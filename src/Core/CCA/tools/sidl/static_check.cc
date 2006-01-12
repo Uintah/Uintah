@@ -38,19 +38,19 @@ using std::vector;
 
 int getExceptionID()
 {
-    static int exceptionCount = 0;
-    return ++exceptionCount;
+  static int exceptionCount = 0;
+  return ++exceptionCount;
 }
 
 void SpecificationList::staticCheck()
 {
   globals = new SymbolTable(0, "Global Symbols");
   for (vector<Specification*>::iterator iter = specs.begin();
-      iter != specs.end(); iter++) {
+       iter != specs.end(); iter++) {
     (*iter)->gatherSymbols(globals);
   }
   for (vector<Specification*>::iterator iter = specs.begin();
-      iter != specs.end(); iter++) {
+       iter != specs.end(); iter++) {
     (*iter)->staticCheck(globals);
   }
 }
@@ -65,15 +65,15 @@ void Specification::staticCheck(SymbolTable* globals)
 
 void Specification::gatherSymbols(SymbolTable* globals)
 {
-    packages->gatherSymbols(globals);
+  packages->gatherSymbols(globals);
 }
 
 void DefinitionList::staticCheck(SymbolTable* names) const
 {
-    for (vector<Definition*>::const_iterator iter = list.begin();
-        iter != list.end(); iter++) {
-        (*iter)->staticCheck(names);
-    }
+  for (vector<Definition*>::const_iterator iter = list.begin();
+       iter != list.end(); iter++) {
+    (*iter)->staticCheck(names);
+  }
 }
 
 void DefinitionList::gatherSymbols(SymbolTable* names) const
@@ -105,54 +105,54 @@ void Package::gatherSymbols(SymbolTable* names)
 
 void BaseInterface::staticCheck(SymbolTable* names)
 {
-    // Handle builtin types - Object
-    if (mymethods && !interface_extends && fullname() != ".SSIDL.BaseInterface") {
-        if (! interface_extends) {
-            interface_extends = new ScopedNameList();
-        }
-        interface_extends->prepend(new ScopedName("SSIDL", "BaseInterface"));
+  // Handle builtin types - Object
+  if (mymethods && !interface_extends && fullname() != ".SSIDL.BaseInterface") {
+    if (! interface_extends) {
+      interface_extends = new ScopedNameList();
     }
+    interface_extends->prepend(new ScopedName("SSIDL", "BaseInterface"));
+  }
 
-    // Check extends list
-    if (interface_extends) {
-        const vector<ScopedName*>& list = interface_extends->getList();
-        for (vector<ScopedName*>::const_iterator iter = list.begin();
-                iter != list.end();iter++) {
-            Symbol* s = names->lookup(*iter);
-            if (!s) {
-                std::cerr << curfile << ':' << lineno 
-                          << ": (102) BaseInterface extends unknown type: "
-                          << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            if (s->getType() != Symbol::InterfaceType) {
-                std::cerr << curfile << ':' << lineno
-                          << ": (103) BaseInterface extends a non-interface: "
-                          << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            (*iter)->bind(s);
-            Definition* d = s->getDefinition();
-            BaseInterface* i = (BaseInterface*)d;
-            parent_ifaces.push_back(i);
+  // Check extends list
+  if (interface_extends) {
+    const vector<ScopedName*>& list = interface_extends->getList();
+    for (vector<ScopedName*>::const_iterator iter = list.begin();
+	 iter != list.end();iter++) {
+      Symbol* s = names->lookup(*iter);
+      if (!s) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (102) BaseInterface extends unknown type: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      if (s->getType() != Symbol::InterfaceType) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (103) BaseInterface extends a non-interface: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      (*iter)->bind(s);
+      Definition* d = s->getDefinition();
+      BaseInterface* i = (BaseInterface*)d;
+      parent_ifaces.push_back(i);
 
-            // if it extends BaseException or other exception this
-            // interface defines an exception
-            if ( (exceptionID == 0) && ((i->name == "BaseException") || (i->exceptionID)) ) {
-                exceptionID = getExceptionID();
-}
-        }
+      // if it extends BaseException or other exception this
+      // interface defines an exception
+      if ( (exceptionID == 0) && ((i->name == "BaseException") || (i->exceptionID)) ) {
+	exceptionID = getExceptionID();
+      }
     }
+  }
 
-    // Check methods
-    if (mymethods) {
-        mymethods->setInterface(this);
-        mymethods->staticCheck(symbols);
-        detectRedistribution();
-        vector<Method*> allmethods;
-        gatherMethods(allmethods);
-        checkMethods(allmethods);
-    }
+  // Check methods
+  if (mymethods) {
+    mymethods->setInterface(this);
+    mymethods->staticCheck(symbols);
+    detectRedistribution();
+    vector<Method*> allmethods;
+    gatherMethods(allmethods);
+    checkMethods(allmethods);
+  }
 }
 
 void BaseInterface::gatherSymbols(SymbolTable* names)
@@ -172,7 +172,7 @@ void BaseInterface::gatherSymbols(SymbolTable* names)
     case Symbol::EnumType:
     case Symbol::EnumeratorType:
     case Symbol::DistArrayType:
-      std::cerr << curfile << ':' << lineno 
+      std::cerr << curfile << ':' << lineno
                 << ": (100) Re-definition of "
                 << names->fullname() + "." + name
                 << " as interface" << std::endl;
@@ -199,96 +199,96 @@ Method* BaseInterface::findMethod(const Method* match) const
 void Class::staticCheck(SymbolTable* names)
 {
   /* Handle builtin types - Object  */
-    if (mymethods && !class_extends && fullname() != ".SSIDL.BaseClass") {
-        class_extends = new ScopedName("SSIDL", "BaseClass");
+  if (mymethods && !class_extends && fullname() != ".SSIDL.BaseClass") {
+    class_extends = new ScopedName("SSIDL", "BaseClass");
+  }
+
+  // Check extends class
+  if (class_extends) {
+    Symbol *s = names->lookup(class_extends);
+    if (!s) {
+      std::cerr << curfile << ':' << lineno
+		<< ": (107) Class extends unknown class: "
+		<< class_extends->getName() << std::endl;
+      exit(1);
     }
-
-    // Check extends class
-    if (class_extends) {
-        Symbol *s = names->lookup(class_extends);
-        if (!s) {
-          std::cerr << curfile << ':' << lineno 
-                    << ": (107) Class extends unknown class: " 
-                    << class_extends->getName() << std::endl;
-            exit(1);
-        }
-        if (s->getType() != Symbol::ClassType) {
-            std::cerr << curfile << ':' << lineno
-                      << ": (108) Class extends a non-class: "
-                      << class_extends->getName() << std::endl;
-            exit(1);
-        }
-        class_extends->bind(s);
-        Definition* d = s->getDefinition();
-        Class* c = (Class*)d;
-        parentclass = c;
-
-
-        // if it extends SIDLException or other exception, then this is an exception
-        if ((parentclass->name == "SIDLException") || (parentclass->exceptionID)) {
-            exceptionID = getExceptionID();
-        }
+    if (s->getType() != Symbol::ClassType) {
+      std::cerr << curfile << ':' << lineno
+		<< ": (108) Class extends a non-class: "
+		<< class_extends->getName() << std::endl;
+      exit(1);
     }
+    class_extends->bind(s);
+    Definition* d = s->getDefinition();
+    Class* c = (Class*)d;
+    parentclass = c;
 
-    // Check implements list
-    if (class_implements) {
-        const vector<ScopedName*>& list = class_implements->getList();
-        for (vector<ScopedName*>::const_iterator iter = list.begin();
-                iter != list.end(); iter++) {
-            Symbol* s = names->lookup(*iter);
-            if (!s) {
-              std::cerr << curfile << ':' << lineno 
-                        << ": (110) Class implements unknown interface: " 
-                        << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            (*iter)->bind(s);
-            if (s->getType() != Symbol::InterfaceType) {
-              std::cerr << curfile << ':' << lineno
-                        << ": (111) Class implements a non-interface: " 
-                        << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            Definition* d = s->getDefinition();
-            BaseInterface* i = (BaseInterface*) d;
-            parent_ifaces.push_back(i);
-        }
-    }
 
-    // Check implementsall list
-    if (class_implementsall) {
-        const vector<ScopedName*>& list = class_implementsall->getList();
-        for (vector<ScopedName*>::const_iterator iter = list.begin();
-                iter != list.end(); iter++) {
-            Symbol* s = names->lookup(*iter);
-            if (!s) {
-              std::cerr << curfile << ':' << lineno 
-                        << ": (112) Class implements unknown interface: " 
-                        << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            (*iter)->bind(s);
-            if (s->getType() != Symbol::InterfaceType) {
-              std::cerr << curfile << ':' << lineno
-                        << ": (113) Class implements a non-interface: " 
-                        << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            Definition* d = s->getDefinition();
-            BaseInterface* i = (BaseInterface*) d;
-            parent_ifaces.push_back(i);
-        }
+    // if it extends SIDLException or other exception, then this is an exception
+    if ((parentclass->name == "SIDLException") || (parentclass->exceptionID)) {
+      exceptionID = getExceptionID();
     }
+  }
 
-    // Check methods
-    if (mymethods) {
-        mymethods->setClass(this);
-        mymethods->staticCheck(symbols);
-        detectRedistribution();
-        vector<Method*> allmethods;
-        gatherMethods(allmethods);
-        checkMethods(allmethods);
+  // Check implements list
+  if (class_implements) {
+    const vector<ScopedName*>& list = class_implements->getList();
+    for (vector<ScopedName*>::const_iterator iter = list.begin();
+	 iter != list.end(); iter++) {
+      Symbol* s = names->lookup(*iter);
+      if (!s) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (110) Class implements unknown interface: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      (*iter)->bind(s);
+      if (s->getType() != Symbol::InterfaceType) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (111) Class implements a non-interface: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      Definition* d = s->getDefinition();
+      BaseInterface* i = (BaseInterface*) d;
+      parent_ifaces.push_back(i);
     }
+  }
+
+  // Check implementsall list
+  if (class_implementsall) {
+    const vector<ScopedName*>& list = class_implementsall->getList();
+    for (vector<ScopedName*>::const_iterator iter = list.begin();
+	 iter != list.end(); iter++) {
+      Symbol* s = names->lookup(*iter);
+      if (!s) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (112) Class implements unknown interface: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      (*iter)->bind(s);
+      if (s->getType() != Symbol::InterfaceType) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (113) Class implements a non-interface: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      Definition* d = s->getDefinition();
+      BaseInterface* i = (BaseInterface*) d;
+      parent_ifaces.push_back(i);
+    }
+  }
+
+  // Check methods
+  if (mymethods) {
+    mymethods->setClass(this);
+    mymethods->staticCheck(symbols);
+    detectRedistribution();
+    vector<Method*> allmethods;
+    gatherMethods(allmethods);
+    checkMethods(allmethods);
+  }
 }
 
 void Class::gatherSymbols(SymbolTable* names)
@@ -302,7 +302,7 @@ void Class::gatherSymbols(SymbolTable* names)
     case Symbol::EnumType:
     case Symbol::EnumeratorType:
     case Symbol::DistArrayType:
-      std::cerr << curfile << ':' << lineno 
+      std::cerr << curfile << ':' << lineno
                 << ": (105) Re-definition of "
                 << names->fullname() + "." + name << " as class"
                 << std::endl;
@@ -327,74 +327,74 @@ void Class::gatherSymbols(SymbolTable* names)
 
 Method* Class::findMethod(const Method* match, bool recurse) const
 {
-    Method* m = mymethods->findMethod(match);
-    if (!m && recurse) {
-        if (parentclass) {
-            return parentclass->findMethod(match, recurse);
-        } else {
-            return 0;
-        }
+  Method* m = mymethods->findMethod(match);
+  if (!m && recurse) {
+    if (parentclass) {
+      return parentclass->findMethod(match, recurse);
     } else {
-        return m;
+      return 0;
     }
+  } else {
+    return m;
+  }
 }
 
 Method* MethodList::findMethod(const Method* match) const
 {
-    for (vector<Method*>::const_iterator iter = list.begin();iter != list.end();iter++) {
-        Method *m = *iter;
-        if (m != match && m->getChecked()) {
-            if (m->matches(match, Method::TypesOnly)) {
-                return m;
-            }
-        }
+  for (vector<Method*>::const_iterator iter = list.begin();iter != list.end();iter++) {
+    Method *m = *iter;
+    if (m != match && m->getChecked()) {
+      if (m->matches(match, Method::TypesOnly)) {
+	return m;
+      }
     }
-    return 0;
+  }
+  return 0;
 }
 
 void MethodList::staticCheck(SymbolTable* names) const
 {
-    for (vector<Method*>::const_iterator iter = list.begin();iter != list.end();iter++) {
-        (*iter)->staticCheck(names);
-    }
+  for (vector<Method*>::const_iterator iter = list.begin();iter != list.end();iter++) {
+    (*iter)->staticCheck(names);
+  }
 }
 
 void Definition::checkMethods(const vector<Method*>& allmethods)
 {
   for (vector<Method*>::const_iterator iter1 = allmethods.begin();
-      iter1 != allmethods.end();iter1++) {
+       iter1 != allmethods.end();iter1++) {
     for (vector<Method*>::const_iterator iter2 = allmethods.begin();
-    iter2 != iter1;iter2++) {
+	 iter2 != iter1;iter2++) {
       Method* m1=*iter1;
       Method* m2=*iter2;
       if (m1->matches(m2, Method::TypesOnly)) {
-    if (!m1->matches(m2, Method::TypesAndModes)) {
-      std::cerr << m1->getCurfile() << ':' << m1->getLineno()
-                << ": (123) Method (" << m1->fullname()
-                << ") does not match modes of related method ("
-                << m2->fullname() << ") defined at " << m2->getCurfile()
-                << ':' << m2->getLineno() << std::endl;
-      exit(1);
-    }
-    if (!m1->matches(m2, Method::TypesModesAndThrows)) {
-      std::cerr << m1->getCurfile() << ':' << m1->getLineno()
-                << ": (124) Method (" << m1->fullname()
-                << ") does not match throws clause of related method ("
-                << m2->fullname() << ") defined at " << m2->getCurfile()
-                << ':' << m2->getLineno() << std::endl;
-      exit(1);
-    }
-    if (!m1->matches(m2, Method::TypesModesThrowsAndReturnTypes)) {
-      m1->matches(m2, Method::TypesModesThrowsAndReturnTypes);
-      std::cerr << m1->getCurfile() << ':' << m1->getLineno()
-                << ": (125) Method (" << m1->fullname()
-                << ") does not match return type of related method ("
-                << m2->fullname() << ") defined at " << m2->getCurfile()
-                << ':' << m2->getLineno() << std::endl;
-      std::cerr << m1->fullsignature() << std::endl;
-      std::cerr << m2->fullsignature() << std::endl;
-      exit(1);
-    }
+	if (!m1->matches(m2, Method::TypesAndModes)) {
+	  std::cerr << m1->getCurfile() << ':' << m1->getLineno()
+		    << ": (123) Method (" << m1->fullname()
+		    << ") does not match modes of related method ("
+		    << m2->fullname() << ") defined at " << m2->getCurfile()
+		    << ':' << m2->getLineno() << std::endl;
+	  exit(1);
+	}
+	if (!m1->matches(m2, Method::TypesModesAndThrows)) {
+	  std::cerr << m1->getCurfile() << ':' << m1->getLineno()
+		    << ": (124) Method (" << m1->fullname()
+		    << ") does not match throws clause of related method ("
+		    << m2->fullname() << ") defined at " << m2->getCurfile()
+		    << ':' << m2->getLineno() << std::endl;
+	  exit(1);
+	}
+	if (!m1->matches(m2, Method::TypesModesThrowsAndReturnTypes)) {
+	  m1->matches(m2, Method::TypesModesThrowsAndReturnTypes);
+	  std::cerr << m1->getCurfile() << ':' << m1->getLineno()
+		    << ": (125) Method (" << m1->fullname()
+		    << ") does not match return type of related method ("
+		    << m2->fullname() << ") defined at " << m2->getCurfile()
+		    << ':' << m2->getLineno() << std::endl;
+	  std::cerr << m1->fullsignature() << std::endl;
+	  std::cerr << m2->fullsignature() << std::endl;
+	  exit(1);
+	}
       }
     }
   }
@@ -402,154 +402,154 @@ void Definition::checkMethods(const vector<Method*>& allmethods)
 
 void Method::staticCheck(SymbolTable* names)
 {
-    // Method shouldn't match any other in the local namespace
-    Symbol* n = names->lookup(name, false);
-    if (n) {
-        // See if types match
-        switch(n->getType()) {
-            case Symbol::InterfaceType:
-            case Symbol::PackageType:
-            case Symbol::ClassType:
-            case Symbol::EnumType:
-            case Symbol::EnumeratorType:
-            case Symbol::DistArrayType:
-                std::cerr << curfile << ':' << lineno
-                          << ": (114) Internal error - Re-definition of "
-                          << names->fullname() + "." + name
-                          << " as a method" << std::endl;
-                exit(1);
-                break;
-            case Symbol::MethodType:
-                // This is handled below...
-                break;
-        }
+  // Method shouldn't match any other in the local namespace
+  Symbol* n = names->lookup(name, false);
+  if (n) {
+    // See if types match
+    switch(n->getType()) {
+    case Symbol::InterfaceType:
+    case Symbol::PackageType:
+    case Symbol::ClassType:
+    case Symbol::EnumType:
+    case Symbol::EnumeratorType:
+    case Symbol::DistArrayType:
+      std::cerr << curfile << ':' << lineno
+		<< ": (114) Internal error - Re-definition of "
+		<< names->fullname() + "." + name
+		<< " as a method" << std::endl;
+      exit(1);
+      break;
+    case Symbol::MethodType:
+      // This is handled below...
+      break;
     }
+  }
 
-    // Check return type and arguments
-    return_type->staticCheck(names,this);
-    args->staticCheck(names,this);
-    checked = true;
+  // Check return type and arguments
+  return_type->staticCheck(names,this);
+  args->staticCheck(names,this);
+  checked = true;
 
-    // Method shouldn't match another method exactly
-    if (myclass) {
-        Method* meth = myclass->findMethod(this, false);
-        if (meth) {
-            std::cerr << curfile << ':' << lineno
-                      << ": (115) Re-definition of method "
-                      << names->fullname()+"."+name << std::endl;
-            exit(1);
-        }
+  // Method shouldn't match another method exactly
+  if (myclass) {
+    Method* meth = myclass->findMethod(this, false);
+    if (meth) {
+      std::cerr << curfile << ':' << lineno
+		<< ": (115) Re-definition of method "
+		<< names->fullname()+"."+name << std::endl;
+      exit(1);
     }
-    if (myinterface) {
-        Method* meth = myinterface->findMethod(this);
-        if (meth) {
-            std::cerr << curfile << ':' << lineno
-                      << ": (116) Re-definition of method "
-                      << names->fullname()+"."+name << std::endl;
-            exit(1);
-        }
+  }
+  if (myinterface) {
+    Method* meth = myinterface->findMethod(this);
+    if (meth) {
+      std::cerr << curfile << ':' << lineno
+		<< ": (116) Re-definition of method "
+		<< names->fullname()+"."+name << std::endl;
+      exit(1);
     }
+  }
 
-    // Shouldn't override a final method
-    if (myclass) {
-        Class* parent = myclass->getParentClass();
-        if (parent) {
-            Method* m = parent->findMethod(this, true);
-            if (m) {
-                switch(m->getModifier()) {
-                    case Method::Abstract:
-                    case Method::Static:
-                    case Method::Unknown:
-                    case Method::NoModifier:
-                        // No problem...
-                        break;
-                    case Method::Final:
-                        std::cerr << curfile << ':' << lineno
-                                  << ": (117) Method attempts to override a final method: "
-                                  << name << std::endl;
-                        exit(1);
-                }
-            }
-        }
+  // Shouldn't override a final method
+  if (myclass) {
+    Class* parent = myclass->getParentClass();
+    if (parent) {
+      Method* m = parent->findMethod(this, true);
+      if (m) {
+	switch(m->getModifier()) {
+	case Method::Abstract:
+	case Method::Static:
+	case Method::Unknown:
+	case Method::NoModifier:
+	  // No problem...
+	  break;
+	case Method::Final:
+	  std::cerr << curfile << ':' << lineno
+		    << ": (117) Method attempts to override a final method: "
+		    << name << std::endl;
+	  exit(1);
+	}
+      }
     }
+  }
 
-    // Check throws clause
-    if (throws_clause) {
-        const vector<ScopedName*>& list = throws_clause->getList();
-        map<CI*, int> thrown;
-        for (vector<ScopedName*>::const_iterator iter = list.begin();
-            iter != list.end(); iter++) {
-            Symbol* s = names->lookup(*iter);
-            if (!s) {
-              std::cerr << curfile << ':' << lineno
-                        << ": (118) Method throws unknown type: "
-                        << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            (*iter)->bind(s);
-            CI *ci = (CI*) s->getDefinition();
-            map<CI*, int>::iterator citer = thrown.find(ci);
-            if (citer != thrown.end()) {
-                std::cerr << curfile << ':' << lineno
-                          << ": (119) Method specifies redundant throw: "
-                          << (*iter)->getName() << std::endl;
-                exit(1);
-            }
-            if (!ci->getMethods()) {
-                std::cerr << curfile << ':' << lineno
-                          << ": (126) method throws incomplete class: "
-                          << (*iter)->getName() << std::endl;
-                exit(1);
-            }
+  // Check throws clause
+  if (throws_clause) {
+    const vector<ScopedName*>& list = throws_clause->getList();
+    map<CI*, int> thrown;
+    for (vector<ScopedName*>::const_iterator iter = list.begin();
+	 iter != list.end(); iter++) {
+      Symbol* s = names->lookup(*iter);
+      if (!s) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (118) Method throws unknown type: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      (*iter)->bind(s);
+      CI *ci = (CI*) s->getDefinition();
+      map<CI*, int>::iterator citer = thrown.find(ci);
+      if (citer != thrown.end()) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (119) Method specifies redundant throw: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
+      if (!ci->getMethods()) {
+	std::cerr << curfile << ':' << lineno
+		  << ": (126) method throws incomplete class: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+      }
 
-            switch(s->getType()) {
-                case Symbol::ClassType:
-                {
-                    Class *c = (Class *) ci;
-                    Class *t = c->findParent(".SSIDL.SIDLException");
-                    if (!t) {
-                        std::cerr << curfile << ':' << lineno
-                                  << ": (127) method must throw a derivative of .SSIDL.SIDLException: "
-                                  << (*iter)->getName() << std::endl;
-                        exit(1);
-                    }
-                    thrown[ci]=1; // Just a dummy value
-                }
-                    break;
-                case Symbol::InterfaceType:
-                {
-                    BaseInterface *i = (BaseInterface *) ci;
-if ((i->fullname() != ".sci.cca.CCAException") || (i->fullname() != ".SSIDL.BaseException")) {
-                    BaseInterface *pi = i->findParent(".SSIDL.BaseException");
-                    if (!pi) {
-                        std::cerr << curfile << ':' << lineno
-                                  << ": (132) method must throw a derivative of .SSIDL.BaseException: "
-                                  << (*iter)->getName() << std::endl;
-                        exit(1);
+      switch(s->getType()) {
+      case Symbol::ClassType:
+	{
+	  Class *c = (Class *) ci;
+	  Class *t = c->findParent(".SSIDL.SIDLException");
+	  if (!t) {
+	    std::cerr << curfile << ':' << lineno
+		      << ": (127) method must throw a derivative of .SSIDL.SIDLException: "
+		      << (*iter)->getName() << std::endl;
+	    exit(1);
+	  }
+	  thrown[ci]=1; // Just a dummy value
+	}
+	break;
+      case Symbol::InterfaceType:
+	{
+	  BaseInterface *i = (BaseInterface *) ci;
+	  if ((i->fullname() != ".sci.cca.CCAException") || (i->fullname() != ".SSIDL.BaseException")) {
+	    BaseInterface *pi = i->findParent(".SSIDL.BaseException");
+	    if (!pi) {
+	      std::cerr << curfile << ':' << lineno
+			<< ": (132) method must throw a derivative of .SSIDL.BaseException: "
+			<< (*iter)->getName() << std::endl;
+	      exit(1);
 
-                    }
-}
-                    thrown[ci]=1; // Just a dummy value
-                }
-                    break;
-                case Symbol::MethodType:
-                case Symbol::PackageType:
-                case Symbol::EnumType:
-                case Symbol::EnumeratorType:
-                case Symbol::DistArrayType:
-                    std::cerr << curfile << ':' << lineno
-                              << ": (120) Method throws a non-class: "
-                              << (*iter)->getName() << std::endl;
-                    exit(1);
-                    break;
-            }
-        }
+	    }
+	  }
+	  thrown[ci]=1; // Just a dummy value
+	}
+	break;
+      case Symbol::MethodType:
+      case Symbol::PackageType:
+      case Symbol::EnumType:
+      case Symbol::EnumeratorType:
+      case Symbol::DistArrayType:
+	std::cerr << curfile << ':' << lineno
+		  << ": (120) Method throws a non-class: "
+		  << (*iter)->getName() << std::endl;
+	exit(1);
+	break;
+      }
     }
+  }
 
-    n = new Symbol(name);
-    names->insert(n);
-    n->setType(Symbol::MethodType);
-    n->setMethod(this);
+  n = new Symbol(name);
+  names->insert(n);
+  n->setType(Symbol::MethodType);
+  n->setMethod(this);
 }
 
 bool Method::matches(const Method* m, Method::MatchWhich match) const
@@ -563,19 +563,19 @@ bool Method::matches(const Method* m, Method::MatchWhich match) const
     return args->matches(m->args, true);
   case TypesModesAndThrows:
     if ((throws_clause && !m->throws_clause) ||
-       (!throws_clause && m->throws_clause))
+	(!throws_clause && m->throws_clause))
       return false;
     else
       return args->matches(m->args, true)
-    && (!throws_clause || throws_clause->matches(m->throws_clause));
+	&& (!throws_clause || throws_clause->matches(m->throws_clause));
   case TypesModesThrowsAndReturnTypes:
     if ((throws_clause && !m->throws_clause) ||
-       (!throws_clause && m->throws_clause))
+	(!throws_clause && m->throws_clause))
       return false;
     else
       return args->matches(m->args, true)
-    && (!throws_clause || throws_clause->matches(m->throws_clause))
-    && return_type->matches(m->return_type);
+	&& (!throws_clause || throws_clause->matches(m->throws_clause))
+	&& return_type->matches(m->return_type);
   }
   std::cerr << "Error - should not reach this point!" << std::endl;
   exit(1);
@@ -599,8 +599,8 @@ bool ArgumentList::matches(const ArgumentList* a, bool checkmode) const
   if (list.size() != a->list.size())
     return false;
   for (vector<Argument*>::const_iterator iter1 = list.begin(), iter2 = a->list.begin();
-      iter1 != list.end() && iter1 != a->list.end();
-      iter1++, iter2++) {
+       iter1 != list.end() && iter1 != a->list.end();
+       iter1++, iter2++) {
     if (!(*iter1)->matches(*iter2, checkmode))
       return false;
   }
@@ -616,12 +616,12 @@ bool Argument::matches(const Argument* a, bool checkmode) const
   return type->matches(a->type);
 }
 
-void BuiltinType::staticCheck(SymbolTable*, Method* method) 
+void BuiltinType::staticCheck(SymbolTable*, Method* method)
 {
   thisMethod = method;
 }
 
-void NamedType::staticCheck(SymbolTable* names, Method* method) 
+void NamedType::staticCheck(SymbolTable* names, Method* method)
 {
   thisMethod = method;
   Symbol* s = names->lookup(name);
@@ -652,7 +652,7 @@ void NamedType::staticCheck(SymbolTable* names, Method* method)
   }
 }
 
-void ArrayType::staticCheck(SymbolTable* names, Method* method) 
+void ArrayType::staticCheck(SymbolTable* names, Method* method)
 {
   thisMethod = method;
   subtype->staticCheck(names,method);
@@ -663,8 +663,8 @@ bool ScopedNameList::matches(const ScopedNameList* l) const
   if (list.size() != l->list.size())
     return false;
   for (vector<ScopedName*>::const_iterator iter1 = list.begin(), iter2 = l->list.begin();
-      iter1 != list.end() && iter2 != l->list.end();
-      iter1++, iter2++) {
+       iter1 != list.end() && iter2 != l->list.end();
+       iter1++, iter2++) {
     if (!(*iter1)->matches(*iter2))
       return false;
   }
@@ -701,7 +701,7 @@ bool NamedType::matches(const Type* t) const
   const NamedType* n = dynamic_cast<const NamedType*>(t);
   if (n)
     return name->matches(n->name);
-  else 
+  else
     return false;
 }
 
@@ -714,12 +714,12 @@ void Enum::staticCheck(SymbolTable* names)
 {
   set<int> occupied;
   for (std::vector<Enumerator*>::iterator iter = list.begin();
-      iter != list.end(); iter++) {
+       iter != list.end(); iter++) {
     (*iter)->assignValues1(names, occupied);
   }
   int nextvalue = 0;
   for (std::vector<Enumerator*>::iterator iter = list.begin();
-      iter != list.end(); iter++) {
+       iter != list.end(); iter++) {
     (*iter)->assignValues2(names, occupied, nextvalue);
   }
 }
@@ -728,8 +728,8 @@ void Enumerator::assignValues1(SymbolTable* /*names*/, set<int>& occupied)
 {
   if (have_value) {
     if (occupied.find(value) != occupied.end()) {
-       std::cerr << curfile << ':' << lineno << ": (132) Enumerator ("
-                 << name << ") assigned to a duplicate value" << std::endl;
+      std::cerr << curfile << ':' << lineno << ": (132) Enumerator ("
+		<< name << ") assigned to a duplicate value" << std::endl;
       exit(1);
     }
     occupied.insert(value);
@@ -737,7 +737,7 @@ void Enumerator::assignValues1(SymbolTable* /*names*/, set<int>& occupied)
 }
 
 void Enumerator::assignValues2(SymbolTable* /*names*/, set<int>& occupied,
-                   int& nextvalue)
+			       int& nextvalue)
 {
   if (!have_value) {
     while (occupied.find(nextvalue) != occupied.end()) {
@@ -778,7 +778,7 @@ void Enum::gatherSymbols(SymbolTable* names)
   n->setDefinition(this);
 
   for (std::vector<Enumerator*>::iterator iter = list.begin();
-      iter != list.end(); iter++) {
+       iter != list.end(); iter++) {
     (*iter)->gatherSymbols(names);
   }
 }
@@ -840,7 +840,7 @@ void DistributionArray::gatherSymbols(SymbolTable* names)
 
   n = new Symbol(name);
   names->insert(n);
-  n->setType(Symbol::DistArrayType); 
+  n->setType(Symbol::DistArrayType);
   n->setDefinition(this);
 }
 
@@ -864,9 +864,9 @@ int ArrayType::detectRedistribution() { return 0; }
 
 int BuiltinType::detectRedistribution() { return 0; }
 
-int NamedType::detectRedistribution() 
+int NamedType::detectRedistribution()
 {
-  Symbol::Type t = name->getSymbol()->getType(); 
+  Symbol::Type t = name->getSymbol()->getType();
   if (t == Symbol::DistArrayType) {
     return 1;
   }
@@ -875,16 +875,16 @@ int NamedType::detectRedistribution()
   }
 }
 
-int Argument::detectRedistribution() 
+int Argument::detectRedistribution()
 {
   if (type->detectRedistribution()) {
     if (mode == InOut) return 2;
     return 1;
   }
-  return 0;  
+  return 0;
 }
 
-int ArgumentList::detectRedistribution() 
+int ArgumentList::detectRedistribution()
 {
   int totalRedisMessages = 0;
   for (vector<Argument*>::const_iterator iter = list.begin();iter != list.end();iter++) {
@@ -904,7 +904,7 @@ bool Method::detectRedistribution()
     return false;
 }
 
-bool MethodList::detectRedistribution() 
+bool MethodList::detectRedistribution()
 {
   bool redis = false;
   for (vector<Method*>::const_iterator iter = list.begin();iter != list.end();iter++) {
@@ -915,6 +915,6 @@ bool MethodList::detectRedistribution()
 
 void CI::detectRedistribution()
 {
-  if (mymethods->detectRedistribution()) 
+  if (mymethods->detectRedistribution())
     doRedistribution = true;
 }

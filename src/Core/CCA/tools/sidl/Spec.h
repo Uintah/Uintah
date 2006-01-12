@@ -598,12 +598,14 @@ private:
   std::string nexusname;
 };
 
+// corresponds to SIDL interfaces used as arguments and return types
 class NamedType : public Type {
 public:
   NamedType(const std::string& curfile, int lineno, ScopedName*);
   virtual ~NamedType();
   virtual void staticCheck(SymbolTable* names, Method* method);
   int detectRedistribution();
+  const ScopedName* getScopedName() const { return name; }
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
@@ -632,6 +634,7 @@ private:
   ScopedName* name;
 };
 
+// corresponds to SIDL arrays
 class ArrayType : public Type {
 public:
   virtual void staticCheck(SymbolTable* names, Method* method);
