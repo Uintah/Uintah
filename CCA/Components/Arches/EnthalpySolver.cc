@@ -140,7 +140,6 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
             else if (limiter_type == "upwind") d_limiter_type = 4;
 	      else throw InvalidValue("Flux limiter type "
 		                           "not supported: " + limiter_type, __FILE__, __LINE__);
-  }
   string boundary_limiter_type;
   d_boundary_limiter_type = 3;
   if (d_limiter_type < 3) {
@@ -157,6 +156,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
     d_central_limiter = false;
     if (d_limiter_type < 2)
       db->getWithDefault("central_limiter",d_central_limiter,false);
+  }
   }
 
   // make source and boundary_condition objects
