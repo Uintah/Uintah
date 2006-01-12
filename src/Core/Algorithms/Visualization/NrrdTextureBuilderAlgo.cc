@@ -141,6 +141,118 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
 }
 
 
+void
+NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
+                              NrrdDataHandle vHandle,
+                              double vmin, double vmax,
+                              NrrdDataHandle gHandle,
+                              double gmin, double gmax,
+                              int card_mem,
+                              int is_uchar)
+{
+  Nrrd* nv_nrrd = vHandle->nrrd;
+  Nrrd* gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd : 0);
+
+  int axis_size[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
+  double axis_min[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMin, axis_min);
+  double axis_max[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMax, axis_max);
+
+  const int nx = axis_size[nv_nrrd->dim-3];
+  const int ny = axis_size[nv_nrrd->dim-2];
+  const int nz = axis_size[nv_nrrd->dim-1];
+
+  int nc = gm_nrrd ? 2 : 1;
+  int nb[2];
+  nb[0] = nv_nrrd->dim == 4 ? axis_size[0] : 1;
+  nb[1] = gm_nrrd ? 1 : 0;
+
+  const BBox bbox(Point(0,0,0), Point(1,1,1)); 
+
+  Transform tform;
+  string trans_str;
+  // See if it's stored in the nrrd first.
+  if (vHandle->get_property("Transform", trans_str) && trans_str != "Unknown")
+  {
+    double t[16];
+    int old_index=0, new_index=0;
+    for(int i=0; i<16; i++)
+    {
+      new_index = trans_str.find(" ", old_index);
+      string temp = trans_str.substr(old_index, new_index-old_index);
+      old_index = new_index+1;
+      string_to_double(temp, t[i]);
+    }
+    tform.set(t);
+  } 
+  else
+  {
+    // Reconstruct the axis aligned transform.
+    const Point nmin(axis_min[nv_nrrd->dim-3],
+                     axis_min[nv_nrrd->dim-2],
+                     axis_min[nv_nrrd->dim-1]);
+    const Point nmax(axis_max[nv_nrrd->dim-3],
+                     axis_max[nv_nrrd->dim-2],
+                     axis_max[nv_nrrd->dim-1]);
+    tform.pre_scale(nmax - nmin);
+    tform.pre_translate(nmin.asVector());
+  }
+
+  tHandle->lock_bricks();
+  vector<TextureBrickHandle>& bricks = tHandle->bricks();
+  if (nx != tHandle->nx() || ny != tHandle->ny() || nz != tHandle->nz() ||
+      nc != tHandle->nc() || nb[0] != tHandle->nb(0) ||
+      card_mem != tHandle->card_mem() ||
+      bbox.min() != tHandle->bbox().min() ||
+      bbox.max() != tHandle->bbox().max() ||
+      vmin != tHandle->vmin() ||
+      vmax != tHandle->vmax() ||
+      gmin != tHandle->gmin() ||
+      gmax != tHandle->gmax() )
+  {
+    // NrrdTextureBricks can be used if specifically requested or if
+    // the data is unisgned chars with no rescaling.
+    bool use_nrrd_brick =
+      is_uchar || (vHandle->nrrd->type == nrrdTypeUChar &&
+		   vmin == 0 && vmax == 255 &&
+		   gHandle->nrrd->type == nrrdTypeUChar &&
+		   gmin == 0 && gmax == 255);
+
+    if ( use_nrrd_brick &&
+	ShaderProgramARB::shaders_supported() &&
+	ShaderProgramARB::texture_non_power_of_two())
+    {
+      nrrd_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+    }
+    else
+    {
+      if( vHandle->nrrd->type == nrrdTypeUChar &&
+	  vmin == 0 && vmax == 255 &&
+	  gHandle->nrrd->type == nrrdTypeUChar &&
+	  gmin == 0 && gmax == 255 )
+      texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem,
+			   use_nrrd_brick );
+
+    }
+    tHandle->set_size(nx, ny, nz, nc, nb);
+    tHandle->set_card_mem(card_mem);
+  }
+  tHandle->set_bbox(bbox);
+  tHandle->set_minmax(vmin, vmax, gmin, gmax);
+  tHandle->set_transform(tform);
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    fill_brick(bricks[i], vHandle, vmin, vmax, gHandle, gmin, gmax,
+	       nx, ny, nz);
+
+    bricks[i]->set_dirty(true);
+  }
+  tHandle->unlock_bricks();
+}
+
+
 CompileInfoHandle
 NrrdTextureBuilderAlgo::get_compile_info( const unsigned int vtype,
 					  const unsigned int gtype)
