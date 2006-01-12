@@ -4580,7 +4580,6 @@ if test "$sci_required_ruby" = "yes"; then
     AC_MSG_ERROR(One or more of the ruby components are missing.)
     echo
   fi
-else
 fi # end sci_required_ruby
 
 AC_SUBST(HAVE_RUBY)
