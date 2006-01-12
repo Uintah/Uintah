@@ -51,12 +51,6 @@ SRCS     += \
         $(SRCDIR)/XMLParser.cc          \
         $(SRCDIR)/ProgressiveWarning.cc
 
-ifeq ($(BUILD_SCIRUN2),yes)
-  ifneq ($(HAVE_UUID),yes)
-    SRCS += $(SRCDIR)/GenerateUUID.cc
-  endif
-endif
-
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math
 LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
 

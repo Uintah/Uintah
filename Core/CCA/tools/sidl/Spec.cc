@@ -901,7 +901,7 @@ std::string NamedType::cppfullname(SymbolTable* localScope) const
 
   if (symtype == Symbol::EnumType) {
     return name->cppfullname(localScope);
-  } else if(name->getSymbol()->getDefinition()->isEmitted()) {
+  } else if (name->getSymbol()->getDefinition()->isEmitted()) {
     return name->cppfullname(localScope) + "::pointer";
   } else {
     return "CCALib::SmartPointer< " + name->cppfullname(localScope) + " >";
