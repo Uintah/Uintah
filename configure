@@ -58155,7 +58155,6 @@ echo "$as_me: error: One or more of the ruby components are missing." >&2;}
    { (exit 1); exit 1; }; }
     echo
   fi
-else
 fi # end sci_required_ruby
 
 
