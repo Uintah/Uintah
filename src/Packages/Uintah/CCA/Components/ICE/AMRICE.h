@@ -86,8 +86,7 @@ namespace Uintah {
                                    const double factor);
 
     void scheduleSetBC_FineLevel(const PatchSet* patches,
-                                 SchedulerP& scheduler,
-                                 const bool isNewLevel);
+                                 SchedulerP& scheduler);
                                                                     
     void setBC_FineLevel(const ProcessorGroup*,
                          const PatchSubset* patches,              
