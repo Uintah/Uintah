@@ -34,9 +34,8 @@
 #include <Dataflow/Network/Module.h>
 
 namespace Uintah {
-using namespace::SCIRun;
 
-using SCIRun::LatVolMesh;
+using namespace SCIRun;
 
 class ScalarMinMaxAlgoCount : public DynamicAlgoBase
 {
