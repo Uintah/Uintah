@@ -29,7 +29,7 @@
 #ifndef SCIRun_src_main_sci_version_h
 #define SCIRun_src_main_sci_version_h
 
-#define SCIRUN_VERSION "1.25.0"
+#define SCIRUN_VERSION "1.25.1"
 #define SCIRUN_RCFILE_SUBVERSION "1"
 
 
