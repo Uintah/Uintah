@@ -36,17 +36,12 @@
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
 
-
-namespace Uintah {
-
 using std::endl;
 using std::pair;
 using std::ostringstream;
 
-using namespace::SCIRun;
-
-
-
+using namespace Uintah;
+using namespace SCIRun;
 
 DECLARE_MAKER(ScalarMinMax)
 ScalarMinMax::ScalarMinMax(GuiContext* ctx)
@@ -166,8 +161,4 @@ ScalarMinMaxAlgoCount::get_compile_info(const TypeDescription *td)
   td->fill_compile_info(rval);
   return rval;
 }
-
-
-} // end Uintah namespace
-
 
