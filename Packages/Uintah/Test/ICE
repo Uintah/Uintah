@@ -10,9 +10,7 @@ hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
                             "<lattice_refinement_ratio> [[5,5,1],[2,2,1]]  </lattice_refinement_ratio>",\
                             "<filebase>AMR_HotBlob_3L.uda</filebase>"])
 
-UNUSED = [  ("hotBlob_AMR", "hotBlob_AMR.ups", "-amr", 4, "ALL"),     \
-            ("hotBlob_AMR_3L", "hotBlob_AMR_3L_ups", "-amr", 4, "ALL")
-         ]
+UNUSED = [  ]
 
 TESTS = [   ("advect", "advect.ups", "", 1, "ALL"),	\
             ("rieman_sm", "rieman_sm.ups", "", 1, "ALL"),     \
@@ -20,6 +18,8 @@ TESTS = [   ("advect", "advect.ups", "", 1, "ALL"),	\
             ("hotBlob2mat_sym", "hotBlob2mat_sym.ups", "", 1, "ALL"),     \
             ("impHotBlob", "impHotBlob.ups", "", 1, "ALL"),     \
             ("hotBlob8patch", "hotBlob2mat8patch.ups", "", 8, "ALL")     \
+            ("hotBlob_AMR", "hotBlob_AMR.ups", "-amr", 4, "ALL"),     \
+            ("hotBlob_AMR_3L", "hotBlob_AMR_3L_ups", "-amr", 4, "ALL")
     	]
 
 exit(runSusTests(argv, TESTS, "ice"))
