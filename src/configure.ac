@@ -1330,7 +1330,7 @@ case $host in
           ac_objext=obj
           CXXFLAGS="-EHsc -GR"
           
-          if test "$debug" = no; then
+          if test "$debug" = yes; then
             CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -Gm -MD -W3 -Wp64 -Zi"
             WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@)'
           else
