@@ -12,13 +12,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.5e-2      </maxTime>
+       <maxTime>            0.1e-2      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  2.0         </max_delt_increase>
-       <max_iterations>     100       </max_iterations>
+       <!--<max_iterations>     120       </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -39,6 +39,9 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -52,6 +55,9 @@
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -67,6 +73,9 @@
         <BCType id = "0"   label = "Density"    var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -81,33 +90,16 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
       <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
