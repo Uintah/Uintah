@@ -457,8 +457,7 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
  Purpose:  
 _____________________________________________________________________*/
 void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
-                                     SchedulerP& sched,
-                                     const bool isNewLevel) 
+                                     SchedulerP& sched) 
 {
   const Level* fineLevel = getLevel(patches);
   int L_indx = fineLevel->getIndex();
@@ -477,19 +476,14 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     t->requires(Task::NewDW, lb->gammaLabel,        0, Task::CoarseLevel, 0, ND, gn,0);
     t->requires(Task::NewDW, lb->specific_heatLabel,0, Task::CoarseLevel, 0, ND, gn,0);
     
-    // This conditional is a HACK to fake out the task graph.  Bryan should
-    // fix this.  We execute the task on every level we just don't tell the task
-    // graph that we are.  1/06/05
-    if (isNewLevel) {   
-      t->modifies(lb->press_CCLabel, d_press_matl, oims);
-      t->modifies(lb->rho_CCLabel);
-      t->modifies(lb->sp_vol_CCLabel);
-      t->modifies(lb->temp_CCLabel);
-      t->modifies(lb->vel_CCLabel);
-      t->computes(lb->gammaLabel);
-      t->computes(lb->specific_heatLabel);
-      t->computes(lb->vol_frac_CCLabel);
-    }
+    t->modifies(lb->press_CCLabel, d_press_matl, oims);
+    t->modifies(lb->rho_CCLabel);
+    t->modifies(lb->sp_vol_CCLabel);
+    t->modifies(lb->temp_CCLabel);
+    t->modifies(lb->vel_CCLabel);
+    t->computes(lb->gammaLabel);
+    t->computes(lb->specific_heatLabel);
+    t->computes(lb->vol_frac_CCLabel);
     
     //__________________________________
     // Model Variables.
@@ -499,9 +493,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
       for(iter = d_modelSetup->tvars.begin();
          iter != d_modelSetup->tvars.end(); iter++){
         TransportedVariable* tvar = *iter;
-        if(isNewLevel){
-          t->modifies(tvar->var);
-        }
+        t->modifies(tvar->var);
       }
     }
     sched->addTask(t, patches, d_sharedState->allMaterials());
@@ -702,13 +694,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     
     subset->add(0);
     Ghost::GhostType  gac = Ghost::AroundCells;
-    
-    bool isNewLevel = false;
-    if (patches == getLevel(patches->getSubset(0))->eachPatch()){
-      isNewLevel = true;
-    }
-    
-    
+        
     task->requires(Task::NewDW, lb->press_CCLabel,
                    0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
     
@@ -734,9 +720,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
         TransportedVariable* tvar = *iter;
         task->requires(Task::NewDW, tvar->var,
                        0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-        if (isNewLevel) {
-          task->computes(tvar->var);
-        }
+        task->computes(tvar->var);
       }
     }
     
@@ -749,7 +733,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     
     //__________________________________
     // Sub Task 
-    scheduleSetBC_FineLevel(patches, sched, isNewLevel);
+    scheduleSetBC_FineLevel(patches, sched);
   }
 }
 
