@@ -792,7 +792,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
              (den[currCell]+den[zminusCell])*Min(wVelocity[currCell],0.0)) /
             cellinfo->stb[colZ])+small_num;
 
-	    delta_t2=Min(den[currCell]/tmp_time, delta_t2);
+	    if (den[currCell] > 0.0)
+	      delta_t2=Min(den[currCell]/tmp_time, delta_t2);
 	  }
         }
       }
