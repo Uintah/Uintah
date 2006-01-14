@@ -206,7 +206,8 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         CCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
         CCVariable<Vector> vel_CC;
 
-//        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch);
+
+        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch); 
         fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,patch);
         fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch);
         fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,patch);
@@ -218,19 +219,16 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           ostringstream desc;     
           desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
                << patch->getID()<< " step " << subCycleProgress;
-//          printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
+
+          printData(indx, patch,   1, desc.str(), "press_CC",    press_CC); 
           printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
           printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
           printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
         }
-/*`==========TESTING==========*/
-#if 0
-// I'm not sure that we need to refine pressure since it is a derived quantity
+
         refineCoarseFineBoundaries(patch, press_CC, fine_new_dw, 
                                    lb->press_CCLabel,  0,   subCycleProgress);
-#endif 
-/*===========TESTING==========`*/
 
         refineCoarseFineBoundaries(patch, rho_CC,   fine_new_dw, 
                                    lb->rho_CCLabel,    indx,subCycleProgress);
@@ -476,7 +474,8 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     t->requires(Task::NewDW, lb->gammaLabel,        0, Task::CoarseLevel, 0, ND, gn,0);
     t->requires(Task::NewDW, lb->specific_heatLabel,0, Task::CoarseLevel, 0, ND, gn,0);
     
-    t->modifies(lb->press_CCLabel, d_press_matl, oims);
+
+    t->modifies(lb->press_CCLabel, d_press_matl, oims);     
     t->modifies(lb->rho_CCLabel);
     t->modifies(lb->sp_vol_CCLabel);
     t->modifies(lb->temp_CCLabel);
@@ -525,6 +524,8 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       StaticArray<CCVariable<double> > sp_vol_CC(numMatls);
+      StaticArray<constCCVariable<double> > sp_vol_const(numMatls);
+      
       
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
@@ -559,7 +560,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
         for (iter  = patch->getBoundaryFaces()->begin(); 
              iter != patch->getBoundaryFaces()->end(); ++iter){
           Patch::FaceType face = *iter;
-cout << " Boundary Face " << face << " Level " << fineLevel->getIndex() << endl;
+          cout_dbg << " Setting BC on Face " << face << " patch " << patch->getGridIndex() << " Level " << fineLevel->getIndex() << endl;
           //__________________________________
           // fine level hi & lo cell iter limits
           // coarselevel hi and low index
@@ -603,6 +604,8 @@ cout << " Boundary Face " << face << " Level " << fineLevel->getIndex() << endl;
         setSpecificVolBC(sp_vol_CC[m], "SpecificVol", false,rho_CC,vol_frac,
                          patch,d_sharedState, indx);
                          
+        sp_vol_const[m] = sp_vol_CC[m];  // needed by pressure BC
+                         
 #if 0
         // worry about this later
         delete_CustomBCs(d_customBC_var_basket);
@@ -619,10 +622,6 @@ cout << " Boundary Face " << face << " Level " << fineLevel->getIndex() << endl;
               string Labelname = tvar->var->getName();
               CCVariable<double> q_CC;
               fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
-
-              if(switchDebug_AMR_refineInterface){ 
-                printData(indx, patch, 1, "TOP_setBC_FineLevel", Labelname, q_CC);
-              }
           
               setBC(q_CC, Labelname,  patch, d_sharedState, indx, fine_new_dw);
 
@@ -635,7 +634,6 @@ cout << " Boundary Face " << face << " Level " << fineLevel->getIndex() << endl;
         
         //__________________________________
         //  Print Data 
-   #if 1
         if(switchDebug_AMR_refine){
           ostringstream desc;    
           desc << "BOT_setBC_FineLevel_Mat_" << indx << "_patch_"<< patch->getID();
@@ -644,30 +642,24 @@ cout << " Boundary Face " << face << " Level " << fineLevel->getIndex() << endl;
           printData(indx, patch,   1, desc.str(), "Temp_CC",   temp_CC);
           printVector(indx, patch, 1, desc.str(), "vel_CC", 0, vel_CC);
         }
-    #endif
       } // matl loop
       
-#if 0     
-// I'm not sure that we need to set the boundary conditions on the pressure since they are 
-// a derived quantity 
       //__________________________________
       //  Pressure boundary condition
       CCVariable<double> press_CC;
       StaticArray<CCVariable<double> > placeHolder(0);
-      fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,     0,   patch);
       
-      setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
+      fine_new_dw->getModifiable(press_CC, lb->press_CCLabel, 0, patch);
+      
+      setBC(press_CC, placeHolder, sp_vol_const, d_surroundingMatl_indx,
             "sp_vol", "Pressure", patch , d_sharedState, 0, fine_new_dw, 
             d_customBC_var_basket);
       
       if(switchDebug_AMR_refine){
         ostringstream desc;    
-        desc << "BOT_setBC_FineLevel_Mat_" << indx << "_patch_"<< patch->getID();
-        printData(indx, patch,   1, desc.str(), "press_CC",  press_CC);
-      }
-#endif   
-      
-      
+        desc << "BOT_setBC_FineLevel_Mat_" << 0 << "_patch_"<< patch->getID();
+        printData(0, patch, 1, desc.str(), "press_CC", press_CC);
+      }      
     }  // patches loop
     cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
   }             
@@ -767,17 +759,13 @@ void AMRICE::refine(const ProcessorGroup*,
 
     //testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,finePatch);
 
-/*`==========TESTING==========*/
-// I'm not sure we need to refine the pressure since it is a dervied quantity
-#if 0    
+   
     // refine pressure
     CCVariable<double> press_CC;
     new_dw->allocateAndPut(press_CC, lb->press_CCLabel, 0, finePatch);
     press_CC.initialize(d_EVIL_NUM);
     CoarseToFineOperator<double>(press_CC,  lb->press_CCLabel,0, new_dw, 
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
-#endif   
-/*===========TESTING==========`*/ 
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -837,7 +825,7 @@ void AMRICE::refine(const ProcessorGroup*,
       if(switchDebug_AMR_refine){ 
       ostringstream desc;     
         desc << "BOT_Refine_Mat_" << indx << "_patch_"<< finePatch->getID();
-//        printData(indx, finePatch,   1, desc.str(), "press_CC",  press_CC);
+        printData(indx, finePatch,   1, desc.str(), "press_CC",  press_CC); 
         printData(indx, finePatch,   1, desc.str(), "rho_CC",    rho_CC);
         printData(indx, finePatch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
         printData(indx, finePatch,   1, desc.str(), "Temp_CC",   temp);
