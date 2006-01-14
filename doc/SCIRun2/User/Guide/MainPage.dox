@@ -13,27 +13,65 @@
 </center>
 \endhtmlonly
 
-\section intro SCIRun2 Framework and Meta Component Model
-
-Here is the introduction and overview of the 
-<a href="http://www.cca-forum.org">Common Component Architecture</a>
-(%CCA) activities at SCI.
-
-\section howto How to Use this Documentation
-
-Here is a little blurb describing what can be found in this documentation
-and how to navigate the pages.
-
-\section getting Started Getting Started
-\li \ref devtasks
-\li \ref building 
+\section start Getting Started
+\li \ref building
 \li \ref running
-\li \ref gui 
 \li \ref nightly
+\li \ref gui
+
+\section cca Common Component Architecture
+
+<!-- framework diagram? -->
+
+A group of researchers from several national laboratories and academic institutions form the
+<a href="http://www.cca-forum.org">Common Component Architecture</a> (%CCA) forum.
+Forum contributers defined a standard component architecture for high-performance parallel computing.
+
+The architecture is made up of a minimal set of interfaces that a high-performance component framework should provide to implement hight-performance components.
+The interfaces are written in the scientific interface definition language (SIDL) which is translated into commonly used programming languages (C, C++, Fortran, Java).
+This standard promotes interoperability between components across different institutions and developer groups.
+
+The <a href="http://www.cca-forum.org">SIDL specification</a>
+for the framework interfaces is available from the %CCA forum.
+A <a href="http://www.cca-forum.org/glossary/index.html">glossary</a>
+is also available to explain some of the terms used in this page.
+
+\subsection components Components
+
+Components are software units (can contain multiple compilation units ie. C++ or Java classes, C files) with common interfaces and communication mechanisms.
+Component models allow software assembly without writing programs.
+Component-based software is popular in the software industry for business applications (Microsoft COM, CORBA, Enterprise Java Beans), however most component models used in industry are not useful for scientific computing problems.
+
+\subsubsection framework Framework
+
+The component framework provides services that create and destroy components, and to create applications by connecting and disconnecting components to create applications.
+The framework is also the execution environment for component-based applications.
+
+\section intro SCIRun2 Framework and Meta-Component Model
+
+\image html sr2-pde.jpg "SCIRun2 PDE solver application"
+
+SCIRun2 is a problem solving environment that implements the \ref cca "Common Component Architecture".
+The SCIRun2 framework supports parallel and distributed components.
+
+<!-- Like %SCIRun, SCIRun2 uses visual programming to create component networks. -->
+
+\image html metacomponents.png
+
+SCIRun2 was designed around a meta-component model which allows for the use of multiple component models together.
+
+<!--
+SCIRun2 has a bridging mechanism to connect components from different component models.
+\image html metacomponent_bridge.png "Bridging component models"
+-->
+
+\section group CCA group
+\li \ref devtasks
 \li \ref meetings
 
 \section contact Contact Information
 
+CCA mailing list at SCI: <b>cca@cs.utah.edu</b>
 
 */
 

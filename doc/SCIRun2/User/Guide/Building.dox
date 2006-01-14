@@ -126,6 +126,12 @@ Alternatively, source downloads are available from the
 
 \subsection depend_gawk Gawk
 
+<!--
+\subsection depend_xml2 xml2
+
+Version ? or better is required...
+-->
+
 \subsection depend_ncurses ncurses
 
 Ncurses libraries and development headers need to be available to compile
