@@ -33,7 +33,8 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, MPMFlags* Mflag)
 
   ps->require("gamma", d_initialData.gamma);
   ps->require("specific_heat",d_initialData.cv);
-
+  ps->getWithDefault("UseArtificialViscosity",
+        d_initialData.UseArtificialViscosity, false);
 }
 
 IdealGasMP::IdealGasMP(const IdealGasMP* cm)
@@ -257,6 +258,17 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       double dp_de   = (gamma - 1.0)*rhoM;
 
       p = (gamma - 1.0)*rhoM*cv*ptemp[idx];
+
+      // try artificial viscosity
+      double AV=0.;
+      if(d_initialData.UseArtificialViscosity){
+        if(velGrad(0,0)<=0.){
+          AV = 2.5*2.5*dx.x()*dx.x()*rhoM*velGrad(0,0)*velGrad(0,0);
+        }
+      }
+
+      p=p+AV;
+
       double P = p - 101325.;
 
       double tmp = dp_drho + dp_de * p /(rhoM * rhoM);
