@@ -183,6 +183,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -verbose (prints status of output)\n";
   cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
   cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
+  cerr << "  -matl [int] (only outputs data for matl (for -jim1 only))\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
@@ -232,6 +233,7 @@ int main(int argc, char** argv)
   bool tslow_set = false;
   bool tsup_set = false;
   int tskip = 1;
+  int matl_jim1 = 0;
   string i_xd;
   string filebase;
   string raydatadir;
@@ -343,6 +345,8 @@ int main(int argc, char** argv)
       tsup_set = true;
     } else if (s == "-timestepinc") {
       time_step_inc = strtoul(argv[++i],(char**)NULL,10);
+    } else if (s == "-matl") {
+      matl_jim1 = strtoul(argv[++i],(char**)NULL,10);
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else if( filebase == "") {
@@ -1696,18 +1700,27 @@ int main(int argc, char** argv)
 	    for(Level::const_patchIterator iter = level->patchesBegin();
 		iter != level->patchesEnd(); iter++){
 	      const Patch* patch = *iter;
-		int matl = 0;
+		int matl = matl_jim1;
 		  //__________________________________
 		  //   P A R T I C L E   V A R I A B L E
 		  ParticleVariable<long64> value_pID;
 		  ParticleVariable<Point> value_pos;
 		  ParticleVariable<Vector> value_vel;
+		  ParticleVariable<Matrix3> value_strs;
                   da->query(value_pID, "p.particleID", matl, patch, time);
                   da->query(value_pos, "p.x",          matl, patch, time);
-                  da->query(value_vel, "p.velocity",   matl, patch, time);
+                  da->query(value_vel, "p.velocity",matl, patch, time);
+                  da->query(value_strs,"p.stress",     matl, patch, time);
                   ParticleSubset* pset = value_pos.getParticleSubset();
                   if(pset->numParticles() > 0){
                      ParticleSubset::iterator iter = pset->begin();
+                     for(;iter != pset->end(); iter++){
+                         partfile << value_pos[*iter].x() << " "
+                                  << value_vel[*iter].x() << " "
+                                  << value_strs[*iter](0,0) << " ";
+			 partfile << value_pID[*iter] <<  endl;
+                     } // for
+#if 0
                      for(;iter != pset->end(); iter++){
                          partfile << value_pos[*iter].x() << " " <<
                                      value_pos[*iter].y() << " " <<
@@ -1717,6 +1730,7 @@ int main(int argc, char** argv)
                                      value_vel[*iter].z() << " "; 
 			 partfile << value_pID[*iter] <<  endl;
                      } // for
+#endif
 		  }  //if
 	    }  // for patches
 	  }   // for levels
