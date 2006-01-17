@@ -13,8 +13,8 @@
  *  Copyright (C) 2005 U of U
  */
 
-#include <Packages/Uintah/StandAlone/compare_mms/MMS.h>
-#include <Packages/Uintah/StandAlone/compare_mms/MMS1.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
@@ -63,7 +63,7 @@ string udaFileName;
 void
 usage()
 {
-  printf( "\nUsage: compare_mss <Uda Directory Name>\n\n" );
+  printf( "\nUsage: compare_mms <Uda Directory Name>\n\n" );
   exit(1);
 }
 
