@@ -251,7 +251,7 @@ void ArchesTable::setup(const bool cerrSwitch)
     throw ProblemSetupException("file not found: "+filename, __FILE__, __LINE__);
   
 
-  cerr_dbg << "Reading table\n";
+  cerr_dbg << "Reading reaction table: " << filename << endl;
   int nvars = getInt(in);
   cerr_dbg << "Reading " << nvars << " variables : ";
 
