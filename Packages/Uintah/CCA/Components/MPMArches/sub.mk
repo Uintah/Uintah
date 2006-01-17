@@ -4,7 +4,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/MPMArches
 
-SRCS     += $(SRCDIR)/MPMArches.cc \
+SRCS     += \
+	$(SRCDIR)/MPMArches.cc \
 	$(SRCDIR)/MPMArchesLabel.cc \
 	$(SRCDIR)/CutCellInfo.cc
 
@@ -24,6 +25,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Components/Arches \
 	Packages/Uintah/CCA/Components/Arches/fortran \
+	Packages/Uintah/CCA/Components/Arches/Mixing  \
 	Core/Exceptions \
 	Core/Util       \
 	Core/Thread     \
