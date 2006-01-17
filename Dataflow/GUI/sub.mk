@@ -3,6 +3,7 @@
 SRCDIR := Packages/Uintah/Dataflow/GUI
 
 SRCS := \
+	$(SRCDIR)/CompareMMS.tcl \
 	$(SRCDIR)/application.tcl \
 	$(SRCDIR)/test.tcl \
 	$(SRCDIR)/ScalarFieldAverage.tcl \

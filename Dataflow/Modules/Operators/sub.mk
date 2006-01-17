@@ -5,6 +5,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Dataflow/Modules/Operators
 
 SRCS     += \
+	$(SRCDIR)/CompareMMS.cc \
 	$(SRCDIR)/EigenEvaluator.cc \
 	$(SRCDIR)/ParticleEigenEvaluator.cc \
 	$(SRCDIR)/ScalarFieldAverage.cc \
@@ -19,6 +20,9 @@ SRCS     += \
 	$(SRCDIR)/VectorFieldOperator.cc \
 	$(SRCDIR)/VectorParticlesOperator.cc \
 [INSERT NEW CODE FILE HERE]
+
+SUBDIRS := $(SRCDIR)/MMS
+include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
 	Packages/Uintah/Core/Datatypes     \
