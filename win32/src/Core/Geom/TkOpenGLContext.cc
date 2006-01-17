@@ -74,6 +74,11 @@ extern "C" SHARE Tcl_Interp* the_interp;
 
 vector<int> TkOpenGLContext::valid_visuals_ = vector<int>();
 
+#if (TK_MAJOR_VERSION>=8 && TK_MINOR_VERSION>=4)
+#  define HAVE_TK_SETCLASSPROCS
+/* pointer to Tk_SetClassProcs function in the stub table */
+#endif
+
 #ifndef _WIN32
 static GLXContext first_context = NULL;
 #else
@@ -494,16 +499,14 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 #endif
 
 #ifdef _WIN32
-#  if (TK_MAJOR_VERSION>=8 && TK_MINOR_VERSION>=4)
-   Tk_ClassProcs *procsPtr;
-   procsPtr = (Tk_ClassProcs*) Tcl_Alloc(sizeof(Tk_ClassProcs));
-   procsPtr->size             = sizeof(Tk_ClassProcs);
-   procsPtr->createProc       = TkGLMakeWindow;
-   procsPtr->worldChangedProc = NULL;
-   procsPtr->modalProc        = NULL;
-   Tk_SetClassProcs(tkwin_,procsPtr,(ClientData)this);
-
-
+#  ifdef HAVE_TK_SETCLASSPROCS
+  Tk_ClassProcs *procsPtr;
+  procsPtr = (Tk_ClassProcs*) Tcl_Alloc(sizeof(Tk_ClassProcs));
+  procsPtr->size             = sizeof(Tk_ClassProcs);
+  procsPtr->createProc       = TkGLMakeWindow;
+  procsPtr->worldChangedProc = NULL;
+  procsPtr->modalProc        = NULL;
+  Tk_SetClassProcs(tkwin_,procsPtr,(ClientData)this); 
 #  else
   TkClassProcs *procsPtr;
   Tk_FakeWin *winPtr = (Tk_FakeWin*)(tkwin_);
@@ -514,12 +517,11 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   procsPtr->modalProc      = NULL;
   winPtr->dummy17 = (char*)procsPtr;
   winPtr->dummy18 = (ClientData)this;
-
+#  endif
   Tk_GeometryRequest(tkwin_, width, height);
   Tk_ResizeWindow(tkwin_, width, height);
 
-#  endif // _WIN32
-#endif
+#endif // _WIN32
 
   Tk_MakeWindowExist(tkwin_);
   if (Tk_WindowId(tkwin_) == 0) {
