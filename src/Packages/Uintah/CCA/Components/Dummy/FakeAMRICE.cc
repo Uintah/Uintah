@@ -3,13 +3,13 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 namespace Uintah {
 
-class ICE : public UintahParallelComponent, public SimulationInterface {
+class AMRICE : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
-      ICE(const ProcessorGroup* myworld, bool);
+      AMRICE(const ProcessorGroup* myworld);
 
-      virtual ~ICE();
+      virtual ~AMRICE();
 
       virtual void problemSetup(const ProblemSpecP& params, 
 				GridP& grid,
@@ -32,37 +32,37 @@ public:
 				       DataWarehouseP&, 
 				       DataWarehouseP&);
 
-}; // end class ICE
+}; // end class AMRICE
 
 } // End namespace Uintah
 
 using namespace Uintah;
 
-ICE::ICE(const ProcessorGroup* myworld, bool) :
+AMRICE::AMRICE(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
 }
 
-ICE::~ICE()
+AMRICE::~AMRICE()
 {
 }
 
 void 
-ICE::problemSetup(const ProblemSpecP& params, 
+AMRICE::problemSetup(const ProblemSpecP& params, 
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
   printf("-----------------------------------\n");
-  printf(" Y O U ' R E   R U N N I N G   F A K E I C E \n");
+  printf(" Y O U ' R E   R U N N I N G   F A K E   A M R I C E \n");
   printf("  The last person to check in Uintah/StandAlone/sub.mk \n");
   printf("  probably checked it in after it had been tweaked to compile \n");
-  printf("  fakeICE. \n");
+  printf("  fakeAMRICE. \n");
   printf("-----------------------------------\n");
   exit(1);
 }
 
 void 
-ICE::sched_paramInit(const LevelP& level,
+AMRICE::sched_paramInit(const LevelP& level,
 			SchedulerP& sched,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -73,7 +73,7 @@ ICE::sched_paramInit(const LevelP& level,
 // Schedule initialization
 // ****************************************************************************
 void 
-ICE::scheduleInitialize(const LevelP& level,
+AMRICE::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched)
 {
 }
@@ -82,7 +82,7 @@ ICE::scheduleInitialize(const LevelP& level,
 // schedule computation of stable time step
 // ****************************************************************************
 void 
-ICE::scheduleComputeStableTimestep(const LevelP&,
+AMRICE::scheduleComputeStableTimestep(const LevelP&,
 				      SchedulerP&)
 {
 }
@@ -91,7 +91,7 @@ ICE::scheduleComputeStableTimestep(const LevelP&,
 // Schedule time advance
 // ****************************************************************************
 void 
-ICE::scheduleTimeAdvance(double time, double dt,
+AMRICE::scheduleTimeAdvance(double time, double dt,
 			    const LevelP& level, 
 			    SchedulerP& sched,
 			    DataWarehouseP& old_dw, 
