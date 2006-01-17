@@ -179,6 +179,8 @@ WARNING
     IntVector trackingStartIndex_;
     IntVector trackingEndIndex_;
 
+    // so we can manually copy vars between AMR levels
+    vector<string> copyDataVars_;
   private:
 
     SchedulerCommon(const SchedulerCommon&);
