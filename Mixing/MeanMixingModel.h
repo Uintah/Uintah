@@ -141,7 +141,8 @@ public:
 	return d_rxnModel;
       }
       inline Integrator* getIntegrator() const {
-      }  
+        return NULL;
+      }
 
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
