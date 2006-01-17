@@ -207,6 +207,16 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
         trackingTasks_.push_back(name);
       }      
     }
+    ProblemSpecP copydata = params->findBlock("CopyData");
+    if (copydata) {
+      for (ProblemSpecP var=copydata->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
+        map<string,string> attributes;
+        var->getAttributes(attributes);
+        string name = attributes["label"];
+        copyDataVars_.push_back(name);
+      }
+
+    }
   }
 }
 
@@ -765,7 +775,17 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   // produce a map from all tasks' requires from the Old DW.  Store the varlabel and matls
   for (int i = 0; i < graph.getNumTasks(); i++) {
     for(Task::Dependency* dep = graph.getTask(i)->getRequires(); dep != 0; dep=dep->next){
-      if(this->isOldDW(dep->mapDataWarehouse())) {
+      bool copyThisVar = this->isOldDW(dep->mapDataWarehouse());
+      if (!copyThisVar) {
+        for (int j = 0; j < copyDataVars_.size(); j++) {
+          const VarLabel* label = VarLabel::find(copyDataVars_[j]);
+          if (label == dep->var) {
+            copyThisVar = true;
+            break;
+          }
+        }
+      }
+      if (copyThisVar) {
         if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable)
           // we will take care of reduction variables in a different section
           continue;
@@ -904,8 +924,6 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     levelset = newLevel->eachPatch()->getUnion();
     
     PatchSubset::intersectionAndDifferences(levelset, modset, intersection, compset, diffset);
-    if (compset)
-      compset->addReference();
 
     dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
                                      &SchedulerCommon::copyDataToNewGrid));
