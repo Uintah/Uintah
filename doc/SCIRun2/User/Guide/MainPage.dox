@@ -1,6 +1,6 @@
 /*!
 
-\mainpage %CCA Software at SCI
+\mainpage Meta-component frameworks at SCI
 
 \htmlonly
 <center>
@@ -19,7 +19,15 @@
 \li \ref nightly
 \li \ref gui
 
-\section cca Common Component Architecture
+\section intro SCIRun2 Framework and Meta-Component Model
+
+SCIRun2 is a problem solving environment that implements the
+\ref cca "Common Component Architecture".
+The SCIRun2 framework supports parallel and distributed \ref components "components".
+
+\image html sr2-pde.jpg "SCIRun2 PDE solver application"
+
+\subsection cca Common Component Architecture
 
 <!-- framework diagram? -->
 
@@ -38,7 +46,7 @@ for the framework interfaces is available from the %CCA forum website.
 A <a href="http://www.cca-forum.org/glossary/index.html">glossary</a>
 is also available to explain some of the terms used in CCA documentation.
 
-\subsection components Components
+\subsubsection components Components
 
 Components are software units with common interfaces and communication mechanisms.
 Component models allow software assembly without writing programs.
@@ -52,15 +60,9 @@ The component framework provides services that create and destroy components,
 and that create applications by connecting and disconnecting components.
 The framework is also the execution environment for component-based applications.
 
-\section intro SCIRun2 Framework and Meta-Component Model
-
-\image html sr2-pde.jpg "SCIRun2 PDE solver application"
-
-SCIRun2 is a problem solving environment that implements the
-\ref cca "Common Component Architecture".
-The SCIRun2 framework supports parallel and distributed components.
-
 <!-- Like %SCIRun, SCIRun2 uses visual programming to create component networks. -->
+
+\subsubsection metacomp Meta-Component Model
 
 \image html metacomponents.png
 
