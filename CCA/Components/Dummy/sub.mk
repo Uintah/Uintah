@@ -14,18 +14,26 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Packages/Uintah/CCA/Components/Dummy
 
-SRCS += $(SRCDIR)/FakeArches.cc    \
-	$(SRCDIR)/FakeMPMArches.cc \
+# The following variables are used by the Fake* scripts... please
+# do not modify...
+#
+#FAKE_ICE       = $(SRCDIR)/FakeICE.cc $(SRCDIR)/FakeAMRICE.cc
+#FAKE_ARCHES     = $(SRCDIR)/FakeArches.cc
+#FAKE_MPMARCHES  = $(SRCDIR)/FakeMPMArches.cc
+#FAKE_MPM       = $(SRCDIR)/FakeMPM.cc
+#FAKE_MPMICE    = $(SRCDIR)/FakeMPMICE.cc
 
-#	$(SRCDIR)/FakeICE.cc       \
-#	$(SRCDIR)/FakeMPM.cc       \
-#	$(SRCDIR)/FakeMPMICE.cc 
+SRCS += \
+       $(FAKE_ICE) \
+       $(FAKE_ARCHES) \
+       $(FAKE_MPMARCHES) \
+       $(FAKE_MPM) \
+       $(FAKE_MPMICE)
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/CCA/Ports     \
 	Packages/Uintah/CCA/Components/Solvers 
-
 
 LIBS := 
 

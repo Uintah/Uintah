@@ -7,6 +7,15 @@ SRCDIR  := Packages/Uintah/CCA/Components/Parent
 SRCS    := $(SRCDIR)/Switcher.cc \
 	   $(SRCDIR)/ComponentFactory.cc 
 
+# The following variables are used by the Fake* scripts... please
+# do not modify...
+#
+COMPONENTS = Packages/Uintah/CCA/Components
+ARCHES = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
+ICE    = $(COMPONENTS)/ICE
+MPM    = $(COMPONENTS)/MPM
+MPMICE = $(COMPONENTS)/MPMICE
+
 PSELIBS := \
 	Core/Exceptions \
 	Core/Util \
@@ -19,15 +28,14 @@ PSELIBS := \
         Packages/Uintah/Core/Parallel    \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Util        \
-        Packages/Uintah/CCA/Components/Arches    \
-        Packages/Uintah/CCA/Components/MPMArches \
-        Packages/Uintah/CCA/Components/Examples  \
-        Packages/Uintah/CCA/Components/ICE       \
-        Packages/Uintah/CCA/Components/MPM       \
-        Packages/Uintah/CCA/Components/MPMICE  	 \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/CCA/Components/Solvers \
-	Packages/Uintah/CCA/Components/SwitchingCriteria
+        $(ARCHES) \
+        $(ICE)    \
+        $(MPM)    \
+        $(MPMICE) \
+        $(COMPONENTS)/Examples  \
+	$(COMPONENTS)/ProblemSpecification \
+	$(COMPONENTS)/Solvers \
+	$(COMPONENTS)/SwitchingCriteria
 
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY)
 
