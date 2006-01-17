@@ -2,7 +2,7 @@
 
 SRCDIR := Packages/Uintah/StandAlone/compare_mms
 
-SRCS := $(SRCDIR)/compare_mms.cc $(SRCDIR)/MMS1.cc
+SRCS := $(SRCDIR)/compare_mms.cc
 
 PROGRAM := Packages/Uintah/StandAlone/compare_mms/compare_mms
 
@@ -17,6 +17,7 @@ else
         Core/Math         \
         Core/Thread       \
         Core/Util         \
+        Packages/Uintah/Dataflow/Modules/Operators \
         Packages/Uintah/Core/DataArchive \
         Packages/Uintah/Core/Grid        \
         Packages/Uintah/Core/Parallel    \
