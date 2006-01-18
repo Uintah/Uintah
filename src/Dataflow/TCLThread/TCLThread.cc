@@ -172,6 +172,16 @@ TCLThread::startNetworkEditor()
   }
   new NetworkEditor(net, gui);
 
+#if (TCL_MINOR_VERSION >= 4)
+// tcl 8.4 deprecates some private internal commands, but allows us to alias them
+  // FieldReader
+  gui->eval("::tk::unsupported::ExposePrivateCommand tkFDGetFileTypes");
+  gui->eval("::tk::unsupported::ExposePrivateCommand tkFocusGroup_Create");
+  gui->eval("::tk::unsupported::ExposePrivateCommand tkFocusGroup_BindIn");
+  gui->eval("::tk::unsupported::ExposePrivateCommand tkFocusGroup_BindOut");
+  gui->eval("::tk::unsupported::ExposePrivateCommand tkButtonInvoke");
+#endif
+
   // If the user doesnt have a .scirunrc file, or it is out of date,
   // provide them with a default one
   if (!scirunrc_parsed || (scirunrc_parsed && check_for_newer_scirunrc()))
