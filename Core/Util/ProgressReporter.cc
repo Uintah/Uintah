@@ -76,6 +76,11 @@ ProgressReporter::remark(const std::string& msg)
   std::cerr << "Remark: " << msg << std::endl;
 }
 
+void 
+ProgressReporter::compile_error(const std::string &filename)
+{
+  std::cerr << "Dynamic Compiler failure in file: " << filename << "cc" << std::endl;
+}
 
 void
 ProgressReporter::postMessage(const std::string&msg)
