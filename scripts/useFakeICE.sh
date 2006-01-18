@@ -113,7 +113,8 @@ if test -z "$using_fake_ice"; then
     echo "Applying FakeICE to $filename..."
 
     mv -f $filename $filename.tmp
-    sed -e "s,^ICE ,#ICE,g" $filename.tmp > $filename
+    sed -e "s,^#DUMMY,DUMMY ,g" \
+        -e "s,^ICE ,#ICE,g" $filename.tmp > $filename
     rm $filename.tmp
 
 else # REVERSE FakeICE
@@ -152,8 +153,13 @@ else # REVERSE FakeICE
     filename=$1/../src/Packages/Uintah/CCA/Components/Parent/sub.mk
     echo "Reversing FakeICE from $filename..."
 
+    if test -z "$using_fake_arches" -a -z "$using_fake_mpmice"; then
+        sed_line1='-e "s,DUMMY ,#DUMMY,g"'
+    fi
+
     mv -f $filename $filename.tmp
-    sed -e "s,#ICE,ICE ,g" $filename.tmp > $filename
+    sed_line2='-e "s,#ICE,ICE ,g"'
+    eval sed $sed_line1 $sed_line2 $filename.tmp > $filename
     rm $filename.tmp
 fi
 
