@@ -121,6 +121,10 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
+  db->getWithDefault("doMMS", d_doMMS, false);
+  if (d_doMMS)
+	  d_source->problemSetup(db);
+
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "linegs")
@@ -419,6 +423,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
     d_source->calculateScalarSource(pc, patch,
+				    delta_t, index, cellinfo, 
+				    &scalarVars, &constScalarVars);
+    if (d_doMMS)
+    d_source->calculateScalarMMSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &scalarVars, &constScalarVars);
     if (d_conv_scheme > 0) {

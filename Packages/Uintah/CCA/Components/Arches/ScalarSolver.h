@@ -167,7 +167,7 @@ private:
       bool d_central_limiter;
       bool d_dynScalarModel;
       double d_turbPrNo;
-
+      bool d_doMMS;
 #ifdef multimaterialform
       // set the values in problem setup
       MultiMaterialInterface* d_mmInterface;

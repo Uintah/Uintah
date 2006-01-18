@@ -72,6 +72,11 @@ public:
       // Destructor
       ~Source();
 
+      // GROUP: Problem Setup :
+      ///////////////////////////////////////////////////////////////////////
+      // Set up the problem specification database
+      void problemSetup(const ProblemSpecP& params);
+
       // GROUP:  Action Methods
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
@@ -217,11 +222,39 @@ public:
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
   
+      void calculateVelMMSource(const ProcessorGroup* pc,
+				   const Patch* patch,
+				   double delta_t, double time,
+				   int index,
+				   CellInformation* cellinfo,
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars);
+
+      void calculateScalarMMSource(const ProcessorGroup* pc,
+				 const Patch* patch,
+				 double delta_t, 
+				 int index,
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars,
+				 ArchesConstVariables* constvars);
+
+      void calculatePressMMSourcePred(const ProcessorGroup* pc,
+				       const Patch* patch,
+				       double delta_t,
+				       CellInformation* cellinfo,
+				       ArchesVariables* vars,
+				       ArchesConstVariables* constvars); 
+
 private:
 
       TurbulenceModel* d_turbModel;
       PhysicalConstants* d_physicalConsts;
-
+      string d_mms;
+      double d_airDensity, d_heDensity;
+      Vector d_gravity;
+      double d_viscosity;
+      double cu, cv, cw, cp, phi0;
+      double d_turbPrNo;
 
 }; // end Class Source
 
