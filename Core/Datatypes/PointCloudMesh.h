@@ -179,7 +179,7 @@ public:
   //! get the parent element(s) of the given index
   void get_elems(typename Elem::array_type &result, 
                  typename Node::index_type idx) const
-  { ASSERTFAIL("Not implemented."); }
+  { result.clear(); result.push_back(idx); }
 
   //! get the center point (in object space) of an element
   void get_center(Point &p, typename Node::index_type i) const { p = points_[i]; }

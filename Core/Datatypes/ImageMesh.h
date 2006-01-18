@@ -448,8 +448,7 @@ public:
 
   //! get the parent element(s) of the given index
   void get_elems(typename Elem::array_type &result, 
-                 typename Node::index_type idx) const
-  { ASSERTFAIL("Not implemented."); }
+                 typename Node::index_type idx) const;
 
   //! return all face_indecies that overlap the BBox in arr.
   void get_faces(typename Face::array_type &arr, const BBox &box);
@@ -816,6 +815,26 @@ ImageMesh<Basis>::get_valence(typename Edge::index_type idx) const
   }
 }
 
+
+template<class Basis>
+void
+ImageMesh<Basis>::get_elems(typename Elem::array_type &result,
+                            const typename Node::index_type idx) const
+{
+  result.reserve(4);
+  result.clear();
+  
+  const unsigned int i0 = idx.i_ ? idx.i_ - 1 : 0;
+  const unsigned int j0 = idx.j_ ? idx.j_ - 1 : 0;
+
+  const unsigned int i1 = idx.i_ < ni_-1 ? idx.i_+1 : ni_-1;
+  const unsigned int j1 = idx.j_ < nj_-1 ? idx.j_+1 : nj_-1;
+
+  unsigned int i, j, k;
+  for (j = j0; j < j1; j++)
+    for (i = i0; i < i1; i++)
+      result.push_back(typename Face::index_type(this, i, j));
+}
 
 
 //! return all face_indecies that overlap the BBox in arr.

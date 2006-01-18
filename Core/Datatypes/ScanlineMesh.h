@@ -203,8 +203,7 @@ public:
 
   //! get the parent element(s) of the given index
   void get_elems(typename Elem::array_type &result, 
-                 typename Node::index_type idx) const
-  { ASSERTFAIL("Not implemented."); }
+                 typename Node::index_type idx) const;
 
   //! return all edge_indecies that overlap the BBox in arr.
   void get_edges(typename Edge::array_type &arr, const BBox &box) const;
@@ -444,6 +443,25 @@ ScanlineMesh<Basis>::get_nodes(typename Node::array_type &array,
   array[0] = typename Node::index_type(idx);
   array[1] = typename Node::index_type(idx + 1);
 }
+
+
+template <class Basis>
+void
+ScanlineMesh<Basis>::get_elems(typename Edge::array_type &result,
+                               typename Node::index_type index) const
+{
+  result.reserve(2);
+  result.clear();
+  if (index > 0)
+  {
+    result.push_back(index-1);
+  }
+  if (index < ni_-1)
+  {
+    result.push_back(index);
+  }
+}
+
 
 //! return all cell_indecies that overlap the BBox in arr.
 template <class Basis>
