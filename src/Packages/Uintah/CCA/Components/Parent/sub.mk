@@ -11,10 +11,11 @@ SRCS    := $(SRCDIR)/Switcher.cc \
 # do not modify...
 #
 COMPONENTS = Packages/Uintah/CCA/Components
-ARCHES = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
-ICE    = $(COMPONENTS)/ICE
+#ARCHES= $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
+#ICE   = $(COMPONENTS)/ICE
 MPM    = $(COMPONENTS)/MPM
-MPMICE = $(COMPONENTS)/MPMICE
+#MPMICE= $(COMPONENTS)/MPMICE
+DUMMY  = $(COMPONENTS)/Dummy
 
 PSELIBS := \
 	Core/Exceptions \
@@ -28,6 +29,7 @@ PSELIBS := \
         Packages/Uintah/Core/Parallel    \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Util        \
+        $(DUMMY)  \
         $(ARCHES) \
         $(ICE)    \
         $(MPM)    \
