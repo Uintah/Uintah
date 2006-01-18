@@ -91,6 +91,9 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
   d_source = scinew Source(d_turbModel, d_physicalConsts);
+  db->getWithDefault("doMMS", d_doMMS, false);
+  if (d_doMMS)
+	  d_source->problemSetup(db);
 
   string linear_sol;
   db->require("linear_solver", linear_sol);
@@ -104,7 +107,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 		       " not supported" + linear_sol, __FILE__, __LINE__);
 
   }
-
+  
   d_linearSolver->problemSetup(db);
   d_mixedModel=d_turbModel->getMixedModel();
 }
@@ -654,7 +657,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
-
+  double time=d_lab->d_sharedState->getElapsedTime();
+	  
   for (int p = 0; p < patches->size(); p++) {
   TAU_PROFILE_START(input);
 
@@ -881,6 +885,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 					delta_t, index,
 					cellinfo, &velocityVars,
 					&constVelocityVars);
+      if (d_doMMS)
+          d_source->calculateVelMMSource(pc, patch, 
+					delta_t, time, index,
+					cellinfo, &velocityVars,
+					&constVelocityVars);
+
 
 #ifdef filter_convection_terms
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {

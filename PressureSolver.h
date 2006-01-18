@@ -212,6 +212,7 @@ private:
 #endif
       bool d_pressure_correction;
       bool d_norm_pres;
+      bool d_doMMS;
 }; // End class PressureSolver
 
 } // End namespace Uintah
