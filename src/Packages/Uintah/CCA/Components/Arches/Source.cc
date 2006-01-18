@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -60,6 +61,42 @@ Source::Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const)
 //****************************************************************************
 Source::~Source()
 {
+}
+
+//****************************************************************************
+// Problem Setup
+//****************************************************************************
+void 
+Source::problemSetup(const ProblemSpecP& params)
+{
+  ProblemSpecP db = params->findBlock("Source");
+  
+  db->getWithDefault("whichMMS", d_mms, "linearMMS");
+  if (d_mms == "linearMMS") {
+    ProblemSpecP db_mms = params->findBlock("linearMMS");
+    db_mms->require("rhoair", d_airDensity);
+    db_mms->require("rhohe", d_heDensity);
+    db_mms->require("gravity", d_gravity);//Vector
+    db_mms->require("viscosity",d_viscosity); 
+    db_mms->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+    db_mms->getWithDefault("cu",cu,1.0);
+    db_mms->getWithDefault("cv",cv,1.0);
+    db_mms->getWithDefault("cw",cw,1.0);
+    db_mms->getWithDefault("cp",cp,1.0);
+    db_mms->getWithDefault("phi0",phi0,0.5);
+  }
+  else if (d_mms == "expMMS") {
+	  ProblemSpecP db_mms = params->findBlock("linearMMS");
+	  db_mms->require("cu",cu);
+  }
+  else if (d_mms == "sineMMS") {
+	  ProblemSpecP db_mms = params->findBlock("linearMMS");
+	  db_mms->require("cu",cu);
+  }
+  else
+	  throw InvalidValue("current MMS "
+		       "not supported: " + d_mms, __FILE__, __LINE__);
+  
 }
 
 //****************************************************************************
@@ -1426,5 +1463,245 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
   }
 
 }
+
+//****************************************************************************
+// Velocity source calculation for MMS
+//****************************************************************************
+void 
+Source::calculateVelMMSource(const ProcessorGroup* ,
+				const Patch* patch,
+				double delta_t, double time,
+				int index,
+				CellInformation* cellinfo,
+				ArchesVariables* vars,
+				ArchesConstVariables* constvars)
+{
+//  double time = d_lab->d_sharedState->getElapsedTime();
+#ifdef ARCHES_MOM_DEBUG
+  cerr << " ref_ density" << den_ref << endl;
+#endif
+  // Get the patch and variable indices
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+
+#ifdef ARCHES_MOM_DEBUG
+  for (int iii = domLo.z(); iii < domHi.z(); iii++)
+    std::cerr << cellinfo->ktsdw[iii] << " " << cellinfo->kbsdw[iii] << endl;
+  for (int iii = domLo.y(); iii < domHi.z(); iii++)
+    std::cerr << cellinfo->jnsdv[iii] << " " << cellinfo->jssdv[iii] << endl;
+#endif
+  double rho0=d_airDensity*d_heDensity/(phi0*d_airDensity+(1-phi0)*d_heDensity);
+  switch(index) {
+  case Arches::XDIR:
+
+  for (int colZ = idxLoU.z(); colZ <= idxHiU.z(); colZ ++) {
+    for (int colY = idxLoU.y(); colY <= idxHiU.y(); colY ++) {
+      for (int colX = idxLoU.x(); colX <= idxHiU.x(); colX ++) {
+	IntVector currCell(colX, colY, colZ);
+	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	vars->uVelNonlinearSrc[currCell] += rho0*(2.0*cu*cu+cu*cv+cu*cw)*cellinfo->xu[colX]
+		+rho0*(2.0*cu+cv+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.x();
+      }
+    }
+  }
+
+#ifdef ARCHES_SRC_DEBUG
+    cerr << "patch: " << *patch << '\n';
+    cerr << "dom: " << domLoU << ", " << domHiU << '\n';
+    Array3Window<double>* win = vars->uVelNonlinearSrc.getWindow();
+    cerr << "usrc: " << win->getLowIndex() << ", " << win->getHighIndex() << ", " << win->getOffset() << '\n';
+    cerr << "AFTER U Velocity LinearSource" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cerr << "SU for U velocity for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER U Velocity LinearSource" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cerr << "SP for U velocity for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->uVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
+    break;
+  case Arches::YDIR:
+    
+  for (int colZ = idxLoV.z(); colZ <= idxHiV.z(); colZ ++) {
+    for (int colY = idxLoV.y(); colY <= idxHiV.y(); colY ++) {
+      for (int colX = idxLoV.x(); colX <= idxHiV.x(); colX ++) {
+	IntVector currCell(colX, colY, colZ);
+	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	vars->vVelNonlinearSrc[currCell] +=  rho0*(2.0*cv*cv+cu*cv+cv*cw)*cellinfo->yv[colY]
+                +rho0*(2.0*cv+cu+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.y();
+      }
+    }
+  }
+
+#ifdef ARCHES_SRC_DEBUG
+    cerr << "AFTER V Velocity LinearSource" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cerr << "SU for V velocity for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER V Velocity LinearSource" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cerr << "SP for V velocity for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->vVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
+    break;
+  case Arches::ZDIR:
+
+  for (int colZ = idxLoW.z(); colZ <= idxHiW.z(); colZ ++) {
+    for (int colY = idxLoW.y(); colY <= idxHiW.y(); colY ++) {
+      for (int colX = idxLoW.x(); colX <= idxHiW.x(); colX ++) {
+	IntVector currCell(colX, colY, colZ);
+	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	vars->wVelNonlinearSrc[currCell] +=  rho0*(2.0*cw*cw+cu*cw+cv*cw)*cellinfo->zw[colX]
+                +rho0*(2.0*cw+cu+cv)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.z();
+      }
+    }
+  }
+
+#ifdef ARCHES_SRC_DEBUG
+    cerr << "AFTER W Velocity LinearSource" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cerr << "SU for W velocity for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER W Velocity LinearSource" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cerr << "SP for W velocity for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->wVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
+    break;
+  default:
+    throw InvalidValue("Invalid index in LinearSource::calcVelSrc", __FILE__, __LINE__);
+  }
+
+}
+//****************************************************************************
+// Scalar source calculation for MMS
+//****************************************************************************
+void 
+Source::calculateScalarMMSource(const ProcessorGroup*,
+			      const Patch* patch,
+			      double delta_t,
+			      int, 
+			      CellInformation* cellinfo,
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars) 
+{
+
+  // Get the patch and variable indices
+  double rho0=d_airDensity*d_heDensity/(phi0*d_airDensity+(1-phi0)*d_heDensity);
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	IntVector currCell(colX, colY, colZ);
+	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	vars->scalarNonlinearSrc[currCell] += rho0*phi0*(cu+cv+cw);
+      }
+    }
+  }
+
+#ifdef ARCHES_SRC_DEBUG
+    cerr << "AFTER Calculate Scalar LinearMMsSource" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER Calculate Scalar LinearMMsSource" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP for Scalar " << index << " for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->scalarLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+}
+//****************************************************************************
+// Pressure source calculation for MMS
+//****************************************************************************
+void 
+Source::calculatePressMMSourcePred(const ProcessorGroup* ,
+				    const Patch* patch,
+				    double delta_t,
+				    CellInformation* cellinfo,
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars)
+{
+
+  // Get the patch and variable indices
+  double rho0=d_airDensity*d_heDensity/(phi0*d_airDensity+(1-phi0)*d_heDensity);
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	IntVector currCell(colX, colY, colZ);
+	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	vars->pressNonlinearSrc[currCell] += rho0*(cu+cv+cw);
+      }
+    }
+  }
+}
+
+
 
 

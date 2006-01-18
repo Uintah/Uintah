@@ -251,6 +251,7 @@ private:
       bool d_calcEnthalpy;
       bool d_mixedModel;
       string turbModel;
+      string mms;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;

@@ -205,6 +205,7 @@ private:
       bool d_3d_periodic;
       bool d_filter_divergence_constraint;
       bool d_mixedModel;
+      bool d_doMMS;
 
 }; // End class MomentumSolver
 } // End namespace Uintah
