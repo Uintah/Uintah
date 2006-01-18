@@ -214,18 +214,9 @@ public:
   { a.push_back(f); }
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(typename Edge::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Face::index_type) const { return 0; }
+  void get_elems(typename Elem::array_type &result, 
+                 typename Node::index_type idx) const
+  { ASSERTFAIL("Not implemented."); }
 
   bool get_neighbor(typename Face::index_type &neighbor, 
 		    typename Face::index_type face,

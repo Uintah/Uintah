@@ -107,26 +107,6 @@ public:
   { a.push_back(idx);}
   //void get_faces(typename Face::array_type &, typename Cell::index_type) const {}
 
-  //! get the parent element(s) of the given index
-  void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &a, 
-		 typename ScanlineMesh<Basis>::Node::index_type idx) const
-  { a.push_back(typename ScanlineMesh<Basis>::Edge::index_type(idx));}
-  bool get_faces(typename ScanlineMesh<Basis>::Face::array_type &, 
-		 typename ScanlineMesh<Basis>::Node::index_type) const 
-  { return 0; }
-  bool get_faces(typename ScanlineMesh<Basis>::Face::array_type &, 
-		 typename ScanlineMesh<Basis>::Edge::index_type) const 
-  { return 0; }
-  bool get_cells(typename ScanlineMesh<Basis>::Cell::array_type &, 
-		 typename ScanlineMesh<Basis>::Node::index_type) const 
-  { return 0; }
-  bool get_cells(typename ScanlineMesh<Basis>::Cell::array_type &, 
-		 typename ScanlineMesh<Basis>::Edge::index_type) const 
-  { return 0; }
-  bool get_cells(typename ScanlineMesh<Basis>::Cell::array_type &, 
-		 typename ScanlineMesh<Basis>::Face::index_type) const 
-  { return 0; }
-
   //! return all edge_indecies that overlap the BBox in arr.
   void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &, 
 		 const BBox &) const

@@ -192,31 +192,19 @@ public:
   {}
   void get_nodes(typename Node::array_type &, typename Cell::index_type) const 
   {}
+  void get_edges(typename Edge::array_type &, typename Edge::index_type) const 
+  {}
   void get_edges(typename Edge::array_type &, typename Face::index_type) const 
   {}
   void get_edges(typename Edge::array_type &, typename Cell::index_type) const 
   {}
-  void get_faces(typename Face::array_type &, typename Cell::index_type) const 
+  void get_faces(typename Face::array_type &, typename Elem::index_type) const
   {}
 
   //! get the parent element(s) of the given index
-  void get_edges(typename Edge::array_type &a, 
-		 typename Node::index_type idx) const
-  { a.push_back(typename Edge::index_type(idx));}
-  //! needed to support Mesh concept
-  void get_edges(typename Edge::array_type &a, 
-		 typename Edge::index_type idx) const
-  { a.push_back(idx);}
-  bool get_faces(typename Face::array_type &, typename Node::index_type) const 
-  { return 0; }
-  bool get_faces(typename Face::array_type &, typename Edge::index_type) const 
-  { return 0; }
-  bool get_cells(typename Cell::array_type &, typename Node::index_type) const 
-  { return 0; }
-  bool get_cells(typename Cell::array_type &, typename Edge::index_type) const 
-  { return 0; }
-  bool get_cells(typename Cell::array_type &, typename Face::index_type) const 
-  { return 0; }
+  void get_elems(typename Elem::array_type &result, 
+                 typename Node::index_type idx) const
+  { ASSERTFAIL("Not implemented."); }
 
   //! return all edge_indecies that overlap the BBox in arr.
   void get_edges(typename Edge::array_type &arr, const BBox &box) const;

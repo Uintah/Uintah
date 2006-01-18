@@ -100,16 +100,16 @@ ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
     double *d = 0;
     typename FSRC::mesh_type::Node::array_type tmparray;
 
-    if (basis_order == 0 && mesh->dimensionality() == 1)
+    if (basis_order == 0 && mesh->dimensionality())
     {
-      typename FSRC::mesh_type::Edge::size_type osize;
+      typename FSRC::mesh_type::Elem::size_type osize;
       mesh->size(osize);
       nrows = osize;
 
       rr = scinew int[nrows+1];
       rr[0] = 0;
       size_t counter = 0;
-      typename FSRC::mesh_type::Edge::iterator itr, eitr;
+      typename FSRC::mesh_type::Elem::iterator itr, eitr;
       mesh->begin(itr);
       mesh->end(eitr);
       while (itr != eitr)
@@ -133,72 +133,6 @@ ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
 	rr[counter] = rr[counter-1] + mult;
       }
     } 
-    else if (basis_order == 0 && mesh->dimensionality() == 2)
-    {
-     typename FSRC::mesh_type::Face::size_type osize;
-      mesh->size(osize);
-      nrows = osize;
-
-      rr = scinew int[nrows+1];
-      rr[0] = 0;
-      size_t counter = 0;
-      typename FSRC::mesh_type::Face::iterator itr, eitr;
-      mesh->begin(itr);
-      mesh->end(eitr);
-      while (itr != eitr)
-      {
-	mesh->get_nodes(tmparray, *itr);
-	const int mult = tmparray.size();
-	if (counter == 0)
-	{
-	  nnz = nrows*mult;
-	  cc = scinew int[nnz];
-	  d = scinew double[nnz];
-	}
-	for (int i = 0; i < mult; i++)
-	{
-	  cc[counter*mult + i] = tmparray[i];
-	  d[counter*mult + i] = 1.0 / mult;
-	}
-
-	++itr;
-	++counter;
-	rr[counter] = rr[counter-1] + mult;
-      }
-    }    
-    else if (basis_order == 0 && mesh->dimensionality() == 3)
-    {
-      typename FSRC::mesh_type::Cell::size_type osize;
-      mesh->size(osize);
-      nrows = osize;
-
-      rr = scinew int[nrows+1];
-      rr[0] = 0;
-      size_t counter = 0;
-      typename FSRC::mesh_type::Cell::iterator itr, eitr;
-      mesh->begin(itr);
-      mesh->end(eitr);
-      while (itr != eitr)
-      {
-	mesh->get_nodes(tmparray, *itr);
-	const int mult = tmparray.size();
-	if (counter == 0)
-	{
-	  nnz = nrows*mult;
-	  cc = scinew int[nnz];
-	  d = scinew double[nnz];
-	}
-	for (int i = 0; i < mult; i++)
-	{
-	  cc[counter*mult + i] = tmparray[i];
-	  d[counter*mult + i] = 1.0 / mult;
-	}
-
-	++itr;
-	++counter;
-	rr[counter] = rr[counter-1] + mult;
-      }
-    }
 
     if (rr && cc)
     {
@@ -215,11 +149,11 @@ ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
   }
   try {
     if (basis_order == 1 && fsrc->basis_order() == 0 && 
-	mesh->dimensionality() == 3)
+	mesh->dimensionality())
     {
       mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
-      typename FSRC::mesh_type::Cell::size_type nsize;
+      typename FSRC::mesh_type::Elem::size_type nsize;
       mesh->size(nsize);
       const int ncols = (int)nsize;
 
@@ -231,7 +165,7 @@ ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
       vector<unsigned int> cctmp;
       vector<double> dtmp;
 
-      typename FSRC::mesh_type::Cell::array_type tmparray;
+      typename FSRC::mesh_type::Elem::array_type tmparray;
       typename FSRC::mesh_type::Node::iterator itr, eitr;
       mesh->begin(itr);
       mesh->end(eitr);
@@ -239,7 +173,7 @@ ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
       int counter = 0;
       while (itr != eitr)
       {
-	mesh->get_cells(tmparray, *itr);
+	mesh->get_elems(tmparray, *itr);
 	for (unsigned int i = 0; i < tmparray.size(); i++)
 	{
 	  cctmp.push_back(tmparray[i]);
@@ -262,102 +196,6 @@ ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
 
       interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
     }    
-    else if (basis_order == 1 && fsrc->basis_order() == 0 && 
-	     mesh->dimensionality() == 2)
-    {
-      mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
-
-      typename FSRC::mesh_type::Face::size_type nsize;
-      mesh->size(nsize);
-      const int ncols = (int)nsize;
-
-      typename FSRC::mesh_type::Node::size_type osize;
-      mesh->size(osize);
-      const int nrows = (int)osize;
-
-      int *rr = scinew int[nrows + 1];
-      vector<unsigned int> cctmp;
-      vector<double> dtmp;
-
-      typename FSRC::mesh_type::Face::array_type tmparray;
-      typename FSRC::mesh_type::Node::iterator itr, eitr;
-      mesh->begin(itr);
-      mesh->end(eitr);
-      rr[0] = 0;
-      int counter = 0;
-      while (itr != eitr)
-      {
-	mesh->get_faces(tmparray, *itr);
-	for (unsigned int i = 0; i < tmparray.size(); i++)
-	{
-	  cctmp.push_back(tmparray[i]);
-	  dtmp.push_back(1.0 / tmparray.size()); // Weight by distance?
-	}
-
-	++itr;
-	++counter;
-	rr[counter] = rr[counter-1] + tmparray.size();
-      }
-
-      const int nnz = cctmp.size();
-      int *cc = scinew int[nnz];
-      double *d = scinew double[nnz];
-      for (int i = 0; i < nnz; i++)
-      {
-	cc[i] = cctmp[i];
-	d[i] = dtmp[i];
-      }
-    
-      interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
-    }
-    else if (basis_order == 1 && fsrc->basis_order() == 0 && 
-	     mesh->dimensionality() == 1)
-    {
-      mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
-
-      typename FSRC::mesh_type::Edge::size_type nsize;
-      mesh->size(nsize);
-      const int ncols = (int)nsize;
-
-      typename FSRC::mesh_type::Node::size_type osize;
-      mesh->size(osize);
-      const int nrows = (int)osize;
-
-      int *rr = scinew int[nrows + 1];
-      vector<unsigned int> cctmp;
-      vector<double> dtmp;
-
-      typename FSRC::mesh_type::Edge::array_type tmparray;
-      typename FSRC::mesh_type::Node::iterator itr, eitr;
-      mesh->begin(itr);
-      mesh->end(eitr);
-      rr[0] = 0;
-      int counter = 0;
-      while (itr != eitr)
-      {
-	mesh->get_edges(tmparray, *itr);
-	for (unsigned int i = 0; i < tmparray.size(); i++)
-	{
-	  cctmp.push_back(tmparray[i]);
-	  dtmp.push_back(1.0 / tmparray.size()); // Weight by distance?
-	}
-
-	++itr;
-	++counter;
-	rr[counter] = rr[counter-1] + tmparray.size();
-      }
-
-      const int nnz = cctmp.size();
-      int *cc = scinew int[nnz];
-      double *d = scinew double[nnz];
-      for (int i = 0; i < nnz; i++)
-      {
-	cc[i] = cctmp[i];
-	d[i] = dtmp[i];
-      }
-
-      interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
-    }
   } catch (...)
   {
   }

@@ -171,17 +171,15 @@ public:
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const {}
   void get_nodes(typename Node::array_type &, typename Face::index_type) const {}
   void get_nodes(typename Node::array_type &, typename Cell::index_type) const {}
+  void get_edges(typename Edge::array_type &, typename Node::index_type) const {}
   void get_edges(typename Edge::array_type &, typename Face::index_type) const {}
   void get_edges(typename Edge::array_type &, typename Cell::index_type) const {}
-  void get_faces(typename Face::array_type &, typename Cell::index_type) const {}
+  void get_faces(typename Face::array_type &, typename Elem::index_type) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(typename Edge::array_type &, typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, typename Node::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, typename Face::index_type) const { return 0; }
+  void get_elems(typename Elem::array_type &result, 
+                 typename Node::index_type idx) const
+  { ASSERTFAIL("Not implemented."); }
 
   //! get the center point (in object space) of an element
   void get_center(Point &p, typename Node::index_type i) const { p = points_[i]; }
