@@ -99,6 +99,9 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
+  db->getWithDefault("doMMS", d_doMMS, false);
+  if (d_doMMS)
+	  d_source->problemSetup(db);
 
   string linear_sol;
   db->require("linear_solver", linear_sol);
@@ -314,6 +317,11 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     pressureVars.pressNonlinearSrc.initialize(0.0);
 
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
+    					  cellinfo, &pressureVars,
+					  &constPressureVars);
+
+    if (d_doMMS)
+        d_source->calculatePressMMSourcePred(pc, patch, delta_t,
     					  cellinfo, &pressureVars,
 					  &constPressureVars);
 
