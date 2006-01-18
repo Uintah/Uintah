@@ -37,6 +37,9 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -50,6 +53,9 @@
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
       </Face>
 
@@ -66,6 +72,9 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -80,7 +89,10 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0  </value>
         </BCType>
-        </Face>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
       <Face side = "z-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
@@ -93,6 +105,9 @@
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
       </Face>                  
       <Face side = "z+">
@@ -107,6 +122,9 @@
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
         </Face>
     </BoundaryConditions>
@@ -180,13 +198,20 @@
     <!--____________________________________________________________________--> 
     
     <Regridder>
-      <max_levels>1</max_levels>
+      <max_levels>2</max_levels>
       <cell_refinement_ratio>    [[2,1,1]]  </cell_refinement_ratio>
       <lattice_refinement_ratio> [[5,1,1],[2,1,1]]  </lattice_refinement_ratio>
       <cell_creation_dilation>   [2,0,0]   </cell_creation_dilation>   
-      <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
-      <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+      <cell_deletion_dilation>   [1,0,0]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [1,0,0]   </min_boundary_cells>
     </Regridder>
+    <Scheduler>
+     <CopyData>
+       <var label="specific_heat"/>
+       <var label="gamma"/>
+       <var label="vol_frac_CC"/>
+     </CopyData>
+   </Scheduler>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
