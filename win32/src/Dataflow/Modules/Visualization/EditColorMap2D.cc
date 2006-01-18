@@ -399,13 +399,15 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     select_widget();
     want_to_execute();
   } else if (args[1] == "mouse") {
-    int b = args.get_int(5); // which button it was
     int X = args.get_int(3), Y = args.get_int(4); // unscaled/untranslated
     int x = X, y = Y;
     screen_val(x,y); // x, y are scaled/translated coordinates
 
     if (args[2] == "motion") motion(x, y);
-    else if (args[2] == "push") push(x, y, b);
+
+    // arg 5 is the button pushed - don't do above - tcl 8.4 doesn't generate 
+    // button for motion
+    else if (args[2] == "push") push(x, y, args.get_int(5)); 
     else if (args[2] == "release") release(x, y);
     else if (args[2] == "x_late_start") translate_start(X, Y);
     else if (args[2] == "x_late_motion") translate_motion(X, Y);
