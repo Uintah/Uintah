@@ -109,7 +109,7 @@
 
 #endif
 
-#include <Core/Icom/share.h>
+#include <Core/ICom/share.h>
 
 namespace SCIRun {
 
