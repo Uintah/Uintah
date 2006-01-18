@@ -960,6 +960,10 @@ public:
   void get_faces(typename Face::array_type &, 
 		 const typename Cell::index_type&) const;
 
+  //! get the parent element(s) of the given index
+  void get_elems(typename Elem::array_type &result, 
+                 const typename Node::index_type &idx) const;
+
   // returns 26 pairs in ijk order
   void	get_neighbors_stencil(
 			      vector<pair<bool,typename Cell::index_type> > &nbrs, 
@@ -1362,6 +1366,30 @@ MaskedLatVolMesh<Basis>::get_faces(typename Face::array_type &array,
   array[5] = FaceIndex(this, i, j+1, k, 2);
 }
 
+
+template <class Basis>
+void
+MaskedLatVolMesh<Basis>::get_elems(
+          typename MaskedLatVolMesh<Basis>::Cell::array_type &result,
+          const typename MaskedLatVolMesh<Basis>::Node::index_type &idx) const
+{
+  result.reserve(8);
+  result.clear();
+  const unsigned int i0 = idx.i_ ? idx.i_ - 1 : 0;
+  const unsigned int j0 = idx.j_ ? idx.j_ - 1 : 0;
+  const unsigned int k0 = idx.k_ ? idx.k_ - 1 : 0;
+
+  const unsigned int i1 = idx.i_ < this->ni_-1 ? idx.i_+1 : this->ni_-1;
+  const unsigned int j1 = idx.j_ < this->nj_-1 ? idx.j_+1 : this->nj_-1;
+  const unsigned int k1 = idx.k_ < this->nk_-1 ? idx.k_+1 : this->nk_-1;
+
+  unsigned int i, j, k;
+  for (k = k0; k < k1; k++)
+    for (j = j0; j < j1; j++)
+      for (i = i0; i < i1; i++)
+        if (check_valid(i, j, k))
+          result.push_back(typename Cell::index_type(this, i, j, k));
+}
 
 template <class Basis>
 bool
