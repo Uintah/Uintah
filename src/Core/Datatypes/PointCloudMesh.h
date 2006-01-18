@@ -171,9 +171,12 @@ public:
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const {}
   void get_nodes(typename Node::array_type &, typename Face::index_type) const {}
   void get_nodes(typename Node::array_type &, typename Cell::index_type) const {}
-  void get_edges(typename Edge::array_type &, typename Node::index_type) const {}
-  void get_edges(typename Edge::array_type &, typename Face::index_type) const {}
-  void get_edges(typename Edge::array_type &, typename Cell::index_type) const {}
+
+  // Stubs, used by ShowField.
+  //  void get_edges(typename Edge::array_type &, typename Node::index_type) const {}
+  //  void get_edges(typename Edge::array_type &, typename Face::index_type) const {}
+  //  void get_edges(typename Edge::array_type &, typename Cell::index_type) cons
+  void get_edges(typename Edge::array_type &, typename Elem::index_type) const {}
   void get_faces(typename Face::array_type &, typename Elem::index_type) const {}
 
   //! get the parent element(s) of the given index

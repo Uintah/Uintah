@@ -198,6 +198,8 @@ public:
   {}
   void get_edges(typename Edge::array_type &, typename Cell::index_type) const 
   {}
+
+  //Stub, used by ShowField.
   void get_faces(typename Face::array_type &, typename Elem::index_type) const
   {}
 

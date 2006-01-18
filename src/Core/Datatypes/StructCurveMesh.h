@@ -105,7 +105,6 @@ public:
   void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &a, 
 		 typename ScanlineMesh<Basis>::Edge::index_type idx) const
   { a.push_back(idx);}
-  //void get_faces(typename Face::array_type &, typename Cell::index_type) const {}
 
   //! return all edge_indecies that overlap the BBox in arr.
   void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &, 
