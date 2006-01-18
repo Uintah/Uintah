@@ -4,11 +4,13 @@
 
 namespace Uintah {
 
+enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
+
 class MPMICE : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
-      MPMICE(const ProcessorGroup* myworld);
+      MPMICE(const ProcessorGroup* myworld,Uintah::MPMType,bool);
 
       virtual ~MPMICE();
 
@@ -39,7 +41,7 @@ public:
 
 using namespace Uintah;
 
-MPMICE::MPMICE( const ProcessorGroup* myworld ) :
+MPMICE::MPMICE(const ProcessorGroup* myworld,Uintah::MPMType,bool) :
   UintahParallelComponent(myworld)
 {
 }
