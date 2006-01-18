@@ -146,12 +146,24 @@ public:
 
 
 
-  CurveMesh() {}
-  CurveMesh(const CurveMesh &copy) : 
-    nodes_(copy.nodes_), 
-    edges_(copy.edges_), 
-    basis_(copy.basis_) 
+  CurveMesh() :
+    synchronized_(ALL_ELEMENTS_E),
+    sync_lock_("CurveMesh sync lock")
   {}
+  CurveMesh(const CurveMesh &copy) : 
+    nodes_(copy.nodes_),
+    edges_(copy.edges_),
+    basis_(copy.basis_),
+    synchronized_(copy.synchronized_),
+    sync_lock_("CurveMesh sync lock")
+  {
+    CurveMesh &lcopy = (CurveMesh &)copy;
+
+    lcopy.sync_lock_.lock();
+    node_neighbors_ = copy.node_neighbors_;
+    synchronized_ |= copy.synchronized_ & NODE_NEIGHBORS_E;
+    lcopy.sync_lock_.unlock();
+  }
   virtual CurveMesh *clone() { return new CurveMesh(*this); }
   virtual ~CurveMesh() {}
 
@@ -210,8 +222,13 @@ public:
 
   //! get the parent element(s) of the given index
   void get_elems(typename Elem::array_type &result, 
-                 typename Node::index_type) const
-  { ASSERTFAIL("Not implemented."); }
+                 typename Node::index_type idx) const
+  {
+    result.clear();
+    for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
+      result.push_back(node_neighbors_[idx][i]);
+  }
+
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
@@ -341,6 +358,8 @@ public:
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 1; }
     
+  virtual bool synchronize(unsigned int mask);
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
@@ -358,10 +377,17 @@ public:
   static Persistent *maker() { return new CurveMesh<Basis>(); }
 
 private:
+  void			  compute_node_neighbors();
 
   vector<Point>           nodes_;
   vector<index_pair_type> edges_;
   Basis                   basis_;
+
+  unsigned int		  synchronized_;
+  Mutex			  sync_lock_;
+
+  typedef vector<vector<typename Edge::index_type> > NodeNeighborMap;
+  NodeNeighborMap	  node_neighbors_;
 };
 
 template <class Basis>
@@ -658,6 +684,37 @@ CurveMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l,
     return 1;
   }
   return 0;
+}
+
+
+template <class Basis>
+bool
+CurveMesh<Basis>::synchronize(unsigned int tosync)
+{
+  if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
+    compute_node_neighbors();
+  return true;
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::compute_node_neighbors()
+{
+  sync_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    sync_lock_.unlock();
+    return;
+  }
+  node_neighbors_.clear();
+  node_neighbors_.resize(nodes_.size());
+  unsigned int i, num_elems = edges_.size();
+  for (i = 0; i < num_elems; i++)
+  {
+    node_neighbors_[edges_[i].first].push_back(i);
+    node_neighbors_[edges_[i].second].push_back(i);
+  }
+  synchronized_ |= NODE_NEIGHBORS_E;
+  sync_lock_.unlock();
 }
 
 
