@@ -682,21 +682,8 @@ public:
 		 const typename Cell::index_type &) const;
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(typename Edge::array_type &, 
-		     typename Node::index_type) const
-  { ASSERTFAIL("LatVolMesh::get_edges not implemented."); }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Node::index_type) const
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Edge::index_type) const
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Node::index_type) const;
-  unsigned get_cells(typename Cell::array_type &, typename Edge::index_type)
-  { ASSERTFAIL("LatVolMesh::get_cells not implemented."); }
-  unsigned get_cells(typename Cell::array_type &, typename Face::index_type)
-  { ASSERTFAIL("LatVolMesh::get_cells not implemented."); }
+  void get_elems(typename Elem::array_type &result, 
+                 const typename Node::index_type &idx) const;
 
   //! return all cell_indecies that overlap the BBox in arr.
   void get_cells(typename Cell::array_type &arr, const BBox &box);
@@ -1314,11 +1301,12 @@ LatVolMesh<Basis>::get_faces(typename Face::array_type &array,
 
 
 template <class Basis>
-unsigned
-LatVolMesh<Basis>::get_cells(typename Cell::array_type &array, 
-			     typename Node::index_type idx) const
+void
+LatVolMesh<Basis>::get_elems(typename Cell::array_type &result,
+			     const typename Node::index_type &idx) const
 {
-  array.clear();
+  result.reserve(8);
+  result.clear();
   const unsigned int i0 = idx.i_ ? idx.i_ - 1 : 0;
   const unsigned int j0 = idx.j_ ? idx.j_ - 1 : 0;
   const unsigned int k0 = idx.k_ ? idx.k_ - 1 : 0;
@@ -1331,9 +1319,7 @@ LatVolMesh<Basis>::get_cells(typename Cell::array_type &array,
   for (k = k0; k < k1; k++)
     for (j = j0; j < j1; j++)
       for (i = i0; i < i1; i++)
-	array.push_back(typename Cell::index_type(this, i, j, k));
-
-  return array.size();
+	result.push_back(typename Cell::index_type(this, i, j, k));
 }
 
 //! return all cell_indecies that overlap the BBox in arr.

@@ -204,21 +204,12 @@ public:
   void get_edges(typename Edge::array_type &, 
 		 typename Cell::index_type) const {}
   void get_faces(typename Face::array_type &, 
-		 typename Cell::index_type) const {}
+		 typename Elem::index_type) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(typename Edge::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Face::index_type) const { return 0; }
+  void get_elems(typename Elem::array_type &result, 
+                 typename Node::index_type) const
+  { ASSERTFAIL("Not implemented."); }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.

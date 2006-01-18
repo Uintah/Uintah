@@ -287,18 +287,9 @@ public:
 		 typename Cell::index_type idx) const;
 
   //! Get the parent element(s) of the given index.
-  unsigned get_edges(typename Edge::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Node::index_type) const;
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Face::index_type) const { return 0; }
+  void get_elems(typename Elem::array_type &result,
+                 typename Node::index_type node) const;
+
 
   bool get_neighbor(typename Cell::index_type &neighbor, 
 		    typename Cell::index_type from,
@@ -2150,8 +2141,8 @@ HexVolMesh<Basis>::cell_type_description()
 }
 
 template <class Basis>
-unsigned int
-HexVolMesh<Basis>::get_cells(typename Cell::array_type &cells, 
+void
+HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells, 
 			     typename Node::index_type node) const 
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
@@ -2179,7 +2170,6 @@ HexVolMesh<Basis>::get_cells(typename Cell::array_type &cells,
   // Copy the unique set of cells to our Cells array return argument
   cells.resize(unique_cells.size());
   copy(unique_cells.begin(), unique_cells.end(), cells.begin());
-  return cells.size();
 }
 
 } // namespace SCIRun

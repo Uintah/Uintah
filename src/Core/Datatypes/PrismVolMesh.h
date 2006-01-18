@@ -655,6 +655,10 @@ public:
   void get_cells(typename Cell::array_type &array, typename Edge::index_type idx) const;
   void get_cells(typename Cell::array_type &array, typename Face::index_type idx) const;
   
+  void get_elems(typename Elem::array_type &result, 
+                 typename Node::index_type idx) const
+  { get_cells(result, idx); }
+
   // This function is redundant, the next one can be used with less parameters 
   bool get_neighbor(typename Cell::index_type &neighbor, typename Cell::index_type from,
 		   typename Face::index_type idx) const;
