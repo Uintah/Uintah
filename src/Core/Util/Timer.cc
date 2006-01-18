@@ -44,6 +44,7 @@
 #include <Core/Util/Timer.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Math/MiscMath.h>
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/times.h>

@@ -94,7 +94,7 @@ class SHARE RenderFieldBase : public DynamicAlgoBase
 {
 public:
 
-#if !defined(_MSC_VER) && !!defined(__ECC)
+#if !defined(_MSC_VER) && !defined(__ECC)
 
   struct equal_str
   {
