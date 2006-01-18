@@ -692,7 +692,7 @@ public:
   void rewind_mesh();
 
 
-  virtual bool		synchronize(unsigned int);
+  virtual bool		synchronize(unsigned int tosync);
 
   //! Persistent IO
   virtual void io(Piostream&);
@@ -928,7 +928,6 @@ protected:
   Mutex			face_lock_;
 
   typedef vector<vector<typename Cell::index_type> > NodeNeighborMap;
-  //  typedef LockingHandle<NodeMap> NodeMapHandle;
   NodeNeighborMap	node_neighbors_;
   Mutex			node_neighbor_lock_;
 
@@ -1140,6 +1139,7 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   locate_cache_(0),
   synchronized_(copy.synchronized_)
 {
+  synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~FACES_E;
