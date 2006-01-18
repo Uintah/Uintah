@@ -180,6 +180,7 @@ TCLThread::startNetworkEditor()
   gui->eval("::tk::unsupported::ExposePrivateCommand tkFocusGroup_BindIn");
   gui->eval("::tk::unsupported::ExposePrivateCommand tkFocusGroup_BindOut");
   gui->eval("::tk::unsupported::ExposePrivateCommand tkButtonInvoke");
+  gui->eval("::tk::unsupported::ExposePrivateCommand tkCancelRepeat");
 #endif
 
   // If the user doesnt have a .scirunrc file, or it is out of date,
