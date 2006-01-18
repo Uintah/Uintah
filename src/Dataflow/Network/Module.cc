@@ -872,6 +872,21 @@ Module::remark(const string& str)
   update_msg_state(Remark); 
 }
 
+void Module::compile_error(const string& filename)
+{
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
+  {
+    cout << id << ":COMPILE ERROR IN FILE: " << filename << "cc" << "\n";
+  }
+
+  msgStream_flush();
+  msgStream_ << "COMPILE ERROR IN FILE: " << filename << "cc\n";
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} OrangeRed");
+  msgStream_.str("");
+  update_msg_state(Error); 
+  
+  gui->eval(getID() + " compile_error "+filename);
+}
 
 void
 Module::msgStream_flush()

@@ -186,6 +186,8 @@ public:
   virtual void error(const std::string&);
   virtual void warning(const std::string&);
   virtual void remark(const std::string&);
+  virtual void compile_error(const std::string&);
+  
   virtual void postMessage(const std::string&);
   virtual std::ostream &msgStream() { return msgStream_; }
   virtual void msgStream_flush();
