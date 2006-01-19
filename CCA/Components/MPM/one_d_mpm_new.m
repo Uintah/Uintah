@@ -218,3 +218,57 @@ err=abs(DX_tip(tstep)-Exact_tip(tstep))
 length(TIME)
 
 return;
+
+function [nodes,Ss]=findNodesAndWeights(xp,dx);
+ 
+% find the nodes that surround the given location and
+% the values of the shape functions for those nodes
+% Assume the grid starts at x=0.
+ 
+node = xp/dx;
+node=floor(node)+1;
+ 
+nodes(1)= node;
+nodes(2)=nodes(1)+1;
+ 
+dnode=double(node);
+ 
+locx=(xp-dx*(dnode-1))/dx;
+Ss(1)=1-locx;
+Ss(2)=locx;
+ 
+return;
+
+function [nodes,Gs]=findNodesAndWeightGradients(xp,dx);
+ 
+% find the nodes that surround the given location and
+% the values of the shape functions for those nodes
+% Assume the grid starts at x=0.
+ 
+node = xp/dx;
+node=floor(node)+1;
+ 
+nodes(1)= node;
+nodes(2)=nodes(1)+1;
+ 
+dnode=double(node);
+ 
+%locx=(xp-dx*(dnode-1))/dx;
+Gs(1)=-1;
+Gs(2)=1;
+ 
+return;
+
+function [sigp,vol,Fp]=computeStressFromVelocity(xp,dx,dt,vg,E,Fp,volp,NP);
+                                                                                
+for ip=1:NP
+    [nodes,Gs]=findNodesAndWeightGradients(xp(ip),dx);
+    gUp=0;
+    for ig=1:2
+        gUp=gUp+vg(nodes(ig))*(Gs(ig)/dx);
+    end
+    dF=1.+gUp*dt;
+    Fp(ip)=dF*Fp(ip);
+    sigp(ip)=E*(Fp(ip)-1);
+    vol(ip)=volp*Fp(ip);
+end
