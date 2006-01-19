@@ -13,12 +13,12 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            10.0        </maxTime>
+       <maxTime>            100.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0e-2      </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-        <max_iterations>    100         </max_iterations>
+        <max_iterations>    5         </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -120,8 +120,9 @@
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
            </Box>
-           <spacing>         [.125,.125,.125]      </spacing>
+           <spacing>         [.25,.25,.25]      </spacing>
        </Level>
+
        <time_refinement_ratio>    1 </time_refinement_ratio>       
 
        <Level>
@@ -131,10 +132,10 @@
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
            </Box>
-           <spacing>         [.0625,.0625,.0625]    </spacing>
+           <spacing>         [.125,.125,.125]    </spacing>
        </Level>
-<!--      
-      
+       
+  <!--     
         <Level>
            <Box label="3">
               <lower>        [.35,.35,.35]         </lower>       
@@ -170,7 +171,7 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>impAdvectAMR.uda</filebase>
+      <filebase>impAdvectTest.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
@@ -178,19 +179,26 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/>  
       <save label="temp_CC"/>  
-      <save label="residualError"/> 
+      <save label = "CenterOfMassVelocity"/>
+      <save label = "TotalMass"/>
+      <save label = "TotalIntEng"/>
+      <save label="KineticEnergy"/>
+      <save label="residualError"/>
+      <save label="solverResidual"/>
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
 
   <Debug>
+      <dbg_var1>           1e-2        </dbg_var1>
       <dbg_timeStart>       0.00        </dbg_timeStart>
       <dbg_timeStop>        100.00      </dbg_timeStop>
       <dbg_outputInterval>  1e-9        </dbg_outputInterval>
-      <dbg_BeginIndex>      [0,0,4]     </dbg_BeginIndex>
-      <dbg_EndIndex>        [8,8,5]     </dbg_EndIndex>
+      <dbg_BeginIndex>      [2,2,2]     </dbg_BeginIndex>
+      <dbg_EndIndex>        [8,8,8]     </dbg_EndIndex>
       <dbg_Matls>           [0]         </dbg_Matls>
       <dbg_Level>           0           </dbg_Level>
       <dbg_SigFigs>         16          </dbg_SigFigs>
+      <debug label = "switchDebug_setupRHS"/>
       
 <!--
        <debug label = "switchDebug_equil_press"/>
@@ -220,7 +228,7 @@
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
-        
+       
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive  </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.0         </knob_for_speedSound>
@@ -231,16 +239,16 @@
            <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-            <tolerance>1.e-6    </tolerance>
+            <tolerance>1.e-2    </tolerance>
 
-	     <!-- Hypre options -->
 	     <solver>         amg     </solver>
-             <preconditioner> none    </preconditioner>
+            <preconditioner> none    </preconditioner>
 	     <maxiterations>  7500    </maxiterations>
 	     <npre>           1       </npre>
 	     <npost>          1       </npost>
 	     <skip>           0       </skip>
 	     <jump>           0       </jump>
+            <logging>        2       </logging>
            </Parameters>
         </ImplicitSolver>
         

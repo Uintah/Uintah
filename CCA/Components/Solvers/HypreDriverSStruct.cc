@@ -494,7 +494,9 @@ HypreDriverSStruct::getSolution_CC(const int matl)
 {
   for (int p = 0 ; p < _patches->size(); p++) {
     HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
+    fprintf(stderr,"======== get the solution ============\n");
     hpatch.getSolution(_HX,_new_dw,_X_label,_modifies_x);
+    fprintf(stderr,"======== get the residual ============\n");
     hpatch.getSolution(_HResidual,_new_dw,_residualLabel,_modifiesResidual);
   } 
 } 
@@ -986,6 +988,12 @@ HypreDriverSStruct::HyprePatch_CC::getSolution(HYPRE_SStructVector& HX,
                                       chunkLow.get_pointer(),
                                       chunkHigh.get_pointer(),
                                       CC_VAR, const_cast<double*>(values));
+      /*=========== TESTING =============*/
+      fprintf(stderr,"Slice z=%d, y=%d\n",z,y);
+      for (int i = 0; i < 4; i++) {
+	fprintf(stderr,"values[%d] = %le\n",i,values[i]);
+      }
+      /*=========== TESTING =============*/
     }
   }
 }

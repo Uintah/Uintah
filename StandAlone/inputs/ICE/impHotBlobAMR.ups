@@ -163,6 +163,7 @@
       <save label="sum_imp_delP"/>
       <save label="delP_Dilatate"/>
       <save label="rhs"/>
+      <save label="residualError"/>
       <checkpoint timestepInterval="20" cycle="2"/>"
    </DataArchiver>
    

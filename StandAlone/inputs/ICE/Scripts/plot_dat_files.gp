@@ -25,9 +25,9 @@ set grid xtics ytics
 set pointsize 1
 
 set autoscale
-set terminal x11 1
-#set terminal postscript "Times-Roman" 9
-#set output "datPlots.ps"
+#set terminal x11 1
+set terminal postscript "Times-Roman" 9
+set output "datPlots_1e-2.ps"
 
 #set xrange[0:0.02]
 #__________________________________
@@ -36,36 +36,34 @@ set terminal x11 1
 set multiplot
 set size 0.51,0.51  
 set origin 0.0,0.0
-set ylabel "total mass"
+set ylabel "Normalized total mass"
 set y2tics
 
-plot   'TotalMass.dat'      using 1:2 t ''  w lines
+plot   'TotalMass.dat'      using 1:($2/1.179) t ''  w lines
 
 #__________________________________
 #   totalInternalEnergy
 #__________________________________
 set origin 0.5,0.0
 
-set ylabel "Total Internal Energy"
-plot   'TotalIntEng.dat'    using 1:2  t '' w lines
+set ylabel "Normalized Total Internal Energy"
+plot   'TotalIntEng.dat'    using 1:($2/253100.0)  t '' w lines
 
 #__________________________________
 #  KineticEnergy.dat
 #__________________________________ 
 set origin 0.0,0.5
 
-set ylabel "KineticEnergy"
-plot   'KineticEnergy.dat'  using 1:2 t ''  w lines
+set ylabel "Normalized KineticEnergy"
+plot   'KineticEnergy.dat'  using 1:($2/58.95) t ''  w lines
 
 #__________________________________
 #  totalMomentum.dat
 #__________________________________ 
 set origin 0.5,0.5
 
-set ylabel "total Momentum"
-plot   'TotalMom.dat'         using 1:2 t 'x'  w lines,\
-       'TotalMom.dat'         using 1:3 t 'y'  w lines, \
-       'TotalMom.dat'         using 1:4 t 'z'  w lines
+set ylabel "Normalized total Momentum"
+plot   'TotalMom.dat'         using 1:($2/(1.179*10)) t 'x-component'  w lines
        
 set nomultiplot   
 pause -1 "Hit return to continue"

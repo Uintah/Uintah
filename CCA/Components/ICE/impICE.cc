@@ -14,7 +14,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h> 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-
+#include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Exceptions/InternalError.h>
@@ -305,7 +305,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 //  t->requires( Task::OldDW, lb->delTLabel);    AMR
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
-  t->requires( Task::NewDW, lb->rhsLabel,            one_matl,   oims,gn,0);
+  t->requires( Task::NewDW, lb->rhsLabel,    one_matl,   oims,gn,0);
   //t->requires( Task::OldDW, lb->initialGuessLabel, one_matl,   oims,gn,0);
   //__________________________________
   // SetupRHS
@@ -342,6 +342,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   //__________________________________
   //  what's produced from this task
   t->computes(lb->press_CCLabel,     press_matl,oims);
+  t->computes(lb->residualErrorLabel,press_matl,oims);
   t->modifies(lb->sum_imp_delPLabel, press_matl,oims);  
   t->modifies(lb->term2Label,        one_matl,  oims);   
 
@@ -599,6 +600,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       pNewDW->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
 
       //---- P R I N T   D A T A ------  
+#if 0
       if (switchDebug_setupRHS) {
         ostringstream desc;
         desc << "Top_setupRHS_Mat_"<<indx<<"_patch_"<<patch->getID();
@@ -606,6 +608,7 @@ void ICE::setupRHS(const ProcessorGroup*,
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",    vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC",    wvel_FC);
       }
+#endif
         
       //__________________________________
       // Advection preprocessing
@@ -683,13 +686,24 @@ void ICE::setupRHS(const ProcessorGroup*,
     //__________________________________
     //  Compare rhs to the solver residual
     if(computes_or_modifies == "modifies"){
-      CCVariable<double> residualError; 
+      CCVariable<double> residualError, rhs_tmp; 
       new_dw->allocateAndPut(residualError, lb->residualErrorLabel, 0, patch, gn, 0);
+      new_dw->allocateTemporary(rhs_tmp, patch);
+      
+      rhs_tmp.initialize(0.0);
       residualError.initialize(0.0);
       
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
-        residualError[c] = Abs(Abs(rhs[c]/vol) - solverResidual[c]);
+        rhs_tmp[c] = (rhs[c]/vol);
+        residualError[c] = rhs_tmp[c] - solverResidual[c];
+      }
+      if (switchDebug_setupRHS) {
+        ostringstream desc;
+        desc << "BOT_setupRHS_patch_" << patch->getID();
+        printData( 0, patch, 0,desc.str(), "residualError",  residualError);
+        printData( 0, patch, 0,desc.str(), "solverResidual", solverResidual);
+        printData( 0, patch, 0,desc.str(), "rhs_tmp",        rhs_tmp);
       }
     }   
     
@@ -697,6 +711,7 @@ void ICE::setupRHS(const ProcessorGroup*,
 
     //---- P R I N T   D A T A ------  
     if (switchDebug_setupRHS) {
+#if 0
       ostringstream desc;
       desc << "BOT_setupRHS_patch_" << patch->getID();
       printData( 0, patch, 0,desc.str(), "rhs",              rhs);
@@ -704,6 +719,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       printData( 0, patch, 0,desc.str(), "sum_impDelP",      sum_imp_delP);
   //  printData( 0, patch, 0,desc.str(), "MassExchangeTerm", massExchTerm);
       printData( 0, patch, 0,desc.str(), "term1",            term1);
+#endif
     }  
   }  // patches loop
 //  cout << " Level " << level->getIndex() << " rhs " 
@@ -772,6 +788,99 @@ void ICE::updatePressure(const ProcessorGroup*,
       press_CC[c] = press_equil[c] + sum_imp_delP[c];
       press_CC[c] = max(1.0e-12, press_CC[c]);   // C L A M P
     }   
+    
+    
+   
+/*`==========TESTING==========*/
+ #if 0
+  int i,j,k;
+  
+  IntVector low(2,2,2);  // level 2
+  IntVector hi(5,5,5);
+  double epsilon = d_dbgVar1;
+  // systematic errors at the coarsefine interfaces
+    // x- x+
+  for(j = low.y(); j <= hi.y(); j++){
+    for(k = low.z(); k <= hi.z(); k++){
+      IntVector l(low.x(), j, k);
+      IntVector h(hi.x(),  j, k);
+      press_CC[l]     += epsilon;
+      sum_imp_delP[l] += epsilon;
+      press_CC[h]     += epsilon;
+      sum_imp_delP[h] += epsilon;
+    }
+  }
+  // y- y+
+  for(i = low.x(); i <= hi.x(); i++){
+    for(k = low.z(); k <= hi.z(); k++){
+      IntVector l(i,low.y(), k);
+      IntVector h(i,hi.y(), k);
+      press_CC[l]     += epsilon;
+      sum_imp_delP[l] += epsilon;
+      press_CC[h]     += epsilon;
+      sum_imp_delP[h] += epsilon;
+    }
+  }
+  // z- z+
+  for(i = low.x(); i <= hi.x(); i++){
+    for(j = low.y(); j <= hi.y(); j++){
+      IntVector l(i,j, low.z());
+      IntVector h(i,j, hi.z());
+      press_CC[l]     += epsilon;
+      sum_imp_delP[l] += epsilon;
+      press_CC[h]     += epsilon;
+      sum_imp_delP[h] += epsilon;
+    }
+  }
+  
+#if 0  
+  // x- x+
+  for(j = low.y(); j <= hi.y(); j++){
+    for(k = low.z(); k <= hi.z(); k++){
+      IntVector l(low.x(), j, k);
+      IntVector h(hi.x(),  j, k);
+      double fuzz_l = (-1 + 2.0 * drand48()) * epsilon;
+      double fuzz_h = (-1 + 2.0 * drand48()) * epsilon;
+      //cout << "fuzz_l " << fuzz_l << " fuzz_h " << fuzz_h<< endl;
+      press_CC[l]     += fuzz_l;
+      sum_imp_delP[l] += fuzz_l;
+      press_CC[h]     += fuzz_h;
+      sum_imp_delP[h] += fuzz_h;
+    }
+  }
+  // y- y+
+  for(i = low.x(); i <= hi.x(); i++){
+    for(k = low.z(); k <= hi.z(); k++){
+      IntVector l(i,low.y(), k);
+      IntVector h(i,hi.y(), k);
+      double fuzz_l = (-1 + 2.0 * drand48()) * epsilon;
+      double fuzz_h = (-1 + 2.0 * drand48()) * epsilon;
+      //cout << "fuzz_l " << fuzz_l << " fuzz_h " << fuzz_h<< endl;
+      press_CC[l]     += fuzz_l;
+      sum_imp_delP[l] += fuzz_l;
+      press_CC[h]     += fuzz_h;
+      sum_imp_delP[h] += fuzz_h;
+    }
+  }
+  // z- z+
+  for(i = low.x(); i <= hi.x(); i++){
+    for(j = low.y(); j <= hi.y(); j++){
+      IntVector l(i,j, low.z());
+      IntVector h(i,j, hi.z());
+      double fuzz_l = (-1 + 2.0 * drand48()) * epsilon;
+      double fuzz_h = (-1 + 2.0 * drand48()) * epsilon;
+      //cout << "fuzz_l " << fuzz_l << " fuzz_h " << fuzz_h<< endl;
+      press_CC[l]     += fuzz_l;
+      sum_imp_delP[l] += fuzz_l;
+      press_CC[h]     += fuzz_h;
+      sum_imp_delP[h] += fuzz_h;
+    }
+  }
+#endif
+#endif   
+/*===========TESTING==========`*/
+    
+    
     //__________________________________
     //  set boundary conditions   
     preprocess_CustomBCs("update_press_CC",parent_old_dw,parent_new_dw, 
@@ -1092,7 +1201,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
                     lb->vol_fracY_FCLabel,   patch_sub, all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
-                    lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);                 
+                    lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);
+  ParentNewDW->transferFrom(subNewDW,         // residualError
+                    lb->residualErrorLabel,  patch_sub, d_press_matl, replace);                 
     
   //__________________________________
   //  Turn scrubbing back on
