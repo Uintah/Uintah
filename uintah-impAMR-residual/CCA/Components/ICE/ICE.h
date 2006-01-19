@@ -776,7 +776,7 @@ namespace Uintah {
       
       
       // debugging variables
-      int d_dbgVar1;
+      double d_dbgVar1;
       int d_dbgVar2;
       vector<IntVector>d_dbgIndices;
      
