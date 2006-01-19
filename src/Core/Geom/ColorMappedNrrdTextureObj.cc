@@ -71,19 +71,21 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin,
                                int time) :
   colormap_(0),
   nrrd_(0),
-  dirty_(true),
+  nrrd_dirty_(true),
+  dirty_(4,true),
+  dirty_region_(),
   texture_id_(4,0),
   xdiv_(2),
   ydiv_(2),
   clut_min_(0.0), 
   clut_max_(1.0),
-  data_(0)
+  data_(0),
+  own_data_(false)
 {
-  if (!nin.get_rep() || !nin->nrrd || nin->nrrd->dim != 3) 
-    throw "ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(nrrd) nrrd not valid";
+  if (!nin.get_rep() || !nin->nrrd)// || nin->nrrd->dim != 3) 
+    throw "ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(nrrd)"
+      "nrrd not valid";
   nrrd_ = new NrrdData;
-
-  NrrdDataHandle tmp1 = new NrrdData;
 
   if (min_slice != max_slice) {
     int *min = new int[nin->nrrd->dim];
@@ -94,12 +96,14 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin,
     }
     min[axis] = Min(min_slice, max_slice);
     max[axis] = Max(min_slice, max_slice);
+    NrrdDataHandle tmp1 = new NrrdData;
     NRRD_EXEC(nrrdCrop(tmp1->nrrd, nin->nrrd, min, max));
     NRRD_EXEC(nrrdProject(nrrd_->nrrd, tmp1->nrrd, axis, 
                           nrrdMeasureMax, nrrdTypeDefault));
   } else {
     NRRD_EXEC(nrrdSlice(nrrd_->nrrd, nin->nrrd, axis, min_slice));
   }
+  nrrd_dirty_ = true;
 }
 
 
@@ -107,7 +111,7 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin,
 
 ColorMappedNrrdTextureObj::~ColorMappedNrrdTextureObj()
 {
-  if (data_) delete[] data_;
+  if (own_data_ && data_) delete[] data_;
   for (unsigned int t = 0; t < texture_id_.size(); ++t) 
     if (glIsTexture(texture_id_[t]))
         glDeleteTextures(1,&texture_id_[t]);
@@ -118,15 +122,23 @@ ColorMappedNrrdTextureObj::set_clut_minmax(float min, float max)
 {
   clut_min_ = Min(min,max);
   clut_max_ = Max(min,max);
-  dirty_ = true;
+  nrrd_dirty_ = true;
 }
 
 void
 ColorMappedNrrdTextureObj::set_colormap(ColorMapHandle &cmap)
 {
   colormap_ = cmap;
-  dirty_ = true;
+  nrrd_dirty_ = true;
 }
+
+
+// void
+// ColorMappedNrrdTextureObj::recalculate(int x1, int y1, int x2, int y2)
+// {
+  
+
+  
 
 
 
@@ -153,7 +165,7 @@ ColorMappedNrrdTextureObj::apply_colormap_to_raw_data(float *dst,
 float *
 ColorMappedNrrdTextureObj::apply_colormap()
 {
-  const int num = nrrd_->nrrd->axis[0].size*nrrd_->nrrd->axis[1].size;
+  const int num = nrrd_->nrrd->axis[1].size*nrrd_->nrrd->axis[2].size;
   float *data = new float[4*num];
   if (!data) return 0;
 
@@ -244,30 +256,61 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   glBindTexture(GL_TEXTURE_2D, texture_id_[pos]);
   CHECK_OPENGL_ERROR();  
 
-  if (bound && !dirty_)
+  if (bound && !nrrd_dirty_ && !dirty_[pos])
     return true;
 
-  if (dirty_) {
-    if (data_) {
-      delete [] data_;
-      data_ = 0;
+
+  if (nrrd_dirty_) {
+    if (nrrd_->nrrd->axis[0].size == 1) {
+      if (own_data_ && data_) {
+        delete [] data_;
+        data_ = 0;
+        own_data_ = false;
+      }
+      data_ = apply_colormap();
+      own_data_ = true;
+    } else {
+      data_ = nrrd_->nrrd->data;
+      own_data_ = false;
     }
-    data_ = apply_colormap();
     if (!data_) 
       return false;
-    dirty_ = false;
+    nrrd_dirty_ = false;
+    for (int i = 0; i < 4; ++i)
+      dirty_[i] = true;
+
+  }
+
+  GLenum type = GL_FLOAT;
+  if (nrrd_->nrrd->axis[0].size != 1) {
+    switch (nrrd_->nrrd->type) {
+    case nrrdTypeChar: type = GL_BYTE; break;
+    case nrrdTypeUChar: type = GL_UNSIGNED_BYTE; break;
+    case nrrdTypeShort: type = GL_SHORT; break;
+    case nrrdTypeUShort: type = GL_UNSIGNED_SHORT; break;	
+    case nrrdTypeInt: type = GL_INT; break;
+    case nrrdTypeUInt: type = GL_UNSIGNED_INT; break;
+    case nrrdTypeFloat: type = GL_FLOAT; break;
+    default: throw "Cant bind nrrd"; break;
+    }
   }
 
 
+  GLint format = GL_RGBA;
+  if (nrrd_->nrrd->axis[0].size == 3)
+    format = GL_RGB;
+
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, nrrd_->nrrd->axis[0].size);  
-  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, nrrd_->nrrd->axis[1].size);  
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, nrrd_->nrrd->axis[1].size);  
+  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, nrrd_->nrrd->axis[2].size);  
+  CHECK_OPENGL_ERROR();  
+
   if (x == 0) {
     xdiv_[x].first = 0;
-    xdiv_[x].second = LargestPowerOf2(nrrd_->nrrd->axis[0].size);
+    xdiv_[x].second = LargestPowerOf2(nrrd_->nrrd->axis[1].size);
   } else if (x == 1) {
-    int wid = Pow2(nrrd_->nrrd->axis[0].size - xdiv_[0].second);
-    xdiv_[1].second = nrrd_->nrrd->axis[0].size;
+    int wid = Pow2(nrrd_->nrrd->axis[1].size - xdiv_[0].second);
+    xdiv_[1].second = nrrd_->nrrd->axis[1].size;
     xdiv_[1].first = xdiv_[1].second - wid;
     glPixelStorei(GL_UNPACK_SKIP_PIXELS, xdiv_[1].first);
   }
@@ -276,10 +319,10 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
 
   if (y == 0) {
     ydiv_[y].first = 0;
-    ydiv_[y].second = LargestPowerOf2(nrrd_->nrrd->axis[1].size);
+    ydiv_[y].second = LargestPowerOf2(nrrd_->nrrd->axis[2].size);
   } else if (y == 1) {
-    int wid = Pow2(nrrd_->nrrd->axis[1].size - ydiv_[0].second);
-    ydiv_[1].second = nrrd_->nrrd->axis[1].size;
+    int wid = Pow2(nrrd_->nrrd->axis[2].size - ydiv_[0].second);
+    ydiv_[1].second = nrrd_->nrrd->axis[2].size;
     ydiv_[1].first = ydiv_[1].second - wid;
     glPixelStorei(GL_UNPACK_SKIP_ROWS, ydiv_[1].first);
   }
@@ -303,7 +346,7 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                xdiv_[x].second - xdiv_[x].first, 
                ydiv_[y].second - ydiv_[y].first,
-               0, GL_RGBA, GL_FLOAT, data_);
+               0,format, type, data_);
   CHECK_OPENGL_ERROR();  
 
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -312,6 +355,7 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0); 
 
   CHECK_OPENGL_ERROR();  
+  dirty_[pos] = false;
 
   return true;
 }
@@ -329,11 +373,12 @@ ColorMappedNrrdTextureObj::draw_quad(Point &min, Vector &xdir, Vector &ydir)
     unsigned int xoff = 0;
     for (int x = 0; x < 2; ++x) {
       if (!bind(x,y)) continue;
-
-      float x1 = xoff / float(nrrd_->nrrd->axis[0].size);
-      float y1 = yoff / float(nrrd_->nrrd->axis[1].size);
-      float x2 = xdiv_[x].second / float(nrrd_->nrrd->axis[0].size);
-      float y2 = ydiv_[y].second / float(nrrd_->nrrd->axis[1].size);
+      //      glDisable(GL_TEXTURE_2D);
+      //      glColor4d(1.0, 0.0, 0.3, 1.0);
+      float x1 = xoff / float(nrrd_->nrrd->axis[1].size);
+      float y1 = yoff / float(nrrd_->nrrd->axis[2].size);
+      float x2 = xdiv_[x].second / float(nrrd_->nrrd->axis[1].size);
+      float y2 = ydiv_[y].second / float(nrrd_->nrrd->axis[2].size);
 
       float tx = (xoff - xdiv_[x].first) / float(xdiv_[x].second - xdiv_[x].first);
       float ty = (yoff - ydiv_[y].first) / float(ydiv_[y].second - ydiv_[y].first);
@@ -376,6 +421,172 @@ ColorMappedNrrdTextureObj::draw_quad(Point &min, Vector &xdir, Vector &ydir)
   }
   glDisable(GL_TEXTURE_2D);
 
+}
+
+BBoxSet::BBoxSet() :
+  boxes_()
+{
+}
+
+BBoxSet::BBoxSet(BBox &box) :
+  boxes_()
+{
+  add(box);
+}
+
+BBoxSet::BBoxSet(BBoxSet &boxes) :
+  boxes_()
+{
+  add(boxes);
+}
+
+BBoxSet::~BBoxSet() 
+{
+}
+
+void
+BBoxSet::add(BBox &box)
+{
+  boxes_.push_back(box);
+}
+
+void
+BBoxSet::add(BBoxSet &boxes)
+{
+  BBoxes::iterator iter = boxes.boxes_.begin(), end = boxes.boxes_.end();
+  while (iter != end) {
+    boxes_.push_back(*iter);
+    ++iter;
+  }
+}
+
+
+
+void
+BBoxSet::sub(BBox &box)
+{
+  BBoxes boxes = boxes_;
+  boxes_.clear();
+  BBoxes::iterator iter = boxes.begin(), end = boxes.end();
+  while (iter != end) {
+    BBox &box1 = *iter;
+    ++iter;
+    if (!box.overlaps2(box1)) continue;
+    for (int x = 0; x < 3; ++x) {
+      float x1, x2;
+      switch (x) {
+      case 0: 
+        x1 = Min(box.min().x(), box1.min().x());
+        x2 = Max(box.min().x(), box1.min().x());
+        break;
+      case 1: 
+        x1 = Max(box.min().x(), box1.min().x());
+        x2 = Min(box.max().x(), box1.max().x());
+        break;
+      default:
+      case 2: 
+        x1 = Min(box.max().x(), box1.max().x());
+        x2 = Max(box.max().x(), box1.max().x());
+        break;
+      }
+       
+      for (int y = 0; y < 3; ++y) {
+        float y1, y2;
+        switch (y) {
+        case 0: 
+          y1 = Min(box.min().y(), box1.min().y());
+          y2 = Max(box.min().y(), box1.min().y());
+          break;
+        case 1: 
+          y1 = Max(box.min().y(), box1.min().y());
+          y2 = Min(box.max().y(), box1.max().y());
+          break;
+        default:
+        case 2: 
+          y1 = Min(box.max().y(), box1.max().y());
+          y2 = Max(box.max().y(), box1.max().y());
+          break;
+        }
+
+        for (int z = 0; z < 3; ++z) {
+          float z1, z2;
+          switch (z) {
+          case 0: 
+            z1 = Min(box.min().z(), box1.min().z());
+            z2 = Max(box.min().z(), box1.min().z());
+            break;
+          case 1: 
+            z1 = Max(box.min().z(), box1.min().z());
+            z2 = Min(box.max().z(), box1.max().z());
+            break;
+          default:
+          case 2: 
+            z1 = Min(box.max().z(), box1.max().z());
+            z2 = Max(box.max().z(), box1.max().z());
+            break;
+          }
+          Point p1(x1,y1,z1);
+          Point p2(x2,y2,z2);
+          BBox newbox(p1,p2);
+          if (newbox.overlaps2(box1) && !newbox.overlaps(box))
+            boxes_.push_back(newbox);
+        }
+      }
+    }
+  }
+}
+
+
+void
+BBoxSet::sub(BBoxSet &boxes)
+{
+  BBoxes::iterator iter = boxes.boxes_.begin(), end = boxes.boxes_.end();
+  while (iter != end) {
+    sub(*iter);
+    ++iter;
+  }
+}
+
+void
+BBoxSet::reset()
+{
+  boxes_.clear();
+}
+
+
+void
+BBoxSet::set(BBox &box)
+{
+  boxes_.clear();
+  add(box);
+}
+
+
+void
+BBoxSet::set(BBoxSet &boxes)
+{
+  boxes_.clear();
+  add(boxes);
+}
+
+
+
+BBox
+BBoxSet::get()
+{
+  BBox box;
+  BBoxes::iterator iter = boxes_.begin(), end = boxes_.end();
+  while (iter != end) {
+    box.extend(*iter);
+    ++iter;
+  }
+  return box;
+}
+
+vector<BBox>
+BBoxSet::get_boxes()
+{
+  return boxes_;
 }
 
 

@@ -38,7 +38,7 @@
  *
  *  Copyright (C) 2005 SCI Group
  */
- 
+
 #include <Dataflow/Modules/Render/Painter.h>
 #include <sci_comp_warn_fixes.h>
 #include <tcl.h>
@@ -71,7 +71,6 @@
 #include <Core/Geom/OpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/UIvar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -79,30 +78,32 @@
 #include <Core/Thread/CleanupManager.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Thread/Semaphore.h>
 #include <Core/Util/Timer.h>
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
+
 extern Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
   /* Todo:
-     X - Persistent volume state when re-executing
+    X - Persistent volume state when re-executing
      X - Fix Non-origin world_to_index conversion
      X - Use FreeTypeTextTexture class for text
      X - Send Bundles correctly
      X - Ability to render 2D nrrds
      X - Automatic world space grid
      X - Add tool support for ITK filters
+     X - Show other windows slice correctly
+     X - Remove TCLTask::lock and replace w/ volume lock
+     X - Optimize build_index_to_world_matrix out
+     X - Add support for RGBA nrrds 
        - help mode
        - Better tool mechanism to allow for customization & event fallthrough 
-       - Add support for 4, 5-D nrrds (includes time and rgba)
+       - Add support for time axis in nrrds
        - Add back in MIP mode
        - Geometry output port
-       - Show other windows slice correctly
        - Automatic index space grid
-       - Remove TCLTask::lock and replace w/ volume lock
        - View to choose tools
        - Change tools to store error codes
        - Add keybooard to tools
@@ -112,7 +113,8 @@ namespace SCIRun {
        - Remove clever offseting for non-power-of-2 suported machines
        - Removal of for_each
        - Support applying CM2
-       - Optimize build_index_to_world_matrix out
+       - vertical text for grid
+
 
        Filters:
        confidence connected image filter
@@ -122,10 +124,10 @@ namespace SCIRun {
        later add greyscale dilate/erode filters
        *aniosotropicimagediffusionfilters* (vector if supported)
        watershed
-       
+
 
   */
-     
+
 Painter::RealDrawer::~RealDrawer()
 {
 }
@@ -135,7 +137,7 @@ void
 Painter::RealDrawer::run()
 {
   throttle_.start();
-  
+
   double t = throttle_.time();
   double frame_count_start = t;
   double time_since_frame_count_start;
@@ -152,7 +154,7 @@ Painter::RealDrawer::run()
       frames = 0;
       frame_count_start = t2;
     }
-    
+
     while (t <= t2) t += 1.0/30.0;
   }
 }
@@ -161,10 +163,10 @@ int
 Painter::for_each(SliceWindow &window, NrrdSliceFunc func) {
   int value = 0;
   for (unsigned int slice = 0; slice < window.slices_.size(); ++slice)
-  {
-    ASSERT(window.slices_[slice]);
-    value += (this->*func)(*window.slices_[slice]);
-  }
+    {
+      ASSERT(window.slices_[slice]);
+      value += (this->*func)(*window.slices_[slice]);
+    }
   return value;
 }
 
@@ -173,23 +175,23 @@ Painter::for_each(WindowLayout &layout, NrrdSliceFunc func) {
   int value = 0;
   for (unsigned int window = 0; 
        window < layout.windows_.size(); ++window)
-  {
-    ASSERT(layout.windows_[window]);
-    value += for_each(*layout.windows_[window], func);
-  }
+    {
+      ASSERT(layout.windows_[window]);
+      value += for_each(*layout.windows_[window], func);
+    }
   return value;
 }
-  
+
 int
 Painter::for_each(WindowLayout &layout, SliceWindowFunc func)
 {
   int value = 0;
   for (unsigned int window = 0; 
        window < layout.windows_.size(); ++window)
-  {
-    ASSERT(layout.windows_[window]);
-    value += (this->*func)(*layout.windows_[window]);
-  }
+    {
+      ASSERT(layout.windows_[window]);
+      value += (this->*func)(*layout.windows_[window]);
+    }
   return value;
 }
 
@@ -217,46 +219,17 @@ Painter::NrrdSlice::NrrdSlice(Painter *painter,
   tex_dirty_(false),
   geom_dirty_(false),
   texture_(0)
-  //lock_("Slice lock"),
-  //owner_(0),
-  //lock_count_(0)
 {
 }
 
-void
-Painter::NrrdSlice::do_lock()
-{
-  TCLTask::lock();
-//     ASSERT(Thread::self() != 0);
-//     if(owner_ == Thread::self()){
-//       lock_count_++;
-//       return;
-//     }
-//     lock_.lock();
-//     lock_count_=1;
-//    owner_=Thread::self();
-}
 
-void
-Painter::NrrdSlice::do_unlock()
-{
-//     ASSERT(lock_count_>0);
-//     ASSERT(Thread::self() == owner_);
-//     if(--lock_count_ == 0){
-// 	owner_=0;
-// 	lock_.unlock();
-//     } else {
-//     }
-  TCLTask::unlock();
-}
-
-
-Painter::SliceWindow::SliceWindow(Painter &painter, GuiContext *ctx) :  
+Painter::SliceWindow::SliceWindow(Painter *painter, GuiContext *ctx) :  
   painter_(painter),
   name_("INVALID"),
   layout_(0),
   viewport_(0),
   slices_(),
+  paint_layer_(0),
   center_(0,0,0),
   normal_(1,0,0),
   slice_num_(ctx->subVar("slice"), 0),
@@ -277,6 +250,27 @@ Painter::WindowLayout::WindowLayout(GuiContext */*ctx*/) :
   windows_()
 {
 }
+
+
+Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
+                                const string &name,
+                                NrrdDataHandle &nrrd) :
+  nrrd_(0),
+  gui_context_(ctx),
+  name_(gui_context_->subVar("name"), name),
+  opacity_(gui_context_->subVar("opacity"), 1.0),
+  clut_min_(gui_context_->subVar("clut_min"), 0.0),
+  clut_max_(gui_context_->subVar("clut_max"), 1.0),
+  mutex_(gui_context_->getfullname().c_str()),
+  data_min_(0),
+  data_max_(1.0),
+  colormap_(ctx->subVar("colormap"), 0),
+  stub_axes_(),
+  transform_()
+{
+  set_nrrd(nrrd);
+}
+
 
 int
 nrrd_type_size(Nrrd *nrrd)
@@ -309,24 +303,6 @@ nrrd_data_size(Nrrd *nrrd)
   return size*nrrd_type_size(nrrd);
 }
 
-Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
-                                const string &name,
-                                NrrdDataHandle &nrrd) :
-  nrrd_(0),
-  gui_context_(ctx),
-  name_(gui_context_->subVar("name"), name),
-  opacity_(gui_context_->subVar("opacity"), 1.0),
-  clut_min_(gui_context_->subVar("clut_min"), 0.0),
-  clut_max_(gui_context_->subVar("clut_max"), 1.0),
-  semaphore_(gui_context_->getfullname().c_str(), 1),
-  data_min_(0),
-  data_max_(1.0),
-  colormap_(ctx->subVar("colormap"), 0),
-  stub_axes_()
-{
-  set_nrrd(nrrd);
-}
-
 
 Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy, 
                                 const string &name,
@@ -337,40 +313,48 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
   opacity_(gui_context_->subVar("opacity"), copy->opacity_.get()),
   clut_min_(gui_context_->subVar("clut_min"), copy->clut_min_.get()),
   clut_max_(gui_context_->subVar("clut_max"), copy->clut_max_.get()),
-  semaphore_(gui_context_->getfullname().c_str(), 1),
+  mutex_(gui_context_->getfullname().c_str()),
   data_min_(copy->data_min_),
   data_max_(copy->data_max_),
   colormap_(gui_context_->subVar("colormap"), copy->colormap_.get()),
-  stub_axes_(copy->stub_axes_)
+  stub_axes_(copy->stub_axes_),
+  transform_()
 {
+  copy->mutex_.lock();
+  mutex_.lock();
   nrrdCopy(nrrd_->nrrd, copy->nrrd_->nrrd);
   if (clear) 
     memset(nrrd_->nrrd->data, 0, nrrd_data_size(nrrd_->nrrd));
 
   set_nrrd(nrrd_);
+  mutex_.unlock();
+  copy->mutex_.unlock();
 }
 
-  
+
 void
 Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
 {
+  mutex_.lock();
   nrrd_ = nrrd;
-  if (nrrd_->nrrd->dim == 2) {
-    nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 2);
-    nrrd_->nrrd->axis[2].min = 0.0;
-    nrrd_->nrrd->axis[2].max = 1.0;
-    nrrd_->nrrd->axis[2].spacing = 1.0;
-    stub_axes_.push_back(2);
-  }
-
-  if (name_.get() == string("axis_test")) {
+  
+  if (nrrd_->nrrd->axis[0].size > 4) {
     nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 0);
     nrrd_->nrrd->axis[0].min = 0.0;
     nrrd_->nrrd->axis[0].max = 1.0;
     nrrd_->nrrd->axis[0].spacing = 1.0;
     stub_axes_.push_back(0);
+    cerr << "Inserted 0 axis\n";
   }
 
+  if (nrrd_->nrrd->dim == 3) {
+    nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 3);
+    nrrd_->nrrd->axis[3].min = 0.0;
+    nrrd_->nrrd->axis[3].max = 1.0;
+    nrrd_->nrrd->axis[3].spacing = 1.0;
+    stub_axes_.push_back(3);
+    cerr << "Inserted 3 axis\n";
+  }
 
 
   for (int a = 0; a < nrrd_->nrrd->dim; ++a) {
@@ -389,6 +373,9 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
     clut_max_ = range.max;
     opacity_ = 1.0;
   }
+
+  build_index_to_world_matrix();
+  mutex_.unlock();
 }
 
 
@@ -401,11 +388,11 @@ Painter::NrrdVolume::get_nrrd()
     nrrdAxesDelete(nout->nrrd, nrrd->nrrd, stub_axes_[s]);
     nrrd = nout;
   }
-  return nrrd;
+  return nrrd_;
 }
 
 
-DECLARE_MAKER(Painter)
+DECLARE_MAKER(Painter);
 
 Painter::Painter(GuiContext* ctx) :
   Module("Painter", ctx, Filter, "Render", "SCIRun"),
@@ -447,6 +434,14 @@ Painter::~Painter()
     runner_thread_ = 0;
   }
 }
+
+bool
+Painter::static_callback(void *this_ptr) {
+  Painter *painter = static_cast<Painter *>(this_ptr);
+  painter->filter_ = 0;
+  return true;
+}
+
 void
 Painter::set_context(Network *net) {
   Module::set_context(net);
@@ -466,19 +461,26 @@ Painter::render_window(SliceWindow &window) {
     window.setup_gl_view();
   }
   CHECK_OPENGL_ERROR();
-  
+
+
+
+  for (unsigned int s = 0; s < window.slices_.size(); ++s) {
+
+    if (window.paint_layer_ &&
+        window.slices_[s]->volume_ == window.paint_layer_->volume_)
+      window.paint_layer_->draw();
+    else 
+      window.slices_[s]->draw();
+  }
+      
+  draw_slice_lines(window);
   window.render_grid();
 
-  for (unsigned int s = 0; s < window.slices_.size(); ++s)
-    window.slices_[s]->draw();
-
-  draw_slice_lines(window);
-
-  draw_guide_lines(window, 
-                   mouse_.position_.x(), 
-                   mouse_.position_.y(),
-                   mouse_.position_.z());
-  
+  if (mouse_.window_ == &window) {
+    Point windowpos(mouse_.x_, mouse_.y_, 0);
+    window.render_guide_lines(windowpos);
+  }
+    
   if (tool_) 
     tool_->draw(window);
 
@@ -501,13 +503,12 @@ Painter::swap_window(SliceWindow &window) {
 void
 Painter::real_draw_all()
 {
-  TCLTask::lock();
+  gui->lock();
   if (for_each(&Painter::render_window)) 
     for_each(&Painter::swap_window);
-  TCLTask::unlock();
+  gui->unlock();
 }
 
-  
 
 void
 Painter::redraw_all()
@@ -521,14 +522,13 @@ Painter::redraw_window(SliceWindow &window) {
   return 1;
 }
 
-// draw_guide_lines
-// renders vertical and horizontal bars that represent
-// selected slices in other dimensions
-// if x, y, or z < 0, then that dimension wont be rendered
+
 void
-Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
-  if (!window.show_guidelines_()) return;
-  if (mouse_.window_ != &window) return;
+Painter::SliceWindow::render_guide_lines(Point mouse) {
+  if (!show_guidelines_()) return;
+
+  //  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
+  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -538,126 +538,32 @@ Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   glLoadIdentity();
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
-  GLint gl_vp[4];
-  glGetIntegerv(GL_VIEWPORT, gl_vp);
-  glScaled(1.0/(gl_vp[2] - gl_vp[0]), 
-           1.0/(gl_vp[3] - gl_vp[1]), 1.0);
+  double vpw = viewport_->width();
+  double vph = viewport_->height();
+  glScaled(1.0/vpw, 1.0/vph, 1.0);
   CHECK_OPENGL_ERROR();
+
+  glColor4dv(white);
+  glBegin(GL_LINES); 
+  glVertex3d(0, mouse.y(), mouse.z());
+  glVertex3d(vpw, mouse.y(), mouse.z());
+  glVertex3d(mouse.x(), 0, mouse.z());
+  glVertex3d(mouse.x(), vph, mouse.z());
+  glEnd();
+  CHECK_OPENGL_ERROR();
+
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   CHECK_OPENGL_ERROR();
+}
 
-
-  Vector tmp = window.x_dir();
-  tmp[window.axis_] = 0;
-  const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
-  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
-
-  const int axis = window.axis_;
-  int p = (axis+1)%3;
-  int s = (axis+2)%3;
-
-  double c[3];
-  c[0] = x;
-  c[1] = y;
-  c[2] = z;
-
-  vector<int> max_slice(3,0);
-  Vector scale(1,1,1);
-
-  if (current_volume_) {
-    scale = current_volume_->scale();
-    max_slice = current_volume_->max_index();
-  }
-
-
-  glColor4dv(yellow);
-  for (int i = 0; i < 2; ++i) {
-    glBegin(GL_QUADS);    
-    if (c[p] >= 0 && c[p] <= max_slice[p]*scale[p]) {
-      glVertex3f(p==0?x:0.0, p==1?y:0.0, p==2?z:0.0);
-      glVertex3f(p==0?x+one:0.0, p==1?y+one:0.0, p==2?z+one:0.0);
-      glVertex3f(p==0?x+one:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
-		 p==1?y+one:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
-		 p==2?z+one:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-      
-      glVertex3f(p==0?x:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
-		 p==1?y:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
-		 p==2?z:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-    }
-    glEnd();
-    SWAP(p,s);
-  }
-
-    
-  Point cvll = window.screen_to_world(0, 0);
-  Point cvur = window.screen_to_world(window.viewport_->max_width(), 
-                                      window.viewport_->max_height());
-  cvll(window.axis_) = 0;
-  cvur(window.axis_) = 0;
-  glColor4dv(white);
-  glBegin(GL_QUADS);
-  for (int i = 0; i < 2; ++i) {
-    if (c[p] < 0 || c[p] > max_slice[p]*scale[p]) {
-      glVertex3f(p==0?x:cvll(0), 
-		 p==1?y:cvll(1), 
-		 p==2?z:cvll(2));
-      glVertex3f(p==0?x+one:cvll(0), 
-		 p==1?y+one:cvll(1), 
-		 p==2?z+one:cvll(2));
-      glVertex3f(p==0?x+one:(axis==0?cvll(0):cvur(0)),
-		 p==1?y+one:(axis==1?cvll(1):cvur(1)),
-		 p==2?z+one:(axis==2?cvll(2):cvur(2)));
-      
-      glVertex3f(p==0?x:(axis==0?cvll(0):cvur(0)),
-		 p==1?y:(axis==1?cvll(1):cvur(1)),
-		 p==2?z:(axis==2?cvll(2):cvur(2)));
-    } else {
-      glVertex3f(p==0?x:cvll(0), p==1?y:cvll(1), p==2?z:cvll(2));
-      glVertex3f(p==0?x+one:cvll(0), p==1?y+one:cvll(1), p==2?z+one:cvll(2));
-      glVertex3f(p==0?x+one:(axis==0?cvll(0):0.0),
-		 p==1?y+one:(axis==1?cvll(1):0.0),
-		 p==2?z+one:(axis==2?cvll(2):0.0));
-      
-      glVertex3f(p==0?x:(axis==0?cvll(0):0.0),
-		 p==1?y:(axis==1?cvll(1):0.0),
-		 p==2?z:(axis==2?cvll(2):0.0));
-
-
-      glVertex3f(p==0?x:(axis==0?0.0:(max_slice[s]+1)*scale[s]), 
-		 p==1?y:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
-		 p==2?z:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-
-      glVertex3f(p==0?x+one:(axis==0?0.0:(max_slice[s]+1)*scale[s]), 
-		 p==1?y+one:(axis==1?0.0:(max_slice[s]+1)*scale[s]), 
-		 p==2?z+one:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-
-      glVertex3f(p==0?x+one:(axis==0?(axis==0?0.0:(max_slice[s]+1)*scale[s]):cvur(0)),
-		 p==1?y+one:(axis==1?(axis==1?0.0:(max_slice[s]+1)*scale[s]):cvur(1)),
-		 p==2?z+one:(axis==2?(axis==2?0.0:(max_slice[s]+1)*scale[s]):cvur(2)));
-      
-      glVertex3f(p==0?x:(axis==0?(axis==0?0.0:(max_slice[s]+1)*scale[s]):cvur(0)),
-		 p==1?y:(axis==1?(axis==1?0.0:(max_slice[s]+1)*scale[s]):cvur(1)),
-		 p==2?z:(axis==2?(axis==2?0.0:(max_slice[s]+1)*scale[s]):cvur(2)));
-    }
-    SWAP(p,s);
-  }
-
-      
-  glEnd();
-}  
 
 template <class T>
-unsigned int max_vector_index(vector<T> array) {
+unsigned int max_vector_magnitude_index(vector<T> array) {
   if (array.empty()) return 0;
   unsigned int index = 0;
-  //  double max_val = fabs(array[index]);
-  for (int i = 1; i < array.size(); ++i) 
+  for (unsigned int i = 1; i < array.size(); ++i) 
     if (fabs(array[i]) > fabs(array[index]))
       index = i;
   return index;
@@ -695,7 +601,7 @@ Painter::draw_slice_lines(SliceWindow &window)
       if (Dot(window.normal_, window2.normal_) > 0.999) continue;
       Vector span = Cross(window.normal_, window2.normal_);
       vector<double> span_index = current_volume_->vector_to_index(span);
-      int span_axis = max_vector_index(span_index);
+      int span_axis = max_vector_magnitude_index(span_index);
 
       vector<int> pos_idx = current_volume_->world_to_index(window2.center_);
       vector<int> min_idx = pos_idx;
@@ -720,56 +626,8 @@ Painter::draw_slice_lines(SliceWindow &window)
       glVertex3dv(&max(0));
       glVertex3dv(&min(0));
       glEnd();
-
-
-        
-
-//       cerr << "window " << window.name_ << " drawing " 
-//            << window2.name_ 
-//            << " max span: " << span_axis << std::endl;
-#if 0
-           << " has vector: [";
-      for (int n = 0; n < index.size(); ++n)
-        cerr << index[n] << " ";
-      cerr << "]\n";
-#endif
     }
   }
-
-#if 0
-
-      
-
-
-      for (i = 0; i < 2; ++i) {
-        if (!slab_width_[p]) continue;
-        one = Max(screen_space_one, double(scale[p]*slab_width_[p]));
-        
-        switch (p) {
-        case 0: glColor4dv(red); break;
-        case 1: glColor4dv(green); break;
-        default:
-        case 2: glColor4dv(blue); break;
-        }
-        glBegin(GL_QUADS);    
-        if (xyz[p] >= 0 && xyz[p] <= max_slice[p]*scale[p]) {
-          glVertex3f(p==0?xyz[0]:0.0, p==1?xyz[1]:0.0, p==2?xyz[2]:0.0);
-          glVertex3f(p==0?xyz[0]+one:0.0, p==1?xyz[1]+one:0.0, p==2?xyz[2]+one:0.0);
-          glVertex3f(p==0?xyz[0]+one:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
-                     p==1?xyz[1]+one:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
-                     p==2?xyz[2]+one:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-          
-          glVertex3f(p==0?xyz[0]:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
-                     p==1?xyz[1]:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
-                     p==2?xyz[2]:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-        }
-        glEnd();
-        SWAP(p,s);
-      }
-      CHECK_OPENGL_ERROR();
-    }
-#endif
-
 }
 
 
@@ -784,57 +642,66 @@ double mod_d(double dividend, double divisor) {
 }
 
 
-
 void
-Painter::SliceWindow::draw_line(const Point &p1, const Point &p2) {
-#if 0
-  Point s1 = world_to_screen(p1);
-  Point s2 = world_to_screen(p2);
-  Point temp1 = screen_to_world(s1.x(), s1.y());
-  Point temp2 = screen_to_world(s2.x(), s2.y());
-
-  Vector v1 = s2 - s1;
-  Vector v2(0,0,1);
-  Vector v3 = Cross(v1,v2);
-  if (v3.length() < 0.00001) return;
-  v3.normalize();
-  s1(0) = Floor(s1.x());
-  s1(1) = Floor(s1.y());
-  s2(0) = Floor(s2.x());
-  s2(1) = Floor(s2.y());
-  Point s11 = s1+v3;
-  Point s22 = s2+v3;
+Painter::SliceWindow::render_frame(double x,
+                                   double y,
+                                   double border_wid,
+                                   double border_hei,
+                                   double *color1,
+                                   double *color2)
+{
+  const double vw = viewport_->width();
+  const double vh = viewport_->height();
+  if (color1)
+    glColor4dv(color1);
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
+  CHECK_OPENGL_ERROR();
+
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
-  GLint gl_vp[4];
-  glGetIntegerv(GL_VIEWPORT, gl_vp);
-  glScaled(1.0/(gl_vp[2] - gl_vp[0]), 
-           1.0/(gl_vp[3] - gl_vp[1]), 1.0);
+  glScaled(1.0/vw, 1.0/vh, 1.0);
   CHECK_OPENGL_ERROR();
-//   s1 = screen_to_world(s1.x(), s1.y());
-//   s2 = screen_to_world(s2.x(), s2.y());
-//   s11 = screen_to_world(s11.x(), s11.y());
-//   s22 = screen_to_world(s22.x(), s22.y());
+
   glBegin(GL_QUADS);
-  glVertex3dv(&s1(0));
-  glVertex3dv(&s11(0));
-  glVertex3dv(&s22(0));
-  glVertex3dv(&s2(0));
+  glVertex3d(x,y,0);
+  glVertex3d(vw-x,y,0);
+  glVertex3d(vw-x,y+border_hei,0);
+  glVertex3d(x,y+border_hei,0);
+
+  glVertex3d(vw-x-border_wid,y+border_hei,0);
+  glVertex3d(vw-x,y+border_hei,0);
+  glVertex3d(vw-x,vh-y,0);
+  glVertex3d(vw-x-border_wid,vh-y,0);
+
+  if (color2)
+    glColor4dv(color2);
+
+  glVertex3d(x,vh-y,0);
+  glVertex3d(vw-x,vh-y,0);
+  glVertex3d(vw-x-border_wid,vh-y-border_hei,0);
+  glVertex3d(x,vh-y-border_hei,0);
+
+  glVertex3d(x,y,0);
+  glVertex3d(x+border_wid,y+border_hei,0);
+  glVertex3d(x+border_wid,vh-y-border_hei,0);
+  glVertex3d(x,vh-y-border_hei,0);
+
   glEnd();
+  CHECK_OPENGL_ERROR();
 
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   CHECK_OPENGL_ERROR();
-#endif
 }
+
+  
 
 
 // renders vertical and horizontal bars that represent
@@ -872,36 +739,63 @@ Painter::SliceWindow::render_grid()
   }
   double gap = gaps[selected];
 
-  Point min = screen_to_world(0,0);
-  Point max = screen_to_world(viewport_->width()-1, viewport_->height()-1);
+  const int vw = viewport_->width();
+  const int vh = viewport_->height();
 
-  int xax = painter_.x_axis(*this);
-  int yax = painter_.y_axis(*this);
-  min(xax) = div_d(min(xax), gap)*gap;
-  min(yax) = div_d(min(yax), gap)*gap;
 
-  glColor4d(1.0, 1.0, 1.0, 1.0);
+  double grey1[4] = { 0.75, 0.75, 0.75, 1.0 };
+  double grey2[4] = { 0.5, 0.5, 0.5, 1.0 };
+  double grey3[4] = { 0.25, 0.25, 0.25, 1.0 };
+  double white[4] = { 1,1,1,1 };
+  render_frame(0,0, 15, 15, grey1);
+  render_frame(15,15, 3, 3, white, grey2 );
+  render_frame(17,17, 2, 2, grey3);
+
+  double grid_color = 0.0;
+
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
   CHECK_OPENGL_ERROR();
-  FreeTypeTextTexture text("X",painter_.fonts_["default"]);
+
+  Point min = screen_to_world(0,0);
+  Point max = screen_to_world(vw-1, vh-1);
+
+  int xax = x_axis();
+  int yax = y_axis();
+  min(xax) = div_d(min(xax), gap)*gap;
+  min(yax) = div_d(min(yax), gap)*gap;
+
+  FreeTypeTextTexture text("X", painter_->fonts_["default"]);
+  vector<string> lab;
+  lab.push_back("X: ");
+  lab.push_back("Y: ");
+  lab.push_back("Z: ");
+  
+
   int num = 0;
   Point linemin = min;
   Point linemax = min;
   linemax(yax) = max(yax);
   while (linemin(xax) < max(xax)) {
     linemin(xax) = linemax(xax) = min(xax) + gap*num;
+    glColor4d(grid_color, grid_color, grid_color, 1.0);
     glBegin(GL_LINES);
     glVertex3dv(&linemin(0));
     glVertex3dv(&linemax(0));
     glEnd();
 
-    text.set(to_string(linemin(xax)));
+    text.set(lab[xax]+to_string(linemin(xax)));
 
     Point pos = world_to_screen(linemin);
-    text.draw(pos.x()+1, pos.y(), FreeTypeTextTexture::sw);
+    text.set_color(1,1,1,1);
+    text.draw(pos.x()+2, 0, FreeTypeTextTexture::sw);
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
+    text.draw(pos.x()+1, 1, FreeTypeTextTexture::sw);
 
     pos = world_to_screen(linemax);
+    text.set_color(1,1,1,1);
+    text.draw(pos.x()+2, pos.y()-1, FreeTypeTextTexture::nw);
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
     text.draw(pos.x()+1, pos.y(), FreeTypeTextTexture::nw);
 
     num++;
@@ -912,26 +806,48 @@ Painter::SliceWindow::render_grid()
   linemax(xax) = max(xax);
   while (linemin(yax) < max(yax)) {
     linemin(yax) = linemax(yax) = min(yax) + gap*num;
+    glColor4d(grid_color, grid_color, grid_color, 1.0);
     glBegin(GL_LINES);
     glVertex3dv(&linemin(0));
     glVertex3dv(&linemax(0));
     glEnd();
+    
+    text.set(to_string(linemin(yax)));
+    Point pos = world_to_screen(linemin);
+    text.set_color(1,1,1,1);
+    render_vertical_text(&text, text.width()/2, pos.y()+2);
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
+    text.set(to_string(linemin(yax)));
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
+    render_vertical_text(&text, text.width()/2, pos.y()+1);
 
     text.set(to_string(linemin(yax)));
+     pos = world_to_screen(linemax);
+    text.set_color(1,1,1,1);
+    render_vertical_text(&text, vw-2-text.width()/2, pos.y()+1);
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
+    text.set(to_string(linemin(yax)));
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
+    render_vertical_text(&text, vw-2-text.width()/2, pos.y());
 
-    Point pos = world_to_screen(linemin);
-    text.draw(pos.x(), pos.y()+1, FreeTypeTextTexture::sw);
+
+#if 0
+
+
+    text.draw(1, pos.y(), FreeTypeTextTexture::sw);
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
+    text.draw(0, pos.y()+1, FreeTypeTextTexture::sw);
 
     pos = world_to_screen(linemax);
+    text.set_color(1,1,1,1);
+    text.draw(pos.x()+1, pos.y(), FreeTypeTextTexture::se);
+    text.set_color(grid_color, grid_color, grid_color, 1.0);
     text.draw(pos.x(), pos.y()+1, FreeTypeTextTexture::se);
-    
+#endif
     CHECK_OPENGL_ERROR();
     num++;
   }
 }
-
-
-
 
 
 Point
@@ -1003,39 +919,28 @@ Painter::NrrdVolume::inside_p(const Point &p) {
 
 
 
-// Returns and index to the axis that is most parallel and in the direction of
-// +X in the screen.  
-// 0 for +x, 1 for +y, and 2 for +z
-// 3 for -x, 4 for -y, and 5 for -z
+// Returns the index to the axis coordinate that is most parallel and 
+// in the direction of X in the screen.  
+// 0 for x, 1 for y, and 2 for z
 int
-Painter::x_axis(SliceWindow &window)
+Painter::SliceWindow::x_axis()
 {
-  Vector dir = window.x_dir();
-  Vector adir = Abs(dir);
+  Vector adir = Abs(x_dir());
   if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
   if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
   return 2;
-
-  //  int m = adir[0] > adir[1] ? 0 : 1;
-  //  m = adir[m] > adir[2] ? m : 2;
-  //  return dir[m] < 0.0 ? m+3 : m;
 }
 
-// Returns and index to the axis that is most parallel and in the direction of
-// +Y in the screen.  
-// 0 for +x, 1 for +y, and 2 for +z
-// 3 for -x, 4 for -y, and 5 for -z
+// Returns the index to the axis coordinate that is most parallel and 
+// in the direction of Y in the screen.  
+// 0 for x, 1 for y, and 2 for z
 int
-Painter::y_axis(SliceWindow &window)
+Painter::SliceWindow::y_axis()
 {
-  Vector dir = window.y_dir();
-  Vector adir = Abs(dir);
+  Vector adir = Abs(y_dir());
   if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
   if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
   return 2;
-  //  int m = adir[0] > adir[1] ? 0 : 1;
-  //  m = adir[m] > adir[2] ? m : 2;
-  //  return dir[m] < 0.0 ? m+3 : m;
 }
 
 void
@@ -1044,7 +949,7 @@ Painter::SliceWindow::setup_gl_view()
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   CHECK_OPENGL_ERROR();
-  if (!painter_.current_volume_) return;
+  if (!painter_->current_volume_) return;
   
   if (axis_ == 0) { // screen +X -> +Y, screen +Y -> +Z
     glRotated(-90,0.,1.,0.);
@@ -1060,11 +965,18 @@ Painter::SliceWindow::setup_gl_view()
   glGetDoublev(GL_PROJECTION_MATRIX, gl_projection_matrix_);
   CHECK_OPENGL_ERROR();
 
-  //  const Point center = painter_.current_volume_->center(axis_, slice_num_);
   double hwid = viewport_->width()*50.0/zoom_();
   double hhei = viewport_->height()*50.0/zoom_();
-  double cx = center_(painter_.x_axis(*this));
-  double cy = center_(painter_.y_axis(*this));
+  int vol_x_fastest_axis = max_vector_magnitude_index
+    (painter_->current_volume_->vector_to_index(x_dir()));
+  int vol_y_fastest_axis = max_vector_magnitude_index
+    (painter_->current_volume_->vector_to_index(y_dir()));
+
+  double cx = center_(vol_x_fastest_axis);
+  double cy = center_(vol_y_fastest_axis);
+  cx = center_(x_axis());
+  cy = center_(y_axis());
+  
   double maxz = center_(axis_) + Max(hwid, hhei);
 
   glMatrixMode(GL_PROJECTION);
@@ -1077,7 +989,6 @@ Painter::SliceWindow::setup_gl_view()
 }
 
 
-
 string
 double_to_string(double val)
 {
@@ -1085,7 +996,6 @@ double_to_string(double val)
   snprintf(s, 49, "%1.2f", val);
   return string(s);
 }
-
 
 
 // Right	= -X
@@ -1097,15 +1007,15 @@ double_to_string(double val)
 void
 Painter::SliceWindow::render_orientation_text()
 {
-  FreeTypeFace *font = painter_.fonts_["orientation"];
+  FreeTypeFace *font = painter_->fonts_["orientation"];
   if (!font) return;
 
-  int prim = painter_.x_axis(*this);
-  int sec = painter_.y_axis(*this);
+  int prim = x_axis();
+  int sec = y_axis();
   
   string ltext, rtext, ttext, btext;
 
-  if (painter_.anatomical_coordinates_()) {
+  if (painter_->anatomical_coordinates_()) {
     switch (prim % 3) {
     case 0: ltext = "R"; rtext = "L"; break;
     case 1: ltext = "P"; rtext = "A"; break;
@@ -1159,20 +1069,20 @@ Painter::SliceWindow::render_orientation_text()
 void
 Painter::NrrdSlice::bind()
 {
-  do_lock();
   if (texture_ && tex_dirty_) { 
     delete texture_; 
     texture_ = 0; 
   }
 
+  volume_->mutex_.lock();
   if (!texture_) {
     vector<int> index = volume_->world_to_index(window_->center_);
-    int slice = index[window_->axis_];
-    if (slice >= 0 && slice < volume_->nrrd_->nrrd->axis[window_->axis_].size)
-        texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_, 
-                                                    window_->axis_,
-                                                    slice, 
-                                                    slice);
+    int slice = index[window_->axis_+1];
+    if (slice>=0 && slice < volume_->nrrd_->nrrd->axis[window_->axis_+1].size)
+      texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_, 
+                                                  window_->axis_+1,
+                                                  slice, 
+                                                  slice);
     tex_dirty_ = true;
   }
 
@@ -1182,11 +1092,11 @@ Painter::NrrdSlice::bind()
     ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_.get());
     texture_->set_colormap(cmap);
   }
+  volume_->mutex_.unlock();
 
   tex_dirty_ = false;
   geom_dirty_ = true;
 
-  do_unlock();
   return;
 }
 
@@ -1205,16 +1115,10 @@ void
 Painter::NrrdSlice::draw()
 {
   if (nrrd_dirty_) {
-    do_lock();
-    //    painter_->cur_slice_[window_->axis_] = window_->slice_num_;
-    painter_->slab_width_[window_->axis_] = 
-      window_->slab_max_ - window_->slab_min_ + 1;
-
     set_coords();
     nrrd_dirty_ = false;
     tex_dirty_ = true;
     geom_dirty_ = false;
-    do_unlock();
   }
 
   float a = volume_->opacity_;
@@ -1233,62 +1137,83 @@ Painter::NrrdSlice::draw()
     texture_->draw_quad(pos_, xdir_, ydir_);
 }
 
+void
+Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
+                                           double x, double y)
+{
+  string str = text->get_string();
+  for (unsigned int i = 0; i < str.length(); ++i) 
+  {
+    text->set(str.substr(i, 1));
+    text->draw(x,y, FreeTypeTextTexture::n);
+    y -= 2 + text->height();
+  }
+}
+
+
 
 void
 Painter::SliceWindow::render_text() {
-  if (!painter_.show_text_) return;
+  if (!painter_->show_text_) return;
 
-  FreeTypeFace *font = painter_.fonts_["default"];
+  FreeTypeFace *font = painter_->fonts_["default"];
   if (!font) return;
   
-  FreeTypeTextTexture 
-    text("X: "+double_to_string(painter_.mouse_.position_.x())+
-         " Y: "+double_to_string(painter_.mouse_.position_.y())+
-         " Z: "+double_to_string(painter_.mouse_.position_.z()), font);
-  text.draw(0,0);
+  FreeTypeTextTexture text("X", font);
+
+  const int yoff = 19;
+  const int xoff = 19;
   const int y_pos = text.height()+2;
   text.set("Zoom: "+to_string(zoom_())+"%");
-  text.draw(0, y_pos);
+  text.draw(xoff, yoff);
     
-  NrrdVolume *vol = painter_.current_volume_;
+  NrrdVolume *vol = painter_->current_volume_;
   if (vol) {
     const float ww = vol->clut_max_ - vol->clut_min_;
     const float wl = vol->clut_min_ + ww/2.0;
     text.set("WL: " + to_string(wl) +  " -- WW: " + to_string(ww));
-    text.draw(0, y_pos*2);
+    text.draw(xoff, y_pos+yoff);
 
     text.set("Min: " + to_string(vol->clut_min_) + 
              " -- Max: " + to_string(vol->clut_max_));
-    text.draw(0, y_pos*3);
+    text.draw(xoff, y_pos*2+yoff);
 
-    if (this == painter_.mouse_.window_) {
-      vector<int> index = vol->world_to_index(painter_.mouse_.position_);
+    if (this == painter_->mouse_.window_) {
+      text.set("X: "+double_to_string(painter_->mouse_.position_.x())+
+               " Y: "+double_to_string(painter_->mouse_.position_.y())+
+               " Z: "+double_to_string(painter_->mouse_.position_.z()));
+      text.draw(viewport_->width()-2-xoff,yoff, FreeTypeTextTexture::se);
+      
+      vector<int> index = vol->world_to_index(painter_->mouse_.position_);
       if (vol->index_valid(index)) {
+        text.set("S: "+to_string(index[1])+
+                 " C: "+to_string(index[2])+
+                 " A: "+to_string(index[3]));
+        text.draw(viewport_->width()-2-xoff,y_pos*1+yoff, FreeTypeTextTexture::se);
+
         double val;
         vol->get_value(index, val);
         text.set("Value: " + to_string(val));
-        text.draw(0,y_pos*4);
-        
-        text.set("S: "+to_string(index[0])+
-                 " C: "+to_string(index[1])+
-                 " A: "+to_string(index[2]));
-        text.draw(0, y_pos*5);
+        text.draw(viewport_->width()-2-xoff,y_pos*2+yoff, FreeTypeTextTexture::se);
+        //        text.draw(0,y_pos*4);
       }
+        //        text.draw(0, y_pos*5);
+        //      }
     }
   }
 
 
-  if (string(sci_getenv("USER")) == string("mdavis")) {
-    text.set("fps: "+to_string(painter_.fps_));
-    text.draw(0, viewport_->height() - 2, FreeTypeTextTexture::nw);
-  }
+//   if (string(sci_getenv("USER")) == string("mdavis")) {
+//     text.set("fps: "+to_string(painter_->fps_));
+//     text.draw(0, viewport_->height() - 2, FreeTypeTextTexture::nw);
+//   }
 
   render_orientation_text();
 
-  font = painter_.fonts_["view"];
+  font = painter_->fonts_["view"];
   if (!font) return;
   string str;
-  if (painter_.anatomical_coordinates_()) { 
+  if (!painter_->anatomical_coordinates_()) { 
     switch (axis_) {
     case 0: str = "Sagittal"; break;
     case 1: str = "Coronal"; break;
@@ -1308,29 +1233,31 @@ Painter::SliceWindow::render_text() {
   else if (mode_ == mip_e) str = "MIP - "+str;
 
   text = FreeTypeTextTexture(str, font);
+  text.set_color(0,0,0,1);
+  text.draw(viewport_->width() - 1, -1, FreeTypeTextTexture::se);
+  text.set_color(1,1,1,1);
   text.draw(viewport_->width() - 2, 0, FreeTypeTextTexture::se);
+
 }
 
 
 void
 Painter::NrrdSlice::set_coords() {
-  do_lock();
-
+  volume_->mutex_.lock();
   vector<int> centerindex = volume_->world_to_index(window_->center_);
-  pos_ = volume_->min(window_->axis_, centerindex[window_->axis_]);
+  pos_ = volume_->min(window_->axis_+1, centerindex[window_->axis_+1]);
 
   const int axis = window_->axis_;
-  vector<int> index(3,0);
+  vector<int> index(volume_->nrrd_->nrrd->dim,0);
   int prim = (axis == 1) ? 0 : (axis+1)%3;
-  index[prim] = volume_->nrrd_->nrrd->axis[prim].size;
+  index[prim+1] = volume_->nrrd_->nrrd->axis[prim+1].size;
   xdir_ = volume_->index_to_world(index) - pos_;
-  index[prim] = 0;
+  index[prim+1] = 0;
 
   int sec = (axis == 1) ? 2: (axis+2)%3;
-  index[sec] = volume_->nrrd_->nrrd->axis[sec].size;
+  index[sec+1] = volume_->nrrd_->nrrd->axis[sec+1].size;
   ydir_ = volume_->index_to_world(index) - pos_;
-
-  do_unlock();
+  volume_->mutex_.unlock();
 }
 
 
@@ -1341,15 +1268,16 @@ Painter::extract_window_slices(SliceWindow &window) {
   for (unsigned int s = 0; s < volumes_.size(); ++s)
     window.slices_[s]->volume_ = volumes_[s];
   for_each(window, &Painter::set_slice_nrrd_dirty);
-
+  if (window.paint_layer_) {
+    delete window.paint_layer_;
+    window.paint_layer_ = 0;
+  }
   return window.slices_.size();
 }
 
 int
 Painter::set_slice_nrrd_dirty(NrrdSlice &slice) {
-  slice.do_lock();
   slice.nrrd_dirty_ = true;
-  slice.do_unlock();
   return 0;
 }
 
@@ -1368,30 +1296,66 @@ Painter::set_axis(SliceWindow &window, unsigned int axis) {
 void
 Painter::SliceWindow::prev_slice()
 {
-  if (!painter_.current_volume_) return;
+  if (!painter_->current_volume_) return;
   Point cached = center_;
   center_ = center_ + normal_;
-  if (!painter_.current_volume_->inside_p(center_)) {
+  if (!painter_->current_volume_->inside_p(center_)) {
     center_ = cached;
     return;
   }
-  painter_.extract_window_slices(*this);
-  painter_.redraw_all();
+  painter_->extract_window_slices(*this);
+  painter_->redraw_all();
 }
 
 void
 Painter::SliceWindow::next_slice()
 {
-  if (!painter_.current_volume_) return;
+  if (!painter_->current_volume_) return;
   Point cached = center_;
   center_ = center_ - normal_;
-  if (!painter_.current_volume_->inside_p(center_)) {
+  if (!painter_->current_volume_->inside_p(center_)) {
     center_ = cached;
     return;
   }
-  painter_.extract_window_slices(*this);
-  painter_.redraw_all();
+  painter_->extract_window_slices(*this);
+  painter_->redraw_all();
 }
+
+
+
+void
+Painter::layer_up()
+{
+  if (!current_volume_) return;
+  unsigned int i = 0;
+  for (i = 0; i < volumes_.size(); ++i)
+    if (volumes_[i] == current_volume_) break;
+  ASSERT(volumes_[i] == current_volume_);
+  if (i == volumes_.size()-1) return;
+  NrrdVolume *temp = volumes_[i+1];
+  volumes_[i+1] = volumes_[i];
+  volumes_[i] = temp;
+  for_each(&Painter::extract_window_slices);
+  redraw_all();
+}
+
+void
+Painter::layer_down()
+{
+  if (!current_volume_) return;
+  unsigned int i = 0;
+  for (i = 0; i < volumes_.size(); ++i)
+    if (volumes_[i] == current_volume_) break;
+  ASSERT(volumes_[i] == current_volume_);
+  if (i == 0) return;
+  NrrdVolume *temp = volumes_[i-1];
+  volumes_[i-1] = volumes_[i];
+  volumes_[i] = temp;
+  for_each(&Painter::extract_window_slices);
+  redraw_all();
+}
+
+
 
 
 void
@@ -1411,7 +1375,7 @@ Painter::SliceWindow::zoom_out()
 Point
 Painter::SliceWindow::screen_to_world(unsigned int x, unsigned int y) {
   GLdouble xyz[3];
-  gluUnProject(double(x), double(y), 0,
+  gluUnProject(double(x)+0.5, double(y)+0.5, 0,
 	       gl_modelview_matrix_, 
 	       gl_projection_matrix_,
 	       gl_viewport_,
@@ -1456,12 +1420,12 @@ Painter::NrrdVolume::index_to_world(const vector<int> &index) {
   for (unsigned int i = 0; i < dim-1; ++i)
     index_matrix[i] = index[i];
   index_matrix[dim-1] = 1.0;
-  DenseMatrix transform = build_index_to_world_matrix();
+  DenseMatrix transform = transform_;
   int tmp1, tmp2;
   transform.mult(index_matrix, world_coords, tmp1, tmp2);
   Point return_val;
-  for (int i = 0; i < 3; ++i) 
-    return_val(i) = world_coords[i];
+  for (int i = 1; i < 4; ++i) 
+    return_val(i-1) = world_coords[i];
   return return_val;
 }
 
@@ -1469,12 +1433,12 @@ Painter::NrrdVolume::index_to_world(const vector<int> &index) {
 
 vector<int> 
 Painter::NrrdVolume::world_to_index(const Point &p) {
-  DenseMatrix transform = build_index_to_world_matrix();
+  DenseMatrix transform = transform_;
   ColumnMatrix index_matrix(transform.ncols());
   ColumnMatrix world_coords(transform.nrows());
   for (int i = 0; i < transform.nrows(); ++i)
-    if (i < 3) 
-      world_coords[i] = p(i)-transform.get(i,transform.ncols()-1);
+    if (i > 0 && i < 4) 
+      world_coords[i] = p(i-1)-transform.get(i,transform.ncols()-1);
     else       
       world_coords[i] = 0.0;;
   transform.solve(world_coords, index_matrix, 1);
@@ -1489,12 +1453,12 @@ Painter::NrrdVolume::world_to_index(const Point &p) {
 
 vector<double> 
 Painter::NrrdVolume::vector_to_index(const Vector &v) {
-  DenseMatrix transform = build_index_to_world_matrix();
+  DenseMatrix transform = transform_;
   ColumnMatrix index_matrix(transform.ncols());
   ColumnMatrix world_coords(transform.nrows());
   for (int i = 0; i < transform.nrows(); ++i)
-    if (i < 3) 
-      world_coords[i] = v[i];
+    if (i > 0 && i < 4) 
+      world_coords[i] = v[i-1];
     else       
       world_coords[i] = 0.0;;
   int tmp, tmp2;
@@ -1507,24 +1471,31 @@ Painter::NrrdVolume::vector_to_index(const Vector &v) {
 
 
 
-DenseMatrix
+void
 Painter::NrrdVolume::build_index_to_world_matrix() {
   Nrrd *nrrd = nrrd_->nrrd;
   int dim = nrrd->dim+1;
   DenseMatrix matrix(dim, dim);
   matrix.zero();
-  for (int i = 0; i < dim-1; ++i)
+  for (int i = 0; i < dim-1; ++i) {
     if (airExists(nrrd->axis[i].spacing))
       matrix.put(i,i,nrrd->axis[i].spacing);
     else 
       matrix.put(i,i,((nrrd->axis[i].max-nrrd->axis[i].min+1.0)/
                       nrrd->axis[i].size));
+    if (airExists(nrrd->axis[i].min))
+      matrix.put(i, nrrd->dim, nrrd->axis[i].min);
+  }
+
+  if (nrrd->axis[0].size != 1) {
+    matrix.put(2,nrrd->dim, nrrd->axis[2].min+nrrd->axis[2].size*matrix.get(2,2));
+    matrix.put(2,2,-matrix.get(2,2));
+  }
+
+
   matrix.put(dim-1, dim-1, 1.0);
-  
-  for (int i = 0; i < 3; ++i)
-    matrix.put(i, nrrd->dim, nrrd->axis[i].min);
-  return matrix;
-      
+    
+  transform_ = matrix;
 }
 
 bool
@@ -1567,18 +1538,6 @@ Painter::receive_filter_data()
   return true;
 }
 
-bool
-Painter::static_callback(void *this_ptr) {
-  return ((Painter *)this_ptr)->callback();
-}
-
-bool
-Painter::callback() {
-//   if (filter_) 
-//     cerr << "filter = false\n";
-  filter_ = 0;
-  return true;
-}
   
 void
 Painter::execute()
@@ -1632,7 +1591,6 @@ Painter::execute()
   }
   
   update_state(Module::Executing);
-  TCLTask::lock();
   
   for (unsigned int n = 0; n < nrrds.size(); ++n) {
     if (volume_map_.find(nrrd_names[n]) == volume_map_.end()) 
@@ -1657,8 +1615,6 @@ Painter::execute()
   for_each(&Painter::extract_window_slices);
   for_each(&Painter::mark_autoview);
 
-  TCLTask::unlock();
-
   send_data();
 
   update_state(Module::Completed);
@@ -1667,9 +1623,7 @@ Painter::execute()
 
 int
 Painter::set_probe(SliceWindow &window) {
-  vector<int> index = current_volume_->world_to_index(mouse_.position_);
-  if (current_volume_->index_valid(index)) {
-    //    window.slice_num_ = index[window.axis_];
+  if (current_volume_->inside_p(mouse_.position_)) {
     window.center_(window.axis_) = mouse_.position_(window.axis_);
     extract_window_slices(window);
   }
@@ -1679,9 +1633,7 @@ Painter::set_probe(SliceWindow &window) {
 
 int
 Painter::rebind_slice(NrrdSlice &slice) {
-  slice.do_lock();
   slice.tex_dirty_ = true;
-  slice.do_unlock();
   return 1;
 }
 
@@ -1694,7 +1646,7 @@ Painter::handle_gui_mouse_enter(GuiArgs &args) {
 	    ("Cannot handle enter on "+args[2]).c_str());
   ASSERTMSG(current_layout_ == 0, "Haven't left window");
   current_layout_ = layouts_[args[2]];
-  update_mouse_state(args, true);
+  update_mouse_state(args);
   if (mouse_.window_)
     redraw_window(*mouse_.window_);
 }
@@ -1704,7 +1656,7 @@ void
 Painter::handle_gui_mouse_leave(GuiArgs &args) {
   SliceWindow *left_window = mouse_.window_;
   current_layout_ = 0;
-  update_mouse_state(args, true);
+  update_mouse_state(args);
   if (left_window)
     redraw_window(*left_window);
 }
@@ -1865,6 +1817,8 @@ Painter::handle_gui_keypress(GuiArgs &args) {
         for_each(&Painter::redraw_window);
       }
     }
+    else if (args[4] == "semicolon") layer_up();
+    else if (args[4] == "apostrophe") layer_down();
     else if (args[4] == "0") set_axis(window, 0);
     else if (args[4] == "1") set_axis(window, 1);
     else if (args[4] == "2") set_axis(window, 2);
@@ -1874,7 +1828,7 @@ Painter::handle_gui_keypress(GuiArgs &args) {
     }
     else if (args[4] == "g") { 
       if (!tool_) 
-        tool_ = scinew PixelPaintTool(this);
+        tool_ = scinew PaintTool(this);
     }
     else if (args[4] == "h") { 
       if (!tool_) 
@@ -1916,21 +1870,17 @@ Painter::handle_gui_keypress(GuiArgs &args) {
       window.mode_ = (window.mode_+1)%num_display_modes_e;
       extract_window_slices(window);
       redraw_window(window);
-//     } else if (args[4] == "Left") {
-//       window.x_ += pan_delta;
-//       redraw_window(window);
-//     } else if (args[4] == "Right") {
-//       window.x_ -= pan_delta;
-//       redraw_window(window);
-    } else if (args[4] == "Down") {
-//       window.y_ += pan_delta;
-//       redraw_window(window);
+    } 
+    else if (args[4] == "Left") layer_up();
+    else if (args[4] == "Right") layer_down();
+    else if (args[4] == "Down") {
       if (volumes_.size() < 2 || current_volume_ == volumes_[0]) 
         return;
       for (unsigned int i = 1; i < volumes_.size(); ++i)
         if (current_volume_ == volumes_[i]) {
           current_volume_ = volumes_[i-1];
           cerr << "Current volume: " << current_volume_->name_.get() << std::endl;
+          redraw_all();
           return;
         }
           
@@ -1941,11 +1891,9 @@ Painter::handle_gui_keypress(GuiArgs &args) {
         if (current_volume_ == volumes_[i]) {
           current_volume_ = volumes_[i+1];
           cerr << "Current volume: " << current_volume_->name_.get() << std::endl;
+          redraw_all();
           return;
         }
-
-//       window.y_ -= pan_delta;
-//       redraw_window(window);
     }
   }
 }
@@ -1997,14 +1945,11 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
   } else if(args[1] == "add_viewport") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
     WindowLayout *layout = layouts_[args[2]];
-    SliceWindow *window = scinew SliceWindow(*this, ctx->subVar(args[3],0));
+    SliceWindow *window = scinew SliceWindow(this, ctx->subVar(args[3],0));
     window->layout_ = layout;
     window->name_ = args[2];
     window->viewport_ = scinew OpenGLViewport(layout->opengl_);
-    window->axis_ = (layouts_.size())%3;
-    window->normal_ = Vector(0,0,0);
-    window->normal_[window->axis_] = 1.0;
-
+    set_axis(*window, layouts_.size()%3);
     layout->windows_.push_back(window);
     autoview(*window);
   } else if(args[1] == "redraw") {
@@ -2150,18 +2095,18 @@ Painter::autoview(SliceWindow &window) {
 //     cerr << x_index[i] << ", ";
 //   cerr << " <- x_index\n";
 
-  int xax = x_axis(window);
-  int yax = y_axis(window);
+  int xax = window.x_axis();
+  int yax = window.y_axis();
 
   vector<int> zero(current_volume_->nrrd_->nrrd->dim,0);
   vector<int> index = zero;
-  index[xax] = current_volume_->nrrd_->nrrd->axis[xax].size;
+  index[xax+1] = current_volume_->nrrd_->nrrd->axis[xax+1].size;
   double w_wid = (current_volume_->index_to_world(index) - 
                   current_volume_->index_to_world(zero)).length();
   double w_ratio = wid/w_wid;
 
   index = zero;
-  index[yax] = current_volume_->nrrd_->nrrd->axis[yax].size;
+  index[yax+1] = current_volume_->nrrd_->nrrd->axis[yax+1].size;
   double w_hei = (current_volume_->index_to_world(index) - 
                   current_volume_->index_to_world(zero)).length();
   double h_ratio = hei/w_hei;

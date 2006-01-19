@@ -80,7 +80,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Thread/Semaphore.h>
 #include <Core/Util/Timer.h>
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
@@ -282,7 +281,6 @@ class Painter : public Module
     double              value_;
   };
 
-  class NrrdVolume;
   class StatisticsTool : public PainterTool {
   public:
     StatisticsTool(Painter *painter);
@@ -296,6 +294,25 @@ class Painter : public Module
     double              standard_deviation_;
     double              mean_;
     vector<double>      values_;
+  };
+
+
+  class PaintTool : public PainterTool {
+  public:
+    PaintTool(Painter *painter);
+    ~PaintTool();
+    string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
+    string *            mouse_motion(MouseState &);
+    string *            draw(SliceWindow &window);
+  private:
+    void                line(Nrrd *, double, int, int, int, int, bool);
+    void                splat(Nrrd *, double,int,int);
+    
+    vector<int>         last_index_;
+    double              radius_;
+    bool                drawing_;
+
   };
     
 
@@ -311,16 +328,21 @@ class Painter : public Module
 
   class NrrdVolume { 
   public:
+    // Constructor
     NrrdVolume		(GuiContext *ctx, 
                          const string &name,
                          NrrdDataHandle &);
-    NrrdVolume          (NrrdVolume *copy, const string &name, bool clear = 0);
+    // Copy Constructor
+    NrrdVolume          (NrrdVolume *copy, 
+                         const string &name, 
+                         bool clear = 0); // if true, zeros out volume
+
     void                set_nrrd(NrrdDataHandle &);
     NrrdDataHandle      get_nrrd();
     Point               index_to_world(const vector<int> &index);
     vector<int>         world_to_index(const Point &p);
     vector<double>      vector_to_index(const Vector &v);
-    DenseMatrix         build_index_to_world_matrix();
+    void                build_index_to_world_matrix();
     bool                index_valid(const vector<int> &index);
     template<class T>
     void                get_value(const vector<int> &index, T &value);
@@ -344,11 +366,12 @@ class Painter : public Module
     UIdouble		opacity_;
     UIdouble            clut_min_;
     UIdouble            clut_max_;
-    Semaphore           semaphore_;
+    Mutex               mutex_;
     float               data_min_;
     float               data_max_;
     GuiInt              colormap_;
     vector<int>         stub_axes_;
+    DenseMatrix         transform_;
   };
 
   struct SliceWindow;
@@ -372,18 +395,12 @@ class Painter : public Module
     Vector              ydir_;
 
     ColorMappedNrrdTextureObj *    texture_;
-
-    //    Mutex		lock_;
-    //    Thread *	owner_;
-    //    int		lock_count_;
-    void		do_lock();
-    void		do_unlock();
   };
   typedef vector<NrrdSlice *>		NrrdSlices;
   typedef vector<NrrdSlices>		NrrdVolumeSlices;
 
   struct SliceWindow { 
-    SliceWindow(Painter &painter, GuiContext *ctx);
+    SliceWindow(Painter *painter, GuiContext *ctx);
     void                setup_gl_view();
     void		next_slice();
     void		prev_slice();
@@ -396,15 +413,20 @@ class Painter : public Module
     int                 x_axis();
     int                 y_axis();
     void                render_text();
+    void                render_vertical_text(FreeTypeTextTexture *text,
+                                             double, double);
     void		render_orientation_text();
     void		render_grid();
-    void                draw_line(const Point &, const Point &);
+    void		render_frame(double,double,double,double,
+                                     double *color1 = 0, double *color2=0);
+    void		render_guide_lines(Point);
 
-    Painter &           painter_;
+    Painter *           painter_;
     string		name_;
     WindowLayout *	layout_;
     OpenGLViewport *	viewport_;
     NrrdSlices		slices_;
+    NrrdSlice*          paint_layer_;
 
     Point               center_;
     Vector              normal_;
@@ -464,7 +486,6 @@ class Painter : public Module
   MouseState            mouse_;
 
   int			cur_slice_[3];
-  int			slab_width_[3];
 
   UIint			anatomical_coordinates_;
   UIint			show_text_;
@@ -489,7 +510,7 @@ class Painter : public Module
   // Methods for drawing to the GL window
   void			redraw_all();
   int			redraw_window(SliceWindow &);
-  void			draw_guide_lines(SliceWindow &, float, float, float);
+
   void			draw_slice_lines(SliceWindow &);
 
   
@@ -504,10 +525,6 @@ class Painter : public Module
 
   // Methods for navigating around the slices
   void			set_axis(SliceWindow &, unsigned int axis);
-
-  // Methods for cursor/coordinate projection and its inverse
-  int			x_axis(SliceWindow &);
-  int			y_axis(SliceWindow &);
 
   // Methods called by tcl_command
   void                  update_mouse_state(GuiArgs &args, bool reset = false);
@@ -542,6 +559,8 @@ class Painter : public Module
   ColorMapHandle        get_colormap(int id);
   void                  send_data();
   bool                  receive_filter_data();
+  void                  layer_up();
+  void                  layer_down();
 
 public:
   Painter(GuiContext* ctx);
@@ -551,7 +570,6 @@ public:
   void			real_draw_all();
 
   static bool           static_callback(void *);
-  bool                  callback();
 
   virtual void          set_context(Network *);
   double		fps_;
@@ -687,6 +705,9 @@ nrrd_set_value(Nrrd *nrrd,
   }
 }
 
+
+int nrrd_type_size(Nrrd *);
+int nrrd_data_size(Nrrd *);
 
 
 template<class T>

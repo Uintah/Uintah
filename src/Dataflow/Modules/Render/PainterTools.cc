@@ -153,7 +153,7 @@ Painter::ZoomTool::mouse_button_release(MouseState &mouse) {
 
 string *
 Painter::ZoomTool::mouse_motion(MouseState &mouse) {
-  double scale = 1.0;//exp(log(window_->zoom_/100.0)/log(10.0));
+  //  double scale = 1.0;//exp(log(window_->zoom_/100.0)/log(10.0));
   //  cerr << scale << std::endl;
   //  window_->zoom_ = Max(1.0,zoom_+scale*(mouse.dx_+mouse.dy_));
   window_->zoom_ = Max(0.00001,zoom_*Pow(1.002,mouse.dx_+mouse.dy_));
@@ -232,12 +232,10 @@ Painter::PanTool::mouse_button_release(MouseState &mouse) {
 string *
 Painter::PanTool::mouse_motion(MouseState &mouse) {
   const float scale = 100.0/window_->zoom_;
-  int xax = painter_->x_axis(*window_);
-  int yax = painter_->y_axis(*window_);
+  int xax = window_->x_axis();
+  int yax = window_->y_axis();
   window_->center_(xax) = center_(xax) - mouse.dx_ * scale;
   window_->center_(yax) = center_(yax) + mouse.dy_ * scale;
-  //  window_->y_ = center_(painter_->y_axis(*window_)) + mouse.dy_ * scale;
-  //  window_->y_ = y_ + mouse.dy_ * scale;
   painter_->redraw_window(*window_);
   return 0; 
 }
@@ -283,8 +281,8 @@ Painter::CropTool::mouse_motion(MouseState &mouse) {
   Vector crop_delta_y = crop_delta.second*mouse.dy_;
   Point min = bbox_.min();
   Point max = bbox_.max();
-  const int p = painter_->x_axis(window);
-  const int s = painter_->y_axis(window);
+  const int p = window.x_axis();
+  const int s = window.y_axis();
 
   vector<int> max_slice = painter_->current_volume_->max_index();
 
@@ -405,8 +403,8 @@ Painter::CropTool::draw(SliceWindow &window) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   const int axis = window.axis_;
-  int p = painter_->x_axis(window);
-  int s = painter_->y_axis(window);
+  int p = window.x_axis();
+  int s = window.y_axis();
   
   Vector scale = painter_->current_volume_->scale();
 
@@ -573,8 +571,8 @@ void
 Painter::CropTool::compute_crop_pick_boxes(SliceWindow &window) 
 {
   const int axis = window.axis_;
-  int p = painter_->x_axis(window);
-  int s = painter_->y_axis(window);
+  int p = window.x_axis();
+  int s = window.y_axis();
   
   Vector scale = painter_->current_volume_->scale();
 
@@ -686,14 +684,14 @@ Painter::CropTool::get_crop_vectors(SliceWindow &window, int pick)
   Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
   tmp[window.axis_] = 0;
   const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
-  const int x_ax = painter_->x_axis(window);
-  const int y_ax = painter_->y_axis(window);
+  const int xax = window.x_axis();
+  const int yax = window.y_axis();
   Vector x_delta(0.0, 0.0, 0.0), y_delta(0.0, 0.0, 0.0);
   Vector scale = painter_->current_volume_->scale();
   if (pick != 6 && pick != 8)
-    x_delta[x_ax] = one/scale[x_ax];
+    x_delta[xax] = one/scale[xax];
   if (pick != 5 && pick != 7)
-    y_delta[y_ax] = -one/scale[y_ax];
+    y_delta[yax] = -one/scale[yax];
   
   return make_pair(x_delta, y_delta);
 }
@@ -1073,6 +1071,213 @@ Painter::StatisticsTool::draw(SliceWindow &window)
   return 0;
 }
 
+Painter::PaintTool::PaintTool(Painter *painter) :
+  PainterTool(painter, "Paint"),
+  radius_(5.0),
+  drawing_(false)
+    
+{
+}
+
+
+Painter::PaintTool::~PaintTool()
+{
+}
+
+string *
+Painter::PaintTool::mouse_button_press(MouseState &mouse)
+{
+  if (mouse.button_ == 1) {
+    SliceWindow *window = mouse.window_;
+    if (!window->paint_layer_) {
+      window->paint_layer_ = scinew NrrdSlice(painter_, painter_->current_volume_, window);
+      NrrdSlice &paint = *window->paint_layer_;
+      paint.bind();
+
+      Nrrd *nrrd = paint.texture_->nrrd_->nrrd;
+      memset(nrrd->data, 0, nrrd_data_size(nrrd));
+    }
+
+    //    paint.texture_->set_clut_minmax(0.0, 1.0);
+    //    ColorMapHandle cmap = 0;
+    //    paint.texture_->set_colormap(cmap);
+    //    
+    last_index_ = window->paint_layer_->volume_->world_to_index(mouse.position_);
+    drawing_ = true;
+  } else if (mouse.button_ == 4) {
+    radius_ += 2;
+    cerr << "radius: " << radius_ << std::endl;
+  } else if (mouse.button_ == 5) {
+    radius_ = Clamp(radius_-2, 1.0, radius_);
+    cerr << "radius: " << radius_ << std::endl;
+  }
+
+  return 0;
+}
+
+string *
+Painter::PaintTool::mouse_button_release(MouseState &mouse)
+
+{  
+  if (mouse.state_ & MouseState::BUTTON_1_E) {
+    drawing_ = false;
+  }
+  
+
+  if (mouse.state_ & MouseState::BUTTON_3_E) {
+    NrrdSlice &paint = *mouse.window_->paint_layer_;
+    NrrdData *nout = scinew NrrdData();
+    nrrdSplice(nout->nrrd,
+               painter_->current_volume_->nrrd_->nrrd,
+               paint.texture_->nrrd_->nrrd,
+               mouse.window_->axis_+1,
+               last_index_[mouse.window_->axis_+1]);
+    painter_->current_volume_->nrrd_ = nout;
+               
+    if (mouse.window_->paint_layer_) {
+      delete mouse.window_->paint_layer_;
+      mouse.window_->paint_layer_ = 0;
+    }
+    return new string ("Done");
+  }
+  return 0;
+}
+
+string *
+Painter::PaintTool::mouse_motion(MouseState &mouse)
+{
+  SliceWindow *window = mouse.window_;
+  if (!window->paint_layer_) return 0;
+
+  NrrdSlice &paint = *window->paint_layer_;
+  NrrdVolume *volume = paint.volume_;
+  
+  vector<int> index = 
+    volume->world_to_index(mouse.position_);
+  if (!volume->index_valid(index)) return 0;
+  
+  if (mouse.state_ & MouseState::BUTTON_1_E && drawing_) {
+
+    vector<int> index1(index.size()-1, 0);
+    vector<int> index2 = index1;
+    for (unsigned int i = 0, j=0; i < index.size(); ++i) 
+      if (i != (window->axis_+1)) {
+        index1[j] = last_index_[i];
+        index2[j] = index[i];
+        ++j;
+      }
+    last_index_ = index;
+
+    line(paint.texture_->nrrd_->nrrd, radius_, 
+         index1[1], index1[2],
+         index2[1], index2[2], true);
+
+         
+        
+//     nrrd_set_value(paint.texture_->nrrd_->nrrd, 
+//                    index2, 1.0);
+    paint.texture_->set_dirty();
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
+  }
+  
+
+  return 0;
+
+
+//     vector<int> index = 
+//       volume->world_to_index(mouse.position_);
+//     if (!volume->index_valid(index)) return 0;
+//     volume->get_value(index, value_);
+//   }
+
+}
+
+string *
+Painter::PaintTool::draw(SliceWindow &window)
+{
+  return 0;
+}
+
+
+
+void
+Painter::PaintTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
+{
+  vector<int> index(3,0);
+  const int wid = Round(radius);
+  for (int y = y0-wid; y <= y0+wid; ++y)
+    for (int x = x0-wid; x <= x0+wid; ++x)
+      if (x >= 0 && x < nrrd->axis[1].size &&
+          y >= 0 && y < nrrd->axis[2].size) 
+        {
+          index[1] = x;
+          index[2] = y;
+          float dist = sqrt(double(x0-x)*(x0-x)+(y0-y)*(y0-y))/radius;
+          if (dist <= 1.0) {
+            dist = 1.0 - dist;
+            dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
+            dist += painter_->current_volume_->clut_min_;
+            nrrd_set_value(nrrd, index, dist);
+          }
+        }
+}
+
+void 
+Painter::PaintTool::line(Nrrd *nrrd, double radius,
+                     int x0, int y0, int x1, int y1, bool first)
+{
+  if (x0 < 0 || x0 >= nrrd->axis[1].size || 
+      x1 < 0 || x1 >= nrrd->axis[1].size || 
+      y0 < 0 || y0 >= nrrd->axis[2].size || 
+      y1 < 0 || y1 >= nrrd->axis[2].size) return;
+  int dy = y1 - y0;
+  int dx = x1 - x0;
+  int sx = 1;
+  int sy = 1;
+  int frac = 0;
+  bool do_splat = false;
+  if (dy < 0) { 
+    dy = -dy;
+    sy = -1; 
+  } 
+  if (dx < 0) { 
+    dx = -dx;  
+    sx = -1;
+  } 
+  dy <<= 1;
+  dx <<= 1;
+  if (first) splat(nrrd, radius, x0, y0);
+  if (dx > dy) {
+    frac = dy - (dx >> 1);
+    while (x0 != x1) {
+      if (frac >= 0) {
+        y0 += sy;
+        frac -= dx;
+      }
+      x0 += sx;
+      frac += dy;
+      splat(nrrd, radius, x0, y0);
+    }
+  } else {
+    frac = dx - (dy >> 1);
+    while (y0 != y1) {
+      if (frac >= 0) {
+        x0 += sx;
+        frac -= dy;
+        //        do_splat = true;
+      }
+      y0 += sy;
+      frac += dx;
+      //      if (do_splat) {
+        splat(nrrd, radius, x0, y0);
+        //        do_splat = true;
+        //      }
+    }
+  }
+}
+
+
 // string *
 // Painter::StatisticsTool::draw_mouse(MouseState &mouse)
 // {
@@ -1122,6 +1327,8 @@ Painter::TemplateTool::draw_mouse(MouseState &mouse)
   return 0;
 }
 */
+
+
 
 
       
