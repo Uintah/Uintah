@@ -875,8 +875,8 @@ TriSurfMesh<Basis>::compute_node_neighbors()
     node_neighbor_lock_.unlock();
     return;
   }
-  node_neighbors_.reserve(points_.size());
   node_neighbors_.clear();
+  node_neighbors_.resize(points_.size());
   unsigned int nfaces = faces_.size();
   for (unsigned int f = 0; f < nfaces; ++f)
   {
