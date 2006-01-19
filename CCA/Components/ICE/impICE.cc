@@ -789,6 +789,30 @@ void ICE::updatePressure(const ProcessorGroup*,
       press_CC[c] = max(1.0e-12, press_CC[c]);   // C L A M P
     }   
     
+/*`==========TESTING==========*/
+#if 1
+        FILE *fp;
+        ostringstream filename;
+        filename<<"Uintah_solution_L"<< level->getIndex();
+        string tmp = filename.str();
+        fp = fopen(tmp.c_str(), "w");
+        
+        IntVector low   = patch->getInteriorCellLowIndex();
+        IntVector high  = patch->getInteriorCellHighIndex();
+        
+        for(int k = low.z(); k < high.z(); k++)  {
+          for(int j = low.y(); j < high.y(); j++) {
+            for(int i = low.x(); i < high.x(); i++) {
+              IntVector idx(i, j, k);
+              fprintf(fp, "[%d,%d,%d]  %16.15E\n", i,j,k,imp_delP[idx]);
+            }
+          }
+        }
+        fclose(fp);
+        
+#endif
+/*===========TESTING==========`*/    
+    
     
    
 /*`==========TESTING==========*/
