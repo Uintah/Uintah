@@ -101,6 +101,11 @@ namespace SCIRun {
     return sqrt(d);
   }
 
+  inline float Sqrt(float d)
+  {
+    return sqrtf(d);
+  }
+
 #if defined(linux)||defined(_WIN32)
   inline double Cbrt(double d)
   {
