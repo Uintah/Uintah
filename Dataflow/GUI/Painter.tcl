@@ -158,10 +158,10 @@ itcl_class SCIRun_Render_Painter {
 	pack $top.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 	pack $bot.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 
- 	pack [gl_frame $topl.gl1] -expand 1 -fill both
- 	pack [gl_frame $topr.gl2] -expand 1 -fill both
- 	pack [gl_frame $botl.gl3] -expand 1 -fill both
- 	pack [gl_frame $botr.gl4] -expand 1 -fill both
+ 	pack [gl_frame $topl.gl1] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack [gl_frame $topr.gl2] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack [gl_frame $botl.gl3] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack [gl_frame $botr.gl4] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 
 
     }

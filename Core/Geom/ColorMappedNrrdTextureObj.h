@@ -44,14 +44,47 @@
 
 
 #include <string>
+#include <vector>
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
 
 namespace SCIRun {
 
 using std::string;
+
+
+class BBoxSet {
+public:
+  BBoxSet();
+  BBoxSet(BBox &bbox);
+  BBoxSet(BBoxSet &bbox);
+  ~BBoxSet();
+
+  typedef vector<BBox> BBoxes;
+
+  void          add(BBox &);
+  void          add(BBoxSet &);
+
+  void          sub(BBox &);
+  void          sub(BBoxSet &);
+
+  void          reset();
+
+  void          set(BBox &);
+  void          set(BBoxSet &);
+
+  BBox          get();
+  vector<BBox>  get_boxes();
+
+
+private:
+  BBoxes         boxes_;
+};
+ 
+
 class ColorMappedNrrdTextureObj {
 public:
   ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd, 
@@ -63,9 +96,13 @@ public:
 
   void                  set_colormap(ColorMapHandle &cmap);
   void                  set_clut_minmax(float min, float max);
-  void                  set_dirty();
+  void                  set_dirty() { nrrd_dirty_ = true; }
   void			draw_quad(Point &min, Vector &xdir, Vector &ydir);
-  bool                  dirty_p() { return dirty_; }
+  bool                  dirty_p() { return nrrd_dirty_; }
+
+  ColorMapHandle        colormap_;
+  NrrdDataHandle	nrrd_;
+
 private:
   bool			bind(int x, int y);
   float *               apply_colormap();
@@ -76,17 +113,18 @@ private:
                                                    const float *rgba,
                                                    int ncolors,
                                                    float scale, float bias);
-
-  ColorMapHandle        colormap_;
-  NrrdDataHandle	nrrd_;
-  bool			dirty_;
+  bool  		nrrd_dirty_;
+  vector<bool>		dirty_;
+  BBoxSet               dirty_region_;
   vector<unsigned int>  texture_id_;
   vector<pair<unsigned int, unsigned int> >  xdiv_;
   vector<pair<unsigned int, unsigned int> >  ydiv_;
   float                 clut_min_;
   float                 clut_max_;
-  float *               data_;
+  void *                data_;
+  bool                  own_data_;
 };
+
 
 }
 

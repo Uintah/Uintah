@@ -58,6 +58,7 @@ public:
   void                  set_color(double, double, double, double);
   int                   width();
   int                   height();
+  string                get_string() { return text_; };
 private:
   void			render_text_to_texture();
   NrrdTextureObj *	texture_;

@@ -184,6 +184,18 @@ bool BBox::overlaps(const BBox & bb)
   return true;
 }
 
+bool BBox::overlaps2(const BBox & bb)
+{
+  if( bb.cmin.x() >= cmax.x() || bb.cmax.x() <= cmin.x())
+    return false;
+  else if( bb.cmin.y() >= cmax.y() || bb.cmax.y() <= cmin.y())
+    return false;
+  else if( bb.cmin.z() >= cmax.z() || bb.cmax.z() <= cmin.z())
+    return false;
+
+  return true;
+}
+
 bool BBox::intersect(const Point& origin, const Vector& dir,
                      Point& hitPoint)
 {

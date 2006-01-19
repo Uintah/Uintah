@@ -94,6 +94,7 @@ namespace SCIRun {
     inline bool inside(const Point &p) const {return (is_valid && p.x()>=cmin.x() && p.y()>=cmin.y() && p.z()>=cmin.z() && p.x()<=cmax.x() && p.y()<=cmax.y() && p.z()<=cmax.z());}
 
     bool overlaps( const BBox& bb );
+    bool overlaps2( const BBox& bb );
 
     // returns true if the ray hit the bbox and returns the hit point
     // in hitNear
