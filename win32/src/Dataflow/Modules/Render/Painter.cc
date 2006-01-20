@@ -491,9 +491,9 @@ Painter::render_window(SliceWindow &window) {
     tool_->draw(window);
 
   window.render_text();
+  CHECK_OPENGL_ERROR();
   window.viewport_->release();
 
-  CHECK_OPENGL_ERROR();
   return 1;
 }
 
