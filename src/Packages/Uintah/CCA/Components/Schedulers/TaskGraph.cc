@@ -1135,10 +1135,15 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
       }
     } 
     else if (patches && patches->empty() && 
-             (req->patches_dom == Task::FineLevel || task->getTask()->getType() == Task::OncePerProc))
+             (req->patches_dom == Task::FineLevel || task->getTask()->getType() == Task::OncePerProc ||
+              strcmp(task->getTask()->getName(), "SchedulerCommon::copyDataToNewGrid") == 0))
     {
       // this is a either coarsen task where there aren't any fine patches, or a PerProcessor task where
       // there aren't any patches on this processor.  Perfectly legal, so do nothing
+
+      // another case is the copy-data-to-new-grid task, which will wither compute or modify to every patch
+      // but not both.  So it will yell at you for the detailed task's patches not intersecting with the 
+      // computes or modifies... (maybe there's a better way) - bryan
     }
     else {
       ostringstream desc;

@@ -473,6 +473,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     // need to interpolate these intermediate values
     t->requires(Task::NewDW, lb->gammaLabel,        0, Task::CoarseLevel, 0, ND, gn,0);
     t->requires(Task::NewDW, lb->specific_heatLabel,0, Task::CoarseLevel, 0, ND, gn,0);
+    t->requires(Task::NewDW, lb->vol_frac_CCLabel,  0, Task::CoarseLevel, 0, ND, gn,0);
     
 
     t->modifies(lb->press_CCLabel, d_press_matl, oims);     
