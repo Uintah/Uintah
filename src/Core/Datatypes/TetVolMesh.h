@@ -3716,7 +3716,7 @@ void
 TetVolMesh<Basis>::get_cells(typename Cell::array_type &array, 
 			     typename Node::index_type idx) const
 {
-  ASSERTMSG(is_frozen(),"only call get_cells with a node index if frozen!!");
+  //ASSERTMSG(is_frozen(),"only call get_cells with a node index if frozen!!");
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TetVolMesh first.");
   array.clear();
