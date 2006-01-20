@@ -14,7 +14,8 @@ SRCS += $(SRCDIR)/SimulationInterface.cc \
 	$(SRCDIR)/Regridder.cc \
 	$(SRCDIR)/Scheduler.cc \
 	$(SRCDIR)/SolverInterface.cc \
-	$(SRCDIR)/SwitchingCriteria.cc
+	$(SRCDIR)/SwitchingCriteria.cc \
+	$(SRCDIR)/SFC.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
