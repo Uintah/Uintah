@@ -44,6 +44,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Exceptions/InternalError.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
@@ -116,7 +117,7 @@ void
 FreeTypeTextTexture::render_text_to_texture()
 {
   if (!face_) 
-    throw "FreeTypeTextTexture::render_text_to_texture(), face_ == 0";
+    throw InternalError("FreeTypeTextTexture::render_text_to_texture(), face_ == 0", __FILE__, __LINE__);
   BBox bbox;
   bbox.reset();
   FreeTypeText fttext(text_, face_);
@@ -152,7 +153,7 @@ FreeTypeTextTexture::draw(double x, double y,
     render_text_to_texture();
 
   if (!texture_)
-    throw "FreeTypeTextTexture::draw() texture_ == 0";
+    throw InternalError("FreeTypeTextTexture::draw() texture_ == 0", __FILE__, __LINE__);
 
   double w = texture_->width();
   double h = texture_->height();

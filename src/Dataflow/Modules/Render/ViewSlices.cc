@@ -830,8 +830,8 @@ ViewSlices::render_window(SliceWindow &window) {
     set_window_cursor(window, 0);
   }
   draw_all_labels(window);
-  window.viewport_->release();
   GL_ERROR();
+  window.viewport_->release();
   return 1;
 }
 
