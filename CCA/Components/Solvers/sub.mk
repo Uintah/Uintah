@@ -37,7 +37,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec 
 
-LIBS := $(XML_LIBRARY) 
+LIBS := $(XML2_LIBRARY) 
 
 ifeq ($(HAVE_HYPRE),yes)
 LIBS := $(LIBS) $(HYPRE_LIBRARY) 

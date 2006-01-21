@@ -25,7 +25,7 @@ PSELIBS := \
 	Core/Datatypes \
 	Core/Geom \
 	Core/GeomInterface
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML2_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

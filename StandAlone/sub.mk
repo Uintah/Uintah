@@ -88,7 +88,7 @@ ifeq ($(IS_AIX),yes)
   LIBS := \
         $(TCL_LIBRARY) \
         $(TEEM_LIBRARY) \
-        $(XML_LIBRARY) \
+        $(XML2_LIBRARY) \
         $(Z_LIBRARY) \
         $(THREAD_LIBRARY) \
         $(F_LIBRARY) \
@@ -100,7 +100,7 @@ ifeq ($(IS_AIX),yes)
         $(X_LIBRARY) \
         -lld $(M_LIBRARY)
 else
-  LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 endif
@@ -138,7 +138,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -205,7 +205,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -247,7 +247,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 #         Core/Containers
 # endif
 
-# LIBS := $(XML_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
+# LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
 # SRCS := $(SRCDIR)/uda2nrrd.cc
 # PROGRAM := Packages/Uintah/StandAlone/uda2nrrd
@@ -286,7 +286,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -313,7 +313,7 @@ else
         Core/Geometry
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -325,7 +325,7 @@ PROGRAM := Packages/Uintah/StandAlone/async_mpi_test
 PSELIBS := \
         Core/Thread \
         Packages/Uintah/Core/Parallel
-LIBS    := $(XML_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -354,7 +354,7 @@ PSELIBS := \
         Core/OS          \
         Core/Containers
 endif
-LIBS    := $(XML_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -407,7 +407,7 @@ else
       Core/Geometry
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

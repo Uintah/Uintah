@@ -29,7 +29,7 @@ PSELIBS := \
 	Core/Exceptions                  \
 	Core/Util
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

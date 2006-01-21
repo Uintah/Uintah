@@ -199,8 +199,7 @@ namespace Uintah {
 
     if (d_restarting) {
       // do these before calling sim->problemSetup
-      XMLURL blah; // unused
-      const ProblemSpecP spec = d_archive->getTimestep(d_restartTime, blah);
+      const ProblemSpecP spec = d_archive->getTimestep(d_restartTime);
       d_sim->readFromTimestepXML(spec);
 
       // set prevDelt to what it was in the last simulation.  If in the last 
@@ -277,7 +276,6 @@ namespace Uintah {
     }
     d_scheduler->get_dw(1)->finalize();
     ProblemSpecP pspec = d_archive->getRestartTimestepDoc();
-    XMLURL url = d_archive->getRestartTimestepURL();
     //d_lb->restartInitialize(pspec, url);
     
     d_output->restartSetup(restartFromDir, 0, d_restartTimestep, t,

@@ -12,15 +12,14 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+typedef struct _xmlNode xmlNode;
+
 namespace SCIRun {
   class IntVector;
   class Vector;
   class Point;
 }
 
-class DOMNode;
-class DOMText;
-class DOMElement;
 namespace Uintah {
 
 class TypeDescription;
@@ -60,7 +59,7 @@ KEYWORDS
    Problem_Specification
 
 DESCRIPTION
-   The ProblemSpec class is used as a wrapper of the Xerces DOM implementation.
+   The ProblemSpec class is used as a wrapper of the libxml xml implementation.
    
   
 WARNING
@@ -78,8 +77,8 @@ WARNING
 	COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, 
 	DOCUMENT_FRAGMENT_NODE, NOTATION_NODE};
      
-      inline ProblemSpec(const DOMNode* node, bool doWrite=true){
-	d_node = const_cast<DOMNode*>(node); d_write = doWrite; 
+      inline ProblemSpec(const xmlNode* node, bool doWrite=true){
+	d_node = const_cast<xmlNode*>(node); d_write = doWrite; 
       }
 
       virtual ~ProblemSpec();
@@ -132,15 +131,11 @@ WARNING
 
       //////////
       // Replaces the child node replaced with the node toreplace
-      ProblemSpecP replaceChild(ProblemSpecP toreplace, ProblemSpecP replaced);
+      void replaceChild(ProblemSpecP toreplace, ProblemSpecP replaced);
 
       //////////
       // Removes the specified child node from the tree
-      ProblemSpecP removeChild(ProblemSpecP child);
-
-      //////////
-      // Creates and returns a node with name str
-      ProblemSpecP createElement(char* str);
+      void removeChild(ProblemSpecP child);
 
       //////////
       // creates (and does not append) a copy of node src
@@ -190,6 +185,7 @@ WARNING
       // only to be used when finished using entire document
       void releaseDocument();
 
+
       // Returns the root node of the DOM tree.
       ProblemSpecP getRootNode();
 
@@ -200,17 +196,17 @@ WARNING
 
       //////////
       // append a node with given value (of varied types) to this node
-      void appendElement(const char* name, const std::string& val, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const char* value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, int value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, long value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const IntVector& value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const Point& value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const Vector& value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, double value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const vector<double>& val,bool trail=0, int tabs=1);
-      void appendElement(const char* name, const vector<int>& val, bool trail=0, int tabs=1);
-      void appendElement(const char* name, bool value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const std::string& val, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const char* value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, int value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, long value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const IntVector& value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const Point& value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const Vector& value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, double value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const vector<double>& val,bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const vector<int>& val, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, bool value, bool trail=0, int tabs=1);
 
 
 
@@ -229,11 +225,6 @@ WARNING
       void require(const std::string& name, vector<double>& value);
       void require(const std::string& name, vector<int>& value); 
       void require(const std::string& name, vector<IntVector>& value);
-
-      //////////
-      // Get any optional attributes associated with a tag
-      void requireOptional(const std::string& name, std::string& value);
-      ProblemSpecP getOptional(const std::string& name, std::string& value);
 
       //////////
       // look for the value of tag named name and passes
@@ -284,7 +275,7 @@ WARNING
 
       //////////
       // Output the DOMTree.  
-      void output(char* filename = 0) const;
+      void output(const char* filename = 0) const;
 
       inline bool operator == (const ProblemSpec& a) const {
 	return a.d_node == d_node;
@@ -303,7 +294,7 @@ WARNING
 	return d_node != 0;
       }
       static const TypeDescription* getTypeDescription();
-      DOMNode* getNode() const {
+      xmlNode* getNode() const {
 	return d_node;
       }
 
@@ -321,7 +312,7 @@ WARNING
 
       //////////
       // to output the document
-      friend std::ostream& operator<<(std::ostream& out, const Uintah::ProblemSpecP pspec);
+      //friend std::ostream& operator<<(std::ostream& out, const Uintah::ProblemSpecP pspec);
    private:
 
       //////////
@@ -331,7 +322,7 @@ WARNING
       
       /////////
       // the node
-      DOMNode* d_node;
+      xmlNode* d_node;
       bool d_write;
    };
 

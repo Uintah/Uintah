@@ -26,6 +26,7 @@ namespace Uintah {
       
       std::string d_filename;
       ProblemSpecP d_xmlData;
+
    };
 } // End namespace Uintah
 
