@@ -28,7 +28,7 @@
 
 
 /*
- *  BridgeComponentDescription.h: 
+ *  BridgeComponentDescription.h:
  *
  *  Written by:
  *   Kostadin Damevski
@@ -45,6 +45,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
+
 class BridgeComponentModel;
 class BridgeComponentDescription : public ComponentDescription {
 public:
@@ -60,6 +61,7 @@ private:
   BridgeComponentDescription(const BridgeComponentDescription&);
   BridgeComponentDescription& operator=(const BridgeComponentDescription&);
 };
+
 }
 
 #endif

@@ -28,7 +28,7 @@
 
 
 /*
- *  CCAComponentModel.h: 
+ *  CCAComponentModel.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -68,13 +68,14 @@ class CCAComponentInstance;
 class CCAComponentModel : public ComponentModel
 {
 public:
-  CCAComponentModel(SCIRunFramework* framework);
+  CCAComponentModel(SCIRunFramework* framework,
+		    const StringVector& xmlPaths=StringVector());
   virtual ~CCAComponentModel();
 
   /** ? */
   sci::cca::Services::pointer createServices(const std::string& instanceName,
-                                             const std::string& className,
-                                             const sci::cca::TypeMap::pointer& properties);
+					     const std::string& className,
+					     const sci::cca::TypeMap::pointer& properties);
 
   /** ? */
   bool destroyServices(const sci::cca::Services::pointer& svc);
@@ -89,16 +90,16 @@ public:
       Returns a smart pointer to the newly created instance, or a null pointer
       on failure. */
   virtual ComponentInstance* createInstance(const std::string& name,
-                                            const std::string& type,
-                                            const sci::cca::TypeMap::pointer& properties);
-  
+					    const std::string& type,
+					    const sci::cca::TypeMap::pointer& properties);
+
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
   virtual bool destroyInstance(ComponentInstance *ci);
 
   /** Returns the name (as a string) of this component model. */
-  virtual std::string getName() const;
-  
+  virtual const std::string getName() const;
+
   /**
    * Creates a list of all the available components (as ComponentDescriptions)
    * registered in this ComponentModel.
@@ -106,13 +107,13 @@ public:
    * @param listInternal currently not used
    */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>& list,
-                                     bool listInternal);
+				     bool listInternal);
 
   /** ? */
   virtual void destroyComponentList();
 
   /** ? */
-  virtual void buildComponentList();
+  virtual void buildComponentList(const StringVector& files=StringVector());
 
   /** ? */
   int addLoader(resourceReference *rr);
@@ -127,17 +128,18 @@ public:
   void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
 
   static const std::string DEFAULT_PATH;
-  
+
+protected:
+  virtual void setComponentDescription(const std::string& type, const std::string& library);
+
 private:
-  SCIRunFramework* framework;
   std::string sidlDLLPath;
   typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
   componentDB_type components;
   std::vector<resourceReference*> loaderList;
-  SCIRun::Mutex lock_components;   
+  SCIRun::Mutex lock_components;
   SCIRun::Mutex lock_loaderList;
 
-  void readComponentDescription(const std::string& file);
   resourceReference *getLoader(std::string loaderName);
 
   CCAComponentModel(const CCAComponentModel&);

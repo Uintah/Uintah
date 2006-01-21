@@ -86,7 +86,6 @@ InternalFrameworkServiceInstance *InternalFrameworkServiceDescription::get(SCIRu
     try {
       sci::cca::Port::pointer port = pidl_cast<sci::cca::Port::pointer>(singleton_instance->getService(serviceType));
       if (! port.isNull()) {
-std::cerr << "InternalFrameworkServiceDescription::get(..): have port!!!" << std::endl;
         port->addReference();
       }
     }

@@ -28,7 +28,7 @@
 
 
 /*
- *  BridgeComponentModel.h: 
+ *  BridgeComponentModel.h:
  *
  *  Written by:
  *   Kostadin Damevski
@@ -51,52 +51,52 @@
 #include <map>
 
 namespace SCIRun {
-  class SCIRunFramework;
-  class BridgeComponentDescription;
-  class BridgeComponentInstance;
+class SCIRunFramework;
+class BridgeComponentDescription;
+class BridgeComponentInstance;
 
-  class BridgeComponentModel : public ComponentModel {
-  public:
-    BridgeComponentModel(SCIRunFramework* framework);
-    virtual ~BridgeComponentModel();
+class BridgeComponentModel : public ComponentModel {
+public:
+  BridgeComponentModel(SCIRunFramework* framework);
+  virtual ~BridgeComponentModel();
 
-    BridgeServices* createServices(const std::string& instanceName,
-                                   const std::string& className,
-                                   const sci::cca::TypeMap::pointer &tm);
+  BridgeServices* createServices(const std::string& instanceName,
+				 const std::string& className,
+				 const sci::cca::TypeMap::pointer &tm);
 
-    virtual bool haveComponent(const std::string& type);
+  virtual bool haveComponent(const std::string& type);
 
-    virtual ComponentInstance*
-    createInstance(const std::string& name,
-                   const std::string& type,
-                   const sci::cca::TypeMap::pointer &tm);
-    
-    virtual bool destroyInstance(ComponentInstance *ci);
+  virtual ComponentInstance*
+  createInstance(const std::string& name,
+		 const std::string& type,
+		 const sci::cca::TypeMap::pointer &tm);
 
-    virtual std::string getName() const;
+  virtual bool destroyInstance(ComponentInstance *ci);
 
-    virtual void
-    listAllComponentTypes(std::vector<ComponentDescription*>&,
-	                      bool);
+  virtual const std::string getName() const;
 
+  virtual void
+  listAllComponentTypes(std::vector<ComponentDescription*>&, bool);
 
-    static const std::string DEFAULT_PATH;
+  static const std::string DEFAULT_PATH;
 
-  private:
-    SCIRunFramework* framework;
-    typedef std::map<std::string, BridgeComponentDescription*> componentDB_type;
-    componentDB_type components;
-    SCIRun::Mutex lock_components;
+private:
+  typedef std::map<std::string, BridgeComponentDescription*> componentDB_type;
+  componentDB_type components;
+  SCIRun::Mutex lock_components;
 
-    void destroyComponentList();
-    void buildComponentList();
-    void readComponentDescription(const std::string& file);
-    BridgeComponentModel(const BridgeComponentModel&);
-    BridgeComponentModel& operator=(const BridgeComponentModel&);
+  virtual void destroyComponentList();
+  virtual void buildComponentList(const StringVector& files=StringVector());
+  virtual void setComponentDescription(const std::string& type, const std::string& library="");
 
-    std::vector<resourceReference* > loaderList;
+  void readComponentDescriptions(const std::string& file);
 
-  };
+  BridgeComponentModel(const BridgeComponentModel&);
+  BridgeComponentModel& operator=(const BridgeComponentModel&);
+
+  std::vector<resourceReference* > loaderList;
+
+};
 }
 
 #endif

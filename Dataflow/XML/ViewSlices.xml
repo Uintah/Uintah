@@ -39,7 +39,8 @@
       <author>McKay Davis</author>
     </authors>
     <summary>
-	The ViewSlices module displays orthogonal slices of a 3D Nrrd in a 2D OpenGL window.
+	The ViewSlices module displays orthogonal slices of a 3D Nrrd
+in a 2D OpenGL window.
     </summary>
     <description>
       <developer>
@@ -108,8 +109,8 @@
 	<name>Geometry</name>
 	<description>
 	  <p>
-             A scene graph is sent out through this port expecting to be 
-             rendered by the downstream port.
+             A scene graph is sent out through this port expecting to
+be rendered by the downstream port.
           </p>
 	</description>
 	<datatype>SCIRun::Geometry</datatype>
@@ -139,6 +140,4 @@
       </step>
     </plan>
   </testing>
-  <nets>
-  </nets>
 </component>

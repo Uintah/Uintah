@@ -28,7 +28,7 @@
 
 
 /*
- *  VtkComponentDescription.h: 
+ *  VtkComponentDescription.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -74,10 +74,8 @@ public:
    *    the SIDL_DLL_PATH for a matching library name. */
   std::string getLibrary() const { return library; }
   void setLibrary(const std::string &l) { library = l; }
-  
+
 private:
-  std::string library;
-  
   VtkComponentDescription(const VtkComponentDescription&);
   VtkComponentDescription& operator=(const VtkComponentDescription&);
 };

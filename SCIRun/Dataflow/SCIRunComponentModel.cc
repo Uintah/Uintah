@@ -41,7 +41,6 @@
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <SCIRun/Dataflow/SCIRunTCLThread.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/OS/Dir.h>
 #include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
 #include <Dataflow/Network/Module.h>
@@ -49,11 +48,8 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLInterface.h>
-#include <Core/XMLUtil/StrX.h>
-#include <Core/XMLUtil/XMLUtil.h>
 #include <SCIRun/Dataflow/SCIRunComponentDescription.h>
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
-#include <SCIRun/SCIRunErrorHandler.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 
@@ -90,7 +86,7 @@ split_name(const std::string &type,
 }
 
 SCIRunComponentModel::SCIRunComponentModel(SCIRunFramework* framework)
-  : ComponentModel("scirun"), framework(framework)
+  : ComponentModel("scirun", framework)
 {
   create_sci_environment(0,0);
   packageDB = new PackageDB(0);
@@ -168,13 +164,13 @@ SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
 {
   std::cerr<<"Warning:I don't know how to destroy a SCIRun component instance"
            << std::endl;
-  return true; 
+  return true;
 }
 
-std::string
+const std::string
 SCIRunComponentModel::getName() const
 {
-    return "Dataflow";
+  return "Dataflow";
 }
 
 void
@@ -185,9 +181,16 @@ SCIRunComponentModel::destroyComponentList()
 }
 
 void
-SCIRunComponentModel::buildComponentList()
+SCIRunComponentModel::buildComponentList(const StringVector& files)
 {
   std::cerr << "Error: SCIRunComponentModel does not implement buildComponentList"
+            << std::endl;
+}
+
+void
+SCIRunComponentModel::setComponentDescription(const std::string& type, const std::string& library)
+{
+  std::cerr << "Error: SCIRunComponentModel does not implement setComponentDescription"
             << std::endl;
 }
 

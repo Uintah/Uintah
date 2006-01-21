@@ -39,37 +39,37 @@
       <author>Martin Cole</author>
     </authors>
     <summary>
-          The ShowField module visualizes the geometry that makes up a 
-          Mesh inside a Field. Where possible, the field takes its color from the Data 
-          values that permeate the field.
+          The ShowField module visualizes the geometry that makes up a
+Mesh inside a Field. Where possible, the field takes its color from
+the Data values that permeate the field.
     </summary>
     <description>
       <p>
-         The field in the first input port holds the mesh that is
-         to be visualized. It only needs to have a mesh, in which case 
-         it will be rendered in the default color, which is editable from
-         the UI. If there is a color map attached to port 2, and there is
-         valid data in field, then the data serves as an index into the
-         color map, and the mesh is rendered with appropriate colors.
+         The field in the first input port holds the mesh that is to
+be visualized. It only needs to have a mesh, in which case it will be
+rendered in the default color, which is editable from the UI. If there
+is a color map attached to port 2, and there is valid data in field,
+then the data serves as an index into the color map, and the mesh is
+rendered with appropriate colors.
       </p>
       <p>
-         Nodes can be rendered as spheres, axes, or as points. Edges can be
-         rendered as lines or cylinders. All of which have editable size.
-         Faces and text can be rendered or not.
+         Nodes can be rendered as spheres, axes, or as points. Edges
+can be rendered as lines or cylinders. All of which have editable
+size. Faces and text can be rendered or not.
       </p>
       <p>
          If the Orientation Field contains Vector data, then that
-         field is used to draw vectors or oriented glyphs.  These can
-         then be colored with the values derived from the first input
-         port.  In order for the vectors to be colored properly, the
-         Field and Orientation Field ports must share the same mesh
-         and have data at the same locations.
+field is used to draw vectors or oriented glyphs.  These can then be
+colored with the values derived from the first input port.  In order
+for the vectors to be colored properly, the Field and Orientation
+Field ports must share the same mesh and have data at the same
+locations.
       </p>
       <developer>
 	<p>
-           ShowField uses the dynamic loader to compile and load a 
-           RenderField Algorithm templated on field type. RenderField does 
-           all the rendering work, it loads the scene graph to be rendered. 
+           ShowField uses the dynamic loader to compile and load a
+RenderField Algorithm templated on field type. RenderField does all
+the rendering work, it loads the scene graph to be rendered. 
         </p>
       </developer>
     </description>
@@ -81,9 +81,9 @@
 	<name>Field</name>
 	<description>
 	  <p>
-             The only required input to function properly. This field need 
-             only have a valid mesh. Its data is accessed only if the ColorMap 
-             port has valid data.
+             The only required input to function properly. This field
+need only have a valid mesh. Its data is accessed only if the ColorMap
+port has valid data.
           </p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
@@ -93,9 +93,8 @@
 	<name>ColorMap</name>
 	<description>
 	  <p>
-             Optional Input. This is the color indexed by the
-             input field's data, and defines the colors the mesh is 
-             rendered with.
+             Optional Input. This is the color indexed by the input
+field's data, and defines the colors the mesh is rendered with.
           </p>
 	</description>
 	<datatype>SCIRun::ColorMap</datatype>
@@ -106,11 +105,11 @@
 	<description>
 	  <p>
 	     Optional Input.  If this is a Vector or Tensor field,
-  then arrows or oriented glyphs can be drawn where the data are in
-  the field.  These glyphs are then colored by the data values from
-the first input port.  In order for the coloring to work properly,
-  both the Field and Orientation Field input ports must contain fields
-  with the same mesh and data at the same locations.
+then arrows or oriented glyphs can be drawn where the data are in the
+field.  These glyphs are then colored by the data values from the
+first input port.  In order for the coloring to work properly, both
+the Field and Orientation Field input ports must contain fields with
+the same mesh and data at the same locations.
           </p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
@@ -123,8 +122,8 @@ the first input port.  In order for the coloring to work properly,
 	<name>Scene Graph</name>
 	<description>
 	  <p>
-             A scene graph is sent out through this port expecting to be 
-             rendered by the downstream port.
+             A scene graph is sent out through this port expecting to
+be rendered by the downstream port.
           </p>
 	</description>
 	<datatype>SCIRun::Geometry</datatype>
@@ -135,145 +134,135 @@ the first input port.  In order for the coloring to work properly,
   <gui>
     <description>
       <p>
-         The user can control wether or not to render nodes, edges, or 
-         faces independently. Also some option for how to render them 
-         are available.
+         The user can control wether or not to render nodes, edges, or
+faces independently. Also some option for how to render them are
+available.
       </p>
     </description>
     <parameter>
       <widget>checkbox</widget>
-      <datatype>bool</datatype>
       <label>Show Nodes</label>
       <description>
 	<p>Toggles display of nodes in the scene.</p>
 	<developer>
-	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	  <p>This toggles the state of a GeomSwitch on the C++
+side.</p>
 	</developer>
       </description>
     </parameter>
     <parameter>
       <widget>radiobutton</widget>
-      <datatype>string</datatype>
       <label>Node Display Type</label>
       <description>
 	<p>
-           Choices are Spheres, Axes, Points and possibly Disks. These are 
-           options for how to draw the nodes. Spheres will draw spheres 
-           centered on the node, 
-           Axes will draw a miniature coordinate frame centered on each 
-           node, while Points will draw a single point at each node. 
-           Disks will show up as an option only if the input Field has Vector
-           data.  It will render a disk oriented by the vector, and color 
-           indexed based on the lenght of the vector.
+           Choices are Spheres, Axes, Points and possibly Disks. These
+are options for how to draw the nodes. Spheres will draw spheres
+centered on the node, Axes will draw a miniature coordinate frame
+centered on each node, while Points will draw a single point at each
+node. Disks will show up as an option only if the input Field has
+Vector data.  It will render a disk oriented by the vector, and color
+indexed based on the lenght of the vector.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>expontial scale</widget>
-      <datatype>double</datatype>
       <label>NodeScale</label>
       <description>
 	<p>
-           Effects the size of rendered nodes (Point rendered nodes, 
-           are always a single point therefore not affected by this value)
+           Effects the size of rendered nodes (Point rendered nodes,
+are always a single point therefore not affected by this value)
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>checkbox</widget>
-      <datatype>bool</datatype>
       <label>Show Edges</label>
       <description>
 	<p>Toggles display of edges in the scene.</p>
 	<developer>
-	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	  <p>This toggles the state of a GeomSwitch on the C++
+side.</p>
 	</developer>
       </description>
     </parameter>
     <parameter>
       <widget>radiobutton</widget>
-      <datatype>string</datatype>
       <label>Edge Display Type</label>
       <description>
 	<p>
-           Choices are Cylinders or Lines. These are options for how to 
-           draw the edges. Cylinders draw cylinders to represent edges, while 
-           lines always draw lines.
+           Choices are Cylinders or Lines. These are options for how
+to draw the edges. Cylinders draw cylinders to represent edges, while
+lines always draw lines.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>expontial scale</widget>
-      <datatype>double</datatype>
       <label>CylinderScale</label>
       <description>
 	<p>
-           Effects the thickness of both cylinders and lines rendered for 
-           edges.
+           Effects the thickness of both cylinders and lines rendered
+for edges.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>checkbox</widget>
-      <datatype>bool</datatype>
       <label>Show Faces</label>
       <description>
 	<p>Toggles display of faces in the scene.</p>
 	<developer>
-	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	  <p>This toggles the state of a GeomSwitch on the C++
+side.</p>
 	</developer>
       </description>
     </parameter>
     <parameter>
       <widget>slider</widget>
-      <datatype>int</datatype>
       <label>Cylinder and Sphere Resolution</label>
       <description>
 	<p>
-           This effects how smooth spheres and cylinders appear when rendered.
-           The greater the number the smoother they appear, but the longer 
-           it takes to draw.
+           This effects how smooth spheres and cylinders appear when
+rendered. The greater the number the smoother they appear, but the
+longer it takes to draw.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>button</widget>
-      <datatype>Material</datatype>
       <label>Default Color</label>
       <description>
 	<p>
-           This button will pop up a color selector when activated. This 
-           allows you to control the default color a mesh will render with.  
-           Default color is ignored if a color map is attached to input port 2.
+           This button will pop up a color selector when activated.
+This allows you to control the default color a mesh will render with.
+Default color is ignored if a color map is attached to input port 2.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>button</widget>
-      <datatype>none</datatype>
       <label>Calculate Defaults</label>
       <description>
-	<p>This button will trigger the module to calculate reasonable scale
-           values for the various scale sliders (Nodes, Edges, Vectors) based
-           on the bounding box of the module.</p>
+	<p>This button will trigger the module to calculate reasonable
+scale values for the various scale sliders (Nodes, Edges, Vectors)
+based on the bounding box of the module.</p>
       </description>
     </parameter>
     <parameter>
       <widget>radio button</widget>
-      <datatype>none</datatype>
       <label>Execute Policy</label>
       <description>
-	<p>Choices are "Interactively update" and "Execute button only".  
-           The default is interactive, which means that anytime you change a 
-           value in the gui, the display changes are sent downstream. If you 
-           choose execute button only, then you can change all the values in 
-           gui, but they will not be sent downstream until you hit the 
-           execute button.</p>
+	<p>Choices are "Interactively update" and "Execute button
+only". The default is interactive, which means that anytime you change
+a value in the gui, the display changes are sent downstream. If you
+choose execute button only, then you can change all the values in gui,
+but they will not be sent downstream until you hit the execute
+button.</p>
       </description>
     </parameter>
     <parameter>
       <widget>button</widget>
-      <datatype>none</datatype>
       <label>Excecute</label>
       <description>
 	<p>Force the module to execute.</p>
@@ -281,7 +270,6 @@ the first input port.  In order for the coloring to work properly,
     </parameter>
     <parameter>
       <widget>button</widget>
-      <datatype>none</datatype>
       <label>Dismiss</label>
       <description>
 	<p>Closes the ui window for ShowField.</p>
@@ -289,13 +277,72 @@ the first input port.  In order for the coloring to work properly,
     </parameter>
     <img>../Modules/Visualization/doc/ShowFieldGUI.jpg</img>
   </gui>
+  <nets>
+    <net id="ShowField-colorcube">
+      <title>ShowField-colorcube Regression Test</title>
+
+      <p>Create and display a color cube using vectors to represent
+RGB values in a lattice volume.</p>
+
+      <p>This network can be found at
+src/nets/Modules/Visualization/ShowField-colorcube.net.</p>
+
+    </net>
+    <net id="ShowField-rgbscalars">
+      <title>ShowField-rgbscalars Regression Test</title>
+
+      <p>Create and display a color cube using vectors to represent
+RGB values in a lattice volume.  The cell centers are scaled by the
+vector magnitude of the RGB values in addition to being colored.</p>
+
+      <p>This network can be found at
+src/nets/Modules/Visualization/ShowField-rgbscalars.net.</p>
+
+    </net>
+    <net id="ShowField-vectorarrows">
+      <title>ShowField-vectorarrows Regression Test</title>
+
+      <p>Test Showfield to make sure that it renders vector fields as
+arrows properly.  The gradient is taken of the sphere-voltage data set
+and then this is displayed as an arrow field colored by the original
+scalar values.</p>
+
+      <p>This network can be found at
+src/nets/Modules/Visualization/ShowField-vectorarrows.net.</p>
+
+    </net>
+    <net id="ShowField-vectorcones">
+      <title>ShowField-vectorcones Regression Test</title>
+
+      <p>Test Showfield to make sure that it renders vector fields as
+cones properly.  The gradient is taken of the sphere-voltage data set
+and then this is displayed as a cone field colored by the original
+scalar values.</p>
+
+      <p>This network can be found at
+src/nets/Modules/Visualization/ShowField-vectorcones.net.</p>
+
+    </net>
+    <net id="ShowField-vectorneedles">
+      <title>ShowField-vectorneedles Regression Test</title>
+
+      <p>Test Showfield to make sure that it renders vector fields as
+needles properly.  The gradient is taken of the sphere-voltage data
+set and then this is displayed as a needle field colored by the
+original scalar values.</p>
+
+      <p>This network can be found at
+src/nets/Modules/Visualization/ShowField-vectorneedles.net.</p>
+
+    </net>
+  </nets>
   <testing>
     <plan>
       <description>
 	<p>
-           To test this module all of the steps below need to be attempted 
-           with all types of valid fields. Render with/without nodes, 
-           edges, and faces.  Also with and without color input.
+           To test this module all of the steps below need to be
+attempted with all types of valid fields. Render with/without nodes,
+edges, and faces.  Also with and without color input.
         </p>
       </description>
       <step>
@@ -342,58 +389,4 @@ the first input port.  In order for the coloring to work properly,
       </step>
     </plan>
   </testing>
-<nets>
-<net id="ShowField-colorcube">
-<title>ShowField-colorcube Regression Test</title>
-
-<p>Create and display a color cube using vectors to represent RGB values
-in a lattice volume.</p>
-
-<p>This network can be found at src/nets/Modules/Visualization/ShowField-colorcube.net.</p>
-
-</net>
-<net id="ShowField-rgbscalars">
-<title>ShowField-rgbscalars Regression Test</title>
-
-<p>Create and display a color cube using vectors to represent RGB values
-in a lattice volume.  The cell centers are scaled by the vector
-magnitude of the RGB values in addition to being colored.</p>
-
-<p>This network can be found at src/nets/Modules/Visualization/ShowField-rgbscalars.net.</p>
-
-</net>
-<net id="ShowField-vectorarrows">
-<title>ShowField-vectorarrows Regression Test</title>
-
-<p>Test Showfield to make sure that it renders vector fields as arrows
-properly.  The gradient is taken of the sphere-voltage data set and
-then this is displayed as an arrow field colored by the original
-scalar values.</p>
-
-<p>This network can be found at src/nets/Modules/Visualization/ShowField-vectorarrows.net.</p>
-
-</net>
-<net id="ShowField-vectorcones">
-<title>ShowField-vectorcones Regression Test</title>
-
-<p>Test Showfield to make sure that it renders vector fields as cones
-properly.  The gradient is taken of the sphere-voltage data set and
-then this is displayed as a cone field colored by the original
-scalar values.</p>
-
-<p>This network can be found at src/nets/Modules/Visualization/ShowField-vectorcones.net.</p>
-
-</net>
-<net id="ShowField-vectorneedles">
-<title>ShowField-vectorneedles Regression Test</title>
-
-<p>Test Showfield to make sure that it renders vector fields as needles
-properly.  The gradient is taken of the sphere-voltage data set and
-then this is displayed as a needle field colored by the original
-scalar values.</p>
-
-<p>This network can be found at src/nets/Modules/Visualization/ShowField-vectorneedles.net.</p>
-
-</net>
-</nets>
 </component>

@@ -35,11 +35,14 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>Calculate one or more eigenvalues in a DT volume.</summary>
+    <summary>Calculate one or more eigenvalues in a DT
+volume.</summary>
     <description>
       <p>Calculate one or more eigenvalues in a DT volume.</p>
-      <p>Major, Medium, and Minor : indicate which eigenvalues should be saved out.</p>
-      <p>Threshold : Confidence threshold.  This should be a float.</p>
+      <p>Major, Medium, and Minor : indicate which eigenvalues should
+be saved out.</p>
+      <p>Threshold : Confidence threshold.  This should be a
+float.</p>
     </description>
     <examplesr></examplesr>
   </overview>
@@ -57,6 +60,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

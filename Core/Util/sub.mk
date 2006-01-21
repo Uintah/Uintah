@@ -48,11 +48,10 @@ SRCS     += \
         $(SRCDIR)/Signals.cc            \
 	$(SRCDIR)/Timer.cc              \
 	$(SRCDIR)/TypeDescription.cc    \
-        $(SRCDIR)/XMLParser.cc          \
         $(SRCDIR)/ProgressiveWarning.cc
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math
-LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

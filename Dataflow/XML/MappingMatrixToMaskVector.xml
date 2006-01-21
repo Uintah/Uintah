@@ -12,11 +12,9 @@
       Converts a Mapping Matrix to a Mask Vector
     </summary>
     <description>
-      Converts a Mapping Matrix to a Mask Vector
+      <p>Converts a Mapping Matrix to a Mask Vector</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -31,9 +29,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

@@ -39,14 +39,23 @@
  */
 
 #include <SCIRun/ComponentModel.h>
+#include <SCIRun/SCIRunFramework.h>
+#include <Core/OS/Dir.h>
+#include <Core/Thread/Guard.h>
+#include <Core/XMLUtil/XMLUtil.h>
 
 #include <iostream>
-#include <vector>
+
+#ifndef DEBUG
+  #define DEBUG 0
+#endif
 
 namespace SCIRun {
 
-ComponentModel::ComponentModel(const std::string& prefixName)
-  : prefixName(prefixName)
+static Mutex parserLock("parser lock");
+
+ComponentModel::ComponentModel(const std::string& prefixName, SCIRunFramework* framework)
+  : prefixName(prefixName), framework(framework)
 {
 }
 
@@ -57,32 +66,159 @@ ComponentModel::~ComponentModel()
 bool ComponentModel::haveComponent(const std::string& type)
 {
   std::cerr << "Error: this component model does not implement haveComponent, name="
-            << type << std::endl;
+	    << type << std::endl;
   return false;
 }
 
 ComponentInstance*
 ComponentModel::createInstance(const std::string& name,
-                               const std::string& type,
-                               const sci::cca::TypeMap::pointer &tm)
+			       const std::string& type,
+			       const sci::cca::TypeMap::pointer &tm)
 {
   std::cerr << "Error: this component model does not implement createInstance"
-            << std::endl;
+	    << std::endl;
   return 0;
 }
 
 bool ComponentModel::destroyInstance(ComponentInstance* ic)
 {
   std::cerr << "Error: this component model does not implement destroyInstance"
-            << std::endl;
+	    << std::endl;
   return false;
 }
 
-std::vector<std::string>
-ComponentModel::splitPathString(const std::string &path)
+
+
+///////////////////////////////////////////////////////////////////////////
+// convenience functions
+
+bool parseComponentModelXML(const std::string& file, ComponentModel* model)
 {
-    std::vector<std::string> ans;
-    if (path == "" ) {
+  Guard g(&parserLock);
+  static bool initialized = false;
+
+  if (!initialized) {
+    // check that libxml version in use is compatible with version
+    // the software has been compiled against
+    LIBXML_TEST_VERSION;
+    initialized = true;
+  }
+
+  // create a parser context
+  xmlParserCtxtPtr ctxt = xmlNewParserCtxt();
+  if (ctxt == 0) {
+    std::cerr << "ERROR: Failed to allocate parser context." << std::endl;
+    return false;
+  }
+  // parse the file, activating the DTD validation option
+  xmlDocPtr doc = xmlCtxtReadFile(ctxt, file.c_str(), 0, (XML_PARSE_DTDATTR |
+							  XML_PARSE_DTDVALID |
+							  XML_PARSE_PEDANTIC));
+  // check if parsing suceeded
+  if (doc == 0) {
+    std::cerr << "ERROR: Failed to parse " << file << std::endl;
+    return false;
+  }
+
+  // check if validation suceeded
+  if (ctxt->valid == 0) {
+    std::cerr << "ERROR: Failed to validate " << file << std::endl;
+    return false;
+  }
+
+  // this code does NOT check for includes!
+  xmlNode* node = doc->children;
+  for (; node != 0; node = node->next) {
+    if (node->type == XML_ELEMENT_NODE &&
+	std::string(to_char_ptr(node->name)) == std::string("metacomponentmodel")) {
+
+      xmlAttrPtr nameAttrModel = get_attribute_by_name(node, "name");
+
+      // case-sensitive comparison
+      if (std::string(to_char_ptr(nameAttrModel->children->content)) == model->getPrefixName()) {
+	xmlNode* libNode = node->children;
+	for (;libNode != 0; libNode = libNode->next) {
+	  if (libNode->type == XML_ELEMENT_NODE &&
+	      std::string(to_char_ptr(libNode->name)) == std::string("library")) {
+
+	    xmlAttrPtr nameAttrLib = get_attribute_by_name(libNode, "name");
+	    if (nameAttrLib != 0) {
+	      std::string component_type;
+	      std::string library_name(to_char_ptr(nameAttrLib->children->content));
+#if DEBUG
+	      std::cerr << "Library name = ->" << library_name << "<-" << std::endl;
+#endif
+	      xmlNode* componentNode = libNode->children;
+	      for (; componentNode != 0; componentNode = componentNode->next) {
+		if (componentNode->type == XML_ELEMENT_NODE &&
+		    std::string(to_char_ptr(componentNode->name)) == std::string("component")) {
+		  xmlAttrPtr nameAttrComp = get_attribute_by_name(componentNode, "name");
+		  if (nameAttrComp != 0) {
+		    component_type = std::string(to_char_ptr(nameAttrComp->children->content));
+#if DEBUG
+		    std::cerr << "Component name = ->" << component_type << "<-" << std::endl;
+#endif
+		    model->setComponentDescription(component_type, library_name);
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      } else {
+	xmlFreeDoc(doc);
+	// free up the parser context
+	xmlFreeParserCtxt(ctxt);
+	xmlCleanupParser();
+	return false;
+      }
+    }
+  }
+  xmlFreeDoc(doc);
+  // free up the parser context
+  xmlFreeParserCtxt(ctxt);
+  xmlCleanupParser();
+  return true;
+}
+
+bool
+getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
+{
+  sci::cca::TypeMap::pointer tm;
+  SSIDL::array1<std::string> sArray;
+
+  sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+    pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+        fwk->getFrameworkService("cca.FrameworkProperties", ""));
+  if (fwkProperties.isNull()) {
+    std::cerr << "Error: Cannot find framework properties" ;
+    return false;
+  } else {
+    tm = fwkProperties->getProperties();
+    sArray = tm->getStringArray("sidl_xml_path", sArray);
+  }
+  fwk->releaseFrameworkService("cca.FrameworkProperties", "");
+
+  for (SSIDL::array1<std::string>::iterator dirIter = sArray.begin();
+          dirIter != sArray.end(); dirIter++) {
+    StringVector files;
+    Dir d(*dirIter);
+    d.getFilenamesBySuffix(".xml", files);
+
+    // Dir::getFilenamesBySuffix returns file names only
+    for (StringVector::iterator fileIter = files.begin(); fileIter != files.end(); fileIter++) {
+      xmlPaths.push_back(*dirIter + "/" + *fileIter);
+    }
+  }
+
+  return true;
+}
+
+StringVector
+splitPathString(const std::string& path)
+{
+    StringVector ans;
+    if (path.empty()) {
 	return ans;
     }
 
@@ -99,7 +235,8 @@ ComponentModel::splitPathString(const std::string &path)
     std::string substring = path.substr(start, end - start);
     ans.push_back(substring);
 
-    return ans;  
+    return ans;
 }
+
 
 } // end namespace SCIRun

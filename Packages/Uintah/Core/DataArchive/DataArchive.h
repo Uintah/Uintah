@@ -25,15 +25,6 @@
 #include <list>
 #include <sgi_stl_warnings_on.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
-#pragma set woff 1375
-#endif
-//#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/util/XMLURL.hpp>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#endif
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -53,9 +44,9 @@ class LoadBalancer;
      }
    };
 
-   typedef HashTable<string, pair<ProblemSpecP, XMLURL> > VarHashMap;
+   typedef HashTable<string, pair<ProblemSpecP, string> > VarHashMap;
 
-   typedef HashTableIter<string, pair<ProblemSpecP, XMLURL> >
+   typedef HashTableIter<string, pair<ProblemSpecP, string> >
    VarHashMapIterator;
 
    /**************************************
@@ -104,12 +95,12 @@ private:
   class TimeHashMaps {
   public:
     TimeHashMaps(DataArchive* archive, const vector<double>& tsTimes,
-		 const vector<XMLURL>& tsUrls,
+		 const vector<string>& tsUrls,
 		 const vector<ProblemSpecP>& tsTopNodes,
 		 int processor, int numProcessors);
     
     ProblemSpecP findVariable(const string& name, const Patch* patch,
-                              int matl, double time, XMLURL& foundUrl);
+                              int matl, double time, string& foundUrl);
     
     PatchHashMaps* findTimeData(double time);
     
@@ -153,11 +144,11 @@ private:
   public:
     PatchHashMaps();
     ~PatchHashMaps();  // to free the saved XML Data
-    void init(XMLURL tsUrl, ProblemSpecP tsTopNode,
+    void init(string tsUrl, ProblemSpecP tsTopNode,
 	      int processor, int numProcessors);
     void purgeCache(); // purge the cached data
     inline ProblemSpecP findVariable(const string& name, const Patch* patch,
-				 int matl, XMLURL& foundUrl);
+				 int matl, string& foundUrl);
     MaterialHashMaps* findPatchData(const Patch* patch);
 
     void setTime(double t) { time = t; }
@@ -170,13 +161,13 @@ private:
     void parseProc(int proc);
     void parse();    
     void add(const string& name, int patchid, int matl,
-	     ProblemSpecP varNode, XMLURL url)
+	     ProblemSpecP varNode, string url)
     { d_matHashMaps[patchid].add(name, matl, varNode, url); }
 
     // The index into this map is the patchid
     map<int, MaterialHashMaps> d_matHashMaps;
     map<int, MaterialHashMaps>::iterator d_lastFoundIt;
-    vector<XMLURL> d_xmlUrls;
+    vector<string> d_xmlUrls;
     bool d_allParsed;           // True if all patches have been parsed
     vector<bool> d_xmlParsed;   // Same size as d_xmlUrls, indicates
                                 // if that xml has been parsed
@@ -191,13 +182,13 @@ private:
     MaterialHashMaps() {}
     
     ProblemSpecP findVariable(const string& name, int matl,
-			  XMLURL& foundUrl);
+			  string& foundUrl);
     
     // note that vector is offset by one to allow for matl=-1 at element 0
     const vector<VarHashMap>& getVarHashMaps() const
     { return d_varHashMaps; }
   private:
-    void add(const string& name, int matl, ProblemSpecP varNode, XMLURL url);
+    void add(const string& name, int matl, ProblemSpecP varNode, string url);
     
     vector<VarHashMap> d_varHashMaps;
   };
@@ -221,7 +212,7 @@ public:
 			 double* pDelt /* passed back */);
 
   inline ProblemSpecP getRestartTimestepDoc() { return d_restartTimestepDoc; }
-  inline XMLURL getRestartTimestepURL() { return d_restartTimestepURL; }
+  inline string getRestartTimestepURL() { return d_restartTimestepURL; }
   // GROUP:  Information Access
   //////////
   // However, we need a means of determining the names of existing
@@ -331,7 +322,7 @@ public:
   int ref_cnt;
   Mutex lock;
 
-  const ProblemSpecP getTimestep(double time, XMLURL& url);
+  const ProblemSpecP getTimestep(double time);
 protected:
   DataArchive();
   
@@ -342,7 +333,7 @@ private:
   string queryEndianness();  
   int queryNBits();  
 
-  void query( Variable& var, ProblemSpecP vnode, XMLURL url,
+  void query( Variable& var, ProblemSpecP vnode, string url,
 	      int matlIndex, const Patch* patch);
 
   void queryVariables( const ProblemSpecP vars, vector<string>& names,
@@ -365,13 +356,12 @@ private:
   void initVariable(const Patch* patch,
 		    DataWarehouse* new_dw,
 		    VarLabel* label, int matl,
-		    pair<ProblemSpecP, XMLURL> dataRef);   
+		    pair<ProblemSpecP, string> dataRef);   
   
   std::string d_filebase;  
   ProblemSpecP d_indexDoc;
   ProblemSpecP d_restartTimestepDoc;
-  XMLURL d_base;
-  XMLURL d_restartTimestepURL;
+  string d_restartTimestepURL;
 
   bool d_simRestart;
   bool d_swapBytes;
@@ -381,7 +371,7 @@ private:
   std::vector<int> d_tsindex;
   std::vector<double> d_tstimes;
   std::vector<ProblemSpecP> d_tstop;
-  std::vector<XMLURL> d_tsurl;
+  std::vector<std::string> d_tsurl;
   TimeHashMaps* d_varHashMaps;
   
   typedef map<pair<int, const Patch*>, Handle<ParticleSubset> > psetDBType;
@@ -394,7 +384,7 @@ private:
   Mutex d_lock;
 
   ProblemSpecP findVariable(const string& name, const Patch* patch,
-			int matl, double time, XMLURL& url);
+			int matl, double time, string& url);
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 			 long64 particleID, int matIndex,
 			 double time);

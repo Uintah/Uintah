@@ -90,7 +90,7 @@ namespace Uintah {
 
     //! Assigns the patches to the processors they ended up on in the previous
     //! Simulation.
-    void restartInitialize(ProblemSpecP& pspec, XMLURL, const GridP& grid);
+    void restartInitialize(ProblemSpecP& pspec, string, const GridP& grid);
     
   private:
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };

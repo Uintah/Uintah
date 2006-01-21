@@ -38,8 +38,11 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Coregister the first three points of two PointCloudFields.</summary>
+    <summary>Coregister the first three points of two
+PointCloudFields.</summary>
     <description>
+      <p>Coregister the first three points of two
+PointCloudFields.</p>
     </description>
   </overview>
   <io>
@@ -64,6 +67,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

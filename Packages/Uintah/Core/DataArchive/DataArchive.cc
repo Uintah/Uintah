@@ -15,11 +15,6 @@
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
-#include <xercesc/sax/ErrorHandler.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
-
 #include <sys/param.h>
 
 #include <iostream>
@@ -47,36 +42,13 @@ DataArchive::DataArchive(const std::string& filebase,
   d_lock("DataArchive lock")
 {
 
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch(const XMLException& toCatch) {
-    char* ch = XMLString::transcode(toCatch.getMessage());
-    string ex("XML Exception: " + string(ch));
-    delete [] ch;
-    throw ProblemSetupException(ex, __FILE__, __LINE__);
-  }
-
-
   have_timesteps=false;
   string index(filebase+"/index.xml");
-  const XMLCh* tmpRel = XMLString::transcode(index.c_str());
-  d_base.setURL(tmpRel);
-  delete [] tmpRel;
   
-  if(d_base.isRelative()){
-    char path[MAXPATHLEN];
-    string url = string("file://")+getcwd(path, MAXPATHLEN)+"/.";
-    d_base.makeRelativeTo(url.c_str());
-    if( d_base.isRelative() && verbose )
-      cerr << "base is still relative!\n";
-  }
-  
-  char* urltext = XMLString::transcode(d_base.getURLText());
-  ProblemSpecReader psr(urltext);
+  ProblemSpecReader psr(index.c_str());
   if( verbose && processor == 0) {
-    cerr << "Parsing " << urltext << endl;
+    cerr << "Parsing " << index << endl;
   }
-  delete [] urltext;
 
   d_indexDoc = psr.readInputFile();
   
@@ -123,7 +95,7 @@ DataArchive::queryEndianness()
     return ret;
   }
 
-  ret = endian_node->getFirstChild()->getNodeValue();
+  ret = endian_node->getNodeValue();
   d_lock.unlock();
   return ret;
 }
@@ -149,7 +121,7 @@ DataArchive::queryNBits()
     return sizeof(unsigned long) * 8;
   }
 
-  ret = atoi(nBits_node->getFirstChild()->getNodeValue().c_str());
+  ret = atoi(nBits_node->getNodeValue().c_str());
   d_lock.unlock();
   return ret;
 }
@@ -175,16 +147,13 @@ DataArchive::queryTimesteps( std::vector<int>& index,
             throw InternalError("DataArchive::queryTimesteps:timestep href not found",
                                 __FILE__, __LINE__);
           
-          XMLURL url(d_base, tsfile.c_str());
-          
-          char* urltext = XMLString::transcode(url.getURLText());
-          ProblemSpecReader psr(urltext);
-          delete [] urltext;
+          string ts = d_filebase + "/" + tsfile;
+          ProblemSpecReader psr(ts.c_str());
           
           ProblemSpecP top = psr.readInputFile();
           
           d_tstop.push_back(top);
-          d_tsurl.push_back(url);
+          d_tsurl.push_back(ts);
           ProblemSpecP time = top->findBlock("Time");
           if(time == 0)
             throw InternalError("DataArchive::queryTimesteps:Cannot find Time block",
@@ -213,7 +182,7 @@ DataArchive::queryTimesteps( std::vector<int>& index,
 }
 
 const ProblemSpecP
-DataArchive::getTimestep(double searchtime, XMLURL& found_url)
+DataArchive::getTimestep(double searchtime)
 {
   if(!have_timesteps){
     vector<int> index;
@@ -227,13 +196,12 @@ DataArchive::getTimestep(double searchtime, XMLURL& found_url)
       break;
   if(i == (int)d_tstimes.size())
     return 0; 
-  found_url = d_tsurl[i];
   return d_tstop[i];
 }
 
 ProblemSpecP
 DataArchive::findVariable(const string& name, const Patch* patch,
-                          int matl, double time, XMLURL& url)
+                          int matl, double time, string& url)
 {
   return getTopLevelVarHashMaps()->findVariable(name, patch, matl, time, url);
 }
@@ -242,9 +210,8 @@ GridP
 DataArchive::queryGrid( double time, const ProblemSpec* ups)
 {
   double start = Time::currentSeconds();
-  XMLURL url;
   d_lock.lock();
-  const ProblemSpecP top = getTimestep(time, url);
+  const ProblemSpecP top = getTimestep(time);
   if (top == 0)
     throw InternalError("DataArchive::queryGrid:Cannot find Grid in timestep",
                         __FILE__, __LINE__);
@@ -452,7 +419,7 @@ DataArchive::query( Variable& var, const std::string& name,
                     int matlIndex, const Patch* patch, double time )
 {
   double tstart = Time::currentSeconds();
-  XMLURL url;
+  string url;
   d_lock.lock();  
   ProblemSpecP vnode = findVariable(name, patch, matlIndex, time, url);
   d_lock.unlock();
@@ -467,7 +434,7 @@ DataArchive::query( Variable& var, const std::string& name,
 }
 
 void
-DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
+DataArchive::query( Variable& var, ProblemSpecP vnode, string url,
                     int matlIndex, const Patch* patch)
 {
   d_lock.lock();
@@ -526,19 +493,12 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
   if(!vnode->get("compression", compressionMode))
     compressionMode = "";
   
-  XMLURL dataurl(url, filename.c_str());
-  if(dataurl.getProtocol() != XMLURL::File) {
-    char* urlpath = XMLString::transcode(dataurl.getPath());
-    throw InternalError(string("DataArchive::query:Cannot read over: ")+urlpath,
-                        __FILE__, __LINE__);
-  }
-  char* urlpath = XMLString::transcode(dataurl.getPath());
-  string datafile(urlpath);
-  delete [] urlpath;
-  
-  int fd = open(datafile.c_str(), O_RDONLY);
+  // strip off the last blah.xml and append filename
+  string dataurl = url.substr(0, url.find_last_of('/')+1) + filename;
+
+  int fd = open(dataurl.c_str(), O_RDONLY);
   if(fd == -1) {
-    cerr << "Error closing file: " << datafile.c_str() << ", errno=" << errno << '\n';
+    cerr << "Error opening file: " << dataurl.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (open call)", errno, __FILE__, __LINE__);
   }
 #ifdef __sgi
@@ -547,17 +507,18 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
   off_t ls = lseek(fd, start, SEEK_SET);
 #endif
   if(ls == -1) {
-    cerr << "Error lseek - file: " << datafile.c_str() << ", errno=" << errno << '\n';
+    cerr << "Error lseek - file: " << dataurl.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (lseek call)", errno, __FILE__, __LINE__);
   }
-  InputContext ic(fd, datafile.c_str(), start);
+  InputContext ic(fd, dataurl.c_str(), start);
   double starttime = Time::currentSeconds();
   var.read(ic, end, d_swapBytes, d_nBytes, compressionMode);
+
   dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
   ASSERTEQ(end, ic.cur);
   int s = close(fd);
   if(s == -1) {
-    cerr << "Error closing file: " << datafile.c_str() << ", errno=" << errno << '\n';
+    cerr << "Error closing file: " << dataurl.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
   }
   d_lock.unlock();  
@@ -758,11 +719,11 @@ void
 DataArchive::initVariable(const Patch* patch,
                           DataWarehouse* dw,
                           VarLabel* label, int matl,
-                          pair<ProblemSpecP, XMLURL> dataRef)
+                          pair<ProblemSpecP, string> dataRef)
 {
   Variable* var = label->typeDescription()->createInstance();
   ProblemSpecP vnode = dataRef.first;
-  XMLURL url = dataRef.second;
+  string url = dataRef.second;
   query(*var, vnode, url, matl, patch);
 
   ParticleVariableBase* particles;
@@ -811,7 +772,7 @@ DataArchive::setTimestepCacheSize(int new_size) {
 
 DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
                                         const vector<double>& tsTimes,
-                                        const vector<XMLURL>& tsUrls,
+                                        const vector<string>& tsUrls,
                                         const vector<ProblemSpecP>& tsTopNodes,
                                         int processor, int numProcessors):
   archive(archive)
@@ -842,7 +803,7 @@ DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
 ProblemSpecP
 DataArchive::TimeHashMaps::findVariable(const string& name,
                                         const Patch* patch, int matl,
-                                        double time, XMLURL& foundUrl)
+                                        double time, string& foundUrl)
 {
   //  cerr << "TimeHashMaps::findVariable\n";
   PatchHashMaps* timeData = findTimeData(time);
@@ -954,7 +915,7 @@ DataArchive::PatchHashMaps::~PatchHashMaps() {
 }
 
 void
-DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
+DataArchive::PatchHashMaps::init(string tsUrl, ProblemSpecP tsTopNode,
                                  int /*processor*/, int /*numProcessors*/)
 {
   //  cerr << "PatchHashMaps["<<time<<"]::init\n";
@@ -981,8 +942,8 @@ DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
       string datafile = attributes["href"];
       if(datafile == "")
         throw InternalError("timestep href not found", __FILE__, __LINE__);
-      XMLURL url(tsUrl, datafile.c_str());
-       d_xmlUrls.push_back(url);
+      string url = tsUrl.substr(0, tsUrl.find_last_of('/')+1) + datafile;
+      d_xmlUrls.push_back(url);
     }
     else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "WARNING: Unknown element in Data section: " << n->getNodeName() << '\n';
@@ -1027,15 +988,11 @@ DataArchive::PatchHashMaps::parseProc(int proc)
     return;
   }
   
-  XMLURL urlIt = d_xmlUrls[proc];
+  string urlIt = d_xmlUrls[proc];
 
   ///////////////////////////////////////////////////////
   // parse the file
-  char* urltext = XMLString::transcode(urlIt.getURLText());
-  //  cerr << "reading: " << urltext << '\n';
-  
-  ProblemSpecReader psr(urltext);
-  delete [] urltext;
+  ProblemSpecReader psr(urlIt);
   
   ProblemSpecP top = psr.readInputFile();
   docs.push_back(top);
@@ -1086,7 +1043,7 @@ ProblemSpecP
 DataArchive::PatchHashMaps::findVariable(const string& name,
                                          const Patch* patch,
                                          int matl,
-                                         XMLURL& foundUrl)
+                                         string& foundUrl)
 {
   //  cerr << "PatchHashMaps::findVariable\n";
   MaterialHashMaps* patchData = findPatchData(patch);
@@ -1150,7 +1107,7 @@ DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
 ProblemSpecP
 DataArchive::MaterialHashMaps::findVariable(const string& name,
                                             int matl,
-                                            XMLURL& foundUrl)
+                                            string& foundUrl)
 {
   //  cerr << "MaterialHashMaps::findVariable:start\n";
   //  cerr << "name = "<<name<<", matl = "<<matl<<"\n";
@@ -1159,7 +1116,7 @@ DataArchive::MaterialHashMaps::findVariable(const string& name,
  
   if (matl < (int)d_varHashMaps.size()) {
     VarHashMap& hashMap = d_varHashMaps[matl];
-    pair<ProblemSpecP, XMLURL> found;
+    pair<ProblemSpecP, string> found;
     if (hashMap.lookup(name, found)) {
       //      cerr << "Found in hashMap\n";
       foundUrl = found.second;
@@ -1174,14 +1131,14 @@ DataArchive::MaterialHashMaps::findVariable(const string& name,
 
 void
 DataArchive::MaterialHashMaps::add(const string& name, int matl,
-                                   ProblemSpecP varNode, XMLURL url)
+                                   ProblemSpecP varNode, string url)
 {
   matl++; // allows for matl=-1 for universal variables
    
   if (matl >= (int)d_varHashMaps.size())
     d_varHashMaps.resize(matl + 1);
-  pair<ProblemSpecP, XMLURL> value(varNode, url);
-  pair<ProblemSpecP, XMLURL> dummy;
+  pair<ProblemSpecP, string> value(varNode, url);
+  pair<ProblemSpecP, string> dummy;
   if (d_varHashMaps[matl].lookup(name, dummy) == 1)
     cerr << "Duplicate variable name: " << name << endl;
   else
@@ -1209,7 +1166,7 @@ DataArchive::queryMaterials( const string& name,
   ConsecutiveRangeSet result;
   int numMatls = (int)matlVarHashMaps->getVarHashMaps().size() - 1;
   for (int matl = -1; matl < numMatls; matl++) {
-    XMLURL url;
+    string url;
     if (matlVarHashMaps->findVariable(name, matl, url) != 0)
       result.addInOrder(matl);
   }

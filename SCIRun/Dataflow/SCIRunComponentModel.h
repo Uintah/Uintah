@@ -28,7 +28,7 @@
 
 
 /*
- *  SCIRunComponentModel.h: 
+ *  SCIRunComponentModel.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -61,57 +61,59 @@ class BridgeModule;
 class SCIRunComponentModel : public ComponentModel
 {
 public:
-    SCIRunComponentModel(SCIRunFramework* framework);
-    virtual ~SCIRunComponentModel();
+  SCIRunComponentModel(SCIRunFramework* framework);
+  virtual ~SCIRunComponentModel();
 
-    /** Returns true if component type \em type has been registered with this
-        component model.  In other words, returns true if this ComponentModel
-        knows how to instantiate component \em type. */
-    virtual bool
-    haveComponent(const std::string& type);
+  /** Returns true if component type \em type has been registered with this
+      component model.  In other words, returns true if this ComponentModel
+      knows how to instantiate component \em type. */
+  virtual bool
+  haveComponent(const std::string& type);
 
-    /** Allocates an instance of the component of type \em type.  The parameter
-        \em name is assigned as the unique name of the newly created instance.
-        Returns a smart pointer to the newly created instance, or a null pointer
-        on failure. */
-    virtual ComponentInstance*
-    createInstance(const std::string& name,
-                   const std::string& type,
-                   const sci::cca::TypeMap::pointer& tm);
+  /** Allocates an instance of the component of type \em type.  The parameter
+      \em name is assigned as the unique name of the newly created instance.
+      Returns a smart pointer to the newly created instance, or a null pointer
+      on failure. */
+  virtual ComponentInstance*
+  createInstance(const std::string& name,
+		 const std::string& type,
+		 const sci::cca::TypeMap::pointer& tm);
 
-    /** Deallocates the component instance \em ci.
-        Returns \code true on success and \code false on failure. */
-    virtual bool
-    destroyInstance(ComponentInstance * ic);
+  /** Deallocates the component instance \em ci.
+      Returns \code true on success and \code false on failure. */
+  virtual bool
+  destroyInstance(ComponentInstance * ic);
 
-    /** Returns the name (as a string) of this component model. */ 
-    virtual std::string getName() const;
+  /** Returns the name (as a string) of this component model. */
+  virtual const std::string getName() const;
 
-    /** Creates a list of all the available components (as ComponentDescriptions)
-        registered in this ComponentModel. */
-    virtual void
-    listAllComponentTypes(std::vector<ComponentDescription*>&, bool);
+  /** Creates a list of all the available components (as ComponentDescriptions)
+      registered in this ComponentModel. */
+  virtual void
+  listAllComponentTypes(std::vector<ComponentDescription*>&, bool);
 
-    /** Method not implemented by the SCIRunComponentModel. */
-        virtual void destroyComponentList();
+  /** Method not implemented by the SCIRunComponentModel. */
+  virtual void destroyComponentList();
 
-    /** Method not implemented by the SCIRunComponentModel. */
-        virtual void buildComponentList();
+  /** Method not implemented by the SCIRunComponentModel. */
+  virtual void buildComponentList(const std::vector<std::string>& files=std::vector<std::string>());
 
-    /** Initialize SCIRun GUI elements. */
-    static void initGuiInterface();
+  /** Initialize SCIRun GUI elements. */
+  static void initGuiInterface();
 
 private:
-    friend class DataflowScheduler;
-    friend class BridgeModule;
+  friend class DataflowScheduler;
+  friend class BridgeModule;
 
-    SCIRunFramework* framework;
+  SCIRunFramework* framework;
 
-    static TCLInterface* gui;
-    static Network* net;
+  static TCLInterface* gui;
+  static Network* net;
 
-    SCIRunComponentModel(const SCIRunComponentModel&);
-    SCIRunComponentModel& operator=(const SCIRunComponentModel&);
+  virtual void setComponentDescription(const std::string& type, const std::string& library);
+
+  SCIRunComponentModel(const SCIRunComponentModel&);
+  SCIRunComponentModel& operator=(const SCIRunComponentModel&);
 };
 
 } // end namespace SCIRun

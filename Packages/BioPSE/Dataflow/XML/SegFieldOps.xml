@@ -39,9 +39,12 @@
       <author>David Weinstein</author>
     </authors>
     <summary>
-      Create and process a segmented volume: erosion/dilation/open/close/absorb.
+      Create and process a segmented volume:
+erosion/dilation/open/close/absorb.
     </summary>
     <description>
+      <p>Create and process a segmented volume:
+erosion/dilation/open/close/absorb.</p>
     </description>
   </overview>
   <io>
@@ -58,6 +61,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

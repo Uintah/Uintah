@@ -46,7 +46,7 @@ namespace SCIRun {
 namespace vtk {
 
 VtkComponentDescription::VtkComponentDescription(VtkComponentModel* m, const std::string& t, const std::string& library)
-  : ComponentDescription(m, t), library(library)
+  : ComponentDescription(m, t, library)
 {
 }
 

@@ -59,6 +59,4 @@ be absolute or based on a multiplier (see UI).</p>
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>
