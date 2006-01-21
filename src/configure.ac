@@ -1714,7 +1714,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.24.1
+  sci_tp_version=1.25.1
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -2871,7 +2871,7 @@ case $host in
     # Linux Library Check
     if test "$F77" = "pgf77"; then
       SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
-    elif test "$F77" = "gfortran-4.0"; then
+    elif test "$F77" = "gfortran-4.0" -o "$F77" = "gfortran"; then
       SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
     elif test "$F77" = "ifort"; then
       SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
