@@ -5,7 +5,7 @@
 #include <vector>
 #include <queue>
 #include <iostream>
-#include <cmath>
+#include <math.h>
 using namespace std;
 
 #include<Packages/Uintah/Core/Parallel/ProcessorGroup.h>
