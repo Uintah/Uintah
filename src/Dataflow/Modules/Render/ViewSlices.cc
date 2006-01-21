@@ -1622,7 +1622,8 @@ ViewSlices::draw_window_label(SliceWindow &window)
   draw_label(window, text, window.viewport_->width() - 2, 0, 
 	     FreeTypeText::se, fonts_["view"]);
 
-  if (string(sci_getenv("USER")) == string("mdavis"))
+  const char* user = sci_getenv("USER");
+  if (user && string(user) == string("mdavis"))
     draw_label(window, "fps: "+to_string(fps_), 
 	       0, window.viewport_->height() - 2,
 	       FreeTypeText::nw, fonts_["default"]);
