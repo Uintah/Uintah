@@ -39,34 +39,32 @@
       <author>David Weinstein</author>
     </authors>
     <summary>
-      <p>
-        ChooseMatrix takes in an arbitrary number of input matrices, and
-        pass one of them downstream, based on the port index typed in the UI.
-      </p>
+        ChooseMatrix takes in an arbitrary number of input matrices,
+and pass one of them downstream, based on the port index typed in the
+UI.
     </summary>
-    <description>
-      <p>
-        ChooseMatrix takes in an arbitrary number of input matrices, and
-        pass one of them downstream, based on the port index typed in the UI. If the Use first valid matrix option is checked, the module will disregard the port index and iterate over the input ports, passing the first valid data downstream.
+      <description>
+	<p>
+        ChooseMatrix takes in an arbitrary number of input matrices,
+and pass one of them downstream, based on the port index typed in the
+UI. If the Use first valid matrix option is checked, the module will
+disregard the port index and iterate over the input ports, passing the
+first valid data downstream.
       </p>
-    </description>
+      </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">
-     <port>
-       <name>Matrix</name>
-       <datatype>SCIRun::Matrix</datatype>
-     </port>
+      <port>
+	<name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
-     <port>
-       <name>Matrix</name>
-       <datatype>SCIRun::Matrix</datatype>
-     </port>
+      <port>
+	<name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>

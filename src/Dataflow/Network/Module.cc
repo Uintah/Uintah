@@ -64,8 +64,6 @@
 
 using namespace std;
 using namespace SCIRun;
-typedef std::map<int,IPortInfo*>::iterator iport_iter;
-typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
 #ifdef __APPLE__
 const string ext = ".dylib";
@@ -175,40 +173,42 @@ Module::Module(const string& name, GuiContext* ctx,
 					      packageName);
   if (info) {
     oport_maker maker;
-    for (oport_iter i2=info->oports->begin();
-	 i2!=info->oports->end();
-	 i2++) {
-      unsigned long strlength = ((*i2).second)->datatype.length();
+    vector<OPortInfo*>::iterator i2 = info->oports_.begin();
+    while (i2 < info->oports_.end())
+    {
+      OPortInfo* op = *i2++;
+      unsigned long strlength = op->datatype.length();
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
-      sscanf(((*i2).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
+      sscanf(op->datatype.c_str(),"%[^:]::%s",package,datatype);
       if (package[0]=='*')
 	maker = FindOPort(&package[1],datatype);
       else
 	maker = FindOPort(package,datatype);	
       if (maker && package[0]!='*') {
-	oport = maker(this,((*i2).second)->name);
+	oport = maker(this, op->name);
 	if (oport)
 	  add_oport(oport);
       }
       delete[] package;
       delete[] datatype;
     }  
-    for (iport_iter i1=info->iports->begin();
-	 i1!=info->iports->end();
-	 i1++) {
-      unsigned long strlength = ((*i1).second)->datatype.length();
+    vector<IPortInfo*>::iterator i1 = info->iports_.begin();
+    while (i1 < info->iports_.end())
+    {
+      IPortInfo* ip = *i1++;
+      unsigned long strlength = ip->datatype.length();
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
-      sscanf(((*i1).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
+      sscanf(ip->datatype.c_str(),"%[^:]::%s",package,datatype);
       if (package[0]=='*')
 	dynamic_port_maker = FindIPort(&package[1],datatype);
       else
 	dynamic_port_maker = FindIPort(package,datatype);	
       if (dynamic_port_maker && package[0]!='*') {
-	iport = dynamic_port_maker(this,((*i1).second)->name);
+	iport = dynamic_port_maker(this, ip->name);
 	if (iport) {
-	  lastportname = string(((*i1).second)->name);
+	  lastportname = ip->name;
 	  add_iport(iport);
 	}
       } else {

@@ -40,9 +40,9 @@
     <summary>Pad the size of a nrrd along its axes.</summary>
     <description>
       <p>The user interface for NrrdPad varies depending upon the
-dimenion of the input nrrd.  For each axis,
-the user inputs the amount to prepend and append to the axis.  NrrdPad
-outputs a new NrrdData of the specified size.</p>
+dimenion of the input nrrd.  For each axis, the user inputs the amount
+to prepend and append to the axis.  NrrdPad outputs a new NrrdData of
+the specified size.</p>
     </description>
     <examplesr>Teem/nets/test/pad.net</examplesr>
   </overview>
@@ -60,6 +60,4 @@ outputs a new NrrdData of the specified size.</p>
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

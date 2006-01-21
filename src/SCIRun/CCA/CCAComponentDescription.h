@@ -59,7 +59,8 @@ class CCAComponentModel;
  */
 class CCAComponentDescription : public ComponentDescription {
 public:
-  CCAComponentDescription(CCAComponentModel* model, const std::string& type, const std::string& loader = "", const std::string& library="");
+  CCAComponentDescription(CCAComponentModel* model, const std::string& type, const std::string& library="", const std::string& loader = "");
+
   virtual ~CCAComponentDescription();
 
   /** Returns the component type name (a string). */
@@ -73,10 +74,8 @@ public:
   /** ? */
   void setLoaderName(const std::string& loaderName);
 
-  /** Get/Set the name of the DLL for this component.  The loader will search
+  /** Set the name of the DLL for this component.  The loader will search
    *    the SIDL_DLL_PATH for a matching library name. */
-  std::string getLibrary() const { return library; }
-  /** ? */
   void setLibrary(const std::string &l) { library = l; }
 
 private:

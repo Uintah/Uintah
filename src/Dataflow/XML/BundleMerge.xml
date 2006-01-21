@@ -32,21 +32,17 @@
 <component name="BundleMerge" category="Bundle">
   <overview>
     <authors>
-    Jeroen Stinstra
+      <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This merges the contents of multiple bundles into one
-      bundle. 
+      This merges the contents of multiple bundles into one bundle. 
     </summary>
     <description>
-      This merges the contents of multiple bundles into one
-      bundle. If the same object name exists in multiple bundles
-      the one from the right most input is chosen and the other
-      one will be purged.
+      <p>This merges the contents of multiple bundles into one bundle.
+If the same object name exists in multiple bundles the one from the
+right most input is chosen and the other one will be purged.</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="yes">
       <port>
@@ -61,9 +57,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

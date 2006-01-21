@@ -28,7 +28,7 @@
 
 
 /*
- *  TaoComponentDescription.h: 
+ *  TaoComponentDescription.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -69,15 +69,12 @@ public:
 
   /** Returns a pointer to the TaoComponentModel that holds this TaoComponentDescription.*/
   virtual const ComponentModel* getModel() const;
-  
-  /** Get/Set the name of the DLL for this component.  The loader will search
+
+  /** Set the name of the DLL for this component.  The loader will search
    *    the SIDL_DLL_PATH for a matching library name. */
-  std::string getLibrary() const { return library; }
   void setLibrary(const std::string &l) { library = l; }
 
 private:
-  std::string library;
-  
   TaoComponentDescription(const TaoComponentDescription&);
   TaoComponentDescription& operator=(const TaoComponentDescription&);
 };

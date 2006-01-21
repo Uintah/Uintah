@@ -63,7 +63,7 @@
 namespace SCIRun {
 
 InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
-  : ComponentModel("internal"), framework(framework),
+  : ComponentModel("internal", framework),
     lock_frameworkServices("InternalComponentModel::frameworkServices lock")
 {
     addService(new InternalFrameworkServiceDescription(this, "cca.BuilderService", &BuilderService::create));
@@ -89,7 +89,7 @@ InternalComponentModel::~InternalComponentModel()
 void InternalComponentModel::addService(InternalFrameworkServiceDescription* desc)
 {
   SCIRun::Guard g1(&lock_frameworkServices);
-  if (frameworkServices.find(desc->getType()) != frameworkServices.end()) 
+  if (frameworkServices.find(desc->getType()) != frameworkServices.end())
     throw FrameworkInternalException("add duplicate service ["+desc->getType()+"]");
   frameworkServices[desc->getType()] = desc;
 }
@@ -160,16 +160,16 @@ InternalComponentModel::getFrameworkService(const std::string& type,
 
 bool
 InternalComponentModel::releaseFrameworkService(const std::string& type,
-                                                const std::string& componentName)
+						const std::string& componentName)
 {
   lock_frameworkServices.lock();
   FrameworkServicesMap::iterator iter = frameworkServices.find(type);
   lock_frameworkServices.unlock();
 
-  if (iter == frameworkServices.end()) { 
-    return false; 
+  if (iter == frameworkServices.end()) {
+    return false;
   }
-  
+
   iter->second->release(framework);
 
   return true;
@@ -184,15 +184,15 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
 //   } else {
 //     std::string cname = "internal: " + type + " for " + componentName;
 //     ci = dynamic_cast<InternalComponentInstance*>(
-// 						  framework->lookupComponent(cname));
+//						  framework->lookupComponent(cname));
 //     if (!ci) {
 //       throw InternalError("Cannot find Service component of type: " +
-// 			  type + " for component " + componentName, __FILE__, __LINE__);
+//			  type + " for component " + componentName, __FILE__, __LINE__);
 //     }
 //   }
 //   if (!ci->decrementUseCount()) {
 //     throw InternalError("Service released without correspond get",
-// 			__FILE__, __LINE__);
+//			__FILE__, __LINE__);
 //   }
 //   return true;
 // }
@@ -202,8 +202,8 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
 bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 {
 #if DEBUG
-  std::cerr << "Error: InternalComponentModel does not implement haveComponent"
-        << std::endl;
+  std::cerr << "Warning: InternalComponentModel does not implement haveComponent"
+	<< std::endl;
 #endif
     return false;
 }
@@ -211,21 +211,29 @@ bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 void InternalComponentModel::destroyComponentList()
 {
 #if DEBUG
-  std::cerr << "Error: InternalComponentModel does not implement destroyComponentList"
-            << std::endl;
+  std::cerr << "Warning: InternalComponentModel does not implement destroyComponentList"
+	    << std::endl;
 #endif
 }
 
-void InternalComponentModel::buildComponentList()
+void InternalComponentModel::buildComponentList(const StringVector& files)
 {
 #if DEBUG
-  std::cerr << "Error: InternalComponentModel does not implement buildComponentList"
-            << std::endl;
+  std::cerr << "Warning: InternalComponentModel does not implement buildComponentList"
+	    << std::endl;
+#endif
+}
+
+void InternalComponentModel::setComponentDescription(const std::string& type, const std::string& library)
+{
+#if DEBUG
+  std::cerr << "Warning: InternalComponentModel does not implement setComponentDescription"
+	    << std::endl;
 #endif
 }
 
 ComponentInstance* InternalComponentModel::createInstance(const std::string&,
-                                                          const std::string&)
+							  const std::string&)
 {
     return 0;
 }
@@ -238,7 +246,7 @@ bool InternalComponentModel::destroyInstance(ComponentInstance *ic)
     return true;
 }
 
-std::string InternalComponentModel::getName() const
+const std::string InternalComponentModel::getName() const
 {
     return "Internal";
 }

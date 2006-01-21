@@ -34,6 +34,15 @@
 
 
 <component name="MaskLatVolWithTriSurf" category="FieldsData">
+  <overview>
+    <authors>
+      <author>?</author>
+    </authors>
+    <summary>?</summary>
+    <description>
+      <p>?</p>
+    </description>
+  </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -52,6 +61,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

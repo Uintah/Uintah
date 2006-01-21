@@ -39,9 +39,12 @@
       <author>David Weinstein</author>
     </authors>
     <summary>
-      Extract a single QuadSurf (one connected component) from a Separating Surface
+      Extract a single QuadSurf (one connected component) from a
+Separating Surface.
     </summary>
     <description>
+      <p>Extract a single QuadSurf (one connected component) from a
+Separating Surface.</p>
     </description>
   </overview>
   <io>
@@ -58,6 +61,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

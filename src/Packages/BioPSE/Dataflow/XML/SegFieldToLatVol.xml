@@ -39,9 +39,12 @@
       <author>David Weinstein</author>
     </authors>
     <summary>
-      Create a LatVolField from a SegLatVolField -- choose a quantity to store as the data.
+      Create a LatVolField from a SegLatVolField -- choose a quantity
+to store as the data.
     </summary>
     <description>
+      <p>Create a LatVolField from a SegLatVolField -- choose a quantity
+to store as the data.</p>
     </description>
   </overview>
   <io>
@@ -58,6 +61,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

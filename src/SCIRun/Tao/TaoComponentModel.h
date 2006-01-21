@@ -28,7 +28,7 @@
 
 
 /*
- *  TaoComponentModel.h: 
+ *  TaoComponentModel.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -65,18 +65,18 @@ class TaoComponentInstance;
  * framework. See ComponentModel for more information.
  *
  * \sa BabelComponentModel InternalComponentModel SCIRunComponentModel TaoComponentModel
-*/
-class TaoComponentModel : public ComponentModel
-{
+ */
+class TaoComponentModel : public ComponentModel {
 public:
-  TaoComponentModel(SCIRunFramework* framework);
+  TaoComponentModel(SCIRunFramework* framework,
+		    const StringVector& xmlPaths=StringVector());
   virtual ~TaoComponentModel();
 
   /** ? */
   sci::cca::TaoServices::pointer
   createServices(const std::string& instanceName,
-                 const std::string& className,
-                 const sci::cca::TypeMap::pointer& properties);
+		 const std::string& className,
+		 const sci::cca::TypeMap::pointer& properties);
 
   /** ? */
   bool destroyServices(const sci::cca::TaoServices::pointer& svc);
@@ -92,26 +92,29 @@ public:
       on failure. */
   virtual ComponentInstance*
   createInstance(const std::string& name,
-                 const std::string& type,
-                 const sci::cca::TypeMap::pointer& tm);
-  
+		 const std::string& type,
+		 const sci::cca::TypeMap::pointer& tm);
+
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
   virtual bool destroyInstance(ComponentInstance *ci);
 
   /** Returns the name (as a string) of this component model. */
-  virtual std::string getName() const;
-  
+  virtual const std::string getName() const;
+
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-                                     bool);
+				     bool);
 
   /** ? */
   virtual void destroyComponentList();
 
   /** ? */
-  virtual void buildComponentList();
+  virtual void buildComponentList(const StringVector& files=StringVector());
+
+  /** ? */
+  virtual void setComponentDescription(const std::string& type, const std::string& library);
 
   /** Get/set the directory path to component DLLs.  By default,
    * the sidlDLLPath is initialized to the environment variable
@@ -120,18 +123,16 @@ public:
   void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
 
   static const std::string DEFAULT_PATH;
-  
+
+
 private:
-  SCIRunFramework* framework;
   typedef std::map<std::string, TaoComponentDescription*> componentDB_type;
   componentDB_type components;
   SCIRun::Mutex lock_components;
-    
-  void readComponentDescription(const std::string& file);
 
   TaoComponentModel(const TaoComponentModel&);
   TaoComponentModel& operator=(const TaoComponentModel&);
- 
+
   std::string sidlDLLPath;
 };
 

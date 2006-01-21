@@ -28,7 +28,7 @@
 
 
 /*
- *  BabelComponentModel.h: 
+ *  BabelComponentModel.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -69,13 +69,14 @@ class BabelComponentInstance;
 class BabelComponentModel : public ComponentModel
 {
 public:
-  BabelComponentModel(SCIRunFramework* framework);
+  BabelComponentModel(SCIRunFramework* framework,
+		      const StringVector& xmlPaths=StringVector());
   virtual ~BabelComponentModel();
 
   /** ? */
   gov::cca::Services createServices(const std::string& instanceName,
-                                    const std::string& className,
-                                    const gov::cca::TypeMap& properties);
+				    const std::string& className,
+				    const gov::cca::TypeMap& properties);
 
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
@@ -90,18 +91,18 @@ public:
    * Remote components are currently NOT supported.
    */
   virtual ComponentInstance* createInstance(const std::string& name,
-                                            const std::string& type);
+					    const std::string& type);
 
   /** ? */
   virtual std::string createComponent(const std::string& name,
-					 const std::string& type);
+				      const std::string& type);
 
- /** Deallocates the component instance \em ci.  Returns \code true on success and
-     \code false on failure. */
+  /** Deallocates the component instance \em ci.  Returns \code true on success and
+      \code false on failure. */
   virtual bool destroyInstance(ComponentInstance *ci);
 
   /**  Returns the name (as a string) of this component model. */
-  virtual std::string getName() const;
+  virtual const std::string getName() const;
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
@@ -111,17 +112,18 @@ public:
   virtual void destroyComponentList();
 
   /** ? */
-  virtual void buildComponentList();
+  virtual void buildComponentList(const StringVector& files=StringVector());
+
+  /** ? */
+  virtual void setComponentDescription(const std::string& type, const std::string& library);
 
   static const std::string DEFAULT_PATH;
-  
+
+
 private:
-  SCIRunFramework* framework;
   typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
   componentDB_type components;
   SCIRun::Mutex lock_components;
- 
-  void readComponentDescription(const std::string& file);
 
   BabelComponentModel(const BabelComponentModel&);
   BabelComponentModel& operator=(const BabelComponentModel&);

@@ -44,7 +44,7 @@
 namespace SCIRun {
 
 BabelComponentDescription::BabelComponentDescription(BabelComponentModel* model, const std::string& type, const std::string& library)
-  : ComponentDescription(model, type), library(library)
+  : ComponentDescription(model, type, library)
 {
 }
 

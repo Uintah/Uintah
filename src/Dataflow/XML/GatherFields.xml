@@ -39,55 +39,49 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>
-      <p>
-        GatherFields glues any number of input fields into one output field.
-      </p>
+        GatherFields glues any number of input fields into one output
+field.
     </summary>
     <description>
       <p>GatherFields takes in an arbitrary number of input fields and
-      gathers them all up into one output field.  If the input
-      fields all have the same editable mesh type then the output
-      field will also be of the same type.  If the meshes are not
-      editable or of different mesh types then only their points
-      will be gathered up and a single PointCloudField will be
-      produced.</p>
+gathers them all up into one output field.  If the input fields all
+have the same editable mesh type then the output field will also be of
+the same type.  If the meshes are not editable or of different mesh
+types then only their points will be gathered up and a single
+PointCloudField will be produced.</p>
 
       <p>The mesh type is not preserved for non-editable mesh types
-      such as LatVolFields because they cannot be arbitrarily glued
-      together while maintaining their mesh type.  Run the fields
-      through the <modref package="SCIRun" name="Unstructure"/>
-      module before passing them into GatherFields if you want the
-      element structure to be preserved.</p>
+such as LatVolFields because they cannot be arbitrarily glued together
+while maintaining their mesh type.  Run the fields through the <modref
+package="SCIRun" name="Unstructure"/> module before passing them into
+GatherFields if you want the element structure to be preserved.</p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">
-     <port>
-       <name>Field</name>
-       <datatype>SCIRun::Field</datatype>
-     </port>
+      <port>
+	<name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </inputs>
     <outputs>
-     <port>
-       <name>Output Field</name>
-       <datatype>SCIRun::Field</datatype>
-     </port>
+      <port>
+	<name>Output Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
-<nets>
-<net id="GatherFields">
-<title>GatherFields-pcmerge Regression Test</title>
+  <nets>
+    <net id="GatherFields">
+      <title>GatherFields-pcmerge Regression Test</title>
 
-<p>Read in two PointCloudFields and extract all of the node points
-from both of them into a new PointCloud using the GatherFields
+      <p>Read in two PointCloudFields and extract all of the node
+points from both of them into a new PointCloud using the GatherFields
 module.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsCreate/GatherFields-pcmerge.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsCreate/GatherFields-pcmerge.net.</p>
 
-</net>
-</nets>
+    </net>
+  </nets>
 </component>

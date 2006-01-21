@@ -49,20 +49,15 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
-    <outputs>
-    </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-<net id="ScalarFieldStats">
-<title>ScalarFieldStats Regression Test</title>
-
-<p>Read in a scalar field and then view a histogram of it's values using
+  <nets>
+    <net id="ScalarFieldStats">
+      <title>ScalarFieldStats Regression Test</title>    
+      <p>Read in a scalar field and then view a histogram of it's values using
 ScalarFieldStats.</p>
-
-<p>This network can be found at src/nets/Modules/FieldsCreate/ScalarFieldStats.net.</p>
-
-</net>
-</nets>
+      
+      <p>This network can be found at src/nets/Modules/FieldsCreate/ScalarFieldStats.net.</p>
+      
+    </net>
+  </nets>
 </component>

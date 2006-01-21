@@ -43,8 +43,8 @@
 
 namespace SCIRun {
 
-CCAComponentDescription::CCAComponentDescription(CCAComponentModel* model, const std::string& type, const std::string& loader, const std::string& library)
- : ComponentDescription(model, type, loader), library(library)
+CCAComponentDescription::CCAComponentDescription(CCAComponentModel* model, const std::string& type, const std::string& library, const std::string& loader)
+ : ComponentDescription(model, type, library, loader)
 {
 }
 

@@ -43,7 +43,7 @@
       <p>Displays type if the input matrix.
       </p>
       <p>Allows you to let the matrix stay the same and just pass
-      through, or cast it to a ColumnMatrix, DenseMatrix or SparseRowMatrix.
+through, or cast it to a ColumnMatrix, DenseMatrix or SparseRowMatrix.
       </p>
     </description>
   </overview>
@@ -64,6 +64,4 @@
   <gui>
     <img>../Modules/Math/doc/CastMatrixUI.jpg</img>
   </gui>
-  <testing>
-  </testing>
 </component>

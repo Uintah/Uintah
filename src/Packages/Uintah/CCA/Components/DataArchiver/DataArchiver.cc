@@ -417,12 +417,8 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
    if (d_writeMeta) {
       // create index.xml 
       string inputname = d_dir.getName()+"/input.xml";
-      ofstream out(inputname.c_str());
-      if (!out) {
-        throw ErrnoException("DataArchiver::initializeOutput(): The file \"" + \
-                            inputname + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
-      }
-      out << params << endl; 
+      params->output(inputname.c_str());
+
       createIndexXML(d_dir);
    
       // create checkpoints/index.xml (if we are saving checkpoints)
@@ -474,12 +470,8 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
      ProblemSpecP indexDoc = loadDocument(iname);
      if (timestep >= 0)
        addRestartStamp(indexDoc, restartFromDir, timestep);
-     ofstream copiedIndex(iname.c_str());
-     if (!copiedIndex) {
-       throw InternalError("DataArchiver::restartSetup(): The file \"" + \
-                           iname + "\" could not be opened for writing!", __FILE__, __LINE__);
-     }
-     copiedIndex << indexDoc << endl;
+
+     indexDoc->output(iname.c_str());
      indexDoc->releaseDocument();
    }
    
@@ -579,12 +571,7 @@ DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
     }
   }
   
-  ofstream indexOut(iname.c_str());
-  if (!indexOut) {
-    throw InternalError("DataArchiver::copySection(): The file \"" + \
-                        iname + "\" could not be opened for writing!", __FILE__, __LINE__);
-  }
-  indexOut << myIndexDoc << endl;
+  myIndexDoc->output(iname.c_str());
 
   indexDoc->releaseDocument();
   myIndexDoc->releaseDocument();
@@ -667,12 +654,10 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
             d_checkpointTimestepDirs.push_back(toDir.getSubdir(href).getName());
          
          // add the timestep to the index.xml
-         ProblemSpecP newTS = timesteps->appendChild("timestep", 0, 1);
-
          ostringstream timestep_str;
          timestep_str << timestep;
+         ProblemSpecP newTS = timesteps->appendElement("timestep", timestep_str.str().c_str(), 0, 1);
 
-         newTS->appendText(timestep_str.str().c_str());
          for (map<string,string>::iterator iter = attributes.begin();
               iter != attributes.end(); iter++) {
            newTS->setAttribute((*iter).first, (*iter).second);
@@ -683,12 +668,7 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
    }
 
    // re-output index.xml
-   ofstream copiedIndex(iname.c_str());
-   if (!copiedIndex) {
-     throw InternalError("DataArchiver::copyTimesteps(): The file \"" + \
-                         iname + "\" could not be opened for writing!", __FILE__, __LINE__);
-   }
-   copiedIndex << indexDoc << endl;
+   indexDoc->output(iname.c_str());
    indexDoc->releaseDocument();
 
    // we don't need the old document anymore...
@@ -771,12 +751,7 @@ DataArchiver::createIndexXML(Dir& dir)
    metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
    
    string iname = dir.getName()+"/index.xml";
-   ofstream out(iname.c_str());
-   if (!out) {
-     throw ErrnoException("DataArchiver::createIndexXML(): The file \"" + \
-                         iname + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
-   }
-   out << rootElem << endl;
+   rootElem->output(iname.c_str());
    rootElem->releaseDocument();
 }
 
@@ -946,12 +921,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
       
       // store a back up in case it dies while writing index.xml
       string ibackup_name = d_checkpointsDir.getName()+"/index_backup.xml";
-      ofstream index_backup(ibackup_name.c_str());
-      if (!index_backup) {
-        throw InternalError("DataArchiver::beginOutputTimestep(): The file \"" + \
-                            ibackup_name + "\" could not be opened for writing!", __FILE__, __LINE__);
-      }
-      index_backup << index << endl;
+      index->output(ibackup_name.c_str());
     }
 
     d_checkpointTimestepDirs.push_back(timestepDir);
@@ -960,17 +930,10 @@ DataArchiver::beginOutputTimestep( double time, double delt,
         // remove reference to outdated checkpoint directory from the
         // checkpoint index
         ProblemSpecP ts = index->findBlock("timesteps");
-        ProblemSpecP removed;
-        do {
-          ProblemSpecP temp = ts->getFirstChild();
-          removed = ts->removeChild(temp);
-        } while (removed->getNodeType() != ProblemSpec::ELEMENT_NODE);
-        ofstream indexout(iname.c_str());
-        if (!indexout) {
-          throw InternalError("DataArchiver::beginOutputTimestep(): The file \"" + \
-                              iname + "\" could not be opened for writing!", __FILE__, __LINE__);
-        }
-        indexout << index << endl;
+        ProblemSpecP temp = ts->getFirstChild();
+        ts->removeChild(temp);
+
+        index->output(iname.c_str());
         
         // remove out-dated checkpoint directory
         Dir expiredDir(d_checkpointTimestepDirs.front());
@@ -1158,21 +1121,15 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         // add timestep info
         string timestepindex = tname.str()+"/timestep.xml";      
         
-        ProblemSpecP newElem = ts->appendChild("timestep",0,1);
         ostringstream value;
         value << timestep;
-        newElem->appendText(value.str().c_str());
+        ProblemSpecP newElem = ts->appendElement("timestep",value.str().c_str());
 
         newElem->setAttribute("href", timestepindex.c_str());
         ts->appendText("\n");
       }
       
-      ofstream indexOut(iname.c_str());
-      if (!indexOut) {
-        throw InternalError("DataArchiver::executedTimestep(): The file \"" + \
-                            iname + "\" could not be opened for writing!", __FILE__, __LINE__);
-      }
-      indexOut << indexDoc << endl;
+      indexDoc->output(iname.c_str());
       indexDoc->releaseDocument();
 
       // make a timestep.xml file for this timestep 
@@ -1273,12 +1230,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       sim->addToTimestepXML(rootElem);
 
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
-      ofstream out(name.c_str());
-      if (!out) {
-        throw ErrnoException("DataArchiver::outputTimestep(): The file \"" + \
-                            name + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
-      }
-      out << rootElem << endl;
+      rootElem->output(name.c_str());
       rootElem->releaseDocument();
 
     }
@@ -1353,12 +1305,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         
       // Open the file and write out the XML Doc.
       
-      ofstream out(xmlFilename.c_str());
-      if (!out) {
-        throw ErrnoException("DataArchiver::executedTimestep(): The file \"" + \
-                            xmlFilename + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
-      }
-      out << tempXMLDataFile << endl;
+      tempXMLDataFile->output(xmlFilename.c_str());
       tempXMLDataFile->releaseDocument();
         
       xmlDocIdx++;
@@ -1391,12 +1338,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         
       // Open the file and write out the XML Doc.
       
-      ofstream out(xmlFilename.c_str());
-      if (!out) {
-        throw ErrnoException("DataArchiver::executedTimestep(): The file \"" + \
-              xmlFilename + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
-      }
-      out << tempXMLDataFile << endl;
+      tempXMLDataFile->output(xmlFilename.c_str());
       tempXMLDataFile->releaseDocument();
         
       xmlDocIdx++;
@@ -1505,12 +1447,7 @@ DataArchiver::indexAddGlobals()
       }
     }
 
-    ofstream indexOut(iname.c_str());
-    if (!indexOut) {
-      throw InternalError("DataArchiver::indexAddGlobals(): The file \"" + \
-            iname + "\" could not be opened for writing!", __FILE__, __LINE__);
-    }
-    indexOut << indexDoc << endl;
+    indexDoc->output(iname.c_str());
     indexDoc->releaseDocument();
   }
   dbg << "end indexAddGlobals()\n";
@@ -1707,6 +1644,7 @@ DataArchiver::output(const ProcessorGroup*,
       }
       else {
         doc = (*currentXMLDataDocMap)[level->getIndex()];
+        doc->output((xmlFilename+"blah").c_str());
       }
     }
 #endif
@@ -1719,9 +1657,7 @@ DataArchiver::output(const ProcessorGroup*,
     while(n != 0){
       ProblemSpecP endNode = n->findBlock("end");
       ASSERT(endNode != 0);
-      ProblemSpecP tn = endNode->findTextBlock();
-      
-      long end = atol(tn->getNodeValue().c_str());
+      long end = atol(endNode->getNodeValue().c_str());
       
       if(end > cur)
         cur=end;
@@ -1788,6 +1724,9 @@ DataArchiver::output(const ProcessorGroup*,
       cerr << "Cannot fstat: " << dataFilename << '\n';
       throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
     }
+    if (cur != st.st_size)
+      cerr << "Cannot fstat: " << dataFilename << '\n';
+      
     ASSERTEQ(cur, st.st_size);
 #endif
     
@@ -1870,12 +1809,7 @@ DataArchiver::output(const ProcessorGroup*,
     if ( isReduction )
 #endif
     {
-      ofstream out(xmlFilename.c_str());
-      if (!out) {
-        throw ErrnoException("DataArchiver::output(): The file \"" + \
-              xmlFilename + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
-      }
-      out << doc << endl;
+      doc->output(xmlFilename.c_str());
       doc->releaseDocument();
     }
 
@@ -1934,12 +1868,7 @@ DataArchiver::output(const ProcessorGroup*,
       }
 
 #ifndef PVFS_FIX
-      ofstream indexOut(iname.c_str());
-      if (!indexOut) {
-        throw InternalError("DataArchiver::output(): The file \"" + \
-              iname + "\" could not be opened for writing!", __FILE__, __LINE__);
-      }
-      indexOut << indexDoc << endl;  
+      indexDoc->output(iname.c_str());
       indexDoc->releaseDocument();
 #endif
 

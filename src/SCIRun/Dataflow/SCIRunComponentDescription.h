@@ -66,7 +66,7 @@ public:
                              const std::string& category,
                              const std::string& module);
   virtual ~SCIRunComponentDescription();
-  
+
   /** Returns the component type name (a string). */
   virtual std::string getType() const;
 
@@ -77,7 +77,7 @@ private:
   std::string package;
   std::string category;
   std::string module;
-  
+
   SCIRunComponentDescription(const SCIRunComponentDescription&);
   SCIRunComponentDescription& operator=(const SCIRunComponentDescription&);
 };

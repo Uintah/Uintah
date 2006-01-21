@@ -38,9 +38,11 @@
     <authors>
       <author>McKay Davis</author>
     </authors>
-    <summary>Builds mapping matrix that projects data from a PointCloud to a LatVol </summary>
+    <summary>Builds mapping matrix that projects data from a
+PointCloud to a LatVol </summary>
     <description>
-      <p>
+      <p>Builds mapping matrix that projects data from a PointCloud to
+a LatVol 
       </p>
     </description>
   </overview>
@@ -62,6 +64,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

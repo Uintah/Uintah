@@ -43,18 +43,7 @@
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
-#include <SCIRun/CCA/CCAComponentModel.h>
 
-#if HAVE_BABEL
- #include <SCIRun/Babel/BabelComponentModel.h>
-#endif
-
-#if HAVE_VTK
- #include <SCIRun/Vtk/VtkComponentModel.h>
-#endif
-
-#include <SCIRun/Corba/CorbaComponentModel.h>
-#include <SCIRun/Tao/TaoComponentModel.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 
@@ -73,7 +62,7 @@ FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
     frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
     frameworkProperties->putString("url", framework->getURL().getString());
     getLogin();
-    getSidlPaths();
+    initSidlPaths();
 }
 
 FrameworkProperties::~FrameworkProperties()
@@ -104,7 +93,7 @@ sci::cca::Port::pointer FrameworkProperties::getService(const std::string& name)
     return sci::cca::Port::pointer(this);
 }
 
-void FrameworkProperties::getSidlPaths()
+void FrameworkProperties::initSidlPaths()
 {
     SSIDL::array1<std::string> sArray;
     // ';' seperated list of directories where one can find SIDL xml files
@@ -125,11 +114,14 @@ void FrameworkProperties::getSidlPaths()
 #if HAVE_VTK
         sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
 #endif
+
+#if HAVE_TAO
         sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_PATH);
         sArray.push_back(srcDir + TaoComponentModel::DEFAULT_PATH);
+#endif
         frameworkProperties->putStringArray("sidl_xml_path", sArray);
     }
-    // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel
+    // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel etc.
 }
 
 void FrameworkProperties::parseEnvVariable(std::string& input,

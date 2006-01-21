@@ -38,11 +38,14 @@
     <authors>
       <author>Steven G. Parker</author>
     </authors>
-    <summary>The ColorMap2 Read a persistent 2d colormap from a file on disk.</summary>
+    <summary>The ColorMap2 Read a persistent 2d colormap from a file
+on disk.</summary>
     <description>
     </description>
   </overview>
   <io>
+    <inputs>
+    </inputs>
     <outputs>
       <port>
 	<name>Output Data</name>
@@ -53,6 +56,4 @@
   <gui>
     <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
   </gui>
-  <testing>
-  </testing>
 </component>

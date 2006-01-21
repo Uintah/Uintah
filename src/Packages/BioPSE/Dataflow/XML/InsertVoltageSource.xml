@@ -36,6 +36,7 @@
     </authors>
     <summary>Insert electrodes into a finite element mesh.</summary>
     <description>
+      <p>Insert electrodes into a finite element mesh.</p>
     </description>
   </overview>
   <io>
@@ -56,6 +57,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

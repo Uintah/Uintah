@@ -28,7 +28,7 @@
 
 
 /*
- *  AutoBridge.h: Interface from framework to automatic bridge gen tools 
+ *  AutoBridge.h: Interface from framework to automatic bridge gen tools
  *
  *  Written by:
  *   Kostadin Damevski
@@ -46,26 +46,30 @@
 #include <set>
 
 namespace SCIRun {
-  class AutoBridge {
-  public:
-    AutoBridge(); 
-    virtual ~AutoBridge();
-    std::string genBridge(std::string modelFrom, std::string cFrom, std::string modelTo, std::string cTo);
-    bool canBridge(PortInstance* pr1, PortInstance* pr2);
-  private:
-    ///////
-    //list of bridges that just happened to exist in directory
-    std::set<std::string > oldB;
 
-    //////
-    //runtime cache used to maintain a list of generated bridges 
-    std::set<std::string > runC;
+class AutoBridge {
+public:
+  AutoBridge();
+  virtual ~AutoBridge();
+  std::string genBridge(std::string modelFrom, std::string cFrom, std::string modelTo, std::string cTo);
+  bool canBridge(PortInstance* pr1, PortInstance* pr2);
+private:
+  ///////
+  //list of bridges that just happened to exist in directory
+  std::set<std::string > oldB;
 
-    /////
-    //Compare CRC of existing files found in oldB to the strauss emitted ones
-    //Return true if they match. (Used for caching between different runs)
-    bool isSameFile(std::string name, Strauss* strauss);
-  };
+  //////
+  //runtime cache used to maintain a list of generated bridges
+  std::set<std::string > runC;
+
+  static const std::string COMPILEDIR;
+
+  /////
+  //Compare CRC of existing files found in oldB to the strauss emitted ones
+  //Return true if they match. (Used for caching between different runs)
+  bool isSameFile(std::string name, Strauss* strauss);
+};
+
 }
 
 #endif
