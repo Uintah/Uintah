@@ -304,9 +304,8 @@ SCIRunFramework::registerComponent(ComponentInstance *ci,
   // TODO: get some properties
   emitComponentEvent(
      new ComponentEvent(sci::cca::ports::InstantiatePending,
-			cid, sci::cca::TypeMap::pointer(0)));
+                        cid, sci::cca::TypeMap::pointer(0)));
   ci->framework = this;
-  ci->setInstanceName(goodname);
 
   lock_activeInstances.lock();
   activeInstances[name] = ci;

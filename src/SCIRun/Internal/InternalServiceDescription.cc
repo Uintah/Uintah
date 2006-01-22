@@ -44,28 +44,6 @@
 
 namespace SCIRun {
 
-<<<<<<< .working
-InternalServiceDescription::InternalServiceDescription(InternalComponentModel* model,
-                                                       const std::string& serviceType)
-  : ComponentDescription(model, serviceType), serviceType(serviceType)
-{
-}
-  
-InternalServiceDescription::~InternalServiceDescription()
-{
-}
-  
-std::string InternalServiceDescription::getType() const
-{
-  return serviceType;
-}
-  
-ComponentModel* InternalServiceDescription::getModel() const
-{
-  return model;
-}
-  
-=======
 InternalServiceDescription::InternalServiceDescription(InternalComponentModel* model,
 						       const std::string& serviceType)
   : ComponentDescription(model, serviceType), serviceType(serviceType)
@@ -86,5 +64,4 @@ ComponentModel* InternalServiceDescription::getModel() const
   return model;
 }
 
->>>>>>> .merge-right.r33028
 } // end namespace SCIRun
