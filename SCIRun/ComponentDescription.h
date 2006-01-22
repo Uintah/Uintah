@@ -85,14 +85,6 @@ public:
 
   /** ?  */
   virtual std::string getLoaderName() const;
-<<<<<<< .working
-
-protected:
-  ComponentModel *model;
-  std::string type;
-  std::string loaderName;
-
-=======
 
 protected:
   ComponentModel *model;
@@ -100,7 +92,6 @@ protected:
   std::string library;
   std::string loaderName;
 
->>>>>>> .merge-right.r33028
 private:
   ComponentDescription(const ComponentDescription&);
   ComponentDescription& operator=(const ComponentDescription&);

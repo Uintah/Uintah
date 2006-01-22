@@ -72,9 +72,7 @@ SCIRunLoader::SCIRunLoader(const std::string &loaderName,
 }
 
 //<<<<<<< SCIRunLoader.cc
-int SCIRunLoader::createPInstance(const string& componentName, const string& componentType,
-                  const sci::cca::TypeMap::pointer& properties,SSIDL::array1<std::string> &componentURLs) {
-
+int SCIRunLoader::createPInstance(const string& componentName, const string& componentType, const sci::cca::TypeMap::pointer& properties, SSIDL::array1<std::string> &componentURLs) {
 
 #if 0
   //////////////////////////
@@ -158,8 +156,7 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
 
 
 
-int SCIRunLoader::createInstance(const std::string& componentName, const std::string& componentType,
-                 const sci::cca::TypeMap::pointer& properties,std::string &componentURL) {
+int SCIRunLoader::createInstance(const std::string& componentName, const std::string& componentType, const sci::cca::TypeMap::pointer& properties, std::string &componentURL) {
 
   //TODO: assume type is always good?
 
@@ -178,8 +175,8 @@ int SCIRunLoader::createInstance(const std::string& componentName, const std::st
     return 1;
   }
   std::string makername = "make_"+componentType;
-  for(int i = 0; i < (int) makername.size(); i++) {
-    if (makername[i] == '.') {
+  for(int i = 0; i < (int) makername.size(); i++)
+    if (makername[i] == '.')
       makername[i]='_';
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
   if (!maker_v) {
@@ -206,7 +203,7 @@ int SCIRunLoader::createInstance(const std::string& componentName, const std::st
 
 int SCIRunLoader::destroyInstance(const std::string& componentName, float time)
 {
-  std::cerr<<"destroyInstance not implemneted\n";
+  std::cerr<<"destroyInstance not implemented\n";
   return 0;
 }
 
