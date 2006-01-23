@@ -331,10 +331,6 @@ public:
 
   void get_random_point(Point &, typename Face::index_type, int seed=0) const;
 
-  //! the double return val is the area of the triangle.
-  double get_gradient_basis(typename Face::index_type fi, Vector& g0, Vector& g1,
-			    Vector& g2);
-
   virtual bool synchronize(unsigned int);
 
   virtual bool has_normals() const { return true; }
@@ -1034,114 +1030,6 @@ TriSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   }
   return 0;
 }
-
-//! return the area of the triangle.
-template <class Basis>
-double
-TriSurfMesh<Basis>::get_gradient_basis(typename Face::index_type fi, Vector& g0, Vector& g1,
-				       Vector& g2)
-{
-  Point& p1 = points_[faces_[fi * 3]];
-  Point& p2 = points_[faces_[fi * 3+1]];
-  Point& p3 = points_[faces_[fi * 3+2]];
-
-  double x1=p1.x();
-  double y1=p1.y();
-  double z1=p1.z();
-
-  // rotate these points into the xy (z=0) plane
-  Transform trans1;
-  Transform rot1;
-  Transform rot2;
-  Transform rot3;
-
-  Point newp1;
-  Point newp2;
-  Point newp3;
-  newp1 = p1;
-  newp2 = p2;
-  newp3 = p3;
-
-  // 1. Translate so that p1 is at the origin
-  trans1.post_translate(Vector(-x1,-y1,-z1));
-  newp1 = trans1.project(newp1);
-  newp2 = trans1.project(newp2);
-  newp3 = trans1.project(newp3);
-
-  // 2. Rotate about z axis - this will bring the p1-p2 edge into the xz 
-  //    plane and make p2y=0;
-  double phi = Atan(newp2.y()/newp2.x());
-  rot1.post_rotate(-phi, Vector(0,0,1));
-  newp2 = rot1.project(newp2);
-  newp3 = rot1.project(newp3);
-
-  // 3. Rotate about y-axis so that newp2.z() = 0 and p1-p2 edge is 
-  //    coincident with the x-axis
-  double theta = Atan(newp2.z()/newp2.x());
-  rot2.post_rotate(theta, Vector(0,1,0));
-  newp2 = rot2.project(newp2);
-  newp3 = rot2.project(newp3);
-
-  // 4. Rotate p3 about x axis so that pnew3.z() = 0.
-  theta = Atan(newp3.z()/newp3.y());
-  rot3.post_rotate(theta, Vector(1,0,0));
-  newp3 = rot3.project(newp3);
-
-  // All nodes are now in the x-y plane. Compute basis vectors.
-
-  // first compute iA2, 1/(2xArea) (with z=0)
-  double x1prime=newp1.x();
-  double y1prime=newp1.y();
-  double x2prime=newp2.x();
-  double y2prime=newp2.y();
-  double x3prime=newp3.x();
-  double y3prime=newp3.y();
-  
-  double a1=+(x2prime*y3prime-x3prime*y2prime);
-  double a2=-(x1prime*y3prime-x3prime*y1prime);
-  double a3=+(x1prime*y2prime-x2prime*y1prime);
-
-  double iA2=1./(a1+a2+a3);
-
-  // compute the gradient basis vectors (with z=0)
-  double b0=y2prime-y3prime;
-  double c0=x3prime-x2prime;
-
-  Vector g0prime=Vector(b0*iA2, c0*iA2, 0);
-  
-  double b1=y3prime-y1prime;
-  double c1=x1prime-x3prime;
-
-  Vector g1prime=Vector(b1*iA2, c1*iA2, 0);
-
-  double b2=y1prime-y2prime;
-  double c2=x2prime-x1prime;
-
-  Vector g2prime=Vector(b2*iA2, c2*iA2, 0);
-
-  // apply the inverse rotations to the basis vectors
-  g0 = rot3.unproject(g0prime);
-  g0 = rot2.unproject(g0);
-  g0 = rot1.unproject(g0);
-
-  g1 = rot3.unproject(g1prime);
-  g1 = rot2.unproject(g1);
-  g1 = rot1.unproject(g1);
-  
-  g2 = rot3.unproject(g2prime);
-  g2 = rot2.unproject(g2);
-  g2 = rot1.unproject(g2);
-
-  // apply the inverse translation
-  g0 = trans1.unproject(g0);
-  g1 = trans1.unproject(g1);
-  g2 = trans1.unproject(g2);
-    
-  // return the area of the element
-  double area=(1./iA2)/2.0;
-  return(area);
-}
-
 
 template <class Basis>
 bool 

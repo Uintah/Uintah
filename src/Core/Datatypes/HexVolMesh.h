@@ -422,12 +422,6 @@ public:
   void get_random_point(Point &p, typename Cell::index_type i, 
 			int seed = 0) const;
 
-  //! the double return val is the volume of the Hex.
-  double get_gradient_basis(typename Cell::index_type ci, 
-			    Vector& g0, Vector& g1,
-			    Vector& g2, Vector& g3, Vector& g4,
-			    Vector& g5, Vector& g6, Vector& g7);
-  
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>
@@ -1909,18 +1903,6 @@ HexVolMesh<Basis>::inside8_p(typename Cell::index_type i, const Point &p) const
 }
     
 
-
-//! return the volume of the hex.
-template <class Basis>
-double
-HexVolMesh<Basis>::get_gradient_basis(typename Cell::index_type /*ci*/, 
-				      Vector& /*g0*/, Vector& /*g1*/,
-				      Vector& /*g2*/, Vector& /*g3*/,
-				      Vector& /*g4*/, Vector& /*g5*/,
-				      Vector& /*g6*/, Vector& /*g7*/)
-{
-  ASSERTFAIL("get_gradient_basis not implemented for hexes");
-}
 
 template <class Basis>
 typename HexVolMesh<Basis>::Node::index_type

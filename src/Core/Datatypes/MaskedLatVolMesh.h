@@ -1017,13 +1017,6 @@ public:
 			int /*seed=0*/) const
   { ASSERTFAIL("not implemented") }
 
-  //! the double return val is the volume of the Hex.
-  double get_gradient_basis(typename Cell::index_type /*ci*/, Vector& /*g0*/, 
-			    Vector& /*g1*/,
-			    Vector& /*g2*/, Vector& /*g3*/, Vector& /*g4*/,
-			    Vector& /*g5*/, Vector& /*g6*/, Vector& /*g7*/)
-  { ASSERTFAIL("not implemented") }
-
   void get_normal(Vector &/*normal*/, 
 		  typename Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented") }
