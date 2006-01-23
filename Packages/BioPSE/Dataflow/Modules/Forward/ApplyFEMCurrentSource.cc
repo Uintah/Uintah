@@ -84,6 +84,11 @@ class ApplyFEMCurrentSource : public Module {
   typedef ConstantBasis<PairData>                                PairDataBasis;
   typedef GenericField<PCMesh, PairDataBasis, vector<PairData> > PCPairField;
 
+  double get_tet_gradient_basis(TVMesh *mesh,
+                                TVMesh::Cell::index_type ci,
+                                Vector& g0, Vector& g1,
+                                Vector& g2, Vector& g3);
+
   void execute_dipole();
 
   void execute_sources_and_sinks();
@@ -134,6 +139,62 @@ ApplyFEMCurrentSource::execute()
   {
     error("Unreachable code, bad mode.");
   }
+}
+
+
+//! return the volume of the tet.
+double
+ApplyFEMCurrentSource::get_tet_gradient_basis(TVMesh *mesh,
+                                              TVMesh::Cell::index_type ci,
+                                              Vector& g0, Vector& g1,
+                                              Vector& g2, Vector& g3)
+{
+  TVMesh::Node::array_type ra;
+  mesh->get_nodes(ra, ci);
+
+  Point p[4];
+  for (int i = 0; i < 4; i++)
+  {
+    mesh->get_center(p[i], ra[i]);
+  }
+
+  double x1=p[0].x();
+  double y1=p[0].y();
+  double z1=p[0].z();
+  double x2=p[1].x();
+  double y2=p[1].y();
+  double z2=p[1].z();
+  double x3=p[2].x();
+  double y3=p[2].y();
+  double z3=p[2].z();
+  double x4=p[3].x();
+  double y4=p[3].y();
+  double z4=p[3].z();
+  double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+  double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+  double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+  double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+  double iV6=1./(a1+a2+a3+a4);
+
+  double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+  double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+  double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+  g0=Vector(b1*iV6, c1*iV6, d1*iV6);
+  double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+  double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+  double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+  g1=Vector(b2*iV6, c2*iV6, d2*iV6);
+  double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+  double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+  double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+  g2=Vector(b3*iV6, c3*iV6, d3*iV6);
+  double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+  double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+  double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+  g3=Vector(b4*iV6, c4*iV6, d4*iV6);
+
+  double vol=(1./iV6)/6.0;
+  return(vol);
 }
 
 
@@ -282,7 +343,7 @@ ApplyFEMCurrentSource::execute_dipole()
         }
 		
         Vector g1, g2, g3, g4;
-        hTetMesh->get_gradient_basis(loc, g1, g2, g3, g4);
+        get_tet_gradient_basis(hTetMesh, loc, g1, g2, g3, g4);
 		
         const double s1 = Dot(g1, dir);
         const double s2 = Dot(g2, dir);
