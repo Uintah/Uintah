@@ -28,7 +28,7 @@
 
 
 /*
- *  BabelComponentDescription.h: 
+ *  BabelComponentDescription.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -75,8 +75,6 @@ public:
   void setLibrary(const std::string &l) { library = l; }
 
 private:
-  std::string library;
-
   BabelComponentDescription(const BabelComponentDescription&);
   BabelComponentDescription& operator=(const BabelComponentDescription&);
 };
