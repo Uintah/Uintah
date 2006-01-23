@@ -65,7 +65,7 @@ public:
 	void SetLocations(vector<LOCS> *locs);
 	void SetOutputVector(vector<unsigned int> *orders);
 	void SetMergeParameters(unsigned int block_size, unsigned int blocks_in_transit, float sample_percent);
-	void SetBlockSize(unsigned int b) {blocksize=b;};
+	void SetBlockSize(unsigned int b) {block_size=b;};
 	void SetBlocksInTransit(unsigned int b) {blocks_in_transit=b;};
 	void SetSamplePercent(float p) {sample_percent=p;};
 	void SetCleanup(CleanupType cleanup) {this->cleanup=cleanup;};
@@ -244,7 +244,9 @@ void SFC<DIM,LOCS>::Profile()
 		double ptime=0, cleantime=0;
 		int r;
 		MPI_Barrier(Comm);
+#ifdef _TIMESFC_
 		start=timer->currentSeconds();
+#endif
 		for(r=0;r<250;r++)
 		{
 			
@@ -253,14 +255,15 @@ void SFC<DIM,LOCS>::Profile()
 			swap(sendbuf,mergebuf);
 		
 		}
+#ifdef _TIMESFC_
 		finish=timer->currentSeconds();
 		ptime=finish-start;	
 		double sum,sum2;
 		MPI_Reduce(&ptime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
 		MPI_Reduce(&cleantime,&sum2,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-				
 		if(rank==0)
 			cout << b << " " << ptime/P/r << " " << cleantime/P/r << endl;
+#endif		
 
 	}
 
