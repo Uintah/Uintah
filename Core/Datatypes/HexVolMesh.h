@@ -428,27 +428,6 @@ public:
 			    Vector& g2, Vector& g3, Vector& g4,
 			    Vector& g5, Vector& g6, Vector& g7);
   
-  //! function to test if at least one of cell's nodes are in supplied range
-  inline bool test_nodes_range(typename Cell::index_type ci,
-			       unsigned int sn,
-			       unsigned int en)
-  {
-    if (cells_[ci*8]>=sn && cells_[ci*8]<en
-	|| cells_[ci*8+1]>=sn && cells_[ci*8+1]<en
-	|| cells_[ci*8+2]>=sn && cells_[ci*8+2]<en
-	|| cells_[ci*8+3]>=sn && cells_[ci*8+3]<en
-	|| cells_[ci*8+4]>=sn && cells_[ci*8+4]<en
-	|| cells_[ci*8+5]>=sn && cells_[ci*8+5]<en
-	|| cells_[ci*8+6]>=sn && cells_[ci*8+6]<en
-	|| cells_[ci*8+7]>=sn && cells_[ci*8+7]<en)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>

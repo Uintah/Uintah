@@ -335,17 +335,7 @@ public:
   double get_gradient_basis(typename Face::index_type fi, Vector& g0, Vector& g1,
 			    Vector& g2);
 
-  //! function to test if at least one of face's nodes are in supplied range
-  inline bool test_nodes_range(typename Face::index_type fi,
-			       unsigned int sn,
-			       unsigned int en)
-  {
-    return (faces_[fi*3]>=sn && faces_[fi*3]<en
-	    || faces_[fi*3+1]>=sn && faces_[fi*3+1]<en
-	    || faces_[fi*3+2]>=sn && faces_[fi*3+2]<en);
-  }
-
-  virtual bool		synchronize(unsigned int);
+  virtual bool synchronize(unsigned int);
 
   virtual bool has_normals() const { return true; }
 
