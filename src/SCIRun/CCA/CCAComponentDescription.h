@@ -60,7 +60,6 @@ class CCAComponentModel;
 class CCAComponentDescription : public ComponentDescription {
 public:
   CCAComponentDescription(CCAComponentModel* model, const std::string& type, const std::string& library="", const std::string& loader = "");
-
   virtual ~CCAComponentDescription();
 
   /** Returns the component type name (a string). */
@@ -79,8 +78,6 @@ public:
   void setLibrary(const std::string &l) { library = l; }
 
 private:
-  std::string library;
-
   CCAComponentDescription(const CCAComponentDescription&);
   CCAComponentDescription& operator=(const CCAComponentDescription&);
 };
