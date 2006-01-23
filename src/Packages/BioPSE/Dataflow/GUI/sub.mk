@@ -39,7 +39,6 @@ SRCS := \
 	$(SRCDIR)/AnisoSphereModel.tcl\
 	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 	$(SRCDIR)/ApplyFEMVoltageSource.tcl\
-	$(SRCDIR)/BuildFEMatrixQuadratic.tcl\
 	$(SRCDIR)/BuildMisfitField.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/ConfigureElectrode.tcl\
