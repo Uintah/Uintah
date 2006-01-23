@@ -783,21 +783,6 @@ public:
 			    Vector&, Vector&)
   { ASSERTFAIL("not implemented") }
 
-  //! function to test if at least one of cell's nodes are in supplied range
-  inline bool test_nodes_range(typename Cell::index_type ci,
-			       unsigned int sn,
-			       unsigned int en)
-  {
-    for ( int i=0; i<PRISM_NNODES; i++ )
-    {
-      if (sn<=cells_[ci*PRISM_NNODES+i] && cells_[ci*PRISM_NNODES+i]<en )
-      {
-	return true;
-      }
-    }
-    return false;
-  }
-
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>
