@@ -248,15 +248,6 @@ public:
 			int) const
   { ASSERTFAIL("not implemented") }
 
-  //! the double return val is the volume of the Hex.
-  double get_gradient_basis(typename LatVolMesh<Basis>::Cell::index_type, 
-			    Vector&, Vector&,
-			    Vector&, Vector&, Vector&,
-			    Vector&, Vector&, Vector&)
-  { ASSERTFAIL("not implemented") }
-
-
-
   bool get_coords(vector<double> &coords, 
 		  const Point &p,
 		  typename LatVolMesh<Basis>::Elem::index_type idx) const

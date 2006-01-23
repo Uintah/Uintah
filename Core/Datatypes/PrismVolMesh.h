@@ -776,13 +776,6 @@ public:
   void get_random_point(Point &p, const typename Cell::index_type &ei, 
 			int seed=0) const;
 
-  //! the double return val is the volume of the prism.
-  double get_gradient_basis(typename Cell::index_type,
-			    Vector&, Vector&,
-			    Vector&, Vector&,
-			    Vector&, Vector&)
-  { ASSERTFAIL("not implemented") }
-
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>
