@@ -325,8 +325,14 @@ ProblemSpec::get(const string& name, string &value)
     ps = 0;
     return ps;
   }
-  else {
+  else {  // eliminate spaces
     value = node->getNodeValue();
+   
+    // elminate spaces from string
+    string::size_type pos =0;
+    while(( pos = value.find_first_of(" ",pos)) != string::npos){
+      value.erase(pos,1);
+    }
   }
 
   return ps;
