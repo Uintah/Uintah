@@ -1228,7 +1228,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     return(0); // SCIRun is ONLY 3D data, no 2D, or 1D
   }
 
-  numnodes = n; if ((m!=3)&&(n==3)) numnodes = m;
+  numnodes = n; if ((m!=3)&&(n==3)) { numnodes = m; mlnode.transpose(); }
   numelements = 0;
 
   //////////////
@@ -1523,7 +1523,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
 
     if (fieldbasistype == "")
     {
-      if (numfield == numelements)
+      if ((numfield == numelements)&&(numfield != numnodes))
       {
         fieldbasistype = "constant";
       }
@@ -1656,14 +1656,16 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       m = mlface.getm();
       n = mlface.getn();
       
-      if ((n==3)||(n==4)||(n==6)||(n==8)) m = n;
-      
-      if ((m==3)||(m==4)||(m==6)||(m==8))
+      if ((m==3)||(m==4)||(m==6)||(m==8)) n = m;
+      if ((n==3)||(n==4)||(n==6)||(n==8))
       {
-        if ((m==3)||(m==6)) meshtype = "TriSurfMesh";
+        if ((n==3)||(n==6)) meshtype = "TriSurfMesh";
         else meshtype = "QuadSurfMesh";            
       }
     }
+
+    m = mlface.getm();
+    n = mlface.getn();
     
     if ((meshtype != "TriSurfMesh")&&(meshtype != "QuadSurfMesh"))
     {   // explicitly stated type 
@@ -1811,7 +1813,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
 
     if (fieldbasistype == "")
     {
-      if (numfield == numelements)
+      if ((numfield == numelements)&&(numfield != numnodes))
       {
         fieldbasistype = "constant";
       }
@@ -1984,16 +1986,18 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       m = mlcell.getm();
       n = mlcell.getn();
       
-      if ((n==4)||(n==6)||(n==8)||(n==10)||(n==15)||(n==20)) m = n;
-      
-      if ((m==4)||(m==6)||(m==8)||(m==10)||(m==15)||(m==20))
+      if ((m==4)||(m==6)||(m==8)||(m==10)||(m==15)||(m==20)) n = m;
+      if ((n==4)||(n==6)||(n==8)||(n==10)||(n==15)||(n==20))
       {
-        if ((m==4)||(m==10)) meshtype = "TetVolMesh";
-        else if ((m==6)||(m==15)) meshtype = "PrismVolMesh";
+        if ((n==4)||(n==10)) meshtype = "TetVolMesh";
+        else if ((n==6)||(n==15)) meshtype = "PrismVolMesh";
         else meshtype = "HexVolMesh";            
       }
     }
-    
+  
+    m = mlcell.getm();
+    n = mlcell.getn();    
+        
     if ((meshtype != "TetVolMesh")&&(meshtype != "PrismVolMesh")&&(meshtype != "HexVolMesh"))
     {   // explicitly stated type 
       if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cell connectivity does not match meshtype)"));
@@ -2188,7 +2192,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
 
     if (fieldbasistype == "")
     {
-      if (numfield == numelements)
+      if ((numfield == numelements)&&(numfield != numnodes))
       {
         fieldbasistype = "constant";
       }
