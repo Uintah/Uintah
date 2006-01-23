@@ -4264,14 +4264,17 @@ tenEigensolve_f(a,b,c);
 if test "$HAVE_TEEM" = "yes"; then
    DEF_TEEM="#define HAVE_TEEM 1"
 else
-   AC_MSG_WARN(Teem thirdparty library check failed.  This most likely)
-   AC_MSG_WARN(means one of two things.  1. Could not find the teem)
-   AC_MSG_WARN(thirdparty library files.  or 2. Your teem thirdparty)
-   AC_MSG_WARN(is too old.  Look in config.log for more information.)
-   AC_MSG_WARN(If the error message is something like:)
-   AC_MSG_WARN(`tenEigensolve_f' undeclared then you most likely)
-   AC_MSG_WARN(have too old of a thirdparty.)
-   AC_MSG_ERROR(One or more of the TEEM components is missing.)   
+  if test "$sci_required_scirun" = "yes"; then
+
+    AC_MSG_WARN(Teem thirdparty library check failed.  This most likely)
+    AC_MSG_WARN(means one of two things.  1. Could not find the teem)
+    AC_MSG_WARN(thirdparty library files.  or 2. Your teem thirdparty)
+    AC_MSG_WARN(is too old.  Look in config.log for more information.)
+    AC_MSG_WARN(If the error message is something like:)
+    AC_MSG_WARN(`tenEigensolve_f' undeclared then you most likely)
+    AC_MSG_WARN(have too old of a thirdparty.)
+    AC_MSG_ERROR(One or more of the TEEM components is missing.)   
+  fi
 fi
 
 SCI_SUBST_THIRDPARTY_DIR(TEEM_LIB_DIR_FLAG)

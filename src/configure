@@ -53322,23 +53322,26 @@ _sci_includes=''
 if test "$HAVE_TEEM" = "yes"; then
    DEF_TEEM="#define HAVE_TEEM 1"
 else
-   { echo "$as_me:$LINENO: WARNING: Teem thirdparty library check failed.  This most likely" >&5
+  if test "$sci_required_scirun" = "yes"; then
+
+    { echo "$as_me:$LINENO: WARNING: Teem thirdparty library check failed.  This most likely" >&5
 echo "$as_me: WARNING: Teem thirdparty library check failed.  This most likely" >&2;}
-   { echo "$as_me:$LINENO: WARNING: means one of two things.  1. Could not find the teem" >&5
+    { echo "$as_me:$LINENO: WARNING: means one of two things.  1. Could not find the teem" >&5
 echo "$as_me: WARNING: means one of two things.  1. Could not find the teem" >&2;}
-   { echo "$as_me:$LINENO: WARNING: thirdparty library files.  or 2. Your teem thirdparty" >&5
+    { echo "$as_me:$LINENO: WARNING: thirdparty library files.  or 2. Your teem thirdparty" >&5
 echo "$as_me: WARNING: thirdparty library files.  or 2. Your teem thirdparty" >&2;}
-   { echo "$as_me:$LINENO: WARNING: is too old.  Look in config.log for more information." >&5
+    { echo "$as_me:$LINENO: WARNING: is too old.  Look in config.log for more information." >&5
 echo "$as_me: WARNING: is too old.  Look in config.log for more information." >&2;}
-   { echo "$as_me:$LINENO: WARNING: If the error message is something like:" >&5
+    { echo "$as_me:$LINENO: WARNING: If the error message is something like:" >&5
 echo "$as_me: WARNING: If the error message is something like:" >&2;}
-   { echo "$as_me:$LINENO: WARNING: \`tenEigensolve_f' undeclared then you most likely" >&5
+    { echo "$as_me:$LINENO: WARNING: \`tenEigensolve_f' undeclared then you most likely" >&5
 echo "$as_me: WARNING: \`tenEigensolve_f' undeclared then you most likely" >&2;}
-   { echo "$as_me:$LINENO: WARNING: have too old of a thirdparty." >&5
+    { echo "$as_me:$LINENO: WARNING: have too old of a thirdparty." >&5
 echo "$as_me: WARNING: have too old of a thirdparty." >&2;}
-   { { echo "$as_me:$LINENO: error: One or more of the TEEM components is missing." >&5
+    { { echo "$as_me:$LINENO: error: One or more of the TEEM components is missing." >&5
 echo "$as_me: error: One or more of the TEEM components is missing." >&2;}
    { (exit 1); exit 1; }; }
+  fi
 fi
 
 
