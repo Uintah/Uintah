@@ -68,7 +68,7 @@
 #               -filetypes $types \
 #               -initialfile $defname \
 #               -initialdir $initdir \
-#               -defaultextension $defext \
+#               -defaultextension $g \
 #               -formatvar $this-saveType \
 #               -formats {ppm raw "by_extension"} \
 #               -imgwidth $this-resx \
@@ -724,13 +724,22 @@ proc biopseFDialog {argstring} {
     # 5. Initialize the file types menu
     if {$data(-filetypes) != {}} {
         $data(typeMenu) delete 0 end
+        
+        set idx 0
+        set cnt 0
+        set ftype [set $data(-selectedfiletype)]
         foreach type $data(-filetypes) {
             set title  [lindex $type 0]
             set filter [lindex $type 1]
             $data(typeMenu) add command -label $title \
                 -command [list biopseFDialog_SetFilter $w $type]
+            if { [string equal $title $ftype ]} {
+              set idx $cnt
+            }
+            incr cnt
         }
-        biopseFDialog_SetFilter $w [lindex $data(-filetypes) 0]
+        
+        biopseFDialog_SetFilter $w [lindex $data(-filetypes) $idx]
         $data(typeMenuBtn) config -state normal
         $data(typeMenuLab) config -state normal
     } else {
@@ -1968,10 +1977,10 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
 	    #puts $justname
             set parts [split $justname 0123456789]
 	    
-	    set tmp_idx [string first [lindex $parts 0] $selectFilePath]
+	    set tmp_idx [string last $justname $selectFilePath]
 	    #puts $tmp_idx
 	    set base [string range $selectFilePath 0 [expr $tmp_idx - 1]]
-	    append base [lindex $parts 0]
+      append base [lindex $parts 0]
             set ext [lindex $parts end]
 
             #puts "working with $base ... $ext"
