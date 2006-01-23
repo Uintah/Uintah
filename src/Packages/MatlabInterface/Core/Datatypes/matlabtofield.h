@@ -712,7 +712,7 @@ bool MatlabToFieldAlgo::addedges(SCIRun::LockingHandle<MESH>& handle)
        edge[q] = mldata[r]; r++; 
      }
      
-		handle->add_edge(edge);
+		handle->add_elem(edge);
 	}
 
   return (true);

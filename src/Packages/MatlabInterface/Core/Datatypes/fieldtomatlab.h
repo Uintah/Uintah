@@ -501,29 +501,10 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::QuadSurfMesh<BASIS>* me
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::TetVolMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  std::cout << mladdfieldheader(field,mlarray);
-  std::cout << "wrote header\n";
- 
-  std::cout <<  mladdfielddata(field,mesh,mlarray);
-  std::cout << "field data\n";
- 
-  std::cout <<  mladdmeshheader(mesh,mlarray);
-  std::cout << "mesh header\n";
-  
-  std::cout << mladdnodes(mesh,mlarray);
-  std::cout << "wrote nodes\n";
-  
-  std::cout << mladdcells(mesh,mlarray);
-  std::cout << "wrote cells\n";
-
-
-  return (true);
-/*
  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldcells(field,mesh,mlarray) && mladdfieldcellderivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdcells(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
-*/
 }
 
 template <class FIELD, class BASIS>
@@ -1724,7 +1705,7 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
     fieldedge.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
-    std::vector<unsigned int> mapping;
+    std::vector<unsigned int> mapping(fdata.size());
     for (size_t p = 0; p < fdata.size(); p++)
     {
       mapping[p] = static_cast<unsigned int>(p) + option_indexbase_;
@@ -1750,8 +1731,8 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
     std::vector<typename MESH::Node::index_type> edges(num*numedges);
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numedges);
-    
-    
+    fieldedge.createdensearray(dims,matlabarray::miUINT32);
+        
     // SCIRun iterators are limited in supporting any index management
     // Hence I prefer to do it with integer and convert to the required
     // class at the last moment. Hopefully the compiler is smart and
@@ -1808,7 +1789,7 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
     fieldface.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
-    std::vector<unsigned int> mapping;
+    std::vector<unsigned int> mapping(fdata.size());
     for (size_t p = 0; p < fdata.size(); p++)
     {
       mapping[p] = static_cast<unsigned int>(p) + option_indexbase_;
@@ -1834,7 +1815,7 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
     std::vector<typename MESH::Node::index_type> faces(num*numfaces);
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numfaces);
-    
+    fieldface.createdensearray(dims,matlabarray::miUINT32);    
     
     // SCIRun iterators are limited in supporting any index management
     // Hence I prefer to do it with integer and convert to the required
@@ -1893,7 +1874,7 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
     fieldcell.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
-    std::vector<unsigned int> mapping;
+    std::vector<unsigned int> mapping(fdata.size());
     for (size_t p = 0; p < fdata.size(); p++)
     {
       mapping[p] = static_cast<unsigned int>(p) + option_indexbase_;
@@ -1919,7 +1900,7 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
     std::vector<typename MESH::Node::index_type> cells(num*numcells);
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numcells);
-    
+    fieldcell.createdensearray(dims,matlabarray::miUINT32);    
     
     // SCIRun iterators are limited in supporting any index management
     // Hence I prefer to do it with integer and convert to the required
