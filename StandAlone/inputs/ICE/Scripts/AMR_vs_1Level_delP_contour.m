@@ -59,15 +59,13 @@ for(ts = 1:nDumps )
     x2L = press2L(:,1);
     y2L = press2L(:,2);     % multi level data
     z2L = press2L(:,4);
-
+    X = reshape(x1L, [5 5]);
+    Y = reshape(y1L, [5 5]);
+    Z = reshape((z2L - z1L), [5 5]);
+  
+    [C,h] = contour(X, Y ,Z);
+    clabel(C,h);
     
-    % Oren --------------------------
-    % I have all the data in the vectors. How to I make a contour
-    % plot with them?
-    %[X, Y] = meshgrid(x2L,y2L);
-    %Z = meshgrid(z2L);
-    %contour(X,Y,Z)
-    stem3(x1L, y1L,z2L)
     xlabel('x')
     ylabel('y')
 
