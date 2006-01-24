@@ -45,7 +45,7 @@
 #include <Core/Datatypes/Matrix.h>
 
 #include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -97,7 +97,7 @@ void DistanceToBoundary::execute()
     return;
   }
 
-  FieldsMath fieldmath(this);
+  FieldsAlgo fieldmath(this);
 
   bool update = false;
 

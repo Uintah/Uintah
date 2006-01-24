@@ -60,7 +60,7 @@ itcl_class ModelCreation_DataIO_PathReader {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".path"
+	set defext ".*"
 	set title "Open path file"
 	
 	# file types to appers in filter box

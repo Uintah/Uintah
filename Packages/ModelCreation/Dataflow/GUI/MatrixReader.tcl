@@ -60,7 +60,7 @@ itcl_class ModelCreation_DataIO_MatrixReader {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".mat"
+	set defext ".*"
 	set title "Open matrix file"
 	
 	

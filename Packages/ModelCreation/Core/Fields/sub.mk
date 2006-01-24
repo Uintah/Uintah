@@ -12,9 +12,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/ModelCreation/Core/Fields
 
-SRCS     += $(SRCDIR)/ClipBySelectionMask.cc\
+SRCS     += $(SRCDIR)/ConvertToTetVol.cc\
+            $(SRCDIR)/ConvertToTriSurf.cc\
+            $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/DistanceToField.cc\
-            $(SRCDIR)/FieldsMath.cc\
+            $(SRCDIR)/FieldsAlgo.cc\
             $(SRCDIR)/FieldDataNodeToElem.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
             $(SRCDIR)/SplitFieldByElementData.cc\
@@ -22,6 +24,8 @@ SRCS     += $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/GetFieldData.cc\
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
+            $(SRCDIR)/ToPointCloud.cc\
+            $(SRCDIR)/Unstructure.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
@@ -29,6 +33,7 @@ PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Core/Geom Core/Geometry Dataflow/Network \
             Packages/ModelCreation/Core/Algorithms \
             Packages/ModelCreation/Core/Datatypes \
+            Packages/ModelCreation/Core/Util \
             Dataflow/Modules/Fields \
             Core/Algorithms/Fields
 LIBS :=

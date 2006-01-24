@@ -28,7 +28,6 @@ itcl_class ModelCreation_FieldsCreate_ClipFieldByFunction {
         if {[winfo exists $w]} {
             return
         }
-        $this-c gethelp
 
         toplevel $w
 
@@ -65,19 +64,41 @@ itcl_class ModelCreation_FieldsCreate_ClipFieldByFunction {
         pack $w.ff -side top -anchor w -fill both 
         pack $function.function -side top -fill both 
 
-        iwidgets::labeledframe $w.hf -labeltext "available functions"
-        set help [$w.hf childsite]
-        option add *textBackground white	
-        iwidgets::scrolledhtml $help.help -height 60 -hscrollmode dynamic
-        pack $w.hf -side top -anchor w -fill both -expand yes
-        pack $help.help -side top -fill both -expand yes
-
-        $help.help render [set $this-help]
+        button $w.help -text "Available Functions" -command "$this showhelp"
+        pack $w.help -side top -anchor e    
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w
     }
+    
+     method showhelp { } {
 
+      # Create a unique name for the file selection window
+      set w [format "%s-functionhelp" .ui[modname]]
+
+      if { [winfo exists $w] } {
+        if { [winfo ismapped $w] == 1} {
+          raise $w
+        } else {
+          wm deiconify $w
+        }
+	    	return
+      }
+	
+      toplevel $w -class TkFDialog
+
+      global $this-help
+      $this-c gethelp   
+            
+      iwidgets::labeledframe $w.hf -labeltext "available functions"
+      set help [$w.hf childsite]
+      option add *textBackground white	
+      iwidgets::scrolledhtml $help.help -height 60 -hscrollmode dynamic -width 500p -height 300p        
+      $help.help render [set $this-help]
+      pack $help.help -side top -anchor w -fill both -expand yes
+      pack $w.hf -side top -anchor w -fill both -expand yes
+    }
+    
 }
 
 

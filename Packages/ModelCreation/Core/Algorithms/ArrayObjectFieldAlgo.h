@@ -61,6 +61,10 @@
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/TriQuadraticLgn.h>
 
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/ScanlineMesh.h>
 #include <Core/Containers/FData.h>
 
 #include <Core/Util/TypeDescription.h>
@@ -69,7 +73,6 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Mesh.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Dataflow/Network/Module.h>

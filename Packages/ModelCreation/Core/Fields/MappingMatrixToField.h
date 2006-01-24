@@ -29,19 +29,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_MAPPINGMATRIXTOFIELD_H
 #define MODELCREATION_CORE_FIELDS_MAPPINGMATRIXTOFIELD_H 1
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/DynamicCompilation.h>
-#include <Core/Util/ProgressReporter.h>
-
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Mesh.h>
-
-#include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
+#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
 
 namespace ModelCreation {
 
@@ -50,40 +38,30 @@ using namespace SCIRun;
 class MappingMatrixToFieldAlgo : public DynamicAlgoBase
 {
   public:
-    virtual bool execute(ProgressReporter *reporter, 
-                         FieldHandle input, 
-                         FieldHandle& output,
-                         MatrixHandle mapping) = 0;
+    virtual bool MappingMatrixToField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle mapping);
 
-  static CompileInfoHandle get_compile_info(FieldHandle& field);
 };
 
 template<class FIELD, class OFIELD>
 class MappingMatrixToFieldAlgoT: public MappingMatrixToFieldAlgo
 {
   public:
-    virtual bool execute(ProgressReporter *reporter, 
-                         FieldHandle input, 
-                         FieldHandle& output,
-                         MatrixHandle mapping);
+    virtual bool MappingMatrixToField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle mapping);
 };
 
 template<class FIELD, class OFIELD>
-bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter, 
-                         FieldHandle input, 
-                         FieldHandle& output,
-                         MatrixHandle mapping)
+bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::MappingMatrixToField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle mapping)
 {
   FIELD *field = dynamic_cast<FIELD *>(input.get_rep());
   if (field == 0)
   {
-    reporter->error("MappingMatrixToField: No field on input");
+    pr->error("MappingMatrixToField: No field on input");
     return(false);
   }
   
   if (!mapping->is_sparse())
   {
-    reporter->error("MappingMatrixToField: Matrix is not a sparse matrix");
+    pr->error("MappingMatrixToField: Matrix is not a sparse matrix");
     return(false);
   }
   
@@ -99,7 +77,7 @@ bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter
   {
     if (rr[p] != p)
     {
-      reporter->error("MappingMatrixToField: This mapping matrix does not do a one-to-one mapping");
+      pr->error("MappingMatrixToField: This mapping matrix does not do a one-to-one mapping");
       return(false);
     }
   }
@@ -117,7 +95,7 @@ bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter
 
     if (ofield == 0)
     {
-      reporter->error("MappingMatrixToField: Could not allocate output field");
+      pr->error("MappingMatrixToField: Could not allocate output field");
       return(false);
     }
 
@@ -140,7 +118,7 @@ bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter
 
     if (ofield == 0)
     {
-      reporter->error("MappingMatrixToField: Could not allocate output field");
+      pr->error("MappingMatrixToField: Could not allocate output field");
       return(false);
     }
 
@@ -158,7 +136,7 @@ bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter
   }  
   else
   {
-    reporter->error("MappingMatrixToField: Number of nodes or elements is not equal to the number of rows of the mapping matrix");
+    pr->error("MappingMatrixToField: Number of nodes or elements is not equal to the number of rows of the mapping matrix");
     return(false);
   }
 

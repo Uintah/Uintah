@@ -59,7 +59,7 @@ itcl_class ModelCreation_DataIO_ColorMap2Reader {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".cmap2"
+	set defext ".*"
 	set title "Open colormap2 file"
 	
 	

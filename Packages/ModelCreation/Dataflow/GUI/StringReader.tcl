@@ -54,7 +54,7 @@ itcl_class ModelCreation_DataIO_StringReader {
       # to be modified for particular reader
 
       # extansion to append if no extension supplied by user
-      set defext ".txt"
+      set defext ".*"
       set title "Open text file"
       
       ######################################################

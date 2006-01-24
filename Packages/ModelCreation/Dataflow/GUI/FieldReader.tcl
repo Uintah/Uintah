@@ -59,7 +59,7 @@ itcl_class ModelCreation_DataIO_FieldReader {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".fld"
+	set defext ".*"
 	set title "Open field file"
 	
 	######################################################

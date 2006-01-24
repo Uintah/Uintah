@@ -26,15 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  ClipFieldBySelectionMask.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -44,7 +35,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -119,7 +110,7 @@ void ClipFieldBySelectionMask::execute()
 
   if(update)
   {
-    FieldsMath fieldmath(this);
+    FieldsAlgo fieldmath(this);
   
     FieldHandle output;
     MatrixHandle interpolant;

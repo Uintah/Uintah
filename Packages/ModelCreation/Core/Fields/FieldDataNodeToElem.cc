@@ -42,13 +42,11 @@ FieldDataNodeToElemAlgo::get_compile_info(FieldHandle field)
   std::string basis =  "ConstantBasis<" + data_type->get_name() +"> ";
   std::string datatype = data_type->get_name();
   
-  std::string algo_type = "Scalar";
-  if (datatype == "Vector") algo_type = "Vector";
-  if (datatype == "Tensor") algo_type = "Tensor";
+
               
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name = "FieldData"+ algo_type +"NodeToElemAlgoT";
+  std::string algo_name = "FieldDataNodeToElemAlgoT";
   std::string base_name = "FieldDataNodeToElemAlgo";
 
 
