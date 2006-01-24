@@ -805,7 +805,7 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 
   painter_->for_each(&Painter::rebind_slice);
   painter_->redraw_all();
-  painter_->need_execute();
+  painter_->want_to_execute();
   return scinew string("Done");
 }
 
