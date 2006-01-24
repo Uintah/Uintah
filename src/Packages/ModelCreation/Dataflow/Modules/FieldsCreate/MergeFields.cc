@@ -26,21 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  MergeFields.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -106,7 +96,6 @@ void MergeFields::execute()
     fields[p] = input;
   }
   
-  FieldsMath fieldmath(dynamic_cast<ProgressReporter *>(this));  
   FieldHandle output;
 
   double tolerance = 0.0;
@@ -117,12 +106,25 @@ void MergeFields::execute()
   if (guimergenodes_.get()) mergenodes = true;
   if (guiforcepointcloud_.get()) forcepointcloud = true;
 
-  if(!(fieldmath.MergeFields(fields,output,tolerance,mergenodes,forcepointcloud)))
+  FieldsAlgo fieldalgo(dynamic_cast<ProgressReporter *>(this));  
+
+  if (!(fieldalgo.MergeFields(fields,output,tolerance,mergenodes)))
   {
-    error("Dynamically compile algorithm failed");
+    error("The MergeFields algorithm failed.");
     return;
   }
 
+  if (forcepointcloud)
+  {
+    FieldHandle temp;
+    if (!(fieldalgo.ToPointCloud(output,temp)))
+    {
+      error("The ToPointCloud algorithm failed");
+      return;
+    }
+    output = temp;
+  }
+  
   FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
   if (output_oport) output_oport->send(output);
 }

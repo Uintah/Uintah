@@ -27,23 +27,16 @@
 */
 
 
-#ifndef MODELCREATION_CORE_FIELDS_FIELDMATH_H
-#define MODELCREATION_CORE_FIELDS_FIELDMATH_H 1
+#ifndef MODELCREATION_CORE_FIELDS_FIELDALGO_H
+#define MODELCREATION_CORE_FIELDS_FIELDALGO_H 1
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ProgressReporter.h>
+#include <Packages/ModelCreation/Core/Util/AlgoLibrary.h>
 
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/DenseMatrix.h>
+
 #include <Dataflow/Network/Module.h>
-
-// Dynamic code that already exist
-// We wrap it only by a function call
-// A more clean solution is to transfer all
-// dynamic code to Algorithms
-
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -54,24 +47,19 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class FieldsMath {
+class FieldsAlgo : public AlgoLibrary {
 
   public:
-    FieldsMath(Module* module);       // if you want the module to pop up some
-                                      // error message of dynamically compiled 
-                                      // user supplied code
-    FieldsMath(ProgressReporter* pr); // normal case
-    virtual ~FieldsMath();
+    FieldsAlgo(ProgressReporter* pr); // normal case
 
     // Funtions borrow from Core of SCIRun
     bool FieldBoundary(FieldHandle input, FieldHandle& output, MatrixHandle &interpolant);
     bool ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield);
-    bool Unstructure(FieldHandle input,FieldHandle& output);
     bool ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis);
     
     // ManageFieldData split into two parts
     // Need to upgrade code for these when we are done with HO integration
-    bool SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype = true);
+    bool SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype);
     bool GetFieldData(FieldHandle input, MatrixHandle& data);
 	
     // Due to some oddity in the FieldDesign information like this cannot be queried directly
@@ -88,43 +76,59 @@ class FieldsMath {
     bool FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method);
     bool FieldDataElemToNode(FieldHandle input, FieldHandle& output, std::string method);
 
+    bool FilterFieldElements(FieldHandle input, FieldHandle& output, bool removezerosize = true, bool removedegenerate = true, bool removedouble = true);
+
     // Check properties of surface field
     bool IsClosedSurface(FieldHandle input);
     bool IsClockWiseSurface(FieldHandle input);
     bool IsCounterClockWiseSurface(FieldHandle input);
 
-    // More specialized functions
-    // Function to split a field into different unconnected regions
-    bool SplitFieldByElementData(FieldHandle input, FieldHandle& output);
+    // ConvertToTetVol:
+    // This function converts an hexvol or latvol into a tetvol. The functionality
+    // is similar to HexToTet, but does more checks and is more robust and works
+    // on unconnected data.
+    bool ConvertToTetVol(FieldHandle input, FieldHandle& output);
+
+    // ConvertToTriSurf:
+    // This function converts an quadsurf or image into a trisurf. The functionality
+    // is similar to QuadToTri, but does more checks and is more robust and works
+    // on unconnected data.
+    bool ConvertToTriSurf(FieldHandle input, FieldHandle& output);
+    
+    // MappingMatrixToField:
+    // This function will assign to each node the value of the original node.
+    // Hence by selecting areas in this field one can obtain all nodes located
+    // inside the original field
     bool MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix);
 
-    // Gather Fields but then properly
-    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields = true, bool forcepointcloud = false);
+    // MakeEditable: Make a mesh editable. This function calls unstructure if
+    // needed.
+    bool MakeEditable(FieldHandle input, FieldHandle& output);
 
-  private:
-    Module* module_;
-    ProgressReporter* pr_;
+    // MergeFields: Merge a set of fields of the same type together into one
+    // new output field. If mergenodes is true, nodes will be merge if the
+    // distance between them is smaller than tolerance  
+    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true);
+
+    // MergeNodes: Merge the nodes in a field together if the distance between
+    // them is smaller than tolerance.
+    bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance);
+
+    // SplitFieldByElementData:
+    // Use the element data to segment the input field into volumes/areas with a
+    // constant value. This means node splitting at the edges between the
+    // different areas/volumes.
+    bool SplitFieldByElementData(FieldHandle input, FieldHandle& output);    
+
+    // ToPointCloud: Remove all element information from a mesh and only extract
+    // the actual points in the mesh.
+    bool ToPointCloud(FieldHandle input, FieldHandle& output);
     
-    inline void error(std::string error);
-    inline void warning(std::string warning);
-    inline void remark(std::string remark);
-
+    // Unstructure: Unstructure a mesh from a regular or structured mesh into
+    // an unstructured mesh. This is often needed to make a mesh editable
+    bool Unstructure(FieldHandle input,FieldHandle& output);
+    
 };
-
-inline void FieldsMath::error(std::string error)
-{
-  if (pr_) pr_->error(error); else std::cout << "ERROR: " << error << std::endl;
-}
-
-inline void FieldsMath::warning(std::string warning)
-{
-  if (pr_) pr_->warning(warning); else std::cout << "WARNING: " << warning << std::endl;
-}
-
-inline void FieldsMath::remark(std::string remark)
-{
-  if (pr_) pr_->remark(remark); else std::cout << "REMARK: " << remark << std::endl;
-}
 
 
 } // ModelCreation

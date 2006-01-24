@@ -75,27 +75,7 @@ public:
 //// Template for Scalar computations //////////
 
 template<class FIELD, class OFIELD>
-class FieldDataScalarNodeToElemAlgoT : public FieldDataNodeToElemAlgo
-{
-public:
-  virtual bool execute(ProgressReporter *reporter,
-                              FieldHandle input,
-                              FieldHandle& output,
-                              std::string method);                              
-};
-
-template<class FIELD, class OFIELD>
-class FieldDataVectorNodeToElemAlgoT : public FieldDataNodeToElemAlgo
-{
-public:
-  virtual bool execute(ProgressReporter *reporter,
-                              FieldHandle input,
-                              FieldHandle& output,
-                              std::string method);                              
-};
-
-template<class FIELD, class OFIELD>
-class FieldDataTensorNodeToElemAlgoT : public FieldDataNodeToElemAlgo
+class FieldDataNodeToElemAlgoT : public FieldDataNodeToElemAlgo
 {
 public:
   virtual bool execute(ProgressReporter *reporter,
@@ -106,7 +86,7 @@ public:
 
 
 template<class FIELD, class OFIELD>
-bool FieldDataScalarNodeToElemAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
+bool FieldDataNodeToElemAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
                               FieldHandle input,
                               FieldHandle& output,
                               std::string method)
@@ -152,7 +132,7 @@ bool FieldDataScalarNodeToElemAlgoT<FIELD,OFIELD>::execute(ProgressReporter *rep
         {
           val += field->value(nodearray[p]);
         }
-        val *= static_cast<double>((1.0/static_cast<double>(nsize)));
+        val = val * static_cast<double>((1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*it);
         ++it;         
       }
@@ -252,218 +232,6 @@ bool FieldDataScalarNodeToElemAlgoT<FIELD,OFIELD>::execute(ProgressReporter *rep
   output = dynamic_cast<SCIRun::Field *>(ofield);
   return(true);
 }
-
-
-
-template<class FIELD, class OFIELD>
-bool FieldDataVectorNodeToElemAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
-                              FieldHandle input,
-                              FieldHandle& output,
-                              std::string method)
-{ 
-  output = 0;
-                             
-  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
-  if (field == 0)
-  {
-    reporter->error("FieldDataNodeToElem: Object is not valid");
-    return(false);
-  }
-
-  if (field->basis_order() < 1)
-  {
-     reporter->error("FieldDataNodeToElem: Data is not located at nodes");
-     return(false);   
-  }
-
-  // Create the field with the new mesh and data location.
-  OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
-  ofield->resize_fdata();
-
-  typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
-  typename FIELD::mesh_type::Node::array_type nodearray;
-
-  if (field->basis_order() > 0)
-  {
-    typename FIELD::mesh_type::Elem::iterator it, eit;
-
-    mesh->begin(it);
-    mesh->end(eit);
-
-    if ((method == "Interpolate")||(method == "Average"))
-    {
-      while (it != eit)
-      {
-        mesh->get_nodes(nodearray, *it);
-        int nsize = nodearray.size();
-        SCIRun::Vector val= SCIRun::Vector(0,0,0);
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val += field->value(nodearray[p]);
-        }
-        val *= static_cast<double>((1.0/static_cast<double>(nsize)));
-        ofield->set_value(val,*it);
-        ++it;
-      }
-    }
-    
-    if (method == "Max")
-    {
-      reporter->error("FieldDataNodeToElem: Max has not been implemented for this data type");
-      return (false);
-    }
-    
-    if (method == "Min")
-    {
-      reporter->error("FieldDataNodeToElem: Min has not been implemented for this data type");
-      return (false);
-    }
-
-    if (method == "Sum")
-    {
-      while (it != eit)
-      {
-        mesh->get_nodes(nodearray, *it);
-        int nsize = nodearray.size();
-        SCIRun::Vector val = SCIRun::Vector(0,0,0);
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val += field->value(nodearray[p]);
-        }
-        ofield->set_value(val,*it);
-        ++it;
-      }
-    }
-
-    if (method == "Median")
-    {
-      reporter->error("FieldDataNodeToElem: Median has not been implemented for this data type");
-      return (false);
-    }
-  }
-  else if (field->basis_order() == 0)
-  {
-    reporter->warning("FieldDataNodeToElem: Data is already on element");
-    output = input;
-    return(true);
-  }
-  else
-  {    
-    reporter->warning("FieldDataNodeToElem: There is no data on input field");
-    output = input;
-    return(true);
-  }
-
-  output = dynamic_cast<SCIRun::Field *>(ofield);
-  return(true);
-}
-
-
-template<class FIELD, class OFIELD>
-bool FieldDataTensorNodeToElemAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
-                              FieldHandle input,
-                              FieldHandle& output,
-                              std::string method)
-{ 
-  output = 0;
-                             
-  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
-  if (field == 0)
-  {
-    reporter->error("FieldDataNodeToElem: Object is not valid");
-    return(false);
-  }
-
-  if (field->basis_order() < 1)
-  {
-     reporter->error("FieldDataNodeToElem: Data is not located at nodes");
-     return(false);   
-  }
-
-  // Create the field with the new mesh and data location.
-  OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
-  ofield->resize_fdata();
-
-  typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
-  typename FIELD::mesh_type::Node::array_type nodearray;
-
-  if (field->basis_order() > 0)
-  {
-    typename FIELD::mesh_type::Elem::iterator it, eit;
-
-    mesh->begin(it);
-    mesh->end(eit);
-
-    if ((method == "Interpolate")||(method == "Average"))
-    {
-      while (it != eit)
-      {
-        mesh->get_nodes(nodearray, *it);
-        int nsize = nodearray.size();
-        SCIRun::Tensor val = SCIRun::Tensor(0);
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val += field->value(nodearray[p]);
-        }
-        val *= static_cast<double>((1.0/static_cast<double>(nsize)));
-        ofield->set_value(val,*it);
-        ++it;
-      }
-    }
-    
-    if (method == "Max")
-    {
-      reporter->error("FieldDataNodeToElem: Max has not been implemented for this data type");
-      return (false);
-    }
-    
-    if (method == "Min")
-    {
-      reporter->error("FieldDataNodeToElem: Min has not been implemented for this data type");
-      return (false);
-    }
-
-    if (method == "Sum")
-    {
-      while (it != eit)
-      {
-        mesh->get_nodes(nodearray, *it);
-        int nsize = nodearray.size();
-        SCIRun::Tensor val = SCIRun::Tensor(0);
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val += field->value(nodearray[p]);
-        }
-        ofield->set_value(val,*it);
-        ++it;
-      }
-    }
-
-    if (method == "Median")
-    {
-      reporter->error("FieldDataNodeToElem: Median has not been implemented for this data type");
-      return (false);
-    }
-  }
-  else if (field->basis_order() == 0)
-  {
-    reporter->warning("FieldDataNodeToElem: Data is already on element");
-    output = input;
-    return(true);
-  }
-  else
-  {    
-    reporter->warning("FieldDataNodeToElem: There is no data on input field");
-    output = input;
-    return(true);
-  }
-
-  output = dynamic_cast<SCIRun::Field *>(ofield);
-  return(true);
-}
-
-
-
 
 } // namespace ModelCreation
 

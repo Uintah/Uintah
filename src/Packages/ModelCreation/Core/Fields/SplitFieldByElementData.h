@@ -29,20 +29,8 @@
 #ifndef MODELCREATION_CORE_FIELDS_SPLITFIELDBYELEMENTDATA_H
 #define MODELCREATION_CORE_FIELDS_SPLITFIELDBYELEMENTDATA_H 1
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/DynamicCompilation.h>
-#include <Core/Util/ProgressReporter.h>
-
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Mesh.h>
-
+#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
-
-#include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace ModelCreation {
 
@@ -51,34 +39,26 @@ using namespace SCIRun;
 class SplitFieldByElementDataAlgo : public DynamicAlgoBase
 {
   public:
-    virtual bool execute(ProgressReporter *reporter, 
-                         FieldHandle input, 
-                         FieldHandle& output) = 0;
-
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
-                         
-                         
+    virtual bool SplitFieldByElementData(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+    virtual bool isvalid(FieldHandle input);
 };
 
 template<class FIELD>
 class SplitFieldByElementDataAlgoT: public SplitFieldByElementDataAlgo
 {
   public:
-    virtual bool execute(ProgressReporter *reporter, 
-                         FieldHandle input, 
-                         FieldHandle& output);
+    virtual bool SplitFieldByElementData(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+    virtual bool isvalid(FieldHandle input);
 };
 
 
 template<class FIELD>
-bool SplitFieldByElementDataAlgoT<FIELD>::execute(ProgressReporter *reporter, 
-                         FieldHandle input, 
-                         FieldHandle& output)
+bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
   FIELD *field = dynamic_cast<FIELD *>(input.get_rep());
   if (field == 0)
   {
-    reporter->error("SplitFieldByElementData: No field on input");
+    pr->error("SplitFieldByElementData: No field on input");
     return(false);
   }
   
@@ -95,7 +75,6 @@ bool SplitFieldByElementDataAlgoT<FIELD>::execute(ProgressReporter *reporter,
 
   mesh->begin(bni); mesh->end(eni);
 
-//  typename FIELD::mesh_type::under_type maxindex = 0;
   unsigned int maxindex = 0;
 
   while(bni != eni)
@@ -111,7 +90,6 @@ bool SplitFieldByElementDataAlgoT<FIELD>::execute(ProgressReporter *reporter,
     
   typename FIELD::value_type val;
   typename FIELD::value_type eval;
-//  typename FIELD::mesh_type::Node::under_type idx;
   unsigned int idx;
  
   typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
@@ -186,6 +164,12 @@ bool SplitFieldByElementDataAlgoT<FIELD>::execute(ProgressReporter *reporter,
   }
   
   return(true);
+}
+
+template <class FIELD>
+bool SplitFieldByElementDataAlgoT<FIELD>::isvalid(FieldHandle input)
+{
+  return(dynamic_cast<FIELD*>(input.get_rep()));
 }
 
 } // end namespace

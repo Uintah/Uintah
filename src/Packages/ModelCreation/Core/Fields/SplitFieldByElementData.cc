@@ -32,26 +32,51 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-CompileInfoHandle
-SplitFieldByElementDataAlgo::get_compile_info(const TypeDescription *fsrc)
+bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  std::string include_path(TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name("SplitFieldByElementDataAlgoT");
-  std::string base_name("SplitFieldByElementDataAlgo");
+  if (input.get_rep() == 0)
+  {
+    pr->error("SplitFieldByElementData: No input field");
+  }
 
-  CompileInfoHandle ci = 
-    scinew CompileInfo(algo_name + "." +
-                       fsrc->get_filename() + ".",
-                       base_name, 
-                       algo_name, 
-                       fsrc->get_name());
+  FieldInformation fi(input);
+  if (fi.is_nonlinear())
+  {
+    pr->error("SplitFieldByElementData: This function has not yet been defined for non-linear elements.");
+    return (false);
+  }
 
-  // Add in the include path to compile this obj
-  ci->add_include(include_path);
-  ci->add_namespace("ModelCreation");   
-  fsrc->fill_compile_info(ci.get_rep());
-  return(ci);
+  if (fi.is_constantdata())
+  {
+    pr->error("SplitFieldByElementData: This function only works for data located at the elements");
+    return (false);
+  }
+  
+  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
+    "SplitFieldByElementDataAlgoT." + fi.get_field_filename() + ".",
+    "SplitFieldByElementDataAlgo","SplitFieldByElementDataAlgoT",
+    fi.get_field_name());
+
+  ci->add_include(TypeDescription::cc_to_h(__FILE__));
+  ci->add_namespace("ModelCreation");
+
+  fi.fill_compile_info(ci);
+  
+  // Handle dynamic compilation
+  SCIRun::Handle<SplitFieldByElementDataAlgo> algo;
+  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  {
+    pr->compile_error(ci->filename_);
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    return(false);
+  }
+
+  return(algo->SplitFieldByElementData(pr,input,output));    
+}
+
+bool SplitFieldByElementDataAlgo::isvalid(FieldHandle input)
+{
+  return(false);
 }
 
 } // namespace ModelCreation

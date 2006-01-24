@@ -45,7 +45,7 @@
 #include <Core/Datatypes/Matrix.h>
 
 #include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -125,7 +125,7 @@ void SignedDistanceToField::execute()
 
   if(update)
   {
-    FieldsMath fieldmath(dynamic_cast<ProgressReporter *>(this));
+    FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));
   
     FieldHandle output;
 

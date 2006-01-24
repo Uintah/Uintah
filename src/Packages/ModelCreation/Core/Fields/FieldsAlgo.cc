@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 // Matrix types
 #include <Core/Datatypes/Matrix.h>
@@ -70,19 +70,21 @@
 #include <Core/Datatypes/PointCloudMesh.h>
 
 #include <Packages/ModelCreation/Core/Fields/ClipBySelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/ConvertToTetVol.h>
+#include <Packages/ModelCreation/Core/Fields/ConvertToTriSurf.h>
 #include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
-#include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
 #include <Packages/ModelCreation/Core/Fields/MappingMatrixToField.h>
 #include <Packages/ModelCreation/Core/Fields/MergeFields.h>
 #include <Packages/ModelCreation/Core/Fields/GetFieldData.h>
 #include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
+#include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
+#include <Packages/ModelCreation/Core/Fields/ToPointCloud.h>
+#include <Packages/ModelCreation/Core/Fields/Unstructure.h>
 
 #include <Core/Algorithms/Fields/FieldCount.h>
-#include <Dataflow/Modules/Fields/Unstructure.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
-#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 
 
@@ -90,22 +92,12 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-FieldsMath::FieldsMath(Module* module) :
-  module_(module)
-{
-  pr_ = dynamic_cast<ProgressReporter *>(module_);
-}
-
-FieldsMath::FieldsMath(ProgressReporter* pr) :
-  module_(0), pr_(pr)
+FieldsAlgo::FieldsAlgo(ProgressReporter* pr) :
+  AlgoLibrary(pr)
 {
 }
 
-FieldsMath::~FieldsMath() 
-{
-}
-
-bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object)
+bool FieldsAlgo::DistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object)
 {
 
   if (input.get_rep() == 0)
@@ -123,21 +115,6 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
   // If the object is a volume, just extract the outer boundary
   // This should speed up the calculation 
   bool isvol = false;
-
-/*
-  if (object->mesh()->dimensionality() == 3)
-  {
-    MatrixHandle dummy;
-    FieldHandle  objectsurf;
-    if(!(FieldBoundary(object,objectsurf,dummy)))
-    {
-      error("DistanceToField: Getting surface mesh of object failed");
-      return(false);
-    }
-    object = objectsurf;
-    isvol = true;
-  }
-*/
 
   if (object->mesh()->dimensionality() > 2)
   {
@@ -193,7 +170,7 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
 }
 
 
-bool FieldsMath::SignedDistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object)
+bool FieldsAlgo::SignedDistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object)
 {
 
   if (input.get_rep() == 0)
@@ -260,7 +237,7 @@ bool FieldsMath::SignedDistanceToField(FieldHandle input, FieldHandle& output, F
 }
 
 
-bool FieldsMath::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, FieldHandle object)
+bool FieldsAlgo::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, FieldHandle object)
 {
 
   if (input.get_rep() == 0)
@@ -327,14 +304,14 @@ bool FieldsMath::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, Fi
 }
 
 
-bool FieldsMath::ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis)
+bool FieldsAlgo::ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis)
 {
   error("ChangeFieldBasis: algorithm not implemented");
   return(false);
 }
 
 
-bool FieldsMath::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield)
+bool FieldsAlgo::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield)
 {
   if (input.get_rep() == 0)
   {
@@ -389,7 +366,7 @@ bool FieldsMath::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, Matr
   return(true);
 }
 
-bool FieldsMath::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle selmask,MatrixHandle &interpolant)
+bool FieldsAlgo::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle selmask,MatrixHandle &interpolant)
 {
   if (input.get_rep() == 0)
   {
@@ -436,69 +413,8 @@ bool FieldsMath::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output
 }
 
 
-bool FieldsMath::Unstructure(FieldHandle input,FieldHandle& output)
-{
 
-  if (input.get_rep() == 0)
-  {
-    error("Unstructure: No input field was given");
-    return(false);
-  }
-
-  std::string dstname = "";
-  std::string srcname = input->mesh()->get_type_description()->get_name();
-  SCIRun::TypeDescription::td_vec* tdv = input->mesh()->get_type_description()->get_sub_type();
-  (*tdv)[0]->get_name();
-  std::string basisname = (*tdv)[0]->get_name();
-  
-  if ((srcname.find("LatVolMesh") != std::string::npos) || (srcname.find("StructHexVolMesh") != std::string::npos))
-  {
-    dstname = "HexVolMesh<" + basisname + "<Point> >";
-  }
-  else if ((srcname.find("ImageMesh") != std::string::npos ) || (srcname.find("StructQuadSurfMesh") != std::string::npos ))
-  {
-    dstname = "QuadSurfMesh<" + basisname + "<Point> >";
-  }  
-  else if ((srcname.find("ScanlineMesh")  != std::string::npos) || (srcname.find("StructCurveMesh")  != std::string::npos))
-  {
-    dstname = "CurveMesh<" + basisname + "<Point> >";
-  }
-
-  if (dstname == "")
-  {
-    error("Unstructure: Algorithm does not know how to unstructure a field of type " + srcname);
-    return(false);
-  }
-  else
-  {
-    const TypeDescription *ftd = input->get_type_description();
-    TypeDescription::td_vec *tdvdata = input->get_type_description(Field::FDATA_TD_E)->get_sub_type();
-    std::string dataname = (*tdvdata)[0]->get_name();
-    
-    SCIRun::CompileInfoHandle ci = SCIRun::UnstructureAlgo::get_compile_info(ftd, 
-        dstname,input->get_type_description(Field::BASIS_TD_E)->get_name(),dataname);
-        
-    Handle<SCIRun::UnstructureAlgo> algo;
-    if (!(DynamicCompilation::compile(ci, algo, false, pr_))) 
-    {
-      error("Unstructure: Could not dynamically compile algorithm");
-      return(false);
-    }
-    
-    output = algo->execute(pr_, input);
-
-    if (output.get_rep())
-    {
-      output->copy_properties(input.get_rep());
-    }
-  }
-
-  return(true);
-}
-
-
-
-bool FieldsMath::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHandle &interpolant)
+bool FieldsAlgo::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHandle &interpolant)
 {
   if (input.get_rep() == 0)
   {
@@ -524,7 +440,7 @@ bool FieldsMath::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHand
 }
 
 
-bool FieldsMath::SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype)
+bool FieldsAlgo::SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype)
 {
   int numnodes;  
   int numelems;  
@@ -578,7 +494,7 @@ bool FieldsMath::SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandl
   return(true);
 }
 
-bool FieldsMath::GetFieldInfo(FieldHandle input, int& numnodes, int& numelems)
+bool FieldsAlgo::GetFieldInfo(FieldHandle input, int& numnodes, int& numelems)
 {
   if (input.get_rep() == 0)
   {
@@ -600,7 +516,7 @@ bool FieldsMath::GetFieldInfo(FieldHandle input, int& numnodes, int& numelems)
 }
 
 
-bool FieldsMath::GetFieldData(FieldHandle input, MatrixHandle& data)
+bool FieldsAlgo::GetFieldData(FieldHandle input, MatrixHandle& data)
 {
   if (input.get_rep() == 0)
   {
@@ -635,7 +551,7 @@ bool FieldsMath::GetFieldData(FieldHandle input, MatrixHandle& data)
   return(true);
 }
 
-bool FieldsMath::FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method)
+bool FieldsAlgo::FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method)
 {
   if (input.get_rep() == 0)
   {
@@ -679,7 +595,7 @@ bool FieldsMath::FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std
   return(true);
 }
 
-bool FieldsMath::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std::string method)
+bool FieldsAlgo::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std::string method)
 {
   if (input.get_rep() == 0)
   {
@@ -725,142 +641,99 @@ bool FieldsMath::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std
 }
 
 
-bool FieldsMath::IsClosedSurface(FieldHandle input)
+bool FieldsAlgo::IsClosedSurface(FieldHandle input)
 {
   return(true);
 }
 
-bool FieldsMath::IsClockWiseSurface(FieldHandle input)
+bool FieldsAlgo::IsClockWiseSurface(FieldHandle input)
 {
   return(true);
 }
 
-bool FieldsMath::IsCounterClockWiseSurface(FieldHandle input)
+bool FieldsAlgo::IsCounterClockWiseSurface(FieldHandle input)
 {
   return(!(IsClockWiseSurface(input)));
 }
 
 
-bool FieldsMath::SplitFieldByElementData(FieldHandle input, FieldHandle& output)
+// NEWLY CREATED FUNCTIONS:
+
+bool FieldsAlgo::ConvertToTetVol(FieldHandle input, FieldHandle& output)
 {
-  if (input.get_rep() == 0)
-  {
-    error("SplitFieldByElementData: No input field");
-    return(false);
-  }
-  
-  if (input->basis_order() != 0)
-  {
-    error("SplitFieldByElementData: This function only works for data located at the elements");
-    return(false);
-  }
-  
+  ConvertToTetVolAlgo algo;
+  return(algo.ConvertToTetVol(pr_,input,output));
+}
+
+bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
+{
+  ConvertToTriSurfAlgo algo;
+  return(algo.ConvertToTriSurf(pr_,input,output));
+}
+
+bool FieldsAlgo::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
+{
+  MappingMatrixToFieldAlgo algo;
+  return(algo.MappingMatrixToField(pr_,input,output,mappingmatrix));
+}
+
+
+bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
+{
+  output = input;
   if (!input->mesh()->is_editable()) 
   {
-    FieldHandle temp;
-    if(!Unstructure(input,temp))
+    if(!Unstructure(input,output))
     {
-      error("SplitFieldByElementData: Could not make the mesh editable");
+      error("MakeEditable: Could not unstructure the mesh");
       return(false);
     }
-    input = temp;
   }
-
-  Handle<SplitFieldByElementDataAlgo> algo;
-  const TypeDescription *ftd = input->get_type_description();
-    
-  CompileInfoHandle ci = SplitFieldByElementDataAlgo::get_compile_info(ftd);
-    
-  if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
-  {
-    error("SplitFieldByElementData: Could not dynamically compile algorithm");
-//    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-    return(false);
-  }
-    
-  if(!(algo->execute(pr_, input, output)))
-  {
-    error("SplitFieldByElementData: The dynamically compiled function return error");
-    return(false);
-  }    
-  
-  return(true);
+  return (true);
 }
 
-bool FieldsMath::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
+
+bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields)
 {
-  if (input.get_rep() == 0)
-  {
-    error("MappingMatrixToField: No input field");
-    return(false);
-  }
-
-  if (mappingmatrix.get_rep() == 0)
-  {
-    error("MappingMatrixToField: No input mapping matrix");
-    return(false);
-  }    
-    
-  Handle<MappingMatrixToFieldAlgo> algo;
-  CompileInfoHandle ci = MappingMatrixToFieldAlgo::get_compile_info(input);
-    
-  if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
-  {
-    error("MappingMatrixToField: Could not dynamically compile algorithm");
-    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-    return(false);
-  }
-    
-  if(!(algo->execute(pr_, input, output, mappingmatrix)))
-  {
-    error("MappingMatrixToField: The dynamically compiled function return error");
-    return(false);
-  }    
-  
-  return(true);
+  for (size_t p = 0; p < inputs.size(); p++) if (MakeEditable(inputs[0],inputs[0])) return (false);
+  MergeFieldsAlgo algo;
+  return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields));
 }
 
 
-bool FieldsMath::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool forcepointcloud)
+bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double tolerance)
 {
-  if (inputs.size() == 0)
-  {
-    error("MappingMatrixToField: No input field");
-    return(false);
-  } 
-
-  if (inputs[0].get_rep() == 0)
-  {
-    error("MappingMatrixToField: No input field");
-    return(false);
-  } 
-
-  Handle<MergeFieldsAlgo> algo;
-  CompileInfoHandle ci = MergeFieldsAlgo::get_compile_info(inputs[0]);
-
-  if (ci.get_rep() == 0)
-  {
-    error("MergeFields: The input fieldtypes do not match");
-    return(false);  
-  }
-
-  if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
-  {
-    error("MergeFields: Could not dynamically compile algorithm");
-    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-    return(false);
-  }
-    
-  if(!(algo->mergefields(pr_, inputs, output, tolerance, mergefields,forcepointcloud)))
-  {
-    error("MergeFields: The dynamically compiled function return error");
-    return(false);
-  }    
+  if (MakeEditable(input,input)) return (false);
   
-  return(true);
+  std::vector<FieldHandle> inputs(1);
+  inputs[0] = input;
+  
+  MergeFieldsAlgo algo;
+  return(algo.MergeFields(pr_,inputs,output,tolerance,true));
 
 }
 
 
+bool FieldsAlgo::SplitFieldByElementData(FieldHandle input, FieldHandle& output)
+{
+  FieldHandle input_editable;
+  if (!MakeEditable(input,input_editable)) return (false);
+  SplitFieldByElementDataAlgo algo;
+  return(algo.SplitFieldByElementData(pr_,input_editable,output));
+}
+
+
+bool FieldsAlgo::ToPointCloud(FieldHandle input,FieldHandle& output)
+{
+  ToPointCloudAlgo algo;
+  return(algo.ToPointCloud(pr_,input,output));
+}
+
+
+bool FieldsAlgo::Unstructure(FieldHandle input,FieldHandle& output)
+{
+  UnstructureAlgo algo;
+  return(algo.Unstructure(pr_,input,output));
+}
 
 } // ModelCreation

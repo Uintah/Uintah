@@ -60,7 +60,7 @@ itcl_class ModelCreation_DataIO_BundleReader {
         # to be modified for particular reader
 
         # extansion to append if no extension supplied by user
-        set defext ".bdl"
+        set defext ".*"
         set title "Open bundle file"
         
         

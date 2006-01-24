@@ -64,7 +64,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/StringPort.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -258,7 +258,7 @@ void ClipFieldByFunction::execute()
   
   // Now do the clipping
 
-  FieldsMath fieldmath(this);
+  FieldsAlgo fieldmath(this);
 
   FieldHandle output;
   MatrixHandle interpolant;

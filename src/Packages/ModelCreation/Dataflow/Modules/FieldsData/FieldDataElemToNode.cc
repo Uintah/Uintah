@@ -44,7 +44,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -111,7 +111,7 @@ void
 
   if(update)
   {
-    FieldsMath fieldmath(this);
+    FieldsAlgo fieldmath(this);
     FieldHandle output;
 
     if(!(fieldmath.FieldDataElemToNode(input,output,method)))

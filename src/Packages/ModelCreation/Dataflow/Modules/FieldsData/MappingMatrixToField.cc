@@ -35,7 +35,7 @@
  *
  */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -124,7 +124,7 @@ void MappingMatrixToField::execute()
 
   if(update)
   {
-    FieldsMath fieldmath(dynamic_cast<ProgressReporter *>(this));  
+    FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
     FieldHandle output;
 
     if(!(fieldmath.MappingMatrixToField(input,output,matrix)))

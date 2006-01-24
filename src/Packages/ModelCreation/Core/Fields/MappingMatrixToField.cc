@@ -32,36 +32,51 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-CompileInfoHandle MappingMatrixToFieldAlgo::get_compile_info(FieldHandle& field)
+
+bool MappingMatrixToFieldAlgo::MappingMatrixToField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
 {
+  if (input.get_rep() == 0)
+  {
+    pr->error("MappingMatrixToField: No input field");
+  }
 
-  std::string datatype = "unsigned int";
-  std::string fieldtype_in = field->get_type_description()->get_name();
-  std::string fieldtype_out = field->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-              field->get_type_description(Field::MESH_TD_E)->get_name() + "," + 
-              field->get_type_description(Field::BASIS_TD_E)->get_similar_name(datatype, 0,"<", "> ") + "," +
-              field->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", "> ") + " > ";
-        
-  // As I use my own Tensor and Vector algorithms they need to be
-  // converted when reading the data, hence separate algorithms are
-  // implemented for those cases
+  // no precompiled version available, so compile one
+
+  FieldInformation fi(input);
+  FieldInformation fo(input);
   
-  std::string algo_name = "MappingMatrixToFieldAlgoT";
-  std::string algo_base = "MappingMatrixToFieldAlgo";
+  if (fi.is_quadraticmesh())
+  {
+    pr->error("MappingMatrixToField: This function has not yet been defined for geometrical quadratic elements");
+    return (false);
+  }
+  
+  fo.set_data_type("unsigned int");
+  fo.make_lineardata();
+  
 
-  std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  // Setup dynamic files
+  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
+    "MappingMatrixToField."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "MappingMatrixToFieldAlgo","MappingMatrixToFieldAlgoT",
+    fi.get_field_name() + "," + fo.get_field_name());
 
-  SCIRun::CompileInfoHandle ci = 
-    scinew SCIRun::CompileInfo(algo_name + "." +
-                       to_filename(fieldtype_in) + ".",
-                       algo_base, 
-                       algo_name, 
-                       fieldtype_in + "," + fieldtype_out);
-
-  ci->add_include(include_path);
+  ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
-  field->get_type_description()->fill_compile_info(ci.get_rep());
-  return(ci);
+  
+  fi.fill_compile_info(ci);
+  fo.fill_compile_info(ci);
+  
+  // Handle dynamic compilation
+  SCIRun::Handle<MappingMatrixToFieldAlgo> algo;
+  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  {
+    pr->compile_error(ci->filename_);
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    return(false);
+  }
+
+  return(algo->MappingMatrixToField(pr,input,output,mappingmatrix));
 }
 
 } //end namespace

@@ -26,16 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  SplitFieldByElementData.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 
@@ -100,7 +91,7 @@ void SplitFieldByElementData::execute()
 
   if(update)
   {
-    FieldsMath fieldmath(dynamic_cast<ProgressReporter *>(this));  
+    FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
     FieldHandle output;
 
     if(!(fieldmath.SplitFieldByElementData(input,output)))
