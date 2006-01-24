@@ -50,6 +50,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 
 #if defined(_AIX)
 // Needed for strcasecmp on aix 4.3 (on 5.1 we don't need this.)
@@ -141,6 +142,12 @@ Thread::run_body()
 	fprintf(stderr, "Caught unhandled exception:\n%s\n",
 		e.message());
 	Thread::niceAbort();
+    } catch(const std::string &e){
+      fprintf(stderr, "Caught unhandled string exception:\n%s\n", e.c_str());
+      Thread::niceAbort();
+    } catch(const char *&e){
+      fprintf(stderr, "Caught unhandled char exception:\n%s\n", e);
+      Thread::niceAbort();
     } catch(...){
 	fprintf(stderr, "Caught unhandled exception of unknown type\n");
 	Thread::niceAbort();
@@ -366,7 +373,7 @@ Thread::niceAbort(void* Context /* = 0 */)
 
   char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)
-    smode = "ask";
+    smode = "ask"; //"e"; 
 	
   Thread* s=Thread::self();
   print_threads();
