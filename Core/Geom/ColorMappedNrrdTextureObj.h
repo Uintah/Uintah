@@ -100,16 +100,21 @@ public:
   void			draw_quad(Point &min, Vector &xdir, Vector &ydir);
   bool                  dirty_p() { return nrrd_dirty_; }
 
+  void                  apply_colormap(int, int, int, int, int border=0);
   ColorMapHandle        colormap_;
   NrrdDataHandle	nrrd_;
 
 private:
+  void                  create_data();
   bool			bind(int x, int y);
-  float *               apply_colormap();
+
   template <class T> 
   void			apply_colormap_to_raw_data(float *dst,
-                                                   T *src, 
-                                                   int num,
+                                                   T *src,
+                                                   int row_width,
+                                                   int region_start,
+                                                   int region_width,
+                                                   int region_height,
                                                    const float *rgba,
                                                    int ncolors,
                                                    float scale, float bias);
@@ -121,7 +126,7 @@ private:
   vector<pair<unsigned int, unsigned int> >  ydiv_;
   float                 clut_min_;
   float                 clut_max_;
-  void *                data_;
+  float *               data_;
   bool                  own_data_;
 };
 

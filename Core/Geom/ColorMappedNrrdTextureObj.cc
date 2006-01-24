@@ -133,20 +133,14 @@ ColorMappedNrrdTextureObj::set_colormap(ColorMapHandle &cmap)
 }
 
 
-// void
-// ColorMappedNrrdTextureObj::recalculate(int x1, int y1, int x2, int y2)
-// {
-  
-
-  
-
-
-
 template <class T>
 void
 ColorMappedNrrdTextureObj::apply_colormap_to_raw_data(float *dst, 
                                                       T *src, 
-                                                      int num, 
+                                                      int row_width,
+                                                      int region_start,
+                                                      int region_width,
+                                                      int region_height,
                                                       const float *rgba, 
                                                       int ncolors,
                                                       float scale, 
@@ -154,24 +148,40 @@ ColorMappedNrrdTextureObj::apply_colormap_to_raw_data(float *dst,
 {
   const int sizeof4floats = 4*sizeof(float);
   const int maxcolor = ncolors-1;
-  for (int pos = 0; pos < num; ++pos) {
-    float val = float(src[pos])*scale+bias;
-    int color = Round(Clamp(val, 0.0f, 1.0f)*maxcolor);
-    memcpy(dst + pos * 4, rgba + color * 4, sizeof4floats);
+  for (int row = 0; row < region_height; ++row) {
+    int start_pos = region_start + row*row_width;
+    int end_pos = start_pos + region_width;
+    for (int pos = start_pos; pos < end_pos; ++pos) {
+      float val = float(src[pos])*scale+bias;
+      int color = Round(Clamp(val, 0.0f, 1.0f)*maxcolor);
+      memcpy(dst + pos * 4, rgba + color * 4, sizeof4floats);
+    }
   }
 }
 
 
-float *
-ColorMappedNrrdTextureObj::apply_colormap()
+
+void
+ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
+                                          int border)
 {
-  const int num = nrrd_->nrrd->axis[1].size*nrrd_->nrrd->axis[2].size;
-  float *data = new float[4*num];
-  if (!data) return 0;
+  if (!data_ || !own_data_) return;
+  if (x1 > x2) SWAP(x1,x2);
+  if (y1 > y2) SWAP(y1,y2);
+  x1 = Clamp(x1-border, 0, nrrd_->nrrd->axis[1].size);
+  x2 = Clamp(x2+border, 0, nrrd_->nrrd->axis[1].size);
+  y1 = Clamp(y1-border, 0, nrrd_->nrrd->axis[2].size);
+  y2 = Clamp(y2+border, 0, nrrd_->nrrd->axis[2].size);
 
   const float range = (clut_max_ - clut_min_);
   const float scale = (range > 0.00001) ? (1.0 / range) : 1.0;
   const float bias =  (range > 0.00001) ? -clut_min_*scale : 0.0;
+
+  const int row_width = nrrd_->nrrd->axis[1].size;
+  const int region_start = row_width * y1 + x1;
+  const int region_wid = x2 - x1;
+  const int region_hei = y2 - y1;
+
 
   int ncolors;  
   const float *rgba;
@@ -189,44 +199,54 @@ ColorMappedNrrdTextureObj::apply_colormap()
 
   switch (nrrd_->nrrd->type) {
   case nrrdTypeChar: {
-    apply_colormap_to_raw_data(data, (char *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (char *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUChar: {
-    apply_colormap_to_raw_data(data, (unsigned char *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (unsigned char *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeShort: {
-    apply_colormap_to_raw_data(data, (short *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (short *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUShort: {
-    apply_colormap_to_raw_data(data, (unsigned short *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (unsigned short *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeInt: {
-    apply_colormap_to_raw_data(data, (int *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (int *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUInt: {
-    apply_colormap_to_raw_data(data, (unsigned int *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (unsigned int *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeLLong: {
-    apply_colormap_to_raw_data(data, (signed long long *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (signed long long *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeULLong: {
-    apply_colormap_to_raw_data(data, (unsigned long long *)nrrd_->nrrd->data, 
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (unsigned long long *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeFloat: {
-    apply_colormap_to_raw_data(data, (float *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (float *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeDouble: {
-    apply_colormap_to_raw_data(data, (double *)nrrd_->nrrd->data,
-                               num, rgba, ncolors, scale, bias);
+    apply_colormap_to_raw_data(data_, (double *)nrrd_->nrrd->data,
+                               row_width, region_start, region_wid, region_hei,
+                               rgba, ncolors, scale, bias);
   } break;
   default: throw "Unsupported data type: "+to_string(nrrd_->nrrd->type);
   }
@@ -234,9 +254,33 @@ ColorMappedNrrdTextureObj::apply_colormap()
   if (!colormap_.get_rep())
     delete[] rgba;
     
-  return data;
+  Point min(x1, y1, 0), max(x2, y2, 1);
+  BBox bbox(min,max);
+  for (int i = 0; i < 4; ++i) {
+    Point min2(xdiv_[i%2].first, ydiv_[i/2].first, 0);
+    Point max2(xdiv_[i%2].second, ydiv_[i/2].second, 1);
+    BBox bbox2(min2, max2);
+    if (bbox.overlaps(bbox2)) {
+      dirty_[i] = true;
+//       cerr << "Dirty: " << i 
+//            << " b1min: " << bbox.min() << "  b1max: " << bbox.max() 
+//            << " b2min: " << bbox2.min() << "  b2max: " << bbox2.max() 
+//            << std::endl;
+    }
+  }
 }
 
+  
+
+void
+ColorMappedNrrdTextureObj::create_data()
+{
+
+  if (data_ && own_data_) delete[] data_;
+  const int num = nrrd_->nrrd->axis[1].size*nrrd_->nrrd->axis[2].size;
+  data_ = new float[4*num];
+  own_data_ = true;
+}
 
 
 bool
@@ -262,15 +306,10 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
 
   if (nrrd_dirty_) {
     if (nrrd_->nrrd->axis[0].size == 1) {
-      if (own_data_ && data_) {
-        delete [] data_;
-        data_ = 0;
-        own_data_ = false;
-      }
-      data_ = apply_colormap();
-      own_data_ = true;
+      create_data();
+      apply_colormap(0,0,nrrd_->nrrd->axis[1].size,nrrd_->nrrd->axis[2].size);
     } else {
-      data_ = nrrd_->nrrd->data;
+      data_ = (float *)nrrd_->nrrd->data;
       own_data_ = false;
     }
     if (!data_) 
