@@ -1090,7 +1090,9 @@ Painter::PaintTool::mouse_button_press(MouseState &mouse)
   if (mouse.button_ == 1) {
     SliceWindow *window = mouse.window_;
     if (!window->paint_layer_) {
-      window->paint_layer_ = scinew NrrdSlice(painter_, painter_->current_volume_, window);
+      window->paint_layer_ = 
+        scinew NrrdSlice(painter_, painter_->current_volume_, 
+                         window->center_, window->normal_);
       NrrdSlice &paint = *window->paint_layer_;
       paint.bind();
 
@@ -1161,7 +1163,7 @@ Painter::PaintTool::mouse_motion(MouseState &mouse)
     vector<int> index1(index.size()-1, 0);
     vector<int> index2 = index1;
     for (unsigned int i = 0, j=0; i < index.size(); ++i) 
-      if (i != (window->axis_+1)) {
+      if (int(i) != (window->axis_+1)) {
         index1[j] = last_index_[i];
         index2[j] = index[i];
         ++j;

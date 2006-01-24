@@ -73,6 +73,7 @@
 #include <Core/Geom/OpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
+#include <Core/Geometry/Plane.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/UIvar.h>
 #include <Core/Malloc/Allocator.h>
@@ -340,8 +341,11 @@ class Painter : public Module
     void                set_nrrd(NrrdDataHandle &);
     NrrdDataHandle      get_nrrd();
     Point               index_to_world(const vector<int> &index);
+    Point		index_to_point(const vector<double> &index);
     vector<int>         world_to_index(const Point &p);
+    vector<double>      point_to_index(const Point &p);
     vector<double>      vector_to_index(const Vector &v);
+    Vector              index_to_vector(const vector<double> &);
     void                build_index_to_world_matrix();
     bool                index_valid(const vector<int> &index);
     template<class T>
@@ -378,13 +382,13 @@ class Painter : public Module
   struct WindowLayout;
 
   struct NrrdSlice {
-    NrrdSlice(Painter *, NrrdVolume *, SliceWindow *);
+    NrrdSlice(Painter *, NrrdVolume *, Point &p, Vector &normal);
     void                bind();
     void                draw();
     void	        set_coords();
+    unsigned int        axis();
     Painter *           painter_;
     NrrdVolume *	volume_;
-    SliceWindow	*	window_;
 
     bool		nrrd_dirty_;
     bool		tex_dirty_;
@@ -393,6 +397,8 @@ class Painter : public Module
     Point               pos_;
     Vector              xdir_;
     Vector              ydir_;
+    //    int                 axis_;
+    Plane               plane_;
 
     ColorMappedNrrdTextureObj *    texture_;
   };

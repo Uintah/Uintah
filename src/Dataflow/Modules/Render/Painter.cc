@@ -211,13 +211,17 @@ Painter::for_each(T func) {
 
 Painter::NrrdSlice::NrrdSlice(Painter *painter,
                               NrrdVolume *volume, 
-                              SliceWindow *window) :
+                              Point &p, Vector &n) :
   painter_(painter),
   volume_(volume),
-  window_(window),
   nrrd_dirty_(true),
   tex_dirty_(false),
   geom_dirty_(false),
+  pos_(),
+  xdir_(),
+  ydir_(),
+  //  axis_(0),
+  plane_(p,n),
   texture_(0)
 {
 }
@@ -611,7 +615,7 @@ Painter::draw_slice_lines(SliceWindow &window)
       Point min = current_volume_->index_to_world(min_idx);
       Point max = current_volume_->index_to_world(max_idx);
       vector<int> one_idx = zero_idx;
-      one_idx[window2.axis_] = 1;
+      one_idx[window2.axis_+1] = 1;
       double scale = (current_volume_->index_to_world(one_idx) - 
                       current_volume_->index_to_world(zero_idx)).length();
       Vector wid = window2.normal_;
@@ -1066,6 +1070,13 @@ Painter::SliceWindow::render_orientation_text()
 }
 
 
+unsigned int 
+Painter::NrrdSlice::axis() {
+  ASSERT(volume_);
+  return max_vector_magnitude_index(volume_->vector_to_index(plane_.normal()));
+}
+
+
 void
 Painter::NrrdSlice::bind()
 {
@@ -1076,11 +1087,12 @@ Painter::NrrdSlice::bind()
 
   volume_->mutex_.lock();
   if (!texture_) {
-    vector<int> index = volume_->world_to_index(window_->center_);
-    int slice = index[window_->axis_+1];
-    if (slice>=0 && slice < volume_->nrrd_->nrrd->axis[window_->axis_+1].size)
+    vector<int> index = volume_->world_to_index(plane_.project(Point(0,0,0)));
+    unsigned int ax = axis();
+    int slice = index[ax];
+    if (slice>=0 && slice < volume_->nrrd_->nrrd->axis[ax].size)
       texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_, 
-                                                  window_->axis_+1,
+                                                  ax,
                                                   slice, 
                                                   slice);
     tex_dirty_ = true;
@@ -1244,18 +1256,20 @@ Painter::SliceWindow::render_text() {
 void
 Painter::NrrdSlice::set_coords() {
   volume_->mutex_.lock();
-  vector<int> centerindex = volume_->world_to_index(window_->center_);
-  pos_ = volume_->min(window_->axis_+1, centerindex[window_->axis_+1]);
+  
+  vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
+  unsigned int ax = axis();
+  pos_ = volume_->min(ax, sindex[ax]);
 
-  const int axis = window_->axis_;
   vector<int> index(volume_->nrrd_->nrrd->dim,0);
-  int prim = (axis == 1) ? 0 : (axis+1)%3;
-  index[prim+1] = volume_->nrrd_->nrrd->axis[prim+1].size;
-  xdir_ = volume_->index_to_world(index) - pos_;
-  index[prim+1] = 0;
 
-  int sec = (axis == 1) ? 2: (axis+2)%3;
-  index[sec+1] = volume_->nrrd_->nrrd->axis[sec+1].size;
+  int primary = (ax == 1) ? 2 : 1;
+  index[primary] = volume_->nrrd_->nrrd->axis[primary].size;
+  xdir_ = volume_->index_to_world(index) - pos_;
+  index[primary] = 0;
+
+  int secondary = (ax == 3) ? 2 : 3;
+  index[secondary] = volume_->nrrd_->nrrd->axis[secondary].size;
   ydir_ = volume_->index_to_world(index) - pos_;
   volume_->mutex_.unlock();
 }
@@ -1264,9 +1278,12 @@ Painter::NrrdSlice::set_coords() {
 int
 Painter::extract_window_slices(SliceWindow &window) {
   for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s)
-    window.slices_.push_back(scinew NrrdSlice(this, volumes_[s], &window));
-  for (unsigned int s = 0; s < volumes_.size(); ++s)
+    window.slices_.push_back(scinew NrrdSlice(this, volumes_[s], 
+                                              window.center_, window.normal_));
+  for (unsigned int s = 0; s < volumes_.size(); ++s) {
     window.slices_[s]->volume_ = volumes_[s];
+    window.slices_[s]->plane_ = Plane(window.center_, window.normal_);
+  }
   for_each(window, &Painter::set_slice_nrrd_dirty);
   if (window.paint_layer_) {
     delete window.paint_layer_;
@@ -1293,35 +1310,37 @@ Painter::set_axis(SliceWindow &window, unsigned int axis) {
   window.redraw_ = true;
 }
 
+
 void
 Painter::SliceWindow::prev_slice()
 {
-  if (!painter_->current_volume_) return;
-  Point cached = center_;
-  center_ = center_ + normal_;
-  if (!painter_->current_volume_->inside_p(center_)) {
-    center_ = cached;
-    return;
-  }
+  NrrdVolume *volume = painter_->current_volume_;
+  if (!volume) return;
+  vector<double> delta = volume->vector_to_index(normal_);
+  unsigned int index = max_vector_magnitude_index(delta);
+  delta[index] /= fabs(delta[index]);
+  Point new_center = center_ - volume->index_to_vector(delta);
+  if (!painter_->current_volume_->inside_p(new_center)) return;
+  center_ = new_center;
   painter_->extract_window_slices(*this);
   painter_->redraw_all();
 }
+
 
 void
 Painter::SliceWindow::next_slice()
 {
-  if (!painter_->current_volume_) return;
-  Point cached = center_;
-  center_ = center_ - normal_;
-  if (!painter_->current_volume_->inside_p(center_)) {
-    center_ = cached;
-    return;
-  }
+  NrrdVolume *volume = painter_->current_volume_;
+  if (!volume) return;
+  vector<double> delta = volume->vector_to_index(-normal_);
+  unsigned int index = max_vector_magnitude_index(delta);
+  delta[index] /= fabs(delta[index]);
+  Point new_center = center_ - volume->index_to_vector(delta);
+  if (!painter_->current_volume_->inside_p(new_center)) return;
+  center_ = new_center;
   painter_->extract_window_slices(*this);
   painter_->redraw_all();
 }
-
-
 
 void
 Painter::layer_up()
@@ -1430,6 +1449,23 @@ Painter::NrrdVolume::index_to_world(const vector<int> &index) {
 }
 
 
+Point
+Painter::NrrdVolume::index_to_point(const vector<double> &index) {
+  unsigned int dim = index.size()+1;
+  ColumnMatrix index_matrix(dim);
+  ColumnMatrix world_coords(dim);
+  for (unsigned int i = 0; i < dim-1; ++i)
+    index_matrix[i] = index[i];
+  index_matrix[dim-1] = 1.0;
+  DenseMatrix transform = transform_;
+  int tmp1, tmp2;
+  transform.mult(index_matrix, world_coords, tmp1, tmp2);
+  Point return_val;
+  for (int i = 1; i < 4; ++i) 
+    return_val(i-1) = world_coords[i];
+  return return_val;
+}
+
 
 vector<int> 
 Painter::NrrdVolume::world_to_index(const Point &p) {
@@ -1450,6 +1486,27 @@ Painter::NrrdVolume::world_to_index(const Point &p) {
   return return_val;
 }
 
+vector<double> 
+Painter::NrrdVolume::point_to_index(const Point &p) {
+  DenseMatrix transform = transform_;
+  ColumnMatrix index_matrix(transform.ncols());
+  ColumnMatrix world_coords(transform.nrows());
+  for (int i = 0; i < transform.nrows(); ++i)
+    if (i > 0 && i < 4) 
+      world_coords[i] = p(i-1)-transform.get(i,transform.ncols()-1);
+    else       
+      world_coords[i] = 0.0;;
+  transform.solve(world_coords, index_matrix, 1);
+  vector<double> return_val(index_matrix.nrows()-1);
+  for (unsigned int i = 0; i < return_val.size(); ++i) {
+    return_val[i] = index_matrix[i];
+  }
+  
+  return return_val;
+}
+
+
+
 
 vector<double> 
 Painter::NrrdVolume::vector_to_index(const Vector &v) {
@@ -1467,6 +1524,13 @@ Painter::NrrdVolume::vector_to_index(const Vector &v) {
   for (unsigned int i = 0; i < return_val.size(); ++i)
     return_val[i] = index_matrix[i];
   return return_val;
+}
+
+
+Vector 
+Painter::NrrdVolume::index_to_vector(const vector<double> &index) {
+  vector<double> zero_index(index.size(),0.0);
+  return index_to_point(index) - index_to_point(zero_index);
 }
 
 
