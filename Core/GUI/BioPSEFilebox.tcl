@@ -727,7 +727,10 @@ proc biopseFDialog {argstring} {
         
         set idx 0
         set cnt 0
-        set ftype [set $data(-selectedfiletype)]
+        set ftype ""
+        if { [info exists $data(-selectedfiletype)] } {
+          set ftype [set $data(-selectedfiletype)]
+        }
         foreach type $data(-filetypes) {
             set title  [lindex $type 0]
             set filter [lindex $type 1]
