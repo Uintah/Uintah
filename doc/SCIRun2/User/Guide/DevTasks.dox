@@ -6,8 +6,9 @@
 \subsection ayla Ayla
 
 <!-- \li Services interface; Bug 2781: registerUsesPort,  addProvidesPort do not support spec properties: by September 30 -->
-<!-- \li GUI Prototypes: by September 30 -->
+\li Tutorial for component authors: TBD
 \li Replace Qt GUI toolkit: TBD
+\li Tests (framework, components, interfaces): TBD
 \li Migrate loading/saving network files to a Framework service: TBD
 <!-- MPICH done, others? -->
 
@@ -23,16 +24,14 @@
 
 \subsection kosta Kosta
 
-\li Test Dataflow component model: TBD
 \li Audit existing test programs: find broken tests, write some documentation for each, locate script for test automation: (Waiting on Keming to finish parallel components)
 
 \subsection rc Unassigned Release Criteria tasks
 
-\li New name for SCIRun2
 \li Incorporate %SCIRun GUI features to SCIRun2 GUI
-\li Tests: framework, components, interfaces
+<!-- Ashwin Swaminathan is working on a component wizard
 \li Standardize addition of a component model and individual components
-\li Tutorial for component authors
+-->
 \li RMI Security model
 <!-- list assumptions made in implementation with appropriate warnings to the user -->
 
