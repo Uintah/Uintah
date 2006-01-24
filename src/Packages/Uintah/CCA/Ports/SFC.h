@@ -52,6 +52,7 @@ extern int gorient2[][4];
 extern int morient2[][4];
 
 
+#define REAL double
 
 #define BINS (1<<DIM)
 template<int DIM, class LOCS>
@@ -59,6 +60,7 @@ class SFC
 {
 public:
 	SFC(int dir[][DIM], ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), sendbuf(0), recievebuf(0), mergebuf(0), d_myworld(d_myworld), block_size(3000), blocks_in_transit(3), sample_percent(.1), cleanup(BATCHERS) {};
+	virtual ~SFC() {};
 	void GenerateCurve(bool force_serial=false);
 	void SetRefinements(unsigned int refinements);
 	void SetLocalSize(unsigned int n);
@@ -83,8 +85,8 @@ protected:
 	int (*dir)[DIM];
 
 	//curve parameters
-	LOCS dimensions[DIM];
-	LOCS center[DIM];
+	REAL dimensions[DIM];
+	REAL center[DIM];
 	unsigned int refinements;
 	unsigned int n;
 	
@@ -116,10 +118,10 @@ protected:
 	int rank, P;
 	MPI_Comm Comm;	
 	void Serial();
-	void SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o=0);
+	void SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0);
 
 	template<class BITS> void SerialH();
-	template<class BITS> void SerialHR(History<BITS>* orders,vector<unsigned int > *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o=0, unsigned int r=0, BITS history=0);
+	template<class BITS> void SerialHR(History<BITS>* orders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0, unsigned int r=0, BITS history=0);
 	template<class BITS> void Parallel();
 	template<class BITS> int MergeExchange(int to);	
 	template<class BITS> void PrimaryMerge();
@@ -127,7 +129,7 @@ protected:
 	template<class BITS> void Batchers();
 	template<class BITS> void Linear();
 
-	inline virtual unsigned char Bin(LOCS *point, LOCS *center)=0;
+	virtual unsigned char Bin(LOCS *point, REAL *center)=0;
 };
 
 template<class LOCS>
@@ -136,13 +138,14 @@ class SFC2D : public SFC<2,LOCS>
 
 	public:
 		SFC2D(Curve curve,ProcessorGroup *d_myworld) : SFC<2,LOCS>(dir2,d_myworld) {SetCurve(curve);};
+		virtual ~SFC2D() {};
 		void SetCurve(Curve curve);
-		void SetDimensions(LOCS wx, LOCS wy);
-		void SetCenter(LOCS x, LOCS y);
-		void SetRefinementsByDelta(LOCS deltax, LOCS deltay);
+		void SetDimensions(REAL wx, REAL wy);
+		void SetCenter(REAL x, REAL y);
+		void SetRefinementsByDelta(REAL deltax, REAL deltay);
 
 	private:
-		 inline unsigned char Bin(LOCS *point, LOCS *center);
+		 inline unsigned char Bin(LOCS *point, REAL *center);
 
 };
 
@@ -151,13 +154,14 @@ class SFC3D : public SFC<3,LOCS>
 {
 	public:
 		SFC3D(Curve curve,ProcessorGroup *d_myworld) : SFC<3,LOCS>(dir3, d_myworld) {SetCurve(curve);};
+		virtual ~SFC3D() {};
 		void SetCurve(Curve curve);
-		void SetDimensions(LOCS wx, LOCS wy, LOCS wz);
-		void SetCenter(LOCS x, LOCS y, LOCS z);
-		void SetRefinementsByDelta(LOCS deltax, LOCS deltay, LOCS deltaz);
+		void SetDimensions(REAL wx, REAL wy, REAL wz);
+		void SetCenter(REAL x, REAL y, REAL z);
+		void SetRefinementsByDelta(REAL deltax, REAL deltay, REAL deltaz);
 
 private:
-		inline unsigned char Bin(LOCS *point, LOCS *center);
+		inline unsigned char Bin(LOCS *point, REAL *center);
 };
 
 class SFC2f : public SFC2D<float>
@@ -380,9 +384,9 @@ void SFC<DIM,LOCS>::SerialH()
 }
 
 template<int DIM, class LOCS> 
-void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o)
+void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o)
 {
-	LOCS newcenter[BINS][DIM], newdimension[DIM];
+	REAL newcenter[BINS][DIM], newdimension[DIM];
 	unsigned int size[BINS];
 
 	unsigned char b;
@@ -428,7 +432,7 @@ void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsi
 		{
 			bool same=true;
 			//Check if locations are the same
-			LOCS l[DIM];
+			REAL l[DIM];
 			memcpy(l,&locs[orders[0]*DIM],sizeof(LOCS)*DIM);
 			i=1;
 			while(same && i<n)
@@ -459,9 +463,9 @@ void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsi
 }
 
 template<int DIM, class LOCS> template<class BITS> 
-void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o, unsigned int r, BITS history)
+void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o, unsigned int r, BITS history)
 {
-	LOCS newcenter[BINS][DIM], newdimension[DIM];
+	REAL newcenter[BINS][DIM], newdimension[DIM];
 	unsigned int size[BINS];
 
 	unsigned char b;
@@ -526,8 +530,8 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 			NextHistory= ((history<<DIM)|b);
 
 			LOCS *loc=&locs[orders[0].i*DIM];
-			LOCS Clocs[DIM];
-			LOCS dims[DIM];
+			REAL Clocs[DIM];
+			REAL dims[DIM];
 			int Co=orientation[o][b];
 
 			for(int d=0;d<DIM;d++)
@@ -1262,55 +1266,55 @@ void SFC2D<LOCS>::SetCurve(Curve curve)
 	switch(curve)
 	{
 		case HILBERT:
-			order=horder2;
-		        orientation=horient2;
-			inverse=hinv2;
+			SFC<2,LOCS>::order=horder2;
+			SFC<2,LOCS>::orientation=horient2;
+			SFC<2,LOCS>::inverse=hinv2;
 		      	break;
 		case MORTON:
-			order=morder2;
-		        orientation=morient2;
-			inverse=morder2;
+			SFC<2,LOCS>::order=morder2;
+		        SFC<2,LOCS>::orientation=morient2;
+			SFC<2,LOCS>::inverse=morder2;
 			break;
 		case GREY:
-			order=gorder2;
-		        orientation=gorient2;
-			inverse=ginv2;
+			SFC<2,LOCS>::order=gorder2;
+		        SFC<2,LOCS>::orientation=gorient2;
+			SFC<2,LOCS>::inverse=ginv2;
 		      	break;
 	}
 }
 		 
 template<class LOCS>
-void SFC2D<LOCS>::SetDimensions(LOCS wx, LOCS wy)
+void SFC2D<LOCS>::SetDimensions(REAL wx, REAL wy)
 {
-	dimensions[0]=wx;
-	dimensions[1]=wy;
-	set=set|1;
+	SFC<2,LOCS>::dimensions[0]=wx;
+	SFC<2,LOCS>::dimensions[1]=wy;
+	SFC<2,LOCS>::set=SFC<2,LOCS>::set|1;
 }
 
 template<class LOCS>
-void SFC2D<LOCS>::SetCenter(LOCS x, LOCS y)
+void SFC2D<LOCS>::SetCenter(REAL x, REAL y)
 {
-	center[0]=x;
-	center[1]=y;
-	set=set|2;
+	SFC<2,LOCS>::center[0]=x;
+	SFC<2,LOCS>::center[1]=y;
+	SFC<2,LOCS>::set=SFC<2,LOCS>::set|2;
 }
 
 template<class LOCS>
-void SFC2D<LOCS>::SetRefinementsByDelta(LOCS deltax, LOCS deltay)
+void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
 {
 	char mask=1;
-	if( (mask&set) != mask)
+	if( (mask&SFC<2,LOCS>::set) != mask)
 	{
 		cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
 	}
 
-	refinements=(unsigned int)ceil(log(dimensions[0]/deltax)/log(2.0));
-	refinements=max(refinements,(unsigned int)ceil(log(dimensions[1]/deltay)/log(2.0)));
-	set=set|32;
+	SFC<2,LOCS>::refinements=(unsigned int)ceil(log(SFC<2,LOCS>::dimensions[0]/deltax)/log(2.0));
+	SFC<2,LOCS>::refinements=max(SFC<2,LOCS>::refinements,(unsigned int)ceil(log(SFC<2,LOCS>::dimensions[1]/deltay)/log(2.0)));
+	SFC<2,LOCS>::set=SFC<2,LOCS>::set|32;
 }
 	
 template<class LOCS>
-unsigned char  SFC2D<LOCS>::Bin(LOCS *point, LOCS *center)
+unsigned char  SFC2D<LOCS>::Bin(LOCS *point, REAL *center)
 {
 
 	unsigned char bin=0;
@@ -1331,55 +1335,55 @@ void SFC3D<LOCS>::SetCurve(Curve curve)
 	switch(curve)
 	{
 		case HILBERT:
-			order=horder3;
-		        orientation=horient3;
-			inverse=hinv3;
+			SFC<3,LOCS>::order=horder3;
+		        SFC<3,LOCS>::orientation=horient3;
+			SFC<3,LOCS>::inverse=hinv3;
 		      	break;
 		case MORTON:
-			order=morder3;
-		        orientation=morient3;
-			inverse=morder3;
+			SFC<3,LOCS>::order=morder3;
+		        SFC<3,LOCS>::orientation=morient3;
+			SFC<3,LOCS>::inverse=morder3;
 			break;
 		case GREY:
-			order=gorder3;
-		        orientation=gorient3;
-			inverse=ginv3;
+			SFC<3,LOCS>::order=gorder3;
+		        SFC<3,LOCS>::orientation=gorient3;
+			SFC<3,LOCS>::inverse=ginv3;
 		        break;
 	}
 }
 template<class LOCS>
-void SFC3D<LOCS>::SetDimensions(LOCS wx, LOCS wy, LOCS wz)
+void SFC3D<LOCS>::SetDimensions(REAL wx, REAL wy, REAL wz)
 {
-	dimensions[0]=wx;
-	dimensions[1]=wy;
-	dimensions[2]=wz;
-	set=set|1;
+	SFC<3,LOCS>::dimensions[0]=wx;
+	SFC<3,LOCS>::dimensions[1]=wy;
+	SFC<3,LOCS>::dimensions[2]=wz;
+	SFC<3,LOCS>::set=SFC<3,LOCS>::set|1;
 }
 template<class LOCS>
-void SFC3D<LOCS>::SetCenter(LOCS x, LOCS y, LOCS z)
+void SFC3D<LOCS>::SetCenter(REAL x, REAL y, REAL z)
 {
-	center[0]=x;
-	center[1]=y;
-	center[2]=z;
+	SFC<3,LOCS>::center[0]=x;
+	SFC<3,LOCS>::center[1]=y;
+	SFC<3,LOCS>::center[2]=z;
 
-	set=set|2;
+	SFC<3,LOCS>::set=SFC<3,LOCS>::set|2;
 }
 template<class LOCS>
-void SFC3D<LOCS>::SetRefinementsByDelta(LOCS deltax, LOCS deltay, LOCS deltaz)
+void SFC3D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay, REAL deltaz)
 {
 	char mask=1;
-	if( (mask&set) != mask)
+	if( (mask&SFC<3,LOCS>::set) != mask)
 	{
 		cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
 	}
 
-	refinements=(unsigned int)ceil(log(dimensions[0]/deltax)/log(2.0));
-	refinements=max(refinements,(unsigned int)ceil(log(dimensions[1]/deltay)/log(2.0)));
-	refinements=max(refinements,(unsigned int)ceil(log(dimensions[2]/deltaz)/log(2.0)));
-	set=set|32;
+	SFC<3,LOCS>::refinements=(unsigned int)ceil(log(SFC<3,LOCS>::dimensions[0]/deltax)/log(2.0));
+	SFC<3,LOCS>::refinements=max(SFC<3,LOCS>::refinements,(unsigned int)ceil(log(SFC<3,LOCS>::dimensions[1]/deltay)/log(2.0)));
+	SFC<3,LOCS>::refinements=max(SFC<3,LOCS>::refinements,(unsigned int)ceil(log(SFC<3,LOCS>::dimensions[2]/deltaz)/log(2.0)));
+	SFC<3,LOCS>::set=SFC<3,LOCS>::set|32;
 }
 template<class LOCS>
-unsigned char  SFC3D<LOCS>::Bin(LOCS *point, LOCS *center)
+unsigned char  SFC3D<LOCS>::Bin(LOCS *point, REAL *center)
 {
 	unsigned char bin=0;
 	
