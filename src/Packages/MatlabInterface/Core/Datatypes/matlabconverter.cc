@@ -1079,13 +1079,25 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           }
                           
           nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoMin,mindata);            
+          
           double maxdata[NRRD_DIM_MAX];
           for (long p=0;p<NRRD_DIM_MAX;p++)
           {
-            maxdata[p] = 1.0;
+            if (p < dims.size()) maxdata[p] = static_cast<double>(dims[p]);
+            else maxdata[p] = 1.0;
           }
                           
-          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoMax,maxdata);            
+          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoMax,maxdata); 
+          
+          int centerdata[NRRD_DIM_MAX];
+          for (long p=0;p<NRRD_DIM_MAX;p++)
+          {
+            centerdata[p] = 2;
+          }
+          
+                          
+          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoCenter,centerdata); 
+                                           
           scinrrd = nrrddataptr;
         }
         catch (...)
