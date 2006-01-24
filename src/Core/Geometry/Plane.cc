@@ -57,6 +57,13 @@ Plane::Plane(double a, double b, double c, double d) : n(Vector(a,b,c)), d(d) {
     n.normalize();
 }
 
+
+
+Plane::Plane(const Point &p, const Vector &normal)
+  : n(normal), d(-Dot(p, normal))
+{
+}
+
 Plane::Plane(const Plane &copy)
 : n(copy.n), d(copy.d)
 {
