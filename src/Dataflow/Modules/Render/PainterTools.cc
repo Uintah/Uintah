@@ -1149,6 +1149,11 @@ string *
 Painter::PaintTool::mouse_motion(MouseState &mouse)
 {
   SliceWindow *window = mouse.window_;
+  if (!window) {
+    drawing_ = false;
+    return 0;
+  }
+  
   if (!window->paint_layer_) return 0;
 
   NrrdSlice &paint = *window->paint_layer_;
@@ -1168,7 +1173,7 @@ Painter::PaintTool::mouse_motion(MouseState &mouse)
         index2[j] = index[i];
         ++j;
       }
-    last_index_ = index;
+
 
     line(paint.texture_->nrrd_->nrrd, radius_, 
          index1[1], index1[2],
@@ -1178,11 +1183,17 @@ Painter::PaintTool::mouse_motion(MouseState &mouse)
         
 //     nrrd_set_value(paint.texture_->nrrd_->nrrd, 
 //                    index2, 1.0);
-    paint.texture_->set_dirty();
-    painter_->for_each(&Painter::rebind_slice);
+    paint.texture_->apply_colormap(index1[1], index1[2], 
+                                   index2[1], index2[2],
+                                   Ceil(radius_));
+    //    painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
   }
+
+  if (mouse.state_ & MouseState::BUTTON_1_E)
+    drawing_ = true;
   
+  last_index_ = index;
 
   return 0;
 
@@ -1220,7 +1231,9 @@ Painter::PaintTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             dist = 1.0 - dist;
             dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
             dist += painter_->current_volume_->clut_min_;
-            nrrd_set_value(nrrd, index, dist);
+            float val;
+            nrrd_get_value(nrrd, index, val);
+            nrrd_set_value(nrrd, index, Max(dist, val));//nrrd_get_value(nrrd,index);
           }
         }
 }
