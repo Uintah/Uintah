@@ -1399,8 +1399,18 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       fieldbasis = "ConstantBasis";
       if (numfield != numelements)
       {
-        if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements does not match number of field entries)"));
-        return (0);          
+        if (datasize == numelements)
+        {
+          if (numfield == 1) { fieldtype = "double"; numfield = datasize; datasize = 1; mlfield.transpose(); }
+          else if (numfield == 3) { fieldtype = "Vector"; numfield = datasize; datasize = 3; mlfield.transpose(); }
+          else if (numfield == 6) { fieldtype = "Tensor"; numfield = datasize; datasize = 6; mlfield.transpose(); }
+          else if (numfield == 9) { fieldtype = "Tensor"; numfield = datasize; datasize = 9; mlfield.transpose(); }
+        }
+        if (numfield != numelements)
+        {
+          if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements does not match number of field entries)"));
+          return (0);   
+        }
       }
     }
     
@@ -1560,9 +1570,19 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     {
       if (numfield != numelements)
       {
-        if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements in field does not match mesh)"));
-        return(0);                 
-      }
+        if (datasize == numelements)
+        {
+          if (numfield == 1) { fieldtype = "double"; numfield = datasize; datasize = 1; mlfield.transpose(); }
+          else if (numfield == 3) { fieldtype = "Vector"; numfield = datasize; datasize = 3; mlfield.transpose(); }
+          else if (numfield == 6) { fieldtype = "Tensor"; numfield = datasize; datasize = 6; mlfield.transpose(); }
+          else if (numfield == 9) { fieldtype = "Tensor"; numfield = datasize; datasize = 9; mlfield.transpose(); }
+        }
+        if (numfield != numelements)
+        {
+          if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements does not match number of field entries)"));
+          return (0);   
+        }
+            }
       fieldbasis = "ConstantBasis";
     }
     
