@@ -750,7 +750,8 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 
   // Allocated a nrrd to mark where the flood fill has visited
   NrrdDataHandle done = new NrrdData();
-  nrrdAlloc(done->nrrd, nrrdTypeUChar, 3, 
+  nrrdAlloc(done->nrrd, nrrdTypeUChar, 4, 
+            1,
             volume->nrrd_->nrrd->axis[0].size, 
             volume->nrrd_->nrrd->axis[1].size, 
             volume->nrrd_->nrrd->axis[2].size);
@@ -804,6 +805,7 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 
   painter_->for_each(&Painter::rebind_slice);
   painter_->redraw_all();
+  painter_->need_execute();
   return scinew string("Done");
 }
 
