@@ -751,16 +751,17 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
   // Allocated a nrrd to mark where the flood fill has visited
   NrrdDataHandle done = new NrrdData();
   nrrdAlloc(done->nrrd, nrrdTypeUChar, 4, 
-            1,
             volume->nrrd_->nrrd->axis[0].size, 
             volume->nrrd_->nrrd->axis[1].size, 
-            volume->nrrd_->nrrd->axis[2].size);
+            volume->nrrd_->nrrd->axis[2].size, 
+            volume->nrrd_->nrrd->axis[3].size);
 
   // Set the visited nrrd to empty
   memset(done->nrrd->data, 0, 
          volume->nrrd_->nrrd->axis[0].size *
-         volume->nrrd_->nrrd->axis[1].size * 
-         volume->nrrd_->nrrd->axis[2].size);
+         volume->nrrd_->nrrd->axis[1].size *
+         volume->nrrd_->nrrd->axis[2].size * 
+         volume->nrrd_->nrrd->axis[3].size);
 
   while (!todo.empty()) {
     // Grab the index off the end of the array
@@ -805,7 +806,6 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 
   painter_->for_each(&Painter::rebind_slice);
   painter_->redraw_all();
-  painter_->want_to_execute();
   return scinew string("Done");
 }
 
@@ -1131,17 +1131,27 @@ Painter::PaintTool::mouse_button_release(MouseState &mouse)
   if (mouse.state_ & MouseState::BUTTON_3_E) {
     NrrdSlice &paint = *mouse.window_->paint_layer_;
     NrrdData *nout = scinew NrrdData();
-    nrrdSplice(nout->nrrd,
-               painter_->current_volume_->nrrd_->nrrd,
-               paint.texture_->nrrd_->nrrd,
-               mouse.window_->axis_+1,
-               last_index_[mouse.window_->axis_+1]);
+    if (nrrdSplice(nout->nrrd,
+                   painter_->current_volume_->nrrd_->nrrd,
+                   paint.texture_->nrrd_->nrrd,
+                   mouse.window_->axis_+1,
+                   last_index_[mouse.window_->axis_+1])) {
+      char *err = biffGetDone(NRRD);
+      cerr << string("Error on line #")+to_string(__LINE__) +
+        string(" executing nrrd command: nrrdSplice \n")+
+        string("Message: ")+string(err);
+      free(err);
+      return 0;
+    }
+
     painter_->current_volume_->nrrd_ = nout;
                
     if (mouse.window_->paint_layer_) {
       delete mouse.window_->paint_layer_;
       mouse.window_->paint_layer_ = 0;
     }
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
     return new string ("Done");
   }
   return 0;
