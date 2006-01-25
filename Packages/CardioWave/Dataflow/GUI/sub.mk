@@ -27,7 +27,6 @@
 SRCDIR := Packages/CardioWave/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/CreateParametersBundle.tcl \
 	$(SRCDIR)/CreateSimpleMesh.tcl \
 	$(SRCDIR)/HexIntMask.tcl \
 	$(SRCDIR)/ReclassifyInteriorTets.tcl \

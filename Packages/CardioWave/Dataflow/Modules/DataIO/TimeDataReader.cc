@@ -35,13 +35,14 @@
 
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/StringPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/NrrdString.h>
+#include <Core/Datatypes/String.h>
 
 #include <Packages/CardioWave/Core/Datatypes/TimeDataFile.h>
 
@@ -268,28 +269,26 @@ void TimeDataReader::execute()
   
   std::string filename;
   
-  NrrdIPort *filenameport;
-  if ((filenameport = static_cast<NrrdIPort *>(getIPort("Filename"))))
+  StringIPort *filenameport;
+  if ((filenameport = static_cast<StringIPort *>(getIPort("Filename"))))
   {
-    NrrdDataHandle nrrdH;
-    if (filenameport->get(nrrdH))
+    StringHandle fnH;
+    if (filenameport->get(fnH))
     {
-        NrrdString fname(nrrdH);
-        std::string filename = fname.getstring();
+        std::string filename = fnH->get();
         guifilename_.set(filename);
         ctx->reset();
     }
   }  
+  
   filename = guifilename_.get();
 
-  NrrdOPort *filenameoport;
-  if ((filenameoport = static_cast<NrrdOPort *>(getOPort("Filename"))))
+  StringOPort *filenameoport;
+  if ((filenameoport = static_cast<StringOPort *>(getOPort("Filename"))))
   {
-      NrrdString ns(filename);
-      NrrdDataHandle nrrdH = ns.gethandle(); 
-      filenameoport->send(nrrdH);
-  }
-  
+    StringHandle fnH = scinew SCIRun::String(filename);
+    filenameoport->send(fnH);
+  }  
   ctx->reset();
   
   try

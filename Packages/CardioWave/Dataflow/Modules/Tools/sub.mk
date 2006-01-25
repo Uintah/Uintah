@@ -13,7 +13,7 @@ include	$(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR	:= Packages/CardioWave/Dataflow/Modules/Tools
 
 SRCS	+= \
-	$(SRCDIR)/CreateParametersBundle.cc\
+#	$(SRCDIR)/CreateParametersBundle.cc\
 
 #[INSERT NEW CODE FILE HERE]
 
