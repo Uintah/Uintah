@@ -693,15 +693,15 @@ bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
 }
 
 
-bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields)
+bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements)
 {
   for (size_t p = 0; p < inputs.size(); p++) if (MakeEditable(inputs[0],inputs[0])) return (false);
   MergeFieldsAlgo algo;
-  return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields));
+  return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields,mergeelements));
 }
 
 
-bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double tolerance)
+bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements)
 {
   if (MakeEditable(input,input)) return (false);
   
@@ -709,7 +709,7 @@ bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double toler
   inputs[0] = input;
   
   MergeFieldsAlgo algo;
-  return(algo.MergeFields(pr_,inputs,output,tolerance,true));
+  return(algo.MergeFields(pr_,inputs,output,tolerance,true,mergeelements));
 
 }
 

@@ -34,22 +34,22 @@
 <component name="BundleWriter" category="DataIO">
   <overview>
     <authors>
-    Jeroen Stinstra
+      <author>Jeroen Stinstra</author>
     </authors>
     <summary>
       This module writes a bundle to disk.
     </summary>
     <description>
+      <p>
       This module writes a bundle to disk. A bundle file
       has a .bdl extension and can be written with the BundleWriter
       module and can be read with the BundleReader module. 
       In a bdl file every component is stored. Hence it can
       be used to group a lot of different SCIRun objects together
       and store it as one file.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -57,15 +57,12 @@
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
-	<name>Filename</name>
-	<datatype>SCIRun::String</datatype>
-      </port>      </inputs>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </inputs>
     <outputs>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

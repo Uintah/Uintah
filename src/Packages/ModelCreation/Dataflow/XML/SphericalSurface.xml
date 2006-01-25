@@ -9,11 +9,11 @@
       This module creates an example spherical surface.
     </summary>
     <description>
+      <p>
       This module creates an example spherical surface.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -32,16 +32,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-    <description>
-      -
-    </description>
-    <parameter>
-      <widget>Place Widget Name Here</widget>
-      <label>Place Label Name Here</label>
-    </parameter>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

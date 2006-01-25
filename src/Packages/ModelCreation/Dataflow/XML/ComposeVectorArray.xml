@@ -40,11 +40,11 @@
       This module creates a vector out of arrays of scalars.
     </summary>
     <description>
+    <p>
       This module creates a vector out of arrays of scalars.
+    </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -67,9 +67,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

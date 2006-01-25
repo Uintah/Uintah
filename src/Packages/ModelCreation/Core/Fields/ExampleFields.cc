@@ -79,7 +79,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle discretiz
       k++;
     }
   }
-  
+    
   std::vector<Point> Node(k);
   
   k = 0;
@@ -92,69 +92,79 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle discretiz
     }
   }
   
+  
+  typedef GenericField<TriSurfMesh<TriLinearBasis<Point> >, NoDataBasis<double>, std::vector<double> > TSField;
+  TSMesh* ofield = TSMesh();
+  output = dynamic_cast<Field* >(ofield);
+  
+  ofield.reserve_nodes(Node.size());
+  for (int p = 0; p < Node.size(); p++) ofield->add_point(Node[p]);
+  
   int N = Z.size();
+  std::vector<int> H1;
+  std::vector<int> H2;
+
+  typename TSField::mesh_type::Node::index_array nodes(3);
   
-    Tri = zeros(3,2);
-    k = 1;
+  for (q=0; q< (N-1); q++)
+  {
+    H1 = Slices[q];
+    H2 = Slices[q+1];
   
-        for q = 1:(N-1),
+    if (H1.size() > 1) H1.push_back(H1[0]);
+    if (H2.size() > 1) H2.push_back(H2[0]);
+    
+    int I1 = 0;
+    int I2 = 0;
+    int N1 = (H1.size()-1);
+    int N2 = (H2.size()-1);
+    
 
-        H1 = Slices{q};
-        H2 = Slices{q+1};
-
-        I1 = 1; I2 = 1;
-
-        H1 = [H1 H1(1)];
-        H2 = [H2 H2(1)];
-        N1 = size(H1,2);
-        N2 = size(H2,2);
-
-        if N1 == 2, H1 = Slices{q}; N1 = 1; end
-
-        if N2 == 2, H2 = Slices{q+1}; N2 = 1; end
-
-        while ~((I1 == N1) & (I2 == N2)),
-
-            if (I1 < N1) & (I2 < N2)
-                L1 = sqrt(sum((Pos(:,H1(I1+1))-Pos(:,H2(I2))).*(Pos(:,H1(I1+1))-Pos(:,H2(I2)))));
-                L2 = sqrt(sum((Pos(:,H1(I1))-Pos(:,H2(I2+1))).*(Pos(:,H1(I1))-Pos(:,H2(I2+1)))));
-                if L1 < L2,
-                    Tri(:,k) = [H1(I1) H1(I1+1) H2(I2)]';
-                    k = k + 1;
-                    I1 = I1 + 1;
-                else
-                    Tri(:,k) = [H2(I2) H2(I2+1) H1(I1)]';
-                    k = k + 1;
-                    I2 = I2 + 1;
-                end
-            end
-
-            if (I2 == N2)
-                Tri(:,k) = [H1(I1) H1(I1+1) H2(I2)]';
-                k = k + 1;
-                I1 = I1 + 1;
-            elseif (I1 == N1)
-                Tri(:,k) = [H2(I2) H2(I2+1) H1(I1)]';
-                k = k + 1;
-                I2 = I2 + 1;
-            end
-        end
-    end  
+    while (!((I1==N1) && (I2==N2)))
+    {
+      if ((I1 < N1) && (I2 < N2))
+      {
+        double L1 = norm(Vector(Node[H1[I1+1]]-Node[H2[I2]]));
+        double L2 = norm(Vector(Node[H1[I1]]-Node[H2[I2+1]]));
+        if (L1 < L2)
+        {
+          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
+          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1+1]);
+          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
+          ofield->add_elem(nodes);
+          I1++;
+        }
+        else
+        {
+          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
+          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2+1]);
+          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
+          ofield->add_elem(nodes);
+          I2++;        
+        }
+      
+        if (I2==N2)
+        {
+          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
+          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1+1]);
+          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
+          ofield->add_elem(nodes);
+          I1++;        
+        }
+        
+        if (I1==N1)
+        {
+          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
+          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2+1]);
+          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
+          ofield->add_elem(nodes);
+          I2++;          
+        }
+      }
+    }
+  }
   
-    R = 1/3*(Pos(:,Tri(1,:))+Pos(:,Tri(2,:))+Pos(:,Tri(3,:)));
-    y1 = Pos(:,Tri(1,:));
-    y2 = Pos(:,Tri(2,:));
-    y3 = Pos(:,Tri(3,:));
-
-    n = cross(y2-y1,y2-y3);
-    nR = sum(n.*R);
-    H = find(nR < 0);
-    Temp = Tri(2,H);
-    Tri(2,H) = Tri(3,H);
-    Tri(3,H) = Temp;
-  
-  
-  
+  return (true);  
 }
 
 } // end namespace

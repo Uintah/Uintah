@@ -37,29 +37,27 @@
 <component name="ColorMap2Writer" category="DataIO">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
       <author>Jeroen Stinstra</author>
     </authors>
-    <summary>Save persistent representation of a colormap to a file.
+    <summary>
+    Save persistent representation of a colormap to a file.
     </summary>
     <description>
+    <p>
+    Save persistent representation of a colormap to a file.
+    </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Data</name>
-	<datatype>SCIRun::ColorMap2</datatype>
+        <name>Input Data</name>
+        <datatype>SCIRun::ColorMap2</datatype>
       </port>
       <port>
-	<name>Filename</name>
-	<datatype>SCIRun::String</datatype>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
       </port>        
     </inputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
-  </gui>
-  <testing>
-  </testing>
 </component>

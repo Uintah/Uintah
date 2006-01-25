@@ -39,9 +39,7 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      <p>
         MergeFields glues any number of input fields into one output field.
-      </p>
     </summary>
     <description>
       <p>
@@ -84,10 +82,4 @@
      </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
-<nets>
-</nets>
 </component>

@@ -39,7 +39,7 @@ namespace ModelCreation {
 class MergeFieldsAlgo : public SCIRun::DynamicAlgoBase
 {
   public:
-    virtual bool MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes);  
+    virtual bool MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements);  
 };
 
 
@@ -47,22 +47,24 @@ template <class FIELD>
 class  MergeFieldsAlgoT : public MergeFieldsAlgo
 {
   public:
-    virtual bool MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tol, bool mergenodes);
+    virtual bool MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements);
  
 };
 
 template <class FIELD>
-bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> fieldvec, SCIRun::FieldHandle& output, double tol, bool mergenodes)
+bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> fieldvec, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements)
 {
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,unsigned int> node_index_type;
+  typedef hash_multimap<unsigned int,typename FIELD::mesh_type::Node::array_type> elem_index_type; 
 #else
   typedef map<unsigned int,unsigned int> node_index_type;
+  typedef multimap<unsigned int,typename FIELD::mesh_type::Node::array_type> elem_index_type; 
 #endif
 
   node_index_type node_index_;
-
+  elem_index_type elem_map_;
   // Test whether all the fields have the save class
   int basisorder = 1;
 
@@ -285,16 +287,48 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
         }
       }
 
-      if (basisorder == 0)
+      bool addelem = true;
+
+      if ( mergeelements)
       {
-        typename FIELD::mesh_type::Elem::index_type idx = omesh->add_elem(newnodes);
-        ofield->set_value(ifield->value((*it)),idx);
-        actnumelements++;
+        typename FIELD::mesh_type::Node::array_type sortednewnodes = newnodes;
+        std::pair<typename elem_index_type::iterator,typename elem_index_type::iterator> range;
+        std::sort(sortednewnodes.begin(),sortednewnodes.end());
+        
+        unsigned int key = 0;
+        for (int r=0; r<sortednewnodes.size(); r++) key += static_cast<unsigned int>(sortednewnodes[r]);
+
+        range = elem_map_.equal_range(key);
+        while (range.first != range.second)
+        {
+          int r;
+          for (r=0; r<sortednewnodes.size(); r++)
+          {
+            if ((*(range.first))[r] != sortednewnodes[r]) break;
+          }
+          if (r == sortednewnodes.size()) addelem = false;
+        }
+        
+        if (addelem == true)
+        {
+          elem_map_[key] = sortednewnodes;
+        }
       }
-      else
+
+      if (addelem)
       {
-        omesh->add_elem(newnodes);
-        actnumelements++;
+        if (basisorder == 0)
+        {
+          
+          typename FIELD::mesh_type::Elem::index_type idx = omesh->add_elem(newnodes);
+          ofield->set_value(ifield->value((*it)),idx);
+          actnumelements++;
+        }
+        else
+        {
+          omesh->add_elem(newnodes);
+          actnumelements++;
+        }
       }
       
       ++it;

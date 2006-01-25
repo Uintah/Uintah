@@ -41,11 +41,11 @@
       This module allows for creation a bundle with strings, scalars, vectors, and tensors as components. Each component has a name and can be extracte out of the bundle.
     </summary>
     <description>
+      <p>
       This module allows for creation a bundle with strings, scalars, vectors, and tensors as components. Each component has a name and can be extracte out of the bundle.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
     </inputs>
@@ -56,16 +56,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-    <description>
-      NEED COMPLETION
-    </description>
-    <parameter>
-      <widget>Place Widget Name Here</widget>
-      <label>Place Label Name Here</label>
-    </parameter>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

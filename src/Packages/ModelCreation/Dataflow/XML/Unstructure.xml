@@ -9,11 +9,11 @@
       This function unstructures a regular mesh.
     </summary>
     <description>
+      <p>
       This function unstructures a regular mesh.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -28,9 +28,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

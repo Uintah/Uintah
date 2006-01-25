@@ -41,11 +41,11 @@
       Decomposed the vector in the three cartesian coordinates.
     </summary>
     <description>
+      <p>
       Decomposed the vector in the three cartesian coordinates.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -68,9 +68,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

@@ -36,28 +36,32 @@
 <component name="PathWriter" category="DataIO">
   <overview>
     <authors>
-      <author>Dave Weinstein</author>
       <author>Jeroen Stinstra</author>
     </authors>
-    <summary>The PathWriter module saves persistent representation of a path to a file.</summary>
-    <description><p>Upon opening, the PathWriter GUI defaults to the directory that the user sets for their SCIRUN_DATA environment variable.   Otherwise, the GUI will default to the directory where the user's SCIRun executable resides. The user can enter the name of a file that the path saves to. The file should have a .path extension. The default file name is MyCameraPath.  The user may also choose between a Binary or ASCII file format.</p>
+    <summary>
+    The PathWriter module saves persistent representation of a path to a file.
+    </summary>
+    <description>
+    <p>
+    Upon opening, the PathWriter GUI defaults to the directory that the user 
+    sets for their SCIRUN_DATA environment variable.   Otherwise, the GUI will 
+    default to the directory where the user's SCIRun executable resides. The 
+    user can enter the name of a file that the path saves to. The file should 
+    have a .path extension. The default file name is MyCameraPath.  The user 
+    may also choose between a Binary or ASCII file format.
+    </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Data</name>
-	<datatype>SCIRun::Path</datatype>
+        <name>Input Data</name>
+        <datatype>SCIRun::Path</datatype>
       </port>
       <port>
-	<name>Filename</name>
-	<datatype>SCIRun::String</datatype>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
       </port>
     </inputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
-  </gui>
-  <testing>
-  </testing>
 </component>

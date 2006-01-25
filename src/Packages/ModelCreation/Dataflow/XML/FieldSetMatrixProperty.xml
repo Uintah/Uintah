@@ -35,19 +35,19 @@
 <component name="FieldSetMatrixProperty" category="FieldsProperty">
   <overview>
     <authors>
-    Jeroen Stinstra
+      <author>Jeroen Stinstra</author>
     </authors>
     <summary>
       This module adds a 'matrix' object as a field property.
     </summary>
     <description>
+      <p>
       This module adds a 'matrix' object as a field property. The
       module allows three separate matrices to be inserted at the 
       same time. 
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -74,9 +74,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

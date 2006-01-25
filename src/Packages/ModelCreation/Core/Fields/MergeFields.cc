@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes)
+bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements)
 {
 
   // Step 0:
@@ -155,7 +155,7 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
   // is returned. 
   // As error messages are reportered to the ProgressReporter we do not need to
   // handle any error messages here, they automatically are forwarded to the user. 
-  return(algo->MergeFields(pr,input,output,tolerance,mergenodes));
-}  
+  return(algo->MergeFields(pr,input,output,tolerance,mergenodes,mergeelements));
+}   
 
 } // namespace ModelCreation
