@@ -22,19 +22,19 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/LatVolMesh.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 
 #include <Dataflow/Network/Module.h>
@@ -46,6 +46,7 @@
 
 #include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
 #include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
