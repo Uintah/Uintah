@@ -40,11 +40,11 @@
       This module computes the minimum distance between the object and the nodes in field or the center of the elements.
     </summary>
     <description>
+      <p>
       This module computes the minimum distance between the object and the nodes in field or the center of the elements.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -67,16 +67,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-    <description>
-      Select whether the distance map has to be at the center of the elements or at the nodes of the field.
-    </description>
-    <parameter>
-      <widget>Place Widget Name Here</widget>
-      <label>Place Label Name Here</label>
-    </parameter>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

@@ -38,14 +38,18 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This function can be used to clip of parts of a mesh, using a function which defines which parts are inside and which parts are outside.
+      This module can be used to clip of parts of a mesh, using a function which 
+      defines which parts are inside and which parts are outside of the clipping
+      range.
     </summary>
     <description>
-      BLA
+    <p>
+      This module can be used to clip of parts of a mesh, using a function which 
+      defines which parts are inside and which parts are outside of the clipping
+      range.    
+    </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="yes">
       <port>
@@ -72,9 +76,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

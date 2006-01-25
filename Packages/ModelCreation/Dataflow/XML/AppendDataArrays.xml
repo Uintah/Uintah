@@ -40,11 +40,9 @@
       This module combines a several arrays into one.
     </summary>
     <description>
-      This module combines a several arrays into one.
+      <p>This module combines a several arrays into one.</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="yes">
       <port>
@@ -59,9 +57,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

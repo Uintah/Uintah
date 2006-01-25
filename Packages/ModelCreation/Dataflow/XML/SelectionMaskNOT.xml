@@ -41,12 +41,12 @@
       nodes that were selected get deselected.
     </summary>
     <description>
+      <p>
       Inverts a selection. Nodes that were not selected get selection and
       nodes that were selected get deselected.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -61,9 +61,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

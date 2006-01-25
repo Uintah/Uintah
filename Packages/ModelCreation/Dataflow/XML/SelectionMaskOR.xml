@@ -40,13 +40,13 @@
       Boolean OR operation on a series of selection masks. 
     </summary>
     <description>
+      <p>
       Boolean OR operation on a series of selection masks. 
       All the masks must be of the same size in order for this
       module to function properly.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="yes">
       <port>
@@ -61,9 +61,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

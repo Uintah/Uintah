@@ -36,30 +36,29 @@
 <component name="ColorMap2Reader" category="DataIO">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
       <author>Jeroen Stinstra</author>
     </authors>
-    <summary>The ColorMap2 Read a persistent 2d colormap from a file on disk.</summary>
+    <summary>
+    The ColorMap2 Read a persistent 2D colormap from a file on disk.
+    </summary>
     <description>
+    <p>
+    The ColorMap2 Read a persistent 2D colormap from a file on disk.    
+    </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Filename</name>
-	<datatype>SCIRun::String</datatype>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
       </port>  
     </inputs>  
     <outputs>
       <port>
-	<name>Output Data</name>
-	<datatype>SCIRun::ColorMap2</datatype>
+        <name>Output Data</name>
+        <datatype>SCIRun::ColorMap2</datatype>
       </port>
     </outputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
-  </gui>
-  <testing>
-  </testing>
 </component>

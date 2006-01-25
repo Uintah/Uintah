@@ -35,11 +35,12 @@
 <component name="MatrixInfo" category="DataInfo">
   <overview>
     <authors>
-      <author>Micheal Callahan</author>
       <author>Jeroen Stinstra</author>
     </authors>
     
-    <summary>MatrixInfo is used to view the attributes of matrices.</summary>
+    <summary>
+    MatrixInfo is used to view the attributes of matrices.
+    </summary>
     <description>
       <p>
         MatrixInfo is purely an informational Module.  It performs no
@@ -93,8 +94,4 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>

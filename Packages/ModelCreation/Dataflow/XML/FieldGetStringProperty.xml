@@ -35,18 +35,18 @@
 <component name="FieldGetStringProperty" category="FieldsProperty">
   <overview>
     <authors>
-    Jeroen Stinstra
+      <author>Jeroen Stinstra</author>
     </authors>
     <summary>
       This module retrieves a string property from a field. 
     </summary>
     <description>
+      <p>
       This module retrieves a string property from a field. The name of the 
       property can be entered in the GUI.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -69,9 +69,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

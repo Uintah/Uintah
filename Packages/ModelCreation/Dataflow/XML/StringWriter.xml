@@ -40,11 +40,11 @@
       This module writes a text file.
     </summary>
     <description>
+      <p>
       This module writes a text file. The output file will be a plain ascii file.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -59,16 +59,5 @@
     <outputs>
     </outputs>
   </io>
-  <gui>
-    <description>
-      --
-    </description>
-    <parameter>
-      <widget>Place Widget Name Here</widget>
-      <label>Place Label Name Here</label>
-    </parameter>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

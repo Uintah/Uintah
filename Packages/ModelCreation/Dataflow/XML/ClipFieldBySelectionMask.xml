@@ -41,6 +41,7 @@
       Clip away the section of the mesh that is not selected in the SelectionMask.
     </summary>
     <description>
+      <p>
       Clip away the section of the mesh that is not selected in the SelectionMask. 
       This function accepts both a selection of elements as well a selection of 
       nodes. The module automatically detects whether elements are selected or
@@ -52,10 +53,9 @@
       that are selected. 
       In case nodes are selected all elements are cut away that have not all nodes
       selected.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -78,9 +78,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

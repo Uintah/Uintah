@@ -108,11 +108,11 @@ class FieldsAlgo : public AlgoLibrary {
     // MergeFields: Merge a set of fields of the same type together into one
     // new output field. If mergenodes is true, nodes will be merge if the
     // distance between them is smaller than tolerance  
-    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true);
+    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true, bool mergeelements = true);
 
     // MergeNodes: Merge the nodes in a field together if the distance between
     // them is smaller than tolerance.
-    bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance);
+    bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true);
 
     // SplitFieldByElementData:
     // Use the element data to segment the input field into volumes/areas with a

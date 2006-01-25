@@ -40,11 +40,11 @@
       Exclusive OR operation on two selection masks.
     </summary>
     <description>
+      <p>
       Exclusive OR operation on two selection masks.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -63,9 +63,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

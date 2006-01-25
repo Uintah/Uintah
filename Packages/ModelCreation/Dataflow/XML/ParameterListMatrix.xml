@@ -41,11 +41,11 @@
       This module gets a matrix from a ParameterList.
     </summary>
     <description>
+      <p>
       This module gets a matrix from a ParameterList. Use the GUI to select the parameter.
+      </p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -68,16 +68,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-    <description>
-      Use the GUI select which parameter needs to be extracted.
-    </description>
-    <parameter>
-      <widget>Place Widget Name Here</widget>
-      <label>Place Label Name Here</label>
-    </parameter>
-  </gui>
-  <testing>
-  </testing>
 </component>
 
