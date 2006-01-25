@@ -6,6 +6,8 @@
 class MMS1 : public MMS {
 
 public:
+  MMS1() {};
+  virtual ~MMS1() {};
   virtual double pressure( int x, int y, double time );
   virtual double uVelocity( int x, int y, double time );
   
