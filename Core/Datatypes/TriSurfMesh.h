@@ -63,6 +63,7 @@
 #include <list>
 #include <set>
 #include <sgi_stl_warnings_on.h>
+#include <float.h> // for DBL_MAX
 
 namespace SCIRun {
 
@@ -419,6 +420,9 @@ public:
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
   }
+
+  double find_closest_face(Point &result, typename Elem::index_type &face,
+                           const Point &p) const;
 
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
@@ -1872,6 +1876,32 @@ TriSurfMesh<Basis>::size(typename TriSurfMesh::Cell::size_type &s) const
   typename Cell::iterator itr; end(itr);
   s = *itr;
 }
+
+template <class Basis>
+double
+TriSurfMesh<Basis>::find_closest_face(Point &result,
+                                      typename TriSurfMesh::Face::index_type &face,
+                                      const Point &p) const
+{
+  double dmin = DBL_MAX;
+  for (unsigned int i = 0; i < faces_.size(); i+=3)
+  {
+    Point rtmp;
+    closest_point_on_tri(rtmp, p,
+                         points_[faces_[i  ]],
+                         points_[faces_[i+1]],
+                         points_[faces_[i+2]]);
+    const double dtmp = (p - rtmp).length2();
+    if (dtmp < dmin)
+    {
+      result = rtmp;
+      face = i/3;
+      dmin = dtmp;
+    }
+  }
+  return sqrt(dmin);
+}
+
 
 template <class Basis>
 const TypeDescription*
