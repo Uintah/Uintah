@@ -51,16 +51,14 @@
     <inputs lastportdynamic="no">
       <port>
         <name>HexVol</name>
-	<datatype>SCIRun::Field</datatype>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>Bandwidth Minimized HexVol</name>
-	<datatype>SCIRun::Field</datatype>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

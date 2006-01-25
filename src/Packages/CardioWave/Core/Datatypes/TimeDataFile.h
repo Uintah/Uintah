@@ -42,6 +42,7 @@
 #define JGS_CARDIOWAVE_TIMEDATATILE_H 1
 
 #include <Core/Thread/Time.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>

@@ -36,9 +36,11 @@
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
+    <summary>
+    </summary>
+    <description>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
     </inputs>
@@ -49,9 +51,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

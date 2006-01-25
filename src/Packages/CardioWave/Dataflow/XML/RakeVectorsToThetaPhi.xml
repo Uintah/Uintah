@@ -46,8 +46,6 @@
       <p>Version: 1.1</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -58,17 +56,13 @@
     <outputs>
       <port>
         <name>Theta</name> 
-	<datatype>SCIRun::Matrix</datatype>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
         <name>Phi</name> 
-	<datatype>SCIRun::Matrix</datatype>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

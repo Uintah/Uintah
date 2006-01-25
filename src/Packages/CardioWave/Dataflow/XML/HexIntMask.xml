@@ -54,16 +54,14 @@ output field as should the remaining fdata values.
     <inputs lastportdynamic="no">
       <port>
         <name>Input HexVol</name>
-	<datatype>SCIRun::Field</datatype>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>Masked HexVol</name>
-	<datatype>SCIRun::Field</datatype>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>
