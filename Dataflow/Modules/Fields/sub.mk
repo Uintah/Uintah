@@ -123,6 +123,18 @@ ifeq ($(HAVE_CAMAL),yes)
    LIBS := $(LIBS) $(CAMAL_LIBRARY) $(F_LIBRARY)
 endif
 
+# VERDICT Mesh Quality Library
+ifeq ($(HAVE_VERDICT),yes)
+   SRCS += $(SRCDIR)/MeshQuality.cc
+   LIBS := $(LIBS) $(VERDICT_LIBRARY)
+endif
+
+# MESQUITE Mesh Optimization Library
+ifeq ($(HAVE_MESQUITE),yes)
+   SRCS += $(SRCDIR)/MeshSmoother.cc
+   LIBS := $(LIBS) $(MESQUITE_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
