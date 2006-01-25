@@ -278,6 +278,18 @@ SCI_ARG_WITH(camal,
   [with_camal="$withval"
    sci_required_camal=yes],
   [with_camal=""])
+SCI_ARG_WITH(mesquite,
+  AC_HELP_STRING(--with-mesquite=DIR,
+                 Use the Mesquite installation in DIR),
+  [with_mesquite="$withval"
+   sci_required_mesquite=yes],
+  [with_mesquite=""])
+SCI_ARG_WITH(verdict,
+  AC_HELP_STRING(--with-verdict=DIR,
+                 Use the Verdict installation in DIR),
+  [with_verdict="$withval"
+   sci_required_verdict=yes],
+  [with_verdict=""])
 SCI_ARG_WITH(magick,
   AC_HELP_STRING(--with-magick=DIR,
                  Use the Image Magick installation in DIR),
@@ -2962,6 +2974,85 @@ if test "$_sci_optional" != "optional"; then
   SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
 fi
 
+
+##  --  search for Mesquite ------------------------
+AC_LANG([C++])
+_sci_optional=optional
+
+if test "$with_mesquite" = "yes"; then
+  # If --with-mesquite is specified without a parameter, then it makes it required
+  _sci_optional=required
+else 
+  if test "$with_mesquite"; then
+    # If --with-mesquite has a parameter, then use it
+    _sci_lib="$with_mesquite"
+    _sci_inc="$with_mesquite/include"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=specific
+  fi 
+fi
+
+SCI_TRY_LINK(MESQUITE,Mesquite library,Mesquite.hpp,$_sci_inc,
+    mesquite,$_sci_lib,,[
+      double d = Mesquite::cbrt_sqr(1.0);
+    ],$_sci_optional)
+
+if test "$HAVE_MESQUITE" = "yes"; then
+  DEF_MESQUITE="#define HAVE_MESQUITE 1"
+fi
+
+if test "$with_mesquite" && test ! "$DEF_MESQUITE"; then
+  echo
+  AC_MSG_ERROR(One or more of the MESQUITE components is missing.)
+  echo
+fi
+
+AC_SUBST(MESQUITE_LIB_FLAG)
+AC_SUBST(INC_MESQUITE_H)
+AC_SUBST(MESQUITE_LIB_DIR_FLAG)
+AC_SUBST(DEF_MESQUITE)
+AC_SUBST(HAVE_MESQUITE)
+
+AC_LANG(C)
+
+##  --  search for Verdict ------------------------
+AC_LANG([C++])
+_sci_optional=optional
+
+if test "$with_verdict" = "yes"; then
+  # If --with-verdict is specified without a parameter, then it makes it required
+  _sci_optional=required
+else 
+  if test "$with_verdict"; then
+    # If --with-verdict has a parameter, then use it
+    _sci_lib="$with_verdict"
+    _sci_inc="$with_verdict"
+    _sci_optional=specific
+  fi 
+fi
+
+SCI_TRY_LINK(VERDICT,Verdict library,verdict.h,$_sci_inc,
+    verdict110,$_sci_lib,,[
+      v_tet_quality(0,(double (*)[3])0, 0, (TetMetricVals*)0);
+    ],$_sci_optional)
+
+if test "$HAVE_VERDICT" = "yes"; then
+  DEF_VERDICT="#define HAVE_VERDICT 1"
+fi
+
+if test "$with_verdict" && test ! "$DEF_VERDICT"; then
+  echo
+  AC_MSG_ERROR(One or more of the VERDICT components is missing.)
+  echo
+fi
+
+AC_SUBST(VERDICT_LIB_FLAG)
+AC_SUBST(INC_VERDICT_H)
+AC_SUBST(VERDICT_LIB_DIR_FLAG)
+AC_SUBST(DEF_VERDICT)
+AC_SUBST(HAVE_VERDICT)
+
+AC_LANG(C)
 ##  --  search for Camal (Sandia meshing library) ------------------------
 
 _sci_optional=optional
