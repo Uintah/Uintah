@@ -44,8 +44,20 @@
 
 namespace SCIRun {
 
+
+// Compute the distance squared from the point to the given line,
+// where the line is specified by two end points.  This function
+// actually computes the distance to the line segment
+// between the given points and not to the line itself.
 double
 distance_to_line2(const Point &p, const Point &a, const Point &b);
+
+
+// Compute the point on the triangle closest to the given point.
+// The distance to the triangle will be (P - result).length())
+void
+closest_point_on_tri(Point &result, const Point &P,
+                     const Point &A, const Point &B, const Point &C);
 
 double
 RayPlaneIntersection(const Point &p,  const Vector &dir,

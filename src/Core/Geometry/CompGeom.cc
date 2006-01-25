@@ -63,6 +63,74 @@ distance_to_line2(const Point &p, const Point &a, const Point &b)
 }
 
 
+void
+distance_to_line2_aux(Point &result,
+                      const Point &p, const Point &a, const Point &b)
+{
+  Vector m = b - a;
+  Vector n = p - a;
+  if (m.length2() < TOLERANCE_MIN) {
+    result = a;
+  }
+  else
+  {
+    const double t0 = Dot(m, n) / Dot(m, m);
+    if (t0 <= 0) 
+    {
+      result = a;
+    }
+    else if (t0 >= 1.0)
+    {
+      result = b;
+    }
+    else
+    {
+      Vector offset = m * t0;
+      result = a + offset;
+    }
+  }
+}
+
+
+
+void
+closest_point_on_tri(Point &result, const Point &P,
+                     const Point &A, const Point &B, const Point &C)
+{
+  const Vector E0 = B - A;
+  const Vector E1 = C - A;
+
+  const Vector D = A - P;
+  const double a = Dot(E0, E0);
+  const double b = Dot(E0, E1);
+  const double c = Dot(E1, E1);
+  const double d = Dot(E0, D);
+  const double e = Dot(E1, D);
+  //const double f = Dot(D, D);
+
+  const double det = a*c - b*b;
+  double s = b*e - c*b;
+  double t = b*d - a*e;
+
+  if (s < 0.0) s = 0.0;
+  if (t < 0.0) t = 0.0;
+  if (s + t < det)
+  {
+    const double idet = 1.0 / det;
+    s *= idet;
+    t *= idet;
+
+    result = A + E0 * s + E1 * t;
+  }
+  else
+  {
+    distance_to_line2_aux(result, P, B, C);
+  }
+}
+
+
+
+
 double
 RayPlaneIntersection(const Point &p,  const Vector &dir,
 		     const Point &p0, const Vector &pn)
