@@ -74,11 +74,18 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute(FieldHandle tet_h,
   imesh->begin(ibi);
   imesh->end(iei);
 
+  tmesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+
   while (ibi != iei)
   {
     Point p;
     imesh->get_center(p, *ibi);
-    tmesh->insert_node(p);
+
+    typename TFIELD::mesh_type::Elem::index_type elem;
+    tmesh->locate(elem, p);
+    typename TFIELD::mesh_type::Node::index_type newnode;
+    typename TFIELD::mesh_type::Elem::array_type newelems;
+    tmesh->insert_node_in_cell_2(newelems, newnode, elem, p);
 
     ++ibi;
   }
