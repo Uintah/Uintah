@@ -88,6 +88,7 @@ extern Tcl_Interp* the_interp;
 namespace SCIRun {
 
 
+
 Painter::CLUTLevelsTool::CLUTLevelsTool(Painter *painter) : 
   PainterTool(painter, "Color Lookup Table"),
   scale_(1.0), ww_(0), wl_(1.0)
@@ -714,13 +715,11 @@ Painter::FloodfillTool::~FloodfillTool()
 string *
 Painter::FloodfillTool::mouse_button_press(MouseState &mouse)
 {
+  NrrdVolume *volume = painter_->current_volume_;
   if (!mouse.window_ || !painter_->current_volume_) 
     return scinew string("No window or current layer");
   
   if (mouse.button_ == 1) {
-    NrrdVolume *volume = painter_->current_volume_;
-    if (!volume) return 0;
-    
     vector<int> index = volume->world_to_index(mouse.position_);
     if (!volume->index_valid(index)) return 0;
 
@@ -743,7 +742,7 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
   if (!volume->index_valid(index)) return 0;
 
   // Array to hold which indices to visit next
-  vector<vector<int> > todo;
+  vector<vector<int> > todo, oldtodo;
 
   // Push back the first seed point
   todo.push_back(index);
@@ -762,44 +761,53 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
          volume->nrrd_->nrrd->axis[1].size *
          volume->nrrd_->nrrd->axis[2].size * 
          volume->nrrd_->nrrd->axis[3].size);
-
+  int count  = 0;
+  unsigned int axes = index.size();
   while (!todo.empty()) {
-    // Grab the index off the end of the array
-    index = todo.back();
-
-    // Remove it from the array
-    todo.pop_back();
-
-    // Set the voxel at the index to the flood fill value
-    volume->set_value(index, value_);
-
-    // Mark this voxel as visited
-    nrrd_set_value(done->nrrd, index, (unsigned char)1);
+    ++count;
+    if (!(count % 40)) {
+      cerr << todo.size() << std::endl;
+      painter_->for_each(&Painter::rebind_slice);
+      painter_->redraw_all();
+      TCLTask::unlock();
+      sleep(0);
+      TCLTask::lock();
+    }
+      
+    oldtodo = todo;
+    todo.clear();
+    for (unsigned int i = 0; i < oldtodo.size(); ++i)
+      volume->set_value(oldtodo[i], value_);
+    
 
     // For each axis
-    for (unsigned int a = 0; a < index.size(); ++a) {
-      // Visit the previous and next neighbor indices along this axis
-      for (int dir = -1; dir < 2; dir +=2) {
-        // Neighbor index starts as current index
-        vector<int> neighbor_index = index;
-        // Index adjusted in direction we're looking at along axis
-        neighbor_index[a] = neighbor_index[a] + dir;
-        // Bail if this index is outside the volume
-        if (!volume->index_valid(neighbor_index)) continue;
-
-        // Check to see if flood fill has already been here
-        unsigned char visited;
-        nrrd_get_value(done->nrrd, neighbor_index, visited);
-        // Bail if the voxel has been visited
-        if (visited) continue;
-
-        // Now check to see if this pixel is a candidate to be filled
-        double neighborval;
-        volume->get_value(neighbor_index, neighborval);
-        // Bail if the voxel is outside the flood fill range
-        if (neighborval < min_ || neighborval > max_) continue;
-        
-        todo.push_back(neighbor_index);
+    for (unsigned int i = 0; i < oldtodo.size(); ++i) {
+      for (unsigned int a = 1; a < axes; ++a) {
+        // Visit the previous and next neighbor indices along this axis
+        for (int dir = -1; dir < 2; dir +=2) {
+          // Neighbor index starts as current index
+          vector<int> neighbor_index = oldtodo[i];
+          // Index adjusted in direction we're looking at along axis
+          neighbor_index[a] = neighbor_index[a] + dir;
+          // Bail if this index is outside the volume
+          if (!volume->index_valid(neighbor_index)) continue;
+          
+          // Check to see if flood fill has already been here
+          unsigned char visited;
+          nrrd_get_value(done->nrrd, neighbor_index, visited);
+          // Bail if the voxel has been visited
+          if (visited) continue;
+          
+          // Now check to see if this pixel is a candidate to be filled
+          double neighborval;
+          volume->get_value(neighbor_index, neighborval);
+          // Bail if the voxel is outside the flood fill range
+          if (neighborval < min_ || neighborval > max_) continue;
+          // Mark this voxel as visited
+          nrrd_set_value(done->nrrd, neighbor_index, (unsigned char)1);
+          
+          todo.push_back(neighbor_index);
+        }
       }
     }
   }
@@ -812,24 +820,21 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 string *
 Painter::FloodfillTool::mouse_motion(MouseState &mouse)
 {
-  if (mouse.state_ & MouseState::BUTTON_1_E == 0 &&
-      mouse.state_ & MouseState::BUTTON_3_E) return 0;
-
   NrrdVolume *volume = painter_->current_volume_;
   if (!volume) return 0;
-
   vector<int> index = volume->world_to_index(mouse.position_);
   if (!volume->index_valid(index)) return 0;
+
   double val;
   volume->get_value(index, val);
 
-  if (mouse.state_ & MouseState::BUTTON_1_E) {
+  if (mouse.button(1)) {
     min_ = Min(min_, val);
     max_ = Max(max_, val);
     cerr << "Min: " << min_ << "  Max: " << max_ << std::endl;
   }
   
-  if (mouse.state_ & MouseState::BUTTON_3_E) {
+  if (mouse.button(3)) {
     value_ = val;
     cerr << "value: " << value_ << std::endl;
   }
@@ -843,13 +848,6 @@ Painter::FloodfillTool::draw(SliceWindow &window)
 {
   return 0;
 }
-
-string *
-Painter::FloodfillTool::draw_mouse(MouseState &mouse)
-{
-  return 0;
-}
-
 
 
 
@@ -1095,25 +1093,32 @@ Painter::PaintTool::mouse_button_press(MouseState &mouse)
       window->paint_layer_ = 
         scinew NrrdSlice(painter_, painter_->current_volume_, 
                          window->center_, window->normal_);
-      NrrdSlice &paint = *window->paint_layer_;
-      paint.bind();
-
-      Nrrd *nrrd = paint.texture_->nrrd_->nrrd;
-      memset(nrrd->data, 0, nrrd_data_size(nrrd));
+      window->paint_layer_->bind();;
     }
+    last_index_ = 
+      window->paint_layer_->volume_->world_to_index(mouse.position_);
+    
+    vector<int> index1(last_index_.size()-1, 0);
+    for (unsigned int i = 0, j=0; i < last_index_.size(); ++i) 
+      if (int(i) != (window->axis_+1)) {
+        index1[j] = last_index_[i];
+        ++j;
+      }
+    
+    splat(window->paint_layer_->texture_->nrrd_->nrrd, radius_, 
+          index1[1], index1[2]);
 
-    //    paint.texture_->set_clut_minmax(0.0, 1.0);
-    //    ColorMapHandle cmap = 0;
-    //    paint.texture_->set_colormap(cmap);
-    //    
-    last_index_ = window->paint_layer_->volume_->world_to_index(mouse.position_);
+    window->paint_layer_->texture_->apply_colormap(index1[1], index1[2],
+                                                   index1[1]+1, index1[2]+1,
+                                                   Ceil(radius_));
+
+    //    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();    
     drawing_ = true;
   } else if (mouse.button_ == 4) {
-    radius_ += 2;
-    cerr << "radius: " << radius_ << std::endl;
+    radius_ *= 1.1;
   } else if (mouse.button_ == 5) {
-    radius_ = Clamp(radius_-2, 1.0, radius_);
-    cerr << "radius: " << radius_ << std::endl;
+    radius_ /= 1.1;
   }
 
   return 0;
@@ -1123,15 +1128,15 @@ string *
 Painter::PaintTool::mouse_button_release(MouseState &mouse)
 
 {  
-  if (mouse.state_ & MouseState::BUTTON_1_E) {
+  if (mouse.button_ == 1) {
     drawing_ = false;
   }
   
 
-  if (mouse.state_ & MouseState::BUTTON_3_E) {
+  if (mouse.button_ == 3) {
+    if (!mouse.window_->paint_layer_) return 0;
     NrrdSlice &paint = *mouse.window_->paint_layer_;
-    NrrdData *nout = scinew NrrdData();
-    if (nrrdSplice(nout->nrrd,
+    if (nrrdSplice(painter_->current_volume_->nrrd_->nrrd,
                    painter_->current_volume_->nrrd_->nrrd,
                    paint.texture_->nrrd_->nrrd,
                    mouse.window_->axis_+1,
@@ -1143,8 +1148,6 @@ Painter::PaintTool::mouse_button_release(MouseState &mouse)
       free(err);
       return 0;
     }
-
-    painter_->current_volume_->nrrd_ = nout;
                
     if (mouse.window_->paint_layer_) {
       delete mouse.window_->paint_layer_;
@@ -1175,7 +1178,7 @@ Painter::PaintTool::mouse_motion(MouseState &mouse)
     volume->world_to_index(mouse.position_);
   if (!volume->index_valid(index)) return 0;
   
-  if (mouse.state_ & MouseState::BUTTON_1_E && drawing_) {
+  if (mouse.button(1) && drawing_) {
 
     vector<int> index1(index.size()-1, 0);
     vector<int> index2 = index1;
@@ -1191,31 +1194,18 @@ Painter::PaintTool::mouse_motion(MouseState &mouse)
          index1[1], index1[2],
          index2[1], index2[2], true);
 
-         
-        
-//     nrrd_set_value(paint.texture_->nrrd_->nrrd, 
-//                    index2, 1.0);
     paint.texture_->apply_colormap(index1[1], index1[2], 
                                    index2[1], index2[2],
                                    Ceil(radius_));
-    //    painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
   }
 
-  if (mouse.state_ & MouseState::BUTTON_1_E)
+  if (mouse.button(1))
     drawing_ = true;
   
   last_index_ = index;
 
   return 0;
-
-
-//     vector<int> index = 
-//       volume->world_to_index(mouse.position_);
-//     if (!volume->index_valid(index)) return 0;
-//     volume->get_value(index, value_);
-//   }
-
 }
 
 string *
@@ -1225,10 +1215,93 @@ Painter::PaintTool::draw(SliceWindow &window)
 }
 
 
+string *
+Painter::PaintTool::draw_mouse_cursor(MouseState &mouse)
+{
+  glColor4f(1.0, 0.0, 0.0, 1.0);
+  glLineWidth(2.0);
+  glBegin(GL_LINES);
+
+
+  int x0 = Floor(mouse.position_(mouse.window_->x_axis()));
+  int y0 = Floor(mouse.position_(mouse.window_->y_axis()));
+  int z0 = Floor(mouse.position_(mouse.window_->axis_));
+  //  int wid = int(Ceil(radius_));
+  const int wid = Round(radius_);
+  for (int y = y0-wid; y <= y0+wid; ++y)
+    for (int x = x0-wid; x <= x0+wid; ++x) {
+      float dist = sqrt(double(x0-x)*(x0-x)+(y0-y)*(y0-y));
+      if (dist <= radius_ && 
+          sqrt(double(x0-(x+1))*(x0-(x+1))+(y0-(y+0))*(y0-(y+0))) > radius_) {
+        glVertex3d(x+1, y, z0);
+        glVertex3d(x+1, y+1, z0);
+      }
+
+      if (dist <= radius_ && 
+          sqrt(double(x0-(x+0))*(x0-(x+0))+(y0-(y+1))*(y0-(y+1))) > radius_) {
+        glVertex3d(x, y+1, z0);
+        glVertex3d(x+1, y+1, z0);
+      }
+
+      if (dist <= radius_ && 
+          sqrt(double(x0-(x-1))*(x0-(x-1))+(y0-(y+0))*(y0-(y+0))) > radius_) {
+        glVertex3d(x, y, z0);
+        glVertex3d(x, y+1, z0);
+      }
+
+      if (dist <= radius_ && 
+          sqrt(double(x0-(x+0))*(x0-(x+0))+(y0-(y-1))*(y0-(y-1))) > radius_) {
+        glVertex3d(x, y, z0);
+        glVertex3d(x+1, y, z0);
+      }
+
+    }
+
+                 
+
+
+
+//         glVertex3d(mouse.position_.x()+1, mouse.position_.y(), mouse.position_.z());
+
+//       if (x >= 0 && x < nrrd->axis[1].size &&
+//           y >= 0 && y < nrrd->axis[2].size) 
+//         {
+//           index[1] = x;
+//           index[2] = y;
+
+
+//             //            dist = 1.0 - dist;
+//             //            dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
+//             //            dist += painter_->current_volume_->clut_min_;
+//             //            float val;
+//             //            nrrd_get_value(nrrd, index, val);
+//             nrrd_set_value(nrrd, index, Max(dist, val));//nrrd_get_value(nrrd,index);
+//           }
+//         }
+
+
+//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
+//   glVertex3d(mouse.position_.x()+1, mouse.position_.y(), mouse.position_.z());
+  
+//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
+//   glVertex3d(mouse.position_.x()-1, mouse.position_.y(), mouse.position_.z());
+
+//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
+//   glVertex3d(mouse.position_.x(), mouse.position_.y()+1, mouse.position_.z());
+
+//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
+  glVertex3d(mouse.position_.x(), mouse.position_.y()-1, mouse.position_.z());
+  glEnd();
+  glLineWidth(1.0);
+  return 0;
+}
+
+
 
 void
 Painter::PaintTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
 {
+  float val = painter_->current_volume_->clut_max_;
   vector<int> index(3,0);
   const int wid = Round(radius);
   for (int y = y0-wid; y <= y0+wid; ++y)
@@ -1240,11 +1313,11 @@ Painter::PaintTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
           index[2] = y;
           float dist = sqrt(double(x0-x)*(x0-x)+(y0-y)*(y0-y))/radius;
           if (dist <= 1.0) {
-            dist = 1.0 - dist;
-            dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
-            dist += painter_->current_volume_->clut_min_;
-            float val;
-            nrrd_get_value(nrrd, index, val);
+            //            dist = 1.0 - dist;
+            //            dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
+            //            dist += painter_->current_volume_->clut_min_;
+            //            float val;
+            //            nrrd_get_value(nrrd, index, val);
             nrrd_set_value(nrrd, index, Max(dist, val));//nrrd_get_value(nrrd,index);
           }
         }
@@ -1263,7 +1336,6 @@ Painter::PaintTool::line(Nrrd *nrrd, double radius,
   int sx = 1;
   int sy = 1;
   int frac = 0;
-  bool do_splat = false;
   if (dy < 0) { 
     dy = -dy;
     sy = -1; 
@@ -1292,24 +1364,13 @@ Painter::PaintTool::line(Nrrd *nrrd, double radius,
       if (frac >= 0) {
         x0 += sx;
         frac -= dy;
-        //        do_splat = true;
       }
       y0 += sy;
       frac += dx;
-      //      if (do_splat) {
-        splat(nrrd, radius, x0, y0);
-        //        do_splat = true;
-        //      }
+      splat(nrrd, radius, x0, y0);
     }
   }
 }
-
-
-// string *
-// Painter::StatisticsTool::draw_mouse(MouseState &mouse)
-// {
-//   return 0;
-// }
 
 
 /*
@@ -1349,7 +1410,7 @@ Painter::TemplateTool::draw(SliceWindow &window)
 }
 
 string *
-Painter::TemplateTool::draw_mouse(MouseState &mouse)
+Painter::TemplateTool::draw_mouse_cursor(MouseState &mouse)
 {
   return 0;
 }
