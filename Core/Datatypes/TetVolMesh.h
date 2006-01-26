@@ -740,20 +740,24 @@ public:
                                    typename Node::index_type &ni,
                                    const Point &p);
   
-  bool         insert_node_in_cell_face(typename Cell::array_type &tets, 
+  void         insert_node_in_cell_face(typename Cell::array_type &tets, 
                                         typename Node::index_type ni,
                                         typename Cell::index_type ci, 
                                         unsigned int skip);
 
-  bool         insert_node_in_cell_edge(typename Cell::array_type &tets, 
+  void         insert_node_in_cell_edge(typename Cell::array_type &tets, 
                                         typename Node::index_type ni,
                                         typename Cell::index_type ci, 
-                                        unsigned int skip);
+                                        unsigned int skip1,
+                                        unsigned int skip2);
+
+  void         resync_cells(typename Cell::array_type &carray);
 
   bool         insert_node_in_cell_2(typename Cell::array_type &tets, 
                                      typename Node::index_type &ni,
                                      typename Cell::index_type ci, 
-                                     const Point &p);
+                                     const Point &p,
+                                     bool recurse = true);
 
   bool	       insert_node(const Point &p);
   typename Node::index_type	
@@ -2922,7 +2926,7 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
 
 
 template <class Basis>
-bool
+void
 TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets, 
                                             typename Node::index_type pi,
                                             typename Cell::index_type ci,
@@ -2933,30 +2937,27 @@ TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
   delete_cell_faces(ci);
 
   const unsigned int i = ci*4;
+  tets.push_back(ci);
   if (skip == 0)
   {
-    tets.push_back(ci);
     tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
     tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
-      cells_[i+3] = pi;
+    cells_[i+3] = pi;
   }
   else if (skip == 1)
   {
-    tets.push_back(ci);
     tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
     tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
     cells_[i+3] = pi;
   }
   else if (skip == 2)
   {
-    tets.push_back(ci);
     tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
     tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
     cells_[i+3] = pi;
   }
   else if (skip == 3)
   {
-    tets.push_back(ci);
     tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
     tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
     cells_[i+1] = cells_[i+2];
@@ -2967,37 +2968,91 @@ TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
   create_cell_node_neighbors(ci);
   create_cell_edges(ci);
   create_cell_faces(ci);
-
-  return true;
 }
 
+
 template <class Basis>
-bool
+void
 TetVolMesh<Basis>::insert_node_in_cell_edge(typename Cell::array_type &tets, 
                                             typename Node::index_type pi,
                                             typename Cell::index_type ci, 
-                                            unsigned int skip)
+                                            unsigned int skip1,
+                                            unsigned int skip2)
 {
-#if 0
-  pi = add_point(p);
   delete_cell_node_neighbors(ci);
   delete_cell_edges(ci);
   delete_cell_faces(ci);
 
-  tets.resize(4, ci);
-  const unsigned index = ci*4;
-  tets[1] = add_tet(cells_[index+0], cells_[index+3], cells_[index+1], pi);
-  tets[2] = add_tet(cells_[index+1], cells_[index+3], cells_[index+2], pi);
-  tets[3] = add_tet(cells_[index+0], cells_[index+2], cells_[index+3], pi);
-  
-  cells_[index+3] = pi;
-    
+  cout << "insert_node_in_cell_edge called, " << ci << ", "
+       << skip1 << " " << skip2 << "\n";
+
+  bool pushed = false;
+  tets.push_back(ci);
+  const unsigned int i = ci*4;
+  if (skip1 != 0 && skip2 != 0)
+  {
+    // add 1 3 2 pi
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    pushed = true;
+  }
+  if (skip1 != 1 && skip2 != 1)
+  {
+    // add 0 2 3 pi
+    if (pushed)
+    { 
+      cells_[i+1] = cells_[i+2];
+      cells_[i+2] = cells_[i+3];
+      cells_[i+3] = pi;
+    }
+    else
+    {
+      tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+    }
+    pushed = true;
+  }
+  if (skip1 != 2 && skip2 != 2)
+  {
+    // add 0 3 1 pi
+    if (pushed)
+    { 
+      cells_[i+2] = cells_[i+1];
+      cells_[i+1] = cells_[i+3];
+      cells_[i+3] = pi;
+    }
+    else
+    {
+      tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    }
+    pushed = true;
+  }
+  if (skip1 != 3 && skip2 != 3)
+  {
+    // add 0 1 2 pi
+    ASSERTMSG(pushed,
+              "insert_node_in_cell_edge::skip1 or skip2 were invalid.");
+    cells_[i+3] = pi;
+  }
+
   create_cell_node_neighbors(ci);
   create_cell_edges(ci);
   create_cell_faces(ci);
+}
 
-#endif
-  return true;
+
+template <class Basis>
+void
+TetVolMesh<Basis>::resync_cells(typename Cell::array_type &carray)
+{
+  for (unsigned int i = 0; i < carray.size(); i++)
+  {
+    delete_cell_node_neighbors(carray[i]);
+    delete_cell_edges(carray[i]);
+    delete_cell_faces(carray[i]);
+
+    create_cell_node_neighbors(carray[i]);
+    create_cell_edges(carray[i]);
+    create_cell_faces(carray[i]);
+  }
 }
 
 
@@ -3006,7 +3061,8 @@ bool
 TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets, 
                                          typename Node::index_type &pi,
                                          typename Cell::index_type ci, 
-                                         const Point &p)
+                                         const Point &p,
+                                         bool recurse)
 {
   const Point &p0 = points_[cells_[ci*4 + 0]];
   const Point &p1 = points_[cells_[ci*4 + 1]];
@@ -3039,12 +3095,132 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
   else if (mask == 8) { tets.clear(); pi = cells_[ci*4 + 3]; return true; }
 
   // If we're on an edge, we do an edge insert.
-  else if (mask == 3) { /* on 0-1 edge */}
-  else if (mask == 5) { /* on 0-2 edge */}
-  else if (mask == 6) { /* on 1-2 edge */}
-  else if (mask == 9) { /* on 0-3 edge */}
-  else if (mask == 10) { /* on 1-3 edge */}
-  else if (mask == 12) { /* on 2-3 edge */}
+  else if (mask == 3)
+  { /* on 0-1 edge */
+    const unsigned int skip1 = 2;
+    const unsigned int skip2 = 3;
+    typename Cell::array_type nbrs;
+    if (recurse)
+    {
+      typename Edge::index_type edge = ci * 6 + 0;
+      get_cells(nbrs, edge);
+      pi = add_point(p);
+      tets.clear();
+    }
+    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
+    for (unsigned int i = 0; i < nbrs.size(); i++)
+    {
+      if (nbrs[i] != ci)
+      {
+        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
+      }
+    }
+  }
+  else if (mask == 5)
+  { /* on 0-2 edge */
+    const unsigned int skip1 = 1;
+    const unsigned int skip2 = 3;
+    typename Cell::array_type nbrs;
+    if (recurse)
+    {
+      typename Edge::index_type edge = ci * 6 + 1;
+      get_cells(nbrs, edge);
+      pi = add_point(p);
+      tets.clear();
+    }
+    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
+    for (unsigned int i = 0; i < nbrs.size(); i++)
+    {
+      if (nbrs[i] != ci)
+      {
+        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
+      }
+    }
+  }
+  else if (mask == 6)
+  { /* on 1-2 edge */
+    const unsigned int skip1 = 0;
+    const unsigned int skip2 = 3;
+    typename Cell::array_type nbrs;
+    if (recurse)
+    {
+      typename Edge::index_type edge = ci * 6 + 3;
+      get_cells(nbrs, edge);
+      pi = add_point(p);
+      tets.clear();
+    }
+    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
+    for (unsigned int i = 0; i < nbrs.size(); i++)
+    {
+      if (nbrs[i] != ci)
+      {
+        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
+      }
+    }
+  }
+  else if (mask == 9)
+  { /* on 0-3 edge */
+    const unsigned int skip1 = 1;
+    const unsigned int skip2 = 2;
+    typename Cell::array_type nbrs;
+    if (recurse)
+    {
+      typename Edge::index_type edge = ci * 6 + 2;
+      get_cells(nbrs, edge);
+      pi = add_point(p);
+      tets.clear();
+    }
+    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
+    for (unsigned int i = 0; i < nbrs.size(); i++)
+    {
+      if (nbrs[i] != ci)
+      {
+        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
+      }
+    }
+  }
+  else if (mask == 10)
+  { /* on 1-3 edge */
+    const unsigned int skip1 = 0;
+    const unsigned int skip2 = 2;
+    typename Cell::array_type nbrs;
+    if (recurse)
+    {
+      typename Edge::index_type edge = ci * 6 + 5;
+      get_cells(nbrs, edge);
+      pi = add_point(p);
+      tets.clear();
+    }
+    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
+    for (unsigned int i = 0; i < nbrs.size(); i++)
+    {
+      if (nbrs[i] != ci)
+      {
+        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
+      }
+    }
+  }
+  else if (mask == 12)
+  { /* on 2-3 edge */
+    const unsigned int skip1 = 0;
+    const unsigned int skip2 = 1;
+    typename Cell::array_type nbrs;
+    if (recurse)
+    {
+      typename Edge::index_type edge = ci * 6 + 4;
+      get_cells(nbrs, edge);
+      pi = add_point(p);
+      tets.clear();
+    }
+    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
+    for (unsigned int i = 0; i < nbrs.size(); i++)
+    {
+      if (nbrs[i] != ci)
+      {
+        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
+      }
+    }
+  }
 
   // If we're on a face, we do a face insert.
   else if (mask == 7)
@@ -3060,7 +3236,6 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
     {
       insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
     }
-    return true;
   }
   else if (mask == 11)
   { /* on 0 1 3 face */
@@ -3075,7 +3250,6 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
     {
       insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
     }
-    return true;
   }
   else if (mask == 13)
   { /* on 0 2 3 face */
@@ -3090,7 +3264,6 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
     {
       insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
     }
-    return true;
   }
   else if (mask == 14)
   { /* on 1 2 3 face */
@@ -3105,10 +3278,10 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
     {
       insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
     }
-    return true;
   }
 
-  return false; // unreachable.
+  resync_cells(tets);
+  return true;
 }
 
 
