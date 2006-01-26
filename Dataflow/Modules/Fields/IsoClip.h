@@ -1233,7 +1233,7 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     typename FIELD::mesh_type::Cell::array_type attached_cells;
     vector<typename FIELD::mesh_type::Node::index_type> neighbors;
 
-    clipped->get_cells( attached_cells, this_node );
+    clipped->get_elems( attached_cells, this_node );
     clipped->get_neighbors( neighbors, this_node );
 
     Vector offset(0,0,0);
@@ -1275,7 +1275,7 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
     mesh->synchronize( Mesh::NODE_NEIGHBORS_E );
 
-    mesh->get_cells( surrounding_cells, original_index );
+    mesh->get_elems( surrounding_cells, original_index );
     for( j = 0; j < surrounding_cells.size(); j++ )
     {
       typename FIELD::mesh_type::Node::array_type all_nodes;
