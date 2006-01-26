@@ -92,6 +92,10 @@ class Painter : public Module
 {
   class SliceWindow;
   struct MouseState {
+    bool                button(unsigned int);
+    bool                shift();
+    bool                control();
+    bool                alt();
     int                 button_;
     int                 dx_;
     int                 dy_;
@@ -115,7 +119,9 @@ class Painter : public Module
       M4_E              = 128,
       BUTTON_1_E	= 256,
       BUTTON_2_E        = 512,
-      BUTTON_3_E        = 1024
+      BUTTON_3_E        = 1024,
+      BUTTON_4_E        = 2048,
+      BUTTON_5_E        = 4096,
     };
   };
 
@@ -236,7 +242,6 @@ class Painter : public Module
     string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
     string *            draw(SliceWindow &window);
-    string *            draw_mouse(MouseState &);
   private:
     double              value_;
     double              radius_;
@@ -250,7 +255,6 @@ class Painter : public Module
     string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
     string *            draw(SliceWindow &window);
-    string *            draw_mouse(MouseState &);
   private:
     double              value_;
     double              min_;
@@ -306,6 +310,7 @@ class Painter : public Module
     string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
     string *            draw(SliceWindow &window);
+    string *            draw_mouse_cursor(MouseState &);
   private:
     void                line(Nrrd *, double, int, int, int, int, bool);
     void                splat(Nrrd *, double,int,int);

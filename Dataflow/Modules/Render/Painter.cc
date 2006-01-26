@@ -485,8 +485,11 @@ Painter::render_window(SliceWindow &window) {
     window.render_guide_lines(windowpos);
   }
     
-  if (tool_) 
+  if (tool_) {
     tool_->draw(window);
+    if (mouse_.window_ == &window)
+      tool_->draw_mouse_cursor(mouse_);
+  }
 
   window.render_text();
   window.viewport_->release();
@@ -1175,12 +1178,49 @@ Painter::SliceWindow::render_text() {
 
   const int yoff = 19;
   const int xoff = 19;
+  const int vw = viewport_->width();
+  const int vh = viewport_->height();
+  
   const int y_pos = text.height()+2;
   text.set("Zoom: "+to_string(zoom_())+"%");
   text.draw(xoff, yoff);
     
   NrrdVolume *vol = painter_->current_volume_;
+  
+  for (unsigned int s = 0; s < slices_.size(); ++s) {
+    text.set_color(0.0, 0.0, 0.0, 1.0);
+    if (slices_[s]->volume_ == vol) {
+      text.set("->"+slices_[s]->volume_->name_.get());
+      text.draw(vw-2-xoff+1, vh-2-yoff-(y_pos*(slices_.size()-1-s))-1, 
+                FreeTypeTextTexture::ne);
+      text.set_color(240/255.0, 1.0, 0.0, 1.0);
+
+    } else {
+      text.set(slices_[s]->volume_->name_.get());
+      text.draw(vw-2-xoff+1, vh-2-yoff-(y_pos*(slices_.size()-1-s))-1, 
+                FreeTypeTextTexture::ne);
+      text.set_color(1.0, 1.0, 1.0, 1.0);
+
+    }
+
+    text.draw(vw-2-xoff, vh-2-yoff-(y_pos*(slices_.size()-1-s)), 
+              FreeTypeTextTexture::ne);
+  }
+  text.set_color(1.0, 1.0, 1.0, 1.0);
+
+
+  if (painter_->tool_) {
+    text.set(painter_->tool_->get_name());
+    text.set_color(0.0, 0.0, 0.0, 1.0);
+    text.draw(xoff+2+1, vh-2-yoff-1, FreeTypeTextTexture::nw);
+    text.set_color(1.0, 1.0, 1.0, 1.0);
+    text.draw(xoff+2, vh-2-yoff, FreeTypeTextTexture::nw);
+
+  } 
+
+
   if (vol) {
+
     const float ww = vol->clut_max_ - vol->clut_min_;
     const float wl = vol->clut_min_ + ww/2.0;
     text.set("WL: " + to_string(wl) +  " -- WW: " + to_string(ww));
@@ -1725,6 +1765,31 @@ Painter::handle_gui_mouse_leave(GuiArgs &args) {
     redraw_window(*left_window);
 }
 
+bool
+Painter::MouseState::button(unsigned int button)
+{
+  const int mask = MouseState::BUTTON_1_E << (button-1);
+  return (state_ & mask) ? true : false;
+}
+
+bool
+Painter::MouseState::shift()
+{
+  return (state_ & MouseState::SHIFT_E) ? true : false;
+}
+
+bool
+Painter::MouseState::control()
+{
+  return (state_ & MouseState::CONTROL_E) ? true : false;
+}
+
+bool
+Painter::MouseState::alt()
+{
+  return (state_ & MouseState::ALT_E) ? true : false;
+}
+
 void
 Painter::update_mouse_state(GuiArgs &args, bool reset) {
   ASSERT(layouts_.find(args[2]) != layouts_.end());
@@ -1732,6 +1797,18 @@ Painter::update_mouse_state(GuiArgs &args, bool reset) {
 
   mouse_.button_ = args.get_int(3);
   mouse_.state_ = args.get_int(4);
+
+  // Button presses don't set state,
+  // set to make MouseState::button_down() method work on press events
+  switch (mouse_.button_) {
+  case 1: mouse_.state_ |= MouseState::BUTTON_1_E; break;
+  case 2: mouse_.state_ |= MouseState::BUTTON_2_E; break;
+  case 3: mouse_.state_ |= MouseState::BUTTON_3_E; break;
+  case 4: mouse_.state_ |= MouseState::BUTTON_4_E; break;
+  case 5: mouse_.state_ |= MouseState::BUTTON_5_E; break;
+  default: break;
+  }
+
   mouse_.X_ = args.get_int(5);
   mouse_.Y_ = args.get_int(6);
   mouse_.x_ = args.get_int(7);
@@ -1773,31 +1850,31 @@ Painter::handle_gui_mouse_button_press(GuiArgs &args) {
   if (!tool_) {
     switch (mouse_.button_) {
     case 1:
-      if (!tool_ && mouse_.state_ & MouseState::SHIFT_E == MouseState::SHIFT_E)
+      if (!tool_ && mouse_.shift())
         tool_ = scinew PanTool(this);
       else  if (!tool_) 
         tool_ = scinew CLUTLevelsTool(this);
       break;
       
     case 2:
-      if (!tool_ && mouse_.state_ & MouseState::SHIFT_E == MouseState::SHIFT_E)
+      if (!tool_ && mouse_.shift())
         tool_ = scinew AutoviewTool(this);
       else if (!tool_)
         tool_ = scinew ProbeTool(this);
       break;
     case 3:
-      if (!tool_ && mouse_.state_ & MouseState::SHIFT_E == MouseState::SHIFT_E)
+      if (!tool_ && mouse_.shift())
         tool_ = scinew ZoomTool(this);
       break;
     case 4:
-      if (mouse_.state_ & MouseState::CONTROL_E == MouseState::CONTROL_E) 
+      if (mouse_.control()) 
         mouse_.window_->zoom_in();
       else
         mouse_.window_->next_slice();
       break;
       
     case 5:
-      if (mouse_.state_ & MouseState::SHIFT_E == MouseState::SHIFT_E) 
+      if (mouse_.shift())
         mouse_.window_->zoom_out();
       else
         mouse_.window_->prev_slice();
@@ -1909,13 +1986,16 @@ Painter::handle_gui_keypress(GuiArgs &args) {
 
     else if (args[4] == "p") { 
       if (!current_volume_) continue;
-      current_volume_->opacity_ *= 1.1;
-        for_each(&Painter::redraw_window);
+      current_volume_->opacity_ = 
+        Clamp(current_volume_->opacity_+0.05, 0.0, 1.0);
+      
+      for_each(&Painter::redraw_window);
       //      cerr << "Op: " << current_volume_->opacity_ << std::endl;
     }
     else if (args[4] == "o") { 
       if (!current_volume_) continue;
-      current_volume_->opacity_ /= 1.1;
+      current_volume_->opacity_ = 
+        Clamp(current_volume_->opacity_-0.05, 0.0, 1.0);
       for_each(&Painter::redraw_window);
       //      cerr << "Op: " << current_volume_->opacity_ << std::endl;
     }
