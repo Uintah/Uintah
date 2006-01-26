@@ -169,9 +169,9 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
   if (x1 > x2) SWAP(x1,x2);
   if (y1 > y2) SWAP(y1,y2);
   x1 = Clamp(x1-border, 0, nrrd_->nrrd->axis[1].size);
-  x2 = Clamp(x2+border, 0, nrrd_->nrrd->axis[1].size);
+  x2 = Clamp(x2+border+1, 0, nrrd_->nrrd->axis[1].size);
   y1 = Clamp(y1-border, 0, nrrd_->nrrd->axis[2].size);
-  y2 = Clamp(y2+border, 0, nrrd_->nrrd->axis[2].size);
+  y2 = Clamp(y2+border+1, 0, nrrd_->nrrd->axis[2].size);
 
   const float range = (clut_max_ - clut_min_);
   const float scale = (range > 0.00001) ? (1.0 / range) : 1.0;
