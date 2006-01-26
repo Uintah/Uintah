@@ -547,7 +547,7 @@ public:
 
   bool get_neighbor(typename Cell::index_type &neighbor, 
 		    typename Cell::index_type from,
-		   typename Face::index_type idx) const;
+                    typename Face::index_type idx) const;
   // Use this one instead
   bool get_neighbor(typename Face::index_type &neighbor, 
 		    typename Face::index_type idx) const;
@@ -701,8 +701,8 @@ public:
   void elem_reserve(size_t s) { cells_.reserve(s*4); }
 
 
-  //! Subdivision methods
-  //! given 2 cells that share a face, split the 2 tets into 3 by connecting
+  //! Subdivision methods:
+  //! Given 2 cells that share a face, split the 2 tets into 3 by connecting
   //! the 2 nodes not on the shared face.
   bool             split_2_to_3(typename Cell::array_type &new_tets, 
 				typename Node::index_type &c1_node,
@@ -710,7 +710,7 @@ public:
 				typename Cell::index_type c1, 
 				typename Cell::index_type c2, 
 				typename Face::index_type between);
-  //! given a cell, and the face index which is hte boundary face,
+  //! Given a cell, and the face index which is hte boundary face,
   //! split the cell into 3, by adding a point at the center of the boundary
   //! face.
   bool             split_cell_at_boundary(typename Cell::array_type &new_tets, 
@@ -718,12 +718,12 @@ public:
 					  typename Cell::index_type ci, 
 					  typename Face::index_type bface);
 
-  //! given an edge that has exactly 3 tets sharing the edge, create 2 tets in 
+  //! Given an edge that has exactly 3 tets sharing the edge, create 2 tets in 
   //! thier place.  The 3 points not on the edge become a face shared between 
   //! the new 2 tet combo. 
-  //! Warning: this invalidates iterators.  removed has the invalid cell index
+  //! Warning: This invalidates iterators.  removed has the invalid cell index.
   bool         combine_3_to_2(typename Cell::index_type &removed,
-	       		  typename Edge::index_type shared_edge);
+                              typename Edge::index_type shared_edge);
   
   bool         combine_4_to_1_cell(typename Cell::array_type &split_tets, 
 				       set<unsigned int> &removed_tets,
@@ -733,11 +733,28 @@ public:
 					typename Cell::array_type &split_tets);
   void         nbors_from_center_split(typename Cell::index_type ci, 
 		   			typename Cell::array_type &split_tets);
-    
+  
+  //! Always creates 4 tets, does not handle element boundaries properly.
   bool         insert_node_in_cell(typename Cell::array_type &tets, 
-		   		    typename Cell::index_type ci, 
-		   		    typename Node::index_type &ni,
-		   		    const Point &p);
+                                   typename Cell::index_type ci, 
+                                   typename Node::index_type &ni,
+                                   const Point &p);
+  
+  bool         insert_node_in_cell_face(typename Cell::array_type &tets, 
+                                        typename Node::index_type ni,
+                                        typename Cell::index_type ci, 
+                                        unsigned int skip);
+
+  bool         insert_node_in_cell_edge(typename Cell::array_type &tets, 
+                                        typename Node::index_type ni,
+                                        typename Cell::index_type ci, 
+                                        unsigned int skip);
+
+  bool         insert_node_in_cell_2(typename Cell::array_type &tets, 
+                                     typename Node::index_type &ni,
+                                     typename Cell::index_type ci, 
+                                     const Point &p);
+
   bool	       insert_node(const Point &p);
   typename Node::index_type	
                insert_node_watson(const Point &p, 
@@ -2201,7 +2218,7 @@ TetVolMesh<Basis>::get_neighbors(typename Cell::array_type &array,
 template <class Basis>
 void
 TetVolMesh<Basis>::get_neighbors(vector<typename Node::index_type> &array,
-			  typename Node::index_type idx) const
+                                 typename Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TetVolMesh first.");
@@ -2877,8 +2894,9 @@ TetVolMesh<Basis>::orient(typename Cell::index_type ci) {
 template <class Basis>
 bool
 TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets, 
-				typename Cell::index_type ci, 
-				typename Node::index_type &pi, const Point &p)
+                                       typename Cell::index_type ci, 
+                                       typename Node::index_type &pi,
+                                       const Point &p)
 {
   if (!inside(ci, p)) return false;
 
@@ -2901,6 +2919,198 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
 
   return true;
 }
+
+
+template <class Basis>
+bool
+TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets, 
+                                            typename Node::index_type pi,
+                                            typename Cell::index_type ci,
+                                            unsigned int skip)
+{
+  delete_cell_node_neighbors(ci);
+  delete_cell_edges(ci);
+  delete_cell_faces(ci);
+
+  const unsigned int i = ci*4;
+  if (skip == 0)
+  {
+    tets.push_back(ci);
+    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+      cells_[i+3] = pi;
+  }
+  else if (skip == 1)
+  {
+    tets.push_back(ci);
+    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    cells_[i+3] = pi;
+  }
+  else if (skip == 2)
+  {
+    tets.push_back(ci);
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+    cells_[i+3] = pi;
+  }
+  else if (skip == 3)
+  {
+    tets.push_back(ci);
+    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    cells_[i+1] = cells_[i+2];
+    cells_[i+2] = cells_[i+3];
+    cells_[i+3] = pi;
+  }
+  
+  create_cell_node_neighbors(ci);
+  create_cell_edges(ci);
+  create_cell_faces(ci);
+
+  return true;
+}
+
+template <class Basis>
+bool
+TetVolMesh<Basis>::insert_node_in_cell_edge(typename Cell::array_type &tets, 
+                                            typename Node::index_type pi,
+                                            typename Cell::index_type ci, 
+                                            unsigned int skip)
+{
+#if 0
+  pi = add_point(p);
+  delete_cell_node_neighbors(ci);
+  delete_cell_edges(ci);
+  delete_cell_faces(ci);
+
+  tets.resize(4, ci);
+  const unsigned index = ci*4;
+  tets[1] = add_tet(cells_[index+0], cells_[index+3], cells_[index+1], pi);
+  tets[2] = add_tet(cells_[index+1], cells_[index+3], cells_[index+2], pi);
+  tets[3] = add_tet(cells_[index+0], cells_[index+2], cells_[index+3], pi);
+  
+  cells_[index+3] = pi;
+    
+  create_cell_node_neighbors(ci);
+  create_cell_edges(ci);
+  create_cell_faces(ci);
+
+#endif
+  return true;
+}
+
+
+template <class Basis>
+bool
+TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets, 
+                                         typename Node::index_type &pi,
+                                         typename Cell::index_type ci, 
+                                         const Point &p)
+{
+  const Point &p0 = points_[cells_[ci*4 + 0]];
+  const Point &p1 = points_[cells_[ci*4 + 1]];
+  const Point &p2 = points_[cells_[ci*4 + 2]];
+  const Point &p3 = points_[cells_[ci*4 + 3]];
+  
+  // Compute all the new tet areas.
+  const double a0 = fabs(Dot(Cross(p1 - p, p2 - p), p3 - p));
+  const double a1 = fabs(Dot(Cross(p - p0, p2 - p0), p3 - p0));
+  const double a2 = fabs(Dot(Cross(p1 - p0, p - p0), p3 - p0));
+  const double a3 = fabs(Dot(Cross(p1 - p0, p2 - p0), p - p0));
+
+  unsigned int mask = 0;
+  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
+  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
+  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
+  if (a3 >= MIN_ELEMENT_VAL) { mask |= 8; }
+
+  // If we're completely inside then we do a normal 4 tet insert.
+  // Test this first because it's most common.
+  if (mask == 15) { return insert_node_in_cell(tets, ci, pi, p); }
+
+  // If the tet is degenerate then we just return any corner and are done.
+  else if (mask == 0) { tets.clear(); pi = cells_[ci*4 + 0]; return true; }
+
+  // If we're on a corner, we're done.  The corner is the point.
+  else if (mask == 1) { tets.clear(); pi = cells_[ci*4 + 0]; return true; }
+  else if (mask == 2) { tets.clear(); pi = cells_[ci*4 + 1]; return true; }
+  else if (mask == 4) { tets.clear(); pi = cells_[ci*4 + 2]; return true; }
+  else if (mask == 8) { tets.clear(); pi = cells_[ci*4 + 3]; return true; }
+
+  // If we're on an edge, we do an edge insert.
+  else if (mask == 3) { /* on 0-1 edge */}
+  else if (mask == 5) { /* on 0-2 edge */}
+  else if (mask == 6) { /* on 1-2 edge */}
+  else if (mask == 9) { /* on 0-3 edge */}
+  else if (mask == 10) { /* on 1-3 edge */}
+  else if (mask == 12) { /* on 2-3 edge */}
+
+  // If we're on a face, we do a face insert.
+  else if (mask == 7)
+  { /* on 0 1 2 face */
+    const unsigned int skip = 3;
+    typename Face::index_type fi = ci * 4 + skip;
+    typename Face::index_type nbr;
+    const bool have_neighbor = get_neighbor(nbr, fi);
+    pi = add_point(p);
+    tets.clear();
+    insert_node_in_cell_face(tets, pi, ci, skip);
+    if (have_neighbor)
+    {
+      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
+    }
+    return true;
+  }
+  else if (mask == 11)
+  { /* on 0 1 3 face */
+    const unsigned int skip = 2;
+    typename Face::index_type fi = ci * 4 + skip;
+    typename Face::index_type nbr;
+    const bool have_neighbor = get_neighbor(nbr, fi);
+    pi = add_point(p);
+    tets.clear();
+    insert_node_in_cell_face(tets, pi, ci, skip);
+    if (have_neighbor)
+    {
+      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
+    }
+    return true;
+  }
+  else if (mask == 13)
+  { /* on 0 2 3 face */
+    const unsigned int skip = 1;
+    typename Face::index_type fi = ci * 4 + skip;
+    typename Face::index_type nbr;
+    const bool have_neighbor = get_neighbor(nbr, fi);
+    pi = add_point(p);
+    tets.clear();
+    insert_node_in_cell_face(tets, pi, ci, skip);
+    if (have_neighbor)
+    {
+      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
+    }
+    return true;
+  }
+  else if (mask == 14)
+  { /* on 1 2 3 face */
+    const unsigned int skip = 0;
+    typename Face::index_type fi = ci * 4 + skip;
+    typename Face::index_type nbr;
+    const bool have_neighbor = get_neighbor(nbr, fi);
+    pi = add_point(p);
+    tets.clear();
+    insert_node_in_cell_face(tets, pi, ci, skip);
+    if (have_neighbor)
+    {
+      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
+    }
+    return true;
+  }
+
+  return false; // unreachable.
+}
+
 
 template <class Basis>
 bool
