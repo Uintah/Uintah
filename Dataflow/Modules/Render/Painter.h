@@ -314,7 +314,7 @@ class Painter : public Module
   private:
     void                line(Nrrd *, double, int, int, int, int, bool);
     void                splat(Nrrd *, double,int,int);
-    
+    float               value_;
     vector<int>         last_index_;
     double              radius_;
     bool                drawing_;

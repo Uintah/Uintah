@@ -1074,6 +1074,8 @@ Painter::StatisticsTool::draw(SliceWindow &window)
 
 Painter::PaintTool::PaintTool(Painter *painter) :
   PainterTool(painter, "Paint"),
+  value_(airNaN()),
+  last_index_(0.0),
   radius_(5.0),
   drawing_(false)
 {
@@ -1096,6 +1098,9 @@ Painter::PaintTool::mouse_button_press(MouseState &mouse)
                          window->center_, window->normal_);
       window->paint_layer_->bind();;
     }
+    if (airIsNaN(value_))
+      value_ = painter_->current_volume_->clut_max_;
+
     last_index_ = 
       window->paint_layer_->volume_->world_to_index(mouse.position_);
     
@@ -1116,6 +1121,13 @@ Painter::PaintTool::mouse_button_press(MouseState &mouse)
     //    painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();    
     drawing_ = true;
+  } else if (mouse.button_ == 3) {
+    vector<int> index = 
+      painter_->current_volume_->world_to_index(mouse.position_);
+    if (painter_->current_volume_->index_valid(index))
+      painter_->current_volume_->get_value(index, value_);
+    radius_ *= 1.1;
+    painter_->redraw_all();    
   } else if (mouse.button_ == 4) {
     radius_ *= 1.1;
     painter_->redraw_all();    
@@ -1136,7 +1148,7 @@ Painter::PaintTool::mouse_button_release(MouseState &mouse)
   }
   
 
-  if (mouse.button_ == 3) {
+  if (mouse.button_ == 2) {
     if (!mouse.window_->paint_layer_) return 0;
     NrrdSlice &paint = *mouse.window_->paint_layer_;
     if (nrrdSplice(painter_->current_volume_->nrrd_->nrrd,
@@ -1304,7 +1316,6 @@ Painter::PaintTool::draw_mouse_cursor(MouseState &mouse)
 void
 Painter::PaintTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
 {
-  float val = painter_->current_volume_->clut_max_;
   vector<int> index(3,0);
   const int wid = Round(radius);
   for (int y = y0-wid; y <= y0+wid; ++y)
@@ -1321,7 +1332,7 @@ Painter::PaintTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             //            dist += painter_->current_volume_->clut_min_;
             //            float val;
             //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, Max(dist, val));//nrrd_get_value(nrrd,index);
+            nrrd_set_value(nrrd, index, Max(dist, value_));//nrrd_get_value(nrrd,index);
           }
         }
 }
