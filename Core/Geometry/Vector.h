@@ -75,7 +75,9 @@ public:
   friend inline double Dot(const Point&, const Vector&);
   friend inline double Dot(const Vector&, const Point&);
   inline Vector& operator=(const Vector&);
-
+  inline Vector& operator=(const double&);
+  inline Vector& operator=(const int&);
+  
 #ifdef COMMENT_OUT
   /* !!!
   () index from 0
@@ -236,6 +238,47 @@ inline Vector& Vector::operator=(const Vector& v)
     _z=v._z;
     return *this;
 }
+
+// for initializing in dynamic code
+// one often want template<class T> T val = 0.0;
+
+inline Vector& Vector::operator=(const double& d)
+{
+  _x = d;
+  _y = d;
+  _z = d;
+  return *this;
+}
+
+inline Vector& Vector::operator=(const int& d)
+{
+  _x = static_cast<int>(d);
+  _y = static_cast<int>(d);
+  _z = static_cast<int>(d);
+  return *this;
+}
+
+inline bool operator<(Vector v1, Vector v2)
+{
+  return(v1.length()<v2.length());
+}
+
+inline bool operator<=(Vector v1, Vector v2)
+{
+  return(v1.length()<=v2.length());
+}
+
+inline bool operator>(Vector v1, Vector v2)
+{
+  return(v1.length()>v2.length());
+}
+
+inline bool operator>=(Vector v1, Vector v2)
+{
+  return(v1.length()>=v2.length());
+}
+
+
 
 inline Vector Vector::operator*(const double s) const
 {

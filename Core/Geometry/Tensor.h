@@ -68,6 +68,7 @@ public:
   Tensor(const double **);
   Tensor(const Vector&, const Vector&, const Vector&);
   Tensor& operator=(const Tensor&);
+  Tensor& operator=(const double&);
   virtual ~Tensor();
   
   // checks if one tensor is exactly the same as another
@@ -86,6 +87,8 @@ public:
   double mat_[3][3];
   void build_mat_from_eigens();
   void build_eigens_from_mat();
+
+  double norm();
 
   bool have_eigens() { return have_eigens_; }
   void get_eigenvectors(Vector &e1, Vector &e2, Vector &e3);
@@ -107,6 +110,26 @@ public:
 
   friend void Pio(Piostream&, Tensor&);
 };
+
+inline bool operator<(Tensor t1, Tensor t2)
+{
+  return(t1.norm()<t2.norm());
+}
+
+inline bool operator<=(Tensor t1, Tensor t2)
+{
+  return(t1.norm()<=t2.norm());
+}
+
+inline bool operator>(Tensor t1, Tensor t2)
+{
+  return(t1.norm()>t2.norm());
+}
+
+inline bool operator>=(Tensor t1, Tensor t2)
+{
+  return(t1.norm()>=t2.norm());
+}
 
 inline 
 Tensor operator*(double d, const Tensor &t) {
