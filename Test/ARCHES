@@ -10,9 +10,10 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
                            ["<patches>[2,2,2]</patches>", \
                             "<maxTime>10.0</maxTime>"])
 
-TESTS = [   ("methane_explicit", "methane_explicit_table.ups", "", 1.1, "ALL", "chem_meth"), \
+UNUSED_TESTS = [   ("methane_explicit", "methane_explicit_table.ups", "", 1.1, "ALL", "chem_meth"), \
             ("methane_explicit_8patch", methane8patch_ups, "", 8, "ALL","chem_meth")
     	]
+TESTS = []
 
 def chemfile (test):
     return test[5]
