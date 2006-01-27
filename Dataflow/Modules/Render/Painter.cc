@@ -128,6 +128,34 @@ namespace SCIRun {
 
   */
 
+
+#if 1
+#define TIMER(msg)
+#define STARTTIMER()
+#define STOPTIMER()
+
+#elif
+
+static CPUTimer cputimer;
+
+#define TIMER(msg) \
+  cputimer.stop(); \
+  if (!sci_getenv_p("TIMER_OFF")) \
+     cerr << msg << " " << cputimer.time()*1000 << std::endl; \
+  cputimer.clear(); \
+  cputimer.start();
+
+#define STARTTIMER() \
+  cputimer.clear(); \
+  cputimer.start();
+
+#define STOPTIMER() \
+  cputimer.stop();
+
+#endif  
+
+
+
 Painter::RealDrawer::~RealDrawer()
 {
 }
@@ -268,10 +296,11 @@ Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
   mutex_(gui_context_->getfullname().c_str()),
   data_min_(0),
   data_max_(1.0),
-  colormap_(ctx->subVar("colormap"), 0),
+  colormap_(ctx->subVar("colormap")),
   stub_axes_(),
   transform_()
 {
+  if (!colormap_.valid()) colormap_.set(0);
   set_nrrd(nrrd);
 }
 
@@ -330,8 +359,9 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
   if (clear) 
     memset(nrrd_->nrrd->data, 0, nrrd_data_size(nrrd_->nrrd));
 
-  set_nrrd(nrrd_);
   mutex_.unlock();
+  set_nrrd(nrrd_);
+
   copy->mutex_.unlock();
 }
 
@@ -404,9 +434,11 @@ Painter::Painter(GuiContext* ctx) :
   volumes_(),
   volume_map_(),
   current_volume_(0),
+  undo_volume_(0),
   colormaps_(),
   tool_(0),
   anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
+  show_grid_(ctx->subVar("show_grid"), 1),
   show_text_(ctx->subVar("show_text"), 1),
   font_r_(ctx->subVar("color_font_r"), 1.0),
   font_g_(ctx->subVar("color_font_g"), 1.0),
@@ -457,7 +489,12 @@ Painter::render_window(SliceWindow &window) {
   if (!window.redraw_) return 0;
   window.redraw_ = false;
   window.viewport_->make_current();
-  window.viewport_->clear();
+
+  STARTTIMER();
+
+  //  window.viewport_->clear();
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
   window.setup_gl_view();
   if (window.autoview_) {
     window.autoview_ = false;
@@ -466,7 +503,7 @@ Painter::render_window(SliceWindow &window) {
   }
   CHECK_OPENGL_ERROR();
 
-
+  TIMER("\n\nSetup GL View:");
 
   for (unsigned int s = 0; s < window.slices_.size(); ++s) {
 
@@ -476,22 +513,39 @@ Painter::render_window(SliceWindow &window) {
     else 
       window.slices_[s]->draw();
   }
-      
+
+  TIMER("Draw Slices:");
+
   draw_slice_lines(window);
-  window.render_grid();
+
+  TIMER("Draw Slice lines:");
+
+  if (show_grid_()) 
+    window.render_grid();
+
+  TIMER("Render Grid:");
 
   if (mouse_.window_ == &window) {
     Point windowpos(mouse_.x_, mouse_.y_, 0);
     window.render_guide_lines(windowpos);
   }
-    
+
+  TIMER("Render guide lines:");
+
   if (tool_) {
     tool_->draw(window);
     if (mouse_.window_ == &window)
       tool_->draw_mouse_cursor(mouse_);
   }
 
+  TIMER("Tool draw: ");
+
   window.render_text();
+
+  TIMER("Render Text: ");
+
+  STOPTIMER();
+
   window.viewport_->release();
 
   CHECK_OPENGL_ERROR();
@@ -746,8 +800,11 @@ Painter::SliceWindow::render_grid()
   }
   double gap = gaps[selected];
 
+  TIMER("Grid gaps:");
+
   const int vw = viewport_->width();
   const int vh = viewport_->height();
+  TIMER("Viewport:");
 
 
   double grey1[4] = { 0.75, 0.75, 0.75, 1.0 };
@@ -758,6 +815,7 @@ Painter::SliceWindow::render_grid()
   render_frame(15,15, 3, 3, white, grey2 );
   render_frame(17,17, 2, 2, grey3);
 
+  TIMER("Render frame:");
   double grid_color = 0.0;
 
   glDisable(GL_TEXTURE_2D);
@@ -777,7 +835,7 @@ Painter::SliceWindow::render_grid()
   lab.push_back("X: ");
   lab.push_back("Y: ");
   lab.push_back("Z: ");
-  
+  TIMER("Text:");
 
   int num = 0;
   Point linemin = min;
@@ -807,6 +865,10 @@ Painter::SliceWindow::render_grid()
 
     num++;
   }
+  text.set("X");
+  int wid = text.width();
+
+  TIMER("horizontal:");
 
   num = 0;
   linemin = linemax = min;
@@ -820,22 +882,18 @@ Painter::SliceWindow::render_grid()
     glEnd();
     
     text.set(to_string(linemin(yax)));
+
     Point pos = world_to_screen(linemin);
     text.set_color(1,1,1,1);
-    render_vertical_text(&text, text.width()/2, pos.y()+2);
+    render_vertical_text(&text, wid/2, pos.y()+2);
     text.set_color(grid_color, grid_color, grid_color, 1.0);
-    text.set(to_string(linemin(yax)));
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    render_vertical_text(&text, text.width()/2, pos.y()+1);
+    render_vertical_text(&text, wid/2, pos.y()+1);
 
-    text.set(to_string(linemin(yax)));
-     pos = world_to_screen(linemax);
+    pos = world_to_screen(linemax);
     text.set_color(1,1,1,1);
-    render_vertical_text(&text, vw-2-text.width()/2, pos.y()+1);
+    render_vertical_text(&text, vw-2-wid/2, pos.y()+1);
     text.set_color(grid_color, grid_color, grid_color, 1.0);
-    text.set(to_string(linemin(yax)));
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    render_vertical_text(&text, vw-2-text.width()/2, pos.y());
+    render_vertical_text(&text, vw-2-wid/2, pos.y());
 
 
 #if 0
@@ -851,9 +909,10 @@ Painter::SliceWindow::render_grid()
     text.set_color(grid_color, grid_color, grid_color, 1.0);
     text.draw(pos.x(), pos.y()+1, FreeTypeTextTexture::se);
 #endif
-    CHECK_OPENGL_ERROR();
     num++;
   }
+  TIMER("vertical:");
+  CHECK_OPENGL_ERROR();
 }
 
 
@@ -1119,9 +1178,9 @@ Painter::NrrdSlice::bind()
 ColorMapHandle
 Painter::get_colormap(int id)
 {
-  if (id >= 0 && id < int(colormap_names_.size()) &&
-      colormaps_.find(colormap_names_[id]) != colormaps_.end())
-    return colormaps_[colormap_names_[id]];
+  if (id > 0 && id <= int(colormap_names_.size()) &&
+      colormaps_.find(colormap_names_[id-1]) != colormaps_.end())
+    return colormaps_[colormap_names_[id-1]];
   return 0;
 }
     
@@ -1130,6 +1189,7 @@ void
 Painter::NrrdSlice::draw()
 {
   if (nrrd_dirty_) {
+    cerr << "draw nrrd_dirty " << volume_->name_.get() << std::endl;
     set_coords();
     nrrd_dirty_ = false;
     tex_dirty_ = true;
@@ -1157,11 +1217,12 @@ Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
                                            double x, double y)
 {
   string str = text->get_string();
+  int hei = text->height();
   for (unsigned int i = 0; i < str.length(); ++i) 
   {
     text->set(str.substr(i, 1));
     text->draw(x,y, FreeTypeTextTexture::n);
-    y -= 2 + text->height();
+    y -= 2 + hei;
   }
 }
 
@@ -1169,7 +1230,7 @@ Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
 
 void
 Painter::SliceWindow::render_text() {
-  if (!painter_->show_text_) return;
+  if (!painter_->show_text_()) return;
 
   FreeTypeFace *font = painter_->fonts_["default"];
   if (!font) return;
@@ -1317,9 +1378,12 @@ Painter::NrrdSlice::set_coords() {
 
 int
 Painter::extract_window_slices(SliceWindow &window) {
-  for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s)
+  for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s) {
+    if (volumes_[s] == current_volume_) 
+      window.center_ = current_volume_->center();
     window.slices_.push_back(scinew NrrdSlice(this, volumes_[s], 
                                               window.center_, window.normal_));
+  }
   for (unsigned int s = 0; s < volumes_.size(); ++s) {
     window.slices_[s]->volume_ = volumes_[s];
     window.slices_[s]->plane_ = Plane(window.center_, window.normal_);
@@ -1713,8 +1777,9 @@ Painter::execute()
     iter++;
   }
 
-  if (volumes_.size()) 
-    current_volume_ = volumes_.back();      
+  if (volumes_.size())
+    current_volume_ = volumes_.back();
+        
 
   for_each(&Painter::extract_window_slices);
   for_each(&Painter::mark_autoview);
@@ -1795,18 +1860,21 @@ Painter::update_mouse_state(GuiArgs &args, bool reset) {
   ASSERT(layouts_.find(args[2]) != layouts_.end());
   WindowLayout &layout = *layouts_[args[2]];
 
-  mouse_.button_ = args.get_int(3);
   mouse_.state_ = args.get_int(4);
 
-  // Button presses don't set state,
-  // set to make MouseState::button_down() method work on press events
-  switch (mouse_.button_) {
-  case 1: mouse_.state_ |= MouseState::BUTTON_1_E; break;
-  case 2: mouse_.state_ |= MouseState::BUTTON_2_E; break;
-  case 3: mouse_.state_ |= MouseState::BUTTON_3_E; break;
-  case 4: mouse_.state_ |= MouseState::BUTTON_4_E; break;
-  case 5: mouse_.state_ |= MouseState::BUTTON_5_E; break;
-  default: break;
+  // The button parameter may be invalid on motion events (mainly OS X)
+  if (args[1] != "motion") {
+    mouse_.button_ = args.get_int(3);
+    // Button presses don't set state,
+    // set to make MouseState::button_down() method work on press events
+    switch (mouse_.button_) {
+    case 1: mouse_.state_ |= MouseState::BUTTON_1_E; break;
+    case 2: mouse_.state_ |= MouseState::BUTTON_2_E; break;
+    case 3: mouse_.state_ |= MouseState::BUTTON_3_E; break;
+    case 4: mouse_.state_ |= MouseState::BUTTON_4_E; break;
+    case 5: mouse_.state_ |= MouseState::BUTTON_5_E; break;
+    default: break;
+    }
   }
 
   mouse_.X_ = args.get_int(5);
@@ -1963,6 +2031,8 @@ Painter::handle_gui_keypress(GuiArgs &args) {
     else if (args[4] == "0") set_axis(window, 0);
     else if (args[4] == "1") set_axis(window, 1);
     else if (args[4] == "2") set_axis(window, 2);
+    else if (args[4] == "s") want_to_execute();
+    else if (args[4] == "u") undo_volume();
     else if (args[4] == "f") { 
       if (!tool_) 
         tool_ = scinew FloodfillTool(this);
@@ -1972,12 +2042,12 @@ Painter::handle_gui_keypress(GuiArgs &args) {
         tool_ = scinew PaintTool(this);
     }
     else if (args[4] == "h") { 
-      if (!tool_) 
-        tool_ = scinew ITKThresholdTool(this, false);
+      //      if (!tool_) 
+      //        tool_ = scinew ITKThresholdTool(this, false);
     }
     else if (args[4] == "i") { 
-      if (!tool_) 
-        tool_ = scinew ITKThresholdTool(this, true);
+//       if (!tool_) 
+//         tool_ = scinew ITKThresholdTool(this, true);
     }
     else if (args[4] == "j") { 
       if (!tool_) 
@@ -2000,8 +2070,8 @@ Painter::handle_gui_keypress(GuiArgs &args) {
       //      cerr << "Op: " << current_volume_->opacity_ << std::endl;
     }
     else if (args[4] == "d") { 
-      create_volume((NrrdVolumes *)1);
-      extract_window_slices(window);
+//       create_volume((NrrdVolumes *)1);
+//       extract_window_slices(window);
     }
     else if (args[4] == "r") {
       if (current_volume_) {
@@ -2011,12 +2081,12 @@ Painter::handle_gui_keypress(GuiArgs &args) {
         for_each(&Painter::redraw_window);
       }
     } else if (args[4] == "m") {
-      window.mode_ = (window.mode_+1)%num_display_modes_e;
-      extract_window_slices(window);
-      redraw_window(window);
+//       window.mode_ = (window.mode_+1)%num_display_modes_e;
+//       extract_window_slices(window);
+//       redraw_window(window);
     } 
-    else if (args[4] == "Left") layer_up();
-    else if (args[4] == "Right") layer_down();
+    else if (args[4] == "Left") layer_down();
+    else if (args[4] == "Right") layer_up(); 
     else if (args[4] == "Down") {
       if (volumes_.size() < 2 || current_volume_ == volumes_[0]) 
         return;
@@ -2284,6 +2354,40 @@ Painter::create_volume(string name, int nrrdType) {
   for_each(&Painter::extract_window_slices);
   return current_volume_;
 }
+
+void
+Painter::create_undo_volume() {
+  if (undo_volume_) 
+    delete undo_volume_;
+  string newname = current_volume_->name_.get()+"-UNDO";
+  undo_volume_ = scinew NrrdVolume(current_volume_, newname);
+}
+
+void
+Painter::undo_volume() {
+  if (!undo_volume_) return;
+  undo_volume_->mutex_.lock();
+  current_volume_->mutex_.lock();
+  undo_volume_->name_.set(current_volume_->name_.get());
+  volume_map_[current_volume_->name_.get()] = undo_volume_;
+
+  volumes_.clear();
+  NrrdVolumeMap::iterator iter=volume_map_.begin(), last=volume_map_.end();
+  while (iter != last) {
+    volumes_.push_back(iter->second);
+    iter++;
+  }
+  
+  for_each(&Painter::extract_window_slices);
+  current_volume_->mutex_.unlock();
+  delete current_volume_;
+  current_volume_ = undo_volume_;
+  undo_volume_ = 0;
+  current_volume_->mutex_.unlock();
+}
+
+  
+
 
     
 } // end namespace SCIRun
