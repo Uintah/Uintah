@@ -208,6 +208,30 @@ Tensor& Tensor::operator=(const Tensor& copy)
   return *this;
 }
 
+Tensor& Tensor::operator=(const double& d)
+{
+  for(int i=0;i<3;i++)
+    for(int j=0;j<3;j++)
+      mat_[i][j]=d;
+  have_eigens_=false;
+  return *this;
+}
+
+/* matrix max norm */
+double Tensor::norm()
+{
+  double a = 0.0;
+  double sum;
+  for (int i=0;i<3;i++)
+  {
+    sum = 0.0;
+    for (int j=0;j<3;j++) sum += Abs(mat_[i][j]);
+    if (sum > a) a = sum;
+  }
+  return (a);
+}
+
+
 Tensor::~Tensor()
 {
 }
