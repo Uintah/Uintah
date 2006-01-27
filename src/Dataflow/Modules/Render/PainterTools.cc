@@ -705,6 +705,7 @@ Painter::FloodfillTool::FloodfillTool(Painter *painter) :
   max_(0.0),
   start_pos_(0,0,0)
 {
+  painter_->create_undo_volume();
 }
 
 
@@ -1075,8 +1076,8 @@ Painter::PaintTool::PaintTool(Painter *painter) :
   PainterTool(painter, "Paint"),
   radius_(5.0),
   drawing_(false)
-    
 {
+  painter_->create_undo_volume();
 }
 
 
@@ -1117,8 +1118,10 @@ Painter::PaintTool::mouse_button_press(MouseState &mouse)
     drawing_ = true;
   } else if (mouse.button_ == 4) {
     radius_ *= 1.1;
+    painter_->redraw_all();    
   } else if (mouse.button_ == 5) {
     radius_ /= 1.1;
+    painter_->redraw_all();
   }
 
   return 0;

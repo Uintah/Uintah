@@ -488,6 +488,7 @@ class Painter : public Module
   NrrdVolumes		volumes_;
   NrrdVolumeMap         volume_map_;
   NrrdVolume *          current_volume_;
+  NrrdVolume *          undo_volume_;
 
   typedef map<string, ColorMapHandle> colormap_map_t;
 
@@ -499,6 +500,7 @@ class Painter : public Module
   int			cur_slice_[3];
 
   UIint			anatomical_coordinates_;
+  UIint			show_grid_;
   UIint			show_text_;
   UIdouble		font_r_;
   UIdouble		font_g_;
@@ -572,7 +574,8 @@ class Painter : public Module
   bool                  receive_filter_data();
   void                  layer_up();
   void                  layer_down();
-
+  void                  create_undo_volume();
+  void                  undo_volume();
 public:
   Painter(GuiContext* ctx);
   virtual ~Painter();
