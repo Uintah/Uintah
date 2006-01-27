@@ -3,10 +3,13 @@
 <component name="SendIntermediateTest" category="DataIO">
   <overview>
     <authors>
+      <author>Martin Cole</author>
     </authors>
+    <summary>Test module</summary>
+    <description>
+      <p>Module that shows the use of send_intermediate.  Should use a callback at this point instead of send_intermediate.</p>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
     </inputs>
@@ -17,9 +20,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

@@ -12,20 +12,30 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <sys/stat.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
+
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-
-#include <Dataflow/share/share.h>
 
 namespace DDDAS {
 
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE Mesh3dReader : public Module
+typedef NoDataBasis<double>                            NDBasis;
+typedef TetVolMesh<TetLinearLgn<Point> >               TVMesh;
+typedef TriSurfMesh<TriLinearLgn<Point> >              TSMesh;
+typedef GenericField<TVMesh, NDBasis, vector<double> > TVField;  
+typedef GenericField<TSMesh, NDBasis, vector<double> > TSField;  
+
+class Mesh3dReader : public Module
 {
    private:
       GuiString filename_;
@@ -101,8 +111,8 @@ void Mesh3dReader::execute()
 
        mesh_stream.ignore(256, '\n');  // ignore the mesh-type line
        mesh_stream >> npts;            // read the number of vertices (points)
-       TetVolMesh *tvm = new TetVolMesh();
-       TriSurfMesh *tsm = new TriSurfMesh();
+       TVMesh *tvm = new TVMesh();
+       TSMesh *tsm = new TSMesh();
        for (i = 0; i < npts; i++)      // read the coords of all the points
        {
           double x, y, z;
@@ -129,9 +139,9 @@ void Mesh3dReader::execute()
           (*cm2)[i] = attr;
        }
 
-       TetVolField<double> *tv = scinew TetVolField<double>(tvm, -1);
+       TVField *tv = scinew TVField(tvm);
        handle_  = (Field *)tv;
-       TriSurfField<double> *ts = scinew TriSurfField<double>(tsm, -1);
+       TSField *ts = scinew TSField(tsm);
        handle2_ = (Field *)ts;
        mhandle_ = (Matrix *)cm;
        mhandle2_ = (Matrix *)cm2;

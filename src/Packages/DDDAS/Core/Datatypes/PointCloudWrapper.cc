@@ -59,8 +59,8 @@ namespace SCIRun {
 //
 PointCloudWrapper::PointCloudWrapper()
 {
-  // Initialize PointCloudMesh
-  mesh_ = scinew PointCloudMesh;
+  // Initialize PCMesh
+  mesh_ = scinew PCMesh;
   mesh_size_ = 0;
 } 
 
@@ -89,11 +89,10 @@ PointCloudWrapper::~PointCloudWrapper()
 // string data_name - Name of the data contained in the field (i.e. "Pressure,
 //                    "Temperature", etc.)
 //
-PCField PointCloudWrapper::create_field( string data_name )
+PCFieldH PointCloudWrapper::create_field( string data_name )
 {
   // Create a new PCField
-  PCField new_field =
-    scinew PointCloudField<double>(mesh_, 0); 
+  PCFieldH new_field = scinew PCField(mesh_); 
 
   // Set the name of the field
   new_field->set_property( "name", data_name, false );
@@ -116,7 +115,7 @@ PCField PointCloudWrapper::create_field( string data_name )
 // string data_name - Name of the data contained in the field (i.e. "Pressure,
 //                    "Temperature", etc.)
 //
-PCField PointCloudWrapper::get_field( string data_name )
+PCFieldH PointCloudWrapper::get_field( string data_name )
 {
   //cout << "(PointCloudWrapper::get_field) Inside" << endl;
  
@@ -163,7 +162,7 @@ void PointCloudWrapper::update_node_value( string id, Point pt,
                                            double value, string data_name )
 {
   // Get the appropriate field
-  PCField fld = get_field( data_name );
+  PCFieldH fld = get_field( data_name );
 
   // If the field didn't exist, create a new one
   if( fld.get_rep() == 0 )
@@ -174,7 +173,7 @@ void PointCloudWrapper::update_node_value( string id, Point pt,
   }
 
   // Get the field data (data at nodes) for the PointCloudField
-  PointCloudField<double>::fdata_type &fdata = fld->fdata();
+  PCField::fdata_type &fdata = fld->fdata();
 
   // Check to make sure this field has a value for every node (and no extra
   // values)
@@ -203,7 +202,7 @@ void PointCloudWrapper::update_node_value( string id, Point pt,
   }
   else
   {
-    fdata[node_index] == value;
+    fdata[node_index] = value;
   }
  
 }
@@ -224,7 +223,7 @@ void PointCloudWrapper::freeze( string data_name )
   mesh_->freeze();
   
   // Get the appropriate field
-  PCField fld = get_field( data_name );
+  PCFieldH fld = get_field( data_name );
 
   if( fld.get_rep() != 0 )
   {

@@ -3,10 +3,15 @@
 <component name="FEM" category="PDESolver">
   <overview>
     <authors>
+      <author>veselin</author>
     </authors>
+    <summary>Forthcoming</summary>
+    <description>
+      <p>The FEM module requires installation of AggieFEM in the
+user's home directory. (AggieFEM source:
+http://www.isc.tamu.edu/~vdobrev/AggieFEM.tgz)</p>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -21,9 +26,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

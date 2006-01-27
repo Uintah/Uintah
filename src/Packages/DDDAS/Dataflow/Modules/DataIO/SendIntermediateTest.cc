@@ -10,14 +10,18 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Dataflow/share/share.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 
 namespace DDDAS {
 
 using namespace SCIRun;
+typedef ConstantBasis<double>                               PCDatBasis;
+typedef PointCloudMesh<ConstantBasis<Point> >               PCMesh;
+typedef GenericField<PCMesh, PCDatBasis, vector<double> >   PCField;
 
-class PSECORESHARE SendIntermediateTest : public Module {
+class SendIntermediateTest : public Module {
 public:
   SendIntermediateTest(GuiContext*);
 
@@ -35,13 +39,12 @@ SendIntermediateTest::SendIntermediateTest(GuiContext* ctx) :
   Module("SendIntermediateTest", ctx, Source, "DataIO", "DDDAS"),
   output_(0)
 {
-  PointCloudMesh *pcm = scinew PointCloudMesh();
+  PCMesh *pcm = scinew PCMesh();
   Point p(0,0,0);
   pcm->add_point(p);
-  PointCloudField<double> *pcfd = 
-    scinew PointCloudField<double>(pcm, 0);
+  PCField *pcfd =  scinew PCField(pcm);
   pcfd->resize_fdata();
-  pcfd->set_value(69.69, (PointCloudMesh::Node::index_type)0);
+  pcfd->set_value(69.69, (PCMesh::Node::index_type)0);
   output_ = pcfd;
 }
 

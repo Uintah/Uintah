@@ -47,7 +47,9 @@
 
 // SCIRun includes
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <sci_hash_map.h>
 
 // Standard lib includes
@@ -59,8 +61,10 @@ namespace SCIRun {
 // ****************************************************************************
 // ************************** Class: PointCloudWrapper ************************
 // ****************************************************************************
-
-typedef LockingHandle< PointCloudField<double> > PCField;
+typedef ConstantBasis<double>                               PCDatBasis;
+typedef PointCloudMesh<ConstantBasis<Point> >               PCMesh;
+typedef GenericField<PCMesh, PCDatBasis, vector<double> >   PCField;
+typedef LockingHandle<PCField>                              PCFieldH;
 
 // Hash structs for hashing the node locations (key) and indices (value) for
 // fast lookup
@@ -89,8 +93,8 @@ public:
   ~PointCloudWrapper();
 
   // !Member functions
-  PCField create_field( string data_name );
-  PCField get_field( string data_name );
+  PCFieldH create_field( string data_name );
+  PCFieldH get_field( string data_name );
   void update_node_value( string id, Point pt, double value, 
                           string data_name );
   void remove_node( Point pt, string data_name ); 
@@ -98,9 +102,9 @@ public:
 
 private:
 
-  LockingHandle<PointCloudMesh> mesh_; // Single point cloud mesh
+  LockingHandle<PCMesh> mesh_; // Single point cloud mesh
   // Set of fields than can be applied to the point cloud mesh
-  vector<PCField> fields_; 
+  vector<PCFieldH> fields_; 
 
   int mesh_size_; // Numbef of nodes in the mesh.  I'm using this because
                   // I can't figure out how to get this info from the mesh
