@@ -23,10 +23,17 @@
 <component name="NetConnector" category="DataIO">
   <overview>
     <authors>
+      <author>Jenny Simpson</author>
     </authors>
+    <summary>This module should allow SCIRun to form multiple socket
+connections to multiple external clients and exchange data</summary>
+    <description>
+      <p>This module should allow SCIRun to form multiple socket
+connections to multiple external clients and exchange data.This is
+designed to test and demonstrate the use of the new SCIRun socket
+library comprised of the src/Core/Util/Net* files.</p>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -41,9 +48,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

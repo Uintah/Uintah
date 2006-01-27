@@ -56,7 +56,11 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -74,12 +78,16 @@
 namespace DDDAS {
 
 using namespace SCIRun;
+
+typedef LatVolMesh<HexTrilinearLgn<Point> >                       LVMesh;
+typedef ConstantBasis<double>                                     DatBasis;
+typedef GenericField<LVMesh, DatBasis,  FData3d<double, LVMesh> > LVField;
   
 // ****************************************************************************
 // ******************************** Class: Reader *****************************
 // ****************************************************************************
 
-class DDDASSHARE Reader : public Module {
+class Reader : public Module {
 
 public:
 
@@ -270,33 +278,28 @@ void Reader::fill_mesh( string filename, FieldOPort * ofp )
   unsigned int sizey;
   unsigned int sizez;
   sizex = sizey = sizez = Max(2, cube_root) + 1;
-  LatVolMeshHandle mesh = scinew LatVolMesh(sizex, sizey, sizez, minb, maxb);
+  LVMesh::handle_type mesh = scinew LVMesh(sizex, sizey, sizez, minb, maxb);
 
   cerr << "(Reader::fill_mesh) Assign data to cell centers" << endl;
-  
-  // Assign data to cell centers
-  int basis_order = 0; // constant basis
-
   cerr << "(Reader::fill_mesh) Create Image Field" << endl;
   // Create Image Field.
   FieldHandle ofh;
 
-  LatVolField<double> *lvf = scinew LatVolField<double>(mesh, basis_order);
-  if (basis_order != -1)
-  {
-    LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
+  LVField *lvf = scinew LVField(mesh);
 
-    // Iterator for solution points array
-    int i = 0; 
-    while (itr != lvf->fdata().end())
-    {
-      assert( i < num_sols );
-      *itr = sol_pts[i];
-      ++itr;
-      i++;
-    }
-    cerr << "(Reader::execute) number of field data points = " << i << endl;
-  } 
+  LVField::fdata_type::iterator itr = lvf->fdata().begin();
+
+  // Iterator for solution points array
+  int i = 0; 
+  while (itr != lvf->fdata().end())
+  {
+    assert( i < num_sols );
+    *itr = sol_pts[i];
+    ++itr;
+    i++;
+  }
+  cerr << "(Reader::execute) number of field data points = " << i << endl;
+
   ofh = lvf;
 
   cerr << "(Reader::fill_mesh) Deallocate memory for sol_pts array" << endl;

@@ -50,8 +50,9 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
+
+
+
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -61,6 +62,14 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h> 
 #include <Core/Thread/ConditionVariable.h>
+
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Packages/DDDAS/Core/Datatypes/PointCloudWrapper.h>
 #include <Packages/DDDAS/Core/Utils/SocketConnection.h>
 
@@ -82,6 +91,7 @@ namespace DDDAS {
 
 using namespace SCIRun;
 
+//typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
 
 // ****************************************************************************
 // ***************************** Class: StreamReader **************************
@@ -1525,7 +1535,7 @@ void StreamReader::update_pc_mesh( vector<struct PointCloudValue>
   cout << "(StreamReader::update_pc_mesh) Getting point cloud field" << endl;
 
   // Get the field handle
-  PCField pc_fld = pcw_->get_field(dn);
+  PCFieldH pc_fld = pcw_->get_field(dn);
   FieldHandle fld( pc_fld.get_rep() );
 
   cout << "(StreamReader::update_pc_mesh) Sending point cloud field downstream" << endl;
