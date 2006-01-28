@@ -216,8 +216,8 @@ main(int argc, char **argv) {
       cerr << "Added hex #"<<i<<": ["<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<n5<<" "<<n6<<" "<<n7<<" "<<n8<<"]\n";
   }
   cerr << "done adding elements.\n";
-  typedef NoDataBasis<char>                DatBasis;
-  typedef GenericField<HVMesh, DatBasis, vector<char> > HVField;
+  typedef NoDataBasis<double>                DatBasis;
+  typedef GenericField<HVMesh, DatBasis, vector<double> > HVField;
     
   HVField *hv = scinew HVField(hvm);
   FieldHandle hvH(hv);
