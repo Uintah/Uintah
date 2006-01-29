@@ -67,6 +67,8 @@ FieldDataNodeToElemAlgo::get_compile_info(FieldHandle field)
   // Add in the include path to compile this obj
   ci->add_data_include(include_path);
   ci->add_namespace("ModelCreation");
+  ci->add_namespace("SCIRun");
+  
   field->get_type_description()->fill_compile_info(ci.get_rep());
   return(ci);
 }

@@ -97,6 +97,11 @@ class FieldInformation {
     bool        is_structuredmesh();
     bool        is_unstructuredmesh();
     
+    bool        is_pointcloud();
+    bool        is_curve();
+    bool        is_surface();
+    bool        is_volume();
+    
     bool        make_nodata();
     bool        make_constantdata();
     bool        make_lineardata();

@@ -1,28 +1,24 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="SphericalSurface" category="FieldsExample">
+<component name="MergeNodes" category="FieldsGeometry" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module creates an example spherical surface.
+      Merge nodes that are close together and remove double elements.
+
     </summary>
     <description>
-      <p>
-      This module creates an example spherical surface.
-      </p>
+      <p>        Merge nodes that are close together and remove double elements.
+</p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Discretization</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>Radius</name>
-        <datatype>SCIRun::Matrix</datatype>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
@@ -33,4 +29,3 @@
     </outputs>
   </io>
 </component>
-

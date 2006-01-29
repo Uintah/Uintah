@@ -26,17 +26,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/Unstructure.h>
+#include <Packages/ModelCreation/Core/Fields/CompartmentBoundary.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
   if (input.get_rep() == 0)
   {
-    pr->error("Unstructure: No input field");
+    pr->error("CompartmentBoundary: No input field");
   }
 
   // no precompiled version available, so compile one
@@ -46,25 +46,39 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
   
   if (fi.is_nonlinear())
   {
-    pr->error("Unstructure: This function has not yet been defined for non-linear elements");
+    pr->error("CompartmentBoundary: This function has not yet been defined for non-linear elements");
     return (false);
   }
   
-  std::string mesh_type = fi.get_mesh_type();
-  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh"))
+  if (!(fi.is_constantdata()))
   {
-    fo.set_mesh_type("HexVolMesh");
-    fo.set_container_type("vector");
+    pr->error("CompartmentBoundary: This function needs a compartment definition on the elements (constant element data)");
+    return (false);    
   }
-  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh"))
+  
+  if (!(fi.is_volume()||fi.is_surface()))
+  {
+    pr->error("CompartmentBoundary: THis function is only defined for surface and volume data");
+    return (false);
+  }
+  
+  std::string algotype = "";
+  
+  std::string mesh_type = fi.get_mesh_type();
+  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh")||(mesh_type == "HexVolMesh"))
   {
     fo.set_mesh_type("QuadSurfMesh");
-    fo.set_container_type("vector");
+    algotype = "Volume";
   }
-  else if ((mesh_type == "ScanlineMesh")||(mesh_type == "StructCurveMesh"))
+  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "TriSurfMesh"))
   {
     fo.set_mesh_type("CurveMesh");
-    fo.set_container_type("vector");
+    algotype = "Surface";
+  }
+  else if (mesh_type == "TetVolMesh")
+  {
+    fo.set_mesh_type("TriSurfMesh");
+    algotype = "Volume";
   }
   else
   {
@@ -75,27 +89,27 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "Unstructure."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
-    "UnstructureAlgo","UnstructureAlgoT",
+    "CompartmentBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "CompartmentBoundaryAlgo","CompartmentBoundary"+algotype+"AlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
-  ci->add_namespace("ModelCreation");
+  ci->add_namespace("SCIRun");
   
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   
   // Handle dynamic compilation
-  SCIRun::Handle<UnstructureAlgo> algo;
+  SCIRun::Handle<CompartmentBoundaryAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->Unstructure(pr,input,output));
+  return(algo->CompartmentBoundary(pr,input,output));
 }
 
 

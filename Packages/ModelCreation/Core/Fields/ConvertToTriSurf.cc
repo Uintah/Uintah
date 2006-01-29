@@ -79,6 +79,8 @@ bool ConvertToTriSurfAlgo::ConvertToTriSurf(ProgressReporter *pr, FieldHandle in
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
+  ci->add_namespace("SCIRun");
+
   
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);

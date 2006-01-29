@@ -139,6 +139,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   // This function is defined in the namespace ModelCreation, add a statement
   // 'using namespace ModelCreation' to the dynamic file to be created.
   ci->add_namespace("ModelCreation");
+  ci->add_namespace("SCIRun");
   
   // In order to be able to compile the dynamic code it needs to include the
   // descriptions of the mesh/field classes. The following two statements will

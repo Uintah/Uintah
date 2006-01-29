@@ -17,6 +17,7 @@ SRCS     += \
 	$(SRCDIR)/ConvertToPointCloud.cc\
 	$(SRCDIR)/ConvertToTetVol.cc\
 	$(SRCDIR)/ConvertToTriSurf.cc\
+	$(SRCDIR)/MergeNodes.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

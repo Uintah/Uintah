@@ -59,6 +59,7 @@ bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, 
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
+  ci->add_namespace("ModelCreation");
 
   fi.fill_compile_info(ci);
   

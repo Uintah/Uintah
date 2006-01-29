@@ -53,6 +53,12 @@ public:
   bool MatrixToVector(MatrixHandle matrix, Vector& vec);
   bool MatrixToTensor(MatrixHandle matrix, Tensor& ten);
   bool MatrixToTransform(MatrixHandle matrix, Transform& trans);
+  
+  bool DoubleToMatrix(double val, MatrixHandle& matrix);
+  bool IntToMatrix(int val, MatrixHandle& matrix);
+  bool VectorToMatrix(Vector& vec, MatrixHandle& matrix);
+  bool TensorToMatrix(Tensor& ten, MatrixHandle matrix);
+  bool TransformToMatrix(Transform& trans, MatrixHandle& matrix);
 
 };
 

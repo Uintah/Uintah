@@ -26,14 +26,22 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
+#include <Core/Util/ProgressReporter.h>
 #include <Packages/ModelCreation/Core/Fields/ExampleFields.h>
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TriSurfMesh.h>
+
+#include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
+
+#include <Core/Basis/NoData.h>
+#include <core/Basis/Constant.h>
+#include <core/Basis/TriLinearLgn.h>
+
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 
 #include <math.h>
 
@@ -41,19 +49,24 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle discretization)
+ExampleFields::ExampleFields(ProgressReporter *pr) :
+  AlgoLibrary(pr)
+{
+}
+
+bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
 {
   int n;
   
-  MatrixConverter mc(this);
-  mc.MatrixToInt(matrix,n);
+  MatrixConverter mc(pr_);
+  mc.MatrixToInt(disc,n);
   
   double r  = 1.0;
   double dr = 1.0/n;
   
   std::vector<double> Z(2*n+1);
   double Rval = -1.0;
-  for (int p=0; p < R.size(); p++, Rval += dr) Z[p] = sin(Rval*M_PI/2); 
+  for (int p=0; p < Z.size(); p++, Rval += dr) Z[p] = sin(Rval*M_PI/2); 
   
   int k = 0;
   int m = 0;
@@ -64,7 +77,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle discretiz
   for (int p=0; p < Z.size(); p++)
   {
     double Rxy = sqrt(1-Z[p]*Z[p]);
-    int no = ceil(2*M_PI*Rxy/dr);
+    int no = static_cast<int>(ceil(2*M_PI*Rxy/dr));
     if (no == 0) no = 1;
     
     double phi = 0.0;
@@ -72,7 +85,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle discretiz
   
     Nodes[p].resize(no);
     Slices[p].resize(no);
-    for (int q=0; q < slice.size(); q++, phi += (2*M_PI/no)) 
+    for (int q=0; q < Slices[p].size(); q++, phi += (2*M_PI/no)) 
     {  
       Nodes[p][q] = Point(Rxy*cos(phi),Rxy*sin(phi),Z[p]);
       Slices[p][q] = k;
@@ -93,20 +106,28 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle discretiz
   }
   
   
-  typedef GenericField<TriSurfMesh<TriLinearBasis<Point> >, NoDataBasis<double>, std::vector<double> > TSField;
-  TSMesh* ofield = TSMesh();
+  typedef GenericField<TriSurfMesh<TriLinearLgn<Point> >, NoDataBasis<double>, std::vector<double> > TSField;
+  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+
+  TSMesh* omesh = scinew TSMesh();
+  TSField* ofield = scinew TSField(omesh);
   output = dynamic_cast<Field* >(ofield);
+  if (output.get_rep() == 0)
+  {
+    error("Could not allocate output field");
+    return (false);
+  }
   
-  ofield.reserve_nodes(Node.size());
-  for (int p = 0; p < Node.size(); p++) ofield->add_point(Node[p]);
+  omesh->node_reserve(Node.size());
+  for (int p = 0; p < Node.size(); p++) omesh->add_point(Node[p]);
   
   int N = Z.size();
   std::vector<int> H1;
   std::vector<int> H2;
 
-  typename TSField::mesh_type::Node::index_array nodes(3);
+  TSMesh::Node::array_type nodes(3);
   
-  for (q=0; q< (N-1); q++)
+  for (int q=0; q< (N-1); q++)
   {
     H1 = Slices[q];
     H2 = Slices[q+1];
@@ -118,48 +139,48 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle discretiz
     int I2 = 0;
     int N1 = (H1.size()-1);
     int N2 = (H2.size()-1);
-    
 
-    while (!((I1==N1) && (I2==N2)))
+    while (((I1!=N1) || (I2!=N2)))
     {
       if ((I1 < N1) && (I2 < N2))
       {
-        double L1 = norm(Vector(Node[H1[I1+1]]-Node[H2[I2]]));
-        double L2 = norm(Vector(Node[H1[I1]]-Node[H2[I2+1]]));
+        Vector v;
+        v = Vector(Node[H1[I1+1]]-Node[H2[I2]]);
+        double L1 = v.length();
+        v = Vector(Node[H1[I1]]-Node[H2[I2+1]]);
+        double L2 = v.length();
         if (L1 < L2)
         {
-          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
-          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1+1]);
-          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
-          ofield->add_elem(nodes);
+          nodes[0] = static_cast<TSField::mesh_type::Node::index_type>(H1[I1]);
+          nodes[1] = static_cast<TSField::mesh_type::Node::index_type>(H1[I1+1]);
+          nodes[2] = static_cast<TSField::mesh_type::Node::index_type>(H2[I2]);
+          omesh->add_elem(nodes);
           I1++;
         }
         else
         {
-          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
-          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2+1]);
-          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
-          ofield->add_elem(nodes);
+          nodes[0] = static_cast<TSField::mesh_type::Node::index_type>(H1[I1]);
+          nodes[1] = static_cast<TSField::mesh_type::Node::index_type>(H2[I2+1]);
+          nodes[2] = static_cast<TSField::mesh_type::Node::index_type>(H2[I2]);
+          omesh->add_elem(nodes);
           I2++;        
         }
-      
-        if (I2==N2)
-        {
-          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
-          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1+1]);
-          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
-          ofield->add_elem(nodes);
-          I1++;        
-        }
-        
-        if (I1==N1)
-        {
-          nodes[0] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I1]);
-          nodes[1] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2+1]);
-          nodes[2] = static_cast<typename TSField::mesh_type::Node::index_type>(H1[I2]);
-          ofield->add_elem(nodes);
-          I2++;          
-        }
+      }
+      else if (I2==N2)
+      {
+        nodes[0] = static_cast<TSField::mesh_type::Node::index_type>(H1[I1]);
+        nodes[1] = static_cast<TSField::mesh_type::Node::index_type>(H1[I1+1]);
+        nodes[2] = static_cast<TSField::mesh_type::Node::index_type>(H2[I2]);
+        omesh->add_elem(nodes);
+        I1++;        
+      }
+      else if (I1==N1)
+      {
+        nodes[0] = static_cast<TSField::mesh_type::Node::index_type>(H1[I1]);
+        nodes[1] = static_cast<TSField::mesh_type::Node::index_type>(H2[I2+1]);
+        nodes[2] = static_cast<TSField::mesh_type::Node::index_type>(H2[I2]);
+        omesh->add_elem(nodes);
+        I2++;          
       }
     }
   }
