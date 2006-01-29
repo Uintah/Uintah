@@ -14,9 +14,11 @@ SRCDIR   := Packages/ModelCreation/Core/Fields
 
 SRCS     += $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
+            $(SRCDIR)/CompartmentBoundary.cc\
             $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/DistanceToField.cc\
             $(SRCDIR)/FieldsAlgo.cc\
+            $(SRCDIR)/ExampleFields.cc\
             $(SRCDIR)/FieldDataNodeToElem.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
             $(SRCDIR)/SplitFieldByElementData.cc\
@@ -24,6 +26,7 @@ SRCS     += $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/GetFieldData.cc\
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
+            $(SRCDIR)/TransformField.cc\
             $(SRCDIR)/ToPointCloud.cc\
             $(SRCDIR)/Unstructure.cc\
 #[INSERT NEW CODE FILE HERE]
@@ -35,7 +38,9 @@ PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Packages/ModelCreation/Core/Datatypes \
             Packages/ModelCreation/Core/Util \
             Dataflow/Modules/Fields \
-            Core/Algorithms/Fields
+            Core/Algorithms/Fields \
+            Core/Persistent \
+            Core/Basis
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

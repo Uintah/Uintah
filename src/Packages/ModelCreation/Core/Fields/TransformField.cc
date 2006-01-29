@@ -26,68 +26,61 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/Unstructure.h>
+#include <Packages/ModelCreation/Core/Fields/TransformField.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool TransformFieldAlgo::TransformField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, Transform& transform, bool rotatedata)
 {
   if (input.get_rep() == 0)
   {
-    pr->error("Unstructure: No input field");
+    pr->error("TransformField: No input field");
   }
 
   // no precompiled version available, so compile one
 
   FieldInformation fi(input);
-  FieldInformation fo(input);
   
   if (fi.is_nonlinear())
   {
-    pr->error("Unstructure: This function has not yet been defined for non-linear elements");
+    pr->error("TransformField: This function has not yet been defined for non-linear elements");
     return (false);
   }
   
-  std::string mesh_type = fi.get_mesh_type();
-  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh"))
+  if (fi.is_scalar())
   {
-    fo.set_mesh_type("HexVolMesh");
-    fo.set_container_type("vector");
+   TransformFieldScalarAlgo algo;
+   return(algo.TransformField(pr,input,output,transform,rotatedata));
   }
-  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh"))
+  
+  std::string algotype = "";
+  if (fi.is_vector()) algotype = "Vector";
+  if (fi.is_tensor()) algotype = "Tensor";
+  
+  if (algotype == "")
   {
-    fo.set_mesh_type("QuadSurfMesh");
-    fo.set_container_type("vector");
+    pr->error("TransformField: Unknown datatype encountered");
+    return (false);  
   }
-  else if ((mesh_type == "ScanlineMesh")||(mesh_type == "StructCurveMesh"))
-  {
-    fo.set_mesh_type("CurveMesh");
-    fo.set_container_type("vector");
-  }
-  else
-  {
-    pr->error("No unstructure method available for mesh: " + mesh_type);
-    return (false);
-  }
-
+  
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "Unstructure."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
-    "UnstructureAlgo","UnstructureAlgoT",
-    fi.get_field_name() + "," + fo.get_field_name());
+    "TransformField."+fi.get_field_filename()+".",
+    "TransformFieldAlgo","TransformField"+algotype+"AlgoT",
+    fi.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
   ci->add_namespace("ModelCreation");
+
   
   fi.fill_compile_info(ci);
-  fo.fill_compile_info(ci);
   
   // Handle dynamic compilation
-  SCIRun::Handle<UnstructureAlgo> algo;
+  SCIRun::Handle<TransformFieldAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
@@ -95,8 +88,32 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
     return(false);
   }
 
-  return(algo->Unstructure(pr,input,output));
+  return(algo->TransformField(pr,input,output,transform,rotatedata));
 }
+
+
+bool TransformFieldScalarAlgo::TransformField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, Transform& transform, bool rotatedata)
+{
+  if (input.get_rep() == 0)
+  {
+    pr->error("TransformField: Could not obtain input field");
+    return (false);
+  }
+
+  output = dynamic_cast<Field *>(input->clone());
+  if (output.get_rep() == 0)
+  {
+    pr->error("TransformField: Could not create output field");    
+    return (false);
+  }
+
+  output->mesh_detach();
+  output->mesh()->transform(transform);
+
+	output->copy_properties(input.get_rep());
+  return (true);  
+}
+
 
 
 } // End namespace ModelCreation

@@ -198,4 +198,84 @@ bool MatrixConverter::MatrixToTransform(MatrixHandle matrix, Transform& trans)
   return (false);    
 }
 
+
+bool MatrixConverter::DoubleToMatrix(double val, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+  matrix->put(0,0,val);
+  return (true);
+}
+
+bool MatrixConverter::IntToMatrix(int val, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+  matrix->put(0,0,static_cast<int>(val));
+  return (true);
+}
+
+bool MatrixConverter::VectorToMatrix(Vector& vec, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(3,1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+  matrix->put(0,0,vec.x());
+  matrix->put(1,0,vec.y());
+  matrix->put(2,0,vec.z());
+  return (true);
+}
+
+bool MatrixConverter::TensorToMatrix(Tensor& ten, MatrixHandle matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(3,3));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+  matrix->put(0,0,ten.mat_[0][0]);
+  matrix->put(1,0,ten.mat_[1][0]);
+  matrix->put(2,0,ten.mat_[2][0]);
+  matrix->put(0,1,ten.mat_[0][1]);
+  matrix->put(1,1,ten.mat_[1][1]);
+  matrix->put(2,1,ten.mat_[2][1]);
+  matrix->put(0,2,ten.mat_[0][2]);
+  matrix->put(1,2,ten.mat_[1][2]);
+  matrix->put(2,2,ten.mat_[2][2]);
+
+  return (true);
+}
+
+bool MatrixConverter::TransformToMatrix(Transform& trans, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(4,4));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+
+  double *dptr;
+  double sptr[16];
+  
+  trans.get(sptr);
+  dptr = matrix->get_data_pointer();
+  for (int p=0;p<16;p++) dptr[p] = sptr[p];
+  
+  return (true);
+}
+
+
 } // end namespace

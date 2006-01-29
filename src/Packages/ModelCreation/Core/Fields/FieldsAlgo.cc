@@ -72,6 +72,7 @@
 #include <Packages/ModelCreation/Core/Fields/ClipBySelectionMask.h>
 #include <Packages/ModelCreation/Core/Fields/ConvertToTetVol.h>
 #include <Packages/ModelCreation/Core/Fields/ConvertToTriSurf.h>
+#include <Packages/ModelCreation/Core/Fields/CompartmentBoundary.h>
 #include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
@@ -80,6 +81,7 @@
 #include <Packages/ModelCreation/Core/Fields/GetFieldData.h>
 #include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
 #include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
+#include <Packages/ModelCreation/Core/Fields/TransformField.h>
 #include <Packages/ModelCreation/Core/Fields/ToPointCloud.h>
 #include <Packages/ModelCreation/Core/Fields/Unstructure.h>
 
@@ -659,6 +661,13 @@ bool FieldsAlgo::IsCounterClockWiseSurface(FieldHandle input)
 
 // NEWLY CREATED FUNCTIONS:
 
+
+bool FieldsAlgo::CompartmentBoundary(FieldHandle input,FieldHandle& output)
+{
+  CompartmentBoundaryAlgo algo;
+  return(algo.CompartmentBoundary(pr_,input,output));
+}
+
 bool FieldsAlgo::ConvertToTetVol(FieldHandle input, FieldHandle& output)
 {
   ConvertToTetVolAlgo algo;
@@ -677,7 +686,6 @@ bool FieldsAlgo::MappingMatrixToField(FieldHandle input, FieldHandle& output, Ma
   return(algo.MappingMatrixToField(pr_,input,output,mappingmatrix));
 }
 
-
 bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
 {
   output = input;
@@ -692,11 +700,12 @@ bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
   return (true);
 }
 
-
 bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements)
 {
-  for (size_t p = 0; p < inputs.size(); p++) if (MakeEditable(inputs[0],inputs[0])) return (false);
+  std::cout << "start MergeFields" << std::endl;
+  for (size_t p = 0; p < inputs.size(); p++) if (!MakeEditable(inputs[0],inputs[0])) return (false);
   MergeFieldsAlgo algo;
+  std::cout << "before MergeFields algo" << std::endl;
   return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields,mergeelements));
 }
 
@@ -729,11 +738,20 @@ bool FieldsAlgo::ToPointCloud(FieldHandle input,FieldHandle& output)
   return(algo.ToPointCloud(pr_,input,output));
 }
 
+bool FieldsAlgo::TransformField(FieldHandle input,FieldHandle& output,Transform& transform,bool rotatedata)
+{
+  TransformFieldAlgo algo;
+  return(algo.TransformField(pr_,input,output,transform,rotatedata));
+}
+
 
 bool FieldsAlgo::Unstructure(FieldHandle input,FieldHandle& output)
 {
   UnstructureAlgo algo;
   return(algo.Unstructure(pr_,input,output));
 }
+
+
+
 
 } // ModelCreation

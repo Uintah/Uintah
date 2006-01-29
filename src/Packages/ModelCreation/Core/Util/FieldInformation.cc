@@ -83,6 +83,7 @@ void FieldInformation::set_field_type(std::string type)
   field_type = type;
   field_type_h = "";
   if (type == "GenericField") field_type_h = "Core/Datatypes/GenericField.h";
+  if (type == "MultiLevelField") field_type_h = "Core/Datatypes/MultiLevelField.h";
 }
 
 std::string FieldInformation::get_mesh_type()
@@ -113,6 +114,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("CrvLinearLgn");      
     }
+    set_container_type("vector");    
   }
   if (type == "ImageMesh") 
   {
@@ -133,6 +135,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("QuadBilinearLgn");      
     }
+    set_container_type("FData2d");    
   }
   if (type == "LatVolMesh") 
   {
@@ -153,6 +156,28 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("HexTrilinearLgn");      
     }    
+    set_container_type("FData3d");    
+  }
+  if (type == "MaskedLatVolMesh") 
+  {
+    field_type_h = "Core/Datatypes/MaskedLatVolMesh.h";
+    if (mesh_basis_type.find("Hex") == std::string::npos)
+    {
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("HexTriquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("HexTricubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
+      else set_mesh_basis_type("HexTrilinearLgn");      
+    }    
+    if (basis_type.find("Hex") == std::string::npos)
+    {
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("HexTriquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("HexTricubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
+      else set_basis_type("HexTrilinearLgn");      
+    }    
+    set_container_type("FData3d");    
   }
   
   if (type == "StructCurveMesh") 
@@ -174,6 +199,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("CrvLinearLgn");      
     }  
+    set_container_type("vector");    
   }
   
   if (type == "StructQuadSurfMesh")
@@ -195,6 +221,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("QuadBilinearLgn");      
     }  
+    set_container_type("FData2d");    
   }
   
   if (type == "StructHexVolMesh") 
@@ -216,6 +243,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("HexTrilinearLgn");      
     }        
+    set_container_type("FData3d");    
   }
   
   if (type == "CurveMesh") 
@@ -236,7 +264,8 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("CrvLinearLgn");      
-    }    
+    }
+    set_container_type("vector");            
   }
   
   if (type == "TriSurfMesh") 
@@ -258,6 +287,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("TriLinearLgn");      
     }       
+    set_container_type("vector");            
   }
   if (type == "QuadSurfMesh")
   {
@@ -278,6 +308,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("QuadBilinearLgn");      
     }
+    set_container_type("vector");                
   }
   
   if (type == "TetVolMesh")
@@ -299,6 +330,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("TetLinearLgn");      
     }  
+    set_container_type("vector");                
   }
   
   if (type == "PrismVolMesh") 
@@ -320,6 +352,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("PrismLinearLgn");      
     }      
+    set_container_type("vector");            
   }
   
   if (type == "HexVolMesh") 
@@ -341,6 +374,7 @@ void FieldInformation::set_mesh_type(std::string type)
       else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("HexTrilinearLgn");      
     }        
+    set_container_type("vector");            
   }
   
   if (type == "PointCloudMesh") 
@@ -352,6 +386,7 @@ void FieldInformation::set_mesh_type(std::string type)
 
     if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
     else set_basis_type("ConstantBasis");
+    set_container_type("vector");            
   }
 }
 
@@ -625,6 +660,7 @@ bool FieldInformation::make_lineardata()
   if (mesh_type == "ScanlineMesh") set_basis_type("CrvLinearLgn");
   if (mesh_type == "ImageMesh")  set_basis_type("QuadBilinearLgn");
   if (mesh_type == "LatVolMesh")  set_basis_type("HexTrilinearLgn");
+  if (mesh_type == "MaskedLatVolMesh")  set_basis_type("HexTrilinearLgn");
   if (mesh_type == "StructCurveMesh") set_basis_type("CrvLinearLgn");
   if (mesh_type == "StructQuadSurfMesh") set_basis_type("QuadBilinearLgn");
   if (mesh_type == "StructHexVolMesh") set_basis_type("HexTrilinearLgn");
@@ -643,6 +679,7 @@ bool FieldInformation::make_quadraticdata()
   if (mesh_type == "ScanlineMesh") set_basis_type("CrvQuadraticLgn");
   if (mesh_type == "ImageMesh")  set_basis_type("QuadBiquadraticLgn");
   if (mesh_type == "LatVolMesh")  set_basis_type("HexTriquadraticLgn");
+  if (mesh_type == "MaskedLatVolMesh")  set_basis_type("HexTriquadraticLgn");
   if (mesh_type == "StructCurveMesh") set_basis_type("CrvQuadraticLgn");
   if (mesh_type == "StructQuadSurfMesh") set_basis_type("QuadBiquadraticLgn");
   if (mesh_type == "StructHexVolMesh") set_basis_type("HexTriquadraticLgn");
@@ -661,6 +698,7 @@ bool FieldInformation::make_cubichmtdata()
   if (mesh_type == "ScanlineMesh") set_basis_type("CrvCubicHmt");
   if (mesh_type == "ImageMesh")  set_basis_type("QuadBicubicHmt");
   if (mesh_type == "LatVolMesh")  set_basis_type("HexTricubicHmt");
+  if (mesh_type == "MaskedLatVolMesh")  set_basis_type("HexTriquadraticLgn");
   if (mesh_type == "StructCurveMesh") set_basis_type("CrvCubicHmt");
   if (mesh_type == "StructQuadSurfMesh") set_basis_type("QuadBicubicHmt");
   if (mesh_type == "StructHexVolMesh") set_basis_type("HexTricubicHmt");
@@ -674,7 +712,30 @@ bool FieldInformation::make_cubichmtdata()
   return (true);
 }
 
+bool FieldInformation::is_pointcloud()
+{
+  if (mesh_type == "PointCloud") return (true);
+  return (false);
+}
 
+bool FieldInformation::is_curve()
+{
+  if ((mesh_type == "CurveMesh")||(mesh_type == "ScanlineMesh")||(mesh_type == "StructCurveMesh")) return (true);
+  return (false);
+}
 
+bool FieldInformation::is_surface()
+{
+  if ((mesh_type == "TriSurf")||(mesh_type == "QuadSurf")||(mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurf")) return (true);
+  return (false);
+}
+
+bool FieldInformation::is_volume()
+{
+  if ((mesh_type == "TetVolMesh")||(mesh_type == "PrismVolMesh")||
+      (mesh_type == "HexVolMesh")||(mesh_type == "LatVolMesh")||
+      (mesh_type == "StructHexVolMesh")||(mesh_type == "MaskedLatVolMesh")) return (true);
+  return (false);  
+}
 
 } // end namespace

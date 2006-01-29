@@ -84,7 +84,7 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
     return (false);
   }  
   
-  if ((mergenodes == false)&&(input.size() == 1))
+  if ((mergeelements == false)&&(mergenodes == false)&&(input.size() == 1))
   {
     // just passing true
     output = input[0];
@@ -119,6 +119,7 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
   // This function is defined in the namespace ModelCreation, add a statement
   // 'using namespace ModelCreation' to the dynamic file to be created.
   ci->add_namespace("ModelCreation");
+  ci->add_namespace("SCIRun");
   
   // In order to be able to compile the dynamic code it needs to include the
   // descriptions of the mesh/field classes. The following two statements will
@@ -136,6 +137,7 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
   // If the function is a success: algo will point to the dynamically
   // compiled algorithm. Since the access function is virtual executing it will
   // invoke the dynamic version.
+  
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     // In case we detect an error: we forward the error to the user
@@ -145,7 +147,7 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
     pr->compile_error(ci->filename_);
     
     // If compilation failed: remove file from on-the-fly-libs directory
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    // SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 

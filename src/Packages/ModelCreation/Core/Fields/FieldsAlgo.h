@@ -53,7 +53,6 @@ class FieldsAlgo : public AlgoLibrary {
     FieldsAlgo(ProgressReporter* pr); // normal case
 
     // Funtions borrow from Core of SCIRun
-    bool FieldBoundary(FieldHandle input, FieldHandle& output, MatrixHandle &interpolant);
     bool ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield);
     bool ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis);
     
@@ -83,6 +82,12 @@ class FieldsAlgo : public AlgoLibrary {
     bool IsClockWiseSurface(FieldHandle input);
     bool IsCounterClockWiseSurface(FieldHandle input);
 
+    // CompartmentBoundary
+    // Extract the boundaries between compartments in a volume or surface field
+    // The data needs to be on the elements. This function only extracts internal
+    // boundaries, use field boundary to extract the outer surfaces.
+    bool CompartmentBoundary(FieldHandle input, FieldHandle& output);
+
     // ConvertToTetVol:
     // This function converts an hexvol or latvol into a tetvol. The functionality
     // is similar to HexToTet, but does more checks and is more robust and works
@@ -94,6 +99,10 @@ class FieldsAlgo : public AlgoLibrary {
     // is similar to QuadToTri, but does more checks and is more robust and works
     // on unconnected data.
     bool ConvertToTriSurf(FieldHandle input, FieldHandle& output);
+    
+    // FieldBoundary:
+    // This function extracts the outer boundaries of a field
+    bool FieldBoundary(FieldHandle input, FieldHandle& output, MatrixHandle &interpolant);
     
     // MappingMatrixToField:
     // This function will assign to each node the value of the original node.
@@ -123,6 +132,9 @@ class FieldsAlgo : public AlgoLibrary {
     // ToPointCloud: Remove all element information from a mesh and only extract
     // the actual points in the mesh.
     bool ToPointCloud(FieldHandle input, FieldHandle& output);
+    
+    // TransformField: Transform a field and rotate vectors and tensors accordingly
+    bool TransformField(FieldHandle input, FieldHandle& output, Transform& transform, bool rotatedata = true);
     
     // Unstructure: Unstructure a mesh from a regular or structured mesh into
     // an unstructured mesh. This is often needed to make a mesh editable

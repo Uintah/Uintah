@@ -71,14 +71,22 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
   for (size_t p = 0; p < fieldvec.size(); p++)
   {
     FIELD* ifield = dynamic_cast<FIELD *>(fieldvec[p].get_rep());
-    if (ifield == 0) return (false);
+    if (ifield == 0) 
+    {
+      pr->error("MergeFields: Fields are not compatible");
+      return (false);
+    }
     if (p == 0) 
     {
       basisorder = ifield->basis_order();
     }
     else
     {
-      if (ifield->basis_order() != basisorder) return (false);
+      if (ifield->basis_order() != basisorder)
+      {
+        pr->error("MergeFields: Field basisorders are not equal");
+        return (false);
+      }
     }
   }
   
@@ -232,7 +240,7 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
             
             key = static_cast<int>((P.x()-Xmin)*Xmul);
             key += (static_cast<int>((P.y()-Ymin)*Ymul))<<8;
-            key += (static_cast<int>((P.y()-Ymin)*Ymul))<<16;
+            key += (static_cast<int>((P.z()-Zmin)*Zmul))<<16;
           
             mindist = tol2;
             for (int x = -1; x < 2; x++)
@@ -292,6 +300,7 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
       if ( mergeelements)
       {
         typename FIELD::mesh_type::Node::array_type sortednewnodes = newnodes;
+        typename FIELD::mesh_type::Node::array_type n;
         std::pair<typename elem_index_type::iterator,typename elem_index_type::iterator> range;
         std::sort(sortednewnodes.begin(),sortednewnodes.end());
         
@@ -301,17 +310,19 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
         range = elem_map_.equal_range(key);
         while (range.first != range.second)
         {
+          n = (*(range.first)).second;
           int r;
           for (r=0; r<sortednewnodes.size(); r++)
           {
-            if ((*(range.first))[r] != sortednewnodes[r]) break;
+            if (n[r] != sortednewnodes[r]) break;
           }
           if (r == sortednewnodes.size()) addelem = false;
+          ++(range.first);
         }
         
         if (addelem == true)
         {
-          elem_map_[key] = sortednewnodes;
+          elem_map_.insert(typename elem_index_type::value_type(key,sortednewnodes));
         }
       }
 

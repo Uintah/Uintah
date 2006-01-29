@@ -26,34 +26,53 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/ClipBySelectionMask.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-CompileInfoHandle
-ClipBySelectionMaskAlgo::get_compile_info(const TypeDescription *fsrc)
+class CompartmentBoundary : public Module {
+public:
+  CompartmentBoundary(GuiContext*);
+  virtual void execute();
+};
+
+
+DECLARE_MAKER(CompartmentBoundary)
+CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
+  : Module("CompartmentBoundary", ctx, Source, "FieldsCreate", "ModelCreation")
 {
-
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  std::string include_path(TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name("ClipBySelectionMaskAlgoT");
-  std::string base_name("ClipBySelectionMaskAlgo");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(algo_name + "." +
-                       fsrc->get_filename() + ".",
-                       base_name, 
-                       algo_name, 
-                       fsrc->get_name());
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  rval->add_namespace("ModelCreation");
-  rval->add_namespace("SCIRun");
-  fsrc->fill_compile_info(rval);
-  return rval;
 }
 
-} // namespace ModelCreation
+void CompartmentBoundary::execute()
+{
+  FieldIPort* iport = dynamic_cast<FieldIPort*>(get_iport(0));
+  if (iport == 0) 
+  {
+    error("Could not find input port");
+    return;
+  }
+
+  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
+  if (oport == 0) 
+  {
+    error("Could not find output port");
+    return;
+  }
+
+  FieldHandle ifield, ofield;
+  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+
+  iport->get(ifield);
+  if(algo.CompartmentBoundary(ifield,ofield)) oport->send(ofield);
+}
+
+} // End namespace ModelCreation
+
+

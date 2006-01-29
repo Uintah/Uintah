@@ -75,6 +75,8 @@ SetFieldDataAlgo::get_compile_info(FieldHandle field, MatrixHandle matrix,int nu
   // Add in the include path to compile this obj
   ci->add_include(include_path);
   ci->add_namespace("ModelCreation");   
+  ci->add_namespace("SCIRun");
+  
   
   const SCIRun::TypeDescription *fsrc = field->get_type_description();
   fsrc->fill_compile_info(ci.get_rep());
