@@ -1957,9 +1957,21 @@ template <class Basis>
 const string
 MaskedLatVolMesh<Basis>::type_name(int n)
 {
-  ASSERT(n >= -1 && n <= 0);
-  static const string name = "MaskedLatVolMesh";
-  return name;
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    static const string nm("MaskedLatVolMesh");
+    return nm;
+  }
+  else 
+  {
+    return find_type_name((Basis *)0);
+  }
 }
 
 template <class Basis>
