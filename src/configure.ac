@@ -69,7 +69,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.24],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
@@ -1770,7 +1770,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.25.1
+  sci_tp_version=1.25.2
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -2465,7 +2465,7 @@ if test -e $_sci_lib/../bin/xml2-config; then
     XML2_LIB_PATH=""
     for i in $XML2_LIB_DIR_FLAG;do
       is_lib_path=`echo $i | sed -n -e "s/-L//p"`
-      if test -z $is_lib_path;then
+      if test -z "$is_lib_path";then
         XML2_LDFLAGS="$XML2_LDFLAGS $i"
       else 
         if ! test $i = "-L/usr/lib";then
@@ -2809,14 +2809,11 @@ AC_SUBST(DEF_MPEG)
 ##  --  search for ImageMagick --------------------------------------
 AC_LANG(C++)
 # Default values:
-_sci_optional=optional
 _sci_lib="$sci_thirdparty_lib"
+_sci_optional=required
 
-if test "$with_magick" = "yes"; then
-  # If --with-magick is specified without a parameter, then it makes it required
-  _sci_optional=required
-else 
-  if test "$with_magick"; then
+if test "$with_magick"; then
+  if test "$with_magick" != "yes"; then
     # If --with-magick has a parameter, then use it
     _sci_lib="$with_magick/lib"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
@@ -2856,7 +2853,7 @@ if test -e $_sci_lib/../bin/Magick-config; then
     MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
     MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
     includes=`$_sci_lib/../bin/Magick-config --cppflags`
-    if test $includes="-I/usr/include";then
+    if test "$includes" = "-I/usr/include";then
       includes=""
     fi
 
@@ -2864,7 +2861,7 @@ if test -e $_sci_lib/../bin/Magick-config; then
     MAGICK_LIB_PATH=""
     for i in $MAGICK_LIB_DIR_FLAG;do
       is_lib_path=`echo $i | sed -n -e "s/-L//p"`
-      if test -z $is_lib_path;then
+      if test -z "$is_lib_path";then
         MAGICK_LDFLAGS="$MAGICK_LDFLAGS $i"
       else 
         if ! test $i = "-L/usr/lib";then
@@ -2874,7 +2871,7 @@ if test -e $_sci_lib/../bin/Magick-config; then
     done
 
 
-    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,stdio.h magick/api.h,
+    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,time.h stdio.h stdlib.h magick/api.h,
                  $includes,$MAGICK_LIB_PATH,$MAGICK_LDFLAGS,,[
        Image *image = NULL;
        ],required)
