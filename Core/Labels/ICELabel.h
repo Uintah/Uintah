@@ -145,7 +145,6 @@ namespace Uintah {
     const VarLabel* int_eng_Z_FC_fluxLabel;
 
     // Implicit AMR variables
-    const VarLabel* connectionListLabel;
     const VarLabel* matrix_CFI_weightsLabel;
 
     };
