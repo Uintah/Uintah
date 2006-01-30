@@ -51,13 +51,15 @@
 #include <queue>
 #include <Core/Comm/CommAddress.h>
 
+#include <Core/Comm/share.h>
+
 namespace SCIRun {
 
   class ConditionVariable;
   class Semaphore;
   class Mutex;
 
-  class StringSocket {
+  class SHARE StringSocket {
   public:
     //send buf to address paddr, if no connection made for paddr,
     //build a new connection and add the entry into the socket address

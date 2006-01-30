@@ -49,44 +49,32 @@
 #ifdef __digital__
 #include <fp_class.h>
 #endif
-
+#ifdef _WIN32
+#include <float.h>
+#define finite _finite
+#endif
 namespace SCIRun {
 
-
-#ifdef __sgi
 double MakeReal(double value)
 {
   if (!finite(value))
   {
-    fpclass_t c = fpclass(value);
-    if (c == FP_PINF)
-    {
-      value = (double)(0x7fefffffffffffffULL);
-    }
-    else if (c == FP_NINF)
-    {
-      value = (double)(0x0010000000000000ULL);
-    }
-    else
-    {
-      value = 0.0;
-    }
-  }      
-  return value;
-}
-#else
-double MakeReal(double value)
-{
-  if (!finite(value))
-  {
-#ifndef __digital__
-    const int is_inf  = isinf(value);
-#else
+    int is_inf = 0;
+#ifdef __digital__
     // on dec, we have fp_class which can tell us if a number is +/- infinity
     int fpclass = fp_class(value);
-    int is_inf;
     if (fpclass == FP_POS_INF) is_inf = 1;
     if (fpclass == FP_NEG_INF) is_inf = -1;
+#elif defined(__sgi)
+    fpclass_t c = fpclass(value);
+    if (c == FP_PINF) is_inf = 1;
+    if (c == FP_NINF) is_inf = -1;
+#elif defined(_WIN32)
+    int c = _fpclass(value);
+    if (c == _FPCLASS_PINF) is_inf = 1;
+    if (c == _FPCLASS_NINF) is_inf = -1;
+#else
+    is_inf  = isinf(value);
 #endif
     if (is_inf == 1) value = (double)(0x7fefffffffffffffULL);
     if (is_inf == -1) value = (double)(0x0010000000000000ULL);
@@ -94,7 +82,6 @@ double MakeReal(double value)
   }
   return value;
 }
-#endif
 
 void findFactorsNearRoot(const int value, int &factor1, int &factor2) {
   int f1,f2;

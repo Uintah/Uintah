@@ -55,18 +55,6 @@
 #include <X11/Xlib.h>
 #else
 #include <windows.h>
-#define GL_TEXTURE_3D 0x806F
-#define GL_TEXTURE0 0x84C0
-#define GL_TEXTURE1 0x84C1
-#define GL_TEXTURE2 0x84C2
-typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
-typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD2FVPROC) (GLenum target, const GLfloat *v);
-typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD3FPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r);
-
-static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
-static PFNGLMULTITEXCOORD2FVPROC glMultiTexCoord2fv = 0;
-static PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
-
 #endif
 
 

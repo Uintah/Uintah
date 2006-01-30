@@ -50,9 +50,11 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Math/MusilRNG.h>
 
+#include <Core/Algorithms/Geometry/share.h>
+
 namespace SCIRun {
 
-class CoregPts 
+class SHARE CoregPts 
 {
 protected:
   int allowScale_;
@@ -77,7 +79,7 @@ public:
   virtual int getMisfit(double &misfit);
 };
 
-class CoregPtsAnalytic : public CoregPts
+class SHARE CoregPtsAnalytic : public CoregPts
 {
 public:
   CoregPtsAnalytic(int allowScale=1, int allowRotate=1, int allowTranslate=1);
@@ -85,7 +87,7 @@ public:
   virtual int computeTrans();
 };
   
-class CoregPtsProcrustes : public CoregPts
+class SHARE CoregPtsProcrustes : public CoregPts
 {
 public:
   CoregPtsProcrustes(int allowScale=1,int allowRotate=1,int allowTranslate=1);
@@ -93,7 +95,7 @@ public:
   virtual int computeTrans();
 };
   
-class CoregPtsSimplexSearch : public CoregPts
+class SHARE CoregPtsSimplexSearch : public CoregPts
 {
 private:
   int maxIters_;

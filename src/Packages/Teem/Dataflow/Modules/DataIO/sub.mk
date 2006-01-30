@@ -55,8 +55,12 @@ SRCS     += \
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Core/Algorithms/DataIO Core/ImportExport \
+        Core/TkExtensions Core/ImportExport \
 	Dataflow/Network Dataflow/Ports \
+
+ifeq ($(HAVE_INSIGHT),yes)
+  PSELIBS += Core/Algorithms/DataIO
+endif
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY) $(INSIGHT_LIBRARY) $(GDCM_LIBRARY)
 

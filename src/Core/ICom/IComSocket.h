@@ -48,6 +48,8 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/ICom/share.h>
+
 // This class functions like a handle, but is more complicated
 // Since errors are stored in unix in errno and this one is cleared
 // after invoking the next io instruction, the IComSocket class is a
@@ -74,7 +76,7 @@ class IComSocket;
 class IComPacket;
 class IComVirtualSocket;
 
-class IComSocket : public IComBase {
+class SHARE IComSocket : public IComBase {
 
 public:
 	// the public functions 

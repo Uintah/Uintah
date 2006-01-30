@@ -52,6 +52,8 @@
 #include <vector>
 #include <list>
 
+#include <Dataflow/Ports/share.h>
+
 namespace SCIRun {
 
 using namespace std;
@@ -66,7 +68,7 @@ class GeometryComm;
 typedef int GeomID;
 typedef short LightID;
 
-class GeometryIPort : public IPort {
+class SHARE GeometryIPort : public IPort {
 public:
   GeometryIPort(Module*, const string& name);
   virtual ~GeometryIPort();
@@ -76,7 +78,7 @@ public:
 };
 
 
-struct GeometryData {
+struct SHARE GeometryData {
   ColorImage* colorbuffer;
   DepthImage* depthbuffer;
 
@@ -110,7 +112,7 @@ struct GeometryData {
 // CollabVis code end
 
   
-class GeometryOPort : public OPort {
+class SHARE GeometryOPort : public OPort {
 private:
 
   GeomID serial_;

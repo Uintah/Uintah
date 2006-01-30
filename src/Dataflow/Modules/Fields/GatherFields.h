@@ -111,7 +111,11 @@ class GatherFieldsAlgoT : public GatherFieldsAlgo
       return s1 == s2;
     }
   };
+#if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<string, unsigned> points_ht;
+#else
   typedef hash_map<string, unsigned, str_hasher, eqstr> points_ht;
+#endif
   points_ht pnts_table_;
 
   struct equint
@@ -121,7 +125,11 @@ class GatherFieldsAlgoT : public GatherFieldsAlgo
       return s1 == s2;
     }
   };
+#if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<unsigned, unsigned> idx_ht;
+#else
   typedef hash_map<unsigned, unsigned, hash<unsigned>, equint> idx_ht;
+#endif
   idx_ht node_table_;
 
 

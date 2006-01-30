@@ -81,6 +81,13 @@ NrrdSetupTexture::NrrdSetupTexture(SCIRun::GuiContext *ctx) :
   last_generation_(-1),
   last_nvnrrd_(0)
 {
+  double min, max; 
+  int in, ix;
+  min = minf_.get();
+  max = maxf_.get();
+  in = useinputmin_.get();
+  ix = useinputmax_.get();
+  cout << "ctor: " <<  min << " " << max << " " <<  in << " " << ix << endl;
 }
 
 NrrdSetupTexture::~NrrdSetupTexture()
@@ -117,7 +124,12 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
   int i, j, k;
   //const unsigned int nk = nin->axis[0].size;
   const unsigned int nji = nj * ni;
-  const double dmaxplus = 255.0 / (dmax - dmin);
+
+  // add a little epsilon to prevent roundoff - otherwise the max could be 254.99999 and round down
+  const double dmaxplus = 255.0 / (dmax - dmin) + 1e-9;  
+
+  double min = 100000;
+  double max = -100000;
 
   if (justvalues)
   {
@@ -244,7 +256,7 @@ NrrdSetupTexture::execute()
     NrrdRange *range = nrrdRangeNewSet(nin, nrrdBlind8BitRangeState);
     realmin_.set(range->min);
     realmax_.set(range->max);
-    delete range;
+    nrrdRangeNix(range);
     minf_.reset();
     maxf_.reset();
     useinputmin_.reset();
@@ -480,7 +492,10 @@ NrrdSetupTexture::execute()
     nindata += timeoffset * nrrdTypeSize[nin->type];
   }
 
-  // Create SCIRun data structure wrapped around nvout
+    NrrdRange *range = nrrdRangeNewSet(nvout, nrrdBlind8BitRangeFalse);
+    nrrdRangeNix(range);
+
+    // Create SCIRun data structure wrapped around nvout
   if (compute_justvalue)
   {
     last_nvnrrd_->generation = last_nvnrrd_->compute_new_generation();

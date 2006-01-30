@@ -56,13 +56,6 @@ using std::string;
 
 namespace SCIRun {
 
-#ifdef _WIN32
-#define GL_FUNC_ADD 2
-#define GL_MAX 2
-#define GL_TEXTURE_3D 2
-#define glBlendEquation(x)
-#endif
-
 const int BufferSize = 512;
 
 //static SCIRun::DebugStream dbg("FlowRenderer2D", false);

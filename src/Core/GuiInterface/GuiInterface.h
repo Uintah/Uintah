@@ -48,11 +48,13 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/GuiInterface/share.h>
+
 namespace SCIRun {
   using namespace std;
   class GuiCallback;
   class GuiContext;
-  class GuiInterface {
+  class SHARE GuiInterface {
   public:
     virtual ~GuiInterface();
     virtual void execute(const string& str) = 0;

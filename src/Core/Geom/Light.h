@@ -49,6 +49,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Persistent/Persistent.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 class Point;
@@ -60,7 +62,7 @@ class View;
 struct DrawInfoOpenGL;
 
 
-class Light : public Persistent {
+class SHARE Light : public Persistent {
 protected:
   Light(const string& name, bool on = true, bool tranformed = true);
     

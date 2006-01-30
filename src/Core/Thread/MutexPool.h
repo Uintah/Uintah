@@ -46,6 +46,8 @@
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 
+#include <Core/Thread/share.h>
+
 namespace SCIRun {
 /**************************************
  
@@ -61,7 +63,7 @@ DESCRIPTION
    However, this must be used very carefully, as it becomes easy to
    create a hold-and-wait condition.
 ****************************************/
-	class MutexPool {
+	class SHARE MutexPool {
 	public:
 	    //////////
 	    // Create the mutex pool with size mutex objects.

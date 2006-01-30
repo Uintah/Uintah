@@ -44,10 +44,12 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Algorithms/Visualization/share.h>
+
 namespace SCIRun {
 class Field;
 
-class MarchingCubesAlg : public DynamicAlgoBase {
+class SHARE MarchingCubesAlg : public DynamicAlgoBase {
 protected:
   int np_;
 public:

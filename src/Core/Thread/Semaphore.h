@@ -43,6 +43,8 @@
 #ifndef Core_Thread_Semaphore_h
 #define Core_Thread_Semaphore_h
 
+#include <Core/Thread/share.h>
+
 namespace SCIRun {
 
 class Semaphore_private;
@@ -64,7 +66,7 @@ class Semaphore_private;
  thread calls the <i>up</i> method.
 
 ****************************************/
-class Semaphore {
+class SHARE Semaphore {
 public:
   //////////
   // Create the semaphore, and setup the initial <i>count.name</i>

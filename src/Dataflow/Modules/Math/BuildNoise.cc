@@ -46,6 +46,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Math/MusilRNG.h>
+#include <Core/Math/Trig.h> // for M_PI
 #include <iostream>
 #include <sstream>
 

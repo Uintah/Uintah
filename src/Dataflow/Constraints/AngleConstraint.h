@@ -46,9 +46,12 @@
 
 #include <Dataflow/Constraints/BaseConstraint.h>
 
+#include <Dataflow/Constraints/share.h>
+
+
 namespace SCIRun {
 
-class AngleConstraint : public BaseConstraint {
+class SHARE AngleConstraint : public BaseConstraint {
 public:
    AngleConstraint( const string& name,
 		    const Index numSchemes,

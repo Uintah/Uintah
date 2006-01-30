@@ -35,13 +35,19 @@
 #include <Dataflow/Ports/BundlePort.h>
 #include <Core/Malloc/Allocator.h>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
 namespace SCIRun {
 
 extern "C" {
-  IPort* make_BundleIPort(Module* module, const string& name) {
+  SHARE IPort* make_BundleIPort(Module* module, const string& name) {
   return scinew SimpleIPort<BundleHandle>(module,name);
 }
-  OPort* make_BundleOPort(Module* module, const string& name) {
+  SHARE OPort* make_BundleOPort(Module* module, const string& name) {
   return scinew SimpleOPort<BundleHandle>(module,name);
 }
 }

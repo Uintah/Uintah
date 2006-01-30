@@ -50,9 +50,11 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Geom/Material.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomPoints : public GeomObj {
+class SHARE GeomPoints : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
@@ -91,7 +93,7 @@ public:
 };
 
 
-class GeomTranspPoints : public GeomPoints {
+class SHARE GeomTranspPoints : public GeomPoints {
 protected:
   vector<unsigned int> xindices_;
   vector<unsigned int> yindices_;
@@ -163,7 +165,7 @@ struct TimedParticle {
 // spatial partioning with - probably also have a "time" hiearchy
 // this should make it easy to parallelize things...
 
-class GeomTimedParticles : public GeomObj {
+class SHARE GeomTimedParticles : public GeomObj {
   Array1< TimedParticle > particles; // actual particles
 
   int drawMode;                      // 0 - pts at t0

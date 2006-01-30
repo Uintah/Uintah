@@ -48,6 +48,8 @@ set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
 set time_font "-Adobe-Courier-Medium-R-Normal-*-12-120-75-*"
 
+set firstIcon 1
+
 set mainCanvasWidth    4500.0
 set mainCanvasHeight   4500.0
 set maincanvas .topbot.pane1.childsite.frame.canvas
@@ -73,11 +75,19 @@ set CurrentlySelectedModules ""
 
 
 proc setIcons { { w . } { size small } } {
+    global firstIcon tcl_platform
     set srcdir [netedit getenv SCIRUN_SRCDIR]
     if { [string length $srcdir] } {
 	set bitmap $srcdir/pixmaps/scirun-icon-$size.xbm
 	set inverted $srcdir/pixmaps/scirun-icon-$size-inverted.xbm
-	wm iconbitmap $w @$inverted
+    if { $tcl_platform(os) == "Windows NT" && $size == "small" && $firstIcon == 1 } {
+      # make all subsequent windows use this icon.  This prevents an annoying problem
+      # where an empty window pops up and then fills up and moves to the proper location
+	  wm iconbitmap $w -default @$inverted
+	  set firstIcon 0
+	} elseif {$tcl_platform(os) != "Windows NT"} {
+	  wm iconbitmap $w @$inverted	
+	}
 	wm iconmask $w @$bitmap
     }
 }
@@ -392,6 +402,7 @@ proc activate_file_submenus { } {
     bind . <Control-l> "ClearCanvas"
     bind . <Control-z> "undo"
     bind . <Control-a> "selectAll"
+    bind . <Control-e> "netedit scheduleall"
     bind . <Control-y> "redo"
     bind all <Control-q> "NiceQuit"
 }

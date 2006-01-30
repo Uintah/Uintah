@@ -46,9 +46,11 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomFastQuads : public GeomObj {
+class SHARE GeomFastQuads : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
@@ -99,7 +101,7 @@ public:
 
 
 
-class GeomTranspQuads : public GeomFastQuads
+class SHARE GeomTranspQuads : public GeomFastQuads
 {
 protected:
   vector<unsigned int> xlist_;

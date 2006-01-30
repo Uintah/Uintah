@@ -49,10 +49,12 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 
-class GeomArrows : public GeomObj {
+class SHARE GeomArrows : public GeomObj {
     double headwidth;
     double headlength;
     Array1<MaterialHandle> shaft_matls;

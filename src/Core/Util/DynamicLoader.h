@@ -47,10 +47,12 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Util/share.h>
+
 namespace SCIRun {
 using namespace std;
 
-struct CompileInfo
+struct SHARE CompileInfo
 {
 public:
   typedef map<string, int> ci_map_type; //! unique keys.
@@ -92,7 +94,7 @@ typedef Handle<CompileInfo> CompileInfoHandle;
 //! A type that maker functions can create, and DynamicLoader can store.
 //! All algorithms that support the dynamic loading concept must 
 //! inherit from this.
-struct DynamicAlgoBase { 
+struct SHARE DynamicAlgoBase { 
   int       ref_cnt;
   Mutex     lock;
 
@@ -104,7 +106,7 @@ struct DynamicAlgoBase {
 
 typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
 
-class DynamicLoader
+class SHARE DynamicLoader
 {
 public:
   typedef DynamicAlgoBase* (*maker_fun)();

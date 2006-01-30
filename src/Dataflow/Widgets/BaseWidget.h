@@ -57,6 +57,8 @@
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiVar.h>
 
+#include <Dataflow/Widgets/share.h>
+
 namespace SCIRun {
 
 class CrowdMonitor;
@@ -69,7 +71,7 @@ class BaseConstraint;
 class ViewWindow;
 
 
-class BaseWidget : public GuiCallback, public WidgetPickable {
+class SHARE BaseWidget : public GuiCallback, public WidgetPickable {
 public:
   BaseWidget( Module* module, CrowdMonitor* lock,
 	      const string& name,

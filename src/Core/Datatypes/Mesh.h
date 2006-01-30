@@ -35,6 +35,8 @@
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 class BBox;
@@ -48,7 +50,7 @@ typedef LockingHandle<Mesh> MeshHandle;
 #define MESH_WEIGHT_MAXSIZE 64
 #define MESH_NO_NEIGHBOR 0xffffffff // 32 bit under_type!
 
-class Mesh : public PropertyManager {
+class SHARE Mesh : public PropertyManager {
 public:
 
   virtual Mesh *clone() = 0;

@@ -99,6 +99,18 @@ private:
     double dfirst;
   };
 
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return less(a,b);
+    }
+    static bool less(const edgepair_t &a, const edgepair_t &b)
+    {
+      return a.first < b.first || (a.first == b.first && a.second < b.second);
+    }
+  };
+
 #ifdef HAVE_HASH_MAP
   struct edgepairequal
   {
@@ -112,23 +124,36 @@ private:
   {
     unsigned int operator()(const edgepair_t &a) const
     {
+#if defined(__ECC) || defined(_MSC_VER)
+      hash_compare<unsigned int> h;
+#else
       hash<unsigned int> h;
+#endif
       return h(a.first ^ a.second);
     }
+# if defined(__ECC) || defined(_MSC_VER)
+
+      // These are particularly needed by ICC's hash stuff
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      
+      // This is a less than function.
+      bool operator()(const edgepair_t & a, const edgepair_t & b) const {
+        return edgepairless::less(a,b);
+      }
+# endif // endif ifdef __ICC
   };
 
+# if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<edgepair_t, TSMesh::Node::index_type, edgepairhash> edge_hash_type;
+#else
   typedef hash_map<edgepair_t,
 		   TSMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
+#endif // !defined(__ECC) && !defined(_MSC_VER)
+  
 #else
-  struct edgepairless
-  {
-    bool operator()(const edgepair_t &a, const edgepair_t &b) const
-    {
-      return a.first < b.first || (a.first == b.first && a.second < b.second);
-    }
-  };
 
   typedef map<edgepair_t,
 	      TSMesh::Node::index_type,

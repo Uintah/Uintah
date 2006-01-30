@@ -32,9 +32,11 @@
 #ifndef CORE_SERVICES_SERVICEBASE_H
 #define CORE_SERVICES_SERVICEBASE_H 1
 
+#include <Core/Services/share.h>
+
 namespace SCIRun {
 
-  class ServiceBase {
+  class SHARE ServiceBase {
   public:
     enum {
       TAG_RQSV=1,   // REQUEST SERVICE

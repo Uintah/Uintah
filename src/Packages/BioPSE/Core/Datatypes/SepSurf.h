@@ -52,6 +52,8 @@
 #include <Core/Containers/Array1.h>
 #include <vector>
 
+#include <Packages/BioPSE/Core/Datatypes/share.h>
+
 namespace BioPSE {
 
 using namespace SCIRun;
@@ -96,7 +98,7 @@ typedef QuadSurfMesh<QuadBilinearLgn<Point> > SSQSMesh;
 typedef GenericField<SSQSMesh, SSQSBasis, vector<int> > SSQSField;  
 
 
-class SepSurf : public SSQSField {
+class SHARE SepSurf : public SSQSField {
 public:
   Array1<SSQSMesh::Node::index_type> nodes; // array of all nodes
   Array1<SSQSMesh::Face::index_type> faces;	// array of all faces/elements

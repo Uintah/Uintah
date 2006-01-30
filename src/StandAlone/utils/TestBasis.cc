@@ -56,6 +56,12 @@ using std::cout;
 using std::ifstream;
 using std::endl;
 
+#ifdef _WIN32
+// this is terrible, I know...
+#define srand48 srand
+#define drand48 rand
+#endif
+
 using namespace SCIRun;
 
 // !!!WARNING!!! The 'test_vector' is not (and SHOULD NOT be) used.

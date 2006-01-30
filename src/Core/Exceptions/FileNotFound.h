@@ -49,8 +49,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Exceptions/share.h>
+
 namespace SCIRun {
-	class FileNotFound : public Exception {
+	class SHARE FileNotFound : public Exception {
 	public:
 	    FileNotFound(const std::string&, const char* file, int line);
 	    FileNotFound(const FileNotFound&);

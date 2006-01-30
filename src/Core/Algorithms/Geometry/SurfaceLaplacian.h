@@ -47,10 +47,12 @@
 //#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
+#include <Core/Algorithms/Geometry/share.h>
+
 namespace SCIRun {
 
 typedef TriSurfMesh<TriLinearLgn<Point> > surfLaplMesh;
-DenseMatrix *surfaceLaplacian(surfLaplMesh *mesh);
+SHARE DenseMatrix *surfaceLaplacian(surfLaplMesh *mesh);
 
 } // End namespace SCIRun
 #endif // SurfaceLaplacian_h

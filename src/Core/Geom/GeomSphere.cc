@@ -45,6 +45,7 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
 #include <Core/Persistent/PersistentSTL.h>
 
 #include <iostream>

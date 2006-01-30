@@ -50,9 +50,11 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomCylinder : public GeomObj {
+class SHARE GeomCylinder : public GeomObj {
 protected:
     Vector v1;
     Vector v2;
@@ -87,7 +89,7 @@ public:
 };
 
 
-class GeomCylinders : public GeomObj {
+class SHARE GeomCylinders : public GeomObj {
 protected:
   double radius_;
   int  nu_;
@@ -120,7 +122,7 @@ public:
 };
 
 
-class GeomCappedCylinder : public GeomCylinder {
+class SHARE GeomCappedCylinder : public GeomCylinder {
     int nvdisc;
 public:
     GeomCappedCylinder(int nu=20, int nv=1, int nvdisc=1);
@@ -138,7 +140,7 @@ public:
 };
 
 
-class GeomCappedCylinders : public GeomCylinders {
+class SHARE GeomCappedCylinders : public GeomCylinders {
   vector<double> radii_;
 public:
   GeomCappedCylinders(int nu = 8, double radius = 1.0);

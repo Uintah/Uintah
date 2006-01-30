@@ -109,13 +109,15 @@
 
 #endif
 
+#include <Core/ICom/share.h>
+
 namespace SCIRun {
 
 class IComAddress;
 
 typedef std::vector<char> IPaddress;
 
-class IComAddress : public IComBase {
+class SHARE IComAddress : public IComBase {
 
 public:
 

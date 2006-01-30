@@ -58,7 +58,7 @@
 #include <map>
 
 // define 'the_time()' function for UniCam
-#ifdef WIN32
+#ifdef _WIN32
 #  include <windows.h>
 #  include <winbase.h>
    inline double the_time() {

@@ -55,22 +55,10 @@ using std::string;
 namespace SCIRun {
 
 #ifdef _WIN32
-#include <windows.h>
-#define GL_FUNC_ADD 0x8006
-#define GL_MAX 0x8008
-#define GL_TEXTURE_3D 0x806F
-
-#define GL_TEXTURE0_ARB 0x84C0
-#define GL_TEXTURE0 0x84C0
-
-#define GL_ARB_fragment_program
-
-typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONPROC) (GLenum mode);
-typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
-static PFNGLBLENDEQUATIONPROC glBlendEquation = 0;
-static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
-
+#undef min
+#undef max
 #endif
+
 
 //static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
@@ -102,12 +90,6 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
   for(;it2 != level_alpha_.end(); ++it2){
     (*it2) = 0;
   }
-
-#ifdef _WIN32
-  glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
-  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
-#endif
-
 }
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
@@ -123,11 +105,6 @@ VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
   level_alpha_(copy.level_alpha_),
   planes_(copy.planes_)
 {
-#ifdef _WIN32
-  glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
-  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
-#endif
-
 }
 
 VolumeRenderer::~VolumeRenderer()
@@ -201,6 +178,7 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw_volume()
 {
+
   if( tex_->nlevels() > 1 ){
     multi_level_draw();
     return;
@@ -211,7 +189,10 @@ VolumeRenderer::draw_volume()
   Ray view_ray = compute_view();
   vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
-  if(bricks.size() == 0) return;
+  if(bricks.size() == 0) {
+    tex_->unlock_bricks();
+    return;
+  }
 
   bool cmap2_updating = false;
   for (unsigned int c = 0; c < cmap2_.size(); ++c)
@@ -266,24 +247,29 @@ VolumeRenderer::draw_volume()
   // set up blending
   if(blend_num_bits_ == 8) {
     glEnable(GL_BLEND);
-#ifndef _WIN32
     switch(mode_) {
     case MODE_OVER:
+#ifndef _WIN32
       if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS))) 
+#else
+      if (glBlendEquation)
+#endif
 	glBlendEquation(GL_FUNC_ADD);
-      
+
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
+#ifndef _WIN32
       if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+#else
+      if (glBlendEquation)
+#endif 
 	glBlendEquation(GL_MAX);
-      
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
       break;
     }
-#endif
   } else {
     int psize[2];
     psize[0] = Pow2(vp[2]);
@@ -436,8 +422,6 @@ VolumeRenderer::draw_volume()
     shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
   }
-
-
 
 #if 0
   const Transform &field_trans = tex_->transform();
@@ -684,16 +668,23 @@ VolumeRenderer::multi_level_draw()
   
   if(blend_num_bits_ == 8) {
     glEnable(GL_BLEND);
-#ifndef _WIN32
     switch(mode_) {
     case MODE_OVER:
+#ifndef _WIN32
       if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+#else
+      if (glBlendEquation)
+#endif
 	glBlendEquation(GL_FUNC_ADD);
 
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
+#ifndef _WIN32
       if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+#else
+      if (glBlendEquation)
+#endif
 	glBlendEquation(GL_MAX);
 
       glBlendFunc(GL_ONE, GL_ONE);
@@ -701,7 +692,6 @@ VolumeRenderer::multi_level_draw()
     default:
       break;
     }
-#endif
   } else {
     double mv[16], pr[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
@@ -835,7 +825,7 @@ VolumeRenderer::multi_level_draw()
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
-  
+
   Point corner[8];
   BBox bbox = tex_->bbox();
   corner[0] = bbox.min();

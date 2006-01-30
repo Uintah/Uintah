@@ -41,9 +41,11 @@
 #include <Core/Volume/Utils.h>
 #include <vector>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
-class Texture : public Datatype
+class SHARE Texture : public Datatype
 {
 public:
   Texture();

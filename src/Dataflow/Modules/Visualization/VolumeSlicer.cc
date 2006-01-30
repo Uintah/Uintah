@@ -104,6 +104,7 @@ private:
   Point old_min_, old_max_;
   GeomID geom_id_;
   SliceRenderer* slice_ren_;
+  vector<ColorMap2Handle> cmap2_array_;
   Point dmin_;
   Vector ddx_;
   Vector ddy_;
@@ -195,9 +196,10 @@ void VolumeSlicer::execute()
       }
     }
   }
-  vector<ColorMap2Handle> cmap2_array;
+  //vector<ColorMap2Handle> cmap2_array;
+  cmap2_array_.clear();
   if (c2)
-    cmap2_array.push_back(cmap2);
+    cmap2_array_.push_back(cmap2);
     
     
 
@@ -249,7 +251,7 @@ void VolumeSlicer::execute()
 
   if( !slice_ren_ && gui_multi_level_.get() >= 1 ) { gui_color_changed_.set(1);}
   if(!slice_ren_) {
-    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2_array,
+    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2_array_,
 				   int(card_mem_*1024*1024*0.8));
     slice_ren_->
       set_control_point(tex_->transform().unproject(control_widget_->
@@ -307,7 +309,7 @@ void VolumeSlicer::execute()
     }
     if (cmap2 != old_cmap2_)
     {
-      slice_ren_->set_colormap2(cmap2_array);
+      slice_ren_->set_colormap2(cmap2_array_);
       old_cmap2_ = cmap2;
     }
   }

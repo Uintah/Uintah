@@ -54,34 +54,6 @@ using std::string;
 
 namespace SCIRun {
 
-#ifdef _WIN32
-#  include <windows.h>
-#  define GL_TEXTURE0 0x84C0
-#  define GL_TEXTURE1 0x84C1
-#  define GL_TEXTURE2 0x84C2
-#  define GL_TEXTURE3 0x84C3
-
-#  define GL_TEXTURE0_ARB 0x84C0
-#  define GL_TEXTURE1_ARB 0x84C1
-#  define GL_TEXTURE2_ARB 0x84C2
-
-#  define GL_TEXTURE_3D 0x806F
-#  define GL_CLAMP_TO_EDGE 0x812F
-#  define GL_TEXTURE_WRAP_R 0x8072
-#  define GL_ARB_fragment_program 1
-#  define GL_UNPACK_IMAGE_HEIGHT 0x806E
-
-  typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
-  typedef void (GLAPIENTRY * PFNGLTEXIMAGE3DPROC) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
-  typedef void (GLAPIENTRY * PFNGLTEXSUBIMAGE3DPROC) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels);
-  typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD3FPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r);
-
-  static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
-  static PFNGLTEXIMAGE3DPROC glTexImage3D = 0;
-  static PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = 0;
-  static PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
-#endif
-
   static const string Cmap2ShaderStringNV =
   "!!ARBfp1.0 \n"
   "TEMP c, z; \n"
@@ -144,15 +116,6 @@ namespace SCIRun {
     free_tex_mem_(tex_mem),
     use_stencil_(false)
   {
-  
-#ifdef _WIN32
-    glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
-    glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
-    glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
-    glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
-#endif
-
-
   }
 
   TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
@@ -186,12 +149,6 @@ namespace SCIRun {
     free_tex_mem_(copy.free_tex_mem_),
     use_stencil_(copy.use_stencil_)
   {
-#ifdef _WIN32
-    glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
-    glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
-    glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
-    glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
-#endif
   }
 
   TextureRenderer::~TextureRenderer()

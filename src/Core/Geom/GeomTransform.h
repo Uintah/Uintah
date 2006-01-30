@@ -47,10 +47,12 @@
 #include <Core/Geom/GeomContainer.h>
 #include <Core/Geometry/Transform.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 
-class GeomTransform : public GeomContainer {
+class SHARE GeomTransform : public GeomContainer {
     Transform trans;
 public:
     GeomTransform(GeomHandle);

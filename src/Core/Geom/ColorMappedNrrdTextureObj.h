@@ -51,12 +51,13 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
 using std::string;
 
 
-class BBoxSet {
+class SHARE BBoxSet {
 public:
   BBoxSet();
   BBoxSet(BBox &bbox);
@@ -85,7 +86,7 @@ private:
 };
  
 
-class ColorMappedNrrdTextureObj {
+class SHARE ColorMappedNrrdTextureObj {
 public:
   ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd, 
                             int axis, 

@@ -39,13 +39,21 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <Dataflow/Ports/share.h>
+
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
 namespace SCIRun {
 
 extern "C" {
-IPort* make_FieldIPort(Module* module, const string& name) {
+SHARE IPort* make_FieldIPort(Module* module, const string& name) {
   return scinew SimpleIPort<FieldHandle>(module,name);
 }
-OPort* make_FieldOPort(Module* module, const string& name) {
+SHARE OPort* make_FieldOPort(Module* module, const string& name) {
   return scinew SimpleOPort<FieldHandle>(module,name);
 }
 }

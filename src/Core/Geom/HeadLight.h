@@ -49,7 +49,9 @@
 namespace SCIRun {
 
 
-class HeadLight : public Light {
+#include <Core/Geom/share.h>
+
+class SHARE HeadLight : public Light {
     Color c;
 public:
     HeadLight(const string& name, const Color&, bool on = true);

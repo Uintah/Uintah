@@ -37,6 +37,8 @@
 #include <Core/Thread/Mutex.h>
 #include <vector>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
 class CM2Widget;
@@ -44,7 +46,7 @@ typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 using std::vector;
 
-class ColorMap2 : public PropertyManager
+class SHARE ColorMap2 : public PropertyManager
 {
 public:
   ColorMap2();

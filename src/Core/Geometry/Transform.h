@@ -35,6 +35,8 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
 
 class Vector;
@@ -45,10 +47,10 @@ class Plane;
 class Transform;
 class TypeDescription;
 
-void Pio_old(Piostream&, Transform&);
-void Pio(Piostream&, Transform*&);
+SHARE void Pio_old(Piostream&, Transform&);
+SHARE void Pio(Piostream&, Transform*&);
 
-class Transform  : public Persistent
+class SHARE Transform  : public Persistent
 {
   double mat[4][4];
   mutable double imat[4][4];
@@ -80,8 +82,8 @@ public:
   //! Persistent I/O.
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  friend void Pio_old(Piostream&, Transform&);
-  friend void Pio(Piostream&, Transform*&);
+  SHARE friend void Pio_old(Piostream&, Transform&);
+  SHARE friend void Pio(Piostream&, Transform*&);
 
   void load_basis(const Point&,const Vector&, const Vector&, const Vector&);
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
@@ -143,12 +145,12 @@ public:
 };
 
 
-Point operator*(Transform &t, const Point &d);
-Vector operator*(Transform &t, const Vector &d);
+SHARE Point operator*(Transform &t, const Point &d);
+SHARE Vector operator*(Transform &t, const Vector &d);
 
 
 
-const TypeDescription* get_type_description(Transform*);
+SHARE const TypeDescription* get_type_description(Transform*);
 
 } // End namespace SCIRun
 

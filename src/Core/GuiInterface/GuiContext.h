@@ -49,13 +49,15 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/GuiInterface/share.h>
+
 namespace SCIRun {
 
 using std::vector;
 using std::string;
 class GuiInterface;
 
-class GuiContext {
+class SHARE GuiContext {
 public:
   GuiContext(GuiInterface* ctx, 
 	     const string& name, 

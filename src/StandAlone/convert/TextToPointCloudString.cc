@@ -57,8 +57,14 @@
 #include <fstream>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE
+#endif
+
 namespace SCIRun {
-extern FieldHandle
+extern SHARE FieldHandle
 TextPointCloudString_reader(ProgressReporter *pr, const char *file);
 }
 

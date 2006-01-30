@@ -46,9 +46,11 @@
 
 #include <Dataflow/Constraints/BaseConstraint.h>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 
-class RatioConstraint : public BaseConstraint {
+class SHARE RatioConstraint : public BaseConstraint {
 public:
    RatioConstraint( const string& name,
 		    const Index numSchemes,

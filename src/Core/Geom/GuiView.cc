@@ -47,7 +47,11 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geom/GuiView.h>
+#include <Core/Thread/Time.h>
 using namespace SCIRun;
+
+#include <iostream>
+using namespace std;
 
 GuiView::GuiView(GuiContext* ctx)
 : GuiVar(ctx), eyep(ctx->subVar("eyep")),

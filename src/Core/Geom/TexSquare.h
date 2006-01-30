@@ -46,9 +46,11 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class TexSquare : public GeomObj {
+class SHARE TexSquare : public GeomObj {
   float tex_coords_[8];
   float pos_coords_[12];
   Vector normal_;

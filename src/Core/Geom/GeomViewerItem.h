@@ -48,12 +48,13 @@
 #include <Core/Persistent/Persistent.h>
 #include <Dataflow/Network/Module.h>
 
+#include <Core/Geom/share.h>
 
 namespace SCIRun {
 
 class CrowdMonitor;
 
-class GeomViewerItem: public GeomContainer {
+class SHARE GeomViewerItem: public GeomContainer {
 private:  
   string name_;
   CrowdMonitor *crowd_lock_;

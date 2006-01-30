@@ -40,8 +40,6 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#define private public
-#define protected public
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Barrier.h>
@@ -53,6 +51,13 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/ThreadError.h>
+
+// version of windows
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0500
+#endif
+
+
 #define __REENTRANT
 #define _WINSOCK2API_
 #include <windows.h>
@@ -71,7 +76,6 @@ using std::string;
 
 #define MAX(x,y) ((x>y)?x:y)
 #define MIN(x,y) ((x<y)?x:y)
-
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
@@ -96,6 +100,8 @@ namespace SCIRun {
     HANDLE delete_ready;            // native semaphore
     HANDLE main_sema;
     HANDLE control_c_sema;
+
+    static void initialize() { Thread::initialize(); }
   };
   
   struct Mutex_private {
@@ -308,7 +314,7 @@ AtomicCounter::AtomicCounter(const char* name)
   if(!Thread::isInitialized()){
     if(getenv("THREAD_SHOWINIT"))
       fprintf(stderr, "AtomicCounter: %s\n", name);
-    Thread::initialize();
+    Thread_private::initialize();
   }
   priv_=new AtomicCounter_private;
 }
@@ -411,7 +417,7 @@ CrowdMonitor::CrowdMonitor(const char* name)
     if(getenv("THREAD_SHOWINIT"))
       fprintf(stderr, "CrowdMonitor: %s\n", name);
 
-    Thread::initialize();
+    Thread_private::initialize();
   }
   priv_=new CrowdMonitor_private;
 }
@@ -496,7 +502,7 @@ Barrier::Barrier(const char* name)
   if(!Thread::isInitialized()){
     if(getenv("THREAD_SHOWINIT"))
       fprintf(stderr, "Barrier: %s\n", name);
-    Thread::initialize();
+    Thread_private::initialize();
   }
   priv_=new Barrier_private;
 }
@@ -551,7 +557,7 @@ ConditionVariable::ConditionVariable(const char* name)
   : name_(name)
 {
   if (!Thread::isInitialized()) 
-    Thread::initialize();
+    Thread_private::initialize();
   if(getenv("THREAD_SHOWINIT"))
     fprintf(stderr, "ConditionVariable: %s\n", name);
   priv_ = new ConditionVariable_private(name);
@@ -680,9 +686,9 @@ static
 void
 handle_abort_signals(int sig)
 {
+    Thread* self=Thread::self();
     signal(sig, SIG_DFL);
 
-    Thread* self=Thread::self();
     const char* tname=self?self->getThreadName():"idle or main";
     char* signam=Core_Thread_signal_name(sig, 0);
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, (int)GetCurrentThreadId(), signam);
@@ -741,7 +747,7 @@ install_signal_handlers()
     signal(SIGINT, handle_abort_signals);
 
     // NT doesn't generate SIGILL, SIGTERM, or SIGSEGV, so this should catch them
-    SetUnhandledExceptionFilter(exception_handler);
+    //SetUnhandledExceptionFilter(exception_handler);
 }
 
 #if 0
@@ -903,7 +909,7 @@ void Thread_shutdown(Thread* thread, bool actually_exit)
       ExitThread(0);
 }
 
-unsigned long __stdcall run_threads(void* priv_v)
+unsigned long run_threads(void* priv_v)
 {
     Thread_private* priv=(Thread_private*)priv_v;
     threadids[priv->threadid] = priv->thread;
@@ -916,19 +922,25 @@ unsigned long __stdcall run_threads(void* priv_v)
     return 0; // Never reached
 }
 
+// matches the callback from CreateThread, use the helper so we can friend it
+unsigned long __stdcall start_threads(void* priv_v)
+{
+  return run_threads(priv_v);
+}
+
 Thread* Thread::self()
 {
   //return thread_local->current_thread;
   int threadid = GetCurrentThreadId();
   map<int, Thread*>::iterator iter = threadids.find(threadid);
   if (iter == threadids.end()) {
-    printf("This thread: %d", threadid);
+    printf("Thread::self failed: This thread: %d\n", threadid);
     printf("Available threads: ");
     for (iter = threadids.begin(); iter != threadids.end(); iter++) {
       printf("%d ",iter->first);
     }
     printf("\n");
-    throw ThreadError("Thread::self failed");
+    return 0;
   }
   return iter->second;
 }
@@ -948,7 +960,7 @@ void Thread::exit()
 void Thread::os_start(bool stopped)
 {
     if(!Thread::initialized)
-	Thread::initialize();
+	Thread_private::initialize();
 
     priv_=new Thread_private;
 
@@ -970,7 +982,7 @@ void Thread::os_start(bool stopped)
     priv_->main_sema = main_sema;
 
     lock_scheduler();
-	priv_->t = CreateThread(0,stacksize_,run_threads,priv_,(stopped?CREATE_SUSPENDED:0),(unsigned long*)&priv_->threadid);
+	priv_->t = CreateThread(0,stacksize_,start_threads,priv_,(stopped?CREATE_SUSPENDED:0),(unsigned long*)&priv_->threadid);
   threadids[priv_->threadid] = this;
 	if (!priv_->t) {
 	  throw ThreadError(std::string("CreateThread failed")

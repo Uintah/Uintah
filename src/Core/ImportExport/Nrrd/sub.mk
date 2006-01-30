@@ -30,7 +30,7 @@
 
 SRCDIR   := Core/ImportExport/Nrrd
 
-SRCS +=	$(SRCDIR)/ExecConverter.cc \
+SRCS +=	$(SRCDIR)/NrrdExecConverter.cc \
 	$(SRCDIR)/NrrdIEPlugin.cc
 
 # PSELIBS and LIBS come from the ImportExport sub.mk file (one dir up).

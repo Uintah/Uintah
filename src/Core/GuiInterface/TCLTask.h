@@ -47,6 +47,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <tcl.h>
 
+#include <Core/GuiInterface/share.h>
 namespace SCIRun {
 
 #if (TCL_MINOR_VERSION >= 4)
@@ -59,7 +60,7 @@ namespace SCIRun {
 #define EXPERIMENTAL_TCL_THREAD
 #endif
 
-class TCLTask : public Runnable {
+class SHARE TCLTask : public Runnable {
     int argc;
     char** argv;
     Semaphore cont;

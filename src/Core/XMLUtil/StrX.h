@@ -27,8 +27,8 @@
 */
 
 
-#ifndef Dataflow_Dataflow_StrX_h
-#define PSECORE_Dataflow_StrX_h 1
+#ifndef Dataflow_StrX_h
+#define Dataflow_StrX_h 1
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
@@ -48,6 +48,8 @@
 #endif
 
 #include <iostream>
+
+#include <Core/XMLUtil/share.h>
 
 namespace SCIRun {
 
@@ -97,7 +99,7 @@ private :
   char*   fLocalForm;
 };
 
-std::ostream& operator<<(std::ostream& target, const StrX& toDump);
+SHARE std::ostream& operator<<(std::ostream& target, const StrX& toDump);
 
 } // End namespace SCIRun
 

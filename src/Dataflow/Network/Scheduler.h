@@ -50,6 +50,8 @@
 #include <string>
 #include <list>
 
+#include <Dataflow/Network/share.h>
+
 namespace SCIRun {
 
 using std::string;
@@ -80,7 +82,7 @@ struct SerialSet
 // until after you were finished.
 typedef bool (*SchedulerCallback)(void *);
 
-class Scheduler : public Runnable
+class SHARE Scheduler : public Runnable
 {
   Network* net;
   bool first_schedule;

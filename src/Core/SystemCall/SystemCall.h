@@ -62,6 +62,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/ICom/IComSocket.h>
 
+#include <Core/SystemCall/share.h>
 namespace SCIRun {
 
 class SystemCallHandler;
@@ -89,7 +90,7 @@ typedef LockingHandle<SystemCallHandler> SystemCallHandlerHandle;
 // line to the handler. Multiple handlers can exist and share data
 // There is always a single thread buffering and sorting out the data
 
-class SystemCallHandler : public SystemCallBase
+class SHARE SystemCallHandler : public SystemCallBase
 {
   public:
   SystemCallHandler();
@@ -160,7 +161,7 @@ class SystemCallThread : public Runnable, public SystemCallBase {
 //////////////////////////////////////////////////////////////////////
 // SystemCall:  Main object for handling calls to unix
 
-class SystemCall : public SystemCallBase {
+class SHARE SystemCall : public SystemCallBase {
 
   public:
 

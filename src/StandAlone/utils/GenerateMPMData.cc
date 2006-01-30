@@ -61,6 +61,10 @@ vector<string> prename;
 const unsigned int max_lines = 25000000;
 double part_per_mm = 4.;
 
+#ifdef _WIN32
+#define round(x) (int) (x+.5)
+#endif
+
 template<class Fld>
 void
 write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
@@ -125,7 +129,7 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
     double dz = (u - o).length();
 
     double vol = dx * dy * dz; 
-    
+
     const int div_per_x = (int)round(part_per_mm * dx);
     const int div_per_y = (int)round(part_per_mm * dy);
     const int div_per_z = (int)round(part_per_mm * dz);

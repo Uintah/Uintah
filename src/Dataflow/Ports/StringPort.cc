@@ -42,13 +42,19 @@
 #include <Dataflow/Ports/StringPort.h>
 #include <Core/Malloc/Allocator.h>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
 namespace SCIRun {
 
 extern "C" {
-IPort* make_StringIPort(Module* module, const string& name) {
+SHARE IPort* make_StringIPort(Module* module, const string& name) {
   return scinew SimpleIPort<StringHandle>(module,name);
 }
-OPort* make_StringOPort(Module* module, const string& name) {
+SHARE OPort* make_StringOPort(Module* module, const string& name) {
   return scinew SimpleOPort<StringHandle>(module,name);
 }
 }

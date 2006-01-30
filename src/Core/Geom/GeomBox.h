@@ -47,9 +47,10 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
-class GeomBox : public GeomObj {
+class SHARE GeomBox : public GeomObj {
   Point min, max;
   int opacity[6];
 public:
@@ -72,7 +73,7 @@ public:
 };
 
 
-class GeomSimpleBox : public GeomObj {
+class SHARE GeomSimpleBox : public GeomObj {
 protected:
   Point min, max;
 
@@ -94,7 +95,7 @@ public:
 };
 
 
-class GeomCBox : public GeomSimpleBox {
+class SHARE GeomCBox : public GeomSimpleBox {
 public:
   GeomCBox( const Point& p, const Point& q);
   GeomCBox(const GeomCBox&);
@@ -111,7 +112,7 @@ public:
 };
 
 
-class GeomBoxes : public GeomObj {
+class SHARE GeomBoxes : public GeomObj {
 private:
   vector<Point> centers_;
   vector<double> edges_;

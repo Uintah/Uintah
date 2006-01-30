@@ -45,6 +45,7 @@
 #  pragma set woff 1506
 #endif
 
+#include <Core/Basis/share.h>
 
 namespace SCIRun {
 
@@ -223,7 +224,6 @@ namespace SCIRun {
     return area*pEB->area(face);
   }
  
-
   //! default case for arc length calculation - currently not needed
   template <class T>
     inline double d_arc_length(const vector<T>& derivs, const vector<double>& dv)
@@ -337,7 +337,7 @@ namespace SCIRun {
   }
 
   template <>
-    Point difference(const Point& interp, const Point& value);
+    SHARE Point difference(const Point& interp, const Point& value);
  
 
 
@@ -346,7 +346,7 @@ namespace SCIRun {
 		     const T& y, const vector<T>& yd);
 
   template <>
-    double getnextx1(vector<double> &x, vector<double> &xold, 
+    SHARE double getnextx1(vector<double> &x, vector<double> &xold, 
 		     const Point& y, const vector<Point>& yd);
 
   template <class T>
@@ -363,7 +363,7 @@ namespace SCIRun {
 		     const T& y, const vector<T>& yd);
 
   template <>
-    double getnextx2(vector<double> &x, vector<double> &xold, 
+    SHARE double getnextx2(vector<double> &x, vector<double> &xold, 
 		     const Point& y, const vector<Point>& yd);
 
   template <class T>
@@ -385,7 +385,7 @@ namespace SCIRun {
  
   // locate for Point 
   template <>
-    double getnextx3(vector<double> &x, vector<double> &xold, 
+    SHARE double getnextx3(vector<double> &x, vector<double> &xold, 
 		     const Point& y, const vector<Point>& yd);
       
   // locate for scalar value 
@@ -547,7 +547,7 @@ class Dim1Locate {
   }
 
   template <>
-    bool compare_distance(const Point &interp, const Point &val, 
+    SHARE bool compare_distance(const Point &interp, const Point &val, 
 			  double &cur_d, double dist);
 
   template <class T>
@@ -563,7 +563,7 @@ class Dim1Locate {
   }
 
   template <>
-    bool check_zero(const vector<Point> &val); 
+    SHARE bool check_zero(const vector<Point> &val); 
 
 }
 #endif

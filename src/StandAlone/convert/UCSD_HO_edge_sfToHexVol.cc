@@ -97,10 +97,19 @@ struct edge_hsh {
   {
     return (e1.e1_ == e2.e1_ && e1.e2_ == e2.e2_);
   }
+#if defined(__ECC) || defined(_MSC_VER)
+
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+#endif
 
 };
 
+#if defined(__ECC) || defined(_MSC_VER)
+typedef hash_set<edge_hsh, edge_hsh> etable_t;
+#else
 typedef hash_set<edge_hsh, edge_hsh, edge_hsh> etable_t;
+#endif
 
 int
 parse_edge_sf_17(ifstream &nodal_in, etable_t &tbl) 

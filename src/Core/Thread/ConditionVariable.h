@@ -46,6 +46,8 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 
+#include <Core/Thread/share.h>
+
 struct timespec;
 
 namespace SCIRun {
@@ -75,7 +77,7 @@ class CrowdMonitor_private;
    
 ****************************************/
 
-class ConditionVariable {
+class SHARE ConditionVariable {
 public:
   //////////
   // Create a condition variable. <i>name</i> should be a static

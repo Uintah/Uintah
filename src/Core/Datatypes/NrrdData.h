@@ -45,11 +45,13 @@
 #include <Core/Containers/LockingHandle.h>
 #include <teem/nrrd.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 /////////
 // Structure to hold NrrdData
-class NrrdData : public PropertyManager {
+class SHARE NrrdData : public PropertyManager {
 public:  
   // GROUP: public data
   //////////
@@ -108,40 +110,40 @@ typedef LockingHandle<NrrdData> NrrdDataHandle;
 //  nrrdTypeDouble,
 
 
-unsigned int string_to_nrrd_type(const string &str);
+SHARE unsigned int string_to_nrrd_type(const string &str);
 
 template <class T>
-unsigned int get_nrrd_type();
+SHARE unsigned int get_nrrd_type();
 
 template <>
-unsigned int get_nrrd_type<char>();
+SHARE unsigned int get_nrrd_type<char>();
 
 template <>
-unsigned int get_nrrd_type<unsigned char>();
+SHARE unsigned int get_nrrd_type<unsigned char>();
 
 template <>
-unsigned int get_nrrd_type<short>();
+SHARE unsigned int get_nrrd_type<short>();
 
 template <>
-unsigned int get_nrrd_type<unsigned short>();
+SHARE unsigned int get_nrrd_type<unsigned short>();
 
 template <>
-unsigned int get_nrrd_type<int>();
+SHARE unsigned int get_nrrd_type<int>();
 
 template <>
-unsigned int get_nrrd_type<unsigned int>();
+SHARE unsigned int get_nrrd_type<unsigned int>();
 
 template <>
-unsigned int get_nrrd_type<long long>();
+SHARE unsigned int get_nrrd_type<long long>();
 
 template <>
-unsigned int get_nrrd_type<unsigned long long>();
+SHARE unsigned int get_nrrd_type<unsigned long long>();
 
 template <>
-unsigned int get_nrrd_type<float>();
+SHARE unsigned int get_nrrd_type<float>();
 
 template <>
-unsigned int get_nrrd_type<Tensor>();
+SHARE unsigned int get_nrrd_type<Tensor>();
 
 template <class T>
 unsigned int get_nrrd_type()
@@ -149,7 +151,7 @@ unsigned int get_nrrd_type()
   return nrrdTypeDouble;
 }
 
-void get_nrrd_compile_type( const unsigned int type,
+SHARE void get_nrrd_compile_type( const unsigned int type,
 			    string & typeStr,
 			    string & typeName );
 

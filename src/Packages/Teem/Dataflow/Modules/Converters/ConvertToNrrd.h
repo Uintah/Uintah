@@ -42,13 +42,14 @@
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 
+#include <Teem/Dataflow/Modules/Converters/share.h>
 namespace SCIRun {
 using namespace std;
 
 //! ConvertToNrrdBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! ConvertToNrrdBase from the DynamicAlgoBase they will have a pointer to.
-class ConvertToNrrdBase : public DynamicAlgoBase
+class SHARE ConvertToNrrdBase : public DynamicAlgoBase
 {
 public:
   virtual bool convert_to_nrrd(SCIRun::FieldHandle, NrrdDataHandle &pointsH,

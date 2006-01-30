@@ -40,10 +40,11 @@
 #endif
 
 
+#include <Core/Basis/share.h>
 namespace SCIRun {
 
 //! Class for describing unit geometry of CrvLinearLgn 
-  class CrvQuadraticLgnUnitElement : public CrvLinearLgnUnitElement {
+  class SHARE CrvQuadraticLgnUnitElement : public CrvLinearLgnUnitElement {
 public: 
   static double unit_vertices[3][1]; //!< Parametric coordinates of vertices of unit edge
 

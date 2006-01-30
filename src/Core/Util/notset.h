@@ -30,9 +30,13 @@
 #ifndef Core_Util_notset_h
 #define Core_Util_notset_h 1
 
+#include <Core/Util/share.h>
 namespace SCIRun {
 
-extern const char _NOTSET_[]; // = "(null string)";
+extern SHARE const char _NOTSET_[]; // = "(null string)";
+/* NOT_SET is used to indicate active 
+   fields inside of data structures that
+   represent XML element trees */
 #define NOT_SET ((char*)_NOTSET_)
 
 }

@@ -801,6 +801,7 @@ fi
 echo 
 IS_OSX="no"
 IS_WIN="no"
+IS_VC="no"
 IS_AIX="no"
 unset NUM_CPUS
 
@@ -840,7 +841,7 @@ case $host in
     ;;
   *-pc*)
     echo
-    AC_MSG_ERROR(Currently Windows only handles mingw.  See install instructions)
+    AC_MSG_ERROR(Currently Windows only configures from mingw.  See install instructions)
     ;;
   *)
     echo
@@ -1083,10 +1084,13 @@ sci_defs_files="$sci_defs_files include/sci_defs/error_testdefs.h"
 ##  ----------------  set host specific build tools  ---------------------
 ##  ----------------------------------------------------------------------
 
+DEBUG=yes
+
 AC_MSG_CHECKING(whether debug was enabled)
 OGL_ERR_MACRO=""
 if test "$debug" = "no"; then
   AC_MSG_RESULT(no)
+  DEBUG=no
 elif test "$debug" = "yes"; then
   OGL_ERR_MACRO="#define OGL_DBG 1"
   extra_cflags="-g ${extra_cflags}"
@@ -1097,6 +1101,7 @@ else
   AC_MSG_RESULT(yes ($debug) )
 fi
 
+AC_SUBST(DEBUG)
 AC_SUBST(OGL_ERR_MACRO)
 
 AC_MSG_CHECKING(whether optimize was enabled)
@@ -1124,15 +1129,15 @@ if test "$sci_required_perfex" = "yes"; then
   extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
 fi
 
-if test ! -e "`type $CC | sed 's%^.* %%'`"; then
+if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
   SCI_MSG_ERROR(Could not find the specified C compiler ($CC))
 fi
-if test ! -e "`type $CXX | sed 's%^.* %%'`"; then
+if test ! -e "`type $CXX | sed 's%^.* /%/%'`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
 fi
 
 if test $sci_required_fortran = "yes"; then
-  if test ! -e "`type $F77 | sed 's%^.* %%'`"; then
+  if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
     SCI_MSG_ERROR(Could not find the specified Fortran compiler ($F77))
   fi
 fi
@@ -1347,48 +1352,95 @@ case $host in
     ;;
 
   *-pc-mingw*)
-    ac_objext=o
-    CFLAGS=" -Wall"
-    CXXFLAGS=" -Wall"
-    WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@)))'
-    SCI_CHECK_VERSION($CC,--version,2.95.3,,
-      echo configure: error: wrong $CC version.; exit)
-    if test $sci_required_fortran = "yes"; then
-      SCI_CHECK_VERSION($F77,--version,0.5.25,,
-        echo configure: error: wrong $F77 version.; exit)
-    fi
-    SCI_CHECK_VERSION($CXX,--version,2.95.3,,
-      echo configure: error: wrong $CXX version.; exit)
+    case $CXX in
+      *cl*)
+          ac_objext=obj
+          CXXFLAGS="-EHsc -GR"
+          
+          if test "$debug" = yes; then
+            #  no debug information for dynamic compilation yet - the threaded compilations will overwrite the db file
+            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -Gm -MD -W1 -Wp64"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@) /Fd"../$(dir $@)vc70.pdb"'
+          else
+            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -O2 -MD -W1"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@)'
+          fi
+          CXXFLAGS="$CXXFLAGS $CFLAGS"
+          WOFF=" -w0"
+          SOFLAGS="-link -dll"
+          NEED_SONAME=no
+          LDRUN_PREFIX="-LIBPATH:"
+          IS_VC="yes"
+          if !test -f "$PATH_TO_VC"/bin/cl.exe; then
+            PATH_TO_VC=""
+            echo "invalid PATH_TO_VC"
+          fi
+          if !test -f "$PATH_TO_PSDK"/Include/windows.h; then
+            PATH_TO_PSDK=""
+            echo "invalid PATH_TO_PSDK"
+          fi
+          if !test -f "$PATH_TO_MSYS_BIN"/make.exe; then
+            PATH_TO_MSYS_BIN=""
+            echo "invalid PATH_TO_MSYS_BIN"
+          fi
+          
+          if test -z "$PATH_TO_VC" -o -z "$PATH_TO_PSDK" -o -z "$PATH_TO_MSYS_BIN"; then
+            SCI_MSG_ERROR([One of more of the required VCDIRS variables are not set. Execute
+  export PATH_TO_VC=<path-to-vc>
+  export PATH_TO_PSDK=<path-to-PlatformSDK>
+  export PATH_TO_MSYS_BIN=<msys-bin-dir>
+    Use drive letter and forward slashes (/) instead of backslashes (\)
+    i.e., C:/msys/1.0/bin])
+          fi
+          AC_SUBST(PATH_TO_VC)
+          AC_SUBST(PATH_TO_PSDK)
+          AC_SUBST(PATH_TO_MSYS_BIN)
+          ;;
+      *g++*)
+          ac_objext=o
+          CFLAGS=" -Wall"
+          CXXFLAGS=" -Wall"
+          WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@)))'
+          SCI_CHECK_VERSION($CC,--version,2.95.3,,
+            echo configure: error: wrong $CC version.; exit)
+          SCI_CHECK_VERSION($CXX,--version,2.95.3,,
+            echo configure: error: wrong $CXX version.; exit)
+          WOFF=" -w"
+          SOFLAGS="-shared ${SOFLAGS}"
+          NEED_SONAME=yes
+          ;;
+      esac
     AC_PROG_CPP
     AC_PROG_CXXCPP
     AC_CHECK_PROG(AS,as,as)
     AC_CHECK_PROG(LD,ld,ld)
-    WOFF=" -w"
     CPPFLAGS="$CPPFLAGS $WOFF"
     CFLAGS="$CFLAGS $extra_cflags"
-
-    case $F77 in
-      *g77*)
-         # extra_fflags has array checking if in debug mode.
-         FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
-
-         # put '_' at end and two '_'s if there is a '_' in name.
-         # This flag is used by the genfspec.pl script in Uintah (generated
-         # from fspec.pl.in).
-         FORTRAN_UNDERSCORE=linux
-         ;;
-      *gfortran*)
-         FFLAGS="$FFLAGS $extra_cflags"   
-         FORTRAN_UNDERSCORE=linux
-         ;;        
-      *)
-         FFLAGS="$FFLAGS $extra_cflags"
-         ;;
-    esac
-
     CXXFLAGS="$CXXFLAGS $extra_cflags"
-    SOFLAGS="-shared ${SOFLAGS}"
-    NEED_SONAME=yes
+
+    if test $sci_required_fortran = "yes"; then
+      SCI_CHECK_VERSION($F77,--version,0.5.25,,
+        echo configure: error: wrong $F77 version.; exit)
+      case $F77 in
+        *g77*)
+          # extra_fflags has array checking if in debug mode.
+          FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+          # put '_' at end and two '_'s if there is a '_' in name.
+          # This flag is used by the genfspec.pl script in Uintah (generated
+          # from fspec.pl.in).
+          FORTRAN_UNDERSCORE=linux
+          ;;
+        *gfortran*)
+          FFLAGS="$FFLAGS $extra_cflags"   
+          FORTRAN_UNDERSCORE=linux
+          ;;        
+        *)
+          FFLAGS="$FFLAGS $extra_cflags"
+          ;;
+      esac
+    fi
+ 
     ;;
   *)
     # linux
@@ -1810,7 +1862,11 @@ fi
 sci_thirdparty_lib="$sci_thirdparty_dir/lib"
 sci_thirdparty_include="$sci_thirdparty_dir/include"
 SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_lib"
-SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib -L$sci_thirdparty_lib"
+if test "$IS_VC" != "yes"; then
+  SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib -L$sci_thirdparty_lib"
+else
+  SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib"
+fi
 INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
 SCI_THIRDPARTY_DIR="$sci_thirdparty_dir"
 
@@ -1880,7 +1936,12 @@ sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 ##  --  search for the math library  -------------------------------------
 AC_LANG(C)
 
-SCI_TRY_LINK(M,math libraries and headers,math.h,,m,,,[
+if test "$IS_VC" = "yes"; then
+  M_LIB=""
+else
+  M_LIB=m
+fi
+SCI_TRY_LINK(M,math libraries and headers,math.h,,$M_LIB,,,[
   double d = fabs(69.05);
 ],required)
 
@@ -1933,7 +1994,11 @@ case $host in
     ;;
   *-pc-mingw*)
     threads=win32
-    SOCKET_LIB_FLAG="-lws2_32"
+    if test $IS_VC = "yes"; then
+      SOCKET_LIB_FLAG="ws2_32.lib"
+    else
+      SOCKET_LIB_FLAG="-lws2_32"
+    fi
     ;;
   *)
     if test "$threads" = "unknown"; then
@@ -2000,7 +2065,11 @@ case $threads in
    win32)
      # for time functions in windows
      DEF_THREAD=
-     THREAD_LIB_FLAG=-lwinmm
+     if test $IS_VC = "yes"; then
+       THREAD_LIB_FLAG=winmm.lib
+     else
+       THREAD_LIB_FLAG=-lwinmm
+     fi
      ;;
    *)
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
@@ -2090,6 +2159,9 @@ AC_SUBST(INC_GL_H)
 SCI_COMPILE_LINK_TEST(EXT_HDRS,correct OpenGL extension headers ,
 [
   #define GL_GLEXT_PROTOTYPES
+  #ifdef _WIN32
+  #include <windows.h>
+  #endif
   #include <GL/gl.h>
   #include <GL/glext.h>
 ],
@@ -2214,17 +2286,17 @@ AC_SUBST(DEF_STAT64)
 sci_defs_files="$sci_defs_files include/sci_defs/stat64_testdefs.h"  
 
 ##  --  required standard headers
-SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h unistd.h ctype.h signal.h locale.h dirent.h assert.h sys/types.h sys/time.h sys/stat.h sys/timeb.h sys/param.h,,,,,,required)
+SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h ctype.h signal.h locale.h assert.h sys/types.h sys/stat.h sys/timeb.h,,,,,,required)
 
 # don't test for malloc.h or values.h on darwin
 # don't test a bunch of then on win32
 case $host in
   *-darwin*)
-    SCI_TRY_LINK(STD_HDRS, standard headers-2,netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
+    SCI_TRY_LINK(STD_HDRS, standard headers-2,unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
   *-irix*)
     # test for required sqi headers as well
-    SCI_TRY_LINK(STD_HDRS,SGI standard headers,ieeefp.h ulocks.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
+    SCI_TRY_LINK(STD_HDRS,SGI standard headers,unistd.h dirent.h sys/time.h sys/param.h ieeefp.h ulocks.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
     ;;
   *-pc-mingw*)
@@ -2232,7 +2304,7 @@ case $host in
 
   *)
     # default system headers that cannot be tested on all systems
-    SCI_TRY_LINK(STD_HDRS,standard headers-2,values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
+    SCI_TRY_LINK(STD_HDRS,standard headers-2,unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
 esac
 
@@ -2258,6 +2330,12 @@ if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
                  std::hash_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
+fi
+# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <hash_map>
+                 stdext::hash_map<int, int> xx;], ,
+		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
 fi
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
@@ -2313,10 +2391,10 @@ fi
 SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
              $_sci_tcl_inc,tcl,$_sci_lib,,,$_sci_optional)
 
-if test "$IS_WIN" = "yes"; then
+# if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
-  LIB_DIR_TCL=`echo "$LIB_DIR_TCL" | sed 's,/,,' | sed 's,/,:/,'`
-fi
+  # LIB_DIR_TCL=`echo "$LIB_DIR_TCL" | sed 's,/,,' | sed 's,/,:/,'`
+# fi
 
 SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_TCL)
 SCI_SUBST_THIRDPARTY_DIR(TCL_LIB_DIR_FLAG)
@@ -2350,10 +2428,10 @@ AC_SUBST(INC_TK_H)
 SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
              $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
 
-if test "$IS_WIN" = "yes"; then
+# if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
-  LIB_DIR_ITCL=`echo "$LIB_DIR_ITCL" | sed 's,/,,' | sed 's,/,:/,'`
-fi
+  # LIB_DIR_ITCL=`echo "$LIB_DIR_ITCL" | sed 's,/,,' | sed 's,/,:/,'`
+# fi
 
 SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_ITCL)
 SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG_H)
@@ -2379,7 +2457,11 @@ SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_
 
 if test "$IS_WIN" = "yes"; then
   # Windows BLT needs these other libs
-  BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
+  if test $IS_VC = "yes"; then
+    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib"
+  else
+    BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
+  fi
 fi
 
 SCI_SUBST_THIRDPARTY_DIR(BLT_LIB_DIR_FLAG)
@@ -4500,7 +4582,7 @@ if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != 
    AC_MSG_ERROR(Please fix this problem and then configure again.)
 fi
 
-SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,[
+SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG $M_LIB_FLAG,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,[
 float a[3], b[9], c[7];
 tenEigensolve_f(a,b,c);
 ]

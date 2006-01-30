@@ -83,7 +83,14 @@
 #include <Core/Volume/CM2Widget.h>
 
 
-extern Tcl_Interp* the_interp;
+#ifdef _WIN32
+#define SHARE __declspec(dllimport)
+#define sleep(z) Sleep(z*1000)
+#else
+#define SHARE
+#endif
+
+extern "C" SHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 

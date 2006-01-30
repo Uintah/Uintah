@@ -83,10 +83,14 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
   clipped->copy_properties(mesh);
 
 #ifdef HAVE_HASH_MAP
+# if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<unsigned int, typename FIELD::mesh_type::Node::index_type> hash_type;
+# else
   typedef hash_map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,
     hash<unsigned int>,
     equal_to<unsigned int> > hash_type;
+# endif
 #else
   typedef map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,
@@ -185,10 +189,14 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
   clipped->copy_properties(mesh);
 
 #ifdef HAVE_HASH_MAP
+# if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<unsigned int, typename FIELD::mesh_type::Node::index_type> hash_type;
+# else
   typedef hash_map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,
     hash<unsigned int>,
     equal_to<unsigned int> > hash_type;
+# endif
 #else
   typedef map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,

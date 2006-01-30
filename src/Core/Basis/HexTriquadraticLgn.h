@@ -39,10 +39,12 @@
 #  pragma set woff 1506
 #endif
 
+#include <Core/Basis/share.h>
+
 namespace SCIRun {
 
 //! Class for describing unit geometry of HexTriquadraticLgn 
-  class HexTriquadraticLgnUnitElement : public HexTrilinearLgnUnitElement {
+  class SHARE HexTriquadraticLgnUnitElement : public HexTrilinearLgnUnitElement {
 public:
   static double unit_vertices[20][3]; //!< Parametric coordinates of vertices of unit edge 
  

@@ -45,9 +45,11 @@
 
 #include <Core/Geometry/Vector.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
   class Point;
-class Plane {
+class SHARE Plane {
    Vector n;
    double d;
 public:

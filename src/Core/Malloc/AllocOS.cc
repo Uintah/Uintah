@@ -49,12 +49,12 @@
 #endif
 #ifndef _WIN32
 #include <sys/mman.h>
+#include <unistd.h>
 #endif
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
 #define ALIGN 16
 
 #if defined(sun) || defined(__linux)
