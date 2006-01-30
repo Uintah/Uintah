@@ -55,6 +55,7 @@ PSELIBS := \
 	Core/GuiInterface \
 	Core/Persistent   \
 	Core/Thread       \
+	Core/Volume       \
 	Core/Util         \
 	Dataflow/Network  \
 	Dataflow/Comm    
