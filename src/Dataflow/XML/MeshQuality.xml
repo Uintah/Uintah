@@ -33,7 +33,7 @@
 
 
 
-<component name="MeshQuality" category="FieldsData">
+<component name="MeshQuality" category="FieldsData" optional="true">
   <overview>
     <authors>
       <author>Jason Shepherd</author>
