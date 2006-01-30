@@ -593,9 +593,21 @@ template <class Basis>
 const string
 ScanlineMesh<Basis>::type_name(int n)
 {
-  ASSERT(n >= -1 && n <= 0);
-  static const string name = "ScanlineMesh";
-  return name;
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    static const string nm("ScanLineMesh");
+    return nm;
+  }
+  else 
+  {
+    return find_type_name((Basis *)0);
+  }
 }
 
 
