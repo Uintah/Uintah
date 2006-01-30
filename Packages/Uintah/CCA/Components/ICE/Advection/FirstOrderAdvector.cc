@@ -373,7 +373,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
                                       const string& desc,
                                       advectVarBasket* vb)
 {
-  if(vb->doAMR){
+  if(vb->doRefluxing){
     // pull variables from the basket
     const int indx = vb->indx;
     const Patch* patch = vb->patch;
@@ -470,5 +470,5 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
 #endif
   /*===========TESTING==========`*/                                       
                                            
-  } // doAMR   
+  } // doRefluxing   
 }

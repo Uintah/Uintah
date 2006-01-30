@@ -236,7 +236,6 @@ namespace Uintah {
     double d_vol_frac_threshold;
     double d_vel_threshold;
     
-    bool d_doRefluxing;
     bool d_regridderTest;
     int d_orderOfInterpolation;    
   };
