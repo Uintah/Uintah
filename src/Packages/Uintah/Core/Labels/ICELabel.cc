@@ -270,8 +270,6 @@ ICELabel::ICELabel()
 
   //__________________________________
   // Implicit AMR variable
-  connectionListLabel = 
-    VarLabel::create("connectionList",CCVariable<ConnectionList>::getTypeDescription());
   matrix_CFI_weightsLabel     =
     VarLabel::create("matrix_CFI_weights", CCVariable<double>::getTypeDescription() );
 }
@@ -412,6 +410,5 @@ ICELabel::~ICELabel()
     VarLabel::destroy(int_eng_Z_FC_fluxLabel);
 
     // Implicit AMR labels
-    VarLabel::destroy(connectionListLabel);
     VarLabel::destroy(matrix_CFI_weightsLabel);
 }
