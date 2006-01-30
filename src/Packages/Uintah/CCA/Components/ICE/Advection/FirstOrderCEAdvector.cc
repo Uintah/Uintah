@@ -471,7 +471,7 @@ void FirstOrderCEAdvector::q_FC_fluxes( const CCVariable<T>&,
                                         const string& ,
                                         advectVarBasket* vb)
 {
-  if(vb->doAMR){
+  if(vb->doRefluxing){
     // implement when we have FO and SO working
-  }  // doAMR   
+  }  // doRefluxing   
 }

@@ -1694,7 +1694,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
-  if(d_doAMR){                           
+  if(d_doRefluxing){                           
     computesRequires_AMR_Refluxing(task, AMR_subCycleProgressVar, ice_matls);
   }
   
@@ -4993,7 +4993,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       varBasket->patch = patch;
       varBasket->level = level;
       varBasket->lb  = lb;
-      varBasket->doAMR = d_doAMR;
+      varBasket->doRefluxing = d_doRefluxing;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
 

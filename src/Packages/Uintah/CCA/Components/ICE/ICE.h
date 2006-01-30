@@ -782,6 +782,7 @@ namespace Uintah {
      
       // flags
       bool d_doAMR;
+      bool d_doRefluxing;
       int  d_surroundingMatl_indx;
       bool d_impICE;
       bool d_recompile;
