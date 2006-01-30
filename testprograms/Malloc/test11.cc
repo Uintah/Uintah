@@ -30,7 +30,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef _WIN32
 #include <strings.h>
+#endif
 #if defined(__sun)
 #include <string.h>
 #define bcopy(src,dest,n) memcpy(dest,src,n)
