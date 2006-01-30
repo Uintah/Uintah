@@ -888,7 +888,7 @@ void SecondOrderCEAdvector::q_FC_fluxes(const CCVariable<T>& ,
                                         const string&,
                                         advectVarBasket* vb)
 {
-  if(vb->doAMR){
+  if(vb->doRefluxing){
     // implement when FO and SO is working
-  }  // doAMR
+  }  // doRefluxing
 }

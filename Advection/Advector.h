@@ -29,7 +29,7 @@ namespace Uintah {
       string desc;
       const Patch* patch;
       const Level* level;
-      bool doAMR;
+      bool doRefluxing;
   };
   
   class Advector {
