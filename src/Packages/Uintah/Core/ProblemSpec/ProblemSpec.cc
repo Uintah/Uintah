@@ -7,6 +7,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <iterator>
+#include <algorithm>
+#include <vector>
 #include <iomanip>
 #include <map>
 #include <sstream>
@@ -329,10 +332,23 @@ ProblemSpec::get(const string& name, string &value)
     value = node->getNodeValue();
    
     // elminate spaces from string
-    string::size_type pos =0;
-    while(( pos = value.find_first_of(" ",pos)) != string::npos){
-      value.erase(pos,1);
+
+    stringstream in_stream(value);
+    vector<string> vs;
+    copy(istream_iterator<string>(in_stream),istream_iterator<string>(),
+         back_inserter(vs));
+    string out_string;
+    for (vector<string>::const_iterator it = vs.begin(); it != vs.end();
+         ++it) {
+      out_string += *it + ' ';
     }
+
+    string::iterator begin = out_string.end() - 1;
+    string::iterator end = out_string.end();
+    out_string.erase(begin,end);
+
+    value = out_string;
+
   }
 
   return ps;
