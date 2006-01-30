@@ -338,8 +338,15 @@ SCI_ARG_WITH(insight,
   AC_HELP_STRING(--with-insight=DIR,
 	         Use the Insight installation in DIR),
   [with_insight="$withval"
-   sci_required_insight=yes],
+   sci_required_insight=yes
+   sci_required_gdcm=yes],
   [with_insight=""])
+SCI_ARG_WITH(gdcm,
+  AC_HELP_STRING(--with-gdcm=DIR,
+	         Use the GDCM installation in DIR),
+  [with_gdcm="$withval"
+   sci_required_gdcm=yes],
+  [with_gdcm=""])
 SCI_ARG_WITH(ncurses,
   AC_HELP_STRING(--with-ncurses=DIR,
                  Use the Ncurses installation in DIR),
@@ -3715,7 +3722,6 @@ AC_SUBST(INC_PETSC_UNI_H)
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
 ##  --  search for Insight  ---------------------------------------------------
-
 if test "$sci_required_insight" = "yes"; then
 
   # Insight is a large distribution. 
@@ -3832,6 +3838,140 @@ AC_SUBST(INC_INSIGHT_H)
 AC_SUBST(INSIGHT_LIB_FLAG)
 AC_SUBST(INSIGHT_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/insight_testdefs.h"
+
+
+
+##  --  search for GDCM  ---------------------------------------------------
+if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && test -a "/usr/local/lib/gdcm"); then
+  # GDCM is a large distribution.
+  # we do not want to check all of it. We thus check only if the
+  # include and lib GDCM dirs exist.
+
+  echo "$as_me:$LINENO: checking for GDCM." >&5
+  echo $ECHO_N "checking for GDCM.... $ECHO_C" >&6
+
+  # Check directory specified during configure, else check
+  # standard places
+  if test "$with_gdcm"; then
+    dir="$with_gdcm"
+  elif test "$with_insight"; then
+    dir="$with_insight"
+  else
+    dir="/usr/local"
+  fi
+
+  # determine if dir is pointing to a user build (that contains  makefiles)
+  # or an installation (i.e. /usr/local), or an Insight build
+
+  using_itk="no"
+  gdcm_src=""
+  INC_GDCM_H=""
+  gdcm_libs_dir=""
+
+  if test -a "$dir/Makefile"; then
+
+    if test -a "$dir/ITKConfig.cmake"; then
+      # GDCM distributed with the Insight Toolkit (user's binary)
+      using_itk="yes"
+      insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
+      gdcm_src="$insight_src/Utilities/gdcm/src"
+      INC_GDCM_H="-I$dir/Utilities/gdcm -I$gdcm_src"
+      gdcm_libs_dir="$dir/bin"
+
+    else
+      # normal user installation of GDCM
+      gdcm_src="`cat $dir/Makefile | grep 'CMAKE_CURRENT_SOURCE =' | sed 's/CMAKE_CURRENT_SOURCE = //'`"
+      INC_GDCM_H="-I$dir -I$gdcm_src/src"
+      gdcm_libs_dir="$dir/bin"
+
+    fi
+
+  elif test -a "$dir/include/gdcm" && test -a "$dir/lib/gdcm"; then
+    # standard installation
+    INC_GDCM_H="-I$dir/include/gdcm"
+    gdcm_libs_dir="$dir/lib/gdcm"
+
+
+  elif test -a "$dir/ITKConfig.cmake"; then
+      # GDCM distributed with the Insight Toolkit (make install)
+      using_itk="yes"
+      insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
+      gdcm_src="$insight_src/Utilities/gdcm/src"
+
+      insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
+
+      echo "$insight_include"
+      INC_GDCM_H="-I$gdcm_src -I$insight_include/gdcm/src"
+      gdcm_libs_dir="$dir"
+
+  elif test -a "/usr/local/include/gdcm" && test -a "/usr/local/lib/gdcm"; then
+    INC_GDCM_H="-I/usr/local/include/gdcm"
+    gdcm_libs_dir="/usr/local/lib/gdcm"
+
+  else
+    echo
+    AC_MSG_ERROR(Cannot find GDCM configure files.)
+    echo
+  fi
+
+  GDCM_LIB_DIR_FLAG="$LDRUN_PREFIX$gdcm_libs_dir -L$gdcm_libs_dir"
+
+  GDCM_LIB_FLAG=""
+
+  if test $using_itk = "yes"; then
+    GDCM_LIB_FLAG="-litkgdcm"
+  else
+    GDCM_LIB_FLAG="-lgdcm"
+  fi
+
+  GDCM_JPEG_LINKED=no
+
+  if test -a "$gdcm_libs_dir/libgdcmjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
+    GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg8"
+    GDCM_JPEG_LINKED=yes
+  elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
+    GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+    GDCM_JPEG_LINKED=yes
+  fi
+
+  if test -a "$gdcm_libs_dir/libgdcmjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
+    GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg12"
+    GDCM_JPEG_LINKED=yes
+  elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
+    GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+    GDCM_JPEG_LINKED=yes
+  fi
+
+  if test -a "$gdcm_libs_dir/libgdcmjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
+    GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg16"
+    GDCM_JPEG_LINKED=yes
+  elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
+    GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+    GDCM_JPEG_LINKED=yes
+  fi
+
+  DEF_GDCM="#define HAVE_GDCM"
+  HAVE_GDCM="yes"
+
+  echo "$as_me:$LINENO: result: $dir" >&5
+  echo "${ECHO_T}$dir" >&6
+
+  if test "$with_gdcm" && test ! "$DEF_GDCM"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the GDCM components is missing." >&5
+    echo "$as_me: error: One or more of the GDCM components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
+fi
+
+AC_SUBST(HAVE_GDCM)
+AC_SUBST(DEF_GDCM)
+AC_SUBST(INC_GDCM_H)
+AC_SUBST(GDCM_LIB_FLAG)
+AC_SUBST(GDCM_LIB_DIR_FLAG)
+
 
 ##  --  search for Ptolemy II ---------------------------------------------------
 if test "$sci_required_ptolemyII" = "yes"; then

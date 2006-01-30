@@ -36,7 +36,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(TEEM_INCLUDE)
+INCLUDES += $(TEEM_INCLUDE) $(GDCM_INCLUDE)
 
 
 
@@ -58,7 +58,7 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
         Core/TkExtensions Core/Algorithms/DataIO Core/ImportExport \
 	Dataflow/Network Dataflow/Ports \
 
-LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY) $(INSIGHT_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY) $(INSIGHT_LIBRARY) $(GDCM_LIBRARY)
 
 ifeq ($(NEED_OSX_SYSTEMSTUBS),yes)
   LIBS += -lSystemStubs

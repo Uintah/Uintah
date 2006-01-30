@@ -67,13 +67,13 @@ itcl_class Teem_DataIO_DicomNrrdReader {
     }
 
     method ui {} {
-	global $this-have-insight
-	if {![set $this-have-insight]} {
+	global $this-have-gdcm
+	if {![set $this-have-gdcm]} {
 	    set parent .
 	    if { [winfo exists .standalone] } {
 		set parent .standalone
 	    }
-	    tk_messageBox -title "Error: Need Insight" -message "Error: This module relies upon functionality from the Insight package to read DICOM data; however, you do not have the Insight package enabled.  You can enable the Insight package by installing ITK, re-running configure, and re-compiling.  Please see the SCIRun installation guide for more information." -type ok -icon info -parent $parent
+	    tk_messageBox -title "Error: Need GDCM" -message "Error: This module relies upon functionality from the GDCM Library to read DICOM data; however, you do not have the Insight package enabled, neither have you configured with GDCM.  You can enable the Insight package by installing ITK, re-running configure, and re-compiling.  Or you can build the GDCM library and use the --with-gdcm=path_to_gdcm configure option. Please see the SCIRun installation guide for more information." -type ok -icon info -parent $parent
 	    return
 	}
 
@@ -208,7 +208,7 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 	    # of series uids for the series' in the current directory. If there
 	    # are no series' in this dir, it sets the message variable instead
 	    $this-c get_series_uid [set $this-dir]
-	    
+
 	    set len [string length $this-series-uid]
 	    
 	    if { [string length [set $this-series-uid]] != 0 } { 
@@ -217,8 +217,9 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 		set list_suid $suids
 		
 		# Delete the first entry in the list -- this is always empty
-		set len [llength $list_suid]
-		set list_suid [lrange $list_suid 1 $len]
+		#set len [llength $list_suid]
+		set len [llength [set $this-series-uid]]
+		set list_suid [lrange [set $this-series-uid] 1 $len]
                 set $this-num-series [llength $list_suid] 
 		    
 		foreach entry $list_suid {
