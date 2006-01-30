@@ -410,15 +410,36 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
 #ifdef HAVE_GDCM
 
-    gdcm::SerieHelper *reader = new gdcm::SerieHelper();
+    string dir = args[2];
 
 #if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION >= 2)) || (GDCM_MAJOR_VERSION > 1)
+    gdcm::SerieHelper *reader = gdcm::SerieHelper::New();
     reader->SetLoadMode(gdcm::LD_ALL);
-#else
-    reader->SetUseSeriesDetails( true );
-#endif
 
-    string dir = args[2];
+    // Check to make sure the directory exists
+    DIR *dirp;
+    dirp = opendir( dir.c_str() );
+    if (!dirp)
+    {
+      string no_dir = string( "No such directory: " + dir );
+      messages_.set( no_dir );
+      string all_suids = "";
+      series_uid_.set( all_suids );
+      reader->Delete();
+      return;
+    }
+    closedir(dirp);
+
+    reader->SetDirectory(dir, false);
+
+    // Read all of the series uids from this directory, concatenate them to
+    // form one string, and pass the string to the tcl side.
+    // //std::vector<std::string> suids = reader.get_series_uids();
+    // //int num_suids = suids.size();
+
+#else
+    gdcm::SerieHelper *reader = new gdcm::SerieHelper();
+    reader->SetUseSeriesDetails( true );
 
     // Check to make sure the directory exists
     DIR *dirp;
@@ -440,6 +461,8 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
     // form one string, and pass the string to the tcl side.
     // //std::vector<std::string> suids = reader.get_series_uids();
     // //int num_suids = suids.size();
+#endif
+
 
     string all_suids = "{} ";
     std::vector<string> suids;
@@ -483,23 +506,17 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
   else if( args[1] == "get_series_files" ) 
   {
 #ifdef HAVE_GDCM
-    gdcm::SerieHelper *reader = new gdcm::SerieHelper();
-
-#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION >= 2)) || (GDCM_MAJOR_VERSION > 1) 
-    reader->SetLoadMode(gdcm::LD_ALL);
-#else
-    reader->SetUseSeriesDetails( true );
-#endif
 
     string dir = args[2];
-
-    reader->SetDirectory(dir, false);
-
     string suid = args[3];
-
     std::vector<std::string> files;
 
+
 #if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION >= 2)) || (GDCM_MAJOR_VERSION > 1) 
+    gdcm::SerieHelper *reader = gdcm::SerieHelper::New();
+    reader->SetLoadMode(gdcm::LD_ALL);
+    reader->SetDirectory(dir, false);
+
     gdcm::FileList *l = reader->GetFirstSingleSerieUIDFileSet();
     while (l) 
     {
@@ -516,7 +533,12 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
       delete [] temp;
       l = reader->GetNextSingleSerieUIDFileSet();
     }
+
 #else
+    gdcm::SerieHelper *reader = new gdcm::SerieHelper();
+    reader->SetUseSeriesDetails( true );
+    reader->SetDirectory(dir, false);
+
     gdcm::GdcmFileList *l = reader->GetFirstCoherentFileList();
     while (l) 
     {
@@ -535,6 +557,7 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
       l = reader->GetNextCoherentFileList();
     }
 #endif
+
 
     string all_files = "";
     
