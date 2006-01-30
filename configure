@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -897,8 +897,6 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
---enable-advanced-volume-rendering
-                          Override default tests for this capability
 --enable-verbosity      Turn on verbose configure output
 --enable-threads        Specify a thread implementation (pthreads or irix)
 --enable-debug          Turn on debugging (default is -g) or specify your
@@ -1106,7 +1104,7 @@ esac
     else
       echo "$as_me: WARNING: no configuration information is in $ac_dir" >&2
     fi
-    cd $ac_popdir
+    cd "$ac_popdir"
   done
 fi
 
@@ -2608,31 +2606,6 @@ echo "$as_me: error: The file or directory parameter ($loki) specified for --wit
    { (exit 1); exit 1; }; }
   fi
 
-
-
-
-
-
-  # Check whether --enable-advanced-volume-rendering or --disable-advanced-volume-rendering was given.
-if test "${enable_advanced_volume_rendering+set}" = set; then
-  enableval="$enable_advanced_volume_rendering"
-  avr="$enableval"
-else
-  avr="test"
-fi;
-  sci_arg_enable_list="$sci_arg_enable_list --enable-advanced-volume-rendering --disable-advanced-volume-rendering"
-
-
-
-
-  # Check whether --enable-advanced-volume-rendering or --disable-advanced-volume-rendering was given.
-if test "${enable_advanced_volume_rendering+set}" = set; then
-  enableval="$enable_advanced_volume_rendering"
-  avr="$enableval"
-else
-  avr="test"
-fi;
-  sci_arg_enable_list="$sci_arg_enable_list --enable-advanced-volume-rendering --disable-advanced-volume-rendering"
 
 
   # Check whether --enable-verbosity or --disable-verbosity was given.
@@ -4485,8 +4458,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4544,8 +4516,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4661,8 +4632,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4716,8 +4686,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4762,8 +4731,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4807,8 +4775,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5131,8 +5098,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5302,8 +5268,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5368,8 +5333,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5431,8 +5395,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5472,8 +5435,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5529,8 +5491,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5570,8 +5531,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5635,8 +5595,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5667,10 +5626,8 @@ See \`config.log' for more details." >&2;}
 esac
 else
   if test "$cross_compiling" = yes; then
-  { { echo "$as_me:$LINENO: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&5
-echo "$as_me: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&2;}
+  { { echo "$as_me:$LINENO: error: internal error: not reached in cross-compile" >&5
+echo "$as_me: error: internal error: not reached in cross-compile" >&2;}
    { (exit 1); exit 1; }; }
 else
   cat >conftest.$ac_ext <<_ACEOF
@@ -5975,8 +5932,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6034,8 +5990,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6151,8 +6106,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6206,8 +6160,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6252,8 +6205,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6297,8 +6249,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6531,8 +6482,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6590,8 +6540,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6662,8 +6611,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6707,8 +6655,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6843,7 +6790,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6846:" \
+echo "$as_me:6793:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6889,8 +6836,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_f77_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6939,8 +6885,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_f77_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10087,8 +10032,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10154,8 +10098,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10244,8 +10187,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10741,8 +10683,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -11168,8 +11109,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -11721,8 +11661,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -12284,8 +12223,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -12747,8 +12685,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -12958,8 +12895,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -13482,8 +13418,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -13979,8 +13914,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -14162,7 +14096,8 @@ fi
 
 
 
-# Test for advanced volume rendering capability
+
+# Test for correct OpenGL extension headers
 
 
 ## arguments mean:
@@ -14268,8 +14203,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -14375,465 +14309,6 @@ if test "$HAVE_EXT_HDRS" = "yes"; then
   DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
 else
   DEF_OGL_EXT_HDRS=""
-fi
-
-if test "$avr" = "yes"; then
-  { echo "$as_me:$LINENO: WARNING:
-  *** Including the Advance Volume Rendering (AVR) code in compilation.        ***
-  *** Note: configure can erroneously determine this platform can use AVR.     ***
-  *** use --disable-advanced-volume-rendering if compilation fails due to AVR. ***
-  " >&5
-echo "$as_me: WARNING:
-  *** Including the Advance Volume Rendering (AVR) code in compilation.        ***
-  *** Note: configure can erroneously determine this platform can use AVR.     ***
-  *** use --disable-advanced-volume-rendering if compilation fails due to AVR. ***
-  " >&2;}
-  COMPILE_AVR=1
-  DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
-elif test "$avr" = "no"; then
-  { echo "$as_me:$LINENO: WARNING:
-  *** Will not compile the advance volume rendering code. ***
-  " >&5
-echo "$as_me: WARNING:
-  *** Will not compile the advance volume rendering code. ***
-  " >&2;}
-  COMPILE_AVR=""
-  DEF_HAVE_AVR=""
-else
-  DEF_HAVE_AVR=""
-
-  if test "$HAVE_EXT_HDRS" = "yes"; then
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_AVR        => lib path
-##      AVR_LIB_DIR_FLAG   => all the -L's
-##      AVR_LIB_FLAG       => all the -l's
-##      HAVE_AVR           => yes or no
-##      INC_AVR_H          => all the -I's
-##      HAVE_AVR_H         => yes or no
-
-
-
-echo "$as_me:$LINENO: checking for Advanced Volume OpenGL support (optional)" >&5
-echo $ECHO_N "checking for Advanced Volume OpenGL support (optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-for i in $_sci_inc; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-
-for i in GL; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_sci_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs  $LIBS"
-
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-      #define GL_GLEXT_PROTOTYPES
-      #include <GL/gl.h>
-      #include <GL/glext.h>
-
-int
-main ()
-{
-
-      glBindProgramARB(0,0);
-      glActiveTexture(0);
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_AVR='"$_sci_lib"'
-
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval AVR_LIB_DIR_FLAG=''
-else
-  eval AVR_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
-
-eval AVR_LIB_FLAG='"$_sci_libs"'
-eval HAVE_AVR="yes"
-
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_AVR_H=''
-else
-  eval INC_AVR_H='"$_sci_includes"'
-fi
-
-eval HAVE_AVR_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_AVR=''
-eval AVR_LIB_DIR_FLAG=''
-eval AVR_LIB_FLAG=''
-eval HAVE_AVR="no"
-eval INC_AVR_H=''
-eval HAVE_AVR_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "optional" = "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required AVR failed.
-    To see the failed compile information, look in config.log,
-    search for AVR. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required AVR failed.
-    To see the failed compile information, look in config.log,
-    search for AVR. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-  else
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_AVR        => lib path
-##      AVR_LIB_DIR_FLAG   => all the -L's
-##      AVR_LIB_FLAG       => all the -l's
-##      HAVE_AVR           => yes or no
-##      INC_AVR_H          => all the -I's
-##      HAVE_AVR_H         => yes or no
-
-
-
-echo "$as_me:$LINENO: checking for Advanced Volume OpenGL support (optional)" >&5
-echo $ECHO_N "checking for Advanced Volume OpenGL support (optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-for i in $_sci_inc; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-
-for i in GL; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_sci_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs  $LIBS"
-
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-      #include <GL/gl.h>
-
-int
-main ()
-{
-
-      glActiveTexture(0);
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_AVR='"$_sci_lib"'
-
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval AVR_LIB_DIR_FLAG=''
-else
-  eval AVR_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
-
-eval AVR_LIB_FLAG='"$_sci_libs"'
-eval HAVE_AVR="yes"
-
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_AVR_H=''
-else
-  eval INC_AVR_H='"$_sci_includes"'
-fi
-
-eval HAVE_AVR_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_AVR=''
-eval AVR_LIB_DIR_FLAG=''
-eval AVR_LIB_FLAG=''
-eval HAVE_AVR="no"
-eval INC_AVR_H=''
-eval HAVE_AVR_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "optional" = "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required AVR failed.
-    To see the failed compile information, look in config.log,
-    search for AVR. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required AVR failed.
-    To see the failed compile information, look in config.log,
-    search for AVR. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-
-  fi
-
-  if test "$HAVE_AVR" = "yes"; then
-  { echo "$as_me:$LINENO: WARNING:
-  *** Will include the advance volume rendering code in compilation.  ***
-  *** configure can erroneously determine this platform can use avr.  ***
-  *** use --disable-advanced-volume-rendering if compilation fails.   ***
-  " >&5
-echo "$as_me: WARNING:
-  *** Will include the advance volume rendering code in compilation.  ***
-  *** configure can erroneously determine this platform can use avr.  ***
-  *** use --disable-advanced-volume-rendering if compilation fails.   ***
-  " >&2;}
-    COMPILE_AVR=1
-    DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
-  fi
-
-  ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-
 fi
 
 
@@ -15129,8 +14604,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -15633,8 +15107,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -16098,8 +15571,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -16570,8 +16042,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -17038,8 +16509,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -17499,8 +16969,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -17958,8 +17427,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18421,8 +17889,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18896,8 +18363,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -19094,8 +18560,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -19140,8 +18605,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -19188,8 +18652,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -19235,8 +18698,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -19269,6 +18731,11 @@ echo "${ECHO_T}found: $DEF_HASHMAP" >&6
 fi
 
 sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ##  --  search for tcl stuff  ---------------------------------------------
 echo
@@ -19640,8 +19107,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -20199,8 +19665,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -20730,8 +20195,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -21281,8 +20745,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -21812,8 +21275,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -22227,17 +21689,90 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
 
 ##  --  search for libxml2 --
 _sci_optional=required
+_sci_lib="$sci_thirdparty_lib"
 
 if test "$with_libxml2"; then
-  _xml2_lib_path="$with_libxml2/lib"
-  _xml2_inc="$with_libxml2/include/libxml2"
-  _sci_optional=specific
-else
-  _xml2_lib_path="$sci_thirdparty_lib"
-  _xml2_inc="$sci_thirdparty_include"
+   # If --with-libxml2 has a parameter, then use it
+   _sci_lib="$with_libxml2/lib"
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$_sci_lib/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$_sci_lib/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$_sci_lib/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
+    fi
+  fi
+  eval _sci_lib='"$_new_lib_path"'
+
+   _sci_optional=specific
 fi
 
-_xml2_lib="xml2"
+echo "$as_me:$LINENO: checking for $_sci_optional libxml2" >&5
+echo $ECHO_N "checking for $_sci_optional libxml2... $ECHO_C" >&6
+if test ! -e $_sci_lib/../bin/xml2-config; then
+   echo "$as_me:$LINENO: result: Not found under $_sci_lib" >&5
+echo "${ECHO_T}Not found under $_sci_lib" >&6
+   echo "$as_me:$LINENO: checking for xml2-config in your path" >&5
+echo $ECHO_N "checking for xml2-config in your path... $ECHO_C" >&6
+   XML2_DIR=`xml2-config --prefix`
+   if test -e "$XML2_DIR/lib"; then
+      _sci_lib=$XML2_DIR/lib
+      echo "$as_me:$LINENO: result: xml2-config found..." >&5
+echo "${ECHO_T}xml2-config found..." >&6
+   else
+      echo "$as_me:$LINENO: result: xml2-config program not found..." >&5
+echo "${ECHO_T}xml2-config program not found..." >&6
+   fi
+fi
+
+found_xml2_config="no"
+
+if test -e $_sci_lib/../bin/xml2-config; then
+    found_xml2_config="yes"
+    { echo "$as_me:$LINENO: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&5
+echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&2;}
+
+    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs`
+    XML2_LDFLAGS=""
+    XML2_LIB_PATH=""
+    for i in $XML2_LIB_DIR_FLAG;do
+      is_lib_path=`echo $i | sed -n -e "s/-L//p"`
+      if test -z $is_lib_path;then
+        XML2_LDFLAGS="$XML2_LDFLAGS $i"
+      else
+        if ! test $i = "-L/usr/lib";then
+    	XML2_LIB_PATH="$XML2_LIB_PATH $i"
+        fi
+      fi
+    done
+    includes=`$_sci_lib/../bin/xml2-config --cflags`
 
 
 ##
@@ -22275,12 +21810,12 @@ _xml2_lib="xml2"
 ## arg 1 : XML2
 ## arg 2 : xml2 library and headers
 ## arg 3 : libxml/tree.h libxml/parser.h
-## arg 4 : $_xml2_inc
-## arg 5 : $_xml2_lib
-## arg 6 : $_xml2_lib_path
+## arg 4 : $includes
+## arg 5 : $XML2_LDFLAGS
+## arg 6 : $XML2_LIB_PATH
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : $_sci_optional
+## arg 9 : required
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -22299,8 +21834,8 @@ echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for xml2 li
 fi
 
 
-echo "$as_me:$LINENO: checking for xml2 library and headers ($_sci_optional)" >&5
-echo $ECHO_N "checking for xml2 library and headers ($_sci_optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for xml2 library and headers (required)" >&5
+echo $ECHO_N "checking for xml2 library and headers (required)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -22308,16 +21843,16 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for xml2 library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for xml2 library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for xml2 library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for xml2 library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-# If $_xml2_inc (the -I paths) is blank, do nothing, else do the for statement.
+# If $includes (the -I paths) is blank, do nothing, else do the for statement.
 
-for inc in $_xml2_inc; do
+for inc in $includes; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -22337,8 +21872,8 @@ echo "$as_me: error: Please do not specify /usr/include as the location for XML2
         # Has some other -?.
         if test "$debugging" = "yes"; then
           echo
-          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_xml2_inc) of XML2 check.  Skipping $inc." >&5
-echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_xml2_inc) of XML2 check.  Skipping $inc." >&2;}
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($includes) of XML2 check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($includes) of XML2 check.  Skipping $inc." >&2;}
         fi
         continue
      fi
@@ -22359,10 +21894,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "$_xml2_lib"; then
+if test -n "$XML2_LDFLAGS"; then
 
    found_framework=no
-   for lib in "" $_xml2_lib; do
+   for lib in "" $XML2_LDFLAGS; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -22421,9 +21956,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$_xml2_lib_path"; then
+if test -n "$XML2_LIB_PATH"; then
 
-   for path in "" $_xml2_lib_path; do
+   for path in "" $XML2_LIB_PATH; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -22457,14 +21992,14 @@ echo "$as_me: WARNING: The path given $the_path is not a valid directory... igno
    done
 fi
 
-if test "$_sci_optional" = "specific"; then
+if test "required" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_xml2_lib_path (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $XML2_LIB_PATH (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_xml2_lib_path; do
+  for value in "" $XML2_LIB_PATH; do
     if test "$value" = ""; then
       continue
     fi
@@ -22476,15 +22011,15 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for XML2 only one library path may be specified for arg 6 (you had: $_xml2_lib_path).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for XML2 only one library path may be specified for arg 6 (you had: $_xml2_lib_path).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for XML2 only one library path may be specified for arg 6 (you had: $XML2_LIB_PATH).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for XML2 only one library path may be specified for arg 6 (you had: $XML2_LIB_PATH).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
-  ### Determine if there is only one item in $_xml2_inc
+  ### Determine if there is only one item in $includes
   __sci_pass=false
   __sci_first_time=true
-  for value in "" $_xml2_inc; do
+  for value in "" $includes; do
     if test "$value" = ""; then
       continue
     fi
@@ -22495,9 +22030,9 @@ echo "$as_me: error: For specific SCI-TRY-LINK test for XML2 only one library pa
       __sci_pass=false
     fi
   done
-  if test -n "$_xml2_inc" && test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for XML2 only one include path may be specified for arg 4 (you had: $_xml2_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for XML2 only one include path may be specified for arg 4 (you had: $_xml2_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+  if test -n "$includes" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for XML2 only one include path may be specified for arg 4 (you had: $includes).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for XML2 only one include path may be specified for arg 4 (you had: $includes).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
 fi
@@ -22553,25 +22088,25 @@ int
 main ()
 {
 
-#if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
-  xmlDocPtr doc = NULL;       /* document pointer */
-  xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
-  xmlDtdPtr dtd = NULL;       /* DTD pointer */
-  char buff[256];
-  int i, j;
+    #if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
+    xmlDocPtr doc = NULL;       /* document pointer */
+    xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
+    xmlDtdPtr dtd = NULL;       /* DTD pointer */
+    char buff[256];
+    int i, j;
 
-  LIBXML_TEST_VERSION;
+    LIBXML_TEST_VERSION;
 
-  /*
-   * Creates a new document, a node and set it as a root node
-   */
-  doc = xmlNewDoc(BAD_CAST "1.0");
-  root_node = xmlNewNode(NULL, BAD_CAST "root");
-  xmlDocSetRootElement(doc, root_node);
-#else
-  //create compile error so configure fails
-  WrongVersionOrNotInstalled *x = 0;
-#endif
+    /*
+     * Creates a new document, a node and set it as a root node
+     */
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    root_node = xmlNewNode(NULL, BAD_CAST "root");
+    xmlDocSetRootElement(doc, root_node);
+    #else
+    //create compile error so configure fails
+    WrongVersionOrNotInstalled *x = 0;
+    #endif
 
   ;
   return 0;
@@ -22586,8 +22121,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -22605,7 +22139,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_XML2='"$_xml2_lib_path"'
+eval LIB_DIR_XML2='"$XML2_LIB_PATH"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -22668,7 +22202,7 @@ eval INC_XML2_H=''
 eval HAVE_XML2_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "$_sci_optional" != "optional"; then
+if test "required" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -22712,19 +22246,19 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
-if test "$_sci_optional" = "specific"; then
+if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" libxml/tree.h libxml/parser.h; do
-    #echo looking for $_xml2_inc/$i
-    if test ! -e $_xml2_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specifically requested XML2 include file '$_xml2_inc/$i' was not found" >&5
-echo "$as_me: error: Specifically requested XML2 include file '$_xml2_inc/$i' was not found" >&2;}
+    #echo looking for $includes/$i
+    if test ! -e $includes/$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested XML2 include file '$includes/$i' was not found" >&5
+echo "$as_me: error: Specifically requested XML2 include file '$includes/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" $_xml2_lib; do
+  for i in "" $XML2_LDFLAGS; do
     if test -z "$i"; then
        continue
     fi
@@ -22732,9 +22266,9 @@ echo "$as_me: error: Specifically requested XML2 include file '$_xml2_inc/$i' wa
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_xml2_lib_path/lib$i.so && test ! -e $_xml2_lib_path/lib$i.a && test ! -e $_xml2_lib_path/$i.lib; then
-     { { echo "$as_me:$LINENO: error: Specifically requested XML2 library file '$_xml2_lib_path/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested XML2 library file '$_xml2_lib_path/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $XML2_LIB_PATH/lib$i.so && test ! -e $XML2_LIB_PATH/lib$i.a && test ! -e $XML2_LIB_PATH/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested XML2 library file '$XML2_LIB_PATH/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested XML2 library file '$XML2_LIB_PATH/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -22756,6 +22290,56 @@ _sci_includes=''
 
 
 
+    DEF_XML2="#define HAVE_XML2 1"
+    break
+fi
+
+if test "$found_xml2_config" = "no"; then
+   echo "$as_me:$LINENO: result: no." >&5
+echo "${ECHO_T}no." >&6
+   echo
+   { echo "$as_me:$LINENO: WARNING: Cannot find a xml2-config file to get xml2 variables." >&5
+echo "$as_me: WARNING: Cannot find a xml2-config file to get xml2 variables." >&2;}
+   { echo "$as_me:$LINENO: WARNING: Please install libxml2 and then reconfigure." >&5
+echo "$as_me: WARNING: Please install libxml2 and then reconfigure." >&2;}
+fi
+
+if test ! "$DEF_XML2"; then
+  echo
+  { { echo "$as_me:$LINENO: error: One or more of the xml2 components is missing." >&5
+echo "$as_me: error: One or more of the xml2 components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+##
+## SCI_SUBST_THIRDPARTY_DIR:
+##
+## arguments mean:
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
+##
+  _new_path=${XML2_LIB_DIR_FLAG}
+  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
+  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  eval XML2_LIB_DIR_FLAG='"$_new_path"'
+
+
+##
+## SCI_SUBST_THIRDPARTY_DIR:
+##
+## arguments mean:
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
+##
+  _new_path=${INC_XML2_H}
+  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
+  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  eval INC_XML2_H='"$_new_path"'
+
+
 
 
 
@@ -22765,6 +22349,11 @@ _sci_includes=''
 ##  ----------------------------------------------------------------------
 
 ##  --  search for optional headers  ------------------------------------
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 ##
@@ -23053,8 +22642,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -23231,6 +22819,11 @@ else
 fi
 
 
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ##  --  search for SGI'S or Win32's traceback library  ------------------------------
 
@@ -23574,8 +23167,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -24071,8 +23663,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -24606,8 +24197,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -25137,8 +24727,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -25651,8 +25240,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -26207,8 +25795,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -26788,8 +26375,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -27322,8 +26908,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -27524,6 +27109,11 @@ fi
 
 
 ##  --  search for ImageMagick --------------------------------------
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 # Default values:
 _sci_optional=optional
@@ -27581,18 +27171,20 @@ echo "$as_me:$LINENO: checking for $_sci_optional ImageMagick" >&5
 echo $ECHO_N "checking for $_sci_optional ImageMagick... $ECHO_C" >&6
 
 if test ! -e $_sci_lib/../bin/Magick-config; then
-   { echo "$as_me:$LINENO: WARNING: Magick-config on in SCIRun Thirdparty installation.  Going to" >&5
-echo "$as_me: WARNING: Magick-config on in SCIRun Thirdparty installation.  Going to" >&2;}
-   { echo "$as_me:$LINENO: WARNING: try to find it based on the location of the 'convert' program." >&5
-echo "$as_me: WARNING: try to find it based on the location of the 'convert' program." >&2;}
+   echo "$as_me:$LINENO: result: Not found under $_sci_lib" >&5
+echo "${ECHO_T}Not found under $_sci_lib" >&6
+   echo "$as_me:$LINENO: checking for Magick-config in your path" >&5
+echo $ECHO_N "checking for Magick-config in your path... $ECHO_C" >&6
    # ImageMagick not in SCIRun Thirdparty... Therefore it probably is
    # just in /usr/lib...
-   MAGICK_DIR=`which convert`
-   if test -z "$MAGICK_DIR"; then
-      _sci_lib=$MAGICK_DIR/../lib
+   MAGICK_DIR=`Magick-config --prefix`
+   if test -e "$MAGICK_DIR/lib"; then
+      _sci_lib=$MAGICK_DIR/lib
+      echo "$as_me:$LINENO: result: Magick-config found..." >&5
+echo "${ECHO_T}Magick-config found..." >&6
    else
-      { echo "$as_me:$LINENO: WARNING: 'convert' program not found..." >&5
-echo "$as_me: WARNING: 'convert' program not found..." >&2;}
+      { echo "$as_me:$LINENO: WARNING: Magick-config program not found..." >&5
+echo "$as_me: WARNING: Magick-config program not found..." >&2;}
    fi
 fi
 
@@ -27601,8 +27193,8 @@ found_magic_config="no"
 if test -e $_sci_lib/../bin/Magick-config; then
     found_magic_config="yes"
     echo
-    echo "$as_me:$LINENO: result: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&5
-echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&6
+    { echo "$as_me:$LINENO: WARNING: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&5
+echo "$as_me: WARNING: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&2;}
 
     MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
     MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
@@ -27613,6 +27205,23 @@ echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables
     MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
     MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
     includes=`$_sci_lib/../bin/Magick-config --cppflags`
+    if test $includes="-I/usr/include";then
+      includes=""
+    fi
+
+    MAGICK_LDFLAGS=""
+    MAGICK_LIB_PATH=""
+    for i in $MAGICK_LIB_DIR_FLAG;do
+      is_lib_path=`echo $i | sed -n -e "s/-L//p"`
+      if test -z $is_lib_path;then
+        MAGICK_LDFLAGS="$MAGICK_LDFLAGS $i"
+      else
+        if ! test $i = "-L/usr/lib";then
+    	MAGICK_LIB_PATH="$MAGICK_LIB_PATH $i"
+        fi
+      fi
+    done
+
 
 
 ##
@@ -27649,10 +27258,10 @@ echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables
 ##
 ## arg 1 : MAGICK
 ## arg 2 : ImageMagick library and headers
-## arg 3 : magick/magick.h
+## arg 3 : stdio.h magick/api.h
 ## arg 4 : $includes
-## arg 5 : $MAGICK_LIB_FLAG
-## arg 6 : $MAGICK_LIB_DIR_FLAG
+## arg 5 : $MAGICK_LIB_PATH
+## arg 6 : $MAGICK_LDFLAGS
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : required
@@ -27734,10 +27343,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "$MAGICK_LIB_FLAG"; then
+if test -n "$MAGICK_LIB_PATH"; then
 
    found_framework=no
-   for lib in "" $MAGICK_LIB_FLAG; do
+   for lib in "" $MAGICK_LIB_PATH; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -27796,9 +27405,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$MAGICK_LIB_DIR_FLAG"; then
+if test -n "$MAGICK_LDFLAGS"; then
 
-   for path in "" $MAGICK_LIB_DIR_FLAG; do
+   for path in "" $MAGICK_LDFLAGS; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -27834,12 +27443,12 @@ fi
 
 if test "required" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $MAGICK_LIB_DIR_FLAG (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $MAGICK_LDFLAGS (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $MAGICK_LIB_DIR_FLAG; do
+  for value in "" $MAGICK_LDFLAGS; do
     if test "$value" = ""; then
       continue
     fi
@@ -27851,8 +27460,8 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for MAGICK only one library path may be specified for arg 6 (you had: $MAGICK_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for MAGICK only one library path may be specified for arg 6 (you had: $MAGICK_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for MAGICK only one library path may be specified for arg 6 (you had: $MAGICK_LDFLAGS).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for MAGICK only one library path may be specified for arg 6 (you had: $MAGICK_LDFLAGS).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -27897,7 +27506,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" magick/magick.h; do
+for inc in "" stdio.h magick/api.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -27928,6 +27537,8 @@ int
 main ()
 {
 
+       Image *image = NULL;
+
   ;
   return 0;
 }
@@ -27941,8 +27552,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -27960,7 +27570,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MAGICK='"$MAGICK_LIB_DIR_FLAG"'
+eval LIB_DIR_MAGICK='"$MAGICK_LDFLAGS"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -28070,7 +27680,7 @@ rm -f conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" magick/magick.h; do
+  for i in "" stdio.h magick/api.h; do
     #echo looking for $includes/$i
     if test ! -e $includes/$i; then
      { { echo "$as_me:$LINENO: error: Specifically requested MAGICK include file '$includes/$i' was not found" >&5
@@ -28079,7 +27689,7 @@ echo "$as_me: error: Specifically requested MAGICK include file '$includes/$i' w
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" $MAGICK_LIB_FLAG; do
+  for i in "" $MAGICK_LIB_PATH; do
     if test -z "$i"; then
        continue
     fi
@@ -28087,9 +27697,9 @@ echo "$as_me: error: Specifically requested MAGICK include file '$includes/$i' w
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.so && test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.a && test ! -e $MAGICK_LIB_DIR_FLAG/$i.lib; then
-     { { echo "$as_me:$LINENO: error: Specifically requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $MAGICK_LDFLAGS/lib$i.so && test ! -e $MAGICK_LDFLAGS/lib$i.a && test ! -e $MAGICK_LDFLAGS/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MAGICK library file '$MAGICK_LDFLAGS/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MAGICK library file '$MAGICK_LDFLAGS/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -28171,6 +27781,11 @@ fi
 
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ##  --  search for scisock --------------------------------------
 
@@ -28526,8 +28141,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -29011,8 +28625,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -29470,8 +29083,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -29930,8 +29542,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -30387,8 +29998,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -30844,8 +30454,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -31301,8 +30910,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -31760,8 +31368,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -32260,8 +31867,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -32757,8 +32363,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -33254,8 +32859,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -33715,8 +33319,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -34173,8 +33776,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -34730,8 +34332,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -35289,8 +34890,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -35834,8 +35434,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -36415,8 +36014,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -36915,8 +36513,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -37458,8 +37055,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -37956,8 +37552,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -38442,8 +38037,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -38900,8 +38494,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -39400,8 +38993,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -39902,8 +39494,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -40402,8 +39993,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -40864,8 +40454,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -41321,8 +40910,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -41780,8 +41368,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -42278,8 +41865,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -42739,8 +42325,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -43199,8 +42784,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -43667,8 +43251,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -44126,8 +43709,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -44697,8 +44279,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -45208,8 +44789,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -45717,8 +45297,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -46225,8 +45804,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -46733,8 +46311,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -47432,8 +47009,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -47930,8 +47506,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -48503,8 +48078,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -49005,8 +48579,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -49531,8 +49104,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -50032,8 +49604,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -51028,8 +50599,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -51620,8 +51190,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -52259,8 +51828,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -52948,8 +52516,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -53483,8 +53050,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -54041,8 +53607,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -54599,8 +54164,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -55141,8 +54705,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -55622,8 +55185,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -56219,8 +55781,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -56795,8 +56356,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -57332,8 +56892,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -57809,8 +57368,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -58285,8 +57843,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -58772,8 +58329,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -59312,8 +58868,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -60113,8 +59668,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -60643,8 +60197,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -61221,8 +60774,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -61752,8 +61304,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -62281,8 +61832,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -62835,8 +62385,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -63370,8 +62919,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -63940,8 +63488,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -64482,8 +64029,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -64962,10 +64508,9 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
-  #    will be set to the directory where LIBOBJS objects are built.
-  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
+  # 2. Add them.
+  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 
@@ -65602,8 +65147,6 @@ s,@GL_LIB_FLAG@,$GL_LIB_FLAG,;t t
 s,@GL_LIB_DIR_FLAG@,$GL_LIB_DIR_FLAG,;t t
 s,@INC_GL_H@,$INC_GL_H,;t t
 s,@DEF_OGL_EXT_HDRS@,$DEF_OGL_EXT_HDRS,;t t
-s,@COMPILE_AVR@,$COMPILE_AVR,;t t
-s,@DEF_HAVE_AVR@,$DEF_HAVE_AVR,;t t
 s,@DL_LIB_FLAG@,$DL_LIB_FLAG,;t t
 s,@DL_LIB_DIR_FLAG@,$DL_LIB_DIR_FLAG,;t t
 s,@DEF_STAT64@,$DEF_STAT64,;t t
@@ -66017,11 +65560,6 @@ esac
 
 
 
-  if test x"$ac_file" != x-; then
-    { echo "$as_me:$LINENO: creating $ac_file" >&5
-echo "$as_me: creating $ac_file" >&6;}
-    rm -f "$ac_file"
-  fi
   # Let's still pretend it is `configure' which instantiates (i.e., don't
   # use $as_me), people would be surprised to read:
   #    /* config.h.  Generated by config.status.  */
@@ -66060,6 +65598,12 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
 	 fi;;
       esac
     done` || { (exit 1); exit 1; }
+
+  if test x"$ac_file" != x-; then
+    { echo "$as_me:$LINENO: creating $ac_file" >&5
+echo "$as_me: creating $ac_file" >&6;}
+    rm -f "$ac_file"
+  fi
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF
   sed "$ac_vpsub

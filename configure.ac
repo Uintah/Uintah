@@ -491,21 +491,6 @@ SCI_ARG_WITH(loki,
   [with_loki="$withval"
    sci_required_loki=yes],
   [with_loki=""])
-
-
-
-SCI_ARG_ENABLE(advanced-volume-rendering,
-  AC_HELP_STRING(--enable-advanced-volume-rendering,
-                 Override default tests for this capability),
-  [avr="$enableval"],
-  [avr="test"])
-
-
-SCI_ARG_ENABLE(advanced-volume-rendering,
-  AC_HELP_STRING(--enable-advanced-volume-rendering,
-                 Override default tests for this capability),
-  [avr="$enableval"],
-  [avr="test"])
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
                  Turn on verbose configure output),
@@ -2154,7 +2139,8 @@ AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
 AC_SUBST(INC_GL_H)
 
-# Test for advanced volume rendering capability
+
+# Test for correct OpenGL extension headers
 
 SCI_COMPILE_LINK_TEST(EXT_HDRS,correct OpenGL extension headers ,
 [
@@ -2176,63 +2162,8 @@ else
   DEF_OGL_EXT_HDRS=""
 fi
 
-if test "$avr" = "yes"; then
-  AC_MSG_WARN([
-  *** Including the Advance Volume Rendering (AVR) code in compilation.        ***
-  *** Note: configure can erroneously determine this platform can use AVR.     ***
-  *** use --disable-advanced-volume-rendering if compilation fails due to AVR. ***
-  ])  
-  COMPILE_AVR=1
-  DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
-elif test "$avr" = "no"; then
-  AC_MSG_WARN([
-  *** Will not compile the advance volume rendering code. ***
-  ])
-  COMPILE_AVR=""
-  DEF_HAVE_AVR=""
-else
-  DEF_HAVE_AVR=""
-  
-  if test "$HAVE_EXT_HDRS" = "yes"; then
-    SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
-    [
-      #define GL_GLEXT_PROTOTYPES
-      #include <GL/gl.h>
-      #include <GL/glext.h>
-    ],
-    $_sci_inc, GL, $_sci_lib,,
-    [
-      glBindProgramARB(0,0);
-      glActiveTexture(0);
-    ],optional)
-  else
-    SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
-    [
-      #include <GL/gl.h>
-    ],
-    $_sci_inc, GL, $_sci_lib,,
-    [
-      glActiveTexture(0);
-    ],optional)
-  
-  fi
-      
-  if test "$HAVE_AVR" = "yes"; then
-  AC_MSG_WARN([
-  *** Will include the advance volume rendering code in compilation.  ***
-  *** configure can erroneously determine this platform can use avr.  ***
-  *** use --disable-advanced-volume-rendering if compilation fails.   ***
-  ])  
-    COMPILE_AVR=1
-    DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
-  fi
-  
-  AC_LANG(C)
-  
-fi
 AC_SUBST(DEF_OGL_EXT_HDRS)
-AC_SUBST(COMPILE_AVR)
-AC_SUBST(DEF_HAVE_AVR)
+
 
 ##  --  search for dlopen  -----------------------------------------------
 SCI_TRY_LINK(DL,dlopen in libc,dlfcn.h,,c,,,[
@@ -2352,7 +2283,7 @@ else
 fi
 AC_SUBST(DEF_HASHMAP)
 sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
-
+AC_LANG(C)
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
 AC_CHECKING(for required Tcl components...)
@@ -2501,40 +2432,91 @@ AC_SUBST(ITCL_WIDGETS)
 
 ##  --  search for libxml2 --
 _sci_optional=required
+_sci_lib="$sci_thirdparty_lib"
 
 if test "$with_libxml2"; then
-  _xml2_lib_path="$with_libxml2/lib"
-  _xml2_inc="$with_libxml2/include/libxml2"
-  _sci_optional=specific
-else
-  _xml2_lib_path="$sci_thirdparty_lib"
-  _xml2_inc="$sci_thirdparty_include"
+   # If --with-libxml2 has a parameter, then use it
+   _sci_lib="$with_libxml2/lib"
+   BASE_LIB_PATH(_sci_lib,$_sci_lib)
+   _sci_optional=specific
 fi
 
-_xml2_lib="xml2"
+AC_MSG_CHECKING(for $_sci_optional libxml2)
+if test ! -e $_sci_lib/../bin/xml2-config; then
+   AC_MSG_RESULT(Not found under $_sci_lib)
+   AC_MSG_CHECKING(for xml2-config in your path)
+   XML2_DIR=`xml2-config --prefix`
+   if test -e "$XML2_DIR/lib"; then
+      _sci_lib=$XML2_DIR/lib
+      AC_MSG_RESULT(xml2-config found...)
+   else
+      AC_MSG_RESULT(xml2-config program not found...)
+   fi
+fi
 
-SCI_TRY_LINK(XML2,xml2 library and headers, libxml/tree.h libxml/parser.h,$_xml2_inc,$_xml2_lib,$_xml2_lib_path,,[
-#if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
-  xmlDocPtr doc = NULL;       /* document pointer */
-  xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
-  xmlDtdPtr dtd = NULL;       /* DTD pointer */
-  char buff[256];
-  int i, j;
+found_xml2_config="no"
 
-  LIBXML_TEST_VERSION;
+if test -e $_sci_lib/../bin/xml2-config; then
+    found_xml2_config="yes"
+    AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
-  /*
-   * Creates a new document, a node and set it as a root node
-   */
-  doc = xmlNewDoc(BAD_CAST "1.0");
-  root_node = xmlNewNode(NULL, BAD_CAST "root");
-  xmlDocSetRootElement(doc, root_node);
-#else
-  //create compile error so configure fails
-  WrongVersionOrNotInstalled *x = 0;
-#endif
-],$_sci_optional)
-  
+    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs`
+    XML2_LDFLAGS=""
+    XML2_LIB_PATH=""
+    for i in $XML2_LIB_DIR_FLAG;do
+      is_lib_path=`echo $i | sed -n -e "s/-L//p"`
+      if test -z $is_lib_path;then
+        XML2_LDFLAGS="$XML2_LDFLAGS $i"
+      else 
+        if ! test $i = "-L/usr/lib";then
+    	XML2_LIB_PATH="$XML2_LIB_PATH $i"
+        fi
+      fi
+    done
+    includes=`$_sci_lib/../bin/xml2-config --cflags`
+
+    SCI_TRY_LINK(XML2,xml2 library and headers,libxml/tree.h libxml/parser.h,
+                 $includes,$XML2_LDFLAGS,$XML2_LIB_PATH,,[
+    #if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
+    xmlDocPtr doc = NULL;       /* document pointer */
+    xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
+    xmlDtdPtr dtd = NULL;       /* DTD pointer */
+    char buff[256];
+    int i, j;
+    
+    LIBXML_TEST_VERSION;
+    
+    /*
+     * Creates a new document, a node and set it as a root node
+     */
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    root_node = xmlNewNode(NULL, BAD_CAST "root");
+    xmlDocSetRootElement(doc, root_node);
+    #else
+    //create compile error so configure fails
+    WrongVersionOrNotInstalled *x = 0;
+    #endif
+    ],required)
+
+    DEF_XML2="#define HAVE_XML2 1"
+    break
+fi
+
+if test "$found_xml2_config" = "no"; then
+   AC_MSG_RESULT(no.)
+   echo
+   AC_MSG_WARN(Cannot find a xml2-config file to get xml2 variables.)
+   AC_MSG_WARN(Please install libxml2 and then reconfigure.)
+fi
+
+if test ! "$DEF_XML2"; then
+  echo
+  AC_MSG_ERROR(One or more of the xml2 components is missing.)
+fi
+
+SCI_SUBST_THIRDPARTY_DIR(XML2_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_XML2_H)
+
 AC_SUBST(XML2_LIB_FLAG)
 AC_SUBST(XML2_LIB_DIR_FLAG)
 AC_SUBST(INC_XML2_H)
@@ -2544,7 +2526,7 @@ AC_SUBST(INC_XML2_H)
 ##  ----------------------------------------------------------------------
 
 ##  --  search for optional headers  ------------------------------------
-
+AC_LANG(C++)
 SCI_TRY_LINK(SSTREAM,sstream header,sstream,,,,,,optional)
 
 if test "$HAVE_SSTREAM" = "yes"; then
@@ -2555,7 +2537,7 @@ else
 fi
 
 AC_SUBST(SSTREAM_COMPAT)
-
+AC_LANG(C)
 ##  --  search for SGI'S or Win32's traceback library  ------------------------------ 
 
 _sci_optional=optional
@@ -2825,7 +2807,7 @@ AC_SUBST(MPEGE_LIB_DIR_FLAG)
 AC_SUBST(DEF_MPEG)
 
 ##  --  search for ImageMagick --------------------------------------
-
+AC_LANG(C++)
 # Default values:
 _sci_optional=optional
 _sci_lib="$sci_thirdparty_lib"
@@ -2845,15 +2827,16 @@ fi
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
 
 if test ! -e $_sci_lib/../bin/Magick-config; then
-   AC_MSG_WARN(Magick-config on in SCIRun Thirdparty installation.  Going to)
-   AC_MSG_WARN(try to find it based on the location of the 'convert' program.)
+   AC_MSG_RESULT(Not found under $_sci_lib)
+   AC_MSG_CHECKING(for Magick-config in your path)
    # ImageMagick not in SCIRun Thirdparty... Therefore it probably is
    # just in /usr/lib...
-   MAGICK_DIR=`which convert`
-   if test -z "$MAGICK_DIR"; then
-      _sci_lib=$MAGICK_DIR/../lib
+   MAGICK_DIR=`Magick-config --prefix`
+   if test -e "$MAGICK_DIR/lib"; then
+      _sci_lib=$MAGICK_DIR/lib
+      AC_MSG_RESULT(Magick-config found...)	
    else
-      AC_MSG_WARN('convert' program not found...)
+      AC_MSG_WARN(Magick-config program not found...)
    fi
 fi
 
@@ -2862,7 +2845,7 @@ found_magic_config="no"
 if test -e $_sci_lib/../bin/Magick-config; then
     found_magic_config="yes"
     echo
-    AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
+    AC_MSG_WARN(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
 
     MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
     MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
@@ -2873,9 +2856,28 @@ if test -e $_sci_lib/../bin/Magick-config; then
     MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
     MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
     includes=`$_sci_lib/../bin/Magick-config --cppflags`
+    if test $includes="-I/usr/include";then
+      includes=""
+    fi
 
-    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
-                 $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
+    MAGICK_LDFLAGS=""
+    MAGICK_LIB_PATH=""
+    for i in $MAGICK_LIB_DIR_FLAG;do
+      is_lib_path=`echo $i | sed -n -e "s/-L//p"`
+      if test -z $is_lib_path;then
+        MAGICK_LDFLAGS="$MAGICK_LDFLAGS $i"
+      else 
+        if ! test $i = "-L/usr/lib";then
+    	MAGICK_LIB_PATH="$MAGICK_LIB_PATH $i"
+        fi
+      fi
+    done
+
+
+    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,stdio.h magick/api.h,
+                 $includes,$MAGICK_LIB_PATH,$MAGICK_LDFLAGS,,[
+       Image *image = NULL;
+       ],required)
 
     DEF_MAGICK="#define HAVE_MAGICK 1"
     break
@@ -2905,7 +2907,7 @@ AC_SUBST(INC_MAGICK_H)
 AC_SUBST(DEF_MAGICK)
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
-
+AC_LANG(C)
 ##  --  search for scisock --------------------------------------
 
 AC_SUBST(SCISOCK_LIB_FLAG)
