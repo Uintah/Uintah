@@ -23,7 +23,7 @@ symbol = {'+r','*r','xg'}
 symbol2 = {'--b','r','-.g'}
 
 % lineExtract start and stop
-startEnd ='-istart 0 0 2 -iend 100 100 2';
+startEnd ='-istart -1 -1 8 -iend 100 100 8';
 
 %________________________________
 %  extract the physical time for each dump
@@ -59,12 +59,13 @@ for(ts = 1:nDumps )
     x2L = press2L(:,1);
     y2L = press2L(:,2);     % multi level data
     z2L = press2L(:,4);
-    X = reshape(x1L, [5 5]);
-    Y = reshape(y1L, [5 5]);
-    Z = reshape((z2L - z1L), [5 5]);
+    X = reshape(x1L, [18 18]);
+    Y = reshape(y1L, [18 18]);
+    Z = reshape((z2L - z1L), [18 18]);
   
-    [C,h] = contour(X, Y ,Z);
+    [C,h] = contourf(X, Y ,Z);
     clabel(C,h);
+    colormap jet
     
     xlabel('x')
     ylabel('y')
@@ -75,11 +76,11 @@ for(ts = 1:nDumps )
     else
         hold on;
     end
+    filename = sprintf('%i.jpg',ts);
+    saveas(gcf,filename,'jpg');
     %M(ts) = getframe(gcf);
 end  % timestep loop
-%__________________________________
-% show the move and make an avi file
-hFig = figure;
-%movie(hFig,M,1,3)
-%movie2avi(M,'test.avi','fps',30,'quality',100);
+
+%montage -geometry "640x480" -tile 3x3 1.jpg 2.jpg 3.jpg 4.jpg 5.jpg 6.jpg 7.jpg 8.jpg 9.jpg montage.jpg
+
 %clear all
