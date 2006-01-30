@@ -130,6 +130,7 @@ namespace Uintah {
     const VarLabel* mag_grad_vol_frac_CCLabel;
     const VarLabel* mag_grad_press_CCLabel;
     
+    // refluxing variables
     const VarLabel* mass_X_FC_fluxLabel;
     const VarLabel* mass_Y_FC_fluxLabel;
     const VarLabel* mass_Z_FC_fluxLabel;
@@ -145,9 +146,12 @@ namespace Uintah {
     const VarLabel* int_eng_X_FC_fluxLabel;
     const VarLabel* int_eng_Y_FC_fluxLabel;
     const VarLabel* int_eng_Z_FC_fluxLabel;
+    
+    const VarLabel* vol_frac_X_FC_fluxLabel;
+    const VarLabel* vol_frac_Y_FC_fluxLabel;
+    const VarLabel* vol_frac_Z_FC_fluxLabel;
 
     // Implicit AMR variables
-    const VarLabel* connectionListLabel;
     const VarLabel* matrix_CFI_weightsLabel;
 
     };

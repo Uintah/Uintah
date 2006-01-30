@@ -33,6 +33,7 @@ namespace Uintah {
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
                           CCVariable<double>& q_advected,
+                          advectVarBasket* varBasket,
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
                           SFCZVariable<double>& q_ZFC,

@@ -181,6 +181,7 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
 void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                                  const Patch* patch,
                                  CCVariable<double>& q_advected,
+                                 advectVarBasket* varBasket,
                                  SFCXVariable<double>& q_XFC,
                                  SFCYVariable<double>& q_YFC,
                                  SFCZVariable<double>& q_ZFC,
@@ -191,6 +192,9 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                       
   // fluxes on faces at the coarse fine interfaces		      
   q_FC_PlusFaces( q_CC, patch, q_XFC, q_YFC, q_ZFC); 
+  
+  // fluxes on faces at the coarse fine interfaces                    
+  q_FC_fluxes<double>(q_CC, "vol_frac", varBasket);
 }
 //__________________________________
 //     V E C T O R
@@ -373,7 +377,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
                                       const string& desc,
                                       advectVarBasket* vb)
 {
-  if(vb->doAMR){
+  if(vb->doRefluxing){
     // pull variables from the basket
     const int indx = vb->indx;
     const Patch* patch = vb->patch;
@@ -470,5 +474,5 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
 #endif
   /*===========TESTING==========`*/                                       
                                            
-  } // doAMR   
+  } // doRefluxing   
 }

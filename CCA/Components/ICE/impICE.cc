@@ -14,7 +14,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h> 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
+
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Exceptions/InternalError.h>
@@ -564,7 +564,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->allocateAndPut(rhs, lb->rhsLabel, 0,patch);
     }
     if(computes_or_modifies == "modifies"){
-      new_dw->getModifiable(rhs,   lb->rhsLabel,            0,patch);
+      new_dw->getModifiable(rhs, lb->rhsLabel, 0,patch);
     }
         
     rhs.initialize(0.0);
@@ -615,11 +615,28 @@ void ICE::setupRHS(const ProcessorGroup*,
       //__________________________________
       // Advection preprocessing
       bool bulletProof_test=false;
+      
+      //__________________________________
+      // common variables that get passed into the advection operators
+      advectVarBasket* varBasket = scinew advectVarBasket();
+      varBasket->new_dw = new_dw;
+      varBasket->old_dw = old_dw;
+      varBasket->indx = indx;
+      varBasket->patch = patch;
+      varBasket->level = level;
+      varBasket->lb  = lb;
+      varBasket->doRefluxing = d_doRefluxing;
+      varBasket->is_Q_massSpecific = false;
+      varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
+      varBasket->AMR_subCycleProgressVar = 0;  // for lockstep it's always 0
+      
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
                                     bulletProof_test, pNewDW); 
 
-      advector->advectQ(vol_frac, patch, q_advected,  
-                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);  
+      advector->advectQ(vol_frac, patch, q_advected, varBasket, 
+                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw); 
+                        
+      delete varBasket;                         
     
       //__________________________________
       //  sum Advecton (<vol_frac> vel_FC)
@@ -659,6 +676,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       rhs[c] = -term1[c] + massExchTerm[c] + sumAdvection[c];
       rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
+    
     
     //__________________________________
     // set rhs = 0 under all fine patches
@@ -784,7 +802,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     
 /*`==========TESTING==========*/
 // READ IN THE SOLUTION
-      if(d_dbgVar2 == 0 && counter == 0){
+      if((d_dbgVar2 == 0 || d_dbgVar2 == 2 ) && counter == 0 && level->getIndex() == 0){
         FILE *fp;
         int ts = d_sharedState->getCurrentTopLevelTimeStep();
         ostringstream filename;
@@ -832,7 +850,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     }   
     
 /*`==========TESTING==========*/
-      if(d_dbgVar2 == 1){
+      if( (d_dbgVar2 == 1 || d_dbgVar2 == 2 )){
         FILE *fp;
         int ts = d_sharedState->getCurrentTopLevelTimeStep();
         ostringstream filename;

@@ -29,7 +29,7 @@ namespace Uintah {
       string desc;
       const Patch* patch;
       const Level* level;
-      bool doAMR;
+      bool doRefluxing;
   };
   
   class Advector {
@@ -53,6 +53,7 @@ namespace Uintah {
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
                           CCVariable<double>& q_advected,
+                          advectVarBasket* vb,
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
                           SFCZVariable<double>& q_ZFC,
