@@ -36,7 +36,7 @@ SRCDIR   := Core/GeomInterface
 SRCS += \
 	$(SRCDIR)/Pickable.cc
 
-PSELIBS :=
+PSELIBS := Core/Thread
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

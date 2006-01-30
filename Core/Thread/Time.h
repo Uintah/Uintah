@@ -43,6 +43,8 @@
 #ifndef Core_Thread_Time_h
 #define Core_Thread_Time_h
 
+#include <Core/Thread/share.h>
+
 namespace SCIRun {
 /**************************************
 
@@ -58,7 +60,7 @@ namespace SCIRun {
  on other machines.
 
 ****************************************/
-class Time {
+class SHARE Time {
 public:
   typedef unsigned long long SysClock;
 	    

@@ -88,7 +88,15 @@
 #include <iostream>
 #include <map>
 
-extern Tcl_Interp* the_interp;
+#ifdef _WIN32
+#undef min
+#undef max
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE
+#endif
+
+extern "C" SHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
@@ -822,8 +830,8 @@ ViewSlices::render_window(SliceWindow &window) {
     set_window_cursor(window, 0);
   }
   draw_all_labels(window);
-  window.viewport_->release();
   GL_ERROR();
+  window.viewport_->release();
   return 1;
 }
 
@@ -1614,7 +1622,8 @@ ViewSlices::draw_window_label(SliceWindow &window)
   draw_label(window, text, window.viewport_->width() - 2, 0, 
 	     FreeTypeText::se, fonts_["view"]);
 
-  if (string(sci_getenv("USER")) == string("mdavis"))
+  const char* user = sci_getenv("USER");
+  if (user && string(user) == string("mdavis"))
     draw_label(window, "fps: "+to_string(fps_), 
 	       0, window.viewport_->height() - 2,
 	       FreeTypeText::nw, fonts_["default"]);

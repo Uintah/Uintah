@@ -51,6 +51,13 @@
 #include <stdlib.h>
 #include <set>
 
+#ifdef _MSC_VER
+inline double rint (double x)
+{
+  return (double) ((int) x + .5);
+}
+#endif
+
 namespace SCITeem {
 
 using namespace SCIRun;
@@ -1326,6 +1333,8 @@ MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatrix &Musc
 // On the mac, the isnan define (from math.h) gets screwed up if
 // iostream is included... go figure... this is a hack to fix that.
 #  define isnan(x) __isnanf(x)
+#elif defined(_WIN32)
+#  define isnan(x) _isnan(x)
 #endif
             for (j=0;j<2;j++) if (isnan(prob[k+j]))
 	    {

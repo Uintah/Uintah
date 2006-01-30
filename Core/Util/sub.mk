@@ -50,7 +50,12 @@ SRCS     += \
 	$(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/ProgressiveWarning.cc
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math
+PSELIBS := Core/Containers Core/Exceptions Core/Thread
+
+ifeq ($(IS_WIN),yes)
+  PSELIBS += Core_OS
+endif
+
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

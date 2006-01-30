@@ -48,11 +48,13 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
+#include <Core/Algorithms/Visualization/share.h>
+
 namespace SCIRun {
 
 // NoiseBase
 
-class NoiseAlg : public DynamicAlgoBase {
+class SHARE NoiseAlg : public DynamicAlgoBase {
 public:
   NoiseAlg();
   virtual ~NoiseAlg();

@@ -43,6 +43,8 @@ namespace SCIRun {
 #include <iosfwd>
 #include <vector>
 
+#include <Core/XMLUtil/share.h>
+
 namespace SCIRun {
 using std::string;
 using std::vector;
@@ -62,8 +64,8 @@ bool string_is(const xmlChar *childname, const char *const name) {
   return (xmlStrcmp(childname, xmlCharStrdup(name)) == 0);
 }
 
-xmlAttrPtr get_attribute_by_name(const xmlNodePtr p, const char *name);
-bool get_attributes(vector<xmlNodePtr> &att, const xmlNodePtr p);
+SHARE xmlAttrPtr get_attribute_by_name(const xmlNodePtr p, const char *name);
+SHARE bool get_attributes(vector<xmlNodePtr> &att, const xmlNodePtr p);
 
       
 //////////////////////////////
@@ -72,8 +74,7 @@ bool get_attributes(vector<xmlNodePtr> &att, const xmlNodePtr p);
 // represents the children of the node
 // named "node".
       
-std::string get_serialized_children(xmlNode* node);
-      
+SHARE std::string get_serialized_children(xmlNode* node);
 } // End namespace SCIRun
 
 #endif

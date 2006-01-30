@@ -58,6 +58,8 @@ void Pio(Piostream &stream,
 	 LatVolMesh<HexTrilinearLgn<Point> >::CellIndex &n);
 
 }
+#include <Packages/BioPSE/Core/Datatypes/share.h>
+
 namespace BioPSE {
 
 using namespace SCIRun;
@@ -67,7 +69,7 @@ typedef ConstantBasis<int>                 SegDatBasis;
 typedef GenericField<SegLVMesh, SegDatBasis,
 		     FData3d<int, SegLVMesh> > SegLVField;
 
-class SegLatVolField : public SegLVField {
+class SHARE SegLatVolField : public SegLVField {
 private:
   int maxMatl_;
   Array1<pair<int, long> > comps_;

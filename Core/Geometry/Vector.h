@@ -52,6 +52,8 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
 using std::string;
 
@@ -110,8 +112,8 @@ public:
   }
 
   // checks if one vector is exactly the same as another
-  int operator==(const Vector&) const;
-  int operator!=(const Vector&) const;
+  SHARE int operator==(const Vector&) const;
+  SHARE int operator!=(const Vector&) const;
 
   inline Vector operator*(const double) const;
   inline Vector operator*(const Vector&) const;
@@ -128,7 +130,7 @@ public:
   inline Vector& operator-=(const Vector&);
   inline double normalize();
   inline double safe_normalize();
-  Vector normal() const;
+  SHARE Vector normal() const;
   friend inline Vector Cross(const Vector&, const Vector&);
   friend inline Vector Abs(const Vector&);
   inline void x(double);
@@ -157,10 +159,10 @@ public:
     
   friend inline Vector Interpolate(const Vector&, const Vector&, double);
     
-  void find_orthogonal(Vector&, Vector&) const;
-  bool check_find_orthogonal(Vector&, Vector&) const;
+  SHARE void find_orthogonal(Vector&, Vector&) const;
+  SHARE bool check_find_orthogonal(Vector&, Vector&) const;
 
-  friend void Pio( Piostream&, Vector& );
+  SHARE friend void Pio( Piostream&, Vector& );
 
   inline const Point &point() const;
   inline Point &asPoint() const;
@@ -198,8 +200,8 @@ public:
       _z = z;
     }
       
-  friend std::ostream& operator<<(std::ostream& os, const Vector& p);
-  friend std::istream& operator>>(std::istream& os, Vector& p);
+  SHARE friend std::ostream& operator<<(std::ostream& os, const Vector& p);
+  SHARE friend std::istream& operator>>(std::istream& os, Vector& p);
 
 }; // end class Vector
 
@@ -209,6 +211,7 @@ public:
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
+
 
 inline Vector::Vector(const Point& p)
     : _x(p._x), _y(p._y), _z(p._z)
@@ -515,7 +518,7 @@ inline Vector Max(const Vector &v1, const Vector &v2)
 		Max(v1.z(), v2.z()));
 }
 
-const TypeDescription* get_type_description(Vector*);
+SHARE const TypeDescription* get_type_description(Vector*);
 
 } // End namespace SCIRun
 

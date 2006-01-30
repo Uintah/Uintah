@@ -46,9 +46,11 @@
 
 #include <Dataflow/Constraints/BaseConstraint.h>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 
-class LineConstraint : public BaseConstraint {
+class SHARE LineConstraint : public BaseConstraint {
 public:
    LineConstraint( const string& name,
 		   const Index numSchemes,

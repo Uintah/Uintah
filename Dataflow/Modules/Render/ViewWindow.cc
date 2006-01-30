@@ -76,6 +76,7 @@
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
+#include <Core/Thread/Time.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -88,7 +89,16 @@ using std::ostringstream;
 #define MouseEnd 1
 #define MouseMove 2
 
+#ifdef _WIN32
+#undef min
+#undef max
+#endif
+
+
 namespace SCIRun {
+
+// gather the buffer's z-values
+extern int CAPTURE_Z_DATA_HACK;
 
 ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
   : id_(ctx->getfullname()),
@@ -447,8 +457,6 @@ ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
       //   towards the lookat point, since read the z-values is sorta slow
       if (fabs(curpt[0])>.2 || fabs(curpt[1])>.2) {
 
-	// gather the buffer's z-values
-	extern int CAPTURE_Z_DATA_HACK;
 	CAPTURE_Z_DATA_HACK = 1;
 	redraw();
 
@@ -794,7 +802,6 @@ ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
 	gui_inertia_mode_.set(0);
 	redraw();
       }
-      extern int CAPTURE_Z_DATA_HACK;
       CAPTURE_Z_DATA_HACK = 1;
       redraw();
 
@@ -1657,6 +1664,7 @@ ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
   // We have to send this to the Viewer thread...
   ViewWindowMouseMessage *msg = scinew ViewWindowMouseMessage
     (id_, handler, action, x, y, state, btn, time);
+
   if (!viewer_->mailbox.trySend(msg))
     cerr << "Mouse event dropped, mailbox full!\n";
 }

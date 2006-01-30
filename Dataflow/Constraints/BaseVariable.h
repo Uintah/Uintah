@@ -48,6 +48,8 @@
 #include <string>
 #include <vector>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 using std::string;
 using std::vector;
@@ -66,7 +68,7 @@ enum Scheme { Scheme1, Scheme2, Scheme3, Scheme4,
 class BaseConstraint;
 class ConstraintSolver;
 
-class BaseVariable {
+class SHARE BaseVariable {
    friend class BaseConstraint;
    friend class ConstraintSolver;
 public:

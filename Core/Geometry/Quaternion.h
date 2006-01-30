@@ -73,6 +73,8 @@ POSSIBLE REVISIONS
 #include <Core/Geometry/Point.h>
 #include <math.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
 
 #define NUM_ZERO 10e-9
@@ -91,11 +93,11 @@ class Quaternion {
   friend Quaternion Pow(const Quaternion&, double);
 public:
 
-  Quaternion(): a(1), v(Vector(0, 0, 0)){};
-  Quaternion(double angle, const Vector& vect): a(angle), v(vect){
+  inline Quaternion(): a(1), v(Vector(0, 0, 0)){};
+  inline Quaternion(double angle, const Vector& vect): a(angle), v(vect){
     this->normalize();
   };
-  Quaternion(Vector, Vector);
+  SHARE Quaternion(Vector, Vector);
   explicit Quaternion(const Transform&);
   explicit Quaternion(const Vector&);
 

@@ -47,6 +47,8 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
 class CM2ShaderFactory;
@@ -54,7 +56,7 @@ class Pbuffer;
 
 typedef pair<float, float> range_t;
 
-class CM2Widget : public Datatype
+class SHARE CM2Widget : public Datatype
 {
 public:
   CM2Widget();
@@ -130,7 +132,7 @@ protected:
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 
-class ClippingCM2Widget : public CM2Widget
+class SHARE ClippingCM2Widget : public CM2Widget
 {
 public:
   ClippingCM2Widget();
@@ -175,7 +177,7 @@ protected:
 
 
 
-class TriangleCM2Widget : public CM2Widget
+class SHARE TriangleCM2Widget : public CM2Widget
 {
 public:
   TriangleCM2Widget();
@@ -222,7 +224,7 @@ enum CM2RectangleType
   CM2_RECTANGLE_ELLIPSOID = 1
 };
 
-class RectangleCM2Widget : public CM2Widget
+class SHARE RectangleCM2Widget : public CM2Widget
 {
 public:
   RectangleCM2Widget();
@@ -265,7 +267,7 @@ protected:
 
 
 
-class ColorMapCM2Widget : public RectangleCM2Widget
+class SHARE ColorMapCM2Widget : public RectangleCM2Widget
 {
 public:
   ColorMapCM2Widget();
@@ -291,7 +293,7 @@ protected:
 
 
 // The image widget cannot be manipulated, only drawn.
-class ImageCM2Widget : public CM2Widget
+class SHARE ImageCM2Widget : public CM2Widget
 {
 public:
   ImageCM2Widget();
@@ -333,7 +335,7 @@ protected:
 
 
 
-class PaintCM2Widget : public CM2Widget
+class SHARE PaintCM2Widget : public CM2Widget
 {
 public:
   typedef pair<double, double>          Coordinate;

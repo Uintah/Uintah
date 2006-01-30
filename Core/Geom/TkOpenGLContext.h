@@ -60,9 +60,10 @@
 using std::string;
 using std::vector;
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
-class TkOpenGLContext {
+class SHARE TkOpenGLContext {
 public:
   TkOpenGLContext(const string &, int visualid=0, 
 		  int width=640, int height = 480);
@@ -70,7 +71,7 @@ public:
   
   static string		listvisuals();
   bool			make_current();
-  void			release();
+  void /*bool*/			release();
   int			width();
   int			height();
   void			swap();
@@ -110,6 +111,7 @@ public:
 #else
   HDC                   hDC_;
   HGLRC                 context_;
+  HWND                  hWND_;
 #endif
   XVisualInfo*		vi_;
   Colormap		colormap_;

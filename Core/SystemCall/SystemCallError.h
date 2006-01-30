@@ -47,12 +47,16 @@
 
 
 #include <errno.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <stdio.h>
+
+#include <Core/SystemCall/share.h>
 
 namespace SCIRun {
 
-class SystemCallBase {
+class SHARE SystemCallBase {
 
   public:
     SystemCallBase();

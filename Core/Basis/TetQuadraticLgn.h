@@ -39,10 +39,11 @@
 #  pragma set woff 1506
 #endif
 
+#include <Core/Basis/share.h>
 namespace SCIRun {
 
 //! Class for describing unit geometry of TetQuadraticLgn 
-  class TetQuadraticLgnUnitElement : public TetLinearLgnUnitElement {
+  class SHARE TetQuadraticLgnUnitElement : public TetLinearLgnUnitElement {
 public:
   static double unit_vertices[10][3]; //!< Parametric coordinates of vertices of unit edge
   

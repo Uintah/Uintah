@@ -183,7 +183,7 @@ protected:
 };
 
 
-void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
+SHARE void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 } // End namespace SCIRun
 

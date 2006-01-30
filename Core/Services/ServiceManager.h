@@ -44,9 +44,10 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/LockingHandle.h>
 
+#include <Core/Services/share.h>
 namespace SCIRun {
 
-class ServiceManager: public Runnable, public ServiceBase {
+class SHARE ServiceManager: public Runnable, public ServiceBase {
 public:
 
   // Constructor/destructor

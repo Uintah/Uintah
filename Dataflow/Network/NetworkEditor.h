@@ -45,11 +45,13 @@
 
 #include <Core/GuiInterface/GuiCallback.h>
 
+#include <Dataflow/Network/share.h>
+
 namespace SCIRun {
   class GuiInterface;
   class Network;
 
-  class NetworkEditor : public GuiCallback {
+  class SHARE NetworkEditor : public GuiCallback {
   public:
     NetworkEditor(Network*, GuiInterface* gui);
     ~NetworkEditor();

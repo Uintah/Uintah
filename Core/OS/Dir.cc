@@ -35,8 +35,13 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <iostream>
+#ifndef _WIN32
 #include <unistd.h>
 #include <dirent.h>
+#else
+// supply a POSIX version
+#include <Core/OS/dirent.h>
+#endif
 
 using namespace std;
 

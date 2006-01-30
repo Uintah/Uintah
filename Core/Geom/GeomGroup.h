@@ -46,9 +46,11 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/BBox.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomGroup : public GeomObj {
+class SHARE GeomGroup : public GeomObj {
     vector<GeomHandle> objs;
 
 public:

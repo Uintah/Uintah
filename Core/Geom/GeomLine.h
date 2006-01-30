@@ -51,9 +51,11 @@
 
 #include <stdlib.h>	// For size_t
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomLine : public GeomObj {
+class SHARE GeomLine : public GeomObj {
 public:
   Point p1, p2;
   float lineWidth_;
@@ -77,7 +79,7 @@ public:
   static PersistentTypeID type_id;
 };
 
-class GeomLines : public GeomObj {
+class SHARE GeomLines : public GeomObj {
 protected:
   double line_width_;
   vector<float> points_;
@@ -112,7 +114,7 @@ public:
 };
 
 
-class GeomTranspLines : public GeomLines {
+class SHARE GeomTranspLines : public GeomLines {
 protected:
   vector<unsigned int> xindices_;
   vector<unsigned int> yindices_;
@@ -141,7 +143,7 @@ public:
 
 // can generate "lit" streamlines this way
 
-class TexGeomLines : public GeomObj {
+class SHARE TexGeomLines : public GeomObj {
 protected:
   Array1<unsigned char>  tmap1d; // 1D texture - should be in Viewer?
   int tmapid;                    // id for this texture map
@@ -186,7 +188,7 @@ public:
 };
 
 
-class GeomCLineStrips : public GeomObj {
+class SHARE GeomCLineStrips : public GeomObj {
 protected:
   double line_width_;
   vector<vector<float> > points_;

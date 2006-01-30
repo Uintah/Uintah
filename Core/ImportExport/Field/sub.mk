@@ -31,7 +31,7 @@
 
 SRCDIR   := Core/ImportExport/Field
 
-SRCS +=	$(SRCDIR)/ExecConverter.cc \
+SRCS +=	$(SRCDIR)/FieldExecConverter.cc \
 	$(SRCDIR)/FieldIEPlugin.cc \
 	$(SRCDIR)/TextPointCloudString_plugin.cc
 

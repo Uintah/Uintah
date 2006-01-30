@@ -42,11 +42,13 @@
 #include <algorithm>
 #include <vector>
 
+#include <Dataflow/Modules/Fields/share.h>
+
 namespace SCIRun {
 using std::sort;
 using std::vector;
 
-class ScalarFieldStats : public Module
+class SHARE ScalarFieldStats : public Module
 {
   friend class ScalarFieldStatsAlgo;
 public:

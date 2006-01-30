@@ -38,6 +38,9 @@
 
 
 #include <Core/SystemCall/SystemCall.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 
 namespace SCIRun {
 

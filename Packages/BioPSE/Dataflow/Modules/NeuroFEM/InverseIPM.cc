@@ -49,10 +49,16 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/OS/Dir.h> // for MKDIR
 
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fstream>
+
+#ifdef _WIN32
+#define mode_t int
+#include <io.h>
+#endif
 
 namespace SCIRun {
 
@@ -538,11 +544,7 @@ InverseIPM::execute()
   try {
     // Make our tmp directory.
     mode_t umsk = umask(00);
-#ifndef _WIN32
-    if (mkdir(tmpdir.c_str(), 0700) == -1)
-#else
-    if (mkdir(tmpdir.c_str()) == -1)
-#endif
+    if (MKDIR(tmpdir.c_str(), 0700) == -1)
     {
       //error("Unable to open a temporary working directory.");
       //throw false;

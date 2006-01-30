@@ -49,9 +49,10 @@
 #endif
 
 #include <sci_defs/error_defs.h>
+#include <Core/Exceptions/share.h>
 
 namespace SCIRun {
-      class Exception {
+      class SHARE Exception {
       public:
 	 Exception();
 	 virtual ~Exception();

@@ -40,6 +40,8 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Util/share.h>
+
 namespace SCIRun {
 
 using std::string;
@@ -48,7 +50,7 @@ using std::pair;
 
 struct CompileInfo;
 
-class TypeDescription {
+class SHARE TypeDescription {
 public:
   enum category_e {
     DATA_E,
@@ -115,18 +117,18 @@ private:
 };
 
 
-const TypeDescription* get_type_description(double*);
-const TypeDescription* get_type_description(long*);
-const TypeDescription* get_type_description(float*);
-const TypeDescription* get_type_description(short*);
-const TypeDescription* get_type_description(unsigned short*); 
-const TypeDescription* get_type_description(int*);
-const TypeDescription* get_type_description(unsigned int*);
-const TypeDescription* get_type_description(char*);
-const TypeDescription* get_type_description(unsigned char*);
-const TypeDescription* get_type_description(bool*);
-const TypeDescription* get_type_description(string*);
-const TypeDescription* get_type_description(unsigned long*);
+SHARE const TypeDescription* get_type_description(double*);
+SHARE const TypeDescription* get_type_description(long*);
+SHARE const TypeDescription* get_type_description(float*);
+SHARE const TypeDescription* get_type_description(short*);
+SHARE const TypeDescription* get_type_description(unsigned short*); 
+SHARE const TypeDescription* get_type_description(int*);
+SHARE const TypeDescription* get_type_description(unsigned int*);
+SHARE const TypeDescription* get_type_description(char*);
+SHARE const TypeDescription* get_type_description(unsigned char*);
+SHARE const TypeDescription* get_type_description(bool*);
+SHARE const TypeDescription* get_type_description(string*);
+SHARE const TypeDescription* get_type_description(unsigned long*);
 
 template <class T>
 const TypeDescription* get_type_description(vector<T>*)

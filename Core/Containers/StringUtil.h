@@ -48,42 +48,44 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Containers/share.h>
+
 namespace SCIRun {
   using std::string;
   using std::vector;
 
-bool string_to_int(const string &str, int &result);
-bool string_to_double(const string &str, double &result);
+SHARE bool string_to_int(const string &str, int &result);
+SHARE bool string_to_double(const string &str, double &result);
 
-string to_string(int val);
-string to_string(unsigned int val);
-string to_string(unsigned long val);
-string to_string(double val);
+SHARE string to_string(int val);
+SHARE string to_string(unsigned int val);
+SHARE string to_string(unsigned long val);
+SHARE string to_string(double val);
 
 //////////
 // Remove directory name
-string basename(const string &path);
+SHARE string basename(const string &path);
 
 //////////
 // Return directory name
-string pathname(const string &path);
+SHARE string pathname(const string &path);
 
 // Split a string into multiple parts, separated by the character sep
-vector<string> split_string(const std::string& str, char sep);
+SHARE vector<string> split_string(const std::string& str, char sep);
 
 /////////
 // C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.
-string string_Cify(const string &str);
+SHARE string string_Cify(const string &str);
 
 //////////
 // Unsafe cast from string to char *, used to export strings to C functions.
-char * ccast_unsafe(const string &str);
+SHARE char* ccast_unsafe(const string &str);
 
 // replaces all occurances of 'substr' in 'str' with 'replacement'
-string replace_substring(string str, string substr, string replacement);
+SHARE string replace_substring(string str, string substr, string replacement);
 
 // Returns true if 'str' ends with the string 'substr'
-bool ends_with(string str, string substr);
+SHARE bool ends_with(string str, string substr);
 
 
 } // End namespace SCIRun

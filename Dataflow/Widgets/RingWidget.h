@@ -46,10 +46,11 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
+#include <Dataflow/Widgets/share.h>
 
 namespace SCIRun {
 
-class RingWidget : public BaseWidget {
+class SHARE RingWidget : public BaseWidget {
 public:
   RingWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	      bool is_slideable = true);

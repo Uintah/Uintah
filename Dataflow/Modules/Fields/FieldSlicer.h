@@ -37,7 +37,7 @@
 #if !defined(FieldSlicer_h)
 #define FieldSlicer_h
 
-#include <include/sci_defs/insight_defs.h>
+#include <sci_defs/insight_defs.h>
 
 #include <Core/Containers/Handle.h>
 #include <Core/Util/DynamicLoader.h>

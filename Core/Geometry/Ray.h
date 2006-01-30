@@ -46,12 +46,14 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
 
 class Piostream;
 
 
-class Ray {
+class SHARE Ray {
     Point o_;
     Vector d_;
 public:
@@ -88,7 +90,7 @@ public:
   void normalize(); //! normalizes the direction vector d
   void direction(const Vector& newdir); //! changes d
 
-  friend void Pio( Piostream&, Ray&);
+  SHARE friend void Pio( Piostream&, Ray&);
 };
 
 

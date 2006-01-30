@@ -43,13 +43,19 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Malloc/Allocator.h>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
 namespace SCIRun {
 
 extern "C" {
-IPort* make_MatrixIPort(Module* module, const string& name) {
+SHARE IPort* make_MatrixIPort(Module* module, const string& name) {
   return scinew SimpleIPort<MatrixHandle>(module,name);
 }
-OPort* make_MatrixOPort(Module* module, const string& name) {
+SHARE OPort* make_MatrixOPort(Module* module, const string& name) {
   return scinew SimpleOPort<MatrixHandle>(module,name);
 }
 }

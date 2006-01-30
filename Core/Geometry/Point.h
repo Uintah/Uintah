@@ -49,6 +49,7 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Geometry/share.h>
 namespace SCIRun {
 using std::string;
     
@@ -62,11 +63,11 @@ class Point {
 public:
   inline explicit Point(const Vector& v);
   inline Point(double x, double y, double z): _x(x), _y(y), _z(z) {}
-  Point(double, double, double, double);
+  SHARE Point(double, double, double, double);
   inline Point(const Point&);
   inline Point();
-  int operator==(const Point&) const;
-  int operator!=(const Point&) const;
+  SHARE int operator==(const Point&) const;
+  SHARE int operator!=(const Point&) const;
   inline Point& operator=(const Point&);
   inline Vector operator+(const Point&) const;
   inline Vector operator-(const Point&) const;
@@ -91,7 +92,7 @@ public:
   inline const Vector &vector() const;
   inline Vector &asVector() const;
     
-  string get_string() const;
+  SHARE string get_string() const;
 
   //! support dynamic compilation
   static const string& get_h_file_path();
@@ -103,17 +104,17 @@ public:
   //    friend inline double Dot(const Point&, const Vector&);
   friend inline Point Min(const Point&, const Point&);
   friend inline Point Max(const Point&, const Point&);
-  friend Point Interpolate(const Point&, const Point&, double);
-  friend Point AffineCombination(const Point&, double,
+  SHARE friend Point Interpolate(const Point&, const Point&, double);
+  SHARE friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  friend Point AffineCombination(const Point&, double,
+  SHARE friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  friend Point AffineCombination(const Point&, double,
+  SHARE friend Point AffineCombination(const Point&, double,
 					      const Point&, double);
-  friend void Pio( Piostream&, Point& );
+  SHARE friend void Pio( Piostream&, Point& );
 
 
 
@@ -124,8 +125,8 @@ public:
     
   static void test_rigorous(RigorousTest* __test);
 
-  friend std::ostream& operator<<(std::ostream& os, const Point& p);
-  friend std::istream& operator>>(std::istream& os, Point& p);
+  SHARE friend std::ostream& operator<<(std::ostream& os, const Point& p);
+  SHARE friend std::istream& operator>>(std::istream& os, Point& p);
 
 }; // end class Point
 
@@ -138,8 +139,8 @@ Point operator+(const Vector &v, const Point &p) {
   return p+v;
 }
 
-std::ostream& operator<<(std::ostream& os, const Point& p);
-std::istream& operator>>(std::istream& os, Point& p);
+SHARE std::ostream& operator<<(std::ostream& os, const Point& p);
+SHARE std::istream& operator>>(std::istream& os, Point& p);
 
 } // End namespace SCIRun
 
@@ -323,7 +324,7 @@ inline double Dot(const Point& p1, const Point& p2)
   return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
 }
 
-const TypeDescription* get_type_description(Point*);
+SHARE const TypeDescription* get_type_description(Point*);
 
 } // End namespace SCIRun
 

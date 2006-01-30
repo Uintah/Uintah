@@ -961,7 +961,7 @@ public:
 		 const typename Cell::index_type&) const;
 
   //! get the parent element(s) of the given index
-  void get_elems(typename Elem::array_type &result, 
+  void get_elems(typename Cell::array_type &result, 
                  const typename Node::index_type &idx) const;
 
   // returns 26 pairs in ijk order

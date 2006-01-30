@@ -49,6 +49,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/ICom/share.h>
 // Keep the MIPS compiler from putting REMARKS on implicit template
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -62,7 +63,7 @@ class IComPacket;
 
 typedef LockingHandle<IComPacket> IComPacketHandle;
 
-class IComPacket : public IComBase {
+class SHARE IComPacket : public IComBase {
 
 friend class IComSocket;
 

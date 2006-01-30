@@ -48,6 +48,8 @@
 
 #include <stack>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 using std::stack;
 
@@ -69,7 +71,7 @@ struct StackItem {
    uchar iter;
 };
 
-class ConstraintSolver {
+class SHARE ConstraintSolver {
 public:
    ConstraintSolver();
    ConstraintSolver( const double epsilon );

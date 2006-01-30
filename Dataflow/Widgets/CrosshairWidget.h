@@ -47,9 +47,11 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 
 
+#include <Dataflow/Widgets/share.h>
+
 namespace SCIRun {
 
-class CrosshairWidget : public BaseWidget {
+class SHARE CrosshairWidget : public BaseWidget {
 public:
   CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale );
   CrosshairWidget( const CrosshairWidget& );

@@ -35,6 +35,10 @@ SRCDIR   := Core/OS
 
 SRCS     += $(SRCDIR)/Dir.cc $(SRCDIR)/sock.cc $(SRCDIR)/ProcessInfo.cc 
 
+ifeq ($(IS_WIN),yes) 
+SRCS += $(SRCDIR)/dirent.cc
+endif
+
 PSELIBS := Core/Exceptions
 LIBS := $(SOCKET_LIBRARY)
 

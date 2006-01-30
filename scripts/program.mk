@@ -37,7 +37,9 @@ OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
 	   $(patsubst %.y,%.o,$(filter %.y,$(SRCS)))
 
 # We always link against the internal Dataflow malloc
+ifneq ($(IS_WIN),yes)
 PSELIBS := $(PSELIBS) $(MALLOCLIB)
+endif
 
 ifneq ($(REPOSITORY_FLAGS),)
 REPOSITORIES_$(PROGRAM) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository_$(notdir $(PROGRAM)) $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
@@ -71,6 +73,12 @@ CLEANPROGS := $(CLEANPROGS) $(PROGRAM)
 ifneq ($(REPOSITORY_FLAGS),)
   ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository_$(notdir $(PROGRAM)):%,$(OBJS))
 endif
+
+ifeq ($(IS_WIN), yes)
+  MAKE_WHAT:=EXE
+  include $(SCIRUN_SCRIPTS)/vcproj.mk
+endif
+
 
 # Try to prevent user error
 SRCS := INVALID_SRCS.cc

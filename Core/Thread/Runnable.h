@@ -43,6 +43,8 @@
 #ifndef Core_Thread_Runnable_h
 #define Core_Thread_Runnable_h
 
+#include <Core/Thread/share.h>
+
 namespace SCIRun {
 
   class Thread;
@@ -71,7 +73,7 @@ DESCRIPTION
    of this same thread.
    
 ****************************************/
-  class Runnable {
+  class SHARE Runnable {
   protected:
     friend class Thread;
     Thread* my_thread_;

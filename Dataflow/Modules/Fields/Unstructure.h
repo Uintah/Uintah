@@ -92,6 +92,36 @@ struct SpecialUnstructuredHash
 
   size_t operator()(const SMesh::Elem::index_type &n) const
   { return n; }
+#if defined(__ECC) || defined(_MSC_VER)
+  // add < operators here...
+  bool operator()(const LVMesh::Node::index_type &a,
+		  const LVMesh::Node::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && ( a.j_ < b.j_ || a.j_ == b.j_ && a.k_ < b.k_); }
+
+  bool operator()(const IMesh::Node::index_type &a,
+		  const IMesh::Node::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
+
+  bool operator()(const SMesh::Node::index_type &a,
+		  const SMesh::Node::index_type &b) const
+  { return a < b; }
+
+  bool operator()(const LVMesh::Elem::index_type &a,
+		  const LVMesh::Elem::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && ( a.j_ < b.j_ || a.j_ == b.j_ && a.k_ < b.k_); }
+
+  bool operator()(const IMesh::Elem::index_type &a,
+		  const IMesh::Elem::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
+
+  bool operator()(const SMesh::Elem::index_type &a,
+		  const SMesh::Elem::index_type &b) const
+  { return a < b; }
+  // These are particularly needed by ICC's hash stuff
+  static const size_t bucket_size = 4;
+  static const size_t min_buckets = 8;
+
+#endif
 };
 
 #ifdef HAVE_HASH_MAP
@@ -161,6 +191,15 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   typename FDST::mesh_handle_type omesh = scinew typename FDST::mesh_type();
 
 #ifdef HAVE_HASH_MAP
+# if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<typename FSRC::mesh_type::Node::index_type,
+    typename FDST::mesh_type::Node::index_type,
+    SpecialUnstructuredHash> node_hash_type;
+
+  typedef hash_map<typename FSRC::mesh_type::Elem::index_type,
+    typename FDST::mesh_type::Elem::index_type,
+    SpecialUnstructuredHash> elem_hash_type;
+#else
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
     typename FDST::mesh_type::Node::index_type,
     SpecialUnstructuredHash, SpecialUnstructuredEqual> node_hash_type;
@@ -168,6 +207,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   typedef hash_map<typename FSRC::mesh_type::Elem::index_type,
     typename FDST::mesh_type::Elem::index_type,
     SpecialUnstructuredHash, SpecialUnstructuredEqual> elem_hash_type;
+#endif
 #else
   typedef map<typename FSRC::mesh_type::Node::index_type,
     typename FDST::mesh_type::Node::index_type,

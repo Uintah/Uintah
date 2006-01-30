@@ -36,10 +36,12 @@
 
 namespace SCIRun {
 
-class ShaderProgramARB
+#include <Core/Geom/share.h>
+
+class SHARE ShaderProgramARB
 {
 public:
-  ShaderProgramARB(const std::string& program, bool isFile = false);
+  ShaderProgramARB(const std::string& program);
   virtual ~ShaderProgramARB();
   
   bool create();
@@ -62,28 +64,25 @@ protected:
   unsigned int type_;
   unsigned int id_;
   std::string  program_;
-  bool is_file_;
 
   static bool init_;
   static bool supported_;
   static bool non_2_textures_;
   static int  max_texture_size_1_;
   static int  max_texture_size_4_;
-
-  std::string read_from_file(const std::string& program_file);
 };
 
-class VertexProgramARB : public ShaderProgramARB
+class SHARE VertexProgramARB : public ShaderProgramARB
 {
 public:
-  VertexProgramARB(const std::string& program, bool is_file = false);
+  VertexProgramARB(const std::string& program);
   ~VertexProgramARB();
 };
 
-class FragmentProgramARB : public ShaderProgramARB
+class SHARE FragmentProgramARB : public ShaderProgramARB
 {
 public:
-  FragmentProgramARB(const std::string& program, bool is_file = false);
+  FragmentProgramARB(const std::string& program);
   ~FragmentProgramARB();
 };
 

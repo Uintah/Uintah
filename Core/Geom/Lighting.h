@@ -47,10 +47,12 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/Color.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 
-class Lighting {
+class SHARE Lighting {
 public:
     Lighting();
     ~Lighting();

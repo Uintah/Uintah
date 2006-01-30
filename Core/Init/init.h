@@ -42,6 +42,9 @@
 #define Core_Init_h
 
 #include <string>
-void SCIRunInit(std::string packages = "");
+
+#include <Core/Init/share.h>
+
+SHARE void SCIRunInit(std::string packages = "");
 
 #endif

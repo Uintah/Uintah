@@ -257,6 +257,11 @@ public:
   static T GaussianWeights[6];
 };
 
+#ifdef _WIN32
+// force the instantiation of TetGaussian2<double>
+template class PrismGaussian2<double>;
+#endif
+
 template <class T>
 int PrismGaussian2<T>::GaussianNum = 6;
 

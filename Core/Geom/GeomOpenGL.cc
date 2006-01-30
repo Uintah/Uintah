@@ -46,10 +46,6 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 
-#ifdef _WIN32
-#define GL_ARB_fragment_program
-#endif
-
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Environment.h>
 
@@ -128,18 +124,6 @@ using std::endl;
 #include <X11/Xlib.h>
 #else
 #include <windows.h>
-#define GL_TEXTURE_3D 0x806F
-#define GL_TEXTURE0 0x84C0
-#define GL_TEXTURE1 0x84C1
-#define GL_TEXTURE2 0x84C2
-typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
-typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD2FVPROC) (GLenum target, const GLfloat *v);
-typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD3FPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r);
-
-static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
-static PFNGLMULTITEXCOORD2FVPROC glMultiTexCoord2fv = 0;
-static PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
-
 #endif
 
 #include <stdio.h>
@@ -6109,15 +6093,6 @@ TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-#ifdef _WIN32
-  if (glActiveTexture == NULL)
-  {
-    glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
-    glMultiTexCoord2fv = (PFNGLMULTITEXCOORD2FVPROC)wglGetProcAddress("glMultiTexCoord2fv");
-    glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
-  }
-#endif
-
   if (!pre_draw(di, matl, 1)) return;
   GLboolean use_fog = glIsEnabled(GL_FOG);
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)

@@ -50,17 +50,19 @@ using std::string;
 using std::vector;
 
 
+#include <Core/Algorithms/Visualization/share.h>
+
 namespace SCIRun {
 
 // Currently located in TextureBuilderAlgo.cc
-void texture_build_bricks(vector<TextureBrickHandle>& bricks,
+SHARE void texture_build_bricks(vector<TextureBrickHandle>& bricks,
                           int nx, int ny, int nz,
                           int nc, int* nb,
                           const BBox& bbox, int brick_mem,
                           bool use_nrrd_brick);
 
 
-class TextureBuilderAlgo : public SCIRun::DynamicAlgoBase
+class SHARE TextureBuilderAlgo : public SCIRun::DynamicAlgoBase
 {
 public:
   virtual void build(TextureHandle texture,

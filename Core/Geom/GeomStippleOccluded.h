@@ -48,9 +48,11 @@
 
 #include <Core/Geom/GeomSwitch.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomStippleOccluded : public GeomSwitch {
+class SHARE GeomStippleOccluded : public GeomSwitch {
     GeomStippleOccluded(const GeomStippleOccluded&);
 
 public:

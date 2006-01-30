@@ -49,6 +49,7 @@
 #include <Core/Datatypes/FieldIndex.h>
 #include <Core/Containers/LockingHandle.h>
 
+#include <Core/Datatypes/share.h>
 
 #ifndef TYPENAME_H
 #define TYPENAME_H
@@ -82,29 +83,29 @@ class Matrix;
 class NrrdData;
 class Field;
 
-template<> const string find_type_name(float*);
-template<> const string find_type_name(double*);
-template<> const string find_type_name(long double*);
-template<> const string find_type_name(short*);
-template<> const string find_type_name(unsigned short*);
-template<> const string find_type_name(int*);
-template<> const string find_type_name(unsigned int*);
-template<> const string find_type_name(long*);
-template<> const string find_type_name(unsigned long*);
-template<> const string find_type_name(long long*);
-template<> const string find_type_name(unsigned long long*);
-template<> const string find_type_name(char*);
-template<> const string find_type_name(unsigned char*);
-template<> const string find_type_name(bool*);
-template<> const string find_type_name(Vector*);
-template<> const string find_type_name(IntVector*);
-template<> const string find_type_name(Point*);
-template<> const string find_type_name(Transform*);
-template<> const string find_type_name(string*);
+template<> SHARE const string find_type_name(float*);
+template<> SHARE const string find_type_name(double*);
+template<> SHARE const string find_type_name(long double*);
+template<> SHARE const string find_type_name(short*);
+template<> SHARE const string find_type_name(unsigned short*);
+template<> SHARE const string find_type_name(int*);
+template<> SHARE const string find_type_name(unsigned int*);
+template<> SHARE const string find_type_name(long*);
+template<> SHARE const string find_type_name(unsigned long*);
+template<> SHARE const string find_type_name(long long*);
+template<> SHARE const string find_type_name(unsigned long long*);
+template<> SHARE const string find_type_name(char*);
+template<> SHARE const string find_type_name(unsigned char*);
+template<> SHARE const string find_type_name(bool*);
+template<> SHARE const string find_type_name(Vector*);
+template<> SHARE const string find_type_name(IntVector*);
+template<> SHARE const string find_type_name(Point*);
+template<> SHARE const string find_type_name(Transform*);
+template<> SHARE const string find_type_name(string*);
 
-template<> const string find_type_name(LockingHandle<Matrix> *);
-template<> const string find_type_name(LockingHandle<NrrdData> *);
-template<> const string find_type_name(LockingHandle<Field> *);
+template<> SHARE const string find_type_name(LockingHandle<Matrix> *);
+template<> SHARE const string find_type_name(LockingHandle<NrrdData> *);
+template<> SHARE const string find_type_name(LockingHandle<Field> *);
 
 //////////
 // Function overloading for templates 

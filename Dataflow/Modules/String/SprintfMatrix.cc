@@ -45,6 +45,9 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 namespace SCIRun {
 

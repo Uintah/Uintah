@@ -282,10 +282,10 @@ public:
   bool locate(typename Cell::index_type &loc, const Point &p) const;
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
-  int get_weights(const Point & , typename Edge::array_type & , double */*w*/)
+  int get_weights(const Point & , typename Edge::array_type & , double * /*w*/)
   {ASSERTFAIL("TriSurfMesh::get_weights(Edges) not supported."); }
   int get_weights(const Point &p, typename Face::array_type &l, double *w);
-  int get_weights(const Point & , typename Cell::array_type & , double */*w*/)
+  int get_weights(const Point & , typename Cell::array_type & , double * /*w*/)
   {ASSERTFAIL("TriSurfMesh::get_weights(Cells) not supported."); }
 
   void get_point(Point &result, typename Node::index_type index) const
@@ -469,10 +469,14 @@ private:
   {
     size_t operator()(const pair<int, int> &a) const
     {
+#if defined(__ECC) || defined(_MSC_VER)
+      hash_compare<int> hasher;
+#else
       hash<int> hasher;
+#endif
       return hasher(hasher(a.first) + a.second);
     }
-#ifdef __ECC
+#if defined(__ECC) || defined(_MSC_VER)
 
     static const size_t bucket_size = 4;
     static const size_t min_buckets = 8;
@@ -506,7 +510,7 @@ private:
 
 #ifdef HAVE_HASH_MAP
 
-#ifdef __ECC
+#if defined(__ECC) || defined(_MSC_VER)
   typedef hash_map<pair<int, int>, int, edgehash> EdgeMapType;
 #else
   typedef hash_map<pair<int, int>, int, edgehash, edgecompare> EdgeMapType;
@@ -520,7 +524,7 @@ private:
 
 #ifdef HAVE_HASH_MAP
 
-#ifdef __ECC
+#if defined(__ECC) || defined(_MSC_VER)
   typedef hash_map<pair<int, int>, list<int>, edgehash> EdgeMapType2;
 #else
   typedef hash_map<pair<int, int>, list<int>, edgehash, edgecompare> EdgeMapType2;
@@ -1542,7 +1546,7 @@ TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1,
   // no shared nodes means no shared edge.
   if (shared.size() > 4) return false;  
 
-  set<int>::iterator iter = shared.find(not_shar[0]);
+  set<int, less_int>::iterator iter = shared.find(not_shar[0]);
   shared.erase(iter);
 
   iter = shared.find(not_shar[1]);

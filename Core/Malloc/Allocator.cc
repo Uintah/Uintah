@@ -57,9 +57,6 @@ const int ALIGN=16;
 #include <Core/Malloc/AllocPriv.h>
 #include <Core/Malloc/AllocOS.h>
 
-// irix64 KCC stuff
-#include <strings.h>
-
 #if defined(__sun) || defined(_WIN32)
 #  include <string.h>
 #  define bcopy(src,dest,n) memcpy(dest,src,n)
@@ -69,7 +66,11 @@ const int ALIGN=16;
 #  error "Need bcopy idfdef for this architecture"
 #endif
 
-#include <sys/param.h>
+#ifndef _WIN32
+#  include <sys/param.h>
+// irix64 KCC stuff
+#  include <strings.h>
+#endif
 #include <stdio.h>
 
 #ifdef SCI_PTHREAD
@@ -294,11 +295,11 @@ inline void Allocator::unlock()
 }
 
 
-void LockAllocator(Allocator */*a*/)
+void LockAllocator(Allocator * /*a*/)
 {
 }
 
-void UnLockAllocator(Allocator */*a*/)
+void UnLockAllocator(Allocator * /*a*/)
 {
 }
 #else 

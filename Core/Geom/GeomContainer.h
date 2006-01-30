@@ -45,9 +45,11 @@
 
 #include <Core/Geom/GeomObj.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomContainer : public GeomObj {
+class SHARE GeomContainer : public GeomObj {
 protected:
     GeomHandle child_;
 

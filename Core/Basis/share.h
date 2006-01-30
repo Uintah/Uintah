@@ -1,6 +1,5 @@
 #undef SHARE
 
-
 #ifdef _WIN32
 #ifdef BUILD_Core_Basis
 #define SHARE __declspec(dllexport)

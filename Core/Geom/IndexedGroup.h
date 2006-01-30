@@ -49,11 +49,13 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/BBox.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 using namespace std;
 
-class GeomIndexedGroup: public GeomObj {
+class SHARE GeomIndexedGroup: public GeomObj {
     
 public:
     typedef map< int, GeomHandle, less<int> > MapIntGeomObj;

@@ -46,6 +46,8 @@
 #include <algorithm>
 #include <sstream>
 
+#include <Dataflow/Modules/Visualization/share.h>
+
 namespace SCIRun {
 
 typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
@@ -70,10 +72,10 @@ typedef struct _SLData {
 } SLData;
 
 
-vector<Point>::iterator
+SHARE vector<Point>::iterator
 StreamLinesCleanupPoints(vector<Point> &input, double e2);
 
-class StreamLinesAlgo : public DynamicAlgoBase
+class SHARE StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle seed_field_h,

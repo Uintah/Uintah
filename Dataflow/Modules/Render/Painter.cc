@@ -82,7 +82,14 @@
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
 
-extern Tcl_Interp* the_interp;
+#ifdef _WIN32
+#define snprintf _snprintf
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE
+#endif
+
+extern "C" SHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 

@@ -52,6 +52,8 @@
 #include <vector>
 #include <map>
 
+#include <Dataflow/Network/share.h>
+
 namespace SCIRun {
 
 using std::string;
@@ -68,7 +70,7 @@ class DeleteModuleThread;
 class ViewServer;
 // CollabVis code end
   
-class Network {
+class SHARE Network {
   friend class DeleteModuleThread;
 public:
     

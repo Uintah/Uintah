@@ -42,6 +42,8 @@
 
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
 
 
@@ -49,17 +51,17 @@ namespace SCIRun {
 // where the line is specified by two end points.  This function
 // actually computes the distance to the line segment
 // between the given points and not to the line itself.
-double
+SHARE double
 distance_to_line2(const Point &p, const Point &a, const Point &b);
 
 
 // Compute the point on the triangle closest to the given point.
 // The distance to the triangle will be (P - result).length())
-void
+SHARE void
 closest_point_on_tri(Point &result, const Point &P,
                      const Point &A, const Point &B, const Point &C);
 
-double
+SHARE double
 RayPlaneIntersection(const Point &p,  const Vector &dir,
 		     const Point &p0, const Vector &pn);
 }

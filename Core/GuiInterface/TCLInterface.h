@@ -48,9 +48,11 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/GuiInterface/share.h>
+
 namespace SCIRun {
   using namespace std;
-  class TCLInterface : public GuiInterface{
+  class SHARE TCLInterface : public GuiInterface{
   public:
     TCLInterface();
     virtual ~TCLInterface();

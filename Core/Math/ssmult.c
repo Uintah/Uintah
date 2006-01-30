@@ -26,6 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifdef _WIN32
+// make sure to get a dllexport defined for these
+#include <Core/Math/ssmult.h>
+#endif
 
 void ssmult(int beg, int end, int* rows, int* columns,
 	    double* a, double* xp, double* bp)

@@ -54,6 +54,10 @@ using std::cerr;
 using std::ifstream;
 using std::endl;
 
+#ifdef _WIN32
+#define cbrt(x) pow(x, 1.0/3)
+#endif
+
 using namespace SCIRun;
 
 int

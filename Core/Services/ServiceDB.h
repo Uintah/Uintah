@@ -44,6 +44,7 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Services/share.h>
 
 namespace SCIRun {
 
@@ -84,7 +85,7 @@ class ServiceInfo {
 };
 
 
-class ServiceDB : public ServiceBase {
+class SHARE ServiceDB : public ServiceBase {
   public:
   ServiceDB();
   ~ServiceDB();

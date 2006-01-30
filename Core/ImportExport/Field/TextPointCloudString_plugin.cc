@@ -59,6 +59,13 @@
 #include <sstream>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
+
 namespace SCIRun {
 
 using namespace std;
@@ -67,7 +74,7 @@ typedef PointCloudMesh<ConstantBasis<Point> >                   PCMesh;
 typedef ConstantBasis<string>                                   DatBasis;
 typedef GenericField<PCMesh, DatBasis, vector<string> >         PCField;  
 
-FieldHandle
+SHARE FieldHandle
 TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
 {
   ifstream ptsstream(filename);

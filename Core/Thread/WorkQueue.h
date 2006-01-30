@@ -48,6 +48,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Thread/share.h>
 namespace SCIRun {
 	struct WorkQueue_private;
 	
@@ -66,7 +67,7 @@ DESCRIPTION
    towards the end in an effort to equalize the total effort.
    
 ****************************************/
-	class WorkQueue {
+	class SHARE WorkQueue {
 	public:
 	    //////////
 	    // Make an empty work queue with no assignments.

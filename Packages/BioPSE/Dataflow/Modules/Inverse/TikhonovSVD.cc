@@ -569,7 +569,7 @@ TikhonovSVD::execute()
     eta.setsize(nLambda);   
 		
     lambdaArray[0]=lambda_min_.get();
-    lam_step=pow(10,log10(lambda_max_.get()/lambda_min_.get())/(nLambda-1));
+    lam_step=pow(10.0,log10(lambda_max_.get()/lambda_min_.get())/(nLambda-1));
 	
 		
     for(j=0; j<nLambda; j++)

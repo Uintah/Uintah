@@ -45,9 +45,11 @@
 #include <Core/Geom/GeomContainer.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomSticky : public GeomContainer {
+class SHARE GeomSticky : public GeomContainer {
 
 public:
   GeomSticky( GeomHandle obj);

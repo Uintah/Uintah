@@ -44,6 +44,7 @@
 #define SpanSpace_h 
 
 #include <Core/Datatypes/Field.h>
+#include <Core/Algorithms/Visualization/share.h>
 
 
 namespace SCIRun {
@@ -63,7 +64,7 @@ struct SpanPoint {
 
 // SpanSpace
   
-class SpanSpaceBase : public Datatype {
+class SHARE SpanSpaceBase : public Datatype {
 public:
   SpanSpaceBase() {}
   virtual ~SpanSpaceBase() {}

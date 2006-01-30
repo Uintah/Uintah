@@ -60,8 +60,10 @@
 #include <sys/stat.h>
 #ifndef _WIN32
 #include <sys/signal.h>
-#endif
 #include <unistd.h>
+#else
+typedef int pid_t;
+#endif
 #include <fcntl.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -83,6 +85,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Handle.h>
 
+#include <Core/SystemCall/share.h>
 namespace SCIRun {
 
 class SystemCallProcess : public SystemCallBase {
@@ -153,7 +156,7 @@ inline void    SystemCallProcess::unlock()
   
   
 
-class SystemCallManager : public SystemCallBase {
+class SHARE SystemCallManager : public SystemCallBase {
 
   public:
 
@@ -240,7 +243,13 @@ inline void    SystemCallManager::unlock()
 // The systemcallmanager_ will be allocated in main and will be used by 
 // classes making use of this class.
 
-extern SystemCallManager* systemcallmanager_;
+#ifdef _WIN32
+  #define SHARE __declspec(dllimport)
+#else
+  #define SHARE
+#endif
+
+extern SHARE SystemCallManager* systemcallmanager_;
 
 }
 

@@ -42,22 +42,22 @@
 
 #ifdef HAVE_STD_HASHMAP
 #  include <hash_set>
+   using stdext::hash_set;
+   using stdext::hash_multiset;
+#elif defined(HAVE_EXT_HASHMAP)
+#  include <ext/hash_set>
    using std::hash_set;
    using std::hash_multiset;
+#elif defined(HAVE_GNU_HASHMAP)
+#  include <ext/hash_set>
+   using __gnu_cxx::hash_set;
+   using __gnu_cxx::hash_multiset;
+#elif defined(HAVE_STDEXT_HASHMAP)
+#  include <hash_set>
+   using stdext::hash_set;
+   using stdext::hash_multiset;
 #else
-#  ifdef HAVE_EXT_HASHMAP
-#    include <ext/hash_set>
-     using std::hash_set;
-     using std::hash_multiset;
-#  else
-#    ifdef HAVE_GNU_HASHMAP
-#      include <ext/hash_set>
-       using __gnu_cxx::hash_set;
-       using __gnu_cxx::hash_multiset;
-#    else
-#      undef HAVE_HASH_SET
-#    endif
-#  endif
+#  undef HAVE_HASH_SET
 #endif
 
 #endif // SCI_HASH_SET_H

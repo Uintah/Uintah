@@ -147,6 +147,7 @@ NrrdTextureBuilder::execute()
 
     gui_vminval_.set(range->min);
     gui_vmaxval_.set(range->max);
+    nrrdRangeNix(range);
   }
 
   // Check to see if the input nrrd has changed.
