@@ -1674,10 +1674,8 @@ proc licenseAccept { } {
     }
 }
 
-
 proc promptUserToCopySCIRunrc {} {
-
-    global dontAskAgain copyResult
+    global copyResult
     set w .copyRCprompt
 
     toplevel $w
@@ -1692,34 +1690,43 @@ proc promptUserToCopySCIRunrc {} {
     }
 
     wm title $w "Copy v$version .scirunrc file?"
-    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?" -justify left
+    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for new features.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by copying.\n\nIf you copy, your existing file will be moved to\n ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?\n" -justify left
+
     frame $w.but
     button $w.but.ok -text Copy -command "set copyResult 1"
     button $w.but.no -text "Don't Copy" -command "set copyResult 0"
-    checkbutton $w.dontAskAgain -text "Don't ask me this question again." -variable dontAskAgain -offvalue 0 -onvalue 1
-#    pack $w.but.dontAskAgain -side topy -pady 5
+    button $w.but.dontask -text "Don't Ask Again" -command "set copyResult 2"
 
-    pack $w.but.ok $w.but.no -side left -padx 5 -ipadx 5
-
-    pack $w.message $w.dontAskAgain $w.but -pady 5 -padx 5
+    pack $w.but.ok $w.but.no $w.but.dontask  -side left -pady 5 -padx 5 -ipadx 5 -expand 1
+    pack $w.message -expand 1 -fill both 
+    pack $w.but -expand 1 -fill both -side top -anchor n
 
     # Override the destroy window decoration and make it not do anything
     wm protocol $w WM_DELETE_WINDOW "SciRaise $w"
-
     moveToCursor $w
     SciRaise $w
 
     vwait copyResult
-    if { $dontAskAgain && !$copyResult } {
-	if [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] return
-	puts $rcfile "\n\# This section added when the user chose 'Dont Ask This Question Again'"
-	puts $rcfile "\# when prompted about updating the .scirurc file version"
-	set version [netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]
-	puts $rcfile "SCIRUN_RCFILE_VERSION=${version}"
+
+    if { $copyResult == 2 } {
+	if { [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] } {
+            puts "Unable to open ~/.scirunrc"
+            return 0
+        }
+
+	puts $rcfile \
+            "\n\# This section added when the user chose 'Dont Ask Again'"
+	puts $rcfile \
+            "\# when prompted about updating the .scirurc file version"
+
+	set version [netedit getenv SCIRUN_VERSION]
+        set rcversion [netedit getenv SCIRUN_RCFILE_SUBVERSION]
+	puts $rcfile "SCIRUN_RCFILE_VERSION=${version}.${rcversion}"
 	close $rcfile
+        set copyResult 0
     }
+
     destroy $w
-    unset dontAskAgain
     return $copyResult
 }
     
