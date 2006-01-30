@@ -73,7 +73,7 @@ HypreSolverAMG::solve(void)
   
     // Retrieve convergence information
 
-    cout << "logging = " << params->logging << "\n";
+    //cout << "logging = " << params->logging << "\n";
     HYPRE_BoomerAMGGetResidual(parSolver, &_driver->getResidualPar());
 
 

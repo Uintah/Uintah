@@ -132,6 +132,8 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   }
   if(computes_or_modifies =="modifies"){
     t->modifies(lb->rhsLabel,          one_matl,oims);
+  }
+  if(insideOuterIterLoop){
     t->computes(lb->residualErrorLabel,one_matl,oims);
     t->requires( Task::NewDW, lb->solverResidualLabel,  press_matl,oims,gn,0);
   }
@@ -148,7 +150,8 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
                                    const MaterialSubset* ice_matls,          
                                    const MaterialSubset* /*mpm_matls*/,
                                    const MaterialSubset* press_matl,
-                                   const MaterialSet* all_matls)
+                                   const MaterialSet* all_matls,
+                                   const int outerIterCounter)
 {
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
@@ -157,7 +160,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   // update the pressure
   cout_doing << d_myworld->myrank()<<" ICE::scheduleUpdatePressure" 
              << "\t\t\t\t\tL-" <<level->getIndex()<<endl;
-  t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
+  t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure, outerIterCounter);
   t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
   t->requires(Task::OldDW,       lb->sum_imp_delPLabel,  press_matl,oims,gn);
   
@@ -545,7 +548,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     CCVariable<double> q_advected, rhs;
     CCVariable<double> sumAdvection, massExchTerm;
     constCCVariable<double> press_CC, oldPressure, speedSound, sumKappa;
-    constCCVariable<double> sum_imp_delP, solverResidual;    
+    constCCVariable<double> sum_imp_delP;    
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;   
@@ -562,7 +565,6 @@ void ICE::setupRHS(const ProcessorGroup*,
     }
     if(computes_or_modifies == "modifies"){
       new_dw->getModifiable(rhs,   lb->rhsLabel,            0,patch);
-      new_dw->get(solverResidual,  lb->solverResidualLabel, 0,patch,gn,0);
     }
         
     rhs.initialize(0.0);
@@ -685,10 +687,14 @@ void ICE::setupRHS(const ProcessorGroup*,
     }
     //__________________________________
     //  Compare rhs to the solver residual
-    if(computes_or_modifies == "modifies"){
+    if(insideOuterIterLoop){
       CCVariable<double> residualError, rhs_tmp; 
-      new_dw->allocateAndPut(residualError, lb->residualErrorLabel, 0, patch, gn, 0);
+      constCCVariable<double> solverResidual;
+      new_dw->get(solverResidual,           lb->solverResidualLabel,0,patch,gn,0);
+      new_dw->allocateAndPut(residualError, lb->residualErrorLabel, 0,patch,gn, 0);
       new_dw->allocateTemporary(rhs_tmp, patch);
+      
+      
       
       rhs_tmp.initialize(0.0);
       residualError.initialize(0.0);
@@ -735,7 +741,8 @@ void ICE::updatePressure(const ProcessorGroup*,
                          const PatchSubset* patches,                    
                          const MaterialSubset* ,                        
                          DataWarehouse* old_dw,                         
-                         DataWarehouse* new_dw)                         
+                         DataWarehouse* new_dw,
+                         const int counter)                         
 {
   const Level* level = getLevel(patches);
  
@@ -773,7 +780,42 @@ void ICE::updatePressure(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       parent_new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel, indx,patch,gn,0);
-    }             
+    }       
+    
+/*`==========TESTING==========*/
+// READ IN THE SOLUTION
+      if(d_dbgVar2 == 0 && counter == 0){
+        FILE *fp;
+        int ts = d_sharedState->getCurrentTopLevelTimeStep();
+        ostringstream filename;
+        filename<<"Uintah_solution_L"<< level->getIndex() << "_ts_"<<ts;
+        string tmp = filename.str();
+
+        fp = fopen(tmp.c_str(), "r");
+        
+        if (!fp){
+          throw ProblemSetupException("Couldn't open the file with hardwired variables",__FILE__, __LINE__);
+        }
+        cout << "=================NOW READING IN impDelP FROM THE FILE " << filename.str() << endl;
+        IntVector low   = patch->getInteriorCellLowIndex();
+        IntVector high  = patch->getInteriorCellHighIndex();
+        
+        for(int k = low.z(); k < high.z(); k++)  {
+          for(int j = low.y(); j < high.y(); j++) {
+            for(int i = low.x(); i < high.x(); i++) {
+              int ii,jj,kk;
+              double value;
+              fscanf(fp, "%d,%d,%d  %lf\n", &ii,&jj,&kk,&value);
+              IntVector idx(ii, jj, kk);
+              imp_delP[idx] = value;
+              //cout << " reading in " << idx << " imp_delP "<< imp_delP[idx] << endl;
+            }
+          }
+        }
+        fclose(fp);
+      }        
+/*===========TESTING==========`*/    
+          
     //__________________________________
     //  add delP to press_equil
     //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure
@@ -790,13 +832,14 @@ void ICE::updatePressure(const ProcessorGroup*,
     }   
     
 /*`==========TESTING==========*/
-#if 1
+      if(d_dbgVar2 == 1){
         FILE *fp;
+        int ts = d_sharedState->getCurrentTopLevelTimeStep();
         ostringstream filename;
-        filename<<"Uintah_solution_L"<< level->getIndex();
+        filename<<"Uintah_solution_L"<< level->getIndex() << "_ts_"<<ts;
         string tmp = filename.str();
         fp = fopen(tmp.c_str(), "w");
-        
+        cout << "NOW WRITING THE FILE " << filename.str() << endl;
         IntVector low   = patch->getInteriorCellLowIndex();
         IntVector high  = patch->getInteriorCellHighIndex();
         
@@ -804,13 +847,13 @@ void ICE::updatePressure(const ProcessorGroup*,
           for(int j = low.y(); j < high.y(); j++) {
             for(int i = low.x(); i < high.x(); i++) {
               IntVector idx(i, j, k);
-              fprintf(fp, "[%d,%d,%d]  %16.15E\n", i,j,k,imp_delP[idx]);
+              fprintf(fp, "%d,%d,%d  %16.15E\n", i,j,k,imp_delP[idx]);
             }
           }
         }
         fclose(fp);
         
-#endif
+      }
 /*===========TESTING==========`*/    
     
     
@@ -1115,7 +1158,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
                                                           mpm_matls, 
                                                           d_press_matl,  
-                                                          all_matls);
+                                                          all_matls,
+                                                          counter);
                                                           
     scheduleRecomputeVel_FC(subsched,         patch_set,  ice_matls,
                                                           mpm_matls, 

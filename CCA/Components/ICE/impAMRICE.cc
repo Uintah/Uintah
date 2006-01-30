@@ -457,7 +457,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
                                                             mpm_matls,    
                                                             d_press_matl, 
-                                                            all_matls);   
+                                                            all_matls,
+                                                            counter);   
       
       scheduleRecomputeVel_FC(subsched,         patch_set,  ice_matls,
                                                             mpm_matls,    

@@ -211,7 +211,8 @@ namespace Uintah {
                                    const MaterialSubset*,         
                                    const MaterialSubset*, 
                                    const MaterialSubset*,
-                                   const MaterialSet*);
+                                   const MaterialSet*,
+                                   const int counter);
                                    
       void scheduleRecomputeVel_FC(SchedulerP& sched,
                                    const PatchSet* patches,                 
@@ -567,7 +568,8 @@ namespace Uintah {
                            const PatchSubset* patches,                      
                            const MaterialSubset* ,                          
                            DataWarehouse* old_dw,                           
-                           DataWarehouse* new_dw);
+                           DataWarehouse* new_dw,
+                           const int counter);
 
       void computeDel_P(const ProcessorGroup*,
                          const PatchSubset* patches,                    
