@@ -48813,29 +48813,34 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
   INC_GDCM_H=""
   gdcm_libs_dir=""
 
+  found_gdcm_comp="no"
+
   if test -a "$dir/Makefile"; then
 
     if test -a "$dir/ITKConfig.cmake"; then
       # GDCM distributed with the Insight Toolkit (user's binary)
-      using_itk="yes"
-      insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
-      gdcm_src="$insight_src/Utilities/gdcm/src"
-      INC_GDCM_H="-I$dir/Utilities/gdcm -I$gdcm_src"
-      gdcm_libs_dir="$dir/bin"
+      if test -a "$dir/Utilities/gdcm"; then
+            using_itk="yes"
+	    insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
+	    gdcm_src="$insight_src/Utilities/gdcm/src"
+            INC_GDCM_H="-I$dir/Utilities/gdcm -I$gdcm_src"
+	    gdcm_libs_dir="$dir/bin"
+	    found_gdcm_comp="yes"
+      fi
 
     else
       # normal user installation of GDCM
       gdcm_src="`cat $dir/Makefile | grep 'CMAKE_CURRENT_SOURCE =' | sed 's/CMAKE_CURRENT_SOURCE = //'`"
       INC_GDCM_H="-I$dir -I$gdcm_src/src"
       gdcm_libs_dir="$dir/bin"
-
+      found_gdcm_comp="yes"
     fi
 
   elif test -a "$dir/include/gdcm" && test -a "$dir/lib/gdcm"; then
     # standard installation
     INC_GDCM_H="-I$dir/include/gdcm"
     gdcm_libs_dir="$dir/lib/gdcm"
-
+    found_gdcm_comp="yes"
 
   elif test -a "$dir/ITKConfig.cmake"; then
       # GDCM distributed with the Insight Toolkit (make install)
@@ -48845,13 +48850,18 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
 
       insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
 
-      echo "$insight_include"
-      INC_GDCM_H="-I$gdcm_src -I$insight_include/gdcm/src"
-      gdcm_libs_dir="$dir"
+      if test -a "$insigt_include/gdcm/src"; then
+           INC_GDCM_H="-I$gdcm_src -I$insight_include/gdcm/src"
+           gdcm_libs_dir="$dir"
+           found_gdcm_comp="yes"
+      fi
+
+
 
   elif test -a "/usr/local/include/gdcm" && test -a "/usr/local/lib/gdcm"; then
     INC_GDCM_H="-I/usr/local/include/gdcm"
     gdcm_libs_dir="/usr/local/lib/gdcm"
+    found_gdcm_comp="yes"
 
   else
     echo
@@ -48861,56 +48871,60 @@ echo "$as_me: error: Cannot find GDCM configure files." >&2;}
     echo
   fi
 
-  GDCM_LIB_DIR_FLAG="$LDRUN_PREFIX$gdcm_libs_dir -L$gdcm_libs_dir"
+  if test $found_gdcm_comp = "yes"; then
 
-  GDCM_LIB_FLAG=""
+     GDCM_LIB_DIR_FLAG="$LDRUN_PREFIX$gdcm_libs_dir -L$gdcm_libs_dir"
 
-  if test $using_itk = "yes"; then
-    GDCM_LIB_FLAG="-litkgdcm"
-  else
-    GDCM_LIB_FLAG="-lgdcm"
-  fi
+     GDCM_LIB_FLAG=""
 
-  GDCM_JPEG_LINKED=no
+     if test $using_itk = "yes"; then
+       GDCM_LIB_FLAG="-litkgdcm"
+     else
+       GDCM_LIB_FLAG="-lgdcm"
+     fi
 
-  if test -a "$gdcm_libs_dir/libgdcmjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
-    GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg8"
-    GDCM_JPEG_LINKED=yes
-  elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
-    GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-    GDCM_JPEG_LINKED=yes
-  fi
+     GDCM_JPEG_LINKED=no
 
-  if test -a "$gdcm_libs_dir/libgdcmjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
-    GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg12"
-    GDCM_JPEG_LINKED=yes
-  elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
-    GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-    GDCM_JPEG_LINKED=yes
-  fi
+     if test -a "$gdcm_libs_dir/libgdcmjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
+       GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg8"
+       GDCM_JPEG_LINKED=yes
+     elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
+       GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       GDCM_JPEG_LINKED=yes
+     fi
 
-  if test -a "$gdcm_libs_dir/libgdcmjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
-    GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg16"
-    GDCM_JPEG_LINKED=yes
-  elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
-    GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-    GDCM_JPEG_LINKED=yes
-  fi
+     if test -a "$gdcm_libs_dir/libgdcmjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
+       GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg12"
+       GDCM_JPEG_LINKED=yes
+     elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
+       GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       GDCM_JPEG_LINKED=yes
+     fi
 
-  DEF_GDCM="#define HAVE_GDCM"
-  HAVE_GDCM="yes"
+     if test -a "$gdcm_libs_dir/libgdcmjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
+       GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg16"
+       GDCM_JPEG_LINKED=yes
+     elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
+       GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       GDCM_JPEG_LINKED=yes
+     fi
 
-  echo "$as_me:$LINENO: result: $dir" >&5
-  echo "${ECHO_T}$dir" >&6
+     DEF_GDCM="#define HAVE_GDCM"
+     HAVE_GDCM="yes"
 
-  if test "$with_gdcm" && test ! "$DEF_GDCM"; then
-    echo
-    { { echo "$as_me:$LINENO: error: One or more of the GDCM components is missing." >&5
-    echo "$as_me: error: One or more of the GDCM components is missing." >&2;}
-   { (exit 1); exit 1; }; }
-    echo
-  fi
+     echo "$as_me:$LINENO: result: $dir" >&5
+     echo "${ECHO_T}$dir" >&6
 
+     if test "$with_gdcm" && test ! "$DEF_GDCM"; then
+       echo
+       { { echo "$as_me:$LINENO: error: One or more of the GDCM components is missing." >&5
+       echo "$as_me: error: One or more of the GDCM components is missing." >&2;}
+      { (exit 1); exit 1; }; }
+       echo
+     fi
+   else
+      HAVE_GDCM="no"
+   fi
 fi
 
 
