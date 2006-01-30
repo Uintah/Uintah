@@ -592,7 +592,70 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   }
 } // end multiLevelPressureSolve()
 
+#if 0
+/*______________________________________________________________________
+ Function~  ICE::scheduleAddReflux_RHS--
+ Purpose:  Add a refluxing correction to the rhs
+ _____________________________________________________________________*/
+ void ICE::scheduleAddReflux_RHS(SchedulerP& sched,
+                                 const PatchSet* patches,
+                                 const MaterialSubset* one_matl,
+                                 const MaterialSet* all_matls,
+                                 const bool insideOuterIterLoop)
+{
+  if(d_doRefluxing){
+    
+    //__________________________________
+    //  Compute reflux_fluxes task
+    const Level* fineLevel = coarseLevel->getFinerLevel().get_rep(); 
+    cout_doing << d_myworld->myrank() 
+               << " ICE::scheduleCompute_refluxFluxes_RHS\tL-" 
+               << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
 
+    Task* t2 = scinew Task("ICE::compute_refluxFluxes_RHS",
+                     this, &ICE::compute_refluxFluxes_RHS);
+
+    Ghost::GhostType gn  = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
+    // Fluxes from the fine level. These are computed in the advection operator
+    t1->requires(Task::NewDW, lb->vol_frac_X_FC_fluxLabel,
+                 0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+    t1->requires(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel,
+                 0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+    t1->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel,
+                 0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);             
+
+    t1->modifies(lb->vol_frac_X_FC_fluxLabel);  // these are the correction fluxes
+    t1->modifies(lb->vol_frac_Y_FC_fluxLabel);
+    t1->modifies(lb->vol_frac_Z_FC_fluxLabel);
+
+    sched->addTask(t1, coarseLevel->eachPatch(), all_matls); 
+    
+    //__________________________________
+    //  Apply reflux corrections to rhs   
+    cout_doing << d_myworld->myrank() 
+               << " ICE::scheduleApply_refluxFluxes_RHS\t\tL-" 
+               << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
+
+    Task* t2 = scinew Task("ICE::apply_refluxFluxes_RHS",
+                     this, &ICE::apply_refluxFluxes_RHS);
+                     
+    // coarse grid RHS after setupRHS               
+    t2->requires(Task::NewDW,lb->rhsLabel, press_matl,oims,gn,0);                        
+    
+    // Correction fluxes  from the coarse level               
+    t2->requires(Task::NewDW, lb->vol_frac_X_FC_fluxLabel, gac, 1);    
+    t2->requires(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel, gac, 1);    
+    t2->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel, gac, 1);               
+
+    t2->modifies(lb->rhsLabel, one_matl,oim);
+    t2->modifies(lb->max_RHSLabel);
+
+    sched->addTask(t2, coarseLevel->eachPatch(), all_matls);    
+  }
+}
+#endif
 
 
 /*______________________________________________________________________

@@ -1705,7 +1705,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
-  if(d_doAMR){                           
+  if(d_doRefluxing){                           
     computesRequires_AMR_Refluxing(task, AMR_subCycleProgressVar, ice_matls);
   }
   
@@ -3428,8 +3428,14 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                     bulletProof_test, new_dw); 
       //__________________________________
       //   advect vol_frac
-      advector->advectQ(vol_frac, patch, q_advected,  
-                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw); 
+      // common variables that get passed into the advection operators
+      advectVarBasket* varBasket = scinew advectVarBasket();
+      varBasket->doRefluxing = false;  // don't need to reflux here
+      
+      advector->advectQ(vol_frac, patch, q_advected, varBasket,  
+                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
+                        
+      delete varBasket; 
       
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -5004,7 +5010,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       varBasket->patch = patch;
       varBasket->level = level;
       varBasket->lb  = lb;
-      varBasket->doAMR = d_doAMR;
+      varBasket->doRefluxing = d_doRefluxing;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
 
