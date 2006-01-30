@@ -232,11 +232,8 @@ ShaderProgramARB::init_shaders_supported()
 	TkOpenGLContext *context =
 	  new TkOpenGLContext(".testforshadersupport", 0, 0,0);
 
-	cerr << "returned from TKOpenGL Constructor\n";
-
 	context->make_current();
 
-	cerr << "done making current\n";
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	  fprintf(stderr,"GL error '%s'\n",gluErrorString(err));
