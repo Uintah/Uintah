@@ -227,7 +227,6 @@ ShaderProgramARB::init_shaders_supported()
       else
       {
 	// Create a test context.
-	ShaderProgramARB_init_Mutex.unlock();
 
 	TkOpenGLContext *context =
 	  new TkOpenGLContext(".testforshadersupport", 0, 0,0);
