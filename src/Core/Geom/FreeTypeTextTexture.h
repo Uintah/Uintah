@@ -50,7 +50,7 @@ namespace SCIRun {
 
 class NrrdTextureObj;
 
-class SHARE FreeTypeTextTexture {
+class SCISHARE FreeTypeTextTexture {
 public:
   FreeTypeTextTexture(const string &text, FreeTypeFace *face);
   ~FreeTypeTextTexture();

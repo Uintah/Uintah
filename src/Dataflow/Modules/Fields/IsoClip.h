@@ -53,7 +53,7 @@ typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
 typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 class GuiInterface;
 
-class SHARE IsoClipAlgo : public DynamicAlgoBase
+class SCISHARE IsoClipAlgo : public DynamicAlgoBase
 {
 public:
 

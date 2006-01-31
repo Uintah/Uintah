@@ -33,20 +33,21 @@
 #include <Dataflow/Ports/TexturePort.h>
 #include <Core/Malloc/Allocator.h>
 
+#undef SCISHARE
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 namespace SCIRun {
 
 extern "C" {
-SHARE IPort* make_TextureIPort(Module* module,
+SCISHARE IPort* make_TextureIPort(Module* module,
                                       const string& name) {
   return scinew SimpleIPort<TextureHandle>(module,name);
 }
-SHARE OPort* make_TextureOPort(Module* module,
+SCISHARE OPort* make_TextureOPort(Module* module,
                                       const string& name) {
   return scinew SimpleOPort<TextureHandle>(module,name);
 }

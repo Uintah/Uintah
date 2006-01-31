@@ -49,7 +49,7 @@ using namespace std;
 //! ConvertToNrrdBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! ConvertToNrrdBase from the DynamicAlgoBase they will have a pointer to.
-class SHARE ConvertToNrrdBase : public DynamicAlgoBase
+class SCISHARE ConvertToNrrdBase : public DynamicAlgoBase
 {
 public:
   virtual bool convert_to_nrrd(SCIRun::FieldHandle, NrrdDataHandle &pointsH,

@@ -71,7 +71,7 @@ struct StackItem {
    uchar iter;
 };
 
-class SHARE ConstraintSolver {
+class SCISHARE ConstraintSolver {
 public:
    ConstraintSolver();
    ConstraintSolver( const double epsilon );

@@ -50,7 +50,7 @@
 namespace SCIRun {
 
 
-class SHARE SliceRenderer : public TextureRenderer
+class SCISHARE SliceRenderer : public TextureRenderer
 {
 public:
   SliceRenderer(TextureHandle tex, 

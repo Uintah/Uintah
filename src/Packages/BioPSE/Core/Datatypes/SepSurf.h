@@ -98,7 +98,7 @@ typedef QuadSurfMesh<QuadBilinearLgn<Point> > SSQSMesh;
 typedef GenericField<SSQSMesh, SSQSBasis, vector<int> > SSQSField;  
 
 
-class SHARE SepSurf : public SSQSField {
+class SCISHARE SepSurf : public SSQSField {
 public:
   Array1<SSQSMesh::Node::index_type> nodes; // array of all nodes
   Array1<SSQSMesh::Face::index_type> faces;	// array of all faces/elements

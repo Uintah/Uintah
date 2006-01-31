@@ -45,7 +45,7 @@
 
 namespace SCIRun {
 
-class SHARE Texture : public Datatype
+class SCISHARE Texture : public Datatype
 {
 public:
   Texture();

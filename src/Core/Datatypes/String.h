@@ -58,7 +58,7 @@ namespace SCIRun {
 class String;
 typedef LockingHandle<String> StringHandle;
 
-class SHARE String : public PropertyManager {
+class SCISHARE String : public PropertyManager {
 
   std::string str_;
 

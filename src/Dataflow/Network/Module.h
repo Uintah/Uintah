@@ -168,7 +168,7 @@ PortManager<T>::operator[](string item)
   return port_range_type(namemap_.equal_range(item));
 }
 
-class SHARE Module : public ProgressReporter, public ModulePickable, public GuiCallback
+class SCISHARE Module : public ProgressReporter, public ModulePickable, public GuiCallback
 {
 public:
   enum SchedClass {

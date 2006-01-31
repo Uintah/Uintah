@@ -46,7 +46,7 @@ typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 using std::vector;
 
-class SHARE ColorMap2 : public PropertyManager
+class SCISHARE ColorMap2 : public PropertyManager
 {
 public:
   ColorMap2();

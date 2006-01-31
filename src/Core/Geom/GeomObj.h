@@ -70,7 +70,7 @@ class  Vector;
 class  Point;
 class  IntVector;
 
-class SHARE GeomObj : public Persistent {
+class SCISHARE GeomObj : public Persistent {
 public:
   int ref_cnt;
   Mutex &lock;

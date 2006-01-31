@@ -84,13 +84,13 @@
 
 
 #ifdef _WIN32
-#define SHARE __declspec(dllimport)
+#define SCISHARE __declspec(dllimport)
 #define sleep(z) Sleep(z*1000)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
-extern "C" SHARE Tcl_Interp* the_interp;
+extern "C" SCISHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 

@@ -50,7 +50,7 @@
 #include <Core/Exceptions/share.h>
 namespace SCIRun {
 
-class SHARE ErrnoException : public Exception {
+class SCISHARE ErrnoException : public Exception {
 public:
   ErrnoException(const std::string&, int err, const char* file, int line);
   ErrnoException(const ErrnoException&);

@@ -46,7 +46,7 @@ typedef LockingHandle<ScalarFieldInterface> ScalarFieldInterfaceHandle;
 typedef LockingHandle<VectorFieldInterface> VectorFieldInterfaceHandle;
 typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 
-class SHARE Field: public PropertyManager
+class SCISHARE Field: public PropertyManager
 {
 public:
   enum  td_info_e {

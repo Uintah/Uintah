@@ -56,7 +56,7 @@
 
 namespace SCIRun {
 
-class SHARE SystemCallBase {
+class SCISHARE SystemCallBase {
 
   public:
     SystemCallBase();

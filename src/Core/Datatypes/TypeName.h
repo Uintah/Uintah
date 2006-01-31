@@ -83,29 +83,29 @@ class Matrix;
 class NrrdData;
 class Field;
 
-template<> SHARE const string find_type_name(float*);
-template<> SHARE const string find_type_name(double*);
-template<> SHARE const string find_type_name(long double*);
-template<> SHARE const string find_type_name(short*);
-template<> SHARE const string find_type_name(unsigned short*);
-template<> SHARE const string find_type_name(int*);
-template<> SHARE const string find_type_name(unsigned int*);
-template<> SHARE const string find_type_name(long*);
-template<> SHARE const string find_type_name(unsigned long*);
-template<> SHARE const string find_type_name(long long*);
-template<> SHARE const string find_type_name(unsigned long long*);
-template<> SHARE const string find_type_name(char*);
-template<> SHARE const string find_type_name(unsigned char*);
-template<> SHARE const string find_type_name(bool*);
-template<> SHARE const string find_type_name(Vector*);
-template<> SHARE const string find_type_name(IntVector*);
-template<> SHARE const string find_type_name(Point*);
-template<> SHARE const string find_type_name(Transform*);
-template<> SHARE const string find_type_name(string*);
+template<> SCISHARE const string find_type_name(float*);
+template<> SCISHARE const string find_type_name(double*);
+template<> SCISHARE const string find_type_name(long double*);
+template<> SCISHARE const string find_type_name(short*);
+template<> SCISHARE const string find_type_name(unsigned short*);
+template<> SCISHARE const string find_type_name(int*);
+template<> SCISHARE const string find_type_name(unsigned int*);
+template<> SCISHARE const string find_type_name(long*);
+template<> SCISHARE const string find_type_name(unsigned long*);
+template<> SCISHARE const string find_type_name(long long*);
+template<> SCISHARE const string find_type_name(unsigned long long*);
+template<> SCISHARE const string find_type_name(char*);
+template<> SCISHARE const string find_type_name(unsigned char*);
+template<> SCISHARE const string find_type_name(bool*);
+template<> SCISHARE const string find_type_name(Vector*);
+template<> SCISHARE const string find_type_name(IntVector*);
+template<> SCISHARE const string find_type_name(Point*);
+template<> SCISHARE const string find_type_name(Transform*);
+template<> SCISHARE const string find_type_name(string*);
 
-template<> SHARE const string find_type_name(LockingHandle<Matrix> *);
-template<> SHARE const string find_type_name(LockingHandle<NrrdData> *);
-template<> SHARE const string find_type_name(LockingHandle<Field> *);
+template<> SCISHARE const string find_type_name(LockingHandle<Matrix> *);
+template<> SCISHARE const string find_type_name(LockingHandle<NrrdData> *);
+template<> SCISHARE const string find_type_name(LockingHandle<Field> *);
 
 //////////
 // Function overloading for templates 

@@ -70,7 +70,7 @@ DESCRIPTION
    executed in another thread.
    
 ****************************************/
-	class SHARE Thread {
+	class SCISHARE Thread {
 	public:
 	    //////////
 	    // Possible thread start states

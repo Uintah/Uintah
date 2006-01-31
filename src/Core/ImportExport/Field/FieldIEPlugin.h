@@ -59,7 +59,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class SHARE FieldIEPlugin {
+class SCISHARE FieldIEPlugin {
 public:
   const string pluginname;
 
@@ -85,7 +85,7 @@ public:
 
 
 
-class SHARE FieldIEPluginManager {
+class SCISHARE FieldIEPluginManager {
 public:
   void get_importer_list(vector<string> &results);
   void get_exporter_list(vector<string> &results);

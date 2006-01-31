@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE RatioConstraint : public BaseConstraint {
+class SCISHARE RatioConstraint : public BaseConstraint {
 public:
    RatioConstraint( const string& name,
 		    const Index numSchemes,

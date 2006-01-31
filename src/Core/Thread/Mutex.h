@@ -64,7 +64,7 @@ struct Mutex_private;
  lock() in a nested call will result in an error or deadlock.
 
 ****************************************/
-class SHARE Mutex {
+class SCISHARE Mutex {
 public:
   //////////
   // Create the mutex.  The mutex is allocated in the unlocked

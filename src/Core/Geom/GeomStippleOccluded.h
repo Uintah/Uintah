@@ -52,7 +52,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomStippleOccluded : public GeomSwitch {
+class SCISHARE GeomStippleOccluded : public GeomSwitch {
     GeomStippleOccluded(const GeomStippleOccluded&);
 
 public:

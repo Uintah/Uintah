@@ -42,19 +42,20 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 
+#undef SCISHARE
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 namespace SCIRun {
 
 extern "C" {
-  SHARE IPort* make_NrrdIPort(Module* module, const string& name) {
+  SCISHARE IPort* make_NrrdIPort(Module* module, const string& name) {
   return scinew SimpleIPort<NrrdDataHandle>(module,name);
 }
-  SHARE OPort* make_NrrdOPort(Module* module, const string& name) {
+  SCISHARE OPort* make_NrrdOPort(Module* module, const string& name) {
   return scinew SimpleOPort<NrrdDataHandle>(module,name);
 }
 }

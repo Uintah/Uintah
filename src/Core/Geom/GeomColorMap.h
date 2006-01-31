@@ -51,7 +51,7 @@
 
 namespace SCIRun {
     
-class SHARE GeomColorMap : public GeomContainer
+class SCISHARE GeomColorMap : public GeomContainer
 {
   ColorMapHandle cmap_;
 

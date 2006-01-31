@@ -50,7 +50,7 @@ class ServiceLog;
 typedef LockingHandle<ServiceLog> ServiceLogHandle;
 	
 	
-class SHARE ServiceLog : public ServiceBase {
+class SCISHARE ServiceLog : public ServiceBase {
 
 public:
   // Create a log file, that can used by multiple threads without

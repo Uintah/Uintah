@@ -56,7 +56,7 @@ using std::string;
 using std::vector;
 
 
-class SHARE BaseConstraint {
+class SCISHARE BaseConstraint {
    friend class BaseVariable;
    friend class ConstraintSolver;
 public:

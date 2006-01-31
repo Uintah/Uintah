@@ -60,9 +60,9 @@
 #include <stdlib.h>
 
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 
@@ -74,7 +74,7 @@ typedef PointCloudMesh<ConstantBasis<Point> >                   PCMesh;
 typedef ConstantBasis<string>                                   DatBasis;
 typedef GenericField<PCMesh, DatBasis, vector<string> >         PCField;  
 
-SHARE FieldHandle
+SCISHARE FieldHandle
 TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
 {
   ifstream ptsstream(filename);

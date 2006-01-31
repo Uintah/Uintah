@@ -56,7 +56,7 @@ namespace SCIRun {
 
   //using namespace std;
 
-class SHARE ProgressReporter 
+class SCISHARE ProgressReporter 
 {
 public:
   typedef enum {Starting, Compiling, CompilationDone, Done } ProgressState;

@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-SHARE int video_card_memory_size();
+SCISHARE int video_card_memory_size();
 
 #ifdef __cplusplus
 }

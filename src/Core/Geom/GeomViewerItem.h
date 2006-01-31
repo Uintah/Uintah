@@ -54,7 +54,7 @@ namespace SCIRun {
 
 class CrowdMonitor;
 
-class SHARE GeomViewerItem: public GeomContainer {
+class SCISHARE GeomViewerItem: public GeomContainer {
 private:  
   string name_;
   CrowdMonitor *crowd_lock_;

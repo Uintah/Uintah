@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class SHARE AngleConstraint : public BaseConstraint {
+class SCISHARE AngleConstraint : public BaseConstraint {
 public:
    AngleConstraint( const string& name,
 		    const Index numSchemes,

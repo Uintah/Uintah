@@ -52,8 +52,8 @@ using std::string;
 //! Class for describing unit geometry of CrvLinearLgn 
 class CrvLinearLgnUnitElement {
 public: 
-  static SHARE double unit_vertices[2][1]; //!< Parametric coordinates of vertices 
-  static SHARE int unit_edges[1][2];    //!< References to vertices of unit edge 
+  static SCISHARE double unit_vertices[2][1]; //!< Parametric coordinates of vertices 
+  static SCISHARE int unit_edges[1][2];    //!< References to vertices of unit edge 
 
   CrvLinearLgnUnitElement() {}
   virtual ~CrvLinearLgnUnitElement() {}

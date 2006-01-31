@@ -63,7 +63,7 @@ DESCRIPTION
    However, this must be used very carefully, as it becomes easy to
    create a hold-and-wait condition.
 ****************************************/
-	class SHARE MutexPool {
+	class SCISHARE MutexPool {
 	public:
 	    //////////
 	    // Create the mutex pool with size mutex objects.

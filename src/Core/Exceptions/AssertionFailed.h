@@ -53,7 +53,7 @@
 #include <Core/Exceptions/share.h>
 
 namespace SCIRun {
-class SHARE AssertionFailed : public Exception {
+class SCISHARE AssertionFailed : public Exception {
 public:
   AssertionFailed(const char* msg,
 		  const char* file,

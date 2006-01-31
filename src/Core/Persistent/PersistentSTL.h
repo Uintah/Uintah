@@ -135,21 +135,21 @@ void Pio(Piostream& stream, vector<bool>& data);
 
 // Optimize these four, heavily used in the field classes.
 template <>
-SHARE void Pio(Piostream& stream, vector<char>& data);
+SCISHARE void Pio(Piostream& stream, vector<char>& data);
 template <>
-SHARE void Pio(Piostream& stream, vector<unsigned char>& data);
+SCISHARE void Pio(Piostream& stream, vector<unsigned char>& data);
 template <>
-SHARE void Pio(Piostream& stream, vector<short>& data);
+SCISHARE void Pio(Piostream& stream, vector<short>& data);
 template <>
-SHARE void Pio(Piostream& stream, vector<unsigned short>& data);
+SCISHARE void Pio(Piostream& stream, vector<unsigned short>& data);
 template <>
-SHARE void Pio(Piostream& stream, vector<int>& data);
+SCISHARE void Pio(Piostream& stream, vector<int>& data);
 template <>
-SHARE void Pio(Piostream& stream, vector<unsigned int>& data);
+SCISHARE void Pio(Piostream& stream, vector<unsigned int>& data);
 template <>
-SHARE void Pio(Piostream& stream, vector<float>& data);
+SCISHARE void Pio(Piostream& stream, vector<float>& data);
 template <>
-SHARE void Pio(Piostream& stream, vector<double>& data);
+SCISHARE void Pio(Piostream& stream, vector<double>& data);
 
 template <class T> 
 void Pio(Piostream& stream, vector<T>& data)

@@ -41,19 +41,20 @@
 
 #include <Dataflow/Ports/share.h>
 
+#undef SCISHARE
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 namespace SCIRun {
 
 extern "C" {
-SHARE IPort* make_FieldIPort(Module* module, const string& name) {
+SCISHARE IPort* make_FieldIPort(Module* module, const string& name) {
   return scinew SimpleIPort<FieldHandle>(module,name);
 }
-SHARE OPort* make_FieldOPort(Module* module, const string& name) {
+SCISHARE OPort* make_FieldOPort(Module* module, const string& name) {
   return scinew SimpleOPort<FieldHandle>(module,name);
 }
 }

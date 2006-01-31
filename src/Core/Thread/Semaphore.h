@@ -66,7 +66,7 @@ class Semaphore_private;
  thread calls the <i>up</i> method.
 
 ****************************************/
-class SHARE Semaphore {
+class SCISHARE Semaphore {
 public:
   //////////
   // Create the semaphore, and setup the initial <i>count.name</i>

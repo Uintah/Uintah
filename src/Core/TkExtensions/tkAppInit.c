@@ -55,16 +55,16 @@
 
 
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-  SHARE Tcl_Interp* the_interp;
+  SCISHARE Tcl_Interp* the_interp;
 #ifdef __cplusplus
 }
 #endif
@@ -140,7 +140,7 @@ static void* wait_func_data;
  *----------------------------------------------------------------------
  */
 
-SHARE int
+SCISHARE int
 tkMain(argc, argv, nwait_func, nwait_func_data)
      int argc;			/* Number of command-line arguments. */
      char **argv;		/* Values of command-line arguments. */
@@ -190,7 +190,7 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
  *----------------------------------------------------------------------
  */
 
-/*SHARE*/ int
+/*SCISHARE*/ int
 Tcl_AppInit(interp)
      Tcl_Interp *interp;		/* Interpreter for application. */
 {

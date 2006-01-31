@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomSwitch : public GeomContainer {
+class SCISHARE GeomSwitch : public GeomContainer {
 protected:
     int state;
     GeomSwitch(const GeomSwitch&);

@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomGroup : public GeomObj {
+class SCISHARE GeomGroup : public GeomObj {
     vector<GeomHandle> objs;
 
 public:

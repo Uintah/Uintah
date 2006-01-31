@@ -38,7 +38,7 @@
 
 namespace SCIRun {
 
-class SHARE TimeViewer 
+class SCISHARE TimeViewer 
 {
 public:
 
@@ -54,7 +54,7 @@ public:
   Mutex    lock;
 };
 
-class SHARE TimeData : public TimeViewer
+class SCISHARE TimeData : public TimeViewer
 {
 public:
   TimeData();

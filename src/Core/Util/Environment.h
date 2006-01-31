@@ -48,15 +48,15 @@
 
 namespace SCIRun {
 
-  SHARE void create_sci_environment(char **env, char *execname);
-  SHARE bool find_and_parse_scirunrc();
-  SHARE void copy_and_parse_scirunrc();
-  SHARE bool parse_scirunrc(const std::string &);
+  SCISHARE void create_sci_environment(char **env, char *execname);
+  SCISHARE bool find_and_parse_scirunrc();
+  SCISHARE void copy_and_parse_scirunrc();
+  SCISHARE bool parse_scirunrc(const std::string &);
 
   // Use the following functions to get/put environment variables.
-  SHARE void sci_putenv( const std::string & key, const std::string & val );
+  SCISHARE void sci_putenv( const std::string & key, const std::string & val );
   // Returns NULL if 'key' not found. 
-  SHARE const char *sci_getenv( const std::string & key );
+  SCISHARE const char *sci_getenv( const std::string & key );
 
   // sci_getenv_p
   // will return a bool representing the value of environment variable 'key'
@@ -66,7 +66,7 @@ namespace SCIRun {
   //   or is equal (Case insensitive) to 'false', 'no', 'off', or '0' 
   // returns TRUE:
   //   otherwise.
-  SHARE bool sci_getenv_p( const std::string & key );
+  SCISHARE bool sci_getenv_p( const std::string & key );
 
 } // end namespace SCIRun
 

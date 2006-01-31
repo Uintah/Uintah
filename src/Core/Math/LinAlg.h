@@ -47,14 +47,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    SHARE double linalg_norm2(int n, const double* data);
-    SHARE void linalg_mult(int n, double* result, double* a, double* b);
-    SHARE void linalg_sub(int n, double* result, double* a, double* b);
-    SHARE void linalg_add(int n, double* result, double* a, double* b);
-    SHARE double linalg_dot(int n, double* a, double* b);
-    SHARE void linalg_smadd(int n, double* result, double s, double* a, double* b);
-    SHARE typedef double LinAlg_TriDiagRow[3];
-    SHARE void linalg_tridiag(int n, LinAlg_TriDiagRow* data, double* c);
+    SCISHARE double linalg_norm2(int n, const double* data);
+    SCISHARE void linalg_mult(int n, double* result, double* a, double* b);
+    SCISHARE void linalg_sub(int n, double* result, double* a, double* b);
+    SCISHARE void linalg_add(int n, double* result, double* a, double* b);
+    SCISHARE double linalg_dot(int n, double* a, double* b);
+    SCISHARE void linalg_smadd(int n, double* result, double s, double* a, double* b);
+    SCISHARE typedef double LinAlg_TriDiagRow[3];
+    SCISHARE void linalg_tridiag(int n, LinAlg_TriDiagRow* data, double* c);
 #ifdef __cplusplus
 }
 #endif

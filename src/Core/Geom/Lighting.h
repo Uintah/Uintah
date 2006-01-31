@@ -52,7 +52,7 @@
 namespace SCIRun {
 
 
-class SHARE Lighting {
+class SCISHARE Lighting {
 public:
     Lighting();
     ~Lighting();

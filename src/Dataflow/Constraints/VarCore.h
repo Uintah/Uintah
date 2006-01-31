@@ -54,7 +54,7 @@ namespace SCIRun {
 
 // VarCore is the data of a Variable.  It implements the polymorphism.
 class BaseVariable;
-class SHARE VarCore {
+class SCISHARE VarCore {
 public:
    enum VarType { PointVar, RealVar };
    // This controls operator= with different VarTypes.

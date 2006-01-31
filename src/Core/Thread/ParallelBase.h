@@ -61,7 +61,7 @@ class Semaphore;
  by a user program.  See <b>Parallel</b> instead.
    
 ****************************************/
-class SHARE ParallelBase {
+class SCISHARE ParallelBase {
 public:
   //////////
   // <i>The thread body</i>

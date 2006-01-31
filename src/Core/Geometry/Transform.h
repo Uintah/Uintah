@@ -47,10 +47,10 @@ class Plane;
 class Transform;
 class TypeDescription;
 
-SHARE void Pio_old(Piostream&, Transform&);
-SHARE void Pio(Piostream&, Transform*&);
+SCISHARE void Pio_old(Piostream&, Transform&);
+SCISHARE void Pio(Piostream&, Transform*&);
 
-class SHARE Transform  : public Persistent
+class SCISHARE Transform  : public Persistent
 {
   double mat[4][4];
   mutable double imat[4][4];
@@ -82,8 +82,8 @@ public:
   //! Persistent I/O.
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  SHARE friend void Pio_old(Piostream&, Transform&);
-  SHARE friend void Pio(Piostream&, Transform*&);
+  SCISHARE friend void Pio_old(Piostream&, Transform&);
+  SCISHARE friend void Pio(Piostream&, Transform*&);
 
   void load_basis(const Point&,const Vector&, const Vector&, const Vector&);
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
@@ -145,12 +145,12 @@ public:
 };
 
 
-SHARE Point operator*(Transform &t, const Point &d);
-SHARE Vector operator*(Transform &t, const Vector &d);
+SCISHARE Point operator*(Transform &t, const Point &d);
+SCISHARE Vector operator*(Transform &t, const Vector &d);
 
 
 
-SHARE const TypeDescription* get_type_description(Transform*);
+SCISHARE const TypeDescription* get_type_description(Transform*);
 
 } // End namespace SCIRun
 

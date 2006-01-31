@@ -62,7 +62,7 @@ typedef LockingHandle<TSFieldI>   TriSurfFieldIntHandle;
 typedef LockingHandle<TSFieldT>   TriSurfFieldTensorHandle;
 typedef LockingHandle<BuildTriFEMatrix>   BuildTriFEMatrixHandle;
 
-class SHARE BuildTriFEMatrix: public Datatype {
+class SCISHARE BuildTriFEMatrix: public Datatype {
   
   //! Private data members
   TriSurfFieldIntHandle           hFieldInt_;

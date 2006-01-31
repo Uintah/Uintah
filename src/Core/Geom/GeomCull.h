@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomCull : public GeomContainer {
+class SCISHARE GeomCull : public GeomContainer {
   Vector *normal_;
   GeomCull(const GeomCull &copy);
 

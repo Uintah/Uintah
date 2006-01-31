@@ -89,7 +89,7 @@ typedef LockingHandle<Path> PathHandle;
 enum {KEYFRAMED=0, LINEAR, CUBIC};
 enum {NO_ACCEL=0, SMOOTH, USERMODE};
 
-class SHARE Path : public PropertyManager {
+class SCISHARE Path : public PropertyManager {
  
   double    pathP;                 // current value of distance from the start point
   int       keyF;                  // keyframe nearest to the current path point

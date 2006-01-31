@@ -62,7 +62,7 @@ class View;
 struct DrawInfoOpenGL;
 
 
-class SHARE Light : public Persistent {
+class SCISHARE Light : public Persistent {
 protected:
   Light(const string& name, bool on = true, bool tranformed = true);
     

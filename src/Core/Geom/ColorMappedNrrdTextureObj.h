@@ -57,7 +57,7 @@ namespace SCIRun {
 using std::string;
 
 
-class SHARE BBoxSet {
+class SCISHARE BBoxSet {
 public:
   BBoxSet();
   BBoxSet(BBox &bbox);
@@ -86,7 +86,7 @@ private:
 };
  
 
-class SHARE ColorMappedNrrdTextureObj {
+class SCISHARE ColorMappedNrrdTextureObj {
 public:
   ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd, 
                             int axis, 

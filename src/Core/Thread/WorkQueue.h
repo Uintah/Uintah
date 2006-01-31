@@ -67,7 +67,7 @@ DESCRIPTION
    towards the end in an effort to equalize the total effort.
    
 ****************************************/
-	class SHARE WorkQueue {
+	class SCISHARE WorkQueue {
 	public:
 	    //////////
 	    // Make an empty work queue with no assignments.

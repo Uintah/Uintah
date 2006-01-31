@@ -97,7 +97,7 @@ public:
   inline Quaternion(double angle, const Vector& vect): a(angle), v(vect){
     this->normalize();
   };
-  SHARE Quaternion(Vector, Vector);
+  SCISHARE Quaternion(Vector, Vector);
   explicit Quaternion(const Transform&);
   explicit Quaternion(const Vector&);
 

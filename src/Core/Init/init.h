@@ -45,6 +45,6 @@
 
 #include <Core/Init/share.h>
 
-SHARE void SCIRunInit(std::string packages = "");
+SCISHARE void SCIRunInit(std::string packages = "");
 
 #endif

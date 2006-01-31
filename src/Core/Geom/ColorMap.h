@@ -62,7 +62,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class SHARE ColorMap : public PropertyManager,
+class SCISHARE ColorMap : public PropertyManager,
                               public GeomColormapInterface
 {
 public:

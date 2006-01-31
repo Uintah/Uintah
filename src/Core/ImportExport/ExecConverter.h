@@ -57,7 +57,7 @@ void
 Exec_setup_command(const char *cfilename, const string &precommand,
 		   string &command, string &tmpfilename);
 
-SHARE bool
+SCISHARE bool
 Exec_execute_command(ProgressReporter *pr,
 		     const string &icommand, const string &tmpfilename);
 

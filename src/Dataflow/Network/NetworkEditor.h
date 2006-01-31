@@ -51,7 +51,7 @@ namespace SCIRun {
   class GuiInterface;
   class Network;
 
-  class SHARE NetworkEditor : public GuiCallback {
+  class SCISHARE NetworkEditor : public GuiCallback {
   public:
     NetworkEditor(Network*, GuiInterface* gui);
     ~NetworkEditor();

@@ -60,7 +60,7 @@ namespace SCIRun {
 #define EXPERIMENTAL_TCL_THREAD
 #endif
 
-class SHARE TCLTask : public Runnable {
+class SCISHARE TCLTask : public Runnable {
     int argc;
     char** argv;
     Semaphore cont;

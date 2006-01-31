@@ -54,14 +54,14 @@ namespace SCIRun {
 
 
 #ifdef _WIN32
-  #define SHARE __declspec(dllimport)
+  #define SCISHARE __declspec(dllimport)
 #else
-  #define SHARE
+  #define SCISHARE
 #endif
 
 
 static map<string, MatrixIEPlugin *> *matrix_plugin_table = 0;
-extern SHARE Mutex matrixIEPluginMutex; // From Core/Util/DynamicLoader.cc
+extern SCISHARE Mutex matrixIEPluginMutex; // From Core/Util/DynamicLoader.cc
 
 //----------------------------------------------------------------------
 

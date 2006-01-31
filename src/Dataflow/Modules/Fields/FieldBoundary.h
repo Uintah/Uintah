@@ -58,7 +58,7 @@ namespace SCIRun {
 //! This supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! FieldBoundaryAlgoAux from the DynamicAlgoBase they will have a pointer to.
-class SHARE FieldBoundaryAlgoAux : public DynamicAlgoBase
+class SCISHARE FieldBoundaryAlgoAux : public DynamicAlgoBase
 {
 public:
   typedef TriSurfMesh<TriLinearLgn<Point> >                    TSMesh;

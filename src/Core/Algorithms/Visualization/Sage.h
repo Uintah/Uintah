@@ -77,7 +77,7 @@ typedef Time  SysTime;
 
 // SageBase
 
-class SHARE SageAlg : public DynamicAlgoBase {
+class SCISHARE SageAlg : public DynamicAlgoBase {
 public:
   SageAlg();
   virtual ~SageAlg();
@@ -91,7 +91,7 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *td);
 };
 
-class SHARE SageBase  : public SageAlg
+class SCISHARE SageBase  : public SageAlg
 {
 protected:
   int counter;
@@ -271,7 +271,7 @@ struct SageCell {
 };
     
 // Stack
-class SHARE SageStack {
+class SCISHARE SageStack {
 public:
   int size;
   int pos;

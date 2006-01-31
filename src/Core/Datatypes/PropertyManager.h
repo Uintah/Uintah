@@ -60,7 +60,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class SHARE PropertyBase : public Datatype {
+class SCISHARE PropertyBase : public Datatype {
 public:
   PropertyBase(bool trans) : transient_(trans) {} 
   //PropertyBase(const PropertyBase &p) : transient_(p.transient_) {} 
@@ -87,7 +87,7 @@ protected:
 };
 
 
-class SHARE PropertyManager;
+class SCISHARE PropertyManager;
 
 template<class T>
 class Property : public PropertyBase {

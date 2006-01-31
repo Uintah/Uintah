@@ -44,7 +44,7 @@ typedef void (Tcl_LockProc)();
 using namespace SCIRun;
 
 #ifdef _WIN32
-#  define SHARE __declspec(dllimport)
+#  define SCISHARE __declspec(dllimport)
 #  ifdef __cplusplus
      extern "C" {
 #  endif // __cplusplus
@@ -57,7 +57,7 @@ using namespace SCIRun;
      }
 #  endif // __cplusplus
 #else // not _WIN32
-#  define SHARE
+#  define SCISHARE
 #  ifndef EXPERIMENTAL_TCL_THREAD
      extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 #  endif
@@ -65,7 +65,7 @@ using namespace SCIRun;
                            void (*nwait_func)(void*), void* nwait_func_data);
 #endif // _WIN32
 
-extern "C" SHARE Tcl_Interp* the_interp;
+extern "C" SCISHARE Tcl_Interp* the_interp;
 
 #include <stdio.h>
 

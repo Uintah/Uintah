@@ -55,7 +55,7 @@ class FTGLTextureFont;
 
 namespace SCIRun {
 
-class SHARE GeomText : public GeomObj {
+class SCISHARE GeomText : public GeomObj {
 public:
   string text;
   string fontsize;
@@ -86,7 +86,7 @@ public:
 };
 
 
-class SHARE GeomTexts : public GeomObj {
+class SCISHARE GeomTexts : public GeomObj {
 protected:
   int fontindex_;
   vector<string> text_;
@@ -117,7 +117,7 @@ public:
 };
 
 
-class SHARE GeomTextsCulled : public GeomTexts {
+class SCISHARE GeomTextsCulled : public GeomTexts {
 protected:
   vector<Vector> normal_;
 
@@ -141,7 +141,7 @@ public:
 };
 
 #ifdef HAVE_FTGL
-class SHARE GeomFTGLFontRenderer : public GeomObj{
+class SCISHARE GeomFTGLFontRenderer : public GeomObj{
 private:
   FTGLTextureFont *font_;
   int ptRez_,screenRez_;
@@ -168,7 +168,7 @@ typedef LockingHandle<GeomFTGLFontRenderer> GeomFTGLFontRendererHandle;
 #endif
 
 
-class SHARE GeomTextTexture : public GeomObj {
+class SCISHARE GeomTextTexture : public GeomObj {
 public:
   enum anchor_e { n, e, s, w, ne, se, sw, nw, c};
 private:

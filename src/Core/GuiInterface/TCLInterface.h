@@ -52,7 +52,7 @@
 
 namespace SCIRun {
   using namespace std;
-  class SHARE TCLInterface : public GuiInterface{
+  class SCISHARE TCLInterface : public GuiInterface{
   public:
     TCLInterface();
     virtual ~TCLInterface();

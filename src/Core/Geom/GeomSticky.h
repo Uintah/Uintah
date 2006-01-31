@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomSticky : public GeomContainer {
+class SCISHARE GeomSticky : public GeomContainer {
 
 public:
   GeomSticky( GeomHandle obj);

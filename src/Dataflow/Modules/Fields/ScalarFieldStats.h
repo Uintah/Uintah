@@ -48,7 +48,7 @@ namespace SCIRun {
 using std::sort;
 using std::vector;
 
-class SHARE ScalarFieldStats : public Module
+class SCISHARE ScalarFieldStats : public Module
 {
   friend class ScalarFieldStatsAlgo;
 public:

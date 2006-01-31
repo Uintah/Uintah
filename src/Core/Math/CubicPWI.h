@@ -79,7 +79,7 @@ typedef struct Quat {
   double d;
 } QUAT;
 
-class SHARE CubicPWI: public PiecewiseInterp<double> {
+class SCISHARE CubicPWI: public PiecewiseInterp<double> {
 public:
   CubicPWI();
   CubicPWI(const Array1<double>&, const Array1<double>&);
@@ -137,7 +137,7 @@ template <class T> inline bool Cubic3DPWI<T>::get_value(double w, T& res){
 }
 
 
-SHARE bool set_tangents(const Array1<double>&, const Array1<double>&, 
+SCISHARE bool set_tangents(const Array1<double>&, const Array1<double>&, 
 			       Array1<double>&, EndCondition);
 
 template <class T> bool 

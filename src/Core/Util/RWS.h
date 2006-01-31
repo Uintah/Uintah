@@ -40,10 +40,10 @@ using std::string;
 
 //!remove leading and trailing white space from a char*
 // returns _NOTSET_ if the string is or becomes zero length
-SHARE char* removeLTWhiteSpace(char* string);
+SCISHARE char* removeLTWhiteSpace(char* string);
 
 //! string version.
-SHARE bool remove_lt_white_space(string &str);
+SCISHARE bool remove_lt_white_space(string &str);
 
 }
 

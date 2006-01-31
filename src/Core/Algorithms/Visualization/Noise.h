@@ -54,7 +54,7 @@ namespace SCIRun {
 
 // NoiseBase
 
-class SHARE NoiseAlg : public DynamicAlgoBase {
+class SCISHARE NoiseAlg : public DynamicAlgoBase {
 public:
   NoiseAlg();
   virtual ~NoiseAlg();

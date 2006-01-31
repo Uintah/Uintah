@@ -36,7 +36,7 @@
 
 namespace SCIRun {
 
-  class SHARE ServiceBase {
+  class SCISHARE ServiceBase {
   public:
     enum {
       TAG_RQSV=1,   // REQUEST SERVICE

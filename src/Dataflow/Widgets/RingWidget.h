@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE RingWidget : public BaseWidget {
+class SCISHARE RingWidget : public BaseWidget {
 public:
   RingWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	      bool is_slideable = true);

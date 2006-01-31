@@ -56,7 +56,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class SHARE DenseMatrix : public Matrix {
+class SCISHARE DenseMatrix : public Matrix {
   double** data;
   double*  dataptr_;
 
@@ -144,17 +144,17 @@ public:
   static PersistentTypeID type_id;
 
   //! Friend functions
-  SHARE friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  SCISHARE friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 };
 
 
 //! Friend functions
-SHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
-SHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
-SHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SCISHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SCISHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SCISHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
+SCISHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
+SCISHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SCISHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 
 
 } // End namespace SCIRun

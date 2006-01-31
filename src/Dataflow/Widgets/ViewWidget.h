@@ -53,7 +53,7 @@
 namespace SCIRun {
 
 
-class SHARE ViewWidget : public BaseWidget {
+class SCISHARE ViewWidget : public BaseWidget {
 public:
   ViewWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	      double AspectRatio = 1.3333);

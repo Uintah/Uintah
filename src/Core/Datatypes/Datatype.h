@@ -51,7 +51,7 @@
 namespace SCIRun {
 
 
-class SHARE Datatype : public Persistent {
+class SCISHARE Datatype : public Persistent {
 public:
   //! needed for our smart pointers -- LockingHandle<T>
   int ref_cnt;

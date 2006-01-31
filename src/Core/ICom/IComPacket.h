@@ -63,7 +63,7 @@ class IComPacket;
 
 typedef LockingHandle<IComPacket> IComPacketHandle;
 
-class SHARE IComPacket : public IComBase {
+class SCISHARE IComPacket : public IComBase {
 
 friend class IComSocket;
 

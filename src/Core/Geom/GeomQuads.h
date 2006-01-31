@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomFastQuads : public GeomObj {
+class SCISHARE GeomFastQuads : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
@@ -101,7 +101,7 @@ public:
 
 
 
-class SHARE GeomTranspQuads : public GeomFastQuads
+class SCISHARE GeomTranspQuads : public GeomFastQuads
 {
 protected:
   vector<unsigned int> xlist_;

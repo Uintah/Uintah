@@ -43,7 +43,7 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of TriCubicHmt
-  class SHARE TriCubicHmtUnitElement : public TriLinearLgnUnitElement {
+  class SCISHARE TriCubicHmtUnitElement : public TriLinearLgnUnitElement {
   public:
   //! Parametric coordinates of vertices of unit edge
   static double unit_vertices[4][2];

@@ -64,8 +64,8 @@ bool string_is(const xmlChar *childname, const char *const name) {
   return (xmlStrcmp(childname, xmlCharStrdup(name)) == 0);
 }
 
-SHARE xmlAttrPtr get_attribute_by_name(const xmlNodePtr p, const char *name);
-SHARE bool get_attributes(vector<xmlNodePtr> &att, const xmlNodePtr p);
+SCISHARE xmlAttrPtr get_attribute_by_name(const xmlNodePtr p, const char *name);
+SCISHARE bool get_attributes(vector<xmlNodePtr> &att, const xmlNodePtr p);
 
       
 //////////////////////////////
@@ -74,7 +74,7 @@ SHARE bool get_attributes(vector<xmlNodePtr> &att, const xmlNodePtr p);
 // represents the children of the node
 // named "node".
       
-SHARE std::string get_serialized_children(xmlNode* node);
+SCISHARE std::string get_serialized_children(xmlNode* node);
 } // End namespace SCIRun
 
 #endif

@@ -55,14 +55,14 @@ using std::vector;
 namespace SCIRun {
 
 // Currently located in TextureBuilderAlgo.cc
-SHARE void texture_build_bricks(vector<TextureBrickHandle>& bricks,
+SCISHARE void texture_build_bricks(vector<TextureBrickHandle>& bricks,
                           int nx, int ny, int nz,
                           int nc, int* nb,
                           const BBox& bbox, int brick_mem,
                           bool use_nrrd_brick);
 
 
-class SHARE TextureBuilderAlgo : public SCIRun::DynamicAlgoBase
+class SCISHARE TextureBuilderAlgo : public SCIRun::DynamicAlgoBase
 {
 public:
   virtual void build(TextureHandle texture,

@@ -81,7 +81,7 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class SHARE SphericalVolumeConductor {
+class SCISHARE SphericalVolumeConductor {
 
 public:
 

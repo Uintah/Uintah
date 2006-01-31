@@ -38,7 +38,7 @@ namespace SCIRun {
 
 #include <Core/Geom/share.h>
 
-class SHARE ShaderProgramARB
+class SCISHARE ShaderProgramARB
 {
 public:
   ShaderProgramARB(const std::string& program);
@@ -72,14 +72,14 @@ protected:
   static int  max_texture_size_4_;
 };
 
-class SHARE VertexProgramARB : public ShaderProgramARB
+class SCISHARE VertexProgramARB : public ShaderProgramARB
 {
 public:
   VertexProgramARB(const std::string& program);
   ~VertexProgramARB();
 };
 
-class SHARE FragmentProgramARB : public ShaderProgramARB
+class SCISHARE FragmentProgramARB : public ShaderProgramARB
 {
 public:
   FragmentProgramARB(const std::string& program);

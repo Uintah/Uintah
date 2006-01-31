@@ -54,19 +54,20 @@
 #include <iostream>
 using std::cerr;
 
+#undef SCISHARE
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 namespace SCIRun {
 
 extern "C" {
-  SHARE IPort* make_GeometryIPort(Module* module, const string& name) {
+  SCISHARE IPort* make_GeometryIPort(Module* module, const string& name) {
     return scinew GeometryIPort(module,name);
   }
-  SHARE OPort* make_GeometryOPort(Module* module, const string& name) {
+  SCISHARE OPort* make_GeometryOPort(Module* module, const string& name) {
     return scinew GeometryOPort(module,name);
   }
 }

@@ -56,7 +56,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class SHARE DenseColMajMatrix : public Matrix
+class SCISHARE DenseColMajMatrix : public Matrix
 {
   double*  dataptr_;
 

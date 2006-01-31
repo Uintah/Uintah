@@ -47,7 +47,7 @@
 #include <Core/Services/share.h>
 namespace SCIRun {
 
-class SHARE ServiceManager: public Runnable, public ServiceBase {
+class SCISHARE ServiceManager: public Runnable, public ServiceBase {
 public:
 
   // Constructor/destructor

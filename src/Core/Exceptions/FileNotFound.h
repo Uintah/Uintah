@@ -52,7 +52,7 @@
 #include <Core/Exceptions/share.h>
 
 namespace SCIRun {
-	class SHARE FileNotFound : public Exception {
+	class SCISHARE FileNotFound : public Exception {
 	public:
 	    FileNotFound(const std::string&, const char* file, int line);
 	    FileNotFound(const FileNotFound&);

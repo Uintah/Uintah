@@ -52,7 +52,7 @@ namespace SCIRun {
 
 // This constraint only finds the projection or the point.
 
-class SHARE ProjectConstraint : public BaseConstraint {
+class SCISHARE ProjectConstraint : public BaseConstraint {
 public:
    ProjectConstraint( const string& name,
 		      const Index numSchemes,

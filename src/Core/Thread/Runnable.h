@@ -73,7 +73,7 @@ DESCRIPTION
    of this same thread.
    
 ****************************************/
-  class SHARE Runnable {
+  class SCISHARE Runnable {
   protected:
     friend class Thread;
     Thread* my_thread_;

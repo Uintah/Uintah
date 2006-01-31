@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE SegmentConstraint : public BaseConstraint {
+class SCISHARE SegmentConstraint : public BaseConstraint {
 public:
    SegmentConstraint( const string& name,
 		      const Index numSchemes,

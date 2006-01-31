@@ -69,7 +69,7 @@ typedef ConstantBasis<int>                 SegDatBasis;
 typedef GenericField<SegLVMesh, SegDatBasis,
 		     FData3d<int, SegLVMesh> > SegLVField;
 
-class SHARE SegLatVolField : public SegLVField {
+class SCISHARE SegLatVolField : public SegLVField {
 private:
   int maxMatl_;
   Array1<pair<int, long> > comps_;

@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class SHARE PointWidget : public BaseWidget {
+class SCISHARE PointWidget : public BaseWidget {
 public:
   PointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
   PointWidget( const PointWidget& );

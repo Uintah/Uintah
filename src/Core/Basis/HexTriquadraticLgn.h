@@ -44,7 +44,7 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of HexTriquadraticLgn 
-  class SHARE HexTriquadraticLgnUnitElement : public HexTrilinearLgnUnitElement {
+  class SCISHARE HexTriquadraticLgnUnitElement : public HexTrilinearLgnUnitElement {
 public:
   static double unit_vertices[20][3]; //!< Parametric coordinates of vertices of unit edge 
  

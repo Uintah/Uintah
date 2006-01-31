@@ -117,7 +117,7 @@ class IComAddress;
 
 typedef std::vector<char> IPaddress;
 
-class SHARE IComAddress : public IComBase {
+class SCISHARE IComAddress : public IComBase {
 
 public:
 

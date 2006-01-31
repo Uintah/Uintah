@@ -60,7 +60,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class SHARE MatrixIEPlugin {
+class SCISHARE MatrixIEPlugin {
 public:
   const string pluginname_;
 
@@ -86,7 +86,7 @@ public:
 
 
 
-class SHARE MatrixIEPluginManager {
+class SCISHARE MatrixIEPluginManager {
 public:
   void get_importer_list(vector<string> &results);
   void get_exporter_list(vector<string> &results);

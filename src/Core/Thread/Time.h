@@ -60,7 +60,7 @@ namespace SCIRun {
  on other machines.
 
 ****************************************/
-class SHARE Time {
+class SCISHARE Time {
 public:
   typedef unsigned long long SysClock;
 	    

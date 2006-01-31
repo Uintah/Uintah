@@ -52,7 +52,7 @@
 #include <Core/Exceptions/share.h>
 
 namespace SCIRun {
-      class SHARE Exception {
+      class SCISHARE Exception {
       public:
 	 Exception();
 	 virtual ~Exception();

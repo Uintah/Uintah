@@ -60,7 +60,7 @@ using std::pair;
 class Persistent;
 
 //----------------------------------------------------------------------
-struct SHARE PersistentTypeID {
+struct SCISHARE PersistentTypeID {
   string type;
   string parent;
   Persistent* (*maker)();
@@ -75,7 +75,7 @@ struct SHARE PersistentTypeID {
 };
 
 //----------------------------------------------------------------------
-class SHARE Piostream {
+class SCISHARE Piostream {
   
 public:
 
@@ -160,14 +160,14 @@ public:
   // Returns true if bkock_io was supported (even on error).
   virtual bool block_io(void*, size_t, size_t) { return false; }
 
-  SHARE friend Piostream* auto_istream(const string& filename,
+  SCISHARE friend Piostream* auto_istream(const string& filename,
                                  ProgressReporter *pr = 0);
-  SHARE friend Piostream* auto_ostream(const string& filename, const string& type,
+  SCISHARE friend Piostream* auto_ostream(const string& filename, const string& type,
                                  ProgressReporter *pr = 0);
 };
 
 //----------------------------------------------------------------------
-class SHARE Persistent {
+class SCISHARE Persistent {
 public:
   virtual ~Persistent();
   virtual void io(Piostream&) = 0;

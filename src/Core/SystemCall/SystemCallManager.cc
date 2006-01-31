@@ -936,12 +936,12 @@ void SystemCallManager::killall()
 }
 
 #ifdef _WIN32
-  #define SHARE __declspec(dllexport)
+  #define SCISHARE __declspec(dllexport)
 #else
-  #define SHARE
+  #define SCISHARE
 #endif
 
-SHARE SystemCallManager*    systemcallmanager_;
+SCISHARE SystemCallManager*    systemcallmanager_;
 
 } // end namespace
 

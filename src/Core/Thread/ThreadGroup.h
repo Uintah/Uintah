@@ -67,7 +67,7 @@ DESCRIPTION
    and alerted simultaneously.
  
 ****************************************/
-	class SHARE ThreadGroup {
+	class SCISHARE ThreadGroup {
 	public:
 	    
 	    //////////

@@ -48,9 +48,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    SHARE void matsolve3by3(double mat[3][3], double rhs[3]);
-    SHARE void matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
-    SHARE void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int size);
+    SCISHARE void matsolve3by3(double mat[3][3], double rhs[3]);
+    SCISHARE void matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
+    SCISHARE void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int size);
 
 #ifdef __cplusplus
 }

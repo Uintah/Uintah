@@ -48,15 +48,15 @@ using std::string;
 class TetLinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge
-  static SHARE double unit_vertices[4][3];
+  static SCISHARE double unit_vertices[4][3];
   //! References to vertices of unit edge 
-  static SHARE int unit_edges[6][2]; 
+  static SCISHARE int unit_edges[6][2]; 
   //! References to vertices of unit face
-  static SHARE int unit_faces[4][3];  
+  static SCISHARE int unit_faces[4][3];  
   //! Normals of unit faces
-  static SHARE double unit_face_normals[4][3];
+  static SCISHARE double unit_face_normals[4][3];
   //! Precalculated area of faces
-  static SHARE double unit_face_areas[4];
+  static SCISHARE double unit_face_areas[4];
 
   TetLinearLgnUnitElement() {}
   virtual ~TetLinearLgnUnitElement() {}

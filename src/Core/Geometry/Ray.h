@@ -53,7 +53,7 @@ namespace SCIRun {
 class Piostream;
 
 
-class SHARE Ray {
+class SCISHARE Ray {
     Point o_;
     Vector d_;
 public:
@@ -90,7 +90,7 @@ public:
   void normalize(); //! normalizes the direction vector d
   void direction(const Vector& newdir); //! changes d
 
-  SHARE friend void Pio( Piostream&, Ray&);
+  SCISHARE friend void Pio( Piostream&, Ray&);
 };
 
 
