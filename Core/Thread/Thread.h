@@ -292,6 +292,7 @@ DESCRIPTION
 	private:
 #ifdef _WIN32
             // in windows, we can't get around this with #define private public
+            //   since it knows which symbols at link-time are public and private.
 	    friend class Runnable;	    
             friend class ConditionVariable;
             friend void Thread_run(Thread* t);
