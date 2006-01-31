@@ -76,35 +76,33 @@ public:
 template <class FIELD>
 FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
 {
-  mod->error( "Mesh quality metric calculation for tets is not yet available." );
+//   enum tetMetrics {ASPECT_RATIO,   // this is aspect ratio 'beta'
+//                    ASPECT_RATIO_GAMMA, 
+//                    VOLUME, 
+//                    CONDITION_NUMBER,
+//                    JACOBIAN, NORM_JACOBIAN, 
+//                    SHAPE, RELSIZE, SHAPE_SIZE,DISTORTION,
+//                    ALLMETRICS, ALGEBRAIC, TRADITIONAL,                  
+//                    NUM_TET_METRICS};
+// // Note: if you want to add a new metric, do it immediately before 
+// //       "ALLMETRICS" so that grouping capability is not broken
 
-  enum tetMetrics {ASPECT_RATIO,   // this is aspect ratio 'beta'
-                   ASPECT_RATIO_GAMMA, 
-                   VOLUME, 
-                   CONDITION_NUMBER,
-                   JACOBIAN, NORM_JACOBIAN, 
-                   SHAPE, RELSIZE, SHAPE_SIZE,DISTORTION,
-                   ALLMETRICS, ALGEBRAIC, TRADITIONAL,                  
-                   NUM_TET_METRICS};
-// Note: if you want to add a new metric, do it immediately before 
-//       "ALLMETRICS" so that grouping capability is not broken
-
-  const int metricBitFlags[NUM_TET_METRICS] = 
-      {
-          V_TET_ASPECT_BETA,
-          V_TET_ASPECT_GAMMA,
-          V_TET_VOLUME,
-          V_TET_CONDITION,
-          V_TET_JACOBIAN,
-          V_TET_SCALED_JACOBIAN,
-          V_TET_SHAPE,
-          V_TET_RELATIVE_SIZE_SQUARED,
-          V_TET_SHAPE_AND_SIZE,
-          V_TET_DISTORTION,
-          V_TET_ALL,
-          V_TET_ALGEBRAIC,
-          V_TET_TRADITIONAL
-      };
+//   const int metricBitFlags[NUM_TET_METRICS] = 
+//       {
+//           V_TET_ASPECT_BETA,
+//           V_TET_ASPECT_GAMMA,
+//           V_TET_VOLUME,
+//           V_TET_CONDITION,
+//           V_TET_JACOBIAN,
+//           V_TET_SCALED_JACOBIAN,
+//           V_TET_SHAPE,
+//           V_TET_RELATIVE_SIZE_SQUARED,
+//           V_TET_SHAPE_AND_SIZE,
+//           V_TET_DISTORTION,
+//           V_TET_ALL,
+//           V_TET_ALGEBRAIC,
+//           V_TET_TRADITIONAL
+//       };
 
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh = dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
@@ -141,7 +139,8 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
     }
     
     TetMetricVals values;
-    int verdict_metric = metricBitFlags[V_TET_ALL];
+//    int verdict_metric = metricBitFlags[V_TET_ALL];
+    int verdict_metric = V_TET_ALL;
     v_tet_quality(4, node_pos, verdict_metric, &values);
     
     double aspect = values.aspect_beta;
@@ -209,29 +208,12 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
     distortion_ave += distortion;
  
 
-//     CubitBoolean malformed_found = CUBIT_FALSE;
-    
-//     if ((verdict_metric & V_TET_SHAPE) && metrics[SHAPE] == 0.0 )
-//     {
-//       malformed_found = CUBIT_TRUE;
-//       if( get_print_error() )
-//           PRINT_ERROR("Malformed element (shape = %f); "
-//                       "%s %d owned by %s\n",
-//                       metrics[SHAPE], 
-//                       mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                       mesh_entity_ptr()->owner()->entity_name().c_str());
-//     }
-//     if ((verdict_metric & V_TET_SCALED_JACOBIAN) && metrics[NORM_JACOBIAN] <= 0.0  )
-//     {
-//       malformed_found = CUBIT_TRUE;
-//       if( get_print_error() )
-//           PRINT_ERROR("Malformed element (norm. jacobian = %f); "
-//                       "%s %d owned by %s\n",
-//                       metrics[NORM_JACOBIAN], 
-//                       mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                       mesh_entity_ptr()->owner()->entity_name().c_str());
-//     }
-    
+    typename FIELD::mesh_type::Elem::index_type elem_id = *bi;
+//     if( shape == 0.0 )
+//         cout << "WARNING: Tet " << elem_id << " has negative volume!" << endl;
+    if( scaled_jacobian <= 0.0 )
+       cout << "WARNING: Tet " << elem_id << " has negative volume!" << endl;
+
     total_elements++;
     ++bi;
   }
@@ -246,7 +228,7 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
   
-  cout << "Number of elements checked = " << total_elements << endl << endl;
+  cout << endl << "Number of Tet elements checked = " << total_elements << endl;
   
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Aspect Ratio (gamma): Low = " << aspect_gamma_low << ", Average = " << aspect_gamma_ave << ", High = " << aspect_gamma_high << endl;
@@ -274,37 +256,35 @@ public:
 template <class FIELD>
 FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
 {
-  mod->error( "Mesh quality metric calculation for hexes is not yet available." );
+//   enum hexMetrics {ASPECT, SKEW, TAPER, VOLUME, STRETCH,
+//                    DIAGONALS, CHARDIM, CONDITION, JACOBIAN,
+//                    NORM_JACOBIAN, SHEAR, SHAPE, RELSIZE, SHEAR_SIZE, SHAPE_SIZE, 
+//                    DISTORTION, ALLMETRICS, ALGEBRAIC, ROBINSON, TRADITIONAL,
+//                    NUM_HEX_METRICS};
 
-  enum hexMetrics {ASPECT, SKEW, TAPER, VOLUME, STRETCH,
-                   DIAGONALS, CHARDIM, CONDITION, JACOBIAN,
-                   NORM_JACOBIAN, SHEAR, SHAPE, RELSIZE, SHEAR_SIZE, SHAPE_SIZE, 
-                   DISTORTION, ALLMETRICS, ALGEBRAIC, ROBINSON, TRADITIONAL,
-                   NUM_HEX_METRICS};
-
-  const int metricBitFlags[NUM_HEX_METRICS] = 
-      { 
-          V_HEX_ASPECT,
-          V_HEX_SKEW,
-          V_HEX_TAPER,
-          V_HEX_VOLUME,
-          V_HEX_STRETCH,
-          V_HEX_DIAGONAL,
-          V_HEX_DIMENSION,
-          V_HEX_CONDITION,
-          V_HEX_JACOBIAN,
-          V_HEX_SCALED_JACOBIAN,
-          V_HEX_SHEAR,
-          V_HEX_SHAPE,
-          V_HEX_RELATIVE_SIZE_SQUARED,
-          V_HEX_SHEAR_AND_SIZE,
-          V_HEX_SHAPE_AND_SIZE,
-          V_HEX_DISTORTION,
-          V_HEX_ALL,
-          V_HEX_ALGEBRAIC,
-          V_HEX_ROBINSON,
-          V_HEX_TRADITIONAL
-      };
+//   const int metricBitFlags[NUM_HEX_METRICS] = 
+//       { 
+//           V_HEX_ASPECT,
+//           V_HEX_SKEW,
+//           V_HEX_TAPER,
+//           V_HEX_VOLUME,
+//           V_HEX_STRETCH,
+//           V_HEX_DIAGONAL,
+//           V_HEX_DIMENSION,
+//           V_HEX_CONDITION,
+//           V_HEX_JACOBIAN,
+//           V_HEX_SCALED_JACOBIAN,
+//           V_HEX_SHEAR,
+//           V_HEX_SHAPE,
+//           V_HEX_RELATIVE_SIZE_SQUARED,
+//           V_HEX_SHEAR_AND_SIZE,
+//           V_HEX_SHAPE_AND_SIZE,
+//           V_HEX_DISTORTION,
+//           V_HEX_ALL,
+//           V_HEX_ALGEBRAIC,
+//           V_HEX_ROBINSON,
+//           V_HEX_TRADITIONAL
+//       };
   
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh = dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
@@ -347,9 +327,11 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
     }
     
     HexMetricVals values;
-    int verdict_metric = metricBitFlags[V_HEX_ALL];
-    v_hex_quality(8, node_pos, verdict_metric, &values);
+//    int verdict_metric = metricBitFlags[V_HEX_ALL];
+    int verdict_metric = V_HEX_ALL;
     
+    v_hex_quality(8, node_pos, verdict_metric, &values);
+
     double aspect = values.aspect;
     double skew = values.skew;
     double taper = values.taper;
@@ -456,40 +438,13 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
         distortion_low = distortion;
     distortion_ave += distortion;
 
-//   if((verdict_metric & V_HEX_SHAPE) && metrics[SHAPE] == 0.0 )
-//   {
-//     malformed_found = CUBIT_TRUE;
-//     if ( get_print_error() )
-//       PRINT_ERROR("Malformed element (shape = %f): "
-//                   "%s %d owned by %s\n",
-//                   metrics[SHAPE], 
-//                   mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                   mesh_entity_ptr()->owner()->entity_name().c_str());
-//   }
-
-//   if ((verdict_metric & V_HEX_JACOBIAN) && metrics[JACOBIAN] <= 0.0 ) 
-//   {
-//     malformed_found = CUBIT_TRUE;
-//     if ( get_print_error() )
-//        PRINT_ERROR("Malformed element (%s = %f): "
-//                    "%s %d owned by %s\n",
-//                    metricNames[JACOBIAN],
-//                    metrics[JACOBIAN], 
-//                    mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                    mesh_entity_ptr()->owner()->entity_name().c_str());
-//   }
-
-//   if ((verdict_metric & V_HEX_SCALED_JACOBIAN) && metrics[NORM_JACOBIAN] <= 0.0 ) 
-//   {
-//     malformed_found = CUBIT_TRUE;
-//     if ( get_print_error() )
-//        PRINT_ERROR("Malformed element (%s = %f): "
-//                    "%s %d owned by %s\n",
-//                    metricNames[NORM_JACOBIAN],
-//                    metrics[NORM_JACOBIAN], 
-//                    mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                    mesh_entity_ptr()->owner()->entity_name().c_str());
-//   }
+    typename FIELD::mesh_type::Elem::index_type elem_id = *bi;
+//     if( shape == 0.0 )
+//         cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
+//     if( jacobian <= 0.0 )
+//        cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
+    if( scaled_jacobian <= 0.0 )
+       cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
 
     total_elements++;
     ++bi;
@@ -511,7 +466,7 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
   
-  cout << "Number of elements checked = " << total_elements << endl << endl;
+  cout << endl << "Number of Hex elements checked = " << total_elements << endl;
   
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Skew: Low = " << skew_low << ", Average = " << skew_ave << ", High = " << skew_high << endl;
@@ -545,29 +500,27 @@ public:
 template <class FIELD>
 FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
 {
-  mod->error( "Mesh quality metric calculation for tris is not yet available." );
-
-  enum triMetrics {AREA, ANGLE, MIN_ANGLE, CONDITION_NUMBER, 
-                   MIN_SC_JAC, REL_SIZE, SHAPE, SHAPE_SIZE, DISTORTION,
-                   ALLMETRICS, ALGEBRAIC, TRADITIONAL,  NUM_TRI_METRICS};
-// Note: if you want to add a new metric, do it immediately before 
-//       "ALLMETRICS" so that grouping capability is not broken
+//   enum triMetrics {AREA, ANGLE, MIN_ANGLE, CONDITION_NUMBER, 
+//                    MIN_SC_JAC, REL_SIZE, SHAPE, SHAPE_SIZE, DISTORTION,
+//                    ALLMETRICS, ALGEBRAIC, TRADITIONAL,  NUM_TRI_METRICS};
+// // Note: if you want to add a new metric, do it immediately before 
+// //       "ALLMETRICS" so that grouping capability is not broken
   
-  const int metricBitFlags[NUM_TRI_METRICS] = 
-      {
-          V_TRI_AREA,
-          V_TRI_MAXIMUM_ANGLE,
-          V_TRI_MINIMUM_ANGLE,
-          V_TRI_CONDITION,
-          V_TRI_SCALED_JACOBIAN,
-          V_TRI_RELATIVE_SIZE_SQUARED,
-          V_TRI_SHAPE,
-          V_TRI_SHAPE_AND_SIZE,
-          V_TRI_DISTORTION,
-          V_TRI_ALL,
-          V_TRI_ALGEBRAIC,
-          V_TRI_TRADITIONAL
-      };
+//   const int metricBitFlags[NUM_TRI_METRICS] = 
+//       {
+//           V_TRI_AREA,
+//           V_TRI_MAXIMUM_ANGLE,
+//           V_TRI_MINIMUM_ANGLE,
+//           V_TRI_CONDITION,
+//           V_TRI_SCALED_JACOBIAN,
+//           V_TRI_RELATIVE_SIZE_SQUARED,
+//           V_TRI_SHAPE,
+//           V_TRI_SHAPE_AND_SIZE,
+//           V_TRI_DISTORTION,
+//           V_TRI_ALL,
+//           V_TRI_ALGEBRAIC,
+//           V_TRI_TRADITIONAL
+//       };
   
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh = dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
@@ -582,7 +535,7 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   double minimum_angle_high = 0, minimum_angle_low = 0, minimum_angle_ave = 0;
   double maximum_angle_high = 0, maximum_angle_low = 0, maximum_angle_ave = 0;
   double condition_high = 0, condition_low = 0, condition_ave = 0;
-  double jacobian_high = 0, jacobian_low = 0, jacobian_ave = 0;
+//  double jacobian_high = 0, jacobian_low = 0, jacobian_ave = 0;
   double scaled_jacobian_high = 0, scaled_jacobian_low = 0, scaled_jacobian_ave = 0;
   double shape_high = 0, shape_low = 0, shape_ave = 0;
   double shape_size_high = 0, shape_size_low = 0, shape_size_ave = 0;
@@ -620,14 +573,15 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
 // #endif  
   
     TriMetricVals values;
-    int verdict_metric = metricBitFlags[V_TRI_ALL];
+//    int verdict_metric = metricBitFlags[V_TRI_ALL];
+    int verdict_metric = V_TRI_ALL;
     v_tri_quality(3, node_pos, verdict_metric, &values);
     
     double area = values.area;
     double minimum_angle = values.minimum_angle;
     double maximum_angle = values.maximum_angle;
     double condition = values.condition;
-    double jacobian = values.jacobian;
+//    double jacobian = values.jacobian;
     double scaled_jacobian = values.scaled_jacobian;
     double shape = values.shape;
     double shape_size = values.shape_and_size;
@@ -657,11 +611,11 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
         condition_low = condition;
     condition_ave += condition;
 
-    if( jacobian > jacobian_high )
-        jacobian_high = jacobian;
-    else if( jacobian < jacobian_low )
-        jacobian_low = jacobian;
-    jacobian_ave += jacobian;
+//     if( jacobian > jacobian_high )
+//         jacobian_high = jacobian;
+//     else if( jacobian < jacobian_low )
+//         jacobian_low = jacobian;
+//     jacobian_ave += jacobian;
 
     if( scaled_jacobian > scaled_jacobian_high )
         scaled_jacobian_high = scaled_jacobian;
@@ -687,26 +641,11 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
         distortion_low = distortion;
     distortion_ave += distortion;
 
-//   if((verdict_metric & V_TRI_SHAPE) && metrics[SHAPE] == 0.0) 
-//   {
-//     malformed = CUBIT_TRUE;
-//     if ( get_print_error() )
-//       PRINT_ERROR("Malformed element (shape= %f): "
-//                   "%s %d owned by %s\n",
-//                   metrics[SHAPE], 
-//                   mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                   mesh_entity_ptr()->owner()->entity_name().c_str());
-//   }
-//   if (((verdict_metric & V_TRI_SCALED_JACOBIAN)) && metrics[MIN_SC_JAC] <= 0.0) 
-//   {
-//     malformed = CUBIT_TRUE;
-//     if ( get_print_error() )
-//       PRINT_ERROR("Malformed element (min scaled jac = %f): "
-//                   "%s %d owned by %s\n",
-//                   metrics[MIN_SC_JAC], 
-//                   mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                   mesh_entity_ptr()->owner()->entity_name().c_str());
-//   }
+    typename FIELD::mesh_type::Elem::index_type elem_id = *bi;
+//     if( shape == 0.0 )
+//         cout << "WARNING: Tri " << elem_id << " has negative area!" << endl;
+    if( scaled_jacobian <= 0.0 )
+       cout << "WARNING: Tri " << elem_id << " has negative area!" << endl;
 
     total_elements++;
     ++bi;
@@ -716,19 +655,19 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   minimum_angle_ave /= total_elements;
   maximum_angle_ave /= total_elements;
   condition_ave /= total_elements;
-  jacobian_ave /= total_elements;
+//  jacobian_ave /= total_elements;
   scaled_jacobian_ave /= total_elements;
   shape_ave /= total_elements;
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
   
-  cout << "Number of elements checked = " << total_elements << endl << endl;
+  cout << endl << "Number of Tri elements checked = " << total_elements << endl;
   
   cout << "Area: Low = " << area_low << ", Average = " << area_ave << ", High = " << area_high << endl;
   cout << "Minimum_Angle: Low = " << minimum_angle_low << ", Average = " << minimum_angle_ave << ", High = " << minimum_angle_high << endl;
   cout << "Maximum_Angle: Low = " << maximum_angle_low << ", Average = " << maximum_angle_ave << ", High = " << maximum_angle_high << endl;
   cout << "Condition: Low = " << condition_low << ", Average = " << condition_ave << ", High = " << condition_high << endl;
-  cout << "Jacobian: Low = " << jacobian_low << ", Average = " << jacobian_ave << ", High = " << jacobian_high << endl;
+//  cout << "Jacobian: Low = " << jacobian_low << ", Average = " << jacobian_ave << ", High = " << jacobian_high << endl;
   cout << "Scaled_Jacobian: Low = " << scaled_jacobian_low << ", Average = " << scaled_jacobian_ave << ", High = " << scaled_jacobian_high << endl;
   cout << "Shape: Low = " << shape_low << ", Average = " << shape_ave << ", High = " << shape_high << endl;
   cout << "Shape_Size: Low = " << shape_size_low << ", Average = " << shape_size_ave << ", High = " << shape_size_high << endl;
@@ -750,39 +689,37 @@ public:
 template <class FIELD>
 FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
 {
-  mod->error( "Mesh quality metric calculation for quads is not yet available." );
+//   enum quadMetrics {ASPECT, SKEW, TAPER, WARPAGE, AREA, STRETCH, 
+//                     ANGLE, MIN_ANGLE, MAX_COND, MIN_JAC, MIN_SC_JAC, 
+//                     SHEAR, SHAPE, RELSIZE, SHEAR_SIZE, SHAPE_SIZE, DISTORTION,
+//                     ALLMETRICS, ALGEBRAIC, ROBINSON, TRADITIONAL, NUM_QUAD_METRICS};
+// // Note: if you want to add a new metric, do it immediately before 
+// //       "ALLMETRICS" so that grouping capability is not broken
 
-  enum quadMetrics {ASPECT, SKEW, TAPER, WARPAGE, AREA, STRETCH, 
-                    ANGLE, MIN_ANGLE, MAX_COND, MIN_JAC, MIN_SC_JAC, 
-                    SHEAR, SHAPE, RELSIZE, SHEAR_SIZE, SHAPE_SIZE, DISTORTION,
-                    ALLMETRICS, ALGEBRAIC, ROBINSON, TRADITIONAL, NUM_QUAD_METRICS};
-// Note: if you want to add a new metric, do it immediately before 
-//       "ALLMETRICS" so that grouping capability is not broken
-
-  const int metricBitFlags[NUM_QUAD_METRICS] =
-      {
-          V_QUAD_ASPECT,
-          V_QUAD_SKEW,
-          V_QUAD_TAPER,
-          V_QUAD_WARPAGE,
-          V_QUAD_AREA,
-          V_QUAD_STRETCH,
-          V_QUAD_MAXIMUM_ANGLE,
-          V_QUAD_MINIMUM_ANGLE,
-          V_QUAD_CONDITION,
-          V_QUAD_JACOBIAN,
-          V_QUAD_SCALED_JACOBIAN,
-          V_QUAD_SHEAR,
-          V_QUAD_SHAPE,
-          V_QUAD_RELATIVE_SIZE_SQUARED,
-          V_QUAD_SHEAR_AND_SIZE,
-          V_QUAD_SHAPE_AND_SIZE,
-          V_QUAD_DISTORTION,
-          V_QUAD_ALL,
-          V_QUAD_ALGEBRAIC,
-          V_QUAD_ROBINSON,
-          V_QUAD_TRADITIONAL
-      };
+//   const int metricBitFlags[NUM_QUAD_METRICS] =
+//       {
+//           V_QUAD_ASPECT,
+//           V_QUAD_SKEW,
+//           V_QUAD_TAPER,
+//           V_QUAD_WARPAGE,
+//           V_QUAD_AREA,
+//           V_QUAD_STRETCH,
+//           V_QUAD_MAXIMUM_ANGLE,
+//           V_QUAD_MINIMUM_ANGLE,
+//           V_QUAD_CONDITION,
+//           V_QUAD_JACOBIAN,
+//           V_QUAD_SCALED_JACOBIAN,
+//           V_QUAD_SHEAR,
+//           V_QUAD_SHAPE,
+//           V_QUAD_RELATIVE_SIZE_SQUARED,
+//           V_QUAD_SHEAR_AND_SIZE,
+//           V_QUAD_SHAPE_AND_SIZE,
+//           V_QUAD_DISTORTION,
+//           V_QUAD_ALL,
+//           V_QUAD_ALGEBRAIC,
+//           V_QUAD_ROBINSON,
+//           V_QUAD_TRADITIONAL
+//       };
   
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh = dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
@@ -816,7 +753,7 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
     mesh->get_nodes(onodes, *bi);
 
     int i;
-    for ( i = 0; i < 8; i++ )
+    for ( i = 0; i < 4; i++ )
     {
       Point p;
       mesh->get_center( p, onodes[i] );
@@ -825,9 +762,10 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
       node_pos[i][2] = p.z(); 
     }
     
-    HexMetricVals values;
-    int verdict_metric = metricBitFlags[V_HEX_ALL];
-    v_hex_quality(8, node_pos, verdict_metric, &values);
+    QuadMetricVals values;
+//    int verdict_metric = metricBitFlags[V_QUAD_ALL];
+    int verdict_metric = V_QUAD_ALL;
+    v_quad_quality(4, node_pos, verdict_metric, &values);
     
     double aspect = values.aspect;
     double skew = values.skew;
@@ -942,30 +880,13 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
         distortion_low = distortion;
     distortion_ave += distortion;
 
-//   int malformed_found = CUBIT_FALSE;
-//   if ((verdict_metric & V_QUAD_AREA) && metrics[AREA] <= 0.0)
-//       malformed_found = CUBIT_TRUE;
-
-//   if ((verdict_metric & V_QUAD_SHAPE) && metrics[SHAPE] == 0)
-//   {
-//       malformed_found = CUBIT_TRUE;
-//       if( get_print_error() )
-//         PRINT_ERROR("Malformed element (shape = %f); "
-//                     "%s %d owned by %s\n",
-//                     metrics[SHAPE],
-//                     mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                     mesh_entity_ptr()->owner()->entity_name().c_str());
-//   }
-//   if ((verdict_metric == V_QUAD_SCALED_JACOBIAN) && metrics[MIN_SC_JAC] <= 0.0)
-//   {
-//       malformed_found = CUBIT_TRUE;
-//       if( get_print_error() )
-//         PRINT_ERROR("Malformed element (min scaled jacobian = %f); "
-//                     "%s %d owned by %s\n",
-//                     metrics[MIN_SC_JAC],
-//                     mesh_entity_ptr()->class_name(), mesh_entity_ptr()->id(),
-//                     mesh_entity_ptr()->owner()->entity_name().c_str());
-//   }
+    typename FIELD::mesh_type::Elem::index_type elem_id = *bi;
+//     if( shape == 0.0 )
+//         cout << "WARNING: Quad " << elem_id << " has negative area!" << endl;
+//     if( area <= 0.0 )
+//        cout << "WARNING: Quad " << elem_id << " has negative area!" << endl;
+    if( scaled_jacobian <= 0.0 )
+       cout << "WARNING: Quad " << elem_id << " has negative area!" << endl;
 
     total_elements++;
     ++bi;
@@ -988,7 +909,7 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
   
-  cout << "Number of elements checked = " << total_elements << endl << endl;
+  cout << endl << "Number of Quad elements checked = " << total_elements << endl;
   
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Skew: Low = " << skew_low << ", Average = " << skew_ave << ", High = " << skew_high << endl;
