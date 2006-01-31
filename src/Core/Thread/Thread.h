@@ -293,12 +293,13 @@ DESCRIPTION
 #ifdef _WIN32
             // in windows, we can't get around this with #define private public
 	    friend class Runnable;	    
-	    friend struct Thread_private;
             friend class ConditionVariable;
             friend void Thread_run(Thread* t);
             friend void Thread_shutdown(Thread* thread, bool actually_exit);
 	    friend unsigned long run_threads(void* priv_v);
 #endif
+            
+	    friend struct Thread_private;
 
 	    Runnable* runner_;
 	    const char* threadname_;
