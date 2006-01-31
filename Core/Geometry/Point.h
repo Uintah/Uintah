@@ -63,11 +63,11 @@ class Point {
 public:
   inline explicit Point(const Vector& v);
   inline Point(double x, double y, double z): _x(x), _y(y), _z(z) {}
-  SHARE Point(double, double, double, double);
+  SCISHARE Point(double, double, double, double);
   inline Point(const Point&);
   inline Point();
-  SHARE int operator==(const Point&) const;
-  SHARE int operator!=(const Point&) const;
+  SCISHARE int operator==(const Point&) const;
+  SCISHARE int operator!=(const Point&) const;
   inline Point& operator=(const Point&);
   inline Vector operator+(const Point&) const;
   inline Vector operator-(const Point&) const;
@@ -92,7 +92,7 @@ public:
   inline const Vector &vector() const;
   inline Vector &asVector() const;
     
-  SHARE string get_string() const;
+  SCISHARE string get_string() const;
 
   //! support dynamic compilation
   static const string& get_h_file_path();
@@ -104,17 +104,17 @@ public:
   //    friend inline double Dot(const Point&, const Vector&);
   friend inline Point Min(const Point&, const Point&);
   friend inline Point Max(const Point&, const Point&);
-  SHARE friend Point Interpolate(const Point&, const Point&, double);
-  SHARE friend Point AffineCombination(const Point&, double,
+  SCISHARE friend Point Interpolate(const Point&, const Point&, double);
+  SCISHARE friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  SHARE friend Point AffineCombination(const Point&, double,
+  SCISHARE friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  SHARE friend Point AffineCombination(const Point&, double,
+  SCISHARE friend Point AffineCombination(const Point&, double,
 					      const Point&, double);
-  SHARE friend void Pio( Piostream&, Point& );
+  SCISHARE friend void Pio( Piostream&, Point& );
 
 
 
@@ -125,8 +125,8 @@ public:
     
   static void test_rigorous(RigorousTest* __test);
 
-  SHARE friend std::ostream& operator<<(std::ostream& os, const Point& p);
-  SHARE friend std::istream& operator>>(std::istream& os, Point& p);
+  SCISHARE friend std::ostream& operator<<(std::ostream& os, const Point& p);
+  SCISHARE friend std::istream& operator>>(std::istream& os, Point& p);
 
 }; // end class Point
 
@@ -139,8 +139,8 @@ Point operator+(const Vector &v, const Point &p) {
   return p+v;
 }
 
-SHARE std::ostream& operator<<(std::ostream& os, const Point& p);
-SHARE std::istream& operator>>(std::istream& os, Point& p);
+SCISHARE std::ostream& operator<<(std::ostream& os, const Point& p);
+SCISHARE std::istream& operator>>(std::istream& os, Point& p);
 
 } // End namespace SCIRun
 
@@ -324,7 +324,7 @@ inline double Dot(const Point& p1, const Point& p2)
   return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
 }
 
-SHARE const TypeDescription* get_type_description(Point*);
+SCISHARE const TypeDescription* get_type_description(Point*);
 
 } // End namespace SCIRun
 

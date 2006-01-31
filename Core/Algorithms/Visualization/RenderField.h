@@ -90,7 +90,7 @@ sciVectorToColor(Color &c, const Vector &v)
 //! RenderFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderFieldBase from the DynamicAlgoBase they will have a pointer to.
-class SHARE RenderFieldBase : public DynamicAlgoBase
+class SCISHARE RenderFieldBase : public DynamicAlgoBase
 {
 public:
 
@@ -292,7 +292,7 @@ to_vector(const T& tmp, Vector &val)
 
 
 template <>
-SHARE bool
+SCISHARE bool
 to_vector(const Vector&, Vector &);
 
 
@@ -305,16 +305,16 @@ to_double(const T& tmp, double &val)
 }
 
 template <>
-SHARE bool
+SCISHARE bool
 to_double(const Vector&, double &);
 
 template <>
-SHARE bool
+SCISHARE bool
 to_double(const Tensor&, double &);
 
 
 template <>
-SHARE bool
+SCISHARE bool
 to_double(const string&, double &);
 
 template <class T>
@@ -326,16 +326,16 @@ to_float(const T& tmp, float &val)
 }
 
 template <>
-SHARE bool
+SCISHARE bool
 to_float(const Vector&, float &);
 
 template <>
-SHARE bool
+SCISHARE bool
 to_float(const Tensor&, float &);
 
 
 template <>
-SHARE bool
+SCISHARE bool
 to_float(const string&, float &);
 
 
@@ -348,12 +348,12 @@ add_data(const Point &, const Dat &, GeomArrows *,
 }
 
 template <>
-SHARE bool 
+SCISHARE bool 
 add_data(const Point &, const Vector &, GeomArrows *, 
 	 MaterialHandle &, const string &, double, bool, bool);
 
 template <>
-SHARE bool 
+SCISHARE bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
 	 MaterialHandle &, const string &, double, bool, bool);
 
@@ -1745,10 +1745,10 @@ value_to_string(std::ostringstream &buffer, const T &value)
 }
 
 template <>
-SHARE void value_to_string(std::ostringstream &buffer, const char &value);
+SCISHARE void value_to_string(std::ostringstream &buffer, const char &value);
 
 template <>
-SHARE void value_to_string(std::ostringstream &buffer, const unsigned char &value);
+SCISHARE void value_to_string(std::ostringstream &buffer, const unsigned char &value);
 
 
 template <class Fld, class Loc>
@@ -2508,7 +2508,7 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
 //! RenderVectorFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderVectorFieldBase from the DynamicAlgoBase they will have a pointer to.
-class SHARE RenderVectorFieldBase : public DynamicAlgoBase
+class SCISHARE RenderVectorFieldBase : public DynamicAlgoBase
 {
 public:
 
@@ -3106,7 +3106,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 //! RenderTensorFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderTensorFieldBase from the DynamicAlgoBase they will have a pointer to.
-class SHARE RenderTensorFieldBase : public DynamicAlgoBase
+class SCISHARE RenderTensorFieldBase : public DynamicAlgoBase
 {
 public:
 
@@ -3313,7 +3313,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 //! RenderScalarFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderScalarFieldBase from the DynamicAlgoBase they will have a pointer to.
-class SHARE RenderScalarFieldBase : public DynamicAlgoBase
+class SCISHARE RenderScalarFieldBase : public DynamicAlgoBase
 {
 public:
 

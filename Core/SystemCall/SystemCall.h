@@ -90,7 +90,7 @@ typedef LockingHandle<SystemCallHandler> SystemCallHandlerHandle;
 // line to the handler. Multiple handlers can exist and share data
 // There is always a single thread buffering and sorting out the data
 
-class SHARE SystemCallHandler : public SystemCallBase
+class SCISHARE SystemCallHandler : public SystemCallBase
 {
   public:
   SystemCallHandler();
@@ -161,7 +161,7 @@ class SystemCallThread : public Runnable, public SystemCallBase {
 //////////////////////////////////////////////////////////////////////
 // SystemCall:  Main object for handling calls to unix
 
-class SHARE SystemCall : public SystemCallBase {
+class SCISHARE SystemCall : public SystemCallBase {
 
   public:
 

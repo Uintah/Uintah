@@ -64,7 +64,7 @@ enum CM2ShadingType
   CM2_SHADE_FALLOFF = 2
 };
 
-class SHARE CM2Shader
+class SCISHARE CM2Shader
 {
 public:
   CM2Shader(CM2ShaderType type, bool faux, CM2BlendType blend);
@@ -90,7 +90,7 @@ protected:
   FragmentProgramARB* program_;
 };
 
-class SHARE CM2ShaderFactory
+class SCISHARE CM2ShaderFactory
 {
 public:
   CM2ShaderFactory();

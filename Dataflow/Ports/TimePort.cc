@@ -33,19 +33,20 @@
 #include <Dataflow/Ports/TimePort.h>
 #include <Dataflow/Network/Module.h>
 
+#undef SCISHARE
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 namespace SCIRun {
 
 extern "C" {
-  SHARE IPort* make_TimeIPort(Module* module, const string& name) {
+  SCISHARE IPort* make_TimeIPort(Module* module, const string& name) {
     return scinew TimeIPort(module, name);
   }
-  SHARE OPort* make_TimeOPort(Module* module, const string& name) {
+  SCISHARE OPort* make_TimeOPort(Module* module, const string& name) {
     return scinew TimeOPort(module, name);
   }
 }

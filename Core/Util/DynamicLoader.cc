@@ -74,10 +74,10 @@ void set_vc_dirs()
 }
 
 #endif
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
 #include <unistd.h>
-#define SHARE
+#define SCISHARE
 #endif
 
 namespace SCIRun {
@@ -98,9 +98,9 @@ namespace SCIRun {
   // Need these mutexes to be created here for use in another library
   // as they must "construct" _now_ because they are used before the
   // library that would normally construct them gets loaded...
-  SHARE Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
-  SHARE Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
-  SHARE Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
+  SCISHARE Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
+  SCISHARE Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
+  SCISHARE Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");

@@ -52,10 +52,10 @@ namespace SCIRun {
   class Vector;
   class Piostream;
 
-  class SHARE BBox {
+  class SCISHARE BBox {
     
   protected:
-    SHARE friend void Pio( Piostream &, BBox& );
+    SCISHARE friend void Pio( Piostream &, BBox& );
 
   public:
     BBox();

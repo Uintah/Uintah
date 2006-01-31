@@ -72,10 +72,10 @@ typedef struct _SLData {
 } SLData;
 
 
-SHARE vector<Point>::iterator
+SCISHARE vector<Point>::iterator
 StreamLinesCleanupPoints(vector<Point> &input, double e2);
 
-class SHARE StreamLinesAlgo : public DynamicAlgoBase
+class SCISHARE StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle seed_field_h,

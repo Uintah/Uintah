@@ -54,7 +54,7 @@ namespace SCIRun {
 class DrawInfoOpenGL;
 using std::list;
 
-class SHARE GeomDL : public GeomContainer {
+class SCISHARE GeomDL : public GeomContainer {
 protected:
   int polygons_;
   list<DrawInfoOpenGL *> drawinfo_;

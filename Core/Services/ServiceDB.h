@@ -85,7 +85,7 @@ class ServiceInfo {
 };
 
 
-class SHARE ServiceDB : public ServiceBase {
+class SCISHARE ServiceDB : public ServiceBase {
   public:
   ServiceDB();
   ~ServiceDB();

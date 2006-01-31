@@ -44,9 +44,9 @@
 #include <Dataflow/Ports/NrrdPort.h>
 
 #ifdef _WIN32
-#define SHARE __declspec(dllimport)
+#define SCISHARE __declspec(dllimport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 /* bad Gordon */

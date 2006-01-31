@@ -48,15 +48,15 @@ namespace SCIRun {
 class PrismLinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge
-  static SHARE double unit_vertices[6][3];
+  static SCISHARE double unit_vertices[6][3];
   //! References to vertices of unit edge 
-  static SHARE int unit_edges[9][2]; 
+  static SCISHARE int unit_edges[9][2]; 
   //! References to vertices of unit face
-  static SHARE int unit_faces[5][4]; 
+  static SCISHARE int unit_faces[5][4]; 
   //! Normals of unit face
-  static SHARE double unit_face_normals[5][3];
+  static SCISHARE double unit_face_normals[5][3];
   //! Precalculated area of faces
-  static SHARE double unit_face_areas[5];
+  static SCISHARE double unit_face_areas[5];
 
   PrismLinearLgnUnitElement() {};
   virtual ~PrismLinearLgnUnitElement() {}

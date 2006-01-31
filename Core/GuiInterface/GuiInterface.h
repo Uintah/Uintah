@@ -54,7 +54,7 @@ namespace SCIRun {
   using namespace std;
   class GuiCallback;
   class GuiContext;
-  class SHARE GuiInterface {
+  class SCISHARE GuiInterface {
   public:
     virtual ~GuiInterface();
     virtual void execute(const string& str) = 0;

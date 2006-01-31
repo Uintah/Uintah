@@ -76,7 +76,7 @@ class IComSocket;
 class IComPacket;
 class IComVirtualSocket;
 
-class SHARE IComSocket : public IComBase {
+class SCISHARE IComSocket : public IComBase {
 
 public:
 	// the public functions 

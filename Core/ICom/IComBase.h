@@ -60,7 +60,7 @@ namespace SCIRun {
 
 	enum conntype			{ DIRECT = 1, SSH_TUNNEL = 2}; 
 
-class SHARE IComBase {
+class SCISHARE IComBase {
     
 	// Define all the communication errors here
   public:

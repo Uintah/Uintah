@@ -59,7 +59,7 @@ namespace SCIRun {
   class Semaphore;
   class Mutex;
 
-  class SHARE StringSocket {
+  class SCISHARE StringSocket {
   public:
     //send buf to address paddr, if no connection made for paddr,
     //build a new connection and add the entry into the socket address

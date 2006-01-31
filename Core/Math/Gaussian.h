@@ -52,7 +52,7 @@
 namespace SCIRun {
 
 //   http://mathworld.wolfram.com/GaussianDistribution.html
-class SHARE Gaussian {
+class SCISHARE Gaussian {
 public:
   double mean_;
   double sigma_;

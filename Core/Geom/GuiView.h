@@ -54,7 +54,7 @@
 namespace SCIRun {
 
 
-class SHARE GuiView : public GuiVar {
+class SCISHARE GuiView : public GuiVar {
     GuiPoint eyep;
     GuiPoint lookat;
     GuiVector up;

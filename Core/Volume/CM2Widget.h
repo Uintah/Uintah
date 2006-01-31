@@ -56,7 +56,7 @@ class Pbuffer;
 
 typedef pair<float, float> range_t;
 
-class SHARE CM2Widget : public Datatype
+class SCISHARE CM2Widget : public Datatype
 {
 public:
   CM2Widget();
@@ -132,7 +132,7 @@ protected:
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 
-class SHARE ClippingCM2Widget : public CM2Widget
+class SCISHARE ClippingCM2Widget : public CM2Widget
 {
 public:
   ClippingCM2Widget();
@@ -177,7 +177,7 @@ protected:
 
 
 
-class SHARE TriangleCM2Widget : public CM2Widget
+class SCISHARE TriangleCM2Widget : public CM2Widget
 {
 public:
   TriangleCM2Widget();
@@ -224,7 +224,7 @@ enum CM2RectangleType
   CM2_RECTANGLE_ELLIPSOID = 1
 };
 
-class SHARE RectangleCM2Widget : public CM2Widget
+class SCISHARE RectangleCM2Widget : public CM2Widget
 {
 public:
   RectangleCM2Widget();
@@ -267,7 +267,7 @@ protected:
 
 
 
-class SHARE ColorMapCM2Widget : public RectangleCM2Widget
+class SCISHARE ColorMapCM2Widget : public RectangleCM2Widget
 {
 public:
   ColorMapCM2Widget();
@@ -293,7 +293,7 @@ protected:
 
 
 // The image widget cannot be manipulated, only drawn.
-class SHARE ImageCM2Widget : public CM2Widget
+class SCISHARE ImageCM2Widget : public CM2Widget
 {
 public:
   ImageCM2Widget();
@@ -335,7 +335,7 @@ protected:
 
 
 
-class SHARE PaintCM2Widget : public CM2Widget
+class SCISHARE PaintCM2Widget : public CM2Widget
 {
 public:
   typedef pair<double, double>          Coordinate;

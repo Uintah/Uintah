@@ -54,7 +54,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomPoints : public GeomObj {
+class SCISHARE GeomPoints : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
@@ -93,7 +93,7 @@ public:
 };
 
 
-class SHARE GeomTranspPoints : public GeomPoints {
+class SCISHARE GeomTranspPoints : public GeomPoints {
 protected:
   vector<unsigned int> xindices_;
   vector<unsigned int> yindices_;
@@ -165,7 +165,7 @@ struct TimedParticle {
 // spatial partioning with - probably also have a "time" hiearchy
 // this should make it easy to parallelize things...
 
-class SHARE GeomTimedParticles : public GeomObj {
+class SCISHARE GeomTimedParticles : public GeomObj {
   Array1< TimedParticle > particles; // actual particles
 
   int drawMode;                      // 0 - pts at t0

@@ -82,7 +82,7 @@ struct SerialSet
 // until after you were finished.
 typedef bool (*SchedulerCallback)(void *);
 
-class SHARE Scheduler : public Runnable
+class SCISHARE Scheduler : public Runnable
 {
   Network* net;
   bool first_schedule;

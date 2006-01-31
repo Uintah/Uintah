@@ -47,13 +47,13 @@ using std::string;
 class TriLinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge
-  static SHARE double unit_vertices[3][2];
+  static SCISHARE double unit_vertices[3][2];
   //! References to vertices of unit edge 
-  static SHARE int unit_edges[3][2]; 
+  static SCISHARE int unit_edges[3][2]; 
   //! References to vertices of unit face
-  static SHARE int unit_faces[1][3]; 
+  static SCISHARE int unit_faces[1][3]; 
   //! References to normal of unit face
-  static SHARE double unit_face_normals[1][3];
+  static SCISHARE double unit_face_normals[1][3];
 
   TriLinearLgnUnitElement() {}
   virtual ~TriLinearLgnUnitElement() {}

@@ -44,7 +44,7 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of CrvLinearLgn 
-  class SHARE CrvQuadraticLgnUnitElement : public CrvLinearLgnUnitElement {
+  class SCISHARE CrvQuadraticLgnUnitElement : public CrvLinearLgnUnitElement {
 public: 
   static double unit_vertices[3][1]; //!< Parametric coordinates of vertices of unit edge
 

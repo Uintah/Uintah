@@ -52,7 +52,7 @@
 #include <Core/Exceptions/share.h>
 
 namespace SCIRun {
-  class SHARE InternalError : public Exception {
+  class SCISHARE InternalError : public Exception {
   public:
     InternalError(const std::string&, const char* file, int line);
     InternalError(const InternalError&);

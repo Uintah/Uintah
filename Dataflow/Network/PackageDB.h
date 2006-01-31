@@ -77,7 +77,7 @@ typedef AVLTreeIter<string,ModuleInfo*> CategoryIter;
 typedef AVLTreeIter<string,Category*> PackageIter;
 typedef AVLTreeIter<string,Package*> PackagesIter;
 
-class SHARE PackageDB {
+class SCISHARE PackageDB {
 public:
   PackageDB(GuiInterface* gui);
   ~PackageDB();

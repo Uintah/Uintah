@@ -52,7 +52,7 @@
 namespace SCIRun {
 
 
-class SHARE GeomTransform : public GeomContainer {
+class SCISHARE GeomTransform : public GeomContainer {
     Transform trans;
 public:
     GeomTransform(GeomHandle);

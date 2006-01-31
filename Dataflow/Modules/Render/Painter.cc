@@ -84,12 +84,12 @@
 
 #ifdef _WIN32
 #define snprintf _snprintf
-#define SHARE __declspec(dllimport)
+#define SCISHARE __declspec(dllimport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
-extern "C" SHARE Tcl_Interp* the_interp;
+extern "C" SCISHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 

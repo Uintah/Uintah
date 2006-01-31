@@ -46,7 +46,7 @@ namespace SCIRun {
 
 class VolShaderFactory;
 
-class SHARE VolumeRenderer : public TextureRenderer
+class SCISHARE VolumeRenderer : public TextureRenderer
 {
 public:
   VolumeRenderer(TextureHandle tex, 

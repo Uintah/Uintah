@@ -60,7 +60,7 @@ namespace SCIRun {
 class Lighting;
 class GeomObj;
 
-struct SHARE GeomScene : public Persistent {
+struct SCISHARE GeomScene : public Persistent {
     GeomScene();
     GeomScene(const Color& bgcolor, const View& view, Lighting* lighting,
 	     GeomObj* topobj);

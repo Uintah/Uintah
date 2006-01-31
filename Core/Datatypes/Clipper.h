@@ -44,7 +44,7 @@
 
 namespace SCIRun {
 
-class SHARE Clipper : public Datatype
+class SCISHARE Clipper : public Datatype
 {
 public:
   virtual ~Clipper();
@@ -61,7 +61,7 @@ typedef LockingHandle<Clipper> ClipperHandle;
 
 
 
-class SHARE IntersectionClipper : public Clipper
+class SCISHARE IntersectionClipper : public Clipper
 {
 private:
   ClipperHandle clipper0_;
@@ -77,7 +77,7 @@ public:
 };
 
 
-class SHARE UnionClipper : public Clipper
+class SCISHARE UnionClipper : public Clipper
 {
 private:
   ClipperHandle clipper0_;
@@ -93,7 +93,7 @@ public:
 };
 
 
-class SHARE InvertClipper : public Clipper
+class SCISHARE InvertClipper : public Clipper
 {
 private:
   ClipperHandle clipper_;
@@ -108,7 +108,7 @@ public:
 };
 
   
-class SHARE BoxClipper : public Clipper
+class SCISHARE BoxClipper : public Clipper
 {
 private:
   Transform trans_;

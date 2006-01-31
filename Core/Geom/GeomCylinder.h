@@ -54,7 +54,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomCylinder : public GeomObj {
+class SCISHARE GeomCylinder : public GeomObj {
 protected:
     Vector v1;
     Vector v2;
@@ -89,7 +89,7 @@ public:
 };
 
 
-class SHARE GeomCylinders : public GeomObj {
+class SCISHARE GeomCylinders : public GeomObj {
 protected:
   double radius_;
   int  nu_;
@@ -122,7 +122,7 @@ public:
 };
 
 
-class SHARE GeomCappedCylinder : public GeomCylinder {
+class SCISHARE GeomCappedCylinder : public GeomCylinder {
     int nvdisc;
 public:
     GeomCappedCylinder(int nu=20, int nv=1, int nvdisc=1);
@@ -140,7 +140,7 @@ public:
 };
 
 
-class SHARE GeomCappedCylinders : public GeomCylinders {
+class SCISHARE GeomCappedCylinders : public GeomCylinders {
   vector<double> radii_;
 public:
   GeomCappedCylinders(int nu = 8, double radius = 1.0);

@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class SHARE CrosshairWidget : public BaseWidget {
+class SCISHARE CrosshairWidget : public BaseWidget {
 public:
   CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale );
   CrosshairWidget( const CrosshairWidget& );

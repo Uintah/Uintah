@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class SHARE FrameWidget : public BaseWidget {
+class SCISHARE FrameWidget : public BaseWidget {
 public:
   FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 		     bool is_slideable = false);

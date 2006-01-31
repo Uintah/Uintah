@@ -51,7 +51,7 @@ namespace SCIRun {
 
 class TkOpenGLContext;
 
-class SHARE OpenGLViewport {
+class SCISHARE OpenGLViewport {
 private:
   TkOpenGLContext *	context_;
   float			x_;

@@ -56,7 +56,7 @@
 
 namespace SCIRun {
 
-class SHARE BinaryPiostream : public Piostream {
+class SCISHARE BinaryPiostream : public Piostream {
 protected:
   FILE* fp_;
 
@@ -92,7 +92,7 @@ public:
 };
 
 
-class SHARE BinarySwapPiostream : public BinaryPiostream {
+class SCISHARE BinarySwapPiostream : public BinaryPiostream {
 protected:
   virtual const char *endianness();
 private:
@@ -121,7 +121,7 @@ public:
 };
 
 
-class SHARE TextPiostream : public Piostream {
+class SCISHARE TextPiostream : public Piostream {
 private:
   std::istream* istr;
   std::ostream* ostr;
@@ -165,7 +165,7 @@ public:
 
 //! The Fast stream is binary, its results can only safely be used
 //! on the architecture where the file is generated.
-class SHARE FastPiostream : public Piostream {
+class SCISHARE FastPiostream : public Piostream {
 private:
   FILE* fp_;
 

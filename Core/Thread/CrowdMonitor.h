@@ -77,7 +77,7 @@ WARNING
    
 ****************************************/
 
-	class SHARE CrowdMonitor {
+	class SCISHARE CrowdMonitor {
 	public:
 	    //////////
 	    // Create and initialize the CrowdMonitor. <i>name</i> should

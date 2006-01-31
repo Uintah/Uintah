@@ -49,7 +49,7 @@
 namespace SCIRun {
 class Field;
 
-class SHARE MarchingCubesAlg : public DynamicAlgoBase {
+class SCISHARE MarchingCubesAlg : public DynamicAlgoBase {
 protected:
   int np_;
 public:

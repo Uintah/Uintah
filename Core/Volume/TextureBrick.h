@@ -50,7 +50,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class SHARE TextureBrick
+class SCISHARE TextureBrick
 {
 public:
   TextureBrick(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
@@ -131,7 +131,7 @@ typedef LockingHandle<TextureBrick> TextureBrickHandle;
 
 
 
-class SHARE NrrdTextureBrick : public TextureBrick
+class SCISHARE NrrdTextureBrick : public TextureBrick
 {
 public:
   NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,

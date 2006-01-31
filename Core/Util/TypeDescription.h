@@ -50,7 +50,7 @@ using std::pair;
 
 struct CompileInfo;
 
-class SHARE TypeDescription {
+class SCISHARE TypeDescription {
 public:
   enum category_e {
     DATA_E,
@@ -117,18 +117,18 @@ private:
 };
 
 
-SHARE const TypeDescription* get_type_description(double*);
-SHARE const TypeDescription* get_type_description(long*);
-SHARE const TypeDescription* get_type_description(float*);
-SHARE const TypeDescription* get_type_description(short*);
-SHARE const TypeDescription* get_type_description(unsigned short*); 
-SHARE const TypeDescription* get_type_description(int*);
-SHARE const TypeDescription* get_type_description(unsigned int*);
-SHARE const TypeDescription* get_type_description(char*);
-SHARE const TypeDescription* get_type_description(unsigned char*);
-SHARE const TypeDescription* get_type_description(bool*);
-SHARE const TypeDescription* get_type_description(string*);
-SHARE const TypeDescription* get_type_description(unsigned long*);
+SCISHARE const TypeDescription* get_type_description(double*);
+SCISHARE const TypeDescription* get_type_description(long*);
+SCISHARE const TypeDescription* get_type_description(float*);
+SCISHARE const TypeDescription* get_type_description(short*);
+SCISHARE const TypeDescription* get_type_description(unsigned short*); 
+SCISHARE const TypeDescription* get_type_description(int*);
+SCISHARE const TypeDescription* get_type_description(unsigned int*);
+SCISHARE const TypeDescription* get_type_description(char*);
+SCISHARE const TypeDescription* get_type_description(unsigned char*);
+SCISHARE const TypeDescription* get_type_description(bool*);
+SCISHARE const TypeDescription* get_type_description(string*);
+SCISHARE const TypeDescription* get_type_description(unsigned long*);
 
 template <class T>
 const TypeDescription* get_type_description(vector<T>*)

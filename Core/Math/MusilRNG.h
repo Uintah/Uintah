@@ -46,7 +46,7 @@
 
 #include <Core/Math/share.h>
 
-class SHARE MusilRNG {
+class SCISHARE MusilRNG {
   int d[16], n[16];
   int stab[2][32];
   int point;

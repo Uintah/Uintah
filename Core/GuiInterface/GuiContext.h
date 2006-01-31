@@ -57,7 +57,7 @@ using std::vector;
 using std::string;
 class GuiInterface;
 
-class SHARE GuiContext {
+class SCISHARE GuiContext {
 public:
   GuiContext(GuiInterface* ctx, 
 	     const string& name, 

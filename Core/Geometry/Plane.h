@@ -49,7 +49,7 @@
 
 namespace SCIRun {
   class Point;
-class SHARE Plane {
+class SCISHARE Plane {
    Vector n;
    double d;
 public:

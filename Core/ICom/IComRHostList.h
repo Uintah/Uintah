@@ -59,7 +59,7 @@ private:
 };
 
 
-class SHARE IComRHostList {
+class SCISHARE IComRHostList {
 
 public:
 	// insert a comma or black space delimited list

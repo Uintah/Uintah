@@ -100,7 +100,7 @@ void swapbytes(double& i);
 void swapbytes(Point &i);
 void swapbytes(Vector &i);
 
-SHARE bool isBigEndian();
+SCISHARE bool isBigEndian();
 
 bool isLittleEndian();
  

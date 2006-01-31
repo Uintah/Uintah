@@ -238,7 +238,7 @@ public:
   { return (int)rangeSet_.size(); }
 
   static const ConsecutiveRangeSet empty;
-  SHARE static const ConsecutiveRangeSet all;  
+  SCISHARE static const ConsecutiveRangeSet all;  
   friend class ConsecutiveRangeSet::iterator;
 private:
   template <class InputIterator>

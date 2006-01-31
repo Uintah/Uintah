@@ -60,7 +60,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class SHARE ColorMapIEPlugin {
+class SCISHARE ColorMapIEPlugin {
 public:
   const string pluginname;
 
@@ -86,7 +86,7 @@ public:
 
 
 
-class SHARE ColorMapIEPluginManager {
+class SCISHARE ColorMapIEPluginManager {
 public:
   void get_importer_list(vector<string> &results);
   void get_exporter_list(vector<string> &results);

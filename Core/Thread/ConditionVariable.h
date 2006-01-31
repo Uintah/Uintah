@@ -77,7 +77,7 @@ class CrowdMonitor_private;
    
 ****************************************/
 
-class SHARE ConditionVariable {
+class SCISHARE ConditionVariable {
 public:
   //////////
   // Create a condition variable. <i>name</i> should be a static

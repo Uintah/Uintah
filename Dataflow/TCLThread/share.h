@@ -1,11 +1,11 @@
-#undef SHARE
+#undef SCISHARE
 
 #ifdef _WIN32
 #ifdef BUILD_Dataflow_TCLThread
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE __declspec(dllimport)
+#define SCISHARE __declspec(dllimport)
 #endif
 #else
-#define SHARE
+#define SCISHARE
 #endif

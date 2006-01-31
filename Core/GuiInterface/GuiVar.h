@@ -55,7 +55,7 @@
 namespace SCIRun {
   class GuiContext;
 
-  class SHARE GuiVar {
+  class SCISHARE GuiVar {
   protected:
     GuiContext* ctx;
   public:
@@ -68,7 +68,7 @@ namespace SCIRun {
   
   
 template <class T>
-class SHARE GuiSingle : public GuiVar
+class SCISHARE GuiSingle : public GuiVar
 {
   T value_;
 public:
@@ -119,7 +119,7 @@ typedef GuiSingle<int> GuiInt;
 
 
 template <class T>
-class SHARE GuiTriple : public GuiVar
+class SCISHARE GuiTriple : public GuiVar
 {
   GuiDouble x_;
   GuiDouble y_;

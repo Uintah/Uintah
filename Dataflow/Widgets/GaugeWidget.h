@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE GaugeWidget : public BaseWidget {
+class SCISHARE GaugeWidget : public BaseWidget {
 public:
   GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	       bool is_slideable = false);

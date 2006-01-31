@@ -55,13 +55,13 @@ class Semaphore;
 class GeometryData;
 
 
-struct SHARE GeomReply {
+struct SCISHARE GeomReply {
   int portid;
   GeomReply();
   GeomReply(int);
 };
 
-class SHARE GeometryComm : public MessageBase {
+class SCISHARE GeometryComm : public MessageBase {
 public:
   GeometryComm(Mailbox<GeomReply> *);
   GeometryComm(int, GeomID, GeomHandle,

@@ -70,7 +70,7 @@ class DeleteModuleThread;
 class ViewServer;
 // CollabVis code end
   
-class SHARE Network {
+class SCISHARE Network {
   friend class DeleteModuleThread;
 public:
     

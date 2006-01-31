@@ -54,7 +54,7 @@
 
 namespace SCIRun {
 
-class SHARE CoregPts 
+class SCISHARE CoregPts 
 {
 protected:
   int allowScale_;
@@ -79,7 +79,7 @@ public:
   virtual int getMisfit(double &misfit);
 };
 
-class SHARE CoregPtsAnalytic : public CoregPts
+class SCISHARE CoregPtsAnalytic : public CoregPts
 {
 public:
   CoregPtsAnalytic(int allowScale=1, int allowRotate=1, int allowTranslate=1);
@@ -87,7 +87,7 @@ public:
   virtual int computeTrans();
 };
   
-class SHARE CoregPtsProcrustes : public CoregPts
+class SCISHARE CoregPtsProcrustes : public CoregPts
 {
 public:
   CoregPtsProcrustes(int allowScale=1,int allowRotate=1,int allowTranslate=1);
@@ -95,7 +95,7 @@ public:
   virtual int computeTrans();
 };
   
-class SHARE CoregPtsSimplexSearch : public CoregPts
+class SCISHARE CoregPtsSimplexSearch : public CoregPts
 {
 private:
   int maxIters_;

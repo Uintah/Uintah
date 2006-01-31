@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class SHARE SparseRowMatrix : public Matrix {
+class SCISHARE SparseRowMatrix : public Matrix {
 private:
   SparseRowMatrix(); // This is only used by the maker function.
 

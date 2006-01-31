@@ -52,7 +52,7 @@ namespace SCIRun {
 
 // This constraint only finds the center (i.e. one-way constraint).
 
-class SHARE CenterConstraint : public BaseConstraint {
+class SCISHARE CenterConstraint : public BaseConstraint {
 public:
    CenterConstraint( const string& name,
 		     const Index numSchemes,

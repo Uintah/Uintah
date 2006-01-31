@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE TexSquare : public GeomObj {
+class SCISHARE TexSquare : public GeomObj {
   float tex_coords_[8];
   float pos_coords_[12];
   Vector normal_;

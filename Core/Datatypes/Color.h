@@ -50,7 +50,7 @@ namespace SCIRun {
 
 class HSVColor;
 
-class SHARE Color {
+class SCISHARE Color {
 protected:
     double _r, _g, _b;
 public:
@@ -107,7 +107,7 @@ public:
       }
     }
 
-    SHARE friend void Pio( Piostream&, Color& );
+    SCISHARE friend void Pio( Piostream&, Color& );
 
     friend class HSVColor;
 };
@@ -131,7 +131,7 @@ public:
   // should be enough for now - this is less bandwidth...
 };
 
-class SHARE HSVColor {
+class SCISHARE HSVColor {
     double _hue;
     double _sat;
     double _val;

@@ -99,7 +99,7 @@ private :
   char*   fLocalForm;
 };
 
-SHARE std::ostream& operator<<(std::ostream& target, const StrX& toDump);
+SCISHARE std::ostream& operator<<(std::ostream& target, const StrX& toDump);
 
 } // End namespace SCIRun
 

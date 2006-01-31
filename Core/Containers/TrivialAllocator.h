@@ -63,8 +63,8 @@ class TrivialAllocator {
     Mutex lock;
     int ta_disable;
 public:
-    SHARE TrivialAllocator(unsigned int size);
-    SHARE ~TrivialAllocator();
+    SCISHARE TrivialAllocator(unsigned int size);
+    SCISHARE ~TrivialAllocator();
 
     inline void* alloc();
     inline void free(void*);

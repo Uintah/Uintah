@@ -51,7 +51,7 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class SHARE ReferenceElement {
+class SCISHARE ReferenceElement {
 
 public:
 

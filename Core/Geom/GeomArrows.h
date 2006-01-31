@@ -54,7 +54,7 @@
 namespace SCIRun {
 
 
-class SHARE GeomArrows : public GeomObj {
+class SCISHARE GeomArrows : public GeomObj {
     double headwidth;
     double headlength;
     Array1<MaterialHandle> shaft_matls;

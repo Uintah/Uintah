@@ -52,7 +52,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomCone : public GeomObj {
+class SCISHARE GeomCone : public GeomObj {
 protected:
     Vector v1;
     Vector v2;
@@ -88,7 +88,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class SHARE GeomCappedCone : public GeomCone {
+class SCISHARE GeomCappedCone : public GeomCone {
     int nvdisc1;
     int nvdisc2;
 public:
@@ -107,7 +107,7 @@ public:
 };
 
 
-class SHARE GeomCones : public GeomObj {
+class SCISHARE GeomCones : public GeomObj {
 protected:
   double radius_;
   int  nu_;

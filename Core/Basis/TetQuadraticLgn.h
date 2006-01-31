@@ -43,7 +43,7 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of TetQuadraticLgn 
-  class SHARE TetQuadraticLgnUnitElement : public TetLinearLgnUnitElement {
+  class SCISHARE TetQuadraticLgnUnitElement : public TetLinearLgnUnitElement {
 public:
   static double unit_vertices[10][3]; //!< Parametric coordinates of vertices of unit edge
   

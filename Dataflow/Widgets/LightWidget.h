@@ -56,7 +56,7 @@ enum LightType {
 
 class FrameWidget;
 
-class SHARE LightWidget : public BaseWidget {
+class SCISHARE LightWidget : public BaseWidget {
 public:
    LightWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    LightWidget( Module* module, CrowdMonitor* lock, 

@@ -50,7 +50,7 @@ typedef LockingHandle<Mesh> MeshHandle;
 #define MESH_WEIGHT_MAXSIZE 64
 #define MESH_NO_NEIGHBOR 0xffffffff // 32 bit under_type!
 
-class SHARE Mesh : public PropertyManager {
+class SCISHARE Mesh : public PropertyManager {
 public:
 
   virtual Mesh *clone() = 0;

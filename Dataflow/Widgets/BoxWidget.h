@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE BoxWidget : public BaseWidget {
+class SCISHARE BoxWidget : public BaseWidget {
 public:
   BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	     bool is_aligned = false, bool is_slideable = false );

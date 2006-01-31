@@ -52,7 +52,7 @@
 namespace SCIRun {
 
 typedef TriSurfMesh<TriLinearLgn<Point> > surfLaplMesh;
-SHARE DenseMatrix *surfaceLaplacian(surfLaplMesh *mesh);
+SCISHARE DenseMatrix *surfaceLaplacian(surfLaplMesh *mesh);
 
 } // End namespace SCIRun
 #endif // SurfaceLaplacian_h

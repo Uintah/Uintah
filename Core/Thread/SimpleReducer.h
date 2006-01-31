@@ -64,7 +64,7 @@ DESCRIPTION
    thread, and these sums are added together.
    
 ****************************************/
-	class SHARE SimpleReducer : public Barrier {
+	class SCISHARE SimpleReducer : public Barrier {
 	public:
 	    //////////
 	    // Create a <b> SimpleReducer</i>.

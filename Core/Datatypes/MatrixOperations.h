@@ -50,11 +50,11 @@
 namespace SCIRun {
 
 
-SHARE MatrixHandle operator+(MatrixHandle A, MatrixHandle B);
-SHARE MatrixHandle operator-(MatrixHandle A, MatrixHandle B);
-SHARE MatrixHandle operator*(MatrixHandle A, MatrixHandle B);
-SHARE MatrixHandle operator*(double a, MatrixHandle B);
-SHARE MatrixHandle operator*(MatrixHandle A, double b);
+SCISHARE MatrixHandle operator+(MatrixHandle A, MatrixHandle B);
+SCISHARE MatrixHandle operator-(MatrixHandle A, MatrixHandle B);
+SCISHARE MatrixHandle operator*(MatrixHandle A, MatrixHandle B);
+SCISHARE MatrixHandle operator*(double a, MatrixHandle B);
+SCISHARE MatrixHandle operator*(MatrixHandle A, double b);
 
 } // End namespace SCIRun
 

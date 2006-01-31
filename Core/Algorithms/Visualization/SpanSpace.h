@@ -64,7 +64,7 @@ struct SpanPoint {
 
 // SpanSpace
   
-class SHARE SpanSpaceBase : public Datatype {
+class SCISHARE SpanSpaceBase : public Datatype {
 public:
   SpanSpaceBase() {}
   virtual ~SpanSpaceBase() {}

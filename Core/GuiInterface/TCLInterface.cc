@@ -96,12 +96,12 @@ void eventSetup(ClientData cd, int flags);
 #endif
 #ifdef _WIN32
 #include <windows.h>
-#define SHARE __declspec(dllimport)
+#define SCISHARE __declspec(dllimport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
-extern "C" SHARE Tcl_Interp* the_interp;
+extern "C" SCISHARE Tcl_Interp* the_interp;
 
 TCLInterface::TCLInterface()
 {

@@ -68,7 +68,7 @@ class GeometryComm;
 typedef int GeomID;
 typedef short LightID;
 
-class SHARE GeometryIPort : public IPort {
+class SCISHARE GeometryIPort : public IPort {
 public:
   GeometryIPort(Module*, const string& name);
   virtual ~GeometryIPort();
@@ -78,7 +78,7 @@ public:
 };
 
 
-struct SHARE GeometryData {
+struct SCISHARE GeometryData {
   ColorImage* colorbuffer;
   DepthImage* depthbuffer;
 
@@ -112,7 +112,7 @@ struct SHARE GeometryData {
 // CollabVis code end
 
   
-class SHARE GeometryOPort : public OPort {
+class SCISHARE GeometryOPort : public OPort {
 private:
 
   GeomID serial_;

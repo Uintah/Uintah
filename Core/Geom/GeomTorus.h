@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomTorus : public GeomObj {
+class SCISHARE GeomTorus : public GeomObj {
 public:
     Point cen;
     Vector axis;
@@ -83,7 +83,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class SHARE GeomTorusArc : public GeomTorus {
+class SCISHARE GeomTorusArc : public GeomTorus {
 public:
     Vector zero;
     double start_angle;

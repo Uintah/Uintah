@@ -258,7 +258,7 @@ inline int Tile(int tile, int tf)
   }
 }
 
-double SHARE MakeReal(double value);
+double SCISHARE MakeReal(double value);
 
 
 template <class T>

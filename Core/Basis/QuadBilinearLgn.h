@@ -48,13 +48,13 @@ using std::string;
 class QuadBilinearLgnUnitElement {
 public: 
   //! Parametric coordinates of vertices of unit edge
-  static SHARE double unit_vertices[4][2];
+  static SCISHARE double unit_vertices[4][2];
   //! References to vertices of unit edge  
-  static SHARE int unit_edges[4][2]; 
+  static SCISHARE int unit_edges[4][2]; 
   //! References to vertices of unit face 
-  static SHARE int unit_faces[1][4]; 
+  static SCISHARE int unit_faces[1][4]; 
   //! References to normal of unit face
-  static SHARE double unit_face_normals[1][3];
+  static SCISHARE double unit_face_normals[1][3];
 
   QuadBilinearLgnUnitElement() {}
   virtual ~QuadBilinearLgnUnitElement() {}

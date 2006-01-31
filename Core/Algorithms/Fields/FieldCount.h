@@ -43,7 +43,7 @@
 
 namespace SCIRun {
 
-class SHARE FieldCountAlgorithm : public DynamicAlgoBase
+class SCISHARE FieldCountAlgorithm : public DynamicAlgoBase
 {
 public:
   virtual void execute(MeshHandle src, int &num_nodes, int &num_elems) = 0;

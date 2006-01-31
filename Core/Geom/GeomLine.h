@@ -55,7 +55,7 @@
 
 namespace SCIRun {
 
-class SHARE GeomLine : public GeomObj {
+class SCISHARE GeomLine : public GeomObj {
 public:
   Point p1, p2;
   float lineWidth_;
@@ -79,7 +79,7 @@ public:
   static PersistentTypeID type_id;
 };
 
-class SHARE GeomLines : public GeomObj {
+class SCISHARE GeomLines : public GeomObj {
 protected:
   double line_width_;
   vector<float> points_;
@@ -114,7 +114,7 @@ public:
 };
 
 
-class SHARE GeomTranspLines : public GeomLines {
+class SCISHARE GeomTranspLines : public GeomLines {
 protected:
   vector<unsigned int> xindices_;
   vector<unsigned int> yindices_;
@@ -143,7 +143,7 @@ public:
 
 // can generate "lit" streamlines this way
 
-class SHARE TexGeomLines : public GeomObj {
+class SCISHARE TexGeomLines : public GeomObj {
 protected:
   Array1<unsigned char>  tmap1d; // 1D texture - should be in Viewer?
   int tmapid;                    // id for this texture map
@@ -188,7 +188,7 @@ public:
 };
 
 
-class SHARE GeomCLineStrips : public GeomObj {
+class SCISHARE GeomCLineStrips : public GeomObj {
 protected:
   double line_width_;
   vector<vector<float> > points_;

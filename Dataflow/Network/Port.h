@@ -53,7 +53,7 @@ class Connection;
 class Module;
 
 
-class SHARE Port {
+class SCISHARE Port {
 public:
   Port(Module* module, const std::string& type_name,
        const std::string& port_name, const std::string& color_name);
@@ -105,7 +105,7 @@ private:
 };
 
 
-class SHARE IPort : public Port {
+class SCISHARE IPort : public Port {
 public:
   IPort(Module* module, const std::string& type_name,
 	const std::string& port_name, const std::string& color_name);
@@ -118,7 +118,7 @@ private:
 };
 
 
-class SHARE OPort : public Port {
+class SCISHARE OPort : public Port {
 public:
   OPort(Module* module, const std::string& type_name,
 	const std::string& port_name, const std::string& color_name);

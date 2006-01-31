@@ -67,7 +67,7 @@ typedef LockingHandle<HVFieldI> HexVolFieldIntHandle;
 typedef LockingHandle<HVFieldT> HexVolFieldTensorHandle;
 typedef LockingHandle<BuildHexFEMatrix> BuildHexFEMatrixHandle;
 
-class SHARE BuildHexFEMatrix {
+class SCISHARE BuildHexFEMatrix {
 
   // private stuff
   HexVolFieldIntHandle hFieldInt_;

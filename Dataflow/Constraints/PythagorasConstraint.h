@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE PythagorasConstraint : public BaseConstraint {
+class SCISHARE PythagorasConstraint : public BaseConstraint {
 public:
    PythagorasConstraint( const string& name,
 			 const Index numSchemes,

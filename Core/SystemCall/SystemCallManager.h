@@ -156,7 +156,7 @@ inline void    SystemCallProcess::unlock()
   
   
 
-class SHARE SystemCallManager : public SystemCallBase {
+class SCISHARE SystemCallManager : public SystemCallBase {
 
   public:
 
@@ -244,12 +244,12 @@ inline void    SystemCallManager::unlock()
 // classes making use of this class.
 
 #ifdef _WIN32
-  #define SHARE __declspec(dllimport)
+  #define SCISHARE __declspec(dllimport)
 #else
-  #define SHARE
+  #define SCISHARE
 #endif
 
-extern SHARE SystemCallManager* systemcallmanager_;
+extern SCISHARE SystemCallManager* systemcallmanager_;
 
 }
 

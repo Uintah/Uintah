@@ -61,7 +61,7 @@ struct BState {
 };
 
 
-class SHARE WidgetPickable {
+class SCISHARE WidgetPickable {
 
 public:
   virtual ~WidgetPickable();
@@ -74,7 +74,7 @@ public:
 };
 
 
-class SHARE ModulePickable {
+class SCISHARE ModulePickable {
 
 public:
   virtual ~ModulePickable();

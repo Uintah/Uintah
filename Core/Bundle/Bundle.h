@@ -54,7 +54,7 @@
 
 namespace SCIRun {
 
-class SHARE Bundle : public PropertyManager {
+class SCISHARE Bundle : public PropertyManager {
   
   public:  
   

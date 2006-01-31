@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE DistanceConstraint : public BaseConstraint {
+class SCISHARE DistanceConstraint : public BaseConstraint {
 public:
    DistanceConstraint( const string& name,
 		       const Index numSchemes,

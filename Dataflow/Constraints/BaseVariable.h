@@ -68,7 +68,7 @@ enum Scheme { Scheme1, Scheme2, Scheme3, Scheme4,
 class BaseConstraint;
 class ConstraintSolver;
 
-class SHARE BaseVariable {
+class SCISHARE BaseVariable {
    friend class BaseConstraint;
    friend class ConstraintSolver;
 public:

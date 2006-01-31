@@ -32,20 +32,21 @@
 #include <Dataflow/Ports/ColorMap2Port.h>
 #include <Core/Malloc/Allocator.h>
 
+#undef SCISHARE
 #ifdef _WIN32
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 namespace SCIRun {
 
 extern "C" {
-SHARE SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
+SCISHARE SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
                                                 const std::string& name) {
   return scinew SCIRun::SimpleIPort<ColorMap2Handle>(module,name);
 }
-SHARE SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
+SCISHARE SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
                                                 const std::string& name) {
   return scinew SCIRun::SimpleOPort<ColorMap2Handle>(module,name);
 }

@@ -45,7 +45,7 @@
 
 #include <Core/Util/share.h>
 
-class SHARE Timer {
+class SCISHARE Timer {
 public:
   enum timer_state_e {
     Stopped,
@@ -68,20 +68,20 @@ private:
 
 };
 
-class SHARE CPUTimer : public Timer {
+class SCISHARE CPUTimer : public Timer {
     virtual double get_time();
 public:
     virtual ~CPUTimer();
 };
 
-class SHARE WallClockTimer : public Timer {
+class SCISHARE WallClockTimer : public Timer {
     virtual double get_time();
 public:
     WallClockTimer();
     virtual ~WallClockTimer();
 };
 
-class SHARE TimeThrottle : public WallClockTimer {
+class SCISHARE TimeThrottle : public WallClockTimer {
 public:
     TimeThrottle();
     virtual ~TimeThrottle();

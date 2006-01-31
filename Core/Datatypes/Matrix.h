@@ -63,7 +63,7 @@ class DenseColMajMatrix;
 class Matrix;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class SHARE Matrix : public PropertyManager
+class SCISHARE Matrix : public PropertyManager
 {
 public:
   Matrix(int nrows = 0, int ncols = 0) :
@@ -183,7 +183,7 @@ protected:
 };
 
 
-SHARE void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
+SCISHARE void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 } // End namespace SCIRun
 

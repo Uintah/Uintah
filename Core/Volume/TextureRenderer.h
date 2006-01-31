@@ -63,7 +63,7 @@ public:
   bool alpha_dirty_;
 };
 
-class SHARE TextureRenderer : public GeomObj
+class SCISHARE TextureRenderer : public GeomObj
 {
 public:
   TextureRenderer(TextureHandle tex, 

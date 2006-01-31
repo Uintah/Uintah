@@ -59,7 +59,7 @@ namespace SCIRun {
 
   class GuiVar;
 
-  class SHARE GuiArgs {
+  class SCISHARE GuiArgs {
     vector<string> args_;
   public:
     bool have_error_;
@@ -84,7 +84,7 @@ namespace SCIRun {
     static string make_list(const vector<string>&);
   };
 
-  class SHARE GuiCallback {
+  class SCISHARE GuiCallback {
   public:
     GuiCallback();
     virtual ~GuiCallback();

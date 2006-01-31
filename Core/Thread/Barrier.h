@@ -70,7 +70,7 @@ class Barrier_private;
    
 ****************************************/
 
-class SHARE Barrier {
+class SCISHARE Barrier {
 public:
   //////////
   // Create a barrier which will be used by a variable number

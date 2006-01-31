@@ -78,7 +78,7 @@ using namespace SCIRun;
 
 /////////
 // Structure to hold Neumann BC related values
-class SHARE NeumannBC {
+class SCISHARE NeumannBC {
 public:  
   // GROUP: public data
   //////////

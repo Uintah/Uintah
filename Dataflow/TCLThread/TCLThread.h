@@ -39,7 +39,7 @@ namespace SCIRun {
 class Network;
 class TCLInterface;
 
-class SHARE TCLThread : public Runnable
+class SCISHARE TCLThread : public Runnable
 {
 public:
   TCLThread(int argc, char* argv[], Network* net, int startnetno);

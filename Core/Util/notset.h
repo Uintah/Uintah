@@ -33,7 +33,7 @@
 #include <Core/Util/share.h>
 namespace SCIRun {
 
-extern SHARE const char _NOTSET_[]; // = "(null string)";
+extern SCISHARE const char _NOTSET_[]; // = "(null string)";
 /* NOT_SET is used to indicate active 
    fields inside of data structures that
    represent XML element trees */

@@ -48,9 +48,9 @@
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
-#define SHARE __declspec(dllimport)
+#define SCISHARE __declspec(dllimport)
 #else
-#define SHARE
+#define SCISHARE
 #endif
 
 
@@ -61,7 +61,7 @@ using namespace std;
 namespace SCIRun {
 
 static map<string, ColorMapIEPlugin *> *colormap_plugin_table = 0;
-extern SHARE Mutex colormapIEPluginMutex; // From Core/Util/DynamicLoader.cc
+extern SCISHARE Mutex colormapIEPluginMutex; // From Core/Util/DynamicLoader.cc
 
 //----------------------------------------------------------------------
 ColorMapIEPlugin::ColorMapIEPlugin(const string& pname,

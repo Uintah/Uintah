@@ -52,7 +52,7 @@
 namespace SCIRun {
 
 
-class SHARE View {
+class SCISHARE View {
 protected:
     Point eyep_;
     Point lookat_;

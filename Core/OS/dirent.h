@@ -22,10 +22,10 @@ struct dirent
     char *d_name;
 };
 
-SHARE DIR           *opendir(const char *);
-SHARE int           closedir(DIR *);
-SHARE struct dirent *readdir(DIR *);
-SHARE void          rewinddir(DIR *);
+SCISHARE DIR           *opendir(const char *);
+SCISHARE int           closedir(DIR *);
+SCISHARE struct dirent *readdir(DIR *);
+SCISHARE void          rewinddir(DIR *);
 
 /*
 

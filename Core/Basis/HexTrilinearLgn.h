@@ -47,7 +47,7 @@ namespace SCIRun {
 using std::string;
 
 //! Class for describing unit geometry of HexTrilinearLgn 
-class SHARE HexTrilinearLgnUnitElement {
+class SCISHARE HexTrilinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge 
   static double unit_vertices[8][3];

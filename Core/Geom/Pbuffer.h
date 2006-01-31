@@ -43,7 +43,7 @@
 
 namespace SCIRun {
 
-class SHARE Pbuffer
+class SCISHARE Pbuffer
 {
 public:
   Pbuffer(int width, int height, int format = GL_INT /* GL_INT or GL_FLOAT */,

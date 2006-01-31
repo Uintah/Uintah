@@ -71,7 +71,7 @@ class BaseConstraint;
 class ViewWindow;
 
 
-class SHARE BaseWidget : public GuiCallback, public WidgetPickable {
+class SCISHARE BaseWidget : public GuiCallback, public WidgetPickable {
 public:
   BaseWidget( Module* module, CrowdMonitor* lock,
 	      const string& name,

@@ -57,7 +57,7 @@ namespace SCIRun {
 class Image;
 typedef LockingHandle<Image> ImageHandle;
 
-class SHARE Image : public Datatype {
+class SCISHARE Image : public Datatype {
     /* Complex... */
 public:
     float** rows;
@@ -84,7 +84,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class SHARE ColorImage {
+class SCISHARE ColorImage {
 public:
     ColorImage(int xres, int yres);
     ~ColorImage();
@@ -99,7 +99,7 @@ public:
     int yres() const;
 };
 
-class SHARE DepthImage {
+class SCISHARE DepthImage {
 public:
     DepthImage(int xres, int yres);
     ~DepthImage();

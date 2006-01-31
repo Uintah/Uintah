@@ -60,7 +60,7 @@ class GeomDL;
 
 const int     GEOM_FONT_COUNT = 5;
 
-struct SHARE DrawInfoOpenGL {
+struct SCISHARE DrawInfoOpenGL {
 public:
   DrawInfoOpenGL();
   ~DrawInfoOpenGL();

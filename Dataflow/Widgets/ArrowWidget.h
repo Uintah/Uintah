@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SHARE ArrowWidget : public BaseWidget {
+class SCISHARE ArrowWidget : public BaseWidget {
 public:
   ArrowWidget( Module* module, CrowdMonitor* lock, 
 	       double widget_scale, bool stipple_occluded = false);

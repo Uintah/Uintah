@@ -63,7 +63,7 @@ using std::vector;
 #include <Core/Geom/share.h>
 namespace SCIRun {
 
-class SHARE TkOpenGLContext {
+class SCISHARE TkOpenGLContext {
 public:
   TkOpenGLContext(const string &, int visualid=0, 
 		  int width=640, int height = 480);

@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SHARE MessageBase {
+class SCISHARE MessageBase {
 public:
     MessageTypes::MessageType type;
     MessageBase(MessageTypes::MessageType type);

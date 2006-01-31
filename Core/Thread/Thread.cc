@@ -68,9 +68,9 @@
 #include <imagehlp.h>
 #include <tlhelp32.h>
 #define strcasecmp stricmp //native windows doesn't have strcasecmp
-#define SHARE __declspec(dllexport)
+#define SCISHARE __declspec(dllexport)
 #else
-#define SHARE
+#define SCISHARE
 #include <unistd.h>
 #endif
 #ifdef HAVE_EXC
@@ -85,7 +85,7 @@
 
 // provide "C" interface to exitAll
 extern "C" { 
-void SHARE exit_all_threads(int rc) {
+void SCISHARE exit_all_threads(int rc) {
   SCIRun::Thread::exitAll(rc);
 }
 }

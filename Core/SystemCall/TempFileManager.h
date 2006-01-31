@@ -58,7 +58,7 @@
 
 namespace SCIRun {
 
-class SHARE TempFileManager {
+class SCISHARE TempFileManager {
 
   public:
 

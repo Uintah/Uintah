@@ -55,13 +55,13 @@ void texture_build_bricks(vector<TextureBrickHandle>& bricks,
 
 
 // Currently located in NrrdTextureBuilderAlgo.cc
-SHARE void nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
+SCISHARE void nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
 		       int nx, int ny, int nz,
 		       int nc, int* nb,
 		       const BBox& ignored, int card_mem);
 
 
-class SHARE NrrdTextureBuilderAlgo : public SCIRun::DynamicAlgoBase
+class SCISHARE NrrdTextureBuilderAlgo : public SCIRun::DynamicAlgoBase
 {
 public:
   virtual void build(TextureHandle tHandle,
