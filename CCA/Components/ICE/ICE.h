@@ -283,12 +283,12 @@ namespace Uintah {
                                    const PatchSet* perProcPatches,
                                    const MaterialSubset* press_matl,
                                    const MaterialSet* all_matls);
-                                   
-       void bogus_imp_delP(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw);
+                           
+       void scheduleAddReflux_RHS(SchedulerP& sched,
+                                  const LevelP& coarseLevel,
+                                  const MaterialSubset* one_matl,
+                                  const MaterialSet* all_matls,
+                                  const bool OnOff);
                                    
 //__________________________________ 
 //   M O D E L S
@@ -544,9 +544,38 @@ namespace Uintah {
                                           const PatchSubset*,
                                           const MaterialSubset*,
                                           DataWarehouse*,
-                                          DataWarehouse*); 
-
-
+                                          DataWarehouse*);
+//__________________________________ 
+//  A M R I C E 
+    template<class T>
+    void refluxOperator_computeCorrectionFluxes( 
+                              constCCVariable<double>& rho_CC_coarse,
+                              constCCVariable<double>& cv,
+                              const string& fineVarLabel,
+                              const int indx,
+                              const Patch* coarsePatch,
+                              const Patch* finePatch,
+                              const Level* coarseLevel,
+                              const Level* fineLevel,
+                              DataWarehouse* new_dw);
+                              
+    void refluxCoarseLevelIterator(Patch::FaceType patchFace,
+                                   const Patch* coarsePatch,
+                                   const Patch* finePatch,
+                                   const Level* fineLevel,
+                                   CellIterator& iter,
+                                   IntVector& coarse_FC_offset,
+                                   bool& CP_containsCell);
+    template<class T>
+    void refluxOperator_applyCorrectionFluxes(                             
+                              CCVariable<T>& q_CC_coarse,
+                              const string& fineVarLabel,
+                              const int indx,
+                              const Patch* coarsePatch,
+                              const Patch* finePatch,
+                              const Level* coarseLevel,
+                              const Level* fineLevel,
+                              DataWarehouse* new_dw);
 //__________________________________ 
 //  I M P L I C I T   I C E                                                                            
       void setupMatrix(const ProcessorGroup*,
@@ -633,6 +662,24 @@ namespace Uintah {
                                  Scheduler* sched,
                                  const MaterialSubset*,
                                  const MaterialSubset*);
+                                 
+       void bogus_imp_delP(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw);
+                                 
+        void compute_refluxFluxes_RHS(const ProcessorGroup*,
+                                      const PatchSubset* coarsePatches,
+                                      const MaterialSubset*,
+                                      DataWarehouse*,
+                                      DataWarehouse* new_dw);
+                                      
+        void apply_refluxFluxes_RHS(const ProcessorGroup*,
+                                    const PatchSubset* coarsePatches,
+                                    const MaterialSubset*,
+                                    DataWarehouse*,
+                                    DataWarehouse* new_dw);
                                                                               
 //__________________________________ 
 //   M O D E L S

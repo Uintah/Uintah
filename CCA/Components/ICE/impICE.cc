@@ -124,6 +124,12 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->computes(lb->vol_fracY_FCLabel);
   t->computes(lb->vol_fracZ_FCLabel);
   
+  if(d_doAMR){  // compute refluxing variables
+    t->computes(lb->vol_frac_X_FC_fluxLabel);
+    t->computes(lb->vol_frac_Y_FC_fluxLabel);
+    t->computes(lb->vol_frac_Z_FC_fluxLabel);
+  }
+  
   t->computes(lb->term2Label,        one_matl,oims);
   t->computes(lb->max_RHSLabel);
   
@@ -625,7 +631,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       varBasket->patch = patch;
       varBasket->level = level;
       varBasket->lb  = lb;
-      varBasket->doRefluxing = d_doRefluxing;
+      varBasket->doRefluxing = d_doAMR;  // always reflux with amr
       varBasket->is_Q_massSpecific = false;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = 0;  // for lockstep it's always 0

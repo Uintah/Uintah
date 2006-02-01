@@ -346,10 +346,12 @@ void FirstOrderAdvector::q_FC_flux_operator(CellIterator iter,
     
 /*`==========TESTING==========*/
 #ifdef SPEW
-      cout.setf(ios::scientific,ios::floatfield);
-      cout.precision(8);
-    if(c == IntVector(2,5,5) || c == IntVector(8,5,5) 
-    || c == IntVector(4,10,10) || c == IntVector(16,10,10)){
+    cout.setf(ios::scientific,ios::floatfield);
+    cout.precision(8);
+    IntVector begin = iter.begin();
+    IntVector end = iter.end();
+    IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
+    if(c == half){
       cout << c << "    ac " << ac 
            << "     q_FC "<< q_FC_flux[c] 
            << " \t influxVol " << influxVol
@@ -423,6 +425,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
       q_Y_FC_flux.copyData(q_Y_FC_flux_old);
       q_Z_FC_flux.copyData(q_Z_FC_flux_old);
     }
+
     vector<IntVector> adj_offset(3);
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
@@ -434,7 +437,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     CellIterator XFC_iter = patch->getSFCXIterator(offset);
     CellIterator YFC_iter = patch->getSFCYIterator(offset);
     CellIterator ZFC_iter = patch->getSFCZIterator(offset);
-    
+
     q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
                                            q_CC,q_X_FC_flux); 
 
@@ -443,6 +446,8 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
 
     q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK,
                                            q_CC,q_Z_FC_flux);
+                                           
+
                                            
  /*`==========TESTING==========*/    
 #ifdef SPEW                                        

@@ -135,14 +135,6 @@ namespace Uintah {
  
     //__________________________________
     //    refluxing
-    void refluxCoarseLevelIterator(Patch::FaceType patchFace,
-                                   const Patch* coarsePatch,
-                                   const Patch* finePatch,
-                                   const Level* fineLevel,
-                                   CellIterator& iter,
-                                   IntVector& coarse_FC_offset,
-                                   bool& CP_containsCell);
-    
     void scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
                                                 SchedulerP& sched);
                                                     
@@ -150,19 +142,7 @@ namespace Uintah {
                                         const PatchSubset* coarsePatches,
                                         const MaterialSubset* matls,
                                         DataWarehouse*,
-                                        DataWarehouse* new_dw);
-    
-    template<class T>
-    void refluxOperator_computeCorrectionFluxes( 
-                              constCCVariable<double>& rho_CC_coarse,
-                              constCCVariable<double>& cv,
-                              const string& fineVarLabel,
-                              const int indx,
-                              const Patch* coarsePatch,
-                              const Patch* finePatch,
-                              const Level* coarseLevel,
-                              const Level* fineLevel,
-                              DataWarehouse* new_dw);   
+                                        DataWarehouse* new_dw); 
     
     void scheduleReflux_applyCorrection(const LevelP& coarseLevel,
                                         SchedulerP& sched);
@@ -171,17 +151,7 @@ namespace Uintah {
                                       const PatchSubset* coarsePatches,
                                       const MaterialSubset* matls,
                                       DataWarehouse*,
-                                      DataWarehouse* new_dw);
-    template<class T>
-    void refluxOperator_applyCorrectionFluxes(                             
-                              CCVariable<T>& q_CC_coarse,
-                              const string& fineVarLabel,
-                              const int indx,
-                              const Patch* coarsePatch,
-                              const Patch* finePatch,
-                              const Level* coarseLevel,
-                              const Level* fineLevel,
-                              DataWarehouse* new_dw);                                      
+                                      DataWarehouse* new_dw);                                      
  
     void scheduleReflux(const LevelP& coarseLevel,
                         SchedulerP& sched);
