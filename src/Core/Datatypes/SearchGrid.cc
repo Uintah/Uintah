@@ -55,7 +55,7 @@ using namespace std;
 
 
 SearchGridBase::SearchGridBase(unsigned x, unsigned y, unsigned z,
-			       const Point &min, const Point &max)
+                               const Point &min, const Point &max)
   : ni_(x), nj_(y), nk_(z)
 {
   transform_.pre_scale(Vector(1.0 / x, 1.0 / y, 1.0 / z));
@@ -66,7 +66,7 @@ SearchGridBase::SearchGridBase(unsigned x, unsigned y, unsigned z,
 }
 
 SearchGridBase::SearchGridBase(unsigned x, unsigned y, unsigned z,
-			       const Transform &t)
+                               const Transform &t)
   : ni_(x), nj_(y), nk_(z), transform_(t)
 {
 }
@@ -88,7 +88,7 @@ SearchGridBase::get_canonical_transform(Transform &t)
 
 bool
 SearchGridBase::locate(unsigned int &i, unsigned int &j, unsigned int &k,
-		       const Point &p) const
+                       const Point &p) const
 {
   const Point r = transform_.unproject(p);
   
@@ -112,7 +112,7 @@ SearchGridBase::locate(unsigned int &i, unsigned int &j, unsigned int &k,
 
 void
 SearchGridBase::unsafe_locate(unsigned int &i, unsigned int &j,
-			      unsigned int &k, const Point &p) const
+                              unsigned int &k, const Point &p) const
 {
   Point r;
   transform_.unproject(p, r);
@@ -128,10 +128,10 @@ SearchGridBase::unsafe_locate(unsigned int &i, unsigned int &j,
 
 
 SearchGridConstructor::SearchGridConstructor(unsigned int x,
-					     unsigned int y,
-					     unsigned int z,
-					     const Point &min,
-					     const Point &max)
+                                             unsigned int y,
+                                             unsigned int z,
+                                             const Point &min,
+                                             const Point &max)
   : SearchGridBase(x, y, z, min, max), size_(0)
 {
   bin_.resize(x * y * z);
@@ -152,8 +152,8 @@ SearchGridConstructor::insert(under_type val, const BBox &bbox)
     {
       for (unsigned int k = mink; k <= maxk; k++)
       {
-	bin_[linearize(i, j, k)].push_back(val);
-	size_++;
+        bin_[linearize(i, j, k)].push_back(val);
+        size_++;
       }
     }
   }
@@ -184,17 +184,22 @@ SearchGrid::SearchGrid(const SearchGridConstructor &c)
     {
       for (unsigned int k = 0; k < nk_; k++)
       {
-	// TODO:  Sort by size so more likely to get hit is checked first.
-	list<under_type>::const_iterator itr = c.bin_[counter].begin();
-	unsigned int size = 0;
-	while (itr != c.bin_[counter].end())
-	{
-	  vals_[accum_[counter] + size] = *itr;
-	  size++;
-	  ++itr;
-	}
-	accum_[counter+1] = accum_[counter] + size;
-	counter++;
+        // NOTE: Sort by size so more likely to get hit is checked first?
+        // NOTE: Quick testing showed a 3% performance gain in heavy
+        // search/build ratio test.  Build time goes up.  Also makes
+        // edge tests less consistent.  We currently pick lowest
+        // element index on an between-element hit because of the way
+        // these things are built.
+        list<under_type>::const_iterator itr = c.bin_[counter].begin();
+        unsigned int size = 0;
+        while (itr != c.bin_[counter].end())
+        {
+          vals_[accum_[counter] + size] = *itr;
+          size++;
+          ++itr;
+        }
+        accum_[counter+1] = accum_[counter] + size;
+        counter++;
       }
     }
   }
