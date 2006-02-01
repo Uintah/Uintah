@@ -777,7 +777,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     for(Task::Dependency* dep = graph.getTask(i)->getRequires(); dep != 0; dep=dep->next){
       bool copyThisVar = this->isOldDW(dep->mapDataWarehouse());
       if (!copyThisVar) {
-        for (int j = 0; j < copyDataVars_.size(); j++) {
+        for (unsigned j = 0; j < copyDataVars_.size(); j++) {
           const VarLabel* label = VarLabel::find(copyDataVars_[j]);
           if (label == dep->var) {
             copyThisVar = true;
@@ -843,24 +843,20 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   newDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
   const Grid* oldGrid = oldDataWarehouse->getGrid();
   vector<Task*> dataTasks;
+  vector<Handle<PatchSet> > refineSets(grid->numLevels(),(PatchSet*)0);
   SchedulerP sched(dynamic_cast<Scheduler*>(this));
 
   for (int i = 0; i < grid->numLevels(); i++) {
     LevelP newLevel = newDataWarehouse->getGrid()->getLevel(i);
 
-    PatchSet* refineSet = 0; 
     if (i > 0) {
-#ifdef TODD_HACK
-      if (1) {
-#else
       if (i >= oldGrid->numLevels()) {
-#endif
         // new level - refine everywhere
-        refineSet = const_cast<PatchSet*>(newLevel->eachPatch());
+        refineSets[i] = const_cast<PatchSet*>(newLevel->eachPatch());
       }
       // find patches with new space - but temporarily, refine everywhere... 
       else if (i < oldGrid->numLevels()) {
-        refineSet = scinew PatchSet;
+        refineSets[i] = scinew PatchSet;
         LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(newLevel->getIndex());
         
         // go through the patches, and find if there are patches that weren't entirely 
@@ -899,25 +895,21 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
             sum += dist.x()*dist.y()*dist.z();
           }  // for oldPatches
           if (sum != totalCells) {
-            refineSet->add(newPatch);
+            refineSets[i]->add(newPatch);
           }
           
         } // for patchIterator
       }
-      if (refineSet->size() > 0)
-        sim->scheduleRefine(refineSet, sched);
+      if (refineSets[i]->size() > 0)
+        sim->scheduleRefine(refineSets[i].get_rep(), sched);
     }
 
-#ifdef TODD_HACK
-      // only copy data on the coarse level
-    if (i == 0) {
-#endif
     // find the patches that you don't refine
     Handle<PatchSubset> temp = scinew PatchSubset; // temp only to show empty set.  Don't pass into computes
     constHandle<PatchSubset> modset, levelset, compset, diffset, intersection;
     
-    if (refineSet)
-      modset = refineSet->getUnion();
+    if (refineSets[i])
+      modset = refineSets[i]->getUnion();
     else {
       modset = temp;
     }
@@ -938,9 +930,6 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
         dataTasks[i]->modifies(var, modset.get_rep(), matls);
     }
     addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
-#ifdef TODD_HACK
-    }
-#endif
     if (i > 0) {
       sim->scheduleRefineInterface(newLevel, sched, 1, 1);
     }
