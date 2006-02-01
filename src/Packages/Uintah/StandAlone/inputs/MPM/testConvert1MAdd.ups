@@ -8,12 +8,12 @@
    </Meta>
 
    <Time>
-     <maxTime>100.0e-6</maxTime>
+     <maxTime>1.560e-5</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.e-10</delt_min>
      <delt_max>1.e-6</delt_max>
      <timestep_multiplier>0.1</timestep_multiplier>
-     <max_iterations>300</max_iterations>
+     <!-- <max_iterations>300</max_iterations> -->
    </Time>
    <DataArchiver>
      <filebase>testConvertAdd.uda</filebase>
