@@ -124,6 +124,12 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->computes(lb->vol_fracY_FCLabel);
   t->computes(lb->vol_fracZ_FCLabel);
   
+  if(d_doAMR){  // compute refluxing variables
+    t->computes(lb->vol_frac_X_FC_fluxLabel);
+    t->computes(lb->vol_frac_Y_FC_fluxLabel);
+    t->computes(lb->vol_frac_Z_FC_fluxLabel);
+  }
+  
   t->computes(lb->term2Label,        one_matl,oims);
   t->computes(lb->max_RHSLabel);
   
@@ -607,11 +613,28 @@ void ICE::setupRHS(const ProcessorGroup*,
       //__________________________________
       // Advection preprocessing
       bool bulletProof_test=false;
+      
+      //__________________________________
+      // common variables that get passed into the advection operators
+      advectVarBasket* varBasket = scinew advectVarBasket();
+      varBasket->new_dw = new_dw;
+      varBasket->old_dw = old_dw;
+      varBasket->indx = indx;
+      varBasket->patch = patch;
+      varBasket->level = level;
+      varBasket->lb  = lb;
+      varBasket->doRefluxing = d_doAMR;  // always reflux with amr
+      varBasket->is_Q_massSpecific = false;
+      varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
+      varBasket->AMR_subCycleProgressVar = 0;  // for lockstep it's always 0
+      
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
                                     bulletProof_test, pNewDW); 
 
-      advector->advectQ(vol_frac, patch, q_advected,  
-                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);  
+      advector->advectQ(vol_frac, patch, q_advected, varBasket, 
+                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw); 
+                        
+      delete varBasket;                         
     
       //__________________________________
       //  sum Advecton (<vol_frac> vel_FC)

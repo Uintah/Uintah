@@ -114,6 +114,13 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                           "computes");    
     }
     
+    // correct the rhs at the coarse fine interfaces
+    for(int L = 0; L<maxLevel; L++){
+      LevelP level = grid->getLevel(L);
+      scheduleAddReflux_RHS(     sched,         level,     one_matl,
+                                                           all_matls,
+                                                           true);    
+    }
     scheduleMultiLevelPressureSolve(sched, grid,   0,
                                                    one_matl,
                                                    d_press_matl,
@@ -467,6 +474,12 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                                             recursion,
                                                             "modifies");
     }
+    for(int L = 0; L<maxLevel; L++){
+      LevelP level = grid->getLevel(L);
+      scheduleAddReflux_RHS(  subsched,         level,      one_matl,
+                                                            all_matls,
+                                                           true);
+    }
 
     subsched->compile();
     //__________________________________
@@ -584,6 +597,165 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   }
 } // end multiLevelPressureSolve()
 
+
+/*______________________________________________________________________
+ Function~  ICE::scheduleAddReflux_RHS--
+ Purpose:  Add a refluxing correction to the rhs
+ _____________________________________________________________________*/
+ void ICE::scheduleAddReflux_RHS(SchedulerP& sched,
+                                 const LevelP& coarseLevel,
+                                 const MaterialSubset* one_matl,
+                                 const MaterialSet* all_matls,
+                                 const bool OnOff)
+{
+  if(OnOff && coarseLevel->hasFinerLevel()){
+    
+    //__________________________________
+    //  Compute reflux_fluxes task
+    const Level* fineLevel = coarseLevel->getFinerLevel().get_rep(); 
+    cout_doing << d_myworld->myrank() 
+               << " ICE::scheduleCompute_refluxFluxes_RHS\t\t\t\tL-" 
+               << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
+
+    Task* t1 = scinew Task("ICE::compute_refluxFluxes_RHS",
+                     this, &ICE::compute_refluxFluxes_RHS);
+
+    Ghost::GhostType gn  = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet
+    
+    // Fluxes from the fine level. These are computed in the advection operator
+    t1->requires(Task::NewDW, lb->vol_frac_X_FC_fluxLabel,
+                 0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+    t1->requires(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel,
+                 0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+    t1->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel,
+                 0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);             
+
+    t1->modifies(lb->vol_frac_X_FC_fluxLabel);  // these are the correction fluxes
+    t1->modifies(lb->vol_frac_Y_FC_fluxLabel);
+    t1->modifies(lb->vol_frac_Z_FC_fluxLabel);
+
+    sched->addTask(t1, coarseLevel->eachPatch(), all_matls); 
+    
+    //__________________________________
+    //  Apply reflux corrections to rhs   
+    cout_doing << d_myworld->myrank() 
+               << " ICE::scheduleApply_refluxFluxes_RHS\t\t\t\tL-" 
+               << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
+
+    Task* t2 = scinew Task("ICE::apply_refluxFluxes_RHS",
+                     this, &ICE::apply_refluxFluxes_RHS);
+                     
+    // coarse grid RHS after setupRHS               
+    t2->requires(Task::NewDW,lb->rhsLabel, one_matl,oims,gn,0);                        
+    
+    // Correction fluxes  from the coarse level               
+    t2->requires(Task::NewDW, lb->vol_frac_X_FC_fluxLabel, gac, 1);    
+    t2->requires(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel, gac, 1);    
+    t2->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel, gac, 1);               
+
+    t2->modifies(lb->rhsLabel, one_matl,oims);
+    //t2->modifies(lb->max_RHSLabel);
+
+    sched->addTask(t2, coarseLevel->eachPatch(), all_matls);    
+  }
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::compute_refluxFluxes_RHS
+ _____________________________________________________________________  */
+void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
+                                   const PatchSubset* coarsePatches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
+{ 
+  const Level* coarseLevel = getLevel(coarsePatches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  cout_doing << d_myworld->myrank() 
+             << " Doing reflux_computeCorrectionFluxes \t\t\t impAMRICE L-"
+             <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
+  
+  for(int c_p=0;c_p<coarsePatches->size();c_p++){  
+    const Patch* coarsePatch = coarsePatches->get(c_p);
+    
+    cout_doing <<"  patch " << coarsePatch->getID()<< endl;
+    CCVariable<double> one;
+          
+    new_dw->allocateTemporary(one, coarsePatch);
+    one.initialize(1.0);
+    constCCVariable<double> notUsed = one;
+
+    for(int m = 0;m<matls->size();m++){
+      int indx = matls->get(m);
+
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches);
+      //__________________________________
+      //   compute the correction
+      for(int i=0; i < finePatches.size();i++){  
+        const Patch* finePatch = finePatches[i];       
+
+        if(finePatch->hasCoarseFineInterfaceFace() ){
+          refluxOperator_computeCorrectionFluxes<double>( notUsed, notUsed, "vol_frac", indx, 
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+        }
+      }
+    }  // matl loop
+  }  // course patch loop
+}
+/* _____________________________________________________________________
+ Function~  ICE::apply_refluxFluxes_RHS
+ _____________________________________________________________________  */
+void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
+                                   const PatchSubset* coarsePatches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
+{ 
+  const Level* coarseLevel = getLevel(coarsePatches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  cout_doing << d_myworld->myrank() 
+             << " Doing apply_refluxFluxes_RHS \t\t\t\t impAMRICE L-"
+             <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
+  
+  for(int c_p=0;c_p<coarsePatches->size();c_p++){  
+    const Patch* coarsePatch = coarsePatches->get(c_p);
+    cout_doing << "  patch " << coarsePatch->getID()<< endl;
+
+    CCVariable<double> rhs;
+    new_dw->getModifiable(rhs,lb->rhsLabel, 0, coarsePatch);
+          
+    for(int m = 0;m<matls->size();m++){
+      int indx = matls->get(m);
+
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches); 
+
+      for(int i=0; i < finePatches.size();i++){  
+        const Patch* finePatch = finePatches[i];
+        //__________________________________
+        // Apply the correction
+        if(finePatch->hasCoarseFineInterfaceFace() ){
+
+          refluxOperator_applyCorrectionFluxes<double>(rhs, "vol_frac",  indx, 
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+        }  
+      }  // finePatch loop 
+    }  // matls
+
+    //__________________________________
+    //  Print Data
+    if(switchDebug_setupRHS){ 
+      ostringstream desc;     
+      desc << "apply_refluxFluxes_RHS"<< "_patch_"<< coarsePatch->getID();
+      printData(0, coarsePatch,   1, desc.str(), "rhs",rhs);
+    }
+  }  // course patch loop 
+}
 
 
 
@@ -716,7 +888,7 @@ void ICE::scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched,
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
 }
 /* _____________________________________________________________________
- Function~  ICE::zeroMatrixUnderFinePatches
+ Function~  ICE::zeroMatrix_RHS_UnderFinePatches
  _____________________________________________________________________  */
 void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
                                           const PatchSubset* coarsePatches,
