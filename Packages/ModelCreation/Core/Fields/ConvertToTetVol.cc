@@ -37,6 +37,7 @@ bool ConvertToTetVolAlgo::ConvertToTetVol(ProgressReporter *pr, FieldHandle inpu
   if (input.get_rep() == 0)
   {
     pr->error("ConvertToTetVol: No input field");
+    return (false);
   }
 
   // no precompiled version available, so compile one

@@ -40,7 +40,6 @@ class SplitFieldByElementDataAlgo : public DynamicAlgoBase
 {
   public:
     virtual bool SplitFieldByElementData(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
-    virtual bool isvalid(FieldHandle input);
 };
 
 template<class FIELD>
@@ -48,7 +47,6 @@ class SplitFieldByElementDataAlgoT: public SplitFieldByElementDataAlgo
 {
   public:
     virtual bool SplitFieldByElementData(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
-    virtual bool isvalid(FieldHandle input);
 };
 
 
@@ -88,7 +86,7 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
   typename FIELD::mesh_type::Node::array_type nodes;
   typename FIELD::mesh_type::Node::array_type newnodes;
     
-  typename FIELD::value_type val;
+  typename FIELD::value_type val, minval;
   typename FIELD::value_type eval;
   unsigned int idx;
  
@@ -98,17 +96,29 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
   
   std::vector<typename FIELD::value_type> newdata(nelems);
   
-  FIELD* ofield = scinew FIELD(omesh,0);
+  FIELD* ofield = scinew FIELD(omesh);
   output = dynamic_cast<SCIRun::Field* >(ofield);
-
+  if (ofield == 0)
+  {
+    pr->error("SplitFieldByElementData: Could not create output field");
+    return(false);
+  }
+  
   mesh->begin(bei2);
   mesh->end(eei2);
-  val = field->value(*(bei2));
+  minval = field->value(*(bei2));
+  while (bei2 != eei2)  
+  {
+    val = field->value(*(bei2));
+    if (val < minval) val = minval;
+    ++bei2; 
+  }
   
   int k = 0;
   
   while(1)
   {
+  
     for (size_t p =0; p<(maxindex+1); p++) newidxarray[p] = true;
 
     mesh->begin(bei); mesh->end(eei);
@@ -137,16 +147,32 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
     }
 
     eval = val;
+    bool foundminval = false;
+    
+    mesh->begin(bei2);
+    mesh->end(eei2);
     while (bei2 != eei2)
     {
       eval = field->value(*(bei2));
-      if (eval > val) break;
+      if (eval > val)
+      {
+        if (foundminval)
+        {
+          if (eval < minval) minval = eval;
+        }
+        else
+        {
+          minval = eval;
+          foundminval = true;
+        }
+      }
       ++bei2;
     }
 
-    if (eval > val)
+
+    if (minval > val)
     {
-      val = eval;
+      val = minval;
     }
     else
     {
@@ -159,17 +185,12 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
   k = 0;
   while (bei != eei)
   {
-    ofield->set_value(newdata[k++],(*bei));
+    ofield->set_value(newdata[k],(*bei));
     ++bei;
+    k++;
   }
   
   return(true);
-}
-
-template <class FIELD>
-bool SplitFieldByElementDataAlgoT<FIELD>::isvalid(FieldHandle input)
-{
-  return(dynamic_cast<FIELD*>(input.get_rep()));
 }
 
 } // end namespace
