@@ -2807,7 +2807,7 @@ AC_SUBST(MPEGE_LIB_DIR_FLAG)
 AC_SUBST(DEF_MPEG)
 
 ##  --  search for ImageMagick --------------------------------------
-AC_LANG(C++)
+AC_LANG(C)
 # Default values:
 _sci_lib="$sci_thirdparty_lib"
 _sci_optional=required
@@ -2847,11 +2847,7 @@ if test -e $_sci_lib/../bin/Magick-config; then
     MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
     MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
 
-    #MAGICK_LIB_DIR_FLAG=
-    #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
-
-    MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
-    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
+    MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --libs`
     includes=`$_sci_lib/../bin/Magick-config --cppflags`
     if test "$includes" = "-I/usr/include";then
       includes=""
@@ -2870,11 +2866,13 @@ if test -e $_sci_lib/../bin/Magick-config; then
       fi
     done
 
-
-    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,time.h stdio.h stdlib.h magick/api.h,
-                 $includes,$MAGICK_LIB_PATH,$MAGICK_LDFLAGS,,[
-       Image *image = NULL;
-       ],required)
+    SCI_TRY_LINK(MAGICK, ImageMagick library and headers,
+                 time.h stdio.h stdlib.h magick/api.h,
+                 $includes,$MAGICK_LDFLAGS,$MAGICK_LIB_PATH,,
+       [
+         Image *image = NULL;
+       ],
+       $_sci_optional)
 
     DEF_MAGICK="#define HAVE_MAGICK 1"
     break
@@ -2904,7 +2902,7 @@ AC_SUBST(INC_MAGICK_H)
 AC_SUBST(DEF_MAGICK)
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
-AC_LANG(C)
+
 ##  --  search for scisock --------------------------------------
 
 AC_SUBST(SCISOCK_LIB_FLAG)
