@@ -598,7 +598,7 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
     d_processorAssignment[i]= -1;
 
   // strip off the timestep.xml
-  string dir = tsurl.substr(0, tsurl.find_last_of(',')+1);
+  string dir = tsurl.substr(0, tsurl.find_last_of('/')+1);
 
   ASSERT(pspec != 0);
   ProblemSpecP datanode = pspec->findBlock("Data");
@@ -616,8 +616,7 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
         if(datafile == "")
           throw InternalError("timestep href not found", __FILE__, __LINE__);
         
-        string dataxml = tsurl + datafile;
-
+        string dataxml = dir + datafile;
         // open the datafiles
         ProblemSpecReader psr(dataxml);
 
