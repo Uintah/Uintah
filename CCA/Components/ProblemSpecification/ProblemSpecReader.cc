@@ -109,7 +109,7 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
             //make include be created from same document that created params
             ProblemSpecP newnode = child->importNode(incChild, true);
             resolveIncludes(newnode);
-            xmlAddPrevSibling(newnode->getNode(), child->getNode());
+            xmlAddPrevSibling(child->getNode(), newnode->getNode());
             incChild = incChild->getNextSibling();
           }
           ProblemSpecP temp = child->getNextSibling();
