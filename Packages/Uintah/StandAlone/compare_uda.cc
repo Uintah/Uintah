@@ -1000,6 +1000,18 @@ void buildPatchMap(LevelP level, const string& filebase,
                << (*iter)->getID() << " overlap on the same file at time " << time
                << " in " << filebase << " at index " << iter.getIndex() << endl;
 	//abort_uncomparable();
+        
+        // in some cases, we can have overlapping patches, where an extra cell/node 
+        // overlaps an interior cell/node of another patch.  We prefer the interior
+        // one.  (if there are two overlapping interior ones (nodes or face centers only),
+        // they should have the same value.
+        IntVector in_low = patch->getInteriorNodeLowIndex();
+        IntVector in_high = patch->getInteriorNodeHighIndex();
+        IntVector pos = iter.getIndex();
+        if (pos.x() >= in_low.x() && pos.y() >= in_low.y() && pos.z() >= in_low.z() &&
+            pos.x() < in_high.x() && pos.y() < in_high.y() && pos.z() < in_high.z()) {
+          *iter = patch;
+        }
       }
       else
 	*iter = patch;
