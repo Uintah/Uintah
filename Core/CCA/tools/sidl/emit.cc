@@ -30,6 +30,7 @@
 #include <sci_defs/mpi_defs.h>
 #include <Core/CCA/tools/sidl/Spec.h>
 #include <Core/CCA/tools/sidl/SymbolTable.h>
+#include <Core/Util/FileUtils.h>
 
 #include <map>
 #include <algorithm>
@@ -225,10 +226,30 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
     if ((*iter)->isImport) {
       Definition* def = (*iter)->packages->list.back();
       std::string fname = def->curfile;
-      int start_pos = fname.find("src");
-      start_pos += 4;
-      int end_pos = fname.find(".sidl");
-      hdr << "#include <" << fname.substr(start_pos,end_pos-start_pos) << "_sidl.h>\n";
+
+      std::string::size_type i = 0;
+      // Not terribly efficient, but works until another solution for
+      // searching build directory for c++ headers generated from sidl
+      // is found.
+      while (i < fname.length()) {
+	std::string::size_type start_pos;
+	if (i == 0) { // start search from beginning of curfile
+	  start_pos = 0;
+	  i += 1;
+	} else {
+	  // WARNING: MS Windows uses dir separator "\"
+	  start_pos = fname.find("/", i);
+	  start_pos += 1;
+	  i = start_pos;
+	}
+	std::string::size_type end_pos = fname.find(".sidl");
+	std::string inclfile = fname.substr(start_pos, end_pos - start_pos) + "_sidl.h";
+
+	if (SCIRun::validFile(inclfile)) {
+	  hdr << "#include <" << inclfile << ">\n";
+	  break;
+	}
+      }
     }
   }
 
