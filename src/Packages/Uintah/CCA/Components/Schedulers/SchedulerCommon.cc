@@ -913,7 +913,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     if (i == 0) {
 #endif
     // find the patches that you don't refine
-    PatchSubset* temp = scinew PatchSubset; // temp only to show empty set.  Don't pass into computes
+    Handle<PatchSubset> temp = scinew PatchSubset; // temp only to show empty set.  Don't pass into computes
     constHandle<PatchSubset> modset, levelset, compset, diffset, intersection;
     
     if (refineSet)
