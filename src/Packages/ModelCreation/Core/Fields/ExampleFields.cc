@@ -37,8 +37,8 @@
 #include <Core/Geometry/Tensor.h>
 
 #include <Core/Basis/NoData.h>
-#include <core/Basis/Constant.h>
-#include <core/Basis/TriLinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/TriLinearLgn.h>
 
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/GenericField.h>

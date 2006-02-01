@@ -37,6 +37,7 @@ bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, 
   if (input.get_rep() == 0)
   {
     pr->error("SplitFieldByElementData: No input field");
+    return (false);
   }
 
   FieldInformation fi(input);
@@ -46,7 +47,7 @@ bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, 
     return (false);
   }
 
-  if (fi.is_constantdata())
+  if (!(fi.is_constantdata()))
   {
     pr->error("SplitFieldByElementData: This function only works for data located at the elements");
     return (false);
@@ -73,11 +74,6 @@ bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, 
   }
 
   return(algo->SplitFieldByElementData(pr,input,output));    
-}
-
-bool SplitFieldByElementDataAlgo::isvalid(FieldHandle input)
-{
-  return(false);
 }
 
 } // namespace ModelCreation

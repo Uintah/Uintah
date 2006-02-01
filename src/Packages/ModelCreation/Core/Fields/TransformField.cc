@@ -37,6 +37,7 @@ bool TransformFieldAlgo::TransformField(ProgressReporter *pr, FieldHandle input,
   if (input.get_rep() == 0)
   {
     pr->error("TransformField: No input field");
+    return (false);
   }
 
   // no precompiled version available, so compile one

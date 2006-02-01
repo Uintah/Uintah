@@ -37,6 +37,7 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
   if (input.get_rep() == 0)
   {
     pr->error("Unstructure: No input field");
+    return (false);
   }
 
   // no precompiled version available, so compile one

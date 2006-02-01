@@ -726,7 +726,7 @@ bool FieldInformation::is_curve()
 
 bool FieldInformation::is_surface()
 {
-  if ((mesh_type == "TriSurf")||(mesh_type == "QuadSurf")||(mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurf")) return (true);
+  if ((mesh_type == "TriSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")) return (true);
   return (false);
 }
 

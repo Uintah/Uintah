@@ -41,12 +41,24 @@ class CompartmentBoundary : public Module {
 public:
   CompartmentBoundary(GuiContext*);
   virtual void execute();
+  
+private:
+  GuiInt    guiuserange_;
+  GuiDouble guiminrange_;
+  GuiDouble guimaxrange_;
+  GuiInt    guiincludeouterboundary_;
+  
+  
 };
 
 
 DECLARE_MAKER(CompartmentBoundary)
 CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
-  : Module("CompartmentBoundary", ctx, Source, "FieldsCreate", "ModelCreation")
+  : Module("CompartmentBoundary", ctx, Source, "FieldsCreate", "ModelCreation"),
+    guiuserange_(ctx->subVar("userange")),
+    guiminrange_(ctx->subVar("minrange")),
+    guimaxrange_(ctx->subVar("maxrange")),
+    guiincludeouterboundary_(ctx->subVar("includeouterboundary"))    
 {
 }
 
@@ -69,8 +81,16 @@ void CompartmentBoundary::execute()
   FieldHandle ifield, ofield;
   FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
 
+  double minrange, maxrange;
+  bool   userange, includeouterboundary;
+
+  minrange = guiminrange_.get();
+  maxrange = guimaxrange_.get();
+  userange = static_cast<bool>(guiuserange_.get());
+  includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
+
   iport->get(ifield);
-  if(algo.CompartmentBoundary(ifield,ofield)) oport->send(ofield);
+  if(algo.CompartmentBoundary(ifield,ofield,minrange,maxrange,userange,includeouterboundary)) oport->send(ofield);
 }
 
 } // End namespace ModelCreation
