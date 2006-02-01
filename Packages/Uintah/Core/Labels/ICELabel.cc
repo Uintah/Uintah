@@ -240,6 +240,7 @@ ICELabel::ICELabel()
   mag_grad_press_CCLabel = 
     VarLabel::create("mag_grad_press_CC",   CCVariable<double>::getTypeDescription());
     
+  // refluxing variables  
   mass_X_FC_fluxLabel = 
     VarLabel::create("mass_X_FC_flux",  SFCXVariable<double>::getTypeDescription());
   mass_Y_FC_fluxLabel = 
@@ -267,6 +268,13 @@ ICELabel::ICELabel()
     VarLabel::create("int_eng_Y_FC_flux",SFCYVariable<double>::getTypeDescription()); 
   int_eng_Z_FC_fluxLabel = 
     VarLabel::create("int_eng_Z_FC_flux",SFCZVariable<double>::getTypeDescription()); 
+    
+  vol_frac_X_FC_fluxLabel = 
+    VarLabel::create("vol_frac_X_FC_flux",SFCXVariable<double>::getTypeDescription()); 
+  vol_frac_Y_FC_fluxLabel = 
+    VarLabel::create("vol_frac_Y_FC_flux",SFCYVariable<double>::getTypeDescription()); 
+  vol_frac_Z_FC_fluxLabel = 
+    VarLabel::create("vol_frac_Z_FC_flux",SFCZVariable<double>::getTypeDescription());
 
   //__________________________________
   // Implicit AMR variable
@@ -393,6 +401,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(mag_grad_vol_frac_CCLabel);
     VarLabel::destroy(mag_grad_press_CCLabel);
     
+    // refluxing variables
     VarLabel::destroy(mass_X_FC_fluxLabel);
     VarLabel::destroy(mass_Y_FC_fluxLabel);
     VarLabel::destroy(mass_Z_FC_fluxLabel);
@@ -408,6 +417,10 @@ ICELabel::~ICELabel()
     VarLabel::destroy(int_eng_X_FC_fluxLabel);
     VarLabel::destroy(int_eng_Y_FC_fluxLabel);
     VarLabel::destroy(int_eng_Z_FC_fluxLabel);
+    
+    VarLabel::destroy(vol_frac_X_FC_fluxLabel);
+    VarLabel::destroy(vol_frac_Y_FC_fluxLabel);
+    VarLabel::destroy(vol_frac_Z_FC_fluxLabel);
 
     // Implicit AMR labels
     VarLabel::destroy(matrix_CFI_weightsLabel);
