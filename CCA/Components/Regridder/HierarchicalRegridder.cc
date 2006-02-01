@@ -90,12 +90,14 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   int ngc;
   for ( int levelIndex = 0; levelIndex < oldGrid->numLevels() && levelIndex < d_maxLevels-1; levelIndex++ ) {
   // copy refine flags to the "old dw" so mpi copying will work correctly
-    const PatchSubset* psub = scheduler->getLoadBalancer()->createPerProcessorPatchSet(oldGrid->getLevel(levelIndex))->getSubset(d_myworld->myrank());
+    const PatchSet* perproc = scheduler->getLoadBalancer()->createPerProcessorPatchSet(oldGrid->getLevel(levelIndex));
+    const PatchSubset* psub = perproc->getSubset(d_myworld->myrank());
     MaterialSubset* msub = scinew MaterialSubset;
     msub->add(0);
     DataWarehouse* old_dw = tempsched->get_dw(2);
     old_dw->transferFrom(parent_dw, d_sharedState->get_refineFlag_label(), psub, msub);
     delete msub;
+    delete perproc;
                        
                        
     // dilate flagged cells on this level
