@@ -421,6 +421,7 @@ void SecondOrderCEAdvector::advectQ( const CCVariable<double>& A_CC,
 void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
                                     const Patch* patch,
                                     CCVariable<double>& q_advected,
+                                    advectVarBasket* varBasket,
                                     SFCXVariable<double>& q_XFC,
                                     SFCYVariable<double>& q_YFC,
                                     SFCZVariable<double>& q_ZFC,
@@ -466,6 +467,9 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
           
   q_FC_PlusFaces( q_CC, q_OAFS, q_OAFE, q_OAFC, 
                           patch, q_XFC, q_YFC, q_ZFC);
+                          
+  // fluxes on faces at the coarse fine interfaces 
+  q_FC_fluxes<double>(q_CC, q_OAFS, q_OAFE, q_OAFC, "vol_frac", varBasket);
 }
 
 //__________________________________
