@@ -36,13 +36,15 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Geometry/CompGeom.h>
 
 namespace SCIRun {
 
 class InsertFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(FieldHandle tet, FieldHandle insert) = 0;
+  virtual void execute_0(FieldHandle tet, FieldHandle insert) = 0;
+  virtual void execute_1(FieldHandle tet, FieldHandle insert) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftet,
@@ -56,14 +58,15 @@ class InsertFieldAlgoT : public InsertFieldAlgo
 public:
 
   //! virtual interface. 
-  virtual void execute(FieldHandle tet, FieldHandle insert);
+  virtual void execute_0(FieldHandle tet, FieldHandle insert);
+  virtual void execute_1(FieldHandle tet, FieldHandle insert);
 };
 
 
 template <class TFIELD, class IFIELD>
 void
-InsertFieldAlgoT<TFIELD, IFIELD>::execute(FieldHandle tet_h,
-                                          FieldHandle insert_h)
+InsertFieldAlgoT<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
+                                            FieldHandle insert_h)
 {
   TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
   typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
@@ -92,6 +95,93 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute(FieldHandle tet_h,
 
   tfield->resize_fdata();
 }
+
+
+template <class TFIELD, class IFIELD>
+void
+InsertFieldAlgoT<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
+                                            FieldHandle insert_h)
+{
+  TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
+  typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
+  IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
+  typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+
+  typename IFIELD::mesh_type::Edge::iterator ibi, iei;
+  imesh->begin(ibi);
+  imesh->end(iei);
+
+  tmesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+
+  while (ibi != iei)
+  {
+    typename IFIELD::mesh_type::Node::array_type enodes;
+    imesh->get_nodes(enodes, *ibi);
+
+    Point e0, e1;
+    imesh->get_center(e0, enodes[0]);
+    imesh->get_center(e1, enodes[1]);
+    Vector dir = e1 - e0;
+
+    typename TFIELD::mesh_type::Elem::index_type elem, neighbor;
+    typename TFIELD::mesh_type::Face::array_type faces;
+    typename TFIELD::mesh_type::Node::array_type nodes;
+    typename TFIELD::mesh_type::Face::index_type minface;
+
+    tmesh->locate(elem, e0);
+
+    vector<Point> v;
+    v.push_back(e0);
+
+    unsigned int i;
+    unsigned int maxsteps = 10000;
+    for (i=0; i < maxsteps; i++)
+    {
+      tmesh->get_faces(faces, elem);
+      double mindist = -1.0;
+      bool found = false;
+      Point ecenter;
+      tmesh->get_center(ecenter, elem);
+      for (unsigned int j=0; j < faces.size(); j++)
+      {
+        Point p0, p1, p2;
+        tmesh->get_nodes(nodes, faces[j]);
+        tmesh->get_center(p0, nodes[0]);
+        tmesh->get_center(p1, nodes[1]);
+        tmesh->get_center(p2, nodes[2]);
+        Vector normal = Cross(p1-p0, p2-p0);
+        if (Dot(normal, ecenter-p0) > 0.0) { normal *= -1.0; }
+        const double dist = RayPlaneIntersection(e0, dir, p0, normal);
+        if (dist > -1.0e-6 && dist > mindist && dist < 1.0+1.0e-6)
+        {
+          mindist = dist;
+          minface = faces[j];
+          found = true;
+        }
+      }
+      if (!found) { break; }
+
+      v.push_back(e0 + dir * mindist);
+      if (!tmesh->get_neighbor(neighbor, elem, minface)) { break; }
+      elem = neighbor;
+    }
+    v.push_back(e1);
+
+    typename TFIELD::mesh_type::Node::index_type newnode;
+    typename TFIELD::mesh_type::Elem::array_type newelems;
+
+    for (i = 0; i < v.size(); i++)
+    {
+      tmesh->locate(elem, v[i]);
+      tmesh->insert_node_in_cell_2(newelems, newnode, elem, v[i]);
+    }
+
+    ++ibi;
+  }
+
+  tfield->resize_fdata();
+}
+
 
 
 } // end namespace SCIRun
