@@ -1082,7 +1082,7 @@ Painter::StatisticsTool::draw(SliceWindow &window)
 Painter::PaintTool::PaintTool(Painter *painter) :
   PainterTool(painter, "Paint"),
   value_(airNaN()),
-  last_index_(0.0),
+  last_index_(),
   radius_(5.0),
   drawing_(false)
 {
