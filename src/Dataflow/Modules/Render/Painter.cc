@@ -650,7 +650,7 @@ Painter::draw_slice_lines(SliceWindow &window)
   //  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
   GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
 
-  Vector scale = current_volume_->scale();
+  // Vector scale = current_volume_->scale();
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
