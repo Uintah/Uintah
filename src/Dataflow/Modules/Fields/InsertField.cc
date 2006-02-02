@@ -132,7 +132,14 @@ InsertField::execute()
     tet_field = 0;
     output_field_.detach();
     output_field_->mesh_detach();
-    algo->execute(output_field_, insert_field);
+    if (insert_field->mesh()->dimensionality() == 1)
+    {
+      algo->execute_1(output_field_, insert_field);
+    }
+    else
+    {
+      algo->execute_0(output_field_, insert_field);
+    }
   }
 
   if( output_field_.get_rep() )
