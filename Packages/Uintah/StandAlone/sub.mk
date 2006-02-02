@@ -220,41 +220,41 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # uda2nrrd
 
-# ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
-# ifeq ($(LARGESOS),yes)
-#   PSELIBS := Datflow Packages/Uintah
-# else
-#   PSELIBS := \
-#         Packages/Uintah/Core/Exceptions    \
-#         Packages/Uintah/Core/Grid          \
-#         Packages/Uintah/Core/Util          \
-#         Packages/Uintah/Core/Math          \
-#         Packages/Uintah/Core/Disclosure    \
-#         Packages/Uintah/Core/ProblemSpec   \
-#         Packages/Uintah/Core/Disclosure    \
-#         Packages/Uintah/Core/DataArchive   \
-#       Packages/Uintah/Core/Parallel   \
-#       Packages/Uintah/CCA/Ports          \
-#       Packages/Uintah/CCA/Components/ProblemSpecification \
-#       Core/XMLUtil  \
-#       Core/Persistent   \
-#       Core/Datatypes    \
-#         Core/Geometry    \
-#         Core/Thread      \
-#         Core/Util        \
-#       Core/Math        \
-#       Core/Exceptions  \
-#         Core/Containers
-# endif
+ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Math          \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/DataArchive   \
+      Packages/Uintah/Core/Parallel   \
+      Packages/Uintah/CCA/Ports          \
+      Packages/Uintah/CCA/Components/ProblemSpecification \
+      Core/XMLUtil  \
+      Core/Persistent   \
+      Core/Datatypes    \
+        Core/Geometry    \
+        Core/Thread      \
+        Core/Util        \
+      Core/Math        \
+      Core/Exceptions  \
+        Core/Containers
+endif
 
-# LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
-# SRCS := $(SRCDIR)/uda2nrrd.cc
-# PROGRAM := Packages/Uintah/StandAlone/uda2nrrd
+SRCS := $(SRCDIR)/uda2nrrd.cc
+PROGRAM := Packages/Uintah/StandAlone/uda2nrrd
 
-# include $(SCIRUN_SCRIPTS)/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
-# endif
+endif
 
 ##############################################
 # compare_uda
