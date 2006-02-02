@@ -10,6 +10,20 @@
  *  Copyright (C) 2003 U of U
  */
 
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/OS/Dir.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Util/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Persistent/Pstreams.h>
 
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -20,17 +34,6 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/OS/Dir.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Persistent/Pstreams.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
@@ -49,6 +52,10 @@
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
+
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+typedef LVMesh::handle_type LVMeshHandle;
+
 
 bool verbose = false;
 bool quiet = false;
@@ -186,11 +193,12 @@ unsigned int get_nrrd_type() {
 //
 // This will gather all the patch data and write it into the single
 // contiguous volume.
-template <class T, class Var>
+template <class T, class VarT, class FIELD>
 void build_field(QueryInfo &qinfo,
 		 IntVector& lo,
-		 Var& /*var*/,
-		 LatVolField<T> *sfd)
+                 T& /* data_type */,
+		 VarT& /*var*/,
+		 FIELD *sfd)
 {
 #ifndef _AIX
   int max_workers = Max(Thread::numProcessors()/2, 2);
@@ -204,7 +212,7 @@ void build_field(QueryInfo &qinfo,
   for( Level::const_patchIterator r = qinfo.level->patchesBegin();
       r != qinfo.level->patchesEnd(); ++r){
     IntVector low, hi;
-    Var v;
+    VarT v;
     // This gets the data
     qinfo.archive->query( v, qinfo.varname, qinfo.mat, *r, qinfo.time);
     if( sfd->basis_order() == 0){
@@ -254,13 +262,13 @@ void build_field(QueryInfo &qinfo,
 #ifndef _AIX
       thread_sema->down();
       Thread *thrd = scinew Thread( 
-        (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
+        (scinew PatchToFieldThread<VarT, T, FIELD>(sfd, v, lo, min_i, max_i,// low, hi,
 				      thread_sema)),
 	"patch_to_field_worker");
       thrd->detach();
 #else
       if (verbose) { cout << "Creating worker...";cout.flush(); }
-      PatchToFieldThread<Var, T> *worker = 
+      PatchToFieldThread<VarT, T, FIELD> *worker = 
         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
 					   thread_sema));
       if (verbose) { cout << "Running worker..."; cout.flush(); }
@@ -276,165 +284,217 @@ void build_field(QueryInfo &qinfo,
 #endif
 }
 
+// helper function for wrap_nrrd
+
+template <class T>
+bool 
+wrap_copy( T* fdata, double*& datap, unsigned int size){
+  cerr<<"Should not be called for scalar data, no copy required!";
+  return false;
+}
+
+// Vector version
+template <>
+bool
+wrap_copy( Vector* fdata, double*& datap, unsigned int size){
+
+    // Copy the data
+    for(unsigned int i = 0; i < size; i++) {
+      *datap++ = fdata->x();
+      *datap++ = fdata->y();
+      *datap++ = fdata->z();
+      fdata++;
+    }
+    return true;
+}
+
+// Matrix3 version
+
+template <>
+bool
+wrap_copy( Matrix3* fdata, double*& datap, unsigned int size){
+
+    switch (matrix_op) {
+    case None:
+      for(unsigned int i = 0; i < size; i++) {
+        for(int i = 0; i < 3; i++)
+          for(int j = 0; j < 3; j++)
+            *datap++ = (*fdata)(i,j);
+        fdata++;
+      }
+      break;
+    case Det:
+      for(unsigned int i = 0; i < size; i++) {
+        *datap++ = fdata->Determinant();
+        fdata++;
+      }
+      break;
+    case Trace:
+      for(unsigned int i = 0; i < size; i++) {
+        *datap++ = fdata->Trace();
+        fdata++;
+      }
+      break;
+    case Norm:
+      for(unsigned int i = 0; i < size; i++) {
+        *datap++ = fdata->Norm();
+        fdata++;
+      }
+      break;
+    default:
+      cerr << "Unknown matrix operation\n";
+      return false;
+    }
+    return true;
+}
+
 // Allocates memory for dest when needed (sets delete_me to true if it
 // does allocate memory), then copies all the data to dest from
 // source.
-template<class T>
-Nrrd* wrap_nrrd(LatVolField<T> *source, bool &delete_data);
-
-// Do the generic one for scalars
-template<class T>
-Nrrd* wrap_nrrd(LatVolField<T> *source, bool &delete_data) {
+template<class FIELD>
+Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
   Nrrd *out = nrrdNew();
   int dim = 3;
-  int size[3];
+  int size[5];
   
   size[0] = source->fdata().dim3();
   size[1] = source->fdata().dim2();
   size[2] = source->fdata().dim1();
+
   if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
+
+  const SCIRun::TypeDescription *td = 
+     source->get_type_description(Field::FDATA_TD_E);
+  if( td->get_name().find( "Vector") != string::npos ) {  // Vectors
+    unsigned int num_vec = source->fdata().size();
+    double *data = new double[num_vec*3];
+    if (!data) {
+      cerr << "Cannot allocate memory ("<<num_vec*3*sizeof(double)<<" byptes) for temp storage of vectors\n";
+      nrrdNix(out);
+      return 0;
+    }
+    double *datap = data;
+    delete_data = true;
+    typename FIELD::value_type *vec_data = &(source->fdata()(0,0,0));
+    
+
+    // Copy the data
+    wrap_copy( vec_data, datap, num_vec);
+    
+    if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
+      return out;
+    } else {
+      nrrdNix(out);
+      delete data;
+      return 0;
+    }
+  } else if (td->get_name().find( "Matrix3") != string::npos ) { // Matrix3
+    dim = matrix_op == None? 5 : 3;
+    if (matrix_op == None) {
+      size[0] = 3;
+      size[1] = 3;
+      size[2] = source->fdata().dim3();
+      size[3] = source->fdata().dim2();
+      size[4] = source->fdata().dim1();
+    } else {
+      size[0] = source->fdata().dim3();
+      size[1] = source->fdata().dim2();
+      size[2] = source->fdata().dim1();
+    }
+    unsigned int num_mat = source->fdata().size();
+    int elem_size = matrix_op == None? 9 : 1;
+    double *data = new double[num_mat*elem_size];
+    if (!data) {
+      cerr << "Cannot allocate memory ("<<num_mat*elem_size*sizeof(double)<<" byptes) for temp storage of vectors\n";
+      nrrdNix(out);
+      return 0;
+    }
+    double *datap = data;
+    delete_data = true;
+    typename FIELD::value_type *mat_data = &(source->fdata()(0,0,0));
+    // Copy the data
+    if( !wrap_copy( mat_data, datap, num_mat) ){
+      nrrdNix(out);
+      delete data;
+      return 0;
+    }
+
+    if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
+      return out;
+    } else {
+      nrrdNix(out);
+      delete data;
+      return 0;
+    }
+  } else { // Scalars
   // We don't need to copy data, so just get the pointer to the data
-  delete_data = false;
-  void *data = (void*)&(source->fdata()(0,0,0));
+    delete_data = false;
+    void *data = (void*)&(source->fdata()(0,0,0));
 
-  if (nrrdWrap_nva(out, data, get_nrrd_type<T>(), dim, size) == 0) {
-    return out;
-  } else {
-    nrrdNix(out);
-    return 0;
+    if (nrrdWrap_nva(out, data, get_nrrd_type< typename FIELD::value_type>(), 
+                     dim, size) == 0) {
+      return out;
+    } else {
+      nrrdNix(out);
+      return 0;
+    }
   }
 }
 
-// Do the one for vectors
-template <>
-Nrrd* wrap_nrrd(LatVolField<Vector> *source, bool &delete_data) {
-  Nrrd *out = nrrdNew();
-  int dim = 4;
-  int size[4];
-
-  size[0] = 3;
-  size[1] = source->fdata().dim3();
-  size[2] = source->fdata().dim2();
-  size[3] = source->fdata().dim1();
-  if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
-  unsigned int num_vec = source->fdata().size();
-  double *data = new double[num_vec*3];
-  if (!data) {
-    cerr << "Cannot allocate memory ("<<num_vec*3*sizeof(double)<<" byptes) for temp storage of vectors\n";
-    nrrdNix(out);
-    return 0;
-  }
-  double *datap = data;
-  delete_data = true;
-  Vector *vec_data = &(source->fdata()(0,0,0));
-
-  // Copy the data
-  for(unsigned int i = 0; i < num_vec; i++) {
-    *datap++ = vec_data->x();
-    *datap++ = vec_data->y();
-    *datap++ = vec_data->z();
-    vec_data++;
-  }
-
-  if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
-    return out;
-  } else {
-    nrrdNix(out);
-    delete data;
-    return 0;
-  }
-}
-
-// Do the one for Matrix3
-template <>
-Nrrd* wrap_nrrd(LatVolField<Matrix3> *source, bool &delete_data) {
-  Nrrd *out = nrrdNew();
-  int dim = matrix_op == None? 5 : 3;
-  int size[5];
-
-  if (matrix_op == None) {
-    size[0] = 3;
-    size[1] = 3;
-    size[2] = source->fdata().dim3();
-    size[3] = source->fdata().dim2();
-    size[4] = source->fdata().dim1();
-  } else {
-    size[0] = source->fdata().dim3();
-    size[1] = source->fdata().dim2();
-    size[2] = source->fdata().dim1();
-  }
-  if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
-  unsigned int num_mat = source->fdata().size();
-  int elem_size = matrix_op == None? 9 : 1;
-  double *data = new double[num_mat*elem_size];
-  if (!data) {
-    cerr << "Cannot allocate memory ("<<num_mat*elem_size*sizeof(double)<<" byptes) for temp storage of vectors\n";
-    nrrdNix(out);
-    return 0;
-  }
-  double *datap = data;
-  delete_data = true;
-  Matrix3 *mat_data = &(source->fdata()(0,0,0));
-
-  // Copy the data
-  switch (matrix_op) {
-  case None:
-    for(unsigned int i = 0; i < num_mat; i++) {
-      for(int i = 0; i < 3; i++)
-	for(int j = 0; j < 3; j++)
-	  *datap++ = (*mat_data)(i,j);
-      mat_data++;
-    }
-    break;
-  case Det:
-    for(unsigned int i = 0; i < num_mat; i++) {
-      *datap++ = mat_data->Determinant();
-      mat_data++;
-    }
-    break;
-  case Trace:
-    for(unsigned int i = 0; i < num_mat; i++) {
-      *datap++ = mat_data->Trace();
-      mat_data++;
-    }
-    break;
-  case Norm:
-    for(unsigned int i = 0; i < num_mat; i++) {
-      *datap++ = mat_data->Norm();
-      mat_data++;
-    }
-    break;
-  default:
-    cerr << "Unknown matrix operation\n";
-    nrrdNix(out);
-    delete data;
-    return 0;
-  }
-
-  if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
-    return out;
-  } else {
-    nrrdNix(out);
-    delete data;
-    return 0;
-  }
-}
 
 // getData<CCVariable<T>, T >();
-template<class Var, class T>
+template<class VarT, class T>
 void getData(QueryInfo &qinfo, IntVector &low,
-	     LatVolMeshHandle mesh_handle_,
+	     LVMeshHandle mesh_handle_,
 	     int basis_order,
 	     string &filename) {
-  Var gridVar;
-  LatVolField<T>* source_field = new LatVolField<T>( mesh_handle_, basis_order );
-  if (!source_field) {
-    cerr << "Cannot allocate memory for field\n";
-    return;
-  }
+
+  typedef GenericField<LVMesh, ConstantBasis<T>, 
+                       FData3d<T, LVMesh> > LVFieldCB;
+  typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
+                       FData3d<T, LVMesh> > LVFieldLB;
+
+  VarT gridVar;
+  T data_T;
+
   // set the generation and timestep in the field
   if (!quiet) cout << "Building Field from uda data\n";
-  build_field(qinfo, low, gridVar, source_field);
+  
+  // Print out the psycal extents
+  BBox bbox = mesh_handle_->get_bounding_box();
+  if (!quiet) cout << "Bounding box: min("<<bbox.min()<<"), max("<<bbox.max()<<")\n";
+  
+
+  // Get the nrrd data, and print it out.
+  char *err;
+  bool delete_data = false;
+
+  Nrrd *out;
+  if( basis_order == 0){
+    LVFieldCB* sf = scinew LVFieldCB(mesh_handle_);
+    if (!sf) {
+      cerr << "Cannot allocate memory for field\n";
+      return;
+    }
+    build_field(qinfo, low, data_T, gridVar, sf);
+    // Convert the field to a nrrd
+    if (!quiet) cout << "Converting field to nrrd.\n";
+    out = wrap_nrrd(sf, delete_data);
+    // Clean up our memory
+    delete sf;
+  } else {
+    LVFieldLB* sf = scinew LVFieldLB(mesh_handle_);
+    if (!sf) {
+      cerr << "Cannot allocate memory for field\n";
+      return;
+    }
+    build_field(qinfo, low, data_T, gridVar, sf);
+    // Convert the field to a nrrd
+    if (!quiet) cout << "Converting field to nrrd.\n";
+    out = wrap_nrrd(sf, delete_data);
+    // Clean up our memory
+    delete sf;
+  }
 
 #if 0
   Piostream *fieldstrm =
@@ -449,17 +509,6 @@ void getData(QueryInfo &qinfo, IntVector &low,
   }
 #endif
 
-  // Print out the psycal extents
-  BBox bbox = mesh_handle_->get_bounding_box();
-  cout << "Bounding box: min("<<bbox.min()<<"), max("<<bbox.max()<<")\n";
-  
-  // Convert the field to a nrrd
-  if (!quiet) cout << "Converting field to nrrd.\n";
-
-  // Get the nrrd data, and print it out.
-  char *err;
-  bool delete_data = false;
-  Nrrd *out = wrap_nrrd(source_field, delete_data);
   if (out) {
     // Now write it out
     if (!quiet) cout << "Writing nrrd file\n";
@@ -483,11 +532,7 @@ void getData(QueryInfo &qinfo, IntVector &low,
     // There was a problem
     err = biffGetDone(NRRD);
     cerr << "Error wrapping nrrd: "<<err<<"\n";
-  }
-
-  // Clean up our memory
-  delete source_field;
-  
+  }  
   return;
 }
 
@@ -496,38 +541,38 @@ template<class T>
 void getVariable(QueryInfo &qinfo, IntVector &low,
 		 IntVector &range, BBox &box, string &filename) {
 		 
-  LatVolMeshHandle mesh_handle_;
+  LVMeshHandle mesh_handle_;
   switch( qinfo.type->getType() ) {
   case Uintah::TypeDescription::CCVariable:
-    mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+    mesh_handle_ = scinew LVMesh(range.x(), range.y(),
 				     range.z(), box.min(),
 				     box.max());
     getData<CCVariable<T>, T>(qinfo, low, mesh_handle_, 0,
 			      filename);
     break;
   case Uintah::TypeDescription::NCVariable:
-    mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+    mesh_handle_ = scinew LVMesh(range.x(), range.y(),
 				     range.z(), box.min(),
 				     box.max());
     getData<NCVariable<T>, T>(qinfo, low, mesh_handle_, 1,
 			      filename);
     break;
   case Uintah::TypeDescription::SFCXVariable:
-    mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
+    mesh_handle_ = scinew LVMesh(range.x(), range.y()-1,
 				     range.z()-1, box.min(),
 				     box.max());
     getData<SFCXVariable<T>, T>(qinfo, low, mesh_handle_, 1,
 				filename);
     break;
   case Uintah::TypeDescription::SFCYVariable:
-    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
+    mesh_handle_ = scinew LVMesh(range.x()-1, range.y(),
 				     range.z()-1, box.min(),
 				     box.max());
     getData<SFCYVariable<T>, T>(qinfo, low, mesh_handle_, 1,
 				filename);
     break;
   case Uintah::TypeDescription::SFCZVariable:
-    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
+    mesh_handle_ = scinew LVMesh(range.x()-1, range.y()-1,
 				     range.z(), box.min(),
 				     box.max());
     getData<SFCZVariable<T>, T>(qinfo, low, mesh_handle_, 1,
