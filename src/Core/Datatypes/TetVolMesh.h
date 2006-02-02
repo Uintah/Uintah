@@ -884,11 +884,9 @@ protected:
 
   //! all the vertices
   vector<Point>		points_;
-  Mutex			points_lock_;
 
   //! each 4 indecies make up a tet
   vector<under_type>	cells_;
-  Mutex			cells_lock_;
 
   typedef LockingHandle<typename Edge::HalfEdgeSet> HalfEdgeSetHandle;
   typedef LockingHandle<typename Edge::EdgeSet> EdgeSetHandle;
@@ -907,7 +905,6 @@ protected:
   mutable
 #endif
   typename Edge::EdgeSet		edges_;
-  Mutex			edge_lock_;
 
   typedef LockingHandle<typename Face::HalfFaceSet> HalfFaceSetHandle;
   typedef LockingHandle<typename Face::FaceSet> FaceSetHandle;
@@ -926,11 +923,9 @@ protected:
   mutable
 #endif
   typename Face::FaceSet		faces_;
-  Mutex			face_lock_;
 
   typedef vector<vector<typename Cell::index_type> > NodeNeighborMap;
   NodeNeighborMap	node_neighbors_;
-  Mutex			node_neighbor_lock_;
 
   //! This grid is used as an acceleration structure to expedite calls
   //!  to locate.  For each cell in the grid, we store a list of which
@@ -938,11 +933,11 @@ protected:
   //!  point, we simply find which grid cell contains that point, and
   //!  then search just those tets that overlap that grid cell.
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
-  LockingHandle<SearchGrid>  grid_;
-  Mutex                      grid_lock_; // Bad traffic!
+  LockingHandle<SearchGridConstructor>  grid_;
   typename Cell::index_type           locate_cache_;
 
   unsigned int		synchronized_;
+  Mutex                 synchronize_lock_;
   Basis                 basis_;
 
 #if defined(__sgi)
@@ -950,13 +945,18 @@ protected:
   Face::HFSallocator_type face_allocator_;
 #endif
 
+  Vector cell_epsilon_;
+  void insert_cell_into_grid(typename Cell::index_type ci);
+  void insert_cell_into_grid_lock(typename Cell::index_type ci);
+  void remove_cell_from_grid(typename Cell::index_type ci);
+  void remove_cell_from_grid_lock(typename Cell::index_type ci);
 }; // end class TetVolMesh
 
 template <class Basis>
 template <class Iter, class Functor>
 void
 TetVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor) {
-  points_lock_.lock();
+  synchronize_lock_.lock();
   Iter iter = begin;
   points_.resize(end - begin); // resize to the new size
   vector<Point>::iterator piter = points_.begin();
@@ -964,7 +964,7 @@ TetVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     *piter = fill_ftor(*iter);
     ++piter; ++iter;
   }
-  points_lock_.unlock();
+  synchronize_lock_.unlock();
   //dirty_ = true;
 }
 
@@ -972,7 +972,7 @@ template <class Basis>
 template <class Iter, class Functor>
 void
 TetVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
-  cells_lock_.lock();
+  synchronize_lock_.lock();
   Iter iter = begin;
   cells_.resize((end - begin) * 4); // resize to the new size
   vector<under_type>::iterator citer = cells_.begin();
@@ -987,7 +987,7 @@ TetVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     *citer = nodes[3];
     ++citer; ++iter;
   }
-  cells_lock_.unlock();
+  synchronize_lock_.unlock();
   //dirty_ = true;
 }
 
@@ -1020,9 +1020,7 @@ TetVolMesh<Basis>::type_name(int n)
 template <class Basis>
 TetVolMesh<Basis>::TetVolMesh() :
   points_(0),
-  points_lock_("TetVolMesh points_ fill lock"),
   cells_(0),
-  cells_lock_("TetVolMesh cells_ fill lock"),
 
   //! Unique Edges
 #ifdef HAVE_HASH_SET
@@ -1046,8 +1044,6 @@ TetVolMesh<Basis>::TetVolMesh() :
   edges_(edge_comp_),
 #endif // ifdef HAVE_HASH_SET
 
-  edge_lock_("TetVolMesh edges_ fill lock"),
-
   //! Unique Faces
 #ifdef HAVE_HASH_SET
   face_hasher_(cells_),
@@ -1070,23 +1066,18 @@ TetVolMesh<Basis>::TetVolMesh() :
   faces_(face_comp_),
 #endif // ifdef HAVE_HASH_SET
 
-  face_lock_("TetVolMesh faces_ fill lock"),
-
   node_neighbors_(0),
-  node_neighbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(0),
-  grid_lock_("TetVolMesh grid_ fill lock"),
   locate_cache_(0),
-  synchronized_(CELLS_E | NODES_E)
+  synchronized_(CELLS_E | NODES_E),
+  synchronize_lock_("TetVolMesh synchronize() lock")
 {
 }
 
 template <class Basis>
 TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   points_(0),
-  points_lock_("TetVolMesh points_ fill lock"),
   cells_(0),
-  cells_lock_("TetVolMesh cells_ fill lock"),
 #ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
 #  if defined(__ECC) || defined(_MSC_VER)
@@ -1107,8 +1098,6 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   all_edges_(edge_comp_),
   edges_(edge_comp_),
 #endif // ifdef HAVE_HASH_SET
-
-  edge_lock_("TetVolMesh edges_ fill lock"),
 
 #ifdef HAVE_HASH_SET
   face_hasher_(cells_),
@@ -1131,14 +1120,11 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   faces_(face_comp_),
 #endif // ifdef HAVE_HASH_SET
 
-  face_lock_("TetVolMesh edges_ fill lock"),
-
   node_neighbors_(0),
-  node_neighbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(0),
-  grid_lock_("TetVolMesh grid_ fill lock"),
   locate_cache_(0),
-  synchronized_(copy.synchronized_)
+  synchronized_(copy.synchronized_),
+  synchronize_lock_("TetVolMesh synchronize() lock")
 {
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
@@ -1148,19 +1134,13 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
 
   TetVolMesh &lcopy = (TetVolMesh &)copy;
 
-  lcopy.points_lock_.lock();
+  lcopy.synchronize_lock_.lock();
   points_ = copy.points_;
-  lcopy.points_lock_.unlock();
-
-  lcopy.cells_lock_.lock();
   cells_ = copy.cells_;
-  lcopy.cells_lock_.unlock();
-
-  lcopy.grid_lock_.lock();
   grid_ = copy.grid_;
   synchronized_ &= ~LOCATE_E;
   synchronized_ |= copy.synchronized_ & LOCATE_E;
-  lcopy.grid_lock_.unlock();
+  lcopy.synchronize_lock_.unlock();
 }
 
 template <class Basis>
@@ -1241,9 +1221,9 @@ TetVolMesh<Basis>::transform(const Transform &t)
     ++itr;
   }
 
-  grid_lock_.lock();
+  synchronize_lock_.lock();
   if (grid_.get_rep()) { grid_->transform(t); }
-  grid_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1252,9 +1232,9 @@ template <class Basis>
 void
 TetVolMesh<Basis>::compute_faces()
 {  
-  face_lock_.lock();
+  synchronize_lock_.lock();
   if ((synchronized_ & FACES_E) && (synchronized_ & FACE_NEIGHBORS_E)) {
-    face_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   }
 
@@ -1270,7 +1250,7 @@ TetVolMesh<Basis>::compute_faces()
   }
   synchronized_ |= FACES_E;
   synchronized_ |= FACE_NEIGHBORS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1278,9 +1258,9 @@ template <class Basis>
 void
 TetVolMesh<Basis>::compute_edges()
 {
-  edge_lock_.lock();
+  synchronize_lock_.lock();
   if ((synchronized_ & EDGES_E) && (synchronized_ & EDGE_NEIGHBORS_E)) {
-    edge_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   } 
 
@@ -1296,16 +1276,16 @@ TetVolMesh<Basis>::compute_edges()
   }
   synchronized_ |= EDGES_E;
   synchronized_ |= EDGE_NEIGHBORS_E;
-  edge_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 template <class Basis>
 void
 TetVolMesh<Basis>::compute_node_neighbors()
 {
-  node_neighbor_lock_.lock();
+  synchronize_lock_.lock();
   if (synchronized_ & NODE_NEIGHBORS_E) {
-    node_neighbor_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   }
   node_neighbors_.clear();
@@ -1316,7 +1296,7 @@ TetVolMesh<Basis>::compute_node_neighbors()
     node_neighbors_[cells_[i]].push_back(i);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  node_neighbor_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1444,13 +1424,13 @@ TetVolMesh<Basis>::create_cell_edges(typename Cell::index_type c)
 {
   //ASSERT(!is_frozen());
   if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
-  edge_lock_.lock();
+  synchronize_lock_.lock();
   for (unsigned int i = c*6; i < c*6+6; ++i)
   {
     edges_.insert(i);
     all_edges_.insert(i);
   }
-  edge_lock_.unlock();
+  synchronize_lock_.unlock();
 }
       
 
@@ -1460,7 +1440,7 @@ TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c)
 {
   //ASSERT(!is_frozen());
   if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
-  edge_lock_.lock();
+  synchronize_lock_.lock();
   for (unsigned int i = c*6; i < c*6+6; ++i)
   {
     //! If the Shared Edge Set is represented by the particular
@@ -1498,7 +1478,7 @@ TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c)
     ASSERT(half_edge_to_delete != all_edges_.end());
     all_edges_.erase(half_edge_to_delete);
   }
-  edge_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 template <class Basis>
@@ -1507,13 +1487,13 @@ TetVolMesh<Basis>::create_cell_faces(typename Cell::index_type c)
 {
   //ASSERT(!is_frozen());
   if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
-  face_lock_.lock();
+  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     faces_.insert(i);
     all_faces_.insert(i);
   }
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 template <class Basis>
@@ -1522,7 +1502,7 @@ TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c)
 {
   //ASSERT(!is_frozen());
   if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
-  face_lock_.lock();
+  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     // If the Shared Face Set is represented by the particular
@@ -1559,7 +1539,7 @@ TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c)
     ASSERT(half_face_to_delete != all_faces_.end());
     all_faces_.erase(half_face_to_delete);
   }
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 template <class Basis>
@@ -1568,12 +1548,12 @@ TetVolMesh<Basis>::create_cell_node_neighbors(typename Cell::index_type c)
 {
   //ASSERT(!is_frozen());
   if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
-  node_neighbor_lock_.lock();
+  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     node_neighbors_[cells_[i]].push_back(i);
   }
-  node_neighbor_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1583,7 +1563,7 @@ TetVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type c)
 {
   //ASSERT(!is_frozen());
   if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
-  node_neighbor_lock_.lock();
+  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     const int n = cells_[i];
@@ -1598,7 +1578,7 @@ TetVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type c)
 
     node_neighbors_[n].erase(cell);
   }
-  node_neighbor_lock_.unlock();      
+  synchronize_lock_.unlock();      
 }
 
 
@@ -1611,8 +1591,7 @@ TetVolMesh<Basis>::is_edge(const typename Node::index_type n0,
                     typename Edge::array_type *array)
 {
   ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize EDGES_E on TetVolMesh first.");
-  edge_lock_.lock();
-  cells_lock_.lock();
+  synchronize_lock_.lock();
   //! Create a phantom cell with edge 0 being the one we're searching for
   const unsigned int fake_edge = cells_.size() / 4 * 6;
   const unsigned int fake_cell = cells_.size() / 4;
@@ -1640,8 +1619,7 @@ TetVolMesh<Basis>::is_edge(const typename Node::index_type n0,
   //! Delete the phantom cell
   cells_.resize(cells_.size()-4);
   
-  edge_lock_.unlock();
-  cells_lock_.unlock();
+  synchronize_lock_.unlock();
   return ret_val;
 }
       
@@ -1654,8 +1632,7 @@ TetVolMesh<Basis>::is_face(typename Node::index_type n0,typename Node::index_typ
 		    typename Node::index_type n2, typename Face::array_type *array)
 {
   ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize FACES_E on TetVolMesh first.");
-  face_lock_.lock();
-  cells_lock_.lock();
+  synchronize_lock_.lock();
 
   //! Create a phantom cell with face 3 being the one we're searching for
   const int fake_face = cells_.size() + 3;
@@ -1678,8 +1655,7 @@ TetVolMesh<Basis>::is_face(typename Node::index_type n0,typename Node::index_typ
   cells_.erase(c1);
   cells_.erase(c2);
 
-  face_lock_.unlock();
-  cells_lock_.unlock();
+  synchronize_lock_.unlock();
   return range.first != range.second;
 }
   
@@ -1740,14 +1716,15 @@ TetVolMesh<Basis>::set_nodes(typename Node::array_type &array,
   delete_cell_edges(idx);
   delete_cell_faces(idx);
   delete_cell_node_neighbors(idx);
+  remove_cell_from_grid_lock(idx);
 
   for (int n = 0; n < 4; ++n)
     cells_[idx * 4 + n] = array[n];
   
-  synchronized_ &= ~LOCATE_E;
   create_cell_edges(idx);
   create_cell_faces(idx);
   create_cell_node_neighbors(idx);
+  insert_cell_into_grid_lock(idx);
 }
 
 template <class Basis>
@@ -2015,7 +1992,8 @@ TetVolMesh<Basis>::combine_3_to_2(typename Cell::index_type &removed,
   delete_cell_node_neighbors(removed);
   delete_cell_edges(removed);
   delete_cell_faces(removed);
-  
+  remove_cell_from_grid_lock(removed);
+
   // FIX_ME needs to make sure that the ray between c1_node, and c2_node
   //        intersects the face shared by the tets.
 
@@ -2052,6 +2030,7 @@ TetVolMesh<Basis>::combine_4_to_1_cell(typename Cell::array_type &tets,
       delete_cell_node_neighbors(tets[i]);
       delete_cell_edges(tets[i]);
       delete_cell_faces(tets[i]);
+      remove_cell_from_grid_lock(tets[i]);
     }
     
     // redefine the remaining tet.
@@ -2407,10 +2386,11 @@ TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
 
-  unsigned int *iter, *end;
-  if (grid_->lookup(&iter, &end, p))
+  const list<unsigned int> *candidates;
+  if (grid_->lookup(candidates, p))
   {
-    while (iter != end)
+    list<unsigned int>::const_iterator iter = candidates->begin();
+    while (iter != candidates->end())
     {
       if (inside(typename Cell::index_type(*iter), p))
       {
@@ -2461,11 +2441,75 @@ TetVolMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
 
 template <class Basis>
 void
+TetVolMesh<Basis>::insert_cell_into_grid(typename Cell::index_type ci)
+{
+  BBox box;
+  typename Node::array_type nodes;
+  get_nodes(nodes, ci);
+  
+  box.reset();
+  box.extend(points_[nodes[0]]);
+  box.extend(points_[nodes[1]]);
+  box.extend(points_[nodes[2]]);
+  box.extend(points_[nodes[3]]);
+  const Point padmin(box.min() - cell_epsilon_);
+  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(padmin);
+  box.extend(padmax);
+  grid_->insert(ci, box);
+}
+
+
+template <class Basis>
+void
+TetVolMesh<Basis>::insert_cell_into_grid_lock(typename Cell::index_type ci)
+{
+  if (!(synchronized_ & LOCATE_E)) return;
+  synchronize_lock_.lock();
+  insert_cell_into_grid(ci);
+  synchronize_lock_.unlock();
+}
+
+
+template <class Basis>
+void
+TetVolMesh<Basis>::remove_cell_from_grid(typename Cell::index_type ci)
+{
+  BBox box;
+  typename Node::array_type nodes;
+  get_nodes(nodes, ci);
+  
+  box.reset();
+  box.extend(points_[nodes[0]]);
+  box.extend(points_[nodes[1]]);
+  box.extend(points_[nodes[2]]);
+  box.extend(points_[nodes[3]]);
+  const Point padmin(box.min() - cell_epsilon_);
+  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(padmin);
+  box.extend(padmax);
+  grid_->remove(ci, box);
+}
+
+
+template <class Basis>
+void
+TetVolMesh<Basis>::remove_cell_from_grid_lock(typename Cell::index_type ci)
+{
+  if (!(synchronized_ & LOCATE_E)) return;
+  synchronize_lock_.lock();
+  remove_cell_from_grid(ci);
+  synchronize_lock_.unlock();
+}
+
+
+template <class Basis>
+void
 TetVolMesh<Basis>::compute_grid()
 {
-  grid_lock_.lock();
+  synchronize_lock_.lock();
   if (synchronized_ & LOCATE_E) {
-    grid_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   }
 
@@ -2475,40 +2519,24 @@ TetVolMesh<Basis>::compute_grid()
     // Cubed root of number of cells to get a subdivision ballpark.
     typename Cell::size_type csize;  size(csize);
     const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
-    const Vector cell_epsilon = bb.diagonal() * (1.0e-4 / s);
-    bb.extend(bb.min() - cell_epsilon*2);
-    bb.extend(bb.max() + cell_epsilon*2);
+    cell_epsilon_ = bb.diagonal() * (1.0e-4 / s);
+    bb.extend(bb.min() - cell_epsilon_ * 2);
+    bb.extend(bb.max() + cell_epsilon_ * 2);
 
-    SearchGridConstructor sgc(s, s, s, bb.min(), bb.max());
+    grid_ = scinew SearchGridConstructor(s, s, s, bb.min(), bb.max());
 
-    BBox box;
     typename Node::array_type nodes;
     typename Cell::iterator ci, cie;
     begin(ci); end(cie);
     while(ci != cie)
     {
-      get_nodes(nodes, *ci);
-
-      box.reset();
-      box.extend(points_[nodes[0]]);
-      box.extend(points_[nodes[1]]);
-      box.extend(points_[nodes[2]]);
-      box.extend(points_[nodes[3]]);
-      const Point padmin(box.min() - cell_epsilon);
-      const Point padmax(box.max() + cell_epsilon);
-      box.extend(padmin);
-      box.extend(padmax);
-
-      sgc.insert(*ci, box);
-
+      insert_cell_into_grid(*ci);
       ++ci;
     }
-
-    grid_ = scinew SearchGrid(sgc);
   }
   
   synchronized_ |= LOCATE_E;
-  grid_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -2740,9 +2768,9 @@ TetVolMesh<Basis>::add_find_point(const Point &p, double err)
   {
     points_.push_back(p);
     if (synchronized_ & NODE_NEIGHBORS_E) {
-      node_neighbor_lock_.lock();
+      synchronize_lock_.lock();
       node_neighbors_.push_back(vector<typename Cell::index_type>());
-      node_neighbor_lock_.unlock();
+      synchronize_lock_.unlock();
     }
     return points_.size() - 1;
   }
@@ -2763,7 +2791,7 @@ TetVolMesh<Basis>::add_tet(typename Node::index_type a, typename Node::index_typ
   create_cell_node_neighbors(tet);
   create_cell_edges(tet);
   create_cell_faces(tet);
-  synchronized_ &= ~LOCATE_E;
+  insert_cell_into_grid_lock(tet);
 
   return tet; 
 }
@@ -2776,9 +2804,9 @@ TetVolMesh<Basis>::add_point(const Point &p)
 {
   points_.push_back(p);
   if (synchronized_ & NODE_NEIGHBORS_E) {
-    node_neighbor_lock_.lock();
+    synchronize_lock_.lock();
     node_neighbors_.push_back(vector<typename Cell::index_type>());
-    node_neighbor_lock_.unlock();
+    synchronize_lock_.unlock();
   }
   return points_.size() - 1;
 }
@@ -2808,7 +2836,7 @@ TetVolMesh<Basis>::add_elem(typename Node::array_type a)
   create_cell_node_neighbors(tet);
   create_cell_edges(tet);
   create_cell_faces(tet);
-  synchronized_ &= ~LOCATE_E;
+  insert_cell_into_grid_lock(tet);
 
   return tet;
 }
@@ -2819,7 +2847,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::delete_cells(set<unsigned int> &to_delete)
 {
-  cells_lock_.lock();
+  synchronize_lock_.lock();
   set<unsigned int>::reverse_iterator iter = to_delete.rbegin();
   while (iter != to_delete.rend()) {
     // erase the correct cell
@@ -2830,7 +2858,7 @@ TetVolMesh<Basis>::delete_cells(set<unsigned int> &to_delete)
     ce+=4;
     cells_.erase(cb, ce);
   }
-  cells_lock_.unlock();
+  synchronize_lock_.unlock();
 
   synchronized_ &= ~LOCATE_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
@@ -2849,14 +2877,14 @@ template <class Basis>
 void
 TetVolMesh<Basis>::delete_nodes(set<unsigned int> &to_delete)
 {
-  points_lock_.lock();
+  synchronize_lock_.lock();
   set<unsigned int>::reverse_iterator iter = to_delete.rbegin();
   while (iter != to_delete.rend()) {
     typename TetVolMesh::Node::index_type n = *iter++;
     vector<Point>::iterator pit = points_.begin() + n;
     points_.erase(pit);
   }
-  points_lock_.unlock();
+  synchronize_lock_.unlock();
 
   synchronized_ &= ~LOCATE_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
@@ -2910,6 +2938,7 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
   delete_cell_node_neighbors(ci);
   delete_cell_edges(ci);
   delete_cell_faces(ci);
+  remove_cell_from_grid_lock(ci);
 
   tets.resize(4, ci);
   const unsigned index = ci*4;
@@ -2922,6 +2951,7 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
   create_cell_node_neighbors(ci);
   create_cell_edges(ci);
   create_cell_faces(ci);
+  insert_cell_into_grid_lock(ci);
 
   return true;
 }
@@ -2937,6 +2967,7 @@ TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
   delete_cell_node_neighbors(ci);
   delete_cell_edges(ci);
   delete_cell_faces(ci);
+  remove_cell_from_grid_lock(ci);
 
   const unsigned int i = ci*4;
   tets.push_back(ci);
@@ -2970,6 +3001,7 @@ TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
   create_cell_node_neighbors(ci);
   create_cell_edges(ci);
   create_cell_faces(ci);
+  insert_cell_into_grid_lock(ci);
 }
 
 
@@ -2984,6 +3016,7 @@ TetVolMesh<Basis>::insert_node_in_cell_edge(typename Cell::array_type &tets,
   delete_cell_node_neighbors(ci);
   delete_cell_edges(ci);
   delete_cell_faces(ci);
+  remove_cell_from_grid_lock(ci);
 
   cout << "insert_node_in_cell_edge called, " << ci << ", "
        << skip1 << " " << skip2 << "\n";
@@ -3038,6 +3071,7 @@ TetVolMesh<Basis>::insert_node_in_cell_edge(typename Cell::array_type &tets,
   create_cell_node_neighbors(ci);
   create_cell_edges(ci);
   create_cell_faces(ci);
+  insert_cell_into_grid_lock(ci);
 }
 
 
@@ -3047,13 +3081,16 @@ TetVolMesh<Basis>::resync_cells(typename Cell::array_type &carray)
 {
   for (unsigned int i = 0; i < carray.size(); i++)
   {
+    // Need to delete prior to making changes.  This doesn't work here.
     delete_cell_node_neighbors(carray[i]);
     delete_cell_edges(carray[i]);
     delete_cell_faces(carray[i]);
+    remove_cell_from_grid_lock(carray[i]);
 
     create_cell_node_neighbors(carray[i]);
     create_cell_edges(carray[i]);
     create_cell_faces(carray[i]);
+    insert_cell_into_grid_lock(carray[i]);
   }
 }
 
@@ -3887,6 +3924,7 @@ TetVolMesh<Basis>::mod_tet(typename Cell::index_type cell,
   delete_cell_node_neighbors(cell);
   delete_cell_edges(cell);
   delete_cell_faces(cell);
+  remove_cell_from_grid_lock(cell);
   cells_[cell*4+0] = a;
   cells_[cell*4+1] = b;
   cells_[cell*4+2] = c;
@@ -3894,7 +3932,7 @@ TetVolMesh<Basis>::mod_tet(typename Cell::index_type cell,
   create_cell_node_neighbors(cell);
   create_cell_edges(cell);
   create_cell_faces(cell);
-  synchronized_ &= ~LOCATE_E;
+  insert_cell_into_grid_lock(cell);
   return cell;
 }
 

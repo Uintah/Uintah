@@ -97,7 +97,7 @@ protected:
 };
 
 
-class SCISHARE SearchGridConstructor : public SearchGridBase
+class SCISHARE SearchGridConstructor : public Datatype, public SearchGridBase
 {
   friend class SearchGrid;
   
@@ -106,7 +106,11 @@ public:
 			const Point &min, const Point &max);
 
   void insert(under_type val, const BBox &bbox);
+  void remove(under_type val, const BBox &bbox);
+  bool lookup(const std::list<under_type> *&candidates, const Point &p) const;
   
+  virtual void io(Piostream&) {}
+
 protected:
   std::vector<std::list<under_type> > bin_;
   unsigned int size_;

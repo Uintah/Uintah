@@ -160,6 +160,42 @@ SearchGridConstructor::insert(under_type val, const BBox &bbox)
 }
 
 
+void
+SearchGridConstructor::remove(under_type val, const BBox &bbox)
+{
+  unsigned int mini, minj, mink, maxi, maxj, maxk;
+
+  unsafe_locate(mini, minj, mink, bbox.min());
+  unsafe_locate(maxi, maxj, maxk, bbox.max());
+
+  for (unsigned int i = mini; i <= maxi; i++)
+  {
+    for (unsigned int j = minj; j <= maxj; j++)
+    {
+      for (unsigned int k = mink; k <= maxk; k++)
+      {
+        bin_[linearize(i, j, k)].remove(val);
+        size_++;
+      }
+    }
+  }
+}
+
+
+bool
+SearchGridConstructor::lookup(const list<under_type> *&candidates,
+                              const Point &p) const
+{
+  unsigned int i, j, k;
+  if (locate(i, j, k, p))
+  {
+    candidates = &(bin_[linearize(i, j, k)]);
+    return true;
+  }
+  return false;
+}
+
+
 PersistentTypeID SearchGrid::type_id("SearchGrid", "Datatype", maker);
 
 
