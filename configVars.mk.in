@@ -429,10 +429,14 @@ endif
 .SUFFIXES: .cc .c .o .s .F .f .cpp
 
 .cc.o: $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
 	-rm -f $@
+endif
 ifeq ($(CC_DEPEND_MODE),normal)
-ifneq ($(TAU_MAKEFILE),)
-ifneq ($(PDTDIR),)
+  ifneq ($(TAU_MAKEFILE),)
+    ifneq ($(PDTDIR),)
 	-echo "Building $*.o ..." ; \
 	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
 	pdbfile=`basename $< .cc`.pdb ; \
@@ -445,22 +449,32 @@ ifneq ($(PDTDIR),)
 	ls -l $@; \
 	fi ; \
 	rm -f $$pdbfile ; 
-else
+    else
+      ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling: $<"
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; 
+      else
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; 
-endif
-else
+      endif
+    endif
+  else
+    ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling: $<"
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
+    else
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
-endif
+    endif
+  endif
 else
-ifeq ($(CC_DEPEND_MODE),modify)
+  ifeq ($(CC_DEPEND_MODE),modify)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
-else
-ifeq ($(CC_DEPEND_MODE),move)
+  else
+    ifeq ($(CC_DEPEND_MODE),move)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
-else
-ifeq ($(CC_DEPEND_MODE),stdout)
+    else
+      ifeq ($(CC_DEPEND_MODE),stdout)
         #
         # .d - most likely gcc... have to explicitly put it in a .d file.
         #
@@ -475,12 +489,12 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
-else
+      else
 	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
 	exit 1
-endif
-endif
-endif
+      endif
+    endif
+  endif
 endif
 
 .cpp.o: $<
@@ -592,19 +606,28 @@ endif
 endif
 
 .c.o: $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
 	-rm -f $@
+endif
 ifeq ($(CC_DEPEND_MODE),normal)
-	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling: $<"
+	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN)  -c $< -o $@
+  else
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN)  -c $< -o $@
+  endif
 else
-ifeq ($(CC_DEPEND_MODE),modify)
+  ifeq ($(CC_DEPEND_MODE),modify)
 	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
-else
-ifeq ($(CC_DEPEND_MODE),move)
+  else
+    ifeq ($(CC_DEPEND_MODE),move)
 	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
-else
-ifeq ($(CC_DEPEND_MODE),stdout)
+    else
+      ifeq ($(CC_DEPEND_MODE),stdout)
         #
         # .d - most likely gcc... have to explicitly put it in a .d file.
         #
@@ -620,12 +643,12 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-else
+      else
 	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
 	exit 1
-endif
-endif
-endif
+      endif
+    endif
+  endif
 endif
 
 .s.o: $<

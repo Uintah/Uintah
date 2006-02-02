@@ -233,18 +233,19 @@ else
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/DataArchive   \
-      Packages/Uintah/Core/Parallel   \
-      Packages/Uintah/CCA/Ports          \
-      Packages/Uintah/CCA/Components/ProblemSpecification \
-      Core/XMLUtil  \
-      Core/Persistent   \
-      Core/Datatypes    \
-        Core/Geometry    \
-        Core/Thread      \
-        Core/Util        \
-      Core/Math        \
-      Core/Exceptions  \
-        Core/Containers
+        Packages/Uintah/Core/Parallel      \
+        Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Core/Basis        \
+        Core/Exceptions   \
+        Core/Containers   \
+        Core/Datatypes    \
+        Core/Geometry     \
+        Core/Math         \
+        Core/Persistent   \
+        Core/Thread       \
+        Core/Util         \
+        Core/XMLUtil
 endif
 
 LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
