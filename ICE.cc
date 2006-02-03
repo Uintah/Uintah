@@ -87,6 +87,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_conservationTest = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
   
+  d_exchCoeff = scinew ExchangeCoefficients();
 
   d_customInitialize_basket  = scinew customInitialize_basket();
   d_customBC_var_basket  = scinew customBC_var_basket();
@@ -107,6 +108,8 @@ ICE::~ICE()
   delete lb;
   delete MIlb;
   delete d_advector;
+  delete d_exchCoeff;
+
   if(d_turbulence)
     delete d_turbulence;
      
@@ -137,10 +140,12 @@ ICE::~ICE()
   } 
   
   // delete models
+#if 0
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
       iter != d_models.end(); iter++) {
     delete *iter; 
   }
+#endif
   if(d_modelInfo){
     delete d_modelInfo;
   }
@@ -163,8 +168,9 @@ double ICE::recomputeTimestep(double current_dt)
 /* _____________________________________________________________________
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
-void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-                        SimulationStateP&   sharedState)
+void ICE::problemSetup(const ProblemSpecP& prob_spec, 
+                       const ProblemSpecP& materials_ps,
+                       GridP& grid, SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
   d_press_matl = scinew MaterialSubset();
@@ -300,14 +306,35 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   //__________________________________
   // Pull out Initial Conditions
-  ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP mat_ps = 0;
+  if (materials_ps)
+    mat_ps       =  materials_ps->findBlock("MaterialProperties");
+  else
+    mat_ps       =  prob_spec->findBlock("MaterialProperties");
+
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
 
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
     ps = ps->findNextBlock("material") ) {
+    string index("");
+    ps->getAttribute("index",index);
+    stringstream id(index);
+    int index_val = -1;
+    id >> index_val;
+    cout << "Material attribute = " << index_val << endl;
+
     // Extract out the type of EOS and the associated parameters
     ICEMaterial *mat = scinew ICEMaterial(ps);
-    sharedState->registerICEMaterial(mat);
+    // When doing restart, we need to make sure that we load the materials
+    // in the same order that they were initially created.  Restarts will
+    // ALWAYS have an index number as in <material index = "0">.
+    // Index_val = -1 means that we don't register the material by its 
+    // index number.
+    if (index_val > -1)
+      sharedState->registerICEMaterial(mat,index_val);
+    else
+      sharedState->registerICEMaterial(mat);
+
     if(mat->isSurroundingMatl()) {
       d_surroundingMatl_indx = mat->getDWIndex();  //which matl. is the surrounding matl
     } 
@@ -315,41 +342,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   }     
   cout_norm << "Pulled out InitialConditions block of the input file" << endl;
 
-  //__________________________________
-  // Pull out the exchange coefficients
-  ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
-  if (!exch_ps)
-    throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
-  
-  ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
-  exch_co_ps->require("momentum",d_K_mom);
-  exch_co_ps->require("heat",d_K_heat);
-
-  for (int i = 0; i<(int)d_K_mom.size(); i++) {
-    cout_norm << "K_mom = " << d_K_mom[i] << endl;
-    if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
-      ostringstream warn;
-      warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
-  for (int i = 0; i<(int)d_K_heat.size(); i++) {
-    cout_norm << "K_heat = " << d_K_heat[i] << endl;
-    if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
-      ostringstream warn;
-      warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
-
-  //__________________________________
-  //  convective heat transfer
-  d_convective = false;
-  exch_ps->get("do_convective_heat_transfer", d_convective);
-  if(d_convective){
-    exch_ps->require("convective_fluid",d_conv_fluid_matlindex);
-    exch_ps->require("convective_solid",d_conv_solid_matlindex);
-  }
+  // Exchange Coefficients
+  d_exchCoeff->problemSetup(mat_ps);
 
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
 
@@ -402,9 +396,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   
   //__________________________________
   //  Load Model info.
+  // If we are doing a restart, then use the "timestep.xml" 
+  if (materials_ps)
+    mat_ps = materials_ps;
+  else
+    mat_ps = prob_spec;
   ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   if(modelMaker){
-    modelMaker->makeModels(prob_spec, grid, sharedState, d_doAMR, d_models);
+
+    modelMaker->makeModels(mat_ps, grid, sharedState, d_doAMR);
+    d_models = modelMaker->getModels();
     releasePort("ModelMaker");
     d_modelSetup = scinew ICEModelSetup();
       
@@ -456,41 +457,8 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
     sharedState->registerICEMaterial(mat);
   }
 
-  // Pull out the exchange coefficients
-  ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
-  if (!exch_ps){
-    throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
-  }
-  
-  ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
-  d_K_mom.clear();
-  d_K_heat.clear();
-  exch_co_ps->require("momentum",d_K_mom);
-  exch_co_ps->require("heat",d_K_heat);
+  d_exchCoeff->problemSetup(mat_ps);
 
-  for (int i = 0; i<(int)d_K_mom.size(); i++) {
-    cout_norm << "K_mom = " << d_K_mom[i] << endl;
-    if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
-      ostringstream warn;
-      warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
-  for (int i = 0; i<(int)d_K_heat.size(); i++) {
-    cout_norm << "K_heat = " << d_K_heat[i] << endl;
-    if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
-      ostringstream warn;
-      warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
-
-  d_convective = false;
-  exch_ps->get("do_convective_heat_transfer", d_convective);
-  if(d_convective){
-    exch_ps->require("convective_fluid",d_conv_fluid_matlindex);
-    exch_ps->require("convective_solid",d_conv_solid_matlindex);
-  }
   // problem setup for each model  
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
      iter != d_models.end(); iter++){
@@ -508,34 +476,40 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
 {
   cout << "Updating Ex Coefficients" << endl;
   ProblemSpecP mat_ps  =  prob_spec->findBlock("AddMaterialProperties");
-  ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
-  if (!exch_ps){
-    throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
-  }
   
-  ProblemSpecP exch_co_ps = exch_ps->findBlock("exch_coef_after_MPM_add");
-  d_K_mom.clear();
-  d_K_heat.clear();
-  exch_co_ps->require("momentum",d_K_mom);
-  exch_co_ps->require("heat",    d_K_heat);
+  d_exchCoeff->problemSetup(mat_ps);
 
-  for (int i = 0; i<(int)d_K_mom.size(); i++) {
-    cout_norm << "K_mom = " << d_K_mom[i] << endl;
-    if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
-      ostringstream warn;
-      warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
-  for (int i = 0; i<(int)d_K_heat.size(); i++) {
-    cout_norm << "K_heat = " << d_K_heat[i] << endl;
-    if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
-      ostringstream warn;
-      warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
 }
+
+void ICE::outputProblemSpec(ProblemSpecP& root_ps)
+{
+
+  ProblemSpecP root = root_ps->getRootNode();
+
+  ProblemSpecP mat_ps = 0;
+  mat_ps = root->findBlock("MaterialProperties");
+
+  if (mat_ps == 0)
+    mat_ps = root->appendChild("MaterialProperties");
+
+  ProblemSpecP ice_ps = mat_ps->appendChild("ICE",true,1);
+  for (int i = 0; i < d_sharedState->getNumICEMatls();i++) {
+    ICEMaterial* mat = d_sharedState->getICEMaterial(i);
+    mat->outputProblemSpec(ice_ps);
+  }
+  d_exchCoeff->outputProblemSpec(mat_ps);
+
+  ProblemSpecP models_ps = root->appendChild("Models");
+
+  ModelMaker* modelmaker = 
+    dynamic_cast<ModelMaker*>(getPort("modelmaker"));
+  
+  if (modelmaker) {
+    modelmaker->outputProblemSpec(models_ps);
+  }
+
+}
+
 /*______________________________________________________________________
  Function~  ICE::scheduleInitializeAddedMaterial--
  _____________________________________________________________________*/
@@ -1522,7 +1496,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, d_sharedState->get_delt_label()); for AMR
  
-  if(d_convective){
+  if(d_exchCoeff->convective()){
     Ghost::GhostType  gac  = Ghost::AroundCells; 
     t->requires(Task::NewDW,MIlb->gMassLabel,       mpm_matls,  gac, 1);      
     t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
@@ -3193,6 +3167,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(),level);
+    cout_doing << "delT = " << delT << endl;
 
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
     StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
@@ -3302,7 +3277,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
        printData_FC( indx, patch,1, desc.str(), "vvel_FCME", vvel_FCME[m]);
        printData_FC( indx, patch,1, desc.str(), "wvel_FCME", wvel_FCME[m]);
       }
-    }
+    }    
   }  // patch loop  
 }
 
@@ -4627,7 +4602,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }  //end CellIterator loop
 
-  if(d_convective){
+  if(d_exchCoeff->convective()){
     //  Loop over matls
     //  if (mpm_matl)
     //  Loop over cells
@@ -4642,8 +4617,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     FastMatrix cet(2,2),ac(2,2);
     double RHSc[2];
     cet.zero();
-    int gm=d_conv_fluid_matlindex;  // gas matl from which to get heat
-    int sm=d_conv_solid_matlindex;  // solid matl that heat goes to
+    int gm=d_exchCoeff->conv_fluid_matlindex();  // gas matl from which to get heat
+    int sm=d_exchCoeff->conv_solid_matlindex();  // solid matl that heat goes to
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     constNCVariable<double> NC_CCweight, NCsolidMass;
@@ -5409,6 +5384,9 @@ void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 
    // Check if the # of coefficients = # of upper triangular terms needed
    int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
+
+   vector<double> d_K_mom = d_exchCoeff->K_mom();
+   vector<double> d_K_heat = d_exchCoeff->K_heat();
 
    vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
 

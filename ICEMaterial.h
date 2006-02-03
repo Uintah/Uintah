@@ -22,7 +22,7 @@ namespace Uintah {
   using namespace SCIRun;
   class ICELabel;
   class EquationOfState;
-  class GeometryObject2;
+  class GeometryObject;
  
 /**************************************
      
@@ -58,6 +58,8 @@ WARNING
    ICEMaterial(ProblemSpecP&);
    
    ~ICEMaterial();
+
+   virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
    
    //////////
    // Return correct EOS model pointer for this material
@@ -87,8 +89,8 @@ WARNING
    double d_gamma;
    bool d_isSurroundingMatl; // defines which matl is the background matl.
    
-   std::vector<GeometryObject2*> d_geom_objs;
-   
+   std::vector<GeometryObject*> d_geom_objs;
+
    ICELabel* lb;
    
    // Prevent copying of this class
