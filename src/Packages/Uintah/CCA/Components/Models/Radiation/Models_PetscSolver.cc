@@ -42,6 +42,27 @@ Models_PetscSolver::~Models_PetscSolver()
 //  finalizeSolver();
 }
 
+
+void 
+Models_PetscSolver::outputProblemSpec(ProblemSpecP& ps)
+{
+  ps->appendElement("linear_solver","petsc",false,4);
+
+  ProblemSpecP solver_ps = ps->appendChild("LinearSolver",true,4);
+
+  solver_ps->appendElement("underrelax",d_underrelax,false,4);
+  solver_ps->appendElement("max_iter", d_maxSweeps,false,4);
+  if (d_shsolver) 
+    solver_ps->appendElement("ksptype", d_kspType,false,4);
+  solver_ps->appendElement("tolerance", d_tolerance,false,4);
+  solver_ps->appendElement("pctype", d_pcType,false,4);
+  if (d_pcType == "asm")
+    solver_ps->appendElement("overlap", d_overlap,false,4);
+  if (d_pcType == "ilu")
+    solver_ps->appendElement("fill", d_fill,false,4);
+
+}
+
 // ****************************************************************************
 // Problem setup
 // ****************************************************************************

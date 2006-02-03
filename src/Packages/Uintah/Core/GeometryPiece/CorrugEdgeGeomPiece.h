@@ -63,6 +63,8 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~CorrugEdgeGeomPiece();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     /// Make a clone
     CorrugEdgeGeomPiece* clone();
 	 

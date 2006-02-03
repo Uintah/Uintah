@@ -57,6 +57,16 @@ FrictionContact::~FrictionContact()
   // Destructor
 }
 
+void FrictionContact::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP contact_ps = ps->appendChild("contact",true,2);
+  contact_ps->appendElement("type","friction",false,3);
+  contact_ps->appendElement("mu",d_mu,false,3);
+  contact_ps->appendElement("volume_constraint",d_vol_const,false,3);
+  d_matls.outputProblemSpec(contact_ps);
+}
+
+
 void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* matls,

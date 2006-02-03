@@ -45,6 +45,8 @@ WARNING
                    ProblemSpecP& params,
                   const bool doAMR);
     virtual ~PassiveScalar();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);

@@ -43,6 +43,7 @@ SteadyState::~SteadyState()
 }
 
 void SteadyState::problemSetup(const ProblemSpecP& ps, 
+                               const ProblemSpecP& materials_ps, 
                                SimulationStateP& state)
 {
   d_sharedState = state;

@@ -3,6 +3,8 @@
 
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 
@@ -28,6 +30,8 @@ namespace Uintah {
 
     //! Destructor of stability check
     virtual ~StabilityCheck();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 	 
     /*! Check the stability and return the direction of instability
       if any */

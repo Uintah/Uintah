@@ -74,6 +74,7 @@ WARNING
 	 // Destructor
 	 virtual ~DifferenceGeometryPiece();
 
+         virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
 	 /// Make a clone
 	 DifferenceGeometryPiece* clone();

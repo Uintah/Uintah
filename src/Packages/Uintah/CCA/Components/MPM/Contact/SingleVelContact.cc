@@ -46,7 +46,14 @@ SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,
 
 SingleVelContact::~SingleVelContact()
 {
-  // Destructor
+}
+
+void SingleVelContact::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP contact_ps = ps->appendChild("contact",true,2);
+  contact_ps->appendElement("type","single_velocity",false,3);
+  d_matls.outputProblemSpec(contact_ps);
+  
 
 }
 

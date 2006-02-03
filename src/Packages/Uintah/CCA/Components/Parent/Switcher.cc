@@ -134,7 +134,8 @@ Switcher::~Switcher()
   //VarLabel::destroy(d_switchLabel);
 }
 
-void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
+void Switcher::problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& materials_ps, GridP& grid,
                             SimulationStateP& sharedState)
 {
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex));
@@ -150,6 +151,8 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
 
     comp->attachPort("output",output);
     comp->attachPort("modelmaker",modelmaker);
+    // Do the materialmaker stuff
+
   }
 
   for (unsigned i = 0; i < d_componentIndex; i++) {
@@ -157,7 +160,7 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
     ProblemSpecInterface* psi = 
       dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",i));
     ProblemSpecP ups = psi->readInputFile();
-    sim->problemSetup(ups,grid,sharedState);
+    sim->problemSetup(ups,materials_ps,grid,sharedState);
     sharedState->clearMaterials();
   }
   
@@ -168,7 +171,7 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
   ProblemSpecP ups;
   if (psi) {
     ups = psi->readInputFile();
-    d_sim->problemSetup(ups,grid,sharedState);
+    d_sim->problemSetup(ups,materials_ps,grid,sharedState);
   } else {
     throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
   }
@@ -462,10 +465,11 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
       dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",
                                                   d_componentIndex));
 
-    ProblemSpecP ups;
+    ProblemSpecP ups,materials_ps=0;
     if (psi) {
       ups = psi->readInputFile();
-      d_sim->problemSetup(ups,const_cast<GridP&>(grid),d_sharedState);
+      d_sim->problemSetup(ups,materials_ps,const_cast<GridP&>(grid),
+                          d_sharedState);
     }
     // we need this to get the "ICE surrounding matl"
     d_sim->restartInitialize();

@@ -42,6 +42,8 @@ WARNING
     TestModel(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~TestModel();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
       

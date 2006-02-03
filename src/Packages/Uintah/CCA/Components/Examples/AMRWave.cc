@@ -28,10 +28,11 @@ AMRWave::~AMRWave()
 }
 
 
-void AMRWave::problemSetup(const ProblemSpecP& params, GridP& grid,
-		      SimulationStateP& sharedState)
+void AMRWave::problemSetup(const ProblemSpecP& params, 
+                           const ProblemSpecP& materials_ps, 
+                           GridP& grid, SimulationStateP& sharedState)
 {
-  Wave::problemSetup(params, grid, sharedState);
+  Wave::problemSetup(params, materials_ps,grid, sharedState);
   ProblemSpecP wave = params->findBlock("Wave");
   wave->require("refine_threshold", refine_threshold);
 

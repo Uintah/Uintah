@@ -66,8 +66,11 @@ public:
 	 
   //////////
   // Insert Documentation Here:
-  virtual void problemSetup(const ProblemSpecP& params, GridP&,
+  virtual void problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& materials_ps, GridP&,
 			    SimulationStateP&);
+
+  virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
@@ -118,11 +121,6 @@ public:
 	d_with_ice = true;
   };
 
-  int get8or27()
-  {
-       return flags->d_8or27;
-  };
-
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
@@ -142,7 +140,7 @@ protected:
 
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
 				    SimulationStateP& sharedState,
-				    MPMLabel* lb, MPMFlags* flags);
+				    MPMFlags* flags);
 	 
   virtual void actuallyInitialize(const ProcessorGroup*,
 				  const PatchSubset* patches,

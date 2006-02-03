@@ -26,8 +26,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
-    : ConstitutiveModel(Mlb,Mflag)
+MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
+    : ConstitutiveModel(Mflag)
 {
   ps->require("e_shear_modulus",d_initialData.E_Shear);
   ps->require("e_bulk_modulus",d_initialData.E_Bulk);
@@ -39,22 +39,39 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
 }
 
 MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
+  : ConstitutiveModel(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
   d_initialData.E_Shear = cm->d_initialData.E_Shear;
   d_initialData.E_Bulk = cm->d_initialData.E_Bulk;
   d_initialData.VE_Shear = cm->d_initialData.VE_Shear;
   d_initialData.VE_Bulk = cm->d_initialData.VE_Bulk;
   d_initialData.V_Viscosity = cm->d_initialData.V_Viscosity;
   d_initialData.D_Viscosity = cm->d_initialData.D_Viscosity;
-  
 }
 
 MWViscoElastic::~MWViscoElastic()
 {
 }
+
+void MWViscoElastic::outputProblemSpec(ProblemSpecP& ps,
+                                       bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","mw_visco_elastic");
+  }
+
+  cm_ps->appendElement("e_shear_modulus",d_initialData.E_Shear,false,4);
+  cm_ps->appendElement("e_bulk_modulus",d_initialData.E_Bulk,false,4);
+  cm_ps->appendElement("ve_shear_modulus",d_initialData.VE_Shear,false,4);
+  cm_ps->appendElement("ve_bulk_modulus",d_initialData.VE_Bulk,false,4);
+  cm_ps->appendElement("ve_volumetric_viscosity",d_initialData.V_Viscosity,
+                       false,4);
+  cm_ps->appendElement("ve_deviatoric_viscosity",d_initialData.D_Viscosity,
+                       false,4);
+}
+
 
 MWViscoElastic* MWViscoElastic::clone()
 {

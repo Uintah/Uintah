@@ -36,12 +36,9 @@ using namespace SCIRun;
 //_____________________with strain-based failure criteria
 //_____________________implicit MPM
 
-TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
-                                             MPMFlags* Mflag) : ImplicitCM(Mlb)
-//______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
+TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag),ImplicitCM()
 {
-  lb = Mlb;
-  flag = Mflag;
   d_useModifiedEOS = false;
 //______________________material properties
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -57,14 +54,6 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->require("max_matrix_strain",d_initialData.crit_shear);
   ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
-//______________________interpolation
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
-    NGN=1;
-  } else if(d_8or27==27){
-    NGN=2;
-  }
-
   pStretchLabel = VarLabel::create("p.stretch",
         ParticleVariable<double>::getTypeDescription());
   pStretchLabel_preReloc = VarLabel::create("p.stretch+",
@@ -77,11 +66,8 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
 }
 
 TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
+  : ConstitutiveModel(cm), ImplicitCM(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  d_8or27 = cm->d_8or27;
-  NGN = cm->NGN;
 
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
@@ -106,6 +92,32 @@ TransIsoHyperImplicit::~TransIsoHyperImplicit()
   VarLabel::destroy(pFailureLabel);
   VarLabel::destroy(pFailureLabel_preReloc);
 }
+
+
+void TransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
+                                              bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","trans_iso_hyper");
+  }
+
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk);
+  cm_ps->appendElement("c1", d_initialData.c1,false,4);
+  cm_ps->appendElement("c2", d_initialData.c2,false,4);
+  cm_ps->appendElement("c3", d_initialData.c3,false,4);
+  cm_ps->appendElement("c4", d_initialData.c4,false,4);
+  cm_ps->appendElement("c5", d_initialData.c5,false,4);
+  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star,false,4);
+  cm_ps->appendElement("direction_of_symm", d_initialData.a0,false,4);
+  cm_ps->appendElement("failure_option",d_initialData.failure,false,4);
+  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch,false,4);
+  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear,false,4);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
+}
+
+
 
 
 TransIsoHyperImplicit* TransIsoHyperImplicit::clone()

@@ -26,7 +26,7 @@
 using namespace Uintah;
 using namespace std;
 static DebugStream cout_doing("AMRICE_DOING_COUT", false);
-static DebugStream cout_dbg("AMRICE_DBG", false);
+
 //setenv SCI_DEBUG AMR:+ you can see the new grid it creates
 
 
@@ -39,13 +39,14 @@ AMRICE::~AMRICE()
 {
 }
 //___________________________________________________________________
-void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
-                            SimulationStateP& sharedState)
+void AMRICE::problemSetup(const ProblemSpecP& params, 
+                          const ProblemSpecP& materials_ps, 
+                          GridP& grid, SimulationStateP& sharedState)
 {
   cout_doing << d_myworld->myrank() 
              << " Doing problemSetup  \t\t\t AMRICE" << '\n';
              
-  ICE::problemSetup(params, grid, sharedState);
+  ICE::problemSetup(params, materials_ps,grid, sharedState);
   ProblemSpecP cfd_ps = params->findBlock("CFD");
   ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
   ProblemSpecP amr_ps = ice_ps->findBlock("AMR");

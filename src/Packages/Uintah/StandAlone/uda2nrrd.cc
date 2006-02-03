@@ -10,11 +10,18 @@
  *  Copyright (C) 2003 U of U
  */
 
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>
+
+
 #include <Core/Math/MinMax.h>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>

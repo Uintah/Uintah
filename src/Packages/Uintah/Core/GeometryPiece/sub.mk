@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Core/GeometryPiece
 
 SRCS     += \
+	$(SRCDIR)/GeometryObject.cc \
 	$(SRCDIR)/GeometryPiece.cc \
 	$(SRCDIR)/SphereGeometryPiece.cc \
 	$(SRCDIR)/SphereMembraneGeometryPiece.cc \

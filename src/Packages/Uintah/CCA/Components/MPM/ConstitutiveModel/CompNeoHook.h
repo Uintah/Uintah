@@ -48,11 +48,13 @@ namespace Uintah {
 
   public:
     // constructors
-    CompNeoHook(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+    CompNeoHook(ProblemSpecP& ps, MPMFlags* flag);
     CompNeoHook(const CompNeoHook* cm);
        
     // destructor
     virtual ~CompNeoHook();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     CompNeoHook* clone();

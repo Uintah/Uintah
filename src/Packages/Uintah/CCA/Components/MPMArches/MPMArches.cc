@@ -89,8 +89,9 @@ MPMArches::~MPMArches()
 // problem set up
 // ****************************************************************************
 
-void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-			  SimulationStateP& sharedState)
+void MPMArches::problemSetup(const ProblemSpecP& prob_spec, 
+                             const ProblemSpecP& materials_ps,
+                             GridP& grid, SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
 
@@ -115,11 +116,11 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    calcVel = !dontCalcVel;
 
    d_mpm->setMPMLabel(Mlb);
-   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
+   d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
    // set multimaterial label in Arches to access interface variables
    d_arches->setMPMArchesLabel(d_MAlb);
    d_Alab = d_arches->getArchesLabel();
-   d_arches->problemSetup(prob_spec, grid, d_sharedState);
+   d_arches->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
 
    d_arches->getBoundaryCondition()->setIfCalcEnergyExchange(d_calcEnergyExchange);
    d_arches->getBoundaryCondition()->setIfFixTemp(d_fixTemp);

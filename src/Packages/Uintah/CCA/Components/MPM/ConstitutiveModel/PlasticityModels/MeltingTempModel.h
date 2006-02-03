@@ -2,6 +2,8 @@
 #define __MELTING_TEMP_MODEL_H__
 
 #include "PlasticityState.h"
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 
@@ -26,6 +28,8 @@ namespace Uintah {
     //! Destructor of melting temp model.  
     /*! Virtual to ensure correct behavior */
     virtual ~MeltingTempModel();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 	 
     /////////////////////////////////////////////////////////////////////////
     /*! 

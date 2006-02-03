@@ -155,6 +155,8 @@ namespace Uintah {
          
     // destructor 
     virtual ~MTSPlastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
          
     // Computes and requires for internal evolution variables
     // Only one internal variable for MTS model :: mechanical threshold stress

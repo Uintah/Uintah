@@ -15,7 +15,6 @@
 #include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
-
 #include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
@@ -114,8 +113,9 @@ double MPMICE::recomputeTimestep(double current_dt)
 } 
 //______________________________________________________________________
 //
-void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-                          SimulationStateP& sharedState)
+void MPMICE::problemSetup(const ProblemSpecP& prob_spec, 
+                          const ProblemSpecP& materials_ps, 
+                          GridP& grid, SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
@@ -125,7 +125,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //  d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->attachPort("output",dataArchiver);
-  d_mpm->problemSetup(prob_spec, grid, d_sharedState);
+  d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
   d_8or27 = d_mpm->flags->d_8or27; 
   if(d_8or27==8){
     NGN=1;
@@ -137,8 +137,10 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     (getPort("switch_criteria"));
   
   if (d_switchCriteria) {
-    d_switchCriteria->problemSetup(prob_spec,d_sharedState);
+    d_switchCriteria->problemSetup(prob_spec,materials_ps,d_sharedState);
   }
+
+#if 0
     
   // Get the PBX matl id
   int matl_id = 0;
@@ -153,6 +155,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     
     matl_id++;
   }
+#endif
 
   //__________________________________
   //  I C E
@@ -176,7 +179,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   }
   
   d_ice->setICELabel(Ilb);
-  d_ice->problemSetup(prob_spec, grid, d_sharedState);
+  d_ice->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
 
 
   if(models){  // some models may need to have access to MPMLabels
@@ -220,6 +223,15 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     cout_norm << "--------------------------------\n"<<endl;
   }
 }
+
+
+void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
+{
+  d_mpm->outputProblemSpec(root_ps);
+  d_ice->outputProblemSpec(root_ps);
+}
+
+
 //______________________________________________________________________
 //
 void MPMICE::scheduleInitialize(const LevelP& level,
@@ -261,6 +273,9 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 
 void MPMICE::restartInitialize()
 {
+  if (cout_doing.active())
+    cout_doing <<"Doing restartInitialize \t\t\t MPMICE" << endl;
+
   d_mpm->restartInitialize();
   d_ice->restartInitialize();
 }

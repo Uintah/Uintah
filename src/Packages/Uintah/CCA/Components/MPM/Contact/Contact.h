@@ -6,7 +6,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-
 #include <math.h>
 
 namespace Uintah {
@@ -51,8 +50,11 @@ WARNING
   class Contact : public UintahParallelComponent {
       public:
          // Constructor
-         Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag, ProblemSpecP ps);
+         Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag,
+                 ProblemSpecP ps);
 	 virtual ~Contact();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorGroup*,

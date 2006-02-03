@@ -39,15 +39,17 @@ namespace Uintah {
          // copy constructor
          //HypoElasticImplicit(const HypoElasticImplicit &cm);
          HypoElasticImplicit& operator=(const HypoElasticImplicit &cm);
-         int d_8or27;
 
       public:
          // constructors
-         HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+         HypoElasticImplicit(ProblemSpecP& ps, MPMFlags* flag);
          HypoElasticImplicit(const HypoElasticImplicit* cm);
        
          // destructor
          virtual ~HypoElasticImplicit();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps,
+                                        bool output_cm_tag = true);
 
          // clone
          HypoElasticImplicit* clone();

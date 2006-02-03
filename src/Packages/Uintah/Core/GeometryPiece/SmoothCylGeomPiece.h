@@ -86,6 +86,8 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~SmoothCylGeomPiece();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     /// Make a clone
     SmoothCylGeomPiece* clone();
 	 

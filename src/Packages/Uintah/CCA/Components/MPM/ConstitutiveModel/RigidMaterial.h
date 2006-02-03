@@ -47,11 +47,13 @@ namespace Uintah {
   public:
 
     // constructors
-    RigidMaterial(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
+    RigidMaterial(ProblemSpecP& ps, MPMFlags* flag);
     RigidMaterial(const RigidMaterial* cm);
        
     // destructor
     virtual ~RigidMaterial();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     RigidMaterial* clone();
 

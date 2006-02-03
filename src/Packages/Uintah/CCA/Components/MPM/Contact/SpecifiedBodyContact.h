@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <string>
 
 namespace Uintah {
 
@@ -132,14 +133,13 @@ DESCRIPTION
     SpecifiedBodyContact(const SpecifiedBodyContact &con);
     SpecifiedBodyContact& operator=(const SpecifiedBodyContact &con);
 	 
-  private:
     Vector findVelFromProfile(double t) const;
     
-  private:
     SimulationStateP d_sharedState;
     double    d_stop_time;
     Vector    d_vel_after_stop;
     int       d_material;
+    std::string    d_filename;
     IntVector d_direction;
     std::vector< std::pair<double, Vector> > d_vel_profile;
     
@@ -150,6 +150,8 @@ DESCRIPTION
 	 
     // Destructor
     virtual ~SpecifiedBodyContact();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 
     // Basic contact methods
     virtual void exMomInterpolated(const ProcessorGroup*,

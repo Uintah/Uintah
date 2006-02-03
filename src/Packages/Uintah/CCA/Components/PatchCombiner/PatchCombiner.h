@@ -50,8 +50,9 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			       SimulationStateP& state);
+     virtual void problemSetup(const ProblemSpecP& params, 
+                               const ProblemSpecP& materials_ps, 
+                               GridP& grid, SimulationStateP& state);
      
      //////////
      // Insert Documentation Here:

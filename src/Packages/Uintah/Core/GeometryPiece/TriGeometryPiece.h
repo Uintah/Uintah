@@ -64,6 +64,8 @@ WARNING
 	 
 	 // Destructor
 	 virtual ~TriGeometryPiece();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
 	 /// Make a clone
 	 TriGeometryPiece* clone();
@@ -84,6 +86,7 @@ WARNING
 	 void makeTriBoxes();
 	 void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
 	 
+         std::string d_file;
 	 Box d_box;
 	 vector<Point> d_points;
 	 vector<IntVector> d_tri;

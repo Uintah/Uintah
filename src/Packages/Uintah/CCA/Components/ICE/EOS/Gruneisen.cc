@@ -21,6 +21,13 @@ Gruneisen::Gruneisen(ProblemSpecP& ps)
 Gruneisen::~Gruneisen()
 {
 }
+
+void Gruneisen::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  eos_ps->setAttribute("type","Gruneisen");
+}
+
 //__________________________________
 double Gruneisen::computeRhoMicro(double P, double,
                                  double , double T, double)

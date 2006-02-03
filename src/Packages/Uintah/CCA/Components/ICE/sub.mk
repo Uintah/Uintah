@@ -10,14 +10,14 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
-       $(SRCDIR)/GeometryObject2.cc \
        $(SRCDIR)/Turbulence.cc \
        $(SRCDIR)/SmagorinskyModel.cc \
        $(SRCDIR)/DynamicModel.cc \
        $(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc \
        $(SRCDIR)/impAMRICE.cc \
-       $(SRCDIR)/customInitialize.cc   
+       $(SRCDIR)/customInitialize.cc   \
+       $(SRCDIR)/ExchangeCoefficients.cc   	
        
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
 

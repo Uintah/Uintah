@@ -22,14 +22,17 @@ using namespace Uintah;
 
 ImplicitCM::ImplicitCM()
 {
+  d_lb = scinew MPMLabel();
 }
 
-ImplicitCM::ImplicitCM(MPMLabel* Mlb) : d_lb(Mlb)
+ImplicitCM::ImplicitCM(const ImplicitCM* cm)
 {
+  d_lb = scinew MPMLabel();
 }
 
 ImplicitCM::~ImplicitCM()
 {
+  delete d_lb;
 }
 
 ///////////////////////////////////////////////////////////////////////

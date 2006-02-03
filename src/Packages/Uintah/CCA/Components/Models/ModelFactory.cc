@@ -21,7 +21,7 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace std;
+
 
 ModelFactory::ModelFactory(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
@@ -30,13 +30,21 @@ ModelFactory::ModelFactory(const ProcessorGroup* myworld)
 
 ModelFactory::~ModelFactory()
 {
+  for (std::vector<ModelInterface*>::const_iterator it = d_models.begin();
+       it != d_models.end(); it++) 
+    delete *it;
+
+}
+
+std::vector<ModelInterface*> ModelFactory::getModels()
+{
+  return d_models;
 }
 
 void ModelFactory::makeModels(const ProblemSpecP& params, 
                               GridP&,
                               SimulationStateP&,
-                              const bool doAMR,
-                              vector<ModelInterface*>& models)
+                              const bool doAMR)
 {
   ProblemSpecP m = params->findBlock("Models");
   if(!m)
@@ -49,32 +57,42 @@ void ModelFactory::makeModels(const ProblemSpecP& params,
     }
     
     if(type == "SimpleRxn")
-      models.push_back(scinew SimpleRxn(d_myworld, model));
+      d_models.push_back(scinew SimpleRxn(d_myworld, model));
     else if(type == "AdiabaticTable")
-      models.push_back(scinew AdiabaticTable(d_myworld, model,doAMR));
+      d_models.push_back(scinew AdiabaticTable(d_myworld, model,doAMR));
     else if(type == "Test")
-      models.push_back(scinew TestModel(d_myworld, model));
+      d_models.push_back(scinew TestModel(d_myworld, model));
     else if(type == "Mixing")
-      models.push_back(scinew Mixing(d_myworld, model));
+      d_models.push_back(scinew Mixing(d_myworld, model));
     else if(type == "Simple_Burn")
-      models.push_back(scinew Simple_Burn(d_myworld, model));
+      d_models.push_back(scinew Simple_Burn(d_myworld, model));
     else if(type == "Steady_Burn")
-      models.push_back(scinew Steady_Burn(d_myworld, model));
+      d_models.push_back(scinew Steady_Burn(d_myworld, model));
     else if(type == "IandG")
-      models.push_back(scinew IandG(d_myworld, model));
+      d_models.push_back(scinew IandG(d_myworld, model));
     else if(type == "JWLpp")
-      models.push_back(scinew JWLpp(d_myworld, model));
+      d_models.push_back(scinew JWLpp(d_myworld, model));
     else if(type == "LightTime")
-      models.push_back(scinew LightTime(d_myworld, model));
+      d_models.push_back(scinew LightTime(d_myworld, model));
     else if(type == "flameSheet_rxn")
-      models.push_back(scinew flameSheet_rxn(d_myworld, model));
+      d_models.push_back(scinew flameSheet_rxn(d_myworld, model));
     else if(type == "PassiveScalar")
-      models.push_back(scinew PassiveScalar(d_myworld, model, doAMR));
+      d_models.push_back(scinew PassiveScalar(d_myworld, model, doAMR));
     else if(type == "VorticityConfinement")
-      models.push_back(scinew VorticityConfinement(d_myworld, model));
+      d_models.push_back(scinew VorticityConfinement(d_myworld, model));
     else if(type == "Radiation")
-      models.push_back(scinew RadiationDriver(d_myworld, model));
+      d_models.push_back(scinew RadiationDriver(d_myworld, model));
     else
       throw ProblemSetupException("Unknown model: "+type, __FILE__, __LINE__);
   }
+}
+
+
+void ModelFactory::outputProblemSpec(ProblemSpecP& models_ps)
+{
+  for (std::vector<ModelInterface*>::const_iterator it = d_models.begin();
+       it != d_models.end(); it++) {
+    (*it)->outputProblemSpec(models_ps);
+  }
+
 }

@@ -50,7 +50,7 @@ namespace Uintah {
   public:
          
     ImplicitCM();
-    ImplicitCM(MPMLabel* Mlb);
+    ImplicitCM(const ImplicitCM* cm);
     virtual ~ImplicitCM();
          
     virtual void computeStressTensor(const PatchSubset* patches,

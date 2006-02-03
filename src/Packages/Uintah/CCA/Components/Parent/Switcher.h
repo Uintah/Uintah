@@ -16,7 +16,8 @@ namespace Uintah {
     Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR);
     virtual ~Switcher();
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+    virtual void problemSetup(const ProblemSpecP& params, 
+                              const ProblemSpecP& materials_ps, GridP& grid,
 			      SimulationStateP&);
     virtual void scheduleInitialize(const LevelP& level,
 				    SchedulerP& sched);

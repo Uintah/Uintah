@@ -69,7 +69,9 @@ public:
       //
       // Set up the problem specification database
       //
-      void problemSetup(const ProblemSpecP& params);
+      virtual void problemSetup(const ProblemSpecP& params);
+
+      void outputProblemSpec(ProblemSpecP& ps);
     
       // GROUP: Actual Action Methods :
       ///////////////////////////////////////////////////////////////////////
@@ -109,6 +111,7 @@ private:
 
       int MAXITR;
       double QACCU, d_opl, af, qerr, totsrc;
+      string d_prop_model;
       int iflag, iriter;
       int lambda;
       double wavemin, wavemax, dom, omega, srcsum;

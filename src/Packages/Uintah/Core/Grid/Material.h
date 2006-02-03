@@ -48,6 +48,8 @@ WARNING
       
      virtual ~Material();
       
+     virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
+
       //////////
       // Return index associated with this material's
       // location in the data warehouse

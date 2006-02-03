@@ -78,6 +78,8 @@ class RadiationDriver : public ModelInterface {
   // GROUP: Schedule Action
   ////////////////////////////////////////////////////////////////////////
 
+  virtual void outputProblemSpec(ProblemSpecP& ps);
+
   virtual void problemSetup(GridP& grid,
                             SimulationStateP& sharedState,
                             ModelSetup* setup);

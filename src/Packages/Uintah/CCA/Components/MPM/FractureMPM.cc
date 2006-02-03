@@ -110,17 +110,22 @@ FractureMPM::~FractureMPM()
   MPMPhysicalBCFactory::clean();
 }
 
-void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, 
+                               const ProblemSpecP& materials_ps,GridP& grid,
 			       SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
-    
-  ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
+  
+  ProblemSpecP mpm_soln_ps = 0;
+  if (materials_ps)
+    mpm_soln_ps = materials_ps->findBlock("MPM");
+  else
+    mpm_soln_ps = prob_spec->findBlock("MPM");
       
   if(mpm_soln_ps) {
 	        
     // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(mpm_soln_ps, grid);
+    flags->readMPMFlags(mpm_soln_ps);
     if (flags->d_integrator_type == "implicit")
       throw ProblemSetupException("Can't use implicit integration with -mpm", __FILE__, __LINE__);
 
@@ -179,7 +184,7 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   crackModel =  scinew Crack(prob_spec,sharedState,dataArchiver,lb,flags);
 
-  materialProblemSetup(prob_spec, d_sharedState, lb, flags);
+  materialProblemSetup(prob_spec, d_sharedState, flags);
 //  GridP grid;
 //  addMaterial(prob_spec, grid ,sharedState);
 }
@@ -194,7 +199,7 @@ void FractureMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps);
     sharedState->registerMPMMaterial(mat);
   }
 }
@@ -203,7 +208,7 @@ void FractureMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
 void
 FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
                                   SimulationStateP& sharedState,
-                                  MPMLabel* lb, MPMFlags* flags)
+                                  MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
@@ -212,14 +217,14 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
        ps = ps->findNextBlock("material") ) {
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps);
     sharedState->registerMPMMaterial(mat);
 
     // If new particles are to be created, create a copy of each material
     // without the associated geometry
     if (flags->d_createNewParticles) {
       MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(mat, flags,sharedState);
+      mat_copy->copyWithoutGeom(ps,mat, flags);
       sharedState->registerMPMMaterial(mat_copy);
     }
   }
@@ -930,7 +935,7 @@ void FractureMPM::scheduleAddNewParticles(SchedulerP& sched,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
-                                                                 patches, lb);
+                                                                 patches);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->allocateCMDataAddRequires(t,mpm_matl,patches,lb);
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
@@ -965,7 +970,7 @@ void FractureMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
       cout_convert << " Material = " << m << " mpm_matl = " <<mpm_matl<< endl;
 
     mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
-                                                                 patches, lb);
+                                                                 patches);
     if (cout_convert.active())
       cout_convert << "   Done ParticleCreator::allocateVariablesAddRequires\n";
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -2705,7 +2710,7 @@ void FractureMPM::addNewParticles(const ProcessorGroup*,
 	//  mpm_matl->getParticleCreator()->returnParticleState();
 	//printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
 	
-	particle_creator->allocateVariablesAdd(lb,new_dw,addset,newState,
+	particle_creator->allocateVariablesAdd(new_dw,addset,newState,
 	                                       delset,old_dw);	
 
 	// Need to do the constitutive models particle variables;
@@ -2855,7 +2860,7 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
 	//  mpm_matl->getParticleCreator()->returnParticleState();
 	//printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
 	
-	particle_creator->allocateVariablesAdd(lb, new_dw, addset, newState,
+	particle_creator->allocateVariablesAdd(new_dw, addset, newState,
 	                                       delset, old_dw);
 	
 	conv_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw, addset,

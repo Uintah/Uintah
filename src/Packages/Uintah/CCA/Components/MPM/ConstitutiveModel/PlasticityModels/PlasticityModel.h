@@ -38,6 +38,8 @@ namespace Uintah {
          
     PlasticityModel();
     virtual ~PlasticityModel();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
          
     // Computes and requires for internal evolution variables
     virtual void addInitialComputesAndRequires(Task* task,

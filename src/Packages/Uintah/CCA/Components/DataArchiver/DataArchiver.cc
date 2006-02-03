@@ -14,6 +14,8 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
+#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -99,6 +101,7 @@ DataArchiver::problemSetup(const ProblemSpecP& params,
                            SimulationState* state)
 {
    d_sharedState = state;
+   d_upsFile = params;
    ProblemSpecP p = params->findBlock("DataArchiver");
 
    d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
@@ -1226,7 +1229,11 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         dataElem->appendText("\n");
       }
 
-      SimulationInterface* sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+      // Add the <Materials> section to the timestep.xml
+      SimulationInterface* sim = 
+        dynamic_cast<SimulationInterface*>(getPort("sim")); 
+      sim->outputProblemSpec(rootElem);
+
       sim->addToTimestepXML(rootElem);
 
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";

@@ -20,6 +20,7 @@ namespace Uintah {
       virtual ~TimestepNumber();
       
       virtual void problemSetup(const ProblemSpecP& ps, 
+                                const ProblemSpecP& materials_ps, 
                                 SimulationStateP& sharedState);
 
       virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);

@@ -49,6 +49,8 @@ WARNING
                    const bool doAMR);
                    
     virtual ~AdiabaticTable();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);

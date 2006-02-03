@@ -128,6 +128,7 @@ else
         Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
+	Packages/Uintah/CCA/Components/MPM \
         Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
@@ -195,6 +196,7 @@ else
         Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/MPM \
         Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
@@ -235,6 +237,7 @@ else
         Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/CCA/Components/MPM \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Core/Basis        \
         Core/Exceptions   \
@@ -278,6 +281,7 @@ else
         Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/MPM \
         Core/Exceptions  \
         Core/Persistent   \
         Core/Geometry    \
@@ -301,16 +305,17 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Grid \
-        Packages/Uintah/Core/Util \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Exceptions \
-        Packages/Uintah/Core/Math \
-        Packages/Uintah/Core/ProblemSpec \
-        Packages/Uintah/CCA/Ports \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        Core/Exceptions \
+	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/Util \
+	Packages/Uintah/Core/GeometryPiece \
+	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/Exceptions \
+	Packages/Uintah/Core/Math \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/CCA/Ports \
+	Packages/Uintah/CCA/Components/ProblemSpecification \
+	Packages/Uintah/CCA/Components/MPM \
+	Core/Exceptions \
         Core/Geometry
 endif
 
@@ -404,6 +409,7 @@ else
       Packages/Uintah/Core/ProblemSpec \
       Packages/Uintah/CCA/Ports \
       Packages/Uintah/CCA/Components/ProblemSpecification \
+      Packages/Uintah/CCA/Components/MPM \
       Core/Exceptions \
       Core/Geometry
 endif

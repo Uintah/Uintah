@@ -17,6 +17,13 @@ Harlow::~Harlow()
 }
 
 
+void Harlow::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  eos_ps->setAttribute("type","harlow");
+}
+
+
 double Harlow::getGasConstant() const
 {
   return d_gas_constant;

@@ -8,11 +8,9 @@ namespace Uintah {
   class MembraneParticleCreator : public ParticleCreator {
   public:
     
-    MembraneParticleCreator(MPMMaterial* matl, 
-			    MPMLabel* lb,
-			    MPMFlags* flags,SimulationStateP& sharedState);
+    MembraneParticleCreator(MPMMaterial* matl,MPMFlags* flags);
     virtual ~MembraneParticleCreator();
-    
+
     virtual ParticleSubset* createParticles(MPMMaterial* matl, 
 					    particleIndex numParticles,
 					    CCVariable<short int>& cellNAPID,
@@ -26,8 +24,8 @@ namespace Uintah {
     virtual particleIndex countAndCreateParticles(const Patch*,
 						  GeometryObject* obj) ;
 
-    virtual void registerPermanentParticleState(MPMMaterial* matl,
-						MPMLabel* lb);
+    virtual void registerPermanentParticleState(MPMMaterial* matl);
+
 
   protected:
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,

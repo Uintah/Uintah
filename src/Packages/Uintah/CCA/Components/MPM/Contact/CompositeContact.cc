@@ -17,6 +17,12 @@ CompositeContact::~CompositeContact()
     delete *mit;
 }
 
+void CompositeContact::outputProblemSpec(ProblemSpecP& ps)
+{
+  for (list<Contact*>::const_iterator it = d_m.begin(); it != d_m.end(); it++)
+    (*it)->outputProblemSpec(ps);
+}
+
 void
 CompositeContact::add(Contact * m)
 {

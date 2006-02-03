@@ -81,6 +81,38 @@ MTSPlastic::~MTSPlastic()
   //VarLabel::destroy(pMTSLabel);
   //VarLabel::destroy(pMTSLabel_preReloc);
 }
+
+
+void MTSPlastic::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model",true,4);
+  plastic_ps->setAttribute("type","mts_model");
+
+  plastic_ps->appendElement("sigma_a",d_CM.sigma_a,false,5);
+  plastic_ps->appendElement("mu_0",d_CM.mu_0,false,5); //b1
+  plastic_ps->appendElement("D",d_CM.D,false,5); //b2
+  plastic_ps->appendElement("T_0",d_CM.T_0,false,5); //b3
+  plastic_ps->appendElement("koverbcubed",d_CM.koverbcubed,false,5);
+  plastic_ps->appendElement("g_0i",d_CM.g_0i,false,5);
+  plastic_ps->appendElement("g_0e",d_CM.g_0e,false,5); // g0
+  plastic_ps->appendElement("edot_0i",d_CM.edot_0i,false,5);
+  plastic_ps->appendElement("edot_0e",d_CM.edot_0e,false,5); //edot
+  plastic_ps->appendElement("p_i",d_CM.p_i,false,5);
+  plastic_ps->appendElement("q_i",d_CM.q_i,false,5);
+  plastic_ps->appendElement("p_e",d_CM.p_e,false,5); //p
+  plastic_ps->appendElement("q_e",d_CM.q_e,false,5); //q
+  plastic_ps->appendElement("sigma_i",d_CM.sigma_i,false,5);
+  plastic_ps->appendElement("a_0",d_CM.a_0,false,5);
+  plastic_ps->appendElement("a_1",d_CM.a_1,false,5);
+  plastic_ps->appendElement("a_2",d_CM.a_2,false,5);
+  plastic_ps->appendElement("a_3",d_CM.a_3,false,5);
+  plastic_ps->appendElement("theta_IV",d_CM.theta_IV,false,5);
+  plastic_ps->appendElement("alpha",d_CM.alpha,false,5);
+  plastic_ps->appendElement("edot_es0",d_CM.edot_es0,false,5);
+  plastic_ps->appendElement("g_0es",d_CM.g_0es,false,5); //A
+  plastic_ps->appendElement("sigma_es0",d_CM.sigma_es0,false,5);
+}
+
          
 void 
 MTSPlastic::addInitialComputesAndRequires(Task* ,

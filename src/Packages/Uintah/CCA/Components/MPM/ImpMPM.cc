@@ -111,8 +111,9 @@ ImpMPM::~ImpMPM()
   MPMPhysicalBCFactory::clean();
 }
 
-void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-                             SimulationStateP& sharedState)
+void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, 
+                          const ProblemSpecP& materials_ps,GridP& grid,
+                          SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
 
@@ -120,13 +121,18 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
 
-   ProblemSpecP mpm_ps = prob_spec->findBlock("MPM");
+   
+   ProblemSpecP mpm_ps = 0;
+   if (materials_ps)
+     mpm_ps = materials_ps->findBlock("MPM");
+   else
+     mpm_ps = prob_spec->findBlock("MPM");
 
    string integrator_type;
    if (mpm_ps) {
 
      // Read all MPM flags (look in MPMFlags.cc)
-     flags->readMPMFlags(mpm_ps, grid);
+     flags->readMPMFlags(mpm_ps);
      if (flags->d_integrator_type != "implicit")
        throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
 
@@ -203,7 +209,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    int numMatls=0;
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
+     MPMMaterial *mat = scinew MPMMaterial(ps);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
      numMatls++;
@@ -227,7 +233,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      (getPort("switch_criteria"));
    
    if (d_switchCriteria) {
-     d_switchCriteria->problemSetup(prob_spec,d_sharedState);
+     d_switchCriteria->problemSetup(prob_spec,materials_ps,d_sharedState);
    }
     
    

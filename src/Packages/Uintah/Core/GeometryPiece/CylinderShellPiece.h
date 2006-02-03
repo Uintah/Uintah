@@ -55,6 +55,8 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~CylinderShellPiece();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     /// Make a clone
     CylinderShellPiece* clone();
 	 

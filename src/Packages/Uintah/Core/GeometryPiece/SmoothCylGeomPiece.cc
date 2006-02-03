@@ -56,6 +56,23 @@ SmoothCylGeomPiece::~SmoothCylGeomPiece()
 {
 }
 
+void SmoothCylGeomPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP smooth_ps = ps->appendChild("smoothcyl",true,4);
+
+  smooth_ps->appendElement("bottom", d_bottom,false,5);
+  smooth_ps->appendElement("top", d_top,false,5);
+  smooth_ps->appendElement("radius", d_radius,false,5);
+  smooth_ps->appendElement("num_radial", d_numRadial,false,5);
+  smooth_ps->appendElement("num_axial", d_numAxial,false,5);
+  smooth_ps->appendElement("thickness", d_thickness,false,5);
+  smooth_ps->appendElement("endcap_thickness", d_capThick,false,5);
+  smooth_ps->appendElement("output_file", d_fileName,false,5);
+
+}
+
+
+
 SmoothCylGeomPiece* SmoothCylGeomPiece::clone()
 {
   return scinew SmoothCylGeomPiece(*this);

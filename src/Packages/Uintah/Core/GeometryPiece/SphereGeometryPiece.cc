@@ -40,6 +40,15 @@ SphereGeometryPiece::~SphereGeometryPiece()
 {
 }
 
+void SphereGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP sphere_ps = ps->appendChild("sphere",true,4);
+
+  sphere_ps->appendElement("origin",d_origin,false,5);
+  sphere_ps->appendElement("radius",d_radius,false,5);
+}
+
+
 SphereGeometryPiece* SphereGeometryPiece::clone()
 {
   return scinew SphereGeometryPiece(*this);

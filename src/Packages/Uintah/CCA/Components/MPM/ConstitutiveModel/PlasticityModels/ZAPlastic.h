@@ -103,6 +103,8 @@ namespace Uintah {
          
     // destructor 
     virtual ~ZAPlastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
          
     // Computes and requires for internal evolution variables
     virtual void addInitialComputesAndRequires(Task* task,

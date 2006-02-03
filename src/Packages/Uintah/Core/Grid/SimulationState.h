@@ -81,8 +81,10 @@ public:
 
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
+  void registerMPMMaterial(MPMMaterial*,unsigned int index);
   void registerArchesMaterial(ArchesMaterial*);
   void registerICEMaterial(ICEMaterial*);
+  void registerICEMaterial(ICEMaterial*,unsigned int index);
   int getNumVelFields() const;
 
   int getNumMatls() const {
@@ -172,6 +174,7 @@ public:
 private:
 
   void registerMaterial(Material*);
+  void registerMaterial(Material*,unsigned int index);
 
   SimulationState(const SimulationState&);
   SimulationState& operator=(const SimulationState&);

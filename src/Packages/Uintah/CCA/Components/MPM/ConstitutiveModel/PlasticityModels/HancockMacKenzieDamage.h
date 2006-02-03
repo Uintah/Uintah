@@ -57,6 +57,8 @@ namespace Uintah {
 	 
     // destructor 
     virtual ~HancockMacKenzieDamage();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     //////////////////////////////////////////////////////////////////////////
     /*! 

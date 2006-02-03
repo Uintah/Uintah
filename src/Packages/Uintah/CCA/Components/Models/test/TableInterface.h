@@ -49,6 +49,7 @@ WARNING
 			     const CellIterator&,
 			     vector<constCCVariable<double> >& independents) = 0;
     virtual double interpolate(int index, vector<double>& independents) = 0;
+
   private:
   };
 } // End namespace Uintah

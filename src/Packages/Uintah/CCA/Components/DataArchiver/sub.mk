@@ -16,6 +16,8 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
+	Packages/Uintah/CCA/Components/MPM \
+	Packages/Uintah/CCA/Components/ICE \
 	Core/OS          \
 	Core/Exceptions  \
 	Core/Containers  \

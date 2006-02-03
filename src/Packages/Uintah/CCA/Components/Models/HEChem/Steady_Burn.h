@@ -51,6 +51,8 @@ WARNING
   public:
     Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~Steady_Burn();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);

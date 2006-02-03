@@ -27,8 +27,9 @@ PatchCombiner::~PatchCombiner()
     VarLabel::destroy(labels_[i]);
 }
 
-void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
-				 SimulationStateP& state)
+void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, 
+                                 const ProblemSpecP& /*materials_ps*/, 
+                                 GridP& grid, SimulationStateP& state)
 {
   d_sharedState = state;
 

@@ -21,6 +21,15 @@ DruckerBeckerCheck::DruckerBeckerCheck(const DruckerBeckerCheck* )
 DruckerBeckerCheck::~DruckerBeckerCheck()
 {
 }
+
+void DruckerBeckerCheck::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP stability_ps = ps->appendChild("stability_check",true,4);
+  stability_ps->setAttribute("type","drucker_becker");
+
+}
+
+
 	 
 bool 
 DruckerBeckerCheck::checkStability(const Matrix3& stress,

@@ -44,6 +44,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <sgi_stl_warnings_on.h>
 
 #undef KUMAR
@@ -110,17 +111,25 @@ SerialMPM::~SerialMPM()
 
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, 
+                             const ProblemSpecP& materials_ps,GridP& grid,
                              SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
+
+  ProblemSpecP restart_mat_ps = 0;
+  if (materials_ps)
+    restart_mat_ps = materials_ps;
+  else
+    restart_mat_ps = prob_spec;
+
 
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
   if(mpm_soln_ps) {
 
     // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(mpm_soln_ps, grid);
+    flags->readMPMFlags(restart_mat_ps);
     if (flags->d_integrator_type == "implicit")
       throw ProblemSetupException("Can't use implicit integration with -mpm", __FILE__, __LINE__);
 
@@ -175,10 +184,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if(!p->get("outputInterval", d_outputInterval))
     d_outputInterval = 1.0;
 
-  materialProblemSetup(prob_spec, d_sharedState, lb, flags);
 
-//  GridP grid;
-//  addMaterial(prob_spec, grid ,sharedState);
+  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 }
 
 void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
@@ -191,7 +198,7 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps);
     sharedState->registerMPMMaterial(mat);
   }
 }
@@ -199,26 +206,63 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
 void 
 SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
                                 SimulationStateP& sharedState,
-                                MPMLabel* lb, MPMFlags* flags)
+                                MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
+    string index("");
+    ps->getAttribute("index",index);
+    stringstream id(index);
+    int index_val = -1;
+    id >> index_val;
+    cout << "Material attribute = " << index_val << endl;
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
-    sharedState->registerMPMMaterial(mat);
+    MPMMaterial *mat = scinew MPMMaterial(ps);
+    // When doing restart, we need to make sure that we load the materials
+    // in the same order that they were initially created.  Restarts will
+    // ALWAYS have an index number as in <material index = "0">.
+    // Index_val = -1 means that we don't register the material by its 
+    // index number.
+    if (index_val > -1) 
+      sharedState->registerMPMMaterial(mat,index_val);
+    else
+      sharedState->registerMPMMaterial(mat);
+      
 
     // If new particles are to be created, create a copy of each material
     // without the associated geometry
     if (flags->d_createNewParticles) {
       MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(mat, flags,sharedState);    
+      mat_copy->copyWithoutGeom(ps,mat, flags);    
       sharedState->registerMPMMaterial(mat_copy);
     }
   }
+}
+
+void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
+{
+  ProblemSpecP root = root_ps->getRootNode();
+
+  ProblemSpecP flags_ps = root->appendChild("MPM");
+  flags->outputProblemSpec(flags_ps);
+
+  ProblemSpecP mat_ps = 0;
+  mat_ps = root->findBlock("MaterialProperties");
+
+  if (mat_ps == 0)
+    mat_ps = root->appendChild("MaterialProperties");
+    
+  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM",true,1);
+  for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
+    MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
+    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+  }
+  contactModel->outputProblemSpec(mpm_ps);
+
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -964,7 +1008,7 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
-                                                                 patches, lb);
+                                                                 patches);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->allocateCMDataAddRequires(t,mpm_matl,patches,lb);
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
@@ -1005,7 +1049,7 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
       cout_convert << " Material = " << m << " mpm_matl = " <<mpm_matl<< endl;
 
     mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
-                                                                 patches, lb);
+                                                                 patches);
     if (cout_convert.active())
       cout_convert << "   Done ParticleCreator::allocateVariablesAddRequires\n";
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -2165,10 +2209,10 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       // Create variables for the results
       NCVariable<Vector> velocity_star;
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
-      velocity_star.initialize(Vector(0.0));
+      velocity_star.initialize(Vector(0,0,0));
 
       for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
-                       !iter.done();iter++){
+                        !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }
@@ -2555,7 +2599,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
         //  mpm_matl->getParticleCreator()->returnParticleState();
         //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
 
-        particle_creator->allocateVariablesAdd(lb,new_dw,addset,newState,
+        particle_creator->allocateVariablesAdd(new_dw,addset,newState,
                                                delset,old_dw);
         
         // Need to do the constitutive models particle variables;
@@ -2702,7 +2746,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
         //  mpm_matl->getParticleCreator()->returnParticleState();
         //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
 
-        particle_creator->allocateVariablesAdd(lb, new_dw, addset, newState,
+        particle_creator->allocateVariablesAdd(new_dw, addset, newState,
                                                delset, old_dw);
         
         conv_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw, addset,

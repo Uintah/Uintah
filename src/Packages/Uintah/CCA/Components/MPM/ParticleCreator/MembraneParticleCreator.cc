@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -18,22 +18,17 @@
 using namespace Uintah;
 
 MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
-						 MPMLabel* lb,
-						 MPMFlags* flags,
-                                                 SimulationStateP& sharedState)
-  :  ParticleCreator(matl,lb, flags,sharedState)
+						 MPMFlags* flags)
+                               
+  :  ParticleCreator(matl,flags)
 {
-  registerPermanentParticleState(matl,lb);
-
-  // Transfer to the lb's permanent particle state array of vectors
-
-  sharedState->d_particleState.push_back(particle_state);
-  sharedState->d_particleState_preReloc.push_back(particle_state_preReloc);
+  registerPermanentParticleState(matl);
 }
 
 MembraneParticleCreator::~MembraneParticleCreator()
 {
 }
+
 
 ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl, 
 					      particleIndex numParticles,
@@ -78,7 +73,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 				       pTang1, pTang2, pNorm, psize, start);
       for(int idx=0;idx<(start+numP);idx++){
 	pvelocity[start+idx]=(*obj)->getInitialVelocity();
-	ptemperature[start+idx]=(*obj)->getInitialTemperature();
+	ptemperature[start+idx]=(*obj)->getInitialData("temperature");
        psp_vol[start+idx]=1.0/matl->getInitialDensity();
 	pmass[start+idx]=matl->getInitialDensity() * pvolume[start+idx];
 	// Determine if particle is on the surface
@@ -119,7 +114,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 		position[start+count]=p;
 		pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[start+count]=(*obj)->getInitialVelocity();
-		ptemperature[start+count]=(*obj)->getInitialTemperature();
+		ptemperature[start+count]=(*obj)->getInitialData("temperature");
               psp_vol[start+count]     =1.0/matl->getInitialDensity();
                 // Calculate particle mass
                 double partMass = matl->getInitialDensity()*pvolume[start+count];
@@ -188,7 +183,7 @@ MembraneParticleCreator::allocateVariables(particleIndex numParticles,
 {
 
   ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
-							      dwi,lb,patch,
+							      dwi,patch,
 							      new_dw);
 
   new_dw->allocateAndPut(pTang1, lb->pTang1Label, subset);
@@ -201,16 +196,14 @@ MembraneParticleCreator::allocateVariables(particleIndex numParticles,
 
 
 void 
-MembraneParticleCreator::registerPermanentParticleState(MPMMaterial*,
-							MPMLabel* lb)
-
+MembraneParticleCreator::registerPermanentParticleState(MPMMaterial*)
 {
-  particle_state.push_back(lb->pTang1Label);
-  particle_state_preReloc.push_back(lb->pTang1Label_preReloc);
+  particle_state.push_back(d_lb->pTang1Label);
+  particle_state_preReloc.push_back(d_lb->pTang1Label_preReloc);
 
-  particle_state.push_back(lb->pTang2Label);
-  particle_state_preReloc.push_back(lb->pTang2Label_preReloc);
+  particle_state.push_back(d_lb->pTang2Label);
+  particle_state_preReloc.push_back(d_lb->pTang2Label_preReloc);
 
-  particle_state.push_back(lb->pNormLabel);
-  particle_state_preReloc.push_back(lb->pNormLabel_preReloc);
+  particle_state.push_back(d_lb->pNormLabel);
+  particle_state_preReloc.push_back(d_lb->pNormLabel_preReloc);
 }

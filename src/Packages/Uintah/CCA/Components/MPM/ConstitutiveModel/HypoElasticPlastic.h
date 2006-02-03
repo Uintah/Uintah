@@ -128,13 +128,15 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
-    HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,MPMFlags* flag);
+    HypoElasticPlastic(ProblemSpecP& ps,MPMFlags* flag);
     HypoElasticPlastic(const HypoElasticPlastic* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
     ////////////////////////////////////////////////////////////////////////
     virtual ~HypoElasticPlastic();
+    
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     HypoElasticPlastic* clone();

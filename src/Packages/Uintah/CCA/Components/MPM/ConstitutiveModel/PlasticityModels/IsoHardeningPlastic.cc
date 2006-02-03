@@ -37,6 +37,14 @@ IsoHardeningPlastic::~IsoHardeningPlastic()
   VarLabel::destroy(pAlphaLabel);
   VarLabel::destroy(pAlphaLabel_preReloc);
 }
+
+void IsoHardeningPlastic::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model",true,4);
+  plastic_ps->setAttribute("type","isotropic_hardening");
+  plastic_ps->appendElement("K",d_CM.K,false,5);
+  plastic_ps->appendElement("sigma_Y",d_CM.sigma_0,false,5);
+}
          
 void 
 IsoHardeningPlastic::addInitialComputesAndRequires(Task* task,

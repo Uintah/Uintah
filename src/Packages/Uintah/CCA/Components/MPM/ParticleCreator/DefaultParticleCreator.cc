@@ -1,5 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
@@ -15,14 +15,9 @@ using namespace Uintah;
 
 
 DefaultParticleCreator::DefaultParticleCreator(MPMMaterial* matl, 
-                                               MPMLabel* lb,
-                                               MPMFlags* flags,
-                                               SimulationStateP& sharedState)
-  :  ParticleCreator(matl,lb, flags,sharedState)
+                                               MPMFlags* flags)
+  :  ParticleCreator(matl,flags)
 {
-  // Transfer to the sharedState's permanent particle state array of vectors
-  sharedState->d_particleState.push_back(particle_state);
-  sharedState->d_particleState_preReloc.push_back(particle_state_preReloc);
 }
 
 DefaultParticleCreator::~DefaultParticleCreator()
@@ -41,7 +36,7 @@ DefaultParticleCreator::createParticles(MPMMaterial* matl,
 
   ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
 							    cellNAPID,patch,
-							    new_dw,lb,
+							    new_dw,
 							    d_geom_objs);
 
   return subset;

@@ -73,8 +73,9 @@ public:
 
   //////////
   // Insert Documentation Here:
-  virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			    SimulationStateP&);
+  virtual void problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& mat_ps,
+                            GridP& grid, SimulationStateP&);
 	 
   virtual void scheduleInitialize(           const LevelP& level, SchedulerP&);
 	 

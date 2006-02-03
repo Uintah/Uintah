@@ -2,6 +2,7 @@
 #define __GEOMETRY_PIECE_H__
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -55,6 +56,8 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual ~GeometryPiece();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 	 
 	 /// Clone a geometry piece
 	 virtual GeometryPiece* clone() = 0;

@@ -160,8 +160,9 @@ SimpleCFD::~SimpleCFD()
 }
 //______________________________________________________________________
 //           P R O B L E M     S E T U P
-void SimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
-                         SimulationStateP& sharedState)
+void SimpleCFD::problemSetup(const ProblemSpecP& params, 
+                             const ProblemSpecP& materials_ps, 
+                             GridP& grid, SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup  \t\t\t SimpleCFD" << '\n';
   sharedState_ = sharedState;

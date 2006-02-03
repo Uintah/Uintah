@@ -74,7 +74,7 @@ using std::pair;
       //! files up to the specified timestep from restartFromDir if
       //! fromScratch is false and will set time and timestep variables
       //! appropriately to continue smoothly from that timestep.
-      //! If timestep is negative, then all timesteps will get copied
+      //! If timestep is negative, then all timesteps will getg copied
       //! if they are to be copied at all (fromScratch is false).
       virtual void restartSetup(Dir& restartFromDir, int startTimestep,
 				int timestep, double time, bool fromScratch,
@@ -346,6 +346,8 @@ using std::pair;
 
       //! checkpoints/index.xml
       ProblemSpecP d_CheckpointXMLIndexDoc;
+
+      ProblemSpecP d_upsFile;
 
       // Each level needs it's own data file handle 
       // and if we are outputting and checkpointing

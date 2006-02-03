@@ -44,6 +44,19 @@ PlaneShellPiece::~PlaneShellPiece()
 {
 }
 
+void PlaneShellPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP shell_ps = ps->appendChild("shell",true,4);
+  ProblemSpecP plane_ps = shell_ps->appendChild("plane",true,5);
+
+  plane_ps->appendElement("center", d_center,false,6);
+  plane_ps->appendElement("normal", d_normal,false,6);
+  plane_ps->appendElement("radius", d_radius,false,6);
+  plane_ps->appendElement("thickness", d_thickness,false,6);
+  plane_ps->appendElement("num_radius", d_numRadius,false,6);
+
+}
+
 PlaneShellPiece* PlaneShellPiece::clone()
 {
   return scinew PlaneShellPiece(*this);

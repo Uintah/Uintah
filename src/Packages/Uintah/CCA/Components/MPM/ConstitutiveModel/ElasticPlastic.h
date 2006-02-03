@@ -142,13 +142,15 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
-    ElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,MPMFlags* flag);
+    ElasticPlastic(ProblemSpecP& ps,MPMFlags* flag);
     ElasticPlastic(const ElasticPlastic* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
     ////////////////////////////////////////////////////////////////////////
     virtual ~ElasticPlastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     ElasticPlastic* clone();

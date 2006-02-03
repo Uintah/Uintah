@@ -39,8 +39,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 {
   // Constructor
   // read a list of values from a file
-  std::string fname;
-  ps->get("filename", fname);
+  ps->get("filename", d_filename);
   
   IntVector defaultDir(0,0,1);
   ps->getWithDefault("direction",d_direction, defaultDir);
@@ -48,10 +47,10 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   ps->getWithDefault("master_material", d_material, 0);
   d_matls.add(d_material); // always need specified material
   
-  if(fname!="") {
-    std::ifstream is(fname.c_str());
+  if(d_filename!="") {
+    std::ifstream is(d_filename.c_str());
     if (!is ){
-      throw ProblemSetupException("ERROR: opening MPM rigid motion file '"+fname+"'\nFailed to find profile file",
+      throw ProblemSetupException("ERROR: opening MPM rigid motion file '"+d_filename+"'\nFailed to find profile file",
                                   __FILE__, __LINE__);
     }
     double t0(-1.e9);
@@ -88,6 +87,20 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 SpecifiedBodyContact::~SpecifiedBodyContact()
 {
 }
+
+void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP contact_ps = ps->appendChild("contact",true,2);
+  contact_ps->appendElement("type","specified",false,3);
+  contact_ps->appendElement("filename",d_filename,false,3);
+  contact_ps->appendElement("direction",d_direction,false,3);
+  contact_ps->appendElement("master_material",d_material,false,3);
+  contact_ps->appendElement("stop_time",d_stop_time,false,3);
+  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop,false,3);
+
+  d_matls.outputProblemSpec(contact_ps);
+}
+
 
 // find velocity from table of values
 Vector

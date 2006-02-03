@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
+#include <Packages/Uintah/CCA/Components/ICE/ExchangeCoefficients.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
@@ -36,6 +37,7 @@
 
 #define MAX_MATLS 16
 
+
 namespace Uintah { 
   using namespace SCIRun;
   class ModelInfo; 
@@ -51,9 +53,11 @@ namespace Uintah {
 
       virtual double recomputeTimestep(double current_dt);
       
-      virtual void problemSetup(const ProblemSpecP& params, 
-                                GridP& grid,
-                                SimulationStateP&);
+      virtual void problemSetup(const ProblemSpecP& params,
+                                const ProblemSpecP& materials_ps,
+                                GridP& grid, SimulationStateP&);
+
+      virtual void outputProblemSpec(ProblemSpecP& ps);
       
       virtual void addMaterial(const ProblemSpecP& params, 
                                GridP& grid,
@@ -985,14 +989,9 @@ namespace Uintah {
       std::string d_delT_scheme;
       
       // exchange coefficients
-      vector<double> d_K_mom, d_K_heat;
+      ExchangeCoefficients* d_exchCoeff;
       
-      // convective ht model
-      bool d_convective;
-      int d_conv_fluid_matlindex;
-      int d_conv_solid_matlindex;
-
-       // flags for the conservation test
+      // flags for the conservation test
        struct conservationTest_flags{
         bool onOff;
         bool momentum;

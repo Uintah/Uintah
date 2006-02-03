@@ -34,8 +34,9 @@ Test1::~Test1()
   
 }
 
-void Test1::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
-                        SimulationStateP& sharedState)
+void Test1::problemSetup(const ProblemSpecP& params, 
+                         const ProblemSpecP& materials_ps, 
+                         GridP& /*grid*/, SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   matl = scinew SimpleMaterial();

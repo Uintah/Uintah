@@ -74,7 +74,7 @@ void displayEigen(Matrix3 M)
     cout << "Eigen value: " << e[i] << endl;
     std::vector<Vector> eigenVectors = M.getEigenVectors(e[i], M.MaxAbsElem());
     cout << "Eigen vectors:\n";
-    for (int j = 0; j < eigenVectors.size(); j++)
+    for (int j = 0; j < (int)eigenVectors.size(); j++)
       cout << eigenVectors[j] << endl;
   }
   cout << endl;
@@ -282,7 +282,7 @@ bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value
     bool success = true;
     for (int trials = 0; trials < 10; trials++) {
       Vector x(0, 0, 0);
-      for (int i = 0; i < eigenVectors.size(); i++) {
+      for (int i = 0; i < (int)eigenVectors.size(); i++) {
 	x = x + eigenVectors[i] * getRandom();
       }
       if (!equal_enough(M*x, x*eigen_value, rel_scale))
@@ -312,7 +312,7 @@ void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
     }*/
 	
 
-    if (exp_xg_basis_size != xg_basis.size()) {
+    if (exp_xg_basis_size != (int)xg_basis.size()) {
       suite.findOrAddTest(test_name + ", xg size", false);
       suite.findOrAddTest(test_name + ", xg_basis", false);
     }
@@ -322,7 +322,7 @@ void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
       bool success = true;
       for (int trial = 0; trial < 50; trial++) {
 	Vector x(0, 0, 0);
-	for (int i = 0; i < xg_basis.size(); i++) {
+	for (int i = 0; i < (int)xg_basis.size(); i++) {
 	  x = x + xg_basis[i] * getRandom();
 	}
 	if (!equal_enough(M*x, Vector(0, 0, 0), rel_scale))

@@ -41,7 +41,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
     deps.push_back(dep);
   }
 
-  // Parse default values
+  // Parse derived values
   for (ProblemSpecP child = params->findBlock("derivedValue"); child != 0;
        child = child->findNextBlock("derivedValue")) {
     Dep* dep = scinew Dep(Dep::DerivedValue);

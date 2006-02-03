@@ -31,6 +31,8 @@ namespace Uintah {
 
     //! Destructor of stability check
     ~DruckerCheck();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     /*! Check the stability.
 

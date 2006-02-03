@@ -41,6 +41,27 @@ GUVSphereShellPiece::~GUVSphereShellPiece()
 {
 }
 
+void GUVSphereShellPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP shell_ps = ps->appendChild("shell",true,4);
+  ProblemSpecP guv_ps = shell_ps->appendChild("GUV_sphere",true,5);
+
+
+  guv_ps->appendElement("origin",d_origin,false,6);
+  guv_ps->appendElement("radius",d_radius,false,6);
+  guv_ps->appendElement("thickness_lipid",d_h_lipid,false,6);
+  guv_ps->appendElement("thickness_cholesterol",d_h_cholesterol,false,6);
+
+  for (unsigned int i = 0; i <= d_theta_zone.size(); i++) {
+    ProblemSpecP zone_ps = guv_ps->appendChild("zone",true,6);
+    zone_ps->appendElement("zone_center_theta",d_theta_zone[i]*180./M_PI,
+                           false,6);
+    zone_ps->appendElement("zone_center_phi",d_phi_zone[i]*180./M_PI,false,6);
+    zone_ps->appendElement("zone_center_radius",d_radius_zone[i],false,6);
+  }
+}
+
+
 GUVSphereShellPiece* GUVSphereShellPiece::clone()
 {
   return scinew GUVSphereShellPiece(*this);

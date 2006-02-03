@@ -54,13 +54,17 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
   bool defaultActive=true;
   params->getWithDefault("Active", d_active, defaultActive);
   params->require("ThresholdPressure",   d_threshold_pressure);
+
+  params->require("fromMaterial",fromMaterial);
+  params->require("toMaterial",toMaterial);
+  params->require("G",    d_G);
+  params->require("b",    d_b);
+  params->require("E0",   d_E0);
+  params->require("rho0", d_rho0);
+
   if(d_active){
     matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
     matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-    params->require("G",    d_G);
-    params->require("b",    d_b);
-    params->require("E0",   d_E0);
-    params->require("rho0", d_rho0);
 
     //__________________________________
     //  define the materialSet
@@ -85,17 +89,36 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
   }
 }
 
+void JWLpp::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  model_ps->setAttribute("type","JWLpp");
+
+  model_ps->appendElement("Active",d_active,false,4);
+  model_ps->appendElement("ThresholdPressure",d_threshold_pressure,false,4);
+  model_ps->appendElement("fromMaterial",fromMaterial,false,4);
+  model_ps->appendElement("toMaterial",toMaterial,false,4);
+  model_ps->appendElement("G",    d_G,false,4);
+  model_ps->appendElement("b",    d_b,false,4);
+  model_ps->appendElement("E0",   d_E0,false,4);
+  model_ps->appendElement("rho0", d_rho0,false,4);
+  
+}
+
+
 void JWLpp::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
   cout << "I'm in activateModel" << endl;
   d_active=true;
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
+#if 0
   params->require("G",    d_G);
   params->require("b",    d_b);
   params->require("E0",   d_E0);
   params->require("rho0", d_rho0);
+#endif
 
+  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
   //__________________________________
   //  define the materialSet
   vector<int> m_tmp(2);
