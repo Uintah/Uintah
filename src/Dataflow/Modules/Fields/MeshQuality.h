@@ -112,6 +112,18 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
 
+  mesh->synchronize( Mesh::ALL_ELEMENTS_E );
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  typename FIELD::mesh_type::Cell::size_type tets;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  mesh->size( tets );
+  int holes = (tets-faces+edges-nodes+2)/2;
+//  cout << "Tets: " << tets << " Faces: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
+
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
   double aspect_gamma_high = 0, aspect_gamma_low = 0, aspect_gamma_ave = 0;
@@ -229,7 +241,7 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   distortion_ave /= total_elements;
   
   cout << endl << "Number of Tet elements checked = " << total_elements << endl;
-  
+  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Aspect Ratio (gamma): Low = " << aspect_gamma_low << ", Average = " << aspect_gamma_ave << ", High = " << aspect_gamma_high << endl;
   cout << "Volume: Low = " << volume_low << ", Average = " << volume_ave << ", High = " << volume_high << endl;
@@ -294,6 +306,20 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
 
+    //perform Euler checks for topology errors...
+    // 2-2g = -#hexes+#faces-#edges+#nodes
+  mesh->synchronize( Mesh::EDGES_E );
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  typename FIELD::mesh_type::Cell::size_type hexes;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  mesh->size( hexes );
+  int holes = (hexes-faces+edges-nodes+2)/2;
+//  cout << "Hexes: " << hexes << " Faces: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
+  
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
   double skew_high = 0, skew_low = 0, skew_ave = 0;
@@ -465,9 +491,9 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   shear_size_ave /= total_elements;
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
-  
+
   cout << endl << "Number of Hex elements checked = " << total_elements << endl;
-  
+  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Skew: Low = " << skew_low << ", Average = " << skew_ave << ", High = " << skew_high << endl;
   cout << "Taper: Low = " << taper_low << ", Average = " << taper_ave << ", High = " << taper_high << endl;
@@ -529,6 +555,16 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
+
+  mesh->synchronize( Mesh::EDGES_E );
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  int holes = (faces-edges+nodes-2)/2;
+//  cout << " Tris: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
 
   int total_elements = 0;
   double area_high = 0, area_low = 0, area_ave = 0;
@@ -662,7 +698,7 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   distortion_ave /= total_elements;
   
   cout << endl << "Number of Tri elements checked = " << total_elements << endl;
-  
+  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
   cout << "Area: Low = " << area_low << ", Average = " << area_ave << ", High = " << area_high << endl;
   cout << "Minimum_Angle: Low = " << minimum_angle_low << ", Average = " << minimum_angle_ave << ", High = " << minimum_angle_high << endl;
   cout << "Maximum_Angle: Low = " << maximum_angle_low << ", Average = " << maximum_angle_ave << ", High = " << maximum_angle_high << endl;
@@ -728,6 +764,16 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
+
+  mesh->synchronize( Mesh::EDGES_E );
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  int holes = (faces-edges+nodes-2)/2;
+//  cout << "Quads: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
 
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
@@ -910,7 +956,7 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   distortion_ave /= total_elements;
   
   cout << endl << "Number of Quad elements checked = " << total_elements << endl;
-  
+  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Skew: Low = " << skew_low << ", Average = " << skew_ave << ", High = " << skew_high << endl;
   cout << "Taper: Low = " << taper_low << ", Average = " << taper_ave << ", High = " << taper_high << endl;
