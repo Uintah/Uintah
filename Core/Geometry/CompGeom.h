@@ -64,4 +64,10 @@ closest_point_on_tri(Point &result, const Point &P,
 SCISHARE double
 RayPlaneIntersection(const Point &p,  const Vector &dir,
 		     const Point &p0, const Vector &pn);
+
+
+SCISHARE bool
+RayTriangleIntersection(double &t, double &u, double &v, bool backface_cull,
+                        const Point &orig,  const Vector &dir,
+                        const Point &p0, const Point &p1, const Point &p2);
 }

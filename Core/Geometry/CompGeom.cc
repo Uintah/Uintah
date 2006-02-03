@@ -150,5 +150,43 @@ RayPlaneIntersection(const Point &p,  const Vector &dir,
 }
 
 
+#define EPSILON 1.0e-6
+
+
+bool
+RayTriangleIntersection(double &t, double &u, double &v, bool backface_cull,
+                        const Point &orig,  const Vector &dir,
+                        const Point &p0, const Point &p1, const Point &p2)
+{
+  const Vector edge1 = p1 - p0;
+  const Vector edge2 = p2 - p0;
+
+  const Vector pvec = Cross(dir, edge2);
+  
+  const double det = Dot(edge1, pvec);
+
+  if (det < EPSILON && (backface_cull || det > -EPSILON))
+    return false;
+
+  const double inv_det = 1.0 / det;
+    
+  const Vector tvec = orig - p0;
+
+  u = Dot(tvec, pvec) * inv_det;
+  if (u < 0.0 || u > 1.0)
+    return false;
+
+  const Vector qvec = Cross(tvec, edge1);
+
+  v = Dot(dir, qvec) * inv_det;
+  if (v < 0.0 || u+v > 1.0)
+    return false;
+
+  t = Dot(edge2, qvec) * inv_det;
+
+  return true;
+}
+
+
 }
 
