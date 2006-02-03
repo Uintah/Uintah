@@ -51,6 +51,38 @@ Mixing::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
   ps->require("massFraction", initialMassFraction);
 }
 
+void Mixing::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  model_ps->setAttribute("type","Mixing");
+
+  model_ps->appendElement("material",matl->getName(),false,4);
+
+
+  for (vector<Stream*>::const_iterator s_it = streams.begin(); 
+       s_it != streams.end(); s_it++) {
+    ProblemSpecP stream_ps = model_ps->appendChild("stream",true,4);
+    stream_ps->setAttribute("name",(*s_it)->name);
+    (*s_it)->props.outputProblemSpec(stream_ps);
+
+    for (vector<Region*>::const_iterator r_it = (*s_it)->regions.begin();
+         r_it != (*s_it)->regions.end(); r_it++) {
+      ProblemSpecP geom_ps = stream_ps->appendChild("geom_object",true,4);
+      (*r_it)->piece->outputProblemSpec(geom_ps);
+    }
+  }
+
+  for (vector<Reaction*>::const_iterator r_it = reactions.begin(); 
+       r_it != reactions.end(); r_it++) {
+    ProblemSpecP reaction_ps = model_ps->appendChild("reaction",true,4);
+    reaction_ps->appendElement("from",(*r_it)->fromStream,false,4);
+    reaction_ps->appendElement("to",(*r_it)->toStream,false,4);
+
+  }
+
+}
+
 void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 			  ModelSetup* setup)
 {

@@ -42,6 +42,8 @@ WARNING
     EquationOfState();
     virtual ~EquationOfState();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+
     // Per cell
 
      virtual double computeRhoMicro(double press,double gamma,

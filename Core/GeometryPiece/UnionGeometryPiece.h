@@ -73,6 +73,8 @@ WARNING
 	 /// Assignment operator
 	 UnionGeometryPiece& operator=(const UnionGeometryPiece& );
 
+         virtual void outputProblemSpec(ProblemSpecP& ps);
+
 	 //// Make a clone
 	 UnionGeometryPiece* clone();
 

@@ -27,21 +27,18 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag)
+IdealGasMP::IdealGasMP(ProblemSpecP& ps,MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag)
 {
-
   ps->require("gamma", d_initialData.gamma);
   ps->require("specific_heat",d_initialData.cv);
   ps->getWithDefault("UseArtificialViscosity",
         d_initialData.UseArtificialViscosity, false);
+
 }
 
-IdealGasMP::IdealGasMP(const IdealGasMP* cm)
+IdealGasMP::IdealGasMP(const IdealGasMP* cm) : ConstitutiveModel(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
   d_initialData.gamma = cm->d_initialData.gamma;
   d_initialData.cv = cm->d_initialData.cv;
 }
@@ -49,6 +46,22 @@ IdealGasMP::IdealGasMP(const IdealGasMP* cm)
 IdealGasMP::~IdealGasMP()
 {
 }
+
+
+void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","ideal_gas");
+  }
+
+  cm_ps->appendElement("gamma", d_initialData.gamma,false,4);
+  cm_ps->appendElement("specific_heat",d_initialData.cv,false,4);
+  cm_ps->appendElement("specific_heat",d_initialData.UseArtificialViscosity,
+                       false,4);
+}
+
 
 IdealGasMP* IdealGasMP::clone()
 {

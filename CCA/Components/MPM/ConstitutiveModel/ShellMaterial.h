@@ -68,11 +68,13 @@ namespace Uintah {
 
   public:
     // constructors
-    ShellMaterial(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+    ShellMaterial(ProblemSpecP& ps, MPMFlags* flag);
     ShellMaterial(const ShellMaterial* cm);
        
     // destructor
     virtual ~ShellMaterial();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     ShellMaterial* clone();

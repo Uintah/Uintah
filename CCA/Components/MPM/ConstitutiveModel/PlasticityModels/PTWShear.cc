@@ -33,6 +33,18 @@ PTWShear::PTWShear(const PTWShear* smm)
 PTWShear::~PTWShear()
 {
 }
+
+void PTWShear::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model",true,4);
+  shear_ps->setAttribute("type","ptw_sheer");
+
+  shear_ps->appendElement("mu_0",d_mu0,false,5);
+  shear_ps->appendElement("alpha",d_alpha,false,5);
+  shear_ps->appendElement("alphap",d_alphap,false,5);
+  shear_ps->appendElement("slope_mu_p_over_mu0",d_slope_mu_p_over_mu0,false,5);
+}
+
 	 
 // Compute the shear modulus
 double 

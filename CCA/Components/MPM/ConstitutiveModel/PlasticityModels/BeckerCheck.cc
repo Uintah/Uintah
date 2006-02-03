@@ -22,6 +22,13 @@ BeckerCheck::BeckerCheck(const BeckerCheck* )
 BeckerCheck::~BeckerCheck()
 {
 }
+
+void BeckerCheck::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP stability_ps = ps->appendChild("stability_check",true,4);
+  stability_ps->setAttribute("type","becker");
+
+}
 	 
 bool 
 BeckerCheck::checkStability(const Matrix3& stress ,

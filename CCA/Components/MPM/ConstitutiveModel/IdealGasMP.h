@@ -40,11 +40,13 @@ namespace Uintah {
 
   public:
     // constructors
-    IdealGasMP(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+    IdealGasMP(ProblemSpecP& ps, MPMFlags* flag);
     IdealGasMP(const IdealGasMP* cm);
        
     // destructor
     virtual ~IdealGasMP();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     IdealGasMP* clone();
 

@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -22,14 +22,9 @@ using namespace Uintah;
 // Constructor
 //
 ShellParticleCreator::ShellParticleCreator(MPMMaterial* matl,
-					   MPMLabel* lb,
-					   MPMFlags* flags,
-                                           SimulationStateP& sharedState)
-  : ParticleCreator(matl,lb, flags,sharedState)
+					   MPMFlags* flags)
+  : ParticleCreator(matl,flags)
 {
-  // Transfer to the lb's permanent particle state array of vectors
-  sharedState->d_particleState.push_back(particle_state);
-  sharedState->d_particleState_preReloc.push_back(particle_state_preReloc);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -61,7 +56,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 
   // Create a particle subset for the patch
   ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
-							      dwi, lb, patch,
+							      dwi, patch,
 							      new_dw);
   // Create the variables that go with each shell particle
   ParticleVariable<double>  pThickTop0, pThickBot0, pThickTop, pThickBot;
@@ -119,7 +114,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
       for (int idx = 0; idx < numP; idx++) {
         particleIndex pidx = start+idx;
 	pvelocity[pidx]=(*obj)->getInitialVelocity();
-	ptemperature[pidx]=(*obj)->getInitialTemperature();
+	ptemperature[pidx]=(*obj)->getInitialData("temperature");
         pdisp[pidx] = Vector(0.,0.,0.);
         pfiberdir[pidx] = Vector(0.0,0.0,0.0);
         perosion[pidx] = 1.0;
@@ -218,7 +213,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
                 pdisp[pidx] = Vector(0.,0.,0.);
 		pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[pidx]=(*obj)->getInitialVelocity();
-		ptemperature[pidx]=(*obj)->getInitialTemperature();
+		ptemperature[pidx]=(*obj)->getInitialData("temperature");
 	        psp_vol[pidx]=1.0/matl->getInitialDensity(); 
                 perosion[pidx] = 1.0;
                 pfiberdir[pidx] = Vector(0.0,0.0,0.0);

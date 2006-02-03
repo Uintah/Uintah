@@ -8,7 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/CCA/Components/ICE/GeometryObject2.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
@@ -53,6 +53,11 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
+   list<string> geom_obj_data;
+   geom_obj_data.push_back("temperature");
+   geom_obj_data.push_back("pressure");
+   geom_obj_data.push_back("density");
+   
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
         geom_obj_ps != 0;
         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -70,7 +75,8 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
       }
 
       piece_num++;
-      d_geom_objs.push_back(scinew GeometryObject2(this,mainpiece,geom_obj_ps));
+      d_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,
+                                                  geom_obj_data));
    }
    lb = scinew ICELabel();
 }
@@ -83,6 +89,28 @@ ICEMaterial::~ICEMaterial()
     delete d_geom_objs[i];
   }
 }
+
+ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP ice_ps = Material::outputProblemSpec(ps);
+
+  d_eos->outputProblemSpec(ice_ps);
+  ice_ps->appendElement("thermal_conductivity",d_thermalConductivity,false,3);
+  ice_ps->appendElement("specific_heat",d_specificHeat,false,3);
+  ice_ps->appendElement("dynamic_viscosity",d_viscosity,false,3);
+  ice_ps->appendElement("speed_of_sound",d_speed_of_sound,false,3);
+  ice_ps->appendElement("gamma",d_gamma,false,3);
+  ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl,false,3);
+  ice_ps->appendElement("includeFlowWork",d_includeFlowWork,false,3);
+    
+  for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
+       it != d_geom_objs.end(); it++) {
+    (*it)->outputProblemSpec(ice_ps);
+  }
+
+  return ice_ps;
+}
+
 
 EquationOfState * ICEMaterial::getEOS() const
 {
@@ -177,11 +205,11 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       if(numMatls == 1)  {
         if ( count > 0 ) {
           vol_frac_CC[*iter]= 1.0;
-          press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 1;
         }
@@ -192,10 +220,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           // This cell hasn't been hit for this matl yet so set values
           // to ensure that everything is set to something everywhere
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= obj; 
         }
@@ -203,12 +231,12 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           // This cell HAS been hit but another object has values to
           // override it, possibly in a cell that was just set by default
           // in the above section.
-          press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= obj; 
         }

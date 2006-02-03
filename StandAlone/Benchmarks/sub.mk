@@ -29,6 +29,7 @@ else
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/CCA/Components/MPM \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Persistent  \

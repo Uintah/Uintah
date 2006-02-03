@@ -29,7 +29,6 @@ SUBDIRS := \
 	$(SRCDIR)/ConstitutiveModel \
 	$(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
-	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
 	$(SRCDIR)/ParticleCreator \
 	$(SRCDIR)/Crack		\

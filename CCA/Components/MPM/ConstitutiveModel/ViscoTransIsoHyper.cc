@@ -29,12 +29,10 @@ using namespace SCIRun;
 
 // _________________transversely isotropic hyperelastic material [Jeff Weiss's]
 
-ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                             MPMFlags* Mflag)
-  //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
+ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag)
+
 {
-  lb = Mlb;
-  flag = Mflag;
   d_useModifiedEOS = false;
 
   //______________________material properties
@@ -62,14 +60,6 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->require("t4", d_initialData.t4);
   ps->require("t5", d_initialData.t5);
   ps->require("t6", d_initialData.t6);
-
-  //______________________interpolation
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
-    NGN=1;
-  } else if(d_8or27==27){
-    NGN=2;
-  }
 
   pStretchLabel = VarLabel::create("p.stretch",
      ParticleVariable<double>::getTypeDescription());
@@ -118,11 +108,8 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
 }
 
 ViscoTransIsoHyper::ViscoTransIsoHyper(const ViscoTransIsoHyper* cm)
+  : ConstitutiveModel(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-  d_8or27 = cm->d_8or27;
 
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
@@ -176,6 +163,42 @@ ViscoTransIsoHyper::~ViscoTransIsoHyper()
   VarLabel::destroy(pHistory6Label_preReloc);
 
 }
+
+
+void ViscoTransIsoHyper::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","visco_trans_iso_hyper");
+  }
+
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
+  cm_ps->appendElement("c1", d_initialData.c1,false,4);
+  cm_ps->appendElement("c2", d_initialData.c2,false,4);
+  cm_ps->appendElement("c3", d_initialData.c3,false,4);
+  cm_ps->appendElement("c4", d_initialData.c4,false,4);
+  cm_ps->appendElement("c5", d_initialData.c5,false,4);
+  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star,false,4);
+  cm_ps->appendElement("direction_of_symm", d_initialData.a0,false,4);
+  cm_ps->appendElement("failure_option",d_initialData.failure,false,4);
+  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch,false,4);
+  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear,false,4);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
+  cm_ps->appendElement("y1", d_initialData.y1,false,4);
+  cm_ps->appendElement("y2", d_initialData.y2,false,4);
+  cm_ps->appendElement("y3", d_initialData.y3,false,4);
+  cm_ps->appendElement("y4", d_initialData.y4,false,4);
+  cm_ps->appendElement("y5", d_initialData.y5,false,4);
+  cm_ps->appendElement("y6", d_initialData.y6,false,4);
+  cm_ps->appendElement("t1", d_initialData.t1,false,4);
+  cm_ps->appendElement("t2", d_initialData.t2,false,4);
+  cm_ps->appendElement("t3", d_initialData.t3,false,4);
+  cm_ps->appendElement("t4", d_initialData.t4,false,4);
+  cm_ps->appendElement("t5", d_initialData.t5,false,4);
+  cm_ps->appendElement("t6", d_initialData.t6,false,4);
+}
+
 
 ViscoTransIsoHyper* ViscoTransIsoHyper::clone()
 {
@@ -500,7 +523,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       Vector gvel;
       velGrad.set(0.0);
-      for(int k = 0; k < d_8or27; k++) {
+      for(int k = 0; k < flag->d_8or27; k++) {
         gvel = gvelocity[ni[k]];
         for (int j = 0; j<3; j++){
           double d_SXoodx = d_S[k][j] * oodx[j];

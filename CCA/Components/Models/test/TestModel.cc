@@ -29,6 +29,13 @@ TestModel::~TestModel()
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
+
+void TestModel::outputProblemSpec(ProblemSpecP& ps)
+{
+  ps = params;
+
+}
+
 //______________________________________________________________________
 void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup* )

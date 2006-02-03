@@ -16,6 +16,13 @@ DefaultHypoElasticEOS::DefaultHypoElasticEOS(const DefaultHypoElasticEOS*)
 DefaultHypoElasticEOS::~DefaultHypoElasticEOS()
 {
 }
+
+
+void DefaultHypoElasticEOS::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("equation_of_state",true,4);
+  eos_ps->setAttribute("type","default_hypo");
+}
 	 
 
 //////////

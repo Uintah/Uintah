@@ -66,6 +66,8 @@ namespace Uintah {
          
     // destructor 
     virtual ~IsoHardeningPlastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
          
     // Computes and requires for internal evolution variables
     // Only one internal variable for Isotropic-Hardening :: plastic strain

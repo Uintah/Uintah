@@ -19,12 +19,11 @@ using namespace std;
 TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 {
   setName("tri");
-  std::string file;
-
-  ps->require("name",file);
   
-  readPoints(file);
-  readTri(file);
+  ps->require("name",d_file);
+  
+  readPoints(d_file);
+  readTri(d_file);
   makePlanes();
   makeTriBoxes();
 
@@ -42,6 +41,16 @@ TriGeometryPiece::~TriGeometryPiece()
 {
   delete d_grid;
 }
+
+void TriGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ProblemSpecP tri_ps = ps->appendChild("tri",true,4);
+
+  tri_ps->appendElement("name",d_file,false,5);
+
+}
+
 
 TriGeometryPiece* TriGeometryPiece::clone()
 {

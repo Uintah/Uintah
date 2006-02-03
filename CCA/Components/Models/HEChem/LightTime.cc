@@ -47,6 +47,12 @@ LightTime::~LightTime()
     delete mymatls;
 }
 
+void LightTime::outputProblemSpec(ProblemSpecP& ps)
+{
+  ps = params;
+
+}
+
 void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {

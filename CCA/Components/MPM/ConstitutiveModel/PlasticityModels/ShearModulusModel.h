@@ -2,6 +2,9 @@
 #define __SHEAR_MODULUS_MODEL_H__
 
 #include "PlasticityState.h"
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
 namespace Uintah {
 
   /*! \class ShearModulusModel
@@ -24,6 +27,8 @@ namespace Uintah {
     //! Destructor of shear modulus model.  
     /*! Virtual to ensure correct behavior */
     virtual ~ShearModulusModel();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 	 
     /////////////////////////////////////////////////////////////////////////
     /*! 

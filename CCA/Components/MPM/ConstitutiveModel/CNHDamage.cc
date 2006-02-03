@@ -28,8 +28,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CNHDamage::CNHDamage(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
-  : CompNeoHook(ps, Mlb, Mflag), ImplicitCM(Mlb)
+CNHDamage::CNHDamage(ProblemSpecP& ps, MPMFlags* Mflag)
+  : CompNeoHook(ps, Mflag), ImplicitCM()
 {
   // Initialize local VarLabels
   initializeLocalMPMLabels();
@@ -64,6 +64,22 @@ CNHDamage::~CNHDamage()
   VarLabel::destroy(pFailureStrainLabel_preReloc);
   VarLabel::destroy(pFailedLabel_preReloc);
   VarLabel::destroy(pDeformRateLabel_preReloc);
+}
+
+void CNHDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","cnh_damag");
+  }
+
+  CompNeoHook::outputProblemSpec(cm_ps,false);
+
+  cm_ps->appendElement("failure_strain_mean",d_epsf.mean,false,4);
+  cm_ps->appendElement("failure_strain_std",d_epsf.std,false,4);
+  cm_ps->appendElement("failure_strain_distrib",d_epsf.dist,false,4);
+
 }
 
 CNHDamage* CNHDamage::clone()

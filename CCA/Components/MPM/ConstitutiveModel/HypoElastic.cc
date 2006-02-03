@@ -27,8 +27,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag)
+HypoElastic::HypoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag)
 {
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
@@ -83,11 +83,8 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
   }
 }
 
-HypoElastic::HypoElastic(const HypoElastic* cm)
+HypoElastic::HypoElastic(const HypoElastic* cm) : ConstitutiveModel(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
   d_initialData.alpha = cm->d_initialData.alpha; // for thermal stress
@@ -98,6 +95,23 @@ HypoElastic::HypoElastic(const HypoElastic* cm)
 HypoElastic::~HypoElastic()
 {
 }
+
+
+void HypoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","hypo_elastic");
+  }
+
+  cm_ps->appendElement("G",d_initialData.G,false,4);
+  cm_ps->appendElement("K",d_initialData.K,false,4);
+  cm_ps->appendElement("alpha",d_initialData.alpha,false,4);
+
+  // Still need to do the FRACTURE thing
+}
+
 
 
 HypoElastic* HypoElastic::clone()

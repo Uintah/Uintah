@@ -41,6 +41,8 @@ WARNING
 
         JWLC(ProblemSpecP& ps);
         virtual ~JWLC();
+
+        virtual void outputProblemSpec(ProblemSpecP& ps);
         
         virtual double computeRhoMicro(double press,double gamma,
                                       double cv, double Temp, double rho_guess);

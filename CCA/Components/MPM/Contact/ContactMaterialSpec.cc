@@ -10,7 +10,8 @@ ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps)
   if(ps) {
     vector<int> materials;
     if(ps->get("materials", materials)) {
-      for(vector<int>::const_iterator mit(materials.begin());mit!=materials.end();mit++) {
+      for(vector<int>::const_iterator mit(materials.begin());
+          mit!=materials.end();mit++) {
         if(*mit<0)
           throw ProblemSetupException(" Invalid material index in contact block", __FILE__, __LINE__);
         this->add(*mit);
@@ -18,6 +19,20 @@ ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps)
     }
   }
   
+}
+
+void ContactMaterialSpec::outputProblemSpec(ProblemSpecP& ps)
+{
+  std::vector<int> matls;
+  int i = 0;
+  for (std::vector<bool>::const_iterator it = d_matls.begin(); 
+       it != d_matls.end(); it++,i++) {
+    if (*it)
+      matls.push_back(i);
+  }
+  
+  ps->appendElement("materials",matls,false,3);
+
 }
 
 void

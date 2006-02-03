@@ -113,6 +113,8 @@ namespace Uintah {
          
     // destructor 
     virtual ~PTWPlastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
          
     // Computes and requires for internal evolution variables
     // Only one internal variable for PTW model :: mechanical threshold stress

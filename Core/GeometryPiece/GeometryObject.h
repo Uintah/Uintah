@@ -4,12 +4,19 @@
 
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <list>
+#include <string>
+#include <map>
+
 
 namespace Uintah {
 
 class GeometryPiece;
 
 using namespace SCIRun;
+using std::string;
+using std::list;
+using std::map;
 
 /**************************************
 	
@@ -40,18 +47,18 @@ WARNING
 	
 ****************************************/
 
-      class MPMMaterial;
-      
       class GeometryObject {
 	 
       public:
 	//////////
 	// Insert Documentation Here:
-	GeometryObject(MPMMaterial* mpm_matl,GeometryPiece* piece, ProblemSpecP&);
+	GeometryObject(GeometryPiece* piece, ProblemSpecP&,list<string>& data);
 
 	//////////
 	// Insert Documentation Here:
 	 ~GeometryObject();
+
+         void outputProblemSpec(ProblemSpecP& ps);
 
 	 //////////
 	 // Insert Documentation Here:
@@ -67,31 +74,16 @@ WARNING
 	    return d_initialVel;
 	 }
 
-	 double getInitialTemperature() const {
-	    return d_initialTemperature;
-	 }
-
-	 double getToughnessMin() const {
-	    return d_toughnessMin;
-	 }
-
-	 double getToughnessMax() const {
-	    return d_toughnessMax;
-	 }
-
-	 double getToughnessVariation() const {
-	    return d_toughnessVariation;
+	 double getInitialData(const string& data_string) {
+           return d_data[data_string];
 	 }
 
       private:
 	 GeometryPiece* d_piece;
 	 IntVector d_resolution;
 	 Vector d_initialVel;
-	 double d_initialTemperature;
+         map<string,double> d_data;
 
-	 double d_toughnessMin;
-	 double d_toughnessMax;
-	 double d_toughnessVariation;
       };
 } // End namespace Uintah
       

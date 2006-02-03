@@ -26,6 +26,8 @@ namespace Uintah {
 	 
     MPMEquationOfState();
     virtual ~MPMEquationOfState();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 	 
     ////////////////////////////////////////////////////////////////////////
     /*! Calculate the hydrostatic component of stress (pressure)

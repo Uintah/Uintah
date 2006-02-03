@@ -26,8 +26,9 @@ Poisson1::~Poisson1()
   delete lb_;
 }
 
-void Poisson1::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
-			 SimulationStateP& sharedState)
+void Poisson1::problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& materials_ps, 
+                            GridP& /*grid*/, SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");

@@ -20,6 +20,13 @@ DruckerCheck::DruckerCheck(const DruckerCheck*)
 DruckerCheck::~DruckerCheck()
 {
 }
+
+void DruckerCheck::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP stability_ps = ps->appendChild("stability_check",true,4);
+  stability_ps->setAttribute("type","drucker");
+
+}
 	 
 bool 
 DruckerCheck::checkStability(const Matrix3& ,

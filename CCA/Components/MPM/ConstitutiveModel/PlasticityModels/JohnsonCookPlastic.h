@@ -69,6 +69,8 @@ namespace Uintah {
          
     // destructor 
     virtual ~JohnsonCookPlastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
          
     // Computes and requires for internal evolution variables
     virtual void addInitialComputesAndRequires(Task* task,

@@ -31,8 +31,9 @@ SolverTest1::~SolverTest1()
   delete lb_;
 }
 
-void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, GridP&,
-			 SimulationStateP& sharedState)
+void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, 
+                               const ProblemSpecP& materials_ps, 
+                               GridP&, SimulationStateP& sharedState)
 {
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {

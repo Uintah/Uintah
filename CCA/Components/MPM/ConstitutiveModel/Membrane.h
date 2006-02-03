@@ -38,11 +38,13 @@ namespace Uintah {
 
   public:
     // constructors
-    Membrane(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+    Membrane(ProblemSpecP& ps, MPMFlags* flag);
     Membrane(const Membrane* cm);
        
     // destructor
     virtual ~Membrane();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     Membrane* clone();

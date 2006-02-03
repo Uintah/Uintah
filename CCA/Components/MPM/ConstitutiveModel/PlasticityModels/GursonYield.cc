@@ -29,6 +29,18 @@ GursonYield::GursonYield(const GursonYield* cm)
 GursonYield::~GursonYield()
 {
 }
+
+void GursonYield::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP yield_ps = ps->appendChild("yield_condition",true,4);
+  yield_ps->setAttribute("type","gurson");
+  yield_ps->appendElement("q1",d_CM.q1,false,5);
+  yield_ps->appendElement("q2",d_CM.q2,false,5);
+  yield_ps->appendElement("q3",d_CM.q3,false,5);
+  yield_ps->appendElement("k",d_CM.k,false,5);
+  yield_ps->appendElement("f_c",d_CM.f_c,false,5);
+
+}
 	 
 double 
 GursonYield::evalYieldCondition(const double sigEqv,

@@ -26,8 +26,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb,  MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag)
+Membrane::Membrane(ProblemSpecP& ps,MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag)
 {
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
@@ -40,12 +40,8 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb,  MPMFlags* Mflag)
 
 }
 
-Membrane::Membrane(const Membrane* cm)
+Membrane::Membrane(const Membrane* cm) : ConstitutiveModel(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
 
@@ -62,6 +58,19 @@ Membrane::~Membrane()
   // Destructor
   VarLabel::destroy(defGradInPlaneLabel);
   VarLabel::destroy(defGradInPlaneLabel_preReloc);
+}
+
+
+void Membrane::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","membrane");
+  }
+
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
 }
 
 

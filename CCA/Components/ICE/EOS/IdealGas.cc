@@ -13,6 +13,14 @@ IdealGas::IdealGas(ProblemSpecP& )
 IdealGas::~IdealGas()
 {
 }
+
+void IdealGas::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  eos_ps->setAttribute("type","ideal_gas");
+}
+
+
 //__________________________________
 double IdealGas::computeRhoMicro(double press, double gamma,
                                  double cv, double Temp, double)

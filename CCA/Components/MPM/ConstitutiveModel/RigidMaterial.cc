@@ -27,23 +27,17 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag) : ImplicitCM(Mlb)
+RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMFlags* Mflag) : 
+  ConstitutiveModel(Mflag), ImplicitCM()
 {
-  lb = Mlb;
-  flag = Mflag;
-  NGN = 1;
   d_initialData.G = 1.0e200;
   ps->get("shear_modulus",d_initialData.G);
   d_initialData.K = 1.0e200;
   ps->get("bulk_modulus",d_initialData.K);
 }
 
-RigidMaterial::RigidMaterial(const RigidMaterial* cm)
+RigidMaterial::RigidMaterial(const RigidMaterial* cm) : ConstitutiveModel(cm)
 {
-  d_lb = cm->lb;
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
 }
@@ -51,6 +45,20 @@ RigidMaterial::RigidMaterial(const RigidMaterial* cm)
 RigidMaterial::~RigidMaterial()
 {
 }
+
+void RigidMaterial::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","rigid");
+  }
+
+  cm_ps->appendElement("shear_modulus",d_initialData.G,false,4);
+  cm_ps->appendElement("bulk_modulus",d_initialData.K,false,4);
+}
+
+
 
 RigidMaterial* RigidMaterial::clone()
 {

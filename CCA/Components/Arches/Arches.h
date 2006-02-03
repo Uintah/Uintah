@@ -117,8 +117,8 @@ int nofTimeSteps;
       ///////////////////////////////////////////////////////////////////////
       // Set up the problem specification database
       virtual void problemSetup(const ProblemSpecP& params, 
-				GridP& grid,
-				SimulationStateP&);
+                                const ProblemSpecP& materials_ps, 
+				GridP& grid, SimulationStateP&);
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////

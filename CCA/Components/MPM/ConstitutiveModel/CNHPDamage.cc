@@ -28,8 +28,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CNHPDamage::CNHPDamage(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
-  :CNHDamage(ps, Mlb, Mflag)
+CNHPDamage::CNHPDamage(ProblemSpecP& ps, MPMFlags* Mflag)
+  :CNHDamage(ps, Mflag)
 {
   initializeLocalMPMLabels();
   getPlasticityData(ps);
@@ -47,6 +47,21 @@ CNHPDamage::~CNHPDamage()
   VarLabel::destroy(pPlasticStrainLabel);
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
+
+void CNHPDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","cnhp_damag");
+  }
+
+  CNHDamage::outputProblemSpec(cm_ps,false);
+
+  cm_ps->appendElement("yield_stress",d_plastic.FlowStress,false,4);
+  cm_ps->appendElement("hardening_modulus",d_plastic.K,false,4);
+}
+
 
 
 CNHPDamage* CNHPDamage::clone()

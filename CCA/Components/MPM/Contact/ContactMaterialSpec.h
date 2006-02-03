@@ -66,6 +66,8 @@ WARNING
          
          // contructor using contact block
          ContactMaterialSpec(ProblemSpecP & ps);
+
+         void outputProblemSpec(ProblemSpecP& ps);
          
          // require this material to apply contact
          void add(unsigned int matlIndex);
@@ -78,24 +80,25 @@ WARNING
          }
           
          //  does this cell have the requested materials
-         bool present(const StaticArray<constNCVariable<double> > & gmass, IntVector c) const
-         {
-           static const double EPSILON=1.e-12;
-           
-           size_t numMats = gmass.size();
-           if(numMats>d_matls.size()) numMats = d_matls.size();
-           
-           for(unsigned int imat=0;imat<numMats;imat++) 
-             {
-               if(d_matls[imat] && fabs(gmass[imat][c])<EPSILON ) {
-                 return false; // required material not present, dont apply this bc
+         bool present(const StaticArray<constNCVariable<double> > & gmass,
+                      IntVector c) const
+           {
+             static const double EPSILON=1.e-12;
+             
+             size_t numMats = gmass.size();
+             if(numMats>d_matls.size()) numMats = d_matls.size();
+             
+             for(unsigned int imat=0;imat<numMats;imat++) 
+               {
+                 if(d_matls[imat] && fabs(gmass[imat][c])<EPSILON ) {
+                   return false; // required material not present, dont apply this bc
+                 }
                }
-             }
-           
-           return true;
-         }
+             
+             return true;
+           }
          
-      private: // hide
+      private: 
          ContactMaterialSpec(const ContactMaterialSpec &);
          ContactMaterialSpec& operator=(const ContactMaterialSpec &);
          

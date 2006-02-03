@@ -56,15 +56,17 @@ namespace Uintah {
          // copy constructor
          //TransIsoHyperImplicit(const TransIsoHyperImplicit &cm);
          TransIsoHyperImplicit& operator=(const TransIsoHyperImplicit &cm);
-         int d_8or27;
 
       public:
          // constructors
-         TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+         TransIsoHyperImplicit(ProblemSpecP& ps, MPMFlags* flag);
          TransIsoHyperImplicit(const TransIsoHyperImplicit* cm);
        
          // destructor
          virtual ~TransIsoHyperImplicit();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps,
+                                        bool output_cm_tag = true);
 
          // clone
          TransIsoHyperImplicit* clone();

@@ -49,6 +49,8 @@ WARNING
   public:
     flameSheet_rxn(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~flameSheet_rxn();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);

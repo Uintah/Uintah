@@ -47,11 +47,10 @@ WARNING
     // Constructor and destructor
     //
     ShellParticleCreator(MPMMaterial* matl, 
-			 MPMLabel* lb,
-			 MPMFlags* flags,
-                         SimulationStateP& sharedState);
+			 MPMFlags* flags);
+
     virtual ~ShellParticleCreator();
-    
+
     /////////////////////////////////////////////////////////////////////////
     //
     // Actually create particles using geometry

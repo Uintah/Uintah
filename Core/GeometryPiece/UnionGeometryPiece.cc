@@ -3,12 +3,13 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP &ps) 
+UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP& ps) 
 {
   setName("union");
   // Need to loop through all the geometry pieces
@@ -45,6 +46,16 @@ UnionGeometryPiece& UnionGeometryPiece::operator=(const UnionGeometryPiece& rhs)
   return *this;
 
 }
+
+void UnionGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP union_ps = ps->appendChild("union",true,4);
+
+  for (vector<GeometryPiece*>::const_iterator it = child.begin();
+       it != child.end(); ++it)
+    (*it)->outputProblemSpec(union_ps);
+}
+
 
 UnionGeometryPiece* UnionGeometryPiece::clone()
 {

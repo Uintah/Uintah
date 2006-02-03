@@ -48,8 +48,11 @@ WARNING
       
      //////////
      // Insert Documentation Here:
-     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			       SimulationStateP& state) = 0;
+     virtual void problemSetup(const ProblemSpecP& params, 
+                               const ProblemSpecP& materials_ps,
+                               GridP& grid, SimulationStateP& state) = 0;
+
+     virtual void outputProblemSpec(ProblemSpecP& ps) {}
       
      //////////
      // Insert Documentation Here:

@@ -86,10 +86,35 @@ void SimulationState::registerMaterial(Material* matl)
      named_matls[matl->getName()] = matl;
 }
 
+void SimulationState::registerMaterial(Material* matl,unsigned int index)
+{
+   matl->setDWIndex(index);
+
+   if (matls.size() <= index)
+     matls.resize(index+1);
+   matls[index]=matl;
+
+   if ((int)matls.size() > max_matl_index) {
+     max_matl_index = matls.size();
+   }
+
+   if(matl->hasName())
+     named_matls[matl->getName()] = matl;
+}
+
+
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
 {
-   mpm_matls.push_back(matl);
-   registerMaterial(matl);
+  matl->registerParticleState(this);
+  mpm_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
+{
+  matl->registerParticleState(this);
+  mpm_matls.push_back(matl);
+  registerMaterial(matl,index);
 }
 
 void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
@@ -102,6 +127,12 @@ void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
    ice_matls.push_back(matl);
    registerMaterial(matl);
+}
+
+void SimulationState::registerICEMaterial(ICEMaterial* matl,unsigned int index)
+{
+   ice_matls.push_back(matl);
+   registerMaterial(matl,index);
 }
 
 void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)

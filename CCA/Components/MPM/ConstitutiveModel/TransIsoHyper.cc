@@ -29,12 +29,9 @@ using namespace SCIRun;
 
 // _________________transversely isotropic hyperelastic material [Jeff Weiss's]
 
-TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                             MPMFlags* Mflag)
-  //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
+TransIsoHyper::TransIsoHyper(ProblemSpecP& ps, MPMFlags* Mflag) :
+  ConstitutiveModel(Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
   d_useModifiedEOS = false;
 
   //______________________material properties
@@ -52,12 +49,6 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
   //______________________interpolation
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
-    NGN=1;
-  } else if(d_8or27==27){
-    NGN=2;
-  }
 
   pStretchLabel = VarLabel::create("p.stretch",
      ParticleVariable<double>::getTypeDescription());
@@ -70,13 +61,8 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
      ParticleVariable<double>::getTypeDescription());
 }
 
-TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm)
+TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm) : ConstitutiveModel(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-  d_8or27 = cm->d_8or27;
-
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
   d_initialData.Bulk = cm->d_initialData.Bulk;
@@ -99,6 +85,29 @@ TransIsoHyper::~TransIsoHyper()
   VarLabel::destroy(pStretchLabel_preReloc);
   VarLabel::destroy(pFailureLabel);
   VarLabel::destroy(pFailureLabel_preReloc);
+}
+
+
+void TransIsoHyper::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","trans_iso_hyper");
+  }
+
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
+  cm_ps->appendElement("c1", d_initialData.c1,false,4);
+  cm_ps->appendElement("c2", d_initialData.c2,false,4);
+  cm_ps->appendElement("c3", d_initialData.c3,false,4);
+  cm_ps->appendElement("c4", d_initialData.c4,false,4);
+  cm_ps->appendElement("c5", d_initialData.c5,false,4);
+  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star,false,4);
+  cm_ps->appendElement("direction_of_symm", d_initialData.a0,false,4);
+  cm_ps->appendElement("failure_option",d_initialData.failure,false,4);
+  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch,false,4);
+  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear,false,4);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
 }
 
 
@@ -360,7 +369,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       Vector gvel;
       velGrad.set(0.0);
-      for(int k = 0; k < d_8or27; k++) {
+      for(int k = 0; k < flag->d_8or27; k++) {
         gvel = gvelocity[ni[k]];
         for (int j = 0; j<3; j++){
           double d_SXoodx = d_S[k][j] * oodx[j];

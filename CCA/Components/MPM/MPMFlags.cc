@@ -36,11 +36,13 @@ MPMFlags::MPMFlags()
   d_erosionAlgorithm = "none";
   d_doThermalExpansion = true;
 
+  d_adiabaticHeatingOn = false;
   d_adiabaticHeating = 1.0;
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
   d_canAddMPMMaterial = false;
   d_interpolator = scinew LinearInterpolator(); 
+  d_do_contact_friction = true;
   d_addFrictionWork = 1.0;  // do frictional heating by default
 
   d_extraSolverFlushes = 0;  // Have PETSc do more flushes to save memory
@@ -54,9 +56,12 @@ MPMFlags::~MPMFlags()
 }
 
 void
-MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& /*grid*/)
+MPMFlags::readMPMFlags(ProblemSpecP& ps)
 {
-  ps->get("time_integrator", d_integrator_type);
+  ProblemSpecP root = ps->getRootNode();
+  ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
+
+  mpm_flag_ps->get("time_integrator", d_integrator_type);
   if (d_integrator_type == "implicit") 
     d_integrator = Implicit;
   else if (d_integrator_type == "fracture") {
@@ -65,31 +70,31 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& /*grid*/)
   }
   else 
     d_integrator = Explicit;
-  ps->get("nodes8or27", d_8or27);
-  ps->get("reference_temperature", d_ref_temp); // for thermal stress
-  ps->get("withColor",  d_with_color);
-  ps->get("artificial_damping_coeff", d_artificialDampCoeff);
-  ps->get("artificial_viscosity",     d_artificial_viscosity);
-  ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
-  ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
-  ps->get("accumulate_strain_energy", d_accStrainEnergy);
-  ps->get("use_load_curves", d_useLoadCurves);
-  bool adiabaticHeatingOn = false;
-  ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
-  if (adiabaticHeatingOn) d_adiabaticHeating = 0.0;
-  ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
-  ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
-  ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
-  ps->get("create_new_particles", d_createNewParticles);
-  ps->get("manual_new_material", d_addNewMaterial);
-  ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
-  ps->get("DoImplicitHeatConduction", d_doImplicitHeatConduction);
-  ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
-  ps->get("DoThermalExpansion", d_doThermalExpansion);
-  bool do_contact_friction = true;
-  ps->get("do_contact_friction_heating", do_contact_friction);
-  if (!do_contact_friction) d_addFrictionWork = 0.0;
-  ProblemSpecP erosion_ps = ps->findBlock("erosion");
+  mpm_flag_ps->get("nodes8or27", d_8or27);
+  mpm_flag_ps->get("reference_temperature", d_ref_temp); // for thermal stress
+  mpm_flag_ps->get("withColor",  d_with_color);
+  mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
+  mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
+  mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
+  mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
+  mpm_flag_ps->get("accumulate_strain_energy", d_accStrainEnergy);
+  mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
+
+  mpm_flag_ps->get("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
+  if (d_adiabaticHeatingOn) d_adiabaticHeating = 0.0;
+  mpm_flag_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
+  mpm_flag_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
+  mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
+  mpm_flag_ps->get("create_new_particles", d_createNewParticles);
+  mpm_flag_ps->get("manual_new_material", d_addNewMaterial);
+  mpm_flag_ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
+  mpm_flag_ps->get("DoImplicitHeatConduction", d_doImplicitHeatConduction);
+  mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
+  mpm_flag_ps->get("DoThermalExpansion", d_doThermalExpansion);
+
+  mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
+  if (!d_do_contact_friction) d_addFrictionWork = 0.0;
+  ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
   if (erosion_ps) {
     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
       if (d_erosionAlgorithm == "none") d_doErosion = false;
@@ -105,7 +110,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& /*grid*/)
     d_interpolator = scinew Node27Interpolator();
   }
 
-  ps->get("extra_solver_flushes", d_extraSolverFlushes);
+  mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
 
   if (dbg.active()) {
     dbg << "---------------------------------------------------------\n";
@@ -132,6 +137,42 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& /*grid*/)
     dbg << "---------------------------------------------------------\n";
   }
 }
+
+void
+MPMFlags::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ps->appendElement("time_integrator", d_integrator_type,false,1);
+
+  ps->appendElement("nodes8or27", d_8or27,false,1);
+  ps->appendElement("reference_temperature", d_ref_temp,false,1);
+  ps->appendElement("withColor",  d_with_color,false,1);
+  ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff,false,1);
+  ps->appendElement("artificial_viscosity",     d_artificial_viscosity,false,1);
+  ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1,false,1);
+  ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2,false,1);
+  ps->appendElement("accumulate_strain_energy", d_accStrainEnergy,false,1);
+  ps->appendElement("use_load_curves", d_useLoadCurves,false,1);
+  ps->appendElement("turn_on_adiabatic_heating", d_adiabaticHeatingOn,false,1);
+  ps->appendElement("min_grid_level", d_minGridLevel,false,1);
+  ps->appendElement("max_grid_level", d_maxGridLevel, false,1);
+  ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor,
+                    false,1);
+  ps->appendElement("create_new_particles", d_createNewParticles,false,1);
+  ps->appendElement("manual_new_material", d_addNewMaterial,false,1);
+  ps->appendElement("CanAddMPMMaterial", d_canAddMPMMaterial,false,1);
+  ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction,false,1);
+  ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction,false,1);
+  ps->appendElement("DoThermalExpansion", d_doThermalExpansion,false,1);
+
+  ps->appendElement("do_contact_friction_heating", d_do_contact_friction,false,1);
+
+  ProblemSpecP erosion_ps = ps->appendChild("erosion",true,1);
+  erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
+
+  ps->appendElement("extra_solver_flushes", d_extraSolverFlushes,false,1);
+}
+
 
 bool
 MPMFlags::doMPMOnLevel(int level, int numLevels) const

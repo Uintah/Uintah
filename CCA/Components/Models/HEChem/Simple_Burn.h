@@ -42,6 +42,8 @@ WARNING
     Simple_Burn(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~Simple_Burn();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     //////////
     // Insert Documentation Here:
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,

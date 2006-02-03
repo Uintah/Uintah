@@ -30,6 +30,8 @@ namespace Uintah {
     /*! Destructor of constant melt temp model.   */
     virtual ~ConstantMeltTemp();
 	 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     /*! Compute the melt temp */
     double computeMeltingTemp(const PlasticityState* state);
   };

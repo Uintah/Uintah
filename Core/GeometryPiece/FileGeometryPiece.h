@@ -7,6 +7,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
+#include <string>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -70,11 +71,10 @@ namespace Uintah {
 /////////////////////////////////////////////////////////////////////////////
 	
   using std::vector;
+  using std::string;
+  using std::list;
 
   class FileGeometryPiece : public SmoothGeomPiece {
-  private:
-    enum FileFormat {FFText, FFLSBBin, FFMSBBin, FFGzip};
-    enum InputVar   {IVvolume, IVtemperature, IVextforces, IVfiberdirn};
     
   public:
     //////////////////////////////////////////////////////////////////////
@@ -91,6 +91,8 @@ namespace Uintah {
     //////////
     // Destructor
     virtual ~FileGeometryPiece();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     /// Make a clone
     FileGeometryPiece* clone();
@@ -111,8 +113,8 @@ namespace Uintah {
     Box                 d_box;
     string              d_file_name;
     bool                d_presplit;
-    FileFormat          d_file_format;
-    std::list<InputVar> d_vars;
+    string              d_file_format;
+    list<string>        d_vars;
     
   private:
     bool read_line(std::istream & is, Point & xmin, Point & xmax);

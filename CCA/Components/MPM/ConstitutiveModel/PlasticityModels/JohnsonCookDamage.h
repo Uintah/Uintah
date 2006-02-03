@@ -68,6 +68,8 @@ namespace Uintah {
 	 
     // destructor 
     virtual ~JohnsonCookDamage();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     //////////////////////////////////////////////////////////////////////////
     /*! 

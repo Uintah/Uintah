@@ -30,6 +30,19 @@ SphereMembraneGeometryPiece::~SphereMembraneGeometryPiece()
 {
 }
 
+void SphereMembraneGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ProblemSpecP sphere_mem_ps = ps->appendChild("sphere_membrane",true,4);
+
+  sphere_mem_ps->appendElement("origin",d_origin,false,5);
+  sphere_mem_ps->appendElement("radius",d_radius,false,5);
+  sphere_mem_ps->appendElement("thickness",d_h,false,5);
+  sphere_mem_ps->appendElement("num_lat",d_numLat,false,5);
+  sphere_mem_ps->appendElement("num_long",d_numLong,false,5);
+}
+
+
 SphereMembraneGeometryPiece* SphereMembraneGeometryPiece::clone()
 {
   return scinew SphereMembraneGeometryPiece(*this);

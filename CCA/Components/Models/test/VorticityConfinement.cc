@@ -48,6 +48,12 @@ VorticityConfinement::~VorticityConfinement()
   
 }
 
+void VorticityConfinement::outputProblemSpec(ProblemSpecP& ps)
+{
+  ps = params;
+
+}
+
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void

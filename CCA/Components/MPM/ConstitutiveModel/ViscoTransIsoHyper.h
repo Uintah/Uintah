@@ -86,15 +86,16 @@ namespace Uintah {
     // copy constructor
     //ViscoTransIsoHyper(const ViscoTransIsoHyper &cm);
     ViscoTransIsoHyper& operator=(const ViscoTransIsoHyper &cm);
-    int d_8or27;
 
   public:
     // constructors
-    ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+    ViscoTransIsoHyper(ProblemSpecP& ps, MPMFlags* flag);
     ViscoTransIsoHyper(const ViscoTransIsoHyper* cm);
        
     // destructor
     virtual ~ViscoTransIsoHyper();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     ViscoTransIsoHyper* clone();

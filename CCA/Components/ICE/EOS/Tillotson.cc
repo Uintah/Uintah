@@ -26,6 +26,13 @@ Tillotson::Tillotson(ProblemSpecP& ps)
 Tillotson::~Tillotson()
 {
 }
+
+void Tillotson::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  eos_ps->setAttribute("type","Tillotson");
+}
+
 //__________________________________
 double Tillotson::computeRhoMicro(double press, double,
                              double cv, double Temp,double rho_guess)

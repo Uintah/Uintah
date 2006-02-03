@@ -43,11 +43,13 @@ namespace Uintah {
 
   public:
     // constructors
-    CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+    CompNeoHookImplicit(ProblemSpecP& ps, MPMFlags* flag);
     CompNeoHookImplicit(const CompNeoHookImplicit* cm);
        
     // destructor
     virtual ~CompNeoHookImplicit();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     CompNeoHookImplicit* clone();

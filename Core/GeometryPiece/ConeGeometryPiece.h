@@ -80,6 +80,8 @@ WARNING
     //////////
     // Destructor
     virtual ~ConeGeometryPiece();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     //////////
     // Determines whether a point is inside the cone.

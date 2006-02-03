@@ -3,29 +3,27 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/NullGeometryPiece.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+//#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <string>
+#include <list>
 #include <sgi_stl_warnings_on.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
@@ -35,40 +33,25 @@ using namespace Uintah;
 using namespace SCIRun;
 
 // Standard Constructor
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flags,
-                         SimulationStateP& sharedState)
-  : Material(ps), lb(lb), d_cm(0), d_particle_creator(0)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps)
+  : Material(ps), d_cm(0),  d_particle_creator(0)
 {
+  d_lb = scinew MPMLabel();
+  d_flag = scinew MPMFlags();
+  d_flag->readMPMFlags(ps);
   // The standard set of initializations needed
-  standardInitialization(ps, lb, flags,sharedState);
+  standardInitialization(ps);
 
   // Check to see which ParticleCreator object we need
-  if (flags->d_integrator_type == "implicit") 
-    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags,
-                                                        sharedState);
 
-  else if (flags->d_integrator_type == "fracture") 
-    d_particle_creator = scinew FractureParticleCreator(this,lb, flags,
-                                                        sharedState);
+  d_particle_creator = ParticleCreatorFactory::create(ps,this,d_flag);
 
-  else if (dynamic_cast<Membrane*>(d_cm) != 0)
-    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags,
-                                                        sharedState);
 
-  else if (dynamic_cast<ShellMaterial*>(d_cm) != 0) {
-    d_particle_creator = scinew ShellParticleCreator(this,lb, flags,
-                                                     sharedState);
-  }
-
-  else
-    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags,
-                                                       sharedState);
 }
 
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, 
-                                    MPMFlags* flags,
-                                    SimulationStateP& sharedState)
+MPMMaterial::standardInitialization(ProblemSpecP& ps)
+
 {
   // Follow the layout of the input file
   // Steps:
@@ -82,7 +65,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb,
   // 5.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
-  d_cm = ConstitutiveModelFactory::create(ps,lb,flags);
+  d_cm = ConstitutiveModelFactory::create(ps,d_flag);
   if(!d_cm){
     ostringstream desc;
     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
@@ -117,7 +100,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb,
   ps->get("includeFlowWork",d_includeFlowWork);
 
   // Step 3 -- Loop through all of the pieces in this geometry object
-  int piece_num = 0;
+  //int piece_num = 0;
+  list<string> geom_obj_data;
+  geom_obj_data.push_back("temperature");
+
   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
        geom_obj_ps != 0; 
        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -134,20 +120,22 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb,
       mainpiece = pieces[0];
     }
 
-    piece_num++;
-    d_geom_objs.push_back(scinew GeometryObject(this,mainpiece, geom_obj_ps));
+    //    piece_num++;
+    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps,
+                                                geom_obj_data));
   }
 }
 
 // Default constructor
 MPMMaterial::MPMMaterial() : d_cm(0), d_particle_creator(0)
 {
+  d_lb = scinew MPMLabel();
 }
 
 MPMMaterial::~MPMMaterial()
 {
-  // Destructor
-
+  delete d_lb;
+  delete d_flag;
   delete d_cm;
   delete d_particle_creator;
 
@@ -156,11 +144,35 @@ MPMMaterial::~MPMMaterial()
   }
 }
 
-void
-MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags,
-                             SimulationStateP& sharedState)
+void MPMMaterial::registerParticleState(SimulationState* sharedState)
 {
-  lb = mat->lb;
+  sharedState->d_particleState.push_back(d_particle_creator->returnParticleState());
+  sharedState->d_particleState_preReloc.push_back(d_particle_creator->returnParticleStatePreReloc());
+}
+
+ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP mpm_ps = Material::outputProblemSpec(ps);
+  mpm_ps->appendElement("density",d_density,false,3);
+  mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity,false,3);
+  mpm_ps->appendElement("specific_heat",d_specificHeat,false,3);
+  mpm_ps->appendElement("C_p",d_Cp,false,3);
+  mpm_ps->appendElement("room_temp",d_troom,false,3);
+  mpm_ps->appendElement("melt_temp",d_tmelt,false,3);
+  d_cm->outputProblemSpec(mpm_ps);
+  for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
+       it != d_geom_objs.end(); it++) {
+    (*it)->outputProblemSpec(mpm_ps);
+  }
+
+  return mpm_ps;
+}
+
+void
+MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat, 
+                             MPMFlags* flags)
+{
+  d_flag = flags;
   d_cm = mat->d_cm->clone();
   d_density = mat->d_density;
   d_thermalConductivity = mat->d_thermalConductivity;
@@ -172,28 +184,12 @@ MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags,
   d_is_rigid = mat->d_is_rigid;
 
   // Check to see which ParticleCreator object we need
-  if (dynamic_cast<ImplicitParticleCreator*>(d_cm))
-    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags,
-                                                        sharedState);
 
-  else if (dynamic_cast<ImplicitParticleCreator*>(d_cm))
-    d_particle_creator = scinew FractureParticleCreator(this,lb, flags,
-                                                        sharedState);
+  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
 
-  else if (dynamic_cast<Membrane*>(d_cm))
-    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags,
-                                                        sharedState);
-
-  else if (dynamic_cast<ShellMaterial*>(d_cm))
-    d_particle_creator = scinew ShellParticleCreator(this,lb, flags,
-                                                     sharedState);
-
-  else
-    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags,
-                                                       sharedState);
 }
 
-ConstitutiveModel * MPMMaterial::getConstitutiveModel() const
+ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
 {
   // Return the pointer to the constitutive model associated
   // with this material
@@ -212,7 +208,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				  DataWarehouse* new_dw)
 {
   d_particle_creator->createParticles(this,numParticles,cellNAPID,
-				      patch,new_dw,lb,d_geom_objs);
+				      patch,new_dw,d_geom_objs);
 }
 
 ParticleCreator* MPMMaterial::getParticleCreator()
@@ -321,7 +317,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = getInitialDensity();
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
-          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
         }
 
         if (count > 0 && obj > 0) {
@@ -329,7 +325,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = getInitialDensity();
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
-          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
         } 
       }   
       if (numMatls > 1 ) {
@@ -341,7 +337,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
         if((pd.x() > b1low.x() && pd.y() > b1low.y() && pd.z() > b1low.z()) &&
            (pd.x() < b1up.x()  && pd.y() < b1up.y()  && pd.z() < b1up.z())){
             vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+            temp[*iter]      = d_geom_objs[obj]->getInitialData("temperature");
         }    
       }    
     }  // Loop over domain
@@ -361,3 +357,4 @@ MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
   rho_CC.initialize(d_TINY_RHO);
   temp.initialize(d_troom);
 }
+

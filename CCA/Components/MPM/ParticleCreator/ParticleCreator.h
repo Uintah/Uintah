@@ -19,18 +19,17 @@ namespace Uintah {
   class GeometryPiece;
   class Patch;
   class DataWarehouse;
-  class MPMLabel;
   class MPMFlags;
   class MPMMaterial;
+  class MPMLabel;
   class ParticleSubset;
   class VarLabel;
 
   class ParticleCreator {
   public:
     
-    ParticleCreator(MPMMaterial* matl, 
-                    MPMLabel* lb,
-                    MPMFlags* flags, SimulationStateP& sharedState);
+    ParticleCreator(MPMMaterial* matl, MPMFlags* flags);
+
 
     virtual ~ParticleCreator();
 
@@ -38,27 +37,23 @@ namespace Uintah {
 					    particleIndex numParticles,
 					    CCVariable<short int>& cellNAPID,
 					    const Patch*,DataWarehouse* new_dw,
-					    MPMLabel* lb,
-					    vector<GeometryObject*>&);
+                                            vector<GeometryObject*>&);
 
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
-					      int dwi, MPMLabel* lb, 
-					      const Patch* patch,
+					      int dwi, const Patch* patch,
 					      DataWarehouse* new_dw);
 
     virtual void allocateVariablesAddRequires(Task* task, 
 					      const MPMMaterial* matl,
-					      const PatchSet* patch, 
-					      MPMLabel* lb) const;
+					      const PatchSet* patch) const;
 
-    virtual void allocateVariablesAdd(MPMLabel* lb, DataWarehouse* new_dw,
+    virtual void allocateVariablesAdd(DataWarehouse* new_dw,
 				      ParticleSubset* addset,
 				      map<const VarLabel*,ParticleVariableBase*>* newState,
 				      ParticleSubset* delset,
 				      DataWarehouse* old_dw);
 
-    virtual void registerPermanentParticleState(MPMMaterial* matl,
-						MPMLabel* lb);
+    virtual void registerPermanentParticleState(MPMMaterial* matl);
 
     virtual particleIndex countParticles(const Patch*,
 					 std::vector<GeometryObject*>&);
@@ -66,7 +61,8 @@ namespace Uintah {
     virtual particleIndex countAndCreateParticles(const Patch*,
 						  GeometryObject* obj);
 
-    virtual vector<const VarLabel* > returnParticleState();
+    vector<const VarLabel* > returnParticleState();
+    vector<const VarLabel* > returnParticleStatePreReloc();
 
   protected:
 
@@ -110,6 +106,8 @@ namespace Uintah {
     ParticleVariable<double> ptempPrevious;  // for thermal stress 
 
     ParticleVariable<int> pLoadCurveID;
+
+    MPMLabel* d_lb;
 
     bool d_useLoadCurves;
     bool d_with_color;

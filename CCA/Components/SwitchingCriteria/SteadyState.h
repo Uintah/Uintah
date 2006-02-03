@@ -22,6 +22,7 @@ namespace Uintah {
       virtual ~SteadyState();
       
       virtual void problemSetup(const ProblemSpecP& ps, 
+                                const ProblemSpecP& materials_ps, 
                                 SimulationStateP& sharedState);
 
       virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched);

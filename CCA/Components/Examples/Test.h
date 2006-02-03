@@ -14,8 +14,9 @@ namespace Uintah {
     Test(const ProcessorGroup* myworld);
     virtual ~Test();
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      SimulationStateP&);
+    virtual void problemSetup(const ProblemSpecP& params, 
+                              const ProblemSpecP& materials_ps, 
+                              GridP& grid, SimulationStateP&);
     virtual void scheduleInitialize(const LevelP& level,
 				    SchedulerP& sched);
     virtual void scheduleComputeStableTimestep(const LevelP& level,

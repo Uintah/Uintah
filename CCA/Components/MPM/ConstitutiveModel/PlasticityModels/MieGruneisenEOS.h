@@ -71,6 +71,8 @@ namespace Uintah {
 	 
     // destructor 
     virtual ~MieGruneisenEOS();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     /////////////////////////////////////////////////////////////////////////
     /*! Calculate the pressure using a equation of state */

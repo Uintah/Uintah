@@ -93,7 +93,7 @@ using namespace std;
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 extern DebugStream fullDebug;
-
+//#define HAVE_MPICH
 
 static
 void
@@ -368,7 +368,14 @@ main( int argc, char** argv )
     usage("No input file specified", "", argv[0]);
   }
 
-  if (restart || combine_patches || reduce_uda) {
+  if (restart) {
+    // check if state.xml is present
+    // if not do normal
+    udaDir = filename;
+    filename = filename + "/input.xml";
+  }
+
+  if (combine_patches || reduce_uda) {
     udaDir = filename;
     filename = filename + "/input.xml";
   }
@@ -560,7 +567,7 @@ main( int argc, char** argv )
     
     ModelMaker* modelmaker = scinew ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
-    
+
     // Load balancer
     LoadBalancer* bal;
     UintahParallelComponent* lb; // to add scheduler as a port

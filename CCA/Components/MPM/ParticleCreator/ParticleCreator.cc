@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -28,20 +28,19 @@ using std::cerr;
 using std::ofstream;
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
-                                 MPMLabel* lb,
-                                 MPMFlags* flags, 
-                                 SimulationStateP& /*sharedState*/)
+                                 MPMFlags* flags)
 {
+  d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
-  d_fracture = flags->d_fracture;
   d_ref_temp = flags->d_ref_temp; // for thermal stress 
 
-  registerPermanentParticleState(matl,lb);
+  registerPermanentParticleState(matl);
 }
 
 ParticleCreator::~ParticleCreator()
 {
+  delete d_lb;
 }
 
 
@@ -50,14 +49,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
                                  particleIndex numParticles,
                                  CCVariable<short int>& cellNAPID,
                                  const Patch* patch,DataWarehouse* new_dw,
-                                 MPMLabel* lb,
                                  vector<GeometryObject*>& d_geom_objs)
 {
   // Print the physical boundary conditions
   printPhysicalBCs();
 
   int dwi = matl->getDWIndex();
-  ParticleSubset* subset = allocateVariables(numParticles,dwi,lb,patch,new_dw);
+  ParticleSubset* subset = allocateVariables(numParticles,dwi,patch,new_dw);
 
   particleIndex start = 0;
   
@@ -238,61 +236,59 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
 
 ParticleSubset* 
 ParticleCreator::allocateVariables(particleIndex numParticles, 
-                                   int dwi,MPMLabel* lb, 
-                                   const Patch* patch,
+                                   int dwi, const Patch* patch,
                                    DataWarehouse* new_dw)
 {
 
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
                                                         patch);
-  new_dw->allocateAndPut(position,       lb->pXLabel,             subset);
-  new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      subset); 
-  new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, subset);
-  new_dw->allocateAndPut(pmass,          lb->pMassLabel,          subset);
-  new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        subset);
-  new_dw->allocateAndPut(ptemperature,   lb->pTemperatureLabel,   subset);
-  new_dw->allocateAndPut(pparticleID,    lb->pParticleIDLabel,    subset);
-  new_dw->allocateAndPut(psize,          lb->pSizeLabel,          subset);
-  new_dw->allocateAndPut(pfiberdir,      lb->pFiberDirLabel,      subset); 
-  new_dw->allocateAndPut(perosion,       lb->pErosionLabel,       subset); 
+  new_dw->allocateAndPut(position,       d_lb->pXLabel,             subset);
+  new_dw->allocateAndPut(pvelocity,      d_lb->pVelocityLabel,      subset); 
+  new_dw->allocateAndPut(pexternalforce, d_lb->pExternalForceLabel, subset);
+  new_dw->allocateAndPut(pmass,          d_lb->pMassLabel,          subset);
+  new_dw->allocateAndPut(pvolume,        d_lb->pVolumeLabel,        subset);
+  new_dw->allocateAndPut(ptemperature,   d_lb->pTemperatureLabel,   subset);
+  new_dw->allocateAndPut(pparticleID,    d_lb->pParticleIDLabel,    subset);
+  new_dw->allocateAndPut(psize,          d_lb->pSizeLabel,          subset);
+  new_dw->allocateAndPut(pfiberdir,      d_lb->pFiberDirLabel,      subset); 
+  new_dw->allocateAndPut(perosion,       d_lb->pErosionLabel,       subset); 
   // for thermal stress
-  new_dw->allocateAndPut(ptempPrevious,  lb->pTempPreviousLabel,  subset); 
+  new_dw->allocateAndPut(ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
   if (d_useLoadCurves) {
-    new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
+    new_dw->allocateAndPut(pLoadCurveID,   d_lb->pLoadCurveIDLabel,   subset); 
   }
-  new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          subset);
+  new_dw->allocateAndPut(pdisp,          d_lb->pDispLabel,          subset);
 
   return subset;
 }
 
 void ParticleCreator::allocateVariablesAddRequires(Task* task, 
                                                    const MPMMaterial* ,
-                                                   const PatchSet* ,
-                                                   MPMLabel* lb) const
+                                                   const PatchSet* ) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,lb->pDispLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pXLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pMassLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pParticleIDLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pTemperatureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pVelocityLabel, Ghost::None);
-  task->requires(Task::NewDW,lb->pExtForceLabel_preReloc, Ghost::None);
-  //task->requires(Task::OldDW,lb->pExternalForceLabel, Ghost::None);
-  task->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::None);
-  //task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pErosionLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pDispLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pXLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pMassLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pParticleIDLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pTemperatureLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pVelocityLabel, Ghost::None);
+  task->requires(Task::NewDW,d_lb->pExtForceLabel_preReloc, Ghost::None);
+  //task->requires(Task::OldDW,d_lb->pExternalForceLabel, Ghost::None);
+  task->requires(Task::NewDW,d_lb->pVolumeDeformedLabel, Ghost::None);
+  //task->requires(Task::OldDW,d_lb->pVolumeLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pErosionLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pSizeLabel, Ghost::None);
   // for thermal stress
-  task->requires(Task::OldDW,lb->pTempPreviousLabel, Ghost::None); 
+  task->requires(Task::OldDW,d_lb->pTempPreviousLabel, Ghost::None); 
 
   if (d_useLoadCurves)
-    task->requires(Task::OldDW,lb->pLoadCurveIDLabel, Ghost::None);
+    task->requires(Task::OldDW,d_lb->pLoadCurveIDLabel, Ghost::None);
 
 }
 
 
-void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
+void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
                                            ParticleSubset* addset,
                                            map<const VarLabel*, ParticleVariableBase*>* newState,
                                            ParticleSubset* delset,
@@ -329,22 +325,22 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   // for thermal stress
   new_dw->allocateTemporary(ptempPrevious,addset); 
 
-  old_dw->get(o_disp,lb->pDispLabel,delset);
-  old_dw->get(o_position,lb->pXLabel,delset);
-  old_dw->get(o_mass,lb->pMassLabel,delset);
-  old_dw->get(o_particleID,lb->pParticleIDLabel,delset);
-  old_dw->get(o_temperature,lb->pTemperatureLabel,delset);
-  old_dw->get(o_velocity,lb->pVelocityLabel,delset);
-  new_dw->get(o_external_force,lb->pExtForceLabel_preReloc,delset);
-  //old_dw->get(o_external_force,lb->pExternalForceLabel,delset);
-  new_dw->get(o_volume,lb->pVolumeDeformedLabel,delset);
-  //old_dw->get(o_volume,lb->pVolumeLabel,delset);
-  new_dw->get(o_erosion,lb->pErosionLabel_preReloc,delset);
-  old_dw->get(o_size,lb->pSizeLabel,delset);
+  old_dw->get(o_disp,d_lb->pDispLabel,delset);
+  old_dw->get(o_position,d_lb->pXLabel,delset);
+  old_dw->get(o_mass,d_lb->pMassLabel,delset);
+  old_dw->get(o_particleID,d_lb->pParticleIDLabel,delset);
+  old_dw->get(o_temperature,d_lb->pTemperatureLabel,delset);
+  old_dw->get(o_velocity,d_lb->pVelocityLabel,delset);
+  new_dw->get(o_external_force,d_lb->pExtForceLabel_preReloc,delset);
+  //old_dw->get(o_external_force,d_lb->pExternalForceLabel,delset);
+  new_dw->get(o_volume,d_lb->pVolumeDeformedLabel,delset);
+  //old_dw->get(o_volume,d_lb->pVolumeLabel,delset);
+  new_dw->get(o_erosion,d_lb->pErosionLabel_preReloc,delset);
+  old_dw->get(o_size,d_lb->pSizeLabel,delset);
   if (d_useLoadCurves) 
-    old_dw->get(o_loadcurve,lb->pLoadCurveIDLabel,delset);
+    old_dw->get(o_loadcurve,d_lb->pLoadCurveIDLabel,delset);
   //for thermal stress
-  old_dw->get(o_tempPrevious,lb->pTempPreviousLabel,delset);   
+  old_dw->get(o_tempPrevious,d_lb->pTempPreviousLabel,delset);   
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -364,20 +360,20 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
     ptempPrevious[*n]=o_tempPrevious[*o];  
   }
   
-  (*newState)[lb->pDispLabel]=pdisp.clone();
-  (*newState)[lb->pXLabel] = position.clone();
-  (*newState)[lb->pVelocityLabel]=pvelocity.clone();
-  (*newState)[lb->pExternalForceLabel]=pexternalforce.clone();
-  (*newState)[lb->pMassLabel]=pmass.clone();
-  (*newState)[lb->pVolumeLabel]=pvolume.clone();
-  (*newState)[lb->pTemperatureLabel]=ptemperature.clone();
-  (*newState)[lb->pParticleIDLabel]=pparticleID.clone();
-  (*newState)[lb->pErosionLabel]=perosion.clone();
-  (*newState)[lb->pSizeLabel]=psize.clone();
+  (*newState)[d_lb->pDispLabel]=pdisp.clone();
+  (*newState)[d_lb->pXLabel] = position.clone();
+  (*newState)[d_lb->pVelocityLabel]=pvelocity.clone();
+  (*newState)[d_lb->pExternalForceLabel]=pexternalforce.clone();
+  (*newState)[d_lb->pMassLabel]=pmass.clone();
+  (*newState)[d_lb->pVolumeLabel]=pvolume.clone();
+  (*newState)[d_lb->pTemperatureLabel]=ptemperature.clone();
+  (*newState)[d_lb->pParticleIDLabel]=pparticleID.clone();
+  (*newState)[d_lb->pErosionLabel]=perosion.clone();
+  (*newState)[d_lb->pSizeLabel]=psize.clone();
   if (d_useLoadCurves) 
-    (*newState)[lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
+    (*newState)[d_lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
   // for thermal stress
-  (*newState)[lb->pTempPreviousLabel]=ptempPrevious.clone();  
+  (*newState)[d_lb->pTempPreviousLabel]=ptempPrevious.clone();  
 }
 
 
@@ -428,7 +424,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   psize[i] = size;
 
   pvelocity[i] = (*obj)->getInitialVelocity();
-  ptemperature[i] = (*obj)->getInitialTemperature();
+  ptemperature[i] = (*obj)->getInitialData("temperature");
   pmass[i] = matl->getInitialDensity()*pvolume[i];
   pdisp[i] = Vector(0.,0.,0.);
   // for thermal stress
@@ -539,55 +535,60 @@ vector<const VarLabel* > ParticleCreator::returnParticleState()
   return particle_state;
 }
 
-void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
-                                                     MPMLabel* lb)
+
+vector<const VarLabel* > ParticleCreator::returnParticleStatePreReloc()
 {
-  particle_state.push_back(lb->pDispLabel);
-  particle_state_preReloc.push_back(lb->pDispLabel_preReloc);
+  return particle_state_preReloc;
+}
 
-  particle_state.push_back(lb->pVelocityLabel);
-  particle_state_preReloc.push_back(lb->pVelocityLabel_preReloc);
+void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
+{
+  particle_state.push_back(d_lb->pDispLabel);
+  particle_state_preReloc.push_back(d_lb->pDispLabel_preReloc);
 
-  particle_state.push_back(lb->pExternalForceLabel);
-  particle_state_preReloc.push_back(lb->pExtForceLabel_preReloc);
+  particle_state.push_back(d_lb->pVelocityLabel);
+  particle_state_preReloc.push_back(d_lb->pVelocityLabel_preReloc);
 
-  particle_state.push_back(lb->pMassLabel);
-  particle_state_preReloc.push_back(lb->pMassLabel_preReloc);
+  particle_state.push_back(d_lb->pExternalForceLabel);
+  particle_state_preReloc.push_back(d_lb->pExtForceLabel_preReloc);
 
-  particle_state.push_back(lb->pVolumeLabel);
-  particle_state_preReloc.push_back(lb->pVolumeLabel_preReloc);
+  particle_state.push_back(d_lb->pMassLabel);
+  particle_state_preReloc.push_back(d_lb->pMassLabel_preReloc);
 
-  particle_state.push_back(lb->pTemperatureLabel);
-  particle_state_preReloc.push_back(lb->pTemperatureLabel_preReloc);
+  particle_state.push_back(d_lb->pVolumeLabel);
+  particle_state_preReloc.push_back(d_lb->pVolumeLabel_preReloc);
+
+  particle_state.push_back(d_lb->pTemperatureLabel);
+  particle_state_preReloc.push_back(d_lb->pTemperatureLabel_preReloc);
 
   // for thermal stress
-  particle_state.push_back(lb->pTempPreviousLabel);
-  particle_state_preReloc.push_back(lb->pTempPreviousLabel_preReloc);
+  particle_state.push_back(d_lb->pTempPreviousLabel);
+  particle_state_preReloc.push_back(d_lb->pTempPreviousLabel_preReloc);
   
-  particle_state.push_back(lb->pParticleIDLabel);
-  particle_state_preReloc.push_back(lb->pParticleIDLabel_preReloc);
+  particle_state.push_back(d_lb->pParticleIDLabel);
+  particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
   
-  particle_state.push_back(lb->pErosionLabel);
-  particle_state_preReloc.push_back(lb->pErosionLabel_preReloc);
+  particle_state.push_back(d_lb->pErosionLabel);
+  particle_state_preReloc.push_back(d_lb->pErosionLabel_preReloc);
 
   if (d_with_color){
-    particle_state.push_back(lb->pColorLabel);
-    particle_state_preReloc.push_back(lb->pColorLabel_preReloc);
+    particle_state.push_back(d_lb->pColorLabel);
+    particle_state_preReloc.push_back(d_lb->pColorLabel_preReloc);
   }
 
-  particle_state.push_back(lb->pSizeLabel);
-  particle_state_preReloc.push_back(lb->pSizeLabel_preReloc);
+  particle_state.push_back(d_lb->pSizeLabel);
+  particle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
 
   if (d_useLoadCurves) {
-    particle_state.push_back(lb->pLoadCurveIDLabel);
-    particle_state_preReloc.push_back(lb->pLoadCurveIDLabel_preReloc);
+    particle_state.push_back(d_lb->pLoadCurveIDLabel);
+    particle_state_preReloc.push_back(d_lb->pLoadCurveIDLabel_preReloc);
   }
 
-  particle_state.push_back(lb->pDeformationMeasureLabel);
-  particle_state.push_back(lb->pStressLabel);
+  particle_state.push_back(d_lb->pDeformationMeasureLabel);
+  particle_state.push_back(d_lb->pStressLabel);
 
-  particle_state_preReloc.push_back(lb->pDeformationMeasureLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pStressLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);

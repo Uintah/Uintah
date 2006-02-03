@@ -67,6 +67,11 @@ SimpleRxn::~SimpleRxn()
   }
 }
 
+void SimpleRxn::outputProblemSpec(ProblemSpecP& ps)
+{
+
+}
+
 //__________________________________
 SimpleRxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
   : piece(piece)

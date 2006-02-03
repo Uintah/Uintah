@@ -62,6 +62,16 @@ CylinderGeometryPiece::~CylinderGeometryPiece()
 {
 }
 
+void CylinderGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ProblemSpecP cylinder_ps = ps->appendChild("cylinder",true,4);
+
+  cylinder_ps->appendElement("bottom",d_bottom,false,5);
+  cylinder_ps->appendElement("top",d_top,false,5);
+  cylinder_ps->appendElement("radius",d_radius,false,5);
+}
+
 
 CylinderGeometryPiece* CylinderGeometryPiece::clone()
 {

@@ -8,9 +8,7 @@ namespace Uintah {
   class FractureParticleCreator : public ParticleCreator {
   public:
     
-    FractureParticleCreator(MPMMaterial* matl, 
-			    MPMLabel* lb,
-			    MPMFlags* flags,SimulationStateP& sharedState);
+    FractureParticleCreator(MPMMaterial* matl, MPMFlags* flags);
     virtual ~FractureParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,
@@ -27,8 +25,14 @@ namespace Uintah {
     virtual particleIndex countAndCreateParticles(const Patch*,
 						  GeometryObject* obj) ;
 
-    virtual void registerPermanentParticleState(MPMMaterial* matl,
-						MPMLabel* lb);
+    virtual void registerPermanentParticleState(MPMMaterial* matl);
+
+    void applyForceBC(const Vector& dxpp, 
+                      const Point& pp,
+                      const double& pMass, 
+		      Vector& pExtForce);
+    
+
     
   };
 

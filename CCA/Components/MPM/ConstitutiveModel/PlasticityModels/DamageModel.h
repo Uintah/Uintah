@@ -3,6 +3,8 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 
 namespace Uintah {
@@ -23,6 +25,8 @@ namespace Uintah {
 	 
     DamageModel();
     virtual ~DamageModel();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 	 
     //////////////////////////////////////////////////////////////////////////
     /*! 

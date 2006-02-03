@@ -45,6 +45,27 @@ PTWPlastic::PTWPlastic(const PTWPlastic* cm)
 PTWPlastic::~PTWPlastic()
 {
 }
+
+
+void PTWPlastic::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model",true,4);
+  plastic_ps->setAttribute("type","preston_tonks_wallace");
+
+  plastic_ps->appendElement("theta",d_CM.theta,false,5);
+  plastic_ps->appendElement("p",d_CM.p,false,5);
+  plastic_ps->appendElement("s0",d_CM.s0,false,5);
+  plastic_ps->appendElement("sinf",d_CM.sinf,false,5);
+  plastic_ps->appendElement("kappa",d_CM.kappa,false,5);
+  plastic_ps->appendElement("gamma",d_CM.gamma,false,5);
+  plastic_ps->appendElement("y0",d_CM.y0,false,5);
+  plastic_ps->appendElement("yinf",d_CM.yinf,false,5);
+  plastic_ps->appendElement("y1",d_CM.y1,false,5);
+  plastic_ps->appendElement("y2",d_CM.y2,false,5);
+  plastic_ps->appendElement("beta",d_CM.beta,false,5);
+  plastic_ps->appendElement("M",d_CM.M,false,5);
+}
+
          
 double 
 PTWPlastic::computeFlowStress(const PlasticityState* state,

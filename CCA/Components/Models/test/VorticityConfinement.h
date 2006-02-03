@@ -45,6 +45,8 @@ WARNING
   public:
     VorticityConfinement(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~VorticityConfinement();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);

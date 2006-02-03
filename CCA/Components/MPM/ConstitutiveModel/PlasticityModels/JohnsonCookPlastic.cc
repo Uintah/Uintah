@@ -41,6 +41,22 @@ JohnsonCookPlastic::JohnsonCookPlastic(const JohnsonCookPlastic* cm)
 JohnsonCookPlastic::~JohnsonCookPlastic()
 {
 }
+
+void JohnsonCookPlastic::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model",true,4);
+  plastic_ps->setAttribute("type","johnson_cook");
+
+  plastic_ps->appendElement("A",d_CM.A,false,5);
+  plastic_ps->appendElement("B",d_CM.B,false,5);
+  plastic_ps->appendElement("C",d_CM.C,false,5);
+  plastic_ps->appendElement("n",d_CM.n,false,5);
+  plastic_ps->appendElement("m",d_CM.m,false,5);
+  plastic_ps->appendElement("epdot_0", d_CM.epdot_0,false,5);
+  plastic_ps->appendElement("T_r",d_CM.TRoom,false,5);
+  plastic_ps->appendElement("T_m",d_CM.TMelt,false,5);
+}
+
          
 void 
 JohnsonCookPlastic::addInitialComputesAndRequires(Task* ,

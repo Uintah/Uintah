@@ -10,6 +10,7 @@ namespace Uintah {
     MaterialProperties();
     ~MaterialProperties();
     void parse(ProblemSpecP&);
+    void outputProblemSpec(ProblemSpecP& ps);
 
     double Cp;
     //double Cv;
