@@ -865,14 +865,19 @@ protected:
   bool			inside(typename Cell::index_type idx, const Point &p);
   pair<Point,double>	circumsphere(const typename Cell::index_type);
 
-  //! Used to recompute data for individual cells
-  void			create_cell_edges(typename Cell::index_type);
-  void			delete_cell_edges(typename Cell::index_type);
-  void			create_cell_faces(typename Cell::index_type);
-  void			delete_cell_faces(typename Cell::index_type);
-  void			create_cell_node_neighbors(typename Cell::index_type);
-  void			delete_cell_node_neighbors(typename Cell::index_type);
+  //! Used to recompute data for individual cells.  Don't use these, they
+  // are not synchronous.  Use create_cell_syncinfo instead.
+  void create_cell_edges(typename Cell::index_type);
+  void delete_cell_edges(typename Cell::index_type);
+  void create_cell_faces(typename Cell::index_type);
+  void delete_cell_faces(typename Cell::index_type);
+  void create_cell_node_neighbors(typename Cell::index_type);
+  void delete_cell_node_neighbors(typename Cell::index_type);
+  void insert_cell_into_grid(typename Cell::index_type ci);
+  void remove_cell_from_grid(typename Cell::index_type ci);
 
+  void create_cell_syncinfo(typename Cell::index_type ci);
+  void delete_cell_syncinfo(typename Cell::index_type ci);
  
   typename Elem::index_type	mod_tet(typename Cell::index_type cell, 
 				typename Node::index_type a,
@@ -946,10 +951,6 @@ protected:
 #endif
 
   Vector cell_epsilon_;
-  void insert_cell_into_grid(typename Cell::index_type ci);
-  void insert_cell_into_grid_lock(typename Cell::index_type ci);
-  void remove_cell_from_grid(typename Cell::index_type ci);
-  void remove_cell_from_grid_lock(typename Cell::index_type ci);
 }; // end class TetVolMesh
 
 template <class Basis>
@@ -1324,7 +1325,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::begin(typename TetVolMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & NODES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & NODES_E, "NODES_E not synchronized.");
   itr = 0;
 }
 
@@ -1332,7 +1333,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::end(typename TetVolMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & NODES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & NODES_E, "NODES_E not synchronized.");
   itr = points_.size();
 }
 
@@ -1340,7 +1341,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::size(typename TetVolMesh::Node::size_type &s) const
 {
-  ASSERTMSG(synchronized_ & NODES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & NODES_E, "NODES_E not synchronized.");
   s = points_.size();
 }
 
@@ -1348,7 +1349,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::begin(typename TetVolMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
   itr = edges_.begin();
 }
 
@@ -1356,7 +1357,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::end(typename TetVolMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
   itr = edges_.end();
 }
 
@@ -1364,7 +1365,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::size(typename TetVolMesh::Edge::size_type &s) const
 {
-  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
   s = edges_.size();
 }
 
@@ -1372,7 +1373,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::begin(typename TetVolMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & FACES_E, "FACES_E not synchronized.");
   itr = faces_.begin();
 }
 
@@ -1380,7 +1381,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::end(typename TetVolMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & FACES_E, "FACES_E not synchronized.");
   itr = faces_.end();
 }
 
@@ -1388,7 +1389,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::size(typename TetVolMesh::Face::size_type &s) const
 {
-  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & FACES_E, "FACES_E not synchronized.");
   s = faces_.size();
 }
 
@@ -1396,7 +1397,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::begin(typename TetVolMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & ELEMENTS_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & ELEMENTS_E, "ELEMENTS_E not synchronized.");
   itr = 0;
 }
 
@@ -1404,7 +1405,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::end(typename TetVolMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_ & ELEMENTS_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & ELEMENTS_E, "ELEMENTS_E not synchronized.");
   itr = cells_.size() >> 2;
 }
 
@@ -1412,7 +1413,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::size(typename TetVolMesh::Cell::size_type &s) const
 {
-  ASSERTMSG(synchronized_ & ELEMENTS_E, "Must call synchronize on mesh first");
+  ASSERTMSG(synchronized_ & ELEMENTS_E, "ELEMENTS_E not synchronized.");
   s = cells_.size() >> 2;
 }
 
@@ -1422,15 +1423,11 @@ template <class Basis>
 void
 TetVolMesh<Basis>::create_cell_edges(typename Cell::index_type c)
 {
-  //ASSERT(!is_frozen());
-  if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
-  synchronize_lock_.lock();
   for (unsigned int i = c*6; i < c*6+6; ++i)
   {
     edges_.insert(i);
     all_edges_.insert(i);
   }
-  synchronize_lock_.unlock();
 }
       
 
@@ -1438,9 +1435,6 @@ template <class Basis>
 void
 TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c)
 {
-  //ASSERT(!is_frozen());
-  if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
-  synchronize_lock_.lock();
   for (unsigned int i = c*6; i < c*6+6; ++i)
   {
     //! If the Shared Edge Set is represented by the particular
@@ -1478,31 +1472,23 @@ TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c)
     ASSERT(half_edge_to_delete != all_edges_.end());
     all_edges_.erase(half_edge_to_delete);
   }
-  synchronize_lock_.unlock();
 }
 
 template <class Basis>
 void
 TetVolMesh<Basis>::create_cell_faces(typename Cell::index_type c)
 {
-  //ASSERT(!is_frozen());
-  if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
-  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     faces_.insert(i);
     all_faces_.insert(i);
   }
-  synchronize_lock_.unlock();
 }
 
 template <class Basis>
 void
 TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c)
 {
-  //ASSERT(!is_frozen());
-  if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
-  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     // If the Shared Face Set is represented by the particular
@@ -1539,21 +1525,16 @@ TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c)
     ASSERT(half_face_to_delete != all_faces_.end());
     all_faces_.erase(half_face_to_delete);
   }
-  synchronize_lock_.unlock();
 }
 
 template <class Basis>
 void
 TetVolMesh<Basis>::create_cell_node_neighbors(typename Cell::index_type c)
 {
-  //ASSERT(!is_frozen());
-  if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
-  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     node_neighbors_[cells_[i]].push_back(i);
   }
-  synchronize_lock_.unlock();
 }
 
 
@@ -1561,9 +1542,6 @@ template <class Basis>
 void
 TetVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type c)
 {
-  //ASSERT(!is_frozen());
-  if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
-  synchronize_lock_.lock();
   for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     const int n = cells_[i];
@@ -1578,7 +1556,40 @@ TetVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type c)
 
     node_neighbors_[n].erase(cell);
   }
-  synchronize_lock_.unlock();      
+}
+
+
+template <class Basis>
+void
+TetVolMesh<Basis>::create_cell_syncinfo(typename Cell::index_type ci)
+{
+  synchronize_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E)
+    create_cell_node_neighbors(ci);
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+    create_cell_edges(ci);
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+    create_cell_faces(ci);
+  if (synchronized_ & LOCATE_E)
+    insert_cell_into_grid(ci);
+  synchronize_lock_.unlock();
+}
+
+
+template <class Basis>
+void
+TetVolMesh<Basis>::delete_cell_syncinfo(typename Cell::index_type ci)
+{
+  synchronize_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E)
+    delete_cell_node_neighbors(ci);
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+    delete_cell_edges(ci);
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+    delete_cell_faces(ci);
+  if (synchronized_ & LOCATE_E)
+    remove_cell_from_grid(ci);
+  synchronize_lock_.unlock();
 }
 
 
@@ -1590,7 +1601,7 @@ TetVolMesh<Basis>::is_edge(const typename Node::index_type n0,
 			   const typename Node::index_type n1,
                     typename Edge::array_type *array)
 {
-  ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize EDGES_E on TetVolMesh first.");
+  ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
   synchronize_lock_.lock();
   //! Create a phantom cell with edge 0 being the one we're searching for
   const unsigned int fake_edge = cells_.size() / 4 * 6;
@@ -1713,18 +1724,12 @@ TetVolMesh<Basis>::set_nodes(typename Node::array_type &array,
 {
   ASSERT(array.size() == 4);
 
-  delete_cell_edges(idx);
-  delete_cell_faces(idx);
-  delete_cell_node_neighbors(idx);
-  remove_cell_from_grid_lock(idx);
+  delete_cell_syncinfo(idx);
 
   for (int n = 0; n < 4; ++n)
     cells_[idx * 4 + n] = array[n];
-  
-  create_cell_edges(idx);
-  create_cell_faces(idx);
-  create_cell_node_neighbors(idx);
-  insert_cell_into_grid_lock(idx);
+
+  create_cell_syncinfo(idx);
 }
 
 template <class Basis>
@@ -1989,10 +1994,7 @@ TetVolMesh<Basis>::combine_3_to_2(typename Cell::index_type &removed,
   // later deletion outside of this call.
   removed = c3;
 
-  delete_cell_node_neighbors(removed);
-  delete_cell_edges(removed);
-  delete_cell_faces(removed);
-  remove_cell_from_grid_lock(removed);
+  delete_cell_syncinfo(removed);
 
   // FIX_ME needs to make sure that the ray between c1_node, and c2_node
   //        intersects the face shared by the tets.
@@ -2027,10 +2029,7 @@ TetVolMesh<Basis>::combine_4_to_1_cell(typename Cell::array_type &tets,
     removed_tets.insert(tets[3]);
     // clean up to be removed tets
     for (int i = 1; i < 4; i++) {
-      delete_cell_node_neighbors(tets[i]);
-      delete_cell_edges(tets[i]);
-      delete_cell_faces(tets[i]);
-      remove_cell_from_grid_lock(tets[i]);
+      delete_cell_syncinfo(tets[i]);
     }
     
     // redefine the remaining tet.
@@ -2443,6 +2442,9 @@ template <class Basis>
 void
 TetVolMesh<Basis>::insert_cell_into_grid(typename Cell::index_type ci)
 {
+  // TODO:  This can crash if you insert a new cell outside of the grid.
+  // Need to recompute grid at that point.
+  
   BBox box;
   typename Node::array_type nodes;
   get_nodes(nodes, ci);
@@ -2457,17 +2459,6 @@ TetVolMesh<Basis>::insert_cell_into_grid(typename Cell::index_type ci)
   box.extend(padmin);
   box.extend(padmax);
   grid_->insert(ci, box);
-}
-
-
-template <class Basis>
-void
-TetVolMesh<Basis>::insert_cell_into_grid_lock(typename Cell::index_type ci)
-{
-  if (!(synchronized_ & LOCATE_E)) return;
-  synchronize_lock_.lock();
-  insert_cell_into_grid(ci);
-  synchronize_lock_.unlock();
 }
 
 
@@ -2489,17 +2480,6 @@ TetVolMesh<Basis>::remove_cell_from_grid(typename Cell::index_type ci)
   box.extend(padmin);
   box.extend(padmax);
   grid_->remove(ci, box);
-}
-
-
-template <class Basis>
-void
-TetVolMesh<Basis>::remove_cell_from_grid_lock(typename Cell::index_type ci)
-{
-  if (!(synchronized_ & LOCATE_E)) return;
-  synchronize_lock_.lock();
-  remove_cell_from_grid(ci);
-  synchronize_lock_.unlock();
 }
 
 
@@ -2788,10 +2768,7 @@ TetVolMesh<Basis>::add_tet(typename Node::index_type a, typename Node::index_typ
   cells_.push_back(c);
   cells_.push_back(d);
 
-  create_cell_node_neighbors(tet);
-  create_cell_edges(tet);
-  create_cell_faces(tet);
-  insert_cell_into_grid_lock(tet);
+  create_cell_syncinfo(tet);
 
   return tet; 
 }
@@ -2833,10 +2810,7 @@ TetVolMesh<Basis>::add_elem(typename Node::array_type a)
   for (unsigned int n = 0; n < a.size(); n++)
     cells_.push_back(a[n]);
 
-  create_cell_node_neighbors(tet);
-  create_cell_edges(tet);
-  create_cell_faces(tet);
-  insert_cell_into_grid_lock(tet);
+  create_cell_syncinfo(tet);
 
   return tet;
 }
@@ -2935,10 +2909,8 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
   if (!inside(ci, p)) return false;
 
   pi = add_point(p);
-  delete_cell_node_neighbors(ci);
-  delete_cell_edges(ci);
-  delete_cell_faces(ci);
-  remove_cell_from_grid_lock(ci);
+
+  delete_cell_syncinfo(ci);
 
   tets.resize(4, ci);
   const unsigned index = ci*4;
@@ -2948,10 +2920,7 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
   
   cells_[index+3] = pi;
     
-  create_cell_node_neighbors(ci);
-  create_cell_edges(ci);
-  create_cell_faces(ci);
-  insert_cell_into_grid_lock(ci);
+  create_cell_syncinfo(ci);
 
   return true;
 }
@@ -2964,10 +2933,7 @@ TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
                                             typename Cell::index_type ci,
                                             unsigned int skip)
 {
-  delete_cell_node_neighbors(ci);
-  delete_cell_edges(ci);
-  delete_cell_faces(ci);
-  remove_cell_from_grid_lock(ci);
+  delete_cell_syncinfo(ci);
 
   const unsigned int i = ci*4;
   tets.push_back(ci);
@@ -2998,10 +2964,7 @@ TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
     cells_[i+3] = pi;
   }
   
-  create_cell_node_neighbors(ci);
-  create_cell_edges(ci);
-  create_cell_faces(ci);
-  insert_cell_into_grid_lock(ci);
+  create_cell_syncinfo(ci);
 }
 
 
@@ -3013,13 +2976,7 @@ TetVolMesh<Basis>::insert_node_in_cell_edge(typename Cell::array_type &tets,
                                             unsigned int skip1,
                                             unsigned int skip2)
 {
-  delete_cell_node_neighbors(ci);
-  delete_cell_edges(ci);
-  delete_cell_faces(ci);
-  remove_cell_from_grid_lock(ci);
-
-  cout << "insert_node_in_cell_edge called, " << ci << ", "
-       << skip1 << " " << skip2 << "\n";
+  delete_cell_syncinfo(ci);
 
   bool pushed = false;
   tets.push_back(ci);
@@ -3068,10 +3025,7 @@ TetVolMesh<Basis>::insert_node_in_cell_edge(typename Cell::array_type &tets,
     cells_[i+3] = pi;
   }
 
-  create_cell_node_neighbors(ci);
-  create_cell_edges(ci);
-  create_cell_faces(ci);
-  insert_cell_into_grid_lock(ci);
+  create_cell_syncinfo(ci);
 }
 
 
@@ -3082,15 +3036,9 @@ TetVolMesh<Basis>::resync_cells(typename Cell::array_type &carray)
   for (unsigned int i = 0; i < carray.size(); i++)
   {
     // Need to delete prior to making changes.  This doesn't work here.
-    delete_cell_node_neighbors(carray[i]);
-    delete_cell_edges(carray[i]);
-    delete_cell_faces(carray[i]);
-    remove_cell_from_grid_lock(carray[i]);
+    delete_cell_syncinfo(carray[i]);
 
-    create_cell_node_neighbors(carray[i]);
-    create_cell_edges(carray[i]);
-    create_cell_faces(carray[i]);
-    insert_cell_into_grid_lock(carray[i]);
+    create_cell_syncinfo(carray[i]);
   }
 }
 
@@ -3921,18 +3869,15 @@ TetVolMesh<Basis>::mod_tet(typename Cell::index_type cell,
 			   typename Node::index_type c,
 			   typename Node::index_type d)
 {
-  delete_cell_node_neighbors(cell);
-  delete_cell_edges(cell);
-  delete_cell_faces(cell);
-  remove_cell_from_grid_lock(cell);
+  delete_cell_syncinfo(cell);
+
   cells_[cell*4+0] = a;
   cells_[cell*4+1] = b;
   cells_[cell*4+2] = c;
   cells_[cell*4+3] = d;  
-  create_cell_node_neighbors(cell);
-  create_cell_edges(cell);
-  create_cell_faces(cell);
-  insert_cell_into_grid_lock(cell);
+
+  create_cell_syncinfo(cell);
+
   return cell;
 }
 
