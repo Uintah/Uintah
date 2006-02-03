@@ -2434,6 +2434,7 @@ AC_SUBST(ITCL_WIDGETS)
 _sci_optional=required
 _sci_lib="$sci_thirdparty_lib"
 
+
 if test "$with_libxml2"; then
    # If --with-libxml2 has a parameter, then use it
    _sci_lib="$with_libxml2/lib"
@@ -2474,40 +2475,37 @@ if test -e $_sci_lib/../bin/xml2-config; then
       fi
     done
     includes=`$_sci_lib/../bin/xml2-config --cflags`
-
-    SCI_TRY_LINK(XML2,xml2 library and headers,libxml/tree.h libxml/parser.h,
-                 $includes,$XML2_LDFLAGS,$XML2_LIB_PATH,,[
-    #if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
-    xmlDocPtr doc = NULL;       /* document pointer */
-    xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
-    xmlDtdPtr dtd = NULL;       /* DTD pointer */
-    char buff[256];
-    int i, j;
-    
-    LIBXML_TEST_VERSION;
-    
-    /*
-     * Creates a new document, a node and set it as a root node
-     */
-    doc = xmlNewDoc(BAD_CAST "1.0");
-    root_node = xmlNewNode(NULL, BAD_CAST "root");
-    xmlDocSetRootElement(doc, root_node);
-    #else
-    //create compile error so configure fails
-    WrongVersionOrNotInstalled *x = 0;
-    #endif
-    ],required)
-
-    DEF_XML2="#define HAVE_XML2 1"
-    break
+else
+    # otherwise, assume it's in the SCI 3P
+    XML2_LIB_PATH=$sci_thirdparty_lib
+    XML2_LDFLAGS=xml2
+    includes=$sci_thirdparty_include
 fi
+SCI_TRY_LINK(XML2,xml2 library and headers,libxml/tree.h libxml/parser.h,
+              $includes,$XML2_LDFLAGS,$XML2_LIB_PATH,,[
+#if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
+xmlDocPtr doc = NULL;       /* document pointer */
+xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
+xmlDtdPtr dtd = NULL;       /* DTD pointer */
+char buff[256];
+int i, j;
 
-if test "$found_xml2_config" = "no"; then
-   AC_MSG_RESULT(no.)
-   echo
-   AC_MSG_WARN(Cannot find a xml2-config file to get xml2 variables.)
-   AC_MSG_WARN(Please install libxml2 and then reconfigure.)
-fi
+LIBXML_TEST_VERSION;
+
+/*
+  * Creates a new document, a node and set it as a root node
+  */
+doc = xmlNewDoc(BAD_CAST "1.0");
+root_node = xmlNewNode(NULL, BAD_CAST "root");
+xmlDocSetRootElement(doc, root_node);
+#else
+//create compile error so configure fails
+WrongVersionOrNotInstalled *x = 0;
+#endif
+],required)
+
+DEF_XML2="#define HAVE_XML2 1"
+break
 
 if test ! "$DEF_XML2"; then
   echo
