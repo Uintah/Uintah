@@ -854,7 +854,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                            all_matls,
                                                            false,
                                                            "computes");
-  
+    
+    scheduleCompute_maxRHS(                sched, level,   one_matl,
+                                                           all_matls);
+    
     scheduleImplicitPressureSolve(         sched, level,   patches,
                                                            one_matl,      
                                                            d_press_matl,    
