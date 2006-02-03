@@ -45,6 +45,7 @@ class InsertFieldAlgo : public DynamicAlgoBase
 public:
   virtual void execute_0(FieldHandle tet, FieldHandle insert) = 0;
   virtual void execute_1(FieldHandle tet, FieldHandle insert) = 0;
+  virtual void execute_2(FieldHandle tet, FieldHandle insert) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftet,
@@ -60,6 +61,7 @@ public:
   //! virtual interface. 
   virtual void execute_0(FieldHandle tet, FieldHandle insert);
   virtual void execute_1(FieldHandle tet, FieldHandle insert);
+  virtual void execute_2(FieldHandle tet, FieldHandle insert);
 };
 
 
@@ -73,11 +75,11 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
   IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
+  tmesh->synchronize(Mesh::EDGES_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+
   typename IFIELD::mesh_type::Node::iterator ibi, iei;
   imesh->begin(ibi);
   imesh->end(iei);
-
-  tmesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
 
   while (ibi != iei)
   {
@@ -107,38 +109,52 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
   IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
+  imesh->synchronize(Mesh::EDGES_E);
+  tmesh->synchronize(Mesh::EDGES_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+
   typename IFIELD::mesh_type::Edge::iterator ibi, iei;
   imesh->begin(ibi);
   imesh->end(iei);
-
-  tmesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
 
   while (ibi != iei)
   {
     typename IFIELD::mesh_type::Node::array_type enodes;
     imesh->get_nodes(enodes, *ibi);
-
-    Point e0, e1;
-    imesh->get_center(e0, enodes[0]);
-    imesh->get_center(e1, enodes[1]);
-    Vector dir = e1 - e0;
+    ++ibi;
 
     typename TFIELD::mesh_type::Elem::index_type elem, neighbor;
     typename TFIELD::mesh_type::Face::array_type faces;
     typename TFIELD::mesh_type::Node::array_type nodes;
     typename TFIELD::mesh_type::Face::index_type minface;
 
-    tmesh->locate(elem, e0);
+    Point e0, e1;
+    imesh->get_center(e0, enodes[0]);
+    imesh->get_center(e1, enodes[1]);
 
-    vector<Point> v;
-    v.push_back(e0);
+
+    // Find our first element.  If e0 isn't inside then try e1.  Need
+    // to handle falling outside of mesh better.
+    if (!tmesh->locate(elem, e0))
+    {
+      Point tmp = e0;
+      e0 = e1;
+      e1 = tmp;
+      if (!tmesh->locate(elem, e0))
+        continue;
+    }
+
+    Vector dir = e1 - e0;
+
+
+    vector<Point> points;
+    points.push_back(e0);
 
     unsigned int i;
     unsigned int maxsteps = 10000;
     for (i=0; i < maxsteps; i++)
     {
       tmesh->get_faces(faces, elem);
-      double mindist = -1.0;
+      double mindist = 1.0-1.0e-6;
       bool found = false;
       Point ecenter;
       tmesh->get_center(ecenter, elem);
@@ -152,7 +168,7 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
         Vector normal = Cross(p1-p0, p2-p0);
         if (Dot(normal, ecenter-p0) > 0.0) { normal *= -1.0; }
         const double dist = RayPlaneIntersection(e0, dir, p0, normal);
-        if (dist > -1.0e-6 && dist > mindist && dist < 1.0+1.0e-6)
+        if (dist > -1.0e-6 && dist < mindist)
         {
           mindist = dist;
           minface = faces[j];
@@ -161,19 +177,98 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
       }
       if (!found) { break; }
 
-      v.push_back(e0 + dir * mindist);
+      if (mindist > 1.0e-6) { points.push_back(e0 + dir * mindist); }
+
+      // TODO:  Handle falling outside of mesh better.  May not be convex.
       if (!tmesh->get_neighbor(neighbor, elem, minface)) { break; }
       elem = neighbor;
     }
-    v.push_back(e1);
+    points.push_back(e1);
 
     typename TFIELD::mesh_type::Node::index_type newnode;
     typename TFIELD::mesh_type::Elem::array_type newelems;
 
-    for (i = 0; i < v.size(); i++)
+    for (i = 0; i < points.size(); i++)
     {
-      tmesh->locate(elem, v[i]);
-      tmesh->insert_node_in_cell_2(newelems, newnode, elem, v[i]);
+      if (tmesh->locate(elem, points[i]))
+      {
+        tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[i]);
+      }
+    }
+  }
+
+  tfield->resize_fdata();
+}
+
+
+template <class TFIELD, class IFIELD>
+void
+InsertFieldAlgoT<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
+                                            FieldHandle insert_h)
+{
+  TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
+  typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
+  IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
+  typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+
+  imesh->synchronize(Mesh::FACES_E);
+  tmesh->synchronize(Mesh::EDGES_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+
+  typename IFIELD::mesh_type::Face::iterator ibi, iei;
+  imesh->begin(ibi);
+  imesh->end(iei);
+
+  while (ibi != iei)
+  {
+    typename IFIELD::mesh_type::Node::array_type fnodes;
+    imesh->get_nodes(fnodes, *ibi);
+
+    unsigned int i;
+
+    Point tri[4];
+    for (i = 0; i < 4 && i < fnodes.size(); i++)
+    {
+      imesh->get_center(tri[i], fnodes[i]);
+    }
+    
+    vector<Point> points;
+
+    // TODO:
+    // Intersect all of the edges in the tetvol with the triangle.
+    // Add each intersection between (0,1) to the results.
+    
+    typename TFIELD::mesh_type::Edge::iterator edge_iter, edge_iter_end;
+    tmesh->begin(edge_iter);
+    tmesh->end(edge_iter_end);
+    while (edge_iter != edge_iter_end)
+    {
+      typename TFIELD::mesh_type::Node::array_type nodes;
+      tmesh->get_nodes(nodes, *edge_iter);
+
+      Point e0, e1;
+      tmesh->get_center(e0, nodes[0]);
+      tmesh->get_center(e1, nodes[1]);
+      Vector dir = e1 - e0;
+
+      double t, u, v;
+      const bool hit = RayTriangleIntersection(t, u, v, false, e0, dir,
+                                               tri[0], tri[1], tri[2]);
+      
+      if (hit && t > 0 && t < 1.0)
+      {
+        points.push_back(e0 + t * dir);
+      }
+
+      ++edge_iter;
+    }
+
+    typename TFIELD::mesh_type::Elem::index_type elem;
+    typename TFIELD::mesh_type::Node::index_type newnode;
+    typename TFIELD::mesh_type::Elem::array_type newelems;
+    for (i = 0; i < points.size(); i++)
+    {
+      tmesh->locate(elem, points[i]);
+      tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[i]);
     }
 
     ++ibi;

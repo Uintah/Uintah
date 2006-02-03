@@ -132,13 +132,18 @@ InsertField::execute()
     tet_field = 0;
     output_field_.detach();
     output_field_->mesh_detach();
-    if (insert_field->mesh()->dimensionality() == 1)
+    const int dim = insert_field->mesh()->dimensionality();
+    if (dim == 0)
+    {
+      algo->execute_0(output_field_, insert_field);
+    }
+    if (dim >= 1)
     {
       algo->execute_1(output_field_, insert_field);
     }
-    else
+    if (dim >= 2)
     {
-      algo->execute_0(output_field_, insert_field);
+      algo->execute_2(output_field_, insert_field);
     }
   }
 
