@@ -41,6 +41,7 @@ SRCS     += \
 	$(SRCDIR)/Environment.cc        \
 	$(SRCDIR)/FileUtils.cc          \
 	$(SRCDIR)/ProgressReporter.cc   \
+	$(SRCDIR)/SimpleProfiler.cc	\
 	$(SRCDIR)/SizeTypeConvert.cc    \
 	$(SRCDIR)/RWS.cc                \
 	$(SRCDIR)/sci_system.cc         \
