@@ -37,6 +37,13 @@ Models_PetscSolver::problemSetup(const ProblemSpecP& /*params*/,
 
 
 void 
+Models_PetscSolver::outputProblemSpec(ProblemSpecP& /*params*/)
+{
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
+}
+
+
+void 
 Models_PetscSolver::matrixCreate(const PatchSet* ,
                                  const PatchSubset* )
 {
