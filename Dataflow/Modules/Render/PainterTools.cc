@@ -1152,17 +1152,16 @@ Painter::PaintTool::mouse_button_release(MouseState &mouse)
 {  
   if (mouse.button_ == 1) {
     drawing_ = false;
-  }
-  
-
-  if (mouse.button_ == 2) {
     if (!mouse.window_->paint_layer_) return 0;
     NrrdSlice &paint = *mouse.window_->paint_layer_;
+    painter_->current_volume_->mutex_.lock();
+    //    NrrdData *nout = scinew NrrdData();
     if (nrrdSplice(painter_->current_volume_->nrrd_->nrrd,
                    painter_->current_volume_->nrrd_->nrrd,
                    paint.texture_->nrrd_->nrrd,
                    mouse.window_->axis_+1,
                    last_index_[mouse.window_->axis_+1])) {
+      painter_->current_volume_->mutex_.unlock();
       char *err = biffGetDone(NRRD);
       cerr << string("Error on line #")+to_string(__LINE__) +
         string(" executing nrrd command: nrrdSplice \n")+
@@ -1170,6 +1169,8 @@ Painter::PaintTool::mouse_button_release(MouseState &mouse)
       free(err);
       return 0;
     }
+    //    painter_->current_volume_->nrrd_ = nout;
+    painter_->current_volume_->mutex_.unlock();
                
     if (mouse.window_->paint_layer_) {
       delete mouse.window_->paint_layer_;
@@ -1177,6 +1178,10 @@ Painter::PaintTool::mouse_button_release(MouseState &mouse)
     }
     painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
+  }
+  
+
+  if (mouse.button_ == 2) {
     return new string ("Done");
   }
   return 0;

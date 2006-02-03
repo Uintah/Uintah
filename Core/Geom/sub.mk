@@ -98,6 +98,8 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/SpotLight.cc		    		\
 	$(SRCDIR)/ShaderProgramARB.cc                   \
+	$(SRCDIR)/TextRenderer.cc 	    		\
+	$(SRCDIR)/TextureObj.cc 	    		\
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
 	$(SRCDIR)/TkOpenGLContext.cc	    		\

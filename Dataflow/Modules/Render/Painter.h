@@ -65,7 +65,7 @@
 #include <Core/Exceptions/GuiException.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/ColorMappedNrrdTextureObj.h>
-#include <Core/Geom/FreeTypeTextTexture.h>
+#include <Core/Geom/TextRenderer.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
@@ -170,8 +170,6 @@ class Painter : public Module
     int                 x_axis();
     int                 y_axis();
     void                render_text();
-    void                render_vertical_text(FreeTypeTextTexture *text,
-                                             double, double);
     void		render_orientation_text();
     void		render_grid();
     void		render_frame(double,double,double,double,
@@ -519,6 +517,10 @@ class Painter : public Module
   typedef		map<string, FreeTypeFace *> FontMap;
   FontMap		fonts_;
   UIdouble		font_size_;
+  TextRenderer *        font1_;
+  TextRenderer *        font2_;
+  TextRenderer *        font3_;
+  
   
   RealDrawer *		runner_;
   Thread *		runner_thread_;
