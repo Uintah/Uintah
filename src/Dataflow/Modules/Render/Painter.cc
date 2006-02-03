@@ -63,7 +63,6 @@
 #include <Core/Exceptions/GuiException.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/ColorMappedNrrdTextureObj.h>
-#include <Core/Geom/FreeTypeTextTexture.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
@@ -78,9 +77,10 @@
 #include <Core/Thread/CleanupManager.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Util/Timer.h>
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
+#include <Core/Geom/TextRenderer.h>
+#include <Core/Util/SimpleProfiler.h>
 
 #ifdef _WIN32
 #define snprintf _snprintf
@@ -105,6 +105,7 @@ namespace SCIRun {
      X - Remove TCLTask::lock and replace w/ volume lock
      X - Optimize build_index_to_world_matrix out
      X - Add support for RGBA nrrds 
+       - compute bounding box for fast volume rendering
        - help mode
        - Better tool mechanism to allow for customization & event fallthrough 
        - Add support for time axis in nrrds
@@ -125,41 +126,14 @@ namespace SCIRun {
 
        Filters:
        confidence connected image filter
+       *aniosotropicimagediffusionfilters* (vector if supported)
        discrete gaussian image filter
        gradient magnitude image filter
        binary dilate/erode filters
        later add greyscale dilate/erode filters
-       *aniosotropicimagediffusionfilters* (vector if supported)
+
        watershed
-
-
   */
-
-
-#if 1
-#define TIMER(msg)
-#define STARTTIMER()
-#define STOPTIMER()
-
-#elif
-
-static CPUTimer cputimer;
-
-#define TIMER(msg) \
-  cputimer.stop(); \
-  if (!sci_getenv_p("TIMER_OFF")) \
-     cerr << msg << " " << cputimer.time()*1000 << std::endl; \
-  cputimer.clear(); \
-  cputimer.start();
-
-#define STARTTIMER() \
-  cputimer.clear(); \
-  cputimer.start();
-
-#define STOPTIMER() \
-  cputimer.stop();
-
-#endif  
 
 
 
@@ -377,7 +351,8 @@ void
 Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
 {
   mutex_.lock();
-  nrrd_ = nrrd;
+  nrrd_ = nrrd;//scinew NrrdData();
+  //  nrrdCopy(nrrd_->nrrd, nrrd->nrrd);
   
   if (nrrd_->nrrd->axis[0].size > 4) {
     nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 0);
@@ -423,13 +398,15 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
 NrrdDataHandle
 Painter::NrrdVolume::get_nrrd() 
 {
+  //  return nrrd_;
   NrrdDataHandle nrrd = nrrd_;
   for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
+    cerr << "Deleteing axis " << stub_axes_[s] << std::endl;
     NrrdDataHandle nout = new NrrdData();
     nrrdAxesDelete(nout->nrrd, nrrd->nrrd, stub_axes_[s]);
     nrrd = nout;
   }
-  return nrrd_;
+  return nrrd;
 }
 
 
@@ -455,6 +432,9 @@ Painter::Painter(GuiContext* ctx) :
   freetype_lib_(0),
   fonts_(),
   font_size_(ctx->subVar("font_size"),15.0),
+  font1_(0),
+  font2_(0),
+  font3_(0),
   runner_(0),
   runner_thread_(0),
   filter_(0),
@@ -491,13 +471,15 @@ Painter::set_context(Network *net) {
   sched->add_callback(this->static_callback, this);
 }
 
+static SimpleProfiler profiler("RenderWindow", sci_getenv_p("SCIRUN_PROFILE"));
+
 int
 Painter::render_window(SliceWindow &window) {
   if (!window.redraw_) return 0;
   window.redraw_ = false;
   window.viewport_->make_current();
-
-  STARTTIMER();
+  //  profiler.disable();
+  profiler.enter("Render window");
 
   //  window.viewport_->clear();
   glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -510,7 +492,7 @@ Painter::render_window(SliceWindow &window) {
   }
   CHECK_OPENGL_ERROR();
 
-  TIMER("\n\nSetup GL View:");
+  profiler("setup gl");
 
   for (unsigned int s = 0; s < window.slices_.size(); ++s) {
 
@@ -521,23 +503,23 @@ Painter::render_window(SliceWindow &window) {
       window.slices_[s]->draw();
   }
 
-  TIMER("Draw Slices:");
+  profiler("draw slices");
 
   draw_slice_lines(window);
 
-  TIMER("Draw Slice lines:");
+  profiler("draw slice lines");
 
   if (show_grid_()) 
     window.render_grid();
 
-  TIMER("Render Grid:");
+  profiler("render grid");
 
   if (mouse_.window_ == &window) {
     Point windowpos(mouse_.x_, mouse_.y_, 0);
     window.render_guide_lines(windowpos);
   }
 
-  TIMER("Render guide lines:");
+  profiler("render_guide_lines");
 
   if (tool_) {
     tool_->draw(window);
@@ -545,13 +527,13 @@ Painter::render_window(SliceWindow &window) {
       tool_->draw_mouse_cursor(mouse_);
   }
 
-  TIMER("Tool draw: ");
+  profiler("tool draw");
 
   window.render_text();
 
-  TIMER("Render Text: ");
-
-  STOPTIMER();
+  profiler("render_text");
+  profiler.leave();
+  profiler.print();
 
   window.viewport_->release();
 
@@ -643,7 +625,7 @@ void
 Painter::draw_slice_lines(SliceWindow &window)
 {
   if (!current_volume_) return;
-
+  profiler.enter("draw_slice_lines");
   double upp = 100.0 / window.zoom_;    // World space units per one pixel
 
   //  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
@@ -651,7 +633,7 @@ Painter::draw_slice_lines(SliceWindow &window)
   GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
 
   // Vector scale = current_volume_->scale();
-
+  profiler("scale");
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   vector<int> zero_idx(current_volume_->nrrd_->nrrd->dim, 0);
@@ -696,6 +678,8 @@ Painter::draw_slice_lines(SliceWindow &window)
       glEnd();
     }
   }
+  profiler("done");
+  profiler.leave();
 }
 
 
@@ -777,6 +761,7 @@ Painter::SliceWindow::render_frame(double x,
 void
 Painter::SliceWindow::render_grid()
 {
+  profiler.enter("render_grid");
   //  double one = 100.0 / zoom_;    // World space units per one pixel
   double units = zoom_ / 100.0;  // Pixels per world space unit
   const double pixels = 100.0;    // Number of target pixels for grid gap
@@ -807,12 +792,9 @@ Painter::SliceWindow::render_grid()
   }
   double gap = gaps[selected];
 
-  TIMER("Grid gaps:");
-
+  profiler("gaps");
   const int vw = viewport_->width();
   const int vh = viewport_->height();
-  TIMER("Viewport:");
-
 
   double grey1[4] = { 0.75, 0.75, 0.75, 1.0 };
   double grey2[4] = { 0.5, 0.5, 0.5, 1.0 };
@@ -821,8 +803,7 @@ Painter::SliceWindow::render_grid()
   render_frame(0,0, 15, 15, grey1);
   render_frame(15,15, 3, 3, white, grey2 );
   render_frame(17,17, 2, 2, grey3);
-
-  TIMER("Render frame:");
+  profiler("render_frame");
   double grid_color = 0.0;
 
   glDisable(GL_TEXTURE_2D);
@@ -837,17 +818,20 @@ Painter::SliceWindow::render_grid()
   min(xax) = div_d(min(xax), gap)*gap;
   min(yax) = div_d(min(yax), gap)*gap;
 
-  FreeTypeTextTexture text("X", painter_->fonts_["default"]);
   vector<string> lab;
   lab.push_back("X: ");
   lab.push_back("Y: ");
   lab.push_back("Z: ");
-  TIMER("Text:");
 
   int num = 0;
   Point linemin = min;
   Point linemax = min;
   linemax(yax) = max(yax);
+  TextRenderer &font1 = *painter_->font1_;
+  font1.set_color(0,0,0,1);
+  font1.set_shadow_color(1,1,1,1);
+  string str;
+  profiler("start");
   while (linemin(xax) < max(xax)) {
     linemin(xax) = linemax(xax) = min(xax) + gap*num;
     glColor4d(grid_color, grid_color, grid_color, 1.0);
@@ -856,26 +840,19 @@ Painter::SliceWindow::render_grid()
     glVertex3dv(&linemax(0));
     glEnd();
 
-    text.set(lab[xax]+to_string(linemin(xax)));
-
+    //    str = lab[xax]+to_string(linemin(xax));
+    str = to_string(linemin(xax));
     Point pos = world_to_screen(linemin);
-    text.set_color(1,1,1,1);
-    text.draw(pos.x()+2, 0, FreeTypeTextTexture::sw);
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    text.draw(pos.x()+1, 1, FreeTypeTextTexture::sw);
-
-    pos = world_to_screen(linemax);
-    text.set_color(1,1,1,1);
-    text.draw(pos.x()+2, pos.y()-1, FreeTypeTextTexture::nw);
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    text.draw(pos.x()+1, pos.y(), FreeTypeTextTexture::nw);
-
+    font1.render(str, pos.x()+1, 2, 
+                 TextRenderer::SHADOW | TextRenderer:: SW);
+    
+    //    pos = world_to_screen(linemax);
+    font1.render(str, pos.x()+1, vh-2, 
+                 TextRenderer::SHADOW | TextRenderer:: NW);
     num++;
   }
-  text.set("X");
-  int wid = text.width();
-
-  TIMER("horizontal:");
+  profiler("horizontal");
+  //  int wid = text.width();
 
   num = 0;
   linemin = linemax = min;
@@ -887,38 +864,24 @@ Painter::SliceWindow::render_grid()
     glVertex3dv(&linemin(0));
     glVertex3dv(&linemax(0));
     glEnd();
-    
-    text.set(to_string(linemin(yax)));
 
+    str = to_string(linemin(yax));
     Point pos = world_to_screen(linemin);
-    text.set_color(1,1,1,1);
-    render_vertical_text(&text, wid/2, pos.y()+2);
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    render_vertical_text(&text, wid/2, pos.y()+1);
+    font1.render(str, 2, pos.y(), 
+                 TextRenderer::SHADOW | 
+                 TextRenderer::NW | 
+                 TextRenderer::VERTICAL);
 
-    pos = world_to_screen(linemax);
-    text.set_color(1,1,1,1);
-    render_vertical_text(&text, vw-2-wid/2, pos.y()+1);
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    render_vertical_text(&text, vw-2-wid/2, pos.y());
-
-
-#if 0
-
-
-    text.draw(1, pos.y(), FreeTypeTextTexture::sw);
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    text.draw(0, pos.y()+1, FreeTypeTextTexture::sw);
-
-    pos = world_to_screen(linemax);
-    text.set_color(1,1,1,1);
-    text.draw(pos.x()+1, pos.y(), FreeTypeTextTexture::se);
-    text.set_color(grid_color, grid_color, grid_color, 1.0);
-    text.draw(pos.x(), pos.y()+1, FreeTypeTextTexture::se);
-#endif
+    font1.render(str, vw-2, pos.y(), 
+                 TextRenderer::SHADOW | 
+                 TextRenderer::NE | 
+                 TextRenderer::VERTICAL);
     num++;
   }
-  TIMER("vertical:");
+  profiler("vertical");
+  font1.set_color(1,1,1,1);
+  font1.set_shadow_color(0,0,0,1);
+  profiler.leave();
   CHECK_OPENGL_ERROR();
 }
 
@@ -1080,9 +1043,10 @@ double_to_string(double val)
 void
 Painter::SliceWindow::render_orientation_text()
 {
-  FreeTypeFace *font = painter_->fonts_["orientation"];
-  if (!font) return;
+  TextRenderer *text = painter_->font3_;
+  if (!text) return;
 
+  profiler.enter("render_orientation_text");
   int prim = x_axis();
   int sec = y_axis();
   
@@ -1120,22 +1084,24 @@ Painter::SliceWindow::render_orientation_text()
 
   if (prim >= 3) SWAP (ltext, rtext);
   if (sec >= 3) SWAP (ttext, btext);
+  profiler("start render");
+  text->render(ltext, 2, viewport_->height()/2,
+            TextRenderer::W | TextRenderer::SHADOW);
+  profiler("ltext");
 
-  FreeTypeTextTexture texture(ltext, font);
-  texture.draw(2, viewport_->height()/2,
-               FreeTypeTextTexture::w);
+  text->render(rtext,viewport_->width()-2, viewport_->height()/2,
+               TextRenderer::E | TextRenderer::SHADOW);
+  profiler("rtext");
 
-  texture.set(rtext);
-  texture.draw(viewport_->width()-2, viewport_->height()/2,
-               FreeTypeTextTexture::e);
+  text->render(btext,viewport_->width()/2, 2,
+               TextRenderer::S | TextRenderer::SHADOW);
+  profiler("btext");  
 
-  texture.set(btext);
-  texture.draw(viewport_->width()/2, 2,
-               FreeTypeTextTexture::s);
+  text->render(ttext,viewport_->width()/2, viewport_->height()-2, 
+               TextRenderer::N | TextRenderer::SHADOW);
+  profiler("ttext");
 
-  texture.set(ttext);
-  texture.draw(viewport_->width()/2, viewport_->height()-2, 
-               FreeTypeTextTexture::n);
+  profiler.leave();
 }
 
 
@@ -1196,7 +1162,6 @@ void
 Painter::NrrdSlice::draw()
 {
   if (nrrd_dirty_) {
-    cerr << "draw nrrd_dirty " << volume_->name_.get() << std::endl;
     set_coords();
     nrrd_dirty_ = false;
     tex_dirty_ = true;
@@ -1219,6 +1184,7 @@ Painter::NrrdSlice::draw()
     texture_->draw_quad(pos_, xdir_, ydir_);
 }
 
+#if 0
 void
 Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
                                            double x, double y)
@@ -1232,106 +1198,91 @@ Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
     y -= 2 + hei;
   }
 }
-
+#endif
 
 
 void
 Painter::SliceWindow::render_text() {
+
   if (!painter_->show_text_()) return;
-
-  FreeTypeFace *font = painter_->fonts_["default"];
-  if (!font) return;
+  profiler.enter("render_text");  
+  if (!(painter_->font1_ && painter_->font2_ && painter_->font3_)) return;
+  TextRenderer &font1 = *painter_->font1_;
+  TextRenderer &font2 = *painter_->font2_;
+  TextRenderer &font3 = *painter_->font3_;
   
-  FreeTypeTextTexture text("X", font);
-
   const int yoff = 19;
   const int xoff = 19;
   const int vw = viewport_->width();
   const int vh = viewport_->height();
   
-  const int y_pos = text.height()+2;
-  text.set("Zoom: "+to_string(zoom_())+"%");
-  text.draw(xoff, yoff);
-    
+  const int y_pos = font1.height("X")+2;
+  font1.render("Zoom: "+to_string(zoom_())+"%", xoff, yoff, 
+               TextRenderer::SHADOW | TextRenderer::SW);
+  profiler("zoom");
   NrrdVolume *vol = painter_->current_volume_;
   
   for (unsigned int s = 0; s < slices_.size(); ++s) {
-    text.set_color(0.0, 0.0, 0.0, 1.0);
+    string str = slices_[s]->volume_->name_.get();
     if (slices_[s]->volume_ == vol) {
-      text.set("->"+slices_[s]->volume_->name_.get());
-      text.draw(vw-2-xoff+1, vh-2-yoff-(y_pos*(slices_.size()-1-s))-1, 
-                FreeTypeTextTexture::ne);
-      text.set_color(240/255.0, 1.0, 0.0, 1.0);
-
+      font1.set_color(240/255.0, 1.0, 0.0, 1.0);
+      str = "->" + str;
     } else {
-      text.set(slices_[s]->volume_->name_.get());
-      text.draw(vw-2-xoff+1, vh-2-yoff-(y_pos*(slices_.size()-1-s))-1, 
-                FreeTypeTextTexture::ne);
-      text.set_color(1.0, 1.0, 1.0, 1.0);
-
+      font1.set_color(1.0, 1.0, 1.0, 1.0);
     }
 
-    text.draw(vw-2-xoff, vh-2-yoff-(y_pos*(slices_.size()-1-s)), 
-              FreeTypeTextTexture::ne);
+    font1.render(str,
+                 vw-2-xoff, vh-2-yoff-(y_pos*(slices_.size()-1-s)),
+                 TextRenderer::NE | TextRenderer::SHADOW);
   }
-  text.set_color(1.0, 1.0, 1.0, 1.0);
+  profiler("volumes");
+  font1.set_color(1.0, 1.0, 1.0, 1.0);
 
-
-  if (painter_->tool_) {
-    text.set(painter_->tool_->get_name());
-    text.set_color(0.0, 0.0, 0.0, 1.0);
-    text.draw(xoff+2+1, vh-2-yoff-1, FreeTypeTextTexture::nw);
-    text.set_color(1.0, 1.0, 1.0, 1.0);
-    text.draw(xoff+2, vh-2-yoff, FreeTypeTextTexture::nw);
-
-  } 
-
+  if (painter_->tool_)
+    font1.render(painter_->tool_->get_name(), 
+                 xoff+2+1, vh-2-yoff-1, 
+                 TextRenderer::NW | TextRenderer::SHADOW);
+  profiler("tool");
 
   if (vol) {
-
     const float ww = vol->clut_max_ - vol->clut_min_;
     const float wl = vol->clut_min_ + ww/2.0;
-    text.set("WL: " + to_string(wl) +  " -- WW: " + to_string(ww));
-    text.draw(xoff, y_pos+yoff);
+    font1.render("WL: " + to_string(wl) +  " -- WW: " + to_string(ww),
+                 xoff, y_pos+yoff,
+                 TextRenderer::SHADOW | TextRenderer::SW);
 
-    text.set("Min: " + to_string(vol->clut_min_) + 
-             " -- Max: " + to_string(vol->clut_max_));
-    text.draw(xoff, y_pos*2+yoff);
-
+    profiler("WLWW");
+    font1.render("Min: " + to_string(vol->clut_min_) + 
+                 " -- Max: " + to_string(vol->clut_max_),
+                 xoff, y_pos*2+yoff, TextRenderer::SHADOW | TextRenderer::SW);
+    profiler("Min/Max");
     if (this == painter_->mouse_.window_) {
-      text.set("X: "+double_to_string(painter_->mouse_.position_.x())+
-               " Y: "+double_to_string(painter_->mouse_.position_.y())+
-               " Z: "+double_to_string(painter_->mouse_.position_.z()));
-      text.draw(viewport_->width()-2-xoff,yoff, FreeTypeTextTexture::se);
-      
+      font1.render("X: "+double_to_string(painter_->mouse_.position_.x())+
+                   " Y: "+double_to_string(painter_->mouse_.position_.y())+
+                   " Z: "+double_to_string(painter_->mouse_.position_.z()),
+                   viewport_->width()-2-xoff, yoff,
+                   TextRenderer::SHADOW | TextRenderer::SE);
+      profiler("XYZ");
       vector<int> index = vol->world_to_index(painter_->mouse_.position_);
       if (vol->index_valid(index)) {
-        text.set("S: "+to_string(index[1])+
-                 " C: "+to_string(index[2])+
-                 " A: "+to_string(index[3]));
-        text.draw(viewport_->width()-2-xoff,y_pos*1+yoff, FreeTypeTextTexture::se);
-
-        double val;
+        font1.render("S: "+to_string(index[1])+
+                     " C: "+to_string(index[2])+
+                     " A: "+to_string(index[3]),
+                     viewport_->width()-2-xoff, yoff+y_pos,
+                     TextRenderer::SHADOW | TextRenderer::SE);
+        profiler("SCA");
+        double val = 1.0;
         vol->get_value(index, val);
-        text.set("Value: " + to_string(val));
-        text.draw(viewport_->width()-2-xoff,y_pos*2+yoff, FreeTypeTextTexture::se);
-        //        text.draw(0,y_pos*4);
+        font1.render("Value: " + to_string(val),
+                     viewport_->width()-2-xoff,y_pos*2+yoff, 
+                     TextRenderer::SHADOW | TextRenderer::SE);
+        profiler("VALUE");
       }
-        //        text.draw(0, y_pos*5);
-        //      }
     }
   }
-
-
-//   if (string(sci_getenv("USER")) == string("mdavis")) {
-//     text.set("fps: "+to_string(painter_->fps_));
-//     text.draw(0, viewport_->height() - 2, FreeTypeTextTexture::nw);
-//   }
-
+    
   render_orientation_text();
 
-  font = painter_->fonts_["view"];
-  if (!font) return;
   string str;
   if (!painter_->anatomical_coordinates_()) { 
     switch (axis_) {
@@ -1352,12 +1303,13 @@ Painter::SliceWindow::render_text() {
   if (mode_ == slab_e) str = "SLAB - "+str;
   else if (mode_ == mip_e) str = "MIP - "+str;
 
-  text = FreeTypeTextTexture(str, font);
-  text.set_color(0,0,0,1);
-  text.draw(viewport_->width() - 1, -1, FreeTypeTextTexture::se);
-  text.set_color(1,1,1,1);
-  text.draw(viewport_->width() - 2, 0, FreeTypeTextTexture::se);
-
+  font2.set_color(0,0,0,1);
+  font2.set_shadow_color(1,1,1,1);
+  font2.set_shadow_offset(2,-2);
+  font2.render(str, viewport_->width() - 2, 2,
+               TextRenderer::SHADOW | TextRenderer::SE);
+  profiler("plane");
+  profiler.leave();
 }
 
 
@@ -1799,7 +1751,8 @@ Painter::execute()
 
 int
 Painter::set_probe(SliceWindow &window) {
-  if (current_volume_->inside_p(mouse_.position_)) {
+  if (mouse_.window_ != &window &&
+      current_volume_->inside_p(mouse_.position_)) {
     window.center_(window.axis_) = mouse_.position_(window.axis_);
     extract_window_slices(window);
   }
@@ -1991,7 +1944,6 @@ Painter::handle_gui_mouse_button_release(GuiArgs &args) {
   if (tool_) {
     string *err = tool_->mouse_button_release(mouse_);
     if (err && *err == "Done") {
-      cerr << tool_->get_name() << " tool Done\n";
       delete tool_;
       tool_ = 0;
     }
@@ -2067,14 +2019,12 @@ Painter::handle_gui_keypress(GuiArgs &args) {
         Clamp(current_volume_->opacity_+0.05, 0.0, 1.0);
       
       for_each(&Painter::redraw_window);
-      //      cerr << "Op: " << current_volume_->opacity_ << std::endl;
     }
     else if (args[4] == "o") { 
       if (!current_volume_) continue;
       current_volume_->opacity_ = 
         Clamp(current_volume_->opacity_-0.05, 0.0, 1.0);
       for_each(&Painter::redraw_window);
-      //      cerr << "Op: " << current_volume_->opacity_ << std::endl;
     }
     else if (args[4] == "d") { 
 //       create_volume((NrrdVolumes *)1);
@@ -2100,7 +2050,6 @@ Painter::handle_gui_keypress(GuiArgs &args) {
       for (unsigned int i = 1; i < volumes_.size(); ++i)
         if (current_volume_ == volumes_[i]) {
           current_volume_ = volumes_[i-1];
-          cerr << "Current volume: " << current_volume_->name_.get() << std::endl;
           redraw_all();
           return;
         }
@@ -2111,7 +2060,6 @@ Painter::handle_gui_keypress(GuiArgs &args) {
       for (unsigned int i = 0; i < volumes_.size()-1; ++i)
         if (current_volume_ == volumes_[i]) {
           current_volume_ = volumes_[i+1];
-          cerr << "Current volume: " << current_volume_->name_.get() << std::endl;
           redraw_all();
           return;
         }
@@ -2257,6 +2205,10 @@ Painter::initialize_fonts() {
     fonts_["orientation"] = freetype_lib_->load_face(fontfile);
     fonts_["view"] = freetype_lib_->load_face(fontfile);
     set_font_sizes(font_size_());
+    font1_ = scinew TextRenderer(fonts_["default"]);
+    font2_ = scinew TextRenderer(fonts_["view"]);
+    font3_ = scinew TextRenderer(fonts_["orientation"]);
+
   } catch (...) {
     delete_all_fonts();
     error("Error loading font file: "+fontfile);
