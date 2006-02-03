@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
@@ -211,7 +212,7 @@ namespace Uintah {
     int d_orderOfInterpolation;    
   };
 
-
+static DebugStream cout_dbg("AMRICE_DBG", false);
 /*_____________________________________________________________________
  Function~  ICE::refluxOperator_applyCorrectionFluxes
  Purpose~   
