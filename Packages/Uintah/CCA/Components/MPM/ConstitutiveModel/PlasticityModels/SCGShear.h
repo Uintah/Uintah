@@ -35,6 +35,8 @@ namespace Uintah {
 
     /*! Destructor of constant shear modulus model.   */
     virtual ~SCGShear();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     /*! Compute the shear modulus */
     double computeShearModulus(const PlasticityState* state);

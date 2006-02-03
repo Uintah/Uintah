@@ -29,26 +29,21 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
       varblock;varblock=varblock->findNextBlock("var")) {
     string next_var_name("");
     varblock->get(next_var_name);
-    if      (next_var_name=="p.volume")        d_vars.push_back(IVvolume);
-    else if (next_var_name=="p.temperature")   d_vars.push_back(IVtemperature);
-    else if (next_var_name=="p.externalforce") d_vars.push_back(IVextforces);
-    else if (next_var_name=="p.fiberdir")      d_vars.push_back(IVfiberdirn);
-    else 
-      throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'", __FILE__, __LINE__);
+    d_vars.push_back(next_var_name);
   }
   
-  d_file_format = FFText; 
+  d_file_format = "text";
   d_presplit    = true;  // default expects input to have been been processed with pfs
 #if 0
   cerr << "reading: positions";
-  for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
-    if       (*vit==IVvolume) {
+  for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
+    if       (*vit=="p.volume") {
       cerr << " volume";
-    } else if(*vit==IVtemperature) {
+    } else if(*vit=="p.temperature") {
       cerr << " temperature";
-    } else if(*vit==IVextforces) {
+    } else if(*vit=="p.externalforce") {
       cerr << " externalforce";
-    } else if(*vit==IVfiberdirn) {
+    } else if(*vit=="p.fiberdir") {
       cerr << " fiberdirn";
     }
   }
@@ -60,16 +55,13 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
     if (fformat_txt=="split") 
       {
         // leave for backward compatibility
-        d_file_format = FFText;
+        d_file_format = "text";
         d_presplit    = true;
       }
-    else if(fformat_txt=="text")  d_file_format = FFText;
-    else if(fformat_txt=="bin")   d_file_format = isLittleEndian()?FFLSBBin:FFMSBBin;
-    else if(fformat_txt=="lsb")   d_file_format = FFLSBBin;
-    else if(fformat_txt=="msb")   d_file_format = FFMSBBin;
-    else if(fformat_txt=="gzip")  d_file_format = FFGzip;
+    else if(fformat_txt=="bin")   
+      d_file_format = isLittleEndian()?"lsb":"msb";
     else
-      throw ProblemSetupException("Unexpected file geometry format", __FILE__, __LINE__);
+      d_file_format = fformat_txt;
   }
   ps->get("split", d_presplit);
   
@@ -109,6 +101,19 @@ FileGeometryPiece::~FileGeometryPiece()
 {
 }
 
+void FileGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP file_ps = ps->appendChild("file",true,4);
+
+  file_ps->appendElement("name",d_file_name,false,5);
+  file_ps->appendElement("format",d_file_format,false,5);
+  file_ps->appendElement("split",d_presplit,false,5);
+  for (list<string>::const_iterator it = d_vars.begin(); it != d_vars.end(); 
+       it++)
+    file_ps->appendElement("var",*it,false,5);
+  
+}
+
 FileGeometryPiece* FileGeometryPiece::clone()
 {
   return scinew FileGeometryPiece(*this);
@@ -131,12 +136,12 @@ Box FileGeometryPiece::getBoundingBox() const
 
 void FileGeometryPiece::read_bbox(istream & source, Point & min, Point & max) const
 {
-  if(d_file_format==FFText) {
+  if(d_file_format=="text") {
     source >> min(0) >> min(1) >> min(2) >> max(0) >> max(1) >> max(2);
   } else {
     // FIXME: never changes, should save this !
     const bool iamlittle = isLittleEndian();
-    const bool needflip = (iamlittle && (d_file_format==FFMSBBin)) || (!iamlittle && (d_file_format==FFLSBBin));
+    const bool needflip = (iamlittle && (d_file_format=="msb")) || (!iamlittle && (d_file_format=="lsb"));
     double t;
     source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); min(0) = t;
     source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); min(1) = t;
@@ -151,7 +156,7 @@ bool
 FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
 {
   double x1,x2,x3;
-  if(d_file_format==FFText) {
+  if(d_file_format=="text") {
     double v1,v2,v3;
     
     // line always starts with coordinates
@@ -159,28 +164,28 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
     if(is.eof()) return false; // out of points
     d_points.push_back(Point(x1,x2,x3));
     
-    for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
-      if       (*vit==IVvolume) {
+    for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
+      if       (*vit=="p.volume") {
         if(is >> v1) d_volume.push_back(v1);
-      } else if(*vit==IVtemperature) {
+      } else if(*vit=="p.temperature") {
         if(is >> v1) d_temperature.push_back(v1);
-      } else if(*vit==IVextforces) {
+      } else if(*vit=="p.externalforce") {
         if(is >> v1 >> v2 >> v3) d_forces.push_back(Vector(v1,v2,v3));
-      } else if(*vit==IVfiberdirn) {
+      } else if(*vit=="p.fiberdir") {
         if(is >> v1 >> v2 >> v3) d_fiberdirs.push_back(Vector(v1,v2,v3));
       }
       if(!is)
         throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
     }
     
-  } else if(d_file_format==FFLSBBin || d_file_format==FFMSBBin) {
+  } else if(d_file_format=="lsb" || d_file_format=="msb") {
     // read unformatted binary numbers
     
     double v[3];
     
     // never changes, should save this !
     const bool iamlittle = isLittleEndian();
-    const bool needflip = (iamlittle && (d_file_format==FFMSBBin)) || (!iamlittle && (d_file_format==FFLSBBin));
+    const bool needflip = (iamlittle && (d_file_format=="msb")) || (!iamlittle && (d_file_format=="lsb"));
     
     is.read((char*)&x1, sizeof(double)); if(!is) return false;
     is.read((char*)&x2, sizeof(double));
@@ -192,17 +197,17 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
     }
     d_points.push_back(Point(x1,x2,x3));
     
-    for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
-      if (*vit==IVvolume) {
+    for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
+      if (*vit=="p.volume") {
         if(is.read((char*)&v[0], sizeof(double))) {
           if(needflip) swapbytes(v[0]);
           d_volume.push_back(v[0]);
-      } else if(*vit==IVtemperature) {
+      } else if(*vit=="p.temperature") {
         if(is.read((char*)&v[0], sizeof(double))) {
           if(needflip) swapbytes(v[0]);
           d_temperature.push_back(v[0]);
         }
-      } else if(*vit==IVextforces) {
+      } else if(*vit=="p.externalforce") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
             swapbytes(v[0]);
@@ -211,7 +216,7 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
           }
           d_forces.push_back(Vector(v[0],v[1],v[2]));
         }
-      } else if(*vit==IVfiberdirn) {
+      } else if(*vit=="p.fiberdir") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
             swapbytes(v[0]);
@@ -226,7 +231,7 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
       }
     }
     
-  } else if(d_file_format==FFGzip) {
+  } else if(d_file_format=="gzip") {
     throw ProblemSetupException("Sorry - gzip not implemented !", __FILE__, __LINE__);
   }
   

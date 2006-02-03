@@ -21,3 +21,10 @@ void MaterialProperties::parse(ProblemSpecP& p)
   params->require("cp", Cp);
   params->require("molecularweight", molecularWeight);
 }
+
+void MaterialProperties::outputProblemSpec(ProblemSpecP& ps)
+{
+  ps->appendElement("cp",Cp,false,4);
+  ps->appendElement("molecularweight",molecularWeight,false,4);
+
+}

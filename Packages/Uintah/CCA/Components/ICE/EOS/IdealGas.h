@@ -40,6 +40,8 @@ WARNING
    IdealGas(ProblemSpecP& ps);
    virtual ~IdealGas();
 
+   virtual void outputProblemSpec(ProblemSpecP& ps);
+
     virtual double computeRhoMicro(double press,double gamma,
                                    double cv, double Temp, double rho_guess);
 

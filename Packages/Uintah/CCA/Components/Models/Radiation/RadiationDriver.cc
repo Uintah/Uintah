@@ -216,12 +216,21 @@ RadiationDriver::problemSetup(GridP& grid,
   
   d_sharedState = sharedState;
   d_matl_G= d_sharedState->parseAndLookupMaterial(params, "radiatingGas");
+
+  string absSolid("");
+  ProblemSpecP abs_ps = params->get("absorbingSolid",absSolid);
+
+  if (abs_ps)
+    d_hasAbsorbingSolid = true;
+  else
+    d_hasAbsorbingSolid = false;
+    
   
   ProblemSpecP db = params->findBlock("RadiationModel");
   
   //__________________________________
   // absorbing solid
-  db->getWithDefault("absorbingSolid",d_hasAbsorbingSolid, false);
+  //  db->getWithDefault("absorbingSolid",d_hasAbsorbingSolid, false);
   if(d_hasAbsorbingSolid){
     if (d_sharedState->getNumMPMMatls() == 0){
       ostringstream warn;
@@ -287,6 +296,38 @@ RadiationDriver::problemSetup(GridP& grid,
   d_DORadiation = scinew Models_DORadiationModel(d_myworld);
   d_DORadiation->problemSetup(db);
 }
+
+
+void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  model_ps->setAttribute("type","Radiation");
+
+  model_ps->appendElement("radiatingGas",d_matl_G->getName(),false,4);
+  if (d_hasAbsorbingSolid) {
+    model_ps->appendElement("absorbingSolid",d_matl_S->getName(),false,4);
+  }
+  ProblemSpecP rad_ps = model_ps->appendChild("RadiationModel",true,4);
+ 
+  rad_ps->appendElement("caclFreq",d_radCalcFreq,false,4);
+  rad_ps->appendElement("caclInterval",d_radCalc_interval,false,4);
+  rad_ps->appendElement("table_or_ice_temp_density",
+                        d_table_or_ice_temp_density,false,4);
+  rad_ps->appendElement("useTableValues",d_useTableValues,false,4);
+  rad_ps->appendElement("computeCO2_H2)_from_f",d_computeCO2_H2O_from_f,
+                        false,4);
+
+
+  ProblemSpecP geom_ps = rad_ps->appendChild("geom_object",true,4);
+  for (vector<GeometryPiece*>::const_iterator it = d_geom_pieces.begin();
+       it != d_geom_pieces.end(); it++) {
+    (*it)->outputProblemSpec(geom_ps);
+  }
+
+  d_DORadiation->outputProblemSpec(rad_ps);
+
+}
+
 
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E

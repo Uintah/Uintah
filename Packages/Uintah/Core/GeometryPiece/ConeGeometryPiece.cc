@@ -71,6 +71,17 @@ ConeGeometryPiece* ConeGeometryPiece::clone()
   return scinew ConeGeometryPiece(*this);
 }
 
+void ConeGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ProblemSpecP cone_ps = ps->appendChild("cone",true,4);
+
+  cone_ps->appendElement("bottom",d_bottom,false,5);
+  cone_ps->appendElement("top",d_top,false,5);
+  cone_ps->appendElement("bottom_radius",d_radius,false,5);
+  cone_ps->appendElement("top_radius",d_topRad,false,5);
+}
+
 bool 
 ConeGeometryPiece::inside(const Point &pt) const
 {

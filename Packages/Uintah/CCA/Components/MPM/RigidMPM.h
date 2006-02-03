@@ -56,8 +56,9 @@ public:
 
   //////////
   // Insert Documentation Here:
-  virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			    SimulationStateP&);
+  virtual void problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& materials_ps, 
+                            GridP& grid, SimulationStateP&);
 	 
   //////////
   // Insert Documentation Here:

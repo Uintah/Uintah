@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -33,6 +34,7 @@ using namespace SCIRun;
  class ConstitutiveModel;
  class MPMLabel;
  class ParticleCreator;
+
       
 /**************************************
      
@@ -70,13 +72,17 @@ WARNING
    MPMMaterial();
 
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, MPMLabel* lb, MPMFlags* flags,SimulationStateP&);
+   MPMMaterial(ProblemSpecP&);
 	 
    ~MPMMaterial();
 
+   void registerParticleState(SimulationState* ss);
+
+   virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
+
    /*!  Create a copy of the material without the associated geometry */
-   void copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags,
-                        SimulationStateP& sharedState);
+   void copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
+                        MPMFlags* flags);
 	 
    //////////
    // Return correct constitutive model pointer for this material
@@ -107,6 +113,7 @@ WARNING
 
    int nullGeomObject() const;
 
+
    // For MPMICE
    double getGamma() const;
    void initializeCCVariables(CCVariable<double>& rhom,
@@ -125,10 +132,9 @@ WARNING
 
  private:
 
-   MPMLabel* lb;
-   // Specific constitutive model associated with this material
+   MPMLabel* d_lb;
+   MPMFlags* d_flag;
    ConstitutiveModel* d_cm;
-
    ParticleCreator* d_particle_creator;
 
    double d_density;
@@ -155,8 +161,7 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps, MPMLabel* lb, 
-                               MPMFlags* flags,SimulationStateP& sharedState);
+   void standardInitialization(ProblemSpecP& ps);
  };
 
 } // End namespace Uintah

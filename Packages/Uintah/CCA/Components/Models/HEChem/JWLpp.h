@@ -43,6 +43,8 @@ WARNING
     JWLpp(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~JWLpp();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
 
@@ -111,7 +113,8 @@ WARNING
 
     ICELabel* Ilb;
     MaterialSet* mymatls;
-    
+
+    string fromMaterial, toMaterial;
     bool d_active;
     double d_G;
     double d_b;

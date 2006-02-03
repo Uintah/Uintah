@@ -61,11 +61,12 @@ AMRSimpleCFD::~AMRSimpleCFD()
 }
 //______________________________________________________________________
 //
-void AMRSimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
-				SimulationStateP& sharedState)
+void AMRSimpleCFD::problemSetup(const ProblemSpecP& params, 
+                                const ProblemSpecP& materials_ps, 
+                                GridP& grid, SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup  \t\t\t AMRSimpleCFD" << '\n';
-  SimpleCFD::problemSetup(params, grid, sharedState);
+  SimpleCFD::problemSetup(params, materials_ps,grid, sharedState);
   ProblemSpecP cfd = params->findBlock("SimpleCFD");
   if(!cfd->get("err_density_grad", err_density_grad))
     err_density_grad=0;

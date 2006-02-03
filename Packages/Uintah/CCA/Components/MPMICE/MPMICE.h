@@ -68,8 +68,11 @@ public:
 
   virtual double recomputeTimestep(double current_dt); 
           
-  virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-                            SimulationStateP&);
+  virtual void problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& materials_ps, 
+                            GridP& grid, SimulationStateP&);
+
+  virtual void outputProblemSpec(ProblemSpecP& ps);
          
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);

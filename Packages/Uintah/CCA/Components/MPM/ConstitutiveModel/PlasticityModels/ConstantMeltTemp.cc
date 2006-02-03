@@ -16,6 +16,13 @@ ConstantMeltTemp::ConstantMeltTemp(const ConstantMeltTemp* )
 ConstantMeltTemp::~ConstantMeltTemp()
 {
 }
+
+void ConstantMeltTemp::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP temp_ps = ps->appendChild("melting_temp_model",true,4);
+  temp_ps->setAttribute("type","constant_Tm");
+}
+
 	 
 // Compute the melt temp
 double 

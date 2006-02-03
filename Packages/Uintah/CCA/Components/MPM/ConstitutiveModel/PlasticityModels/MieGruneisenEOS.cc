@@ -23,6 +23,15 @@ MieGruneisenEOS::~MieGruneisenEOS()
 {
 }
 	 
+void MieGruneisenEOS::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("equation_of_state",true,4);
+  eos_ps->setAttribute("type","mie_gruneisen");
+
+  eos_ps->appendElement("C_0",d_const.C_0,false,5);
+  eos_ps->appendElement("Gamma_0",d_const.Gamma_0,false,5);
+  eos_ps->appendElement("S_alpha",d_const.S_alpha,false,5);
+}
 
 //////////
 // Calculate the pressure using the Mie-Gruneisen equation of state

@@ -46,7 +46,9 @@ WARNING
     virtual ~RegridderTest ( void );
 
     // Interface inherited from Simulation Interface
-    virtual void problemSetup                  ( const ProblemSpecP& params, GridP& grid, SimulationStateP& state );
+    virtual void problemSetup(const ProblemSpecP& params, 
+                              const ProblemSpecP& materials_ps, 
+                              GridP& grid, SimulationStateP& state );
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps );

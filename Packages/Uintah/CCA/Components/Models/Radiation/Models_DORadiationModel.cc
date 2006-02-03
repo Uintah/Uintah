@@ -61,6 +61,23 @@ Models_DORadiationModel::~Models_DORadiationModel()
   delete d_linearSolver;
 }
 
+
+void Models_DORadiationModel::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP dor_ps = ps->appendChild("DORadiationModel",true,4);
+
+  dor_ps->appendElement("ordinates",d_sn,false,4);
+  dor_ps->appendElement("opl",d_opl,false,4);
+  dor_ps->appendElement("property_model",d_prop_model,false,4);
+  dor_ps->appendElement("spherical_harmonics",d_SHRadiationCalc,false,4);
+  
+
+  d_linearSolver->outputProblemSpec(dor_ps);
+  
+
+
+}
+
 //****************************************************************************
 // Problem Setup for Models_DORadiationModel
 //**************************************************************************** 
@@ -71,14 +88,13 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("DORadiationModel");
 
-  string prop_model;
   test_problems = false;
   int nproblem = 1;
 
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
     db->require("opl",d_opl);
-    db->getWithDefault("property_model",prop_model,"radcoef");
+    db->getWithDefault("property_model",d_prop_model,"radcoef");
     db->getWithDefault("spherical_harmonics",d_SHRadiationCalc,false);
     db->getWithDefault("test_problem",test_problems,false);
     if (test_problems) 
@@ -102,7 +118,7 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
       lprobthree = true;
   }
 
-  if (prop_model == "radcoef"){ 
+  if (d_prop_model == "radcoef"){ 
     lradcal = false;
     lwsgg = false;
     lambda = 1;
@@ -110,7 +126,7 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
     lpatchmean = false;
   }
 
-  if (prop_model == "patchmean"){ 
+  if (d_prop_model == "patchmean"){ 
     lradcal = true;
     lwsgg = false;
     lambda = 6;
@@ -118,7 +134,7 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
     lpatchmean = true;
   }
 
-  if (prop_model == "wsggm"){ 
+  if (d_prop_model == "wsggm"){ 
     lradcal = false;
     lwsgg = true;
     lambda = 4;

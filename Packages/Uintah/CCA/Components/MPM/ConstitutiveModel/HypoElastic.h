@@ -52,11 +52,13 @@ namespace Uintah {
 
   public:
     // constructors
-    HypoElastic(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
+    HypoElastic(ProblemSpecP& ps, MPMFlags* flag);
     HypoElastic(const HypoElastic* cm);
        
     // destructor
     virtual ~HypoElastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     HypoElastic* clone();

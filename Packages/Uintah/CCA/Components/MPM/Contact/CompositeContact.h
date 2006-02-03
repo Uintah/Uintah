@@ -34,8 +34,11 @@ WARNING
     class CompositeContact :public Contact {
       public:
          // Constructor
-         CompositeContact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag);
+         CompositeContact(const ProcessorGroup* myworld, MPMLabel* Mlb, 
+                          MPMFlags* MFlag);
 	 virtual ~CompositeContact();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps);
          
          // memory deleted on destruction of composite
          void add(Contact * m);

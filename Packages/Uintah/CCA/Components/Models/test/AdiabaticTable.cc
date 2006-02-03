@@ -100,6 +100,31 @@ AdiabaticTable::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 {
   ps->require("scalar", initialScalar);
 }
+
+void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
+{
+#if 0
+  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  model_ps->setAttribute("type","AdiabaticTable");
+
+  model_ps->appendElement("material",d_matl->getName(),false,4);
+
+  model_ps->appendElement("varianceScale",varianceScale,false,4);
+  model_ps->appendElement("varianceMax",varianceMax,false,4);
+
+  ProblemSpecP table_ps = model_ps->appendChild("table",true,4);
+  table_ps->setAttribute("name","adiabatic");
+
+  table->outputProblemSpec(table_ps);
+
+#endif
+
+  ps = params;
+
+
+}
+
+
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,

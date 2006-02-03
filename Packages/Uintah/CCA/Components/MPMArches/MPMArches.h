@@ -72,8 +72,9 @@ public:
   virtual ~MPMArches();
 
   // Read inputs from ups file for MPMArches case
-  virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			    SimulationStateP&);
+  virtual void problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& materials_ps,
+                            GridP& grid, SimulationStateP&);
 
   // Set up initial conditions for MPMArches problem	 
   virtual void scheduleInitialize(const LevelP& level,

@@ -79,11 +79,13 @@ WARNING
 
   public:
     // constructors
-    CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* lb,MPMFlags* flag);
+    CompNeoHookPlas(ProblemSpecP& ps,MPMFlags* flag);
     CompNeoHookPlas(const CompNeoHookPlas* cm);
          
     // destructor 
     virtual ~CompNeoHookPlas();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     CompNeoHookPlas* clone();

@@ -23,7 +23,8 @@
 
 
 namespace Uintah {
-      class ViscoTransIsoHyperImplicit : public ConstitutiveModel, public ImplicitCM {
+      class ViscoTransIsoHyperImplicit : public ConstitutiveModel, 
+        public ImplicitCM {
       private:
          // Create datatype for storing model parameters
 	  bool d_useModifiedEOS; 
@@ -88,15 +89,17 @@ namespace Uintah {
          // copy constructor
          //ViscoTransIsoHyperImplicit(const ViscoTransIsoHyperImplicit &cm);
          ViscoTransIsoHyperImplicit& operator=(const ViscoTransIsoHyperImplicit &cm);
-         int d_8or27;
 
       public:
          // constructors
-         ViscoTransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+         ViscoTransIsoHyperImplicit(ProblemSpecP& ps,MPMFlags* flag);
          ViscoTransIsoHyperImplicit(const ViscoTransIsoHyperImplicit* cm);
        
          // destructor
          virtual ~ViscoTransIsoHyperImplicit();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps,
+                                        bool output_cm_tag = true);
 
          // clone
          ViscoTransIsoHyperImplicit* clone();

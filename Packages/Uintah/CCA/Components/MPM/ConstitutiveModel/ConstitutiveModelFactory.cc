@@ -37,7 +37,6 @@ using std::ofstream;
 using namespace Uintah;
 
 ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
-                                                    MPMLabel* lb, 
                                                     MPMFlags* flags)
 {
   ProblemSpecP child = ps->findBlock("constitutive_model");
@@ -55,79 +54,79 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }   
 
   if (mat_type == "rigid")
-    return(scinew RigidMaterial(child,lb,flags));
+    return(scinew RigidMaterial(child,flags));
 
   else if (mat_type == "comp_mooney_rivlin")
-    return(scinew CompMooneyRivlin(child,lb,flags));
+    return(scinew CompMooneyRivlin(child,flags));
    
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew CompNeoHook(child,lb,flags));
+      return(scinew CompNeoHook(child,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew CompNeoHookImplicit(child,lb,flags));
+      return(scinew CompNeoHookImplicit(child,flags));
   }
   else if (mat_type ==  "cnh_damage") 
-    return(scinew CNHDamage(child,lb,flags));
+    return(scinew CNHDamage(child,flags));
 
   else if (mat_type ==  "cnhp_damage") 
-    return(scinew CNHPDamage(child,lb,flags));
+    return(scinew CNHPDamage(child,flags));
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
-      return(scinew TransIsoHyper(child,lb,flags));
+      return(scinew TransIsoHyper(child,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew TransIsoHyperImplicit(child,lb,flags));
+      return(scinew TransIsoHyperImplicit(child,flags));
   }
   
   else if (mat_type ==  "visco_trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
-      return(scinew ViscoTransIsoHyper(child,lb,flags));
+      return(scinew ViscoTransIsoHyper(child,flags));
     else if (flags->d_integrator_type == "implicit")
-    return(scinew ViscoTransIsoHyperImplicit(child,lb,flags));
+    return(scinew ViscoTransIsoHyperImplicit(child,flags));
   }
   
   else if (mat_type ==  "ideal_gas")
-    return(scinew IdealGasMP(child,lb,flags));
+    return(scinew IdealGasMP(child,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew CompNeoHookPlas(child,lb,flags));
+    return(scinew CompNeoHookPlas(child,flags));
    
   else if (mat_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew ViscoScram(child,lb,flags));
+      return(scinew ViscoScram(child,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew ViscoScramImplicit(child,lb,flags));
+      return(scinew ViscoScramImplicit(child,flags));
   }
    
   else if (mat_type ==  "viscoSCRAM_hs")
-    return(scinew ViscoSCRAMHotSpot(child,lb,flags));
+    return(scinew ViscoSCRAMHotSpot(child,flags));
    
   else if (mat_type ==  "hypo_elastic") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew HypoElastic(child,lb,flags));
+      return(scinew HypoElastic(child,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew HypoElasticImplicit(child,lb,flags));
+      return(scinew HypoElasticImplicit(child,flags));
   }
 
   else if (mat_type ==  "mw_visco_elastic")
-    return(scinew MWViscoElastic(child,lb,flags));
+    return(scinew MWViscoElastic(child,flags));
    
   else if (mat_type ==  "membrane")
-    return(scinew Membrane(child,lb,flags));
+    return(scinew Membrane(child,flags));
 
   else if (mat_type ==  "shell_CNH")
-    return(scinew ShellMaterial(child,lb,flags));
+    return(scinew ShellMaterial(child,flags));
    
   else if (mat_type ==  "hypoelastic_plastic")
-    return(scinew HypoElasticPlastic(child,lb,flags));
+    return(scinew HypoElasticPlastic(child,flags));
 
   else if (mat_type ==  "elastic_plastic")
-    return(scinew ElasticPlastic(child,lb,flags));
+    return(scinew ElasticPlastic(child,flags));
 
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

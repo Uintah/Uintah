@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -17,17 +17,10 @@ using std::vector;
 using std::find;
 
 ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
-                                                 MPMLabel* lb,
-                                                 MPMFlags* flags,
-                                                 SimulationStateP& sharedState)
-  :  ParticleCreator(matl,lb,flags,sharedState)
+                                                 MPMFlags* flags)
+  :  ParticleCreator(matl,flags)
 {
-  registerPermanentParticleState(matl,lb);
-
-  // Transfer to the lb's permanent particle state array of vectors
-
-  sharedState->d_particleState.push_back(particle_state);
-  sharedState->d_particleState_preReloc.push_back(particle_state_preReloc);
+  registerPermanentParticleState(matl);
 }
 
 ImplicitParticleCreator::~ImplicitParticleCreator()
@@ -46,7 +39,7 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
 
   ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
                                                             cellNAPID,patch,
-                                                            new_dw,lb,
+                                                            new_dw,
                                                             d_geom_objs);
 
 
@@ -91,7 +84,7 @@ ImplicitParticleCreator::allocateVariables(particleIndex numParticles,
 {
 
   ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
-                                                              dwi,lb,patch,
+                                                              dwi,patch,
                                                               new_dw);
 
   new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
@@ -101,21 +94,21 @@ ImplicitParticleCreator::allocateVariables(particleIndex numParticles,
 }
 
 void
-ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/,
-                                                        MPMLabel* lb)
+ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/)
+
 {
-  particle_state.push_back(lb->pAccelerationLabel);
-  particle_state_preReloc.push_back(lb->pAccelerationLabel_preReloc);
+  particle_state.push_back(d_lb->pAccelerationLabel);
+  particle_state_preReloc.push_back(d_lb->pAccelerationLabel_preReloc);
 
   vector<const VarLabel*>::iterator r3,r4;
 
   if(d_useLoadCurves){
     r3 = find(particle_state.begin(), particle_state.end(),
-              lb->pLoadCurveIDLabel);
+              d_lb->pLoadCurveIDLabel);
     particle_state.erase(r3);
 
     r4 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
-              lb->pLoadCurveIDLabel_preReloc);
+              d_lb->pLoadCurveIDLabel_preReloc);
     particle_state_preReloc.erase(r4);
   }
 }

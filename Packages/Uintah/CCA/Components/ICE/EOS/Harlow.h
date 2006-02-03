@@ -39,6 +39,8 @@ WARNING
         
         Harlow(ProblemSpecP& ps);
         virtual ~Harlow();
+
+        virtual void outputProblemSpec(ProblemSpecP& ps);
         
         // Per cell
         virtual double computeRhoMicro(double press,double gamma,

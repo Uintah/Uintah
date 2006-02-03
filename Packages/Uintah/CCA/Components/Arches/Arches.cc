@@ -111,8 +111,8 @@ Arches::~Arches()
 // ****************************************************************************
 void 
 Arches::problemSetup(const ProblemSpecP& params, 
-		     GridP&,
-		     SimulationStateP& sharedState)
+                     const ProblemSpecP& materials_ps, 
+		     GridP&, SimulationStateP& sharedState)
 {
   d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);

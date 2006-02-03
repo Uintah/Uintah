@@ -78,6 +78,8 @@ public:
       // Set up the problem specification database
       //
       virtual void problemSetup(const ProblemSpecP& params) = 0;
+
+      virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
  
       // GROUP: Actual Action Methods :
       ///////////////////////////////////////////////////////////////////////

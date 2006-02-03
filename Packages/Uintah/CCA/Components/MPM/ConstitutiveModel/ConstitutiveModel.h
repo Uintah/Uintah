@@ -47,9 +47,13 @@ namespace Uintah {
   class ConstitutiveModel {
   public:
          
-    ConstitutiveModel();
-    ConstitutiveModel(MPMLabel* Mlb, MPMFlags* MFlag);
+    ConstitutiveModel(MPMFlags* MFlag);
+    ConstitutiveModel(const ConstitutiveModel* cm);
     virtual ~ConstitutiveModel();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,
+                                   bool output_cm_tag = true) = 0;
+
          
     // Basic constitutive model calculations
     virtual void computeStressTensor(const PatchSubset* patches,

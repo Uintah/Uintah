@@ -56,6 +56,14 @@ DifferenceGeometryPiece& DifferenceGeometryPiece::operator=(const DifferenceGeom
   return *this;
 }
 
+void DifferenceGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP difference_ps = ps->appendChild("difference",true,4);
+
+  left->outputProblemSpec(difference_ps);
+  right->outputProblemSpec(difference_ps);
+}
+
 DifferenceGeometryPiece* DifferenceGeometryPiece::clone()
 {
   return scinew DifferenceGeometryPiece(*this);

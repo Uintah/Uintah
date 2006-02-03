@@ -49,6 +49,8 @@ WARNING
   public:
     SimpleRxn(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~SimpleRxn();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);

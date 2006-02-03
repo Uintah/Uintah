@@ -106,11 +106,13 @@ namespace Uintah {
   public:
 
     // constructors
-    ViscoScram(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
+    ViscoScram(ProblemSpecP& ps,MPMFlags* flag);
     ViscoScram(const ViscoScram* cm);
        
     // destructor
     virtual ~ViscoScram();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     ViscoScram* clone();
 

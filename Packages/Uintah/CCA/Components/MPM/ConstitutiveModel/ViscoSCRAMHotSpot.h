@@ -145,7 +145,7 @@ namespace Uintah {
 
   public:
     // constructors
-    ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
+    ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMFlags* flag);
     ViscoSCRAMHotSpot(const ViscoSCRAMHotSpot* cm);
        
     // destructor

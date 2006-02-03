@@ -49,82 +49,81 @@ WARNING
 	
 ****************************************/
 
-      class CylinderGeometryPiece : public GeometryPiece {
-	 
-      public:
-	 //////////
-	 // Constructor that takes a ProblemSpecP argument.   It reads the xml 
-	 // input specification and builds a generalized cylinder.
-         //
-	 CylinderGeometryPiece(ProblemSpecP &);
-	 
-	 //////////
-	 // Constructor that takes top, bottom and radius
-	 //
-	 CylinderGeometryPiece(const Point& top, 
-			       const Point& bottom,
-			       double radius);
-
-	 //////////
-	 // Destructor
-         //
-	 virtual ~CylinderGeometryPiece();
-	 
-	 /// Make a clone
-	 CylinderGeometryPiece* clone();
-
-
-	 //////////
-	 // Determines whether a point is inside the cylinder.
-         //
-	 virtual bool inside(const Point &p) const;
-	 
-	 //////////
-	 // Returns the bounding box surrounding the cylinder.
-	 virtual Box getBoundingBox() const;
-	 
-	 //////////
-	 // Calculate the surface area
-         //
-	 virtual inline double surfaceArea() const
-	 {
-	   return ((2.0*M_PI*d_radius)*height());
-	 }
-
-	 //////////
-	 // Calculate the volume
-         //
-	 virtual inline double volume() const
-	 {
-	   return ((M_PI*d_radius*d_radius)*height());
-	 }
-
-	 //////////
-	 // Calculate the unit normal vector to axis from point
-         //
-	 Vector radialDirection(const Point& pt) const;
-
-	 //////////
-	 // Get the top, bottom, radius, height
-	 //
-	 inline Point top() const {return d_top;}
-	 inline Point bottom() const {return d_bottom;}
-	 inline double radius() const {return d_radius;}
-	 inline double height() const { return (d_top-d_bottom).length();}
-
-      protected:
-         
-         //////////
-         // Constructor needed for subclasses
-         //
-	 CylinderGeometryPiece();
-	 Point d_bottom;
-	 Point d_top;
-	 double d_radius;
-	 
-	 
-	 
-      };
+  class CylinderGeometryPiece : public GeometryPiece {
+    
+  public:
+    //////////
+    // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+    // input specification and builds a generalized cylinder.
+    //
+    CylinderGeometryPiece(ProblemSpecP &);
+    
+    //////////
+    // Constructor that takes top, bottom and radius
+    //
+    CylinderGeometryPiece(const Point& top, 
+                          const Point& bottom,
+                          double radius);
+    
+    //////////
+    // Destructor
+    //
+    virtual ~CylinderGeometryPiece();
+    
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+    
+    /// Make a clone
+    CylinderGeometryPiece* clone();
+    
+    
+    //////////
+    // Determines whether a point is inside the cylinder.
+    //
+    virtual bool inside(const Point &p) const;
+    
+    //////////
+    // Returns the bounding box surrounding the cylinder.
+    virtual Box getBoundingBox() const;
+    
+    //////////
+    // Calculate the surface area
+    //
+    virtual inline double surfaceArea() const
+      {
+        return ((2.0*M_PI*d_radius)*height());
+      }
+    
+    //////////
+    // Calculate the volume
+    //
+    virtual inline double volume() const
+      {
+        return ((M_PI*d_radius*d_radius)*height());
+      }
+    
+    //////////
+    // Calculate the unit normal vector to axis from point
+    //
+    Vector radialDirection(const Point& pt) const;
+    
+    //////////
+    // Get the top, bottom, radius, height
+    //
+    inline Point top() const {return d_top;}
+    inline Point bottom() const {return d_bottom;}
+    inline double radius() const {return d_radius;}
+    inline double height() const { return (d_top-d_bottom).length();}
+    
+  protected:
+    
+    //////////
+    // Constructor needed for subclasses
+    //
+    CylinderGeometryPiece();
+    Point d_bottom;
+    Point d_top;
+    double d_radius;
+  };
 } // End namespace Uintah
       
 #endif // __CYLINDER_GEOMTRY_Piece_H__

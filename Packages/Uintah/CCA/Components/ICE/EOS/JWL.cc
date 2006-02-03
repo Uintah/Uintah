@@ -23,6 +23,13 @@ JWL::JWL(ProblemSpecP& ps)
 JWL::~JWL()
 {
 }
+
+void JWL::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  eos_ps->setAttribute("type","JWL");
+}
+
 //__________________________________
 double JWL::computeRhoMicro(double press, double,
                             double cv, double Temp,double rho_guess)

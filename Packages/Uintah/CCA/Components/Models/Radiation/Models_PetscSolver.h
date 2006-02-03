@@ -74,6 +74,8 @@ public:
       // Problem setup
       void problemSetup(const ProblemSpecP& params, bool shradiation);
 
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+
       // to close petsc 
       void finalizeSolver();
 

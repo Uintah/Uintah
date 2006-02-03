@@ -16,6 +16,13 @@ VonMisesYield::VonMisesYield(const VonMisesYield*)
 VonMisesYield::~VonMisesYield()
 {
 }
+
+void VonMisesYield::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP yield_ps = ps->appendChild("yield_condition",true,4);
+  yield_ps->setAttribute("type","vonMises");
+
+}
          
 double 
 VonMisesYield::evalYieldCondition(const double sigEqv,

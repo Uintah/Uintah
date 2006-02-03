@@ -34,8 +34,8 @@ static DebugStream debug("ShellMat", false);
 //
 // Constructor
 //
-ShellMaterial::ShellMaterial(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
-    : ConstitutiveModel(Mlb,Mflag)
+ShellMaterial::ShellMaterial(ProblemSpecP& ps, MPMFlags* Mflag)
+    : ConstitutiveModel(Mflag)
 {
   // Read Material Constants
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -85,14 +85,11 @@ ShellMaterial::ShellMaterial(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
                      ParticleVariable<Vector>::getTypeDescription());
 }
 
-ShellMaterial::ShellMaterial(const ShellMaterial* cm)
+ShellMaterial::ShellMaterial(const ShellMaterial* cm) 
+  : ConstitutiveModel(cm)
 {
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
-
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
 
   // Allocate local VarLabels
   pNormalRotRateLabel = VarLabel::create("p.normalRotRate",
@@ -162,6 +159,20 @@ ShellMaterial::~ShellMaterial()
   VarLabel::destroy(pRotMassLabel);
   VarLabel::destroy(pNormalRotAccLabel);
 }
+
+void ShellMaterial::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","shell_CNH");
+  }
+
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
+  cm_ps->appendElement("includeFlowWork",d_includeFlowWork,false,4);
+}
+
 
 ShellMaterial* ShellMaterial::clone()
 {

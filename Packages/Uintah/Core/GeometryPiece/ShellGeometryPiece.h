@@ -70,6 +70,8 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~ShellGeometryPiece();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+
     /// Make a clone
     virtual ShellGeometryPiece* clone() = 0;
 	 

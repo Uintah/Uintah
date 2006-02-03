@@ -45,6 +45,16 @@ BoxGeometryPiece::~BoxGeometryPiece()
 {
 }
 
+void BoxGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP box_ps = ps->appendChild("box",true,4);
+
+  box_ps->appendElement("min",d_box.lower(),false,5);
+  box_ps->appendElement("max",d_box.upper(),false,5);
+}
+
+
+
 BoxGeometryPiece* BoxGeometryPiece::clone()
 {
   return scinew BoxGeometryPiece(*this);

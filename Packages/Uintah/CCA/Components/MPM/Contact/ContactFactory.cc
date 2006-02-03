@@ -44,8 +44,9 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
         contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
       
       else if (con_type == "specified_velocity" || con_type == "specified"
-                                                || con_type == "rigid"  )
-        contact_list->add(scinew SpecifiedBodyContact(myworld,child,ss,lb,flag));
+               || con_type == "rigid"  )
+        contact_list->add(scinew SpecifiedBodyContact(myworld,child,ss,lb,
+                                                      flag));
       
       else {
         cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;

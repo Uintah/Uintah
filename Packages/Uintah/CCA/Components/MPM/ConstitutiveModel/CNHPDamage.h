@@ -41,11 +41,14 @@ namespace Uintah {
   public:
 
     // constructors
-    CNHPDamage(ProblemSpecP& ps, MPMLabel* lb,MPMFlags* flag);
+    CNHPDamage(ProblemSpecP& ps, MPMFlags* flag);
     CNHPDamage(const CNHPDamage* cm);
          
     // destructor 
     virtual ~CNHPDamage();
+
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     CNHPDamage* clone();

@@ -53,6 +53,8 @@ namespace Uintah {
     //////////
     // Destructor
     virtual ~PlaneShellPiece();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     
     /// Make a clone
     PlaneShellPiece* clone();

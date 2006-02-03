@@ -30,8 +30,9 @@ ParticleTest1::~ParticleTest1()
   delete lb_;
 }
 
-void ParticleTest1::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
-			 SimulationStateP& sharedState)
+void ParticleTest1::problemSetup(const ProblemSpecP& params, 
+                                 const ProblemSpecP& materials_ps, 
+                                 GridP& /*grid*/,SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   ProblemSpecP pt1 = params->findBlock("ParticleTest1");

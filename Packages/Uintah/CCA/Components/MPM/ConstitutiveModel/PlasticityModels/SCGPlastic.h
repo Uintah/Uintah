@@ -114,6 +114,8 @@ namespace Uintah {
          
     // destructor 
     virtual ~SCGPlastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
          
     // Computes and requires for internal evolution variables
     // Only one internal variable for SCG model :: mechanical threshold stress

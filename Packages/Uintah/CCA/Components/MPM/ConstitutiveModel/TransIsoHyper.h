@@ -53,15 +53,16 @@ namespace Uintah {
     // copy constructor
     //TransIsoHyper(const TransIsoHyper &cm);
     TransIsoHyper& operator=(const TransIsoHyper &cm);
-    int d_8or27;
 
   public:
     // constructors
-    TransIsoHyper(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+    TransIsoHyper(ProblemSpecP& ps, MPMFlags* flag);
     TransIsoHyper(const TransIsoHyper* cm);
        
     // destructor
     virtual ~TransIsoHyper();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     TransIsoHyper* clone();

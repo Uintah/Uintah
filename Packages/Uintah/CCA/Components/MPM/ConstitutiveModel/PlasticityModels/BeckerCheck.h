@@ -85,6 +85,8 @@ namespace Uintah {
 
     //! Destructor of stability check
     ~BeckerCheck();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     /*! Check the stability and return the direction of instability.
 

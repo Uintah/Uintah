@@ -42,8 +42,9 @@ WARNING
     AMRWave(const ProcessorGroup* myworld);
     virtual ~AMRWave();
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-		      SimulationStateP& sharedState);
+    virtual void problemSetup(const ProblemSpecP& params, 
+                              const ProblemSpecP& materials_ps, 
+                              GridP& grid, SimulationStateP& sharedState);
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
 					 SchedulerP& scheduler,
 					 int step, int nsteps);

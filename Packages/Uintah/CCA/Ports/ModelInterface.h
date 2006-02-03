@@ -111,6 +111,8 @@ WARNING
    public:
      ModelInterface(const ProcessorGroup* d_myworld);
      virtual ~ModelInterface();
+
+     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
       
      virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			       ModelSetup* setup) = 0;

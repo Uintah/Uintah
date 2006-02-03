@@ -45,7 +45,9 @@ namespace Uintah
   }
 
   // Interface inherited from Simulation Interface
-  void RegridderTest::problemSetup ( const ProblemSpecP& params, GridP& grid, SimulationStateP& state )
+  void RegridderTest::problemSetup(const ProblemSpecP& params, 
+                                   const ProblemSpecP& materials_ps, 
+                                   GridP& grid, SimulationStateP& state )
   {
     d_sharedState = state;
     d_material = new SimpleMaterial();

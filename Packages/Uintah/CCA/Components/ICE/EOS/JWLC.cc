@@ -23,6 +23,21 @@ JWLC::JWLC(ProblemSpecP& ps)
 JWLC::~JWLC()
 {
 }
+
+void JWLC::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  eos_ps->setAttribute("type","JWLC");
+
+  eos_ps->appendElement("A",A,false,4);
+  eos_ps->appendElement("B",B,false,4);
+  eos_ps->appendElement("C",C,false,4);
+  eos_ps->appendElement("R1",R1,false,4);
+  eos_ps->appendElement("R2",R2,false,4);
+  eos_ps->appendElement("om",om,false,4);
+  eos_ps->appendElement("rho0",rho0,false,4);
+}
+
 //__________________________________
 double JWLC::computeRhoMicro(double press, double,
                              double cv, double Temp,double rho_guess)

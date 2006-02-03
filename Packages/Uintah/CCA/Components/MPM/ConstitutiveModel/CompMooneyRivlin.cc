@@ -32,9 +32,8 @@ using namespace SCIRun;
 // Material Constants are C1, C2 and PR (poisson's ratio).  
 // The shear modulus = 2(C1 + C2).
 
-CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb, 
-				   MPMFlags* Mflag) 
-  : ConstitutiveModel(Mlb,Mflag)
+CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMFlags* Mflag) 
+  : ConstitutiveModel(Mflag)
 {
 
   ps->require("he_constant_1",d_initialData.C1);
@@ -44,11 +43,8 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb,
 }
 
 CompMooneyRivlin::CompMooneyRivlin(const CompMooneyRivlin* cm)
+  : ConstitutiveModel(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-
   d_initialData.C1 = cm->d_initialData.C1;
   d_initialData.C2 = cm->d_initialData.C2;
   d_initialData.PR = cm->d_initialData.PR;
@@ -58,6 +54,19 @@ CompMooneyRivlin::~CompMooneyRivlin()
 {
 }
 
+
+void CompMooneyRivlin::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","comp_mooney_rivlin");
+  }
+    
+  cm_ps->appendElement("he_constant_1",d_initialData.C1,false,4);
+  cm_ps->appendElement("he_constant_2",d_initialData.C2,false,4);
+  cm_ps->appendElement("he_PR",d_initialData.PR,false,4);
+}
 
 CompMooneyRivlin* CompMooneyRivlin::clone()
 {

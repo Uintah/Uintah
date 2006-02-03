@@ -73,6 +73,8 @@ WARNING
 	 // Destructor
 	 virtual ~IntersectionGeometryPiece();
 
+         virtual void outputProblemSpec(ProblemSpecP& ps);
+
 	 /// Make a clone
 	 IntersectionGeometryPiece* clone();
 	 

@@ -66,6 +66,7 @@ WARNING
 	 // Destructor
 	 virtual ~SphereMembraneGeometryPiece();
 
+         virtual void outputProblemSpec(ProblemSpecP& ps);
 
 	 /// Make a clone
 	 SphereMembraneGeometryPiece* clone();

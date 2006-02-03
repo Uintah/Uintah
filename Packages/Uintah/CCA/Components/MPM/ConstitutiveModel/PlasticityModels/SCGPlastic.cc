@@ -95,6 +95,53 @@ SCGPlastic::SCGPlastic(const SCGPlastic* cm)
 SCGPlastic::~SCGPlastic()
 {
 }
+
+void SCGPlastic::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model",true,4);
+  plastic_ps->setAttribute("type","steinberg_cochran_guinan");
+
+  plastic_ps->appendElement("mu_0",d_CM.mu_0,false,5); 
+  plastic_ps->appendElement("A",d_CM.A,false,5); 
+  plastic_ps->appendElement("B",d_CM.B,false,5); 
+  plastic_ps->appendElement("sigma_0",d_CM.sigma_0,false,5); 
+  plastic_ps->appendElement("beta",d_CM.beta,false,5); 
+  plastic_ps->appendElement("n",d_CM.n,false,5); 
+  plastic_ps->appendElement("epsilon_p0",d_CM.epsilon_p0,false,5); 
+  plastic_ps->appendElement("Y_max",d_CM.Y_max,false,5); 
+  plastic_ps->appendElement("T_m0",d_CM.T_m0,false,5); 
+  plastic_ps->appendElement("a",d_CM.a,false,5); 
+  plastic_ps->appendElement("Gamma_0",d_CM.Gamma_0,false,5); 
+
+  // Compute C1 and C2
+  d_CM.C1 = 0.0;
+  d_CM.C2 = 0.0;
+  plastic_ps->appendElement("C1",d_CM.C1,false,5); 
+  plastic_ps->appendElement("C2",d_CM.C2,false,5); 
+  double C1 = d_CM.C1;
+  double C2 = d_CM.C2;
+  if (C1 == 0.0 || C2 == 0.0) {
+    plastic_ps->appendElement("dislocation_density", d_CM.dislocationDensity,
+                              false,5);
+    plastic_ps->appendElement("length_of_dislocation_segment",
+                d_CM.lengthOfDislocationSegment,false,5);
+    plastic_ps->appendElement("distance_between_Peierls_valleys",
+                d_CM.distanceBetweenPeierlsValleys,false,5);
+    plastic_ps->appendElement("length_of_Burger_vector", 
+                              d_CM.lengthOfBurgerVector,false,5);
+    plastic_ps->appendElement("Debye_frequency", d_CM.debyeFrequency,false,5);
+    plastic_ps->appendElement("width_of_kink_loop", d_CM.widthOfKinkLoop,
+                              false,5);
+    plastic_ps->appendElement("drag_coefficient", d_CM.dragCoefficient,
+                              false,5);
+  }
+  plastic_ps->appendElement("energy_to_form_kink_pair",d_CM.kinkPairEnergy,
+                            false,5);
+  plastic_ps->appendElement("Boltzmann_constant",d_CM.boltzmannConstant,
+                            false,5);
+  plastic_ps->appendElement("Peierls_stress",d_CM.peierlsStress,false,5);
+}
+
          
 void 
 SCGPlastic::addInitialComputesAndRequires(Task* ,

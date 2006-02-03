@@ -35,9 +35,15 @@ NullContact::NullContact(const ProcessorGroup* myworld,
 
 NullContact::~NullContact()
 {
-  // Destructor
-
 }
+
+void NullContact::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP contact_ps = ps->appendChild("contact",true,2);
+  contact_ps->appendElement("type","null",false,3);
+  d_matls.outputProblemSpec(contact_ps);
+}
+
 
 void NullContact::exMomInterpolated(const ProcessorGroup*,
 				    const PatchSubset* patches,

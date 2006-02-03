@@ -46,14 +46,17 @@ WARNING
    public:
      ModelMaker();
      virtual ~ModelMaker();
-      
+           
+     virtual std::vector<ModelInterface*> getModels() = 0;
      //////////
      // Insert Documentation Here:
      virtual void makeModels(const ProblemSpecP& params, 
                              GridP& grid,
                              SimulationStateP& sharedState,
-                             const bool doAMR,
-                             std::vector<ModelInterface*>& models) = 0;
+                             const bool doAMR) = 0;
+
+     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+
    private:
      ModelMaker(const ModelMaker&);
      ModelMaker& operator=(const ModelMaker&);

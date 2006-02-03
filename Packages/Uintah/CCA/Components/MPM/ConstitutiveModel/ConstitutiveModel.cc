@@ -23,13 +23,9 @@ using namespace Uintah;
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-ConstitutiveModel::ConstitutiveModel()
+ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 {
-}
-
-ConstitutiveModel::ConstitutiveModel(MPMLabel* Mlb, MPMFlags* Mflag)
-{
-  lb = Mlb;
+  lb = scinew MPMLabel();
   flag = Mflag;
   if(flag->d_8or27==8){
     NGN=1;
@@ -38,8 +34,17 @@ ConstitutiveModel::ConstitutiveModel(MPMLabel* Mlb, MPMFlags* Mflag)
   }
 }
 
+ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
+{
+  lb = scinew MPMLabel();
+  flag = cm->flag;
+  NGN = cm->NGN;
+  NGP = cm->NGP;
+}
+
 ConstitutiveModel::~ConstitutiveModel()
 {
+  delete lb;
 }
 
 void 

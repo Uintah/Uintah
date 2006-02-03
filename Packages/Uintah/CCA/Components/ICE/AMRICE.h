@@ -15,8 +15,8 @@ namespace Uintah {
     virtual ~AMRICE();
     
     virtual void problemSetup(const ProblemSpecP& params, 
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              const ProblemSpecP& materials_ps, 
+                              GridP& grid, SimulationStateP& sharedState);
                               
     virtual void scheduleInitialize(const LevelP& level,
                                     SchedulerP& sched);

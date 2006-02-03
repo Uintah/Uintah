@@ -59,6 +59,8 @@ namespace Uintah {
     // Destructor
     virtual ~GUVSphereShellPiece();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     /// Make a clone
     GUVSphereShellPiece* clone();
          

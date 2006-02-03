@@ -36,12 +36,11 @@ using namespace SCIRun;
 //_____________________with strain-based failure criteria
 //_____________________implicit MPM
 
-ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
-                                             MPMFlags* Mflag) : ImplicitCM(Mlb)
+ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,
+                                                       MPMFlags* Mflag) 
+  : ConstitutiveModel(Mflag), ImplicitCM()
 //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
-{  cout << "\n begin Constructor \n";
-  lb = Mlb;
-  flag = Mflag;
+{  
   d_useModifiedEOS = false;
 //______________________material properties
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -69,13 +68,6 @@ ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,  MPMLab
   ps->require("t5", d_initialData.t5);
   ps->require("t6", d_initialData.t6);
 
-//______________________interpolation
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
-    NGN=1;
-  } else if(d_8or27==27){
-    NGN=2;
-  }
 
   pStretchLabel = VarLabel::create("p.stretch",
         ParticleVariable<double>::getTypeDescription());
@@ -126,13 +118,8 @@ ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,  MPMLab
 
 }
 
-ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(const ViscoTransIsoHyperImplicit* cm)
+ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(const ViscoTransIsoHyperImplicit* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  d_8or27 = cm->d_8or27;
-  NGN = cm->NGN;
-
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
   d_initialData.Bulk = cm->d_initialData.Bulk;
@@ -187,6 +174,42 @@ ViscoTransIsoHyperImplicit::~ViscoTransIsoHyperImplicit()
   VarLabel::destroy(pHistory6Label_preReloc);
   cout << "\n end of Destuctor \n";
 }
+
+void ViscoTransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
+                                                   bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","visco_trans_iso_hyper");
+  }
+
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
+  cm_ps->appendElement("c1", d_initialData.c1,false,4);
+  cm_ps->appendElement("c2", d_initialData.c2,false,4);
+  cm_ps->appendElement("c3", d_initialData.c3,false,4);
+  cm_ps->appendElement("c4", d_initialData.c4,false,4);
+  cm_ps->appendElement("c5", d_initialData.c5,false,4);
+  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star,false,4);
+  cm_ps->appendElement("direction_of_symm", d_initialData.a0,false,4);
+  cm_ps->appendElement("failure_option",d_initialData.failure,false,4);
+  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch,false,4);
+  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear,false,4);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
+  cm_ps->appendElement("y1", d_initialData.y1,false,4);
+  cm_ps->appendElement("y2", d_initialData.y2,false,4);
+  cm_ps->appendElement("y3", d_initialData.y3,false,4);
+  cm_ps->appendElement("y4", d_initialData.y4,false,4);
+  cm_ps->appendElement("y5", d_initialData.y5,false,4);
+  cm_ps->appendElement("y6", d_initialData.y6,false,4);
+  cm_ps->appendElement("t1", d_initialData.t1,false,4);
+  cm_ps->appendElement("t2", d_initialData.t2,false,4);
+  cm_ps->appendElement("t3", d_initialData.t3,false,4);
+  cm_ps->appendElement("t4", d_initialData.t4,false,4);
+  cm_ps->appendElement("t5", d_initialData.t5,false,4);
+  cm_ps->appendElement("t6", d_initialData.t6,false,4);
+}
+
 
 
 ViscoTransIsoHyperImplicit* ViscoTransIsoHyperImplicit::clone()

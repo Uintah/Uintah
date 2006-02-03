@@ -27,9 +27,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
-					 MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag), ImplicitCM(Mlb)
+CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag), ImplicitCM()
 {
   d_useModifiedEOS = false;
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -39,6 +38,7 @@ CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
 }
 
 CompNeoHookImplicit::CompNeoHookImplicit(const CompNeoHookImplicit* cm)
+  : ConstitutiveModel(cm), ImplicitCM(cm)
 {
 
   d_useModifiedEOS = cm->d_useModifiedEOS;
@@ -48,6 +48,21 @@ CompNeoHookImplicit::CompNeoHookImplicit(const CompNeoHookImplicit* cm)
 
 CompNeoHookImplicit::~CompNeoHookImplicit()
 {
+}
+
+void 
+CompNeoHookImplicit::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","comp_neo_hook");
+  }
+  
+  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk,false,4);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
+
 }
 
 

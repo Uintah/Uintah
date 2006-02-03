@@ -54,9 +54,8 @@ static DebugStream CSTi("HEPi",false);
 static DebugStream CSTir("HEPir",false);
 
 
-HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, 
-                                       MPMFlags* Mflag) :
-  ConstitutiveModel(Mlb,Mflag), ImplicitCM(Mlb)
+HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
+  ConstitutiveModel(Mflag), ImplicitCM()
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
@@ -148,10 +147,8 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb,
 }
 
 HypoElasticPlastic::HypoElasticPlastic(const HypoElasticPlastic* cm)
+  : ConstitutiveModel(cm), ImplicitCM(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
   d_initialData.alpha = cm->d_initialData.alpha;
@@ -218,8 +215,53 @@ HypoElasticPlastic::~HypoElasticPlastic()
   delete d_eos;
 }
 
-HypoElasticPlastic*
-HypoElasticPlastic::clone()
+void HypoElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","hypoelastic_plastic");
+  }
+
+  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk,false,4);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
+  cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha,false,4);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
+  cm_ps->appendElement("remove_particles",d_removeParticles,false,4);
+  cm_ps->appendElement("zero_stress_upon_failure",d_setStressToZero,false,4);
+  cm_ps->appendElement("evolve_porosity",d_evolvePorosity,false,4);
+  cm_ps->appendElement("evolve_damage",d_evolveDamage,false,4);
+  cm_ps->appendElement("check_TEPLA_failure_criterion",
+                       d_checkTeplaFailureCriterion,false,4);
+  cm_ps->appendElement("tolerance",d_tol,false,4);
+  cm_ps->appendElement("initial_material_temperature",
+                       d_initialMaterialTemperature,false,4);
+
+  cm_ps->appendElement("initial_mean_porosity",d_porosity.f0,false,4);
+  cm_ps->appendElement("initial_std_porosity",d_porosity.f0_std,false,4);
+  cm_ps->appendElement("critical_porosity",d_porosity.fc,false,4);
+  cm_ps->appendElement("frac_nucleation",d_porosity.fn,false,4);
+  cm_ps->appendElement("meanstrain_nucleation",d_porosity.en,false,4);
+  cm_ps->appendElement("stddevstrain_nucleation",d_porosity.sn,false,4);
+  cm_ps->appendElement("initial_porosity_distrib",d_porosity.porosityDist,
+                       false,4);
+
+  cm_ps->appendElement("initial_mean_scalar_damage",d_scalarDam.D0,false,4);
+  cm_ps->appendElement("initial_std_scalar_damage",d_scalarDam.D0_std,false,4);
+  cm_ps->appendElement("critical_scalar_damage",d_scalarDam.Dc,false,4);
+  cm_ps->appendElement("initial_scalar_damage_distrib",
+                       d_scalarDam.scalarDamageDist,false,4);
+
+  d_yield->outputProblemSpec(cm_ps);
+  d_stable->outputProblemSpec(cm_ps);
+  d_plastic->outputProblemSpec(cm_ps);
+  d_damage->outputProblemSpec(cm_ps);
+  d_eos->outputProblemSpec(cm_ps);
+}
+
+
+
+HypoElasticPlastic* HypoElasticPlastic::clone()
 {
   return scinew HypoElasticPlastic(*this);
 }

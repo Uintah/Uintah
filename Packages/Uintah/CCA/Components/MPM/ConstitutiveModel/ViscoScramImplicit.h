@@ -87,15 +87,17 @@ namespace Uintah {
          // copy constructor
          //ViscoScramImplicit(const ViscoScramImplicit &cm);
          ViscoScramImplicit& operator=(const ViscoScramImplicit &cm);
-         int d_8or27;
 
       public:
          // constructors
-         ViscoScramImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
+         ViscoScramImplicit(ProblemSpecP& ps, MPMFlags* flag);
          ViscoScramImplicit(const ViscoScramImplicit* cm);
        
          // destructor
          virtual ~ViscoScramImplicit();
+
+         virtual void outputProblemSpec(ProblemSpecP& ps,
+                                        bool output_cm_tag = true);
 
          // clone
          ViscoScramImplicit* clone();

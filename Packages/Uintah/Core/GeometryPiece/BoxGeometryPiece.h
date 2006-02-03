@@ -63,7 +63,9 @@ WARNING
 	 //////////
 	 // Destructor
 	 virtual ~BoxGeometryPiece();
-	 
+
+
+	 virtual void outputProblemSpec(ProblemSpecP& ps);
 
 	 /// Make a clone
 	 BoxGeometryPiece* clone();

@@ -27,17 +27,15 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
-					 MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag), ImplicitCM(Mlb)
+HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps, MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag), ImplicitCM()
 {
-
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
-
 }
 
 HypoElasticImplicit::HypoElasticImplicit(const HypoElasticImplicit* cm)
+  : ConstitutiveModel(cm), ImplicitCM(cm)
 {
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
@@ -45,6 +43,21 @@ HypoElasticImplicit::HypoElasticImplicit(const HypoElasticImplicit* cm)
 
 HypoElasticImplicit::~HypoElasticImplicit()
 {
+}
+
+
+void HypoElasticImplicit::outputProblemSpec(ProblemSpecP& ps,
+                                            bool output_cm_tag)
+{
+  ProblemSpecP cm_ps = ps;
+  if (output_cm_tag) {
+    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps->setAttribute("type","hypo_elastic");
+  }
+
+  cm_ps->appendElement("G",d_initialData.G,false,4);
+  cm_ps->appendElement("K",d_initialData.K,false,4);
+
 }
 
 

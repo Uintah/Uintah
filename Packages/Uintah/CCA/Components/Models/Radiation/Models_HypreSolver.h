@@ -71,6 +71,8 @@ public:
   // Problem setup
   void problemSetup(const ProblemSpecP& params, bool shradiation);
 
+  virtual void outputProblemSpec(ProblemSpecP& ps);
+
   ////////////////////////////////////////////////////////////////////////
   // HYPRE grid and stencil setup
   void gridSetup(const ProcessorGroup*,

@@ -194,6 +194,45 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
     }
   } 
 }
+
+void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  model_ps->setAttribute("type","PassiveScalar");
+
+  model_ps->appendElement("material",d_matl->getName(),false,4);
+  ProblemSpecP scalar_ps = model_ps->appendChild("scalar",true,4);
+  scalar_ps->setAttribute("name","f");
+  scalar_ps->appendElement("test_conservation",d_test_conservation,false,4);
+
+
+  ProblemSpecP const_ps = scalar_ps->appendChild("constants",true,4);
+  const_ps->appendElement("initialize_diffusion_knob",
+                          d_scalar->initialize_diffusion_knob,false,4);
+  const_ps->appendElement("diffusivity",d_scalar->diff_coeff,false,4);
+  const_ps->appendElement("AMR_Refinement_Criteria",d_scalar->refineCriteria,
+                          false,4);
+  
+  for (vector<Region*>::const_iterator it = d_scalar->regions.begin();
+       it != d_scalar->regions.end(); it++) {
+    ProblemSpecP geom_ps = scalar_ps->appendChild("geom_object",true,3);
+    (*it)->piece->outputProblemSpec(geom_ps);
+    geom_ps->appendElement("scalar",(*it)->initialScalar,false,4);
+  }
+
+  if (d_usingProbePts) {
+    throw ProblemSetupException("Can't output tag",__FILE__,__LINE__);
+    ProblemSpecP probe_ps = scalar_ps->appendChild("probePoints",true,4);
+    probe_ps->appendElement("probeSamplingFreq",d_probeFreq,false,4);
+    for (unsigned int i = 0; i < d_probePts.size(); i++) {
+      probe_ps->appendElement("location",d_probePts[i],false,4);
+      probe_ps->setAttribute("name",d_probePtsNames[i]);
+    }
+  }
+
+}
+
+
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
 void PassiveScalar::scheduleInitialize(SchedulerP& sched,

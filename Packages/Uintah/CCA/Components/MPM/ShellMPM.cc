@@ -60,10 +60,11 @@ ShellMPM::~ShellMPM()
 // for the shell problem
 //
 void 
-ShellMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-                       SimulationStateP& sharedState)
+ShellMPM::problemSetup(const ProblemSpecP& prob_spec, 
+                       const ProblemSpecP& materials_ps, 
+                       GridP& grid, SimulationStateP& sharedState)
 {
-  SerialMPM::problemSetup(prob_spec, grid, sharedState);
+  SerialMPM::problemSetup(prob_spec, materials_ps,grid, sharedState);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -82,7 +83,7 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps);
 
     //register as an MPM material
     sharedState->registerMPMMaterial(mat);

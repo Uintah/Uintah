@@ -45,6 +45,8 @@ namespace Uintah {
 	 
     // destructor 
     virtual ~DefaultHypoElasticEOS();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 	 
     //////////
     // Calculate the pressure using a equation of state

@@ -47,6 +47,8 @@ namespace Uintah {
          
     //! Destructor 
     ~VonMisesYield();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
          
     //! Evaluate the yield function.
     double evalYieldCondition(const double equivStress,

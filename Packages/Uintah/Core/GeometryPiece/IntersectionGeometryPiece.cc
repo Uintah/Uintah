@@ -46,9 +46,19 @@ IntersectionGeometryPiece::IntersectionGeometryPiece(const IntersectionGeometryP
   for (std::vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
        it != rhs.child.end(); ++it)
     child.push_back((*it)->clone());
-
-  
 }
+
+
+void IntersectionGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP intersection_ps = ps->appendChild("intersection",true,4);
+
+  for (vector<GeometryPiece*>::const_iterator it = child.begin();
+       it != child.end(); ++it)
+    (*it)->outputProblemSpec(intersection_ps);
+}
+
+
 
 IntersectionGeometryPiece* IntersectionGeometryPiece::clone()
 {

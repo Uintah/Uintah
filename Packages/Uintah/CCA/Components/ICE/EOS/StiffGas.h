@@ -40,6 +40,8 @@ WARNING
    StiffGas(ProblemSpecP& ps);
    virtual ~StiffGas();
 
+   virtual void outputProblemSpec(ProblemSpecP& ps);
+
     virtual double computeRhoMicro(double press,double gamma,
                                    double cv, double Temp);
 

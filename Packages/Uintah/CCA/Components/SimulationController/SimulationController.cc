@@ -197,10 +197,14 @@ namespace Uintah {
     if(!d_sim)
       throw InternalError("No simulation component", __FILE__, __LINE__);
 
+    ProblemSpecP materials_ps = 0;
+
     if (d_restarting) {
       // do these before calling sim->problemSetup
       const ProblemSpecP spec = d_archive->getTimestep(d_restartTime);
       d_sim->readFromTimestepXML(spec);
+
+      materials_ps = spec;
 
       // set prevDelt to what it was in the last simulation.  If in the last 
       // sim we were clamping delt based on the values of prevDelt, then
@@ -214,7 +218,11 @@ namespace Uintah {
       // eventually we will also probably query the material properties here.
     }
 
-    d_sim->problemSetup(d_ups, grid, d_sharedState);
+    // Pass the materials_ps to the problemSetup.  For restarting, 
+    // pull the <MaterialProperties> from the material_ps.  If it is not
+    // available, then we will pull the properties from the d_ups instead.
+
+    d_sim->problemSetup(d_ups, materials_ps, grid, d_sharedState);
     
     // Finalize the shared state/materials
     d_sharedState->finalizeMaterials();

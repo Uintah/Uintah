@@ -57,11 +57,12 @@ RigidMPM::~RigidMPM()
 {
 }
 
-void RigidMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-                       SimulationStateP& sharedState)
+void RigidMPM::problemSetup(const ProblemSpecP& prob_spec, 
+                            const ProblemSpecP& materials_ps, 
+                            GridP& grid, SimulationStateP& sharedState)
 {
 
-  SerialMPM::problemSetup(prob_spec, grid, sharedState);
+  SerialMPM::problemSetup(prob_spec, materials_ps,grid, sharedState);
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   if(cfd_ps && d_myworld->myrank() == 0){
     cout << "\n__________________________________"<< endl;

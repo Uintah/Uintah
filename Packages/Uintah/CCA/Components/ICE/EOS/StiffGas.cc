@@ -13,6 +13,13 @@ StiffGas::StiffGas(ProblemSpecP& ps)
 StiffGas::~StiffGas()
 {
 }
+
+void StiffGas::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  eos_ps->setAttribute("type","stiff_gas");
+}
+
 //__________________________________
 double StiffGas::computeRhoMicro(double press, double gamma,
                                  double cv, double Temp)

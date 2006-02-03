@@ -24,6 +24,11 @@ NullGeometryPiece::~NullGeometryPiece()
 {
 }
 
+void NullGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP null_ps = ps->appendChild("null",true,4);
+}
+
 NullGeometryPiece*
 NullGeometryPiece::clone()
 {

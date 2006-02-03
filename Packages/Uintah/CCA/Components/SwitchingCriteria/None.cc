@@ -13,7 +13,9 @@ None::~None()
 {
 }
 
-void None::problemSetup(const ProblemSpecP& ps, SimulationStateP& state)
+void None::problemSetup(const ProblemSpecP& ps, 
+                        const ProblemSpecP& materials_ps, 
+                        SimulationStateP& state)
 {
   d_sharedState = state;
 }

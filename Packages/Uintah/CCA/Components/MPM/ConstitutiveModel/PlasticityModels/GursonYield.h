@@ -83,6 +83,8 @@ namespace Uintah {
     //! Destructor 
     virtual ~GursonYield();
 	 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     //! Evaluate the yield function.
     double evalYieldCondition(const double equivStress,
 			      const double flowStress,

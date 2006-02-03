@@ -26,8 +26,9 @@ UdaReducer::~UdaReducer()
     VarLabel::destroy(labels_[i]);
 }
 
-void UdaReducer::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
-				 SimulationStateP& state)
+void UdaReducer::problemSetup(const ProblemSpecP& /*params*/, 
+                              const ProblemSpecP& /*materials_ps*/, 
+                              GridP& grid, SimulationStateP& state)
 {
   d_sharedState = state;
 

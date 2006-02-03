@@ -3,7 +3,6 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -54,12 +53,14 @@ namespace Uintah {
     
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 
+    bool        d_adiabaticHeatingOn;
     double      d_adiabaticHeating; // Flag adiabatic plastic heating on/off
     double      d_artificialDampCoeff;
     double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2
     double      d_forceIncrementFactor;
     bool        d_canAddMPMMaterial;
+    bool        d_do_contact_friction;
     double      d_addFrictionWork;     // 1 == add , 0 == do not add
 
     int         d_extraSolverFlushes;  // Have PETSc do more flushes to save memory
@@ -72,7 +73,8 @@ namespace Uintah {
 
     ~MPMFlags();
 
-    void readMPMFlags(ProblemSpecP& ps, const GridP& grid);
+    void readMPMFlags(ProblemSpecP& ps);
+    void outputProblemSpec(ProblemSpecP& ps);
 
   private:
 

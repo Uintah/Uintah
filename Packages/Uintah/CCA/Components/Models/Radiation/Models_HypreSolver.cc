@@ -55,6 +55,21 @@ Models_HypreSolver::~Models_HypreSolver()
 {
   finalizeSolver();
 }
+
+void
+Models_HypreSolver::outputProblemSpec(ProblemSpecP& ps)
+{
+  ps->appendElement("linear_solver","hypre",false,4);
+
+  ProblemSpecP solver_ps = ps->appendChild("LinearSolver",true,4);
+
+  solver_ps->appendElement("solver",d_solverType,false,4);
+  solver_ps->appendElement("preconditioner", d_precondType,false,4);
+  solver_ps->appendElement("max_iter", d_maxSweeps,false,4);
+  solver_ps->appendElement("tolerance", d_tolerance,false,4);
+  
+}
+
 // ****************************************************************************
 // Problem setup
 // ****************************************************************************

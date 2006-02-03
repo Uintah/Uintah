@@ -33,9 +33,8 @@ using namespace SCIRun;
 
 static DebugStream dbg("VS_HS", false);
 
-ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMLabel* Mlb, 
-                                     MPMFlags* Mflag)
-  :ViscoScram(ps,Mlb,Mflag)
+ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMFlags* Mflag)
+  :ViscoScram(ps,Mflag)
 {
   // Read in the extra material constants
   ps->require("Chi",d_matConst.Chi);
@@ -79,11 +78,9 @@ ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMLabel* Mlb,
                      ParticleVariable<double>::getTypeDescription());
 }
 
-ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(const ViscoSCRAMHotSpot* cm):ViscoScram(cm)
+ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(const ViscoSCRAMHotSpot* cm)
+  : ViscoScram(cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
   // Material constants
   d_matConst.Chi = cm->d_matConst.Chi;
   d_matConst.delH = cm->d_matConst.delH;

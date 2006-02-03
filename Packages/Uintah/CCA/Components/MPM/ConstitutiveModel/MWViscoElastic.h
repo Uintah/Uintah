@@ -45,11 +45,13 @@ namespace Uintah {
 
   public:
     // constructors
-    MWViscoElastic(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
+    MWViscoElastic(ProblemSpecP& ps, MPMFlags* flag);
     MWViscoElastic(const MWViscoElastic* cm);
        
     // destructor
     virtual ~MWViscoElastic();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
     MWViscoElastic* clone();

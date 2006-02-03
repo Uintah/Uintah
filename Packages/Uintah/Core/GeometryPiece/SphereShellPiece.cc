@@ -29,6 +29,20 @@ SphereShellPiece::~SphereShellPiece()
 {
 }
 
+
+void SphereShellPiece::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP shell_ps = ps->appendChild("shell",true,4);
+  ProblemSpecP sphere_ps = shell_ps->appendChild("sphere",true,5);
+
+  sphere_ps->appendElement("origin",d_origin,false,6);
+  sphere_ps->appendElement("radius",d_radius,false,6);
+  sphere_ps->appendElement("thickness",d_h,false,6);
+  sphere_ps->appendElement("num_lat",d_numLat,false,6);
+  sphere_ps->appendElement("num_long",d_numLong,false,6);
+}
+
+
 SphereShellPiece* SphereShellPiece::clone()
 {
   return scinew SphereShellPiece(*this);

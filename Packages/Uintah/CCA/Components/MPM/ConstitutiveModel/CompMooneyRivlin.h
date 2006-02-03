@@ -59,11 +59,13 @@ WARNING
 
   public:
     // constructor
-    CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
+    CompMooneyRivlin(ProblemSpecP& ps, MPMFlags* flag);
     CompMooneyRivlin(const CompMooneyRivlin* cm);
 	 
     // destructor 
     virtual ~CompMooneyRivlin();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
 

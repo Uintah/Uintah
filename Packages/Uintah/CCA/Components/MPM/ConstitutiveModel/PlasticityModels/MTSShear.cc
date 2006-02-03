@@ -31,6 +31,17 @@ MTSShear::MTSShear(const MTSShear* smm)
 MTSShear::~MTSShear()
 {
 }
+
+void MTSShear::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model",true,4);
+  shear_ps->setAttribute("type","mts_sheer");
+
+  shear_ps->appendElement("mu_0",d_mu0,false,5);
+  shear_ps->appendElement("D",d_D,false,5);
+  shear_ps->appendElement("T_0",d_T0,false,5);
+}
+
 	 
 // Compute the shear modulus
 double 

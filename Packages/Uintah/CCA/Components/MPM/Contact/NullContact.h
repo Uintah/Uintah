@@ -62,6 +62,8 @@ WARNING
       // Destructor
       virtual ~NullContact();
 
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+
       // Basic contact methods
       virtual void exMomInterpolated(const ProcessorGroup*,
 				     const PatchSubset* patches,
