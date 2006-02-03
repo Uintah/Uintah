@@ -203,7 +203,12 @@ namespace Uintah {
                               const MaterialSubset*,             
                               const MaterialSet*,
                               const bool insideOuterIterLoop,
-                              const string& computes_or_modifies); 
+                              const string& computes_or_modifies);
+                               
+      void scheduleCompute_maxRHS(SchedulerP& sched,
+                                  const LevelP& level,
+                                  const MaterialSubset* one_matl,
+                                  const MaterialSet*);
                                                   
       void scheduleUpdatePressure(  SchedulerP&,
                                    const LevelP&,
@@ -243,21 +248,12 @@ namespace Uintah {
                                 const LevelP& level,
                                 const MaterialSubset* press_matl,
                                 const VarLabel* variable);
-                                     
-      void scheduleCompute_matrix_CFI_weights(SchedulerP& sched, 
-                                              const LevelP& coarseLevel,
-                                              const MaterialSet* all_matls);
-                                                                                 
+                                                                                                                      
       void schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched, 
                                              const LevelP& coarseLevel,
                                              const MaterialSubset* one_matl,
                                              const MaterialSet* all_matls);
-                                             
-      void schedule_matrixBC_CFI_finePatch(SchedulerP& sched, 
-                                           const LevelP& fineLevel,
-                                           const MaterialSubset* one_matl,
-                                           const MaterialSet* all_matls);
-                                            
+                                                                                       
       void scheduleMultiLevelPressureSolve(SchedulerP& sched,
                                          const GridP grid,
                                          const PatchSet*,
@@ -267,17 +263,17 @@ namespace Uintah {
                                          const MaterialSubset* mpm_matls,
                                          const MaterialSet* all_matls); 
                                          
-      void scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched, 
-                                                   const LevelP& coarseLevel,
-                                                   const MaterialSubset* one_matl,
-                                                   bool firstIter);
+      void scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched, 
+                                               const LevelP& coarseLevel,
+                                               const MaterialSubset* one_matl,
+                                               bool firstIter);
 
-      void zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
-                                           const PatchSubset* coarsePatches,
-                                           const MaterialSubset*,
-                                           DataWarehouse*,
-                                           DataWarehouse* new_dw,
-                                           bool firstIter);
+      void zeroMatrix_UnderFinePatches(const ProcessorGroup*,
+                                       const PatchSubset* coarsePatches,
+                                       const MaterialSubset*,
+                                       DataWarehouse*,
+                                       DataWarehouse* new_dw,
+                                       bool firstIter);
 
       void schedule_bogus_imp_delP(SchedulerP& sched,
                                    const PatchSet* perProcPatches,
@@ -592,6 +588,12 @@ namespace Uintah {
                     DataWarehouse* new_dw,
                     const bool insideOuterIterLoop,
                     const string computes_or_modifies);
+                    
+      void compute_maxRHS(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse*,
+                          DataWarehouse* new_dw);
                        
        void updatePressure(const ProcessorGroup*,
                            const PatchSubset* patches,                      
@@ -617,10 +619,7 @@ namespace Uintah {
                                  const MaterialSubset*);
 
 //__________________________________ 
-//  I M P L I C I T   A M R I C E
-      void zeroMatrix_RHS_UnderFinePatches(const PatchSubset* coarsePatches,
-                                           DataWarehouse* new_dw);
-                                      
+//  I M P L I C I T   A M R I C E     
       void coarsen_delP(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
@@ -628,17 +627,6 @@ namespace Uintah {
                         DataWarehouse* new_dw,
                         const VarLabel* variable);
                            
-     void compute_matrix_CFI_weights(const ProcessorGroup*,
-                                     const PatchSubset* finePatches,
-                                     const MaterialSubset*,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw);
-                           
-      void matrixBC_CFI_finePatch(const ProcessorGroup*,
-                                  const PatchSubset* finePatches,
-                                  const MaterialSubset*,
-                                  DataWarehouse*,
-                                  DataWarehouse* new_dw);
                                   
       void matrixCoarseLevelIterator(Patch::FaceType patchFace,
                                        const Patch* coarsePatch,
