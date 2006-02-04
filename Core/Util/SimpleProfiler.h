@@ -46,9 +46,7 @@
 #include <string>
 using std::string;
 
-
-
-
+#include <Core/Util/share.h>
 namespace SCIRun {
 
 
@@ -56,7 +54,7 @@ namespace SCIRun {
 const int SIMPLE_PROFILER_MAX_LEVEL= 1024;
 
 
-class SimpleProfiler {
+class SCISHARE SimpleProfiler {
 
 public:
   SimpleProfiler(const string &, bool enabled=1);

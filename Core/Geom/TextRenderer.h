@@ -49,10 +49,11 @@
 
 using namespace std;
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
 class TextureObj;
-class TextRenderer {
+class SCISHARE TextRenderer {
 public:
   TextRenderer(FreeTypeFace *face);
   ~TextRenderer();
@@ -97,9 +98,11 @@ private:
 
   // Info for glyphs rendered to texture
   struct GlyphInfo {
+#ifdef HAVE_FREETYPE
     FT_Glyph_Metrics    ft_metrics_;
     FT_UInt             index_;
     TextureObj *        texture_;
+#endif
     float               tex_coords_[8];
   };
 

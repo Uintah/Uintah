@@ -89,19 +89,27 @@ TextRenderer::~TextRenderer()
 int
 TextRenderer::width(const string &text, int flags) {
   render_string_glyphs_to_texture(text);
+#ifdef HAVE_FREETYPE
   int wid;
   for (unsigned int c = 0; c < text.size(); ++c)
     wid += glyphs_[text[c]]->ft_metrics_.horiAdvance;
   return wid / 64;
+#else
+  return -1;
+#endif
 }
 
 int
 TextRenderer::height(const string &text, int flags) {
+#ifdef HAVE_FREETYPE
   render_string_glyphs_to_texture(text);
   int hei = 0;
   for (unsigned int c = 0; c < text.size(); ++c)
     hei = Max(hei, (int)glyphs_[text[c]]->ft_metrics_.horiBearingY);
   return hei / 64;
+#else
+  return -1;
+#endif
 }
 
 
@@ -154,6 +162,7 @@ TextRenderer::layout_text(const string &text,
                           const Vector &up, 
                           int flags) 
 {
+#ifdef HAVE_FREETYPE
   profiler.enter("layout_text");
   //  render_string_glyphs_to_texture("X");
   //  GlyphInfo *standard = glyphs_['X'];
@@ -264,6 +273,9 @@ TextRenderer::layout_text(const string &text,
   profiler.leave();
   
   return num;
+#else
+  return -1;
+#endif
 }
 
 
@@ -271,6 +283,7 @@ TextRenderer::layout_text(const string &text,
 void
 TextRenderer::render(const string &text, float x, float y, int flags)
 {
+#ifdef HAVE_FREETYPE
   profiler.enter("TextRenderer::render");
   CHECK_OPENGL_ERROR();
   glMatrixMode(GL_PROJECTION);
@@ -319,7 +332,7 @@ TextRenderer::render(const string &text, float x, float y, int flags)
   CHECK_OPENGL_ERROR();
   profiler.leave();
   profiler.print();
-      
+#endif
 }
 
 void
@@ -340,6 +353,7 @@ TextRenderer::render_string_glyphs_to_texture(const string &text) {
 
 TextRenderer::GlyphInfo *
 TextRenderer::render_glyph_to_texture(const wchar_t &character) {
+#ifdef HAVE_FREETYPE
   string str = " ";
   str[0] = character;
   GlyphInfo *glyph_info = scinew GlyphInfo();
@@ -417,10 +431,9 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
   FT_Done_Glyph(glyph);
   texture_->set_dirty();
   return glyph_info;
+#else
+  return 0;
+#endif
 }
-
-
-
-
 
 }
