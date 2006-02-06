@@ -76,6 +76,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
 void SimulationState::registerMaterial(Material* matl)
 {
+   matl->registerParticleState(this);
    matl->setDWIndex((int)matls.size());
    matls.push_back(matl);
    if ((int)matls.size() > max_matl_index) {
@@ -88,6 +89,7 @@ void SimulationState::registerMaterial(Material* matl)
 
 void SimulationState::registerMaterial(Material* matl,unsigned int index)
 {
+   matl->registerParticleState(this);
    matl->setDWIndex(index);
 
    if (matls.size() <= index)
@@ -105,14 +107,12 @@ void SimulationState::registerMaterial(Material* matl,unsigned int index)
 
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
 {
-  matl->registerParticleState(this);
   mpm_matls.push_back(matl);
   registerMaterial(matl);
 }
 
 void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
 {
-  matl->registerParticleState(this);
   mpm_matls.push_back(matl);
   registerMaterial(matl,index);
 }

@@ -37,7 +37,6 @@ else
         Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Packages/Uintah/CCA/Components/MPM \
         Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \

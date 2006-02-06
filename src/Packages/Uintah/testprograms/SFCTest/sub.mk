@@ -9,7 +9,6 @@ PROGRAM := $(SRCDIR)/sfctest
 SRCS := $(SRCDIR)/sfctest.cc
 PSELIBS := Packages/Uintah/CCA/Ports \
            Packages/Uintah/Core/Parallel \
-           Packages/Uintah/CCA/Components/MPM \
            Core/Thread
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
