@@ -95,7 +95,7 @@ TextRenderer::width(const string &text, int flags) {
     wid += glyphs_[text[c]]->ft_metrics_.horiAdvance;
   return wid / 64;
 #else
-  return -1;
+  return 0;
 #endif
 }
 
@@ -108,7 +108,7 @@ TextRenderer::height(const string &text, int flags) {
     hei = Max(hei, (int)glyphs_[text[c]]->ft_metrics_.horiBearingY);
   return hei / 64;
 #else
-  return -1;
+  return 0;
 #endif
 }
 
@@ -195,7 +195,10 @@ TextRenderer::layout_text(const string &text,
     for (unsigned int c = 0; c < text.size(); ++c) {
       LayoutInfo &layout = layout_[p*text.size()+c];
       layout.glyph_info_ = glyphs_[text[c]];
-      layout.color_ = shadow ? shadow_color_ : color_;
+      if (flags & REVERSE) 
+        layout.color_ = shadow ? color_ : shadow_color_;
+      else
+        layout.color_ = shadow ? shadow_color_ : color_;
       if (c && kern && !vert) {
         FT_Vector kerning; 
         FT_Get_Kerning(face_->ft_face_, 
@@ -274,7 +277,7 @@ TextRenderer::layout_text(const string &text,
   
   return num;
 #else
-  return -1;
+  return 0;
 #endif
 }
 
@@ -333,12 +336,6 @@ TextRenderer::render(const string &text, float x, float y, int flags)
   profiler.leave();
   profiler.print();
 #endif
-}
-
-void
-TextRenderer::render(const string &text, float vertices[12])
-{
-  
 }
 
 
