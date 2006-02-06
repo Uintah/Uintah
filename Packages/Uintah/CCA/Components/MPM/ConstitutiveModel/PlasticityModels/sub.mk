@@ -28,6 +28,7 @@ SRCS     += \
 	$(SRCDIR)/StabilityCheckFactory.cc \
 	$(SRCDIR)/BeckerCheck.cc \
 	$(SRCDIR)/DruckerCheck.cc \
+	$(SRCDIR)/NoneCheck.cc \
 	$(SRCDIR)/DruckerBeckerCheck.cc \
 	$(SRCDIR)/ShearModulusModel.cc \
 	$(SRCDIR)/ShearModulusModelFactory.cc \

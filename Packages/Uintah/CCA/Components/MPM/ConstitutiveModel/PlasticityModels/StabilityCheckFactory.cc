@@ -1,6 +1,7 @@
 #include "StabilityCheckFactory.h"
 #include "DruckerCheck.h"
 #include "BeckerCheck.h"
+#include "NoneCheck.h"
 #include "DruckerBeckerCheck.h"
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -29,7 +30,7 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
    else if (mat_type == "drucker_becker")
       return(scinew DruckerBeckerCheck(child));
    else if (mat_type == "none")
-      return 0;
+    return(scinew NoneCheck(child));
    else 
       throw ProblemSetupException("Unknown Stability Check ("+mat_type+")", __FILE__, __LINE__);
 }
@@ -45,6 +46,8 @@ StabilityCheckFactory::createCopy(const StabilityCheck* sc)
 
    else if (dynamic_cast<const DruckerBeckerCheck*>(sc))
       return(scinew DruckerBeckerCheck(dynamic_cast<const DruckerBeckerCheck*>(sc)));
+   else if (dynamic_cast<const NoneCheck*>(sc))
+      return(scinew NoneCheck(dynamic_cast<const NoneCheck*>(sc)));
 
    else 
       return 0;
