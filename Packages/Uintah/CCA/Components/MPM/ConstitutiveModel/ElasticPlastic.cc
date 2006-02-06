@@ -60,10 +60,10 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
   d_initialData.Chi = 0.9;
   ps->get("taylor_quinney_coeff",d_initialData.Chi);
-  bool isothermal = false;
+  d_doIsothermal = false;
   d_isothermal = 1.0;
-  ps->get("isothermal", isothermal);
-  if (isothermal) d_isothermal = 0.0;
+  ps->get("isothermal", d_doIsothermal);
+  if (d_doIsothermal) d_isothermal = 0.0;
 
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
@@ -232,7 +232,7 @@ void ElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
   cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha,false,4);
   cm_ps->appendElement("taylor_quinney_coeff",d_initialData.Chi,false,4);
-  cm_ps->appendElement("isothermal", d_isothermal,false,4);
+  cm_ps->appendElement("isothermal", d_doIsothermal,false,4);
   cm_ps->appendElement("tolerance",d_tol,false,4);
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
   cm_ps->appendElement("initial_material_temperature",
