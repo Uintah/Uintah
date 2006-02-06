@@ -900,18 +900,15 @@ Optional Features:
 --enable-verbosity      Turn on verbose configure output
 --enable-threads        Specify a thread implementation (pthreads or irix)
 --enable-debug          Turn on debugging (default is -g) or specify your
-                          own.
- example: --enable-debug='-O0 -g'
+                          own. example: --enable-debug='-O0 -g'
 --enable-optimize       Turn on optimize (default is -O2) or specify your
-                          own.
- example: --enable-optimize='-O3'
+                          own. example: --enable-optimize='-O3'
 --enable-64bit          Compile in 64 bit mode
 --enable-32bit          Compile in 32 bit mode
 --enable-output-avg-walltime
                           Output ellapsed wall-times
 --enable-perfex         Use perfex hardware counters (sgi only)
---enable-package=<list> Use the SCIRun packages specified by list.
- example:
+--enable-package=<list> Use the SCIRun packages specified by list. example:
                           --enable-package='BioPSE Teem'
 --disable-dataflow      Do not build Dataflow component model
 --disable-scirun        Do not require SCIRun components
@@ -27183,7 +27180,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 # Default values:
 _sci_lib="$sci_thirdparty_lib"
-_sci_optional=required
+_sci_optional=optional
 
 if test "$with_magick"; then
   if test "$with_magick" != "yes"; then
@@ -27226,7 +27223,7 @@ if test "$with_magick"; then
   fi
   eval _sci_lib='"$_new_lib_path"'
 
-    _sci_optional=specific
+    _sci_optional=optional
   fi
 fi
 
@@ -64522,8 +64519,7 @@ fi
 
 
 
-                                                            ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile 
- disjointPackageMakefile $sci_defs_files"
+                                                  ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile disjointPackageMakefile $sci_defs_files"
 
 
 ##   Only do the following if configuring with Uintah
@@ -64632,10 +64628,9 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
-  #    will be set to the directory where LIBOBJS objects are built.
-  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
+  # 2. Add them.
+  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 
@@ -65081,9 +65076,6 @@ do
   "configVars.mk" ) CONFIG_FILES="$CONFIG_FILES configVars.mk" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "on-the-fly-libs/Makefile" ) CONFIG_FILES="$CONFIG_FILES on-the-fly-libs/Makefile" ;;
-  "
-" ) CONFIG_FILES="$CONFIG_FILES 
-" ;;
   "disjointPackageMakefile" ) CONFIG_FILES="$CONFIG_FILES disjointPackageMakefile" ;;
   "$sci_defs_files" ) CONFIG_FILES="$CONFIG_FILES $sci_defs_files" ;;
   "Packages/Uintah/tools/fspec.pl" ) CONFIG_FILES="$CONFIG_FILES Packages/Uintah/tools/fspec.pl" ;;
