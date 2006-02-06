@@ -2808,14 +2808,14 @@ AC_SUBST(DEF_MPEG)
 AC_LANG(C)
 # Default values:
 _sci_lib="$sci_thirdparty_lib"
-_sci_optional=required
+_sci_optional=optional
 
 if test "$with_magick"; then
   if test "$with_magick" != "yes"; then
     # If --with-magick has a parameter, then use it
     _sci_lib="$with_magick/lib"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=specific
+    _sci_optional=optional
   fi 
 fi
 
