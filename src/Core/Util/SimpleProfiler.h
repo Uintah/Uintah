@@ -51,7 +51,7 @@ namespace SCIRun {
 
 
 
-const int SIMPLE_PROFILER_MAX_LEVEL= 1024;
+const int SIMPLE_PROFILER_MAX_LEVEL = 64;
 
 
 class SCISHARE SimpleProfiler {
