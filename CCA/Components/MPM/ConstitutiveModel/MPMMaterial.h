@@ -76,7 +76,7 @@ WARNING
 	 
    ~MPMMaterial();
 
-   void registerParticleState(SimulationState* ss);
+   virtual void registerParticleState(SimulationState* ss);
 
    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
