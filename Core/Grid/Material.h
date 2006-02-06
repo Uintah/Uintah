@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
 
 namespace Uintah {
@@ -66,6 +67,8 @@ WARNING
      const MaterialSubset* thisMaterial() const {
        return thismatl;
      }
+     
+     virtual void registerParticleState(SimulationState* ss);
 
      double getThermalConductivity() const;
      double getSpecificHeat() const;

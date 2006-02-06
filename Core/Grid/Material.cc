@@ -78,6 +78,10 @@ void Material::setVFIndex(int idx)
    d_vfindex = idx;
 }
 
+void Material::registerParticleState(SimulationState* ss)
+{
+}
+
 double Material::getThermalConductivity() const
 {
   return d_thermalConductivity;
