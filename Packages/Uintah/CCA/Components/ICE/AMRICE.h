@@ -794,7 +794,6 @@ void ICE::refluxOperator_computeCorrectionFluxes(
          }
          // Q_CC = mass * q_CC = cellVol * rho * q_CC
          // coeff accounts for the different cell sizes on the different levels
-         double coeff = (double)r_Ratio.x() * r_Ratio.y() * r_Ratio.z();
          double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
          double denominator = oneZero
                             + switch1 * coarseCellVol     
@@ -834,7 +833,6 @@ void ICE::refluxOperator_computeCorrectionFluxes(
          }
          // Q_CC = mass * q_CC = cellVol * rho * q_CC
          // coeff accounts for the different cell sizes on the different levels
-         double coeff = (double)r_Ratio.x() * r_Ratio.y() * r_Ratio.z();
          double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
          double denominator = oneZero
                             + switch1 * coarseCellVol     
