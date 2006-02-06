@@ -32,6 +32,13 @@ namespace Uintah {
     virtual ~StabilityCheck();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+
+    // Determine if we do the stability.  Instead of checking for the
+    // existence of d_stable in ElasticPlastic.cc, instead check 
+    // do() which is true except for NoneCheck.cc.
+    virtual bool doIt() {
+      return true;
+    }
 	 
     /*! Check the stability and return the direction of instability
       if any */

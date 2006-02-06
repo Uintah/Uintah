@@ -1233,7 +1233,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
           } 
 
           // Check 3: Stability criterion (only if material is plastic)
-          if (d_stable && !isLocalized) {
+          if (d_stable->doIt() && !isLocalized) {
 
             // Calculate values needed for tangent modulus calculation
             state->temperature = temperature;

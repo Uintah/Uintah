@@ -1158,7 +1158,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           } 
 
           // Check 4: Stability criterion
-          if (d_stable && !isLocalized) {
+          if (d_stable->doIt() && !isLocalized) {
 
             // Calculate the elastic tangent modulus
             TangentModulusTensor Ce;
