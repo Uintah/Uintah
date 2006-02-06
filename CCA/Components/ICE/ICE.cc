@@ -70,6 +70,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
 
   d_doAMR               = doAMR;
   d_useLockStep         = false; 
+  d_doRefluxing         = false;
   d_add_heat            = false;
   d_impICE              = false;
   d_useCompatibleFluxes = false;
@@ -1668,7 +1669,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
-  if(d_doRefluxing){                           
+  if(d_doRefluxing){            
     computesRequires_AMR_Refluxing(task, AMR_subCycleProgressVar, ice_matls);
   }
   
