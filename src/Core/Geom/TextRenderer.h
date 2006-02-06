@@ -70,7 +70,8 @@ public:
                  ANCHOR_MASK = 15, 
                  VERTICAL = 16,
                  SHADOW = 32,
-                 DEFAULT = 64 };
+                 REVERSE = 64,
+                 DEFAULT = 128 };
 
   int                   width(const string &text, int flags = DEFAULT);
   int                   height(const string &text, int flags = DEFAULT);
@@ -88,14 +89,7 @@ public:
   void			render(const string &,
                                float x, float y, 
                                int flags = DEFAULT);
-  
-  void			render(const string &,
-                               float vertices[12]);
-  
-
 private:
-
-
   // Info for glyphs rendered to texture
   struct GlyphInfo {
 #ifdef HAVE_FREETYPE
@@ -112,7 +106,6 @@ private:
   struct LayoutInfo {
     GlyphInfo *         glyph_info_;
     Point               vertices_[4];
-    //    float               vertices_[12];
     float *             color_;
   };
 

@@ -48,6 +48,15 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
+
+#if FREETYPE_MAJOR == 2
+#  if (FREETYPE_MINOR == 0) || ((FREETYPE_MINOR == 1) && (FREETYPE_PATCH < 3))
+#    define FT_KERNING_DEFAULT ft_kerning_default
+#    define FT_RENDER_MODE_NORMAL ft_render_mode_normal
+#    define FT_PIXEL_MODE_GRAY ft_pixel_mode_grays
+#  endif
+#endif
+
 #endif
 #include <Core/Geometry/Point.h>
 #include <string>
