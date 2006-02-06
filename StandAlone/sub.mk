@@ -439,6 +439,8 @@ dumpfields: prereqs Packages/Uintah/StandAlone/tools/dumpfields/dumpfields
 
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 
+uda2nrrd: prereqs Packages/Uintah/StandAlone/uda2nrrd
+
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 
 partextract: prereqs Packages/Uintah/StandAlone/partextract
