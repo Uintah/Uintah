@@ -35,7 +35,7 @@ SCGShear::~SCGShear()
 void SCGShear::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model",true,4);
-  shear_ps->setAttribute("type","scg_sheer");
+  shear_ps->setAttribute("type","scg_shear");
 
   shear_ps->appendElement("mu_0",d_mu0,false,5);
   shear_ps->appendElement("A",d_A,false,5);
