@@ -87,7 +87,8 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  int levelIndex = getLevel(patches)->getIndex();
+  const Level* level = getLevel(patches);
+  int levelIndex = level->getIndex();
  
   cout_doing << d_myworld->myrank()<< " ICE::scheduleSetupRHS" 
              << "\t\t\t\t\t\tL-" << levelIndex<< endl;
@@ -123,15 +124,13 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->computes(lb->vol_fracX_FCLabel);
   t->computes(lb->vol_fracY_FCLabel);
   t->computes(lb->vol_fracZ_FCLabel);
+  t->computes(lb->term2Label, one_matl,oims);
   
-  if(d_doAMR){  // compute refluxing variables
+  if(d_doAMR){  // compute refluxing variables if using AMR
     t->computes(lb->vol_frac_X_FC_fluxLabel);
     t->computes(lb->vol_frac_Y_FC_fluxLabel);
     t->computes(lb->vol_frac_Z_FC_fluxLabel);
   }
-  
-  t->computes(lb->term2Label,        one_matl,oims);
-  t->computes(lb->max_RHSLabel);
   
   if(computes_or_modifies =="computes"){
     t->computes(lb->rhsLabel,          one_matl,oims);
@@ -141,6 +140,25 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   }
   
   sched->addTask(t, patches, all_matls);                     
+}
+
+/*___________________________________________________________________
+ Function~  ICE::scheduleCompute_maxRHS--
+_____________________________________________________________________*/
+void ICE::scheduleCompute_maxRHS(SchedulerP& sched,
+                                 const LevelP& level,
+                                 const MaterialSubset* one_matl,
+                                 const MaterialSet* allMatls){ 
+  cout_doing << d_myworld->myrank()<< " ICE::scheduleCompute_maxRHS" 
+             << "\t\t\t\t\tL-" << level->getIndex()<< endl;
+  Task* t;
+  t = scinew Task("ICE::compute_maxRHS", this, &ICE::compute_maxRHS);
+  
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  t->requires( Task::NewDW, lb->rhsLabel,  one_matl,oims,Ghost::None,0);
+  t->computes(lb->max_RHSLabel);
+  
+  sched->addTask(t, level->eachPatch(), allMatls);
 }
 
 /*___________________________________________________________________
@@ -347,7 +365,8 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   //  what's produced from this task
   t->computes(lb->press_CCLabel,     press_matl,oims);
   t->modifies(lb->sum_imp_delPLabel, press_matl,oims);  
-  t->modifies(lb->term2Label,        one_matl,  oims);   
+  t->modifies(lb->term2Label,        one_matl,  oims);
+  t->modifies(lb->rhsLabel,          one_matl,  oims);   
 
   t->modifies(lb->uvel_FCMELabel);
   t->modifies(lb->vvel_FCMELabel);
@@ -519,7 +538,6 @@ void ICE::setupRHS(const ProcessorGroup*,
                    const string computes_or_modifies)
 {
   const Level* level = getLevel(patches);
-  double rhs_max = 0.0;
   Vector dx     = level->dCell();
   double vol    = dx.x()*dx.y()*dx.z();
       
@@ -672,9 +690,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       rhs[c] = -term1[c] + massExchTerm[c] + sumAdvection[c];
-      rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
-    
     
     //__________________________________
     // set rhs = 0 under all fine patches
@@ -695,15 +711,8 @@ void ICE::setupRHS(const ProcessorGroup*,
         continue;
       }
       rhs.initialize(0.0, l, h);
-    } 
-        
-    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-      IntVector c = *iter;
-      rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }   
     
-    new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
-
     //---- P R I N T   D A T A ------  
     if (switchDebug_setupRHS) {
       ostringstream desc;
@@ -718,6 +727,40 @@ void ICE::setupRHS(const ProcessorGroup*,
 //  cout << " Level " << level->getIndex() << " rhs " 
 //       << rhs_max << " rhs * vol " << rhs_max * vol <<  endl;
 }
+
+/*___________________________________________________________________
+ Function~  ICE::compute_maxRHS-- 
+_____________________________________________________________________*/
+void ICE::compute_maxRHS(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset*,
+                         DataWarehouse*,
+                         DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  double rhs_max = 0.0;
+  IntVector maxCell(0,0,0);
+      
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing<< d_myworld->myrank()<<" Doing maxRHS on patch "
+              << patch->getID() <<"\t\t\t\t ICE \tL-"
+              << level->getIndex()<<endl;
+    
+    Vector dx  = patch->dCell();
+    double vol = dx.x()*dx.y()*dx.z();
+    
+    constCCVariable<double> rhs;
+    new_dw->get(rhs,lb->rhsLabel, 0,patch,Ghost::None,0); 
+
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
+    }
+    new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
+  } 
+}
+
 
 /*___________________________________________________________________
  Function~  ICE::updatePressure-- 
@@ -1002,6 +1045,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                                           all_matls,
                                                           recursion,
                                                           "computes");
+                                                          
+    scheduleCompute_maxRHS( subsched,         level,       one_matl,
+                                                           all_matls);
 
     subsched->compile();
     //__________________________________
@@ -1088,13 +1134,17 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->transferFrom(subNewDW,
                     lb->sum_imp_delPLabel,   patch_sub,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,         // term2
-                    lb->term2Label,          patch_sub,  one_matl,     replace);    
+                    lb->term2Label,          patch_sub,  one_matl,     replace);
+  ParentNewDW->transferFrom(subNewDW,         // rhs
+                    lb->rhsLabel,            patch_sub,  one_matl,     replace);  
+                      
   ParentNewDW->transferFrom(subNewDW,         // uvel_FC
                     lb->uvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vvel_FC
                     lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // wvel_FC
-                    lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
+                    lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace);
+                     
   ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
                     lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC

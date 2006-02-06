@@ -829,7 +829,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                            all_matls,
                                                            false,
                                                            "computes");
-  
+    
+    scheduleCompute_maxRHS(                sched, level,   one_matl,
+                                                           all_matls);
+    
     scheduleImplicitPressureSolve(         sched, level,   patches,
                                                            one_matl,      
                                                            d_press_matl,    
@@ -3168,7 +3171,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(),level);
-    cout_doing << "delT = " << delT << endl;
 
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
     StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);

@@ -116,11 +116,15 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     }
     
     // correct the rhs at the coarse fine interfaces
+    // compute maxRHS
     for(int L = 0; L<maxLevel; L++){
       LevelP level = grid->getLevel(L);
       scheduleAddReflux_RHS(     sched,         level,     one_matl,
                                                            all_matls,
-                                                           true);    
+                                                           true);
+                                                           
+      scheduleCompute_maxRHS(    sched,         level,     one_matl,
+                                                           all_matls);
     }
     scheduleMultiLevelPressureSolve(sched, grid,   0,
                                                    one_matl,
@@ -275,7 +279,7 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
       t->requires(Task::NewDW,lb->modelMass_srcLabel, patches, gn,0);
     } 
     t->requires( Task::NewDW, lb->speedSound_CCLabel, patches, gn,0);
-    t->requires( Task::NewDW, lb->max_RHSLabel, patches, gn, 0);
+    t->requires( Task::NewDW, lb->max_RHSLabel,       patches, gn,0);
     
     //__________________________________
     // setup Matrix
@@ -304,9 +308,10 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     
     //__________________________________
     //  what's produced from this task
-    t->computes(lb->press_CCLabel,    patches, nd, press_matl,oims);
-    t->modifies(lb->sum_imp_delPLabel,patches,  nd, press_matl,oims);
-    t->modifies(lb->term2Label,       patches, nd, one_matl,  oims);   
+    t->computes(lb->press_CCLabel,      patches, nd, press_matl,oims);
+    t->modifies(lb->sum_imp_delPLabel,  patches, nd, press_matl,oims);
+    t->modifies(lb->term2Label,         patches, nd, one_matl,  oims);   
+    t->modifies(lb->rhsLabel,           patches, nd, one_matl,  oims);
     
     t->modifies(lb->uvel_FCMELabel, patches);
     t->modifies(lb->vvel_FCMELabel, patches);
@@ -314,7 +319,11 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     
     t->modifies(lb->vol_fracX_FCLabel, patches);
     t->modifies(lb->vol_fracY_FCLabel, patches);
-    t->modifies(lb->vol_fracZ_FCLabel, patches);  
+    t->modifies(lb->vol_fracZ_FCLabel, patches); 
+    
+    t->modifies(lb->vol_frac_X_FC_fluxLabel, patches);
+    t->modifies(lb->vol_frac_Y_FC_fluxLabel, patches);
+    t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches); 
   }
   t->setType(Task::OncePerProc);
   LoadBalancer* loadBal = sched->getLoadBalancer();
@@ -416,27 +425,18 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
     for(int L = 0; L<maxLevel; L++){
       const LevelP level = grid->getLevel(L);
-      
-      //scheduleCompute_matrix_CFI_weights(subsched,level, all_matls);
-
       schedule_matrixBC_CFI_coarsePatch(subsched, level, one_matl, all_matls);
-
-      //schedule_matrixBC_CFI_finePatch(  subsched, level, one_matl, all_matls);
-
-      scheduleZeroMatrix_RHS_UnderFinePatches( subsched,level,one_matl, firstIter);
+      scheduleZeroMatrix_UnderFinePatches( subsched,level,one_matl, firstIter);
     }
 #if 1
     // Level argument is not really used in this version of scheduleSolve(),
     // so just pass in the coarsest level as it always exists.
     const VarLabel* whichInitialGuess = NULL; 
-    MaterialSet* press_matlSet  = scinew MaterialSet();
-    press_matlSet->add(0);
-    press_matlSet->addReference(); 
 
     solver->scheduleSolve(grid->getLevel(0), subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
                           lb->imp_delPLabel, modifies_X,
-                          lb->rhsLabel,      Task::NewDW,
+                          lb->rhsLabel,      Task::OldDW,
                           whichInitialGuess, Task::NewDW,
 			     solver_parameters);
 
@@ -473,13 +473,15 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       scheduleSetupRHS(       subsched,         patch_set,  one_matl, 
                                                             all_matls,
                                                             recursion,
-                                                            "modifies");
+                                                            "computes");
     }
     for(int L = 0; L<maxLevel; L++){
       LevelP level = grid->getLevel(L);
       scheduleAddReflux_RHS(  subsched,         level,      one_matl,
                                                             all_matls,
                                                            true);
+      scheduleCompute_maxRHS(  subsched,        level,      one_matl,
+                                                            all_matls);
     }
 
     subsched->compile();
@@ -567,24 +569,35 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   bool replace = true;
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
 
-  ParentNewDW->transferFrom(subNewDW,         // press
-                    lb->press_CCLabel,       patches,  d_press_matl, replace);
+  ParentNewDW->transferFrom(subNewDW,           // press
+                    lb->press_CCLabel,         patches,  d_press_matl, replace);
   ParentNewDW->transferFrom(subNewDW,
-                    lb->sum_imp_delPLabel,   patches,  d_press_matl, replace); 
-  ParentNewDW->transferFrom(subNewDW,         // term2
-                    lb->term2Label,          patches,  one_matl,     replace);    
-  ParentNewDW->transferFrom(subNewDW,         // uvel_FC
-                    lb->uvel_FCMELabel,      patches,  all_matls_sub,replace); 
-  ParentNewDW->transferFrom(subNewDW,         // vvel_FC
-                    lb->vvel_FCMELabel,      patches,  all_matls_sub,replace); 
-  ParentNewDW->transferFrom(subNewDW,         // wvel_FC
-                    lb->wvel_FCMELabel,      patches,  all_matls_sub,replace); 
-  ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
-                    lb->vol_fracX_FCLabel,   patches, all_matls_sub,replace); 
-  ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
-                    lb->vol_fracY_FCLabel,   patches, all_matls_sub,replace); 
-  ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
-                    lb->vol_fracZ_FCLabel,   patches, all_matls_sub,replace);           
+                    lb->sum_imp_delPLabel,     patches,  d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,           // term2
+                    lb->term2Label,            patches,  one_matl,     replace); 
+  ParentNewDW->transferFrom(subNewDW,           // term2
+                    lb->rhsLabel,              patches,  one_matl,     replace);
+                       
+  ParentNewDW->transferFrom(subNewDW,           // uvel_FC
+                    lb->uvel_FCMELabel,        patches,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,           // vvel_FC
+                    lb->vvel_FCMELabel,        patches,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,           // wvel_FC
+                    lb->wvel_FCMELabel,        patches,  all_matls_sub,replace);
+                     
+  ParentNewDW->transferFrom(subNewDW,          // vol_fracX_FC
+                    lb->vol_fracX_FCLabel,     patches, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,           // vol_fracY_FC
+                    lb->vol_fracY_FCLabel,     patches, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,           // vol_fracZ_FC
+                    lb->vol_fracZ_FCLabel,     patches, all_matls_sub,replace);
+                    
+  ParentNewDW->transferFrom(subNewDW,           // vol_fracX_FC_flux
+                    lb->vol_frac_X_FC_fluxLabel,patches, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,           // vol_fracY_FC_flux
+                    lb->vol_frac_Y_FC_fluxLabel,patches, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,           // vol_fracZ_FC_flux
+                    lb->vol_frac_Z_FC_fluxLabel,patches, all_matls_sub,replace);           
     
   //__________________________________
   //  Turn scrubbing back on
@@ -654,10 +667,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     // Correction fluxes  from the coarse level               
     t2->requires(Task::NewDW, lb->vol_frac_X_FC_fluxLabel, gac, 1);    
     t2->requires(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel, gac, 1);    
-    t2->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel, gac, 1);               
-
+    t2->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel, gac, 1);
     t2->modifies(lb->rhsLabel, one_matl,oims);
-    //t2->modifies(lb->max_RHSLabel);
 
     sched->addTask(t2, coarseLevel->eachPatch(), all_matls);    
   }
@@ -727,9 +738,13 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(c_p);
     cout_doing << "  patch " << coarsePatch->getID()<< endl;
 
-    CCVariable<double> rhs;
+    CCVariable<double> rhs, sumRefluxCorrection;
     new_dw->getModifiable(rhs,lb->rhsLabel, 0, coarsePatch);
-          
+    new_dw->allocateTemporary(sumRefluxCorrection, coarsePatch);
+    sumRefluxCorrection.initialize(0.0);
+
+    //__________________________________
+    // Sum the reflux correction over all materials  
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
@@ -738,16 +753,26 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
 
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];
-        //__________________________________
-        // Apply the correction
+        
         if(finePatch->hasCoarseFineInterfaceFace() ){
 
-          refluxOperator_applyCorrectionFluxes<double>(rhs, "vol_frac",  indx, 
+          refluxOperator_applyCorrectionFluxes<double>(
+                        sumRefluxCorrection, "vol_frac",  indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+          // Note in the equations the rhs is multiplied by vol, which is automatically canceled
+          // This cancelation is mystically handled inside of the the applyCorrectionFluxes
+          // operator.  
         }  
       }  // finePatch loop 
     }  // matls
-
+    
+    //__________________________________
+    // apply reflux correction to rhs
+    for(CellIterator iter=coarsePatch->getCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      rhs[c] += sumRefluxCorrection[c]; 
+    }
+    
     //__________________________________
     //  Print Data
     if(switchDebug_setupRHS){ 
@@ -860,64 +885,50 @@ void ICE::coarsen_delP(const ProcessorGroup*,
   } // for patches
 }
 /*______________________________________________________________________
- Function~  ICE::scheduleZeroMatrix_RHS_UnderFinePatches--
+ Function~  ICE::scheduleZeroMatrix_UnderFinePatches--
  Purpose:  zero out the matrix and rhs on the coarse level, under
   any fine patch.
  _____________________________________________________________________*/
-void ICE::scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched, 
-                                                  const LevelP& coarseLevel,
-                                                  const MaterialSubset* one_matl,
-                                                  bool firstIter)
+void ICE::scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched, 
+                                              const LevelP& coarseLevel,
+                                              const MaterialSubset* one_matl,
+                                              bool firstIter)
 { 
   cout_doing << d_myworld->myrank()
              << " ICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\tL-" 
              << coarseLevel->getIndex() << endl;
   
-  Task* t = scinew Task("ICE::zeroMatrix_RHS_UnderFinePatches",
-                        this, &ICE::zeroMatrix_RHS_UnderFinePatches, firstIter);
+  Task* t = scinew Task("ICE::zeroMatrix_UnderFinePatches",
+                  this, &ICE::zeroMatrix_UnderFinePatches, firstIter);
   
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  Ghost::GhostType  gn = Ghost::None;
-  
-    
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
   if(coarseLevel->hasFinerLevel()){                                                                      
     t->modifies(lb->matrixLabel, one_matl, oims);
-  }
-  t->requires(Task::OldDW, lb->rhsLabel, one_matl, oims, gn, 0);
-  t->computes(lb->rhsLabel,              one_matl, oims);       
-
+  }   
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
 }
 /* _____________________________________________________________________
- Function~  ICE::zeroMatrix_RHS_UnderFinePatches
+ Function~  ICE::zeroMatrix_UnderFinePatches
  _____________________________________________________________________  */
-void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
-                                          const PatchSubset* coarsePatches,
-                                          const MaterialSubset*,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw,
-                                          bool firstIter)
+void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
+                                      const PatchSubset* coarsePatches,
+                                      const MaterialSubset*,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      bool firstIter)
 { 
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = 0;
-  
-  // copy the rhs from the old, and then we can change it where necessary
-  MaterialSubset matls;
-  matls.add(0);
-  new_dw->transferFrom(old_dw, lb->rhsLabel, coarsePatches, &matls);
 
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     
     cout_doing << d_myworld->myrank()
-               << " Doing zeroMatrix_RHS_UnderFinePatches on patch "
+               << " Doing zeroMatrix_UnderFinePatches on patch "
                << coarsePatch->getID() << "\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
                
     CCVariable<Stencil7> A; 
-    CCVariable<double> rhs;            
-
     new_dw->getModifiable(A,  lb->matrixLabel, 0, coarsePatch);
-    new_dw->getModifiable(rhs,lb->rhsLabel,    0, coarsePatch);
     
     Level::selectType finePatches;
     if(coarseLevel->hasFinerLevel()){
@@ -949,7 +960,6 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
         A[c].t= 0; 
         A[c].b= 0;
         A[c].p= 1;
-        rhs[c] = 0;
       }
     }
     //__________________________________
@@ -960,7 +970,6 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
       desc << "BOT_zeroMatrix_RHS_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
            <<  " L-" <<coarseLevel->getIndex()<< endl;
       printStencil( 0, coarsePatch, 1, desc.str(), "A", A);
-      printData( 0, coarsePatch, 0,desc.str(), "rhs", rhs);
     }
 #endif
 
@@ -1026,103 +1035,6 @@ void ICE::matrixCoarseLevelIterator(Patch::FaceType patchFace,
              << " does this coarse patch own the face centered variable "
              << isRight_CP_FP_pair << endl; 
   }
-}
-/*___________________________________________________________________
- Function~  ICE::scheduleCompute_matrix_CFI_weights--  
-_____________________________________________________________________*/
-void ICE::scheduleCompute_matrix_CFI_weights(SchedulerP& sched, 
-                                            const LevelP& fineLevel,
-                                            const MaterialSet* all_matls)
-
-{
-  if(fineLevel->getIndex() > 0 ){
-    cout_doing << d_myworld->myrank() 
-               << " ICE::scheduleCompute_matrix_CFI_weights\t\t\tL-" 
-               << fineLevel->getIndex() <<endl;
-
-    Task* task = scinew Task("compute_matrix_CFI_weights",
-                  this, &ICE::compute_matrix_CFI_weights);
-                  
-    Ghost::GhostType  gac = Ghost::AroundCells;              
-    task->requires(Task::NewDW, lb->vol_frac_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-               
-    task->computes(lb->matrix_CFI_weightsLabel);
-
-    sched->addTask(task, fineLevel->eachPatch(), all_matls);
-  }
-}
-
-/*___________________________________________________________________
- Function~  ICE::compute_matrix_CFI_weights--  
-_____________________________________________________________________*/
-void ICE::compute_matrix_CFI_weights(const ProcessorGroup*,
-                                     const PatchSubset* finePatches,
-                                     const MaterialSubset*,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw)       
-{
-
-  const Level* fineLevel = getLevel(finePatches);
-  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
-  IntVector refineRatio = fineLevel->getRefinementRatio();
-                       
-  //Vector c_dx = coarseLevel->dCell();
-  //Vector inv_c_dx = Vector(1.0)/c_dx;
-  
-  cout_doing << d_myworld->myrank() 
-             << " Doing compute_matrix_CFI_weights \t\t\t\t\t\t AMRICE L-"
-             << fineLevel->getIndex();
-  //__________________________________
-  // Iterate over fine patches
-  for(int p=0;p<finePatches->size();p++){  
-    const Patch* finePatch = finePatches->get(p);
-    cout_doing << "  patch " << finePatch->getID()<< endl;
-    CCVariable<double> matrix_CFI_weight;
-    new_dw->allocateAndPut(matrix_CFI_weight,lb->matrix_CFI_weightsLabel,
-                           0,finePatch);
-    
-    //__________________________________
-    // Iterate over coarsefine interface faces
-    vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-         iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
-      Patch::FaceType face = *iter;
-
-      IntVector cl, ch, fl, fh;
-      getCoarseFineFaceRange(finePatch, coarseLevel, face, 1, cl, ch, fl, fh);
-      IntVector oneCell = finePatch->faceDirection(face);
-
-      cout_dbg<< " face " << face << " refineRatio "<< refineRatio
-              << " BC type " << finePatch->getBCType(face)
-              << " FineLevel iterator" << fl << " " << fh 
-              << " \t coarseLevel iterator " << cl << " " << ch <<endl;
-
-      //__________________________________
-      //  get the data
-      int matl = 0;  // THIS WON'T WORK FOR MULTIMATERIAL PROBLEMS
-      Ghost::GhostType  gn  = Ghost::None;
-      constCCVariable<double> vol_frac_coarse, vol_frac_fine;
-      new_dw->getRegion(vol_frac_coarse, lb->vol_frac_CCLabel, matl, coarseLevel,
-                        cl, ch);
-                        
-      new_dw->get(vol_frac_fine, lb->vol_frac_CCLabel, matl, finePatch, gn,0);
-      
-       
-      //__________________________________
-      //  Now compute the weights
-      for(CellIterator iter(fl,fh); !iter.done(); iter++){
-        IntVector f_cell = *iter;
-        IntVector c_cell = fineLevel->mapCellToCoarser(f_cell) + oneCell;
-        //Point coarse_cell_pos = coarseLevel->getCellPosition(c_cell);
-        //Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
-        //Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx;
-          
-        // TODO: need to add equation
-        matrix_CFI_weight[f_cell] = vol_frac_coarse[c_cell] + vol_frac_fine[f_cell];  
-      }
-    }  // CFI loop
-  }  // finePatch
 }
 
 /*___________________________________________________________________
@@ -1288,110 +1200,6 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
     } 
 #endif
   }  // course patch loop 
-}
-
-/*___________________________________________________________________
- Function~  ICE::schedule_matrixBC_CFI_finePatch--  
-_____________________________________________________________________*/
-void ICE::schedule_matrixBC_CFI_finePatch(SchedulerP& sched, 
-                                          const LevelP& fineLevel,
-                                          const MaterialSubset* one_matl,
-                                          const MaterialSet* all_matls)
-{
-  if(fineLevel->getIndex() > 0 ){
-    cout_doing << d_myworld->myrank() 
-               << " ICE::schedule_matrixBC_CFI_finePatch\t\t\t\tL-" 
-               << fineLevel->getIndex() <<endl;
-
-    Task* task = scinew Task("matrixBC_CFI_finePatch",
-                  this, &ICE::matrixBC_CFI_finePatch);
-    //Ghost::GhostType  gn  = Ghost::None;
-    //    task->requires(Task::NewDW,lb->matrix_CFI_weightsLabel,one_matl, gn,0); 
-                   
-    task->modifies(lb->matrixLabel);
-
-    sched->addTask(task, fineLevel->eachPatch(), all_matls);
-  } 
-}
-/*___________________________________________________________________ 
- Function~  matrixBC_CFI_finePatch--      
- Purpose~   Along each coarseFine interface (on finePatches)
- set the stencil weight
- 
- Naming convention
-      +x -x +y -y +z -z
-       e, w, n, s, t, b 
- 
-   A.p = beta[c] -
-          (A.n + A.s + A.e + A.w + A.t + A.b);
-   LHS       
-   A.p*delP - (A.e*delP_e + A.w*delP_w + A.n*delP_n + A.s*delP_s 
-             + A.t*delP_t + A.b*delP_b )
-             
- Suppose the x- face then you must add A.w to
- both A.p and set A.w = 0.
-___________________________________________________________________*/
-void ICE::matrixBC_CFI_finePatch(const ProcessorGroup*,
-                                 const PatchSubset* finePatches,
-                                 const MaterialSubset*,
-                                 DataWarehouse*,
-                                 DataWarehouse* new_dw)       
-{ 
-  const Level* fineLevel = getLevel(finePatches);
-  cout_doing << d_myworld->myrank() 
-             << " Doing matrixBC_CFI_finePatch \t\t\t ICE L-"
-             <<fineLevel->getIndex();  
-  Ghost::GhostType  gn  = Ghost::None;
-  
-  for(int p=0;p<finePatches->size();p++){  
-    const Patch* finePatch = finePatches->get(p);
-      
-    if(finePatch->hasCoarseFineInterfaceFace() ){    
-      cout_dbg << *finePatch << " ";
-      finePatch->printPatchBCs(cout_dbg);
-      CCVariable<Stencil7> A;
-      // A_CFI_weights_fine equals A for now. Higher order
-      // ghost node interpolation can be developed at
-      // a later stage.
-      //      constCCVariable<double>A_CFI_weights;
-      constCCVariable<Stencil7>A_CFI_weights;
-      
-      new_dw->getModifiable(A,   lb->matrixLabel, 0,   finePatch);
-      //      new_dw->get(A_CFI_weights, lb->matrix_CFI_weightsLabel, 0,finePatch,gn,0);
-      new_dw->get(A_CFI_weights, lb->matrixLabel, 0,finePatch,gn,0);
-
-      //__________________________________
-      // Iterate over coarsefine interface faces
-      vector<Patch::FaceType>::const_iterator iter;  
-      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
-        Patch::FaceType face = *iter;
-
-        CellIterator f_iter=finePatch->getFaceCellIterator(face, "alongInteriorFaceCells");
-        int f = face;
-
-        for(; !f_iter.done(); f_iter++){
-          IntVector c = *f_iter;
-          A[c].p  += A[c][f];
-          
-          // add back the connection CFI weights
-          A[c][f] = A_CFI_weights[c][f];
-          A[c].p  -= A[c][f];
-        }
-      }  //CFI interface loop
-      
-      //__________________________________
-      //  Print Data
-  #if 1
-      if (switchDebug_setupMatrix) {    
-        ostringstream desc;
-        desc << "BOT_matrixBC_CFI_fine_patch_" << finePatch->getID()
-             <<  " L-" <<fineLevel->getIndex()<< endl;
-        printStencil( 0, finePatch, 1, desc.str(), "A_fine", A);
-      } 
-  #endif
-    }  // if finePatch has a CFI
-  }  // patches loop
 }
   
 /*___________________________________________________________________
