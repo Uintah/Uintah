@@ -69,7 +69,7 @@ extern "C"
 void*
 BioPSEInit(void *param) 
 {
-  cerr << "BioPSEInit called!: " << param << "\n";
+  //cerr << "BioPSEInit called!: " << param << "\n";
   return 0;
 }
 

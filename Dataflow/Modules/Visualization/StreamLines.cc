@@ -467,7 +467,6 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
   FindRK4(v, x, t2, s, Min(n, 5), vfi);
 
   if (v.size() < 5) {
-    cerr << "Streamlines - FindAdamsBashforth: Ending early, less than 5 points.\n\n";
     return;
   }
 
@@ -490,12 +489,6 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
     f[1] = f[0];
 
     if (!interpolate(vfi, x, f[0])) {
-      cerr << "Streamlines - FindAdamsBashforth: Ending early, can not interpolate\n";
-      cerr << "vfi interpolate returned " << vfi->interpolate(f[0], x) << "\n";
-      cerr << "Point " << x.x() << "  " << x.y() << "  " << x.z() << "\n";
-      cerr << "Value " << f[0].x() << "  " << f[0].y() << "  " << f[0].z() << "\n";
-      cerr << "safe_normalize returned " << f[0].safe_normalize() << "\n\n";
-
       break; 
     }
 

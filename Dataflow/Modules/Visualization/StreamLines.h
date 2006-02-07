@@ -40,9 +40,6 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/CompGeom.h>
 #include <Core/Thread/Thread.h>
-//#include <Core/Util/TypeDescription.h>
-//#include <Core/Util/DynamicLoader.h>
-//#include <Core/Datatypes/FieldInterface.h>
 #include <algorithm>
 #include <sstream>
 
