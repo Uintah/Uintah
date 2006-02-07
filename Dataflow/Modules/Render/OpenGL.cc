@@ -503,14 +503,13 @@ OpenGL::render_and_save_image(int x, int y,
 #ifndef HAVE_MAGICK
   if (ftype != "ppm" && ftype != "raw")
   {
-    cerr << "Error - ImageMagick is not enabled, "
-         << "can only save .ppm or .raw files.\n";
+    cerr << "Error - ImageMagick is not enabled.  Only .ppm or .raw files are supported.\n";
     return;
   }
 #endif
 
-  cerr << "Saving image " << fname << " with width=" << x
-       << " and height=" << y <<".\n";
+  cout << "Saving " + to_string(x) + "x" + to_string(y) +
+    " image to '" + fname + "'.\n";
 
 #ifndef HAVE_PBUFFER
   // Don't need to raise if using pbuffer.
