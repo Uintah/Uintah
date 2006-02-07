@@ -1202,14 +1202,14 @@ Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
 
 
 void
-Painter::SliceWindow::render_text() {
-
+Painter::SliceWindow::render_text()
+{
   if (!painter_->show_text_()) return;
   profiler.enter("render_text");  
   if (!(painter_->font1_ && painter_->font2_ && painter_->font3_)) return;
   TextRenderer &font1 = *painter_->font1_;
   TextRenderer &font2 = *painter_->font2_;
-  TextRenderer &font3 = *painter_->font3_;
+  //TextRenderer &font3 = *painter_->font3_;
   
   const int yoff = 19;
   const int xoff = 19;
