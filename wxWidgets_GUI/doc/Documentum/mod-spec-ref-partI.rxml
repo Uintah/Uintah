@@ -1,0 +1,283 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<part>
+  <title>Introduction</title>
+  <chapter id="chapter.introduction">
+    <title>Justification</title>
+    <para>This section introduces the SCIRun module specification
+    language.</para>
+    <sect1>
+      <title>Purpose</title>
+      <para>Writing a module specification should be one of the first
+      steps in the design and implementation of a module.</para>
+      <para>A module specification documents the use, design,
+      implementation, and testing of a SCIRun module.</para>
+      <para><acronym>HTML</acronym> and <acronym>PDF</acronym>
+      documention for a module are generated from a module specification.  A
+      module's source code can be partially generated from its module
+      specification.</para>
+      <para>A module specification is written in an
+      <acronym>XML</acronym>-based mark-up language.  The rest of this
+      document describes the grammer and semantics of the module
+      specificition language.</para>
+    </sect1>
+    <sect1>
+      <title><acronym>XML</acronym> Language</title>
+      <para>An <acronym>XML</acronym> formulation of the module
+      specification is used to achieve the following goals:</para>
+      <variablelist>
+	<varlistentry>
+	  <term>Data centric viewpoint</term>
+	  <listitem>
+	    <para>Represent the module specification as a set of
+	    data to be used in several contexts.</para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Uniformity</term>
+	  <listitem>
+	    <para>Specify all modules the same way</para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Validation</term>
+	  <listitem>
+	    <para>Validate (check for correctness and completeness)
+	    module specifications.</para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+      <para>The module specification mark-up language is similar in
+      concept to <acronym>HTML</acronym>, but has a different,
+      smaller set of tags, and a simpler, more regular set of
+      document composition rules.
+      </para>
+    </sect1>
+    <sect1>
+      <title>Module Specification Schema</title>
+      <para>An XML Schema defines a set of elements, element
+      attributes, and the way they may be used in order to produce a
+      valid document.  The module specification language definition
+      is available as a <acronym>DTD</acronym> and as a RELAX NG
+      schema.</para>
+      <para></para>
+      <para>The module specification <acronym>DTD</acronym> can be
+      found, relative to the top of the SCIRun tree, here:
+      <literallayout
+       class="monospaced">src/Dataflow/XML/component.dtd</literallayout>.
+       The RELAX NG schema can be found here: <literallayout
+      class="monospaced">src/Dataflow/XML/component.rnc</literallayout></para>
+    </sect1>
+  </chapter>
+
+  <chapter id="chap.edit-mode-spec">
+    <title>Editing a Module Description</title>
+    <sect1>
+      <title>Emacs</title>
+      <para>Any text editor can be used to create a module
+      specification document's content.  However, because it is easy
+      to get lost in the <quote>noise</quote> of
+      <acronym>XML</acronym> syntax, it is best to use an
+      <acronym>XML</acronym>/Schema (e.g. <acronym>DTD</acronym>,
+      Relax NG) aware editor.  This type of editor will help
+      construct a valid module specification document.  Emacs is one
+      such editor.</para>
+      <para>Emacs supports editing environments
+      <acronym>PSGML</acronym> mode and nxml mode.  These modes
+      highlight <acronym>XML</acronym> syntax, indent nested
+      elements and their content, and suggest elements based
+      on the position of the insertion point.  Nxml mode
+      performs on-the-fly validation (<acronym>PSGML</acronym> does
+      not).</para>
+      <para>Nxml mode can be downloaded from:</para>
+      <literallayout class="monospaced">
+	http://www.thaiopensource.com/download/
+      </literallayout>
+      <para>Information on the use of nxml mode can be found here:
+      <literallayout>
+	http://www.xmlhack.com/read.php?item=2061	  
+      </literallayout></para>
+      <para>PSGML mode can be downloaded from:</para>
+      <literallayout class="monospaced">
+	http://sourceforge.net/projects/psgml/	  
+      </literallayout>
+      <para>Information on the use of psgml mode can be found here:
+      <literallayout class="monospaced">
+	http://www.lysator.liu.se/~lenst/about_psgml/	  
+      </literallayout></para>
+      <para>It is strongly recommended that content is created with
+      one of these editing modes in emacs.  Note also that these modes
+      are excellent for composing any xml (e.g. xhtml, DocBook, etc)
+      content.</para>
+      <para>This author recommends nxml mode because it is simpler to
+      use than psgml mode, performs on-the-fly content validation, and is
+      actively supported.</para>
+    </sect1>
+
+    <sect1>
+      <title>Nxml Prerequisites</title>
+      <sect2>
+	<title>Installation</title>
+	<para>Nxml mode is commonly installed in a sub-directory of
+	emacs'<filename>site-lisp</filename> directory, typically
+	<filename>/usr/share/emacs/sitelisp/nxml</filename>.</para>
+	<para>After installing nxml, file
+	<filename>component.rnc</filename> must be copied to
+	<filename>nxml/schema</filename>.</para>
+	<para>The following lines must be added to file
+	<filename>nxml/schema/schemas.xml</filename>:
+	<literallayout class="monospaced">
+	  &lt;documentElement prefix="" localName="component" typeId="Component"/&gt;
+	  &lt;typeId id="Component" uri="component.rnc"/&gt;
+	</literallayout>
+	</para>
+      </sect2>
+      <sect2>
+	<title>.emacs (nxml mode)</title>
+	<para>The following lisp code should be inserted into Emacs'
+	<filename>.emacs</filename> initialization file prior to using
+	nxml mode:</para>
+	<programlisting>
+(load "nxml/rng-auto")
+(setq auto-mode-alist
+(append
+'(("\\.xml" . nxml-mode)
+("\\.html" . nxml-mode))
+auto-mode-alist))
+(make-face 'nxml-delimited-data-face)
+(make-face 'nxml-name-face)
+(make-face 'nxml-ref-face)
+(make-face 'nxml-delimiter-face)
+(make-face 'nxml-comment-content-face)
+(make-face 'nxml-comment-delimiter-face)
+(set-face-foreground 'nxml-delimited-data-face "grey55")
+(set-face-foreground 'nxml-name-face "#257A25")
+(set-face-foreground 'nxml-ref-face "#9292C9")
+(set-face-foreground 'nxml-delimiter-face "#9292C9")
+(set-face-foreground 'nxml-comment-content-face "orange")
+(set-face-foreground 'nxml-comment-delimiter-face "orange")
+	</programlisting>
+      </sect2>
+    </sect1>
+
+    <sect1>
+      <title>PSGML Prerequisites</title>
+      <sect2>
+	<title>.emacs (<acronym>SGML</acronym> mode)</title>
+	<para>The following lisp code should be inserted into Emacs'
+	<filename>.emacs</filename> initialization file prior to using
+	<acronym>SGML</acronym> mode:</para>
+	<programlisting>
+;; Setup autoloading
+(require 'psgml)
+(autoload 'sgml-mode "psgml" "Major mode to edit SGML files" t)
+(autoload 'xml-mode "psgml" "Major mode to edit XML files." t) 
+(setq auto-mode-alist
+(append
+'(("\\.xml" . xml-mode)
+("\\.html" . sgml-mode))
+auto-mode-alist))
+
+;; Indent tags but not content.
+(setq sgml-indent-step 2)
+(setq sgml-indent-data nil)
+
+;; Create appropriate "faces"
+(make-face 'sgml-start-tag-face) 
+(make-face 'sgml-end-tag-face) 
+(make-face 'sgml-entity-face) 
+(make-face 'sgml-doctype-face)
+(make-face 'sgml-comment-face) 
+
+;; Assign colors to faces
+(set-face-foreground 'sgml-start-tag-face "grey55") 
+(set-face-foreground 'sgml-end-tag-face "seagreen") 
+(set-face-foreground 'sgml-entity-face "yellow2") 
+(set-face-foreground 'sgml-doctype-face "orange3") 
+(set-face-foreground 'sgml-comment-face "lightblue") 
+
+;; Assign faces to sgml objects
+(setq sgml-set-face t)
+(setq sgml-markup-faces 
+'((comment   . sgml-comment-face) 
+(start-tag . sgml-start-tag-face) 
+(end-tag   . sgml-end-tag-face) 
+(doctype   . sgml-doctype-face) 
+(entity    . sgml-entity-face))) 
+	</programlisting>
+      </sect2>
+    </sect1>
+
+    <sect1>
+      <title>Creating a Module Specification</title>
+      <para>To create a new module specification (using nxml mode)
+      follow these steps:</para>
+      <orderedlist>
+	<listitem>
+	  <para>Create a new file and insert the following:</para>
+	  <literallayout class="monospaced">
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;!DOCTYPE component SYSTEM "<replaceable>path-to</replaceable>/component.dtd"&gt;
+
+&lt;component name="<replaceable>component-name</replaceable>" category="<replaceable>category-name</replaceable>"&gt;
+  
+&lt;/component&gt;
+	  </literallayout>
+	</listitem>
+	<listitem>
+	  <para>Save, close, and re-open the file (this will force
+	  nxml/sgml mode to load the proper schema when the file is
+	  re-opened).</para>
+	</listitem>
+	<listitem>
+	  <para>Insert remaining content using features of nxml or
+	  psgml mode.</para>
+	</listitem>
+      </orderedlist>
+    </sect1>
+
+    <sect1>
+      <title>Validating a Module Description</title>
+      <para>A validation service for module specification xml files
+      can be found here:</para>
+      <para><ulink
+      url="http://www.cvrti.utah.edu/~dustman/srvalidate.html">http://www.cvrti.utah.edu/~dustman/srvalidate.html</ulink></para>
+    </sect1>
+
+  </chapter>
+
+  <chapter>
+    <title>Example</title>
+    <para>Huh!</para>
+    <literallayout class="monospaced">
+    </literallayout>
+  </chapter>
+
+</part>

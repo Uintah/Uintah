@@ -1,0 +1,40 @@
+DONE - * Get makefiles in subdirs to read variables in top dir - OR use 
+	 configure to create make.include 
+DONE - * Test on irix machines (rapture & burn)
+DONE - * See if programs will compile & run
+DONE - * Fix endian problem in network
+	- Make client expect things in MSB order, not LSB.
+	- Test network interface driver -> crashes at the end. Why?
+DONE - * Fix Sample Server to allow multiple client connections
+DONE - * Allow compression between server and client
+* Get a better test image for Sample Server
+DONE - * Add FPS info to client
+* Find client image streaming bottleneck
+* When giving data to a renderer, we need to make it explicit whether
+  or not the data is static or dynamic (ie, whether we need to
+  copy/dispose). 
+
+
+========== MULTICAST ==================
+
+DONE - * MulticastConnection.java to be done.
+DONE - * MulticastConnectionDriver.java to be done.
+DONE - * Test the c++ driver with the java driver
+DONE - * Implement new multicast protocol
+DONE - * Enable the callback for multicast in client.
+DONE - * In client, when multicast is enabled, allow the multicast socket to
+	 call the dispatch manager.
+DONE - * Allow client to allow/disallow multicast.
+DONE - * Allow client to switch to reading data from multicast after viewframe.
+
+ * Allow multicast message from server->client
+ * Implement SendDataToClients() with a client list. This will initiate a
+   multicast connection if necessary, and will dump the data to the
+   clients.
+ * Make multicast switch robust - ie, when the server sets up multicast,
+   wait for clients' responses. As they say yea or nay, add them to the 
+   list of those in multicast. Resend the message to those who don't
+   respond after a given time. 
+ * Write some module for the server that tests (listens to a group for a
+   while) for a free group. Set a default group & port & ttl (low!).	
+ * Fix TTL to allow a TTL > 1 - server AND client.

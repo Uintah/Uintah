@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="GenesisMatrixReader" category="Genesis">
+  <overview>
+    <authors>
+      <author>Marty Cole</author>
+    </authors>
+    <summary>
+      Specialized reader to visualize dipoles over time
+    </summary>
+    <description>
+      <p>Version Date: Wed Nov 15 15:56:10 MST 2000</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs>
+    </inputs>
+    <outputs>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

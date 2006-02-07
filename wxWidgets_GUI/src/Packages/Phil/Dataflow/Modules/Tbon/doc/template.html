@@ -1,0 +1,18 @@
+<html>
+<title>Warnings on templated classes</title>
+<body>
+
+<h1>Warnings on templated classes</h1>
+
+This module contains a template class.  Before running the module on 
+a data set, check to be sure the data types match.  If they do not, 
+you will need to recompile after changing the following declaration in
+<i>modulename</i>.cc (usually towards the top of the file):<p>
+
+<center>typedef <i>typeid</i> type;</center><p>
+
+<i>typeid</i> should be changed to match the data type of your data
+set (float, unsigned char, etc.).
+
+</body>
+</html>

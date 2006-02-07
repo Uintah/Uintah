@@ -1,0 +1,122 @@
+#!/bin/csh
+#------------------------------------------------
+#  This script is used to combine the gnuplot data from
+#  multiple patch data into a single file.
+#  For example if we have
+#     BOT_Advection/L-0/patch_0/mat_0/data_files
+#                               mat_1/data_files
+#                       patch_1/mat_0/data_files
+#                               mat_1/data_files
+#  the script will generate
+#
+#     BOT_Advection/L-0/patch_combined/mat_0/data_files
+#                                      mat_1/data_files
+#------------------------------------------------
+#  Check to see that you have gnu sort --version 2.0
+unalias ls
+unalias cd 
+unalias rm
+unalias mv
+
+set test = `uname -s`
+if ( $test != "Linux") then
+  echo "You must run this on a Linux box.  The scripts needs gnu commands. "
+  exit ()
+endif
+
+#------------------------
+# For each data dump locaton (ie BOT_Advection)
+set steps = ( `find . -type d -maxdepth 1 |grep -v  t\[0-9\] |grep -v checkpoints |grep "/"` )
+echo "steps $steps"
+
+foreach step ($steps[*]:q) 
+  cd $step
+  #------------------------
+  # find all time dumps
+  set folders = `ls`
+  foreach folder ($folders[*]:q)
+    cd $folder
+    
+    set levels =   `find . -name 'L-*'`
+    echo "levels $levels"
+    
+    #------------------------
+    #   loop over each level
+    foreach level($levels[*]:q)
+      cd $level
+      
+      # find all patches on that level
+      # copy first patch to patch_combined
+      # find all files not accociated with a matl
+      # find all the matls including 0
+      # find all the files in a matl  
+      /bin/rm -rf patch_combined
+      set patches       = `find . -name 'patch_*'| cut -d"/" -f2`
+      cp -r $patches[1]/ patch_combined/
+      cd patch_combined
+      
+      set no_matl_files = `find . -type f -maxdepth 1 | cut -d"/" -f2`
+      set matls         = `find . -name 'Mat_[0-9]'| cut -d"/" -f2`
+      
+      if ($#matls >0 ) then 
+        cd Mat_0
+        set files         = `find . -type f| cut -d"/" -f2`
+        cd ..
+      else 
+        set files        = ""
+      endif
+
+      #------------------------
+      #  spew what I've found
+      echo `pwd`
+      echo "Level:                             "$level
+      echo "Files:                             "$files
+      echo "Files not associated with a matl:  "$no_matl_files
+      echo "Patches:                           "$patches
+      echo "matls:                             "$matls
+      
+      shift patches  # you already copied patch[1] to patch_combined
+      #------------------------
+      # loop over each patch and each matl
+      # and combine the files
+      foreach patch ( $patches[*]:q )
+        foreach mat ( $matls[*]:q )
+          foreach file2 ( $files[*]:q )
+            if ( -e ../$patch/$mat/$file2 ) then 
+              #echo "cat  ../$patch/$mat/$file2 >> $mat/$file2"
+              cat ../$patch/$mat/$file2 >> $mat/$file2
+
+              #echo "sort -g $mat/$file2 > $mat/file_tmp"
+              sort -g $mat/$file2 > $mat/file_tmp
+
+              #echo "mv   $mat/file_tmp $mat/$file2"
+              mv $mat/file_tmp $mat/$file2
+            endif
+          end
+        end
+      end
+
+      #------------------------
+      # loop over each patch 
+      # and combine the files not assocated with no Matls
+      foreach patch ( $patches[*]:q )
+        foreach file1 ( $no_matl_files[*]:q ) 
+          #echo "cat  ../$patch/$file1 >> $file1"
+          cat ../$patch/$file1 >> $file1
+
+          #echo "sort -g $file1 > file_tmp"
+          sort -g $file1 > file_tmp
+
+          #echo "mv   file_tmp $file1"
+          mv file_tmp $file1  
+        end
+      end
+      cd ../..
+    end # each level
+    cd ..
+  end  # each folder (timedumps)
+  cd ..
+end  #each step
+
+
+exit

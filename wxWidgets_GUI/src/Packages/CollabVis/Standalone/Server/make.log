@@ -1,0 +1,48 @@
+( cd Logging ; make  ) 
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Logging'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Logging'
+( cd XML ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/XML'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/XML'
+( cd Compression ; make  ) 
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Compression'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Compression'
+( cd Exceptions ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Exceptions'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Exceptions'
+( cd Thread ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Thread'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Thread'
+( cd Malloc ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Malloc'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Malloc'
+( cd Properties ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Properties'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Properties'
+( cd Network ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Network'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Network'
+( cd Message ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Message'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Message'
+( cd Rendering ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Rendering'
+make[1]: Nothing to be done for `all'.
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Rendering'
+( cd Drivers ; make  )
+make[1]: Entering directory `/home/sci/simpson/SV/LAST/Server/Drivers'
+make[1]: Leaving directory `/home/sci/simpson/SV/LAST/Server/Drivers'
+
+
+
+
+

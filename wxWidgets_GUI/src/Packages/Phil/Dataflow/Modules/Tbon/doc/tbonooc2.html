@@ -1,0 +1,53 @@
+<html>
+<title>TBONOOC2 module</title>
+<body>
+
+<h1>TBONOOC2</h1>
+
+<b>Description:</b><p>
+
+<a href="template.html">Template class</a> (Please read!)<p>
+
+Implementation of another out-of-core algorithm based on the Temporal
+Branch-on-Need Octree (T-BON) for rectilinear scalar fields.<p>
+
+Some preprocessing must be done before isosurface extraction.
+This preprocessing is DIFFERENT from that of the 
+<a href="tbon.html">TBON</a> and
+<a href="tbonooc1.html">TBONOOC1</a> modules - don't just use the files
+resulting from those preprocess.  Your results will be incorrect.
+<p>
+
+During execution (run the module on an execution metafile), the
+user controls isovalue and time value sliders.  Nodes and data are read
+in whenever needed to construct the current isosurface, otherwise
+left on disk.  Nodes and data are read in in blocks to improve I/O
+performance (again, see the thesis).  A static data structure holds
+the nodes, while a dynamic data structure is
+used to hold data blocks (see algorithm 2 in the thesis).
+A Marching Cubes-type 
+interpolation is performed to create triangles for rendering.<p>
+
+The maximum size for the dynamic data structure that holds the data
+bricks is declared statically in TbonOOC2.cc:<p>
+
+<pre>
+static const int DATABRICKS = &lt size of data list &gt;
+</pre><p>
+
+The <b>minimum</b> size is <b>8</b>.<p>
+
+
+<p><b>Metafile format:</b><p>
+
+Although the results of preprocessing are not the same, the metafile
+format for TBONOOC2 is the same as that of the <a href="tbon.html">
+TBON</a> module.<p>
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 2 February 2000
+
+
+</body>
+</html>
