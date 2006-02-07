@@ -259,24 +259,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 
     // wall boundary type
     int celltypeval;
-    {
-      if (d_wallBoundary) {
-        int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
-        for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
-	  Box geomBox = piece->getBoundingBox();
-	  Box b = geomBox.intersect(patchBox);
-	  // check for another geometry
-	  if (!(b.degenerate())) {
-	    CellIterator iter = patch->getCellCenterIterator(b);
-	    IntVector idxLo = iter.begin();
-	    IntVector idxHi = iter.end() - IntVector(1,1,1);
-	    celltypeval = d_wallBdry->d_cellTypeID;
-	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
-	  }
-        }
-      }
-    }
     // initialization for pressure boundary
     {
       if (d_pressureBoundary) {
@@ -294,6 +276,30 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 	  }
 	}
+      }
+    }
+    {
+      if (d_wallBoundary) {
+        int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
+        for (int ii = 0; ii < nofGeomPieces; ii++) {
+	  GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
+	  Box geomBox = piece->getBoundingBox();
+	  Box b = geomBox.intersect(patchBox);
+	  // check for another geometry
+	  if (!(b.degenerate())) {
+/*	    CellIterator iter = patch->getCellCenterIterator(b);
+	    IntVector idxLo = iter.begin();
+	    IntVector idxHi = iter.end() - IntVector(1,1,1);
+	    celltypeval = d_wallBdry->d_cellTypeID;
+	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);*/
+	    for (CellIterator iter = patch->getCellCenterIterator(b);
+	         !iter.done(); iter++) {
+	      Point p = patch->cellPosition(*iter);
+	      if (piece->inside(p)) 
+	        cellType[*iter] = d_wallBdry->d_cellTypeID;
+	    }
+	  }
+        }
       }
     }
     // initialization for outlet boundary
