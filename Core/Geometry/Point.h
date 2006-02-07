@@ -130,6 +130,14 @@ public:
 
 }; // end class Point
 
+
+// Actual declarations of these functions (as 'friend' above doesn't
+// (depending on the compiler) actually declare them.
+SCISHARE Point AffineCombination(const Point&, double, const Point&, double,
+                                 const Point&, double, const Point&, double);
+SCISHARE Point AffineCombination(const Point&, double, const Point&, double, const Point&, double);
+SCISHARE Point AffineCombination(const Point&, double, const Point&, double);
+
 inline 
 Point operator*(double d, const Point &p) {
   return p*d;
