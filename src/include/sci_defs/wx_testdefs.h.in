@@ -27,10 +27,10 @@
 */
 
 
-#ifndef SCI_QT_DEFS_H
-#define SCI_QT_DEFS_H
+#ifndef SCI_WX_DEFS_H
+#define SCI_WX_DEFS_H
 
-@DEF_QT@
+@DEF_WX@
 
 #endif
 
