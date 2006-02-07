@@ -509,8 +509,8 @@ OpenGL::render_and_save_image(int x, int y,
   }
 #endif
 
-  cerr << "Saving Image: " << fname << " with width=" << x
-       << " and height=" << y <<"...\n";
+  cerr << "Saving image " << fname << " with width=" << x
+       << " and height=" << y <<".\n";
 
 #ifndef HAVE_PBUFFER
   // Don't need to raise if using pbuffer.
