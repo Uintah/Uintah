@@ -41,11 +41,11 @@
  */
 
 /*
-  A structured grid is a dataset with regular topology but with irregular 
+  A structured grid is a dataset with regular topology but with irregular
   geometry.
 
   The grid may have any shape but can not be overlapping or self-intersecting.
-  
+
   The topology of a structured grid is represented using 2D, or 3D vector with
   the points being stored in an index based array. The faces (quadrilaterals)
   and cells (Hexahedron) are implicitly define based based upon their indexing.
@@ -54,7 +54,7 @@
 
   For more information on datatypes see Schroeder, Martin, and Lorensen,
   "The Visualization Toolkit", Prentice Hall, 1998.
- */
+*/
 
 
 #ifndef SCI_project_StructHexVolMesh_h
@@ -70,6 +70,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+
 namespace SCIRun {
 
 using std::string;
@@ -79,99 +80,97 @@ class StructHexVolMesh : public LatVolMesh<Basis>
 {
 public:
   typedef LockingHandle<StructHexVolMesh<Basis> > handle_type;
-  
+
   StructHexVolMesh();
   StructHexVolMesh(unsigned int i, unsigned int j, unsigned int k);
   StructHexVolMesh(const StructHexVolMesh<Basis> &copy);
-  virtual StructHexVolMesh *clone() 
+  virtual StructHexVolMesh *clone()
   { return new StructHexVolMesh<Basis>(*this); }
   virtual ~StructHexVolMesh() {}
 
 
-  //  friend class StructHextVolMesh::ElemData;
-  
-  class ElemData 
+  class ElemData
   {
   public:
-    ElemData(const StructHexVolMesh<Basis>& msh, 
-	     const typename LatVolMesh<Basis>::Cell::index_type ind) :
+    ElemData(const StructHexVolMesh<Basis>& msh,
+             const typename LatVolMesh<Basis>::Cell::index_type ind) :
       mesh_(msh),
       index_(ind)
     {}
-    
+
     // the following designed to coordinate with ::get_nodes
-    inline 
+    inline
     unsigned node0_index() const {
-      return (index_.i_ + mesh_.get_ni()*index_.j_ + 
-	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+      return (index_.i_ + mesh_.get_ni()*index_.j_ +
+              mesh_.get_ni()*mesh_.get_nj()*index_.k_);
     }
-    inline 
+    inline
     unsigned node1_index() const {
-      return (index_.i_+ 1 + mesh_.get_ni()*index_.j_ + 
-	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+      return (index_.i_+ 1 + mesh_.get_ni()*index_.j_ +
+              mesh_.get_ni()*mesh_.get_nj()*index_.k_);
     }
-    inline 
+    inline
     unsigned node2_index() const {
-      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) + 
-	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
-      
+      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) +
+              mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+
     }
-    inline 
+    inline
     unsigned node3_index() const {
-      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) + 
-	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) +
+              mesh_.get_ni()*mesh_.get_nj()*index_.k_);
     }
-    inline 
+    inline
     unsigned node4_index() const {
-      return (index_.i_ + mesh_.get_ni()*index_.j_ + 
-	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+      return (index_.i_ + mesh_.get_ni()*index_.j_ +
+              mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
-    inline 
+    inline
     unsigned node5_index() const {
-      return (index_.i_ + 1 + mesh_.get_ni()*index_.j_ + 
-	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+      return (index_.i_ + 1 + mesh_.get_ni()*index_.j_ +
+              mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
 
-    inline 
+    inline
     unsigned node6_index() const {
-      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) + 
-	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) +
+              mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
-    inline 
+    inline
     unsigned node7_index() const {
-      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) + 
-	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) +
+              mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
 
-    inline 
+    inline
     const Point node0() const {
       return mesh_.points_(index_.i_, index_.j_, index_.k_);
     }
-    inline 
+    inline
     const Point node1() const {
       return mesh_.points_(index_.i_+1, index_.j_, index_.k_);
     }
-    inline 
+    inline
     const Point node2() const {
       return mesh_.points_(index_.i_+1, index_.j_+1, index_.k_);
     }
-    inline 
+    inline
     const Point node3() const {
       return mesh_.points_(index_.i_, index_.j_+1, index_.k_);
     }
-    inline 
+    inline
     const Point node4() const {
       return mesh_.points_(index_.i_, index_.j_, index_.k_+1);
     }
-    inline 
+    inline
     const Point node5() const {
       return mesh_.points_(index_.i_+1, index_.j_, index_.k_+1);
     }
-    inline 
+    inline
     const Point node6() const {
       return mesh_.points_(index_.i_+1, index_.j_+1, index_.k_+1);
     }
-    inline 
+    inline
     const Point node7() const {
       return mesh_.points_(index_.i_, index_.j_+1, index_.k_+1);
     }
@@ -195,78 +194,78 @@ public:
   }
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, 
-		  const typename LatVolMesh<Basis>::Node::index_type &) const;
+  void get_center(Point &,
+                  const typename LatVolMesh<Basis>::Node::index_type &) const;
   void get_center(Point &, typename LatVolMesh<Basis>::Edge::index_type) const;
   void get_center(Point &, typename LatVolMesh<Basis>::Face::index_type) const;
-  void get_center(Point &, 
-		  const typename LatVolMesh<Basis>::Cell::index_type &) const;
+  void get_center(Point &,
+                  const typename LatVolMesh<Basis>::Cell::index_type &) const;
 
   double get_size(const typename LatVolMesh<Basis>::Node::index_type &idx) const;
   double get_size(typename LatVolMesh<Basis>::Edge::index_type idx) const;
   double get_size(typename LatVolMesh<Basis>::Face::index_type idx) const;
   double get_size(
-	       const typename LatVolMesh<Basis>::Cell::index_type &idx) const;
-  double get_length(typename LatVolMesh<Basis>::Edge::index_type idx) const 
+               const typename LatVolMesh<Basis>::Cell::index_type &idx) const;
+  double get_length(typename LatVolMesh<Basis>::Edge::index_type idx) const
   { return get_size(idx); };
-  double get_area(typename LatVolMesh<Basis>::Face::index_type idx) const 
+  double get_area(typename LatVolMesh<Basis>::Face::index_type idx) const
   { return get_size(idx); };
-  double get_volume(const 
-		    typename LatVolMesh<Basis>::Cell::index_type &i) const 
+  double get_volume(const
+                    typename LatVolMesh<Basis>::Cell::index_type &i) const
   { return get_size(i); };
 
   bool locate(typename LatVolMesh<Basis>::Node::index_type &, const Point &);
-  bool locate(typename LatVolMesh<Basis>::Edge::index_type &, 
-	      const Point &) const 
+  bool locate(typename LatVolMesh<Basis>::Edge::index_type &,
+              const Point &) const
   { return false; }
-  bool locate(typename LatVolMesh<Basis>::Face::index_type &, 
-	      const Point &) const 
+  bool locate(typename LatVolMesh<Basis>::Face::index_type &,
+              const Point &) const
   { return false; }
   bool locate(typename LatVolMesh<Basis>::Cell::index_type &, const Point &);
 
 
-  int get_weights(const Point &, 
-		  typename LatVolMesh<Basis>::Node::array_type &, double *);
-  int get_weights(const Point &, 
-		  typename LatVolMesh<Basis>::Edge::array_type &, double *)
+  int get_weights(const Point &,
+                  typename LatVolMesh<Basis>::Node::array_type &, double *);
+  int get_weights(const Point &,
+                  typename LatVolMesh<Basis>::Edge::array_type &, double *)
   { ASSERTFAIL("StructHexVolMesh::get_weights for edges isn't supported"); }
-  int get_weights(const Point &, 
-		  typename LatVolMesh<Basis>::Face::array_type &, double *)
+  int get_weights(const Point &,
+                  typename LatVolMesh<Basis>::Face::array_type &, double *)
   { ASSERTFAIL("StructHexVolMesh::get_weights for faces isn't supported"); }
-  int get_weights(const Point &, 
-		  typename LatVolMesh<Basis>::Cell::array_type &, double *);
+  int get_weights(const Point &,
+                  typename LatVolMesh<Basis>::Cell::array_type &, double *);
 
-  void get_point(Point &point, 
-	      const typename LatVolMesh<Basis>::Node::index_type &index) const
+  void get_point(Point &point,
+              const typename LatVolMesh<Basis>::Node::index_type &index) const
   { get_center(point, index); }
-  void set_point(const Point &point, 
-		 const typename LatVolMesh<Basis>::Node::index_type &index);
+  void set_point(const Point &point,
+                 const typename LatVolMesh<Basis>::Node::index_type &index);
 
 
-  void get_random_point(Point &, 
-			const typename LatVolMesh<Basis>::Elem::index_type &, 
-			int) const
+  void get_random_point(Point &,
+                        const typename LatVolMesh<Basis>::Elem::index_type &,
+                        int) const
   { ASSERTFAIL("not implemented") }
 
-  bool get_coords(vector<double> &coords, 
-		  const Point &p,
-		  typename LatVolMesh<Basis>::Elem::index_type idx) const
+  bool get_coords(vector<double> &coords,
+                  const Point &p,
+                  typename LatVolMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
-    return this->basis_.get_coords(coords, p, ed); 
+    return this->basis_.get_coords(coords, p, ed);
   }
-  
-  void interpolate(Point &pt, const vector<double> &coords, 
-		   typename LatVolMesh<Basis>::Elem::index_type idx) const
+
+  void interpolate(Point &pt, const vector<double> &coords,
+                   typename LatVolMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     pt = this->basis_.interpolate(coords, ed);
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords, 
-		typename LatVolMesh<Basis>::Cell::index_type idx, 
-		vector<Point> &J) const
+  void derivate(const vector<double> &coords,
+                typename LatVolMesh<Basis>::Cell::index_type idx,
+                vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     this->basis_.derivate(coords, ed, J);
@@ -283,7 +282,7 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
-  static const TypeDescription* elem_type_description() 
+  static const TypeDescription* elem_type_description()
   { return elem_type_description(); }
 
   // returns a StructHexVolMesh
@@ -292,19 +291,19 @@ public:
 private:
   void compute_grid();
 
-  bool inside8_p(typename LatVolMesh<Basis>::Cell::index_type i, 
-		 const Point &p) const;
-  double polygon_area(const typename LatVolMesh<Basis>::Node::array_type &, 
-		      const Vector) const;
-  double pyramid_volume(const typename LatVolMesh<Basis>::Node::array_type &, 
-			const Point &)const;
-  void get_face_weights(double *w, 
-		   const typename LatVolMesh<Basis>::Node::array_type &nodes,
-			const Point &p, int i0, int i1, int i2, int i3);
+  bool inside8_p(typename LatVolMesh<Basis>::Cell::index_type i,
+                 const Point &p) const;
+  double polygon_area(const typename LatVolMesh<Basis>::Node::array_type &,
+                      const Vector) const;
+  double pyramid_volume(const typename LatVolMesh<Basis>::Node::array_type &,
+                        const Point &)const;
+  void get_face_weights(double *w,
+                   const typename LatVolMesh<Basis>::Node::array_type &nodes,
+                        const Point &p, int i0, int i1, int i2, int i3);
   const Point &point(
-		const typename LatVolMesh<Basis>::Node::index_type &i) const 
+                const typename LatVolMesh<Basis>::Node::index_type &i) const
   { return points_(i.i_, i.j_, i.k_); }
-  
+
 
   Array3<Point> points_;
 
@@ -317,9 +316,10 @@ private:
 
 
 template <class Basis>
-PersistentTypeID 
-StructHexVolMesh<Basis>::type_id(StructHexVolMesh<Basis>::type_name(-1), 
-				 "Mesh", maker);
+PersistentTypeID
+StructHexVolMesh<Basis>::type_id(StructHexVolMesh<Basis>::type_name(-1),
+                                 "Mesh", maker);
+
 
 template <class Basis>
 StructHexVolMesh<Basis>::StructHexVolMesh():
@@ -327,19 +327,23 @@ StructHexVolMesh<Basis>::StructHexVolMesh():
   grid_lock_("StructHexVolMesh grid lock"),
   locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
-{}
+{
+}
+
 
 template <class Basis>
 StructHexVolMesh<Basis>::StructHexVolMesh(unsigned int i,
-					  unsigned int j,
-					  unsigned int k) :
+                                          unsigned int j,
+                                          unsigned int k) :
   LatVolMesh<Basis>(i, j, k, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
   points_(i, j, k),
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
   locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
-{}
+{
+}
+
 
 template <class Basis>
 StructHexVolMesh<Basis>::StructHexVolMesh(const StructHexVolMesh<Basis> &copy):
@@ -360,6 +364,7 @@ StructHexVolMesh<Basis>::StructHexVolMesh(const StructHexVolMesh<Basis> &copy):
   lcopy.grid_lock_.unlock();
 }
 
+
 template <class Basis>
 bool
 StructHexVolMesh<Basis>::get_dim(vector<unsigned int> &array) const
@@ -373,6 +378,7 @@ StructHexVolMesh<Basis>::get_dim(vector<unsigned int> &array) const
 
   return true;
 }
+
 
 template <class Basis>
 BBox
@@ -392,6 +398,7 @@ StructHexVolMesh<Basis>::get_bounding_box() const
   }
   return result;
 }
+
 
 template <class Basis>
 void
@@ -415,6 +422,7 @@ StructHexVolMesh<Basis>::transform(const Transform &t)
 
 }
 
+
 template <class Basis>
 void
 StructHexVolMesh<Basis>::get_center(Point &result, const typename LatVolMesh<Basis>::Node::index_type &idx) const
@@ -432,7 +440,7 @@ StructHexVolMesh<Basis>::get_center(Point &result, typename LatVolMesh<Basis>::E
   Point p1;
   get_center(result, arr[0]);
   get_center(p1, arr[1]);
-  
+
   result.asVector() += p1.asVector();
   result.asVector() *= 0.5;
 }
@@ -483,8 +491,8 @@ StructHexVolMesh<Basis>::get_center(Point &result, const typename LatVolMesh<Bas
 template <class Basis>
 bool
 StructHexVolMesh<Basis>::inside8_p(
-		             typename LatVolMesh<Basis>::Cell::index_type idx, 
-			     const Point &p) const
+                             typename LatVolMesh<Basis>::Cell::index_type idx,
+                             const Point &p) const
 {
   static const int table[6][3][3] =
   {{{0, 0, 0},
@@ -510,24 +518,24 @@ StructHexVolMesh<Basis>::inside8_p(
    {{1, 1, 1},
     {0, 1, 1},
     {1, 1, 0}}};
-  
+
   Point center;
   get_center(center, idx);
 
   for (int i = 0; i < 6; i++)
   {
     typename LatVolMesh<Basis>::Node::index_type n0(this,
-			idx.i_ + table[i][0][0],
-			idx.j_ + table[i][0][1],
-			idx.k_ + table[i][0][2]);
+                        idx.i_ + table[i][0][0],
+                        idx.j_ + table[i][0][1],
+                        idx.k_ + table[i][0][2]);
     typename LatVolMesh<Basis>::Node::index_type n1(this,
-			idx.i_ + table[i][1][0],
-			idx.j_ + table[i][1][1],
-			idx.k_ + table[i][1][2]);
+                        idx.i_ + table[i][1][0],
+                        idx.j_ + table[i][1][1],
+                        idx.k_ + table[i][1][2]);
     typename LatVolMesh<Basis>::Node::index_type n2(this,
-			idx.i_ + table[i][2][0],
-			idx.j_ + table[i][2][1],
-			idx.k_ + table[i][2][2]);
+                        idx.i_ + table[i][2][0],
+                        idx.j_ + table[i][2][1],
+                        idx.k_ + table[i][2][2]);
 
     Point p0, p1, p2;
     get_center(p0, n0);
@@ -557,8 +565,8 @@ StructHexVolMesh<Basis>::inside8_p(
 template <class Basis>
 bool
 StructHexVolMesh<Basis>::locate(
-			    typename LatVolMesh<Basis>::Cell::index_type &cell,
-			    const Point &p)
+                            typename LatVolMesh<Basis>::Cell::index_type &cell,
+                            const Point &p)
 {
   if (this->basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   // Check last cell found first.  Copy cache to cell first so that we
@@ -566,14 +574,14 @@ StructHexVolMesh<Basis>::locate(
   // context switch is that cache is not found.
   cell = locate_cache_;
   if (cell > typename LatVolMesh<Basis>::Cell::index_type(this, 0, 0, 0) &&
-      cell < typename LatVolMesh<Basis>::Cell::index_type(this, this->ni_ -1, 
-							  this->nj_ - 1, 
-							  this->nk_ - 1) &&
+      cell < typename LatVolMesh<Basis>::Cell::index_type(this, this->ni_ -1,
+                                                          this->nj_ - 1,
+                                                          this->nk_ - 1) &&
       inside8_p(cell, p))
   {
       return true;
   }
-  
+
   ASSERT(synchronized_ & Mesh::LOCATE_E);
   cell.mesh_ = this;
 
@@ -584,7 +592,7 @@ StructHexVolMesh<Basis>::locate(
       to_index(idx, *iter);
 
       if( inside8_p(idx, p) ) {
-	cell = idx;
+        cell = idx;
         locate_cache_ = cell;
         return true;
       }
@@ -606,17 +614,17 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &no
     typename LatVolMesh<Basis>::Node::array_type nodes;
     get_nodes(nodes, ci);
 
-    double dmin = 
+    double dmin =
       (p - points_(nodes[0].i_, nodes[0].j_, nodes[0].k_)).length2();
     node = nodes[0];
     for (unsigned int i = 1; i < nodes.size(); i++)
     {
       const double d =
-	(p - points_(nodes[i].i_, nodes[i].j_, nodes[i].k_)).length2();
+        (p - points_(nodes[i].i_, nodes[i].j_, nodes[i].k_)).length2();
       if (d < dmin)
       {
-	dmin = d;
-	node = nodes[i];
+        dmin = d;
+        node = nodes[i];
       }
     }
     return true;
@@ -634,12 +642,12 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &no
 
     while (ni != nie)
     {
-      const double dist = 
-	(p - points_((*ni).i_, (*ni).j_, (*ni).k_)).length2();
+      const double dist =
+        (p - points_((*ni).i_, (*ni).j_, (*ni).k_)).length2();
       if (dist < min_dist)
       {
-	node = *ni;
-	min_dist = dist;
+        node = *ni;
+        min_dist = dist;
       }
       ++ni;
     }
@@ -647,11 +655,12 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &no
   }
 }
 
+
 template <class Basis>
 int
-StructHexVolMesh<Basis>::get_weights(const Point &p, 
-			     typename LatVolMesh<Basis>::Node::array_type &l, 
-				     double *w)
+StructHexVolMesh<Basis>::get_weights(const Point &p,
+                             typename LatVolMesh<Basis>::Node::array_type &l,
+                                     double *w)
 {
   typename LatVolMesh<Basis>::Cell::index_type idx;
   if (locate(idx, p))
@@ -666,11 +675,12 @@ StructHexVolMesh<Basis>::get_weights(const Point &p,
   return 0;
 }
 
+
 template <class Basis>
 int
-StructHexVolMesh<Basis>::get_weights(const Point &p, 
-			     typename LatVolMesh<Basis>::Cell::array_type &l, 
-				     double *w)
+StructHexVolMesh<Basis>::get_weights(const Point &p,
+                             typename LatVolMesh<Basis>::Cell::array_type &l,
+                                     double *w)
 {
   typename LatVolMesh<Basis>::Cell::index_type idx;
   if (locate(idx, p))
@@ -683,8 +693,8 @@ StructHexVolMesh<Basis>::get_weights(const Point &p,
   return 0;
 }
 
-//===================================================================
 
+//===================================================================
 // area3D_Polygon(): computes the area of a 3D planar polygon
 //    Input:  int n = the number of vertices in the polygon
 //            Point* V = an array of n+2 vertices in a plane
@@ -698,59 +708,60 @@ StructHexVolMesh<Basis>::get_weights(const Point &p,
 // SoftSurfer makes no warranty for this code, and cannot be held
 // liable for any real or imagined damage resulting from its use.
 // Users of this code must verify correctness for their application.
- 
+
 template <class Basis>
 double
 StructHexVolMesh<Basis>::polygon_area(const typename LatVolMesh<Basis>::Node::array_type &ni, const Vector N) const
 {
   double area = 0;
-    double an, ax, ay, az;  // abs value of normal and its coords
-    int   coord;           // coord to ignore: 1=x, 2=y, 3=z
-    unsigned int   i, j, k;         // loop indices
-    const unsigned int n = ni.size();
+  double an, ax, ay, az;  // abs value of normal and its coords
+  int   coord;           // coord to ignore: 1=x, 2=y, 3=z
+  unsigned int   i, j, k;         // loop indices
+  const unsigned int n = ni.size();
 
-    // select largest abs coordinate to ignore for projection
-    ax = (N.x()>0 ? N.x() : -N.x());     // abs x-coord
-    ay = (N.y()>0 ? N.y() : -N.y());     // abs y-coord
-    az = (N.z()>0 ? N.z() : -N.z());     // abs z-coord
+  // select largest abs coordinate to ignore for projection
+  ax = (N.x()>0 ? N.x() : -N.x());     // abs x-coord
+  ay = (N.y()>0 ? N.y() : -N.y());     // abs y-coord
+  az = (N.z()>0 ? N.z() : -N.z());     // abs z-coord
 
-    coord = 3;                     // ignore z-coord
-    if (ax > ay) {
-        if (ax > az) coord = 1;    // ignore x-coord
-    }
-    else if (ay > az) coord = 2;   // ignore y-coord
+  coord = 3;                     // ignore z-coord
+  if (ax > ay) {
+    if (ax > az) coord = 1;    // ignore x-coord
+  }
+  else if (ay > az) coord = 2;   // ignore y-coord
 
-    // compute area of the 2D projection
-    for (i=1, j=2, k=0; i<=n; i++, j++, k++)
-        switch (coord) {
-        case 1:
-            area += (point(ni[i%n]).y() *
-		     (point(ni[j%n]).z() - point(ni[k%n]).z()));
-            continue;
-        case 2:
-            area += (point(ni[i%n]).x() * 
-		     (point(ni[j%n]).z() - point(ni[k%n]).z()));
-            continue;
-        case 3:
-            area += (point(ni[i%n]).x() * 
-		     (point(ni[j%n]).y() - point(ni[k%n]).y()));
-            continue;
-        }
-
-    // scale to get area before projection
-    an = sqrt( ax*ax + ay*ay + az*az);  // length of normal vector
+  // compute area of the 2D projection
+  for (i=1, j=2, k=0; i<=n; i++, j++, k++)
     switch (coord) {
     case 1:
-        area *= (an / (2*ax));
-        break;
+      area += (point(ni[i%n]).y() *
+               (point(ni[j%n]).z() - point(ni[k%n]).z()));
+      continue;
     case 2:
-        area *= (an / (2*ay));
-        break;
+      area += (point(ni[i%n]).x() *
+               (point(ni[j%n]).z() - point(ni[k%n]).z()));
+      continue;
     case 3:
-        area *= (an / (2*az));
+      area += (point(ni[i%n]).x() *
+               (point(ni[j%n]).y() - point(ni[k%n]).y()));
+      continue;
     }
-    return area;
+
+  // scale to get area before projection
+  an = sqrt( ax*ax + ay*ay + az*az);  // length of normal vector
+  switch (coord) {
+  case 1:
+    area *= (an / (2*ax));
+    break;
+  case 2:
+    area *= (an / (2*ay));
+    break;
+  case 3:
+    area *= (an / (2*az));
+  }
+  return area;
 }
+
 
 template <class Basis>
 double
@@ -758,7 +769,8 @@ StructHexVolMesh<Basis>::pyramid_volume(const typename LatVolMesh<Basis>::Node::
 {
   Vector e1(point(face[1])-point(face[0]));
   Vector e2(point(face[1])-point(face[2]));
-  if (Cross(e1,e2).length2()>0.0) {
+  if (Cross(e1,e2).length2()>0.0)
+  {
     Plane plane(point(face[0]), point(face[1]), point(face[2]));
     //double dist = plane.eval_point(p);
     return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
@@ -772,16 +784,17 @@ StructHexVolMesh<Basis>::pyramid_volume(const typename LatVolMesh<Basis>::Node::
   return 0.0;
 }
 
-extern   
+
+extern
 double
 tri_area(const Point &a, const Point &b, const Point &c);
 
 template <class Basis>
 void
 StructHexVolMesh<Basis>::get_face_weights(double *w,
-		    const typename LatVolMesh<Basis>::Node::array_type &nodes,
-					  const Point &p,
-					  int i0, int i1, int i2, int i3)
+                    const typename LatVolMesh<Basis>::Node::array_type &nodes,
+                                          const Point &p,
+                                          int i0, int i1, int i2, int i3)
 {
   for (unsigned int j = 0; j < 8; j++)
     w[j] = 0.0;
@@ -843,7 +856,6 @@ StructHexVolMesh<Basis>::get_face_weights(double *w,
   w[i2] *= suminv;
   w[i3] *= suminv;
 }
-  
 
 
 template <class Basis>
@@ -876,7 +888,7 @@ StructHexVolMesh<Basis>::compute_grid()
       box.reset();
       for (unsigned int i = 0; i < nodes.size(); i++)
       {
-	box.extend(points_(nodes[i].i_, nodes[i].j_, nodes[i].k_));
+        box.extend(points_(nodes[i].i_, nodes[i].j_, nodes[i].k_));
       }
       const Point padmin(box.min() - cell_epsilon);
       const Point padmax(box.max() + cell_epsilon);
@@ -894,7 +906,6 @@ StructHexVolMesh<Basis>::compute_grid()
   synchronized_ |= Mesh::LOCATE_E;
   grid_lock_.unlock();
 }
-
 
 
 template <class Basis>
@@ -917,7 +928,7 @@ StructHexVolMesh<Basis>::get_size(typename LatVolMesh<Basis>::Edge::index_type i
 
   return (p1.asVector() - p0.asVector()).length();
 }
-  
+
 
 template <class Basis>
 double
@@ -953,11 +964,10 @@ StructHexVolMesh<Basis>::get_size(const typename LatVolMesh<Basis>::Cell::index_
 }
 
 
-
 template <class Basis>
 void
-StructHexVolMesh<Basis>::set_point(const Point &p, 
-		       const typename LatVolMesh<Basis>::Node::index_type &i)
+StructHexVolMesh<Basis>::set_point(const Point &p,
+                       const typename LatVolMesh<Basis>::Node::index_type &i)
 {
   points_(i.i_, i.j_, i.k_) = p;
 }
@@ -970,7 +980,7 @@ StructHexVolMesh<Basis>::synchronize(unsigned int tosync)
   if (tosync & Mesh::LOCATE_E && !(synchronized_ & Mesh::LOCATE_E))
     compute_grid();
   return true;
-}  
+}
 
 
 #define STRUCT_HEX_VOL_MESH_VERSION 1
@@ -987,6 +997,7 @@ StructHexVolMesh<Basis>::io(Piostream& stream)
   stream.end_class();
 }
 
+
 template <class Basis>
 const string
 StructHexVolMesh<Basis>::type_name(int n)
@@ -1002,11 +1013,12 @@ StructHexVolMesh<Basis>::type_name(int n)
     static const string nm("StructHexVolMesh");
     return nm;
   }
-  else 
+  else
   {
     return find_type_name((Basis *)0);
   }
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1019,12 +1031,13 @@ get_type_description(StructHexVolMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("StructHexVolMesh", subs,
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1033,6 +1046,7 @@ StructHexVolMesh<Basis>::get_type_description() const
   return SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
 }
 
+
 template <class Basis>
 const TypeDescription*
 StructHexVolMesh<Basis>::node_type_description()
@@ -1040,15 +1054,16 @@ StructHexVolMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1057,15 +1072,16 @@ StructHexVolMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1074,15 +1090,16 @@ StructHexVolMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1091,12 +1108,12 @@ StructHexVolMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }

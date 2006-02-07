@@ -76,23 +76,23 @@ public:
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
     typedef StackVector<index_type, 8>  array_type;
-  };					
-					
-  struct Edge {				
+  };
+
+  struct Edge {
     typedef EdgeIndex<under_type>       index_type;
     typedef EdgeIterator<under_type>    iterator;
     typedef EdgeIndex<under_type>       size_type;
     typedef vector<index_type>          array_type;
-  };					
-					
-  struct Face {				
+  };
+
+  struct Face {
     typedef FaceIndex<under_type>       index_type;
     typedef FaceIterator<under_type>    iterator;
     typedef FaceIndex<under_type>       size_type;
     typedef vector<index_type>          array_type;
-  };					
-					
-  struct Cell {				
+  };
+
+  struct Cell {
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
@@ -101,48 +101,48 @@ public:
 
   typedef Cell Elem;
   friend class ElemData;
-  
-  class ElemData 
+
+  class ElemData
   {
   public:
-    ElemData(const HexVolMesh<Basis>& msh, 
-	     const typename Cell::index_type ind) :
+    ElemData(const HexVolMesh<Basis>& msh,
+             const typename Cell::index_type ind) :
       mesh_(msh),
       index_(ind)
     {
       mesh_.get_edges(edges_, index_);
     }
-    
+
     // the following designed to coordinate with ::get_nodes
-    inline 
+    inline
     unsigned node0_index() const {
       return mesh_.cells_[index_ * 8];
     }
-    inline 
+    inline
     unsigned node1_index() const {
       return mesh_.cells_[index_ * 8 + 1];
     }
-    inline 
+    inline
     unsigned node2_index() const {
       return mesh_.cells_[index_ * 8 + 2];
     }
-    inline 
+    inline
     unsigned node3_index() const {
       return mesh_.cells_[index_ * 8 + 3];
     }
-    inline 
+    inline
     unsigned node4_index() const {
       return mesh_.cells_[index_ * 8 + 4];
     }
-    inline 
+    inline
     unsigned node5_index() const {
       return mesh_.cells_[index_ * 8 + 5];
     }
-    inline 
+    inline
     unsigned node6_index() const {
       return mesh_.cells_[index_ * 8 + 6];
     }
-    inline 
+    inline
     unsigned node7_index() const {
       return mesh_.cells_[index_ * 8 + 7];
     }
@@ -150,84 +150,84 @@ public:
     // the following designed to coordinate with ::get_edges
     // use the mapping as in approx_edge to match basis order.
     //unsigned emap[] = {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7};
-    inline 
+    inline
     unsigned edge0_index() const {
       return edges_[0];
     }
-    inline 
+    inline
     unsigned edge1_index() const {
       return edges_[1];
     }
-    inline 
+    inline
     unsigned edge2_index() const {
       return edges_[2];
     }
-    inline 
+    inline
     unsigned edge3_index() const {
       return edges_[3];
     }
-    inline 
+    inline
     unsigned edge4_index() const {
       return edges_[8];
     }
-    inline 
+    inline
     unsigned edge5_index() const {
       return edges_[9];
     }
-    inline 
+    inline
     unsigned edge6_index() const {
       return edges_[10];
     }
-    inline 
+    inline
     unsigned edge7_index() const {
       return edges_[11];
     }
-    inline 
+    inline
     unsigned edge8_index() const {
       return edges_[4];
     }
-    inline 
+    inline
     unsigned edge9_index() const {
       return edges_[5];
     }
-    inline 
+    inline
     unsigned edge10_index() const {
       return edges_[6];
     }
-    inline 
+    inline
     unsigned edge11_index() const {
       return edges_[7];
     }
 
-    inline 
+    inline
     const Point node0() const {
       return mesh_.points_[node0_index()];
     }
-    inline 
+    inline
     const Point node1() const {
       return mesh_.points_[node1_index()];
     }
-    inline 
+    inline
     const Point node2() const {
       return mesh_.points_[node2_index()];
     }
-    inline 
+    inline
     const Point node3() const {
       return mesh_.points_[node3_index()];
     }
-    inline 
+    inline
     const Point node4() const {
       return mesh_.points_[node4_index()];
     }
-    inline 
+    inline
     const Point node5() const {
       return mesh_.points_[node5_index()];
     }
-    inline 
+    inline
     const Point node6() const {
       return mesh_.points_[node6_index()];
     }
-    inline 
+    inline
     const Point node7() const {
       return mesh_.points_[node7_index()];
     }
@@ -240,7 +240,6 @@ public:
 
   HexVolMesh();
   HexVolMesh(const HexVolMesh &copy);
-  //HexVolMesh(const MeshRG &lattice);
   virtual HexVolMesh *clone() { return new HexVolMesh(*this); }
   virtual ~HexVolMesh();
 
@@ -264,41 +263,41 @@ public:
   void size(typename Face::size_type &) const;
   void size(typename Cell::size_type &) const;
 
-  void to_index(typename Node::index_type &index, unsigned int i) const 
+  void to_index(typename Node::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Edge::index_type &index, unsigned int i) const 
+  void to_index(typename Edge::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Face::index_type &index, unsigned int i) const 
+  void to_index(typename Face::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Cell::index_type &index, unsigned int i) const 
+  void to_index(typename Cell::index_type &index, unsigned int i) const
   { index = i; }
 
   //! Get the child elements of the given index
-  void get_nodes(typename Node::array_type &array, 
-		 typename Edge::index_type idx) const;
-  void get_nodes(typename Node::array_type &array, 
-		 typename Face::index_type idx) const;
-  void get_nodes(typename Node::array_type &array, 
-		 typename Cell::index_type idx) const;
-  void get_edges(typename Edge::array_type &array, 
-		 typename Face::index_type idx) const;
-  void get_edges(typename Edge::array_type &array, 
-		 typename Cell::index_type idx) const;
-  void get_faces(typename Face::array_type &array, 
-		 typename Cell::index_type idx) const;
+  void get_nodes(typename Node::array_type &array,
+                 typename Edge::index_type idx) const;
+  void get_nodes(typename Node::array_type &array,
+                 typename Face::index_type idx) const;
+  void get_nodes(typename Node::array_type &array,
+                 typename Cell::index_type idx) const;
+  void get_edges(typename Edge::array_type &array,
+                 typename Face::index_type idx) const;
+  void get_edges(typename Edge::array_type &array,
+                 typename Cell::index_type idx) const;
+  void get_faces(typename Face::array_type &array,
+                 typename Cell::index_type idx) const;
 
   //! Get the parent element(s) of the given index.
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type node) const;
 
 
-  bool get_neighbor(typename Cell::index_type &neighbor, 
-		    typename Cell::index_type from,
-		    typename Face::index_type idx) const;
+  bool get_neighbor(typename Cell::index_type &neighbor,
+                    typename Cell::index_type from,
+                    typename Face::index_type idx) const;
   void get_neighbors(vector<typename Node::index_type> &array,
-		     typename Node::index_type idx) const;
-  void get_neighbors(typename Cell::array_type &array, 
-		     typename Cell::index_type idx) const;
+                     typename Node::index_type idx) const;
+  void get_neighbors(typename Cell::array_type &array,
+                     typename Cell::index_type idx) const;
 
   //! Get the center point of an element.
   void get_center(Point &result, typename Node::index_type idx) const;
@@ -308,7 +307,7 @@ public:
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(typename Node::index_type /*idx*/) const { return 0.0; }
-  double get_size(typename Edge::index_type idx) const 
+  double get_size(typename Edge::index_type idx) const
   {
     typename Node::array_type arr;
     get_nodes(arr, idx);
@@ -327,26 +326,26 @@ public:
     get_point(p2,ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
-  double get_size(typename Cell::index_type idx) const 
-  { 
+  double get_size(typename Cell::index_type idx) const
+  {
     typename Face::array_type faces;
     get_faces(faces, idx);
-    Point center; 
+    Point center;
     get_center(center, idx);
     double volume = 0.0;
     for (unsigned int f = 0; f < faces.size(); f++)
       {
-	typename Node::array_type nodes;
-	get_nodes(nodes, faces[f]);
-	volume += pyramid_volume(nodes, center);
+        typename Node::array_type nodes;
+        get_nodes(nodes, faces[f]);
+        volume += pyramid_volume(nodes, center);
       }
     return volume;
   };
-  double get_length(typename Edge::index_type idx) const 
+  double get_length(typename Edge::index_type idx) const
   { return get_size(idx); };
-  double get_area(typename Face::index_type idx) const   
+  double get_area(typename Face::index_type idx) const
   { return get_size(idx); };
-  double get_volume(typename Cell::index_type idx) const 
+  double get_volume(typename Cell::index_type idx) const
   { return get_size(idx); };
 
   unsigned int get_valence(typename Node::index_type idx) const
@@ -355,11 +354,11 @@ public:
     get_neighbors(nodes, idx);
     return (int)nodes.size();
   }
-  unsigned int get_valence(typename Edge::index_type /*idx*/) const 
+  unsigned int get_valence(typename Edge::index_type /*idx*/) const
   { return 0; }
-  unsigned int get_valence(typename Face::index_type /*idx*/) const 
+  unsigned int get_valence(typename Face::index_type /*idx*/) const
   { return 0; }
-  unsigned int get_valence(typename Cell::index_type /*idx*/) const 
+  unsigned int get_valence(typename Cell::index_type /*idx*/) const
   { return 0; }
 
   //! returns false if point is out of range.
@@ -384,8 +383,8 @@ public:
   void get_normal(Vector &, typename Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented"); }
 
-  void get_normal(Vector &result, vector<double> &coords, 
-		  typename Elem::index_type eidx, unsigned int f) 
+  void get_normal(Vector &result, vector<double> &coords,
+                  typename Elem::index_type eidx, unsigned int f)
   {
     ElemData ed(*this, eidx);
     vector<Point> Jv;
@@ -420,8 +419,8 @@ public:
     result.normalize();
   }
 
-  void get_random_point(Point &p, typename Cell::index_type i, 
-			int seed = 0) const;
+  void get_random_point(Point &p, typename Cell::index_type i,
+                        int seed = 0) const;
 
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
@@ -441,16 +440,16 @@ public:
 
   // Extra functionality needed by this specific geometry.
 
-  typename Node::index_type add_find_point(const Point &p, 
-					   double err = 1.0e-3);
-  void add_hex(typename Node::index_type a, typename Node::index_type b, 
-	       typename Node::index_type c,
-	       typename Node::index_type d, typename Node::index_type e, 
-	       typename Node::index_type f,
-	       typename Node::index_type g, typename Node::index_type h);
+  typename Node::index_type add_find_point(const Point &p,
+                                           double err = 1.0e-3);
+  void add_hex(typename Node::index_type a, typename Node::index_type b,
+               typename Node::index_type c,
+               typename Node::index_type d, typename Node::index_type e,
+               typename Node::index_type f,
+               typename Node::index_type g, typename Node::index_type h);
   void add_hex(const Point &p0, const Point &p1, const Point &p2,
-	       const Point &p3, const Point &p4, const Point &p5, 
-	       const Point &p6, const Point &p7);
+               const Point &p3, const Point &p4, const Point &p5,
+               const Point &p6, const Point &p7);
   typename Elem::index_type add_elem(typename Node::array_type a);
   void node_reserve(size_t s) { points_.reserve(s); }
   void elem_reserve(size_t s) { edges_.reserve(s*8); }
@@ -459,54 +458,51 @@ public:
 
   typename Node::index_type add_point(const Point &p);
 
-  //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
-  //		 typename Face::index_type &face, double &u, double &v);
-
-  virtual bool		synchronize(unsigned int);
+  virtual bool          synchronize(unsigned int);
 
   virtual bool has_normals() const { return basis_.polynomial_order() > 1; }
 
-  double pyramid_volume(const typename Node::array_type &, 
-			const Point &) const;
+  double pyramid_volume(const typename Node::array_type &,
+                        const Point &) const;
   double polygon_area(const typename Node::array_type &, const Vector) const;
   Basis& get_basis() { return basis_; }
-  
+
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords, 
-		       typename Cell::index_type ci, 
-		       unsigned which_edge, 
-		       unsigned div_per_unit) const
+  void pwl_approx_edge(vector<vector<double> > &coords,
+                       typename Cell::index_type ci,
+                       unsigned which_edge,
+                       unsigned div_per_unit) const
   {
     unsigned emap[] = {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7};
-    basis_.approx_edge(emap[which_edge], div_per_unit, coords); 
+    basis_.approx_edge(emap[which_edge], div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
-		       typename Cell::index_type ci, 
-		       unsigned which_face, 
-		       unsigned div_per_unit) const
+  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+                       typename Cell::index_type ci,
+                       unsigned which_face,
+                       unsigned div_per_unit) const
   {
 
     // map the order we have faces to the way the basis expects it for hexes.
     // this needs to be unified for all hex types to avoid this switch.
     unsigned fmap[] = {0, 5, 1, 3, 4, 2};
-    basis_.approx_face(fmap[which_face], div_per_unit, coords); 
+    basis_.approx_face(fmap[which_face], div_per_unit, coords);
   }
 
-  bool get_coords(vector<double> &coords, 
-		  const Point &p,
-		  typename Cell::index_type idx)
+  bool get_coords(vector<double> &coords,
+                  const Point &p,
+                  typename Cell::index_type idx)
   {
     synchronize(Mesh::FACES_E | Mesh::EDGES_E);
     ElemData ed(*this, idx);
-    return basis_.get_coords(coords, p, ed); 
+    return basis_.get_coords(coords, p, ed);
   }
-  
-  void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Cell::index_type idx)
+
+  void interpolate(Point &pt, const vector<double> &coords,
+                   typename Cell::index_type idx)
   {
     synchronize(Mesh::FACES_E | Mesh::EDGES_E);
     ElemData ed(*this, idx);
@@ -514,9 +510,9 @@ public:
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords, 
-		typename Cell::index_type idx, 
-		vector<Point> &J) const
+  void derivate(const vector<double> &coords,
+                typename Cell::index_type idx,
+                vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -526,7 +522,7 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
-  static const TypeDescription* elem_type_description() 
+  static const TypeDescription* elem_type_description()
   { return cell_type_description(); }
 
   static Persistent* maker() { return scinew HexVolMesh<Basis>; }
@@ -561,7 +557,6 @@ private:
     typename Cell::index_type         cells_[2];   //! 2 cells may have this face is in.
     typename Node::index_type         snodes_[4];   //! sorted nodes, used for hashing
 
-
     PFace() {
       nodes_[0] = MESH_NO_NEIGHBOR;
       nodes_[1] = MESH_NO_NEIGHBOR;
@@ -575,8 +570,8 @@ private:
       cells_[1] = MESH_NO_NEIGHBOR;
     }
     // snodes_ must be sorted. See Hash Function below.
-    PFace(typename Node::index_type n1, typename Node::index_type n2, 
-	  typename Node::index_type n3, typename Node::index_type n4) {
+    PFace(typename Node::index_type n1, typename Node::index_type n2,
+          typename Node::index_type n3, typename Node::index_type n4) {
       cells_[0] = MESH_NO_NEIGHBOR;
       cells_[1] = MESH_NO_NEIGHBOR;
       nodes_[0] = n1;
@@ -591,21 +586,21 @@ private:
       // bubble sort the 4 node indices -- smallest one goes to nodes_[0]
       int i,j;
       for (i=0; i<3; i++) {
-	for (j=i+1; j<4; j++) {
-	  if (snodes_[i] > snodes_[j]) {
-	    tmp = snodes_[i]; snodes_[i] = snodes_[j]; snodes_[j] = tmp;
-	  }
-	}
+        for (j=i+1; j<4; j++) {
+          if (snodes_[i] > snodes_[j]) {
+            tmp = snodes_[i]; snodes_[i] = snodes_[j]; snodes_[j] = tmp;
+          }
+        }
       }
     }
 
-    bool shared() const { return ((cells_[0] != MESH_NO_NEIGHBOR) && 
-				  (cells_[1] != MESH_NO_NEIGHBOR)); }
+    bool shared() const { return ((cells_[0] != MESH_NO_NEIGHBOR) &&
+                                  (cells_[1] != MESH_NO_NEIGHBOR)); }
 
     //! true if both have the same nodes (order does not matter)
     bool operator==(const PFace &f) const {
       return ((snodes_[0] == f.snodes_[0]) && (snodes_[1] == f.snodes_[1]) &&
-	      (snodes_[2] == f.snodes_[2]) && (snodes_[3] == f.snodes_[3]));
+              (snodes_[2] == f.snodes_[2]) && (snodes_[3] == f.snodes_[3]));
     }
 
     //! Compares each node.  When a non equal node is found the <
@@ -628,21 +623,22 @@ private:
   //! Edge information.
   struct PEdge {
     typename Node::index_type         nodes_[2];   //! 2 nodes makes an edge.
-    vector<typename Cell::index_type> cells_;      //! list of all the cells this edge is in.
+    //! list of all the cells this edge is in.
+    vector<typename Cell::index_type> cells_;
 
     PEdge() : cells_(0) {
       nodes_[0] = MESH_NO_NEIGHBOR;
       nodes_[1] = MESH_NO_NEIGHBOR;
     }
     // node_[0] must be smaller than node_[1]. See Hash Function below.
-    PEdge(typename Node::index_type n1, 
-	  typename Node::index_type n2) : cells_(0) {
+    PEdge(typename Node::index_type n1,
+          typename Node::index_type n2) : cells_(0) {
       if (n1 < n2) {
-	nodes_[0] = n1;
-	nodes_[1] = n2;
+        nodes_[0] = n1;
+        nodes_[1] = n2;
       } else {
-	nodes_[0] = n2;
-	nodes_[1] = n1;
+        nodes_[0] = n2;
+        nodes_[1] = n1;
       }
     }
 
@@ -684,9 +680,9 @@ private:
     //! This is the hash function
     size_t operator()(const PFace &f) const {
       return ((f.snodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
-	      (up4_mask & (f.snodes_[1] << sz_quarter_int << sz_quarter_int)) |
-	      (mid4_mask & (f.snodes_[2] << sz_quarter_int)) |
-	      (low4_mask & f.snodes_[3]));
+              (up4_mask & (f.snodes_[1] << sz_quarter_int << sz_quarter_int)) |
+              (mid4_mask & (f.snodes_[2] << sz_quarter_int)) |
+              (low4_mask & f.snodes_[3]));
     }
     //! This should return less than rather than equal to.
     bool operator()(const PFace &f1, const PFace& f2) const {
@@ -695,7 +691,7 @@ private:
   };
 
   friend struct FaceHash; // needed by the gcc-2.95.3 compiler
-  
+
   /*! hash the egde's node_indecies such that edges with the same nodes
    *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {
@@ -744,17 +740,17 @@ private:
 
   inline
   void hash_edge(typename Node::index_type n1, typename Node::index_type n2,
-		 typename Cell::index_type ci, edge_ht &table) const;
+                 typename Cell::index_type ci, edge_ht &table) const;
 
   inline
-  void hash_face(typename Node::index_type n1, typename Node::index_type n2, 
-		 typename Node::index_type n3, typename Node::index_type n4, 
-		 typename Cell::index_type ci, face_ht &table) const;
+  void hash_face(typename Node::index_type n1, typename Node::index_type n2,
+                 typename Node::index_type n3, typename Node::index_type n4,
+                 typename Cell::index_type ci, face_ht &table) const;
 
   //! useful functors
   struct FillNodeNeighbors {
-    FillNodeNeighbors(vector<vector<typename Node::index_type> > &n, 
-		      const HexVolMesh &m) :
+    FillNodeNeighbors(vector<vector<typename Node::index_type> > &n,
+                      const HexVolMesh &m) :
       nbor_vec_(n),
       mesh_(m)
     {}
@@ -778,34 +774,40 @@ private:
   Mutex                       grid_lock_; // Bad traffic!
   typename Cell::index_type            locate_cache_;
 
-  unsigned int			synchronized_;
+  unsigned int                  synchronized_;
   Basis                         basis_;
 };
+
 
 template <class Basis>
 template <class Iter, class Functor>
 void
-HexVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor) {
+HexVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor)
+{
   fill_lock_.lock();
   Iter iter = begin;
   points_.resize(end - begin); // resize to the new size
   vector<Point>::iterator piter = points_.begin();
-  while (iter != end) {
+  while (iter != end)
+  {
     *piter = fill_ftor(*iter);
     ++piter; ++iter;
   }
   fill_lock_.unlock();
 }
 
+
 template <class Basis>
 template <class Iter, class Functor>
 void
-HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
+HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor)
+{
   fill_lock_.lock();
   Iter iter = begin;
   cells_.resize((end - begin) * 8); // resize to the new size
   vector<under_type>::iterator citer = cells_.begin();
-  while (iter != end) {
+  while (iter != end)
+  {
     int *nodes = fill_ftor(*iter); // returns an array of length 4
     *citer = nodes[0];
     ++citer;
@@ -827,15 +829,18 @@ HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
   fill_lock_.unlock();
 }
 
+
 template <class Basis>
 template <class Iter, class Functor>
 void
-HexVolMesh<Basis>::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
+HexVolMesh<Basis>::fill_neighbors(Iter begin, Iter end, Functor fill_ftor)
+{
   fill_lock_.lock();
   Iter iter = begin;
   neighbors_.resize((end - begin) * 8); // resize to the new size
   vector<under_type>::iterator citer = neighbors_.begin();
-  while (iter != end) {
+  while (iter != end)
+  {
     int *face_nbors = fill_ftor(*iter); // returns an array of length 4
     *citer = face_nbors[0];
     ++citer;
@@ -857,8 +862,9 @@ HexVolMesh<Basis>::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
   fill_lock_.unlock();
 }
 
+
 template <class Basis>
-PersistentTypeID 
+PersistentTypeID
 HexVolMesh<Basis>::type_id(HexVolMesh<Basis>::type_name(-1), "Mesh",  maker);
 
 
@@ -877,11 +883,12 @@ HexVolMesh<Basis>::type_name(int n)
     static const string nm("HexVolMesh");
     return nm;
   }
-  else 
+  else
   {
     return find_type_name((Basis *)0);
   }
 }
+
 
 template <class Basis>
 HexVolMesh<Basis>::HexVolMesh() :
@@ -902,6 +909,7 @@ HexVolMesh<Basis>::HexVolMesh() :
   synchronized_(NODES_E | CELLS_E)
 {
 }
+
 
 template <class Basis>
 HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
@@ -934,7 +942,7 @@ HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
   faces_ = copy.faces_;
   synchronized_ |= copy.synchronized_ & FACES_E;
   lcopy.face_table_lock_.unlock();
-  
+
   lcopy.edge_table_lock_.lock();
   edge_table_ = copy.edge_table_;
   edges_ = copy.edges_;
@@ -947,28 +955,32 @@ HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
   lcopy.grid_lock_.unlock();
 }
 
+
 template <class Basis>
 HexVolMesh<Basis>::~HexVolMesh()
 {
 }
 
+
 /* To generate a random point inside of a hexrahedron, we generate random
    barrycentric coordinates (independent random variables between 0 and
    1 that sum to 1) for the point. */
 template <class Basis>
-void 
-HexVolMesh<Basis>::get_random_point(Point &/*p*/, typename Cell::index_type /*ei*/,
-				    int /*seed*/) const
+void
+HexVolMesh<Basis>::get_random_point(Point &/*p*/,
+                                    typename Cell::index_type /*ei*/,
+                                    int /*seed*/) const
 {
   ASSERTFAIL("don't know how to pick a random point in a hex");
 }
+
 
 template <class Basis>
 BBox
 HexVolMesh<Basis>::get_bounding_box() const
 {
   BBox result;
-  
+
   typename Node::iterator ni, nie;
   begin(ni);
   end(nie);
@@ -1003,15 +1015,15 @@ HexVolMesh<Basis>::transform(const Transform &t)
 
 template <class Basis>
 void
-HexVolMesh<Basis>::hash_face(typename Node::index_type n1, 
-			     typename Node::index_type n2,
-			     typename Node::index_type n3, 
-			     typename Node::index_type n4,
-			     typename Cell::index_type ci, 
-			     face_ht &table) const 
+HexVolMesh<Basis>::hash_face(typename Node::index_type n1,
+                             typename Node::index_type n2,
+                             typename Node::index_type n3,
+                             typename Node::index_type n4,
+                             typename Cell::index_type ci,
+                             face_ht &table) const
 {
   PFace f(n1, n2, n3, n4);
-  
+
   typename face_ht::iterator iter = table.find(f);
   if (iter == table.end()) {
     f.cells_[0] = ci;
@@ -1019,15 +1031,15 @@ HexVolMesh<Basis>::hash_face(typename Node::index_type n1,
   } else {
     PFace f = (*iter).first;
     if (f.cells_[1] != MESH_NO_NEIGHBOR) {
-      cerr << "This Mesh has problems: Cells #" 
-	   << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci 
-	   << " are illegally adjacent." << std::endl; 
-      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));      
+      cerr << "This Mesh has problems: Cells #"
+           << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci
+           << " are illegally adjacent." << std::endl;
+      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));
     } else if (f.cells_[0] == ci) {
-      cerr << "This Mesh has problems: Cells #" 
-	   << f.cells_[0] << " and #" << ci 
-	   << " are the same." << std::endl; 
-      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));      
+      cerr << "This Mesh has problems: Cells #"
+           << f.cells_[0] << " and #" << ci
+           << " are the same." << std::endl;
+      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));
     } else {
       f.cells_[1] = ci; // add this cell
       table.erase(iter);
@@ -1035,6 +1047,7 @@ HexVolMesh<Basis>::hash_face(typename Node::index_type n1,
     }
   }
 }
+
 
 template <class Basis>
 void
@@ -1067,7 +1080,8 @@ HexVolMesh<Basis>::compute_faces()
   typename vector<PFace>::iterator f_iter = faces_.begin();
   typename face_ht::iterator ht_iter = face_table_.begin();
   int i = 0;
-  while (ht_iter != face_table_.end()) {
+  while (ht_iter != face_table_.end())
+  {
     *f_iter = (*ht_iter).first;
     (*ht_iter).second = i;
     ++f_iter; ++ht_iter; i++;
@@ -1077,12 +1091,13 @@ HexVolMesh<Basis>::compute_faces()
   face_table_lock_.unlock();
 }
 
+
 template <class Basis>
 void
-HexVolMesh<Basis>::hash_edge(typename Node::index_type n1, 
-			     typename Node::index_type n2,
-			     typename Cell::index_type ci, 
-			     edge_ht &table) const 
+HexVolMesh<Basis>::hash_edge(typename Node::index_type n1,
+                             typename Node::index_type n2,
+                             typename Cell::index_type ci,
+                             edge_ht &table) const
 {
   PEdge e(n1, n2);
   typename edge_ht::iterator iter = table.find(e);
@@ -1094,6 +1109,7 @@ HexVolMesh<Basis>::hash_edge(typename Node::index_type n1,
     e.cells_.push_back(ci); // add this cell
   }
 }
+
 
 template <class Basis>
 void
@@ -1134,15 +1150,13 @@ HexVolMesh<Basis>::compute_edges()
   while (ht_iter != edge_table_.end()) {
     *e_iter = (*ht_iter).first;
     (*ht_iter).second = static_cast<typename Edge::index_type>(
-						      e_iter - edges_.begin());
+                                                      e_iter - edges_.begin());
     ++e_iter; ++ht_iter;
   }
-  
+
   synchronized_ |= EDGES_E;
   edge_table_lock_.unlock();
 }
-
-
 
 
 template <class Basis>
@@ -1175,116 +1189,128 @@ void
 HexVolMesh<Basis>::begin(typename HexVolMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on HexVolMesh first");
+            "Must call synchronize NODES_E on HexVolMesh first");
   itr = 0;
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::end(typename HexVolMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on HexVolMesh first");
+            "Must call synchronize NODES_E on HexVolMesh first");
   itr = static_cast<typename Node::iterator>(points_.size());
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::size(typename HexVolMesh::Node::size_type &s) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on HexVolMesh first");
+            "Must call synchronize NODES_E on HexVolMesh first");
   s = static_cast<typename Node::size_type>(points_.size());
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::begin(typename HexVolMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   itr = 0;
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::end(typename HexVolMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   itr = static_cast<typename Edge::iterator>(edges_.size());
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::size(typename HexVolMesh::Edge::size_type &s) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   s = static_cast<typename Edge::size_type>(edges_.size());
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::begin(typename HexVolMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   itr = 0;
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::end(typename HexVolMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   itr = static_cast<typename Face::iterator>(faces_.size());
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::size(typename HexVolMesh::Face::size_type &s) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   s = static_cast<typename Face::size_type>(faces_.size());
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::begin(typename HexVolMesh::Cell::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on HexVolMesh first");
+            "Must call synchronize CELLS_E on HexVolMesh first");
   itr = 0;
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::end(typename HexVolMesh::Cell::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on HexVolMesh first");
+            "Must call synchronize CELLS_E on HexVolMesh first");
   itr = static_cast<typename Cell::iterator>(cells_.size() >> 3);
 }
+
 
 template <class Basis>
 void
 HexVolMesh<Basis>::size(typename HexVolMesh::Cell::size_type &s) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on HexVolMesh first");
+            "Must call synchronize CELLS_E on HexVolMesh first");
   s = static_cast<typename Cell::size_type>(cells_.size() >> 3);
 }
 
+
 template <class Basis>
 void
-HexVolMesh<Basis>::get_nodes(typename Node::array_type &array, 
-			     typename Edge::index_type idx) const
+HexVolMesh<Basis>::get_nodes(typename Node::array_type &array,
+                             typename Edge::index_type idx) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   array.clear();
   PEdge e = edges_[idx];
   array.push_back(e.nodes_[0]);
@@ -1294,10 +1320,11 @@ HexVolMesh<Basis>::get_nodes(typename Node::array_type &array,
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::index_type idx) const
+HexVolMesh<Basis>::get_nodes(typename Node::array_type &array,
+                             typename Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   array.push_back(f.nodes_[0]);
@@ -1309,7 +1336,8 @@ HexVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::in
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Cell::index_type idx) const
+HexVolMesh<Basis>::get_nodes(typename Node::array_type &array,
+                             typename Cell::index_type idx) const
 {
   array.clear();
   array.push_back(cells_[idx * 8 + 0]);
@@ -1322,12 +1350,14 @@ HexVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Cell::in
   array.push_back(cells_[idx * 8 + 7]);
 }
 
+
 template <class Basis>
 void
-HexVolMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::index_type idx) const
+HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
+                             typename Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   PEdge e0(f.nodes_[0], f.nodes_[1]);
@@ -1336,7 +1366,7 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::in
   PEdge e3(f.nodes_[3], f.nodes_[0]);
 
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e0))).second);
   array.push_back((*(edge_table_.find(e1))).second);
   array.push_back((*(edge_table_.find(e2))).second);
@@ -1346,8 +1376,8 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::in
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
-			     typename Cell::index_type idx) const
+HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
+                             typename Cell::index_type idx) const
 {
   array.clear();
   const int off = idx * 8;
@@ -1365,7 +1395,7 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
   PEdge e11(cells_[off + 7], cells_[off + 3]);
 
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e00))).second);
   array.push_back((*(edge_table_.find(e01))).second);
   array.push_back((*(edge_table_.find(e02))).second);
@@ -1383,10 +1413,11 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_faces(typename Face::array_type &array, typename Cell::index_type idx) const
+HexVolMesh<Basis>::get_faces(typename Face::array_type &array,
+                             typename Cell::index_type idx) const
 {
   array.clear();
-  
+
   const int off = idx * 8;
   PFace f0(cells_[off + 0], cells_[off + 1], cells_[off + 2], cells_[off + 3]);
   PFace f1(cells_[off + 4], cells_[off + 5], cells_[off + 6], cells_[off + 7]);
@@ -1395,9 +1426,8 @@ HexVolMesh<Basis>::get_faces(typename Face::array_type &array, typename Cell::in
   PFace f4(cells_[off + 3], cells_[off + 7], cells_[off + 4], cells_[off + 0]);
   PFace f5(cells_[off + 1], cells_[off + 5], cells_[off + 6], cells_[off + 2]);
 
-  // operator[] not const safe...
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   array.push_back((*(face_table_.find(f0))).second);
   array.push_back((*(face_table_.find(f1))).second);
   array.push_back((*(face_table_.find(f2))).second);
@@ -1406,13 +1436,15 @@ HexVolMesh<Basis>::get_faces(typename Face::array_type &array, typename Cell::in
   array.push_back((*(face_table_.find(f5))).second);
 }
 
+
 template <class Basis>
 bool
-HexVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor, typename Cell::index_type from,
-				typename Face::index_type idx) const
+HexVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor,
+                                typename Cell::index_type from,
+                                typename Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   const PFace &f = faces_[idx];
 
   if (from == f.cells_[0]) {
@@ -1424,9 +1456,11 @@ HexVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor, typename Ce
   return true;
 }
 
+
 template <class Basis>
 void
-HexVolMesh<Basis>::get_neighbors(typename Cell::array_type &array, typename Cell::index_type idx) const
+HexVolMesh<Basis>::get_neighbors(typename Cell::array_type &array,
+                                 typename Cell::index_type idx) const
 {
   typename Face::array_type faces;
   get_faces(faces, idx);
@@ -1441,17 +1475,19 @@ HexVolMesh<Basis>::get_neighbors(typename Cell::array_type &array, typename Cell
   }
 }
 
+
 template <class Basis>
 void
 HexVolMesh<Basis>::get_neighbors(vector<typename Node::index_type> &array,
-				 typename Node::index_type idx) const
+                                 typename Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
-	    "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
+            "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
   array.clear();
   array.insert(array.end(), node_neighbors_[idx].begin(),
-	       node_neighbors_[idx].end());
+               node_neighbors_[idx].end());
 }
+
 
 template <class Basis>
 void
@@ -1472,6 +1508,7 @@ HexVolMesh<Basis>::compute_node_neighbors()
   node_nbor_lock_.unlock();
 }
 
+
 template <class Basis>
 void
 HexVolMesh<Basis>::get_center(Point &p, typename Node::index_type idx) const
@@ -1482,14 +1519,15 @@ HexVolMesh<Basis>::get_center(Point &p, typename Node::index_type idx) const
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_center(Point &result, typename Edge::index_type idx) const
+HexVolMesh<Basis>::get_center(Point &result,
+                              typename Edge::index_type idx) const
 {
   typename Node::array_type arr;
   get_nodes(arr, idx);
   Point p1;
   get_center(result, arr[0]);
   get_center(p1, arr[1]);
-  
+
   result.asVector() += p1.asVector();
   result.asVector() *= 0.5;
 }
@@ -1515,6 +1553,7 @@ HexVolMesh<Basis>::get_center(Point &p, typename Face::index_type idx) const
   p.asVector() *= (1.0 / 4.0);
 }
 
+
 template <class Basis>
 void
 HexVolMesh<Basis>::get_center(Point &p, typename Cell::index_type idx) const
@@ -1535,6 +1574,7 @@ HexVolMesh<Basis>::get_center(Point &p, typename Cell::index_type idx) const
   p.asVector() *= (1.0 / 8.0);
 }
 
+
 template <class Basis>
 bool
 HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
@@ -1543,7 +1583,7 @@ HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
   if (locate(ci, p)) { // first try the fast way.
     typename Node::array_type nodes;
     get_nodes(nodes, ci);
-    
+
     double dmin = (p - points_[nodes[0]]).length2();
     loc = nodes[0];
     for (unsigned int i = 1; i < nodes.size(); i++)
@@ -1551,8 +1591,8 @@ HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
       const double d = (p - points_[nodes[i]]).length2();
       if (d < dmin)
       {
-	dmin = d;
-	loc = nodes[i];
+        dmin = d;
+        loc = nodes[i];
       }
     }
     return true;
@@ -1573,8 +1613,8 @@ HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
       const double dist = (p - points_[*ni]).length2();
       if (dist < min_dist)
       {
-	loc = *ni;
-	min_dist = dist;
+        loc = *ni;
+        min_dist = dist;
       }
       ++ni;
     }
@@ -1605,8 +1645,8 @@ HexVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
       const double dist = (p -loc).length2();
       if (dist < mindist)
       {
-	edge = edges[i];
-	mindist = dist;
+        edge = edges[i];
+        mindist = dist;
       }
     }
     return true;
@@ -1637,8 +1677,8 @@ HexVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
       const double dist = (p - loc).length2();
       if (dist < mindist)
       {
-	face = faces[i];
-	mindist = dist;
+        face = faces[i];
+        mindist = dist;
       }
     }
     return true;
@@ -1662,7 +1702,7 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
   {
       return true;
   }
-  
+
 
   if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
@@ -1675,9 +1715,9 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
     {
       if (inside8_p(typename Cell::index_type(*iter), p))
       {
-	cell = typename Cell::index_type(*iter);
-	locate_cache_ = cell;
-	return true;
+        cell = typename Cell::index_type(*iter);
+        locate_cache_ = cell;
+        return true;
       }
       ++iter;
     }
@@ -1686,17 +1726,19 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
   return false;
 }
 
+
 template <class Basis>
 int
-HexVolMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
-			       double *w)
+HexVolMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
+                               double *w)
 {
   typename Cell::index_type idx;
   if (locate(idx, p))
   {
     get_nodes(l,idx);
     vector<double> coords(3);
-    if (get_coords(coords, p, idx)) {
+    if (get_coords(coords, p, idx))
+    {
       basis_.get_weights(coords, w);
       return basis_.dofs();
     }
@@ -1704,10 +1746,11 @@ HexVolMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   return 0;
 }
 
+
 template <class Basis>
 int
-HexVolMesh<Basis>::get_weights(const Point &p, typename Cell::array_type &l, 
-			      double *w)
+HexVolMesh<Basis>::get_weights(const Point &p, typename Cell::array_type &l,
+                              double *w)
 {
   typename Cell::index_type idx;
   if (locate(idx, p))
@@ -1719,6 +1762,7 @@ HexVolMesh<Basis>::get_weights(const Point &p, typename Cell::array_type &l,
   }
   return 0;
 }
+
 
 //===================================================================
 
@@ -1738,7 +1782,8 @@ HexVolMesh<Basis>::get_weights(const Point &p, typename Cell::array_type &l,
 
 template <class Basis>
 double
-HexVolMesh<Basis>::polygon_area(const typename Node::array_type &ni, const Vector N) const
+HexVolMesh<Basis>::polygon_area(const typename Node::array_type &ni,
+                                const Vector N) const
 {
   double area = 0;
   double an, ax, ay, az;  // abs value of normal and its coords
@@ -1762,15 +1807,15 @@ HexVolMesh<Basis>::polygon_area(const typename Node::array_type &ni, const Vecto
         switch (coord) {
         case 1:
             area += (points_[ni[i%n]].y() *
-		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+                     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
             continue;
         case 2:
-            area += (points_[ni[i%n]].x() * 
-		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+            area += (points_[ni[i%n]].x() *
+                     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
             continue;
         case 3:
-            area += (points_[ni[i%n]].x() * 
-		     (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
+            area += (points_[ni[i%n]].x() *
+                     (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
             continue;
         }
 
@@ -1789,21 +1834,22 @@ HexVolMesh<Basis>::polygon_area(const typename Node::array_type &ni, const Vecto
     return area;
 }
 
+
 template <class Basis>
 double
 HexVolMesh<Basis>::pyramid_volume(const typename Node::array_type &face, const Point &p) const
 {
   Vector e1(points_[face[1]]-points_[face[0]]);
   Vector e2(points_[face[1]]-points_[face[2]]);
-  if (Cross(e1,e2).length2()>0.0) {
+  if (Cross(e1,e2).length2()>0.0)
+  {
     Plane plane(points_[face[0]], points_[face[1]], points_[face[2]]);
-    //double dist = plane.eval_point(p);
     return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
   }
   Vector e3(points_[face[3]]-points_[face[2]]);
-  if (Cross(e2,e3).length2()>0.0) {
+  if (Cross(e2,e3).length2()>0.0)
+  {
     Plane plane(points_[face[1]], points_[face[2]], points_[face[3]]);
-    //double dist = plane.eval_point(p);
     return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
   }
   return 0.0;
@@ -1864,10 +1910,10 @@ HexVolMesh<Basis>::compute_grid()
 }
 
 
-
 template <class Basis>
 bool
-HexVolMesh<Basis>::inside8_p(typename Cell::index_type i, const Point &p) const
+HexVolMesh<Basis>::inside8_p(typename Cell::index_type i,
+                             const Point &p) const
 {
   typename Face::array_type faces;
   get_faces(faces, i);
@@ -1902,7 +1948,6 @@ HexVolMesh<Basis>::inside8_p(typename Cell::index_type i, const Point &p) const
 
   return true;
 }
-    
 
 
 template <class Basis>
@@ -1924,10 +1969,14 @@ HexVolMesh<Basis>::add_find_point(const Point &p, double err)
 
 template <class Basis>
 void
-HexVolMesh<Basis>::add_hex(typename Node::index_type a, typename Node::index_type b, 
-			   typename Node::index_type c, typename Node::index_type d,
-			   typename Node::index_type e, typename Node::index_type f,
-			   typename Node::index_type g, typename Node::index_type h)
+HexVolMesh<Basis>::add_hex(typename Node::index_type a,
+                           typename Node::index_type b,
+                           typename Node::index_type c,
+                           typename Node::index_type d,
+                           typename Node::index_type e,
+                           typename Node::index_type f,
+                           typename Node::index_type g,
+                           typename Node::index_type h)
 {
   cells_.push_back(a);
   cells_.push_back(b);
@@ -1951,16 +2000,17 @@ HexVolMesh<Basis>::add_point(const Point &p)
 
 template <class Basis>
 void
-HexVolMesh<Basis>::add_hex(const Point &p0, const Point &p1, 
-			   const Point &p2, const Point &p3,
-			   const Point &p4, const Point &p5,
-			   const Point &p6, const Point &p7)
+HexVolMesh<Basis>::add_hex(const Point &p0, const Point &p1,
+                           const Point &p2, const Point &p3,
+                           const Point &p4, const Point &p5,
+                           const Point &p6, const Point &p7)
 {
   add_hex(add_find_point(p0), add_find_point(p1),
-	  add_find_point(p2), add_find_point(p3),
-	  add_find_point(p4), add_find_point(p5),
-	  add_find_point(p6), add_find_point(p7));
+          add_find_point(p2), add_find_point(p3),
+          add_find_point(p4), add_find_point(p5),
+          add_find_point(p6), add_find_point(p7));
 }
+
 
 template <class Basis>
 typename HexVolMesh<Basis>::Elem::index_type
@@ -1986,7 +2036,7 @@ HexVolMesh<Basis>::io(Piostream &stream)
 {
   const int version = stream.begin_class(type_name(-1), HEXVOLMESH_VERSION);
   Mesh::io(stream);
-  
+
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
   if (version == 1)
@@ -1995,7 +2045,7 @@ HexVolMesh<Basis>::io(Piostream &stream)
     SCIRun::Pio(stream, face_neighbors);
   }
 
-  if (version >= 3) { 
+  if (version >= 3) {
     basis_.io(stream);
   }
 
@@ -2008,7 +2058,6 @@ HexVolMesh<Basis>::io(Piostream &stream)
 }
 
 
-
 template <class Basis>
 const TypeDescription* get_type_description(HexVolMesh<Basis> *)
 {
@@ -2019,12 +2068,13 @@ const TypeDescription* get_type_description(HexVolMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("HexVolMesh", subs,
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2041,15 +2091,16 @@ HexVolMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((HexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2058,15 +2109,16 @@ HexVolMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((HexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2075,15 +2127,16 @@ HexVolMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((HexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2092,20 +2145,21 @@ HexVolMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((HexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
 
+
 template <class Basis>
 void
-HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells, 
-			     typename Node::index_type node) const 
+HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
+                             typename Node::index_type node) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
             "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
@@ -2117,15 +2171,16 @@ HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
   // Get all the nodes that share an edge with this node
   get_neighbors(neighbors, node);
   // Iterate through all those edges
-  for (unsigned int n = 0; n < neighbors.size(); ++n) {
+  for (unsigned int n = 0; n < neighbors.size(); ++n)
+  {
     // Get the edge information for the current edge
-    typename edge_ht::const_iterator iter = 
+    typename edge_ht::const_iterator iter =
                                 edge_table_.find(PEdge(node,neighbors[n]));
     ASSERTMSG(iter != edge_table_.end(),
-	      "Edge not found in HexVolMesh::edge_table_");
+              "Edge not found in HexVolMesh::edge_table_");
     // Insert all cells that share this edge into
     // the unique set of cell indices
-    for (unsigned int c = 0; c < (iter->first).cells_.size(); ++c) 
+    for (unsigned int c = 0; c < (iter->first).cells_.size(); ++c)
       unique_cells.insert((iter->first).cells_[c]);
   }
 
@@ -2133,6 +2188,7 @@ HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
   cells.resize(unique_cells.size());
   copy(unique_cells.begin(), unique_cells.end(), cells.begin());
 }
+
 
 } // namespace SCIRun
 
