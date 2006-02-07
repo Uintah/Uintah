@@ -355,7 +355,6 @@ TextureBuilder::execute()
 
     Handle<TextureBuilderAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
-    cerr<<"TextureBuilder module compiled\n";
 
     algo->build(tHandle_,
 		vHandle, vminval_, vmaxval_,
