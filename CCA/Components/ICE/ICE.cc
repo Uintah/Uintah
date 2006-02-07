@@ -359,7 +359,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Set up data analysis modules
   d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-  d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  if(d_analysisModule){
+    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  }
 
   //__________________________________
   //  conservationTest
@@ -664,7 +666,9 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   
   //__________________________________
   // dataAnalysis 
-  d_analysisModule->scheduleInitialize( sched, level);
+  if(d_analysisModule){
+    d_analysisModule->scheduleInitialize( sched, level);
+  }
  
   //__________________________________
   // Make adjustments to the hydrostatic pressure
@@ -701,8 +705,9 @@ void ICE::restartInitialize()
   // disregard initial dt when restarting
   d_initialDt = 10000.0;
   
-  d_analysisModule->restartInitialize();
-  
+  if(d_analysisModule){
+    d_analysisModule->restartInitialize();
+  }
   //__________________________________
   // Models Initialization
   if(d_models.size() != 0){
@@ -901,8 +906,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           mpm_matls_sub,
                                                           d_press_matl,
                                                           all_matls);
-                                                          
-  d_analysisModule->scheduleDoAnalysis(   sched, level);                                                          
+  if(d_analysisModule){                                                        
+    d_analysisModule->scheduleDoAnalysis(   sched, level);
+  }                                                          
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                           all_matls); 
