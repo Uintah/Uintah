@@ -87,7 +87,6 @@ NrrdSetupTexture::NrrdSetupTexture(SCIRun::GuiContext *ctx) :
   max = maxf_.get();
   in = useinputmin_.get();
   ix = useinputmax_.get();
-  cout << "ctor: " <<  min << " " << max << " " <<  in << " " << ix << endl;
 }
 
 NrrdSetupTexture::~NrrdSetupTexture()
@@ -125,11 +124,12 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
   //const unsigned int nk = nin->axis[0].size;
   const unsigned int nji = nj * ni;
 
-  // add a little epsilon to prevent roundoff - otherwise the max could be 254.99999 and round down
+  // Add a little epsilon to prevent roundoff - otherwise the max
+  // could be 254.99999 and round down
   const double dmaxplus = 255.0 / (dmax - dmin) + 1e-9;  
 
-  double min = 100000;
-  double max = -100000;
+  //double min = 100000;
+  //double max = -100000;
 
   if (justvalues)
   {

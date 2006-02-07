@@ -141,7 +141,6 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
       }
     }
   }
-  cout << "   ENd of nrrdTBA - " << bricks.size() << " bricks \n" ;
 }
 
 
