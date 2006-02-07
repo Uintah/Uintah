@@ -150,13 +150,19 @@ HypreDriverSStruct::printSolution(const string& fileName /* =  "output_x" */)
   if (_requiresPar) {
     HYPRE_ParVectorPrint(_HX_Par, (fileName + ".par").c_str());
   }
+
+  // Print the Residual as an SStruct Vector
+  HYPRE_SStructVectorPrint((fileName + "_residual").c_str(), _HResidual, 0);
+  if (_requiresPar) {
+    HYPRE_ParVectorPrint(_HResidual_Par, (fileName + "_residual.par").c_str());
+  }
 }
 //______________________________________________________________________
 void
 HypreDriverSStruct::gatherSolutionVector(void)
 {
   HYPRE_SStructVectorGather(_HX);
-  HYPRE_SStructVectorGather(_HResidual);
+  //  HYPRE_SStructVectorGather(_HResidual);
 } 
 
 void
