@@ -16,9 +16,8 @@ namespace Uintah{
 #ifdef _TIMESFC_
 SCIRun::Time *timer;
 double start, finish;
-double ptime, cleantime, sertime, gtime;
+double ptime=0, cleantime=0, sertime=0, gtime=0;
 #endif
-
 enum Curve {HILBERT, MORTON, GREY};
 enum CleanupType{BATCHERS,LINEAR};
 
@@ -53,6 +52,7 @@ extern int morient2[][4];
 
 
 #define REAL double
+#define EPSILON 1e-6
 
 #define BINS (1<<DIM)
 template<int DIM, class LOCS>
@@ -61,7 +61,7 @@ class SFC
 public:
 	SFC(int dir[][DIM], ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), sendbuf(0), recievebuf(0), mergebuf(0), d_myworld(d_myworld), block_size(3000), blocks_in_transit(3), sample_percent(.1), cleanup(BATCHERS) {};
 	virtual ~SFC() {};
-	void GenerateCurve(bool force_serial=false);
+	void GenerateCurve(int mode=0);
 	void SetRefinements(unsigned int refinements);
 	void SetLocalSize(unsigned int n);
 	void SetLocations(vector<LOCS> *locs);
@@ -214,11 +214,12 @@ void SFC<DIM,LOCS>::Balance()
 template<int DIM, class LOCS> 
 void SFC<DIM,LOCS>::Profile()
 {
+	double start, finish;
 	int  starti;
 	rank=d_myworld->myrank(); P=d_myworld->size(), Comm=d_myworld->getComm();
 	vector<unsigned int> n_per_proc(P);
 	this->n_per_proc=&n_per_proc[0];	
-	n=2000;
+	n=65000;
 	
 
 	//initialize list
@@ -242,15 +243,13 @@ void SFC<DIM,LOCS>::Profile()
 		//starti+=rand()%(2*P)+1;
 	}
 
-	for(int b=25;b<2000;b+=5)
+	for(int b=25;b<65000;b+=100)
 	{
 		block_size=b;
-		double ptime=0, cleantime=0;
+		double ptime=0;
 		int r;
 		MPI_Barrier(Comm);
-#ifdef _TIMESFC_
 		start=timer->currentSeconds();
-#endif
 		for(r=0;r<250;r++)
 		{
 			
@@ -259,30 +258,24 @@ void SFC<DIM,LOCS>::Profile()
 			swap(sendbuf,mergebuf);
 		
 		}
-#ifdef _TIMESFC_
 		finish=timer->currentSeconds();
 		ptime=finish-start;	
 		double sum,sum2;
 		MPI_Reduce(&ptime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-		MPI_Reduce(&cleantime,&sum2,1,MPI_DOUBLE,MPI_SUM,0,Comm);
 		if(rank==0)
-			cout << b << " " << ptime/P/r << " " << cleantime/P/r << endl;
-#endif		
+			cout << b << " " << ptime/P/r <<endl;
 
 	}
 
 }
 
 template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::GenerateCurve(bool force_serial)
+void SFC<DIM,LOCS>::GenerateCurve(int mode)
 {
-#ifdef _TIMESFC_
-	cleantime=sertime=ptime=gtime=0;
-#endif
 	int errors=0;
 	unsigned char mask;
 	P=d_myworld->size();
-	if(P==1 || force_serial)
+	if(P==1 || mode==1)
 	{
 		errors=5;
 		mask=0x0f;
@@ -310,9 +303,31 @@ void SFC<DIM,LOCS>::GenerateCurve(bool force_serial)
 		cout << "************************\n";	
 		return;
 	}
-	if(P==1 || force_serial)
+	if(P==1 && (mode==1 || mode==0))
 	{
 		Serial();
+	}
+	else if(mode==2)
+	{
+										 
+		if(refinements*DIM<=32)
+		{
+		 	vector<History<unsigned int> > sbuf;
+			sbuf.resize(n);
+			sendbuf=(void*)&(sbuf[0]);
+			SerialH<unsigned int>();
+		}
+		else if(refinements*DIM<=65)
+		{
+		 	vector<History<unsigned long long> > sbuf;
+			sbuf.resize(n);
+			sendbuf=(void*)&(sbuf[0]);
+			SerialH<unsigned long long>();
+		}
+		else
+		{
+			cout << "SFC Error not enough bits for histories.... need to design a larger history class or lower refinements\n";
+		}
 	}
 	else
 	{
@@ -353,7 +368,6 @@ void SFC<DIM,LOCS>::Serial()
 	{
 		bin[b].reserve(n/BINS);
 	}
-
 	//Recursive call
 	SerialR(o,bin,n,center,dimensions);
 
@@ -417,7 +431,7 @@ void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsi
 	//Halve all dimensions
 	for(int d=0;d<DIM;d++)
 	{
-		newdimension[d]=dimension[d]/2;
+		newdimension[d]=dimension[d]*.5;
 	}
 
 	//recursivly call
@@ -425,7 +439,7 @@ void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsi
 	{
 		for(int d=0;d<DIM;d++)
 		{
-			newcenter[b][d]=center[d]+dimension[d]/4*dir[order[o][b]][d];		
+			newcenter[b][d]=center[d]+dimension[d]*.25*dir[order[o][b]][d];		
 		}
 
 		if(size[b]==n)
@@ -439,13 +453,13 @@ void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsi
 			{
 				for(int d=0;d<DIM;d++)
 				{
-					if(l[d]!=locs[orders[i]])
+					if(l[d]-locs[orders[i]*DIM+d]>EPSILON || l[d]-locs[orders[i]*DIM+d]<-EPSILON)
 					{
 						same=false;
 						break;
 					}
 				}
-
+				i++;
 			}
 
 			if(!same)
@@ -499,7 +513,7 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 	//Halve all dimensions
 	for(int d=0;d<DIM;d++)
 	{
-		newdimension[d]=dimension[d]/2;
+		newdimension[d]=dimension[d]*.5;
 	}
 
 	BITS NextHistory;
@@ -508,7 +522,7 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 	{
 		for(int d=0;d<DIM;d++)
 		{
-			newcenter[b][d]=center[d]+dimension[d]/4*dir[order[o][b]][d];		
+			newcenter[b][d]=center[d]+dimension[d]*.25*dir[order[o][b]][d];		
 		}
 
 		if(r==refinements)
@@ -536,7 +550,7 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 
 			for(int d=0;d<DIM;d++)
 			{
-				Clocs[d]=center[d]+dir[order[o][b]][d]*dimension[d]/4;
+				Clocs[d]=center[d]+dir[order[o][b]][d]*dimension[d]*.25;
 
 				dims[d]=newdimension[d];
 			}
@@ -552,8 +566,8 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 
 				for(int d=0;d<DIM;d++)
 				{
-					dims[d]/=2;
-					Clocs[d]=Clocs[d]+dir[order[o][b]][d]*dims[d]/2;
+					dims[d]*=.5;
+					Clocs[d]=Clocs[d]+dir[order[o][b]][d]*dims[d]*.5;
 				}
 				Co=orientation[Co][b];
 			}
@@ -666,7 +680,7 @@ void SFC<DIM,LOCS>::Parallel()
 template<int DIM, class LOCS> template<class BITS>
 int SFC<DIM,LOCS>::MergeExchange(int to)
 {
-
+	float inv_denom=1.0/sizeof(History<BITS>);
 //	cout << rank <<  ": Merge Exchange started with " << to << endl;
 	int direction= (int) (rank>to);
 	BITS emax, emin;
@@ -844,7 +858,7 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			rqueue.pop();
 			
 			MPI_Get_count(&status,MPI_BYTE,&b);
-			b/=sizeof(History<BITS>);
+			b*=inv_denom;
 //			cout << rank << " recieved block of size\n";
 			while(b>0 && merged<n)
 			{
@@ -972,7 +986,7 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			rqueue.pop();
 
 			MPI_Get_count(&status,MPI_BYTE,&b);
-			b/=sizeof(History<BITS>);
+			b*=inv_denom;
 //			cout << rank << " recieved block of size\n";
 
 			while(b>0 && merged<n)
@@ -1084,15 +1098,15 @@ void SFC<DIM,LOCS>::PrimaryMerge()
 		base=cur.base;
 		P=cur.P;
 		send=false;
-		if(rank>=base && rank<base+P/2)
+		if(rank>=base && rank<base+P*.5)
 		{
 			send=true;
-			to=rank+(P+1)/2;
+			to=rank+(P+1)*.5;
 		}
-		else if(rank-(P+1)/2>=base && rank-(P+1)/2<base+P/2)
+		else if(rank-(P+1)*.5>=base && rank-(P+1)*.5<base+P*.5)
 		{
 			send=true;
-			to=rank-(P+1)/2;
+			to=rank-(P+1)*.5;
 		}
 
 		if(send)
@@ -1102,14 +1116,14 @@ void SFC<DIM,LOCS>::PrimaryMerge()
 
 		//make next stages
 
-		cur.P=(P+1)/2;
+		cur.P=(P+1)*.5;
 		if(cur.P>1)
 		{
-			cur.base=base+P/2;
+			cur.base=base+P*.5;
 			q.push(cur);
 		}
 
-		cur.P=P-(P+1)/2;
+		cur.P=P-(P+1)*.5;
 		if(cur.P>1)
 		{
 			cur.base=base;
