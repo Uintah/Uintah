@@ -7,6 +7,7 @@
 #include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
@@ -44,8 +45,14 @@ HypreSolverAMG::solve(void)
 {
   cout_doing << "HypreSolverAMG::solve() BEGIN" << "\n";
   const HypreSolverParams* params = _driver->getParams();
-
-  if (_driver->getInterface() == HypreSStruct) {
+  HYPRE_ParVector amg_res;
+  HypreDriverSStruct* sDriver = dynamic_cast<HypreDriverSStruct*>(_driver);
+  if (sDriver == NULL) {
+    throw InternalError("BoomerAMG was not called with an SStruct driver",
+                        __FILE__, __LINE__);
+  }
+  
+  if (sDriver->getInterface() == HypreSStruct) {
     // AMG parameters setup and setup phase
     HYPRE_Solver parSolver;
     HYPRE_BoomerAMGCreate(&parSolver);
@@ -54,8 +61,9 @@ HypreSolverAMG::solve(void)
     HYPRE_BoomerAMGSetTruncFactor(parSolver, 0.3);
     //HYPRE_BoomerAMGSetMaxLevels(parSolver, 4);
     HYPRE_BoomerAMGSetTol(parSolver, params->tolerance);
+    HYPRE_BoomerAMGSetLogging(parSolver, params->logging);
 #if HAVE_HYPRE_1_9
-    HYPRE_BoomerAMGSetPrintLevel(parSolver, 0);
+    HYPRE_BoomerAMGSetPrintLevel(parSolver, 2);
     HYPRE_BoomerAMGSetPrintFileName(parSolver, "sstruct.out.log");
 #else
     ostringstream msg;
@@ -63,19 +71,22 @@ HypreSolverAMG::solve(void)
          << "to files, proceeding without them" << "\n";
 #endif // #if HAVE_HYPRE_1_9
 
+    cout << "params->maxIterations = " << params->maxIterations << "\n";
     HYPRE_BoomerAMGSetMaxIter(parSolver, params->maxIterations);
-    HYPRE_BoomerAMGSetup(parSolver, _driver->getAPar(), _driver->getBPar(),
-                         _driver->getXPar());
+
+    HYPRE_BoomerAMGSetup(parSolver, sDriver->getAPar(), sDriver->getBPar(),
+                         sDriver->getXPar());
     
     // call AMG solver
-    HYPRE_BoomerAMGSolve(parSolver, _driver->getAPar(), _driver->getBPar(),
-                         _driver->getXPar());
+    HYPRE_BoomerAMGSolve(parSolver, sDriver->getAPar(), sDriver->getBPar(),
+                         sDriver->getXPar());
   
     // Retrieve convergence information
-
-    //cout << "logging = " << params->logging << "\n";
-    HYPRE_BoomerAMGGetResidual(parSolver, &_driver->getResidualPar());
-
+    
+    cout << "logging = " << params->logging << "\n";
+    HYPRE_BoomerAMGGetResidual(parSolver, &amg_res);
+    HYPRE_ParVectorCopy(amg_res, sDriver->getResidualPar());
+    HYPRE_SStructVectorGather(sDriver->getResidual());
 
     HYPRE_BoomerAMGGetNumIterations(parSolver,&_results.numIterations);
     HYPRE_BoomerAMGGetFinalRelativeResidualNorm(parSolver,
