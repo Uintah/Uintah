@@ -285,7 +285,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* new_dw)
 {   
   UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
-  const LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
   
@@ -299,12 +299,11 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    //int proc = lb->getPatchwiseProcessorAssignment(patch);
+    int proc = lb->getPatchwiseProcessorAssignment(patch);
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write  BRYAN:  HELP
-    //if(proc == pg->myrank && time >= nextWriteTime){
-    if( now >= nextWriteTime){        
+    if( proc == pg->myrank() && now >= nextWriteTime){
     
      cout_doing << pg->myrank() << " " 
                 << "Doing doAnalysis (lineExtract)\t\t\t\tL-"
