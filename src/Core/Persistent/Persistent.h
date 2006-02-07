@@ -166,6 +166,12 @@ public:
                                  ProgressReporter *pr = 0);
 };
 
+  SCISHARE Piostream* auto_istream(const string& filename,
+                                   ProgressReporter *pr);
+  SCISHARE Piostream* auto_ostream(const string& filename, const string& type,
+                                   ProgressReporter *pr);
+
+
 //----------------------------------------------------------------------
 class SCISHARE Persistent {
 public:

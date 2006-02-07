@@ -74,15 +74,15 @@ public:
 
   virtual void execute();
 
-  DenseMatrix *mat_identity(int len);
-  DenseMatrix *mat_trans_mult_mat(DenseMatrix *A);
-  DenseMatrix *Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B); 
-  DenseMatrix *make_dense(MatrixHandle A);
-  ColumnMatrix *make_column(MatrixHandle A);
+  DenseMatrix  * mat_identity(int len);
+  DenseMatrix  * mat_trans_mult_mat(DenseMatrix *A);
+  DenseMatrix  * mat_mult(DenseMatrix *A, DenseMatrix *B); 
+  DenseMatrix  * make_dense(MatrixHandle A);
+  ColumnMatrix * make_column(MatrixHandle A);
+
   double FindCorner(Array1<double>  &rho, Array1<double>  &eta, 
 		    Array1<double>  &lambdaArray, 
 		    ColumnMatrix *kapa, int *lambda_index, int nLambda);
-
 };
 	
 //! Module Maker
