@@ -856,6 +856,7 @@ protected:
   const Point &point(typename Node::index_type idx) const
   { return points_[idx]; }
 
+  // These should not be called outside of the synchronize_lock_.
   void                  compute_node_neighbors();
   void                  compute_edges();
   void                  compute_faces();
@@ -1237,12 +1238,6 @@ template <class Basis>
 void
 TetVolMesh<Basis>::compute_faces()
 {
-  synchronize_lock_.lock();
-  if ((synchronized_ & FACES_E) && (synchronized_ & FACE_NEIGHBORS_E)) {
-    synchronize_lock_.unlock();
-    return;
-  }
-
   faces_.clear();
   all_faces_.clear();
   unsigned int i, num_cells = cells_.size();
@@ -1253,7 +1248,6 @@ TetVolMesh<Basis>::compute_faces()
   }
   synchronized_ |= FACES_E;
   synchronized_ |= FACE_NEIGHBORS_E;
-  synchronize_lock_.unlock();
 }
 
 
@@ -1261,12 +1255,6 @@ template <class Basis>
 void
 TetVolMesh<Basis>::compute_edges()
 {
-  synchronize_lock_.lock();
-  if ((synchronized_ & EDGES_E) && (synchronized_ & EDGE_NEIGHBORS_E)) {
-    synchronize_lock_.unlock();
-    return;
-  }
-
   edges_.clear();
   all_edges_.clear();
   unsigned int i, num_cells = (cells_.size()) / 4 * 6;
@@ -1277,7 +1265,6 @@ TetVolMesh<Basis>::compute_edges()
   }
   synchronized_ |= EDGES_E;
   synchronized_ |= EDGE_NEIGHBORS_E;
-  synchronize_lock_.unlock();
 }
 
 
@@ -1285,11 +1272,6 @@ template <class Basis>
 void
 TetVolMesh<Basis>::compute_node_neighbors()
 {
-  synchronize_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    synchronize_lock_.unlock();
-    return;
-  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   unsigned int i, num_cells = cells_.size();
@@ -1298,7 +1280,6 @@ TetVolMesh<Basis>::compute_node_neighbors()
     node_neighbors_[cells_[i]].push_back(i);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  synchronize_lock_.unlock();
 }
 
 
@@ -1306,6 +1287,7 @@ template <class Basis>
 bool
 TetVolMesh<Basis>::synchronize(unsigned int tosync)
 {
+  synchronize_lock_.lock();
   if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
     compute_node_neighbors();
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
@@ -1316,6 +1298,7 @@ TetVolMesh<Basis>::synchronize(unsigned int tosync)
     compute_faces();
   if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E))
     compute_grid();
+  synchronize_lock_.unlock();
   return true;
 }
 
@@ -2511,12 +2494,6 @@ template <class Basis>
 void
 TetVolMesh<Basis>::compute_grid()
 {
-  synchronize_lock_.lock();
-  if (synchronized_ & LOCATE_E) {
-    synchronize_lock_.unlock();
-    return;
-  }
-
   BBox bb = get_bounding_box();
   if (bb.valid())
   {
@@ -2540,7 +2517,6 @@ TetVolMesh<Basis>::compute_grid()
   }
 
   synchronized_ |= LOCATE_E;
-  synchronize_lock_.unlock();
 }
 
 
@@ -2836,18 +2812,20 @@ TetVolMesh<Basis>::delete_cells(set<unsigned int> &to_delete)
     ce+=4;
     cells_.erase(cb, ce);
   }
-  synchronize_lock_.unlock();
 
   synchronized_ &= ~LOCATE_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
-  if (synchronized_ & FACE_NEIGHBORS_E) {
+  if (synchronized_ & FACE_NEIGHBORS_E)
+  {
     synchronized_ &= ~FACE_NEIGHBORS_E;
     compute_faces();
   }
-  if (synchronized_ & EDGE_NEIGHBORS_E) {
+  if (synchronized_ & EDGE_NEIGHBORS_E)
+  {
     synchronized_ &= ~EDGE_NEIGHBORS_E;
     compute_edges();
   }
+  synchronize_lock_.unlock();
 }
 
 
@@ -2862,18 +2840,19 @@ TetVolMesh<Basis>::delete_nodes(set<unsigned int> &to_delete)
     vector<Point>::iterator pit = points_.begin() + n;
     points_.erase(pit);
   }
-  synchronize_lock_.unlock();
-
   synchronized_ &= ~LOCATE_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
-  if (synchronized_ & FACE_NEIGHBORS_E) {
+  if (synchronized_ & FACE_NEIGHBORS_E)
+  {
     synchronized_ &= ~FACE_NEIGHBORS_E;
     compute_faces();
   }
-  if (synchronized_ & EDGE_NEIGHBORS_E) {
+  if (synchronized_ & EDGE_NEIGHBORS_E)
+  {
     synchronized_ &= ~EDGE_NEIGHBORS_E;
     compute_edges();
   }
+  synchronize_lock_.unlock();
 }
 
 
