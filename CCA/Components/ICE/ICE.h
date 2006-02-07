@@ -9,6 +9,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Components/ICE/ExchangeCoefficients.h>
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
@@ -42,6 +43,7 @@ namespace Uintah {
   class ModelInfo; 
   class ModelInterface; 
   class Turbulence;
+  class AnalysisModule;
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
     public:
@@ -973,6 +975,8 @@ namespace Uintah {
       Advector* d_advector;
       bool d_useCompatibleFluxes;
       Turbulence* d_turbulence;
+      AnalysisModule* d_analysisModule;
+      
       std::string d_delT_scheme;
       
       // exchange coefficients

@@ -34,6 +34,7 @@ SUBDIRS := \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \
         $(SRCDIR)/SwitchingCriteria \
+        $(SRCDIR)/OnTheFlyAnalysis \
         $(SRCDIR)/Parent
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
