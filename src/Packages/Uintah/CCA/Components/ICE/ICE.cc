@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
@@ -111,9 +112,12 @@ ICE::~ICE()
   delete d_advector;
   delete d_exchCoeff;
 
-  if(d_turbulence)
+  if(d_turbulence){
     delete d_turbulence;
-     
+  }
+  if(d_analysisModule){
+    delete d_analysisModule;
+  }   
   if (d_press_matl->removeReference()){
     delete d_press_matl;
   }
@@ -351,6 +355,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   // Set up turbulence models - needs to be done after materials are initialized
   d_turbulence = TurbulenceFactory::create(cfd_ice_ps, sharedState);
+  
+  //__________________________________
+  //  Set up data analysis modules
+  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  d_analysisModule->problemSetup(prob_spec, grid, sharedState);
 
   //__________________________________
   //  conservationTest
@@ -652,6 +661,10 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
       model->d_dataArchiver = dataArchiver;
     }
   }
+  
+  //__________________________________
+  // dataAnalysis 
+  d_analysisModule->scheduleInitialize( sched, level);
  
   //__________________________________
   // Make adjustments to the hydrostatic pressure
@@ -687,6 +700,8 @@ void ICE::restartInitialize()
     cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
   // disregard initial dt when restarting
   d_initialDt = 10000.0;
+  
+  d_analysisModule->restartInitialize();
   
   //__________________________________
   // Models Initialization
@@ -886,6 +901,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           mpm_matls_sub,
                                                           d_press_matl,
                                                           all_matls);
+                                                          
+  d_analysisModule->scheduleDoAnalysis(   sched, level);                                                          
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                           all_matls); 
