@@ -1,24 +1,3 @@
-/*
-
-To find out what processor you are:
-
-int myrank =  Parallel::getMPIRank()
-
-(include <Packages/Uintah/Core/Parallel/Parallel.h>
-
-To find out what proc a patch is on:
-
-const LoadBalancer* lb = dataarchiver->getPort("load balancer");
-int proc = lb->getPatchwiseProcessorAssignment(patch);
-
-if (proc == myrank) {
-
-// write data
-
-}
-
-
-*/
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
@@ -49,9 +28,9 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "PLUMESTATS_DBG_COUT:+" 
-static DebugStream cout_doing("PLUMESTATS_DOING_COUT", false);
-static DebugStream cout_dbg("PLUMESTATS_DBG_COUT", false);
+//  setenv SCI_DEBUG "LINEEXTRACT_DBG_COUT:+" 
+static DebugStream cout_doing("LINEEXTRACT_DOING_COUT", false);
+static DebugStream cout_dbg("LINEEXTRACT_DBG_COUT", false);
 //______________________________________________________________________              
 lineExtract::lineExtract(ProblemSpecP& module_spec,
                          SimulationStateP& sharedState,
@@ -302,7 +281,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     int proc = lb->getPatchwiseProcessorAssignment(patch);
     //__________________________________
     // write data if this processor owns this patch
-    // and if it's time to write  BRYAN:  HELP
+    // and if it's time to write
     if( proc == pg->myrank() && now >= nextWriteTime){
     
      cout_doing << pg->myrank() << " " 
@@ -311,20 +290,34 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
                 << " patch " << patch->getGridIndex()<< endl;
       //__________________________________
       // loop over each of the variables
+      // load them into the data vectors
       vector< constCCVariable<double> > CC_double_data;
-      constCCVariable<double> q_CC_tmp;
+      vector< constCCVariable<Vector> > CC_Vector_data;
+      constCCVariable<double> q_CC_double;
+      constCCVariable<Vector> q_CC_Vector;      
       Ghost::GhostType gn = Ghost::None;
       int indx = d_matl->getDWIndex();
-      
+
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-        new_dw->get(q_CC_tmp, d_varLabels[i], indx, patch, gn, 0);
-        CC_double_data.push_back(q_CC_tmp);
+        switch( d_varLabels[i]->typeDescription()->getSubType()->getType()){
+        case TypeDescription::double_type:
+          new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gn, 0);
+          CC_double_data.push_back(q_CC_double);
+          break;
+        case TypeDescription::Vector:
+          new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gn, 0);
+          CC_Vector_data.push_back(q_CC_Vector);
+          break;
+        default:
+          throw InternalError("ERROR:AnalysisModule:lineExtact:Unknown variable type", __FILE__, __LINE__);
+        }
       }      
 
       //__________________________________
       // loop over each line 
       for (unsigned int l =0 ; l < d_lines.size(); l++) {
       
+        // create the directory structure
         string udaDir = d_dataArchiver->getOutputLocation();
         string dirName = d_lines[l]->name;
         string linePath = udaDir + "/" + dirName;
@@ -377,15 +370,23 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
             throw InternalError("\nERROR:dataAnalysisModule:lineExtract:  failed opening file"+filename,__FILE__, __LINE__);
           }
           
-          // write position
+          // write cell position and time
           Point here = patch->cellPosition(c);
           double time = d_dataArchiver->getCurrentTime();
           fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
-         
-          // loop over each of the variables
-          for (unsigned int i=0 ; i <  d_varLabels.size(); i++) {
-            fprintf(fp,    "\t%16E",CC_double_data[i][c]);
-          } 
+          
+          // write double variables
+          for (unsigned int i=0 ; i <  CC_double_data.size(); i++) {
+            fprintf(fp, "\t%16E",CC_double_data[i][c]);            
+          }
+          
+          // write Vector variable
+          for (unsigned int i=0 ; i <  CC_Vector_data.size(); i++) {
+            fprintf(fp, "\t% 16E \t %16E \t %16E",
+                    CC_Vector_data[i][c].x(),
+                    CC_Vector_data[i][c].y(),
+                    CC_Vector_data[i][c].z() );            
+          }
           fprintf(fp,    "\n");
           fclose(fp);
         }  // loop over points
@@ -402,12 +403,26 @@ void lineExtract::createFile(string& filename)
 {
   FILE *fp;
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"X_CC \t Y_CC \t Z_CC \t Time");
+  fprintf(fp,"X_CC \t Y_CC \t Z_CC \t Time"); 
   
+  // double variables header
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     VarLabel* vl = d_varLabels[i];
-    string name = vl->getName();
-    fprintf(fp,"\t %s", name.c_str());
+    TypeDescription::Type type =vl->typeDescription()->getSubType()->getType();
+    if(type ==  TypeDescription::double_type){
+      string name = vl->getName();
+      fprintf(fp,"\t %s", name.c_str());
+    }
+  }
+  
+  // Vector variables header
+  for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+    VarLabel* vl = d_varLabels[i];
+    TypeDescription::Type type =vl->typeDescription()->getSubType()->getType();
+    if(type ==  TypeDescription::Vector){
+      string name = vl->getName();
+      fprintf(fp,"\t %s.x \t %s.y \t %s.z", name.c_str(),name.c_str(),name.c_str());
+    }
   }
   fprintf(fp,"\n");
   fclose(fp);
