@@ -40,6 +40,7 @@
  *
  */
 
+
 #ifndef SCI_project_QuadSurfMesh_h
 #define SCI_project_QuadSurfMesh_h 1
 
@@ -56,6 +57,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
+
 
 namespace SCIRun {
 
@@ -101,65 +103,65 @@ public:
   typedef Face Elem;
 
  friend class ElemData;
-  
-  class ElemData 
+
+  class ElemData
   {
   public:
-    ElemData(const QuadSurfMesh<Basis>& msh, 
-	     const typename Elem::index_type ind) :
+    ElemData(const QuadSurfMesh<Basis>& msh,
+             const typename Elem::index_type ind) :
       mesh_(msh),
       index_(ind)
     {}
-    
+
     // the following designed to coordinate with ::get_nodes
-    inline 
+    inline
     unsigned node0_index() const {
       return mesh_.faces_[index_ * 4];
     }
-    inline 
+    inline
     unsigned node1_index() const {
       return mesh_.faces_[index_ * 4 + 1];
     }
-    inline 
+    inline
     unsigned node2_index() const {
       return mesh_.faces_[index_ * 4 + 2];
     }
-    inline 
+    inline
     unsigned node3_index() const {
       return mesh_.faces_[index_ * 4 + 3];
     }
 
     // the following designed to coordinate with ::get_edges
-    inline 
+    inline
     unsigned edge0_index() const {
       return index_ * 6;
     }
-    inline 
+    inline
     unsigned edge1_index() const {
       return index_ * 6 + 1;
     }
-    inline 
+    inline
     unsigned edge2_index() const {
       return index_ * 6 + 2;
     }
-    inline 
+    inline
     unsigned edge3_index() const {
       return index_ * 6 + 3;
     }
 
-    inline 
+    inline
     const Point node0() const {
       return mesh_.points_[node0_index()];
     }
-    inline 
+    inline
     const Point node1() const {
       return mesh_.points_[node1_index()];
     }
-    inline 
+    inline
     const Point node2() const {
       return mesh_.points_[node2_index()];
     }
-    inline 
+    inline
     const Point node3() const {
       return mesh_.points_[node3_index()];
     }
@@ -206,12 +208,12 @@ public:
   void get_edges(typename Edge::array_type &array, typename Cell::index_type idx) const;
   void get_faces(typename Face::array_type &array, typename Cell::index_type idx) const;
 
-  void get_faces(typename Face::array_type &a, 
-		 typename Face::index_type f) const
+  void get_faces(typename Face::array_type &a,
+                 typename Face::index_type f) const
   { a.push_back(f); }
-  
+
   //! get the parent element(s) of the given index
-  void get_elems(typename Elem::array_type &result, 
+  void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   {
     result.clear();
@@ -220,8 +222,8 @@ public:
   }
 
   bool get_neighbor(typename Face::index_type &neighbor,
-		    typename Face::index_type from,
-		    typename Edge::index_type idx) const;
+                    typename Face::index_type from,
+                    typename Edge::index_type idx) const;
 
   void get_neighbors(typename Face::array_type &array, typename Face::index_type idx) const;
 
@@ -242,7 +244,7 @@ public:
     const Point &p2 = point(ra[2]);
     const Point &p3 = point(ra[3]);
     return ((Cross(p0-p1,p2-p1)).length()+(Cross(p2-p3,p0-p3)).length()+
-	    (Cross(p3-p0,p1-p0)).length()+(Cross(p1-p2,p3-p2)).length())*0.25;
+            (Cross(p3-p0,p1-p0)).length()+(Cross(p1-p2,p3-p2)).length())*0.25;
   }
   double get_size(typename Cell::index_type /*idx*/) const { return 0; };
   double get_length(typename Edge::index_type idx) const { return get_size(idx); };
@@ -265,14 +267,14 @@ public:
   int get_weights(const Point &p, typename Face::array_type &l, double *w);
   int get_weights(const Point & , typename Cell::array_type & , double * )
   {ASSERTFAIL("QuadSurfMesh::get_weights(Cells) not supported."); }
-  
+
   bool inside3_p(typename Face::index_type i, const Point &p) const;
 
   void get_point(Point &p, typename Node::index_type i) const { p = points_[i]; }
   void get_normal(Vector &n, typename Node::index_type i) const { n = normals_[i]; }
 
-  void get_normal(Vector &result, vector<double> &coords, 
-		  typename Elem::index_type eidx, unsigned int) 
+  void get_normal(Vector &result, vector<double> &coords,
+                  typename Elem::index_type eidx, unsigned int)
   {
 
     if (basis_.polynomial_order() < 2) {
@@ -285,24 +287,24 @@ public:
       const double c1_1 = fabs(coords[1] - 1.0L);
 
       if (c0_0 < 1e-7 && c1_0 < 1e-7) {
-	// arr[0]
-	result = normals_[arr[0]];
-	return;
+        // arr[0]
+        result = normals_[arr[0]];
+        return;
       } else if (c0_1 < 1e-7 && c1_0 < 1e-7) {
-	// arr[1]
-	result = normals_[arr[1]];
-	return;
+        // arr[1]
+        result = normals_[arr[1]];
+        return;
       } else if (c0_1 < 1e-7 && c1_1 < 1e-7) {
-	// arr[2]
-	result = normals_[arr[2]];
-	return;
+        // arr[2]
+        result = normals_[arr[2]];
+        return;
       } else if (c0_0 < 1e-7 && c1_1 < 1e-7) {
-	// arr[3]
-	result = normals_[arr[3]];
-	return;
+        // arr[3]
+        result = normals_[arr[3]];
+        return;
       }
     }
-    
+
     ElemData ed(*this, eidx);
     vector<Point> Jv;
     basis_.derivate(coords, ed, Jv);
@@ -310,7 +312,8 @@ public:
     result.normalize();
   }
 
-  void set_point(const Point &p, typename Node::index_type i) { points_[i] = p; }
+  void set_point(const Point &p, typename Node::index_type i)
+  { points_[i] = p; }
 
   int get_valence(typename Node::index_type /*idx*/) const { return 0; }
   int get_valence(typename Edge::index_type /*idx*/) const { return 0; }
@@ -325,14 +328,14 @@ public:
   virtual const TypeDescription *get_type_description() const;
 
   // Extra functionality needed by this specific geometry.
-  typename Node::index_type add_find_point(const Point &p, 
-					   double err = 1.0e-3);
-  typename Elem::index_type add_quad(typename Node::index_type a, 
-			    typename Node::index_type b,
-			    typename Node::index_type c, 
-			    typename Node::index_type d);
+  typename Node::index_type add_find_point(const Point &p,
+                                           double err = 1.0e-3);
+  typename Elem::index_type add_quad(typename Node::index_type a,
+                            typename Node::index_type b,
+                            typename Node::index_type c,
+                            typename Node::index_type d);
   typename Elem::index_type add_quad(const Point &p0, const Point &p1,
-		const Point &p2, const Point &p3);
+                const Point &p2, const Point &p3);
   typename Elem::index_type add_elem(typename Node::array_type a);
   void node_reserve(size_t s) { points_.reserve(s); }
   void elem_reserve(size_t s) { faces_.reserve(s*4); }
@@ -340,55 +343,55 @@ public:
   virtual int dimensionality() const { return 2; }
   typename Node::index_type add_point(const Point &p);
 
-  virtual bool		synchronize(unsigned int);
+  virtual bool          synchronize(unsigned int);
 
   Basis& get_basis() { return basis_; }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords, 
-		       typename Elem::index_type ci, 
-		       unsigned which_edge, 
-		       unsigned div_per_unit) const
-  {    
-    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+  void pwl_approx_edge(vector<vector<double> > &coords,
+                       typename Elem::index_type ci,
+                       unsigned which_edge,
+                       unsigned div_per_unit) const
+  {
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc
     // compare get_nodes order to the basis order
 
     //FIX_ME MC delete this comment when this is verified.
-    basis_.approx_edge(which_edge, div_per_unit, coords); 
+    basis_.approx_edge(which_edge, div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
-		       typename Elem::index_type ci, 
-		       unsigned, 
-		       unsigned div_per_unit) const
+  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+                       typename Elem::index_type ci,
+                       unsigned,
+                       unsigned div_per_unit) const
   {
-    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
+    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc
     // compare get_nodes order to the basis order
     basis_.approx_face(0, div_per_unit, coords);
   }
-  
-  bool get_coords(vector<double> &coords, 
-		  const Point &p,
-		  typename Elem::index_type idx) const
+
+  bool get_coords(vector<double> &coords,
+                  const Point &p,
+                  typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
-    return basis_.get_coords(coords, p, ed); 
+    return basis_.get_coords(coords, p, ed);
   }
-  
-  void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Elem::index_type idx) const
+
+  void interpolate(Point &pt, const vector<double> &coords,
+                   typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     pt = basis_.interpolate(coords, ed);
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords, 
-		typename Elem::index_type idx, 
-		vector<Point> &J) const
+  void derivate(const vector<double> &coords,
+                typename Elem::index_type idx,
+                vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -398,7 +401,7 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
-  static const TypeDescription* elem_type_description() 
+  static const TypeDescription* elem_type_description()
   { return face_type_description(); }
 
   // returns a QuadSurfMesh
@@ -418,81 +421,79 @@ private:
   const Point &point(typename Node::index_type i) const { return points_[i]; }
 
   void                  compute_edges();
-  void			compute_normals();
-  void			compute_node_neighbors();
-  void			compute_edge_neighbors();
+  void                  compute_normals();
+  void                  compute_node_neighbors();
+  void                  compute_edge_neighbors();
 
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
 
-  vector<Point>			points_;
+  vector<Point>                 points_;
   vector<int>                   edges_;
-  vector<typename Node::index_type>	faces_;
+  vector<typename Node::index_type>     faces_;
   typedef vector<vector<typename Cell::index_type> > NodeNeighborMap;
-  NodeNeighborMap	        node_neighbors_;
-  vector<int>			edge_neighbors_;
-  vector<Vector>		normals_; //! normalized per node
-  Mutex				point_lock_;
-  Mutex				edge_lock_;
-  Mutex				face_lock_;
-  Mutex	         		node_neighbor_lock_;
-  Mutex				edge_neighbor_lock_;
-  Mutex				normal_lock_;
-  unsigned int			synchronized_;
+  NodeNeighborMap               node_neighbors_;
+  vector<int>                   edge_neighbors_;
+  vector<Vector>                normals_; //! normalized per node
+  Mutex                         point_lock_;
+  Mutex                         edge_lock_;
+  Mutex                         face_lock_;
+  Mutex                         node_neighbor_lock_;
+  Mutex                         edge_neighbor_lock_;
+  Mutex                         normal_lock_;
+  unsigned int                  synchronized_;
   Basis                         basis_;
 
 
 #ifdef HAVE_HASH_MAP
-
-struct edgehash
-{
-  size_t operator()(const pair<int, int> &a) const
+  struct edgehash
   {
+    size_t operator()(const pair<int, int> &a) const
+    {
 #if defined(__ECC) || defined(_MSC_VER)
-    hash_compare<int> hasher;
+      hash_compare<int> hasher;
 #else
-    hash<int> hasher;
+      hash<int> hasher;
 #endif
-    return hasher(hasher(a.first) + a.second);
-  }
+      return hasher(hasher(a.first) + a.second);
+    }
 #if defined(__ECC) || defined(_MSC_VER)
 
-  static const size_t bucket_size = 4;
-  static const size_t min_buckets = 8;
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
 
-  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
-  {
-    return a.first < b.first || a.first == b.first && a.second < b.second;
-  }
+    bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
 #endif
-};
+  };
 
-struct edgecompare
-{
-  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  struct edgecompare
   {
-    return a.first == b.first && a.second == b.second;
-  }
-};
+    bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
 
-#else
+#else // HAVE_HASH_MAP
 
-struct edgecompare
-{
-  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  struct edgecompare
   {
-    return a.first < b.first || a.first == b.first && a.second < b.second;
-  }
+    bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
+#endif // HAVE_HASH_MAP
 };
 
-#endif
-
-};
 
 template <class Basis>
-PersistentTypeID 
-QuadSurfMesh<Basis>::type_id(type_name(-1), "Mesh", 
-			     QuadSurfMesh<Basis>::maker);
+PersistentTypeID
+QuadSurfMesh<Basis>::type_id(type_name(-1), "Mesh",
+                             QuadSurfMesh<Basis>::maker);
 
 
 
@@ -511,7 +512,7 @@ QuadSurfMesh<Basis>::type_name(int n)
     static const string nm("QuadSurfMesh");
     return nm;
   }
-  else 
+  else
   {
     return find_type_name((Basis *)0);
   }
@@ -535,6 +536,7 @@ QuadSurfMesh<Basis>::QuadSurfMesh()
 {
 }
 
+
 template <class Basis>
 QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
   : points_(0),
@@ -555,7 +557,7 @@ QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
   lcopy.point_lock_.lock();
   points_ = copy.points_;
   lcopy.point_lock_.unlock();
-  
+
   lcopy.edge_lock_.lock();
   edges_ = copy.edges_;
   synchronized_ |= copy.synchronized_ & EDGES_E;
@@ -581,10 +583,12 @@ QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
   lcopy.normal_lock_.unlock();
 }
 
+
 template <class Basis>
 QuadSurfMesh<Basis>::~QuadSurfMesh()
 {
 }
+
 
 template <class Basis>
 BBox
@@ -599,6 +603,7 @@ QuadSurfMesh<Basis>::get_bounding_box() const
 
   return result;
 }
+
 
 template <class Basis>
 void
@@ -615,79 +620,94 @@ QuadSurfMesh<Basis>::transform(const Transform &t)
   point_lock_.unlock();
 }
 
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::begin(typename QuadSurfMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on QuadSurfMesh first");
+            "Must call synchronize NODES_E on QuadSurfMesh first");
   itr = 0;
 }
+
 
 template <class Basis>
 void
 QuadSurfMesh<Basis>::end(typename QuadSurfMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on QuadSurfMesh first");
+            "Must call synchronize NODES_E on QuadSurfMesh first");
   itr = (int)points_.size();
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::begin(typename QuadSurfMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on QuadSurfMesh first");
+            "Must call synchronize EDGES_E on QuadSurfMesh first");
   itr = 0;
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::end(typename QuadSurfMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on QuadSurfMesh first");
+            "Must call synchronize EDGES_E on QuadSurfMesh first");
   itr = static_cast<typename Edge::iterator>((int)edges_.size());
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::begin(typename QuadSurfMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on QuadSurfMesh first");
+            "Must call synchronize FACES_E on QuadSurfMesh first");
   itr = 0;
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::end(typename QuadSurfMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on QuadSurfMesh first");
+            "Must call synchronize FACES_E on QuadSurfMesh first");
   itr = static_cast<typename Face::iterator>((int)faces_.size() / 4);
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::begin(typename QuadSurfMesh::Cell::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on QuadSurfMesh first");
+            "Must call synchronize CELLS_E on QuadSurfMesh first");
   itr = 0;
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::end(typename QuadSurfMesh::Cell::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on QuadSurfMesh first");
+            "Must call synchronize CELLS_E on QuadSurfMesh first");
   itr = 0;
 }
 
+
 template <class Basis>
 void
-QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array, 
-			       typename Edge::index_type eidx) const
+QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
+                               typename Edge::index_type eidx) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on QuadSurfMesh first");
+            "Must call synchronize EDGES_E on QuadSurfMesh first");
   static int table[8][2] =
   {
     {0, 1},
@@ -704,13 +724,14 @@ QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
   array.push_back(faces_[node + table[off][1]]);
 }
 
+
 template <class Basis>
 void
-QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array, 
-			       typename Face::index_type idx) const
+QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
+                               typename Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on QuadSurfMesh first");
+            "Must call synchronize FACES_E on QuadSurfMesh first");
   array.clear();
   array.push_back(faces_[idx * 4 + 0]);
   array.push_back(faces_[idx * 4 + 1]);
@@ -718,13 +739,14 @@ QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
   array.push_back(faces_[idx * 4 + 3]);
 }
 
+
 template <class Basis>
 void
-QuadSurfMesh<Basis>::get_edges(typename Edge::array_type &array, 
-			       typename Face::index_type idx) const
+QuadSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
+                               typename Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on TriSurfMesh first");
+            "Must call synchronize EDGES_E on TriSurfMesh first");
 
   array.clear();
 
@@ -739,23 +761,24 @@ QuadSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
       const int c = edges_[j];
       const int d = c - c % 4 + (c+1) % 4;
       if (faces_[a] == faces_[c] && faces_[b] == faces_[d] ||
-	  faces_[a] == faces_[d] && faces_[b] == faces_[c])
+          faces_[a] == faces_[d] && faces_[b] == faces_[c])
       {
-	array.push_back(j);
-	break;
+        array.push_back(j);
+        break;
       }
     }
   }
 }
 
+
 template <class Basis>
 bool
 QuadSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
-			   typename Face::index_type from,
-			   typename Edge::index_type edge) const
+                                  typename Face::index_type from,
+                                  typename Edge::index_type edge) const
 {
   ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
-	    "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
+            "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
   unsigned int n = edge_neighbors_[edges_[edge]];
   if (n != MESH_NO_NEIGHBOR && (n / 4) == from)
   {
@@ -768,21 +791,25 @@ QuadSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
   }
   return false;
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::get_neighbors(typename Face::array_type &neighbor,
-			    typename Face::index_type idx) const
+                                   typename Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
-	    "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
+            "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
   typename Edge::array_type edges;
   get_edges(edges, idx);
 
   neighbor.clear();
   typename Edge::array_type::iterator iter = edges.begin();
-  while (iter != edges.end()) {
+  while (iter != edges.end())
+  {
     typename Face::index_type f;
-    if (get_neighbor(f, idx, *iter)) {
+    if (get_neighbor(f, idx, *iter))
+    {
       neighbor.push_back(f);
     }
     ++iter;
@@ -792,53 +819,20 @@ QuadSurfMesh<Basis>::get_neighbors(typename Face::array_type &neighbor,
 
 template <class Basis>
 bool
-QuadSurfMesh<Basis>::locate(typename Node::index_type &loc, 
-			    const Point &p) const
-{ 
+QuadSurfMesh<Basis>::locate(typename Node::index_type &loc,
+                            const Point &p) const
+{
   typename Node::iterator bi, ei;
   begin(bi);
   end(ei);
   loc = 0;
-  
-  bool found = false;
-  double mindist = 0.0;
-  while (bi != ei) 
-  {
-    const Point &center = point(*bi);
-    const double dist = (p - center).length2();
-    if (!found || dist < mindist) 
-    {      
-      loc = *bi;
-      mindist = dist;
-      found = true;
-    }
-    ++bi;
-  }
-  return found;
-}
 
-
-template <class Basis>
-bool
-QuadSurfMesh<Basis>::locate(typename Edge::index_type &loc, 
-			    const Point &p) const
-{
-  ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on QuadSurfMesh first");
-
-  typename Edge::iterator bi, ei;
-  typename Node::array_type nodes;
-  begin(bi);
-  end(ei);
-  loc = 0;
-  
   bool found = false;
   double mindist = 0.0;
   while (bi != ei)
   {
-    get_nodes(nodes,*bi);
-    const double dist = distance_to_line2(p, points_[nodes[0]], 
-					  points_[nodes[1]]);
+    const Point &center = point(*bi);
+    const double dist = (p - center).length2();
     if (!found || dist < mindist)
     {
       loc = *bi;
@@ -850,10 +844,44 @@ QuadSurfMesh<Basis>::locate(typename Edge::index_type &loc,
   return found;
 }
 
+
 template <class Basis>
-bool 
-QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i, 
-			       const Point &p) const
+bool
+QuadSurfMesh<Basis>::locate(typename Edge::index_type &loc,
+                            const Point &p) const
+{
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize EDGES_E on QuadSurfMesh first");
+
+  typename Edge::iterator bi, ei;
+  typename Node::array_type nodes;
+  begin(bi);
+  end(ei);
+  loc = 0;
+
+  bool found = false;
+  double mindist = 0.0;
+  while (bi != ei)
+  {
+    get_nodes(nodes,*bi);
+    const double dist = distance_to_line2(p, points_[nodes[0]],
+                                          points_[nodes[1]]);
+    if (!found || dist < mindist)
+    {
+      loc = *bi;
+      mindist = dist;
+      found = true;
+    }
+    ++bi;
+  }
+  return found;
+}
+
+
+template <class Basis>
+bool
+QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i,
+                               const Point &p) const
 {
   typename Node::array_type nodes;
   get_nodes(nodes, i);
@@ -861,12 +889,14 @@ QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i,
   unsigned int n = nodes.size();
 
   Point * pts = new Point[n];
-  
-  for (unsigned int i = 0; i < n; i++) {
+
+  for (unsigned int i = 0; i < n; i++)
+  {
     get_center(pts[i], nodes[i]);
   }
 
-  for (unsigned int i = 0; i < n; i+=2) {
+  for (unsigned int i = 0; i < n; i+=2)
+  {
     Point p0 = pts[(i+0)%n];
     Point p1 = pts[(i+1)%n];
     Point p2 = pts[(i+2)%n];
@@ -882,14 +912,6 @@ QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i,
     const double a2 = Cross(v0, v1).length();  // area opposite p2
     const double s = a0+a1+a2;
 
-    // If the area of any of the sub triangles is very small then the point
-    // is on the edge of the subtriangle.
-    // TODO : How small is small ???
-//     if( a0 < MIN_ELEMENT_VAL ||
-// 	a1 < MIN_ELEMENT_VAL ||
-// 	a2 < MIN_ELEMENT_VAL )
-//       return true;
-
     // For the point to be inside a CONVEX quad it must be inside one
     // of the four triangles that can be formed by using three of the
     // quad vertices and the point in question.
@@ -902,11 +924,12 @@ QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i,
   return false;
 }
 
+
 template <class Basis>
 bool
-QuadSurfMesh<Basis>::locate(typename Face::index_type &face, 
-			    const Point &p) const
-{  
+QuadSurfMesh<Basis>::locate(typename Face::index_type &face,
+                            const Point &p) const
+{
   if (basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
   typename Face::iterator bi, ei;
   begin(bi);
@@ -923,19 +946,21 @@ QuadSurfMesh<Basis>::locate(typename Face::index_type &face,
   return false;
 }
 
+
 template <class Basis>
 bool
-QuadSurfMesh<Basis>::locate(typename Cell::index_type &loc, 
-			    const Point &) const
+QuadSurfMesh<Basis>::locate(typename Cell::index_type &loc,
+                            const Point &) const
 {
   loc = 0;
   return false;
 }
 
+
 template <class Basis>
 int
-QuadSurfMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l, 
-				 double *w)
+QuadSurfMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l,
+                                 double *w)
 {
   typename Face::index_type idx;
   if (locate(idx, p))
@@ -948,17 +973,19 @@ QuadSurfMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l,
   return 0;
 }
 
+
 template <class Basis>
-int 
-QuadSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
-				 double *w)
+int
+QuadSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
+                                 double *w)
 {
   typename Face::index_type idx;
   if (locate(idx, p))
   {
     get_nodes(l,idx);
     vector<double> coords(2);
-    if (get_coords(coords, p, idx)) {
+    if (get_coords(coords, p, idx))
+    {
       basis_.get_weights(coords, w);
       return basis_.dofs();
     }
@@ -966,10 +993,11 @@ QuadSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   return 0;
 }
 
+
 template <class Basis>
 void
-QuadSurfMesh<Basis>::get_center(Point &result, 
-				typename Edge::index_type idx) const
+QuadSurfMesh<Basis>::get_center(Point &result,
+                                typename Edge::index_type idx) const
 {
   typename Node::array_type arr;
   get_nodes(arr, idx);
@@ -978,6 +1006,7 @@ QuadSurfMesh<Basis>::get_center(Point &result,
 
   result.asVector() *= 0.5;
 }
+
 
 template <class Basis>
 void
@@ -998,6 +1027,7 @@ QuadSurfMesh<Basis>::get_center(Point &p, typename Face::index_type idx) const
   p.asVector() *= (1.0 / 4.0);
 }
 
+
 template <class Basis>
 bool
 QuadSurfMesh<Basis>::synchronize(unsigned int tosync)
@@ -1008,10 +1038,11 @@ QuadSurfMesh<Basis>::synchronize(unsigned int tosync)
     compute_normals();
   if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
     compute_node_neighbors();
-  if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E)) 
+  if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edge_neighbors();
   return true;
 }
+
 
 template <class Basis>
 void
@@ -1057,12 +1088,12 @@ QuadSurfMesh<Basis>::compute_normals()
     ++iter;
   }
   //Averaging the normals.
-  typename vector<vector<typename Face::index_type> >::iterator nif_iter = 
+  typename vector<vector<typename Face::index_type> >::iterator nif_iter =
     node_in_faces.begin();
   int i = 0;
   while (nif_iter != node_in_faces.end()) {
     const vector<typename Face::index_type> &v = *nif_iter;
-    typename vector<typename Face::index_type>::const_iterator fiter = 
+    typename vector<typename Face::index_type>::const_iterator fiter =
       v.begin();
     Vector ave(0.L,0.L,0.L);
     while(fiter != v.end()) {
@@ -1099,12 +1130,13 @@ QuadSurfMesh<Basis>::add_find_point(const Point &p, double err)
   }
 }
 
+
 template <class Basis>
 typename QuadSurfMesh<Basis>::Elem::index_type
-QuadSurfMesh<Basis>::add_quad(typename Node::index_type a, 
-			      typename Node::index_type b,
-			      typename Node::index_type c, 
-			      typename Node::index_type d)
+QuadSurfMesh<Basis>::add_quad(typename Node::index_type a,
+                              typename Node::index_type b,
+                              typename Node::index_type c,
+                              typename Node::index_type d)
 {
   face_lock_.lock();
   faces_.push_back(a);
@@ -1132,6 +1164,8 @@ QuadSurfMesh<Basis>::add_elem(typename Node::array_type a)
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   return static_cast<typename Elem::index_type>(((int)faces_.size() - 1) >> 2);
 }
+
+
 #ifdef HAVE_HASH_MAP
 
 struct edgehash
@@ -1191,6 +1225,7 @@ typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
 
 #endif
 
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::compute_edges()
@@ -1202,7 +1237,7 @@ QuadSurfMesh<Basis>::compute_edges()
   }
 
   EdgeMapType edge_map;
-  
+
   for( int i=(int)faces_.size()-1; i >= 0; i--)
   {
     const int a = i;
@@ -1227,8 +1262,6 @@ QuadSurfMesh<Basis>::compute_edges()
   synchronized_ |= EDGES_E;
   edge_lock_.unlock();
 }
-
-
 
 
 template <class Basis>
@@ -1258,7 +1291,7 @@ QuadSurfMesh<Basis>::compute_edge_neighbors()
 {
   // TODO: This is probably broken with the new indexed edges.
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on TriSurfMesh first");
+            "Must call synchronize EDGES_E on TriSurfMesh first");
   edge_neighbor_lock_.lock();
   if (synchronized_ & EDGE_NEIGHBORS_E) {
     edge_neighbor_lock_.unlock();
@@ -1266,7 +1299,7 @@ QuadSurfMesh<Basis>::compute_edge_neighbors()
   }
 
   EdgeMapType edge_map;
-  
+
   edge_neighbors_.resize(faces_.size());
   for (unsigned int j = 0; j < edge_neighbors_.size(); j++)
   {
@@ -1284,7 +1317,7 @@ QuadSurfMesh<Basis>::compute_edge_neighbors()
     if (n0 > n1) { tmp = n0; n0 = n1; n1 = tmp; }
 
     pair<int, int> nodes(n0, n1);
-   
+
     EdgeMapType::iterator maploc;
 
     maploc = edge_map.find(nodes);
@@ -1299,6 +1332,7 @@ QuadSurfMesh<Basis>::compute_edge_neighbors()
   synchronized_ |= EDGE_NEIGHBORS_E;
   edge_neighbor_lock_.unlock();
 }
+
 
 template <class Basis>
 typename QuadSurfMesh<Basis>::Node::index_type
@@ -1317,10 +1351,10 @@ QuadSurfMesh<Basis>::add_point(const Point &p)
 template <class Basis>
 typename QuadSurfMesh<Basis>::Elem::index_type
 QuadSurfMesh<Basis>::add_quad(const Point &p0, const Point &p1,
-			      const Point &p2, const Point &p3)
+                              const Point &p2, const Point &p3)
 {
   return add_quad(add_find_point(p0), add_find_point(p1),
-		  add_find_point(p2), add_find_point(p3));
+                  add_find_point(p2), add_find_point(p3));
 }
 
 
@@ -1352,6 +1386,7 @@ QuadSurfMesh<Basis>::io(Piostream &stream)
   }
 }
 
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::size(typename QuadSurfMesh::Node::size_type &s) const
@@ -1359,14 +1394,18 @@ QuadSurfMesh<Basis>::size(typename QuadSurfMesh::Node::size_type &s) const
   typename Node::iterator itr; end(itr);
   s = *itr;
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::size(typename QuadSurfMesh::Edge::size_type &s) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on QuadSurfMesh first");
+            "Must call synchronize EDGES_E on QuadSurfMesh first");
   s = edges_.size();
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::size(typename QuadSurfMesh::Face::size_type &s) const
@@ -1374,6 +1413,8 @@ QuadSurfMesh<Basis>::size(typename QuadSurfMesh::Face::size_type &s) const
   typename Face::iterator itr; end(itr);
   s = *itr;
 }
+
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::size(typename QuadSurfMesh::Cell::size_type &s) const
@@ -1394,12 +1435,13 @@ get_type_description(QuadSurfMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("QuadSurfMesh", subs,
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1408,6 +1450,7 @@ QuadSurfMesh<Basis>::get_type_description() const
   return SCIRun::get_type_description((QuadSurfMesh<Basis> *)0);
 }
 
+
 template <class Basis>
 const TypeDescription*
 QuadSurfMesh<Basis>::node_type_description()
@@ -1415,15 +1458,16 @@ QuadSurfMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((QuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1432,15 +1476,16 @@ QuadSurfMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((QuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1449,15 +1494,16 @@ QuadSurfMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((QuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1466,12 +1512,12 @@ QuadSurfMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-   const TypeDescription *me = 
+   const TypeDescription *me =
       SCIRun::get_type_description((QuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }

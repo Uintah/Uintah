@@ -72,8 +72,8 @@ public:
   {
   public:
     MaskedLatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
-    MaskedLatIndex(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, 
-		   unsigned int k) : i_(i), j_(j), k_(k), mesh_(m) {}
+    MaskedLatIndex(const MaskedLatVolMesh *m, unsigned int i, unsigned int j,
+                   unsigned int k) : i_(i), j_(j), k_(k), mesh_(m) {}
 
 
     std::ostream& str_render(std::ostream& os) const
@@ -81,9 +81,9 @@ public:
       os << "[" << i_ << "," << j_ << "," << k_ << "]";
       return os;
     }
-    
+
     unsigned int i_, j_, k_;
-    
+
     // Needs to be here so we can compute a sensible index.
     const MaskedLatVolMesh *mesh_;
   };
@@ -92,8 +92,8 @@ public:
   struct CellIndex : public MaskedLatIndex
   {
     CellIndex() : MaskedLatIndex() {}
-    CellIndex(const MaskedLatVolMesh *m, 
-	      unsigned int i, unsigned int j, unsigned int k)
+    CellIndex(const MaskedLatVolMesh *m,
+              unsigned int i, unsigned int j, unsigned int k)
       : MaskedLatIndex(m,i,j,k) {}
 
     // The 'operator unsigned()' cast is used to convert a CellIndex
@@ -101,14 +101,14 @@ public:
     // to index into a field.
     operator unsigned() const {
       ASSERT(this->mesh_);
-      return this->i_ + (this->mesh_->ni_-1)*this->j_ + 
-	(this->mesh_->ni_-1)*(this->mesh_->nj_-1)*this->k_;
+      return this->i_ + (this->mesh_->ni_-1)*this->j_ +
+        (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*this->k_;
     }
 
     bool operator ==(const CellIndex &a) const
     {
-      return (this->i_ == a.i_ && this->j_ == a.j_ && 
-	      this->k_ == a.k_ && this->mesh_ == a.mesh_);
+      return (this->i_ == a.i_ && this->j_ == a.j_ &&
+              this->k_ == a.k_ && this->mesh_ == a.mesh_);
     }
 
     bool operator !=(const CellIndex &a) const
@@ -116,7 +116,7 @@ public:
       return !(*this == a);
     }
 
-    static string type_name(int i=-1) 
+    static string type_name(int i=-1)
     { ASSERT(i<1); return "MaskedLatVolMesh::CellIndex"; }
   };
 
@@ -124,9 +124,9 @@ public:
   struct NodeIndex : public MaskedLatIndex
   {
     NodeIndex() : MaskedLatIndex() {}
-    NodeIndex(const MaskedLatVolMesh *m, unsigned int i, 
-	      unsigned int j, unsigned int k) :
-      MaskedLatIndex(m,i,j,k) 
+    NodeIndex(const MaskedLatVolMesh *m, unsigned int i,
+              unsigned int j, unsigned int k) :
+      MaskedLatIndex(m,i,j,k)
     {}
 
     // The 'operator unsigned()' cast is used to convert a NodeIndex
@@ -134,10 +134,10 @@ public:
     // to index into a field.
     operator unsigned() const {
       ASSERT(this->mesh_);
-      return this->i_ + this->mesh_->ni_*this->j_ + 
-	this->mesh_->ni_*this->mesh_->nj_*this->k_;
+      return this->i_ + this->mesh_->ni_*this->j_ +
+        this->mesh_->ni_*this->mesh_->nj_*this->k_;
     }
-    
+
 
     bool operator ==(const MaskedLatIndex &a) const
     {
@@ -149,7 +149,7 @@ public:
       return !(*this == a);
     }
 
-    static string type_name(int i=-1) 
+    static string type_name(int i=-1)
     { ASSERT(i<1); return "MaskedLatVolMesh::NodeIndex"; }
   };
 
@@ -157,8 +157,8 @@ public:
   struct EdgeIndex : public MaskedLatIndex
   {
     EdgeIndex() : MaskedLatIndex(), dir_(0) {}
-    EdgeIndex(const MaskedLatVolMesh *m, 
-	      unsigned int i, unsigned int j, unsigned int k, unsigned int dir)
+    EdgeIndex(const MaskedLatVolMesh *m,
+              unsigned int i, unsigned int j, unsigned int k, unsigned int dir)
       : MaskedLatIndex(m, i,j,k) , dir_(dir){}
 
     // The 'operator unsigned()' cast is used to convert a EdgeIndex
@@ -168,23 +168,23 @@ public:
       ASSERT(this->mesh_);
       switch (dir_)
       {
-      case 0: return (this->i_ + (this->mesh_->ni_-1)*this->j_ + 
-		      (this->mesh_->ni_-1)*this->mesh_->nj_*this->k_); 
-      case 1: return (this->j_ + (this->mesh_->nj_-1)*this->k_ + 
-		      (this->mesh_->nj_-1)*this->mesh_->nk_*this->i_ + 
-		      (this->mesh_->ni_-1)*this->mesh_->nj_*this->mesh_->nk_); 
-      case 2: return (this->k_ + (this->mesh_->nk_-1)*this->i_ + 
-		      (this->mesh_->nk_-1)*this->mesh_->ni_*this->j_ +
-		      (this->mesh_->ni_-1)*this->mesh_->nj_*this->mesh_->nk_ + 
-		      this->mesh_->ni_*(this->mesh_->nj_-1)*this->mesh_->nk_); 
+      case 0: return (this->i_ + (this->mesh_->ni_-1)*this->j_ +
+                      (this->mesh_->ni_-1)*this->mesh_->nj_*this->k_);
+      case 1: return (this->j_ + (this->mesh_->nj_-1)*this->k_ +
+                      (this->mesh_->nj_-1)*this->mesh_->nk_*this->i_ +
+                      (this->mesh_->ni_-1)*this->mesh_->nj_*this->mesh_->nk_);
+      case 2: return (this->k_ + (this->mesh_->nk_-1)*this->i_ +
+                      (this->mesh_->nk_-1)*this->mesh_->ni_*this->j_ +
+                      (this->mesh_->ni_-1)*this->mesh_->nj_*this->mesh_->nk_ +
+                      this->mesh_->ni_*(this->mesh_->nj_-1)*this->mesh_->nk_);
       default: return 0;
       }
     }
 
     bool operator ==(const EdgeIndex &a) const
     {
-      return (this->i_ == a.i_ && this->j_ == a.j_ && this->k_ == a.k_ && 
-	      this->mesh_ == a.mesh_ && this->dir_ == a.dir_);
+      return (this->i_ == a.i_ && this->j_ == a.j_ && this->k_ == a.k_ &&
+              this->mesh_ == a.mesh_ && this->dir_ == a.dir_);
     }
 
     bool operator !=(const EdgeIndex &a) const
@@ -192,7 +192,7 @@ public:
       return !(*this == a);
     }
 
-    static string type_name(int i=-1) { 
+    static string type_name(int i=-1) {
       ASSERT(i<1); return "MaskedLatVolMesh::EdgeIndex";
     }
 
@@ -204,38 +204,38 @@ public:
   {
     FaceIndex() : MaskedLatIndex() {}
     FaceIndex(const MaskedLatVolMesh *m,
-	      unsigned int i, unsigned int j, 
-	      unsigned int k, unsigned int dir) : 
-      MaskedLatIndex(m, i,j,k), 
+              unsigned int i, unsigned int j,
+              unsigned int k, unsigned int dir) :
+      MaskedLatIndex(m, i,j,k),
       dir_(dir)
     {}
 
     // The 'operator unsigned()' cast is used to convert a FaceIndex
     // into a single scalar, in this case an 'index' value that is used
     // to index into a field.
-    operator unsigned() const { 
+    operator unsigned() const {
       ASSERT(this->mesh_);
       switch (dir_)
       {
-      case 0: return (this->i_ + (this->mesh_->ni_-1)*this->j_ + 
-		      (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*this->k_); 
-      case 1: return (this->j_ + (this->mesh_->nj_-1)*this->k_ + 
-		      (this->mesh_->nj_-1)*(this->mesh_->nk_-1)*this->i_ + 
-		      (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*
-		      this->mesh_->nk_);
-      case 2: return (this->k_ + (this->mesh_->nk_-1)*this->i_ + 
-		      (this->mesh_->nk_-1)*(this->mesh_->ni_-1)*this->j_ +
-		      (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*
-		      this->mesh_->nk_ + this->mesh_->ni_*
-		      (this->mesh_->nj_-1)*(this->mesh_->nk_-1));
-      default: return 0; //ASSERTFAIL("MLVMFaceIndex dir_ off."); 
+      case 0: return (this->i_ + (this->mesh_->ni_-1)*this->j_ +
+                      (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*this->k_);
+      case 1: return (this->j_ + (this->mesh_->nj_-1)*this->k_ +
+                      (this->mesh_->nj_-1)*(this->mesh_->nk_-1)*this->i_ +
+                      (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*
+                      this->mesh_->nk_);
+      case 2: return (this->k_ + (this->mesh_->nk_-1)*this->i_ +
+                      (this->mesh_->nk_-1)*(this->mesh_->ni_-1)*this->j_ +
+                      (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*
+                      this->mesh_->nk_ + this->mesh_->ni_*
+                      (this->mesh_->nj_-1)*(this->mesh_->nk_-1));
+      default: return 0; //ASSERTFAIL("MLVMFaceIndex dir_ off.");
       }
     }
 
     bool operator ==(const FaceIndex &a) const
     {
-      return (this->i_ == a.i_ && this->j_ == a.j_ && this->k_ == a.k_ && 
-	      this->mesh_ == a.mesh_ && this->dir_ == a.dir_);
+      return (this->i_ == a.i_ && this->j_ == a.j_ && this->k_ == a.k_ &&
+              this->mesh_ == a.mesh_ && this->dir_ == a.dir_);
     }
 
     bool operator !=(const FaceIndex &a) const
@@ -243,7 +243,7 @@ public:
       return !(*this == a);
     }
 
-    static string type_name(int i=-1) { 
+    static string type_name(int i=-1) {
       ASSERT(i<1); return "MaskedLatVolMesh::FaceIndex";
     }
 
@@ -255,24 +255,24 @@ public:
   {
   public:
     CellSize() : MaskedLatIndex() {}
-    CellSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
+    CellSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : MaskedLatIndex(m, i, j, k) {}
-    operator unsigned() const 
-    { 
+    operator unsigned() const
+    {
       return this->i_*this->j_*this->k_;
-    } 
+    }
   };
 
   struct NodeSize : public MaskedLatIndex
   {
   public:
     NodeSize() : MaskedLatIndex() {}
-    NodeSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
+    NodeSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : MaskedLatIndex(m, i, j, k) {}
-    operator unsigned() const 
-    { 
+    operator unsigned() const
+    {
       return this->i_*this->j_*this->k_;
-    } 
+    }
   };
 
 
@@ -280,12 +280,12 @@ public:
   {
   public:
     EdgeSize() : MaskedLatIndex() {}
-    EdgeSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
+    EdgeSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : MaskedLatIndex(m, i, j, k) {}
-    operator unsigned() const 
-    { 
+    operator unsigned() const
+    {
       return (this->i_-1)*this->j_*this->k_ + this->i_*(this->j_-1)*this->k_ + this->i_*this->j_*(this->k_-1);
-    } 
+    }
   };
 
 
@@ -293,12 +293,12 @@ public:
   {
   public:
     FaceSize() : MaskedLatIndex() {}
-    FaceSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
+    FaceSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : MaskedLatIndex(m, i, j, k) {}
-    operator unsigned() const 
-    { 
-      return this->i_*(this->j_-1)*(this->k_-1) + (this->i_-1)*this->j_*(this->k_-1) + (this->i_-1)*(this->j_-1)*this->k_; 
-    } 
+    operator unsigned() const
+    {
+      return this->i_*(this->j_-1)*(this->k_-1) + (this->i_-1)*this->j_*(this->k_-1) + (this->i_-1)*(this->j_-1)*this->k_;
+    }
   };
 
 
@@ -310,8 +310,8 @@ public:
       : MaskedLatIndex(m, i, j, k) {}
 
     const NodeIndex &operator *() const
-    { 
-      return (const NodeIndex&)(*this); 
+    {
+      return (const NodeIndex&)(*this);
     }
 
     operator unsigned()  const
@@ -321,8 +321,8 @@ public:
     }
 
     NodeIter &operator++() {
-      do next(); while (!this->mesh_->check_valid(*this) && 
-			(this->k_ < (this->mesh_->min_k_+this->mesh_->nk_)));
+      do next(); while (!this->mesh_->check_valid(*this) &&
+                        (this->k_ < (this->mesh_->min_k_+this->mesh_->nk_)));
       return *this;
     }
     NodeIter &operator--() {
@@ -333,28 +333,28 @@ public:
     void next() {
       this->i_++;
       if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_) {
-	this->i_ = this->mesh_->min_i_;
-	this->j_++;
-	if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_) {
-	  this->j_ = this->mesh_->min_j_;
-	  this->k_++;
-	}
+        this->i_ = this->mesh_->min_i_;
+        this->j_++;
+        if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_) {
+          this->j_ = this->mesh_->min_j_;
+          this->k_++;
+        }
       }
     }
     void prev() {
       if (this->i_ == this->mesh_->min_i_) {
-	this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
-	if (this->j_ == this->mesh_->min_j_) {
-	  this->j_ = this->mesh_->min_j_ + this->mesh_->nj_;
-	  ASSERTMSG(this->k_ != this->mesh_->min_k_-1, "Cant prev() from first node!");
-	  this->k_--;
-	}
-	else {
-	  this->j_--;
-	}
+        this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
+        if (this->j_ == this->mesh_->min_j_) {
+          this->j_ = this->mesh_->min_j_ + this->mesh_->nj_;
+          ASSERTMSG(this->k_ != this->mesh_->min_k_-1, "Cant prev() from first node!");
+          this->k_--;
+        }
+        else {
+          this->j_--;
+        }
       }
       else {
-	this->i_--;
+        this->i_--;
       }
     }
 
@@ -379,20 +379,20 @@ public:
   {
   public:
     EdgeIter() : EdgeIndex() {}
-    EdgeIter(const MaskedLatVolMesh *m, 
-	     unsigned int i, unsigned int j, 
-	     unsigned int k, unsigned int dir)
+    EdgeIter(const MaskedLatVolMesh *m,
+             unsigned int i, unsigned int j,
+             unsigned int k, unsigned int dir)
       : EdgeIndex(m, i, j, k,dir) {}
 
-    const EdgeIndex &operator *() const 
-    { 
-      return (const EdgeIndex&)(*this); 
+    const EdgeIndex &operator *() const
+    {
+      return (const EdgeIndex&)(*this);
     }
 
     bool operator ==(const EdgeIter &a) const
     {
-      return (this->i_ == a.i_ && this->j_ == a.j_ && this->k_ == a.k_ && 
-	      this->mesh_ == a.mesh_ && this->dir_ == a.dir_);
+      return (this->i_ == a.i_ && this->j_ == a.j_ && this->k_ == a.k_ &&
+              this->mesh_ == a.mesh_ && this->dir_ == a.dir_);
     }
 
     bool operator !=(const EdgeIter &a) const
@@ -413,141 +413,141 @@ public:
       switch (this->dir_)
       {
       case 0:
-	this->i_++;
-	if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1) {
-	  this->i_ = this->mesh_->min_i_;
-	  this->j_++;
-	  if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_) {
-	    this->j_ = this->mesh_->min_j_;
-	    this->k_++;	 
-	    if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_) {
-	      this->dir_++;
-	      this->i_ = 0;
-	      this->j_ = 0;
-	      this->k_ = 0;
-	    }
-	  }
-	}
-	break;
+        this->i_++;
+        if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1) {
+          this->i_ = this->mesh_->min_i_;
+          this->j_++;
+          if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_) {
+            this->j_ = this->mesh_->min_j_;
+            this->k_++;
+            if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_) {
+              this->dir_++;
+              this->i_ = 0;
+              this->j_ = 0;
+              this->k_ = 0;
+            }
+          }
+        }
+        break;
       case 1:
-	this->j_++;
-	if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_-1) {
-	  this->j_ = this->mesh_->min_j_;
-	  this->k_++;
-	  if (this->k_ >=  this->mesh_->min_k_+this->mesh_->nk_) {
-	    this->k_ = this->mesh_->min_k_;
-	    this->i_++;	 
-	    if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_) {
-	      this->dir_++;
-	      this->i_ = 0;
-	      this->j_ = 0;
-	      this->k_ = 0;
-	    }
-	  }
-	}
-	break;
+        this->j_++;
+        if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_-1) {
+          this->j_ = this->mesh_->min_j_;
+          this->k_++;
+          if (this->k_ >=  this->mesh_->min_k_+this->mesh_->nk_) {
+            this->k_ = this->mesh_->min_k_;
+            this->i_++;
+            if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_) {
+              this->dir_++;
+              this->i_ = 0;
+              this->j_ = 0;
+              this->k_ = 0;
+            }
+          }
+        }
+        break;
 
       case 2:
-	this->k_++;
-	if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_-1) {
-	  this->k_ = this->mesh_->min_k_;
-	  this->i_++;
-	  if (this->i_ >=  this->mesh_->min_i_+this->mesh_->ni_) {
-	    this->i_ = this->mesh_->min_i_;
-	    this->j_++;	 
-	    if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_) {
-	      this->dir_++;
-	      this->i_ = 0;
-	      this->j_ = 0;
-	      this->k_ = 0;
-	    }
-	  }
-	}
-	break;
+        this->k_++;
+        if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_-1) {
+          this->k_ = this->mesh_->min_k_;
+          this->i_++;
+          if (this->i_ >=  this->mesh_->min_i_+this->mesh_->ni_) {
+            this->i_ = this->mesh_->min_i_;
+            this->j_++;
+            if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_) {
+              this->dir_++;
+              this->i_ = 0;
+              this->j_ = 0;
+              this->k_ = 0;
+            }
+          }
+        }
+        break;
       default:
       case 3:
-	ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
-	BREAK;
+        ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
+        BREAK;
       }
     }
     void prev() {
       switch(this->dir_)
       {
       case 2:
-	if (this->k_ == this->mesh_->min_k_) {
-	  this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
-	  if (this->i_ == this->mesh_->min_i_) {
-	    this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
-	    if (this->j_ == this->mesh_->min_j_) {
-	      this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
-	      this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
-	      this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
-	      this->dir_--;
-	    }
-	    else {
-	      this->j_--;
-	    }
-	  }
-	  else {
-	    this->i_--;
-	  }
-	}
-	else {
-	  this->k_--;
-	}
-	break;
+        if (this->k_ == this->mesh_->min_k_) {
+          this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
+          if (this->i_ == this->mesh_->min_i_) {
+            this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
+            if (this->j_ == this->mesh_->min_j_) {
+              this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
+              this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
+              this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
+              this->dir_--;
+            }
+            else {
+              this->j_--;
+            }
+          }
+          else {
+            this->i_--;
+          }
+        }
+        else {
+          this->k_--;
+        }
+        break;
 
       case 1:
-	if (this->j_ == this->mesh_->min_j_) {
-	  this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
-	  if (this->k_ == this->mesh_->min_k_) {
-	    this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
-	    if (this->i_ == this->mesh_->min_i_) {
-	      this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
-	      this->j_ = this->mesh_->min_j_ + this->mesh_->nj_;
-	      this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
-	      this->dir_--;
-	    }
-	    else {
-	      this->i_--;
-	    }
-	  }
-	  else {
-	    this->k_--;
-	  }
-	}
-	else {
-	  this->j_--;
-	}
-	break;
+        if (this->j_ == this->mesh_->min_j_) {
+          this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
+          if (this->k_ == this->mesh_->min_k_) {
+            this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
+            if (this->i_ == this->mesh_->min_i_) {
+              this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
+              this->j_ = this->mesh_->min_j_ + this->mesh_->nj_;
+              this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
+              this->dir_--;
+            }
+            else {
+              this->i_--;
+            }
+          }
+          else {
+            this->k_--;
+          }
+        }
+        else {
+          this->j_--;
+        }
+        break;
 
       case 0:
-	if (this->i_ == this->mesh_->min_i_) {
-	  this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
-	  if (this->j_ == this->mesh_->min_j_) {
-	    this->j_ = this->mesh_->min_j_ + this->mesh_->nj_;
-	    if (this->k_ == this->mesh_->min_k_) {
-	      ASSERTFAIL("Iterating b4 MaskedLatVolMesh edge boundaries.");
-	    }
-	    else {
-	      this->k_--;
-	    }
-	  }
-	  else {
-	    this->j_--;
-	  }
-	}
-	else {
-	  this->i_--;
-	}
-	break;
+        if (this->i_ == this->mesh_->min_i_) {
+          this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
+          if (this->j_ == this->mesh_->min_j_) {
+            this->j_ = this->mesh_->min_j_ + this->mesh_->nj_;
+            if (this->k_ == this->mesh_->min_k_) {
+              ASSERTFAIL("Iterating b4 MaskedLatVolMesh edge boundaries.");
+            }
+            else {
+              this->k_--;
+            }
+          }
+          else {
+            this->j_--;
+          }
+        }
+        else {
+          this->i_--;
+        }
+        break;
       default:
-	ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
-	BREAK;
+        ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
+        BREAK;
       }
     }
 
-  private:    
+  private:
     EdgeIter operator++(int)
     {
       EdgeIter result(*this);
@@ -566,13 +566,13 @@ public:
   {
   public:
     FaceIter() : FaceIndex() {}
-    FaceIter(const MaskedLatVolMesh *m, 
-	     unsigned int i, unsigned int j, unsigned int k, unsigned int dir)
+    FaceIter(const MaskedLatVolMesh *m,
+             unsigned int i, unsigned int j, unsigned int k, unsigned int dir)
       : FaceIndex(m, i, j, k, dir){}
 
-    const FaceIndex &operator *() const 
-    { 
-      return (const FaceIndex&)(*this); 
+    const FaceIndex &operator *() const
+    {
+      return (const FaceIndex&)(*this);
     }
 
     FaceIter &operator++() {
@@ -588,137 +588,137 @@ public:
       switch (this->dir_)
       {
       case 0:
-	this->i_++;
-	if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1) {
-	  this->i_ = this->mesh_->min_i_;
-	  this->j_++;
-	  if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_-1) {
-	    this->j_ = this->mesh_->min_j_;
-	    this->k_++;	 
-	    if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_) {
-	      this->dir_++;
-	      this->i_ = 0;
-	      this->j_ = 0;
-	      this->k_ = 0;
-	    }
-	  }
-	}
-	break;
+        this->i_++;
+        if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1) {
+          this->i_ = this->mesh_->min_i_;
+          this->j_++;
+          if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_-1) {
+            this->j_ = this->mesh_->min_j_;
+            this->k_++;
+            if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_) {
+              this->dir_++;
+              this->i_ = 0;
+              this->j_ = 0;
+              this->k_ = 0;
+            }
+          }
+        }
+        break;
       case 1:
-	this->j_++;
-	if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_-1) {
-	  this->j_ = this->mesh_->min_j_;
-	  this->k_++;
-	  if (this->k_ >=  this->mesh_->min_k_+this->mesh_->nk_-1) {
-	    this->k_ = this->mesh_->min_k_;
-	    this->i_++;	 
-	    if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_) {
-	      this->dir_++;
-	      this->i_ = 0;
-	      this->j_ = 0;
-	      this->k_ = 0;
-	    }
-	  }
-	}
-	break;
+        this->j_++;
+        if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_-1) {
+          this->j_ = this->mesh_->min_j_;
+          this->k_++;
+          if (this->k_ >=  this->mesh_->min_k_+this->mesh_->nk_-1) {
+            this->k_ = this->mesh_->min_k_;
+            this->i_++;
+            if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_) {
+              this->dir_++;
+              this->i_ = 0;
+              this->j_ = 0;
+              this->k_ = 0;
+            }
+          }
+        }
+        break;
 
       case 2:
-	this->k_++;
-	if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_-1) {
-	  this->k_ = this->mesh_->min_k_;
-	  this->i_++;
-	  if (this->i_ >=  this->mesh_->min_i_+this->mesh_->ni_-1) {
-	    this->i_ = this->mesh_->min_i_;
-	    this->j_++;	 
-	    if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_) {
-	      this->dir_++;
-	      this->i_ = 0;
-	      this->j_ = 0;
-	      this->k_ = 0;
-	    }
-	  }
-	}
-	break;
+        this->k_++;
+        if (this->k_ >= this->mesh_->min_k_+this->mesh_->nk_-1) {
+          this->k_ = this->mesh_->min_k_;
+          this->i_++;
+          if (this->i_ >=  this->mesh_->min_i_+this->mesh_->ni_-1) {
+            this->i_ = this->mesh_->min_i_;
+            this->j_++;
+            if (this->j_ >= this->mesh_->min_j_+this->mesh_->nj_) {
+              this->dir_++;
+              this->i_ = 0;
+              this->j_ = 0;
+              this->k_ = 0;
+            }
+          }
+        }
+        break;
       default:
       case 3:
-	ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
-	BREAK;
+        ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
+        BREAK;
       }
     }
     void prev() {
       switch(this->dir_)
       {
       case 2:
-	if (this->k_ == this->mesh_->min_k_) {
-	  this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
-	  if (this->i_ == this->mesh_->min_i_) {
-	    this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
-	    if (this->j_ == this->mesh_->min_j_) {
-	      this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
-	      this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
-	      this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
-	      this->dir_--;
-	    }
-	    else {
-	      this->j_--;
-	    }
-	  }
-	  else {
-	    this->i_--;
-	  }
-	}
-	else {
-	  this->k_--;
-	}
-	break;
+        if (this->k_ == this->mesh_->min_k_) {
+          this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
+          if (this->i_ == this->mesh_->min_i_) {
+            this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
+            if (this->j_ == this->mesh_->min_j_) {
+              this->i_ = this->mesh_->min_i_ + this->mesh_->ni_;
+              this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
+              this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
+              this->dir_--;
+            }
+            else {
+              this->j_--;
+            }
+          }
+          else {
+            this->i_--;
+          }
+        }
+        else {
+          this->k_--;
+        }
+        break;
 
       case 1:
-	if (this->j_ == this->mesh_->min_j_) {
-	  this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
-	  if (this->k_ == this->mesh_->min_k_) {
-	    this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
-	    if (this->i_ == this->mesh_->min_i_) {
-	      this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
-	      this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
-	      this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
-	      this->dir_--;
-	    }
-	    else {
-	      this->i_--;
-	    }
-	  }
-	  else {
-	    this->k_--;
-	  }
-	}
-	else {
-	  this->j_--;
-	}
-	break;
+        if (this->j_ == this->mesh_->min_j_) {
+          this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
+          if (this->k_ == this->mesh_->min_k_) {
+            this->k_ = this->mesh_->min_k_ + this->mesh_->nk_-1;
+            if (this->i_ == this->mesh_->min_i_) {
+              this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
+              this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
+              this->k_ = this->mesh_->min_k_ + this->mesh_->nk_;
+              this->dir_--;
+            }
+            else {
+              this->i_--;
+            }
+          }
+          else {
+            this->k_--;
+          }
+        }
+        else {
+          this->j_--;
+        }
+        break;
 
       case 0:
-	if (this->i_ == this->mesh_->min_i_) {
-	  this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
-	  if (this->j_ == this->mesh_->min_j_) {
-	    this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
-	    if (this->k_ == this->mesh_->min_k_) {
-	      ASSERTFAIL("Iterating b4 MaskedLatVolMesh face boundaries.");
-	    }
-	    else {
-	      this->k_--;
-	    }
-	  }
-	  else {
-	    this->j_--;
-	  }
-	}
-	else {
-	  this->i_--;
-	}
-	break;
+        if (this->i_ == this->mesh_->min_i_) {
+          this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
+          if (this->j_ == this->mesh_->min_j_) {
+            this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
+            if (this->k_ == this->mesh_->min_k_) {
+              ASSERTFAIL("Iterating b4 MaskedLatVolMesh face boundaries.");
+            }
+            else {
+              this->k_--;
+            }
+          }
+          else {
+            this->j_--;
+          }
+        }
+        else {
+          this->i_--;
+        }
+        break;
       default:
-	ASSERTFAIL("Iterating beyond MaskedLatVolMesh face boundaries.");
-	BREAK;
+        ASSERTFAIL("Iterating beyond MaskedLatVolMesh face boundaries.");
+        BREAK;
       }
     }
 
@@ -741,24 +741,24 @@ public:
   {
   public:
     CellIter() : MaskedLatIndex() {}
-    CellIter(const MaskedLatVolMesh *m, unsigned int i, 
-	     unsigned int j, unsigned int k) : 
-      MaskedLatIndex(m, i, j, k) 
+    CellIter(const MaskedLatVolMesh *m, unsigned int i,
+             unsigned int j, unsigned int k) :
+      MaskedLatIndex(m, i, j, k)
     {}
 
-    const CellIndex &operator *() const 
-    { 
-      return (const CellIndex&)(*this); 
+    const CellIndex &operator *() const
+    {
+      return (const CellIndex&)(*this);
     }
 
-    operator unsigned() const { 
+    operator unsigned() const {
       ASSERT(this->mesh_);
       return this->i_ + (this->mesh_->ni_-1)*this->j_ + (this->mesh_->ni_-1)*(this->mesh_->nj_-1)*this->k_;
     }
 
     CellIter &operator++() {
-      do next(); while (!this->mesh_->check_valid(this->i_,this->j_,this->k_) && 
-			this->k_ < this->mesh_->min_k_ + this->mesh_->nk_ - 1);
+      do next(); while (!this->mesh_->check_valid(this->i_,this->j_,this->k_) &&
+                        this->k_ < this->mesh_->min_k_ + this->mesh_->nk_ - 1);
       return *this;
     }
     CellIter &operator--() {
@@ -768,33 +768,33 @@ public:
 
     void next() {
       this->i_++;
-      if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1)	{
-	this->i_ = this->mesh_->min_i_;
-	this->j_++;
-	if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_-1) {
-	  this->j_ = this->mesh_->min_j_;
-	  this->k_++;
-	}
+      if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1)   {
+        this->i_ = this->mesh_->min_i_;
+        this->j_++;
+        if (this->j_ >=  this->mesh_->min_j_+this->mesh_->nj_-1) {
+          this->j_ = this->mesh_->min_j_;
+          this->k_++;
+        }
       }
     }
     void prev() {
       if (this->i_ == this->mesh_->min_i_) {
-	this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
-	if (this->j_ == this->mesh_->min_j_) {
-	  this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
-	  ASSERTMSG(this->k_ != this->mesh_->min_k_, "Cant prev() from first cell!");
-	  this->k_--;
-	}
-	else {
-	  this->j_--;
-	}
+        this->i_ = this->mesh_->min_i_ + this->mesh_->ni_-1;
+        if (this->j_ == this->mesh_->min_j_) {
+          this->j_ = this->mesh_->min_j_ + this->mesh_->nj_-1;
+          ASSERTMSG(this->k_ != this->mesh_->min_k_, "Cant prev() from first cell!");
+          this->k_--;
+        }
+        else {
+          this->j_--;
+        }
       }
       else {
-	this->i_--;
+        this->i_--;
       }
     }
 
-  private:      
+  private:
     CellIter operator++(int)
     {
       CellIter result(*this);
@@ -811,27 +811,27 @@ public:
   };
 
   struct Node {
-    typedef NodeIndex		index_type;
+    typedef NodeIndex           index_type;
     typedef NodeIter            iterator;
     typedef NodeSize            size_type;
     typedef vector<index_type>  array_type;
-  };			
-  			
-  struct Edge {		
-    typedef EdgeIndex		index_type;
-    typedef EdgeIter		iterator;
-    typedef EdgeSize		size_type;
+  };
+
+  struct Edge {
+    typedef EdgeIndex           index_type;
+    typedef EdgeIter            iterator;
+    typedef EdgeSize            size_type;
     typedef vector<index_type>  array_type;
-  };			
-			
-  struct Face {		
+  };
+
+  struct Face {
     typedef FaceIndex           index_type;
     typedef FaceIter            iterator;
     typedef FaceSize            size_type;
     typedef vector<index_type>  array_type;
-  };			
-			
-  struct Cell {		
+  };
+
+  struct Cell {
     typedef CellIndex           index_type;
     typedef CellIter            iterator;
     typedef CellSize            size_type;
@@ -852,7 +852,7 @@ public:
 
   MaskedLatVolMesh();
   MaskedLatVolMesh(unsigned int x, unsigned int y, unsigned int z,
-		   const Point &min, const Point &max);
+                   const Point &min, const Point &max);
   MaskedLatVolMesh(const MaskedLatVolMesh &copy);
   virtual MaskedLatVolMesh *clone() { return new MaskedLatVolMesh(*this); }
   virtual ~MaskedLatVolMesh() {}
@@ -861,52 +861,52 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords, 
-		       typename Elem::index_type ci, 
-		       unsigned which_edge, 
-		       unsigned div_per_unit) const
-  {    
-    typename LatVolMesh<Basis>::Elem::index_type i(this, ci.i_, 
-						   ci.j_, ci.k_);
+  void pwl_approx_edge(vector<vector<double> > &coords,
+                       typename Elem::index_type ci,
+                       unsigned which_edge,
+                       unsigned div_per_unit) const
+  {
+    typename LatVolMesh<Basis>::Elem::index_type i(this, ci.i_,
+                                                   ci.j_, ci.k_);
     LatVolMesh<Basis>::pwl_approx_edge(coords, i, which_edge, div_per_unit);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
-		       typename Elem::index_type ci, 
-		       unsigned which_face, 
-		       unsigned div_per_unit) const
+  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+                       typename Elem::index_type ci,
+                       unsigned which_face,
+                       unsigned div_per_unit) const
   {
-    typename LatVolMesh<Basis>::Elem::index_type i(this, ci.i_, 
-						   ci.j_, ci.k_);
+    typename LatVolMesh<Basis>::Elem::index_type i(this, ci.i_,
+                                                   ci.j_, ci.k_);
     LatVolMesh<Basis>::pwl_approx_face(coords, i, which_face, div_per_unit);
   }
-  
-  bool get_coords(vector<double> &coords, 
-		  const Point &p,
-		  typename Elem::index_type idx) const
+
+  bool get_coords(vector<double> &coords,
+                  const Point &p,
+                  typename Elem::index_type idx) const
   {
-    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_, 
-						   idx.j_, idx.k_);
+    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_,
+                                                   idx.j_, idx.k_);
     return LatVolMesh<Basis>::get_coords(coords, p, i);
   }
-  
-  void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Elem::index_type idx) const
+
+  void interpolate(Point &pt, const vector<double> &coords,
+                   typename Elem::index_type idx) const
   {
-    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_, 
-						   idx.j_, idx.k_);
+    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_,
+                                                   idx.j_, idx.k_);
     LatVolMesh<Basis>::interpolate(pt, coords, i);
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords, 
-		typename Elem::index_type idx, 
-		vector<Point> &J) const
+  void derivate(const vector<double> &coords,
+                typename Elem::index_type idx,
+                vector<Point> &J) const
   {
-    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_, 
-						   idx.j_, idx.k_);
+    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_,
+                                                   idx.j_, idx.k_);
     LatVolMesh<Basis>::derivate(coords, i, J);
   }
 
@@ -923,8 +923,8 @@ public:
   void unmask_face(typename Face::index_type);
   void unmask_cell(typename Cell::index_type);
   //! Special Method to Reset Mesh
-  void unmask_everything();  
-  
+  void unmask_everything();
+
   unsigned int num_masked_nodes() const;
   unsigned int num_masked_edges() const;
   unsigned int num_masked_faces() const;
@@ -955,28 +955,28 @@ public:
   void get_nodes(typename Node::array_type &, typename Face::index_type) const;
   void get_nodes(typename Node::array_type &, typename Cell::index_type) const;
   void get_edges(typename Edge::array_type &, typename Face::index_type) const;
-  void get_edges(typename Edge::array_type &, 
-		 const typename Cell::index_type&) const;
-  void get_faces(typename Face::array_type &, 
-		 const typename Cell::index_type&) const;
+  void get_edges(typename Edge::array_type &,
+                 const typename Cell::index_type&) const;
+  void get_faces(typename Face::array_type &,
+                 const typename Cell::index_type&) const;
 
   //! get the parent element(s) of the given index
-  void get_elems(typename Cell::array_type &result, 
+  void get_elems(typename Cell::array_type &result,
                  const typename Node::index_type &idx) const;
 
   // returns 26 pairs in ijk order
-  void	get_neighbors_stencil(
-			      vector<pair<bool,typename Cell::index_type> > &nbrs, 
-			      typename Cell::index_type idx) const;
+  void  get_neighbors_stencil(
+                              vector<pair<bool,typename Cell::index_type> > &nbrs,
+                              typename Cell::index_type idx) const;
   // return 26 pairs in ijk order
-  void	get_neighbors_stencil(
-			      vector<pair<bool,typename Node::index_type> > &nbrs, 
-			      typename Node::index_type idx) const;
-  
+  void  get_neighbors_stencil(
+                              vector<pair<bool,typename Node::index_type> > &nbrs,
+                              typename Node::index_type idx) const;
+
   // return 8 pairs in ijk order
-  void	get_neighbors_stencil(
-			      vector<pair<bool,typename Cell::index_type> > &nbrs, 
-			      typename Node::index_type idx) const;
+  void  get_neighbors_stencil(
+                              vector<pair<bool,typename Cell::index_type> > &nbrs,
+                              typename Node::index_type idx) const;
 
 
   //! get the center point (in object space) of an element
@@ -989,17 +989,17 @@ public:
   double get_size(typename Edge::index_type idx) const;
   double get_size(typename Face::index_type idx) const;
   double get_size(typename Cell::index_type idx) const;
-  double get_length(typename Edge::index_type idx) const 
+  double get_length(typename Edge::index_type idx) const
   { return get_size(idx); };
-  double get_area(typename Face::index_type idx) const 
+  double get_area(typename Face::index_type idx) const
   { return get_size(idx); };
-  double get_volume(typename Cell::index_type idx) const 
+  double get_volume(typename Cell::index_type idx) const
   { return get_size(idx); };
 
   bool locate(typename Node::index_type &, const Point &);
-  bool locate(typename Edge::index_type &, const Point &) const 
+  bool locate(typename Edge::index_type &, const Point &) const
   { return false; }
-  bool locate(typename Face::index_type &, const Point &) const 
+  bool locate(typename Face::index_type &, const Point &) const
   { return false; }
   bool locate(typename Cell::index_type &, const Point &);
 
@@ -1013,15 +1013,15 @@ public:
   void get_point(Point &point, const typename Node::index_type &index) const
   { get_center(point, index); }
 
-  void get_random_point(Point &/*p*/, const typename Elem::index_type &/*ei*/, 
-			int /*seed=0*/) const
+  void get_random_point(Point &/*p*/, const typename Elem::index_type &/*ei*/,
+                        int /*seed=0*/) const
   { ASSERTFAIL("not implemented") }
 
-  void get_normal(Vector &/*normal*/, 
-		  typename Node::index_type /*index*/) const
+  void get_normal(Vector &/*normal*/,
+                  typename Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented") }
   void get_normal(Vector &, vector<double> &, typename Elem::index_type,
-		  unsigned int) 
+                  unsigned int)
   { ASSERTFAIL("not implemented"); }
 
   virtual void io(Piostream&);
@@ -1033,42 +1033,42 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* node_type_description();
-  static const TypeDescription* elem_type_description() 
+  static const TypeDescription* elem_type_description()
   { return cell_type_description(); }
   static const TypeDescription* cell_index_type_description();
   static const TypeDescription* node_index_type_description();
 
-  unsigned int	get_sequential_node_index(const typename Node::index_type idx);
+  unsigned int  get_sequential_node_index(const typename Node::index_type idx);
 
   // returns a MaskedLatVolMesh
   static Persistent *maker() { return new MaskedLatVolMesh<Basis>(); }
 
 private:
-  unsigned int	synchronized_;
-  map<typename Node::index_type, unsigned>	nodes_;
-  Mutex					node_lock_;
+  unsigned int  synchronized_;
+  map<typename Node::index_type, unsigned>      nodes_;
+  Mutex                                 node_lock_;
   set<unsigned int> masked_cells_;
-  unsigned	    masked_nodes_count_;
-  unsigned	    masked_edges_count_;
-  unsigned	    masked_faces_count_;
+  unsigned          masked_nodes_count_;
+  unsigned          masked_edges_count_;
+  unsigned          masked_faces_count_;
 
-  bool		update_count(typename Cell::index_type, bool masking);
-  unsigned	num_missing_faces(typename Cell::index_type);
-  bool		check_valid(typename Node::index_type idx) const;
-  bool		check_valid(typename Edge::index_type idx) const;
-  bool		check_valid(typename Face::index_type idx) const;
-  bool		check_valid(typename Cell::index_type idx) const;
-  bool		check_valid(typename Node::iterator idx) const;
-  bool		check_valid(typename Edge::iterator idx) const;
-  bool		check_valid(typename Face::iterator idx) const;    
-  bool		check_valid(typename Cell::iterator idx) const; 
+  bool          update_count(typename Cell::index_type, bool masking);
+  unsigned      num_missing_faces(typename Cell::index_type);
+  bool          check_valid(typename Node::index_type idx) const;
+  bool          check_valid(typename Edge::index_type idx) const;
+  bool          check_valid(typename Face::index_type idx) const;
+  bool          check_valid(typename Cell::index_type idx) const;
+  bool          check_valid(typename Node::iterator idx) const;
+  bool          check_valid(typename Edge::iterator idx) const;
+  bool          check_valid(typename Face::iterator idx) const;
+  bool          check_valid(typename Cell::iterator idx) const;
 
-  inline bool	check_valid(int i, int j, int k) const
-  { 
+  inline bool   check_valid(int i, int j, int k) const
+  {
     if ((i >= int(this->min_i_)) && (i <(int(this->min_i_ +this->ni_) - 1)) &&
-	(j >= int(this->min_j_)) && (j <(int(this->min_j_ +this->nj_) - 1)) &&
-	(k >= int(this->min_k_)) && (k <(int(this->min_k_ +this->nk_) - 1)) &&
-	(masked_cells_.find(unsigned(typename Cell::index_type(this,i,j,k))) == masked_cells_.end()))
+        (j >= int(this->min_j_)) && (j <(int(this->min_j_ +this->nj_) - 1)) &&
+        (k >= int(this->min_k_)) && (k <(int(this->min_k_ +this->nk_) - 1)) &&
+        (masked_cells_.find(unsigned(typename Cell::index_type(this,i,j,k))) == masked_cells_.end()))
     {
       return true;
     }
@@ -1076,11 +1076,12 @@ private:
   }
 };
 
+
 template <class Basis>
-PersistentTypeID 
-MaskedLatVolMesh<Basis>::type_id(type_name(-1), 
-				 LatVolMesh<Basis>::type_name(-1), 
-				 maker);
+PersistentTypeID
+MaskedLatVolMesh<Basis>::type_id(type_name(-1),
+                                 LatVolMesh<Basis>::type_name(-1),
+                                 maker);
 
 template <class Basis>
 MaskedLatVolMesh<Basis>::MaskedLatVolMesh():
@@ -1088,28 +1089,31 @@ MaskedLatVolMesh<Basis>::MaskedLatVolMesh():
   synchronized_(0),
   nodes_(),
   node_lock_("MaskedLatVolMesh node_lock_"),
-  masked_cells_(), 
+  masked_cells_(),
   masked_nodes_count_(0),
   masked_edges_count_(0),
   masked_faces_count_(0)
+{
+}
 
-{}
 
 template <class Basis>
 MaskedLatVolMesh<Basis>::MaskedLatVolMesh(unsigned int x,
-					  unsigned int y,
-					  unsigned int z,
-					  const Point &min,
-					  const Point &max) :
+                                          unsigned int y,
+                                          unsigned int z,
+                                          const Point &min,
+                                          const Point &max) :
   LatVolMesh<Basis>(x, y, z, min, max),
   synchronized_(0),
   nodes_(),
   node_lock_("MaskedLatVolMesh node_lock_"),
-  masked_cells_(), 
+  masked_cells_(),
   masked_nodes_count_(0),
   masked_edges_count_(0),
   masked_faces_count_(0)
-{}
+{
+}
+
 
 template <class Basis>
 MaskedLatVolMesh<Basis>::MaskedLatVolMesh(const MaskedLatVolMesh<Basis> &copy):
@@ -1117,28 +1121,31 @@ MaskedLatVolMesh<Basis>::MaskedLatVolMesh(const MaskedLatVolMesh<Basis> &copy):
   synchronized_(copy.synchronized_),
   nodes_(copy.nodes_),
   node_lock_("MaskedLatVolMesh node_lock_"),
-  masked_cells_(copy.masked_cells_), 
+  masked_cells_(copy.masked_cells_),
   masked_nodes_count_(copy.masked_nodes_count_),
   masked_edges_count_(copy.masked_edges_count_),
   masked_faces_count_(copy.masked_edges_count_)
 {
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::begin(typename MaskedLatVolMesh<Basis>::Node::iterator &itr) const
 {
-  itr = typename Node::iterator(this, this->min_i_, this->min_j_, this->min_k_);
+  itr = typename Node::iterator(this,
+                                this->min_i_, this->min_j_, this->min_k_);
   if (!check_valid(itr)) ++itr;
 }
+
 
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::end(typename MaskedLatVolMesh<Basis>::Node::iterator &itr) const
 {
   itr = typename Node::iterator(this, this->min_i_, this->min_j_, this->min_k_ + this->nk_);
-  //  if (!check_valid(itr)) { --itr; itr.next(); }  
 }
+
 
 template <class Basis>
 void
@@ -1147,10 +1154,11 @@ MaskedLatVolMesh<Basis>::size(typename MaskedLatVolMesh<Basis>::Node::size_type 
   s = typename Node::size_type(this,this->ni_,this->nj_,this->nk_);
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Node::index_type &idx,
-				  unsigned int a)
+                                  unsigned int a)
 {
   const unsigned int i = a % this->ni_;
   const unsigned int jk = a / this->ni_;
@@ -1158,6 +1166,7 @@ MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Node::index_
   const unsigned int k = jk / this->nj_;
   idx = typename Node::index_type(this, i, j, k);
 }
+
 
 template <class Basis>
 void
@@ -1167,13 +1176,14 @@ MaskedLatVolMesh<Basis>::begin(typename MaskedLatVolMesh<Basis>::Cell::iterator 
   if (!check_valid(itr)) ++itr;
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::end(typename MaskedLatVolMesh<Basis>::Cell::iterator &itr) const
 {
   itr = typename Cell::iterator(this, this->min_i_, this->min_j_, this->min_k_ + this->nk_-1);
-  //  if (!check_valid(itr)) { --itr; itr.next(); }
 }
+
 
 template <class Basis>
 void
@@ -1183,11 +1193,10 @@ MaskedLatVolMesh<Basis>::size(typename MaskedLatVolMesh<Basis>::Cell::size_type 
 }
 
 
-
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Cell::index_type &idx,
-				  unsigned int a)
+                                  unsigned int a)
 {
   const unsigned int i = a % (this->ni_-1);
   const unsigned int jk = a / (this->ni_-1);
@@ -1205,13 +1214,14 @@ MaskedLatVolMesh<Basis>::begin(typename MaskedLatVolMesh<Basis>::Edge::iterator 
   if (!check_valid(itr)) ++itr;
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::end(typename MaskedLatVolMesh<Basis>::Edge::iterator &itr) const
 {
   itr = typename Edge::iterator(this, this->min_i_, this->min_j_, this->min_k_,3);
-  //  if (!check_valid(itr)) { --itr; itr.next(); }
 }
+
 
 template <class Basis>
 void
@@ -1220,14 +1230,16 @@ MaskedLatVolMesh<Basis>::size(typename MaskedLatVolMesh<Basis>::Edge::size_type 
   s = typename Edge::size_type(this,this->ni_,this->nj_,this->nk_);
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Edge::index_type &/*idx*/,
-				  unsigned int /*a*/)
+                                  unsigned int /*a*/)
 {
   // TODO: Implement inverse of unsigned() function in EdgeIndex.
   ASSERTFAIL("NOT IMPLEMENTED YET!");
 }
+
 
 template <class Basis>
 void
@@ -1237,13 +1249,14 @@ MaskedLatVolMesh<Basis>::begin(typename MaskedLatVolMesh<Basis>::Face::iterator 
   if (!check_valid(itr)) ++itr;
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::end(typename MaskedLatVolMesh<Basis>::Face::iterator &itr) const
 {
   itr = typename Face::iterator(this, this->min_i_, this->min_j_, this->min_k_,3);
-  //  if (!check_valid(itr)) { --itr; itr.next(); }
 }
+
 
 template <class Basis>
 void
@@ -1252,14 +1265,16 @@ MaskedLatVolMesh<Basis>::size(typename MaskedLatVolMesh<Basis>::Face::size_type 
   s = typename Face::size_type(this,this->ni_,this->nj_,this->nk_);
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Face::index_type &/*idx*/,
-				  unsigned int /*a*/)
+                                  unsigned int /*a*/)
 {
   // TODO: Implement inverse of unsigned() function in FaceIndex.
   ASSERTFAIL("NOT IMPLEMENTED YET!");
 }
+
 
 //! get the child elements of the given index
 template <class Basis>
@@ -1269,35 +1284,35 @@ MaskedLatVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Ed
   array.resize(2);
   array[0] = typename Node::index_type(this,e.i_,e.j_,e.k_);
   array[1] = typename Node::index_type(this,
-				       e.i_ + (e.dir_ == 0 ? 1:0),
-				       e.j_ + (e.dir_ == 1 ? 1:0),
-				       e.k_ + (e.dir_ == 2 ? 1:0));
+                                       e.i_ + (e.dir_ == 0 ? 1:0),
+                                       e.j_ + (e.dir_ == 1 ? 1:0),
+                                       e.k_ + (e.dir_ == 2 ? 1:0));
 }
 
-		           
+
 template <class Basis>
-void 
+void
 MaskedLatVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::index_type f) const
 {
   array.resize(4);
   array[0] = typename Node::index_type(this,f.i_,f.j_,f.k_);
   array[1] = typename Node::index_type(this,
-				       f.i_ + (f.dir_ == 0 ? 1:0),
-				       f.j_ + (f.dir_ == 1 ? 1:0),
-				       f.k_ + (f.dir_ == 2 ? 1:0));
+                                       f.i_ + (f.dir_ == 0 ? 1:0),
+                                       f.j_ + (f.dir_ == 1 ? 1:0),
+                                       f.k_ + (f.dir_ == 2 ? 1:0));
   array[2] = typename Node::index_type(this,
-				       f.i_ + ((f.dir_ == 0 || f.dir_ == 2) ? 1:0),
-				       f.j_ + ((f.dir_ == 0 || f.dir_ == 1) ? 1:0),
-				       f.k_ + ((f.dir_ == 1 || f.dir_ == 2) ? 1:0));
+                                       f.i_ + ((f.dir_ == 0 || f.dir_ == 2) ? 1:0),
+                                       f.j_ + ((f.dir_ == 0 || f.dir_ == 1) ? 1:0),
+                                       f.k_ + ((f.dir_ == 1 || f.dir_ == 2) ? 1:0));
   array[3] = typename Node::index_type(this,
-				       f.i_ + (f.dir_ == 2 ? 1:0),
-				       f.j_ + (f.dir_ == 0 ? 1:0),
-				       f.k_ + (f.dir_ == 1 ? 1:0));
-
+                                       f.i_ + (f.dir_ == 2 ? 1:0),
+                                       f.j_ + (f.dir_ == 0 ? 1:0),
+                                       f.k_ + (f.dir_ == 1 ? 1:0));
 }
 
+
 template <class Basis>
-void 
+void
 MaskedLatVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Cell::index_type idx) const
 {
   array.resize(8);
@@ -1311,38 +1326,43 @@ MaskedLatVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Ce
   array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
 }
 
-template <class Basis>
-void
-MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
-				   typename Face::index_type idx) const
-{}
 
 template <class Basis>
-void 
-MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
-				   const typename Cell::index_type &idx) const
+void
+MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &array,
+                                   typename Face::index_type idx) const
+{
+}
+
+
+template <class Basis>
+void
+MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &array,
+                                   const typename Cell::index_type &idx) const
 {
   array.resize(12);
   array[0] = EdgeIndex(this, idx.i_, idx.j_, idx.k_, 0);
   array[1] = EdgeIndex(this, idx.i_, idx.j_+ 1, idx.k_, 0);
   array[2] = EdgeIndex(this, idx.i_, idx.j_, idx.k_ + 1, 0);
   array[3] = EdgeIndex(this, idx.i_, idx.j_ + 1, idx.k_ + 1, 0);
-  
+
   array[4] = EdgeIndex(this, idx.i_, idx.j_, idx.k_, 1);
   array[5] = EdgeIndex(this, idx.i_ + 1, idx.j_, idx.k_, 1);
   array[6] = EdgeIndex(this, idx.i_, idx.j_, idx.k_ + 1, 1);
   array[7] = EdgeIndex(this, idx.i_ + 1, idx.j_, idx.k_ + 1, 1);
-  
+
   array[8] =  EdgeIndex(this, idx.i_, idx.j_, idx.k_, 2);
   array[9] =  EdgeIndex(this, idx.i_ + 1, idx.j_, idx.k_, 2);
   array[10] = EdgeIndex(this, idx.i_, idx.j_ + 1, idx.k_, 2);
   array[11] = EdgeIndex(this, idx.i_ + 1, idx.j_ + 1, idx.k_, 2);
-  
+
 }
+
+
 template <class Basis>
-void 
-MaskedLatVolMesh<Basis>::get_faces(typename Face::array_type &array, 
-				   const typename Cell::index_type &idx) const
+void
+MaskedLatVolMesh<Basis>::get_faces(typename Face::array_type &array,
+                                   const typename Cell::index_type &idx) const
 {
   array.resize(6);
   const unsigned int i = idx.i_;
@@ -1384,52 +1404,53 @@ MaskedLatVolMesh<Basis>::get_elems(
           result.push_back(typename Cell::index_type(this, i, j, k));
 }
 
+
 template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Node::index_type idx) const
 {
   unsigned int i = idx.i_, j = idx.j_, k = idx.k_;
   return (check_valid(i  ,j  ,k  ) ||
-	  check_valid(i-1,j  ,k  ) ||
-	  check_valid(i  ,j-1,k  ) ||
-	  check_valid(i  ,j  ,k-1) ||
-	  check_valid(i-1,j-1,k  ) ||
-	  check_valid(i-1,j  ,k-1) ||
-	  check_valid(i  ,j-1,k-1) ||
-	  check_valid(i-1,j-1,k-1));	  
+          check_valid(i-1,j  ,k  ) ||
+          check_valid(i  ,j-1,k  ) ||
+          check_valid(i  ,j  ,k-1) ||
+          check_valid(i-1,j-1,k  ) ||
+          check_valid(i-1,j  ,k-1) ||
+          check_valid(i  ,j-1,k-1) ||
+          check_valid(i-1,j-1,k-1));
 }
 
 
 template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::check_valid(
-		 typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
+                 typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
 {
-  
+
   bool val = false;
   if (idx.dir_ == 0)
   {
     val =  ((idx.i_ < this->min_i_ + this->ni_ - 1) &&
-	    (check_valid(idx.i_  ,idx.j_  ,idx.k_  ) ||
-	     check_valid(idx.i_  ,idx.j_-1,idx.k_  ) ||
-	     check_valid(idx.i_  ,idx.j_  ,idx.k_-1) ||
-	     check_valid(idx.i_  ,idx.j_-1,idx.k_-1)));
+            (check_valid(idx.i_  ,idx.j_  ,idx.k_  ) ||
+             check_valid(idx.i_  ,idx.j_-1,idx.k_  ) ||
+             check_valid(idx.i_  ,idx.j_  ,idx.k_-1) ||
+             check_valid(idx.i_  ,idx.j_-1,idx.k_-1)));
   }
   if (idx.dir_ == 1)
   {
     val =   ((idx.j_ < this->min_j_ + this->nj_ - 1) &&
-	     (check_valid(idx.i_  ,idx.j_  ,idx.k_) ||
-	      check_valid(idx.i_-1,idx.j_  ,idx.k_) ||
-	      check_valid(idx.i_  ,idx.j_  ,idx.k_-1) ||
-	      check_valid(idx.i_-1,idx.j_  ,idx.k_-1)));
+             (check_valid(idx.i_  ,idx.j_  ,idx.k_) ||
+              check_valid(idx.i_-1,idx.j_  ,idx.k_) ||
+              check_valid(idx.i_  ,idx.j_  ,idx.k_-1) ||
+              check_valid(idx.i_-1,idx.j_  ,idx.k_-1)));
   }
   if (idx.dir_ == 2)
-  { 
+  {
     val =  ((idx.k_ < this->min_k_ + this->nk_ - 1) &&
-	    (check_valid(idx.i_  ,idx.j_,  idx.k_) ||
-	     check_valid(idx.i_-1,idx.j_,  idx.k_) ||
-	     check_valid(idx.i_  ,idx.j_-1,idx.k_) ||
-	     check_valid(idx.i_-1,idx.j_-1,idx.k_)));
+            (check_valid(idx.i_  ,idx.j_,  idx.k_) ||
+             check_valid(idx.i_-1,idx.j_,  idx.k_) ||
+             check_valid(idx.i_  ,idx.j_-1,idx.k_) ||
+             check_valid(idx.i_-1,idx.j_-1,idx.k_)));
   }
   return val;
 }
@@ -1443,28 +1464,28 @@ MaskedLatVolMesh<Basis>::check_valid(
   if (idx.dir_ == 0)
   {
     return (idx.i_ < this->min_i_ + this->ni_ - 1 &&
-	    idx.j_ < this->min_j_ + this->nj_ - 1 &&
-	    (check_valid(idx.i_,idx.j_,idx.k_) ||
-	     check_valid(idx.i_,idx.j_,idx.k_-1)));
+            idx.j_ < this->min_j_ + this->nj_ - 1 &&
+            (check_valid(idx.i_,idx.j_,idx.k_) ||
+             check_valid(idx.i_,idx.j_,idx.k_-1)));
   }
   if (idx.dir_ == 1)
   {
     return (idx.j_ < this->min_j_ + this->nj_ - 1 &&
-	    idx.k_ < this->min_k_ + this->nk_ - 1 &&
-	    (check_valid(idx.i_,idx.j_,idx.k_) ||
-	     check_valid(idx.i_-1,idx.j_,idx.k_)));
+            idx.k_ < this->min_k_ + this->nk_ - 1 &&
+            (check_valid(idx.i_,idx.j_,idx.k_) ||
+             check_valid(idx.i_-1,idx.j_,idx.k_)));
   }
   if (idx.dir_ == 2)
   {
     return (idx.i_ < this->min_i_ + this->ni_ - 1 &&
-	    idx.k_ < this->min_k_ + this->nk_ - 1 &&
-	    (check_valid(idx.i_,idx.j_,idx.k_) ||
-	     check_valid(idx.i_,idx.j_-1,idx.k_)));
+            idx.k_ < this->min_k_ + this->nk_ - 1 &&
+            (check_valid(idx.i_,idx.j_,idx.k_) ||
+             check_valid(idx.i_,idx.j_-1,idx.k_)));
   }
 
   return false;
-
 }
+
 
 template <class Basis>
 bool
@@ -1475,7 +1496,6 @@ MaskedLatVolMesh<Basis>::check_valid(
 }
 
 
-
 template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::check_valid(
@@ -1483,6 +1503,7 @@ MaskedLatVolMesh<Basis>::check_valid(
 {
   return check_valid(*i);
 }
+
 
 template <class Basis>
 bool
@@ -1492,6 +1513,7 @@ MaskedLatVolMesh<Basis>::check_valid(
   return check_valid(*i);
 }
 
+
 template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::check_valid(
@@ -1499,6 +1521,7 @@ MaskedLatVolMesh<Basis>::check_valid(
 {
   return check_valid(*i);
 }
+
 
 template <class Basis>
 bool
@@ -1510,12 +1533,12 @@ MaskedLatVolMesh<Basis>::check_valid(
 
 
 //! This function updates the missing node, edge, and face count
-//! when masking or unmasking one cell. 
+//! when masking or unmasking one cell.
 //! Returns true if nodes, edges, or faces count is changed
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::update_count(typename MaskedLatVolMesh<Basis>::Cell::index_type c, 
-				      bool masking)
+MaskedLatVolMesh<Basis>::update_count(typename MaskedLatVolMesh<Basis>::Cell::index_type c,
+                                      bool masking)
 {
   synchronized_ &= ~Mesh::NODES_E;
   const bool i0 = (c.i_ > this->min_i_) && check_valid(c.i_-1, c.j_, c.k_);
@@ -1526,59 +1549,59 @@ MaskedLatVolMesh<Basis>::update_count(typename MaskedLatVolMesh<Basis>::Cell::in
   const bool k1 = (c.k_ < this->min_k_+this->nk_-1) && check_valid(c.i_, c.j_, c.k_+1);
 
   // These counts are the number of nodes, edges, faces that exist
-  // ONLY from the presence of this cell, not because of the contribution 
+  // ONLY from the presence of this cell, not because of the contribution
   // of neighboring cells.
   const unsigned int faces = (i0?0:1)+(i1?0:1)+(j0?0:1)+(j1?0:1)+(k0?0:1)+(k1?0:1);
   unsigned int       nodes = 0;
   unsigned int       edges = 0;
 
-  if (faces == 6) {  
-    nodes = 8; 
+  if (faces == 6) {
+    nodes = 8;
     edges = 12;
-  } 
+  }
   else {
-    if (faces == 5)	{ 
+    if (faces == 5)     {
       nodes = 4; edges = 8;
     }
-    else { 
-      if (faces == 1 || faces == 0)	{ 
-	nodes = 0; edges = 0; 
+    else {
+      if (faces == 1 || faces == 0)     {
+        nodes = 0; edges = 0;
       }
-      else { 
-	if(faces == 4) {
-	  if((i0 == i1) && (j0 == j1) && (k0 == k1)) {
-	    nodes = 0;
-	    edges = 4;
-	  }
-	  else {
-	    nodes = 2;
-	    edges = 5;
-	  }
-	}
-	else {
-	  if(faces == 3) {
-	    if((i0!=i1)&&(j0!=j1)&&(k0!=k1)) {
-	      nodes = 1;
-	      edges = 3;
-	    }
-	    else {
-	      nodes = 0;
-	      nodes = 2;
-	    }
-	  }
-	  else {
-	    if(faces == 2) {
-	      if((i0 == i1) && (j0 == j1) && (k0 == k1)) {
-		nodes = 0;
-		edges = 0;
-	      }
-	      else {
-		nodes = 0;
-		edges = 1;
-	      }
-	    }
-	  }
-	}
+      else {
+        if(faces == 4) {
+          if((i0 == i1) && (j0 == j1) && (k0 == k1)) {
+            nodes = 0;
+            edges = 4;
+          }
+          else {
+            nodes = 2;
+            edges = 5;
+          }
+        }
+        else {
+          if(faces == 3) {
+            if((i0!=i1)&&(j0!=j1)&&(k0!=k1)) {
+              nodes = 1;
+              edges = 3;
+            }
+            else {
+              nodes = 0;
+              nodes = 2;
+            }
+          }
+          else {
+            if(faces == 2) {
+              if((i0 == i1) && (j0 == j1) && (k0 == k1)) {
+                nodes = 0;
+                edges = 0;
+              }
+              else {
+                nodes = 0;
+                edges = 1;
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -1593,7 +1616,7 @@ MaskedLatVolMesh<Basis>::update_count(typename MaskedLatVolMesh<Basis>::Cell::in
   }
   // These ndoes, edges, & faces are being implicitly added back into the mesh
   // because this cell is being added back in
-  else 
+  else
   {
     masked_nodes_count_ -= nodes;
     masked_edges_count_ -= edges;
@@ -1602,8 +1625,6 @@ MaskedLatVolMesh<Basis>::update_count(typename MaskedLatVolMesh<Basis>::Cell::in
 
   return (faces == 0);
 }
-
-  
 
 
 template <class Basis>
@@ -1625,21 +1646,21 @@ MaskedLatVolMesh<Basis>::get_center(Point &result, const typename Node::index_ty
 }
 
 
-
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::get_center(Point &result, const typename Edge::index_type &idx) const
 {
   ASSERT(check_valid(idx));
-  LatVolMesh<Basis>::get_center(result, typename LatVolMesh<Basis>::Edge::index_type(unsigned(idx))); 
+  LatVolMesh<Basis>::get_center(result, typename LatVolMesh<Basis>::Edge::index_type(unsigned(idx)));
 }
+
 
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::get_center(Point &result, const typename Face::index_type &idx) const
 {
   ASSERT(check_valid(idx));
-  LatVolMesh<Basis>::get_center(result, typename LatVolMesh<Basis>::Face::index_type(unsigned(idx))); 
+  LatVolMesh<Basis>::get_center(result, typename LatVolMesh<Basis>::Face::index_type(unsigned(idx)));
 }
 
 
@@ -1664,8 +1685,9 @@ MaskedLatVolMesh<Basis>::locate(typename Node::index_type &idx, const Point &p)
   {
     return true;
   }
-  else return false;    
+  else return false;
 }
+
 
 template <class Basis>
 bool
@@ -1684,23 +1706,26 @@ MaskedLatVolMesh<Basis>::locate(typename Cell::index_type &idx, const Point &p)
   else return false;
 }
 
+
 template <class Basis>
 int
-MaskedLatVolMesh<Basis>::get_weights(const Point &p, 
-				     typename Node::array_type &l, 
-				     double *w)
+MaskedLatVolMesh<Basis>::get_weights(const Point &p,
+                                     typename Node::array_type &l,
+                                     double *w)
 {
   return LatVolMesh<Basis>::get_weights(p, l, w);
 }
 
+
 template <class Basis>
 int
-MaskedLatVolMesh<Basis>::get_weights(const Point &p, 
-				     typename Cell::array_type &l, 
-				     double *w)
+MaskedLatVolMesh<Basis>::get_weights(const Point &p,
+                                     typename Cell::array_type &l,
+                                     double *w)
 {
   return LatVolMesh<Basis>::get_weights(p, l, w);
 }
+
 
 template <class Basis>
 double
@@ -1711,6 +1736,7 @@ MaskedLatVolMesh<Basis>::get_size(typename Node::index_type idx) const
   return LatVolMesh<Basis>::get_size(i);
 }
 
+
 template <class Basis>
 double
 MaskedLatVolMesh<Basis>::get_size(typename Edge::index_type idx) const
@@ -1719,6 +1745,7 @@ MaskedLatVolMesh<Basis>::get_size(typename Edge::index_type idx) const
   return LatVolMesh<Basis>::get_size(typename LatVolMesh<Basis>::Edge::index_type(unsigned(idx)));
 }
 
+
 template <class Basis>
 double
 MaskedLatVolMesh<Basis>::get_size(typename Face::index_type idx) const
@@ -1726,6 +1753,7 @@ MaskedLatVolMesh<Basis>::get_size(typename Face::index_type idx) const
   ASSERT(check_valid(idx));
   return LatVolMesh<Basis>::get_size(typename LatVolMesh<Basis>::Face::index_type(unsigned(idx)));
 }
+
 
 template <class Basis>
 double
@@ -1736,6 +1764,7 @@ MaskedLatVolMesh<Basis>::get_size(typename Cell::index_type idx) const
   return LatVolMesh<Basis>::get_size(i);
 }
 
+
 template <class Basis>
 void
 MaskedLatVolMesh<Basis>::mask_cell(typename Cell::index_type idx)
@@ -1743,6 +1772,7 @@ MaskedLatVolMesh<Basis>::mask_cell(typename Cell::index_type idx)
   update_count(idx,true);
   masked_cells_.insert(unsigned(idx));
 }
+
 
 template <class Basis>
 void
@@ -1760,12 +1790,14 @@ MaskedLatVolMesh<Basis>::num_masked_nodes() const
   return masked_nodes_count_;
 }
 
+
 template <class Basis>
 unsigned int
 MaskedLatVolMesh<Basis>::num_masked_edges() const
 {
   return masked_edges_count_;
 }
+
 
 template <class Basis>
 unsigned int
@@ -1774,6 +1806,7 @@ MaskedLatVolMesh<Basis>::num_masked_faces() const
   return masked_faces_count_;
 }
 
+
 template <class Basis>
 unsigned int
 MaskedLatVolMesh<Basis>::num_masked_cells() const
@@ -1781,69 +1814,70 @@ MaskedLatVolMesh<Basis>::num_masked_cells() const
   return masked_cells_.size();
 }
 
+
 template <class Basis>
-void 
+void
 MaskedLatVolMesh<Basis>::
-get_neighbors_stencil(vector<pair<bool,typename Cell::index_type> > &nbrs, 
-		      typename Cell::index_type idx) const
+get_neighbors_stencil(vector<pair<bool,typename Cell::index_type> > &nbrs,
+                      typename Cell::index_type idx) const
 {
   nbrs.clear();
   for (int k = idx.k_ - 1; k <= int(idx.k_ + 1); k++)
     for (int j = idx.j_ - 1; j <= int(idx.j_ + 1); j++)
       for (int i = idx.i_ - 1; i <= int(idx.i_ + 1); i++)
-	if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
-	  if (i >= int(this->min_i_) && j >= int(this->min_j_) && k >= int(this->min_k_) &&
-	      i <= int(this->min_i_+this->ni_)-1 && j <= int(this->min_j_+this->nj_)-1 && 
-	      i <= int(this->min_k_+this->nk_)-1 && check_valid(i,j,k))
-	    nbrs.push_back(make_pair(true,typename Cell::index_type(this,i,j,k)));
-	  else
-	    nbrs.push_back(make_pair(false,typename Cell::index_type(0,0,0,0)));
+        if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
+          if (i >= int(this->min_i_) && j >= int(this->min_j_) && k >= int(this->min_k_) &&
+              i <= int(this->min_i_+this->ni_)-1 && j <= int(this->min_j_+this->nj_)-1 &&
+              i <= int(this->min_k_+this->nk_)-1 && check_valid(i,j,k))
+            nbrs.push_back(make_pair(true,typename Cell::index_type(this,i,j,k)));
+          else
+            nbrs.push_back(make_pair(false,typename Cell::index_type(0,0,0,0)));
 }
 
 
 template <class Basis>
-void 
+void
 MaskedLatVolMesh<Basis>::
-get_neighbors_stencil(vector<pair<bool,typename Node::index_type> > &nbrs, 
-		      typename Node::index_type idx) const
+get_neighbors_stencil(vector<pair<bool,typename Node::index_type> > &nbrs,
+                      typename Node::index_type idx) const
 {
   nbrs.clear();
   for (int k = idx.k_ - 1; k <= int(idx.k_) + 1; k++)
     for (int j = idx.j_ - 1; j <= int(idx.j_) + 1; j++)
       for (int i = idx.i_ - 1; i <= int(idx.i_) + 1; i++)
-	if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
-	  if (i >= int(this->min_i_) && j >= int(this->min_j_) && k >= int(this->min_k_) &&
-	      i <= int(this->min_i_+this->ni_) && j <= int(this->min_j_+this->nj_) &&
-	      i <= int(this->min_k_+this->nk_) &&
-	      check_valid(typename Node::index_type(this,i,j,k)))
-	    nbrs.push_back(make_pair(true,typename Node::index_type(this,i,j,k)));
-	  else
-	    nbrs.push_back(make_pair(false,typename Node::index_type(0,0,0,0)));
+        if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
+          if (i >= int(this->min_i_) && j >= int(this->min_j_) && k >= int(this->min_k_) &&
+              i <= int(this->min_i_+this->ni_) && j <= int(this->min_j_+this->nj_) &&
+              i <= int(this->min_k_+this->nk_) &&
+              check_valid(typename Node::index_type(this,i,j,k)))
+            nbrs.push_back(make_pair(true,typename Node::index_type(this,i,j,k)));
+          else
+            nbrs.push_back(make_pair(false,typename Node::index_type(0,0,0,0)));
 }
 
 
 template <class Basis>
-void 
+void
 MaskedLatVolMesh<Basis>::
-get_neighbors_stencil(vector<pair<bool,typename Cell::index_type> > &nbrs, 
-		      typename Node::index_type idx) const
+get_neighbors_stencil(vector<pair<bool,typename Cell::index_type> > &nbrs,
+                      typename Node::index_type idx) const
 {
   nbrs.clear();
   for (int k = idx.k_ - 1; k <= int(idx.k_); k++)
     for (int j = idx.j_ - 1; j <= int(idx.j_); j++)
       for (int i = idx.i_ - 1; i <= int(idx.i_); i++)
-	if (i >= int(this->min_i_) && j >= 
-	    int(this->min_j_) && k >= int(this->min_k_) &&
-	    i <= int(this->min_i_+this->ni_)-1 && j <= 
-	    int(this->min_j_+this->nj_)-1 &&
-	    i <= int(this->min_k_+this->nk_)-1 && check_valid(i,j,k))
-	  nbrs.push_back(make_pair(true,
-				   typename Cell::index_type(this,i,j,k)));
-	else
-	  nbrs.push_back(make_pair(false,typename Cell::index_type(0,0,0,0)));
+        if (i >= int(this->min_i_) && j >=
+            int(this->min_j_) && k >= int(this->min_k_) &&
+            i <= int(this->min_i_+this->ni_)-1 && j <=
+            int(this->min_j_+this->nj_)-1 &&
+            i <= int(this->min_k_+this->nk_)-1 && check_valid(i,j,k))
+          nbrs.push_back(make_pair(true,
+                                   typename Cell::index_type(this,i,j,k)));
+        else
+          nbrs.push_back(make_pair(false,typename Cell::index_type(0,0,0,0)));
 }
 
-    
+
 template <class Basis>
 unsigned int
 MaskedLatVolMesh<Basis>::get_sequential_node_index(const typename Node::index_type idx)
@@ -1880,6 +1914,7 @@ Pio(Piostream& stream, typename MaskedLatVolMesh<Basis>::NodeIndex& n)
   stream.end_cheap_delim();
 }
 
+
 template <class Basis>
 void
 Pio(Piostream& stream, typename MaskedLatVolMesh<Basis>::CellIndex& n)
@@ -1890,6 +1925,7 @@ Pio(Piostream& stream, typename MaskedLatVolMesh<Basis>::CellIndex& n)
   Pio(stream, n.k_);
   stream.end_cheap_delim();
 }
+
 
 template <class Basis>
 void
@@ -1902,6 +1938,7 @@ Pio(Piostream& stream, typename MaskedLatVolMesh<Basis>::EdgeIndex& n)
   stream.end_cheap_delim();
 }
 
+
 template <class Basis>
 void
 Pio(Piostream& stream, typename MaskedLatVolMesh<Basis>::FaceIndex& n)
@@ -1913,16 +1950,18 @@ Pio(Piostream& stream, typename MaskedLatVolMesh<Basis>::FaceIndex& n)
   stream.end_cheap_delim();
 }
 
+
 template <class Basis>
-const string 
+const string
 find_type_name(typename MaskedLatVolMesh<Basis>::NodeIndex *)
 {
   static string name = MaskedLatVolMesh<Basis>::type_name(-1) + "::NodeIndex";
   return name;
 }
 
+
 template <class Basis>
-const string 
+const string
 find_type_name(typename MaskedLatVolMesh<Basis>::CellIndex *)
 {
   static string name = MaskedLatVolMesh<Basis>::type_name(-1) + "::CellIndex";
@@ -1937,12 +1976,12 @@ void
 MaskedLatVolMesh<Basis>::io(Piostream& stream)
 {
   stream.begin_class(type_name(-1), MASKED_LAT_VOL_MESH_VERSION);
-  
+
   LatVolMesh<Basis>::io(stream);
 
   // IO data members, in order
-  vector<unsigned int > masked_vec(masked_cells_.begin(), 
-				   masked_cells_.end());
+  vector<unsigned int > masked_vec(masked_cells_.begin(),
+                                   masked_cells_.end());
   Pio(stream, masked_vec);
   if (stream.reading())
   {
@@ -1952,6 +1991,7 @@ MaskedLatVolMesh<Basis>::io(Piostream& stream)
 
   stream.end_class();
 }
+
 
 template <class Basis>
 const string
@@ -1968,11 +2008,12 @@ MaskedLatVolMesh<Basis>::type_name(int n)
     static const string nm("MaskedLatVolMesh");
     return nm;
   }
-  else 
+  else
   {
     return find_type_name((Basis *)0);
   }
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1980,6 +2021,7 @@ MaskedLatVolMesh<Basis>::get_type_description() const
 {
   return SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -1992,45 +2034,47 @@ get_type_description(MaskedLatVolMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("MaskedLatVolMesh", subs,
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
 
 
 template <class Basis>
-const TypeDescription* 
+const TypeDescription*
 MaskedLatVolMesh<Basis>::node_index_type_description()
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::NodeIndex",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
 
+
 template <class Basis>
-const TypeDescription* 
+const TypeDescription*
 MaskedLatVolMesh<Basis>::cell_index_type_description()
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::CellIndex",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2039,15 +2083,16 @@ MaskedLatVolMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2056,15 +2101,16 @@ MaskedLatVolMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2073,15 +2119,16 @@ MaskedLatVolMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -2090,15 +2137,16 @@ MaskedLatVolMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 } // namespace SCIRun
 

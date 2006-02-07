@@ -68,14 +68,14 @@ public:
   public:
     ImageIndex() : i_(0), j_(0), mesh_(0) {}
 
-    ImageIndex(const ImageMesh *m, unsigned i, unsigned j) 
+    ImageIndex(const ImageMesh *m, unsigned i, unsigned j)
       : i_(i), j_(j), mesh_(m) {}
 
-    operator unsigned() const { 
+    operator unsigned() const {
       ASSERT(mesh_);
       return i_ + j_*mesh_->ni_;
     }
-    
+
     std::ostream& str_render(std::ostream& os) const {
       os << "[" << i_ << "," << j_ << "]";
       return os;
@@ -89,26 +89,20 @@ public:
   struct IFaceIndex : public ImageIndex
   {
     IFaceIndex() : ImageIndex() {}
-    IFaceIndex(const ImageMesh *m, unsigned i, unsigned j) 
+    IFaceIndex(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIndex(m, i, j) {}
 
-    operator unsigned() const { 
+    operator unsigned() const {
       ASSERT(this->mesh_);
       return this->i_ + this->j_ * (this->mesh_->ni_-1);
     }
-    
-    //friend void Pio<Basis>(Piostream&, IFaceIndex&);
-    //friend const TypeDescription* get_type_description(IFaceIndex *);
   };
 
   struct INodeIndex : public ImageIndex
   {
     INodeIndex() : ImageIndex() {}
-    INodeIndex(const ImageMesh *m, unsigned i, unsigned j) 
+    INodeIndex(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIndex(m, i, j) {}
-    
-    //friend void Pio<Basis>(Piostream&, INodeIndex&);
-    //friend const TypeDescription* get_type_description(INodeIndex *);
   };
 
   struct ImageIter : public ImageIndex
@@ -142,8 +136,8 @@ public:
     {
       this->i_++;
       if (this->i_ >= this->mesh_->min_i_ + this->mesh_->ni_) {
-	this->i_ = this->mesh_->min_i_;
-	this->j_++;
+        this->i_ = this->mesh_->min_i_;
+        this->j_++;
       }
       return *this;
     }
@@ -171,8 +165,8 @@ public:
     {
       this->i_++;
       if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1) {
-	this->i_ = this->mesh_->min_i_;
-	this->j_++;
+        this->i_ = this->mesh_->min_i_;
+        this->j_++;
       }
       return *this;
     }
@@ -188,7 +182,7 @@ public:
   };
 
   struct ImageSize
-  { 
+  {
   public:
     ImageSize() : i_(0), j_(0) {}
     ImageSize(unsigned i, unsigned j) : i_(i), j_(j) {}
@@ -224,23 +218,23 @@ public:
     typedef INodeIter                        iterator;
     typedef INodeSize                        size_type;
     typedef StackVector<index_type, 4>       array_type;
-  };			
-			
-  struct Edge {		
+  };
+
+  struct Edge {
     typedef EdgeIndex<unsigned int>          index_type;
     typedef EdgeIterator<unsigned int>       iterator;
     typedef EdgeIndex<unsigned int>          size_type;
     typedef vector<index_type>               array_type;
-  };			
-			
-  struct Face {		
+  };
+
+  struct Face {
     typedef IFaceIndex                       index_type;
     typedef IFaceIter                        iterator;
     typedef IFaceSize                        size_type;
     typedef vector<index_type>               array_type;
-  };			
-			
-  struct Cell {		
+  };
+
+  struct Cell {
     typedef CellIndex<unsigned int>          index_type;
     typedef CellIterator<unsigned int>       iterator;
     typedef CellIndex<unsigned int>          size_type;
@@ -254,72 +248,72 @@ public:
   friend class IFaceIndex;
 
   friend class ElemData;
-  
-  class ElemData 
+
+  class ElemData
   {
   public:
-    ElemData(const ImageMesh<Basis>& msh, 
-	     const typename Elem::index_type ind) :
+    ElemData(const ImageMesh<Basis>& msh,
+             const typename Elem::index_type ind) :
       mesh_(msh),
       index_(ind)
     {}
-    
+
     // the following designed to coordinate with ::get_nodes
-    inline 
+    inline
     unsigned node0_index() const {
       return (index_.i_ + mesh_.get_ni()*index_.j_);
     }
-    inline 
+    inline
     unsigned node1_index() const {
       return (index_.i_+ 1 + mesh_.get_ni()*index_.j_);
     }
-    inline 
+    inline
     unsigned node2_index() const {
       return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1));
-      
+
     }
-    inline 
+    inline
     unsigned node3_index() const {
       return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1));
     }
 
     // the following designed to coordinate with ::get_edges
-    inline 
+    inline
     unsigned edge0_index() const {
-      return index_.i_ + index_.j_ * (mesh_.ni_- 1); 
+      return index_.i_ + index_.j_ * (mesh_.ni_- 1);
     }
-    inline 
+    inline
     unsigned edge1_index() const {
       return index_.i_ + (index_.j_ + 1) * (mesh_.ni_ - 1);
     }
-    inline 
+    inline
     unsigned edge2_index() const {
-      return index_.i_    *(mesh_.nj_ - 1) + index_.j_ + 
-	((mesh_.ni_ - 1) * mesh_.nj_);
+      return index_.i_    *(mesh_.nj_ - 1) + index_.j_ +
+        ((mesh_.ni_ - 1) * mesh_.nj_);
      }
-    inline 
+    inline
     unsigned edge3_index() const {
-      return (index_.i_ + 1) * (mesh_.nj_ - 1) + index_.j_ + 
-	((mesh_.ni_ - 1) * mesh_.nj_);
+      return (index_.i_ + 1) * (mesh_.nj_ - 1) + index_.j_ +
+        ((mesh_.ni_ - 1) * mesh_.nj_);
     }
 
 
-    inline 
+    inline
     const Point node0() const {
       Point p(index_.i_, index_.j_, 0.0);
       return mesh_.transform_.project(p);
     }
-    inline 
+    inline
     const Point node1() const {
       Point p(index_.i_ + 1, index_.j_, 0.0);
       return mesh_.transform_.project(p);
     }
-    inline 
+    inline
     const Point node2() const {
       Point p(index_.i_ + 1, index_.j_ + 1, 0.0);
       return mesh_.transform_.project(p);
     }
-    inline 
+    inline
     const Point node3() const {
       Point p(index_.i_, index_.j_ + 1, 0.0);
       return mesh_.transform_.project(p);
@@ -337,7 +331,7 @@ public:
       ni_(1), nj_(1) {}
   ImageMesh(unsigned x, unsigned y, const Point &min, const Point &max);
   ImageMesh(ImageMesh* mh, unsigned int mx, unsigned int my,
-	    unsigned int x, unsigned int y)
+            unsigned int x, unsigned int y)
     : min_i_(mx), min_j_(my), ni_(x), nj_(y), transform_(mh->transform_) {}
   ImageMesh(const ImageMesh &copy)
     : min_i_(copy.min_i_), min_j_(copy.min_j_),
@@ -349,46 +343,46 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords, 
-		       typename Elem::index_type ci, 
-		       unsigned which_edge, 
-		       unsigned div_per_unit) const
-  {    
-    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+  void pwl_approx_edge(vector<vector<double> > &coords,
+                       typename Elem::index_type ci,
+                       unsigned which_edge,
+                       unsigned div_per_unit) const
+  {
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc
     // compare get_nodes order to the basis order
-    int basis_emap[] = {0, 2, 3, 1}; 
-    basis_.approx_edge(basis_emap[which_edge], div_per_unit, coords); 
+    int basis_emap[] = {0, 2, 3, 1};
+    basis_.approx_edge(basis_emap[which_edge], div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
-		       typename Elem::index_type, 
-		       unsigned, 
-		       unsigned div_per_unit) const
+  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+                       typename Elem::index_type,
+                       unsigned,
+                       unsigned div_per_unit) const
   {
     basis_.approx_face(0, div_per_unit, coords);
   }
-  
-  bool get_coords(vector<double> &coords, 
-		  const Point &p,
-		  typename Elem::index_type idx) const
+
+  bool get_coords(vector<double> &coords,
+                  const Point &p,
+                  typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
-    return basis_.get_coords(coords, p, ed); 
+    return basis_.get_coords(coords, p, ed);
   }
-  
-  void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Elem::index_type idx) const
+
+  void interpolate(Point &pt, const vector<double> &coords,
+                   typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     pt = basis_.interpolate(coords, ed);
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords, 
-		typename Elem::index_type idx, 
-		vector<Point> &J) const
+  void derivate(const vector<double> &coords,
+                typename Elem::index_type idx,
+                vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -431,9 +425,9 @@ public:
   void size(typename Cell::size_type &) const;
 
   void to_index(typename Node::index_type &index, unsigned int i);
-  void to_index(typename Edge::index_type &index, unsigned int i) { index = i; }
+  void to_index(typename Edge::index_type &index, unsigned int i) { index= i; }
   void to_index(typename Face::index_type &index, unsigned int i);
-  void to_index(typename Cell::index_type &index, unsigned int i) { index = i; }
+  void to_index(typename Cell::index_type &index, unsigned int i) { index= i; }
 
   //! get the child elements of the given index
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
@@ -442,20 +436,20 @@ public:
   void get_edges(typename Edge::array_type &, typename Face::index_type) const;
   void get_edges(typename Edge::array_type &, typename Cell::index_type) const {}
   void get_faces(typename Face::array_type &, typename Cell::index_type) const {}
-  void get_faces(typename Face::array_type &a, 
-		 typename Face::index_type f) const
+  void get_faces(typename Face::array_type &a,
+                 typename Face::index_type f) const
   { a.push_back(f); }
 
   //! get the parent element(s) of the given index
-  void get_elems(typename Elem::array_type &result, 
+  void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const;
 
   //! return all face_indecies that overlap the BBox in arr.
   void get_faces(typename Face::array_type &arr, const BBox &box);
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(const typename Node::index_type &/*idx*/) const { return 0.0; }
-  double get_size(typename Edge::index_type idx) const 
+  double get_size(const typename Node::index_type &/*i*/) const { return 0.0; }
+  double get_size(typename Edge::index_type idx) const
   {
     typename Node::array_type arr;
     get_nodes(arr, idx);
@@ -482,23 +476,23 @@ public:
   int get_valence(const typename Node::index_type &idx) const
   {
     return ((idx.i_ == 0 || idx.i_ == ni_ - 1 ? 1 : 2) +
-	    (idx.j_ == 0 || idx.j_ == nj_ - 1 ? 1 : 2));
-  }   
+            (idx.j_ == 0 || idx.j_ == nj_ - 1 ? 1 : 2));
+  }
   int get_valence(typename Edge::index_type idx) const;
   int get_valence(const typename Face::index_type &/*idx*/) const { return 0; }
   int get_valence(typename Cell::index_type /*idx*/) const { return 0; }
 
 
   bool get_neighbor(typename Face::index_type &neighbor,
-		    typename Face::index_type from,
-		    typename Edge::index_type idx) const;
-  
+                    typename Face::index_type from,
+                    typename Edge::index_type idx) const;
+
   void get_neighbors(typename Face::array_type &array, typename Face::index_type idx) const;
-    
+
   void get_normal(Vector &, const typename Node::index_type &) const
   { ASSERTFAIL("not implemented") }
-  void get_normal(Vector &result, vector<double> &coords, 
-		  typename Elem::index_type eidx, unsigned int) 
+  void get_normal(Vector &result, vector<double> &coords,
+                  typename Elem::index_type eidx, unsigned int)
   {
     ElemData ed(*this, eidx);
     vector<Point> Jv;
@@ -537,7 +531,7 @@ public:
 
   // Unsafe due to non-constness of unproject.
   Transform &get_transform() { return transform_; }
-  Transform &set_transform(const Transform &trans) 
+  Transform &set_transform(const Transform &trans)
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 2; }
@@ -545,7 +539,7 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
-  static const TypeDescription* elem_type_description() 
+  static const TypeDescription* elem_type_description()
   { return face_type_description(); }
   static const TypeDescription* node_index_type_description();
   static const TypeDescription* face_index_type_description();
@@ -560,29 +554,28 @@ protected:
   unsigned               min_j_;
   //! the typename Node::index_type space extents of a ImageMesh
   //! (min=min_typename Node::index_type, max=min+extents-1)
-  unsigned               ni_; 
+  unsigned               ni_;
   unsigned               nj_;
 
   //! the object space extents of a ImageMesh
   Transform              transform_;
 
   Vector                 normal_;
-  
-  //! The basis class 
+
+  //! The basis class
   Basis                  basis_;
 
 };
 
+
 template <class Basis>
-PersistentTypeID 
+PersistentTypeID
 ImageMesh<Basis>::type_id(type_name(-1),"Mesh", maker);
 
-//std::ostream& operator<<(std::ostream& os, const ImageMesh::ImageIndex& n);
-//std::ostream& operator<<(std::ostream& os, const ImageMesh::ImageSize& s);
 
 template<class Basis>
 ImageMesh<Basis>::ImageMesh(unsigned i, unsigned j,
-			    const Point &min, const Point &max) : 
+                            const Point &min, const Point &max) :
   min_i_(0), min_j_(0), ni_(i), nj_(j)
 {
   transform_.pre_scale(Vector(1.0 / (i-1.0), 1.0 / (j-1.0), 1.0));
@@ -595,6 +588,7 @@ ImageMesh<Basis>::ImageMesh(unsigned i, unsigned j,
   normal_.safe_normalize();
 }
 
+
 template<class Basis>
 BBox
 ImageMesh<Basis>::get_bounding_box() const
@@ -603,7 +597,7 @@ ImageMesh<Basis>::get_bounding_box() const
   Point p1(ni_-1, 0.0,   0.0);
   Point p2(ni_-1, nj_-1, 0.0);
   Point p3(0.0,   nj_-1, 0.0);
-  
+
   BBox result;
   result.extend(transform_.project(p0));
   result.extend(transform_.project(p1));
@@ -612,20 +606,23 @@ ImageMesh<Basis>::get_bounding_box() const
   return result;
 }
 
+
 template<class Basis>
-Vector 
+Vector
 ImageMesh<Basis>::diagonal() const
 {
   return get_bounding_box().diagonal();
 }
 
+
 template<class Basis>
 void
-ImageMesh<Basis>::get_canonical_transform(Transform &t) 
+ImageMesh<Basis>::get_canonical_transform(Transform &t)
 {
   t = transform_;
   t.post_scale(Vector(ni_ - 1.0, nj_ - 1.0, 1.0));
 }
+
 
 template<class Basis>
 bool
@@ -641,12 +638,14 @@ ImageMesh<Basis>::synchronize(unsigned int flag)
   return false;
 }
 
+
 template<class Basis>
 void
 ImageMesh<Basis>::transform(const Transform &t)
 {
   transform_.pre_trans(t);
 }
+
 
 template<class Basis>
 bool
@@ -661,6 +660,7 @@ ImageMesh<Basis>::get_min(vector<unsigned int> &array) const
   return true;
 }
 
+
 template<class Basis>
 bool
 ImageMesh<Basis>::get_dim(vector<unsigned int> &array) const
@@ -674,6 +674,7 @@ ImageMesh<Basis>::get_dim(vector<unsigned int> &array) const
   return true;
 }
 
+
 template<class Basis>
 void
 ImageMesh<Basis>::set_min(vector<unsigned int> min)
@@ -681,6 +682,7 @@ ImageMesh<Basis>::set_min(vector<unsigned int> min)
   min_i_ = min[0];
   min_j_ = min[1];
 }
+
 
 template<class Basis>
 void
@@ -690,9 +692,11 @@ ImageMesh<Basis>::set_dim(vector<unsigned int> dim)
   nj_ = dim[1];
 }
 
+
 template<class Basis>
 void
-ImageMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::index_type idx) const
+ImageMesh<Basis>::get_nodes(typename Node::array_type &array,
+                            typename Face::index_type idx) const
 {
   array.resize(4);
 
@@ -710,7 +714,8 @@ ImageMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::ind
 
 template<class Basis>
 void
-ImageMesh<Basis>::get_nodes(typename Node::array_type &array, typename Edge::index_type idx) const
+ImageMesh<Basis>::get_nodes(typename Node::array_type &array,
+                            typename Edge::index_type idx) const
 {
   array.resize(2);
 
@@ -736,30 +741,29 @@ template<class Basis>
 void
 ImageMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::index_type idx) const
 {
-  array.resize(4);  
+  array.resize(4);
 
   const int j_idx = (ni_-1) * nj_;
 
-  array[0] = idx.i_             + idx.j_    *(ni_-1); 
+  array[0] = idx.i_             + idx.j_    *(ni_-1);
   array[1] = idx.i_             + (idx.j_+1)*(ni_-1);
   array[2] = idx.i_    *(nj_-1) + idx.j_+ j_idx;
   array[3] = (idx.i_+1)*(nj_-1) + idx.j_+ j_idx;
 }
-  
 
 
 template<class Basis>
 bool
 ImageMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
-			       typename Face::index_type from,
-			       typename Edge::index_type edge) const
+                               typename Face::index_type from,
+                               typename Edge::index_type edge) const
 {
   neighbor.mesh_ = this;
   const int j_idx = edge - (ni_-1) * nj_;
   if (j_idx >= 0)
   {
     const unsigned int i = j_idx / (nj_ - 1);
-    if (i == 0 || i == ni_-1) 
+    if (i == 0 || i == ni_-1)
       return false;
     neighbor.j_ = from.j_;
     if (i == from.i_)
@@ -770,20 +774,22 @@ ImageMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
   else
   {
     const unsigned int j = edge / (ni_ - 1);;
-    if (j == 0 || j == nj_-1) 
+    if (j == 0 || j == nj_-1)
       return false;
     neighbor.i_ = from.i_;
     if (j == from.j_)
       neighbor.j_ = from.j_ - 1;
     else
-      neighbor.j_ = from.j_ + 1; 
+      neighbor.j_ = from.j_ + 1;
   }
   return true;
 }
 
+
 template<class Basis>
-void 
-ImageMesh<Basis>::get_neighbors(typename Face::array_type &array, typename Face::index_type idx) const
+void
+ImageMesh<Basis>::get_neighbors(typename Face::array_type &array,
+                                typename Face::index_type idx) const
 {
   typename Edge::array_type edges;
   get_edges(edges, idx);
@@ -797,6 +803,7 @@ ImageMesh<Basis>::get_neighbors(typename Face::array_type &array, typename Face:
     ++iter;
   }
 }
+
 
 template<class Basis>
 int
@@ -823,7 +830,7 @@ ImageMesh<Basis>::get_elems(typename Elem::array_type &result,
 {
   result.reserve(4);
   result.clear();
-  
+
   const unsigned int i0 = idx.i_ ? idx.i_ - 1 : 0;
   const unsigned int j0 = idx.j_ ? idx.j_ - 1 : 0;
 
@@ -861,7 +868,8 @@ ImageMesh<Basis>::get_faces(typename Face::array_type &arr, const BBox &bbox)
 
 template<class Basis>
 void
-ImageMesh<Basis>::get_center(Point &result, const typename Node::index_type &idx) const
+ImageMesh<Basis>::get_center(Point &result,
+                             const typename Node::index_type &idx) const
 {
   Point p(idx.i_, idx.j_, 0.0);
   result = transform_.project(p);
@@ -870,14 +878,15 @@ ImageMesh<Basis>::get_center(Point &result, const typename Node::index_type &idx
 
 template<class Basis>
 void
-ImageMesh<Basis>::get_center(Point &result, typename Edge::index_type idx) const
+ImageMesh<Basis>::get_center(Point &result,
+                             typename Edge::index_type idx) const
 {
   typename Node::array_type arr;
   get_nodes(arr, idx);
   Point p1;
   get_center(result, arr[0]);
   get_center(p1, arr[1]);
-  
+
   result.asVector() += p1.asVector();
   result.asVector() *= 0.5;
 }
@@ -885,7 +894,8 @@ ImageMesh<Basis>::get_center(Point &result, typename Edge::index_type idx) const
 
 template<class Basis>
 void
-ImageMesh<Basis>::get_center(Point &result, const typename Face::index_type &idx) const
+ImageMesh<Basis>::get_center(Point &result,
+                             const typename Face::index_type &idx) const
 {
   Point p(idx.i_ + 0.5, idx.j_ + 0.5, 0.0);
   result = transform_.project(p);
@@ -938,17 +948,19 @@ ImageMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
   return true;
 }
 
+
 template <class Basis>
 int
-ImageMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
-			      double *w)
+ImageMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
+                              double *w)
 {
   typename Face::index_type idx;
   if (locate(idx, p))
   {
     get_nodes(l,idx);
     vector<double> coords(2);
-    if (get_coords(coords, p, idx)) {
+    if (get_coords(coords, p, idx))
+    {
       basis_.get_weights(coords, w);
       return basis_.dofs();
     }
@@ -956,10 +968,11 @@ ImageMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   return 0;
 }
 
+
 template <class Basis>
 int
-ImageMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l, 
-			      double *w)
+ImageMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l,
+                              double *w)
 {
   typename Face::index_type idx;
   if (locate(idx, p))
@@ -978,10 +991,10 @@ ImageMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l,
    1 that sum to 1) for the point. */
 
 template<class Basis>
-void 
-ImageMesh<Basis>::get_random_point(Point &p, 
-				   const typename Face::index_type &ci,
-				   int seed) const
+void
+ImageMesh<Basis>::get_random_point(Point &p,
+                                   const typename Face::index_type &ci,
+                                   int seed) const
 {
   static MusilRNG rng;
 
@@ -1000,16 +1013,17 @@ ImageMesh<Basis>::get_random_point(Point &p,
   if (seed) {
     MusilRNG rng1(seed);
     rng1();
-    u = rng1(); 
+    u = rng1();
     v = rng1();
   } else {
-    u = rng(); 
+    u = rng();
     v = rng();
   }
 
   // compute the position of the random point
   p = p00+dx*u+dy*v;
 }
+
 
 template<class Basis>
 const TypeDescription*
@@ -1018,26 +1032,28 @@ ImageMesh<Basis>::node_index_type_description()
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription(ImageMesh<Basis>::type_name(-1) +
-				string("::INodeIndex"),
-				string(__FILE__),
-				"SCIRun");
+                                string("::INodeIndex"),
+                                string(__FILE__),
+                                "SCIRun");
   }
   return td;
 }
 
+
 template<class Basis>
-const TypeDescription* 
+const TypeDescription*
 ImageMesh<Basis>::face_index_type_description()
 {
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription(ImageMesh<Basis>::type_name(-1) +
-				string("::IFaceIndex"),
-				string(__FILE__),
-				"SCIRun");
+                                string("::IFaceIndex"),
+                                string(__FILE__),
+                                "SCIRun");
   }
   return td;
 }
+
 
 template<class Basis>
 void
@@ -1049,6 +1065,7 @@ Pio(Piostream& stream, typename ImageMesh<Basis>::INodeIndex& n)
   stream.end_cheap_delim();
 }
 
+
 template<class Basis>
 void
 Pio(Piostream& stream, typename ImageMesh<Basis>::IFaceIndex& n)
@@ -1058,7 +1075,6 @@ Pio(Piostream& stream, typename ImageMesh<Basis>::IFaceIndex& n)
   Pio(stream, n.j_);
   stream.end_cheap_delim();
 }
-
 
 
 #define IMAGEMESH_VERSION 2
@@ -1082,6 +1098,7 @@ ImageMesh<Basis>::io(Piostream& stream)
   stream.end_class();
 }
 
+
 template<class Basis>
 const string
 ImageMesh<Basis>::type_name(int n)
@@ -1097,7 +1114,7 @@ ImageMesh<Basis>::type_name(int n)
     static const string nm("ImageMesh");
     return nm;
   }
-  else 
+  else
   {
     return find_type_name((Basis *)0);
   }
@@ -1111,12 +1128,14 @@ ImageMesh<Basis>::begin(typename ImageMesh::Node::iterator &itr) const
   itr = typename Node::iterator(this, min_i_, min_j_);
 }
 
+
 template<class Basis>
 void
 ImageMesh<Basis>::end(typename ImageMesh::Node::iterator &itr) const
 {
   itr = typename Node::iterator(this, min_i_, min_j_ + nj_);
 }
+
 
 template<class Basis>
 void
@@ -1144,12 +1163,14 @@ ImageMesh<Basis>::begin(typename ImageMesh::Edge::iterator &itr) const
   itr = 0;
 }
 
+
 template<class Basis>
 void
 ImageMesh<Basis>::end(typename ImageMesh::Edge::iterator &itr) const
 {
   itr = (ni_-1) * (nj_) + (ni_) * (nj_ -1);
 }
+
 
 template<class Basis>
 void
@@ -1158,6 +1179,7 @@ ImageMesh<Basis>::size(typename ImageMesh::Edge::size_type &s) const
   s = (ni_-1) * (nj_) + (ni_) * (nj_ -1);
 }
 
+
 template<class Basis>
 void
 ImageMesh<Basis>::begin(typename ImageMesh::Face::iterator &itr) const
@@ -1165,12 +1187,14 @@ ImageMesh<Basis>::begin(typename ImageMesh::Face::iterator &itr) const
   itr = typename Face::iterator(this,  min_i_, min_j_);
 }
 
+
 template<class Basis>
 void
 ImageMesh<Basis>::end(typename ImageMesh::Face::iterator &itr) const
 {
   itr = typename Face::iterator(this, min_i_, min_j_ + nj_ - 1);
 }
+
 
 template<class Basis>
 void
@@ -1198,12 +1222,14 @@ ImageMesh<Basis>::begin(typename ImageMesh::Cell::iterator &itr) const
   itr = typename Cell::iterator(0);
 }
 
+
 template<class Basis>
 void
 ImageMesh<Basis>::end(typename ImageMesh::Cell::iterator &itr) const
 {
   itr = typename Cell::iterator(0);
 }
+
 
 template<class Basis>
 void
@@ -1224,12 +1250,13 @@ get_type_description(ImageMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("ImageMesh", subs,
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template<class Basis>
 const TypeDescription*
@@ -1238,6 +1265,7 @@ ImageMesh<Basis>::get_type_description() const
   return SCIRun::get_type_description((ImageMesh *)0);
 }
 
+
 template<class Basis>
 const TypeDescription*
 ImageMesh<Basis>::node_type_description()
@@ -1245,15 +1273,16 @@ ImageMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template<class Basis>
 const TypeDescription*
@@ -1262,15 +1291,16 @@ ImageMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template<class Basis>
 const TypeDescription*
@@ -1279,15 +1309,16 @@ ImageMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template<class Basis>
 const TypeDescription*
@@ -1296,12 +1327,12 @@ ImageMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }

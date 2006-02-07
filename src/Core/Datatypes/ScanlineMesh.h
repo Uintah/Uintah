@@ -40,6 +40,7 @@
  *
  */
 
+
 #ifndef SCI_project_ScanlineMesh_h
 #define SCI_project_ScanlineMesh_h 1
 
@@ -49,6 +50,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/StackVector.h>
+
 
 namespace SCIRun {
 
@@ -67,23 +69,23 @@ public:
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
     typedef StackVector<index_type, 8>  array_type;
-  };				
-				
-  struct Edge {			
+  };
+
+  struct Edge {
     typedef EdgeIndex<under_type>       index_type;
     typedef EdgeIterator<under_type>    iterator;
     typedef EdgeIndex<under_type>       size_type;
     typedef vector<index_type>          array_type;
-  };				
-  				
-  struct Face {			
+  };
+
+  struct Face {
     typedef FaceIndex<under_type>       index_type;
     typedef FaceIterator<under_type>    iterator;
     typedef FaceIndex<under_type>       size_type;
     typedef vector<index_type>          array_type;
-  };				
-				
-  struct Cell {			
+  };
+
+  struct Cell {
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
@@ -93,39 +95,39 @@ public:
   typedef Edge Elem;
 
   friend class ElemData;
-  
-  class ElemData 
+
+  class ElemData
   {
   public:
-    ElemData(const ScanlineMesh<Basis>& msh, 
-	     const typename Elem::index_type ind) :
+    ElemData(const ScanlineMesh<Basis>& msh,
+             const typename Elem::index_type ind) :
       mesh_(msh),
       index_(ind)
     {}
-    
+
     // the following designed to coordinate with ::get_nodes
-    inline 
+    inline
     unsigned node0_index() const {
       return (index_);
     }
-    inline 
+    inline
     unsigned node1_index() const {
       return (index_ + 1);
     }
 
 
     // the following designed to coordinate with ::get_edges
-    inline 
+    inline
     unsigned edge0_index() const {
-      return index_; 
+      return index_;
     }
 
-    inline 
+    inline
     const Point node0() const {
       Point p(index_, 0.0, 0.0);
       return mesh_.transform_.project(p);
     }
-    inline 
+    inline
     const Point node1() const {
       Point p(index_ + 1, 0.0, 0.0);
       return mesh_.transform_.project(p);
@@ -177,26 +179,26 @@ public:
   void size(typename Face::size_type &) const;
   void size(typename Cell::size_type &) const;
 
-  void to_index(typename Node::index_type &index, unsigned int i) const 
+  void to_index(typename Node::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Edge::index_type &index, unsigned int i) const 
+  void to_index(typename Edge::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Face::index_type &index, unsigned int i) const 
+  void to_index(typename Face::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Cell::index_type &index, unsigned int i) const 
+  void to_index(typename Cell::index_type &index, unsigned int i) const
   { index = i; }
 
   //! get the child elements of the given index
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
-  void get_nodes(typename Node::array_type &, typename Face::index_type) const 
+  void get_nodes(typename Node::array_type &, typename Face::index_type) const
   {}
-  void get_nodes(typename Node::array_type &, typename Cell::index_type) const 
+  void get_nodes(typename Node::array_type &, typename Cell::index_type) const
   {}
-  void get_edges(typename Edge::array_type &, typename Edge::index_type) const 
+  void get_edges(typename Edge::array_type &, typename Edge::index_type) const
   {}
-  void get_edges(typename Edge::array_type &, typename Face::index_type) const 
+  void get_edges(typename Edge::array_type &, typename Face::index_type) const
   {}
-  void get_edges(typename Edge::array_type &, typename Cell::index_type) const 
+  void get_edges(typename Edge::array_type &, typename Cell::index_type) const
   {}
 
   //Stub, used by ShowField.
@@ -204,7 +206,7 @@ public:
   {}
 
   //! get the parent element(s) of the given index
-  void get_elems(typename Elem::array_type &result, 
+  void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const;
 
   //! return all edge_indecies that overlap the BBox in arr.
@@ -223,11 +225,11 @@ public:
   }
   double get_size(typename Face::index_type) const { return 0.0; };
   double get_size(typename Cell::index_type) const { return 0.0; };
-  double get_length(typename Edge::index_type idx) const 
+  double get_length(typename Edge::index_type idx) const
   { return get_size(idx); }
-  double get_area(typename Face::index_type idx) const 
+  double get_area(typename Face::index_type idx) const
   { return get_size(idx); }
-  double get_volume(typename Cell::index_type idx) const 
+  double get_volume(typename Cell::index_type idx) const
   { return get_size(idx); }
 
   int get_valence(typename Node::index_type idx) const
@@ -258,7 +260,7 @@ public:
   void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("not implemented"); }
   void get_normal(Vector &, vector<double> &, typename Elem::index_type,
-		  unsigned int) 
+                  unsigned int)
   { ASSERTFAIL("not implemented"); }
 
   virtual void io(Piostream&);
@@ -268,7 +270,7 @@ public:
 
   // Unsafe due to non-constness of unproject.
   Transform &get_transform() { return transform_; }
-  Transform &set_transform(const Transform &trans) 
+  Transform &set_transform(const Transform &trans)
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 1; }
@@ -276,45 +278,45 @@ public:
 
  //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords, 
-		       typename Elem::index_type ci, 
-		       unsigned, 
-		       unsigned div_per_unit) const
-  {    
-    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+  void pwl_approx_edge(vector<vector<double> > &coords,
+                       typename Elem::index_type ci,
+                       unsigned,
+                       unsigned div_per_unit) const
+  {
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc
     // compare get_nodes order to the basis order
-    basis_.approx_edge(0, div_per_unit, coords); 
+    basis_.approx_edge(0, div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
-		       typename Elem::index_type ci, 
-		       typename Face::index_type fi, 
-		       unsigned div_per_unit) const
+  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+                       typename Elem::index_type ci,
+                       typename Face::index_type fi,
+                       unsigned div_per_unit) const
   {
     ASSERTFAIL("ScanlineMesh has no faces");
   }
-  
-  bool get_coords(vector<double> &coords, 
-		  const Point &p,
-		  typename Elem::index_type idx) const
+
+  bool get_coords(vector<double> &coords,
+                  const Point &p,
+                  typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
-    return basis_.get_coords(coords, p, ed); 
+    return basis_.get_coords(coords, p, ed);
   }
-  
-  void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Elem::index_type idx) const
+
+  void interpolate(Point &pt, const vector<double> &coords,
+                   typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     pt = basis_.interpolate(coords, ed);
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords, 
-		typename Elem::index_type idx, 
-		vector<Point> &J) const
+  void derivate(const vector<double> &coords,
+                typename Elem::index_type idx,
+                vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -324,7 +326,7 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
-  static const TypeDescription* elem_type_description() 
+  static const TypeDescription* elem_type_description()
   { return edge_type_description(); }
 
   // returns a ScanlineMesh
@@ -342,18 +344,20 @@ protected:
   //! the object space extents of a ScanlineMesh
   Transform            transform_;
 
-  //! the basis fn 
+  //! the basis fn
   Basis                basis_;
 };
 
+
 template <class Basis>
-PersistentTypeID 
-ScanlineMesh<Basis>::type_id(type_name(-1), "Mesh", 
-			     ScanlineMesh<Basis>::maker);
+PersistentTypeID
+ScanlineMesh<Basis>::type_id(type_name(-1), "Mesh",
+                             ScanlineMesh<Basis>::maker);
+
 
 template <class Basis>
 ScanlineMesh<Basis>::ScanlineMesh(unsigned int ni,
-				  const Point &min, const Point &max)
+                                  const Point &min, const Point &max)
   : min_i_(0), ni_(ni)
 {
   transform_.pre_scale(Vector(1.0 / (ni_ - 1.0), 1.0, 1.0));
@@ -369,19 +373,21 @@ ScanlineMesh<Basis>::get_bounding_box() const
 {
   Point p0(0.0, 0.0, 0.0);
   Point p1(ni_ - 1, 0.0, 0.0);
-  
+
   BBox result;
   result.extend(transform_.project(p0));
   result.extend(transform_.project(p1));
   return result;
 }
 
+
 template <class Basis>
-Vector 
+Vector
 ScanlineMesh<Basis>::diagonal() const
 {
   return get_bounding_box().diagonal();
 }
+
 
 template <class Basis>
 void
@@ -390,16 +396,18 @@ ScanlineMesh<Basis>::transform(const Transform &t)
   transform_.pre_trans(t);
 }
 
+
 template <class Basis>
-void 
-ScanlineMesh<Basis>::get_canonical_transform(Transform &t) 
+void
+ScanlineMesh<Basis>::get_canonical_transform(Transform &t)
 {
   t = transform_;
   t.post_scale(Vector(ni_ - 1.0, 1.0, 1.0));
 }
 
+
 template <class Basis>
-bool 
+bool
 ScanlineMesh<Basis>::get_min(vector<unsigned int> &array ) const
 {
   array.resize(1);
@@ -409,6 +417,7 @@ ScanlineMesh<Basis>::get_min(vector<unsigned int> &array ) const
 
   return true;
 }
+
 
 template <class Basis>
 bool
@@ -422,12 +431,14 @@ ScanlineMesh<Basis>::get_dim(vector<unsigned int> &array) const
   return true;
 }
 
+
 template <class Basis>
 void
 ScanlineMesh<Basis>::set_min(vector<unsigned int> min)
 {
   min_i_ = min[0];
 }
+
 
 template <class Basis>
 void
@@ -436,10 +447,11 @@ ScanlineMesh<Basis>::set_dim(vector<unsigned int> dim)
   ni_ = dim[0];
 }
 
+
 template <class Basis>
 void
-ScanlineMesh<Basis>::get_nodes(typename Node::array_type &array, 
-			       typename Edge::index_type idx) const
+ScanlineMesh<Basis>::get_nodes(typename Node::array_type &array,
+                               typename Edge::index_type idx) const
 {
   array.resize(2);
   array[0] = typename Node::index_type(idx);
@@ -468,8 +480,8 @@ ScanlineMesh<Basis>::get_elems(typename Edge::array_type &result,
 //! return all cell_indecies that overlap the BBox in arr.
 template <class Basis>
 void
-ScanlineMesh<Basis>::get_edges(typename Edge::array_type &/* arr */, 
-			       const BBox &/*bbox*/) const
+ScanlineMesh<Basis>::get_edges(typename Edge::array_type &/* arr */,
+                               const BBox &/*bbox*/) const
 {
   // TODO: implement this
 }
@@ -477,8 +489,8 @@ ScanlineMesh<Basis>::get_edges(typename Edge::array_type &/* arr */,
 
 template <class Basis>
 void
-ScanlineMesh<Basis>::get_center(Point &result, 
-				typename Node::index_type idx) const
+ScanlineMesh<Basis>::get_center(Point &result,
+                                typename Node::index_type idx) const
 {
   Point p(idx, 0.0, 0.0);
   result = transform_.project(p);
@@ -487,12 +499,13 @@ ScanlineMesh<Basis>::get_center(Point &result,
 
 template <class Basis>
 void
-ScanlineMesh<Basis>::get_center(Point &result, 
-				typename Edge::index_type idx) const
+ScanlineMesh<Basis>::get_center(Point &result,
+                                typename Edge::index_type idx) const
 {
   Point p(idx + 0.5, 0.0, 0.0);
   result = transform_.project(p);
 }
+
 
 // TODO: verify
 template <class Basis>
@@ -532,17 +545,19 @@ ScanlineMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
   }
 }
 
+
 template <class Basis>
 int
-ScanlineMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
-				 double *w)
+ScanlineMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
+                                 double *w)
 {
   typename Edge::index_type idx;
   if (locate(idx, p))
   {
     get_nodes(l,idx);
     vector<double> coords(1);
-    if (get_coords(coords, p, idx)) {
+    if (get_coords(coords, p, idx))
+    {
       basis_.get_weights(coords, w);
       return basis_.dofs();
     }
@@ -550,10 +565,11 @@ ScanlineMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   return 0;
 }
 
+
 template <class Basis>
 int
-ScanlineMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l, 
-				 double *w)
+ScanlineMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l,
+                                 double *w)
 {
   typename Edge::index_type idx;
   if (locate(idx, p))
@@ -565,6 +581,7 @@ ScanlineMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l,
   }
   return 0;
 }
+
 
 #define SCANLINEMESH_VERSION 3
 
@@ -578,16 +595,21 @@ ScanlineMesh<Basis>::io(Piostream& stream)
 
   // IO data members, in order
   Pio(stream, ni_);
-  if (version < 2 && stream.reading() ) {
+  if (version < 2 && stream.reading() )
+  {
     Pio_old(stream, transform_);
-  } else {
+  }
+  else
+  {
     Pio(stream, transform_);
   }
-  if (version >= 3) {
+  if (version >= 3)
+  {
     basis_.io(stream);
   }
   stream.end_class();
 }
+
 
 template <class Basis>
 const string
@@ -604,7 +626,7 @@ ScanlineMesh<Basis>::type_name(int n)
     static const string nm("ScanLineMesh");
     return nm;
   }
-  else 
+  else
   {
     return find_type_name((Basis *)0);
   }
@@ -618,12 +640,14 @@ ScanlineMesh<Basis>::begin(typename ScanlineMesh::Node::iterator &itr) const
   itr = typename Node::iterator(min_i_);
 }
 
+
 template <class Basis>
 void
 ScanlineMesh<Basis>::end(typename ScanlineMesh::Node::iterator &itr) const
 {
   itr = typename Node::iterator(min_i_ + ni_);
 }
+
 
 template <class Basis>
 void
@@ -632,12 +656,14 @@ ScanlineMesh<Basis>::size(typename ScanlineMesh::Node::size_type &s) const
   s = typename Node::size_type(ni_);
 }
 
+
 template <class Basis>
 void
 ScanlineMesh<Basis>::begin(typename ScanlineMesh::Edge::iterator &itr) const
 {
   itr = typename Edge::iterator(min_i_);
 }
+
 
 template <class Basis>
 void
@@ -646,12 +672,14 @@ ScanlineMesh<Basis>::end(typename ScanlineMesh::Edge::iterator &itr) const
   itr = typename Edge::iterator(min_i_+ni_-1);
 }
 
+
 template <class Basis>
 void
 ScanlineMesh<Basis>::size(typename ScanlineMesh::Edge::size_type &s) const
 {
   s = typename Edge::size_type(ni_ - 1);
 }
+
 
 template <class Basis>
 void
@@ -660,12 +688,14 @@ ScanlineMesh<Basis>::begin(typename ScanlineMesh::Face::iterator &itr) const
   itr = typename Face::iterator(0);
 }
 
+
 template <class Basis>
 void
 ScanlineMesh<Basis>::end(typename ScanlineMesh::Face::iterator &itr) const
 {
   itr = typename Face::iterator(0);
 }
+
 
 template <class Basis>
 void
@@ -674,12 +704,14 @@ ScanlineMesh<Basis>::size(typename ScanlineMesh::Face::size_type &s) const
   s = typename Face::size_type(0);
 }
 
+
 template <class Basis>
 void
 ScanlineMesh<Basis>::begin(typename ScanlineMesh::Cell::iterator &itr) const
 {
   itr = typename Cell::iterator(0);
 }
+
 
 template <class Basis>
 void
@@ -688,13 +720,13 @@ ScanlineMesh<Basis>::end(typename ScanlineMesh::Cell::iterator &itr) const
   itr = typename Cell::iterator(0);
 }
 
+
 template <class Basis>
 void
 ScanlineMesh<Basis>::size(typename ScanlineMesh::Cell::size_type &s) const
 {
   s = typename Cell::size_type(0);
 }
-
 
 
 template <class Basis>
@@ -708,12 +740,13 @@ get_type_description(ScanlineMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("ScanlineMesh", subs,
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -722,6 +755,7 @@ ScanlineMesh<Basis>::get_type_description() const
   return SCIRun::get_type_description((ScanlineMesh *)0);
 }
 
+
 template <class Basis>
 const TypeDescription*
 ScanlineMesh<Basis>::node_type_description()
@@ -729,15 +763,16 @@ ScanlineMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -746,15 +781,16 @@ ScanlineMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -763,15 +799,16 @@ ScanlineMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
+
 
 template <class Basis>
 const TypeDescription*
@@ -780,12 +817,12 @@ ScanlineMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *me = 
+    const TypeDescription *me =
       SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-				string(__FILE__),
-				"SCIRun", 
-				TypeDescription::MESH_E);
+                                string(__FILE__),
+                                "SCIRun",
+                                TypeDescription::MESH_E);
   }
   return td;
 }
