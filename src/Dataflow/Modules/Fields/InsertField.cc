@@ -70,7 +70,7 @@ public:
 DECLARE_MAKER(InsertField)
 
 InsertField::InsertField(GuiContext* ctx)
-  : Module("InsertField", ctx, Filter, "FieldsGeometry", "SCIRun"),
+  : Module("InsertField", ctx, Filter, "FieldsCreate", "SCIRun"),
     tet_generation_(-1),
     insert_generation_(-1)
 {
