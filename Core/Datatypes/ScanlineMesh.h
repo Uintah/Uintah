@@ -468,11 +468,11 @@ ScanlineMesh<Basis>::get_elems(typename Edge::array_type &result,
   result.clear();
   if (index > 0)
   {
-    result.push_back(index-1);
+    result.push_back(typename Edge::index_type(index-1));
   }
   if (index < ni_-1)
   {
-    result.push_back(index);
+    result.push_back(typename Edge::index_type(index));
   }
 }
 
