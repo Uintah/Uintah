@@ -5,7 +5,12 @@ FSPEC := $(SRCDIR)/genfspec.pl
 FSPEC_ORIG := $(SRCDIR)/fspec.pl
 
 %_fort.h: %.fspec $(FSPEC)
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@$(FSPEC) $< $@
+	@echo "FSpec:     $@"
+else
 	$(FSPEC) $< $@
+endif
 
 $(FSPEC): $(SRCDIR)/stamp-fspec
 
