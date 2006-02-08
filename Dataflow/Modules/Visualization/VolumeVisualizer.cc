@@ -82,9 +82,6 @@ private:
   vector<ColorMap2Handle> cmap2_;
   int tex_prevgen_;
   int card_mem_;
-   
-
-
 
   CrowdMonitor widget_lock_;
   vector<int> widget_id_;
@@ -92,7 +89,6 @@ private:
   vector<GeomHandle>       widget_switch_;
   vector<Plane>	clipping_planes_;
   map<ArrowWidget *, int> widget_plane_index_;
-
 
   GuiDouble gui_sampling_rate_hi_;
   GuiDouble gui_sampling_rate_lo_;
@@ -170,10 +166,12 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_level_on_(ctx->subVar("level_on")),
     gui_level_vals_(ctx->subVar("level_vals")),
     volren_(0)
-{}
+{
+}
 
 VolumeVisualizer::~VolumeVisualizer()
-{}
+{
+}
 
 void
 VolumeVisualizer::widget_moved(bool release, BaseWidget *widget)
