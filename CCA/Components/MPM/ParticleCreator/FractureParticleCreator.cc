@@ -28,7 +28,6 @@ ParticleSubset* FractureParticleCreator::createParticles(MPMMaterial* matl,
                                               CCVariable<short int>& cellNAPID,
                                               const Patch* patch,
                                               DataWarehouse* new_dw,
-                                              MPMLabel* lb,
                                               vector<GeometryObject*>& d_geom_objs)
 {
 

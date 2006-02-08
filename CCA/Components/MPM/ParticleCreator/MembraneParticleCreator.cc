@@ -2,9 +2,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
@@ -35,13 +35,12 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 					      CCVariable<short int>& cellNAPID,
 					      const Patch* patch,
 					      DataWarehouse* new_dw,
-					      MPMLabel* lb,
 					      vector<GeometryObject*>& d_geom_objs)
 {
   int dwi = matl->getDWIndex();
 
   ParticleSubset* subset =  allocateVariables(numParticles,
-					      dwi,lb,patch,
+					      dwi,patch,
 					      new_dw);
 
   
@@ -177,8 +176,7 @@ MembraneParticleCreator::countAndCreateParticles(const Patch* patch,
 
 ParticleSubset* 
 MembraneParticleCreator::allocateVariables(particleIndex numParticles, 
-					   int dwi,MPMLabel* lb, 
-					   const Patch* patch,
+					   int dwi,const Patch* patch,
 					   DataWarehouse* new_dw)
 {
 
@@ -186,9 +184,9 @@ MembraneParticleCreator::allocateVariables(particleIndex numParticles,
 							      dwi,patch,
 							      new_dw);
 
-  new_dw->allocateAndPut(pTang1, lb->pTang1Label, subset);
-  new_dw->allocateAndPut(pTang2, lb->pTang2Label, subset);
-  new_dw->allocateAndPut(pNorm, lb->pNormLabel,  subset);
+  new_dw->allocateAndPut(pTang1, d_lb->pTang1Label, subset);
+  new_dw->allocateAndPut(pTang2, d_lb->pTang2Label, subset);
+  new_dw->allocateAndPut(pNorm, d_lb->pNormLabel,  subset);
 
   return subset;
 

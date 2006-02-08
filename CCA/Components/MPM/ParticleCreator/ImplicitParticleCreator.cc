@@ -2,9 +2,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
@@ -27,21 +27,19 @@ ImplicitParticleCreator::~ImplicitParticleCreator()
 {
 }
 
+
 ParticleSubset* 
 ImplicitParticleCreator::createParticles(MPMMaterial* matl, 
                                          particleIndex numParticles,
                                          CCVariable<short int>& cellNAPID,
                                          const Patch* patch,
                                          DataWarehouse* new_dw,
-                                         MPMLabel* lb,
                                          vector<GeometryObject*>& d_geom_objs)
 {
-
   ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
                                                             cellNAPID,patch,
                                                             new_dw,
                                                             d_geom_objs);
-
 
   return subset;
 }
@@ -78,8 +76,7 @@ ImplicitParticleCreator::countAndCreateParticles(const Patch* patch,
 
 ParticleSubset* 
 ImplicitParticleCreator::allocateVariables(particleIndex numParticles, 
-                                           int dwi,MPMLabel* lb, 
-                                           const Patch* patch,
+                                           int dwi,const Patch* patch,
                                            DataWarehouse* new_dw)
 {
 
@@ -87,7 +84,7 @@ ImplicitParticleCreator::allocateVariables(particleIndex numParticles,
                                                               dwi,patch,
                                                               new_dw);
 
-  new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
+  new_dw->allocateAndPut(pacceleration, d_lb->pAccelerationLabel, subset);
 
   return subset;
 

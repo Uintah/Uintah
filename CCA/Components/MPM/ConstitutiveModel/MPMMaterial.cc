@@ -46,7 +46,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
   d_particle_creator = ParticleCreatorFactory::create(ps,this,d_flag);
 
-
 }
 
 void
