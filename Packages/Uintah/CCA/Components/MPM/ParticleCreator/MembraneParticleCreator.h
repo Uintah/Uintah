@@ -16,7 +16,6 @@ namespace Uintah {
 					    CCVariable<short int>& cellNAPID,
 					    const Patch*, 
 					    DataWarehouse* new_dw,
-					    MPMLabel* lb,
 					    vector<GeometryObject*>&);
 
     virtual particleIndex countParticles(const Patch*,
@@ -29,8 +28,7 @@ namespace Uintah {
 
   protected:
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
-					      int dwi, MPMLabel* lb, 
-					      const Patch* patch,
+					      int dwi, const Patch* patch,
 					      DataWarehouse* new_dw);
     
 

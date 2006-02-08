@@ -317,7 +317,6 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( matl );
       particleIndex numParticles = mpm_matl->countParticles(patch);
       totalParticles+=numParticles;
-       
       mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,

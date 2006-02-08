@@ -60,7 +60,6 @@ WARNING
 					    CCVariable<short int>& cellNAPID,
 					    const Patch*, 
 					    DataWarehouse* new_dw,
-					    MPMLabel* lb,
 					    vector<GeometryObject*>&);
 
     /////////////////////////////////////////////////////////////////////////
@@ -76,8 +75,8 @@ WARNING
     //
     // Make sure data is copied when particles cross patch boundaries
     //
-    virtual void registerPermanentParticleState(MPMMaterial* matl,
-						MPMLabel* lb);
+    virtual void registerPermanentParticleState(MPMMaterial* matl);
+						
 
   };
 

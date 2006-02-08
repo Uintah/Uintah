@@ -2,9 +2,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
@@ -45,7 +45,6 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 				      CCVariable<short int>& cellNAPID,
 				      const Patch* patch,
 				      DataWarehouse* new_dw,
-				      MPMLabel* lb,
 				      vector<GeometryObject*>& d_geom_objs)
 {
   // Print the physical boundary conditions
@@ -61,12 +60,12 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
   // Create the variables that go with each shell particle
   ParticleVariable<double>  pThickTop0, pThickBot0, pThickTop, pThickBot;
   ParticleVariable<Vector>  pNormal0, pNormal;
-  new_dw->allocateAndPut(pThickTop,   lb->pThickTopLabel,        subset);
-  new_dw->allocateAndPut(pThickTop0,  lb->pInitialThickTopLabel, subset);
-  new_dw->allocateAndPut(pThickBot,   lb->pThickBotLabel,        subset);
-  new_dw->allocateAndPut(pThickBot0,  lb->pInitialThickBotLabel, subset);
-  new_dw->allocateAndPut(pNormal,     lb->pNormalLabel,          subset);
-  new_dw->allocateAndPut(pNormal0,    lb->pInitialNormalLabel,   subset);
+  new_dw->allocateAndPut(pThickTop,   d_lb->pThickTopLabel,        subset);
+  new_dw->allocateAndPut(pThickTop0,  d_lb->pInitialThickTopLabel, subset);
+  new_dw->allocateAndPut(pThickBot,   d_lb->pThickBotLabel,        subset);
+  new_dw->allocateAndPut(pThickBot0,  d_lb->pInitialThickBotLabel, subset);
+  new_dw->allocateAndPut(pNormal,     d_lb->pNormalLabel,          subset);
+  new_dw->allocateAndPut(pNormal0,    d_lb->pInitialNormalLabel,   subset);
 
   // Initialize the global particle index
   particleIndex start = 0;
@@ -296,21 +295,19 @@ ShellParticleCreator::countAndCreateParticles(const Patch* patch,
 // Register variables for crossing patches
 //
 void 
-ShellParticleCreator::registerPermanentParticleState(MPMMaterial*,
-						     MPMLabel* lb)
-
+ShellParticleCreator::registerPermanentParticleState(MPMMaterial*)
 {
-  particle_state.push_back(lb->pThickTopLabel);
-  particle_state.push_back(lb->pInitialThickTopLabel);
-  particle_state.push_back(lb->pThickBotLabel);
-  particle_state.push_back(lb->pInitialThickBotLabel);
-  particle_state.push_back(lb->pNormalLabel);
-  particle_state.push_back(lb->pInitialNormalLabel);
+  particle_state.push_back(d_lb->pThickTopLabel);
+  particle_state.push_back(d_lb->pInitialThickTopLabel);
+  particle_state.push_back(d_lb->pThickBotLabel);
+  particle_state.push_back(d_lb->pInitialThickBotLabel);
+  particle_state.push_back(d_lb->pNormalLabel);
+  particle_state.push_back(d_lb->pInitialNormalLabel);
 
-  particle_state_preReloc.push_back(lb->pThickTopLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pInitialThickTopLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pThickBotLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pInitialThickBotLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pNormalLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pInitialNormalLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pThickTopLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pInitialThickTopLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pThickBotLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pInitialThickBotLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pNormalLabel_preReloc);
+  particle_state_preReloc.push_back(d_lb->pInitialNormalLabel_preReloc);
 }
