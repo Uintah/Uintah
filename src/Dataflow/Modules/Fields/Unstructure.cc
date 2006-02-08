@@ -124,7 +124,7 @@ Unstructure::execute()
 	dst_basis_name = "QuadBilinearLgn";
     } else if ((mtdn.find("ScanlineMesh") != string::npos) ||
 	       (mtdn.find("StructCurveMesh") != string::npos)) {
-      dstname = "CurveMesh<CrvLinearLgn<Point>";
+      dstname = "CurveMesh<CrvLinearLgn<Point> >";
       if (ifieldhandle->basis_order() == 0)
 	dst_basis_name = "ConstantBasis";
       else if (ifieldhandle->basis_order() == 1)
