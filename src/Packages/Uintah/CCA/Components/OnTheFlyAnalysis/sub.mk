@@ -10,6 +10,7 @@ SRCS     += \
        $(SRCDIR)/lineExtract.cc
 
 PSELIBS := \
+	Core/Geometry                    \
 	Core/Exceptions                  \
 	Core/Util                        \
 	Packages/Uintah/CCA/Ports        \

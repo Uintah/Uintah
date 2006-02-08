@@ -2,11 +2,13 @@
 #define Packages_Uintah_CCA_Ports_AnalysisModule_h
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah {
