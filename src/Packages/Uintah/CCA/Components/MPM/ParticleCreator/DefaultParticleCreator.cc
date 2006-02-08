@@ -3,8 +3,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
@@ -30,7 +30,6 @@ DefaultParticleCreator::createParticles(MPMMaterial* matl,
 					CCVariable<short int>& cellNAPID,
 					const Patch* patch,
 					DataWarehouse* new_dw,
-					MPMLabel* lb,
 					vector<GeometryObject*>& d_geom_objs)
 {
 

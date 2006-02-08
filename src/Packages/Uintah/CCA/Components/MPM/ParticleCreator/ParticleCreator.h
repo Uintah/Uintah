@@ -33,11 +33,13 @@ namespace Uintah {
 
     virtual ~ParticleCreator();
 
+
     virtual ParticleSubset* createParticles(MPMMaterial* matl,
 					    particleIndex numParticles,
 					    CCVariable<short int>& cellNAPID,
 					    const Patch*,DataWarehouse* new_dw,
                                             vector<GeometryObject*>&);
+
 
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
 					      int dwi, const Patch* patch,
@@ -67,6 +69,8 @@ namespace Uintah {
   protected:
 
     void createPoints(const Patch* patch, GeometryObject* obj);
+
+
 
     virtual void initializeParticle(const Patch* patch,
 				    vector<GeometryObject*>::const_iterator obj,

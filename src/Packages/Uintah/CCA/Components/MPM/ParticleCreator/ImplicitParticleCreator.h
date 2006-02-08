@@ -16,7 +16,6 @@ namespace Uintah {
 					    CCVariable<short int>& cellNAPID,
 					    const Patch*, 
 					    DataWarehouse* new_dw,
-					    MPMLabel* lb, 
 					    vector<GeometryObject*>&);
 
     virtual particleIndex countParticles(const Patch*,
@@ -25,14 +24,6 @@ namespace Uintah {
 						  GeometryObject* obj) ;
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
- 
-  protected:
-
-    virtual ParticleSubset* allocateVariables(particleIndex numParticles,
-					      int dwi, MPMLabel* lb, 
-					      const Patch* patch,
-					      DataWarehouse* new_dw);
-    
     virtual void initializeParticle(const Patch* patch,
 				    vector<GeometryObject*>::const_iterator obj, 
 				    MPMMaterial* matl,
@@ -40,7 +31,13 @@ namespace Uintah {
 				    particleIndex i,
 				    CCVariable<short int>& cellNAPI);
 
+    virtual ParticleSubset* allocateVariables(particleIndex numParticles,
+					      int dwi, const Patch* patch,
+					      DataWarehouse* new_dw);
+    
 
+ 
+  protected:
     ParticleVariable<Vector> pacceleration;
     ParticleVariable<double> pvolumeold;
     

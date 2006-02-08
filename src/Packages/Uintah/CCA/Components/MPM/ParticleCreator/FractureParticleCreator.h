@@ -16,7 +16,6 @@ namespace Uintah {
 					    CCVariable<short int>& cellNAPID,
 					    const Patch*, 
 					    DataWarehouse* new_dw,
-					    MPMLabel* lb, 
 					    vector<GeometryObject*>&);
 
     virtual particleIndex countParticles(const Patch*,
