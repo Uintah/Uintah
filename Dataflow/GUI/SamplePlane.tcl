@@ -81,7 +81,7 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 
 	set type [set $this-update_type]
 	if { $type == "On Release" } {
-	    eval "$this-c needexecute"
+	    $this-c needexecute
 	}
     }
 
@@ -90,7 +90,7 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 
 	set type [set $this-update_type]
 	if { $type == "Auto" } {
-	    eval "$this-c needexecute"
+	    $this-c needexecute
 	}
     }
 
@@ -155,10 +155,14 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	pack $w.row21.zsize_label $w.row21.zsize -side left
 
 	label $w.row3.label -text "Axis: "
-	radiobutton $w.row3.x -text "X    " -variable $this-axis -value 0
-	radiobutton $w.row3.y -text "Y    " -variable $this-axis -value 1
-	radiobutton $w.row3.z -text "Z    " -variable $this-axis -value 2
-	radiobutton $w.row3.c -text "Custom" -variable $this-axis -value 3
+	radiobutton $w.row3.x -text "X    " -variable $this-axis -value 0 \
+            -command "$this set_position [set $this-z_value]"
+	radiobutton $w.row3.y -text "Y    " -variable $this-axis -value 1 \
+            -command "$this set_position [set $this-z_value]"
+	radiobutton $w.row3.z -text "Z    " -variable $this-axis -value 2 \
+            -command "$this set_position [set $this-z_value]"
+	radiobutton $w.row3.c -text "Custom" -variable $this-axis -value 3 \
+            -command "$this set_position [set $this-z_value]"
 	pack $w.row3.label $w.row3.x $w.row3.y $w.row3.z $w.row3.c -side left
 
         label $w.row31.lab -text "Custom Origin:   "
@@ -184,6 +188,10 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	$w.row5.update insert end "On Release" Manual Auto
 	$w.row5.update select [set $this-update_type]
 
+	bind $w.row3.x <ButtonRelease> "$this position_release"
+	bind $w.row3.y <ButtonRelease> "$this position_release"
+	bind $w.row3.z <ButtonRelease> "$this position_release"
+	bind $w.row3.c <ButtonRelease> "$this position_release"
 	bind $w.row4.scale <ButtonRelease> "$this position_release"
         bind $w.row4.entry <Return> "$this position_release"
 	
