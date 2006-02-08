@@ -44,29 +44,32 @@
 #define SCIRun_src_Core_Geom_Freetype_h 1
 
 #include <sci_defs/ogl_defs.h>
+
 #ifdef HAVE_FREETYPE
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
 
-#if FREETYPE_MAJOR == 2
-#  if (FREETYPE_MINOR == 0) || ((FREETYPE_MINOR == 1) && (FREETYPE_PATCH < 3))
-#    define FT_KERNING_DEFAULT ft_kerning_default
-#    define FT_RENDER_MODE_NORMAL ft_render_mode_normal
-#    define FT_PIXEL_MODE_GRAY ft_pixel_mode_grays
+#  if FREETYPE_MAJOR == 2
+#    if (FREETYPE_MINOR == 0) || ((FREETYPE_MINOR == 1) && (FREETYPE_PATCH < 3))
+#      define FT_KERNING_DEFAULT ft_kerning_default
+#      define FT_RENDER_MODE_NORMAL ft_render_mode_normal
+#      define FT_PIXEL_MODE_GRAY ft_pixel_mode_grays
+#    endif
 #  endif
-#endif
 
 #endif
-#include <Core/Geometry/Point.h>
-#include <string>
-#include <vector>
-using std::string;
-using std::vector;
 
 #include <Core/Geom/share.h>
+#include <Core/Geometry/Point.h>
+
+#include <string>
+#include <vector>
 
 namespace SCIRun {
+
+using std::string;
+using std::vector;
 
 class FreeTypeFace;
 class BBox;
