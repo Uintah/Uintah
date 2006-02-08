@@ -1,6 +1,8 @@
 #include <mpi.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/Endian.h> // for other swapbytes() functions.
 namespace Uintah {
 
  /*______________________________________________________________________
