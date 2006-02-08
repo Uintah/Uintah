@@ -33,7 +33,7 @@
 
 
 
-<component name="InsertField" category="FieldsGeometry">
+<component name="InsertField" category="FieldsCreate">
   <overview>
     <authors>
       <author>Michael Callahan</author>
