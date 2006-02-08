@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 
 using namespace std;
 using namespace Uintah;
