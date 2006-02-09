@@ -91,7 +91,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
   d_source = scinew Source(d_turbModel, d_physicalConsts);
-  db->getWithDefault("doMMS", d_doMMS, false);
   if (d_doMMS)
 	  d_source->problemSetup(db);
 

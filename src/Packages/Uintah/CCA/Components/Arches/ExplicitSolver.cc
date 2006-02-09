@@ -110,12 +110,15 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
+  
+  
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
     d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
 					  d_turbModel, d_boundaryCondition,
 					  d_physicalConsts, d_myworld);
+    d_pressSolver->setMMS(d_doMMS);
     d_pressSolver->problemSetup(db); // d_mmInterface
   }
   bool calMom;
@@ -124,6 +127,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
 					d_turbModel, d_boundaryCondition,
 					d_physicalConsts);
+    d_momSolver->setMMS(d_doMMS);
     d_momSolver->problemSetup(db); // d_mmInterface
   }
   if ((calPress)&&(calMom)) {
@@ -135,12 +139,14 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
 					 d_turbModel, d_boundaryCondition,
 					 d_physicalConsts);
+    d_scalarSolver->setMMS(d_doMMS);
     d_scalarSolver->problemSetup(db);
   }
   if (d_reactingScalarSolve) {
     d_reactingScalarSolver = scinew ReactiveScalarSolver(d_lab, d_MAlab,
 					     d_turbModel, d_boundaryCondition,
 					     d_physicalConsts);
+    d_reactingScalarSolver->setMMS(d_doMMS);
     d_reactingScalarSolver->problemSetup(db);
   }
   // Creating an instance of thermal NOx solver
@@ -148,6 +154,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
         d_thermalNOxSolver = scinew ThermalNOxSolver(d_lab, d_MAlab,
                                                      d_turbModel, d_boundaryCondition,
                                                      d_physicalConsts);
+	d_thermalNOxSolver->setMMS(d_doMMS);
         d_thermalNOxSolver->problemSetup(db);
     }
 
@@ -155,6 +162,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
 					     d_turbModel, d_boundaryCondition,
 					     d_physicalConsts, d_myworld);
+    d_enthalpySolver->setMMS(d_doMMS);
     d_enthalpySolver->problemSetup(db);
   }
 

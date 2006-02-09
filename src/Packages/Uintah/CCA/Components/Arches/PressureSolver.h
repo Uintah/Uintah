@@ -116,6 +116,9 @@ public:
       inline void setPressureCorrectionFlag(bool pressure_correction) {
 	d_pressure_correction = pressure_correction;
       }
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
 protected:
 
 private:
