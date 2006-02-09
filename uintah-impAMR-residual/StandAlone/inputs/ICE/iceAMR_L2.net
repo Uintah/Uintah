@@ -2,9 +2,9 @@
 
 
 set name {Main}
-set bbox {0 7 620 616}
-set creationDate {Wed Jan 11 2006}
-set creationTime {16:36:32}
+set bbox {0 7 620 766}
+set creationDate {Thu Feb 09 2006}
+set creationTime {08:05:22}
 set runDate {}
 set runTime {}
 set notes {}
@@ -26,7 +26,7 @@ set m4 [addModuleAtPosition "Uintah" "Visualization" "GridVisualizer" 455 212]
 set m5 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 0 87]
 
 # Create a SCIRun->Render->Viewer Module
-set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 0 572]
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 0 722]
 
 # Create a Uintah->Selectors->ScalarFieldExtractor Module
 set m7 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 251 212]
@@ -37,49 +37,47 @@ set m8 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 241 293]
 # Create a SCIRun->Math->BuildTransform Module
 set m9 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 377 98]
 
-# Create a Uintah->Visualization->CuttingPlane Module
-set m10 [addModuleAtPosition "Uintah" "Visualization" "CuttingPlane" 0 460]
-
-# Create a Uintah->Visualization->CuttingPlane Module
-set m11 [addModuleAtPosition "Uintah" "Visualization" "CuttingPlane" 243 467]
-
-# Create a SCIRun->Visualization->RescaleColorMap Module
-set m12 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 274 377]
+# Create a SCIRun->Visualization->ShowColorMap Module
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 263 562]
 
 # Create a SCIRun->Visualization->ShowColorMap Module
-set m13 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 426 464]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 27 537]
 
-# Create a SCIRun->Visualization->RescaleColorMap Module
-set m14 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 57 321]
+# Create a SCIRun->Visualization->TextureBuilder Module
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 14 323]
 
-# Create a SCIRun->Visualization->ShowColorMap Module
-set m15 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 84 393]
+# Create a SCIRun->Visualization->TextureBuilder Module
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 243 385]
+
+# Create a SCIRun->Visualization->VolumeSlicer Module
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "VolumeSlicer" 11 418]
+
+# Create a SCIRun->Visualization->VolumeSlicer Module
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "VolumeSlicer" 244 462]
 
 # Create the Connections between Modules
-set c1 [addConnection $m8 0 $m11 0]
-set c2 [addConnection $m2 0 $m12 0]
-set c3 [addConnection $m2 0 $m14 0]
-set c4 [addConnection $m12 0 $m13 0]
-set c5 [addConnection $m14 0 $m15 0]
+set c1 [addConnection $m8 0 $m13 0]
+set c2 [addConnection $m12 0 $m14 0]
+set c3 [addConnection $m13 0 $m15 0]
+set c4 [addConnection $m14 1 $m11 0]
+set c5 [addConnection $m15 1 $m10 0]
 set c6 [addConnection $m1 0 $m5 0]
-set c7 [addConnection $m3 0 $m10 0]
+set c7 [addConnection $m3 0 $m12 0]
 set c8 [addConnection $m7 0 $m8 0]
 set c9 [addConnection $m5 0 $m3 0]
 set c10 [addConnection $m5 0 $m7 0]
 set c11 [addConnection $m5 0 $m4 0]
 set c12 [addConnection $m4 0 $m6 0]
-set c13 [addConnection $m8 0 $m12 1]
-set c14 [addConnection $m9 0 $m8 1]
-set c15 [addConnection $m12 0 $m11 1]
-set c16 [addConnection $m14 0 $m10 1]
-set c17 [addConnection $m3 0 $m14 1]
-set c18 [addConnection $m11 0 $m6 1]
-set c19 [addConnection $m10 0 $m6 2]
-set c20 [addConnection $m13 0 $m6 3]
-set c21 [addConnection $m15 0 $m6 4]
+set c13 [addConnection $m9 0 $m8 1]
+set c14 [addConnection $m2 0 $m14 1]
+set c15 [addConnection $m2 0 $m15 1]
+set c16 [addConnection $m10 0 $m6 1]
+set c17 [addConnection $m11 0 $m6 2]
+set c18 [addConnection $m14 0 $m6 3]
+set c19 [addConnection $m15 0 $m6 4]
 
 # Set GUI variables for the Uintah->DataIO->ArchiveReader Module
-set $m1-filebase {/data/Builds/011106SCIRun/dbg_Linux/Packages/Uintah/StandAlone/impAdvectAMR.uda.008}
+set $m1-filebase {/data/Builds/011106ResidualBranch/dbg_Linux/Packages/Uintah/StandAlone/impAdvect_2Level.uda.007}
 set $m1-tcl_status {Executing}
 
 # Open the Uintah->DataIO->ArchiveReader UI
@@ -110,35 +108,32 @@ set $m4-level1_grid_color {blue}
 set $m4-level2_grid_color {magenta}
 set $m4-plane_on {1}
 set $m4-node_select_on {1}
-set $m4-default_radius {0.0625}
+set $m4-default_radius {0.03125}
 set $m4-radius {0.0803}
-
-# Open the Uintah->Visualization->GridVisualizer UI
-$m4 initialize_ui
 
 # Set GUI variables for the Uintah->Selectors->TimestepSelector Module
 set $m5-tcl_status {Done}
-set $m5-time {47}
-set $m5-max_time {47}
-set $m5-timeval {0.037958783392}
+set $m5-time {50}
+set $m5-max_time {99}
+set $m5-timeval {0.0159374999994}
 set $m5-def-color-a {}
 
 # Open the Uintah->Selectors->TimestepSelector UI
 $m5 initialize_ui
 
 $m6 addViewer
-set $m6-ViewWindow_0-geometry 679x508+829+100
+set $m6-ViewWindow_0-geometry 679x507+833+120
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m6-ViewWindow_0-view-eyep-x {0.524999671565}
-set $m6-ViewWindow_0-view-eyep-y {0.273193138383}
-set $m6-ViewWindow_0-view-eyep-z {10.3514676997}
-set $m6-ViewWindow_0-view-lookat-x {0.906140779747}
-set $m6-ViewWindow_0-view-lookat-y {0.440632693111}
-set $m6-ViewWindow_0-view-lookat-z {0.0877185535332}
-set $m6-ViewWindow_0-view-up-x {0.0149296031574}
-set $m6-ViewWindow_0-view-up-y {0.999746324874}
-set $m6-ViewWindow_0-view-up-z {0.0168639512235}
+set $m6-ViewWindow_0-view-eyep-x {4.74160724124}
+set $m6-ViewWindow_0-view-eyep-y {2.13674666564}
+set $m6-ViewWindow_0-view-eyep-z {9.74982602695}
+set $m6-ViewWindow_0-view-lookat-x {0.917284950993}
+set $m6-ViewWindow_0-view-lookat-y {0.42362190756}
+set $m6-ViewWindow_0-view-lookat-z {0.0881794550195}
+set $m6-ViewWindow_0-view-up-x {-0.0847793237479}
+set $m6-ViewWindow_0-view-up-y {0.986325728135}
+set $m6-ViewWindow_0-view-up-z {-0.141329488372}
 set $m6-ViewWindow_0-view-fov {20.0}
 set $m6-ViewWindow_0-view-eyep_offset-x {}
 set $m6-ViewWindow_0-view-eyep_offset-y {}
@@ -218,18 +213,24 @@ set $m6-ViewWindow_0-global-cull {0}
 set $m6-ViewWindow_0-global-dl {0}
 set $m6-ViewWindow_0-global-type {Gouraud}
 set "$m6-ViewWindow_0-GridVisualizer Widget (1)" {0}
-set "$m6-ViewWindow_0-CuttingPlane Widget (3)" {0}
-set "$m6-ViewWindow_0-CuttingPlane Widget (2)" {0}
-set "$m6-ViewWindow_0-ShowColorMap Sticky (4)" {1}
 set "$m6-ViewWindow_0-Nodes - level 0 (1)" {0}
 set "$m6-ViewWindow_0-Patches - level 0 (1)" {1}
 set "$m6-ViewWindow_0-Nodes - level 1 (1)" {1}
 set "$m6-ViewWindow_0-Patches - level 1 (1)" {1}
 set "$m6-ViewWindow_0-Selectable Nodes (1)" {0}
 set "$m6-ViewWindow_0-Current Node (1)" {1}
+set "$m6-ViewWindow_0-CuttingPlane Widget (3)" {0}
+set "$m6-ViewWindow_0-CuttingPlane Widget (2)" {0}
+set "$m6-ViewWindow_0-ShowColorMap Sticky (5)" {1}
+set "$m6-ViewWindow_0-ShowColorMap Sticky (4)" {1}
 set "$m6-ViewWindow_0-Cutting Plane (3)" {1}
 set "$m6-ViewWindow_0-Cutting Plane (2)" {1}
-set "$m6-ViewWindow_0-ShowColorMap Sticky (5)" {1}
+set "$m6-ViewWindow_0-ShowColorMap Sticky (3)" {1}
+set "$m6-ViewWindow_0-ShowColorMap Sticky (2)" {1}
+set "$m6-ViewWindow_0-Volume Slicer (4)" {1}
+set "$m6-ViewWindow_0-Control Widget (4)" {1}
+set "$m6-ViewWindow_0-Volume Slicer (5)" {1}
+set "$m6-ViewWindow_0-Control Widget (5)" {1}
 
 # Set GUI variables for the Uintah->Selectors->ScalarFieldExtractor Module
 set $m7-level {1}
@@ -245,39 +246,43 @@ set $m9-shear_plane_c {1.0}
 set $m9-shear_plane_d {1.0}
 set $m9-widget_scale {1.0}
 
-# Set GUI variables for the Uintah->Visualization->CuttingPlane Module
-set $m10-need_find {1}
-set $m10-plane_index {3}
-
-# Set GUI variables for the Uintah->Visualization->CuttingPlane Module
-set $m11-need_find {1}
-set $m11-plane_index {4}
-
-# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
-set $m12-main_frame {.uiSCIRun_Visualization_RescaleColorMap_0}
-set $m12-min {0.0}
-set $m12-max {8.07892847252e-08}
-
-# Open the SCIRun->Visualization->RescaleColorMap UI
-$m12 initialize_ui
+# Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
+set $m10-numsigdigits {5}
+set $m10-text-fontsize {1}
 
 # Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
-set $m13-numsigdigits {5}
-set $m13-text-fontsize {1}
+set $m11-length {half1}
+set $m11-text-fontsize {1}
 
-# Open the SCIRun->Visualization->ShowColorMap UI
-$m13 initialize_ui
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m12-vmin {-1.97365726744e-17}
+set $m12-vmax {2.21729605218e-17}
+set $m12-card_mem {128}
 
-# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
-set $m14-min {0.0}
-set $m14-max {0.00899210574978}
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m13-vmin {-4.29846256587e-17}
+set $m13-vmax {3.929030182e-17}
+set $m13-card_mem {128}
 
-# Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
-set $m15-length {half1}
-set $m15-text-fontsize {1}
+# Set GUI variables for the SCIRun->Visualization->VolumeSlicer Module
+set $m14-control_pos_saved {1}
+set $m14-control_x {0.5}
+set $m14-control_y {0.5}
+set $m14-control_z {0.5}
+set $m14-drawX {1}
+set $m14-drawY {1}
+set $m14-drawZ {1}
+set $m14-cyl_active {0}
 
-# Open the SCIRun->Visualization->ShowColorMap UI
-$m15 initialize_ui
+# Set GUI variables for the SCIRun->Visualization->VolumeSlicer Module
+set $m15-control_pos_saved {1}
+set $m15-control_x {1.562}
+set $m15-control_y {0.5}
+set $m15-control_z {0.5}
+set $m15-drawX {1}
+set $m15-drawY {1}
+set $m15-drawZ {1}
+set $m15-cyl_active {0}
 
 
 ::netedit scheduleok
