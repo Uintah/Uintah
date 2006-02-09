@@ -32,7 +32,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/BioPSE/Core/Algorithms/NumApproximation
 
-SRCS += \
+SRCS     += $(SRCDIR)/BuildBEMatrix.cc\
+
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
