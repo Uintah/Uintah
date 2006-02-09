@@ -252,7 +252,6 @@ private:
       bool d_mixedModel;
       bool d_doMMS;
       string turbModel;
-      string whichMMS;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;
