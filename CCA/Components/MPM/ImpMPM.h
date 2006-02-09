@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 
@@ -66,8 +67,9 @@ WARNING
   
 ****************************************/
 
-class ImpMPM : public UintahParallelComponent, public SimulationInterface {
-public:
+ class ImpMPM : public MPMCommon, public UintahParallelComponent, 
+   public SimulationInterface {
+   public:
   ImpMPM(const ProcessorGroup* myworld);
   virtual ~ImpMPM();
 
@@ -77,6 +79,8 @@ public:
                             const ProblemSpecP& mat_ps,
                             GridP& grid, SimulationStateP&);
 	 
+  virtual void outputProblemSpec(ProblemSpecP& ps);
+
   virtual void scheduleInitialize(           const LevelP& level, SchedulerP&);
 	 
   //////////
@@ -445,6 +449,7 @@ private:
   bool             d_doMechanics;
   bool             d_doGridReset;  // Default is true, standard MPM
   Vector           d_contact_dirs; // For rigid body contact
+  std::string      d_con_type;
   int              d_max_num_iterations;  // restart timestep
   int              d_num_iters_to_decrease_delT;
   int              d_num_iters_to_increase_delT;
