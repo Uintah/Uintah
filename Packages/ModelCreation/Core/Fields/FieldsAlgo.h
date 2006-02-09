@@ -32,6 +32,7 @@
 
 #include <Packages/ModelCreation/Core/Util/AlgoLibrary.h>
 
+#include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -82,6 +83,17 @@ class FieldsAlgo : public AlgoLibrary {
     bool IsClockWiseSurface(FieldHandle input);
     bool IsCounterClockWiseSurface(FieldHandle input);
 
+    // BuildMembraneTable
+    // Find the surfaces in membranemodel and fir them to the ones found in
+    // elementtype. This will produce a table that can be used to see which surfaces
+    // in the elementtype mesh can be used to model the membrane model.
+    // This is a support function for the CardioWave Interface
+    bool BuildMembraneTable(FieldHandle elementtype, FieldHandle membranemodel, MatrixHandle& table);
+  
+    // BundleToFieldArray
+    // Created an vector of fields out of the bundle type
+    bool BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>& output);
+
     // CompartmentBoundary
     // Extract the boundaries between compartments in a volume or surface field
     // The data needs to be on the elements. This function only extracts internal
@@ -99,6 +111,10 @@ class FieldsAlgo : public AlgoLibrary {
     // is similar to QuadToTri, but does more checks and is more robust and works
     // on unconnected data.
     bool ConvertToTriSurf(FieldHandle input, FieldHandle& output);
+
+    // FieldArrayToBundle
+    // Created an vector of fields out of the bundle type
+    bool FieldArrayToBundle(std::vector<FieldHandle>& input, BundleHandle output);
     
     // FieldBoundary:
     // This function extracts the outer boundaries of a field
@@ -128,6 +144,11 @@ class FieldsAlgo : public AlgoLibrary {
     // constant value. This means node splitting at the edges between the
     // different areas/volumes.
     bool SplitFieldByElementData(FieldHandle input, FieldHandle& output);    
+
+    // SplitFieldByConnectedRegion:
+    // Use the connectivity data to split the field so each unconnected region is its own
+    // field.
+    bool SplitFieldByConnectedRegion(FieldHandle input, std::vector<FieldHandle>& output);    
 
     // ToPointCloud: Remove all element information from a mesh and only extract
     // the actual points in the mesh.

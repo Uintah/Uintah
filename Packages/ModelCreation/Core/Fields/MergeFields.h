@@ -56,10 +56,10 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
 {
 
 #ifdef HAVE_HASH_MAP
-  typedef hash_map<unsigned int,unsigned int> node_index_type;
+  typedef hash_multimap<unsigned int,unsigned int> node_index_type;
   typedef hash_multimap<unsigned int,typename FIELD::mesh_type::Node::array_type> elem_index_type; 
 #else
-  typedef map<unsigned int,unsigned int> node_index_type;
+  typedef multimap<unsigned int,unsigned int> node_index_type;
   typedef multimap<unsigned int,typename FIELD::mesh_type::Node::array_type> elem_index_type; 
 #endif
 
@@ -189,9 +189,9 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
   int actnumnodes = 0;      
   int actnumelements = 0;  
     
-  double Xmul = 250/(Xmax-Xmin);
-  double Ymul = 250/(Ymax-Ymin);
-  double Zmul = 250/(Zmax-Zmin);
+  double Xmul =0.0; if ((Xmax-Xmin) > 0) Xmul = 250/(Xmax-Xmin);
+  double Ymul =0.0; if ((Ymax-Ymin) > 0) Ymul = 250/(Ymax-Ymin);
+  double Zmul =0.0; if ((Zmax-Zmin) > 0) Zmul = 250/(Zmax-Zmin);
   Xmin -= (Xmax-Xmin)*0.01;
   Ymin -= (Ymax-Ymin)*0.01;
   Zmin -= (Zmax-Zmin)*0.01;
