@@ -48,7 +48,12 @@ typedef LockingHandle<Mesh> MeshHandle;
 // Maximum number of weights get_weights will return.
 // Currently at 15 for QuadraticLatVolMesh.
 #define MESH_WEIGHT_MAXSIZE 64
-#define MESH_NO_NEIGHBOR 0xffffffff // 32 bit under_type!
+
+// We reserve the last unsigned int value as a marker for bad mesh
+// indices.  This is useful for example when there are no neighbors,
+// or when elements are deleted.
+#define MESH_INVALID_INDEX ((unsigned int)-1)
+#define MESH_NO_NEIGHBOR MESH_INVALID_INDEX
 
 class SCISHARE Mesh : public PropertyManager {
 public:
