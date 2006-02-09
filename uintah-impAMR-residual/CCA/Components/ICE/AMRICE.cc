@@ -19,7 +19,7 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
-#define SPEW 1
+#define SPEW 0
 //#undef SPEW
 
 //#define BRYAN

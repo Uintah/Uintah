@@ -124,7 +124,8 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                            true);
                                                            
       scheduleCompute_maxRHS(    sched,         level,     one_matl,
-                                                           all_matls);
+                                                           all_matls,
+                                                           recursion);
     }
     scheduleMultiLevelPressureSolve(sched, grid,   0,
                                                    one_matl,
@@ -485,7 +486,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                                             all_matls,
                                                            true);
       scheduleCompute_maxRHS(  subsched,        level,      one_matl,
-                                                            all_matls);
+                                                            all_matls,
+                                                            recursion);
     }
 
     subsched->compile();
@@ -753,7 +755,7 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     sumRefluxCorrection.initialize(0.0);
 
     //__________________________________
-    // Sum the reflux correction over all materials      
+    // Sum the reflux correction over all materials  
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
@@ -768,6 +770,9 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
           refluxOperator_applyCorrectionFluxes<double>(
                         sumRefluxCorrection, "vol_frac",  indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+          // Note in the equations the rhs is multiplied by vol, which is automatically canceled
+          // This cancelation is mystically handled inside of the the applyCorrectionFluxes
+          // operator.  
         }  
       }  // finePatch loop 
     }  // matls

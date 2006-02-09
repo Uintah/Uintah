@@ -208,7 +208,8 @@ namespace Uintah {
       void scheduleCompute_maxRHS(SchedulerP& sched,
                                   const LevelP& level,
                                   const MaterialSubset* one_matl,
-                                  const MaterialSet*);
+                                  const MaterialSet*,
+                                  const bool insideOuterIterLoop);
                                                   
       void scheduleUpdatePressure(  SchedulerP&,
                                    const LevelP&,
@@ -593,7 +594,8 @@ namespace Uintah {
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse*,
-                          DataWarehouse* new_dw);
+                          DataWarehouse* new_dw,
+                          const bool insideOuterIterLoop);
                        
        void updatePressure(const ProcessorGroup*,
                            const PatchSubset* patches,                      
