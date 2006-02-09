@@ -100,7 +100,6 @@ public:
   virtual void scalar_multiply(double s);
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
-
   double  sumOfCol(int);
   double  sumOfRow(int);
   
@@ -129,12 +128,14 @@ public:
   //! throws an assertion if not square
   double determinant();
 
+ 
   void mult(double s);
   
   void svd(DenseMatrix&, SparseRowMatrix&, DenseMatrix&);
   void eigenvalues(ColumnMatrix&, ColumnMatrix&);
   void eigenvectors(ColumnMatrix&, ColumnMatrix&, DenseMatrix&);
 
+ 
   virtual void    print() const;
   virtual void    print(ostream&) const;
   
@@ -145,6 +146,7 @@ public:
 
   //! Friend functions
   SCISHARE friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+
 };
 
 
@@ -155,7 +157,8 @@ SCISHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseM
 SCISHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
 SCISHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 SCISHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-
+void Concat_rows(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
+void Concat_cols(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
 
 } // End namespace SCIRun
 

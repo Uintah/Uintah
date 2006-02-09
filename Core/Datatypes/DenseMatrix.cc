@@ -1117,6 +1117,43 @@ DenseMatrix::determinant()
 }
 
 
+// Added by Saeed Babaeizadeh, Jan. 2006
+void 
+Concat_rows(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2){
+
+    int r, c;
+    ASSERTEQ(m1.ncols(), m2.ncols());
+    for (r = 0; r <= m1.nrows()-1; r++) {
+      for (c = 0; c <= m1.ncols()-1; c++) {
+  	out[r][c] = m1[r][c];
+      }
+    }
+    for (r = m1.nrows(); r <= m1.nrows()+m2.nrows()-1; r++) {
+      for (c = 0; c <= m2.ncols()-1; c++) {
+  	out[r][c] = m2[r-m1.nrows()][c];
+      }
+    }
+    return;
+}
+
+// Added by Saeed Babaeizadeh, Jan. 2006
+void 
+Concat_cols(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2){
+    int r, c;
+    ASSERTEQ(m1.nrows(), m2.nrows());
+    for (r = 0; r <= m1.nrows()-1; r++) {
+      for (c = 0; c <= m1.ncols()-1; c++) {
+	out[r][c] = m1[r][c];
+      }
+    }
+    for (r = 0; r <= m2.nrows()-1; r++) {
+      for (c = m1.ncols(); c <= m1.ncols()+m2.ncols()-1; c++) {
+	out[r][c] = m2[r][c-m1.ncols()];
+      }
+    }
+    return;
+}
+
 #if defined(HAVE_LAPACK)
 
 void
@@ -1132,7 +1169,6 @@ DenseMatrix::svd(DenseMatrix& U, SparseRowMatrix& S, DenseMatrix& VT)
 
   lapacksvd(data, nrows_, ncols_, S.a, U.data, VT.data);
 }
-
 
 void
 DenseMatrix::eigenvalues(ColumnMatrix& R, ColumnMatrix& I)
