@@ -68,7 +68,7 @@ static DebugStream cout_doing("IMPM", false);
 
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
-  UintahParallelComponent(myworld)
+  MPMCommon(), UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
   flags = scinew MPMFlags();
@@ -123,43 +123,46 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    
    ProblemSpecP mpm_ps = 0;
+   ProblemSpecP restart_mat_ps = 0;
+
    if (materials_ps)
-     mpm_ps = materials_ps->findBlock("MPM");
+     restart_mat_ps = materials_ps;
    else
-     mpm_ps = prob_spec->findBlock("MPM");
+     restart_mat_ps = prob_spec;
+
+   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
    string integrator_type;
-   if (mpm_ps) {
+   if (mpm_soln_ps) {
 
      // Read all MPM flags (look in MPMFlags.cc)
-     flags->readMPMFlags(mpm_ps);
+     flags->readMPMFlags(restart_mat_ps);
      if (flags->d_integrator_type != "implicit")
        throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
 
 
-     mpm_ps->get("ProjectHeatSource", d_projectHeatSource);
-     mpm_ps->get("DoMechanics", d_doMechanics);
-     mpm_ps->get("do_grid_reset",  d_doGridReset);
-     mpm_ps->get("ForceBC_force_increment_factor",
+     mpm_soln_ps->get("ProjectHeatSource", d_projectHeatSource);
+     mpm_soln_ps->get("DoMechanics", d_doMechanics);
+     mpm_soln_ps->get("do_grid_reset",  d_doGridReset);
+     mpm_soln_ps->get("ForceBC_force_increment_factor",
                                     flags->d_forceIncrementFactor);
-     mpm_ps->get("use_load_curves", flags->d_useLoadCurves);
-     d_integrator = Implicit;
-     mpm_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
-     mpm_ps->get("convergence_criteria_energy",d_conv_crit_energy);
-     mpm_ps->get("dynamic",d_dynamic);
-     mpm_ps->getWithDefault("iters_before_timestep_restart",
+     mpm_soln_ps->get("use_load_curves", flags->d_useLoadCurves);
+     mpm_soln_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
+     mpm_soln_ps->get("convergence_criteria_energy",d_conv_crit_energy);
+     mpm_soln_ps->get("dynamic",d_dynamic);
+     mpm_soln_ps->getWithDefault("iters_before_timestep_restart",
                                d_max_num_iterations, 25);
-     mpm_ps->getWithDefault("num_iters_to_decrease_delT",
+     mpm_soln_ps->getWithDefault("num_iters_to_decrease_delT",
                                d_num_iters_to_decrease_delT, 12);
-     mpm_ps->getWithDefault("num_iters_to_increase_delT",
+     mpm_soln_ps->getWithDefault("num_iters_to_increase_delT",
                                d_num_iters_to_increase_delT, 4);
-     mpm_ps->getWithDefault("delT_decrease_factor",
+     mpm_soln_ps->getWithDefault("delT_decrease_factor",
                                d_delT_decrease_factor, .6);
-     mpm_ps->getWithDefault("delT_increase_factor",
+     mpm_soln_ps->getWithDefault("delT_increase_factor",
                                d_delT_increase_factor, 2);
 
      std::vector<std::string> bndy_face_txt_list;
-     mpm_ps->get("boundary_traction_faces", bndy_face_txt_list);
+     mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
                                                                                 
      // convert text representation of face into FaceType
      std::vector<std::string>::const_iterator ftit;
@@ -185,11 +188,11 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
 
    ProblemSpecP child = mpm_mat_ps->findBlock("contact");
-   std::string con_type = "null";
-   child->get("type",con_type);
+   d_con_type = "null";
+   child->get("type",d_con_type);
    d_rigid_body = false;
 
-   if (con_type == "rigid"){
+   if (d_con_type == "rigid"){
       d_rigid_body = true;
       Vector defaultDir(1,1,1);
       child->getWithDefault("direction",d_contact_dirs, defaultDir);
@@ -205,7 +208,10 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
        throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
     }
    }
-
+#if 1
+  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+#endif
+#if 0
    int numMatls=0;
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
@@ -214,6 +220,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
      sharedState->registerMPMMaterial(mat);
      numMatls++;
    }
+#endif
 
 #ifdef HAVE_PETSC
    d_solver = scinew MPMPetscSolver();
@@ -242,6 +249,39 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    ProblemSpecP time_ps = prob_spec->findBlock("Time");
    time_ps->get("delt_init",d_initialDt);
 }
+
+
+void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
+{
+  ProblemSpecP root = root_ps->getRootNode();
+
+  ProblemSpecP flags_ps = root->appendChild("MPM");
+  flags->outputProblemSpec(flags_ps);
+
+  ProblemSpecP mat_ps = 0;
+  mat_ps = root->findBlock("MaterialProperties");
+
+  if (mat_ps == 0)
+    mat_ps = root->appendChild("MaterialProperties");
+    
+  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM",true,1);
+  for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
+    MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
+    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+  }
+
+#if 0
+  contactModel->outputProblemSpec(mpm_ps);
+#endif
+
+  ProblemSpecP contact_ps = mat_ps->appendChild("contact",true,2);
+  contact_ps->appendElement("type",d_con_type,false,3);
+  contact_ps->appendElement("direction",d_contact_dirs,false,3);
+  contact_ps->appendElement("stop_time",d_stop_time,false,3);
+  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop,false,3);
+
+}
+
 
 void ImpMPM::scheduleInitialize(const LevelP& level,
                                    SchedulerP& sched)
