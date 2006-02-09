@@ -10,27 +10,9 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/ModelCreation/Core/Fields
+SRCDIR   := Packages/ModelCreation/Core/Numeric
 
-SRCS     += $(SRCDIR)/BuildMembraneTable.cc\
-            $(SRCDIR)/ConvertToTetVol.cc\
-            $(SRCDIR)/ConvertToTriSurf.cc\
-            $(SRCDIR)/CompartmentBoundary.cc\
-            $(SRCDIR)/ClipBySelectionMask.cc\
-            $(SRCDIR)/DistanceToField.cc\
-            $(SRCDIR)/FieldsAlgo.cc\
-            $(SRCDIR)/ExampleFields.cc\
-            $(SRCDIR)/FieldDataNodeToElem.cc\
-            $(SRCDIR)/FieldDataElemToNode.cc\
-            $(SRCDIR)/SplitByConnectedRegion.cc\
-            $(SRCDIR)/SplitFieldByElementData.cc\
-            $(SRCDIR)/MergeFields.cc\
-            $(SRCDIR)/GetFieldData.cc\
-            $(SRCDIR)/SetFieldData.cc\
-            $(SRCDIR)/MappingMatrixToField.cc\
-            $(SRCDIR)/TransformField.cc\
-            $(SRCDIR)/ToPointCloud.cc\
-            $(SRCDIR)/Unstructure.cc\
+SRCS     += $(SRCDIR)/NumericAlgo.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
@@ -39,10 +21,12 @@ PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Packages/ModelCreation/Core/Algorithms \
             Packages/ModelCreation/Core/Datatypes \
             Packages/ModelCreation/Core/Util \
+            Packages/ModelCreation/Core/Numeric \
             Dataflow/Modules/Fields \
             Core/Algorithms/Fields \
             Core/Persistent \
             Core/Basis Core/Bundle
+            
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

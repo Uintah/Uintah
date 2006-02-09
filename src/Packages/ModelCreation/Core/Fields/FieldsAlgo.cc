@@ -29,6 +29,7 @@
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 // Matrix types
+#include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
@@ -69,6 +70,7 @@
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 
+#include <Packages/ModelCreation/Core/Fields/BuildMembraneTable.h>
 #include <Packages/ModelCreation/Core/Fields/ClipBySelectionMask.h>
 #include <Packages/ModelCreation/Core/Fields/ConvertToTetVol.h>
 #include <Packages/ModelCreation/Core/Fields/ConvertToTriSurf.h>
@@ -81,6 +83,7 @@
 #include <Packages/ModelCreation/Core/Fields/GetFieldData.h>
 #include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
 #include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
+#include <Packages/ModelCreation/Core/Fields/SplitByConnectedRegion.h>
 #include <Packages/ModelCreation/Core/Fields/TransformField.h>
 #include <Packages/ModelCreation/Core/Fields/ToPointCloud.h>
 #include <Packages/ModelCreation/Core/Fields/Unstructure.h>
@@ -89,6 +92,9 @@
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 namespace ModelCreation {
 
@@ -702,10 +708,8 @@ bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
 
 bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements)
 {
-  std::cout << "start MergeFields" << std::endl;
   for (size_t p = 0; p < inputs.size(); p++) if (!MakeEditable(inputs[0],inputs[0])) return (false);
   MergeFieldsAlgo algo;
-  std::cout << "before MergeFields algo" << std::endl;
   return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields,mergeelements));
 }
 
@@ -719,7 +723,6 @@ bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double toler
   
   MergeFieldsAlgo algo;
   return(algo.MergeFields(pr_,inputs,output,tolerance,true,mergeelements));
-
 }
 
 
@@ -732,11 +735,21 @@ bool FieldsAlgo::SplitFieldByElementData(FieldHandle input, FieldHandle& output)
 }
 
 
+bool FieldsAlgo::SplitFieldByConnectedRegion(FieldHandle input, std::vector<FieldHandle>& output)
+{
+  FieldHandle input_editable;
+  if (!MakeEditable(input,input_editable)) return (false);
+  SplitByConnectedRegionAlgo algo;
+  return(algo.SplitByConnectedRegion(pr_,input_editable,output));
+}
+
+
 bool FieldsAlgo::ToPointCloud(FieldHandle input,FieldHandle& output)
 {
   ToPointCloudAlgo algo;
   return(algo.ToPointCloud(pr_,input,output));
 }
+
 
 bool FieldsAlgo::TransformField(FieldHandle input,FieldHandle& output,Transform& transform,bool rotatedata)
 {
@@ -752,6 +765,37 @@ bool FieldsAlgo::Unstructure(FieldHandle input,FieldHandle& output)
 }
 
 
+bool FieldsAlgo::BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>& output)
+{
+  output.resize(input->numFields());
+  for (int p=0; p < input->numFields(); p++) output[p] = input->getField(input->getFieldName(p));
+  return (true);
+}
 
+
+bool FieldsAlgo::FieldArrayToBundle(std::vector<FieldHandle>& input, BundleHandle output)
+{
+  output = scinew Bundle();
+  if (output.get_rep() == 0)
+  {
+    error("FieldArrayToBundle: Could not allocate new bundle");
+    return (false);
+  }
+  
+  for (size_t p=0; p < input.size(); p++)
+  {
+    std::ostringstream oss;
+    oss << "field" << p; 
+    output->setField(oss.str(),input[p]);
+  }
+  return (true);
+}
+
+
+bool FieldsAlgo::BuildMembraneTable(FieldHandle elementtype, FieldHandle membranemodel, MatrixHandle& membranetable)
+{
+  BuildMembraneTableAlgo algo;
+  return(algo.BuildMembraneTable(pr_,elementtype,membranemodel,membranetable));
+}
 
 } // ModelCreation

@@ -40,6 +40,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PathReader.tcl\
 	$(SRCDIR)/PathWriter.tcl\
 	$(SRCDIR)/ReplicateDataArray.tcl\
+	$(SRCDIR)/SelectAndReplaceFieldData.tcl\
+	$(SRCDIR)/SelectAndReplaceFieldsData.tcl\
 	$(SRCDIR)/SelectByFieldData.tcl\
 	$(SRCDIR)/SelectByFieldsData.tcl\
 	$(SRCDIR)/StringReader.tcl\

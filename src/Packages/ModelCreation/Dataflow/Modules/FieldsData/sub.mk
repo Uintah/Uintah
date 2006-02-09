@@ -21,6 +21,8 @@ SRCS     += \
 	$(SRCDIR)/FieldDataElemToNode.cc\
 	$(SRCDIR)/FieldDataNodeToElem.cc\
 	$(SRCDIR)/IsInsideField.cc\
+	$(SRCDIR)/SelectAndReplaceFieldData.cc\
+	$(SRCDIR)/SelectAndReplaceFieldsData.cc\
 	$(SRCDIR)/SelectByFieldData.cc\
 	$(SRCDIR)/SelectByFieldsData.cc\
 	$(SRCDIR)/SignedDistanceToField.cc\
