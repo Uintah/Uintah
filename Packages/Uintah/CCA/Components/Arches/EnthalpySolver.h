@@ -125,6 +125,9 @@ public:
 				     const MaterialSet* matls,
 		 		     const TimeIntegratorLabel* timelabels);
 
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
 
 protected:
 
@@ -197,6 +200,7 @@ private:
       double d_turbPrNo;
       int d_iteration_number;
       double d_H_air;
+      bool d_doMMS;
 
 }; // End class EnthalpySolver
 } // End namespace Uintah

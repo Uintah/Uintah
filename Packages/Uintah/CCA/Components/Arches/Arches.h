@@ -250,8 +250,9 @@ private:
       bool d_calcThermalNOx;
       bool d_calcEnthalpy;
       bool d_mixedModel;
+      bool d_doMMS;
       string turbModel;
-      string mms;
+      string whichMMS;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;

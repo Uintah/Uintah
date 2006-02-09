@@ -100,6 +100,11 @@ public:
       virtual double getAdiabaticAirEnthalpy() const = 0;
 
       virtual bool restartableTimesteps() = 0;
+
+      virtual void setMMS(bool doMMS) = 0;
+
+      virtual bool getMMS() const = 0;
+
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;

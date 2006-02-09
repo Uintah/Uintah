@@ -186,6 +186,12 @@ public:
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
       }
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
+      inline bool getMMS() const {
+        return d_doMMS;
+      }
 
 protected :
 
@@ -352,6 +358,8 @@ private:
     bool d_turbModelRKsteps;
     int d_turbCounter;
     double d_H_air;
+    bool d_doMMS;
+    
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

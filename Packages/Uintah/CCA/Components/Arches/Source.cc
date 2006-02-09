@@ -69,11 +69,14 @@ Source::~Source()
 void 
 Source::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("Source");
+  ProblemSpecP params_non_constant = params;
+  const ProblemSpecP params_root = params_non_constant->getRootNode();
+  ProblemSpecP db=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
   
+  db->require("whichMMS", d_mms);
   db->getWithDefault("whichMMS", d_mms, "linearMMS");
   if (d_mms == "linearMMS") {
-    ProblemSpecP db_mms = params->findBlock("linearMMS");
+    ProblemSpecP db_mms = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS")->findBlock("linearMMS");
     db_mms->require("rhoair", d_airDensity);
     db_mms->require("rhohe", d_heDensity);
     db_mms->require("gravity", d_gravity);//Vector
@@ -86,17 +89,16 @@ Source::problemSetup(const ProblemSpecP& params)
     db_mms->getWithDefault("phi0",phi0,0.5);
   }
   else if (d_mms == "expMMS") {
-	  ProblemSpecP db_mms = params->findBlock("linearMMS");
+	  ProblemSpecP db_mms = params->findBlock("expMMS");
 	  db_mms->require("cu",cu);
   }
   else if (d_mms == "sineMMS") {
-	  ProblemSpecP db_mms = params->findBlock("linearMMS");
+	  ProblemSpecP db_mms = params->findBlock("sineMMS");
 	  db_mms->require("cu",cu);
   }
   else
 	  throw InvalidValue("current MMS "
 		       "not supported: " + d_mms, __FILE__, __LINE__);
-  
 }
 
 //****************************************************************************

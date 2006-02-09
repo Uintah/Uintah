@@ -108,6 +108,9 @@ public:
 				   const TimeIntegratorLabel* timelabels,
 				   int index);
 
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
 protected:
 
 private:
