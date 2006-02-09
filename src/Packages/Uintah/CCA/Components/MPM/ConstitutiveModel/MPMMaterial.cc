@@ -158,6 +158,8 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("C_p",d_Cp,false,3);
   mpm_ps->appendElement("room_temp",d_troom,false,3);
   mpm_ps->appendElement("melt_temp",d_tmelt,false,3);
+  mpm_ps->appendElement("is_rigid",d_is_rigid,false,3);
+  mpm_ps->appendElement("includeFlowWork",d_includeFlowWork,false,3);
   d_cm->outputProblemSpec(mpm_ps);
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {

@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Math/Short27.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
@@ -55,7 +56,7 @@ WARNING
   
 ****************************************/
 
-class SerialMPM : public SimulationInterface, public UintahParallelComponent {
+class SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
 public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();
@@ -137,10 +138,11 @@ protected:
   // Insert Documentation Here:
   friend class MPMICE;
   friend class MPMArches;
-
+#if 0
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
 				    SimulationStateP& sharedState,
 				    MPMFlags* flags);
+#endif
 	 
   virtual void actuallyInitialize(const ProcessorGroup*,
 				  const PatchSubset* patches,

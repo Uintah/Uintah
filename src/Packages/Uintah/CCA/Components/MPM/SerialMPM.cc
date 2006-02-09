@@ -80,7 +80,7 @@ static Vector face_norm(Patch::FaceType f)
 }
 
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
-  UintahParallelComponent(myworld)
+  MPMCommon(), UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
   flags = scinew MPMFlags();
@@ -203,6 +203,7 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   }
 }
 
+#if 0
 void 
 SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
                                 SimulationStateP& sharedState,
@@ -242,6 +243,8 @@ SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
     }
   }
 }
+
+#endif
 
 void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 {
