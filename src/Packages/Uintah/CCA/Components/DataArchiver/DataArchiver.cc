@@ -1651,7 +1651,6 @@ DataArchiver::output(const ProcessorGroup*,
       }
       else {
         doc = (*currentXMLDataDocMap)[level->getIndex()];
-        doc->output((xmlFilename+"blah").c_str());
       }
     }
 #endif
