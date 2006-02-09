@@ -56,8 +56,16 @@
     </inputs>
     <outputs>
       <port>
-        <name>Combined Fields</name>
+        <name>Combined Field</name>
 	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Extended Insert Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Combined To Extended Mapping</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>

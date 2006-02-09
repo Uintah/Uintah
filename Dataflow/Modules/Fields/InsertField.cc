@@ -149,7 +149,7 @@ InsertField::execute()
 
   if( output_field_.get_rep() )
   {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Combined Fields");
+    FieldOPort *ofield_port = (FieldOPort *)get_oport("Combined Field");
     ofield_port->send_and_dereference(output_field_, true);
   }
 }
