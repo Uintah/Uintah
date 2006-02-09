@@ -101,6 +101,13 @@ public:
 				        const MaterialSet* matls,
 				        const TimeIntegratorLabel* timelabels);
 
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
+      inline bool getMMS() const {
+        return d_doMMS;
+      }
+
 protected:
 
 private:
@@ -157,6 +164,7 @@ private:
       int d_conv_scheme;
       bool d_dynScalarModel;
       double d_turbPrNo;
+      bool d_doMMS;
 
 #ifdef multimaterialform
       // set the values in problem setup

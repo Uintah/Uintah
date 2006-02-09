@@ -133,6 +133,9 @@ public:
 	{
 	  return d_pressure_correction;
 	}
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
 protected: 
 
 private:

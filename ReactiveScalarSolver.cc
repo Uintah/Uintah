@@ -121,6 +121,10 @@ ReactiveScalarSolver::problemSetup(const ProblemSpecP& params)
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
+  
+  if (d_doMMS)
+	  d_source->problemSetup(db);
+  
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "linegs")

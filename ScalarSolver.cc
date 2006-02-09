@@ -121,7 +121,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
-  db->getWithDefault("doMMS", d_doMMS, false);
+  
   if (d_doMMS)
 	  d_source->problemSetup(db);
 

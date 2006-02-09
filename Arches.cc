@@ -134,6 +134,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("turnonMixedModel",d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",d_recompile,false);
   db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
+  
+  db->getWithDefault("doMMS", d_doMMS, false);
 
   // physical constant
   // physical constants
@@ -228,6 +230,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
 
+  d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
 }
