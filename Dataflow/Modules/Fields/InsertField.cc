@@ -43,7 +43,7 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/Field.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/InsertField.h>
 #include <Core/Containers/StringUtil.h>
@@ -56,7 +56,10 @@ class InsertField : public Module
 {
   int tet_generation_;
   int insert_generation_;
-  FieldHandle output_field_;
+
+  FieldHandle combined_;
+  FieldHandle extended_;
+  MatrixHandle mapping_;
 
 public:
   InsertField(GuiContext* ctx);
@@ -115,7 +118,7 @@ InsertField::execute()
     update = true;
   }
 
-  if( !output_field_.get_rep() || update)
+  if( !combined_.get_rep() || update)
   {
     const TypeDescription *ftd0 = tet_field->get_type_description();
     const TypeDescription *ftd1 = insert_field->get_type_description();
@@ -128,29 +131,47 @@ InsertField::execute()
       return;
     }
 
-    output_field_ = tet_field;
+    combined_ = tet_field;
     tet_field = 0;
-    output_field_.detach();
-    output_field_->mesh_detach();
+    combined_.detach();
+    combined_->mesh_detach();
     const int dim = insert_field->mesh()->dimensionality();
+
+    vector<unsigned int> added_nodes;
+    vector<unsigned int> added_elems;
     if (dim == 0)
     {
-      algo->execute_0(output_field_, insert_field);
+      algo->execute_0(combined_, insert_field, added_nodes, added_elems);
+      algo->extract_0(extended_, mapping_,
+                      combined_, added_nodes, added_elems);
     }
     if (dim >= 1)
     {
-      algo->execute_1(output_field_, insert_field);
+      algo->execute_1(combined_, insert_field, added_nodes, added_elems);
     }
     if (dim >= 2)
     {
-      algo->execute_2(output_field_, insert_field);
+      algo->execute_2(combined_, insert_field, added_nodes, added_elems);
     }
   }
 
-  if( output_field_.get_rep() )
+  if( combined_.get_rep() )
   {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Combined Field");
-    ofield_port->send_and_dereference(output_field_, true);
+    ofield_port->send_and_dereference(combined_, true);
+  }
+
+  if( extended_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *)get_oport("Extended Insert Field");
+    ofield_port->send_and_dereference(extended_, true);
+  }
+
+  if( mapping_.get_rep() )
+  {
+    MatrixOPort *oport =
+      (MatrixOPort *)get_oport("Combined To Extended Mapping");
+    oport->send_and_dereference(mapping_, true);
   }
 }
 
@@ -177,6 +198,10 @@ InsertFieldAlgo::get_compile_info(const TypeDescription *ftet,
   rval->add_include(include_path);
   ftet->fill_compile_info(rval);
   finsert->fill_compile_info(rval);
+  
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+
   return rval;
 }
 
