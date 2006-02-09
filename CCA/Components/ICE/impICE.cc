@@ -138,10 +138,6 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   if(computes_or_modifies =="modifies"){
     t->modifies(lb->rhsLabel,          one_matl,oims);
   }
-  if(insideOuterIterLoop){
-    t->computes(lb->residualErrorLabel,one_matl,oims);
-    t->requires( Task::NewDW, lb->solverResidualLabel,  press_matl,oims,gn,0);
-  }
   
   sched->addTask(t, patches, all_matls);                     
 }
@@ -152,14 +148,23 @@ _____________________________________________________________________*/
 void ICE::scheduleCompute_maxRHS(SchedulerP& sched,
                                  const LevelP& level,
                                  const MaterialSubset* one_matl,
-                                 const MaterialSet* allMatls){ 
+                                 const MaterialSet* allMatls,
+                                 const bool insideOuterIterLoop){ 
+                                 
   cout_doing << d_myworld->myrank()<< " ICE::scheduleCompute_maxRHS" 
              << "\t\t\t\t\tL-" << level->getIndex()<< endl;
   Task* t;
-  t = scinew Task("ICE::compute_maxRHS", this, &ICE::compute_maxRHS);
+  t = scinew Task("ICE::compute_maxRHS", this, 
+                  &ICE::compute_maxRHS,insideOuterIterLoop);
   
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  t->requires( Task::NewDW, lb->rhsLabel,  one_matl,oims,Ghost::None,0);
+  Ghost::GhostType gn = Ghost::None;
+  
+  t->requires( Task::NewDW, lb->rhsLabel,  one_matl,oims,gn,0);
+  if(insideOuterIterLoop){
+    t->computes(lb->residualErrorLabel,one_matl,oims);
+    t->requires( Task::NewDW, lb->solverResidualLabel,  one_matl,oims,gn,0);
+  }
   t->computes(lb->max_RHSLabel);
   
   sched->addTask(t, level->eachPatch(), allMatls);
@@ -722,37 +727,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       }
       rhs.initialize(0.0, l, h);
     } 
-
-    //__________________________________
-    //  Compare rhs to the solver residual
-    if(insideOuterIterLoop){
-      CCVariable<double> residualError, rhs_tmp; 
-      constCCVariable<double> solverResidual;
-      new_dw->get(solverResidual,           lb->solverResidualLabel,0,patch,gn,0);
-      new_dw->allocateAndPut(residualError, lb->residualErrorLabel, 0,patch,gn, 0);
-      new_dw->allocateTemporary(rhs_tmp, patch);
-      
-      rhs_tmp.initialize(0.0);
-      residualError.initialize(0.0);
-      
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-        IntVector c = *iter;
-        rhs_tmp[c] = (rhs[c]/vol);
-        residualError[c] = rhs_tmp[c] - solverResidual[c];
-      }
-#if 0      
-      if (switchDebug_setupRHS) {
-        ostringstream desc;
-        desc << "BOT_setupRHS_patch_" << patch->getID();
-        printData( 0, patch, 0,desc.str(), "residualError",  residualError);
-        printData( 0, patch, 0,desc.str(), "solverResidual", solverResidual);
-        printData( 0, patch, 0,desc.str(), "rhs_tmp",        rhs_tmp);
-      }
-#endif
-    }   
-    
-    
-
+   
     //---- P R I N T   D A T A ------  
     if (switchDebug_setupRHS) {
 #if 1
@@ -777,7 +752,8 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset*,
                          DataWarehouse*,
-                         DataWarehouse* new_dw)
+                         DataWarehouse* new_dw,
+                         const bool insideOuterIterLoop)
 {
   const Level* level = getLevel(patches);
   double rhs_max = 0.0;
@@ -797,22 +773,36 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
 
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
-/*`==========TESTING==========*/
-#if 0
-      cout.setf(ios::scientific,ios::floatfield);
-      cout.precision(5);
-      
-      if(Abs(rhs[c]/vol) > rhs_max){    // debugging
-        maxCell = c;
-        cout << c << " level " << level->getIndex() << " rhs_max "<< rhs_max << " " 
-             << " Abs(rhs[c]/vol) "  << Abs(rhs[c]/vol) << " rhs[c] " << rhs[c] << endl;
-      } 
-#endif
-/*===========TESTING==========`*/
       rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
-  } 
+    
+    //__________________________________
+    //  Compare rhs to the solver residual
+    if(insideOuterIterLoop){
+      CCVariable<double> residualError, rhs_tmp; 
+      constCCVariable<double> solverResidual;
+      Ghost::GhostType gn = Ghost::None;
+      new_dw->get(solverResidual,          lb->solverResidualLabel,0,patch,gn,0);
+      new_dw->allocateAndPut(residualError,lb->residualErrorLabel, 0,patch,gn,0);
+      new_dw->allocateTemporary(rhs_tmp, patch);
+
+      rhs_tmp.initialize(0.0);
+      residualError.initialize(0.0);
+
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        rhs_tmp[c] = (rhs[c]/vol);
+        residualError[c] = rhs_tmp[c] - solverResidual[c];
+      }      
+      if (switchDebug_setupRHS) {
+        ostringstream desc;
+        desc << "BOT_setupRHS_patch_" << patch->getID();
+        printData( 0, patch, 0,desc.str(), "residualError",  residualError);
+        printData( 0, patch, 0,desc.str(), "solverResidual", solverResidual);
+      }
+    }
+  }
 }
 
 
@@ -1257,7 +1247,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                                           "computes");
                                                           
     scheduleCompute_maxRHS( subsched,         level,       one_matl,
-                                                           all_matls);
+                                                           all_matls,
+                                                           recursion);
 
     subsched->compile();
     //__________________________________
