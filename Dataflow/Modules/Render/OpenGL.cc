@@ -568,13 +568,36 @@ OpenGL::render_and_save_image(int x, int y,
     }
 
     channel_bytes = 1;
-    num_channels = 3;
+    if (ftype != "raw")
+      num_channels = 3;
+    else
+      num_channels = 4;
+
     do_magick = false;
     if (ftype == "ppm")
     {
       (*image_file) << "P6" << std::endl;
       (*image_file) << hi_res_.resx << " " << hi_res_.resy << std::endl;
       (*image_file) << 255 << std::endl;
+    }
+    else if (ftype == "raw")
+    {
+      ofstream *nhdr_file = scinew ofstream((fname+string(".nhdr")).c_str());
+      if ( !nhdr_file )
+      {
+	ostringstream str;
+	str << "ERROR opening file: " << (fname+string(".nhdr")).c_str();
+	view_window_->setMessage( str.str() );
+	cerr<<str.str()<<"\n";
+	return;
+      }
+      (*nhdr_file) << "NRRD0001" << std::endl;
+      (*nhdr_file) << "type: unsigned char" << std::endl;
+      (*nhdr_file) << "dimension: 3" << std::endl;
+      (*nhdr_file) << "sizes: 4 "<<hi_res_.resx << " " << hi_res_.resy << std::endl;
+      (*nhdr_file) << "encoding: raw" << std::endl;
+      (*nhdr_file) << "data file: " << fname << std::endl;
+      nhdr_file->close();
     }
   }
   else
@@ -806,7 +829,7 @@ OpenGL::redraw_frame()
   // Clear the screen.
   glViewport(0, 0, xres_, yres_);
   Color bg(view_window_->gui_bgcolor_.get());
-  glClearColor(bg.r(), bg.g(), bg.b(), 1);
+  glClearColor(bg.r(), bg.g(), bg.b(), 0);
 
   // Setup the view...
   View view(view_window_->gui_view_.get());
