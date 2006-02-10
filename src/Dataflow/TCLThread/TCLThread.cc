@@ -35,6 +35,7 @@
 #include <Core/Util/sci_system.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
+#include <Dataflow/Network/NetworkIO.h>
 #include <main/sci_version.h>
 #include <tcl.h>
 #include <tk.h>
@@ -253,10 +254,21 @@ TCLThread::startNetworkEditor()
   // wait for main to release its semaphore
   mainloop_wait();
 
+  bool loaded_network = false;
+  // load network from an xml file...
+  if (NetworkIO::has_file()) {
+    NetworkIO ln;
+    ln.load_network();
+    loaded_network = true;
+  }
   // Load the Network file specified from the command line
   if (startnetno)
   {
     gui->eval("loadnet {"+string(argv[startnetno])+"}");
+    loaded_network = true;
+  }
+
+  if (loaded_network) {
     if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || 
         sci_getenv_p("SCI_REGRESSION_TESTING"))
     {

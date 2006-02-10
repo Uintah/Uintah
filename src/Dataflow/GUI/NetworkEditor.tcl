@@ -26,6 +26,12 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+proc show_fname_trace { args } {
+    puts $args
+    return 0
+}
+
+trace variable SCIRun_DataIO_FieldReader_0-filename u show_fname_trace
 
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/defaults.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Module.tcl
@@ -743,7 +749,7 @@ proc popupSaveMenu {} {
 
 proc popupSaveAsMenu {} {
     set types {
-	{{SCIRun Net} {.net} }
+	{{SCIRun Net} {.srn} }
 	{{Uintah Script} {.uin} }
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
@@ -763,7 +769,7 @@ proc popupSaveAsMenu {} {
     }
 
     set netedit_savefile \
-	[tk_getSaveFile -defaultextension {.net} -filetypes $types -initialdir $initialdir]
+	[tk_getSaveFile -defaultextension {.srn} -filetypes $types -initialdir $initialdir]
     if { $netedit_savefile != "" } {
 	writeNetwork $netedit_savefile
 	set NetworkChanged 0
@@ -778,7 +784,8 @@ proc popupInsertMenu { {subnet 0} } {
     
     #get the net to be inserted
     set types {
-	{{SCIRun Net} {.net} }
+	{{SCIRun Net} {.srn} }
+	{{old SCIRun Net} {.net} }
 	{{Uintah Script} {.uin} }
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
@@ -854,7 +861,8 @@ proc popupInsertMenu { {subnet 0} } {
     $canvas yview moveto [expr [lindex $bbox 1]/$mainCanvasHeight-0.01]
     set preLoadModules $Subnet(Subnet${subnet}_Modules)
     set inserting 1
-    loadnet $netedit_loadnet
+    uplevel \#0 netedit load_srn $netedit_loadnet
+    #loadnet $netedit_loadnet
     set inserting 0
     unselectAll
     foreach module $Subnet(Subnet${subnet}_Modules) {
@@ -910,7 +918,8 @@ proc popupLoadMenu {} {
     }
 
     set types {
-	{{SCIRun Net} {.net} }
+	{{SCIRun Net} {.srn} }
+	{{old SCIRun Net} {.net} }
 	{{Uintah Script} {.uin} }
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
@@ -920,7 +929,8 @@ proc popupLoadMenu {} {
     if { $netedit_loadnet == ""} return
     #dont ask user before clearing canvas
     ClearCanvas 0
-    loadnet $netedit_loadnet
+    uplevel \#0 netedit load_srn $netedit_loadnet
+    #loadnet $netedit_loadnet
 }
 
 proc ClearCanvas { { confirm 1 } { subnet 0 } } {
@@ -1183,7 +1193,7 @@ proc loadnet { netedit_loadfile } {
     # if we are not loading a powerapp network, show loading progress
     if { !$PowerApp } {
 	showProgress 0 0 1 ;# -maybe- raise the progress meter
-	setProgressText "Loading .net file..."
+	setProgressText "Loading SCIRun network file..."
 	update idletasks
 	# The following counts the number of steps it will take to load the net
 	resetScriptCount
@@ -1931,8 +1941,9 @@ proc maybeWrite_init_DATADIR_and_DATASET { out } {
 	    upvar \#0 $module-$var val
 	    if { [info exists val] && \
 		![string equal $val [subDATADIRandDATASET $val]] } {
-		puts $out "\n# Ask SCIRun to tell us where the data is"
-		puts $out "init_DATADIR_and_DATASET"
+		netedit net-add-env-var scisub_datadir SCIRUN_DATA
+		netedit net-add-env-var scisub_datafile SCIRUN_DATAFILE
+		netedit net-add-env-var scisub_dataset SCIRUN_DATASET
 		return
 	    }
 	}
@@ -1972,14 +1983,15 @@ proc writeNetwork { filename { subnet 0 } } {
 	catch [file rename -force $src $dest]
     }
 
-    set out [open $filename {WRONLY CREAT TRUNC}]
-    puts $out "\# SCIRun Network v[netedit getenv SCIRUN_VERSION]\n"
-    maybeWriteTCLStyleCopyright $out
+    netedit start-net-doc $filename v[netedit getenv SCIRUN_VERSION]
+    set out stdout
+    
+    #maybeWriteTCLStyleCopyright $out
     maybeWrite_init_DATADIR_and_DATASET $out
     writeSubnets $out $subnet
-    puts $out [genSubnetScript $subnet ""]
-    puts $out "\n::netedit scheduleok"    
-    close $out
+    genSubnetScript $subnet ""
+
+    netedit write-net-doc
 }
 
 

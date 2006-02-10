@@ -834,22 +834,19 @@ itcl_class Module {
 		}
 	    }
 	}
-	
+
 	if { [llength $write_vars] } {
-	    # Write the comment line for this modules GUI values
-	    append script "\n"
-	    append script "${tab}\# Set GUI variables for the $modstr Module\n"
+
 	    foreach var $write_vars {
 		upvar \#0 $module-$var val
-		set varname "${prefix}-${var}"
+		set varname "${var}"
 		if { [llength $varname] > 1 } {
 		    set varname \"${varname}\"
 		}
 
 		if { [info exists ModuleSubstitutedVars($module)] && \
 			 [lsearch $ModuleSubstitutedVars($module) $var]!=-1} {
-		    append script "${tab}set $varname "
-		    append script "\"[subDATADIRandDATASET $val]\"\n"
+		    netedit add-mod-var $prefix $varname [subDATADIRandDATASET $val]
 		} else {
 		    if { ![string is integer $val] && [string is double $val]} {
 			set failed [catch "set num [format %.[string length $val]e $val]"]
@@ -857,19 +854,19 @@ itcl_class Module {
 			    set failed [catch "set num [expr $num]"]
 			}
 			if { !$failed } {
-			    append script "${tab}set $varname \{$num\}\n"
+			    netedit add-mod-var $prefix $varname \{$num\}
 			    continue
 			}
 		    }
-		    append script "${tab}set $varname \{${val}\}\n"
+
+		    netedit add-mod-var $prefix $varname \{${val}\}
 		}
 	    }
 	}
 	
 	# Write command to open GUI on load if it was open on save
 	if [windowIsMapped .ui$module] {
-	    append script "\n${tab}\# Open the $modstr UI\n"
-	    append script "${tab}${prefix} initialize_ui\n"
+	    netedit set-modgui-visible $prefix 
 	}	
     }
 }   

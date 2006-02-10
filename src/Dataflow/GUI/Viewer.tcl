@@ -123,7 +123,8 @@ itcl_class SCIRun_Render_Viewer {
 	foreach w [winfo children .] {
 	    if { [string first .ui$module $w] == 0 && \
 		     [winfo exists $w.bsframe] } {
-		append script "\n${tab}${prefix} addViewer"
+		netedit add-modgui-callback $prefix addViewer
+
 		# since the viewer always initially comes up without
 		# the extended controls, save the geometry to only
 		# include the menu, viewer gl window, and standard controls
@@ -137,8 +138,7 @@ itcl_class SCIRun_Render_Viewer {
 		set height [expr $height1 + $height2 + $height3 + 7]
 		set x [winfo rootx $w]
 		set y [winfo rooty $w]
-		append script "\n${tab}set ${prefix}-ViewWindow_$num"
-		append script "-geometry $width\x$height\+$x\+$y\n"
+		netedit add-mod-var $prefix ViewWindow_$num-geometry $width\x$height\+$x\+$y
 		incr num
 	    }
 	}
