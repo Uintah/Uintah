@@ -178,6 +178,13 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
+    if(start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
+      ostringstream warn;
+      warn << "\n ERROR:lineExtract: the line that you've specified " << start 
+           << " " << end << " the starting point is > than the ending point \n" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
     
     // Start time < stop time
     if(d_StartTime > d_StopTime){
@@ -216,7 +223,8 @@ void lineExtract::initialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
      
-    new_dw->put(max_vartype(0.0), ps_lb->lastWriteTimeLabel);
+    double tminus = -1.0/d_writeFreq;
+    new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
 
     if(patch->getGridIndex() == 0){   // only need to do this once
       string udaDir = d_dataArchiver->getOutputLocation();
