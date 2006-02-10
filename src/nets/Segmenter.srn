@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{45 0 1684 893}" creationDate="{Fri Feb 10 2006}" creationTime="{10:49:42}" geometry="{974x984+1381+49}">
+<network version="v1.25.2" name="{Main}" bbox="{45 0 1684 893}" creationDate="{Fri Feb 10 2006}" creationTime="{13:04:09}" geometry="{974x653+0+39}">
   <environment>
     <var name="scisub_datadir" val="SCIRUN_DATA"/>
     <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
@@ -30,7 +30,7 @@ display/edit.  Connect them here.}</note>
       <var name="nrrd2-name" val="{Analyze}"/>
       <var name="ui_geometry" val="{324x203+1005+539}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Render" name="Painter">
+    <module id="m3" package="SCIRun" category="Render" name="Painter" gui_visible="yes">
       <position x="45" y="257"/>
       <note position="{def}" color="{white}">{Main GUI
 Display / Navigator / Editor
@@ -47,30 +47,31 @@ receiving data from filters downstream}</note>
       <var name="color_font_b" val="{1.0}"/>
       <var name="color_font_a" val="{1.0}"/>
       <var name="font_size" val="{15.0}"/>
+      <var name="ui_geometry" val="{800x800+32+78}"/>
       <var name="gl1-viewport0-slice" val="{0}"/>
       <var name="gl1-viewport0-axis" val="{1}"/>
-      <var name="gl1-viewport0-zoom" val="{292.056074766}"/>
+      <var name="gl1-viewport0-zoom" val="{157.522123894}"/>
       <var name="gl1-viewport0-slab_min" val="{0}"/>
       <var name="gl1-viewport0-slab_max" val="{0}"/>
       <var name="gl1-viewport0-mode" val="{0}"/>
       <var name="gl1-viewport0-show_guidelines" val="{1}"/>
       <var name="gl2-viewport0-slice" val="{0}"/>
       <var name="gl2-viewport0-axis" val="{2}"/>
-      <var name="gl2-viewport0-zoom" val="{269.140625}"/>
+      <var name="gl2-viewport0-zoom" val="{139.0625}"/>
       <var name="gl2-viewport0-slab_min" val="{0}"/>
       <var name="gl2-viewport0-slab_max" val="{0}"/>
       <var name="gl2-viewport0-mode" val="{0}"/>
       <var name="gl2-viewport0-show_guidelines" val="{1}"/>
       <var name="gl3-viewport0-slice" val="{0}"/>
       <var name="gl3-viewport0-axis" val="{0}"/>
-      <var name="gl3-viewport0-zoom" val="{244.140625}"/>
+      <var name="gl3-viewport0-zoom" val="{143.75}"/>
       <var name="gl3-viewport0-slab_min" val="{0}"/>
       <var name="gl3-viewport0-slab_max" val="{0}"/>
       <var name="gl3-viewport0-mode" val="{0}"/>
       <var name="gl3-viewport0-show_guidelines" val="{1}"/>
       <var name="gl4-viewport0-slice" val="{0}"/>
       <var name="gl4-viewport0-axis" val="{1}"/>
-      <var name="gl4-viewport0-zoom" val="{292.056074766}"/>
+      <var name="gl4-viewport0-zoom" val="{157.522123894}"/>
       <var name="gl4-viewport0-slab_min" val="{0}"/>
       <var name="gl4-viewport0-slab_max" val="{0}"/>
       <var name="gl4-viewport0-mode" val="{0}"/>
@@ -79,31 +80,7 @@ receiving data from filters downstream}</note>
       <var name="Original-opacity" val="{1.0}"/>
       <var name="Original-clut_min" val="{0.0}"/>
       <var name="Original-clut_max" val="{3272.0}"/>
-      <var name="Original-colormap" val="{2}"/>
-      <var name="&quot;ITK Confidence Connected-opacity&quot;" val="{1.0}"/>
-      <var name="&quot;ITK Confidence Connected-clut_min&quot;" val="{0.0}"/>
-      <var name="&quot;ITK Confidence Connected-clut_max&quot;" val="{3272.0}"/>
-      <var name="Connected-name" val="{Connected}"/>
-      <var name="Connected-opacity" val="{0.0}"/>
-      <var name="Connected-clut_min" val="{0.0}"/>
-      <var name="Connected-clut_max" val="{255.0}"/>
-      <var name="Connected-colormap" val="{1}"/>
-      <var name="&quot;ITK Curvature Anisotropic Diffusion-opacity&quot;" val="{0.0}"/>
-      <var name="&quot;ITK Curvature Anisotropic Diffusion-clut_min&quot;" val="{0.0}"/>
-      <var name="&quot;ITK Curvature Anisotropic Diffusion-clut_max&quot;" val="{255.0}"/>
-      <var name="&quot;Anisotropic Diffusion-name&quot;" val="{Anisotropic Diffusion}"/>
-      <var name="&quot;Anisotropic Diffusion-opacity&quot;" val="{0.0}"/>
-      <var name="&quot;Anisotropic Diffusion-clut_min&quot;" val="{0.0}"/>
-      <var name="&quot;Anisotropic Diffusion-clut_max&quot;" val="{255.0}"/>
-      <var name="&quot;Anisotropic Diffusion-colormap&quot;" val="{0}"/>
-      <var name="&quot;ITK Gradient Magnitude-opacity&quot;" val="{1.0}"/>
-      <var name="&quot;ITK Gradient Magnitude-clut_min&quot;" val="{0.0}"/>
-      <var name="&quot;ITK Gradient Magnitude-clut_max&quot;" val="{3272.0}"/>
-      <var name="Gradient-name" val="{Gradient}"/>
-      <var name="Gradient-opacity" val="{1.0}"/>
-      <var name="Gradient-clut_min" val="{0.0}"/>
-      <var name="Gradient-clut_max" val="{2454.0}"/>
-      <var name="Gradient-colormap" val="{0}"/>
+      <var name="Original-colormap" val="{0}"/>
     </module>
     <module id="m4" package="SCIRun" category="Bundle" name="BundleSetColorMap">
       <position x="464" y="180"/>
@@ -126,7 +103,7 @@ Threshold Segmenter}</note>
       <var name="nrrd1-name" val="{ITK Threshold Seed}"/>
       <var name="nrrd2-name" val="{ITK Threshold Source}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Anisotropic Diffusion} {Connected} {Gradient} {ITK Gradient Magnitude} {Original} }"/>
+      <var name="nrrd-selection" val="{{Original} }"/>
       <var name="ui_geometry" val="{324x243+57+1207}"/>
     </module>
     <module id="m7" package="Insight" category="Converters" name="ImageToNrrd">
@@ -159,9 +136,6 @@ Image}</note>
       <var name="number_of_iterations" val="{2}"/>
       <var name="dimension" val="{3}"/>
       <var name="ui_geometry" val="{314x171+1563+742}"/>
-      <var name="seed_point0" val="{107}"/>
-      <var name="seed_point1" val="{27}"/>
-      <var name="seed_point2" val="{76}"/>
     </module>
     <module id="m13" package="Insight" category="Converters" name="ImageToNrrd">
       <position x="458" y="611"/>
@@ -171,7 +145,7 @@ Image}</note>
       <var name="nrrd1-name" val="{Connected}"/>
       <var name="ui_geometry" val="{324x203+493+1187}"/>
     </module>
-    <module id="m15" package="SCIRun" category="Bundle" name="BundleGetNrrd" gui_visible="yes">
+    <module id="m15" package="SCIRun" category="Bundle" name="BundleGetNrrd">
       <position x="440" y="412"/>
       <note position="{n}" color="{white}">{Confidence Connected
 Filter}</note>
@@ -181,8 +155,8 @@ Filter}</note>
       <var name="nrrd1-name" val="{ITK Confidence Connected}"/>
       <var name="nrrd2-name" val="{UNUSED}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Anisotropic Diffusion} {Connected} {Gradient} {ITK Gradient Magnitude} {Original} }"/>
-      <var name="ui_geometry" val="{324x243+1538+1283}"/>
+      <var name="nrrd-selection" val="{{Original} }"/>
+      <var name="ui_geometry" val="{324x243+393+1188}"/>
     </module>
     <module id="m16" package="Insight" category="Converters" name="NrrdToImage">
       <position x="203" y="476"/>
@@ -200,7 +174,7 @@ Image}</note>
       </port_caching>
       <var name="nrrd1-name" val="{ITK Curvature Anisotropic Diffusion}"/>
       <var name="nrrd2-name" val="{ITK Confidence Connected}"/>
-      <var name="nrrd-selection" val="{{Anisotropic Diffusion} {Connected} {Gradient} {ITK Gradient Magnitude} {Original} }"/>
+      <var name="nrrd-selection" val="{{Original} }"/>
       <var name="ui_geometry" val="{324x243+393+1188}"/>
     </module>
     <module id="m18" package="Insight" category="Converters" name="NrrdToImage">
@@ -232,7 +206,7 @@ Image}</note>
       <var name="nrrd1-name" val="{ITK Gradient Magnitude}"/>
       <var name="nrrd2-name" val="{UNUSED}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Anisotropic Diffusion} {Connected} {Gradient} {ITK Gradient Magnitude} {Original} }"/>
+      <var name="nrrd-selection" val="{{Original} }"/>
       <var name="ui_geometry" val="{324x243+393+1188}"/>
     </module>
     <module id="m23" package="Insight" category="Converters" name="NrrdToImage">
@@ -285,7 +259,7 @@ in this network}</note>
       <var name="nrrd1-name" val="{ITK Binary Dilate Erode}"/>
       <var name="nrrd2-name" val="{UNUSED}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Anisotropic Diffusion} {Connected} {Gradient} {ITK Gradient Magnitude} {Original} }"/>
+      <var name="nrrd-selection" val="{{Original} }"/>
       <var name="ui_geometry" val="{324x243+393+1188}"/>
     </module>
     <module id="m30" package="Insight" category="Converters" name="NrrdToImage">
