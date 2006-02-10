@@ -381,7 +381,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
                                                                     false,
                                                                     "computes");
       d_ice->scheduleCompute_maxRHS(            sched, ice_level,    one_matl,
-                                                                     all_matls);
+                                                                     all_matls,
+                                                                     false);
                                                                   
       d_ice->scheduleImplicitPressureSolve(     sched, ice_level,   ice_patches,
                                                                     one_matl, 
