@@ -28,82 +28,61 @@
 
 
 /*
- *  ApplyFEMVoltageSource.cc:  Builds the RHS of the FE matrix for current sources
+ *  ApplyFEMVoltageSource.cc:  Builds the RHS of the FE matrix for voltage sources
  *
  *  Written by:
  *   David Weinstein
  *   University of Utah
  *   May 1999
  *  Modified by:
- *   Alexei Samsonov
- *   March 2001
- *  Copyright (C) 1999, 2001 SCI Group
+ *   Alexei Samsonov, March 2001
+ *   Frank B. Sachse, February 2006
+ *  
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Basis/TetLinearLgn.h>
-#include <Core/Basis/Constant.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/PointCloudMesh.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Math/Trig.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Containers/StringUtil.h>
-#include <iostream>
+#include <Packages/BioPSE/Dataflow/Modules/Forward/ApplyFEMVoltageSource.h>
+
 
 namespace BioPSE {
 
-using namespace SCIRun;
-
-class ApplyFEMVoltageSource : public Module {
-public:
-  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
-  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
-
-  typedef TetLinearLgn<int>                  tetDatBasis;
-  typedef GenericField<TVMesh, tetDatBasis,    vector<int> > TVField;
-
-  typedef ConstantBasis<int>                 pcDatBasis;
-  typedef GenericField<PCMesh, pcDatBasis,    vector<int> > PCField;  
-
-
+class ApplyFEMVoltageSource : public Module
+{
   GuiString bcFlag_; // "none", "GroundZero", or "DirSub"
 
-  //! Constructor/Destructor
+public:
   ApplyFEMVoltageSource(GuiContext *context);
   virtual ~ApplyFEMVoltageSource();
-  
+
   //! Public methods
   virtual void execute();
 };
 
+
 DECLARE_MAKER(ApplyFEMVoltageSource)
 
 
-ApplyFEMVoltageSource::ApplyFEMVoltageSource(GuiContext *context)
-  : Module("ApplyFEMVoltageSource", context, Filter, "Forward", "BioPSE"),
-    bcFlag_(context->subVar("bcFlag"))
+ApplyFEMVoltageSource::ApplyFEMVoltageSource(GuiContext *context) : 
+  Module("ApplyFEMVoltageSource", context, Filter, "Forward", "BioPSE"),
+      bcFlag_(context->subVar("bcFlag"))
 {
+  cerr << "ApplyFEMVoltageSource" << endl;
 }
+
 
 ApplyFEMVoltageSource::~ApplyFEMVoltageSource()
 {
 }
 
-void ApplyFEMVoltageSource::execute()
+
+void
+ApplyFEMVoltageSource::execute()
 {
   FieldIPort *iportField_ = (FieldIPort *)get_iport("Mesh");
   MatrixIPort *iportMatrix_ = (MatrixIPort *)get_iport("Stiffness Matrix");
   MatrixIPort *iportRhs_ = (MatrixIPort *)get_iport("RHS");
   MatrixOPort *oportMatrix_ = (MatrixOPort *)get_oport("Forward Matrix");
   MatrixOPort *oportRhs_ = (MatrixOPort *)get_oport("RHS");
-
+  
   //! Obtaining handles to computation objects
   FieldHandle hField;
   
@@ -111,51 +90,11 @@ void ApplyFEMVoltageSource::execute()
     error("Can't get handle to mesh.");
     return;
   }
-
-  TVMesh::handle_type mesh = dynamic_cast<TVMesh *>(hField->mesh().get_rep());
-  if (mesh.get_rep() == 0)
-  {
-    error("Supplied field is not of type TVField.");
-    return;
-  }
   
-  //-- polling Field for Dirichlet BC
   vector<pair<int, double> > dirBC;
-  string bcFlag = bcFlag_.get();
-  if (bcFlag != "none") {
-    if (bcFlag=="GroundZero"){
-//      dirBC.erase(dirBC.begin(), dirBC.end());
-      dirBC.push_back(pair<int, double>(0,0.0));
-    } else { // bcFlag == DirSub
-      if (!hField->get_property("dirichlet", dirBC)){
-	warning("The input field doesn't contain Dirichlet boundary conditions.");
-//	return;
-      }
-    }
-  }
-
-  MatrixHandle  hRhsIn;
-  ColumnMatrix* rhsIn;
-  
-  TVMesh::Node::size_type nsize; mesh->size(nsize);
-  ColumnMatrix* rhs = scinew ColumnMatrix(nsize);
- 
-  // -- if the user passed in a vector the right size, copy it into ours 
-  if (iportRhs_->get(hRhsIn) && 
-      (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
-      ((unsigned int)(rhsIn->nrows()) == nsize))
-  {
-    string units;
-    if (rhsIn->get_property("units", units))
-      rhs->set_property("units", units, false);
-
-    for (unsigned int i=0; i < nsize; i++) 
-      (*rhs)[i]=(*rhsIn)[i];
-  }
-  else{
-    rhs->set_property("units", string("volts"), false);
-    rhs->zero();
-  }
+  if (bcFlag_.get() == "DirSub") 
+    if (!hField->get_property("dirichlet", dirBC))
+      warning("The input field doesn't contain Dirichlet boundary conditions.");
   
 
   MatrixHandle  hMatIn;
@@ -172,57 +111,83 @@ void ApplyFEMVoltageSource::execute()
     error("Input stiffness matrix wasn't square.");
     return;
   }
-  if (nsize != (unsigned int)(matIn->nrows())) {
-    error("Input stiffness matrix was " + to_string(nsize)  +
-	  " nodes, matrix has " + to_string(matIn->nrows()) + " rows.");
-    return;
-  }
-
+  
   SparseRowMatrix *mat = matIn->clone();
-
-  //! adjusting matrix for Dirichlet BC
-  int *idcNz;
-  double *valNz;
-  int idcNzsize;
-  int idcNzstride;
-
-  TVMesh::Node::array_type nind;
-  vector<double> dbc;
-  unsigned int idx;
-  for(idx = 0; idx<dirBC.size(); ++idx){
-    int ni = dirBC[idx].first;
-    double val = dirBC[idx].second;
+  
+  unsigned int nsize=matIn->ncols();
+  ColumnMatrix* rhs = scinew ColumnMatrix(nsize);
+  
+  MatrixHandle  hRhsIn;
+  ColumnMatrix* rhsIn;
+  
+  // -- if the user passed in a vector the right size, copy it into ours 
+  if (iportRhs_->get(hRhsIn) && 
+      (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
+      ((unsigned int)(rhsIn->nrows()) == nsize))
+  {
+    string units;
+    if (rhsIn->get_property("units", units))
+      rhs->set_property("units", units, false);
     
-    // -- getting column indices of non-zero elements for the current row
-    mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
-    
-    // -- updating rhs
-    for (int i=0; i<idcNzsize; ++i){
-      int j = idcNz?idcNz[i*idcNzstride]:i;
-      (*rhs)[j] += - val * valNz[i*idcNzstride]; 
-    }
+    for (unsigned int i=0; i < nsize; i++) 
+      (*rhs)[i]=(*rhsIn)[i];
+  }
+  else{
+    rhs->set_property("units", string("volts"), false);
+    rhs->zero();
   }
   
-  //! zeroing matrix row and column corresponding to the dirichlet nodes
-  for(idx = 0; idx<dirBC.size(); ++idx){
-    int ni = dirBC[idx].first;
-    double val = dirBC[idx].second;
-    
-    mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
-      
-    for (int i=0; i<idcNzsize; ++i){
-      int j = idcNz?idcNz[i*idcNzstride]:i;
-      mat->put(ni, j, 0.0);
-      mat->put(j, ni, 0.0); 
-    }
-      
-    //! updating dirichlet node and corresponding entry in rhs
-    mat->put(ni, ni, 1);
-    (*rhs)[ni] = val;
-  }
+  const TypeDescription *ftd = hField->get_type_description(Field::FIELD_NAME_ONLY_E);
+  const TypeDescription *mtd = hField->get_type_description(Field::MESH_TD_E);
+  const TypeDescription *btd = hField->get_type_description(Field::BASIS_TD_E);
+  const TypeDescription *dtd = hField->get_type_description(Field::FDATA_TD_E);
+
+  CompileInfoHandle ci =
+    ApplyFEMVoltageSourceAlgo::get_compile_info(ftd, mtd, btd, dtd);
+  Handle<ApplyFEMVoltageSourceAlgo> algo;
+  if (!module_dynamic_compile(ci, algo)) 
+    return;
+  
+  algo->execute(hField, rhsIn, matIn, bcFlag_.get(), mat, rhs);
 
   //! Sending result
-  oportRhs_->send(MatrixHandle(rhs)); 
   oportMatrix_->send(MatrixHandle(mat)); 
+  oportRhs_->send(MatrixHandle(rhs)); 
 }
+
+
+CompileInfoHandle
+ApplyFEMVoltageSourceAlgo::get_compile_info(const TypeDescription *ftd,
+			       const TypeDescription *mtd,
+			       const TypeDescription *btd,
+			       const TypeDescription *dtd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ApplyFEMVoltageSourceAlgoT");
+  static const string base_class_name("ApplyFEMVoltageSourceAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + "." +
+		       mtd->get_filename() + "."+
+		       btd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name() + "<" + mtd->get_name() + ", " +
+		       btd->get_name() + ", " + dtd->get_name() + "> "  );
+  
+  // Add in the include path to compile this obj
+
+  rval->add_include(include_path);
+  rval->add_namespace("BioPSE");
+
+  ftd->fill_compile_info(rval);
+  mtd->fill_compile_info(rval);
+  btd->fill_compile_info(rval);
+  dtd->fill_compile_info(rval);
+
+  return rval;
+}
+
 } // End namespace BioPSE
