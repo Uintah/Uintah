@@ -249,7 +249,9 @@ void SFC<DIM,LOCS>::Profile()
 		double ptime=0;
 		int r;
 		MPI_Barrier(Comm);
+#ifdef _TIMESFC_
 		start=timer->currentSeconds();
+#endif
 		for(r=0;r<250;r++)
 		{
 			
@@ -258,7 +260,9 @@ void SFC<DIM,LOCS>::Profile()
 			swap(sendbuf,mergebuf);
 		
 		}
+#ifdef _TIMESFC_
 		finish=timer->currentSeconds();
+#endif
 		ptime=finish-start;	
 		double sum,sum2;
 		MPI_Reduce(&ptime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
