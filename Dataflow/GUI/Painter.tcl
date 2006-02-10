@@ -117,7 +117,7 @@ itcl_class SCIRun_Render_Painter {
     method create_ui { } {
 	set num [generate_window_num]
 	set title "Window $num"
-	set w .ui[modname]_$num
+	set w .ui[modname]
 	toplevel $w
 	wm title $w "[modname] $title"
 	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
