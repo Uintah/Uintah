@@ -343,6 +343,10 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         Point end_pt   = d_lines[l]->endPt;
         
         Box patchDomain = patch->getBox();
+        if(level->getIndex() > 0){ // ignore extra cells on fine patches
+          patchDomain = patch->getInteriorBox();
+        }
+        
         start_pt = Max(patchDomain.lower(), start_pt);
         end_pt   = Min(patchDomain.upper(), end_pt);
         
@@ -350,9 +354,13 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         patch->findCell(start_pt, start_idx);
         patch->findCell(end_pt,   end_idx);
         
-        // enlarge the index space by 1 except in the looping direction
-        // needed to get the cell iterator right
+        // enlarge the index space by 1 except:
+        // a) in the main looping direction
+        // b) if there's a neighboring patch
+        
         IntVector one(1,1,1);
+        IntVector neighbors = patch->neighborsHigh();
+        one = one * neighbors;
         one[d_lines[l]->loopDir] = 0;
         end_idx+= one;   
         
