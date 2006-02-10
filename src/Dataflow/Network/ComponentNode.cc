@@ -37,7 +37,7 @@
  */
 
 #include <Dataflow/Network/ComponentNode.h>
-
+#include <Core/GuiInterface/GuiInterface.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <libxml/xmlreader.h>
 #include <Core/Util/RWS.h>
@@ -47,12 +47,14 @@
 #include <stdio.h>
 
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
 namespace SCIRun {
 using std::map;
 using std::cout;
 using std::endl;
+using std::ostringstream;
 
 template <class PInfo>
 void 
@@ -294,20 +296,25 @@ bool read_component_file(ModuleInfo &mi, const char* filename)
   }
   /* parse the file, activating the DTD validation option */
   doc = xmlCtxtReadFile(ctxt, filename, 0, (XML_PARSE_DTDATTR | 
-					       XML_PARSE_DTDVALID | 
-					       XML_PARSE_PEDANTIC));
+					    XML_PARSE_DTDVALID | 
+					    XML_PARSE_NOERROR));
   /* check if parsing suceeded */
-  if (doc == 0) {
-    std::cerr << "ComponentNode.cc: Failed to parse " << filename << std::endl;
-    return false;
-  } else {
-    /* check if validation suceeded */
-    if (ctxt->valid == 0) {
-      std::cerr << "ComponentNode.cc: Failed to validate " << filename 
-		<< std::endl;
-      return false;
+  if (doc == 0 || ctxt->valid == 0) {
+
+    xmlError* error = xmlCtxtGetLastError(ctxt);
+    GuiInterface *gui = GuiInterface::getSingleton();
+    string mtype = "Parse ";
+    if (doc) {
+      mtype = "Validation ";
     }
-  }
+    ostringstream msg;
+    msg << "createSciDialog -error -title \"Component XML " 
+	<< mtype << "Error\" -message \"" 
+	<< endl << mtype << "Failure for: " << endl << filename << endl
+	<< endl << "Error Message: " << endl << error->message << endl << "\"";
+    gui->eval(msg.str());
+    return false;
+  } 
   
   xmlNode* node = doc->children;
   for (; node != 0; node = node->next) {
