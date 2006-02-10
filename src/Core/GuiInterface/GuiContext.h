@@ -68,6 +68,8 @@ public:
   GuiInterface*		getInterface();
   GuiContext*		subVar(const string& name, bool save=true);
   GuiContext*           get_parent() { return parent_; }
+
+  GuiContext*           find_child(const string &name);
   
   bool			get(string& value);
   void			set(const string& value);

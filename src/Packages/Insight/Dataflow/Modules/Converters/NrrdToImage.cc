@@ -78,6 +78,9 @@ public:
   template<class type, unsigned int dim>
   void create_image2();
 
+
+  void copy_kvp_to_dictionary(Nrrd *, itk::Object *);
+
 private:
   bool vector_data_;
 };
@@ -113,6 +116,9 @@ void NrrdToImage::execute(){
     warning ("Input Nrrd == 0");
     return;
   }
+
+
+  //  cerr << id << " nrrd: " << (unsigned int)inrrd_handle_->nrrd;
 
   Nrrd *n = inrrd_handle_->nrrd;
   int dim = n->dim;
@@ -273,24 +279,31 @@ void NrrdToImage::create_image() {
     ++i;
   }
 
-  // handle any key/value pairs
-  for (int i=0; i<nrrdKeyValueSize(n); i++) {
-    char *key, *value;
-    nrrdKeyValueIndex(n, &key, &value, i);
-    if (NULL != key && NULL != value) {
-      // add the key/value pair to the dictionary
-      string k = key;
-      string v = value;
-      itk::MetaDataDictionary &dic = img->GetMetaDataDictionary();
-      itk::EncapsulateMetaData<string>( dic, k, v);
-    }
-  }
+  copy_kvp_to_dictionary(n, img);
 
+  
   ITKDatatype* result = scinew ITKDatatype;
   result->data_ = img;
   oimg_handle_ = result;
 
 }
+
+
+void
+NrrdToImage::copy_kvp_to_dictionary(Nrrd *n, itk::Object *obj) {
+  // handle any key/value pairs
+  itk::MetaDataDictionary &dic = obj->GetMetaDataDictionary();
+  for (int i=0; i< nrrdKeyValueSize(n); i++) {
+    char *key, *val;
+    nrrdKeyValueIndex(n, &key, &val, i);
+    if (key && val) { // add the key/value pair to the dictionary
+      //      cerr << id << ": " << key << ", " << val <<std::endl;
+      itk::EncapsulateMetaData<string>(dic, string(key), string(val));
+    }
+  }
+}
+
+  
 
 
 template<class type, unsigned int dim>

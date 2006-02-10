@@ -52,6 +52,8 @@ using namespace SCIRun;
 
 class ThresholdSegmentationLevelSetImageFilter : public Module 
 {
+  void set_image_variables(itk::Object *);
+
 public:
 
   typedef itk::MemberCommand< ThresholdSegmentationLevelSetImageFilter > RedrawCommandType;
@@ -128,6 +130,29 @@ public:
 };
 
 
+
+void
+ThresholdSegmentationLevelSetImageFilter::set_image_variables(itk::Object *obj) {
+  // Use parameters encapsulated in the MetaDataDictionary.
+  // Build a list of key/value pairs and send it to
+  // tcl to set any corresponding guivars.
+  itk::MetaDataDictionary &dic = obj->GetMetaDataDictionary();
+  std::vector<string> keys = dic.GetKeys();
+
+  for(int i=0; i<(int)keys.size(); i++) {
+    string value;
+    if(itk::ExposeMetaData<string>(dic, keys[i], value)) {
+      cerr << id << ": "<< keys[i] << ", " << value << std::endl;
+      GuiContext *subvar = ctx->find_child(keys[i]);
+      if (subvar)
+        subvar->set(value);
+    }
+  }
+  reset_vars();
+}
+
+
+
 template<class ImageType, class FeatureImageType>
 bool 
 ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Object *obj_FeatureImage) 
@@ -176,28 +201,7 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   // reset progress bar
   update_progress(0.0);
 
-  // set filter parameters
-
-  // Use parameters encapsulated in the MetaDataDictionary.
-  // Build a list of key/value pairs and send it to
-  // tcl to set any corresponding guivars.
-  itk::MetaDataDictionary &dic = data_SeedImage->GetMetaDataDictionary();
-  std::vector<string> keys = dic.GetKeys();
-
-  string pairs = "[list";
-  for(int i=0; i<(int)keys.size(); i++) {
-    string value;
-    if(itk::ExposeMetaData<string>(dic, keys[i], value)) {
-      pairs += string(" [list " + keys[i] + " " + value + "]");
-    }
-  }
-  pairs += "]";
-  
-  gui->execute(id + " update_guivars_from_data_dictionary " + pairs);
-
-
-  reset_vars();
-
+  set_image_variables(obj_SeedImage);
 
   //dynamic_cast<FilterType* >(filter_.GetPointer())->AbortGenerateDataOff(); 
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetLowerThreshold( gui_lower_threshold_.get() ); 

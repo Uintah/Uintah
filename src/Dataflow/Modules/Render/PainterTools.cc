@@ -858,116 +858,85 @@ Painter::FloodfillTool::draw(SliceWindow &window)
 }
 
 
-
-Painter::PixelPaintTool::PixelPaintTool(Painter *painter) :
-  PainterTool(painter, "Pixel Paint")
-{
-}
-
-
-Painter::PixelPaintTool::~PixelPaintTool()
-{
-}
-
-string *
-Painter::PixelPaintTool::mouse_button_press(MouseState &mouse)
-{
-  return mouse_motion(mouse);
-}
-
-string *
-Painter::PixelPaintTool::mouse_button_release(MouseState &mouse)
-{
-  if (mouse.state_ & MouseState::BUTTON_2_E) {
-    painter_->filter_ = 20;
-    painter_->send_data();
-    painter_->want_to_execute();
-    return new string ("Done");
-  }
-  return 0;
-}
-
-string *
-Painter::PixelPaintTool::mouse_motion(MouseState &mouse)
-{
-  NrrdVolume *volume = painter_->current_volume_;
-  if (!volume) return 0;
-
-  if (mouse.state_ & MouseState::BUTTON_1_E) {
-    vector<int> index = 
-      volume->world_to_index(mouse.position_);
-    if (!volume->index_valid(index)) return 0;
-    volume->set_value(index, value_);
-    painter_->for_each(&Painter::rebind_slice);
-    painter_->redraw_all();
-  }
-
-  if (mouse.state_ & MouseState::BUTTON_3_E) {
-    vector<int> index = 
-      volume->world_to_index(mouse.position_);
-    if (!volume->index_valid(index)) return 0;
-    volume->get_value(index, value_);
-  }
-
-  return 0;
-}
-
-
-
-Painter::ITKThresholdTool::ITKThresholdTool(Painter *painter, bool test) :
+Painter::ITKThresholdTool::ITKThresholdTool(Painter *painter) :
   PainterTool(painter, "ITK Threshold"),
-  volume_(0),
-  value_(1.0)
-{
-  if (!painter->current_volume_) 
-    throw "No current volume";
-  volume_ = painter_->create_volume("ITK Threshold Seed"+(test?string(" TEST"):string("")),0);
-}
-
-
-Painter::ITKThresholdTool::~ITKThresholdTool()
+  seed_volume_(0),
+  source_volume_(0)
 {
 }
 
-string *
-Painter::ITKThresholdTool::mouse_button_press(MouseState &mouse)
-{
-  return mouse_motion(mouse);
-}
 
-string *
-Painter::ITKThresholdTool::mouse_button_release(MouseState &mouse)
+int
+Painter::ITKThresholdTool::do_event(MouseState &mouse)
 {
-  if (mouse.state_ & MouseState::BUTTON_2_E) {
-    painter_->filter_ = 1;
-    painter_->send_data();
-    painter_->want_to_execute();
-    return new string ("Done");
-  }
-  return 0;
-}
+  if (mouse.type_ != MouseState::KEY_PRESS_E)
+    return FALLTHROUGH_E;
 
-string *
-Painter::ITKThresholdTool::mouse_motion(MouseState &mouse)
-{
-  if (mouse.state_ & MouseState::BUTTON_1_E) {
-    vector<int> index = 
-      volume_->world_to_index(mouse.position_);
-    if (!volume_->index_valid(index)) return 0;
-    volume_->set_value(index, value_);
-    painter_->for_each(&Painter::rebind_slice);
+  NrrdVolume *cur = painter_->current_volume_;
+  NrrdVolume *temp = 0;
+  if (mouse.key_ == "1" && cur && cur != seed_volume_) {
+    if (source_volume_) source_volume_->name_prefix_ = "";
+    source_volume_ = cur;
+    source_volume_->name_prefix_ = "Source - ";
     painter_->redraw_all();
+    return HANDLED_E;
+  }
+  
+  if (mouse.key_ == "2" && cur && cur != source_volume_) {
+    if (seed_volume_) seed_volume_->name_prefix_ = "";
+    seed_volume_ = cur;
+    seed_volume_->name_prefix_ = "Seed - ";
+    painter_->redraw_all();
+    return HANDLED_E;
   }
 
-  if (mouse.state_ & MouseState::BUTTON_3_E) {
-    vector<int> index = 
-      painter_->current_volume_->world_to_index(mouse.position_);
-    if (!painter_->current_volume_->index_valid(index)) return 0;
-    painter_->current_volume_->get_value(index, value_);
+  
+  if (mouse.key_ == "q" || mouse.key_ == "Q") {
+    return QUIT_E;
   }
+  
+  if (mouse.key_ == " " && seed_volume_ && source_volume_) {
+    string name = "ITK Threshold Result";
+    temp = painter_->copy_current_volume(name, 2);
+    temp->colormap_.set(2);
+    temp->data_min_ = -4.0;
+    temp->data_max_ = 4.0;
+    temp->clut_min_ = -0.5;
+    temp->clut_max_ = 0.5;
 
-  return 0;
+    name = "ITK Threshold Source";
+    temp = new NrrdVolume(source_volume_, name, 2);
+    source_volume_->name_prefix_ = "";
+    temp->keep_ = 0;
+    painter_->volumes_.push_back(temp);
+    painter_->volume_map_[name] = temp;
+
+    name = "ITK Threshold Seed";
+    pair<double, double> mean = 
+      painter_->compute_mean_and_deviation(source_volume_->nrrd_->nrrd,
+                                           seed_volume_->nrrd_->nrrd);
+    double min = mean.first - mean.second;
+    double max = mean.first + mean.second;
+    nrrdKeyValueAdd(seed_volume_->nrrd_->nrrd,
+                    "lower_threshold", to_string(min).c_str());
+    nrrdKeyValueAdd(seed_volume_->nrrd_->nrrd,
+                    "upper_threshold", to_string(max).c_str());
+    
+    
+    temp = new NrrdVolume(seed_volume_, name, 2);
+    seed_volume_->name_prefix_ = "";
+    temp->keep_ = 0;
+    painter_->volume_map_[name] = temp;
+
+    painter_->filter_ = 1;
+    painter_->want_to_execute();
+
+    return QUIT_E;
+  }
+  
+  return FALLTHROUGH_E;
 }
+
 
 Painter::StatisticsTool::StatisticsTool(Painter *painter) :
   PainterTool(painter, "Statistics"),
@@ -1079,374 +1048,186 @@ Painter::StatisticsTool::draw(SliceWindow &window)
   return 0;
 }
 
-Painter::PaintTool::PaintTool(Painter *painter) :
-  PainterTool(painter, "Paint"),
-  value_(airNaN()),
-  last_index_(),
-  radius_(5.0),
-  drawing_(false)
-{
-  painter_->create_undo_volume();
-}
 
 
-Painter::PaintTool::~PaintTool()
+
+
+
+Painter::ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilterTool(Painter *painter) :
+  PainterTool(painter, "ITK Confidence Connected\nImage Filter"),
+  volume_(0)
 {
 }
 
-string *
-Painter::PaintTool::mouse_button_press(MouseState &mouse)
-{
-  if (mouse.button_ == 1) {
-    SliceWindow *window = mouse.window_;
-    if (!window->paint_layer_) {
-      window->paint_layer_ = 
-        scinew NrrdSlice(painter_, painter_->current_volume_, 
-                         window->center_, window->normal_);
-      window->paint_layer_->bind();;
-    }
-    if (airIsNaN(value_))
-      value_ = painter_->current_volume_->clut_max_;
 
-    last_index_ = 
-      window->paint_layer_->volume_->world_to_index(mouse.position_);
+int 
+Painter::ITKConfidenceConnectedImageFilterTool::do_event(MouseState &mouse)
+{
+  bool finish = (mouse.type_ == MouseState::KEY_PRESS_E && mouse.key_ == " ");
+  if (!finish && mouse.keys_.size()) 
+    return FALLTHROUGH_E;
+
+  if (finish ||
+      (mouse.type_ == MouseState::BUTTON_RELEASE_E && mouse.button(3))) {
+    if (!volume_) 
+      volume_ = painter_->current_volume_;
+    if (!volume_->index_valid(seed_))
+      seed_ = volume_->world_to_index(mouse.position_);
+    if (!volume_->index_valid(seed_))
+      return QUIT_E;
     
-    vector<int> index1(last_index_.size()-1, 0);
-    for (unsigned int i = 0, j=0; i < last_index_.size(); ++i) 
-      if (int(i) != (window->axis_+1)) {
-        index1[j] = last_index_[i];
-        ++j;
-      }
+    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+                    "seed_point0", to_string(seed_[1]).c_str());
+    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+                    "seed_point1", to_string(seed_[2]).c_str());
+    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+                    "seed_point2", to_string(seed_[3]).c_str());
+
+    NrrdVolume *temp;
+    string name = "ITK Confidence Connected";
+    temp = new NrrdVolume(volume_, name, 2);
+    temp->keep_ = 0;
+    painter_->volume_map_[name] = temp;
     
-    splat(window->paint_layer_->texture_->nrrd_->nrrd, radius_, 
-          index1[1], index1[2]);
+    name = "Connected";
+    temp = new NrrdVolume(volume_, name, 2);
+    temp->colormap_.set(1);
+    painter_->volume_map_[name] = temp;
+    painter_->show_volume(name);
 
-    window->paint_layer_->texture_->apply_colormap(index1[1], index1[2],
-                                                   index1[1]+1, index1[2]+1,
-                                                   Ceil(radius_));
+    painter_->filter_ = 1;
+    painter_->want_to_execute();
+    
+    return QUIT_E;
+  }
 
-    //    painter_->for_each(&Painter::rebind_slice);
-    painter_->redraw_all();    
-    drawing_ = true;
-  } else if (mouse.button_ == 3) {
-    vector<int> index = 
-      painter_->current_volume_->world_to_index(mouse.position_);
-    if (painter_->current_volume_->index_valid(index))
-      painter_->current_volume_->get_value(index, value_);
-    radius_ *= 1.1;
-    painter_->redraw_all();    
-  } else if (mouse.button_ == 4) {
-    radius_ *= 1.1;
-    painter_->redraw_all();    
-  } else if (mouse.button_ == 5) {
-    radius_ /= 1.1;
+  if (mouse.state_ & MouseState::BUTTON_1_E) {
+    volume_ = painter_->current_volume_;
+    if (volume_)
+      seed_ = volume_->world_to_index(mouse.position_);
     painter_->redraw_all();
+    return HANDLED_E;
   }
 
-  return 0;
+  return FALLTHROUGH_E;
 }
 
 string *
-Painter::PaintTool::mouse_button_release(MouseState &mouse)
-
-{  
-  if (mouse.button_ == 1) {
-    drawing_ = false;
-    if (!mouse.window_->paint_layer_) return 0;
-    NrrdSlice &paint = *mouse.window_->paint_layer_;
-    painter_->current_volume_->mutex_.lock();
-    //    NrrdData *nout = scinew NrrdData();
-    if (nrrdSplice(painter_->current_volume_->nrrd_->nrrd,
-                   painter_->current_volume_->nrrd_->nrrd,
-                   paint.texture_->nrrd_->nrrd,
-                   mouse.window_->axis_+1,
-                   last_index_[mouse.window_->axis_+1])) {
-      painter_->current_volume_->mutex_.unlock();
-      char *err = biffGetDone(NRRD);
-      cerr << string("Error on line #")+to_string(__LINE__) +
-        string(" executing nrrd command: nrrdSplice \n")+
-        string("Message: ")+string(err);
-      free(err);
-      return 0;
-    }
-    //    painter_->current_volume_->nrrd_ = nout;
-    painter_->current_volume_->mutex_.unlock();
-               
-    if (mouse.window_->paint_layer_) {
-      delete mouse.window_->paint_layer_;
-      mouse.window_->paint_layer_ = 0;
-    }
-    painter_->for_each(&Painter::rebind_slice);
-    painter_->redraw_all();
-  }
-  
-
-  if (mouse.button_ == 2) {
-    return new string ("Done");
-  }
-  return 0;
-}
-
-string *
-Painter::PaintTool::mouse_motion(MouseState &mouse)
+Painter::ITKConfidenceConnectedImageFilterTool::draw(Painter::SliceWindow &window)
 {
-  SliceWindow *window = mouse.window_;
-  if (!window) {
-    drawing_ = false;
-    return 0;
+  if (!volume_ || !volume_->index_valid(seed_)) return 0;
+  vector<double> index(seed_.size());
+  index[0] = seed_[0];
+  for (unsigned int s = 1; s < index.size(); ++s)
+    index[s] = seed_[s]+0.5;
+
+  Vector left = window.x_dir();
+  Vector up = window.y_dir();
+  Point center = volume_->index_to_point(index);
+  Point p;
+
+  //  double one = 100.0 / window.zoom_; // world space units per one pixel
+  double units = window.zoom_ / 100.0;  // Pixels per world space unit
+  double s = units/2.0;
+  double e = s+Clamp(s, 5.0, Max(units, 5.0));
+
+  for (int pass = 0; pass < 3; ++pass) {
+    glLineWidth(5 - pass*2.0);
+    if (pass == 0)
+      glColor4d(0.0, 0.0, 0.0, 1.0);
+    else if (pass == 1)
+      glColor4d(1.0, 0.0, 0.0, 1.0);
+    else
+      glColor4d(1.0, 0.7, 0.6, 1.0);
+
+    glBegin(GL_LINES);    
+    p = center + s * up;
+    glVertex3dv(&p(0));
+    p = center + e * up;
+    glVertex3dv(&p(0));
+    
+    p = center - s * up;
+    glVertex3dv(&p(0));
+    p = center - e * up;
+    glVertex3dv(&p(0));
+    
+    p = center + s * left;
+    glVertex3dv(&p(0));
+    p = center + e * left;
+    glVertex3dv(&p(0));
+    
+    p = center - s * left;
+    glVertex3dv(&p(0));
+    p = center - e * left;
+    glVertex3dv(&p(0));
+    glEnd();
+    CHECK_OPENGL_ERROR();
   }
-  
-  if (!window->paint_layer_) return 0;
 
-  NrrdSlice &paint = *window->paint_layer_;
-  NrrdVolume *volume = paint.volume_;
-  
-  vector<int> index = 
-    volume->world_to_index(mouse.position_);
-  if (!volume->index_valid(index)) return 0;
-  
-  if (mouse.button(1) && drawing_) {
-
-    vector<int> index1(index.size()-1, 0);
-    vector<int> index2 = index1;
-    for (unsigned int i = 0, j=0; i < index.size(); ++i) 
-      if (int(i) != (window->axis_+1)) {
-        index1[j] = last_index_[i];
-        index2[j] = index[i];
-        ++j;
-      }
-
-
-    line(paint.texture_->nrrd_->nrrd, radius_, 
-         index1[1], index1[2],
-         index2[1], index2[2], true);
-
-    paint.texture_->apply_colormap(index1[1], index1[2], 
-                                   index2[1], index2[2],
-                                   Ceil(radius_));
-    painter_->redraw_all();
-  }
-
-  if (mouse.button(1))
-    drawing_ = true;
-  
-  last_index_ = index;
-
-  return 0;
-}
-
-string *
-Painter::PaintTool::draw(SliceWindow &window)
-{
-  return 0;
-}
-
-
-string *
-Painter::PaintTool::draw_mouse_cursor(MouseState &mouse)
-{
-  glColor4f(1.0, 0.0, 0.0, 1.0);
-  glLineWidth(2.0);
-  glBegin(GL_LINES);
-
-
-  int x0 = Floor(mouse.position_(mouse.window_->x_axis()));
-  int y0 = Floor(mouse.position_(mouse.window_->y_axis()));
-  int z0 = Floor(mouse.position_(mouse.window_->axis_));
-  //  int wid = int(Ceil(radius_));
-  const int wid = Round(radius_);
-  for (int y = y0-wid; y <= y0+wid; ++y)
-    for (int x = x0-wid; x <= x0+wid; ++x) {
-      float dist = sqrt(double(x0-x)*(x0-x)+(y0-y)*(y0-y));
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x+1))*(x0-(x+1))+(y0-(y+0))*(y0-(y+0))) > radius_) {
-        glVertex3d(x+1, y, z0);
-        glVertex3d(x+1, y+1, z0);
-      }
-
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x+0))*(x0-(x+0))+(y0-(y+1))*(y0-(y+1))) > radius_) {
-        glVertex3d(x, y+1, z0);
-        glVertex3d(x+1, y+1, z0);
-      }
-
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x-1))*(x0-(x-1))+(y0-(y+0))*(y0-(y+0))) > radius_) {
-        glVertex3d(x, y, z0);
-        glVertex3d(x, y+1, z0);
-      }
-
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x+0))*(x0-(x+0))+(y0-(y-1))*(y0-(y-1))) > radius_) {
-        glVertex3d(x, y, z0);
-        glVertex3d(x+1, y, z0);
-      }
-
-    }
-
-                 
-
-
-
-//         glVertex3d(mouse.position_.x()+1, mouse.position_.y(), mouse.position_.z());
-
-//       if (x >= 0 && x < nrrd->axis[1].size &&
-//           y >= 0 && y < nrrd->axis[2].size) 
-//         {
-//           index[1] = x;
-//           index[2] = y;
-
-
-//             //            dist = 1.0 - dist;
-//             //            dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
-//             //            dist += painter_->current_volume_->clut_min_;
-//             //            float val;
-//             //            nrrd_get_value(nrrd, index, val);
-//             nrrd_set_value(nrrd, index, Max(dist, val));//nrrd_get_value(nrrd,index);
-//           }
-//         }
-
-
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-//   glVertex3d(mouse.position_.x()+1, mouse.position_.y(), mouse.position_.z());
-  
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-//   glVertex3d(mouse.position_.x()-1, mouse.position_.y(), mouse.position_.z());
-
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-//   glVertex3d(mouse.position_.x(), mouse.position_.y()+1, mouse.position_.z());
-
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-  glVertex3d(mouse.position_.x(), mouse.position_.y()-1, mouse.position_.z());
-  glEnd();
   glLineWidth(1.0);
+  
   return 0;
 }
+  
+  
 
-
-
-void
-Painter::PaintTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
+Painter::ITKGradientMagnitudeTool::ITKGradientMagnitudeTool(Painter *painter) :
+  PainterTool(painter,"ITK Gradient Magnitude")
 {
-  vector<int> index(3,0);
-  const int wid = Round(radius);
-  for (int y = y0-wid; y <= y0+wid; ++y)
-    for (int x = x0-wid; x <= x0+wid; ++x)
-      if (x >= 0 && x < nrrd->axis[1].size &&
-          y >= 0 && y < nrrd->axis[2].size) 
-        {
-          index[1] = x;
-          index[2] = y;
-          float dist = sqrt(double(x0-x)*(x0-x)+(y0-y)*(y0-y))/radius;
-          if (dist <= 1.0) {
-            //            dist = 1.0 - dist;
-            //            dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
-            //            dist += painter_->current_volume_->clut_min_;
-            //            float val;
-            //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, Max(dist, value_));//nrrd_get_value(nrrd,index);
-          }
-        }
-}
+  string name = "ITK Gradient Magnitude";
+  NrrdVolume *vol = new NrrdVolume(painter_->current_volume_, name, 2);
+  vol->keep_ = 0;
+  painter_->volume_map_[name] = vol;
 
-void 
-Painter::PaintTool::line(Nrrd *nrrd, double radius,
-                     int x0, int y0, int x1, int y1, bool first)
-{
-  if (x0 < 0 || x0 >= nrrd->axis[1].size || 
-      x1 < 0 || x1 >= nrrd->axis[1].size || 
-      y0 < 0 || y0 >= nrrd->axis[2].size || 
-      y1 < 0 || y1 >= nrrd->axis[2].size) return;
-  int dy = y1 - y0;
-  int dx = x1 - x0;
-  int sx = 1;
-  int sy = 1;
-  int frac = 0;
-  if (dy < 0) { 
-    dy = -dy;
-    sy = -1; 
-  } 
-  if (dx < 0) { 
-    dx = -dx;  
-    sx = -1;
-  } 
-  dy <<= 1;
-  dx <<= 1;
-  if (first) splat(nrrd, radius, x0, y0);
-  if (dx > dy) {
-    frac = dy - (dx >> 1);
-    while (x0 != x1) {
-      if (frac >= 0) {
-        y0 += sy;
-        frac -= dx;
-      }
-      x0 += sx;
-      frac += dy;
-      splat(nrrd, radius, x0, y0);
-    }
-  } else {
-    frac = dx - (dy >> 1);
-    while (y0 != y1) {
-      if (frac >= 0) {
-        x0 += sx;
-        frac -= dy;
-      }
-      y0 += sy;
-      frac += dx;
-      splat(nrrd, radius, x0, y0);
-    }
-  }
+  name = "Gradient";
+  vol = new NrrdVolume(painter_->current_volume_, name, 2);
+  vol->colormap_.set(0);
+  painter_->volume_map_[name] = vol;
+  painter_->show_volume(name);
+
+  painter_->filter_ = 1;
+  painter_->want_to_execute();
+
 }
 
 
-/*
-
-Painter::TemplateTool::TemplateTool(Painter *painter) :
-  PainterTool(painter, "Template")
+Painter::ITKBinaryDilateErodeTool::ITKBinaryDilateErodeTool(Painter *painter) :
+  PainterTool(painter,"ITK Fill Holes")
 {
+  string name = "ITK Binary Dilate Erode";
+  NrrdVolume *vol = new NrrdVolume(painter_->current_volume_, name, 2);
+  vol->keep_ = 0;
+  painter_->volume_map_[name] = vol;
+
+  name = "Filled";
+  vol = new NrrdVolume(painter_->current_volume_, name, 2);
+  vol->colormap_.set(1);
+  painter_->volume_map_[name] = vol;
+  painter_->show_volume(name);
+
+  painter_->filter_ = 1;
+  painter_->want_to_execute();
+
 }
 
 
-Painter::TemplateTool::~TemplateTool()
+Painter::ITKCurvatureAnisotropicDiffusionTool::ITKCurvatureAnisotropicDiffusionTool(Painter *painter) :
+  PainterTool(painter,"ITK Curvature Anisotropic Diffusion")
 {
+  string name = "ITK Curvature Anisotropic Diffusion";
+  NrrdVolume *vol = new NrrdVolume(painter_->current_volume_, name, 2);
+  vol->keep_ = 0;
+  painter_->volume_map_[name] = vol;
+
+  name = "Anisotropic Diffusion";
+  vol = new NrrdVolume(painter_->current_volume_, name, 2);
+  vol->colormap_.set(0);
+  painter_->volume_map_[name] = vol;
+  painter_->show_volume(name);
+
+  painter_->filter_ = 1;
+  painter_->want_to_execute();
 }
-
-string *
-Painter::TemplateTool::mouse_button_press(MouseState &mouse)
-{
-  return 0;
-}
-
-string *
-Painter::TemplateTool::mouse_button_release(MouseState &mouse)
-{
-  return 0;
-}
-
-string *
-Painter::TemplateTool::mouse_motion(MouseState &mouse)
-{
-  return 0;
-}
-
-string *
-Painter::TemplateTool::draw(SliceWindow &window)
-{
-  return 0;
-}
-
-string *
-Painter::TemplateTool::draw_mouse_cursor(MouseState &mouse)
-{
-  return 0;
-}
-*/
-
-
-
-
-      
-
 
 
 

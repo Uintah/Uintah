@@ -86,13 +86,28 @@ GuiContext::~GuiContext()
 
 
 
-GuiContext* GuiContext::subVar(const string& subname, bool saveChild)
+GuiContext* 
+GuiContext::subVar(const string& subname, bool saveChild)
 {
+//   if (subname.find("-") != string::npos) 
+//     cerr << "Warning: " << name_ << " subVar: " << subname 
+//          << "contains a dash '-', which may cause context problems\n";
   dontSave(); // Do not save intermediate nodes
   GuiContext* child = 
     scinew GuiContext(gui_, name_+"-"+subname, saveChild, this);
   children_.push_back(child);
   return child;
+}
+
+
+GuiContext * 
+GuiContext::find_child(const string &subname)
+{
+  string fullname = name_+"-"+subname;
+  for (unsigned int c = 0; c < children_.size(); ++c)
+    if (fullname == children_[c]->name_)
+      return children_[c];
+  return 0;
 }
 
 
