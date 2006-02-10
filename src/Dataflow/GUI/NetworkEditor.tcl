@@ -657,7 +657,7 @@ proc findMovedModulePath { packvar catvar modvar } {
 }	        
 
 
-proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
+proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { absolute 0 } } {
     # Look up the real category for a module.  This allows networks to
     # be read in if the modules change categories.
     findMovedModulePath package category module
@@ -706,7 +706,8 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
 	set xpos [expr $xpos+[$canvas canvasx 0]]
 	set ypos [expr $ypos+[$canvas canvasy 0]]
     }
-    $modid make_icon $xpos $ypos $inserting
+    set absolute [expr $absolute || $inserting]
+    $modid make_icon $xpos $ypos $absolute
     update idletasks
     return $modid
 }
