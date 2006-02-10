@@ -81,6 +81,7 @@
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/TextRenderer.h>
 #include <Core/Util/SimpleProfiler.h>
+#include <Core/GuiInterface/TCLKeysyms.h>
 
 #ifdef _WIN32
 #define snprintf _snprintf
@@ -229,7 +230,6 @@ Painter::NrrdSlice::NrrdSlice(Painter *painter,
   pos_(),
   xdir_(),
   ydir_(),
-  //  axis_(0),
   plane_(p,n),
   texture_(0)
 {
@@ -244,9 +244,9 @@ Painter::SliceWindow::SliceWindow(Painter *painter, GuiContext *ctx) :
   slices_(),
   paint_layer_(0),
   center_(0,0,0),
-  normal_(1,0,0),
+  normal_(0,0,0),
   slice_num_(ctx->subVar("slice"), 0),
-  axis_(ctx->subVar("axis"), 2),
+  axis_(ctx->subVar("axis")),
   zoom_(ctx->subVar("zoom"), 100.0),
   slab_min_(ctx->subVar("slab_min"), 0),
   slab_max_(ctx->subVar("slab_max"), 0),
@@ -271,6 +271,7 @@ Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
   nrrd_(0),
   gui_context_(ctx),
   name_(gui_context_->subVar("name"), name),
+  name_prefix_(""),
   opacity_(gui_context_->subVar("opacity"), 1.0),
   clut_min_(gui_context_->subVar("clut_min"), 0.0),
   clut_max_(gui_context_->subVar("clut_max"), 1.0),
@@ -279,10 +280,21 @@ Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
   data_max_(1.0),
   colormap_(ctx->subVar("colormap")),
   stub_axes_(),
-  transform_()
+  transform_(),
+  keep_(true)
 {
   if (!colormap_.valid()) colormap_.set(0);
   set_nrrd(nrrd);
+}
+
+
+
+Painter::NrrdVolume::~NrrdVolume() {
+  mutex_.lock();
+  nrrd_ = 0;
+  //  delete gui_context_;
+  mutex_.unlock();
+
 }
 
 
@@ -320,8 +332,8 @@ nrrd_data_size(Nrrd *nrrd)
 
 Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy, 
                                 const string &name,
-                                bool clear) :
-  nrrd_(scinew NrrdData()),
+                                int clear) :
+  nrrd_(0),
   gui_context_(copy->gui_context_->get_parent()->subVar(name,0)),
   name_(gui_context_->subVar("name"), name),
   opacity_(gui_context_->subVar("opacity"), copy->opacity_.get()),
@@ -336,31 +348,43 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
 {
   copy->mutex_.lock();
   mutex_.lock();
-  nrrdCopy(nrrd_->nrrd, copy->nrrd_->nrrd);
-  if (clear) 
-    memset(nrrd_->nrrd->data, 0, nrrd_data_size(nrrd_->nrrd));
+
+  if (clear == 2) {
+    nrrd_ = copy->nrrd_;
+  } else {
+    nrrd_ = scinew NrrdData();
+    nrrdCopy(nrrd_->nrrd, copy->nrrd_->nrrd);
+    if (clear) 
+      memset(nrrd_->nrrd->data, 0, nrrd_data_size(nrrd_->nrrd));
+  }
 
   mutex_.unlock();
-  set_nrrd(nrrd_);
-
+  //  set_nrrd(nrrd_);
+  build_index_to_world_matrix();
   copy->mutex_.unlock();
+
+
 }
+
 
 
 void
 Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
 {
   mutex_.lock();
-  nrrd_ = nrrd;//scinew NrrdData();
+  nrrd_ = nrrd;
+  nrrd_.detach();
+  //  nrrdBasicInfoCopy(nrrd_->nrrd, nrrd->nrrd,0);
+  //  nrrdAxisInfoCopy(nrrd_->nrrd, nrrd->nrrd, 0,0);
   //  nrrdCopy(nrrd_->nrrd, nrrd->nrrd);
-  
+
+  stub_axes_.clear();
   if (nrrd_->nrrd->axis[0].size > 4) {
     nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 0);
     nrrd_->nrrd->axis[0].min = 0.0;
     nrrd_->nrrd->axis[0].max = 1.0;
     nrrd_->nrrd->axis[0].spacing = 1.0;
     stub_axes_.push_back(0);
-    cerr << "Inserted 0 axis\n";
   }
 
   if (nrrd_->nrrd->dim == 3) {
@@ -369,7 +393,6 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
     nrrd_->nrrd->axis[3].max = 1.0;
     nrrd_->nrrd->axis[3].spacing = 1.0;
     stub_axes_.push_back(3);
-    cerr << "Inserted 3 axis\n";
   }
 
 
@@ -389,25 +412,137 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
     clut_max_ = range.max;
     opacity_ = 1.0;
   }
-
-  build_index_to_world_matrix();
   mutex_.unlock();
+  build_index_to_world_matrix();
+
 }
 
 
 NrrdDataHandle
 Painter::NrrdVolume::get_nrrd() 
 {
+  NrrdDataHandle nrrd = nrrd_;
+  nrrd.detach();
+  NrrdDataHandle nrrd2 = scinew NrrdData();
+
+  //   nrrdBasicInfoCopy(nrrd->nrrd, nrrd_->nrrd,0);
+  //   nrrdAxisInfoCopy(nrrd->nrrd, nrrd_->nrrd, 0,0);
+  //   nrrd->nrrd->data = nrrd_->nrrd->data;
+
+  for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
+    nrrdAxesDelete(nrrd2->nrrd, nrrd->nrrd, stub_axes_[s]);
+    nrrd = nrrd2;
+  }
+  nrrdKeyValueCopy(nrrd->nrrd, nrrd_->nrrd);
+  return nrrd;
+}
+
+#if 0
+
+NrrdDataHandle
+Painter::NrrdVolume::get_nrrd() 
+{
+  mutex_.lock();
   //  return nrrd_;
   NrrdDataHandle nrrd = nrrd_;
+  
   for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
-    cerr << "Deleteing axis " << stub_axes_[s] << std::endl;
+    cerr << name_.get() <<  " Deleteing axis " 
+         << stub_axes_[s] << " of dim: " << nrrd->nrrd->dim 
+         << std::endl;
     NrrdDataHandle nout = new NrrdData();
     nrrdAxesDelete(nout->nrrd, nrrd->nrrd, stub_axes_[s]);
     nrrd = nout;
   }
+
+  if (nrrd_.get_rep() != nrrd.get_rep()) 
+    nrrdKeyValueCopy(nrrd->nrrd, nrrd_->nrrd);
+  mutex_.unlock();
   return nrrd;
 }
+
+
+
+
+
+
+void
+Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
+{
+  mutex_.lock();
+
+  NrrdDataHandle newnrrd = scinew NrrdData();
+  // nrrdBasicInfoCopy(newnrrd->nrrd, nrrd->nrrd,0);
+//   nrrdAxisInfoCopy(newnrrd->nrrd, nrrd->nrrd, 0,0);
+  //newnrrd->nrrd->data = nrrd->nrrd->data;
+  nrrdCopy(newnrrd->nrrd, nrrd->nrrd);
+  stub_axes_.clear();
+  if (newnrrd->nrrd->axis[0].size > 4) {
+    nrrdAxesInsert(newnrrd->nrrd, newnrrd->nrrd, 0);
+    newnrrd->nrrd->axis[0].min = 0.0;
+    newnrrd->nrrd->axis[0].max = 1.0;
+    newnrrd->nrrd->axis[0].spacing = 1.0;
+    stub_axes_.push_back(0);
+    cerr << "Insert axis 0\n";
+  }
+
+  if (newnrrd->nrrd->dim == 3) {
+    nrrdAxesInsert(newnrrd->nrrd, newnrrd->nrrd, 3);
+    newnrrd->nrrd->axis[3].min = 0.0;
+    newnrrd->nrrd->axis[3].max = 1.0;
+    newnrrd->nrrd->axis[3].spacing = 1.0;
+    stub_axes_.push_back(3);
+    cerr << "Insert axis 3\n";
+  }
+
+
+  for (int a = 0; a < newnrrd->nrrd->dim; ++a) {
+    if (newnrrd->nrrd->axis[a].min > newnrrd->nrrd->axis[a].max)
+      SWAP(newnrrd->nrrd->axis[a].min,newnrrd->nrrd->axis[a].max);
+    if (newnrrd->nrrd->axis[a].spacing < 0.0)
+      newnrrd->nrrd->axis[a].spacing *= -1.0;
+  }
+
+  NrrdRange range;
+  nrrdRangeSet(&range, newnrrd->nrrd, 0);
+  if (data_min_ != range.min || data_max_ != range.max) {
+    data_min_ = range.min;
+    data_max_ = range.max;
+    clut_min_ = range.min;
+    clut_max_ = range.max;
+    opacity_ = 1.0;
+  }
+  nrrd_ = newnrrd;
+  mutex_.unlock();
+
+  build_index_to_world_matrix();
+
+}
+
+
+NrrdDataHandle
+Painter::NrrdVolume::get_nrrd() 
+{
+  //  mutex_.lock();
+  //  return nrrd_;
+  NrrdDataHandle newnrrd = new NrrdData();
+  nrrdCopy(newnrrd->nrrd, nrrd_->nrrd);
+  for (int a = 0; a < nrrd_->nrrd->dim; ++a)
+    cerr << name_.get() << " - " << a << " : " << nrrd_->nrrd->axis[a].size << std::endl;
+  //  nrrdBasicInfoCopy(newnrrd->nrrd, nrrd_->nrrd,0);
+  //  nrrdAxisInfoCopy(newnrrd->nrrd, nrrd_->nrrd,0,0);
+  for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
+    nrrdAxesDelete(newnrrd->nrrd, newnrrd->nrrd, stub_axes_[s]);
+  }
+
+  //  if (nrrd_.get_rep() != nrrd.get_rep()) 
+    nrrdKeyValueCopy(newnrrd->nrrd, nrrd_->nrrd);
+  //  mutex_.unlock();
+
+  return newnrrd;
+}
+
+#endif
 
 
 DECLARE_MAKER(Painter);
@@ -417,10 +552,12 @@ Painter::Painter(GuiContext* ctx) :
   layouts_(),
   volumes_(),
   volume_map_(),
+  volume_order_(),
   current_volume_(0),
   undo_volume_(0),
   colormaps_(),
   tool_(0),
+  tools_(),
   anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
   show_grid_(ctx->subVar("show_grid"), 1),
   show_text_(ctx->subVar("show_text"), 1),
@@ -431,7 +568,7 @@ Painter::Painter(GuiContext* ctx) :
   bundle_oport_((BundleOPort *)get_oport("Paint Data")),
   freetype_lib_(0),
   fonts_(),
-  font_size_(ctx->subVar("font_size"),15.0),
+  font_size_(ctx->subVar("font_size"),17.0),
   font1_(0),
   font2_(0),
   font3_(0),
@@ -461,6 +598,7 @@ Painter::~Painter()
 bool
 Painter::static_callback(void *this_ptr) {
   Painter *painter = static_cast<Painter *>(this_ptr);
+  //  if (painter->filter_)  cerr << "filter off\n";
   painter->filter_ = 0;
   return true;
 }
@@ -527,6 +665,13 @@ Painter::render_window(SliceWindow &window) {
       tool_->draw_mouse_cursor(mouse_);
   }
 
+  for (unsigned int t = 0; t < tools_.size(); ++t) {
+    tools_[t]->draw(window);
+    if (mouse_.window_ == &window)
+      tools_[t]->draw_mouse_cursor(mouse_);
+  }
+
+
   profiler("tool draw");
 
   window.render_text();
@@ -538,6 +683,7 @@ Painter::render_window(SliceWindow &window) {
   window.viewport_->release();
 
   CHECK_OPENGL_ERROR();
+
   return 1;
 }
 
@@ -553,10 +699,10 @@ Painter::swap_window(SliceWindow &window) {
 void
 Painter::real_draw_all()
 {
-  gui->lock();
+  TCLTask::lock();
   if (for_each(&Painter::render_window)) 
     for_each(&Painter::swap_window);
-  gui->unlock();
+  TCLTask::unlock();
 }
 
 
@@ -680,6 +826,7 @@ Painter::draw_slice_lines(SliceWindow &window)
   }
   profiler("done");
   profiler.leave();
+  
 }
 
 
@@ -828,8 +975,6 @@ Painter::SliceWindow::render_grid()
   Point linemax = min;
   linemax(yax) = max(yax);
   TextRenderer &font1 = *painter_->font1_;
-  font1.set_color(0,0,0,1);
-  font1.set_shadow_color(1,1,1,1);
   string str;
   profiler("start");
   while (linemin(xax) < max(xax)) {
@@ -844,11 +989,15 @@ Painter::SliceWindow::render_grid()
     str = to_string(linemin(xax));
     Point pos = world_to_screen(linemin);
     font1.render(str, pos.x()+1, 2, 
-                 TextRenderer::SHADOW | TextRenderer:: SW);
+                 TextRenderer::SHADOW | 
+                 TextRenderer:: SW | 
+                 TextRenderer::REVERSE);
     
     //    pos = world_to_screen(linemax);
     font1.render(str, pos.x()+1, vh-2, 
-                 TextRenderer::SHADOW | TextRenderer:: NW);
+                 TextRenderer::SHADOW | 
+                 TextRenderer:: NW | 
+                 TextRenderer::REVERSE);
     num++;
   }
   profiler("horizontal");
@@ -870,17 +1019,17 @@ Painter::SliceWindow::render_grid()
     font1.render(str, 2, pos.y(), 
                  TextRenderer::SHADOW | 
                  TextRenderer::NW | 
-                 TextRenderer::VERTICAL);
+                 TextRenderer::VERTICAL | 
+                 TextRenderer::REVERSE);
 
     font1.render(str, vw-2, pos.y(), 
                  TextRenderer::SHADOW | 
                  TextRenderer::NE | 
-                 TextRenderer::VERTICAL);
+                 TextRenderer::VERTICAL | 
+                 TextRenderer::REVERSE);
     num++;
   }
   profiler("vertical");
-  font1.set_color(1,1,1,1);
-  font1.set_shadow_color(0,0,0,1);
   profiler.leave();
   CHECK_OPENGL_ERROR();
 }
@@ -1085,20 +1234,21 @@ Painter::SliceWindow::render_orientation_text()
   if (prim >= 3) SWAP (ltext, rtext);
   if (sec >= 3) SWAP (ttext, btext);
   profiler("start render");
+  text->set_shadow_offset(2,-2);
   text->render(ltext, 2, viewport_->height()/2,
-            TextRenderer::W | TextRenderer::SHADOW);
+            TextRenderer::W | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("ltext");
 
   text->render(rtext,viewport_->width()-2, viewport_->height()/2,
-               TextRenderer::E | TextRenderer::SHADOW);
+               TextRenderer::E | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("rtext");
 
   text->render(btext,viewport_->width()/2, 2,
-               TextRenderer::S | TextRenderer::SHADOW);
+               TextRenderer::S | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("btext");  
 
   text->render(ttext,viewport_->width()/2, viewport_->height()-2, 
-               TextRenderer::N | TextRenderer::SHADOW);
+               TextRenderer::N | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("ttext");
 
   profiler.leave();
@@ -1120,16 +1270,19 @@ Painter::NrrdSlice::bind()
     texture_ = 0; 
   }
 
-  volume_->mutex_.lock();
+
   if (!texture_) {
     vector<int> index = volume_->world_to_index(plane_.project(Point(0,0,0)));
     unsigned int ax = axis();
     int slice = index[ax];
+    volume_->mutex_.lock();
     if (slice>=0 && slice < volume_->nrrd_->nrrd->axis[ax].size)
       texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_, 
                                                   ax,
                                                   slice, 
                                                   slice);
+    volume_->mutex_.unlock();
+
     tex_dirty_ = true;
   }
 
@@ -1139,7 +1292,7 @@ Painter::NrrdSlice::bind()
     ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_.get());
     texture_->set_colormap(cmap);
   }
-  volume_->mutex_.unlock();
+
 
   tex_dirty_ = false;
   geom_dirty_ = true;
@@ -1223,7 +1376,8 @@ Painter::SliceWindow::render_text()
   NrrdVolume *vol = painter_->current_volume_;
   
   for (unsigned int s = 0; s < slices_.size(); ++s) {
-    string str = slices_[s]->volume_->name_.get();
+    string str = slices_[s]->volume_->name_prefix_ + 
+      slices_[s]->volume_->name_.get();
     if (slices_[s]->volume_ == vol) {
       font1.set_color(240/255.0, 1.0, 0.0, 1.0);
       str = "->" + str;
@@ -1242,6 +1396,11 @@ Painter::SliceWindow::render_text()
     font1.render(painter_->tool_->get_name(), 
                  xoff+2+1, vh-2-yoff-1, 
                  TextRenderer::NW | TextRenderer::SHADOW);
+  else if (painter_->tools_.size())
+    font1.render(painter_->tools_.back()->get_name(), 
+                 xoff+2+1, vh-2-yoff-1, 
+                 TextRenderer::NW | TextRenderer::SHADOW);
+
   profiler("tool");
 
   if (vol) {
@@ -1303,24 +1462,21 @@ Painter::SliceWindow::render_text()
   if (mode_ == slab_e) str = "SLAB - "+str;
   else if (mode_ == mip_e) str = "MIP - "+str;
 
-  font2.set_color(0,0,0,1);
-  font2.set_shadow_color(1,1,1,1);
   font2.set_shadow_offset(2,-2);
   font2.render(str, viewport_->width() - 2, 2,
-               TextRenderer::SHADOW | TextRenderer::SE);
+               TextRenderer::SHADOW | 
+               TextRenderer::SE | 
+               TextRenderer::REVERSE);
   profiler("plane");
   profiler.leave();
 }
 
 
 void
-Painter::NrrdSlice::set_coords() {
-  volume_->mutex_.lock();
-  
+Painter::NrrdSlice::set_coords() {  
   vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
   unsigned int ax = axis();
   pos_ = volume_->min(ax, sindex[ax]);
-
   vector<int> index(volume_->nrrd_->nrrd->dim,0);
 
   int primary = (ax == 1) ? 2 : 1;
@@ -1331,23 +1487,31 @@ Painter::NrrdSlice::set_coords() {
   int secondary = (ax == 3) ? 2 : 3;
   index[secondary] = volume_->nrrd_->nrrd->axis[secondary].size;
   ydir_ = volume_->index_to_world(index) - pos_;
-  volume_->mutex_.unlock();
 }
-
 
 int
 Painter::extract_window_slices(SliceWindow &window) {
+  for (unsigned int s = volumes_.size(); s < window.slices_.size(); ++s) {
+    delete window.slices_[s];
+  }
+
+  if (window.slices_.size() > volumes_.size())
+    window.slices_.resize(volumes_.size());
+
   for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s) {
-    if (volumes_[s] == current_volume_) 
-      window.center_ = current_volume_->center();
+    //    if (volumes_[s] == current_volume_) 
+    //      window.center_ = current_volume_->center();
     window.slices_.push_back(scinew NrrdSlice(this, volumes_[s], 
                                               window.center_, window.normal_));
   }
+
   for (unsigned int s = 0; s < volumes_.size(); ++s) {
     window.slices_[s]->volume_ = volumes_[s];
     window.slices_[s]->plane_ = Plane(window.center_, window.normal_);
   }
+
   for_each(window, &Painter::set_slice_nrrd_dirty);
+
   if (window.paint_layer_) {
     delete window.paint_layer_;
     window.paint_layer_ = 0;
@@ -1355,6 +1519,29 @@ Painter::extract_window_slices(SliceWindow &window) {
   return window.slices_.size();
 }
 
+
+#if 0
+int
+Painter::extract_window_slices(SliceWindow &window) {
+  for (unsigned int s = 0; s < window.slices_.size(); ++s)
+    delete window.slices_[s];
+
+  window.slices_.clear();
+
+  for (unsigned int s = 0; s < volumes_.size(); ++s) {
+    window.slices_.push_back
+      (scinew NrrdSlice(this, volumes_[s], 
+                        window.center_, window.normal_));
+  }
+    
+//   if (window.paint_layer_) {
+//     delete window.paint_layer_;
+//     window.paint_layer_ = 0;
+//   }
+  return window.slices_.size();
+}
+#endif
+  
 int
 Painter::set_slice_nrrd_dirty(NrrdSlice &slice) {
   slice.nrrd_dirty_ = true;
@@ -1367,8 +1554,9 @@ Painter::set_slice_nrrd_dirty(NrrdSlice &slice) {
 void
 Painter::set_axis(SliceWindow &window, unsigned int axis) {
   window.axis_ = axis;
-  window.normal_ = Vector(0,0,0);
-  window.normal_[axis] = 1.0;
+  window.normal_ = Vector(axis == 0 ? 1 : 0,
+                          axis == 1 ? 1 : 0,
+                          axis == 2 ? 1 : 0);
   extract_window_slices(window);
   window.redraw_ = true;
 }
@@ -1414,9 +1602,25 @@ Painter::layer_up()
     if (volumes_[i] == current_volume_) break;
   ASSERT(volumes_[i] == current_volume_);
   if (i == volumes_.size()-1) return;
-  NrrdVolume *temp = volumes_[i+1];
+
+  NrrdVolumeOrder::iterator voiter1 = 
+    find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
+
+  //    volume_order_.find();
+  NrrdVolumeOrder::iterator voiter2 =
+    find(volume_order_.begin(),volume_order_.end(),volumes_[i+1]->name_.get());
+  //    volume_order_.find(volumes_[i+1]->name_.get());
+  ASSERT(voiter1 != volume_order_.end());
+  ASSERT(voiter2 != volume_order_.end());
+
+  NrrdVolume *tempvol = volumes_[i+1];
   volumes_[i+1] = volumes_[i];
-  volumes_[i] = temp;
+  volumes_[i] = tempvol;
+  
+  NrrdVolumeOrder::value_type temporder = *voiter2;
+  *voiter2 = *voiter1;
+  *voiter1 = temporder;
+  
   for_each(&Painter::extract_window_slices);
   redraw_all();
 }
@@ -1430,9 +1634,26 @@ Painter::layer_down()
     if (volumes_[i] == current_volume_) break;
   ASSERT(volumes_[i] == current_volume_);
   if (i == 0) return;
+
+
+  NrrdVolumeOrder::iterator voiter1 = 
+    find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
+
+  //    volume_order_.find();
+  NrrdVolumeOrder::iterator voiter2 =
+    find(volume_order_.begin(),volume_order_.end(),volumes_[i-1]->name_.get());
+
+  ASSERT(voiter1 != volume_order_.end());
+  ASSERT(voiter2 != volume_order_.end());
+
+  NrrdVolumeOrder::value_type temporder = *voiter2;
+  *voiter2 = *voiter1;
+  *voiter1 = temporder;
+
   NrrdVolume *temp = volumes_[i-1];
   volumes_[i-1] = volumes_[i];
   volumes_[i] = temp;
+
   for_each(&Painter::extract_window_slices);
   redraw_all();
 }
@@ -1545,7 +1766,6 @@ Painter::NrrdVolume::world_to_index(const Point &p) {
   for (unsigned int i = 0; i < return_val.size(); ++i) {
     return_val[i] = Floor(index_matrix[i]);
   }
-  
   return return_val;
 }
 
@@ -1564,7 +1784,6 @@ Painter::NrrdVolume::point_to_index(const Point &p) {
   for (unsigned int i = 0; i < return_val.size(); ++i) {
     return_val[i] = index_matrix[i];
   }
-  
   return return_val;
 }
 
@@ -1627,9 +1846,12 @@ Painter::NrrdVolume::build_index_to_world_matrix() {
 
 bool
 Painter::NrrdVolume::index_valid(const vector<int> &index) {
-  for (int a = 0; a < nrrd_->nrrd->dim; ++a) 
-    if (index[a] < 0 || index[a] >= nrrd_->nrrd->axis[a].size)
+  unsigned int dim = nrrd_->nrrd->dim;
+  if (index.size() != dim) return false;
+  for (unsigned int a = 0; a < dim; ++a) 
+    if (index[a] < 0 || index[a] >= nrrd_->nrrd->axis[a].size) {
       return false;
+    }
   return true;
 }
   
@@ -1637,11 +1859,21 @@ void
 Painter::send_data()
 {
   BundleHandle bundle = new Bundle();
-  for (unsigned int v = 0; v < volumes_.size(); ++v) {
-    string name = volumes_[v]->name_.get();
-    NrrdDataHandle nrrd = volumes_[v]->get_nrrd();
-    bundle->setNrrd(name, nrrd);
-  }
+  NrrdVolumeMap::iterator viter = volume_map_.begin();
+  NrrdVolumeMap::iterator vend = volume_map_.end();
+  for (; viter != vend; ++viter)
+    if (viter->second) {
+      NrrdDataHandle nrrd = viter->second->get_nrrd();
+      bundle->setNrrd(viter->first, nrrd);
+    }
+
+  
+//   for (unsigned int v = 0; v < volumes_.size(); ++v) {
+//     string name = volumes_[v]->name_.get();
+//     NrrdDataHandle nrrd = volumes_[v]->get_nrrd();
+//     bundle->setNrrd(name, nrrd);
+//   }
+
   BundleOPort *oport = (BundleOPort *)get_oport("Paint Data");
   ASSERT(oport);
   oport->send(bundle);  
@@ -1674,6 +1906,9 @@ Painter::execute()
 
   BundleHandle bundle = 0;
   bundles_.clear();
+
+  if (filter_)
+    send_data();
 
   receive_filter_data();
 
@@ -1718,32 +1953,29 @@ Painter::execute()
   }
   
   update_state(Module::Executing);
-  
+
+
+  NrrdVolumeMap::iterator viter = volume_map_.begin();
+  NrrdVolumeMap::iterator vend = volume_map_.end();
+
   for (unsigned int n = 0; n < nrrds.size(); ++n) {
-    if (volume_map_.find(nrrd_names[n]) == volume_map_.end()) 
-      {
-        volume_map_[nrrd_names[n]] =  
-          new NrrdVolume(ctx->subVar(nrrd_names[n]), nrrd_names[n], nrrds[n]);
-      } else {
-        volume_map_[nrrd_names[n]]->set_nrrd(nrrds[n]); 
-      }
+    string name = nrrd_names[n];
+    viter = volume_map_.find(name);
+    if (viter == vend || viter->second == 0) {
+      volume_map_[name] = 
+        new NrrdVolume(ctx->subVar(name), name, nrrds[n]);
+      show_volume(name);
+    } else {
+      viter->second->set_nrrd(nrrds[n]);
+    }
+    volume_map_[name]->keep_ = 1;
   }
 
-  volumes_.clear();
-  NrrdVolumeMap::iterator iter=volume_map_.begin(), last=volume_map_.end();
-  while (iter != last) {
-    volumes_.push_back(iter->second);
-    iter++;
-  }
+  recompute_volume_list();
 
-  if (volumes_.size())
-    current_volume_ = volumes_.back();
-        
 
-  for_each(&Painter::extract_window_slices);
-  for_each(&Painter::mark_autoview);
-
-  send_data();
+  if (!filter_)
+    send_data();
 
   update_state(Module::Completed);
 }
@@ -1771,11 +2003,10 @@ Painter::rebind_slice(NrrdSlice &slice) {
 
 void
 Painter::handle_gui_mouse_enter(GuiArgs &args) {
-  ASSERTMSG(layouts_.find(args[2]) != layouts_.end(),
-	    ("Cannot handle enter on "+args[2]).c_str());
+  ASSERTMSG(layouts_.find(args[3]) != layouts_.end(),
+	    ("Cannot handle enter on "+args[3]).c_str());
   ASSERTMSG(current_layout_ == 0, "Haven't left window");
-  current_layout_ = layouts_[args[2]];
-  update_mouse_state(args);
+  current_layout_ = layouts_[args[3]];
   if (mouse_.window_)
     redraw_window(*mouse_.window_);
 }
@@ -1783,11 +2014,9 @@ Painter::handle_gui_mouse_enter(GuiArgs &args) {
 
 void
 Painter::handle_gui_mouse_leave(GuiArgs &args) {
-  SliceWindow *left_window = mouse_.window_;
   current_layout_ = 0;
-  update_mouse_state(args);
-  if (left_window)
-    redraw_window(*left_window);
+  if (mouse_.last_window_)
+    redraw_window(*mouse_.last_window_);
 }
 
 bool
@@ -1817,14 +2046,55 @@ Painter::MouseState::alt()
 
 void
 Painter::update_mouse_state(GuiArgs &args, bool reset) {
-  ASSERT(layouts_.find(args[2]) != layouts_.end());
-  WindowLayout &layout = *layouts_[args[2]];
+  ASSERT(layouts_.find(args[3]) != layouts_.end());
+  WindowLayout &layout = *layouts_[args[3]];
 
-  mouse_.state_ = args.get_int(4);
+  mouse_.state_ = args.get_int(5);
 
-  // The button parameter may be invalid on motion events (mainly OS X)
-  if (args[1] != "motion") {
-    mouse_.button_ = args.get_int(3);
+  if (args[2] == "motion")
+    mouse_.type_ = MouseState::MOUSE_MOTION_E;
+  else if (args[2] == "button")
+    mouse_.type_ = MouseState::BUTTON_PRESS_E;
+  else if (args[2] == "release")
+    mouse_.type_ = MouseState::BUTTON_RELEASE_E;
+  else if (args[2] == "keydown")
+    mouse_.type_ = MouseState::KEY_PRESS_E;
+  else if (args[2] == "keyup")
+    mouse_.type_ = MouseState::KEY_RELEASE_E;
+  else if (args[2] == "enter")
+    mouse_.type_ = MouseState::FOCUS_IN_E;
+  else if (args[2] == "leave")
+    mouse_.type_ = MouseState::FOCUS_OUT_E;
+
+
+  if (args[2] == "keydown" || args[2] == "keyup") {
+    TCLKeysym_t::iterator keysym = tcl_keysym.find(args[4]);
+
+    if (keysym != tcl_keysym.end()) {
+      mouse_.key_ = "";
+      mouse_.key_.push_back(keysym->second);
+    } else {
+      mouse_.key_ = args[4];
+    }
+
+
+    if (args[2] == "keydown") 
+      mouse_.keys_.insert(mouse_.key_);
+    else {
+      set<string>::iterator pos = mouse_.keys_.find(mouse_.key_);
+      if (pos != mouse_.keys_.end())
+        mouse_.keys_.erase(pos);
+      else {
+        return;
+      }
+    }
+    return;
+  }
+  
+  
+  if (args[2] != "motion") {
+    // The button parameter may be invalid on motion events (mainly OS X)
+    mouse_.button_ = args.get_int(4);
     // Button presses don't set state,
     // set to make MouseState::button_down() method work on press events
     switch (mouse_.button_) {
@@ -1837,19 +2107,22 @@ Painter::update_mouse_state(GuiArgs &args, bool reset) {
     }
   }
 
-  mouse_.X_ = args.get_int(5);
-  mouse_.Y_ = args.get_int(6);
-  mouse_.x_ = args.get_int(7);
-  mouse_.y_ = layout.opengl_->height() - 1 - args.get_int(8);
+  mouse_.X_ = args.get_int(6);
+  mouse_.Y_ = args.get_int(7);
+  mouse_.x_ = args.get_int(8);
+  mouse_.y_ = layout.opengl_->height() - 1 - args.get_int(9);
 
+  mouse_.last_window_ = mouse_.window_;
   mouse_.window_ = 0;
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
     SliceWindow *window = layout.windows_[w];
     if (&layout == current_layout_ && 
         mouse_.x_ >= window->viewport_->x() && 
-        mouse_.x_ <  window->viewport_->x() + window->viewport_->width() &&
-        mouse_.y_ >= window->viewport_->y() &&
-        mouse_.y_ <  window->viewport_->y() + window->viewport_->height())
+        (mouse_.x_ <  window->viewport_->x() + 
+         window->viewport_->width()) &&
+        (mouse_.y_ >= window->viewport_->y() &&
+         mouse_.y_ <  window->viewport_->y() + 
+         window->viewport_->height()))
     {
       mouse_.window_ = window;
       break;
@@ -1953,118 +2226,140 @@ Painter::handle_gui_mouse_button_release(GuiArgs &args) {
   
 void
 Painter::handle_gui_keypress(GuiArgs &args) {
-  if (args.count() != 6)
-    SCI_THROW(GuiException(args[0]+" "+args[1]+
-			   " expects a win #, keycode, keysym,& time"));
+  ASSERT(layouts_.find(args[3]) != layouts_.end());
+  if (!mouse_.window_) return;
+  SliceWindow &window = *mouse_.window_;
+  string &key = mouse_.key_;
+  PainterTool *oldtool = tool_;
+  unsigned int numtools = tools_.size();
+  if (key == "=" || key == "+") window.zoom_in();
+  else if (key == "-" || key == "_") window.zoom_out();
+  else if (key == "<" || key == ",") window.prev_slice();
+  else if (key == ">" || key == ".") window.next_slice();
+  else if (key == "[") {
+    if (current_volume_) {
+      current_volume_->colormap_.set(Max(0, current_volume_->colormap_.get()-1));
+      for_each(&Painter::rebind_slice);
+      for_each(&Painter::redraw_window);
+    }
+  }
+  else if (key == "]") {
+    if (current_volume_) {
+      current_volume_->colormap_.set(Min(int(colormap_names_.size()), 
+                                         current_volume_->colormap_.get()+1));
+      for_each(&Painter::rebind_slice);
+      for_each(&Painter::redraw_window);
+    }
+  }
+  else if (key == "s") want_to_execute();
+  else if (key == "u") undo_volume();
+  else if (key == "q") { 
+    if (tool_) {
+      delete tool_;
+      tool_ = 0;
+    }
+    for (unsigned int t = 0; t < tools_.size(); ++t)
+      delete tools_[t];
+    tools_.clear();
+  }
+  else if (key == "x") {
+    if (current_volume_) {
+      current_volume_->keep_ = 0;
+      recompute_volume_list();
+      for_each(&Painter::extract_window_slices);
+      redraw_all();
+    }    
+  }
+  else if (key == "c") {
+    if (current_volume_) {
+      string base = current_volume_->name_.get();
+      string::size_type pos = base.find_last_not_of(" 0123456789");
+      base = base.substr(0, pos+1);
+      int i = 0;
+      string name = base + " "+to_string(++i);
+      while (volume_map_.find(name) != volume_map_.end())
+        name = base + " "+to_string(++i);
+      current_volume_ = copy_current_volume(name,0);
+    }
+  }
+  else if (key == "v") {
+    if (current_volume_) {
+      string base = "New Layer";
+      int i = 0;
+      string name = base + " "+to_string(++i);
+      while (volume_map_.find(name) != volume_map_.end())
+        name = base + " "+to_string(++i);
+      current_volume_ = copy_current_volume(name,1);
+    }
+  }
+  else if (key == "b") {
+    if (tools_.empty())
+      tools_.push_back(new BrushTool(this));
+  } else if (key == "h") {
+    if (tools_.empty()) {
+      tools_.push_back(new BrushTool(this));
+      tools_.push_back(new ITKThresholdTool(this));
+    }
+  }
+  else if (key == "k") {
+    if (tools_.empty())
+      tools_.push_back(new ITKConfidenceConnectedImageFilterTool(this));
+  }
+  else if (key == "g") ITKGradientMagnitudeTool temp(this);
+  else if (key == "j") ITKBinaryDilateErodeTool temp(this);
+  else if (key == "d") ITKCurvatureAnisotropicDiffusionTool temp(this);
+  else if (key == "l") { 
+    if (!tool_) 
+      tool_ = scinew StatisticsTool(this);
+  }
 
-  ASSERT(layouts_.find(args[2]) != layouts_.end());
-  WindowLayout &layout = *layouts_[args[2]];
-
-  for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-    SliceWindow &window = *layout.windows_[w];
-    if (mouse_.window_ != &window) continue;
-    double pan_delta = Round(3.0/(window.zoom_()/100.0));
-    if (pan_delta < 1.0) pan_delta = 1.0;
-
-    if (args[4] == "equal" || args[4] == "plus") window.zoom_in();
-    else if (args[4] == "minus" || args[4] == "underscore") window.zoom_out();
-    else if (args[4] == "less" || args[4] == "comma") window.prev_slice();
-    else if (args[4] == "greater" || args[4] == "period") window.next_slice();
-    else if (args[4] == "bracketleft") {
-      if (current_volume_) {
-        current_volume_->colormap_.set(Max(0, current_volume_->colormap_.get()-1));
-        for_each(&Painter::rebind_slice);
-        for_each(&Painter::redraw_window);
-      }
-    }
-    else if (args[4] == "bracketright") {
-      if (current_volume_) {
-        current_volume_->colormap_.set(Min(int(colormap_names_.size()), 
-                                           current_volume_->colormap_.get()+1));
-        for_each(&Painter::rebind_slice);
-        for_each(&Painter::redraw_window);
-      }
-    }
-    else if (args[4] == "semicolon") layer_up();
-    else if (args[4] == "apostrophe") layer_down();
-    else if (args[4] == "0") set_axis(window, 0);
-    else if (args[4] == "1") set_axis(window, 1);
-    else if (args[4] == "2") set_axis(window, 2);
-    else if (args[4] == "s") want_to_execute();
-    else if (args[4] == "u") undo_volume();
-    else if (args[4] == "f") { 
-      if (!tool_) 
-        tool_ = scinew FloodfillTool(this);
-    }
-    else if (args[4] == "g") { 
-      if (!tool_) 
-        tool_ = scinew PaintTool(this);
-    }
-    else if (args[4] == "h") { 
-      //      if (!tool_) 
-      //        tool_ = scinew ITKThresholdTool(this, false);
-    }
-    else if (args[4] == "i") { 
-//       if (!tool_) 
-//         tool_ = scinew ITKThresholdTool(this, true);
-    }
-    else if (args[4] == "j") { 
-      if (!tool_) 
-        tool_ = scinew StatisticsTool(this);
-    }
-
-    else if (args[4] == "p") { 
-      if (!current_volume_) continue;
+  else if (key == "p") { 
+    if (current_volume_) {
       current_volume_->opacity_ = 
         Clamp(current_volume_->opacity_+0.05, 0.0, 1.0);
       
       for_each(&Painter::redraw_window);
     }
-    else if (args[4] == "o") { 
-      if (!current_volume_) continue;
+  }
+  else if (key == "o") { 
+    if (current_volume_) {
       current_volume_->opacity_ = 
         Clamp(current_volume_->opacity_-0.05, 0.0, 1.0);
       for_each(&Painter::redraw_window);
     }
-    else if (args[4] == "d") { 
-//       create_volume((NrrdVolumes *)1);
-//       extract_window_slices(window);
-    }
-    else if (args[4] == "r") {
-      if (current_volume_) {
-        current_volume_->clut_min_ = current_volume_->data_min_;
-        current_volume_->clut_max_ = current_volume_->data_max_;
-        for_each(&Painter::rebind_slice);
-        for_each(&Painter::redraw_window);
-      }
-    } else if (args[4] == "m") {
-//       window.mode_ = (window.mode_+1)%num_display_modes_e;
-//       extract_window_slices(window);
-//       redraw_window(window);
-    } 
-    else if (args[4] == "Left") layer_down();
-    else if (args[4] == "Right") layer_up(); 
-    else if (args[4] == "Down") {
-      if (volumes_.size() < 2 || current_volume_ == volumes_[0]) 
-        return;
-      for (unsigned int i = 1; i < volumes_.size(); ++i)
-        if (current_volume_ == volumes_[i]) {
-          current_volume_ = volumes_[i-1];
-          redraw_all();
-          return;
-        }
-          
-    } else if (args[4] == "Up") {
-      if (volumes_.size() < 2 || current_volume_ == volumes_.back()) 
-        return;
-      for (unsigned int i = 0; i < volumes_.size()-1; ++i)
-        if (current_volume_ == volumes_[i]) {
-          current_volume_ = volumes_[i+1];
-          redraw_all();
-          return;
-        }
-    }
   }
+  else if (key == "r") {
+    if (current_volume_) {
+      current_volume_->clut_min_ = current_volume_->data_min_;
+      current_volume_->clut_max_ = current_volume_->data_max_;
+      for_each(&Painter::rebind_slice);
+      for_each(&Painter::redraw_window);
+    }
+  } 
+  else if (key == "Left") layer_down();
+  else if (key == "Right") layer_up(); 
+  else if (key == "Down") {
+    if (volumes_.size() < 2 || current_volume_ == volumes_[0]) 
+      return;
+    for (unsigned int i = 1; i < volumes_.size(); ++i)
+      if (current_volume_ == volumes_[i]) {
+        current_volume_ = volumes_[i-1];
+        redraw_all();
+        return;
+      }
+          
+  } else if (key == "Up") {
+    if (volumes_.size() < 2 || current_volume_ == volumes_.back()) 
+      return;
+    for (unsigned int i = 0; i < volumes_.size()-1; ++i)
+      if (current_volume_ == volumes_[i]) {
+        current_volume_ = volumes_[i+1];
+        redraw_all();
+        return;
+      }
+  }
+  if (oldtool != tool_ || numtools != tools_.size())
+    redraw_all();
 }
 
 
@@ -2082,20 +2377,44 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
     cerr << "\n";
   }
     
-  if (args[1] == "enter")         handle_gui_mouse_enter(args);
-  else if (args[1] == "leave")    handle_gui_mouse_leave(args);
-  else if (args[1] == "motion")	  handle_gui_mouse_motion(args);
-  else if (args[1] == "button")   handle_gui_mouse_button_press(args);
-  else if (args[1] == "release")  handle_gui_mouse_button_release(args);
-  else if (args[1] == "keypress") handle_gui_keypress(args);
+
+  if (args[1] == "event") {
+    update_mouse_state(args);
+    int tool = tools_.size();
+    while (tool > 0) {
+      --tool;
+      switch (tools_[tool]->do_event(mouse_)) {
+      case PainterTool::HANDLED_E: {
+        return;
+      } break;
+      case PainterTool::QUIT_E: { 
+        delete tools_[tool];
+        tools_.erase(tools_.begin()+tool);
+        return;
+      } break;
+      case PainterTool::ERROR_E: { 
+        cerr << tools_[tool]->get_name() << " Tool Error: " 
+             << tools_[tool]->err() << std::endl;
+        return;
+      } break;
+      default: // nothing, continue to next tool 
+        break;
+      }
+    }
+    
+
+    if (args[2] == "enter")        handle_gui_mouse_enter(args);
+    else if (args[2] == "leave")   handle_gui_mouse_leave(args);
+    else if (args[2] == "motion")  handle_gui_mouse_motion(args);
+    else if (args[2] == "button") handle_gui_mouse_button_press(args);
+    else if (args[2] == "release") handle_gui_mouse_button_release(args);
+    else if (args[2] == "keydown") handle_gui_keypress(args);
+  }
   else if (args[1] == "set_font_sizes") set_font_sizes(font_size_());
   else if (args[1] == "setgl") {
     TkOpenGLContext *context = \
       scinew TkOpenGLContext(args[2], args.get_int(4), 256, 256);
     XSync(context->display_, 0);
-//     Tk_DefineCursor(tkwin, Tk_GetCursor(the_interp, tkwin, 
-//                                         ccast_unsafe(cursor_name)));
-
     ASSERT(layouts_.find(args[2]) == layouts_.end());
     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
     layouts_[args[2]]->opengl_ = context;
@@ -2120,46 +2439,13 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
     window->viewport_ = scinew OpenGLViewport(layout->opengl_);
     set_axis(*window, layouts_.size()%3);
     layout->windows_.push_back(window);
-    autoview(*window);
   } else if(args[1] == "redraw") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
     for_each(*layouts_[args[2]], &Painter::redraw_window);
   } else if(args[1] == "resize") {
-    ASSERT(layouts_.find(args[2]) != layouts_.end());
+    //    ASSERT(layouts_.find(args[2]) != layouts_.end());
     //    for_each(*layouts_[args[2]], &Painter::autoview);
-  } else if(args[1] == "redrawall") {
-    redraw_all();
-  } else if(args[1] == "rebind") {
-    ASSERT(layouts_.find(args[2]) != layouts_.end());
-    for_each(*layouts_[args[2]], &Painter::extract_window_slices);
-    for_each(*layouts_[args[2]], &Painter::redraw_window);
-  } else if(args[1] == "texture_rebind") {
-    if (args.count() == 2) { 
-      for_each(&Painter::rebind_slice);
-      for_each(&Painter::redraw_window);
-    } else {
-      for_each(*layouts_[args[2]], &Painter::rebind_slice);
-      for_each(*layouts_[args[2]], &Painter::redraw_window);
-    }
-  } else if(args[1] == "startcrop") {
-    tool_ = scinew CropTool(this);
-    redraw_all();
-  } else if(args[1] == "stopcrop") {
-    //    crop_ = 0;
-    //    redraw_all();
-  } else if(args[1] == "updatecrop") {
-    //    update_bbox_from_gui();
-    //    redraw_all();
-  } else if (args[1] == "setclut") {
-    //    const double cache_ww = clut_ww_;
-    //    const double cache_wl = clut_wl_;
-    //    clut_ww_(); // resets gui context
-    //    clut_wl_(); // resets gui context
-    //    if (fabs(cache_ww - clut_ww_) < 0.0001 && 
-    //	fabs(cache_wl - clut_wl_) < 0.0001) return;
-    for_each(&Painter::rebind_slice);
-    for_each(&Painter::redraw_window);
-  } else 
+  } else
     Module::tcl_command(args, userdata);
 }
 
@@ -2174,7 +2460,7 @@ Painter::delete_all_fonts() {
       delete fiter++->second;
   fonts_.clear();
 }
-
+ 
 void
 Painter::initialize_fonts() {
   if (!freetype_lib_) {
@@ -2241,6 +2527,13 @@ Painter::set_font_sizes(double size) {
 
 int
 Painter::mark_autoview(SliceWindow &window) {
+  if (current_volume_)
+    window.center_ = current_volume_->center();
+
+  for (unsigned int s = 0; s < volumes_.size(); ++s) {
+    window.slices_[s]->plane_ = Plane(window.center_, window.normal_);
+  }
+
   window.autoview_ = true;
   window.redraw_ = true;
   return 1;
@@ -2262,12 +2555,6 @@ Painter::autoview(SliceWindow &window) {
     hei -= 2*Ceil(bbox.max().y() - bbox.min().y())+4;
   }
   
-//   Vector xdir = window.x_dir();
-//   vector<double> x_index = current_volume_->vector_to_index(xdir);
-//   for (int i = 0; i < x_index.size(); ++i) 
-//     cerr << x_index[i] << ", ";
-//   cerr << " <- x_index\n";
-
   int xax = window.x_axis();
   int yax = window.y_axis();
 
@@ -2295,58 +2582,162 @@ Painter::autoview(SliceWindow &window) {
 
 
 
-
-int
-Painter::create_volume(NrrdVolumes *copies) {
-  if (!current_volume_) return -1;
-  create_volume(current_volume_->name_.get()+"-Copy", 0);
-  return volumes_.size()-1;
-}
-
-
-Painter::NrrdVolume *
-Painter::create_volume(string name, int nrrdType) {
-  if (!current_volume_) return 0;
-  volumes_.push_back(new NrrdVolume(current_volume_, name, 1));
-  //volume_map_[name] = volumes_.back();
-  current_volume_ = volumes_.back();
-  for_each(&Painter::extract_window_slices);
-  return current_volume_;
-}
-
 void
 Painter::create_undo_volume() {
   if (undo_volume_) 
     delete undo_volume_;
-  string newname = current_volume_->name_.get()+"-UNDO";
-  undo_volume_ = scinew NrrdVolume(current_volume_, newname);
+  string newname = current_volume_->name_.get();
+  undo_volume_ = scinew NrrdVolume(current_volume_, newname, 0);
 }
 
 void
 Painter::undo_volume() {
   if (!undo_volume_) return;
-  undo_volume_->mutex_.lock();
-  current_volume_->mutex_.lock();
-  undo_volume_->name_.set(current_volume_->name_.get());
-  volume_map_[current_volume_->name_.get()] = undo_volume_;
+  NrrdVolume *vol = volume_map_[undo_volume_->name_.get()];
+  if (!vol) return;
+  vol->nrrd_ = undo_volume_->nrrd_;
+  vol->nrrd_.detach();
+  for_each(&Painter::extract_window_slices);
+  redraw_all();
+  //  delete undo_volume_;
+  //  undo_volume_ = 0;
+}
+
+
+void
+Painter::recompute_volume_list()
+{
+  //  gui->lock();  
+
+  NrrdVolume *newcurrent = 0;
+
+  vector<string> todelete;
+  NrrdVolumeMap::iterator viter = volume_map_.begin();
+  NrrdVolumeMap::iterator vend = volume_map_.end();
+  for (; viter != vend; ++viter)
+    if (!viter->second->keep_)
+      todelete.push_back(viter->first);
+    else
+      newcurrent = viter->second;
+
+  for (unsigned int v = 0; v < todelete.size(); ++v) {
+
+    if (current_volume_ == volume_map_[todelete[v]]) 
+      current_volume_ = newcurrent;
+
+    delete volume_map_[todelete[v]];
+    volume_map_.erase(todelete[v]);
+  }
 
   volumes_.clear();
-  NrrdVolumeMap::iterator iter=volume_map_.begin(), last=volume_map_.end();
-  while (iter != last) {
-    volumes_.push_back(iter->second);
-    iter++;
+
+  NrrdVolume *oldcurrent = 0;
+  NrrdVolumeOrder::iterator voiter = volume_order_.begin();
+  NrrdVolumeOrder::iterator voend = volume_order_.end();
+  for (; voiter != voend; ++voiter) {
+    viter = volume_map_.find(*voiter);
+    if (viter != vend && viter->second != 0) {
+      if (viter->second == current_volume_)
+        oldcurrent = current_volume_;
+      volumes_.push_back(viter->second);
+    }
   }
   
   for_each(&Painter::extract_window_slices);
-  current_volume_->mutex_.unlock();
-  delete current_volume_;
-  current_volume_ = undo_volume_;
-  undo_volume_ = 0;
-  current_volume_->mutex_.unlock();
+
+  if (!newcurrent) return;
+  
+  if (!oldcurrent) {
+    NrrdVolume *current = current_volume_;
+    if (current)
+      current->mutex_.lock();
+    if (current_volume_ != volumes_.back()) {
+      volumes_.back()->mutex_.lock();
+      current_volume_ = volumes_.back();
+      volumes_.back()->mutex_.unlock();
+    }
+    if (current)
+      current->mutex_.unlock();
+
+    if (!oldcurrent)
+      for_each(&Painter::mark_autoview);
+  }
+
+  redraw_all();  
+  //  gui->unlock();
 }
 
+
+void
+Painter::show_volume(const string &name)
+{
+  NrrdVolumeOrder::iterator voiter;  
+  voiter =  find(volume_order_.begin(), volume_order_.end(), name);
+  if (voiter == volume_order_.end())
+    volume_order_.push_back(name);
+}
+
+void
+Painter::hide_volume(const string &name)
+{
+  NrrdVolumeOrder::iterator voiter;  
+  voiter = find(volume_order_.begin(), volume_order_.end(), name);
+  if (voiter != volume_order_.end())
+    volume_order_.erase(voiter);
+}
+
+
+pair<double, double>
+Painter::compute_mean_and_deviation(Nrrd *nrrd, Nrrd *mask) {
+  double mean = 0;
+  double squared = 0;
+  unsigned int n = 0;
+  ASSERT(nrrd->dim > 3 && mask->dim > 3 && 
+         nrrd->axis[0].size == mask->axis[0].size &&
+         nrrd->axis[1].size == mask->axis[1].size &&
+         nrrd->axis[2].size == mask->axis[2].size &&
+         nrrd->axis[3].size == mask->axis[3].size &&
+         nrrd->type == nrrdTypeFloat &&
+         mask->type == nrrdTypeFloat);
+
+  unsigned int size = nrrd->axis[0].size;
+  for (int a = 1; a < nrrd->dim; ++a)
+    size *= nrrd->axis[a].size;
+
+  float *src = (float *)nrrd->data;
+  float *test = (float *)mask->data;
+  
+  for (unsigned int i = 0; i < size; ++i)
+    if (test[i] > 0.0) {
+      //      cerr << test[i] << std::endl;
+      mean += src[i];
+      squared += src[i]*src[i];
+      ++n;
+    }
+
+  mean = mean / n;
+  double deviation = sqrt(squared/n-mean*mean);
+  cerr << "size: " << size << " n: " << n << std::endl;
+  cerr << "mean: " << mean << " dev: " << deviation << std::endl;
+  return make_pair(mean, deviation);
+}
+  
+         
+
+Painter::NrrdVolume *
+Painter::copy_current_volume(const string &name, int mode) {
+  if (!current_volume_) return 0;
+  NrrdVolume *vol = new NrrdVolume(current_volume_, name, mode);
+  volume_map_[name] = vol;
+  volumes_.push_back(vol);
+  show_volume(name);
+  for_each(&Painter::extract_window_slices);
+  redraw_all();
+  return vol;
+}
+  
   
 
 
-    
+  
 } // end namespace SCIRun

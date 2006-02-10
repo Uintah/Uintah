@@ -112,23 +112,38 @@ class Painter : public Module
     int                 state_;
     Point               position_;
     SliceWindow *       window_;
+    SliceWindow *       last_window_;
+    set<string>         keys_;
+    string              key_;
+    int                 type_;
+
     enum {
-      SHIFT_E           = 1,
-      CAPS_LOCK_E       = 2,
-      CONTROL_E         = 4,
-      ALT_E             = 8,
-      M1_E              = 16,
-      M2_E              = 32,
-      M3_E              = 64,
-      M4_E              = 128,
-      BUTTON_1_E	= 256,
-      BUTTON_2_E        = 512,
-      BUTTON_3_E        = 1024,
-      BUTTON_4_E        = 2048,
-      BUTTON_5_E        = 4096,
+      SHIFT_E           = 1 << 0,
+      CAPS_LOCK_E       = 1 << 1,
+      CONTROL_E         = 1 << 2,
+      ALT_E             = 1 << 3,
+      M1_E              = 1 << 4,
+      M2_E              = 1 << 5,
+      M3_E              = 1 << 6,
+      M4_E              = 1 << 7,
+      BUTTON_1_E	= 1 << 8,
+      BUTTON_2_E        = 1 << 9,
+      BUTTON_3_E        = 1 << 10,
+      BUTTON_4_E        = 1 << 11,
+      BUTTON_5_E        = 1 << 12
+    };
+    
+    enum {
+      MOUSE_MOTION_E    = 1 << 0,
+      BUTTON_PRESS_E    = 1 << 1,
+      BUTTON_RELEASE_E  = 1 << 2,
+      KEY_PRESS_E       = 1 << 3,
+      KEY_RELEASE_E     = 1 << 4,
+      FOCUS_IN_E        = 1 << 5,
+      FOCUS_OUT_E       = 1 << 6
     };
   };
-
+  
   class NrrdVolume;
   struct WindowLayout;
 
@@ -211,9 +226,18 @@ class Painter : public Module
   class PainterTool {
   public:
     PainterTool(Painter *painter, const string &name) : 
-      painter_(painter), name_(name) {}
+      painter_(painter), name_(name), err_msg_() {}
     virtual ~PainterTool() {};
-    const string &      get_name()      { return name_; };
+
+    enum {
+      ERROR_E = 0,
+      FALLTHROUGH_E = 1,
+      HANDLED_E = 2,
+      QUIT_E = 3
+    };
+
+    const string &      get_name()      { return name_; }
+    const string &      err() { return err_msg_; }
 
     virtual string *    mouse_button_press(MouseState &) { return 0; }
     virtual string *    mouse_button_release(MouseState &) { return 0; }
@@ -221,9 +245,13 @@ class Painter : public Module
 
     virtual string *    draw(SliceWindow &) { return 0; }
     virtual string *    draw_mouse_cursor(MouseState &) { return 0; }
+    
+    virtual int         do_event(MouseState &) { return 0; }
+
   protected:
     Painter *           painter_;
     string              name_;
+    string              err_msg_;
   };
 
   class CLUTLevelsTool : public PainterTool {
@@ -319,13 +347,23 @@ class Painter : public Module
   public:
     BrushTool(Painter *painter);
     ~BrushTool();
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
-    string *            draw(SliceWindow &window);
+    int                 do_event(MouseState &);
+
+    //    string *            draw(SliceWindow &window);
+    string *            draw_mouse_cursor(MouseState &);
   private:
-    double              value_;
+    int                 button_press(MouseState &);
+    int                 button_release(MouseState &);
+    int                 my_mouse_motion(MouseState &);
+    int                 key_press(MouseState &);
+
+    void                line(Nrrd *, double, int, int, int, int, bool);
+    void                splat(Nrrd *, double,int,int);
+    SliceWindow *       window_;
+    float               value_;
+    vector<int>         last_index_;
     double              radius_;
+    bool                drawing_;
   };
 
   class FloodfillTool : public PainterTool {
@@ -343,28 +381,47 @@ class Painter : public Module
     Point               start_pos_;
   };
 
-  class PixelPaintTool : public PainterTool {
-  public:
-    PixelPaintTool(Painter *painter);
-    ~PixelPaintTool();
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
-  private:
-    double              value_;
-  };
 
   class ITKThresholdTool : public PainterTool {
   public:
-    ITKThresholdTool(Painter *painter, bool test);
-    ~ITKThresholdTool();
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    ITKThresholdTool(Painter *painter);
+    int                 do_event(MouseState &);
   private:
-    NrrdVolume *        volume_;
-    double              value_;
+    NrrdVolume *        seed_volume_;
+    NrrdVolume *        source_volume_;
   };
+
+
+  class ITKConfidenceConnectedImageFilterTool : public PainterTool {
+  public:
+    ITKConfidenceConnectedImageFilterTool(Painter *painter);
+    int                 do_event(MouseState &);
+    string *            draw(SliceWindow &window);
+  private:
+    vector<int>         seed_;
+    NrrdVolume *        volume_;
+  };
+
+  class ITKGradientMagnitudeTool : public PainterTool {
+  public:
+    ITKGradientMagnitudeTool(Painter *painter);
+  private:
+  };
+
+
+  class ITKCurvatureAnisotropicDiffusionTool : public PainterTool {
+  public:
+    ITKCurvatureAnisotropicDiffusionTool(Painter *painter);
+  private:
+  };
+
+  class ITKBinaryDilateErodeTool : public PainterTool {
+  public:
+    ITKBinaryDilateErodeTool(Painter *painter);
+  private:
+  };
+
+
 
   class StatisticsTool : public PainterTool {
   public:
@@ -381,26 +438,6 @@ class Painter : public Module
     vector<double>      values_;
   };
 
-
-  class PaintTool : public PainterTool {
-  public:
-    PaintTool(Painter *painter);
-    ~PaintTool();
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
-    string *            draw(SliceWindow &window);
-    string *            draw_mouse_cursor(MouseState &);
-  private:
-    void                line(Nrrd *, double, int, int, int, int, bool);
-    void                splat(Nrrd *, double,int,int);
-    float               value_;
-    vector<int>         last_index_;
-    double              radius_;
-    bool                drawing_;
-
-  };
-    
 
 
   friend class PainterTool;
@@ -421,8 +458,8 @@ class Painter : public Module
     // Copy Constructor
     NrrdVolume          (NrrdVolume *copy, 
                          const string &name, 
-                         bool clear = 0); // if true, zeros out volume
-
+                         int mode = 0); // if 1, clears out volume
+    ~NrrdVolume();
     void                set_nrrd(NrrdDataHandle &);
     NrrdDataHandle      get_nrrd();
     Point               index_to_world(const vector<int> &index);
@@ -452,6 +489,7 @@ class Painter : public Module
     NrrdDataHandle	nrrd_;
     GuiContext *        gui_context_;
     GuiString           name_;
+    string              name_prefix_;
     UIdouble		opacity_;
     UIdouble            clut_min_;
     UIdouble            clut_max_;
@@ -461,6 +499,7 @@ class Painter : public Module
     GuiInt              colormap_;
     vector<int>         stub_axes_;
     DenseMatrix         transform_;
+    bool                keep_;
   };
 
 
@@ -474,6 +513,7 @@ class Painter : public Module
 
   typedef vector<NrrdVolume *>		NrrdVolumes;
   typedef map<string, NrrdVolume *>	NrrdVolumeMap;
+  typedef list<string>                  NrrdVolumeOrder;
 
 
   class RealDrawer : public Runnable {
@@ -489,6 +529,7 @@ class Painter : public Module
   WindowLayouts		layouts_;
   NrrdVolumes		volumes_;
   NrrdVolumeMap         volume_map_;
+  NrrdVolumeOrder       volume_order_;
   NrrdVolume *          current_volume_;
   NrrdVolume *          undo_volume_;
 
@@ -497,6 +538,8 @@ class Painter : public Module
   colormap_map_t	colormaps_;
   vector<string>        colormap_names_;
   PainterTool *         tool_;
+  typedef vector<PainterTool *> Tools_t;
+  Tools_t               tools_;
   MouseState            mouse_;
 
   int			cur_slice_[3];
@@ -573,8 +616,10 @@ class Painter : public Module
 
   int                   set_probe(SliceWindow &window);
 
-  int                   create_volume(NrrdVolumes *copies = 0);
-  NrrdVolume *          create_volume(string name, int nrrdType);
+  NrrdVolume *          create_volume(string name, int mode, int nrrdType);
+  void                  recompute_volume_list();  
+  void                  show_volume(const string & );
+  void                  hide_volume(const string & );
   ColorMapHandle        get_colormap(int id);
   void                  send_data();
   bool                  receive_filter_data();
@@ -582,6 +627,8 @@ class Painter : public Module
   void                  layer_down();
   void                  create_undo_volume();
   void                  undo_volume();
+  pair<double, double>  compute_mean_and_deviation(Nrrd *, Nrrd *);
+  NrrdVolume *          copy_current_volume(const string &, int mode=0);
 public:
   Painter(GuiContext* ctx);
   virtual ~Painter();

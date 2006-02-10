@@ -43,6 +43,8 @@
 
 #include <itkCommand.h>
 
+#include "itkMetaDataObject.h"
+
 namespace Insight 
 {
 
@@ -50,6 +52,8 @@ using namespace SCIRun;
 
 class ConfidenceConnectedImageFilter : public Module 
 {
+  void set_image_variables(itk::Object *);
+
 public:
 
   typedef itk::MemberCommand< ConfidenceConnectedImageFilter > RedrawCommandType;
@@ -100,6 +104,26 @@ public:
 
 };
 
+void
+ConfidenceConnectedImageFilter::set_image_variables(itk::Object *obj) {
+  // Use parameters encapsulated in the MetaDataDictionary.
+  // Build a list of key/value pairs and send it to
+  // tcl to set any corresponding guivars.
+  itk::MetaDataDictionary &dic = obj->GetMetaDataDictionary();
+  std::vector<string> keys = dic.GetKeys();
+
+  for(int i=0; i<(int)keys.size(); i++) {
+    string value;
+    if(itk::ExposeMetaData<string>(dic, keys[i], value)) {
+      //      cerr << id << ": "<< keys[i] << ", " << value << std::endl;
+      GuiContext *subvar = ctx->find_child(keys[i]);
+      if (subvar)
+        subvar->set(value);
+    }
+  }
+  reset_vars();
+}
+
 
 template<class InputImageType, class OutputImageType>
 bool 
@@ -135,6 +159,8 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
        
   }
+
+
 
   // reset progress bar
   update_progress(0.0);
@@ -178,6 +204,9 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
     gui_seed_point_.push_back(new GuiInt(ctx->subVar(str.str())));
 
   }
+
+
+  set_image_variables(obj_InputImage);
 
   // set seed_point values
   for(int i=0; i<seed_point.GetIndexDimension(); i++) {

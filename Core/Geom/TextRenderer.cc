@@ -185,6 +185,7 @@ TextRenderer::layout_text(const string &text,
   Point position;
   profiler("start");
   for (unsigned int p = 0; p < passes; ++p) {
+    int linenum = 0;
     width_pt = 0;
     height_pt = 0;
     position = anchor;
@@ -199,30 +200,38 @@ TextRenderer::layout_text(const string &text,
         layout.color_ = shadow ? color_ : shadow_color_;
       else
         layout.color_ = shadow ? shadow_color_ : color_;
-      if (c && kern && !vert) {
-        FT_Vector kerning; 
-        FT_Get_Kerning(face_->ft_face_, 
-                       layout_[c-1].glyph_info_->index_,
-                       layout.glyph_info_->index_, 
-                       FT_KERNING_DEFAULT, &kerning); 
-        position += left_pt * kerning.x;
-        position += up_pt * kerning.y;
-      }
       FT_Glyph_Metrics &metrics = layout.glyph_info_->ft_metrics_;
 
       if (!vert) {
-        height_pt = Max(height_pt, (int)metrics.horiBearingY);
-        width_pt = width_pt + metrics.horiAdvance;
 
-        ll = (position + 
-              up_pt * (metrics.horiBearingY - metrics.height) +
-              left_pt * metrics.horiBearingX);
-        layout.vertices_[0] = ll;
-        layout.vertices_[1] = ll + left_pt * metrics.width;
-        layout.vertices_[2] = (ll + left_pt * metrics.width + 
-                               up_pt * metrics.height);
-        layout.vertices_[3] = ll + up_pt * metrics.height;
-        position = position + left_pt * metrics.horiAdvance;
+        if (text[c] == '\n') {
+          int advance = (++linenum)*(linegap + face_->ft_face_->height);
+          position = anchor - up_pt*advance;
+          layout.glyph_info_ = 0;
+        } else {
+          if (c && kern && !vert) {
+            FT_Vector kerning; 
+            FT_Get_Kerning(face_->ft_face_, 
+                           layout_[c-1].glyph_info_->index_,
+                           layout.glyph_info_->index_, 
+                           FT_KERNING_DEFAULT, &kerning); 
+            position += left_pt * kerning.x;
+            position += up_pt * kerning.y;
+          }
+          
+          height_pt = Max(height_pt, (int)metrics.horiBearingY);
+          width_pt = width_pt + metrics.horiAdvance;
+          
+          ll = (position + 
+                up_pt * (metrics.horiBearingY - metrics.height) +
+                left_pt * metrics.horiBearingX);
+          layout.vertices_[0] = ll;
+          layout.vertices_[1] = ll + left_pt * metrics.width;
+          layout.vertices_[2] = (ll + left_pt * metrics.width + 
+                                 up_pt * metrics.height);
+          layout.vertices_[3] = ll + up_pt * metrics.height;
+          position = position + left_pt * metrics.horiAdvance;
+        }
       } else {
 
         int halfwidth = (metrics.width) >> 1;
@@ -323,9 +332,10 @@ TextRenderer::render(const string &text, float x, float y, int flags)
   texture_->bind();
   for (unsigned int c = 0; c < num; ++c) {
     LayoutInfo &layout = layout_[c];
-    GlyphInfo &glyph = *layout.glyph_info_;
-    glyph.texture_->set_color(layout.color_);
-    glyph.texture_->draw(4, layout.vertices_, glyph.tex_coords_);
+    GlyphInfo *glyph = layout.glyph_info_;
+    if (!glyph) continue;
+    glyph->texture_->set_color(layout.color_);
+    glyph->texture_->draw(4, layout.vertices_, glyph->tex_coords_);
   }
   profiler("texture draw");
   glPopMatrix();
