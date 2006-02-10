@@ -50,7 +50,7 @@ NetworkIO::add_module_at_position(const string &mod_id,
   GuiInterface *gui = GuiInterface::getSingleton();
 
   string cmmd = "addModuleAtPosition " + package + " " + 
-    category + " " + module + " " + x + " " + y;
+    category + " " + module + " " + x + " " + y + " 1";
   string mid = gui->eval(cmmd);
   netid_to_modid_[mod_id] = mid;
 }
