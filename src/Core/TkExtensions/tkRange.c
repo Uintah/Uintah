@@ -58,15 +58,13 @@
  * 9/95  Added nonZero flag to indicate whether min and max must be distinct
  */
 
+#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
+
 #include "tkPort.h"
 #include "default.h"
 #include "tkInt.h"
 #include "tclMath.h"
 #include "tkRange.h"
-
-
-#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
-
 
 /*
  * The following table defines the legal values for the -orient option.
