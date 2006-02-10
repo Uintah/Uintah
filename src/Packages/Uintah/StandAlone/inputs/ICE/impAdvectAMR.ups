@@ -118,22 +118,22 @@
               <lower>        [0,0,0]            </lower>
               <upper>        [1,1,1]            </upper>
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
+              <patches>      [2,2,2]            </patches>
            </Box>
-           <spacing>         [.125,.125,.125]      </spacing>
+           <spacing>         [.1,.1,.1]         </spacing>
        </Level>
        <time_refinement_ratio>    1 </time_refinement_ratio>       
 
        <Level>
            <Box label="2">
-              <lower>        [.25,.25,.25]        </lower>
-              <upper>        [.75,.75,.75]        </upper>
+              <lower>        [.2,.2,.2]        </lower>
+              <upper>        [.8,.8,.8]        </upper>
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
+              <patches>      [2,2,2]            </patches>
            </Box>
-           <spacing>         [.0625,.0625,.0625]    </spacing>
+           <spacing>         [.05,.05,.05]    </spacing>
        </Level>
-<!--      
+      
       
         <Level>
            <Box label="3">
@@ -164,7 +164,7 @@
            </Box>
            <spacing>         [0.00625,0.00625,0.00625]   </spacing>
        </Level>
- -->
+ 
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
@@ -246,9 +246,9 @@
         
         <!--A M R -->
         <AMR>
-          <orderOfInterpolation>0  </orderOfInterpolation>
+          <orderOfInterpolation>1  </orderOfInterpolation>
           <useLockStep>       true </useLockStep>
-          <do_Refluxing>      false </do_Refluxing>
+          <do_Refluxing>      true </do_Refluxing>
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>
             <Temperature> 1e100    </Temperature>
@@ -273,12 +273,12 @@
     <!--____________________________________________________________________-->                      
     <MaterialProperties>
        <ICE>
-         <material>
+         <material name = "Atmosphere">
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
-           <specific_heat>      716.0                   </specific_heat>
+           <specific_heat>      0.716                   </specific_heat>
            <speed_of_sound>     376                     </speed_of_sound>
            <gamma>              1.4                     </gamma>
            <geom_object>
@@ -287,9 +287,9 @@
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
                <res>           [2,2,2]                  </res>
-               <velocity>      [10.,0.,0.]               </velocity>
+               <velocity>      [10.,10.,10.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
-               <pressure>      101325.0                 </pressure>     
+               <pressure>      101.3250                 </pressure>     
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
@@ -300,5 +300,37 @@
             <heat>              []              </heat>
         </exchange_coefficients>
        </exchange_properties>
-    </MaterialProperties>       
+    </MaterialProperties>   
+    <!--____________________________________________________________________-->
+    <DataAnalysis>
+       <Module name="lineExtract">
+       
+        <material>Atmosphere</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <Variables>
+          <analyze label="press_CC"/> 
+          <analyze label="rho_CC"/>
+          <analyze label="temp_CC"/>
+          <analyze label="delP_Dilatate"/>
+        </Variables>
+
+        <lines>
+          <line name="X_line"> 
+                <startingPt>  [0.0, 0.5, 0.5]   </startingPt>
+                <endingPt>    [1.0, 0.5, 0.5]   </endingPt>
+          </line>
+          <line name="Y_line"> 
+                <startingPt>  [0.5, -0.1, 0.5]   </startingPt>
+                <endingPt>    [0.5, 1.0, 0.5]   </endingPt>
+          </line>
+          <line name="Z_line"> 
+                <startingPt>  [0.0, 0.5, 0.5]   </startingPt>
+                <endingPt>    [1.0, 0.5, 0.5]   </endingPt>
+          </line>
+        </lines>
+      </Module>
+    </DataAnalysis>      
 </Uintah_specification>
