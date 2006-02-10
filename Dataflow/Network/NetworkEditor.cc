@@ -53,6 +53,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Port.h>
 #include <Dataflow/Network/ComponentNode.h>
@@ -96,6 +97,7 @@ NetworkEditor::~NetworkEditor()
 void
 NetworkEditor::tcl_command(GuiArgs& args, void*)
 {
+  static NetworkIO *netio = 0;
   if (args.count() < 2) {
     throw "netedit needs a minor command";
   }
@@ -327,6 +329,55 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if (args[1] == "presave") {
     for(int i=0;i<net->nmodules();i++)
       net->module(i)->presave();
+  } else if (args[1] == "start-net-doc") {
+    if (netio) {
+      delete netio;
+      netio = 0;
+    }
+    netio = new NetworkIO();
+    netio->start_net_doc(args[2], args[3]);
+  } else if (args[1] == "write-net-doc") {
+    netio->write_net_doc();
+  } else if (args[1] == "network-variable") {
+    netio->add_net_var(args[2], args[3]);
+  } else if (args[1] == "net-add-env-var") {
+    netio->add_environment_sub(args[2], args[3]);
+  } else if (args[1] == "network-note") {
+    netio->add_net_note(args[2]);
+  } else if (args[1] == "add-module") {
+    netio->add_module_node(args[2], args[3], args[4], args[5]);
+  } else if (args[1] == "module-position") {
+    netio->add_module_position(args[2], args[3], args[4]);
+  } else if (args[1] == "mod-note") {
+    netio->add_module_note(args[2], args[3]);
+  } else if (args[1] == "mod-note-pos") {
+    netio->add_module_note_position(args[2], args[3]);
+  } else if (args[1] == "mod-note-col") {
+    netio->add_module_note_color(args[2], args[3]);
+  } else if (args[1] == "mod-connection") {
+    netio->add_connection_node(args[2], args[3], args[4], args[5], args[6]);
+  } else if (args[1] == "conn-disabled") {
+    netio->set_disabled_connection(args[2]);
+  } else if (args[1] == "conn-route") {
+    netio->add_connection_route(args[2], args[3]);
+  } else if (args[1] == "conn-note") {
+    netio->add_connection_note(args[2], args[3]);
+  } else if (args[1] == "conn-note-pos") {
+    netio->add_connection_note_position(args[2], args[3]);
+  } else if (args[1] == "conn-note-col") {
+    netio->add_connection_note_color(args[2], args[3]);
+  } else if (args[1] == "set-port-caching") {
+    netio->set_port_caching(args[2], args[3], args[4]);
+  } else if (args[1] == "set-modgui-visible") {
+    netio->set_module_gui_visible(args[2]);
+  } else if (args[1] == "add-mod-var") {
+    netio->add_module_variable(args[2], args[3], args[4]);
+  } else if (args[1] == "add-modgui-callback") {
+    netio->add_module_gui_callback(args[2], args[3]);
+  } else if (args[1] == "load_srn") {
+    NetworkIO::load_net(args[2]);
+    NetworkIO ln;
+    ln.load_network();
   } else {
     throw "Unknown minor command for netedit";
   }

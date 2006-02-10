@@ -43,6 +43,7 @@
 
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/PackageDB.h>
+#include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/TCLThread/TCLThread.h>
 #include <Core/Containers/StringUtil.h>
@@ -63,7 +64,6 @@
 #include <TauProfilerForSCIRun.h>
 
 #include <sci_defs/ptolemy_defs.h>
-
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -116,101 +116,106 @@ parse_args( int argc, char *argv[] )
   bool powerapp = false;
   int cnt = 1;
   while (cnt < argc)
+  {
+    string arg( argv[ cnt ] );
+    if( ( arg == "--version" ) || ( arg == "-version" )
+	|| ( arg == "-v" ) || ( arg == "--v" ) )
     {
-      string arg( argv[ cnt ] );
-      if( ( arg == "--version" ) || ( arg == "-version" )
-          || ( arg == "-v" ) || ( arg == "--v" ) )
-        {
-          cout << "Version: " << SCIRUN_VERSION << "\n";
-          exit( 0 );
-        }
-      else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
-                ( arg == "-h" ) ||  ( arg == "--h" ) )
-        {
-          usage();
-        }
-      else if ( ( arg == "--execute" ) || ( arg == "-execute" ) ||
-                ( arg == "-e" ) ||  ( arg == "--e" ) )
-        {
-          sci_putenv("SCIRUN_EXECUTE_ON_STARTUP","1");
-        }
-      else if ( ( arg == "--eai" ) || ( arg == "-eai" ))
-        {
-          sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
-        }
-      else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
-                ( arg == "-r" ) ||  ( arg == "--r" ) )
-        {
-          sci_putenv("SCI_REGRESSION_TESTING","1");
-        }
-      else if ( arg == "--nosplash" )
-        {
-          sci_putenv("SCIRUN_NOSPLASH", "1");
-        }
-      else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
-                ( arg == "-s" ) ||  ( arg == "--s" ) )
-        {
-          int port;
-          if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
-            if (port < 1024 || port > 65535) {
-              cerr << "Server port must be in range 1024-65535\n";
-              exit(0);
-            }
-            cnt++;
-          } else {
-            port = 0;
-          }
-          sci_putenv("SCIRUN_SERVER_PORT",to_string(port));
-        }    
-      else if ( ( arg == "--port" ) || ( arg == "-port" ) ||
-                ( arg == "-p" ) ||  ( arg == "--p" ) )
-        {
-          int port;
-          if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
-            if (port < 1024 || port > 65535) {
-              cerr << "Server port must be in range 1024-65535\n";
-              exit(0);
-            }
-            cnt++;
-          } else {
-            port = 0;
-          }
-          sci_putenv("SCIRUN_SERVICE_PORT",to_string(port));
-          sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
-        }
-#ifdef HAVE_PTOLEMY
-      else if ( ( arg == "--SPAserver" ) || ( arg == "-SPAserver" ) ||
-                ( arg == "-SPAs" ) || ( arg == "--SPAs" ) || ( arg == "-spas" ) )
-        {
-          sci_putenv("PTOLEMY_CLIENT_PORT","1");
-        }
-#endif   
-      else
-        {
-          struct stat buf;
-          if (stat(argv[cnt],&buf) < 0)
-            {
-              std::cerr << "Couldn't find net file " << arg
-                        << ".\nNo such file or directory.  Exiting." 
-			<< std::endl;
-              exit(0);
-            }
-
-          if (found && !powerapp)
-            {
-              usage();
-            }
-
-          // determine if it is a PowerApp
-          if (ends_with(arg,".app")) {
-            powerapp = true;
-            found = cnt;
-          } else if(!powerapp) {
-            found = cnt;
-          }
-        }
-      cnt++;
+      cout << "Version: " << SCIRUN_VERSION << "\n";
+      exit( 0 );
     }
+    else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
+	      ( arg == "-h" ) ||  ( arg == "--h" ) )
+    {
+      usage();
+    }
+    else if ( ( arg == "--execute" ) || ( arg == "-execute" ) ||
+	      ( arg == "-e" ) ||  ( arg == "--e" ) )
+    {
+      sci_putenv("SCIRUN_EXECUTE_ON_STARTUP","1");
+    }
+    else if ( ( arg == "--eai" ) || ( arg == "-eai" ))
+    {
+      sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
+    }
+    else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
+	      ( arg == "-r" ) ||  ( arg == "--r" ) )
+    {
+      sci_putenv("SCI_REGRESSION_TESTING","1");
+    }
+    else if ( arg == "--nosplash" )
+    {
+      sci_putenv("SCIRUN_NOSPLASH", "1");
+    }
+
+    else if ( arg.find(".srn") != string::npos )
+    {
+      NetworkIO::load_net(arg);
+    }
+    else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
+	      ( arg == "-s" ) ||  ( arg == "--s" ) )
+    {
+      int port;
+      if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
+	if (port < 1024 || port > 65535) {
+	  cerr << "Server port must be in range 1024-65535\n";
+	  exit(0);
+	}
+	cnt++;
+      } else {
+	port = 0;
+      }
+      sci_putenv("SCIRUN_SERVER_PORT",to_string(port));
+    }    
+    else if ( ( arg == "--port" ) || ( arg == "-port" ) ||
+	      ( arg == "-p" ) ||  ( arg == "--p" ) )
+    {
+      int port;
+      if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
+	if (port < 1024 || port > 65535) {
+	  cerr << "Server port must be in range 1024-65535\n";
+	  exit(0);
+	}
+	cnt++;
+      } else {
+	port = 0;
+      }
+      sci_putenv("SCIRUN_SERVICE_PORT",to_string(port));
+      sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
+    }
+#ifdef HAVE_PTOLEMY
+    else if ( ( arg == "--SPAserver" ) || ( arg == "-SPAserver" ) ||
+	      ( arg == "-SPAs" ) || ( arg == "--SPAs" ) || ( arg == "-spas" ) )
+    {
+      sci_putenv("PTOLEMY_CLIENT_PORT","1");
+    }
+#endif   
+    else
+    {
+      struct stat buf;
+      if (stat(argv[cnt],&buf) < 0)
+      {
+	std::cerr << "Couldn't find net file " << arg
+		  << ".\nNo such file or directory.  Exiting." 
+		  << std::endl;
+	exit(0);
+      }
+
+      if (found && !powerapp)
+      {
+	usage();
+      }
+
+      // determine if it is a PowerApp
+      if (ends_with(arg,".app")) {
+	powerapp = true;
+	found = cnt;
+      } else if(!powerapp) {
+	found = cnt;
+      }
+    }
+    cnt++;
+  }
   return found;
 }
 

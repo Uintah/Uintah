@@ -40,6 +40,7 @@ SRCS     += $(SRCDIR)/ComponentNode.cc \
 	$(SRCDIR)/ModuleHelper.cc \
 	$(SRCDIR)/Network.cc \
 	$(SRCDIR)/NetworkEditor.cc \
+	$(SRCDIR)/NetworkIO.cc \
 	$(SRCDIR)/PackageDB.cc \
 	$(SRCDIR)/Port.cc \
 	$(SRCDIR)/SkeletonFiles.cc \

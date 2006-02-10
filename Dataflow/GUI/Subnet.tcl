@@ -1080,7 +1080,7 @@ proc subDATADIRandDATASET { val } {
 	set first [string first $tmp $tmpval]
 	set last [expr $first+[string length $tmp]-1]
 	if { $first != -1 } {
-	    set tmpval [string replace $tmpval $first $last "\$DATADIR"]
+	    set tmpval [string replace $tmpval $first $last "scisub_datadir"]
 	}
     }
 
@@ -1089,7 +1089,7 @@ proc subDATADIRandDATASET { val } {
 	set first [string first $tmp $tmpval]
 	set last [expr $first+[string length $tmp]-1]
 	if { $first != -1 } {
-	    set tmpval [string replace $tmpval $first $last "\$DATAFILE"]
+	    set tmpval [string replace $tmpval $first $last "scisub_datafile"]
 	}
     }
 
@@ -1098,7 +1098,7 @@ proc subDATADIRandDATASET { val } {
 	set first [string first $tmp $tmpval]
 	while { $first != -1 } {
 	    set last [expr $first+[string length $tmp]-1]
-	    set tmpval [string replace $tmpval $first $last "\$DATASET"]
+	    set tmpval [string replace $tmpval $first $last "scisub_dataset"]
 	    set first [string first $tmp $tmpval]
 	}
     }
@@ -1116,26 +1116,25 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     if { [string equal $tab "__auto__"] } {
 	if $subnet { set tab "   " } else { set tab "" }
     }
-    
-    append script "\n${tab}set name \{$Subnet(Subnet${subnet}_Name)\}\n"
-    append script "${tab}set bbox \{[subnet_bbox $subnet]\}\n"
-    append script "${tab}set creationDate \{$Subnet(Subnet${subnet}_creationDate)\}\n"
-    append script "${tab}set creationTime \{$Subnet(Subnet${subnet}_creationTime)\}\n"
-    append script "${tab}set runDate \{$Subnet(Subnet${subnet}_runDate)\}\n"
-    append script "${tab}set runTime \{$Subnet(Subnet${subnet}_runTime)\}\n"
-    append script "${tab}set notes \{$Subnet(Subnet${subnet}_notes)\}\n"
+    append script " "
+    netedit network-variable name \{$Subnet(Subnet${subnet}_Name)\}
+    netedit network-variable bbox \{[subnet_bbox $subnet]\}
+    netedit network-variable creationDate \{$Subnet(Subnet${subnet}_creationDate)\}
+    netedit network-variable creationTime \{$Subnet(Subnet${subnet}_creationTime)\}
+    netedit network-note \{$Subnet(Subnet${subnet}_notes)\}
+
     if { $subnet } {
-	append script "${tab}set geometry \{[wm geometry .subnet$subnet]\}\n"
+	netedit network-variable geometry \{[wm geometry .subnet$subnet]\}
     } else {
-	append script "${tab}set geometry \{[wm geometry .]\}\n"
+	netedit network-variable geometry \{[wm geometry .]\}
     }
     
     
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	incr i
-	set modVar($module) "\$m$i"
-	append script "\n"
+	set modVar($module) "m$i"
+
 	if { [isaSubnetIcon $module] } {
 	    set number $Subnet(${module}_num)
 	    set name $Subnet(Subnet${number}_Name)
@@ -1152,24 +1151,23 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	    }
 	} else {
 	    set modpath [modulePath $module]	    
-	    append script "${tab}\# Create a [join $modpath ->] Module\n"
-	    append script "${tab}set m$i \[addModuleAtPosition "
-	    foreach elem $modpath { append script "\"${elem}\" " }
+	    set args "add-module m$i " 
+	    foreach elem $modpath { append args "\"${elem}\" " }
+	    eval netedit $args
 	}
 	# Write the x,y position of the modules icon on the network graph
-	append script "[expr int([$module get_x])] [expr int([$module get_y])]\]\n"
+	netedit module-position m$i [expr int([$module get_x])] [expr int([$module get_y])]
+
 	# Cache all connections to a big list to write out later in the file
 	eval lappend connections $Subnet(${module}_connections)
 	# Write user notes 
 	if { [info exists Notes($module)]&&[string length $Notes($module)] } {
-	    append script "${tab}set Notes(\$m$i) \{$Notes($module)\}\n"
+	    netedit mod-note m$i \{$Notes($module)\}
 	    if { [info exists Notes($module-Position)] } {
-		append script "${tab}set Notes(\$m$i-Position) "
-		append script  "\{$Notes($module-Position)\}\n"
+		netedit mod-note-pos m$i \{$Notes($module-Position)\}
 	    }
 	    if { [info exists Notes($module-Color)] } {
-		append script "${tab}set Notes(\$m$i-Color) "
-		append script "\{$Notes($module-Color)\}\n"
+		netedit mod-note-col m$i \{$Notes($module-Color)\}
 	    }
 	}
     }
@@ -1177,10 +1175,6 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     # Uniquely sort connections list by output port # to handle dynamic ports
     set connections [lsort -integer -index 3 [lsort -unique $connections]]
 
-    if [llength $connections] {
-	append script "\n"
-	append script "${tab}\# Create the Connections between Modules\n"
-    }
     set i 0
     foreach conn $connections {
 	incr i
@@ -1193,48 +1187,44 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	    continue
 	}
 
-        append script "${tab}set c$i \[addConnection "
-	append script "$modVar([oMod conn]) [oNum conn]"
-	append script " $modVar([iMod conn]) [iNum conn]\]\n"
+	netedit mod-connection c$i $modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]
+
 	set id [makeConnID $conn]
 	if { [info exists Disabled($id)] && $Disabled($id) } {
-	    append script "${tab}set Disabled(\$c$i) \{1\}\n"
+	    netedit conn-disabled c$i
 	}
 
 	if { [info exists ConnectionRoutes($id)] && \
 		 [string length $ConnectionRoutes($id)] } {
-	    append script "${tab}set ConnectionRoutes(\$c$i) "
-	    append script "\{$ConnectionRoutes($id)\}\n"
+	    netedit conn-route c$i \{$ConnectionRoutes($id)\}
 	}
 
 	if { [info exists Notes($id)] && [string length $Notes($id)] } {
-	    append script "${tab}set Notes(\$c$i) \{$Notes($id)\}\n"
+	    netedit conn-note c$i \{$Notes($id)\}
+
 	    if [info exists Notes($id-Position)] {
-		append script "${tab}set Notes(\$c$i-Position) "
-		append script "\{$Notes($id-Position)\}\n"
+		netedit conn-note-pos c$i \{$Notes($id-Position)\}
 	    }
 	    if { [info exists Notes($id-Color)] } {
-		append script "${tab}set Notes(\$c$i-Color) "
-		append script "\{$Notes($id-Color)\}\n"
+		netedit conn-note-col c$i \{$Notes($id-Color)\}
 	    }
 	}
     }
 
-    append script "\n${tab}\# Disable caching on applicable ports.\n"
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
         incr i
         set nports [portCount "$module 0 o"]
         for { set j 0 } { $j < $nports} { incr j } {
             if {[netedit supportsPortCaching $module $j] && ![netedit isPortCaching $module $j]} {
-                append script "${tab}setPortCaching \$m$i $j 0\n"
+		netedit set-port-caching m$i $j 0
             }
         }
     }
 
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	$module writeStateToScript script "\$m[incr i]" $tab
+	$module writeStateToScript script "m[incr i]" $tab
     }
 
     return $script
