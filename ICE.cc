@@ -355,13 +355,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   // Set up turbulence models - needs to be done after materials are initialized
   d_turbulence = TurbulenceFactory::create(cfd_ice_ps, sharedState);
-  
-  //__________________________________
-  //  Set up data analysis modules
-  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-  if(d_analysisModule){
-    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
-  }
 
   //__________________________________
   //  conservationTest
@@ -448,6 +441,13 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
                                lb->sp_vol_CCLabel,
                                lb->specific_heatLabel,
                                lb->gammaLabel);
+  }
+  
+  //__________________________________
+  //  Set up data analysis modules
+  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  if(d_analysisModule){
+    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
   }
 
 }
