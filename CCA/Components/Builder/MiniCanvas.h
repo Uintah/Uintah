@@ -26,53 +26,56 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-//#include <sci_defs/qt_defs.h>
-#include <iostream>
-#include <vtkImageReader.h>
-#include <vtkImageData.h>
 
-#include "ImageReader.h"
+#ifndef MiniCanvas_h
+#define MiniCanvas_h
 
-//#if HAVE_QT
-// #include <qfiledialog.h>
-//#endif
+//#include <Core/CCA/spec/cca_sidl.h>
 
-extern "C" SCIRun::vtk::Component* make_Vtk_ImageReader()
-{
-  return new SCIRun::vtk::ImageReader;
+#include <map>
+#include <string>
+
+class wxRect;
+class wxScrolledWindow;
+
+namespace GUIBuilder {
+
+class BuilderWindow;
+class NetworkCanvas;
+class Connection;
+
+// Scrolled window???
+
+class MiniCanvas : public wxScrolledWindow {
+public:
+  MiniCanvas(wxWindow* parent, NetworkCanvas* canvas, wxWindowID id, const wxPoint& pos, const wxSize& size);
+  virtual ~MiniCanvas();
+
+  bool Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style = wxHSCROLL|wxVSCROLL|wxSUNKEN_BORDER|wxRETAINED);
+
+  void SetCanvasShapes();
+
+  void OnPaint(wxPaintEvent& event);
+  void PaintBackground(wxDC& dc);
+  void OnDraw(wxDC& dc);
+
+protected:
+  MiniCanvas() { Init(); }
+  void Init();
+  void OnEraseBackground(wxEraseEvent& event) {}
+
+private:
+  NetworkCanvas *canvas;
+
+  std::vector<wxRect> iRects;
+  std::vector<Connection*> conns;
+
+  void scaleRect(wxRect& rect, int scaleV, int scaleH);
+
+  DECLARE_EVENT_TABLE()
+  DECLARE_DYNAMIC_CLASS(MiniCanvas)
+};
+
 }
 
-SCIRun::vtk::ImageReader::ImageReader()
-{
-  //set output port name
-  OutPort::setName("ImageReader::output");
-  this->reader = vtkImageReader::New();
-  addPort(this);
-  enableUI();
-}
-
-SCIRun::vtk::ImageReader::~ImageReader()
-{
-  reader->Delete();
-}
-
-int
-SCIRun::vtk::ImageReader::popupUI()
-{
-//#if HAVE_QT
-//  QString fn = QFileDialog::getOpenFileName("./","Vtk Image Files");
-//  if(fn.isNull())
-//    {
-//    return 1;
-//    }
-//  reader->SetFileName(fn);
-//  reader->Update();
-//#endif
-
-  return 0;
-}
-
-vtkObject*
-SCIRun::vtk::ImageReader::getOutput(){
-  return reader->GetOutput();
-}
+#endif
