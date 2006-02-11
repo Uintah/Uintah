@@ -49,9 +49,9 @@ GENHDRS := $(SRCDIR)/Hello_sidl.h
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
            Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
-ifeq ($(HAVE_QT),yes)
- LIBS := $(QT_LIBRARY)
-endif
+#ifeq ($(HAVE_QT),yes)
+# LIBS := $(QT_LIBRARY)
+#endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

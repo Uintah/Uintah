@@ -26,182 +26,142 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef BuilderWindow_h
+#define BuilderWindow_h
 
-/*
- *  BuilderWindow.h: 
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   October 2001
- *
- */
 
-#ifndef SCIRun_Framework_BuilderWindow_h
-#define SCIRun_Framework_BuilderWindow_h
-
-#include <Core/CCA/spec/cca_sidl.h>
-#include <CCA/Components/Builder/Module.h>
-#include <CCA/Components/Builder/Connection.h>
-#include <map>
-#include <vector>
-#include <qcanvas.h>
-#include <qtextedit.h>
-#include <qmainwindow.h>
-
-class NetworkCanvasView;
-
-class QAction;
-class QCanvasView;
-class QVBox;
-class QFont;
-class QPopupMenu;
-class QSplitter;
-class QLabel;
-
-namespace SCIRun {
-
-class BuilderWindow;
-class MenuTree;
-
-typedef std::map<std::string, int> IntMap;
-typedef std::map<std::string, MenuTree*> MenuMap;
-
-/**
- * \class MenuTree
- *
- */
-class MenuTree : public QObject
-{
-    Q_OBJECT
-public:
-    MenuTree(BuilderWindow* builder, const std::string &url);
-    virtual ~MenuTree();
-    void add(const std::vector<std::string>& name,
-         int nameindex,
-         const sci::cca::ComponentClassDescription::pointer& desc,
-         const std::string& fullname);
-    void coalesce();
-    void populateMenu( QPopupMenu* );
-    void clear();
-    // create menu based on port type? -- from builder service
-
-    sci::cca::ComponentClassDescription::pointer cd;
-
-private:
-    BuilderWindow* builder;
-    std::map<std::string, MenuTree*> child;
-    std::string url;
-
-private slots:
-    void instantiateComponent();  
-};
-
-/**
- *
- * \class BuilderWindow
- *  SCIRun2 main window
- */
-class BuilderWindow : public QMainWindow,
-            public sci::cca::ports::ComponentEventListener
-{
-    Q_OBJECT
-public:
-    BuilderWindow(const sci::cca::Services::pointer& services,
-                  QApplication *app);
-    virtual ~BuilderWindow();
-    void instantiateComponent(
-        const sci::cca::ComponentClassDescription::pointer &);
-
-    Module* instantiateBridgeComponent(const std::string& className,
-                                       const std::string& type,
-                                       const std::string& loaderName);
-    // From sci::cca::ComponentEventListener
-    virtual void componentActivity(
-        const sci::cca::ports::ComponentEvent::pointer &e);
-    void displayMsg(const char *);
-    void displayMsg(const QString &);
-    void buildRemotePackageMenus(
-        const sci::cca::ports::ComponentRepository::pointer &reg,
-        const std::string &frameworkURL);
-    void loadFile();
-
-    QPopupMenu* componentContextMenu() const { return componentMenu; }
-    const QApplication* application() const { return app; }
-    MenuMap* packageMenus() { return &menus; }
-
-public slots:
-    void updateMiniView();
-
-protected:
-    void closeEvent( QCloseEvent* );
-    IntMap popupMenuID;
-    MenuMap menus;
-
-private:
-    BuilderWindow(const BuilderWindow&);
-    BuilderWindow& operator=(const BuilderWindow&);
-    void setupFileActions();
-    void setupLoaderActions();
-    void buildPackageMenus();
-    void setupHelpActions();
-    void writeFile();
-
-    QApplication *app;
-    QFont *bFont;
-    QSplitter *vsplit;
-    QSplitter *hsplit;
-    QVBox *vBox;
-    QLabel *msgLabel;
-    QTextEdit *msgTextEdit;
-    QCanvas *miniCanvas,
-            *networkCanvas;
-    QCanvasView *miniView;
-    NetworkCanvasView* networkCanvasView;
-    QCanvasItemList tempQCL;
-    QAction *loadAction,
-            *insertAction,
-            *saveAction,
-            *saveAsAction,
-            *clearAction,
-            *addInfoAction,
-            *addPathAction,
-            *quitAction,
-            *exitAction,
-            *addLoaderAction,
-            *rmLoaderAction,
-            *refreshAction;
-    QPopupMenu *componentMenu;
-    //QPopupMenu *loaderMenu;
-
-    std::string filename;
-    sci::cca::Services::pointer services;
-    std::vector<QCanvasRectangle*> miniRect;
-    //std::vector<sci::cca::ComponentID::pointer> windows;
-
-private slots:
-    void save();
-    void saveAs();
-    void load();
-    void insert();
-    void clear();
-    void addInfo();
-    void exit();
-    void mxn_add();
-    void performance_mngr();
-    void performance_tau_add();
-    void demos();
-    void about();
-    void addLoader();
-    void rmLoader();
-    void refresh();
-    void addSidlXmlPath();
-};
-
-} // end namespace SCIRun
-
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+ #include <wx/wx.h>
 #endif
 
+#include <Core/CCA/spec/cca_sidl.h>
+
+#include <string>
+
+class wxEvtHandler;
+class wxFrame;
+class wxSashLayoutWindow;
+class wxSashEvent;
+class wxTextCtrl;
+class wxMenuBar;
+
+namespace GUIBuilder {
+
+class BuilderWindow;
+class MiniCanvas;
+class NetworkCanvas;
+
+class MenuTree : public wxEvtHandler {
+public:
+  enum { // user specified ids for widgets, menus
+    ID_MENU_COMPONENTS = wxID_HIGHEST,
+    ID_MENUTREE_HIGHEST = ID_MENU_COMPONENTS + 1,
+  };
+
+  MenuTree(BuilderWindow* builder, const std::string &url);
+  virtual ~MenuTree();
+
+  void add(const std::vector<std::string>& name, int nameindex, const sci::cca::ComponentClassDescription::pointer& desc, const std::string& fullname);
+  void coalesce();
+  void populateMenu(wxMenu* menu);
+  void clear();
+
+  void OnInstantiateComponent(wxCommandEvent& event);
 
 
+private:
+  BuilderWindow* builder;
+  sci::cca::ComponentClassDescription::pointer cd;
+  std::map<std::string, MenuTree*> child;
+  std::string url;
+  int id;
+};
+
+class BuilderWindow : public wxFrame /*, public sci::cca::ports::ComponentEventListener */ {
+public:
+  //typedef std::map<std::string, int> IntMap;
+  typedef std::map<std::string, MenuTree*> MenuMap;
+
+  enum { // user specified ids for widgets, menus
+    ID_WINDOW_LEFT = MenuTree::ID_MENUTREE_HIGHEST,
+    ID_WINDOW_RIGHT,
+    ID_WINDOW_BOTTOM,
+    ID_NET_WINDOW,
+    ID_MINI_WINDOW,
+    ID_TEXT_WINDOW,
+    ID_MENU_TEST,
+    ID_BUILDERWINDOW_HIGHEST = ID_MENU_TEST + 1,
+  };
+
+  BuilderWindow(const sci::cca::BuilderComponent::pointer& bc, wxWindow *parent);
+  virtual ~BuilderWindow();
+
+  // two-step creation
+  bool Create(wxWindow* parent, wxWindowID id,
+              const wxString& title = wxString(wxT("SCIRun2 GUI Builder")),
+              const wxPoint& pos = wxDefaultPosition,
+              const wxSize& size = wxSize(WIDTH, HEIGHT),
+              long style = wxDEFAULT_FRAME_STYLE,
+              const wxString& name = wxString(wxT("SCIRun2")));
+
+  // set builder only if builder is null
+  bool SetBuilder(const sci::cca::BuilderComponent::pointer& bc);
+
+  // Event handlers
+  void OnQuit(wxCommandEvent& event);
+  void OnAbout(wxCommandEvent& event);
+  void OnSize(wxSizeEvent& event);
+  void OnSashDrag(wxSashEvent& event);
+  void OnTest(wxCommandEvent& event);
+
+  void InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd);
+
+  void RefreshMiniCanvas();
+
+  static int GetNextID() { return ++IdCounter; }
+  static int GetCurrentID() { return IdCounter; }
+
+  static const wxColor BACKGROUND_COLOUR;
+
+protected:
+  BuilderWindow() { Init(); }
+  // common initialization
+  void Init();
+
+  MiniCanvas* miniCanvas;
+  wxTextCtrl* textCtrl;
+  NetworkCanvas* networkCanvas;
+
+  wxSashLayoutWindow* leftWindow;
+  wxSashLayoutWindow* rightWindow;
+  wxSashLayoutWindow* bottomWindow;
+
+  wxMenuBar* menuBar;
+  wxStatusBar* statusBar;
+
+  MenuMap menus;
+
+private:
+  DECLARE_DYNAMIC_CLASS(BuilderWindow)
+  // This class handles events
+  DECLARE_EVENT_TABLE()
+
+  static const int MIN = 4;
+  static const int WIDTH = 1000;
+  static const int HEIGHT = 800;
+  static const int TOP_HEIGHT = 300;
+  static const int BOTTOM_HEIGHT = 500;
+  static const int MINI_WIDTH = 350;
+  static const int TEXT_WIDTH = 650;
+  static int IdCounter;
+
+  sci::cca::BuilderComponent::pointer builder;
+  std::string url;
+
+  void buildPackageMenus();
+};
+
+}
+
+#endif

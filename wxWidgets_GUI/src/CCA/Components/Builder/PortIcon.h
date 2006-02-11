@@ -34,106 +34,21 @@
 #ifndef PortIcon_h
 #define PortIcon_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+// try wxColorDatabase for port colors
 
-#include <qcolor.h>
-#include <qrect.h>
-#include <qpoint.h>
-#include <string>
+namespace SCIRun {
 
-class Module;
-class QPainter;
-class QPopupMenu;
-class QRect;
-
-class PortIcon
+class PortIcon : public wxRegion
 {
 public:
-    enum PortType{ USES, PROVIDES };
-
-    PortIcon(Module *module, const std::string& model,
-             const std::string& type, const std::string &name,
-             PortType pType, const QRect &r, const int num,
-             const sci::cca::Services::pointer &services);
-    ~PortIcon();
-    void drawPort(QPainter &p);
-
-    QPopupMenu* menu() const;
-    QPoint portPoint();
-    int number() const;
-    Module* module() const;
-    std::string typeName() const;
-    std::string name() const;
-    PortType type() const;
-    QColor color() const;
-    QColor highlight() const;
-    QRect rect() const;
+  PortIcon();
+  ~PortIcon();
+//void drawPort(QPainter &p);
 
 private:
-    void portColorMap();
-
-    Module *mod;
-    std::string pModel;
-    std::string tName;
-    PortType pType;
-    std::string pName;
-    // allows modules to keep track of their ports & used to calc. posn.
-    int num;
-
-    QPopupMenu *pMenu;
-    QColor pColor;
-    QColor iColor;
-    QRect pRect;
-    QRect iRect;
-    sci::cca::TypeMap::pointer colorMap;
-    sci::cca::Services::pointer services;
+  DECLARE_EVENT_TABLE()
 };
 
-inline QPopupMenu* PortIcon::menu() const
-{
-    return pMenu;
-}
-
-inline int PortIcon::number() const
-{
-    return num;
-}
-
-inline Module* PortIcon::module() const
-{
-    return mod;
-}
-
-inline std::string PortIcon::typeName() const
-{
-    return tName;
-}
-
-inline std::string PortIcon::name() const
-{
-    return pName;
-}
-
-inline PortIcon::PortType PortIcon::type() const
-{
-    return pType;
-}
-
-inline QColor PortIcon::color() const
-{
-    return pColor;
-}
-
-inline QColor PortIcon::highlight() const
-{
-    std::string highlight =
-        colorMap->getString(std::string("highlight"), "");
-    return QColor(highlight.c_str());
-}
-
-inline QRect PortIcon::rect() const
-{
-    return pRect;
 }
 
 #endif

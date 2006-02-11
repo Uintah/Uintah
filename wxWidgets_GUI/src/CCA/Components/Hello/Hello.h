@@ -69,17 +69,17 @@ private:
   sci::cca::Services::pointer services;
 };
 
-class HelloComponentIcon : public sci::cca::ports::ComponentIcon {
-public:
-  HelloComponentIcon() {}
-  virtual ~HelloComponentIcon() {}
+// class HelloComponentIcon : public sci::cca::ports::ComponentIcon {
+// public:
+//   HelloComponentIcon() {}
+//   virtual ~HelloComponentIcon() {}
 
-  virtual std::string getDisplayName();
-  virtual std::string getDescription();
-  virtual std::string getIconShape();
-  virtual int getProgressBar();
-  static const int STEPS = 50;
-};
+//   virtual std::string getDisplayName();
+//   virtual std::string getDescription();
+//   virtual std::string getIconShape();
+//   virtual int getProgressBar();
+//   static const int STEPS = 50;
+// };
 
 // demonstrate use of Go port, UI port and ComponentRelease
 class Hello : public sci::cca::Hello {

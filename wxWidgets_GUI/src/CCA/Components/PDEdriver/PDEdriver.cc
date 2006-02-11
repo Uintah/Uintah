@@ -41,10 +41,10 @@
 #include <CCA/Components/PDEdriver/PDEdriver.h>
 #include <iostream>
 #include <fstream>
-#include <CCA/Components/Builder/QtUtils.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
-#include <qfiledialog.h>
-#include <qmessagebox.h>
+//#include <CCA/Components/Builder/QtUtils.h>
+// #include <qfiledialog.h>
+// #include <qmessagebox.h>
 
 
 using namespace std;
@@ -76,12 +76,12 @@ std::cerr << "PDEdriver::~PDEdriver" << std::endl;
 void PDEdriver::setServices(const sci::cca::Services::pointer& svc)
 {
   services = svc;
-  //register provides ports here ...  
+  //register provides ports here ...
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
   PDEGoPort *gop = new PDEGoPort(svc);
   svc->addProvidesPort(PDEGoPort::pointer(gop),"go","sci.cca.ports.GoPort", props);
-  svc->addProvidesPort(PDEComponentIcon::pointer(new PDEComponentIcon), "icon", "sci.cca.ports.ComponentIcon", svc->createTypeMap());
+//   svc->addProvidesPort(PDEComponentIcon::pointer(new PDEComponentIcon), "icon", "sci.cca.ports.ComponentIcon", svc->createTypeMap());
 
   svc->registerUsesPort("pde","sci.cca.ports.PDEdescriptionPort", svc->createTypeMap());
   svc->registerUsesPort("mesh","sci.cca.ports.MeshPort", svc->createTypeMap());
@@ -89,20 +89,20 @@ void PDEdriver::setServices(const sci::cca::Services::pointer& svc)
   svc->registerUsesPort("linsolver","sci.cca.ports.LinSolverPort", svc->createTypeMap());
   svc->registerUsesPort("viewer","sci.cca.ports.ViewPort", svc->createTypeMap());
 
-  svc->registerUsesPort("progress","sci.cca.ports.Progress", svc->createTypeMap());
+//   svc->registerUsesPort("progress","sci.cca.ports.Progress", svc->createTypeMap());
 }
 
-void PDEGoPort::updateProgress(int counter)
-{
-  if (pPtr.isNull()) return;
-  pPtr->updateProgress(counter);
-}
+// void PDEGoPort::updateProgress(int counter)
+// {
+//   if (pPtr.isNull()) return;
+//   pPtr->updateProgress(counter);
+// }
 
-int PDEGoPort::go() 
+int PDEGoPort::go()
 {
   //driver's go() acts like a main()
   SSIDL::array1<double> nodes;
-  SSIDL::array1<int> boundries; 
+  SSIDL::array1<int> boundries;
   SSIDL::array1<int> dirichletNodes;
   SSIDL::array1<double> dirichletValues;
   SSIDL::array1<int> triangles;
@@ -112,64 +112,64 @@ int PDEGoPort::go()
 
   int size = 0;
   int progCtr = 0;
-  try {
-    sci::cca::Port::pointer progPort = services->getPort("progress");  
-    pPtr = pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    QMessageBox::warning(0, "PDEdriver", e->getNote());
-  }  
+//   try {
+//     sci::cca::Port::pointer progPort = services->getPort("progress");
+//     pPtr = pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+//   }
+//   catch (const sci::cca::CCAException::pointer &e) {
+//     QMessageBox::warning(0, "PDEdriver", e->getNote());
+//   }
   sci::cca::ports::PDEdescriptionPort::pointer pdePort;
   try {
-    sci::cca::Port::pointer pp = services->getPort("pde");   
+    sci::cca::Port::pointer pp = services->getPort("pde");
     pdePort = pidl_cast<sci::cca::ports::PDEdescriptionPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    QMessageBox::warning(0, "PDEdriver", e->getNote());
+    //QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
   pdePort->getPDEdescription(nodes, boundries, dirichletNodes, dirichletValues);
   services->releasePort("pde");
-  updateProgress(++progCtr);
+  //updateProgress(++progCtr);
 
   sci::cca::ports::MeshPort::pointer meshPort;
   try {
-    sci::cca::Port::pointer pp = services->getPort("mesh");  
+    sci::cca::Port::pointer pp = services->getPort("mesh");
     meshPort = pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    QMessageBox::warning(0, "PDEdriver", e->getNote());
+    //QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
   meshPort->triangulate(nodes, boundries, triangles);
   services->releasePort("mesh");
-  updateProgress(++progCtr);
+  //updateProgress(++progCtr);
 
   sci::cca::ports::FEMmatrixPort::pointer fem_matrixPort;
   try {
-    sci::cca::Port::pointer pp = services->getPort("fem_matrix");    
+    sci::cca::Port::pointer pp = services->getPort("fem_matrix");
     fem_matrixPort = pidl_cast<sci::cca::ports::FEMmatrixPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    QMessageBox::warning(0, "PDEdriver", e->getNote());
+    //QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
   fem_matrixPort->makeFEMmatrices(triangles, nodes,
-                                  dirichletNodes, dirichletValues,
-                                  Ag, fg, size);
+				  dirichletNodes, dirichletValues,
+				  Ag, fg, size);
   services->releasePort("fem_matrix");
-  updateProgress(++progCtr);
+  //updateProgress(++progCtr);
 
   sci::cca::ports::LinSolverPort::pointer linsolverPort;
   try {
-    sci::cca::Port::pointer pp = services->getPort("linsolver"); 
+    sci::cca::Port::pointer pp = services->getPort("linsolver");
     linsolverPort = pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    QMessageBox::warning(0, "PDEdriver", e->getNote());
+    //QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
-  updateProgress(++progCtr);
+  //updateProgress(++progCtr);
 
   /////////////////////////////
   //NEED REVERSE THIS dr[0] dr[1] AFTER KOSTA CHANGES THE
@@ -181,48 +181,47 @@ int PDEGoPort::go()
   // unused variable:
   //MxNArrayRep* arrr = new MxNArrayRep(2,dr);
   delete dr[0];
-  delete dr[1]; 
+  delete dr[1];
 
-  // linsolverPort->setCallerDistribution("DMatrix",arrr); 
+  // linsolverPort->setCallerDistribution("DMatrix",arrr);
   linsolverPort->jacobi(Ag, fg, x);
   services->releasePort("linsolver");
-  updateProgress(++progCtr);
+  //updateProgress(++progCtr);
 
   sci::cca::ports::ViewPort::pointer viewPort;
   try {
-    sci::cca::Port::pointer pp = services->getPort("viewer");    
+    sci::cca::Port::pointer pp = services->getPort("viewer");
     viewPort = pidl_cast<sci::cca::ports::ViewPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    QMessageBox::warning(0, "PDEdriver", e->getNote());
+    //QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
   viewPort->view2dPDE(nodes, triangles, x);
   services->releasePort("viewer");
-  updateProgress(++progCtr);
+  //updateProgress(++progCtr);
 
-  services->releasePort("progress");
+//   services->releasePort("progress");
   return 0;
 }
 
 
-std::string PDEComponentIcon::getDisplayName()
-{
-  return "PDE Driver";
-}
+// std::string PDEComponentIcon::getDisplayName()
+// {
+//   return "PDE Driver";
+// }
 
-std::string PDEComponentIcon::getDescription()
-{
-  return "PDE Driver Component";
-}
+// std::string PDEComponentIcon::getDescription()
+// {
+//   return "PDE Driver Component";
+// }
 
-int PDEComponentIcon::getProgressBar()
-{
-  return 6;
-}
- 
-std::string PDEComponentIcon::getIconShape()
-{
-  return "RECT";
-}
+// int PDEComponentIcon::getProgressBar()
+// {
+//   return 6;
+// }
 
+// std::string PDEComponentIcon::getIconShape()
+// {
+//   return "RECT";
+// }
