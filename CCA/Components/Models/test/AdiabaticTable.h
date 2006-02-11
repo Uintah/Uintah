@@ -139,12 +139,15 @@ WARNING
     public:
       Region(GeometryPiece* piece, ProblemSpecP&);
       
+      void outputProblemSpec(ProblemSpecP&);
+
       GeometryPiece* piece;
       double initialScalar;
     };
 
     class Scalar {
     public:
+      void outputProblemSpec(ProblemSpecP&);
       int index;
       string name;
       // labels for this particular scalar
@@ -159,6 +162,8 @@ WARNING
       vector<Region*> regions;
       double diff_coeff;
       double refineCriteria;
+      bool d_test_conservation;
+      bool d_doTableTest;
     };
 
     double oldProbeDumpTime;
@@ -172,6 +177,11 @@ WARNING
 
     TableInterface* table;
     struct TableValue {
+      void outputProblemSpec(ProblemSpecP& ps)
+      {
+        ps->appendElement("tableValue",name,false,3);
+
+      };
       string name;
       int index;
       VarLabel* label;
@@ -196,8 +206,7 @@ WARNING
     int d_ref_cv_index;
     int d_ref_gamma_index;
     int d_ref_temp_index;
-    bool d_test_conservation;
-    bool d_doTableTest;
+
     bool d_useVariance;
     double varianceScale;
     double varianceMax;

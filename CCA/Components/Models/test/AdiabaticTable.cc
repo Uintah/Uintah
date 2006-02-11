@@ -101,27 +101,55 @@ AdiabaticTable::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
   ps->require("scalar", initialScalar);
 }
 
+void AdiabaticTable::Region::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP geom_obj_ps = ps->appendChild("geom_object",true,4);
+  piece->outputProblemSpec(geom_obj_ps);
+  geom_obj_ps->appendElement("scalar", initialScalar,false,4);
+}
+
+void AdiabaticTable::Scalar::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP scalar_ps = ps->appendChild("scalar",true,3);
+  scalar_ps->setAttribute("name",name);
+
+  scalar_ps->appendElement("test_conservation", d_test_conservation,false,4);
+  scalar_ps->appendElement("doTableTest", d_doTableTest,false,4);
+
+  ProblemSpecP constants_ps = scalar_ps->appendChild("constants",true,4);
+  constants_ps->appendElement("diffusivity",diff_coeff,false,4);
+  constants_ps->appendElement("AMR_Refinement_Criteria",
+                              refineCriteria,false,4);
+  
+  for (vector<Region*>::const_iterator it = regions.begin();
+       it != regions.end(); ++it) {
+    (*it)->outputProblemSpec(scalar_ps);
+  }
+
+}
+
+
 void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 {
-#if 0
   ProblemSpecP model_ps = ps->appendChild("Model",true,3);
   model_ps->setAttribute("type","AdiabaticTable");
+
+  for (vector<TableValue*>::const_iterator it = tablevalues.begin();
+       it != tablevalues.end(); ++it)
+    (*it)->outputProblemSpec(model_ps);
 
   model_ps->appendElement("material",d_matl->getName(),false,4);
 
   model_ps->appendElement("varianceScale",varianceScale,false,4);
   model_ps->appendElement("varianceMax",varianceMax,false,4);
 
+#if 1
   ProblemSpecP table_ps = model_ps->appendChild("table",true,4);
   table_ps->setAttribute("name","adiabatic");
-
   table->outputProblemSpec(table_ps);
-
 #endif
-
-  ps = params;
-
-
+  d_scalar->outputProblemSpec(model_ps);
+  
 }
 
 
@@ -209,8 +237,8 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     throw ProblemSetupException("AdiabaticTable: Couldn't find scalar tag", __FILE__, __LINE__);    
   }
    
-  child->getWithDefault("test_conservation", d_test_conservation, false);
-  child->getWithDefault("doTableTest",       d_doTableTest,      false);
+  child->getWithDefault("test_conservation", d_scalar->d_test_conservation, false);
+  child->getWithDefault("doTableTest",       d_scalar->d_doTableTest, false);
    
   ProblemSpecP const_ps = child->findBlock("constants");
   if(!const_ps) {
@@ -361,7 +389,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     } // regions
     
     
-    if(d_doTableTest){   // 1D table test problem
+    if(d_scalar->d_doTableTest){   // 1D table test problem
       for(CellIterator iter = patch->getExtraCellIterator();
             !iter.done(); iter++){
         IntVector c = *iter;
@@ -681,7 +709,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       
       //__________________________________
       //  table sanity test
-      if(d_doTableTest){
+      if(d_scalar->d_doTableTest){
         CCVariable<double> rho_table, mix_mol_weight, co2, h2o;
         new_dw->allocateTemporary(rho_table, patch);
         new_dw->allocateTemporary(co2, patch);
@@ -814,7 +842,7 @@ void AdiabaticTable::scheduleTestConservation(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const ModelInfo* mi)
 {
-  if(d_test_conservation){
+  if(d_scalar->d_test_conservation){
     cout_doing << "ADIABATICTABLE::scheduleTestConservation " << endl;
     Task* t = scinew Task("AdiabaticTable::testConservation", 
                      this,&AdiabaticTable::testConservation, mi);
