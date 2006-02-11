@@ -90,8 +90,15 @@ public:
     ID_NET_WINDOW,
     ID_MINI_WINDOW,
     ID_TEXT_WINDOW,
-    ID_MENU_TEST,
-    ID_BUILDERWINDOW_HIGHEST = ID_MENU_TEST + 1,
+    ID_MENU_TEST, // temporary
+    ID_MENU_LOAD,
+    ID_MENU_INSERT,
+    ID_MENU_CLEAR,
+    //ID_MENU_EXECALL,
+    ID_MENU_COMPONENT_WIZARD,
+    ID_MENU_WIZARDS,
+    ID_MENU_ADDINFO,
+    ID_BUILDERWINDOW_HIGHEST = ID_MENU_ADDINFO + 1,
   };
 
   BuilderWindow(const sci::cca::BuilderComponent::pointer& bc, wxWindow *parent);
