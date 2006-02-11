@@ -38,18 +38,13 @@
  *
  */
 
-#include <sci_defs/qt_defs.h>
+//#include <sci_defs/wx_defs.h>
 #include <CCA/Components/Hello/Hello.h>
-#include <CCA/Components/Builder/QtUtils.h>
+//#include <CCA/Components/Builder/QtUtils.h>
 #include <Core/Thread/Time.h>
 #include <SCIRun/TypeMap.h>
 
 #include <iostream>
-
-#if HAVE_QT
- #include <qmessagebox.h>
- #include <qstring.h>
-#endif
 
 #include <unistd.h>
 
@@ -89,39 +84,38 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
     svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort",
                          sci::cca::TypeMap::pointer(0));
 
-    HelloComponentIcon::pointer ciPortPtr = HelloComponentIcon::pointer(new HelloComponentIcon);
-
-    svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
-                         sci::cca::TypeMap::pointer(0));
-
     props->putString("cca.portName", "stringport");
     props->putString("cca.portType", "sci.cca.ports.StringPort");
     svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
 
-    sci::cca::TypeMap::pointer props2 = svc->createTypeMap();
-    svc->registerUsesPort("progress","sci.cca.ports.Progress", props2);
+//     HelloComponentIcon::pointer ciPortPtr = HelloComponentIcon::pointer(new HelloComponentIcon);
+//     svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
+//                          sci::cca::TypeMap::pointer(0));
+
+//     sci::cca::TypeMap::pointer props2 = svc->createTypeMap();
+//     svc->registerUsesPort("progress","sci.cca.ports.Progress", props2);
 }
 
 void Hello::releaseServices(const sci::cca::Services::pointer& svc)
 {
 std::cerr << "Hello::releaseServices" << std::endl;
 
-    svc->unregisterUsesPort("stringport");
-    svc->unregisterUsesPort("progress");
+//     svc->unregisterUsesPort("stringport");
+//     svc->unregisterUsesPort("progress");
 
-    svc->removeProvidesPort("ui");
-    svc->removeProvidesPort("go");
-    svc->removeProvidesPort("icon");
+//     svc->removeProvidesPort("ui");
+//     svc->removeProvidesPort("go");
+//     svc->removeProvidesPort("icon");
 }
 
 
 int HelloUIPort::ui()
 {
-#if HAVE_QT
-    QMessageBox::information(0, "Hello", com->text);
-#else
+// #if HAVE_QT
+//     QMessageBox::information(0, "Hello", com->text);
+// #else
     std::cerr << "UI not available." << std::endl;
-#endif
+// #endif
     return 0;
 }
 
@@ -135,18 +129,18 @@ int HelloGoPort::go()
     double st = SCIRun::Time::currentSeconds();
 
     sci::cca::Port::pointer pp;
-    sci::cca::Port::pointer progPort;
+//     sci::cca::Port::pointer progPort;
     try {
         pp = services->getPort("stringport");
-        progPort = services->getPort("progress");
+//         progPort = services->getPort("progress");
     }
     catch (const sci::cca::CCAException::pointer &e) {
         std::cerr << e->getNote() << std::endl;
         return 1;
     }
 
-     sci::cca::ports::Progress::pointer pPtr =
-         pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+//      sci::cca::ports::Progress::pointer pPtr =
+//          pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
 
     sci::cca::ports::StringPort::pointer sp =
         pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
@@ -160,30 +154,30 @@ int HelloGoPort::go()
       com->text = name.c_str();
     }
 
-    pPtr->updateProgress(HelloComponentIcon::STEPS);
+//     pPtr->updateProgress(HelloComponentIcon::STEPS);
     services->releasePort("stringport");
-    services->releasePort("progress");
+//     services->releasePort("progress");
 
     return 0;
 }
 
-std::string HelloComponentIcon::getDisplayName()
-{
-    return std::string("Hello Component");
-}
+// std::string HelloComponentIcon::getDisplayName()
+// {
+//     return std::string("Hello Component");
+// }
 
-std::string HelloComponentIcon::getDescription()
-{
-    return std::string("The Hello component is a sample CCA component that uses a sci::cca::StringPort.");
-}
+// std::string HelloComponentIcon::getDescription()
+// {
+//     return std::string("The Hello component is a sample CCA component that uses a sci::cca::StringPort.");
+// }
 
-int HelloComponentIcon::getProgressBar()
-{
-    return STEPS;
-}
+// int HelloComponentIcon::getProgressBar()
+// {
+//     return STEPS;
+// }
 
-std::string HelloComponentIcon::getIconShape()
-{
-    return std::string("RECT");
-}
+// std::string HelloComponentIcon::getIconShape()
+// {
+//     return std::string("RECT");
+// }
 

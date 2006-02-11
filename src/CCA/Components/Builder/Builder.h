@@ -26,79 +26,89 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef Builder_h
+#define Builder_h
 
-/*
- *  Builder.h: 
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   October 2001
- *
- */
-
-#ifndef SCIRun_Framework_Builder_h
-#define SCIRun_Framework_Builder_h
+#include <wx/app.h>
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+ #include <wx/wx.h>
+#endif
 
 #include <Core/CCA/spec/cca_sidl.h>
+//#include <Core/Thread/Mutex.h>
+#include <CCA/Components/Builder/BuilderWindow.h>
 
 #include <string>
+//#include <vector>
 
+// check \#if wxUSE_STATUSBAR, wxUSE_MENUS, wxUSE_THREADS...
 
-namespace SCIRun{
+class SCIRun::Semaphore;
+class SCIRun::Mutex;
 
-class BuilderWindow;
-class Builder;
+namespace GUIBuilder {
 
-/**
- * \class myBuilderPort
- *
- * An extension and implementation of sci::cca::ports::BuilderPort. 
- */
-class myBuilderPort : public virtual sci::cca::ports::BuilderPort
-{
+// wxApp is a singleton class, has private copy ctor, assgn. op. (see wx/app.h, wx/def.h)
+class wxSCIRunApp : public wxApp {
 public:
-  virtual ~myBuilderPort();
-  /** Obtain Services handle, through which the component communicates with the
-      framework. */
-  virtual void setServices(const sci::cca::Services::pointer& svc);
-  
-    /** ? */
-    virtual void buildRemotePackageMenus(
-    const sci::cca::ports::ComponentRepository::pointer &reg,
-    const std::string &frameworkURL);
+  virtual bool OnInit();
+  // virtual int OnExit() { return wxApp::OnExit(); }
+  void addTopWindow(const sci::cca::BuilderComponent::pointer& bc);
 
-protected:
-  friend class Builder;
-  sci::cca::Services::pointer services;
-  BuilderWindow* builder;
-};
-
-
-/**
- * \class Builder
- *
- * ?
- */
-class Builder : public sci::cca::Component
-{
-public:
-  Builder();
-  virtual ~Builder();
-  
-  /** Obtain Services handle, through which the component communicates with the
-      framework. */
-  virtual void setServices(const sci::cca::Services::pointer& svc);
-
-  virtual void setCommunicator(int comm) {  };
+  static void setTopBuilder(const sci::cca::BuilderComponent::pointer& bc) { topBuilder = bc; }
+  static void semDown() { sem.down(); }
+  static void semUp() { sem.up(); }
 
 private:
-  Builder(const Builder&);
-  Builder& operator=(const Builder&);
-  myBuilderPort builderPort;
+  static SCIRun::Mutex appLock;
+  static SCIRun::Semaphore sem;
+  // keep track of inital Builder component (instantiated from main)
+  static sci::cca::BuilderComponent::pointer topBuilder;
+  //static std::vector<sci::cca::BuilderComponent> activeBuilders;
 };
 
-} //namespace SCIRun
+DECLARE_APP(wxSCIRunApp)
+
+class Builder : public sci::cca::BuilderComponent {
+public:
+  enum PortType { Uses = 0, Provides };
+
+  Builder();
+  virtual ~Builder();
+  virtual void setServices(const sci::cca::Services::pointer &svc);
+  virtual std::string getFrameworkURL() { return frameworkURL; }
+  virtual sci::cca::ComponentID::pointer createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties);
+  virtual void getUsedPortNames(const sci::cca::ComponentID::pointer& cid,
+				SSIDL::array1<std::string>& nameArray);
+  virtual void getProvidedPortNames(const sci::cca::ComponentID::pointer& cid,
+				    SSIDL::array1<std::string>& nameArray);
+  virtual void getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray);
+
+  virtual void getCompatiblePortList(const sci::cca::ComponentID::pointer& user,
+				     const std::string& usesPortName,
+				     const sci::cca::ComponentID::pointer& provider,
+				     SSIDL::array1<std::string>& portArray);
+
+  /* virtual */ bool go();
+
+  virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
+  virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
+
+  static void setApp(wxSCIRunApp& a) { app = &a; }
+
+private:
+  Builder(const Builder &);
+  Builder& operator=(const Builder &);
+
+  sci::cca::Services::pointer services;
+  std::string frameworkURL;
+
+  static const std::string guiThreadName;
+  static SCIRun::Mutex builderLock;
+  static wxSCIRunApp* app;
+};
+
+}
 
 #endif

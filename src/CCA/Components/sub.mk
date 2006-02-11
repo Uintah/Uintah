@@ -31,29 +31,36 @@
 
 SRCDIR   := CCA/Components
 
-ifeq ($(HAVE_QT),yes)
-  SUBDIRS := \
-             $(SRCDIR)/Builder \
-             $(SRCDIR)/TxtBuilder \
-             $(SRCDIR)/Hello  \
-             $(SRCDIR)/ListPlotter \
-             $(SRCDIR)/ZList \
-             $(SRCDIR)/ZListWriter \
-             $(SRCDIR)/Viewer \
-             $(SRCDIR)/LinSolver \
-             $(SRCDIR)/FileReader \
-             $(SRCDIR)/FEM \
-             $(SRCDIR)/Tri \
-             $(SRCDIR)/TableTennis \
-             $(SRCDIR)/TTClient \
-             $(SRCDIR)/World \
-             $(SRCDIR)/PDEdriver 
-else
- SUBDIRS := \
-            $(SRCDIR)/TxtBuilder \
+#ifeq ($(HAVE_QT),yes)
+#  SUBDIRS := \
+#             $(SRCDIR)/TxtBuilder \
+#             $(SRCDIR)/Hello  \
+#             $(SRCDIR)/ListPlotter \
+#             $(SRCDIR)/ZList \
+#             $(SRCDIR)/ZListWriter \
+#             $(SRCDIR)/Viewer \
+#             $(SRCDIR)/LinSolver \
+#             $(SRCDIR)/FileReader \
+#             $(SRCDIR)/FEM \
+#             $(SRCDIR)/Tri \
+#             $(SRCDIR)/TableTennis \
+#             $(SRCDIR)/TTClient \
+#             $(SRCDIR)/World \
+#             $(SRCDIR)/PDEdriver
+#else
+# SUBDIRS := \
+#            $(SRCDIR)/TxtBuilder \
+#            $(SRCDIR)/Hello \
+#            $(SRCDIR)/World
+#endif
+
+SUBDIRS := \
             $(SRCDIR)/Hello \
-            $(SRCDIR)/World
-endif
+            $(SRCDIR)/World \
+            $(SRCDIR)/PDEdriver
+
+## until configure support for wxWidgets:
+SUBDIRS += $(SRCDIR)/Builder
 
 ifeq ($(HAVE_TAO),yes)
   SUBDIRS += $(SRCDIR)/TAO

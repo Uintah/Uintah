@@ -26,126 +26,242 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-/*
- *  Builder.cc:
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   October 2001
- *
- */
-
-#ifndef DEBUG
- #define DEBUG 0
-#endif
+#include <wx/splash.h>
+#include <wx/bitmap.h>
+#include <wx/image.h>
 
 #include <CCA/Components/Builder/Builder.h>
-#include <CCA/Components/Builder/BuilderWindow.h>
-#include <CCA/Components/Builder/QtUtils.h>
-#include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Util/Environment.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 
-#include <qapplication.h>
-#include <qsplashscreen.h>
+//#include <iostream>
 
-#include <iostream>
+namespace GUIBuilder {
 
-namespace SCIRun {
+using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 {
   return sci::cca::Component::pointer(new Builder());
 }
 
-void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
+Mutex wxSCIRunApp::appLock("GUI application lock");
+Semaphore wxSCIRunApp::sem("wxWidgets GUI Thread startup wait", 0);
+sci::cca::BuilderComponent::pointer wxSCIRunApp::topBuilder(0);
+
+const std::string Builder::guiThreadName("wxWidgets GUI Builder");
+Mutex Builder::builderLock("Builder class lock");
+wxSCIRunApp* Builder::app = 0;
+
+// Don't automatically create main function (see wx/app.h).
+// Initializes global application object.
+IMPLEMENT_APP_NO_MAIN(wxSCIRunApp)
+
+
+class wxGUIThread : public Runnable {
+public:
+    wxGUIThread(const sci::cca::BuilderComponent::pointer &bc) : builder(bc) {}
+    virtual ~wxGUIThread() {}
+    virtual void run();
+    sci::cca::BuilderComponent::pointer getBuilder() { return builder; }
+
+private:
+   // store builder handle
+    sci::cca::BuilderComponent::pointer builder;
+};
+
+void wxGUIThread::run()
 {
-  services = svc;
-#if DEBUG
-  std::cerr << "BuilderPort::setServices" << std::endl;
-#endif
-  QApplication* app = QtUtils::getApplication();
-#ifdef QT_THREAD_SUPPORT
-  app->lock();
-#endif
-
-  QString path(sci_getenv("SCIRUN_SRCDIR"));
-  path.append("/CCA/Components/Builder/scirun2-splash.png");
-  QSplashScreen* splash =
-      new QSplashScreen(QPixmap(path), Qt::WStyle_StaysOnTop);
-  splash->show();
-
-  builder = new BuilderWindow(services, app);
-  splash->finish(builder); // wait for a QMainWindow to show
-
-  builder->addReference();
-  builder->show();
-  delete splash;
-#ifdef QT_THREAD_SUPPORT
-  app->unlock();
-#endif
+    std::cerr << "******************wxGUIThread::run()**********************" << std::endl;
+    wxSCIRunApp::setTopBuilder(builder);
+    int argc = 1;
+    char *argv[1];
+    argv[0] = "SCIRun2";
+    // add framework URL to args???
+    // initialize single wxApp instance and run main loop (Unix-specific):
+    wxEntry(argc, argv);  // never returns, do initialization from OnInit
 }
-myBuilderPort::~myBuilderPort()
+
+bool wxSCIRunApp::OnInit()
 {
-  if (builder) {
-    delete builder;
-  }
+  wxApp::OnInit(); // for command line processing (if any)
+
+  Guard g(&appLock);
+  Builder::setApp(*this);
+  semUp();
+  // TODO: get splash screen working
+
+//     wxInitAllImageHandlers();
+
+//     std::string path(sci_getenv("SCIRUN_SRCDIR"));
+//     path += "/CCA/Components/GUIPrototypes/scirun2-splash.png";
+//     wxBitmap bitmap(wxT(path), wxBITMAP_TYPE_PNG);
+//     if (bitmap.Ok()) {
+//         wxSplashScreen splash(bitmap,  wxSPLASH_TIMEOUT|wxSPLASH_CENTRE_ON_SCREEN, 6000, 0, -1, wxDefaultPosition, wxDefaultSize, wxFRAME_NO_TASKBAR|wxSTAY_ON_TOP);
+//         splash.Show(true);
+//     } else {
+//       std::cerr << "bitmap not loaded" << std::endl;
+//     }
+//     wxYield();
+
+  BuilderWindow *window = new BuilderWindow(topBuilder, 0);
+  window->Show(true);
+  SetTopWindow(window);
+
+  return true;
 }
 
-void myBuilderPort::buildRemotePackageMenus(
-    const sci::cca::ports::ComponentRepository::pointer &reg,
-    const std::string &frameworkURL)
+void wxSCIRunApp::addTopWindow(const sci::cca::BuilderComponent::pointer& bc)
 {
-  builder->buildRemotePackageMenus(reg, frameworkURL);
+  Guard g(&appLock);
+std::cerr << "wxSCIRunApp::AddTopWindow(): from thread " << Thread::self()->getThreadName() << std::endl;
+
+  // set the "main" top level window as parent
+  wxWindow *top = GetTopWindow();
+  BuilderWindow *window = new BuilderWindow(bc, top);
+  window->Show(true);
 }
 
 Builder::Builder()
 {
-  std::cerr << "Builder()" << std::endl;
+std::cerr << "Builder::Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
 }
 
 Builder::~Builder()
 {
-    // cleanup ports
-    try {
-        builderPort.services->removeProvidesPort("builderPort");
-        builderPort.services->unregisterUsesPort("builder");
-    }
-    catch (const sci::cca::CCAException::pointer &e) {
-        std::cerr << e->getCCAExceptionType() << ", " << e->getNote() << std::endl;
-    }
+std::cerr << "Builder::~Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
 }
 
-void Builder::setServices(const sci::cca::Services::pointer& services)
+// The first Builder to be instantiated (when wxTheApp is null) gets setServices
+// run from the "main" thread.
+// Subsequent Builders should only run in the GUI thread.
+// wxSCIRunApp functions should only run in the GUI thread.
+// (is is possible to defend against instantiating in the wrong thread?)
+void Builder::setServices(const sci::cca::Services::pointer &svc)
 {
-#if DEBUG
-    std::cerr << "Builder::setServices" << std::endl;
-#endif
-    builderPort.setServices(services);
-    sci::cca::TypeMap::pointer props = services->createTypeMap();
-    myBuilderPort::pointer bp(&builderPort);
-    services->addProvidesPort(bp, "builderPort",
-                              "sci.cca.ports.BuilderPort", props);
-    services->registerUsesPort("builder",
-                               "sci.cca.ports.BuilderPort", props);
+  Guard g(&builderLock);
+  std::cerr << "Builder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
+  services = svc;
 
-// The following lines are not required until
-// BuilderService::registerServices is implemented.
-//
-//     sci::cca::ports::BuilderService::pointer builder =
-//         pidl_cast<sci::cca::ports::BuilderService::pointer>(
-//             services->getPort("cca.BuilderService")
-//         );
-//     if (builder.isNull()) {
-//         std::cerr << "Fatal Error: Cannot find builder service\n";
-//         return;
-//     } 
-//     //do not delete the following line	
-//     //builder->registerServices(services);
-//     services->releasePort("cca.BuilderService"); 
+  // What framework do we belong to?
+  try {
+    sci::cca::ports::FrameworkProperties::pointer fwkProperties = pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
+    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+    services->releasePort("cca.FrameworkProperties");
+    frameworkURL = tm->getString("url", "NO URL AVAILABLE");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Framework URL is not available; " <<  e->getNote() << std::endl;
+  }
+
+  if (! wxTheApp) {
+    Thread *t = new Thread(new wxGUIThread(sci::cca::BuilderComponent::pointer(this)), guiThreadName.c_str(), 0, Thread::NotActivated);
+    t->setStackSize(8*256*1024);
+    t->activate(false);
+    t->detach();
+    wxSCIRunApp::semDown();
+  } else {
+    if (Thread::self()->getThreadName() == guiThreadName) {
+      app->addTopWindow(sci::cca::BuilderComponent::pointer(this));
+    //} else {
+    // add to event queue???
+    }
+  }
 }
 
-} // end namespace SCIRun
+sci::cca::ComponentID::pointer Builder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
+{
+std::cerr << "Builder::createInstance(): from thread " << Thread::self()->getThreadName() << std::endl;
+  sci::cca::TypeMap::pointer tm = services->createTypeMap();
+  sci::cca::ComponentID::pointer cid;
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    cid = bs->createInstance(std::string(), className, tm);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Could not create an instance of " << className << "; " <<  e->getNote() << std::endl;
+  }
+  return cid;
+}
+
+void
+Builder::getUsedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
+{
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    nameArray = bs->getUsedPortNames(cid);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Could not get uses ports for " << cid->getInstanceName() << "; " <<  e->getNote() << std::endl;
+  }
+}
+
+void
+Builder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
+{
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    nameArray = bs->getProvidedPortNames(cid);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Could not get uses ports for " << cid->getInstanceName() << "; " <<  e->getNote() << std::endl;
+  }
+}
+
+void Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray)
+{
+  try {
+    sci::cca::ports::ComponentRepository::pointer rep =
+      pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
+
+    descArray = rep->getAvailableComponentClasses();
+
+    services->releasePort("cca.ComponentRepository");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Could not get component descriptions from component repository; " << e->getNote() << std::endl;
+  }
+}
+
+void Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
+				    const std::string& usesPortName,
+				    const sci::cca::ComponentID::pointer &provider,
+				    SSIDL::array1<std::string>& portArray)
+{
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    portArray = bs->getCompatiblePortList(user, usesPortName, provider);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Could not get compatible port list for " << usesPortName << "; " <<  e->getNote() << std::endl;
+  }
+}
+
+bool Builder::go()
+{
+  return true;
+}
+
+void Builder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)
+{
+  std::cerr << "Builder::connectionActivity(..)" << std::endl;
+}
+
+void Builder::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
+{
+  std::cerr << "Builder::componentActivity: got event for component " << e->getComponentID()->getInstanceName() << std::endl;
+}
+
+}

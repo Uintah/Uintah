@@ -27,64 +27,55 @@
 */
 
 
-/*
- *  QtUtils.cc:
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   October 2001
- *
- */
+#ifndef MiniCanvas_h
+#define MiniCanvas_h
 
-#include <CCA/Components/Builder/QtUtils.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Thread.h>
-#include <iostream>
+//#include <Core/CCA/spec/cca_sidl.h>
 
-#include <qapplication.h>
+#include <map>
+#include <string>
 
+class wxRect;
+class wxScrolledWindow;
 
-using namespace SCIRun;
+namespace GUIBuilder {
 
-static QApplication* theApp;
-static Semaphore* startup;
+class BuilderWindow;
+class NetworkCanvas;
+class Connection;
 
-class QtThread : public Runnable {
+// Scrolled window???
+
+class MiniCanvas : public wxScrolledWindow {
 public:
-    QtThread() {}
-    ~QtThread() {}
-    void run();
+  MiniCanvas(wxWindow* parent, NetworkCanvas* canvas, wxWindowID id, const wxPoint& pos, const wxSize& size);
+  virtual ~MiniCanvas();
+
+  bool Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style = wxHSCROLL|wxVSCROLL|wxSUNKEN_BORDER|wxRETAINED);
+
+  void SetCanvasShapes();
+
+  void OnPaint(wxPaintEvent& event);
+  void PaintBackground(wxDC& dc);
+  void OnDraw(wxDC& dc);
+
+protected:
+  MiniCanvas() { Init(); }
+  void Init();
+  void OnEraseBackground(wxEraseEvent& event) {}
+
+private:
+  NetworkCanvas *canvas;
+
+  std::vector<wxRect> iRects;
+  std::vector<Connection*> conns;
+
+  void scaleRect(wxRect& rect, double scaleV, double scaleH);
+
+  DECLARE_EVENT_TABLE()
+  DECLARE_DYNAMIC_CLASS(MiniCanvas)
 };
 
-
-QApplication* QtUtils::getApplication()
-{
-    if ( !theApp ) {
-        startup = new Semaphore("Qt Thread startup wait", 0);
-        Thread* t = new Thread(new QtThread(), "SCIRun Builder",
-                               0, Thread::NotActivated);
-        t->setStackSize(8*256*1024);
-        t->activate(false);
-        t->detach();
-        startup->down();
-    }
-    return theApp;
 }
 
-void QtThread::run()
-{
-    std::cerr << "******************QtThread::run()**********************" << std::endl;
-    int argc = 3;
-    char* argv[3];
-    argv[0] = "SCIRun2";
-    argv[1] = "-im";
-    argv[2] = "-iconic";
-
-    theApp = new QApplication(argc, argv);
-    startup->up();
-
-    theApp->exec();
-}
+#endif

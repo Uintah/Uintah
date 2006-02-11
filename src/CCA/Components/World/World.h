@@ -62,15 +62,15 @@ public:
 };
 
 
-class ComponentIcon : public virtual sci::cca::ports::ComponentIcon {
-public:
-  virtual ~ComponentIcon() {}
+// class ComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+// public:
+//   virtual ~ComponentIcon() {}
 
-  virtual std::string getDisplayName();
-  virtual std::string getDescription();
-  virtual std::string getIconShape();
-  virtual int getProgressBar();
-};
+//   virtual std::string getDisplayName();
+//   virtual std::string getDescription();
+//   virtual std::string getIconShape();
+//   virtual int getProgressBar();
+// };
 
 
 class World : public sci::cca::Component {

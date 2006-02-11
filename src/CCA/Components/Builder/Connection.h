@@ -26,129 +26,58 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CONNECTION_H
-#define CONNECTION_H
+#ifndef Connection_h
+#define Connection_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <CCA/Components/Builder/PortIcon.h>
+#include <CCA/Components/Builder/Builder.h>
+#include <wx/event.h>
 
-#include <qcanvas.h>
-#include <qcursor.h>
-#include <qpainter.h>
+class wxPoint;
+class wxDC;
+class wxColour;
 
-#include <vector>
+// should probably check for wxUSE_THREADS
 
-using namespace SCIRun;
+namespace GUIBuilder {
 
-class Module;
+class PortIcon;
 
-/**
- * \class Connection
- *
- * \brief Represents a connection between components in the Builder GUI.
- */
-
-class Connection : public QCanvasPolygon
-{
+class Connection : public wxEvtHandler {
 public:
-    Connection(PortIcon *pU, PortIcon* pP, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv);
-    void resetPoints();
-    bool isConnectedTo(Module *who);
-    sci::cca::ConnectionID::pointer getConnectionID() const;
-    void highlight();
-    void setDefault();
-    PortIcon* usesPort() const;
-    PortIcon* providesPort() const;
+  Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection=false);
+  virtual ~Connection();
 
-    // TEK
-    virtual std::string getConnectionType();
+  void ResetPoints();
+  void OnDraw(wxDC& dc);
 
-    static void drawConnection(QPainter& p,
-                               const QPointArray& points,
-                               QPointArray& drawPoints);
-    virtual int rtti() const;
+  void OnLeftDown(wxMouseEvent& event);
+  void OnLeftUp(wxMouseEvent& event);
+  void OnRightClick(wxMouseEvent& event);
+  void OnMouseMove(wxMouseEvent& event);
 
-    static int RTTI;
-    static const int Rtti_Connection = 2001;
-    static const unsigned int NUM_POINTS = 12;
-    static const unsigned int NUM_DRAW_POINTS = 6;
 
 protected:
-    /** Override QCanvasPolygon::drawShape to draw a polyline not a polygon. */
-    virtual void drawShape(QPainter &);
-    QColor color;
+  //   void drawConnection(const wxPoint[] points, wxPoint[] drawPoints);
+  //   void drawPoints(const wxPoint[] points);
+  //void setColour();
+
+  wxColour colour;
+  wxColour hColour;
+  bool setConnection(wxPoint drawPoints[], int arrayLen);
 
 private:
-    QCanvasView *cv;
-    PortIcon *pUse, *pProvide;
-    std::string uPortName, pPortName;
-    sci::cca::ConnectionID::pointer connID;
+  const int NUM_POINTS;
+  const int NUM_DRAW_POINTS;
+  wxPoint* points;
+  PortIcon* pUses;
+  PortIcon* pProvides;
+  bool possibleConnection;
+  sci::cca::ConnectionID::pointer connectionID;
+
+  DECLARE_EVENT_TABLE()
 };
 
-
-inline sci::cca::ConnectionID::pointer Connection::getConnectionID() const
-{
-  return connID;
 }
-
-// Distinguish between QCanvasItems on a QCanvas.
-inline int Connection::rtti() const
-{
-    return RTTI;
-}
-
-inline void Connection:: setDefault()
-{
-  color = pUse->color();
-}
-
-inline void Connection:: highlight()
-{
-  color = pUse->highlight();
-}
-
-inline PortIcon* Connection::usesPort() const
-{
-  return pUse;
-}
-
-inline PortIcon* Connection::providesPort() const
-{
-  return pProvide;
-}
-
-inline std::string Connection::getConnectionType()
-{
-  return "Connection";
-}
-
-inline void Connection::drawConnection(QPainter& p,
-            const QPointArray& points, QPointArray& drawPoints)
-{
-    for (unsigned int i = 0; i < NUM_DRAW_POINTS; i++) {
-        drawPoints[i] = ( points[i] + points[NUM_POINTS - 1 - i] ) / 2;
-    }
-}
-
-/**
- * \class MiniConnection
- *
- * \brief Draw a connection on the BuilderWindow's miniCanvas.
- */
-class MiniConnection : public QCanvasPolygon
-{
-public:
-    MiniConnection(QCanvasView *cv, QPointArray pa, double scaleX, double scaleY);
-
-protected:
-    /** Override QCanvasPolygon::drawShape to draw a polyline not a polygon. */
-    virtual void drawShape(QPainter&);
-
-private:
-    void scalePoints(QPointArray *pa, double scaleX, double scaleY);
-};
 
 #endif
-
-
-

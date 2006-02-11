@@ -32,69 +32,30 @@
  */
 
 #include <CCA/Components/Builder/PortIcon.h>
-#include <CCA/Components/Builder/Module.h>
-#include <CCA/Components/Builder/NetworkCanvasView.h>
-#include <CCA/Components/Builder/BuilderWindow.h>
-#include <SCIRun/TypeMap.h>
 
-#include <qmenudata.h>
-#include <qpainter.h>
-#include <qpopupmenu.h>
-#include <iostream>
+#include <wx/region.h>
 
-using namespace SCIRun;
+namespace SCIRun {
+
+BEGIN_EVENT_TABLE(PortIcon, wxRegion)
+// from htmlwin.cpp 
+//EVT_LEFT_DOWN(wxHtmlWindow::OnMouseDown)
+//EVT_LEFT_UP(wxHtmlWindow::OnMouseUp)
+//EVT_RIGHT_UP(wxHtmlWindow::OnMouseUp)
+//EVT_MOTION(wxHtmlWindow::OnMouseMove)
+//EVT_PAINT(wxHtmlWindow::OnPaint)
+//#if wxUSE_CLIPBOARD
+//EVT_LEFT_DCLICK(wxHtmlWindow::OnDoubleClick)
+//EVT_ENTER_WINDOW(wxHtmlWindow::OnMouseEnter)
+//EVT_LEAVE_WINDOW(wxHtmlWindow::OnMouseLeave)
+//#endif // wxUSE_CLIPBOARD
+END_EVENT_TABLE()
+
+
 
 // TODO: filter menu for type, find a better way to show port type
-PortIcon::PortIcon(Module *module, const std::string& model,
-                   const std::string& type, const std::string &name,
-                   PortType pType, const QRect &r, const int num,
-                   const sci::cca::Services::pointer &services)
-    : mod(module), pModel(model), tName(type), pType(pType), pName(name),
-      num(num), pRect(r), services(services)
+PortIcon::PortIcon()
 {
-  //    std::cerr << "PortIcon::PortIcon " << name << " model=" << model << std::endl;
-    portColorMap();
-    if (pType == USES) {
-        iColor = Qt::green;
-        iRect = QRect(r.x() - Module::PORT_W, r.top(), 3, r.height());
-    } else { // PROVIDES
-        iColor = Qt::red;
-        iRect = QRect(r.x() + Module::PORT_W, r.top(), 3, r.height());
-    }
-
-    unsigned int i;
-    std::string t;
-    if ((i = type.find_last_of(".")) != std::string::npos) {
-        t = type.substr(i + 1);
-    } else {
-        t = type;
-    }
-
-    std::string color = colorMap->getString(t, "");
-    if (color.empty()) {
-        color = colorMap->getString(std::string("default"), "");
-    }
-    pColor.setNamedColor(color.c_str());
-
-    //TODO: find a better way to detect the component model
-    pMenu = new QPopupMenu((QWidget *) module);
-    std::string s;
-    if ("cca" == model || "CCA" == model) {
-        s = "CCA";
-    } else if ("babel" == model) {
-        s = "babel";
-    } else if ("Vtk" == model || "vtk" == model) {
-        s = "Vtk";
-    } else if ("Dataflow" == model || "dataflow" == model) {
-        s = "Dataflow";
-    }
-
-    if (! s.empty() ) {
-        MenuMap *menus = module->parent()->p2BuilderWindow->packageMenus();
-        (*menus)[s]->populateMenu(pMenu);
-    } else {
-        pMenu->hide();
-    }
 }
 
 PortIcon::~PortIcon()
@@ -103,48 +64,44 @@ PortIcon::~PortIcon()
 
 void PortIcon::drawPort(QPainter &p)
 {
-    p.setPen(pColor);
-    p.setBrush(pColor);
-    p.drawRect(pRect);
-
-    p.setPen(iColor);
-    p.setBrush(iColor);
-    p.drawRect(iRect);
+//p.setPen(pColor);
+//p.setBrush(pColor);
+//p.drawRect(pRect);
+//p.setPen(iColor);
+//p.setBrush(iColor);
+//p.drawRect(iRect);
 }
 
 QPoint PortIcon::portPoint()
 {
-    if (pType == USES) {
-        return mod->usesPortPoint(num);
-    } else {
-        return mod->providesPortPoint(num);
-    }
 }
 
 // better way to figure out how to map color to port type?
-void PortIcon::portColorMap()
-{
-    colorMap = sci::cca::TypeMap::pointer(new TypeMap);
+//void PortIcon::portColorMap()
+//{
+//    colorMap = sci::cca::TypeMap::pointer(new TypeMap);
+//
+//    // using named colors
+//    // Qt can use these for either Unix or Windows systems
+//    // see Qt documentation for QColor
+//    colorMap->putString(std::string("default"),
+//                        std::string("yellow"));
+//    colorMap->putString(std::string("highlight"),
+//                        std::string("white"));
+//    colorMap->putString(std::string("StringPort"),
+//                        std::string("cadetblue1"));
+//    colorMap->putString(std::string("ZListPort"),
+//                        std::string("goldenrod4"));
+//    colorMap->putString(std::string("LinSolverPort"),
+//                        std::string("darkorange"));
+//    colorMap->putString(std::string("PDEdescriptionPort"),
+//                        std::string("tomato"));
+//    colorMap->putString(std::string("MeshPort"),
+//                        std::string("magenta"));
+//    colorMap->putString(std::string("ViewPort"),
+//                        std::string("darkseagreen"));
+//    colorMap->putString(std::string("FEMmatrixPort"),
+//                        std::string("gray65"));
+//}
 
-    // using named colors
-    // Qt can use these for either Unix or Windows systems
-    // see Qt documentation for QColor
-    colorMap->putString(std::string("default"),
-                        std::string("yellow"));
-    colorMap->putString(std::string("highlight"),
-                        std::string("white"));
-    colorMap->putString(std::string("StringPort"),
-                        std::string("cadetblue1"));
-    colorMap->putString(std::string("ZListPort"),
-                        std::string("goldenrod4"));
-    colorMap->putString(std::string("LinSolverPort"),
-                        std::string("darkorange"));
-    colorMap->putString(std::string("PDEdescriptionPort"),
-                        std::string("tomato"));
-    colorMap->putString(std::string("MeshPort"),
-                        std::string("magenta"));
-    colorMap->putString(std::string("ViewPort"),
-                        std::string("darkseagreen"));
-    colorMap->putString(std::string("FEMmatrixPort"),
-                        std::string("gray65"));
 }
