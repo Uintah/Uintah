@@ -170,6 +170,7 @@ class Painter : public Module
   };
   typedef vector<NrrdSlice *>		NrrdSlices;
   typedef vector<NrrdSlices>		NrrdVolumeSlices;
+  typedef map<NrrdVolume *, NrrdSlice*> VolumeSliceMap;
 
   struct SliceWindow { 
     SliceWindow(Painter *painter, GuiContext *ctx);
@@ -196,6 +197,7 @@ class Painter : public Module
     WindowLayout *	layout_;
     OpenGLViewport *	viewport_;
     NrrdSlices		slices_;
+    VolumeSliceMap      slice_map_;
     NrrdSlice*          paint_layer_;
 
     Point               center_;
@@ -360,10 +362,10 @@ class Painter : public Module
     void                line(Nrrd *, double, int, int, int, int, bool);
     void                splat(Nrrd *, double,int,int);
     SliceWindow *       window_;
+    NrrdSlice *         slice_;
     float               value_;
     vector<int>         last_index_;
     double              radius_;
-    bool                drawing_;
   };
 
   class FloodfillTool : public PainterTool {
@@ -541,6 +543,7 @@ class Painter : public Module
   typedef vector<PainterTool *> Tools_t;
   Tools_t               tools_;
   MouseState            mouse_;
+  string                filter_text_;
 
   int			cur_slice_[3];
 
@@ -792,6 +795,15 @@ Painter::NrrdVolume::set_value(const vector<int> &index, T value) {
   nrrd_set_value(nrrd_->nrrd, index, value);
 }
 
+template <class T>
+unsigned int max_vector_magnitude_index(vector<T> array) {
+  if (array.empty()) return 0;
+  unsigned int index = 0;
+  for (unsigned int i = 1; i < array.size(); ++i) 
+    if (fabs(array[i]) > fabs(array[index]))
+      index = i;
+  return index;
+}
 
 }
 
