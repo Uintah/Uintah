@@ -47,8 +47,9 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
     Dep* dep = scinew Dep(Dep::DerivedValue);
     if(!child->getAttribute("name", dep->name))
       throw ProblemSetupException("No expression for derivedValue", __FILE__, __LINE__);
-    string expr;
-    child->get(expr);
+
+    child->get(dep->expr_string);
+    string expr = dep->expr_string;
     string::iterator beg = expr.begin();
     string::iterator end = expr.end();
     dep->expression = parse_addsub(beg, end);
@@ -79,6 +80,19 @@ ArchesTable::~ArchesTable()
       delete deps[i]->expression;
     delete deps[i];
   }
+}
+
+void ArchesTable::outputProblemSpec(ProblemSpecP& ps)
+{
+  ps->setAttribute("type", "Arches");
+  ps->appendElement("filename",filename,false,4);
+  for (vector<DefaultValue*>::const_iterator it = defaults.begin();
+       it != defaults.end(); ++it)
+    (*it)->outputProblemSpec(ps);
+
+  for (vector<Dep*>::const_iterator it = deps.begin(); it != deps.end(); ++it)
+    (*it)->outputProblemSpec(ps);
+
 }
 
 ArchesTable::Expr* ArchesTable::parse_addsub(string::iterator&  begin,
@@ -973,6 +987,22 @@ void ArchesTable::eatWhite(istream& in)
     c = in.get();
   if(in)
     in.unget();
+}
+
+void ArchesTable::Dep::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  if (type == Dep::ConstantValue) {
+    stringstream ss;
+    ss << constantValue;
+    ProblemSpecP cv_ps = ps->appendElement("constantValue",ss.str(), false,4);
+    cv_ps->setAttribute("name",name);
+  }
+  if (type == Dep::DerivedValue) {
+    ProblemSpecP dv_ps = ps->appendElement("derivedValue",expr_string,false,4);
+    dv_ps->setAttribute("name",name);
+  }
+
 }
 
 void ArchesTable::Dep::addAxis(InterpAxis* newAxis)
