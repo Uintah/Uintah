@@ -275,8 +275,8 @@ Painter::BrushTool::draw_mouse_cursor(Event &event)
   glLineWidth(2.0);
   glBegin(GL_LINES);
 
-  int x0 = Floor(event.position_(event.window_->x_axis()));
-  int y0 = Floor(event.position_(event.window_->y_axis()));
+  //  int x0 = Floor(event.position_(event.window_->x_axis()));
+  //  int y0 = Floor(event.position_(event.window_->y_axis()));
   //  int z0 = Floor(event.position_(event.window_->axis_));
   //  int wid = int(Ceil(radius_));
 
