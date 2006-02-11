@@ -61,6 +61,9 @@ MenuTree::~MenuTree()
     delete iter->second;
   }
   if (! cd.isNull()) {
+    // event handler cleanup
+    this->Disconnect(id,  wxEVT_COMMAND_MENU_SELECTED,
+		     wxCommandEventHandler(MenuTree::OnInstantiateComponent));
     builder->RemoveEventHandler(this);
   }
 }
@@ -110,7 +113,7 @@ void MenuTree::coalesce()
   }
 }
 
-void MenuTree::populateMenu(wxMenu* menu /*QPopupMenu* menu*/)
+void MenuTree::populateMenu(wxMenu* menu)
 {
   for (std::map<std::string, MenuTree*>::iterator iter = child.begin();
        iter != child.end(); iter++) {
@@ -122,7 +125,8 @@ void MenuTree::populateMenu(wxMenu* menu /*QPopupMenu* menu*/)
     } else {
       builder->PushEventHandler(iter->second);
       menu->Append(iter->second->id, wxT(iter->first), wxT(iter->first));
-      iter->second->Connect(iter->second->id, wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction) (wxEventFunction)(wxCommandEventFunction)&MenuTree::OnInstantiateComponent);
+      iter->second->Connect(iter->second->id, wxEVT_COMMAND_MENU_SELECTED,
+			    wxCommandEventHandler(MenuTree::OnInstantiateComponent));
     }
   }
 }
@@ -212,8 +216,25 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   wxMenu *helpMenu = new wxMenu();
   helpMenu->Append(wxID_ABOUT, wxT("&About...\tF1"), wxT("Show about dialog"));
 
+  wxMenu* compWizardMenu = new wxMenu(wxT(""), wxMENU_TEAROFF);
+  compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
+
   wxMenu* fileMenu = new wxMenu();
   fileMenu->Append(ID_MENU_TEST, wxT("&Test\tAlt-T"), wxT("Test component build"));
+  fileMenu->AppendSeparator();
+  fileMenu->Append(ID_MENU_LOAD, wxT("&Load\tAlt-L"), wxT("Load network file"));
+  fileMenu->Append(ID_MENU_INSERT, wxT("&Insert\tAlt-L"), wxT("Insert network file"));
+  fileMenu->Append(wxID_SAVE, wxT("&Save\tAlt-S"), wxT("Save network to file"));
+  fileMenu->Append(wxID_SAVEAS, wxT("&Save As\tAlt-S"), wxT("Save network to file"));
+  fileMenu->AppendSeparator();
+  fileMenu->Append(ID_MENU_CLEAR, wxT("&Clear\tAlt-C"), wxT("Clear All"));
+  fileMenu->Append(wxID_SELECTALL, wxT("Select &All\tCtrl-A"), wxT("Select All"));
+  //fileMenu->Append(ID_MENU_EXECALL, wxT("&Execute All\tCtrl-A"), wxT("Execute All"));
+  fileMenu->AppendSeparator();
+  fileMenu->Append(ID_MENU_WIZARDS, wxT("&Wizards\tAlt-W"), compWizardMenu);
+  fileMenu->AppendSeparator();
+  //fileMenu->Append(ID_MENU_ADDINFO, wxT("&Add Info\tAlt-A"), wxT("Add information to?"));
+  //fileMenu->AppendSeparator();
   fileMenu->Append(wxID_EXIT, wxT("E&xit\tAlt-X"), wxT("Quit this program"));
 
   menuBar = new wxMenuBar();
@@ -272,6 +293,7 @@ void BuilderWindow::OnAbout(wxCommandEvent &event)
   msg.Printf(wxT("Hello and welcome to %s"),
              wxVERSION_STRING);
 
+  // show license
   wxMessageBox(msg, wxT("About SCIRun2"),
                wxOK | wxICON_INFORMATION, this);
 }
