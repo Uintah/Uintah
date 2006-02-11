@@ -95,7 +95,7 @@ namespace SCIRun {
 class Painter : public Module
 {
   struct SliceWindow;
-  struct MouseState {
+  struct Event {
     bool                button(unsigned int);
     bool                shift();
     bool                control();
@@ -241,14 +241,14 @@ class Painter : public Module
     const string &      get_name()      { return name_; }
     const string &      err() { return err_msg_; }
 
-    virtual string *    mouse_button_press(MouseState &) { return 0; }
-    virtual string *    mouse_button_release(MouseState &) { return 0; }
-    virtual string *    mouse_motion(MouseState &) { return 0; }
+    virtual string *    mouse_button_press(Event &) { return 0; }
+    virtual string *    mouse_button_release(Event &) { return 0; }
+    virtual string *    mouse_motion(Event &) { return 0; }
 
     virtual string *    draw(SliceWindow &) { return 0; }
-    virtual string *    draw_mouse_cursor(MouseState &) { return 0; }
+    virtual string *    draw_mouse_cursor(Event &) { return 0; }
     
-    virtual int         do_event(MouseState &) { return 0; }
+    virtual int         do_event(Event &) { return 0; }
 
   protected:
     Painter *           painter_;
@@ -259,9 +259,7 @@ class Painter : public Module
   class CLUTLevelsTool : public PainterTool {
   public:
     CLUTLevelsTool(Painter *painter);
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    virtual int         do_event(Event &);
   private:
     double              scale_;
     double              ww_;
@@ -272,9 +270,7 @@ class Painter : public Module
   class ZoomTool : public PainterTool {
   public:
     ZoomTool(Painter *painter);
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    virtual int         do_event(Event &);
   private:
     double              zoom_;
     SliceWindow *       window_;
@@ -283,25 +279,20 @@ class Painter : public Module
   class AutoviewTool : public PainterTool {
   public:
     AutoviewTool(Painter *painter);
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
+    virtual int         do_event(Event &);
   };
 
   class ProbeTool : public PainterTool {
   public:
     ProbeTool(Painter *painter);
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    virtual int         do_event(Event &);
   };
 
 
   class PanTool : public PainterTool {
   public:
     PanTool(Painter *painter);
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    virtual int         do_event(Event &);
   private:
     Point               center_;
     SliceWindow *       window_;
@@ -314,16 +305,16 @@ class Painter : public Module
   public:
     CropTool(Painter *painter);
     ~CropTool();
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    string *            mouse_button_press(Event &);
+    string *            mouse_button_release(Event &);
+    string *            mouse_motion(Event &);
     string *            draw(SliceWindow &window);
   private:
     typedef vector<BBox> BBoxes;
     void                compute_crop_pick_boxes(SliceWindow &);
     void                update_bbox_from_gui();
     void                update_bbox_to_gui();
-    int                 get_pick_from_mouse(MouseState &mouse);
+    int                 get_pick_from_event(Event &event);
     void                set_window_cursor(SliceWindow &window, int cursor);
     pair<Vector,Vector> get_crop_vectors(SliceWindow &window, int pick);
     
@@ -349,15 +340,15 @@ class Painter : public Module
   public:
     BrushTool(Painter *painter);
     ~BrushTool();
-    int                 do_event(MouseState &);
+    int                 do_event(Event &);
 
     //    string *            draw(SliceWindow &window);
-    string *            draw_mouse_cursor(MouseState &);
+    string *            draw_mouse_cursor(Event &);
   private:
-    int                 button_press(MouseState &);
-    int                 button_release(MouseState &);
-    int                 my_mouse_motion(MouseState &);
-    int                 key_press(MouseState &);
+    int                 button_press(Event &);
+    int                 button_release(Event &);
+    int                 my_mouse_motion(Event &);
+    int                 key_press(Event &);
 
     void                line(Nrrd *, double, int, int, int, int, bool);
     void                splat(Nrrd *, double,int,int);
@@ -372,9 +363,9 @@ class Painter : public Module
   public:
     FloodfillTool(Painter *painter);
     ~FloodfillTool();
-    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    string *            mouse_button_press(Event &);
+    string *            mouse_button_release(Event &);
+    string *            mouse_motion(Event &);
     string *            draw(SliceWindow &window);
   private:
     double              value_;
@@ -387,7 +378,7 @@ class Painter : public Module
   class ITKThresholdTool : public PainterTool {
   public:
     ITKThresholdTool(Painter *painter);
-    int                 do_event(MouseState &);
+    int                 do_event(Event &);
   private:
     NrrdVolume *        seed_volume_;
     NrrdVolume *        source_volume_;
@@ -397,7 +388,7 @@ class Painter : public Module
   class ITKConfidenceConnectedImageFilterTool : public PainterTool {
   public:
     ITKConfidenceConnectedImageFilterTool(Painter *painter);
-    int                 do_event(MouseState &);
+    int                 do_event(Event &);
     string *            draw(SliceWindow &window);
   private:
     vector<int>         seed_;
@@ -429,9 +420,9 @@ class Painter : public Module
   public:
     StatisticsTool(Painter *painter);
     ~StatisticsTool();
-    //    string *            mouse_button_press(MouseState &);
-    string *            mouse_button_release(MouseState &);
-    string *            mouse_motion(MouseState &);
+    //    string *            mouse_button_press(Event &);
+    string *            mouse_button_release(Event &);
+    string *            mouse_motion(Event &);
     string *            draw(SliceWindow &window);
   private:
     void                recompute();
@@ -542,7 +533,7 @@ class Painter : public Module
   PainterTool *         tool_;
   typedef vector<PainterTool *> Tools_t;
   Tools_t               tools_;
-  MouseState            mouse_;
+  Event                 event_;
   string                filter_text_;
 
   int			cur_slice_[3];
@@ -592,7 +583,7 @@ class Painter : public Module
   void			set_axis(SliceWindow &, unsigned int axis);
 
   // Methods called by tcl_command
-  void                  update_mouse_state(GuiArgs &args, bool reset = false);
+  void                  update_event_state(GuiArgs &args, bool reset = false);
   void			handle_gui_mouse_motion(GuiArgs &args);
   void			handle_gui_mouse_button_press(GuiArgs &args);
   void			handle_gui_mouse_button_release(GuiArgs &args);
