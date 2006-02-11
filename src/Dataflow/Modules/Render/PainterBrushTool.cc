@@ -89,10 +89,10 @@ namespace SCIRun {
 Painter::BrushTool::BrushTool(Painter *painter) :
   PainterTool(painter, "Paint Brush"),
   window_(0),
+  slice_(0),
   value_(airNaN()),
   last_index_(),
-  radius_(5.0),
-  drawing_(false)
+  radius_(5.0)
 {
   painter_->create_undo_volume();
 }
@@ -130,46 +130,41 @@ Painter::BrushTool::button_press(MouseState &mouse)
   if (!mouse.keys_.empty()) 
     return FALLTHROUGH_E;
 
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!vol) 
+    return FALLTHROUGH_E;
+
+  window_ = mouse.window_;
+  if (!window_) 
+    return FALLTHROUGH_E;
+  
+
+
   if ( mouse.button_ == 1) {
-    window_ = mouse.window_;
-    if (!window_) 
+    slice_ = window_->slice_map_[vol];
+    if (!slice_)
       return FALLTHROUGH_E;
-    if (!window_->paint_layer_) {
-      window_->paint_layer_ = 
-        scinew NrrdSlice(painter_, painter_->current_volume_, 
-                         window_->center_, window_->normal_);
-      window_->paint_layer_->bind();;
-    }
+
     if (airIsNaN(value_))
       value_ = painter_->current_volume_->clut_max_;
 
-    last_index_ = 
-      window_->paint_layer_->volume_->world_to_index(mouse.position_);
-    
-    vector<int> index1(last_index_.size()-1, 0);
-    for (unsigned int i = 0, j=0; i < last_index_.size(); ++i) 
-      if (int(i) != (window_->axis_+1)) {
-        index1[j] = last_index_[i];
-        ++j;
-      }
-    
-    splat(window_->paint_layer_->texture_->nrrd_->nrrd, radius_, 
-          index1[1], index1[2]);
+    last_index_ = vol->world_to_index(mouse.position_);
+    last_index_.erase(last_index_.begin()+slice_->axis());
 
-    window_->paint_layer_->texture_->apply_colormap(index1[1], index1[2],
-                                                   index1[1]+1, index1[2]+1,
-                                                   Ceil(radius_));
+    splat(slice_->texture_->nrrd_->nrrd, radius_, 
+          last_index_[1], last_index_[2]);
 
-    //    painter_->for_each(&Painter::rebind_slice);
+    slice_->texture_->apply_colormap(last_index_[1], last_index_[2],
+                                     last_index_[1]+1, last_index_[2]+1,
+                                     Ceil(radius_));
+    
     painter_->redraw_all();    
-    drawing_ = true;
     return HANDLED_E;
   } else if (mouse.button_ == 3) {
     vector<int> index = 
-      painter_->current_volume_->world_to_index(mouse.position_);
-    if (painter_->current_volume_->index_valid(index))
-      painter_->current_volume_->get_value(index, value_);
-    radius_ *= 1.1;
+      vol->world_to_index(mouse.position_);
+    if (vol->index_valid(index))
+      vol->get_value(index, value_);
     painter_->redraw_all();    
     return HANDLED_E;
   } else if (mouse.button_ == 4) {
@@ -191,19 +186,26 @@ Painter::BrushTool::button_release(MouseState &mouse)
   if (!mouse.keys_.empty()) 
     return FALLTHROUGH_E;
 
-  if (mouse.button_ == 1) {
-    drawing_ = false;
-    if (!window_ || !window_->paint_layer_) 
-      return FALLTHROUGH_E;
-    NrrdSlice &paint = *window_->paint_layer_;
-    painter_->current_volume_->mutex_.lock();
-    //    NrrdData *nout = scinew NrrdData();
-    if (nrrdSplice(painter_->current_volume_->nrrd_->nrrd,
-                   painter_->current_volume_->nrrd_->nrrd,
-                   paint.texture_->nrrd_->nrrd,
-                   window_->axis_+1,
-                   last_index_[window_->axis_+1])) {
-      painter_->current_volume_->mutex_.unlock();
+  if (!window_ || !slice_) 
+    return FALLTHROUGH_E;
+
+  if (mouse.button(1)) {
+    NrrdVolume *vol = slice_->volume_;
+    ASSERT(vol);
+
+    vector<int> window_center = vol->world_to_index(window_->center_);
+    int axis = slice_->axis();
+    vol->mutex_.lock();
+
+    //    nrrdSave("/tmp/vol.nrrd", vol->nrrd_->nrrd, 0);
+    //    nrrdSave("/tmp/slice.nrrd", slice_->texture_->nrrd_->nrrd, 0);
+    vol->nrrd_->nrrd->content[0] = 0;
+    
+    if (nrrdSplice(vol->nrrd_->nrrd,
+                   vol->nrrd_->nrrd,
+                   slice_->texture_->nrrd_->nrrd,
+                   axis, window_center[axis])) {
+      vol->mutex_.unlock();
       char *err = biffGetDone(NRRD);
       err_msg_ = string("Error on line #")+to_string(__LINE__) +
         string(" executing nrrd command: nrrdSplice \n")+
@@ -212,14 +214,11 @@ Painter::BrushTool::button_release(MouseState &mouse)
       return ERROR_E;
     }
     //    painter_->current_volume_->nrrd_ = nout;
-    painter_->current_volume_->mutex_.unlock();
+    vol->mutex_.unlock();
                
-    if (window_->paint_layer_) {
-      delete window_->paint_layer_;
-      window_->paint_layer_ = 0;
-    }
     painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
+    slice_ = 0;
     return HANDLED_E;
   }
   
@@ -232,53 +231,37 @@ Painter::BrushTool::my_mouse_motion(MouseState &mouse)
   if (!mouse.keys_.empty()) 
     return FALLTHROUGH_E;
 
-  if (!window_) {
-    drawing_ = false;
-    return FALLTHROUGH_E;
-  }
-  
-  if (!window_->paint_layer_) {
-    return FALLTHROUGH_E;
-  }
-
-  NrrdSlice &paint = *window_->paint_layer_;
-  NrrdVolume *volume = paint.volume_;
-  
-  vector<int> index = 
-    volume->world_to_index(mouse.position_);
-  if (!volume->index_valid(index)) 
+  if (!window_)
     return FALLTHROUGH_E;
   
-  if (mouse.button(1) && drawing_) {
+  if (!slice_)
+    return FALLTHROUGH_E;
 
-    vector<int> index1(index.size()-1, 0);
-    vector<int> index2 = index1;
-    for (unsigned int i = 0, j=0; i < index.size(); ++i) 
-      if (int(i) != (window_->axis_+1)) {
-        index1[j] = last_index_[i];
-        index2[j] = index[i];
-        ++j;
-      }
-
-    line(paint.texture_->nrrd_->nrrd, radius_, 
-         index1[1], index1[2],
-         index2[1], index2[2], true);
-
-    paint.texture_->apply_colormap(index1[1], index1[2], 
-                                   index2[1], index2[2],
-                                   Ceil(radius_));
-    painter_->redraw_all();
-    last_index_ = index;
-    return HANDLED_E;
-  }
-
-  if (mouse.button(1)) {
-    last_index_ = index;
-    drawing_ = true;
-    return HANDLED_E;
-  }
+  NrrdVolume *vol = slice_->volume_;
+  if (!vol)
+    return FALLTHROUGH_E;
     
+  vector<int> index = vol->world_to_index(mouse.position_);
+  if (!vol->index_valid(index)) 
     return FALLTHROUGH_E;
+  
+  if (mouse.button(1)) {
+    //    vector<int> index = = vol->world_to_index(mouse.position_);
+    index.erase(index.begin()+slice_->axis());
+
+    line(slice_->texture_->nrrd_->nrrd, radius_, 
+         last_index_[1], last_index_[2],
+         index[1], index[2], true);
+
+    slice_->texture_->apply_colormap(last_index_[1], last_index_[2], 
+                                     index[1], index[2],
+                                     Ceil(radius_));
+    last_index_ = index;
+    painter_->redraw_all();
+    return HANDLED_E;
+  }
+
+  return FALLTHROUGH_E;
 }
 
 
@@ -286,79 +269,70 @@ Painter::BrushTool::my_mouse_motion(MouseState &mouse)
 string *
 Painter::BrushTool::draw_mouse_cursor(MouseState &mouse)
 {
-  if (!mouse.window_) return 0;
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!mouse.window_ || !vol) return 0;
   glColor4f(1.0, 0.0, 0.0, 1.0);
   glLineWidth(2.0);
   glBegin(GL_LINES);
 
   int x0 = Floor(mouse.position_(mouse.window_->x_axis()));
   int y0 = Floor(mouse.position_(mouse.window_->y_axis()));
-  int z0 = Floor(mouse.position_(mouse.window_->axis_));
+  //  int z0 = Floor(mouse.position_(mouse.window_->axis_));
   //  int wid = int(Ceil(radius_));
+
+
+  Vector up = mouse.window_->y_dir();
+  vector<double> upv = vol->vector_to_index(up);
+  upv[max_vector_magnitude_index(upv)] /= 
+    Abs(upv[max_vector_magnitude_index(upv)]);
+  up =vol->index_to_vector(upv);
+
+  Vector right = mouse.window_->x_dir();
+  vector<double> rightv = vol->vector_to_index(right);
+  rightv[max_vector_magnitude_index(rightv)] /= 
+    Abs(rightv[max_vector_magnitude_index(rightv)]);
+  right = vol->index_to_vector(rightv);
+
+  Point center = vol->index_to_world(vol->world_to_index(mouse.position_));
+
+  double rsquared = radius_*radius_;
   const int wid = Round(radius_);
-  for (int y = y0-wid; y <= y0+wid; ++y)
-    for (int x = x0-wid; x <= x0+wid; ++x) {
-      float dist = sqrt(double(x0-x)*(x0-x)+(y0-y)*(y0-y));
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x+1))*(x0-(x+1))+(y0-(y+0))*(y0-(y+0))) > radius_) {
-        glVertex3d(x+1, y, z0);
-        glVertex3d(x+1, y+1, z0);
+  for (int y = -wid; y <= wid; ++y)
+    for (int x = -wid; x <= wid; ++x) {
+      float dist = x*x+y*y;
+      if (dist > rsquared) continue;
+      Point p = center + x * right + y * up;
+      Point p2;      
+      // right
+      if ((x+1)*(x+1)+(y+0)*(y+0) > rsquared) {
+        p2 = p + right;
+        glVertex3dv(&p2(0));
+        p2 = p + right+up;
+        glVertex3dv(&p2(0));
       }
 
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x+0))*(x0-(x+0))+(y0-(y+1))*(y0-(y+1))) > radius_) {
-        glVertex3d(x, y+1, z0);
-        glVertex3d(x+1, y+1, z0);
+      // top
+      if ((x+0)*(x+0)+(y+1)*(y+1) > rsquared) {
+        p2 = p + up;
+        glVertex3dv(&p2(0));
+        p2 = p + right+up;
+        glVertex3dv(&p2(0));
+      }
+      //left 
+      if ((x-1)*(x-1)+(y+0)*(y+0) > rsquared) {
+        glVertex3dv(&p(0));
+        p2 = p + up;
+        glVertex3dv(&p2(0));
       }
 
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x-1))*(x0-(x-1))+(y0-(y+0))*(y0-(y+0))) > radius_) {
-        glVertex3d(x, y, z0);
-        glVertex3d(x, y+1, z0);
-      }
-
-      if (dist <= radius_ && 
-          sqrt(double(x0-(x+0))*(x0-(x+0))+(y0-(y-1))*(y0-(y-1))) > radius_) {
-        glVertex3d(x, y, z0);
-        glVertex3d(x+1, y, z0);
+      // bottom
+      if ((x+0)*(x+0)+(y-1)*(y-1) > rsquared) {
+        glVertex3dv(&p(0));
+        p2 = p + right;
+        glVertex3dv(&p2(0));
       }
 
     }
-
-                 
-
-
-
-//         glVertex3d(mouse.position_.x()+1, mouse.position_.y(), mouse.position_.z());
-
-//       if (x >= 0 && x < nrrd->axis[1].size &&
-//           y >= 0 && y < nrrd->axis[2].size) 
-//         {
-//           index[1] = x;
-//           index[2] = y;
-
-
-//             //            dist = 1.0 - dist;
-//             //            dist *= painter_->current_volume_->clut_max_ - painter_->current_volume_->clut_min_;
-//             //            dist += painter_->current_volume_->clut_min_;
-//             //            float val;
-//             //            nrrd_get_value(nrrd, index, val);
-//             nrrd_set_value(nrrd, index, Max(dist, val));//nrrd_get_value(nrrd,index);
-//           }
-//         }
-
-
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-//   glVertex3d(mouse.position_.x()+1, mouse.position_.y(), mouse.position_.z());
-  
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-//   glVertex3d(mouse.position_.x()-1, mouse.position_.y(), mouse.position_.z());
-
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-//   glVertex3d(mouse.position_.x(), mouse.position_.y()+1, mouse.position_.z());
-
-//   glVertex3d(mouse.position_.x(), mouse.position_.y(), mouse.position_.z());
-  glVertex3d(mouse.position_.x(), mouse.position_.y()-1, mouse.position_.z());
   glEnd();
   glLineWidth(1.0);
   return 0;

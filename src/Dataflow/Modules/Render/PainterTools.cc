@@ -929,6 +929,8 @@ Painter::ITKThresholdTool::do_event(MouseState &mouse)
     painter_->volume_map_[name] = temp;
 
     painter_->filter_ = 1;
+    painter_->filter_text_ = get_name() + "\nFilter Running, Please Wait";
+    painter_->redraw_all();
     painter_->want_to_execute();
 
     return QUIT_E;
@@ -1096,6 +1098,8 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(MouseState &mouse)
     painter_->show_volume(name);
 
     painter_->filter_ = 1;
+    painter_->filter_text_ = get_name() + "\nFilter Running, Please Wait";
+    painter_->redraw_all();
     painter_->want_to_execute();
     
     return QUIT_E;
@@ -1186,8 +1190,9 @@ Painter::ITKGradientMagnitudeTool::ITKGradientMagnitudeTool(Painter *painter) :
   painter_->show_volume(name);
 
   painter_->filter_ = 1;
+  painter_->filter_text_ = get_name() + "\nFilter Running, Please Wait";
+  painter_->redraw_all();
   painter_->want_to_execute();
-
 }
 
 
@@ -1206,8 +1211,9 @@ Painter::ITKBinaryDilateErodeTool::ITKBinaryDilateErodeTool(Painter *painter) :
   painter_->show_volume(name);
 
   painter_->filter_ = 1;
+  painter_->filter_text_ = get_name() + "\nFilter Running, Please Wait";
+  painter_->redraw_all();
   painter_->want_to_execute();
-
 }
 
 
@@ -1226,6 +1232,8 @@ Painter::ITKCurvatureAnisotropicDiffusionTool::ITKCurvatureAnisotropicDiffusionT
   painter_->show_volume(name);
 
   painter_->filter_ = 1;
+  painter_->filter_text_ = get_name() + "\nFilter Running, Please Wait";
+  painter_->redraw_all();
   painter_->want_to_execute();
 }
 

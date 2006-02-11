@@ -242,6 +242,7 @@ Painter::SliceWindow::SliceWindow(Painter *painter, GuiContext *ctx) :
   layout_(0),
   viewport_(0),
   slices_(),
+  slice_map_(),
   paint_layer_(0),
   center_(0,0,0),
   normal_(0,0,0),
@@ -336,6 +337,7 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
   nrrd_(0),
   gui_context_(copy->gui_context_->get_parent()->subVar(name,0)),
   name_(gui_context_->subVar("name"), name),
+  name_prefix_(copy->name_prefix_),
   opacity_(gui_context_->subVar("opacity"), copy->opacity_.get()),
   clut_min_(gui_context_->subVar("clut_min"), copy->clut_min_.get()),
   clut_max_(gui_context_->subVar("clut_max"), copy->clut_max_.get()),
@@ -344,7 +346,8 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
   data_max_(copy->data_max_),
   colormap_(gui_context_->subVar("colormap"), copy->colormap_.get()),
   stub_axes_(copy->stub_axes_),
-  transform_()
+  transform_(),
+  keep_(copy->keep_)
 {
   copy->mutex_.lock();
   mutex_.lock();
@@ -437,112 +440,7 @@ Painter::NrrdVolume::get_nrrd()
   return nrrd;
 }
 
-#if 0
 
-NrrdDataHandle
-Painter::NrrdVolume::get_nrrd() 
-{
-  mutex_.lock();
-  //  return nrrd_;
-  NrrdDataHandle nrrd = nrrd_;
-  
-  for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
-    cerr << name_.get() <<  " Deleteing axis " 
-         << stub_axes_[s] << " of dim: " << nrrd->nrrd->dim 
-         << std::endl;
-    NrrdDataHandle nout = new NrrdData();
-    nrrdAxesDelete(nout->nrrd, nrrd->nrrd, stub_axes_[s]);
-    nrrd = nout;
-  }
-
-  if (nrrd_.get_rep() != nrrd.get_rep()) 
-    nrrdKeyValueCopy(nrrd->nrrd, nrrd_->nrrd);
-  mutex_.unlock();
-  return nrrd;
-}
-
-
-
-
-
-
-void
-Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
-{
-  mutex_.lock();
-
-  NrrdDataHandle newnrrd = scinew NrrdData();
-  // nrrdBasicInfoCopy(newnrrd->nrrd, nrrd->nrrd,0);
-//   nrrdAxisInfoCopy(newnrrd->nrrd, nrrd->nrrd, 0,0);
-  //newnrrd->nrrd->data = nrrd->nrrd->data;
-  nrrdCopy(newnrrd->nrrd, nrrd->nrrd);
-  stub_axes_.clear();
-  if (newnrrd->nrrd->axis[0].size > 4) {
-    nrrdAxesInsert(newnrrd->nrrd, newnrrd->nrrd, 0);
-    newnrrd->nrrd->axis[0].min = 0.0;
-    newnrrd->nrrd->axis[0].max = 1.0;
-    newnrrd->nrrd->axis[0].spacing = 1.0;
-    stub_axes_.push_back(0);
-    cerr << "Insert axis 0\n";
-  }
-
-  if (newnrrd->nrrd->dim == 3) {
-    nrrdAxesInsert(newnrrd->nrrd, newnrrd->nrrd, 3);
-    newnrrd->nrrd->axis[3].min = 0.0;
-    newnrrd->nrrd->axis[3].max = 1.0;
-    newnrrd->nrrd->axis[3].spacing = 1.0;
-    stub_axes_.push_back(3);
-    cerr << "Insert axis 3\n";
-  }
-
-
-  for (int a = 0; a < newnrrd->nrrd->dim; ++a) {
-    if (newnrrd->nrrd->axis[a].min > newnrrd->nrrd->axis[a].max)
-      SWAP(newnrrd->nrrd->axis[a].min,newnrrd->nrrd->axis[a].max);
-    if (newnrrd->nrrd->axis[a].spacing < 0.0)
-      newnrrd->nrrd->axis[a].spacing *= -1.0;
-  }
-
-  NrrdRange range;
-  nrrdRangeSet(&range, newnrrd->nrrd, 0);
-  if (data_min_ != range.min || data_max_ != range.max) {
-    data_min_ = range.min;
-    data_max_ = range.max;
-    clut_min_ = range.min;
-    clut_max_ = range.max;
-    opacity_ = 1.0;
-  }
-  nrrd_ = newnrrd;
-  mutex_.unlock();
-
-  build_index_to_world_matrix();
-
-}
-
-
-NrrdDataHandle
-Painter::NrrdVolume::get_nrrd() 
-{
-  //  mutex_.lock();
-  //  return nrrd_;
-  NrrdDataHandle newnrrd = new NrrdData();
-  nrrdCopy(newnrrd->nrrd, nrrd_->nrrd);
-  for (int a = 0; a < nrrd_->nrrd->dim; ++a)
-    cerr << name_.get() << " - " << a << " : " << nrrd_->nrrd->axis[a].size << std::endl;
-  //  nrrdBasicInfoCopy(newnrrd->nrrd, nrrd_->nrrd,0);
-  //  nrrdAxisInfoCopy(newnrrd->nrrd, nrrd_->nrrd,0,0);
-  for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
-    nrrdAxesDelete(newnrrd->nrrd, newnrrd->nrrd, stub_axes_[s]);
-  }
-
-  //  if (nrrd_.get_rep() != nrrd.get_rep()) 
-    nrrdKeyValueCopy(newnrrd->nrrd, nrrd_->nrrd);
-  //  mutex_.unlock();
-
-  return newnrrd;
-}
-
-#endif
 
 
 DECLARE_MAKER(Painter);
@@ -598,8 +496,9 @@ Painter::~Painter()
 bool
 Painter::static_callback(void *this_ptr) {
   Painter *painter = static_cast<Painter *>(this_ptr);
-  //  if (painter->filter_)  cerr << "filter off\n";
   painter->filter_ = 0;
+  painter->filter_text_ = "";
+  painter->redraw_all();
   return true;
 }
 
@@ -699,10 +598,12 @@ Painter::swap_window(SliceWindow &window) {
 void
 Painter::real_draw_all()
 {
-  TCLTask::lock();
-  if (for_each(&Painter::render_window)) 
+  gui->lock();
+  if (for_each(&Painter::render_window)) {
     for_each(&Painter::swap_window);
-  TCLTask::unlock();
+  }
+  
+  gui->unlock();
 }
 
 
@@ -755,15 +656,6 @@ Painter::SliceWindow::render_guide_lines(Point mouse) {
 }
 
 
-template <class T>
-unsigned int max_vector_magnitude_index(vector<T> array) {
-  if (array.empty()) return 0;
-  unsigned int index = 0;
-  for (unsigned int i = 1; i < array.size(); ++i) 
-    if (fabs(array[i]) > fabs(array[index]))
-      index = i;
-  return index;
-}
 
 // renders vertical and horizontal bars that represent
 // selected slices in other dimensions
@@ -1354,6 +1246,8 @@ Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
 #endif
 
 
+static int dots = 0;
+
 void
 Painter::SliceWindow::render_text()
 {
@@ -1373,6 +1267,8 @@ Painter::SliceWindow::render_text()
   font1.render("Zoom: "+to_string(zoom_())+"%", xoff, yoff, 
                TextRenderer::SHADOW | TextRenderer::SW);
   profiler("zoom");
+
+
   NrrdVolume *vol = painter_->current_volume_;
   
   for (unsigned int s = 0; s < slices_.size(); ++s) {
@@ -1392,7 +1288,16 @@ Painter::SliceWindow::render_text()
   profiler("volumes");
   font1.set_color(1.0, 1.0, 1.0, 1.0);
 
-  if (painter_->tool_)
+
+  if (painter_->filter_text_.length()) {
+    string filter = painter_->filter_text_;
+    for (unsigned int d = 0; d < (dots/(painter_->layouts_.size()*3))%5; ++d)
+      filter = filter + ".";
+    ++dots;
+    filter = filter + ".";
+    font1.render(filter, xoff+2+1, vh-2-yoff-1,
+                 TextRenderer::NW | TextRenderer::SHADOW);
+  } else if (painter_->tool_)
     font1.render(painter_->tool_->get_name(), 
                  xoff+2+1, vh-2-yoff-1, 
                  TextRenderer::NW | TextRenderer::SHADOW);
@@ -1497,15 +1402,16 @@ Painter::extract_window_slices(SliceWindow &window) {
 
   if (window.slices_.size() > volumes_.size())
     window.slices_.resize(volumes_.size());
-
+  
   for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s) {
     //    if (volumes_[s] == current_volume_) 
     //      window.center_ = current_volume_->center();
     window.slices_.push_back(scinew NrrdSlice(this, volumes_[s], 
                                               window.center_, window.normal_));
   }
-
+  window.slice_map_.clear();
   for (unsigned int s = 0; s < volumes_.size(); ++s) {
+    window.slice_map_[volumes_[s]] = window.slices_[s];
     window.slices_[s]->volume_ = volumes_[s];
     window.slices_[s]->plane_ = Plane(window.center_, window.normal_);
   }
@@ -1954,7 +1860,7 @@ Painter::execute()
   
   update_state(Module::Executing);
 
-
+  gui->lock();
   NrrdVolumeMap::iterator viter = volume_map_.begin();
   NrrdVolumeMap::iterator vend = volume_map_.end();
 
@@ -1970,6 +1876,7 @@ Painter::execute()
     }
     volume_map_[name]->keep_ = 1;
   }
+  gui->unlock();
 
   recompute_volume_list();
 
@@ -2266,8 +2173,6 @@ Painter::handle_gui_keypress(GuiArgs &args) {
     if (current_volume_) {
       current_volume_->keep_ = 0;
       recompute_volume_list();
-      for_each(&Painter::extract_window_slices);
-      redraw_all();
     }    
   }
   else if (key == "c") {
@@ -2439,6 +2344,7 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
     window->viewport_ = scinew OpenGLViewport(layout->opengl_);
     set_axis(*window, layouts_.size()%3);
     layout->windows_.push_back(window);
+    for_each(&Painter::mark_autoview);
   } else if(args[1] == "redraw") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
     for_each(*layouts_[args[2]], &Painter::redraw_window);
@@ -2530,7 +2436,7 @@ Painter::mark_autoview(SliceWindow &window) {
   if (current_volume_)
     window.center_ = current_volume_->center();
 
-  for (unsigned int s = 0; s < volumes_.size(); ++s) {
+  for (unsigned int s = 0; s < window.slices_.size(); ++s) {
     window.slices_[s]->plane_ = Plane(window.center_, window.normal_);
   }
 
@@ -2607,64 +2513,57 @@ Painter::undo_volume() {
 void
 Painter::recompute_volume_list()
 {
-  //  gui->lock();  
+  gui->lock();
+  string currentname = "";
+  if (current_volume_)
+    currentname = current_volume_->name_.get();
 
-  NrrdVolume *newcurrent = 0;
-
-  vector<string> todelete;
+  NrrdVolumeMap newmap;
+  vector<NrrdVolume *> todelete;
   NrrdVolumeMap::iterator viter = volume_map_.begin();
   NrrdVolumeMap::iterator vend = volume_map_.end();
   for (; viter != vend; ++viter)
-    if (!viter->second->keep_)
-      todelete.push_back(viter->first);
+    if (viter->second->keep_)
+      newmap[viter->first] = viter->second;
     else
-      newcurrent = viter->second;
+      todelete.push_back(viter->second);
 
-  for (unsigned int v = 0; v < todelete.size(); ++v) {
+  current_volume_ = 0;
+  volume_map_ = newmap;
 
-    if (current_volume_ == volume_map_[todelete[v]]) 
-      current_volume_ = newcurrent;
-
-    delete volume_map_[todelete[v]];
-    volume_map_.erase(todelete[v]);
-  }
+  for (unsigned int v = 0; v < todelete.size(); ++v)
+    delete todelete[v];
 
   volumes_.clear();
 
-  NrrdVolume *oldcurrent = 0;
+  NrrdVolume *newcurrent = 0;
+  bool found = false;
   NrrdVolumeOrder::iterator voiter = volume_order_.begin();
   NrrdVolumeOrder::iterator voend = volume_order_.end();
   for (; voiter != voend; ++voiter) {
+
+    if (*voiter == currentname)
+      found = true;
+
     viter = volume_map_.find(*voiter);
     if (viter != vend && viter->second != 0) {
-      if (viter->second == current_volume_)
-        oldcurrent = current_volume_;
+      if (!found || !newcurrent)
+        newcurrent = viter->second;
+          
       volumes_.push_back(viter->second);
     }
   }
+
+  if (!current_volume_)
+    current_volume_ = newcurrent;
   
   for_each(&Painter::extract_window_slices);
 
-  if (!newcurrent) return;
-  
-  if (!oldcurrent) {
-    NrrdVolume *current = current_volume_;
-    if (current)
-      current->mutex_.lock();
-    if (current_volume_ != volumes_.back()) {
-      volumes_.back()->mutex_.lock();
-      current_volume_ = volumes_.back();
-      volumes_.back()->mutex_.unlock();
-    }
-    if (current)
-      current->mutex_.unlock();
-
-    if (!oldcurrent)
-      for_each(&Painter::mark_autoview);
-  }
+  if (newcurrent && currentname.empty())
+    for_each(&Painter::mark_autoview);
 
   redraw_all();  
-  //  gui->unlock();
+  gui->unlock();
 }
 
 
