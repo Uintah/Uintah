@@ -40,6 +40,7 @@ WARNING
     TableInterface();
     virtual ~TableInterface();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
     virtual void addIndependentVariable(const string&) = 0;
     virtual int addDependentVariable(const string&) = 0;
     

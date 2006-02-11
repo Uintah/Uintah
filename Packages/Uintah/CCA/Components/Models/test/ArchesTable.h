@@ -3,9 +3,11 @@
 #define Uintah_ArchesTable_h
 
 #include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
+#include <sstream>
 
 namespace Uintah {
 
+  using std::stringstream;
 /****************************************
 
 CLASS
@@ -40,6 +42,7 @@ WARNING
     ArchesTable(ProblemSpecP& ps);
     virtual ~ArchesTable();
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
     virtual void addIndependentVariable(const string&);
     virtual int addDependentVariable(const string&);
     
@@ -101,6 +104,7 @@ WARNING
     };
 
     struct Dep {
+      void outputProblemSpec(ProblemSpecP& ps);
       string name;
       enum Type {
         ConstantValue,
@@ -109,6 +113,7 @@ WARNING
       } type;
       double constantValue;
       double* data;
+      string expr_string;
       Expr* expression;
       vector<Ind*> myinds;
       vector<InterpAxis*> axes;
@@ -131,6 +136,13 @@ WARNING
     bool file_read;
 
     struct DefaultValue {
+      void outputProblemSpec(ProblemSpecP& ps) {
+        stringstream ss;
+        ss << value;
+        ProblemSpecP dv_ps = ps->appendElement("defaultValue",ss.str(),false,
+                                               4);
+        dv_ps->setAttribute("name",name);
+      };
       string name;
       double value;
     };
