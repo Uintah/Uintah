@@ -156,8 +156,7 @@ DropMenu::exec(){
 
     sci::cca::TypeMap *tm = new SCIRun::TypeMap;
     tm->putString("LOADER NAME", cd->getLoaderName());
-    // set by framework
-    //tm->putString("cca.className", cd->getComponentModelName()); // component type
+    tm->putString("cca.className", cd->getComponentModelName()); // component type
 
     sci::cca::ComponentID::pointer cid;
     try {
