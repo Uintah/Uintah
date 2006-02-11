@@ -95,7 +95,7 @@ extern "C" SCISHARE Tcl_Interp* the_interp;
 namespace SCIRun {
 
   /* Todo:
-    X - Persistent volume state when re-executing
+     X - Persistent volume state when re-executing
      X - Fix Non-origin world_to_index conversion
      X - Use FreeTypeTextTexture class for text
      X - Send Bundles correctly
@@ -106,34 +106,34 @@ namespace SCIRun {
      X - Remove TCLTask::lock and replace w/ volume lock
      X - Optimize build_index_to_world_matrix out
      X - Add support for RGBA nrrds 
+     X - Change tools to store error codes
+     X - Add keybooard to tools
+     X - Faster painting, using current window buffer
+     X - vertical text for grid
        - compute bounding box for fast volume rendering
        - help mode
-       - Better tool mechanism to allow for customization & event fallthrough 
+     W - Better tool mechanism to allow for customization & event fallthrough 
        - Add support for time axis in nrrds
        - Add back in MIP mode
        - Geometry output port
        - Automatic index space grid
        - View to choose tools
-       - Change tools to store error codes
-       - Add keybooard to tools
        - Migrate all operations to tools (next_siice, zoom, etc)
-       - Faster painting, using current window buffer
        - Use GPU/3DTextures for applying colormap when supported
        - Remove clever offseting for non-power-of-2 suported machines
        - Removal of for_each
        - Support applying CM2
-       - vertical text for grid
+       - Move freetype font initialization to static global singleton
+       - Multi-rez texture map for MipMapping & drawing subregions
 
 
-       Filters:
-       confidence connected image filter
-       *aniosotropicimagediffusionfilters* (vector if supported)
-       discrete gaussian image filter
-       gradient magnitude image filter
-       binary dilate/erode filters
-       later add greyscale dilate/erode filters
-
-       watershed
+     ITK Filters:
+     X - confidence connected image filter
+     X - gradient magnitude image filter
+     X - binary dilate/erode filters
+       - *aniosotropicimagediffusionfilters* (vector if supported)
+       - discrete gaussian image filter
+       - watershed
   */
 
 
@@ -479,8 +479,8 @@ Painter::Painter(GuiContext* ctx) :
 {
   runner_ = scinew RealDrawer(this);
   runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
-  mouse_.window_ = 0;
-  mouse_.position_ = Point(0,0,0);
+  event_.window_ = 0;
+  event_.position_ = Point(0,0,0);
   initialize_fonts();
 }
 
@@ -551,8 +551,8 @@ Painter::render_window(SliceWindow &window) {
 
   profiler("render grid");
 
-  if (mouse_.window_ == &window) {
-    Point windowpos(mouse_.x_, mouse_.y_, 0);
+  if (event_.window_ == &window) {
+    Point windowpos(event_.x_, event_.y_, 0);
     window.render_guide_lines(windowpos);
   }
 
@@ -560,14 +560,14 @@ Painter::render_window(SliceWindow &window) {
 
   if (tool_) {
     tool_->draw(window);
-    if (mouse_.window_ == &window)
-      tool_->draw_mouse_cursor(mouse_);
+    if (event_.window_ == &window)
+      tool_->draw_mouse_cursor(event_);
   }
 
   for (unsigned int t = 0; t < tools_.size(); ++t) {
     tools_[t]->draw(window);
-    if (mouse_.window_ == &window)
-      tools_[t]->draw_mouse_cursor(mouse_);
+    if (event_.window_ == &window)
+      tools_[t]->draw_mouse_cursor(event_);
   }
 
 
@@ -843,10 +843,9 @@ Painter::SliceWindow::render_grid()
   render_frame(15,15, 3, 3, white, grey2 );
   render_frame(17,17, 2, 2, grey3);
   profiler("render_frame");
-  double grid_color = 0.0;
+  double grid_color = 0.25;
 
   glDisable(GL_TEXTURE_2D);
-  glDisable(GL_BLEND);
   CHECK_OPENGL_ERROR();
 
   Point min = screen_to_world(0,0);
@@ -871,7 +870,10 @@ Painter::SliceWindow::render_grid()
   profiler("start");
   while (linemin(xax) < max(xax)) {
     linemin(xax) = linemax(xax) = min(xax) + gap*num;
-    glColor4d(grid_color, grid_color, grid_color, 1.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+
+    glColor4d(grid_color, grid_color, grid_color, 0.25);
     glBegin(GL_LINES);
     glVertex3dv(&linemin(0));
     glVertex3dv(&linemax(0));
@@ -900,7 +902,10 @@ Painter::SliceWindow::render_grid()
   linemax(xax) = max(xax);
   while (linemin(yax) < max(yax)) {
     linemin(yax) = linemax(yax) = min(yax) + gap*num;
-    glColor4d(grid_color, grid_color, grid_color, 1.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+
+    glColor4d(grid_color, grid_color, grid_color, 0.25);
     glBegin(GL_LINES);
     glVertex3dv(&linemin(0));
     glVertex3dv(&linemax(0));
@@ -1320,14 +1325,14 @@ Painter::SliceWindow::render_text()
                  " -- Max: " + to_string(vol->clut_max_),
                  xoff, y_pos*2+yoff, TextRenderer::SHADOW | TextRenderer::SW);
     profiler("Min/Max");
-    if (this == painter_->mouse_.window_) {
-      font1.render("X: "+double_to_string(painter_->mouse_.position_.x())+
-                   " Y: "+double_to_string(painter_->mouse_.position_.y())+
-                   " Z: "+double_to_string(painter_->mouse_.position_.z()),
+    if (this == painter_->event_.window_) {
+      font1.render("X: "+double_to_string(painter_->event_.position_.x())+
+                   " Y: "+double_to_string(painter_->event_.position_.y())+
+                   " Z: "+double_to_string(painter_->event_.position_.z()),
                    viewport_->width()-2-xoff, yoff,
                    TextRenderer::SHADOW | TextRenderer::SE);
       profiler("XYZ");
-      vector<int> index = vol->world_to_index(painter_->mouse_.position_);
+      vector<int> index = vol->world_to_index(painter_->event_.position_);
       if (vol->index_valid(index)) {
         font1.render("S: "+to_string(index[1])+
                      " C: "+to_string(index[2])+
@@ -1890,9 +1895,9 @@ Painter::execute()
 
 int
 Painter::set_probe(SliceWindow &window) {
-  if (mouse_.window_ != &window &&
-      current_volume_->inside_p(mouse_.position_)) {
-    window.center_(window.axis_) = mouse_.position_(window.axis_);
+  if (event_.window_ != &window &&
+      current_volume_->inside_p(event_.position_)) {
+    window.center_(window.axis_) = event_.position_(window.axis_);
     extract_window_slices(window);
   }
   return 1;
@@ -1914,83 +1919,83 @@ Painter::handle_gui_mouse_enter(GuiArgs &args) {
 	    ("Cannot handle enter on "+args[3]).c_str());
   ASSERTMSG(current_layout_ == 0, "Haven't left window");
   current_layout_ = layouts_[args[3]];
-  if (mouse_.window_)
-    redraw_window(*mouse_.window_);
+  if (event_.window_)
+    redraw_window(*event_.window_);
 }
 
 
 void
 Painter::handle_gui_mouse_leave(GuiArgs &args) {
   current_layout_ = 0;
-  if (mouse_.last_window_)
-    redraw_window(*mouse_.last_window_);
+  if (event_.last_window_)
+    redraw_window(*event_.last_window_);
 }
 
 bool
-Painter::MouseState::button(unsigned int button)
+Painter::Event::button(unsigned int button)
 {
-  const int mask = MouseState::BUTTON_1_E << (button-1);
+  const int mask = Event::BUTTON_1_E << (button-1);
   return (state_ & mask) ? true : false;
 }
 
 bool
-Painter::MouseState::shift()
+Painter::Event::shift()
 {
-  return (state_ & MouseState::SHIFT_E) ? true : false;
+  return (state_ & Event::SHIFT_E) ? true : false;
 }
 
 bool
-Painter::MouseState::control()
+Painter::Event::control()
 {
-  return (state_ & MouseState::CONTROL_E) ? true : false;
+  return (state_ & Event::CONTROL_E) ? true : false;
 }
 
 bool
-Painter::MouseState::alt()
+Painter::Event::alt()
 {
-  return (state_ & MouseState::ALT_E) ? true : false;
+  return (state_ & Event::ALT_E) ? true : false;
 }
 
 void
-Painter::update_mouse_state(GuiArgs &args, bool reset) {
+Painter::update_event_state(GuiArgs &args, bool reset) {
   ASSERT(layouts_.find(args[3]) != layouts_.end());
   WindowLayout &layout = *layouts_[args[3]];
 
-  mouse_.state_ = args.get_int(5);
+  event_.state_ = args.get_int(5);
 
   if (args[2] == "motion")
-    mouse_.type_ = MouseState::MOUSE_MOTION_E;
+    event_.type_ = Event::MOUSE_MOTION_E;
   else if (args[2] == "button")
-    mouse_.type_ = MouseState::BUTTON_PRESS_E;
+    event_.type_ = Event::BUTTON_PRESS_E;
   else if (args[2] == "release")
-    mouse_.type_ = MouseState::BUTTON_RELEASE_E;
+    event_.type_ = Event::BUTTON_RELEASE_E;
   else if (args[2] == "keydown")
-    mouse_.type_ = MouseState::KEY_PRESS_E;
+    event_.type_ = Event::KEY_PRESS_E;
   else if (args[2] == "keyup")
-    mouse_.type_ = MouseState::KEY_RELEASE_E;
+    event_.type_ = Event::KEY_RELEASE_E;
   else if (args[2] == "enter")
-    mouse_.type_ = MouseState::FOCUS_IN_E;
+    event_.type_ = Event::FOCUS_IN_E;
   else if (args[2] == "leave")
-    mouse_.type_ = MouseState::FOCUS_OUT_E;
+    event_.type_ = Event::FOCUS_OUT_E;
 
 
   if (args[2] == "keydown" || args[2] == "keyup") {
     TCLKeysym_t::iterator keysym = tcl_keysym.find(args[4]);
 
     if (keysym != tcl_keysym.end()) {
-      mouse_.key_ = "";
-      mouse_.key_.push_back(keysym->second);
+      event_.key_ = "";
+      event_.key_.push_back(keysym->second);
     } else {
-      mouse_.key_ = args[4];
+      event_.key_ = args[4];
     }
 
 
     if (args[2] == "keydown") 
-      mouse_.keys_.insert(mouse_.key_);
+      event_.keys_.insert(event_.key_);
     else {
-      set<string>::iterator pos = mouse_.keys_.find(mouse_.key_);
-      if (pos != mouse_.keys_.end())
-        mouse_.keys_.erase(pos);
+      set<string>::iterator pos = event_.keys_.find(event_.key_);
+      if (pos != event_.keys_.end())
+        event_.keys_.erase(pos);
       else {
         return;
       }
@@ -2001,91 +2006,91 @@ Painter::update_mouse_state(GuiArgs &args, bool reset) {
   
   if (args[2] != "motion") {
     // The button parameter may be invalid on motion events (mainly OS X)
-    mouse_.button_ = args.get_int(4);
+    event_.button_ = args.get_int(4);
     // Button presses don't set state,
-    // set to make MouseState::button_down() method work on press events
-    switch (mouse_.button_) {
-    case 1: mouse_.state_ |= MouseState::BUTTON_1_E; break;
-    case 2: mouse_.state_ |= MouseState::BUTTON_2_E; break;
-    case 3: mouse_.state_ |= MouseState::BUTTON_3_E; break;
-    case 4: mouse_.state_ |= MouseState::BUTTON_4_E; break;
-    case 5: mouse_.state_ |= MouseState::BUTTON_5_E; break;
+    // set to make Event::button_down() method work on press events
+    switch (event_.button_) {
+    case 1: event_.state_ |= Event::BUTTON_1_E; break;
+    case 2: event_.state_ |= Event::BUTTON_2_E; break;
+    case 3: event_.state_ |= Event::BUTTON_3_E; break;
+    case 4: event_.state_ |= Event::BUTTON_4_E; break;
+    case 5: event_.state_ |= Event::BUTTON_5_E; break;
     default: break;
     }
   }
 
-  mouse_.X_ = args.get_int(6);
-  mouse_.Y_ = args.get_int(7);
-  mouse_.x_ = args.get_int(8);
-  mouse_.y_ = layout.opengl_->height() - 1 - args.get_int(9);
+  event_.X_ = args.get_int(6);
+  event_.Y_ = args.get_int(7);
+  event_.x_ = args.get_int(8);
+  event_.y_ = layout.opengl_->height() - 1 - args.get_int(9);
 
-  mouse_.last_window_ = mouse_.window_;
-  mouse_.window_ = 0;
+  event_.last_window_ = event_.window_;
+  event_.window_ = 0;
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
     SliceWindow *window = layout.windows_[w];
     if (&layout == current_layout_ && 
-        mouse_.x_ >= window->viewport_->x() && 
-        (mouse_.x_ <  window->viewport_->x() + 
+        event_.x_ >= window->viewport_->x() && 
+        (event_.x_ <  window->viewport_->x() + 
          window->viewport_->width()) &&
-        (mouse_.y_ >= window->viewport_->y() &&
-         mouse_.y_ <  window->viewport_->y() + 
+        (event_.y_ >= window->viewport_->y() &&
+         event_.y_ <  window->viewport_->y() + 
          window->viewport_->height()))
     {
-      mouse_.window_ = window;
+      event_.window_ = window;
       break;
     }
   }
 
 
   if (reset) {
-    mouse_.pick_x_ = mouse_.X_;
-    mouse_.pick_y_ = mouse_.Y_;
+    event_.pick_x_ = event_.X_;
+    event_.pick_y_ = event_.Y_;
   }    
 
-  mouse_.dx_ = mouse_.X_ - mouse_.pick_x_;
-  mouse_.dy_ = mouse_.Y_ - mouse_.pick_y_;
-  if (mouse_.window_) 
-    mouse_.position_ = mouse_.window_->screen_to_world(mouse_.x_, mouse_.y_);
+  event_.dx_ = event_.X_ - event_.pick_x_;
+  event_.dy_ = event_.Y_ - event_.pick_y_;
+  if (event_.window_) 
+    event_.position_ = event_.window_->screen_to_world(event_.x_, event_.y_);
 }
 
 
 
 void
 Painter::handle_gui_mouse_button_press(GuiArgs &args) {
-  update_mouse_state(args, true);
-  if (!mouse_.window_) return;
+  update_event_state(args, true);
+  if (!event_.window_) return;
 
   if (!tool_) {
-    switch (mouse_.button_) {
+    switch (event_.button_) {
     case 1:
-      if (!tool_ && mouse_.shift())
-        tool_ = scinew PanTool(this);
-      else  if (!tool_) 
-        tool_ = scinew CLUTLevelsTool(this);
+      if (event_.shift())
+        tools_.push_back(new PanTool(this));
+      else
+        tools_.push_back(new CLUTLevelsTool(this));
       break;
       
     case 2:
-      if (!tool_ && mouse_.shift())
-        tool_ = scinew AutoviewTool(this);
+      if (event_.shift())
+        tools_.push_back(new AutoviewTool(this));
       else if (!tool_)
-        tool_ = scinew ProbeTool(this);
+        tools_.push_back(new ProbeTool(this));
       break;
     case 3:
-      if (!tool_ && mouse_.shift())
-        tool_ = scinew ZoomTool(this);
+      if (event_.shift())
+        tools_.push_back(new ZoomTool(this));
       break;
     case 4:
-      if (mouse_.control()) 
-        mouse_.window_->zoom_in();
+      if (event_.control()) 
+        event_.window_->zoom_in();
       else
-        mouse_.window_->next_slice();
+        event_.window_->next_slice();
       break;
       
     case 5:
-      if (mouse_.shift())
-        mouse_.window_->zoom_out();
+      if (event_.shift())
+        event_.window_->zoom_out();
       else
-        mouse_.window_->prev_slice();
+        event_.window_->prev_slice();
       break;
       
     default: 
@@ -2093,8 +2098,32 @@ Painter::handle_gui_mouse_button_press(GuiArgs &args) {
     }
   }
 
+
+  int tool = tools_.size();
+  while (tool > 0) {
+    --tool;
+    switch (tools_[tool]->do_event(event_)) {
+    case PainterTool::HANDLED_E: {
+      return;
+    } break;
+    case PainterTool::QUIT_E: { 
+      delete tools_[tool];
+      tools_.erase(tools_.begin()+tool);
+      return;
+    } break;
+    case PainterTool::ERROR_E: { 
+      cerr << tools_[tool]->get_name() << " Tool Error: " 
+           << tools_[tool]->err() << std::endl;
+      return;
+    } break;
+    default: // nothing, continue to next tool 
+      break;
+    }
+  }
+
+
   if (tool_) {
-    string *err = tool_->mouse_button_press(mouse_);
+    string *err = tool_->mouse_button_press(event_);
     if (err) {
       error(*err);
       delete err;
@@ -2107,11 +2136,11 @@ Painter::handle_gui_mouse_button_press(GuiArgs &args) {
 
 void
 Painter::handle_gui_mouse_motion(GuiArgs &args) {
-  update_mouse_state(args);
+  update_event_state(args);
   if (tool_)
-    tool_->mouse_motion(mouse_);
-  if (mouse_.window_)
-    redraw_window(*mouse_.window_);
+    tool_->mouse_motion(event_);
+  if (event_.window_)
+    redraw_window(*event_.window_);
 }
 
 
@@ -2119,10 +2148,10 @@ Painter::handle_gui_mouse_motion(GuiArgs &args) {
 
 void
 Painter::handle_gui_mouse_button_release(GuiArgs &args) {
-  update_mouse_state(args);
+  update_event_state(args);
 
   if (tool_) {
-    string *err = tool_->mouse_button_release(mouse_);
+    string *err = tool_->mouse_button_release(event_);
     if (err && *err == "Done") {
       delete tool_;
       tool_ = 0;
@@ -2134,9 +2163,9 @@ Painter::handle_gui_mouse_button_release(GuiArgs &args) {
 void
 Painter::handle_gui_keypress(GuiArgs &args) {
   ASSERT(layouts_.find(args[3]) != layouts_.end());
-  if (!mouse_.window_) return;
-  SliceWindow &window = *mouse_.window_;
-  string &key = mouse_.key_;
+  if (!event_.window_) return;
+  SliceWindow &window = *event_.window_;
+  string &key = event_.key_;
   PainterTool *oldtool = tool_;
   unsigned int numtools = tools_.size();
   if (key == "=" || key == "+") window.zoom_in();
@@ -2284,11 +2313,11 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
     
 
   if (args[1] == "event") {
-    update_mouse_state(args);
+    update_event_state(args);
     int tool = tools_.size();
     while (tool > 0) {
       --tool;
-      switch (tools_[tool]->do_event(mouse_)) {
+      switch (tools_[tool]->do_event(event_)) {
       case PainterTool::HANDLED_E: {
         return;
       } break;

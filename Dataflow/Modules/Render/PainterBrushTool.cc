@@ -104,43 +104,43 @@ Painter::BrushTool::~BrushTool()
 
 
 int
-Painter::BrushTool::do_event(MouseState &event)
+Painter::BrushTool::do_event(Event &event)
 {
   switch (event.type_) {
-  case MouseState::BUTTON_PRESS_E:   return button_press(event); break;
-  case MouseState::BUTTON_RELEASE_E: return button_release(event); break;
-  case MouseState::MOUSE_MOTION_E:   return my_mouse_motion(event); break;
-  case MouseState::KEY_PRESS_E:      return key_press(event); break;
+  case Event::BUTTON_PRESS_E:   return button_press(event); break;
+  case Event::BUTTON_RELEASE_E: return button_release(event); break;
+  case Event::MOUSE_MOTION_E:   return my_mouse_motion(event); break;
+  case Event::KEY_PRESS_E:      return key_press(event); break;
   default:  break;
   }
   return FALLTHROUGH_E;
 }
 
 int
-Painter::BrushTool::key_press(MouseState &mouse)
+Painter::BrushTool::key_press(Event &event)
 {
-  if (mouse.key_ == " ") 
+  if (event.key_ == " ") 
     return QUIT_E;
   return FALLTHROUGH_E;
 }
 
 int
-Painter::BrushTool::button_press(MouseState &mouse)
+Painter::BrushTool::button_press(Event &event)
 {
-  if (!mouse.keys_.empty()) 
+  if (!event.keys_.empty()) 
     return FALLTHROUGH_E;
 
   NrrdVolume *vol = painter_->current_volume_;
   if (!vol) 
     return FALLTHROUGH_E;
 
-  window_ = mouse.window_;
+  window_ = event.window_;
   if (!window_) 
     return FALLTHROUGH_E;
   
 
 
-  if ( mouse.button_ == 1) {
+  if ( event.button_ == 1) {
     slice_ = window_->slice_map_[vol];
     if (!slice_)
       return FALLTHROUGH_E;
@@ -148,7 +148,7 @@ Painter::BrushTool::button_press(MouseState &mouse)
     if (airIsNaN(value_))
       value_ = painter_->current_volume_->clut_max_;
 
-    last_index_ = vol->world_to_index(mouse.position_);
+    last_index_ = vol->world_to_index(event.position_);
     last_index_.erase(last_index_.begin()+slice_->axis());
 
     splat(slice_->texture_->nrrd_->nrrd, radius_, 
@@ -160,18 +160,18 @@ Painter::BrushTool::button_press(MouseState &mouse)
     
     painter_->redraw_all();    
     return HANDLED_E;
-  } else if (mouse.button_ == 3) {
+  } else if (event.button_ == 3) {
     vector<int> index = 
-      vol->world_to_index(mouse.position_);
+      vol->world_to_index(event.position_);
     if (vol->index_valid(index))
       vol->get_value(index, value_);
     painter_->redraw_all();    
     return HANDLED_E;
-  } else if (mouse.button_ == 4) {
+  } else if (event.button_ == 4) {
     radius_ *= 1.1;
     painter_->redraw_all();    
     return HANDLED_E;
-  } else if (mouse.button_ == 5) {
+  } else if (event.button_ == 5) {
     radius_ /= 1.1;
     painter_->redraw_all();
     return HANDLED_E;
@@ -181,15 +181,15 @@ Painter::BrushTool::button_press(MouseState &mouse)
 }
 
 int
-Painter::BrushTool::button_release(MouseState &mouse)
+Painter::BrushTool::button_release(Event &event)
 {  
-  if (!mouse.keys_.empty()) 
+  if (!event.keys_.empty()) 
     return FALLTHROUGH_E;
 
   if (!window_ || !slice_) 
     return FALLTHROUGH_E;
 
-  if (mouse.button(1)) {
+  if (event.button(1)) {
     NrrdVolume *vol = slice_->volume_;
     ASSERT(vol);
 
@@ -226,9 +226,9 @@ Painter::BrushTool::button_release(MouseState &mouse)
 }
 
 int
-Painter::BrushTool::my_mouse_motion(MouseState &mouse)
+Painter::BrushTool::my_mouse_motion(Event &event)
 {
-  if (!mouse.keys_.empty()) 
+  if (!event.keys_.empty()) 
     return FALLTHROUGH_E;
 
   if (!window_)
@@ -241,12 +241,12 @@ Painter::BrushTool::my_mouse_motion(MouseState &mouse)
   if (!vol)
     return FALLTHROUGH_E;
     
-  vector<int> index = vol->world_to_index(mouse.position_);
+  vector<int> index = vol->world_to_index(event.position_);
   if (!vol->index_valid(index)) 
     return FALLTHROUGH_E;
   
-  if (mouse.button(1)) {
-    //    vector<int> index = = vol->world_to_index(mouse.position_);
+  if (event.button(1)) {
+    //    vector<int> index = = vol->world_to_index(event.position_);
     index.erase(index.begin()+slice_->axis());
 
     line(slice_->texture_->nrrd_->nrrd, radius_, 
@@ -267,33 +267,33 @@ Painter::BrushTool::my_mouse_motion(MouseState &mouse)
 
 
 string *
-Painter::BrushTool::draw_mouse_cursor(MouseState &mouse)
+Painter::BrushTool::draw_mouse_cursor(Event &event)
 {
   NrrdVolume *vol = painter_->current_volume_;
-  if (!mouse.window_ || !vol) return 0;
+  if (!event.window_ || !vol) return 0;
   glColor4f(1.0, 0.0, 0.0, 1.0);
   glLineWidth(2.0);
   glBegin(GL_LINES);
 
-  int x0 = Floor(mouse.position_(mouse.window_->x_axis()));
-  int y0 = Floor(mouse.position_(mouse.window_->y_axis()));
-  //  int z0 = Floor(mouse.position_(mouse.window_->axis_));
+  int x0 = Floor(event.position_(event.window_->x_axis()));
+  int y0 = Floor(event.position_(event.window_->y_axis()));
+  //  int z0 = Floor(event.position_(event.window_->axis_));
   //  int wid = int(Ceil(radius_));
 
 
-  Vector up = mouse.window_->y_dir();
+  Vector up = event.window_->y_dir();
   vector<double> upv = vol->vector_to_index(up);
   upv[max_vector_magnitude_index(upv)] /= 
     Abs(upv[max_vector_magnitude_index(upv)]);
   up =vol->index_to_vector(upv);
 
-  Vector right = mouse.window_->x_dir();
+  Vector right = event.window_->x_dir();
   vector<double> rightv = vol->vector_to_index(right);
   rightv[max_vector_magnitude_index(rightv)] /= 
     Abs(rightv[max_vector_magnitude_index(rightv)]);
   right = vol->index_to_vector(rightv);
 
-  Point center = vol->index_to_world(vol->world_to_index(mouse.position_));
+  Point center = vol->index_to_world(vol->world_to_index(event.position_));
 
   double rsquared = radius_*radius_;
   const int wid = Round(radius_);

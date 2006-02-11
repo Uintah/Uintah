@@ -103,38 +103,44 @@ Painter::CLUTLevelsTool::CLUTLevelsTool(Painter *painter) :
 }
 
 
-string *
-Painter::CLUTLevelsTool::mouse_button_press(MouseState &mouse) {
-  if (!painter_->current_volume_) 
-    return scinew string("No layer selected!");
-  ww_ = (painter_->current_volume_->clut_max_() - 
-         painter_->current_volume_->clut_min_());
-  wl_ =  painter_->current_volume_->clut_min_ + ww_ / 2.0;;
+int
+Painter::CLUTLevelsTool::do_event(Event &event) {
+  if (!event.keys_.empty()) 
+    return FALLTHROUGH_E;
+  
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!vol) 
+    return FALLTHROUGH_E;
+  
+  //  if (!event.button(1))
+  //    return FALLTHROUGH_E;
+  
+  if (event.type_ == Event::BUTTON_RELEASE_E)
+    return QUIT_E;
 
-  const double w = painter_->current_layout_->opengl_->width();
-  const double h = painter_->current_layout_->opengl_->height();
-  scale_ = (painter_->current_volume_->data_max_ - 
-            painter_->current_volume_->data_min_) / sqrt(w*w+h*h);
-  return mouse_motion(mouse); 
+  
+  if (event.type_ == Event::BUTTON_PRESS_E) {
+    ww_ = vol->clut_max_() - vol->clut_min_();
+    wl_ = vol->clut_min_ + ww_ / 2.0;
+    
+    const double w = painter_->current_layout_->opengl_->width();
+    const double h = painter_->current_layout_->opengl_->height();
+    scale_ = (vol->data_max_ - vol->data_min_) / sqrt(w*w+h*h);
+  }
+
+  if (event.type_ == Event::BUTTON_PRESS_E ||
+      event.type_ == Event::MOUSE_MOTION_E) {
+    const float ww = ww_+scale_*event.dy_;  
+    const float wl = wl_+scale_*event.dx_;
+    vol->clut_min_ = wl - ww/2.0;
+    vol->clut_max_ = wl + ww/2.0;
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
+    return HANDLED_E;
+  }
+
+  return FALLTHROUGH_E;
 }
-
-string *
-Painter::CLUTLevelsTool::mouse_button_release(MouseState &mouse) {
-  return scinew string("Done");
-}
-
-
-string *
-Painter::CLUTLevelsTool::mouse_motion(MouseState &mouse) {
-  const float ww = ww_+scale_*mouse.dy_;  
-  const float wl = wl_+scale_*mouse.dx_;
-  painter_->current_volume_->clut_min_ = wl - ww/2.0;
-  painter_->current_volume_->clut_max_ = wl + ww/2.0;
-  painter_->for_each(&Painter::rebind_slice);
-  painter_->redraw_all();
-  return 0; 
-}
-
 
 
 Painter::ZoomTool::ZoomTool(Painter *painter) : 
@@ -144,29 +150,31 @@ Painter::ZoomTool::ZoomTool(Painter *painter) :
 }
 
 
-string *
-Painter::ZoomTool::mouse_button_press(MouseState &mouse) {
-  if (!mouse.window_)
-    return scinew string("Cant Zoom!, mouse not in window");
-  window_ = mouse.window_;
-  zoom_ = window_->zoom_;
-  return 0;
-}
+int
+Painter::ZoomTool::do_event(Event &event) {
 
-string *
-Painter::ZoomTool::mouse_button_release(MouseState &mouse) {
-  return scinew string("Done");
-}
+  //  if (!event.button(1))
+  //    return FALLTHROUGH_E;
+  
+  if (event.type_ == Event::BUTTON_RELEASE_E)
+    return QUIT_E;
+  
+  if (event.type_ == Event::BUTTON_PRESS_E) {
+    if (!event.window_)
+      return FALLTHROUGH_E;
 
-
-string *
-Painter::ZoomTool::mouse_motion(MouseState &mouse) {
-  //  double scale = 1.0;//exp(log(window_->zoom_/100.0)/log(10.0));
-  //  cerr << scale << std::endl;
-  //  window_->zoom_ = Max(1.0,zoom_+scale*(mouse.dx_+mouse.dy_));
-  window_->zoom_ = Max(0.00001,zoom_*Pow(1.002,mouse.dx_+mouse.dy_));
-  painter_->redraw_window(*window_);
-  return 0; 
+    window_ = event.window_;
+    zoom_ = window_->zoom_;
+    return HANDLED_E;
+  }
+  
+  if (event.type_ == Event::MOUSE_MOTION_E && window_) {
+    window_->zoom_ = Max(0.00001,zoom_*Pow(1.002,event.dx_+event.dy_));
+    painter_->redraw_window(*window_);
+    return HANDLED_E;
+  }
+  
+  return FALLTHROUGH_E;
 }
 
 
@@ -176,18 +184,13 @@ Painter::AutoviewTool::AutoviewTool(Painter *painter) :
 }
 
 
-string *
-Painter::AutoviewTool::mouse_button_press(MouseState &mouse) {
-  if (!mouse.window_)
-    return scinew string("Cant Autoview!, mouse not in window");
-  painter_->autoview(*(mouse.window_));
-  return 0;
+int
+Painter::AutoviewTool::do_event(Event &event) {
+  if (event.window_)
+    painter_->autoview(*(event.window_));
+  return QUIT_E;
 }
 
-string *
-Painter::AutoviewTool::mouse_button_release(MouseState &mouse) {
-  return scinew string("Done");
-}
 
 Painter::ProbeTool::ProbeTool(Painter *painter) : 
   PainterTool(painter, "Probe")
@@ -195,22 +198,20 @@ Painter::ProbeTool::ProbeTool(Painter *painter) :
 }
 
 
-string *
-Painter::ProbeTool::mouse_button_press(MouseState &mouse) {
-  return mouse_motion(mouse);
-}
-
-string *
-Painter::ProbeTool::mouse_button_release(MouseState &mouse) {
-  return scinew string("Done");
-}
-
-
-string *
-Painter::ProbeTool::mouse_motion(MouseState &mouse) {
-  painter_->for_each(&Painter::set_probe);
-  painter_->redraw_all();
-  return 0;
+int
+Painter::ProbeTool::do_event(Event &event) {
+  if (event.type_ == Event::BUTTON_PRESS_E ||
+      event.type_ == Event::MOUSE_MOTION_E){
+    painter_->for_each(&Painter::set_probe);
+    painter_->redraw_all();
+    return HANDLED_E;
+  }
+  
+  if (event.type_ == Event::BUTTON_RELEASE_E) {
+    return QUIT_E;
+  }
+  
+  return FALLTHROUGH_E;
 }
 
 
@@ -222,32 +223,31 @@ Painter::PanTool::PanTool(Painter *painter) :
 }
 
 
-string *
-Painter::PanTool::mouse_button_press(MouseState &mouse) {
-  if (!mouse.window_)
-    return scinew string("Cant Pan, mouse not in window");
-  window_ = mouse.window_;
-  center_ = window_->center_;
-  return 0;
+int
+Painter::PanTool::do_event(Event &event) {
+  if (event.type_ == Event::BUTTON_RELEASE_E)
+    return QUIT_E;
+
+  if (event.type_ == Event::BUTTON_PRESS_E) {
+    if (!event.window_)
+      return FALLTHROUGH_E;
+    window_ = event.window_;
+    center_ = window_->center_;
+    return HANDLED_E;
+  }
+
+  if (event.type_ == Event::MOUSE_MOTION_E) {
+    const float scale = 100.0/window_->zoom_;
+    int xax = window_->x_axis();
+    int yax = window_->y_axis();
+    window_->center_(xax) = center_(xax) - event.dx_ * scale;
+    window_->center_(yax) = center_(yax) + event.dy_ * scale;
+    painter_->redraw_window(*window_);
+    return HANDLED_E;
+  }
+
+  return FALLTHROUGH_E;
 }
-
-
-string *
-Painter::PanTool::mouse_button_release(MouseState &mouse) {
-  return scinew string("Done");
-}
-
-string *
-Painter::PanTool::mouse_motion(MouseState &mouse) {
-  const float scale = 100.0/window_->zoom_;
-  int xax = window_->x_axis();
-  int yax = window_->y_axis();
-  window_->center_(xax) = center_(xax) - mouse.dx_ * scale;
-  window_->center_(yax) = center_(yax) + mouse.dy_ * scale;
-  painter_->redraw_window(*window_);
-  return 0; 
-}
-
 
 
 
@@ -270,23 +270,23 @@ Painter::CropTool::~CropTool() {}
 
 
 string *
-Painter::CropTool::mouse_button_press(MouseState &mouse) {
-  if (!mouse.window_) 
+Painter::CropTool::mouse_button_press(Event &event) {
+  if (!event.window_) 
     return scinew string("No window!");
 
-  compute_crop_pick_boxes(*(mouse.window_));
-  pick_ = get_pick_from_mouse(mouse);
+  compute_crop_pick_boxes(*(event.window_));
+  pick_ = get_pick_from_event(event);
   //  bbox_ = BBox(painter_current_volume_->min_, painter_.current_volume_->max_);
   return 0;
 }
 
 
 string *
-Painter::CropTool::mouse_motion(MouseState &mouse) {
-  SliceWindow &window = *(mouse.window_);
+Painter::CropTool::mouse_motion(Event &event) {
+  SliceWindow &window = *(event.window_);
   pair<Vector, Vector> crop_delta = get_crop_vectors(window, pick_);
-  Vector crop_delta_x = crop_delta.first*mouse.dx_;
-  Vector crop_delta_y = crop_delta.second*mouse.dy_;
+  Vector crop_delta_x = crop_delta.first*event.dx_;
+  Vector crop_delta_y = crop_delta.second*event.dy_;
   Point min = bbox_.min();
   Point max = bbox_.max();
   const int p = window.x_axis();
@@ -387,7 +387,7 @@ Painter::CropTool::mouse_motion(MouseState &mouse) {
 
 
 string *
-Painter::CropTool::mouse_button_release(MouseState &mouse) {
+Painter::CropTool::mouse_button_release(Event &event) {
   if (pick_) {
     bbox_ = draw_bbox_;
     pick_ = 0;
@@ -570,7 +570,7 @@ Painter::CropTool::draw(SliceWindow &window) {
   glDisable(GL_BLEND);
 
   compute_crop_pick_boxes(window);
-  //  set_window_cursor(window, get_pick_from_mouse(mouse));
+  //  set_window_cursor(window, get_pick_from_event(event));
   return 0; 
 }
 
@@ -649,9 +649,9 @@ Painter::CropTool::update_bbox_to_gui()
 
 
 int
-Painter::CropTool::get_pick_from_mouse(MouseState &mouse)
+Painter::CropTool::get_pick_from_event(Event &event)
 {
-  Point pos(mouse.x_, mouse.y_, 0.0);
+  Point pos(event.x_, event.y_, 0.0);
   // Optimization: Check the last pick box first, 
   // assuming it encloses all the previous pick boxes
   if (!pick_boxes_.back().inside(pos)) return 0;
@@ -663,7 +663,7 @@ Painter::CropTool::get_pick_from_mouse(MouseState &mouse)
 void
 Painter::CropTool::set_window_cursor(SliceWindow &window, int cursor) 
 {
-  if (painter_->mouse_.window_ != &window || 
+  if (painter_->event_.window_ != &window || 
       window.cursor_pixmap_ == cursor) return;
   window.cursor_pixmap_ = cursor;
   string cursor_name;
@@ -721,29 +721,29 @@ Painter::FloodfillTool::~FloodfillTool()
 }
 
 string *
-Painter::FloodfillTool::mouse_button_press(MouseState &mouse)
+Painter::FloodfillTool::mouse_button_press(Event &event)
 {
   NrrdVolume *volume = painter_->current_volume_;
-  if (!mouse.window_ || !painter_->current_volume_) 
+  if (!event.window_ || !painter_->current_volume_) 
     return scinew string("No window or current layer");
   
-  if (mouse.button_ == 1) {
-    vector<int> index = volume->world_to_index(mouse.position_);
+  if (event.button_ == 1) {
+    vector<int> index = volume->world_to_index(event.position_);
     if (!volume->index_valid(index)) return 0;
 
     min_ = painter_->current_volume_->data_max_;
     max_ = painter_->current_volume_->data_min_;
-    start_pos_ = mouse.position_;
+    start_pos_ = event.position_;
   }
 
-  return mouse_motion(mouse);
+  return mouse_motion(event);
 }
 
 
 string *
-Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
+Painter::FloodfillTool::mouse_button_release(Event &event)
 {
-  if (mouse.button_ != 1) return 0;
+  if (event.button_ != 1) return 0;
 
   NrrdVolume *volume = painter_->current_volume_;
   vector<int> index = volume->world_to_index(start_pos_);
@@ -826,23 +826,23 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 }
 
 string *
-Painter::FloodfillTool::mouse_motion(MouseState &mouse)
+Painter::FloodfillTool::mouse_motion(Event &event)
 {
   NrrdVolume *volume = painter_->current_volume_;
   if (!volume) return 0;
-  vector<int> index = volume->world_to_index(mouse.position_);
+  vector<int> index = volume->world_to_index(event.position_);
   if (!volume->index_valid(index)) return 0;
 
   double val;
   volume->get_value(index, val);
 
-  if (mouse.button(1)) {
+  if (event.button(1)) {
     min_ = Min(min_, val);
     max_ = Max(max_, val);
     cerr << "Min: " << min_ << "  Max: " << max_ << std::endl;
   }
   
-  if (mouse.button(3)) {
+  if (event.button(3)) {
     value_ = val;
     cerr << "value: " << value_ << std::endl;
   }
@@ -867,14 +867,14 @@ Painter::ITKThresholdTool::ITKThresholdTool(Painter *painter) :
 
 
 int
-Painter::ITKThresholdTool::do_event(MouseState &mouse)
+Painter::ITKThresholdTool::do_event(Event &event)
 {
-  if (mouse.type_ != MouseState::KEY_PRESS_E)
+  if (event.type_ != Event::KEY_PRESS_E)
     return FALLTHROUGH_E;
 
   NrrdVolume *cur = painter_->current_volume_;
   NrrdVolume *temp = 0;
-  if (mouse.key_ == "1" && cur && cur != seed_volume_) {
+  if (event.key_ == "1" && cur && cur != seed_volume_) {
     if (source_volume_) source_volume_->name_prefix_ = "";
     source_volume_ = cur;
     source_volume_->name_prefix_ = "Source - ";
@@ -882,7 +882,7 @@ Painter::ITKThresholdTool::do_event(MouseState &mouse)
     return HANDLED_E;
   }
   
-  if (mouse.key_ == "2" && cur && cur != source_volume_) {
+  if (event.key_ == "2" && cur && cur != source_volume_) {
     if (seed_volume_) seed_volume_->name_prefix_ = "";
     seed_volume_ = cur;
     seed_volume_->name_prefix_ = "Seed - ";
@@ -891,11 +891,11 @@ Painter::ITKThresholdTool::do_event(MouseState &mouse)
   }
 
   
-  if (mouse.key_ == "q" || mouse.key_ == "Q") {
+  if (event.key_ == "q" || event.key_ == "Q") {
     return QUIT_E;
   }
   
-  if (mouse.key_ == " " && seed_volume_ && source_volume_) {
+  if (event.key_ == " " && seed_volume_ && source_volume_) {
     string name = "ITK Threshold Result";
     temp = painter_->copy_current_volume(name, 2);
     temp->colormap_.set(2);
@@ -954,22 +954,22 @@ Painter::StatisticsTool::~StatisticsTool()
 }
 
 // string *
-// Painter::StatisticsTool::mouse_button_press(MouseState &mouse)
+// Painter::StatisticsTool::mouse_button_press(Event &event)
 // {
 //   return mouse_motion(mouse);
 // }
 
 string *
-Painter::StatisticsTool::mouse_button_release(MouseState &mouse)
+Painter::StatisticsTool::mouse_button_release(Event &event)
 {
   NrrdVolume *vol = painter_->current_volume_;
-  if (vol && mouse.state_ & MouseState::BUTTON_1_E) {
+  if (vol && event.state_ & Event::BUTTON_1_E) {
     vol->clut_min_ = mean_ - standard_deviation_;
     vol->clut_max_ = mean_ + standard_deviation_;
     painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
 
-  } else if (vol && mouse.state_ & MouseState::BUTTON_2_E) {
+  } else if (vol && event.state_ & Event::BUTTON_2_E) {
     vol->clut_min_ = vol->data_min_;
     vol->clut_max_ = vol->data_max_;
     painter_->for_each(&Painter::rebind_slice);
@@ -977,19 +977,19 @@ Painter::StatisticsTool::mouse_button_release(MouseState &mouse)
 
   } 
     
-  if (mouse.state_ & MouseState::BUTTON_3_E)
+  if (event.state_ & Event::BUTTON_3_E)
     return new string ("Done");
     
   return 0;
 }
 
 string *
-Painter::StatisticsTool::mouse_motion(MouseState &mouse)
+Painter::StatisticsTool::mouse_motion(Event &event)
 {
   NrrdVolume *vol = painter_->current_volume_;
   if (!vol) return 0;
-  if (mouse.state_ & MouseState::BUTTON_1_E) {
-    vector<int> index = vol->world_to_index(mouse.position_);
+  if (event.state_ & Event::BUTTON_1_E) {
+    vector<int> index = vol->world_to_index(event.position_);
     if (!vol->index_valid(index)) return 0;
     double value;
     vol->get_value(index, value);
@@ -1000,7 +1000,7 @@ Painter::StatisticsTool::mouse_motion(MouseState &mouse)
     painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
 
-  } else if (mouse.state_ & MouseState::BUTTON_2_E) {
+  } else if (event.state_ & Event::BUTTON_2_E) {
     values_.clear();
     recompute();
   }
@@ -1038,13 +1038,13 @@ Painter::StatisticsTool::recompute() {
 string *
 Painter::StatisticsTool::draw(SliceWindow &window)
 {
-  if (&window != painter_->mouse_.window_) return 0;
+  if (&window != painter_->event_.window_) return 0;
   string std = "Standard Deviation: "+to_string(standard_deviation_);
   string mean = "Mean: "+to_string(mean_);
   FreeTypeTextTexture text(mean, painter_->fonts_["default"]);
-  text.draw(painter_->mouse_.x_, painter_->mouse_.y_, FreeTypeTextTexture::nw);
+  text.draw(painter_->event_.x_, painter_->event_.y_, FreeTypeTextTexture::nw);
   text.set(std);
-  text.draw(painter_->mouse_.x_, painter_->mouse_.y_+text.height()+2, 
+  text.draw(painter_->event_.x_, painter_->event_.y_+text.height()+2, 
             FreeTypeTextTexture::nw);
                       
   return 0;
@@ -1063,18 +1063,18 @@ Painter::ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilte
 
 
 int 
-Painter::ITKConfidenceConnectedImageFilterTool::do_event(MouseState &mouse)
+Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
 {
-  bool finish = (mouse.type_ == MouseState::KEY_PRESS_E && mouse.key_ == " ");
-  if (!finish && mouse.keys_.size()) 
+  bool finish = (event.type_ == Event::KEY_PRESS_E && event.key_ == " ");
+  if (!finish && event.keys_.size()) 
     return FALLTHROUGH_E;
 
   if (finish ||
-      (mouse.type_ == MouseState::BUTTON_RELEASE_E && mouse.button(3))) {
+      (event.type_ == Event::BUTTON_RELEASE_E && event.button(3))) {
     if (!volume_) 
       volume_ = painter_->current_volume_;
     if (!volume_->index_valid(seed_))
-      seed_ = volume_->world_to_index(mouse.position_);
+      seed_ = volume_->world_to_index(event.position_);
     if (!volume_->index_valid(seed_))
       return QUIT_E;
     
@@ -1105,10 +1105,10 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(MouseState &mouse)
     return QUIT_E;
   }
 
-  if (mouse.state_ & MouseState::BUTTON_1_E) {
+  if (event.state_ & Event::BUTTON_1_E) {
     volume_ = painter_->current_volume_;
     if (volume_)
-      seed_ = volume_->world_to_index(mouse.position_);
+      seed_ = volume_->world_to_index(event.position_);
     painter_->redraw_all();
     return HANDLED_E;
   }
