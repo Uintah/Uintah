@@ -26,42 +26,67 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
-#ifndef MODELCREATION_CORE_FIELDS_NUMERICALGO_H
-#define MODELCREATION_CORE_FIELDS_NUMERICALGO_H 1
-
-#include <Packages/ModelCreation/Core/Util/AlgoLibrary.h>
-
-#include <Core/Bundle/Bundle.h>
-#include <Core/Datatypes/Matrix.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/DenseMatrix.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
 
 #include <Dataflow/Network/Module.h>
-
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <sstream>
-#include <sgi_stl_warnings_on.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class NumericAlgo : public AlgoLibrary {
+class MatrixToField : public Module {
+public:
+  MatrixToField(GuiContext*);
 
-  public:
-    NumericAlgo(ProgressReporter* pr); // normal case
+  virtual void execute();
 
-    // Build the FEMMatrix using a variable number of processes
-    bool BuildFEMMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc);
-    
-    // Resize a matrix, Dense or Sparse
-    bool ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n);
-    
+private:
+  GuiString guidatalocation_;
 };
 
 
-} // ModelCreation
+DECLARE_MAKER(MatrixToField)
+MatrixToField::MatrixToField(GuiContext* ctx)
+  : Module("MatrixToField", ctx, Source, "FieldsCreate", "ModelCreation"),
+    guidatalocation_(ctx->subVar("datalocation"))
+{
+}
 
-#endif
+void MatrixToField::execute()
+{
+  MatrixIPort* iport = dynamic_cast<MatrixIPort*>(get_iport(0));
+  if (iport == 0) 
+  {
+    error("Could not find input port");
+    return;
+  }
+
+  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
+  if (oport == 0) 
+  {
+    error("Could not find output port");
+    return;
+  }
+
+  MatrixHandle imatrix;
+  FieldHandle ofield;
+  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+
+  std::string datalocation = guidatalocation_.get();
+  
+  iport->get(imatrix);
+  if(algo.MatrixToField(imatrix,ofield,datalocation)) oport->send(ofield);
+}
+
+
+} // End namespace ModelCreation
+
+

@@ -88,43 +88,48 @@ class TimeDataFile {
     virtual ~TimeDataFile();
     
     // open function
-    void open(std::string filename);
-    
-    int getncols();
-    int getnrows();
-    
-    int         getsize(int dim);
-    double      getspacing(int dim);
-    std::string getkind(int dim);
-    std::string getunit(int dim);
-    
-    std::string getcontent();
-    std::string getunit();
+    void open(std::string filename);  // Open the datafile
 
-	void getmatrix(MatrixHandle& mh,int dim, int dimstart, int dimend);
-	void getnrrd(NrrdDataHandle& nh,int dim, int dimstart, int dimend);
-    
-    void getcolmatrix(MatrixHandle& mh,int colstart,int colend);
-    void getrowmatrix(MatrixHandle& mh,int rowstart,int rowend);
-    void getcolnrrd(NrrdDataHandle& nh,int colstart,int colend);
-    void getrownrrd(NrrdDataHandle& nh,int rowstart,int rowend);
+    // Get the essential Nrrd Header data
+    int         getsize(int dim);     // Get the number of samples in dimension dim
+    double      getspacing(int dim);  // Get the spacing in dimension dim
+    std::string getkind(int dim);     // Get the kind of the axis 
+    std::string getunit(int dim);     // Get the unit along dimension dim
+    std::string getcontent();         // Get the content field of the nrrd
+    std::string getsampleunit();      // Get the unit of the data.
 
+    bool getmatrix(MatrixHandle& mh,int dim, int dimstart, int dimend);
+    bool getnrrd(NrrdDataHandle& nh,int dim, int dimstart, int dimend);
+    
   private:  
-    std::string remspaces(std::string str);
-    void gettype(std::string type,int& nrrdtype, int& elsize);
-    int  cmp_nocase(const std::string& s1, const std::string& s2);
-    void doswapbytes(void *vbuffer,long elsize,long size);
+
+    //  Functions for fast access to the specific data
+    // Internal functions for fast access to the data
+    // We have eight different cases
+    bool getmatrix_dim0(MatrixHandle& mh, int start, int end);
+    bool getmatrix_dim1(MatrixHandle& mh, int start, int end);
+    bool getmatrix_dim2(MatrixHandle& mh, int start, int end);
+    bool getmatrix_dim3(MatrixHandle& mh, int start, int end);
+    
+    bool getnrrd_dim0(NrrdDataHandle& mh, int start, int end);
+    bool getnrrd_dim1(NrrdDataHandle& mh, int start, int end);
+    bool getnrrd_dim2(NrrdDataHandle& mh, int start, int end);
+    bool getnrrd_dim3(NrrdDataHandle& mh, int start, int end);
+
+
+    std::string remspaces(std::string str); // Remove white spaces from data read
+    void gettype(std::string type,int& nrrdtype, int& elsize);  // Get the nrrdtype and the element size
+    int  cmp_nocase(const std::string& s1, const std::string& s2);  // Nrrd header is text, make it case insensitive
+    void doswapbytes(void *vbuffer,long elsize,long size); // Swap bytes if needed
   
-  private:
-  
-    std::string               datafilename_;
-    std::vector<std::string>  datafilenames_;
-    std::vector<std::string>  units_;
-    std::vector<std::string>  kinds_;
-    std::vector<double>       spacings_;
-	std::vector<int>		  sizes_;
-    std::vector<int>          sdoffset_;
-	int						  sdsize_;
+    std::string               datafilename_;    // if there is one file use this one
+    std::vector<std::string>  datafilenames_;   // if data is spread over multiple files use this one
+    std::vector<std::string>  units_;           // Unit per axis
+    std::vector<std::string>  kinds_;           // Kind per axis
+    std::vector<double>       spacings_;        // Spacing per axis
+    std::vector<int>          sizes_;           // Size per axis
+    std::vector<int>          sdoffset_;        // Internal use only
+    int                       sdsize_;          
 
     std::string             content_;
     std::string             encoding_;

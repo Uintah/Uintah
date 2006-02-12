@@ -38,7 +38,7 @@
 	typedef unsigned __int64 uint64;
 
 #include <stdint.h>
-        typedef uint32_t u_int32_t;
+  typedef uint32_t u_int32_t;
 #else
   
   #define __USE_LARGEFILE64
@@ -146,7 +146,7 @@ void TimeDataFile::open(std::string filename)
     bool success = false;
     
     // Since the header file maybe being updated
-    // This way the reader will try several times durin 2
+    // This way the reader will try several times during 0.2
     // seconds to get access to it.
     // It is not the best synchronization, unfortunately the
     // nrrd format is ill designed and does not allow for
@@ -175,7 +175,7 @@ void TimeDataFile::open(std::string filename)
     units_.clear();
     kinds_.clear();
     spacings_.clear();
-	sizes_.clear();
+    sizes_.clear();
     coloffset_.clear();
     content_ = "";
     endian_ = "";
@@ -285,7 +285,7 @@ void TimeDataFile::open(std::string filename)
              end_ = 1;
              step_ = 1;
              subdim_ = 0;
-            useformatting_ = true;
+             useformatting_ = true;
              
              try
              {
@@ -358,7 +358,7 @@ void TimeDataFile::open(std::string filename)
       }
     }
 	
-	if (dimension_ == 0) dimension_ = sizes_.size();
+	  if (dimension_ == 0) dimension_ = sizes_.size();
 	
     // Correct the subdim values
     if ((subdim_ > dimension_)&&(subdim_ < 0))
@@ -366,19 +366,19 @@ void TimeDataFile::open(std::string filename)
       throw TimeDataFileException("Improper subdim value encountered");    
     }
     if (subdim_ == 0) subdim_ = 1;
-  
-	if (subdim_ == dimension_) subdim_ = dimension_-1;
-  
-	if (dimension_ > sizes_.size())
-	{
-		throw TimeDataFileException("The size of sizes array does not match dimension in NRRD file");
-	}
-  
-	// complete the per axis information
-	for (size_t p = spacings_.size(); p < dimension_; p++ ) spacings_.push_back(1.0);
-	for (size_t p = units_.size(); p < dimension_; p++ ) units_.push_back("");
-	for (size_t p = kinds_.size(); p < dimension_; p++ ) kinds_.push_back("");
-	for (size_t p = sizes_.size(); p < dimension_; p++ ) sizes_.push_back(1);
+    
+    if (subdim_ == dimension_) subdim_ = dimension_-1;
+    
+    if (dimension_ > sizes_.size())
+    {
+      throw TimeDataFileException("The size of sizes array does not match dimension in NRRD file");
+    }
+    
+    // complete the per axis information
+    for (size_t p = spacings_.size(); p < dimension_; p++ ) spacings_.push_back(1.0);
+    for (size_t p = units_.size(); p < dimension_; p++ ) units_.push_back("");
+    for (size_t p = kinds_.size(); p < dimension_; p++ ) kinds_.push_back("");
+    for (size_t p = sizes_.size(); p < dimension_; p++ ) sizes_.push_back(1);
   
     // We only support one of Gordon's types
     // If someone wants more it would be easier to fix teem library
@@ -515,8 +515,8 @@ void TimeDataFile::open(std::string filename)
       nsd = 0;
       std::list<std::string>::iterator p = datafilenames_.begin();
       int q = 0;
-	  sdsize_ = 1;
-	  for (size_p =0; p < subdim_; p++) sdsize_ *= sizes_[p]; 
+      sdsize_ = 1;
+      for (size_p =0; p < subdim_; p++) sdsize_ *= sizes_[p]; 
 	  
       sdoffset_.resize(datafilenames_.size()+1);
       for (;p != datafilenames_.end();p++)
@@ -534,10 +534,10 @@ void TimeDataFile::open(std::string filename)
 
     int div = 1;
     for (size_t p = subdim_ ; p < dimension_-1; p++ ) div *= sizes_[p]; 
-	int lastdim = static_cast<int>(nsd/div);
-    
-	if (sizes_[dimension_-1] == -1) sizes_[dimension_-1] = lastdim; 
-	if (sizes_[dimension-1] > lastdim) sizes_[dimension_-1] = lastdim;
+    int lastdim = static_cast<int>(nsd/div);
+      
+    if (sizes_[dimension_-1] == -1) sizes_[dimension_-1] = lastdim; 
+    if (sizes_[dimension-1] > lastdim) sizes_[dimension_-1] = lastdim;
     
     if (datafilenames_.size() > 0)
     {
@@ -561,10 +561,11 @@ std::string TimeDataFile::getcontent()
   return(content_);
 }
 
-std::string TimeDataFile::getunit()
+std::string TimeDataFile::getsampleunit()
 {
   return(unit_);
 }
+
 
 void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend)
 {
