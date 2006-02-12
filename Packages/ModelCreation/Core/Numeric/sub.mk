@@ -13,6 +13,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Core/Numeric
 
 SRCS     += $(SRCDIR)/NumericAlgo.cc\
+            $(SRCDIR)/BuildFEMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
@@ -21,7 +22,6 @@ PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Packages/ModelCreation/Core/Algorithms \
             Packages/ModelCreation/Core/Datatypes \
             Packages/ModelCreation/Core/Util \
-            Packages/ModelCreation/Core/Numeric \
             Dataflow/Modules/Fields \
             Core/Algorithms/Fields \
             Core/Persistent \

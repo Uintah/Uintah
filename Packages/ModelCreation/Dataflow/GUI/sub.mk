@@ -51,6 +51,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldSetMatrixProperty.tcl\
 	$(SRCDIR)/FieldSetStringProperty.tcl\
 	$(SRCDIR)/SphericalSurface.tcl\
+	$(SRCDIR)/MatrixToField.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

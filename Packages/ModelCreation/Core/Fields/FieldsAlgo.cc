@@ -798,4 +798,60 @@ bool FieldsAlgo::BuildMembraneTable(FieldHandle elementtype, FieldHandle membran
   return(algo.BuildMembraneTable(pr_,elementtype,membranemodel,membranetable));
 }
 
+
+bool FieldsAlgo::MatrixToField(MatrixHandle input, FieldHandle& output,std::string datalocation)
+{
+  MatrixHandle mat = dynamic_cast<Matrix *>(input->dense());
+  if (mat.get_rep() == 0)
+  {
+    error("MatrixToField: Could not convert matrix into dense matrix");
+    return (false);    
+  } 
+
+  int m = mat->ncols();
+  int n = mat->nrows();
+  double* dataptr = mat->get_data_pointer();
+  int k = 0;
+  
+  if (datalocation == "Node")
+  {
+    ImageMesh<QuadBilinearLgn<Point> >::handle_type mesh_handle = scinew ImageMesh<QuadBilinearLgn<Point> >(m,n,Point(static_cast<double>(m),0.0,0.0),Point(0.0,static_cast<double>(n),0.0));
+    GenericField<ImageMesh<QuadBilinearLgn<Point> >,QuadBilinearLgn<double>, FData2d<double, ImageMesh<QuadBilinearLgn<Point> > > >* field = scinew GenericField<ImageMesh<QuadBilinearLgn<Point> >,QuadBilinearLgn<double>, FData2d<double, ImageMesh<QuadBilinearLgn<Point> > > >(mesh_handle);
+    output = dynamic_cast<Field *>(field);
+    ImageMesh<QuadBilinearLgn<Point> >::Node::iterator it, it_end;
+    mesh_handle->begin(it);
+    mesh_handle->end(it_end);
+    while (it != it_end)
+    {
+      field->set_value(dataptr[k++],*it);
+      ++it;
+    }
+  }
+  else if (datalocation == "Element")
+  {
+    ImageMesh<QuadBilinearLgn<Point> >::handle_type mesh_handle = scinew ImageMesh<QuadBilinearLgn<Point> >(m+1,n+1,Point(static_cast<double>(m+1),0.0,0.0),Point(0.0,static_cast<double>(n+1),0.0));
+    GenericField<ImageMesh<QuadBilinearLgn<Point> >,ConstantBasis<double>, FData2d<double, ImageMesh<QuadBilinearLgn<Point> > > >* field = scinew GenericField<ImageMesh<QuadBilinearLgn<Point> >,ConstantBasis<double>, FData2d<double, ImageMesh<QuadBilinearLgn<Point> > > >(mesh_handle);
+    output = dynamic_cast<Field *>(field);
+    ImageMesh<QuadBilinearLgn<Point> >::Elem::iterator it, it_end;
+    mesh_handle->begin(it);
+    mesh_handle->end(it_end);
+    while (it != it_end)
+    {
+      field->set_value(dataptr[k++],*it);
+      ++it;
+    }  
+  }
+  else
+  {
+    error("MatrixToField: Data location information is not recognized");
+    return (false);      
+  }
+  
+  return (true);
+}
+
+
+
+
+
 } // ModelCreation

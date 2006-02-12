@@ -7,6 +7,7 @@ SUBDIRS := \
         $(SRCDIR)/Algorithms \
         $(SRCDIR)/Fields \
         $(SRCDIR)/Util \
+        $(SRCDIR)/Numeric \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

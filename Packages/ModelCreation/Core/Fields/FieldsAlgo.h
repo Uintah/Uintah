@@ -130,6 +130,9 @@ class FieldsAlgo : public AlgoLibrary {
     // needed.
     bool MakeEditable(FieldHandle input, FieldHandle& output);
 
+    // MatrixToField: Convert the Field into a Matrix
+    bool MatrixToField(MatrixHandle input, FieldHandle& output, std::string datalocation);
+
     // MergeFields: Merge a set of fields of the same type together into one
     // new output field. If mergenodes is true, nodes will be merge if the
     // distance between them is smaller than tolerance  

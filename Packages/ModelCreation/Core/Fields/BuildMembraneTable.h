@@ -43,6 +43,29 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
+
+class membraneparam_type {
+  public:
+    unsigned int node1;
+    unsigned int node2;
+    double       surface;
+    
+};
+
+inline bool operator==(const membraneparam_type& p1,const membraneparam_type& p2)
+{
+  if ((p1.node1 == p2.node1)&&(p1.node2 == p2.node2)) return (true);
+  return (false);
+}    
+
+inline bool operator<(const membraneparam_type& p1, const membraneparam_type& p2)
+{
+  if (p1.node1 < p2.node1) return(true);
+  if (p1.node2 < p2.node2) return(true);
+  return (false);
+}
+
+
 class BuildMembraneTableAlgo : public DynamicAlgoBase
 {
 public:
@@ -55,26 +78,6 @@ class BuildMembraneTableVolAlgoT : public BuildMembraneTableAlgo
 {
 public:
   virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable);
-
-  class membraneparam_type {
-    public:
-      typename FVOL::mesh_type::Node::index_type node1;
-      typename FVOL::mesh_type::Node::index_type node2;
-      double                                     surface;
-      
-      bool operator<(membraneparam_type& p)
-      {
-        if (node1 < p.node1) return(true);
-        if (node2 < p.node2) return(true);
-        return (false);
-      }
-      
-      bool operator==(membraneparam_type& p)
-      {
-        if ((node1 == p.node1)&&(node2 == p.node2)) return (true);
-        return (false);
-      }         
-  };
   
 };
 
@@ -242,7 +245,8 @@ bool BuildMembraneTableVolAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter
           elementtypemesh->get_elems(elems,idx);
           for (size_t p = 0; p < elems.size(); p++)
           {
-            if (elementtypemesh->get_faces(faces,elems[p]));
+            elementtypemesh->get_faces(faces,elems[p]);
+            if (faces.size())
             {
               std::sort(faces.begin(),faces.end());
               bool isequal = true;
@@ -353,25 +357,7 @@ class BuildMembraneTableSurfAlgoT : public BuildMembraneTableAlgo
 public:
   virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable);
 
-  class membraneparam_type {
-    public:
-      typename FVOL::mesh_type::Node::index_type node1;
-      typename FVOL::mesh_type::Node::index_type node2;
-      double                                     surface;
-      
-      bool operator<(membraneparam_type& p)
-      {
-        if (node1 < p.node1) return(true);
-        if (node2 < p.node2) return(true);
-        return (false);
-      }
-      
-      bool operator==(membraneparam_type& p)
-      {
-        if ((node1 == p.node1)&&(node2 == p.node2)) return (true);
-        return (false);
-      }         
-  };
+
   
 };
 
@@ -499,7 +485,7 @@ bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporte
   double   surface;
   
   int k = 0;
-  typename FSURF::mesh_type::Elems::size_type numelems;
+  typename FSURF::mesh_type::Elem::size_type numelems;
   membranemesh->size(numelems);
   std::vector<membraneparam_type> membranetablelist(nodespersurf*numelems);
   
@@ -538,7 +524,8 @@ bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporte
           elementtypemesh->get_elems(elems,idx);
           for (size_t p = 0; p < elems.size(); p++)
           {
-            if (elementtypemesh->get_edges(edges,elems[p]));
+            elementtypemesh->get_edges(edges,elems[p]);
+            if (edges.size());
             {
               std::sort(edges.begin(),edges.end());
               bool isequal = true;

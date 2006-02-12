@@ -26,82 +26,59 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/BuildMembraneTable.h>
+#include <Packages/ModelCreation/Core/Numeric/BuildFEMatrix.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable)
+bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, int numproc)
 {
-  if (elementtypevol.get_rep() == 0)
+  if (input.get_rep() == 0)
   {
-    pr->error("BuildMembraneTable: No element type field");
-    return (false);
-  }
-
-  if (membranesurf.get_rep() == 0)
-  {
-    pr->error("BuildMembraneTable: No membrane model field");
+    pr->error("BuildFEMatrix: No input field");
     return (false);
   }
 
   // no precompiled version available, so compile one
 
-  FieldInformation fi(elementtypevol);
-  FieldInformation fi2(membranesurf);
+  FieldInformation fi(input);
   
-  if (!(fi.is_constantdata()))
+  if (fi.is_vector())
   {
-    pr->error("BuildMembraneTable: The element type field needs to have one data value assigned to each element");
+    pr->error("BuildFEMatrix: This function has not yet been defined forelements with vector data");
+    return (false);
+  }
+
+  if (!fi.is_constantdata())
+  {
+    pr->error("BuildFEMatrix: This function has only been defined or  data");
     return (false);
   }
   
-  if (!fi.is_unstructuredmesh())
-  {
-    pr->error("BuildMembraneTable: This function is not defined for structured meshes");
-    return (false);
-  }  
-
-  if (!((fi.is_volume()&&fi2.is_surface())||(fi.is_surface()&&fi2.is_curve())))
-  {
-    pr->error("BuildMembraneTable: The element type field and the membranesurface needs to be a volumea and a surface OR a surface and a curve");
-    return (false);
-  }  
-  
-  if (!fi2.is_unstructuredmesh())
-  {
-    pr->error("BuildMembraneTable: This function is not defined for structured meshes");
-    return (false);
-  }  
-
-  std::string algotype = "BuildMembraneTableVolAlgoT";
-  if (fi2.is_curve()) algotype = "BuildMembraneTableSurfAlgoT";
-
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "BuildMembraneTable."+fi.get_field_filename()+"."+fi2.get_field_filename()+".",
-    "BuildMembraneTableAlgo",algotype,
-    fi.get_field_name()+","+fi2.get_field_name());
+    "BuildFEMatrix."+fi.get_field_filename()+".",
+    "BuildFEMatrixAlgo","BuildFEMatrixAlgoT",
+    fi.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("ModelCreation");
   ci->add_namespace("SCIRun");
-
+  ci->add_namespace("ModelCreation");
+  
   fi.fill_compile_info(ci);
-  fi2.fill_compile_info(ci);
   
   // Handle dynamic compilation
-  SCIRun::Handle<BuildMembraneTableAlgo> algo;
+  SCIRun::Handle<BuildFEMatrixAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
- //   SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->BuildMembraneTable(pr,elementtypevol,membranesurf,membranetable));
+  return(algo->BuildFEMatrix(pr,input,output,numproc));
 }
 
 
