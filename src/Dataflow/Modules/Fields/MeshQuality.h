@@ -113,16 +113,6 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   mesh->begin(bi); mesh->end(ei);
 
   mesh->synchronize( Mesh::ALL_ELEMENTS_E );
-  typename FIELD::mesh_type::Node::size_type nodes;
-  typename FIELD::mesh_type::Edge::size_type edges;
-  typename FIELD::mesh_type::Face::size_type faces;
-  typename FIELD::mesh_type::Cell::size_type tets;
-  mesh->size( nodes );
-  mesh->size( edges );
-  mesh->size( faces );
-  mesh->size( tets );
-  int holes = (tets-faces+edges-nodes+2)/2;
-//  cout << "Tets: " << tets << " Faces: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
 
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
@@ -135,13 +125,15 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   double shape_size_high = 0, shape_size_low = 0, shape_size_ave = 0;
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
+  int inversions = 0;
+
   while (bi != ei)
   {
     typename FIELD::mesh_type::Node::array_type onodes;
     mesh->get_nodes(onodes, *bi);
 
     int i;
-    for ( i = 0; i < 4; i++ )
+    for( i = 0; i < 4; i++ )
     {
       Point p;
       mesh->get_center( p, onodes[i] );
@@ -224,8 +216,11 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
 //     if( shape == 0.0 )
 //         cout << "WARNING: Tet " << elem_id << " has negative volume!" << endl;
     if( scaled_jacobian <= 0.0 )
-       cout << "WARNING: Tet " << elem_id << " has negative volume!" << endl;
-
+    {
+      inversions++;
+      cout << "WARNING: Tet " << elem_id << " has negative volume!" << endl;
+    }
+    
     total_elements++;
     ++bi;
   }
@@ -239,9 +234,23 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   shape_ave /= total_elements;
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
-  
-  cout << endl << "Number of Tet elements checked = " << total_elements << endl;
-  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  typename FIELD::mesh_type::Cell::size_type tets;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  mesh->size( tets );
+  int holes = (tets-faces+edges-nodes+2)/2;
+
+//  cout << "Tets: " << tets << " Faces: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
+
+  cout << endl << "Number of Tet elements checked = " << total_elements;
+  if( inversions != 0 )
+      cout << " (" << inversions << " Tets have negative jacobians!)";
+  cout << endl << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Aspect Ratio (gamma): Low = " << aspect_gamma_low << ", Average = " << aspect_gamma_ave << ", High = " << aspect_gamma_high << endl;
   cout << "Volume: Low = " << volume_low << ", Average = " << volume_ave << ", High = " << volume_high << endl;
@@ -308,18 +317,8 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
 
     //perform Euler checks for topology errors...
     // 2-2g = -#hexes+#faces-#edges+#nodes
-  mesh->synchronize( Mesh::EDGES_E );
-  typename FIELD::mesh_type::Node::size_type nodes;
-  typename FIELD::mesh_type::Edge::size_type edges;
-  typename FIELD::mesh_type::Face::size_type faces;
-  typename FIELD::mesh_type::Cell::size_type hexes;
-  mesh->size( nodes );
-  mesh->size( edges );
-  mesh->size( faces );
-  mesh->size( hexes );
-  int holes = (hexes-faces+edges-nodes+2)/2;
-//  cout << "Hexes: " << hexes << " Faces: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
-  
+  mesh->synchronize( Mesh::ALL_ELEMENTS_E );
+
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
   double skew_high = 0, skew_low = 0, skew_ave = 0;
@@ -337,13 +336,15 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   double shape_size_high = 0, shape_size_low = 0, shape_size_ave = 0;
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
+  int inversions = 0;
+
   while (bi != ei)
   {
     typename FIELD::mesh_type::Node::array_type onodes;
     mesh->get_nodes(onodes, *bi);
 
     int i;
-    for ( i = 0; i < 8; i++ )
+    for( i = 0; i < 8; i++ )
     {
       Point p;
       mesh->get_center( p, onodes[i] );
@@ -470,7 +471,10 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
 //     if( jacobian <= 0.0 )
 //        cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
     if( scaled_jacobian <= 0.0 )
-       cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
+    {
+      inversions++;
+      cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
+    }
 
     total_elements++;
     ++bi;
@@ -492,8 +496,21 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
 
-  cout << endl << "Number of Hex elements checked = " << total_elements << endl;
-  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  typename FIELD::mesh_type::Cell::size_type hexes;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  mesh->size( hexes );
+  signed int holes = (hexes-faces+edges-nodes+2)/2;
+  
+  cout << endl << "Number of Hex elements checked = " << total_elements;
+  if( inversions != 0 )
+      cout << " (" << inversions << " Hexes have negative jacobians!)";
+  cout << endl << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+  cout << "Number of Elements = Hexes: " << hexes << " Faces: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Skew: Low = " << skew_low << ", Average = " << skew_ave << ", High = " << skew_high << endl;
   cout << "Taper: Low = " << taper_low << ", Average = " << taper_ave << ", High = " << taper_high << endl;
@@ -557,14 +574,6 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   mesh->begin(bi); mesh->end(ei);
 
   mesh->synchronize( Mesh::EDGES_E );
-  typename FIELD::mesh_type::Node::size_type nodes;
-  typename FIELD::mesh_type::Edge::size_type edges;
-  typename FIELD::mesh_type::Face::size_type faces;
-  mesh->size( nodes );
-  mesh->size( edges );
-  mesh->size( faces );
-  int holes = (faces-edges+nodes-2)/2;
-//  cout << " Tris: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
 
   int total_elements = 0;
   double area_high = 0, area_low = 0, area_ave = 0;
@@ -577,13 +586,15 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   double shape_size_high = 0, shape_size_low = 0, shape_size_ave = 0;
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
+  int inversions = 0;
+  
   while (bi != ei)
   {
     typename FIELD::mesh_type::Node::array_type onodes;
     mesh->get_nodes(onodes, *bi);
 
     int i;
-    for ( i = 0; i < 3; i++ )
+    for( i = 0; i < 3; i++ )
     {
       Point p;
       mesh->get_center( p, onodes[i] );
@@ -681,7 +692,10 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
 //     if( shape == 0.0 )
 //         cout << "WARNING: Tri " << elem_id << " has negative area!" << endl;
     if( scaled_jacobian <= 0.0 )
-       cout << "WARNING: Tri " << elem_id << " has negative area!" << endl;
+    {
+      inversions++;
+      cout << "WARNING: Tri " << elem_id << " has negative area!" << endl;
+    }
 
     total_elements++;
     ++bi;
@@ -696,9 +710,20 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   shape_ave /= total_elements;
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
-  
-  cout << endl << "Number of Tri elements checked = " << total_elements << endl;
-  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  int holes = (faces-edges+nodes-2)/2;
+//  cout << " Tris: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
+
+  cout << endl << "Number of Tri elements checked = " << total_elements;
+  if( inversions != 0 )
+      cout << " (" << inversions << " Tris have negative jacobians!)";
+  cout << endl << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
   cout << "Area: Low = " << area_low << ", Average = " << area_ave << ", High = " << area_high << endl;
   cout << "Minimum_Angle: Low = " << minimum_angle_low << ", Average = " << minimum_angle_ave << ", High = " << minimum_angle_high << endl;
   cout << "Maximum_Angle: Low = " << maximum_angle_low << ", Average = " << maximum_angle_ave << ", High = " << maximum_angle_high << endl;
@@ -766,14 +791,6 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   mesh->begin(bi); mesh->end(ei);
 
   mesh->synchronize( Mesh::EDGES_E );
-  typename FIELD::mesh_type::Node::size_type nodes;
-  typename FIELD::mesh_type::Edge::size_type edges;
-  typename FIELD::mesh_type::Face::size_type faces;
-  mesh->size( nodes );
-  mesh->size( edges );
-  mesh->size( faces );
-  int holes = (faces-edges+nodes-2)/2;
-//  cout << "Quads: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
 
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
@@ -793,13 +810,15 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   double shape_size_high = 0, shape_size_low = 0, shape_size_ave = 0;
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
+  int inversions = 0;
+
   while (bi != ei)
   {
     typename FIELD::mesh_type::Node::array_type onodes;
     mesh->get_nodes(onodes, *bi);
 
     int i;
-    for ( i = 0; i < 4; i++ )
+    for( i = 0; i < 4; i++ )
     {
       Point p;
       mesh->get_center( p, onodes[i] );
@@ -932,7 +951,10 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
 //     if( area <= 0.0 )
 //        cout << "WARNING: Quad " << elem_id << " has negative area!" << endl;
     if( scaled_jacobian <= 0.0 )
-       cout << "WARNING: Quad " << elem_id << " has negative area!" << endl;
+    {
+      inversions++;
+      cout << "WARNING: Quad " << elem_id << " has negative area!" << endl;
+    }
 
     total_elements++;
     ++bi;
@@ -954,9 +976,20 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   shear_size_ave /= total_elements;
   shape_size_ave /= total_elements;
   distortion_ave /= total_elements;
-  
-  cout << endl << "Number of Quad elements checked = " << total_elements << endl;
-  cout << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+
+  typename FIELD::mesh_type::Node::size_type nodes;
+  typename FIELD::mesh_type::Edge::size_type edges;
+  typename FIELD::mesh_type::Face::size_type faces;
+  mesh->size( nodes );
+  mesh->size( edges );
+  mesh->size( faces );
+  int holes = (faces-edges+nodes-2)/2;
+//  cout << "Quads: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
+
+  cout << endl << "Number of Quad elements checked = " << total_elements;
+  if( inversions != 0 )
+      cout << " (" << inversions << " Quads have negative jacobians!)";
+  cout << endl << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Skew: Low = " << skew_low << ", Average = " << skew_ave << ", High = " << skew_high << endl;
   cout << "Taper: Low = " << taper_low << ", Average = " << taper_ave << ", High = " << taper_high << endl;
