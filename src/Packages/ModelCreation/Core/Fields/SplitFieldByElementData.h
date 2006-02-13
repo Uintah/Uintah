@@ -106,11 +106,11 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
   
   mesh->begin(bei2);
   mesh->end(eei2);
-  minval = field->value(*(bei2));
+  field->value(minval,*(bei2));
   while (bei2 != eei2)  
   {
-    val = field->value(*(bei2));
-    if (val < minval) val = minval;
+    field->value(val,*(bei2));
+    if (val < minval) minval = val;
     ++bei2; 
   }
   
@@ -118,13 +118,16 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
   
   while(1)
   {
+    val = minval;
   
     for (size_t p =0; p<(maxindex+1); p++) newidxarray[p] = true;
 
     mesh->begin(bei); mesh->end(eei);
+    mesh->get_nodes(newnodes,*(bei));
+
     while (bei != eei)
     {
-      eval = field->value(*(bei));
+      field->value(eval,*(bei));
       if (eval == val)
       {
         mesh->get_nodes(nodes,*(bei));
@@ -153,7 +156,7 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
     mesh->end(eei2);
     while (bei2 != eei2)
     {
-      eval = field->value(*(bei2));
+      field->value(eval,*(bei2));
       if (eval > val)
       {
         if (foundminval)
@@ -178,9 +181,10 @@ bool SplitFieldByElementDataAlgoT<FIELD>::SplitFieldByElementData(ProgressReport
     {
       break;
     }
+    
   }
   
-  mesh->begin(bei); mesh->end(eei);
+  omesh->begin(bei); omesh->end(eei);
   ofield->resize_fdata();
   k = 0;
   while (bei != eei)

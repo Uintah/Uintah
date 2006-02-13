@@ -52,6 +52,13 @@ bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, 
     pr->error("SplitFieldByElementData: This function only works for data located at the elements");
     return (false);
   }
+
+  if (!(fi.is_unstructuredmesh()))
+  {
+    pr->error("SplitFieldByElementData: This function only works for unstructured meshes");
+    return (false);
+  }
+
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "SplitFieldByElementDataAlgoT." + fi.get_field_filename() + ".",
@@ -60,7 +67,7 @@ bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, 
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
-  ci->add_namespace("ModelCreation");
+  ci->add_namespace("SCIRun");
 
   fi.fill_compile_info(ci);
   

@@ -668,10 +668,10 @@ bool FieldsAlgo::IsCounterClockWiseSurface(FieldHandle input)
 // NEWLY CREATED FUNCTIONS:
 
 
-bool FieldsAlgo::CompartmentBoundary(FieldHandle input,FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary)
+bool FieldsAlgo::CompartmentBoundary(FieldHandle input,FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   CompartmentBoundaryAlgo algo;
-  return(algo.CompartmentBoundary(pr_,input,output,minrange,maxrange,userange,addouterboundary));
+  return(algo.CompartmentBoundary(pr_,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
 
 bool FieldsAlgo::ConvertToTetVol(FieldHandle input, FieldHandle& output)
