@@ -47,6 +47,7 @@ private:
   GuiDouble guiminrange_;
   GuiDouble guimaxrange_;
   GuiInt    guiincludeouterboundary_;
+  GuiInt    guiinnerboundaryonly_;
   
   
 };
@@ -58,7 +59,8 @@ CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
     guiuserange_(ctx->subVar("userange")),
     guiminrange_(ctx->subVar("minrange")),
     guimaxrange_(ctx->subVar("maxrange")),
-    guiincludeouterboundary_(ctx->subVar("includeouterboundary"))    
+    guiincludeouterboundary_(ctx->subVar("includeouterboundary")),
+    guiinnerboundaryonly_(ctx->subVar("innerboundaryonly"))    
 {
 }
 
@@ -83,14 +85,16 @@ void CompartmentBoundary::execute()
 
   double minrange, maxrange;
   bool   userange, includeouterboundary;
+  bool   innerboundaryonly;
 
   minrange = guiminrange_.get();
   maxrange = guimaxrange_.get();
   userange = static_cast<bool>(guiuserange_.get());
   includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
+  innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
 
   iport->get(ifield);
-  if(algo.CompartmentBoundary(ifield,ofield,minrange,maxrange,userange,includeouterboundary)) oport->send(ofield);
+  if(algo.CompartmentBoundary(ifield,ofield,minrange,maxrange,userange,includeouterboundary,innerboundaryonly)) oport->send(ofield);
 }
 
 } // End namespace ModelCreation

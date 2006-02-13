@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary)
+bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   if (input.get_rep() == 0)
   {
@@ -110,7 +110,7 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
     return(false);
   }
 
-  return(algo->CompartmentBoundary(pr,input,output,minrange,maxrange,userange,addouterboundary));
+  return(algo->CompartmentBoundary(pr,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
 
 

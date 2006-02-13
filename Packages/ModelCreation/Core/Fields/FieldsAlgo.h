@@ -98,7 +98,7 @@ class FieldsAlgo : public AlgoLibrary {
     // Extract the boundaries between compartments in a volume or surface field
     // The data needs to be on the elements. This function only extracts internal
     // boundaries, use field boundary to extract the outer surfaces.
-    bool CompartmentBoundary(FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary);
+    bool CompartmentBoundary(FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 
     // ConvertToTetVol:
     // This function converts an hexvol or latvol into a tetvol. The functionality

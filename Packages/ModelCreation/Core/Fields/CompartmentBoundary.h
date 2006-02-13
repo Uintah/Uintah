@@ -40,7 +40,7 @@ using namespace SCIRun;
 class CompartmentBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 };
 
 
@@ -48,7 +48,7 @@ template <class FSRC, class FDST>
 class CompartmentBoundaryVolumeAlgoT : public CompartmentBoundaryAlgo
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 };
 
 
@@ -56,12 +56,12 @@ template <class FSRC, class FDST>
 class CompartmentBoundarySurfaceAlgoT : public CompartmentBoundaryAlgo
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 };
 
 
 template <class FSRC, class FDST>
-bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary)
+bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -138,13 +138,23 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRep
         {
           ifield->value(val1,ci);
           ifield->value(val2,nci);
-          if ((((val1 >= minval)||(val2 >= minval))&&((val1 <= maxval)||(val2 <= maxval)))||(userange == false))
+          if (innerboundaryonly == false)
           {
-            if (!(val1 == val2)) includeface = true;             
+            if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+            {
+              if (!(val1 == val2)) includeface = true;             
+            }
+          }
+          else
+          {
+            if ((((val1 >= minval)&&(val2 >= minval))&&((val1 <= maxval)&&(val2 <= maxval)))||(userange == false))
+            {
+              if (!(val1 == val2)) includeface = true;             
+            }          
           }
         }
       }
-      else if (addouterboundary)
+      else if ((addouterboundary)&&(innerboundaryonly == false))
       {
         ifield->value(val1,ci);
         if (((val1 >= minval)&&(val1 <= maxval))||(userange == false)) includeface = true;
@@ -183,7 +193,7 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRep
 
 
 template <class FSRC, class FDST>
-bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary)
+bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -261,13 +271,23 @@ bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRe
         {
           ifield->value(val1,ci);
           ifield->value(val2,nci);
-          if (((val1 >= minval)&&(val1 <= maxval))||(userange == false))
+          if (innerboundaryonly == false)
           {
-            if (!(val1 == val2)) includeedge = true;             
+            if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+            {
+              if (!(val1 == val2)) includeedge = true;             
+            }
+          }
+          else
+          {
+            if ((((val1 >= minval)&&(val2 >= minval))&&((val1 <= maxval)&&(val2 <= maxval)))||(userange == false))
+            {
+              if (!(val1 == val2)) includeedge = true;             
+            }          
           }
         }
       }
-      else if (addouterboundary)
+      else if ((addouterboundary)&&(innerboundaryonly == false))
       {
         ifield->value(val1,ci);
         if (((val1 >= minval)&&(val1 <= maxval))||(userange == false)) includeedge = true;
