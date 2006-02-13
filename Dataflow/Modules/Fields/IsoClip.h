@@ -34,6 +34,7 @@
 #if !defined(ClipField_h)
 #define ClipField_h
 
+#include <Dataflow/Network/Module.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
@@ -42,6 +43,8 @@
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
+#include <Dataflow/Modules/Fields/HexToTet.h>
+#include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 #include <set>
@@ -1153,13 +1156,63 @@ FieldHandle
 IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 			       double isoval, bool lte, MatrixHandle &interp)
 {
-   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
-   typename FIELD::mesh_type *mesh =
-       dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
-   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
-   clipped->copy_properties(mesh);
+  mod->error( "The IsoClip module for hexes is still under development..." );
+  
+  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
+  typename FIELD::mesh_type *mesh =
+      dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
+  typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
+  clipped->copy_properties(mesh);
+  
+     //get a copy of the mesh in tets... 
+  const TypeDescription *src_td = fieldh->get_type_description();
+  CompileInfoHandle ci = HexToTetAlgo::get_compile_info( src_td );
+  Handle<HexToTetAlgo> algo;
+  if (!DynamicCompilation::compile( ci, algo, mod)) return fieldh;
+  FieldHandle tet_field_h;
+  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, mod ) )
+  {
+    mod->warning("HexToTet conversion failed to copy data.");
+    return fieldh;
+  }
 
-   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> clipped_to_original_nodemap;
+  const TypeDescription *ftd = tet_field_h->get_type_description();
+  ci = IsoClipAlgo::get_compile_info( ftd, "Tet" );
+  Handle<IsoClipAlgo> iso_algo;
+  if( !DynamicCompilation::compile( ci, iso_algo, false, mod ) )
+  {
+    mod->error("Unable to compile IsoClip algorithm.");
+    return fieldh;
+  }
+  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, mod ) )
+  {
+    mod->warning("HexToTet conversion failed to copy data.");
+    return fieldh;
+  }
+  MatrixHandle tet_interp(0);
+  FieldHandle clipped_tet_field = iso_algo->execute( mod, tet_field_h, isoval, lte, tet_interp );
+  TetVolMesh<TetLinearLgn<Point> > *tet_mesh = dynamic_cast<TetVolMesh<TetLinearLgn<Point> >*>(clipped_tet_field->mesh().get_rep());
+
+  const TypeDescription *mtd = tet_mesh->get_type_description();
+  CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
+  Handle<FieldBoundaryAlgo> boundary_algo;
+  FieldHandle tri_field_h;
+  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) ) return fieldh;
+
+  MatrixHandle tet_interp1(0);  
+  boundary_algo->execute( mod, tet_mesh, tri_field_h, tet_interp1, 0 );
+  TriSurfMesh<TriLinearLgn<Point> > *tri_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_field_h->mesh().get_rep());
+//   typename FIELD::mesh_type::Elem::size_type hex_mesh_size;
+//   typename FIELD::mesh_type::Elem::size_type tet_mesh_size;
+//   typename FIELD::mesh_type::Face::size_type tri_mesh_size;
+//   mesh->size( hex_mesh_size );
+//   tet_mesh->size( tet_mesh_size ); 
+//   tri_mesh->size( tri_mesh_size );
+//   cout << "Mesh sizes = " << hex_mesh_size << " " << tet_mesh_size << " " << tri_mesh_size << endl;
+
+     //create a map to help differentiate between new nodes created for 
+     //  the pillow, and the nodes on the stair stepped boundary...
+  map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> clipped_to_original_nodemap;
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -1244,7 +1297,6 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   }
 
 //Get the boundary elements (code from FieldBoundary)
-  
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> vertex_map;
   typename map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type>::iterator node_iter;
 
@@ -1298,149 +1350,22 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     }
   }
 
-//NOTE TO JS: Need to do this correctly based on it's position...
     //project a new node to the isoval for each node on the clipped boundary
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map;
-  unsigned int i, j;  
 
-//  HVMesh *new_mesh = clipped->clone();
-
+  unsigned int i;  
   for( i = 0; i < node_list.size(); i++ )
   {
     typename FIELD::mesh_type::Node::index_type this_node = node_list[i];
-    typename FIELD::mesh_type::Cell::array_type attached_cells;
-    vector<typename FIELD::mesh_type::Node::index_type> neighbors;
-
-    clipped->get_elems( attached_cells, this_node );
-    clipped->get_neighbors( neighbors, this_node );
-
-    Vector offset(0,0,0);
     Point n_p;
     clipped->get_center( n_p, this_node );
-    Vector node_v( n_p );
 
-//NOTE TO JS: May want to use the smallest length here...
-    double ave_length = 0;
-    for( j = 0; j < neighbors.size(); j++ )
-    {
-      Point p;
-      clipped->get_center( p, neighbors[j] );      
-      Vector center( p );
-      Vector add_v = node_v - center;
-      ave_length += add_v.length();
-    }    
-    ave_length /= (double)neighbors.size();
+    Point new_result;
+    typename FIELD::mesh_type::Face::index_type face_id;
+    tri_mesh->find_closest_face( new_result, face_id, n_p );
 
-    for( j = 0; j < attached_cells.size(); j++ )
-    {
-      Point p;
-      clipped->get_center( p, attached_cells[j] );
-      
-      Vector center( p );
-      Vector add_v = node_v - center;
-      add_v.safe_normalize();
-      offset += add_v;
-    }
-  
-    offset.safe_normalize();
-    offset *= ave_length;
+    Point new_point( new_result );
 
-      //use linear interpolation to find the correct place to put the new point...
-    typename FIELD::mesh_type::Node::index_type original_index = clipped_to_original_nodemap[this_node];
-    typename FIELD::mesh_type::Cell::array_type surrounding_cells;
-    set<typename FIELD::mesh_type::Node::index_type> unique_set;
-    vector<typename FIELD::mesh_type::Node::index_type> unique_nodes;
-
-    mesh->synchronize( Mesh::NODE_NEIGHBORS_E );
-
-    mesh->get_elems( surrounding_cells, original_index );
-    for( j = 0; j < surrounding_cells.size(); j++ )
-    {
-      typename FIELD::mesh_type::Node::array_type all_nodes;
-      mesh->get_nodes( all_nodes, surrounding_cells[j] );
-      for( unsigned int k = 0; k < 8; k++ )
-      {
-        if( all_nodes[k] == original_index )
-            continue;
-        
-        typename FIELD::value_type v(0);
-        if( field->basis_order() == 1 )
-        {
-          field->value( v, all_nodes[k]); 
-        }
-
-        if( lte )
-        {
-          if( (v > isoval) )
-          {
-            unique_set.insert( all_nodes[k] );
-          }
-        }
-        else
-        {
-          if( (v < isoval) )
-          {
-            unique_set.insert( all_nodes[k] );
-          }
-        }
-      }
-    }
-
-    unique_nodes.resize( unique_set.size() );
-    copy( unique_set.begin(), unique_set.end(), unique_nodes.begin() );
-    
-    int found_one = 0;
-    typename FIELD::mesh_type::Node::index_type interp_node;
-    double test = 1.;
-//    cout << "Testing " << unique_nodes.size() << " nodes with node " << original_index << endl;
-    for( j = 0; j < unique_nodes.size(); j++ )
-    {
-      Point p;
-      mesh->get_center( p, unique_nodes[j] );
-      Vector other( p );
-      Vector other_node = node_v - other;
-      double angle = Dot( offset, other_node );
-      angle /= -1*(offset.length() * other_node.length());
-//      cout << "  Node " << unique_nodes[j] << ": angle = " << angle << endl;
-      if( (angle > 0.) && ((1 - angle) < test) )
-      {
-        found_one = 1;
-        interp_node = unique_nodes[j];
-        test = 1-angle;
-      }
-    }
-    
-//    ASSERTMSG( found_one == 1, "Unexpected case in finding interpolation location...");
-    if( found_one == 1 )
-    {
-      Point other_p;
-      mesh->get_center( other_p, interp_node );
-      Vector other_node( other_p );
-      typename FIELD::value_type v1(1);
-      typename FIELD::value_type v2(1);
-      field->value(v1, original_index );
-      field->value(v2, interp_node );
-//      cout << "Interp node = " << interp_node << ": V1 = " << v1 << "; V2 = " << v2 << endl;
-      if( fabs(v2-v1) > 1e-6 )
-      {
-        const double imv = isoval - v1;
-        const double dl1 = imv / (v2 - v1);
-//      off set = node_v - other_node;
-//        cout << "orig length = " << offset.length() << " dl1 = " << dl1;
-//      offset *= -1*dl1;
-        offset *= dl1;
-//    offset =  Interpolate(node_v, other_node, dl1);
-        offset += node_v;
-//        cout << " Offset length = " << offset.length() << endl;
-      }
-    }
-    else
-    {
-      offset += node_v;
-    }
-      
-    Point new_point( offset );
-    
       //add the new node to the clipped mesh
     typename FIELD::mesh_type::Node::index_type this_index = clipped->add_point( new_point );
       
@@ -1455,9 +1380,32 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     typename FIELD::mesh_type::Node::array_type nodes;
     clipped->get_nodes( nodes, face_list[i] );
 
-    clipped->add_hex( nodes[0], nodes[1], nodes[2], nodes[3], 
-                      new_map[nodes[0]], new_map[nodes[1]],
-                      new_map[nodes[2]], new_map[nodes[3]] );
+//     Point p0, p1, p3, p4;
+//     mesh->get_center( p0, nodes[0] );
+//     mesh->get_center( p1, nodes[1] );
+//     mesh->get_center( p3, nodes[2] );
+//     mesh->get_center( p4, new_map[nodes[0]] );
+//     Vector p0v( p0 );
+//     Vector p1v( p1 );
+//     Vector p3v( p3 );
+//     Vector p4v( p4 );
+//     Vector normal = Cross( (p1v-p0v), (p3v-p0v) );
+//     Vector out = (p4v-p0v);
+//     double angle = Dot( normal, out  );
+
+//     if( angle > 1.5707963 )
+//     {
+//       cout << "Different order..." << endl;
+//       clipped->add_hex( nodes[0], nodes[1], nodes[2], nodes[3], 
+//                         new_map[nodes[0]], new_map[nodes[1]],
+//                         new_map[nodes[2]], new_map[nodes[3]] ); 
+//     }
+//     else
+//     {
+      clipped->add_hex( nodes[3], nodes[2], nodes[1], nodes[0],
+                        new_map[nodes[3]], new_map[nodes[2]],
+                        new_map[nodes[1]], new_map[nodes[0]] );
+//     }
   }
   
   clipped->synchronize(Mesh::ALL_ELEMENTS_E);
