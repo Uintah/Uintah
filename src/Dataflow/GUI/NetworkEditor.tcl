@@ -862,8 +862,11 @@ proc popupInsertMenu { {subnet 0} } {
     $canvas yview moveto [expr [lindex $bbox 1]/$mainCanvasHeight-0.01]
     set preLoadModules $Subnet(Subnet${subnet}_Modules)
     set inserting 1
-    uplevel \#0 netedit load_srn $netedit_loadnet
-    #loadnet $netedit_loadnet
+    if {[string match *.net $netedit_loadnet]} {
+	loadnet $netedit_loadnet
+    } else {
+	uplevel \#0 netedit load_srn $netedit_loadnet
+    }
     set inserting 0
     unselectAll
     foreach module $Subnet(Subnet${subnet}_Modules) {
@@ -930,8 +933,11 @@ proc popupLoadMenu {} {
     if { $netedit_loadnet == ""} return
     #dont ask user before clearing canvas
     ClearCanvas 0
-    uplevel \#0 netedit load_srn $netedit_loadnet
-    #loadnet $netedit_loadnet
+    if {[string match *.net $netedit_loadnet]} {
+	loadnet $netedit_loadnet
+    } else {
+	uplevel \#0 netedit load_srn $netedit_loadnet
+    }
 }
 
 proc ClearCanvas { { confirm 1 } { subnet 0 } } {
