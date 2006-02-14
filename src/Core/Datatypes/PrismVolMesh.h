@@ -2532,7 +2532,7 @@ template <class Basis>
 typename PrismVolMesh<Basis>::Elem::index_type
 PrismVolMesh<Basis>::add_elem(typename Node::array_type a)
 {
-  ASSERT(a.size() == PRISM_NNODES);
+  ASSERTMSG(a.size() == PRISM_NNODES, "Tried to add non-prism element.");
 
   const unsigned int idx = cells_.size() / PRISM_NNODES;
 

@@ -1154,6 +1154,7 @@ template <class Basis>
 typename QuadSurfMesh<Basis>::Elem::index_type
 QuadSurfMesh<Basis>::add_elem(typename Node::array_type a)
 {
+  ASSERTMSG(a.size() == 4, "Tried to add non-quad element.");
   face_lock_.lock();
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);

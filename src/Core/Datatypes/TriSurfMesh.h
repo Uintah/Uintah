@@ -1629,6 +1629,8 @@ template <class Basis>
 typename TriSurfMesh<Basis>::Elem::index_type
 TriSurfMesh<Basis>::add_elem(typename Node::array_type a)
 {
+  ASSERTMSG(a.size() == 3, "Tried to add non-tri element.");
+
   face_lock_.lock();
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
