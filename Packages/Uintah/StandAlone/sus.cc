@@ -174,7 +174,8 @@ main( int argc, char** argv )
   // Causes buserr for some reason in 32 bit mode... may be fixed now:
   TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
 
-  TAU_PROFILE_INIT(argc,argv);
+  // This seems to be causing a problem when using LAM, disabling for now.
+  //   TAU_PROFILE_INIT(argc,argv);
   
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
