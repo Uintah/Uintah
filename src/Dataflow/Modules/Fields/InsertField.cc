@@ -142,8 +142,6 @@ InsertField::execute()
     if (dim == 0)
     {
       algo->execute_0(combined_, insert_field, added_nodes, added_elems);
-      algo->extract_0(extended_, mapping_,
-                      combined_, added_nodes, added_elems);
     }
     if (dim >= 1)
     {
@@ -153,6 +151,7 @@ InsertField::execute()
     {
       algo->execute_2(combined_, insert_field, added_nodes, added_elems);
     }
+    //algo->extract(extended_, mapping_, combined_, added_nodes, added_elems);
   }
 
   if( combined_.get_rep() )
@@ -198,9 +197,6 @@ InsertFieldAlgo::get_compile_info(const TypeDescription *ftet,
   rval->add_include(include_path);
   ftet->fill_compile_info(rval);
   finsert->fill_compile_info(rval);
-  
-  rval->add_basis_include("../src/Core/Basis/Constant.h");
-  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
 
   return rval;
 }
