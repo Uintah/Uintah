@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<scl>
+  <library uri="libCCA_Components_BabelTest_hello.so" scope="global" resolution="now">
+    <class name="hello.GoPort" desc="ior/impl" />
+    <class name="hello.Com"    desc="ior/impl" />
+  </library>
+  <library uri="libCCA_Components_BabelTest_who.so" scope="global" resolution="now">
+    <class name="who.Com"      desc="ior/impl" />
+    <class name="who.IDPort"   desc="ior/impl" />
+    <class name="who.UIPort"   desc="ior/impl" />
+  </library>
+  <library uri="libCCA_Components_BabelTest_whoc.so" scope="global" resolution="now">
+    <class name="whoc.Com"      desc="ior/impl" />
+    <class name="whoc.IDPort"   desc="ior/impl" />
+    <class name="whoc.UIPort"   desc="ior/impl" />
+  </library>
+  <library uri="libCCA_Components_BabelTest_whof77.so" scope="global" resolution="now">
+    <class name="whof77.Com"      desc="ior/impl" />
+    <class name="whof77.IDPort"   desc="ior/impl" />
+    <class name="whof77.UIPort"   desc="ior/impl" />
+  </library>
+  <library uri="libCCA_Components_BabelTest_BridgeTest.so" scope="global" resolution="now">
+    <class name="BridgeTest.Com"      desc="ior/impl" />
+    <class name="BridgeTest.GoPort"   desc="ior/impl" />
+    <class name="BridgeTest.BridgeTestPort"   desc="ior/impl" />
+  </library>
+  <library uri="libCCA_Components_BabelTest_NewPort.so" scope="global" resolution="now">
+    <class name="NewPort.Com"      desc="ior/impl" />
+    <class name="NewPort.GoPort"   desc="ior/impl" />
+    <class name="NewPort.StringPort"   desc="ior/impl" />
+  </library>
+</scl>

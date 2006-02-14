@@ -1,0 +1,55 @@
+
+<port> 
+#include <CCA/Components/BabelTest/<%= $inPackage%>/<%= $inPackage%>_<%= $inPortName%>.hh>
+</port>
+
+#include <vtkImageCanvasSource2D.h>
+
+#include <SCIRun/Vtk/Component.h>
+#include <SCIRun/Vtk/OutPort.h>
+#include <SCIRun/Vtk/InPort.h>
+
+#include <SCIRun/Bridge/BridgeComponent.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+
+using namespace std;
+
+namespace SCIRun {
+
+  class <%= rndBridgeName%> : public BridgeComponent{
+  public:
+    <%= rndBridgeName%>();
+    virtual ~<%= rndBridgeName%>();
+    virtual void setServices(const BridgeServices* svc);
+  private:
+    <%= rndBridgeName%>(const <%= rndBridgeName%>&);
+    <%= rndBridgeName%>& operator=(const <%= rndBridgeName%>&);
+    BridgeServices* services;
+  };
+
+  
+  class DataReader : public vtk::Component, public vtk::OutPort{
+  public:
+    DataReader();
+    ~DataReader() { if(vtkID) vtkID->Delete(); }
+    vtkObject* getOutput();
+    vtkImageData* vtkID;
+  };
+
+} //namespace SCIRun
+
+
+namespace somethingspc {
+<port> 
+class <%= $inPortName%> {
+ public:
+  <%= $inPortName%>() {};
+  ~<%= $inPortName%>() {};
+  <method> 
+  <%= $inMethodType%> <%= $inMethodName%>(<%= outDefArgs(method(:babelType))%>);
+  </method>
+};
+</port>
+} //end of namepspace somethingspc
+
+

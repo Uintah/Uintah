@@ -1,0 +1,47 @@
+
+inPackage=NewPort
+outPackage=NewPort
+
+templateArgv[0]=heyhey
+
+  
+  PORT
+  GoPort
+  GoPort
+  EOF_PORT
+  
+  PORT
+  iStringPort
+  iStringPort
+  EOF_PORT
+  
+  PORT
+  StringPort
+  StringPort
+  EOF_PORT
+  
+  PORT
+  Com
+  Com
+  EOF_PORT
+
+
+   
+        
+  PORTMETHOD
+  void setService
+  setService
+  EOF_PORTMETHOD
+  
+   
+        
+  PORTMETHOD
+  string getString
+  getString
+  EOF_PORTMETHOD
+  
+   
+      
+   
+      
+

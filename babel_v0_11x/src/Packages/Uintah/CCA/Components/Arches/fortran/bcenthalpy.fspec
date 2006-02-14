@@ -1,0 +1,17 @@
+void bcenthalpy(IntVector domLo, IntVector domHi,
+	IntVector idxLo, IntVector idxHi,
+	constCCVariable<double> H, CCVariable<double> ae,
+	CCVariable<double> aw, CCVariable<double> an,
+	CCVariable<double> as, CCVariable<double> at,
+	CCVariable<double> ab, CCVariable<double> su,
+	CCVariable<double> sp, constCCVariable<double> den,
+	constSFCXVariable<double> uu, constSFCYVariable<double> vv,
+	constSFCZVariable<double> ww, OffsetArray1<double> sew,
+	OffsetArray1<double> sns, OffsetArray1<double> stb,
+	constCCVariable<int> pcell, int wall, int symtry, int pfield,
+	int presstype, int ffield, int sfield, int outletfield,
+	bool xminus, bool xplus, bool yminus, bool yplus, bool zminus,
+	bool zplus);
+
+
+

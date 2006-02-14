@@ -1,0 +1,201 @@
+# SCIRun Network v1.25.0
+
+
+set name {Main}
+set bbox {9 0 553 177}
+set creationDate {Wed Apr 20 2005}
+set creationTime {13:45:38}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a Teem->DataIO->NrrdReader Module
+set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 184 1]
+
+# Create a VS->Render->ICUMonitor Module
+set m2 [addModuleAtPosition "VS" "Render" "ICUMonitor" 166 120]
+
+# Create a Teem->DataIO->NrrdReader Module
+set m3 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 388 0]
+
+# Create a SCIRun->Time->TimeControls Module
+set m4 [addModuleAtPosition "SCIRun" "Time" "TimeControls" 9 2]
+
+# Create the Connections between Modules
+set c1 [addConnection $m4 0 $m2 0]
+set c2 [addConnection $m1 0 $m2 1]
+set c3 [addConnection $m3 0 $m2 2]
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m1-filename "$DATADIR/$DATASET/P87-HIP/respcycles/P87baseline1RC.nrrd"
+set $m1-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
+
+# Set GUI variables for the VS->Render->ICUMonitor Module
+set $m2-time {0.833}
+set $m2-sample_rate {500.0}
+set $m2-time_markers_mode {0}
+set $m2-left_margin {43}
+set $m2-plot_spacing {40}
+set $m2-font_scale {1.7}
+set $m2-show_name {1}
+set $m2-plot_count {8}
+set $m2-geom {704x1096+3+0}
+set $m2-nw_label-0 {}
+set $m2-sw_label-0 {mV}
+set $m2-min_ref_label-0 {-60}
+set $m2-max_ref_label-0 {60}
+set $m2-label-0 {ECG (P wave and QRS complex) (ECG)}
+set $m2-aux_data_label-0 {HR}
+set $m2-min-0 {-60}
+set $m2-max-0 {60}
+set $m2-idx-0 {1}
+set $m2-snd-0 {1}
+set $m2-clamp-0 {0}
+set $m2-lines-0 {0}
+set $m2-auxidx-0 {27}
+set $m2-draw_aux_data-0 {1}
+set $m2-use_plot_color-0 {1}
+set $m2-plot_color-0-r {0.0}
+set $m2-plot_color-0-g {1.0}
+set $m2-plot_color-0-b {0.0}
+set $m2-nw_label-1 {}
+set $m2-sw_label-1 {mmHg}
+set $m2-min_ref_label-1 {0}
+set $m2-max_ref_label-1 {160}
+set $m2-label-1 {Systemic arterial pressure (ABP)}
+set $m2-aux_data_label-1 {SV}
+set $m2-min-1 {0}
+set $m2-max-1 {160}
+set $m2-idx-1 {2}
+set $m2-snd-1 {1}
+set $m2-clamp-1 {0}
+set $m2-lines-1 {1}
+set $m2-auxidx-1 {49}
+set $m2-draw_aux_data-1 {1}
+set $m2-use_plot_color-1 {1}
+set $m2-plot_color-1-r {0.92}
+set $m2-plot_color-1-g {0.4}
+set $m2-plot_color-1-b {0.74}
+set $m2-nw_label-2 {}
+set $m2-sw_label-2 {mmHg}
+set $m2-min_ref_label-2 {0}
+set $m2-max_ref_label-2 {160}
+set $m2-label-2 {Left ventricular chamber pressure (LVP)}
+set $m2-aux_data_label-2 {SPO2 (%)}
+set $m2-min-2 {0}
+set $m2-max-2 {160}
+set $m2-idx-2 {3}
+set $m2-snd-2 {1}
+set $m2-clamp-2 {0}
+set $m2-lines-2 {1}
+set $m2-auxidx-2 {48}
+set $m2-draw_aux_data-2 {1}
+set $m2-use_plot_color-2 {1}
+set $m2-plot_color-2-r {0.58}
+set $m2-plot_color-2-g {1.0}
+set $m2-plot_color-2-b {0.71}
+set $m2-nw_label-3 {}
+set $m2-sw_label-3 {mmHg}
+set $m2-min_ref_label-3 {0}
+set $m2-max_ref_label-3 {50}
+set $m2-label-3 {Right ventricular chamber pressure (RVP)}
+set $m2-aux_data_label-3 {}
+set $m2-min-3 {0}
+set $m2-max-3 {50}
+set $m2-idx-3 {5}
+set $m2-snd-3 {1}
+set $m2-clamp-3 {0}
+set $m2-lines-3 {1}
+set $m2-auxidx-3 {}
+set $m2-draw_aux_data-3 {0}
+set $m2-use_plot_color-3 {0}
+set $m2-plot_color-3-r {0.0}
+set $m2-plot_color-3-g {1.0}
+set $m2-plot_color-3-b {1.0}
+set $m2-nw_label-4 {}
+set $m2-sw_label-4 {mmHg}
+set $m2-min_ref_label-4 {0}
+set $m2-max_ref_label-4 {50}
+set $m2-label-4 {Central venous pressure (CVP)}
+set $m2-aux_data_label-4 {}
+set $m2-min-4 {0}
+set $m2-max-4 {50}
+set $m2-idx-4 {4}
+set $m2-snd-4 {1}
+set $m2-clamp-4 {0}
+set $m2-lines-4 {1}
+set $m2-auxidx-4 {}
+set $m2-draw_aux_data-4 {0}
+set $m2-use_plot_color-4 {0}
+set $m2-plot_color-4-r {0.0}
+set $m2-plot_color-4-g {0.5}
+set $m2-plot_color-4-b {1.0}
+set $m2-nw_label-5 {}
+set $m2-sw_label-5 {L/min}
+set $m2-min_ref_label-5 {-10}
+set $m2-max_ref_label-5 {30}
+set $m2-label-5 {Proximal aorta flow (AOF)}
+set $m2-aux_data_label-5 {}
+set $m2-min-5 {-10}
+set $m2-max-5 {30}
+set $m2-idx-5 {6}
+set $m2-snd-5 {1}
+set $m2-clamp-5 {0}
+set $m2-lines-5 {1}
+set $m2-auxidx-5 {}
+set $m2-draw_aux_data-5 {0}
+set $m2-use_plot_color-5 {0}
+set $m2-plot_color-5-r {1.0}
+set $m2-plot_color-5-g {0.49}
+set $m2-plot_color-5-b {0.0}
+set $m2-nw_label-6 {}
+set $m2-sw_label-6 {L/min}
+set $m2-min_ref_label-6 {-10}
+set $m2-max_ref_label-6 {30}
+set $m2-label-6 {Proximal pulmonary arterial flow (PAF)}
+set $m2-aux_data_label-6 {}
+set $m2-min-6 {-10}
+set $m2-max-6 {30}
+set $m2-idx-6 {7}
+set $m2-snd-6 {1}
+set $m2-clamp-6 {0}
+set $m2-lines-6 {1}
+set $m2-auxidx-6 {}
+set $m2-draw_aux_data-6 {0}
+set $m2-use_plot_color-6 {0}
+set $m2-plot_color-6-r {0.27}
+set $m2-plot_color-6-g {0.65}
+set $m2-plot_color-6-b {0.44}
+set $m2-nw_label-7 {}
+set $m2-sw_label-7 {mmHg}
+set $m2-min_ref_label-7 {0}
+set $m2-max_ref_label-7 {47}
+set $m2-label-7 {CO2 partial pressure at mouth (Pmouth_CO2)}
+set $m2-aux_data_label-7 {}
+set $m2-min-7 {0}
+set $m2-max-7 {47}
+set $m2-idx-7 {8}
+set $m2-snd-7 {1}
+set $m2-clamp-7 {0}
+set $m2-lines-7 {1}
+set $m2-auxidx-7 {}
+set $m2-draw_aux_data-7 {0}
+set $m2-plot_color-7-r {0.5}
+set $m2-plot_color-7-g {1.0}
+set $m2-plot_color-7-b {0.0}
+
+# Open the VS->Render->ICUMonitor UI
+$m2 initialize_ui
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m3-filename "$DATADIR/$DATASET/P87-HIP/respcycles/P87_ISR_baseline1RC.nrrd"
+set $m3-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
+
+# Set GUI variables for the SCIRun->Time->TimeControls Module
+set $m4-execmode {pause}
+
+# Open the SCIRun->Time->TimeControls UI
+$m4 initialize_ui
+
+
+::netedit scheduleok

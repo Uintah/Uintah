@@ -1,0 +1,36 @@
+
+inPackage=
+outPackage=
+
+   
+  PORT
+  iStringPort
+  oStringPort
+  EOF_PORT
+   
+  PORT
+  Margaritaville
+  Margaritaville
+  EOF_PORT
+
+
+  
+        
+  PORTMETHOD
+  getString
+  getString
+  EOF_PORTMETHOD
+    
+  PORTMETHOD
+  m1
+  m2
+  EOF_PORTMETHOD
+ 
+  
+        
+  PORTMETHOD
+  jimmy_buffet
+  jimmy_buffet
+  EOF_PORTMETHOD
+ 
+

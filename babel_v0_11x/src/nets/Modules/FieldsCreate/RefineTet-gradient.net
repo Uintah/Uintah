@@ -1,0 +1,259 @@
+# SCIRun Network v1.24.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {0 8 554 673}
+set creationDate {Thu Dec 09 2004}
+set creationTime {15:28:34}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->FieldsCreate->RefineTetVol Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "RefineTetVol" 170 409]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 342 552]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 359 409]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 360 487]
+
+# Create a SCIRun->Render->Viewer Module
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 120 629]
+
+# Create a SCIRun->FieldsOther->FieldInfo Module
+set m6 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 0 122]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 0 253]
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m8 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 0 8]
+
+# Create a SCIRun->FieldsOther->FieldInfo Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 5 515]
+
+# Create a SCIRun->FieldsData->Gradient Module
+set m10 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 188 85]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m11 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 188 217]
+
+# Create the Connections between Modules
+set c1 [addConnection $m8 0 $m1 0]
+set c2 [addConnection $m8 0 $m10 0]
+set c3 [addConnection $m8 0 $m6 0]
+set c4 [addConnection $m8 0 $m7 0]
+set c5 [addConnection $m1 0 $m9 0]
+set c6 [addConnection $m1 0 $m2 0]
+set c7 [addConnection $m10 0 $m11 0]
+set c8 [addConnection $m3 0 $m4 0]
+set c9 [addConnection $m7 0 $m5 0]
+set c10 [addConnection $m1 0 $m4 1]
+set c11 [addConnection $m11 0 $m1 1]
+set c12 [addConnection $m4 0 $m2 1]
+set c13 [addConnection $m2 0 $m5 1]
+
+# Set GUI variables for the SCIRun->FieldsCreate->RefineTetVol Module
+set $m1-cell_index {3}
+set $m1-execution_mode {sub_all}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m2-nodes-on {0}
+set $m2-edges-transparency {1}
+set $m2-faces-on {0}
+set $m2-use-transparency {1}
+set $m2-normalize-vectors {}
+set $m2-has_scalar_data {1}
+set $m2-text-color-r {0.81}
+set $m2-text-color-g {1.0}
+set $m2-text-color-b {0.59}
+set $m2-text-show-data {0}
+set $m2-def-color-r {0.0}
+set $m2-def-color-g {0.75}
+set $m2-def-color-b {1.0}
+set $m2-def-color-a {0.65}
+set $m2-node_display_type {Spheres}
+set $m2-scalar_display_type {Spheres}
+set $m2-active_tab {Edges}
+set $m2-node_scale {0.0636}
+set $m2-edge_scale {0.0075}
+set $m2-scalars_scale {0.033}
+set $m2-show_progress {}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m3-positionList {{0 32} {334 32}}
+set $m3-nodeList {257 258}
+set $m3-width {335}
+set $m3-height {40}
+set $m3-mapName {Old Rainbow}
+set $m3-reverse {1}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m4-min {0.0}
+set $m4-max {2.0}
+
+$m5 addViewer
+set $m5-ViewWindow_0-geometry 654x613+1901+405
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m5-ViewWindow_0-view-eyep-x {3.17101935246}
+set $m5-ViewWindow_0-view-eyep-y {-6.78482941341}
+set $m5-ViewWindow_0-view-eyep-z {-0.419483769519}
+set $m5-ViewWindow_0-view-lookat-x {-0.0153579718224}
+set $m5-ViewWindow_0-view-lookat-y {0.00792292762133}
+set $m5-ViewWindow_0-view-lookat-z {0.02251528719}
+set $m5-ViewWindow_0-view-up-x {-0.046721035768}
+set $m5-ViewWindow_0-view-up-y {0.0430217151164}
+set $m5-ViewWindow_0-view-up-z {-0.997981100445}
+set $m5-ViewWindow_0-view-fov {20}
+set $m5-ViewWindow_0-view-eyep_offset-x {}
+set $m5-ViewWindow_0-view-eyep_offset-y {}
+set $m5-ViewWindow_0-view-eyep_offset-z {}
+set $m5-ViewWindow_0-sr {1}
+set $m5-ViewWindow_0-do_stereo {0}
+set $m5-ViewWindow_0-ortho-view {0}
+set $m5-ViewWindow_0-trackViewWindow0 {1}
+set $m5-ViewWindow_0-raxes {1}
+set $m5-ViewWindow_0-ambient-scale {1.0}
+set $m5-ViewWindow_0-diffuse-scale {1.0}
+set $m5-ViewWindow_0-specular-scale {0.4}
+set $m5-ViewWindow_0-emission-scale {1.0}
+set $m5-ViewWindow_0-shininess-scale {1.0}
+set $m5-ViewWindow_0-polygon-offset-factor {1.0}
+set $m5-ViewWindow_0-polygon-offset-units {0.0}
+set $m5-ViewWindow_0-point-size {1.0}
+set $m5-ViewWindow_0-line-width {1.0}
+set $m5-ViewWindow_0-sbase {0.4}
+set $m5-ViewWindow_0-bgcolor-r {0}
+set $m5-ViewWindow_0-bgcolor-g {0}
+set $m5-ViewWindow_0-bgcolor-b {0}
+set $m5-ViewWindow_0-fogusebg {1}
+set $m5-ViewWindow_0-fogcolor-r {0.0}
+set $m5-ViewWindow_0-fogcolor-g {0.0}
+set $m5-ViewWindow_0-fogcolor-b {1.0}
+set $m5-ViewWindow_0-fog-start {0.0}
+set $m5-ViewWindow_0-fog-end {0.714265}
+set $m5-ViewWindow_0-fog-visibleonly {1}
+set $m5-ViewWindow_0-currentvisual {0}
+set $m5-ViewWindow_0-caxes {0}
+set $m5-ViewWindow_0-pos {}
+set $m5-ViewWindow_0-clip-num {}
+set $m5-ViewWindow_0-clip-visible {}
+set $m5-ViewWindow_0-clip-selected {}
+set $m5-ViewWindow_0-clip-visible-1 {}
+set $m5-ViewWindow_0-clip-normal-x-1 {}
+set $m5-ViewWindow_0-clip-normal-y-1 {}
+set $m5-ViewWindow_0-clip-normal-z-1 {}
+set $m5-ViewWindow_0-clip-normal-d-1 {}
+set $m5-ViewWindow_0-clip-visible-2 {}
+set $m5-ViewWindow_0-clip-normal-x-2 {}
+set $m5-ViewWindow_0-clip-normal-y-2 {}
+set $m5-ViewWindow_0-clip-normal-z-2 {}
+set $m5-ViewWindow_0-clip-normal-d-2 {}
+set $m5-ViewWindow_0-clip-visible-3 {}
+set $m5-ViewWindow_0-clip-normal-x-3 {}
+set $m5-ViewWindow_0-clip-normal-y-3 {}
+set $m5-ViewWindow_0-clip-normal-z-3 {}
+set $m5-ViewWindow_0-clip-normal-d-3 {}
+set $m5-ViewWindow_0-clip-visible-4 {}
+set $m5-ViewWindow_0-clip-normal-x-4 {}
+set $m5-ViewWindow_0-clip-normal-y-4 {}
+set $m5-ViewWindow_0-clip-normal-z-4 {}
+set $m5-ViewWindow_0-clip-normal-d-4 {}
+set $m5-ViewWindow_0-clip-visible-5 {}
+set $m5-ViewWindow_0-clip-normal-x-5 {}
+set $m5-ViewWindow_0-clip-normal-y-5 {}
+set $m5-ViewWindow_0-clip-normal-z-5 {}
+set $m5-ViewWindow_0-clip-normal-d-5 {}
+set $m5-ViewWindow_0-clip-visible-6 {}
+set $m5-ViewWindow_0-clip-normal-x-6 {}
+set $m5-ViewWindow_0-clip-normal-y-6 {}
+set $m5-ViewWindow_0-clip-normal-z-6 {}
+set $m5-ViewWindow_0-clip-normal-d-6 {}
+set $m5-ViewWindow_0-global-light0 {1}
+set $m5-ViewWindow_0-global-light1 {0}
+set $m5-ViewWindow_0-global-light2 {0}
+set $m5-ViewWindow_0-global-light3 {0}
+set $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m5-ViewWindow_0-global-light {1}
+set $m5-ViewWindow_0-global-fog {0}
+set $m5-ViewWindow_0-global-debug {0}
+set $m5-ViewWindow_0-global-clip {1}
+set $m5-ViewWindow_0-global-cull {0}
+set $m5-ViewWindow_0-global-dl {0}
+set $m5-ViewWindow_0-global-type {Gouraud}
+set "$m5-ViewWindow_0-Transparent Edges (1)" {1}
+set "$m5-ViewWindow_0-Transparent Edges (2)" {1}
+
+# Open the SCIRun->FieldsOther->FieldInfo UI
+$m6 initialize_ui
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m7-nodes-on {0}
+set $m7-edges-transparency {1}
+set $m7-edges-usedefcolor {1}
+set $m7-faces-on {0}
+set $m7-use-transparency {1}
+set $m7-normalize-vectors {}
+set $m7-has_scalar_data {1}
+set $m7-def-color-r {1.0}
+set $m7-def-color-g {0.0}
+set $m7-def-color-b {0.0}
+set $m7-def-color-a {0.23}
+set $m7-node_display_type {Spheres}
+set $m7-active_tab {Edges}
+set $m7-node_scale {0.0234}
+set $m7-edge_scale {0.0046}
+set $m7-scalars_scale {0.3}
+set $m7-show_progress {}
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m8-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
+
+# Open the SCIRun->FieldsOther->FieldInfo UI
+$m9 initialize_ui
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m11-function {const double tmp = v.length();
+if (fabs(tmp) > 15.0) result = 2;
+else result = 0;
+}
+set $m11-outputdatatype {char}
+
+# Open the SCIRun->FieldsData->TransformData UI
+$m11 initialize_ui
+
+
+::netedit scheduleok
