@@ -39,17 +39,18 @@ SRCS     += \
 	$(SRCDIR)/DynamicCompilation.cc \
 	$(SRCDIR)/Endian.cc             \
 	$(SRCDIR)/Environment.cc        \
+	$(SRCDIR)/FieldInformation.cc   \
 	$(SRCDIR)/FileUtils.cc          \
 	$(SRCDIR)/ProgressReporter.cc   \
-	$(SRCDIR)/SimpleProfiler.cc	\
+	$(SRCDIR)/SimpleProfiler.cc     \
 	$(SRCDIR)/SizeTypeConvert.cc    \
 	$(SRCDIR)/RWS.cc                \
 	$(SRCDIR)/sci_system.cc         \
 	$(SRCDIR)/soloader.cc           \
-        $(SRCDIR)/Signals.cc            \
+  $(SRCDIR)/Signals.cc            \
 	$(SRCDIR)/Timer.cc              \
 	$(SRCDIR)/TypeDescription.cc    \
-        $(SRCDIR)/ProgressiveWarning.cc
+  $(SRCDIR)/ProgressiveWarning.cc
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread
 
