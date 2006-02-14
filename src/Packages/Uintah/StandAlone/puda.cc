@@ -241,7 +241,7 @@ int main(int argc, char** argv)
   string ccVarInput;
   // set defaults for cout
   cout.setf(ios::scientific,ios::floatfield);
-  cout.precision(8);
+  cout.precision(16);
   /*
    * Parse arguments
    */
