@@ -2784,7 +2784,7 @@ template <class Basis>
 typename TetVolMesh<Basis>::Elem::index_type
 TetVolMesh<Basis>::add_elem(typename Node::array_type a)
 {
-  ASSERT(a.size() == 4);
+  ASSERTMSG(a.size() == 4, "Tried to add non-tet element.");
 
   const int tet = cells_.size() / 4;
 

@@ -350,6 +350,7 @@ public:
   }
   typename Elem::index_type add_elem(typename Node::array_type a)
   {
+    ASSERTMSG(a.size() == 2, "Tried to add non-line element.");
     edges_.push_back(index_pair_type(a[0],a[1]));
     return static_cast<under_type>(edges_.size()-1);
   }
