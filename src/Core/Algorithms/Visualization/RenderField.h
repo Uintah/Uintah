@@ -372,6 +372,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      bool n_transp, bool e_transp, bool f_transp,
 			      bool nfdc, bool efdc, bool ffdc, 
 			      unsigned div, bool fut)
+
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -1165,7 +1166,10 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 
   // if we have an ImageMesh, we can render it as a single polygon
   // with a textured face, providing the flag is true.
-  if(dynamic_cast<IMesh *> (mesh.get_rep())){
+  const TypeDescription *mtd = 
+    sfld->get_type_description(Field::MESH_TD_E);
+
+  if((mtd->get_name().find("ImageMesh") != string::npos)){
     if( use_texture_for_face ){
       return render_texture_face(sfld, color_handle, def_mat,
 				 force_def_color, use_normals,
@@ -1391,7 +1395,10 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
 
   // if we have an ImageMesh, we can render it as a single polygon
   // with a textured face, providing the flag is true.
-  if(dynamic_cast<ImageMesh<QuadBilinearLgn<Point> > *> (mesh.get_rep())){
+  const TypeDescription *mtd = 
+    sfld->get_type_description(Field::MESH_TD_E);
+  
+  if((mtd->get_name().find("ImageMesh") != string::npos)){
     if( use_texture_for_face ){
       return render_texture_face(sfld, color_handle, def_mat,
                                  force_def_color, use_normals,
