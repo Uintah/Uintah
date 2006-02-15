@@ -58,12 +58,6 @@ public:
                          vector<unsigned int> &added_elems) = 0;
 
 
-  virtual void extract(FieldHandle &result_field,
-                       MatrixHandle &result_mapping,
-                       FieldHandle tet_h,
-                       vector<unsigned int> &added_nodes,
-                       vector<unsigned int> &added_elems) = 0;
-
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftet,
 					    const TypeDescription *finsert);
@@ -85,12 +79,6 @@ public:
   virtual void execute_2(FieldHandle tet, FieldHandle insert,
                          vector<unsigned int> &added_nodes,
                          vector<unsigned int> &added_elems);
-
-  virtual void extract(FieldHandle &result_field,
-                       MatrixHandle &result_mapping,
-                       FieldHandle tet_h,
-                       vector<unsigned int> &added_nodes,
-                       vector<unsigned int> &added_elems);
 };
 
 
@@ -345,13 +333,43 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
 }
 
 
+
+class InsertFieldExtract : public DynamicAlgoBase
+{
+public:
+
+  virtual void extract(FieldHandle &result_field,
+                       MatrixHandle &result_mapping,
+                       FieldHandle tet_h,
+                       vector<unsigned int> &added_nodes,
+                       vector<unsigned int> &added_elems) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftet,
+					    int dim);
+};
+
+
+template <class TFIELD, class IFIELD>
+class InsertFieldExtractT : public InsertFieldExtract
+{
+public:
+
+  virtual void extract(FieldHandle &result_field,
+                       MatrixHandle &result_mapping,
+                       FieldHandle tet_h,
+                       vector<unsigned int> &added_nodes,
+                       vector<unsigned int> &added_elems);
+};
+
+
 template <class TFIELD, class IFIELD>
 void
-InsertFieldAlgoT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
-                                          MatrixHandle &result_mapping,
-                                          FieldHandle tet_h,
-                                          vector<unsigned int> &added_nodes,
-                                          vector<unsigned int> &added_elems)
+InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
+                                             MatrixHandle &result_mapping,
+                                             FieldHandle tet_h,
+                                             vector<unsigned int> &added_nodes,
+                                             vector<unsigned int> &added_elems)
 {
   TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
   typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
@@ -369,54 +387,85 @@ InsertFieldAlgoT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
     omesh->add_point(p);
   }
 
-  std::sort(added_elems.begin(), added_elems.end());
-  vector<unsigned int>::iterator elems_end;
-  elems_end = std::unique(added_elems.begin(), added_elems.end());
-  for (itr = added_elems.begin(); itr != elems_end; ++itr)
+  if (omesh->dimensionality() > 0)
   {
-    if (omesh->dimensionality() == 1)
+    std::sort(added_elems.begin(), added_elems.end());
+    vector<unsigned int>::iterator elems_end;
+    elems_end = std::unique(added_elems.begin(), added_elems.end());
+    for (itr = added_elems.begin(); itr != elems_end; ++itr)
     {
-      typename TFIELD::mesh_type::Edge::array_type edges;
-      tmesh->get_edges(edges,
-                       typename TFIELD::mesh_type::Cell::index_type(*itr));
-      for (unsigned int i = 0; i < edges.size(); i++)
+      if (omesh->dimensionality() == 1)
       {
-        typename TFIELD::mesh_type::Node::array_type oldnodes;
-        typename IFIELD::mesh_type::Node::array_type newnodes;
-        tmesh->get_nodes(oldnodes, edges[i]);
-        bool all_found = true;
-        for (unsigned int j = 0; j < oldnodes.size(); j++)
+        typename TFIELD::mesh_type::Edge::array_type edges;
+        tmesh->get_edges(edges,
+                         typename TFIELD::mesh_type::Cell::index_type(*itr));
+        for (unsigned int i = 0; i < edges.size(); i++)
         {
-          vector<unsigned int>::iterator loc =
-            lower_bound(added_nodes.begin(), nodes_end, oldnodes[j]);
-          if (loc != nodes_end && *loc == oldnodes[j])
+          typename TFIELD::mesh_type::Node::array_type oldnodes;
+          typename IFIELD::mesh_type::Node::array_type newnodes;
+          tmesh->get_nodes(oldnodes, edges[i]);
+          bool all_found = true;
+          for (unsigned int j = 0; j < oldnodes.size(); j++)
           {
-            newnodes.push_back(loc - added_nodes.begin());
+            vector<unsigned int>::iterator loc =
+              lower_bound(added_nodes.begin(), nodes_end, oldnodes[j]);
+            if (loc != nodes_end && *loc == oldnodes[j])
+            {
+              newnodes.push_back(loc - added_nodes.begin());
+            }
+            else
+            {
+              all_found = false;
+              break;
+            }
           }
-          else
-          {
-            all_found = false;
-            break;
-          }
-        }
 
-        // TODO:  Only add unique elements.
-        if (all_found)
-        {
-          omesh->add_elem(newnodes);
+          // TODO:  Only add unique elements.
+          if (all_found)
+          {
+            omesh->add_elem(newnodes);
+          }
         }
       }
-    }
-    if (omesh->dimensionality() == 2)
-    {
-      typename TFIELD::mesh_type::Face::array_type faces;
-      tmesh->get_faces(faces,
-                       typename TFIELD::mesh_type::Cell::index_type(*itr));
-      for (unsigned int i = 0; i < faces.size(); i++)
+      if (omesh->dimensionality() == 2)
+      {
+        typename TFIELD::mesh_type::Face::array_type faces;
+        tmesh->get_faces(faces,
+                         typename TFIELD::mesh_type::Cell::index_type(*itr));
+        for (unsigned int i = 0; i < faces.size(); i++)
+        {
+          typename TFIELD::mesh_type::Node::array_type oldnodes;
+          typename IFIELD::mesh_type::Node::array_type newnodes;
+          tmesh->get_nodes(oldnodes, faces[i]);
+          bool all_found = true;
+          for (unsigned int j = 0; j < oldnodes.size(); j++)
+          {
+            vector<unsigned int>::iterator loc =
+              std::lower_bound(added_nodes.begin(), nodes_end, oldnodes[j]);
+            if (loc != nodes_end && *loc == oldnodes[j])
+            {
+              newnodes.push_back(loc - added_nodes.begin());
+            }
+            else
+            {
+              all_found = false;
+              break;
+            }
+          }
+
+          // TODO:  Only add unique elements.
+          if (all_found)
+          {
+            omesh->add_elem(newnodes);
+          }
+        }
+      }
+      if (omesh->dimensionality() == 3)
       {
         typename TFIELD::mesh_type::Node::array_type oldnodes;
         typename IFIELD::mesh_type::Node::array_type newnodes;
-        tmesh->get_nodes(oldnodes, faces[i]);
+        tmesh->get_nodes(oldnodes,
+                         typename TFIELD::mesh_type::Cell::index_type(*itr));
         bool all_found = true;
         for (unsigned int j = 0; j < oldnodes.size(); j++)
         {
@@ -433,13 +482,8 @@ InsertFieldAlgoT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
           }
         }
 
-        // TODO:  Only add unique elements.
-        static int counter = 0;
-        if (all_found && counter < 6)
+        if (all_found)
         {
-          counter++;
-          cout << "Adding element " << newnodes[0] << " " <<
-            newnodes[1] << " " << newnodes[2] << "\n";
           omesh->add_elem(newnodes);
         }
       }
