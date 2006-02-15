@@ -136,6 +136,29 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
   
   db->getWithDefault("doMMS", d_doMMS, false);
+  if(d_doMMS) {
+	  ProblemSpecP db_mms = db->findBlock("MMS");
+	  db_mms->getWithDefault("whichMMS", d_mms, "linearMMS");
+	  if (d_mms == "linearMMS") {
+	    ProblemSpecP db_mms1 = db_mms->findBlock("linearMMS");
+	    db_mms1->getWithDefault("cu",cu,1.0);
+	    db_mms1->getWithDefault("cv",cv,1.0);
+	    db_mms1->getWithDefault("cw",cw,1.0);
+	    db_mms1->getWithDefault("cp",cp,1.0);
+	    db_mms1->getWithDefault("phi0",phi0,0.5);
+	  }
+	  else if (d_mms == "expMMS") {
+		  ProblemSpecP db_mms2 = db_mms->findBlock("expMMS");
+		  db_mms2->require("cu",cu);
+	  }
+	  else if (d_mms == "sineMMS") {
+		  ProblemSpecP db_mms3 = db_mms->findBlock("sineMMS");
+		  db_mms3->require("cu",cu);
+	  }
+	  else
+		  throw InvalidValue("current MMS "
+		       "not supported: " + d_mms, __FILE__, __LINE__);
+  }
 
   // physical constant
   // physical constants
@@ -253,6 +276,9 @@ Arches::scheduleInitialize(const LevelP& level,
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
     sched_interpInitialConditionToStaggeredGrid(level, sched);
+  }
+  if (d_doMMS) {
+	  sched_mmsInitialCondition(level, sched);
   }
   // schedule init of cell type
   // require : NONE
@@ -929,6 +955,85 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
       }
     }
     fd.close();  
+  }
+}
+
+
+// ****************************************************************************
+// schedule reading of initial condition for velocity and pressure
+// ****************************************************************************
+void 
+Arches::sched_mmsInitialCondition(const LevelP& level,
+				     SchedulerP& sched)
+{
+    // primitive variable initialization
+    Task* tsk = scinew Task( "Arches::mmsInitialCondition",
+			    this, &Arches::mmsInitialCondition);
+    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+    tsk->modifies(d_lab->d_pressurePSLabel);
+    tsk->modifies(d_lab->d_scalarSPLabel);
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+// ****************************************************************************
+// Actual read
+// ****************************************************************************
+void
+Arches::mmsInitialCondition(const ProcessorGroup* ,
+		  	       const PatchSubset* patches,
+			       const MaterialSubset*,
+	 		       DataWarehouse* ,
+			       DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    CCVariable<double> pressure;
+    CCVariable<double> scalar;
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
+    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    else {
+
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  if (d_mms == "linearMMS") {
+	    uVelocity[currCell] = cu*cellinfo->xu[colX];
+	    vVelocity[currCell] = cv*cellinfo->yv[colY];
+	    wVelocity[currCell] = cw*cellinfo->zw[colZ];
+	    pressure[currCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
+	    scalar[currCell] = phi0;
+	  }
+	}
+      }
+    }
   }
 }
 
