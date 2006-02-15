@@ -153,6 +153,8 @@ int nofTimeSteps;
 				   		SchedulerP&);
       virtual void sched_getCCVelocities(const LevelP& level,
 			   		 SchedulerP&);
+      virtual void sched_mmsInitialCondition(const LevelP& level,
+				   		SchedulerP&);
       // GROUP: Access Functions :
       ///////////////////////////////////////////////////////////////////////
 	// Boolean to see whether or not Enthalpy is solved for
@@ -239,6 +241,12 @@ private:
 		     	   const MaterialSubset*,
 		    	   DataWarehouse* ,
 		     	   DataWarehouse* new_dw);
+      void mmsInitialCondition(const ProcessorGroup*,
+		     		  const PatchSubset* patches,
+		     		  const MaterialSubset*,
+		    		  DataWarehouse* ,
+		     		  DataWarehouse* new_dw);
+
 private:
 
       double d_deltaT;
@@ -286,6 +294,8 @@ private:
     bool init_timelabel_allocated;
     bool d_dynScalarModel;
     bool d_underflow;
+    string d_mms;
+    double cu,cv,cw,cp,phi0;
 
 }; // end class Arches
 
