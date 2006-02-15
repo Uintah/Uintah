@@ -685,8 +685,10 @@ ShowField::execute()
   }
   data_resolution_ = gui_data_resolution_.get();
 
+  const TypeDescription *td = 
+    fld_handle->get_type_description(Field::MESH_TD_E);
   if (color_map_changed && faces_usetexture_.get() &&
-      dynamic_cast<IMesh *>(fld_handle->mesh().get_rep())){
+      (td->get_name().find("ImageMesh") != string::npos)) {
     faces_dirty_ = true;
   }
 
