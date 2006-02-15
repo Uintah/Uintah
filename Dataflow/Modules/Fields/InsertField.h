@@ -40,7 +40,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-
+#include <set>
 
 namespace SCIRun {
 
@@ -360,6 +360,23 @@ public:
                        FieldHandle tet_h,
                        vector<unsigned int> &added_nodes,
                        vector<unsigned int> &added_elems);
+
+
+  struct ltvn
+  {
+    bool operator()(const typename IFIELD::mesh_type::Node::array_type &a,
+                    const typename IFIELD::mesh_type::Node::array_type &b) const
+    {
+      for (unsigned int i = 0; i < a.size(); i++)
+      {
+        if (a[i] < b[i]) return true;
+        if (a[i] > b[i]) return false;
+      }
+      return false;
+    }
+  };
+
+  typedef std::set<typename IFIELD::mesh_type::Node::array_type, ltvn> added_set_type;
 };
 
 
@@ -389,6 +406,8 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
 
   if (omesh->dimensionality() > 0)
   {
+    added_set_type already_added;
+
     std::sort(added_elems.begin(), added_elems.end());
     vector<unsigned int>::iterator elems_end;
     elems_end = std::unique(added_elems.begin(), added_elems.end());
@@ -419,11 +438,17 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
               break;
             }
           }
-
-          // TODO:  Only add unique elements.
+          
           if (all_found)
           {
-            omesh->add_elem(newnodes);
+            std::sort(newnodes.begin(), newnodes.end());
+            typename added_set_type::iterator found =
+              already_added.find(newnodes);
+            if (found == already_added.end())
+            {
+              already_added.insert(newnodes);
+              omesh->add_elem(newnodes);
+            }
           }
         }
       }
@@ -453,10 +478,16 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
             }
           }
 
-          // TODO:  Only add unique elements.
           if (all_found)
           {
-            omesh->add_elem(newnodes);
+            std::sort(newnodes.begin(), newnodes.end());
+            typename added_set_type::iterator found =
+              already_added.find(newnodes);
+            if (found == already_added.end())
+            {
+              already_added.insert(newnodes);
+              omesh->add_elem(newnodes);
+            }
           }
         }
       }
