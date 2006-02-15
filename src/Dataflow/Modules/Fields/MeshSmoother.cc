@@ -95,6 +95,8 @@ void MeshSmoother::execute()
   }
   last_field_generation_ = ifieldhandle->generation;
 
+  cout << "Smoothing hexesa..." << endl;
+  
   string ext = "";
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
   if (mtd->get_name().find("TetVolMesh") != string::npos)
@@ -145,7 +147,8 @@ void MeshSmoother::execute()
 //     error("Isoclipping can only be done for fields with data at nodes.  Note: you can insert a ChangeFieldDataAt module (and an ApplyInterpMatrix module) upstream to push element data to the nodes.");
 //     return;
 //   }
-
+  cout << "Smoothing hexesb..." << endl;
+  
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = MeshSmootherAlgo::get_compile_info(ftd, ext);
   Handle<MeshSmootherAlgo> algo;
@@ -158,7 +161,10 @@ void MeshSmoother::execute()
 //   FieldHandle ofield = algo->execute(this, ifieldhandle,
 // 				     isoval, gui_lte_.get(),
 // 				     interp);
+  cout << "Smoothing hexesc..." << endl;
+  
   FieldHandle ofield = algo->execute(this, ifieldhandle);
+    cout << "Smoothing hexesd..." << endl;
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Smoothed");
   ofield_port->send_and_dereference(ofield);
