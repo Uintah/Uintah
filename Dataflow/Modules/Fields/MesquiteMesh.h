@@ -5,8 +5,8 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/HexVolMesh.h>
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/MeshInterface.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/MsqError.hpp"
+#include <MeshInterface.hpp>
+#include <MsqError.hpp>
 
 namespace SCIRun {
 
