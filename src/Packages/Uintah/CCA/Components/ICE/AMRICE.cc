@@ -959,7 +959,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
                        tvar->var, indx, new_dw, 
                        coarsePatch, coarseLevel, fineLevel);
             
-            if(switchDebug_AMR_refine){  
+            if(switchDebug_AMR_coarsen){  
               string name = tvar->var->getName();
               printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
             }                 
@@ -969,7 +969,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
 
       //__________________________________
       //  Print Data 
-      if(switchDebug_AMR_refine){
+      if(switchDebug_AMR_coarsen){
         ostringstream desc;     
         desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
        // printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
