@@ -1504,8 +1504,10 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
       for (int colX = idxLoU.x(); colX <= idxHiU.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	vars->uVelNonlinearSrc[currCell] += rho0*(2.0*cu*cu+cu*cv+cu*cw)*cellinfo->xu[colX]
-		+rho0*(2.0*cu+cv+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.x();
+	if (d_mms == "linearMMS") {
+		vars->uVelNonlinearSrc[currCell] += rho0*(2.0*cu*cu+cu*cv+cu*cw)*cellinfo->xu[colX]
+			+rho0*(2.0*cu+cv+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.x();
+	}
       }
     }
   }
@@ -1547,8 +1549,10 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
       for (int colX = idxLoV.x(); colX <= idxHiV.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	vars->vVelNonlinearSrc[currCell] +=  rho0*(2.0*cv*cv+cu*cv+cv*cw)*cellinfo->yv[colY]
-                +rho0*(2.0*cv+cu+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.y();
+	if (d_mms == "linearMMS") {
+		vars->vVelNonlinearSrc[currCell] +=  rho0*(2.0*cv*cv+cu*cv+cv*cw)*cellinfo->yv[colY]
+                	+rho0*(2.0*cv+cu+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.y();
+	}
       }
     }
   }
@@ -1586,8 +1590,10 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
       for (int colX = idxLoW.x(); colX <= idxHiW.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	vars->wVelNonlinearSrc[currCell] +=  rho0*(2.0*cw*cw+cu*cw+cv*cw)*cellinfo->zw[colX]
-                +rho0*(2.0*cw+cu+cv)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.z();
+	if (d_mms == "linearMMS") {
+		vars->wVelNonlinearSrc[currCell] +=  rho0*(2.0*cw*cw+cu*cw+cv*cw)*cellinfo->zw[colX]
+                	+rho0*(2.0*cw+cu+cv)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.z();
+	}
       }
     }
   }
@@ -1645,7 +1651,9 @@ Source::calculateScalarMMSource(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	vars->scalarNonlinearSrc[currCell] += rho0*phi0*(cu+cv+cw);
+	if (d_mms == "linearMMS") {
+		vars->scalarNonlinearSrc[currCell] += rho0*phi0*(cu+cv+cw);
+	}
       }
     }
   }
@@ -1697,7 +1705,9 @@ Source::calculatePressMMSourcePred(const ProcessorGroup* ,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	vars->pressNonlinearSrc[currCell] += rho0*(cu+cv+cw);
+	if (d_mms == "linearMMS") {
+		vars->pressNonlinearSrc[currCell] += rho0*(cu+cv+cw);
+	}
       }
     }
   }
