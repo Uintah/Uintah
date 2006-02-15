@@ -123,8 +123,7 @@ InsertField::execute()
     const TypeDescription *ftd0 = tet_field->get_type_description();
     const TypeDescription *ftd1 = insert_field->get_type_description();
 
-    CompileInfoHandle ci =
-      InsertFieldAlgo::get_compile_info(ftd0, ftd1);
+    CompileInfoHandle ci = InsertFieldAlgo::get_compile_info(ftd0, ftd1);
     Handle<InsertFieldAlgo> algo;
     if (!DynamicCompilation::compile(ci, algo, this)) {
       error("Dynamic compilation failed.");
@@ -151,7 +150,14 @@ InsertField::execute()
     {
       algo->execute_2(combined_, insert_field, added_nodes, added_elems);
     }
-    //algo->extract(extended_, mapping_, combined_, added_nodes, added_elems);
+
+    CompileInfoHandle ci2 = InsertFieldExtract::get_compile_info(ftd0, dim);
+    Handle<InsertFieldExtract> algo2;
+    if (!DynamicCompilation::compile(ci2, algo2, this)) {
+      error("Dynamic compilation failed.");
+      return;
+    }
+    algo2->extract(extended_, mapping_, combined_, added_nodes, added_elems);
   }
 
   if( combined_.get_rep() )
@@ -198,6 +204,71 @@ InsertFieldAlgo::get_compile_info(const TypeDescription *ftet,
   ftet->fill_compile_info(rval);
   finsert->fill_compile_info(rval);
 
+  return rval;
+}
+
+
+CompileInfoHandle
+InsertFieldExtract::get_compile_info(const TypeDescription *ftet,
+                                     int dim)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("InsertFieldExtractT");
+  static const string base_class_name("InsertFieldExtract");
+
+  string outname;
+  if (dim == 0)
+  {
+    outname = "GenericField<PointCloudMesh<ConstantBasis<Point> >, ConstantBasis<double>, vector<double> > ";
+  }
+  else if (dim == 1)
+  {
+    outname = "GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double>, vector<double> > ";
+  }
+  else if (dim == 2)
+  {
+    outname = "GenericField<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double>, vector<double> > ";
+  }
+  else if (dim == 3)
+  {
+    outname = "GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, vector<double> > ";
+  }
+
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftet->get_filename() + "." + to_string(dim) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftet->get_name() + ", " +
+                       outname);
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftet->fill_compile_info(rval);
+
+  if (dim == 0)
+  {
+    rval->add_basis_include("../src/Core/Basis/Constant.h");
+    rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+  }
+  else if (dim == 1)
+  {
+    rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+    rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
+  }
+  else if (dim == 2)
+  {
+    rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+    rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  }
+  else if (dim == 3)
+  {
+    rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
+    rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
+  }
+  
   return rval;
 }
 
