@@ -42,16 +42,16 @@
 #include <sci_hash_map.h>
 #include <algorithm>
 #include <set>
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/Mesquite.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/MeshImpl.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/MeshWriter.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/MsqError.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/InstructionQueue.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/SmartLaplacianSmoother.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/TerminationCriterion.hpp"
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/TopologyInfo.hpp"
-#include "MesquiteMesh.h"
-#include "MesquiteDomain.h"
+#include <Mesquite.hpp>
+#include <MeshImpl.hpp>
+#include <MeshWriter.hpp>
+#include <MsqError.hpp>
+#include <InstructionQueue.hpp>
+#include <SmartLaplacianSmoother.hpp>
+#include <TerminationCriterion.hpp>
+#include <TopologyInfo.hpp>
+#include <Dataflow/Modules/Fields/MesquiteMesh.h>
+#include <Dataflow/Modules/Fields/MesquiteDomain.h>
 
 namespace SCIRun {
 
@@ -148,31 +148,29 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHand
   
 //  need to make a copy of the field, so that the previous one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
-//  double cull_eps = 1e-4;
+  double cull_eps = 1e-4;
   Mesquite::MsqError err;
-//   Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
-//   //Set stopping criterion
-//   Mesquite::TerminationCriterion term_inner, term_outer;
-//   term_inner.set_culling_type( Mesquite::TerminationCriterion::VERTEX_MOVEMENT_ABSOLUTE, cull_eps, err );
-//   term_outer.add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 100, err );
-//   term_outer.add_criterion_type_with_double( Mesquite::TerminationCriterion::CPU_TIME, 600, err );
-//     // sets a culling method on the first QualityImprover
-//   sl_smoother.set_inner_termination_criterion(&term_inner);
-//   sl_smoother.set_outer_termination_criterion(&term_outer);
-//   Mesquite::InstructionQueue queue;
+  Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
+    //Set stopping criterion
+  Mesquite::TerminationCriterion term_inner, term_outer;
+  term_inner.set_culling_type( Mesquite::TerminationCriterion::VERTEX_MOVEMENT_ABSOLUTE, cull_eps, err );
+  term_outer.add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 100, err );
+  term_outer.add_criterion_type_with_double( Mesquite::TerminationCriterion::CPU_TIME, 600, err );
+    // sets a culling method on the first QualityImprover
+  sl_smoother.set_inner_termination_criterion(&term_inner);
+  sl_smoother.set_outer_termination_criterion(&term_outer);
+  Mesquite::InstructionQueue queue;
     
-//   queue.disable_automatic_quality_assessment();
-//   queue.disable_automatic_midnode_adjustment();
+  queue.disable_automatic_quality_assessment();
+  queue.disable_automatic_midnode_adjustment();
     
-//   queue.set_master_quality_improver(&sl_smoother, err);
+  queue.set_master_quality_improver(&sl_smoother, err);  
     
-    
-//   if(err)
-//   {
-//     mod->error( "Unexpected error from Mesquite code.\n" );
-//     return field;
-//   }
-    
+  if(err)
+  {
+    mod->error( "Unexpected error from Mesquite code.\n" );
+    return field;
+  }
 
 //   MesquiteMesh<FIELD> entity_mesh( field );
 //   MesquiteDomain domain;

@@ -1,7 +1,7 @@
 
 #include <Core/Datatypes/Field.h>
-#include "MesquiteMesh.h"
-#include "MsqVertex.hpp"
+#include <Dataflow/Modules/Fields/MesquiteMesh.h>
+#include <MsqVertex.hpp>
 
 namespace SCIRun {
     

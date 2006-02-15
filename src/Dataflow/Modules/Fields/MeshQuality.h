@@ -34,7 +34,7 @@
 #if !defined(MeshQuality_h)
 #define MeshQuality_h
 
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/verdict-1.0.1/verdict.h"
+#include <verdict.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>

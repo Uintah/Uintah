@@ -1,7 +1,7 @@
 #ifndef MESQUITE_DOMAIN_HPP
 #define MESQUITE_DOMAIN_HPP
 
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/mesquite-1.1.3/include/MeshInterface.hpp"
+#include <MeshInterface.hpp>
 
 namespace SCIRun {
     
