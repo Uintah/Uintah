@@ -140,7 +140,7 @@ Painter::BrushTool::button_press(Event &event)
   
 
 
-  if ( event.button_ == 1) {
+  if ( event.button(1)) {
     slice_ = window_->slice_map_[vol];
     if (!slice_)
       return FALLTHROUGH_E;
@@ -160,18 +160,18 @@ Painter::BrushTool::button_press(Event &event)
     
     painter_->redraw_all();    
     return HANDLED_E;
-  } else if (event.button_ == 3) {
+  } else if (event.button(3)) {
     vector<int> index = 
       vol->world_to_index(event.position_);
     if (vol->index_valid(index))
       vol->get_value(index, value_);
     painter_->redraw_all();    
     return HANDLED_E;
-  } else if (event.button_ == 4) {
+  } else if (event.button(4)) {
     radius_ *= 1.1;
     painter_->redraw_all();    
     return HANDLED_E;
-  } else if (event.button_ == 5) {
+  } else if (event.button(5)) {
     radius_ /= 1.1;
     painter_->redraw_all();
     return HANDLED_E;
@@ -266,7 +266,7 @@ Painter::BrushTool::my_mouse_motion(Event &event)
 
 
 
-string *
+int
 Painter::BrushTool::draw_mouse_cursor(Event &event)
 {
   NrrdVolume *vol = painter_->current_volume_;

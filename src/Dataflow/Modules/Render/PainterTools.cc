@@ -123,6 +123,8 @@ Painter::CLUTLevelsTool::do_event(Event &event) {
     ww_ = vol->clut_max_() - vol->clut_min_();
     wl_ = vol->clut_min_ + ww_ / 2.0;
     
+    press_event_ = event;
+    
     const double w = painter_->current_layout_->opengl_->width();
     const double h = painter_->current_layout_->opengl_->height();
     scale_ = (vol->data_max_ - vol->data_min_) / sqrt(w*w+h*h);
@@ -130,8 +132,8 @@ Painter::CLUTLevelsTool::do_event(Event &event) {
 
   if (event.type_ == Event::BUTTON_PRESS_E ||
       event.type_ == Event::MOUSE_MOTION_E) {
-    const float ww = ww_+scale_*event.dy_;  
-    const float wl = wl_+scale_*event.dx_;
+    const float ww = ww_+scale_*(event.Y_ - press_event_.Y_);  
+    const float wl = wl_+scale_*(event.X_ - press_event_.X_);
     vol->clut_min_ = wl - ww/2.0;
     vol->clut_max_ = wl + ww/2.0;
     painter_->for_each(&Painter::rebind_slice);
@@ -145,32 +147,28 @@ Painter::CLUTLevelsTool::do_event(Event &event) {
 
 Painter::ZoomTool::ZoomTool(Painter *painter) : 
   PainterTool(painter, "Zoom"),
-  zoom_(0.0), window_(0)
+  zoom_(0.0)
 {
 }
 
 
 int
-Painter::ZoomTool::do_event(Event &event) {
-
-  //  if (!event.button(1))
-  //    return FALLTHROUGH_E;
-  
+Painter::ZoomTool::do_event(Event &event) {  
   if (event.type_ == Event::BUTTON_RELEASE_E)
     return QUIT_E;
   
   if (event.type_ == Event::BUTTON_PRESS_E) {
     if (!event.window_)
       return FALLTHROUGH_E;
-
-    window_ = event.window_;
-    zoom_ = window_->zoom_;
+    press_event_ = event;
+    zoom_ = event.window_->zoom_;
     return HANDLED_E;
   }
   
-  if (event.type_ == Event::MOUSE_MOTION_E && window_) {
-    window_->zoom_ = Max(0.00001,zoom_*Pow(1.002,event.dx_+event.dy_));
-    painter_->redraw_window(*window_);
+  if (event.type_ == Event::MOUSE_MOTION_E && press_event_.window_) {
+    int delta = event.X_+event.Y_-press_event_.X_-press_event_.Y_;
+    press_event_.window_->zoom_ = Max(0.00001, zoom_ * Pow(1.002,delta));
+    painter_->redraw_window(*press_event_.window_);
     return HANDLED_E;
   }
   
@@ -218,7 +216,7 @@ Painter::ProbeTool::do_event(Event &event) {
 
 Painter::PanTool::PanTool(Painter *painter) : 
   PainterTool(painter, "Pan"),
-  center_(0,0,0), window_(0)
+  center_(0,0,0)
 {
 }
 
@@ -231,18 +229,19 @@ Painter::PanTool::do_event(Event &event) {
   if (event.type_ == Event::BUTTON_PRESS_E) {
     if (!event.window_)
       return FALLTHROUGH_E;
-    window_ = event.window_;
-    center_ = window_->center_;
+    press_event_ = event;
+    center_ = event.window_->center_;
     return HANDLED_E;
   }
 
   if (event.type_ == Event::MOUSE_MOTION_E) {
-    const float scale = 100.0/window_->zoom_;
-    int xax = window_->x_axis();
-    int yax = window_->y_axis();
-    window_->center_(xax) = center_(xax) - event.dx_ * scale;
-    window_->center_(yax) = center_(yax) + event.dy_ * scale;
-    painter_->redraw_window(*window_);
+    SliceWindow &window = *press_event_.window_;
+    const float scale = 100.0/window.zoom_;
+    int xax = window.x_axis();
+    int yax = window.y_axis();
+    window.center_(xax) = center_(xax) - scale * (event.X_ - press_event_.X_);
+    window.center_(yax) = center_(yax) + scale * (event.Y_ - press_event_.Y_);
+    painter_->redraw_window(window);
     return HANDLED_E;
   }
 
@@ -255,410 +254,200 @@ Painter::CropTool::CropTool(Painter *painter) :
   PainterTool(painter, "Crop"),
   pick_(0)
 {
-  //  bbox_ = BBox(painter_->current_volume_->min_, painter_.current_volume_->max_);
-  bbox_ = 
-    BBox(Point(0,0,0), 
-         Point(painter_->current_volume_->nrrd_->nrrd->axis[0].size, 
-               painter_->current_volume_->nrrd_->nrrd->axis[1].size, 
-               painter_->current_volume_->nrrd_->nrrd->axis[2].size));
-  draw_bbox_ = bbox_;
-  update_bbox_to_gui();
-  
+  ASSERT(painter_->current_volume_);
+  minmax_[1] = painter_->current_volume_->max_index();
+  minmax_[0] = vector<int>(minmax_[1].size(), 0);
+  pick_minmax_[0] = minmax_[0];
+  pick_minmax_[1] = minmax_[1];
 }
 
 Painter::CropTool::~CropTool() {}
 
 
-string *
-Painter::CropTool::mouse_button_press(Event &event) {
-  if (!event.window_) 
-    return scinew string("No window!");
+int
+Painter::CropTool::do_event(Event &event) {
 
-  compute_crop_pick_boxes(*(event.window_));
-  pick_ = get_pick_from_event(event);
-  //  bbox_ = BBox(painter_current_volume_->min_, painter_.current_volume_->max_);
-  return 0;
-}
-
-
-string *
-Painter::CropTool::mouse_motion(Event &event) {
-  SliceWindow &window = *(event.window_);
-  pair<Vector, Vector> crop_delta = get_crop_vectors(window, pick_);
-  Vector crop_delta_x = crop_delta.first*event.dx_;
-  Vector crop_delta_y = crop_delta.second*event.dy_;
-  Point min = bbox_.min();
-  Point max = bbox_.max();
-  const int p = window.x_axis();
-  const int s = window.y_axis();
-
-  vector<int> max_slice = painter_->current_volume_->max_index();
-
-  //  UIint *uimin[3] = { &crop_min_x_, &crop_min_y_, &crop_min_z_ };
-  // UIint *uimax[3] = { &crop_min_x_, &crop_min_y_, &crop_min_z_ };
-  int uiminpad[3] = {0,0,0}; //{crop_min_pad_x_(), crop_min_pad_y_(), crop_min_pad_z_()};
-  int uimaxpad[3] = {0,0,0}; //{crop_max_pad_x_(), crop_max_pad_y_(), crop_max_pad_z_()};
-  for (int n = 0; n < 3; n++)
-    uimaxpad[n] += uiminpad[n];
-  switch (pick_) {
-  case 1: 
-    min += crop_delta_x; 
-    min += crop_delta_y; 
-    break;
-  case 2: 
-    max += crop_delta_x; 
-    min += crop_delta_y; 
-    break;
-  case 3: 
-    max += crop_delta_x; 
-    max += crop_delta_y; 
-    break;
-  case 4: 
-    min += crop_delta_x; 
-    max += crop_delta_y; 
-    break;
-  case 5:
-    min += crop_delta_x; 
-    break;
-  case 6:
-    min += crop_delta_y; 
-    break;
-  case 7:
-    max += crop_delta_x; 
-    break;
-  case 8:
-    max += crop_delta_y; 
-    break;
-  case 9:
-
-    if (min(p)+crop_delta_x[p] < -uiminpad[p])
-      crop_delta_x[p] = -min(p)-uiminpad[p];
-    if (min(s)+crop_delta_y[s] < -uiminpad[s])
-      crop_delta_y[s] = -min(s)-uiminpad[s];
-    if (max(p)+crop_delta_x[p] > (max_slice[p]+uimaxpad[p]+1.0))
-      crop_delta_x[p] = (max_slice[p]+uimaxpad[p]+1.0)-max(p);
-    if (max(s)+crop_delta_y[s] > (max_slice[s]+uimaxpad[s]+1.0))
-      crop_delta_y[s] = (max_slice[s]+uimaxpad[s]+1.0)-max(s);
-
-    min += crop_delta_x;
-    min += crop_delta_y; 
-    max += crop_delta_x; 
-    max += crop_delta_y; 
-    break;
-  default: break;
-  }
-  int i;
-  for (i = 0; i < 3; ++i) 
-    if (min(i) > max(i)) 
-      SWAP(min(i), max(i));
-
-  for (i = 0; i < 3; ++i) {
-    if (min(i) > 0)
-      min(i) = Round(min(i));
-    else
-      min(i) = -Round(-min(i)+0.5);
-    max(i) = Round(max(i));
-  }
-
-  for (int i = 0; i < 3; ++i) {
-    if (min(i) < -uiminpad[i]) {
-      min(i) = -uiminpad[i];
+  if (event.type_ == Event::KEY_PRESS_E &&
+      event.key_ == " ") {
+    int *minmax[2] = { new int[minmax_[0].size()], new int[minmax_[1].size()] };
+    for (int i = 0; i < 2; ++i)
+      for (unsigned int a = 0; a < minmax_[0].size(); ++a)
+	minmax[i][a] = minmax_[i][a]-(i==1?1:0);
+    NrrdDataHandle nout = new NrrdData();
+    if (nrrdCrop(nout->nrrd, painter_->current_volume_->nrrd_->nrrd,
+		 minmax[0], minmax[1])) {
+      char *err = biffGetDone(NRRD);
+      string str = string("nrrdcrop: ") + err;
+      free(err);
+      throw str;
     }
-    if (max(i) > (max_slice[i]+uimaxpad[i]+1.0)) 
-      max(i) = (max_slice[i]+uimaxpad[i]+1.0);    
+
+    painter_->current_volume_->nrrd_ = nout;
+    painter_->current_volume_->build_index_to_world_matrix();
+    delete[] minmax[0];
+    delete[] minmax[1];
+    painter_->for_each(&Painter::extract_window_slices);
+    painter_->redraw_all();
+    return QUIT_E;
   }
 
-  for (i = 0; i < 3; ++i)
-    if (fabs(min(i)-max(i)) < 0.0001)  // floating point equal
-      if (min(i)+uiminpad[i] > 0.0001) 
-	min(i) = max(i)-1.0;
-      else
-	max(i) = -uiminpad[i]+1.0;
+  if (event.type_ == Event::KEY_PRESS_E &&
+      event.key_ == "q") {
+    return QUIT_E;
+  }
 
-  draw_bbox_ = BBox(min, max);
+  if (!event.keys_.empty())
+    return FALLTHROUGH_E;
 
-  compute_crop_pick_boxes(window);
-  update_bbox_to_gui();
-  painter_->redraw_all();
+  if (event.type_ == Event::BUTTON_PRESS_E && event.window_) {
+    double units = 100.0 / event.window_->zoom_; // world space units per pixel
+    pick_ = 1;
+    for (int i = 0; i < 2; ++i) {
+      pick_minmax_[i] = minmax_[i];
+      Point p = painter_->current_volume_->index_to_world(minmax_[i]);
+      for (int a = 0; a < 3; ++a) {
+        Vector n(a==0 ? 1:0, a==1?1:0, a==2?1:0);
+        if (i) n = -1*n;
+        Plane plane(p, n);
+        pick_dist_[i][a] = plane.eval_point(event.position_)/units;
+        if (Abs(pick_dist_[i][a]) < 5.0) pick_ |= 2;
+        if (pick_dist_[i][a] < 0.0 && 
+	    a != event.window_->axis_) pick_ = pick_ & ~1;
+      }
+    }
+    pick_index_ = painter_->current_volume_->point_to_index(event.position_);
 
-  return 0; 
-}
+    return HANDLED_E;
+  }
 
 
+  if (pick_ && event.type_ == Event::BUTTON_RELEASE_E && event.window_) {
+    for (unsigned int a = 0; a < minmax_[0].size(); ++a)
+      if (minmax_[0][a] > minmax_[1][a])
+	SWAP(minmax_[0][a],minmax_[1][a]);
 
-string *
-Painter::CropTool::mouse_button_release(Event &event) {
-  if (pick_) {
-    bbox_ = draw_bbox_;
     pick_ = 0;
+    return HANDLED_E;
   }
 
-  return 0;
+  if (pick_ && event.type_ == Event::MOUSE_MOTION_E && event.window_) {
+    pick_mouse_motion(event);
+    return HANDLED_E;
+  }
+
+  return FALLTHROUGH_E;
+}
+
+
+void
+Painter::CropTool::pick_mouse_motion(Event &event) {
+  ASSERT(pick_ && event.type_ == Event::MOUSE_MOTION_E && event.window_);
+  unsigned int axis = event.window_->axis_;
+  vector<int> max_index = painter_->current_volume_->max_index();
+  vector<double> idx = 
+    painter_->current_volume_->point_to_index(event.position_);
+
+  if (pick_ == 1) {  // Clicked inside crop box
+    for (unsigned int a = 0; a < idx.size(); ++ a) {    
+      for (unsigned int i = 0; i < 2; ++i) {
+	double delta = Clamp(idx[a]-Floor(pick_index_[a]),
+			     -double(pick_minmax_[0][a]), 
+			     double(max_index[a]-pick_minmax_[1][a]));
+        minmax_[i][a] = Floor(pick_minmax_[i][a]+delta);
+      }
+    }
+  }
+  else { // Clicked on crop box boundary
+    for (int i = 0; i < 2; ++i) {
+      for (unsigned int a = 0; a < 3; ++a) {
+	if (a == axis) continue;
+	int newval = Clamp(Round(idx[a+1]), 0, max_index[a+1]);
+	if (Abs(pick_dist_[i][a]) < 5.0 && newval != minmax_[(i+1)%2][a+1]) {
+	  minmax_[i][a+1] = newval;
+	}
+      }
+    }
+  }
+  
+  painter_->redraw_all();
 }
 
 
 
-string *
+int
 Painter::CropTool::draw(SliceWindow &window) {
-  float unscaled_one = 1.0;
-  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
-  tmp[window.axis_] = 0;
-  float screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
-  if (screen_space_one > unscaled_one) 
-    unscaled_one = screen_space_one;
-
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  const int axis = window.axis_;
-  int p = window.x_axis();
-  int s = window.y_axis();
+  Point ll = painter_->current_volume_->index_to_world(minmax_[0]);
+  Point ur = painter_->current_volume_->index_to_world(minmax_[1]);
+  Vector dia = ur - ll;
+
+  Vector right = window.x_dir();
+  right.normalize();
+  right = right*dia;
+
+  Vector up = window.y_dir();
+  up.normalize();
+  up = up*dia;
+
+  Point lr = ll+right;
+  Point ul = ll+up;
   
-  Vector scale = painter_->current_volume_->scale();
-
-  double ll[3], ur[3], lr[3], ul[3], upper[3], lower[3], left[3], right[3];
-  ll[0] = draw_bbox_.min().x()*scale[0];
-  ll[1] = draw_bbox_.min().y()*scale[1];
-  ll[2] = draw_bbox_.min().z()*scale[2];
-
-  ur[0] = draw_bbox_.max().x()*scale[0];
-  ur[1] = draw_bbox_.max().y()*scale[1];
-  ur[2] = draw_bbox_.max().z()*scale[2];
-
-  ll[axis] = int(window.slice_num_)*scale[axis];
-  ur[axis] = int(window.slice_num_)*scale[axis];
-  int i;
-  for (i = 0; i < 3; ++i) {
-    lr[i] = p==i?ur[i]:ll[i];
-    ul[i] = s==i?ur[i]:ll[i];
-    upper[i] = (ur[i]+ul[i])/2.0;
-    lower[i] = (lr[i]+ll[i])/2.0;
-    left[i] = (ll[i]+ul[i])/2.0;
-    right[i] = (lr[i]+ur[i])/2.0;
-  }    
-  
-  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
-  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.7 };
-  GLdouble lt_green[4] = { 0.5, 1.0, 0.1, 0.4 };
-  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
+  //  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
+  //  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.7 };
+  //  GLdouble lt_green[4] = { 0.5, 1.0, 0.1, 0.4 };
+  //  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
   GLdouble grey[4] = { 0.6, 0.6, 0.6, 0.6 }; 
   GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 }; 
   GLdouble black[4] = { 0.0, 0.0, 0.0, 1.0 }; 
   GLdouble yellow[4] = { 1.0, 0.76, 0.1, 1.0 };
+  GLdouble lt_yellow[4] = { 0.8, 0.5, 0.1, 1.0 };  
 
-  switch (axis) {
-  case 0: glColor4dv(red); break;
-  case 1: glColor4dv(green); break;
-  default:
-  case 2: glColor4dv(blue); break;
-  }
+  GLdouble *colors[5] = { lt_yellow, yellow, black, grey, white };
+  GLdouble widths[5] = { 11, 9.0, 7.0, 5.0, 1.0 }; 
 
-  if (double(window.slice_num_) >= draw_bbox_.min()(window.axis_) &&
-      double(window.slice_num_) <= (draw_bbox_.max()(window.axis_)-1.0))
-    glColor4dv(green);
-  else
-    glColor4dv(lt_green);
-  glColor4d(0.0, 0.0, 0.0, 0.75);
-
-
-  Point sll = window.screen_to_world(0, 0);
-  Point slr = window.screen_to_world(window.viewport_->width(), 0);
-  Point sul = window.screen_to_world(0, window.viewport_->height());
-  Point sur = window.screen_to_world(window.viewport_->width(), 
-                                     window.viewport_->height());
-
-  glBegin(GL_QUADS);
-  
-  glVertex3dv(&sll(0));
-  glVertex3dv(&slr(0));
-  glVertex3d(s==0?lr[0]:slr(0), s==1?lr[1]:slr(1), s==2?lr[2]:slr(2));
-  glVertex3d(s==0?lr[0]:sll(0), s==1?lr[1]:sll(1), s==2?lr[2]:sll(2));
-
-  glVertex3d(s==0?ur[0]:sul(0), s==1?ur[1]:sul(1), s==2?ur[2]:sul(2));
-  glVertex3d(s==0?ur[0]:sur(0), s==1?ur[1]:sur(1), s==2?ur[2]:sur(2));
-  glVertex3dv(&sur(0));
-  glVertex3dv(&sul(0));
-
-  glVertex3d(s==0?ll[0]:sll(0), s==1?ll[1]:sll(1), s==2?ll[2]:sll(2));
-  glVertex3dv(ll);
-  glVertex3dv(ul);
-  glVertex3d(s==0?ul[0]:sul(0), s==1?ul[1]:sul(1), s==2?ul[2]:sul(2));
-
-  glVertex3dv(lr);
-  glVertex3d(s==0?lr[0]:slr(0), s==1?lr[1]:slr(1), s==2?lr[2]:slr(2));
-  glVertex3d(s==0?ur[0]:sur(0), s==1?ur[1]:sur(1), s==2?ur[2]:sur(2));
-  glVertex3dv(ur);
-
-  //  glVertex3dv(ll);
-  //  glVertex3dv(lr);
-  //  glVertex3dv(ur);
-  //  glVertex3dv(ul);
-  glEnd();
-
-  glColor4dv(black);
   glEnable(GL_LINE_SMOOTH);
-  glLineWidth(5.0);
-  glBegin(GL_LINE_LOOP);
-  {
-    glVertex3dv(ll);
-    glVertex3dv(lr);
-    glVertex3dv(ur);
-    glVertex3dv(ul);
-  }
-  glEnd();
-  glDisable(GL_LINE_SMOOTH);
+  for (int pass = 2; pass < 5; ++pass) {
+    glColor4dv(colors[pass]);
+    glLineWidth(widths[pass]);    
 
-  glColor4dv(grey);
-  glEnable(GL_LINE_SMOOTH);
-  glLineWidth(3.0);
-  glBegin(GL_LINE_LOOP);
-  {
-    glVertex3dv(ll);
-    glVertex3dv(lr);
-    glVertex3dv(ur);
-    glVertex3dv(ul);
+    glBegin(GL_LINE_LOOP);
+    {
+      glVertex3dv(&ll(0));
+      glVertex3dv(&lr(0));
+      glVertex3dv(&ur(0));
+      glVertex3dv(&ul(0));
+    }
+    glEnd();
   }
-  glEnd();
-  glDisable(GL_LINE_SMOOTH);
-
-  glColor4dv(white);
-  glEnable(GL_LINE_SMOOTH);
   glLineWidth(1.0);
-  glBegin(GL_LINE_LOOP);
-  {
-    glVertex3dv(ll);
-    glVertex3dv(lr);
-    glVertex3dv(ur);
-    glVertex3dv(ul);
-  }
-  glEnd();
   glDisable(GL_LINE_SMOOTH);
 
-
-  glColor4dv(black);
+  widths[0] = 10.0;
+  widths[1] = 6.0;
+  widths[2] = 2.0;
+  
   glEnable(GL_POINT_SMOOTH);
-  glPointSize(8.0);
-  glBegin(GL_POINTS);
-  {
-    glVertex3dv(ll);
-    glVertex3dv(lr);
-    glVertex3dv(ur);
-    glVertex3dv(ul);
-    //    glVertex3dv(upper);
-    //glVertex3dv(lower);
-    //glVertex3dv(left);
-    //glVertex3dv(right);
+  for (int pass = 2; pass < 5; ++pass) {
+    glColor4dv(colors[pass]);
+    glPointSize(widths[pass]);
+    glBegin(GL_POINTS);
+    {
+      glVertex3dv(&ll(0));
+      glVertex3dv(&lr(0));
+      glVertex3dv(&ur(0));
+      glVertex3dv(&ul(0));
+    }
+    glEnd();
   }
-  glEnd();
-
-  glPointSize(6.0);
-  glColor4dv(yellow);
-  glBegin(GL_POINTS);
-  {
-    glVertex3dv(ll);
-    glVertex3dv(lr);
-    glVertex3dv(ur);
-    glVertex3dv(ul);
-    //    glVertex3dv(upper);
-    //glVertex3dv(lower);
-    //glVertex3dv(left);
-    //glVertex3dv(right);
-  }
-  glEnd();
 
   glDisable(GL_POINT_SMOOTH);
   glDisable(GL_BLEND);
-
-  compute_crop_pick_boxes(window);
-  //  set_window_cursor(window, get_pick_from_event(event));
+  CHECK_OPENGL_ERROR();
   return 0; 
 }
 
-
-void
-Painter::CropTool::compute_crop_pick_boxes(SliceWindow &window) 
-{
-  const int axis = window.axis_;
-  int p = window.x_axis();
-  int s = window.y_axis();
-  
-  Vector scale = painter_->current_volume_->scale();
-
-  Point ll, ur, lr, ul;
-  ll(0) = draw_bbox_.min().x()*scale[0];
-  ll(1) = draw_bbox_.min().y()*scale[1];
-  ll(2) = draw_bbox_.min().z()*scale[2];
-
-  ur(0) = draw_bbox_.max().x()*scale[0];
-  ur(1) = draw_bbox_.max().y()*scale[1];
-  ur(2) = draw_bbox_.max().z()*scale[2];
-
-  ll(axis) = int(window.slice_num_)*scale[axis];
-  ur(axis) = int(window.slice_num_)*scale[axis];
-  int i;
-  for (i = 0; i < 3; ++i) {
-    lr(i) = p==i?ur(i):ll(i);
-    ul(i) = s==i?ur(i):ll(i);
-  }
-  
-  ll = window.world_to_screen(ll);
-  lr = window.world_to_screen(lr);
-  ur = window.world_to_screen(ur);
-  ul = window.world_to_screen(ul);
-
-  Vector delta(3.0, 3.0, 1.0);
-  pick_boxes_.reserve(9);
-  pick_boxes_.push_back(BBox(ll-delta, ll+delta)); // Lower-Left 1
-  pick_boxes_.push_back(BBox(lr-delta, lr+delta)); // Lower-Right 2
-  pick_boxes_.push_back(BBox(ur-delta, ur+delta)); // Upper-right 3
-  pick_boxes_.push_back(BBox(ul-delta, ul+delta)); // Upper-Left 4
-  pick_boxes_.push_back(BBox(ll-delta, ul+delta)); // Left 5
-  pick_boxes_.push_back(BBox(ll-delta, lr+delta)); // Lower 6
-  pick_boxes_.push_back(BBox(lr-delta, ur+delta)); // Right 7
-  pick_boxes_.push_back(BBox(ul-delta, ur+delta)); // Upper 8
-  pick_boxes_.push_back(BBox(ll-delta, ur+delta)); // Entire Crop Box
-}
-
-void
-Painter::CropTool::update_bbox_from_gui() 
-{
-#if 0 // todo
-  draw_bbox_ = 
-    BBox(Point(double(Min(crop_min_x_(), crop_max_x_())),
-	       double(Min(crop_min_y_(), crop_max_y_())),
-	       double(Min(crop_min_z_(), crop_max_z_()))),
-	 Point(double(Max(crop_min_x_(), crop_max_x_())+1),
-	       double(Max(crop_min_y_(), crop_max_y_())+1),
-	       double(Max(crop_min_z_(), crop_max_z_())+1)));
-  bbox_ = draw_bbox_;
-#endif
-}
-
-void
-Painter::CropTool::update_bbox_to_gui() 
-{
-#if 0
-  crop_min_x_ = int(draw_bbox_.min().x());
-  crop_min_y_ = int(draw_bbox_.min().y());
-  crop_min_z_ = int(draw_bbox_.min().z());
-  crop_max_x_ = int(draw_bbox_.max().x()-1.0);
-  crop_max_y_ = int(draw_bbox_.max().y()-1.0);
-  crop_max_z_ = int(draw_bbox_.max().z()-1.0);
-#endif
-}
-
-
-int
-Painter::CropTool::get_pick_from_event(Event &event)
-{
-  Point pos(event.x_, event.y_, 0.0);
-  // Optimization: Check the last pick box first, 
-  // assuming it encloses all the previous pick boxes
-  if (!pick_boxes_.back().inside(pos)) return 0;
-  else for (unsigned int i = 0; i < pick_boxes_.size(); ++i)
-    if (pick_boxes_[i].inside(pos)) return i+1;
-  return 0; //pick_boxes.size();
-}
 
 void
 Painter::CropTool::set_window_cursor(SliceWindow &window, int cursor) 
@@ -685,26 +474,6 @@ Painter::CropTool::set_window_cursor(SliceWindow &window, int cursor)
 }
 
 
-pair<Vector, Vector>
-Painter::CropTool::get_crop_vectors(SliceWindow &window, int pick) 
-{
-
-  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
-  tmp[window.axis_] = 0;
-  const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
-  const int xax = window.x_axis();
-  const int yax = window.y_axis();
-  Vector x_delta(0.0, 0.0, 0.0), y_delta(0.0, 0.0, 0.0);
-  Vector scale = painter_->current_volume_->scale();
-  if (pick != 6 && pick != 8)
-    x_delta[xax] = one/scale[xax];
-  if (pick != 5 && pick != 7)
-    y_delta[yax] = -one/scale[yax];
-  
-  return make_pair(x_delta, y_delta);
-}
-
-
 Painter::FloodfillTool::FloodfillTool(Painter *painter) :
   PainterTool(painter, "Flood Fill"),
   value_(0.0),
@@ -720,34 +489,81 @@ Painter::FloodfillTool::~FloodfillTool()
 {
 }
 
-string *
-Painter::FloodfillTool::mouse_button_press(Event &event)
-{
-  NrrdVolume *volume = painter_->current_volume_;
-  if (!event.window_ || !painter_->current_volume_) 
-    return scinew string("No window or current layer");
-  
-  if (event.button_ == 1) {
-    vector<int> index = volume->world_to_index(event.position_);
-    if (!volume->index_valid(index)) return 0;
 
-    min_ = painter_->current_volume_->data_max_;
-    max_ = painter_->current_volume_->data_min_;
-    start_pos_ = event.position_;
+int
+Painter::FloodfillTool::do_event(Event &event) {
+  if (!event.window_ || !painter_->current_volume_) 
+    return FALLTHROUGH_E;
+
+  if (event.type_ == Event::KEY_PRESS_E &&
+      event.key_ == "q")
+    return QUIT_E;
+
+
+  if (event.type_ == Event::KEY_PRESS_E &&
+      event.key_ == " ") {
+    do_floodfill();
+    return QUIT_E;
   }
 
-  return mouse_motion(event);
+
+  NrrdVolume *volume = painter_->current_volume_;
+    
+  if (event.type_ == Event::BUTTON_PRESS_E) {
+    vector<int> index = volume->world_to_index(event.position_);
+    if (!volume->index_valid(index))
+      return FALLTHROUGH_E;
+    if (event.button(1)) {
+      min_ = volume->data_max_;
+      max_ = volume->data_min_;
+      start_pos_ = event.position_;
+    }
+    return HANDLED_E;
+  }
+  
+  if (event.type_ == Event::MOUSE_MOTION_E) {
+
+    vector<int> index = 
+      volume->world_to_index(event.position_);
+    if (!volume->index_valid(index)) 
+      return FALLTHROUGH_E;
+    
+    double val;
+    volume->get_value(index, val);
+    
+    if (event.button(1)) {
+      min_ = Min(min_, val);
+      max_ = Max(max_, val);
+      cerr << "Min: " << min_ << "  Max: " << max_ << std::endl;
+    }
+    
+    if (event.button(3)) {
+      value_ = val;
+      cerr << "value: " << value_ << std::endl;
+    }
+    painter_->redraw_all();
+    return HANDLED_E;
+  }
+  
+  return FALLTHROUGH_E;
 }
 
 
-string *
-Painter::FloodfillTool::mouse_button_release(Event &event)
-{
-  if (event.button_ != 1) return 0;
 
+int
+Painter::FloodfillTool::draw(SliceWindow &)
+{
+  return 0;
+}
+
+
+void
+Painter::FloodfillTool::do_floodfill()
+{
   NrrdVolume *volume = painter_->current_volume_;
   vector<int> index = volume->world_to_index(start_pos_);
-  if (!volume->index_valid(index)) return 0;
+  if (!volume->index_valid(index)) 
+    return;
 
   // Array to hold which indices to visit next
   vector<vector<int> > todo, oldtodo;
@@ -778,7 +594,7 @@ Painter::FloodfillTool::mouse_button_release(Event &event)
       painter_->for_each(&Painter::rebind_slice);
       painter_->redraw_all();
       TCLTask::unlock();
-      sleep(0);
+      Thread::yield();
       TCLTask::lock();
     }
       
@@ -822,39 +638,6 @@ Painter::FloodfillTool::mouse_button_release(Event &event)
 
   painter_->for_each(&Painter::rebind_slice);
   painter_->redraw_all();
-  return scinew string("Done");
-}
-
-string *
-Painter::FloodfillTool::mouse_motion(Event &event)
-{
-  NrrdVolume *volume = painter_->current_volume_;
-  if (!volume) return 0;
-  vector<int> index = volume->world_to_index(event.position_);
-  if (!volume->index_valid(index)) return 0;
-
-  double val;
-  volume->get_value(index, val);
-
-  if (event.button(1)) {
-    min_ = Min(min_, val);
-    max_ = Max(max_, val);
-    cerr << "Min: " << min_ << "  Max: " << max_ << std::endl;
-  }
-  
-  if (event.button(3)) {
-    value_ = val;
-    cerr << "value: " << value_ << std::endl;
-  }
-
-  
-  return 0;
-}
-
-string *
-Painter::FloodfillTool::draw(SliceWindow &window)
-{
-  return 0;
 }
 
 
@@ -944,109 +727,77 @@ Painter::StatisticsTool::StatisticsTool(Painter *painter) :
   PainterTool(painter, "Statistics"),
   standard_deviation_(0.0),
   mean_(0.0),
-  values_()
+  sum_(0.0),
+  squared_sum_(0.0),
+  count_(0)
 {
 }
 
 
-Painter::StatisticsTool::~StatisticsTool()
-{
-}
 
-// string *
-// Painter::StatisticsTool::mouse_button_press(Event &event)
-// {
-//   return mouse_motion(mouse);
-// }
-
-string *
-Painter::StatisticsTool::mouse_button_release(Event &event)
+int
+Painter::StatisticsTool::do_event(Event &event)
 {
+
   NrrdVolume *vol = painter_->current_volume_;
-  if (vol && event.state_ & Event::BUTTON_1_E) {
-    vol->clut_min_ = mean_ - standard_deviation_;
-    vol->clut_max_ = mean_ + standard_deviation_;
-    painter_->for_each(&Painter::rebind_slice);
-    painter_->redraw_all();
+  if (!vol || !event.window_)
+    return FALLTHROUGH_E;
 
-  } else if (vol && event.state_ & Event::BUTTON_2_E) {
+  if (event.type_ == Event::BUTTON_PRESS_E && 
+      event.button(2)) {
+
+    sum_ = 0;
+    squared_sum_ = 0;
+    count_ = 0;
+    mean_ = 0;
+    standard_deviation_ = 0;
+    
+
     vol->clut_min_ = vol->data_min_;
     vol->clut_max_ = vol->data_max_;
     painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
+    return HANDLED_E;
+  }
 
-  } 
-    
-  if (event.state_ & Event::BUTTON_3_E)
-    return new string ("Done");
-    
-  return 0;
-}
+  if ((event.type_ == Event::BUTTON_PRESS_E ||
+       event.type_ == Event::MOUSE_MOTION_E)  && 
+      event.button(1)) {
 
-string *
-Painter::StatisticsTool::mouse_motion(Event &event)
-{
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol) return 0;
-  if (event.state_ & Event::BUTTON_1_E) {
     vector<int> index = vol->world_to_index(event.position_);
-    if (!vol->index_valid(index)) return 0;
+    if (!vol->index_valid(index)) 
+      return FALLTHROUGH_E;
+
     double value;
     vol->get_value(index, value);
-    values_.push_back(value);
-    recompute();
+
+    sum_ += value;
+    squared_sum_ += value*value;
+    ++count_;
+
+    mean_ = sum_ / count_;
+    standard_deviation_ = sqrt(squared_sum_/count_-mean_*mean_);    
+
     vol->clut_min_ = mean_ - standard_deviation_;
     vol->clut_max_ = mean_ + standard_deviation_;
+
     painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
-
-  } else if (event.state_ & Event::BUTTON_2_E) {
-    values_.clear();
-    recompute();
+    return HANDLED_E;
   }
-  return 0;
+  return FALLTHROUGH_E;
 }
-
-void
-Painter::StatisticsTool::recompute() {
-  mean_ = 0.0;
-  for (unsigned int n = 0; n < values_.size(); ++n)
-    mean_ += values_[n];
-  mean_ /= values_.size();
-  double variance = 0.0;
-  for (unsigned int n = 0; n < values_.size(); ++n)
-    variance += (values_[n]-mean_)*(values_[n]-mean_);
-  variance /= values_.size();
-  standard_deviation_ = sqrt(variance);
-#if 0
-  cerr << "size: " << values_.size() << std::endl;
-  cerr << "standard_deviation: " << standard_deviation_ << std::endl;
-  cerr << "variance: " << variance << std::endl;
-
-  double temp = 0.0;
-  for (unsigned int n = 0; n < values_.size(); ++n)
-    temp += values_[n]*values_[n];
-  temp /= values_.size();
-  cerr << "temp: " << temp << std::endl;
-  double temp2 = -(mean_*mean_) + temp;
-  cerr << "temp2: " << temp2 << std::endl << std::endl;
-#endif
-
   
-}
 
-string *
+int
 Painter::StatisticsTool::draw(SliceWindow &window)
 {
-  if (&window != painter_->event_.window_) return 0;
-  string std = "Standard Deviation: "+to_string(standard_deviation_);
-  string mean = "Mean: "+to_string(mean_);
-  FreeTypeTextTexture text(mean, painter_->fonts_["default"]);
-  text.draw(painter_->event_.x_, painter_->event_.y_, FreeTypeTextTexture::nw);
-  text.set(std);
-  text.draw(painter_->event_.x_, painter_->event_.y_+text.height()+2, 
-            FreeTypeTextTexture::nw);
-                      
+  if (painter_->font1_ && &window == painter_->event_.window_)
+    painter_->font1_->render("Mean: "+to_string(mean_)+
+                             "\nStandard Deviation: "+
+                             to_string(standard_deviation_), 
+                             painter_->event_.x_, painter_->event_.y_,
+                             TextRenderer::NW | TextRenderer::SHADOW);
   return 0;
 }
 
@@ -1085,6 +836,11 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
     nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
                     "seed_point2", to_string(seed_[3]).c_str());
 
+    unsigned long ptr = (unsigned long)painter_;
+    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+                    "progress_ptr", to_string(ptr).c_str());
+
+
     NrrdVolume *temp;
     string name = "ITK Confidence Connected";
     temp = new NrrdVolume(volume_, name, 2);
@@ -1116,7 +872,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
   return FALLTHROUGH_E;
 }
 
-string *
+int
 Painter::ITKConfidenceConnectedImageFilterTool::draw(Painter::SliceWindow &window)
 {
   if (!volume_ || !volume_->index_valid(seed_)) return 0;
