@@ -635,8 +635,8 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
       nnodes[0] = inodes[0];
       nnodes[1] = inodes[1];
-      nnodes[2] = inodes[7];
-      nnodes[3] = inodes[6];
+      nnodes[2] = inodes[6];
+      nnodes[3] = inodes[7];
       clipped->add_elem(nnodes);
     }
 
