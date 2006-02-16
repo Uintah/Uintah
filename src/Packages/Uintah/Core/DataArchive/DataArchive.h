@@ -339,7 +339,10 @@ private:
   void queryVariables( const ProblemSpecP vars, vector<string>& names,
 		       vector<const TypeDescription*>& types);
 
-  
+  // Accesses the d_tstop array, loading the timestep.xml as needed
+  // WARNING: Do not access d_tstop directly
+  ProblemSpecP getTimestepCache(int i);
+
   TimeHashMaps* getTopLevelVarHashMaps()
   {
     if (d_varHashMaps == NULL) {

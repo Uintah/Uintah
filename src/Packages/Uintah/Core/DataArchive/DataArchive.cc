@@ -69,7 +69,8 @@ DataArchive::~DataArchive()
   // need to delete the nodes
   int size = static_cast<int>(d_tstop.size());
   for (int i = 0; i < size; i++) {
-    d_tstop[i]->releaseDocument();
+    if(d_tstop[i])
+      d_tstop[i]->releaseDocument();
   }
 }
 
@@ -147,27 +148,46 @@ DataArchive::queryTimesteps( std::vector<int>& index,
             throw InternalError("DataArchive::queryTimesteps:timestep href not found",
                                 __FILE__, __LINE__);
           
-          string ts = d_filebase + "/" + tsfile;
-          ProblemSpecReader psr(ts.c_str());
-          
-          ProblemSpecP top = psr.readInputFile();
-          
-          d_tstop.push_back(top);
-          d_tsurl.push_back(ts);
-          ProblemSpecP time = top->findBlock("Time");
-          if(time == 0)
-            throw InternalError("DataArchive::queryTimesteps:Cannot find Time block",
-                                __FILE__, __LINE__);
-          
+
           int timestepNumber;
-          if(!time->get("timestepNumber", timestepNumber))
-            throw InternalError("DataArchive::queryTimesteps:Cannot find timestepNumber",
-                                __FILE__, __LINE__);
-          
           double currentTime;
-          if(!time->get("currentTime", currentTime))
-            throw InternalError("DataArchive::queryTimesteps:Cannot find currentTime",
-                                __FILE__, __LINE__);
+          string ts = d_filebase + "/" + tsfile;
+
+          if(attributes["delt"] == "" || attributes["time"] == "") {
+            // This block if for earlier versions of the index.xml file that do not
+            // contain delt and time information as attributes of the timestep field.
+
+            ProblemSpecReader psr(ts.c_str());
+            
+            ProblemSpecP top = psr.readInputFile();
+            
+            d_tstop.push_back(top);
+            d_tsurl.push_back(ts);
+            ProblemSpecP time = top->findBlock("Time");
+            if(time == 0)
+              throw InternalError("DataArchive::queryTimesteps:Cannot find Time block",
+                                  __FILE__, __LINE__);
+            
+            if(!time->get("timestepNumber", timestepNumber))
+              throw InternalError("DataArchive::queryTimesteps:Cannot find timestepNumber",
+                                  __FILE__, __LINE__);
+            
+            if(!time->get("currentTime", currentTime))
+              throw InternalError("DataArchive::queryTimesteps:Cannot find currentTime",
+                                  __FILE__, __LINE__);
+          } else {
+            // This block will read delt and time info from the index.xml file instead of
+            // opening every single timestep.xml file to get this information
+            istringstream timeVal(attributes["time"]);
+            istringstream timestepVal(t->getNodeValue());
+
+            timeVal >> currentTime;
+            timestepVal >> timestepNumber;
+
+            d_tstop.push_back(0);
+            d_tsurl.push_back(ts);
+          }
+
           d_tsindex.push_back(timestepNumber);
           d_tstimes.push_back(currentTime);
         }
@@ -196,7 +216,7 @@ DataArchive::getTimestep(double searchtime)
       break;
   if(i == (int)d_tstimes.size())
     return 0; 
-  return d_tstop[i];
+  return getTimestepCache(i);
 }
 
 ProblemSpecP
@@ -524,6 +544,17 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, string url,
   d_lock.unlock();  
 }
 
+ProblemSpecP
+DataArchive::getTimestepCache(int i)
+{
+  if(!d_tstop[i]) {
+    ProblemSpecReader psr(d_tsurl[i].c_str());      
+    d_tstop[i] = psr.readInputFile();
+  }
+
+  return d_tstop[i];
+}
+
 void 
 DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
                                long64 particleID, int matlIndex,
@@ -617,7 +648,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   *pTime = times[i];
   timestep = indices[i];
 
-  d_restartTimestepDoc = d_tstop[i];
+  d_restartTimestepDoc = getTimestepCache(i);
   d_restartTimestepURL = d_tsurl[i];
 
   if (lb)
@@ -632,9 +663,9 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   ASSERTL3(d_tsurl.size() == d_tstop.size());
 
   PatchHashMaps patchMap;
-  patchMap.init(d_tsurl[i], d_tstop[i], d_processor, d_numProcessors);
+  patchMap.init(d_tsurl[i], getTimestepCache(i), d_processor, d_numProcessors);
 
-  ProblemSpecP timeBlock = d_tstop[i]->findBlock("Time");
+  ProblemSpecP timeBlock = getTimestepCache(i)->findBlock("Time");
   if (!timeBlock->get("delt", *pDelt))
     *pDelt = 0;
   

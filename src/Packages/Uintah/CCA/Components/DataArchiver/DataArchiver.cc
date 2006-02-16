@@ -1124,11 +1124,14 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         // add timestep info
         string timestepindex = tname.str()+"/timestep.xml";      
         
-        ostringstream value;
+        ostringstream value, timeVal, deltVal;
         value << timestep;
         ProblemSpecP newElem = ts->appendElement("timestep",value.str().c_str());
-
         newElem->setAttribute("href", timestepindex.c_str());
+        deltVal << delt;
+        newElem->setAttribute("delt", deltVal.str());
+        timeVal << d_tempElapsedTime;
+        newElem->setAttribute("time", timeVal.str());
         ts->appendText("\n");
       }
       
