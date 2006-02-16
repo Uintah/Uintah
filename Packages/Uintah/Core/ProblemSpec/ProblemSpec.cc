@@ -813,19 +813,19 @@ ProblemSpec::getWithDefault(const string& name,
 ProblemSpecP ProblemSpec::appendElement(const char* name, const string& value,
                                 bool trail /*=0*/, int tabs /*=1*/) 
 {
-  ostringstream ostr;
-  ostr.clear();
-  ostr << "\n";
-  for (int i = 0; i < tabs; i++)
-    ostr << "\t";
+//   ostringstream ostr;
+//   ostr.clear();
+//   ostr << "\n";
+//   for (int i = 0; i < tabs; i++)
+//     ostr << "\t";
 
-  appendText(ostr.str().c_str());
+//   appendText(ostr.str().c_str());
   
   xmlNode* newnode = xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
   
-  if (trail) {
-    appendText("\n");
-  }
+//   if (trail) {
+//     appendText("\n");
+//   }
   return scinew ProblemSpec(newnode, d_write);
 }
 
@@ -1140,14 +1140,14 @@ ProblemSpecP
 ProblemSpec::appendChild(const char *str, 
                          bool lead /*=0*/, int tabs /*=0*/) 
 {
-  ostringstream ostr;
-  ostr.clear();
-  if (lead)
-    ostr << "\n";
-  for (int i = 0; i < tabs; i++)
-    ostr << "\t";
+//   ostringstream ostr;
+//   ostr.clear();
+//   if (lead)
+//     ostr << "\n";
+//   for (int i = 0; i < tabs; i++)
+//     ostr << "\t";
 
-  appendText(ostr.str().c_str());
+//   appendText(ostr.str().c_str());
   
   xmlNode* elt = xmlNewChild(d_node, 0, BAD_CAST str, 0);
   
@@ -1182,6 +1182,7 @@ void
 ProblemSpec::output(const char* filename) const 
 {
   if (filename) {
+    xmlKeepBlanksDefault(0);
     xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
   }
 }
