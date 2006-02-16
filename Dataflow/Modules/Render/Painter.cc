@@ -400,6 +400,8 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
 
 
   for (int a = 0; a < nrrd_->nrrd->dim; ++a) {
+    if (nrrd_->nrrd->axis[a].center == nrrdCenterUnknown)
+      nrrd_->nrrd->axis[a].center = nrrdCenterNode;
     if (nrrd_->nrrd->axis[a].min > nrrd_->nrrd->axis[a].max)
       SWAP(nrrd_->nrrd->axis[a].min,nrrd_->nrrd->axis[a].max);
     if (nrrd_->nrrd->axis[a].spacing < 0.0)
@@ -454,7 +456,6 @@ Painter::Painter(GuiContext* ctx) :
   current_volume_(0),
   undo_volume_(0),
   colormaps_(),
-  tool_(0),
   tools_(),
   anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
   show_grid_(ctx->subVar("show_grid"), 1),
@@ -557,12 +558,6 @@ Painter::render_window(SliceWindow &window) {
   }
 
   profiler("render_guide_lines");
-
-  if (tool_) {
-    tool_->draw(window);
-    if (event_.window_ == &window)
-      tool_->draw_mouse_cursor(event_);
-  }
 
   for (unsigned int t = 0; t < tools_.size(); ++t) {
     tools_[t]->draw(window);
@@ -984,7 +979,7 @@ vector<int>
 Painter::NrrdVolume::max_index() {
   vector<int> max_index(nrrd_->nrrd->dim,0);
   for (int a = 0; a < nrrd_->nrrd->dim; ++a)
-    max_index[a] = nrrd_->nrrd->axis[a].size-1;
+    max_index[a] = nrrd_->nrrd->axis[a].size;
   return max_index;
 }
 
@@ -1302,11 +1297,7 @@ Painter::SliceWindow::render_text()
     filter = filter + ".";
     font1.render(filter, xoff+2+1, vh-2-yoff-1,
                  TextRenderer::NW | TextRenderer::SHADOW);
-  } else if (painter_->tool_)
-    font1.render(painter_->tool_->get_name(), 
-                 xoff+2+1, vh-2-yoff-1, 
-                 TextRenderer::NW | TextRenderer::SHADOW);
-  else if (painter_->tools_.size())
+  } else if (painter_->tools_.size())
     font1.render(painter_->tools_.back()->get_name(), 
                  xoff+2+1, vh-2-yoff-1, 
                  TextRenderer::NW | TextRenderer::SHADOW);
@@ -1703,20 +1694,27 @@ Painter::NrrdVolume::point_to_index(const Point &p) {
 
 vector<double> 
 Painter::NrrdVolume::vector_to_index(const Vector &v) {
-  DenseMatrix transform = transform_;
-  ColumnMatrix index_matrix(transform.ncols());
-  ColumnMatrix world_coords(transform.nrows());
-  for (int i = 0; i < transform.nrows(); ++i)
-    if (i > 0 && i < 4) 
-      world_coords[i] = v[i-1];
-    else       
-      world_coords[i] = 0.0;;
-  int tmp, tmp2;
-  transform.mult_transpose(world_coords, index_matrix, tmp, tmp2);
-  vector<double> return_val(index_matrix.nrows()-1);
-  for (unsigned int i = 0; i < return_val.size(); ++i)
-    return_val[i] = index_matrix[i];
-  return return_val;
+  Point zero(0,0,0);
+  vector<double> zero_idx = point_to_index(zero);
+  vector<double> idx = point_to_index(v.asPoint());
+  for (unsigned int i = 0; i < zero_idx.size(); ++i) 
+    idx[i] = idx[i] - zero_idx[i];
+  return idx;
+    
+//   DenseMatrix transform = transform_;
+//   ColumnMatrix index_matrix(transform.ncols());
+//   ColumnMatrix world_coords(transform.nrows());
+//   for (int i = 0; i < transform.nrows(); ++i)
+//     if (i > 0 && i < 4) 
+//       world_coords[i] = v[i-1];
+//     else       
+//       world_coords[i] = 0.0;;
+//   int tmp, tmp2;
+//   transform.mult_transpose(world_coords, index_matrix, tmp, tmp2);
+//   vector<double> return_val(index_matrix.nrows()-1);
+//   for (unsigned int i = 0; i < return_val.size(); ++i)
+//     return_val[i] = index_matrix[i];
+//   return return_val;
 }
 
 
@@ -1792,56 +1790,44 @@ Painter::send_data()
 
 
 
-bool
-Painter::receive_filter_data()
+void
+Painter::receive_filter_bundles(Bundles &bundles)
 {   
-  if (!filter_) 
-    return false;
-
   BundleIPort *filter_port = (BundleIPort *)get_iport("Filter Data");
   ASSERT(filter_port);
   BundleHandle bundle = 0;
   filter_port->get(bundle);
   if (bundle.get_rep()) 
-    bundles_.push_back(bundle);
-  
-  return true;
+    bundles.push_back(bundle);
 }
 
-  
 void
-Painter::execute()
+Painter::receive_normal_bundles(Bundles &bundles)
 {
-  update_state(Module::JustStarted);
-  update_state(Module::NeedData);
-
   BundleHandle bundle = 0;
-  bundles_.clear();
-
-  if (filter_)
-    send_data();
-
-  receive_filter_data();
-
   port_range_type prange = get_iports("Paint Data");
   port_map_type::iterator pi = prange.first;
   while (pi != prange.second) {
     BundleIPort *iport = (BundleIPort *)get_iport(pi++->second);
     
     if (iport && iport->get(bundle) && bundle.get_rep())
-      bundles_.push_back(bundle);
+      bundles.push_back(bundle);
   }
-    
+}
+  
+void
+Painter::extract_data_from_bundles(Bundles &bundles)
+{
   vector<NrrdDataHandle> nrrds;
   vector<string> nrrd_names;
   colormaps_.clear();
   colormap_names_.clear();
 
-  for (unsigned int b = 0; b < bundles_.size(); ++b) {
-    int numNrrds = bundles_[b]->numNrrds();
+  for (unsigned int b = 0; b < bundles.size(); ++b) {
+    int numNrrds = bundles[b]->numNrrds();
     for (int n = 0; n < numNrrds; n++) {
-      string name = bundles_[b]->getNrrdName(n);
-      NrrdDataHandle nrrdH = bundles_[b]->getNrrd(name);
+      string name = bundles[b]->getNrrdName(n);
+      NrrdDataHandle nrrdH = bundles[b]->getNrrd(name);
       if (!nrrdH.get_rep()) continue;
       if (nrrdH->nrrd->dim < 2)
       {
@@ -1852,10 +1838,10 @@ Painter::execute()
       nrrd_names.push_back(name);
     }
     
-    int numColormaps = bundles_[b]->numColorMaps();
+    int numColormaps = bundles[b]->numColorMaps();
     for (int n = 0; n < numColormaps; n++) {
-      const string name = bundles_[b]->getColorMapName(n);
-      ColorMapHandle cmap = bundles_[b]->getColorMap(name);
+      const string name = bundles[b]->getColorMapName(n);
+      ColorMapHandle cmap = bundles[b]->getColorMap(name);
       if (cmap.get_rep()) {
         colormaps_[name] = cmap;
         colormap_names_.push_back(name);
@@ -1882,10 +1868,24 @@ Painter::execute()
     volume_map_[name]->keep_ = 1;
   }
   gui->unlock();
+}
 
+
+
+void
+Painter::execute()
+{
+  update_state(Module::JustStarted);
+  update_state(Module::NeedData);
+
+  Bundles bundles;
+  if (filter_) {
+    send_data();
+    receive_filter_bundles(bundles);
+  }
+  receive_normal_bundles(bundles);
+  extract_data_from_bundles(bundles);
   recompute_volume_list();
-
-
   if (!filter_)
     send_data();
 
@@ -1957,45 +1957,45 @@ Painter::Event::alt()
 }
 
 void
-Painter::update_event_state(GuiArgs &args, bool reset) {
-  ASSERT(layouts_.find(args[3]) != layouts_.end());
-  WindowLayout &layout = *layouts_[args[3]];
+Painter::Event::update_state(GuiArgs &args, Painter &painter) {
+  ASSERT(painter.layouts_.find(args[3]) != painter.layouts_.end());
+  Painter::WindowLayout &layout = *painter.layouts_[args[3]];
 
-  event_.state_ = args.get_int(5);
+  state_ = args.get_int(5);
 
   if (args[2] == "motion")
-    event_.type_ = Event::MOUSE_MOTION_E;
+    type_ = MOUSE_MOTION_E;
   else if (args[2] == "button")
-    event_.type_ = Event::BUTTON_PRESS_E;
+    type_ = BUTTON_PRESS_E;
   else if (args[2] == "release")
-    event_.type_ = Event::BUTTON_RELEASE_E;
+    type_ = BUTTON_RELEASE_E;
   else if (args[2] == "keydown")
-    event_.type_ = Event::KEY_PRESS_E;
+    type_ = KEY_PRESS_E;
   else if (args[2] == "keyup")
-    event_.type_ = Event::KEY_RELEASE_E;
+    type_ = KEY_RELEASE_E;
   else if (args[2] == "enter")
-    event_.type_ = Event::FOCUS_IN_E;
+    type_ = FOCUS_IN_E;
   else if (args[2] == "leave")
-    event_.type_ = Event::FOCUS_OUT_E;
+    type_ = FOCUS_OUT_E;
 
 
   if (args[2] == "keydown" || args[2] == "keyup") {
     TCLKeysym_t::iterator keysym = tcl_keysym.find(args[4]);
 
     if (keysym != tcl_keysym.end()) {
-      event_.key_ = "";
-      event_.key_.push_back(keysym->second);
+      key_ = "";
+      key_.push_back(keysym->second);
     } else {
-      event_.key_ = args[4];
+      key_ = args[4];
     }
 
 
     if (args[2] == "keydown") 
-      event_.keys_.insert(event_.key_);
+      keys_.insert(key_);
     else {
-      set<string>::iterator pos = event_.keys_.find(event_.key_);
-      if (pos != event_.keys_.end())
-        event_.keys_.erase(pos);
+      set<string>::iterator pos = keys_.find(key_);
+      if (pos != keys_.end())
+        keys_.erase(pos);
       else {
         return;
       }
@@ -2006,98 +2006,81 @@ Painter::update_event_state(GuiArgs &args, bool reset) {
   
   if (args[2] != "motion") {
     // The button parameter may be invalid on motion events (mainly OS X)
-    event_.button_ = args.get_int(4);
-    // Button presses don't set state,
-    // set to make Event::button_down() method work on press events
-    switch (event_.button_) {
-    case 1: event_.state_ |= Event::BUTTON_1_E; break;
-    case 2: event_.state_ |= Event::BUTTON_2_E; break;
-    case 3: event_.state_ |= Event::BUTTON_3_E; break;
-    case 4: event_.state_ |= Event::BUTTON_4_E; break;
-    case 5: event_.state_ |= Event::BUTTON_5_E; break;
+    // Button presses don't set state correctly, so manually set state_ here
+    // to make Event::button() method work on press events
+    button_ = args.get_int(4);
+    switch (button_) {
+    case 1: state_ |= BUTTON_1_E; break;
+    case 2: state_ |= BUTTON_2_E; break;
+    case 3: state_ |= BUTTON_3_E; break;
+    case 4: state_ |= BUTTON_4_E; break;
+    case 5: state_ |= BUTTON_5_E; break;
     default: break;
     }
   }
 
-  event_.X_ = args.get_int(6);
-  event_.Y_ = args.get_int(7);
-  event_.x_ = args.get_int(8);
-  event_.y_ = layout.opengl_->height() - 1 - args.get_int(9);
+  X_ = args.get_int(6);
+  Y_ = args.get_int(7);
+  x_ = args.get_int(8);
+  y_ = layout.opengl_->height() - 1 - args.get_int(9);
 
-  event_.last_window_ = event_.window_;
-  event_.window_ = 0;
-  for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-    SliceWindow *window = layout.windows_[w];
-    if (&layout == current_layout_ && 
-        event_.x_ >= window->viewport_->x() && 
-        (event_.x_ <  window->viewport_->x() + 
-         window->viewport_->width()) &&
-        (event_.y_ >= window->viewport_->y() &&
-         event_.y_ <  window->viewport_->y() + 
-         window->viewport_->height()))
-    {
-      event_.window_ = window;
-      break;
+  last_window_ = window_;
+  window_ = 0;
+  SliceWindows::iterator window = layout.windows_.begin();
+  while (window != layout.windows_.end() && !window_) {
+    if (x_ >= (*window)->viewport_->x() && 
+        x_ <  (*window)->viewport_->x() + (*window)->viewport_->width() &&
+        y_ >= (*window)->viewport_->y() &&
+        y_ <  (*window)->viewport_->y() + (*window)->viewport_->height()) {
+      
+      window_ = (*window);
+      position_ = window_->screen_to_world(x_, y_);
     }
+    ++window;
   }
-
-
-  if (reset) {
-    event_.pick_x_ = event_.X_;
-    event_.pick_y_ = event_.Y_;
-  }    
-
-  event_.dx_ = event_.X_ - event_.pick_x_;
-  event_.dy_ = event_.Y_ - event_.pick_y_;
-  if (event_.window_) 
-    event_.position_ = event_.window_->screen_to_world(event_.x_, event_.y_);
 }
 
 
 
 void
 Painter::handle_gui_mouse_button_press(GuiArgs &args) {
-  update_event_state(args, true);
   if (!event_.window_) return;
 
-  if (!tool_) {
-    switch (event_.button_) {
-    case 1:
-      if (event_.shift())
-        tools_.push_back(new PanTool(this));
-      else
-        tools_.push_back(new CLUTLevelsTool(this));
-      break;
-      
-    case 2:
-      if (event_.shift())
-        tools_.push_back(new AutoviewTool(this));
-      else if (!tool_)
-        tools_.push_back(new ProbeTool(this));
-      break;
-    case 3:
-      if (event_.shift())
-        tools_.push_back(new ZoomTool(this));
-      break;
-    case 4:
-      if (event_.control()) 
-        event_.window_->zoom_in();
-      else
-        event_.window_->next_slice();
-      break;
-      
-    case 5:
-      if (event_.shift())
-        event_.window_->zoom_out();
-      else
-        event_.window_->prev_slice();
-      break;
-      
-    default: 
-      break;
-    }
+  switch (event_.button_) {
+  case 1:
+    if (event_.shift())
+      tools_.push_back(new PanTool(this));
+    else
+      tools_.push_back(new CLUTLevelsTool(this));
+    break;
+    
+  case 2:
+    if (event_.shift())
+      tools_.push_back(new AutoviewTool(this));
+    else
+      tools_.push_back(new ProbeTool(this));
+    break;
+  case 3:
+    if (event_.shift())
+      tools_.push_back(new ZoomTool(this));
+    break;
+  case 4:
+    if (event_.control()) 
+      event_.window_->zoom_in();
+    else
+      event_.window_->next_slice();
+    break;
+    
+  case 5:
+    if (event_.shift())
+      event_.window_->zoom_out();
+    else
+      event_.window_->prev_slice();
+    break;
+    
+  default: 
+    break;
   }
-
 
   int tool = tools_.size();
   while (tool > 0) {
@@ -2120,45 +2103,9 @@ Painter::handle_gui_mouse_button_press(GuiArgs &args) {
       break;
     }
   }
-
-
-  if (tool_) {
-    string *err = tool_->mouse_button_press(event_);
-    if (err) {
-      error(*err);
-      delete err;
-      delete tool_;
-      tool_ = 0;
-    }
-  }
 }
 
 
-void
-Painter::handle_gui_mouse_motion(GuiArgs &args) {
-  update_event_state(args);
-  if (tool_)
-    tool_->mouse_motion(event_);
-  if (event_.window_)
-    redraw_window(*event_.window_);
-}
-
-
-
-
-void
-Painter::handle_gui_mouse_button_release(GuiArgs &args) {
-  update_event_state(args);
-
-  if (tool_) {
-    string *err = tool_->mouse_button_release(event_);
-    if (err && *err == "Done") {
-      delete tool_;
-      tool_ = 0;
-    }
-  }
-}
-  
   
 void
 Painter::handle_gui_keypress(GuiArgs &args) {
@@ -2166,7 +2113,6 @@ Painter::handle_gui_keypress(GuiArgs &args) {
   if (!event_.window_) return;
   SliceWindow &window = *event_.window_;
   string &key = event_.key_;
-  PainterTool *oldtool = tool_;
   unsigned int numtools = tools_.size();
   if (key == "=" || key == "+") window.zoom_in();
   else if (key == "-" || key == "_") window.zoom_out();
@@ -2190,10 +2136,6 @@ Painter::handle_gui_keypress(GuiArgs &args) {
   else if (key == "s") want_to_execute();
   else if (key == "u") undo_volume();
   else if (key == "q") { 
-    if (tool_) {
-      delete tool_;
-      tool_ = 0;
-    }
     for (unsigned int t = 0; t < tools_.size(); ++t)
       delete tools_[t];
     tools_.clear();
@@ -2225,8 +2167,12 @@ Painter::handle_gui_keypress(GuiArgs &args) {
         name = base + " "+to_string(++i);
       current_volume_ = copy_current_volume(name,1);
     }
-  }
-  else if (key == "b") {
+  } else if (key == "a") {
+    if (tools_.empty())
+      tools_.push_back(new CropTool(this));
+  } else if (key == "f") {
+    tools_.push_back(new FloodfillTool(this));
+  } else if (key == "b") {
     if (tools_.empty())
       tools_.push_back(new BrushTool(this));
   } else if (key == "h") {
@@ -2243,8 +2189,7 @@ Painter::handle_gui_keypress(GuiArgs &args) {
   else if (key == "j") ITKBinaryDilateErodeTool temp(this);
   else if (key == "d") ITKCurvatureAnisotropicDiffusionTool temp(this);
   else if (key == "l") { 
-    if (!tool_) 
-      tool_ = scinew StatisticsTool(this);
+    tools_.push_back(new StatisticsTool(this));
   }
 
   else if (key == "p") { 
@@ -2292,7 +2237,7 @@ Painter::handle_gui_keypress(GuiArgs &args) {
         return;
       }
   }
-  if (oldtool != tool_ || numtools != tools_.size())
+  if (numtools != tools_.size())
     redraw_all();
 }
 
@@ -2313,7 +2258,10 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
     
 
   if (args[1] == "event") {
-    update_event_state(args);
+    event_.update_state(args, *this);
+    if (event_.type_ == Event::MOUSE_MOTION_E&& event_.window_)
+      redraw_window(*event_.window_);
+
     int tool = tools_.size();
     while (tool > 0) {
       --tool;
@@ -2339,9 +2287,7 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
 
     if (args[2] == "enter")        handle_gui_mouse_enter(args);
     else if (args[2] == "leave")   handle_gui_mouse_leave(args);
-    else if (args[2] == "motion")  handle_gui_mouse_motion(args);
-    else if (args[2] == "button") handle_gui_mouse_button_press(args);
-    else if (args[2] == "release") handle_gui_mouse_button_release(args);
+    else if (args[2] == "button")  handle_gui_mouse_button_press(args);
     else if (args[2] == "keydown") handle_gui_keypress(args);
   }
   else if (args[1] == "set_font_sizes") set_font_sizes(font_size_());
