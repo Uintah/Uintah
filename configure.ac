@@ -4557,7 +4557,7 @@ if test "$with_teem"; then
     AC_MSG_WARN(Teem is already required - you do not need to specify --with-teem.)
   else
     # If --with-teem has a parameter, then use it
-    _sci_lib="$with_teem/lib"
+    _sci_lib="$with_teem"
     _sci_inc="$with_teem/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
