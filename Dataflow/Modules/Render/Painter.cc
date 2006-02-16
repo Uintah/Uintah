@@ -1804,15 +1804,12 @@ Painter::receive_filter_bundles(Bundles &bundles)
 void
 Painter::receive_normal_bundles(Bundles &bundles)
 {
+  BundleIPort *filter_port = (BundleIPort *)get_iport("Paint Data");
+  ASSERT(filter_port);
   BundleHandle bundle = 0;
-  port_range_type prange = get_iports("Paint Data");
-  port_map_type::iterator pi = prange.first;
-  while (pi != prange.second) {
-    BundleIPort *iport = (BundleIPort *)get_iport(pi++->second);
-    
-    if (iport && iport->get(bundle) && bundle.get_rep())
-      bundles.push_back(bundle);
-  }
+  filter_port->get(bundle);
+  if (bundle.get_rep()) 
+    bundles.push_back(bundle);
 }
   
 void
