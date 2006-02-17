@@ -2016,7 +2016,7 @@ template <class Basis>
 typename HexVolMesh<Basis>::Elem::index_type
 HexVolMesh<Basis>::add_elem(typename Node::array_type a)
 {
-  ASSERTMSG(a.size() == 6, "Tried to add non-hex element.");
+  ASSERTMSG(a.size() == 8, "Tried to add non-hex element.");
   cells_.push_back(a[0]);
   cells_.push_back(a[1]);
   cells_.push_back(a[2]);
