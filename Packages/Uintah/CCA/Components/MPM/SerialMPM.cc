@@ -259,7 +259,7 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");
     
-  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM",true,1);
+  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
   for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
     MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);

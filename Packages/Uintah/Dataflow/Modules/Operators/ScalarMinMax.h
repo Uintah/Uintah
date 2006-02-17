@@ -144,6 +144,7 @@ public:
   virtual ~ScalarMinMax();
   virtual void execute();
 private:
+  GuiString gui_field_name_;
   GuiString gui_min_data_;
   GuiString gui_max_data_;
   GuiString gui_min_index_;
@@ -182,10 +183,14 @@ ScalarMinMax::get_info( Reporter * reporter, FieldHandle f)
   algo->execute(f, min_val, min_idx, n_min_vals,
 		max_val, max_idx, n_max_vals);
 
-  gui_min_data_.set( to_string( min_val ));
-  gui_max_data_.set( to_string( max_val ));
-  gui_min_values_.set( to_string( n_min_vals ));
-  gui_max_values_.set( to_string( n_max_vals ));
+  string field_name = "Not Specified";
+  f->get_property("varname",field_name);
+
+  gui_field_name_.set( field_name );
+  gui_min_data_.set( to_string( min_val ) );
+  gui_max_data_.set( to_string( max_val ) );
+  gui_min_values_.set( to_string( n_min_vals ) );
+  gui_max_values_.set( to_string( n_max_vals ) );
 
   ostringstream min_os, max_os;
   min_os<<min_idx;

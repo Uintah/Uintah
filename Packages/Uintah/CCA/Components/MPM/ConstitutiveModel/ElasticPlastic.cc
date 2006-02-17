@@ -224,22 +224,22 @@ void ElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","elastic_plastic");
   }
   
-  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk,false,4);
-  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
-  cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha,false,4);
-  cm_ps->appendElement("taylor_quinney_coeff",d_initialData.Chi,false,4);
-  cm_ps->appendElement("isothermal", d_doIsothermal,false,4);
-  cm_ps->appendElement("tolerance",d_tol,false,4);
-  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
+  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear);
+  cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha);
+  cm_ps->appendElement("taylor_quinney_coeff",d_initialData.Chi);
+  cm_ps->appendElement("isothermal", d_doIsothermal);
+  cm_ps->appendElement("tolerance",d_tol);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
   cm_ps->appendElement("initial_material_temperature",
-                       d_initialMaterialTemperature,false,4);
+                       d_initialMaterialTemperature);
   cm_ps->appendElement("check_TEPLA_failure_criterion",
-                       d_checkTeplaFailureCriterion,false,4);
-  cm_ps->appendElement("do_melting",d_doMelting,false,4);
+                       d_checkTeplaFailureCriterion);
+  cm_ps->appendElement("do_melting",d_doMelting);
 
   d_yield->outputProblemSpec(cm_ps);
   d_stable->outputProblemSpec(cm_ps);
@@ -249,28 +249,26 @@ void ElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   d_shear->outputProblemSpec(cm_ps);
   d_melt->outputProblemSpec(cm_ps);
 
-  cm_ps->appendElement("evolve_porosity",d_evolvePorosity,false,4);
-  cm_ps->appendElement("initial_mean_porosity",d_porosity.f0,false,4);
-  cm_ps->appendElement("initial_std_porosity",d_porosity.f0_std,false,4);
-  cm_ps->appendElement("critical_porosity",d_porosity.fc,false,4);
-  cm_ps->appendElement("frac_nucleation",d_porosity.fn,false,4);
-  cm_ps->appendElement("meanstrain_nucleation",d_porosity.en,false,4);
-  cm_ps->appendElement("stddevstrain_nucleation",d_porosity.sn,false,4);
-  cm_ps->appendElement("initial_porosity_distrib",d_porosity.porosityDist,
-                       false,4);
+  cm_ps->appendElement("evolve_porosity",d_evolvePorosity);
+  cm_ps->appendElement("initial_mean_porosity",d_porosity.f0);
+  cm_ps->appendElement("initial_std_porosity",d_porosity.f0_std);
+  cm_ps->appendElement("critical_porosity",d_porosity.fc);
+  cm_ps->appendElement("frac_nucleation",d_porosity.fn);
+  cm_ps->appendElement("meanstrain_nucleation",d_porosity.en);
+  cm_ps->appendElement("stddevstrain_nucleation",d_porosity.sn);
+  cm_ps->appendElement("initial_porosity_distrib",d_porosity.porosityDist);
 
-  cm_ps->appendElement("evolve_damage",d_evolveDamage,false,4);
-  cm_ps->appendElement("initial_mean_scalar_damage",d_scalarDam.D0,false,4);
-  cm_ps->appendElement("initial_std_scalar_damage",d_scalarDam.D0_std,false,4);
-  cm_ps->appendElement("critical_scalar_damage",d_scalarDam.Dc,false,4);
+  cm_ps->appendElement("evolve_damage",d_evolveDamage);
+  cm_ps->appendElement("initial_mean_scalar_damage",d_scalarDam.D0);
+  cm_ps->appendElement("initial_std_scalar_damage",d_scalarDam.D0_std);
+  cm_ps->appendElement("critical_scalar_damage",d_scalarDam.Dc);
   cm_ps->appendElement("initial_scalar_damage_distrib",
-                       d_scalarDam.scalarDamageDist,false,4);
-   
+                       d_scalarDam.scalarDamageDist);
 
-  cm_ps->appendElement("compute_specific_heat",d_computeSpecificHeat,false,4);
-  cm_ps->appendElement("Cp_constA", d_Cp.A,false,4);
-  cm_ps->appendElement("Cp_constB", d_Cp.B,false,4);
-  cm_ps->appendElement("Cp_constC", d_Cp.C,false,4);
+  cm_ps->appendElement("compute_specific_heat",d_computeSpecificHeat);
+  cm_ps->appendElement("Cp_constA", d_Cp.A);
+  cm_ps->appendElement("Cp_constB", d_Cp.B);
+  cm_ps->appendElement("Cp_constC", d_Cp.C);
 
 }
 

@@ -23,9 +23,8 @@ DruckerCheck::~DruckerCheck()
 
 void DruckerCheck::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP stability_ps = ps->appendChild("stability_check",true,4);
+  ProblemSpecP stability_ps = ps->appendChild("stability_check");
   stability_ps->setAttribute("type","drucker");
-
 }
 	 
 bool 

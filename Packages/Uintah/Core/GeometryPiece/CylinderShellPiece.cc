@@ -41,15 +41,15 @@ CylinderShellPiece::~CylinderShellPiece()
 
 void CylinderShellPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP shell_ps = ps->appendChild("shell",true,4);
-  ProblemSpecP cylinder_ps = shell_ps->appendChild("cylinder",true,5);
+  ProblemSpecP shell_ps = ps->appendChild("shell");
+  ProblemSpecP cylinder_ps = shell_ps->appendChild("cylinder");
 
-  cylinder_ps->appendElement("top",d_top,false,6);
-  cylinder_ps->appendElement("bottom",d_bottom,false,6);
-  cylinder_ps->appendElement("radius",d_radius,false,6);
-  cylinder_ps->appendElement("thickness",d_thickness,false,6);
-  cylinder_ps->appendElement("num_axis",d_numAxis,false,6);
-  cylinder_ps->appendElement("num_circum",d_numCircum,false,6);
+  cylinder_ps->appendElement("top",d_top);
+  cylinder_ps->appendElement("bottom",d_bottom);
+  cylinder_ps->appendElement("radius",d_radius);
+  cylinder_ps->appendElement("thickness",d_thickness);
+  cylinder_ps->appendElement("num_axis",d_numAxis);
+  cylinder_ps->appendElement("num_circum",d_numCircum);
 }
 
 

@@ -59,13 +59,13 @@ void CompMooneyRivlin::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","comp_mooney_rivlin");
   }
     
-  cm_ps->appendElement("he_constant_1",d_initialData.C1,false,4);
-  cm_ps->appendElement("he_constant_2",d_initialData.C2,false,4);
-  cm_ps->appendElement("he_PR",d_initialData.PR,false,4);
+  cm_ps->appendElement("he_constant_1",d_initialData.C1);
+  cm_ps->appendElement("he_constant_2",d_initialData.C2);
+  cm_ps->appendElement("he_PR",d_initialData.PR);
 }
 
 CompMooneyRivlin* CompMooneyRivlin::clone()

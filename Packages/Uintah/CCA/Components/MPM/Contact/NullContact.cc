@@ -39,8 +39,8 @@ NullContact::~NullContact()
 
 void NullContact::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP contact_ps = ps->appendChild("contact",true,2);
-  contact_ps->appendElement("type","null",false,3);
+  ProblemSpecP contact_ps = ps->appendChild("contact");
+  contact_ps->appendElement("type","null");
   d_matls.outputProblemSpec(contact_ps);
 }
 

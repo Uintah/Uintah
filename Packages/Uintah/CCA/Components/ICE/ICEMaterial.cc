@@ -95,13 +95,13 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP ice_ps = Material::outputProblemSpec(ps);
 
   d_eos->outputProblemSpec(ice_ps);
-  ice_ps->appendElement("thermal_conductivity",d_thermalConductivity,false,3);
-  ice_ps->appendElement("specific_heat",d_specificHeat,false,3);
-  ice_ps->appendElement("dynamic_viscosity",d_viscosity,false,3);
-  ice_ps->appendElement("speed_of_sound",d_speed_of_sound,false,3);
-  ice_ps->appendElement("gamma",d_gamma,false,3);
-  ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl,false,3);
-  ice_ps->appendElement("includeFlowWork",d_includeFlowWork,false,3);
+  ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
+  ice_ps->appendElement("specific_heat",d_specificHeat);
+  ice_ps->appendElement("dynamic_viscosity",d_viscosity);
+  ice_ps->appendElement("speed_of_sound",d_speed_of_sound);
+  ice_ps->appendElement("gamma",d_gamma);
+  ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl);
+  ice_ps->appendElement("includeFlowWork",d_includeFlowWork);
     
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {

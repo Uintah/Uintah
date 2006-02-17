@@ -356,8 +356,7 @@ ProblemSpec::get(const string& name, string &value)
 }
 
 ProblemSpecP
-ProblemSpec::get(const string& name, 
-                 Point &value)
+ProblemSpec::get(const string& name, Point &value)
 {
     Vector v;
     ProblemSpecP ps = get(name, v);
@@ -366,10 +365,8 @@ ProblemSpec::get(const string& name,
 }
 
 ProblemSpecP
-ProblemSpec::get(const string& name, 
-                 Vector &value)
+ProblemSpec::get(const string& name, Vector &value)
 {
-
   ProblemSpecP ps;
 
   string stringValue;
@@ -399,13 +396,11 @@ ProblemSpec::get(const string& name,
   }
           
   return ps;
-
 }
 
 // value should probably be empty before calling this...
 ProblemSpecP
-ProblemSpec::get(const string& name, 
-                 vector<double>& value)
+ProblemSpec::get(const string& name, vector<double>& value)
 {
   vector<string> string_values;
   if(!this->get(name, string_values)) {
@@ -425,8 +420,7 @@ ProblemSpec::get(const string& name,
 
 // value should probably be empty before calling this...
 ProblemSpecP
-ProblemSpec::get(const string& name, 
-                 vector<int>& value)
+ProblemSpec::get(const string& name, vector<int>& value)
 {
   vector<string> string_values;
   if(!this->get(name, string_values)) {
@@ -446,10 +440,8 @@ ProblemSpec::get(const string& name,
 
 // value should probably be empty before calling this...
 ProblemSpecP
-ProblemSpec::get(const string& name, 
-                 vector<string>& value)
+ProblemSpec::get(const string& name, vector<string>& value)
 {
-
   ProblemSpecP ps;
 
   string stringValue;
@@ -478,8 +470,7 @@ ProblemSpec::get(const string& name,
 } 
 
 ProblemSpecP
-ProblemSpec::get(const string& name, 
-                 IntVector &value)
+ProblemSpec::get(const string& name, IntVector &value)
 {
   ProblemSpecP ps;
 
@@ -493,7 +484,6 @@ ProblemSpec::get(const string& name,
   }
 
   return ps;
-
 }
 
 ProblemSpecP
@@ -574,7 +564,8 @@ void ProblemSpec::parseIntVector(const string& string_value, IntVector& value)
 
 }
 
-bool ProblemSpec::get(int &value)
+bool
+ProblemSpec::get(int &value)
 {
   string stringValue;
   if (!get(stringValue))
@@ -583,7 +574,8 @@ bool ProblemSpec::get(int &value)
   return true;
 }
 
-bool ProblemSpec::get(long &value)
+bool
+ProblemSpec::get(long &value)
 {
   string stringValue;
   if (!get(stringValue))
@@ -592,7 +584,8 @@ bool ProblemSpec::get(long &value)
   return true;
 }
 
-bool ProblemSpec::get(double &value)
+bool
+ProblemSpec::get(double &value)
 {
   string stringValue;
   if (!get(stringValue))
@@ -601,7 +594,8 @@ bool ProblemSpec::get(double &value)
   return true;
 }
 
-bool ProblemSpec::get(string &value)
+bool
+ProblemSpec::get(string &value)
 {
   string tmp = getNodeValue();
   if (tmp == "")
@@ -612,7 +606,8 @@ bool ProblemSpec::get(string &value)
   return true;
 }
 
-bool ProblemSpec::get(Vector &value)
+bool
+ProblemSpec::get(Vector &value)
 {
   string stringValue;
   if (!get(stringValue))
@@ -655,6 +650,7 @@ ProblemSpec::getWithDefault(const string& name,
 
   return ps;
 }
+
 ProblemSpecP
 ProblemSpec::getWithDefault(const string& name, 
                             int& value, int defaultVal)
@@ -809,88 +805,75 @@ ProblemSpec::getWithDefault(const string& name,
   return ps;
 }
 
-// add newline before, then tabs tabs, and then if trail is true, ending whitespace
-ProblemSpecP ProblemSpec::appendElement(const char* name, const string& value,
-                                bool trail /*=0*/, int tabs /*=1*/) 
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, const string& value)
 {
-//   ostringstream ostr;
-//   ostr.clear();
-//   ostr << "\n";
-//   for (int i = 0; i < tabs; i++)
-//     ostr << "\t";
-
-//   appendText(ostr.str().c_str());
-  
   xmlNode* newnode = xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
-  
-//   if (trail) {
-//     appendText("\n");
-//   }
   return scinew ProblemSpec(newnode, d_write);
 }
 
 //basically to make sure correct overloaded function is called
-ProblemSpecP ProblemSpec::appendElement(const char* name, const char* value,
-                                bool trail /*=0*/, int tabs /*=1*/) {
-  return appendElement(name, string(value), trail, tabs);
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, const char* value)
+{
+  return appendElement(name, string(value));
 }
 
-
-ProblemSpecP ProblemSpec::appendElement(const char* name, int value,
-                                bool trail /*=0*/, int tabs /*=1*/) 
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, int value)
 {
    ostringstream val;
    val << value;
-   return appendElement(name, val.str(), trail, tabs);
-
+   return appendElement(name, val.str());
 }
 
-ProblemSpecP ProblemSpec::appendElement(const char* name, long value,
-                                bool trail /*=0*/, int tabs /*=1*/) 
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, long value)
 {
    ostringstream val;
    val << value;
-   return appendElement(name, val.str(), trail, tabs);
-
+   return appendElement(name, val.str());
 }
 
-ProblemSpecP ProblemSpec::appendElement(const char* name, const IntVector& value,
-                                bool trail /*=0*/, int tabs /*=1*/) 
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, const IntVector& value)
 {
    ostringstream val;
    val << '[' << value.x() << ", " << value.y() << ", " << value.z() << ']';
-   return appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str());
 }
 
-ProblemSpecP ProblemSpec::appendElement(const char* name, const Point& value,
-                                bool trail /*=0*/, int tabs /*=1*/) 
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, const Point& value)
+{
+  ostringstream val;
+  val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " 
+      << setprecision(17) << value.z() << ']';
+  return appendElement(name, val.str());
+
+}
+
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, const Vector& value)
 {
    ostringstream val;
-   val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
-   return appendElement(name, val.str(), trail, tabs);
+   val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", "
+       << setprecision(17) << value.z() << ']';
+   return appendElement(name, val.str());
 
 }
 
-ProblemSpecP ProblemSpec::appendElement(const char* name, const Vector& value,
-                                bool trail /*=0*/, int tabs /*=1*/)
-{
-   ostringstream val;
-   val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
-   return appendElement(name, val.str(), trail, tabs);
-
-}
-
-ProblemSpecP ProblemSpec::appendElement(const char* name, double value,
-                                bool trail /*=0*/, int tabs /*=1*/)
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, double value )
 {
    ostringstream val;
    val << setprecision(17) << value;
-   return appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str());
 
 }
 
-ProblemSpecP ProblemSpec::appendElement(const char* name, const vector<double>& value,
-                                bool trail /*=0*/, int tabs /*=1*/)
+ProblemSpecP
+ProblemSpec::appendElement( const char* name, const vector<double>& value)
 {
    ostringstream val;
    val << '[';
@@ -901,12 +884,12 @@ ProblemSpecP ProblemSpec::appendElement(const char* name, const vector<double>& 
      
    }
    val << ']';
-   return appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str());
 
 }
 
-ProblemSpecP ProblemSpec::appendElement(const char* name, const vector<int>& value,
-                                bool trail /*=0*/, int tabs /*=1*/)
+ProblemSpecP
+ProblemSpec::appendElement(const char* name, const vector<int>& value)
 {
    ostringstream val;
    val << '[';
@@ -917,140 +900,118 @@ ProblemSpecP ProblemSpec::appendElement(const char* name, const vector<int>& val
      
    }
    val << ']';
-   return appendElement(name, val.str(), trail, tabs);
-
+   return appendElement(name, val.str());
 }
 
-ProblemSpecP ProblemSpec::appendElement(const char* name, bool value,
-                                bool trail /*=0*/, int tabs /*=1*/)
+ProblemSpecP
+ProblemSpec::appendElement( const char* name, bool value )
 {
   if (value)
-    return appendElement(name, string("true"), trail, tabs);
+    return appendElement(name, string("true"));
   else
-    return appendElement(name, string("false"), trail, tabs);
+    return appendElement(name, string("false"));
 }
 
-void ProblemSpec::require(const string& name, double& value)
+void
+ProblemSpec::require(const string& name, double& value)
+{
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
+}
+
+void
+ProblemSpec::require(const string& name, int& value)
+{
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
+}
+
+void
+ProblemSpec::require(const string& name, unsigned int& value)
+{
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+      throw ParameterNotFound(name, __FILE__, __LINE__);
+}
+
+void
+ProblemSpec::require(const string& name, long& value)
+{
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
+}
+
+void
+ProblemSpec::require(const string& name, bool& value)
+{
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+      throw ParameterNotFound(name, __FILE__, __LINE__);
+}
+
+void
+ProblemSpec::require(const string& name, string& value)
+{
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
+}
+
+void
+ProblemSpec::require(const string& name, Vector  &value)
+{
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+   throw ParameterNotFound(name, __FILE__, __LINE__);
+}
+
+void
+ProblemSpec::require(const string& name, vector<double>& value)
 {
 
   // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
- 
-}
-
-void ProblemSpec::require(const string& name, int& value)
-{
-
- // Check if the prob_spec is NULL
-
-  if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-  
-}
-
-void ProblemSpec::require(const string& name, unsigned int& value)
-{
-
- // Check if the prob_spec is NULL
-
-  if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-  
-}
-
-void ProblemSpec::require(const string& name, long& value)
-{
-
- // Check if the prob_spec is NULL
-
-  if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-  
-}
-
-void ProblemSpec::require(const string& name, bool& value)
-{
- // Check if the prob_spec is NULL
-
-  if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
- 
+    throw ParameterNotFound(name, __FILE__, __LINE__);
 
 }
 
-void ProblemSpec::require(const string& name, string& value)
-{
- // Check if the prob_spec is NULL
-
-  if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
- 
-}
-
-void ProblemSpec::require(const string& name, 
-                       Vector  &value)
+void
+ProblemSpec::require(const string& name, vector<int>& value)
 {
 
   // Check if the prob_spec is NULL
 
- if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-
-}
-
-void ProblemSpec::require(const string& name, 
-                       vector<double>& value)
-{
-
-  // Check if the prob_spec is NULL
-
- if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-
-}
-
-void ProblemSpec::require(const string& name, 
-                       vector<int>& value)
-{
-
-  // Check if the prob_spec is NULL
-
- if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
 
 } 
 
-void ProblemSpec::require(const string& name, 
-                       vector<IntVector>& value)
+void
+ProblemSpec::require(const string& name, vector<IntVector>& value)
 {
-
   // Check if the prob_spec is NULL
-
- if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
 } 
 
-void ProblemSpec::require(const string& name, 
-                       IntVector  &value)
+void
+ProblemSpec::require(const string& name, IntVector  &value)
 {
-
   // Check if the prob_spec is NULL
-
- if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
 }
 
-void ProblemSpec::require(const string& name, 
-                       Point  &value)
+void
+ProblemSpec::require(const string& name, Point  &value)
 {
- // Check if the prob_spec is NULL
- if (! this->get(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-
+  // Check if the prob_spec is NULL
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
 }
 
 void
@@ -1127,52 +1088,19 @@ ProblemSpec::getNodeValue()
   return ret;
 }
 
-void
-ProblemSpec::appendText(const char* str)
-{
-  //FIX
-  //xmlNewTextChild(d_node, 0, BAD_CAST "name", BAD_CAST str);
-}
-
 // append element with associated string
-// preceded by \n (if lead is true) with tabs tabs (default 0), and followed by a newline
 ProblemSpecP
-ProblemSpec::appendChild(const char *str, 
-                         bool lead /*=0*/, int tabs /*=0*/) 
+ProblemSpec::appendChild( const char *str )
 {
-//   ostringstream ostr;
-//   ostr.clear();
-//   if (lead)
-//     ostr << "\n";
-//   for (int i = 0; i < tabs; i++)
-//     ostr << "\t";
-
-//   appendText(ostr.str().c_str());
-  
   xmlNode* elt = xmlNewChild(d_node, 0, BAD_CAST str, 0);
   
   return scinew ProblemSpec(elt, d_write);
 }
 
 void
-ProblemSpec::appendChild(ProblemSpecP pspec) 
+ProblemSpec::appendChild( ProblemSpecP pspec )
 {
   xmlAddChild(d_node, pspec->d_node);
-}
-
-void
-ProblemSpec::addStylesheet(char* type, char* name) 
-{
-   ASSERT((strcmp(type, "css") == 0) || strcmp(type, "xsl") == 0);
-
-   string str1 = "xml-stylesheet";
-
-   ostringstream str;
-   str << " type=\"text/" << type << "\" href=\"" << name << "\"";
-   string str2 = str.str().c_str();
-
-   xmlAddPrevSibling(xmlDocGetRootElement(d_node->doc),
-                     xmlNewDocPI(d_node->doc, BAD_CAST str1.c_str(), BAD_CAST str2.c_str()));
 }
 
 // filename is a default param (NULL)

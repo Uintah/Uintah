@@ -29,14 +29,14 @@ GeometryObject::~GeometryObject()
 
 void GeometryObject::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP geom_obj_ps = ps->appendChild("geom_object",true,3);
+  ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
   d_piece->outputProblemSpec(geom_obj_ps);
   
-  geom_obj_ps->appendElement("res", d_resolution,false,4);
-  geom_obj_ps->appendElement("velocity", d_initialVel,false,4);
+  geom_obj_ps->appendElement("res", d_resolution);
+  geom_obj_ps->appendElement("velocity", d_initialVel);
   for (map<string,double>::iterator it = d_data.begin(); 
        it != d_data.end(); it++) {
-    geom_obj_ps->appendElement(it->first.c_str(),it->second,false,4);
+    geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
 
 }

@@ -56,23 +56,23 @@ ZAPlastic::~ZAPlastic()
 
 void ZAPlastic::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model",true,4);
+  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
   plastic_ps->setAttribute("type","zerilli_armstrong");
 
-  plastic_ps->appendElement("c_0", d_CM.c_0,false,5);
+  plastic_ps->appendElement("c_0", d_CM.c_0);
   if (d_CM.c_0 == 0.0) {
-    plastic_ps->appendElement("sigma_g",d_CM.sigma_g,false,5);  
-    plastic_ps->appendElement("k_H",d_CM.k_H);  
-    plastic_ps->appendElement("sqrt_l_inv",d_CM.sqrt_l,false,5);  
+    plastic_ps->appendElement("sigma_g",    d_CM.sigma_g);  
+    plastic_ps->appendElement("k_H",        d_CM.k_H);
+    plastic_ps->appendElement("sqrt_l_inv", d_CM.sqrt_l);  
   }
-  plastic_ps->appendElement("B",d_CM.B,false,5);  
-  plastic_ps->appendElement("beta_0",d_CM.beta_0,false,5);  
-  plastic_ps->appendElement("beta_1",d_CM.beta_1,false,5);  
-  plastic_ps->appendElement("B_0",d_CM.B_0,false,5);  
-  plastic_ps->appendElement("alpha_0",d_CM.alpha_0,false,5);  
-  plastic_ps->appendElement("alpha_1",d_CM.alpha_1,false,5);  
-  plastic_ps->appendElement("K",d_CM.K,false,5);  
-  plastic_ps->appendElement("n",d_CM.n,false,5);  
+  plastic_ps->appendElement("B",d_CM.B);  
+  plastic_ps->appendElement("beta_0",d_CM.beta_0);  
+  plastic_ps->appendElement("beta_1",d_CM.beta_1);  
+  plastic_ps->appendElement("B_0",d_CM.B_0);  
+  plastic_ps->appendElement("alpha_0",d_CM.alpha_0);  
+  plastic_ps->appendElement("alpha_1",d_CM.alpha_1);  
+  plastic_ps->appendElement("K",d_CM.K);  
+  plastic_ps->appendElement("n",d_CM.n);  
 }
 
          

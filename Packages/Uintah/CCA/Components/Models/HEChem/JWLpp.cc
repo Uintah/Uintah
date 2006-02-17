@@ -91,17 +91,17 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
 
 void JWLpp::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","JWLpp");
 
-  model_ps->appendElement("Active",d_active,false,4);
-  model_ps->appendElement("ThresholdPressure",d_threshold_pressure,false,4);
-  model_ps->appendElement("fromMaterial",fromMaterial,false,4);
-  model_ps->appendElement("toMaterial",toMaterial,false,4);
-  model_ps->appendElement("G",    d_G,false,4);
-  model_ps->appendElement("b",    d_b,false,4);
-  model_ps->appendElement("E0",   d_E0,false,4);
-  model_ps->appendElement("rho0", d_rho0,false,4);
+  model_ps->appendElement("Active",d_active);
+  model_ps->appendElement("ThresholdPressure",d_threshold_pressure);
+  model_ps->appendElement("fromMaterial",fromMaterial);
+  model_ps->appendElement("toMaterial",toMaterial);
+  model_ps->appendElement("G",    d_G);
+  model_ps->appendElement("b",    d_b);
+  model_ps->appendElement("E0",   d_E0);
+  model_ps->appendElement("rho0", d_rho0);
   
 }
 

@@ -103,23 +103,23 @@ AdiabaticTable::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 
 void AdiabaticTable::Region::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP geom_obj_ps = ps->appendChild("geom_object",true,4);
+  ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
   piece->outputProblemSpec(geom_obj_ps);
-  geom_obj_ps->appendElement("scalar", initialScalar,false,4);
+  geom_obj_ps->appendElement("scalar", initialScalar);
 }
 
 void AdiabaticTable::Scalar::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP scalar_ps = ps->appendChild("scalar",true,3);
+  ProblemSpecP scalar_ps = ps->appendChild("scalar");
   scalar_ps->setAttribute("name",name);
 
-  scalar_ps->appendElement("test_conservation", d_test_conservation,false,4);
-  scalar_ps->appendElement("doTableTest", d_doTableTest,false,4);
+  scalar_ps->appendElement("test_conservation", d_test_conservation);
+  scalar_ps->appendElement("doTableTest", d_doTableTest);
 
-  ProblemSpecP constants_ps = scalar_ps->appendChild("constants",true,4);
-  constants_ps->appendElement("diffusivity",diff_coeff,false,4);
+  ProblemSpecP constants_ps = scalar_ps->appendChild("constants");
+  constants_ps->appendElement("diffusivity",diff_coeff);
   constants_ps->appendElement("AMR_Refinement_Criteria",
-                              refineCriteria,false,4);
+                              refineCriteria);
   
   for (vector<Region*>::const_iterator it = regions.begin();
        it != regions.end(); ++it) {
@@ -131,20 +131,20 @@ void AdiabaticTable::Scalar::outputProblemSpec(ProblemSpecP& ps)
 
 void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","AdiabaticTable");
 
   for (vector<TableValue*>::const_iterator it = tablevalues.begin();
        it != tablevalues.end(); ++it)
     (*it)->outputProblemSpec(model_ps);
 
-  model_ps->appendElement("material",d_matl->getName(),false,4);
+  model_ps->appendElement("material",d_matl->getName());
 
-  model_ps->appendElement("varianceScale",varianceScale,false,4);
-  model_ps->appendElement("varianceMax",varianceMax,false,4);
+  model_ps->appendElement("varianceScale",varianceScale);
+  model_ps->appendElement("varianceMax",varianceMax);
 
 #if 1
-  ProblemSpecP table_ps = model_ps->appendChild("table",true,4);
+  ProblemSpecP table_ps = model_ps->appendChild("table");
   table_ps->setAttribute("name","adiabatic");
   table->outputProblemSpec(table_ps);
 #endif

@@ -70,15 +70,15 @@ void CNHDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","cnh_damag");
   }
 
   CompNeoHook::outputProblemSpec(cm_ps,false);
 
-  cm_ps->appendElement("failure_strain_mean",d_epsf.mean,false,4);
-  cm_ps->appendElement("failure_strain_std",d_epsf.std,false,4);
-  cm_ps->appendElement("failure_strain_distrib",d_epsf.dist,false,4);
+  cm_ps->appendElement("failure_strain_mean",d_epsf.mean);
+  cm_ps->appendElement("failure_strain_std",d_epsf.std);
+  cm_ps->appendElement("failure_strain_distrib",d_epsf.dist);
 
 }
 
