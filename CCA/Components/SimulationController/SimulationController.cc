@@ -358,7 +358,9 @@ namespace Uintah {
                << " to line up with output/checkpoint time\n";
       }
     }
-    
+    if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime){
+       delt = d_timeinfo->maxTime - t;
+    }
   }
 
   double SimulationController::getWallTime  ( void )

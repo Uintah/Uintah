@@ -62,6 +62,7 @@ public:
   // Clamp the length of the timestep to the next
   // output or checkpoint if it will go over
   bool timestep_clamping;
+  bool end_on_max_time;
 private:
   SimulationTime(const SimulationTime&);
   SimulationTime& operator=(const SimulationTime&);
