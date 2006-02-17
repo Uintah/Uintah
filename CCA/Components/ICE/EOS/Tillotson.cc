@@ -29,7 +29,7 @@ Tillotson::~Tillotson()
 
 void Tillotson::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  ProblemSpecP eos_ps = ps->appendChild("EOS");
   eos_ps->setAttribute("type","Tillotson");
 }
 

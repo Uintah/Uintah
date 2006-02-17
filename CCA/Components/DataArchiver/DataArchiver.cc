@@ -591,7 +591,7 @@ DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
    }
 
    // restart from <dir> at timestep
-   ProblemSpecP restartInfo = indexDoc->appendChild("restart",0,1);
+   ProblemSpecP restartInfo = indexDoc->appendChild("restart");
    restartInfo->setAttribute("from", fromDir.getName().c_str());
    
    ostringstream timestep_str;
@@ -659,7 +659,7 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
          // add the timestep to the index.xml
          ostringstream timestep_str;
          timestep_str << timestep;
-         ProblemSpecP newTS = timesteps->appendElement("timestep", timestep_str.str().c_str(), 0, 1);
+         ProblemSpecP newTS = timesteps->appendElement("timestep", timestep_str.str().c_str());
 
          for (map<string,string>::iterator iter = attributes.begin();
               iter != attributes.end(); iter++) {
@@ -1132,7 +1132,6 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         newElem->setAttribute("delt", deltVal.str());
         timeVal << d_tempElapsedTime;
         newElem->setAttribute("time", timeVal.str());
-        ts->appendText("\n");
       }
       
       indexDoc->output(iname.c_str());
@@ -1160,17 +1159,17 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       }
       for(int l = 0;l<numLevels;l++){
         LevelP level = grid->getLevel(l);
-        ProblemSpecP levelElem = gridElem->appendChild("Level", 1, 1);
+        ProblemSpecP levelElem = gridElem->appendChild("Level");
 
         if (level->getPeriodicBoundaries() != IntVector(0,0,0))
-          levelElem->appendElement("periodic", level->getPeriodicBoundaries(),0,2);
-        levelElem->appendElement("numPatches", level->numPatches(),0,2);
-        levelElem->appendElement("totalCells", level->totalCells(),0,2);
+          levelElem->appendElement("periodic", level->getPeriodicBoundaries());
+        levelElem->appendElement("numPatches", level->numPatches());
+        levelElem->appendElement("totalCells", level->totalCells());
         if (level->getExtraCells() != IntVector(0,0,0))
-          levelElem->appendElement("extraCells", level->getExtraCells(),0,2);
-        levelElem->appendElement("cellspacing", level->dCell(),0,2);
-        levelElem->appendElement("anchor", level->getAnchor(),0,2);
-        levelElem->appendElement("id", level->getID(),0,2);
+          levelElem->appendElement("extraCells", level->getExtraCells());
+        levelElem->appendElement("cellspacing", level->dCell());
+        levelElem->appendElement("anchor", level->getAnchor());
+        levelElem->appendElement("id", level->getID());
 
 
         Level::const_patchIterator iter;
@@ -1183,18 +1182,18 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           procOnLevel[l][lb->getPatchwiseProcessorAssignment(patch)] = 1;
 
           Box box = patch->getBox();
-          ProblemSpecP patchElem = levelElem->appendChild("Patch",1,2);
-          patchElem->appendElement("id", patch->getID(),0,3);
-          patchElem->appendElement("lowIndex", patch->getCellLowIndex(),0,3);
-          patchElem->appendElement("highIndex", patch->getCellHighIndex(),0,3);
+          ProblemSpecP patchElem = levelElem->appendChild("Patch");
+          patchElem->appendElement("id", patch->getID());
+          patchElem->appendElement("lowIndex", patch->getCellLowIndex());
+          patchElem->appendElement("highIndex", patch->getCellHighIndex());
           if (patch->getCellLowIndex() != patch->getInteriorCellLowIndex())
-            patchElem->appendElement("interiorLowIndex", patch->getInteriorCellLowIndex(),0,3);
+            patchElem->appendElement("interiorLowIndex", patch->getInteriorCellLowIndex());
           if (patch->getCellHighIndex() != patch->getInteriorCellHighIndex())
-            patchElem->appendElement("interiorHighIndex", patch->getInteriorCellHighIndex(),0,3);
-          patchElem->appendElement("nnodes", patch->getNNodes(),0,3);
-          patchElem->appendElement("lower", box.lower(),0,3);
-          patchElem->appendElement("upper", box.upper(),0,3);
-          patchElem->appendElement("totalCells", patch->totalCells(),0,3);
+            patchElem->appendElement("interiorHighIndex", patch->getInteriorCellHighIndex());
+          patchElem->appendElement("nnodes", patch->getNNodes());
+          patchElem->appendElement("lower", box.lower());
+          patchElem->appendElement("upper", box.upper());
+          patchElem->appendElement("totalCells", patch->totalCells());
         }
       }
       
@@ -1211,7 +1210,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           pname << lname.str() << "/p" << setw(5) << setfill('0') << i 
                 << ".xml";
 
-          ProblemSpecP df = dataElem->appendChild("Datafile",0,1);
+          ProblemSpecP df = dataElem->appendChild("Datafile");
           df->setAttribute("href",pname.str());
           
           ostringstream procID;
@@ -1220,16 +1219,12 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           
           ostringstream labeltext;
           labeltext << "Processor " << i << " of " << d_myworld->size();
-
-          df->appendText(labeltext.str().c_str());
-          dataElem->appendText("\n");
         }
       }
       
       if (hasGlobals) {
-        ProblemSpecP df = dataElem->appendChild("Datafile",0,1);
+        ProblemSpecP df = dataElem->appendChild("Datafile");
         df->setAttribute("href", "global.xml");
-        dataElem->appendText("\n");
       }
 
       // Add the <Materials> section to the timestep.xml
@@ -1749,7 +1744,6 @@ DataArchiver::output(const ProcessorGroup*,
         int matlIndex = matls->get(m);
         // Variables may not exist when we get here due to something whacky with weird AMR stuff...
         ProblemSpecP pdElem = doc->appendChild("Variable");
-        doc->appendText("\n");
         
         pdElem->appendElement("variable", var->getName());
         pdElem->appendElement("index", matlIndex);
@@ -1873,7 +1867,6 @@ DataArchiver::output(const ProcessorGroup*,
         ProblemSpecP newElem = vs->appendChild("variable");
         newElem->setAttribute("type", TranslateVariableType( var->typeDescription()->getName(), isThisCheckpoint ) );
         newElem->setAttribute("name", var->getName());
-        vs->appendText("\n");
       }
 
 #ifndef PVFS_FIX

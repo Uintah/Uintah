@@ -52,14 +52,13 @@ void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","ideal_gas");
   }
 
-  cm_ps->appendElement("gamma", d_initialData.gamma,false,4);
-  cm_ps->appendElement("specific_heat",d_initialData.cv,false,4);
-  cm_ps->appendElement("specific_heat",d_initialData.UseArtificialViscosity,
-                       false,4);
+  cm_ps->appendElement("gamma", d_initialData.gamma);
+  cm_ps->appendElement("specific_heat",d_initialData.cv);
+  cm_ps->appendElement("specific_heat",d_initialData.UseArtificialViscosity);
 }
 
 

@@ -34,12 +34,12 @@ SCGMeltTemp::~SCGMeltTemp()
 
 void SCGMeltTemp::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP temp_ps = ps->appendChild("melting_temp_model",true,4);
+  ProblemSpecP temp_ps = ps->appendChild("melting_temp_model");
   temp_ps->setAttribute("type","scg_Tm");
 
-  temp_ps->appendElement("Gamma_0",d_Gamma0,false,5);
-  temp_ps->appendElement("a",d_a,false,5);
-  temp_ps->appendElement("T_m0",d_Tm0,false,5);
+  temp_ps->appendElement("Gamma_0",d_Gamma0);
+  temp_ps->appendElement("a",d_a);
+  temp_ps->appendElement("T_m0",d_Tm0);
 }
 
 	 

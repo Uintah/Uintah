@@ -4,8 +4,8 @@
 class MMS {
 
 public:
-  MMS() {};
-  virtual ~MMS() {};
+  MMS() {}
+  virtual ~MMS() {}
   virtual double pressure( int x, int y, double time ) = 0;
   virtual double uVelocity( int x, int y, double time ) = 0;
 

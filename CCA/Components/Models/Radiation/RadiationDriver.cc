@@ -300,25 +300,23 @@ RadiationDriver::problemSetup(GridP& grid,
 
 void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Radiation");
 
-  model_ps->appendElement("radiatingGas",d_matl_G->getName(),false,4);
+  model_ps->appendElement("radiatingGas",d_matl_G->getName());
   if (d_hasAbsorbingSolid) {
-    model_ps->appendElement("absorbingSolid",d_matl_S->getName(),false,4);
+    model_ps->appendElement("absorbingSolid",d_matl_S->getName());
   }
-  ProblemSpecP rad_ps = model_ps->appendChild("RadiationModel",true,4);
+  ProblemSpecP rad_ps = model_ps->appendChild("RadiationModel");
  
-  rad_ps->appendElement("caclFreq",d_radCalcFreq,false,4);
-  rad_ps->appendElement("caclInterval",d_radCalc_interval,false,4);
+  rad_ps->appendElement("caclFreq",d_radCalcFreq);
+  rad_ps->appendElement("caclInterval",d_radCalc_interval);
   rad_ps->appendElement("table_or_ice_temp_density",
-                        d_table_or_ice_temp_density,false,4);
-  rad_ps->appendElement("useTableValues",d_useTableValues,false,4);
-  rad_ps->appendElement("computeCO2_H2)_from_f",d_computeCO2_H2O_from_f,
-                        false,4);
+                        d_table_or_ice_temp_density);
+  rad_ps->appendElement("useTableValues",d_useTableValues);
+  rad_ps->appendElement("computeCO2_H2)_from_f",d_computeCO2_H2O_from_f);
 
-
-  ProblemSpecP geom_ps = rad_ps->appendChild("geom_object",true,4);
+  ProblemSpecP geom_ps = rad_ps->appendChild("geom_object");
   for (vector<GeometryPiece*>::const_iterator it = d_geom_pieces.begin();
        it != d_geom_pieces.end(); it++) {
     (*it)->outputProblemSpec(geom_ps);

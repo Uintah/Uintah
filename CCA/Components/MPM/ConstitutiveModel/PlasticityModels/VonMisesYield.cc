@@ -19,7 +19,7 @@ VonMisesYield::~VonMisesYield()
 
 void VonMisesYield::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP yield_ps = ps->appendChild("yield_condition",true,4);
+  ProblemSpecP yield_ps = ps->appendChild("yield_condition");
   yield_ps->setAttribute("type","vonMises");
 
 }

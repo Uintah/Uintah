@@ -109,21 +109,21 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
 
 void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Steady_Burn");
 
-  model_ps->appendElement("fromMaterial",matl0->getName(),false,4);
-  model_ps->appendElement("toMaterial",matl1->getName(),false,4);
-  model_ps->appendElement("PreExpCondPh",      Ac,false,4);
-  model_ps->appendElement("ActEnergyCondPh",   Ec,false,4);
-  model_ps->appendElement("PreExpGasPh",       Bg,false,4);
-  model_ps->appendElement("CondPhaseHeat",     Qc,false,4);
-  model_ps->appendElement("GasPhaseHeat",      Qg,false,4);
-  model_ps->appendElement("HeatConductGasPh",  Kg,false,4);
-  model_ps->appendElement("HeatConductCondPh", Kc,false,4);
-  model_ps->appendElement("SpecificHeatBoth",  Cp,false,4);
-  model_ps->appendElement("MoleWeightGasPh",   MW,false,4);
-  model_ps->appendElement("IgnitionTemp",      ignitionTemp,false,4);
+  model_ps->appendElement("fromMaterial",matl0->getName());
+  model_ps->appendElement("toMaterial",matl1->getName());
+  model_ps->appendElement("PreExpCondPh",      Ac);
+  model_ps->appendElement("ActEnergyCondPh",   Ec);
+  model_ps->appendElement("PreExpGasPh",       Bg);
+  model_ps->appendElement("CondPhaseHeat",     Qc);
+  model_ps->appendElement("GasPhaseHeat",      Qg);
+  model_ps->appendElement("HeatConductGasPh",  Kg);
+  model_ps->appendElement("HeatConductCondPh", Kc);
+  model_ps->appendElement("SpecificHeatBoth",  Cp);
+  model_ps->appendElement("MoleWeightGasPh",   MW);
+  model_ps->appendElement("IgnitionTemp",      ignitionTemp);
 }
 
 void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){

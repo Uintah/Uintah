@@ -50,12 +50,12 @@ void RigidMaterial::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","rigid");
   }
 
-  cm_ps->appendElement("shear_modulus",d_initialData.G,false,4);
-  cm_ps->appendElement("bulk_modulus",d_initialData.K,false,4);
+  cm_ps->appendElement("shear_modulus",d_initialData.G);
+  cm_ps->appendElement("bulk_modulus",d_initialData.K);
 }
 
 

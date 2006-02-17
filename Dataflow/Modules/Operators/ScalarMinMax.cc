@@ -46,6 +46,7 @@ using namespace SCIRun;
 DECLARE_MAKER(ScalarMinMax)
 ScalarMinMax::ScalarMinMax(GuiContext* ctx)
   : Module("ScalarMinMax", ctx, Sink, "Operators", "Uintah"),
+    gui_field_name_(ctx->subVar("field_name", false)),
     gui_min_data_(ctx->subVar("min_data", false)),
     gui_max_data_(ctx->subVar("max_data", false)),
     gui_min_index_(ctx->subVar("min_index", false)),
@@ -72,6 +73,7 @@ ScalarMinMax::~ScalarMinMax()
 void
 ScalarMinMax::clear_vals()
 {
+  gui_field_name_.set("---");
   gui_min_data_.set("---");
   gui_max_data_.set("---");
   gui_min_index_.set("---");
@@ -84,7 +86,6 @@ ScalarMinMax::clear_vals()
 void
 ScalarMinMax::update_input_attributes(FieldHandle f)
 {
-
   ScalarFieldInterfaceHandle sdi = f->query_scalar_interface(this);
   if ( !sdi.get_rep() ){
     error("Not a Scalar Field.");

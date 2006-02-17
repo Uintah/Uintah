@@ -58,8 +58,6 @@ using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
-static double current_time = 0.0;
-
 class CompareMMS : public Module {
 
 public:
@@ -67,7 +65,8 @@ public:
   virtual ~CompareMMS();
   virtual void execute();
 
-  static bool update_time_cb(void * module_pointer);
+private:
+  GuiString gui_field_name_;
 
 private:
 
@@ -76,25 +75,90 @@ private:
 DECLARE_MAKER(CompareMMS)
 
 CompareMMS::CompareMMS(GuiContext* ctx) :
-  Module("CompareMMS", ctx, Sink, "Operators", "Uintah")
+  Module("CompareMMS", ctx, Sink, "Operators", "Uintah"),
+  gui_field_name_(ctx->subVar("field_name", false))
 {
 }
 
 CompareMMS::~CompareMMS()
 {
-  sched->remove_callback(update_time_cb, this);
 }
 
 void
 CompareMMS::execute()
 {
-  printf("execute: %lf\n", current_time);
+  typedef ConstantBasis<double>                                     CBDBasis;
+  typedef LatVolMesh< HexTrilinearLgn<Point> >                      LVMesh;
+  typedef GenericField< LVMesh, CBDBasis, FData3d<double, LVMesh> > LVFieldCBD;
 
-  // Much of this code comes from the SampleLattice.cc module.
-  enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
+
+
+  FieldIPort *iport = (FieldIPort*)get_iport("Scalar Field");
+  if (!iport)
+  {
+    error("Error: unable to find (in xml file, I think) module input port named 'Scalar Field'");
+    return;
+  }
+
+  // The input port (with data) is required.
+  FieldHandle fh;
+  if (!iport->get(fh) || !fh.get_rep())
+  {
+    warning("No input connected to the Scalar Field input port.");
+    return;
+  }
+
+  if (!fh->query_scalar_interface(this).get_rep())
+  {
+    error("This module only works on scalar fields.");
+    return;
+  }
+
+  string field_name = "Not Specified";
+  fh->get_property("varname",field_name);
+
+  gui_field_name_.set( field_name + " -- " + fh->mesh()->type_name() );
+
+  const BBox bbox = fh->mesh()->get_bounding_box();
+
+  cout << "BBox: " << bbox.min() << "  ----  " << bbox.max() << "\n";
+
+  vector<unsigned int> dimensions;
+  bool result = fh->mesh()->get_dim( dimensions );
+
+  if( result ) {
+    for( int pos = 0; pos < dimensions.size(); pos++ ) {
+      printf("dim[%d] is: %d\n",pos,dimensions[pos]);
+    }
+  } else {
+    printf("dimensions not returned???\n");
+  }
+
+  LVMesh* mesh = dynamic_cast<LVMesh*>(fh->mesh().get_rep());
+  if( !mesh ) {
+    printf("error here\n");
+    error( "failed to cast mesh" );
+    return;
+  }
+
+  LVMesh::Cell::index_type pos(mesh,1,1,1 );
+
+  LVFieldCBD* field = dynamic_cast<LVFieldCBD*>(fh.get_rep());
+
+  if( !field ) {
+    printf("ERROR HERE\n");
+    error( "failed to cast field" );
+    return;
+  }
+  double val;
+  field->value( val, pos );
+
+  printf("val is %lf\n", val);
+
+  return;
+#if 0
 
   Point minb, maxb;
-  DataTypeEnum datatype;
 
   int size = 20;
 
@@ -107,10 +171,6 @@ CompareMMS::execute()
   minb -= diag;
   maxb += diag;
 
-  typedef ConstantBasis<double>                                     CBDBasis;
-  typedef LatVolMesh< HexTrilinearLgn<Point> >                      LVMesh;
-  typedef GenericField< LVMesh, CBDBasis, FData3d<double, LVMesh> > LVFieldCBD;
-
   // Create blank mesh.
   unsigned int sizex = size+1;//Max(2, size_x_.get());
   unsigned int sizey = size+1;//Max(2, size_y_.get());
@@ -122,50 +182,24 @@ CompareMMS::execute()
 
   // Create Image Field.
   FieldHandle ofh;
-  if (datatype == SCALAR)
-  {
-    if (basis_order == 0) {
-      LVFieldCBD *lvf = scinew LVFieldCBD(mesh);
 
-      //      LVFieldCBD::fdata_type &fdata = lvf->fdata();
+  LVFieldCBD *lvf = scinew LVFieldCBD(mesh);
 
-      MMS * mms = new MMS1();
+  MMS * mms = new MMS1();
 
-      for( int xx = 0; xx < size; xx++ ) {
-        for( int yy = 0; yy < size; yy++ ) {
-          for( int zz = 0; zz < 1; zz++ ) {
-            LVMesh::Cell::index_type pos(mesh.get_rep(),xx,yy,zz);
-            lvf->set_value( mms->pressure( xx, yy, current_time ), pos );
-          }
-        }
+  for( int xx = 0; xx < size; xx++ ) {
+    for( int yy = 0; yy < size; yy++ ) {
+      for( int zz = 0; zz < 1; zz++ ) {
+        LVMesh::Cell::index_type pos(mesh.get_rep(),xx,yy,zz);
+        lvf->set_value( mms->pressure( xx, yy, 0.0 ), pos );
       }
-      ofh = lvf;
-    } else {
-      error("Unsupported basis");
-      return;
     }
   }
-  else {
-    error("Unsupported datatype.");
-    return;
-  }
+  ofh = lvf;
 
-  sched->add_callback(update_time_cb, this);
-
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("Comparison Field");
+  FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
   ofp->send_and_dereference(ofh);
-}
+#endif
+} // end execute()
 
-bool
-CompareMMS::update_time_cb(void* module_pointer) {
-  current_time += .10;
 
-  if( current_time < 10000 ) {
-    //    ((CompareMMS*)module_pointer)->sched->add_callback(update_time_cb,
-    //                                                   (CompareMMS*)module_pointer);
-    ((CompareMMS*)module_pointer)->want_to_execute();
-  }
-
-  return true;
-}

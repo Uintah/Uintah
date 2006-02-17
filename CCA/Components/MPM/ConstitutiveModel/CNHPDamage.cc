@@ -52,14 +52,14 @@ void CNHPDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","cnhp_damag");
   }
 
   CNHDamage::outputProblemSpec(cm_ps,false);
 
-  cm_ps->appendElement("yield_stress",d_plastic.FlowStress,false,4);
-  cm_ps->appendElement("hardening_modulus",d_plastic.K,false,4);
+  cm_ps->appendElement("yield_stress",d_plastic.FlowStress);
+  cm_ps->appendElement("hardening_modulus",d_plastic.K);
 }
 
 

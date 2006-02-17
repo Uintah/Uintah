@@ -51,7 +51,7 @@ IntersectionGeometryPiece::IntersectionGeometryPiece(const IntersectionGeometryP
 
 void IntersectionGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP intersection_ps = ps->appendChild("intersection",true,4);
+  ProblemSpecP intersection_ps = ps->appendChild("intersection");
 
   for (vector<GeometryPiece*>::const_iterator it = child.begin();
        it != child.end(); ++it)

@@ -45,14 +45,14 @@ NPShear::~NPShear()
 
 void NPShear::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model",true,4);
+  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model");
   shear_ps->setAttribute("type","np_shear");
 
-  shear_ps->appendElement("mu_0",d_mu0,false,5);
-  shear_ps->appendElement("zeta",d_zeta,false,5);
-  shear_ps->appendElement("slope_mu_p_over_mu0",d_slope_mu_p_over_mu0,false,5);
-  shear_ps->appendElement("C",d_C,false,5);
-  shear_ps->appendElement("m",d_m,false,5);
+  shear_ps->appendElement("mu_0",d_mu0);
+  shear_ps->appendElement("zeta",d_zeta);
+  shear_ps->appendElement("slope_mu_p_over_mu0",d_slope_mu_p_over_mu0);
+  shear_ps->appendElement("C",d_C);
+  shear_ps->appendElement("m",d_m);
 }
 
 	 

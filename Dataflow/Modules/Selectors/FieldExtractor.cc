@@ -521,8 +521,10 @@ bool FieldExtractor::update_mesh_handle( LevelP& level,
 // Sets all sorts of properties using the PropertyManager facility
 // of the Field.  This is called for all types of Fields.
 void
-FieldExtractorAlgo::set_field_properties(Field* field, QueryInfo& qinfo,
-                                     IntVector& offset) {
+FieldExtractorAlgo::set_field_properties( Field* field, 
+                                          QueryInfo& qinfo,
+                                          IntVector& offset )
+{
   field->set_property( "varname",    string(qinfo.varname), true);
   field->set_property( "generation", qinfo.generation, true);
   field->set_property( "timestep",   qinfo.timestep, true);

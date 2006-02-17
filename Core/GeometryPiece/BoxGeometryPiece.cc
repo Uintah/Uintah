@@ -47,10 +47,10 @@ BoxGeometryPiece::~BoxGeometryPiece()
 
 void BoxGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP box_ps = ps->appendChild("box",true,4);
+  ProblemSpecP box_ps = ps->appendChild("box");
 
-  box_ps->appendElement("min",d_box.lower(),false,5);
-  box_ps->appendElement("max",d_box.upper(),false,5);
+  box_ps->appendElement("min",d_box.lower());
+  box_ps->appendElement("max",d_box.upper());
 }
 
 
