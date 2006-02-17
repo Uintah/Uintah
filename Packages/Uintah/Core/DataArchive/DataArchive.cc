@@ -663,7 +663,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   ASSERTL3(d_tsurl.size() == d_tstop.size());
 
   PatchHashMaps patchMap;
-  patchMap.init(d_tsurl[i], getTimestepCache(i), d_processor, d_numProcessors);
+  patchMap.init(d_tsurl[i], getTimestepCache(i));
 
   ProblemSpecP timeBlock = getTimestepCache(i)->findBlock("Time");
   if (!timeBlock->get("delt", *pDelt))
@@ -814,8 +814,11 @@ DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
   long double total_num_procs = 0;
   for (int i = 0; i < (int)tsTimes.size(); i++) {
     d_patchHashMaps[tsTimes[i]].setTime(tsTimes[i]);
-    d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
-                                     processor, numProcessors);
+
+    // No longer calling init on all timesteps as soon as we create the TimeHashMap
+    // since we are not loading all files initially.
+    //d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
+    //                                 processor, numProcessors);
     total_num_procs += d_patchHashMaps[tsTimes[i]].numSimProcessors();
   }
    
@@ -836,7 +839,6 @@ DataArchive::TimeHashMaps::findVariable(const string& name,
                                         const Patch* patch, int matl,
                                         double time, string& foundUrl)
 {
-  //  cerr << "TimeHashMaps::findVariable\n";
   PatchHashMaps* timeData = findTimeData(time);
   return (timeData == NULL) ? scinew ProblemSpec(0) :
     timeData->findVariable(name, patch, matl, foundUrl);
@@ -847,7 +849,7 @@ DataArchive::TimeHashMaps::findPatchData(double time, const Patch* patch)
 {
   //  cerr << "TimeHashMaps::findPatchData\n";
   PatchHashMaps* timeData = findTimeData(time);
-  return (timeData == NULL) ? NULL : timeData->findPatchData(patch);
+  return timeData == NULL ? NULL : timeData->findPatchData(patch);
 }
 
 DataArchive::PatchHashMaps*
@@ -891,6 +893,19 @@ DataArchive::TimeHashMaps::findTimeData(double time)
     d_lastNtimesteps.push_front(foundIt);
 
     d_lastFoundIt = foundIt;
+
+    PatchHashMaps* timeData = &foundIt->second;
+    if( !timeData->isInitialized() ) {
+      // Convert the time into a timestep
+      int timestep;
+      for(timestep=0;timestep<(int)archive->d_tstimes.size();timestep++)
+        if(time == archive->d_tstimes[timestep])
+          break;
+      if(timestep == (int)archive->d_tstimes.size())
+        return 0;  
+      timeData->init(archive->d_tsurl[timestep], archive->getTimestepCache(timestep));
+    }
+
     return &(*foundIt).second;
   }
 
@@ -934,7 +949,7 @@ DataArchive::TimeHashMaps::updateCacheSize(int new_size)
 
 DataArchive::PatchHashMaps::PatchHashMaps()
   : d_matHashMaps(),
-    d_allParsed(false)
+    d_allParsed(false), d_initialized(false)
 {
   // d_lastFoundIt must be initialized in init.  The value here
   // doesn't persist and causes problems.
@@ -946,9 +961,9 @@ DataArchive::PatchHashMaps::~PatchHashMaps() {
 }
 
 void
-DataArchive::PatchHashMaps::init(string tsUrl, ProblemSpecP tsTopNode,
-                                 int /*processor*/, int /*numProcessors*/)
+DataArchive::PatchHashMaps::init(string tsUrl, ProblemSpecP tsTopNode)
 {
+  d_initialized=true;
   //  cerr << "PatchHashMaps["<<time<<"]::init\n";
   d_allParsed = false;
   // grab the data xml files from the timestep xml file
