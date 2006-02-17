@@ -8,8 +8,8 @@
 #include <Core/Util/Endian.h>
 #include <iostream>
 
+//#define SPEW
 #undef SPEW
-
 using namespace Uintah;
 using std::cerr;
 using std::endl;
@@ -344,21 +344,6 @@ void FirstOrderAdvector::q_FC_flux_operator(CellIterator iter,
 
     q_FC_flux[c] += q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
     
-/*`==========TESTING==========*/
-#ifdef SPEW
-      cout.setf(ios::scientific,ios::floatfield);
-      cout.precision(8);
-    if(c == IntVector(2,5,5) || c == IntVector(8,5,5) 
-    || c == IntVector(4,10,10) || c == IntVector(16,10,10)){
-      cout << c << "    ac " << ac 
-           << "     q_FC "<< q_FC_flux[c] 
-           << " \t influxVol " << influxVol
-           << " \t outfluxVol " << outfluxVol
-           << " \t q_CC[ac] " << q_CC[ac]
-           << " \t q_CC[c] " << q_CC[c] << endl;    
-    } 
-#endif
-/*===========TESTING==========`*/
   }  
 }
 /*_____________________________________________________________________
@@ -445,13 +430,15 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
                                            q_CC,q_Z_FC_flux);
                                            
  /*`==========TESTING==========*/    
-#ifdef SPEW                                        
+#ifdef SPEW                
+    cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->getID() <<endl;                        
     vector<Patch::FaceType>::const_iterator itr;  
     for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
          itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
       Patch::FaceType patchFace = *itr;
+      string name = patch->getFaceName(patchFace);
 
-      cout << "Patch " << patch->getID()<< " Level " << patch->getLevel()->getID()<<" patchFace " << patchFace;
+      cout << "Patch " << patch->getID()<<" patchFace " << name << " " ;
       
       IntVector shift = patch->faceDirection(patchFace);
       shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
@@ -462,13 +449,13 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
  
       IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
       if(patchFace == Patch::xminus || patchFace == Patch::xplus){
-        cout << half << " \t difference: q " << q_X_FC_flux[half] <<  endl; 
+        cout << half << " \t sum_q_flux " << q_X_FC_flux[half] <<  endl; 
       } 
       if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-        cout << half << " \t difference: q " << q_Y_FC_flux[half] <<  endl;
+        cout << half << " \t sum_q_flux " << q_Y_FC_flux[half] <<  endl;
       }
       if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-        cout << half << " \t difference: q " << q_Z_FC_flux[half] <<  endl;
+        cout << half << " \t sum_q_flux " << q_Z_FC_flux[half] <<  endl;
       } 
     } 
 #endif
