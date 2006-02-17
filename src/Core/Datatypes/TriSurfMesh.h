@@ -456,13 +456,8 @@ private:
   vector<under_type>    edge_neighbors_;
   vector<Vector>        normals_;   //! normalized per node normal.
   vector<vector<under_type> > node_neighbors_;
-  Mutex                 point_lock_;
-  Mutex                 edge_lock_;
-  Mutex                 face_lock_;
-  Mutex                 edge_neighbor_lock_;
-  Mutex                 normal_lock_;
-  Mutex                 node_neighbor_lock_;
   unsigned int          synchronized_;
+  Mutex                 synchronize_lock_;
   Basis                 basis_;
 
 #ifdef HAVE_HASH_MAP
@@ -584,13 +579,8 @@ TriSurfMesh<Basis>::TriSurfMesh()
     faces_(0),
     edge_neighbors_(0),
     node_neighbors_(0),
-    point_lock_("TriSurfMesh point_lock_"),
-    edge_lock_("TriSurfMesh edge_lock_"),
-    face_lock_("TriSurfMesh face_lock_"),
-    edge_neighbor_lock_("TriSurfMesh edge_neighbor_lock_"),
-    normal_lock_("TriSurfMesh normal_lock_"),
-    node_neighbor_lock_("TriSurfMesh node_neighbor_lock_"),
-    synchronized_(NODES_E | FACES_E | CELLS_E)
+    synchronized_(NODES_E | FACES_E | CELLS_E),
+    synchronize_lock_("TriSurfMesh synchronize_lock_")
 {
 }
 
@@ -604,44 +594,29 @@ TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
     edge_neighbors_(0),
     normals_(0),
     node_neighbors_(0),
-    point_lock_("TriSurfMesh point_lock_"),
-    edge_lock_("TriSurfMesh edge_lock_"),
-    face_lock_("TriSurfMesh face_lock_"),
-    edge_neighbor_lock_("TriSurfMesh edge_neighbor_lock_"),
-    normal_lock_("TriSurfMesh normal_lock_"),
-    node_neighbor_lock_("TriSurfMesh node_neighbor_lock_"),
-    synchronized_(NODES_E | FACES_E | CELLS_E)
+    synchronized_(NODES_E | FACES_E | CELLS_E),
+    synchronize_lock_("TriSurfMesh synchronize_lock_")
 {
   TriSurfMesh &lcopy = (TriSurfMesh &)copy;
 
-  lcopy.point_lock_.lock();
+  lcopy.synchronize_lock_.lock();
   points_ = copy.points_;
-  lcopy.point_lock_.unlock();
 
-  lcopy.edge_lock_.lock();
   edges_ = copy.edges_;
   halfedge_to_edge_ = copy.halfedge_to_edge_;
   synchronized_ |= copy.synchronized_ & EDGES_E;
-  lcopy.edge_lock_.unlock();
 
-  lcopy.face_lock_.lock();
   faces_ = copy.faces_;
-  lcopy.face_lock_.unlock();
 
-  lcopy.edge_neighbor_lock_.lock();
   edge_neighbors_ = copy.edge_neighbors_;
   synchronized_ |= copy.synchronized_ & EDGE_NEIGHBORS_E;
-  lcopy.edge_neighbor_lock_.unlock();
 
-  lcopy.normal_lock_.lock();
   normals_ = copy.normals_;
   synchronized_ |= copy.synchronized_ & NORMALS_E;
-  lcopy.normal_lock_.unlock();
 
-  lcopy.node_neighbor_lock_.lock();
   node_neighbors_ = copy.node_neighbors_;
   synchronized_ |= copy.synchronized_ & NODE_NEIGHBORS_E;
-  lcopy.node_neighbor_lock_.unlock();
+  lcopy.synchronize_lock_.unlock();
 }
 
 
@@ -704,7 +679,7 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::transform(const Transform &t)
 {
-  point_lock_.lock();
+  synchronize_lock_.lock();
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
@@ -712,7 +687,7 @@ TriSurfMesh<Basis>::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-  point_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -875,9 +850,9 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_node_neighbors()
 {
-  node_neighbor_lock_.lock();
+  synchronize_lock_.lock();
   if (synchronized_ & NODE_NEIGHBORS_E) {
-    node_neighbor_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   }
   node_neighbors_.clear();
@@ -888,7 +863,7 @@ TriSurfMesh<Basis>::compute_node_neighbors()
     node_neighbors_[faces_[f]].push_back(f);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  node_neighbor_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1139,9 +1114,9 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_normals()
 {
-  normal_lock_.lock();
+  synchronize_lock_.lock();
   if (synchronized_ & NORMALS_E) {
-    normal_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   }
   normals_.resize(points_.size()); // 1 per node
@@ -1193,7 +1168,7 @@ TriSurfMesh<Basis>::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
-  normal_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1209,9 +1184,7 @@ TriSurfMesh<Basis>::insert_node(typename Face::index_type face, const Point &p)
   const unsigned f1 = faces_.size();
   const unsigned f2 = f1+3;
 
-  face_lock_.lock();
-  edge_neighbor_lock_.lock();
-  normal_lock_.lock();
+  synchronize_lock_.lock();
 
   faces_.push_back(faces_[f0+1]);
   faces_.push_back(faces_[f0+2]);
@@ -1264,9 +1237,7 @@ TriSurfMesh<Basis>::insert_node(typename Face::index_type face, const Point &p)
   synchronized_ &= ~EDGES_E;
   if (!do_normals) synchronized_ &= ~NORMALS_E;
 
-  face_lock_.unlock();
-  edge_neighbor_lock_.unlock();
-  normal_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1320,9 +1291,8 @@ TriSurfMesh<Basis>::bisect_element(const typename Face::index_type face)
       normals[edge].safe_normalize();
     }
   }
-  face_lock_.lock();
-  edge_neighbor_lock_.lock();
-  normal_lock_.lock();
+
+  synchronize_lock_.lock();
 
   const unsigned f1 = faces_.size();
   faces_.push_back(nodes[0]);
@@ -1459,9 +1429,7 @@ TriSurfMesh<Basis>::bisect_element(const typename Face::index_type face)
   synchronized_ &= ~EDGES_E;
   if (!do_normals) synchronized_ &= ~NORMALS_E;
 
-  face_lock_.unlock();
-  edge_neighbor_lock_.unlock();
-  normal_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1469,9 +1437,9 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_edges()
 {
-  edge_lock_.lock();
+  synchronize_lock_.lock();
   if (synchronized_ & EDGES_E) {
-    edge_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   }
 
@@ -1508,7 +1476,7 @@ TriSurfMesh<Basis>::compute_edges()
   }
 
   synchronized_ |= EDGES_E;
-  edge_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1523,12 +1491,10 @@ TriSurfMesh<Basis>::add_find_point(const Point &p, double err)
   }
   else
   {
-    node_neighbor_lock_.lock();
-    point_lock_.lock();
+    synchronize_lock_.lock();
     points_.push_back(p);
     node_neighbors_.push_back(vector<under_type>());
-    node_neighbor_lock_.unlock();
-    point_lock_.unlock();
+    synchronize_lock_.unlock();
     return static_cast<typename Node::index_type>(points_.size() - 1);
   }
 }
@@ -1569,7 +1535,8 @@ TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1,
   iter = shared.begin();
   int s1 = *iter++;
   int s2 = *iter;
-  face_lock_.lock();
+
+  synchronize_lock_.lock();
   faces_[face1] = s1;
   faces_[face1 + 1] = not_shar[0];
   faces_[face1 + 2] = s2;
@@ -1581,7 +1548,8 @@ TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1,
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
+
   return true;
 }
 
@@ -1591,7 +1559,8 @@ bool
 TriSurfMesh<Basis>::remove_face(typename Face::index_type f)
 {
   bool rval = true;
-  face_lock_.lock();
+
+  synchronize_lock_.lock();
   vector<under_type>::iterator fb = faces_.begin() + f*3;
   vector<under_type>::iterator fe = fb + 3;
 
@@ -1603,7 +1572,8 @@ TriSurfMesh<Basis>::remove_face(typename Face::index_type f)
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
+
   return rval;
 }
 
@@ -1614,14 +1584,14 @@ TriSurfMesh<Basis>::add_triangle(typename Node::index_type a,
                                  typename Node::index_type b,
                                  typename Node::index_type c)
 {
-  face_lock_.lock();
+  synchronize_lock_.lock();
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1631,14 +1601,14 @@ TriSurfMesh<Basis>::add_elem(typename Node::array_type a)
 {
   ASSERTMSG(a.size() == 3, "Tried to add non-tri element.");
 
-  face_lock_.lock();
+  synchronize_lock_.lock();
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
   return static_cast<typename Elem::index_type>((faces_.size() - 1) / 3);
 }
 
@@ -1647,7 +1617,7 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::flip_faces()
 {
-  face_lock_.lock();
+  synchronize_lock_.lock();
   typename Face::iterator fiter, fend;
   begin(fiter);
   end(fend);
@@ -1660,7 +1630,7 @@ TriSurfMesh<Basis>::flip_faces()
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1743,7 +1713,7 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::orient_faces()
 {
-  face_lock_.lock();
+  synchronize_lock_.lock();
   synchronize(EDGES_E | EDGE_NEIGHBORS_E);
   int nfaces = (int)faces_.size() / 3;
   vector<bool> tested(nfaces, false);
@@ -1762,7 +1732,7 @@ TriSurfMesh<Basis>::orient_faces()
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1773,9 +1743,9 @@ TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
   // TODO: This is probably broken with the new indexed edges.
   ASSERTMSG(synchronized_ & EDGES_E,
             "Must call synchronize EDGES_E on TriSurfMesh first");
-  edge_neighbor_lock_.lock();
+  synchronize_lock_.lock();
   if (synchronized_ & EDGE_NEIGHBORS_E) {
-    edge_neighbor_lock_.unlock();
+    synchronize_lock_.unlock();
     return;
   }
 
@@ -1812,7 +1782,7 @@ TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
   }
 
   synchronized_ |= EDGE_NEIGHBORS_E;
-  edge_neighbor_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1820,18 +1790,14 @@ template <class Basis>
 typename TriSurfMesh<Basis>::Node::index_type
 TriSurfMesh<Basis>::add_point(const Point &p)
 {
-  normal_lock_.lock();
-  node_neighbor_lock_.lock();
-  point_lock_.lock();
+  synchronize_lock_.lock();
   points_.push_back(p);
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
   if (synchronized_ & NODE_NEIGHBORS_E)
   {
     node_neighbors_.push_back(vector<under_type>());
   }
-  normal_lock_.unlock();
-  node_neighbor_lock_.unlock();
-  point_lock_.unlock();
+  synchronize_lock_.unlock();
   return static_cast<typename Node::index_type>(points_.size() - 1);
 }
 
