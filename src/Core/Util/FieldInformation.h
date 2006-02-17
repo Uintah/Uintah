@@ -29,7 +29,6 @@
 #ifndef CORE_UTIL_FIELDINFORMATION
 #define CORE_UTIL_FIELDINFORMATION 1
 
-#include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Field.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -126,7 +125,6 @@ class FieldInformation {
     std::string basis_type_h;
     std::string data_type_h;
     std::string container_type_h;
-
 };
 
 } // end namespace
