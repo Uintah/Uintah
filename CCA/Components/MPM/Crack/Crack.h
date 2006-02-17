@@ -274,7 +274,7 @@ class Crack
     void   DiscretizePartialEllipticCracks(const int&,int&);
     void   CombineCrackSegments(const int&);
     short  TwoPointsCoincide(const Point&,const Point&);
-    short  TwoDoublesEqual(const double&, const double&);
+    short  TwoDoublesEqual(const double&, const double&, const double&);
     void   ResetCrackNodes(const int&, const int&, const int&);
     void   ResetCrackElements(const int&, const int&, const int&);
     void   ResetCrackFrontNodes(const int&, const int&, const int&);
