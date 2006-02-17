@@ -330,7 +330,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
-    d_ice->scheduleComputeThermoTransportProperties(sched, ice_level, ice_matls);
+    d_ice->scheduleComputeThermoTransportProperties(sched, ice_level,ice_matls);
   }
    
   d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
@@ -362,53 +362,54 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
     
-    scheduleComputePressure(                    sched, ice_patches, ice_matls_sub,
-                                                                    mpm_matls_sub,
-                                                                    press_matl,
-                                                                    all_matls);
+    scheduleComputePressure(                  sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
     
   
-    d_ice->scheduleComputeTempFC(               sched, ice_patches, ice_matls_sub,
-                                                                    mpm_matls_sub,
-                                                                    all_matls);
-    d_ice->scheduleComputeModelSources(         sched, ice_level,   all_matls);
+    d_ice->scheduleComputeTempFC(             sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  all_matls);
+    d_ice->scheduleComputeModelSources(       sched, ice_level,   all_matls);
 
-    d_ice->scheduleUpdateVolumeFraction(        sched, ice_level,   press_matl,
-                                                                    all_matls);
+    d_ice->scheduleUpdateVolumeFraction(      sched, ice_level,   press_matl,
+                                                                  all_matls);
   
-    d_ice->scheduleComputeVel_FC(               sched, ice_patches, ice_matls_sub,
-                                                                    mpm_matls_sub,
-                                                                    press_matl, 
-                                                                    all_matls, 
-                                                                    false);
+    d_ice->scheduleComputeVel_FC(             sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl, 
+                                                                  all_matls, 
+                                                                  false);
                                                                
-    d_ice->scheduleAddExchangeContributionToFCVel(sched, ice_patches, ice_matls_sub,
-                                                                      all_matls,
-                                                                      false);  
+    d_ice->scheduleAddExchangeContributionToFCVel(
+                                              sched, ice_patches, ice_matls_sub,
+                                                                  all_matls,
+                                                                  false);  
   }
   if(d_ice->d_impICE) {        //  I M P L I C I T, won't work with AMR yet
     // we should use the AMR multi-level pressure solve
     for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
       const PatchSet* ice_patches = ice_level->eachPatch();
-      d_ice->scheduleSetupRHS(                  sched, ice_patches, one_matl, 
-                                                                    all_matls,
-                                                                    false,
-                                                                    "computes");
-      d_ice->scheduleCompute_maxRHS(            sched, ice_level,    one_matl,
-                                                                     all_matls);
+      d_ice->scheduleSetupRHS(                sched, ice_patches, one_matl, 
+                                                                  all_matls,
+                                                                  false,
+                                                                  "computes");
+      d_ice->scheduleCompute_maxRHS(          sched, ice_level,    one_matl,
+                                                                   all_matls);
                                                                   
-      d_ice->scheduleImplicitPressureSolve(     sched, ice_level,   ice_patches,
-                                                                    one_matl, 
-                                                                    press_matl,
-                                                                    ice_matls_sub,
-                                                                    mpm_matls_sub,
-                                                                    all_matls);
+      d_ice->scheduleImplicitPressureSolve(   sched, ice_level,   ice_patches,
+                                                                  one_matl, 
+                                                                  press_matl,
+                                                                  ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  all_matls);
                                                            
-      d_ice->scheduleComputeDel_P(              sched, ice_level,   ice_patches, 
-                                                                    one_matl, 
-                                                                    press_matl,
-                                                                    all_matls);
+      d_ice->scheduleComputeDel_P(            sched, ice_level,   ice_patches, 
+                                                                  one_matl, 
+                                                                  press_matl,
+                                                                  all_matls);
     }
   }                           //  IMPLICIT AND EXPLICIT
 
@@ -418,10 +419,11 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
       const PatchSet* ice_patches = ice_level->eachPatch();
 
-      d_ice->scheduleComputeDelPressAndUpdatePressCC(sched, ice_patches, press_matl,
-                                                                         ice_matls_sub,
-                                                                         mpm_matls_sub,
-                                                                         all_matls);
+      d_ice->scheduleComputeDelPressAndUpdatePressCC(
+                                              sched, ice_patches, press_matl,
+                                                                  ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  all_matls);
     }
   } 
   
@@ -432,17 +434,18 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
 
-    d_ice->scheduleComputePressFC(              sched, ice_patches, press_matl,
+    d_ice->scheduleComputePressFC(            sched, ice_patches, press_matl,
                                                                     all_matls);
-    d_ice->scheduleAccumulateMomentumSourceSinks(sched, ice_patches, press_matl,
-                                                                     ice_matls_sub,
-                                                                     mpm_matls_sub,
-                                                                     all_matls);
+    d_ice->scheduleAccumulateMomentumSourceSinks(
+                                              sched, ice_patches, press_matl,
+                                                                  ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  all_matls);
                                                                   
-    d_ice->scheduleAccumulateEnergySourceSinks( sched, ice_patches, ice_matls_sub,
-                                                                    mpm_matls_sub,
-                                                                    press_matl,
-                                                                    all_matls);
+    d_ice->scheduleAccumulateEnergySourceSinks(sched, ice_patches,ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
   }
 
   if(!d_rigidMPM){
@@ -486,22 +489,25 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
 
-    d_ice->scheduleComputeLagrangianValues(     sched, ice_patches, ice_matls);
+    d_ice->scheduleComputeLagrangianValues(   sched, ice_patches, ice_matls);
 
-    d_ice->scheduleAddExchangeToMomentumAndEnergy(sched, ice_patches, ice_matls_sub,
-                                                                      mpm_matls_sub,
-                                                                      press_matl,
-                                                                      all_matls); 
+    d_ice->scheduleAddExchangeToMomentumAndEnergy(
+                                              sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls); 
 
-    d_ice->scheduleComputeLagrangianSpecificVolume(sched, ice_patches, ice_matls_sub,
-                                                                       mpm_matls_sub,
-                                                                       press_matl,
-                                                                       all_matls);
+    d_ice->scheduleComputeLagrangianSpecificVolume(
+                                              sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
                                                                   
-    d_ice->scheduleComputeLagrangian_Transported_Vars(sched, ice_patches, ice_matls);
+    d_ice->scheduleComputeLagrangian_Transported_Vars(
+                                              sched, ice_patches, ice_matls);
 
 
-    scheduleComputeCCVelAndTempRates(           sched, ice_patches, mpm_matls);
+    scheduleComputeCCVelAndTempRates(         sched, ice_patches, mpm_matls);
 
   }
   if(do_mlmpmice){
@@ -528,16 +534,17 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
     
-    d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,maxMach_PSS);
+    d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,
+                                                             maxMach_PSS);
                                    
-    d_ice->scheduleAdvectAndAdvanceInTime(     sched, ice_patches, AMR_subCycleVar,
-                                                                   ice_matls_sub,
-                                                                   mpm_matls_sub,
-                                                                   press_matl,
-                                                                   ice_matls);
+    d_ice->scheduleAdvectAndAdvanceInTime(  sched, ice_patches, AMR_subCycleVar,
+                                                                ice_matls_sub,
+                                                                mpm_matls_sub,
+                                                                press_matl,
+                                                                ice_matls);
                                                                   
-    d_ice->scheduleTestConservation(           sched, ice_patches, ice_matls_sub,
-                                                                   all_matls); 
+    d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
+                                                                all_matls); 
   }
 
   if(d_ice->d_canAddICEMaterial){
@@ -546,7 +553,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
 
       //  This checks to see if the model on THIS patch says that it's
       //  time to add a new material
-      d_ice->scheduleCheckNeedAddMaterial(sched, ice_level,   all_matls);
+      d_ice->scheduleCheckNeedAddMaterial(  sched, ice_level,   all_matls);
                                                                                 
       //  This one checks to see if the model on ANY patch says that it's
       //  time to add a new material
@@ -557,11 +564,11 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   if(d_mpm->flags->d_canAddMPMMaterial){
     //  This checks to see if the model on THIS patch says that it's
     //  time to add a new material
-    d_mpm->scheduleCheckNeedAddMPMMaterial(sched, mpm_patches, mpm_matls);
+    d_mpm->scheduleCheckNeedAddMPMMaterial( sched, mpm_patches, mpm_matls);
                                                                                 
     //  This one checks to see if the model on ANY patch says that it's
     //  time to add a new material
-    d_mpm->scheduleSetNeedAddMaterialFlag(sched, mpm_level,   mpm_matls);
+    d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
   }
 
   sched->scheduleParticleRelocation(mpm_level,
@@ -596,8 +603,8 @@ void MPMICE::scheduleRefinePressCC(SchedulerP& sched,
   press_matls->add(0);
   press_matls->addReference();
 
-  scheduleRefineVariableCC(sched, patches, press_matls, Ilb->press_CCLabel);
-  scheduleRefineVariableCC(sched, patches, matls,       Ilb->press_force_CCLabel);
+  scheduleRefineVariableCC(sched,patches, press_matls,Ilb->press_CCLabel);
+  scheduleRefineVariableCC(sched,patches, matls,      Ilb->press_force_CCLabel);
   if(press_matls->removeReference())
     delete press_matls;
 }
