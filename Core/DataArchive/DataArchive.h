@@ -144,14 +144,14 @@ private:
   public:
     PatchHashMaps();
     ~PatchHashMaps();  // to free the saved XML Data
-    void init(string tsUrl, ProblemSpecP tsTopNode,
-	      int processor, int numProcessors);
+    void init(string tsUrl, ProblemSpecP tsTopNode);
     void purgeCache(); // purge the cached data
     inline ProblemSpecP findVariable(const string& name, const Patch* patch,
 				 int matl, string& foundUrl);
     MaterialHashMaps* findPatchData(const Patch* patch);
 
     void setTime(double t) { time = t; }
+    bool isInitialized(void) { return d_initialized; }
 
     // This returns the number of simulation processors that stored
     // data in this timestep.  This is only valid after you call init.
@@ -171,7 +171,8 @@ private:
     bool d_allParsed;           // True if all patches have been parsed
     vector<bool> d_xmlParsed;   // Same size as d_xmlUrls, indicates
                                 // if that xml has been parsed
-    vector<ProblemSpecP> docs; // kept around for memory cleanup purposes
+    vector<ProblemSpecP> docs;  // kept around for memory cleanup purposes
+    bool d_initialized;         // Flagged once this patch's init is called
   };
   
   //! Third layer of DataArchive structure for storing hash maps of variable data
@@ -391,6 +392,7 @@ private:
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 			 long64 particleID, int matIndex,
 			 double time);
+
   static DebugStream dbg;
 };
 
