@@ -1128,9 +1128,9 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         value << timestep;
         ProblemSpecP newElem = ts->appendElement("timestep",value.str().c_str());
         newElem->setAttribute("href", timestepindex.c_str());
-        deltVal << delt;
+        deltVal << std::setprecision(17) << delt;
         newElem->setAttribute("delt", deltVal.str());
-        timeVal << d_tempElapsedTime;
+        timeVal << std::setprecision(17) << d_tempElapsedTime;
         newElem->setAttribute("time", timeVal.str());
       }
       
