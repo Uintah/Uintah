@@ -74,29 +74,23 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
         int n = mpm_matl->getDWIndex();
-        if (!flag->d_fracture) {
-          numerator   += (gTemp[n][c] * gmass[n][c]  * Cp[m]);
+        numerator   += (gTemp[n][c] * gmass[n][c]  * Cp[m]);
+        denominator += (gmass[n][c]  * Cp[m]);
+        if (flag->d_fracture) {
+          numerator   += GTemp[n][c] * Gmass[n][c]  * Cp[m];
+          denominator += Gmass[n][c]  * Cp[m];  // add in second field;
         }
-        else
-          //add second
-          numerator   += (gTemp[n][c] * gmass[n][c]  * Cp[m]
-                        + GTemp[n][c] * Gmass[n][c]  * Cp[m]);
-        if (!flag->d_fracture)
-          denominator += (gmass[n][c]  * Cp[m]);
-        else
-          denominator += (gmass[n][c]  * Cp[m]
-                         +Gmass[n][c]  * Cp[m]);  // add in second field;
       }
       
       double contactTemperature = numerator/denominator;
 
       for(int m = 0; m < numMatls; m++) {
-        if (!flag->d_fracture)
-          thermalContactHeatExchangeRate[m][c] =
-          (contactTemperature - gTemp[m][c])/delT;
-        else
+        thermalContactHeatExchangeRate[m][c] =
+                                      (contactTemperature - gTemp[m][c])/delT;
+        if (flag->d_fracture){
           GthermalContactHeatExchangeRate[m][c] =
           (contactTemperature - GTemp[m][c])/delT;
+        }
       }
     }
   }
