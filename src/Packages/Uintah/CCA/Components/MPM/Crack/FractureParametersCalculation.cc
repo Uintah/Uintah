@@ -263,7 +263,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
     ni.reserve(interpolator->size());
     vector<double> S;
     S.reserve(interpolator->size());
-
+    
     int pid,patch_size;
     MPI_Comm_size(mpi_crack_comm,&patch_size);
     MPI_Comm_rank(mpi_crack_comm,&pid);
@@ -340,9 +340,10 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                 } 
                 if(preIdx<0) { // duplicate node, not operated
 			
+
                   // Step 1: Define crack-front local coordinates with
-                  // origin located at the point at which J&K is calculated.
-                  // v1,v2,v3: direction consies of new axes X',Y' and Z'
+                  //   origin located at the point at which J&K is calculated.
+                  //   v1,v2,v3: direction consies of new axes X',Y' and Z'
 			 
                   // Two segments connected by the node
                   int segs[2];
@@ -411,7 +412,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 
 		  
                   // Step 3: Find intersection (crossPt) between J-integral ptah 
-		  // and crack plane
+		  //   and crack plane
                  
                   double d_rJ=rJ; // Radius of J-contour
                   Point crossPt;
@@ -438,7 +439,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   int nSegs=16;
                   double xprime,yprime,x,y,z;
                   double PI=3.141592654;
-                  Point*   X  = new Point[nSegs+1];   // Integral points
+                  Point*   X  = new Point[nSegs+1];   // Integration points
                   double*  W  = new double[nSegs+1];  // Strain energy density
                   double*  K  = new double[nSegs+1];  // Kinetic energy density
                   Matrix3* ST = new Matrix3[nSegs+1]; // Stresses in global coordinates
@@ -451,14 +452,15 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     angle=2*PI*(float)j/(float)nSegs;
                     cosTheta=(xcprime*cos(angle)-ycprime*sin(angle))/scprime;
                     sinTheta=(ycprime*cos(angle)+xcprime*sin(angle))/scprime;
-                    // Coordinates of integral points in local coordinates
+                    // Coordinates of integration points in local coordinates
                     xprime=d_rJ*cosTheta;
                     yprime=d_rJ*sinTheta;
-                    // Coordinates of integral points in global coordinates
+                    // Coordinates of integration points in global coordinates
                     x=l1*xprime+l2*yprime+x0;
                     y=m1*xprime+m2*yprime+y0;
                     z=n1*xprime+n2*yprime+z0;
                     X[j] = Point(x,y,z);
+		    // Initialize the variables at the integration points
                     W[j]  = 0.0;
                     K[j]  = 0.0;
                     ST[j] = Matrix3(0.);
@@ -468,29 +470,52 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   }
 
 		  
-                  // Step 5: Evaluate solutions at integral points in global coordinates
-                 
+                  // Step 5: Evaluate solutions at integration points in global coordinates
+		  //   and the relative displacement (Uc) and stress traction (Sc) at crossPt
+
+                  Vector  Uca=Vector(0.,0.,0.), Ucb=Vector(0.,0.,0.);
+                  Matrix3 Sca=Matrix3(0.), Scb=Matrix3(0.);   
                   for(int j=0; j<=nSegs; j++) {
 		    interpolator->findCellAndWeights(X[j],ni,S,psize[j]);
                     for(int k=0; k<n8or27; k++) {
+		      // Calculate the values of the variables used in J-integral 
                       if(GnumPatls[ni[k]]!=0 && j<nSegs/2) { // below crack
                         W[j]  += GW[ni[k]]          * S[k];
                         K[j]  += GK[ni[k]]          * S[k];
                         ST[j] += GgridStress[ni[k]] * S[k];
                         DG[j] += GdispGrads[ni[k]]  * S[k];
                       }
-                      else { // above crack
+                      else { // above crack or non-crack zone  
                         W[j]  += gW[ni[k]]          * S[k];
                         K[j]  += gK[ni[k]]          * S[k];
                         ST[j] += ggridStress[ni[k]] * S[k];
                         DG[j] += gdispGrads[ni[k]]  * S[k];
                       }
-                    } 
-                  } 
+                    } // End of loop over k
 
-		  
+		    // Calculate stress traction (Sc) and relative displacement (Uc) at crossPt.
+                    // Only the nodes in crack zone participate in the interpolation.
+		    if(j==0) {
+                      double sumS=0.; 
+                      for(int k=0; k<n8or27; k++) {
+		        if(GnumPatls[ni[k]]!=0) {
+                          Sca += ggridStress[ni[k]]*S[k];
+			  Scb += GgridStress[ni[k]]*S[k];
+                          Uca += gdisp[ni[k]]*S[k];
+			  Ucb += Gdisp[ni[k]]*S[k];
+                          sumS += S[k];
+                        }
+		      }  
+                      Sca/=sumS; Scb/=sumS; Uca/=sumS; Ucb/=sumS; 
+		    }   
+
+                  } // End of loop over j
+
+			  
                   // Step 6: Transform the solutions to crack-front local coordinates
-                  
+
+                  // Transform second-order tensors
+		  Matrix3 sca=Matrix3(0.), scb=Matrix3(0.);
                   for(int j=0; j<=nSegs; j++) {
                     for(int i1=0; i1<3; i1++) {
                       for(int j1=0; j1<3; j1++) {
@@ -498,14 +523,32 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                           for(int j2=0; j2<3; j2++) {
                             st[j](i1,j1) += T(i1,i2)*T(j1,j2)*ST[j](i2,j2);
                             dg[j](i1,j1) += T(i1,i2)*T(j1,j2)*DG[j](i2,j2);
+			    if(j==0) {
+			      sca(i1,j1) += T(i1,i2)*T(j1,j2)*Sca(i2,j2);
+			      scb(i1,j1) += T(i1,i2)*T(j1,j2)*Scb(i2,j2);
+			    }
                           }
                         }
                       } 
                     } 
                   } 
 
+		  // Transform the relative displacement at crossPt
+		  Vector uca=Vector(0.,0.,0.), ucb=Vector(0.,0.,0.);
+		  double uax=0., uay=0., uaz=0., ubx=0., uby=0., ubz=0.;
+		  for(int j=0; j<3; j++) {
+	   	    uax += T(0,j) * Uca[j];
+		    uay += T(1,j) * Uca[j];
+		    uaz += T(2,j) * Uca[j];
+		    ubx += T(0,j) * Ucb[j];
+		    uby += T(1,j) * Ucb[j];
+		    ubz += T(2,j) * Ucb[j];
+		  }
+		  uca=Vector(uax,uay,uaz);
+		  ucb=Vector(ubx,uby,ubz);
+
 		  
-                  // Step 7: Compute integrand values at integral points
+                  // Step 7: Compute integrand values at integration points
                  
                   double* f1ForJx = new double[nSegs+1];
                   double* f1ForJy = new double[nSegs+1];
@@ -528,7 +571,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   }
 
 		  
-                  // Step 8: Calculate contour integral (primary part of J integral)
+                  // Step 8: Calculate contour integral (primary part of J-integral)
                  
                   double Jx1=0.,Jy1=0.;
                   for(int j=0; j<nSegs; j++) { 
@@ -538,9 +581,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   Jx1 *= d_rJ*PI/nSegs;
                   Jy1 *= d_rJ*PI/nSegs;
 
-		  
-                  // Step 9: Release dynamic arries for this crack front segment
-                 
+                  // Release dynamic arries for this crack front segment
                   delete [] X;
                   delete [] W;        delete [] K;
                   delete [] ST;       delete [] DG;
@@ -548,10 +589,10 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   delete [] f1ForJx;  delete [] f1ForJy;
 
 		  
-                  // Step 10: Area integral (secondary part of J-integral)
-		  // Area integral calculation is optional. 
-		  // It can be forced in input file by setting useVolumeIntegral=YES.
-		  // If Jx1 less than zero, it will be activated automatically.  
+                  // Step 9: Area integral (the secondary part of J-integral)
+		  //   Area integral calculation is optional. 
+		  //   It can be forced in input file by setting useVolumeIntegral=YES.
+		  //   If Jx1 less than zero, it will be activated automatically.  
 			 
                   double Jx2=0.,Jy2=0.;
                   if(useVolumeIntegral || Jx1<0.) {
@@ -647,15 +688,42 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     delete [] acc;  delete [] vel;
                     delete [] dg;   delete [] vg;
 
-                  } // End of if(useVoluemIntegral)
+                  } // End of if(useVoluemIntegral || Jx1<0)
 
-                  // J-integral components
-		  cfJ[l]=Vector(Jx1+Jx2,Jy1+Jy2,0.);
+		  
+                  // Step 10. Contribution of friction to energy release rate = t*u 
+		  //          t: stress traction at crossPt on crack surface
+		  //          u: relative displacement at crossPt on crack surface
+		  
+		  // Tangential traction
+		  double ta=sqrt(sca(1,0)*sca(1,0)+sca(1,2)*sca(1,2));
+		  double tb=sqrt(scb(1,0)*scb(1,0)+scb(1,2)*scb(1,2));
+		  Matrix3 tc=sca;
+		  if(tb>ta) tc=scb;
+		  
+		  // Relative displacement
+		  Vector uc=uca-ucb;
+
+		  // Contribution of frictional work on energy release rate
+		  double  fricWork=0.;
+		  if(cmu[m]!=0.) {
+		    fricWork=fabs(tc(1,0)*uc.x())+fabs(tc(1,2)*uc.z());
+		    if(tc(1,1)<0. && uc.y()<0.) fricWork+=fabs(tc(1,1)*uc.y());
+		  }
+		  
+
+                  // Step 11. J-integral vector
+
+		  // Energy release rate: G=Jx1+Jx2-fricWork
+		  // Jx1: contribution of contour-integral (primary part)
+		  // Jx2: contribution of area integral (secondary part)
+		  // fricWork: frictional dissipation due to crack surface frictional sliding
+		  cfJ[l]=Vector(Jx1+Jx2-fricWork,Jy1+Jy2,0.);
 
 		   
-                  // Step 11: Convert J-integral to stress intensity (K)
+                  // Step 12: Convert J-integral into stress intensity (K)
                  
-                  // Task 11a: Find COD at crossPt or near crack tip
+                  // Task 12a: Find COD at crossPt or near crack tip
                   Point p_d;
                   if(CODOption==0 || CODOption==1) {
                     double d;
@@ -664,14 +732,17 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     else  // For calculation of pure fracture parameters
 	              d=d_rJ/2.;
 
-                    // If point (-d,0,0) is not on crack plane, adjust 'd'  
+                    // If point (-d,0,0) is not on crack plane, adjust 'd',
+		    // i.e. find the maximum d on the crack  
                     if(CODOption==1) GetPositionToComputeCOD(m,origin,T,d);
 
-		    // Global coordinates of the point
+		    // Global coordinates of the point (-d,0,0)
                     p_d=Point(-d*l1+x0,-d*m1+y0,-d*n1+z0);
-                  }                     
-                 if(CODOption==2) p_d=crossPt;
-
+                  }               
+                  else if(CODOption==2) { // Choose the intersection
+		    p_d=crossPt;
+                  }
+			 
                   // Calculate displacements at point p_d
                   Vector disp_a=Vector(0.);
                   Vector disp_b=Vector(0.);
@@ -681,13 +752,13 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     disp_b += Gdisp[ni[k]] * S[k];
                   }
 
-                  // Crack opening displacements
+                  // Crack opening displacements in local coodinates
                   Vector D = T*(disp_a-disp_b);
 
-                  // Task 11b: Get crack propagating velocity
+                  // Task 12b: Get crack propagating velocity
                   double C=cfSegVel[m][idx];
 
-                  // Task 11c: Convert J-integral into stress intensity factors
+                  // Task 12c: Convert J-integral into stress intensity factors
 		  // cfJ is the components of J-integral in the crack-axis coordinates,
 		  // and its first component is the total energy release rate. 
                   Vector SIF;
@@ -1023,7 +1094,7 @@ void Crack::OutputCrackFrontResults(const int& m)
     
     ofstream outCrkFrt(outFileName, ios::app);
 	
-    
+    short out3middlecracks=NO; // for NF grinding problem
     char outFileName0[200];
     char outFileName1[200];
     char outFileName2[200];
@@ -1036,7 +1107,6 @@ void Crack::OutputCrackFrontResults(const int& m)
     ofstream outCrkFrt0(outFileName0, ios::app);
     ofstream outCrkFrt1(outFileName1, ios::app);
     ofstream outCrkFrt2(outFileName2, ios::app);
-    
     
     double time=d_sharedState->getElapsedTime();
     int timestep=d_sharedState->getCurrentTopLevelTimeStep();
@@ -1066,7 +1136,8 @@ void Crack::OutputCrackFrontResults(const int& m)
           outCrkFrt << setw(15) << "inf" << endl;
 
         if(i==cfSegMaxIdx[m][i] && num>2) outCrkFrt << endl;
- /*       
+       
+	if(out3middlecracks) {
 	if(i==2) {
           outCrkFrt0 << setw(5) << timestep
 	            << setw(15) << time
@@ -1117,7 +1188,7 @@ void Crack::OutputCrackFrontResults(const int& m)
           else 
             outCrkFrt2 << setw(15) << "inf" << endl;           
         }	  
-*/          	
+	}  	
       }
     } // End of loop over i 
   } 
