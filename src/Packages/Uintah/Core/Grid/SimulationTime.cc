@@ -43,7 +43,9 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
 
   if (!time_ps->get("clamp_timesteps_to_output", timestep_clamping))
     timestep_clamping = false;
-  
+
+  if (!time_ps->get("end_on_max_time_exactly", end_on_max_time))
+    end_on_max_time = false;
 
   if( max_iterations < 1 )
     {
