@@ -722,13 +722,15 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
                                            q_OAFS,q_Z_FC_flux);
                                            
  /*`==========TESTING==========*/ 
-#ifdef SPEW                                           
+#ifdef SPEW                
+    cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->getID() <<endl;                        
     vector<Patch::FaceType>::const_iterator itr;  
     for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
          itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
       Patch::FaceType patchFace = *itr;
+      string name = patch->getFaceName(patchFace);
 
-      cout << "Patch " << patch->getID()<< " Level " << patch->getLevel()->getID()<<" patchFace " << patchFace;
+      cout << "Patch " << patch->getID()<<" patchFace " << name << " " ;
       
       IntVector shift = patch->faceDirection(patchFace);
       shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
@@ -739,15 +741,15 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
  
       IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
       if(patchFace == Patch::xminus || patchFace == Patch::xplus){
-        cout << half << " \t difference: q " << q_X_FC_flux[half] <<  endl; 
+        cout << half << " \t sum_q_flux " << q_X_FC_flux[half] <<  endl; 
       } 
       if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-        cout << half << " \t difference: q " << q_Y_FC_flux[half] <<  endl;
+        cout << half << " \t sum_q_flux " << q_Y_FC_flux[half] <<  endl;
       }
       if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-        cout << half << " \t difference: q " << q_Z_FC_flux[half] <<  endl;
+        cout << half << " \t sum_q_flux " << q_Z_FC_flux[half] <<  endl;
       } 
-    }
+    } 
 #endif 
   /*===========TESTING==========`*/ 
   }   
