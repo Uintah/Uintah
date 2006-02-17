@@ -101,9 +101,9 @@ using std::vector;
       const VarLabel* gSp_vol_srcLabel;      // specific volume 
       const VarLabel* gTemperatureNoBCLabel; //for heat conduction
       const VarLabel* gTemperatureStarLabel; //for heat conduction
-      const VarLabel* gInternalHeatRateLabel;
+      const VarLabel* gdTdtLabel;
       const VarLabel* gExternalHeatRateLabel;
-      const VarLabel* gThermalContactHeatExchangeRateLabel;
+      const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;
       const VarLabel* gStressLabel;
@@ -201,9 +201,9 @@ using std::vector;
       const VarLabel* GTemperatureNoBCLabel;
       const VarLabel* GExternalForceLabel;
       const VarLabel* GExternalHeatRateLabel;
-      const VarLabel* GThermalContactHeatExchangeRateLabel;
+      const VarLabel* GThermalContactTemperatureRateLabel;
       const VarLabel* GInternalForceLabel;
-      const VarLabel* GInternalHeatRateLabel;
+      const VarLabel* GdTdtLabel;
       const VarLabel* GTemperatureRateLabel;
       const VarLabel* GTemperatureStarLabel;
       const VarLabel* GVelocityStarLabel;

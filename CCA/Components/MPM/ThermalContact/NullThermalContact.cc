@@ -36,18 +36,18 @@ void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
 
-      NCVariable<double> thermalContactHeatExchangeRate;
-      new_dw->allocateAndPut(thermalContactHeatExchangeRate, 
-			     lb->gThermalContactHeatExchangeRateLabel, 
+      NCVariable<double> thermalContactTemperatureRate;
+      new_dw->allocateAndPut(thermalContactTemperatureRate, 
+			     lb->gThermalContactTemperatureRateLabel, 
 			     dwindex, patch);
 
-      thermalContactHeatExchangeRate.initialize(0);
-      NCVariable<double> GthermalContactHeatExchangeRate;
+      thermalContactTemperatureRate.initialize(0);
+      NCVariable<double> GthermalContactTemperatureRate;
       if (flag->d_fracture) {
-	new_dw->allocateAndPut(GthermalContactHeatExchangeRate,
-			       lb->GThermalContactHeatExchangeRateLabel, 
+	new_dw->allocateAndPut(GthermalContactTemperatureRate,
+			       lb->GThermalContactTemperatureRateLabel, 
 			       dwindex, patch);
-	GthermalContactHeatExchangeRate.initialize(0);
+	GthermalContactTemperatureRate.initialize(0);
       }
 
     }
@@ -64,7 +64,7 @@ void NullThermalContact::addComputesAndRequires(Task* t,
 					    const PatchSet*,
 					    const MaterialSet*) const
 {
-  t->computes(lb->gThermalContactHeatExchangeRateLabel);
+  t->computes(lb->gThermalContactTemperatureRateLabel);
   if (flag->d_fracture)
-    t->computes(lb->GThermalContactHeatExchangeRateLabel); 
+    t->computes(lb->GThermalContactTemperatureRateLabel); 
 }
