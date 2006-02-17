@@ -269,7 +269,7 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_f
   // cache per cell calculations that are used over and over again.
   set_up_cell_cache();
   
-  mod->update_progress(1, sz);
+  mod->updateprogress(1.0/sz);
  
   data_out_.resize(np_);
 
