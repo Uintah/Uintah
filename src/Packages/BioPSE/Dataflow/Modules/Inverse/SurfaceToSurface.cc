@@ -940,8 +940,7 @@ SurfaceToSurface::execute()
 
   msgStream_ << "(ns,nv,nc)="<<ns<<" "<<nv<<" "<<nc<<"\n";
 
-  update_progress(1,2);
-  update_progress(2,2);
+  update_progress(0.5);
 
   // The problem is stated as:  A * Phi = 0
   // Where:      +-           -+

@@ -209,7 +209,6 @@ public:
   // Execution time progress.
   // Percent is number between 0.0-1.0
   virtual void update_progress(double percent); 
-  virtual void update_progress(unsigned int n, unsigned int max);
 
   port_range_type getIPorts(const string &name);
   IPort* getIPort(const string &name);
@@ -323,7 +322,7 @@ private:
   void add_oport(OPort*);
   State state;
   MsgState msg_state;  
-  double progress;
+
     
   PortManager<OPort*> oports;
   PortManager<IPort*> iports;

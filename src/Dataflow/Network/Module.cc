@@ -54,6 +54,7 @@
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <iostream>
@@ -135,7 +136,9 @@ FindOPort(const string &package, const string &datatype)
 Module::Module(const string& name, GuiContext* ctx,
 	       SchedClass sched_class, const string& cat,
 	       const string& pack)
-  : mailbox("Module execution FIFO", 100),
+  : ProgressReporter(),
+    GuiCallback(),
+    mailbox("Module execution FIFO", 100),
     gui(ctx->getInterface()),
     ctx(ctx),
     name(name),
@@ -151,7 +154,6 @@ Module::Module(const string& name, GuiContext* ctx,
     sched_class(sched_class),
     state(NeedData),
     msg_state(Reset), 
-    progress(0),
     helper(0),
     helper_thread(0),
     network(0), 
@@ -411,23 +413,15 @@ Module::update_progress(double p)
 {
   if (state == JustStarted)
     update_state(Executing);
-  if (p < 0.0) p = 0.0;
-  if (p > 1.0) p = 1.0;
-  int opp=(int)(progress*100);
-  int npp=(int)(p*100);
-  if(opp != npp){
-    double time=timer.time();
-    gui->execute(id+" set_progress "+to_string(p)+" "+to_string(time));
-    progress=p;
+  p = Clamp(p, 0.0, 1.0);
+  if (p != progress_percent_){
+    progress_percent_ = p;
+    string str = to_string(progress_percent_*100);
+    gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
+
   }
 }
 
-
-void
-Module::update_progress(unsigned int n, unsigned int max)
-{
-  update_progress(double(n)/double(max));
-}
 
 
 // Port stuff

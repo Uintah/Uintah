@@ -64,29 +64,23 @@ public:
   ProgressReporter();
   virtual ~ProgressReporter();
 
-  virtual void error(const std::string& msg);
-  virtual void warning(const std::string& msg);
-  virtual void remark(const std::string& msg);
-  virtual void postMessage(const std::string &msg);
-  virtual void compile_error(const std::string &filename);
+  virtual void          error(const std::string& msg);
+  virtual void          warning(const std::string& msg);
+  virtual void          remark(const std::string& msg);
+  virtual void          postMessage(const std::string &msg);
+  virtual void          compile_error(const std::string &filename);
 
   virtual std::ostream &msgStream();
-  virtual void msgStream_flush();
+  virtual void          msgStream_flush();
 
   // Compilation progress.  Should probably have different name.
-  virtual void report_progress( ProgressState );
+  virtual void          report_progress( ProgressState );
 
   // Execution time progress.
   // Percent is number between 0.0-1.0
-  // unsigned int will probably become size_t
-  virtual void update_progress(double percent);
-  virtual void update_progress(unsigned int n, unsigned int max);
-
+  virtual void          update_progress(double percent);
 protected:
-  // accumulation storage;
-  int                current_;
-  int                max_;
-  Mutex              progress_lock_;
+  double                progress_percent_;
 };
 
 

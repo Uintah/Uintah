@@ -359,7 +359,7 @@ SynchronizeGeometry::forward_saved_msg()
   }
   else
   {
-    update_progress(num_flush, numIPorts() - 1);
+    update_progress(num_flush/double(numIPorts() - 1));
   }
 }
 
