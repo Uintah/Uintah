@@ -264,7 +264,7 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");
     
-  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM",true,1);
+  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
   for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
     MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
@@ -274,11 +274,11 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
   contactModel->outputProblemSpec(mpm_ps);
 #endif
 
-  ProblemSpecP contact_ps = mat_ps->appendChild("contact",true,2);
-  contact_ps->appendElement("type",d_con_type,false,3);
-  contact_ps->appendElement("direction",d_contact_dirs,false,3);
-  contact_ps->appendElement("stop_time",d_stop_time,false,3);
-  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop,false,3);
+  ProblemSpecP contact_ps = mat_ps->appendChild("contact");
+  contact_ps->appendElement("type",d_con_type);
+  contact_ps->appendElement("direction",d_contact_dirs);
+  contact_ps->appendElement("stop_time",d_stop_time);
+  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
 
 }
 

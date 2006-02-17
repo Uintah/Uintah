@@ -449,6 +449,7 @@ void ParticleFieldExtractor::graph(string idx, string var)
 //----------------------------------------------------------------
 void ParticleFieldExtractor::execute() 
 { 
+  printf("ParticleFieldExtractor::execute()\n");
   //  const char* old_tag1 = AllocatorSetDefaultTag("ParticleFieldExtractor::execute");
   tcl_status.set("Calling ParticleFieldExtractor!"); 
   //  bool newarchive; RNJ - Not used???

@@ -152,14 +152,14 @@ void MPMMaterial::registerParticleState(SimulationState* sharedState)
 ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP mpm_ps = Material::outputProblemSpec(ps);
-  mpm_ps->appendElement("density",d_density,false,3);
-  mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity,false,3);
-  mpm_ps->appendElement("specific_heat",d_specificHeat,false,3);
-  mpm_ps->appendElement("C_p",d_Cp,false,3);
-  mpm_ps->appendElement("room_temp",d_troom,false,3);
-  mpm_ps->appendElement("melt_temp",d_tmelt,false,3);
-  mpm_ps->appendElement("is_rigid",d_is_rigid,false,3);
-  mpm_ps->appendElement("includeFlowWork",d_includeFlowWork,false,3);
+  mpm_ps->appendElement("density",d_density);
+  mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity);
+  mpm_ps->appendElement("specific_heat",d_specificHeat);
+  mpm_ps->appendElement("C_p",d_Cp);
+  mpm_ps->appendElement("room_temp",d_troom);
+  mpm_ps->appendElement("melt_temp",d_tmelt);
+  mpm_ps->appendElement("is_rigid",d_is_rigid);
+  mpm_ps->appendElement("includeFlowWork",d_includeFlowWork);
   d_cm->outputProblemSpec(mpm_ps);
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {

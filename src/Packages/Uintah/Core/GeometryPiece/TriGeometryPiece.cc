@@ -45,9 +45,9 @@ TriGeometryPiece::~TriGeometryPiece()
 void TriGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
 
-  ProblemSpecP tri_ps = ps->appendChild("tri",true,4);
+  ProblemSpecP tri_ps = ps->appendChild("tri");
 
-  tri_ps->appendElement("name",d_file,false,5);
+  tri_ps->appendElement("name",d_file);
 
 }
 

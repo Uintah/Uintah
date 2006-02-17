@@ -72,19 +72,20 @@ WARNING
    public:
      
       enum NodeType {
-	ELEMENT_NODE = 1, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE,
-	ENTITY_REFERENCE_NODE, ENTITY_NODE, PROCESSING_INSTRUCTION_NODE,
-	COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, 
-	DOCUMENT_FRAGMENT_NODE, NOTATION_NODE};
+        ELEMENT_NODE = 1, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE,
+        ENTITY_REFERENCE_NODE, ENTITY_NODE, PROCESSING_INSTRUCTION_NODE,
+        COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, 
+        DOCUMENT_FRAGMENT_NODE, NOTATION_NODE};
      
       inline ProblemSpec(const xmlNode* node, bool doWrite=true){
-	d_node = const_cast<xmlNode*>(node); d_write = doWrite; 
+        d_node = const_cast<xmlNode*>(node); 
+        d_write = doWrite; 
       }
 
       virtual ~ProblemSpec();
 
       /****************
-	 Methods to find a particular Node
+         Methods to find a particular Node
       *****************/
 
       //////////
@@ -123,7 +124,7 @@ WARNING
       //////////
       // adds a newline with 'tabs' tabs, then creates, appends, and returns
       // a node with name str
-      ProblemSpecP appendChild(const char *str, bool lead=0, int tabs = 0);
+      ProblemSpecP appendChild(const char *str);
 
       //////////
       // appends only a node to the tree
@@ -144,7 +145,7 @@ WARNING
 
 
       /*************
-	Methods involving node's attributes
+        Methods involving node's attributes
       *************/
 
       //////////
@@ -162,7 +163,7 @@ WARNING
       void setAttribute(const std::string& name, const std::string& value);
 
       /*************
-	Methods involving node information
+        Methods involving node information
       *************/
       
 
@@ -190,25 +191,18 @@ WARNING
       ProblemSpecP getRootNode();
 
       //////////
-      // simply adds the text to this node
-      void appendText(const char* str);
-
-
-      //////////
       // append a node with given value (of varied types) to this node
-      ProblemSpecP appendElement(const char* name, const std::string& val, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, const char* value, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, int value, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, long value, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, const IntVector& value, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, const Point& value, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, const Vector& value, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, double value, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, const vector<double>& val,bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, const vector<int>& val, bool trail=0, int tabs=1);
-      ProblemSpecP appendElement(const char* name, bool value, bool trail=0, int tabs=1);
-
-
+      ProblemSpecP appendElement(const char* name, const std::string& val);
+      ProblemSpecP appendElement(const char* name, const char* value);
+      ProblemSpecP appendElement(const char* name, int value);
+      ProblemSpecP appendElement(const char* name, long value);
+      ProblemSpecP appendElement(const char* name, const IntVector& value);
+      ProblemSpecP appendElement(const char* name, const Point& value);
+      ProblemSpecP appendElement(const char* name, const Vector& value);
+      ProblemSpecP appendElement(const char* name, double value);
+      ProblemSpecP appendElement(const char* name, const vector<double>& va);
+      ProblemSpecP appendElement(const char* name, const vector<int>& val);
+      ProblemSpecP appendElement(const char* name, bool value);
 
       //////////
       // Finds child node with name 'name' and passes its value back into
@@ -278,28 +272,28 @@ WARNING
       void output(const char* filename = 0) const;
 
       inline bool operator == (const ProblemSpec& a) const {
-	return a.d_node == d_node;
+        return a.d_node == d_node;
       }
       inline bool operator != (const ProblemSpec& a) const {
-	return a.d_node != d_node;
+        return a.d_node != d_node;
       }
       inline bool operator == (int a) const {
-	ASSERT(a == 0);
+        ASSERT(a == 0);
         a=a;     // This quiets the MIPS compilers
-	return d_node == 0;
+        return d_node == 0;
       }
       inline bool operator != (int a) const {
-	ASSERT(a == 0);
+        ASSERT(a == 0);
         a=a;     // This quiets the MIPS compilers
-	return d_node != 0;
+        return d_node != 0;
       }
       static const TypeDescription* getTypeDescription();
       xmlNode* getNode() const {
-	return d_node;
+        return d_node;
       }
 
       bool isNull() {
-	return (d_node == 0);
+        return (d_node == 0);
       }
 
       //////////

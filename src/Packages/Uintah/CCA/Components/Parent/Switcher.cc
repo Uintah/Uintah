@@ -489,8 +489,8 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 
 void Switcher::addToTimestepXML(ProblemSpecP& spec)
 {
-  spec->appendElement("switcherComponentIndex", (int) d_componentIndex, true);
-  spec->appendElement("switcherState", (int) d_switchState, true);
+  spec->appendElement( "switcherComponentIndex", (int) d_componentIndex );
+  spec->appendElement( "switcherState", (int) d_switchState );
 }
 
 void Switcher::readFromTimestepXML(const ProblemSpecP& spec)

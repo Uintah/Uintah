@@ -208,54 +208,46 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","visco_scram");
   }
 
   cm_ps->appendElement("PR",d_initialData.PR);
-  cm_ps->appendElement("CoeffThermalExpansion", d_initialData.CoefThermExp,
-                       false,4);
-  cm_ps->appendElement("CrackParameterA",d_initialData.CrackParameterA,
-                       false,4);
-  cm_ps->appendElement("CrackPowerValue",d_initialData.CrackPowerValue,
-                       false,4);
-  cm_ps->appendElement("CrackMaxGrowthRate",d_initialData.CrackMaxGrowthRate,
-                       false,4);
-  cm_ps->appendElement("StressIntensityF",d_initialData.StressIntensityF,
-                       false,4);
-  cm_ps->appendElement("CrackFriction",d_initialData.CrackFriction,false,4);
-  cm_ps->appendElement("InitialCrackRadius",d_initialData.InitialCrackRadius,
-                       false,4);
-  cm_ps->appendElement("CrackGrowthRate",d_initialData.CrackGrowthRate,
-                       false,4);
-  cm_ps->appendElement("G1",d_initialData.G[0],false,4);
-  cm_ps->appendElement("G2",d_initialData.G[1],false,4);
-  cm_ps->appendElement("G3",d_initialData.G[2],false,4);
-  cm_ps->appendElement("G4",d_initialData.G[3],false,4);
-  cm_ps->appendElement("G5",d_initialData.G[4],false,4);
-  cm_ps->appendElement("RTau1",d_initialData.RTau[0],false,4);
-  cm_ps->appendElement("RTau2",d_initialData.RTau[1],false,4);
-  cm_ps->appendElement("RTau3",d_initialData.RTau[2],false,4);
-  cm_ps->appendElement("RTau4",d_initialData.RTau[3],false,4);
-  cm_ps->appendElement("RTau5",d_initialData.RTau[4],false,4);
-  cm_ps->appendElement("Beta",d_initialData.Beta,false,4);
-  cm_ps->appendElement("Gamma",d_initialData.Gamma,false,4);
-  cm_ps->appendElement("DCp_DTemperature",d_initialData.DCp_DTemperature,
-                       false,4);
-  cm_ps->appendElement("randomize_parameters", d_random,false,4);
-  cm_ps->appendElement("use_time_temperature_equation", d_doTimeTemperature,
-                       false,4);
-  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
-  cm_ps->appendElement("useObjectiveRate",d_useObjectiveRate,false,4);
+  cm_ps->appendElement("CoeffThermalExpansion", d_initialData.CoefThermExp);
+  cm_ps->appendElement("CrackParameterA",d_initialData.CrackParameterA);
+  cm_ps->appendElement("CrackPowerValue",d_initialData.CrackPowerValue);
+  cm_ps->appendElement("CrackMaxGrowthRate",d_initialData.CrackMaxGrowthRate);
+  cm_ps->appendElement("StressIntensityF",d_initialData.StressIntensityF);
+  cm_ps->appendElement("CrackFriction",d_initialData.CrackFriction);
+  cm_ps->appendElement("InitialCrackRadius",d_initialData.InitialCrackRadius);
+  cm_ps->appendElement("CrackGrowthRate",d_initialData.CrackGrowthRate);
+  cm_ps->appendElement("G1",d_initialData.G[0]);
+  cm_ps->appendElement("G2",d_initialData.G[1]);
+  cm_ps->appendElement("G3",d_initialData.G[2]);
+  cm_ps->appendElement("G4",d_initialData.G[3]);
+  cm_ps->appendElement("G5",d_initialData.G[4]);
+  cm_ps->appendElement("RTau1",d_initialData.RTau[0]);
+  cm_ps->appendElement("RTau2",d_initialData.RTau[1]);
+  cm_ps->appendElement("RTau3",d_initialData.RTau[2]);
+  cm_ps->appendElement("RTau4",d_initialData.RTau[3]);
+  cm_ps->appendElement("RTau5",d_initialData.RTau[4]);
+  cm_ps->appendElement("Beta",d_initialData.Beta);
+  cm_ps->appendElement("Gamma",d_initialData.Gamma);
+  cm_ps->appendElement("DCp_DTemperature",d_initialData.DCp_DTemperature);
+  cm_ps->appendElement("randomize_parameters", d_random);
+  cm_ps->appendElement("use_time_temperature_equation", d_doTimeTemperature);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
+  cm_ps->appendElement("useObjectiveRate",d_useObjectiveRate);
 
   // Time-temperature data for relaxtion time calculation
-  cm_ps->appendElement("T0", d_tt.T0_WLF,false,4);
-  cm_ps->appendElement("C1", d_tt.C1_WLF,false,4);
-  cm_ps->appendElement("C2", d_tt.C2_WLF,false,4);
+  cm_ps->appendElement("T0", d_tt.T0_WLF);
+  cm_ps->appendElement("C1", d_tt.C1_WLF);
+  cm_ps->appendElement("C2", d_tt.C2_WLF);
 }
 
 
-ViscoScram* ViscoScram::clone()
+ViscoScram*
+ViscoScram::clone()
 {
   return scinew ViscoScram(*this);
 }

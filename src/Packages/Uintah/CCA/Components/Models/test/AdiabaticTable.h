@@ -179,7 +179,7 @@ WARNING
     struct TableValue {
       void outputProblemSpec(ProblemSpecP& ps)
       {
-        ps->appendElement("tableValue",name,false,3);
+        ps->appendElement("tableValue",name);
 
       };
       string name;

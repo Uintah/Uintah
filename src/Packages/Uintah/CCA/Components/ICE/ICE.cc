@@ -504,7 +504,7 @@ void ICE::outputProblemSpec(ProblemSpecP& root_ps)
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");
 
-  ProblemSpecP ice_ps = mat_ps->appendChild("ICE",true,1);
+  ProblemSpecP ice_ps = mat_ps->appendChild("ICE");
   for (int i = 0; i < d_sharedState->getNumICEMatls();i++) {
     ICEMaterial* mat = d_sharedState->getICEMaterial(i);
     mat->outputProblemSpec(ice_ps);

@@ -180,34 +180,34 @@ void ViscoTransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","visco_trans_iso_hyper");
   }
 
-  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
-  cm_ps->appendElement("c1", d_initialData.c1,false,4);
-  cm_ps->appendElement("c2", d_initialData.c2,false,4);
-  cm_ps->appendElement("c3", d_initialData.c3,false,4);
-  cm_ps->appendElement("c4", d_initialData.c4,false,4);
-  cm_ps->appendElement("c5", d_initialData.c5,false,4);
-  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star,false,4);
-  cm_ps->appendElement("direction_of_symm", d_initialData.a0,false,4);
-  cm_ps->appendElement("failure_option",d_initialData.failure,false,4);
-  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch,false,4);
-  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear,false,4);
-  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
-  cm_ps->appendElement("y1", d_initialData.y1,false,4);
-  cm_ps->appendElement("y2", d_initialData.y2,false,4);
-  cm_ps->appendElement("y3", d_initialData.y3,false,4);
-  cm_ps->appendElement("y4", d_initialData.y4,false,4);
-  cm_ps->appendElement("y5", d_initialData.y5,false,4);
-  cm_ps->appendElement("y6", d_initialData.y6,false,4);
-  cm_ps->appendElement("t1", d_initialData.t1,false,4);
-  cm_ps->appendElement("t2", d_initialData.t2,false,4);
-  cm_ps->appendElement("t3", d_initialData.t3,false,4);
-  cm_ps->appendElement("t4", d_initialData.t4,false,4);
-  cm_ps->appendElement("t5", d_initialData.t5,false,4);
-  cm_ps->appendElement("t6", d_initialData.t6,false,4);
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk);
+  cm_ps->appendElement("c1", d_initialData.c1);
+  cm_ps->appendElement("c2", d_initialData.c2);
+  cm_ps->appendElement("c3", d_initialData.c3);
+  cm_ps->appendElement("c4", d_initialData.c4);
+  cm_ps->appendElement("c5", d_initialData.c5);
+  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star);
+  cm_ps->appendElement("direction_of_symm", d_initialData.a0);
+  cm_ps->appendElement("failure_option",d_initialData.failure);
+  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch);
+  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
+  cm_ps->appendElement("y1", d_initialData.y1);
+  cm_ps->appendElement("y2", d_initialData.y2);
+  cm_ps->appendElement("y3", d_initialData.y3);
+  cm_ps->appendElement("y4", d_initialData.y4);
+  cm_ps->appendElement("y5", d_initialData.y5);
+  cm_ps->appendElement("y6", d_initialData.y6);
+  cm_ps->appendElement("t1", d_initialData.t1);
+  cm_ps->appendElement("t2", d_initialData.t2);
+  cm_ps->appendElement("t3", d_initialData.t3);
+  cm_ps->appendElement("t4", d_initialData.t4);
+  cm_ps->appendElement("t5", d_initialData.t5);
+  cm_ps->appendElement("t6", d_initialData.t6);
 }
 
 

@@ -381,7 +381,7 @@ FieldExtractorAlgoT<Var, T>::build_patch_field(QueryInfo& qinfo,
   map<const Patch*, list<const Patch*> >::iterator oldPatch_it =
     new2OldPatchMap_.find(patch);
   if( oldPatch_it == new2OldPatchMap_.end() ) {
-//     error("No mapping from old patches to new patches.");
+    //  error("No mapping from old patches to new patches.");
     cerr<<"No mapping from old patches to new patches.\n";
     return;
   }

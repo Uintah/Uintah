@@ -139,8 +139,7 @@ WARNING
       void outputProblemSpec(ProblemSpecP& ps) {
         stringstream ss;
         ss << value;
-        ProblemSpecP dv_ps = ps->appendElement("defaultValue",ss.str(),false,
-                                               4);
+        ProblemSpecP dv_ps = ps->appendElement("defaultValue",ss.str());
         dv_ps->setAttribute("name",name);
       };
       string name;

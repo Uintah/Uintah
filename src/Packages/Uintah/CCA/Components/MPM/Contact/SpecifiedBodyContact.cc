@@ -90,13 +90,13 @@ SpecifiedBodyContact::~SpecifiedBodyContact()
 
 void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP contact_ps = ps->appendChild("contact",true,2);
-  contact_ps->appendElement("type","specified",false,3);
-  contact_ps->appendElement("filename",d_filename,false,3);
-  contact_ps->appendElement("direction",d_direction,false,3);
-  contact_ps->appendElement("master_material",d_material,false,3);
-  contact_ps->appendElement("stop_time",d_stop_time,false,3);
-  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop,false,3);
+  ProblemSpecP contact_ps = ps->appendChild("contact");
+  contact_ps->appendElement("type","specified");
+  contact_ps->appendElement("filename",d_filename);
+  contact_ps->appendElement("direction",d_direction);
+  contact_ps->appendElement("master_material",d_material);
+  contact_ps->appendElement("stop_time",d_stop_time);
+  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
 
   d_matls.outputProblemSpec(contact_ps);
 }

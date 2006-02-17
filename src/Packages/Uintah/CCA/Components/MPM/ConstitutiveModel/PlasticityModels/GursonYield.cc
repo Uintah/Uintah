@@ -32,13 +32,13 @@ GursonYield::~GursonYield()
 
 void GursonYield::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP yield_ps = ps->appendChild("yield_condition",true,4);
+  ProblemSpecP yield_ps = ps->appendChild("yield_condition");
   yield_ps->setAttribute("type","gurson");
-  yield_ps->appendElement("q1",d_CM.q1,false,5);
-  yield_ps->appendElement("q2",d_CM.q2,false,5);
-  yield_ps->appendElement("q3",d_CM.q3,false,5);
-  yield_ps->appendElement("k",d_CM.k,false,5);
-  yield_ps->appendElement("f_c",d_CM.f_c,false,5);
+  yield_ps->appendElement("q1",d_CM.q1);
+  yield_ps->appendElement("q2",d_CM.q2);
+  yield_ps->appendElement("q3",d_CM.q3);
+  yield_ps->appendElement("k",d_CM.k);
+  yield_ps->appendElement("f_c",d_CM.f_c);
 
 }
 	 
