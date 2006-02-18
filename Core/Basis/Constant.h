@@ -87,6 +87,15 @@ public:
     return cd.elem();
   }
   
+  //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_derivate_weights(const vector<double> &coords, double *w) const
+  {
+    vector<double>::size_type s=coords.size();
+    for(vector<double>::size_type si=0; si<s; si++)
+      w[si] = 0;
+  }
+
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &, 
