@@ -75,7 +75,7 @@ public:
   int polynomial_order() const { return 3; }
 
   inline
-  void get_weights(const vector<double> &coords, double *w) const
+  static void get_weights(const vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1];  
 
@@ -112,7 +112,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  void get_derivate_weights(const vector<double> &coords, double *w) const
+  static void get_derivate_weights(const vector<double> &coords, double *w) 
   {
    const double x=coords[0], y=coords[1];  
     w[0] = (6*x*x + 13*(-1 + y)*y + x*(-6 + 26*y));
