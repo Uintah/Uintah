@@ -331,7 +331,7 @@ public:
 
   //! get weight factors at parametric coordinate 
   inline
-  void get_weights(const vector<double> &coords, double *w) const
+  static void get_weights(const vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1], z=coords[2];
     w[0] = -((-1 + x)*(-1 + y)*(-1 + z));
@@ -362,7 +362,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  void get_derivate_weights(const vector<double> &coords, double *w) const
+  static void get_derivate_weights(const vector<double> &coords, double *w) 
   {
    const double x=coords[0], y=coords[1], z=coords[2];  
     w[0]=(-1 + y + z - y * z);

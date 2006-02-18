@@ -67,7 +67,7 @@ public:
   virtual ~TriCubicHmtScaleFactors() {}
 
   inline
-  void get_weights(const vector<double> &coords, double *w) const
+  static void get_weights(const vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1];  
     const double x2=x*x, x3=x2*x, y2=y*y, y3=y2*y;
@@ -122,7 +122,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  void get_derivate_weights(const vector<double> &coords, double *w) const
+  static void get_derivate_weights(const vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1];  
     const double x2=x*x, x3=x2*x, y2=y*y;
