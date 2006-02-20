@@ -167,13 +167,21 @@ echo;echo "Using the "$DIR "gold standard directory"
 
 mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts testConvert1MAdd"
 ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch impHotBlob"
-mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz testConvertMPMICEAdd"
+mpmice_test_cases="advect massX guni2dRT TRWnoz testConvertMPMICEAdd"
 model_test_cases="HePlume"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="jp8cyl"
 examples_test_cases="poisson1 poisson2"
+
+#IRIX tests
+OS=`uname -s`
+if test $OS = "IRIX64"; then
+  mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz testConvertMPMICEAdd"
+fi
+
+
 
 # Check if the applications sus and compare_uda are available
 
@@ -254,9 +262,16 @@ run_test () {
 
 compare_results () {
     cd $results
-    echo "Comparing results"
-    echo "compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare"
-    ../compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare
+    
+    #Inside of the component directory find the location of the 
+    #gold standard uda and pass it to compare_uda
+    
+    uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
+    goldStandard=`find $test_dir/$DIR/$CASE -maxdepth 3 -type d -name $uda_tmp`
+    echo "Comparing $uda results against $goldStandard"
+    
+    ../compare_uda $goldStandard $uda &> $n.compare
+    
     compare=`grep "passed" $n.compare`
     if test -n "$compare";
 	then
@@ -304,19 +319,9 @@ mpm_test () {
     
     for n in $mpm_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
-
-	udadir=$n
-	if test "$n" = "disks2mat4patch"; 
-	    then
-	    udadir=disks2mat4patch4proc
-	fi
-
-	compare_results
-        
-        run_restart
-
+	compare_results 
+       run_restart
     done
 }
 
@@ -325,24 +330,9 @@ mpmice_test () {
     
     for n in $mpmice_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-
-	udadir=$n
-	if test "$n" = "advect"; then
-	    udadir=advect_mpmice
-	fi
-	if test "$n" = "guni2dRT"; 
-	    then
-	    udadir=guni2d
-	fi
-        if test "$n" = "TRWnoz";
-            then
-            cp ../$INPUTS/$CASE/complex_MPM_geometries/trwnozzlentop3_01mesh.{pts,tri} ../
-        fi
-          	
 	compare_results
-        run_restart
+       run_restart
     done
 }
 model_test () {
@@ -354,17 +344,9 @@ model_test () {
     
     for n in $model_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-
-	udadir=$n
-	if test "$n" = "He_Plume"; then
-	    udadir=HE_Plume
-	fi
-	
 	compare_results
-        run_restart
-
+       run_restart
     done
 }
 impm_test () {
@@ -372,16 +354,9 @@ impm_test () {
     
     for n in $impm_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-
-	udadir=$n
-	if test "$n" = "4disks_2d.1mat"; then
-	    udadir=4disks1mat
-	fi
-	
 	compare_results
-        run_restart
+       run_restart
     done
 }
 
@@ -390,13 +365,9 @@ smpm_test () {
     
     for n in $smpm_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-
-	udadir=$n
-
 	compare_results
-        run_restart
+       run_restart
     done
 }
 
@@ -406,16 +377,9 @@ ice_test () {
     
     for n in $ice_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-
-	udadir=$n
-	if test "$n" = "hotBlob2mat8patch"; then
-	    udadir=hotBlob8patch
-	fi
-
 	compare_results
-        run_restart
+       run_restart
 
     done
 }
@@ -438,13 +402,9 @@ arches_test () {
 	    echo; echo "FAILURE running sus . . ."
 	    continue;
 	fi
-	udadir=$n
-	if test "$n" = "methane_explicit_table"; then
-	    udadir=methane_explicit
-	fi
 
 	compare_results
-        run_restart
+       run_restart
     done
 }
 
@@ -464,7 +424,6 @@ mpmarches_test () {
 	run_test
 
 #	mpirun -np 1 sus -mpmarches $INPUTS/$CASE/$n.ups &> $n.out
-	udadir=$n
 	
 	compare_results
         run_restart
@@ -486,10 +445,9 @@ examples_test () {
 	    echo; echo "FAILURE running sus . . ."
 	    continue;
 	fi
-	udadir=$n
 
 	compare_results
-        run_restart
+       run_restart
     done
 }
 
@@ -529,7 +487,7 @@ if test $do_mpmice -eq 1; then
     opts=-mpmice
     mpmice_test
 fi
-if test $do_models -eq 1; then
+if test $do_models -eq 1; then 
     CASE=Models
     opts=-ice
     model_test
