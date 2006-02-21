@@ -28,7 +28,7 @@
 
 
 /*
- *  BabelComponentInstance.h: 
+ *  BabelComponentInstance.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -40,16 +40,22 @@
 #ifndef SCIRun_Framework_BabelComponentInstance_h
 #define SCIRun_Framework_BabelComponentInstance_h
 
+#include <SCIRun/Babel/framework.hxx>
+#include <SCIRun/Babel/gov_cca.hxx>
+
 #include <SCIRun/Babel/BabelPortInstance.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstanceIterator.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Babel/framework.hh>
-#include <SCIRun/Babel/gov_cca.hh>
+
 #include <map>
 #include <string>
 
 namespace SCIRun {
+
+#ifdef SIDL_USE_UCXX
+  using namespace ucxx;
+#endif
 
 /** \class BabelCCAGoPort
  *
@@ -92,13 +98,13 @@ class BabelComponentInstance : public ComponentInstance
 {
 public:
   BabelComponentInstance(SCIRunFramework* framework,
-                         const std::string& instanceName,
-                         const std::string& className,
-                         const gov::cca::TypeMap& typemap,
-                         const gov::cca::Component& component,
-                         const framework::Services& svc);
+			 const std::string& instanceName,
+			 const std::string& className,
+			 const gov::cca::TypeMap& typemap,
+			 const gov::cca::Component& component,
+			 const framework::Services& svc);
   virtual ~BabelComponentInstance();
-  
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   gov::cca::Port getPort(const std::string& name);
@@ -112,18 +118,18 @@ public:
       SCIRunFramework::Services. */
   gov::cca::TypeMap createTypeMap();
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */ 
+      SCIRunFramework::Services. */
   void registerUsesPort(const std::string& name, const std::string& type,
-                        const gov::cca::TypeMap& properties);
+			const gov::cca::TypeMap& properties);
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void unregisterUsesPort(const std::string& name);
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void addProvidesPort(const gov::cca::Port& port,
-                       const std::string& name,
-                       const std::string& type,
-                       const gov::cca::TypeMap& properties);
+		       const std::string& name,
+		       const std::string& type,
+		       const gov::cca::TypeMap& properties);
   void removeProvidesPort(const std::string& name);
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
@@ -131,7 +137,7 @@ public:
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   gov::cca::ComponentID getComponentID();
-  
+
   /** ? */
   virtual PortInstance* getPortInstance(const std::string& name);
   /** ? */
@@ -154,7 +160,7 @@ private:
     Iterator& operator=(const Iterator&);
     //sci::cca::ComponentID::pointer cid;
   };
-  
+
   gov::cca::Component component;
   BabelComponentInstance(const BabelComponentInstance&);
   BabelComponentInstance& operator=(const BabelComponentInstance&);
@@ -163,23 +169,3 @@ private:
 } // end namespace SCIRun
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
