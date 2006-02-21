@@ -34,7 +34,7 @@ static void circle_points(int x, int y, int x_center, int y_center);
 
 ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins):
   DpyBase("ColorMap GUI"),
-  data_min(MAXFLOAT), data_max(-MAXFLOAT),
+  data_min(FLT_MAX), data_max(-FLT_MAX),
   colors_index(matls),
   selected_point(-1)
 {
@@ -48,7 +48,7 @@ ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins):
 
 ColorMapDpy::ColorMapDpy(char *filebase, int num_bins):
   DpyBase("ColorMap GUI"),
-  data_min(MAXFLOAT), data_max(-MAXFLOAT),
+  data_min(FLT_MAX), data_max(-FLT_MAX),
   selected_point(-1)
 {
   set_resolution(400,200);

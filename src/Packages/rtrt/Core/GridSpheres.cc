@@ -59,8 +59,8 @@ GridSpheres::GridSpheres(float* spheres, float* /*inmin*/, float* /*inmax*/,
     cerr << "Recomputing min/max for GridSpheres\n";
     float* p=spheres;
     for(int j = 0; j < ndata; j++){
-      min[j]=MAXFLOAT;
-      max[j]=-MAXFLOAT;
+      min[j]=FLT_MAX;
+      max[j]=-FLT_MAX;
     }
     for(int i = 0; i < nspheres; i++){
       for(int j = 0; j < ndata; j++){
@@ -413,8 +413,8 @@ void GridSpheres::calc_mcell(int depth, int startidx, MCell& mcell)
   mcell.min=new float[n*2];
   mcell.max=mcell.min+n;
   for(int i=0;i<n;i++){
-    mcell.min[i]=MAXFLOAT;
-    mcell.max[i]=-MAXFLOAT;
+    mcell.min[i]=FLT_MAX;
+    mcell.max[i]=-FLT_MAX;
   }
   int cellsize3=cellsize*cellsize*cellsize;
   if(depth==0){

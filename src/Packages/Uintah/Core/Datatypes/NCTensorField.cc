@@ -6,7 +6,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
-#include <values.h>
+#include <sci_values.h>
 #include <iostream>
 
 using std::vector;
@@ -40,8 +40,8 @@ NCTensorField::NCTensorField(GridP grid, LevelP level,
   //  : UintahScalarField( grid, level, var, mat )
   : TensorField(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
-   high(-MAXINT,-MAXINT,-MAXINT),
-   low(MAXINT,MAXINT,MAXINT)
+   high(-INT_MAX,-INT_MAX,-INT_MAX),
+   low(INT_MAX,INT_MAX,INT_MAX)
 {
   for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);

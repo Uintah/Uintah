@@ -212,8 +212,8 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     if(delT_new < 1.e-12)
-      // don't use adjustDelt here because of MAXDOUBLE
-      new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
+      // don't use adjustDelt here because of DBL_MAX
+      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
       new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
@@ -404,7 +404,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
     
     if(delT_new < 1.e-12)
-      new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
+      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
       new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);

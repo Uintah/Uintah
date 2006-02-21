@@ -529,7 +529,7 @@ void Worker::traceRay(Color& result, Ray& ray, int depth,
   } else {
     cx->stats->ds[depth].nbg++;
     cx->scene->get_bgcolor( ray.direction(), result );
-    dist = MAXDOUBLE;
+    dist = DBL_MAX;
   }
 }
 
@@ -563,7 +563,7 @@ void Worker::traceRay(Color& result, Ray& ray, int depth,
   } else {
     cx->stats->ds[depth].nbg++;
     cx->scene->get_bgcolor( ray.direction(), result );
-    dist = MAXDOUBLE;
+    dist = DBL_MAX;
   }
 }
 

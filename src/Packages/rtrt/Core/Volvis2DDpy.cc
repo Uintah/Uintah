@@ -1652,10 +1652,10 @@ Volvis2DDpy::store_voxel( Voxel2D<float> voxel )
 void
 Volvis2DDpy::create_widget_probe()
 {
-  float p_vmin = MAXFLOAT;
-  float p_vmax = -MAXFLOAT;
-  float p_gmin = MAXFLOAT;
-  float p_gmax = -MAXFLOAT;
+  float p_vmin = FLT_MAX;
+  float p_vmax = -FLT_MAX;
+  float p_gmin = FLT_MAX;
+  float p_gmax = -FLT_MAX;
   for(size_t i = 0; i < cp_voxels.size(); i++ ) {
     p_vmin = min( p_vmin, cp_voxels[i]->value );
     p_gmin = min( p_gmin, cp_voxels[i]->gradient );
@@ -2258,7 +2258,7 @@ Volvis2DDpy::loadWidgets( char* file )
 // template<class T>
 Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut )
   :DpyBase("Volvis2DDpy"), t_inc(t_inc), cut(cut),
-   vmin(MAXFLOAT), vmax(-MAXFLOAT), gmin(MAXFLOAT), gmax(-MAXFLOAT)
+   vmin(FLT_MAX), vmax(-FLT_MAX), gmin(FLT_MAX), gmax(-FLT_MAX)
 {
   waiting_for_redraw = true;
   // initialize adjustable global variables from volume data

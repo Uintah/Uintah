@@ -544,7 +544,7 @@ void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
                                       DataWarehouse* new_dw)
 {
   cout_doing << "Doing computeStableTimestep  \t\t\t SimpleCFD" << '\n';
-  double delt=MAXDOUBLE;
+  double delt=DBL_MAX;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
@@ -569,13 +569,13 @@ void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
         delt=Min(delt, 1./t_inv.maxComponent());
     }
   }
-  if(delt != MAXDOUBLE){
+  if(delt != DBL_MAX){
     delt *= delt_multiplier_;
     const Level* level = getLevel(patches);
     new_dw->put(delt_vartype(level->adjustDelt(delt)), sharedState_->get_delt_label());
   }
   else {
-    // don't use adjustDelt here, as we have MAXDOUBLE value...
+    // don't use adjustDelt here, as we have DBL_MAX value...
     new_dw->put(delt_vartype(delt), sharedState_->get_delt_label());
   }
 }

@@ -60,8 +60,8 @@ void GridSpheresDpy::setup_vars() {
     max = new float[ndata];
     // inialize values
     for(int i = 0; i < ndata; i ++) {
-      min[i] = MAXFLOAT;
-      max[i] = -MAXFLOAT;
+      min[i] = FLT_MAX;
+      max[i] = -FLT_MAX;
     }
     // go through all the grids and compute min/max
     for(int g = 0; g < grids.size(); g++) {
@@ -163,8 +163,8 @@ void GridSpheresDpy::update_vars() {
     
     // inialize values
     for(int i = 0; i < ndata; i ++) {
-      new_min[i] = MAXFLOAT;
-      new_max[i] = -MAXFLOAT;
+      new_min[i] = FLT_MAX;
+      new_max[i] = -FLT_MAX;
     }
     // go through all the grids and compute min/max
     for(int g = 0; g < grids.size(); g++) {

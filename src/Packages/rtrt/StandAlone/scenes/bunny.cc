@@ -59,7 +59,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double (*vert)[3] = new double[num_verts][3];
   double conf,intensity;
   int i;
-  double minval = MAXFLOAT;
+  double minval = FLT_MAX;
   Group *g = new Group();
   Material* mat=new LambertianMaterial (Color(.4,.4,.4));
   
