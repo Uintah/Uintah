@@ -36,12 +36,26 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     print "    where <mode> is 'dbg' or 'opt' and <test> is optional"
     exit(1)
 
-  # setup up parameter variables
-  ALGO = upper(algo)
-  susdir =  path.normpath(path.join(getcwd(), argv[1]))
+  # ALGO needs to store the path for input files, goldStandards, and otherwise a
+  # grouping for tests.  newalgo needs to be the algorithm to pass to sus
 
-  if ALGO == "EXAMPLES":
-    ALGO = "Examples"
+  # in certain cases (like when algo was performance or ucf), need to make 
+  # the input dir something like (MPM, ARCHES, etc.), but we will also need to
+  # have the original ALGO name, i.e., to save in PERFORMANCE-results
+
+  # set inputsdir in the loop since certain (performance) algos can have
+  # different inputs dirs or have different sus flags
+  ALGO = upper(algo)
+
+  if ALGO == "Examples":
+    algo = testname
+    ALGO = ALGO
+  elif algo == "models":
+    ALGO = "Models" # get the real algo in the for test loop
+  INPUT_SUB=ALGO
+
+  # setup up parameter variables
+  susdir =  path.normpath(path.join(getcwd(), argv[1]))
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   mode = argv[4]
   max_parallelism = float(argv[5])
@@ -56,12 +70,12 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   # performance tests are run only by passing "performance" as the algo
   #   if algo is "performance", then there can be any algo associated with that
   # determine which tests to do
-  if algo == "performance" or algo == "scalability":
+  if ALGO == "PERFORMANCE" or ALGO == "SCALABILITY":
     do_restart = 0
     do_dbg = 0
     do_comparisons = 0
     do_memory = 0
-    if algo != "scalability":
+    if ALGO != "SCALABILITY":
       # scalability will perform its own tests
       do_performance = 1
     else:
@@ -185,6 +199,13 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     testname = nameoftest(test)
     ran_any_tests = 1
 
+    if ALGO == "Models":
+      algo = get_algo(test)
+    elif ALGO == "PERFORMANCE" or ALGO == "UCF" or ALGO == "SCALABILITY":
+      algo = get_algo(test)
+      INPUT_SUB = upper(algo)
+
+
     # make sure that this test exists in the gold standard
     try:
       chdir(compare_root)
@@ -211,27 +232,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
     tests_to_do = [test_comparisons, test_memory, do_performance]
 
-    # in certain cases (like when algo was performance or ucf), need to make it
-    # something usable by sus (MPM, ARCHES, etc.), but we will also need to
-    # have the original ALGO name, i.e., to save in PERFORMANCE-results
-
-    # set inputsdir in the loop since certain (performance) algos can have
-    # different inputs dirs or have different sus flags
-    if ALGO == "Examples":
-      newalgo = testname
-      NEWALGO = ALGO
-    elif algo == "models":
-      newalgo = get_algo(test)
-      NEWALGO = "Models"
-    elif algo == "performance" or algo == "ucf" or algo == "scalability":
-      newalgo = get_algo(test)
-      NEWALGO = upper(newalgo)
-    else:
-      newalgo = ""
-      NEWALGO = ALGO
-
-
-    inputsdir = "%s/%s" % (inputpath, NEWALGO)
+    # need to set the inputs dir here, since it could be different per test
+    inputsdir = "%s/%s" % (inputpath, INPUT_SUB)
 
     try:
       chdir(inputsdir)
@@ -264,7 +266,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     symlink(inputpath, "inputs")
     # Run normal test
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
-    rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "no", newalgo)
+    rc = runSusTest(test, susdir, inputxml, compare_root, algo, ALGO, mode, max_parallelism, tests_to_do, "no")
     system("rm inputs")
     
     # rc of 2 means it failed comparison or memory test, so try to run restart
@@ -282,7 +284,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       if test_restart == 1:
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
-        rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "yes", newalgo)
+        rc = runSusTest(test, susdir, inputxml, compare_root, algo, ALGO, mode, max_parallelism, tests_to_do, "yes")
         if rc > 0:
           failcode = 1
         system("rm inputs")
@@ -331,11 +333,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, restart = "no", newalgo = ""):
-  if newalgo != "":
-    sim = newalgo
-  else:
-    sim = algo
+def runSusTest(test, susdir, inputxml, compare_root, algo, ALGO, mode, max_parallelism, tests_to_do, restart = "no"):
   testname = nameoftest(test)
 
   np = float(num_processes(test))
@@ -385,10 +383,10 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   # set the command for sus, based on # of processors
   # the /usr/bin/time is to tell how long it took
   if np == 1:
-    command = "/usr/bin/time -p %s/sus -%s %s" % (susdir, sim, extra_flags)
+    command = "/usr/bin/time -p %s/sus -%s %s" % (susdir, algo, extra_flags)
     mpimsg = ""
   else:
-    command = "/usr/bin/time -p %s %s %s/sus -mpi -%s %s" % (MPIHEAD, int(np), susdir, sim, extra_flags)
+    command = "/usr/bin/time -p %s %s %s/sus -mpi -%s %s" % (MPIHEAD, int(np), susdir, algo, extra_flags)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   if restart == "yes":
@@ -442,12 +440,9 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   if restart == "yes":
     chdir("..")
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
-#    system("rm *.uda")
-#    system("ln -s restart/*.uda .")
     chdir("restart")
   else:
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
-    restart_text = ""
 
   return_code = 0
   if rc != 0:
@@ -455,7 +450,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     if restart == "yes":
 	print "\t\tMake sure the problem makes checkpoints before finishing"
     print sus_log_msg
-    system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
+    system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
   else:
     # Sus completed successfully - now do comp, mem, and perf tests
@@ -551,7 +546,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 
     # if comparison tests fail, return here, so mem_leak tests can run
     if cu_rc == 5*256 or cu_rc == 1*256:
-        system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
+        system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
         # debug
         return_code = 2;
     if pf_rc == 2*256:
@@ -563,10 +558,10 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
         return_code = 2;
     if mem_rc == 1*256 or mem_rc == 2*256:
         # debug
-        system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
+        system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
         return_code = 2;
     if return_code != 0:
       # as the file is only created if a certain test fails, change the permissions here as we are certain the file exists
-      system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, upper(algo)))
+      system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, ALGO))
           
   return return_code
