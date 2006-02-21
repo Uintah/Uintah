@@ -76,7 +76,7 @@ void SeaLambertianMaterial::shade(Color& result, const Ray& ray,
     Color shadowfactor(1,1,1);
     Vector light_dir = caustics->GetProjectionAxis();
     if(cx->scene->lit(hitpos, NULL, light_dir,
-		      MAXDOUBLE, shadowfactor, depth, cx) )
+		      DBL_MAX, shadowfactor, depth, cx) )
     {
       double cos_theta=Dot(light_dir,normal);
       result += caustics->GetCausticColor( hitpos, currentTime ) * 

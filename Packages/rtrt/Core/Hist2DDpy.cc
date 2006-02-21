@@ -120,10 +120,10 @@ void Hist2DDpy::init() {
   // Compute the global minmax
   if(vols.size()==0)
     exit(0);
-  vdatamax=-MAXFLOAT;
-  vdatamin=MAXFLOAT;
-  gdatamax=-MAXFLOAT;
-  gdatamin=MAXFLOAT;
+  vdatamax=-FLT_MAX;
+  vdatamin=FLT_MAX;
+  gdatamax=-FLT_MAX;
+  gdatamin=FLT_MAX;
   for(int i=0;i<vols.size();i++){
     float vmin, vmax, gmin, gmax;
     vols[i]->get_minmax(vmin, vmax, gmin, gmax);

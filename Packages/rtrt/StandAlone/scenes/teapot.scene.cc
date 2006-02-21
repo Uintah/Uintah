@@ -141,7 +141,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
            double (*vert)[3] = new double[num_verts][3];
     double conf,intensity;
     int i;
-    double minval = MAXFLOAT;
+    double minval = FLT_MAX;
 //    //Material* bunnymat=new LambertianMaterial (Color(.4,.4,.4));
     Material *bunnymat = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
   

@@ -25,7 +25,7 @@ public:
   // Flag indicating if an object intersection was recorded.
   bool was_hit;
   
-  inline HitInfo():min_t(MAXDOUBLE), was_hit(false) {}
+  inline HitInfo():min_t(DBL_MAX), was_hit(false) {}
   
   // Shadow intersection routines should use shadowhit instead of hit.
   // The idea is to create a HitInfo and assign the distance to the

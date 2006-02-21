@@ -190,7 +190,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       return;
 
    // anchor/highpoint on the grid
-   Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
+   Point anchor(DBL_MAX, DBL_MAX, DBL_MAX);
 
    // time refinement between a level and the previous one
    int trr = 2;
@@ -208,8 +208,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       // the resulting grid spacing must be consistent.
 
       // anchor/highpoint on the level
-      Point levelAnchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
-      Point levelHighPoint(-MAXDOUBLE, -MAXDOUBLE, -MAXDOUBLE);
+      Point levelAnchor(DBL_MAX, DBL_MAX, DBL_MAX);
+      Point levelHighPoint(-DBL_MAX, -DBL_MAX, -DBL_MAX);
 
       Vector spacing;
       bool have_levelspacing=false;

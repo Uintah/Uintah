@@ -591,8 +591,8 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
     maxs = (float*)malloc(numvars*sizeof(float));
     // setup min/max values
     for(int j=0;j<numvars;j++){
-      mins[j]=MAXFLOAT;
-      maxs[j]=-MAXFLOAT;
+      mins[j]=FLT_MAX;
+      maxs[j]=-FLT_MAX;
     }
 
     // loop through the data and find min/max

@@ -29,8 +29,8 @@ float *global_points;
 void tetra_bounds(int *nodes, int *sx, int *ex, int *sy, int *ey,
                   int *sz, int *ez)
 {
-  Point min(MAXFLOAT,MAXFLOAT,MAXFLOAT);
-  Point max(-MAXFLOAT,-MAXFLOAT,-MAXFLOAT);
+  Point min(FLT_MAX,FLT_MAX,FLT_MAX);
+  Point max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
   for(int j=0; j < 4; j++) {
     float *p=global_points+nodes[j]*4;
     min=Min(min, Point(p[0],p[1],p[2]));

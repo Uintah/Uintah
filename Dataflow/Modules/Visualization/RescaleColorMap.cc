@@ -176,7 +176,7 @@ RescaleColorMap::execute()
 
       // initialize the following so that the compiler will stop
       // warning us about possibly using unitialized variables
-      double minv = MAXDOUBLE, maxv = -MAXDOUBLE;
+      double minv = DBL_MAX, maxv = -DBL_MAX;
 
       for( unsigned int i=0; i<fHandles.size(); i++ ) {
 	FieldHandle fHandle = fHandles[i];

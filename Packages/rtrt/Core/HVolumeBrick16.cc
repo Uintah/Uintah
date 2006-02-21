@@ -376,8 +376,8 @@ void HVolumeBrick16::preprocess(double, int&, int&)
 void HVolumeBrick16::calc_mcell(int depth, int startx, int starty, int startz,
 				VMCell16& mcell)
 {
-    mcell.min=MAXSHORT;
-    mcell.max=-MAXSHORT;
+    mcell.min=SHRT_MAX;
+    mcell.max=-SHRT_MAX;
     int endx=startx+xsize[depth];
     int endy=starty+ysize[depth];
     int endz=startz+zsize[depth];

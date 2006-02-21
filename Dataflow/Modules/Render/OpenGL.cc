@@ -1943,8 +1943,8 @@ OpenGL::pick_scene( int x, int y, Point *p )
 bool
 OpenGL::compute_depth(const View& view, double& znear, double& zfar)
 {
-  znear = MAXDOUBLE;
-  zfar =- MAXDOUBLE;
+  znear = DBL_MAX;
+  zfar =- DBL_MAX;
   BBox bb;
   view_window_->get_bounds(bb);
   if (bb.valid())
@@ -1999,8 +1999,8 @@ bool
 OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar,
                           bool visible_only)
 {
-  znear = MAXDOUBLE;
-  zfar = -MAXDOUBLE;
+  znear = DBL_MAX;
+  zfar = -DBL_MAX;
   BBox bb;
   if (visible_only)
   {

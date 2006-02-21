@@ -195,8 +195,8 @@ void Image::draw_sils_on_image( float max_depth ) {
   pixel = &depth[0][0];
 
 #if 0
-  float max_val = -MAXFLOAT;
-  float min_val = MAXFLOAT;
+  float max_val = -FLT_MAX;
+  float min_val = FLT_MAX;
 #endif
   for(int j = 0; j < yres; j++) {
     int ylow = j>0?j-1:0;
@@ -305,10 +305,10 @@ void Image::set(const Pixel& value)
 }
 
 void Image::set_depth(int x, int y, double d) {
-  if (d <= MAXFLOAT/10)
+  if (d <= FLT_MAX/10)
     depth[y][x] = d;
   else
-    depth[y][x] = MAXFLOAT/10;
+    depth[y][x] = FLT_MAX/10;
   //depth[y][x] = 0;
 }
 
