@@ -28,7 +28,7 @@
 
 
 /*
- *  BabelPortInstance.h: 
+ *  BabelPortInstance.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -41,16 +41,23 @@
 #ifndef SCIRun_Babel_BabelPortInstance_h
 #define SCIRun_Babel_BabelPortInstance_h
 
+#include <SCIRun/Babel/gov_cca.hxx>
+
+#include <SCIRun/PortInstance.h>
+
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Babel/gov_cca.hh>
+
 #include <map>
 #include <string>
 #include <vector>
 
 namespace SCIRun {
+
+#ifdef SIDL_USE_UCXX
+  using namespace ucxx;
+#endif
 
 /**
  * \class BabelPortInstance
@@ -61,14 +68,14 @@ class BabelPortInstance : public PortInstance
 {
 public:
   enum PortType {  Uses, Provides  };
-  
+
   BabelPortInstance(const std::string& portname, const std::string& classname,
-                    const gov::cca::TypeMap& properties,
-                    PortType porttype);
+		    const gov::cca::TypeMap& properties,
+		    PortType porttype);
   BabelPortInstance(const std::string& portname, const std::string& classname,
-                    const gov::cca::TypeMap& properties,
-                    const gov::cca::Port& port,
-                    PortType porttype);
+		    const gov::cca::TypeMap& properties,
+		    const gov::cca::Port& port,
+		    PortType porttype);
   virtual ~BabelPortInstance();
   virtual bool connect(PortInstance*);
   virtual PortInstance::PortType portType();
@@ -82,7 +89,10 @@ public:
   std::string getName();
   void incrementUseCount();
   bool decrementUseCount();
-public:
+
+  const gov::cca::Port& getPort() { return port; }
+
+private:
   PortType porttype;
   std::vector<PortInstance*> connections;
   SCIRun::Mutex lock_connections;
@@ -91,9 +101,9 @@ public:
   std::string type;
   gov::cca::TypeMap properties;
   gov::cca::Port port;
-  
+
   int useCount;
-  
+
   BabelPortInstance(const BabelPortInstance&);
   BabelPortInstance& operator=(const BabelPortInstance&);
 };
@@ -101,4 +111,3 @@ public:
 } //namespace SCIRun
 
 #endif
-

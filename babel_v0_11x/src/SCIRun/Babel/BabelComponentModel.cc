@@ -38,11 +38,12 @@
  *
  */
 
+#include <SCIRun/Babel/framework.hxx>
+#include <SCIRun/Babel/sidl.hxx>
+
 #include <SCIRun/Babel/BabelComponentModel.h>
 #include <SCIRun/Babel/BabelComponentDescription.h>
 #include <SCIRun/Babel/BabelComponentInstance.h>
-#include <SCIRun/Babel/framework.hh>
-#include <SCIRun/Babel/sidl.hh>
 
 #include <SCIRun/SCIRunFramework.h>
 #include <Core/Containers/StringUtil.h>
@@ -239,8 +240,8 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
 
   sidl::BaseClass sidl_class = library.createClass(type);
   // cast BaseClass instance to Component
-  // Note: when changing to UCxx bindings, use babel_cast<>()
-  gov::cca::Component component = sidl_class;
+  // babel_cast<>() introduced in UC++ bindings, returns nil pointer on bad cast
+  gov::cca::Component component = sidl::babel_cast<gov::cca::Component>(sidl_class);
   if ( component._is_nil() ) {
     std::cerr << "Cannot load babel component of type " << type
 	      << ". Babel component not created." << std::endl;
@@ -248,7 +249,7 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
   }
   framework::Services svc = framework::Services::_create();
   component.setServices(svc);
-  gov::cca::Component nullMap;
+  gov::cca::TypeMap nullMap;
 
   BabelComponentInstance* ci =
     new BabelComponentInstance(framework, name, type, nullMap, component, svc);
