@@ -936,7 +936,7 @@ proc popupLoadMenu {} {
     if {[string match *.net $netedit_loadnet]} {
 	loadnet $netedit_loadnet
     } else {
-	uplevel \#0 netedit load_srn $netedit_loadnet
+        after 500 "uplevel \#0 netedit load_srn $netedit_loadnet"
     }
 }
 
@@ -968,7 +968,7 @@ proc ClearCanvas { { confirm 1 } { subnet 0 } } {
 	setGlobal netedit_savefile ""
 	setGlobal CurrentlySelectedModules ""
 	setGlobal NetworkChanged 0
-    }   
+    }
 }
 
 proc NiceQuit {} {
