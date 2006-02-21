@@ -32,6 +32,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Dataflow/Network/Module.h>
+#include <sci_values.h>
 
 namespace Uintah {
 
@@ -173,10 +174,10 @@ ScalarMinMax::get_info( Reporter * reporter, FieldHandle f)
     return false;
   }
 
-  IntVector min_idx(MAXINT, MAXINT, MAXINT);
-  IntVector max_idx(-MAXINT, -MAXINT, -MAXINT);
-  double min_val = MAXDOUBLE;
-  double max_val = -MAXDOUBLE;
+  IntVector min_idx(INT_MAX, INT_MAX, INT_MAX);
+  IntVector max_idx(-INT_MAX, -INT_MAX, -INT_MAX);
+  double min_val = DBL_MAX;
+  double max_val = -DBL_MAX;
   int n_min_vals = 0;
   int n_max_vals = 0;
 
