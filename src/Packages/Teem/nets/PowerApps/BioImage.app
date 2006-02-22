@@ -1171,7 +1171,7 @@ class BioImageApp {
 	set c45 [addConnection $m18 1 $m19 2]
 	set c46 [addConnection $m5 2 $m6 3]
 	set c47 [addConnection $m29 0 $m28 4]
-	set c48 [addConnection $m33 0 $m28 5]
+	set c48 [addConnection $m32 0 $m28 5]
 	set c49 [addConnection $m31 0 $mods(Viewer) 0]
 	set c50 [addConnection $m28 0 $mods(Viewer) 1]
 	set c51 [addConnection $m14 0 $m35 0]
