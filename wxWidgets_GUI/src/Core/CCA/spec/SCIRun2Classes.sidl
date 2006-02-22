@@ -67,7 +67,7 @@ class BuilderComponent implements-all sci.cca.Component,
                                       sci.cca.ports.ComponentEventListener,
                                       sci.cca.ports.ConnectionEventListener {
   string getFrameworkURL();
-  ComponentID createInstance(in string className);
+  ComponentID createInstance(in string className, in sci.cca.TypeMap properties);
   void getUsedPortNames(in cca.ComponentID cid, inout array<string>);
   void getProvidedPortNames(in cca.ComponentID cid, inout array<string>);
   void getComponentClassDescriptions(inout array<cca.ComponentClassDescription>);
