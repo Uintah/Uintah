@@ -3888,8 +3888,6 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-MY_TEMP=$CPPFLAGS
-
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -5780,10 +5778,6 @@ echo "$as_me: error: This machine has some strange sizeof(void*): $ac_cv_sizeof_
   ;;
 esac
 
-# the next two lines were moved to a later stage to allow us to change this default based on --enable-32/64bit
-#AC_SUBST(NBITS)
-#sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
-
 ## --------------
 
 ac_ext=cc
@@ -6816,7 +6810,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6819:" \
+echo "$as_me:6813:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7697,10 +7691,14 @@ echo "$as_me: error: Looked in $COMPILER_DIR" >&2;}
 
     if test "$enable_64bit" = "yes"; then
       if test $NBITS = "32"; then
+        # The machine defaults to 32 bits (as found above by void* check).
+        # This flag tries to force it to give us 64 bits...
         BINARYFLAGS="-64 -mips4"
       fi
       NBITS=64
     else
+      # FIX ME - we might want to check NBITS at this point... if it is 64 then the machine default
+      # is 64 bits and we are trying to switch it to 32 bits... perhaps should let the user know...
       NBITS=32
       BINARYFLAGS="-n32 -mips4"
     fi
@@ -7792,6 +7790,7 @@ echo "${ECHO_T}no" >&6
 
          if test "$enable_64bit" = "yes"; then
             BIT64FLAG=-q64
+            NBITS=64
          fi
          CFLAGS="-qrtti=all $BIT64FLAG $CFLAGS"
 
@@ -8775,14 +8774,14 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
 
     echo "$as_me:$LINENO: checking if special 32/64 bits flags required" >&5
 echo $ECHO_N "checking if special 32/64 bits flags required... $ECHO_C" >&6
-    if test "$enable_32bit" = "yes" -a $NBITS=64; then
+    if test "$enable_32bit" = "yes" -a $NBITS = 64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"
        CXXFLAGS="-m32 $CXXFLAGS"
        echo "$as_me:$LINENO: result: -m32" >&5
 echo "${ECHO_T}-m32" >&6
     else
-      if test "$enable_64bit" = "yes" -a $NBITS=32; then
+      if test "$enable_64bit" = "yes" -a $NBITS = 32; then
         NBITS=64
         # Do not set this flag when using intel compilers
         if test "$CC" != "icc"; then
@@ -9541,6 +9540,9 @@ fi
     NEED_SONAME=yes
     ;;
 esac
+
+
+
 
 
 
@@ -64476,6 +64478,10 @@ fi
 
   case $host in
     *aix*)
+        { echo "$as_me:$LINENO: WARNING: Changing the compiler for AIX computers..." >&5
+echo "$as_me: WARNING: Changing the compiler for AIX computers..." >&2;}
+        { echo "$as_me:$LINENO: WARNING: ...to (probably) mpxlC" >&5
+echo "$as_me: WARNING: ...to (probably) mpxlC" >&2;}
 	CC=`echo $CC | sed 's,x,mpx,g'`
 	CXX=`echo $CXX | sed 's,x,mpx,g'`
 	F77=`echo $F77 | sed 's,x,mpx,g'`
