@@ -373,6 +373,16 @@ public:
   void                  insert_node(typename Face::index_type face, const Point &p);
   void                  bisect_element(const typename Face::index_type);
 
+  bool              insert_node_in_edge_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            unsigned int halfedge,
+                                            const Point &p);
+
+  bool              insert_node_in_face_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            typename Face::index_type face,
+                                            const Point &p);
+
   bool                  insert_node_in_face(typename Face::array_type &tris,
                                             typename Node::index_type &ni,
                                             typename Face::index_type face,
@@ -1259,26 +1269,112 @@ TriSurfMesh<Basis>::insert_node(const Point &p)
 
 template <class Basis>
 bool
-TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
-                                        typename Node::index_type &ni,
-                                        typename Face::index_type face,
-                                        const Point &p)
+TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            unsigned int halfedge,
+                                            const Point &p)
 {
   const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
   const bool do_normals = false; // synchronized_ & NORMALS_E;
 
   ni = add_point(p);
 
+  synchronize_lock_.lock();
+  
+  tris.clear();
+  tris.push_back(faces_.size() / 3);
+
+  faces_.push_back(ni);
+  faces_.push_back(faces_[next(halfedge)]);
+  faces_.push_back(faces_[prev(halfedge)]);
+
+  faces_[prev(halfedge)] = ni;
+
+  const unsigned int nbr = edge_neighbors_[halfedge];
+  if (nbr != MESH_NO_NEIGHBOR)
+  {
+    tris.push_back(faces_.size() / 3);
+
+    faces_.push_back(ni);
+    faces_.push_back(faces_[next(nbr)]);
+    faces_.push_back(faces_[prev(nbr)]);
+
+    faces_[prev(nbr)] = ni;
+  }
+
+#if 0
+  if (do_neighbors)
+  {
+    edge_neighbors_.push_back(edge_neighbors_[f0+1]);
+    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
+      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
+    edge_neighbors_.push_back(f2+2);
+    edge_neighbors_.push_back(f0+1);
+
+    edge_neighbors_.push_back(edge_neighbors_[f0+2]);
+    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
+      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
+    edge_neighbors_.push_back(f0+2);
+    edge_neighbors_.push_back(f1+1);
+
+    edge_neighbors_[f0+1] = f1+2;
+    edge_neighbors_[f0+2] = f2+1;
+  }
+
+  if (do_normals)
+  {
+    Vector normal = Vector( (p.asVector() +
+                             normals_[faces_[f0]] +
+                             normals_[faces_[f1]] +
+                             normals_[faces_[f2]]).safe_normalize() );
+    normals_.push_back(normals_[faces_[f1]]);
+    normals_.push_back(normals_[faces_[f2]]);
+    normals_.push_back(normal);
+
+    normals_.push_back(normals_[faces_[f2]]);
+    normals_.push_back(normals_[faces_[f0]]);
+    normals_.push_back(normal);
+
+    normals_[faces_[f0+2]] = normal;
+  }
+#endif
+
+  if (!do_neighbors) synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~EDGES_E;
+  if (!do_normals) synchronized_ &= ~NORMALS_E;
+
+  synchronize_lock_.unlock();
+
+  return true;
+}
+
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::insert_node_in_face_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            typename Face::index_type face,
+                                            const Point &p)
+{
+  const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
+  const bool do_normals = false; // synchronized_ & NORMALS_E;
+
+  ni = add_point(p);
+
+  synchronize_lock_.lock();
+  
   const unsigned f0 = face*3;
   const unsigned f1 = faces_.size();
   const unsigned f2 = f1+3;
 
-  synchronize_lock_.lock();
+  tris.clear();
 
+  tris.push_back(faces_.size() / 3);
   faces_.push_back(faces_[f0+1]);
   faces_.push_back(faces_[f0+2]);
   faces_.push_back(ni);
 
+  tris.push_back(faces_.size() / 3);
   faces_.push_back(faces_[f0+2]);
   faces_.push_back(faces_[f0+0]);
   faces_.push_back(ni);
@@ -1329,6 +1425,74 @@ TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
   synchronize_lock_.unlock();
 
   return true;
+}
+
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
+                                        typename Node::index_type &ni,
+                                        typename Face::index_type face,
+                                        const Point &p)
+{
+  const Point &p0 = point(faces_[face * 3 + 0]);
+  const Point &p1 = point(faces_[face * 3 + 1]);
+  const Point &p2 = point(faces_[face * 3 + 2]);
+
+  const double a0 = Cross(p - p1, p - p2).length2();
+  const double a1 = Cross(p - p2, p - p0).length2();
+  const double a2 = Cross(p - p0, p - p1).length2();
+
+  unsigned int mask = 0;
+  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
+  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
+  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
+
+  if (mask == 7)
+  {
+    // Point is inside the face, do a three split.
+    return insert_node_in_face_aux(tris, ni, face, p);
+  }
+  else if (mask == 0)
+  {
+    // Tri is degenerate, just return first point.
+    tris.clear();
+    ni = faces_[face * 3 + 0];
+    return true;
+  }
+  // The point is on a corner, return that corner.
+  else if (mask == 1)
+  {
+    tris.clear();
+    ni = faces_[face * 3 + 0];
+    return true;
+  }
+  else if (mask == 2)
+  {
+    tris.clear();
+    ni = faces_[face * 3 + 1];
+    return true;
+  }
+  else if (mask == 4)
+  {
+    tris.clear();
+    ni = faces_[face * 3 + 2];
+    return true;
+  }
+  // The point is on an edge, split that edge and neighboring triangle.
+  else if (mask == 3)
+  {
+    return insert_node_in_edge_aux(tris, ni, face*3+0, p);
+  }
+  else if (mask == 5)
+  {
+    return insert_node_in_edge_aux(tris, ni, face*3+2, p);
+  }
+  else if (mask == 6)
+  {
+    return insert_node_in_edge_aux(tris, ni, face*3+1, p);
+  }
+  return false;
 }
 
 
