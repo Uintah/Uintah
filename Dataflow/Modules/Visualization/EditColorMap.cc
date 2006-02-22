@@ -162,9 +162,9 @@ EditColorMap::EditColorMap( GuiContext* ctx)
   : Module("EditColorMap",ctx,Source, "Visualization", "SCIRun"),
     RGBorHSV_(ctx->subVar("rgbhsv")),
     lineVSspline_(ctx->subVar("linespline")),
-    rgb_points_pickle_(ctx->subVar("rgb_points_pickle")),
+    rgb_points_pickle_(ctx->subVar("rgb_points")),
     hsv_points_pickle_(ctx->subVar("hsv_points_pickle")),
-    alphas_pickle_(ctx->subVar("alphas_pickle")),
+    alphas_pickle_(ctx->subVar("alpha_points")),
     resolution_(ctx->subVar("resolution")),
     hsv_mode_(0),
     activeLine(-1),
@@ -245,37 +245,26 @@ EditColorMap::loadTs( double Ax, double Ay, double ax, double ay,
 void
 EditColorMap::tcl_pickle()
 {
-#if 0
   unsigned int i;
 
   ostringstream rgbstream;
-  for (i = 0; i < rgb_points_.size(); i++)
+  for (i = 0; i < rgbs_.size(); i++)
   {
-    rgbstream << rgb_points_[i]._t << " "
-	      << rgb_points_[i]._rgb.r() << " "
-	      << rgb_points_[i]._rgb.g() << " "
-	      << rgb_points_[i]._rgb.b() << " ";
+    rgbstream << rgbs_[i].r() << " "
+	      << rgbs_[i].g() << " "
+	      << rgbs_[i].b() << " "
+              << rgbT_[i] << " ";
   }
   rgb_points_pickle_.set(rgbstream.str());
 
-  ostringstream hsvstream;
-  for (i = 0; i < hsv_points_.size(); i++)
-  {
-    hsvstream << hsv_points_[i]._t << " "
-	      << hsv_points_[i]._rgb.r() << " "
-	      << hsv_points_[i]._rgb.g() << " "
-	      << hsv_points_[i]._rgb.b() << " ";
-  }
-  hsv_points_pickle_.set(hsvstream.str());
 
   ostringstream astream;
   for (i = 0; i < alphas_.size(); i++)
   {
-    astream << alphas_[i]._t << " "
-	    << alphas_[i]._alpha << " ";
+    astream << alphas_[i] << " "
+	    << alphaT_[i] << " ";
   }
   alphas_pickle_.set(astream.str());
-#endif
 }
 
 
