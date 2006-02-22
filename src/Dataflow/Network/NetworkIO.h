@@ -92,29 +92,32 @@ private:
 
   //! Interface from xml reading to tcl.
   //! this could be virtualized and used to interface with another gui type.
-  void add_module_at_position(const string &mod_id, const string &package, 
-			      const string &category, const string &module, 
-			      const string &x, const string &y);
+  void gui_add_module_at_position(const string &mod_id, 
+				  const string &package, 
+				  const string &category, 
+				  const string &module, 
+				  const string &x, 
+				  const string &y);
+  
+  void gui_add_connection(const string &con_id,
+			  const string &from_id, const string &from_port,
+			  const string &to_id, const string &to_port);
 
-  void add_connection(const string &con_id,
-		      const string &from_id, const string &from_port,
-		      const string &to_id, const string &to_port);
-
-  void set_connection_disabled(const string &con_id);
-  void set_module_port_caching(const string &mid, const string &pid,
+  void gui_set_connection_disabled(const string &con_id);
+  void gui_set_module_port_caching(const string &mid, const string &pid,
 			       const string &val);
 
-  void call_module_callback(const string &id, const string &call);
+  void gui_call_module_callback(const string &id, const string &call);
 
-  void set_gui_variable(const string &var, const string &val);
-  void set_modgui_variable(const string &mod_id, const string &var, 
+  void gui_set_variable(const string &var, const string &val);
+  void gui_set_modgui_variable(const string &mod_id, const string &var, 
 			   const string &val);
-  void set_module_note(const string &mod_id, const string &pos, 
+  void gui_set_module_note(const string &mod_id, const string &pos, 
 		       const string &col, const string &note);
-  void set_connection_note(const string &mod_id, const string &pos, 
+  void gui_set_connection_note(const string &mod_id, const string &pos, 
 			   const string &col, const string &note);
-  void set_connection_route(const string &con_id, const string &route);
-  void open_module_gui(const string &mod_id);
+  void gui_set_connection_route(const string &con_id, const string &route);
+  void gui_open_module_gui(const string &mod_id);
 
   xmlNode* get_module_node(const string &id);
   xmlNode* get_connection_node(const string &id);
