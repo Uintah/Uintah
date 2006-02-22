@@ -128,8 +128,8 @@ CompareMMS::execute()
   enum field_type_e { PRESSURE, UVEL, INVALID };
   field_type_e field_type;
 
-  if      ( field_type == "press_CC" )  field_type = PRESSURE;
-  else if ( field_type == "uvel_FCME" ) field_type = UVEL;
+  if      ( field_name == "press_CC" )  field_type = PRESSURE;
+  else if ( field_name == "uvel_FCME" ) field_type = UVEL;
   else {
     string msg = "MMS currently only knows how to compare pressure and uVelocity... you have: " + field_name;
     error( msg );
