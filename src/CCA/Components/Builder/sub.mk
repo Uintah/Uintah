@@ -39,7 +39,8 @@ SRCS += \
          $(SRCDIR)/NetworkCanvas.cc \
          $(SRCDIR)/MiniCanvas.cc \
          $(SRCDIR)/Connection.cc \
-         $(SRCDIR)/ComponentIcon.cc
+         $(SRCDIR)/ComponentIcon.cc \
+         $(SRCDIR)/PortIcon.cc
 
 PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/Thread Core/Exceptions SCIRun
 

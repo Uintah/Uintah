@@ -338,7 +338,7 @@ void BuilderWindow::OnSize(wxSizeEvent& WXUNUSED(event))
   Refresh();
 }
 
-void BuilderWindow::RefreshMiniCanvas()
+void BuilderWindow::RedrawMiniCanvas()
 {
   miniCanvas->Refresh();
 }

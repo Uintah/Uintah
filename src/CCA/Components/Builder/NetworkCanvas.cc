@@ -32,6 +32,7 @@
 #include <CCA/Components/Builder/NetworkCanvas.h>
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/ComponentIcon.h>
+#include <CCA/Components/Builder/PortIcon.h>
 #include <CCA/Components/Builder/Connection.h>
 
 #include <iostream>
@@ -128,7 +129,7 @@ void NetworkCanvas::DrawConnections(wxDC& dc)
   }
 }
 
-void NetworkCanvas::ShowPossibleConnections(PortIcon* port)
+bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
 {
 std::cerr << "NetworkCanvas::ShowPossibleConnections(..): " << port->GetPortName() << std::endl;
   ComponentIcon* pCI = port->GetParent();
@@ -156,12 +157,12 @@ std::cerr << "NetworkCanvas::ShowPossibleConnections(..): " << port->GetPortName
         PortIcon *pUses = ci_->GetPortIcon(portArray[j]);
         if (pUses == 0) {
           std::cerr << "Error: could not locate port " << portArray[j] << std::endl;
-          return;
+          return false;
         }
         PortIcon *pProvides = pCI->GetPortIcon(port->GetPortName());
         if (pProvides == 0) {
           std::cerr << "Error: could not locate port " << port->GetPortName() << std::endl;
-          return;
+          return false;
         }
         con = new Connection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), true);
       }
@@ -171,6 +172,10 @@ std::cerr << "NetworkCanvas::ShowPossibleConnections(..): " << port->GetPortName
       //std::cerr<<portList[j]<<std::endl;
     }
   }
+  if (possibleConnections.size() > 0) {
+    return true;
+  }
+  return false;
 }
 
 void NetworkCanvas::ClearPossibleConnections()
@@ -213,7 +218,7 @@ void NetworkCanvas::OnLeftUp(wxMouseEvent& event)
     CalcScrolledPosition(p.x, p.y, &p.x, &p.y);
     movingIcon->Move(p.x, p.y);
     movingIcon->Show(true);
-    builderWindow->RefreshMiniCanvas();
+    builderWindow->RedrawMiniCanvas();
     SetMovingIcon(0);
     //ReleaseMouse();
   }
@@ -224,7 +229,6 @@ void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
   // see wxMouseEvent::LeftIsDown and wxMouseEvent::Dragging
   if (event.LeftIsDown() && event.Dragging() && movingIcon) {
 
-    //wxClientDC dc(this);
     wxClientDC dc(this);
     DoPrepareDC(dc);
     wxPoint p = event.GetLogicalPosition(dc);
@@ -283,7 +287,7 @@ void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
     movingIcon->Show(true);
     // reset moving icon connections
     Refresh();
-    builderWindow->RefreshMiniCanvas();
+    builderWindow->RedrawMiniCanvas();
 
     wxRect windowRect = GetClientRect();
     if (! windowRect.Inside(newX + mw, newY + mh)) {
@@ -293,6 +297,8 @@ void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
     }
 
     //SetCursor(*arrowCursor);
+  } else {
+    wxScrolledWindow();
   }
 }
 
@@ -304,10 +310,10 @@ void NetworkCanvas::OnRightClick(wxMouseEvent& event)
   PopupMenu(m, event.GetPosition());
 }
 
-void NetworkCanvas::OnScroll(wxScrollWinEvent& /*event*/)
+void NetworkCanvas::OnScroll(wxScrollWinEvent& event)
 {
-  std::cerr << "NetworkCanvas::OnScroll(..)" << std::endl;
-  builderWindow->RefreshMiniCanvas();
+  wxScrolledWindow::OnScroll(event);
+  builderWindow->RedrawMiniCanvas();
 }
 
 void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
@@ -338,7 +344,7 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
   if (rects.empty()) {
     ci->Move(x, y);
     ci->Show(true);
-    builderWindow->RefreshMiniCanvas();
+    builderWindow->RedrawMiniCanvas();
     Refresh();
     return;
   }
@@ -369,7 +375,7 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
 	  GetScrollPixelsPerUnit(&xu, &yu);
 	  Scroll(x_/xu, y_/yu);
 	}
-	builderWindow->RefreshMiniCanvas();
+	builderWindow->RedrawMiniCanvas();
 	Refresh();
         return;
       }
@@ -378,7 +384,7 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
 
   ci->Move(max_row, max_col);
   ci->Show(true);
-  builderWindow->RefreshMiniCanvas();
+  builderWindow->RedrawMiniCanvas();
   Refresh();
 }
 

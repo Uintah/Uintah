@@ -43,7 +43,7 @@ namespace GUIBuilder {
 
 class PortIcon;
 
-class Connection : public wxEvtHandler {
+class Connection /*: public wxEvtHandler*/ {
 public:
   Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection=false);
   virtual ~Connection();
@@ -51,10 +51,10 @@ public:
   void ResetPoints();
   void OnDraw(wxDC& dc);
 
-  void OnLeftDown(wxMouseEvent& event);
-  void OnLeftUp(wxMouseEvent& event);
-  void OnRightClick(wxMouseEvent& event);
-  void OnMouseMove(wxMouseEvent& event);
+//   void OnLeftDown(wxMouseEvent& event);
+//   void OnLeftUp(wxMouseEvent& event);
+//   void OnRightClick(wxMouseEvent& event);
+//   void OnMouseMove(wxMouseEvent& event);
 
 
 protected:
@@ -75,7 +75,7 @@ private:
   bool possibleConnection;
   sci::cca::ConnectionID::pointer connectionID;
 
-  DECLARE_EVENT_TABLE()
+//   DECLARE_EVENT_TABLE()
 };
 
 }
