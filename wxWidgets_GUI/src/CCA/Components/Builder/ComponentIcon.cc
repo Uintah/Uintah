@@ -31,14 +31,14 @@
 //#include <wx/dc.h>
 
 #include <wx/dcbuffer.h>
-#include <wx/gdicmn.h>
+#include <wx/gdicmn.h> // color database
 #include <wx/panel.h>
 #include <wx/stattext.h>
 #include <wx/gbsizer.h>
 #include <wx/gauge.h>
-#include <wx/gdicmn.h> // color database
 
 #include <CCA/Components/Builder/ComponentIcon.h>
+#include <CCA/Components/Builder/PortIcon.h>
 #include <CCA/Components/Builder/NetworkCanvas.h>
 
 #include <string>
@@ -46,97 +46,6 @@
 namespace GUIBuilder {
 
 using namespace SCIRun;
-
-BEGIN_EVENT_TABLE(PortIcon, wxWindow)
-  EVT_LEFT_DOWN(PortIcon::OnLeftDown)
-  EVT_LEFT_UP(PortIcon::OnLeftUp)
-  EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu
-// EVT_MIDDLE_DOWN(PortIcon::OnMouseDown)
-  EVT_MOTION(PortIcon::OnMouseMove)
-END_EVENT_TABLE()
-
-IMPLEMENT_DYNAMIC_CLASS(PortIcon, wxWindow)
-
-PortIcon::PortIcon(ComponentIcon* parent, wxWindowID id, Builder::PortType pt, const std::string& name) : parent(parent), type(pt), name(name), connecting(false), ID_MENU_POPUP(BuilderWindow::GetNextID())
-{
-  Init();
-  Create(parent, id, wxT(name));
-
-}
-
-PortIcon::~PortIcon()
-{
-}
-
-bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
-{
-  if (! wxWindow::Create(parent, id, wxDefaultPosition, wxSize(PORT_WIDTH, PORT_HEIGHT), wxNO_BORDER, name)) {
-    return false;
-  }
-
-  //need database of port types/colours
-  if (type == Builder::Uses) {
-    pColour = wxColour(wxTheColourDatabase->Find("FIREBRICK"));
-    hColour = wxColour(wxTheColourDatabase->Find("GREEN"));
-  } else {
-    pColour = wxColour(wxTheColourDatabase->Find("SLATE BLUE"));
-    hColour = wxColour(wxTheColourDatabase->Find("RED"));
-  }
-  SetBackgroundColour(pColour);
-  //hRect = wxRect(, , HIGHLIGHT_WIDTH, PORT_HEIGHT);
-
-  SetToolTip(name);
-
-  return true;
-}
-
-void PortIcon::OnLeftDown(wxMouseEvent& event)
-{
-  if (type == Builder::Uses) {
-    parent->GetCanvas()->ShowPossibleConnections(this);
-  }
-}
-
-void PortIcon::OnLeftUp(wxMouseEvent& event)
-{
-  parent->GetCanvas()->ClearPossibleConnections();
-}
-
-void PortIcon::OnMouseMove(wxMouseEvent& event)
-{
-  std::cerr << "PortIcon::OnMouseMove(..)" << std::endl;
-  // connect
-  connecting = true;
-  // figure out which connection we're over and change to highlight colour
-
-}
-
-void PortIcon::OnRightClick(wxMouseEvent& event)
-{
-  // show component menu w/ compatible ports
-  wxMenu *m = new wxMenu();
-  m->Append(wxID_ANY, wxT("Port Icon Menu Item"));
-
-  // fill with compatible component types -> handle bridging???
-  PopupMenu(m, event.GetPosition());
-}
-
-// void PortIcon::OnDraw(wxDC& dc)
-// {
-// }
-
-///////////////////////////////////////////////////////////////////////////
-// protected constructor and member functions
-
-PortIcon::PortIcon() : ID_MENU_POPUP(BuilderWindow::GetNextID())
-{
-  Init();
-}
-
-void PortIcon::Init()
-{
-}
-
 
 BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
   //EVT_PAINT(ComponentIcon::OnPaint)
@@ -151,7 +60,7 @@ END_EVENT_TABLE()
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
 
 ComponentIcon::ComponentIcon(const sci::cca::BuilderComponent::pointer& bc, wxWindowID winid, NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y)
-  : /* dragMode(TEST_DRAG_NONE), */ canvas(parent), cid(compID), builder(bc), hasUIPort(false), hasGoPort(false), isSciPort(false), ID_MENU_POPUP(BuilderWindow::GetNextID()), ID_BUTTON_UI(BuilderWindow::GetNextID()), ID_BUTTON_STATUS(BuilderWindow::GetNextID()), ID_PROGRESS(BuilderWindow::GetNextID())
+  : /* dragMode(TEST_DRAG_NONE), */ canvas(parent), hasUIPort(false), hasGoPort(false), isSciPort(false), cid(compID), builder(bc), ID_MENU_POPUP(BuilderWindow::GetNextID()), ID_BUTTON_UI(BuilderWindow::GetNextID()), ID_BUTTON_STATUS(BuilderWindow::GetNextID()), ID_PROGRESS(BuilderWindow::GetNextID())
 {
 
   Init();

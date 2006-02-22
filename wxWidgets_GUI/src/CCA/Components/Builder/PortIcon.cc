@@ -31,77 +31,116 @@
  *
  */
 
+
+
+//#include <wx/region.h>
+//#include <wx/dc.h>
+
+#include <wx/dcbuffer.h>
+#include <wx/gdicmn.h> // color database
+
 #include <CCA/Components/Builder/PortIcon.h>
+#include <CCA/Components/Builder/ComponentIcon.h>
+#include <CCA/Components/Builder/NetworkCanvas.h>
 
-#include <wx/region.h>
+#include <string>
 
-namespace SCIRun {
+namespace GUIBuilder {
 
-BEGIN_EVENT_TABLE(PortIcon, wxRegion)
-// from htmlwin.cpp 
-//EVT_LEFT_DOWN(wxHtmlWindow::OnMouseDown)
-//EVT_LEFT_UP(wxHtmlWindow::OnMouseUp)
-//EVT_RIGHT_UP(wxHtmlWindow::OnMouseUp)
-//EVT_MOTION(wxHtmlWindow::OnMouseMove)
-//EVT_PAINT(wxHtmlWindow::OnPaint)
-//#if wxUSE_CLIPBOARD
-//EVT_LEFT_DCLICK(wxHtmlWindow::OnDoubleClick)
-//EVT_ENTER_WINDOW(wxHtmlWindow::OnMouseEnter)
-//EVT_LEAVE_WINDOW(wxHtmlWindow::OnMouseLeave)
-//#endif // wxUSE_CLIPBOARD
+using namespace SCIRun;
+
+BEGIN_EVENT_TABLE(PortIcon, wxWindow)
+  EVT_LEFT_DOWN(PortIcon::OnLeftDown)
+  EVT_LEFT_UP(PortIcon::OnLeftUp)
+  EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu
+// EVT_MIDDLE_DOWN(PortIcon::OnMouseDown)
+  EVT_MOTION(PortIcon::OnMouseMove)
 END_EVENT_TABLE()
 
+IMPLEMENT_DYNAMIC_CLASS(PortIcon, wxWindow)
 
-
-// TODO: filter menu for type, find a better way to show port type
-PortIcon::PortIcon()
+PortIcon::PortIcon(ComponentIcon* parent, wxWindowID id, Builder::PortType pt, const std::string& name) : parent(parent), type(pt), name(name), connecting(false), ID_MENU_POPUP(BuilderWindow::GetNextID())
 {
+  Init();
+  Create(parent, id, wxT(name));
+
 }
 
 PortIcon::~PortIcon()
 {
 }
 
-void PortIcon::drawPort(QPainter &p)
+bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
 {
-//p.setPen(pColor);
-//p.setBrush(pColor);
-//p.drawRect(pRect);
-//p.setPen(iColor);
-//p.setBrush(iColor);
-//p.drawRect(iRect);
+  if (! wxWindow::Create(parent, id, wxDefaultPosition, wxSize(PORT_WIDTH, PORT_HEIGHT), wxNO_BORDER, name)) {
+    return false;
+  }
+
+  //need database of port types/colours
+  if (type == Builder::Uses) {
+    pColour = wxColour(wxTheColourDatabase->Find("FIREBRICK"));
+    hColour = wxColour(wxTheColourDatabase->Find("GREEN"));
+  } else {
+    pColour = wxColour(wxTheColourDatabase->Find("SLATE BLUE"));
+    hColour = wxColour(wxTheColourDatabase->Find("RED"));
+  }
+  SetBackgroundColour(pColour);
+  //hRect = wxRect(, , HIGHLIGHT_WIDTH, PORT_HEIGHT);
+
+  SetToolTip(name);
+
+  return true;
 }
 
-QPoint PortIcon::portPoint()
+void PortIcon::OnLeftDown(wxMouseEvent& event)
 {
+  if (type == Builder::Uses) {
+    connecting = parent->GetCanvas()->ShowPossibleConnections(this);
+  }
 }
 
-// better way to figure out how to map color to port type?
-//void PortIcon::portColorMap()
-//{
-//    colorMap = sci::cca::TypeMap::pointer(new TypeMap);
-//
-//    // using named colors
-//    // Qt can use these for either Unix or Windows systems
-//    // see Qt documentation for QColor
-//    colorMap->putString(std::string("default"),
-//                        std::string("yellow"));
-//    colorMap->putString(std::string("highlight"),
-//                        std::string("white"));
-//    colorMap->putString(std::string("StringPort"),
-//                        std::string("cadetblue1"));
-//    colorMap->putString(std::string("ZListPort"),
-//                        std::string("goldenrod4"));
-//    colorMap->putString(std::string("LinSolverPort"),
-//                        std::string("darkorange"));
-//    colorMap->putString(std::string("PDEdescriptionPort"),
-//                        std::string("tomato"));
-//    colorMap->putString(std::string("MeshPort"),
-//                        std::string("magenta"));
-//    colorMap->putString(std::string("ViewPort"),
-//                        std::string("darkseagreen"));
-//    colorMap->putString(std::string("FEMmatrixPort"),
-//                        std::string("gray65"));
-//}
+void PortIcon::OnLeftUp(wxMouseEvent& event)
+{
+  parent->GetCanvas()->ClearPossibleConnections();
+}
+
+void PortIcon::OnMouseMove(wxMouseEvent& event)
+{
+  if (connecting) {
+    NetworkCanvas *canvas = parent->GetCanvas();
+    wxPoint p = event.GetPosition();
+    wxPoint pp = wxGetMousePosition();
+    canvas->CalcUnscrolledPosition(pp.x, pp.y, &pp.x, &pp.y);
+    std::cerr << "PortIcon::OnMouseMove(..): (" << p.x << ", " << p.y << ")" << std::endl
+	      << "Canvas position: (" << pp.x << ", " << pp.y << ")" << std::endl;
+    // figure out which connection we're over and change to highlight colour
+  }
+}
+
+void PortIcon::OnRightClick(wxMouseEvent& event)
+{
+  // show component menu w/ compatible ports
+  wxMenu *m = new wxMenu();
+  m->Append(wxID_ANY, wxT("Port Icon Menu Item"));
+
+  // fill with compatible component types -> handle bridging???
+  PopupMenu(m, event.GetPosition());
+}
+
+// void PortIcon::OnDraw(wxDC& dc)
+// {
+// }
+
+///////////////////////////////////////////////////////////////////////////
+// protected constructor and member functions
+
+PortIcon::PortIcon() : ID_MENU_POPUP(BuilderWindow::GetNextID())
+{
+  Init();
+}
+
+void PortIcon::Init()
+{
+}
 
 }

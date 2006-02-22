@@ -124,7 +124,7 @@ public:
 
   void InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd);
 
-  void RefreshMiniCanvas();
+  void RedrawMiniCanvas();
 
   static int GetNextID() { return ++IdCounter; }
   static int GetCurrentID() { return IdCounter; }

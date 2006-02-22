@@ -70,7 +70,7 @@ public:
 
   //void DrawIcons(wxDC& dc);
   void DrawConnections(wxDC& dc);
-  void ShowPossibleConnections(PortIcon* usesPort);
+  bool ShowPossibleConnections(PortIcon* usesPort);
   void ClearPossibleConnections();
 
   void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }

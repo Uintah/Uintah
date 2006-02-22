@@ -28,6 +28,7 @@
 
 #include <CCA/Components/Builder/Connection.h>
 #include <CCA/Components/Builder/ComponentIcon.h>
+#include <CCA/Components/Builder/PortIcon.h>
 #include <CCA/Components/Builder/NetworkCanvas.h>
 //#include <iostream>
 
@@ -38,13 +39,13 @@
 
 namespace GUIBuilder {
 
-BEGIN_EVENT_TABLE(Connection, wxEvtHandler)
-  EVT_LEFT_DOWN(Connection::OnLeftDown)
-  EVT_LEFT_UP(Connection::OnLeftUp)
-  EVT_RIGHT_UP(Connection::OnRightClick)
-END_EVENT_TABLE()
+// BEGIN_EVENT_TABLE(Connection, wxEvtHandler)
+//   EVT_LEFT_DOWN(Connection::OnLeftDown)
+//   EVT_LEFT_UP(Connection::OnLeftUp)
+//   EVT_RIGHT_UP(Connection::OnRightClick)
+// END_EVENT_TABLE()
 
-Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : wxEvtHandler(), NUM_POINTS(12), NUM_DRAW_POINTS(6), pUses(pU), pProvides(pP), possibleConnection(possibleConnection), connectionID(connID)
+Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : NUM_POINTS(12), NUM_DRAW_POINTS(6), pUses(pU), pProvides(pP), possibleConnection(possibleConnection), connectionID(connID)
 {
   points = new wxPoint[NUM_POINTS];
   ResetPoints();
@@ -176,25 +177,25 @@ void Connection::OnDraw(wxDC& dc)
   }
 }
 
-void Connection::OnLeftDown(wxMouseEvent& event)
-{
-  // connecting
-  std::cerr << "Connection::OnLeftDown(..)" << std::endl;
-}
+// void Connection::OnLeftDown(wxMouseEvent& event)
+// {
+//   // connecting
+//   std::cerr << "Connection::OnLeftDown(..)" << std::endl;
+// }
 
-void Connection::OnLeftUp(wxMouseEvent& event)
-{
-  std::cerr << "Connection::OnLeftUp(..)" << std::endl;
-}
+// void Connection::OnLeftUp(wxMouseEvent& event)
+// {
+//   std::cerr << "Connection::OnLeftUp(..)" << std::endl;
+// }
 
-void Connection::OnRightClick(wxMouseEvent& event)
-{
-  wxMenu *m = new wxMenu();
-  m->Append(wxID_ANY, wxT("Connection Menu Item"));
+// void Connection::OnRightClick(wxMouseEvent& event)
+// {
+//   wxMenu *m = new wxMenu();
+//   m->Append(wxID_ANY, wxT("Connection Menu Item"));
 
-  NetworkCanvas* canvas = pUses->GetParent()->GetCanvas();
-  canvas->PopupMenu(m, event.GetPosition());
-}
+//   NetworkCanvas* canvas = pUses->GetParent()->GetCanvas();
+//   canvas->PopupMenu(m, event.GetPosition());
+// }
 
 
 ///////////////////////////////////////////////////////////////////////////

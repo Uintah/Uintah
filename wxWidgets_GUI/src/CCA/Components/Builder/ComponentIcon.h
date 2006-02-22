@@ -31,7 +31,6 @@
 #define ComponentIcon_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <CCA/Components/Builder/Builder.h>
 
 #include <map>
 //#include <vector>
@@ -47,7 +46,7 @@ class wxGauge;
 namespace GUIBuilder {
 
 class NetworkCanvas;
-class ComponentIcon;
+class PortIcon;
 
 // to replace button?
 // class MessageControl : public wxWindow {
@@ -57,54 +56,6 @@ class ComponentIcon;
 
 // private:
 // };
-
-class PortIcon : public wxWindow {
-public:
-  PortIcon(ComponentIcon *parent, wxWindowID id, Builder::PortType pt, const std::string& name);
-  virtual ~PortIcon();
-  bool Create(wxWindow *parent, wxWindowID id, const wxString &name);
-  void OnLeftDown(wxMouseEvent& event);
-  void OnLeftUp(wxMouseEvent& event);
-  void OnMouseMove(wxMouseEvent& event);
-  void OnRightClick(wxMouseEvent& event);
-
-  wxColour GetPortColour() { return pColour; }
-  const std::string GetPortName() const { return name; }
-  Builder::PortType GetPortType() const { return type; }
-
-  ComponentIcon* GetParent() const { return parent; }
-
-  //void PortIcon::OnDraw(wxDC& dc)
-
-  const static int PORT_WIDTH = 7;
-  const static int PORT_HEIGHT = 10;
-  const static int HIGHLIGHT_WIDTH = 2;
-  //const static int PORT_DISTANCE = 10;
-
-protected:
-  PortIcon();
-  void Init();
-
-private:
-  PortIcon(const PortIcon&);
-  PortIcon& operator=(const PortIcon&);
-
-  ComponentIcon* parent;
-  Builder::PortType type;
-  std::string name;
-  bool connecting;
-
-  wxRect hRect;
-  //wxRegion region;
-
-  wxColour hColour;
-  wxColour pColour;
-
-  const int ID_MENU_POPUP;
-
-  DECLARE_DYNAMIC_CLASS(PortIcon)
-  DECLARE_EVENT_TABLE()
-};
 
 class ComponentIcon : public wxPanel {
 public:
