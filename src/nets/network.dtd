@@ -60,7 +60,16 @@
 
 <!-- modules an id for use later in connections, 
      the module instantiation info, and the position in the network editor -->
-<!ELEMENT modules (module+)>
+<!ELEMENT modules (subnet*, module*)>
+
+<!ELEMENT subnet (position, note?, port_caching?, network)>
+<!ATTLIST subnet
+          id CDATA #REQUIRED
+          package CDATA #REQUIRED
+          category CDATA #REQUIRED
+          name CDATA #REQUIRED>
+
+
 <!ELEMENT module (position, gui_callback?, note?, port_caching?, var*)>
 <!ATTLIST module
           id CDATA #REQUIRED
