@@ -382,9 +382,10 @@ proc centerWindow { w1 { w2 "" } } {
 #############################################################################
 # label_pair frame "Label Text" "Label Var"
 #
-# - frame      : The tcl path to the location name the frame should be created at (eg: .w.f1)
-# - Label Text : Text to use as the label 
-# - Label Var  :
+# - frame         : The tcl path to the location name the frame should be created at (eg: .w.f1)
+# - Label Text    : Text to use as the label 
+# - Label Var     : Variable that will be used to update this field
+# - [Label Width] : Optional width of the label text (defaults to 12) 
 #
 # Example use:
 #
