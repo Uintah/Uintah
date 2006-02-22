@@ -67,6 +67,8 @@ public:
 
 private:
   GuiString gui_field_name_;
+  GuiDouble gui_field_time_;
+  GuiInt    gui_output_choice_;  // 0 == original, 1 == exact solution, 2 == difference
 
 private:
 
@@ -76,7 +78,9 @@ DECLARE_MAKER(CompareMMS)
 
 CompareMMS::CompareMMS(GuiContext* ctx) :
   Module("CompareMMS", ctx, Sink, "Operators", "Uintah"),
-  gui_field_name_(ctx->subVar("field_name", false))
+  gui_field_name_(ctx->subVar("field_name", false)),
+  gui_field_time_(ctx->subVar("field_time", false)),
+  gui_output_choice_(ctx->subVar("output_choice", false))
 {
 }
 
@@ -104,7 +108,9 @@ CompareMMS::execute()
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
   {
-    warning("No input connected to the Scalar Field input port.");
+    remark("No input connected to the Scalar Field input port.");
+    remark("Displaying exact solution.");
+    gui->eval( id + " set_to_exact" );
     return;
   }
 
@@ -114,92 +120,118 @@ CompareMMS::execute()
     return;
   }
 
-  string field_name = "Not Specified";
-  fh->get_property("varname",field_name);
+  string field_name;
+  double field_time;
+  fh->get_property( "varname", field_name );
+  fh->get_property( "time",    field_time );
 
-  gui_field_name_.set( field_name + " -- " + fh->mesh()->type_name() );
+  enum field_type_e { PRESSURE, UVEL, INVALID };
+  field_type_e field_type;
 
-  const BBox bbox = fh->mesh()->get_bounding_box();
+  if      ( field_type == "press_CC" )  field_type = PRESSURE;
+  else if ( field_type == "uvel_FCME" ) field_type = UVEL;
+  else {
+    string msg = "MMS currently only knows how to compare pressure and uVelocity... you have: " + field_name;
+    error( msg );
+    return;
+  }
 
-  cout << "BBox: " << bbox.min() << "  ----  " << bbox.max() << "\n";
+  gui_field_name_.set( field_name );
+  gui_field_time_.set( field_time );
 
-  vector<unsigned int> dimensions;
-  bool result = fh->mesh()->get_dim( dimensions );
+  if( gui_output_choice_.get() == 0 ) { // Just pass original Field through
 
-  if( result ) {
-    for( int pos = 0; pos < dimensions.size(); pos++ ) {
-      printf("dim[%d] is: %d\n",pos,dimensions[pos]);
-    }
+    FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
+    ofp->send_and_dereference( fh );
+
   } else {
-    printf("dimensions not returned???\n");
-  }
 
-  LVMesh* mesh = dynamic_cast<LVMesh*>(fh->mesh().get_rep());
-  if( !mesh ) {
-    printf("error here\n");
-    error( "failed to cast mesh" );
-    return;
-  }
+    // handle showing the exact solution or the diff
 
-  LVMesh::Cell::index_type pos(mesh,1,1,1 );
+    vector<unsigned int> dimensions;
+    bool result = fh->mesh()->get_dim( dimensions );
 
-  LVFieldCBD* field = dynamic_cast<LVFieldCBD*>(fh.get_rep());
-
-  if( !field ) {
-    printf("ERROR HERE\n");
-    error( "failed to cast field" );
-    return;
-  }
-  double val;
-  field->value( val, pos );
-
-  printf("val is %lf\n", val);
-
-  return;
-#if 0
-
-  Point minb, maxb;
-
-  int size = 20;
-
-  datatype = SCALAR;
-  minb = Point(-size, -size, -1.0);
-  maxb = Point(size, size, 1.0);
-
-  double padpercent = 10.0;
-  Vector diag((maxb.asVector() - minb.asVector()) * (padpercent/100.0));
-  minb -= diag;
-  maxb += diag;
-
-  // Create blank mesh.
-  unsigned int sizex = size+1;//Max(2, size_x_.get());
-  unsigned int sizey = size+1;//Max(2, size_y_.get());
-  unsigned int sizez = 2;//Max(2, size_z_.get());
-
-  LVMesh::handle_type mesh = scinew LVMesh(sizex, sizey, sizez, minb, maxb);
-
-  int basis_order = 0; // cells?
-
-  // Create Image Field.
-  FieldHandle ofh;
-
-  LVFieldCBD *lvf = scinew LVFieldCBD(mesh);
-
-  MMS * mms = new MMS1();
-
-  for( int xx = 0; xx < size; xx++ ) {
-    for( int yy = 0; yy < size; yy++ ) {
-      for( int zz = 0; zz < 1; zz++ ) {
-        LVMesh::Cell::index_type pos(mesh.get_rep(),xx,yy,zz);
-        lvf->set_value( mms->pressure( xx, yy, 0.0 ), pos );
-      }
+    if( !result ) {
+      error("dimensions not returned???\n");
+      return;
     }
-  }
-  ofh = lvf;
+    
+    LVMesh* mesh = dynamic_cast<LVMesh*>(fh->mesh().get_rep());
+    if( !mesh ) {
+      printf("error here\n");
+      error( "failed to cast mesh" );
+      return;
+    }
+    LVFieldCBD* field = dynamic_cast<LVFieldCBD*>(fh.get_rep());
+    if( !field ) {
+      printf("ERROR HERE\n");
+      error( "failed to cast field" );
+      return;
+    }
+    
+    Point minb, maxb;
+    
+    int size = 20;
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
-  ofp->send_and_dereference(ofh);
-#endif
+    minb = Point(0,0,0);
+    maxb = Point(1, 1, 1);
+
+    // Create blank mesh.
+    unsigned int sizex = dimensions[0]+1;
+    unsigned int sizey = dimensions[1]+1;
+    unsigned int sizez = 2;
+
+    //printf( "size is %d, %d, %d\n", sizex, sizey, sizez );
+    
+    LVMesh::handle_type outputMesh = scinew LVMesh(sizex, sizey, sizez, minb, maxb);
+
+    Transform temp;
+  
+    mesh->get_canonical_transform( temp );
+    outputMesh->transform( temp );
+
+    FieldHandle ofh;
+
+    LVFieldCBD *lvf = scinew LVFieldCBD(outputMesh);
+
+    MMS * mms = new MMS1();
+
+    bool   showDif = (gui_output_choice_.get() == 2);
+    double time = gui_field_time_.get();
+
+    for( int xx = 0; xx < dimensions[0]-1; xx++ ) { // Not sure why I have to subtract 1 from the dimension...
+      for( int yy = 0; yy < dimensions[1]-1; yy++ ) {
+        for( int zz = 0; zz < 1; zz++ ) {
+          LVMesh::Cell::index_type pos(outputMesh.get_rep(),xx,yy,zz);
+
+          LVMesh::Cell::index_type inputMeshPos(mesh,xx,yy,zz);
+
+          double calculatedValue;
+          switch( field_type ) {
+          case PRESSURE:
+            calculatedValue = mms->pressure( xx, yy, time );
+            break;
+          case UVEL:
+            calculatedValue = mms->uVelocity( xx, yy, time );
+            break;
+          }
+          if( showDif ) {
+            double val;
+            field->value( val, inputMeshPos ); // Get the value at pos
+
+            lvf->set_value( calculatedValue - val, pos );
+          } else {
+            lvf->set_value( calculatedValue, pos );
+          }
+        }
+      }
+
+    } 
+    ofh = lvf;
+    
+    FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
+    ofp->send_and_dereference(ofh);
+  } // end if gui_output_choice_ == 0;
+
 } // end execute()
-
 
