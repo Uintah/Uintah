@@ -530,6 +530,7 @@ FieldExtractorAlgo::set_field_properties( Field* field,
   field->set_property( "timestep",   qinfo.timestep, true);
   field->set_property( "offset",     IntVector(offset), true);
   field->set_property( "delta_t",    qinfo.dt, true);
+  field->set_property( "time",       qinfo.time, true);
   field->set_property( "vartype",    int(qinfo.type->getType()),true);
 }
 
