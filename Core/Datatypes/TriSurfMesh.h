@@ -373,6 +373,11 @@ public:
   void                  insert_node(typename Face::index_type face, const Point &p);
   void                  bisect_element(const typename Face::index_type);
 
+  bool                  insert_node_in_face(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            typename Face::index_type face,
+                                            const Point &p);
+
 
   const Point &point(typename Node::index_type i) { return points_[i]; }
   Basis& get_basis() { return basis_; }
@@ -1241,7 +1246,6 @@ TriSurfMesh<Basis>::insert_node(typename Face::index_type face, const Point &p)
 }
 
 
-
 template <class Basis>
 bool
 TriSurfMesh<Basis>::insert_node(const Point &p)
@@ -1249,6 +1253,81 @@ TriSurfMesh<Basis>::insert_node(const Point &p)
   typename Face::index_type face;
   if (!locate(face,p)) return false;
   insert_node(face,p);
+  return true;
+}
+
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
+                                        typename Node::index_type &ni,
+                                        typename Face::index_type face,
+                                        const Point &p)
+{
+  const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
+  const bool do_normals = false; // synchronized_ & NORMALS_E;
+
+  ni = add_point(p);
+
+  const unsigned f0 = face*3;
+  const unsigned f1 = faces_.size();
+  const unsigned f2 = f1+3;
+
+  synchronize_lock_.lock();
+
+  faces_.push_back(faces_[f0+1]);
+  faces_.push_back(faces_[f0+2]);
+  faces_.push_back(ni);
+
+  faces_.push_back(faces_[f0+2]);
+  faces_.push_back(faces_[f0+0]);
+  faces_.push_back(ni);
+
+  // Must do last
+  faces_[f0+2] = ni;
+
+  if (do_neighbors)
+  {
+    edge_neighbors_.push_back(edge_neighbors_[f0+1]);
+    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
+      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
+    edge_neighbors_.push_back(f2+2);
+    edge_neighbors_.push_back(f0+1);
+
+    edge_neighbors_.push_back(edge_neighbors_[f0+2]);
+    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
+      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
+    edge_neighbors_.push_back(f0+2);
+    edge_neighbors_.push_back(f1+1);
+
+    edge_neighbors_[f0+1] = f1+2;
+    edge_neighbors_[f0+2] = f2+1;
+  }
+
+  if (do_normals)
+  {
+    Vector normal = Vector( (p.asVector() +
+                             normals_[faces_[f0]] +
+                             normals_[faces_[f1]] +
+                             normals_[faces_[f2]]).safe_normalize() );
+    normals_.push_back(normals_[faces_[f1]]);
+    normals_.push_back(normals_[faces_[f2]]);
+    normals_.push_back(normal);
+
+    normals_.push_back(normals_[faces_[f2]]);
+    normals_.push_back(normals_[faces_[f0]]);
+    normals_.push_back(normal);
+
+    normals_[faces_[f0+2]] = normal;
+
+  }
+
+  if (!do_neighbors) synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~EDGES_E;
+  if (!do_normals) synchronized_ &= ~NORMALS_E;
+
+  synchronize_lock_.unlock();
+
   return true;
 }
 

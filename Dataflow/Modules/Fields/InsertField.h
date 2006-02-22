@@ -48,46 +48,47 @@ class InsertFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual void execute_0(FieldHandle tet, FieldHandle insert,
-                         vector<unsigned int> &added_nodes,
-                         vector<unsigned int> &added_elems) = 0;
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems) = 0;
   virtual void execute_1(FieldHandle tet, FieldHandle insert,
-                         vector<unsigned int> &added_nodes,
-                         vector<unsigned int> &added_elems) = 0;
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems) = 0;
   virtual void execute_2(FieldHandle tet, FieldHandle insert,
-                         vector<unsigned int> &added_nodes,
-                         vector<unsigned int> &added_elems) = 0;
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems) = 0;
 
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftet,
-					    const TypeDescription *finsert);
+					    const TypeDescription *finsert,
+                                            bool tri);
 };
 
 
 template <class TFIELD, class IFIELD>
-class InsertFieldAlgoT : public InsertFieldAlgo
+class InsertFieldAlgoTet : public InsertFieldAlgo
 {
 public:
 
   //! virtual interface. 
   virtual void execute_0(FieldHandle tet, FieldHandle insert,
-                         vector<unsigned int> &added_nodes,
-                         vector<unsigned int> &added_elems);
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems);
   virtual void execute_1(FieldHandle tet, FieldHandle insert,
-                         vector<unsigned int> &added_nodes,
-                         vector<unsigned int> &added_elems);
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems);
   virtual void execute_2(FieldHandle tet, FieldHandle insert,
-                         vector<unsigned int> &added_nodes,
-                         vector<unsigned int> &added_elems);
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems);
 };
 
 
 template <class TFIELD, class IFIELD>
 void
-InsertFieldAlgoT<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
-                                            FieldHandle insert_h,
-                                            vector<unsigned int> &added_nodes,
-                                            vector<unsigned int> &added_elems)
+InsertFieldAlgoTet<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
+                                              FieldHandle insert_h,
+                                              vector<unsigned int> &new_nodes,
+                                              vector<unsigned int> &new_elems)
 {
   TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
   typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
@@ -112,11 +113,11 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
       typename TFIELD::mesh_type::Elem::array_type newelems;
       tmesh->insert_node_in_cell_2(newelems, newnode, elem, p);
 
-      added_nodes.push_back(newnode);
-      added_elems.push_back(elem);
+      new_nodes.push_back(newnode);
+      new_elems.push_back(elem);
       for (unsigned int i = 0; i < newelems.size(); i++)
       {
-        added_elems.push_back(newelems[i]);
+        new_elems.push_back(newelems[i]);
       }
     }
 
@@ -129,10 +130,10 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
 
 template <class TFIELD, class IFIELD>
 void
-InsertFieldAlgoT<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
-                                            FieldHandle insert_h,
-                                            vector<unsigned int> &added_nodes,
-                                            vector<unsigned int> &added_elems)
+InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
+                                              FieldHandle insert_h,
+                                              vector<unsigned int> &new_nodes,
+                                              vector<unsigned int> &new_elems)
 {
   TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
   typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
@@ -224,11 +225,11 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
       {
         tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[i]);
 
-        added_nodes.push_back(newnode);
-        added_elems.push_back(elem);
+        new_nodes.push_back(newnode);
+        new_elems.push_back(elem);
         for (unsigned int i = 0; i < newelems.size(); i++)
         {
-          added_elems.push_back(newelems[i]);
+          new_elems.push_back(newelems[i]);
         }
       }
     }
@@ -240,10 +241,10 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
 
 template <class TFIELD, class IFIELD>
 void
-InsertFieldAlgoT<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
-                                            FieldHandle insert_h,
-                                            vector<unsigned int> &added_nodes,
-                                            vector<unsigned int> &added_elems)
+InsertFieldAlgoTet<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
+                                              FieldHandle insert_h,
+                                              vector<unsigned int> &new_nodes,
+                                              vector<unsigned int> &new_elems)
 {
   TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
   typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
@@ -317,11 +318,11 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
         {
           tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[j]);
 
-          added_nodes.push_back(newnode);
-          added_elems.push_back(elem);
+          new_nodes.push_back(newnode);
+          new_elems.push_back(elem);
           for (unsigned int k = 0; k < newelems.size(); k++)
           {
-            added_elems.push_back(newelems[k]);
+            new_elems.push_back(newelems[k]);
           }
         }
       }
@@ -334,6 +335,108 @@ InsertFieldAlgoT<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
 
 
 
+template <class TFIELD, class IFIELD>
+class InsertFieldAlgoTri : public InsertFieldAlgo
+{
+public:
+
+  //! virtual interface. 
+  virtual void execute_0(FieldHandle tet, FieldHandle insert,
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems);
+  virtual void execute_1(FieldHandle tet, FieldHandle insert,
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems);
+  virtual void execute_2(FieldHandle tet, FieldHandle insert,
+                         vector<unsigned int> &new_nodes,
+                         vector<unsigned int> &new_elems) {}
+};
+
+
+template <class TFIELD, class IFIELD>
+void
+InsertFieldAlgoTri<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
+                                              FieldHandle insert_h,
+                                              vector<unsigned int> &new_nodes,
+                                              vector<unsigned int> &new_elems)
+{
+  TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
+  typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
+  IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
+  typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+
+  tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E | Mesh::FACES_E);
+
+  typename IFIELD::mesh_type::Node::iterator ibi, iei;
+  imesh->begin(ibi);
+  imesh->end(iei);
+
+  while (ibi != iei)
+  {
+    Point p;
+    imesh->get_center(p, *ibi);
+
+    Point cp;
+    typename TFIELD::mesh_type::Elem::index_type cf;
+    tmesh->find_closest_face(cp, cf, p);
+
+    tmesh->insert_node(cf, cp);
+
+    ++ibi;
+  }
+
+  tfield->resize_fdata();
+}
+
+
+template <class TFIELD, class IFIELD>
+void
+InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
+                                              FieldHandle insert_h,
+                                              vector<unsigned int> &new_nodes,
+                                              vector<unsigned int> &new_elems)
+{
+#if 0
+  TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
+  typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
+  IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
+  typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+
+  tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E | Mesh::FACES_E);
+
+  typename IFIELD::mesh_type::Node::iterator ibi, iei;
+  imesh->begin(ibi);
+  imesh->end(iei);
+
+  while (ibi != iei)
+  {
+    Point p;
+    imesh->get_center(p, *ibi);
+
+    typename TFIELD::mesh_type::Elem::index_type elem;
+    if (tmesh->locate(elem, p))
+    {
+      typename TFIELD::mesh_type::Node::index_type newnode;
+      typename TFIELD::mesh_type::Elem::array_type newelems;
+      tmesh->insert_node_in_cell_2(newelems, newnode, elem, p);
+
+      new_nodes.push_back(newnode);
+      new_elems.push_back(elem);
+      for (unsigned int i = 0; i < newelems.size(); i++)
+      {
+        new_elems.push_back(newelems[i]);
+      }
+    }
+
+    ++ibi;
+  }
+
+  tfield->resize_fdata();
+#endif
+}
+
+
+
 class InsertFieldExtract : public DynamicAlgoBase
 {
 public:
@@ -341,8 +444,8 @@ public:
   virtual void extract(FieldHandle &result_field,
                        MatrixHandle &result_mapping,
                        FieldHandle tet_h,
-                       vector<unsigned int> &added_nodes,
-                       vector<unsigned int> &added_elems) = 0;
+                       vector<unsigned int> &new_nodes,
+                       vector<unsigned int> &new_elems) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftet,
@@ -358,8 +461,8 @@ public:
   virtual void extract(FieldHandle &result_field,
                        MatrixHandle &result_mapping,
                        FieldHandle tet_h,
-                       vector<unsigned int> &added_nodes,
-                       vector<unsigned int> &added_elems);
+                       vector<unsigned int> &new_nodes,
+                       vector<unsigned int> &new_elems);
 
 
   struct ltvn
@@ -385,8 +488,8 @@ void
 InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
                                              MatrixHandle &result_mapping,
                                              FieldHandle tet_h,
-                                             vector<unsigned int> &added_nodes,
-                                             vector<unsigned int> &added_elems)
+                                             vector<unsigned int> &new_nodes,
+                                             vector<unsigned int> &new_elems)
 {
   TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
   typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
@@ -394,10 +497,10 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   typename IFIELD::mesh_handle_type omesh =
     scinew typename IFIELD::mesh_type();
 
-  std::sort(added_nodes.begin(), added_nodes.end());
+  std::sort(new_nodes.begin(), new_nodes.end());
   vector<unsigned int>::iterator nodes_end, itr;
-  nodes_end = std::unique(added_nodes.begin(), added_nodes.end());
-  for (itr = added_nodes.begin(); itr != nodes_end; ++itr)
+  nodes_end = std::unique(new_nodes.begin(), new_nodes.end());
+  for (itr = new_nodes.begin(); itr != nodes_end; ++itr)
   {
     Point p;
     tmesh->get_point(p, *itr);
@@ -408,10 +511,10 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   {
     added_set_type already_added;
 
-    std::sort(added_elems.begin(), added_elems.end());
+    std::sort(new_elems.begin(), new_elems.end());
     vector<unsigned int>::iterator elems_end;
-    elems_end = std::unique(added_elems.begin(), added_elems.end());
-    for (itr = added_elems.begin(); itr != elems_end; ++itr)
+    elems_end = std::unique(new_elems.begin(), new_elems.end());
+    for (itr = new_elems.begin(); itr != elems_end; ++itr)
     {
       if (omesh->dimensionality() == 1)
       {
@@ -427,10 +530,10 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
           for (unsigned int j = 0; j < oldnodes.size(); j++)
           {
             vector<unsigned int>::iterator loc =
-              lower_bound(added_nodes.begin(), nodes_end, oldnodes[j]);
+              lower_bound(new_nodes.begin(), nodes_end, oldnodes[j]);
             if (loc != nodes_end && *loc == oldnodes[j])
             {
-              newnodes.push_back(loc - added_nodes.begin());
+              newnodes.push_back(loc - new_nodes.begin());
             }
             else
             {
@@ -466,10 +569,10 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
           for (unsigned int j = 0; j < oldnodes.size(); j++)
           {
             vector<unsigned int>::iterator loc =
-              std::lower_bound(added_nodes.begin(), nodes_end, oldnodes[j]);
+              std::lower_bound(new_nodes.begin(), nodes_end, oldnodes[j]);
             if (loc != nodes_end && *loc == oldnodes[j])
             {
-              newnodes.push_back(loc - added_nodes.begin());
+              newnodes.push_back(loc - new_nodes.begin());
             }
             else
             {
@@ -501,10 +604,10 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
         for (unsigned int j = 0; j < oldnodes.size(); j++)
         {
           vector<unsigned int>::iterator loc =
-            std::lower_bound(added_nodes.begin(), nodes_end, oldnodes[j]);
+            std::lower_bound(new_nodes.begin(), nodes_end, oldnodes[j]);
           if (loc != nodes_end && *loc == oldnodes[j])
           {
-            newnodes.push_back(loc - added_nodes.begin());
+            newnodes.push_back(loc - new_nodes.begin());
           }
           else
           {
@@ -537,7 +640,7 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   double *d = scinew double[nrows];
 
   int i = 0;
-  for (itr = added_nodes.begin(); itr != nodes_end; itr++)
+  for (itr = new_nodes.begin(); itr != nodes_end; itr++)
   {
     cc[i] = *itr;
     i++;
@@ -553,6 +656,7 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   
   result_mapping = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
 }
+
 
 
 } // end namespace SCIRun
