@@ -40,12 +40,12 @@ namespace SCIRun {
 string NetworkIO::net_file_= "";
 
 void 
-NetworkIO::add_module_at_position(const string &mod_id, 
-				    const string &package, 
-				    const string &category, 
-				    const string &module, 
-				    const string& x, 
-				    const string &y)
+NetworkIO::gui_add_module_at_position(const string &mod_id, 
+				      const string &package, 
+				      const string &category, 
+				      const string &module, 
+				      const string& x, 
+				      const string &y)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
 
@@ -56,7 +56,7 @@ NetworkIO::add_module_at_position(const string &mod_id,
 }
 
 void 
-NetworkIO::add_connection(const string &con_id,
+NetworkIO::gui_add_connection(const string &con_id,
 			  const string &from_id, 
 			  const string &from_port,
 			  const string &to_id, 
@@ -73,7 +73,7 @@ NetworkIO::add_connection(const string &con_id,
 }
 
 void 
-NetworkIO::set_connection_disabled(const string &con_id)
+NetworkIO::gui_set_connection_disabled(const string &con_id)
 { 
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -83,7 +83,7 @@ NetworkIO::set_connection_disabled(const string &con_id)
 }
 
 void 
-NetworkIO::set_module_port_caching(const string &mid, const string &pid,
+NetworkIO::gui_set_module_port_caching(const string &mid, const string &pid,
 				   const string &val)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
@@ -94,7 +94,7 @@ NetworkIO::set_module_port_caching(const string &mid, const string &pid,
 }
 
 void 
-NetworkIO::call_module_callback(const string &id, const string &call)
+NetworkIO::gui_call_module_callback(const string &id, const string &call)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -104,7 +104,7 @@ NetworkIO::call_module_callback(const string &id, const string &call)
 }
 
 void 
-NetworkIO::set_modgui_variable(const string &mod_id, const string &var, 
+NetworkIO::gui_set_modgui_variable(const string &mod_id, const string &var, 
 			      const string &val)
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
@@ -125,7 +125,7 @@ NetworkIO::set_modgui_variable(const string &mod_id, const string &var,
 }
 
 void 
-NetworkIO::set_connection_route(const string &con_id, const string &route)
+NetworkIO::gui_set_connection_route(const string &con_id, const string &route)
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -135,7 +135,7 @@ NetworkIO::set_connection_route(const string &con_id, const string &route)
 }
 
 void 
-NetworkIO::set_module_note(const string &mod_id, const string &pos, 
+NetworkIO::gui_set_module_note(const string &mod_id, const string &pos, 
 			   const string &col, const string &note)
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
@@ -150,7 +150,7 @@ NetworkIO::set_module_note(const string &mod_id, const string &pos,
 }
 
 void 
-NetworkIO::set_connection_note(const string &con_id, const string &pos, 
+NetworkIO::gui_set_connection_note(const string &con_id, const string &pos, 
 			       const string &col, const string &note)
 { 
   GuiInterface *gui = GuiInterface::getSingleton();
@@ -165,7 +165,7 @@ NetworkIO::set_connection_note(const string &con_id, const string &pos,
 }
 
 void 
-NetworkIO::set_gui_variable(const string &var, const string &val)
+NetworkIO::gui_set_variable(const string &var, const string &val)
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -174,7 +174,7 @@ NetworkIO::set_gui_variable(const string &var, const string &val)
 }
 
 void 
-NetworkIO::open_module_gui(const string &mod_id)
+NetworkIO::gui_open_module_gui(const string &mod_id)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -219,7 +219,7 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 	  xmlAttrPtr y_att = get_attribute_by_name(pnode, "y");
 	  x = string(to_char_ptr(x_att->children->content));
 	  y = string(to_char_ptr(y_att->children->content)); 
-	  add_module_at_position(mid,
+	  gui_add_module_at_position(mid,
 			  string(to_char_ptr(package_att->children->content)),
 			  string(to_char_ptr(category_att->children->content)),
 			  string(to_char_ptr(name_att->children->content)),
@@ -237,7 +237,7 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 	    col = string(to_char_ptr(col_att->children->content));
 	  
 	  note = string(to_char_ptr(pnode->children->content));
-	  set_module_note(mid, pos, col, note);
+	  gui_set_module_note(mid, pos, col, note);
 	}
 	else if (string(to_char_ptr(pnode->name)) == string("port_caching")) 
 	{
@@ -249,7 +249,7 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 	    {
 	      xmlAttrPtr pid_att = get_attribute_by_name(pc_node, "id");
 	      xmlAttrPtr val_att = get_attribute_by_name(pc_node, "val");
-	      set_module_port_caching(mid, 
+	      gui_set_module_port_caching(mid, 
 			      string(to_char_ptr(pid_att->children->content)),
 			      string(to_char_ptr(val_att->children->content)));
 				   
@@ -281,7 +281,7 @@ NetworkIO::process_modules_pass2(const xmlNodePtr enode)
 	    if (string(to_char_ptr(gc_node->name)) == string("callback")) 
 	    {
 	      string call = string(to_char_ptr(gc_node->children->content));
-	      call_module_callback(
+	      gui_call_module_callback(
 			      string(to_char_ptr(id_att->children->content)),
 			      call);
 				   
@@ -294,7 +294,8 @@ NetworkIO::process_modules_pass2(const xmlNodePtr enode)
 	  xmlAttrPtr val_att = get_attribute_by_name(pnode, "val");
 	  string val = 
 	    substitute_env(string(to_char_ptr(val_att->children->content)));
-	  set_modgui_variable(string(to_char_ptr(id_att->children->content)),
+	  gui_set_modgui_variable(
+			      string(to_char_ptr(id_att->children->content)),
 			      string(to_char_ptr(name_att->children->content)),
 			      val);
 	}
@@ -302,7 +303,7 @@ NetworkIO::process_modules_pass2(const xmlNodePtr enode)
       if (visible_att && 
 	  string(to_char_ptr(visible_att->children->content)) == "yes")
       {
-	open_module_gui(string(to_char_ptr(id_att->children->content)));
+	gui_open_module_gui(string(to_char_ptr(id_att->children->content)));
       }
     }
   }
@@ -323,7 +324,7 @@ NetworkIO::process_connections(const xmlNodePtr enode)
 
       string id = string(to_char_ptr(id_att->children->content));
 
-      add_connection(id,
+      gui_add_connection(id,
 		     string(to_char_ptr(from_att->children->content)),
 		     string(to_char_ptr(fromport_att->children->content)),
 		     string(to_char_ptr(to_att->children->content)),
@@ -332,7 +333,7 @@ NetworkIO::process_connections(const xmlNodePtr enode)
       if (dis_att && 
 	  string(to_char_ptr(dis_att->children->content)) == "yes") 
       {
-	set_connection_disabled(id);
+	gui_set_connection_disabled(id);
       }
 
 
@@ -340,7 +341,7 @@ NetworkIO::process_connections(const xmlNodePtr enode)
       for (; cnode != 0; cnode = cnode->next) {	
 	if (string(to_char_ptr(cnode->name)) == string("route")) 
 	{
-	  set_connection_route(id, 
+	  gui_set_connection_route(id, 
 			       string(to_char_ptr(cnode->children->content)));
 	} 
 	else if (string(to_char_ptr(cnode->name)) == string("note")) 
@@ -354,7 +355,7 @@ NetworkIO::process_connections(const xmlNodePtr enode)
 	    col = string(to_char_ptr(col_att->children->content));
 	  
 	  note = string(to_char_ptr(cnode->children->content));
-	  set_connection_note(id, pos, col, note);
+	  gui_set_connection_note(id, pos, col, note);
 	} 
       }
     }
@@ -453,19 +454,19 @@ NetworkIO::load_network()
       //! set attributes
       //xmlAttrPtr version_att = get_attribute_by_name(node, "version");
       xmlAttrPtr name_att = get_attribute_by_name(node, "name");
-      set_gui_variable(string("name"), 
+      gui_set_variable(string("name"), 
 		       string(to_char_ptr(name_att->children->content)));
       xmlAttrPtr bbox_att = get_attribute_by_name(node, "bbox");
-      set_gui_variable(string("bbox"), 
+      gui_set_variable(string("bbox"), 
 		       string(to_char_ptr(bbox_att->children->content)));
       xmlAttrPtr cd_att = get_attribute_by_name(node, "creationDate");
-      set_gui_variable(string("creationDate"), 
+      gui_set_variable(string("creationDate"), 
 		       string(to_char_ptr(cd_att->children->content)));
       xmlAttrPtr ct_att = get_attribute_by_name(node, "creationTime");
-      set_gui_variable(string("creationTime"), 
+      gui_set_variable(string("creationTime"), 
 		       string(to_char_ptr(ct_att->children->content)));
       xmlAttrPtr geom_att = get_attribute_by_name(node, "geometry");
-      set_gui_variable(string("geometry"), 
+      gui_set_variable(string("geometry"), 
 		       string(to_char_ptr(geom_att->children->content)));
       
       xmlNode* enode = node->children;
@@ -486,7 +487,7 @@ NetworkIO::load_network()
 	} else if (enode->type == XML_ELEMENT_NODE && 
 		   string(to_char_ptr(enode->name)) == string("note")) 
 	{
-	  set_gui_variable(string("notes"), 
+	  gui_set_variable(string("notes"), 
 			   string(to_char_ptr(enode->children->content)));
 	}
       }
@@ -511,6 +512,8 @@ NetworkIO::load_network()
       }
     }
   }
+
+  gui->eval("setGlobal NetworkChanged 0");
 
   xmlFreeDoc(doc);
   /* free up the parser context */
