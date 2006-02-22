@@ -380,7 +380,16 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
     typename TFIELD::mesh_type::Elem::index_type cf;
     tmesh->find_closest_face(cp, cf, p);
 
-    tmesh->insert_node(cf, cp);
+    typename TFIELD::mesh_type::Node::index_type newnode;
+    typename TFIELD::mesh_type::Elem::array_type newelems;
+    tmesh->insert_node_in_face(newelems, newnode, cf, cp);
+
+    new_nodes.push_back(newnode);
+    new_elems.push_back(cf);
+    for (unsigned int i = 0; i < newelems.size(); i++)
+    {
+      new_elems.push_back(newelems[i]);
+    }
 
     ++ibi;
   }
