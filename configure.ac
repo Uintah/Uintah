@@ -851,8 +851,6 @@ AC_MSG_RESULT($NUM_CPUS)
 ##  ----------  determine if this is a 32 or 64 bit machine
 AC_LANG([C])
 
-MY_TEMP=$CPPFLAGS
-
 AC_CHECK_SIZEOF(void*)
 
 case $ac_cv_sizeof_voidp in
@@ -874,10 +872,6 @@ case $ac_cv_sizeof_voidp in
   Exiting due to size of void* problem! Read above warnings!])
   ;;
 esac
-
-# the next two lines were moved to a later stage to allow us to change this default based on --enable-32/64bit
-#AC_SUBST(NBITS)
-#sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 
 ## --------------
 
@@ -1174,10 +1168,14 @@ case $host in
 
     if test "$enable_64bit" = "yes"; then
       if test $NBITS = "32"; then
+        # The machine defaults to 32 bits (as found above by void* check).
+        # This flag tries to force it to give us 64 bits...
         BINARYFLAGS="-64 -mips4"
       fi
       NBITS=64
     else
+      # FIX ME - we might want to check NBITS at this point... if it is 64 then the machine default
+      # is 64 bits and we are trying to switch it to 32 bits... perhaps should let the user know...
       NBITS=32
       BINARYFLAGS="-n32 -mips4"
     fi
@@ -1265,6 +1263,7 @@ case $host in
 
          if test "$enable_64bit" = "yes"; then
             BIT64FLAG=-q64
+            NBITS=64
          fi
          CFLAGS="-qrtti=all $BIT64FLAG $CFLAGS"
 
@@ -1453,13 +1452,13 @@ case $host in
     fi
 
     AC_MSG_CHECKING(if special 32/64 bits flags required)
-    if test "$enable_32bit" = "yes" -a $NBITS=64; then
+    if test "$enable_32bit" = "yes" -a $NBITS = 64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"
        CXXFLAGS="-m32 $CXXFLAGS"
        AC_MSG_RESULT(-m32)
     else 
-      if test "$enable_64bit" = "yes" -a $NBITS=32; then
+      if test "$enable_64bit" = "yes" -a $NBITS = 32; then
         NBITS=64
         # Do not set this flag when using intel compilers
         if test "$CC" != "icc"; then
@@ -1519,6 +1518,9 @@ esac
 AC_SUBST(NEED_OSX_SYSTEMSTUBS)
 AC_SUBST(NEED_OSX_HACK)
 AC_SUBST(DEF_NEED_OSX_HACK)
+
+
+
 
 # now that we know which NBITS the user wants, we can save this info
 AC_SUBST(NBITS)
@@ -5345,6 +5347,8 @@ AC_SUBST(BUILD_SCIRUN2)
 
   case $host in
     *aix*)
+        AC_MSG_WARN(Changing the compiler for AIX computers...)
+        AC_MSG_WARN(...to (probably) mpxlC, etc, and removing MPI flags...)
 	CC=`echo $CC | sed 's,x,mpx,g'`
 	CXX=`echo $CXX | sed 's,x,mpx,g'`
 	F77=`echo $F77 | sed 's,x,mpx,g'`
