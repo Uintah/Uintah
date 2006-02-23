@@ -453,7 +453,10 @@ public:
 
 private:
   void                  walk_face_orient(typename Face::index_type face,
-                                         vector<bool> &tested);
+                                         vector<bool> &tested,
+                                         vector<bool> &flip);
+
+  // These require the synchronize_lock_ to be held before calling.
   void                  compute_normals();
   void                  compute_node_neighbors();
   void                  compute_edges();
@@ -865,11 +868,6 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_node_neighbors()
 {
-  synchronize_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    synchronize_lock_.unlock();
-    return;
-  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   unsigned int nfaces = faces_.size();
@@ -878,7 +876,6 @@ TriSurfMesh<Basis>::compute_node_neighbors()
     node_neighbors_[faces_[f]].push_back(f);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  synchronize_lock_.unlock();
 }
 
 
@@ -1112,6 +1109,7 @@ template <class Basis>
 bool
 TriSurfMesh<Basis>::synchronize(unsigned int tosync)
 {
+  synchronize_lock_.lock();
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
       tosync & LOCATE_E && !(synchronized_ & EDGES_E))
     compute_edges();
@@ -1121,6 +1119,7 @@ TriSurfMesh<Basis>::synchronize(unsigned int tosync)
     compute_node_neighbors();
   if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edge_neighbors();
+  synchronize_lock_.unlock();
   return true;
 }
 
@@ -1129,11 +1128,6 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_normals()
 {
-  synchronize_lock_.lock();
-  if (synchronized_ & NORMALS_E) {
-    synchronize_lock_.unlock();
-    return;
-  }
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
@@ -1183,7 +1177,6 @@ TriSurfMesh<Basis>::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
-  synchronize_lock_.unlock();
 }
 
 
@@ -1274,9 +1267,6 @@ TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
                                             unsigned int halfedge,
                                             const Point &p)
 {
-  const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
-  const bool do_normals = false; // synchronized_ & NORMALS_E;
-
   ni = add_point(p);
 
   synchronize_lock_.lock();
@@ -1655,12 +1645,6 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_edges()
 {
-  synchronize_lock_.lock();
-  if (synchronized_ & EDGES_E) {
-    synchronize_lock_.unlock();
-    return;
-  }
-
   EdgeMapType2 edge_map;
 
   int i;
@@ -1694,7 +1678,6 @@ TriSurfMesh<Basis>::compute_edges()
   }
 
   synchronized_ |= EDGES_E;
-  synchronize_lock_.unlock();
 }
 
 
@@ -1856,7 +1839,7 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::flip_face(typename Face::index_type face)
 {
-  unsigned int base = face * 3;
+  const unsigned int base = face * 3;
   int tmp = faces_[base + 1];
   faces_[base + 1] = faces_[base + 2];
   faces_[base + 2] = tmp;
@@ -1871,62 +1854,28 @@ TriSurfMesh<Basis>::flip_face(typename Face::index_type face)
 template <class Basis>
 void
 TriSurfMesh<Basis>::walk_face_orient(typename Face::index_type face,
-                                     vector<bool> &tested)
+                                     vector<bool> &tested,
+                                     vector<bool> &flip)
 {
-  typename Face::index_type nbor;
-  typename Edge::array_type edges(3);
-  get_edges(edges, face);
-
-  typename Node::array_type nodes;
-  get_nodes(nodes, face);
-
-
-  typename Edge::array_type::iterator iter = edges.begin();
-  while (iter != edges.end())
+  tested[face] = true;
+  for (unsigned int i = 0; i < 3; i++)
   {
-    unsigned a = edges_[*iter];
-    unsigned b = faces_[a - a % 3 + (a+1) % 3];
-    a = faces_[a];
-    //set order according to orientation in face
-    if (((nodes[0] == b) && (nodes[1] == a)) ||
-        ((nodes[1] == b) && (nodes[2] == a)) ||
-        ((nodes[0] == a) && (nodes[2] == b)))
+    const unsigned int edge = face * 3 + i;
+    const unsigned int nbr = edge_neighbors_[edge];
+    if (nbr != MESH_NO_NEIGHBOR && !tested[nbr])
     {
-      //swap
-      unsigned tmp = b;
-      b = a;
-      a = tmp;
-    }
-
-    if (get_neighbor(nbor, face, *iter) && !tested[nbor])
-    {
-      tested[nbor] = true;
-
-      typename Node::array_type nbor_nodes;
-      get_nodes(nbor_nodes, nbor);
-
-      //order should be opposite of a,b
-      if (((nbor_nodes[0] == a) && (nbor_nodes[1] == b)) ||
-          ((nbor_nodes[1] == a) && (nbor_nodes[2] == b)) ||
-          ((nbor_nodes[0] == b) && (nbor_nodes[2] == a)))
+      if (!flip[face] && faces_[edge] == faces_[nbr] ||
+          flip[face] && faces_[next(edge)] == faces_[nbr])
       {
-        flip_face(nbor);
-        synchronized_ &= ~EDGES_E;
-        synchronized_ &= ~EDGE_NEIGHBORS_E;
-        edges_.clear();
-        halfedge_to_edge_.clear();
-        compute_edges();
-        compute_edge_neighbors(0.0);
+        flip[nbr] = true;
       }
-
-      // recurse...
-      walk_face_orient(nbor, tested);
+      walk_face_orient(nbr/3, tested, flip);
     }
-    ++iter;
   }
 }
 
 
+// TODO:  This deadlocks on synchronize_lock_.
 template <class Basis>
 void
 TriSurfMesh<Basis>::orient_faces()
@@ -1935,20 +1884,32 @@ TriSurfMesh<Basis>::orient_faces()
   synchronize(EDGES_E | EDGE_NEIGHBORS_E);
   int nfaces = (int)faces_.size() / 3;
   vector<bool> tested(nfaces, false);
+  vector<bool> flip(nfaces, false);
 
   typename Face::iterator fiter, fend;
   begin(fiter);
   end(fend);
-  while (fiter != fend) {
-    if (! tested[*fiter]) {
-      tested[*fiter] = true;
-      walk_face_orient(*fiter, tested);
+  while (fiter != fend)
+  {
+    if (! tested[*fiter])
+    {
+      walk_face_orient(*fiter, tested, flip);
     }
     ++fiter;
   }
 
+  begin(fiter);
+  while (fiter != fend)
+  {
+    if (flip[*fiter])
+    {
+      flip_face(*fiter);
+    }
+    ++fiter;
+  }
+
+  synchronized_ &= ~EDGES_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
-  synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
   synchronize_lock_.unlock();
 }
@@ -1958,15 +1919,6 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
 {
-  // TODO: This is probably broken with the new indexed edges.
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on TriSurfMesh first");
-  synchronize_lock_.lock();
-  if (synchronized_ & EDGE_NEIGHBORS_E) {
-    synchronize_lock_.unlock();
-    return;
-  }
-
   EdgeMapType edge_map;
 
   edge_neighbors_.resize(faces_.size());
@@ -2000,7 +1952,6 @@ TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
   }
 
   synchronized_ |= EDGE_NEIGHBORS_E;
-  synchronize_lock_.unlock();
 }
 
 
