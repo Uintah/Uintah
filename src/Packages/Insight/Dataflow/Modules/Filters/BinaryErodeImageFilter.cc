@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkBinaryErodeImageFilter.h>
@@ -49,7 +48,7 @@ namespace Insight
 
 using namespace SCIRun;
 
-class InsightSHARE BinaryErodeImageFilter : public Module
+class BinaryErodeImageFilter : public Module
 {
 public:
 

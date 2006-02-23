@@ -49,12 +49,13 @@
 #include "itkRGBPixel.h"
 #include "itkVector.h"
 
+#include <Packages/Insight/Core/Datatypes/share.h>
 namespace Insight {
 
 using namespace SCIRun;
 
 
-class ITKDatatype : public Datatype {
+class SCISHARE ITKDatatype : public Datatype {
 public:  
   string fname;
   itk::Object::Pointer data_;

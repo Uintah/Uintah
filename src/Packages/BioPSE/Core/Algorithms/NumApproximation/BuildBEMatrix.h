@@ -52,11 +52,12 @@
 
 #define epsilon 1e-12
 
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/share.h>
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BuildBEMatrix
+class SCISHARE BuildBEMatrix
 {
   typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> > TSMesh;
   typedef LockingHandle<DenseMatrix>     DenseMatrixHandle;

@@ -62,7 +62,7 @@ PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions Core/GeomInterface
 
-LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
+LIBS := $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -45,9 +45,10 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
-class HistogramTex : public GeomObj {
+class SCISHARE HistogramTex : public GeomObj {
   Point a, b, c, d;
   const int *buckets;
   int nbuckets, min, max;

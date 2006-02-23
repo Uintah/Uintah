@@ -29,12 +29,12 @@
 
 # Makefile fragment for programs.
 
-OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
-	   $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS))) \
-	   $(patsubst %.s,%.o,$(filter %.s,$(SRCS))) \
-	   $(patsubst %.F,%.o,$(filter %.F,$(SRCS))) \
-	   $(patsubst %.l,%.o,$(filter %.l,$(SRCS))) \
-	   $(patsubst %.y,%.o,$(filter %.y,$(SRCS)))
+OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS))) \
+	   $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS))) \
+	   $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS))) \
+	   $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS))) \
+	   $(patsubst %.l,%.$(OBJEXT),$(filter %.l,$(SRCS))) \
+	   $(patsubst %.y,%.$(OBJEXT),$(filter %.y,$(SRCS)))
 
 # We always link against the internal Dataflow malloc
 ifneq ($(IS_WIN),yes)
@@ -64,13 +64,17 @@ $(PROGRAM)_LIBS := $(LIBS)
 # lib/libCore_Thread.so to -lCore_Thread.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
 $(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)/lib%.$(SO_OR_A_FILE),$(PSELIBS))
-ifeq ($(SCI_MAKE_BE_QUIET),true)
+ifeq ($(IS_WIN),yes)
+	$(CXX) $(filter %.$(OBJEXT),$^) -o $@ $(LDFLAGS) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(patsubst $(LIBDIR)/%.$(SO_OR_A_FILE),%.lib,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
+else
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@rm -f $@
 	@echo "Building:  $@"
-	@$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
-else
+	@$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
+  else
 	rm -f $@
-	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
+	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
+  endif
 endif
 
 

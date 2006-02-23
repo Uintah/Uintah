@@ -42,15 +42,16 @@
 #include <Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <Packages/Insight/Dataflow/Ports/share.h>
 namespace Insight {
 
 using namespace SCIRun;
 
 extern "C" {
-  IPort* make_ITKDatatypeIPort(Module* module, const string& name) {
+  SCISHARE IPort* make_ITKDatatypeIPort(Module* module, const string& name) {
     return scinew SimpleIPort<ITKDatatypeHandle>(module,name);
 }
-  OPort* make_ITKDatatypeOPort(Module* module, const string& name) {
+  SCISHARE OPort* make_ITKDatatypeOPort(Module* module, const string& name) {
     return scinew SimpleOPort<ITKDatatypeHandle>(module,name);
 }
 }
