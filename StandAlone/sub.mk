@@ -429,9 +429,9 @@ link_regression_tester:
 	   fi )
 
 faster_gmake:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS))
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 fake_arches:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS))
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
