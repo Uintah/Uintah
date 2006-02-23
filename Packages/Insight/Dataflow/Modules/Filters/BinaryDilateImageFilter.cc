@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkBinaryDilateImageFilter.h>
@@ -49,7 +48,7 @@ namespace Insight
 
 using namespace SCIRun;
 
-class InsightSHARE BinaryDilateImageFilter : public Module
+class BinaryDilateImageFilter : public Module
 {
 public:
 

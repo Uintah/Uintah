@@ -51,6 +51,7 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Containers/FData.h>
 
+#include <Core/Datatypes/share.h>
 namespace SCIRun {
 
 template <class Mesh, class Basis, class FData>
@@ -719,10 +720,10 @@ template <class T>
 unsigned int get_vsize(T*);
 
 template <>
-unsigned int get_vsize(Vector*);
+SCISHARE unsigned int get_vsize(Vector*);
 
 template <>
-unsigned int get_vsize(Tensor*);
+SCISHARE unsigned int get_vsize(Tensor*);
 
 //size for scalars
 template <class T>
@@ -736,11 +737,11 @@ void
 load_partials(const vector<T> &grad, DenseMatrix &m);
 
 template <>
-void
+SCISHARE void
 load_partials(const vector<Vector> &grad, DenseMatrix &m);
 
 template <>
-void
+SCISHARE void
 load_partials(const vector<Tensor> &grad, DenseMatrix &m);
 
 

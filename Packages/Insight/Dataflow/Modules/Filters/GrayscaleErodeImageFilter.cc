@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkGrayscaleErodeImageFilter.h>
@@ -49,7 +48,7 @@ namespace Insight
 
 using namespace SCIRun;
 
-class InsightSHARE GrayscaleErodeImageFilter : public Module
+class GrayscaleErodeImageFilter : public Module
 {
 public:
 

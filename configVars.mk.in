@@ -392,13 +392,20 @@ AS              := @AS@
 LD              := @LD@
 CFLAGS          := @CFLAGS@ $(CFLAGS) $(QT_DEFS) @WOFF_STRING@
 CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) $(QT_DEFS) @WOFF_STRING@
-SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
-LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CXXFLAGS)
+ifneq ($(IS_WIN),yes)
+  SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
+  LDFLAGS         := $(CXXFLAGS) @LDFLAGS@ -L$(LIBDIR)
+else
+  SOFLAGS         := $(CFLAGS) @SOFLAGS@ -LIBPATH:$(LIBDIR)
+  LDFLAGS         := $(CXXFLAGS) @LDFLAGS@
+  PROGRAM_LDFLAGS := -link -LIBPATH:$(LIBDIR)
+endif
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
 F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
+OBJEXT := @OBJEXT@
 
 ################################################################
 # Auto dependency generation flags
@@ -426,9 +433,9 @@ else
   SONAMEFLAG = 
 endif
 
-.SUFFIXES: .cc .c .o .s .F .f .cpp
+.SUFFIXES: .cc .c .$(OBJEXT) .s .F .f .cpp
 
-.cc.o: $<
+.cc.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
@@ -437,13 +444,13 @@ endif
 ifeq ($(CC_DEPEND_MODE),normal)
   ifneq ($(TAU_MAKEFILE),)
     ifneq ($(PDTDIR),)
-	-echo "Building $*.o ..." ; \
+	-echo "Building $*.$(OBJEXT) ..." ; \
 	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
 	pdbfile=`basename $< .cc`.pdb ; \
 	$(TAUINSTR) $$pdbfile $< -o $*.inst.cc -f $(SRCTOP)/tau/select.dat ; \
         $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $*.inst.cc -o $@ ; \
 	if [ -f $@ ] ; then  \
-	echo "Instrumented $*.o successfully  " ; \
+	echo "Instrumented $*.$(OBJEXT) successfully  " ; \
 	else \
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; \
 	ls -l $@; \
@@ -497,7 +504,7 @@ else
   endif
 endif
 
-.cpp.o: $<
+.cpp.$(OBJEXT): $<
 	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
@@ -533,7 +540,7 @@ endif
 endif
 endif
 
-.F.o: $<
+.F.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
@@ -578,7 +585,7 @@ endif
 endif
 endif
 
-.f.o: $<
+.f.$(OBJEXT): $<
 	-rm -f $@
 ifeq ($(F77_DEPEND_MODE),normal)
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
@@ -614,7 +621,7 @@ endif
 endif
 endif
 
-.c.o: $<
+.c.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
@@ -623,9 +630,9 @@ endif
 ifeq ($(CC_DEPEND_MODE),normal)
   ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
-	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN)  -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
   else
-	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN)  -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
   endif
 else
   ifeq ($(CC_DEPEND_MODE),modify)
@@ -660,7 +667,7 @@ else
   endif
 endif
 
-.s.o: $<
+.s.$(OBJEXT): $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
 
 ifeq ($(BUILD_SCIRUN2),yes)

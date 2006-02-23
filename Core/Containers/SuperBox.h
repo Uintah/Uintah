@@ -133,13 +133,13 @@ public:
   {
     size_t operator()(BoxP box) const
     { return (size_t)box; }
-#ifdef __ECC
+#if defined(__ECC) || defined(_WIN32)
     // intel compilersspecific hash map stuff
     static const size_t bucket_size = 4;
     static const size_t min_buckets = 8;
     bool operator()(BoxP b1, BoxP b2) const
     { return b1 < b2; }
-#endif // __ECC
+#endif // __ECC || _WIN32
   };
   
 
@@ -973,7 +973,7 @@ anyActiveEnclosingSuperBoxAlsoEnclosing(typename BasicBox::SB* other) const
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
 BasicBox<BoxP, Point, Volume, Value, Evaluator>::
-getActiveEnclosingSuperBox(const typename BasicBox::SB::Region& region) const
+getActiveEnclosingSuperBox(const typename SuperBox<BoxP, Point, Volume, Value, Evaluator>::Region& region) const
 {
   typename set<CB*, typename SB::ValueCompare>::const_iterator iter;  
   for (iter = getActiveEnclosingSuperBoxes().begin();
@@ -1507,7 +1507,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   typename vector<SB*>::iterator sb_iter;
 
   vector<BB*> basicBoxes(n);
-#if defined(HAVE_HASH_MAP) && !defined(__ECC)
+#if defined(HAVE_HASH_MAP) && !defined(__ECC) && !defined(_WIN32)
   BoxHashMap boxMap(n);
 #else
   BoxHashMap boxMap;

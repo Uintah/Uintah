@@ -52,6 +52,7 @@
 #include "itkImageIOBase.h"
 #include "itkAnalyzeDbh.h"
 
+#include <Core/Algorithms/DataIO/share.h>
 namespace itk
 {
 /**
@@ -105,7 +106,7 @@ namespace itk
    *      A specially formated file with a mapping between object name and image code used to associate
    *      image voxel locations with a label.  This file is run length encoded to save disk storage.
    */
-class ITK_EXPORT AnalyzeSliceImageIO : public ImageIOBase
+class SCISHARE AnalyzeSliceImageIO : public ImageIOBase
 {
 public:
   /** Standard class typedefs. */

@@ -40,7 +40,7 @@ ifeq ($(HAVE_INSIGHT),yes)
           $(SRCDIR)/AnalyzeReader.cc     \
 	  $(SRCDIR)/AnalyzeSliceImageIO.cc \
 
-  LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY)
+  LIBS := $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY)
 
   PSELIBS := Core/Datatypes Core/Containers Core/Thread \
 	Core/Exceptions Core/Geometry Core/Util Core/Math

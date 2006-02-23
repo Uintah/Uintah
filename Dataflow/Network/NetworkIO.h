@@ -38,13 +38,14 @@
 #include <map>
 #include <stack>
 
+#include <Dataflow/Network/share.h>
 namespace SCIRun {
 
 using std::string;
 using std::map;
 using std::stack;
 
-class NetworkIO {
+class SCISHARE NetworkIO {
 public:
   NetworkIO() : 
     doc_(0),

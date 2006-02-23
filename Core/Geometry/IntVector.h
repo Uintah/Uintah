@@ -209,9 +209,9 @@ public:
    //! support dynamic compilation
   static const string& get_h_file_path();
 
- friend void Pio( Piostream&, IntVector& );
+ SCISHARE friend void Pio( Piostream&, IntVector& );
 
- friend std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+ SCISHARE friend std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
 
 private:
   int value_[3];

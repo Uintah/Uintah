@@ -74,6 +74,8 @@
 #include <sgi_stl_warnings_on.h>
 
 
+#include <Core/Util/share.h>
+
 namespace SCIRun {
 
     using std::streambuf;
@@ -103,7 +105,7 @@ namespace SCIRun {
     ///////////////////
     // class DebugStream
     // A general purpose debugging ostream.
-    class DebugStream: public ostream{
+    class SCISHARE DebugStream: public ostream{
     private:
       // identifies me uniquely
       string name;

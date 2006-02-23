@@ -1124,6 +1124,7 @@ fi
 # This flag is for the windows compiler - so it can generate correct
 # SHARE flags.
 WIN_DLLFLAGS=""
+WIN_OTFFLAGS=""
 
 case $host in 
   *-irix*)
@@ -1343,11 +1344,12 @@ case $host in
           
           if test "$debug" = yes; then
             #  no debug information for dynamic compilation yet - the threaded compilations will overwrite the db file
-            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -Gm -MD -W1 -Wp64"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@) /Fd"../$(dir $@)vc70.pdb"'
+            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -Gm -Zi -MD -W1 -Wp64"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)" -Fd"$(dir $@)vc70.pdb"'
+            WIN_OTFFLAGS=' -Fd"$(basename $@).pdb"'
           else
-            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -O2 -MD -W1"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@)'
+            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -O2 -MD -W1"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)"'
           fi
           CXXFLAGS="$CXXFLAGS $CFLAGS"
           WOFF=" -w0"
@@ -1515,9 +1517,12 @@ case $host in
     ;;
 esac
 
+OBJEXT=$ac_objext
+
 AC_SUBST(NEED_OSX_SYSTEMSTUBS)
 AC_SUBST(NEED_OSX_HACK)
 AC_SUBST(DEF_NEED_OSX_HACK)
+AC_SUBST(OBJEXT)
 
 
 
@@ -1529,6 +1534,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 ###
 
 AC_SUBST(WIN_DLLFLAGS)
+AC_SUBST(WIN_OTFFLAGS)
 
 AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
@@ -1608,6 +1614,13 @@ if test $CC_DEPEND_MODE = unknown; then
       break
     fi
   done
+fi
+
+if test $IS_WIN = "yes"; then
+  # for the moment, don't gen deps on win32
+  CC_DEPEND_MODE=normal
+  CC_DEPEND_REGEN=""
+  CC_DEPEND_EXT=""
 fi
 
 if test $CC_DEPEND_MODE = unknown; then
@@ -2125,7 +2138,7 @@ AC_LANG(C++)
 
 if test "$IS_WIN" = "yes"; then
   SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
-               $_sci_inc,glu32 opengl32 gdi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+               $_sci_inc,glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
 else
   SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
 	       $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
@@ -2391,7 +2404,7 @@ SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_
 if test "$IS_WIN" = "yes"; then
   # Windows BLT needs these other libs
   if test $IS_VC = "yes"; then
-    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib"
+    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib user32.lib advapi32.lib"
   else
     BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
   fi
@@ -3483,6 +3496,11 @@ if test "$sci_required_mpi" = "yes"; then
                    SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
                    $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
 
+                   # try mpich again without the pmpich
+                   if test "$HAVE_MPI" != "yes"; then
+                     SCI_TRY_LINK(MPI,mpich library and header-2,mpi.h,
+                     $_sci_inc /usr/include/mpi,mpich,$_sci_lib,,,optional)
+                   fi
                    if test "$HAVE_MPI" = "yes"; then
                       HAVE_MPICH="yes"
                    fi
@@ -3492,16 +3510,21 @@ if test "$sci_required_mpi" = "yes"; then
         fi
         
         if test "$HAVE_MPI" = "yes"; then
-
+           if test "$IS_WIN" = "yes"; then
+             header=""
+           else
+             header="lib"
+           fi
            if test "$_sci_optional" = "specific"; then
-              the_file=libmpi
+              the_file="$header"mpi
               if test "$HAVE_MPICH" = "yes"; then
-                the_file=libmpich
+                the_file="$header"mpich
               fi
 
               # verify that it was found in the location requested.
               if test ! -e $with_mpi/lib/$the_file.so &&
                  test ! -e $with_mpi/lib/$the_file.a &&
+                 test ! -e $with_mpi/lib/$the_file.lib &&
                  test ! -e $with_mpi/lib/$the_file.dylib; then
                    echo
                    AC_MSG_ERROR(Found libmpi but not in requested directory: $with_mpi/lib)
@@ -3819,15 +3842,23 @@ if test "$sci_required_insight" = "yes"; then
     INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -litkniftiio -litkznz -litkvnl -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
 
-    if test -a "$insight_libs_dir/libitkzlib.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test "$IS_WIN" = "yes"; then
+	  libBegin=""
+	  ext="lib" #windows's so is dll, not lib, but we link against the lib
+	else
+	  libBegin="lib"
+	  ext="$SO_OR_ARCHIVE_EXTENSION"
+	fi
+
+    if test -a "$insight_libs_dir/"$libBegin"itkzlib.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
     elif test "$HAVE_Z" = "yes"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG"
     fi
 
-    if test -a "$insight_libs_dir/libitktiff.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itktiff.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
     elif test "$HAVE_TIFF" = "yes"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $TIFF_LIB_DIR_FLAG $TIFF_LIB_FLAG"
@@ -3836,7 +3867,7 @@ if test "$sci_required_insight" = "yes"; then
 
     INSIGHT_JPEG_LINKED=no
 
-    if test -a "$insight_libs_dir/libitkjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg8.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg8"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -3844,7 +3875,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg12.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg12"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -3852,7 +3883,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg16.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -3860,7 +3891,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg.$SO_OR_ARCHIVE_EXTENSION" && test "$INSIGHT_JPEG_LINKED" = "no"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg.$ext" && test "$INSIGHT_JPEG_LINKED" = "no"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no"; then
@@ -3868,7 +3899,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libITKNrrdIO.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"ITKNrrdIO.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO"
     fi
 
@@ -3982,9 +4013,14 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
       insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
       gdcm_src="$insight_src/Utilities/gdcm/src"
 
-      insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
+      if test "$IS_WIN" = "no"; then
+        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
+      else
+        # the sed '; -> \n' doesn't quite produce the right results - awk off the first entry instead
+        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"//' | sed 's/\")//' | awk -F ';' '{print $1}'`"
+      fi
 
-      if test -a "$insigt_include/gdcm/src"; then     
+      if test -a "$insight_include/gdcm/src"; then     
            INC_GDCM_H="-I$gdcm_src -I$insight_include/gdcm/src"
            gdcm_libs_dir="$dir"
            found_gdcm_comp="yes"
@@ -4011,6 +4047,10 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
 
      if test $using_itk = "yes"; then
        GDCM_LIB_FLAG="-litkgdcm"
+       if test $IS_WIN = "yes"; then
+         # don't know why, but windows needs them...
+         GDCM_LIB_FLAG="$GDCM_LIB_FLAG SnmpAPI.lib ws2_32.lib"
+       fi
      else
        GDCM_LIB_FLAG="-lgdcm"
      fi
@@ -4460,16 +4500,20 @@ if test -e $freetype_bin/freetype-config; then
     AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
     includes=`$freetype_bin/freetype-config --cflags`
-    SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                 $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
-
-    INC_FREETYPE_H="$INC_FREETYPE_H $includes"
-
-    DEF_FREETYPE="#define HAVE_FREETYPE 1"
+else
+    AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.)
+    # try the 3P (for windows...)
+    _sci_lib="$sci_thirdparty_lib"
+    _sci_inc="$sci_thirdparty_include"
+    includes=""
 fi
+SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
+             $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
 
-if test "$found_freetype_config" = "no"; then
-   AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check.)
+if test "$HAVE_FREETYPE" = "yes"; then
+  INC_FREETYPE_H="$INC_FREETYPE_H $includes"
+  DEF_FREETYPE="#define HAVE_FREETYPE 1"
+elif test "$found_freetype_config" = "no"; then
    if test "$_sci_optional" != "optional"; then
      echo
      AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)

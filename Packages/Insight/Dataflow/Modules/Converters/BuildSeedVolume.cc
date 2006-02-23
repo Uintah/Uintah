@@ -47,13 +47,11 @@
 
 #include <Core/Datatypes/GenericField.h>
 
-#include <Packages/Insight/share/share.h>
-
 namespace Insight {
   
 using namespace SCIRun;
   
-class InsightSHARE BuildSeedVolume : public Module {  
+class BuildSeedVolume : public Module {  
 public:
   GuiDouble  gui_inside_value_;
   GuiDouble  gui_outside_value_;

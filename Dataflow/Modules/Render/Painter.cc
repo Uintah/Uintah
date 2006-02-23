@@ -51,6 +51,7 @@
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
+#include <sci_algorithm.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Ports/BundlePort.h>
@@ -574,9 +575,9 @@ Painter::render_window(SliceWindow &window) {
   profiler.leave();
   profiler.print();
 
+  CHECK_OPENGL_ERROR();
   window.viewport_->release();
 
-  CHECK_OPENGL_ERROR();
 
   return 1;
 }
@@ -1506,11 +1507,11 @@ Painter::layer_up()
   if (i == volumes_.size()-1) return;
 
   NrrdVolumeOrder::iterator voiter1 = 
-    find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
+    std::find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
 
   //    volume_order_.find();
   NrrdVolumeOrder::iterator voiter2 =
-    find(volume_order_.begin(),volume_order_.end(),volumes_[i+1]->name_.get());
+    std::find(volume_order_.begin(),volume_order_.end(),volumes_[i+1]->name_.get());
   //    volume_order_.find(volumes_[i+1]->name_.get());
   ASSERT(voiter1 != volume_order_.end());
   ASSERT(voiter2 != volume_order_.end());
@@ -1539,11 +1540,11 @@ Painter::layer_down()
 
 
   NrrdVolumeOrder::iterator voiter1 = 
-    find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
+    std::find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
 
   //    volume_order_.find();
   NrrdVolumeOrder::iterator voiter2 =
-    find(volume_order_.begin(),volume_order_.end(),volumes_[i-1]->name_.get());
+    std::find(volume_order_.begin(),volume_order_.end(),volumes_[i-1]->name_.get());
 
   ASSERT(voiter1 != volume_order_.end());
   ASSERT(voiter2 != volume_order_.end());
@@ -2543,7 +2544,7 @@ void
 Painter::show_volume(const string &name)
 {
   NrrdVolumeOrder::iterator voiter;  
-  voiter =  find(volume_order_.begin(), volume_order_.end(), name);
+  voiter =  std::find(volume_order_.begin(), volume_order_.end(), name);
   if (voiter == volume_order_.end())
     volume_order_.push_back(name);
 }
@@ -2552,7 +2553,7 @@ void
 Painter::hide_volume(const string &name)
 {
   NrrdVolumeOrder::iterator voiter;  
-  voiter = find(volume_order_.begin(), volume_order_.end(), name);
+  voiter = std::find(volume_order_.begin(), volume_order_.end(), name);
   if (voiter != volume_order_.end())
     volume_order_.erase(voiter);
 }

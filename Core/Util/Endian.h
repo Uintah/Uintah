@@ -84,27 +84,27 @@ using std::string;
                    _c = *++_p; *_p = _p[3]; _p[3] = _c; \
                    _c = *++_p; *_p = _p[1]; _p[1] = _c; }
 
-void swapbytes(bool& i);
-void swapbytes(int8_t& i);
-void swapbytes(uint8_t& i);
-void swapbytes(int16_t& i);
-void swapbytes(uint16_t& i);
-void swapbytes(int32_t& i);
-void swapbytes(uint32_t& i);
-void swapbytes(int64_t& i);
-void swapbytes(uint64_t& i);
+SCISHARE void swapbytes(bool& i);
+SCISHARE void swapbytes(int8_t& i);
+SCISHARE void swapbytes(uint8_t& i);
+SCISHARE void swapbytes(int16_t& i);
+SCISHARE void swapbytes(uint16_t& i);
+SCISHARE void swapbytes(int32_t& i);
+SCISHARE void swapbytes(uint32_t& i);
+SCISHARE void swapbytes(int64_t& i);
+SCISHARE void swapbytes(uint64_t& i);
 // /////////////////////////////////////////////
-void swapbytes(float& i);
-//void swapbytes(int64_t& i){SWAP_8(i);}
-void swapbytes(double& i);
-void swapbytes(Point &i);
-void swapbytes(Vector &i);
+SCISHARE void swapbytes(float& i);
+//SCISHARE void swapbytes(int64_t& i){SWAP_8(i);}
+SCISHARE void swapbytes(double& i);
+SCISHARE void swapbytes(Point &i);
+SCISHARE void swapbytes(Vector &i);
 
 SCISHARE bool isBigEndian();
 
-bool isLittleEndian();
+SCISHARE bool isLittleEndian();
  
-string endianness();
+SCISHARE string endianness();
 
 
 

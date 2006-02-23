@@ -55,7 +55,7 @@ SRCS     += \
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Core/ImportExport \
+        Core/TkExtensions Core/ImportExport Core/OS \
 	Dataflow/Network Dataflow/Ports \
 
 ifeq ($(HAVE_INSIGHT),yes)

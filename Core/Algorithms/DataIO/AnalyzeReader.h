@@ -69,13 +69,14 @@
 // Standard lib includes
 #include <iostream>
 
+#include <Core/Algorithms/DataIO/share.h>
 namespace SCIRun {
 
 // ****************************************************************************
 // *************************** Class: AnalyzeReader ***************************
 // ****************************************************************************
 
-class AnalyzeReader
+class SCISHARE AnalyzeReader
 {
 
 public:
