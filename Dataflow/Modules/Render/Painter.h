@@ -173,6 +173,8 @@ class Painter : public Module
   struct SliceWindow { 
     SliceWindow(Painter *painter, GuiContext *ctx);
     void                setup_gl_view();
+    void                push_gl_2d_view();
+    void                pop_gl_2d_view();
     void		next_slice();
     void		prev_slice();
     void		zoom_in();
@@ -189,6 +191,7 @@ class Painter : public Module
     void		render_frame(double,double,double,double,
                                      double *color1 = 0, double *color2=0);
     void		render_guide_lines(Point);
+    void		render_progress_bar();
 
     Painter *           painter_;
     string		name_;
