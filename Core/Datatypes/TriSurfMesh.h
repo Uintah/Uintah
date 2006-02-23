@@ -1282,66 +1282,63 @@ TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
   synchronize_lock_.lock();
   
   tris.clear();
-  tris.push_back(faces_.size() / 3);
 
+  const unsigned int nbr = edge_neighbors_[halfedge];
+
+  if (edge_neighbors_[next(halfedge)] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[next(halfedge)]] = next(halfedge);
+  }
+  if (edge_neighbors_[prev(halfedge)] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[prev(halfedge)]] = prev(halfedge);
+  }
+  // f1
+  const unsigned int f1 = faces_.size();
+  tris.push_back(f1 / 3);
   faces_.push_back(ni);
   faces_.push_back(faces_[next(halfedge)]);
   faces_.push_back(faces_[prev(halfedge)]);
+  edge_neighbors_.push_back(nbr);
+  edge_neighbors_.push_back(edge_neighbors_[next(halfedge)]);
+  edge_neighbors_.push_back(next(halfedge));
 
-  faces_[prev(halfedge)] = ni;
+  // f0
+  faces_[next(halfedge)] = ni;
+  edge_neighbors_[halfedge] = (nbr!=MESH_NO_NEIGHBOR)?faces_.size():MESH_NO_NEIGHBOR;
+  edge_neighbors_[next(halfedge)] = prev(f1);
+  edge_neighbors_[prev(halfedge)] = edge_neighbors_[prev(halfedge)];
 
-  const unsigned int nbr = edge_neighbors_[halfedge];
   if (nbr != MESH_NO_NEIGHBOR)
   {
-    tris.push_back(faces_.size() / 3);
+    if (edge_neighbors_[next(nbr)] != MESH_NO_NEIGHBOR)
+    {
+      edge_neighbors_[edge_neighbors_[next(nbr)]] = next(nbr);
+    }
+    if (edge_neighbors_[prev(nbr)] != MESH_NO_NEIGHBOR)
+    {
+      edge_neighbors_[edge_neighbors_[prev(nbr)]] = prev(nbr);
+    }
 
+    // f3
+    const unsigned int f3 = faces_.size();
+    tris.push_back(f3 / 3);
     faces_.push_back(ni);
     faces_.push_back(faces_[next(nbr)]);
     faces_.push_back(faces_[prev(nbr)]);
-
-    faces_[prev(nbr)] = ni;
+    edge_neighbors_.push_back(halfedge);
+    edge_neighbors_.push_back(edge_neighbors_[next(nbr)]);
+    edge_neighbors_.push_back(next(halfedge));
+    
+    // f2
+    faces_[next(nbr)] = ni;
+    edge_neighbors_[nbr] = f1;
+    edge_neighbors_[next(nbr)] = f3+2;
   }
 
-#if 0
-  if (do_neighbors)
-  {
-    edge_neighbors_.push_back(edge_neighbors_[f0+1]);
-    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
-      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
-    edge_neighbors_.push_back(f2+2);
-    edge_neighbors_.push_back(f0+1);
-
-    edge_neighbors_.push_back(edge_neighbors_[f0+2]);
-    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
-      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
-    edge_neighbors_.push_back(f0+2);
-    edge_neighbors_.push_back(f1+1);
-
-    edge_neighbors_[f0+1] = f1+2;
-    edge_neighbors_[f0+2] = f2+1;
-  }
-
-  if (do_normals)
-  {
-    Vector normal = Vector( (p.asVector() +
-                             normals_[faces_[f0]] +
-                             normals_[faces_[f1]] +
-                             normals_[faces_[f2]]).safe_normalize() );
-    normals_.push_back(normals_[faces_[f1]]);
-    normals_.push_back(normals_[faces_[f2]]);
-    normals_.push_back(normal);
-
-    normals_.push_back(normals_[faces_[f2]]);
-    normals_.push_back(normals_[faces_[f0]]);
-    normals_.push_back(normal);
-
-    normals_[faces_[f0+2]] = normal;
-  }
-#endif
-
-  if (!do_neighbors) synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
-  if (!do_normals) synchronized_ &= ~NORMALS_E;
+  synchronized_ &= ~NORMALS_E;
 
   synchronize_lock_.unlock();
 
@@ -1356,9 +1353,6 @@ TriSurfMesh<Basis>::insert_node_in_face_aux(typename Face::array_type &tris,
                                             typename Face::index_type face,
                                             const Point &p)
 {
-  const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
-  const bool do_normals = false; // synchronized_ & NORMALS_E;
-
   ni = add_point(p);
 
   synchronize_lock_.lock();
@@ -1369,58 +1363,39 @@ TriSurfMesh<Basis>::insert_node_in_face_aux(typename Face::array_type &tris,
 
   tris.clear();
 
+  if (edge_neighbors_[f0+1] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[f0+1]] = f1+0;
+  }
+  if (edge_neighbors_[f0+2] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[f0+2]] = f2+0;
+  }
+
   tris.push_back(faces_.size() / 3);
   faces_.push_back(faces_[f0+1]);
   faces_.push_back(faces_[f0+2]);
   faces_.push_back(ni);
+  edge_neighbors_.push_back(edge_neighbors_[f0+1]);
+  edge_neighbors_.push_back(f2+0);
+  edge_neighbors_.push_back(f0+1);
 
   tris.push_back(faces_.size() / 3);
   faces_.push_back(faces_[f0+2]);
   faces_.push_back(faces_[f0+0]);
   faces_.push_back(ni);
+  edge_neighbors_.push_back(edge_neighbors_[f0+2]);
+  edge_neighbors_.push_back(f0+2);
+  edge_neighbors_.push_back(f1+1);
 
   // Must do last
   faces_[f0+2] = ni;
+  edge_neighbors_[f0+1] = f1+2;
+  edge_neighbors_[f0+2] = f2+1;
 
-  if (do_neighbors)
-  {
-    edge_neighbors_.push_back(edge_neighbors_[f0+1]);
-    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
-      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
-    edge_neighbors_.push_back(f2+2);
-    edge_neighbors_.push_back(f0+1);
-
-    edge_neighbors_.push_back(edge_neighbors_[f0+2]);
-    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR)
-      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
-    edge_neighbors_.push_back(f0+2);
-    edge_neighbors_.push_back(f1+1);
-
-    edge_neighbors_[f0+1] = f1+2;
-    edge_neighbors_[f0+2] = f2+1;
-  }
-
-  if (do_normals)
-  {
-    Vector normal = Vector( (p.asVector() +
-                             normals_[faces_[f0]] +
-                             normals_[faces_[f1]] +
-                             normals_[faces_[f2]]).safe_normalize() );
-    normals_.push_back(normals_[faces_[f1]]);
-    normals_.push_back(normals_[faces_[f2]]);
-    normals_.push_back(normal);
-
-    normals_.push_back(normals_[faces_[f2]]);
-    normals_.push_back(normals_[faces_[f0]]);
-    normals_.push_back(normal);
-
-    normals_[faces_[f0+2]] = normal;
-
-  }
-
-  if (!do_neighbors) synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
-  if (!do_normals) synchronized_ &= ~NORMALS_E;
+  synchronized_ &= ~NORMALS_E;
 
   synchronize_lock_.unlock();
 
