@@ -36,18 +36,25 @@
 #include <libxml/xmlreader.h>
 #include <string>
 #include <map>
+#include <stack>
 
 namespace SCIRun {
 
 using std::string;
 using std::map;
+using std::stack;
 
 class NetworkIO {
 public:
   NetworkIO() : 
     doc_(0),
-    out_fname_("")
-  {}
+    out_fname_(""),
+    sn_count_(0),
+    sn_ctx_(0)
+  {
+    netid_to_modid_.push(id_map_t());
+    netid_to_conid_.push(id_map_t());
+  }
   virtual ~NetworkIO() {}
   static void load_net(const string &net);
   static bool has_file() { return net_file_ != string(""); }
@@ -81,14 +88,20 @@ public:
   void add_connection_note_position(const string &id, const string &pos); 
   void add_connection_note_color(const string &id, const string &col); 
   void set_port_caching(const string &id, const string &port, 
-			const string &val); 
+			const string &val);
+  void push_subnet_scope(const string &id, const string &name);
+  void pop_subnet_scope();
 
 private:
   void process_environment(const xmlNodePtr enode);
   void process_modules_pass1(const xmlNodePtr enode);
   void process_modules_pass2(const xmlNodePtr enode);
   void process_connections(const xmlNodePtr enode);
+  void process_network_node(const xmlNodePtr nnode);
   string substitute_env(const string &src) const;
+
+  inline
+  string get_mod_id(const string &id); 
 
   //! Interface from xml reading to tcl.
   //! this could be virtualized and used to interface with another gui type.
@@ -119,18 +132,30 @@ private:
   void gui_set_connection_route(const string &con_id, const string &route);
   void gui_open_module_gui(const string &mod_id);
 
+  void gui_add_subnet_at_position(const string &mod_id, 
+				  const string &module, 
+				  const string& x, 
+				  const string &y);
+  string gui_push_subnet_ctx();
+  void gui_pop_subnet_ctx(string ctx);
+
   xmlNode* get_module_node(const string &id);
   xmlNode* get_connection_node(const string &id);
 
-  map<string, string> netid_to_modid_; 
-  map<string, string> netid_to_conid_; 
+  typedef map<string, string> id_map_t;
+
+  stack<id_map_t> netid_to_modid_; 
+  stack<id_map_t> netid_to_conid_; 
   //! the enviroment variable substitutions
   map<string, string> env_subs_; 
   static string net_file_;
 
   //! document for writing nets.
   xmlDocPtr                          doc_;  
+  stack<xmlNodePtr>                  subnets_;
   string                             out_fname_;
+  int                                sn_count_;
+  int                                sn_ctx_;
 };
 
 } // end namespace SCIRun

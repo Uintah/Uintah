@@ -1105,7 +1105,6 @@ proc subDATADIRandDATASET { val } {
     return $tmpval
 }
 
-
 proc genSubnetScript { subnet { tab "__auto__" }  } {
     netedit presave
 
@@ -1132,44 +1131,57 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	incr i
-	set modVar($module) "m$i"
-
 	if { [isaSubnetIcon $module] } {
+            incr i
+            set modVar($module) "m$i"
 	    set number $Subnet(${module}_num)
-	    set name $Subnet(Subnet${number}_Name)
-	    if { $Subnet(Subnet${number}_State) == "ondisk" } {
-		if { [info exists Subnet(Subnet${number}_Filename)] } {
-		    set name $Subnet(Subnet${number}_Filename)
-		}
-		append script "${tab}\# Load $name Sub-Network from disk\n"
-		append script "${tab}set m$i \[loadSubnetFromDisk \"${name}\" "
+            netedit subnet-start m$i $Subnet(Subnet${number}_Name)
+            genSubnetScript $number
+            netedit subnet-end 
+            # Write the x,y position of the modules icon on the network graph
+            netedit module-position m$i [expr int([$module get_x])] [expr int([$module get_y])]
+            
+            # Cache all connections to a big list to write out later in the file
+            eval lappend connections $Subnet(${module}_connections)
+            # Write user notes 
+            if { [info exists Notes($module)]&&[string length $Notes($module)] } {
+                netedit mod-note m$i \{$Notes($module)\}
+                if { [info exists Notes($module-Position)] } {
+                    netedit mod-note-pos m$i \{$Notes($module-Position)\}
+                }
+                if { [info exists Notes($module-Color)] } {
+                    netedit mod-note-col m$i \{$Notes($module-Color)\}
+                }
+            }
+        }
+    }
 
-	    } else {
-		append script "${tab}\# Create an instance of a $name Sub-Network\n"
-		append script "${tab}set m$i \[instanceSubnet \"${name}\" "
-	    }
-	} else {
+    set num_subnets $i
+    puts $num_subnets
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	if { ![isaSubnetIcon $module] } {
+            incr i
+            set modVar($module) "m$i"
 	    set modpath [modulePath $module]	    
 	    set args "add-module m$i " 
 	    foreach elem $modpath { append args "\"${elem}\" " }
 	    eval netedit $args
-	}
-	# Write the x,y position of the modules icon on the network graph
-	netedit module-position m$i [expr int([$module get_x])] [expr int([$module get_y])]
-
-	# Cache all connections to a big list to write out later in the file
-	eval lappend connections $Subnet(${module}_connections)
-	# Write user notes 
-	if { [info exists Notes($module)]&&[string length $Notes($module)] } {
-	    netedit mod-note m$i \{$Notes($module)\}
-	    if { [info exists Notes($module-Position)] } {
-		netedit mod-note-pos m$i \{$Notes($module-Position)\}
-	    }
-	    if { [info exists Notes($module-Color)] } {
-		netedit mod-note-col m$i \{$Notes($module-Color)\}
-	    }
-	}
+            # Write the x,y position of the modules icon on the network graph
+            netedit module-position m$i [expr int([$module get_x])] [expr int([$module get_y])]
+            
+            # Cache all connections to a big list to write out later in the file
+            eval lappend connections $Subnet(${module}_connections)
+            # Write user notes 
+            if { [info exists Notes($module)]&&[string length $Notes($module)] } {
+                netedit mod-note m$i \{$Notes($module)\}
+                if { [info exists Notes($module-Position)] } {
+                    netedit mod-note-pos m$i \{$Notes($module-Position)\}
+                }
+                if { [info exists Notes($module-Color)] } {
+                    netedit mod-note-col m$i \{$Notes($module-Color)\}
+                }
+            }
+        }
     }
 
     # Uniquely sort connections list by output port # to handle dynamic ports
@@ -1222,7 +1234,7 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
         }
     }
 
-    set i 0
+    set i $num_subnets
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	$module writeStateToScript script "m[incr i]" $tab
     }
@@ -1310,9 +1322,9 @@ proc loadSubnetScriptsFromDisk { } {
     }
 }
 
-proc generateSubnetScriptsFromNetwork { } {
-    global Subnet
-    for {set i 1} {$i <= $Subnet(num)} {incr i} {
-	addSubnetToDatabase [genSubnetScript $i]
-    }    
-}
+# proc generateSubnetScriptsFromNetwork { } {
+#     global Subnet
+#     for {set i 1} {$i <= $Subnet(num)} {incr i} {
+# 	addSubnetToDatabase [genSubnetScript $i]
+#     }    
+# }

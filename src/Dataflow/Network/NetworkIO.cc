@@ -32,12 +32,77 @@
 #include <Dataflow/Network/NetworkIO.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/Assert.h>
 #include <libxml/catalog.h>
 #include <iostream>
+#include <sstream>
 
 namespace SCIRun {
 
 string NetworkIO::net_file_= "";
+
+inline 
+string
+NetworkIO::get_mod_id(const string& id)
+{
+  id_map_t &mmap = netid_to_modid_.top();
+  const string sn("Subnet"); 
+  return (id == sn) ? sn : mmap[id];
+}
+
+string 
+NetworkIO::gui_push_subnet_ctx()
+{
+  GuiInterface *gui = GuiInterface::getSingleton();
+  string cmmd = "set sn_ctx $Subnet(Loading)";
+  string s = gui->eval(cmmd);
+  return s;
+}
+
+void 
+NetworkIO::gui_pop_subnet_ctx(string ctx)
+{
+  GuiInterface *gui = GuiInterface::getSingleton();
+  string cmmd = "set Subnet(Loading) " + ctx;
+  gui->eval(cmmd);
+
+  --sn_ctx_;
+  netid_to_modid_.pop();
+  netid_to_conid_.pop();
+}
+void 
+NetworkIO::gui_add_subnet_at_position(const string &mod_id, 
+				      const string &module, 
+				      const string& x, 
+				      const string &y)
+{
+  GuiInterface *gui = GuiInterface::getSingleton();
+
+  ++sn_count_;
+  // map the subnet to a local var before we push maps.
+  id_map_t &mmap = netid_to_modid_.top();
+
+  ostringstream snic;
+  snic << "SubnetIcon" << sn_count_;
+  mmap[mod_id] = snic.str();
+
+  netid_to_modid_.push(id_map_t());
+  netid_to_conid_.push(id_map_t());
+
+  ostringstream cmmd;
+
+  cmmd << "set Subnet(Loading) [makeSubnetEditorWindow " 
+       << sn_ctx_ << " " << x  << " " << y << "]";
+  gui->eval(cmmd.str());
+  ++sn_ctx_;
+
+
+  ostringstream cmmd1;
+  cmmd1 << "set Subnet(Subnet" << sn_count_ << "_Name) " << module;
+  gui->eval(cmmd1.str());
+
+
+}
 
 void 
 NetworkIO::gui_add_module_at_position(const string &mod_id, 
@@ -52,7 +117,8 @@ NetworkIO::gui_add_module_at_position(const string &mod_id,
   string cmmd = "addModuleAtPosition " + package + " " + 
     category + " " + module + " " + x + " " + y + " 1";
   string mid = gui->eval(cmmd);
-  netid_to_modid_[mod_id] = mid;
+  id_map_t &mmap = netid_to_modid_.top();
+  mmap[mod_id] = mid;
 }
 
 void 
@@ -63,13 +129,15 @@ NetworkIO::gui_add_connection(const string &con_id,
 			  const string &to_port)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
-  
-  string from = netid_to_modid_[from_id];
-  string to = netid_to_modid_[to_id];
+  string sn = "Subnet";
+  string from = get_mod_id(from_id);
+  string to = get_mod_id(to_id);
   string cmmd = "addConnection " + from + " " + 
     from_port +  " " + to + " " + to_port;
+
   string cid = gui->eval(cmmd);
-  netid_to_conid_[con_id] = cid;
+  id_map_t &cmap = netid_to_conid_.top();
+  cmap[con_id] = cid;
 }
 
 void 
@@ -77,7 +145,8 @@ NetworkIO::gui_set_connection_disabled(const string &con_id)
 { 
   GuiInterface *gui = GuiInterface::getSingleton();
   
-  string con = netid_to_conid_[con_id];
+  id_map_t &cmap = netid_to_conid_.top();
+  string con = cmap[con_id];
   string cmmd = "set Disabled(" + con + ") {1}";
   gui->eval(cmmd);
 }
@@ -88,7 +157,7 @@ NetworkIO::gui_set_module_port_caching(const string &mid, const string &pid,
 {
   GuiInterface *gui = GuiInterface::getSingleton();
   
-  string modid = netid_to_modid_[mid];
+  string modid = get_mod_id(mid);
   string cmmd = "setPortCaching " + modid + " " + pid + " " + val;
   gui->eval(cmmd);
 }
@@ -98,7 +167,7 @@ NetworkIO::gui_call_module_callback(const string &id, const string &call)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
   
-  string modid = netid_to_modid_[id];
+  string modid = get_mod_id(id);
   string cmmd = modid + " " + call;
   gui->eval(cmmd);
 }
@@ -109,7 +178,7 @@ NetworkIO::gui_set_modgui_variable(const string &mod_id, const string &var,
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
   string cmmd;
-  string mod = netid_to_modid_[mod_id];
+  string mod = get_mod_id(mod_id);
 
   // Some variables in tcl are quoted strings with spaces, so in that 
   // case insert the module identifying string after the first quote.
@@ -129,7 +198,8 @@ NetworkIO::gui_set_connection_route(const string &con_id, const string &route)
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
   
-  string con = netid_to_conid_[con_id];
+  id_map_t &cmap = netid_to_conid_.top();
+  string con = cmap[con_id];
   string cmmd = "set ConnectionRoutes(" + con + ") " + route;
   gui->eval(cmmd);
 }
@@ -140,7 +210,7 @@ NetworkIO::gui_set_module_note(const string &mod_id, const string &pos,
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
   
-  string mod = netid_to_modid_[mod_id];
+  string mod = get_mod_id(mod_id);
   string cmmd = "set Notes(" + mod + ") " + note;
   gui->eval(cmmd);
   cmmd = "set Notes(" + mod + "-Position) " + pos;
@@ -155,7 +225,8 @@ NetworkIO::gui_set_connection_note(const string &con_id, const string &pos,
 { 
   GuiInterface *gui = GuiInterface::getSingleton();
   
-  string con = netid_to_conid_[con_id];
+  id_map_t &cmap = netid_to_conid_.top();
+  string con = cmap[con_id];
   string cmmd = "set Notes(" + con + ") " + note;
   gui->eval(cmmd);
   cmmd = "set Notes(" + con + "-Position) " + pos;
@@ -178,7 +249,7 @@ NetworkIO::gui_open_module_gui(const string &mod_id)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
   
-  string mod = netid_to_modid_[mod_id];
+  string mod = get_mod_id(mod_id);
   string cmmd = mod + " initialize_ui";
   gui->eval(cmmd);
 }
@@ -203,13 +274,19 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 {
   xmlNodePtr node = enode->children;
   for (; node != 0; node = node->next) {
-    if (string(to_char_ptr(node->name)) == string("module")) {
+    if (string(to_char_ptr(node->name)) == string("module") ||
+	string(to_char_ptr(node->name)) == string("subnet")) 
+    {
+      bool do_subnet = string(to_char_ptr(node->name)) == string("subnet");
+      xmlNodePtr network_node = 0;
+
       string x,y;
       xmlAttrPtr id_att = get_attribute_by_name(node, "id");
       xmlAttrPtr package_att = get_attribute_by_name(node, "package");
       xmlAttrPtr category_att = get_attribute_by_name(node, "category");
       xmlAttrPtr name_att = get_attribute_by_name(node, "name");
-
+      
+      string mname = string(to_char_ptr(name_att->children->content));
       string mid = string(to_char_ptr(id_att->children->content));
       xmlNodePtr pnode = node->children;
       for (; pnode != 0; pnode = pnode->next) {
@@ -219,12 +296,23 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 	  xmlAttrPtr y_att = get_attribute_by_name(pnode, "y");
 	  x = string(to_char_ptr(x_att->children->content));
 	  y = string(to_char_ptr(y_att->children->content)); 
-	  gui_add_module_at_position(mid,
+	  if (do_subnet) {
+	    string old_ctx = gui_push_subnet_ctx();
+	    gui_add_subnet_at_position(mid, mname, x, y);
+
+	    ASSERT(network_node != 0);
+	    process_network_node(network_node);
+	    gui_pop_subnet_ctx(old_ctx);
+	  } else {
+	    gui_add_module_at_position(mid,
 			  string(to_char_ptr(package_att->children->content)),
 			  string(to_char_ptr(category_att->children->content)),
-			  string(to_char_ptr(name_att->children->content)),
-			  x,y);
-
+			  mname, x, y);
+	  }
+	}
+	else if (string(to_char_ptr(pnode->name)) == string("network")) 
+	{
+	  network_node = pnode;
 	} 	
 	else if (string(to_char_ptr(pnode->name)) == string("note")) 
 	{
@@ -241,8 +329,6 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 	}
 	else if (string(to_char_ptr(pnode->name)) == string("port_caching")) 
 	{
-	  //setPortCaching $m10 0 0
-
 	  xmlNodePtr pc_node = pnode->children;
 	  for (; pc_node != 0; pc_node = pc_node->next) {
 	    if (string(to_char_ptr(pc_node->name)) == string("port")) 
@@ -397,55 +483,13 @@ NetworkIO::load_net(const string &net)
   net_file_ = net;
 }
 
-bool
-NetworkIO::load_network()
+
+void
+NetworkIO::process_network_node(xmlNode* network_node)
 {
-  GuiInterface *gui = GuiInterface::getSingleton();
-  gui->eval("::netedit dontschedule");
-  /*
-   * this initialize the library and check potential ABI mismatches
-   * between the version it was compiled for and the actual shared
-   * library used.
-   */
-  LIBXML_TEST_VERSION;
-  
-  xmlParserCtxtPtr ctxt; /* the parser context */
-  xmlDocPtr doc; /* the resulting document tree */
-
-  string src_dir = string(sci_getenv("SCIRUN_SRCDIR")) + 
-    string("/nets/network.dtd");
-  xmlInitializeCatalog();
-  xmlCatalogAdd(BAD_CAST "public", BAD_CAST "-//SCIRun/Network DTD", 
-		BAD_CAST src_dir.c_str());
-
-  /* create a parser context */
-  ctxt = xmlNewParserCtxt();
-  if (ctxt == 0) {
-    std::cerr << "ComponentNode.cc: Failed to allocate parser context" 
-	      << std::endl;
-    return false;
-  }
-  /* parse the file, activating the DTD validation option */
-  doc = xmlCtxtReadFile(ctxt, net_file_.c_str(), 0, (XML_PARSE_DTDATTR | 
-						     XML_PARSE_DTDVALID | 
-						     XML_PARSE_PEDANTIC));
-  /* check if parsing suceeded */
-  if (doc == 0) {
-    std::cerr << "ComponentNode.cc: Failed to parse " << net_file_ 
-	      << std::endl;
-    return false;
-  } else {
-    /* check if validation suceeded */
-    if (ctxt->valid == 0) {
-      std::cerr << "ComponentNode.cc: Failed to validate " << net_file_ 
-		<< std::endl;
-      return false;
-    }
-  }
-
   // have to multi pass this document to workaround tcl timing issues.
   // PASS 1 - create the modules and connections
-  xmlNode* node = doc->children;
+  xmlNode* node = network_node;
   for (; node != 0; node = node->next) {
     // skip all but the component node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -495,7 +539,7 @@ NetworkIO::load_network()
   }
 
   // PASS 2 -- call the callbacks and set the variables
-  node = doc->children;
+  node = network_node;
   for (; node != 0; node = node->next) {
     // skip all but the component node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -512,18 +556,118 @@ NetworkIO::load_network()
       }
     }
   }
+}
 
-  gui->eval("setGlobal NetworkChanged 0");
+bool
+NetworkIO::load_network()
+{
+
+  /*
+   * this initialize the library and check potential ABI mismatches
+   * between the version it was compiled for and the actual shared
+   * library used.
+   */
+  LIBXML_TEST_VERSION;
+  
+  xmlParserCtxtPtr ctxt; /* the parser context */
+  xmlDocPtr doc; /* the resulting document tree */
+
+  string src_dir = string(sci_getenv("SCIRUN_SRCDIR")) + 
+    string("/nets/network.dtd");
+  xmlInitializeCatalog();
+  xmlCatalogAdd(BAD_CAST "public", BAD_CAST "-//SCIRun/Network DTD", 
+		BAD_CAST src_dir.c_str());
+
+  /* create a parser context */
+  ctxt = xmlNewParserCtxt();
+  if (ctxt == 0) {
+    std::cerr << "ComponentNode.cc: Failed to allocate parser context" 
+	      << std::endl;
+    return false;
+  }
+  /* parse the file, activating the DTD validation option */
+  doc = xmlCtxtReadFile(ctxt, net_file_.c_str(), 0, (XML_PARSE_DTDATTR | 
+						     XML_PARSE_DTDVALID | 
+						     XML_PARSE_PEDANTIC));
+  /* check if parsing suceeded */
+  if (doc == 0) {
+    std::cerr << "ComponentNode.cc: Failed to parse " << net_file_ 
+	      << std::endl;
+    return false;
+  } else {
+    /* check if validation suceeded */
+    if (ctxt->valid == 0) {
+      std::cerr << "ComponentNode.cc: Failed to validate " << net_file_ 
+		<< std::endl;
+      return false;
+    }
+  }
+
+  GuiInterface *gui = GuiInterface::getSingleton();
+  gui->eval("::netedit dontschedule");
+  
+  // parse the doc at network node.
+  process_network_node(doc->children);
 
   xmlFreeDoc(doc);
   /* free up the parser context */
   xmlFreeParserCtxt(ctxt);  
   xmlCleanupParser();
 
+  gui->eval("setGlobal NetworkChanged 0");
   gui->eval("::netedit scheduleok");
+
   return true;
 }
 
+
+// push a new network root node.
+void 
+NetworkIO::push_subnet_scope(const string &id, const string &name)
+{
+  // this is a child node of the network.
+  xmlNode* mod_node = 0;
+  xmlNode* net_node = 0;
+  xmlNode* node = subnets_.top();
+  for (; node != 0; node = node->next) {
+    // skip all but the network node.
+    if (node->type == XML_ELEMENT_NODE && 
+	string(to_char_ptr(node->name)) == string("network")) 
+    {
+      net_node = node;
+      xmlNode* mnode = node->children;
+      for (; mnode != 0; mnode = mnode->next) {
+	if (string(to_char_ptr(mnode->name)) == string("modules")) {
+	  mod_node = mnode;
+	  break;
+	}
+      }
+    }
+  }
+  if (! mod_node) { 
+    if (! net_node) { 
+      cerr << "ERROR: could not find top level node." << endl;
+      return;
+    }
+    mod_node = xmlNewChild(net_node, 0, BAD_CAST "modules", 0);
+  }
+  xmlNodePtr tmp = xmlNewChild(mod_node, 0, BAD_CAST "subnet", 0);
+  xmlNewProp(tmp, BAD_CAST "id", BAD_CAST id.c_str());
+  xmlNewProp(tmp, BAD_CAST "package", BAD_CAST "subnet");
+  xmlNewProp(tmp, BAD_CAST "category", BAD_CAST "subnet");
+  xmlNewProp(tmp, BAD_CAST "name", BAD_CAST name.c_str());
+
+  xmlNodePtr sn_node = xmlNewChild(tmp, 0, BAD_CAST "network", 0);
+  xmlNewProp(sn_node, BAD_CAST "version", BAD_CAST "contained");
+
+  subnets_.push(sn_node);
+}
+
+void 
+NetworkIO::pop_subnet_scope()
+{
+  subnets_.pop();
+}
 
 void 
 NetworkIO::start_net_doc(const string &fname, const string &vers)
@@ -539,6 +683,7 @@ NetworkIO::start_net_doc(const string &fname, const string &vers)
    */
   doc_ = xmlNewDoc(BAD_CAST "1.0");
   root_node = xmlNewNode(0, BAD_CAST "network");
+  subnets_.push(root_node);
   xmlDocSetRootElement(doc_, root_node);
   
   /*
@@ -572,7 +717,7 @@ void
 NetworkIO::add_net_var(const string &var, const string &val)
 {
   // add these as attributes of the network node.
-  xmlNode* node = doc_->children;
+  xmlNode* node = subnets_.top();
   for (; node != 0; node = node->next) {
     // skip all but the network node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -594,7 +739,7 @@ NetworkIO::add_environment_sub(const string &var, const string &val)
   // this is a child node of the network.
   xmlNode* env_node = 0;
   xmlNode* net_node = 0;
-  xmlNode* node = doc_->children;
+  xmlNode* node = subnets_.top();
   for (; node != 0; node = node->next) {
     // skip all but the network node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -627,7 +772,7 @@ NetworkIO::add_net_note(const string &val)
 {
   // this is a child node of the network, must come after 
   // environment node if it exists.
-  xmlNode* node = doc_->children;
+  xmlNode* node = subnets_.top();
   for (; node != 0; node = node->next) {
     // skip all but the network node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -651,7 +796,7 @@ NetworkIO::add_module_node(const string &id, const string &pack,
   // this is a child node of the network.
   xmlNode* mod_node = 0;
   xmlNode* net_node = 0;
-  xmlNode* node = doc_->children;
+  xmlNode* node = subnets_.top();
   for (; node != 0; node = node->next) {
     // skip all but the network node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -685,7 +830,7 @@ xmlNode*
 NetworkIO::get_module_node(const string &id)
 {  
   xmlNode* mid_node = 0;
-  xmlNode* node = doc_->children;
+  xmlNode* node = subnets_.top();
   for (; node != 0; node = node->next) {
     // skip all but the network node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -698,10 +843,13 @@ NetworkIO::get_module_node(const string &id)
 	  xmlNode* mnode = msnode->children;
 	  for (; mnode != 0; mnode = mnode->next) {
 
-	    if (string(to_char_ptr(mnode->name)) == string("module")) {
+	    if (string(to_char_ptr(mnode->name)) == string("module") ||
+		string(to_char_ptr(mnode->name)) == string("subnet")) 
+	    {
 	      xmlAttrPtr name_att = get_attribute_by_name(mnode, "id");
 	      string mid = string(to_char_ptr(name_att->children->content));
-	      if (mid == id) {
+	      if (mid == id) 
+	      {
 		mid_node = mnode;
 		break;
 	      }
@@ -854,7 +1002,7 @@ NetworkIO::add_connection_node(const string &id, const string &fmod,
   // this is a child node of the network.
   xmlNode* con_node= 0;
   xmlNode* net_node= 0;
-  xmlNode* node = doc_->children;
+  xmlNode* node = subnets_.top();
   for (; node != 0; node = node->next) {
     // skip all but the network node.
     if (node->type == XML_ELEMENT_NODE && 
@@ -890,7 +1038,7 @@ xmlNode*
 NetworkIO::get_connection_node(const string &id)
 {  
   xmlNode* cid_node = 0;
-  xmlNode* node = doc_->children;
+  xmlNode* node = subnets_.top();
   for (; node != 0; node = node->next) {
     // skip all but the network node.
     if (node->type == XML_ELEMENT_NODE && 
