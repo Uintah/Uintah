@@ -109,7 +109,7 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHand
     return field;
   }
 
-  MesquiteMesh<FIELD> entity_mesh( fieldh );
+  MesquiteMesh<FIELD> entity_mesh( field );
     // Create a MeshDomain
   MesquiteDomain domain;
         
@@ -143,9 +143,7 @@ public:
 
 template <class FIELD>
 FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
-{
-  cout << "Smoothing hexes..." << endl;
-  
+{  
 //  need to make a copy of the field, so that the previous one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   double cull_eps = 1e-4;
@@ -171,25 +169,28 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHand
     mod->error( "Unexpected error from Mesquite code.\n" );
     return field;
   }
+  cout << "Setup Mesquite mesh interface..." << endl;
 
-//   MesquiteMesh<FIELD> entity_mesh( field );
-//   MesquiteDomain domain;
-        
-//   if(err)
-//   {
-//     mod->error( "Error occured during Mesquite initizlization\n" );
-//     return field;
-//   }
-//   else
-//   {
-//     queue.run_instructions(&entity_mesh, &domain, err); 
-//     MSQ_CHKERR(err);
-//     if(err)
-//     {
-//       mod->error( "Error occured during Mesquite smart laplacian smoothing.\n" );
-//       return field;
-//     }
-//   }
+  MesquiteMesh<FIELD> entity_mesh( field );
+  cout << "Setup Mesquite mesh domain..." << endl;
+  MesquiteDomain domain;
+
+  cout << "Smoothing mesh..." << endl;        
+  if(err)
+  {
+    mod->error( "Error occured during Mesquite initizlization\n" );
+    return field;
+  }
+  else
+  {
+    queue.run_instructions(&entity_mesh, &domain, err); 
+    MSQ_CHKERR(err);
+    if(err)
+    {
+      mod->error( "Error occured during Mesquite smart laplacian smoothing.\n" );
+      return field;
+    }
+  }
 
   return field;
 }
