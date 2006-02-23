@@ -440,6 +440,11 @@ Painter::NrrdVolume::get_nrrd()
     nrrd = nrrd2;
   }
   nrrdKeyValueCopy(nrrd->nrrd, nrrd_->nrrd);
+  
+  //  unsigned long ptr = (unsigned long)(&painter_);
+  //  nrrdKeyValueAdd(nrrd->nrrd, 
+  //                  "progress_ptr", to_string(ptr).c_str());
+
   return nrrd;
 }
 
@@ -572,6 +577,10 @@ Painter::render_window(SliceWindow &window) {
   window.render_text();
 
   profiler("render_text");
+
+  if (filter_text_.length()) 
+    window.render_progress_bar();
+
   profiler.leave();
   profiler.print();
 
@@ -615,14 +624,8 @@ Painter::redraw_window(SliceWindow &window) {
   return 1;
 }
 
-
 void
-Painter::SliceWindow::render_guide_lines(Point mouse) {
-  if (!show_guidelines_()) return;
-
-  //  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
-  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
-
+Painter::SliceWindow::push_gl_2d_view() {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -635,6 +638,29 @@ Painter::SliceWindow::render_guide_lines(Point mouse) {
   double vph = viewport_->height();
   glScaled(1.0/vpw, 1.0/vph, 1.0);
   CHECK_OPENGL_ERROR();
+}
+
+
+void
+Painter::SliceWindow::pop_gl_2d_view() {
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  CHECK_OPENGL_ERROR();
+}
+
+
+void
+Painter::SliceWindow::render_guide_lines(Point mouse) {
+  if (!show_guidelines_()) return;
+
+  //  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
+  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
+
+  push_gl_2d_view();
+  double vpw = viewport_->width();
+  double vph = viewport_->height();
 
   glColor4dv(white);
   glBegin(GL_LINES); 
@@ -645,10 +671,8 @@ Painter::SliceWindow::render_guide_lines(Point mouse) {
   glEnd();
   CHECK_OPENGL_ERROR();
 
-  glPopMatrix();
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  CHECK_OPENGL_ERROR();
+  pop_gl_2d_view();
+
 }
 
 
@@ -1192,6 +1216,77 @@ Painter::NrrdSlice::bind()
 
   return;
 }
+
+
+void
+Painter::SliceWindow::render_progress_bar() {
+  GLdouble grey[4] = { 0.6, 0.6, 0.6, 0.6 }; 
+  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 }; 
+  GLdouble black[4] = { 0.0, 0.0, 0.0, 1.0 }; 
+  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 1.0 };
+  GLdouble lt_yellow[4] = { 0.8, 0.5, 0.1, 1.0 };  
+  
+  GLdouble *colors[5] = { lt_yellow, yellow, black, grey, white };
+  GLdouble widths[5] = { 11, 9.0, 7.0, 5.0, 1.0 }; 
+
+  push_gl_2d_view();
+
+  double vpw = viewport_->width();
+  double vph = viewport_->height();
+  double x_off = 50;
+  double h = 50;
+  double gap = 5;
+  //  double y_off = 20;
+
+  Point ll(x_off, vph/2.0 - h/2, 0);
+  Point lr(vpw-x_off, vph/2.0 - h/2, 0);
+  Point ur(vpw-x_off, vph/2.0 + h/2, 0);
+  Point ul(x_off, vph/2.0 + h/2, 0);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glEnable(GL_LINE_SMOOTH);
+  for (int pass = 2; pass < 5; ++pass) {
+    glColor4dv(colors[pass]);
+    glLineWidth(widths[pass]);    
+
+    glBegin(GL_LINE_LOOP);
+    {
+      glVertex3dv(&ll(0));
+      glVertex3dv(&lr(0));
+      glVertex3dv(&ur(0));
+      glVertex3dv(&ul(0));
+    }
+    glEnd();
+  }
+  glLineWidth(1.0);
+  glDisable(GL_LINE_SMOOTH);
+  CHECK_OPENGL_ERROR();
+
+  Vector right = painter_->progress_percent_*Vector(vpw - 2 *x_off - 2*gap, 0, 0);
+  Vector up = Vector(0, h - gap * 2, 0);
+
+  ll = ll + Vector(gap, gap, 0);
+  lr = ll + right;
+  ur = lr + up;
+  ul = ll + up;
+
+  glColor4dv(yellow);
+  glBegin(GL_QUADS);
+  glVertex3dv(&ll(0));
+  glVertex3dv(&lr(0));
+  glVertex3dv(&ur(0));
+  glVertex3dv(&ul(0));
+  glEnd();
+  CHECK_OPENGL_ERROR();
+  
+
+
+  pop_gl_2d_view();
+}
+
+
 
 
 ColorMapHandle
@@ -2002,7 +2097,7 @@ Painter::Event::update_state(GuiArgs &args, Painter &painter) {
   }
   
   
-  if (args[2] != "motion") {
+  if (args[2] == "button" || args[2] == "release") {
     // The button parameter may be invalid on motion events (mainly OS X)
     // Button presses don't set state correctly, so manually set state_ here
     // to make Event::button() method work on press events
@@ -2608,8 +2703,6 @@ Painter::copy_current_volume(const string &name, int mode) {
   return vol;
 }
   
-  
-
 
   
 } // end namespace SCIRun
