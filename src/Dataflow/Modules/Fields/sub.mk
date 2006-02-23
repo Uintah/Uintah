@@ -132,7 +132,6 @@ endif
 # MESQUITE Mesh Optimization Library
 ifeq ($(HAVE_MESQUITE),yes)
    SRCS += $(SRCDIR)/MeshSmoother.cc\
-	$(SRCDIR)/MesquiteMesh.cc\
 	$(SRCDIR)/MesquiteDomain.cc
    LIBS := $(LIBS) $(MESQUITE_LIBRARY)
 endif

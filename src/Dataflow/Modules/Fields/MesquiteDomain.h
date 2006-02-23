@@ -4,7 +4,7 @@
 #include <MeshInterface.hpp>
 
 namespace SCIRun {
-    
+
 class MesquiteDomain : public Mesquite::MeshDomain
 {
 public:
