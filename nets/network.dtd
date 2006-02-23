@@ -62,7 +62,7 @@
      the module instantiation info, and the position in the network editor -->
 <!ELEMENT modules (subnet*, module*)>
 
-<!ELEMENT subnet (position, note?, port_caching?, network)>
+<!ELEMENT subnet (network, position, note?, port_caching?)>
 <!ATTLIST subnet
           id CDATA #REQUIRED
           package CDATA #REQUIRED

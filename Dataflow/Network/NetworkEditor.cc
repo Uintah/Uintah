@@ -374,6 +374,10 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     netio->add_module_variable(args[2], args[3], args[4]);
   } else if (args[1] == "add-modgui-callback") {
     netio->add_module_gui_callback(args[2], args[3]);
+  } else if (args[1] == "subnet-start") {
+    netio->push_subnet_scope(args[2], args[3]);
+  } else if (args[1] == "subnet-end") {
+    netio->pop_subnet_scope();
   } else if (args[1] == "load_srn") {
     NetworkIO::load_net(args[2]);
     NetworkIO ln;

@@ -26,13 +26,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-proc show_fname_trace { args } {
-    puts $args
-    return 0
-}
-
-trace variable SCIRun_DataIO_FieldReader_0-filename u show_fname_trace
-
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/defaults.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Module.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
@@ -569,7 +562,7 @@ proc createModulesMenu { menu subnet } {
 proc createSubnetMenu { { menu "" } { subnet 0 } } {
     global SubnetScripts
     loadSubnetScriptsFromDisk
-    generateSubnetScriptsFromNetwork
+    #generateSubnetScriptsFromNetwork
 
     if { [winfo exists $menu ] } {
 	$menu.subnet delete 0 end
@@ -1995,7 +1988,6 @@ proc writeNetwork { filename { subnet 0 } } {
     
     #maybeWriteTCLStyleCopyright $out
     maybeWrite_init_DATADIR_and_DATASET $out
-    writeSubnets $out $subnet
     genSubnetScript $subnet ""
 
     netedit write-net-doc
