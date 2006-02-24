@@ -1407,12 +1407,9 @@ TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
   const double a2 = Cross(p - p0, p - p1).length2();
 
   unsigned int mask = 0;
-  //  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
-  //  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
-  //  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
-  if (a0 >= 0.001) { mask |= 1; }
-  if (a1 >= 0.001) { mask |= 2; }
-  if (a2 >= 0.001) { mask |= 4; }
+  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
+  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
+  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
 
   if (mask == 7)
   {
