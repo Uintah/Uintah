@@ -3833,16 +3833,16 @@ if test "$sci_required_insight" = "yes"; then
   AC_MSG_CHECKING(for Insight.)
 
   if test "$with_insight"; then
-    dir="$with_insight"
+    dir="$with_insight/lib/InsightToolkit"
   else
-    dir="/usr/local/lib/InsightToolkit"
+    dir="$sci_thirdparty_lib/InsightToolkit"
   fi
 
   if test -a "$dir/ITKConfig.cmake"; then
     INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -litkniftiio -litkznz -litkvnl -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -lITKniftiio -lITKznz -litkvnl -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
 
     if test "$IS_WIN" = "yes"; then
 	  libBegin=""
@@ -3926,7 +3926,7 @@ if test "$sci_required_insight" = "yes"; then
 
 #    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
 
-    DEF_INSIGHT="#define HAVE_INSIGHT"
+    DEF_INSIGHT="#define HAVE_INSIGHT 1"
     HAVE_INSIGHT="yes"
 
     AC_MSG_RESULT($dir)
