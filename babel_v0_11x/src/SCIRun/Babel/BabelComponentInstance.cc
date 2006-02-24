@@ -48,9 +48,13 @@
 
 #include <iostream>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
 namespace SCIRun {
 
-BabelCCAGoPort::BabelCCAGoPort(const gov::cca::ports::GoPort& port)
+BabelCCAGoPort::BabelCCAGoPort(const UCXX ::gov::cca::ports::GoPort& port)
 {
   this->port=port;
 }
@@ -60,7 +64,7 @@ int BabelCCAGoPort::go()
   return port.go();
 }
 
-BabelCCAUIPort::BabelCCAUIPort(const gov::cca::ports::UIPort& port)
+BabelCCAUIPort::BabelCCAUIPort(const UCXX ::gov::cca::ports::UIPort& port)
 {
   this->port=port;
 }
@@ -72,51 +76,53 @@ int BabelCCAUIPort::ui()
 
 
 BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
-					       const std::string& instanceName,
-					       const std::string& typeName,
-					       const gov::cca::TypeMap& properties,
-					       const gov::cca::Component& component,
-					       const framework::Services& svc)
+                                               const std::string& instanceName,
+                                               const std::string& typeName,
+                                               const UCXX ::gov::cca::TypeMap& properties,
+                                               const UCXX ::gov::cca::Component& component,
+                                               const UCXX ::framework::Services& svc)
   : ComponentInstance(framework, instanceName, typeName, sci::cca::TypeMap::pointer(0))
 {
   // Babel component properties are ignored for now.
   this->component = component;
   this->svc = svc;
-  BabelPortInstance *go = dynamic_cast<BabelPortInstance*> (getPortInstance("go"));
+  BabelPortInstance *go = dynamic_cast<BabelPortInstance*>(getPortInstance("go"));
   if (go != 0) {
     std::map<std::string, PortInstance*> *pports=
       (std::map<std::string, PortInstance*>* ) (this->svc.getData());
 
-    //sci::cca::ports::GoPort::pointer goPort(new BabelCCAGoPort(go->port));
-    gov::cca::Port p = go->getPort();
-    gov::cca::ports::GoPort g = sidl::babel_cast<gov::cca::ports::GoPort>(p);
-    BabelCCAGoPort *gg = new BabelCCAGoPort(g);
-    sci::cca::ports::GoPort::pointer goPort(gg);
-    CCAPortInstance *piGo=new CCAPortInstance("sci.go","sci.cca.ports.GoPort",
-					      sci::cca::TypeMap::pointer(0),
-					      goPort,
-					      CCAPortInstance::Provides);
+    UCXX ::gov::cca::ports::GoPort g = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ports::GoPort>(go->getPort());
+    sci::cca::ports::GoPort::pointer goPort(new BabelCCAGoPort(g));
+    CCAPortInstance *piGo = new CCAPortInstance("sci.go",
+						"sci.cca.ports.GoPort",
+						sci::cca::TypeMap::pointer(0),
+						goPort,
+						CCAPortInstance::Provides);
 
     pports->insert(std::make_pair("sci.go", piGo));
   }
 
-  BabelPortInstance *ui=dynamic_cast<BabelPortInstance*> (getPortInstance("ui"));
-  if(ui!=0) {
+  BabelPortInstance *ui = dynamic_cast<BabelPortInstance*>(getPortInstance("ui"));
+  if (ui != 0) {
     std::map<std::string, PortInstance*> *pports=
       (std::map<std::string, PortInstance*>* ) (this->svc.getData());
 
-    sci::cca::ports::UIPort::pointer uiPort(new BabelCCAUIPort(ui->port));
-    CCAPortInstance *piUI=new CCAPortInstance("sci.ui","sci.cca.ports.UIPort",
-					      sci::cca::TypeMap::pointer(0),
-					      uiPort,
-					      CCAPortInstance::Provides);
+    UCXX ::gov::cca::ports::UIPort u = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ports::UIPort>(ui->getPort());
+    sci::cca::ports::UIPort::pointer uiPort(new BabelCCAUIPort(u));
+    CCAPortInstance *piUI = new CCAPortInstance("sci.ui",
+						"sci.cca.ports.UIPort",
+						sci::cca::TypeMap::pointer(0),
+						uiPort,
+						CCAPortInstance::Provides);
     pports->insert(std::make_pair("sci.ui", piUI));
   }
 }
 
 BabelComponentInstance::~BabelComponentInstance()
 {
+#if DEBUG
   std::cerr << "BabelComponentInstance destroyed..." << std::endl;
+#endif
 }
 
 PortInstance*
@@ -133,30 +139,34 @@ BabelComponentInstance::getPortInstance(const std::string& portname)
   }
 }
 
-gov::cca::Port BabelComponentInstance::getPort(const std::string& name)
+UCXX ::gov::cca::Port
+BabelComponentInstance::getPort(const std::string& name)
 {
   return svc.getPort(name);
 }
 
-gov::cca::Port
+UCXX ::gov::cca::Port
 BabelComponentInstance::getPortNonblocking(const std::string& name)
 {
   return svc.getPortNonblocking(name);
 }
 
-void BabelComponentInstance::releasePort(const std::string& name)
+void
+BabelComponentInstance::releasePort(const std::string& name)
 {
   return svc.releasePort(name);
 }
 
-gov::cca::TypeMap BabelComponentInstance::createTypeMap()
+UCXX ::gov::cca::TypeMap
+BabelComponentInstance::createTypeMap()
 {
   return svc.createTypeMap();
 }
 
-void BabelComponentInstance::registerUsesPort(const std::string& portName,
-					      const std::string& portType,
-					      const gov::cca::TypeMap& properties)
+void
+BabelComponentInstance::registerUsesPort(const std::string& portName,
+                                         const std::string& portType,
+                                         const UCXX ::gov::cca::TypeMap& properties)
 {
   return svc.registerUsesPort(portName, portType, properties);
 }
@@ -166,10 +176,11 @@ void BabelComponentInstance::unregisterUsesPort(const std::string& name)
   return svc.unregisterUsesPort(name);
 }
 
-void BabelComponentInstance::addProvidesPort(const gov::cca::Port& port,
-					     const std::string& portName,
-					     const std::string& portType,
-					     const gov::cca::TypeMap& properties)
+void
+BabelComponentInstance::addProvidesPort(const UCXX ::gov::cca::Port& port,
+                                        const std::string& portName,
+                                        const std::string& portType,
+                                        const UCXX ::gov::cca::TypeMap& properties)
 {
   return svc.addProvidesPort(port, portName, portType, properties);
 }
@@ -180,17 +191,20 @@ void BabelComponentInstance::removeProvidesPort(const std::string& name)
   return;
 }
 
-gov::cca::TypeMap BabelComponentInstance::getPortProperties(const std::string& portName)
+UCXX ::gov::cca::TypeMap
+BabelComponentInstance::getPortProperties(const std::string& portName)
 {
   return svc.getPortProperties(portName);
 }
 
-gov::cca::ComponentID BabelComponentInstance::getComponentID()
+UCXX ::gov::cca::ComponentID
+BabelComponentInstance::getComponentID()
 {
   return svc.getComponentID();
 }
 
-PortInstanceIterator* BabelComponentInstance::getPorts()
+PortInstanceIterator*
+BabelComponentInstance::getPorts()
 {
   return new Iterator(this);
 }

@@ -57,10 +57,6 @@ class SCIRunFramework;
 class BabelComponentDescription;
 class BabelComponentInstance;
 
-#ifdef SIDL_USE_UCXX
-  using namespace ucxx;
-#endif
-
 /**
  * \class BabelComponentModel
  *
@@ -80,9 +76,9 @@ public:
   virtual ~BabelComponentModel();
 
   /** ? */
-  gov::cca::Services createServices(const std::string& instanceName,
+  UCXX ::gov::cca::Services createServices(const std::string& instanceName,
                                     const std::string& className,
-                                    const gov::cca::TypeMap& properties);
+                                    const UCXX ::gov::cca::TypeMap& properties);
 
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
