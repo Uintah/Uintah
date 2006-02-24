@@ -59,6 +59,13 @@ string_to_double(const string &str, double &result)
   return sscanf(str.c_str(), "%lf", &result) == 1;
 }
 
+bool
+string_to_unsigned_long(const string &str, unsigned long &result)
+{
+  return sscanf(str.c_str(), "%lu", &result) == 1;
+}
+
+
 string
 to_string(int val)
 {

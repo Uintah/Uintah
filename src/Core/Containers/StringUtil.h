@@ -56,6 +56,7 @@ namespace SCIRun {
 
 SCISHARE bool string_to_int(const string &str, int &result);
 SCISHARE bool string_to_double(const string &str, double &result);
+SCISHARE bool string_to_unsigned_long(const string &str, unsigned long &res);
 
 SCISHARE string to_string(int val);
 SCISHARE string to_string(unsigned int val);
