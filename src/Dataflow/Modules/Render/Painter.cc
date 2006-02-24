@@ -2097,7 +2097,7 @@ Painter::Event::update_state(GuiArgs &args, Painter &painter) {
   }
   
   
-  if (args[2] == "button" || args[2] == "release") {
+  if (args[2] != "motion" && args[2] != "enter" && args[2] != "leave") {
     // The button parameter may be invalid on motion events (mainly OS X)
     // Button presses don't set state correctly, so manually set state_ here
     // to make Event::button() method work on press events
