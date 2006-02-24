@@ -77,7 +77,7 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
     debug_ps->getWithDefault("dbg_var1",          d_dbgVar1, 0);   
     debug_ps->getWithDefault("dbg_var2",          d_dbgVar2, 0);  
     debug_ps->getWithDefault("dbg_SigFigs",       d_dbgSigFigs, 5 );
-    debug_ps->getWithDefault("dbg_Level",         d_dbgLevel,   0);
+    debug_ps->get("dbg_Level",                    d_dbgLevel);
     debug_ps->get("dbg_timeStart",                d_dbgStartTime);
     debug_ps->get("dbg_timeStop",                 d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",           d_dbgOutputInterval);
@@ -155,13 +155,20 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   if(switchDebug_Initialize){ 
     d_dbgTime_to_printData = true;
   }
+  
+  //__________________________________
+  //  default values
+  if(d_dbgMatls.size() == 0 ){
+    d_dbgMatls.push_back(0);
+  }
+  if(d_dbgLevel.size() == 0 ){
+    d_dbgLevel.push_back(0);
+  }
  
   cout_norm << "Pulled out the debugging switches from input file" << endl;
   cout_norm<< "  debugging starting time   "<<d_dbgStartTime<<endl;
   cout_norm<< "  debugging stopping time   "<<d_dbgStopTime<<endl;
   cout_norm<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
-  cout_norm<< "  debugging begin index     "<<d_dbgBeginIndx<< endl;
-  cout_norm<< "  debugging End index       "<<d_dbgEndIndx<< endl;
   cout_norm<< "  debugging variable 1      "<<d_dbgVar1<<endl;
   cout_norm<< "  debugging variable 2      "<<d_dbgVar2<<endl; 
   for (int i = 0; i<(int) d_dbgMatls.size(); i++) {
@@ -295,14 +302,18 @@ void    ICE::printData_driver( int matl,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
-  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
-    onRightLevel = true;
+  for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
+    
+    if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
+      onRightLevel = true;
+    }
   }
   
   if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData ) {
     IntVector low, high; 
 
-    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+    adjust_dbg_indices( include_EC, patch, 
+                        d_dbgBeginIndx[levelIndx],d_dbgEndIndx[levelIndx], 
                         low, high); 
     
     //__________________________________
@@ -392,14 +403,17 @@ void    ICE::printVector_driver(int matl,
   int levelIndx = level->getIndex(); 
   
   bool onRightLevel = false;
-  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
-    onRightLevel = true;
+  for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
+    if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
+      onRightLevel = true;
+    }
   }
   
   if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData) {        
     IntVector low, high; 
 
-    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+    adjust_dbg_indices( include_EC, patch, 
+                        d_dbgBeginIndx[levelIndx],d_dbgEndIndx[levelIndx], 
                         low, high); 
     
     string var_name;
@@ -527,8 +541,10 @@ void    ICE::symmetryTest_driver( int matl,
   }
   
   bool onRightLevel = false;
-  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
-    onRightLevel = true;
+  for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
+    if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
+      onRightLevel = true;
+    }
   }
     
   //__________________________________
@@ -670,8 +686,10 @@ void    ICE::symmetryTest_Vector( int matl,
   }
   
   bool onRightLevel = false;
-  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
-    onRightLevel = true;
+  for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
+    if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
+      onRightLevel = true;
+    }
   }
   //__________________________________
   if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData ) { 
@@ -767,14 +785,17 @@ void    ICE::printStencil( int /*matl*/,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
-  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
-    onRightLevel = true;
+  for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
+    if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
+      onRightLevel = true;
+    }
   }
   
   if ( onRightLevel && d_dbgTime_to_printData) {
     IntVector low, high; 
-    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
-                        low, high); 
+    adjust_dbg_indices( include_EC, patch, 
+                        d_dbgBeginIndx[levelIndx], 
+                        d_dbgEndIndx[levelIndx], low, high); 
     //__________________________________
     // spew to stderr
     cerr << "______________________________________________L-"<<levelIndx<<"\n";

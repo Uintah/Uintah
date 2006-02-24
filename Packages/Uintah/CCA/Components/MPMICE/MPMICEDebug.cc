@@ -40,15 +40,18 @@ void    MPMICE::printData(int matl,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
-  if(levelIndx == d_ice->d_dbgLevel || d_ice->d_dbgLevel == -9) {
-    onRightLevel = true;
+  for (int l = 0; l<(int) d_ice->d_dbgLevel.size(); l++) {
+    if(levelIndx == d_ice->d_dbgLevel[l] || d_ice->d_dbgLevel[l] == -9) {
+      onRightLevel = true;
+    }
   }
   
   if ( onRightLevel && dumpThisMatl == true && d_ice->d_dbgTime_to_printData ) {        
     IntVector low, high; 
     
-    d_ice->adjust_dbg_indices( include_EC, patch, d_ice->d_dbgBeginIndx, 
-                                d_ice->d_dbgEndIndx, low, high);
+    d_ice->adjust_dbg_indices( include_EC, patch, 
+                               d_ice->d_dbgBeginIndx[levelIndx],
+                               d_ice->d_dbgEndIndx[levelIndx], low, high);
     //__________________________________
     // spew to stderr
     if ( high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {      
@@ -106,15 +109,18 @@ void    MPMICE::printNCVector(int matl,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
-  if(levelIndx == d_ice->d_dbgLevel || d_ice->d_dbgLevel == -9) {
-    onRightLevel = true;
+  for (int l = 0; l<(int) d_ice->d_dbgLevel.size(); l++) {
+    if(levelIndx == d_ice->d_dbgLevel[l] || d_ice->d_dbgLevel[l] == -9) {
+      onRightLevel = true;
+    }
   }
   
   if ( onRightLevel && dumpThisMatl == true && d_ice->d_dbgTime_to_printData ) {            
     IntVector low, high; 
     
-    d_ice->adjust_dbg_indices( include_EC, patch, d_ice->d_dbgBeginIndx, 
-                                d_ice->d_dbgEndIndx, low, high); 
+    d_ice->adjust_dbg_indices(  include_EC, patch, 
+                               d_ice->d_dbgBeginIndx[levelIndx],
+                               d_ice->d_dbgEndIndx[levelIndx], low, high); 
     
     string var_name;
     cerr.setf(ios::scientific,ios::floatfield);
