@@ -1275,16 +1275,9 @@ TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
 
   const unsigned int nbr = edge_neighbors_[halfedge];
 
-  if (edge_neighbors_[next(halfedge)] != MESH_NO_NEIGHBOR)
-  {
-    edge_neighbors_[edge_neighbors_[next(halfedge)]] = next(halfedge);
-  }
-  if (edge_neighbors_[prev(halfedge)] != MESH_NO_NEIGHBOR)
-  {
-    edge_neighbors_[edge_neighbors_[prev(halfedge)]] = prev(halfedge);
-  }
   // f1
   const unsigned int f1 = faces_.size();
+  
   tris.push_back(f1 / 3);
   faces_.push_back(ni);
   faces_.push_back(faces_[next(halfedge)]);
@@ -1293,25 +1286,23 @@ TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
   edge_neighbors_.push_back(edge_neighbors_[next(halfedge)]);
   edge_neighbors_.push_back(next(halfedge));
 
+  if (edge_neighbors_[next(halfedge)] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[next(halfedge)]] = next(f1);
+  }
+
+  const unsigned int f3 = faces_.size(); // Only created if there's a neighbor.
+
   // f0
+  tris.push_back(halfedge / 3);
   faces_[next(halfedge)] = ni;
-  edge_neighbors_[halfedge] = (nbr!=MESH_NO_NEIGHBOR)?faces_.size():MESH_NO_NEIGHBOR;
+  edge_neighbors_[halfedge] = (nbr!=MESH_NO_NEIGHBOR)?f3:MESH_NO_NEIGHBOR;
   edge_neighbors_[next(halfedge)] = prev(f1);
   edge_neighbors_[prev(halfedge)] = edge_neighbors_[prev(halfedge)];
 
   if (nbr != MESH_NO_NEIGHBOR)
   {
-    if (edge_neighbors_[next(nbr)] != MESH_NO_NEIGHBOR)
-    {
-      edge_neighbors_[edge_neighbors_[next(nbr)]] = next(nbr);
-    }
-    if (edge_neighbors_[prev(nbr)] != MESH_NO_NEIGHBOR)
-    {
-      edge_neighbors_[edge_neighbors_[prev(nbr)]] = prev(nbr);
-    }
-
     // f3
-    const unsigned int f3 = faces_.size();
     tris.push_back(f3 / 3);
     faces_.push_back(ni);
     faces_.push_back(faces_[next(nbr)]);
@@ -1320,7 +1311,13 @@ TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
     edge_neighbors_.push_back(edge_neighbors_[next(nbr)]);
     edge_neighbors_.push_back(next(halfedge));
     
+    if (edge_neighbors_[next(nbr)] != MESH_NO_NEIGHBOR)
+    {
+      edge_neighbors_[edge_neighbors_[next(nbr)]] = next(f3);
+    }
+
     // f2
+    tris.push_back(nbr / 3);
     faces_[next(nbr)] = ni;
     edge_neighbors_[nbr] = f1;
     edge_neighbors_[next(nbr)] = f3+2;
@@ -1379,6 +1376,7 @@ TriSurfMesh<Basis>::insert_node_in_face_aux(typename Face::array_type &tris,
   edge_neighbors_.push_back(f1+1);
 
   // Must do last
+  tris.push_back(face);
   faces_[f0+2] = ni;
   edge_neighbors_[f0+1] = f1+2;
   edge_neighbors_[f0+2] = f2+1;
@@ -1409,9 +1407,12 @@ TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
   const double a2 = Cross(p - p0, p - p1).length2();
 
   unsigned int mask = 0;
-  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
-  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
-  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
+  //  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
+  //  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
+  //  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
+  if (a0 >= 0.001) { mask |= 1; }
+  if (a1 >= 0.001) { mask |= 2; }
+  if (a2 >= 0.001) { mask |= 4; }
 
   if (mask == 7)
   {
@@ -1422,6 +1423,7 @@ TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
   {
     // Tri is degenerate, just return first point.
     tris.clear();
+    tris.push_back(face);
     ni = faces_[face * 3 + 0];
     return true;
   }
@@ -1429,18 +1431,21 @@ TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
   else if (mask == 1)
   {
     tris.clear();
+    tris.push_back(face);
     ni = faces_[face * 3 + 0];
     return true;
   }
   else if (mask == 2)
   {
     tris.clear();
+    tris.push_back(face);
     ni = faces_[face * 3 + 1];
     return true;
   }
   else if (mask == 4)
   {
     tris.clear();
+    tris.push_back(face);
     ni = faces_[face * 3 + 2];
     return true;
   }
