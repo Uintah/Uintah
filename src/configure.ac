@@ -3965,7 +3965,7 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
   if test "$with_gdcm"; then
     dir="$with_gdcm"
   elif test "$with_insight"; then
-    dir="$with_insight"
+    dir="$with_insight/lib/InsightToolkit"
   else
     dir="/usr/local"
   fi
