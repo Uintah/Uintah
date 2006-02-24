@@ -53,6 +53,8 @@ SRCS := $(SRCS) $(SRCDIR)/BabelComponentModel.cc \
 	$(SRCDIR)/BabelComponentInstance.cc \
 	$(SRCDIR)/BabelComponentDescription.cc \
 	$(SRCDIR)/BabelPortInstance.cc
+
+# Get these from framework.make
 IORSRCS :=
 STUBSRCS :=
 IMPLSRCS :=
@@ -60,6 +62,7 @@ SKELSRCS :=
 include ${OUTPUTDIR}/framework.make
 SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
 
+# Get these from cca.make
 IORSRCS :=
 STUBSRCS :=
 IMPLSRCS :=

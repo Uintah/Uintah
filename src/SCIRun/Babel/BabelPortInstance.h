@@ -55,10 +55,6 @@
 
 namespace SCIRun {
 
-#ifdef SIDL_USE_UCXX
-  using namespace ucxx;
-#endif
-
 /**
  * \class BabelPortInstance
  *
@@ -70,11 +66,11 @@ public:
   enum PortType {  Uses, Provides  };
 
   BabelPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap& properties,
+		    const UCXX ::gov::cca::TypeMap& properties,
 		    PortType porttype);
   BabelPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap& properties,
-		    const gov::cca::Port& port,
+		    const UCXX ::gov::cca::TypeMap& properties,
+		    const UCXX ::gov::cca::Port& port,
 		    PortType porttype);
   virtual ~BabelPortInstance();
   virtual bool connect(PortInstance*);
@@ -90,7 +86,7 @@ public:
   void incrementUseCount();
   bool decrementUseCount();
 
-  const gov::cca::Port& getPort() { return port; }
+  const UCXX ::gov::cca::Port& getPort() { return port; }
 
 private:
   PortType porttype;
@@ -99,8 +95,8 @@ private:
   friend class BabelComponentInstance;
   std::string name;
   std::string type;
-  gov::cca::TypeMap properties;
-  gov::cca::Port port;
+  UCXX ::gov::cca::TypeMap properties;
+  UCXX ::gov::cca::Port port;
 
   int useCount;
 

@@ -45,7 +45,7 @@ namespace SCIRun {
 
 BabelPortInstance::BabelPortInstance(const std::string& name,
 				     const std::string& type,
-				     const gov::cca::TypeMap& properties,
+				     const UCXX ::gov::cca::TypeMap& properties,
 				     PortType porttype)
   : porttype(porttype), lock_connections("BabelPortInstance::connections lock"),
     name(name), type(type), properties(properties), useCount(0)
@@ -54,8 +54,8 @@ BabelPortInstance::BabelPortInstance(const std::string& name,
 
 BabelPortInstance::BabelPortInstance(const std::string& name,
 				     const std::string& type,
-				     const gov::cca::TypeMap& properties,
-				     const gov::cca::Port& port,
+				     const UCXX ::gov::cca::TypeMap& properties,
+				     const UCXX ::gov::cca::Port& port,
 				     PortType porttype)
   : porttype(porttype), lock_connections("BabelPortInstance::connections lock"),
     name(name), type(type), properties(properties),
