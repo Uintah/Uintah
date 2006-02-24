@@ -114,7 +114,6 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
       tmesh->insert_node_in_cell_2(newelems, newnode, elem, p);
 
       new_nodes.push_back(newnode);
-      new_elems.push_back(elem);
       for (unsigned int i = 0; i < newelems.size(); i++)
       {
         new_elems.push_back(newelems[i]);
@@ -226,7 +225,6 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
         tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[i]);
 
         new_nodes.push_back(newnode);
-        new_elems.push_back(elem);
         for (unsigned int i = 0; i < newelems.size(); i++)
         {
           new_elems.push_back(newelems[i]);
@@ -319,7 +317,6 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
           tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[j]);
 
           new_nodes.push_back(newnode);
-          new_elems.push_back(elem);
           for (unsigned int k = 0; k < newelems.size(); k++)
           {
             new_elems.push_back(newelems[k]);
@@ -431,7 +428,6 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
       tmesh->insert_node_in_cell_2(newelems, newnode, elem, p);
 
       new_nodes.push_back(newnode);
-      new_elems.push_back(elem);
       for (unsigned int i = 0; i < newelems.size(); i++)
       {
         new_elems.push_back(newelems[i]);

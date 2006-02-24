@@ -3056,128 +3056,61 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
   if (mask == 15) { return insert_node_in_cell(tets, ci, pi, p); }
 
   // If the tet is degenerate then we just return any corner and are done.
-  else if (mask == 0) { tets.clear(); pi = cells_[ci*4 + 0]; return true; }
+  else if (mask == 0)
+  {
+    tets.clear();
+    tets.push_back(ci);
+    pi = cells_[ci*4 + 0];
+    return true;
+  }
 
   // If we're on a corner, we're done.  The corner is the point.
-  else if (mask == 1) { tets.clear(); pi = cells_[ci*4 + 0]; return true; }
-  else if (mask == 2) { tets.clear(); pi = cells_[ci*4 + 1]; return true; }
-  else if (mask == 4) { tets.clear(); pi = cells_[ci*4 + 2]; return true; }
-  else if (mask == 8) { tets.clear(); pi = cells_[ci*4 + 3]; return true; }
+  else if (mask == 1)
+  {
+    tets.clear();
+    tets.push_back(ci);
+    pi = cells_[ci*4 + 0];
+    return true;
+  }
+  else if (mask == 2)
+  {
+    tets.clear();
+    tets.push_back(ci);
+    pi = cells_[ci*4 + 1];
+    return true;
+  }
+  else if (mask == 4)
+  {
+    tets.clear();
+    tets.push_back(ci);
+    pi = cells_[ci*4 + 2];
+    return true;
+  }
+  else if (mask == 8)
+  {
+    tets.clear();
+    tets.push_back(ci);
+    pi = cells_[ci*4 + 3];
+    return true;
+  }
 
   // If we're on an edge, we do an edge insert.
-  else if (mask == 3)
-  { /* on 0-1 edge */
-    const unsigned int skip1 = 2;
-    const unsigned int skip2 = 3;
+  else if (mask == 3 || mask == 5 || mask == 6 ||
+           mask == 9 || mask == 10 || mask == 12)
+  {
+    // The skips are the missing nodes, edgeoff is the half edge index.
+    unsigned int skip1, skip2, edgeoff;
+    if      (mask == 3)  { skip1 = 2; skip2 = 3; edgeoff = 0; } /* 0-1 edge */
+    else if (mask == 5)  { skip1 = 1; skip2 = 3; edgeoff = 1; } /* 0-2 edge */
+    else if (mask == 6)  { skip1 = 0; skip2 = 3; edgeoff = 3; } /* 1-2 edge */
+    else if (mask == 9)  { skip1 = 1; skip2 = 2; edgeoff = 2; } /* 0-3 edge */
+    else if (mask == 10) { skip1 = 0; skip2 = 2; edgeoff = 5; } /* 1-3 edge */
+    else if (mask == 12) { skip1 = 0; skip2 = 1; edgeoff = 4; } /* 2-3 edge */
+
     typename Cell::array_type nbrs;
     if (recurse)
     {
-      typename Edge::index_type edge = ci * 6 + 0;
-      get_cells(nbrs, edge);
-      pi = add_point(p);
-      tets.clear();
-    }
-    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
-    for (unsigned int i = 0; i < nbrs.size(); i++)
-    {
-      if (nbrs[i] != ci)
-      {
-        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
-      }
-    }
-  }
-  else if (mask == 5)
-  { /* on 0-2 edge */
-    const unsigned int skip1 = 1;
-    const unsigned int skip2 = 3;
-    typename Cell::array_type nbrs;
-    if (recurse)
-    {
-      typename Edge::index_type edge = ci * 6 + 1;
-      get_cells(nbrs, edge);
-      pi = add_point(p);
-      tets.clear();
-    }
-    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
-    for (unsigned int i = 0; i < nbrs.size(); i++)
-    {
-      if (nbrs[i] != ci)
-      {
-        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
-      }
-    }
-  }
-  else if (mask == 6)
-  { /* on 1-2 edge */
-    const unsigned int skip1 = 0;
-    const unsigned int skip2 = 3;
-    typename Cell::array_type nbrs;
-    if (recurse)
-    {
-      typename Edge::index_type edge = ci * 6 + 3;
-      get_cells(nbrs, edge);
-      pi = add_point(p);
-      tets.clear();
-    }
-    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
-    for (unsigned int i = 0; i < nbrs.size(); i++)
-    {
-      if (nbrs[i] != ci)
-      {
-        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
-      }
-    }
-  }
-  else if (mask == 9)
-  { /* on 0-3 edge */
-    const unsigned int skip1 = 1;
-    const unsigned int skip2 = 2;
-    typename Cell::array_type nbrs;
-    if (recurse)
-    {
-      typename Edge::index_type edge = ci * 6 + 2;
-      get_cells(nbrs, edge);
-      pi = add_point(p);
-      tets.clear();
-    }
-    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
-    for (unsigned int i = 0; i < nbrs.size(); i++)
-    {
-      if (nbrs[i] != ci)
-      {
-        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
-      }
-    }
-  }
-  else if (mask == 10)
-  { /* on 1-3 edge */
-    const unsigned int skip1 = 0;
-    const unsigned int skip2 = 2;
-    typename Cell::array_type nbrs;
-    if (recurse)
-    {
-      typename Edge::index_type edge = ci * 6 + 5;
-      get_cells(nbrs, edge);
-      pi = add_point(p);
-      tets.clear();
-    }
-    insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
-    for (unsigned int i = 0; i < nbrs.size(); i++)
-    {
-      if (nbrs[i] != ci)
-      {
-        insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
-      }
-    }
-  }
-  else if (mask == 12)
-  { /* on 2-3 edge */
-    const unsigned int skip1 = 0;
-    const unsigned int skip2 = 1;
-    typename Cell::array_type nbrs;
-    if (recurse)
-    {
-      typename Edge::index_type edge = ci * 6 + 4;
+      typename Edge::index_type edge = ci * 6 + edgeoff;
       get_cells(nbrs, edge);
       pi = add_point(p);
       tets.clear();
@@ -3193,51 +3126,14 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
   }
 
   // If we're on a face, we do a face insert.
-  else if (mask == 7)
-  { /* on 0 1 2 face */
-    const unsigned int skip = 3;
-    typename Face::index_type fi = ci * 4 + skip;
-    typename Face::index_type nbr;
-    const bool have_neighbor = get_neighbor(nbr, fi);
-    pi = add_point(p);
-    tets.clear();
-    insert_node_in_cell_face(tets, pi, ci, skip);
-    if (have_neighbor)
-    {
-      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
-    }
-  }
-  else if (mask == 11)
-  { /* on 0 1 3 face */
-    const unsigned int skip = 2;
-    typename Face::index_type fi = ci * 4 + skip;
-    typename Face::index_type nbr;
-    const bool have_neighbor = get_neighbor(nbr, fi);
-    pi = add_point(p);
-    tets.clear();
-    insert_node_in_cell_face(tets, pi, ci, skip);
-    if (have_neighbor)
-    {
-      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
-    }
-  }
-  else if (mask == 13)
-  { /* on 0 2 3 face */
-    const unsigned int skip = 1;
-    typename Face::index_type fi = ci * 4 + skip;
-    typename Face::index_type nbr;
-    const bool have_neighbor = get_neighbor(nbr, fi);
-    pi = add_point(p);
-    tets.clear();
-    insert_node_in_cell_face(tets, pi, ci, skip);
-    if (have_neighbor)
-    {
-      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
-    }
-  }
-  else if (mask == 14)
-  { /* on 1 2 3 face */
-    const unsigned int skip = 0;
+  else if (mask == 7 || mask == 11 || mask == 13 || mask == 14)
+  { 
+    unsigned int skip;
+    if      (mask == 7)  skip = 3; /* on 0 1 2 face */
+    else if (mask == 11) skip = 2; /* on 0 1 3 face */
+    else if (mask == 13) skip = 1; /* on 0 2 3 face */
+    else if (mask == 14) skip = 0; /* on 1 2 3 face */
+   
     typename Face::index_type fi = ci * 4 + skip;
     typename Face::index_type nbr;
     const bool have_neighbor = get_neighbor(nbr, fi);
