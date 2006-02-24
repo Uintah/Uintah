@@ -960,11 +960,11 @@ namespace Uintah {
       bool   d_dbgGnuPlot;
       bool   d_dbgTime_to_printData;
       bool   d_dbgSymmetryTest;
-      IntVector d_dbgBeginIndx;
-      IntVector d_dbgEndIndx;
+      vector<IntVector> d_dbgBeginIndx;
+      vector<IntVector> d_dbgEndIndx;
       IntVector d_dbgSymPlanes;
       vector<int> d_dbgMatls;
-      int d_dbgLevel; 
+      vector<int> d_dbgLevel; 
       int d_dbgSigFigs;
       
       //__________________________________
