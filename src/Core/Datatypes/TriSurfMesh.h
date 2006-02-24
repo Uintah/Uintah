@@ -1663,6 +1663,7 @@ TriSurfMesh<Basis>::compute_edges()
   }
 
   typename EdgeMapType2::iterator itr;
+  edges_.clear();
   edges_.reserve(edge_map.size());
   halfedge_to_edge_.resize(faces_.size());
   for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
