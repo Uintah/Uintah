@@ -187,10 +187,10 @@
       <dbg_timeStart>       1.00        </dbg_timeStart>
       <dbg_timeStop>        0.01        </dbg_timeStop>
       <dbg_outputInterval>  1e-9        </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,30,-1]  </dbg_BeginIndex>
-      <dbg_EndIndex>        [3,32,3]    </dbg_EndIndex>
+      <dbg_BeginIndex>     [[-1,30,-1]] </dbg_BeginIndex>
+      <dbg_EndIndex>       [[3,32,3]]   </dbg_EndIndex>
       <dbg_Matls>           [0]         </dbg_Matls>
-      <dbg_Level>           1        </dbg_Level>
+      <dbg_Level>           [1]        </dbg_Level>
       <debug label = "switchDebug_AMR_refine"/>
       <debug label = "switchDebug_AMR_refineInterface"/>
       
