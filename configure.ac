@@ -724,6 +724,16 @@ if test "$pkg_Ptolemy" = "yes"; then
   SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
 fi
 
+
+if test "$pkg_Insight" = "yes"; then
+  if test -z "$sci_required_insight"; then
+    AC_MSG_WARN(Insight is required by the Insight package.)
+    AC_MSG_WARN(Use the --with-insight=DIR option if Insight is not located in Thirdparty.)
+    sci_required_insight=yes
+  fi
+
+fi
+
 # Make sure the Package directories exist.
 #   Do an 'ls' of all files in the Packages directory and then grep for the
 #   package in this list.  (We used to just do a "test -d $package", but on
@@ -4500,9 +4510,14 @@ if test -e $freetype_bin/freetype-config; then
     AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
     includes=`$freetype_bin/freetype-config --cflags`
+elif test -e $sci_thirdparty_dir/bin/freetype-config; then
+    AC_MSG_RESULT(Using $sci_thirdparty_dir/bin/freetype-config to set freetype variables.)
+    found_freetype_config="yes"
+    includes=`$sci_thirdparty_dir/bin/freetype-config --cflags`
+    _sci_lib="$sci_thirdparty_lib"
 else
     AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.)
-    # try the 3P (for windows...)
+    # try the 3P for windows
     _sci_lib="$sci_thirdparty_lib"
     _sci_inc="$sci_thirdparty_include"
     includes=""
