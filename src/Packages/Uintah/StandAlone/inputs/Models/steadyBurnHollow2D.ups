@@ -125,13 +125,8 @@
 
       <checkpoint cycle = "10" timestepInterval = "3000"/>
    </DataArchiver>
-
-
-
    <Debug>
    </Debug>
-
-
 
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->

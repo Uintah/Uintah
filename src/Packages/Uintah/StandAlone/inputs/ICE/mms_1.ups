@@ -171,8 +171,8 @@
       <dbg_timeStart>       1.00   </dbg_timeStart>
       <dbg_timeStop>        0.01   </dbg_timeStop>
       <dbg_outputInterval>  1e-9   </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,25,0] </dbg_BeginIndex>
-      <dbg_EndIndex>        [3,27,1] </dbg_EndIndex>
+      <dbg_BeginIndex>   [[-1,25,0]] </dbg_BeginIndex>
+      <dbg_EndIndex>      [[3,27,1]] </dbg_EndIndex>
       <dbg_Matls>           [0]      </dbg_Matls>
       <dbg_SigFigs>         8        </dbg_SigFigs>
       <debug label = "switchDebug_vel_FC"/>
