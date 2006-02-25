@@ -101,10 +101,6 @@
    </DataArchiver>
 
    <Debug>
-       <dbg_timeStart>       99.9   </dbg_timeStart>
-       <dbg_timeStop>        99.99  </dbg_timeStop>
-       <dbg_outputInterval>  1e-4   </dbg_outputInterval>
-       <dbg_Matls>           [0,1]   </dbg_Matls>
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
