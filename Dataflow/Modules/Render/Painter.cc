@@ -531,7 +531,11 @@ Painter::render_window(SliceWindow &window) {
   window.setup_gl_view();
   if (window.autoview_) {
     window.autoview_ = false;
+    // with EXPERIMENTAL_TCL_LOCK, we need to unlock/lock here to avoid deadlock
+    // in the case where you're trying to draw the window while you're creating it
+    gui->unlock();
     autoview(window);
+    gui->lock();
     window.setup_gl_view();
   }
   CHECK_OPENGL_ERROR();
