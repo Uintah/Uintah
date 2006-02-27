@@ -5,14 +5,6 @@
 #include <MsqError.hpp>
 #include <iostream>
 
-// IMPORTANT NOTE *****************
-// * This file converts between mesquite
-// * vectors and cubit vectors by exploiting
-// * the fact that they have the same layout
-// * in memory.  If problems arise, we may
-// * want to switch to safer code.
-// **********************************
-
 namespace SCIRun {
 
 using namespace std;

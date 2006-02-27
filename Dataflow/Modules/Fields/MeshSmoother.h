@@ -50,8 +50,15 @@
 #include <SmartLaplacianSmoother.hpp>
 #include <TerminationCriterion.hpp>
 #include <TopologyInfo.hpp>
+#include <UntangleBetaQualityMetric.hpp>
+#include <TerminationCriterion.hpp>
+#include <IdealWeightInverseMeanRatio.hpp>
+#include <LPtoPTemplate.hpp>
+#include <FeasibleNewton.hpp>
+#include <ConjugateGradient.hpp>
 #include <Dataflow/Modules/Fields/MesquiteMesh.h>
 #include <Dataflow/Modules/Fields/MesquiteDomain.h>
+#include <ctime>
 
 namespace SCIRun {
 
@@ -70,20 +77,32 @@ public:
 					    string ext);
 };
 
-
 template <class FIELD>
 class MeshSmootherAlgoTet : public MeshSmootherAlgo
 {
 public:
   //! virtual interface. 
   virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+private:
+  FieldHandle smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh );
+  FieldHandle shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh );
 };
 
 template <class FIELD>
 FieldHandle MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
 {
+  return smart_laplacian_smoother( mod, fieldh );
+//  return shape_improvement_wrapper( mod, fieldh );
+}
+
+template <class FIELD>
+FieldHandle MeshSmootherAlgoTet<FIELD>::smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh )
+{
 //need to make a copy of the field so that this one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
+  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
+  ofield->copy_properties( fieldh.get_rep() );
+
   double cull_eps=1e-4;
   Mesquite::MsqError err;
   Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
@@ -109,19 +128,20 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHand
     return field;
   }
 
-  MesquiteMesh<FIELD> entity_mesh( field );
+  MesquiteMesh<FIELD> entity_mesh( ofield );
     // Create a MeshDomain
-  MesquiteDomain domain;
+//  MesquiteDomain domain;
         
-//           // run smoother
+    // run smoother
   if(err)
   {
-    mod->error( "Error occured during Mesquite initizlization\n" );
+    mod->error( "Error occured during Mesquite initialization\n" );
     return field;
   }
   else
   {
-    queue.run_instructions(&entity_mesh, &domain, err); 
+//    queue.run_instructions( &entity_mesh, &domain, err ); 
+    queue.run_instructions( &entity_mesh, err ); 
     MSQ_CHKERR(err);
     if(err)
     {
@@ -130,7 +150,137 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHand
     }
   }
 
-  return field;
+  return ofield;
+}
+
+template <class FIELD>
+FieldHandle MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh )
+{
+//need to make a copy of the field so that this one is not damaged...
+  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
+  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
+  ofield->copy_properties( fieldh.get_rep() );
+
+    //arbitrary defined variables
+  double untangle_beta_val=1e-8;
+  double unt_successive_eps=1e-10;
+  double abs_successive_eps=1.e-3;
+  double grad_norm=1.e-6;
+  double max_cpu_time=300; //5 minutes
+//  CpuTimer cpu_timer;
+  clock_t start = clock();
+  
+  Mesquite::MsqError err;
+  Mesquite::InstructionQueue queue_untangle;
+  Mesquite::InstructionQueue queue_shape;
+
+  queue_untangle.disable_automatic_quality_assessment();
+  queue_untangle.disable_automatic_midnode_adjustment();
+  queue_shape.disable_automatic_quality_assessment();
+  queue_shape.disable_automatic_midnode_adjustment();
+  
+      //set up untangle metric and function 
+  Mesquite::UntangleBetaQualityMetric untangle_metric(untangle_beta_val);
+  Mesquite::LPtoPTemplate untangle_function(&untangle_metric, 2, err);
+  untangle_function.set_gradient_type(
+    Mesquite::ObjectiveFunction::ANALYTICAL_GRADIENT);
+    //use cg for the untangle function
+  Mesquite::ConjugateGradient untangle_opt(&untangle_function, err);
+
+  untangle_opt.set_patch_type(Mesquite::PatchData::GLOBAL_PATCH, err,1 ,1);
+  Mesquite::TerminationCriterion untangle_inner, untangle_outer;
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::QUALITY_IMPROVEMENT_ABSOLUTE,0.0,err);
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::SUCCESSIVE_IMPROVEMENTS_ABSOLUTE,unt_successive_eps,err);
+  untangle_outer.add_criterion_type_with_int(Mesquite::TerminationCriterion::NUMBER_OF_ITERATES,1,err);
+  untangle_opt.set_inner_termination_criterion(&untangle_inner);
+  untangle_opt.set_outer_termination_criterion(&untangle_outer);
+
+      //set up shape metric and function
+  Mesquite::IdealWeightInverseMeanRatio mean_ratio(err);
+  
+  mean_ratio.set_averaging_method(Mesquite::QualityMetric::SUM, err);
+  Mesquite::LPtoPTemplate obj_func(&mean_ratio, 1, err);
+  obj_func.set_gradient_type( Mesquite::ObjectiveFunction::ANALYTICAL_GRADIENT);
+  obj_func.set_dividing_by_n(true);
+
+    //use feas. newt.
+  Mesquite::FeasibleNewton shape_opt( &obj_func );
+  shape_opt.set_patch_type(Mesquite::PatchData::GLOBAL_PATCH, err);
+  Mesquite::TerminationCriterion shape_inner, shape_outer;
+  shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::GRADIENT_L2_NORM_ABSOLUTE,grad_norm,err);
+  shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::SUCCESSIVE_IMPROVEMENTS_ABSOLUTE,abs_successive_eps,err);
+  shape_outer.add_criterion_type_with_int(Mesquite::TerminationCriterion::NUMBER_OF_ITERATES,1,err);
+  shape_opt.set_inner_termination_criterion(&shape_inner);
+  shape_opt.set_outer_termination_criterion(&shape_outer);
+
+    //add both to the queue
+  queue_untangle.set_master_quality_improver(&untangle_opt, err);
+  queue_shape.set_master_quality_improver(&shape_opt,err);
+  if(err)
+  {
+    mod->error( "Unexpected error from Mesquite code." );
+//    PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
+    return field;  
+  }
+  
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
+//     if(cur_ent==NULL){
+//       PRINT_ERROR("Mesquite Smoother recieved null pointer to entity.\n");
+//       PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
+//       return CUBIT_FAILURE;
+//     }
+//     else if(!cur_ent->is_meshed()){
+//       PRINT_WARNING( "Smoother called for %s (%s %d) which is not meshed\n",
+//                      cur_ent->entity_name().c_str(),
+//                      cur_ent->class_name(), cur_ent->id() );
+//     }
+//     else
+//     {
+
+  MesquiteMesh<FIELD> entity_mesh( ofield );
+    // Create a MeshDomain
+  MesquiteDomain domain;
+        
+    // run smoother
+  if(err)
+  {
+    mod->error( "Error occured during Mesquite initialization" );
+    return field;
+  } 
+  clock_t finish = clock();
+  double total_time = (finish - start)/(double)CLOCKS_PER_SEC;
+  
+//  cpu_timer.cpu_secs();
+        
+//      queue_untangle.run_instructions(&entity_mesh, &domain, err);
+  queue_untangle.run_instructions( &entity_mesh, err );
+  MSQ_CHKERR(err);
+//  double time_remaining=max_cpu_time-cpu_timer.cpu_secs();
+  double time_remaining = max_cpu_time - total_time;
+  if( err )
+  {
+    mod->error( "Error occurred during Mesquite untangling." );
+    return field;
+  }
+  else if ( time_remaining <= 0.0)
+  {
+    mod->error( "Allotted time expired before shape optimization." );
+  }
+  else if (untangle_inner.get_current_function_value()>1.e-12)
+  {
+    mod->error( "Objective function was not zero.  Untangle unsuccessful." );
+  }
+  else
+  {
+      //add cpu timer
+    shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,time_remaining,err);
+//          queue_shape.run_instructions(&entity_mesh, &domain, err);  
+    queue_shape.run_instructions( &entity_mesh, err );
+    MSQ_CHKERR(err);
+  }
+  
+  return ofield;
 }
 
 template <class FIELD>
@@ -139,13 +289,26 @@ class MeshSmootherAlgoHex : public MeshSmootherAlgo
 public:
     //! virtual interface. 
   virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+private:
+  FieldHandle smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh );
+  FieldHandle shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh );
 };
 
 template <class FIELD>
 FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
-{  
+{
+  return smart_laplacian_smoother( mod, fieldh );
+//  return shape_improvement_wrapper( mod, fieldh );
+}
+
+template <class FIELD>
+FieldHandle MeshSmootherAlgoHex<FIELD>::smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh )
+{
 //  need to make a copy of the field, so that the previous one is not damaged...
-  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
+  FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
+  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
+  ofield->copy_properties( fieldh.get_rep() );
+
   double cull_eps = 1e-4;
   Mesquite::MsqError err;
   Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
@@ -162,28 +325,26 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHand
   queue.disable_automatic_quality_assessment();
   queue.disable_automatic_midnode_adjustment();
     
-  queue.set_master_quality_improver(&sl_smoother, err);  
+  queue.set_master_quality_improver( &sl_smoother, err );  
     
-  if(err)
+  if( err )
   {
     mod->error( "Unexpected error from Mesquite code.\n" );
     return field;
   }
-  cout << "Setup Mesquite mesh interface..." << endl;
 
-  MesquiteMesh<FIELD> entity_mesh( field );
-  cout << "Setup Mesquite mesh domain..." << endl;
-  MesquiteDomain domain;
+  MesquiteMesh<FIELD> entity_mesh( ofield );
+//  MesquiteDomain domain;
 
-  cout << "Smoothing mesh..." << endl;        
   if(err)
   {
-    mod->error( "Error occured during Mesquite initizlization\n" );
+    mod->error( "Error occured during Mesquite initialization\n" );
     return field;
   }
   else
   {
-    queue.run_instructions(&entity_mesh, &domain, err); 
+//    queue.run_instructions( &entity_mesh, &domain, err ); 
+    queue.run_instructions( &entity_mesh, err ); 
     MSQ_CHKERR(err);
     if(err)
     {
@@ -192,9 +353,138 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHand
     }
   }
 
-  return field;
+  return ofield;
 }
 
+template <class FIELD>
+FieldHandle MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh )
+{
+//need to make a copy of the field so that this one is not damaged...
+  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
+  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
+  ofield->copy_properties( fieldh.get_rep() );
+
+    //arbitrary defined variables
+  double untangle_beta_val=1e-8;
+  double unt_successive_eps=1e-10;
+  double abs_successive_eps=1.e-3;
+  double grad_norm=1.e-6;
+  double max_cpu_time=300; //5 minutes
+//  CpuTimer cpu_timer;
+  clock_t start = clock();
+  
+  Mesquite::MsqError err;
+  Mesquite::InstructionQueue queue_untangle;
+  Mesquite::InstructionQueue queue_shape;
+
+  queue_untangle.disable_automatic_quality_assessment();
+  queue_untangle.disable_automatic_midnode_adjustment();
+  queue_shape.disable_automatic_quality_assessment();
+  queue_shape.disable_automatic_midnode_adjustment();
+  
+      //set up untangle metric and function 
+  Mesquite::UntangleBetaQualityMetric untangle_metric(untangle_beta_val);
+  Mesquite::LPtoPTemplate untangle_function(&untangle_metric, 2, err);
+  untangle_function.set_gradient_type(
+    Mesquite::ObjectiveFunction::ANALYTICAL_GRADIENT);
+    //use cg for the untangle function
+  Mesquite::ConjugateGradient untangle_opt(&untangle_function, err);
+
+  untangle_opt.set_patch_type(Mesquite::PatchData::GLOBAL_PATCH, err,1 ,1);
+  Mesquite::TerminationCriterion untangle_inner, untangle_outer;
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::QUALITY_IMPROVEMENT_ABSOLUTE,0.0,err);
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::SUCCESSIVE_IMPROVEMENTS_ABSOLUTE,unt_successive_eps,err);
+  untangle_outer.add_criterion_type_with_int(Mesquite::TerminationCriterion::NUMBER_OF_ITERATES,1,err);
+  untangle_opt.set_inner_termination_criterion(&untangle_inner);
+  untangle_opt.set_outer_termination_criterion(&untangle_outer);
+
+      //set up shape metric and function
+  Mesquite::IdealWeightInverseMeanRatio mean_ratio(err);
+  
+  mean_ratio.set_averaging_method(Mesquite::QualityMetric::SUM, err);
+  Mesquite::LPtoPTemplate obj_func(&mean_ratio, 1, err);
+  obj_func.set_gradient_type( Mesquite::ObjectiveFunction::ANALYTICAL_GRADIENT);
+  obj_func.set_dividing_by_n(true);
+
+    //use feas. newt.
+  Mesquite::FeasibleNewton shape_opt( &obj_func );
+  shape_opt.set_patch_type(Mesquite::PatchData::GLOBAL_PATCH, err);
+  Mesquite::TerminationCriterion shape_inner, shape_outer;
+  shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::GRADIENT_L2_NORM_ABSOLUTE,grad_norm,err);
+  shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::SUCCESSIVE_IMPROVEMENTS_ABSOLUTE,abs_successive_eps,err);
+  shape_outer.add_criterion_type_with_int(Mesquite::TerminationCriterion::NUMBER_OF_ITERATES,1,err);
+  shape_opt.set_inner_termination_criterion(&shape_inner);
+  shape_opt.set_outer_termination_criterion(&shape_outer);
+
+    //add both to the queue
+  queue_untangle.set_master_quality_improver(&untangle_opt, err);
+  queue_shape.set_master_quality_improver(&shape_opt,err);
+  if(err)
+  {
+    mod->error( "Unexpected error from Mesquite code." );
+//    PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
+    return field;  
+  }
+  
+  untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
+//     if(cur_ent==NULL){
+//       PRINT_ERROR("Mesquite Smoother recieved null pointer to entity.\n");
+//       PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
+//       return CUBIT_FAILURE;
+//     }
+//     else if(!cur_ent->is_meshed()){
+//       PRINT_WARNING( "Smoother called for %s (%s %d) which is not meshed\n",
+//                      cur_ent->entity_name().c_str(),
+//                      cur_ent->class_name(), cur_ent->id() );
+//     }
+//     else
+//     {
+
+  MesquiteMesh<FIELD> entity_mesh( ofield );
+    // Create a MeshDomain
+  MesquiteDomain domain;
+        
+    // run smoother
+  if(err)
+  {
+    mod->error( "Error occured during Mesquite initialization" );
+    return field;
+  } 
+  clock_t finish = clock();
+  double total_time = (finish - start)/(double)CLOCKS_PER_SEC;
+  
+//  cpu_timer.cpu_secs();
+        
+//      queue_untangle.run_instructions(&entity_mesh, &domain, err);
+  queue_untangle.run_instructions( &entity_mesh, err );
+  MSQ_CHKERR(err);
+//  double time_remaining=max_cpu_time-cpu_timer.cpu_secs();
+  double time_remaining = max_cpu_time - total_time;
+  if( err )
+  {
+    mod->error( "Error occurred during Mesquite untangling." );
+    return field;
+  }
+  else if ( time_remaining <= 0.0)
+  {
+    mod->error( "Allotted time expired before shape optimization." );
+  }
+  else if (untangle_inner.get_current_function_value()>1.e-12)
+  {
+    mod->error( "Objective function was not zero.  Untangle unsuccessful." );
+  }
+  else
+  {
+      //add cpu timer
+    shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,time_remaining,err);
+//          queue_shape.run_instructions(&entity_mesh, &domain, err);  
+    queue_shape.run_instructions( &entity_mesh, err );
+    MSQ_CHKERR(err);
+  }
+  
+  return ofield;
+}
 
 } // end namespace SCIRun
 
