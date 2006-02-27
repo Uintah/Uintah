@@ -380,14 +380,16 @@ namespace Uintah {
                                        constCCVariable<double>& sp_vol_CC,
                                        constCCVariable<Vector>& vel_CC,
                                        constCCVariable<double>& press_CC,
-                                       T& vel_FC);
+                                       T& vel_FC,
+                                       T& gradP_FC);
                                        
       template<class T> void updateVelFace(int dir, CellIterator it,
                                        IntVector adj_offset,double dx,
                                        double delT,
                                        constCCVariable<double>& sp_vol_CC,
                                        constCCVariable<double>& press_CC,
-                                       T& vel_FC);
+                                       T& vel_FC,
+                                       T& grad_dp_FC);
                                        
       template<class V, class T>
         void add_vel_FC_exchange( CellIterator it,
