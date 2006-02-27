@@ -154,6 +154,20 @@ ICELabel::ICELabel()
     VarLabel::create("TempY_FC",  SFCYVariable<double>::getTypeDescription() );
   TempZ_FCLabel     = 
     VarLabel::create("TempZ_FC",  SFCZVariable<double>::getTypeDescription() );
+  grad_P_XFCLabel   =
+    VarLabel::create("grad_P_XFC",SFCXVariable<double>::getTypeDescription() );
+  grad_P_YFCLabel   =
+    VarLabel::create("grad_P_YFC",SFCYVariable<double>::getTypeDescription() );
+  grad_P_ZFCLabel   =
+    VarLabel::create("grad_P_ZFC",SFCZVariable<double>::getTypeDescription() );
+  grad_dp_XFCLabel   =
+    VarLabel::create("grad_dp_XFC",SFCXVariable<double>::getTypeDescription() );
+  grad_dp_YFCLabel   =
+    VarLabel::create("grad_dp_YFC",SFCYVariable<double>::getTypeDescription() );
+  grad_dp_ZFCLabel   =
+    VarLabel::create("grad_dp_ZFC",SFCZVariable<double>::getTypeDescription() );
+    
+  // these should are for rate form and should be removed.  
   press_diffX_FCLabel = VarLabel::create("press_diffX_FC",
                                   SFCXVariable<double>::getTypeDescription() );
   press_diffY_FCLabel = VarLabel::create("press_diffY_FC",
@@ -354,6 +368,12 @@ ICELabel::~ICELabel()
     VarLabel::destroy(TempX_FCLabel);
     VarLabel::destroy(TempY_FCLabel);
     VarLabel::destroy(TempZ_FCLabel);
+    VarLabel::destroy(grad_P_XFCLabel);
+    VarLabel::destroy(grad_P_YFCLabel);
+    VarLabel::destroy(grad_P_ZFCLabel);
+    VarLabel::destroy(grad_dp_XFCLabel);
+    VarLabel::destroy(grad_dp_YFCLabel);
+    VarLabel::destroy(grad_dp_ZFCLabel);
     VarLabel::destroy(press_diffX_FCLabel);
     VarLabel::destroy(press_diffY_FCLabel);
     VarLabel::destroy(press_diffZ_FCLabel);

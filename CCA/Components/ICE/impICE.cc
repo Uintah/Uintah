@@ -232,6 +232,9 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   t->computes(lb->uvel_FCLabel);
   t->computes(lb->vvel_FCLabel);
   t->computes(lb->wvel_FCLabel);
+  t->computes(lb->grad_dp_XFCLabel);
+  t->computes(lb->grad_dp_YFCLabel);    // debugging variables
+  t->computes(lb->grad_dp_ZFCLabel);
   sched->addTask(t, patches, all_matls);
   
   //__________________________________
@@ -364,7 +367,10 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   //__________________________________
   //  what's produced from this task
   t->computes(lb->press_CCLabel,     press_matl,oims);
-  t->modifies(lb->sum_imp_delPLabel, press_matl,oims);  
+  t->computes(lb->grad_dp_XFCLabel,  press_matl,oims);
+  t->computes(lb->grad_dp_YFCLabel,  press_matl,oims);
+  t->computes(lb->grad_dp_ZFCLabel,  press_matl,oims);
+  t->modifies(lb->sum_imp_delPLabel, press_matl,oims);
   t->modifies(lb->term2Label,        one_matl,  oims);
   t->modifies(lb->rhsLabel,          one_matl,  oims);   
 
@@ -1144,6 +1150,13 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                     lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // wvel_FC
                     lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace);
+                    
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_XFC
+                    lb->grad_dp_XFCLabel,     patch_sub, d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_YFC
+                    lb->grad_dp_YFCLabel,     patch_sub, d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_ZFC
+                    lb->grad_dp_ZFCLabel,     patch_sub, d_press_matl, replace);
                      
   ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
                     lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
