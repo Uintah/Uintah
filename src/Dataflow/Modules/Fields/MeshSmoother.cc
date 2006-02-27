@@ -110,8 +110,6 @@ void MeshSmoother::execute()
   else if (mtd->get_name().find("HexVolMesh") != string::npos)
   {
     ext = "Hex";
-//    error("HexVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting a SCIRun::FieldsGeometry::HexToTet module upstream.");
-//    return;
   }
   else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
   {
@@ -134,17 +132,6 @@ void MeshSmoother::execute()
     return;
   }
 
-//   if (!ifieldhandle->query_scalar_interface(this).get_rep())
-//   {
-//     error("Input field must contain scalar data.");
-//     return;
-//   }
-  
-//   if (ifieldhandle->basis_order() != 1)
-//   {
-//     error("Isoclipping can only be done for fields with data at nodes.  Note: you can insert a ChangeFieldDataAt module (and an ApplyInterpMatrix module) upstream to push element data to the nodes.");
-//     return;
-//   }
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = MeshSmootherAlgo::get_compile_info(ftd, ext);
   Handle<MeshSmootherAlgo> algo;
@@ -154,16 +141,10 @@ void MeshSmoother::execute()
     return;
   }
 
-//   FieldHandle ofield = algo->execute(this, ifieldhandle,
-// 				     isoval, gui_lte_.get(),
-// 				     interp);
   FieldHandle ofield = algo->execute(this, ifieldhandle);
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Smoothed");
   ofield_port->send_and_dereference(ofield);
-
-//   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-//   omatrix_port->send_and_dereference(interp);
 }
 
 CompileInfoHandle
@@ -188,7 +169,6 @@ MeshSmootherAlgo::get_compile_info(const TypeDescription *fsrc,
 
   return rval;
 }
-
 
 } // End namespace SCIRun
 

@@ -1149,14 +1149,12 @@ private:
 
 };
 
-
-
 template <class FIELD>
 FieldHandle
 IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 			       double isoval, bool lte, MatrixHandle &interp)
 {
-  mod->error( "The IsoClip module for hexes is still under development..." );
+  mod->warning( "The IsoClip module for hexes is still under development..." );
   
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh =
