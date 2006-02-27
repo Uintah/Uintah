@@ -98,7 +98,7 @@ NetworkIO::gui_add_subnet_at_position(const string &mod_id,
 
 
   ostringstream cmmd1;
-  cmmd1 << "set Subnet(Subnet" << sn_count_ << "_Name) " << module;
+  cmmd1 << "set Subnet(Subnet" << sn_count_ << "_Name) \"" << module << "\"";
   gui->eval(cmmd1.str());
 
 
