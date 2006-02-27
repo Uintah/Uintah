@@ -1084,6 +1084,9 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
   t->computes(lb->uvel_FCLabel);
   t->computes(lb->vvel_FCLabel);
   t->computes(lb->wvel_FCLabel);
+  t->computes(lb->grad_P_XFCLabel);
+  t->computes(lb->grad_P_YFCLabel);
+  t->computes(lb->grad_P_ZFCLabel);
   sched->addTask(t, patches, all_matls);
 }
 /* _____________________________________________________________________
@@ -2785,7 +2788,8 @@ template<class T> void ICE::computeVelFace(int dir,
                                            constCCVariable<double>& sp_vol_CC,
                                            constCCVariable<Vector>& vel_CC,
                                            constCCVariable<double>& press_CC,
-                                           T& vel_FC)
+                                           T& vel_FC,
+                                           T& grad_P_FC)
 {
   for(;!it.done(); it++){
     IntVector R = *it;
@@ -2801,9 +2805,10 @@ template<class T> void ICE::computeVelFace(int dir,
     // pressure term           
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
                              (sp_vol_CC[L] + sp_vol_CC[R]); 
-    
-    double term2 = delT * sp_vol_brack * (press_CC[R] - press_CC[L])/dx;
-    
+                             
+    grad_P_FC[R] = (press_CC[R] - press_CC[L])/dx;
+    double term2 = delT * sp_vol_brack * grad_P_FC[R];
+     
     //__________________________________
     // gravity term
     double term3 =  delT * gravity;
@@ -2881,18 +2886,26 @@ void ICE::computeVel_FC(const ProcessorGroup*,
         printVector(indx,patch,1, desc.str(), "vel_CC",  0,  vel_CC);
       }
   #endif
-      SFCXVariable<double> uvel_FC;
-      SFCYVariable<double> vvel_FC;
-      SFCZVariable<double> wvel_FC;
+      SFCXVariable<double> uvel_FC, grad_P_XFC;
+      SFCYVariable<double> vvel_FC, grad_P_YFC;
+      SFCZVariable<double> wvel_FC, grad_P_ZFC;
 
       new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
-      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);   
+      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);
+      // debugging variables
+      new_dw->allocateAndPut(grad_P_XFC, lb->grad_P_XFCLabel, indx, patch);
+      new_dw->allocateAndPut(grad_P_YFC, lb->grad_P_YFCLabel, indx, patch);
+      new_dw->allocateAndPut(grad_P_ZFC, lb->grad_P_ZFCLabel, indx, patch);   
       
       IntVector lowIndex(patch->getSFCXLowIndex());
       uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
       vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
+      
+      grad_P_XFC.initialize(0.0);
+      grad_P_YFC.initialize(0.0);
+      grad_P_ZFC.initialize(0.0);
       
       vector<IntVector> adj_offset(3);
       adj_offset[0] = IntVector(-1, 0, 0);    // X faces
@@ -2911,17 +2924,17 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
                                        adj_offset[0],dx[0],delT,gravity[0],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       uvel_FC);
+                                       uvel_FC, grad_P_XFC);
 
       computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
                                        adj_offset[1],dx[1],delT,gravity[1],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       vvel_FC);
+                                       vvel_FC, grad_P_YFC);
 
       computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
                                        adj_offset[2],dx[2],delT,gravity[2],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       wvel_FC);
+                                       wvel_FC, grad_P_ZFC);
 
       //__________________________________
       // (*)vel_FC BC are updated in 
@@ -2933,7 +2946,11 @@ void ICE::computeVel_FC(const ProcessorGroup*,
         desc <<"BOT_computeVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
         printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC); 
+        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "grad_P_XFC", grad_P_XFC);
+        printData_FC( indx, patch,1, desc.str(), "grad_P_YFC", grad_P_YFC);
+        printData_FC( indx, patch,1, desc.str(), "grad_P_ZFC", grad_P_ZFC); 
+        
       }
     } // matls loop
   }  // patch loop
@@ -2947,7 +2964,8 @@ template<class T> void ICE::updateVelFace(int dir, CellIterator it,
                                           double delT,
                                           constCCVariable<double>& sp_vol_CC,
                                           constCCVariable<double>& imp_delP,
-                                          T& vel_FC)
+                                          T& vel_FC,
+                                          T& grad_dp_FC)
 {
   for(;!it.done(); it++){
     IntVector R = *it;
@@ -2958,7 +2976,8 @@ template<class T> void ICE::updateVelFace(int dir, CellIterator it,
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
                              (sp_vol_CC[L] + sp_vol_CC[R]); 
     
-    double term2 = delT * sp_vol_brack * (imp_delP[R] - imp_delP[L])/dx;
+    grad_dp_FC[R] = (imp_delP[R] - imp_delP[L])/dx;
+    double term2 = delT * sp_vol_brack * grad_dp_FC[R];
     
     vel_FC[R] -= term2;
   } 
@@ -3010,9 +3029,9 @@ void ICE::updateVel_FC(const ProcessorGroup*,
       constCCVariable<double> sp_vol_CC;         
       pNewDW->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
-      SFCXVariable<double> uvel_FC;
-      SFCYVariable<double> vvel_FC;
-      SFCZVariable<double> wvel_FC;
+      SFCXVariable<double> uvel_FC, grad_dp_XFC;
+      SFCYVariable<double> vvel_FC, grad_dp_YFC;
+      SFCZVariable<double> wvel_FC, grad_dp_ZFC;
       
       constSFCXVariable<double> uvel_FC_old;
       constSFCYVariable<double> vvel_FC_old;
@@ -3024,7 +3043,11 @@ void ICE::updateVel_FC(const ProcessorGroup*,
       
       new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
-      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);   
+      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch); 
+      
+      new_dw->allocateAndPut(grad_dp_XFC, lb->grad_dp_XFCLabel, indx, patch);
+      new_dw->allocateAndPut(grad_dp_YFC, lb->grad_dp_YFCLabel, indx, patch);
+      new_dw->allocateAndPut(grad_dp_ZFC, lb->grad_dp_ZFCLabel, indx, patch);  
       
       uvel_FC.copy(uvel_FC_old);
       vvel_FC.copy(vvel_FC_old);
@@ -3045,17 +3068,17 @@ void ICE::updateVel_FC(const ProcessorGroup*,
       updateVelFace<SFCXVariable<double> >(0, XFC_iterator,
                                      adj_offset[0],dx[0],delT,
                                      sp_vol_CC,imp_delP,
-                                     uvel_FC);
+                                     uvel_FC, grad_dp_XFC);
 
       updateVelFace<SFCYVariable<double> >(1, YFC_iterator,
                                      adj_offset[1],dx[1],delT,
                                      sp_vol_CC,imp_delP,
-                                     vvel_FC);
+                                     vvel_FC, grad_dp_YFC);
 
       updateVelFace<SFCZVariable<double> >(2, ZFC_iterator,
                                      adj_offset[2],dx[2],delT,
                                      sp_vol_CC,imp_delP,
-                                     wvel_FC);
+                                     wvel_FC, grad_dp_ZFC);
 
       //__________________________________
       // (*)vel_FC BC are updated in 
@@ -3067,7 +3090,10 @@ void ICE::updateVel_FC(const ProcessorGroup*,
         desc <<"BOT_updateVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
         printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC); 
+        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "grad_dp_XFC", grad_dp_XFC);
+        printData_FC( indx, patch,1, desc.str(), "grad_dp_YFC", grad_dp_YFC);
+        printData_FC( indx, patch,1, desc.str(), "grad_dp_ZFC", grad_dp_ZFC);
       }
     } // matls loop
   }  // patch loop
@@ -3717,9 +3743,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     constSFCXVariable<double> pressX_FC;
     constSFCYVariable<double> pressY_FC;
     constSFCZVariable<double> pressZ_FC;
-    constSFCXVariable<double> press_diffX_FC;
-    constSFCYVariable<double> press_diffY_FC;
-    constSFCZVariable<double> press_diffZ_FC;
+    
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn = Ghost::None;  
     new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch, gac, 1);
