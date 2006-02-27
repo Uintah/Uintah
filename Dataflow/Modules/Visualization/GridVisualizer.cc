@@ -109,6 +109,7 @@ protected:
   GuiString level6_node_color;
   GuiInt plane_on; // the selection plane
   GuiInt node_select_on; // the nodes
+  GuiInt show_boundary_values;
   GuiInt use_default_radius;
   GuiDouble default_radius;
   GuiDouble radius;
@@ -154,6 +155,7 @@ GridVisualizer::GridVisualizer(GuiContext* ctx):
   level6_node_color(ctx->subVar("level6_node_color")),
   plane_on(ctx->subVar("plane_on")),
   node_select_on(ctx->subVar("node_select_on")),
+  show_boundary_values(ctx->subVar("show_boundary_vals")),
   use_default_radius(ctx->subVar("use_default_radius")),
   default_radius(ctx->subVar("default_radius")),
   radius(ctx->subVar("radius")),
@@ -419,6 +421,7 @@ GridVisualizer::execute()
   int nu,nv;
   double rad = 1;
   bool node_on = node_select_on.get() != 0;
+  bool boundary_on = show_boundary_values.get() == 1;
   Box widget_box;
 
   if (node_on) {
@@ -461,11 +464,20 @@ GridVisualizer::execute()
       case NC_VAR:
         //------------------------------------
         // for each node in the patch
-        for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-          nodes->add(patch->nodePosition(*iter),
-                     node_color[color_index].get_rep());
+        if( boundary_on ){ //include boundary cells
+          for(NodeIterator iter = NodeIterator( patch->getNodeLowIndex(),
+                                                patch->getNodeHighIndex());
+              !iter.done(); iter++){
+            nodes->add(patch->nodePosition(*iter),
+                       node_color[color_index].get_rep());
+          }
+        } else {
+          for(NodeIterator iter = patch->getNodeIterator();
+              !iter.done(); iter++){
+            nodes->add(patch->nodePosition(*iter),
+                       node_color[color_index].get_rep());
+          }
         }
-        
         //------------------------------------
         // for each node in the patch that intersects the widget space
         if(node_on) {
@@ -482,9 +494,18 @@ GridVisualizer::execute()
       case CC_VAR:
         //------------------------------------
         // for each node in the patch
-        for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-          nodes->add(patch->cellPosition(*iter),
-                     node_color[color_index].get_rep());
+        if(boundary_on){ // include boundary cells
+          for( CellIterator iter = patch->getExtraCellIterator();
+               !iter.done(); iter++){
+            nodes->add(patch->cellPosition(*iter),
+                       node_color[color_index].get_rep());
+          }
+        } else { // don't include boundary cells
+          for(CellIterator iter = patch->getCellIterator();
+              !iter.done(); iter++){
+            nodes->add(patch->cellPosition(*iter),
+                       node_color[color_index].get_rep());
+          }
         }
         
         //------------------------------------
