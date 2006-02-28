@@ -222,23 +222,38 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
             continue;
           }
           
-          if(d_printCell_coords){
-            Point point = level->getCellPosition(c);
-            out << point.x() << " "<< point.y() << " " << point.z() << " ";
-          }else{
-            out << c.x() << " "<< c.y() << " " << c.z() << " ";
-          }
-
           T val;
+          Vector dx = patches[p]->dCell();
+          Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
           switch (variable_type->getType()) {
-          case Uintah::TypeDescription::CCVariable: val = (*dynamic_cast<CCVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::NCVariable: val = (*dynamic_cast<NCVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::SFCXVariable: val = (*dynamic_cast<SFCXVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::SFCYVariable: val = (*dynamic_cast<SFCYVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::SFCZVariable: val = (*dynamic_cast<SFCZVariable<T>*>(vars[p]))[c]; break;
+          case Uintah::TypeDescription::CCVariable: 
+            val = (*dynamic_cast<CCVariable<T>*>(vars[p]))[c]; 
+          break;
+          case Uintah::TypeDescription::NCVariable: 
+            val = (*dynamic_cast<NCVariable<T>*>(vars[p]))[c]; 
+          break;
+          case Uintah::TypeDescription::SFCXVariable: 
+            val = (*dynamic_cast<SFCXVariable<T>*>(vars[p]))[c];
+            shift.x(-dx.x()/2.0); 
+          break;
+          case Uintah::TypeDescription::SFCYVariable: 
+            val = (*dynamic_cast<SFCYVariable<T>*>(vars[p]))[c];
+            shift.y(-dx.y()/2.0); 
+          break;
+          case Uintah::TypeDescription::SFCZVariable: 
+            val = (*dynamic_cast<SFCZVariable<T>*>(vars[p]))[c];
+            shift.z(-dx.z()/2.0); 
+          break;
           default: break;
           }
-          out << val << endl;
+          
+         if(d_printCell_coords){
+            Point point = level->getCellPosition(c);
+            Vector here = point.asVector() + shift;
+            out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
+          }else{
+            out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
+          }
         }
         for (unsigned i = 0; i < vars.size(); i++)
           delete vars[i];
