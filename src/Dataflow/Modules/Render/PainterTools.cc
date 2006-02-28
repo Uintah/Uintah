@@ -67,7 +67,7 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Core/Geom/OpenGLContext.h>
+#include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
 #include <Core/GuiInterface/TCLTask.h>
@@ -986,6 +986,11 @@ Painter::ITKCurvatureAnisotropicDiffusionTool::ITKCurvatureAnisotropicDiffusionT
   vol->colormap_.set(0);
   painter_->volume_map_[name] = vol;
   painter_->show_volume(name);
+
+  unsigned long ptr = (unsigned long)painter_;
+  nrrdKeyValueAdd(vol->nrrd_->nrrd, 
+                  "progress_ptr", to_string(ptr).c_str());
+
 
   painter_->filter_ = 1;
   painter_->filter_text_ = get_name() + "\nFilter Running, Please Wait";
