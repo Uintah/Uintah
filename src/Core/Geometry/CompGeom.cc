@@ -189,5 +189,37 @@ RayTriangleIntersection(double &t, double &u, double &v, bool backface_cull,
 }
 
 
+bool
+closest_line_to_line(double &s, double &t,
+                     const Point &a0, const Point &a1,
+                     const Point &b0, const Point &b1)
+{
+  const Vector u = a1 - a0;
+  const Vector v = b1 - b0;
+  const Vector w = a0 - b0;
+
+  const double a = Dot(u, u);
+  const double b = Dot(u, v);
+  const double c = Dot(v, v);
+  const double d = Dot(u, w);
+  const double e = Dot(v, w);
+  const double D = a*c - b*b;
+
+  if (D < EPSILON)
+  {
+    s = 0.0;
+    t = (b>c?d/b:e/c);
+    return false;
+  }
+  else
+  {
+    s = (b*e - c*d) / D;
+    t = (a*e - b*d) / D;
+    return true;
+  }
+}
+
+
+
 }
 
