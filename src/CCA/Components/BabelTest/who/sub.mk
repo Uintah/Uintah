@@ -27,7 +27,7 @@
 #
 
 SRCDIR   := CCA/Components/BabelTest/who
-XSRCS := 
+SRCS := 
 include $(SCIRUN_SCRIPTS)/babel_component.mk
 
 
