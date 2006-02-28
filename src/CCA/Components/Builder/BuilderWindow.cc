@@ -47,6 +47,8 @@
 #include <CCA/Components/Builder/NetworkCanvas.h>
 #include <CCA/Components/Builder/ComponentIcon.h>
 
+#include "compdialog.h"
+
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -156,6 +158,7 @@ BEGIN_EVENT_TABLE(BuilderWindow, wxFrame)
   EVT_MENU(wxID_ABOUT, BuilderWindow::OnAbout)
   EVT_MENU(wxID_EXIT, BuilderWindow::OnQuit)
   EVT_MENU(ID_MENU_TEST, BuilderWindow::OnTest)
+   EVT_MENU(ID_MENU_COMPONENT_WIZARD,BuilderWindow::OnCompWizard)
   //EVT_MENU(MenuTree::ID_MENU_COMPONENTS, MenuTree::OnInstantiateComponent)
   EVT_SIZE(BuilderWindow::OnSize)
   EVT_SASH_DRAGGED_RANGE(ID_WINDOW_LEFT, ID_WINDOW_BOTTOM, BuilderWindow::OnSashDrag)
@@ -391,6 +394,14 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
   }
   statusBar->SetStatusText("Components built", 0);
 }
+
+
+void BuilderWindow::OnCompWizard(wxCommandEvent& event)
+{
+	MyCustomDialog cwDialog ( this,-1,"Component wizard dialog",wxPoint(100,100),wxSize(400,400));
+	cwDialog.ShowModal();
+}
+
 
 void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
 {
