@@ -411,15 +411,28 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
 
   tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E | Mesh::FACES_E);
 
-  typename IFIELD::mesh_type::Node::iterator ibi, iei;
+  typename IFIELD::mesh_type::Edge::iterator ibi, iei;
   imesh->begin(ibi);
   imesh->end(iei);
 
   while (ibi != iei)
   {
-    Point p;
-    imesh->get_center(p, *ibi);
+    typename IFIELD::mesh_type::Node::array_type nodes;
+    
+    imesh->get_nodes(nodes, *ibi);
+    Point p[2];
+    imesh->get_center(p[0], nodes[0]);
+    imesh->get_center(p[1], nodes[1]);
 
+    Point cp[2];
+    typename TFIELD::mesh_type::Elem::index_type cf[2];
+    tmesh->find_closest_face(cp[0], cf[0], p[0]);
+    tmesh->find_closest_face(cp[1], cf[1], p[1]);
+
+    // Insert the two points and all of the intersections in between them.
+    tmesh->insert_node_in_face(newelems, newnode, cf[0], cp[0]);
+
+    tmesh->find_closest_face(
     typename TFIELD::mesh_type::Elem::index_type elem;
     if (tmesh->locate(elem, p))
     {
