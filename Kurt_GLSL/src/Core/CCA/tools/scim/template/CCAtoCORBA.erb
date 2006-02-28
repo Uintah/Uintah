@@ -1,0 +1,122 @@
+
+using namespace SSIDL;
+//using namespace SCIRun;
+using namespace std;
+
+#include "/scratch/ACE_wrappers/TAO/tests/FileReader/TestC.h"
+#include <ace/Get_Opt.h>
+#include <string>
+
+#include <Core/Thread/Time.h>
+
+std::string ior;
+
+extern "C" SCIRun::BridgeComponent* make_Bridge_<%= $templateArgv[0]%>()
+{
+  return static_cast<SCIRun::BridgeComponent*>(new SCIRun::<%= rndBridgeName%>());
+}
+
+SCIRun::<%= rndBridgeName%>::<%= rndBridgeName%>(){
+}
+
+SCIRun::<%= rndBridgeName%>::~<%= rndBridgeName%>(){
+}
+
+void SCIRun::<%= rndBridgeName%>::setServices(const BridgeServices* svc) {
+  services=const_cast<BridgeServices*>(svc);
+ <port> 
+  corba::Component *component;
+  component = new corba::Component();
+  corba::Services *csvc=new corba::Services(component);
+  component->setServices(csvc);
+  sci::cca::CorbaServices::pointer corba_svc(csvc);
+  corba_svc->addReference();
+  corba_svc->registerUsesPort("uport", "corba.FileReader");
+  corba_svc->done();
+
+  SCIRun::<%= $inPortName%>::pointer dp = <%= $inPortName%>::pointer(new <%= $inPortName%>(corba_svc));
+  services->addProvidesPort((void*)&dp,"pport","sci.cca.ports.<%= $inPortName%>",CCA);
+  services->addCorbaPort(component->getUsesPort("uport"),CorbaPortInstance::Uses);
+ </port>
+}
+
+<port> 
+ <method> 
+                                                                                                                                              
+int
+corba_client(<%= outDefArgs(method(:ccaType))%>)
+{
+  ACE_TRY_NEW_ENV
+    {
+      int argc = 0;
+      char** argv = NULL; 
+      CORBA::ORB_var orb =
+        CORBA::ORB_init (argc, argv, "" ACE_ENV_ARG_PARAMETER);
+      ACE_TRY_CHECK;
+                                                                                                                                              
+                                                                                                                                              
+      CORBA::Object_var tmp =
+        orb->string_to_object(ior.c_str() ACE_ENV_ARG_PARAMETER);
+      ACE_TRY_CHECK;
+                                                                                                                                              
+      Test::FileReader_var hello =
+          Test::FileReader::_narrow(tmp.in () ACE_ENV_ARG_PARAMETER);
+      ACE_TRY_CHECK;
+                                                                                                                                              
+      if (CORBA::is_nil (hello.in ()))
+      { exit(1); }
+
+      Test::FileReader::double_array_var _nodes = new Test::FileReader::double_array;
+      Test::FileReader::long_array_var _boundaries=new Test::FileReader::long_array;
+      Test::FileReader::long_array_var _dirichletNodes=new Test::FileReader::long_array;
+      Test::FileReader::double_array_var _dirichletValues=new Test::FileReader::double_array;
+                                                                                                                               
+      hello->getPDEdescription(_nodes, _boundaries, _dirichletNodes, 
+                               _dirichletValues 
+                               ACE_ENV_ARG_DECL_WITH_DEFAULTS);
+      ACE_TRY_CHECK;
+
+      std::cerr << _nodes->length() << " nodes\n";
+      nodes.resize(_nodes->length());     
+      for(unsigned int i=0; i< _nodes->length(); i++){
+	nodes[i] = _nodes[i];
+      }
+      std::cerr << _boundaries->length() << " nodes\n";
+      boundaries.resize(_boundaries->length());     
+      for(unsigned int i=0; i< _boundaries->length(); i++){
+	boundaries[i] = _boundaries[i];
+      }
+      std::cerr << _dirichletNodes->length() << " nodes\n";
+      dirichletNodes.resize(_dirichletNodes->length());     
+      for(unsigned int i=0; i< _dirichletNodes->length(); i++){
+	dirichletNodes[i] = _dirichletNodes[i];
+      }
+      std::cerr << _dirichletValues->length() << " nodes\n";
+      dirichletValues.resize(_dirichletValues->length());     
+      for(unsigned int i=0; i< _dirichletValues->length(); i++){
+	dirichletValues[i] = _dirichletValues[i];
+      }
+                                                                                                                                              
+      orb->destroy (ACE_ENV_SINGLE_ARG_PARAMETER);
+      ACE_TRY_CHECK;
+    }
+  ACE_CATCHANY
+    {
+      ACE_PRINT_EXCEPTION (ACE_ANY_EXCEPTION,
+                           "Exception caught:");
+      return 1;
+    }
+  ACE_ENDTRY;
+  return 0;
+}
+
+
+<%= $inMethodType%> SCIRun::<%= $inPortName%>::<%= $inMethodName%>(<%= outDefArgs(method(:ccaType))%>) {
+  double stime=Time::currentSeconds();
+  ior=mysvcs->getIOR("uport");
+  corba_client(<%= outCallArgs%>);
+  double dt=Time::currentSeconds()-stime;
+  std::cerr << "Finished in " << dt << " seconds\n";
+}
+ </method>
+</port>

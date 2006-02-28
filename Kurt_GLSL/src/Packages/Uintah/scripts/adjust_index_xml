@@ -1,0 +1,85 @@
+#!/bin/sh
+
+b=1;
+e=0;
+
+while getopts "b:e:" Option
+do
+        case $Option in
+           b)
+		b=$OPTARG
+		;;
+	   e)
+		e=$OPTARG
+		;;
+	esac
+done;
+shift $(($OPTIND - 1))
+
+# Make sure an -e option is specified
+
+if test $e -eq 0;
+	then
+	echo "Must specify and ending number with -e"
+	exit
+fi
+
+if test $e -lt $b;
+	then
+	echo "Start index must be less than end index"
+	exit
+fi
+
+# See if there is an index.xml.orig
+
+if test ! -e index.xml.orig;
+	then
+	# Make a copy of the index.xml
+	cp index.xml index.xml.orig
+fi
+
+# Make sure that the end index is <= number of <timestep>
+num_lines=`grep "<timestep href" index.xml.orig | wc -l`
+
+if test $num_lines -lt $e;
+	then
+	echo "End index must be less than "$num_lines"."
+	exit
+fi
+
+# Create a header, timestep data and footer from the index.xml
+# The header data is everything including the <timesteps> tag
+# The timestep data is just the stuff with <timestep href
+# The footer has everything including </timesteps> and below
+
+# To create the timestep data, must pull out the <timestep> from
+# the first <timestep href line,
+
+grep timestep index.xml.orig | grep "<timesteps>" - | cut -c 12- > timestep.data1
+
+grep "timestep" index.xml.orig | grep -v "<timesteps>" | grep -v "</timesteps>" > timestep.data2
+
+cat timestep.data1 timestep.data2 > timestep.data
+
+rm timestep.data1 timestep.data2
+
+# Create the header.data
+
+nl=`grep -n  "</variables>" index.xml.orig | awk 'BEGIN {FS = ":"} {print $1}'`
+
+head -n $nl index.xml.orig > header.data
+
+# Create the footer.data
+
+tail -n3 index.xml.orig > footer.data
+
+awk '{ if (i >= '"${b}"' && i <= '"${e}"') print $0; i += 1}' < timestep.data > new.data
+
+echo "<timesteps>" > new.data1
+
+cat header.data new.data1 new.data footer.data > index.xml
+
+rm header.data new.data new.data1 footer.data timestep.data
+
+
+exit

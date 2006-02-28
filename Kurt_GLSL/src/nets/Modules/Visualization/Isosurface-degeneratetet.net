@@ -1,0 +1,204 @@
+# SCIRun Network v1.24.1
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+set name {Main}
+set bbox {8 20 554 544}
+set creationDate {Sat Feb 26 2005}
+set creationTime {21:06:19}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->FieldsCreate->SampleLattice Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 78 20]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m2 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 81 93]
+
+# Create a SCIRun->Visualization->Isosurface Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 111 162]
+
+# Create a SCIRun->Render->Viewer Module
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 77 486]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 8 300]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 198 399]
+
+# Create a SCIRun->FieldsOther->FieldMeasures Module
+set m7 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 252 235]
+
+# Create a SCIRun->FieldsData->ManageFieldData Module
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 241 315]
+
+# Create a SCIRun->FieldsCreate->FieldBoundary Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 398 402]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 389 487]
+
+# Create a SCIRun->FieldsGeometry->HexToTet Module
+set m11 [addModuleAtPosition "SCIRun" "FieldsGeometry" "HexToTet" 311 38]
+
+# Create the Connections between Modules
+set c1 [addConnection $m9 0 $m10 0]
+set c2 [addConnection $m1 0 $m11 0]
+set c3 [addConnection $m8 0 $m9 0]
+set c4 [addConnection $m8 0 $m6 0]
+set c5 [addConnection $m2 0 $m3 0]
+set c6 [addConnection $m2 0 $m5 0]
+set c7 [addConnection $m11 0 $m2 0]
+set c8 [addConnection $m3 0 $m8 0]
+set c9 [addConnection $m3 0 $m7 0]
+set c10 [addConnection $m5 0 $m4 0]
+set c11 [addConnection $m7 0 $m8 1]
+set c12 [addConnection $m6 0 $m4 1]
+set c13 [addConnection $m10 0 $m4 2]
+
+# Set GUI variables for the SCIRun->FieldsCreate->SampleLattice Module
+set $m1-sizex {5}
+set $m1-sizey {5}
+set $m1-sizez {5}
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m2-function {result = x + y + z;
+}
+
+# Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m3-isoval-min {-3}
+set $m3-isoval-max {3}
+
+$m4 addViewer
+set $m4-ViewWindow_0-geometry 654x610+678+102
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m4-ViewWindow_0-view-eyep-x {4.97892296109}
+set $m4-ViewWindow_0-view-eyep-y {4.07645309258}
+set $m4-ViewWindow_0-view-eyep-z {9.89003823725}
+set $m4-ViewWindow_0-view-lookat-x {0.0}
+set $m4-ViewWindow_0-view-lookat-y {0.0}
+set $m4-ViewWindow_0-view-lookat-z {0.0}
+set $m4-ViewWindow_0-view-up-x {-0.746090662692}
+set $m4-ViewWindow_0-view-up-y {0.657583097558}
+set $m4-ViewWindow_0-view-up-z {0.104561909171}
+set $m4-ViewWindow_0-view-fov {20.0}
+set $m4-ViewWindow_0-sr {1}
+set $m4-ViewWindow_0-do_stereo {0}
+set $m4-ViewWindow_0-ortho-view {0}
+set $m4-ViewWindow_0-trackViewWindow0 {1}
+set $m4-ViewWindow_0-raxes {1}
+set $m4-ViewWindow_0-ambient-scale {1.0}
+set $m4-ViewWindow_0-diffuse-scale {1.0}
+set $m4-ViewWindow_0-specular-scale {0.4}
+set $m4-ViewWindow_0-emission-scale {1.0}
+set $m4-ViewWindow_0-shininess-scale {1.0}
+set $m4-ViewWindow_0-polygon-offset-factor {1.0}
+set $m4-ViewWindow_0-polygon-offset-units {0.0}
+set $m4-ViewWindow_0-point-size {1.0}
+set $m4-ViewWindow_0-line-width {1.0}
+set $m4-ViewWindow_0-sbase {0.4}
+set $m4-ViewWindow_0-bgcolor-r {0.0}
+set $m4-ViewWindow_0-bgcolor-g {0.0}
+set $m4-ViewWindow_0-bgcolor-b {0.0}
+set $m4-ViewWindow_0-fogusebg {1}
+set $m4-ViewWindow_0-fogcolor-r {0.0}
+set $m4-ViewWindow_0-fogcolor-g {0.0}
+set $m4-ViewWindow_0-fogcolor-b {1.0}
+set $m4-ViewWindow_0-fog-start {0.0}
+set $m4-ViewWindow_0-fog-end {0.714265}
+set $m4-ViewWindow_0-fog-visibleonly {1}
+set $m4-ViewWindow_0-currentvisual {0}
+set $m4-ViewWindow_0-caxes {0}
+set $m4-ViewWindow_0-global-light0 {1}
+set $m4-ViewWindow_0-global-light1 {0}
+set $m4-ViewWindow_0-global-light2 {0}
+set $m4-ViewWindow_0-global-light3 {0}
+set $m4-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m4-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m4-ViewWindow_0-global-light {1}
+set $m4-ViewWindow_0-global-fog {0}
+set $m4-ViewWindow_0-global-debug {0}
+set $m4-ViewWindow_0-global-clip {1}
+set $m4-ViewWindow_0-global-cull {0}
+set $m4-ViewWindow_0-global-dl {0}
+set $m4-ViewWindow_0-global-type {Gouraud}
+set "$m4-ViewWindow_0-Edges (1)" {1}
+set "$m4-ViewWindow_0-Isosurface Edges (2)" {1}
+set "$m4-ViewWindow_0-Isosurface Faces (2)" {1}
+set "$m4-ViewWindow_0-Isosurface Vectors (2)" {1}
+set "$m4-ViewWindow_0-Isosurface Text Data (2)" {1}
+set "$m4-ViewWindow_0-Nodes (3)" {1}
+set "$m4-ViewWindow_0-Edges (3)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m5-nodes-on {0}
+set $m5-faces-on {0}
+set $m5-has_scalar_data {1}
+set $m5-active_tab {Edges}
+set $m5-scalars_scale {0.3}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m6-nodes-on {0}
+set $m6-nodes-as-disks {1}
+set $m6-use-normals {1}
+set $m6-vectors-on {1}
+set $m6-normalize-vectors {0}
+set $m6-has_vector_data {1}
+set $m6-text-on {1}
+set $m6-text-backface-cull {1}
+set $m6-text-fontsize {2}
+set $m6-text-show-data {0}
+set $m6-text-show-nodes {1}
+set $m6-active_tab {Text}
+set $m6-vectors_scale {0.3}
+set $m6-scalars_scale {0.3}
+set $m6-field-name {Isosurface}
+
+# Set GUI variables for the SCIRun->FieldsOther->FieldMeasures Module
+set $m7-xFlag {0}
+set $m7-yFlag {0}
+set $m7-zFlag {0}
+set $m7-normalsFlag {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m10-nodes-as-disks {1}
+set $m10-nodes-usedefcolor {1}
+set $m10-edges-usedefcolor {1}
+set $m10-normalize-vectors {0}
+set $m10-has_vector_data {1}
+set $m10-def-color-r {0.27}
+set $m10-def-color-g {0.91}
+set $m10-node_display_type {Spheres}
+set $m10-edge_display_type {Cylinders}
+set $m10-node_scale {0.0548}
+set $m10-edge_scale {0.0209}
+set $m10-vectors_scale {0.3}
+
+
+::netedit scheduleok

@@ -1,0 +1,32 @@
+
+<html>
+
+<body>
+
+   
+ <b>Port</b> Services </br>
+        
+   <b>Method</b> Port getPort (<i>string</i> portName) </br>
+    
+   <b>Method</b> Port getPortNonblocking (<i>string</i> portName) </br>
+    
+   <b>Method</b> void releasePort (<i>string</i> portName) </br>
+    
+   <b>Method</b> TypeMap createTypeMap (<i>string</i> portName) </br>
+    
+   <b>Method</b> void registerUsesPort (<i>string</i> type,<i>TypeMap</i> properties,<i>string</i> portName) </br>
+    
+   <b>Method</b> void unregisterUsesPort (<i>string</i> portName,<i>TypeMap</i> properties,<i>string</i> portName) </br>
+    
+   <b>Method</b> void addProvidesPort (<i>string</i> portName,<i>string</i> type,<i>TypeMap</i> properties,<i>Port</i> inPort) </br>
+    
+   <b>Method</b> TypeMap getPortProperties (<i>string</i> name,<i>string</i> type,<i>TypeMap</i> properties,<i>Port</i> inPort) </br>
+    
+   <b>Method</b> void removeProvidesPort (<i>string</i> portName,<i>string</i> type,<i>TypeMap</i> properties,<i>Port</i> inPort) </br>
+    
+   <b>Method</b> ComponentID getComponentID (<i>string</i> portName,<i>string</i> type,<i>TypeMap</i> properties,<i>Port</i> inPort) </br>
+  
+
+
+</body>
+</html>

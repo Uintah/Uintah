@@ -1,0 +1,13 @@
+void comp_dynamic_3loop(CCVariable<double> sij1, CCVariable<double> sij2,
+     CCVariable<double> sij3, CCVariable<double> sij4,
+     CCVariable<double> sij5, CCVariable<double> sij6,
+     CCVariable<double> filtersij1, CCVariable<double> filtersij2,
+     CCVariable<double> filtersij3, CCVariable<double> filtersij4,
+     CCVariable<double> filtersij5, CCVariable<double> filtersij6,
+     constSFCXVariable<double> uvel, constSFCYVariable<double> vvel,
+     constSFCZVariable<double> wvel, 
+     constSFCXVariable<double> filterrhou, constSFCYVariable<double> filterrhov,
+     constSFCZVariable<double> filterrhow, constCCVariable<double> filterrho,
+     OffsetArray1<double> sew,
+     OffsetArray1<double> sns, OffsetArray1<double> stb,
+     IntVector idxLo, IntVector idxHi);

@@ -1,0 +1,180 @@
+# SCIRun Network v1.23.0
+
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {17 17 402 693}
+set creationDate {Tue Aug 31 2004}
+set creationTime {11:55:50}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a DataIO->Readers->HDF5DataReader Module
+set m1 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 17 17]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 207 425]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 17 549]
+
+# Create a SCIRun->Render->Viewer Module
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 649]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 207 229]
+
+# Create a SCIRun->FieldsCreate->FieldSlicer Module
+set m6 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSlicer" 17 342]
+
+# Create a SCIRun->FieldsData->VectorMagnitude Module
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "VectorMagnitude" 225 336]
+
+# Create a Fusion->Fields->NIMRODConverter Module
+set m8 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 17 117]
+
+# Create a Fusion->Fields->NIMRODConverter Module
+set m9 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 196 118]
+
+# Create a Teem->DataIO->NrrdToField Module
+set m10 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 17 226]
+
+# Create a SCIRun->FieldsCreate->FieldSubSample Module
+set m11 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 17 441]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m8 0]
+set c2 [addConnection $m1 0 $m9 0]
+set c3 [addConnection $m8 0 $m10 0]
+set c4 [addConnection $m6 0 $m11 0]
+set c5 [addConnection $m11 0 $m3 0]
+set c6 [addConnection $m5 0 $m2 0]
+set c7 [addConnection $m3 0 $m4 0]
+set c8 [addConnection $m10 0 $m6 0]
+set c9 [addConnection $m10 0 $m7 0]
+set c10 [addConnection $m1 1 $m8 1]
+set c11 [addConnection $m1 3 $m9 1]
+set c12 [addConnection $m7 0 $m2 1]
+set c13 [addConnection $m2 0 $m3 1]
+set c14 [addConnection $m1 2 $m8 2]
+set c15 [addConnection $m9 0 $m10 2]
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m1-filename "$DATADIR/$DATASET/NIMROD_10107.h5"
+set $m1-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z}}
+set $m1-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m1-ports {   0   1   2   3   3   3}
+set $m1-0-dim {41}
+set $m1-0-count {41}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m2-min {1.00826689806}
+set $m2-max {2.22499046626}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m3-nodes-on {0}
+set $m3-nodes-as-disks {1}
+set $m3-edges-on {0}
+set $m3-faces-on {0}
+set $m3-vectors-on {1}
+set $m3-normalize-vectors {0}
+set $m3-has_vector_data {1}
+set $m3-active_tab {Vectors}
+set $m3-edge_scale {0.03}
+set $m3-vectors_scale {0.05}
+set $m3-show_progress {0}
+set $m3-field-name {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector}
+
+$m4 addViewer
+set $m4-ViewWindow_0-geometry 654x646+2416+40
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m4-ViewWindow_0-view-eyep-x {8.75627830819}
+set $m4-ViewWindow_0-view-eyep-y {6.50174962757}
+set $m4-ViewWindow_0-view-eyep-z {1.56784181971}
+set $m4-ViewWindow_0-view-lookat-x {1.70006859303}
+set $m4-ViewWindow_0-view-lookat-y {-0.0546137684739}
+set $m4-ViewWindow_0-view-lookat-z {0.00015203131038}
+set $m4-ViewWindow_0-view-up-x {-0.154686742879}
+set $m4-ViewWindow_0-view-up-y {-0.0692990095456}
+set $m4-ViewWindow_0-view-up-z {0.985530141017}
+set $m4-ViewWindow_0-view-fov {20.0}
+set $m4-ViewWindow_0-sr {1}
+set $m4-ViewWindow_0-do_stereo {0}
+set $m4-ViewWindow_0-ortho-view {0}
+set $m4-ViewWindow_0-trackViewWindow0 {1}
+set $m4-ViewWindow_0-raxes {1}
+set $m4-ViewWindow_0-ambient-scale {1.0}
+set $m4-ViewWindow_0-diffuse-scale {1.0}
+set $m4-ViewWindow_0-specular-scale {0.4}
+set $m4-ViewWindow_0-emission-scale {1.0}
+set $m4-ViewWindow_0-shininess-scale {1.0}
+set $m4-ViewWindow_0-polygon-offset-factor {1.0}
+set $m4-ViewWindow_0-polygon-offset-units {0.0}
+set $m4-ViewWindow_0-point-size {1.0}
+set $m4-ViewWindow_0-line-width {1.0}
+set $m4-ViewWindow_0-sbase {0.4}
+set $m4-ViewWindow_0-bgcolor-r {0.0}
+set $m4-ViewWindow_0-bgcolor-g {0.0}
+set $m4-ViewWindow_0-bgcolor-b {0.0}
+set $m4-ViewWindow_0-currentvisual {0}
+set $m4-ViewWindow_0-caxes {0}
+set $m4-ViewWindow_0-global-light0 {1}
+set $m4-ViewWindow_0-global-light1 {0}
+set $m4-ViewWindow_0-global-light2 {0}
+set $m4-ViewWindow_0-global-light3 {0}
+set $m4-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m4-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m4-ViewWindow_0-global-light {1}
+set $m4-ViewWindow_0-global-fog {0}
+set $m4-ViewWindow_0-global-debug {0}
+set $m4-ViewWindow_0-global-clip {1}
+set $m4-ViewWindow_0-global-cull {0}
+set $m4-ViewWindow_0-global-dl {0}
+set $m4-ViewWindow_0-global-type {Gouraud}
+set "$m4-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector Vectors (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m5-width {389}
+set $m5-height {40}
+set $m5-mapName {Old Rainbow}
+set $m5-minRes {12}
+set $m5-resolution {255}
+set $m5-realres {255}
+set $m5-gamma {0.0}
+
+# Set GUI variables for the SCIRun->FieldsCreate->FieldSlicer Module
+set $m6-i-dim {145}
+set $m6-j-dim {85}
+set $m6-k-dim {41}
+set $m6-i-index {0}
+set $m6-j-index {0}
+set $m6-k-index {0}
+
+# Set GUI variables for the Fusion->Fields->NIMRODConverter Module
+set $m8-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m8-allowUnrolling {1}
+
+# Set GUI variables for the Fusion->Fields->NIMRODConverter Module
+set $m9-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-PHI-R-Z:Vector} }
+
+# Set GUI variables for the Teem->DataIO->NrrdToField Module
+set $m10-datasets {{Points : -NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {Connections : (none)} {Data : -NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector} {Original Field : (none)} }
+
+# Set GUI variables for the SCIRun->FieldsCreate->FieldSubSample Module
+set $m11-wrap {1}
+set $m11-dims {2}
+set $m11-i-dim {145}
+set $m11-j-dim {85}
+set $m11-k-dim {1}
+set $m11-i-stop {144}
+set $m11-j-stop {84}
+set $m11-k-stop {0}
+set $m11-i-stride {2}
+set $m11-j-stride {2}
+
+
+::netedit scheduleok

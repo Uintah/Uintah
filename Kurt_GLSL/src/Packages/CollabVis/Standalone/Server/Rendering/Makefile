@@ -1,0 +1,54 @@
+# Generated automatically from Makefile.in by configure.
+# Makefile for Rendering
+
+include ../make.include
+
+SRCTOP  := ..
+SRCDIR  := .
+OBJTOP  := /home/sci/simpson/sv/scirun_upgrade/SCIRun/src/Packages/CollabVis/Standalone/Server
+
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+ifeq ($(OBJTOP),.)
+LIBDIR := lib/
+else
+LIBDIR := $(OBJTOP_ABS)/lib/
+endif
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+VPATH := $(SRCDIR)
+
+INCLUDES += -I$(SRCTOP) $(XML_INCLUDE)
+
+INCLUDES := $(sort $(INCLUDES))
+#SOFLAGS := $(SOFLAGS) -rpath ${LIBDIR}
+
+OBJS = RenderGroup.o Renderer.o ImageRenderer.o GeometryRenderer.o \
+	ZTexRenderer.o ZTex.o
+
+SOLIB = $(LIBDIR)/libRendering.so
+
+LINKLIBS = -L$(XML_LIB_DIR) $(XML_LIB_FLAG) $(GL_LIB) -lm
+
+LIBS = $(LINKLIBS) -L$(LIBDIR) -lNetwork -lThread -lXML -lExceptions \
+	-lLogging 
+
+ZTEXDIR = ZTex
+ZTEXLIBNAME = libZTex.a
+ZTEXLIB = $(ZTEXDIR)/$(ZTEXLIBNAME)
+
+all:	$(SOLIB) $(ZTEXLIB)
+
+$(SOLIB) :	$(OBJS) $(ZTEXLIB)
+	$(CXX) $(SOFLAGS) $(OBJS) -o $(SOLIB) $(LINKLIBS) $(LINKER_ARCHIVE) $(ZTEXLIB)
+
+$(ZTEXLIB):
+	(cd $(ZTEXDIR) ; $(MAKE) )
+
+clean:	ztexclean
+	/bin/rm -f $(OBJS) $(SOLIB)
+
+ztexclean:
+	(cd $(ZTEXDIR) ; $(MAKE) clean )
+
+# -include $(OBJS:.o=.d)

@@ -1,0 +1,885 @@
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<chapter>
+  <title>Tooth Data</title>
+
+  <para>
+    The tooth data used in this tutorial are industrial CT data of a
+    human tooth.  The data are stored in a format called
+    <firstterm>Nearly-Raw Raster Data</firstterm> or
+    <acronym>NRRD</acronym>.  See the <ulink
+    url="http://teem.sourceforge.net/nrrd/index.html"><acronym>NRRD</acronym>
+    web site</ulink> for information on this data format.  See <xref
+    linkend="ch.ref_data"/> for other data formats supported by BioImage.
+  </para>
+
+  <section>
+    <title>Loading Data</title>
+    <para>
+      To load data, start by clicking the <guilabel>Generic</guilabel> tab
+      in the Processing Pane, then click the
+      <guibutton>Browse</guibutton> button.  See item 2 in <xref
+      linkend="fig.load"/>.
+    </para>
+    <para>
+      Now select <filename>tooth.nhdr</filename> and click
+      <guibutton>Set</guibutton>.  The file browser window will close. Click
+      <guibutton>Update</guibutton>, located near the bottom of the
+      Processing Pane (item 4 in <xref linkend="fig.load"/>), to load
+      the data into BioImage.
+    </para>
+
+    <figure id="fig.load">
+      <title>Processing Pane</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Loading the Tooth dataset.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/toothload.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/toothload.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      After loading data, BioImage will display the visualizations
+      shown in <xref linkend="fig.viewing-pane"/>.  The top pane
+      displays a three dimensional representation of the data as
+      orthogonal slices. The bottom three panes present the slices
+      individually.
+    </para>
+
+    <figure id="fig.viewing-pane">
+      <title><ulink url="Figures/viewing-pane_hires.jpg">Visualization Pane After Clicking Update</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Vizualization Pane</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/viewing-pane.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/viewing-pane.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+    
+    <para>
+      The slice panes show sagittal, coronal, and axial views
+      respectively. Depending on the order of the axes in the volume,
+      the data may need to be flipped or permuted so that axis labels
+      are correct.  The Viewing Cube, located in the Processing Pane
+      (item 3 in <xref linkend="fig.load"/>), allows the user to
+      change the orientation of slices presented in the visualization
+      panes.  The orientation of each view can be changed by altering
+      the abbreviation next to the proper arrow.  By default, the
+      axial, sagittal, and coronal slices are viewed from the
+      superior, anterior, and left views respectively.  To change
+      this, click the appropriate arrow entry box, type a value, then
+      click the Viewing Cube icon (button).  This will update all
+      visualization panes.  Valid orientation options are:
+    </para>
+
+    <simplelist type="vert" columns="1">
+      <member>S: Superior</member>
+      <member>I: Inferior</member>
+      <member>A: Anterior</member>
+      <member>P: Posterior</member>
+      <member>L: Left</member>
+      <member>R: Right</member>
+    </simplelist>
+
+    <para>
+      To reset the views to the default parameters, press
+      <guibutton>Reset</guibutton> in the lower right corner of
+      the Load Data window.
+    </para>
+  </section><!-- end:Loading Data -->
+
+  <section>
+    <title>Resampling and Cropping.</title>
+    <para>
+      BioImage supports <firstterm>Dynamic Filters</firstterm>.
+      Dynamic filters change data in some way.  Currently, BioImage
+      supports Resample, Crop, Histogram, and Median Filtering.  
+      These filters can be added, modified, and removed at any time.  
+      Filters are added by pressing one of the filter buttons 
+      located at the top of the Processing Pane, see item 1 
+      in <xref linkend="fig.load"/>.
+    </para>
+
+    <para>
+      In this section the resampling and cropping filters will be
+      used.  Before adding filters, minimize the <guilabel>Load
+      Data</guilabel> frame by clicking on the black triangle next to
+      the label <guilabel>Data - Unknown</guilabel>. This will hide
+      the <guilabel>Load Data</guilabel> frame's user interface,
+      leaving space for subsequent filters.
+    </para>
+
+    <para>
+      Add a resample filter by clicking the Processing Pane's
+      <guibutton>Resample</guibutton> button.  A new frame will appear
+      immediately below the <guilabel>Load Data</guilabel> frame as
+      shown in item 2 of <xref linkend="fig.filter"/>.
+    </para>
+
+    <para>
+      The resampling filter resamples and smooths data in each
+      dimension.  To produce half as many samples in each dimension,
+      change <userinput>x1</userinput> (multiply by 1) to
+      <userinput>x0.5</userinput> in each dimension.  The
+      <userinput>x0.5</userinput> is a magnification factor applied to
+      the dataset along each dimension.  Then select a filter type
+      (cubic B-spline is the default).
+    </para>
+
+    <para>
+      Click the Processing Pane's <guibutton>Update</guibutton> button
+      to apply the filter. Notice the panes in the Visualizion Pane
+      update with the resampled images.
+    </para>
+
+    <para>
+      Add a cropping filter, by clicking the Processing Pane's
+      <guibutton>Crop</guibutton> button.  A new frame will appear
+      below the resample filter frame and cropping controls (boxes)
+      will appear within the slice panes.
+    </para>
+    
+    <figure id="fig.filter">
+      <title>Resample Filter</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>User Interface for the Resample Filter.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/filters.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/filters.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      The extents of the cropping boxes present a visual indication of
+      data remaining after the application of the cropping filter.  A
+      cropping box can be resized by clicking and dragging a box's
+      corner or side.  A box can be moved by clicking and dragging its
+      interior.  <xref linkend="fig.crop_module_added"/> demonstrates
+      use of cropping controls.
+    </para>
+    
+    <para>
+      Click the <guibutton>Update</guibutton> button to
+      apply the crop filter to the resampled dataset.
+    </para>
+
+    <figure id="fig.crop_module_added">
+      <title><ulink url="Figures/crop_module_added_hires.jpg">Adding a crop filter</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Adding a crop filter.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/crop_module_added.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/crop_module_added.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      Filters are applied sequentially, first to last (top to bottom
+      in the Processing Pane).  If a filter parameter is
+      modified, the <guibutton>Update</guibutton> button must be
+      pressed to apply the filter.
+    </para>
+
+    <para>
+      To remove a filter click on its delete button, 
+      <inlinemediaobject>
+	<imageobject>
+	  <imagedata fileref="Figures/delete_filter.eps" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/delete_filter.gif" format="GIF"/>
+	</imageobject>
+	<textobject><phrase>Filter delete button.</phrase></textobject>
+      </inlinemediaobject>, then press <guibutton>Update</guibutton>.  See
+      <xref linkend="sec.dynamic_filters"/> for more information
+      regarding dynamic filters and how to insert and delete them.
+    </para>
+
+  </section><!-- end:Resampling and Cropping -->
+
+  <section>
+    <title>Visualizing Tooth Slices</title>
+
+    <section>
+      <title>Selecting Slices</title>
+
+      <para>
+	The Visualization Pane is composed of four sub-panes: the
+	volume pane on top, and the sagittal, coronal, and axial slice
+	panes on the bottom.  Initially, the volume
+	pane displays a three dimensional representation of the data
+	as orthogonal slices.
+      </para>
+
+      <para>
+	Controls in the slice panes allow selection of any slice.
+	Changes in the slice panes are reflected in the volume pane
+	(when it is displaying orthogonal slices).  Slices are
+	selected using slider controls or mouse actions.  <xref
+	linkend="fig.2dview"/> shows the sagittal slice pane, its
+	slider, and cross-hairs controls.
+      </para>
+
+      <para>
+	Initially, the slice plane is placed at the center of the
+	volume, which, for the tooth dataset, corresponds to the
+	51<superscript>st</superscript> slice along the sagittal axis.
+	Move the sagittal slice plane slider to the right until it
+	reads 68. The 68th sagittal slice is now displayed in both the
+	slice and volume panes, as shown in <xref
+	linkend="fig.68saggitalBoth"/>.
+      </para>
+
+      <para>
+	Cross-hairs correspond to planes orthogonal to the slice
+	beneath the cross-hairs.  Press
+	<mousebutton>Button2</mousebutton> (middle mouse button) and
+	drag the cross hairs to select new slices in orthogonal
+	planes.
+      </para>
+
+      <para>
+	<xref linkend="tbl.slice_pane_controls"/> lists mouse actions
+	and keyboard keys that select slices or alter display of slices.
+      </para>
+
+      <figure id="fig.2dview">
+	<title>A Slice Pane and its Controls</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Slice pane showing tooth dataset.</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/2dview.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/2dview.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <figure id="fig.68saggitalBoth">
+	<title><ulink url="Figures/68saggitalBoth_hires.jpg">Slice plane slider moved to 68th sagittal slice</ulink></title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Slice plane slider moved to 68th sagittal slice.</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/68saggitalBoth.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/68saggitalBoth.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <table id="tbl.slice_pane_controls">
+	<title>Slice Pane Controls</title>
+	<tgroup cols="2">
+	  <thead>
+	    <row>
+	      <entry>Control</entry>
+	      <entry>Effect</entry>
+	    </row>
+	  </thead>
+	  <tbody>
+	    <row>
+	      <entry>Keys <keycap>&lt;</keycap> and <keycap>&gt;</keycap></entry>
+	      <entry>Previous and next slice</entry>
+	    </row>
+	    <row>
+	      <entry>Keys <keycap>+</keycap> and <keycap>-</keycap></entry>
+	      <entry>Zoom in and out</entry>
+	    </row>
+	    <row>
+	      <entry>Arrow keys</entry>
+	      <entry>Move slice left, right, up, down in pane</entry>
+	    </row>
+	    <row>
+	      <entry>Mouse scroll wheel</entry>
+	      <entry>Previous or next slice</entry>
+	    </row>
+	    <row>
+	      <entry>Shift+mouse scroll wheel</entry>
+	      <entry>Zoom in and out</entry>
+	    </row>
+	  </tbody>
+	</tgroup>
+      </table>
+
+      
+    </section><!-- end: Selecting Slices -->
+
+    <section>
+      <title>Coloring Slices</title>
+      <para>
+	The colors displayed in the slice panes are greyscale and
+	represent the underlying density data values: highest
+	density corresponds to white, lowest density are colored
+	black, and in between areas are colored shades of grey.
+      </para>
+      <para>
+	It is possible to change the color range used.  A color range
+	that goes from blue to red, or one that uses rainbow colors
+	can be used.  To change the color range, click the
+	Visualization Settings pane's <guilabel>Planes</guilabel> tab.
+	Then select a color range by clicking one of the
+	<guilabel>Color Planes By</guilabel> radio buttons&#x2014;see
+	<xref linkend="fig.planesTab"/>, item 10.
+	
+	<figure id="fig.planesTab">
+	  <title>Options for controlling planes</title>
+	  <mediaobject>
+	    <textobject>
+	      <phrase>Options for controlling planes.</phrase>
+	    </textobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/planesTab.eps" align="center" format="EPS"/>
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/planesTab.jpg" align="center" format="JPG"/>
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+	
+	<figure id="fig.rainbow_color_applied">
+	  <title>Rainbow colormap</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Rainbow colormap</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/rainbow_color_applied.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/rainbow_color_applied.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+	</figure>	
+      </para>
+
+      <para>
+	Choose the Rainbow colormap and notice the difference in the
+	resulting images displayed in the slice plane as shown in
+	<xref linkend="fig.rainbow_color_applied"/>.
+      </para>
+      <para>
+	With the rainbow colormap it is easier to see small variations
+	in the data, for example the variation in the center of the
+	tooth root from blue to green. Using the greyscale colormap
+	the whole center appears the same shade of grey.
+      </para>
+      <para>
+	With the greyscale colormap it is easier to tell what the
+	underlying data values are. With the greyscale colormap you
+	know that a dark grey region is substantially different than a
+	white region.  Using a rainbow colormap they show up as green
+	and red, and it is not as obvious that green and red represent
+	substantially different data values. It is also not as obvious
+	that red represents a high data value, and the blue represents
+	a low data value.
+      </para>
+    </section><!-- end:Coloring slices -->
+
+    <section>
+      <title>Emphasizing Tooth Features</title>
+      <para>
+	<firstterm>Window width</firstterm> and
+	<firstterm>level</firstterm> controls are used to emphasize
+	data values displayed in the Visualization pane.  Window width
+	is the range of values relative to the ranges center value, or
+	level.  The default window width is the entire dataset.  The
+	default level is the center value of the entire dataset. With
+	the default window and level, all values in the dataset are
+	visible in the viewer. Certain features of the dataset, bone
+	for example, may be emphasized by changing window width and
+	level values.
+      </para>
+      <para>
+	One way to change the window width and level is by using
+	<guilabel>Window/Level</guilabel> slider controls located in
+	the Visualization Settings pane's <guilabel>Planes</guilabel>
+	tab.  <xref linkend="fig.planesTab"/> shows these controls.
+	Two sliders are used to set the window width and level.  It is
+	also possible to type values by clicking on the text entry
+	boxes displayed next to the slider controls.
+      </para>
+
+      <para>
+	The mouse can also be used to change the width and level.
+	Press <mousebutton>Button1</mousebutton> and drag up and down
+	inside of a slice pane to change the level.  Press
+	<mousebutton>Button1</mousebutton> and drag the mouse from
+	side to side to change the window width.
+      </para>
+      <para>
+	The tooth dataset's values range from 0 to 1300.
+	The dataset's default level is 650 and default width is 1300.
+	To view only the enamel, set the window width to 77 and the
+	window level to 942.
+      </para>
+      <figure id="fig.enamel_window_level_control">
+	<title>Window Width and Level Sliders</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Window and Level for enamel on tooth dataset.</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_window_level_control.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_window_level_control.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+    </section>
+  </section><!-- Visualizing Tooth Slices -->
+
+  <section>
+    <title>Visualizing the Tooth Volume</title>
+
+    <para>
+      Initially the volume visualization pane (top of the Visualization pane)
+      displays a three dimensional representation of the data
+      as orthogonal slices.   However, the volume visualization pane
+      can perform full volume rendering as shown in <xref linkend="fig.3dVolRen"/>.
+    </para>
+    
+<!--
+    <figure id="fig.3dview">
+      <title>Volume Pane</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Volume Pane showing tooth dataset.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dview.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dview.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+-->
+
+    <figure id="fig.3dVolRen">
+      <title><ulink url="3dVolRen_hires.jpg">Volume Rendering</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Volume Rendering in Volume Pane</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dVolRen.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dVolRen.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      Turn on volume rendering by clicking the Visualization Settings pane's
+      <guilabel>Volume Rendering</guilabel> tab and then click the
+      check-box labeled <guilabel>Show Volume Rendering</guilabel>. NOTE: On machines with graphics cards that do not support shaders, the user must manipulate the Global Opacity to perform volume rendering.
+    </para>
+
+    <figure id="fig.volrender_tab">
+      <title>Turning on Volume Rendering</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Turning on Volume Rendering</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/volrender_tab.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/volrender_tab.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      The volume can be manipulated with the mouse.  The most commonly
+      used actions are listed in <xref
+      linkend="tbl.vol_mouse_actions"/>.  A complete list of
+      keyboard/mouse actions can be found in the <ulink
+      url="../../Guide/usersguide/srug6_3.html">SCIRun Users
+      Guide</ulink>.
+    </para>
+
+    <table id="tbl.vol_mouse_actions">
+      <title>Volume Mouse Controls</title>
+      <tgroup cols="2">
+	<thead>
+	  <row>
+	    <entry>Control</entry>
+	    <entry>Effect</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry><mousebutton>Button1</mousebutton>+Drag</entry>
+	    <entry>Translate left, right, up, down</entry>
+	  </row>
+	  <row>
+	    <entry><mousebutton>Button3</mousebutton>+Drag</entry>
+	    <entry>Zoom in and out</entry>
+	  </row>
+	  <row>
+	    <entry><mousebutton>Button2</mousebutton>+Drag</entry>
+	    <entry>Rotate volume</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+
+    <para>
+      If the object is no longer in view, click
+      <guibutton>Autoview</guibutton>, found in the Visualization Settings
+      pane's <guilabel>3D Options</guilabel> tab.
+      <guibutton>Autoview</guibutton> restores a resonable view.
+      Pressing <keycombo
+      action="simul"><keycap>Control</keycap><keycap>V</keycap></keycombo>
+      in the volume visualization pane performs the same function.
+    </para>
+
+
+    <section>
+      <title>Using the Paintbrush</title>
+      <para>
+	BioImage provides a simple paintbrush tool for coloring the Volume.
+	First click on the Volume Rendering Tab, shown in <xref linkend="fig.volrender_tab"/>
+	and then click the Add Paint Layer button shown in <xref linkend="fig.volrender_tab"/>
+	item 10. Note a new item named "Paint" is added to the list of color layers 
+	in <xref linkend="fig.pb_paint_layer_added"/>. 
+      </para>
+      <figure id="fig.pb_paint_layer_added">
+	<title>Paint Layer</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Paint Layer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_added.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_added.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>      
+      <para>
+        The paint color defaults to a random color so that each new paint layer has a unique
+	color. Click on the "Color" rectangle in <xref linkend="fig.volrender_tab"/> item 11
+	to bring up the color picker.
+      </para>
+      <para>
+	Using the color picker, set the color to blue by moving the red and green scrolls to the left, the blue
+	scroll to the right, and the alpha scroll to the center, as show in 
+	<xref linkend="fig.pb_color_picker"/>. Then click
+	OK to close the color picker.
+      </para>
+      <figure id="fig.pb_color_picker">
+	<title>Paint Color Picker</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Paint Color Picker</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_color_picker.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_color_picker.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+      <para>
+	Scroll through the remaining layers and disable them by toggling their "On" buttons, as
+	show in <xref linkend="fig.pb_paint_layer_only"/>, so that only the recently added paint layer is active. These layers are 
+	covered in the Transfer Function section.
+      </para>
+      <figure id="fig.pb_paint_layer_only">
+	<title>Only the paint layer is active</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Only the paint layer is active</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_only.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_only.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+      <para>
+	Using your left mouse button, color the area inside of the top of the tooth as displayed inside of the sagittal
+	viewer. You should now see the blue color applied to the volume as shown in <xref linkend="fig.pb_painted_enamel"/>.
+      </para>
+      <figure id="fig.pb_painted_enamel">
+	<title><ulink url="Figures/pb_painted_enamel_hires.jpg">Paint applied to enamel</ulink></title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Paing applied to enamel</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_painted_enamel.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_painted_enamel.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+      <para>
+	Now add another paint layer, and set its color to red. Again, using the left mouse button color the area
+	inside of the root display in the sagittal viewer. You should now see the root colored in red and the
+	top of the tooth colored in blue. 
+      </para>
+    </section>
+
+
+    <section>
+      <title>Transfer Functions</title>
+      <para>
+	BioImage allows editing of a <firstterm>transfer
+	function</firstterm>.  A transfer function assigns color (and
+	other properties) to three dimensional data to help the user
+	comprehend the data visually.  <xref
+	linkend="fig.editTFWindow"/> shows BioImage's interface for
+	editing transfer functions.
+      </para>
+      <para>
+	To edit the transfer function, press <guibutton>Edit
+	Transfer Function</guibutton>, located in the Visualization Settings
+	pane's <guilabel>Volume Rendering
+	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/> item 3.  
+	The new paint layer appears in the list of current editing widgets.
+	To remove any layer, click the red X  delete button next to the paint
+	layer to remove	it from the available widgets.  You may also turn it 
+	on or off using	the On toggle.	After removing the paint layer, 
+	the transfer function 
+	editor should look as it does in <xref linkend="fig.editTFWindow"/>. 
+      </para>
+
+      <figure id="fig.editTFWindow">
+	<title>The Transfer Function Editor</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The Edit Transfer Function Window</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/editTFWindow.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/editTFWindow.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <para>
+	The transfer function editor displays a histogram
+	of data values as shown in <xref linkend="fig.histo"/>.
+      </para>
+
+     <para>
+	The histogram's horizontal axis corresponds to the dataset's
+	range of values.  For the tooth dataset the measure quantity
+	is density. For the tooth dataset, density values range
+	from 0-1300.
+      </para>
+      
+      <para>
+	The histogram's vertical axis measures gradient magnitude.
+	Areas of high gradient magnitude correspond to material
+	borders in the dataset.  Areas of low gradient magnitude
+	correspond to different materials in the dataset.
+      </para>
+      
+      <figure id="fig.histo">
+	<title>Histogram of values in dataset</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Histogram of values in dataset</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/histo.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/histo.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+       <para>
+	Other transfer function editor controls are used to toggle a
+	transfer function on/off, change its color, or assign it a
+	name.  Transfer function sets can be saved to disk and later
+	reloaded.
+      </para>
+    </section>
+
+    <section>
+      <title>Emphasizing Tooth Materials</title>
+
+      <para>
+	In the tooth histogram in <xref linkend="fig.histo"/>
+	four distinct materials are visible, denoted by areas of
+	high concentration near the bottom of the histogram.
+      </para>
+
+      <para>
+	Turn off the current widgets by clicking the corresponding 
+	On checkboxes. The tooth's root is visualized by adding a 
+	rectangle over the first material area, as shown in <xref
+	linkend="fig.root_ren_tf"/>. To do this, click the 
+	<guibutton>Add Rectangle</guibutton> button in the Editor UI.
+      </para>
+      
+      <figure id="fig.root_ren_tf">
+	<title>Transfer function highlighting the tooth's root</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The root of the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/root_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/root_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <para>
+	Now move the rectangle, in turn, to the other material
+	regions to discover the air surrounding the tooth <xref
+	linkend="fig.air_ren_tf"/>, the tooth dentin <xref
+	linkend="fig.dentin_ren_tf"/>, and tooth enamel <xref
+	linkend="fig.enamel_ren"/>.
+      </para>
+
+      <figure id="fig.air_ren_tf">
+	<title>The air around the tooth displayed in the viewer</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The air around the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/air_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/air_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <figure id="fig.dentin_ren_tf">
+	<title>Tooth dentin</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The dentin of the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/dentin_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/dentin_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <figure id="fig.enamel_ren">
+	<title>Tooth enamel</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The enamel of the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+    </section><!-- end:Emphasizing Tooth Materials -->
+
+    <section>
+      <title>Emphasizing Tooth Material Borders</title>
+      
+      <para>
+	The arcs in the histogram <xref linkend="fig.histo"/>
+	represent  borders between different materials in
+	the tooth dataset.
+      </para>
+
+      <para>
+	To visualize the dentin-enamel border, add a triangle and
+	position it on the arc connecting the dentin and enamel,
+	&#x2014;see <xref linkend="fig.border_dentin_enamel_ren_tf"/>.
+      </para>
+
+      <figure id="fig.border_dentin_enamel_ren_tf">
+	<title>Dentin, enamel border</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Adding color to the transfer function</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/border_dentin_enamel_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/border_dentin_enamel_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+    </section><!-- end:Emphsizing Tooth Material Borders -->
+
+  </section><!-- end: Emphsizing Tooth Material Borders -->
+</chapter>

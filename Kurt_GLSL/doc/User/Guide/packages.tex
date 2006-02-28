@@ -1,0 +1,180 @@
+%
+%  For more information, please see: http://software.sci.utah.edu
+% 
+%  The MIT License
+% 
+%  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+%  University of Utah.
+% 
+%  License for the specific language governing rights and limitations under
+%  Permission is hereby granted, free of charge, to any person obtaining a
+%  copy of this software and associated documentation files (the "Software"),
+%  to deal in the Software without restriction, including without limitation
+%  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+%  and/or sell copies of the Software, and to permit persons to whom the
+%  Software is furnished to do so, subject to the following conditions:
+% 
+%  The above copyright notice and this permission notice shall be included
+%  in all copies or substantial portions of the Software.
+% 
+%  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+%  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+%  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+%  DEALINGS IN THE SOFTWARE.
+%
+
+% Document name: package.tex
+%
+
+\chapter{Packages}
+\label{ch:packages}
+\index{packages}
+
+Packages are collections of modules organized by category. \sr{}'s 
+packages and their categories are listed below.   
+
+\section{\sr{} Core}
+\label{sec:srpackage}
+\index{SCIRun@\sr{}!package}
+
+Because \sr{} core is required, it is not technically a package.
+Like a package, \sr{} core provides a set of datatypes, algorithms,
+and modules.  Unlike packages, \sr{} core is required and \sr{} would
+not function without it. Its modules are divided into the
+following categories:
+
+\begin{itemize}
+  \item DataIO
+  \item FieldsCreate
+  \item FieldsData
+  \item FieldsGeometry
+  \item FieldsOther
+  \item Math
+  \item Render
+  \item Visualization
+\end{itemize}
+
+\section{BioPSE}
+\label{sec:biopsepackage}
+\index{SCIRun@\BIOPSE{}!package}
+
+The \BIOPSE{} package supplies a set of modules for interactively
+constructing bioelectric field simulations.
+
+\BIOPSE{} modules comprise a set of modeling tools for building finite element,
+finite difference, and boundary element models and allow for solving
+both forward and inverse bioelectric problems.  Visualization tools
+are provided for interactively investigating scalar and vector field
+data.  \BIOPSE{} allows for rapidly prototyping new modeling, simulation,
+and visualization components and well as providing a flexible method for using
+external packages.  \BIOPSE{} provides support for source localization,
+focusing inversion, and electrical impedance imaging of neural and
+cardiac simulations.
+
+
+\begin{itemize}
+\item DataIO
+\item Forward
+\item Inverse
+\item LeadField
+\item Modeling
+\item Visualization
+\end{itemize}
+
+\section{Teem}
+\label{sec:teempackage}
+\index{Teem}
+
+\scidoclink{Modules}{Developer/Modules/Teem\_bycat.html} of the Teem
+package provide functionality of the \htmladdnormallinkfoot{Teem}
+{http://teem.sourceforge.net/} project's \command{unu} and
+\command{tend} command-line programs and corresponding NRRD and Ten
+libraries.
+
+The Teem project's NRRD library provides data types and functions for
+representing and processing N-dimensional raster data.  The Ten
+library provides types and functions for diffusion tensor processing,
+analysis, and visualization.
+
+Typically, multiple instances of commands \command{unu} and
+\command{tend} are connected by pipes to solve a problem---the
+data-flow network equivalent is available in \sr{} using the Teem
+package.  In other words, the Teem package provides a
+``visual'' programming equivalent to the \command{unu} and
+\command{tend} command-line tools.
+
+The Teem package is divided into the following categories:
+
+\begin{itemize}
+\item DataIO Modules read/write NRRD data from/to files and
+  modules that transform data to/from the NRRD representation.
+\item NrrdData Modules for displaying and setting NRRD property values
+  and for performing miscellaneous operations on NRRD data.
+\item Tend Modules equivalent to commands of the \command{tend}
+  program.  For example, module \module{TendAnhist} implements the
+  command \command{tend anhist}
+\item Segmentation  algorithms operating on NRRD data.
+\item Unu Modules equivalent to commands of the \command{unu} program.
+  For example, module \module{UnuMinMax} implements the command
+  \command{unu minmax}
+\end{itemize}
+
+See \scidoclink{Teem module
+  documentation}{Developer/Modules/Teem\_bycat.html} for more
+information.
+
+\section{MatlabInterface}
+\label{sec:matlabpackage}
+\index{Matlab}
+
+Modules of the Matlabinterface package allow \sr{} to use the
+facilities of Matlab via interactive commands and Matlab scripts.
+
+Matlabinterface modules can be used to convert
+data files between \sr{} and Matlab formats.  Matlabinterface
+modules can be part of \sr{} networks that invoke Matlab scripts to
+perform complex calculations.
+
+Via a sockets interface \sr{} passes scripts and matrix data to
+Matlab, which executes  scripts and returns matrix data to \sr{}.
+Matrix data returned from Matlab can be sent to other modules for
+further processing and visualization.
+
+The Matlab process can run on the same computer as does \sr{} or it
+can run on a separate computer, helping to distribute the load and
+resolving potential licensing conflicts with Matlab.
+
+See Matlabinterface \scidoclink{module
+  documentation}{Developer/Modules/MatlabInterface.html} for more
+information.
+
+\section{Insight (ITK)}
+\label{sec:insightpackage}
+\index{Insight Toolkit}
+
+The \scidoclink{Insight}{Developer/Modules/Insight\_bycat.html}
+package provides an interface to the \htmladdnormallinkfoot{National
+  Library of Medicine Insight Segmentation and Registration Toolkit
+  (ITK)}{http://www.itk.org} .  SCI has developed a method of wrapping
+ITK filters into SCIRun modules.  This gives \sr{} users access to
+ITK filters, which provide image-processing capabilities ranging from
+fundamental algorithms to advanced segmentation and registration
+tools.
+
+\begin{itemize}
+\item Converters
+\item DataIO
+\item Filters
+\end{itemize}
+
+\section{DataIO}
+\label{sec:dataiopackage}
+
+Package \scidoclink{DataIO}{Developer/Modules/DataIO\_bycat.html}
+provides modules for reading data stored in non-SCIRun formats.
+Formats HDF5 and MDSplus are currently supported. The modules convert
+both geometry and data into NRRDS. The Teem package must also be
+installed.

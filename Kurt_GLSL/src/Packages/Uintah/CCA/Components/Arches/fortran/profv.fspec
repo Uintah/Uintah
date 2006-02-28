@@ -1,0 +1,6 @@
+void profv(SFCXVariable<double> uu, SFCYVariable<double> vv,
+     SFCZVariable<double> ww, IntVector idxLo, IntVector idxHi,
+     constCCVariable<int> pcell,  double areapr, int pfield,
+     double flowpr, double inletvel, double denpr, bool xminus, bool xplus,
+     bool yminus, bool yplus, bool zminus, bool zplus, double time,
+     bool ramping, double actual_flow_rate);
