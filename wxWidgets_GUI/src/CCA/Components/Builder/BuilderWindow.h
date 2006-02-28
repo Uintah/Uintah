@@ -121,7 +121,8 @@ public:
   void OnSize(wxSizeEvent& event);
   void OnSashDrag(wxSashEvent& event);
   void OnTest(wxCommandEvent& event);
-
+  void OnCompWizard(wxCommandEvent& event);
+  
   void InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd);
 
   void RedrawMiniCanvas();
