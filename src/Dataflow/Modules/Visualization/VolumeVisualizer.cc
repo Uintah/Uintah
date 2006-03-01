@@ -87,7 +87,8 @@ private:
   vector<int> widget_id_;
   vector<ArrowWidget*> widget_;
   vector<GeomHandle>       widget_switch_;
-  vector<Plane>	clipping_planes_;
+  vector<Plane *>	clipping_planes_;
+  vector<Plane>         widget_clipping_planes_;
   map<ArrowWidget *, int> widget_plane_index_;
 
   GuiDouble gui_sampling_rate_hi_;
@@ -181,9 +182,9 @@ VolumeVisualizer::widget_moved(bool release, BaseWidget *widget)
   map<ArrowWidget *, int>::iterator pos = widget_plane_index_.find(arrow);
   if (pos == widget_plane_index_.end()) return;
   const int idx = pos->second;
-  if (idx < 0 || idx >= int(clipping_planes_.size())) return;
+  if (idx < 0 || idx >= int(widget_clipping_planes_.size())) return;
   Point up = texture_->transform().unproject(arrow->GetPosition());
-  clipping_planes_[idx].ChangePlane(up,-arrow->GetDirection());
+  widget_clipping_planes_[idx].ChangePlane(up,-arrow->GetDirection());
 }
   
 
@@ -214,7 +215,7 @@ VolumeVisualizer::execute()
   ColorMapHandle cmap1;
   
   bool c1 = (cmap1_iport_->get(cmap1) && cmap1.get_rep());
-
+  vector<Plane *> cm2_planes(0);
   vector<int> cmap2_generation;
   port_range_type range = get_iports("ColorMap2");
   port_map_type::iterator pi = range.first;
@@ -226,6 +227,13 @@ VolumeVisualizer::execute()
     if (cmap2_iport && cmap2_iport->get(cmap2H) && cmap2H.get_rep()) {
       cmap2_generation.push_back(cmap2H->generation);
       cmap2.push_back(cmap2H.get_rep());
+      for (unsigned int w = 0; w < cmap2H->widgets().size(); ++w) {
+        ClippingCM2Widget *clip = 
+          dynamic_cast<ClippingCM2Widget *>(cmap2H->widgets()[w].get_rep());
+        if (clip) {
+          cm2_planes.push_back(&clip->plane());
+        }
+      }
     }
     ++pi;
   }
@@ -454,12 +462,19 @@ VolumeVisualizer::execute()
     widget->Move(p);
     widget->redraw();
     widget_plane_index_[widget] = clipping_planes_.size();
-    clipping_planes_.push_back(Plane(1,1,1,1));
+    widget_clipping_planes_.push_back(Plane(1,1,1,1));
     Point up = texture_->transform().unproject(widget->GetPosition());
-    clipping_planes_.back().ChangePlane(up,-bbox.diagonal());
+    widget_clipping_planes_.back().ChangePlane(up,-bbox.diagonal());
   }
 
+  clipping_planes_.clear();
+  for (unsigned int p = 0; p < widget_clipping_planes_.size(); ++p)
+    clipping_planes_.push_back(&widget_clipping_planes_[p]);
 
+  for (unsigned int p = 0; p < cm2_planes.size(); ++p) {
+    clipping_planes_.push_back(cm2_planes[p]);
+  }
+  
   for (unsigned int w = 0; w < widget_switch_.size(); ++w) 
     ((GeomSwitch*)widget_switch_[w].get_rep())->set_state(gui_show_clipping_widgets_.get());
 

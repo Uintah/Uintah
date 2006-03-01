@@ -2161,16 +2161,16 @@ ClippingCM2Widget::io(Piostream &/*stream*/)
 
 ClippingCM2Widget::ClippingCM2Widget() : 
   CM2Widget(),
-  bboxes_()
+  plane_()
 {
   name_ = "Clipping";
 }
 
-ClippingCM2Widget::ClippingCM2Widget(vector<BBox> &bboxes)
+ClippingCM2Widget::ClippingCM2Widget(const Plane &plane)
   : CM2Widget(),
-    bboxes_(bboxes)
+    plane_(plane)
 {
-  name_ = "Clipping";
+  name_ = "Clipping P,ane";
 }
 
 ClippingCM2Widget::~ClippingCM2Widget()
@@ -2178,7 +2178,7 @@ ClippingCM2Widget::~ClippingCM2Widget()
 
 ClippingCM2Widget::ClippingCM2Widget(ClippingCM2Widget& copy) : 
   CM2Widget(copy),
-  bboxes_(copy.bboxes_)
+  plane_(copy.plane_)
 {}
 
 CM2Widget*
