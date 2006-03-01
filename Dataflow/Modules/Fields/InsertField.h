@@ -430,9 +430,71 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     tmesh->find_closest_face(cp[1], cf[1], p[1]);
 
     // Insert the two points and all of the intersections in between them.
+    typename TFIELD::mesh_type::Node::index_type newnode;
+    typename TFIELD::mesh_type::Elem::array_type newelems;
     tmesh->insert_node_in_face(newelems, newnode, cf[0], cp[0]);
+    new_nodes.push_back(newnode);
+    for (unsigned int i = 0; i < newelems.size(); i++)
+    {
+      new_elems.push_back(newelems[i]);
+    }
 
-    tmesh->find_closest_face(
+    if (cf[0] != cf[1])
+    {
+      tmesh->get_nodes(trinodes, cf[0]);
+      for (i = 0; i < 3; i++)
+      {
+        tmesh->get_center(tripts[i], trinodes[i]);
+      }
+
+      Point pnew[3];
+      double dist[3];
+      int mini = -1;
+      int last = -1;
+      for (i = 0; i < 3; i++)
+      {
+        if (i != last)
+        {
+          closest_line_to_line(s, t, p[0], p[1], tripts[i], tripts[(i+1)%3]);
+          if (s > 0.0 && s < 1.0 && t > 0.0 && t < 1.0)
+          {
+            pnew[0] = tripts[i] + t * (tripts[(i+1)%3] - tripts[i]);
+            const Point edgeintersection = p[0] + s * (p[1] - p[0]);
+            dist[i] = (edgeintersection - pnew).length();
+            if (mini == -1 || dist[i] < dist[mini]) mini = i;
+          }
+        }
+      }
+      if (mini != -1)
+      {
+        tmesh->insert_node_in_face(newelems, newnode, cf[0], pnew[mini]);
+        new_nodes.push_back(newnode);
+        for (unsigned int i = 0; i < newelems.size(); i++)
+        {
+          new_elems.push_back(newelems[i]);
+        }
+
+        // Walk to neighbor and go again.
+        //last = nbr - nbr / 3 * 3mini;
+      }
+
+      closest_line_to_line(s, t, p[0], p[1], tripts[1], tripts[2]);
+      if (s > 0.0 && s < 1.0 && t > 0.0 && t < 1.0)
+      {
+        const Point pnew[0] = tripts[0] + t * (tripts[2] - tripts[1]);
+        const Point intr[0] = p[0] + s * (p[1] - p[0]);
+        const double dst[0] = (intr - pnew).length();
+      }
+
+      closest_line_to_line(s, t, p[0], p[1], tripts[2], tripts[0]);
+      if (s > 0.0 && s < 1.0 && t > 0.0 && t < 1.0)
+      {
+        const Point pnew[0] = tripts[0] + t * (tripts[0] - tripts[2]);
+        const Point intr[0] = p[0] + s * (p[1] - p[0]);
+        const double dst[0] = (intr - pnew).length();
+      }
+
+      
     typename TFIELD::mesh_type::Elem::index_type elem;
     if (tmesh->locate(elem, p))
     {
@@ -445,6 +507,13 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
       {
         new_elems.push_back(newelems[i]);
       }
+    }
+
+    tmesh->insert_node_in_face(newelems, newnode, cf[1], cp[1]);
+    new_nodes.push_back(newnode);
+    for (unsigned int i = 0; i < newelems.size(); i++)
+    {
+      new_elems.push_back(newelems[i]);
     }
 
     ++ibi;
