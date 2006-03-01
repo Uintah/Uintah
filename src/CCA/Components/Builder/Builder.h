@@ -78,7 +78,11 @@ public:
   virtual ~Builder();
   virtual void setServices(const sci::cca::Services::pointer &svc);
   virtual std::string getFrameworkURL() { return frameworkURL; }
+
   virtual sci::cca::ComponentID::pointer createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties);
+  virtual void destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout);
+  virtual int destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout);
+
   virtual void getUsedPortNames(const sci::cca::ComponentID::pointer& cid,
 				SSIDL::array1<std::string>& nameArray);
   virtual void getProvidedPortNames(const sci::cca::ComponentID::pointer& cid,

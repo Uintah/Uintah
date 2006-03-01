@@ -36,6 +36,7 @@
 #include <wx/window.h>
 #include <wx/gdicmn.h>
 #include <wx/dc.h>
+#include <wx/region.h>
 
 namespace GUIBuilder {
 
@@ -48,7 +49,10 @@ namespace GUIBuilder {
 Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : NUM_POINTS(12), NUM_DRAW_POINTS(6), pUses(pU), pProvides(pP), possibleConnection(possibleConnection), connectionID(connID)
 {
   points = new wxPoint[NUM_POINTS];
+  drawPoints = new wxPoint[NUM_DRAW_POINTS];
+
   ResetPoints();
+  setConnection();
   // set colour
   if (possibleConnection) {
     colour = wxColour(wxTheColourDatabase->Find("BLACK"));
@@ -58,26 +62,53 @@ Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID:
 
 Connection::~Connection()
 {
-std::cerr << "Connection::~Connection()" << std::endl;
   delete [] points;
+  delete [] drawPoints;
 }
 
 void Connection::ResetPoints()
 {
   wxPoint u = pUses->GetPosition();
   u.y +=  u.y/2; // connect at vertical halfway point on port
-  wxPoint up = pUses->GetParent()->GetCanvasPosition() + u; // position rel. to component icon parent
+
+  wxPoint usesIconPos;
+  pUses->GetParent()->GetCanvasPosition(usesIconPos);
+  wxPoint up = usesIconPos + u; // position rel. to component icon parent
 
   wxPoint p = pProvides->GetPosition();
   p.y += p.y/2;
-  wxPoint pp = pProvides->GetParent()->GetCanvasPosition() + p; // position rel. to component icon parent
 
-  wxRect ru(pUses->GetParent()->GetCanvasPosition(), pUses->GetParent()->GetSize());
-  wxRect rp(pProvides->GetParent()->GetCanvasPosition(), pProvides->GetParent()->GetSize());
+  wxPoint providesIconPos;
+  pProvides->GetParent()->GetCanvasPosition(providesIconPos);
+  wxPoint pp = providesIconPos + p; // position rel. to component icon parent
+
+  wxRect ru(usesIconPos, pUses->GetParent()->GetSize());
+  wxRect rp(providesIconPos, pProvides->GetParent()->GetSize());
 
   int t = PortIcon::PORT_WIDTH;
   int h = PortIcon::PORT_HEIGHT;
   int mid;
+
+std::cerr << "Uses icon pos=("
+	  << usesIconPos.x
+	  << ", "
+	  << usesIconPos.y
+          << ") Uses port pos=("
+	  << up.x
+	  << ", "
+	  << up.y
+	  << ") Provides icon pos=("
+	  << providesIconPos.x
+	  << ", "
+	  << providesIconPos.y
+          << ") Provides port pos=("
+	  << pp.x
+	  << ", "
+	  << pp.y
+	  << ")"
+          << std::endl;
+
+
 
   if ( (up.x + h) < (pp.x - h) ) {
     mid = (up.y + pp.y) / 2;
@@ -165,16 +196,39 @@ void Connection::ResetPoints()
 void Connection::OnDraw(wxDC& dc)
 {
   ResetPoints();
-  wxPoint drawPoints[NUM_DRAW_POINTS];
-  if (setConnection(drawPoints, NUM_DRAW_POINTS)) {
-    if (possibleConnection) {
-      dc.SetPen(wxPen(colour, 2, wxSOLID));
-    } else {
-      dc.SetPen(wxPen(colour, 4, wxSOLID));
-    }
-    dc.SetBrush(*wxTRANSPARENT_BRUSH);
-    dc.DrawLines(NUM_DRAW_POINTS, drawPoints, 0, 0);
+  setConnection();
+  if (highlight) {
+    dc.SetPen(wxPen(hColour, 2, wxSOLID));
+  } else if (possibleConnection) {
+    dc.SetPen(wxPen(colour, 2, wxSOLID));
+  } else {
+    dc.SetPen(wxPen(colour, 4, wxSOLID));
   }
+  dc.SetBrush(*wxTRANSPARENT_BRUSH);
+  dc.DrawLines(NUM_DRAW_POINTS, drawPoints, 0, 0);
+}
+
+bool Connection::IsMouseOver(const wxPoint& position)
+{
+//   ResetPoints();
+//   setConnection();
+
+//   for (int i = 0; i < NUM_DRAW_POINTS; i += 2) {
+// std::cerr << "position=(" << position.x << ", " << position.y << ") " << "point i=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") point i+1=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl;
+
+//     wxRegion r;
+//     if (drawPoints[i].y >= drawPoints[i+1].y) {
+// 	r = wxRegion(drawPoints[i], drawPoints[i+1]);
+//     } else {
+// 	r = wxRegion(drawPoints[i+1], drawPoints[i]);
+//     }
+//     wxRegionContain c = r.Contains(position);
+//     if (c == wxInRegion || c == wxPartRegion) {
+// std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
+//       return true;
+//     }
+//   }
+  return false;
 }
 
 // void Connection::OnLeftDown(wxMouseEvent& event)
@@ -208,17 +262,13 @@ void Connection::OnDraw(wxDC& dc)
 //   }
 // }
 
-bool Connection::setConnection(wxPoint drawPoints[], int arrayLen)
+void Connection::setConnection()
 {
-  if (arrayLen != NUM_DRAW_POINTS) {
-    return false;
-  }
   for (int i = 0; i < NUM_DRAW_POINTS; i++) {
     drawPoints[i] = (points[i] + points[NUM_POINTS - 1 - i]);
     drawPoints[i].x /= 2;
     drawPoints[i].y /= 2;
   }
-  return true;
 }
 
 // void Connection::drawPoints(const wxPoint[] points)

@@ -51,6 +51,10 @@ public:
   void ResetPoints();
   void OnDraw(wxDC& dc);
 
+  bool IsMouseOver(const wxPoint& position);
+  void HighlightConnection() { highlight = true; }
+  void UnhighlightConnection() { highlight = false; }
+
 //   void OnLeftDown(wxMouseEvent& event);
 //   void OnLeftUp(wxMouseEvent& event);
 //   void OnRightClick(wxMouseEvent& event);
@@ -64,15 +68,17 @@ protected:
 
   wxColour colour;
   wxColour hColour;
-  bool setConnection(wxPoint drawPoints[], int arrayLen);
+  void setConnection();
 
 private:
   const int NUM_POINTS;
   const int NUM_DRAW_POINTS;
   wxPoint* points;
+  wxPoint* drawPoints;
   PortIcon* pUses;
   PortIcon* pProvides;
   bool possibleConnection;
+  bool highlight;
   sci::cca::ConnectionID::pointer connectionID;
 
 //   DECLARE_EVENT_TABLE()

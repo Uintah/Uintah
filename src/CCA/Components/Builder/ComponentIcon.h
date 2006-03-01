@@ -82,8 +82,7 @@ public:
   const std::string GetComponentInstanceName() { return cid->getInstanceName(); }
   PortIcon* GetPortIcon(const std::string& portName) { return ports[portName]; }
 
-  wxPoint GetCanvasPosition();
-
+  void GetCanvasPosition(wxPoint& p);
   NetworkCanvas* GetCanvas() const { return canvas; }
 
   // possible to set shape w/ bitmap region?
@@ -107,16 +106,17 @@ protected:
   bool hasGoPort;
   bool isSciPort;
 
-private:
-  ComponentIcon(const ComponentIcon&);
-  ComponentIcon& operator=(const ComponentIcon&);
+  bool isMoving;
 
   sci::cca::ComponentID::pointer cid;
   sci::cca::BuilderComponent::pointer builder;
 
   PortMap ports;
-
   wxPoint movingStart;
+
+private:
+  ComponentIcon(const ComponentIcon&);
+  ComponentIcon& operator=(const ComponentIcon&);
 
   const int ID_MENU_POPUP;
   const int ID_BUTTON_UI;

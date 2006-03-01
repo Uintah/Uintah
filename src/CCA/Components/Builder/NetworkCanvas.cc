@@ -91,9 +91,10 @@ void NetworkCanvas::OnPaint(wxPaintEvent& event)
   // Shifts the device origin so we don't have to worry
   // about the current scroll position ourselves.
   PrepareDC(dc);
-
   PaintBackground(dc);
   OnDraw(dc);
+
+  builderWindow->RedrawMiniCanvas();
 }
 
 void NetworkCanvas::OnDraw(wxDC& dc)
@@ -136,6 +137,7 @@ std::cerr << "NetworkCanvas::ShowPossibleConnections(..): " << port->GetPortName
   Builder::PortType type = port->GetPortType();
   for (ComponentMap::iterator iter = components.begin(); iter != components.end(); iter++) {
     ComponentIcon* ci_ = iter->second;
+
     SSIDL::array1<std::string> portArray;
     builder->getCompatiblePortList(pCI->GetComponentInstance(), port->GetPortName(), ci_->GetComponentInstance(), portArray);
 
@@ -152,7 +154,8 @@ std::cerr << "NetworkCanvas::ShowPossibleConnections(..): " << port->GetPortName
           std::cerr << "Error: could not locate port " << portArray[j] << std::endl;
           continue;
         }
-        con = new Connection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), this);
+        con = new Connection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), true);
+	possibleConnections.push_back(con);
       } else {
         PortIcon *pUses = ci_->GetPortIcon(portArray[j]);
         if (pUses == 0) {
@@ -165,141 +168,72 @@ std::cerr << "NetworkCanvas::ShowPossibleConnections(..): " << port->GetPortName
           return false;
         }
         con = new Connection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), true);
+	possibleConnections.push_back(con);
       }
-      //con->show();
-      possibleConnections.push_back(con);
-      Refresh();
-      //std::cerr<<portList[j]<<std::endl;
     }
   }
-  if (possibleConnections.size() > 0) {
-    return true;
+  if (possibleConnections.empty()) {
+    return false;
   }
-  return false;
+  Refresh();
+  return true;
 }
 
 void NetworkCanvas::ClearPossibleConnections()
 {
+  for (unsigned int i = 0; i < possibleConnections.size(); i++) {
+    Connection *c = possibleConnections[i];
+    delete c;
+  }
   possibleConnections.clear();
   Refresh();
 }
 
-// Connection* NetworkCanvas::FindConnectionIntersection(wxPoint p)
-// {
-//   // compute bounding rectangle for connections, possible connections
-// }
+void NetworkCanvas::HighlightConnection(const wxPoint& point)
+{
+  for (unsigned int i = 0; i < possibleConnections.size(); i++) {
+    // use return value for???
+    bool ret = possibleConnections[i]->IsMouseOver(point);
+    if (ret == true) {
+      possibleConnections[i]->HighlightConnection();
+    }
+  }
+
+  for (unsigned int i = 0; i < connections.size(); i++) {
+  }
+  Refresh();
+}
+
+void NetworkCanvas::Clear()
+{
+  SSIDL::array1<sci::cca::ComponentID::pointer> cids;
+
+  ComponentMap::iterator iter = components.begin();
+  while (iter != components.end()) {
+    ComponentIcon *ci = iter->second;
+    components.erase(iter);
+    iter = components.begin();
+
+    //removeAllConnections(module);
+    cids.push_back(ci->GetComponentInstance());
+
+    ci->Show(false);
+    delete ci;
+  }
+  int ret = builder->destroyInstances(cids, 0);
+  // show warning if not all component instances were destroyed
+}
 
 void NetworkCanvas::OnLeftDown(wxMouseEvent& event)
 {
-//   if (movingIcon || connectingIcon) {
-//     return;
-//   }
-  if (movingIcon) {
-    wxClientDC dc(this);
-    DoPrepareDC(dc);
-    movingStart = event.GetLogicalPosition(dc);
-
-  wxPoint p = event.GetPosition();
-  std::cerr << "NetworkCanvas::OnLeftDown(..) event pos=(" << p.x << ", " << p.y << ")"
-            << std::endl
-	    << "logical event pos=(" << movingStart.x << ", " << movingStart.y << ")" << std::endl;
-    //CaptureMouse();
-  }
-
 }
 
 void NetworkCanvas::OnLeftUp(wxMouseEvent& event)
 {
-  if (movingIcon) {
-    movingIcon->Show(false);
-    wxClientDC dc(this);
-    DoPrepareDC(dc);
-    wxPoint p = event.GetLogicalPosition(dc);
-    CalcScrolledPosition(p.x, p.y, &p.x, &p.y);
-    movingIcon->Move(p.x, p.y);
-    movingIcon->Show(true);
-    builderWindow->RedrawMiniCanvas();
-    SetMovingIcon(0);
-    //ReleaseMouse();
-  }
 }
 
 void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
 {
-  // see wxMouseEvent::LeftIsDown and wxMouseEvent::Dragging
-  if (event.LeftIsDown() && event.Dragging() && movingIcon) {
-
-    wxClientDC dc(this);
-    DoPrepareDC(dc);
-    wxPoint p = event.GetLogicalPosition(dc);
-
-  wxPoint pp = event.GetPosition();
-  std::cerr << "NetworkCanvas::OnMouseMove(..) event pos=(" << pp.x << ", " << pp.y << ")"
-            << std::endl
-	    << "logical event pos=(" << movingStart.x << ", " << movingStart.y << ")" << std::endl;
-    //SetCursor(*handCursor);
-
-    // set tolerance of about 2 pixels
-
-    movingIcon->Show(false);
-
-    int dx = 0, dy = 0, mi_x_ = 0, mi_y_ = 0;
-    CalcUnscrolledPosition(movingIcon->GetPosition().x, movingIcon->GetPosition().y, &mi_x_, &mi_y_);
-    int newX = mi_x_ + p.x - movingStart.x;
-    int newY = mi_y_ + p.y - movingStart.y;
-    wxPoint topLeft(newX, newY);
-
-    // adjust for canvas boundaries
-    if (topLeft.x < 0) {
-      //newX -= topLeft.x; // 0?
-      newX = 0;
-      dx -= 1;
-    }
-
-    if (topLeft.y < 0) {
-      //newY -= topLeft.y; // 0?
-      newY = 0;
-      dy -= 1;
-    }
-
-    int cw = GetVirtualSize().GetWidth();
-    int mw = movingIcon->GetVirtualSize().GetWidth();
-
-    if (topLeft.x > cw - mw) {
-      newX -= topLeft.x - (cw - mw);
-      dx = 1;
-    }
-
-    int ch = GetVirtualSize().GetHeight();
-    int mh = movingIcon->GetVirtualSize().GetHeight();
-
-    if (topLeft.y > ch - mh) {
-      newY -= topLeft.y - (ch - mh);
-      dy = 1;
-    }
-
-    movingStart = p;
-
-
-    CalcScrolledPosition(newX, newY, &newX, &newY);
-    movingIcon->Move(newX, newY);
-    //WarpPointer(newX, newY); // move mouse pointer
-    movingIcon->Show(true);
-    // reset moving icon connections
-    Refresh();
-    builderWindow->RedrawMiniCanvas();
-
-    wxRect windowRect = GetClientRect();
-    if (! windowRect.Inside(newX + mw, newY + mh)) {
-      int xu = 0, yu = 0;
-      GetScrollPixelsPerUnit(&xu, &yu);
-      Scroll(newX/xu, newY/yu);
-    }
-
-    //SetCursor(*arrowCursor);
-  } else {
-    wxScrolledWindow();
-  }
 }
 
 void NetworkCanvas::OnRightClick(wxMouseEvent& event)
@@ -320,6 +254,9 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
 {
   const int x = 10, y = 10;
 
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+
   // cache existing component icon positions, if any
   std::vector<wxRect> rects;
   GetComponentRects(rects);
@@ -327,33 +264,42 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
   ComponentIcon* ci = new ComponentIcon(builder, BuilderWindow::GetNextID(), this, compID, x, y);
   components[compID->getInstanceName()] = ci;
 
+  if (rects.empty()) {
+    ci->Move(x, y);
+    ci->Show(true);
+    //builderWindow->RedrawMiniCanvas();
+    Refresh();
+    return;
+  }
+
   wxPoint origin(x, y);
-  CalcUnscrolledPosition(origin.x, origin.y, &origin.x, &origin.y); // get logical coordinates
+  CalcUnscrolledPosition(origin.x, origin.y, &origin.x, &origin.y);
+// std::cerr << "NetworkCanvas::AddIcon(..) " << ci->GetComponentInstanceName() << " origin = (" << origin.x << ", " << origin.y << ")" << std::endl;
+
   wxSize size = ci->GetSize();
   const int ci_h = size.GetHeight();
   const int ci_w = size.GetWidth();
 
   wxSize displ = size + wxSize(x, y);
-
   int w_ = 0;
   int h_ = 0;
   GetVirtualSize(&w_, &h_); // want the size of the scrollable window area
   const int max_row = h_/displ.GetHeight();
   const int max_col = w_/displ.GetWidth();
 
-  if (rects.empty()) {
-    ci->Move(x, y);
-    ci->Show(true);
-    builderWindow->RedrawMiniCanvas();
-    Refresh();
-    return;
-  }
-
   for (int icol = 0; icol < max_col; icol++) {
     for (int irow = 0; irow < max_row; irow++) {
-
       wxRect candidateRect(origin.x + (displ.GetWidth() * icol), origin.y + (displ.GetHeight() * irow), ci_w, ci_h);
 
+// std::cerr << "\tcandidate rect: ("
+//           << origin.x + (displ.GetWidth() * icol)
+//           << ", "
+//           << origin.y + (displ.GetHeight() * irow)
+//           << ", "
+//           << ci_w
+//           << ", "
+//           << ci_h
+// 	  << ")" << std::endl;
       // check with all the viewable modules - can new icon be placed?
       // searching for intersections with existing icons
       bool intersects = false;
@@ -362,12 +308,18 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
         intersects |= candidateRect.Intersects(*iter);
       }
 
-      if (!intersects) {
+      if (! intersects) {
 	int x_ = 0, y_ = 0;
 	CalcScrolledPosition(candidateRect.GetPosition().x, candidateRect.GetPosition().y, &x_, &y_);
+
+// std::cerr << "\tmove to: ("
+//           << x_
+//           << ", "
+//           << y_
+// 	  << ")" << std::endl;
+
         ci->Move(x_, y_);
         ci->Show(true);
-        Refresh();
 
 	wxRect windowRect = GetClientRect();
 	if (! windowRect.Inside(x_, y_)) {
@@ -375,7 +327,7 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
 	  GetScrollPixelsPerUnit(&xu, &yu);
 	  Scroll(x_/xu, y_/yu);
 	}
-	builderWindow->RedrawMiniCanvas();
+	//builderWindow->RedrawMiniCanvas();
 	Refresh();
         return;
       }
@@ -384,43 +336,74 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
 
   ci->Move(max_row, max_col);
   ci->Show(true);
-  builderWindow->RedrawMiniCanvas();
+  //builderWindow->RedrawMiniCanvas();
   Refresh();
 }
 
-wxRect NetworkCanvas::GetClientRect()
+void NetworkCanvas::GetScrolledPosition(const wxPoint& p, wxPoint& position)
 {
-  wxRect windowRect(wxPoint(0, 0), GetClientSize());
-  // We need to shift the client rectangle to take into account
-  // scrolling, converting device to logical coordinates
-  CalcUnscrolledPosition(windowRect.x, windowRect.y, &windowRect.x, &windowRect.y);
-  return windowRect;
-}
-
-wxPoint NetworkCanvas::GetIconPosition(ComponentIcon* ci)
-{
-  if (!ci) { return wxPoint(0, 0); }
-
-  for (ComponentMap::iterator iter = components.begin(); iter != components.end(); iter++) {
-    if (iter->first == ci->GetComponentInstanceName()) {
-      // calc. component icon position rel. to parent...
-      wxPoint p = iter->second->GetPosition();
-      CalcUnscrolledPosition(p.x, p.y, &p.x, &p.y);
-      return p;
-    }
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+  CalcScrolledPosition(p.x, p.y, &position.x, &position.y);
+  wxRect windowRect = GetClientRect();
+  if (! windowRect.Inside(position.x, position.y)) {
+    int xu = 0, yu = 0;
+    GetScrollPixelsPerUnit(&xu, &yu);
+    Scroll(position.x/xu, position.y/yu);
   }
-
-  return wxPoint(0, 0);
 }
 
-wxRect NetworkCanvas::GetIconRect(ComponentIcon* ci)
+void NetworkCanvas::GetUnscrolledPosition(const wxPoint& p, wxPoint& position)
 {
-  return wxRect(0, 0, 0, 0);
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+  CalcUnscrolledPosition(p.x, p.y, &position.x, &position.y);
 }
+
+void NetworkCanvas::GetUnscrolledMousePosition(wxPoint& position)
+{
+  // DoPrepareDC must be called before CalcUnscrolledPosition
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+  wxPoint mp = wxGetMousePosition();
+  wxPoint stc = ScreenToClient(mp);
+  CalcUnscrolledPosition(stc.x, stc.y, &position.x, &position.y);
+}
+
+ComponentIcon* NetworkCanvas::FindIconAtPointer(wxPoint& position)
+{
+  wxPoint wp;
+  wxWindow* w = wxFindWindowAtPointer(wp);
+  ComponentIcon* ci = dynamic_cast<ComponentIcon*>(w);
+  if (ci) {
+    GetUnscrolledPosition(wp, position);
+    return ci;
+  }
+  return 0;
+}
+
+PortIcon* NetworkCanvas::FindPortIconAtPointer(wxPoint& position)
+{
+  wxPoint wp;
+  wxWindow* w = wxFindWindowAtPointer(wp);
+  PortIcon* pi = dynamic_cast<PortIcon*>(w);
+  if (pi) {
+    GetUnscrolledPosition(wp, position);
+    return pi;
+  }
+  return 0;
+}
+
+// wxRect NetworkCanvas::GetIconRect(ComponentIcon* ci)
+// {
+//   return wxRect(0, 0, 0, 0);
+// }
 
 // compute and cache component icon rectangles
 void NetworkCanvas::GetComponentRects(std::vector<wxRect>& rv)
 {
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
   for (ComponentMap::iterator iter = components.begin(); iter != components.end(); iter++) {
     ComponentIcon* ci_ = iter->second;
     wxPoint p = ci_->GetPosition();
@@ -430,7 +413,7 @@ void NetworkCanvas::GetComponentRects(std::vector<wxRect>& rv)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// protected constructor
+// protected constructor and member functions
 
 NetworkCanvas::NetworkCanvas() : ID_MENU_POPUP(BuilderWindow::GetNextID())
 {
@@ -439,8 +422,21 @@ NetworkCanvas::NetworkCanvas() : ID_MENU_POPUP(BuilderWindow::GetNextID())
 
 void NetworkCanvas::Init()
 {
-  movingIcon = 0;
-  connectingIcon = 0;
+//   movingIcon = 0;
+//   connectingIcon = 0;
+}
+
+// called from within paint event handler only!
+wxRect NetworkCanvas::GetClientRect()
+{
+  // We need to shift the client rectangle to take into account
+  // scrolling, converting device to logical coordinates.
+  //
+  // Device context should have been prepared for scrolling in paint event handler.
+   wxRect windowRect(wxPoint(0, 0), GetClientSize());
+   CalcUnscrolledPosition(windowRect.x, windowRect.y, &windowRect.x, &windowRect.y);
+   //std::cerr << "NetworkCanvas::GetClientRect() rect=(" << windowRect.x << ", " << windowRect.y << ", " << windowRect.width << ", " << windowRect.height <<  ")" << std::endl;
+  return windowRect;
 }
 
 ///////////////////////////////////////////////////////////////////////////
