@@ -64,12 +64,16 @@ void MesquiteDomain::normal_at(
 
 //     // Only get normal if it's a surface owner
 //   if (owner && owner->dimension() == 2)
+//   {
 //     *reinterpret_cast<CubitVector*>(&coordinate) =
 //       dynamic_cast<RefFace*>(owner)->normal_at(
 //         *reinterpret_cast<CubitVector*>(&coordinate));
+//   }  
 //   else
+//   {
 //     coordinate.set(0.0,0.0,0.0);
-  
+//   }
+
 }
 
 void MesquiteDomain::normal_at(
@@ -105,7 +109,8 @@ void MesquiteDomain::closest_point(
 //   CubitVector cubit_position(position[0], position[1], position[2]);
   
 //     // Only get normal if it's a surface owner
-//   if (owner && owner->dimension() == 2){
+//   if (owner && owner->dimension() == 2)
+//   {
 //     RefFace* temp_rface = dynamic_cast<RefFace*>(owner);
 //     if(temp_rface){
 //       temp_rface->find_closest_point_trimmed(cubit_position,
@@ -128,14 +133,15 @@ void MesquiteDomain::domain_DoF(
 //   int i;
 //   MRefEntity* owner=NULL;
   
-//   for(i=0;i<num_handles;++i){
+//   for(i=0;i<num_handles;++i)
+//   {
 //       // Get the domain for the entity_handle
 //     owner = reinterpret_cast<MeshEntity*>(handle_array[i])->owner();
   
 //       // If it's a surface, curve, or vertex, snap back to owner
 //     int temp_int = owner->dimension();
     
-//     switch (temp_int)
+//     switch( temp_int )
 //     {
 //       case 0:
 //       case 1:

@@ -88,7 +88,7 @@ void MeshSmoother::execute()
   }
 
   if (last_field_generation_ == ifieldhandle->generation &&
-      oport_cached("Smoothed") )
+      oport_cached( "Smoothed" ) )
   {
     // We're up to date, return.
     return;
@@ -103,9 +103,8 @@ void MeshSmoother::execute()
   }
   else if (mtd->get_name().find("TriSurfMesh") != string::npos)
   {
-//    ext = "Tri";
+    ext = "Tri";
     error( "TriSurfMesh Fields are not currently supported by the MeshSmoother.");
-    return;
   }
   else if (mtd->get_name().find("HexVolMesh") != string::npos)
   {
@@ -113,6 +112,7 @@ void MeshSmoother::execute()
   }
   else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
   {
+    ext = "Quad";
     error("QuadSurfFields are not currently supported in the MeshSmoother  module.");
     return;
   }
