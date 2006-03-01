@@ -1142,17 +1142,16 @@ class IsoClipAlgoHex : public IsoClipAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
-			      double isoval, bool lte,
-			      MatrixHandle &interpolant);
+  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
+                               double isoval, bool lte, MatrixHandle &interpolant );
 private:
 
 };
 
 template <class FIELD>
 FieldHandle
-IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
-			       double isoval, bool lte, MatrixHandle &interp)
+IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
+                                double isoval, bool lte, MatrixHandle &interp )
 {
   mod->warning( "The IsoClip module for hexes is still under development..." );
   
@@ -1161,7 +1160,46 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
   clipped->copy_properties(mesh);
+//  typename FIELD::mesh_type *final = scinew typename FIELD::mesh_type();
+//  final->copy_properties(mesh);
+
+    //Get the original boundary elements (code from FieldBoundary)
+  vector<typename FIELD::mesh_type::Face::index_type> original_face_list;
   
+  mesh->synchronize(Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+
+    // Walk all the cells in the mesh.
+  typename FIELD::mesh_type::Cell::iterator o_citer; 
+  mesh->begin(o_citer);
+  typename FIELD::mesh_type::Cell::iterator o_citere; 
+  mesh->end(o_citere);
+
+  while( o_citer != o_citere )
+  {
+    typename FIELD::mesh_type::Cell::index_type o_ci = *o_citer;
+    ++o_citer;
+    
+      // Get all the faces in the cell.
+    typename FIELD::mesh_type::Face::array_type o_faces;
+    mesh->get_faces(o_faces, o_ci);
+    
+      // Check each face for neighbors.
+    typename FIELD::mesh_type::Face::array_type::iterator o_fiter = o_faces.begin();
+    
+    while (o_fiter != o_faces.end())
+    {
+      typename FIELD::mesh_type::Cell::index_type o_nci;
+      typename FIELD::mesh_type::Face::index_type o_fi = *o_fiter;
+      ++o_fiter;
+      
+      if( !mesh->get_neighbor( o_nci, o_ci, o_fi ) )
+      {
+          // Faces with no neighbors are on the boundary...
+        original_face_list.push_back( o_fi );
+      }
+    }
+  }
+
      //get a copy of the mesh in tets... 
   const TypeDescription *src_td = fieldh->get_type_description();
   CompileInfoHandle ci = HexToTetAlgo::get_compile_info( src_td );
@@ -1301,48 +1339,69 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   vector<typename FIELD::mesh_type::Node::index_type> node_list;
   vector<typename FIELD::mesh_type::Face::index_type> face_list;
   
-  clipped->synchronize(Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+  clipped->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E );
 
   // Walk all the cells in the mesh.
   typename FIELD::mesh_type::Cell::iterator citer; clipped->begin(citer);
   typename FIELD::mesh_type::Cell::iterator citere; clipped->end(citere);
-
-  while (citer != citere)
+//  int counter = 0;
+  while( citer != citere )
   {
     typename FIELD::mesh_type::Cell::index_type ci = *citer;
     ++citer;
     
       // Get all the faces in the cell.
     typename FIELD::mesh_type::Face::array_type faces;
-    clipped->get_faces(faces, ci);
+    clipped->get_faces( faces, ci );
     
       // Check each face for neighbors.
     typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
     
-    while (fiter != faces.end())
+    while( fiter != faces.end() )
     {
       typename FIELD::mesh_type::Cell::index_type nci;
       typename FIELD::mesh_type::Face::index_type fi = *fiter;
       ++fiter;
       
-      if (! clipped->get_neighbor(nci , ci, fi))
+      if( !clipped->get_neighbor( nci , ci, fi ) )
       {
-        face_list.push_back(fi);
           // Faces with no neighbors are on the boundary...
-        typename FIELD::mesh_type::Node::array_type nodes;
-        clipped->get_nodes(nodes, fi);
-        
-        typename FIELD::mesh_type::Node::array_type::iterator niter = nodes.begin();
-        
-        for (unsigned int i=0; i<nodes.size(); i++)
+          //  make sure that this face isn't on the original boundary
+        Point p;
+        clipped->get_center( p, fi );
+        typename FIELD::mesh_type::Face::index_type old_face;
+        mesh->locate( old_face, p );
+        unsigned int i;
+        bool is_old_boundary = false;
+        for( i = 0; i < original_face_list.size(); i++ )
         {
-          node_iter = vertex_map.find(*niter);
-          if (node_iter == vertex_map.end())
+          if( original_face_list[i] == old_face )
           {
-            node_list.push_back(*niter);
-            vertex_map[*niter] = *niter;
+//            cout << "Found an old boundary face..." << ++counter << endl;
+            is_old_boundary = true;
+            break;
           }
-          ++niter;
+        }
+
+        if( !is_old_boundary )
+        {
+          face_list.push_back( fi );
+          
+          typename FIELD::mesh_type::Node::array_type nodes;
+          clipped->get_nodes(nodes, fi);
+          
+          typename FIELD::mesh_type::Node::array_type::iterator niter = nodes.begin();
+          
+          for( i = 0; i < nodes.size(); i++ )
+          {
+            node_iter = vertex_map.find(*niter);
+            if (node_iter == vertex_map.end())
+            {
+              node_list.push_back(*niter);
+              vertex_map[*niter] = *niter;
+            }
+            ++niter;
+          }
         }
       }
     }
@@ -1406,8 +1465,21 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 //     }
   }
   
+//NOTE TO JS: Do this until the synchronization problem is fixed for hexes...
   clipped->synchronize(Mesh::ALL_ELEMENTS_E);
   FIELD *ofield = scinew FIELD(clipped);
+//   typename FIELD::mesh_type::Elem::iterator fbi, fei;
+//   clipped->begin( fbi ); clipped->end( fei );
+
+//   while( fbi != fei )
+//   {
+//     typename FIELD::mesh_type::Node::array_type fonodes;
+//     clipped->get_nodes( fonodes, *fbi );
+//     final->add_elem( fonodes );
+//     ++fbi;
+//   }
+  
+//  FIELD *ofield = scinew FIELD(final);
   ofield->copy_properties(fieldh.get_rep());
   
 //NOTE TO JS: We'll worry about the interpolation matrix when we've finished the other part of the coding...
