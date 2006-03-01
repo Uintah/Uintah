@@ -44,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/ApplyMappingMatrix.cc\
 	$(SRCDIR)/AttractNormals.cc\
 	$(SRCDIR)/BuildMappingMatrix.cc\
+	$(SRCDIR)/BuildSurfNormals.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
