@@ -1184,8 +1184,8 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
 
   //__________________________________
   // Offset for the coarse level iterator
-  // shift l & h,   1 cell for x+, y+, z+ finePatchfaces
-  // shift l only, -1 cell for x-, y-, z- finePatchfaces
+  // shift l & h,  1 cell for x+, y+, z+ finePatchfaces
+  // shift l & h, -1 cell for x-, y-, z- finePatchfaces
   // 
   // Offset for the coarse_face center (c_FC_offset)
   // shift 1 cell   for x-, y-, z- finePatch faces
@@ -1197,6 +1197,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
 
   if(name == "xminus" || name == "yminus" || name == "zminus"){
     l += offset;
+    h += offset;
     coarse_FC_offset = -offset;
   }
   if(name == "xplus" || name == "yplus" || name == "zplus"){
@@ -1213,15 +1214,16 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
     isRight_CP_FP_pair = true;
   }
   
-  if (cout_dbg.active()) {
-    cout_dbg << "refluxCoarseLevelIterator: face "<< patchFace
-             << " finePatch " << finePatch->getID()
-             << " coarsePatch " << coarsePatch->getID()
-             << " [CellIterator at " << iter.begin() << " of " << iter.end() 
-             << "] coarse_FC_offset " << coarse_FC_offset 
-             << " does this coarse patch own the face centered variable " 
-             << isRight_CP_FP_pair << endl; 
-  }
+#if 0
+  cout << "refluxCoarseLevelIterator: face "<< patchFace
+       << " unmodified Iterator " << f_iter.begin() << " " << f_iter.end()
+       << " finePatch " << finePatch->getID()
+       << " coarsePatch " << coarsePatch->getID()
+       << " [CellIterator at " << iter.begin() << " of " << iter.end() 
+       << "] coarse_FC_offset " << coarse_FC_offset 
+       << " does this coarse patch own the face centered variable " 
+       << isRight_CP_FP_pair << endl;
+#endif 
 }
 
 
