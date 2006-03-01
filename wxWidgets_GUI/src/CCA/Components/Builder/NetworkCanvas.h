@@ -44,10 +44,12 @@ class BuilderWindow;
 class PortIcon;
 class ComponentIcon;
 class Connection;
+class MiniCanvas;
 
 class NetworkCanvas : public wxScrolledWindow {
 public:
   typedef std::map<std::string, ComponentIcon*> ComponentMap;
+  friend class MiniCanvas;
 
   NetworkCanvas(const sci::cca::BuilderComponent::pointer& bc, BuilderWindow* bw, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size);
   virtual ~NetworkCanvas();
@@ -58,6 +60,7 @@ public:
 
   void OnPaint(wxPaintEvent& event);
   void PaintBackground(wxDC& dc);
+
   // Empty implementation, to prevent flicker - from wxWidgets book
   // Handle background paint in paint event handler (on GTK+ might also
   // want to use background style wxBG_STYLE_CUSTOM).
@@ -72,14 +75,19 @@ public:
   void DrawConnections(wxDC& dc);
   bool ShowPossibleConnections(PortIcon* usesPort);
   void ClearPossibleConnections();
+  void HighlightConnection(const wxPoint& point);
 
-  void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }
+  void Clear();
+
+ //  void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }
   void AddIcon(sci::cca::ComponentID::pointer& compID);
 
-  wxRect NetworkCanvas::GetClientRect();
+  void GetUnscrolledPosition(const wxPoint& p, wxPoint& position);
+  void GetUnscrolledMousePosition(wxPoint& position);
+  void GetScrolledPosition(const wxPoint& p, wxPoint& position);
 
-  wxPoint GetIconPosition(ComponentIcon* ci);
-  wxRect GetIconRect(ComponentIcon* ci);
+  ComponentIcon* FindIconAtPointer(wxPoint& position);
+  PortIcon* FindPortIconAtPointer(wxPoint& position);
 
   void GetComponentRects(std::vector<wxRect>& rv);
 
@@ -89,6 +97,9 @@ public:
 protected:
   NetworkCanvas();
   void Init();
+
+  // Only call this from a paint event handler or event handler helper function!
+  wxRect NetworkCanvas::GetClientRect();
 
 private:
   sci::cca::BuilderComponent::pointer builder;
@@ -105,9 +116,9 @@ private:
 
   BuilderWindow* builderWindow;
 
-  ComponentIcon* movingIcon;
-  ComponentIcon* connectingIcon;
-  wxPoint movingStart;
+//   ComponentIcon* movingIcon;
+//   ComponentIcon* connectingIcon;
+//   wxPoint movingStart;
 
   wxCursor *handCursor;
   wxCursor *arrowCursor;

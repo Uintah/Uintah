@@ -158,7 +158,8 @@ BEGIN_EVENT_TABLE(BuilderWindow, wxFrame)
   EVT_MENU(wxID_ABOUT, BuilderWindow::OnAbout)
   EVT_MENU(wxID_EXIT, BuilderWindow::OnQuit)
   EVT_MENU(ID_MENU_TEST, BuilderWindow::OnTest)
-   EVT_MENU(ID_MENU_COMPONENT_WIZARD,BuilderWindow::OnCompWizard)
+  EVT_MENU(ID_MENU_CLEAR, BuilderWindow::OnClear)
+  EVT_MENU(ID_MENU_COMPONENT_WIZARD,BuilderWindow::OnCompWizard)
   //EVT_MENU(MenuTree::ID_MENU_COMPONENTS, MenuTree::OnInstantiateComponent)
   EVT_SIZE(BuilderWindow::OnSize)
   EVT_SASH_DRAGGED_RANGE(ID_WINDOW_LEFT, ID_WINDOW_BOTTOM, BuilderWindow::OnSashDrag)
@@ -215,41 +216,9 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   (*textCtrl) << "Framework URL: " << url.c_str() << "\n";
   (*textCtrl) << "--------------------\n" << "\n";
 
-  // The "About" item should be in the help menu
-  wxMenu *helpMenu = new wxMenu();
-  helpMenu->Append(wxID_ABOUT, wxT("&About...\tF1"), wxT("Show about dialog"));
-
-  wxMenu* compWizardMenu = new wxMenu(wxT(""), wxMENU_TEAROFF);
-  compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
-
-  wxMenu* fileMenu = new wxMenu();
-  fileMenu->Append(ID_MENU_TEST, wxT("&Test\tAlt-T"), wxT("Test component build"));
-  fileMenu->AppendSeparator();
-  fileMenu->Append(ID_MENU_LOAD, wxT("&Load\tAlt-L"), wxT("Load network file"));
-  fileMenu->Append(ID_MENU_INSERT, wxT("&Insert\tAlt-L"), wxT("Insert network file"));
-  fileMenu->Append(wxID_SAVE, wxT("&Save\tAlt-S"), wxT("Save network to file"));
-  fileMenu->Append(wxID_SAVEAS, wxT("&Save As\tAlt-S"), wxT("Save network to file"));
-  fileMenu->AppendSeparator();
-  fileMenu->Append(ID_MENU_CLEAR, wxT("&Clear\tAlt-C"), wxT("Clear All"));
-  fileMenu->Append(wxID_SELECTALL, wxT("Select &All\tCtrl-A"), wxT("Select All"));
-  //fileMenu->Append(ID_MENU_EXECALL, wxT("&Execute All\tCtrl-A"), wxT("Execute All"));
-  fileMenu->AppendSeparator();
-  fileMenu->Append(ID_MENU_WIZARDS, wxT("&Wizards\tAlt-W"), compWizardMenu);
-  fileMenu->AppendSeparator();
-  //fileMenu->Append(ID_MENU_ADDINFO, wxT("&Add Info\tAlt-A"), wxT("Add information to?"));
-  //fileMenu->AppendSeparator();
-  fileMenu->Append(wxID_EXIT, wxT("E&xit\tAlt-X"), wxT("Quit this program"));
-
-  menuBar = new wxMenuBar();
-  menuBar->Append(fileMenu, wxT("&File"));
-
-  buildPackageMenus();
-
-  menuBar->Append(helpMenu, wxT("&Help"));
-  SetMenuBar(menuBar);
+  SetMenus();
 
   //SetFont(wxFont(11, wxDEFAULT, wxNORMAL, wxNORMAL, 0, wxT("Sans")));
-
   statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
   int statusBarWidths[] = { 350, -1 };
   statusBar->SetStatusWidths(2, statusBarWidths);
@@ -265,14 +234,6 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
 
   return true;
 }
-
-void BuilderWindow::Init()
-{
-std::cerr << "BuilderWindow::Init()" << std::endl;
-  //SetFont(wxFont(11, wxDEFAULT, wxNORMAL, wxNORMAL, 0, wxT("Sans")));
-  //SetToolTip(wxT("\"Test tooltip\""));
-}
-
 bool BuilderWindow::SetBuilder(const sci::cca::BuilderComponent::pointer& bc)
 {
   if (builder.isNull()) {
@@ -421,6 +382,58 @@ std::cerr << "BuilderWindow::InstantiateComponent(..)" << std::endl;
     std::cerr << e->getNote() << std::endl;
   }
   statusBar->SetStatusText("Component built", 0);
+}
+
+void BuilderWindow::OnClear(wxCommandEvent& event)
+{
+  networkCanvas->Clear();
+  RedrawMiniCanvas();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// protected member functions
+
+void BuilderWindow::Init()
+{
+  //SetFont(wxFont(11, wxDEFAULT, wxNORMAL, wxNORMAL, 0, wxT("Sans")));
+  //SetToolTip(wxT("\"Test tooltip\""));
+}
+
+void BuilderWindow::SetMenus()
+{
+  // The "About" item should be in the help menu
+  wxMenu *helpMenu = new wxMenu();
+  helpMenu->Append(wxID_ABOUT, wxT("&About...\tF1"), wxT("Show about dialog"));
+
+  wxMenu* compWizardMenu = new wxMenu(wxT(""), wxMENU_TEAROFF);
+  compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
+
+  wxMenu* fileMenu = new wxMenu();
+  fileMenu->Append(ID_MENU_TEST, wxT("&Test\tAlt-T"), wxT("Test component build"));
+  fileMenu->AppendSeparator();
+  fileMenu->Append(ID_MENU_LOAD, wxT("&Load\tAlt-L"), wxT("Load network file"));
+  fileMenu->Append(ID_MENU_INSERT, wxT("&Insert\tAlt-L"), wxT("Insert network file"));
+  fileMenu->Append(wxID_SAVE, wxT("&Save\tAlt-S"), wxT("Save network to file"));
+  fileMenu->Append(wxID_SAVEAS, wxT("&Save As\tAlt-S"), wxT("Save network to file"));
+  fileMenu->AppendSeparator();
+  fileMenu->Append(ID_MENU_CLEAR, wxT("&Clear\tAlt-C"), wxT("Clear All"));
+  fileMenu->Append(wxID_SELECTALL, wxT("Select &All\tCtrl-A"), wxT("Select All"));
+  //fileMenu->Append(ID_MENU_EXECALL, wxT("&Execute All\tCtrl-A"), wxT("Execute All"));
+  fileMenu->AppendSeparator();
+  fileMenu->Append(ID_MENU_WIZARDS, wxT("&Wizards\tAlt-W"), compWizardMenu);
+  fileMenu->AppendSeparator();
+  //fileMenu->Append(ID_MENU_ADDINFO, wxT("&Add Info\tAlt-A"), wxT("Add information to?"));
+  //fileMenu->AppendSeparator();
+  fileMenu->Append(wxID_EXIT, wxT("E&xit\tAlt-X"), wxT("Quit this program"));
+
+  menuBar = new wxMenuBar();
+  menuBar->Append(fileMenu, wxT("&File"));
+
+  buildPackageMenus();
+
+  menuBar->Append(helpMenu, wxT("&Help"));
+  SetMenuBar(menuBar);
 }
 
 

@@ -97,12 +97,17 @@ void MiniCanvas::OnDraw(wxDC& dc)
   // get connections lines
 
   wxRect canvasRect = canvas->GetClientRect();
+  //std::cerr << "MiniCanvas::OnDraw(wxDC& dc) canvas rect=(" << canvasRect.x << ", " << canvasRect.y << ", " << canvasRect.width << ", " << canvasRect.height <<  ")" << std::endl;
+
+
   scaleRect(canvasRect, scaleV, scaleH);
-  dc.SetPen(wxPen(*wxBLACK, 1, wxSOLID));
+  //dc.SetPen(wxPen(*wxRED, 1, wxSOLID));
+  dc.SetPen(*wxRED_PEN);
   dc.DrawRectangle(canvasRect.x, canvasRect.y, canvasRect.width, canvasRect.height);
   //dc.DrawRectangle(ceil(canvasRect.x / scaleH), ceil(canvasRect.y / scaleV), ceil(canvasRect.width / scaleH), ceil(canvasRect.height / scaleV));
 
   dc.SetBrush(*wxWHITE);
+  dc.SetPen(wxPen(*wxBLACK, 1, wxSOLID));
   for (std::vector<wxRect>::iterator it = iRects.begin(); it != iRects.end(); it++) {
     scaleRect(*it, scaleV, scaleH);
     dc.DrawRectangle(it->x, it->y, it->width, it->height);

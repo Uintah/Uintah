@@ -60,7 +60,7 @@ END_EVENT_TABLE()
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
 
 ComponentIcon::ComponentIcon(const sci::cca::BuilderComponent::pointer& bc, wxWindowID winid, NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y)
-  : /* dragMode(TEST_DRAG_NONE), */ canvas(parent), hasUIPort(false), hasGoPort(false), isSciPort(false), cid(compID), builder(bc), ID_MENU_POPUP(BuilderWindow::GetNextID()), ID_BUTTON_UI(BuilderWindow::GetNextID()), ID_BUTTON_STATUS(BuilderWindow::GetNextID()), ID_PROGRESS(BuilderWindow::GetNextID())
+  : /* dragMode(TEST_DRAG_NONE), */ canvas(parent), hasUIPort(false), hasGoPort(false), isSciPort(false), isMoving(false), cid(compID), builder(bc), ID_MENU_POPUP(BuilderWindow::GetNextID()), ID_BUTTON_UI(BuilderWindow::GetNextID()), ID_BUTTON_STATUS(BuilderWindow::GetNextID()), ID_PROGRESS(BuilderWindow::GetNextID())
 {
 
   Init();
@@ -216,43 +216,134 @@ std::cerr << "ComponentIcon::OnPaint()" << std::endl;
 
 void ComponentIcon::OnLeftDown(wxMouseEvent& event)
 {
-  wxPoint p = event.GetPosition();
-  wxClientDC dc;
-  wxPoint lp = event.GetLogicalPosition(dc);
-  std::cerr << "ComponentIcon::OnLeftDown(..) event pos=(" << p.x << ", " << p.y << ")"
-            << std::endl
-	    << "logical event pos=(" << lp.x << ", " << lp.y << ")" << std::endl;
+  wxPoint mp;
+  canvas->GetUnscrolledMousePosition(mp);
+  canvas->GetUnscrolledPosition(event.GetPosition(), movingStart);
 
-  // normally, don't propagate mouse move events; in this case, we want the network canvas (parent) to handle this
-  canvas->SetMovingIcon(this);
-  //CaptureMouse();
-  canvas->GetEventHandler()->ProcessEvent(event);
+  std::cerr << "ComponentIcon::OnLeftDown(..) pos=(" << movingStart.x << ", " << movingStart.y << ") "
+            << "mouse pos=(" << mp.x << ", " << mp.y << ")"
+            << std::endl;
+
+  isMoving = true;
 }
 
-void ComponentIcon::OnLeftUp(wxMouseEvent& event)
+void ComponentIcon::OnLeftUp(wxMouseEvent& WXUNUSED(event))
 {
-  canvas->GetEventHandler()->ProcessEvent(event);
-  //ReleaseMouse();
+  isMoving = false;
 }
 
 void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 {
-  // normally, don't propagate mouse move events; in this case, we want the network canvas (parent) to handle this
-  //canvas->SetMovingIcon(this);
+  if (event.LeftIsDown() && event.Dragging() && isMoving) {
+    Show(false);
+    CaptureMouse();
+    wxPoint p;
+    canvas->GetUnscrolledPosition(event.GetPosition(), p);
+    wxPoint mp;
+    canvas->GetUnscrolledMousePosition(mp);
 
-//   wxPoint p = event.GetPosition();
-//   wxClientDC dc;
-//   wxPoint lp = event.GetLogicalPosition(dc);
-//   std::cerr << "ComponentIcon::OnMouseMove(..) event pos=(" << p.x << ", " << p.y << ")"
-//             << std::endl
-// 	    << "logical event pos=(" << lp.x << ", " << lp.y << ")" << std::endl;
+    wxPoint pp;
+    GetCanvasPosition(pp);
+    //canvas->FindIconAtPointer(pp);
 
-  canvas->GetEventHandler()->ProcessEvent(event);
+    int dx = 0, dy = 0;
+    int newX = pp.x + p.x - movingStart.x;
+    int newY = pp.y + p.y - movingStart.y;
+    //int newX = mp.x + p.x - movingStart.x;
+    //int newY = mp.y + p.y - movingStart.y;
+    wxPoint topLeft;
+    canvas->GetUnscrolledPosition(wxPoint(newX, newY), topLeft);
+
+    std::cerr << "ComponentIcon::OnMouseMove(..) event pos=(" << p.x << ", " << p.y << ")"
+            << std::endl
+	    << "\tmouse canvas pos=(" << mp.x << ", " << mp.y << ")"
+            << std::endl
+	    << "\ticon pos=(" << pp.x << ", " << pp.y << ")"
+           << std::endl
+	    << "\ttop left pos=(" << topLeft.x << ", " << topLeft.y << ")"
+            << std::endl;
+
+    // adjust for canvas boundaries
+    if (topLeft.x < 0) {
+      newX -= topLeft.x;
+      if (p.x < 0) {
+	mp.x -= p.x;
+	p.x = 0;
+	WarpPointer(mp.x, mp.y); // move mouse pointer
+      }
+      dx -= 1;
+    }
+
+    if (topLeft.y < 0) {
+      newY -= topLeft.y;
+      if (p.y < 0) {
+	mp.y -= p.y;
+	p.y = 0;
+	WarpPointer(mp.x, mp.y); // move mouse pointer
+      }
+      dy -= 1;
+    }
+
+//     int cw = canvas->GetVirtualSize().GetWidth();
+//     int mw = GetSize().GetWidth();
+
+//     if (topLeft.x > cw - mw) {
+//       newX -= topLeft.x - (cw - mw);
+//       if (p.x > cw) {
+//         mp.x -= (p.x - cw);
+//         p.x = cw - mw;
+// 	WarpPointer(mp.x, mp.y);
+//       }
+//       dx = 1;
+//     }
+
+    int ch = canvas->GetVirtualSize().GetHeight();
+    int mh = GetSize().GetHeight();
+
+    if (topLeft.y > ch - mh) {
+      newY -= topLeft.y - (ch - mh);
+      if (p.y > ch) {
+        mp.y -= (p.y - ch);
+        p.y = ch;
+	WarpPointer(mp.x, mp.y);
+      }
+      dy = 1;
+    }
+
+    movingStart = p;
+//     wxPoint np;
+//     canvas->GetScrolledPosition(wxPoint(newX, newY), np);
+//     std::cerr << "\tmove to scrolled (" << np.x << ", " << np.y << ") or unscrolled (" << newX << ", " << newY << ")" << std::endl;
+    //Move(np.x, np.y);
+    Move(newX, newY);
+    Show(true);
+    ReleaseMouse();
+
+    canvas->Refresh();
+
+
+//     CalcScrolledPosition(newX, newY, &newX, &newY);
+//     movingIcon->Move(newX, newY);
+//     movingIcon->Show(true);
+//     // reset moving icon connections
+//     Refresh();
+//     builderWindow->RedrawMiniCanvas();
+
+//     wxRect windowRect = GetClientRect();
+//     if (! windowRect.Inside(newX + mw, newY + mh)) {
+//       int xu = 0, yu = 0;
+//       GetScrollPixelsPerUnit(&xu, &yu);
+//       Scroll(newX/xu, newY/yu);
+//     }
+  }
+
+
+
 }
 
-wxPoint ComponentIcon::GetCanvasPosition()
+void ComponentIcon::GetCanvasPosition(wxPoint& p)
 {
-  return canvas->GetIconPosition(this);
+  canvas->GetUnscrolledPosition(this->GetPosition(), p);
 }
 
 
@@ -267,7 +358,5 @@ ComponentIcon::ComponentIcon() : ID_MENU_POPUP(BuilderWindow::GetNextID()), ID_B
 void ComponentIcon::Init()
 {
 }
-
-
 
 }

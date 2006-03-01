@@ -74,7 +74,19 @@ private:
     sci::cca::BuilderComponent::pointer builder;
 };
 
-void wxGUIThread::run()
+class DestroyInstancesThread : public Runnable {
+public:
+    DestroyInstancesThread(const sci::cca::BuilderComponent::pointer &bc) : builder(bc) {}
+    virtual ~DestroyInstancesThread() {}
+    virtual void run();
+    sci::cca::BuilderComponent::pointer getBuilder() { return builder; }
+
+private:
+    sci::cca::BuilderComponent::pointer builder;
+};
+
+void
+wxGUIThread::run()
 {
     std::cerr << "******************wxGUIThread::run()**********************" << std::endl;
     wxSCIRunApp::setTopBuilder(builder);
@@ -86,7 +98,13 @@ void wxGUIThread::run()
     wxEntry(argc, argv);  // never returns, do initialization from OnInit
 }
 
-bool wxSCIRunApp::OnInit()
+void
+DestroyInstancesThread::run()
+{
+}
+
+bool
+wxSCIRunApp::OnInit()
 {
   wxApp::OnInit(); // for command line processing (if any)
 
@@ -115,7 +133,8 @@ bool wxSCIRunApp::OnInit()
   return true;
 }
 
-void wxSCIRunApp::addTopWindow(const sci::cca::BuilderComponent::pointer& bc)
+void
+wxSCIRunApp::addTopWindow(const sci::cca::BuilderComponent::pointer& bc)
 {
   Guard g(&appLock);
 std::cerr << "wxSCIRunApp::AddTopWindow(): from thread " << Thread::self()->getThreadName() << std::endl;
@@ -141,7 +160,8 @@ std::cerr << "Builder::~Builder(): from thread " << Thread::self()->getThreadNam
 // Subsequent Builders should only run in the GUI thread.
 // wxSCIRunApp functions should only run in the GUI thread.
 // (is is possible to defend against instantiating in the wrong thread?)
-void Builder::setServices(const sci::cca::Services::pointer &svc)
+void
+Builder::setServices(const sci::cca::Services::pointer &svc)
 {
   Guard g(&builderLock);
   std::cerr << "Builder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
@@ -173,9 +193,11 @@ void Builder::setServices(const sci::cca::Services::pointer &svc)
   }
 }
 
-sci::cca::ComponentID::pointer Builder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
+sci::cca::ComponentID::pointer
+Builder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
 {
-std::cerr << "Builder::createInstance(): from thread " << Thread::self()->getThreadName() << std::endl;
+  Guard g(&builderLock);
+//std::cerr << "Builder::createInstance(): from thread " << Thread::self()->getThreadName() << std::endl;
   sci::cca::TypeMap::pointer tm = services->createTypeMap();
   sci::cca::ComponentID::pointer cid;
   try {
@@ -188,6 +210,46 @@ std::cerr << "Builder::createInstance(): from thread " << Thread::self()->getThr
     std::cerr << "Error: Could not create an instance of " << className << "; " <<  e->getNote() << std::endl;
   }
   return cid;
+}
+
+void
+Builder::destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout)
+{
+  Guard g(&builderLock);
+  std::string className = cid->getInstanceName();
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    bs->destroyInstance(cid, timeout);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Could not destroy an instance of " << className << "; " <<  e->getNote() << std::endl;
+  }
+}
+
+int
+Builder::destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout)
+{
+  Guard g(&builderLock);
+  // do this in a new thread?
+  std::string className;
+  int destroyedCount = 0;
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+
+    for (SSIDL::array1<sci::cca::ComponentID::pointer>::const_iterator iter = cidArray.begin(); iter != cidArray.end(); iter++) {
+      className = (*iter)->getInstanceName();
+      bs->destroyInstance(*iter, timeout);
+      destroyedCount++;
+    }
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: Could not destroy an instance of " << className << "; " <<  e->getNote() << std::endl;
+  }
+  return destroyedCount;
 }
 
 void
@@ -207,6 +269,7 @@ Builder::getUsedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::arra
 void
 Builder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
 {
+  Guard g(&builderLock);
   try {
     sci::cca::ports::BuilderService::pointer bs =
       pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
@@ -218,8 +281,10 @@ Builder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::
   }
 }
 
-void Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray)
+void
+Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray)
 {
+  Guard g(&builderLock);
   try {
     sci::cca::ports::ComponentRepository::pointer rep =
       pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
@@ -233,11 +298,13 @@ void Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentCla
   }
 }
 
-void Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
-				    const std::string& usesPortName,
-				    const sci::cca::ComponentID::pointer &provider,
-				    SSIDL::array1<std::string>& portArray)
+void
+Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
+			       const std::string& usesPortName,
+			       const sci::cca::ComponentID::pointer &provider,
+			       SSIDL::array1<std::string>& portArray)
 {
+  Guard g(&builderLock);
   try {
     sci::cca::ports::BuilderService::pointer bs =
       pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
@@ -251,6 +318,7 @@ void Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
 
 bool Builder::go()
 {
+  //Guard g(&builderLock);
   return true;
 }
 

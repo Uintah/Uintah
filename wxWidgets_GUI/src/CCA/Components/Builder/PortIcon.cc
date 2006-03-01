@@ -104,16 +104,14 @@ void PortIcon::OnLeftUp(wxMouseEvent& event)
   parent->GetCanvas()->ClearPossibleConnections();
 }
 
-void PortIcon::OnMouseMove(wxMouseEvent& event)
+void PortIcon::OnMouseMove(wxMouseEvent& WXUNUSED(event))
 {
   if (connecting) {
     NetworkCanvas *canvas = parent->GetCanvas();
-    wxPoint p = event.GetPosition();
-    wxPoint pp = wxGetMousePosition();
-    canvas->CalcUnscrolledPosition(pp.x, pp.y, &pp.x, &pp.y);
-    std::cerr << "PortIcon::OnMouseMove(..): (" << p.x << ", " << p.y << ")" << std::endl
-	      << "Canvas position: (" << pp.x << ", " << pp.y << ")" << std::endl;
-    // figure out which connection we're over and change to highlight colour
+//     wxPoint p = event.GetPosition();
+    wxPoint p;
+    canvas->GetUnscrolledMousePosition(p);
+    canvas->HighlightConnection(p);
   }
 }
 
