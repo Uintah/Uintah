@@ -75,16 +75,16 @@ namespace SCIRun {
 "TEMP m; \n" \
 "TEMP b; \n" \
 "MOV c, 0.0; \n" \
-"MUL v.x, v.w, g.w; \n" \
+"MUL v.w, v.w, g.w; \n" \
 "MOV m, mask; \n"
 
 #define VOL_TFLUP_2_1_MASK \
-"TEX b, v, texture[2], 2D; \n" \
+"TEX b, v.wxyz, texture[2], 2D; \n" \
 "MUL m, m, 0.5; \n" \
 "FRC f, m; \n" \
 "SGE f, f, 0.5; \n" \
 "MAD_SAT c, b, f, c; \n" \
-"ADD v.x, v.x, g.w; \n"
+"ADD v.w, v.w, g.w; \n"
 
 #define VOL_TFLUP_2_4 \
 "TEX c, v.wxyz, texture[2], 2D; \n"

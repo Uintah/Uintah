@@ -65,7 +65,7 @@ namespace SCIRun {
 VolumeRenderer::VolumeRenderer(TextureHandle tex,
                                ColorMapHandle cmap1, 
 			       vector<ColorMap2Handle> &cmap2,
-			       vector<Plane> &planes,
+			       vector<Plane *> &planes,
                                int tex_mem):
   TextureRenderer(tex, cmap1, cmap2, tex_mem),
   grange_(1.0),

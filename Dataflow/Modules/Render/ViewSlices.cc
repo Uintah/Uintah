@@ -407,6 +407,7 @@ class ViewSlices : public Module
   // Methods to send geometry to Viewer
   int			send_mip_textures(SliceWindow &);
   int			send_slice_textures(NrrdSlice &slice);
+  int			set_slice_clipping(NrrdSlice &slice);
   void			send_all_geometry();
 
   // Misc
@@ -2246,6 +2247,7 @@ ViewSlices::extract_window_slices(SliceWindow &window) {
     window.slices_.push_back(scinew NrrdSlice(volumes_[s], &window));
   for_each(&ViewSlices::update_slice_from_window);
   for_each(window, &ViewSlices::set_slice_nrrd_dirty);
+
   set_slice_nrrd_dirty(window.paint_);
 
   return window.slices_.size();
@@ -2428,6 +2430,7 @@ ViewSlices::prev_slice(SliceWindow &window)
   window.cursor_moved_ = true;
   extract_window_slices(window);
   redraw_all();
+  want_to_execute();
 }
 
 void
@@ -2441,6 +2444,7 @@ ViewSlices::next_slice(SliceWindow &window)
   window.cursor_moved_ = true;
   extract_window_slices(window);
   redraw_all();
+  want_to_execute();
 }
 
 void
@@ -2557,7 +2561,7 @@ ViewSlices::execute()
     for_each(&ViewSlices::set_paint_dirty);
   paint_lock_.unlock();
   
-      
+          
   n1_cmap_iport_->get(colormap_);
   bool re_extract = 
     colormap_.get_rep()?(colormap_generation_ != colormap_->generation):false;
@@ -2656,7 +2660,7 @@ ViewSlices::execute()
     for_each(&ViewSlices::autoview);
   redraw_all();
   TCLTask::unlock();
-
+  for_each(&ViewSlices::set_slice_clipping);
   cmap2_oport_->send(cm2_);
   cmap2_iport_->get(cm2_);
   update_state(Module::Completed);
@@ -3075,6 +3079,40 @@ ViewSlices::send_slice_textures(NrrdSlice &slice) {
   gobjs_[name] = geom_oport_->addObj(gobj, name, &slice_lock_);
   return 1;
 }
+
+int
+ViewSlices::set_slice_clipping(NrrdSlice &slice) {
+  if (cm2_.get_rep() == 0) return 0;
+  vector<ClippingCM2Widget *> clip;
+  for (unsigned int w = 0; w < cm2_->widgets().size(); ++w) {
+    ClippingCM2Widget *temp = 
+      dynamic_cast<ClippingCM2Widget *>(cm2_->widgets()[w].get_rep());
+    if (temp)
+      clip.push_back(temp);
+  }
+
+  while (clip.size() < 3) {
+    clip.push_back(scinew ClippingCM2Widget());
+    cm2_->widgets().push_back(clip.back());
+  }
+  
+  if (slice.axis_ < clip.size()) {
+    slice.do_lock();
+    set_slice_coords(slice, false);
+    for (int i = 0; i < 9; ++i)
+      slice.pos_coords_[i] = slice.pos_coords_[i]/(max_slice_[i%3]*scale_[i%3]);
+    Point p1(slice.pos_coords_[0], slice.pos_coords_[1], slice.pos_coords_[2]);
+    Point p2(slice.pos_coords_[3], slice.pos_coords_[4], slice.pos_coords_[5]);
+    Point p3(slice.pos_coords_[6], slice.pos_coords_[7], slice.pos_coords_[8]);
+    clip[slice.axis_]->plane() = Plane(p1, p2, p3);
+    set_slice_coords(slice, true);
+    slice.do_unlock();
+  }
+
+
+  return 1;
+}
+
 
 int
 ViewSlices::set_paint_dirty(SliceWindow &window) 
