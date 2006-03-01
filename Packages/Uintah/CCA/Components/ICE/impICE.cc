@@ -816,15 +816,12 @@ void ICE::updatePressure(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       parent_new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel, indx,patch,gn,0);
     }             
+    // set boundary conditions on imp_delP
+    set_imp_DelP_BC(imp_delP, patch, lb->imp_delPLabel, new_dw);
     //__________________________________
     //  add delP to press_equil
-    //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure
-    // imp_delP is ill-defined in teh extraCells
+    //  AMR:  hit the extra cells, you need to update the pressure in these cells
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
-      IntVector c = *iter;
-      press_CC[c] = press_equil[c];
-    }    
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       sum_imp_delP[c] = sum_imp_delP_old[c] + imp_delP[c];
       press_CC[c] = press_equil[c] + sum_imp_delP[c];
