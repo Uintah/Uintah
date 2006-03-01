@@ -788,7 +788,8 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     if(switchDebug_setupRHS){ 
       ostringstream desc;     
       desc << "apply_refluxFluxes_RHS"<< "_patch_"<< coarsePatch->getID();
-      printData(0, coarsePatch,   1, desc.str(), "rhs",rhs);
+      printData(0, coarsePatch,   1, desc.str(), "rhs",             rhs);
+      printData(0, coarsePatch,   1, desc.str(), "refluxCorrection",sumRefluxCorrection);
     }
   }  // course patch loop 
 }

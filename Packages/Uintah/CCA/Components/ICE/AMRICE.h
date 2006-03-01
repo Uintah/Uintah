@@ -270,10 +270,11 @@ void ICE::refluxOperator_applyCorrectionFluxes(
       return;
     };
 
-#if 0    
-    cout << name << " l " << l << " h " << h << endl;
+#if 0
+    cout << x_name << "   face " << finePatch->getFaceName(patchFace)
+         << "   l " << c_iter.begin() << " h " << c_iter.end() << endl;
     cout << " coarsePatch " << *coarsePatch << endl;
-    cout << " finePatch " << *finePatch << endl; 
+    cout << " finePatch   " << *finePatch   << endl; 
 #endif    
     
     //__________________________________
