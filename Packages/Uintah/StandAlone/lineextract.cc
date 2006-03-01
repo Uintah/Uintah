@@ -168,6 +168,12 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
         // find the corresponding patches
         Level::selectType patches;
         level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
+        if( patches.size() == 0){
+          cerr << " Could not find any patches on Level " << level->getIndex()
+               << " that contain cells along line: " << var_start << " and " << var_end 
+               << " Double check the starting and ending indices "<< endl;
+          exit(1);
+        }
 
         // query all the data up front
         vector<Variable*> vars(patches.size());
