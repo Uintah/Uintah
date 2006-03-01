@@ -423,7 +423,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     }
   } else if (args[1] == "redraw") {
     histo_dirty_ |= gui_histo_.changed();
-    redraw();
+    redraw(args.count() >= 3 && args.get_int(2));
   } else if (args[1] == "destroygl") {
     if (ctx_) {
       delete ctx_;
