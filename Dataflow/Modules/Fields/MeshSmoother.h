@@ -39,6 +39,7 @@
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/HexVolMesh.h>
+#include <Dataflow/Modules/Fields/QuadToTri.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 #include <set>
@@ -220,23 +221,10 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressRepor
   if(err)
   {
     mod->error( "Unexpected error from Mesquite code." );
-//    PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
     return field;  
   }
   
   untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
-//     if(cur_ent==NULL){
-//       PRINT_ERROR("Mesquite Smoother recieved null pointer to entity.\n");
-//       PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
-//       return CUBIT_FAILURE;
-//     }
-//     else if(!cur_ent->is_meshed()){
-//       PRINT_WARNING( "Smoother called for %s (%s %d) which is not meshed\n",
-//                      cur_ent->entity_name().c_str(),
-//                      cur_ent->class_name(), cur_ent->id() );
-//     }
-//     else
-//     {
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
     // Create a MeshDomain
@@ -423,23 +411,10 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressRepor
   if(err)
   {
     mod->error( "Unexpected error from Mesquite code." );
-//    PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
     return field;  
   }
   
   untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
-//     if(cur_ent==NULL){
-//       PRINT_ERROR("Mesquite Smoother recieved null pointer to entity.\n");
-//       PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
-//       return CUBIT_FAILURE;
-//     }
-//     else if(!cur_ent->is_meshed()){
-//       PRINT_WARNING( "Smoother called for %s (%s %d) which is not meshed\n",
-//                      cur_ent->entity_name().c_str(),
-//                      cur_ent->class_name(), cur_ent->id() );
-//     }
-//     else
-//     {
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
     // Create a MeshDomain
@@ -536,8 +511,10 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::smart_laplacian_smoother( ProgressReport
     return field;
   }
 
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(ofield->mesh().get_rep());  
+
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-  MesquiteDomain domain;
+  MesquiteDomain domain( domain_mesh );
 
   if(err)
   {
@@ -626,27 +603,15 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::shape_improvement_wrapper( ProgressRepor
   if(err)
   {
     mod->error( "Unexpected error from Mesquite code." );
-//    PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
     return field;  
   }
   
   untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
-//     if(cur_ent==NULL){
-//       PRINT_ERROR("Mesquite Smoother recieved null pointer to entity.\n");
-//       PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
-//       return CUBIT_FAILURE;
-//     }
-//     else if(!cur_ent->is_meshed()){
-//       PRINT_WARNING( "Smoother called for %s (%s %d) which is not meshed\n",
-//                      cur_ent->entity_name().c_str(),
-//                      cur_ent->class_name(), cur_ent->id() );
-//     }
-//     else
-//     {
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-    // Create a MeshDomain
-  MesquiteDomain domain;
+    // Create a MeshDomain 
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(ofield->mesh().get_rep());
+  MesquiteDomain domain( domain_mesh );
         
     // run smoother
   if(err)
@@ -738,8 +703,25 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressRepor
     return field;
   }
 
-  MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-//  MesquiteDomain domain;
+  MesquiteMesh<FIELD> entity_mesh( ofield, mod );  
+
+    //The QuadSurfMesh class doesn't currently support a 'snap_to'
+    // function, so we'll convert the quads to tris for the domain 
+    // functions until the classes can be updated appropriately...
+  const TypeDescription *src_td = fieldh->get_type_description();
+  CompileInfoHandle qci = QuadToTriAlgo::get_compile_info(src_td);
+  Handle<QuadToTriAlgo> qalgo;
+  if( !DynamicCompilation::compile(qci, qalgo, mod )) return fieldh;
+  FieldHandle tri_surf_h;
+  if( !qalgo.get_rep() || !qalgo->execute( fieldh, tri_surf_h, mod ) )
+  {
+    mod->warning( "QuadToTri conversion failed to copy data." );
+    return fieldh;
+  }
+    
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_surf_h->mesh().get_rep());  
+  domain_mesh->synchronize( Mesh::EDGES_E | Mesh::NORMALS_E );
+  MesquiteDomain domain( domain_mesh );
 
   if(err)
   {
@@ -748,8 +730,8 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressRepor
   }
   else
   {
-//    queue.run_instructions( &entity_mesh, &domain, err ); 
-    queue.run_instructions( &entity_mesh, err ); 
+    queue.run_instructions( &entity_mesh, &domain, err ); 
+//    queue.run_instructions( &entity_mesh, err ); 
     MSQ_CHKERR(err);
     if(err)
     {
@@ -828,27 +810,29 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::shape_improvement_wrapper( ProgressRepo
   if(err)
   {
     mod->error( "Unexpected error from Mesquite code." );
-//    PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
     return field;  
   }
   
   untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
-//     if(cur_ent==NULL){
-//       PRINT_ERROR("Mesquite Smoother recieved null pointer to entity.\n");
-//       PRINT_INFO("\n   Mesquite:  %s\n",err.error_message());
-//       return CUBIT_FAILURE;
-//     }
-//     else if(!cur_ent->is_meshed()){
-//       PRINT_WARNING( "Smoother called for %s (%s %d) which is not meshed\n",
-//                      cur_ent->entity_name().c_str(),
-//                      cur_ent->class_name(), cur_ent->id() );
-//     }
-//     else
-//     {
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-    // Create a MeshDomain
-  MesquiteDomain domain;
+
+    //The QuadSurfMesh class doesn't currently support a 'snap_to'
+    // function, so we'll convert the quads to tris for the domain 
+    // functions until the classes can be updated appropriately...
+  const TypeDescription *src_td = fieldh->get_type_description();
+  CompileInfoHandle qci = QuadToTriAlgo::get_compile_info(src_td);
+  Handle<QuadToTriAlgo> qalgo;
+  if( !DynamicCompilation::compile(qci, qalgo, mod )) return fieldh;
+  FieldHandle tri_surf_h;
+  if( !qalgo.get_rep() || !qalgo->execute( fieldh, tri_surf_h, mod ) )
+  {
+    mod->warning( "QuadToTri conversion failed to copy data." );
+    return fieldh;
+  }
+    
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_surf_h->mesh().get_rep());  
+  MesquiteDomain domain( domain_mesh );
         
     // run smoother
   if(err)
@@ -866,6 +850,7 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::shape_improvement_wrapper( ProgressRepo
   MSQ_CHKERR(err);
 //  double time_remaining=max_cpu_time-cpu_timer.cpu_secs();
   double time_remaining = max_cpu_time - total_time;
+
   if( err )
   {
     mod->error( "Error occurred during Mesquite untangling." );

@@ -26,8 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
 /*
  *  MeshSmoother.cc:  Smooth a given mesh.
  *
@@ -104,7 +102,6 @@ void MeshSmoother::execute()
   else if (mtd->get_name().find("TriSurfMesh") != string::npos)
   {
     ext = "Tri";
-    error( "TriSurfMesh Fields are not currently supported by the MeshSmoother.");
   }
   else if (mtd->get_name().find("HexVolMesh") != string::npos)
   {
@@ -113,8 +110,6 @@ void MeshSmoother::execute()
   else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
   {
     ext = "Quad";
-    error("QuadSurfFields are not currently supported in the MeshSmoother  module.");
-    return;
   }
   else if (mtd->get_name().find("LatVolMesh") != string::npos)
   {
