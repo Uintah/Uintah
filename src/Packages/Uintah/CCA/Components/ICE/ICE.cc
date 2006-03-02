@@ -85,6 +85,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
   d_modelSetup = 0;
+  d_analysisModule = 0;
   d_recompile = false;
   d_conservationTest = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
