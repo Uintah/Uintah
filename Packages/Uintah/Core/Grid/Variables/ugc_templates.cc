@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
@@ -39,6 +40,7 @@ template class CCVariable<double>;
 template class CCVariable<float>;
 template class CCVariable<int>;
 template class CCVariable<long64>;
+template class CCVariable<Uintah::Stencil7>;
 
 template class SFCXVariable<SCIRun::Vector>;
 template class SFCXVariable<Uintah::Matrix3>;
