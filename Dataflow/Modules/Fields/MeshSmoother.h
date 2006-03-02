@@ -511,7 +511,8 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::smart_laplacian_smoother( ProgressReport
     return field;
   }
 
-  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(ofield->mesh().get_rep());  
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(ofield->mesh().get_rep());
+  domain_mesh->synchronize( Mesh::EDGES_E | Mesh::NORMALS_E );
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
   MesquiteDomain domain( domain_mesh );
@@ -611,6 +612,7 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::shape_improvement_wrapper( ProgressRepor
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
     // Create a MeshDomain 
   TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(ofield->mesh().get_rep());
+  domain_mesh->synchronize( Mesh::EDGES_E | Mesh::NORMALS_E );
   MesquiteDomain domain( domain_mesh );
         
     // run smoother
@@ -831,7 +833,8 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::shape_improvement_wrapper( ProgressRepo
     return fieldh;
   }
     
-  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_surf_h->mesh().get_rep());  
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_surf_h->mesh().get_rep()); 
+  domain_mesh->synchronize( Mesh::EDGES_E | Mesh::NORMALS_E ); 
   MesquiteDomain domain( domain_mesh );
         
     // run smoother
