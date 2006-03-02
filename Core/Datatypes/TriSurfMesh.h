@@ -230,6 +230,8 @@ public:
   bool get_neighbor(typename Face::index_type &neighbor,
                     typename Face::index_type face,
                     typename Edge::index_type edge) const;
+  bool get_neighbor(unsigned int &nbr_half_edge,
+                    unsigned int half_edge) const;
   void get_neighbors(vector<typename Node::index_type> &array,
                      typename Node::index_type idx) const;
 
@@ -863,6 +865,18 @@ TriSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
     return true;
   }
   return false;
+}
+
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::get_neighbor(unsigned int &nbr_half_edge,
+                                 unsigned int half_edge) const
+{
+  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
+            "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
+  nbr_half_edge = edge_neighbors_[half_edge];
+  return nbr_half_edge != MESH_NO_NEIGHBOR;
 }
 
 
