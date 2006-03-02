@@ -367,6 +367,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   //__________________________________
   //  what's produced from this task
   t->computes(lb->press_CCLabel,     press_matl,oims);
+  t->computes(lb->matrixLabel,       one_matl,  oims);
   t->computes(lb->grad_dp_XFCLabel,  press_matl,oims);
   t->computes(lb->grad_dp_YFCLabel,  press_matl,oims);
   t->computes(lb->grad_dp_ZFCLabel,  press_matl,oims);
@@ -1134,6 +1135,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->press_CCLabel,       patch_sub,  d_press_matl, replace);
+  ParentNewDW->transferFrom(subNewDW,         // press
+                    lb->matrixLabel,         patch_sub,  one_matl,     replace);
   ParentNewDW->transferFrom(subNewDW,
                     lb->sum_imp_delPLabel,   patch_sub,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,         // term2
