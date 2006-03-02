@@ -398,7 +398,7 @@ namespace Uintah {
     d_sumOfWallTimeSquares = 0; // sum all squares of walltimes
   }
 
-  void SimulationController::printSimulationStats ( SimulationStateP sharedState, double delt, double time )
+  void SimulationController::printSimulationStats ( int timestep, double delt, double time )
   {
 #ifndef _WIN32 // win32 doesn't have sci-malloc or sbrk
     // get memory stats for output
@@ -432,7 +432,7 @@ namespace Uintah {
       } else {
 	char filename[MAXPATHLEN];
 	sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
-	if ( sharedState->getCurrentTopLevelTimeStep() == 0 ) {
+	if ( timestep == 0 ) {
 	  mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
 	} else {
 	  mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
@@ -443,7 +443,7 @@ namespace Uintah {
 	}
       }
       *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
-      *mallocPerProcStream << "Timestep " << sharedState->getCurrentTopLevelTimeStep() << "   ";
+      *mallocPerProcStream << "Timestep " << timestep << "   ";
       *mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed() << "   ";
       *mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident() << "   ";
       *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - start_addr << "   ";
@@ -498,7 +498,7 @@ namespace Uintah {
     // output timestep statistics
     if(d_myworld->myrank() == 0){
       dbg << "Time="         << time
-	  << " (timestep "  << sharedState->getCurrentTopLevelTimeStep() 
+	  << " (timestep "  << timestep 
 	   << "), delT="     << delt
 	   << ", elap T = "  << d_wallTime;
       
