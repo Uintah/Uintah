@@ -29,6 +29,13 @@ namespace Uintah {
     return td;
   }
   
+  std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a) {
+    out << "A.p: " << a.p << " A.w: " << a.w << " A.e: " << a.e << " A.s: " << a.s 
+        << " A.n: " << a.n << " A.b: " << a.b << " A.t: " << a.t;
+    return out;
+  }
+
+
 }
 
 namespace SCIRun {

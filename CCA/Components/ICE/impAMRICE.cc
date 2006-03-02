@@ -309,6 +309,7 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     //__________________________________
     //  what's produced from this task
     t->computes(lb->press_CCLabel,      patches, nd, press_matl,oims);
+    t->computes(lb->matrixLabel,        patches, nd, one_matl,  oims);
     t->computes(lb->grad_dp_XFCLabel,   patches, nd, press_matl,oims);
     t->computes(lb->grad_dp_YFCLabel,   patches, nd, press_matl,oims);
     t->computes(lb->grad_dp_ZFCLabel,   patches, nd, press_matl,oims);
@@ -574,6 +575,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
   ParentNewDW->transferFrom(subNewDW,           // press
                     lb->press_CCLabel,         patches,  d_press_matl, replace);
+  ParentNewDW->transferFrom(subNewDW,           // press
+                    lb->matrixLabel,           patches,  one_matl, replace);
   ParentNewDW->transferFrom(subNewDW,
                     lb->sum_imp_delPLabel,     patches,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,           // term2
