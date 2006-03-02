@@ -51,8 +51,8 @@ lineExtract::~lineExtract()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
-  delete ps_lb;
   VarLabel::destroy(ps_lb->lastWriteTimeLabel);
+  delete ps_lb;
   
   // delete each line
   vector<line*>::iterator iter;
