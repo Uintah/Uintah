@@ -200,6 +200,17 @@ parse_args( int argc, char *argv[] )
 		  << std::endl;
 	exit(0);
       }
+      string fname(argv[cnt]);
+      string::size_type sz = fname.length();
+      string ext = fname.substr(sz-4, 4);
+      std::cerr << "ext is : " << ext << std::endl;
+
+      if (ext != string(".net") && ext != string(".srn"))
+      {
+	std::cerr << "Valid net files end with .srn (or .net prior to v1.25.2)"
+		  << " exiting." << std::endl;
+	exit(0);
+      }
 
       if (found && !powerapp)
       {
