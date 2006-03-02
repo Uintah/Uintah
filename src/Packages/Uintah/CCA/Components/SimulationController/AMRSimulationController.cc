@@ -270,8 +270,9 @@ void AMRSimulationController::run()
 
      calcWallTime();
 
+     // use timestep-1 since we need to do the printouts after the incrementing
+     printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep()-1,delt,t);
      // Execute the current timestep, restarting if necessary
-     printSimulationStats(d_sharedState,delt,t);
      executeTimestep(t, delt, currentGrid, totalFine);
 
      if(d_output){
