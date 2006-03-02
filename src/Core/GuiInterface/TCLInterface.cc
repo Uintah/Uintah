@@ -58,6 +58,8 @@
 
 using namespace SCIRun;
 
+SCIRun::ThreadLock SCIRun::TCLTask::tcl_lock_("TCL Thread Lock");
+
 namespace SCIRun {
   struct TCLCommandData {
     GuiCallback* object;

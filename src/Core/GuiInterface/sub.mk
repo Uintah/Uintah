@@ -39,7 +39,6 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/GuiVar.cc \
 	$(SRCDIR)/MemStats.cc \
 	$(SRCDIR)/TCLInterface.cc \
-	$(SRCDIR)/TCLTask.cc \
 	$(SRCDIR)/TclObj.cc \
 	$(SRCDIR)/UIvar.cc
 
