@@ -29,10 +29,10 @@
 
  
 /*
- *  TCLTask.h:  Handle TCL
- *
+ *  TCLTask.cc:
+ *     Mutex that is lockable multiple times within the same thread
  *  Written by:
- *   Steven G. Parker
+ *   McKAy Davis / Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
  *   August 1994
@@ -40,30 +40,60 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_project_TCLTask_h
-#define SCI_project_TCLTask_h 1
-
-#if (TCL_MINOR_VERSION >= 4)
-#define TCLCONST const
-#else
-#define TCLCONST
-#endif
-
 #include <Core/Thread/ThreadLock.h>
-#include <Core/GuiInterface/share.h>
+#include <Core/Util/Assert.h>
 
 namespace SCIRun {
-
-class SCISHARE TCLTask {
-private:
-    static ThreadLock           tcl_lock_;
-public:
-    static void lock()          { tcl_lock_.lock(); }
-    static void unlock()        { tcl_lock_.unlock(); }
-    static int  try_lock()      { return tcl_lock_.try_lock(); }
-  };
   
+ThreadLock::ThreadLock(const char *name) :
+  mutex_(name),
+  owner_(0),
+  count_(0)
+{
+}
+    
+void
+ThreadLock::lock()
+{
+  Thread *self = Thread::self();
+  ASSERT(self != 0);
+  if(owner_ == self) {
+    count_++;
+    return;
+  }
+  mutex_.lock();
+  owner_ = self;
+  count_ = 1;
+}
+
+void
+ThreadLock::unlock()
+{
+  ASSERT(count_ > 0);
+  ASSERT(Thread::self() == owner_);
+
+  if(--count_ == 0) {
+    owner_ = 0;
+    mutex_.unlock();
+  }
+}
+
+int
+ThreadLock::try_lock()
+{
+  Thread *self = Thread::self();
+  if(owner_ == self) {
+    count_++;
+    return 1;
+  }
+  if(mutex_.tryLock()) {
+    owner_ = self;
+    count_ = 1;
+    return 1;
+  }
+  return 0;
+}
+
+
 } // End namespace SCIRun
 
-
-#endif

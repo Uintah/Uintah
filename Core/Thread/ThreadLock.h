@@ -29,10 +29,10 @@
 
  
 /*
- *  TCLTask.h:  Handle TCL
- *
+ *  ThreadLock.h:  
+ *     Mutex that is lockable multiple times within the same thread
  *  Written by:
- *   Steven G. Parker
+ *   McKay Davis / Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
  *   August 1994
@@ -40,29 +40,27 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_project_TCLTask_h
-#define SCI_project_TCLTask_h 1
+#ifndef SCIRun_Core_Thread_ThreadLock_h
+#define SCIRun_Core_Thread_Threadlock_h
 
-#if (TCL_MINOR_VERSION >= 4)
-#define TCLCONST const
-#else
-#define TCLCONST
-#endif
-
-#include <Core/Thread/ThreadLock.h>
-#include <Core/GuiInterface/share.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/share.h>
 
 namespace SCIRun {
 
-class SCISHARE TCLTask {
-private:
-    static ThreadLock           tcl_lock_;
+class SCISHARE ThreadLock {
 public:
-    static void lock()          { tcl_lock_.lock(); }
-    static void unlock()        { tcl_lock_.unlock(); }
-    static int  try_lock()      { return tcl_lock_.try_lock(); }
-  };
-  
+  ThreadLock(const char *);
+  void          lock();
+  int           try_lock();
+  void          unlock();
+private:
+  Mutex         mutex_;
+  Thread *      owner_;
+  int           count_;
+};
+
 } // End namespace SCIRun
 
 
