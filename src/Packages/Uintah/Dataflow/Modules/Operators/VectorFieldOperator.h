@@ -128,6 +128,10 @@ VectorFieldOperatorAlgoT<VectorField>::execute(FieldHandle vectorfh, int op)
       int vartype;
       vectorField->get_property( prop_name, vartype);
       scalarField->set_property(prop_name.c_str(), vartype , true);
+    } else if( prop_name == "time" ){
+      double current_time;
+      vectorField->get_property( prop_name, current_time);
+      scalarField->set_property(prop_name.c_str(), current_time , true);
     } else {
       cerr<<"Unknown field property, not transferred.\n";
     }

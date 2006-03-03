@@ -167,6 +167,7 @@ void set_MMS_Velocity_BC(const Patch* patch,
       double nu = mms_var_basket->viscosity;
       double A =  mms_var_basket->A;
       double t  = sharedState->getElapsedTime();
+      t += mms_v->delT;
       
       vector<IntVector>::const_iterator iter;
       for (iter=bound.begin(); iter != bound.end(); iter++) {
@@ -246,6 +247,7 @@ void set_MMS_press_BC(const Patch* patch,
     double A =  mms_var_basket->A;
     double t =  sharedState->getElapsedTime();
     double p_ref = 101325;
+    t += mms_v->delT;
 
     vector<IntVector>::const_iterator iter;
     for (iter=bound.begin(); iter != bound.end(); iter++) {

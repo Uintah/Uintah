@@ -71,11 +71,10 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         //  Neumann or Dirichlet Press_BC;
         double one_or_zero = -999;
         if(bc_kind == "zeroNeumann" || bc_kind == "Neumann" ||
-           bc_kind == "symmetric"){
+           bc_kind == "symmetric" ||bc_kind == "MMS_1"){
           one_or_zero = 1.0;      // subtract from A.p
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "Custom" || 
-           bc_kind == "MMS_1"){
+        if(bc_kind == "Dirichlet" || bc_kind == "Custom" ){
           one_or_zero = 0.0;      // leave A.p Alone
         }                                 
         //__________________________________
@@ -182,11 +181,10 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //  Neumann or Dirichlet Press_BC;
         double one_or_zero = -999;
         if(bc_kind == "zeroNeumann" || bc_kind == "Neumann" ||
-           bc_kind == "symmetric"){
+           bc_kind == "symmetric" || bc_kind == "MMS_1"){
           one_or_zero = 1.0;     
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "Custom" || 
-           bc_kind == "MMS_1"){
+        if(bc_kind == "Dirichlet" || bc_kind == "Custom"){
           one_or_zero = 0.0;
         }                                 
         //__________________________________
