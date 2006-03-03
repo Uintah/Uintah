@@ -125,13 +125,15 @@ CompareMMS::execute()
   fh->get_property( "varname", field_name );
   fh->get_property( "time",    field_time );
 
-  enum field_type_e { PRESSURE, UVEL, INVALID };
+  enum field_type_e { PRESSURE, UVEL, VVEL, INVALID };
   field_type_e field_type;
 
   if      ( field_name == "press_CC" )  field_type = PRESSURE;
-  else if ( field_name == "uvel_FCME" ) field_type = UVEL;
+  else if ( field_name == "vel_CC:1" ) field_type = UVEL;
+  else if ( field_name == "vel_CC:2" ) field_type = VVEL;
   else {
     string msg = "MMS currently only knows how to compare pressure and uVelocity... you have: " + field_name;
+    field_type = INVALID;
     error( msg );
     return;
   }
@@ -171,19 +173,11 @@ CompareMMS::execute()
     
     Point minb, maxb;
     
-    int size = 20;
-
     minb = Point(0,0,0);
     maxb = Point(1, 1, 1);
 
     // Create blank mesh.
-    unsigned int sizex = dimensions[0]+1;
-    unsigned int sizey = dimensions[1]+1;
-    unsigned int sizez = 2;
-
-    //printf( "size is %d, %d, %d\n", sizex, sizey, sizez );
-    
-    LVMesh::handle_type outputMesh = scinew LVMesh(sizex, sizey, sizez, minb, maxb);
+    LVMesh::handle_type outputMesh = scinew LVMesh(dimensions[0], dimensions[1], dimensions[2], minb, maxb);
 
     Transform temp;
   
@@ -199,20 +193,32 @@ CompareMMS::execute()
     bool   showDif = (gui_output_choice_.get() == 2);
     double time = gui_field_time_.get();
 
-    for( int xx = 0; xx < dimensions[0]-1; xx++ ) { // Not sure why I have to subtract 1 from the dimension...
-      for( int yy = 0; yy < dimensions[1]-1; yy++ ) {
-        for( int zz = 0; zz < 1; zz++ ) {
+// Indexing in SCIRun fields apparently starts from 0, thus start from zero and subtract 1 from high index
+    for( unsigned int xx = 0; xx < dimensions[0]-1; xx++ ) {
+      for( unsigned int yy = 0; yy < dimensions[1]-1; yy++ ) {
+        for( unsigned int zz = 0; zz < dimensions[2]-1; zz++ ) {
           LVMesh::Cell::index_type pos(outputMesh.get_rep(),xx,yy,zz);
 
           LVMesh::Cell::index_type inputMeshPos(mesh,xx,yy,zz);
 
+//WARNING: "grid index to physical position" conversion has been hardcoded here!
+          double x_pos = -0.5 + (xx-0.5) * 1.0 / 50;
+          double y_pos = -0.5 + (yy-0.5) * 1.0 / 50;
+
           double calculatedValue;
           switch( field_type ) {
           case PRESSURE:
-            calculatedValue = mms->pressure( xx, yy, time );
+            calculatedValue = mms->pressure( x_pos, y_pos, time );
             break;
           case UVEL:
-            calculatedValue = mms->uVelocity( xx, yy, time );
+            calculatedValue = mms->uVelocity( x_pos, y_pos, time );
+            break;
+          case VVEL:
+            calculatedValue = mms->vVelocity( x_pos, y_pos, time );
+            break;
+          case INVALID:
+            string msg = "We should not reach this point anyway, but you have selected an usupported by MMS variable";
+            error(msg);
             break;
           }
           if( showDif ) {
@@ -228,6 +234,14 @@ CompareMMS::execute()
 
     } 
     ofh = lvf;
+
+    IntVector offset(0,0,0);        
+    string property_name = "offset";
+    fh->get_property( property_name, offset);
+    ofh->set_property(property_name.c_str(), IntVector(offset) , true);
+    string prefix = "Exact_";
+    if (showDif) prefix = "Diff_";
+    ofh->set_property("varname", string(prefix+field_name.c_str()), true);
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
     ofp->send_and_dereference(ofh);
