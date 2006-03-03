@@ -1465,9 +1465,10 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
 //     }
   }
   
-//NOTE TO JS: Do this until the synchronization problem is fixed for hexes...
-  clipped->synchronize(Mesh::ALL_ELEMENTS_E);
+  // force all the synch data to be rebuilt on next synch call.
+  clipped->unsynchronize();
   FIELD *ofield = scinew FIELD(clipped);
+
 //   typename FIELD::mesh_type::Elem::iterator fbi, fei;
 //   clipped->begin( fbi ); clipped->end( fei );
 
