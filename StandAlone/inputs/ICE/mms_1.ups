@@ -165,6 +165,7 @@
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <save label="CenterOfMassVelocity"/>
+	<outputInitTimestep/>
    </DataArchiver>
 
   <Debug>
@@ -190,7 +191,7 @@
         <solution technique = "EqForm" />
         <customInitialization>
           <manufacturedSolution>
-            <A>   100    </A>
+            <A>   1    </A>
           </manufacturedSolution> 
         </customInitialization>
              
@@ -239,7 +240,7 @@
          <material name = "BackgroundGas">
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>   0.01                    </dynamic_viscosity>
+           <dynamic_viscosity>   0.00002                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <speed_of_sound>     376                     </speed_of_sound>
