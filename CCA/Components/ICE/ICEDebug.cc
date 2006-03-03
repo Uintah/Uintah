@@ -879,6 +879,13 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
     static SCIRun::ProgressiveWarning warning(warn.str(),2); 
     warning.invoke();
   }
+  if(beginIndx.x() == endIndx.x() ||
+     beginIndx.y() == endIndx.y() ||
+     beginIndx.z() == endIndx.z() ){
+    throw ProblemSetupException("PRINT_DATA: you've specified a beginIndex = EndIndex",
+                                __FILE__, __LINE__); 
+  }
+  
   
   
 #if 0    // turn this if you want to specify coarse level cells in the input file
