@@ -1,45 +1,13 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
-
-   The MIT License
-
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
-
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-*/
-
-/*
  * File:          whoc_Com_Impl.c
  * Symbol:        whoc.Com-v1.0
  * Symbol Type:   class
- * Babel Version: 0.7.4
- * SIDL Created:  20030915 14:58:58 MST
- * Generated:     20030915 14:59:01 MST
+ * Babel Version: 0.11.0
  * Description:   Server-side implementation for whoc.Com
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
- * babel-version = 0.7.4
- * source-line   = 13
- * source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/whoc/whoc.sidl
+ * babel-version = 0.11.0
  */
 
 /*
@@ -58,16 +26,40 @@
 /* DO-NOT-DELETE splicer.end(whoc.Com._includes) */
 
 /*
+ * Static class initializer called exactly once before any user-defined method is dispatched
+ */
+
+#undef __FUNC__
+#define __FUNC__ "impl_whoc_Com__load"
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void
+impl_whoc_Com__load(
+  /* out */ sidl_BaseInterface *_ex)
+{
+  *_ex = 0;
+  /* DO-NOT-DELETE splicer.begin(whoc.Com._load) */
+  /* Insert-Code-Here {whoc.Com._load} (static class initializer method) */
+  /* DO-NOT-DELETE splicer.end(whoc.Com._load) */
+}
+/*
  * Class constructor called when the class is created.
  */
 
 #undef __FUNC__
 #define __FUNC__ "impl_whoc_Com__ctor"
 
+#ifdef __cplusplus
+extern "C"
+#endif
 void
 impl_whoc_Com__ctor(
-  whoc_Com self)
+  /* in */ whoc_Com self,
+  /* out */ sidl_BaseInterface *_ex)
 {
+  *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.Com._ctor) */
   /* Insert the implementation of the constructor method here... */
   /* DO-NOT-DELETE splicer.end(whoc.Com._ctor) */
@@ -80,36 +72,117 @@ impl_whoc_Com__ctor(
 #undef __FUNC__
 #define __FUNC__ "impl_whoc_Com__dtor"
 
+#ifdef __cplusplus
+extern "C"
+#endif
 void
 impl_whoc_Com__dtor(
-  whoc_Com self)
+  /* in */ whoc_Com self,
+  /* out */ sidl_BaseInterface *_ex)
 {
+  *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.Com._dtor) */
   /* Insert the implementation of the destructor method here... */
   /* DO-NOT-DELETE splicer.end(whoc.Com._dtor) */
 }
 
 /*
- * Obtain Services handle, through which the 
- * component communicates with the framework. 
- * This is the one method that every CCA Component
- * must implement. 
+ * Starts up a component presence in the calling framework.
+ * @param Svc the component instance's handle on the framework world.
+ * Contracts concerning Svc and setServices:
+ * 
+ * The component interaction with the CCA framework
+ * and Ports begins on the call to setServices by the framework.
+ * 
+ * This function is called exactly once for each instance created
+ * by the framework.
+ * 
+ * The argument Svc will never be nil/null.
+ * 
+ * Those uses ports which are automatically connected by the framework
+ * (so-called service-ports) may be obtained via getPort during
+ * setServices.
  */
 
 #undef __FUNC__
 #define __FUNC__ "impl_whoc_Com_setServices"
 
+#ifdef __cplusplus
+extern "C"
+#endif
 void
 impl_whoc_Com_setServices(
-  whoc_Com self, gov_cca_Services services)
+  /* in */ whoc_Com self,
+  /* in */ gov_cca_Services services,
+  /* out */ sidl_BaseInterface *_ex)
 {
+  *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.Com.setServices) */
 
-  sidl_BaseException ex;
-  gov_cca_TypeMap properties=gov_cca_Services_createTypeMap(
-       services, &ex);
+  /* sidl_BaseException ex; */
+  gov_cca_TypeMap properties = gov_cca_Services_createTypeMap(services, _ex);
 
-  gov_cca_Port idport=gov_cca_Port__cast(whoc_IDPort__create());
-  gov_cca_Services_addProvidesPort(services,idport,"idport","gov.cca.ports.IDPort",properties,&ex);
+  gov_cca_Port idport = gov_cca_Port__cast(whoc_IDPort__ctor(), _ex);
+  gov_cca_Services_addProvidesPort(services, idport, "idport", "gov.cca.ports.IDPort", properties, _ex);
   /* DO-NOT-DELETE splicer.end(whoc.Com.setServices) */
+}
+/* Babel internal methods, Users should not edit below this line. */
+struct gov_cca_Component__object* 
+  impl_whoc_Com_fconnect_gov_cca_Component(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex) {
+  return gov_cca_Component__connectI(url, ar, _ex);
+}
+struct gov_cca_Component__object* impl_whoc_Com_fcast_gov_cca_Component(void* 
+  bi, sidl_BaseInterface* _ex) {
+  return gov_cca_Component__cast(bi, _ex);
+}
+struct gov_cca_Services__object* impl_whoc_Com_fconnect_gov_cca_Services(const 
+  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
+  return gov_cca_Services__connectI(url, ar, _ex);
+}
+struct gov_cca_Services__object* impl_whoc_Com_fcast_gov_cca_Services(void* bi,
+  sidl_BaseInterface* _ex) {
+  return gov_cca_Services__cast(bi, _ex);
+}
+struct sidl_BaseClass__object* impl_whoc_Com_fconnect_sidl_BaseClass(const 
+  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
+  return sidl_BaseClass__connectI(url, ar, _ex);
+}
+struct sidl_BaseClass__object* impl_whoc_Com_fcast_sidl_BaseClass(void* bi,
+  sidl_BaseInterface* _ex) {
+  return sidl_BaseClass__cast(bi, _ex);
+}
+struct sidl_BaseInterface__object* 
+  impl_whoc_Com_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex) {
+  return sidl_BaseInterface__connectI(url, ar, _ex);
+}
+struct sidl_BaseInterface__object* impl_whoc_Com_fcast_sidl_BaseInterface(void* 
+  bi, sidl_BaseInterface* _ex) {
+  return sidl_BaseInterface__cast(bi, _ex);
+}
+struct sidl_ClassInfo__object* impl_whoc_Com_fconnect_sidl_ClassInfo(const 
+  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
+  return sidl_ClassInfo__connectI(url, ar, _ex);
+}
+struct sidl_ClassInfo__object* impl_whoc_Com_fcast_sidl_ClassInfo(void* bi,
+  sidl_BaseInterface* _ex) {
+  return sidl_ClassInfo__cast(bi, _ex);
+}
+struct sidl_RuntimeException__object* 
+  impl_whoc_Com_fconnect_sidl_RuntimeException(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex) {
+  return sidl_RuntimeException__connectI(url, ar, _ex);
+}
+struct sidl_RuntimeException__object* 
+  impl_whoc_Com_fcast_sidl_RuntimeException(void* bi, sidl_BaseInterface* _ex) {
+  return sidl_RuntimeException__cast(bi, _ex);
+}
+struct whoc_Com__object* impl_whoc_Com_fconnect_whoc_Com(const char* url,
+  sidl_bool ar, sidl_BaseInterface *_ex) {
+  return whoc_Com__connectI(url, ar, _ex);
+}
+struct whoc_Com__object* impl_whoc_Com_fcast_whoc_Com(void* bi,
+  sidl_BaseInterface* _ex) {
+  return whoc_Com__cast(bi, _ex);
 }
