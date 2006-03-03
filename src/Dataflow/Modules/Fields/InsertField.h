@@ -414,7 +414,7 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
   imesh->begin(ibi);
   imesh->end(iei);
 
-  int i;
+  vector<Point> insertpoints;
 
   while (ibi != iei)
   {
@@ -427,74 +427,44 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
 
     Point cp[2];
     typename TFIELD::mesh_type::Elem::index_type cf[2];
-    tmesh->find_closest_face(cp[0], cf[0], p[0]);
-    tmesh->find_closest_face(cp[1], cf[1], p[1]);
 
-    // Insert the two points and all of the intersections in between them.
+    insertpoints.push_back(p[0]);
+    insertpoints.push_back(p[1]);
+
+    typename TFIELD::mesh_type::Edge::iterator tbi, tei;
+    tmesh->begin(tbi);
+    tmesh->end(tei);
+    while (tbi != tei)
+    {
+      const double EPSILON = 1.0e-12;
+      typename TFIELD::mesh_type::Node::array_type tnodes;
+      tmesh->get_nodes(tnodes, *tbi);
+      Point tp[2];
+      tmesh->get_center(tp[0], tnodes[0]);
+      tmesh->get_center(tp[1], tnodes[1]);
+
+      double s, t;
+      closest_line_to_line(s, t, p[0], p[1], tp[0], tp[1]);
+
+      if (s > EPSILON && s < 1.0 - EPSILON &&
+          t > EPSILON && t < 1.0 - EPSILON)
+      {
+        insertpoints.push_back(tp[0] + t * (tp[1] - tp[0]));
+      }
+      ++tbi;
+    }
+
     typename TFIELD::mesh_type::Node::index_type newnode;
     typename TFIELD::mesh_type::Elem::array_type newelems;
-    tmesh->insert_node_in_face(newelems, newnode, cf[0], cp[0]);
-    new_nodes.push_back(newnode);
-    for (i = 0; i < newelems.size(); i++)
+    for (unsigned int i = 0; i < insertpoints.size(); i++)
     {
-      new_elems.push_back(newelems[i]);
-    }
-
-    while (cf[0] != cf[1])
-    {
-      typename TFIELD::mesh_type::Node::array_type trinodes;
-      Point tripts[3];
-      tmesh->get_nodes(trinodes, cf[0]);
-      for (i = 0; i < 3; i++)
+      tmesh->find_closest_face(cp[0], cf[0], insertpoints[i]);
+      tmesh->insert_node_in_face(newelems, newnode, cf[0], cp[0]);
+      new_nodes.push_back(newnode);
+      for (unsigned int j = 0; j < newelems.size(); j++)
       {
-        tmesh->get_center(tripts[i], trinodes[i]);
+        new_elems.push_back(newelems[j]);
       }
-
-      Point pnew[3];
-      double dist[3];
-      int mini = -1;
-      int last = -1;
-      for (i = 0; i < 3; i++)
-      {
-        if (i != last)
-        {
-          double s, t;
-          closest_line_to_line(s, t, p[0], p[1], tripts[i], tripts[(i+1)%3]);
-          if (s > 0.0 && s < 1.0 && t > 0.0 && t < 1.0)
-          {
-            pnew[i] = tripts[i] + t * (tripts[(i+1)%3] - tripts[i]);
-            const Point edgeintersection = p[0] + s * (p[1] - p[0]);
-            dist[i] = (edgeintersection - pnew[i]).length();
-            if (mini == -1 || dist[i] < dist[mini]) mini = i;
-          }
-        }
-      }
-      if (mini != -1)
-      {
-        tmesh->insert_node_in_face(newelems, newnode, cf[0], pnew[mini]);
-        new_nodes.push_back(newnode);
-        for (unsigned int i = 0; i < newelems.size(); i++)
-        {
-          new_elems.push_back(newelems[i]);
-        }
-
-        // Walk to neighbor and go again.
-        //last = nbr - nbr / 3 * 3mini;
-        unsigned int nbr_half;
-        if (!tmesh->get_neighbor(nbr_half, cf[0]*3+mini))
-        {
-          break;
-        }
-        cf[0] = nbr_half / 3;
-        last = nbr_half % 3;
-      }
-    }
-
-    tmesh->insert_node_in_face(newelems, newnode, cf[1], cp[1]);
-    new_nodes.push_back(newnode);
-    for (unsigned int i = 0; i < newelems.size(); i++)
-    {
-      new_elems.push_back(newelems[i]);
     }
 
     ++ibi;
@@ -565,6 +535,8 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   typename IFIELD::mesh_handle_type omesh =
     scinew typename IFIELD::mesh_type();
 
+  tfield->mesh()->synchronize(Mesh::EDGES_E);
+
   std::sort(new_nodes.begin(), new_nodes.end());
   vector<unsigned int>::iterator nodes_end, itr;
   nodes_end = std::unique(new_nodes.begin(), new_nodes.end());
@@ -588,7 +560,7 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
       {
         typename TFIELD::mesh_type::Edge::array_type edges;
         tmesh->get_edges(edges,
-                         typename TFIELD::mesh_type::Cell::index_type(*itr));
+                         typename TFIELD::mesh_type::Elem::index_type(*itr));
         for (unsigned int i = 0; i < edges.size(); i++)
         {
           typename TFIELD::mesh_type::Node::array_type oldnodes;
