@@ -297,7 +297,11 @@ public:
   void get_point(Point &result, typename Node::index_type index) const
   { result = points_[index]; }
   void get_normal(Vector &result, typename Node::index_type index) const
-  { result = normals_[index]; }
+  {
+    ASSERTMSG(synchronized_ & NORMALS_E,
+	      "Must call synchronize NORMALS_E on TriSurfMesh first"); 
+    result = normals_[index]; 
+  }
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }
 
@@ -305,6 +309,9 @@ public:
                   typename Elem::index_type eidx, unsigned int)
   {
     if (basis_.polynomial_order() < 2) {
+      ASSERTMSG(synchronized_ & NORMALS_E,
+		"Must call synchronize NORMALS_E on TriSurfMesh first");
+      
       typename Node::array_type arr(3);
       get_nodes(arr, eidx);
 
