@@ -99,10 +99,11 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHand
 template <class FIELD>
 FieldHandle MeshSmootherAlgoTet<FIELD>::smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh )
 {
-//need to make a copy of the field so that this one is not damaged...
+    //need to make a copy of the field so that this one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
+  ofield->mesh_detach();
 
   double cull_eps=1e-4;
   Mesquite::MsqError err;
@@ -157,11 +158,12 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::smart_laplacian_smoother( ProgressReport
 template <class FIELD>
 FieldHandle MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh )
 {
-//need to make a copy of the field so that this one is not damaged...
+    //need to make a copy of the field so that this one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
-
+  ofield->mesh_detach();
+  
     //arbitrary defined variables
   double untangle_beta_val=1e-8;
   double unt_successive_eps=1e-10;
@@ -292,11 +294,12 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHand
 template <class FIELD>
 FieldHandle MeshSmootherAlgoHex<FIELD>::smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh )
 {
-//  need to make a copy of the field, so that the previous one is not damaged...
+    //need to make a copy of the field, so that the previous one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
-
+  ofield->mesh_detach();
+  
   double cull_eps = 1e-4;
   Mesquite::MsqError err;
   Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
@@ -347,11 +350,12 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::smart_laplacian_smoother( ProgressReport
 template <class FIELD>
 FieldHandle MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh )
 {
-//need to make a copy of the field so that this one is not damaged...
+    //need to make a copy of the field so that this one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
-
+  ofield->mesh_detach();
+  
     //arbitrary defined variables
   double untangle_beta_val=1e-8;
   double unt_successive_eps=1e-10;
@@ -482,11 +486,12 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHand
 template <class FIELD>
 FieldHandle MeshSmootherAlgoTri<FIELD>::smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh )
 {
-//  need to make a copy of the field, so that the previous one is not damaged...
+    //need to make a copy of the field, so that the previous one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
-
+  ofield->mesh_detach();
+  
   double cull_eps = 1e-4;
   Mesquite::MsqError err;
   Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
@@ -540,11 +545,12 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::smart_laplacian_smoother( ProgressReport
 template <class FIELD>
 FieldHandle MeshSmootherAlgoTri<FIELD>::shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh )
 {
-//need to make a copy of the field so that this one is not damaged...
+    //need to make a copy of the field so that this one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
-
+  ofield->mesh_detach();
+  
     //arbitrary defined variables
   double untangle_beta_val=1e-8;
   double unt_successive_eps=1e-10;
@@ -676,11 +682,12 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHan
 template <class FIELD>
 FieldHandle MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh )
 {
-//  need to make a copy of the field, so that the previous one is not damaged...
+    //need to make a copy of the field, so that the previous one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
-
+  ofield->mesh_detach();
+  
   double cull_eps = 1e-4;
   Mesquite::MsqError err;
   Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
@@ -748,10 +755,11 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressRepor
 template <class FIELD>
 FieldHandle MeshSmootherAlgoQuad<FIELD>::shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh )
 {
-//need to make a copy of the field so that this one is not damaged...
+    //need to make a copy of the field so that this one is not damaged...
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
   ofield->copy_properties( fieldh.get_rep() );
+  ofield->mesh_detach();
 
     //arbitrary defined variables
   double untangle_beta_val=1e-8;

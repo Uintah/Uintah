@@ -211,9 +211,35 @@ public:
     {return numNodes;}
   int get_num_elements()
     {return numElements;}
+ 
+  void update_progress()
+      {
+        double temp;
+        count_++;
+        if  ( count_%100 == 0 )
+        {
+          if( count_ > anticipated_iterations_ )
+          {
+            count_ = 3*anticipated_iterations_ / 4 ;
+            temp = 0.75;
+          }
+          else
+          {
+            temp = (double)count_/(double)anticipated_iterations_;
+          }
+//          cout << "Update Window % = " << temp << " " << count_ << " " << anticipated_iterations_ << endl;
+          temp /= 100.;
+          
+          update_window_->update_progress( temp );
+        }   
+      }
   
 private:
   FIELD* mOwner;
+  ProgressReporter* update_window_;
+  int anticipated_iterations_;
+  int count_;
+  
   vector<unsigned char> bytes_;
   vector<bool> fixed_;
   
@@ -261,10 +287,11 @@ private:
       //! returns 0.
     virtual bool is_at_end() const;
 
-  private:
+private:
+
     typedef typename FIELD::mesh_type::Node::iterator node_iter_t;   
     node_iter_t node_iter_;
-
+    
     MesquiteMesh* meshPtr;
   };
   
@@ -316,7 +343,8 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
   }
   
   mOwner = field;
-
+  update_window_ = mod;
+  
     //get the nodes and elements of this field
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
   mesh->size( numNodes );
@@ -327,6 +355,9 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
   mesh->end(eiterEnd);
 
     //setup some needed information storage vectors for MESQUITE
+  count_ = 0;
+  anticipated_iterations_ = 3*numNodes;
+  
   bytes_.resize(numNodes);
   fixed_.resize(numNodes);  
   size_t i;
@@ -646,6 +677,8 @@ void MesquiteMesh<FIELD>::vertex_set_coordinates(
   p.y( coordinates[1] );
   p.z( coordinates[2] );
   mOwner->get_typed_mesh()->set_point( p, node_id );
+
+  update_progress();
 }
 
 
