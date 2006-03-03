@@ -4820,15 +4820,22 @@ if test "$with_qt" = "yes"; then
 elif test "$with_qt"; then
   _sci_lib="$with_qt/lib"
   _sci_inc="$with_qt/include"
-  _sci_optional=specific
+  _sci_optional=required
 fi
+
+ext="$ac_ext"
+ac_ext="cc"
 
 qt_bin=$_sci_lib/../bin
 # Only looking for one .h file... assuming all the rest are in the same place.
-SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,,,optional)   
+#SCI_TRY_LINK(QT_MT,qt library,qobject.h qapplication.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,,,$_sci_optional)   
+SCI_TRY_LINK(QT_MT,qt library,qapplication.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,-DQT_THREAD_SUPPORT -DQT_NO_XIM,,$_sci_optional)   
 QT_MOC_BIN=""
 AS_MESSAGE(checking for moc in $qt_bin...)
 AC_CHECK_PROG(QT_MOC_BIN,moc,$qt_bin/moc,NOMOC,)
+
+# Restore the previous settings.
+ac_ext="$ext"
   
 if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
    DEF_QT="#define HAVE_QT 1"
