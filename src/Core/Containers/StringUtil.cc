@@ -185,24 +185,46 @@ string_Cify(const string &str)
 // replaces all occurances of 'substr' in 'str' with 'replacement'
 string 
 replace_substring(string str, 
-		  string substr, 
-		  string replacement) 
+		  const string &substr, 
+		  const string &replacement) 
 {
   string::size_type pos;
   do {
     pos = str.find(substr);
     if (pos != string::npos)
-      str = str.replace(str.begin()+pos, str.begin()+pos+substr.length(), replacement);
+      str = str.replace(str.begin()+pos, 
+                        str.begin()+pos+substr.length(), 
+                        replacement);
   } while (pos != string::npos);
   return str;
 }
 
 
 bool
-ends_with(string str, string substr)
+ends_with(const string &str, const string &substr)
 {
   return str.rfind(substr) == str.size()-substr.size();
 }  
+
+
+string
+string_toupper(string str) 
+{
+  for (unsigned int i = 0; i < str.length(); ++i)
+    str[i] = toupper(str[i]);
+  return str;
+}
+
+string
+string_tolower(string str) 
+{
+  for (unsigned int i = 0; i < str.length(); ++i)
+    str[i] = tolower(str[i]);
+  return str;
+}
+
+  
+
 
 
 } // End namespace SCIRun

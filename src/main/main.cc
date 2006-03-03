@@ -200,15 +200,14 @@ parse_args( int argc, char *argv[] )
 		  << std::endl;
 	exit(0);
       }
-      string fname(argv[cnt]);
-      string::size_type sz = fname.length();
-      string ext = fname.substr(sz-4, 4);
-      std::cerr << "ext is : " << ext << std::endl;
 
-      if (ext != string(".net") && ext != string(".srn"))
+      string filename(string_tolower(argv[cnt]));
+      if (!ends_with(filename,".net") && 
+          !ends_with(filename,".srn") && 
+          !ends_with(filename,".app"))
       {
-	std::cerr << "Valid net files end with .srn (or .net prior to v1.25.2)"
-		  << " exiting." << std::endl;
+	std::cerr << "Valid net files end with .srn, .app, " 
+                  << "(or .net prior to v1.25.2) exiting." << std::endl;
 	exit(0);
       }
 
