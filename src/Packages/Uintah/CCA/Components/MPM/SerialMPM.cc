@@ -203,49 +203,6 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   }
 }
 
-#if 0
-void 
-SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
-                                SimulationStateP& sharedState,
-                                MPMFlags* flags)
-{
-  //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    string index("");
-    ps->getAttribute("index",index);
-    stringstream id(index);
-    int index_val = -1;
-    id >> index_val;
-    cout << "Material attribute = " << index_val << endl;
-
-    //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps);
-    // When doing restart, we need to make sure that we load the materials
-    // in the same order that they were initially created.  Restarts will
-    // ALWAYS have an index number as in <material index = "0">.
-    // Index_val = -1 means that we don't register the material by its 
-    // index number.
-    if (index_val > -1) 
-      sharedState->registerMPMMaterial(mat,index_val);
-    else
-      sharedState->registerMPMMaterial(mat);
-      
-
-    // If new particles are to be created, create a copy of each material
-    // without the associated geometry
-    if (flags->d_createNewParticles) {
-      MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(ps,mat, flags);    
-      sharedState->registerMPMMaterial(mat_copy);
-    }
-  }
-}
-
-#endif
-
 void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 {
   ProblemSpecP root = root_ps->getRootNode();
@@ -3180,52 +3137,6 @@ void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
   }
 }
 
-void
-SerialMPM::scheduleParticleVelocityField(SchedulerP&,  const PatchSet*,
-                                         const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleAdjustCrackContactInterpolated(SchedulerP&, 
-                                                  const PatchSet*,
-                                                  const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleAdjustCrackContactIntegrated(SchedulerP&, 
-                                                const PatchSet*,
-                                                const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleCalculateFractureParameters(SchedulerP&, 
-                                               const PatchSet*,
-                                               const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleDoCrackPropagation(SchedulerP& /*sched*/, 
-                                      const PatchSet* /*patches*/, 
-                                      const MaterialSet* /*matls*/)
-{
-}
-
-void
-SerialMPM::scheduleMoveCracks(SchedulerP& /*sched*/,const PatchSet* /*patches*/,
-                              const MaterialSet* /*matls*/)
-{
-}
-
-void
-SerialMPM::scheduleUpdateCrackFront(SchedulerP& /*sched*/,
-                                    const PatchSet* /*patches*/,
-                                    const MaterialSet* /*matls*/)
-{
-}
 //______________________________________________________________________
 void
 SerialMPM::initialErrorEstimate(const ProcessorGroup*,
