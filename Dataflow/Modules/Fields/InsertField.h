@@ -414,8 +414,6 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
   imesh->begin(ibi);
   imesh->end(iei);
 
-  vector<Point> insertpoints;
-
   while (ibi != iei)
   {
     typename IFIELD::mesh_type::Node::array_type nodes;
@@ -425,9 +423,7 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     imesh->get_center(p[0], nodes[0]);
     imesh->get_center(p[1], nodes[1]);
 
-    Point cp[2];
-    typename TFIELD::mesh_type::Elem::index_type cf[2];
-
+    vector<Point> insertpoints;
     insertpoints.push_back(p[0]);
     insertpoints.push_back(p[1]);
 
@@ -458,8 +454,10 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     typename TFIELD::mesh_type::Elem::array_type newelems;
     for (unsigned int i = 0; i < insertpoints.size(); i++)
     {
-      tmesh->find_closest_face(cp[0], cf[0], insertpoints[i]);
-      tmesh->insert_node_in_face(newelems, newnode, cf[0], cp[0]);
+      typename TFIELD::mesh_type::Elem::index_type elem;
+      Point closest;
+      tmesh->find_closest_face(closest, elem, insertpoints[i]);
+      tmesh->insert_node_in_face(newelems, newnode, elem, closest);
       new_nodes.push_back(newnode);
       for (unsigned int j = 0; j < newelems.size(); j++)
       {
