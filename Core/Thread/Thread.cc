@@ -81,7 +81,7 @@
 
 
 
-#define THREAD_DEFAULT_STACKSIZE 64*1024*2
+
 
 // provide "C" interface to exitAll
 extern "C" { 
@@ -129,7 +129,7 @@ Thread::Thread(ThreadGroup* g, const char* name)
     detached_=false;
     runner_=0;
     cpu_=-1;
-    stacksize_=THREAD_DEFAULT_STACKSIZE;
+    stacksize_ = Thread::DEFAULT_STACKSIZE;
 }
 
 void
@@ -158,8 +158,15 @@ Thread::run_body()
 }
 
 Thread::Thread(Runnable* runner, const char* name,
-	       ThreadGroup* group, ActiveState state)
-    : runner_(runner), threadname_(strdup(name)), group_(group)
+	       ThreadGroup* group, ActiveState state,
+               unsigned long stacksize)
+    : runner_(runner),
+      threadname_(strdup(name)),
+      group_(group),
+      stacksize_(stacksize),
+      daemon_(false),
+      detached_(false),
+      cpu_(-1)
 {
     if(group_ == 0){
         if(!ThreadGroup::s_default_group)
@@ -169,10 +176,6 @@ Thread::Thread(Runnable* runner, const char* name,
 
     runner_->my_thread_=this;
     group_->addme(this);
-    daemon_=false;
-    cpu_=-1;
-    detached_=false;
-    stacksize_=THREAD_DEFAULT_STACKSIZE;
     switch(state){
     case Activated:
 	os_start(false);
