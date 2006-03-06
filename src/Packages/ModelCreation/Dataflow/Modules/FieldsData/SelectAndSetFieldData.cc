@@ -27,7 +27,7 @@
 */
 
 /*
- *  SelectAndReplaceFieldsData.cc:
+ *  SelectAndSetFieldData.cc:
  *
  *  Written by:
  *   jeroen
@@ -66,40 +66,53 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class SelectAndReplaceFieldsData : public Module {
+class SelectAndSetFieldData : public Module {
   public:
-    SelectAndReplaceFieldsData(GuiContext*);
+    SelectAndSetFieldData(GuiContext*);
 
-    virtual ~SelectAndReplaceFieldsData();
+    virtual ~SelectAndSetFieldData();
 
     virtual void execute();
 
     virtual void tcl_command(GuiArgs&, void*);
 
   private:
-    GuiString guiselection_;
-    GuiString guifunction_;     // function code
+    GuiString guiselection1_;
+    GuiString guifunction1_;     // function code
+    GuiString guiselection2_;
+    GuiString guifunction2_;     // function code
+    GuiString guiselection3_;
+    GuiString guifunction3_;     // function code
+    GuiString guiselection4_;
+    GuiString guifunction4_;     // function code
+    GuiString guifunctiondef_;     // function code
     GuiString guiformat_;       // scalar, vector, or tensor ?
 };
 
 
-DECLARE_MAKER(SelectAndReplaceFieldsData)
-SelectAndReplaceFieldsData::SelectAndReplaceFieldsData(GuiContext* ctx)
-  : Module("SelectAndReplaceFieldsData", ctx, Source, "FieldsData", "ModelCreation"),
-  guiselection_(ctx->subVar("selection")),
-  guifunction_(ctx->subVar("function")),
+DECLARE_MAKER(SelectAndSetFieldData)
+SelectAndSetFieldData::SelectAndSetFieldData(GuiContext* ctx)
+  : Module("SelectAndSetFieldData", ctx, Source, "FieldsData", "ModelCreation"),
+  guiselection1_(ctx->subVar("selection1")),
+  guifunction1_(ctx->subVar("function1")),
+  guiselection2_(ctx->subVar("selection2")),
+  guifunction2_(ctx->subVar("function2")),
+  guiselection3_(ctx->subVar("selection3")),
+  guifunction3_(ctx->subVar("function3")),
+  guiselection4_(ctx->subVar("selection4")),
+  guifunction4_(ctx->subVar("function4")),  
+  guifunctiondef_(ctx->subVar("functiondef")),
   guiformat_(ctx->subVar("format"))  
 {
 }
 
-SelectAndReplaceFieldsData::~SelectAndReplaceFieldsData(){
+SelectAndSetFieldData::~SelectAndSetFieldData(){
 }
 
-void SelectAndReplaceFieldsData::execute()
+void SelectAndSetFieldData::execute()
 {
   // Get number of matrix ports with data (the last one is always empty)
-  size_t numinputs = numIPorts()-5;
-  size_t mstart = 6;
+  size_t numinputs = numIPorts()-2;
   
   if (numinputs > 23)
   {
@@ -107,24 +120,13 @@ void SelectAndReplaceFieldsData::execute()
     return;
   }
   
+  ArrayObjectList inputlist(numinputs+4,ArrayObject(this));
+  ArrayObjectList outputlist(1,ArrayObject(this));
+  
   FieldIPort* field_iport = dynamic_cast<FieldIPort *>(getIPort(0));
   if(field_iport == 0)
   {
-    error("Could not locate field input port 1");
-    return;
-  }
-
-  FieldIPort* field_iport2 = dynamic_cast<FieldIPort *>(getIPort(1));
-  if(field_iport2 == 0)
-  {
-    error("Could not locate field input port 2");
-    return;
-  }
-
-  FieldIPort* field_iport3 = dynamic_cast<FieldIPort *>(getIPort(2));
-  if(field_iport3 == 0)
-  {
-    error("Could not locate field input port 3");
+    error("Could not locate field input port");
     return;
   }
 
@@ -137,88 +139,30 @@ void SelectAndReplaceFieldsData::execute()
     return;
   }
 
-  FieldHandle field2;
-  field_iport2->get(field2);
-  if (field2.get_rep() == 0)
-  {
-    mstart--;
-  }
-  
-  FieldHandle field3;
-  field_iport3->get(field3);
-  if (field3.get_rep() == 0)
-  {
-    mstart--;
-  }
-
-  ArrayObjectList inputlist(numinputs+mstart,ArrayObject(this));
-  ArrayObjectList outputlist(1,ArrayObject(this));
-
-  // The function can be scripted. If a string is found on the input
-  // use this one. It will be set in the GIU, after which it is retrieved the
-  // normal way.
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(3));
-  if(function_iport == 0)
-  {
-    error("Could not locate function input port");
-    return;
-  }
-
-  StringHandle func;
-  
-  if (function_iport->get(func))
-  {
-    if (func.get_rep())
-    {
-      guifunction_.set(func->get());
-      ctx->reset();
-    }
-  }
-
   // Create the DATA object for the function
   // DATA is the data on the field
-  size_t k = 0;
-  
-  if(!(inputlist[k++].create_inputdata(field,"DATA1")))
+  if(!(inputlist[0].create_inputdata(field,"DATA")))
   {
     error("Failed to read field data");
     return;
   }
-  
-  if (field2.get_rep())
-  {
-    if(!(inputlist[k++].create_inputdata(field2,"DATA2")))
-    {
-      error("Failed to read field data");
-      return;
-    }
-  }
-
-  if (field3.get_rep())
-  {
-    if(!(inputlist[k++].create_inputdata(field3,"DATA3")))
-    {
-      error("Failed to read field data");
-      return;
-    }
-  }
 
   // Create the POS, X,Y,Z, data location objects.  
-  if(!(inputlist[k++].create_inputlocation(field,"POS","X","Y","Z")))
+  if(!(inputlist[1].create_inputlocation(field,"POS","X","Y","Z")))
   {
     error("Failed to read node/element location data");
     return;
   }
 
   // Create the ELEMENT object describing element properties
-  if(!(inputlist[k++].create_inputelement(field,"ELEMENT")))
+  if(!(inputlist[2].create_inputelement(field,"ELEMENT")))
   {
     error("Failed to read element data");
     return;
   }
 
   // Add an object for getting the index and size of the array.
-  if(!(inputlist[k++].create_inputindex("INDEX","SIZE")))
+  if(!(inputlist[3].create_inputindex("INDEX","SIZE")))
   {
     error("Internal error in module");
     return;
@@ -230,7 +174,7 @@ void SelectAndReplaceFieldsData::execute()
   
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+4));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+1));
     if(iport == 0)
     {
       error("Could not locate matrix input port");
@@ -246,10 +190,10 @@ void SelectAndReplaceFieldsData::execute()
     }
 
     matrixname[0] = mname++;    
-    if (!(inputlist[p+mstart].create_inputdata(matrix,matrixname)))
+    if (!(inputlist[p+4].create_inputdata(matrix,matrixname)))
     {
       std::ostringstream oss;
-      oss << "Input Matrix " << p+1 << "cannot be used as an input";
+      oss << "Input matrix " << p+1 << "is not a valid ScalarArray, VectorArray, or TensorArray";
       error(oss.str());
       return;
     }
@@ -262,7 +206,7 @@ void SelectAndReplaceFieldsData::execute()
     if (n == 1) n = inputlist[r].size();
     if ((inputlist[r].size() != n)&&(inputlist[r].size() != 1))
     {
-      if (r < mstart)
+      if (r < 4)
       {
         error("Number of data entries does not seem to match number of elements/nodes");
         return;
@@ -270,9 +214,8 @@ void SelectAndReplaceFieldsData::execute()
       else
       {
         std::ostringstream oss;
-        oss << "The number of data entries in Field " << r-2 << "does not seem to match the number of data entries in the main field";
+        oss << "The number of rows in matrix " << r-2 << "does not seem to match the number of datapoints in the field";
         error(oss.str());
-        return;
       }
     }
   }
@@ -287,7 +230,6 @@ void SelectAndReplaceFieldsData::execute()
   FieldHandle ofield;
   if(!(outputlist[0].create_outputdata(field,format,"RESULT",ofield)))
   {
-    error("Could not allocate output field");
     return;
   }
   
@@ -295,10 +237,34 @@ void SelectAndReplaceFieldsData::execute()
   gui->eval(getID()+" update_text");
   gui->unlock();
   
-  std::string function = guifunction_.get();
-  std::string selection =  guiselection_.get();
-  std::string f = selection + "\nif (SELECTION)\n{\n" + function + "}\n";  
+  std::string function1 = guifunction1_.get();
+  std::string selection1 = guiselection1_.get();
+  std::string function2 = guifunction2_.get();
+  std::string selection2 = guiselection2_.get();
+  std::string function3 = guifunction3_.get();
+  std::string selection3 = guiselection3_.get();
+  std::string function4 = guifunction4_.get();
+  std::string selection4 = guiselection4_.get();
+  std::string functiondef = guifunctiondef_.get();
+
+  if (selection1.size() > 0) while ((selection1[selection1.size()-1] == '\n')||(selection1[selection1.size()-1] == ' ')||(selection1[selection1.size()-1] == '\r')) { selection1 = selection1.substr(0,selection1.size()-1); if (selection1.size() == 0) break; }
+  if (selection2.size() > 0) while ((selection2[selection2.size()-1] == '\n')||(selection2[selection2.size()-1] == ' ')||(selection2[selection2.size()-1] == '\r')) { selection2 = selection2.substr(0,selection2.size()-1); if (selection2.size() == 0) break; }
+  if (selection3.size() > 0) while ((selection3[selection3.size()-1] == '\n')||(selection3[selection3.size()-1] == ' ')||(selection3[selection3.size()-1] == '\r')) { selection3 = selection3.substr(0,selection3.size()-1); if (selection3.size() == 0) break; }
+  if (selection4.size() > 0) while ((selection4[selection4.size()-1] == '\n')||(selection4[selection4.size()-1] == ' ')||(selection4[selection4.size()-1] == '\r')) { selection4 = selection4.substr(0,selection4.size()-1); if (selection4.size() == 0) break; }
+
+  if (function1.size() > 0) while ((function1[function1.size()-1] == '\n')||(function1[function1.size()-1] == ' ')||(function1[function1.size()-1] == '\r')) { function1 = function1.substr(0,function1.size()-1); if (function1.size() == 0) break; }
+  if (function2.size() > 0) while ((function2[function2.size()-1] == '\n')||(function2[function2.size()-1] == ' ')||(function2[function2.size()-1] == '\r')) { function2 = function2.substr(0,function2.size()-1); if (function2.size() == 0) break; }
+  if (function3.size() > 0) while ((function3[function3.size()-1] == '\n')||(function3[function3.size()-1] == ' ')||(function3[function3.size()-1] == '\r')) { function3 = function3.substr(0,function3.size()-1); if (function3.size() == 0) break; }
+  if (function4.size() > 0) while ((function4[function4.size()-1] == '\n')||(function4[function4.size()-1] == ' ')||(function4[function4.size()-1] == '\r')) { function4 = function4.substr(0,function4.size()-1); if (function4.size() == 0) break; }
+  if (functiondef.size() > 0) while ((functiondef[functiondef.size()-1] == '\n')||(functiondef[functiondef.size()-1] == ' ')||(functiondef[functiondef.size()-1] == '\r')) { functiondef = functiondef.substr(0,functiondef.size()-1); if (functiondef.size() == 0) break; }
   
+  std::string f = "\n";
+  if ((selection1.size()) && (function1.size())) f += "if ("+selection1+")\n{\n RESULT = " + function1 + ";}\n else ";
+  if ((selection2.size()) && (function2.size())) f += "if ("+selection2+")\n{\n RESULT = " + function2 + ";}\n else ";
+  if ((selection3.size()) && (function3.size())) f += "if ("+selection3+")\n{\n RESULT = " + function3 + ";}\n else ";
+  if ((selection4.size()) && (function4.size())) f += "if ("+selection4+")\n{\n RESULT = " + function4 + ";}\n else ";
+  if (functiondef.size()) f += "\n{\n RESULT = " + functiondef + ";\n}\n"; else f += "\n {\n }\n";
+   
   // Actual engine call, which does the dynamic compilation, the creation of the
   // code for all the objects, as well as inserting the function and looping 
   // over every data point
@@ -319,11 +285,11 @@ void SelectAndReplaceFieldsData::execute()
 extern std::string tvm_help_field;
 
 void
- SelectAndReplaceFieldsData::tcl_command(GuiArgs& args, void* userdata)
+ SelectAndSetFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
-    args.error("SelectAndReplaceFieldsData needs a minor command");
+    args.error("ComputeDataField needs a minor command");
     return;
   }
 

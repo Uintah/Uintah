@@ -52,7 +52,7 @@
 #include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
 #include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
 
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/String.h>

@@ -32,7 +32,7 @@
  * SelectionMask.cc
  */
 
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 
 namespace ModelCreation 
