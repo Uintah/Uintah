@@ -1160,8 +1160,6 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
       dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
   clipped->copy_properties(mesh);
-//  typename FIELD::mesh_type *final = scinew typename FIELD::mesh_type();
-//  final->copy_properties(mesh);
 
     //Get the original boundary elements (code from FieldBoundary)
   vector<typename FIELD::mesh_type::Face::index_type> original_face_list;
@@ -1276,8 +1274,6 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
     inside = true;
     for (unsigned int i = 0; i < onodes.size(); i++)
     {
-//       Point p;
-//       mesh->get_center(p, onodes[i]);
       typename FIELD::value_type v(0);
       if (field->basis_order() == 1) { field->value(v, onodes[i]); }
 
@@ -1332,19 +1328,19 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
     ++bi;
   }
 
-//Get the boundary elements (code from FieldBoundary)
+    //Get the boundary elements (code from FieldBoundary)
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> vertex_map;
   typename map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type>::iterator node_iter;
-
+  
   vector<typename FIELD::mesh_type::Node::index_type> node_list;
   vector<typename FIELD::mesh_type::Face::index_type> face_list;
   
   clipped->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E );
 
-  // Walk all the cells in the mesh.
+  //Walk all the cells in the mesh.
   typename FIELD::mesh_type::Cell::iterator citer; clipped->begin(citer);
   typename FIELD::mesh_type::Cell::iterator citere; clipped->end(citere);
-//  int counter = 0;
+
   while( citer != citere )
   {
     typename FIELD::mesh_type::Cell::index_type ci = *citer;
@@ -1377,7 +1373,6 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
         {
           if( original_face_list[i] == old_face )
           {
-//            cout << "Found an old boundary face..." << ++counter << endl;
             is_old_boundary = true;
             break;
           }
@@ -1409,7 +1404,6 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
 
     //project a new node to the isoval for each node on the clipped boundary
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map;
-
   unsigned int i;  
   for( i = 0; i < node_list.size(); i++ )
   {
@@ -1432,125 +1426,174 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
 
     //for each quad on the clipped boundary we have a map to the new projected nodes
     // so, create a new hex for each quad on the boundary
+  vector<typename FIELD::mesh_type::Elem::index_type> new_elems;
   for( i = 0; i < face_list.size(); i++ )
   { 
     typename FIELD::mesh_type::Node::array_type nodes;
     clipped->get_nodes( nodes, face_list[i] );
 
-//     Point p0, p1, p3, p4;
-//     mesh->get_center( p0, nodes[0] );
-//     mesh->get_center( p1, nodes[1] );
-//     mesh->get_center( p3, nodes[2] );
-//     mesh->get_center( p4, new_map[nodes[0]] );
-//     Vector p0v( p0 );
-//     Vector p1v( p1 );
-//     Vector p3v( p3 );
-//     Vector p4v( p4 );
-//     Vector normal = Cross( (p1v-p0v), (p3v-p0v) );
-//     Vector out = (p4v-p0v);
-//     double angle = Dot( normal, out  );
-
-//     if( angle > 1.5707963 )
-//     {
-//       cout << "Different order..." << endl;
-//       clipped->add_hex( nodes[0], nodes[1], nodes[2], nodes[3], 
-//                         new_map[nodes[0]], new_map[nodes[1]],
-//                         new_map[nodes[2]], new_map[nodes[3]] ); 
-//     }
-//     else
-//     {
-      clipped->add_hex( nodes[3], nodes[2], nodes[1], nodes[0],
-                        new_map[nodes[3]], new_map[nodes[2]],
-                        new_map[nodes[1]], new_map[nodes[0]] );
-//     }
+    typename FIELD::mesh_type::Node::array_type nnodes(8);
+    nnodes[0] = nodes[3];
+    nnodes[1] = nodes[2];
+    nnodes[2] = nodes[1];
+    nnodes[3] = nodes[0];
+    nnodes[4] = new_map[nodes[3]];
+    nnodes[5] = new_map[nodes[2]];
+    nnodes[6] = new_map[nodes[1]];
+    nnodes[7] = new_map[nodes[0]];
+    
+//    clipped->add_hex( nodes[3], nodes[2], nodes[1], nodes[0],
+//                      new_map[nodes[3]], new_map[nodes[2]],
+//                      new_map[nodes[1]], new_map[nodes[0]] ) );
+    new_elems.push_back( clipped->add_elem( nnodes ) );
   }
   
   // force all the synch data to be rebuilt on next synch call.
   clipped->unsynchronize();
-  FIELD *ofield = scinew FIELD(clipped);
-
-//   typename FIELD::mesh_type::Elem::iterator fbi, fei;
-//   clipped->begin( fbi ); clipped->end( fei );
-
-//   while( fbi != fei )
+  FIELD *ofield = scinew FIELD( clipped );
+  ofield->copy_properties( fieldh.get_rep() );
+  
+//   if( fieldh->basis_order() == 1 )
 //   {
-//     typename FIELD::mesh_type::Node::array_type fonodes;
-//     clipped->get_nodes( fonodes, *fbi );
-//     final->add_elem( fonodes );
-//     ++fbi;
+      //get the interp values at each of the nodes...
+//    FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
+    typename hash_type::iterator hitr = nodemap.begin();
+
+//     const int nrows = nodemap.size();
+    const int nrows = nodemap.size() + node_list.size();
+    const int ncols = field->fdata().size();
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows+7*node_list.size()];
+    double *d = scinew double[nrows+7*node_list.size()];
+
+    while( hitr != nodemap.end() )
+    {
+      typename FIELD::value_type val;
+      field->value( val, (typename FIELD::mesh_type::Node::index_type)((*hitr).first) );
+      ofield->set_value( val, (typename FIELD::mesh_type::Node::index_type)((*hitr).second) );
+
+      cc[(*hitr).second] = (*hitr).first;
+      ++hitr;
+    }
+
+//    unsigned int i;
+//    for( i = 0; i < nrows; i++ )
+    for( i = 0; i < nodemap.size(); i++ )
+    {
+      rr[i] = i;
+      d[i] = 1.0;
+    }
+
+    int counter = i;
+    int rrvalue = i;
+    for( unsigned int j = 0; j < node_list.size(); j++ )
+    {
+      rr[counter+j] = rrvalue;
+      
+      typename FIELD::mesh_type::Node::index_type ni = new_map[node_list[j]];
+
+      Point p;
+      clipped->get_center(p, ni);
+      
+      typename FIELD::mesh_type::Elem::index_type el;
+      if( mesh->locate( el, p ) )
+      {
+        double w[8];
+        typename FIELD::mesh_type::Node::array_type nodes;
+        mesh->get_nodes( nodes, el );
+        mesh->get_weights(p, nodes, w);
+
+        typename FIELD::value_type val;
+        typename FIELD::value_type actual_val = 0;
+        for( int k = 0; k < 8; k++ )
+        {
+          field->value( val, nodes[k] );
+          actual_val += w[k]*val;
+          cc[rrvalue+k] = nodes[k];
+          d[rrvalue+k] = w[k];
+        }
+        ofield->set_value( actual_val, ni );
+      }
+      else
+      {
+          //find nearest node in the mesh
+        typename FIELD::mesh_type::Node::index_type oi;
+        mesh->locate( oi, p );
+        cc[rrvalue] = oi;
+        d[rrvalue] = 1.0;
+        cc[rrvalue+1] = 0;
+        d[rrvalue+1] = 0.0;
+        cc[rrvalue+2] = 0;
+        d[rrvalue+2] = 0.0;
+        cc[rrvalue+3] = 0;
+        d[rrvalue+3] = 0.0;
+        cc[rrvalue+4] = 0;
+        d[rrvalue+4] = 0.0;
+        cc[rrvalue+5] = 0;
+        d[rrvalue+5] = 0.0;
+        cc[rrvalue+6] = 0;
+        d[rrvalue+6] = 0.0;
+        cc[rrvalue+7] = 0;
+        d[rrvalue+7] = 0.0;
+      }
+
+      rrvalue += 8;
+    }
+    
+    rr[nrows] = rrvalue; // An extra entry goes on the end of rr.
+    interp = scinew SparseRowMatrix( nrows, ncols, rr, cc, nrows+7*node_list.size(), d );
 //   }
-  
-//  FIELD *ofield = scinew FIELD(final);
-  ofield->copy_properties(fieldh.get_rep());
-  
-//NOTE TO JS: We'll worry about the interpolation matrix when we've finished the other part of the coding...
-//   if (fieldh->basis_order() == 1)
+//   else if( fieldh->order_type_description()->get_name() ==
+//            get_type_description( (typename FIELD::mesh_type::Elem *)0 )->get_name() )
 //   {
+//       //get the values at the center of each of the elements...
 //     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
-//     typename hash_type::iterator hitr = nodemap.begin();
 
-//     const int nrows = nodemap.size();;
+//     const int nrows = elemmap.size() + new_elems.size();
 //     const int ncols = field->fdata().size();
 //     int *rr = scinew int[nrows+1];
 //     int *cc = scinew int[nrows];
 //     double *d = scinew double[nrows];
 
-//     while (hitr != nodemap.end())
+//     for( unsigned int i = 0; i < elemmap.size(); i++ )
 //     {
 //       typename FIELD::value_type val;
-//       field->value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).first));
-//       ofield->set_value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).second));
-
-//       cc[(*hitr).second] = (*hitr).first;
-
-//       ++hitr;
-//     }
-
-//     int i;
-//     for (i = 0; i < nrows; i++)
-//     {
-//       rr[i] = i;
-//       d[i] = 1.0;
-//     }
-//     rr[i] = i; // An extra entry goes on the end of rr.
-
-//     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
-//   }
-//   else if (fieldh->order_type_description()->get_name() ==
-// 	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
-//   {
-//     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
-
-//     const int nrows = elemmap.size();
-//     const int ncols = field->fdata().size();
-//     int *rr = scinew int[nrows+1];
-//     int *cc = scinew int[nrows];
-//     double *d = scinew double[nrows];
-
-//     for (unsigned int i=0; i < elemmap.size(); i++)
-//     {
-//       typename FIELD::value_type val;
-//       field->value(val,
-// 		   (typename FIELD::mesh_type::Elem::index_type)elemmap[i]);
-//       ofield->set_value(val, (typename FIELD::mesh_type::Elem::index_type)i);
+//       field->value( val, (typename FIELD::mesh_type::Elem::index_type) elemmap[i] );
+//       ofield->set_value( val, (typename FIELD::mesh_type::Elem::index_type)i );
 
 //       cc[i] = elemmap[i];
 //     }
+//     int counter = elemmap.size();
+//     unsigned int j;
+//     for( j = 0; j < new_elems.size(); j++ )
+//     { 
+//       typename FIELD::mesh_type::Elem::index_type ne = new_elems[j];
 
-//     int j;
-//     for (j = 0; j < nrows; j++)
+//       Point p;
+//       clipped->get_center( p, ne );
+      
+//       typename FIELD::mesh_type::Elem::index_type el;
+//       mesh->locate( el, p );
+//       typename FIELD::value_type val;
+//       field->value( val, el );
+//       ofield->set_value( val, ne );
+
+//       cc[counter+j] = el;
+//     }
+          
+//     for( j = 0; j < nrows; j++ )
 //     {
 //       rr[j] = j;
 //       d[j] = 1.0;
 //     }
 //     rr[j] = j; // An extra entry goes on the end of rr.
 
-//     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+//     interp = scinew SparseRowMatrix( nrows, ncols, rr, cc, nrows, d );
 //   }
 //   else
 //   {
-//     mod->warning("Unable to copy data at this field data location.");
-//     mod->warning("No interpolant computed for field data location.");
+//     mod->warning( "Unable to copy data at this field data location." );
+//     mod->warning( "No interpolant computed for field data location." );
 //     interp = 0;
 //   }
 
