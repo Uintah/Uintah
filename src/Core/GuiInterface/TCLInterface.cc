@@ -221,8 +221,9 @@ int eventCallback(Tcl_Event* event, int flags)
      PauseEventMessage *pause = dynamic_cast<PauseEventMessage *>(em);
      CommandEventMessage *command = dynamic_cast<CommandEventMessage *>(em);
      if (pause) {
+       TCLInterface *tcl_interface = pause->tcl_interface_;
        pause->mark_message_delivered();
-       pause->tcl_interface_->real_pause();
+       tcl_interface->real_pause();
      }
 
      if (command) {
