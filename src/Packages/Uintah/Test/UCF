@@ -1,30 +1,89 @@
 #!/usr/local/bin/python
 
-from os import symlink,environ
+from os import symlink,environ,chdir,getcwd,mkdir,system
 from sys import argv,exit,platform
+from string import upper
 from helpers.runSusTests import runSusTests, inputs_root
+from helpers.modUPS import modUPS
+
+#Performance tests
+UNUSED = [ ("ice_perf_test", "icePerformanceTest.ups", 1, "Linux","", ["do_perf"]),  \
+           ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_perf"]),\
+]
 
 
-TESTS = [ ("dlb_mpm", "dlbTest.ups", "", 8, "NONE","","mpm",[]),  \
-          ("dlb_mpmice", "dlbTest.ups", "", 8, "ALL","","mpmice",[]),  \
-          ("periodic_disks", "periodic_disks.ups", "", 6, "ALL","","mpm",[]) \
+
+TESTS = [ ("dlb_mpm", "dlbTest.ups", 8, "NONE"),  \
+          ("dlb_mpmice", "dlbTest.ups", 8, "ALL"),  \
+          ("periodic_disks", "periodic_disks.ups", 6, "ALL") \
+          ("switcher", "JP8-switch.ups", 8, "ALL") \
           ]
 
-def chemfile (test):
-    return test[5]
+code = runSusTests(argv, TESTS, "UCF")
 
-# if there is arches stuff
-def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
+# Scalability tests -
+# last 6 args are start patches x,y,z and start res x,y,z
+# The 4th argument is the number of times to double the processor count
+SCALE_TESTS = [ ("ice_scale_test", "iceScalabilityTest.ups", 8, "ALL","",1,1,1,10,10,10)]
 
-  # if the cfile exists, then we can assume that there's an input.dtd as well
-  cfile = chemfile(test)
-  if cfile != "":    
-    if platform[0:5] == "linux":
-      cfile = cfile + ".linux.bin"
+retval = 0
+
+for test in SCALE_TESTS:
+  iterations = test[2]
+  
+  # Starting resolution.  Double each iteration
+  xpatches = test[5]
+  ypatches = test[6]
+  zpatches = test[7]
+
+  xres = test[8]
+  yres = test[9]
+  zres = test[10]
+
+  scale_tests = []
+  max_parallelism = float(argv[5])
+
+  # do tests n times, double the procs each time, and double res and patches
+  for i in range(0, iterations):
+    procs = 2**i
+    if procs > max_parallelism:
+      iterations=i  
+      break
+
+    # substitute the new resolution and patch configuration in the UPS file.
+    newUPS = modUPS("%s/UCF" % (inputs_root(), test[1], \
+                    ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
+    scale_tests.append(("%s-%dproc" % (test[0],procs), newUPS, procs, test[3], test[4], test[5], ["do_perf"]))
+
+    # double the patches and resolution for the next run.
+    if xpatches <= ypatches and xpatches <= zpatches:
+      xpatches = xpatches*2
+    elif ypatches <= xpatches and ypatches <= zpatches:
+      ypatches = ypatches*2
     else:
-      cfile = cfile + ".bin"
-    symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
-    symlink("%s/input.dtd" % (inputsdir), "input.dtd")
+      zpatches = zpatches*2
 
+    if xres <= yres and xres <= zres:
+      xres = xres*2
+    elif yres <= xres and yres <= zres:
+      yres = yres*2
+    else:
+      zres = zres*2
 
-exit(runSusTests(argv, TESTS, "ucf", chemfileCallback))
+  # Run al the tests.  Exit if it skips them (because of debug mode)
+  retval = runSusTests(argv, scale_tests, "UCF")
+  if retval != 3:
+    
+    # This dir should exist now, and each tests' subdir should be underneath
+    chdir("%s/UCF-results" % getcwd())
+    mkdir(test[0])
+
+    # Gather results into the log file
+    system("echo Scalability results for %s >> %s/scalability.log.txt" % (test[0], test[0]))
+    for i in range(0, iterations):
+      procs = 2**i
+      # Find the last average time/timestep and append it along it with its numprocs to a log file
+      system("echo %d `grep Time %s-%dproc/sus.log.txt | tail -n1 | awk '{print $10}'` >> %s/scalability.log.txt" % (procs, test[0], procs, test[0]))
+    system("cat %s/scalability.log.txt" % test[0])
+
+exit(code)

@@ -6,6 +6,9 @@
        <title> flow through a nozzle using pressure</title>
    </Meta>
 
+   <SimulationComponent>
+        <type> mpmice </type>
+   </SimulationComponent>
 
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->

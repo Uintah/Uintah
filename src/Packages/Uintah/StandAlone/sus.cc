@@ -93,6 +93,7 @@ using namespace std;
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 extern DebugStream fullDebug;
+static DebugStream stackDebug("ExceptionStack", true);
 //#define HAVE_MPICH
 
 static
@@ -187,25 +188,6 @@ main( int argc, char** argv )
   /*
    * Default values
    */
-  bool   do_mpm=false;
-  bool   do_mpmf=false;      // for Fracture
-  bool   do_rmpm=false;      // for rigid MPM
-  bool   do_smpm=false;      // for shell MPM
-  bool   do_smpmice=false;   // for shell MPM with ICE
-  bool   do_rmpmice=false;   // for rigid MPM with ICE
-  bool   do_fmpmice=false;   // for Fracture MPM with ICE
-  bool   do_impmpm=false;
-  bool   do_arches=false;
-  bool   do_ice=false;
-  bool   do_particletest1=false;
-  bool   do_regriddertest=false;
-  bool   do_burger=false;
-  bool   do_wave=false;
-  bool   do_poisson1=false;
-  bool   do_poisson2=false;
-  bool   do_poisson3=false;
-  bool   do_solvertest1=false;
-  bool   do_simplecfd=false;
   bool   do_AMR=false;
   bool   emit_graphs=false;
   bool   restart=false;
@@ -219,6 +201,7 @@ main( int argc, char** argv )
 //bool   useScheduler3 = false;
   int    numThreads = 0;
   string filename;
+  string component;
   string solver;
   IntVector layout(1,1,1);
 
@@ -248,57 +231,11 @@ main( int argc, char** argv )
     * Parse arguments
     */
   for(int i=1;i<argc;i++){
-	  string s=argv[i];
+    string s=argv[i];
     if( (s == "-help") || (s == "-h") ) {
       usage( "", "", argv[0]);
-    } else if(s == "-mpm"){
-      do_mpm=true;
-    } else if(s == "-mpmf"){    // for Fracture
-      do_mpmf=true;
-    } else if(s == "-rmpm"){
-      do_rmpm=true;
-    } else if(s == "-smpm"){
-      do_smpm=true;
-    } else if(s == "-smpmice"){
-      do_smpmice = true;
-    } else if(s == "-rmpmice"){
-      do_rmpmice = true;
-    } else if(s == "-fmpmice"){
-      do_fmpmice = true;
-    } else if(s == "-impm"){
-      do_impmpm=true;
-    } else if(s == "-arches"){
-      do_arches=true;
-    } else if(s == "-ice"){
-      do_ice=true;
-    } else if(s == "-mpmice"){
-      do_ice=true;
-      do_mpm=true;
-    } else if(s == "-particletest1"){
-      do_particletest1=true;
-    } else if(s == "-regriddertest"){
-      do_regriddertest=true;
-    } else if(s == "-burger"){
-      do_burger=true;
-    } else if(s == "-wave"){
-      do_wave=true;
-    } else if(s == "-poisson1"){
-      do_poisson1=true;
-    } else if(s == "-poisson2"){
-      do_poisson2=true;
-    } else if(s == "-poisson3"){
-      do_poisson3=true;
-    } else if(s == "-solvertest1"){
-      do_solvertest1=true;
-    } else if(s == "-scfd" || s == "-simplecfd"){
-      do_simplecfd=true;
-    } else if(s == "-mpmarches"){
-      do_arches=true;
-      do_mpm=true;
     } else if(s == "-AMR" || s == "-amr"){
       do_AMR=true;
-//  } else if(s == "-s3"){
-//    useScheduler3=true;
     } else if(s == "-nthreads"){
       cerr << "reading number of threads\n";
       if(++i == argc){
@@ -322,10 +259,8 @@ main( int argc, char** argv )
       emit_graphs = true;
     } else if(s == "-restart") {
       restart=true;
-    } else if(s == "-combine_patches") {
-      combine_patches=true;	   
-    } else if(s == "-reduce_uda") {
-      reduce_uda=true;	   
+    } else if(s == "-handle_mpi_errors") {
+      // handled in Parallel.cc
     } else if(s == "-uda_suffix") {
       if (i < argc-1)
         udaSuffix = atoi(argv[++i]);
@@ -351,6 +286,19 @@ main( int argc, char** argv )
       if(sscanf(argv[i], "%dx%dx%d", &ii, &jj, &kk) != 3)
         usage("Error parsing -layout", argv[i], argv[0]);
       layout = IntVector(ii,jj,kk);
+    } else if (s[0] == '-') {
+      // component name - must be the only remaining option with a hyphen
+      if (component.length() > 0) {
+        char errorMsg[256];
+        sprintf(errorMsg, "Cannot specify both -%s and %s", component.c_str(), s.c_str());
+        usage(errorMsg, argv[i], argv[0]);
+      } else {
+        component = s.substr(1,s.length()); // strip off the -
+        if (component == "combine_patches")
+          combine_patches = true;
+        else if (component == "reduce_uda")
+          reduce_uda = true;
+      }
     } else {
       if(filename!="") {
         usage("", s, argv[0]);
@@ -369,14 +317,9 @@ main( int argc, char** argv )
     usage("No input file specified", "", argv[0]);
   }
 
-  if (restart) {
+  if (restart || combine_patches || reduce_uda) {
     // check if state.xml is present
     // if not do normal
-    udaDir = filename;
-    filename = filename + "/input.xml";
-  }
-
-  if (combine_patches || reduce_uda) {
     udaDir = filename;
     filename = filename + "/input.xml";
   }
@@ -388,13 +331,6 @@ main( int argc, char** argv )
   #ifdef USE_VAMPIR
   VTsetup();
   #endif
-
-  /*
-   * Check for valid argument combinations
-   */
-  if(do_ice && do_arches){
-    usage( "ICE and Arches do not work together", "", argv[0]);
-  }
 
 #ifndef _WIN32
   SimulationController::start_addr = (char*)sbrk(0);
@@ -448,119 +384,12 @@ main( int argc, char** argv )
     solve = SolverFactory::create(ups, world, solver);
 
     // try to make it from the command line first, then look in ups file
-    SimulationInterface* sim = 0;
-    UintahParallelComponent* comp = 0;
-    if(do_mpm && do_ice){
-      MPMICE* mpmice = scinew MPMICE(world,STAND_MPMICE,do_AMR);
-      sim = mpmice;
-      comp = mpmice;
-    } else if(do_mpm && do_arches){
-      MPMArches* mpmarches = scinew MPMArches(world);
-      sim = mpmarches;
-      comp = mpmarches;
-    } else if(do_mpm){
-      SerialMPM* mpm = scinew SerialMPM(world);
-      sim = mpm;
-      comp = mpm;
-    } else if(do_mpmf){
-      FractureMPM* mpmf = scinew FractureMPM(world); // for Fracture
-      sim = mpmf;
-      comp = mpmf;
-    } else if(do_rmpm){
-      RigidMPM* rmpm = scinew RigidMPM(world);
-      sim = rmpm;
-      comp = rmpm;
-    } else if(do_smpm){
-      ShellMPM* smpm = scinew ShellMPM(world);
-      sim = smpm;
-      comp = smpm;
-    } else if(do_smpmice){
-      MPMICE* mpmice = scinew MPMICE(world, SHELL_MPMICE, do_AMR);
-      sim = mpmice;
-      comp = mpmice;
-    } else if(do_rmpmice){
-      MPMICE* mpmice = scinew MPMICE(world, RIGID_MPMICE, do_AMR);
-      sim = mpmice;
-      comp = mpmice;
-    } else if(do_fmpmice){
-      MPMICE* mpmice = scinew MPMICE(world, FRACTURE_MPMICE, do_AMR);
-      sim = mpmice;
-      comp = mpmice;
-    } else if(do_impmpm){
-      ImpMPM* impm = scinew ImpMPM(world);
-      sim = impm;
-      comp = impm;
-    } else if(do_arches){
-      Arches* arches = scinew Arches(world);
-      sim = arches;
-      comp = arches;
-    } else if(do_ice) {
-      ICE* ice = NULL;
-      if(do_AMR){
-        ice = scinew AMRICE(world);
-      }else{
-        ice = scinew ICE(world, do_AMR);
-      }
-      sim = ice;
-      comp = ice;
-    } else if(do_burger){
-      Burger* burger = scinew Burger(world);
-      sim = burger;
-      comp = burger;
-    } else if(do_wave){
-      Wave* wave;
-      if(do_AMR)
-        wave = scinew AMRWave(world);
-      else
-        wave = scinew Wave(world);
-      sim = wave;
-      comp = wave;
-    } else if(do_poisson1){
-      Poisson1* poisson1 = scinew Poisson1(world);
-      sim = poisson1;
-      comp = poisson1;
-    } else if(do_particletest1){
-      ParticleTest1* pt1 = scinew ParticleTest1(world);
-      sim = pt1;
-      comp = pt1;
-    } else if(do_regriddertest){
-      RegridderTest* rgt = scinew RegridderTest(world);
-      sim = rgt;
-      comp = rgt;
-    } else if(do_poisson2){
-      Poisson2* poisson2 = scinew Poisson2(world);
-      sim = poisson2;
-      comp = poisson2;
-    } else if(do_poisson3){
-      Poisson3* poisson3 = scinew Poisson3(world);
-      sim = poisson3;
-      comp = poisson3;
-    } else if(do_solvertest1){
-      SolverTest1* solvertest1 = scinew SolverTest1(world);
-      sim = solvertest1;
-      comp = solvertest1;
-    } else if(do_simplecfd){
-      SimpleCFD* simplecfd;
-      if(do_AMR)
-        simplecfd = scinew AMRSimpleCFD(world);
-      else
-        simplecfd = scinew SimpleCFD(world);
-      sim = simplecfd;
-      comp = simplecfd;
-    } else if (combine_patches) {
-      PatchCombiner* pc = scinew PatchCombiner(world, udaDir);
-      sim = pc;
-      comp = pc;
-      ctl->doCombinePatches(udaDir, false);
-    } else if (reduce_uda) {
-      UdaReducer* pc = scinew UdaReducer(world, udaDir);
-      sim = pc;
-      comp = pc;
+    UintahParallelComponent* comp = ComponentFactory::create(ups, world, do_AMR, component, udaDir);
+    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
+
+    if (combine_patches || reduce_uda) {
       // the ctl will do nearly the same thing for combinePatches and reduceUda
-      ctl->doCombinePatches(udaDir, true);
-    } else { // try it from the ups file
-      comp = ComponentFactory::create(ups, world, do_AMR);
-      sim = dynamic_cast<SimulationInterface*>(comp);
+      ctl->doCombinePatches(udaDir, reduce_uda); // true for reduce_uda, false for combine_patches
     }
     
     ctl->attachPort("sim", sim);
@@ -574,6 +403,7 @@ main( int argc, char** argv )
     UintahParallelComponent* lb; // to add scheduler as a port
     LoadBalancerCommon* lbc = LoadBalancerFactory::create(ups, world);
     lb = lbc;
+    lb->attachPort("sim", sim);
     bal = lbc;
     
     // Output
@@ -590,6 +420,7 @@ main( int argc, char** argv )
     sched->attachPort("load balancer", bal);
     ctl->attachPort("scheduler", sched);
     lb->attachPort("scheduler", sched);
+    comp->attachPort("scheduler", sched);
     sch->addReference();
     
     if (emit_graphs) sch->doEmitTaskGraphDocs();
@@ -617,9 +448,9 @@ main( int argc, char** argv )
   } catch (Exception& e) {
     
     cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << '\n';
+    cout << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
-      cerr << "Stack trace: " << e.stackTrace() << '\n';
+      stackDebug << "Stack trace: " << e.stackTrace() << '\n';
     cerrLock.unlock();
     thrownException = true;
   } catch (std::exception e){

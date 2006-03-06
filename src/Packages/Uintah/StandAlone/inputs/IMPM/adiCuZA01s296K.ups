@@ -6,6 +6,9 @@
   <Meta>
     <title>Constitutive Model Tester</title>
   </Meta>
+   <SimulationComponent>
+        <type> impm </type>
+   </SimulationComponent>
 
   <Time>
     <maxTime>9.0e0</maxTime>

@@ -18,21 +18,16 @@
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>disks2mat4patch.uda</filebase>
-	<outputInterval>.01</outputInterval>
-	<save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
+        <filebase>periodic_disks.uda</filebase>
+	<outputTimestepInterval>20</outputTimestepInterval>
+	<save label = "p.particleID"/>
 	<save label = "p.x"/>
 	<save label = "p.volume"/>
 	<save label = "p.stress"/>
-        <save label = "p.particleID"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
 
-	<checkpoint cycle = "2" interval = "0.01"/>
+	<checkpoint cycle = "2" timestepInterval = "20"/>
    </DataArchiver>
 
     <MPM>
@@ -62,36 +57,25 @@
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
-		    <velocity>[2.0,2.0,0]</velocity>
+		    <velocity>[-2.0,0,0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-	    </material>
 
-	    <material>
-                <burn type = "null" />
-		<density>1000.0</density>
-		<constitutive_model type="comp_mooney_rivlin"> 
-		   <he_constant_1>100000.0</he_constant_1>
-		   <he_constant_2>20000.0</he_constant_2>
-		   <he_PR>.49</he_PR>
-	        </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
 		<geom_object>
-		    <cylinder label="gp2">
+		    <cylinder label = "gp2">
 			<bottom>[.75,.75,.05]</bottom>
 			<top>[.75,.75,.1]</top>
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
-		    <velocity>[-2.0,-2.0,0]</velocity>
+		    <velocity>[2.0,2.0,0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
 	    </material>
 
 	    <contact>
-	      <type>single_velocity</type>
-	      <materials>[0,1]</materials>
+	      <type>null</type>
+	      <materials>[0]</materials>
 	    </contact>
 	</MPM>
 
@@ -99,40 +83,41 @@
 	
     <Grid>
 	<BoundaryConditions>
-	  <Face side = "x-">
-             <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                   <value> [0.0,0.0,0.0] </value>
-             </BCType>
-         </Face>
-         <Face side = "x+">
-            <BCType id = "all" var = "Dirichlet" label = "Velocity">
-		   <value> [0.0,0.0,0.0] </value>
-            </BCType>
-         </Face>
-         <Face side = "y-">
-            <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                   <value> [0.0,0.0,0.0] </value>
-            </BCType>
-         </Face>                  
-	 <Face side = "y+">
-           <BCType id = "all" var = "Dirichlet" label = "Velocity">  
-                  <value> [0.0,0.0,0.0] </value>
-           </BCType>
-         </Face>
-         <Face side = "z-">
-           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-          </Face>
-          <Face side = "z+">
-           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-          </Face>                          
+	   <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+		      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>                  
+	   <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+ 		      <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
 	</BoundaryConditions>
 	<Level>
 	    <Box label = "1">
 		<lower>[0,0,0]</lower>
 		<upper>[1.0,1.0,.15]</upper>
 	        <resolution>[20,20,3]</resolution>
-		<patches>[2,2,1]</patches>
+		<patches>[3,2,1]</patches>
 	    </Box>
+	    <periodic>[1,1,0]</periodic>
 	</Level>
     </Grid>
 
@@ -140,6 +125,6 @@
 	<MPM>
 	</MPM>
     </PhysicalBC>
-    
+
 </Uintah_specification>
 

@@ -8,6 +8,9 @@
    <Meta>
        <title>Hot Blob 2 material</title>
    </Meta>
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
