@@ -201,12 +201,10 @@ cmake <replaceable>path-to-itk-source-directory</replaceable> \
 make  
       </literallayout>
       to build ITK.  This builds ITK libraries in the ITK binary
-      directory.  SCIRun will use the ITK libraries in the ITK binary
-      directory by providing SCIRun's configure command with option
-      <option>--with-insight=<replaceable>path-to-itk-binary-directory</replaceable></option>.
+      directory.
     </para>
     <para>
-      Alternatively, ITK can be installed in
+       ITK can then be installed in
       <filename>/usr/local/</filename> by typing:
       <literallayout class="monospaced">
 make install  
@@ -215,7 +213,7 @@ make install
       <filename>/usr/local/lib/InsightToolkit</filename>.  SCIRun will
       use these libraries by providing SCIRun's configure command with
       option
-      <option>--with-insight=/usr/local/lib/InsightToolkit</option>.
+      <option>--with-insight=/usr/local/</option>.
     </para>
   </section>
 
@@ -232,10 +230,8 @@ make install
 	  <term><option>--with-insight=<replaceable>path-to-insight-bin-directory</replaceable></option></term>
 	  <listitem>
 	    <para>
-	      Specifies the ITK binary directory created previously
-	      (e.g. InsightToolkit-<replaceable>x.x.x</replaceable>-bin)
-	      or the ITK installation directory
-	      (e.g. <filename>/usr/local/lib/InsightToolkit</filename>).
+	      Specifies the ITK installation directory
+	      (e.g. <filename>/usr/local/</filename>).
 	    </para>
 	  </listitem>
 	</varlistentry>
@@ -247,7 +243,7 @@ make install
 	../src/configure \
 	<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase><phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
 	--enable-package="BioPSE Teem Insight" \
-	--with-insight=/usr/local/lib/InsightToolkit \<phrase os="osx">
+	--with-insight=/usr/local/ \<phrase os="osx">
 	--with-png=/sw</phrase>
 	.
 	.

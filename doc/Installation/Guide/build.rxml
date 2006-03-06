@@ -153,7 +153,7 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 ../src/configure \
 <!--%= withThirdParty %--> \
 --enable-package="BioPSE Teem Insight" \
---with-insight=/usr/local/lib/InsightToolkit<phrase os="osx"> \
+--with-insight=/usr/local/<phrase os="osx"> \
 --with-png=/sw</phrase>
 	</literallayout>
 	Use option <option>--with-hdf5</option> to add HDF5 support.
