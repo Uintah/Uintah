@@ -247,6 +247,51 @@ SparseRowMatrix::get_data_size()
 
 
 SparseRowMatrix *
+SparseRowMatrix::transpose() const
+{
+  double *t_a = scinew double[nnz];
+  int *t_columns = scinew int[nnz];
+  int *t_rows = scinew int[ncols_+1];
+  int t_nnz = nnz;
+  int t_nncols = nrows_;
+  int t_nnrows = ncols_;
+  SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
+					      t_columns, t_nnz, t_a);
+
+  int *at = scinew int[t_nnrows+1];
+  int i;
+  for (i=0; i<t_nnrows+1;i++)
+  {
+    at[i] = 0;
+  }
+  for (i=0; i<t_nnz;i++)
+  {
+    at[columns[i]+1]++;
+  }
+  t_rows[0] = 0;
+  for (i=1; i<t_nnrows+1; i++)
+  {
+    at[i] += at[i-1];
+    t_rows[i] = at[i];
+  }
+
+  int c = 0;
+  for (int r=0; r<nrows_; r++)
+  {
+    for (; c<rows[r+1]; c++)
+    {
+      int mcol = columns[c];
+      t_columns[at[mcol]] = r;
+      t_a[at[mcol]] = a[c];
+      at[mcol]++;
+    }
+  }
+
+  delete at;
+  return t;
+}
+
+SparseRowMatrix *
 SparseRowMatrix::transpose()
 {
   double *t_a = scinew double[nnz];
@@ -553,43 +598,56 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
 {
   // Compute A*B=C
   ASSERT(b.nrows() == ncols_);
+  
+  SparseRowMatrix* c = b.transpose();
 
-  int i, j, k;
+  int *nrow = scinew int[nrows_+1];
+  vector<int> ncolv;
+  vector<double> nvalv;
 
-  int *crow = scinew int[nrows_+1];
-  vector<int> ccolv;
-  vector<double> cdatav;
+  int cnrows = c->nrows_;
+  int *crows = c->rows;
+  int *ccolumns = c->columns;
+  double* ca = c->a;
 
-  crow[0] = 0;
-  for (i = 0; i < nrows_; i++)
+  nrow[0] = 0;
+  int p,q,r,s;
+  for (s = 0; s < nrows_; s++)
   {
-    crow[i+1] = crow[i];
-    for (j = 0; j < b.ncols(); j++)
+    for (r = 0; r < cnrows; r++)
     {
-      double sum = 0.0;
-      for (k = rows[i]; k < rows[i+1]; k++)
+      for (p = crows[r]; p < crows[r+1]; r++)
       {
-        sum += a[k] * b.get(columns[k], j);
-      }
-      if (sum != 0.0)
-      {
-        ccolv.push_back(j);
-        cdatav.push_back(sum);
-        crow[i+1]++;
+        double cval = 0.0;
+        int cc = ccolumns[p];
+        for (q = rows[s]; q < rows[s+1]; s++)
+        {
+          if (cc == columns[q]) cval += ca[p]*a[q];
+        }
+        
+        if (cval)
+        {
+          ncolv.push_back(r);
+          nvalv.push_back(cval);
+        }
       }
     }
-  }
+    nrow[s+1] = ncolv.size();
+  }  
 
-  int *ccol = scinew int[ccolv.size()];
-  double *cdata = scinew double[cdatav.size()];
-  for (i=0; i < (int)ccolv.size(); i++)
+  delete c;
+  
+  int *ncol = scinew int[ncolv.size()];
+  double *nval = scinew double[nvalv.size()];
+  for (p=0; p < ncolv.size(); p++)
   {
-    ccol[i] = ccolv[i];
-    cdata[i] = cdatav[i];
+    ncol[p] = ncolv[p];
+    nval[p] = nvalv[p];
   }
 
-  return scinew SparseRowMatrix(nrows_, b.ncols(), crow, ccol,
-                                cdatav.size(), cdata);
+  return scinew SparseRowMatrix(nrows_, b.ncols(), nrow, ncol,
+                                nvalv.size(), nval);
+
 }
 
 
