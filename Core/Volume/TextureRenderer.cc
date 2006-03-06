@@ -544,7 +544,7 @@ namespace SCIRun {
     }
     for(unsigned int i=0, k=0; i<poly.size(); i++) {
       if (mask && shader) {
-        if ((*mask)[i]) {
+        if (!(*mask)[i]) {
           k += poly[i];
           continue;
         }
