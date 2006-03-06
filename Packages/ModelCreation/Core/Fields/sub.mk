@@ -12,7 +12,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/ModelCreation/Core/Fields
 
-SRCS     += $(SRCDIR)/BuildMembraneTable.cc\
+SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
+            $(SRCDIR)/BuildMembraneTable.cc\
+            $(SRCDIR)/ClearAndChangeFieldBasis.cc\
             $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
             $(SRCDIR)/CompartmentBoundary.cc\
@@ -20,12 +22,17 @@ SRCS     += $(SRCDIR)/BuildMembraneTable.cc\
             $(SRCDIR)/DistanceToField.cc\
             $(SRCDIR)/FieldsAlgo.cc\
             $(SRCDIR)/ExampleFields.cc\
+            $(SRCDIR)/FieldBoundary.cc\
             $(SRCDIR)/FieldDataNodeToElem.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
+            $(SRCDIR)/GetFieldData.cc\
+            $(SRCDIR)/GetFieldInfo.cc\
+            $(SRCDIR)/MergeFields.cc\
+            $(SRCDIR)/Precompile.cc\
+            $(SRCDIR)/ScaleField.cc\
             $(SRCDIR)/SplitByConnectedRegion.cc\
             $(SRCDIR)/SplitFieldByElementData.cc\
-            $(SRCDIR)/MergeFields.cc\
-            $(SRCDIR)/GetFieldData.cc\
+            $(SRCDIR)/SelectionMask.cc\
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
             $(SRCDIR)/TransformField.cc\
@@ -35,14 +42,12 @@ SRCS     += $(SRCDIR)/BuildMembraneTable.cc\
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Core/Exceptions Core/Thread Core/GuiInterface \
-            Core/Geom Core/Geometry Dataflow/Network \
-            Packages/ModelCreation/Core/Algorithms \
-            Packages/ModelCreation/Core/Datatypes \
-            Packages/ModelCreation/Core/Util \
-            Dataflow/Modules/Fields \
-            Core/Algorithms/Fields \
+            Core/Geom Core/Geometry \
+            Packages/ModelCreation/Core/Converter \
+            Core/Algorithms/Util \
             Core/Persistent \
             Core/Basis Core/Bundle
-LIBS :=
+
+LIBS :=     $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

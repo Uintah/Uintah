@@ -26,42 +26,67 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
-#ifndef MODELCREATION_CORE_ALGORITHMS_MATRIXCONVERTER_H
-#define MODELCREATION_CORE_ALGORITHMS_MATRIXCONVERTER_H 1
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/NrrdData.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
-#include <Packages/ModelCreation/Core/Util/AlgoLibrary.h>
-
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Geometry/Transform.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class MatrixConverter : public AlgoLibrary {
-
+class NrrdToField : public Module {
 public:
-  MatrixConverter(ProgressReporter* pr);
-  
-  bool MatrixToDouble(MatrixHandle matrix, double &val);
-  bool MatrixToInt(MatrixHandle matrix, int &val);
-  bool MatrixToVector(MatrixHandle matrix, Vector& vec);
-  bool MatrixToTensor(MatrixHandle matrix, Tensor& ten);
-  bool MatrixToTransform(MatrixHandle matrix, Transform& trans);
-  
-  bool DoubleToMatrix(double val, MatrixHandle& matrix);
-  bool IntToMatrix(int val, MatrixHandle& matrix);
-  bool VectorToMatrix(Vector& vec, MatrixHandle& matrix);
-  bool TensorToMatrix(Tensor& ten, MatrixHandle matrix);
-  bool TransformToMatrix(Transform& trans, MatrixHandle& matrix);
+  NrrdToField(GuiContext*);
 
+  virtual void execute();
+
+private:
+  GuiString guidatalocation_;
 };
 
-} // end namespace
 
-#endif
+DECLARE_MAKER(NrrdToField)
+NrrdToField::NrrdToField(GuiContext* ctx)
+  : Module("NrrdToField", ctx, Source, "FieldsCreate", "ModelCreation"),
+    guidatalocation_(ctx->subVar("datalocation"))
+{
+}
+
+void NrrdToField::execute()
+{
+  NrrdIPort* iport = dynamic_cast<NrrdIPort*>(get_iport(0));
+  if (iport == 0) 
+  {
+    error("Could not find input port");
+    return;
+  }
+
+  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
+  if (oport == 0) 
+  {
+    error("Could not find output port");
+    return;
+  }
+
+  NrrdDataHandle nrrd;
+  FieldHandle ofield;
+  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+
+  std::string datalocation = guidatalocation_.get();
+  
+  iport->get(nrrd);
+  if(algo.NrrdToField(nrrd,ofield,datalocation)) oport->send(ofield);
+}
+
+
+} // End namespace ModelCreation
+
+

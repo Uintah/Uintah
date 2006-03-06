@@ -39,7 +39,7 @@
 #include <Core/Datatypes/Mesh.h>
 
 #include <sci_hash_map.h>
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

@@ -20,6 +20,7 @@ SRCS     += \
 	$(SRCDIR)/CompartmentBoundary.cc\
 	$(SRCDIR)/SplitFieldByConnectedRegion.cc\
 	$(SRCDIR)/MatrixToField.cc\
+	$(SRCDIR)/NrrdToField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

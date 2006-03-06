@@ -30,10 +30,11 @@
 #ifndef MODELCREATION_CORE_FIELDS_FIELDALGO_H
 #define MODELCREATION_CORE_FIELDS_FIELDALGO_H 1
 
-#include <Packages/ModelCreation/Core/Util/AlgoLibrary.h>
+#include <Core/Algorithms/Util/AlgoLibrary.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
@@ -52,9 +53,9 @@ class FieldsAlgo : public AlgoLibrary {
 
   public:
     FieldsAlgo(ProgressReporter* pr); // normal case
-
+  
     // Funtions borrow from Core of SCIRun
-    bool ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield);
+    bool ApplyMappingMatrix(FieldHandle fsrc,  FieldHandle fdst, FieldHandle& output, MatrixHandle mapping);
     bool ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis);
     
     // ManageFieldData split into two parts
@@ -82,17 +83,14 @@ class FieldsAlgo : public AlgoLibrary {
     bool IsClosedSurface(FieldHandle input);
     bool IsClockWiseSurface(FieldHandle input);
     bool IsCounterClockWiseSurface(FieldHandle input);
-
-    // BuildMembraneTable
-    // Find the surfaces in membranemodel and fir them to the ones found in
-    // elementtype. This will produce a table that can be used to see which surfaces
-    // in the elementtype mesh can be used to model the membrane model.
-    // This is a support function for the CardioWave Interface
-    bool BuildMembraneTable(FieldHandle elementtype, FieldHandle membranemodel, MatrixHandle& table);
   
     // BundleToFieldArray
     // Created an vector of fields out of the bundle type
     bool BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>& output);
+
+    // ClearAndChangeFieldBasis
+    // Similar to ChangeBasis but do not do the interpolation stuff
+    bool ClearAndChangeFieldBasis(FieldHandle input,FieldHandle& output, std::string newbasis);
 
     // CompartmentBoundary
     // Extract the boundaries between compartments in a volume or surface field
@@ -133,6 +131,9 @@ class FieldsAlgo : public AlgoLibrary {
     // MatrixToField: Convert the Field into a Matrix
     bool MatrixToField(MatrixHandle input, FieldHandle& output, std::string datalocation);
 
+    // NrrdToField: Convert the Field into a Matrix
+    bool NrrdToField(NrrdDataHandle input, FieldHandle& output, std::string datalocation);
+
     // MergeFields: Merge a set of fields of the same type together into one
     // new output field. If mergenodes is true, nodes will be merge if the
     // distance between them is smaller than tolerance  
@@ -141,6 +142,10 @@ class FieldsAlgo : public AlgoLibrary {
     // MergeNodes: Merge the nodes in a field together if the distance between
     // them is smaller than tolerance.
     bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true);
+
+    // ScaleField:
+    // Scales FieldData and MeshData, used to change units properly
+    bool ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh);
 
     // SplitFieldByElementData:
     // Use the element data to segment the input field into volumes/areas with a

@@ -29,7 +29,7 @@
 
 // The following include file will include all tools needed for doing 
 // dynamic compilation and will include all the standard dataflow types
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 // Additionally we include sci_hash_map here as it is needed by the algorithm
 #include <sci_hash_map.h>

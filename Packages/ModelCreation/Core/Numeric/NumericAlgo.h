@@ -30,7 +30,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_NUMERICALGO_H
 #define MODELCREATION_CORE_FIELDS_NUMERICALGO_H 1
 
-#include <Packages/ModelCreation/Core/Util/AlgoLibrary.h>
+#include <Core/Algorithms/Util/AlgoLibrary.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
@@ -42,11 +42,17 @@
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sstream>
+#include <vector>
+#include <algorithm>
 #include <sgi_stl_warnings_on.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
+
+class SparseElement; 
+typedef std::vector<SparseElement> SparseElementVector;
+
 
 class NumericAlgo : public AlgoLibrary {
 
@@ -59,7 +65,41 @@ class NumericAlgo : public AlgoLibrary {
     // Resize a matrix, Dense or Sparse
     bool ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n);
     
+    // Build a sparse matrix based on coordinates of elements
+    bool CreateSparseMatrix(SparseElementVector& input, MatrixHandle& output, int m, int n);
+
+    // Recursive CutHill-mcKee
+    bool ReverseCuthillmcKee(MatrixHandle input,MatrixHandle& output,MatrixHandle& mapping,bool calcmapping = true);
+
+    // CutHill-mcKee
+    bool CuthillmcKee(MatrixHandle input,MatrixHandle& output,MatrixHandle& mapping,bool calcmapping = true);
 };
+
+
+
+
+
+// helper classes
+
+class SparseElement {
+public:
+  int     row;
+  int     col;
+  double  val;
+};
+
+inline bool operator==(const SparseElement& s1,const SparseElement& s2)
+{
+  if ((s1.row == s2.row)&&(s1.col == s2.col)) return (true);
+  return (false);
+}    
+
+inline bool operator<(const SparseElement& s1, const SparseElement& s2)
+{
+  if (s1.row < s2.row) return(true);
+  if (s1.row == s2.row) if (s1.col < s2.col) return(true);
+  return (false);
+}
 
 
 } // ModelCreation

@@ -30,17 +30,22 @@
 #ifndef MODELCREATION_CORE_FIELDS_UNSTRUCTURE_H
 #define MODELCREATION_CORE_FIELDS_UNSTRUCTURE_H 1
 
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
+class UnstructureAlgo;
+
 class UnstructureAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool Unstructure(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool testinput(FieldHandle input);
+
+  static AlgoList<UnstructureAlgo> precompiled_;
 };
 
 
@@ -49,6 +54,7 @@ class UnstructureAlgoT : public UnstructureAlgo
 {
 public:
   virtual bool Unstructure(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool testinput(FieldHandle input);
 };
 
 
@@ -179,6 +185,13 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
 	output->copy_properties(input.get_rep());
   return (true);
 }
+
+template <class FSRC, class FDST>
+bool UnstructureAlgoT<FSRC, FDST>::testinput(FieldHandle input)
+{
+  return(dynamic_cast<FSRC*>(input.get_rep()) != 0);
+}
+
 
 } // end namespace ModelCreation
 

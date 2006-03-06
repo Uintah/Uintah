@@ -31,6 +31,7 @@
 // Matrix types
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 
@@ -70,7 +71,9 @@
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 
+#include <Packages/ModelCreation/Core/Fields/ApplyMappingMatrix.h>
 #include <Packages/ModelCreation/Core/Fields/BuildMembraneTable.h>
+#include <Packages/ModelCreation/Core/Fields/ClearAndChangeFieldBasis.h>
 #include <Packages/ModelCreation/Core/Fields/ClipBySelectionMask.h>
 #include <Packages/ModelCreation/Core/Fields/ConvertToTetVol.h>
 #include <Packages/ModelCreation/Core/Fields/ConvertToTriSurf.h>
@@ -78,19 +81,20 @@
 #include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
+#include <Packages/ModelCreation/Core/Fields/FieldBoundary.h>
 #include <Packages/ModelCreation/Core/Fields/MappingMatrixToField.h>
 #include <Packages/ModelCreation/Core/Fields/MergeFields.h>
+#include <Packages/ModelCreation/Core/Fields/NrrdToField.h>
 #include <Packages/ModelCreation/Core/Fields/GetFieldData.h>
+#include <Packages/ModelCreation/Core/Fields/GetFieldInfo.h>
 #include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
+#include <Packages/ModelCreation/Core/Fields/ScaleField.h>
 #include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
 #include <Packages/ModelCreation/Core/Fields/SplitByConnectedRegion.h>
 #include <Packages/ModelCreation/Core/Fields/TransformField.h>
 #include <Packages/ModelCreation/Core/Fields/ToPointCloud.h>
 #include <Packages/ModelCreation/Core/Fields/Unstructure.h>
 
-#include <Core/Algorithms/Fields/FieldCount.h>
-#include <Dataflow/Modules/Fields/FieldBoundary.h>
-#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -319,59 +323,10 @@ bool FieldsAlgo::ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixH
 }
 
 
-bool FieldsAlgo::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield)
+bool FieldsAlgo::ApplyMappingMatrix(FieldHandle fsrc,  FieldHandle fdst, FieldHandle& output, MatrixHandle mapping)
 {
-  if (input.get_rep() == 0)
-  {
-    error("ApplyMappingMatrix: No input field is given");
-    return(false);  
-  }
-
-  if (datafield.get_rep() == 0)
-  {
-    error("ApplyMappingMatrix: No field with data to be mapped is given");
-    return(false);  
-  }
-
-  if (interpolant.get_rep() == 0)
-  {
-    error("ApplyMappingMatrix: No interpolation matrix is given");
-    return(false);  
-  }
-
-
-  TypeDescription::td_vec *tdv = input->get_type_description(Field::FDATA_TD_E)->get_sub_type();
-  std::string accumtype = (*tdv)[0]->get_name();
-  if ((accumtype.find("Vector")!=std::string::npos)&&(accumtype.find("Tensor")!=std::string::npos)) { accumtype = "double"; }
-  const std::string oftn = 
-    datafield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-    datafield->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
-    datafield->get_type_description(Field::BASIS_TD_E)->get_similar_name(accumtype,0, "<", " >, ") +
-    datafield->get_type_description(Field::FDATA_TD_E)->get_similar_name(accumtype,0, "<", " >") + " >";
-
-  CompileInfoHandle ci =
-    ApplyMappingMatrixAlgo::get_compile_info(input->get_type_description(),
-            input->order_type_description(),datafield->get_type_description(),
-            oftn,datafield->order_type_description(),
-            input->get_type_description(Field::FDATA_TD_E),accumtype);
-
-  Handle<ApplyMappingMatrixAlgo> algo;      
-  if (!DynamicCompilation::compile(ci, algo,pr_))
-  {
-    error("ApplyMappingmatrix: Could not compile dynamic function");
-    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-    return(false);
-  }
-         
-  output = algo->execute(datafield, input->mesh(), interpolant);
-  
-  if (output.get_rep() == 0)
-  {
-    error("ApplyMappingmatrix: Could not dynamically compile algorithm");
-    return(false);
-  }
- 
-  return(true);
+  ApplyMappingMatrixAlgo algo;
+  return(algo.ApplyMappingMatrix(pr_,fsrc,fdst,output,mapping));
 }
 
 bool FieldsAlgo::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle selmask,MatrixHandle &interpolant)
@@ -421,30 +376,10 @@ bool FieldsAlgo::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output
 }
 
 
-
-bool FieldsAlgo::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHandle &interpolant)
+bool FieldsAlgo::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHandle& mapping)
 {
-  if (input.get_rep() == 0)
-  {
-    error("FieldBoundary: No input field was given");  
-    return(false);
-  }
-  
-  Handle<FieldBoundaryAlgo> algo;
-  
-  MeshHandle mesh = input->mesh();
-
-  const TypeDescription *mtd = mesh->get_type_description();
-  CompileInfoHandle ci = FieldBoundaryAlgo::get_compile_info(mtd);
-  if (!(DynamicCompilation::compile(ci, algo,false,pr_)))
-  {
-    error("FieldBoundary: Could not dynamically compile algorithm");
-    return(false);
-  }
-  
-  algo->execute(pr_, mesh, output, interpolant, input->basis_order());
-
-  return(true);
+    FieldBoundaryAlgo algo;
+  return(algo.FieldBoundary(pr_,input,output,mapping));
 }
 
 
@@ -504,23 +439,8 @@ bool FieldsAlgo::SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandl
 
 bool FieldsAlgo::GetFieldInfo(FieldHandle input, int& numnodes, int& numelems)
 {
-  if (input.get_rep() == 0)
-  {
-    error("GetFieldInfo: No input field given");
-    return(false);
-  }
-  
-  const TypeDescription *meshtd = input->mesh()->get_type_description();
-  CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd);
-  Handle<FieldCountAlgorithm> algo;
-  if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
-  {
-    error("GetFieldInfo: Could not dynamically compile algorithm");
-    return(false);
-  }
-  
-  algo->execute(input->mesh(),numnodes,numelems);
-  return(true);
+  GetFieldInfoAlgo algo;
+  return(algo.GetFieldInfo(pr_,input,numnodes,numelems));
 }
 
 
@@ -706,6 +626,7 @@ bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
   return (true);
 }
 
+
 bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements)
 {
   for (size_t p = 0; p < inputs.size(); p++) if (!MakeEditable(inputs[0],inputs[0])) return (false);
@@ -765,6 +686,18 @@ bool FieldsAlgo::Unstructure(FieldHandle input,FieldHandle& output)
 }
 
 
+bool FieldsAlgo::ClearAndChangeFieldBasis(FieldHandle input,FieldHandle& output, std::string newbasis)
+{
+  ClearAndChangeFieldBasisAlgo algo;
+  return(algo.ClearAndChangeFieldBasis(pr_,input,output,newbasis));
+}
+
+bool FieldsAlgo::ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh)
+{
+  ScaleFieldAlgo algo;
+  return(algo.ScaleField(pr_,input,output,scaledata,scalemesh));
+}
+
 bool FieldsAlgo::BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>& output)
 {
   output.resize(input->numFields());
@@ -789,13 +722,6 @@ bool FieldsAlgo::FieldArrayToBundle(std::vector<FieldHandle>& input, BundleHandl
     output->setField(oss.str(),input[p]);
   }
   return (true);
-}
-
-
-bool FieldsAlgo::BuildMembraneTable(FieldHandle elementtype, FieldHandle membranemodel, MatrixHandle& membranetable)
-{
-  BuildMembraneTableAlgo algo;
-  return(algo.BuildMembraneTable(pr_,elementtype,membranemodel,membranetable));
 }
 
 
@@ -852,6 +778,47 @@ bool FieldsAlgo::MatrixToField(MatrixHandle input, FieldHandle& output,std::stri
 
 
 
+bool FieldsAlgo::NrrdToField(NrrdDataHandle input, FieldHandle& output,std::string datalocation)
+{
+  if (input.get_rep() == 0)
+  {
+    error("NrrdToField: No input Nrrd");
+    return (false);    
+  } 
+
+  Nrrd *nrrd = input->nrrd;
+
+  if (nrrd == 0)
+  {
+    error("NrrdToField: NrrdData does not contain Nrrd");
+    return (false);      
+  }
+
+  NrrdToFieldAlgo algo;
+
+  switch (nrrd->type)
+  {
+    case nrrdTypeChar : 
+      return(algo.NrrdToField<char>(pr_,input,output,datalocation));
+    case nrrdTypeUChar : 
+      return(algo.NrrdToField<unsigned char>(pr_,input,output,datalocation));
+    case nrrdTypeShort : 
+      return(algo.NrrdToField<short>(pr_,input,output,datalocation));
+    case nrrdTypeUShort : 
+      return(algo.NrrdToField<unsigned short>(pr_,input,output,datalocation));              
+    case nrrdTypeInt : 
+      return(algo.NrrdToField<int>(pr_,input,output,datalocation));
+    case nrrdTypeUInt : 
+      return(algo.NrrdToField<unsigned int>(pr_,input,output,datalocation));
+    case nrrdTypeFloat : 
+      return(algo.NrrdToField<float>(pr_,input,output,datalocation));
+    case nrrdTypeDouble : 
+      return(algo.NrrdToField<double>(pr_,input,output,datalocation));
+    default: 
+      error("NrrdToField: This datatype is not supported");
+      return (false);
+  }
+}
 
 
 } // ModelCreation

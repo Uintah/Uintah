@@ -26,18 +26,18 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Algorithms/MatrixConverter.h>
+#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-MatrixConverter::MatrixConverter(ProgressReporter* pr) :
+ConverterAlgo::ConverterAlgo(ProgressReporter* pr) :
   AlgoLibrary(pr)
 {
 }
 
-bool MatrixConverter::MatrixToDouble(MatrixHandle matrix, double &val)
+bool ConverterAlgo::MatrixToDouble(MatrixHandle matrix, double &val)
 {
   if ((matrix->nrows() * matrix->ncols()) != 1)
   {
@@ -56,7 +56,7 @@ bool MatrixConverter::MatrixToDouble(MatrixHandle matrix, double &val)
   return (true);
 }
 
-bool MatrixConverter::MatrixToInt(MatrixHandle matrix, int &val)
+bool ConverterAlgo::MatrixToInt(MatrixHandle matrix, int &val)
 {
   if ((matrix->nrows() * matrix->ncols()) != 1)
   {
@@ -81,7 +81,7 @@ bool MatrixConverter::MatrixToInt(MatrixHandle matrix, int &val)
   return (true);
 }
 
-bool MatrixConverter::MatrixToVector(MatrixHandle matrix, Vector& vec)
+bool ConverterAlgo::MatrixToVector(MatrixHandle matrix, Vector& vec)
 {
 
   MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
@@ -120,7 +120,7 @@ bool MatrixConverter::MatrixToVector(MatrixHandle matrix, Vector& vec)
   return (false);
 }
 
-bool MatrixConverter::MatrixToTensor(MatrixHandle matrix, Tensor& ten)
+bool ConverterAlgo::MatrixToTensor(MatrixHandle matrix, Tensor& ten)
 {
   MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
   if (mat.get_rep() == 0)
@@ -163,7 +163,7 @@ bool MatrixConverter::MatrixToTensor(MatrixHandle matrix, Tensor& ten)
   return (false);  
 }
 
-bool MatrixConverter::MatrixToTransform(MatrixHandle matrix, Transform& trans)
+bool ConverterAlgo::MatrixToTransform(MatrixHandle matrix, Transform& trans)
 {
   MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
   if (mat.get_rep() == 0)
@@ -199,7 +199,7 @@ bool MatrixConverter::MatrixToTransform(MatrixHandle matrix, Transform& trans)
 }
 
 
-bool MatrixConverter::DoubleToMatrix(double val, MatrixHandle& matrix)
+bool ConverterAlgo::DoubleToMatrix(double val, MatrixHandle& matrix)
 {
   matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
   if (matrix.get_rep() == 0) 
@@ -211,7 +211,7 @@ bool MatrixConverter::DoubleToMatrix(double val, MatrixHandle& matrix)
   return (true);
 }
 
-bool MatrixConverter::IntToMatrix(int val, MatrixHandle& matrix)
+bool ConverterAlgo::IntToMatrix(int val, MatrixHandle& matrix)
 {
   matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
   if (matrix.get_rep() == 0) 
@@ -223,7 +223,7 @@ bool MatrixConverter::IntToMatrix(int val, MatrixHandle& matrix)
   return (true);
 }
 
-bool MatrixConverter::VectorToMatrix(Vector& vec, MatrixHandle& matrix)
+bool ConverterAlgo::VectorToMatrix(Vector& vec, MatrixHandle& matrix)
 {
   matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(3,1));
   if (matrix.get_rep() == 0) 
@@ -237,7 +237,7 @@ bool MatrixConverter::VectorToMatrix(Vector& vec, MatrixHandle& matrix)
   return (true);
 }
 
-bool MatrixConverter::TensorToMatrix(Tensor& ten, MatrixHandle matrix)
+bool ConverterAlgo::TensorToMatrix(Tensor& ten, MatrixHandle matrix)
 {
   matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(3,3));
   if (matrix.get_rep() == 0) 
@@ -258,7 +258,7 @@ bool MatrixConverter::TensorToMatrix(Tensor& ten, MatrixHandle matrix)
   return (true);
 }
 
-bool MatrixConverter::TransformToMatrix(Transform& trans, MatrixHandle& matrix)
+bool ConverterAlgo::TransformToMatrix(Transform& trans, MatrixHandle& matrix)
 {
   matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(4,4));
   if (matrix.get_rep() == 0) 
@@ -277,5 +277,4 @@ bool MatrixConverter::TransformToMatrix(Transform& trans, MatrixHandle& matrix)
   return (true);
 }
 
-
-} // end namespace
+} // ModelCreation
