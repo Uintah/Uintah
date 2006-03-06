@@ -24,16 +24,19 @@
 # if you want to edit this file by hand, see the "Create A New Component"
 # documentation on how to do it correctly.
 
-SRCDIR := Packages/CardioWave/Dataflow/Modules
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := \
-	$(SRCDIR)/CreateModel\
-	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Math\
-	$(SRCDIR)/Tools\
-	$(SRCDIR)/DiscreteMultiDomain\
-#[INSERT NEW CATEGORY DIR HERE]
+SRCDIR   := Packages/CardioWave/Core/XML
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCS     += \
+            $(SRCDIR)/MembraneXML.cc\
+            $(SRCDIR)/SynapseXML.cc\
+#[INSERT NEW CODE FILE HERE]
 
+PSELIBS := Core/Datatypes Core/Persistent Core/Containers Core/Util \
+           Core/XMLUtil
+                        
+LIBS := $(XML2_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
