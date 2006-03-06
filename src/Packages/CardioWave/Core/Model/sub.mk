@@ -24,16 +24,23 @@
 # if you want to edit this file by hand, see the "Create A New Component"
 # documentation on how to do it correctly.
 
-SRCDIR := Packages/CardioWave/Dataflow/Modules
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := \
-	$(SRCDIR)/CreateModel\
-	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Math\
-	$(SRCDIR)/Tools\
-	$(SRCDIR)/DiscreteMultiDomain\
-#[INSERT NEW CATEGORY DIR HERE]
+SRCDIR   := Packages/CardioWave/Core/Model
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCS     += \
+            $(SRCDIR)/ModelAlgo.cc\
+            $(SRCDIR)/BuildMembraneTable.cc\
+#[INSERT NEW CODE FILE HERE]
 
+PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Datatypes Core/Geometry \
+        Core/GeomInterface Core/Bundle \
+        Packages/ModelCreation/Core/Fields \
+                
+LIBS :=
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="DMDCreateDomain" category="DiscreteMultiDomain" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module creates the domain for the discrete multidomain computation.
+
+    </summary>
+    <description>
+      <p>        This module creates the domain for the discrete multidomain computation.
+</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Conductivity</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Element type</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Domain</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
