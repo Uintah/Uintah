@@ -44,7 +44,7 @@
 
 using namespace SCIRun;
 
-GuiInterface* singleton;
+GuiInterface* singleton = 0;
 
 GuiInterface::GuiInterface()
 {
