@@ -44,6 +44,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 namespace SCIRun {
 
