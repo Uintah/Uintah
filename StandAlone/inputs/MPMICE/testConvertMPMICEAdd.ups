@@ -7,6 +7,9 @@
     <title>Constitutive Model Tester</title>
    </Meta>
 
+   <SimulationComponent>
+        <type> mpmice </type>
+   </SimulationComponent>
    <Time>
      <maxTime>1.6e-5</maxTime>
      <initTime>0.0</initTime>

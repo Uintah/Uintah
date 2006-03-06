@@ -8,6 +8,13 @@
    <Meta>
        <title>Advection test</title>
    </Meta>
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
+   <doAMR>true</doAMR>
+   <Solver>
+        <type> hypreamr </type>
+   </Solver>
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
