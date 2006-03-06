@@ -31,6 +31,7 @@
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Comm/StringSocket.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Dataflow/Network/NetworkEditor.h>
@@ -39,64 +40,62 @@
 #include <main/sci_version.h>
 #include <tcl.h>
 #include <tk.h>
+#include <itk.h>
 
 typedef void (Tcl_LockProc)();
 
 using namespace SCIRun;
 
+//#  define EXPERIMENTAL_TCL_THREAD
+
 #ifdef _WIN32
+#  define EXPERIMENTAL_TCL_THREAD
 #  define SCISHARE __declspec(dllimport)
-#  ifdef __cplusplus
-     extern "C" {
-#  endif // __cplusplus
-#  ifndef EXPERIMENTAL_TCL_THREAD
-       __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-#  endif
-       int tkMain(int argc, char** argv, 
-                  void (*nwait_func)(void*), void* nwait_func_data);
-#  ifdef __cplusplus
-     }
-#  endif // __cplusplus
-#else // not _WIN32
+#else
 #  define SCISHARE
-#  ifndef EXPERIMENTAL_TCL_THREAD
-     extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-#  endif
-     extern "C" int tkMain(int argc, char** argv,
-                           void (*nwait_func)(void*), void* nwait_func_data);
 #endif // _WIN32
+
 
 extern "C" SCISHARE Tcl_Interp* the_interp;
 
-#include <stdio.h>
+#ifndef EXPERIMENTAL_TCL_THREAD
+  extern "C" SCISHARE void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#endif
+
+
+/*
+ * The following declarations refer to internal Tk routines.  These
+ * interfaces are available for use, but are not supported.
+ */
+
+//EXTERN void		TkConsoleCreate(void);
+//EXTERN int		TkConsoleInit(Tcl_Interp *interp);
+//extern "C" int Table_Init _ANSI_ARGS_((Tcl_Interp* interp));
+
+extern "C" int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
+                                      Tcl_Interp *interp, 
+                                      int argc, char **argv));
+extern "C" int BevelCmd _ANSI_ARGS_((ClientData clientData,
+                                     Tcl_Interp *interp, 
+                                     int argc, char **argv));
+extern "C" int Tk_RangeObjCmd _ANSI_ARGS_((ClientData clientData, 
+                                           Tcl_Interp *interp, 
+                                           int objc, Tcl_Obj *CONST objv[])); 
+extern "C" int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
+                                         Tcl_Interp *interp, 
+                                         int argc, char **argv));
+extern "C" int BLineInit _ANSI_ARGS_((void));
+extern "C" int Blt_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
+extern "C" int Blt_Init _ANSI_ARGS_((Tcl_Interp *interp));
+
+
+
 
 using namespace std;
 
-
-static void
-wait(void* p)
-{
-  TCLThread* thr = (TCLThread*) p;
-  thr->startNetworkEditor();
-}
-
-
-static void
-do_lock2()
-{
-  TCLTask::lock();
-}
-
-static void
-do_unlock2()
-{
-  TCLTask::unlock();
-}
-
-
 static
 int
-x_error_handler2(Display* dpy, XErrorEvent* error)
+x_error_handler(Display* dpy, XErrorEvent* error)
 {
 #ifndef _WIN32
     char msg[200];
@@ -108,17 +107,25 @@ x_error_handler2(Display* dpy, XErrorEvent* error)
 }
 
 TCLThread::TCLThread(int argc, char* argv[], Network* net, int startnetno) :
-  argc(argc), argv(argv), net(net), startnetno(startnetno),
-  cont("TCLThread startup continue semaphore", 0),
-  start("TCLThread startup semaphore", 0)
+  argc(argc), argv(argv), net(net), startnetno(startnetno)
 {
   // Setup the error handler to catch errors...
   // The default one exits, and makes it very hard to 
   // track down errors.  We need core dumps!
-  XSetErrorHandler(x_error_handler2);
+  XSetErrorHandler(x_error_handler);
 #ifndef EXPERIMENTAL_TCL_THREAD
-  Tcl_SetLock(do_lock2, do_unlock2);
+  Tcl_SetLock(TCLTask::lock, TCLTask::unlock);
 #endif
+}
+
+
+SCIRun::TCLThread *SCIRun::TCLThread::init_ptr_ = 0;
+int
+TCLThread::appInit(Tcl_Interp *interp)
+{
+  the_interp = interp;
+  ASSERT(init_ptr_);
+  return init_ptr_->startNetworkEditor();
 }
 
 
@@ -126,9 +133,14 @@ void
 TCLThread::run()
 {
 #ifndef EXPERIMENTAL_TCL_THREAD
-  do_lock2();
+  TCLTask::lock();
 #endif
-  tkMain(1, argv, wait, this);
+  init_ptr_ = this;
+
+  if (sci_getenv_p("SCIRUN_NOGUI"))
+    Tcl_Main(1, argv, TCLThread::appInit);
+  else
+    Tk_Main(1, argv, TCLThread::appInit);
 }
 
 
@@ -147,9 +159,233 @@ TCLThread::check_for_newer_scirunrc() {
 }
   
 
-void
+void eventCheck(ClientData cd, int flags);
+void eventSetup(ClientData cd, int flags);
+
+static
+int
+exitproc(ClientData, Tcl_Interp*, int, TCLCONST char* [])
+{
+  Thread::exitAll(0);
+  return TCL_OK; // not reached
+}
+
+
+
+class TCLSocketRunner : public Runnable
+{
+private:
+  TCLInterface *gui_;
+  StringSocket *transmitter_;
+public:
+  TCLSocketRunner(TCLInterface *gui, StringSocket *dt) : 
+    gui_(gui), transmitter_(dt) {}
+  void run()
+  {
+    string buffer;
+    while (1) {
+      buffer.append(transmitter_->getMessage());
+      if (gui_->complete_command(buffer)) {
+        buffer = gui_->eval(buffer);
+        if (!buffer.empty()) buffer.append("\n");
+        transmitter_->putMessage(buffer + "scirun> ");
+        buffer = "";
+      } else {
+        transmitter_->putMessage("scirun>> ");
+      }
+    }
+  }
+};
+
+
+int
 TCLThread::startNetworkEditor()
 {
+  int scirun_nogui = 0;
+  if (getenv("SCIRUN_NOGUI"))
+  {
+    scirun_nogui = 1;
+  }
+
+  printf("Initializing the tcl packages: ");
+  fflush(stdout);
+
+  printf("tcl, ");
+  if (Tcl_Init(the_interp) == TCL_ERROR) {
+    printf("Tcl_Init() failed\n");
+    return TCL_ERROR;
+  }
+  fflush(stdout);
+
+  if (!scirun_nogui)
+  {
+    printf("tk, ");
+    if (Tk_Init(the_interp) == TCL_ERROR) {
+      printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
+
+      Thread::exitAll(0);//exit_all_threads(TCL_ERROR);
+    }
+    fflush(stdout);
+    Tcl_StaticPackage(the_interp, "Tk", Tk_Init, Tk_SafeInit);
+  }
+
+#ifdef _WIN32
+  /*
+   * Initialize the console only if we are running as an interactive
+   * application.
+   
+  printf("Calling TkConsoleInit\n");
+  if (TkConsoleInit(interp) == TCL_ERROR) {
+    printf("Error in TkConsoleInit\n");
+    return TCL_ERROR;
+  }
+  */
+#endif
+
+
+#ifdef TK_TEST
+  if (Tktest_Init(the_interp) == TCL_ERROR) {
+    return TCL_ERROR;
+  }
+  Tcl_StaticPackage(the_interp, "Tktest", Tktest_Init,
+		    (Tcl_PackageInitProc *) NULL);
+#endif /* TK_TEST */
+
+
+  /*
+   * Call the init procedures for included packages.  Each call should
+   * look like this:
+   *
+   * if (Mod_Init(interp) == TCL_ERROR) {
+   *     return TCL_ERROR;
+   * }
+   *
+   * where "Mod" is the name of the module.
+   */
+  printf("itcl, ");
+  if (Itcl_Init(the_interp) == TCL_ERROR) {
+    printf("Itcl_Init() failed\n");
+    return TCL_ERROR;
+  }
+  fflush(stdout);
+  if (!scirun_nogui)
+  {
+    printf("itk, ");
+    if (Itk_Init(the_interp) == TCL_ERROR) {
+      printf("Itk_Init() failed\n");
+      return TCL_ERROR;
+    }
+    fflush(stdout);
+    printf("blt, ");
+    if (Blt_Init(the_interp) == TCL_ERROR) {
+      printf("Blt_Init() failed\n");
+      return TCL_ERROR;
+    }
+  }
+  Tcl_StaticPackage(the_interp, "Itcl", Itcl_Init, Itcl_SafeInit);
+  if (!scirun_nogui)
+  {
+    Tcl_StaticPackage(the_interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
+    Tcl_StaticPackage(the_interp, "BLT", Blt_Init, Blt_SafeInit);
+  }
+  printf("Done.\n");
+  fflush(stdout);
+
+  /*
+   *  This is itkwish, so import all [incr Tcl] commands by
+   *  default into the global namespace.  Fix up the autoloader
+   *  to do the same.
+   */
+  if (!scirun_nogui)
+  {
+    if (Tcl_Import(the_interp, Tcl_GetGlobalNamespace(the_interp),
+                   "::itk::*", /* allowOverwrite */ 1) != TCL_OK) {
+      return TCL_ERROR;
+    }
+  }
+
+  if (Tcl_Import(the_interp, Tcl_GetGlobalNamespace(the_interp),
+		 "::itcl::*", /* allowOverwrite */ 1) != TCL_OK) {
+    return TCL_ERROR;
+  }
+
+  if (!scirun_nogui)
+  {
+    if (Tcl_Eval(the_interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }") != TCL_OK) {
+      return TCL_ERROR;
+    }
+  }
+  else
+  {
+    if (Tcl_Eval(the_interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* }") != TCL_OK) {
+      return TCL_ERROR;
+    }
+  }
+  
+
+  /*
+   * Call Tcl_CreateCommand for application-specific commands, if
+   * they weren't already created by the init procedures called above.
+   */
+
+  /*
+   * Call Tcl_CreateCommand for application-specific commands, if
+   * they weren't already created by the init procedures called above.
+   */
+
+#ifdef _WIN32
+#define PARAMETERTYPE int*
+#else
+#define PARAMETERTYPE void
+#endif
+
+  if (!scirun_nogui)
+  {
+    printf("Adding SCI extensions to tcl: ");
+    fflush(stdout);
+
+#ifdef SCI_OPENGL
+    printf("OpenGL widget, ");
+    Tcl_CreateCommand(the_interp, "opengl", OpenGLCmd, 
+                      (ClientData) Tk_MainWindow(the_interp), 0);
+    //                      (void (*)(PARAMETERTYPE)) NULL);
+#endif
+    fflush(stdout);
+    printf("bevel widget, ");
+    Tcl_CreateCommand(the_interp, "bevel", BevelCmd,
+                      (ClientData) Tk_MainWindow(the_interp), 0);
+    //                      (void (*)(PARAMETERTYPE)) NULL);
+    fflush(stdout);
+    printf("range widget, ");
+    Tcl_CreateObjCommand(the_interp, "range", (Tcl_ObjCmdProc *)Tk_RangeObjCmd,
+                         (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    fflush(stdout);
+    printf("cursor, ");
+    Tcl_CreateCommand(the_interp, "cursor", Tk_CursorCmd,
+                      (ClientData) Tk_MainWindow(the_interp), NULL);
+
+    printf("Done.\n");
+    fflush(stdout);
+
+    /*
+     * Initialize the BLine Canvas item
+     */
+
+    BLineInit();
+  }
+
+  /*
+   * Specify a user-specific startup file to invoke if the application
+   * is run interactively.  Typically the startup file is "~/.apprc"
+   * where "app" is the name of the application.  If this line is deleted
+   * then no user-specific startup file will be run under any conditions.
+   */
+
+  //  Tcl_SetVar(the_interp, "tcl_rcFileName", "~/.scirc", TCL_GLOBAL_ONLY);
+  //  (*wait_func)(wait_func_data);
+  
+
+
   gui = new TCLInterface;
 
   // We parse the scirunrc file here before creating the network
@@ -174,7 +410,8 @@ TCLThread::startNetworkEditor()
   new NetworkEditor(net, gui);
 
 #if (TCL_MINOR_VERSION >= 4)
-// tcl 8.4 deprecates some private internal commands, but allows us to alias them
+  // tcl 8.4 deprecates some private internal commands, 
+  // but allows us to alias them
   // FieldReader
   gui->eval("::tk::unsupported::ExposePrivateCommand tkFDGetFileTypes");
   gui->eval("::tk::unsupported::ExposePrivateCommand tkFocusGroup_Create");
@@ -251,9 +488,28 @@ TCLThread::startNetworkEditor()
   // Test for shaders.
   ShaderProgramARB::init_shaders_supported();
 
-  // wait for main to release its semaphore
-  mainloop_wait();
+  Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
 
+  // TCL Socket
+  int port;
+  const char *port_str = sci_getenv("SCIRUN_SERVER_PORT");
+  if (port_str && string_to_int(port_str, port)) {
+    StringSocket *transmitter = scinew StringSocket(port);
+    cerr << "URL: " << transmitter->getUrl() << std::endl;
+    transmitter->run();
+    TCLSocketRunner *socket_runner = scinew TCLSocketRunner(gui, transmitter);
+    (new Thread(socket_runner, "TCL Socket"))->detach();   
+  }
+
+
+#ifdef EXPERIMENTAL_TCL_THREAD
+  // windows doesn't communicate TCL with threads like other OSes do.
+  // do instead of direct TCL communication, setup tcl callbacks
+  Tcl_CreateEventSource(eventSetup, eventCheck, 0);
+  //  TCLTask::setTCLEventCallback();
+#endif
+
+  SCIRun::ShaderProgramARB::init_shaders_supported();
   bool loaded_network = false;
   // load network from an xml file...
   if (NetworkIO::has_file()) {
@@ -268,61 +524,13 @@ TCLThread::startNetworkEditor()
     loaded_network = true;
   }
 
-  if (loaded_network) {
-    if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || 
-        sci_getenv_p("SCI_REGRESSION_TESTING"))
-    {
-      gui->eval("netedit scheduleall");
-    }
+  if (loaded_network &&
+      (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || 
+       sci_getenv_p("SCI_REGRESSION_TESTING"))) {
+    gui->eval("netedit scheduleall");
   }
-}
 
-
-static
-int
-exitproc(ClientData, Tcl_Interp*, int, TCLCONST char* [])
-{
-  Thread::exitAll(0);
-  return TCL_OK; // not reached
-}
-
-
-void
-TCLThread::mainloop_wait()
-{
-  Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
-#ifndef EXPERIMENTAL_TCL_THREAD
-  do_unlock2();
-#endif
-
-  // The main program will want to know that we are started...
-  start.up();
-
-  // Wait for the main program to tell us that all initialization
-  // has occurred...
-  cont.down();
-
-#ifdef EXPERIMENTAL_TCL_THREAD
-  // windows doesn't communicate TCL with threads like other OSes do.
-  // do instead of direct TCL communication, setup tcl callbacks
-  TCLTask::setTCLEventCallback();
-#else
-  do_lock2();
-#endif
-}
-
-
-void
-TCLThread::mainloop_waitstart()
-{
-  start.down();
-}
-
-
-void
-TCLThread::release_mainloop()
-{
-  cont.up();
+  return TCL_OK;
 }
 
 

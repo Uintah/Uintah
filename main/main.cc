@@ -51,7 +51,6 @@
 #include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
-#include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Geom/ShaderProgramARB.h>
@@ -148,7 +147,7 @@ parse_args( int argc, char *argv[] )
       sci_putenv("SCIRUN_NOSPLASH", "1");
     }
 
-    else if ( arg.find(".srn") != string::npos )
+    else if (ends_with(string_tolower(arg),".srn"))
     {
       NetworkIO::load_net(arg);
     }
@@ -193,18 +192,15 @@ parse_args( int argc, char *argv[] )
     else
     {
       struct stat buf;
-      if (stat(argv[cnt],&buf) < 0)
+      if (stat(arg.c_str(),&buf) < 0)
       {
 	std::cerr << "Couldn't find net file " << arg
 		  << ".\nNo such file or directory.  Exiting." 
 		  << std::endl;
 	exit(0);
       }
-
-      string filename(string_tolower(argv[cnt]));
-      if (!ends_with(filename,".net") && 
-          !ends_with(filename,".srn") && 
-          !ends_with(filename,".app"))
+      string filename(string_tolower(arg));
+      if (!ends_with(filename,".net") && !ends_with(filename,".app"))
       {
 	std::cerr << "Valid net files end with .srn, .app, " 
                   << "(or .net prior to v1.25.2) exiting." << std::endl;
@@ -252,30 +248,7 @@ public:
 };
 
 
-class TCLSocketRunner : public Runnable
-{
-private:
-  TCLInterface *gui_;
-  StringSocket *transmitter_;
-public:
-  TCLSocketRunner(TCLInterface *gui, StringSocket *dt) : 
-    gui_(gui), transmitter_(dt) {}
-  void run()
-  {
-    string buffer;
-    while (1) {
-      buffer.append(transmitter_->getMessage());
-      if (gui_->complete_command(buffer)) {
-        buffer = gui_->eval(buffer);
-        if (!buffer.empty()) buffer.append("\n");
-        transmitter_->putMessage(buffer + "scirun> ");
-        buffer = "";
-      } else {
-        transmitter_->putMessage("scirun>> ");
-      }
-    }
-  }
-};
+
 
 // Services start up... 
 void
@@ -373,118 +346,39 @@ main(int argc, char *argv[], char **environment) {
 
   SCIRunInit();
 
-  // Always switch on this option
-  // It is needed for running external applications
+  // Now split off a process for running external processes
+  systemcallmanager_ = scinew SystemCallManager();
+  systemcallmanager_->create();
+  start_eai();
   
-  bool use_eai = true;
-
-  if (use_eai) {
-    // Now split off a process for running external processes
-    systemcallmanager_ = scinew SystemCallManager();
-    systemcallmanager_->create();
-    start_eai();
-  }
-  
-  // Start up TCL...
   Network* net=new Network();
-  // Only passes program name to TCL
-  TCLThread* tcl_task = new TCLThread(argc, argv, net, startnetno);
-  // We need to start the thread in the NotActivated state, so we can
-  // change the stack size.  The 0 is a pointer to a ThreadGroup which
-  // will default to the global thread group.
-  Thread* t=new Thread(tcl_task,"TCL main event loop",0, Thread::NotActivated);
-  t->setStackSize(1024*1024);
-  // False here is stating that the tread was stopped or not.  Since
-  // we have never started it the parameter should be false.
-  t->activate(false);
-  t->detach();
-  tcl_task->mainloop_waitstart();
-
-  // Create user interface link
-  TCLInterface *gui = tcl_task->getTclInterface();
-
-  // TCL Socket
-  int port;
-  const char *port_str = sci_getenv("SCIRUN_SERVER_PORT");
-  if (port_str && string_to_int(port_str, port)) {
-    StringSocket *transmitter = scinew StringSocket(port);
-    cerr << "URL: " << transmitter->getUrl() << std::endl;
-    transmitter->run();
-    TCLSocketRunner *socket_runner = scinew TCLSocketRunner(gui, transmitter);
-    (new Thread(socket_runner, "TCL Socket"))->detach();
-  }
-
-  // Determine if SCIRun is in regression testing mode
-  const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
-
-  // Create initial network
-  Scheduler* sched_task=new Scheduler(net);
 
   // Activate the scheduler.  Arguments and return values are meaningless
-  Thread* t2=new Thread(sched_task, "Scheduler");
-  t2->setDaemon(true);
-  t2->detach();
+  Thread* scheduler=new Thread(new Scheduler(net), "Scheduler");
+  scheduler->setDaemon(true);
+  scheduler->detach();
 
-#if 0
-  // determine if we are loading an app
-  const bool loading_app_p = strstr(argv[startnetno],".app");
-  if (!loading_app_p) {
-    gui->eval("set PowerApp 0");
-    // wait for the main window to display before continuing the startup.
-    gui->eval("wm deiconify .");
-    gui->eval("tkwait visibility $minicanvas");
-    gui->eval("showProgress 1 0 1");
-  } else { // if loading an app, don't wait
-    gui->eval("set PowerApp 1");
-    if (argv[startnetno+1]) {
-      gui->eval("set PowerAppSession {"+string(argv[startnetno+1])+"}");
-    }
-    // determine which standalone and set splash
-    if(strstr(argv[startnetno], "BioTensor")) {
-      gui->eval("set splashImageFile $bioTensorSplashImageFile");
-      gui->eval("showProgress 1 2575 1");
-    } else if(strstr(argv[startnetno], "BioFEM")) {
-      gui->eval("set splashImageFile $bioFEMSplashImageFile");
-      gui->eval("showProgress 1 465 1");
-    } else if(strstr(argv[startnetno], "BioImage")) {
-      // need to make a BioImage splash screen
-      gui->eval("set splashImageFile $bioImageSplashImageFile");
-      gui->eval("showProgress 1 620 1");
-    } else if(strstr(argv[startnetno], "FusionViewer")) {
-      // need to make a FusionViewer splash screen
-      gui->eval("set splashImageFile $fusionViewerSplashImageFile");
-      gui->eval("showProgress 1 310 1");
-    }
-
-  }
-
-  if (!loading_app_p) {
-    gui->eval("hideProgress");
-  }
-#endif
-  
-  // Test for shaders.
-  SCIRun::ShaderProgramARB::init_shaders_supported();
+  // Start the TCL thread, takes care of loading packages and networks
+  Thread* tcl=new Thread(new TCLThread(argc, argv, net, startnetno),
+                         "TCL main event loop",0,Thread::Activated,1024*1024);
+  tcl->detach();
 
   // When doing regressions, make thread to kill ourselves after timeout
-  if (doing_regressions) {
+  if (sci_getenv_p("SCI_REGRESSION_TESTING")) {
     RegressionKiller *kill = scinew RegressionKiller();
     Thread *tkill = scinew Thread(kill, "Kill a hung SCIRun");
     tkill->detach();
   }
 
-  // Now activate the TCL event loop
-  tcl_task->release_mainloop();
 
 #ifdef HAVE_PTOLEMY
   //start the Ptolemy/spa server socket
   const char *pt_str = sci_getenv("PTOLEMY_CLIENT_PORT");
   if (pt_str && string_to_int(pt_str, port)) {
     cerr << "Starting SPA server thread" << std::endl;
-    PtolemyServer *ptserv = scinew PtolemyServer(gui, net);
-    Thread *pt = new Thread(ptserv, "Ptolemy/SPA Server",0, Thread::NotActivated);
-    pt->setStackSize(1024*1024);
-    pt->activate(false);
+    PtolemyServer *ptserv = new PtolemyServer(gui,net);
+    Thread *pt = new Thread(ptserv, "Ptolemy/SPA Server", 0, 
+                            Thread::Activated, 1024*1024);
     pt->detach();   
     PtolemyServer::servSem().up();
   }

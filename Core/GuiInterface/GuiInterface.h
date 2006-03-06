@@ -65,6 +65,8 @@ namespace SCIRun {
     virtual void delete_command( const string& command ) = 0;
     virtual void lock() = 0;
     virtual void unlock() = 0;
+    virtual void pause() = 0;
+    virtual void unpause() = 0;
     virtual GuiContext* createContext(const string& name) = 0;
     virtual void postMessage(const string& errmsg, bool err = false) = 0;
     // Get regular var as string
