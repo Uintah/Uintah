@@ -158,9 +158,10 @@ TCLThread::check_for_newer_scirunrc() {
   return false; // current version is equal to newest version
 }
   
-
+#ifdef EXPERIMENTAL_TCL_THREAD
 void eventCheck(ClientData cd, int flags);
 void eventSetup(ClientData cd, int flags);
+#endif
 
 static
 int
