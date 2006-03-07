@@ -46,7 +46,7 @@ typedef void (Tcl_LockProc)();
 
 using namespace SCIRun;
 
-#  define EXPERIMENTAL_TCL_THREAD
+//#  define EXPERIMENTAL_TCL_THREAD
 
 #ifdef _WIN32
 #  define EXPERIMENTAL_TCL_THREAD
