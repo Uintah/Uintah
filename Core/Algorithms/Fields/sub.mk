@@ -33,10 +33,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Algorithms/Fields
 
-SRCS     += $(SRCDIR)/FieldCount.cc
-
+SRCS     += $(SRCDIR)/FieldCount.cc\
+            $(SRCDIR)/FieldsAlgo.cc\
+            $(SRCDIR)/ToPointCloud.cc\
+            
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geometry Core/Util Core/Math
+	Core/Exceptions Core/Geometry Core/Util Core/Math \
+  Core/Algorithms/Util
 
 LIBS := $(M_LIBRARY)
 
