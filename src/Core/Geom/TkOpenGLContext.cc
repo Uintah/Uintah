@@ -586,7 +586,9 @@ TkOpenGLContext::make_win32_gl_context(const string &id, int visualid,
   Tk_ClassProcs *procsPtr;
   procsPtr = (Tk_ClassProcs*) Tcl_Alloc(sizeof(Tk_ClassProcs));
   procsPtr->size             = sizeof(Tk_ClassProcs);
+#ifdef _WIN32
   procsPtr->createProc       = TkGLMakeWindow;
+#endif
   procsPtr->worldChangedProc = NULL;
   procsPtr->modalProc        = NULL;
   Tk_SetClassProcs(tkwin_,procsPtr,(ClientData)this); 
