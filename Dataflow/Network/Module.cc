@@ -414,8 +414,7 @@ Module::update_msg_state(MsgState st)
 void
 Module::update_progress(double p)
 {
-  if (state == JustStarted)
-    update_state(Executing);
+  if (state != Executing) { update_state(Executing); }
   int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
   int nrp = (unsigned int)(Clamp(p, 0.0, 1.0) * 32.0);
   if (crp != nrp)
@@ -431,8 +430,7 @@ Module::update_progress(double p)
 void
 Module::update_progress(int current, int maxpr)
 {
-  if (state == JustStarted)
-    update_state(Executing);
+  if (state != Executing) { update_state(Executing); }
   int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
   int nrp = current * PROGRESS_GRANULARITY / maxpr;
   if (crp != nrp || maxpr != progress_max_)
@@ -448,8 +446,7 @@ Module::update_progress(int current, int maxpr)
 void
 Module::increment_progress()
 {
-  if (state == JustStarted)
-    update_state(Executing);
+  if (state != Executing) { update_state(Executing); }
   unsigned int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
   progress_current_++;
   unsigned int nrp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;

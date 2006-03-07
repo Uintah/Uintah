@@ -398,7 +398,7 @@ itcl_class Module {
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set graph $canvas.module[modname].ff.inset.graph
 	if {$width == 0} { 
-#	    place forget $graph
+	    place forget $graph
 	} elseif { [winfo exists $graph] } {
 	    $graph configure -width $width
 	    if {$old_width == 0} { place $graph -relheight 1 -anchor nw }
@@ -439,7 +439,7 @@ itcl_class Module {
 	    set color red
 	} elseif {$state == "Executing"} {
 	    set progress 0
-	    set color red
+            set color green
 	} elseif {$state == "NeedData"} {
 	    set progress 1
 	    set color yellow
