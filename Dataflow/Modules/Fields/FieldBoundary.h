@@ -137,6 +137,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(ProgressReporter *reporter,
   typename Msh::Cell::iterator citere; mesh->end(citere);
 
   typename Msh::Cell::size_type prsizetmp;
+  mesh->size(prsizetmp);
   const unsigned int prsize = (unsigned int)prsizetmp;
   unsigned int prcounter = 0;
 
@@ -314,6 +315,7 @@ FieldBoundaryAlgoQuadT<Msh>::execute(ProgressReporter *reporter,
   typename Msh::Cell::iterator citere; mesh->end(citere);
 
   typename Msh::Cell::size_type prsizetmp;
+  mesh->size(prsizetmp);
   const unsigned int prsize = (unsigned int)prsizetmp;
   unsigned int prcounter = 0;
 
@@ -489,6 +491,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(ProgressReporter *reporter,
   typename Msh::Face::iterator citere; mesh->end(citere);
 
   typename Msh::Face::size_type prsizetmp;
+  mesh->size(prsizetmp);
   const unsigned int prsize = (unsigned int)prsizetmp;
   unsigned int prcounter = 0;
 

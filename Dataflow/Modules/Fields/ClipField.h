@@ -102,6 +102,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *reporter,
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
   typename FIELD::mesh_type::Elem::size_type prsizetmp;
+  mesh->size(prsizetmp);
   const unsigned int prsize = (unsigned int)prsizetmp;
   unsigned int prcounter = 0;
 
@@ -214,6 +215,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *reporter,
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
   typename FIELD::mesh_type::Elem::size_type prsizetmp;
+  mesh->size(prsizetmp);
   const unsigned int prsize = (unsigned int)prsizetmp;
   unsigned int prcounter = 0;
 
