@@ -219,7 +219,7 @@ ChangeFieldBasis::execute()
     Handle<ApplyMappingMatrixAlgo> algo;
     if (module_dynamic_compile(ci, algo))
     {
-      algo->execute_aux(fh, ef, interpolant);
+      algo->execute_aux(this, fh, ef, interpolant);
     }
   }
 

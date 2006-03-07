@@ -140,8 +140,7 @@ FieldBoundary::execute()
       Handle<ApplyMappingMatrixAlgo> algo;
       if (module_dynamic_compile(ci, algo))
       {
-	tri_fh_ = algo->execute(input, tri_fh_->mesh(),
-				interp_mh_);
+	tri_fh_ = algo->execute(this, input, tri_fh_->mesh(), interp_mh_);
       }
     }
   }

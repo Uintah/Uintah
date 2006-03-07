@@ -64,6 +64,7 @@ typedef struct _SLData {
   bool rcp;
   int met;
   int np;
+  ProgressReporter *pr;
 
   _SLData() : lock("StreamLines Lock") {}
 } SLData;
@@ -75,7 +76,8 @@ StreamLinesCleanupPoints(vector<Point> &input, double e2);
 class SCISHARE StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle seed_field_h,
+  virtual FieldHandle execute(ProgressReporter *pr,
+                              FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
 			      double stepsize,
@@ -107,7 +109,8 @@ public:
   //! virtual interface. 
   void parallel_generate(int proc, SLData *d);
 
-  virtual FieldHandle execute(FieldHandle seed_field_h,
+  virtual FieldHandle execute(ProgressReporter *pr,
+                              FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
 			      double stepsize,
@@ -155,7 +158,7 @@ parallel_generate( int proc, SLData *d)
   smesh->end(siter_end);
 
   int count = 0;
-
+  
   while (siter != siter_end)
   {
     // If this seed doesn't "belong" to this parallel thread,
@@ -165,6 +168,8 @@ parallel_generate( int proc, SLData *d)
       ++count;
       continue;
     }
+
+    d->pr->increment_progress();
 
     smesh->get_point(seed, *siter);
 
@@ -286,7 +291,8 @@ parallel_generate( int proc, SLData *d)
 template <class FSRC, class STYPE, class SLOC>
 FieldHandle
 StreamLinesAlgoT<FSRC, STYPE, SLOC>::
-execute(FieldHandle seed_field_h,
+execute(ProgressReporter *pr,
+        FieldHandle seed_field_h,
 	VectorFieldInterfaceHandle vfi,
 	double tolerance,
 	double stepsize,
@@ -308,6 +314,7 @@ execute(FieldHandle seed_field_h,
   d.rcp=rcp;
   d.met=met;
   d.np=np;
+  d.pr=pr;
 
   typedef CrvLinearLgn<STYPE> DatBasisL;
   typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
@@ -316,6 +323,13 @@ execute(FieldHandle seed_field_h,
   CFieldL *cf = scinew CFieldL(cmesh);
   
   d.fh = FieldHandle(cf);
+
+  typename SLOC::size_type prsize_tmp;
+  FSRC *sfield = (FSRC *) seed_field_h.get_rep();
+  typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
+  smesh->size(prsize_tmp);
+  const unsigned int prsize = (unsigned int)prsize_tmp;
+  pr->update_progress(0, prsize);
 
   Thread::parallel(this,
                    &StreamLinesAlgoT<FSRC, STYPE, SLOC>::parallel_generate,
@@ -370,7 +384,8 @@ public:
 class StreamLinesAccAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle seed_field_h,
+  virtual FieldHandle execute(ProgressReporter *pr,
+                              FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
 			      int direction,
@@ -397,7 +412,8 @@ public:
 		 VFLD *vfield, bool remove_colinear_p, bool back);
 
 
-  virtual FieldHandle execute(FieldHandle seed_field_h,
+  virtual FieldHandle execute(ProgressReporter *pr,
+                              FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
 			      int direction,
@@ -487,7 +503,8 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::FindNodes(vector<Point> &v,
 
 template <class FSRC, class SLOC, class VFLD, class FDST>
 FieldHandle
-StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
+StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(ProgressReporter *pr,
+                                                     FieldHandle seed_field_h,
                                                      FieldHandle vfield_h,
                                                      int maxsteps,
                                                      int direction,
@@ -517,6 +534,10 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
   smesh->begin(siter);
   smesh->end(siter_end);
 
+  typename SLOC::size_type prsize_tmp;
+  smesh->size(prsize_tmp);
+  const unsigned int prsize = (unsigned int)prsize_tmp;
+
   int count = 0;
 
   while (siter != siter_end)
@@ -530,6 +551,8 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
       ++count;
       continue;
     }
+
+    pr->update_progress(count, prsize);
 
     nodes.clear();
     nodes.push_back(seed);
