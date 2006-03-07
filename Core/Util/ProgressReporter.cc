@@ -45,7 +45,8 @@
 namespace SCIRun {
 
 ProgressReporter::ProgressReporter() :
-  progress_percent_(0.0)
+  progress_current_("ProgressReporter::progress_amount_", 0),
+  progress_max_(100)
 {
 }
 
@@ -110,6 +111,16 @@ ProgressReporter::report_progress( ProgressState )
 
 void
 ProgressReporter::update_progress(double)
+{
+}
+
+void
+ProgressReporter::update_progress(int current, int max)
+{
+}
+
+void
+ProgressReporter::increment_progress()
 {
 }
 
