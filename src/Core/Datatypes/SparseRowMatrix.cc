@@ -639,10 +639,10 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   
   int *ncol = scinew int[ncolv.size()];
   double *nval = scinew double[nvalv.size()];
-  for (p=0; p < ncolv.size(); p++)
+  for (unsigned int pp=0; pp < ncolv.size(); pp++)
   {
-    ncol[p] = ncolv[p];
-    nval[p] = nvalv[p];
+    ncol[pp] = ncolv[pp];
+    nval[pp] = nvalv[pp];
   }
 
   return scinew SparseRowMatrix(nrows_, b.ncols(), nrow, ncol,
