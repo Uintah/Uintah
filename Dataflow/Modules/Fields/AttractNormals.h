@@ -56,7 +56,8 @@ typedef Handle<Attractor> AttractorHandle;
 class AttractNormalsAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src, AttractorHandle a) = 0;
+  virtual FieldHandle execute(ProgressReporter *reporter,
+                              FieldHandle src, AttractorHandle a) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -72,14 +73,16 @@ class AttractNormalsAlgoT : public AttractNormalsAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src, AttractorHandle a);
+  virtual FieldHandle execute(ProgressReporter *reporter,
+                              FieldHandle src, AttractorHandle a);
 };
 
 
 
 template <class MSRC, class FLOC, class FDST>
 FieldHandle
-AttractNormalsAlgoT<MSRC, FLOC, FDST>::execute(FieldHandle field_h,
+AttractNormalsAlgoT<MSRC, FLOC, FDST>::execute(ProgressReporter *reporter,
+                                               FieldHandle field_h,
 					       AttractorHandle attr)
 {
   MSRC *mesh = static_cast<MSRC *>(field_h->mesh().get_rep());
@@ -89,8 +92,15 @@ AttractNormalsAlgoT<MSRC, FLOC, FDST>::execute(FieldHandle field_h,
   mesh->begin(bi);
   mesh->end(ei);
 
+  typename FLOC::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   while (bi != ei)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     Point c;
 
     mesh->get_center(c, *bi);
@@ -112,14 +122,16 @@ class AttractNormalsScaleAlgoT : public AttractNormalsAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src, AttractorHandle a);
+  virtual FieldHandle execute(ProgressReporter *reporter,
+                              FieldHandle src, AttractorHandle a);
 };
 
 
 
 template <class FSRC, class FLOC, class FDST>
 FieldHandle
-AttractNormalsScaleAlgoT<FSRC, FLOC, FDST>::execute(FieldHandle field_h,
+AttractNormalsScaleAlgoT<FSRC, FLOC, FDST>::execute(ProgressReporter *reporter,
+                                                    FieldHandle field_h,
 						    AttractorHandle attr)
 {
   FSRC *fsrc = static_cast<FSRC *>(field_h.get_rep());
@@ -130,8 +142,15 @@ AttractNormalsScaleAlgoT<FSRC, FLOC, FDST>::execute(FieldHandle field_h,
   mesh->begin(bi);
   mesh->end(ei);
 
+  typename FLOC::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   while (bi != ei)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     Point c;
 
     mesh->get_center(c, *bi);

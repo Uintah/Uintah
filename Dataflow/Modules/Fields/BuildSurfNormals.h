@@ -52,7 +52,7 @@ namespace SCIRun {
 class SCISHARE BuildSurfNormalsAlgo : public DynamicAlgoBase
 {
 public:
-  virtual MatrixHandle execute(ProgressReporter *pr, 
+  virtual MatrixHandle execute(ProgressReporter *reporter, 
 			       const MeshHandle mesh) = 0;
   
   //! support the dynamically compiled algorithm concept
@@ -68,7 +68,7 @@ class BuildSurfNormalsAlgoT : public BuildSurfNormalsAlgo
 public:
 
   //! virtual interface. 
-  virtual MatrixHandle execute(ProgressReporter *pr, 
+  virtual MatrixHandle execute(ProgressReporter *reporter, 
 			       const MeshHandle mesh);
 
 };
@@ -85,7 +85,7 @@ double get_normalized_angle(const Vector &v0, const Vector &v1)
 
 template <class Msh>
 MatrixHandle
-BuildSurfNormalsAlgoT<Msh>::execute(ProgressReporter *pr,
+BuildSurfNormalsAlgoT<Msh>::execute(ProgressReporter *reporter,
 				    const MeshHandle mesh_untyped)
 {
   // Must be a surface mesh.
@@ -96,7 +96,7 @@ BuildSurfNormalsAlgoT<Msh>::execute(ProgressReporter *pr,
   typename Msh::Node::iterator  iter;   mesh->begin(iter);
   typename Msh::Node::iterator  endi;   mesh->end(endi);
 
-  pr->report_progress(ProgressReporter::Starting);
+  reporter->report_progress(ProgressReporter::Starting);
   mesh->synchronize(Mesh::NODE_NEIGHBORS_E | Mesh::EDGES_E);
   int cur_idx = 0; int sz = nsz;
   DenseMatrix *omatrix = scinew DenseMatrix(sz, 3);
@@ -104,7 +104,7 @@ BuildSurfNormalsAlgoT<Msh>::execute(ProgressReporter *pr,
   //! from the connected faces.
   while (iter != endi) {
     // update progress meter on module.
-    pr->update_progress(double(cur_idx) / (double)sz);
+    reporter->update_progress(double(cur_idx) / (double)sz);
     Point pnts[3];
     mesh->get_center(pnts[0], *iter); 
 
@@ -145,8 +145,8 @@ BuildSurfNormalsAlgoT<Msh>::execute(ProgressReporter *pr,
     omatrix->put(cur_idx, 2, norm.z());
     ++iter; ++cur_idx;
   }
-  pr->update_progress(1.0);
-  pr->report_progress(ProgressReporter::Done);
+  reporter->update_progress(1.0);
+  reporter->report_progress(ProgressReporter::Done);
   return MatrixHandle(omatrix);
 }
 

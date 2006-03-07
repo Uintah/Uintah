@@ -50,7 +50,7 @@ class ChangeFieldBasisAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(ProgressReporter *mod,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle fsrc_h,
 			      int basis_order,
 			      MatrixHandle &interp) = 0;
@@ -66,7 +66,7 @@ class ChangeFieldBasisAlgoT : public ChangeFieldBasisAlgo
 {
 public:
 
-  virtual FieldHandle execute(ProgressReporter *mod,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle fsrc_h,
 			      int basis_order,
 			      MatrixHandle &interp);
@@ -75,7 +75,7 @@ public:
 
 template <class FSRC, class FDST>
 FieldHandle
-ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
+ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *reporter,
                                            FieldHandle fsrc_h,
                                            int basis_order,
                                            MatrixHandle &interp)

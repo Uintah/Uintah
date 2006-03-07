@@ -331,7 +331,7 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
 
 template <class FIELD>
 FieldHandle
-IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
+IsoClipAlgoTet<FIELD>::execute(ProgressReporter *reporter, FieldHandle fieldh,
 			       double isoval, bool lte, MatrixHandle &interp)
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
@@ -888,7 +888,7 @@ IsoClipAlgoTri<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
 
 template <class FIELD>
 FieldHandle
-IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
+IsoClipAlgoTri<FIELD>::execute(ProgressReporter *reporter, FieldHandle fieldh,
 			       double isoval, bool lte, MatrixHandle &interp)
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
@@ -1143,14 +1143,14 @@ class IsoClipAlgoHex : public IsoClipAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
-                               double isoval, bool lte, MatrixHandle &interpolant );
-private:
-
+                               double isoval, bool lte,
+                               MatrixHandle &interpolant );
 };
+
 
 template <class FIELD>
 FieldHandle
-IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
+IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
                                 double isoval, bool lte, MatrixHandle &interp )
 {
     //This algorithm is divided up into several functional areas.
@@ -1215,11 +1215,11 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
   const TypeDescription *src_td = fieldh->get_type_description();
   CompileInfoHandle ci = HexToTetAlgo::get_compile_info( src_td );
   Handle<HexToTetAlgo> algo;
-  if (!DynamicCompilation::compile( ci, algo, mod)) return fieldh;
+  if (!DynamicCompilation::compile( ci, algo, reporter )) return fieldh;
   FieldHandle tet_field_h;
-  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, mod ) )
+  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, reporter ) )
   {
-    mod->warning("HexToTet conversion failed to copy data.");
+    reporter->warning("HexToTet conversion failed to copy data.");
     return fieldh;
   }
 
@@ -1227,18 +1227,19 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
   const TypeDescription *ftd = tet_field_h->get_type_description();
   ci = IsoClipAlgo::get_compile_info( ftd, "Tet" );
   Handle<IsoClipAlgo> iso_algo;
-  if( !DynamicCompilation::compile( ci, iso_algo, false, mod ) )
+  if( !DynamicCompilation::compile( ci, iso_algo, false, reporter ) )
   {
-    mod->error("Unable to compile IsoClip algorithm.");
+    reporter->error("Unable to compile IsoClip algorithm.");
     return fieldh;
   }
-  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, mod ) )
+  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, reporter ) )
   {
-    mod->warning("IsoClip failed to copy data.");
+    reporter->warning("IsoClip failed to copy data.");
     return fieldh;
   }
   MatrixHandle tet_interp(0);
-  FieldHandle clipped_tet_field = iso_algo->execute( mod, tet_field_h, isoval, lte, tet_interp );
+  FieldHandle clipped_tet_field =
+    iso_algo->execute( reporter, tet_field_h, isoval, lte, tet_interp );
   TetVolMesh<TetLinearLgn<Point> > *tet_mesh = dynamic_cast<TetVolMesh<TetLinearLgn<Point> >*>(clipped_tet_field->mesh().get_rep());
 
     //Finally, get the boundary of the clipped tetmesh to use as our TriSurfMesh for projections
@@ -1247,10 +1248,10 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
   CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
   Handle<FieldBoundaryAlgo> boundary_algo;
   FieldHandle tri_field_h;
-  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) ) return fieldh;
+  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, reporter ) ) return fieldh;
 
   MatrixHandle tet_interp1(0);  
-  boundary_algo->execute( mod, tet_mesh, tri_field_h, tet_interp1, 0 );
+  boundary_algo->execute( reporter, tet_mesh, tri_field_h, tet_interp1, 0 );
   TriSurfMesh<TriLinearLgn<Point> > *tri_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_field_h->mesh().get_rep());
 
      //create a map to help differentiate between new nodes created for 
@@ -1436,7 +1437,7 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
     if( i%50 == 0 )
     {
       double temp = 0.25 + 0.65*( (double)i/(double)node_list.size() );
-      mod->update_progress( temp );
+      reporter->update_progress( temp );
     }
 
       //add the new node to the clipped mesh

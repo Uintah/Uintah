@@ -46,11 +46,11 @@ class ApplyMappingMatrixAlgo : public DynamicAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle src, MeshHandle dst,
 			      MatrixHandle mapping) = 0;
 
-  virtual void execute_aux(ProgressReporter *pr,
+  virtual void execute_aux(ProgressReporter *reporter,
                            FieldHandle src, FieldHandle dst,
 			   MatrixHandle mapping) = 0;
 
@@ -71,11 +71,11 @@ class ApplyMappingMatrixAlgoT : public ApplyMappingMatrixAlgo
 public:
 
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle src, MeshHandle dst,
 			      MatrixHandle mapping);
 
-  virtual void execute_aux(ProgressReporter *pr,
+  virtual void execute_aux(ProgressReporter *reporter,
                            FieldHandle src, FieldHandle dst,
 			   MatrixHandle mapping);
 };
@@ -84,7 +84,7 @@ public:
 template <class FSRC, class LSRC, class FDST, class LDST, class ACCUM>
 FieldHandle
 ApplyMappingMatrixAlgoT<FSRC, LSRC, 
-		       FDST, LDST, ACCUM>::execute(ProgressReporter *pr,
+		       FDST, LDST, ACCUM>::execute(ProgressReporter *reporter,
                                                    FieldHandle src_h,
 						   MeshHandle dst_h,
 						   MatrixHandle mapping)
@@ -93,7 +93,7 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
     dynamic_cast<typename FDST::mesh_type *>(dst_h.get_rep());
 
   FieldHandle ofield = scinew FDST(dstmesh);
-  execute_aux(pr, src_h, ofield, mapping);
+  execute_aux(reporter, src_h, ofield, mapping);
 
   return ofield;
 }
@@ -102,7 +102,7 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
 template <class FSRC, class LSRC, class FDST, class LDST, class ACCUM>
 void
 ApplyMappingMatrixAlgoT<FSRC, LSRC, 
-		       FDST, LDST, ACCUM>::execute_aux(ProgressReporter *pr,
+		       FDST, LDST, ACCUM>::execute_aux(ProgressReporter *reporter,
                                                        FieldHandle src_h,
 						       FieldHandle dst_h,
 						       MatrixHandle mapping)
@@ -127,13 +127,13 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
   fdst->get_typed_mesh()->begin(dbi);
   fdst->get_typed_mesh()->end(dei);
 
-  typename LDST::size_type dsize;
-  fdst->get_typed_mesh()->size(dsize);
-  const unsigned int progress_size = (unsigned int)dsize;
-  const unsigned int progress_counter = 0;
+  typename LDST::size_type prsizetmp;
+  fdst->get_typed_mesh()->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+
   while (dbi != dei)
   {
-    pr->update_progress(counter, progress_size);
+    reporter->update_progress(counter, prsize);
 
     mapping->getRowNonzerosNoCopy(counter, idxsize, idxstride, idx, val);
     
