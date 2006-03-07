@@ -722,7 +722,7 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressRepor
   Handle<QuadToTriAlgo> qalgo;
   if( !DynamicCompilation::compile(qci, qalgo, mod )) return fieldh;
   FieldHandle tri_surf_h;
-  if( !qalgo.get_rep() || !qalgo->execute( fieldh, tri_surf_h, mod ) )
+  if( !qalgo.get_rep() || !qalgo->execute( mod, fieldh, tri_surf_h ) )
   {
     mod->warning( "QuadToTri conversion failed to copy data." );
     return fieldh;
