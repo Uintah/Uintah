@@ -110,6 +110,7 @@ hello::GoPort_impl::go_impl ()
   } else {
     ::std::cerr << "getPort() returns null" << ::std::endl;
   }
+  return 0;
   // DO-NOT-DELETE splicer.end(hello.GoPort.go)
 }
 

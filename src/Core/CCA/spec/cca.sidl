@@ -29,6 +29,7 @@
 version sci 0.1;
 version cca 0.7.8;
 
+// cca spec file for PIDL compiler
 
 package sci {
 
