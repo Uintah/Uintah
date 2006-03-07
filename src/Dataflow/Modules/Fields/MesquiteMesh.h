@@ -227,8 +227,6 @@ public:
           {
             temp = (double)count_/(double)anticipated_iterations_;
           }
-//          cout << "Update Window % = " << temp << " " << count_ << " " << anticipated_iterations_ << endl;
-          temp /= 100.;
           
           update_window_->update_progress( temp );
         }   
