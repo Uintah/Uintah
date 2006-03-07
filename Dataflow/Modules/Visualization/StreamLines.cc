@@ -240,16 +240,15 @@ StreamLines::execute()
       Handle<StreamLinesAccAlgo> accalgo;
       if (!module_dynamic_compile(aci, accalgo)) return;
       
-      fHandle_ = accalgo->execute(sField, vfHandle, maxsteps,
-				  direction, value,
-				  remove_colinear);
+      fHandle_ = accalgo->execute(this, sField, vfHandle, maxsteps,
+				  direction, value, remove_colinear);
     } else {
       CompileInfoHandle ci =
 	StreamLinesAlgo::get_compile_info(sftd, dsttype, sltd, value);
       Handle<StreamLinesAlgo> algo;
       if (!module_dynamic_compile(ci, algo)) return;
       
-      fHandle_ = algo->execute(sField, vfi,
+      fHandle_ = algo->execute(this, sField, vfi,
 			       tolerance, stepsize, maxsteps,
 			       direction, value,
 			       remove_colinear,
