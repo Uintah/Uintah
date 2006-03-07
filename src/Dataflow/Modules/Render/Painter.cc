@@ -1268,7 +1268,7 @@ Painter::SliceWindow::render_progress_bar() {
   glDisable(GL_LINE_SMOOTH);
   CHECK_OPENGL_ERROR();
 
-  Vector right = painter_->progress_percent_*Vector(vpw - 2 *x_off - 2*gap, 0, 0);
+  Vector right = Vector(vpw - 2 *x_off - 2*gap, 0, 0);
   Vector up = Vector(0, h - gap * 2, 0);
 
   ll = ll + Vector(gap, gap, 0);
