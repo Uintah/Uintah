@@ -1217,7 +1217,7 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
   Handle<HexToTetAlgo> algo;
   if (!DynamicCompilation::compile( ci, algo, reporter )) return fieldh;
   FieldHandle tet_field_h;
-  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, reporter ) )
+  if( !algo.get_rep() || !algo->execute( reporter, fieldh, tet_field_h ) )
   {
     reporter->warning("HexToTet conversion failed to copy data.");
     return fieldh;
@@ -1232,11 +1232,11 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
     reporter->error("Unable to compile IsoClip algorithm.");
     return fieldh;
   }
-  if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, reporter ) )
-  {
-    reporter->warning("IsoClip failed to copy data.");
-    return fieldh;
-  }
+//   if( !algo.get_rep() || !algo->execute( fieldh, tet_field_h, reporter ) )
+//   {
+//     reporter->warning("IsoClip failed to copy data.");
+//     return fieldh;
+//   }
   MatrixHandle tet_interp(0);
   FieldHandle clipped_tet_field =
     iso_algo->execute( reporter, tet_field_h, isoval, lte, tet_interp );
