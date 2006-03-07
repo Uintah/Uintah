@@ -46,7 +46,7 @@ typedef void (Tcl_LockProc)();
 
 using namespace SCIRun;
 
-//#  define EXPERIMENTAL_TCL_THREAD
+#  define EXPERIMENTAL_TCL_THREAD
 
 #ifdef _WIN32
 #  define EXPERIMENTAL_TCL_THREAD
@@ -74,16 +74,16 @@ extern "C" SCISHARE Tcl_Interp* the_interp;
 
 extern "C" int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
                                       Tcl_Interp *interp, 
-                                      int argc, char **argv));
+                                      int argc, TCLCONST char **argv));
 extern "C" int BevelCmd _ANSI_ARGS_((ClientData clientData,
                                      Tcl_Interp *interp, 
-                                     int argc, char **argv));
+                                     int argc, TCLCONST char **argv));
 extern "C" int Tk_RangeObjCmd _ANSI_ARGS_((ClientData clientData, 
                                            Tcl_Interp *interp, 
                                            int objc, Tcl_Obj *CONST objv[])); 
 extern "C" int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
                                          Tcl_Interp *interp, 
-                                         int argc, char **argv));
+                                         int argc, TCLCONST char **argv));
 extern "C" int BLineInit _ANSI_ARGS_((void));
 extern "C" int Blt_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
 extern "C" int Blt_Init _ANSI_ARGS_((Tcl_Interp *interp));
@@ -348,7 +348,6 @@ TCLThread::startNetworkEditor()
     printf("OpenGL widget, ");
     Tcl_CreateCommand(the_interp, "opengl", OpenGLCmd, 
                       (ClientData) Tk_MainWindow(the_interp), 0);
-    //                      (void (*)(PARAMETERTYPE)) NULL);
 #endif
     fflush(stdout);
     printf("bevel widget, ");

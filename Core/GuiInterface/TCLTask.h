@@ -43,6 +43,7 @@
 #ifndef SCI_project_TCLTask_h
 #define SCI_project_TCLTask_h 1
 
+#include <tcl.h>
 #if (TCL_MINOR_VERSION >= 4)
 #define TCLCONST const
 #else
