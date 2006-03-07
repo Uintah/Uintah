@@ -4176,23 +4176,25 @@ elif test "$with_babel"; then
   _sci_optional=specific
 fi
 
+#SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl sidlx sidlstub_ucxx,$_sci_lib,,,$_sci_optional)
 SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
-  
+
 BABEL_BIN=
 AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
 AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
-  
+
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
   ## check for compatible version (0.10.0 or greater)
-  SCI_CHECK_VERSION($BABEL_BIN,--version,0.10.0,,echo configure: error: wrong Babel version.; exit)
+  SCI_CHECK_VERSION($BABEL_BIN,--version,0.11.0,,echo configure: error: wrong Babel version.; exit)
   DEF_BABEL="#define HAVE_BABEL 1"
   HAVE_BABEL="yes"
 fi
-  
+
+## make missing babel an error!
 if test "$with_babel" && test ! "$DEF_BABEL"; then
   echo
   AC_MSG_ERROR(One or more of the Babel components is missing.)
-fi 
+fi
 
 AC_SUBST(HAVE_BABEL)
 AC_SUBST(DEF_BABEL)
@@ -4860,15 +4862,21 @@ if test "$with_qt" = "yes"; then
 elif test "$with_qt"; then
   _sci_lib="$with_qt/lib"
   _sci_inc="$with_qt/include"
-  _sci_optional=specific
+  _sci_optional=required
 fi
+
+ext="$ac_ext"
+ac_ext="cc"
 
 qt_bin=$_sci_lib/../bin
 # Only looking for one .h file... assuming all the rest are in the same place.
-SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,,,optional)   
+SCI_TRY_LINK(QT_MT,qt library,qapplication.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,-DQT_THREAD_SUPPORT -DQT_NO_XIM,,$_sci_optional)
 QT_MOC_BIN=""
 AS_MESSAGE(checking for moc in $qt_bin...)
 AC_CHECK_PROG(QT_MOC_BIN,moc,$qt_bin/moc,NOMOC,)
+
+# Restore the previous settings.
+ac_ext="$ext"
   
 if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
    DEF_QT="#define HAVE_QT 1"
@@ -4974,10 +4982,15 @@ if test "$sci_required_vtk" = "yes"; then
     _sci_lib="$sci_thirdparty_lib"
     _vtk_inc="$sci_thirdparty_include"
   fi
+
+  ext="$ac_ext"
+  ac_ext="cc"
   
   # Only looking for one .h file... assuming all the rest are in the same place.
   SCI_TRY_LINK(VTK,vtk library, vtkImageData.h,$_vtk_inc,vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib,$_sci_lib,,,optional)
 
+  # Restore the previous settings.
+  ac_ext="$ext"
 
   if test "$HAVE_VTK" = "yes"; then
      DEF_VTK="#define HAVE_VTK 1"

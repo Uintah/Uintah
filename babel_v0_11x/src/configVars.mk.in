@@ -304,6 +304,7 @@ PTOLEMY_PATH := @PTOLEMY_PATH@
 PTOLEMY_CLASSPATH := @PTOLEMY_CLASSPATH@
 
 ifeq ($(BUILD_SCIRUN2),yes)
+  #SUBDIRS := $(SUBDIRS) SCIRun CCA test_babel
   SUBDIRS := $(SUBDIRS) SCIRun CCA
 
   HAVE_RUBY := @HAVE_RUBY@
@@ -426,7 +427,7 @@ else
   SONAMEFLAG = 
 endif
 
-.SUFFIXES: .cc .c .o .s .F .f .cpp
+.SUFFIXES: .cc .c .o .s .F .f .cpp .cxx
 
 .cc.o: $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
@@ -662,6 +663,51 @@ endif
 
 .s.o: $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
+
+.cxx.o: $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
+	-rm -f $@
+endif
+ifeq ($(CC_DEPEND_MODE),normal)
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling: $<"
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
+  else
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
+  endif
+else
+  ifeq ($(CC_DEPEND_MODE),modify)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+  else
+    ifeq ($(CC_DEPEND_MODE),move)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+    else
+      ifeq ($(CC_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Prepend that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+      else
+	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
+	exit 1
+      endif
+    endif
+  endif
+endif
 
 ifeq ($(BUILD_SCIRUN2),yes)
 moc_%.cpp: %.h
