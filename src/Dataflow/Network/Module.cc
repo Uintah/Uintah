@@ -416,11 +416,10 @@ Module::update_progress(double p)
 {
   if (state != Executing) { update_state(Executing); }
   int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
-  int nrp = (unsigned int)(Clamp(p, 0.0, 1.0) * 32.0);
+  int nrp = (unsigned int)(Clamp(p, 0.0, 1.0) * progress_max_);
   if (crp != nrp)
   {
     progress_current_.set(nrp);
-    progress_max_ = PROGRESS_GRANULARITY;
     string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
     gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
   }

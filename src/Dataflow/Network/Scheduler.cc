@@ -168,7 +168,7 @@ Scheduler::main_loop()
 void
 Scheduler::request_multisend(OPort* p1)
 {
-  mailbox.send(new Module_Scheduler_Message(p1));
+  mailbox.send(scinew Module_Scheduler_Message(p1));
 }
 
 
@@ -192,7 +192,7 @@ Scheduler::multisend_real(OPort* oport)
 void
 Scheduler::do_scheduling()
 {
-  mailbox.send(new Module_Scheduler_Message());
+  mailbox.send(scinew Module_Scheduler_Message());
 }
 
 
