@@ -57,7 +57,8 @@ typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 class HexToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle &dst) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -69,14 +70,15 @@ class HexToTetAlgoT : public HexToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle& dst);
 };
 
 
 template <class FSRC>
 bool
-HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-			     ProgressReporter *mod)
+HexToTetAlgoT<FSRC>::execute(ProgressReporter *reporter,
+                             FieldHandle srcH, FieldHandle& dstH) 
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
   typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
@@ -241,8 +243,11 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TVMesh::Node::index_type)(i));
     }
-  } else {
-    mod->warning("Could not load data values, use DirectInterp if needed.");
+  }
+  else
+  {
+    reporter->warning("Could not load data values onto output field.");
+    reporter->warning("Use DirectInterp if data values are required.");
   }
 
   dstH->copy_properties(hvfield);
@@ -253,7 +258,8 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 class LatToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle &dst) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -265,14 +271,15 @@ class LatToTetAlgoT : public LatToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle& dst);
 };
 
 
 template <class FSRC>
 bool
-LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-			     ProgressReporter *mod)
+LatToTetAlgoT<FSRC>::execute(ProgressReporter *reporter,
+                             FieldHandle srcH, FieldHandle& dstH) 
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -401,8 +408,11 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TVMesh::Node::index_type)(unsigned int)(*nbi));
       ++nbi;
     }
-  } else {
-    mod->warning("Could not load data values, use DirectInterp if needed.");
+  }
+  else
+  {
+    reporter->warning("Could not load data values onto output field.");
+    reporter->warning("Use DirectInterp if data values are required.");
   }
   
   dstH->copy_properties(hvfield);

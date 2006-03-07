@@ -86,7 +86,7 @@ Centroids::execute()
   Handle<CentroidsAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  FieldHandle ofieldhandle(algo->execute(ifieldhandle));
+  FieldHandle ofieldhandle(algo->execute(this, ifieldhandle));
   
   FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
   ofieldPort->send_and_dereference(ofieldhandle);

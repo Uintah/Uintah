@@ -54,7 +54,7 @@ typedef ScanlineMesh<CrvLinearLgn<Point> >                SMesh;
 class UnstructureAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src) = 0;
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -69,7 +69,7 @@ class UnstructureAlgoT : public UnstructureAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src);
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src);
 };
 
 
@@ -183,7 +183,7 @@ struct SpecialUnstructuredLess
 
 template <class FSRC, class FDST>
 FieldHandle
-UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
+UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *reporter,
 				      FieldHandle field_h)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(field_h.get_rep());
@@ -281,7 +281,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
       ++hitr;
     }
   } else {
-    module->warning("Unable to copy data at this field data location.");
+    reporter->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;

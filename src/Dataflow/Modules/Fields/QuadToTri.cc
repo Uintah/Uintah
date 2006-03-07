@@ -115,7 +115,7 @@ QuadToTri::execute()
     Handle<ImgToTriAlgo> ialgo;
     if (DynamicCompilation::compile(ici, ialgo, true, this))
     {
-      if (!ialgo->execute(ifieldhandle, ofieldhandle_, this))
+      if (!ialgo->execute(this, ifieldhandle, ofieldhandle_))
       {
 	warning("ImgToTri conversion failed to copy data.");
 	return;
@@ -133,7 +133,7 @@ QuadToTri::execute()
     Handle<QuadToTriAlgo> qalgo;
     if (DynamicCompilation::compile(qci, qalgo, true, this))
     {
-      if (!qalgo->execute(ifieldhandle, ofieldhandle_, this))
+      if (!qalgo->execute(this, ifieldhandle, ofieldhandle_))
       {
 	warning("QuadToTri conversion failed to copy data.");
 	return;
