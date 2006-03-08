@@ -394,7 +394,7 @@ TCLThread::startNetworkEditor()
   // environment variables used by the network editor are assumed to
   // be in the same state as the default ones in the srcdir/scirunrc
   // file.  For now only SCIRUN_NOGUI is affected.
-  const bool scirunrc_parsed = find_and_parse_scirunrc();
+  //  const bool scirunrc_parsed = find_and_parse_scirunrc();
 
   // Create the network editor here.  For now we just dangle it and
   // let exitAll destroy it with everything else at the end.
@@ -423,10 +423,8 @@ TCLThread::startNetworkEditor()
 
   // If the user doesnt have a .scirunrc file, or it is out of date,
   // provide them with a default one
-  if (!scirunrc_parsed || (scirunrc_parsed && check_for_newer_scirunrc()))
-  {  
+  if (!sci_getenv_p("SCIRUN_RC_PARSED") || check_for_newer_scirunrc())
     copy_and_parse_scirunrc();
-  }
 
   // Determine if we are loading an app.
   const bool powerapp_p = (startnetno && ends_with(argv[startnetno],".app"));
