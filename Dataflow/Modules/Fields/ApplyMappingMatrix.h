@@ -111,7 +111,6 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
   FDST *fdst = dynamic_cast<FDST *>(dst_h.get_rep());
   typename FSRC::mesh_handle_type msrc = fsrc->get_typed_mesh();
 
-  //ASSERT(mapping.is_sparse());
   ASSERT((unsigned int)(mapping->nrows()) == fdst->fdata().size())
   ASSERT((unsigned int)(mapping->ncols()) == fsrc->fdata().size())
 
