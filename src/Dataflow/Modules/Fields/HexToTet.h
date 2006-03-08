@@ -100,7 +100,7 @@ HexToTetAlgoT<FSRC>::execute(ProgressReporter *reporter,
     ++nbi;
   }
 
-  hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
+  hvmesh->synchronize(Mesh::FACE_NEIGHBORS_E);
 
   tvmesh->elem_reserve((unsigned int)hesize * 5);
 
