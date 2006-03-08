@@ -44,6 +44,8 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifndef GL_ARB_vertex_program
 #     define GL_VERTEX_PROGRAM_ARB 0x8620
@@ -83,9 +85,24 @@ using std::string;
 #      define getProcAddress(x) (wglGetProcAddress((LPCSTR) x))
 #    else
 #      define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
-#    endif // _WIN32
+#    endif /* _WIN32 */
 #  endif /* APPLE */
 
+
+# if defined(HAVE_GLEW)
+
+#if !defined(GLAPIENTRY)
+#define GLAPIENTRY
+#endif
+
+#if !defined(APIENTRY)
+#define GLAPIENTRY
+#endif
+
+#if !defined(GLAPI)
+#define GLAPI extern
+#endif
+#endif /* defined(HAVE_GLEW) */
 
 typedef void (GLAPIENTRY * SCIPFNGLGENPROGRAMSARBPROC) (GLsizei n, GLuint* programs);
 typedef void (GLAPIENTRY * SCIPFNGLDELETEPROGRAMSARBPROC) (GLsizei n, const GLuint* programs);
@@ -100,7 +117,11 @@ static SCIPFNGLBINDPROGRAMARBPROC glBindProgramARB_SCI = 0;
 static SCIPFNGLPROGRAMSTRINGARBPROC glProgramStringARB_SCI = 0;
 static SCIPFNGLISPROGRAMARBPROC glIsProgramARB_SCI = 0;
 static SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB_SCI = 0;
+
+
+
 #endif /* GL_ARB_fragment_program */
+
 
 
 #ifdef _WIN32
@@ -181,7 +202,7 @@ bool WGLisExtensionSupported(const char *extension)
       }
     }
 }
-#endif // _WIN32
+#endif /* _WIN32 */
 
 
 namespace SCIRun {
@@ -232,6 +253,9 @@ ShaderProgramARB::init_shaders_supported()
 	  new TkOpenGLContext(".testforshadersupport", 0, 0,0);
 
 	context->make_current();
+#if defined(HAVE_GLEW)
+        sci_glew_init();
+#endif
 
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -297,7 +321,7 @@ ShaderProgramARB::init_shaders_supported()
 #else
   non_2_textures_ =
     WGLisExtensionSupported("GL_ARB_texture_non_power_of_two");
-#endif
+#endif  /* _WIN32 */
 
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 
@@ -312,7 +336,9 @@ ShaderProgramARB::init_shaders_supported()
 	  WGLisExtensionSupported("GL_ARB_vertex_program") &&
 	  WGLisExtensionSupported("GL_ARB_fragment_program") &&
 
-#endif
+#endif /* _WIN32 */
+
+          //#  if !defined(HAVE_GLEW)
 	  (glGenProgramsARB_SCI = (SCIPFNGLGENPROGRAMSARBPROC)
 	   getProcAddress("glGenProgramsARB")) &&
 	  (glDeleteProgramsARB_SCI = (SCIPFNGLDELETEPROGRAMSARBPROC)
@@ -326,10 +352,14 @@ ShaderProgramARB::init_shaders_supported()
 	  (glProgramLocalParameter4fARB_SCI = 
 	   (SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC)
 	   getProcAddress("glProgramLocalParameter4fARB"));
-#else
+        //#else /* HAVE_GLEW */
+        //        true;
+        //#  endif /* !defined(HAVE_GLEW) */
+        
+#else /* !defined(GL_ARB_fragment_program) || ... */
 	supported_ = false;
-#endif
-	delete context;
+#endif /* if defined(GL_ARB_fragment_program) || ... */
+        delete context;
       }
       init_ = true;
     }
