@@ -49,7 +49,7 @@
 namespace SCIRun {
 
   SCISHARE void create_sci_environment(char **env, char *execname);
-  SCISHARE bool find_and_parse_scirunrc();
+  SCISHARE void find_and_parse_scirunrc();
   SCISHARE void copy_and_parse_scirunrc();
   SCISHARE bool parse_scirunrc(const std::string &);
 
