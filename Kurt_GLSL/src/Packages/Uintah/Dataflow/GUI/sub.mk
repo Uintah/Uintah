@@ -19,6 +19,7 @@ SRCS := \
 	$(SRCDIR)/GridVisualizer.tcl\
 	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/PatchDataVisualizer.tcl\
+	$(SRCDIR)/ParticleFlow.tcl \
 	$(SRCDIR)/FaceCuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
 	$(SRCDIR)/ScalarOperator.tcl\

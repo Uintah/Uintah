@@ -11,12 +11,14 @@ SRCS     += \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/ParticleColorMapKey.cc \
 	$(SRCDIR)/ParticleVis.cc \
+	$(SRCDIR)/ParticleFlow.cc \
+	$(SRCDIR)/ParticleFlowRenderer.cc \
 	$(SRCDIR)/FaceCuttingPlane.cc\
 	$(SRCDIR)/Hedgehog.cc\
 	$(SRCDIR)/AnimatedStreams.cc\
 	$(SRCDIR)/VariablePlotter.cc \
 	$(SRCDIR)/NodeHedgehog.cc \
-	$(SRCDIR)/SubFieldHistogram.cc 
+	$(SRCDIR)/SubFieldHistogram.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
