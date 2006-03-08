@@ -52,6 +52,9 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+
+#if !defined(HAVE_GLEW) //wrangle our own
+
 #ifndef _WIN32
 
 #  ifndef GLX_ATI_pixel_format_float
@@ -315,7 +318,7 @@ using std::string;
          extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
 #    endif
 #  endif /* GLX_ARB_get_proc_address */
-#endif
+#endif /* _WIN32 */
 
 #ifdef __APPLE__
 
@@ -343,7 +346,7 @@ using std::string;
 #  define getProcAddress(x) (wglGetProcAddress((LPCSTR)x))
 #else
 #  define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
-#endif
+#endif /* __APPLE__ */
 
 #ifndef _WIN32
   static PFNGLXBINDTEXIMAGEATIPROC glXBindTexImageATI = 0;
@@ -358,7 +361,9 @@ using std::string;
   static PFNWGLDESTROYPBUFFERARBPROC wglDestroyPbufferARB = 0;
   static PFNWGLQUERYPBUFFERARBPROC wglQueryPbufferARB = 0;
 #  define GL_CLAMP_TO_EDGE                  0x812F
-#endif
+#endif  /* _WIN32 */
+
+#endif /* !defined( HAVE_GLEW ) */
 
 static bool mInit = false;
 static bool mSupported = false;
@@ -784,10 +789,14 @@ Pbuffer::create ()
     {
 #if !defined(__sgi)
       bool fail = false;
+#  if !defined(HAVE_GLEW)
       fail = fail || (glXBindTexImageATI = (PFNGLXBINDTEXIMAGEATIPROC)
                       getProcAddress("glXBindTexImageATI")) == 0;
       fail = fail || (glXReleaseTexImageATI = (PFNGLXRELEASETEXIMAGEATIPROC)
                       getProcAddress("glXReleaseTexImageATI")) == 0;
+#  else /* HAVE_GLEW */
+      fail = glxewIsSupported("GLX_ATI_render_texture");
+#  endif /* !defined(HAVE_GLEW) */
       if (fail)
       {
         mSupported = false;
@@ -797,7 +806,7 @@ Pbuffer::create ()
       printf("We are running on an SGI but somehow mATI_render_texture\n");
       printf("is set to true... this is a problem!!!  Continuing, but\n");
       printf("probably something bad will happen shortly...\n");
-#endif
+#endif /* !defined(__sgi) */
     }
 
     mInit = true;
