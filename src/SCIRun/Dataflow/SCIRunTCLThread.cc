@@ -29,8 +29,8 @@
 #include <SCIRun/Dataflow/SCIRunTCLThread.h>
 
 #include <Core/GuiInterface/TCLInterface.h>
-#include <Core/Thread/Semaphore.h>
 #include <Core/GuiInterface/TCLTask.h>
+#include <Core/Thread/Semaphore.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Dataflow/Network/Network.h>
@@ -43,87 +43,113 @@
 
 typedef void (Tcl_LockProc)();
 
+// #ifdef _WIN32
+// #  ifdef __cplusplus
+//      extern "C" {
+// #  endif // __cplusplus
+//        __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+//        int tkMain(int argc, char** argv, 
+//           void (*nwait_func)(void*), void* nwait_func_data);
+// #  ifdef __cplusplus
+//      }
+// #  endif // __cplusplus
+
+// #else // _WIN32
+//   extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+//   extern "C" int tkMain(int argc, char** argv,
+//             void (*nwait_func)(void*), void* nwait_func_data);
+
+// #endif // _WIN32
+
 #ifdef _WIN32
-#  ifdef __cplusplus
-     extern "C" {
-#  endif // __cplusplus
-       __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-       int tkMain(int argc, char** argv, 
-          void (*nwait_func)(void*), void* nwait_func_data);
-#  ifdef __cplusplus
-     }
-#  endif // __cplusplus
-
-#else // _WIN32
-  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-  extern "C" int tkMain(int argc, char** argv,
-            void (*nwait_func)(void*), void* nwait_func_data);
-
+#  define EXPERIMENTAL_TCL_THREAD
+#  define SCISHARE __declspec(dllimport)
+#else
+#  define SCISHARE
 #endif // _WIN32
 
-extern "C" Tcl_Interp* the_interp;
+
+extern "C" SCISHARE Tcl_Interp* the_interp;
+
+#ifndef EXPERIMENTAL_TCL_THREAD
+extern "C" SCISHARE void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#endif
 
 namespace SCIRun {
 
-void wait(void* p);
+SCIRunTCLThread *SCIRunTCLThread::init_ptr_ = 0;
 
 void
 do_lock3()
 {
-    TCLTask::lock();
+#ifndef EXPERIMENTAL_TCL_THREAD
+  TCLTask::lock();
+#endif
 }
 
 void
 do_unlock3()
 {
-    TCLTask::unlock();
+#ifndef EXPERIMENTAL_TCL_THREAD
+  TCLTask::unlock();
+#endif
 }
 
-void
-wait(void* p)
+int
+SCIRunTCLThread::wait(Tcl_Interp *interp)
 {
-    SCIRunTCLThread* thr = (SCIRunTCLThread*) p;
-    thr->startTCL();
+  the_interp = interp;
+  ASSERT(init_ptr_);
+  init_ptr_->startTCL();
 }
 
 SCIRunTCLThread::SCIRunTCLThread(Network* net)
-    : net(net), start("SCIRun startup semaphore", 0)
+  : net(net), start("SCIRun startup semaphore", 0)
 {
-    Tcl_SetLock(do_lock3, do_unlock3);
+#ifndef EXPERIMENTAL_TCL_THREAD
+  Tcl_SetLock(do_lock3, do_unlock3);
+#endif
 }
 
 void
 SCIRunTCLThread::run()
 {
-    char* argv[2];
-    argv[0] = "sr";
-    argv[1] = 0;
+  char* argv[2];
+  argv[0] = "sr";
+  argv[1] = 0;
 
-    do_lock3();
-    tkMain(1, argv, wait, this);
+  do_lock3();
+  init_ptr_ = this;
+
+  if (sci_getenv_p("SCIRUN_NOGUI")) {
+    Tcl_Main(1, argv, wait);
+  } else {
+    Tk_Main(1, argv, wait);
+  }
 }
 
-void
+int
 SCIRunTCLThread::startTCL()
 {
-    gui = new TCLInterface;
-    new NetworkEditor(net, gui);
-    // TODO: scirunrc file handling
+  gui = new TCLInterface;
+  new NetworkEditor(net, gui);
+  // TODO: scirunrc file handling
 
-    // Find and set the on-the-fly directory
-    sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",gui->eval("getOnTheFlyLibsDir"));
+  // Find and set the on-the-fly directory
+  sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",gui->eval("getOnTheFlyLibsDir"));
 
-    packageDB->setGui(gui);
-    gui->eval("set scirun2 1");
-    gui->execute("wm withdraw .");
+  packageDB->setGui(gui);
+  gui->eval("set scirun2 1");
+  gui->execute("wm withdraw .");
 
-    start.up();
+  start.up();
+  return TCL_OK;
 }
 
 void
 SCIRunTCLThread::tclWait()
 {
-    start.down();
+  start.down();
 }
 
 }
