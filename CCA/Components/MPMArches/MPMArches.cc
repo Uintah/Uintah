@@ -4477,6 +4477,13 @@ bool MPMArches::needRecompile(double time, double dt,
 			      const GridP& grid) {
   return d_recompile;
 }
+double MPMArches::recomputeTimestep(double current_dt) {
+  return d_arches->recomputeTimestep(current_dt);
+}
+      
+bool MPMArches::restartableTimesteps() {
+  return d_arches->restartableTimesteps();
+}
 
 namespace Uintah {
 
