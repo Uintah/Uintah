@@ -313,8 +313,13 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	cout<<" Unable to open the given input file " << inputfile << endl;
 	exit(1);
   }
-  fd >> d_indepvarscount;
+
+  std::string header;
+  while (getline(fd, header) && header[0] == '#') { /* skip header lines */ } 
+
+  sscanf(header.c_str(), "%i", &d_indepvarscount);
   cout<< "d_indepvars count: " << d_indepvarscount << endl;
+
   indepvars_names = vector<string>(d_indepvarscount);
   Hl_index = -1;
   F_index = -1;
@@ -358,8 +363,11 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   so2_index = -1;
   so3_index = -1;
   co_index = -1;
+  ch4_index = -1;
   for (int ii = 0; ii < d_varscount; ii++) {
     fd >> vars_names[ii];
+    
+    
     if(vars_names[ii]== "Rho" || vars_names[ii]== "density")
 	    Rho_index = ii;
     else if(vars_names[ii]== "T" || vars_names[ii]== "temperature")
@@ -382,7 +390,11 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    so3_index = ii;
     else if(vars_names[ii]== "CO" || vars_names[ii]== "co")
 	    co_index = ii;
+    else if(vars_names[ii]=="CH4" || vars_names[ii]=="ch4")
+	    ch4_index= ii;
+		    
     cout<<vars_names[ii]<<endl;
+    
   }
   if ((Hs_index == -1)&&(!(d_adiabatic))) {
     cout << "No Hs found in table" << endl;
@@ -393,8 +405,9 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   cout<<"H2S index is " << h2s_index<<endl;
   cout<<"SO2 index is " << so2_index<<endl;
   cout<<"SO3 index is " << so3_index<<endl;
-  cout<<"CO index is " << co_index<<endl;
-
+  cout<<"CO  index is " << co_index <<endl;
+  cout<<"CH4 index is " << ch4_index<<endl;
+  
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);
   for (int ii = 0; ii < d_varscount; ii++) {

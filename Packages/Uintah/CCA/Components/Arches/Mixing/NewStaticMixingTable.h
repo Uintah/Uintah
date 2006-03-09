@@ -177,7 +177,7 @@ private:
       int d_heatlosscount, d_mixfraccount, d_mixvarcount, d_varscount;
       int co2_index, h2o_index;
 
-      int h2s_index, so2_index, so3_index, co_index;
+      int h2s_index, so2_index, so3_index, co_index, ch4_index;
       bool d_co_output;
       bool d_sulfur_chem;
 
