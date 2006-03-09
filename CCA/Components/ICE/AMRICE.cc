@@ -1242,15 +1242,25 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   //bulletproofing
   if(l.x() == h.x() || l.y() == h.y() || l.z() == h.z() ) {
     ostringstream warn;
-    warn << "AMRICE:refluxCoarseLevelIteror:The modified iterator for adding the refluxing correction, l = h"
-         << l << " " << h << " patch face " << name << endl;
+    warn << "AMRICE:refluxCoarseLevelIteror:The modified iterator for adding the refluxing correction, \n l = h "
+         << l << " " << h
+         << "\n level " << fineLevel->getIndex()
+         << "\n patch " << finePatch->getGridIndex()
+         << "\n patch face " << name 
+         << "\n offset " << offset << endl;
+    finePatch->printPatchBCs(warn); 
     throw InternalError(warn.str(), __FILE__, __LINE__ ); 
   }   
     IntVector diff = Abs(l - h);
     if(diff[p_dir] > 1 ) {
     ostringstream warn;
     warn << "AMRICE:refluxCoarseLevelIteror:The modified iterator:l - h > 1"
-         << l[p_dir] << " " << h[p_dir] << " patch face " << name << endl;
+         << l[p_dir] << " " << h[p_dir] 
+         << "\n level " << fineLevel->getIndex()
+         << "\n patch " << finePatch->getGridIndex()
+         << "\n patch face " << name
+         << "\n offset " << offset << endl;
+    finePatch->printPatchBCs(warn);     
     throw InternalError(warn.str(), __FILE__, __LINE__ );
   }
 }
