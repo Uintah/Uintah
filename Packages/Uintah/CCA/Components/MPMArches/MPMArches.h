@@ -199,6 +199,9 @@ public:
 
     virtual bool needRecompile(double time, double dt,
 			       const GridP& grid);
+      virtual double recomputeTimestep(double current_dt);
+      
+      virtual bool restartableTimesteps();
 
  protected:
 
