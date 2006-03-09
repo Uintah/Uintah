@@ -176,11 +176,11 @@ public:
 			        const TimeIntegratorLabel* timelabels);
 
       inline double recomputeTimestep(double current_dt) {
-        return current_dt;
+        return current_dt/2;
       }
       
       inline bool restartableTimesteps() {
-        return false;
+        return true;
       }
   
       inline double getAdiabaticAirEnthalpy() const{
@@ -359,6 +359,7 @@ private:
     int d_turbCounter;
     double d_H_air;
     bool d_doMMS;
+    bool d_restart_on_negative_density_guess;
     
 
 }; // End class ExplicitSolver
