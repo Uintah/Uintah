@@ -114,8 +114,6 @@ void SCGPlastic::outputProblemSpec(ProblemSpecP& ps)
   plastic_ps->appendElement("Gamma_0",d_CM.Gamma_0); 
 
   // Compute C1 and C2
-  d_CM.C1 = 0.0;
-  d_CM.C2 = 0.0;
   plastic_ps->appendElement("C1",d_CM.C1); 
   plastic_ps->appendElement("C2",d_CM.C2); 
   double C1 = d_CM.C1;
