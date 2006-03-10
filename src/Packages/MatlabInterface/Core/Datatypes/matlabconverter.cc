@@ -392,8 +392,11 @@ long matlabconverter::sciColorMapCompatible(matlabarray &ma, std::string &infote
 long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext, bool postremark)
 {
   infotext = "";
-  if (ma.isempty()) return(0);
-  if (ma.getnumelements() == 0) return(0);
+  if (ma.isempty())
+  { 
+    if (postremark) remark(std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (empty matrix)."));
+    return(0);
+  }
 
   matlabarray::mlclass mclass;
   mclass = ma.getclass();
@@ -411,7 +414,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
         if (postremark) remark(std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)."));
         return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
       }
-      if (ma.getnumelements() == 0)
+      if ((ma.getnumelements() == 0)&&(!ma.issparse()))
       {   
         if (postremark) remark(std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (0x0 matrix)."));
         return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
@@ -1358,7 +1361,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                           
                   for (long p=0;p<NRRD_DIM_MAX;p++)
                   {
-                    centerdata[p] = 0;
+                    centerdata[p] = 2;
                   }
                           
                   for (long p=0;p<numaxis;p++)

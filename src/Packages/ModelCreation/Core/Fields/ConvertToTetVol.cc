@@ -71,6 +71,11 @@ bool ConvertToTetVolAlgo::ConvertToTetVol(ProgressReporter *pr, FieldHandle inpu
     return (false);
   }
 
+  for (size_t p =0; p < precompiled_.size(); p++)
+  {
+    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->ConvertToTetVol(pr,input,output));
+  }
+
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
@@ -97,5 +102,12 @@ bool ConvertToTetVolAlgo::ConvertToTetVol(ProgressReporter *pr, FieldHandle inpu
   return(algo->ConvertToTetVol(pr,input,output));
 }
 
+bool ConvertToTetVolAlgo::testinput(FieldHandle input)
+{
+  return (false);
+}
+
+
+AlgoList<ConvertToTetVolAlgo> ConvertToTetVolAlgo::precompiled_;
 
 } // End namespace ModelCreation

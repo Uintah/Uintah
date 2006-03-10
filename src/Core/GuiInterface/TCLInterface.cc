@@ -50,13 +50,30 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Exceptions/GuiException.h>
+#include <Core/Thread/Mailbox.h>
+#include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Time.h>
+#include <Core/Exceptions/GuiException.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
+#include <string>
+
+//#  define EXPERIMENTAL_TCL_THREAD
+
+#ifdef _WIN32
+#  include <windows.h>
+#  define SCISHARE __declspec(dllimport)
+#  define EXPERIMENTAL_TCL_THREAD
+#else
+#  define SCISHARE
+#endif
 
 using namespace SCIRun;
+using std::string;
+
+SCIRun::ThreadLock SCIRun::TCLTask::tcl_lock_("TCL Thread Lock");
+SCISHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
   struct TCLCommandData {
@@ -65,45 +82,27 @@ namespace SCIRun {
   };
 }
 
+
 #ifdef EXPERIMENTAL_TCL_THREAD
 // in windows, we will use a different interface (since it hangs in many
 // places the non-windows ones do not).  Instead of each thread potentially
 // calling TCL code, and have the GUI lock, we will send the TCL commands
 // to the tcl thread via a mailbox, and TCL will get the data via an event 
 // callback
-#include <Core/Thread/Mailbox.h>
-#include <Core/Thread/Semaphore.h>
-#include <string>
-using std::string;
-
-struct EventMessage {
-  EventMessage(string command, Semaphore* sem) : command(command), sem(sem) {};
-  string command;
-  Semaphore* sem;
-  int code;
-  string result;
-};
-
 static Mailbox<EventMessage*> tclQueue("TCL command mailbox", 50);
 static Tcl_Time tcl_time = {0,0};
-
-static unsigned tclThreadId = 0xffffffff;
+static Tcl_ThreadId tclThreadId = 0;
 int eventCallback(Tcl_Event* event, int flags);
-
-namespace SCIRun {
 void eventSetup(ClientData cd, int flags);
-}
-#endif
-#ifdef _WIN32
-#include <windows.h>
-#define SCISHARE __declspec(dllimport)
-#else
-#define SCISHARE
+
 #endif
 
 extern "C" SCISHARE Tcl_Interp* the_interp;
 
-TCLInterface::TCLInterface()
+TCLInterface::TCLInterface() :
+  pause_semaphore_(new Semaphore("TCL Task Pause Semaphore",0)),
+  paused_(0)
+                   
 {
   MemStats* memstats=scinew MemStats;
   memstats->init_tcl(this);
@@ -138,8 +137,28 @@ string TCLInterface::eval(const string& str)
   return result;
 }
 
+void
+TCLInterface::unpause()
+{
+  if (paused_)
+    pause_semaphore_->up();
+  paused_ = false;
+}
+
+void
+TCLInterface::real_pause()
+{
+  paused_ = true;
+  pause_semaphore_->down();
+}
+
 
 #ifndef EXPERIMENTAL_TCL_THREAD
+
+void
+TCLInterface::pause()
+{
+}
 
 int TCLInterface::eval(const string& str, string& result)
 {
@@ -171,15 +190,26 @@ int TCLInterface::eval(const string& str, string& result)
     return code == TCL_OK;
   }
   else {
-    Semaphore sem("wait for tcl", 0);
-    EventMessage em(str, &sem);
-
+    CommandEventMessage em(str);
     tclQueue.send(&em);
-    Tcl_ThreadAlert((Tcl_ThreadId)tclThreadId);
-    sem.down();
-    result = em.result;
-    return em.code == TCL_OK;
+    Tcl_ThreadAlert(tclThreadId);
+    em.wait_for_message_delivery();
+    result = em.result();
+    return em.code() == TCL_OK;
   }
+}
+
+
+void
+TCLInterface::pause()
+{
+  if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") == 0 )
+    return;
+    
+  PauseEventMessage em(this);
+  tclQueue.send(&em);
+  Tcl_ThreadAlert(tclThreadId);
+  em.wait_for_message_delivery();
 }
 
 
@@ -187,28 +217,40 @@ int eventCallback(Tcl_Event* event, int flags)
 {
    EventMessage* em;
    while (tclQueue.tryReceive(em)) {
-     int code = Tcl_Eval(the_interp, ccast_unsafe(em->command));
-     if(code != TCL_OK){
-       Tk_BackgroundError(the_interp);
-     } else {
-       em->result = string(the_interp->result);
+
+     PauseEventMessage *pause = dynamic_cast<PauseEventMessage *>(em);
+     CommandEventMessage *command = dynamic_cast<CommandEventMessage *>(em);
+     if (pause) {
+       TCLInterface *tcl_interface = pause->tcl_interface_;
+       pause->mark_message_delivered();
+       tcl_interface->real_pause();
      }
-     em->code = code;
-     em->sem->up();
+
+     if (command) {
+       int code = Tcl_Eval(the_interp, ccast_unsafe(command->command()));
+       if(code != TCL_OK){
+         Tk_BackgroundError(the_interp);
+       } else {
+         command->result() = the_interp->result;
+       }
+       command->code() = code;
+       command->mark_message_delivered();
+     }
    }
    return 1;
 }
 
-namespace SCIRun {
+
 
 void eventSetup(ClientData cd, int flags)
 {
   // set thread id if not set
-  tclThreadId = GetCurrentThreadId();
+  tclThreadId = Tcl_GetCurrentThread();
   if (tclQueue.numItems() > 0) {
     Tcl_SetMaxBlockTime(&tcl_time);
   }
 }
+
 void eventCheck(ClientData cd, int flags)
 {
   if (tclQueue.numItems() > 0) {
@@ -217,9 +259,10 @@ void eventCheck(ClientData cd, int flags)
     Tcl_QueueEvent(event, TCL_QUEUE_HEAD);
   }
 }
-}
+
 #endif
 
+namespace SCIRun {
 
 void TCLInterface::source_once(const string& filename)
 {
@@ -413,4 +456,42 @@ TCLInterface::complete_command(const string &command)
   TCLTask::unlock();
   delete[] src;
   return (ret_val == TCL_OK);
+}
+
+
+EventMessage::EventMessage() :
+  delivery_semaphore_(new Semaphore("TCL EventMessage Delivery",0))
+{}
+
+EventMessage::~EventMessage()
+{
+  if (delivery_semaphore_) delete delivery_semaphore_;
+}
+
+void
+EventMessage::wait_for_message_delivery()
+{
+  delivery_semaphore_->down();
+}
+
+void
+EventMessage::mark_message_delivered()
+{
+  delivery_semaphore_->up();
+}
+
+PauseEventMessage::PauseEventMessage(TCLInterface *tcl_interface) 
+  : EventMessage(),
+    tcl_interface_(tcl_interface)
+  
+{
+}
+
+
+CommandEventMessage::CommandEventMessage(const string &command) :
+  command_(command),
+  result_(),
+  return_code_(0)
+{}
+
 }

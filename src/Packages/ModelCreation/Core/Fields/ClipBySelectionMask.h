@@ -42,7 +42,7 @@
 #include <Core/Datatypes/Mesh.h>
 
 #include <sci_hash_map.h>
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -208,7 +208,6 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
       elemmap.push_back(*bi); // Assumes elements always added to end.
     }
     ++bi;
-    pr->update_progress(*(bi)/double(*(ei)));
   }
 
   FIELD *ofield = scinew FIELD(clipped);

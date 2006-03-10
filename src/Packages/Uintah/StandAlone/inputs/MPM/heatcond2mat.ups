@@ -9,6 +9,9 @@
 	<title>Heat conduction problem</title>
    </Meta>
 
+   <SimulationComponent>
+        <type> mpm </type>
+   </SimulationComponent>
    <Time>
 	<maxTime>.1</maxTime>
 	<initTime>0.0</initTime>

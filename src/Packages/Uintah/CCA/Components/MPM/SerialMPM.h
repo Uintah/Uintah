@@ -95,15 +95,17 @@ public:
   virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
-  void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
+  virtual void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
 
-  void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
-                               int step, int nsteps);
+  virtual void scheduleRefineInterface(const LevelP& fineLevel, 
+                                       SchedulerP& scheduler,
+                                       int step, int nsteps);
 
-  void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
+  virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
 
   /// Schedule to mark flags for AMR regridding
-  void scheduleErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
+  virtual void scheduleErrorEstimate(const LevelP& coarseLevel, 
+                                     SchedulerP& sched);
   
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
@@ -138,11 +140,6 @@ protected:
   // Insert Documentation Here:
   friend class MPMICE;
   friend class MPMArches;
-#if 0
-  virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
-				    SimulationStateP& sharedState,
-				    MPMFlags* flags);
-#endif
 	 
   virtual void actuallyInitialize(const ProcessorGroup*,
 				  const PatchSubset* patches,
@@ -157,10 +154,10 @@ protected:
                                                DataWarehouse* new_dw);
 
   void printParticleCount(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
 
   //////////
   // Initialize particle data with a default values using 
@@ -426,76 +423,78 @@ protected:
   void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
+
   virtual void scheduleParticleVelocityField(SchedulerP&, const PatchSet*,
-					     const MaterialSet*);
+					     const MaterialSet*) {};
 
   virtual void scheduleAdjustCrackContactInterpolated(SchedulerP&, 
 						      const PatchSet*,
-						      const MaterialSet*);
+						      const MaterialSet*){};
 
   virtual void scheduleAdjustCrackContactIntegrated(SchedulerP&, 
 						    const PatchSet*,
-						    const MaterialSet*);
+						    const MaterialSet*){};
 
   virtual void scheduleCalculateFractureParameters(SchedulerP&,const PatchSet*,
-						   const MaterialSet*);
+						   const MaterialSet*){};
 
   virtual void scheduleDoCrackPropagation(SchedulerP& sched, 
 					  const PatchSet* patches,
-					  const MaterialSet* matls);
+					  const MaterialSet* matls){};
 
   virtual void scheduleMoveCracks(SchedulerP& sched,const PatchSet* patches,
-				  const MaterialSet* matls);
+				  const MaterialSet* matls){};
 
   virtual void scheduleUpdateCrackFront(SchedulerP& sched,
 					const PatchSet* patches,
-					const MaterialSet* matls);
+					const MaterialSet* matls){};
 
-   void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
+
+  void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
 					const PatchSet* patches,
                                         const MaterialSet*);
                                                                              
   //////////
   // Insert Documentation Here:
-  virtual void checkNeedAddMPMMaterial(const ProcessorGroup*,
+  void checkNeedAddMPMMaterial(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
-   void scheduleSetNeedAddMaterialFlag(SchedulerP&,
-                                       const LevelP& level,
-                                       const MaterialSet*);
-
-
-   void setNeedAddMaterialFlag(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse*,
-                               DataWarehouse*);
-
-   virtual bool needRecompile(double time, double dt,
-                              const GridP& grid);
-
-
-   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
-
-   void switchTest(const ProcessorGroup*,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   DataWarehouse*,
-                   DataWarehouse*);
+  void scheduleSetNeedAddMaterialFlag(SchedulerP&,
+                                              const LevelP& level,
+                                              const MaterialSet*);
+  
+  
+  void setNeedAddMaterialFlag(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse*,
+                                      DataWarehouse*);
+  
+  bool needRecompile(double time, double dt,
+                             const GridP& grid);
+  
+  
+  virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+  
+  virtual void switchTest(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse*,
+                          DataWarehouse*);
                    
   void printSchedule(const PatchSet* patches,
                      const string& where);
-                     
+  
   void printSchedule(const LevelP& level,
                      const string& where);
                      
   void printTask(const PatchSubset* patches,
                  const Patch* patch,
                  const string& where);
-
+  
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   MPMFlags* flags;

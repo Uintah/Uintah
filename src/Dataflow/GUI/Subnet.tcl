@@ -742,8 +742,8 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     }
     set splitname [file split $filename]
     set netname [lindex $splitname end]
-    if { [string last .net $netname] != [expr [string length $netname]-4] } {
-	set netname ${netname}.net
+    if { [string last .srn $netname] != [expr [string length $netname]-4] } {
+	set netname ${netname}.srn
     }
     if { [llength $splitname] == 1 } {
 	set filename [file join [netedit getenv SCIRUN_SRCDIR] Subnets $netname]
@@ -850,7 +850,7 @@ proc isaDefaultValue { module varname classname } {
 
 proc writeSubnetOnDisk { id } {
     global Subnet
-    set filename [file join ~ SCIRun Subnets $Subnet(Subnet${id}_Name).net]
+    set filename [file join ~ SCIRun Subnets $Subnet(Subnet${id}_Name).srn]
     if { [info exists Subnet(Subnet${id}_Filename)] } {
 	set filename $Subnet(Subnet${id}_Filename)
     }
@@ -1157,7 +1157,6 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     }
 
     set num_subnets $i
-    puts $num_subnets
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	if { ![isaSubnetIcon $module] } {
             incr i
@@ -1236,7 +1235,10 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 
     set i $num_subnets
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	$module writeStateToScript script "m[incr i]" $tab
+	if { ! [isaSubnetIcon $module] } {
+	    incr i
+	    $module writeStateToScript script "m$i" $tab
+	}
     }
 
     return $script
@@ -1295,12 +1297,13 @@ proc saveSubnetDialog { subnet_id ask } {
     }
     if { $ask } {
 	set types {
-	    {{SCIRun Net} {.net} }
-	    {{Other} { * } }
+	    {{SCIRun Net} {.srn} }
 	} 
-	set Subnet(Subnet${subnet_id}_Filename) \
-	    [tk_getSaveFile -defaultextension {.net} -filetypes $types \
-		 -initialdir "[netedit getenv HOME]/SCIRun/Subnets"]
+	set name [tk_getSaveFile -defaultextension {.srn} -filetypes $types \
+		      -initialdir "[netedit getenv HOME]/SCIRun/Subnets"]
+
+	set name [append_srn_filename $name]
+	set Subnet(Subnet${subnet_id}_Filename) $name
     }
     if { [string length $Subnet(Subnet${subnet_id}_Filename)]} {
 	writeNetwork $Subnet(Subnet${subnet_id}_Filename) $subnet_id
@@ -1311,6 +1314,9 @@ proc loadSubnetScriptsFromDisk { } {
     global SubnetScripts
     set files [glob -nocomplain "[netedit getenv SCIRUN_SRCDIR]/Subnets/*.net"]
     eval lappend files [glob -nocomplain "[netedit getenv HOME]/SCIRun/Subnets/*.net"]
+    eval lappend files [glob -nocomplain "[netedit getenv SCIRUN_SRCDIR]/Subnets/*.srn"]
+    eval lappend files [glob -nocomplain "[netedit getenv HOME]/SCIRun/Subnets/*.srn"]
+    
     foreach file $files {
 	set script ""
 	set handle [open $file RDONLY]

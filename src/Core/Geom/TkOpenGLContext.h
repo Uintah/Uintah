@@ -57,6 +57,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Thread/Mutex.h>
+
 using std::string;
 using std::vector;
 
@@ -69,6 +71,9 @@ public:
 		  int width=640, int height = 480);
   virtual ~TkOpenGLContext();
   
+  void                  make_x11_gl_context(const string &, int, int, int);
+  void                  make_win32_gl_context(const string &, int, int, int);
+
   static string		listvisuals();
   bool			make_current();
   void /*bool*/			release();
@@ -117,6 +122,7 @@ public:
   Colormap		colormap_;
   Tk_Cursor		cursor_;
   string		id_;
+  Mutex                 mutex_;
 };
 
 } // End namespace SCIRun

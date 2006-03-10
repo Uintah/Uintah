@@ -174,7 +174,7 @@ ManageFieldDataAlgoFieldTensor<Fld>::execute(FieldHandle ifield_h)
 class ManageFieldDataAlgoMesh : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      MeshHandle src, MatrixHandle mat) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -290,14 +290,14 @@ class ManageFieldDataAlgoMeshT : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      MeshHandle src, MatrixHandle mat);
 
 };
 
 template <class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshT<FOUT>::execute(ProgressReporter *mod,
+ManageFieldDataAlgoMeshT<FOUT>::execute(ProgressReporter *reporter,
                                         MeshHandle mesh,
                                         MatrixHandle matrix)
 {
@@ -379,9 +379,9 @@ ManageFieldDataAlgoMeshT<FOUT>::execute(ProgressReporter *mod,
     return FieldHandle(ofield);
   }
 
-  mod->warning("Matrix datasize does not match field geometry.");
-  mod->msgStream() << "Matrix size : " << rows << " " << columns << '\n';
-  mod->msgStream() << "Field size : " << nsize << " " << csize << '\n';
+  reporter->warning("Matrix datasize does not match field geometry.");
+  reporter->msgStream() << "Matrix size : " << rows << " " << columns << '\n';
+  reporter->msgStream() << "Field size : " << nsize << " " << csize << '\n';
   return 0;
 }
 

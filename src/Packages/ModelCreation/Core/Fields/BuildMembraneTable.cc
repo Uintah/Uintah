@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable)
+bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MembraneTableList& membranetable)
 {
   if (elementtypevol.get_rep() == 0)
   {

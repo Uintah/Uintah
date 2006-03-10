@@ -70,4 +70,13 @@ SCISHARE bool
 RayTriangleIntersection(double &t, double &u, double &v, bool backface_cull,
                         const Point &orig,  const Vector &dir,
                         const Point &p0, const Point &p1, const Point &p2);
+
+
+// Compute s and t such that the distance between A0 + s * (A1 - AO)
+// and B0 + t * (B1 - B0) is minimal.  Return false if the lines are
+// parallel, true otherwise.
+SCISHARE bool
+closest_line_to_line(double &s, double &t,
+                     const Point &A0, const Point &A1,
+                     const Point &B0, const Point &B1);
 }

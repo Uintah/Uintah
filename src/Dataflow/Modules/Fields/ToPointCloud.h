@@ -44,7 +44,7 @@ namespace SCIRun {
 class ToPointCloudAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src) = 0;
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -59,13 +59,13 @@ class ToPointCloudAlgoT : public ToPointCloudAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src);
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src);
 };
 
 
 template <class FSRC, class FDST>
 FieldHandle
-ToPointCloudAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
+ToPointCloudAlgoT<FSRC, FDST>::execute(ProgressReporter *reporter,
 				      FieldHandle field_h)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(field_h.get_rep());
@@ -101,7 +101,7 @@ ToPointCloudAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
       ++in; ++out;
     }
   } else {
-    module->warning("Unable to copy data at this field data location.");
+    reporter->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;

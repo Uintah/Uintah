@@ -51,7 +51,7 @@ bool TransformFieldAlgo::TransformField(ProgressReporter *pr, FieldHandle input,
   }
   
   if (fi.is_scalar())
-  {
+  {    
    TransformFieldScalarAlgo algo;
    return(algo.TransformField(pr,input,output,transform,rotatedata));
   }
@@ -86,12 +86,16 @@ bool TransformFieldAlgo::TransformField(ProgressReporter *pr, FieldHandle input,
   {
     pr->compile_error(ci->filename_);
     SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
-    return(false);
+    return (false);
   }
 
   return(algo->TransformField(pr,input,output,transform,rotatedata));
 }
 
+bool TransformFieldAlgo::testinput(FieldHandle input)
+{
+  return (false);
+}
 
 bool TransformFieldScalarAlgo::TransformField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, Transform& transform, bool rotatedata)
 {

@@ -71,6 +71,7 @@ DESCRIPTION
    
 ****************************************/
 	class SCISHARE Thread {
+          static const unsigned long DEFAULT_STACKSIZE  = 128 * 1024; // 128 KB
 	public:
 	    //////////
 	    // Possible thread start states
@@ -88,9 +89,12 @@ DESCRIPTION
 	    // specifies the ThreadGroup that to which this thread
 	    // should belong.  If no group is specified (group==0),
 	    // the default group is used.
-	    Thread(Runnable* runner, const char* name,
-		   ThreadGroup* group=0, ActiveState state=Activated);
-	    
+	    Thread(Runnable* runner,
+                   const char* name,
+		   ThreadGroup* group=0, 
+                   ActiveState state=Activated,
+                   unsigned long stack_size = DEFAULT_STACKSIZE);
+
 	    //////////
 	    // Return the <b>ThreadGroup</b> associated with this thread.
 	    ThreadGroup* getThreadGroup();

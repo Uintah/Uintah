@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
@@ -1170,6 +1171,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
 
   // find the intersection of the fine patch face iterator and underlying coarse patch
+  int p_dir = finePatch->faceAxes(patchFace)[0];        // normal face direction, x, y, z
   IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
   IntVector f_hi_face = f_iter.end();
 
@@ -1184,9 +1186,16 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
 
   //__________________________________
   // Offset for the coarse level iterator
-  // shift l & h,   1 cell for x+, y+, z+ finePatchfaces
-  // shift l only, -1 cell for x-, y-, z- finePatchfaces
+  // shift l & h,  1 cell for x+, y+, z+ finePatchfaces
+  // shift l & h, -1 cell for x-, y-, z- finePatchfaces
   // 
+  // if(minus face){
+  //    if(refinement ratio == 1)
+  //      shift h 
+  //    else 
+  //      no shift for h
+  // }
+  //
   // Offset for the coarse_face center (c_FC_offset)
   // shift 1 cell   for x-, y-, z- finePatch faces
   // shift 0 cells  for x+, y+, z+ finePatchFaces
@@ -1196,8 +1205,13 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   coarse_FC_offset = IntVector(0,0,0);
 
   if(name == "xminus" || name == "yminus" || name == "zminus"){
-    l += offset;
     coarse_FC_offset = -offset;
+    l += offset;
+    
+    IntVector rr(fineLevel->getRefinementRatio());
+    if(rr[p_dir] == 1){
+      h += offset;
+    }
   }
   if(name == "xplus" || name == "yplus" || name == "zplus"){
     l += offset;
@@ -1213,14 +1227,41 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
     isRight_CP_FP_pair = true;
   }
   
-  if (cout_dbg.active()) {
-    cout_dbg << "refluxCoarseLevelIterator: face "<< patchFace
-             << " finePatch " << finePatch->getID()
-             << " coarsePatch " << coarsePatch->getID()
-             << " [CellIterator at " << iter.begin() << " of " << iter.end() 
-             << "] coarse_FC_offset " << coarse_FC_offset 
-             << " does this coarse patch own the face centered variable " 
-             << isRight_CP_FP_pair << endl; 
+  
+#if 0
+  cout << "refluxCoarseLevelIterator: face "<< name
+       << " unmodified Iterator " << f_iter.begin() << " " << f_iter.end()
+       << " finePatch " << finePatch->getID()
+       << " coarsePatch " << coarsePatch->getID()
+       << " modified Iterator at " << iter.begin() << " of " << iter.end() 
+       << " coarse_FC_offset " << coarse_FC_offset 
+       << " does this coarse patch own the face centered variable " 
+       << isRight_CP_FP_pair << endl;
+#endif  
+  //__________________________________
+  //bulletproofing
+  if(l.x() == h.x() || l.y() == h.y() || l.z() == h.z() ) {
+    ostringstream warn;
+    warn << "AMRICE:refluxCoarseLevelIteror:The modified iterator for adding the refluxing correction, \n l = h "
+         << l << " " << h
+         << "\n level " << fineLevel->getIndex()
+         << "\n patch " << finePatch->getGridIndex()
+         << "\n patch face " << name 
+         << "\n offset " << offset << endl;
+    finePatch->printPatchBCs(warn); 
+    throw InternalError(warn.str(), __FILE__, __LINE__ ); 
+  }   
+    IntVector diff = Abs(l - h);
+    if(diff[p_dir] > 1 ) {
+    ostringstream warn;
+    warn << "AMRICE:refluxCoarseLevelIteror:The modified iterator:l - h > 1"
+         << l[p_dir] << " " << h[p_dir] 
+         << "\n level " << fineLevel->getIndex()
+         << "\n patch " << finePatch->getGridIndex()
+         << "\n patch face " << name
+         << "\n offset " << offset << endl;
+    finePatch->printPatchBCs(warn);     
+    throw InternalError(warn.str(), __FILE__, __LINE__ );
   }
 }
 

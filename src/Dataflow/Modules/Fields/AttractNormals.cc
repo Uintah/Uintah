@@ -179,7 +179,7 @@ AttractNormals::execute()
   Handle<AttractNormalsAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
+  FieldHandle ofieldhandle(algo->execute(this, ifieldhandle, attractor));
 
   FieldOPort *ofield_port = (FieldOPort *)getOPort("Output Field");
   ofield_port->send_and_dereference(ofieldhandle);

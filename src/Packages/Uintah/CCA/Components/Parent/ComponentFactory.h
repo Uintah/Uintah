@@ -4,6 +4,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <string>
+
 namespace Uintah {
 
   class ProcessorGroup;
@@ -14,7 +16,8 @@ namespace Uintah {
   public:
     // this function has a switch for all known components
     
-    static UintahParallelComponent* create(ProblemSpecP& ps, const ProcessorGroup* world, bool doAMR);
+    static UintahParallelComponent* create(ProblemSpecP& ps, const ProcessorGroup* world, 
+                                           bool doAMR, std::string component, std::string uda);
 
 
   };

@@ -8,6 +8,13 @@
    <Meta>
        <title>Advection test</title>
    </Meta>
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
+   <doAMR>true</doAMR>
+   <Solver>
+        <type> hypreamr </type>
+   </Solver>
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -18,7 +25,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0e-2      </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-        <max_iterations>    100         </max_iterations>
+        <max_iterations>    30         </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -226,11 +233,11 @@
         </TimeStepControl>
         
         <ImplicitSolver>
-           <max_outer_iterations>      1   </max_outer_iterations>
+           <max_outer_iterations>      5   </max_outer_iterations>
            <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-            <tolerance>1.e-6    </tolerance>
+            <tolerance>1.e-8    </tolerance>
 
 	     <!-- Hypre options -->
 	     <solver>         amg     </solver>
@@ -246,7 +253,7 @@
         
         <!--A M R -->
         <AMR>
-          <orderOfInterpolation>1  </orderOfInterpolation>
+          <orderOfInterpolation>0  </orderOfInterpolation>
           <useLockStep>       true </useLockStep>
           <do_Refluxing>      true </do_Refluxing>
           <Refinement_Criteria_Thresholds>
@@ -278,7 +285,7 @@
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
-           <specific_heat>      0.716                   </specific_heat>
+           <specific_heat>      716                   </specific_heat>
            <speed_of_sound>     376                     </speed_of_sound>
            <gamma>              1.4                     </gamma>
            <geom_object>
@@ -289,7 +296,7 @@
                <res>           [2,2,2]                  </res>
                <velocity>      [10.,10.,10.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
-               <pressure>      101.3250                 </pressure>     
+               <pressure>      1013250                 </pressure>     
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>

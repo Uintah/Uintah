@@ -220,6 +220,8 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   {
+    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+	      "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first");
     result.clear();
     for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
       result.push_back(node_neighbors_[idx][i]/3);
@@ -228,6 +230,8 @@ public:
   bool get_neighbor(typename Face::index_type &neighbor,
                     typename Face::index_type face,
                     typename Edge::index_type edge) const;
+  bool get_neighbor(unsigned int &nbr_half_edge,
+                    unsigned int half_edge) const;
   void get_neighbors(vector<typename Node::index_type> &array,
                      typename Node::index_type idx) const;
 
@@ -293,7 +297,11 @@ public:
   void get_point(Point &result, typename Node::index_type index) const
   { result = points_[index]; }
   void get_normal(Vector &result, typename Node::index_type index) const
-  { result = normals_[index]; }
+  {
+    ASSERTMSG(synchronized_ & NORMALS_E,
+	      "Must call synchronize NORMALS_E on TriSurfMesh first"); 
+    result = normals_[index]; 
+  }
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }
 
@@ -301,6 +309,9 @@ public:
                   typename Elem::index_type eidx, unsigned int)
   {
     if (basis_.polynomial_order() < 2) {
+      ASSERTMSG(synchronized_ & NORMALS_E,
+		"Must call synchronize NORMALS_E on TriSurfMesh first");
+      
       typename Node::array_type arr(3);
       get_nodes(arr, eidx);
 
@@ -461,6 +472,8 @@ private:
   void                  compute_node_neighbors();
   void                  compute_edges();
   void                  compute_edge_neighbors(double err = 1.0e-8);
+
+  void                  debug_test_edge_neighbors();
 
   bool inside3_p(int, const Point &p) const;
 
@@ -865,6 +878,18 @@ TriSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
 
 
 template <class Basis>
+bool
+TriSurfMesh<Basis>::get_neighbor(unsigned int &nbr_half_edge,
+                                 unsigned int half_edge) const
+{
+  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
+            "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
+  nbr_half_edge = edge_neighbors_[half_edge];
+  return nbr_half_edge != MESH_NO_NEIGHBOR;
+}
+
+
+template <class Basis>
 void
 TriSurfMesh<Basis>::compute_node_neighbors()
 {
@@ -1261,6 +1286,20 @@ TriSurfMesh<Basis>::insert_node(const Point &p)
 
 
 template <class Basis>
+void
+TriSurfMesh<Basis>::debug_test_edge_neighbors()
+{
+  for (unsigned int i = 0; i < edge_neighbors_.size(); i++)
+  {
+    if (edge_neighbors_[i] != MESH_NO_NEIGHBOR &&
+        edge_neighbors_[edge_neighbors_[i]] != i)
+    {
+      cout << "bad nbr[" << i << "] = " << edge_neighbors_[i] << ", nbr[" << edge_neighbors_[i] << "] = " << edge_neighbors_[edge_neighbors_[i]] << "\n";
+    }
+  }
+}
+
+template <class Basis>
 bool
 TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
                                             typename Node::index_type &ni,
@@ -1309,7 +1348,7 @@ TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
     faces_.push_back(faces_[prev(nbr)]);
     edge_neighbors_.push_back(halfedge);
     edge_neighbors_.push_back(edge_neighbors_[next(nbr)]);
-    edge_neighbors_.push_back(next(halfedge));
+    edge_neighbors_.push_back(next(nbr));
     
     if (edge_neighbors_[next(nbr)] != MESH_NO_NEIGHBOR)
     {
@@ -1322,6 +1361,8 @@ TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
     edge_neighbors_[nbr] = f1;
     edge_neighbors_[next(nbr)] = f3+2;
   }
+
+  debug_test_edge_neighbors();
 
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
@@ -1364,7 +1405,7 @@ TriSurfMesh<Basis>::insert_node_in_face_aux(typename Face::array_type &tris,
   faces_.push_back(faces_[f0+2]);
   faces_.push_back(ni);
   edge_neighbors_.push_back(edge_neighbors_[f0+1]);
-  edge_neighbors_.push_back(f2+0);
+  edge_neighbors_.push_back(f2+2);
   edge_neighbors_.push_back(f0+1);
 
   tris.push_back(faces_.size() / 3);
@@ -1380,6 +1421,8 @@ TriSurfMesh<Basis>::insert_node_in_face_aux(typename Face::array_type &tris,
   faces_[f0+2] = ni;
   edge_neighbors_[f0+1] = f1+2;
   edge_neighbors_[f0+2] = f2+1;
+
+  debug_test_edge_neighbors();
 
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
@@ -1953,6 +1996,8 @@ TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
     }
     edge_map[nodes] = i;
   }
+
+  debug_test_edge_neighbors();
 
   synchronized_ |= EDGE_NEIGHBORS_E;
 }

@@ -208,7 +208,9 @@ public:
 
   // Execution time progress.
   // Percent is number between 0.0-1.0
-  virtual void update_progress(double percent); 
+  virtual void          update_progress(double percent);
+  virtual void          update_progress(int current, int max);
+  virtual void          increment_progress();
 
   port_range_type getIPorts(const string &name);
   IPort* getIPort(const string &name);

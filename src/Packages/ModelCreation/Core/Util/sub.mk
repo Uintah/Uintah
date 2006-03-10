@@ -12,7 +12,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/ModelCreation/Core/Util
 
-SRCS     += $(SRCDIR)/FieldInformation.cc\
+SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \

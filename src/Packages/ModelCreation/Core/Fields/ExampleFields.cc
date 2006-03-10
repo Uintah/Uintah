@@ -58,7 +58,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
 {
   int n;
   
-  MatrixConverter mc(pr_);
+  ConverterAlgo mc(pr_);
   mc.MatrixToInt(disc,n);
   
   double r  = 1.0;

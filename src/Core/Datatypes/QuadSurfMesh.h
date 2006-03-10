@@ -216,6 +216,8 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   {
+    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+	      "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first");
     result.clear();
     for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
       result.push_back(node_neighbors_[idx][i]/4);

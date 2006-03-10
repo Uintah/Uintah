@@ -40,21 +40,23 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
+#include <sci_values.h>
+
 #include <sci_defs/bits_defs.h>
+#include <sci_defs/image_defs.h>
+
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
 #include <Core/Geom/GeomViewerItem.h>
-#include <sci_values.h>
 
-#if defined HAVE_PNG && HAVE_PNG
-#include <png.h>
+#if defined(HAVE_PNG) && HAVE_PNG
+#  include <png.h>
 #endif
 
 #include <sgi_stl_warnings_off.h>
@@ -62,27 +64,27 @@
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
-#include <Core/Thread/Time.h>
-#undef near
-#undef far
-#undef min
-#undef max
-#define SCISHARE __declspec(dllimport)
+#  include <Core/Thread/Time.h>
+#  undef near
+#  undef far
+#  undef min
+#  undef max
+#  define SCISHARE __declspec(dllimport)
 #else
-#define SCISHARE
+#  define SCISHARE
 #endif
 
 extern "C" SCISHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
-#define DO_REDRAW 0
-#define DO_PICK 1
-#define DO_GETDATA 2
-#define REDRAW_DONE 4
-#define PICK_DONE 5
-#define DO_IMAGE 6
-#define IMAGE_DONE 7
+#define DO_REDRAW     0
+#define DO_PICK       1
+#define DO_GETDATA    2
+#define REDRAW_DONE   4
+#define PICK_DONE     5
+#define DO_IMAGE      6
+#define IMAGE_DONE    7
 #define DO_SYNC_FRAME 8
 
 
@@ -498,9 +500,10 @@ OpenGL::render_and_save_image(int x, int y,
                               const string& fname, const string &ftype)
 {
   bool use_convert = false;
-  bool write_png = false;
-  #if defined HAVE_PNG && HAVE_PNG
 
+#if defined(HAVE_PNG) && HAVE_PNG
+
+  bool write_png = false;
   // Either the user specified the type to be ppm or raw (in that case
   // we create that type of image), or they specified the "by_extension"
   // type in which case we need to look at the extension and try to write
@@ -528,7 +531,7 @@ OpenGL::render_and_save_image(int x, int y,
 	write_png = true;
       }
     }
-  #endif
+#endif
 
   cout << "Saving " + to_string(x) + "x" + to_string(y) +
     " image to '" + fname + "'.\n";
@@ -572,7 +575,7 @@ OpenGL::render_and_save_image(int x, int y,
   ofstream *image_file = NULL;
 
 
-#if defined HAVE_PNG && HAVE_PNG
+#if defined(HAVE_PNG) && HAVE_PNG
   /* create png struct */
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
@@ -655,7 +658,7 @@ OpenGL::render_and_save_image(int x, int y,
   {
 
 
-#if defined HAVE_PNG && HAVE_PNG
+#if defined(HAVE_PNG) && HAVE_PNG
     channel_bytes = 1;
     num_channels = 3;
 
@@ -741,6 +744,7 @@ OpenGL::render_and_save_image(int x, int y,
       memcpy(bot_row, tmp_row, hi_res_.resx*pix_size);
     }
 
+#if defined(HAVE_PNG) && HAVE_PNG
     if (write_png)
     {
       // run loop to divide memory into "row" chunks
@@ -754,6 +758,7 @@ OpenGL::render_and_save_image(int x, int y,
       png_write_image(png, rows);
     }
     else
+#endif
     {
       image_file->write((char *)pixels, hi_res_.resx*read_height*pix_size);
     }
@@ -765,6 +770,7 @@ OpenGL::render_and_save_image(int x, int y,
   glPixelStorei(GL_PACK_SKIP_PIXELS,0);
   glPixelStorei(GL_PACK_ROW_LENGTH,0);
 
+#if defined(HAVE_PNG) && HAVE_PNG
   if (write_png)
     {
       /* end write */
@@ -789,6 +795,7 @@ OpenGL::render_and_save_image(int x, int y,
       }
   }
   else
+#endif
   {
     image_file->close();
     delete[] pixels;

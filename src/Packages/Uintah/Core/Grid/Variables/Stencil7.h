@@ -3,6 +3,7 @@
 #define Packages_Uintah_Core_Grid_Stencil7_h
 
 #include <Core/Util/FancyAssert.h>
+#include <iostream>
 
 namespace Uintah {
   class TypeDescription;
@@ -22,6 +23,9 @@ namespace Uintah {
       return (&w)[index];
     }
   };
+
+  std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
+
 }
 
 namespace SCIRun {

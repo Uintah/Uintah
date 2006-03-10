@@ -302,10 +302,11 @@ void    ICE::printData_driver( int matl,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
+  int L;
   for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
-    
     if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
       onRightLevel = true;
+      L = l;
     }
   }
   
@@ -313,7 +314,7 @@ void    ICE::printData_driver( int matl,
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, 
-                        d_dbgBeginIndx[levelIndx],d_dbgEndIndx[levelIndx], 
+                        d_dbgBeginIndx[L],d_dbgEndIndx[L], 
                         low, high); 
     
     //__________________________________
@@ -403,9 +404,11 @@ void    ICE::printVector_driver(int matl,
   int levelIndx = level->getIndex(); 
   
   bool onRightLevel = false;
+  int L;
   for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
     if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
       onRightLevel = true;
+      L = l;
     }
   }
   
@@ -413,7 +416,7 @@ void    ICE::printVector_driver(int matl,
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, 
-                        d_dbgBeginIndx[levelIndx],d_dbgEndIndx[levelIndx], 
+                        d_dbgBeginIndx[L],d_dbgEndIndx[L], 
                         low, high); 
     
     string var_name;
@@ -785,17 +788,19 @@ void    ICE::printStencil( int /*matl*/,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
+  int L;
   for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
     if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
       onRightLevel = true;
+      L = l;
     }
   }
   
   if ( onRightLevel && d_dbgTime_to_printData) {
     IntVector low, high; 
     adjust_dbg_indices( include_EC, patch, 
-                        d_dbgBeginIndx[levelIndx], 
-                        d_dbgEndIndx[levelIndx], low, high); 
+                        d_dbgBeginIndx[L], 
+                        d_dbgEndIndx[L], low, high); 
     //__________________________________
     // spew to stderr
     cerr << "______________________________________________L-"<<levelIndx<<"\n";
@@ -852,6 +857,35 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
 
   IntVector beginIndx = d_dbgBeginIndx;
   IntVector endIndx   = d_dbgEndIndx;
+  
+  //__________________________________
+  // bulletproofing
+  const Level* level = patch->getLevel();
+  IntVector L_lowIndex, L_highIndex;
+  level->findCellIndexRange(L_lowIndex, L_highIndex);
+  
+  if (beginIndx.x() < L_lowIndex.x()  || 
+      beginIndx.y() < L_lowIndex.y()  ||
+      beginIndx.z() < L_lowIndex.z()  ||
+      endIndx.x()   > L_highIndex.x() ||
+      endIndx.y()   > L_highIndex.y() ||
+      endIndx.z()   > L_highIndex.z()  ){
+    ostringstream warn;
+    warn << "WARNING:PRINT_DATA: You've specified an index range "
+         << beginIndx << " " << endIndx
+         << " that is outside the range of this level "
+         << level->getIndex()
+         << " " << L_lowIndex << " " << L_highIndex << endl;
+    static SCIRun::ProgressiveWarning warning(warn.str(),2); 
+    warning.invoke();
+  }
+  if(beginIndx.x() == endIndx.x() ||
+     beginIndx.y() == endIndx.y() ||
+     beginIndx.z() == endIndx.z() ){
+    throw ProblemSetupException("PRINT_DATA: you've specified a beginIndex = EndIndex",
+                                __FILE__, __LINE__); 
+  }
+  
   
   
 #if 0    // turn this if you want to specify coarse level cells in the input file

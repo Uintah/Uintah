@@ -52,7 +52,7 @@ namespace SCIRun {
 class ToStructuredAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src) = 0;
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -66,14 +66,14 @@ class ToStructuredAlgoT : public ToStructuredAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src);
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src);
 };
 
 
 
 template <class FSRC, class FDST>
 FieldHandle
-ToStructuredAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
+ToStructuredAlgoT<FSRC, FDST>::execute(ProgressReporter *reporter,
 				       FieldHandle field_h)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(field_h.get_rep());

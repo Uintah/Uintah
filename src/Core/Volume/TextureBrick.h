@@ -97,7 +97,7 @@ public:
 		     vector<float> &vertex,
 		     vector<float> &texcoord,
 		     vector<int> &masks,
-		     vector<Plane> &planes);
+		     vector<Plane *> &planes);
 		     
   enum tb_td_info_e {
     FULL_TD_E,

@@ -42,6 +42,7 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Plane.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -137,41 +138,32 @@ class SCISHARE ClippingCM2Widget : public CM2Widget
 public:
   ClippingCM2Widget();
   ClippingCM2Widget(ClippingCM2Widget& copy);
-  ClippingCM2Widget(vector<BBox> &bboxes);
+  ClippingCM2Widget(const Plane &);
   ~ClippingCM2Widget();
-  vector<BBox> &        bboxes() { return bboxes_; }
-
+  Plane &                plane() { return plane_; }
   virtual CM2Widget*    clone();
   
   virtual void          draw(){}
-  virtual void          rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* /*pbuffer*/){
-    printf("rasterize1: not implemented\n"); }
-  virtual void          rasterize(Array3<float>& /*array*/){
-    printf("rasterize2: not implemented\n"); }
+  virtual void          rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* /*pbuffer*/){ }
+  virtual void          rasterize(Array3<float>& /*array*/){}
   virtual int           pick1(int /*x*/, int /*y*/, int /*w*/, int /*h*/) {
-    printf("pick1: not implemented\n"); 
     return 0; }
   virtual int           pick2(int /*x*/, int /*y*/, int /*w*/, int /*h*/, int /*m*/){
-    printf("pick2: not implemented\n");
     return 0; }
   virtual void          move(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
-    printf("move: not implemented\n");
   }
   virtual void          release(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
-    printf("release: not implemented\n");
   }
   virtual std::string   tcl_pickle() { 
-    printf("release: not implemented\n");
     return "";
   }
   virtual void          tcl_unpickle(const std::string &/*p*/) {
-    printf("release: not implemented\n");
   }
 
   virtual void          io(Piostream &stream);
   static PersistentTypeID type_id;
 protected:
-  vector<BBox>          bboxes_;
+  Plane                 plane_;
 };
   
 
@@ -385,7 +377,6 @@ protected:
   void                  splat(Array3<float> &, double, int, int);
   Strokes               strokes_;
 };
-
 
 
 

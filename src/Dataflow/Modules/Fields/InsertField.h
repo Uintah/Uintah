@@ -403,7 +403,6 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
                                               vector<unsigned int> &new_nodes,
                                               vector<unsigned int> &new_elems)
 {
-#if 0
   TFIELD *tfield = dynamic_cast<TFIELD *>(tet_h.get_rep());
   typename TFIELD::mesh_handle_type tmesh = tfield->get_typed_mesh();
   IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
@@ -411,26 +410,58 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
 
   tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E | Mesh::FACES_E);
 
-  typename IFIELD::mesh_type::Node::iterator ibi, iei;
+  typename IFIELD::mesh_type::Edge::iterator ibi, iei;
   imesh->begin(ibi);
   imesh->end(iei);
 
   while (ibi != iei)
   {
-    Point p;
-    imesh->get_center(p, *ibi);
+    typename IFIELD::mesh_type::Node::array_type nodes;
+    
+    imesh->get_nodes(nodes, *ibi);
+    Point p[2];
+    imesh->get_center(p[0], nodes[0]);
+    imesh->get_center(p[1], nodes[1]);
 
-    typename TFIELD::mesh_type::Elem::index_type elem;
-    if (tmesh->locate(elem, p))
+    vector<Point> insertpoints;
+    insertpoints.push_back(p[0]);
+    insertpoints.push_back(p[1]);
+
+    typename TFIELD::mesh_type::Edge::iterator tbi, tei;
+    tmesh->begin(tbi);
+    tmesh->end(tei);
+    while (tbi != tei)
     {
-      typename TFIELD::mesh_type::Node::index_type newnode;
-      typename TFIELD::mesh_type::Elem::array_type newelems;
-      tmesh->insert_node_in_cell_2(newelems, newnode, elem, p);
+      const double EPSILON = 1.0e-12;
+      typename TFIELD::mesh_type::Node::array_type tnodes;
+      tmesh->get_nodes(tnodes, *tbi);
+      Point tp[2];
+      tmesh->get_center(tp[0], tnodes[0]);
+      tmesh->get_center(tp[1], tnodes[1]);
 
-      new_nodes.push_back(newnode);
-      for (unsigned int i = 0; i < newelems.size(); i++)
+      double s, t;
+      closest_line_to_line(s, t, p[0], p[1], tp[0], tp[1]);
+
+      if (s > EPSILON && s < 1.0 - EPSILON &&
+          t > EPSILON && t < 1.0 - EPSILON)
       {
-        new_elems.push_back(newelems[i]);
+        insertpoints.push_back(tp[0] + t * (tp[1] - tp[0]));
+      }
+      ++tbi;
+    }
+
+    typename TFIELD::mesh_type::Node::index_type newnode;
+    typename TFIELD::mesh_type::Elem::array_type newelems;
+    for (unsigned int i = 0; i < insertpoints.size(); i++)
+    {
+      typename TFIELD::mesh_type::Elem::index_type elem;
+      Point closest;
+      tmesh->find_closest_face(closest, elem, insertpoints[i]);
+      tmesh->insert_node_in_face(newelems, newnode, elem, closest);
+      new_nodes.push_back(newnode);
+      for (unsigned int j = 0; j < newelems.size(); j++)
+      {
+        new_elems.push_back(newelems[j]);
       }
     }
 
@@ -438,7 +469,6 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
   }
 
   tfield->resize_fdata();
-#endif
 }
 
 
@@ -503,6 +533,8 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   typename IFIELD::mesh_handle_type omesh =
     scinew typename IFIELD::mesh_type();
 
+  tfield->mesh()->synchronize(Mesh::EDGES_E);
+
   std::sort(new_nodes.begin(), new_nodes.end());
   vector<unsigned int>::iterator nodes_end, itr;
   nodes_end = std::unique(new_nodes.begin(), new_nodes.end());
@@ -526,7 +558,7 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
       {
         typename TFIELD::mesh_type::Edge::array_type edges;
         tmesh->get_edges(edges,
-                         typename TFIELD::mesh_type::Cell::index_type(*itr));
+                         typename TFIELD::mesh_type::Elem::index_type(*itr));
         for (unsigned int i = 0; i < edges.size(); i++)
         {
           typename TFIELD::mesh_type::Node::array_type oldnodes;

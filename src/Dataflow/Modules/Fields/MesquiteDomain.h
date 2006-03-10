@@ -2,6 +2,9 @@
 #define MESQUITE_DOMAIN_HPP
 
 #include <MeshInterface.hpp>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Basis/TriLinearLgn.h>
 
 namespace SCIRun {
 
@@ -9,6 +12,8 @@ class MesquiteDomain : public Mesquite::MeshDomain
 {
 public:
 
+  MesquiteDomain( TriSurfMesh<TriLinearLgn<Point> > *domain_mesh )
+      {domain_mesh_ = domain_mesh;}
   virtual ~MesquiteDomain()
     {}
   
@@ -54,6 +59,9 @@ public:
     size_t num_handles,
     Mesquite::MsqError& err ) const;
 
+private:
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh_;
+  
 };
     
 } //namespace SCIRun

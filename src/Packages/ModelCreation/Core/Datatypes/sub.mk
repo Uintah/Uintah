@@ -14,14 +14,16 @@ SRCDIR   := Packages/ModelCreation/Core/Datatypes
 
 SRCS     += $(SRCDIR)/Startup.cc\
             $(SRCDIR)/SimpleTextFile.cc\
-            $(SRCDIR)/SelectionMask.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/ImportExport\
             Core/Datatypes Core/Util Core/Containers \
             Core/Exceptions Core/Thread Core/GuiInterface \
             Core/Geom Core/Geometry Dataflow/Network \
-            Packages/ModelCreation/Core/Algorithms
+            Packages/ModelCreation/Core/Algorithms \
+            Packages/ModelCreation/Core/Fields \
+            Packages/ModelCreation/Core/Numeric \
+            
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
