@@ -56,6 +56,7 @@ protected:
 
 public:
   ColorMap2Writer(GuiContext* ctx);
+  virtual ~ColorMap2Writer();
 
   virtual void execute();
 };
@@ -74,6 +75,11 @@ ColorMap2Writer::ColorMap2Writer(GuiContext* ctx)
   exporttypes += "}";
 
   gui_types_.set(exporttypes);
+}
+
+
+ColorMap2Writer::~ColorMap2Writer()
+{
 }
 
 

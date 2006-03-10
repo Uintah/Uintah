@@ -29,18 +29,9 @@
 
 itcl_class SCIRun_Math_ChooseMatrix {
     inherit Module
+
     constructor {config} {
         set name ChooseMatrix
-
-	global $this-port-index
-	global $this-usefirstvalid
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-port-index 0
-	set $this-usefirstvalid 0
     }
 
     method ui {} {

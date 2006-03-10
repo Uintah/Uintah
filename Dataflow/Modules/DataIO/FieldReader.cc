@@ -56,6 +56,7 @@ protected:
 
 public:
   FieldReader(GuiContext* ctx);
+  virtual ~FieldReader();
 
   virtual void execute();
 };
@@ -92,6 +93,11 @@ FieldReader::FieldReader(GuiContext* ctx)
   importtypes += "}";
 
   gui_types_.set(importtypes);
+}
+
+
+FieldReader::~FieldReader()
+{
 }
 
 

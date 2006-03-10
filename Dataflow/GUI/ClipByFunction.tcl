@@ -29,28 +29,20 @@
 
 itcl_class SCIRun_FieldsCreate_ClipByFunction {
     inherit Module
+
     constructor {config} {
         set name ClipByFunction
-        set_defaults
     }
 
     method set_defaults {} {
-        global $this-clipfunction
-	global $this-clipmode
-	global $this-u0
-	global $this-u1
-	global $this-u2
-	global $this-u3
-	global $this-u4
-	global $this-u5
-	set $this-clipfunction "x < 0"
-	set $this-clipmode "cell"
-	set $this-u0 0.0
-	set $this-u1 0.0
-	set $this-u2 0.0
-	set $this-u3 0.0
-	set $this-u4 0.0
-	set $this-u5 0.0
+	setGlobal $this-clipfunction "x < 0"
+	setGlobal $this-clipmode "cell"
+	setGlobal $this-u0 0.0
+	setGlobal $this-u1 0.0
+	setGlobal $this-u2 0.0
+	setGlobal $this-u3 0.0
+	setGlobal $this-u4 0.0
+	setGlobal $this-u5 0.0
     }
 
     method ui {} {

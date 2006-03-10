@@ -49,6 +49,7 @@ template class GenericWriter<PathHandle>;
 class PathWriter : public GenericWriter<PathHandle> {
 public:
   PathWriter(GuiContext* ctx);
+  virtual ~PathWriter();
 };
 
 
@@ -56,6 +57,10 @@ DECLARE_MAKER(PathWriter)
 
 PathWriter::PathWriter(GuiContext* ctx)
   : GenericWriter<PathHandle>("PathWriter", ctx, "DataIO", "SCIRun")
+{
+}
+
+PathWriter::~PathWriter()
 {
 }
 

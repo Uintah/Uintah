@@ -29,30 +29,20 @@
 
 itcl_class SCIRun_Visualization_StreamLines {
     inherit Module
+
     constructor {config} {
         set name StreamLines
-
-	global $this-stepsize
-	global $this-tolerance
-	global $this-maxsteps
-	global $this-direction
-	global $this-value
-	global $this-remove-colinear
-	global $this-method
-	global $this-np
-
-        set_defaults
     }
 
     method set_defaults {} {
-	set $this-tolerance 0.0001
-	set $this-stepsize 0.01
-	set $this-maxsteps 2000
-	set $this-direction 1
-	set $this-value 1
-	set $this-remove-colinear 1
-	set $this-method 4
-	set $this-np 1
+	setGlobal $this-tolerance 0.0001
+	setGlobal $this-stepsize 0.01
+	setGlobal $this-maxsteps 2000
+	setGlobal $this-direction 1
+	setGlobal $this-value 1
+	setGlobal $this-remove-colinear 1
+	setGlobal $this-method 4
+	setGlobal $this-np 1
     }
 
     method ui {} {

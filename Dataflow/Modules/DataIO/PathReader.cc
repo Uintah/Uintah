@@ -49,6 +49,7 @@ template class GenericReader<PathHandle>;
 class PathReader : public GenericReader<PathHandle> {
 public:
   PathReader(GuiContext* ctx);
+  virtual ~PathReader();
 };
 
 DECLARE_MAKER(PathReader)
@@ -56,5 +57,11 @@ PathReader::PathReader(GuiContext* ctx)
   : GenericReader<PathHandle>("PathReader", ctx, "DataIO", "SCIRun")
 {
 }
+
+
+PathReader::~PathReader()
+{
+}
+
 
 } // End namespace SCIRun

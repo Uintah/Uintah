@@ -29,18 +29,14 @@
 
 itcl_class SCIRun_FieldsOther_ChooseField {
     inherit Module
+
     constructor {config} {
         set name ChooseField
-
-	global $this-port-index
-	global $this-usefirstvalid
-
-        set_defaults
     }
 
     method set_defaults {} {
-	set $this-port-index 0
-	set $this-usefirstvalid 0
+	setGlobal $this-port-index 0
+	setGlobal $this-usefirstvalid 0
     }
 
     method ui {} {

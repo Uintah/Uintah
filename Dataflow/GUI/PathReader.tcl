@@ -36,13 +36,9 @@ catch {rename SCIRun_DataIO_PathReader ""}
 
 itcl_class SCIRun_DataIO_PathReader {
     inherit Module
+
     constructor {config} {
 	set name PathReader
-	set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-filetype
     }
 
     method ui {} {

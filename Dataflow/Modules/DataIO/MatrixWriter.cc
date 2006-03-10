@@ -57,6 +57,7 @@ protected:
 
 public:
   MatrixWriter(GuiContext* ctx);
+  virtual ~MatrixWriter();
 
   virtual void execute();
 };
@@ -67,8 +68,8 @@ DECLARE_MAKER(MatrixWriter)
 MatrixWriter::MatrixWriter(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "SCIRun"),
     gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype")),
-    split_(ctx->subVar("split"))
+    gui_exporttype_(ctx->subVar("exporttype"), "Binary"),
+    split_(ctx->subVar("split"), 0)
 {
   MatrixIEPluginManager mgr;
   vector<string> exporters;
@@ -94,6 +95,11 @@ MatrixWriter::MatrixWriter(GuiContext* ctx)
   exporttypes += "}";
 
   gui_types_.set(exporttypes);
+}
+
+
+MatrixWriter::~MatrixWriter()
+{
 }
 
 

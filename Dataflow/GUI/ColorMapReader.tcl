@@ -36,14 +36,9 @@ catch {rename SCIRun_DataIO_ColorMapReader ""}
 
 itcl_class SCIRun_DataIO_ColorMapReader {
     inherit Module
+
     constructor {config} {
 	set name ColorMapReader
-	set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-types
-	global $this-filetype
     }
 
     method ui {} {

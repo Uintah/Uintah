@@ -56,6 +56,7 @@ protected:
 
 public:
   ColorMapWriter(GuiContext* ctx);
+  virtual ~ColorMapWriter();
 
   virtual void execute();
 };
@@ -66,7 +67,7 @@ DECLARE_MAKER(ColorMapWriter)
 ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun"),
     gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype"))
+    gui_exporttype_(ctx->subVar("exporttype"), "Binary")
 {
   ColorMapIEPluginManager mgr;
   vector<string> exporters;
@@ -92,6 +93,11 @@ ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   exporttypes += "}";
 
   gui_types_.set(exporttypes);
+}
+
+
+ColorMapWriter::~ColorMapWriter()
+{
 }
 
 

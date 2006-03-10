@@ -66,6 +66,7 @@ protected:
 
 public:
   FieldWriter(GuiContext* ctx);
+  virtual ~FieldWriter();
 
   virtual void execute();
 };
@@ -77,11 +78,11 @@ DECLARE_MAKER(FieldWriter)
 FieldWriter::FieldWriter(GuiContext* ctx)
   : GenericWriter<FieldHandle>("FieldWriter", ctx, "DataIO", "SCIRun"),
     gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype")),
-    gui_increment_(ctx->subVar("increment")),
-    gui_current_(ctx->subVar("current"))
+    gui_exporttype_(ctx->subVar("exporttype"), "Binary"),
+    gui_increment_(ctx->subVar("increment"), 0),
+    gui_current_(ctx->subVar("current"), 0)
 {
-    FieldIEPluginManager mgr;
+  FieldIEPluginManager mgr;
   vector<string> exporters;
   mgr.get_exporter_list(exporters);
   
@@ -105,6 +106,11 @@ FieldWriter::FieldWriter(GuiContext* ctx)
   exporttypes += "}";
 
   gui_types_.set(exporttypes);
+}
+
+
+FieldWriter::~FieldWriter()
+{
 }
 
 
