@@ -869,6 +869,102 @@ itcl_class Module {
 	    netedit set-modgui-visible $prefix 
 	}	
     }
+
+    method labelpair { win text1 text2 } {
+	frame $win 
+	pack $win -side top -padx 5
+	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ":" -width 2 -anchor w -just left 
+	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
+		-fore darkred
+	pack $win.l1 $win.colon $win.l2 -side left
+    } 
+
+    method labelpair2 { win text1 text2x text2y } {
+	frame $win 
+	pack $win -side top -padx 5
+	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ": " -width 2 -anchor w -just left
+	label $win.l2x -textvar $text2x -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma1  -text ", " -anchor w -just left  \
+	    -fore darkred -borderwidth 0
+	label $win.l2y -textvar $text2y -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	pack $win.l1 $win.colon \
+	    $win.l2x $win.comma1 $win.l2y -side left -padx 0
+    } 
+
+    method labelpair3 { win text1 text2x text2y text2z } {
+	frame $win 
+	pack $win -side top -padx 5
+	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ": " -width 2 -anchor w -just left
+	label $win.l2x -textvar $text2x -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma1  -text ", " -anchor w -just left  \
+	    -fore darkred -borderwidth 0
+	label $win.l2y -textvar $text2y -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma2  -text ", " -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.l2z -textvar $text2z -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	pack $win.l1 $win.colon \
+	    $win.l2x $win.comma1 $win.l2y $win.comma2 $win.l2z \
+	    -side left -padx 0
+    } 
+
+    method labelentry { win text var } {
+	frame $win 
+	label $win.l -text $text -anchor w
+	entry $win.e -width 10 -just left -textvariable $var
+	pack $win.l $win.e -padx 5 -side left
+	pack $win -side top -padx 5
+    }
+
+    method labelentry2 { win text1 text2 text3 var } {
+	frame $win 
+	pack $win -side top -padx 5
+	global $var
+	checkbutton $win.b -var $var
+	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ":" -width 2 -anchor w -just left 
+	entry $win.l2 -width 10 -just left \
+		-fore darkred -text $text2
+	entry $win.l3 -width 10 -just left \
+		-fore darkred -text $text3
+	label $win.l4 -width 40
+	pack $win.b $win.l1 $win.colon -side left
+	pack $win.l2 $win.l3 $win.l4 -padx 5 -side left
+    }
+
+    method labelentry3 { win text1 text2 text3 text4 func var } {
+	frame $win 
+	pack $win -side top -padx 5
+	global $var
+	checkbutton $win.b -var $var
+	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ":" -width 2 -anchor w -just left 
+	entry $win.l2 -width 10 -just left \
+		-fore darkred -text $text2
+	entry $win.l3 -width 10 -just left \
+		-fore darkred -text $text3
+	entry $win.l4 -width 10 -just left \
+		-fore darkred -text $text4
+	label $win.l5 -width 40
+	pack $win.b $win.l1 $win.colon -side left
+	pack $win.l2 $win.l3 $win.l4 $win.l5 -padx 5 -side left
+
+	bind $win.l2 <Return> $func
+	bind $win.l3 <Return> $func
+	bind $win.l4 <Return> $func
+    }
 }   
 
 proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {

@@ -49,13 +49,7 @@ itcl_class SCIRun_FieldsCreate_ClipLattice {
 	set $this-text-max-y 1
 	set $this-text-max-z 1
     }
-    method labelentry { win text var } {
-	frame $win 
-	label $win.l -text $text -anchor w
-	entry $win.e -width 10 -just left -textvariable $var
-	pack $win.l $win.e -padx 5 -side left
-	pack $win -side top -padx 5
-    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

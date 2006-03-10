@@ -98,19 +98,6 @@ itcl_class SCIRun_FieldsData_ChangeFieldBasis {
 	moveToCursor $w
     }
 
-
-    method labelpair { win text1 text2 } {
-	frame $win 
-	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
-		-fore darkred
-	pack $win.l1 $win.colon $win.l2 -side left
-    } 
-
-
     method labelcombo { win text1 arglist var var2} {
 	frame $win 
 	pack $win -side top -padx 5
