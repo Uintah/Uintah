@@ -63,6 +63,7 @@ private:
 
 public:
   ApplyMappingMatrix(GuiContext* ctx);
+  virtual ~ApplyMappingMatrix();
 
   virtual void execute();
 };
@@ -75,6 +76,11 @@ ApplyMappingMatrix::ApplyMappingMatrix(GuiContext* ctx)
   sfGeneration_(-1),
   dfGeneration_(-1),
   mGeneration_(-1)
+{
+}
+
+
+ApplyMappingMatrix::~ApplyMappingMatrix()
 {
 }
 
