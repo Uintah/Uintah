@@ -37,19 +37,8 @@ itcl_class SCIRun_FieldsGeometry_PlanarTransformField {
     
     constructor {config} {
 	set name PlanarTransformField
-	set_defaults
     }
     
-    method set_defaults {} {
-	global $this-axis
-	global $this-trans_x
-	global $this-trans_y
-
-	set $this-axis 2
-	set $this-trans_x 0
-	set $this-trans_y 0
-    }
-
     method ui {} {
 	global $this-axis
 

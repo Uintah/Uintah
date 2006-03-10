@@ -75,8 +75,8 @@ DECLARE_MAKER(FieldFrenet)
 FieldFrenet::FieldFrenet(GuiContext *context)
   : Module("FieldFrenet", context, Filter, "FieldsOther", "SCIRun"),
     
-    Direction_(context->subVar("direction")),
-    Axis_(context->subVar("axis")),
+    Direction_(context->subVar("direction"), 0),
+    Axis_(context->subVar("axis"), 2),
     Dims_(context->subVar("dims")),
 
     direction_(0),

@@ -29,11 +29,10 @@
 
 itcl_class SCIRun_FieldsData_PointLatticeMap {
     inherit Module
+
     constructor {config} {
         set name PointLatticeMap
-	initGlobal $this-epsilon 0.0
     }
-
 
     method ui {} {
         set w .ui[modname]

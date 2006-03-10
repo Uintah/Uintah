@@ -29,13 +29,9 @@
 
 itcl_class SCIRun_FieldsData_ManageFieldData {
     inherit Module
+
     constructor {config} {
         set name ManageFieldData
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-preserve-scalar-type
-	set $this-preserve-scalar-type 0
     }
 
     method ui {} {

@@ -74,7 +74,7 @@ DECLARE_MAKER(TransformMesh)
 
 TransformMesh::TransformMesh(GuiContext* ctx)
   : Module("TransformMesh", ctx, Filter,"FieldsGeometry", "SCIRun"),
-    gFunction_(ctx->subVar("function")),
+    gFunction_(ctx->subVar("function"), "result = p + Vector(1.0, 2.0, 3.0);"),
     fGeneration_(-1)
 {
 }

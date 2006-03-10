@@ -29,24 +29,13 @@
 
 itcl_class SCIRun_FieldsCreate_CreateMesh {
     inherit Module
+
     constructor {config} {
         set name CreateMesh
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
+	# The width of the first column of the data display.
 	global $this-firstwidth
 	set $this-firstwidth 12
-
-	global $this-fieldname
-	global $this-meshname
-	global $this-fieldbasetype
-	global $this-datatype
-	set $this-meshname "Created Mesh"
-	set $this-fieldname "Created Field"
-	set $this-fieldbasetype "TetVolField"
-	set $this-datatype "double"
     }
 
     method ui {} {

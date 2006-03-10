@@ -29,25 +29,9 @@
 
 itcl_class SCIRun_FieldsCreate_ClipLattice {
     inherit Module
+
     constructor {config} {
         set name ClipLattice
-        set_defaults
-    }
-    method set_defaults {} {
-	global $this-use-text-bbox
-	global $this-text-min-x
-	global $this-text-min-y
-	global $this-text-min-z
-	global $this-text-max-x
-	global $this-text-max-y
-	global $this-text-max-z
-	set $this-use-text-bbox 0
-	set $this-text-min-x 0
-	set $this-text-min-y 0
-	set $this-text-min-z 0
-	set $this-text-max-x 1
-	set $this-text-max-y 1
-	set $this-text-max-z 1
     }
 
     method ui {} {

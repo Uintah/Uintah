@@ -29,10 +29,9 @@
 
 itcl_class SCIRun_FieldsCreate_CubitInterface {
     inherit Module
+
     constructor {config} {
         set name CubitInterface
-	initGlobal $this-cubitdir .
-	initGlobal $this-ncdump ncdump
     }
 
     method choose_ncdump {} {

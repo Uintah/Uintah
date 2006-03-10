@@ -29,46 +29,9 @@
 
 itcl_class SCIRun_FieldsCreate_SamplePlane {
     inherit Module
+
     constructor {config} {
         set name SamplePlane
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-sizex
-	global $this-sizey
-	global $this-sizez
-        global $this-z_value
-        global $this-auto_size
-	global $this-axis
-	global $this-padpercent
-	global $this-data-at
-	global $this-update_type
-	global $this-pos
-        global $this-corigin-x
-        global $this-corigin-y
-        global $this-corigin-z
-        global $this-cnormal-x
-        global $this-cnormal-y
-        global $this-cnormal-z
-
-	set $this-sizex 20
-	set $this-sizey 20
-	set $this-sizez 2
-        set $this-z_value 0
-        set $this-auto_size 0
-	set $this-axis 0
-	set $this-padpercent 0
-	set $this-data-at Nodes
-	set $this-update_type "On Release"
-	set $this-pos 0
-
-        set $this-corigin-x 0
-        set $this-corigin-y 0
-        set $this-corigin-z 0
-        set $this-cnormal-x 1.0
-        set $this-cnormal-y 1.0
-        set $this-cnormal-z 1.0
     }
 
     method update-type { w } {

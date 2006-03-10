@@ -66,7 +66,7 @@ DECLARE_MAKER(ManageFieldData)
 
 ManageFieldData::ManageFieldData(GuiContext* ctx)
   : Module("ManageFieldData", ctx, Filter, "FieldsData", "SCIRun"),
-    gui_preserve_scalar_type_(ctx->subVar("preserve-scalar-type"))
+    gui_preserve_scalar_type_(ctx->subVar("preserve-scalar-type"), 0)
 {
 }
 

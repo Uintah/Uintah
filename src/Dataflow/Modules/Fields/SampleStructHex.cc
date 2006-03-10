@@ -82,11 +82,11 @@ DECLARE_MAKER(SampleStructHex)
 
 SampleStructHex::SampleStructHex(GuiContext* ctx)
   : Module("SampleStructHex", ctx, Filter, "FieldsCreate", "SCIRun"),
-    size_x_(ctx->subVar("sizex")),
-    size_y_(ctx->subVar("sizey")),
-    size_z_(ctx->subVar("sizez")),
-    padpercent_(ctx->subVar("padpercent")),
-    data_at_(ctx->subVar("data-at"))
+    size_x_(ctx->subVar("sizex"), 16),
+    size_y_(ctx->subVar("sizey"), 16),
+    size_z_(ctx->subVar("sizez"), 16),
+    padpercent_(ctx->subVar("padpercent"), 0.0),
+    data_at_(ctx->subVar("data-at"), "Nodes")
 {
 }
 

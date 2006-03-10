@@ -29,25 +29,13 @@
 
 itcl_class SCIRun_FieldsData_ChangeFieldDataType {
     inherit Module
+
     constructor {config} {
         set name ChangeFieldDataType
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
+	# The width of the first column of the data display.
 	global $this-firstwidth
 	set $this-firstwidth 12
-
-	# these won't be saved 
-	global $this-fldname
-	global $this-inputdatatype
-	set $this-fldname "---"
-	set $this-inputdatatype "---"
-
-	# these will be saved
-	global $this-outputdatatype
-	set $this-outputdatatype "double"
     }
 
     method ui {} {

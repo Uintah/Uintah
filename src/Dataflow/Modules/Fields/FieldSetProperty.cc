@@ -81,11 +81,11 @@ protected:
 DECLARE_MAKER(FieldSetProperty)
 FieldSetProperty::FieldSetProperty(GuiContext* context)
 : Module("FieldSetProperty", context, Filter, "FieldsOther", "SCIRun"),
-  nEntries_(context->subVar("num-entries")),
-  sProperty_(context->subVar("property")),
-  sType_(context->subVar("type")),
-  sValue_(context->subVar("value")),
-  iReadOnly_(context->subVar("readonly")),
+  nEntries_(context->subVar("num-entries"), 0),
+  sProperty_(context->subVar("property"), ""),
+  sType_(context->subVar("type"), "unknown"),
+  sValue_(context->subVar("value"), ""),
+  iReadOnly_(context->subVar("readonly"), 0),
   entries_(0),
   error_(-1)
 {

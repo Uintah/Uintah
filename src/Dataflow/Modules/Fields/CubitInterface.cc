@@ -100,8 +100,8 @@ CubitInterface::CubitInterface(GuiContext* ctx)
   : Module("CubitInterface", ctx, Filter, "FieldsCreate", "SCIRun"),
     field1_generation_(-1),
     pcf_generation_(-1),
-    cubitdir_(ctx->subVar("cubitdir")),
-    ncdump_(ctx->subVar("ncdump"))
+    cubitdir_(ctx->subVar("cubitdir"), "."),
+    ncdump_(ctx->subVar("ncdump"), "ncdump")
 {
 }
 

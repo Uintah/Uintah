@@ -76,7 +76,8 @@ MeshQuality::~MeshQuality()
 {
 }
 
-void MeshQuality::execute()
+void
+MeshQuality::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");

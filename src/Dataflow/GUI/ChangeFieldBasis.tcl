@@ -29,29 +29,18 @@
 
 itcl_class SCIRun_FieldsData_ChangeFieldBasis {
     inherit Module
+
     constructor {config} {
         set name ChangeFieldBasis
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
+	# The width of the first column of the data display.
 	global $this-firstwidth
 	set $this-firstwidth 12
-
-	# these won't be saved 
-	global $this-fldname
-	global $this-inputdataat
-	set $this-fldname "---"
-	set $this-inputdataat "---"
 
 	# Deprecated, use output-basis now
 	global $this-outputdataat
 	set $this-outputdataat "Nodes"
 	trace variable $this-outputdataat w "$this backcompat-odt"
-
-	global $this-output-basis
-        set $this-output-basis "Linear"
     }
 
     method backcompat-odt {a b c} {

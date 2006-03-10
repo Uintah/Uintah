@@ -29,14 +29,11 @@
 
 itcl_class SCIRun_FieldsGeometry_MapDataToMeshCoord {
     inherit Module
+
     constructor {config} {
         set name MapDataToMeshCoord
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-coord
-	set $this-coord 2
-    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
