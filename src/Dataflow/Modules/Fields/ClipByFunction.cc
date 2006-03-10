@@ -91,14 +91,14 @@ DECLARE_MAKER(ClipByFunction)
 
 ClipByFunction::ClipByFunction(GuiContext* ctx)
   : Module("ClipByFunction", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gMode_(ctx->subVar("clipmode")),
-    gFunction_(ctx->subVar("clipfunction")),
-    gui_uservar0_(ctx->subVar("u0")),
-    gui_uservar1_(ctx->subVar("u1")),
-    gui_uservar2_(ctx->subVar("u2")),
-    gui_uservar3_(ctx->subVar("u3")),
-    gui_uservar4_(ctx->subVar("u4")),
-    gui_uservar5_(ctx->subVar("u5")),
+    gMode_(ctx->subVar("clipmode"), "cell"),
+    gFunction_(ctx->subVar("clipfunction"), "x < 0"),
+    gui_uservar0_(ctx->subVar("u0"), 0.0),
+    gui_uservar1_(ctx->subVar("u1"), 0.0),
+    gui_uservar2_(ctx->subVar("u2"), 0.0),
+    gui_uservar3_(ctx->subVar("u3"), 0.0),
+    gui_uservar4_(ctx->subVar("u4"), 0.0),
+    gui_uservar5_(ctx->subVar("u5"), 0.0),
     fGeneration_(-1),
     error_(0)
 {

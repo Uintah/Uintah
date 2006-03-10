@@ -56,6 +56,7 @@ protected:
 
 public:
   ColorMap2Reader(GuiContext* ctx);
+  virtual ~ColorMap2Reader();
 
   virtual void execute();
 };
@@ -73,6 +74,11 @@ ColorMap2Reader::ColorMap2Reader(GuiContext* ctx)
   importtypes += "}";
 
   gui_types_.set(importtypes);
+}
+
+
+ColorMap2Reader::~ColorMap2Reader()
+{
 }
 
 

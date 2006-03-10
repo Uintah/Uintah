@@ -29,18 +29,9 @@
 
 itcl_class SCIRun_Visualization_ChooseColorMap {
     inherit Module
+
     constructor {config} {
         set name ChooseColorMap
-
-	global $this-port-index
-	global $this-usefirstvalid
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-port-index 0
-	set $this-usefirstvalid 0
     }
 
     method ui {} {

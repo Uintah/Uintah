@@ -30,29 +30,29 @@ private:
   GuiInt    nrows_;
   GuiInt    ncols_;
   GuiString data_;
-  GuiString dataupdate_;
 };
 
 
 DECLARE_MAKER(CreateMatrix)
 CreateMatrix::CreateMatrix(GuiContext* ctx)
   : Module("CreateMatrix", ctx, Source, "Math", "SCIRun"),
-    nrows_(ctx->subVar("rows")),
-    ncols_(ctx->subVar("cols")),
-    data_(ctx->subVar("data")),
-    dataupdate_(ctx->subVar("update-data"))
+    nrows_(ctx->subVar("rows"), 1),
+    ncols_(ctx->subVar("cols"), 1),
+    data_(ctx->subVar("data"), "{0.0}")
 {
 }
 
-CreateMatrix::~CreateMatrix(){
+
+CreateMatrix::~CreateMatrix()
+{
 }
 
-void CreateMatrix::execute()
+
+void
+CreateMatrix::execute()
 {
   MatrixHandle handle;
-  gui->lock();
-  gui->execute(dataupdate_.get());
-  gui->unlock();
+  gui->execute(id + " update_matrixdata");
   
   int nrows = nrows_.get();
   int ncols = ncols_.get();

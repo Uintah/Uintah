@@ -61,8 +61,8 @@ protected:
 DECLARE_MAKER(BundleWriter)
 BundleWriter::BundleWriter(GuiContext* ctx)
   : GenericWriter<BundleHandle>("BundleWriter", ctx, "DataIO", "SCIRun"),
-    guiTypes_(ctx->subVar("types")),
-    guiFileType_(ctx->subVar("filetype")) 
+    guiTypes_(ctx->subVar("types"), false),
+    guiFileType_(ctx->subVar("filetype"), "Binary")
 {
   string exporttypes = "{";
   exporttypes += "{{SCIRun Bundle File} {.bdl} } ";
@@ -72,7 +72,8 @@ BundleWriter::BundleWriter(GuiContext* ctx)
   guiTypes_.set(exporttypes);
 }
 
-BundleWriter::~BundleWriter(){
+BundleWriter::~BundleWriter()
+{
 }
 
 void

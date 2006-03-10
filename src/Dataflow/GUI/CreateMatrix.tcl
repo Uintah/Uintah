@@ -1,37 +1,20 @@
 itcl_class SCIRun_Math_CreateMatrix {
     inherit Module
+
     constructor {config} {
         set name CreateMatrix
-        set_defaults
-    }
-
-    method set_defaults {} {
-        global $this-rows
-        global $this-cols
-        global $this-crows
-        global $this-ccols
-        global $this-data
-        global $this-update-data
-        global $this-loaddata
         
-        set $this-rows 1
-        set $this-cols 1
-        set $this-crows 0
-        set $this-ccols 0
-        set $this-data { {0.0} } 
-        set $this-update-data "$this update_matrixdata"
-        set $this-loaddata 1
+        initGlobal $this-crows 0
+        initGlobal $this-ccols 0
+        initGlobal $this-loaddata 1
     }
 
     method ui {} {
         global $this-rows
         global $this-cols
         global $this-data
-        global $this-update-data 
         global $this-loaddata
 
-        set $this-update-data "$this update_matrixdata"
-            
         set w .ui[modname]
         if {[winfo exists $w]} {
             return
@@ -81,9 +64,6 @@ itcl_class SCIRun_Math_CreateMatrix {
         global $this-data   
         global $this-rows
         global $this-cols    
-        global $this-update-data 
-
-        set $this-update-data "$this update_matrixdata"
           
         set nrows [set $this-rows]
         set ncols [set $this-cols]
@@ -119,11 +99,8 @@ itcl_class SCIRun_Math_CreateMatrix {
         global $this-cols    
         global $this-crows
         global $this-ccols 
-        global $this-update-data 
         global $this-loaddata
 
-        set $this-update-data "$this update_matrixdata"           
-       
         if {[set $this-rows] == [set $this-crows] && [set $this-cols] == [set $this-ccols] && [set $this-loaddata] == 0} {
           return
         }

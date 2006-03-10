@@ -39,7 +39,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Modules/Visualization/RescaleColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -53,14 +52,51 @@
 
 namespace SCIRun {
 
+
+class RescaleColorMap : public Module {
+public:
+
+  //! Constructor taking [in] id as an identifier
+  RescaleColorMap(GuiContext* ctx);
+
+  virtual ~RescaleColorMap();
+  virtual void execute();
+
+protected:
+  bool success_;
+
+private:
+  GuiString gFrame_;
+  GuiInt gIsFixed_;
+  GuiDouble gMin_;
+  GuiDouble gMax_;
+  GuiInt gMakeSymmetric_;
+
+  int isFixed_;
+  double min_;
+  double max_;
+  int makeSymmetric_;
+
+  ColorMapHandle cHandle_;
+
+  int cGeneration_;
+
+  std::vector<int> fGeneration_;
+
+  bool error_;
+
+  pair<double,double> minmax_;
+};
+
+
 DECLARE_MAKER(RescaleColorMap)
 RescaleColorMap::RescaleColorMap(GuiContext* ctx)
   : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    gFrame_(ctx->subVar("main_frame")),
-    gIsFixed_(ctx->subVar("isFixed")),
-    gMin_(ctx->subVar("min")),
-    gMax_(ctx->subVar("max")),
-    gMakeSymmetric_(ctx->subVar("makeSymmetric")),
+    gFrame_(ctx->subVar("main_frame"), ""),
+    gIsFixed_(ctx->subVar("isFixed"), 0),
+    gMin_(ctx->subVar("min"), 0),
+    gMax_(ctx->subVar("max"), 1),
+    gMakeSymmetric_(ctx->subVar("makeSymmetric"), 0),
     cGeneration_(-1),
     error_(false)
 {

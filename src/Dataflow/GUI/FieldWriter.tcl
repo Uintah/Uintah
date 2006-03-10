@@ -41,26 +41,13 @@ catch {rename SCIRun_DataIO_FieldWriter ""}
 
 itcl_class SCIRun_DataIO_FieldWriter {
     inherit Module
+
     constructor {config} {
 	set name FieldWriter
-	set_defaults
-    }
-    method set_defaults {} {
-	global $this-filetype 
-	global $this-increment
-	global $this-current
-	global $this-confirm
-	set $this-filetype Binary
-	set $this-increment 0
-	set $this-current 0
-	set $this-confirm 1
-	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
-	    set $this-confirm 0
-	}
 
-	global $this-types
-	global $this-exporttype
+        initGlobal $this-confirm [envBool SCIRUN_CONFIRM_OVERWRITE]
     }
+
     method overwrite {} {
 	global $this-confirm $this-filetype
 	if {[info exists $this-confirm] && [info exists $this-filename] && \

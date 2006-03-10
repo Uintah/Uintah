@@ -36,20 +36,13 @@ catch {rename SCIRun_DataIO_PathWriter ""}
 
 itcl_class SCIRun_DataIO_PathWriter {
     inherit Module
+
     constructor {config} {
 	set name PathWriter
-	set_defaults
-    }
-    method set_defaults {} {
-	global $this-filetype $this-confirm 
-    	set $this-filetype Binary
-	set $this-confirm 1
-	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
-	    set $this-confirm 0
-	}
 
-	# set $this-split 0
+        initGlobal $this-confirm [envBool SCIRUN_CONFIRM_OVERWRITE]
     }
+
     method overwrite {} {
 	global $this-confirm $this-filetype
 	if {[info exists $this-confirm] && [info exists $this-filename] && \

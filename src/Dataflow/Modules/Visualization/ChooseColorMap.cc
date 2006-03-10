@@ -61,8 +61,8 @@ public:
 DECLARE_MAKER(ChooseColorMap)
 ChooseColorMap::ChooseColorMap(GuiContext* ctx)
   : Module("ChooseColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    port_index_(ctx->subVar("port-index")),
-    usefirstvalid_(ctx->subVar("usefirstvalid"))
+    port_index_(ctx->subVar("port-index"), 0),
+    usefirstvalid_(ctx->subVar("usefirstvalid"), 0)
 {
 }
 

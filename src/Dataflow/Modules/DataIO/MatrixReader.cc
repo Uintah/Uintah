@@ -56,6 +56,7 @@ protected:
 
 public:
   MatrixReader(GuiContext* ctx);
+  virtual ~MatrixReader();
 
   virtual void execute();
 };
@@ -90,6 +91,11 @@ MatrixReader::MatrixReader(GuiContext* ctx)
   importtypes += "}";
 
   gui_types_.set(importtypes);
+}
+
+
+MatrixReader::~MatrixReader()
+{
 }
 
 

@@ -73,8 +73,11 @@ DECLARE_MAKER(BundleReader)
   guiTypes_.set(importtypes);
 }
 
-BundleReader::~BundleReader(){
+
+BundleReader::~BundleReader()
+{
 }
+
 
 void
 BundleReader::execute()
