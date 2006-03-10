@@ -128,7 +128,8 @@ FaceCuttingPlane::FaceCuttingPlane(GuiContext* ctx) :
   where(ctx->subVar("where")),
   face_name(ctx->subVar("face_name")), 
   line_size(ctx->subVar("line_size")),
-  trans_(0)
+  trans_(0),
+  grid_id(0)
 {
     need_find.set(1);
     
