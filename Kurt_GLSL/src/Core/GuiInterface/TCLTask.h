@@ -43,46 +43,27 @@
 #ifndef SCI_project_TCLTask_h
 #define SCI_project_TCLTask_h 1
 
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
 #include <tcl.h>
-
-#include <Core/GuiInterface/share.h>
-namespace SCIRun {
-
 #if (TCL_MINOR_VERSION >= 4)
 #define TCLCONST const
 #else
 #define TCLCONST
 #endif
 
-#ifdef _WIN32
-#define EXPERIMENTAL_TCL_THREAD
-#endif
+#include <Core/Thread/ThreadLock.h>
+#include <Core/GuiInterface/share.h>
 
-class SCISHARE TCLTask : public Runnable {
-    int argc;
-    char** argv;
-    Semaphore cont;
-    Semaphore start;
-protected:
-    virtual void run();
-    friend void wait_func(void*);
-    void mainloop_wait();
+namespace SCIRun {
+
+class SCISHARE TCLTask {
+private:
+    static ThreadLock           tcl_lock_;
 public:
-    TCLTask(int argc, char* argv[]);
-    virtual ~TCLTask();
-    static Thread* get_owner();
-    static void lock();
-    static int try_lock();
-    static void unlock();
-    void mainloop_waitstart();
-    void release_mainloop();
-#ifdef EXPERIMENTAL_TCL_THREAD
-    static void setTCLEventCallback();
-#endif
-};
-
+    static void lock()          { tcl_lock_.lock(); }
+    static void unlock()        { tcl_lock_.unlock(); }
+    static int  try_lock()      { return tcl_lock_.try_lock(); }
+  };
+  
 } // End namespace SCIRun
 
 

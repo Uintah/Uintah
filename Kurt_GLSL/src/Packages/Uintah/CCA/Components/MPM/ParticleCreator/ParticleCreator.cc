@@ -34,6 +34,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_ref_temp = flags->d_ref_temp; // for thermal stress 
+  d_fracture = flags->d_fracture;
 
   registerPermanentParticleState(matl);
 }

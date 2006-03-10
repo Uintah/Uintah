@@ -97,7 +97,7 @@ namespace Uintah {
                       const string& whichVel,
                       SimulationStateP& sharedState,
                       mms_variable_basket* mms_var_basket,
-                      mms_vars* /*mms_v*/)
+                      mms_vars* mms_v)
 {
   //cout<< "Doing set_MMS_BCs_FC: \t\t" << whichVel
   //          << " face " << face << endl;
@@ -134,7 +134,7 @@ namespace Uintah {
     double nu = mms_var_basket->viscosity;
     double A =  mms_var_basket->A;
     double t  = sharedState->getElapsedTime();
-//    t += mms_v->delT;
+    t += mms_v->delT;
     
     for (iter=bound.begin(); iter != bound.end(); iter++) {
       IntVector c = *iter - one_or_zero;

@@ -24,6 +24,8 @@
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/Test.h>
 #include <Packages/Uintah/CCA/Components/Examples/Test1.h>
+#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
 #include <iosfwd>
 
 using std::cerr;
@@ -31,21 +33,23 @@ using std::endl;
 
 using namespace Uintah;
 
-UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const ProcessorGroup* world, bool doAMR)
+UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const ProcessorGroup* world, 
+                                                  bool doAMR, string sim_comp, string uda)
 {
-  string sim_comp = "";
 
-  ProblemSpecP sim_ps = ps->findBlock("SimulationComponent");
-  if (sim_ps)
-    sim_ps->get("type",sim_comp);
+  if (sim_comp == "") {
+    ProblemSpecP sim_ps = ps->findBlock("SimulationComponent");
+    if (sim_ps)
+      sim_ps->get("type",sim_comp);
+  }
 
   if (sim_comp == "mpm" || sim_comp == "MPM") {
     return scinew SerialMPM(world);
-  } else if (sim_comp == "fracturempm" || sim_comp == "FRACTUREMPM") {
+  } else if (sim_comp == "mpmf" || sim_comp == "fracturempm" || sim_comp == "FRACTUREMPM") {
     return scinew FractureMPM(world);
-  } else if (sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
+  } else if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
     return scinew RigidMPM(world);
-  } else if (sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
+  } else if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
     return scinew ShellMPM(world);
   } else if (sim_comp == "impm" || sim_comp == "IMPM") {
     return scinew ImpMPM(world);
@@ -56,12 +60,14 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
       return scinew ICE(world);
   } else if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
     return scinew MPMICE(world,STAND_MPMICE, doAMR);
-  } else if (sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
+  } else if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
     return scinew MPMICE(world,SHELL_MPMICE, doAMR);
-  } else if (sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
+  } else if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
     return scinew MPMICE(world,RIGID_MPMICE, doAMR);
-  } else if (sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
+  } else if (sim_comp == "fmpmice" || sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
     return scinew MPMICE(world,FRACTURE_MPMICE, doAMR);
+  } else if (sim_comp == "arches" || sim_comp == "ARCHES") {
+    return scinew Arches(world);
   } else if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world);
   } else if (sim_comp == "burger" || sim_comp == "BURGER") {
@@ -94,6 +100,10 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
     return scinew Test1(world);
   } else if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR);
+  } else if (sim_comp == "combine_patches") {
+    return scinew PatchCombiner(world, uda);
+  } else if (sim_comp == "reduce_uda") {
+    return scinew UdaReducer(world, uda);
   } else {
     throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
 		  "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3",

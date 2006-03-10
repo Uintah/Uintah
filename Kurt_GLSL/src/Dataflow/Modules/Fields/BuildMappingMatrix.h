@@ -48,7 +48,8 @@ namespace SCIRun {
 class BuildMappingMatrixAlgo : public DynamicAlgoBase
 {
 public:
-  virtual MatrixHandle execute(MeshHandle src, MeshHandle dst,
+  virtual MatrixHandle execute(ProgressReporter *reporter,
+                               MeshHandle src, MeshHandle dst,
 			       int interp_basis,
 			       bool source_to_single_dest,
 			       bool exhaustive_search,
@@ -75,7 +76,8 @@ class BuildMappingMatrixAlgoT : public BuildMappingMatrixAlgo
 {
 public:
   //! virtual interface. 
-  virtual MatrixHandle execute(MeshHandle src, MeshHandle dst,
+  virtual MatrixHandle execute(ProgressReporter *reporter,
+                               MeshHandle src, MeshHandle dst,
 			       int interp_basis,
 			       bool source_to_single_dest,
 			       bool exhaustive_search,
@@ -100,6 +102,8 @@ private:
     vector<unsigned int> *dstmap;
     Mutex maplock;
   
+    ProgressReporter *reporter;
+
     BIData__() :
       maplock("BuildInterp Map Lock")
     {}
@@ -169,7 +173,8 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_dst_loc(typename L
 template <class MSRC, class LSRC, class MDST, class LDST>
 MatrixHandle
 BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, 
-		       LDST>::execute(MeshHandle src_meshH, 
+		       LDST>::execute(ProgressReporter *reporter,
+                                      MeshHandle src_meshH, 
 				      MeshHandle dst_meshH, 
 				      int interp_basis,
 				      bool source_to_single_dest, 
@@ -207,6 +212,16 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST,
 
   d.sprocsize = (src_size%np)?(src_size/np+1):(src_size / np);
   d.dprocsize = (dst_size%np)?(dst_size/np+1):(dst_size / np);
+
+  d.reporter = reporter;
+  if ((interp_basis == 0) && source_to_single_dest)
+  {
+    reporter->update_progress(0, src_size);
+  }
+  else
+  {
+    reporter->update_progress(0, dst_size);
+  }
 
   if ((interp_basis == 0) && source_to_single_dest)
   {
@@ -291,7 +306,7 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST,
 template <class MSRC, class LSRC, class MDST, class LDST>
 void
 BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
-								 BIData *d)
+                                                                  BIData *d)
 {
   const int interp_basis = d->interp_basis;
   const bool source_to_single_dest = d->source_to_single_dest;
@@ -343,6 +358,8 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
       {
 	break;
       }
+      d->reporter->increment_progress();
+
       typename LDST::array_type locs;
       double weights[MESH_WEIGHT_MAXSIZE];
       Point p;
@@ -404,6 +421,8 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
       {
 	break;
       }
+      d->reporter->increment_progress();
+
       typename LSRC::array_type locs;
       double weights[MESH_WEIGHT_MAXSIZE];
       Point p;

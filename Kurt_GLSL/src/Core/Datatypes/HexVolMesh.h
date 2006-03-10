@@ -459,6 +459,10 @@ public:
   typename Node::index_type add_point(const Point &p);
 
   virtual bool          synchronize(unsigned int);
+  //! only call this if you have modified the geometry, this will delete
+  //! extra computed synch data and reset the flags to an unsynchronized state.
+  void                  unsynchronize();
+
 
   virtual bool has_normals() const { return basis_.polynomial_order() > 1; }
 
@@ -545,10 +549,8 @@ private:
   vector<Point>        points_;
   //! each 8 indecies make up a Hex
   vector<under_type>   cells_;
-  //! each 8 indecies make up a Hex
-  vector<under_type>   neighbors_;
 
-  //! Fill lock, used to fill points_, cells_, neighbors_
+  //! Fill lock, used to fill points_, cells_
   Mutex                fill_lock_;
 
   //! Face information.
@@ -829,40 +831,6 @@ HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor)
   fill_lock_.unlock();
 }
 
-
-template <class Basis>
-template <class Iter, class Functor>
-void
-HexVolMesh<Basis>::fill_neighbors(Iter begin, Iter end, Functor fill_ftor)
-{
-  fill_lock_.lock();
-  Iter iter = begin;
-  neighbors_.resize((end - begin) * 8); // resize to the new size
-  vector<under_type>::iterator citer = neighbors_.begin();
-  while (iter != end)
-  {
-    int *face_nbors = fill_ftor(*iter); // returns an array of length 4
-    *citer = face_nbors[0];
-    ++citer;
-    *citer = face_nbors[1];
-    ++citer;
-    *citer = face_nbors[2];
-    ++citer;
-    *citer = face_nbors[3];
-    ++citer; ++iter;
-    *citer = face_nbors[4];
-    ++citer; ++iter;
-    *citer = face_nbors[5];
-    ++citer; ++iter;
-    *citer = face_nbors[6];
-    ++citer; ++iter;
-    *citer = face_nbors[7];
-    ++citer; ++iter;
-  }
-  fill_lock_.unlock();
-}
-
-
 template <class Basis>
 PersistentTypeID
 HexVolMesh<Basis>::type_id(HexVolMesh<Basis>::type_name(-1), "Mesh",  maker);
@@ -894,8 +862,7 @@ template <class Basis>
 HexVolMesh<Basis>::HexVolMesh() :
   points_(0),
   cells_(0),
-  neighbors_(0),
-  fill_lock_("HexVolMesh fill lock for points_, cells_, neighbors_"),
+  fill_lock_("HexVolMesh fill lock for points_, cells_"),
   faces_(0),
   face_table_(),
   face_table_lock_("HexVolMesh faces_ fill lock"),
@@ -915,8 +882,7 @@ template <class Basis>
 HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
   points_(0),
   cells_(0),
-  neighbors_(0),
-  fill_lock_("HexVolMesh fill lock for points_, cells_, neighbors_"),
+  fill_lock_("HexVolMesh fill lock for points_, cells_"),
   faces_(0),
   face_table_(),
   face_table_lock_("HexVolMesh faces_ fill lock"),
@@ -934,7 +900,6 @@ HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
   lcopy.fill_lock_.lock();
   points_ = copy.points_;
   cells_ = copy.cells_;
-  neighbors_ = copy.neighbors_;
   lcopy.fill_lock_.unlock();
 
   lcopy.face_table_lock_.lock();
@@ -1181,6 +1146,35 @@ HexVolMesh<Basis>::synchronize(unsigned int tosync)
     compute_node_neighbors();
   }
   return true;
+}
+
+template <class Basis>
+void
+HexVolMesh<Basis>::unsynchronize()
+{
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_nbor_lock_.lock();
+    node_neighbors_.clear();
+    node_nbor_lock_.unlock();
+  }
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+  {
+    edge_table_lock_.lock();
+    edge_table_.clear();
+    edge_table_lock_.unlock();
+  }
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+  {
+    face_table_lock_.lock();
+    face_table_.clear();
+    face_table_lock_.unlock();
+  }
+  if (synchronized_ & LOCATE_E) {
+    grid_lock_.lock();
+    grid_ = 0;
+    grid_lock_.unlock();
+  }
+  synchronized_ = NODES_E | CELLS_E;
 }
 
 

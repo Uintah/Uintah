@@ -64,9 +64,6 @@ public:
    virtual ~FractureMPM();
    
   Crack*          crackModel; // for Fracture
-  Contact*        contactModel;
-  ThermalContact* thermalContactModel;
-  HeatConduction* heatConductionModel;
 	 
   //////////
   // Insert Documentation Here:
@@ -77,15 +74,9 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 
-  virtual void addMaterial(const ProblemSpecP& params,
-                           GridP& grid,
-                           SimulationStateP&);
-
   virtual void scheduleInitializeAddedMaterial(const LevelP& level,
                                                SchedulerP&);
 
-  void schedulePrintParticleCount(const LevelP& level,
-                                  SchedulerP& sched);
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -109,29 +100,6 @@ public:
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
-  void setSharedState(SimulationStateP& ssp);
-
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-        delete lb;
-        lb = Mlb;
-  };
-
-  void setWithICE()
-  {
-        d_with_ice = true;
-  };
-
-  enum bctype { NONE=0,
-                FIXED,
-                SYMMETRY,
-                NEIGHBOR };
-
-  enum IntegratorType {
-    Explicit,
-    Implicit,
-    Fracture
-  };
 
 protected:
   //////////
@@ -154,42 +122,6 @@ protected:
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
-
-  void printParticleCount(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
-
-  //////////
-  // Initialize particle data with a default values using
-  // a temporary variable
-  void setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
-                                  ParticleSubset* pset,
-                                  DataWarehouse* new_dw,
-                                  double val);
-
-  //////////
-  // Initialize particle data with a default values in the
-  // new datawarehouse
-  void setParticleDefault(ParticleVariable<double>& pvar,
-                          const VarLabel* label,
-                          ParticleSubset* pset,
-                          DataWarehouse* new_dw,
-                          double val);
-  void setParticleDefault(ParticleVariable<Vector>& pvar,
-                          const VarLabel* label,
-                          ParticleSubset* pset,
-                          DataWarehouse* new_dw,
-                          const Vector& val);
-  void setParticleDefault(ParticleVariable<Matrix3>& pvar,
-                          const VarLabel* label,
-                          ParticleSubset* pset,
-                          DataWarehouse* new_dw,
-                          const Matrix3& val);
-
-  void printParticleLabels(vector<const VarLabel*> label,DataWarehouse* dw,
-                           int dwi, const Patch* patch);
 
   void scheduleInitializePressureBCs(const LevelP& level,
                                      SchedulerP&);
@@ -444,58 +376,13 @@ protected:
   virtual void scheduleUpdateCrackFront(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls);
-  // -----------------------------------------------
    
-  void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
-                                       const PatchSet* patches,
-                                       const MaterialSet*);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void checkNeedAddMPMMaterial(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
-   void scheduleSetNeedAddMaterialFlag(SchedulerP&,
-                                       const LevelP& level,
-                                       const MaterialSet*);
 
 
-   void setNeedAddMaterialFlag(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse*,
-                               DataWarehouse*);
 
-  virtual bool needRecompile(double time, double dt,
-                             const GridP& grid);
-
-  SimulationStateP d_sharedState;
-  MPMLabel* lb;
-  MPMFlags* flags;
-  Output* dataArchiver;
-
-  double           d_nextOutputTime;
-  double           d_outputInterval;
-  double           d_SMALL_NUM_MPM;
-  bool             d_doGridReset;  // Default is true, standard MPM
-  double           d_min_part_mass; // Minimum particle mass before it's deleted
-  double           d_max_vel; // Maxmimum particle velocity before it's deleted
-  int              NGP;      // Number of ghost particles needed.
-  int              NGN;      // Number of ghost nodes     needed.
-
-  list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
-  vector<MPMPhysicalBC*> d_physicalBCs;
-  bool           d_fracture;
-  bool           d_with_ice;
-  bool           d_recompile;
-  IntegratorType d_integrator;
 
 private:
 
-  int n8or27;
   FractureMPM(const FractureMPM&);
   FractureMPM& operator=(const FractureMPM&);
 	 

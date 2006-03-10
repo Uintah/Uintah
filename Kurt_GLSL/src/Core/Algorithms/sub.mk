@@ -35,6 +35,7 @@ SUBDIRS := \
 	$(SRCDIR)/Fields		\
 	$(SRCDIR)/Geometry		\
 	$(SRCDIR)/Visualization		\
+	$(SRCDIR)/Util			\
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

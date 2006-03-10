@@ -615,6 +615,7 @@ NetworkIO::load_network()
   xmlCleanupParser();
 
   gui->eval("setGlobal NetworkChanged 0");
+  gui->eval("set netedit_savefile " + net_file_);
   gui->eval("::netedit scheduleok");
 
   return true;

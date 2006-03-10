@@ -139,8 +139,7 @@ ApplyMappingMatrix::execute()
     Handle<ApplyMappingMatrixAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fHandle_ = algo->execute(sfield, dfield->mesh(),
-			     imatrix);
+    fHandle_ = algo->execute(this, sfield, dfield->mesh(), imatrix);
 
 
     if (fHandle_.get_rep())

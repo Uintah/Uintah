@@ -49,12 +49,10 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Util/Timer.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/AtomicCounter.h>
 
 #include <Core/Util/share.h>
 namespace SCIRun {
-
-  //using namespace std;
 
 class SCISHARE ProgressReporter 
 {
@@ -79,8 +77,12 @@ public:
   // Execution time progress.
   // Percent is number between 0.0-1.0
   virtual void          update_progress(double percent);
+  virtual void          update_progress(int current, int max);
+  virtual void          increment_progress();
+
 protected:
-  double                progress_percent_;
+  AtomicCounter         progress_current_;
+  int                   progress_max_;
 };
 
 

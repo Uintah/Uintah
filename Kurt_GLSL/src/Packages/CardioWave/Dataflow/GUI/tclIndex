@@ -14,3 +14,5 @@ set auto_index(CardioWave_CreateModel_SetupFVMatrix) [list source [file join $di
 set auto_index(CardioWave_CreateModel_SetupFVM2) [list source [file join $dir SetupFVM2.tcl]]
 set auto_index(CardioWave_DataIO_TimeDataReader) [list source [file join $dir TimeDataReader.tcl]]
 set auto_index(CardioWave_Math_ReduceBandWidth) [list source [file join $dir ReduceBandWidth.tcl]]
+set auto_index(CardioWave_DiscreteMultiDomain_DMDAddMembrane) [list source [file join $dir DMDAddMembrane.tcl]]
+set auto_index(CardioWave_DiscreteMultiDomain_DMDCreateSimulator) [list source [file join $dir DMDCreateSimulator.tcl]]

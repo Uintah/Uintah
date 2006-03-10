@@ -29,7 +29,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_MAPPINGMATRIXTOFIELD_H
 #define MODELCREATION_CORE_FIELDS_MAPPINGMATRIXTOFIELD_H 1
 
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 namespace ModelCreation {
 

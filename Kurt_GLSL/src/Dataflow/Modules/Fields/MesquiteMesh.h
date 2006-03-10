@@ -6,6 +6,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/TetVolMesh.h>
+#include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <MeshInterface.hpp>
 #include <MsqError.hpp>
 
@@ -15,7 +16,7 @@ template <class FIELD>
 class MesquiteMesh : public Mesquite::Mesh
 {
 public:
-  MesquiteMesh( FIELD* fieldh );
+  MesquiteMesh( FIELD* fieldh, ProgressReporter* mod );
   
 public:
   virtual ~MesquiteMesh();
@@ -210,9 +211,33 @@ public:
     {return numNodes;}
   int get_num_elements()
     {return numElements;}
+ 
+  void update_progress()
+      {
+        double temp;
+        count_++;
+        if  ( count_%100 == 0 )
+        {
+          if( count_ > anticipated_iterations_ )
+          {
+            count_ = 3*anticipated_iterations_ / 4 ;
+            temp = 0.75;
+          }
+          else
+          {
+            temp = (double)count_/(double)anticipated_iterations_;
+          }
+          
+          update_window_->update_progress( temp );
+        }   
+      }
   
 private:
   FIELD* mOwner;
+  ProgressReporter* update_window_;
+  int anticipated_iterations_;
+  int count_;
+  
   vector<unsigned char> bytes_;
   vector<bool> fixed_;
   
@@ -260,10 +285,11 @@ private:
       //! returns 0.
     virtual bool is_at_end() const;
 
-  private:
+private:
+
     typedef typename FIELD::mesh_type::Node::iterator node_iter_t;   
     node_iter_t node_iter_;
-
+    
     MesquiteMesh* meshPtr;
   };
   
@@ -306,7 +332,7 @@ private:
 
   // MesquiteMesh constructor
 template <class FIELD> 
-MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field )
+MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
 {
     //make sure that we are given a field
   if( !field )
@@ -315,7 +341,8 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field )
   }
   
   mOwner = field;
-
+  update_window_ = mod;
+  
     //get the nodes and elements of this field
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
   mesh->size( numNodes );
@@ -326,6 +353,9 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field )
   mesh->end(eiterEnd);
 
     //setup some needed information storage vectors for MESQUITE
+  count_ = 0;
+  anticipated_iterations_ = 3*numNodes;
+  
   bytes_.resize(numNodes);
   fixed_.resize(numNodes);  
   size_t i;
@@ -335,80 +365,162 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field )
     fixed_[i] = false;
   }
 
+  const TypeDescription *mtd = mOwner->mesh()->get_type_description();
+// //NOTE TO JS: Need to make this general enough for hexes, tets, tris and quads....
+  CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
+  Handle<FieldBoundaryAlgo> boundary_algo;
+  FieldHandle boundary_field_h;
+  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) ) return;
+  
+  MatrixHandle interp1(0);  
+  boundary_algo->execute( mod, mOwner->mesh(), boundary_field_h, interp1, 1 );
+  
   triExists = false;
   quadExists=false;
   tetExists=false;
   hexExists=false;
-  const TypeDescription *mtd = mOwner->mesh()->get_type_description();
-  if (mtd->get_name().find("TetVolMesh") != string::npos)
+  if( mtd->get_name().find("TetVolMesh") != string::npos )
   {
     tetExists=true;
     myDimension = 3;
+    
+    TriSurfMesh<TriLinearLgn<Point> > *bound_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(boundary_field_h->mesh().get_rep());
+    TriSurfMesh<TriLinearLgn<Point> >::Node::iterator bound_iter;
+    bound_mesh->begin( bound_iter );
+    TriSurfMesh<TriLinearLgn<Point> >::Node::iterator bound_itere; 
+    bound_mesh->end( bound_itere );
+    while( bound_iter != bound_itere )
+    {
+      TriSurfMesh<TriLinearLgn<Point> >::Node::index_type bi = *bound_iter;
+      ++bound_iter;
+      
+      int size, stride, *cols;
+      double *vals;
+      interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
+      
+      fixed_[*cols] = true;
+//      cout << "Fixing node " << *cols << endl;
+    }
   }
   else if (mtd->get_name().find("TriSurfMesh") != string::npos)
   {
     triExists=true;
-    myDimension = 2;
+    myDimension = 2; 
+
+    CurveMesh<CrvLinearLgn<Point> > *bound_mesh = dynamic_cast<CurveMesh<CrvLinearLgn<Point> >*>(boundary_field_h->mesh().get_rep());
+    CurveMesh<CrvLinearLgn<Point> >::Node::iterator bound_iter; 
+    bound_mesh->begin( bound_iter );
+    CurveMesh<CrvLinearLgn<Point> >::Node::iterator bound_itere; 
+    bound_mesh->end( bound_itere );
+    while( bound_iter != bound_itere )
+    {
+      CurveMesh<CrvLinearLgn<Point> >::Node::index_type bi = *bound_iter;
+      ++bound_iter;
+
+      int size, stride, *cols;
+      double *vals;
+      interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
+
+      fixed_[*cols] = true;
+//      cout << "Fixing node " << *cols << endl;
+    }    
   }
   else if (mtd->get_name().find("HexVolMesh") != string::npos)
   {
     hexExists=true;
-    myDimension = 3;
+    myDimension = 3; 
+
+    QuadSurfMesh<QuadBilinearLgn<Point> > *bound_mesh = dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> >*>(boundary_field_h->mesh().get_rep());
+    QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator bound_iter; 
+    bound_mesh->begin( bound_iter );
+    QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator bound_itere; 
+    bound_mesh->end( bound_itere );
+    while( bound_iter != bound_itere )
+    {
+      QuadSurfMesh<QuadBilinearLgn<Point> >::Node::index_type bi = *bound_iter;
+      ++bound_iter;
+
+      int size, stride, *cols;
+      double *vals;
+      interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
+
+      fixed_[*cols] = true;
+//      cout << "Fixing node " << *cols << endl;
+    }    
   }
   else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
   {
     quadExists=true;
     myDimension = 2;
+
+    CurveMesh<CrvLinearLgn<Point> > *bound_mesh = dynamic_cast<CurveMesh<CrvLinearLgn<Point> >*>(boundary_field_h->mesh().get_rep());
+    CurveMesh<CrvLinearLgn<Point> >::Node::iterator bound_iter; 
+    bound_mesh->begin( bound_iter );
+    CurveMesh<CrvLinearLgn<Point> >::Node::iterator bound_itere; 
+    bound_mesh->end( bound_itere );
+    while( bound_iter != bound_itere )
+    {
+      CurveMesh<CrvLinearLgn<Point> >::Node::index_type bi = *bound_iter;
+      ++bound_iter;
+
+      int size, stride, *cols;
+      double *vals;
+      interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
+
+      fixed_[*cols] = true;
+//      cout << "Fixing node " << *cols << endl;
+    }    
   }
   else
   {
     return;
   }
 
-    //Get boundary elements (code from FieldBoundary) and set the fixed flags
-  mOwner->get_typed_mesh()->synchronize( SCIRun::Mesh::NODE_NEIGHBORS_E | 
-                                         SCIRun::Mesh::FACE_NEIGHBORS_E | 
-                                         SCIRun::Mesh::FACES_E );
 
-    // Walk all the cells in the mesh.
-  typename FIELD::mesh_type::Cell::iterator citer; 
-  mOwner->get_typed_mesh()->begin( citer );
-  typename FIELD::mesh_type::Cell::iterator citere; 
-  mOwner->get_typed_mesh()->end( citere );
+    //Get boundary elements (code from FieldBoundary) and set the fixed flags
+//   mOwner->get_typed_mesh()->synchronize( SCIRun::Mesh::NODE_NEIGHBORS_E | 
+//                                          SCIRun::Mesh::FACE_NEIGHBORS_E | 
+//                                          SCIRun::Mesh::FACES_E );
+
+//     // Walk all the cells in the mesh.
+//   typename FIELD::mesh_type::Cell::iterator citer; 
+//   mOwner->get_typed_mesh()->begin( citer );
+//   typename FIELD::mesh_type::Cell::iterator citere; 
+//   mOwner->get_typed_mesh()->end( citere );
   
-  while (citer != citere)
-  {
-    typename FIELD::mesh_type::Cell::index_type ci = *citer;
-    ++citer;
+//   while (citer != citere)
+//   {
+//     typename FIELD::mesh_type::Cell::index_type ci = *citer;
+//     ++citer;
     
-      // Get all the faces in the cell.
-    typename FIELD::mesh_type::Face::array_type faces;
-    mOwner->get_typed_mesh()->get_faces( faces, ci );
+//       // Get all the faces in the cell.
+//     typename FIELD::mesh_type::Face::array_type faces;
+//     mOwner->get_typed_mesh()->get_faces( faces, ci );
     
-      // Check each face for neighbors.
-    typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
-    while( fiter != faces.end() )
-    {
-      typename FIELD::mesh_type::Cell::index_type nci;
-      typename FIELD::mesh_type::Face::index_type fi = *fiter;
-      ++fiter;
+//       // Check each face for neighbors.
+//     typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
+//     while( fiter != faces.end() )
+//     {
+//       typename FIELD::mesh_type::Cell::index_type nci;
+//       typename FIELD::mesh_type::Face::index_type fi = *fiter;
+//       ++fiter;
       
-      if ( !mOwner->get_typed_mesh()->get_neighbor( nci , ci, fi ) )
-      {
-          // Faces with no neighbors are on the boundary...
-        typename FIELD::mesh_type::Node::array_type nodes;
-        mOwner->get_typed_mesh()->get_nodes( nodes, fi );
+//       if ( !mOwner->get_typed_mesh()->get_neighbor( nci , ci, fi ) )
+//       {
+//           // Faces with no neighbors are on the boundary...
+//         typename FIELD::mesh_type::Node::array_type nodes;
+//         mOwner->get_typed_mesh()->get_nodes( nodes, fi );
         
-        typename FIELD::mesh_type::Node::array_type::iterator niter = nodes.begin();
+//         typename FIELD::mesh_type::Node::array_type::iterator niter = nodes.begin();
         
-        for( unsigned int i = 0; i < nodes.size(); i++ )
-        {
-          fixed_[*niter] = true;
-          ++niter;
-        }
-      }
-    }
-  }
+//         for( unsigned int i = 0; i < nodes.size(); i++ )
+//         {
+//           fixed_[*niter] = true;
+//           ++niter;
+//         }
+//       }
+//     }
+//   }
 }
 
   //destructor
@@ -563,6 +675,8 @@ void MesquiteMesh<FIELD>::vertex_set_coordinates(
   p.y( coordinates[1] );
   p.z( coordinates[2] );
   mOwner->get_typed_mesh()->set_point( p, node_id );
+
+  update_progress();
 }
 
 

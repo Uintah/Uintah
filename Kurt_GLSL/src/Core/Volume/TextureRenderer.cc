@@ -544,7 +544,12 @@ namespace SCIRun {
     }
     for(unsigned int i=0, k=0; i<poly.size(); i++) {
       if (mask && shader) {
-	float v = float(((*mask)[i] << 1) + 1);
+        if (!(*mask)[i]) {
+          k += poly[i];
+          continue;
+        }
+        //	float v = float((*mask)[i]);
+        float v = float(((*mask)[i] << 1) + 1);
 	shader->setLocalParam(3, v,v,v,v);
       }
       if(buffer) {

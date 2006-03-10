@@ -6,6 +6,9 @@
    <Meta>
 	<title>Compaction of cylinders</title>
    </Meta>
+   <SimulationComponent>
+        <type> impm </type>
+   </SimulationComponent>
 
    <Time>
 	<maxTime>3.e-6</maxTime>

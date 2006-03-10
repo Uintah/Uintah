@@ -108,7 +108,7 @@ HexToTet::execute()
   Handle<HexToTetAlgo> halgo;
   if (DynamicCompilation::compile(hci, halgo, true, this))
   {
-    if (!halgo->execute(ifieldhandle, ofieldhandle_, this))
+    if (!halgo->execute(this, ifieldhandle, ofieldhandle_))
     {
       warning("HexToTet conversion failed to copy data.");
       return;
@@ -120,7 +120,7 @@ HexToTet::execute()
     Handle<LatToTetAlgo> lalgo;
     if (DynamicCompilation::compile(lci, lalgo, true, this))
     {
-      if (!lalgo->execute(ifieldhandle, ofieldhandle_, this))
+      if (!lalgo->execute(this, ifieldhandle, ofieldhandle_))
       {
 	warning("LatToTet conversion failed to copy data.");
 	return;

@@ -17,30 +17,13 @@ void MesquiteDomain::snap_to(
   Mesquite::Mesh::EntityHandle entity_handle,
   Mesquite::Vector3D &coordinate) const
 {
-  cout << "ERROR: MesquiteDomain::snap_to is not currently implemented." << endl;
-  
-//     // Get the domain for the entity_handle
-//   MRefEntity* owner = reinterpret_cast<MeshEntity*>(entity_handle)->owner();
-  
-//     // If it's a surface, curve, or vertex, snap back to owner
-//   switch (owner->dimension())
-//   {
-//     case 0:
-//         //PRINT_INFO("\nCASE 0");
-//       *reinterpret_cast<CubitVector*>(&coordinate) =
-//         dynamic_cast<RefVertex*>(owner)->coordinates();
-//       break;
-//     case 1:
-//         //PRINT_INFO("\nCASE 1");
-//       dynamic_cast<RefEdge*>(owner)->move_to_curve(
-//         *reinterpret_cast<CubitVector*>(&coordinate));
-//       break;
-//     case 2:
-//         //PRINT_INFO("\nCASE 2");
-//       dynamic_cast<RefFace*>(owner)->move_to_surface(
-//         *reinterpret_cast<CubitVector*>(&coordinate));
-//       break;
-//   }
+  Point n_p, new_result;
+  n_p.x( coordinate[0] );
+  n_p.y( coordinate[1] );
+  n_p.z( coordinate[2] );
+  TriSurfMesh<TriLinearLgn<Point> >::Face::index_type face_id;
+  domain_mesh_->find_closest_face( new_result, face_id, n_p );    
+  coordinate.set( new_result.x(), new_result.y(), new_result.z() );
 }
 
 //! Returns the normal of the domain to which
@@ -57,19 +40,39 @@ void MesquiteDomain::normal_at(
   Mesquite::Mesh::EntityHandle entity_handle,
   Mesquite::Vector3D &coordinate) const
 {
-  cout << "ERROR: MesquiteDomain::normal_at is not currently implemented." << endl;
+  Point n_p, new_result;
+  n_p.x( coordinate[0] );
+  n_p.y( coordinate[1] );
+  n_p.z( coordinate[2] );
+  TriSurfMesh<TriLinearLgn<Point> >::Face::index_type face_id;
+  domain_mesh_->find_closest_face( new_result, face_id, n_p );  
+  Vector result;
+  vector<double> bogus;
+  bogus.push_back( new_result.x() );
+  bogus.push_back( new_result.y() );
+  bogus.push_back( new_result.z() );
+  domain_mesh_->get_normal( result, bogus, face_id, 0);
+  coordinate.set( result.x(), result.y(), result.z() );
+//    coordinate.set(0.0,0.0,0.0);
+
+//  cout << "WARNING: MesquiteDomain::normal_at = <" << result.x() << "," << result.y() << "," << result.z() << ">" << endl;
   
+
 //       // Get the domain for the entity_handle
 //   MRefEntity* owner = reinterpret_cast<MeshEntity*>(entity_handle)->owner();
 
 //     // Only get normal if it's a surface owner
 //   if (owner && owner->dimension() == 2)
-//     *reinterpret_cast<CubitVector*>(&coordinate) =
+//   {
+//     *reinterpret_cast<Vector*>(&coordinate) =
 //       dynamic_cast<RefFace*>(owner)->normal_at(
-//         *reinterpret_cast<CubitVector*>(&coordinate));
+//         *reinterpret_cast<Vector*>(&coordinate));
+//   }  
 //   else
-//     coordinate.set(0.0,0.0,0.0);
-  
+//   {
+//  coordinate.set(0.0,0.0,0.0);
+//   }
+
 }
 
 void MesquiteDomain::normal_at(
@@ -78,12 +81,11 @@ void MesquiteDomain::normal_at(
   unsigned count,
   Mesquite::MsqError &/*err*/) const
 {  
-  cout << "ERROR: MesquiteDomain::normal_at(b) is not currently implemented." << endl;  
-
-//   int i;
-//   for (i=0; i<count; ++i){
-//     normal_at(entity_handles[i], coordinates[i]);
-//   }
+  unsigned int i;
+  for( i = 0; i < count; ++i )
+  {
+    normal_at( entity_handles[i], coordinates[i] );
+  }
 }
  
 void MesquiteDomain::closest_point(
@@ -93,29 +95,48 @@ void MesquiteDomain::closest_point(
   Mesquite::Vector3D& normal,
   Mesquite::MsqError& /*err*/ ) const
 {
-  cout << "ERROR: MesquiteDomain::closest_point is not currently implemented." << endl;
+  Point p, close_pt;
+  p.x( position[0] );
+  p.y( position[1] );
+  p.z( position[2] );
+  TriSurfMesh<TriLinearLgn<Point> >::Face::index_type face_id;
+  domain_mesh_->find_closest_face( close_pt, face_id, p );    
+  closest.set( close_pt.x(), close_pt.y(), close_pt.z() );
+ 
+    //Need to set the normal...
+  Vector result;
+  vector<double> bogus;
+  bogus.push_back( close_pt.x() );
+  bogus.push_back( close_pt.y() );
+  bogus.push_back( close_pt.z() );
+  domain_mesh_->get_normal( result, bogus, face_id, 0);
+  normal.set( result.x(), result.y(), result.z() );
+//  normal.set( 0., 0., 0. );
   
+//  cout << "WARNING: MesquiteDomain::closest_point <" << p.x() << "," << p.y() << "," << p.z() << "> to <" << close_pt.x() << "," << close_pt.y() << "," << close_pt.z() << ">" << endl;
+
    // Get the domain for the entity_handle
 //   MeshEntity* temp_ent = reinterpret_cast<MeshEntity*>(handle);
   
 //   MRefEntity* owner = temp_ent->owner();
   
-//   CubitVector cubit_closest(0.0,0.0,0.0);
-//   CubitVector cubit_normal(0.0,0.0,0.0);
-//   CubitVector cubit_position(position[0], position[1], position[2]);
+//   Vector closest(0.0,0.0,0.0);
+//   Vector normal(0.0,0.0,0.0);
+//   Vector position(position[0], position[1], position[2]);
   
 //     // Only get normal if it's a surface owner
-//   if (owner && owner->dimension() == 2){
+//   if (owner && owner->dimension() == 2)
+//   {
 //     RefFace* temp_rface = dynamic_cast<RefFace*>(owner);
 //     if(temp_rface){
-//       temp_rface->find_closest_point_trimmed(cubit_position,
-//                                              cubit_closest);
-//       temp_rface->get_point_normal(cubit_closest, cubit_normal);
+//       temp_rface->find_closest_point_trimmed(position,
+//                                              closest);
+//       temp_rface->get_point_normal(closest, normal);
 //     }
 //   }
-//   closest.set(cubit_closest.x(),cubit_closest.y(),cubit_closest.z());
+//   closest.set(closest.x(), closest.y(), closest.z());
   
-//   normal.set(cubit_normal.x(),cubit_normal.y(),cubit_normal.z());
+//   normal.set(normal.x(),normal.y(),normal.z());
 }
 
 void MesquiteDomain::domain_DoF(
@@ -124,31 +145,35 @@ void MesquiteDomain::domain_DoF(
   size_t num_handles,
   Mesquite::MsqError& err ) const
 {
-  cout << "ERROR: MesquiteDomain::domain_DoF is not currently implemented." << endl;
-//   int i;
+//  cout << "WARNING: MesquiteDomain::domain_DoF was called." << endl;
+    //Since we are only supporting TriSurfMeshes for now, simply fill
+    // the array with 2...
 //   MRefEntity* owner=NULL;
   
-//   for(i=0;i<num_handles;++i){
+  size_t i;
+  for( i = 0; i < num_handles; ++i )
+  {
 //       // Get the domain for the entity_handle
 //     owner = reinterpret_cast<MeshEntity*>(handle_array[i])->owner();
   
 //       // If it's a surface, curve, or vertex, snap back to owner
 //     int temp_int = owner->dimension();
     
-//     switch (temp_int)
+//     switch( temp_int )
 //     {
 //       case 0:
 //       case 1:
 //       case 2:
 //       case 3:
 //         dof_array[i] = (short) temp_int;
+    dof_array[i] = (short)2;
 //         break;
 //       default:
 //         MSQ_SETERR(err)("Unexpected dimension.",
 //                         Mesquite::MsqError::INVALID_STATE);
 //         return;
 //     };
-//   }  
+  }  
 }
 
 } //namespace SCIRun

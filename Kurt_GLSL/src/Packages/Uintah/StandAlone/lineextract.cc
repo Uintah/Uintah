@@ -168,6 +168,12 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
         // find the corresponding patches
         Level::selectType patches;
         level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
+        if( patches.size() == 0){
+          cerr << " Could not find any patches on Level " << level->getIndex()
+               << " that contain cells along line: " << var_start << " and " << var_end 
+               << " Double check the starting and ending indices "<< endl;
+          exit(1);
+        }
 
         // query all the data up front
         vector<Variable*> vars(patches.size());
@@ -222,23 +228,38 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
             continue;
           }
           
-          if(d_printCell_coords){
-            Point point = level->getCellPosition(c);
-            out << point.x() << " "<< point.y() << " " << point.z() << " ";
-          }else{
-            out << c.x() << " "<< c.y() << " " << c.z() << " ";
-          }
-
           T val;
+          Vector dx = patches[p]->dCell();
+          Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
           switch (variable_type->getType()) {
-          case Uintah::TypeDescription::CCVariable: val = (*dynamic_cast<CCVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::NCVariable: val = (*dynamic_cast<NCVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::SFCXVariable: val = (*dynamic_cast<SFCXVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::SFCYVariable: val = (*dynamic_cast<SFCYVariable<T>*>(vars[p]))[c]; break;
-          case Uintah::TypeDescription::SFCZVariable: val = (*dynamic_cast<SFCZVariable<T>*>(vars[p]))[c]; break;
+          case Uintah::TypeDescription::CCVariable: 
+            val = (*dynamic_cast<CCVariable<T>*>(vars[p]))[c]; 
+          break;
+          case Uintah::TypeDescription::NCVariable: 
+            val = (*dynamic_cast<NCVariable<T>*>(vars[p]))[c]; 
+          break;
+          case Uintah::TypeDescription::SFCXVariable: 
+            val = (*dynamic_cast<SFCXVariable<T>*>(vars[p]))[c];
+            shift.x(-dx.x()/2.0); 
+          break;
+          case Uintah::TypeDescription::SFCYVariable: 
+            val = (*dynamic_cast<SFCYVariable<T>*>(vars[p]))[c];
+            shift.y(-dx.y()/2.0); 
+          break;
+          case Uintah::TypeDescription::SFCZVariable: 
+            val = (*dynamic_cast<SFCZVariable<T>*>(vars[p]))[c];
+            shift.z(-dx.z()/2.0); 
+          break;
           default: break;
           }
-          out << val << endl;
+          
+         if(d_printCell_coords){
+            Point point = level->getCellPosition(c);
+            Vector here = point.asVector() + shift;
+            out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
+          }else{
+            out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
+          }
         }
         for (unsigned i = 0; i < vars.size(); i++)
           delete vars[i];
@@ -470,6 +491,14 @@ int main(int argc, char** argv)
                         levelIndex, var_start, var_end, cells,
                         time_start, time_end, *output_stream);    
       break;
+    case Uintah::TypeDescription::Other:
+      if (subtype->getName() == "Stencil7") {
+        printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
+                          levelIndex, var_start, var_end, cells,
+                          time_start, time_end, *output_stream);    
+        break;
+      }
+      // don't break on else - flow to the error statement
     case Uintah::TypeDescription::Matrix3:
     case Uintah::TypeDescription::bool_type:
     case Uintah::TypeDescription::short_int_type:

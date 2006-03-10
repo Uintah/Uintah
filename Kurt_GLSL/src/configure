@@ -59851,8 +59851,11 @@ if test "$with_qt" = "yes"; then
 elif test "$with_qt"; then
   _sci_lib="$with_qt/lib"
   _sci_inc="$with_qt/include"
-  _sci_optional=specific
+  _sci_optional=required
 fi
+
+ext="$ac_ext"
+ac_ext="cc"
 
 qt_bin=$_sci_lib/../bin
 # Only looking for one .h file... assuming all the rest are in the same place.
@@ -59891,13 +59894,13 @@ qt_bin=$_sci_lib/../bin
 ##
 ## arg 1 : QT_MT
 ## arg 2 : qt library
-## arg 3 : qcanvas.h
+## arg 3 : qapplication.h
 ## arg 4 : $_sci_inc
 ## arg 5 : qt-mt Xxf86vm
 ## arg 6 : $_sci_lib /usr/X11R6/lib
-## arg 7 :
+## arg 7 : -DQT_THREAD_SUPPORT -DQT_NO_XIM
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : optional
+## arg 9 : $_sci_optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -59916,8 +59919,8 @@ echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for qt libr
 fi
 
 
-echo "$as_me:$LINENO: checking for qt library (optional)" >&5
-echo $ECHO_N "checking for qt library (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for qt library ($_sci_optional)" >&5
+echo $ECHO_N "checking for qt library ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -59925,10 +59928,10 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for qt library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for qt library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for qt library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for qt library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -60074,7 +60077,7 @@ echo "$as_me: WARNING: The path given $the_path is not a valid directory... igno
    done
 fi
 
-if test "optional" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib /usr/X11R6/lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -60133,13 +60136,13 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs  $LIBS"
+LIBS="$_sci_libs -DQT_THREAD_SUPPORT -DQT_NO_XIM $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" qcanvas.h; do
+for inc in "" qapplication.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -60265,7 +60268,7 @@ eval INC_QT_MT_H=''
 eval HAVE_QT_MT_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "optional" != "optional"; then
+if test "$_sci_optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -60309,10 +60312,10 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
-if test "optional" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" qcanvas.h; do
+  for i in "" qapplication.h; do
     #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
      { { echo "$as_me:$LINENO: error: Specifically requested QT_MT include file '$_sci_inc/$i' was not found" >&5
@@ -60391,6 +60394,9 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
+
+# Restore the previous settings.
+ac_ext="$ext"
 
 if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
    DEF_QT="#define HAVE_QT 1"
@@ -61493,6 +61499,9 @@ if test "$sci_required_vtk" = "yes"; then
     _vtk_inc="$sci_thirdparty_include"
   fi
 
+  ext="$ac_ext"
+  ac_ext="cc"
+
   # Only looking for one .h file... assuming all the rest are in the same place.
 
 ##
@@ -61991,6 +62000,8 @@ _sci_includes=''
 
 
 
+  # Restore the previous settings.
+  ac_ext="$ext"
 
   if test "$HAVE_VTK" = "yes"; then
      DEF_VTK="#define HAVE_VTK 1"

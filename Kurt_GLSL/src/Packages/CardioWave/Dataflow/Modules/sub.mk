@@ -31,6 +31,7 @@ SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/Tools\
+	$(SRCDIR)/DiscreteMultiDomain\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

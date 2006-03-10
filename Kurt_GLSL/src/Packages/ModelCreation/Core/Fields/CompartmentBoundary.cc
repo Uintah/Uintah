@@ -87,6 +87,13 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
     return (false);
   }
 
+  fo.make_nodata();
+
+  for(size_t p =0; p< precompiled_.size(); p++)
+  {
+    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->CompartmentBoundary(pr,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  }
+
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
@@ -112,6 +119,13 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
 
   return(algo->CompartmentBoundary(pr,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
+
+bool CompartmentBoundaryAlgo::testinput(FieldHandle input)
+{
+  return (false);
+}
+
+AlgoList<CompartmentBoundaryAlgo> CompartmentBoundaryAlgo::precompiled_;
 
 
 } // End namespace ModelCreation

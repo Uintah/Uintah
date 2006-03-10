@@ -32,7 +32,7 @@
 
 // The following include file will include all tools needed for doing 
 // dynamic compilation and will include all the standard dataflow types
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 // Additionally we include sci_hash_map here as it is needed by the algorithm
 #include <sci_hash_map.h>
@@ -93,10 +93,17 @@ using namespace SCIRun;
 // hence the pointer to the module can be used to initialise the ProgressReporter
 //
 
+class ToPointCloudAlgo;
+
 class ToPointCloudAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool testinput(FieldHandle input);
+
+public:
+  static AlgoList<ToPointCloudAlgo> precompiled_;
+
 };
 
 
@@ -113,6 +120,7 @@ class ToPointCloudAlgoT : public ToPointCloudAlgo
 {
 public:
   virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool testinput(FieldHandle input);
 };
 
 
@@ -245,6 +253,12 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
   
   // Success:
   return (true);
+}
+
+template <class FSRC, class FDST>
+bool ToPointCloudAlgoT<FSRC, FDST>::testinput(FieldHandle input)
+{
+  return (dynamic_cast<FSRC*>(input.get_rep()) != 0);
 }
 
 

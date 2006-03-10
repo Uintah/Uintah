@@ -85,22 +85,7 @@ void Grid::performConsistencyCheck() const
       LevelP fineLevel = level->getFinerLevel();
       Vector dx_level     = level->dCell();
       Vector dx_fineLevel = fineLevel->dCell();
-
-      //__________________________________
-      //make sure that the refinement ratio
-      //is really 2 between all levels     
-      Vector refineRatio_test = dx_level/dx_fineLevel;
-      Vector refineRatio = fineLevel-> getRefinementRatio().asVector();
-      Vector smallNum(1e-3, 1e-3, 1e-3);
       
-      if (Abs(refineRatio_test - refineRatio).length() > smallNum.length() ) {
-        ostringstream desc;
-        desc << " The refinement Ratio between Level " << level->getIndex()
-             << " and Level " << fineLevel->getIndex() 
-             << " is NOT equal to [2,2,2] but " 
-             << refineRatio_test << endl;
-        //throw InvalidGrid(desc.str());
-      }
       //__________________________________
       // finer level can't lay outside of the coarser level
       BBox C_box,F_box;
@@ -125,6 +110,34 @@ void Grid::performConsistencyCheck() const
              << " "<< C_box.min() << " "<< C_box.max() << endl;
         throw InvalidGrid(desc.str(),__FILE__,__LINE__);
       }
+      //__________________________________
+      //  finer level must have a box width that is
+      //  an integer of the cell spacing
+      Vector integerTest_min(remainder(Fbox_min.x(),dx_fineLevel.x() ), 
+                             remainder(Fbox_min.y(),dx_fineLevel.y() ),
+                             remainder(Fbox_min.z(),dx_fineLevel.z() ) );
+                             
+      Vector integerTest_max(remainder(Fbox_max.x(),dx_fineLevel.x() ), 
+                             remainder(Fbox_max.y(),dx_fineLevel.y() ),
+                             remainder(Fbox_max.z(),dx_fineLevel.z() ) );
+      
+      Vector distance = Fbox_max.asVector() - Fbox_min.asVector();
+      
+      Vector integerTest_distance(remainder(distance.x(), dx_fineLevel.x() ),
+                                  remainder(distance.y(), dx_fineLevel.y() ),
+                                  remainder(distance.z(), dx_fineLevel.z() ) );
+      Vector smallNum(1e-16,1e-16,1e-16);
+      
+      if( (integerTest_min >smallNum || integerTest_max > smallNum) && 
+           integerTest_distance > smallNum){
+        ostringstream desc;
+        desc << " The finer Level " << fineLevel->getIndex()
+             << " "<< F_box.min() << " "<< F_box.max()
+             << " upper or lower limits are not divisible by the cell spacing "
+             << dx_fineLevel << " \n Remainder of level box/dx: lower" 
+             << integerTest_min << " upper " << integerTest_max<< endl;
+        throw InvalidGrid(desc.str(),__FILE__,__LINE__);
+      } 
     }
   }
 }

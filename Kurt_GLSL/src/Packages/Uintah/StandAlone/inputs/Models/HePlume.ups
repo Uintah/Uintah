@@ -6,6 +6,9 @@
        <title></title>
    </Meta>
     
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
     <!--____________________________________________________________________-->
     <!-- This input file mimics the geometry described in                   -->
     <!-- "Large eddy simulation and experimental measurements of the        -->

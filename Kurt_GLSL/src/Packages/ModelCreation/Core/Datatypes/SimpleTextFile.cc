@@ -191,6 +191,11 @@ bool SimpleTextFileMatrix_writer(ProgressReporter *pr, MatrixHandle matrix, cons
   }
 
   double* dataptr = matrix->get_data_pointer();
+  if (dataptr == 0)
+  {
+    if (pr) pr->error("Empty matrix detected");
+    return(false);
+  }
 
   try
   {

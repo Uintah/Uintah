@@ -81,7 +81,8 @@ public:
   typedef GenericField<CMesh, ConBasis, vector<double> >       CFieldC; 
   typedef GenericField<CMesh, NoDataBasis, vector<double> >    CFieldND; 
 
-  virtual void execute(const MeshHandle mesh,
+  virtual void execute(ProgressReporter *reporter,
+                       const MeshHandle mesh,
 		       FieldHandle &bndry,
 		       MatrixHandle &intrp,
 		       int basis_order) = 0;
@@ -102,7 +103,8 @@ class FieldBoundaryAlgoTriT : public FieldBoundaryAlgoAux
 public:
 
   //! virtual interface. 
-  virtual void execute(const MeshHandle mesh,
+  virtual void execute(ProgressReporter *reporter,
+                       const MeshHandle mesh,
 		       FieldHandle &boundary,
 		       MatrixHandle &interp,
 		       int basis_order);
@@ -112,7 +114,8 @@ public:
 
 template <class Msh>
 void 
-FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
+FieldBoundaryAlgoTriT<Msh>::execute(ProgressReporter *reporter,
+                                    const MeshHandle mesh_untyped,
 				    FieldHandle &boundary_fh,
 				    MatrixHandle &interp,
 				    int basis_order)
@@ -133,8 +136,15 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
   typename Msh::Cell::iterator citer; mesh->begin(citer);
   typename Msh::Cell::iterator citere; mesh->end(citere);
 
+  typename Msh::Cell::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   while (citer != citere)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     typename Msh::Cell::index_type ci = *citer;
     ++citer;
   
@@ -269,7 +279,8 @@ class FieldBoundaryAlgoQuadT : public FieldBoundaryAlgoAux
 public:
 
   //! virtual interface. 
-  virtual void execute(const MeshHandle mesh,
+  virtual void execute(ProgressReporter *reporter,
+                       const MeshHandle mesh,
 		       FieldHandle &boundary,
 		       MatrixHandle &interp,
 		       int basis_order);
@@ -280,7 +291,8 @@ public:
 
 template <class Msh>
 void 
-FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
+FieldBoundaryAlgoQuadT<Msh>::execute(ProgressReporter *reporter,
+                                     const MeshHandle mesh_untyped,
 				     FieldHandle &boundary_fh,
 				     MatrixHandle &interp,
 				     int basis_order)
@@ -302,8 +314,15 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
   typename Msh::Cell::iterator citer; mesh->begin(citer);
   typename Msh::Cell::iterator citere; mesh->end(citere);
 
+  typename Msh::Cell::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   while (citer != citere)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     typename Msh::Cell::index_type ci = *citer;
     ++citer;
   
@@ -437,7 +456,8 @@ class FieldBoundaryAlgoCurveT : public FieldBoundaryAlgoAux
 public:
 
   //! virtual interface. 
-  virtual void execute(const MeshHandle mesh,
+  virtual void execute(ProgressReporter *reporter,
+                       const MeshHandle mesh,
 		       FieldHandle &boundary,
 		       MatrixHandle &interp,
 		       int basis_order);
@@ -447,7 +467,8 @@ public:
 
 template <class Msh>
 void 
-FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
+FieldBoundaryAlgoCurveT<Msh>::execute(ProgressReporter *reporter,
+                                      const MeshHandle mesh_untyped,
 				      FieldHandle &boundary_fh,
 				      MatrixHandle &interp,
 				      int basis_order)
@@ -469,8 +490,15 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
   typename Msh::Face::iterator citer; mesh->begin(citer);
   typename Msh::Face::iterator citere; mesh->end(citere);
 
+  typename Msh::Face::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   while (citer != citere)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     typename Msh::Face::index_type ci = *citer;
     ++citer;
   
@@ -595,7 +623,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 class FieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(ProgressReporter *m, const MeshHandle mesh,
+  virtual void execute(ProgressReporter *reporter, const MeshHandle mesh,
 		       FieldHandle &bndry, MatrixHandle &intrp,
 		       int basis_order) = 0;
 
@@ -609,7 +637,7 @@ class FieldBoundaryAlgoT : public FieldBoundaryAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(ProgressReporter *m, const MeshHandle mesh,
+  virtual void execute(ProgressReporter *reporter, const MeshHandle mesh,
 		       FieldHandle &boundary, MatrixHandle &interp,
 		       int basis_order);
 };
@@ -617,8 +645,10 @@ public:
 
 template <class Msh>
 void 
-FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
-				 FieldHandle &boundary, MatrixHandle &interp,
+FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *reporter,
+                                 const MeshHandle mesh,
+				 FieldHandle &boundary,
+                                 MatrixHandle &interp,
 				 int basis_order)
 {
   if (Msh::elem_type_description()->get_name() ==
@@ -649,9 +679,9 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     CompileInfoHandle ci =
       FieldBoundaryAlgoAux::get_compile_info(mtd, algoname);
     Handle<FieldBoundaryAlgoAux> algo;
-    if (DynamicCompilation::compile(ci, algo, true, mod))
+    if (DynamicCompilation::compile(ci, algo, true, reporter))
     {
-      algo->execute(mesh, boundary, interp, basis_order);
+      algo->execute(reporter, mesh, boundary, interp, basis_order);
     }
   }
   else if (Msh::elem_type_description()->get_name() ==
@@ -661,19 +691,19 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     CompileInfoHandle ci =
       FieldBoundaryAlgoAux::get_compile_info(mtd, "Curve");
     Handle<FieldBoundaryAlgoAux> algo;
-    if (DynamicCompilation::compile(ci, algo, true, mod))
+    if (DynamicCompilation::compile(ci, algo, true, reporter))
     {
-      algo->execute(mesh, boundary, interp, basis_order);
+      algo->execute(reporter, mesh, boundary, interp, basis_order);
     }
     else
     {
-      mod->error("Fields of '" + mtd->get_name() + 
-		 "' type are not currently supported.");
+      reporter->error("Fields of '" + mtd->get_name() + 
+                      "' type are not currently supported.");
     }
   }
   else
   {
-    mod->error("Boundary module only works on volumes and surfaces.");
+    reporter->error("Boundary module only works on volumes and surfaces.");
   }
 
   // Set the source range for the interpolation field.

@@ -408,17 +408,51 @@ Module::update_msg_state(MsgState st)
 }
 
 
+#define PROGRESS_GRANULARITY 32
+
+
 void
 Module::update_progress(double p)
 {
-  if (state == JustStarted)
-    update_state(Executing);
-  p = Clamp(p, 0.0, 1.0);
-  if (p != progress_percent_){
-    progress_percent_ = p;
-    string str = to_string(progress_percent_*100);
+  if (state != Executing) { update_state(Executing); }
+  int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
+  int nrp = (unsigned int)(Clamp(p, 0.0, 1.0) * progress_max_);
+  if (crp != nrp)
+  {
+    progress_current_.set(nrp);
+    string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
     gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
+  }
+}
 
+
+void
+Module::update_progress(int current, int maxpr)
+{
+  if (state != Executing) { update_state(Executing); }
+  int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
+  int nrp = current * PROGRESS_GRANULARITY / maxpr;
+  if (crp != nrp || maxpr != progress_max_)
+  {
+    progress_max_ = maxpr;
+    progress_current_.set(current);
+    string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
+    gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
+  }
+}
+
+
+void
+Module::increment_progress()
+{
+  if (state != Executing) { update_state(Executing); }
+  unsigned int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
+  progress_current_++;
+  unsigned int nrp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
+  if (crp != nrp)
+  {
+    string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
+    gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
   }
 }
 

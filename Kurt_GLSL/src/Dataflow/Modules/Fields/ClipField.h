@@ -47,10 +47,10 @@ namespace SCIRun {
 class ClipFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute_cell(ProgressReporter *m,
+  virtual FieldHandle execute_cell(ProgressReporter *reporter,
 				   FieldHandle fieldh,
 				   ClipperHandle clipper) = 0;
-  virtual FieldHandle execute_node(ProgressReporter *m,
+  virtual FieldHandle execute_node(ProgressReporter *reporter,
 				   FieldHandle fieldh, ClipperHandle clipper,
 				   bool any_inside_p) = 0;
 
@@ -64,9 +64,9 @@ class ClipFieldAlgoT : public ClipFieldAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute_cell(ProgressReporter *m,
+  virtual FieldHandle execute_cell(ProgressReporter *reporter,
 				   FieldHandle fieldh, ClipperHandle clipper);
-  virtual FieldHandle execute_node(ProgressReporter *m,
+  virtual FieldHandle execute_node(ProgressReporter *reporter,
 				   FieldHandle fieldh, ClipperHandle clipper,
 				   bool any_inside_p);
 };
@@ -74,7 +74,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
+ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *reporter,
 				    FieldHandle fieldh, ClipperHandle clipper)
 {
   typename FIELD::mesh_type *mesh =
@@ -101,10 +101,17 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
 
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
+  typename FIELD::mesh_type::Elem::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     Point p;
     mesh->get_center(p, *bi);
     if (clipper->inside_p(p))
@@ -169,7 +176,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
   }
   else
   {
-    mod->warning("Unable to copy data at this field data location.");
+    reporter->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;
@@ -179,7 +186,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
 
 template <class FIELD>
 FieldHandle
-ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
+ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *reporter,
 				    FieldHandle fieldh, ClipperHandle clipper,
 				    bool any_inside_p)
 {
@@ -207,10 +214,17 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
 
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
+  typename FIELD::mesh_type::Elem::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     typename FIELD::mesh_type::Node::array_type onodes;
     mesh->get_nodes(onodes, *bi);
 
@@ -297,7 +311,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
   }
   else
   {
-    mod->warning("Unable to copy data at this field data location.");
+    reporter->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;

@@ -52,13 +52,50 @@
 
 namespace SCIRun {
   using namespace std;
+  class Semaphore;
+  class TCLInterface;
+
+  class SCISHARE EventMessage {
+  public:
+    EventMessage();
+    virtual ~EventMessage();
+    void                wait_for_message_delivery();
+    void                mark_message_delivered();
+  private:
+    Semaphore *         delivery_semaphore_;
+  };
+
+  class SCISHARE PauseEventMessage : public EventMessage {
+  public:
+    PauseEventMessage(TCLInterface *);
+    TCLInterface *      tcl_interface_;
+  };
+
+  class SCISHARE CommandEventMessage : public EventMessage {
+  public:
+    CommandEventMessage(const string &command);
+    string &            command() { return command_; }
+    string &            result() { return result_; }
+    int &               code() { return return_code_; } 
+  private:
+    string              command_;
+    string              result_;
+    int                 return_code_;
+  };
+
+
   class SCISHARE TCLInterface : public GuiInterface{
+    Semaphore *         pause_semaphore_;
+    bool                paused_;
   public:
     TCLInterface();
     virtual ~TCLInterface();
     virtual void execute(const string& str);
     virtual int eval(const string& str, string& result);
     virtual string eval(const string &);
+    virtual void pause();
+    virtual void real_pause();
+    virtual void unpause();
     virtual void source_once(const string&);
     virtual void add_command(const string&, GuiCallback*, void*);
     virtual void delete_command( const string& command );
@@ -86,6 +123,8 @@ namespace SCIRun {
 				     const std::string& value);
 
     bool complete_command(const string&);
+
+
   };
 }
 

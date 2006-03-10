@@ -30,7 +30,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_TRANSFORMFIELD_H
 #define MODELCREATION_CORE_FIELDS_TRANSFORMFIELD_H 1
 
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
@@ -48,14 +48,15 @@ class TransformFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool TransformField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, Transform& transform, bool rotatedata);
+  virtual bool testinput(FieldHandle input);
 };
+
 
 class TransformFieldScalarAlgo : public TransformFieldAlgo
 {
 public:
-  virtual bool TransformField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, Transform& transform, bool rotatedata);  
+  virtual bool TransformField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, Transform& transform, bool rotatedata);
 };
-
 
 template <class FIELD>
 class TransformFieldVectorAlgoT : public TransformFieldAlgo
@@ -84,7 +85,7 @@ bool TransformFieldVectorAlgoT<FIELD>::TransformField(ProgressReporter *pr, Fiel
   }
 
   ofield->mesh_detach();
-  ofield->transform(transform);
+  ofield->mesh()->transform(transform);
 
   if (rotatedata)
   {
@@ -221,7 +222,7 @@ bool TransformFieldTensorAlgoT<FIELD>::TransformField(ProgressReporter *pr, Fiel
   }
 
   ofield->mesh_detach();
-  ofield->transform(transform);
+  ofield->mesh()->transform(transform);
 
 
   if (rotatedata)

@@ -5281,7 +5281,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 
     if (d_carbon_balance) {
       if (totalCarbonFlowRate > 0.0)
-	carbonEfficiency = CO2FlowRate * 12.0/28.0 /totalCarbonFlowRate;
+	carbonEfficiency = CO2FlowRate * 12.0/44.0 /totalCarbonFlowRate;
       else 
 	throw InvalidValue("No carbon in the domain", __FILE__, __LINE__);
       new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);

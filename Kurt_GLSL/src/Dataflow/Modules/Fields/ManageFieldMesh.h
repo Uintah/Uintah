@@ -95,7 +95,7 @@ ManageFieldMeshAlgoExtractT<MESH>::execute(MeshHandle mesh_h)
 class ManageFieldMeshAlgoInsert : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle src, MatrixHandle mat) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -108,14 +108,14 @@ class ManageFieldMeshAlgoInsertT : public ManageFieldMeshAlgoInsert
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle src, MatrixHandle mat);
 };
 
 
 template <class FIELD>
 FieldHandle
-ManageFieldMeshAlgoInsertT<FIELD>::execute(ProgressReporter *mod,
+ManageFieldMeshAlgoInsertT<FIELD>::execute(ProgressReporter *reporter,
 					   FieldHandle src,
 					   MatrixHandle matrix)
 {
@@ -125,19 +125,19 @@ ManageFieldMeshAlgoInsertT<FIELD>::execute(ProgressReporter *mod,
 
   if (matrix->ncols() < 3)
   {
-    mod->error("Matrix must contain at least 3 columns for position data.");
+    reporter->error("Matrix must contain at least 3 columns for position data.");
     return 0;
   }
   if (matrix->ncols() > 3)
   {
-    mod->remark("Matrix contains unused columns, only first three are used.");
+    reporter->remark("Matrix contains unused columns, only first three are used.");
   }
 
   typename FIELD::mesh_type::Node::size_type nsize;
   mesh->size(nsize);
   if (((int)nsize) != matrix->nrows())
   {
-    mod->error("Matrix rows do not fit in this mesh.  May need transpose.");
+    reporter->error("Matrix rows do not fit in this mesh.  May need transpose.");
     return 0;
   }
 

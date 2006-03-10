@@ -36,6 +36,7 @@
 
 #include <Packages/ModelCreation/Core/Fields/ExampleFields.h>
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 namespace ModelCreation {
 
@@ -87,7 +88,7 @@ void
   
   MatrixHandle radius, disc;
 
-  MatrixConverter mc(dynamic_cast<ProgressReporter *>(this));
+  ConverterAlgo mc(dynamic_cast<ProgressReporter *>(this));
   
   if (!(disc_port->get(disc))) mc.DoubleToMatrix(guidiscretization_.get(),disc);
   if (!(radius_port->get(radius))) mc.DoubleToMatrix(guiradius_.get(),radius);
