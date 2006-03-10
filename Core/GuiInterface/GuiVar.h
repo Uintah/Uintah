@@ -70,12 +70,17 @@ namespace SCIRun {
 template <class T>
 class SCISHARE GuiSingle : public GuiVar
 {
-  T value_;
+private:
+  T gui_value_;
+  T c_value_;
 public:
   GuiSingle(GuiContext* context) : GuiVar(context) {}
-  GuiSingle(GuiContext* context, const T &val) : GuiVar(context), value_(val)
+  GuiSingle(GuiContext* context, const T &val) :
+    GuiVar(context),
+    gui_value_(val),
+    c_value_(val)
   {
-    ctx->set(value_);
+    ctx->set(gui_value_);
   }
 
   virtual ~GuiSingle() {}
@@ -83,23 +88,45 @@ public:
   inline void set_context(GuiContext *context) {
     if (ctx) delete ctx;
     ctx = context;
-    this->set(value_);
+    this->set(gui_value_);
   }
 
   inline T get() {
     if (ctx)
-      ctx->get(value_);
-    return value_;
+      ctx->get(gui_value_);
+    return gui_value_;
   }
+
   inline void set(const T value) {
-    value_ = value;
+    gui_value_ = value;
     if (ctx)
-      ctx->set(value_);
+      ctx->set(gui_value_);
   }
+
+  inline T get_c() {
+    return c_value_;
+  }
+
+  inline void set_c(const T value) {
+    c_value_ = value;
+  }
+
+  inline bool change( bool update = false ) {
+    if (ctx)
+      ctx->get(gui_value_);
+
+    bool changed = (gui_value_ == c_value_);
+
+    if( update )
+      c_value_ = gui_value_;
+
+    return changed;
+  }
+
   // Returns true if variable exists in TCL scope and is of type T
   inline bool valid() {
     ASSERT(ctx);
-    return ctx->get(value_);
+    return ctx->get(gui_value_);
   }
 
   inline bool changed() {
@@ -108,7 +135,7 @@ public:
     T temp;
     ctx->get(temp);
     ctx->reset();
-    return temp != value_;
+    return temp != gui_value_;
   }
 
 };

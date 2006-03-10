@@ -78,16 +78,6 @@ private:
 
   GuiString  updateType_;
 
-  int axis_;
-
-  int idim_;
-  int jdim_;
-  int kdim_;
-
-  int iindex_;
-  int jindex_;
-  int kindex_;
-
   FieldHandle fHandle_;
   MatrixHandle mHandle_;
 
@@ -102,28 +92,18 @@ DECLARE_MAKER(FieldSlicer)
 FieldSlicer::FieldSlicer(GuiContext *context)
   : Module("FieldSlicer", context, Filter, "FieldsCreate", "SCIRun"),
     
-    Axis_(context->subVar("axis")),
-    Dims_(context->subVar("dims")),
+    Axis_(context->subVar("axis"), 2),
+    Dims_(context->subVar("dims"), 3),
 
-    iDim_(context->subVar("i-dim")),
-    jDim_(context->subVar("j-dim")),
-    kDim_(context->subVar("k-dim")),
+    iDim_(context->subVar("i-dim"), 1),
+    jDim_(context->subVar("j-dim"), 1),
+    kDim_(context->subVar("k-dim"), 1),
 
-    iIndex_(context->subVar("i-index")),
-    jIndex_(context->subVar("j-index")),
-    kIndex_(context->subVar("k-index")),
+    iIndex_(context->subVar("i-index"), 1),
+    jIndex_(context->subVar("j-index"), 1),
+    kIndex_(context->subVar("k-index"), 1),
 
-    updateType_(ctx->subVar("update_type")),
-
-    axis_(2),
-
-    idim_(0),
-    jdim_(0),
-    kdim_(0),
-
-    iindex_(-1),
-    jindex_(-1),
-    kindex_(-1),
+    updateType_(ctx->subVar("update_type"), "Manual"),
 
     fGeneration_(-1),
     mGeneration_(-1)
@@ -186,8 +166,6 @@ FieldSlicer::execute()
     mGeneration_ = -1;
   }
 
-  int dims = 0;
-
   // Get the dimensions of the mesh.
   // this should be part of the dynamic compilation....
   string mesh_type =
@@ -199,32 +177,32 @@ FieldSlicer::execute()
     typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
     LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
 
-    idim_ = lvmInput->get_ni();
-    jdim_ = lvmInput->get_nj();
-    kdim_ = lvmInput->get_nk();
+    iDim_.set_c( lvmInput->get_ni() );
+    jDim_.set_c( lvmInput->get_nj() );
+    kDim_.set_c( lvmInput->get_nk() );
 
-    dims = 3;
+    Dims_.set_c( 3 );
 
   } else if( mesh_type.find("ImageMesh"         ) != string::npos ||
 	     mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
     IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
-    idim_ = imInput->get_ni();
-    jdim_ = imInput->get_nj();
-    kdim_ = 1;
+    iDim_.set_c( imInput->get_ni() );
+    jDim_.set_c( imInput->get_nj() );
+    kDim_.set_c( 1 );
 
-    dims = 2;
+    Dims_.set_c( 2 );
 
   } else if( mesh_type.find("ScanlineMesh"   ) != string::npos ||
 	     mesh_type.find("StructCurveMesh") != string::npos ) {
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
     SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
     
-    idim_ = slmInput->get_ni();
-    jdim_ = 1;
-    kdim_ = 1;
+    iDim_.set_c( slmInput->get_ni() );
+    jDim_.set_c( 1 );
+    kDim_.set_c( 1 );
 
-    dims = 1;
+    Dims_.set_c( 1 );
 
   } else {
     error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
@@ -239,15 +217,19 @@ FieldSlicer::execute()
   }
 
   // Check to see if the dimensions have changed.
-  if( dims  != Dims_.get() ||
-      idim_ != iDim_.get() ||
-      jdim_ != jDim_.get() ||
-      kdim_ != kDim_.get() )
+  if( Dims_.change() ||
+      iDim_.change() ||
+      jDim_.change() ||
+      kDim_.change() )
   {
     // Dims has callback on it, so it must be set it after i, j, and k.
     ostringstream str;
-    str << id << " set_size ";
-    str << dims << "  " << idim_ << " " << jdim_ << " " << kdim_;
+    str << id
+	<< " set_size "
+	<< Dims_.get_c() << " "
+	<< iDim_.get_c() << " "
+	<< jDim_.get_c() << " "
+	<< kDim_.get_c();
     gui->execute(str.str().c_str());
 
     updateAll = true;
@@ -255,13 +237,19 @@ FieldSlicer::execute()
 
   if( mGeneration_ != -1 ) {
 
-    if( idim_ != mHandle->get(0, 2) ||
-	jdim_ != mHandle->get(1, 2) ||
-	kdim_ != mHandle->get(2, 2) ) {
+    if( iDim_.get_c() != mHandle->get(0, 2) ||
+	jDim_.get_c() != mHandle->get(1, 2) ||
+	kDim_.get_c() != mHandle->get(2, 2) ) {
       ostringstream str;
-      str << "The dimensions of the matrix slicing do match the field. ";
-      str << " Expected  " << idim_ << " " << jdim_ << " " << kdim_;
-      str << " Got " <<  mHandle->get(0, 2) << " " <<  mHandle->get(1, 2) << " " <<  mHandle->get(2, 2);
+      str << "The dimensions of the matrix slicing do match the field. "
+	  << " Expected "
+	  << iDim_.get_c() << " "
+	  << jDim_.get_c() << " "
+	  << kDim_.get_c()
+	  << " Got "
+	  << mHandle->get(0, 2) << " "
+	  << mHandle->get(1, 2) << " "
+	  << mHandle->get(2, 2);
       
       error( str.str() );
       return;
@@ -273,46 +261,45 @@ FieldSlicer::execute()
       if( mHandle->get(i, 0) == 1 )
 	axis = i;
 
+    if( axis == -1 ) {
+      ostringstream str;
+      str << "The input slicing matrix has no axis selected. ";      
+      error( str.str() );
+      return;
+    }
+
     ostringstream str;
-    str << id << " set_index ";
-    str << axis <<
-      " " << (int) mHandle->get(0, 1) <<
-      " " << (int) mHandle->get(1, 1) <<
-      " " << (int) mHandle->get(2, 1);
+    str << id << " set_index "
+	<< axis << " "
+	<< (int) mHandle->get(0, 1) << " "
+	<< (int) mHandle->get(1, 1) << " "
+	<< (int) mHandle->get(2, 1);
 
     gui->execute(str.str().c_str());
 
     reset_vars();
   }
 
-  // Check to see if the user setable values have changed.
-  if( iindex_ != iIndex_.get() ||
-      jindex_ != jIndex_.get() ||
-      kindex_ != kIndex_.get() ||
-      axis_ != Axis_.get())
-  {
-    iindex_ = iIndex_.get();
-    jindex_ = jIndex_.get();
-    kindex_ = kIndex_.get();
-
-    axis_ = Axis_.get();
-
+  // Check to see if the gui values have changed.
+  if( iIndex_.change( true ) ||
+      jIndex_.change( true ) ||
+      kIndex_.change( true ) ||
+      Axis_.change( true ))
     updateAll = true;
-  }
 
   if( mGeneration_ == -1 ) {
     DenseMatrix *selected = scinew DenseMatrix(3,3);
 
     for (int i=0; i < 3; i++)
-      selected->put(i, 0, (double) (axis_ == i) );
+      selected->put(i, 0, (double) (Axis_.get_c() == i) );
 
-    selected->put(0, 1, iindex_ );
-    selected->put(1, 1, jindex_ );
-    selected->put(2, 1, kindex_ );
+    selected->put(0, 1, iIndex_.get_c() );
+    selected->put(1, 1, jIndex_.get_c() );
+    selected->put(2, 1, kIndex_.get_c() );
 
-    selected->put(0, 2, idim_ );
-    selected->put(1, 2, jdim_ );
-    selected->put(2, 2, kdim_ );
+    selected->put(0, 2, iDim_.get_c() );
+    selected->put(1, 2, jDim_.get_c() );
+    selected->put(2, 2, kDim_.get_c() );
 
     mHandle_ = MatrixHandle(selected);
   }
@@ -328,17 +315,17 @@ FieldSlicer::execute()
     if (!module_dynamic_compile(ci, algo)) return;
 
     unsigned int index;
-    if (axis_ == 0) {
-      index = iindex_;
+    if (Axis_.get_c() == 0) {
+      index = iIndex_.get_c();
     }
-    else if (axis_ == 1) {
-      index = jindex_;
+    else if (Axis_.get_c() == 1) {
+      index = jIndex_.get_c();
     }
     else {
-      index = kindex_;
+      index = kIndex_.get_c();
     }
 
-    fHandle_ = algo->execute(fHandle, axis_);
+    fHandle_ = algo->execute(fHandle, Axis_.get_c());
 
     // Now the new field is defined so do the work on it.
     const TypeDescription *iftd = fHandle->get_type_description();
@@ -349,7 +336,7 @@ FieldSlicer::execute()
 
     if (!module_dynamic_compile(ci, workalgo)) return;
   
-    workalgo->execute(fHandle, fHandle_, index, axis_);
+    workalgo->execute(fHandle, fHandle_, index, Axis_.get_c());
   }
 
   // Send the data downstream
