@@ -29,16 +29,9 @@
 
 itcl_class SCIRun_FieldsGeometry_TransformMesh {
     inherit Module
+
     constructor {config} {
         set name TransformMesh
-	
-	global $this-function
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-function "result = p + Vector(1.0, 2.0, 3.0);"
     }
 
     method update_text {} {

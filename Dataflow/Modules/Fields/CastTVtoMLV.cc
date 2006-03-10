@@ -71,7 +71,9 @@ public:
 
 CastTVtoMLV::CastTVtoMLV(GuiContext* ctx)
   : Module("CastTVtoMLV", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    nx_(ctx->subVar("nx")), ny_(ctx->subVar("ny")), nz_(ctx->subVar("nz"))
+    nx_(ctx->subVar("nx"), 8),
+    ny_(ctx->subVar("ny"), 8),
+    nz_(ctx->subVar("nz"), 8)
 {
 }
 

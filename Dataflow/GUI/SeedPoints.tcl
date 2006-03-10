@@ -29,41 +29,15 @@
 
 itcl_class SCIRun_FieldsCreate_SeedPoints {
     inherit Module
+
     constructor {config} {
         set name SeedPoints	
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-	global $this-num_seeds
-	set $this-num_seeds 1
-
-	global $this-probe_scale
-	set $this-probe_scale 5.0
-
-	global $this-send
-	set $this-send 0
-
-	global $this-widget
-	set $this-widget 0
-
-	global $this-red
-	set $this-red 0.5
-	global $this-green
-	set $this-green 0.5
-	global $this-blue
-	set $this-blue 0.5
-
-	global $this-auto_execute
-	set $this-auto_execute 1
     }
 
     method send {} {
 	set $this-send 1
 	$this-c needexecute
     }
-
 
     method make_seed {i} {
 	set w .ui[modname]

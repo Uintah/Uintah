@@ -29,61 +29,16 @@
 
 itcl_class SCIRun_FieldsCreate_ClipField {
     inherit Module
+
     constructor {config} {
         set name ClipField
-
-	global $this-clip-location  # Where to clip
-	global $this-clipmode       # Which clip mode to use.
-	global $this-autoexecute    # Execute on widget button up?
-	global $this-autoinvert     # Invert again when executing?
-	global $this-execmode       # Which of three executes to use.
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	# Do not change these default values from -1.0
-	# They are used to check state in the CC file
-	global $this-center_x
-	global $this-center_y
-	global $this-center_x
-	global $this-right_x
-	global $this-right_y
-	global $this-right_z
-	global $this-down_x
-	global $this-down_y
-	global $this-down_z
-	global $this-in_x
-	global $this-in_y
-	global $this-in_z
-	global $this-scale
-
-	set $this-center_x {-1.0}
-	set $this-center_y {-1.0}
-	set $this-center_z {-1.0}
-	set $this-right_x {-1.0}
-	set $this-right_y {-1.0}
-	set $this-right_z {-1.0}
-	set $this-down_x {-1.0}
-	set $this-down_y {-1.0}
-	set $this-down_z {-1.0}
-	set $this-in_x {-1.0}
-	set $this-in_y {-1.0}
-	set $this-in_z {-1.0}
-	set $this-scale {-1.0}
-
-
-	set $this-clip-location cell
-	set $this-clipmode replace
-	set $this-autoexecute 0
-	set $this-autoinvert 0
-	set $this-execmode 0
     }
 
     method execrunmode {} {
 	set $this-execmode execute
 	$this-c needexecute
     }
+
     method invert {} {
 	set $this-execmode invert
 	$this-c needexecute

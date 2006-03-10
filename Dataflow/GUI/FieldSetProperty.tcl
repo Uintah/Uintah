@@ -41,26 +41,9 @@ catch {rename SCIRun_FieldsOther_FieldSetProperty ""}
 
 itcl_class SCIRun_FieldsOther_FieldSetProperty {
     inherit Module
+
     constructor {config} {
         set name FieldSetProperty
-        set_defaults
-    }
-
-    method set_defaults {} {
-        global $this-num-entries
-        set $this-num-entries 0
-
-	global $this-check
-	global $this-property
-	global $this-type
-	global $this-value
-	global $this-readonly
-
-	set $this-check 0
-	set $this-property ""
-	set $this-type "unknown"
-	set $this-value ""
-	set $this-readonly 0
     }
 
     method ui {} {
@@ -114,7 +97,7 @@ itcl_class SCIRun_FieldsOther_FieldSetProperty {
 	    for {set i 0} {$i < [set $this-num-entries]} {incr i} {
 		
 		if { [catch { set t [set $this-check-$i] } ] } {
-		    set $this-check-$i [set $this-check]
+		    set $this-check-$i 0
 		}
 		if { [catch { set t [set $this-property-$i] } ] } {
 		    set $this-property-$i [set $this-property]

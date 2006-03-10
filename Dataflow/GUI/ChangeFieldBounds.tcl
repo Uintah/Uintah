@@ -29,53 +29,13 @@
 
 itcl_class SCIRun_FieldsGeometry_ChangeFieldBounds {
     inherit Module
+
     constructor {config} {
         set name ChangeFieldBounds
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
+	# The width of the first column of the data display.
 	global $this-firstwidth
 	set $this-firstwidth 12
-
-	global $this-box-scale
-	set $this-box-scale -1.0
-
-	global $this-resetting
-	set $this-resetting 0
-
-	# these won't be saved 
-        global $this-inputcenterx
-        global $this-inputcentery
-        global $this-inputcenterz
-        global $this-inputsizex
-        global $this-inputsizey
-        global $this-inputsizez
-        set $this-inputcenterx "---"
-        set $this-inputcentery "---"
-        set $this-inputcenterz "---"
-        set $this-inputsizex "---"
-        set $this-inputsizey "---"
-        set $this-inputsizez "---"
-
-	# these will be saved
-        global $this-outputcenterx
-        global $this-outputcentery
-        global $this-outputcenterz
-	global $this-useoutputcenter
-        global $this-outputsizex
-        global $this-outputsizey
-        global $this-outputsizez
-	global $this-useoutputsize
-        set $this-outputcenterx 0
-        set $this-outputcentery 0
-        set $this-outputcenterz 0
-	set $this-useoutputcenter 0
-        set $this-outputsizex 0
-        set $this-outputsizey 0
-        set $this-outputsizez 0
-	set $this-useoutputsize 0
     }
 
     method ui {} {

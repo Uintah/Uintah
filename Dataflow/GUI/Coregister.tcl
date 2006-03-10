@@ -37,28 +37,12 @@ itcl_class SCIRun_FieldsOther_Coregister {
     
     constructor {config} {
 	set name Coregister
-	set_defaults
-    }
-    
-    method set_defaults {} {
-	global $this-allowScale
-	global $this-allowRotate
-	global $this-allowTranslate
-	global $this-seed
-	global $this-iters
-	global $this-misfitTol
+
 	global $this-method
-	set $this-allowScale 1
-	set $this-allowRotate 1
-	set $this-allowTranslate 1
-	set $this-seed 1
-	set $this-iters 1000
-	set $this-misfitTol 0.001
 	set $this-method "Analytic"
 	trace variable $this-method w "$this switch_to_method"
-
     }
-
+    
     method switch_to_method {name1 name2 op} {
 	#puts stdout "switching"
 	set window .ui[modname]

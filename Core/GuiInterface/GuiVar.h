@@ -158,6 +158,17 @@ public:
     y_(ctx->subVar("y")),
     z_(ctx->subVar("z"))
   {}
+  GuiTriple(GuiContext* context, const T &val) :
+    GuiVar(context),
+    x_(ctx->subVar("x")),
+    y_(ctx->subVar("y")),
+    z_(ctx->subVar("z"))
+  {
+    x_.set(val.x());
+    y_.set(val.y());
+    z_.set(val.z());
+  }
+
   virtual ~GuiTriple() {}
 
   inline T get() {

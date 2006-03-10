@@ -105,14 +105,14 @@ DECLARE_MAKER(SeedPoints)
 SeedPoints::SeedPoints(GuiContext* ctx)
   : Module("SeedPoints", ctx, Filter, "FieldsCreate", "SCIRun"),
     widget_lock_("SeedPoints widget lock"),
-    gui_num_seeds_(ctx->subVar("num_seeds")),
-    gui_probe_scale_(ctx->subVar("probe_scale")),
-    gui_send_(ctx->subVar("send")),
-    gui_widget_(ctx->subVar("widget")),
-    red_(ctx->subVar("red")),
-    green_(ctx->subVar("green")),
-    blue_(ctx->subVar("blue")),
-    gui_auto_execute_(ctx->subVar("auto_execute"))
+    gui_num_seeds_(ctx->subVar("num_seeds"), 1),
+    gui_probe_scale_(ctx->subVar("probe_scale"), 5.0),
+    gui_send_(ctx->subVar("send"), 0),
+    gui_widget_(ctx->subVar("widget"), 0),
+    red_(ctx->subVar("red"), 0.5),
+    green_(ctx->subVar("green"), 0.5),
+    blue_(ctx->subVar("blue"), 0.5),
+    gui_auto_execute_(ctx->subVar("auto_execute"), 1)
 {
 }
 

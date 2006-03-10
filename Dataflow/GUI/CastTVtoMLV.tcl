@@ -29,18 +29,9 @@
 
 itcl_class SCIRun_FieldsGeometry_CastTVtoMLV {
     inherit Module
+
     constructor {config} {
         set name CastTVtoMLV
-	global $this-nx
-	global $this-ny
-	global $this-nz
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-nx 8
-	set $this-ny 8
-	set $this-nz 8
     }
 
     method ui {} {

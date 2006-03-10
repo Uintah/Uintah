@@ -83,9 +83,9 @@ DECLARE_MAKER(PlanarTransformField)
 
 PlanarTransformField::PlanarTransformField(GuiContext* context)
   : Module("PlanarTransformField", context, Filter, "FieldsGeometry", "SCIRun"),
-    Axis_(context->subVar("axis")),
-    TransX_(context->subVar("trans_x")),
-    TransY_(context->subVar("trans_y")),
+    Axis_(context->subVar("axis"), 2),
+    TransX_(context->subVar("trans_x"), 0),
+    TransY_(context->subVar("trans_y"), 0),
     axis_(2),
     tx_(0),
     ty_(0),

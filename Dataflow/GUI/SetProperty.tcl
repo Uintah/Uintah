@@ -41,18 +41,11 @@ catch {rename SCIRun_FieldsOther_SetProperty ""}
 
 itcl_class SCIRun_FieldsOther_SetProperty {
     inherit Module
+
     constructor {config} {
         set name SetProperty
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-prop
-        global $this-val
-        global $this-meshprop
-        set $this-prop units
-        set $this-val cm
-        set $this-meshprop 1
-    }
+
     method make_entry {w text v c} {
         frame $w
         label $w.l -text "$text"
@@ -62,6 +55,7 @@ itcl_class SCIRun_FieldsOther_SetProperty {
         bind $w.e <Return> $c
         pack $w.e -side right
     }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

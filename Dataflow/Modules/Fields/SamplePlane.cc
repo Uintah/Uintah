@@ -90,18 +90,18 @@ DECLARE_MAKER(SamplePlane)
   
 SamplePlane::SamplePlane(GuiContext* ctx) : 
   Module("SamplePlane", ctx, Filter, "FieldsCreate", "SCIRun"),
-  size_x_(ctx->subVar("sizex")),
-  size_y_(ctx->subVar("sizey")),
-  size_z_(ctx->subVar("sizez")),
-  z_value_(ctx->subVar("z_value")),
-  auto_size_(ctx->subVar("auto_size")),
-  axis_(ctx->subVar("axis")),
-  padpercent_(ctx->subVar("padpercent")),
-  position_(ctx->subVar("pos")),
-  data_at_(ctx->subVar("data-at")),
-  update_type_(ctx->subVar("update_type")),
-  custom_origin_(ctx->subVar("corigin")),
-  custom_normal_(ctx->subVar("cnormal"))
+  size_x_(ctx->subVar("sizex"), 20),
+  size_y_(ctx->subVar("sizey"), 20),
+  size_z_(ctx->subVar("sizez"), 2),
+  z_value_(ctx->subVar("z_value"), 0),
+  auto_size_(ctx->subVar("auto_size"), 0),
+  axis_(ctx->subVar("axis"), 0),
+  padpercent_(ctx->subVar("padpercent"), 0),
+  position_(ctx->subVar("pos"), 0),
+  data_at_(ctx->subVar("data-at"), "Nodes"),
+  update_type_(ctx->subVar("update_type"), "On Release"),
+  custom_origin_(ctx->subVar("corigin"), Point(0.0, 0.0, 0.0)),
+  custom_normal_(ctx->subVar("cnormal"), Vector(1.0, 1.0, 1.0))
 {
 }
 
