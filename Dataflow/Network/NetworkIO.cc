@@ -30,6 +30,9 @@
 //    Date   : Mon Feb  6 14:32:15 2006
 
 #include <Dataflow/Network/NetworkIO.h>
+#include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
@@ -112,10 +115,16 @@ NetworkIO::gui_add_module_at_position(const string &mod_id,
 				      const string& x, 
 				      const string &y)
 {
+  // create the module.
+  Module* mod = NetworkEditor::get_network()->add_module(package, 
+							 category, 
+							 module);
+
+  // Now tell tcl about the module.
   GuiInterface *gui = GuiInterface::getSingleton();
 
   string cmmd = "addModuleAtPosition " + package + " " + 
-    category + " " + module + " " + x + " " + y + " 1";
+    category + " " + module + " " + x + " " + y + " 1 " + mod->getID();
   string mid = gui->eval(cmmd);
   id_map_t &mmap = netid_to_modid_.top();
   mmap[mod_id] = mid;
@@ -128,12 +137,26 @@ NetworkIO::gui_add_connection(const string &con_id,
 			  const string &to_id, 
 			  const string &to_port)
 {
-  GuiInterface *gui = GuiInterface::getSingleton();
-  string sn = "Subnet";
   string from = get_mod_id(from_id);
   string to = get_mod_id(to_id);
-  string cmmd = "addConnection " + from + " " + 
-    from_port +  " " + to + " " + to_port;
+
+  // create the connection.
+  Network *net = NetworkEditor::get_network();
+  Module* omod = net->get_module_by_id(from);
+  Module* imod = net->get_module_by_id(to);
+  
+  int owhich = atoi(from_port.c_str());
+  int iwhich = atoi(to_port.c_str());
+  
+  net->connect(omod, owhich, imod, iwhich);
+
+  // Now tell tcl about the connection.
+  GuiInterface *gui = GuiInterface::getSingleton();
+
+  // tell tcl about the connection, last argument tells it not to creat the 
+  // connection on the C side, since we just did that above.
+  string cmmd = "createConnection [list " + from + " " + from_port +
+    " " + to + " " + to_port + "] 0 0";
 
   string cid = gui->eval(cmmd);
   id_map_t &cmap = netid_to_conid_.top();

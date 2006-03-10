@@ -650,7 +650,7 @@ proc findMovedModulePath { packvar catvar modvar } {
 }	        
 
 
-proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { absolute 0 } } {
+proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { absolute 0 } { modid "" } } {
     # Look up the real category for a module.  This allows networks to
     # be read in if the modules change categories.
     findMovedModulePath package category module
@@ -660,9 +660,12 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { abso
     set unknown_body [info body unknown]
     proc unknown { args } {}
     
-    # Tell the C++ network to create the requested module
-    set modid [netedit addmodule "$package" "$category" "$module"]
-
+    # default argument is empty, but if C already created the module, 
+    # it will pass the id in.
+    if { $modid == "" } {
+	# Tell the C++ network to create the requested module
+	set modid [netedit addmodule "$package" "$category" "$module"]
+    }
     # Reset the unknown proc to default behavior
     proc unknown { args } $unknown_body
 

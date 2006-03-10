@@ -77,69 +77,75 @@ Network::~Network()
 void
 Network::read_lock()
 {
-    the_lock.lock();
+  the_lock.lock();
 }
 
 
 void
 Network::read_unlock()
 {
-    the_lock.unlock();
+  the_lock.unlock();
 }
 
 
 void
 Network::write_lock()
 {
-    the_lock.lock();
+  the_lock.lock();
 }
 
 
 void
 Network::write_unlock()
 {
-    the_lock.unlock();
+  the_lock.unlock();
 }
 
 
 int
 Network::nmodules()
 {
-    return modules.size();
+  return modules.size();
 }
 
 
 Module*
 Network::module(int i)
 {
-    return modules[i];
+  return modules[i];
 }
 
 
 Connection*
 Network::connection(int i)
 {
-    return connections[i];
+  return connections[i];
 }
 
 
 string
 Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
-    if (p1 >= m1->numOPorts() || p2 >= m2->numIPorts())
-    {
-      return "";
-    }
+  
+  // dynamic port safeguard.
+  if (m2->lastportdynamic && p2 >= m2->iports.size()) {
+    p2 = m2->iports.size() - 1;
+  }
+  
+  if (p1 >= m1->numOPorts() || p2 >= m2->numIPorts())
+  {
+    return "";
+  }
 
-    ostringstream ids;
-    ids << m1->id << "_p" << p1 << "_to_" << m2->id << "_p" << p2;
-    Connection* conn=scinew Connection(m1, p1, m2, p2, ids.str());
-    connections.push_back(conn);
+  ostringstream ids;
+  ids << m1->id << "_p" << p1 << "_to_" << m2->id << "_p" << p2;
+  Connection* conn=scinew Connection(m1, p1, m2, p2, ids.str());
+  connections.push_back(conn);
 
-    // Reschedule next time we can.
-    reschedule=1;
+  // Reschedule next time we can.
+  reschedule=1;
 
-    return conn->id;
+  return conn->id;
 }
 
 
@@ -193,8 +199,8 @@ Network::add_module2(const string& packageName,
 
 Module*
 Network::add_module(const string& packageName,
-                            const string& categoryName,
-                            const string& moduleName)
+		    const string& categoryName,
+		    const string& moduleName)
 { 
   const string name = 
     remove_spaces(packageName + "_" + categoryName + "_" + moduleName + "_");
@@ -250,16 +256,16 @@ Network::add_instantiated_module(Module* mod)
 Module*
 Network::get_module_by_id(const string& id)
 {
-    MapStringModule::iterator mod;
-    mod = module_ids.find(id);
-    if (mod != module_ids.end())
-    {
-	return (*mod).second;
-    }
-    else
-    {
-	return 0;
-    }
+  MapStringModule::iterator mod;
+  mod = module_ids.find(id);
+  if (mod != module_ids.end())
+  {
+    return (*mod).second;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 
