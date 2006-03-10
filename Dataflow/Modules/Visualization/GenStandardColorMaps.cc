@@ -59,7 +59,7 @@ DESCRIPTION
 
 ****************************************/   
 
-#include <Dataflow/Modules/Visualization/GenStandardColorMaps.h> 
+#include <Dataflow/Network/Module.h> 
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Geom/Material.h>
 #include <Core/Malloc/Allocator.h>
@@ -75,6 +75,81 @@ using std::setw;
 #include <stdio.h>
 
 namespace SCIRun {
+
+
+/**************************************
+CLASS
+   GenStandardColorMaps
+
+   A module that generates fixed Colormaps for visualation purposes.
+
+GENERAL INFORMATION
+   GenStandarColorMaps.h
+   Written by:
+
+     Kurt Zimmerman
+     Department of Computer Science
+     University of Utah
+     December 1998
+
+     Copyright (C) 1998 SCI Group
+
+KEYWORDS
+   Colormap, Transfer Function
+
+DESCRIPTION
+     This module is used to create some
+     "standard" non-editable colormaps in Dataflow/Uintah.
+     Non-editable simply means that the colors cannot be
+     interactively manipulated.  The Module does, allow
+     for the the resolution of the colormaps to be changed.
+     This class sets up the data structures for Colormaps and
+     creates a module from which the user can choose from several
+     popular colormaps.  By clicking in the Color band the user 
+     manipulate the transparency of the color.  This is useful,
+     for example, when volume rendering, though many visualization
+     tool ignore the transparency data.
+
+****************************************/
+
+class GenStandardColorMaps : public Module { 
+  class StandardColorMap;
+  
+public: 
+  
+
+  // GROUP: Constructors: 
+  ////////// 
+  // Contructor taking 
+  // [in] string as an identifier
+  GenStandardColorMaps(GuiContext* ctx); 
+
+  // GROUP: Destructors: 
+  ////////// 
+  // Destructor
+  virtual ~GenStandardColorMaps(); 
+
+  ////////// 
+  // execution scheduled by scheduler   
+  virtual void execute(); 
+
+
+private:
+
+  GuiString positionList;
+  GuiString nodeList;
+  GuiInt width;
+  GuiInt height;
+  GuiString mapName;
+  GuiInt reverse;
+  GuiInt minRes;
+  GuiInt resolution;
+  GuiInt realres;
+  GuiDouble gamma;
+  GuiInt faux;
+  
+}; //class GenStandardColorMaps
+
 
 
 // ---------------------------------------------------------------------- // 
