@@ -65,10 +65,10 @@ private:
 DECLARE_MAKER(BundleGetField)
   BundleGetField::BundleGetField(GuiContext* ctx)
     : Module("BundleGetField", ctx, Filter, "Bundle", "SCIRun"),
-      guifield1name_(ctx->subVar("field1-name")),
-      guifield2name_(ctx->subVar("field2-name")),
-      guifield3name_(ctx->subVar("field3-name")),
-      guifields_(ctx->subVar("field-selection"))
+      guifield1name_(ctx->subVar("field1-name"), "field1"),
+      guifield2name_(ctx->subVar("field2-name"), "field2"),
+      guifield3name_(ctx->subVar("field3-name"), "field3"),
+      guifields_(ctx->subVar("field-selection"), "")
 {
 
 }

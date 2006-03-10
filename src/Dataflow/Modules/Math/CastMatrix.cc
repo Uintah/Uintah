@@ -45,6 +45,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>
 
@@ -56,8 +57,8 @@ class CastMatrix : public Module {
 
   GuiString oldtype_;
   GuiString newtype_;
-  GuiInt nrow_;
-  GuiInt ncol_;
+  GuiString nrow_;
+  GuiString ncol_;
 public:
   CastMatrix(GuiContext* ctx);
   virtual ~CastMatrix();
@@ -67,8 +68,10 @@ public:
 DECLARE_MAKER(CastMatrix)
 CastMatrix::CastMatrix(GuiContext* ctx)
 : Module("CastMatrix", ctx, Filter,"Math", "SCIRun"),
-  oldtype_(ctx->subVar("oldtype")), newtype_(ctx->subVar("newtype")),
-  nrow_(ctx->subVar("nrow")), ncol_(ctx->subVar("ncol"))
+  oldtype_(ctx->subVar("oldtype"), "Same"),
+  newtype_(ctx->subVar("newtype"), "Unknown"),
+  nrow_(ctx->subVar("nrow"), "??"),
+  ncol_(ctx->subVar("ncol"), "??")
 {
 }
 
@@ -92,8 +95,8 @@ CastMatrix::execute()
     warning("Empty input matrix.");
     return;
   }
-  nrow_.set(imH->nrows());
-  ncol_.set(imH->ncols());
+  nrow_.set(to_string(imH->nrows()));
+  ncol_.set(to_string(imH->ncols()));
 
   oldtype_.set(imH->type_name());
 

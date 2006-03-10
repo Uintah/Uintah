@@ -31,20 +31,10 @@
 
 itcl_class SCIRun_FieldsCreate_RefineTetVol {
     inherit Module
+
     constructor {config} {
         set name RefineTetVol
-        set_defaults
     }
-
-    method set_defaults {} {
-	global $this-cell_index
-	global $this-execution_mode
-
-	set $this-cell_index -1
-	set $this-execution_mode sub_one
-    }
-
-
 
     method ui {} {
         set w .ui[modname]

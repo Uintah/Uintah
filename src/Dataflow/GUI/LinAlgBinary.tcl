@@ -29,16 +29,11 @@
 
 itcl_class SCIRun_Math_LinAlgBinary {
     inherit Module
+
     constructor {config} {
         set name LinAlgBinary
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-op
-	set $this-op "Mult"
-        global $this-function
-	set $this-function "x+y"
-    }
+
     method make_entry {w text v c} {
         frame $w
         label $w.l -text "$text"

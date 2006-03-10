@@ -30,38 +30,16 @@
 
 itcl_class SCIRun_Bundle_BundleGetPath {
     inherit Module
+
     constructor {config} {
         set name BundleGetPath
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-path1-name
-        global $this-path2-name
-        global $this-path3-name
-        global $this-path1-listbox
-        global $this-path2-listbox
-        global $this-path3-listbox
-        global $this-path-selection
-        global $this-path1-entry
-        global $this-path2-entry
-        global $this-path3-entry
-
-
-        set $this-path1-name "path1"
-        set $this-path2-name "path2"
-        set $this-path3-name "path3"
-        set $this-path-selection ""
-
-        set $this-path1-listbox ""
-        set $this-path2-listbox ""
-        set $this-path3-listbox ""
-        set $this-path1-entry ""
-        set $this-path2-entry ""
-        set $this-path3-entry ""
-
-
+        initGlobal $this-path1-listbox ""
+        initGlobal $this-path2-listbox ""
+        initGlobal $this-path3-listbox ""
+        initGlobal $this-path1-entry ""
+        initGlobal $this-path2-entry ""
+        initGlobal $this-path3-entry ""
     }
 
     method ui {} {

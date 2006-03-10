@@ -64,10 +64,10 @@ private:
 DECLARE_MAKER(BundleGetColorMap)
   BundleGetColorMap::BundleGetColorMap(GuiContext* ctx)
     : Module("BundleGetColorMap", ctx, Filter, "Bundle", "SCIRun"),
-      guicolormap1name_(ctx->subVar("colormap1-name")),
-      guicolormap2name_(ctx->subVar("colormap2-name")),
-      guicolormap3name_(ctx->subVar("colormap3-name")),
-      guicolormaps_(ctx->subVar("colormap-selection"))
+      guicolormap1name_(ctx->subVar("colormap1-name"), "colormap1"),
+      guicolormap2name_(ctx->subVar("colormap2-name"), "colormap2"),
+      guicolormap3name_(ctx->subVar("colormap3-name"), "colormap3"),
+      guicolormaps_(ctx->subVar("colormap-selection"), "")
 {
 }
 

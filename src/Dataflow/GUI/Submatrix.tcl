@@ -29,25 +29,9 @@
 
 itcl_class SCIRun_Math_Submatrix {
     inherit Module
+
     constructor {config} {
         set name Submatrix
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-minrow
-	global $this-maxrow
-	global $this-mincol
-	global $this-maxcol
-	global $this-nrow
-	global $this-ncol
-
-	set $this-minrow "--"
-	set $this-maxrow "--"
-	set $this-mincol "--"
-	set $this-maxcol "--"
-	set $this-nrow "??"
-	set $this-ncol "??"
     }
 
     method ui {} {

@@ -30,24 +30,9 @@
 
 itcl_class SCIRun_Bundle_BundleSetNrrd {
     inherit Module
+
     constructor {config} {
         set name BundleSetNrrd
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-        global $this-nrrd1-name
-        global $this-nrrd2-name
-        global $this-nrrd3-name
-        global $this-bundlename
-        
-
-        set $this-nrrd1-name "nrrd1"
-        set $this-nrrd2-name "nrrd2"
-        set $this-nrrd3-name "nrrd3"
-        set $this-bundlename ""
-
     }
 
     method ui {} {

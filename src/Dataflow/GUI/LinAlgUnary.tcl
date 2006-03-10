@@ -29,16 +29,11 @@
 
 itcl_class SCIRun_Math_LinAlgUnary {
     inherit Module
+
     constructor {config} {
         set name LinAlgUnary
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-op
-	set $this-op "Function"
-        global $this-function
-	set $this-function "x+10"
-    }
+
     method make_entry {w text v c} {
         frame $w
         label $w.l -text "$text"
@@ -48,6 +43,7 @@ itcl_class SCIRun_Math_LinAlgUnary {
         bind $w.e <Return> $c
         pack $w.e -side right
     }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

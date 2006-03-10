@@ -127,26 +127,26 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     control_lock_("VolumeSlicer resolution lock"),
     control_widget_(0),
     control_id_(-1),
-    control_pos_saved_(ctx->subVar("control_pos_saved")),
+    control_pos_saved_(ctx->subVar("control_pos_saved"), 0),
     control_x_(ctx->subVar("control_x")),
     control_y_(ctx->subVar("control_y")),
     control_z_(ctx->subVar("control_z")),
-    draw_x_(ctx->subVar("drawX")),
-    draw_y_(ctx->subVar("drawY")),
-    draw_z_(ctx->subVar("drawZ")),
-    draw_view_(ctx->subVar("drawView")),
-    interp_mode_(ctx->subVar("interp_mode")),
-    draw_phi0_(ctx->subVar("draw_phi_0")),
-    draw_phi1_(ctx->subVar("draw_phi_1")),
-    phi0_(ctx->subVar("phi_0")),
-    phi1_(ctx->subVar("phi_1")),
-    cyl_active_(ctx->subVar("cyl_active")),   
-    gui_multi_level_(ctx->subVar("multi_level")),
-    gui_color_changed_(ctx->subVar("color_changed")),
-    gui_colors_(ctx->subVar("colors")),
-    gui_level_on_(ctx->subVar("level_on")),
-    gui_outline_levels_(ctx->subVar("outline_levels")),
-    gui_use_stencil_(ctx->subVar("use_stencil")),
+    draw_x_(ctx->subVar("drawX"), 0),
+    draw_y_(ctx->subVar("drawY"), 0),
+    draw_z_(ctx->subVar("drawZ"), 0),
+    draw_view_(ctx->subVar("drawView"), 0),
+    interp_mode_(ctx->subVar("interp_mode"), 1),
+    draw_phi0_(ctx->subVar("draw_phi_0"), 0),
+    draw_phi1_(ctx->subVar("draw_phi_1"), 0),
+    phi0_(ctx->subVar("phi_0"), 30.0),
+    phi1_(ctx->subVar("phi_1"), 60.0),
+    cyl_active_(ctx->subVar("cyl_active")), 
+    gui_multi_level_(ctx->subVar("multi_level"), 1),
+    gui_color_changed_(ctx->subVar("color_changed"), 1),
+    gui_colors_(ctx->subVar("colors"), ""),
+    gui_level_on_(ctx->subVar("level_on"), ""),
+    gui_outline_levels_(ctx->subVar("outline_levels"), 0),
+    gui_use_stencil_(ctx->subVar("use_stencil"), 0),
     old_tex_(0),
     old_cmap1_(0),
     old_cmap2_(0),
@@ -416,15 +416,6 @@ VolumeSlicer::tcl_command(GuiArgs& args, void* userdata)
     ogeom_->flushViews();
   } else if (args[1] == "color_changed") {
     color_changed_ = true;
-
-//     def_color_r_.reset();
-//     def_color_g_.reset();
-//     def_color_b_.reset();
-//     def_color_a_.reset();
-//     def_material_->diffuse =
-//       Color(def_color_r_.get(), def_color_g_.get(), def_color_b_.get());
-//     def_material_->transparency = def_color_a_.get();
-				  
   } else {
     Module::tcl_command(args, userdata);
   }

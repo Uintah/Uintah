@@ -29,20 +29,11 @@
 
 itcl_class SCIRun_Math_CastMatrix {
     inherit Module
+
     constructor {config} {
         set name CastMatrix
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-newtype
-        global $this-oldtype
-	global $this-nrow
-	global $this-ncol
-	set $this-newtype "Same"
-        set $this-oldtype "Unknown"
-	set $this-nrow "??"
-	set $this-ncol "??"
-    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

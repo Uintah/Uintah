@@ -1,24 +1,13 @@
 itcl_class SCIRun_String_StringInfo {
     inherit Module
+
     constructor {config} {
         set name StringInfo
-        set_defaults
-    }
-
-    method set_defaults {} {
-    	global $this-inputstring
-        global $this-update
-        
-        set $this-inputstring ""
-        set $this-update "$this update"
     }
 
     method ui {} {
     
         global $this-inputstring
-        global $this-update
-
-        set $this-update "$this update"
 
         set w .ui[modname]
         if {[winfo exists $w]} {

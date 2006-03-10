@@ -30,38 +30,16 @@
 
 itcl_class SCIRun_Bundle_BundleGetBundle {
     inherit Module
+
     constructor {config} {
         set name BundleGetBundle
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-bundle1-name
-        global $this-bundle2-name
-        global $this-bundle3-name
-        global $this-bundle1-listbox
-        global $this-bundle2-listbox
-        global $this-bundle3-listbox
-        global $this-bundle-selection
-        global $this-bundle1-entry
-        global $this-bundle2-entry
-        global $this-bundle3-entry
-
-
-        set $this-bundle1-name "bundle1"
-        set $this-bundle2-name "bundle2"
-        set $this-bundle3-name "bundle3"
-        set $this-bundle-selection ""
-
-        set $this-bundle1-listbox ""
-        set $this-bundle2-listbox ""
-        set $this-bundle3-listbox ""
-        set $this-bundle1-entry ""
-        set $this-bundle2-entry ""
-        set $this-bundle3-entry ""
-
-
+        initGlobal $this-bundle1-listbox ""
+        initGlobal $this-bundle2-listbox ""
+        initGlobal $this-bundle3-listbox ""
+        initGlobal $this-bundle1-entry ""
+        initGlobal $this-bundle2-entry ""
+        initGlobal $this-bundle3-entry ""
     }
 
     method ui {} {

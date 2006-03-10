@@ -61,19 +61,24 @@ private:
 
 
 DECLARE_MAKER(BundleSetColorMap)
-  BundleSetColorMap::BundleSetColorMap(GuiContext* ctx)
-    : Module("BundleSetColorMap", ctx, Filter, "Bundle", "SCIRun"),
-      guicolormap1name_(ctx->subVar("colormap1-name")),
-      guicolormap2name_(ctx->subVar("colormap2-name")),
-      guicolormap3name_(ctx->subVar("colormap3-name")),
-      guibundlename_(ctx->subVar("bundlename"))
+
+BundleSetColorMap::BundleSetColorMap(GuiContext* ctx)
+  : Module("BundleSetColorMap", ctx, Filter, "Bundle", "SCIRun"),
+    guicolormap1name_(ctx->subVar("colormap1-name"), "colormap1"),
+    guicolormap2name_(ctx->subVar("colormap2-name"), "colormap2"),
+    guicolormap3name_(ctx->subVar("colormap3-name"), "colormap3"),
+    guibundlename_(ctx->subVar("bundlename"), "")
 {
 }
 
-BundleSetColorMap::~BundleSetColorMap(){
+
+BundleSetColorMap::~BundleSetColorMap()
+{
 }
 
-void BundleSetColorMap::execute()
+
+void
+BundleSetColorMap::execute()
 {
   string colormap1name = guicolormap1name_.get();
   string colormap2name = guicolormap2name_.get();

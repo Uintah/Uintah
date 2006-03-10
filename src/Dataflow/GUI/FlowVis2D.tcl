@@ -31,19 +31,9 @@ catch {rename FlowVis2D ""}
 
 itcl_class SCIRun_Visualization_FlowVis2D {
     inherit Module
+
     constructor {config} {
 	set name FlowVis2D
-	set_defaults
-    }
-    method set_defaults {} {
-	global $this-vis_type
-        global $this-clear
-        global $this-conv_accums
-        global $this-adv_accums
-        set $this-vis_type 0
-        set $this-clear 1
-        set $this-adv_accums 3
-        set $this-conv_accums 3
     }
 
     method ui {} {

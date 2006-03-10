@@ -31,26 +31,9 @@ catch {rename TextureBuilder ""}
 
 itcl_class SCIRun_Visualization_TextureBuilder {
     inherit Module
+
     constructor {config} {
 	set name TextureBuilder
-	set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-card_mem
-	global $this-card_mem_auto
-	global $this-vmin
-	global $this-vmax
-	global $this-gmin
-	global $this-gmax
-	global $this-is_fixed
-	set $this-vmin 0
-	set $this-vmax 1
-	set $this-gmin 0
-	set $this-gmax 1
-	set $this-is_fixed 0
-	set $this-card_mem 16
-	set $this-card_mem_auto 1
 
 	# Backwards compatability with GLTextureBuilder
 	global $this-max_brick_dim

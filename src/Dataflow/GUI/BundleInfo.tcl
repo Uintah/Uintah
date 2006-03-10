@@ -33,14 +33,7 @@ itcl_class SCIRun_Bundle_BundleInfo {
 
     constructor {config} {
         set name BundleInfo
-        set_defaults
     }
-
-    method set_defaults {} {
-        global $this-tclinfostring
-        set $this-tclinfostring ""
-    }
-
 
     method ui {} {
 
