@@ -69,7 +69,8 @@ public:
 DECLARE_MAKER(LinAlgUnary)
 LinAlgUnary::LinAlgUnary(GuiContext* ctx)
 : Module("LinAlgUnary", ctx, Filter,"Math", "SCIRun"),
-  op_(ctx->subVar("op")), function_(ctx->subVar("function"))
+  op_(ctx->subVar("op"), "Function"),
+  function_(ctx->subVar("function"), "x+10")
 {
 }
 

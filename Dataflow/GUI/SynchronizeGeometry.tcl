@@ -31,14 +31,8 @@ itcl_class SCIRun_Render_SynchronizeGeometry {
    
     constructor {config} {
         set name SynchronizeGeometry
-        set_defaults
     }
-    method set_defaults {} {
-	global $this-enforce
-	
-	set $this-enforce 1
-	
-    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

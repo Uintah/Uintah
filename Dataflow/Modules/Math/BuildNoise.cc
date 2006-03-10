@@ -64,7 +64,7 @@ public:
 DECLARE_MAKER(BuildNoise)
 BuildNoise::BuildNoise(GuiContext* ctx)
 : Module("BuildNoise", ctx, Filter,"Math", "SCIRun"),
-  snr_(ctx->subVar("snr"))
+  snr_(ctx->subVar("snr"), 10.0)
 {
 }
 

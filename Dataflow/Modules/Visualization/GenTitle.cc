@@ -98,19 +98,16 @@ DECLARE_MAKER(GenTitle)
 
 GenTitle::GenTitle(GuiContext *context)
   : Module("GenTitle", context, Source, "Visualization", "SCIRun"),
-    iShowValue_(context->subVar("showValue")),
-    dValue_(context->subVar("value")),
-    sFormat_(context->subVar("format")),
-    dSize_(context->subVar("size")),
-    sLocation_(context->subVar("location")),
-    color_r_(ctx->subVar("color-r")),
-    color_g_(ctx->subVar("color-g")),
-    color_b_(ctx->subVar("color-b")),
-
+    iShowValue_(context->subVar("showValue"), 0),
+    dValue_(context->subVar("value"), 0),
+    sFormat_(context->subVar("format"), "My Title"),
+    dSize_(context->subVar("size"), 100),
+    sLocation_(context->subVar("location"), "Top Left"),
+    color_r_(ctx->subVar("color-r"), 1.0),
+    color_g_(ctx->subVar("color-g"), 1.0),
+    color_b_(ctx->subVar("color-b"), 1.0),
     value_(0),
-
-    material_(scinew Material(Color(1., 1., 1.))),
-
+    material_(scinew Material(Color(1.0, 1.0, 1.0))),
     update_(false)
 {
 }

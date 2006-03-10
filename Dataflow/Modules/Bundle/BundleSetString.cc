@@ -60,17 +60,21 @@ private:
 
 
 DECLARE_MAKER(BundleSetString)
-  BundleSetString::BundleSetString(GuiContext* ctx)
-    : Module("BundleSetString", ctx, Filter, "Bundle", "SCIRun"),
-      guistring1name_(ctx->subVar("string1-name")),
-      guistring2name_(ctx->subVar("string2-name")),
-      guistring3name_(ctx->subVar("string3-name")),
-      guibundlename_(ctx->subVar("bundlename"))
+
+BundleSetString::BundleSetString(GuiContext* ctx)
+  : Module("BundleSetString", ctx, Filter, "Bundle", "SCIRun"),
+    guistring1name_(ctx->subVar("string1-name"), "string1"),
+    guistring2name_(ctx->subVar("string2-name"), "string2"),
+    guistring3name_(ctx->subVar("string3-name"), "string3"),
+    guibundlename_(ctx->subVar("bundlename"))
 {
 }
 
-BundleSetString::~BundleSetString(){
+
+BundleSetString::~BundleSetString()
+{
 }
+
 
 void
 BundleSetString::execute()

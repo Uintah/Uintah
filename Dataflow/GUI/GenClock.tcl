@@ -42,38 +42,6 @@ itcl_class SCIRun_Visualization_GenClock {
    
     constructor {config} {
         set name GenClock
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-type
-	global $this-bbox
-	global $this-format
-	global $this-min
-	global $this-max
-	global $this-current
-	global $this-size
-	global $this-location
-	global $this-location-x
-	global $this-location-y
-	global $this-color-r
-	global $this-color-g
-	global $this-color-b
-
-	set $this-type 0
-	set $this-bbox 1
-	set $this-format "%8.3f seconds"
-	set $this-min 0
-	set $this-max 1
-	set $this-current 0
-	set $this- 1.0
-	set $this-size 100
-	set $this-location "Top Left"
-	set $this-location-x [expr -31.0/32.0]
-	set $this-location-y [expr  31.0/32.0]
-	set $this-color-r 1.0
-	set $this-color-g 1.0
-	set $this-color-b 1.0
     }
 
     method ui {} {

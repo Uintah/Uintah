@@ -29,31 +29,9 @@
 
 itcl_class SCIRun_Visualization_ShowColorMap {
     inherit Module
+
     constructor {config} {
         set name ShowColorMap
-	global $this-length       # One of three lengths to use.
-	global $this-side         # Which side to put the map on.
-	global $this-numlabels    # How many labels to use on the map.
-	global $this-scale
-	global $this-numsigdigits
-	global $this-units
-	global $this-text_color
-	global $this-text-fontsize
-	global $this-extra-padding
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-length half2
-	set $this-side left
-	set $this-numlabels 5
-	set $this-scale 1.0
-	set $this-numsigdigits 2
-	set $this-units ""
-	set $this-text_color 1
-	set $this-text-fontsize 2
-	set $this-extra-padding 0
     }
 
     method ui {} {

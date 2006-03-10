@@ -31,37 +31,13 @@ catch {rename SolveMatrix ""}
 
 itcl_class SCIRun_Math_SolveMatrix {
     inherit Module
+
     constructor {config} {
 	set name SolveMatrix
-	set_defaults
-    }
-    method set_defaults {} {
-	global $this-target_error $this-method_sci $this-method $this-precond $this-orig_error
-	global $this-current_error $this-flops $this-floprate $this-iteration
-	global $this-memrefs $this-memrate $this-maxiter
-	global $this-use_previous_so
-	global $this-np
-	global $this-emit_partial $this-emit_iter
-        global $this-graphs
-	
-        set $this-target_error 0.001
-	set $this-method "Conjugate Gradient & Precond. (SCI)"
-        set $this-precond jacobi
-	set $this-orig_error 0
-	set $this-current_error 0
-	set $this-flops 0
-	set $this-floprate 0
-	set $this-memrefs 0
-	set $this-memrate 0
-	set $this-iteration 0
-	set $this-maxiter 200
-	set $this-use_previous_soln 1
-	set $this-emit_partial 1
-	set $this-emit_iter 50
-	set $this-np 4
+
+        global this-graphs
         set $this-graphs {}
     }
-    
     
     method switchmethod {} {
 	global $this-method

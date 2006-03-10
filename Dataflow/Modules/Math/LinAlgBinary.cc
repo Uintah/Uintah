@@ -69,7 +69,8 @@ public:
 DECLARE_MAKER(LinAlgBinary)
 LinAlgBinary::LinAlgBinary(GuiContext* ctx)
 : Module("LinAlgBinary", ctx, Filter,"Math", "SCIRun"),
-  op_(ctx->subVar("op")), function_(ctx->subVar("function"))
+  op_(ctx->subVar("op"), "Mult"),
+  function_(ctx->subVar("function"), "x+y")
 {
 }
 

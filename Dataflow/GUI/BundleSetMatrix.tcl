@@ -30,24 +30,9 @@
 
 itcl_class SCIRun_Bundle_BundleSetMatrix {
     inherit Module
+
     constructor {config} {
         set name BundleSetMatrix
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-        global $this-matrix1-name
-        global $this-matrix2-name
-        global $this-matrix3-name
-        global $this-bundlename
-        
-
-        set $this-matrix1-name "matrix1"
-        set $this-matrix2-name "matrix2"
-        set $this-matrix3-name "matrix3"
-        set $this-bundlename ""
-
     }
 
     method ui {} {

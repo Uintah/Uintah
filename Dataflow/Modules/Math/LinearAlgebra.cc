@@ -67,7 +67,7 @@ DECLARE_MAKER(LinearAlgebra)
 
 LinearAlgebra::LinearAlgebra(GuiContext* ctx)
   : Module("LinearAlgebra", ctx, Filter,"Math", "SCIRun"),
-    function_(ctx->subVar("function"))
+    function_(ctx->subVar("function"), "o1 = i1 * 12;")
 {
 }
 

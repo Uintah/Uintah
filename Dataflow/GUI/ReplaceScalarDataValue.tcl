@@ -29,14 +29,11 @@
 
 itcl_class SCIRun_FieldsData_ReplaceScalarDataValue {
     inherit Module
+
     constructor {config} {
         set name ReplaceScalarDataValue
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-function
-	set $this-function "x+10"
-    }
+
     method make_entry {w text v c} {
         frame $w
         label $w.l -text "$text"
@@ -46,6 +43,7 @@ itcl_class SCIRun_FieldsData_ReplaceScalarDataValue {
         bind $w.e <Return> $c
         pack $w.e -side right
     }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -57,7 +55,6 @@ itcl_class SCIRun_FieldsData_ReplaceScalarDataValue {
         wm minsize $w 170 20
         frame $w.f
 
-	global $this-function
 	make_entry $w.f.o "Old Value:" $this-oldvalue "$this-c needexecute"
 	make_entry $w.f.n "New Value:" $this-newvalue "$this-c needexecute"
 	pack $w.f.o $w.f.n -side left -expand 1 -fill x

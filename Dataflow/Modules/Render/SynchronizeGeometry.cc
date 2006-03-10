@@ -83,7 +83,7 @@ DECLARE_MAKER(SynchronizeGeometry)
 SynchronizeGeometry::SynchronizeGeometry(GuiContext* ctx)
   : Module("SynchronizeGeometry", ctx, Filter, "Render", "SCIRun"),
     max_portno_(0),
-    gui_enforce_(ctx->subVar("enforce"))
+    gui_enforce_(ctx->subVar("enforce"), 1)
 {
   have_own_dispatch = true;
 }

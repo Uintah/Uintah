@@ -61,19 +61,24 @@ private:
 
 
 DECLARE_MAKER(BundleSetMatrix)
-  BundleSetMatrix::BundleSetMatrix(GuiContext* ctx)
-    : Module("BundleSetMatrix", ctx, Filter, "Bundle", "SCIRun"),
-      guimatrix1name_(ctx->subVar("matrix1-name")),
-      guimatrix2name_(ctx->subVar("matrix2-name")),
-      guimatrix3name_(ctx->subVar("matrix3-name")),
-      guibundlename_(ctx->subVar("bundlename"))
+
+BundleSetMatrix::BundleSetMatrix(GuiContext* ctx)
+  : Module("BundleSetMatrix", ctx, Filter, "Bundle", "SCIRun"),
+    guimatrix1name_(ctx->subVar("matrix1-name"), "matrix1"),
+    guimatrix2name_(ctx->subVar("matrix2-name"), "matrix2"),
+    guimatrix3name_(ctx->subVar("matrix3-name"), "matrix3"),
+    guibundlename_(ctx->subVar("bundlename"), "")
 {
 }
 
-BundleSetMatrix::~BundleSetMatrix(){
+
+BundleSetMatrix::~BundleSetMatrix()
+{
 }
 
-void BundleSetMatrix::execute()
+
+void
+BundleSetMatrix::execute()
 {
   string matrix1name = guimatrix1name_.get();
   string matrix2name = guimatrix2name_.get();

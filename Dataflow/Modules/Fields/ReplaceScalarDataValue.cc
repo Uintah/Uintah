@@ -64,7 +64,8 @@ DECLARE_MAKER(ReplaceScalarDataValue)
 
 ReplaceScalarDataValue::ReplaceScalarDataValue(GuiContext* ctx)
   : Module("ReplaceScalarDataValue", ctx, Filter,"FieldsData", "SCIRun"),
-    oldvalue_(ctx->subVar("oldvalue")), newvalue_(ctx->subVar("newvalue"))
+    oldvalue_(ctx->subVar("oldvalue"), 0.0),
+    newvalue_(ctx->subVar("newvalue"), 0.0)
 {
 }
 

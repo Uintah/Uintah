@@ -42,29 +42,6 @@ itcl_class SCIRun_Visualization_GenTitle {
    
     constructor {config} {
         set name GenTitle
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-showValue
-	global $this-value
-	global $this-bbox
-	global $this-format
-	global $this-size
-	global $this-location
-	global $this-color-r
-	global $this-color-g
-	global $this-color-b
-
-	set $this-showValue 0
-	set $this-value 0
-	set $this-bbox 1
-	set $this-format "My Title"
-	set $this-size 100
-	set $this-location "Top Left"
-	set $this-color-r 1.0
-	set $this-color-g 1.0
-	set $this-color-b 1.0
     }
 
     method ui {} {
@@ -115,18 +92,6 @@ itcl_class SCIRun_Visualization_GenTitle {
 # Style
 	iwidgets::labeledframe $w.style -labeltext "Title Style"
 	set style [$w.style childsite]
-
-# Style - box
-	#frame $style.bbox
-
-	#checkbutton $style.bbox.button -variable $this-bbox \
-	#    -command "$this-c needexecute"
-	#label $style.bbox.label -text "Box" -width 4 \
-	#    -anchor w -just left
-	
-	#pack $style.bbox.button $style.bbox.label -side left
-
-	#pack $style.bbox -side left
 
 # Style - color
 	frame $style.color

@@ -109,22 +109,20 @@ DECLARE_MAKER(GenClock)
 
 GenClock::GenClock(GuiContext *context)
   : Module("GenClock", context, Source, "Visualization", "SCIRun"),
-    iType_(context->subVar("type")),
-    iBbox_(context->subVar("bbox")),
-    sFormat_(context->subVar("format")),
-    dMin_(context->subVar("min")),
-    dMax_(context->subVar("max")),
-    dCurrent_(context->subVar("current")),
-    dSize_(context->subVar("size")),
-    sLocation_(context->subVar("location")),
-    gLocation_x_(context->subVar("location-x")),
-    gLocation_y_(context->subVar("location-y")),
-    color_r_(ctx->subVar("color-r")),
-    color_g_(ctx->subVar("color-g")),
-    color_b_(ctx->subVar("color-b")),
-
-    material_(scinew Material(Color(1., 1., 1.))),
-
+    iType_(context->subVar("type"), 0),
+    iBbox_(context->subVar("bbox"), 1),
+    sFormat_(context->subVar("format"), "%8.3f seconds"),
+    dMin_(context->subVar("min"), 0),
+    dMax_(context->subVar("max"), 1),
+    dCurrent_(context->subVar("current"), 0),
+    dSize_(context->subVar("size"), 100),
+    sLocation_(context->subVar("location"), "Top Left"),
+    gLocation_x_(context->subVar("location-x"), -31.0/32.0),
+    gLocation_y_(context->subVar("location-y"),  31.0/32.0),
+    color_r_(ctx->subVar("color-r"), 1.0),
+    color_g_(ctx->subVar("color-g"), 1.0),
+    color_b_(ctx->subVar("color-b"), 1.0),
+    material_(scinew Material(Color(1.0, 1.0, 1.0))),
     update_(false)
 {
 }

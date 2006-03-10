@@ -107,22 +107,21 @@ AddLight::AddLight(GuiContext* ctx)
     control_id_(-1),
     light_id_(-1),
     widget_init(false),
-    control_pos_saved_(ctx->subVar("control_pos_saved")),
-    control_x_(ctx->subVar("control_x")),
-    control_y_(ctx->subVar("control_y")),
-    control_z_(ctx->subVar("control_z")),
-    at_x_(ctx->subVar("at_x")),
-    at_y_(ctx->subVar("at_y")),
-    at_z_(ctx->subVar("at_z")),
+    control_pos_saved_(ctx->subVar("control_pos_saved"), 0),
+    control_x_(ctx->subVar("control_x"), 0),
+    control_y_(ctx->subVar("control_y"), 0),
+    control_z_(ctx->subVar("control_z"), 0),
+    at_x_(ctx->subVar("at_x"), 0),
+    at_y_(ctx->subVar("at_y"), 0),
+    at_z_(ctx->subVar("at_z"), 1),
     cone_x_(ctx->subVar("cone_x")),
     cone_y_(ctx->subVar("cone_y")),
     cone_z_(ctx->subVar("cone_z")),
     rad_(ctx->subVar("rad")),
     rat_(ctx->subVar("rat")),
-    light_type_(ctx->subVar("type")),
-    light_on_(ctx->subVar("on"))
+    light_type_(ctx->subVar("type"), 0),
+    light_on_(ctx->subVar("on"), 1)
 {
-  
 }
 
 AddLight::~AddLight()

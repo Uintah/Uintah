@@ -59,22 +59,24 @@ private:
 
 
 DECLARE_MAKER(BundleGetBundle)
-  BundleGetBundle::BundleGetBundle(GuiContext* ctx)
-    : Module("BundleGetBundle", ctx, Filter, "Bundle", "SCIRun"),
-      guibundle1name_(ctx->subVar("bundle1-name")),
-      guibundle2name_(ctx->subVar("bundle2-name")),
-      guibundle3name_(ctx->subVar("bundle3-name")),
-      guibundles_(ctx->subVar("bundle-selection"))
+
+BundleGetBundle::BundleGetBundle(GuiContext* ctx)
+  : Module("BundleGetBundle", ctx, Filter, "Bundle", "SCIRun"),
+    guibundle1name_(ctx->subVar("bundle1-name"), "bundle1"),
+    guibundle2name_(ctx->subVar("bundle2-name"), "bundle2"),
+    guibundle3name_(ctx->subVar("bundle3-name"), "bundle3"),
+    guibundles_(ctx->subVar("bundle-selection"), "")
 {
-
 }
 
 
-BundleGetBundle::~BundleGetBundle(){
+BundleGetBundle::~BundleGetBundle()
+{
 }
 
 
-void BundleGetBundle::execute()
+void
+BundleGetBundle::execute()
 {
   string bundle1name = guibundle1name_.get();
   string bundle2name = guibundle2name_.get();

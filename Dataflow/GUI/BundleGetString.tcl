@@ -30,38 +30,16 @@
 
 itcl_class SCIRun_Bundle_BundleGetString {
     inherit Module
+
     constructor {config} {
         set name BundleGetString
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-string1-name
-        global $this-string2-name
-        global $this-string3-name
-        global $this-string1-listbox
-        global $this-string2-listbox
-        global $this-string3-listbox
-        global $this-string-selection
-        global $this-string1-entry
-        global $this-string2-entry
-        global $this-string3-entry
-
-
-        set $this-string1-name "string1"
-        set $this-string2-name "string2"
-        set $this-string3-name "string3"
-        set $this-string-selection ""
-
-        set $this-string1-listbox ""
-        set $this-string2-listbox ""
-        set $this-string3-listbox ""
-        set $this-string1-entry ""
-        set $this-string2-entry ""
-        set $this-string3-entry ""
-
-
+        initGlobal $this-string1-listbox ""
+        initGlobal $this-string2-listbox ""
+        initGlobal $this-string3-listbox ""
+        initGlobal $this-string1-entry ""
+        initGlobal $this-string2-entry ""
+        initGlobal $this-string3-entry ""
     }
 
     method ui {} {

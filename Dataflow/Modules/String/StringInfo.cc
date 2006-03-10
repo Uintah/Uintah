@@ -44,8 +44,6 @@ public:
 
 private:
   GuiString  inputstring_;
-  GuiString  update_;
-  
 };
 
 
@@ -53,8 +51,7 @@ private:
 DECLARE_MAKER(StringInfo)
 StringInfo::StringInfo(GuiContext* ctx)
   : Module("StringInfo", ctx, Source, "String", "SCIRun"),
-    inputstring_(ctx->subVar("inputstring")),
-    update_(ctx->subVar("update"))    
+    inputstring_(ctx->subVar("inputstring"), "")
 {
 }
 
@@ -86,7 +83,7 @@ void StringInfo::execute()
   }
 
   gui->lock();
-  gui->execute(update_.get());
+  gui->execute(id + " update");
   gui->unlock();
 }
 

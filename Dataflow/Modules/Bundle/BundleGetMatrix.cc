@@ -64,22 +64,27 @@ private:
 
 
 DECLARE_MAKER(BundleGetMatrix)
-  BundleGetMatrix::BundleGetMatrix(GuiContext* ctx)
-    : Module("BundleGetMatrix", ctx, Filter, "Bundle", "SCIRun"),
-      guimatrix1name_(ctx->subVar("matrix1-name")),
-      guimatrix2name_(ctx->subVar("matrix2-name")),
-      guimatrix3name_(ctx->subVar("matrix3-name")),
-      guitransposenrrd1_(ctx->subVar("transposenrrd1")),
-      guitransposenrrd2_(ctx->subVar("transposenrrd2")),
-      guitransposenrrd3_(ctx->subVar("transposenrrd3")),
-      guimatrixs_(ctx->subVar("matrix-selection"))
+
+BundleGetMatrix::BundleGetMatrix(GuiContext* ctx)
+  : Module("BundleGetMatrix", ctx, Filter, "Bundle", "SCIRun"),
+    guimatrix1name_(ctx->subVar("matrix1-name"), "matrix1"),
+    guimatrix2name_(ctx->subVar("matrix2-name"), "matrix2"),
+    guimatrix3name_(ctx->subVar("matrix3-name"), "matrix3"),
+    guitransposenrrd1_(ctx->subVar("transposenrrd1"), 0),
+    guitransposenrrd2_(ctx->subVar("transposenrrd2"), 0),
+    guitransposenrrd3_(ctx->subVar("transposenrrd3"), 0),
+    guimatrixs_(ctx->subVar("matrix-selection"), "")
 {
 }
 
-BundleGetMatrix::~BundleGetMatrix(){
+
+BundleGetMatrix::~BundleGetMatrix()
+{
 }
 
-void BundleGetMatrix::execute()
+
+void
+BundleGetMatrix::execute()
 {
   string matrix1name = guimatrix1name_.get();
   string matrix2name = guimatrix2name_.get();

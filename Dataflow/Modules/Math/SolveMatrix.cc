@@ -213,22 +213,22 @@ DECLARE_MAKER(SolveMatrix)
  
 SolveMatrix::SolveMatrix(GuiContext* ctx)
   : Module("SolveMatrix", ctx, Filter, "Math", "SCIRun"),
-    target_error(ctx->subVar("target_error")),
-    flops(ctx->subVar("flops")),
-    floprate(ctx->subVar("floprate")),
-    memrefs(ctx->subVar("memrefs")),
-    memrate(ctx->subVar("memrate")),
-    orig_error(ctx->subVar("orig_error")),
-    current_error(ctx->subVar("current_error")),
-    method(ctx->subVar("method")),
-    precond(ctx->subVar("precond")),
-    iteration(ctx->subVar("iteration")),
-    maxiter(ctx->subVar("maxiter")),
-    use_previous_soln(ctx->subVar("use_previous_soln")),
-    emit_partial(ctx->subVar("emit_partial")),
-    emit_iter(ctx->subVar("emit_iter")),
-    status(ctx->subVar("status")),
-    tcl_np(ctx->subVar("np"))
+    target_error(ctx->subVar("target_error"), 0.001),
+    flops(ctx->subVar("flops"), 0),
+    floprate(ctx->subVar("floprate"), 0),
+    memrefs(ctx->subVar("memrefs"), 0),
+    memrate(ctx->subVar("memrate"), 0),
+    orig_error(ctx->subVar("orig_error"), 0),
+    current_error(ctx->subVar("current_error"), 0),
+    method(ctx->subVar("method"), "Conjugate Gradient & Precond. (SCI)"),
+    precond(ctx->subVar("precond"), "jacobi"),
+    iteration(ctx->subVar("iteration"), 0),
+    maxiter(ctx->subVar("maxiter"), 200),
+    use_previous_soln(ctx->subVar("use_previous_soln"), 1),
+    emit_partial(ctx->subVar("emit_partial"), 1),
+    emit_iter(ctx->subVar("emit_iter"), 50),
+    status(ctx->subVar("status"), ""),
+    tcl_np(ctx->subVar("np"), 4)
 {
 }
 

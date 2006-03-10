@@ -71,9 +71,9 @@ public:
 DECLARE_MAKER(AppendMatrix)
 AppendMatrix::AppendMatrix(GuiContext* ctx)
 : Module("AppendMatrix", ctx, Filter,"Math", "SCIRun"),
-  append_(ctx->subVar("append")),
-  row_(ctx->subVar("row")),
-  front_(ctx->subVar("front"))
+  append_(ctx->subVar("append"), 0),
+  row_(ctx->subVar("row"), 0),
+  front_(ctx->subVar("front"), 0)
 {
 }
 

@@ -31,40 +31,10 @@ catch {rename VolumeVisualizer ""}
 
 itcl_class SCIRun_Visualization_VolumeVisualizer {
     inherit Module
+
     constructor {config} {
 	set name VolumeVisualizer
-	set_defaults
     }
-
-    method set_defaults {} {
-	setGlobal $this-use_stencil 0
-	setGlobal $this-invert_opacity 0
-	setGlobal $this-multi_level 1
-        setGlobal $this-blend_res 8
-	setGlobal $this-sampling_rate_lo 1.0
-	setGlobal $this-sampling_rate_hi 4.0
-	setGlobal $this-gradient_min 0.0
-	setGlobal $this-gradient_max 0.0
-        setGlobal $this-adaptive 1
-        setGlobal $this-cmap_size 8run
-        setGlobal $this-sw_raster 0
-	setGlobal $this-alpha_scale 0
-	setGlobal $this-render_style 0
-	setGlobal $this-interp_mode 1
-        setGlobal $this-shading 0
-        setGlobal $this-ambient 0.5
-        setGlobal $this-diffuse 0.5
-        setGlobal $this-specular 0.0
-        setGlobal $this-shine 30.0
-        setGlobal $this-light 0
-	setGlobal $this-num_slices -1
-        setGlobal $this-shading-button-state 1
-        setGlobal $this-show_level_flag 1
-        setGlobal $this-show_clipping_widgets 1
-        setGlobal $this-level_on {}
-        setGlobal $this-level_vals {}
-    }
-
 
     method ui {} { 
         set w .ui[modname] 
