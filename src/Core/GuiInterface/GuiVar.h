@@ -72,13 +72,11 @@ class SCISHARE GuiSingle : public GuiVar
 {
 private:
   T gui_value_;
-  T c_value_;
 public:
   GuiSingle(GuiContext* context) : GuiVar(context) {}
   GuiSingle(GuiContext* context, const T &val) :
     GuiVar(context),
-    gui_value_(val),
-    c_value_(val)
+    gui_value_(val)
   {
     ctx->set(gui_value_);
   }
@@ -103,39 +101,25 @@ public:
       ctx->set(gui_value_);
   }
 
-  inline T get_c() {
-    return c_value_;
-  }
-
-  inline void set_c(const T value) {
-    c_value_ = value;
-  }
-
-  inline bool change( bool update = false ) {
-    if (ctx)
-      ctx->get(gui_value_);
-
-    bool changed = (gui_value_ == c_value_);
-
-    if( update )
-      c_value_ = gui_value_;
-
-    return changed;
-  }
-
   // Returns true if variable exists in TCL scope and is of type T
   inline bool valid() {
     ASSERT(ctx);
     return ctx->get(gui_value_);
   }
 
-  inline bool changed() {
+  // Returns true if the gui variable and current state var different.
+  inline bool changed( bool update = false ) {
     ASSERT(ctx);
     ctx->reset();
     T temp;
     ctx->get(temp);
     ctx->reset();
-    return temp != gui_value_;
+    bool change = (gui_value_ != temp);
+
+    if( update )
+      gui_value_ = temp;
+
+    return change;
   }
 
 };

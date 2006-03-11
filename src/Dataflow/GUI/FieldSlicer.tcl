@@ -64,10 +64,10 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    global $this-$index-index2
 
 	    set $this-$index-dim 1
-	    set $this-$index-index 1
+	    set $this-$index-index 0
 	    set $this-$index-index2 "0"
 
-	    trace variable $this-$index-dim w "$this update_setsize_callback"
+	    trace variable $this-$index-dim w "$this update_set_size_callback"
 	}
 
 	global $this-continuous
@@ -78,7 +78,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
 	trace variable $this-update_type w "$this update_type_callback"
 
-	trace variable $this-dims w "$this update_setsize_callback"
+	trace variable $this-dims w "$this update_set_size_callback"
     }
 
     method ui {} {
@@ -146,7 +146,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	
 	iwidgets::optionmenu $opt.update -labeltext "Update:" \
 		-labelpos w -command "$this set_update_type $opt.update"
-	$opt.update insert end "On Release" Manual Auto
+	$opt.update insert end Manual "On Release" Auto
 	$opt.update select [set $this-update_type]
 
 	global $this-update
@@ -171,7 +171,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.s <ButtonRelease> "$this setNode"
+	bind $win.s <ButtonRelease> "$this sliderRelease"
 
 	bind $win.e <Return> "$this manualSliderEntryReturn \
              $start $stop $var1 $var2"
@@ -183,17 +183,18 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
     }
 
 
-    method setNode {} {
-	global $this-update
+    method sliderRelease {} {
+	global $this-update_type
 
-	set type [[set $this-update] get]
-	if { $type == "On Release" } {
+	if { [set $this-update_type] == "On Release" } {
 	    eval "$this-c needexecute"
 	}
     }
 
     method updateSliderEntry {var_slider var_typed someUknownVar} {
 	global $this-continuous
+	global $this-update_type
+
 	set $var_typed [set $var_slider]
 	
 	if { [set $this-continuous] == 1.0 } {
@@ -205,7 +206,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
 
     method manualSliderEntryReturn { start stop var_slider var_typed } {
-	# Since the user has typed in a value and hit return, we know
+	# Because the user has typed in a value and hit return, we know
 	# they are done and if their value is not valid or within range,
 	# we can change it to be either the old value, or the min or max
 	# depending on what is appropriate.
@@ -228,6 +229,11 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	set $var_slider [set $var_typed]
 	
 	set $this-continuous $continuous
+
+	if { [set $this-update_type] == "On Release" ||
+	     [set $this-update_type] == "Auto" } {
+	    eval "$this-c needexecute"
+	}
     }
 
 
@@ -258,21 +264,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
     }
 
 
-    method update_setsize_callback { name1 name2 op } {
-	global $this-dims
-	global $this-i-dim
-	global $this-j-dim
-	global $this-k-dim
-
-	set_size [set $this-dims] \
-	    [set $this-i-dim] \
-	    [set $this-j-dim] \
-	    [set $this-k-dim]
-    }
-
-    method set_index { axis iindex jindex kindex } {
-	global $this-axis
-
+    method update_index { } {
 	global $this-i-index
 	global $this-j-index
 	global $this-k-index
@@ -281,28 +273,23 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	global $this-j-index2
 	global $this-k-index2
 
-	set $this-axis $axis
-
-	set $this-i-index $iindex
-	set $this-j-index $jindex
-	set $this-k-index $kindex
-
-	set $this-i-index2 $iindex
-	set $this-j-index2 $jindex
-	set $this-k-index2 $kindex
+	set $this-i-index2 [set $this-i-index]
+	set $this-j-index2 [set $this-j-index]
+	set $this-k-index2 [set $this-k-index]
     }
 
-    method set_size { dims idim jdim kdim } {
+
+    method update_set_size_callback { name1 name2 op } {
+	set_size
+    }
+
+
+    method set_size { } {
 	global $this-dims
 	global $this-i-dim
 	global $this-j-dim
 	global $this-k-dim
 	global $this-axis
-
-	set $this-dims  $dims
-	set $this-i-dim $idim
-	set $this-j-dim $jdim
-	set $this-k-dim $kdim
 
 	if { [set $this-axis] >= [set $this-dims] } {
 	    set $this-axis [expr [set $this-dims]-1]
@@ -357,6 +344,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    set $this-$index-index2 [set $this-$index-index]
 	}
     }
+
 
     method update_type_callback { name1 name2 op } {
 	set w .ui[modname]
