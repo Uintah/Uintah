@@ -80,6 +80,7 @@ public:
 
   
   InverseIPM(GuiContext* ctx);
+  virtual ~InverseIPM();
 
   virtual void execute();
 
@@ -107,6 +108,11 @@ InverseIPM::InverseIPM(GuiContext* ctx)
     diryTCL_(ctx->subVar("diryTCL")),
     dirzTCL_(ctx->subVar("dirzTCL")),
     eps_matTCL_(ctx->subVar("eps_matTCL"))
+{
+}
+
+
+InverseIPM::~InverseIPM()
 {
 }
 
