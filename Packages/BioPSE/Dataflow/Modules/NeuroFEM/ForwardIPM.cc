@@ -83,6 +83,7 @@ public:
   GuiDouble eps_matTCL_;
   
   ForwardIPM(GuiContext* ctx);
+  virtual ~ForwardIPM();
 
   virtual void execute();
 
@@ -103,6 +104,10 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 {
 }
 
+
+ForwardIPM::~ForwardIPM()
+{
+}
 
 
 static bool
