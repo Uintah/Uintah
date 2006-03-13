@@ -80,9 +80,13 @@ public:
   virtual void finish();
 
   int get(T&);
+  bool changed();
 
 private:
   bool got_something_;
+
+  int generation_;
+  int last_generation_;
 };
 
 
@@ -132,7 +136,9 @@ template<class T>
 SimpleIPort<T>::SimpleIPort(Module* module,
 			    const string& portname)
   : IPort(module, port_type_, portname, port_color_),
-    mailbox("Port mailbox (SimpleIPort)", 2)
+    mailbox("Port mailbox (SimpleIPort)", 2),
+    generation_( -1 ),
+    last_generation_( -1 )
 {
 }
 
@@ -327,6 +333,9 @@ SimpleIPort<T>::get(T& data)
   if (comm->have_data_)
   {
     data = comm->data_;
+    last_generation_ = generation_;
+    generation_ = data->generation;
+
     delete comm;
     if (module->show_stats()) { turn_off(); }
     return 1;
@@ -339,6 +348,12 @@ SimpleIPort<T>::get(T& data)
   }
 }
 
+template<class T>
+bool
+SimpleIPort<T>::changed()
+{
+  return (generation_ != last_generation_);
+}
 
 template<class T>
 bool

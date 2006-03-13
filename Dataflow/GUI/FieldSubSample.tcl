@@ -68,19 +68,19 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    global $this-$index-stride2
 	    global $this-$index-wrap
 
-	    set $this-$index-dim     2
-	    set $this-$index-start   0
-	    set $this-$index-start2 "0"
-	    set $this-$index-stop    1
-	    set $this-$index-stop2  "1"
-	    set $this-$index-stride    1
-	    set $this-$index-stride2  "1"
-	    set $this-$index-wrap    0
+	    set $this-$index-dim      2
+	    set $this-$index-start    0
+	    set $this-$index-start2  "0"
+	    set $this-$index-stop     1
+	    set $this-$index-stop2   "1"
+	    set $this-$index-stride   1
+	    set $this-$index-stride2 "1"
+	    set $this-$index-wrap     0
 
-	    trace variable $this-$index-dim w "$this update_setsize_callback"
+	    trace variable $this-$index-dim w "$this update_set_size_callback"
 	}
 	
-	trace variable $this-dims w "$this update_setsize_callback"
+	trace variable $this-dims w "$this update_set_size_callback"
     }
 
     method set_power_app_cmd { cmd } {
@@ -118,7 +118,7 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	label $w.main.l.stride    -text "Stride" -width 6 -anchor w -just left
 	label $w.main.l.wrap      -text "Wrap"   -width 4 -anchor w -just left
 
-	pack $w.main.l.direction -side left
+	pack $w.main.l.direction -side left -padx  20
 	pack $w.main.l.start     -side left -padx  70
 	pack $w.main.l.stop      -side left -padx 110
 	pack $w.main.l.stride    -side left -padx  40
@@ -320,32 +320,30 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	updateSliderEntry4 $index 0
     }
 
-    method update_setsize_callback { name1 name2 op } {
-	global $this-dims
-	global $this-i-dim
-	global $this-j-dim
-	global $this-k-dim
-	global $this-wrap
+    method update_index { } {
+	global $this-i-index
+	global $this-j-index
+	global $this-k-index
 
-	set_size [set $this-dims] \
-	    [set $this-i-dim] \
-	    [set $this-j-dim] \
-	    [set $this-k-dim] \
-	    [set $this-wrap]
+	global $this-i-index2
+	global $this-j-index2
+	global $this-k-index2
+
+	set $this-i-index2 [set $this-i-index]
+	set $this-j-index2 [set $this-j-index]
+	set $this-k-index2 [set $this-k-index]
     }
 
-    method set_size { dims idim jdim kdim wrap } {
+    method update_set_size_callback { name1 name2 op } {
+	set_size
+    }
+
+    method set_size { } {
 	global $this-dims
 	global $this-i-dim
 	global $this-j-dim
 	global $this-k-dim
 	global $this-wrap
-
-	set $this-dims  $dims
-	set $this-i-dim $idim
-	set $this-j-dim $jdim
-	set $this-k-dim $kdim
-	set $this-wrap  $wrap
 
 	set w .ui[modname]
 
