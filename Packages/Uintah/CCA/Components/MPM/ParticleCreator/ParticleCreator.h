@@ -92,10 +92,8 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////////
     /*! Calculate the external force to be applied to a particle */
     //////////////////////////////////////////////////////////////////////////
-    void applyForceBC(const Vector& dxpp, 
-                      const Point& pp,
-                      const double& pMass, 
-		      Vector& pExtForce);
+    virtual void applyForceBC(const Vector& dxpp,  const Point& pp,
+                              const double& pMass,  Vector& pExtForce);
     
     int checkForSurface(const GeometryPiece* piece, const Point p,
                         const Vector dxpp);
@@ -115,7 +113,6 @@ namespace Uintah {
 
     bool d_useLoadCurves;
     bool d_with_color;
-    bool d_fracture;
 
     // for thermal stress 
     double d_ref_temp;  // Thermal stress of the system is zero at d_ref_temp

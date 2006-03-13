@@ -11,17 +11,6 @@ namespace Uintah {
     ImplicitParticleCreator(MPMMaterial* matl, MPMFlags* flags);
     virtual ~ImplicitParticleCreator();
 
-    virtual ParticleSubset* createParticles(MPMMaterial* matl, 
-					    particleIndex numParticles,
-					    CCVariable<short int>& cellNAPID,
-					    const Patch*, 
-					    DataWarehouse* new_dw,
-					    vector<GeometryObject*>&);
-
-    virtual particleIndex countParticles(const Patch*,
-					 std::vector<GeometryObject*>&) ;
-    virtual particleIndex countAndCreateParticles(const Patch*,
-						  GeometryObject* obj) ;
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
     virtual void initializeParticle(const Patch* patch,

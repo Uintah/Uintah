@@ -23,47 +23,6 @@ FractureParticleCreator::~FractureParticleCreator()
 {
 }
 
-ParticleSubset* FractureParticleCreator::createParticles(MPMMaterial* matl,
-                                              particleIndex numParticles,
-                                              CCVariable<short int>& cellNAPID,
-                                              const Patch* patch,
-                                              DataWarehouse* new_dw,
-                                              vector<GeometryObject*>& d_geom_objs)
-{
-
- ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
-                                                           cellNAPID,patch,
-                                                           new_dw,
-                                                           d_geom_objs);
-
- //ParticleVariable<Point> position0;
- //constParticleVariable<Point> position;
-
- //new_dw->allocateAndPut(position0,lb->pX0Label,subset);
- //new_dw->get(position,lb->pXLabel,subset);
-
- //position0.copyData(position);
-
- return subset;
-}
-
-particleIndex 
-FractureParticleCreator::countParticles(const Patch* patch,
-                                        vector<GeometryObject*>& d_geom_objs) 
-{
-
-  return ParticleCreator::countParticles(patch,d_geom_objs);
-}
-
-particleIndex 
-FractureParticleCreator::countAndCreateParticles(const Patch* patch,
-                                                 GeometryObject* obj) 
-{
-
-  return ParticleCreator::countAndCreateParticles(patch,obj);
-}
-
-
 void
 FractureParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/)
 
