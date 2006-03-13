@@ -41,7 +41,9 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/DenseMatrix.h>
 
 #include <Dataflow/Modules/Fields/FieldSubSample.h>
 #include <Core/Basis/HexTrilinearLgn.h>
@@ -84,30 +86,8 @@ private:
   GuiInt jWrap_;
   GuiInt kWrap_;
 
-  int idim_;
-  int jdim_;
-  int kdim_;
-
-  int istart_;
-  int jstart_;
-  int kstart_;
-
-  int istop_;
-  int jstop_;
-  int kstop_;
-
-  int istride_;
-  int jstride_;
-  int kstride_;
-
-  int iwrap_;
-  int jwrap_;
-  int kwrap_;
-
   FieldHandle  fHandle_;
-
-  int fGeneration_;
-  int mGeneration_;
+  MatrixHandle mHandle_;
 };
 
 
@@ -118,51 +98,28 @@ FieldSubSample::FieldSubSample(GuiContext *context)
   : Module("FieldSubSample", context, Filter, "FieldsCreate", "SCIRun"),
     power_app_(context->subVar("power_app")),
 
-    Wrap_(context->subVar("wrap")),
-    Dims_(context->subVar("dims")),
+    Wrap_(context->subVar("wrap"), 0 ),
+    Dims_(context->subVar("dims"), 3 ),
 
-    iDim_(context->subVar("i-dim")),
-    jDim_(context->subVar("j-dim")),
-    kDim_(context->subVar("k-dim")),
+    iDim_(context->subVar("i-dim"), 2),
+    jDim_(context->subVar("j-dim"), 2),
+    kDim_(context->subVar("k-dim"), 2),
 
-    iStart_(context->subVar("i-start")),
-    jStart_(context->subVar("j-start")),
-    kStart_(context->subVar("k-start")),
+    iStart_(context->subVar("i-start"), 0),
+    jStart_(context->subVar("j-start"), 0),
+    kStart_(context->subVar("k-start"), 0),
 
-    iStop_(context->subVar("i-stop")),
-    jStop_(context->subVar("j-stop")),
-    kStop_(context->subVar("k-stop")),
+    iStop_(context->subVar("i-stop"), 1),
+    jStop_(context->subVar("j-stop"), 1),
+    kStop_(context->subVar("k-stop"), 1),
 
-    iStride_(context->subVar("i-stride")),
-    jStride_(context->subVar("j-stride")),
-    kStride_(context->subVar("k-stride")),
+    iStride_(context->subVar("i-stride"), 1),
+    jStride_(context->subVar("j-stride"), 1),
+    kStride_(context->subVar("k-stride"), 1),
  
-    iWrap_(context->subVar("i-wrap")),
-    jWrap_(context->subVar("j-wrap")),
-    kWrap_(context->subVar("k-wrap")),
-
-    idim_(0),
-    jdim_(0),
-    kdim_(0),
-
-    istart_(-1),
-    jstart_(-1),
-    kstart_(-1),
-
-    istop_(-1),
-    jstop_(-1),
-    kstop_(-1),
-
-    istride_(10),
-    jstride_(5),
-    kstride_(1),
-
-    iwrap_(0),
-    jwrap_(0),
-    kwrap_(0),
-
-    fGeneration_(-1),
-    mGeneration_(-1)
+    iWrap_(context->subVar("i-wrap"), 0),
+    jWrap_(context->subVar("j-wrap"), 0),
+    kWrap_(context->subVar("k-wrap"), 0)
 {
 }
 
@@ -176,67 +133,59 @@ void
 FieldSubSample::execute()
 {
   update_state(NeedData);
+  reset_vars();
 
-  bool updateAll    = false;
-  bool updateField  = false;
+  bool needToExecute = false;
 
-  FieldHandle fHandle;
+  FieldHandle  fHandle;
 
-  // Get a handle to the input field port.
-  FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
+  if( !getIHandle( "Input Field",  fHandle,  needToExecute, true  ) ) return;
+  if( !getIHandle( "Input Matrix", mHandle_, needToExecute, false ) ) return;
 
-  // The field input is required.
-  if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
-      !(fHandle->mesh().get_rep())) {
-    error( "No handle or representation" );
+  // The matrix is optional.
+  if( mHandle_ != 0 &&
+      (mHandle_->nrows() != 3 || mHandle_->ncols() != 5) ) {
+    error( "Input matrix is not a 3x5 matrix" );
     return;
   }
 
-  // Check to see if the input field has changed.
-  if( fGeneration_ != fHandle->generation ) {
-    fGeneration_  = fHandle->generation;
-
-    updateField = true;
-  }
-
-  int dims = 0;
-
   // Get the dimensions of the mesh.
-  string mesh_type = fHandle->get_type_description(Field::MESH_TD_E)->get_name();
-  if( mesh_type.find("LatVolMesh")       != string::npos ||
-      mesh_type.find("StructHexVolMesh") != string::npos ) 
-  {
+  // this should be part of the dynamic compilation....
+  string mesh_type =
+    fHandle->get_type_description(Field::MESH_TD_E)->get_name();
+
+  //FIX_ME MC how do i detect a "ITKLatVolField"
+  if( mesh_type.find("LatVolMesh"      ) != string::npos ||
+      mesh_type.find("StructHexVolMesh") != string::npos ) {
     typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
     LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
 
-    idim_ = lvmInput->get_ni();
-    jdim_ = lvmInput->get_nj();
-    kdim_ = lvmInput->get_nk();
+    iDim_.set( lvmInput->get_ni(), GuiVar::SET_GUI_ONLY );
+    jDim_.set( lvmInput->get_nj(), GuiVar::SET_GUI_ONLY );
+    kDim_.set( lvmInput->get_nk(), GuiVar::SET_GUI_ONLY );
 
-    dims = 3;
+    Dims_.set( 3, GuiVar::SET_GUI_ONLY );
 
-  } else if( mesh_type.find("ImageMesh")          != string::npos ||
-	     mesh_type.find("StructQuadSurfMesh") != string::npos ) 
-  {
+  } else if( mesh_type.find("ImageMesh"         ) != string::npos ||
+	     mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
     IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
+    iDim_.set( imInput->get_ni(), GuiVar::SET_GUI_ONLY );
+    jDim_.set( imInput->get_nj(), GuiVar::SET_GUI_ONLY );
+    kDim_.set( 1, GuiVar::SET_GUI_ONLY );
 
-    idim_ = imInput->get_ni();
-    jdim_ = imInput->get_nj();
-    kdim_ = 1;
+    Dims_.set( 2, GuiVar::SET_GUI_ONLY );
 
-    dims = 2;
-
-  } else if( mesh_type.find("ScanlineMesh")    != string::npos ||
+  } else if( mesh_type.find("ScanlineMesh"   ) != string::npos ||
 	     mesh_type.find("StructCurveMesh") != string::npos ) {
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
     SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
+    
+    iDim_.set( slmInput->get_ni(), GuiVar::SET_GUI_ONLY );
+    jDim_.set( 1, GuiVar::SET_GUI_ONLY );
+    kDim_.set( 1, GuiVar::SET_GUI_ONLY );
 
-    idim_ = slmInput->get_ni();
-    jdim_ = 1;
-    kdim_ = 1;
-
-    dims = 1;
+    Dims_.set( 1, GuiVar::SET_GUI_ONLY );
 
   } else {
     error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
@@ -251,68 +200,99 @@ FieldSubSample::execute()
     return;
   }
 
-  int wrap;
-
   if( mesh_type.find("StructHexVolMesh"  ) != string::npos ||
       mesh_type.find("StructQuadSurfMesh") != string::npos ||
       mesh_type.find("StructCurveMesh"   ) != string::npos )
-    wrap = 1;
+    Wrap_.set( 1, GuiVar::SET_GUI_ONLY );
   else
-    wrap = 0;
+    Wrap_.set( 0, GuiVar::SET_GUI_ONLY );
 
-  // Check to see if the dimensions have changed.
-  if( dims  != Dims_.get() ||
-      wrap  != Wrap_.get() ||
-      idim_ != iDim_.get() ||
-      jdim_ != jDim_.get() ||
-      kdim_ != kDim_.get() )
+  // Check to see if the gui dimensions are different than the field.
+  if( Dims_.changed( true ) ||
+      Wrap_.changed( true ) ||
+      iDim_.changed( true ) ||
+      jDim_.changed( true ) ||
+      kDim_.changed( true ) )
   {
+    // Dims has callback on it, so it must be set it after i, j, and k.
     ostringstream str;
     str << id << " set_size ";
-    str << dims << "  " << idim_ << " " << jdim_ << " " << kdim_ << " " << wrap;
     gui->execute(str.str().c_str());
 
-    updateAll = true;
+    reset_vars();
   }
 
-  // Check to see if the user setable values have changed.
-  if( istart_ != iStart_.get() ||
-      jstart_ != jStart_.get() ||
-      kstart_ != kStart_.get() ||
+  // An input matrix is present so use the values in it to override
+  // the variables set in the gui.
+  if( mHandle_ != 0 ) {
 
-      istop_ != iStop_.get() ||
-      jstop_ != jStop_.get() ||
-      kstop_ != kStop_.get() ||
+    if( iDim_.get() != mHandle_->get(0, 4) ||
+	jDim_.get() != mHandle_->get(1, 4) ||
+	kDim_.get() != mHandle_->get(2, 4) ) {
+      ostringstream str;
+      str << "The dimensions of the matrix slicing do match the field. "
+	  << " Expected "
+	  << iDim_.get() << " "
+	  << jDim_.get() << " "
+	  << kDim_.get()
+	  << " Got "
+	  << mHandle_->get(0, 2) << " "
+	  << mHandle_->get(1, 2) << " "
+	  << mHandle_->get(2, 2);
+      
+      error( str.str() );
+      return;
+    }
 
-      istride_ != iStride_.get() ||
-      jstride_ != jStride_.get() ||
-      kstride_ != kStride_.get() ||
+    iStart_.set( (int) mHandle_->get(0, 0) );
+    jStart_.set( (int) mHandle_->get(1, 0) );
+    kStart_.set( (int) mHandle_->get(2, 0) );
 
-      iwrap_ != iWrap_.get() ||
-      jwrap_ != jWrap_.get() ||
-      kwrap_ != kWrap_.get() ) {
+    iStop_.set( (int) mHandle_->get(0, 1) );
+    jStop_.set( (int) mHandle_->get(1, 1) );
+    kStop_.set( (int) mHandle_->get(2, 1) );
 
-    istart_ = iStart_.get();
-    jstart_ = jStart_.get();
-    kstart_ = kStart_.get();
+    iStride_.set( (int) mHandle_->get(0, 2) );
+    jStride_.set( (int) mHandle_->get(1, 2) );
+    kStride_.set( (int) mHandle_->get(2, 2) );
 
-    istop_ = iStop_.get();
-    jstop_ = jStop_.get();
-    kstop_ = kStop_.get();
+    iWrap_.set( (int) mHandle_->get(0, 3) );
+    jWrap_.set( (int) mHandle_->get(1, 3) );
+    kWrap_.set( (int) mHandle_->get(2, 3) );
+  }
 
-    istride_ = iStride_.get();
-    jstride_ = jStride_.get();
-    kstride_ = kStride_.get();
+  // Check to see if any values have changed via a matrix or user.
+  if( iStart_.changed( true ) ||
+      jStart_.changed( true ) ||
+      kStart_.changed( true ) ||
+      
+      iStop_.changed( true ) ||
+      jStop_.changed( true ) ||
+      kStop_.changed( true ) ||
+      
+      iStride_.changed( true ) ||
+      jStride_.changed( true ) ||
+      kStride_.changed( true ) ||
+      
+      iWrap_.changed( true ) ||
+      jWrap_.changed( true ) ||
+      kWrap_.changed( true ) ) {
 
-    iwrap_ = iWrap_.get();
-    jwrap_ = jWrap_.get();
-    kwrap_ = kWrap_.get();
-    
-    updateAll = true;
+      needToExecute = true;
+
+      if( mHandle_ != 0 ) {
+
+	ostringstream str;
+	str << id << " update_index ";
+
+	gui->execute(str.str().c_str());
+	
+	reset_vars();
+      }
   }
 
   // If no data or a changed recreate the mesh.
-  if( !fHandle_.get_rep() || updateAll || updateField ) {
+  if( !fHandle_.get_rep() || needToExecute ) {
 
     const TypeDescription *ftd = fHandle->get_type_description();
     CompileInfoHandle ci = FieldSubSampleAlgo::get_compile_info(ftd);
@@ -320,18 +300,42 @@ FieldSubSample::execute()
     if (!module_dynamic_compile(ci, algo)) return;
 
     fHandle_ = algo->execute(fHandle,
-			     istart_, jstart_, kstart_,
-			     istop_, jstop_, kstop_,
-			     istride_, jstride_, kstride_,
-			     iwrap_, jwrap_, kwrap_);
+			     iStart_.get(),  jStart_.get(),  kStart_.get(),
+			     iStop_.get(),   jStop_.get(),   kStop_.get(),
+			     iStride_.get(), jStride_.get(), kStride_.get(),
+			     iWrap_.get(),   jWrap_.get(),   kWrap_.get());
+  }
+
+  // Create the output matrix with the axis and index
+  if( mHandle_ == 0 ) {
+    DenseMatrix *selected = scinew DenseMatrix(3,5);
+
+    selected->put(0, 0, iStart_.get() );
+    selected->put(1, 0, jStart_.get() );
+    selected->put(2, 0, kStart_.get() );
+
+    selected->put(0, 1, iStop_.get() );
+    selected->put(1, 1, jStop_.get() );
+    selected->put(2, 1, kStop_.get() );
+
+    selected->put(0, 2, iStride_.get() );
+    selected->put(1, 2, jStride_.get() );
+    selected->put(2, 2, kStride_.get() );
+
+    selected->put(0, 3, iWrap_.get() );
+    selected->put(1, 3, jWrap_.get() );
+    selected->put(2, 3, kWrap_.get() );
+
+    selected->put(0, 4, iDim_.get() );
+    selected->put(1, 4, jDim_.get() );
+    selected->put(2, 4, kDim_.get() );
+
+    mHandle_ = MatrixHandle(selected);
   }
 
   // Send the data downstream
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
-    ofield_port->send_and_dereference( fHandle_ , true);
-  }
+  setOHandle( "Output Field",  fHandle_, true );
+  setOHandle( "Output Matrix", mHandle_, true );
 }
 
 CompileInfoHandle

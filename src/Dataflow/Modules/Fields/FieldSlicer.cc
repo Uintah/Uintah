@@ -80,11 +80,6 @@ private:
 
   FieldHandle fHandle_;
   MatrixHandle mHandle_;
-
-  int fGeneration_;
-  int mGeneration_;
-
-  bool error_;
 };
 
 
@@ -105,12 +100,7 @@ FieldSlicer::FieldSlicer(GuiContext *context)
     jIndex_(context->subVar("j-index"), 1),
     kIndex_(context->subVar("k-index"), 1),
 
-    updateType_(ctx->subVar("update_type"), "Manual"),
-
-    fGeneration_(-1),
-    mGeneration_(-1),
-
-    error_( false )
+    updateType_(ctx->subVar("update_type"), "Manual")
 {
 }
 
@@ -129,42 +119,15 @@ FieldSlicer::execute()
   bool needToExecute = false;
 
   FieldHandle  fHandle;
-  MatrixHandle mHandle;
 
-  // Get a handle to the input field port.
-  FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
+  if( !getIHandle( "Input Field",  fHandle,  needToExecute, true  ) ) return;
+  if( !getIHandle( "Input Matrix", mHandle_, needToExecute, false ) ) return;
 
-  // The field input is required.
-  if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
-      !(fHandle->mesh().get_rep())) {
-    error( "No field handle or representation" );
+  // The matrix is optional.
+  if( mHandle_ != 0 &&
+      (mHandle_->nrows() != 3 || mHandle_->ncols() != 3) ) {
+    error( "Input matrix is not a 3x3 matrix" );
     return;
-  }
-
-  // Check to see if the input field has changed.
-  if( fGeneration_ != fHandle->generation ) {
-    fGeneration_ = fHandle->generation;
-    needToExecute = true;
-  }
-
-  // Get a handle to the input matrix port.
-  MatrixIPort* imatrix_port = (MatrixIPort *) get_iport("Input Matrix");
-
-  // The matrix input is optional.
-  if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
-    
-    // Check to see if the input matrix has changed.
-    if( mGeneration_ != mHandle->generation ) {
-      mGeneration_ = mHandle->generation;
-    }
-
-    if( mHandle->nrows() != 3 || mHandle->ncols() != 3 ) {
-      error( "Input matrix is not a 3x3 matrix" );
-      return;
-    }
-
-  } else {
-    mGeneration_ = -1;
   }
 
   // Get the dimensions of the mesh.
@@ -178,32 +141,32 @@ FieldSlicer::execute()
     typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
     LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
 
-    iDim_.set( lvmInput->get_ni() );
-    jDim_.set( lvmInput->get_nj() );
-    kDim_.set( lvmInput->get_nk() );
+    iDim_.set( lvmInput->get_ni(), GuiVar::SET_GUI_ONLY );
+    jDim_.set( lvmInput->get_nj(), GuiVar::SET_GUI_ONLY );
+    kDim_.set( lvmInput->get_nk(), GuiVar::SET_GUI_ONLY );
 
-    Dims_.set( 3 );
+    Dims_.set( 3, GuiVar::SET_GUI_ONLY );
 
   } else if( mesh_type.find("ImageMesh"         ) != string::npos ||
 	     mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
     IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
-    iDim_.set( imInput->get_ni() );
-    jDim_.set( imInput->get_nj() );
-    kDim_.set( 1 );
+    iDim_.set( imInput->get_ni(), GuiVar::SET_GUI_ONLY );
+    jDim_.set( imInput->get_nj(), GuiVar::SET_GUI_ONLY );
+    kDim_.set( 1, GuiVar::SET_GUI_ONLY );
 
-    Dims_.set( 2 );
+    Dims_.set( 2, GuiVar::SET_GUI_ONLY );
 
   } else if( mesh_type.find("ScanlineMesh"   ) != string::npos ||
 	     mesh_type.find("StructCurveMesh") != string::npos ) {
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
     SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
     
-    iDim_.set( slmInput->get_ni() );
-    jDim_.set( 1 );
-    kDim_.set( 1 );
+    iDim_.set( slmInput->get_ni(), GuiVar::SET_GUI_ONLY );
+    jDim_.set( 1, GuiVar::SET_GUI_ONLY );
+    kDim_.set( 1, GuiVar::SET_GUI_ONLY );
 
-    Dims_.set( 1 );
+    Dims_.set( 1, GuiVar::SET_GUI_ONLY );
 
   } else {
     error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
@@ -218,10 +181,10 @@ FieldSlicer::execute()
   }
 
   // Check to see if the gui dimensions are different than the field.
-  if( Dims_.changed() ||
-      iDim_.changed() ||
-      jDim_.changed() ||
-      kDim_.changed() )
+  if( Dims_.changed( true ) ||
+      iDim_.changed( true ) ||
+      jDim_.changed( true ) ||
+      kDim_.changed( true ) )
   {
     // Dims has callback on it, so it must be set it after i, j, and k.
     ostringstream str;
@@ -233,11 +196,11 @@ FieldSlicer::execute()
 
   // An input matrix is present so use the values in it to override
   // the variables set in the gui.
-  if( mGeneration_ != -1 ) {
+  if( mHandle_ != 0 ) {
 
-    if( iDim_.get() != mHandle->get(0, 2) ||
-	jDim_.get() != mHandle->get(1, 2) ||
-	kDim_.get() != mHandle->get(2, 2) ) {
+    if( iDim_.get() != mHandle_->get(0, 2) ||
+	jDim_.get() != mHandle_->get(1, 2) ||
+	kDim_.get() != mHandle_->get(2, 2) ) {
       ostringstream str;
       str << "The dimensions of the matrix slicing do match the field. "
 	  << " Expected "
@@ -245,9 +208,9 @@ FieldSlicer::execute()
 	  << jDim_.get() << " "
 	  << kDim_.get()
 	  << " Got "
-	  << mHandle->get(0, 2) << " "
-	  << mHandle->get(1, 2) << " "
-	  << mHandle->get(2, 2);
+	  << mHandle_->get(0, 2) << " "
+	  << mHandle_->get(1, 2) << " "
+	  << mHandle_->get(2, 2);
       
       error( str.str() );
       return;
@@ -256,8 +219,8 @@ FieldSlicer::execute()
     // Check to see what axis has been selected.
     Axis_.set( -1 );
 
-    for (int i=0; i < mHandle->nrows(); i++)
-      if( mHandle->get(i, 0) == 1 )
+    for (int i=0; i < mHandle_->nrows(); i++)
+      if( mHandle_->get(i, 0) == 1 )
 	Axis_.set( i );
 
     if( Axis_.get() == -1 ) {
@@ -267,53 +230,27 @@ FieldSlicer::execute()
       return;
     }
 
-    iIndex_.set( (int) mHandle->get(0, 1) );
-    jIndex_.set( (int) mHandle->get(1, 1) );
-    kIndex_.set( (int) mHandle->get(2, 1) );
-
-    if( Axis_.changed( true ) ||
-	(Axis_.get() == 0 && iIndex_.changed( true )) ||
-	(Axis_.get() == 1 && jIndex_.changed( true )) ||
-	(Axis_.get() == 2 && kIndex_.changed( true )) ) {
-
-      needToExecute = true;
-
-      ostringstream str;
-      str << id << " update_index "
-	  << Axis_.get() << " "
-	  << iIndex_.get() << " "
-	  << jIndex_.get() << " "
-	  << kIndex_.get();
-
-      gui->execute(str.str().c_str());
-
-      reset_vars();
-    }
+    iIndex_.set( (int) mHandle_->get(0, GuiVar::SET_GUI_ONLY) );
+    jIndex_.set( (int) mHandle_->get(1, GuiVar::SET_GUI_ONLY) );
+    kIndex_.set( (int) mHandle_->get(2, GuiVar::SET_GUI_ONLY) );
   }
 
-  // Check to see if the gui values have changed.
-  else if( Axis_.changed( true ) ||
-	   (Axis_.get() == 0 && iIndex_.changed( true )) ||
-	   (Axis_.get() == 1 && jIndex_.changed( true )) ||
-	   (Axis_.get() == 2 && kIndex_.changed( true )) )
+  // Check to see if any values have changed via a matrix or user.
+  if( Axis_.changed( true ) ||
+      (Axis_.get() == 0 && iIndex_.changed( true )) ||
+      (Axis_.get() == 1 && jIndex_.changed( true )) ||
+      (Axis_.get() == 2 && kIndex_.changed( true )) ) {
+
     needToExecute = true;
 
-
-  if( mGeneration_ == -1 ) {
-    DenseMatrix *selected = scinew DenseMatrix(3,3);
-
-    for (int i=0; i < 3; i++)
-      selected->put(i, 0, (double) (Axis_.get() == i) );
-
-    selected->put(0, 1, iIndex_.get() );
-    selected->put(1, 1, jIndex_.get() );
-    selected->put(2, 1, kIndex_.get() );
-
-    selected->put(0, 2, iDim_.get() );
-    selected->put(1, 2, jDim_.get() );
-    selected->put(2, 2, kDim_.get() );
-
-    mHandle_ = MatrixHandle(selected);
+    if( mHandle_ != 0 ) {
+      ostringstream str;
+      str << id << " update_index ";
+      
+      gui->execute(str.str().c_str());
+      
+      reset_vars();
+    }
   }
 
   // If no data or a changed recreate the mesh.
@@ -350,29 +287,27 @@ FieldSlicer::execute()
     workalgo->execute(fHandle, fHandle_, index, Axis_.get());
   }
 
+  // Create the output matrix with the axis and index
+  if( mHandle_ == 0 ) {
+    DenseMatrix *selected = scinew DenseMatrix(3,3);
+
+    for (int i=0; i < 3; i++)
+      selected->put(i, 0, (double) (Axis_.get() == i) );
+
+    selected->put(0, 1, iIndex_.get() );
+    selected->put(1, 1, jIndex_.get() );
+    selected->put(2, 1, kIndex_.get() );
+
+    selected->put(0, 2, iDim_.get() );
+    selected->put(1, 2, jDim_.get() );
+    selected->put(2, 2, kDim_.get() );
+
+    mHandle_ = MatrixHandle(selected);
+  }
+
   // Send the data downstream
-  if( fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
-
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Output Field'.");
-      return;
-    }
-
-    ofield_port->send_and_dereference( fHandle_, true );
-  }
-
-  // Get a handle to the output double port.
-  if( mHandle_.get_rep() ) {
-    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Output Matrix");
-
-    if (!omatrix_port) {
-      error("Unable to initialize oport 'Output Matrix'.");
-      return;
-    }
-
-    omatrix_port->send_and_dereference(mHandle_, true);
-  }
+  setOHandle( "Output Field",  fHandle_, true );
+  setOHandle( "Output Matrix", mHandle_, true );
 }
 
 CompileInfoHandle
