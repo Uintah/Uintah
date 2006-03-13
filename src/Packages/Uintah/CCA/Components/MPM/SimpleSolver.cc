@@ -133,6 +133,7 @@ void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld,
   
   KK.setSize(globalrows,globalcolumns);
   Q.resize(globalrows);
+  d_t.resize(globalrows);
 }
 
 void SimpleSolver::destroyMatrix(bool recursion)
