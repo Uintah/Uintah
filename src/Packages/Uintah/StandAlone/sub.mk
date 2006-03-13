@@ -49,9 +49,7 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
 else
 
-# REMOVE CORE/DATATYPES from this list once the Core/Util/FieldInformation problem is fixed...
   PSELIBS := \
-        Core/Datatypes    \
         Core/Exceptions   \
         Core/Thread       \
         Core/Geometry     \
