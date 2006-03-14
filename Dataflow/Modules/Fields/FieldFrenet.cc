@@ -77,12 +77,7 @@ FieldFrenet::FieldFrenet(GuiContext *context)
     
     Direction_(context->subVar("direction"), 0),
     Axis_(context->subVar("axis"), 2),
-    Dims_(context->subVar("dims")),
-
-    direction_(0),
-    axis_(2),
-
-    fGeneration_(-1)
+    Dims_(context->subVar("dims"), 3)
 {
 }
 
@@ -96,29 +91,19 @@ void
 FieldFrenet::execute()
 {
   update_state(NeedData);
+  reset_vars();
 
-  FieldHandle fHandle;
+  bool needToExecute = false;
 
-  // Get a handle to the input field port.
-  FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
+  FieldHandle  fHandle;
 
-  // The field input is required.
-  if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
-      !(fHandle->mesh().get_rep()))
-  {
-    error( "No handle or representation" );
-    return;
-  }
+  if( !getIHandle( "Input Field",  fHandle,  needToExecute, true  ) ) return;
 
-  const TypeDescription *ftd = fHandle->get_type_description();
-
-  // Get the dimensions of the mesh.
-  if( ftd->get_name().find("StructHexVolField"  ) != 0 &&
-      ftd->get_name().find("StructQuadSurfField") != 0 &&
-      ftd->get_name().find("StructCurveField"   ) != 0 ) {
+  if( fHandle->mesh()->topology_geometry() ==
+      (Mesh::STRUCTURED | Mesh::IRREGULAR) ) {
 
     error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
-    error( "Only availible for structured data." );
+    error( "Only availible for topologically structured irregular data." );
     return;
   }
 
@@ -128,30 +113,32 @@ FieldFrenet::execute()
     return;
   }
 
-  vector<unsigned int> dim;
-  fHandle.get_rep()->mesh()->get_dim( dim );
-  unsigned int dims = dim.size();
+  // Get the dimensions of the mesh.
+  vector<unsigned int> dims;
+  fHandle.get_rep()->mesh()->get_dim( dims );
+
+  Dims_.set( dims.size(), GuiVar::SET_GUI_ONLY );
 
   // Check to see if the dimensions have changed.
-  if( dims != (unsigned int) Dims_.get() ) {
+  if(  Dims_.changed( true ) ) {
     ostringstream str;
-    str << id << " set_size " << dims;
+    str << id << " set_size ";
     gui->execute(str.str().c_str());
   }
 
   // If no data or a changed input field or axis recreate the mesh.
   if( !fHandle_.get_rep() ||
-      fGeneration_ != fHandle->generation ||
-      direction_ != Direction_.get() ||
-      axis_ != Axis_.get() ) {
+      Direction_.changed( true ) ||
+      Axis_.changed( true ) || 
+      needToExecute ) {
 
-    fGeneration_ = fHandle->generation;
-    direction_ = Direction_.get();
-    axis_ = Axis_.get();
+    const TypeDescription *ftd = fHandle->get_type_description();
+    const TypeDescription *btd =
+      fHandle->get_type_description(Field::FIELD_NAME_ONLY_E);
 
-    const TypeDescription *btd = fHandle->get_type_description(Field::FIELD_NAME_ONLY_E);
+    CompileInfoHandle ci =
+      FieldFrenetAlgo::get_compile_info(ftd, btd, dims.size());
 
-    CompileInfoHandle ci = FieldFrenetAlgo::get_compile_info(ftd,btd, dims);
     Handle<FieldFrenetAlgo> algo;
 
     if (!module_dynamic_compile(ci, algo)) return;
@@ -171,7 +158,7 @@ FieldFrenet::execute()
 CompileInfoHandle
 FieldFrenetAlgo::get_compile_info(const TypeDescription *ftd,
                                   const TypeDescription *btd,
-                                  const unsigned int dim)
+                                  const unsigned int dims)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -180,7 +167,7 @@ FieldFrenetAlgo::get_compile_info(const TypeDescription *ftd,
 
   char dimstr[6];
 
-  sprintf( dimstr, "%d", dim );
+  sprintf( dimstr, "%d", dims );
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
@@ -192,22 +179,6 @@ FieldFrenetAlgo::get_compile_info(const TypeDescription *ftd,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-
-  // Structured meshs have a set_point method which is needed. However, it is not
-  // defined for gridded meshes. As such, the include file defined below contains a
-  // compiler flag so that when needed in FieldSlicer.h it is compiled.
-  if( ftd->get_name().find("StructHexVolField"  ) == 0 ||
-      ftd->get_name().find("StructQuadSurfField") == 0 ||
-      ftd->get_name().find("StructCurveField"   ) == 0 )
-  {
-    string header_path(include_path);  // Get the right path 
-
-    // Insert the Dynamic header file name.
-    header_path.insert( header_path.find_last_of("."), "Dynamic" );
-
-    rval->add_include(header_path);
-  }
-
   ftd->fill_compile_info(rval);
   return rval;
 }
