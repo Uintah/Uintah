@@ -60,6 +60,8 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/SearchGrid.h>
 
+#define SET_POINT_DEFINED 1
+
 namespace SCIRun {
 
 template <class Basis>
@@ -455,6 +457,7 @@ public:
   void elem_reserve(size_t s) { edges_.reserve(s*8); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 3; }
+  virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   typename Node::index_type add_point(const Point &p);
 

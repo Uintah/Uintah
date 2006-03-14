@@ -55,6 +55,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#define SET_POINT_DEFINED 1
+
 namespace SCIRun {
 
 using std::string;
@@ -243,6 +245,7 @@ public:
 
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 0; }
+  virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

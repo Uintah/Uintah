@@ -70,6 +70,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#define SET_POINT_DEFINED 1
 
 namespace SCIRun {
 
@@ -192,6 +193,8 @@ public:
     LatVolMesh<Basis>::set_dim(dims);
     points_.resize(dims[0], dims[1], dims[2]);
   }
+
+  virtual int topology_geometry() const { return (STRUCTURED | IRREGULAR); }
 
   //! get the center point (in object space) of an element
   void get_center(Point &,

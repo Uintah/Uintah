@@ -63,6 +63,8 @@
 
 #include <float.h>
 
+#define SET_POINT_DEFINED 1
+
 namespace SCIRun {
 
 #define TRI_NNODES 3
@@ -839,9 +841,10 @@ public:
                                 typename Face::array_type *faces = 0);
 
 
-  virtual bool          is_editable() const { return true; }
-  virtual int           dimensionality() const { return 3; }
-  Basis&                get_basis() { return basis_; }
+  virtual bool is_editable() const { return true; }
+  virtual int  dimensionality() const { return 3; }
+  virtual int  topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
+  Basis&       get_basis() { return basis_; }
 
 
   //! Generate the list of points that make up a sufficiently accurate

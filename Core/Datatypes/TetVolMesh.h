@@ -57,12 +57,14 @@
 #include <sci_hash_map.h>
 
 #include <sgi_stl_warnings_off.h>
-#include   <vector>
-#include   <set>
+#include <vector>
+#include <set>
 #include <sgi_stl_warnings_on.h>
 
 #include <math.h>
 #include <float.h> // for DBL_MAX
+
+#define SET_POINT_DEFINED 1
 
 namespace SCIRun {
 
@@ -787,10 +789,10 @@ public:
                        typename Node::index_type n2,
                        typename Face::array_type *faces = 0);
 
-
-  virtual bool                  is_editable() const { return true; }
-  virtual int                   dimensionality() const { return 3; }
-  Basis&                        get_basis() { return basis_; }
+  virtual bool is_editable() const { return true; }
+  virtual int  dimensionality() const { return 3; }
+  virtual int  topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
+  Basis&       get_basis() { return basis_; }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.

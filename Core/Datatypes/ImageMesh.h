@@ -535,6 +535,8 @@ public:
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 2; }
+  virtual int  topology_geometry() const { return (STRUCTURED | REGULAR); }
+
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
