@@ -754,6 +754,7 @@ public:
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 3; }
+  virtual int topology_geometry() const { return (STRUCTURED | REGULAR); }
 
   // returns a LatVolMesh
   static Persistent *maker() { return new LatVolMesh(); }

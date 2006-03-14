@@ -58,6 +58,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#define SET_POINT_DEFINED 1
 
 namespace SCIRun {
 
@@ -343,6 +344,7 @@ public:
   void elem_reserve(size_t s) { faces_.reserve(s*4); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 2; }
+  virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
   typename Node::index_type add_point(const Point &p);
 
   virtual bool          synchronize(unsigned int);

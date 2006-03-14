@@ -67,6 +67,7 @@
 #include <float.h>
 #include <sgi_stl_warnings_on.h>
 
+#define SET_POINT_DEFINED 1
 
 namespace SCIRun {
 
@@ -93,6 +94,8 @@ public:
   }
 
   bool get_dim(vector<unsigned int>&) const;
+
+  virtual int topology_geometry() const { return (STRUCTURED | IRREGULAR); }
 
   //! get the child elements of the given index
   void get_nodes(typename ScanlineMesh<Basis>::Node::array_type &,

@@ -274,6 +274,7 @@ public:
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 1; }
+  virtual int topology_geometry() const { return (STRUCTURED | REGULAR); }
   Basis& get_basis() { return basis_; }
 
  //! Generate the list of points that make up a sufficiently accurate

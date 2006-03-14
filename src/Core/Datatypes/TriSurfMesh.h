@@ -66,6 +66,7 @@
 #include <sgi_stl_warnings_on.h>
 #include <float.h> // for DBL_MAX
 
+#define SET_POINT_DEFINED 1
 
 namespace SCIRun {
 
@@ -184,6 +185,7 @@ public:
   virtual void transform(const Transform &t);
 
   bool get_dim(vector<unsigned int>&) const { return false;  }
+  virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   void begin(typename Node::iterator &) const;
   void begin(typename Edge::iterator &) const;

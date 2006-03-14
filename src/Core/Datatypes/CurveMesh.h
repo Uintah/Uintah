@@ -56,6 +56,8 @@
 #include <float.h>
 #include <sgi_stl_warnings_on.h>
 
+#define SET_POINT_DEFINED 1
+
 namespace SCIRun {
 
 using std::string;
@@ -358,7 +360,8 @@ public:
   void elem_reserve(size_t s) { edges_.reserve(s*2); }
 
   virtual bool is_editable() const { return true; }
-  virtual int dimensionality() const { return 1; }
+  virtual int  dimensionality() const { return 1; }
+  virtual int  topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   virtual bool synchronize(unsigned int mask);
 
