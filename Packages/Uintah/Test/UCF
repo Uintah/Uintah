@@ -1,23 +1,20 @@
 #!/usr/local/bin/python
 
-from os import symlink,environ,chdir,getcwd,mkdir,system
+from os import chdir,getcwd,mkdir,system
 from sys import argv,exit,platform
-from string import upper
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
 
 #Performance tests
 UNUSED = [ ("ice_perf_test", "icePerformanceTest.ups", 1, "Linux","", ["do_perf"]),  \
-           ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_perf"]),\
+           ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_perf"]) \
 ]
 
-
-
-TESTS = [ ("dlb_mpm", "dlbTest.ups", 8, "NONE"),  \
-          ("dlb_mpmice", "dlbTest.ups", 8, "ALL"),  \
-          ("periodic_disks", "periodic_disks.ups", 6, "ALL") \
-          ("switcher", "JP8-switch.ups", 8, "ALL") \
-          ]
+TESTS = [   ("dlb_mpm", "dlbTest.ups", 8, "NONE"), \
+            ("dlb_mpmice", "dlbTest.ups", 8, "ALL"), \
+            ("periodic_disks", "periodic_disks.ups", 6, "ALL"),  \
+            ("switcher", "JP8-switch.ups", 8, "ALL")
+        ]
 
 code = runSusTests(argv, TESTS, "UCF")
 
@@ -51,7 +48,7 @@ for test in SCALE_TESTS:
       break
 
     # substitute the new resolution and patch configuration in the UPS file.
-    newUPS = modUPS("%s/UCF" % (inputs_root(), test[1], \
+    newUPS = modUPS("%s/UCF" % (inputs_root()), test[1], \
                     ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
     scale_tests.append(("%s-%dproc" % (test[0],procs), newUPS, procs, test[3], test[4], test[5], ["do_perf"]))
 
