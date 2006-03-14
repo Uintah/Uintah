@@ -130,53 +130,31 @@ FieldSlicer::execute()
     return;
   }
 
-  // Get the dimensions of the mesh.
-  // this should be part of the dynamic compilation....
-  string mesh_type =
-    fHandle->get_type_description(Field::MESH_TD_E)->get_name();
+  // Get the type and dimensions of the mesh.
+  if( fHandle->mesh()->topology_geometry() & Mesh::STRUCTURED ) {
 
-  //FIX_ME MC how do i detect a "ITKLatVolField"
-  if( mesh_type.find("LatVolMesh"      ) != string::npos ||
-      mesh_type.find("StructHexVolMesh") != string::npos ) {
-    typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
-    LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
+    vector<unsigned int> dims;
 
-    iDim_.set( lvmInput->get_ni(), GuiVar::SET_GUI_ONLY );
-    jDim_.set( lvmInput->get_nj(), GuiVar::SET_GUI_ONLY );
-    kDim_.set( lvmInput->get_nk(), GuiVar::SET_GUI_ONLY );
+    fHandle->mesh()->get_dim( dims );
 
-    Dims_.set( 3, GuiVar::SET_GUI_ONLY );
+    if( dims.size() >= 1 )
+      iDim_.set( dims[0], GuiVar::SET_GUI_ONLY );
+    if( dims.size() >= 2 )
+      jDim_.set( dims[1], GuiVar::SET_GUI_ONLY );
+    if( dims.size() >= 3 )
+      kDim_.set( dims[2], GuiVar::SET_GUI_ONLY );
 
-  } else if( mesh_type.find("ImageMesh"         ) != string::npos ||
-	     mesh_type.find("StructQuadSurfMesh") != string::npos ) {
-    typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
-    IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
-    iDim_.set( imInput->get_ni(), GuiVar::SET_GUI_ONLY );
-    jDim_.set( imInput->get_nj(), GuiVar::SET_GUI_ONLY );
-    kDim_.set( 1, GuiVar::SET_GUI_ONLY );
-
-    Dims_.set( 2, GuiVar::SET_GUI_ONLY );
-
-  } else if( mesh_type.find("ScanlineMesh"   ) != string::npos ||
-	     mesh_type.find("StructCurveMesh") != string::npos ) {
-    typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
-    SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
-    
-    iDim_.set( slmInput->get_ni(), GuiVar::SET_GUI_ONLY );
-    jDim_.set( 1, GuiVar::SET_GUI_ONLY );
-    kDim_.set( 1, GuiVar::SET_GUI_ONLY );
-
-    Dims_.set( 1, GuiVar::SET_GUI_ONLY );
+    Dims_.set( dims.size(), GuiVar::SET_GUI_ONLY );
 
   } else {
     error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
-    error( "Only availible for regular topology e.g. uniformly gridded or structure gridded data." );
+    error( "Only availible for topologically structured data." );
     return;
   }
 
   if( fHandle->basis_order() != 1 ) {
     error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
-    error( "Currently only availible for node data." );
+    error( "Currently only available for node data." );
     return;
   }
 
@@ -365,23 +343,6 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);  
-
-  // Structured meshs have a set_point method which is
-  // needed. However, it is not defined for gridded meshes. As such,
-  // the include file defined below contains a compiler flag so that
-  // when needed in FieldSlicer.h it is compiled.
-  if( iftd->get_name().find("StructHexVolMesh"  ) != string::npos ||
-      iftd->get_name().find("StructQuadSurfMesh") != string::npos ||
-      iftd->get_name().find("StructCurveMesh"   ) != string::npos ||
-      iftd->get_name().find("PointCloudMesh"    ) != string::npos )
-  {
-    string header_path(include_path);  // Get the right path 
-
-    // Insert the Dynamic header file name.
-    header_path.insert( header_path.find_last_of("."), "Dynamic" );
-
-    rval->add_include(header_path);
-  }
 
   iftd->fill_compile_info(rval);
   return rval;
