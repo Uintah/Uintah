@@ -34,6 +34,8 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 
     constructor {config} {
 	set name VolumeVisualizer
+
+        setGlobal $this-shading-button-state 1
     }
 
     method ui {} { 
