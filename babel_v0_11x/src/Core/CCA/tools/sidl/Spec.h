@@ -544,7 +544,6 @@ public:
 
   virtual bool isvoid() const=0;
 
-  static Type* arraytype();
   static Type* booltype();
   static Type* chartype();
   static Type* dcomplextype();
@@ -558,13 +557,12 @@ public:
   static Type* voidtype();
 
   static Type* arraytype(Type*, int number);
-
 };
 
 class BuiltinType : public Type {
 public:
   virtual void staticCheck(SymbolTable* names, Method* method);
-  int detectRedistribution();
+  virtual int detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
@@ -604,7 +602,7 @@ public:
   NamedType(const std::string& curfile, int lineno, ScopedName*);
   virtual ~NamedType();
   virtual void staticCheck(SymbolTable* names, Method* method);
-  int detectRedistribution();
+  virtual int detectRedistribution();
   const ScopedName* getScopedName() const { return name; }
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
@@ -635,10 +633,11 @@ private:
 };
 
 // corresponds to SIDL arrays
+
 class ArrayType : public Type {
 public:
   virtual void staticCheck(SymbolTable* names, Method* method);
-  int detectRedistribution();
+  virtual int detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
@@ -662,8 +661,10 @@ public:
   virtual ~ArrayType();
   int dim;
   Type* subtype;
+
 protected:
   friend class Type;
+
 private:
   Method* thisMethod;
 };
