@@ -36,7 +36,6 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Network/Module.h>
 #include <Core/Algorithms/Util/share.h>
 
 #include <sgi_stl_warnings_off.h>
