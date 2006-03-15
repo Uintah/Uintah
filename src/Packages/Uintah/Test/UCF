@@ -10,15 +10,15 @@ UNUSED = [ ("ice_perf_test", "icePerformanceTest.ups", 1, "Linux","", ["do_perf"
            ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_perf"]) \
 ]
 
-TESTS = [   ("dlb_mpm", "dlbTest.ups", 8, "NONE"), \
-            ("dlb_mpmice", "dlbTest.ups", 8, "ALL"), \
+TESTS = [   ("dlb_mpm", "mpmDLBTest.ups", 8, "NONE"), \
+            ("dlb_mpmice", "mpmiceDLBTest.ups", 8, "ALL"), \
             ("periodic_disks", "periodic_disks.ups", 6, "ALL"),  \
-            ("switcher", "JP8-switch.ups", 8, "ALL")
+            ("switcher", "JP8-switch.ups", 8, "NONE")
         ]
 
 code = runSusTests(argv, TESTS, "UCF")
 
-# Scalability tests -
+                            # Scalability tests -
 # last 6 args are start patches x,y,z and start res x,y,z
 # The 4th argument is the number of times to double the processor count
 SCALE_TESTS = [ ("ice_scale_test", "iceScalabilityTest.ups", 8, "ALL","",1,1,1,10,10,10)]
