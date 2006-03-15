@@ -142,8 +142,10 @@ Thread::run_body()
 		e.message());
 	Thread::niceAbort();
     } catch(const Exception& e){
-	fprintf(stderr, "Caught unhandled exception:\n%s\n",
-		e.message());
+	fprintf(stderr, "Caught unhandled exception:\n%s\n",e.message());
+        const char *trace = e.stackTrace();
+        if (trace)
+          fprintf(stderr, "Exception %s", trace);
 	Thread::niceAbort();
     } catch(const std::string &e){
       fprintf(stderr, "Caught unhandled string exception:\n%s\n", e.c_str());
