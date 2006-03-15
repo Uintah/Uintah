@@ -26,7 +26,7 @@
            <SimulationComponent>
                <type> rigidmpmice </type>
            </SimulationComponent>
-           <input_file> JP8_IS_1-2-3.ups</input_file>
+           <input_file> JP8-switch.ups</input_file>
 	   <SwitchCriteria type = "Timestep">
 	       <timestep> 5 </timestep>
 	   </SwitchCriteria>
