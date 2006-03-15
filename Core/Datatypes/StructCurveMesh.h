@@ -95,7 +95,7 @@ public:
 
   bool get_dim(vector<unsigned int>&) const;
 
-  virtual int topology_geometry() const { return (STRUCTURED | IRREGULAR); }
+  virtual int topology_geometry() const { return (Mesh::STRUCTURED | Mesh::IRREGULAR); }
 
   //! get the child elements of the given index
   void get_nodes(typename ScanlineMesh<Basis>::Node::array_type &,
