@@ -432,14 +432,15 @@ void CI::emit(EmitState& e)
   if (emitted_declaration) {
     return;
   }
-  // Emit parent classes...
-  if (parentclass) {
-    parentclass->emit(e);
-  }
 
   for (std::vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
        iter != parent_ifaces.end(); iter++) {
     (*iter)->emit(e);
+  }
+
+  // Emit parent classes...
+  if (parentclass) {
+    parentclass->emit(e);
   }
 
   emitted_declaration=true;
@@ -652,13 +653,14 @@ bool CI::singly_inherited() const
       || parent_ifaces.size()>1) {
     return false;
   }
-  if (parentclass) {
-    if (!parentclass->singly_inherited()) {
-      return false;
-    }
-  } else if (parent_ifaces.size()>0) {
+
+  if (parent_ifaces.size()>0) {
     // First element...
     if (!(*parent_ifaces.begin())->singly_inherited()) {
+      return false;
+    }
+  } else if (parentclass) {
+    if (!parentclass->singly_inherited()) {
       return false;
     }
   }
@@ -1350,21 +1352,26 @@ void CI::emit_interface(EmitState& e)
     e.out << " : ";
   }
   SymbolTable* localScope=symbols->getParent();
-  if (parentclass) {
-    e.out << parentclass->cppfullname(localScope) << "(false)";
-  }
+
   if (parent_ifaces.size() > 0) {
     std::vector<BaseInterface*> parents;
     gatherParentInterfaces(parents);
     for (std::vector<BaseInterface*>::iterator iter=parents.begin();
 	 iter != parents.end(); iter++) {
       if (*iter != this) {
-        if (parentclass || iter != parents.begin()) {
+        if (iter != parents.begin()) {
 	  e.out << ",\n   ";
         }
         e.out << (*iter)->cppfullname(localScope) << "(false)";
       }
     }
+    if (parentclass) {
+      e.out << ",\n   ";
+    }
+  }
+
+  if (parentclass) {
+    e.out << parentclass->cppfullname(localScope) << "(false)";
   }
 
   e.out << "\n{\n";
