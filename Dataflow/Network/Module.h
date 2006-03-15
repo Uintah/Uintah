@@ -44,7 +44,6 @@
 #define SCIRun_Dataflow_Network_Module_h
 
 #include <Dataflow/Network/Port.h>
-#include <Dataflow/Ports/SimplePort.h>
 #include <Core/Util/Assert.h>
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Thread/Mailbox.h>
@@ -270,66 +269,6 @@ public:
   int addOPortByName(std::string name, std::string d_type);
   void want_to_execute();
 
-  // Used to get handles with error checking.
-  template<class DH>
-  bool Module::getIHandle( std::string name,
-			   DH& handle,
-			   bool changed,
-			   bool required = true )
-  {
-    SimpleIPort<DH> *dataport;
-
-    // We always require the port to be there.
-    if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(getIPort (name))) ) {
-      error( "Unable to initialize input port '" + name + "'." );
-      handle = 0;
-      return false;
-    }
-
-    // Get the handle and check for data.
-    if (dataport->get(handle) && handle.get_rep()) {
-
-      // See if the data has changed. Note only change the boolean if
-      // it is false this way it can be cascaded with other handle gets.
-      if( changed == false )
-	changed = dataport->changed();
-
-      // Handle and rep so return the generation number.
-      return true;
-
-    } else if( required ) {
-      // The input was required so report an error.
-      error( "No field handle or representation for input port '" +
-	     name + "'."  );
-      handle = 0;
-      return false;
-    } else {
-      handle = 0;
-      return true;
-    }
-  }
-
-  // Used to send handles with error checking.
-  template<class DH>
-  bool Module::setOHandle( string name,
-			   DH& handle,
-			   bool cache = true )
-  {
-    if( !handle.get_rep() )
-      return true;
-
-    SimpleOPort<DH> *dataport;
-
-    // We always require the port to be there.
-    if( !(dataport = dynamic_cast<SimpleOPort<DH>*>(getOPort (name))) ) {
-      error( "Unable to initialize input port '" + name + "'." );
-      return false;
-    }
-
-    dataport->send_and_dereference( handle, cache );
-
-    return true;
-  }
 
 protected:
   virtual void tcl_command(GuiArgs&, void*);
@@ -383,6 +322,14 @@ protected:
   bool need_execute;
   SchedClass sched_class;
 
+
+  template<class DH>
+  bool getIHandle( std::string name,DH& handle,bool changed,
+    bool required = true );
+
+  template<class DH>
+  bool Module::setOHandle( string name,DH& handle,
+       bool cache = true );
 private:
   void remove_iport(int);
   void add_iport(IPort*);
@@ -407,7 +354,70 @@ private:
 
   Module(const Module&);
   Module& operator=(const Module&);
+
+
 };
+
+// Used to get handles with error checking.
+template<class DH>
+bool Module::getIHandle( std::string name,
+       DH& handle,
+       bool changed,
+       bool required )
+{
+  SimpleIPort<DH> *dataport;
+
+  // We always require the port to be there.
+  if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(getIPort (name))) ) {
+    error( "Unable to initialize input port '" + name + "'." );
+    handle = 0;
+    return false;
+  }
+
+  // Get the handle and check for data.
+  if (dataport->get(handle) && handle.get_rep()) {
+
+    // See if the data has changed. Note only change the boolean if
+    // it is false this way it can be cascaded with other handle gets.
+    if( changed == false ) changed = dataport->changed();
+
+    // Handle and rep so return the generation number.
+    return true;
+
+  } else if( required ) {
+    // The input was required so report an error.
+    error( "No field handle or representation for input port '" +
+     name + "'."  );
+    handle = 0;
+    return false;
+  } else {
+    handle = 0;
+    return true;
+  }
+}
+
+// Used to send handles with error checking.
+template<class DH>
+bool Module::setOHandle( string name,
+       DH& handle,
+       bool cache)
+{
+  if( !handle.get_rep() )
+    return true;
+
+  SimpleOPort<DH> *dataport;
+
+  // We always require the port to be there.
+  if( !(dataport = dynamic_cast<SimpleOPort<DH>*>(getOPort (name))) ) {
+    error( "Unable to initialize input port '" + name + "'." );
+    return false;
+  }
+
+  dataport->send_and_dereference( handle, cache );
+
+  return true;
+}
+
 
 
 }
