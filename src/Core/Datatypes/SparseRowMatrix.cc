@@ -616,11 +616,11 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   {
     for (r = 0; r < cnrows; r++)
     {
-      for (p = crows[r]; p < crows[r+1]; r++)
+      for (p = crows[r]; p < crows[r+1]; p++)
       {
         double cval = 0.0;
         int cc = ccolumns[p];
-        for (q = rows[s]; q < rows[s+1]; s++)
+        for (q = rows[s]; q < rows[s+1]; q++)
         {
           if (cc == columns[q]) cval += ca[p]*a[q];
         }
