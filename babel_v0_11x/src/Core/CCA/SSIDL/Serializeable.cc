@@ -29,17 +29,17 @@
 #include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <Core/Util/NotFinished.h>
 
-using SSIDL::io::Serializeable;
+using SSIDL::io::Serializable;
 using SSIDL::io::Serializer;
 using SSIDL::io::Deserializer;
 
 
-void Serializeable::packObj(const CCALib::SmartPointer<Serializer >& ser)
+void Serializable::packObj(/*const CCALib::SmartPointer<Serializer >& ser*/ const Serializer::pointer& ser)
 {
     NOT_FINISHED("void .SSIDL.io.Serializeable.packObj(in .SSIDL.io.Serializer ser)");
 }
 
-void Serializeable::unpackObj(const Deserializer::pointer& des)
+void Serializable::unpackObj(const Deserializer::pointer& des)
 {
     NOT_FINISHED("void .SSIDL.io.Serializeable.unpackObj(in .SSIDL.io.Deserializer des)");
 }
