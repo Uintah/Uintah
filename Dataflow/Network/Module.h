@@ -324,12 +324,12 @@ protected:
 
 
   template<class DH>
-  bool getIHandle( std::string name,DH& handle,bool changed,
-    bool required = true );
+  bool getIHandle( std::string name, DH& handle, bool changed,
+		   bool required = true );
 
   template<class DH>
-  bool Module::setOHandle( string name,DH& handle,
-       bool cache = true );
+  bool setOHandle( string name, DH& handle, bool cache = true );
+
 private:
   void remove_iport(int);
   void add_iport(IPort*);
