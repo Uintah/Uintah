@@ -28,7 +28,7 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     stringstream id(index);
     int index_val = -1;
     id >> index_val;
-    cout << "Material attribute = " << index_val << endl;
+    //cout << "Material attribute = " << index_val << endl;
 
     //Create and register as an MPM material
     MPMMaterial *mat = scinew MPMMaterial(ps);
