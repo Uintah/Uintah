@@ -194,7 +194,7 @@ public:
     points_.resize(dims[0], dims[1], dims[2]);
   }
 
-  virtual int topology_geometry() const { return (STRUCTURED | IRREGULAR); }
+  virtual int topology_geometry() const { return (Mesh::STRUCTURED | Mesh::IRREGULAR); }
 
   //! get the center point (in object space) of an element
   void get_center(Point &,
