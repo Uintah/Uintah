@@ -39,6 +39,7 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
 
 namespace Uintah {
 using namespace SCIRun;
@@ -87,8 +88,9 @@ public:
   virtual ~ParticleFlowRenderer();
 
   void update_colormap( ColorMapHandle cmap );
-  void update_vector_field( FieldHandle vfh );
+  void update_vector_field( FieldHandle vfh, bool normalize = false );
   void update_time( double time );
+  void update_transform(const Point& c, const Point& r, const Point& d);
   void set_animation( bool a ) 
   { if(animating_ != a) reset_ = true;  animating_ = a;}
   void set_time_increment(float i){ time_increment_ = i; }
@@ -99,7 +101,7 @@ public:
 #endif
   
   virtual GeomObj* clone();
-  virtual void get_bounds(BBox& bb){ bb = vf_h_->mesh()->get_bounding_box();}
+  virtual void get_bounds(BBox& bb){ bb = fh_->mesh()->get_bounding_box();}
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*);
@@ -114,6 +116,7 @@ private:
   bool shaders_loaded_;
   bool initialized_;
   bool cmap_dirty_;
+  bool flow_tex_dirty_;
   bool animating_;
   bool reset_;
   
@@ -122,8 +125,14 @@ private:
   float time_increment_;
   float particle_time_;
   
+  unsigned int nx_, ny_, nz_;
+  
+  GLuint flow_tex_;
+  GLfloat *vfield_;
+  
+  
   ColorMapHandle cmap_h_;
-  FieldHandle vf_h_;
+  FieldHandle fh_;
 
   DrawInfoOpenGL* di_;
   ParticleFlowShader *shader_;
@@ -134,9 +143,14 @@ private:
   GLfloat *colors_;
   GLfloat *velocities_;
   GLfloat *start_times_;
+
+  Transform shader_trans_;
+  
   
   void drawPoints();
- 
+  void draw_flow_outline();
+  void reload_flow_texture();
+  
 }; 
 
 
