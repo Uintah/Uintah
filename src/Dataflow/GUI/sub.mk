@@ -186,6 +186,11 @@ SRCS := \
 	$(SRCDIR)/GetFileName.tcl\
 #[INSERT NEW TCL FILE HERE]
 
+# MESQUITE Mesh Optimization Library
+ifeq ($(HAVE_MESQUITE),yes)
+   SRCS += $(SRCDIR)/MeshSmoother.tcl
+endif
+
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
 SCIRUN_MODULES := $(SCIRUN_MODULES) $(TCLINDEX)

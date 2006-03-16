@@ -52,7 +52,12 @@ namespace SCIRun {
 class MeshSmoother : public Module
 {
 private:
-  int       last_field_generation_;
+  GuiString smooth_boundary_;
+  GuiString smooth_scheme_;
+  int last_field_generation_;
+
+  string last_smooth_boundary_;
+  string last_smooth_scheme_;
 
 public:
   MeshSmoother(GuiContext* ctx);
@@ -67,6 +72,8 @@ DECLARE_MAKER(MeshSmoother)
 
 MeshSmoother::MeshSmoother(GuiContext* ctx)
         : Module("MeshSmoother", ctx, Filter, "FieldsData", "SCIRun"),
+          smooth_boundary_(ctx->subVar("smoothboundary")),
+          smooth_scheme_(ctx->subVar("smoothscheme")),
           last_field_generation_(0)
 {
 }
@@ -85,13 +92,26 @@ void MeshSmoother::execute()
     return;
   }
 
-  if (last_field_generation_ == ifieldhandle->generation &&
-      oport_cached( "Smoothed" ) )
+  bool changed = false;
+  smooth_scheme_.reset();
+  smooth_boundary_.reset();
+  
+  if( last_smooth_scheme_ != smooth_scheme_.get() ||
+      last_smooth_boundary_ != smooth_boundary_.get() )
+  {
+    last_smooth_scheme_ = smooth_scheme_.get();
+    last_smooth_boundary_ = smooth_boundary_.get();
+    changed = true;
+  }
+
+  if( last_field_generation_ == ifieldhandle->generation &&
+       oport_cached( "Smoothed" ) && !changed )
   {
     // We're up to date, return.
     return;
   }
   last_field_generation_ = ifieldhandle->generation;
+
 
   string ext = "";
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
@@ -136,7 +156,12 @@ void MeshSmoother::execute()
     return;
   }
 
-  FieldHandle ofield = algo->execute(this, ifieldhandle);
+  bool sb = false;
+  if( last_smooth_boundary_ == "On" )
+      sb = true;
+
+  FieldHandle ofield = algo->execute(this, ifieldhandle, 
+                                     sb, last_smooth_scheme_ );
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Smoothed");
   ofield_port->send_and_dereference(ofield);
