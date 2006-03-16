@@ -33,19 +33,9 @@ catch {rename Teem_UnuAtoM_UnuAxsplit ""}
 
 itcl_class Teem_UnuAtoM_UnuAxsplit {
     inherit Module
+
     constructor {config} {
         set name UnuAxsplit
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
-
-        global $this-fastsize
-        set $this-fastsize 0
-
-        global $this-slowsize
-        set $this-slowsize 0
     }
 
     method ui {} {

@@ -66,15 +66,19 @@ DECLARE_MAKER(UnuCCadj)
 UnuCCadj::UnuCCadj(GuiContext* ctx)
   : Module("UnuCCadj", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), onrrd_(0),
-    connectivity_(ctx->subVar("connectivity"))
+    connectivity_(ctx->subVar("connectivity"), 1)
 {
 }
 
-UnuCCadj::~UnuCCadj(){
+
+UnuCCadj::~UnuCCadj()
+{
 }
 
+
 void
- UnuCCadj::execute(){
+UnuCCadj::execute()
+{
   NrrdDataHandle nrrd_handle;
 
   update_state(NeedData);

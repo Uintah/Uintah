@@ -68,15 +68,16 @@ DECLARE_MAKER(UnuSave)
 UnuSave::UnuSave(GuiContext* ctx)
   : Module("UnuSave", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), 
-    format_(ctx->subVar("format")),
-    encoding_(ctx->subVar("encoding")),
-    endian_(ctx->subVar("endian")),
-    filename_(ctx->subVar("filename"))
+    format_(ctx->subVar("format"), "nrrd"),
+    encoding_(ctx->subVar("encoding"), "raw"),
+    endian_(ctx->subVar("endian"), "little"),
+    filename_(ctx->subVar("filename"), "")
 {
 }
 
 
-UnuSave::~UnuSave(){
+UnuSave::~UnuSave()
+{
 }
 
 

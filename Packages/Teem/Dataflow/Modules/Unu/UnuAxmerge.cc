@@ -57,12 +57,15 @@ DECLARE_MAKER(UnuAxmerge)
 
 UnuAxmerge::UnuAxmerge(SCIRun::GuiContext *ctx) : 
   Module("UnuAxmerge", ctx, Filter, "UnuAtoM", "Teem"), 
-  axes_(ctx->subVar("axes"))
+  axes_(ctx->subVar("axes"), "0")
 {
 }
 
-UnuAxmerge::~UnuAxmerge() {
+
+UnuAxmerge::~UnuAxmerge()
+{
 }
+
 
 void 
 UnuAxmerge::execute()

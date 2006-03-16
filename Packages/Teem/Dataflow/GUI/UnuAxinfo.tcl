@@ -32,46 +32,14 @@
 
 itcl_class Teem_UnuAtoM_UnuAxinfo {
     inherit Module
+
     constructor {config} {
         set name UnuAxinfo
-        set_defaults
+
+	setGlobal $this-firstwidth 15
+	setGlobal $this-spaceDir "0,0,0"
+	setGlobal $this-use_spaceDir 0
     }
-    
-    method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	global $this-axis
-	global $this-label
-	global $this-kind
-	global $this-min
-	global $this-max
-	global $this-spacing
-	global $this-spaceDir
-	global $this-reset
-	global $this-use_label
-	global $this-use_kind
-	global $this-use_min
-	global $this-use_max
-	global $this-use_spacing
-	global $this-use_spaceDir
-	
-	set $this-firstwidth 15
-	set $this-axis 0
-	set $this-label "---"
-	set $this-kind "nrrdKindUnknown"
-	set $this-spacing 1.0
-	set $this-min 0
-	set $this-max 1.0
-	set $this-spaceDir "0,0,0"
-	set $this-reset 0
-	set $this-use_label 1
-	set $this-use_kind 1
-	set $this-use_min 1
-	set $this-use_max 1
-	set $this-use_spacing 1
-	set $this-use_spaceDir 0
-    }
-    	
     
     method ui {} {
         set w .ui[modname]

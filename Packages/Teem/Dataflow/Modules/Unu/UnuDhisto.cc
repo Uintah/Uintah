@@ -64,15 +64,18 @@ DECLARE_MAKER(UnuDhisto)
 
 UnuDhisto::UnuDhisto(SCIRun::GuiContext *ctx) : 
   Module("UnuDhisto", ctx, Filter, "UnuAtoM", "Teem"), 
-  height_(ctx->subVar("height")),
-  log_(ctx->subVar("log")),
-  max_(ctx->subVar("max")),
-  usemax_(ctx->subVar("usemax"))
+  height_(ctx->subVar("height"), 0),
+  log_(ctx->subVar("log"), 1),
+  max_(ctx->subVar("max"), 0),
+  usemax_(ctx->subVar("usemax"), 1)
 {
 }
 
-UnuDhisto::~UnuDhisto() {
+
+UnuDhisto::~UnuDhisto()
+{
 }
+
 
 void 
 UnuDhisto::execute()

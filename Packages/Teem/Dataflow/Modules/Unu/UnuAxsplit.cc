@@ -58,14 +58,17 @@ DECLARE_MAKER(UnuAxsplit)
 
 UnuAxsplit::UnuAxsplit(SCIRun::GuiContext *ctx) : 
   Module("UnuAxsplit", ctx, Filter, "UnuAtoM", "Teem"), 
-  axis_(ctx->subVar("axis")),
-  fastsize_(ctx->subVar("fastsize")),
-  slowsize_(ctx->subVar("slowsize"))
+  axis_(ctx->subVar("axis"), 0),
+  fastsize_(ctx->subVar("fastsize"), 0),
+  slowsize_(ctx->subVar("slowsize"), 0)
 {
 }
 
-UnuAxsplit::~UnuAxsplit() {
+
+UnuAxsplit::~UnuAxsplit()
+{
 }
+
 
 void 
 UnuAxsplit::execute()

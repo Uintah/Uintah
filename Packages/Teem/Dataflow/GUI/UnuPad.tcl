@@ -41,20 +41,9 @@ catch {rename Teem_UnuNtoZ_UnuPad ""}
 
 itcl_class Teem_UnuNtoZ_UnuPad {
     inherit Module
+
     constructor {config} {
         set name UnuPad
-        set_defaults
-    }
-    method set_defaults {} {
-	global $this-pad-style
-	global $this-pad-value
-
-	global $this-dim
-
-	set $this-pad-style Bleed
-	set $this-pad-value 0
-
-	set $this-dim 0
     }
 
     method make_min_max {} {

@@ -69,16 +69,20 @@ DECLARE_MAKER(UnuSplice)
 UnuSplice::UnuSplice(GuiContext* ctx)
   : Module("UnuSplice", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), islice_(0), onrrd_(0),
-    axis_(ctx->subVar("axis")),
-    position_(ctx->subVar("position"))
+    axis_(ctx->subVar("axis"), 0),
+    position_(ctx->subVar("position"), 0)
 {
 }
 
-UnuSplice::~UnuSplice(){
+
+UnuSplice::~UnuSplice()
+{
 }
 
+
 void
- UnuSplice::execute(){
+UnuSplice::execute()
+{
   NrrdDataHandle nrrd_handle;
   NrrdDataHandle slice_handle;
 

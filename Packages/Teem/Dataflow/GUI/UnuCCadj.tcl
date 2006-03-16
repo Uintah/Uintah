@@ -31,14 +31,9 @@
 
 itcl_class Teem_UnuAtoM_UnuCCadj {
     inherit Module
+
     constructor {config} {
         set name UnuCCadj
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-connectivity
-	set $this-connectivity 1
     }
 
     method ui {} {

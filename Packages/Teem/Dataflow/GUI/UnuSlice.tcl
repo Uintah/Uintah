@@ -33,18 +33,9 @@ catch {rename Teem_UnuNtoZ_UnuSlice ""}
 
 itcl_class Teem_UnuNtoZ_UnuSlice {
     inherit Module
+
     constructor {config} {
         set name UnuSlice
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
-
-        global $this-position
-        set $this-position 0
-
-
     }
 
     method ui {} {

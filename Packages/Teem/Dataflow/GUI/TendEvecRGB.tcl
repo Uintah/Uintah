@@ -33,28 +33,9 @@ catch {rename Teem_Tend_TendEvecRGB ""}
 
 itcl_class Teem_Tend_TendEvecRGB {
     inherit Module
+
     constructor {config} {
         set name TendEvecRGB
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-evec
-        set $this-evec 2
-
-        global $this-aniso_metric
-        set $this-aniso_metric  "tenAniso_FA"
-
-        global $this-background
-        set $this-background 0.0
-
-	global $this-gray
-	set $this-gray 0.0
-
-	global $this-gamma
-	set $this-gamma 1.0
-
-	global $this-threshold
-	set $this-threshold 0.5
     }
 
     method ui {} {

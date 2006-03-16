@@ -31,32 +31,9 @@
 
 itcl_class Teem_Tend_TendSatin {
     inherit Module
+
     constructor {config} {
         set name TendSatin
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-torus
-	set $this-torus 0
-
-	global $this-anisotropy
-	set $this-anisotropy 1.0
-
-	global $this-maxca1
-	set $this-maxca1 1.0
-
-	global $this-minca1
-	set $this-minca1 0.0
-
-	global $this-boundary
-	set $this-boundary 0.05
-	
-	global $this-thickness
-	set $this-thickness {0.3}
-
-	global $this-size
-	set $this-size {32}
     }
 
     method ui {} {

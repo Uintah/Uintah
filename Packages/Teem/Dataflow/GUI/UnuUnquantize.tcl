@@ -31,23 +31,9 @@
 
 itcl_class Teem_UnuNtoZ_UnuUnquantize {
     inherit Module
+
     constructor {config} {
         set name UnuUnquantize
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-min
-	global $this-useinputmin
-	global $this-max
-	global $this-useinputmax
-	global $this-double
-
-	set $this-min {0.0}
-	set $this-useinputmin 1
-	set $this-max {0.0}
-	set $this-useinputmax 1
-	set $this-double 0
     }
 
     method ui {} {

@@ -68,18 +68,21 @@ DECLARE_MAKER(TendSatin)
 
 TendSatin::TendSatin(SCIRun::GuiContext *ctx) : 
   Module("TendSatin", ctx, Filter, "Tend", "Teem"),
-  torus_(ctx->subVar("torus")),
-  anisotropy_(ctx->subVar("anisotropy")),
-  maxca1_(ctx->subVar("maxca1")),
-  minca1_(ctx->subVar("minca1")),
-  boundary_(ctx->subVar("boundary")),
-  thickness_(ctx->subVar("thickness")),
-  size_(ctx->subVar("size"))
+  torus_(ctx->subVar("torus"), 0),
+  anisotropy_(ctx->subVar("anisotropy"), 1.0),
+  maxca1_(ctx->subVar("maxca1"), 1.0),
+  minca1_(ctx->subVar("minca1"), 0.0),
+  boundary_(ctx->subVar("boundary"), 0.05),
+  thickness_(ctx->subVar("thickness"), 0.3),
+  size_(ctx->subVar("size"), 32)
 {
 }
 
-TendSatin::~TendSatin() {
+
+TendSatin::~TendSatin()
+{
 }
+
 
 void 
 TendSatin::execute()

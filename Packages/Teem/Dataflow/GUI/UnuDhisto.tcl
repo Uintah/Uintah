@@ -33,22 +33,9 @@ catch {rename Teem_UnuAtoM_UnuDhisto ""}
 
 itcl_class Teem_UnuAtoM_UnuDhisto {
     inherit Module
+
     constructor {config} {
         set name UnuDhisto
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-height
-        set $this-height 0
-
-        global $this-log
-        set $this-log 1
-
-	global $this-max
-	set $this-max 0
-
-	global $this-usemax
-	set $this-usemax 1
     }
 
     method ui {} {

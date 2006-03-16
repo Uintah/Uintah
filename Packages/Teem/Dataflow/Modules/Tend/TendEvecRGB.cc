@@ -65,20 +65,23 @@ private:
   GuiDouble    threshold_;
 };
 
+
 DECLARE_MAKER(TendEvecRGB)
 
 TendEvecRGB::TendEvecRGB(SCIRun::GuiContext *ctx) : 
   Module("TendEvecRGB", ctx, Filter, "Tend", "Teem"), 
-  evec_(ctx->subVar("evec")),
-  aniso_metric_(ctx->subVar("aniso_metric")),
-  background_(ctx->subVar("background")),
-  gray_(ctx->subVar("gray")),
-  gamma_(ctx->subVar("gamma")),
-  threshold_(ctx->subVar("threshold"))
+  evec_(ctx->subVar("evec"), 2),
+  aniso_metric_(ctx->subVar("aniso_metric"), "tendAniso_FA"),
+  background_(ctx->subVar("background"), 0.0),
+  gray_(ctx->subVar("gray"), 0.0),
+  gamma_(ctx->subVar("gamma"), 1.0),
+  threshold_(ctx->subVar("threshold"), 0.5)
 {
 }
 
-TendEvecRGB::~TendEvecRGB() {
+
+TendEvecRGB::~TendEvecRGB()
+{
 }
 
 
