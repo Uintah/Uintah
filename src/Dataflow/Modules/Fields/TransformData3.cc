@@ -82,8 +82,8 @@ DECLARE_MAKER(TransformData3)
 
 TransformData3::TransformData3(GuiContext* ctx)
   : Module("TransformData3", ctx, Filter,"FieldsData", "SCIRun"),
-    gFunction_(ctx->subVar("function")),
-    gOutputDataType_(ctx->subVar("outputdatatype")),
+    gFunction_(ctx->subVar("function"), "result = v0 + v1 + v2;"),
+    gOutputDataType_(ctx->subVar("outputdatatype"), "input 0"),
     fGeneration0_(-1),
     fGeneration1_(-1),
     fGeneration2_(-1),

@@ -72,27 +72,20 @@ public:
 
 MatrixInfo::MatrixInfo(GuiContext* ctx)
   : Module("MatrixInfo", ctx, Sink, "Math", "SCIRun"),
-    gui_matrixname_(ctx->subVar("matrixname", false)),
-    gui_generation_(ctx->subVar("generation", false)),
-    gui_typename_(ctx->subVar("typename", false)),
-    gui_rows_(ctx->subVar("rows", false)),
-    gui_cols_(ctx->subVar("cols", false)),
-    gui_elements_(ctx->subVar("elements", false)),
+    gui_matrixname_(ctx->subVar("matrixname", false), "---"),
+    gui_generation_(ctx->subVar("generation", false), "---"),
+    gui_typename_(ctx->subVar("typename", false), "---"),
+    gui_rows_(ctx->subVar("rows", false), "---"),
+    gui_cols_(ctx->subVar("cols", false), "---"),
+    gui_elements_(ctx->subVar("elements", false), "---"),
     generation_(-1)
 {
-  gui_matrixname_.set("---");
-  gui_generation_.set("---");
-  gui_typename_.set("---");
-  gui_rows_.set("---");
-  gui_cols_.set("---");
-  gui_elements_.set("---");
 }
 
 
 MatrixInfo::~MatrixInfo()
 {
 }
-
 
 
 void

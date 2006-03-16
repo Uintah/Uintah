@@ -51,7 +51,7 @@ private:
 DECLARE_MAKER(CreateString)
 CreateString::CreateString(GuiContext* ctx)
   : Module("CreateString", ctx, Source, "String", "SCIRun"),
-  inputstring_(ctx->subVar("inputstring"))
+  inputstring_(ctx->subVar("inputstring"), "")
 {
 }
 
