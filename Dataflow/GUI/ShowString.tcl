@@ -1,24 +1,8 @@
 itcl_class SCIRun_Visualization_ShowString {
     inherit Module
+
     constructor {config} {
         set name ShowString
-        set_defaults
-    }
-
-    method set_defaults {} {
-      global $this-bbox
-      global $this-size
-      global $this-location
-      global $this-color-r
-      global $this-color-g
-      global $this-color-b
-
-      set $this-bbox 0
-      set $this-size 2
-      set $this-location "Top Left"
-      set $this-color-r 1.0
-      set $this-color-g 1.0
-      set $this-color-b 1.0
     }
 
     method ui {} {

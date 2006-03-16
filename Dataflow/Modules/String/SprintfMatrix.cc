@@ -70,7 +70,7 @@ private:
 DECLARE_MAKER(SprintfMatrix)
 SprintfMatrix::SprintfMatrix(GuiContext* ctx)
   : Module("SprintfMatrix", ctx, Source, "String", "SCIRun"),
-    formatstring_(ctx->subVar("formatstring"))
+    formatstring_(ctx->subVar("formatstring"), "time: %5.4f ms")
 {
 }
 

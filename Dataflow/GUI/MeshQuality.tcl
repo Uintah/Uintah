@@ -29,16 +29,9 @@
 
 itcl_class SCIRun_FieldsData_MeshQuality {
     inherit Module
+
     constructor {config} {
         set name MeshQuality
-        set_defaults
-    }
-
-    method set_defaults {} {
-#        global $this-isoval
-#	global $this-lte
-#	set $this-isoval 0
-#	set $this-lte 1
     }
 
     method ui {} {

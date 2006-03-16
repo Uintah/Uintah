@@ -66,7 +66,7 @@ private:
 DECLARE_MAKER(SprintfString)
 SprintfString::SprintfString(GuiContext* ctx)
   : Module("SprintfString", ctx, Source, "String", "SCIRun"),
-    formatstring_(ctx->subVar("formatstring"))
+    formatstring_(ctx->subVar("formatstring"), "my string: %s")
 {
 }
 
