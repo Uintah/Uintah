@@ -29,18 +29,9 @@
 
 itcl_class Teem_NrrdData_ChooseNrrd {
     inherit Module
+
     constructor {config} {
         set name ChooseNrrd
-
-	global $this-port-index
-	global $this-usefirstvalid
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-port-index 0
-	set $this-usefirstvalid 0
     }
 
     method ui {} {

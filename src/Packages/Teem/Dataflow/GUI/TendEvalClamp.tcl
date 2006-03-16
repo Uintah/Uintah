@@ -33,16 +33,9 @@ catch {rename Teem_Tend_TendEvalClamp ""}
 
 itcl_class Teem_Tend_TendEvalClamp {
     inherit Module
+
     constructor {config} {
         set name TendEvalClamp
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-min
-        set $this-min "0.0001"
-
-        global $this-max
-        set $this-max "NaN"
     }
 
     method ui {} {

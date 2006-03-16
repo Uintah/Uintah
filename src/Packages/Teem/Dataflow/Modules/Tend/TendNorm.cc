@@ -66,16 +66,20 @@ DECLARE_MAKER(TendNorm)
 
 TendNorm::TendNorm(SCIRun::GuiContext *ctx) : 
   Module("TendNorm", ctx, Filter, "Tend", "Teem"), 
-  major_weight_(ctx->subVar("major-weight")),
-  medium_weight_(ctx->subVar("medium-weight")),
-  minor_weight_(ctx->subVar("minor-weight")),
-  amount_(ctx->subVar("amount")),
-  target_(ctx->subVar("target"))
+  major_weight_(ctx->subVar("major-weight"), 1.0),
+  medium_weight_(ctx->subVar("medium-weight"), 1.0),
+  minor_weight_(ctx->subVar("minor-weight"), 1.0),
+  amount_(ctx->subVar("amount"), 1.0),
+  target_(ctx->subVar("target"), 1.0)
 {
 }
 
-TendNorm::~TendNorm() {
+
+TendNorm::~TendNorm()
+{
 }
+
+
 void 
 TendNorm::execute()
 {

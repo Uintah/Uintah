@@ -66,8 +66,8 @@ DECLARE_MAKER(ImageExporter)
 
 ImageExporter::ImageExporter(GuiContext *ctx)
   : Module("ImageExporter", ctx, Filter, "DataIO", "Teem"), 
-    filename_(ctx->subVar("filename")),
-    filetype_(ctx->subVar("filetype"))
+    filename_(ctx->subVar("filename"), ""),
+    filetype_(ctx->subVar("filetype"), "Binary")
 {
 }
 

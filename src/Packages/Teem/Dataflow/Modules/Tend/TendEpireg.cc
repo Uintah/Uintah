@@ -76,23 +76,24 @@ DECLARE_MAKER(TendEpireg)
 
 TendEpireg::TendEpireg(SCIRun::GuiContext *ctx) : 
   Module("TendEpireg", ctx, Filter, "Tend", "Teem"), 
-  gradient_list_(ctx->subVar("gradient_list")),
-  reference_(ctx->subVar("reference")),
-  blur_x_(ctx->subVar("blur_x")),
-  blur_y_(ctx->subVar("blur_y")),
-  use_default_threshold_(ctx->subVar("use-default-threshold")),
-  threshold_(ctx->subVar("threshold")),
-  cc_analysis_(ctx->subVar("cc_analysis")),
-  fitting_(ctx->subVar("fitting")),
-  kernel_(ctx->subVar("kernel")),
-  sigma_(ctx->subVar("sigma")),
-  extent_(ctx->subVar("extent"))
+  gradient_list_(ctx->subVar("gradient_list"), ""),
+  reference_(ctx->subVar("reference"), -1),
+  blur_x_(ctx->subVar("blur_x"), 1.0),
+  blur_y_(ctx->subVar("blur_y"), 2.0),
+  use_default_threshold_(ctx->subVar("use-default-threshold"), 1),
+  threshold_(ctx->subVar("threshold"), 0.0),
+  cc_analysis_(ctx->subVar("cc_analysis"), 1),
+  fitting_(ctx->subVar("fitting"), 0.70),
+  kernel_(ctx->subVar("kernel"), "cubicCR"),
+  sigma_(ctx->subVar("sigma"), 0.0),
+  extent_(ctx->subVar("extent"), 0.5)
 {
 }
 
-TendEpireg::~TendEpireg() {
-}
 
+TendEpireg::~TendEpireg()
+{
+}
 
 
 // Create a memory for a new nrrd, that is arranged 3 x n;

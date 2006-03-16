@@ -59,13 +59,16 @@ DECLARE_MAKER(TendExpand)
 
 TendExpand::TendExpand(SCIRun::GuiContext *ctx) : 
   Module("TendExpand", ctx, Filter, "Tend", "Teem"),
-  threshold_(ctx->subVar("threshold")),
-  scale_(ctx->subVar("scale"))
+  threshold_(ctx->subVar("threshold"), 0.5),
+  scale_(ctx->subVar("scale"), 1.0)
 {
 }
 
-TendExpand::~TendExpand() {
+
+TendExpand::~TendExpand()
+{
 }
+
 
 void 
 TendExpand::execute()

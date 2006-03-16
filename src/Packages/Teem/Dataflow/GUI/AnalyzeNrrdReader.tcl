@@ -29,24 +29,12 @@
 
 itcl_class Teem_DataIO_AnalyzeNrrdReader {
     inherit Module
+
     constructor {config} {
         set name AnalyzeNrrdReader
-        set_defaults
-    }
 
-    method set_defaults {} {
-	global $this-file
-        global $this-file-del
-        global $this-messages
-	global $this-num-files
-	global $this-max-files
-	global $this-filenames
-	set $this-file ""
-        set $this-file-del ""
-        set $this-messages ""
-	set $this-num-files 0
-	set $this-max-files 0
-	set $this-filenames ""
+	setGlobal $this-max-files 0
+	setGlobal $this-filenames ""
     }
 
     method ui {} {

@@ -29,41 +29,21 @@
 
 itcl_class Teem_DataIO_DicomNrrdReader {
     inherit Module
+
     constructor {config} {
         set name DicomNrrdReader
-        set_defaults
-    }
 
-    method set_defaults {} {
-	global $this-dir
-        global $this-series-uid
-        global $this-series-files
-        global $this-messages
-        global $this-suid-sel
-        global $this-series-del
-        global $this-dir-tmp
-	global $this-num-entries
-	global $this-max-entries
-	global $this-entry-dir
-	global $this-entry-suid
-	global $this-entry-files
-        global $this-num-series
-        global $this-num-files
+        # In C++ file
+	setGlobal $this-dir [pwd]
 
-	set $this-dir [pwd]
-        set $this-series-uid ""
-        set $this-series-files ""
-        set $this-messages ""
-        set $this-suid-sel ""
-        set $this-series-del ""
-        set $this-dir-tmp ""
-	set $this-num-entries 0
-	set $this-max-entries 0
-	set $this-entry-dir ""
-	set $this-entry-suid ""
-	set $this-entry-files ""
-        set $this-num-series 0
-        set $this-num-files 0
+        # Local TCL variables.
+        setGlobal $this-dir-tmp ""
+	setGlobal $this-max-entries 0
+	setGlobal $this-entry-dir ""
+	setGlobal $this-entry-suid ""
+	setGlobal $this-entry-files ""
+        setGlobal $this-num-series 0
+        setGlobal $this-num-files 0
     }
 
     method ui {} {

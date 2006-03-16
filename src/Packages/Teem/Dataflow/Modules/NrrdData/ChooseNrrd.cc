@@ -62,8 +62,8 @@ public:
 DECLARE_MAKER(ChooseNrrd)
 ChooseNrrd::ChooseNrrd(GuiContext* ctx)
   : Module("ChooseNrrd", ctx, Filter, "NrrdData", "Teem"),
-    port_index_(ctx->subVar("port-index")),
-    usefirstvalid_(ctx->subVar("usefirstvalid"))
+    port_index_(ctx->subVar("port-index"), 0),
+    usefirstvalid_(ctx->subVar("usefirstvalid"), 0)
 {
 }
 

@@ -63,8 +63,8 @@ DECLARE_MAKER(TendEvalClamp)
 
 TendEvalClamp::TendEvalClamp(SCIRun::GuiContext *ctx) : 
   Module("TendEvalClamp", ctx, Filter, "Tend", "Teem"), 
-  min_(ctx->subVar("min")),
-  max_(ctx->subVar("max"))
+  min_(ctx->subVar("min"), "0.0001"),
+  max_(ctx->subVar("max"), "NaN")
 {
 }
 

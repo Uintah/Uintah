@@ -62,14 +62,17 @@ DECLARE_MAKER(TendEvq)
 
 TendEvq::TendEvq(SCIRun::GuiContext *ctx) : 
   Module("TendEvq", ctx, Filter, "Tend", "Teem"),
-  index_(ctx->subVar("index")),
-  anisotropy_(ctx->subVar("anisotropy")),
-  ns_(ctx->subVar("ns"))
+  index_(ctx->subVar("index"), 0),
+  anisotropy_(ctx->subVar("anisotropy"), "cl1"),
+  ns_(ctx->subVar("ns"), 0)
 {
 }
 
-TendEvq::~TendEvq() {
+
+TendEvq::~TendEvq()
+{
 }
+
 
 void 
 TendEvq::execute()

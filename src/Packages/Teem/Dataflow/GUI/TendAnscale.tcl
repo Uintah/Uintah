@@ -33,13 +33,9 @@ catch {rename Teem_Tend_TendAnscale ""}
 
 itcl_class Teem_Tend_TendAnscale {
     inherit Module
+
     constructor {config} {
         set name TendAnscale
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-scale
-        set $this-scale 1.0
     }
 
     method ui {} {

@@ -62,13 +62,15 @@ DECLARE_MAKER(TendEvalPow)
 
 TendEvalPow::TendEvalPow(SCIRun::GuiContext *ctx) : 
   Module("TendEvalPow", ctx, Filter, "Tend", "Teem"), 
-  exponent_(ctx->subVar("exponent"))
+  exponent_(ctx->subVar("exponent"), 1.0)
 {
 }
+
 
 TendEvalPow::~TendEvalPow()
 {
 }
+
 
 void 
 TendEvalPow::execute()

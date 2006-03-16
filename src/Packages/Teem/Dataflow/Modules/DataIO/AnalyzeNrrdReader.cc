@@ -125,10 +125,10 @@ DECLARE_MAKER(AnalyzeNrrdReader)
 AnalyzeNrrdReader::AnalyzeNrrdReader(GuiContext* ctx)
   : Module("AnalyzeNrrdReader", ctx, Source, "DataIO", "Teem"),
     have_insight_(ctx->subVar("have-insight", false)),
-    file_(ctx->subVar("file")),
-    file_del_(ctx->subVar("file-del")),
-    messages_(ctx->subVar("messages")),
-    num_files_(ctx->subVar("num-files"))
+    file_(ctx->subVar("file"), ""),
+    file_del_(ctx->subVar("file-del"), ""),
+    messages_(ctx->subVar("messages"), ""),
+    num_files_(ctx->subVar("num-files"), 0)
 {
 #ifdef HAVE_INSIGHT
   have_insight_.set(1);

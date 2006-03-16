@@ -35,13 +35,9 @@ catch {rename Teem_DataIO_ImageImporter ""}
 
 itcl_class Teem_DataIO_ImageImporter {
     inherit Module
+
     constructor {config} {
 	set name ImageImporter
-	set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-filetype
     }
 
     method ui {} {

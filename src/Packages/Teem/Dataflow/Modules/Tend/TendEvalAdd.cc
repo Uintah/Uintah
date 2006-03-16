@@ -58,12 +58,15 @@ DECLARE_MAKER(TendEvalAdd)
 
 TendEvalAdd::TendEvalAdd(SCIRun::GuiContext *ctx) : 
   Module("TendEvalAdd", ctx, Filter, "Tend", "Teem"),
-  value_(ctx->subVar("value"))
+  value_(ctx->subVar("value"), 1.0)
 {
 }
 
-TendEvalAdd::~TendEvalAdd() {
+
+TendEvalAdd::~TendEvalAdd()
+{
 }
+
 
 void 
 TendEvalAdd::execute()

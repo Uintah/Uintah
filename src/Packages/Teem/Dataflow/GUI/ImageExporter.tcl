@@ -35,16 +35,11 @@ catch {rename Teem_DataIO_ImageExporter ""}
 
 itcl_class Teem_DataIO_ImageExporter {
     inherit Module
+
     constructor {config} {
 	set name ImageExporter
-	set_defaults
     }
-    method set_defaults {} {
-	global $this-filetype
-	set $this-filetype Binary
-	# set $this-split 0
-    }
-    
+
     method ui {} {
 	global env
 	set w .ui[modname]
