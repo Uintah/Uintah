@@ -37,11 +37,12 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     // ALWAYS have an index number as in <material index = "0">.
     // Index_val = -1 means that we don't register the material by its 
     // index number.
-    if (index_val > -1) 
+    if (index_val > -1){
       sharedState->registerMPMMaterial(mat,index_val);
-    else
+    }
+    else{
       sharedState->registerMPMMaterial(mat);
-      
+    }
 
     // If new particles are to be created, create a copy of each material
     // without the associated geometry
