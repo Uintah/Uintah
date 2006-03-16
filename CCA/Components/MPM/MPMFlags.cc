@@ -61,6 +61,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
 
+  if (!mpm_flag_ps)
+    return;
+
   mpm_flag_ps->get("time_integrator", d_integrator_type);
   if (d_integrator_type == "implicit") 
     d_integrator = Implicit;
