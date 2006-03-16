@@ -33,13 +33,9 @@ catch {rename Teem_UnuAtoM_UnuFlip ""}
 
 itcl_class Teem_UnuAtoM_UnuFlip {
     inherit Module
+
     constructor {config} {
         set name UnuFlip
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
     }
 
     method ui {} {

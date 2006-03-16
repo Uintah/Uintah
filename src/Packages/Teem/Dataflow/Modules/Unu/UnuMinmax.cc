@@ -74,15 +74,19 @@ DECLARE_MAKER(UnuMinmax)
 UnuMinmax::UnuMinmax(GuiContext* ctx)
   : Module("UnuMinmax", ctx, Source, "UnuAtoM", "Teem"),
     onrrd_(0), onrrd_handle_(0), in_generation_(0),
-    nrrds_(ctx->subVar("nrrds"))
+    nrrds_(ctx->subVar("nrrds"), 0)
 {
 }
 
-UnuMinmax::~UnuMinmax(){
+
+UnuMinmax::~UnuMinmax()
+{
 }
 
+
 void
- UnuMinmax::execute(){
+UnuMinmax::execute()
+{
   port_range_type range = get_iports("Nrrds");
   if (range.first == range.second) { return; }
 

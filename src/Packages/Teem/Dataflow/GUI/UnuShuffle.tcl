@@ -31,20 +31,9 @@
 
 itcl_class Teem_UnuNtoZ_UnuShuffle {
     inherit Module
+
     constructor {config} {
         set name UnuShuffle
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-ordering
-	set $this-ordering "0"
-
-	global $this-axis
-	set $this-axis 0
-
-	global $this-inverse
-	set $this-inverse 0
     }
 
     method ui {} {

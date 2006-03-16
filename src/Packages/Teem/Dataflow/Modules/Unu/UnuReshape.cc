@@ -65,7 +65,7 @@ DECLARE_MAKER(UnuReshape)
 UnuReshape::UnuReshape(GuiContext* ctx)
   : Module("UnuReshape", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), onrrd_(0),
-    sz_(ctx->subVar("sz"))
+    sz_(ctx->subVar("sz"), "0")
 {
 }
 

@@ -86,9 +86,9 @@ DECLARE_MAKER(UnuPad)
 
 UnuPad::UnuPad(GuiContext *ctx) : 
   Module("UnuPad", ctx, Filter, "UnuNtoZ", "Teem"),
-  pad_style_(ctx->subVar("pad-style")),
-  pad_value_(ctx->subVar("pad-value")),
-  dim_(ctx->subVar("dim")),
+  pad_style_(ctx->subVar("pad-style"), "Bleed"),
+  pad_value_(ctx->subVar("pad-value"), 0.0),
+  dim_(ctx->subVar("dim"), 0),
   last_generation_(-1), 
   last_nrrdH_(0)
 {

@@ -66,13 +66,18 @@ public:
 DECLARE_MAKER(UnuInset)
 UnuInset::UnuInset(GuiContext* ctx)
   : Module("UnuInset", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0), isub_(0), onrrd_(0),
-    mins_(ctx->subVar("mins"))
+    inrrd_(0),
+    isub_(0),
+    onrrd_(0),
+    mins_(ctx->subVar("mins"), "0")
 {
 }
 
-UnuInset::~UnuInset(){
+
+UnuInset::~UnuInset()
+{
 }
+
 
 void
 UnuInset::execute()

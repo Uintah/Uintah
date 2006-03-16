@@ -60,11 +60,11 @@ DECLARE_MAKER(UnuGamma)
 
 UnuGamma::UnuGamma(SCIRun::GuiContext *ctx) : 
   Module("UnuGamma", ctx, Filter, "UnuAtoM", "Teem"), 
-  gamma_(ctx->subVar("gamma")),
-  min_(ctx->subVar("min")),
-  useinputmin_(ctx->subVar("useinputmin")),
-  max_(ctx->subVar("max")),
-  useinputmax_(ctx->subVar("useinputmax"))
+  gamma_(ctx->subVar("gamma"), 0.0),
+  min_(ctx->subVar("min"), 1.0),
+  useinputmin_(ctx->subVar("useinputmin"), 1),
+  max_(ctx->subVar("max"), 1.0),
+  useinputmax_(ctx->subVar("useinputmax"), 1)
 {
 }
 

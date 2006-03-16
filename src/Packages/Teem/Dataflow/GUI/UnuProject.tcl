@@ -33,18 +33,9 @@ catch {rename Teem_UnuNtoZ_UnuProject ""}
 
 itcl_class Teem_UnuNtoZ_UnuProject {
     inherit Module
+
     constructor {config} {
         set name UnuProject
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
-
-        global $this-measure
-        set $this-measure 2
-
-
     }
 
     method ui {} {

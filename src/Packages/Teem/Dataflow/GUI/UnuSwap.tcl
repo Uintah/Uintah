@@ -31,17 +31,9 @@
 
 itcl_class Teem_UnuNtoZ_UnuSwap {
     inherit Module
+
     constructor {config} {
         set name UnuSwap
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-axisA
-	set $this-axisA 0
-
-	global $this-axisB
-	set $this-axisB 1
     }
 
     method ui {} {

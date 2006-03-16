@@ -67,20 +67,23 @@ public:
 DECLARE_MAKER(UnuUnquantize)
 UnuUnquantize::UnuUnquantize(GuiContext* ctx)
   : Module("UnuUnquantize", ctx, Source, "UnuNtoZ", "Teem"),
-    min_(ctx->subVar("min")),
-    useinputmin_(ctx->subVar("useinputmin")),
-    max_(ctx->subVar("max")),
-    useinputmax_(ctx->subVar("useinputmax")),
-    double_(ctx->subVar("double"))
+    min_(ctx->subVar("min"), 0),
+    useinputmin_(ctx->subVar("useinputmin"), 1),
+    max_(ctx->subVar("max"), 0),
+    useinputmax_(ctx->subVar("useinputmax"), 1),
+    double_(ctx->subVar("double"), 0)
 {
 }
 
-UnuUnquantize::~UnuUnquantize(){
+
+UnuUnquantize::~UnuUnquantize()
+{
 }
 
-void
- UnuUnquantize::execute(){
 
+void
+UnuUnquantize::execute()
+{
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");

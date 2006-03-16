@@ -33,13 +33,9 @@ catch {rename Teem_UnuAtoM_UnuAxmerge ""}
 
 itcl_class Teem_UnuAtoM_UnuAxmerge {
     inherit Module
+
     constructor {config} {
         set name UnuAxmerge
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-axes
-        set $this-axes "0"
     }
 
     method ui {} {

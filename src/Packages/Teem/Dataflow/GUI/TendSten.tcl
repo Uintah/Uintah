@@ -31,20 +31,9 @@
 
 itcl_class Teem_Tend_TendSten {
     inherit Module
+
     constructor {config} {
         set name TendSten
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-diffscale
-	set $this-diffscale 1
-
-	global $this-intscale
-	set $this-intscale 2
-
-	global $this-factor
-	set $this-factor 1
     }
 
     method ui {} {

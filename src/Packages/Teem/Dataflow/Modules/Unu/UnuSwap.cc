@@ -60,14 +60,18 @@ private:
 DECLARE_MAKER(UnuSwap)
 UnuSwap::UnuSwap(GuiContext* ctx)
   : Module("UnuSwap", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), onrrd_(0), axisA_(ctx->subVar("axisA")),
-    axisB_(ctx->subVar("axisB"))
+    inrrd_(0),
+    onrrd_(0),
+    axisA_(ctx->subVar("axisA"), 0),
+    axisB_(ctx->subVar("axisB"), 1)
 {
 }
+
 
 UnuSwap::~UnuSwap()
 {
 }
+
 
 void
 UnuSwap::execute()

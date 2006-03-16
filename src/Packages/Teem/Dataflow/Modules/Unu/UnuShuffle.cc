@@ -66,16 +66,23 @@ private:
 DECLARE_MAKER(UnuShuffle)
 UnuShuffle::UnuShuffle(GuiContext* ctx)
   : Module("UnuShuffle", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), onrrd_(0), ordering_(ctx->subVar("ordering")),
-    axis_(ctx->subVar("axis")), inverse_(ctx->subVar("inverse"))
+    inrrd_(0),
+    onrrd_(0),
+    ordering_(ctx->subVar("ordering"), "0"),
+    axis_(ctx->subVar("axis"), 0),
+    inverse_(ctx->subVar("inverse"), 0)
 {
 }
 
-UnuShuffle::~UnuShuffle(){
+
+UnuShuffle::~UnuShuffle()
+{
 }
 
+
 void
- UnuShuffle::execute(){
+UnuShuffle::execute()
+{
   NrrdDataHandle nrrd_handle;
 
   update_state(NeedData);

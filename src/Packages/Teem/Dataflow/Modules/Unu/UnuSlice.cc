@@ -62,13 +62,16 @@ DECLARE_MAKER(UnuSlice)
 
 UnuSlice::UnuSlice(SCIRun::GuiContext *ctx) : 
   Module("UnuSlice", ctx, Filter, "UnuNtoZ", "Teem"), 
-  axis_(ctx->subVar("axis")),
-  position_(ctx->subVar("position"))
+  axis_(ctx->subVar("axis"), 0),
+  position_(ctx->subVar("position"), 0)
 {
 }
 
-UnuSlice::~UnuSlice() {
+
+UnuSlice::~UnuSlice()
+{
 }
+
 
 void 
 UnuSlice::execute()

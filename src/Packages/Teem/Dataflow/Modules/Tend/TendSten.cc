@@ -60,14 +60,17 @@ DECLARE_MAKER(TendSten)
 
 TendSten::TendSten(SCIRun::GuiContext *ctx) : 
   Module("TendSten", ctx, Filter, "Tend", "Teem"),
-  diffscale_(ctx->subVar("diffscale")),
-  intscale_(ctx->subVar("intscale")),
-  factor_(ctx->subVar("factor"))
+  diffscale_(ctx->subVar("diffscale"), 1),
+  intscale_(ctx->subVar("intscale"), 2),
+  factor_(ctx->subVar("factor"), 1)
 {
 }
 
-TendSten::~TendSten() {
+
+TendSten::~TendSten()
+{
 }
+
 
 void 
 TendSten::execute()

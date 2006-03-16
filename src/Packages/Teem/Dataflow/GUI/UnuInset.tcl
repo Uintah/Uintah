@@ -31,14 +31,9 @@
 
 itcl_class Teem_UnuAtoM_UnuInset {
     inherit Module
+
     constructor {config} {
         set name UnuInset
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-mins
-	set $this-mins "0"
     }
 
     method ui {} {
