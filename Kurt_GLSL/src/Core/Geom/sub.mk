@@ -39,6 +39,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/ColorMappedNrrdTextureObj.cc          \
 	$(SRCDIR)/DirectionalLight.cc	                \
 	$(SRCDIR)/DrawInfoOpenGL.cc	                \
+	$(SRCDIR)/Fbuffer.cc		                \
 	$(SRCDIR)/FreeType.cc		                \
 	$(SRCDIR)/FreeTypeTextTexture.cc                \
 	$(SRCDIR)/GeomArrows.cc		                \
