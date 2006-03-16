@@ -308,6 +308,12 @@ namespace Uintah {
        delete lb;
        lb = Ilb;
       };
+
+       void setWithMPM()
+       {
+         d_with_mpm = true;
+       };
+
       
     public:
       
@@ -830,6 +836,7 @@ namespace Uintah {
       bool d_recompile;
       bool d_useLockStep;
       bool d_canAddICEMaterial;
+      bool d_with_mpm;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
