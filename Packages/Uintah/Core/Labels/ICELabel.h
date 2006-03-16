@@ -16,6 +16,7 @@ namespace Uintah {
     const VarLabel* NeedAddIceMaterialLabel;
 
     // Cell centered variables
+    const VarLabel* TMV_CCLabel;
     const VarLabel* press_CCLabel;
     const VarLabel* press_equil_CCLabel;
     const VarLabel* matl_press_CCLabel;
