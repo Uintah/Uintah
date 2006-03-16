@@ -33,30 +33,9 @@ catch {rename Teem_Tend_TendEstim ""}
 
 itcl_class Teem_Tend_TendEstim {
     inherit Module
+
     constructor {config} {
         set name TendEstim
-        set_defaults
-    }
-    method set_defaults {} {
-	global $this-knownB0
-	set $this-knownB0 1
-
-	global $this-use-default-threshold
-	set $this-use-default-threshold 1
-
-        global $this-threshold
-        set $this-threshold 0.0
-
-        global $this-soft
-        set $this-soft 0.0
-
-        global $this-bmatrix
-        set $this-bmatrix ""
-
-        global $this-scale
-        set $this-scale 1.0
-
-
     }
 
     method ui {} {

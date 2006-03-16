@@ -97,30 +97,32 @@ DECLARE_MAKER(TendFiber)
 
 TendFiber::TendFiber(SCIRun::GuiContext *ctx) : 
   Module("TendFiber", ctx, Filter, "Tend", "Teem"), 
-  fibertype_(ctx->subVar("fibertype")),
-  puncture_(ctx->subVar("puncture")),
-  neighborhood_(ctx->subVar("neighborhood")),
-  stepsize_(ctx->subVar("stepsize")),
-  integration_(ctx->subVar("integration")),
-  use_aniso_(ctx->subVar("use-aniso")),
-  aniso_metric_(ctx->subVar("aniso-metric")),
-  aniso_thresh_(ctx->subVar("aniso-thresh")),
-  use_length_(ctx->subVar("use-length")),
-  length_(ctx->subVar("length")),
-  use_steps_(ctx->subVar("use-steps")),
-  steps_(ctx->subVar("steps")),
-  use_conf_(ctx->subVar("use-conf")),
-  conf_thresh_(ctx->subVar("conf-thresh")),
-  kernel_(ctx->subVar("kernel")),
+  fibertype_(ctx->subVar("fibertype"), "tensorline"),
+  puncture_(ctx->subVar("puncture"), 0.0),
+  neighborhood_(ctx->subVar("neighborhood"), 2.0),
+  stepsize_(ctx->subVar("stepsize"), 0.01),
+  integration_(ctx->subVar("integration"), "Euler"),
+  use_aniso_(ctx->subVar("use-aniso"), 1),
+  aniso_metric_(ctx->subVar("aniso-metric"), "tenAniso_Cl2"),
+  aniso_thresh_(ctx->subVar("aniso-thresh"), 0.4),
+  use_length_(ctx->subVar("use-length"), 1),
+  length_(ctx->subVar("length"), 1),
+  use_steps_(ctx->subVar("use-steps"), 0),
+  steps_(ctx->subVar("steps"), 200),
+  use_conf_(ctx->subVar("use-conf"), 1),
+  conf_thresh_(ctx->subVar("conf-thresh"), 0.5),
+  kernel_(ctx->subVar("kernel"), "tent"),
   tfx(0),
   tfx_nrrd(0)
 {
 }
 
-TendFiber::~TendFiber() {
-  if (tfx)
-    tenFiberContextNix(tfx);
+
+TendFiber::~TendFiber()
+{
+  if (tfx) tenFiberContextNix(tfx);
 }
+
 
 unsigned 
 TendFiber::get_aniso(const string &s)

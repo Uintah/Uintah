@@ -41,26 +41,11 @@ catch {rename Teem_NrrdData_NrrdSetProperty ""}
 
 itcl_class Teem_NrrdData_NrrdSetProperty {
     inherit Module
+
     constructor {config} {
         set name NrrdSetProperty
-        set_defaults
-    }
 
-    method set_defaults {} {
-        global $this-num-entries
-        set $this-num-entries 0
-
-	global $this-check
-	global $this-property
-	global $this-type
-	global $this-value
-	global $this-readonly
-
-	set $this-check 0
-	set $this-property ""
-	set $this-type "unknown"
-	set $this-value ""
-	set $this-readonly 0
+	setGlobal $this-check 0
     }
 
     method ui {} {

@@ -62,15 +62,18 @@ DECLARE_MAKER(TendAnplot)
 
 TendAnplot::TendAnplot(SCIRun::GuiContext *ctx) : 
   Module("TendAnplot", ctx, Filter, "Tend", "Teem"),
-  resolution_(ctx->subVar("resolution")),
-  whole_(ctx->subVar("whole")),
-  values_(ctx->subVar("values")),
-  anisotropy_(ctx->subVar("anisotropy"))
+  resolution_(ctx->subVar("resolution"), 256),
+  whole_(ctx->subVar("whole"), 0),
+  values_(ctx->subVar("values"), 0),
+  anisotropy_(ctx->subVar("anisotropy"), "cl1")
 {
 }
 
-TendAnplot::~TendAnplot() {
+
+TendAnplot::~TendAnplot()
+{
 }
+
 
 void 
 TendAnplot::execute()
@@ -95,8 +98,10 @@ TendAnplot::execute()
   onrrd_->send_and_dereference(out);
 }
 
+
 unsigned int
-TendAnplot::get_anisotropy(const string &an) {
+TendAnplot::get_anisotropy(const string &an)
+{
   if (an == "cl1")
     return tenAniso_Cl1;
   else if (an == "cl2")
@@ -129,7 +134,6 @@ TendAnplot::get_anisotropy(const string &an) {
     error("Unkown anisotropy metric.  Using trace");
     return tenAniso_Tr;
   }
-  
 }
 
 } // End namespace SCITeem

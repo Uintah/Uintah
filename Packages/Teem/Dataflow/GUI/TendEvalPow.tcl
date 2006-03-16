@@ -33,13 +33,9 @@ catch {rename Teem_Tend_TendEvalPow ""}
 
 itcl_class Teem_Tend_TendEvalPow {
     inherit Module
+
     constructor {config} {
         set name TendEvalPow
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-exponent
-        set $this-exponent 1.0
     }
 
     method ui {} {

@@ -66,11 +66,13 @@ DECLARE_MAKER(TendBmat)
 
 TendBmat::TendBmat(SCIRun::GuiContext *ctx) : 
   Module("TendBmat", ctx, Filter, "Tend", "Teem"), 
-  gradient_list_(ctx->subVar("gradient_list"))
+  gradient_list_(ctx->subVar("gradient_list"), "")
 {
 }
 
-TendBmat::~TendBmat() {
+
+TendBmat::~TendBmat()
+{
 }
 
 

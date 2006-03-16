@@ -33,22 +33,9 @@ catch {rename Teem_Tend_TendEval ""}
 
 itcl_class Teem_Tend_TendEval {
     inherit Module
+
     constructor {config} {
         set name TendEval
-        set_defaults
-    }
-    method set_defaults {} {
-	global $this-major
-	set $this-major 1
-
-	global $this-medium
-	set $this-medium 0
-
-	global $this-minor
-	set $this-minor 0
-
-        global $this-threshold
-        set $this-threshold 0.5
     }
 
     method ui {} {

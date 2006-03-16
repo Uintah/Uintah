@@ -68,10 +68,10 @@ DECLARE_MAKER(NrrdInfo)
 NrrdInfo::NrrdInfo(GuiContext* ctx)
   : Module("NrrdInfo", ctx, Source, "NrrdData", "Teem"),
     generation_(-1),
-    gui_name_(ctx->subVar("name")),
-    gui_type_(ctx->subVar("type")),
-    gui_dimension_(ctx->subVar("dimension")),
-    gui_origin_(ctx->subVar("origin"))
+    gui_name_(ctx->subVar("name"), "---"),
+    gui_type_(ctx->subVar("type"), "---"),
+    gui_dimension_(ctx->subVar("dimension"), "0"),
+    gui_origin_(ctx->subVar("origin"), "0")
 {
 }
 

@@ -67,16 +67,19 @@ DECLARE_MAKER(TendEstim)
 
 TendEstim::TendEstim(SCIRun::GuiContext *ctx) : 
   Module("TendEstim", ctx, Filter, "Tend", "Teem"), 
-  knownB0_(ctx->subVar("knownB0")),
-  use_default_threshold_(ctx->subVar("use-default-threshold")),
-  threshold_(ctx->subVar("threshold")),
-  soft_(ctx->subVar("soft")),
-  scale_(ctx->subVar("scale"))
+  knownB0_(ctx->subVar("knownB0"), 1),
+  use_default_threshold_(ctx->subVar("use-default-threshold"), 1),
+  threshold_(ctx->subVar("threshold"), 0.0),
+  soft_(ctx->subVar("soft"), 0.0),
+  scale_(ctx->subVar("scale"), 1.0)
 {
 }
 
-TendEstim::~TendEstim() {
+
+TendEstim::~TendEstim()
+{
 }
+
 
 void 
 TendEstim::execute()

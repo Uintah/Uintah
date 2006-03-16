@@ -148,12 +148,12 @@ DicomNrrdReader::DicomNrrdReader(GuiContext* ctx)
   : Module("DicomNrrdReader", ctx, Source, "DataIO", "Teem"),
     have_gdcm_(ctx->subVar("have-gdcm", false)),
     dir_(ctx->subVar("dir")),
-    series_uid_(ctx->subVar("series-uid")),    
-    series_files_(ctx->subVar("series-files")),    
-    messages_(ctx->subVar("messages")),    
-    suid_sel_(ctx->subVar("suid-sel")),    
-    series_del_(ctx->subVar("series-del")),
-    num_entries_(ctx->subVar("num-entries")),
+    series_uid_(ctx->subVar("series-uid"), ""),
+    series_files_(ctx->subVar("series-files"), ""),
+    messages_(ctx->subVar("messages"), ""),
+    suid_sel_(ctx->subVar("suid-sel"), ""),
+    series_del_(ctx->subVar("series-del"), ""),
+    num_entries_(ctx->subVar("num-entries"), 0),
     z_spacing_(0)
 {
 #ifdef HAVE_GDCM

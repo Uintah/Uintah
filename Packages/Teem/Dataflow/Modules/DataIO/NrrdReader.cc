@@ -85,7 +85,7 @@ DECLARE_MAKER(NrrdReader)
 
 NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) : 
   Module("NrrdReader", ctx, Filter, "DataIO", "Teem"),
-  filename_(ctx->subVar("filename")),
+  filename_(ctx->subVar("filename"), ""),
   read_handle_(0),
   old_filemodification_(0),
   cached_label_generation_(0),

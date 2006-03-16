@@ -65,12 +65,14 @@ DECLARE_MAKER(TendAnvol)
 
 TendAnvol::TendAnvol(SCIRun::GuiContext *ctx) : 
   Module("TendAnvol", ctx, Filter, "Tend", "Teem"), 
-  aniso_metric_(ctx->subVar("aniso_metric")),
-  threshold_(ctx->subVar("threshold"))
+  aniso_metric_(ctx->subVar("aniso_metric"), "tenAniso_FA"),
+  threshold_(ctx->subVar("threshold"), 0.5)
 {
 }
 
-TendAnvol::~TendAnvol() {
+
+TendAnvol::~TendAnvol()
+{
 }
 
 

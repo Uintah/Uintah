@@ -75,7 +75,7 @@ DECLARE_MAKER(ImageImporter)
 
 ImageImporter::ImageImporter(SCIRun::GuiContext* ctx) : 
   Module("ImageImporter", ctx, Filter, "DataIO", "Teem"),
-  filename_(ctx->subVar("filename")),
+  filename_(ctx->subVar("filename"), ""),
   old_filemodification_(0),
   handle_(0)
 {

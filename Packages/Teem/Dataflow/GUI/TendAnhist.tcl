@@ -31,17 +31,9 @@
 
 itcl_class Teem_Tend_TendAnhist {
     inherit Module
+
     constructor {config} {
         set name TendAnhist
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-westin
-	set $this-westin 1
-
-	global $this-resolution
-	set $this-resolution 256
     }
 
     method ui {} {
