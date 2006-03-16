@@ -1,14 +1,9 @@
 
 itcl_class SCIRun_String_CreateString {
     inherit Module
+
     constructor {config} {
         set name CreateString
-        set_defaults
-    }
-
-    method set_defaults {} {
-        global $this-inputstring
-        set $this-inputstring ""
     }
 
     method ui {} {

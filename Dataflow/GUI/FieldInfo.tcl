@@ -29,46 +29,31 @@
 
 itcl_class SCIRun_FieldsOther_FieldInfo {
     inherit Module
+
     constructor {config} {
         set name FieldInfo
-        set_defaults
+
+	# The width of the first column of the data display.
+	global $this-firstwidth
+	set $this-firstwidth 12
     }
 
     method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	set $this-firstwidth 12
-
-	# these won't be saved 
-	global $this-fldname
-	global $this-generation
-	global $this-typename
-	global $this-datamin
-	global $this-datamax
-	global $this-numnodes
-	global $this-numelems
-	global $this-dataat
-        global $this-cx
-        global $this-cy
-        global $this-cz
-        global $this-sizex
-        global $this-sizey
-        global $this-sizez
-	set $this-fldname "---"
-	set $this-generation "---"
-	set $this-typename "---"
-	set $this-datamin "---"
-	set $this-datamax "---"
-	set $this-numnodes "---"
-	set $this-numelems "---"
-	set $this-dataat "---"
-        set $this-cx "---"
-        set $this-cy "---"
-        set $this-cz "---"
-        set $this-sizex "---"
-        set $this-sizey "---"
-        set $this-sizez "---"
-
+	# These won't be saved.
+	setGlobal $this-fldname "---"
+	setGlobal $this-generation "---"
+	setGlobal $this-typename "---"
+	setGlobal $this-datamin "---"
+	setGlobal $this-datamax "---"
+	setGlobal $this-numnodes "---"
+	setGlobal $this-numelems "---"
+	setGlobal $this-dataat "---"
+        setGlobal $this-cx "---"
+        setGlobal $this-cy "---"
+        setGlobal $this-cz "---"
+        setGlobal $this-sizex "---"
+        setGlobal $this-sizey "---"
+        setGlobal $this-sizez "---"
     }
 
     method ui {} {

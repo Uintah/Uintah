@@ -76,8 +76,8 @@ DECLARE_MAKER(TransformData)
 
 TransformData::TransformData(GuiContext* ctx)
   : Module("TransformData", ctx, Filter,"FieldsData", "SCIRun"),
-    gFunction_(ctx->subVar("function")),
-    gOutputDataType_(ctx->subVar("outputdatatype")),
+    gFunction_(ctx->subVar("function"), "result = v * 10;"),
+    gOutputDataType_(ctx->subVar("outputdatatype"), "input"),
     fGeneration_(-1)
 {
 }

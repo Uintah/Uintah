@@ -29,29 +29,23 @@
 
 itcl_class SCIRun_Math_MatrixInfo {
     inherit Module
+
     constructor {config} {
         set name MatrixInfo
-        set_defaults
+
+	# The width of the first column of the data display.
+	global $this-firstwidth
+	set $this-firstwidth 12
     }
 
     method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	set $this-firstwidth 12
-
-	# these won't be saved 
-	global $this-matrixname
-	global $this-generation
-	global $this-typename
-	global $this-rows
-	global $this-cols
-	global $this-elements
-	set $this-matrixname "---"
-	set $this-generation "---"
-	set $this-typename "---"
-	set $this-rows "---"
-	set $this-cols "---"
-	set $this-elements "---"
+	# These won't be saved 
+	setGlobal $this-matrixname "---"
+	setGlobal $this-generation "---"
+	setGlobal $this-typename "---"
+	setGlobal $this-rows "---"
+	setGlobal $this-cols "---"
+	setGlobal $this-elements "---"
     }
 
     method ui {} {
