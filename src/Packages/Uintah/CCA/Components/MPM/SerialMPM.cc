@@ -118,11 +118,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   d_sharedState = sharedState;
 
   ProblemSpecP restart_mat_ps = 0;
-  if (materials_ps)
+  if (materials_ps){
     restart_mat_ps = materials_ps;
-  else
+  }
+  else{
     restart_mat_ps = prob_spec;
-
+  }
 
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
@@ -130,8 +131,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
     // Read all MPM flags (look in MPMFlags.cc)
     flags->readMPMFlags(restart_mat_ps);
-    if (flags->d_integrator_type == "implicit")
-      throw ProblemSetupException("Can't use implicit integration with -mpm", __FILE__, __LINE__);
+    if (flags->d_integrator_type == "implicit"){
+      throw ProblemSetupException("Can't use implicit integration with -mpm",
+                                   __FILE__, __LINE__);
+    }
 
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
@@ -222,7 +225,6 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
   contactModel->outputProblemSpec(mpm_ps);
-
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
