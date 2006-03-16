@@ -71,7 +71,8 @@ class MeshSmootherAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh) = 0;
+  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh, 
+                               bool boundary, string scheme ) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -83,17 +84,36 @@ class MeshSmootherAlgoTet : public MeshSmootherAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
+                               bool boundary, string scheme );
 private:
   FieldHandle smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh );
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh );
 };
 
 template <class FIELD>
-FieldHandle MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
+FieldHandle MeshSmootherAlgoTet<FIELD>::execute(
+    ProgressReporter *mod, FieldHandle fieldh, bool boundary, string scheme )
 {
-  return smart_laplacian_smoother( mod, fieldh );
-//  return shape_improvement_wrapper( mod, fieldh );
+  if( boundary )
+  {
+    mod->warning( "Currently unable to smooth the boundary of tetrahedral  meshes." );
+    mod->remark( "Proceeding with smoothing of the interior elements." );
+  }
+  
+  if( scheme == "SmartLaplacian" )
+  {
+    return smart_laplacian_smoother( mod, fieldh );
+  }
+  else if( scheme == "ShapeImprovement" )
+  {
+    return shape_improvement_wrapper( mod, fieldh );
+  }
+  else
+  {
+    mod->error( "Unknown Smoothing Scheme..." );
+    return fieldh;
+  }
 }
 
 template <class FIELD>
@@ -230,7 +250,7 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressRepor
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
     // Create a MeshDomain
-  MesquiteDomain domain;
+//  MesquiteDomain domain;
         
     // run smoother
   if(err)
@@ -278,17 +298,36 @@ class MeshSmootherAlgoHex : public MeshSmootherAlgo
 {
 public:
     //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+  virtual FieldHandle execute(
+      ProgressReporter *reporter, FieldHandle fieldh, bool boundary, string scheme );
 private:
   FieldHandle smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh );
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh );
 };
 
 template <class FIELD>
-FieldHandle MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
-{
-  return smart_laplacian_smoother( mod, fieldh );
-//  return shape_improvement_wrapper( mod, fieldh );
+FieldHandle MeshSmootherAlgoHex<FIELD>::execute(
+    ProgressReporter *mod, FieldHandle fieldh, bool boundary, string scheme )
+{ 
+  if( boundary )
+  {
+    mod->warning( "Currently unable to smooth the boundary of hexahedral meshes." );
+    mod->remark( "Proceeding with smoothing of the interior elements." );
+  }
+
+  if( scheme == "SmartLaplacian" )
+  { 
+    return smart_laplacian_smoother( mod, fieldh );
+  }
+  else if( scheme == "ShapeImprovement" )
+  {
+    return shape_improvement_wrapper( mod, fieldh );
+  }
+  else
+  {
+    mod->error( "Unknown Smoothing Scheme..." );
+    return fieldh;
+  }
 }
 
 template <class FIELD>
@@ -422,7 +461,7 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressRepor
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
     // Create a MeshDomain
-  MesquiteDomain domain;
+//  MesquiteDomain domain;
         
     // run smoother
   if(err)
@@ -470,17 +509,36 @@ class MeshSmootherAlgoTri : public MeshSmootherAlgo
 {
 public:
     //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+  virtual FieldHandle execute(
+      ProgressReporter *reporter, FieldHandle fieldh, bool boundary, string scheme );
 private:
   FieldHandle smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh );
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh );
 };
 
 template <class FIELD>
-FieldHandle MeshSmootherAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
+FieldHandle MeshSmootherAlgoTri<FIELD>::execute(
+    ProgressReporter *mod, FieldHandle fieldh, bool boundary, string scheme )
 {
-  return smart_laplacian_smoother( mod, fieldh );
-//  return shape_improvement_wrapper( mod, fieldh );
+  if( boundary )
+  {
+    mod->warning( "Currently unable to smooth the boundary of triangle meshes." );
+    mod->remark( "Proceeding with smoothing of the interior elements." );
+  }
+  
+  if( scheme == "SmartLaplacian" )
+  { 
+    return smart_laplacian_smoother( mod, fieldh );
+  }
+  else if( scheme == "ShapeImprovement" )
+  {
+    return shape_improvement_wrapper( mod, fieldh );
+  }
+  else
+  {
+    mod->error( "Unknown Smoothing Scheme..." );
+    return fieldh;
+  }
 }
 
 template <class FIELD>
@@ -666,17 +724,36 @@ class MeshSmootherAlgoQuad : public MeshSmootherAlgo
 {
 public:
     //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+  virtual FieldHandle execute(
+      ProgressReporter *reporter, FieldHandle fieldh, bool boundary, string scheme );
 private:
   FieldHandle smart_laplacian_smoother( ProgressReporter *mod, FieldHandle fieldh );
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod, FieldHandle fieldh );
 };
 
 template <class FIELD>
-FieldHandle MeshSmootherAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh)
+FieldHandle MeshSmootherAlgoQuad<FIELD>::execute( 
+    ProgressReporter *mod, FieldHandle fieldh, bool boundary, string scheme )
 {
-  return smart_laplacian_smoother( mod, fieldh );
-//  return shape_improvement_wrapper( mod, fieldh );
+  if( boundary )
+  {
+    mod->warning( "Currently unable to smooth the boundary of quadrilateral meshes." );
+    mod->remark( "Proceeding with smoothing of the interior elements." );
+  }
+  
+  if( scheme == "SmartLaplacian" )
+  {
+    return smart_laplacian_smoother( mod, fieldh );
+  }
+  else if( scheme == "ShapeImprovement" )
+  {
+    return shape_improvement_wrapper( mod, fieldh );
+  }
+  else
+  {
+    mod->error( "Unknown Smoothing Scheme..." );
+    return fieldh;
+  }
 }
 
 template <class FIELD>
@@ -835,7 +912,7 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::shape_improvement_wrapper( ProgressRepo
   Handle<QuadToTriAlgo> qalgo;
   if( !DynamicCompilation::compile(qci, qalgo, mod )) return fieldh;
   FieldHandle tri_surf_h;
-  if( !qalgo.get_rep() || !qalgo->execute( fieldh, tri_surf_h, mod ) )
+  if( !qalgo.get_rep() || !qalgo->execute( mod, fieldh, tri_surf_h ) )
   {
     mod->warning( "QuadToTri conversion failed to copy data." );
     return fieldh;
