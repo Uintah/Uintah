@@ -742,9 +742,9 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     }
     set splitname [file split $filename]
     set netname [lindex $splitname end]
-    if { [string last .srn $netname] != [expr [string length $netname]-4] } {
-	set netname ${netname}.srn
-    }
+#     if { [string last .srn $netname] != [expr [string length $netname]-4] } {
+# 	set netname ${netname}.srn
+#     }
     if { [llength $splitname] == 1 } {
 	set filename [file join [netedit getenv SCIRUN_SRCDIR] Subnets $netname]
 	if ![file exists $filename] {

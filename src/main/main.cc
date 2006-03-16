@@ -92,6 +92,7 @@ usage()
   cout << "    [-]-r[egression]    : regression test a network\n";
   cout << "    [-]-s[erver] [PORT] : start a TCL server on port number PORT\n";
   cout << "    [-]-e[xecute]       : executes the given network on startup\n";
+  cout << "    [-]-c[onvert]       : converts a .net to a .srn network and exits\n";
   cout << "    [-]-v[ersion]       : prints out version information\n";
   cout << "    [-]-h[elp]          : prints usage information\n";
   cout << "    [-]-p[ort] [PORT]   : start remote services port on port number PORT\n";
@@ -105,7 +106,7 @@ usage()
   exit( 0 );
 }
 
-
+static bool doing_convert_ = false;
 // Parse the supported command-line arugments.
 // Returns the argument # of the .net file
 int
@@ -132,6 +133,12 @@ parse_args( int argc, char *argv[] )
 	      ( arg == "-e" ) ||  ( arg == "--e" ) )
     {
       sci_putenv("SCIRUN_EXECUTE_ON_STARTUP","1");
+    }
+    else if ( ( arg == "--convert" ) || ( arg == "-convert" ) ||
+	      ( arg == "-c" ) ||  ( arg == "--c" ) )
+    {
+      sci_putenv("SCIRUN_CONVERT_NET_TO_SRN","1");
+      doing_convert_ = true;
     }
     else if ( ( arg == "--eai" ) || ( arg == "-eai" ))
     {
@@ -243,6 +250,22 @@ public:
     cout << "ERROR: KILL REQUIRED TO CONTINUE.";
     cout.flush();
     cerr.flush();
+    Thread::exitAll(1);
+  }
+};
+
+class ConvertKiller : public Runnable
+{
+public:
+  void run()
+  {
+    double seconds = 1.0;
+    while (! NetworkIO::done_writing()) {
+      Time::waitFor(seconds);
+    }
+    Thread::yield();
+    Time::waitFor(1.0);
+    TCLTask::lock();
     Thread::exitAll(1);
   }
 };
@@ -362,7 +385,7 @@ main(int argc, char *argv[], char **environment) {
   Thread* tcl=new Thread(new TCLThread(argc, argv, net, startnetno),
                          "TCL main event loop",0,Thread::Activated,1024*1024);
   tcl->detach();
-
+        
   // When doing regressions, make thread to kill ourselves after timeout
   if (sci_getenv_p("SCI_REGRESSION_TESTING")) {
     RegressionKiller *kill = scinew RegressionKiller();
@@ -383,6 +406,12 @@ main(int argc, char *argv[], char **environment) {
     PtolemyServer::servSem().up();
   }
 #endif
+
+  if (doing_convert_) {
+    ConvertKiller *kill = scinew ConvertKiller();
+    Thread *tkill = scinew Thread(kill, "Exit post convert net");
+    tkill->detach();
+  }
 
 #ifdef _WIN32
   // windows has a semantic problem with atexit(), so we wait here instead.

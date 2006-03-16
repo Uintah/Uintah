@@ -58,6 +58,7 @@ public:
   }
   virtual ~NetworkIO() {}
   static void load_net(const string &net);
+  static bool done_writing() { return done_writing_; }
   static bool has_file() { return net_file_ != string(""); }
   bool load_network();
 
@@ -150,6 +151,7 @@ private:
   //! the enviroment variable substitutions
   map<string, string> env_subs_; 
   static string net_file_;
+  static bool done_writing_;
 
   //! document for writing nets.
   xmlDocPtr                          doc_;  

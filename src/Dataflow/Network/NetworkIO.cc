@@ -43,6 +43,7 @@
 namespace SCIRun {
 
 string NetworkIO::net_file_= "";
+bool NetworkIO::done_writing_= false;
 
 inline 
 string
@@ -139,24 +140,28 @@ NetworkIO::gui_add_connection(const string &con_id,
 {
   string from = get_mod_id(from_id);
   string to = get_mod_id(to_id);
-
-  // create the connection.
-  Network *net = NetworkEditor::get_network();
-  Module* omod = net->get_module_by_id(from);
-  Module* imod = net->get_module_by_id(to);
+  string arg = "1";
+  if (from.find("Subnet") == string::npos && 
+      to.find("Subnet") == string::npos) 
+  {
+    arg = "0";
+    // create the connection.
+    Network *net = NetworkEditor::get_network();
+    Module* omod = net->get_module_by_id(from);
+    Module* imod = net->get_module_by_id(to);
   
-  int owhich = atoi(from_port.c_str());
-  int iwhich = atoi(to_port.c_str());
+    int owhich = atoi(from_port.c_str());
+    int iwhich = atoi(to_port.c_str());
   
-  net->connect(omod, owhich, imod, iwhich);
-
+    net->connect(omod, owhich, imod, iwhich);
+  }
   // Now tell tcl about the connection.
   GuiInterface *gui = GuiInterface::getSingleton();
 
   // tell tcl about the connection, last argument tells it not to creat the 
   // connection on the C side, since we just did that above.
   string cmmd = "createConnection [list " + from + " " + from_port +
-    " " + to + " " + to_port + "] 0 0";
+    " " + to + " " + to_port + "] 0 " + arg;
 
   string cid = gui->eval(cmmd);
   id_map_t &cmap = netid_to_conid_.top();
@@ -735,6 +740,7 @@ void NetworkIO::write_net_doc()
   xmlFreeDoc(doc_);
   doc_ = 0;
   out_fname_ = "";
+  done_writing_ = true;
 }
 
 void 

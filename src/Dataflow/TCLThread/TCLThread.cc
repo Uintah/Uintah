@@ -516,10 +516,22 @@ TCLThread::startNetworkEditor()
     loaded_network = true;
   }
   // Load the Network file specified from the command line
+  string fname; 
+
   if (startnetno)
   {
-    gui->eval("loadnet {"+string(argv[startnetno])+"}");
+    fname = string(argv[startnetno]);
+    gui->eval("loadnet {"+fname+"}");
     loaded_network = true;
+  }
+
+
+  if (loaded_network &&
+      (sci_getenv_p("SCIRUN_CONVERT_NET_TO_SRN"))) {
+    size_t pos = fname.find(".net");
+    fname.replace(pos, 4, ".srn");
+    gui->eval("set netedit_savefile " + fname);
+    gui->eval("popupSaveMenu");
   }
 
   if (loaded_network &&
