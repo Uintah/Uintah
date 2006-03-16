@@ -68,8 +68,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     d_integrator = Fracture;
     d_fracture = true;
   }
-  else 
+  else{
     d_integrator = Explicit;
+  }
   mpm_flag_ps->get("nodes8or27", d_8or27);
   mpm_flag_ps->get("reference_temperature", d_ref_temp); // for thermal stress
   mpm_flag_ps->get("withColor",  d_with_color);
