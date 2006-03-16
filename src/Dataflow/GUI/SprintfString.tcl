@@ -1,14 +1,8 @@
 itcl_class SCIRun_String_SprintfString {
     inherit Module
+
     constructor {config} {
         set name SprintfString
-        set_defaults
-    }
-
-    method set_defaults {} {
-        global $this-formatstring
-        set    $this-formatstring "my string: %s"    
-    
     }
 
     method ui {} {

@@ -148,7 +148,7 @@ DECLARE_MAKER(SampleField)
 
 SampleField::SampleField(GuiContext* ctx)
   : Module("SampleField", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gui_wtype_(ctx->subVar("wtype")),
+    gui_wtype_(ctx->subVar("wtype"), "rake"),
     gui_endpoints_ (ctx->subVar("endpoints")),
     gui_endpoint0x_(ctx->subVar("endpoint0x")),
     gui_endpoint0y_(ctx->subVar("endpoint0y")),
@@ -159,15 +159,15 @@ SampleField::SampleField(GuiContext* ctx)
     gui_widgetscale_(ctx->subVar("widgetscale")),
     gui_ringstate_(ctx->subVar("ringstate")),
     gui_framestate_(ctx->subVar("framestate")),
-    gui_maxSeeds_(ctx->subVar("maxseeds")),
-    gui_numSeeds_(ctx->subVar("numseeds")),
-    gui_rngSeed_(ctx->subVar("rngseed")),
-    gui_rngInc_(ctx->subVar("rnginc")),
-    gui_clamp_(ctx->subVar("clamp")),
-    gui_autoexec_(ctx->subVar("autoexecute")),
-    gui_randdist_(ctx->subVar("dist")),
-    gui_whichTab_(ctx->subVar("whichtab")),
-    gui_force_rake_reset_(ctx->subVar("force-rake-reset", false)),
+    gui_maxSeeds_(ctx->subVar("maxseeds"), 15),
+    gui_numSeeds_(ctx->subVar("numseeds"), 10),
+    gui_rngSeed_(ctx->subVar("rngseed"), 1),
+    gui_rngInc_(ctx->subVar("rnginc"), 1),
+    gui_clamp_(ctx->subVar("clamp"), 0),
+    gui_autoexec_(ctx->subVar("autoexecute"), 1),
+    gui_randdist_(ctx->subVar("dist"), "uniuni"),
+    gui_whichTab_(ctx->subVar("whichtab"), "Widget"),
+    gui_force_rake_reset_(ctx->subVar("force-rake-reset", false), 0),
 
     gui_widget_lock_("SampleField widget lock"),
 
