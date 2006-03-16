@@ -20,6 +20,8 @@ ICELabel::ICELabel()
 
   //__________________________________
   // Cell Centered variables
+  TMV_CCLabel     =
+    VarLabel::create("TMV_CC",    CCVariable<double>::getTypeDescription());
   press_CCLabel     =
     VarLabel::create("press_CC",    CCVariable<double>::getTypeDescription());
   matl_press_CCLabel     =
@@ -301,6 +303,7 @@ ICELabel::~ICELabel()
     // Cell centered variables
     VarLabel::destroy(delTLabel);
     VarLabel::destroy(press_CCLabel);
+    VarLabel::destroy(TMV_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);
     VarLabel::destroy(matl_press_CCLabel);
     VarLabel::destroy(delP_DilatateLabel);
