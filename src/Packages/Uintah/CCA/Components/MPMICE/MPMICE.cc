@@ -124,6 +124,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   //  M P M
   //  d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
+  d_ice->setWithMPM();
   d_mpm->attachPort("output",dataArchiver);
   d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
   d_8or27 = d_mpm->flags->d_8or27; 
