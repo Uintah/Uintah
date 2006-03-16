@@ -89,7 +89,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_recompile = false;
   d_conservationTest = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
-  
+  d_with_mpm=false;
+ 
   d_exchCoeff = scinew ExchangeCoefficients();
 
   d_customInitialize_basket  = scinew customInitialize_basket();
@@ -807,8 +808,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
-
-  
   if(d_turbulence){
     // The turblence model is also called directly from
     // accumlateMomentumSourceSinks.  This method just allows other
@@ -1363,7 +1362,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 //  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
-  t->requires(Task::NewDW, lb->compressibilityLabel,                gn);
+  t->requires(Task::NewDW, lb->compressibilityLabel,               gn);
   t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gac,1);
   t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
@@ -1372,6 +1371,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
+
+  if(d_with_mpm){
+   t->requires(Task::NewDW,lb->TMV_CCLabel,       press_matl,oims, gn);
+  }
   
   t->computes(lb->int_eng_source_CCLabel);
   t->computes(lb->heatCond_src_CCLabel);
@@ -1524,7 +1527,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                 this, &ICE::addExchangeToMomentumAndEnergy);
 
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+//  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, d_sharedState->get_delt_label()); for AMR
  
   if(d_exchCoeff->convective()){
@@ -3909,8 +3912,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing accumulate_energy_source_sinks on patch " 
-         << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+    cout_doing << d_myworld->myrank() 
+               << " Doing accumulate_energy_source_sinks on patch " 
+               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -3926,12 +3930,23 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     constCCVariable<double> delP_Dilatate;
     constCCVariable<double> matl_press;
     constCCVariable<double> rho_CC;
-        
+    constCCVariable<double> TMV_CC;
+
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(press_CC,     lb->press_CCLabel,      0, patch,gn, 0);
     new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,gn, 0);
-    
+
+    if(d_with_mpm){
+      new_dw->get(TMV_CC,     lb->TMV_CCLabel,        0, patch,gn, 0);
+    }
+    else {
+      CCVariable<double>  TMV_create;
+      new_dw->allocateTemporary(TMV_create,  patch);
+      TMV_create.initialize(vol);
+      TMV_CC = TMV_create; // reference created data
+    }
+
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl); 
@@ -3940,10 +3955,10 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       CCVariable<double> int_eng_source;
       CCVariable<double> heatCond_src;
       
-      new_dw->get(sp_vol_CC,    lb->sp_vol_CCLabel,     indx,patch,gac,1);
-      new_dw->get(rho_CC,       lb->rho_CCLabel,        indx,patch,gac,1);
-      new_dw->get(kappa,        lb->compressibilityLabel,indx,patch,gn, 0);
-      new_dw->get(vol_frac,     lb->vol_frac_CCLabel,   indx,patch,gn, 0);
+      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,      indx,patch, gac,1);
+      new_dw->get(rho_CC,     lb->rho_CCLabel,         indx,patch, gac,1);
+      new_dw->get(kappa,      lb->compressibilityLabel,indx,patch, gn, 0);
+      new_dw->get(vol_frac,   lb->vol_frac_CCLabel,    indx,patch, gn, 0);
        
       new_dw->allocateAndPut(int_eng_source, 
                                lb->int_eng_source_CCLabel,indx,patch);
@@ -3969,9 +3984,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
           constSFCXVariable<double> vol_fracX_FC;
           constSFCYVariable<double> vol_fracY_FC;
           constSFCZVariable<double> vol_fracZ_FC;
-          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel,indx,patch,gac, 2);          
-          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel,indx,patch,gac, 2);          
-          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,indx,patch,gac, 2);  
+          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel,indx,patch,gac, 2);
+          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel,indx,patch,gac, 2);
+          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,indx,patch,gac, 2);
 
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
           scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
@@ -3988,6 +4003,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           A = vol * vol_frac[c] * kappa[c] * press_CC[c];
+//          A = TMV_CC[c] * vol_frac[c] * kappa[c] * press_CC[c];
           int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
         }
       }
