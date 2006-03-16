@@ -329,7 +329,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
  // Scheduling
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
-    const PatchSet* ice_patches = ice_level->eachPatch();
+    //const PatchSet* ice_patches = ice_level->eachPatch();
     d_ice->scheduleComputeThermoTransportProperties(sched, ice_level,ice_matls);
   }
    
@@ -953,6 +953,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(Ilb->vol_frac_CCLabel);
   t->computes(Ilb->sumKappaLabel,       press_matl);
+  t->computes(Ilb->TMV_CCLabel,         press_matl);
   t->computes(Ilb->press_equil_CCLabel, press_matl);  
   t->computes(Ilb->sum_imp_delPLabel,   press_matl);  // needed by implicit ICE
   t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls);
@@ -1062,7 +1063,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     int numMPM_matls = d_sharedState->getNumMPMMatls();
     double p_ref = d_sharedState->getRefPress();
     for (int m = 0; m < numMPM_matls; m++ ) {
-      
       CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
       CCVariable<Vector> vel_CC;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -1300,7 +1300,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
       
-      double rho_orig = mpm_matl->getInitialDensity();
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
          
@@ -1390,18 +1389,20 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       int L = getLevel(patches)->getIndex();
       if(d_testForNegTemps_mpm){
         if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
-          warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx <<" cell "
+          warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
+               <<" cell "
                << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }
       if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
-        warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx <<" cell "
-             << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
+        warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
+             <<" cell " << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
       if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
-        warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx <<" cell "
+        warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
+             <<" cell "
              << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       } 
@@ -1530,7 +1531,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         new_dw->get(modelEng_src, Ilb->modelEng_srcLabel, indx, patch, gn, 0);
                 
         for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
-                                                    iter++){ 
+                                                    iter++){
           IntVector c = *iter;
           //  must have a minimum mass
           double min_mass = d_TINY_RHO * cellVol;
@@ -1630,7 +1631,7 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
 
       constCCVariable<double> mass_L_CC, old_heatRate;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
-      constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
+      constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC;
       
       double cv = mpm_matl->getSpecificHeat();     
 
@@ -1811,14 +1812,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp,sumKappa;
+    CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
     CCVariable<double> sum_imp_delP;    
     Ghost::GhostType  gn = Ghost::None;
     //__________________________________
     old_dw->get(press,                  Ilb->press_CCLabel, 0,patch,gn, 0); 
     new_dw->allocateAndPut(press_new,   Ilb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateAndPut(TMV_CC,      Ilb->TMV_CCLabel,         0,patch);
     new_dw->allocateAndPut(sumKappa,    Ilb->sumKappaLabel,       0,patch);
-    new_dw->allocateAndPut(sum_imp_delP,Ilb->sum_imp_delPLabel, 0,patch);
+    new_dw->allocateAndPut(sum_imp_delP,Ilb->sum_imp_delPLabel,   0,patch);
     new_dw->allocateTemporary(delPress_tmp, patch); 
     
     sum_imp_delP.initialize(0.0);
@@ -1849,8 +1851,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
         new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
-        new_dw->getModifiable(rho_CC_new[m], Ilb->rho_CCLabel, indx,patch);
-//        new_dw->allocateTemporary(rho_CC_new[m],  patch);
+        new_dw->allocateTemporary(rho_CC_new[m],  patch);
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
       new_dw->allocateAndPut(vol_frac[m],   Ilb->vol_frac_CCLabel,  indx,patch);
@@ -1880,6 +1881,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         mat_volume[m] = (rho_CC_old[m][c]*cell_vol)/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
+
+      TMV_CC[c] = total_mat_vol;
 
       for (int m = 0; m < numALLMatls; m++) {
         vol_frac[m][c] = mat_volume[m]/total_mat_vol;
@@ -2054,8 +2057,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // Now change how rho_CC is defined to 
     // rho_CC = mass/cell_volume  NOT mass/mat_volume 
     for (int m = 0; m < numALLMatls; m++) {
-      // Is this necessary? - Steve
+     if(ice_matl[m]){
       rho_CC_new[m].copyData(rho_CC_old[m]);
+     }
     }
 
     //__________________________________
