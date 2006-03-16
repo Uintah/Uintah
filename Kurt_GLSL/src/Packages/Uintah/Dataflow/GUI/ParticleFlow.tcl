@@ -57,8 +57,8 @@ itcl_class Uintah_Visualization_ParticleFlow {
 
         checkbutton $w.f1.animate -text Animate -variable $this-animate
         label $w.f2.l -text "Particle life time increment"
-        scale $w.f2.scale -to 0.002 -from 0.0001 -orient horizontal \
-            -variable $this-time -resolution 0.0001
+        scale $w.f2.scale -to 0.01 -from 0.0002 -orient horizontal \
+            -variable $this-time -resolution 0.0002
         pack  $w.f1.animate 
         pack $w.f2.l $w.f2.scale  -side top
 
