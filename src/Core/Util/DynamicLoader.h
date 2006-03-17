@@ -68,6 +68,7 @@ public:
   void add_container_include(const string &inc);
   void add_field_include(const string &inc);
   void add_namespace(const string &inc) { namespaces_[inc] = 1; }
+  void add_pre_include(const string &pre);
   void add_post_include(const string &post);
   void create_cc(ostream &fstr, bool empty) const;
   
@@ -82,6 +83,7 @@ public:
   string             base_class_name_;
   string             template_class_name_;
   string             template_arg_;
+  string             pre_include_extra_;
   string             post_include_extra_;
 
   int       ref_cnt;
