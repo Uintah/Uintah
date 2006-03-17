@@ -56,6 +56,7 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Util/Timer.h>
 #include <Core/Util/ProgressReporter.h>
+#include <Core/Containers/StringUtil.h>
 #include <sstream>
 #include <iosfwd>
 #include <string>
