@@ -49,20 +49,25 @@
 namespace SCIRun {
 
 class ChooseField : public Module {
-private:
-  GuiInt port_index_;
-  GuiInt usefirstvalid_;
+
 public:
   ChooseField(GuiContext* ctx);
   virtual ~ChooseField();
   virtual void execute();
+
+private:
+  GuiInt gUseFirstValid_;
+  GuiInt gPortIndex_;
+
+  FieldHandle fHandle_;
 };
 
 DECLARE_MAKER(ChooseField)
 ChooseField::ChooseField(GuiContext* ctx)
   : Module("ChooseField", ctx, Filter, "FieldsOther", "SCIRun"),
-    port_index_(ctx->subVar("port-index"), 0),
-    usefirstvalid_(ctx->subVar("usefirstvalid"), 0)
+    gUseFirstValid_(ctx->subVar("use-first-valid"), 1),
+    gPortIndex_(ctx->subVar("port-index"), 0),
+    fHandle_(0)
 {
 }
 
@@ -73,54 +78,69 @@ ChooseField::~ChooseField()
 void
 ChooseField::execute()
 {
-  FieldOPort *ofld = (FieldOPort *)get_oport("Field");
+  pre_execute();
 
-  update_state(NeedData);
+  std::vector<FieldHandle> fHandles;
 
-  port_range_type range = get_iports("Field");
-  if (range.first == range.second)
-    return;
+  if( !getDynamicIHandle( "Field", fHandles, false ) ) return;
 
-  port_map_type::iterator pi = range.first;
+  // Check to see if any values have changed via a matrix or user.
+  if( !fHandle_.get_rep() ||
+      gUseFirstValid_.changed( true ) ||
+
+      (gUseFirstValid_.get() == 1 ) ||      
+      (gUseFirstValid_.get() == 0 &&  gPortIndex_.changed( true )) ||
+
+      execute_error_ ) {
+
+    execute_error_ = false;
   
-  int usefirstvalid = usefirstvalid_.get();
+    // use the first valid field
+    if (gUseFirstValid_.get()) {
 
-  FieldIPort *ifield = 0;
-  FieldHandle field;
-  
-  if (usefirstvalid) {
-    // iterate over the connections and use the
-    // first valid field
-    int idx = 0;
-    bool found_valid = false;
-    while (pi != range.second) {
-      ifield = (FieldIPort *)get_iport(idx);
-      if (ifield->get(field) && field != 0) {
-	found_valid = true;
-	break;
+      unsigned int idx = 0;
+      while( idx < fHandles.size() && !fHandles[idx].get_rep() ) idx++;
+
+      if( idx < fHandles.size() && fHandles[idx].get_rep() ) {
+	fHandle_ = fHandles[idx];
+
+	gPortIndex_.set( idx );
+
+	reset_vars();
+
+      } else {
+	error("Did not find any valid fields.");
+
+	execute_error_ = true;
+	return;
       }
-      ++idx;
-      ++pi;
-    }
-    if (!found_valid) {
-      error("Didn't find any valid fields.");
-      return;
-    }
-  } else {
-    // use the index specified
-    int idx=port_index_.get();
-    if (idx<0) { error("Can't choose a negative port."); return; }
-    while (pi != range.second && idx != 0) { ++pi ; idx--; }
-    int port_number=pi->second;
-    if (pi == range.second || ++pi == range.second) { 
-      error("Selected port index out of range."); return; 
-    }
 
-    ifield = (FieldIPort *)get_iport(port_number);
-    ifield->get(field);
+    } else {
+      // use the index specified
+      int idx = gPortIndex_.get();
+
+      if ( 0 <= idx && idx < (int) fHandles.size() ) {
+	if( fHandles[idx].get_rep() ) {
+	  fHandle_ = fHandles[idx];
+
+	} else {
+	  error( "Port " + to_string(idx) + " did not contain a valid field.");
+	  execute_error_ = true;
+	  return;
+	}
+
+      } else {
+	error("Selected port index out of range.");
+	execute_error_ = true;
+	return;
+      }
+    }
   }
-  
-  ofld->send_and_dereference(field);
+
+  // Send the data downstream
+  setOHandle( "Field",  fHandle_, true );
+
+  post_execute();
 }
 
 } // End namespace SCIRun
