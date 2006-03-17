@@ -366,7 +366,6 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
   }
 
   const TypeDescription *mtd = mOwner->mesh()->get_type_description();
-// //NOTE TO JS: Need to make this general enough for hexes, tets, tris and quads....
   CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
   Handle<FieldBoundaryAlgo> boundary_algo;
   FieldHandle boundary_field_h;
