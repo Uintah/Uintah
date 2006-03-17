@@ -171,7 +171,7 @@ RescaleColorMap::execute()
   }
 
   // Send the data downstream
-  setOHandle( "ColorMap",  cHandle_, true );
+  sendOHandle( "ColorMap",  cHandle_, true );
 }
 
 } // End namespace SCIRun

@@ -137,7 +137,7 @@ ChooseField::execute()
   }
 
   // Send the data downstream
-  setOHandle( "Field",  fHandle_, true );
+  sendOHandle( "Field",  fHandle_, true );
 }
 
 } // End namespace SCIRun

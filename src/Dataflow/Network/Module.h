@@ -335,8 +335,11 @@ protected:
   bool getDynamicIHandle( std::string name, std::vector< DH > &handles,
 			  bool required = true );
 
+  // cache_in_module should be true if the module is doing it's own
+  // caching of the handle.  Otherwise that will be handled by the
+  // port.
   template<class DH>
-  bool setOHandle( string name, DH& handle, bool cache = true );
+  bool sendOHandle( string name, DH& handle, bool cache_in_module = false );
 
 private:
   void remove_iport(int);
@@ -484,7 +487,7 @@ Module::getDynamicIHandle( std::string name,
 // Used to send handles with error checking.
 template<class DH>
 bool
-Module::setOHandle( string name, DH& handle, bool cache )
+Module::sendOHandle( string name, DH& handle, bool cache )
 {
   SimpleOPort<DH> *dataport;
 
