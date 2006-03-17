@@ -674,10 +674,9 @@ void MesquiteMesh<FIELD>::vertex_set_coordinates(
   p.y( coordinates[1] );
   p.z( coordinates[2] );
   mOwner->get_typed_mesh()->set_point( p, node_id );
-
+  
   update_progress();
 }
-
 
 //! Each vertex has a byte-sized flag that can be used to store
 //! flags.  This byte's value is neither set nor used by the mesh
