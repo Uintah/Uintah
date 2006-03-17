@@ -511,7 +511,12 @@ PetscSolver::pressLinearSolve()
   ierr = MatMult(A, d_x, u_tmp);
   if(ierr)
     throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
+#if (PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, u_tmp);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+  ierr = VecAXPY(d_b,neg_one,u_tmp);
+#endif
   if(ierr)
     throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
@@ -626,7 +631,12 @@ PetscSolver::pressLinearSolve()
   ierr = MatMult(A, d_x, d_u);
   if(ierr)
     throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
+#if (PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, d_u);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+  ierr = VecAXPY(d_b,neg_one,d_u);
+#endif
   if(ierr)
     throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(d_u,NORM_2,&norm);

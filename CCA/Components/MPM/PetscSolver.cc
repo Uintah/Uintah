@@ -261,10 +261,18 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
-    VecSet(&zero,d_B);
-    VecSet(&zero,d_diagonal);
-    VecSet(&zero,d_x);
-    VecSet(&zero,d_t);
+#if (PETSC_VERSION_MINOR == 2)
+      VecSet(&zero,d_B);
+      VecSet(&zero,d_diagonal);
+      VecSet(&zero,d_x);
+      VecSet(&zero,d_t);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+      VecSet(d_B,zero);
+      VecSet(d_diagonal,zero);
+      VecSet(d_x,zero);
+      VecSet(d_t,zero);
+#endif
   } else {
     PetscTruth exists;
     PetscObjectExists((PetscObject)d_A,&exists);
@@ -360,7 +368,12 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
 
   PetscScalar one = 1.0;
+#if (PETSC_VERSION_MINOR == 2)
   MatZeroRows(d_A,is,&one);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+  MatZeroRowsIS(d_A,is,one);
+#endif
   ISDestroy(is);
 #if 0
   MatTranspose(d_A,PETSC_NULL);
