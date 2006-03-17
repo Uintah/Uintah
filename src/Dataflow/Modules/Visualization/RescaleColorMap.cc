@@ -99,15 +99,18 @@ RescaleColorMap::execute()
   ColorMapHandle cHandle;
   std::vector<FieldHandle> fHandles;
 
-  if( !getIHandle( "ColorMap",     cHandle,  true ) ) return;
-  if( !getDynamicIHandle( "Field", fHandles, true ) ) return;
+  // Do this first so the ports are optional if a fixed scale is used.
+  if( gIsFixed_.changed( true ) )
+    inputs_changed_ = true;
 
-  // Check to see if any values have changed via a matrix or user.
+  if( !getIHandle( "ColorMap",     cHandle,  true ) ) return;
+  if( !getDynamicIHandle( "Field", fHandles, !gIsFixed_.get()  ) ) return;
+
+  // Check to see if any values have changed.
   if( !cHandle_.get_rep() ||
-      gIsFixed_.changed( true ) ||
-      gMin_.changed( true ) ||
-      gMax_.changed( true ) ||
-      gMakeSymmetric_.changed( true ) ||
+      (gIsFixed_.get() == 0 && gMakeSymmetric_.changed( true )) ||
+      (gIsFixed_.get() == 0 && (gMin_.changed( true ) ||
+				gMax_.changed( true ))) ||
       inputs_changed_ ||
       execute_error_ ) {
 
@@ -118,17 +121,6 @@ RescaleColorMap::execute()
 
     if( gIsFixed_.get() ) {
       cHandle_->Scale( gMin_.get(), gMax_.get());
-
-      // If the data has units set the colormap units.
-      for( unsigned int i=0; i<fHandles.size(); i++ ) {
-	string units;
-      
-	if( fHandles[i]->get_property("units", units) ) {
-	  cHandle_->set_units(units);
-	
-	  break;
-	}
-      }
 
     } else {
 
