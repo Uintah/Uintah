@@ -818,11 +818,6 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
   //Uncomment  the next line to use damping
   //t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
-#if 0
-  if(d_with_ice){
-    t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
-  }
-#endif
   t->computes(lb->gAccelerationLabel);
   sched->addTask(t, patches, matls);
 }
