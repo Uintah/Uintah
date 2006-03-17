@@ -68,7 +68,8 @@ public:
 			      unsigned int kwrap) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *ftd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    bool geometry_irregular);
 };
 
 
@@ -219,7 +220,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   string mesh_name = ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
-  // For structured geometery we need to set the correct location.
+  // For structured geometry we need to set the correct location.
   if(mesh_name.find("LatVolMesh"  ) != string::npos ||
      mesh_name.find("ImageMesh"   ) != string::npos  ||
      mesh_name.find("ScanlineMesh") != string::npos ) 

@@ -113,15 +113,12 @@ FieldSlicer::~FieldSlicer()
 void
 FieldSlicer::execute()
 {
-  update_state(NeedData);
-  reset_vars();
-
-  bool needToExecute = false;
+  pre_execute();
 
   FieldHandle  fHandle;
 
-  if( !getIHandle( "Input Field",  fHandle,  needToExecute, true  ) ) return;
-  if( !getIHandle( "Input Matrix", mHandle_, needToExecute, false ) ) return;
+  if( !getIHandle( "Input Field",  fHandle,  true  ) ) return;
+  if( !getIHandle( "Input Matrix", mHandle_, false ) ) return;
 
   // The matrix is optional.
   if( mHandle_ != 0 &&
@@ -219,7 +216,7 @@ FieldSlicer::execute()
       (Axis_.get() == 1 && jIndex_.changed( true )) ||
       (Axis_.get() == 2 && kIndex_.changed( true )) ) {
 
-    needToExecute = true;
+    inputs_changed_ = true;
 
     if( mHandle_ != 0 ) {
       ostringstream str;
@@ -231,8 +228,8 @@ FieldSlicer::execute()
     }
   }
 
-  // If no data or a changed recreate the mesh.
-  if( !fHandle_.get_rep() || needToExecute ) {
+  // If no data or ainput change recreate the mesh.
+  if( !fHandle_.get_rep() || inputs_changed_ ) {
     const TypeDescription *ftd = fHandle->get_type_description();
     const TypeDescription *ttd = fHandle->get_type_description(Field::FDATA_TD_E);
 
@@ -256,8 +253,10 @@ FieldSlicer::execute()
     // Now the new field is defined so do the work on it.
     const TypeDescription *iftd = fHandle->get_type_description();
     const TypeDescription *oftd = fHandle_->get_type_description();
+    const bool geom_irreg =
+      (fHandle->mesh()->topology_geometry() & Mesh::IRREGULAR);
 
-    ci = FieldSlicerWorkAlgo::get_compile_info(iftd,oftd);
+    ci = FieldSlicerWorkAlgo::get_compile_info(iftd,oftd,geom_irreg);
     Handle<FieldSlicerWorkAlgo> workalgo;
 
     if (!module_dynamic_compile(ci, workalgo)) return;
@@ -286,6 +285,8 @@ FieldSlicer::execute()
   // Send the data downstream
   setOHandle( "Output Field",  fHandle_, true );
   setOHandle( "Output Matrix", mHandle_, true );
+
+  post_execute();
 }
 
 CompileInfoHandle
@@ -325,7 +326,8 @@ FieldSlicerAlgo::get_compile_info(const TypeDescription *ftd,
 
 CompileInfoHandle
 FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
-				      const TypeDescription *oftd)
+				      const TypeDescription *oftd,
+				      bool geometry_irregular)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -342,6 +344,9 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
 		       oftd->get_name() );
 
   // Add in the include path to compile this obj
+  if(geometry_irregular)
+    rval->add_pre_include( "#define SET_POINT_DEFINED 1");
+
   rval->add_include(include_path);  
 
   iftd->fill_compile_info(rval);

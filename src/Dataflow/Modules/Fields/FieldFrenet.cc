@@ -90,14 +90,11 @@ FieldFrenet::~FieldFrenet()
 void
 FieldFrenet::execute()
 {
-  update_state(NeedData);
-  reset_vars();
-
-  bool needToExecute = false;
+  pre_execute();
 
   FieldHandle  fHandle;
 
-  if( !getIHandle( "Input Field",  fHandle,  needToExecute, true  ) ) return;
+  if( !getIHandle( "Input Field",  fHandle, true  ) ) return;
 
   if( fHandle->mesh()->topology_geometry() ==
       (Mesh::STRUCTURED | Mesh::IRREGULAR) ) {
@@ -130,7 +127,7 @@ FieldFrenet::execute()
   if( !fHandle_.get_rep() ||
       Direction_.changed( true ) ||
       Axis_.changed( true ) || 
-      needToExecute ) {
+      inputs_changed_ ) {
 
     const TypeDescription *ftd = fHandle->get_type_description();
     const TypeDescription *btd =
@@ -152,6 +149,8 @@ FieldFrenet::execute()
     FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
     ofield_port->send_and_dereference( fHandle_, true );
   }
+
+  post_execute();
 }
 
 

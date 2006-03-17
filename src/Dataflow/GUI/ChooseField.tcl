@@ -34,17 +34,18 @@ itcl_class SCIRun_FieldsOther_ChooseField {
         set name ChooseField
     }
 
-    method set_defaults {} {
-	setGlobal $this-port-index 0
-	setGlobal $this-usefirstvalid 0
-    }
-
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
             return
         }
         toplevel $w
+
+	checkbutton $w.valid -text "Use first valid field" \
+	    -variable $this-use-first-valid \
+	    -command "$this toggle_use-first-valid"
+	pack $w.valid -side top -anchor nw -padx 3 -pady 3
+
 
 	frame $w.c
 	pack $w.c -side top -e y -f both -padx 5 -pady 5
@@ -54,12 +55,7 @@ itcl_class SCIRun_FieldsOther_ChooseField {
 	bind $w.c.e <Return> "$this-c needexecute"
 	pack $w.c.l $w.c.e -side left
 
-	checkbutton $w.valid -text "Use first valid field" \
-	    -variable $this-usefirstvalid \
-	    -command "$this toggle_usefirstvalid"
-	pack $w.valid -side top -anchor nw -padx 3 -pady 3
-
-	toggle_usefirstvalid
+	toggle_use-first-valid
 
 	Tooltip $w.valid "Module will iterate over ports\nand use the first one with a valid handle."
 
@@ -74,16 +70,16 @@ itcl_class SCIRun_FieldsOther_ChooseField {
 	moveToCursor $w
     }
 
-    method toggle_usefirstvalid {} {
+    method toggle_use-first-valid {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    # grey out port stuff if checked
-	    if {[set $this-usefirstvalid]} {
+	    if {[set $this-use-first-valid]} {
 		$w.c.l configure -foreground grey64
-		$w.c.e configure -foreground grey64
+		$w.c.e configure -foreground grey64 -state disable
 	    } else {
 		$w.c.l configure -foreground black
-		$w.c.e configure -foreground black
+		$w.c.e configure -foreground black -state normal
 	    }
 	}
     }

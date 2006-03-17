@@ -152,11 +152,13 @@ Module::Module(const string& name, GuiContext* ctx,
     abort_flag(0),
     need_execute(0),
     sched_class(sched_class),
+    inputs_changed_(false),
+    execute_error_(false),
     state(NeedData),
     msg_state(Reset), 
     helper(0),
     helper_thread(0),
-    network(0), 
+    network(0),
     show_stats_(true),
     log_string_(ctx->subVar("log_string", false))
 {
@@ -326,6 +328,22 @@ Module::kill_helper()
     helper_thread->join();
     helper_thread = 0;
   }
+}
+
+
+void
+Module::pre_execute()
+{
+  update_state(NeedData);
+  reset_vars();
+
+  inputs_changed_ = false;
+}
+
+void
+Module::post_execute()
+{
+  update_state(Completed);
 }
 
 

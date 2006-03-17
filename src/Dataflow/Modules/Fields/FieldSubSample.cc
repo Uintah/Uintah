@@ -132,15 +132,12 @@ FieldSubSample::~FieldSubSample()
 void
 FieldSubSample::execute()
 {
-  update_state(NeedData);
-  reset_vars();
-
-  bool needToExecute = false;
-
+  pre_execute();
+  
   FieldHandle fHandle;
 
-  if( !getIHandle( "Input Field",  fHandle,  needToExecute, true  ) ) return;
-  if( !getIHandle( "Input Matrix", mHandle_, needToExecute, false ) ) return;
+  if( !getIHandle( "Input Field",  fHandle,  true  ) ) return;
+  if( !getIHandle( "Input Matrix", mHandle_, false ) ) return;
 
   // The matrix is optional.
   if( mHandle_ != 0 &&
@@ -255,7 +252,7 @@ FieldSubSample::execute()
       jWrap_.changed( true ) ||
       kWrap_.changed( true ) ) {
 
-      needToExecute = true;
+      inputs_changed_ = true;
 
       if( mHandle_ != 0 ) {
 
@@ -269,10 +266,15 @@ FieldSubSample::execute()
   }
 
   // If no data or a changed recreate the mesh.
-  if( !fHandle_.get_rep() || needToExecute ) {
+  if( !fHandle_.get_rep() || inputs_changed_ ) {
 
     const TypeDescription *ftd = fHandle->get_type_description();
-    CompileInfoHandle ci = FieldSubSampleAlgo::get_compile_info(ftd);
+    const bool geom_irreg =
+      (fHandle->mesh()->topology_geometry() & Mesh::IRREGULAR);
+
+    CompileInfoHandle ci =
+      FieldSubSampleAlgo::get_compile_info(ftd,geom_irreg);
+
     Handle<FieldSubSampleAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
@@ -313,10 +315,13 @@ FieldSubSample::execute()
   // Send the data downstream
   setOHandle( "Output Field",  fHandle_, true );
   setOHandle( "Output Matrix", mHandle_, true );
+
+  post_execute();
 }
 
 CompileInfoHandle
-FieldSubSampleAlgo::get_compile_info(const TypeDescription *ftd)
+FieldSubSampleAlgo::get_compile_info(const TypeDescription *ftd,
+				     bool geometry_irregular)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -331,7 +336,11 @@ FieldSubSampleAlgo::get_compile_info(const TypeDescription *ftd)
                        ftd->get_name());
 
   // Add in the include path to compile this obj
+  if(geometry_irregular)
+    rval->add_pre_include( "#define SET_POINT_DEFINED 1");
+
   rval->add_include(include_path);
+
   ftd->fill_compile_info(rval);
   return rval;
 }

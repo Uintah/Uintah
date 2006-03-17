@@ -98,7 +98,8 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
-					    const TypeDescription *oftd);
+					    const TypeDescription *oftd,
+					    bool geomtery_irregular);
 };
 
 template< class IFIELD, class OFIELD >
@@ -418,7 +419,7 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
   unsigned int it, jt, kt;
 
 #ifndef SET_POINT_DEFINED
-  // For structured geometery we need to set the correct plane.
+  // For structured geometry we need to set the correct plane.
   string mesh_type =
     ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
