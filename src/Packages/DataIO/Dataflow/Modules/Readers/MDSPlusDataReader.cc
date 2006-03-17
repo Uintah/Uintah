@@ -162,6 +162,8 @@ MDSPlusDataReader::MDSPlusDataReader(GuiContext *context)
     entries_(0),
     error_(-1)
 {
+  for( unsigned int ic=0; ic<MAX_PORTS; ic++ )
+    nHandles_[ic] = 0;
 }
 
 MDSPlusDataReader::~MDSPlusDataReader(){
@@ -305,8 +307,6 @@ void MDSPlusDataReader::execute(){
     ports_.push_back(99);
   }
 
-  bool update = false;
-
   for( unsigned int ic=0; ic<entries_; ic++ ) {
     gServer_[ic]->reset();
     gTree_[ic]->reset();
@@ -322,29 +322,29 @@ void MDSPlusDataReader::execute(){
 
     if( tmpStr != servers_[ic] ) {
       servers_[ic] = tmpStr;
-      update = true;
+      inputs_changed_ = true;
     }
 
     tmpStr = gTree_[ic]->get();
     if( tmpStr != trees_[ic] ) {
       trees_[ic] = tmpStr;
-      update = true;
+      inputs_changed_ = true;
     }
     
     tmpStr = gShot_[ic]->get();
     if( atoi( tmpStr.c_str() ) != shots_[ic] ) {
       shots_[ic] = atoi( tmpStr.c_str() );
-      update = true;
+      inputs_changed_ = true;
     }
     
     tmpStr = gSignal_[ic]->get();
     if( tmpStr != signals_[ic] ) {
       signals_[ic] = tmpStr;
-      update = true;
+      inputs_changed_ = true;
     }
   }
 
-  if( update == true ||
+  if( inputs_changed_ == true ||
 
       error_ == true ||
 
@@ -549,8 +549,11 @@ void MDSPlusDataReader::execute(){
 	ports_[ids[ic][jc]] = cc + (nHandles[ic].size() == 1 ? 0 : jc);
 
       for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
-	if( cc < MAX_PORTS )
+	if( cc < MAX_PORTS ) {
 	  nHandles_[cc] = nHandles[ic][jc];
+
+	  nHandles_[cc]->set_property("Source",string("MDSPlus"), false);
+	}
 
 	++cc;
       }
@@ -571,35 +574,17 @@ void MDSPlusDataReader::execute(){
       warning( "More data than availible ports." );
 
     for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
-      nHandles_[ic] = NULL;
+      nHandles_[ic] = 0;
   } else {
     remark( "Already read data " );
   }
 
-  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
-    // Get a handle to the output double port.
-    if( nHandles_[ic].get_rep() ) {
-
-      char portNumber[4];
-      sprintf( portNumber, "%d", ic );
-
-      string portName = string("Output ") +
-	string(portNumber) +
-	string( " Nrrd" );
-
-      
-      NrrdOPort *ofield_port = 
-	(NrrdOPort *) get_oport(portName);
+  for( unsigned int ic=0; ic<cc; ic++ ) {
     
-      if (!ofield_port) {
-	error("Unable to initialize "+name+"'s " + portName + " oport\n");
-	return;
-      }
-
-      // Send the data downstream
-      nHandles_[ic]->set_property("Source",string("MDSPlus"), false);
-      ofield_port->send( nHandles_[ic] );
-    }
+    string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
+    
+    // Send the data downstream
+    sendOHandle( portName, nHandles_[ic], cache );
   }
 #else  
   error( "No MDSPlus availible." );

@@ -164,7 +164,6 @@ protected:
   NrrdDataHandle nHandles_[MAX_PORTS];
   MatrixHandle mHandle_;
 
-  bool update_;
   int which_;
 
   bool loop_;

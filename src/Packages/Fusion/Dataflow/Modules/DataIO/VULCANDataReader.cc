@@ -421,30 +421,14 @@ VULCANDataReader::execute(){
 
     // Get a handle to the output field port.
     if( nHandles_[i].get_rep() ) {
-      NrrdOPort *ofield_port = (NrrdOPort *) get_oport(portNames[i]);
-    
-      if (!ofield_port) {
-	error("Unable to initialize "+name+"'s oport" + portNames[i]+ "\n");
-	return;
-      }
-
       nHandles_[i]->set_property( "Source", string("Vulcan Reader"), false );
 
       // Send the data downstream
-      ofield_port->send( nHandles_[i] );
+      sendOHandle( portNames[i], nHandles_[i], true );
     }
   }
 
-  if( mHandle_.get_rep() ) {
-    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Time Slice");
-    
-    if (!omatrix_port) {
-      error("Unable to initialize oport 'Time Slice'.");
-      return;
-    }
-    
-    omatrix_port->send(mHandle_ );
-  }
+  sendOHandle( "Time Slice", mHandle_, true );
 
   if( loop_ ) {
     if ( delay > 0) {
