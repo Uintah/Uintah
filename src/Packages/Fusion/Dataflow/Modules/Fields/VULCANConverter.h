@@ -386,10 +386,10 @@ execute(vector< NrrdDataHandle >& nHandles,
   int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[0].size; // Phi
   int nZR  = nHandles[mesh[ZR  ]]->nrrd->axis[1].size; // Points
 
-  int nVal = nHandles[data[0]]->nrrd->axis[1].size;    // Values
+//  int nVal = nHandles[data[0]]->nrrd->axis[1].size;    // Values
 
-  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
-  NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd->data);
+//  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
+//  NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd->data);
   NTYPE *ptr    = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
   NTYPE* ndata = scinew NTYPE[nPhi*nZR];
