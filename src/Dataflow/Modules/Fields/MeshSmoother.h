@@ -197,8 +197,6 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::smart_laplacian_smoother( ProgressReport
   }
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-    // Create a MeshDomain
-//  MesquiteDomain domain;
         
     // run smoother
   if(err)
@@ -208,7 +206,6 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::smart_laplacian_smoother( ProgressReport
   }
   else
   {
-//    queue.run_instructions( &entity_mesh, &domain, err ); 
     queue.run_instructions( &entity_mesh, err ); 
     MSQ_CHKERR(err);
     if(err)
@@ -295,8 +292,6 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressRepor
   untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-    // Create a MeshDomain
-//  MesquiteDomain domain;
         
     // run smoother
   if(err)
@@ -307,12 +302,9 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressRepor
   clock_t finish = clock();
   double total_time = (finish - start)/(double)CLOCKS_PER_SEC;
   
-//  cpu_timer.cpu_secs();
-        
-//      queue_untangle.run_instructions(&entity_mesh, &domain, err);
   queue_untangle.run_instructions( &entity_mesh, err );
   MSQ_CHKERR(err);
-//  double time_remaining=max_cpu_time-cpu_timer.cpu_secs();
+
   double time_remaining = max_cpu_time - total_time;
   if( err )
   {
@@ -331,7 +323,6 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressRepor
   {
       //add cpu timer
     shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,time_remaining,err);
-//          queue_shape.run_instructions(&entity_mesh, &domain, err);  
     queue_shape.run_instructions( &entity_mesh, err );
     MSQ_CHKERR(err);
   }
@@ -456,7 +447,6 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::smart_laplacian_smoother( ProgressReport
   }
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-//  MesquiteDomain domain;
 
   if(err)
   {
@@ -465,7 +455,6 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::smart_laplacian_smoother( ProgressReport
   }
   else
   {
-//    queue.run_instructions( &entity_mesh, &domain, err ); 
     queue.run_instructions( &entity_mesh, err ); 
     MSQ_CHKERR(err);
     if(err)
@@ -552,8 +541,6 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressRepor
   untangle_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,max_cpu_time,err);
 
   MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-    // Create a MeshDomain
-//  MesquiteDomain domain;
         
     // run smoother
   if(err)
@@ -564,12 +551,9 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressRepor
   clock_t finish = clock();
   double total_time = (finish - start)/(double)CLOCKS_PER_SEC;
   
-//  cpu_timer.cpu_secs();
-        
-//      queue_untangle.run_instructions(&entity_mesh, &domain, err);
   queue_untangle.run_instructions( &entity_mesh, err );
   MSQ_CHKERR(err);
-//  double time_remaining=max_cpu_time-cpu_timer.cpu_secs();
+
   double time_remaining = max_cpu_time - total_time;
   if( err )
   {
@@ -588,7 +572,6 @@ FieldHandle MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressRepor
   {
       //add cpu timer
     shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,time_remaining,err);
-//          queue_shape.run_instructions(&entity_mesh, &domain, err);  
     queue_shape.run_instructions( &entity_mesh, err );
     MSQ_CHKERR(err);
   }
@@ -680,7 +663,6 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::smart_laplacian_smoother( ProgressReport
   else
   {
     queue.run_instructions( &entity_mesh, &domain, err ); 
-//    queue.run_instructions( &entity_mesh, err ); 
     MSQ_CHKERR(err);
     if(err)
     {
@@ -783,9 +765,8 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::shape_improvement_wrapper( ProgressRepor
 //  cpu_timer.cpu_secs();
         
   queue_untangle.run_instructions(&entity_mesh, &domain, err);
-//  queue_untangle.run_instructions( &entity_mesh, err );
   MSQ_CHKERR(err);
-//  double time_remaining=max_cpu_time-cpu_timer.cpu_secs();
+
   double time_remaining = max_cpu_time - total_time;
   if( err )
   {
@@ -805,8 +786,11 @@ FieldHandle MeshSmootherAlgoTri<FIELD>::shape_improvement_wrapper( ProgressRepor
       //add cpu timer
     shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,time_remaining,err);
     queue_shape.run_instructions(&entity_mesh, &domain, err);  
-//    queue_shape.run_instructions( &entity_mesh, err );
     MSQ_CHKERR(err);
+    if( err )
+    {
+      mod->error( "Error occurred during smoothing operation." );
+    }
   }
   
   return ofield;
@@ -909,7 +893,7 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressRepor
   else
   {
     queue.run_instructions( &entity_mesh, &domain, err ); 
-//    queue.run_instructions( &entity_mesh, err ); 
+
     MSQ_CHKERR(err);
     if(err)
     {
@@ -1023,12 +1007,9 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::shape_improvement_wrapper( ProgressRepo
   clock_t finish = clock();
   double total_time = (finish - start)/(double)CLOCKS_PER_SEC;
   
-//  cpu_timer.cpu_secs();
-        
-//      queue_untangle.run_instructions(&entity_mesh, &domain, err);
-  queue_untangle.run_instructions( &entity_mesh, err );
+  queue_untangle.run_instructions(&entity_mesh, &domain, err);
+
   MSQ_CHKERR(err);
-//  double time_remaining=max_cpu_time-cpu_timer.cpu_secs();
   double time_remaining = max_cpu_time - total_time;
 
   if( err )
@@ -1048,9 +1029,12 @@ FieldHandle MeshSmootherAlgoQuad<FIELD>::shape_improvement_wrapper( ProgressRepo
   {
       //add cpu timer
     shape_inner.add_criterion_type_with_double(Mesquite::TerminationCriterion::CPU_TIME,time_remaining,err);
-//          queue_shape.run_instructions(&entity_mesh, &domain, err);  
-    queue_shape.run_instructions( &entity_mesh, err );
+    queue_shape.run_instructions(&entity_mesh, &domain, err);  
     MSQ_CHKERR(err);
+    if( err )
+    {
+      mod->error( "Error occurred during smoothing operation." );
+    }
   }
   
   return ofield;
