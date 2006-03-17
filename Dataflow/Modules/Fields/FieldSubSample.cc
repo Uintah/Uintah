@@ -311,8 +311,8 @@ FieldSubSample::execute()
   }
 
   // Send the data downstream
-  setOHandle( "Output Field",  fHandle_, true );
-  setOHandle( "Output Matrix", mHandle_, true );
+  sendOHandle( "Output Field",  fHandle_, true );
+  sendOHandle( "Output Matrix", mHandle_, true );
 }
 
 CompileInfoHandle
