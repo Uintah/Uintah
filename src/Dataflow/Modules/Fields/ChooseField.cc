@@ -78,8 +78,6 @@ ChooseField::~ChooseField()
 void
 ChooseField::execute()
 {
-  pre_execute();
-
   std::vector<FieldHandle> fHandles;
 
   if( !getDynamicIHandle( "Field", fHandles, false ) ) return;
@@ -139,8 +137,6 @@ ChooseField::execute()
 
   // Send the data downstream
   setOHandle( "Field",  fHandle_, true );
-
-  post_execute();
 }
 
 } // End namespace SCIRun

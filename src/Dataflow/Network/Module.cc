@@ -332,22 +332,6 @@ Module::kill_helper()
 
 
 void
-Module::pre_execute()
-{
-  update_state(NeedData);
-  reset_vars();
-
-  inputs_changed_ = false;
-}
-
-void
-Module::post_execute()
-{
-  update_state(Completed);
-}
-
-
-void
 Module::report_progress( ProgressState state )
 {
   switch ( state ) {
@@ -978,6 +962,10 @@ Module::do_execute()
 
   // Reset the TCL variables.
   reset_vars();
+
+  // This gets flagged if the data on any input port has changed.
+  // Also used in the various execute functions to note gui_vars changing.
+  inputs_changed_ = false;
 
   // Call the User's execute function.
   update_msg_state(Reset);

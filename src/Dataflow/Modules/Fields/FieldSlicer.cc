@@ -113,8 +113,6 @@ FieldSlicer::~FieldSlicer()
 void
 FieldSlicer::execute()
 {
-  pre_execute();
-
   FieldHandle  fHandle;
 
   if( !getIHandle( "Input Field",  fHandle,  true  ) ) return;
@@ -285,9 +283,8 @@ FieldSlicer::execute()
   // Send the data downstream
   setOHandle( "Output Field",  fHandle_, true );
   setOHandle( "Output Matrix", mHandle_, true );
-
-  post_execute();
 }
+
 
 CompileInfoHandle
 FieldSlicerAlgo::get_compile_info(const TypeDescription *ftd,

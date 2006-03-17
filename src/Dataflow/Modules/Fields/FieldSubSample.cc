@@ -132,8 +132,6 @@ FieldSubSample::~FieldSubSample()
 void
 FieldSubSample::execute()
 {
-  pre_execute();
-  
   FieldHandle fHandle;
 
   if( !getIHandle( "Input Field",  fHandle,  true  ) ) return;
@@ -315,8 +313,6 @@ FieldSubSample::execute()
   // Send the data downstream
   setOHandle( "Output Field",  fHandle_, true );
   setOHandle( "Output Matrix", mHandle_, true );
-
-  post_execute();
 }
 
 CompileInfoHandle

@@ -96,8 +96,6 @@ RescaleColorMap::~RescaleColorMap()
 void
 RescaleColorMap::execute()
 {
-  pre_execute();
-
   ColorMapHandle cHandle;
   std::vector<FieldHandle> fHandles;
 
@@ -182,8 +180,6 @@ RescaleColorMap::execute()
 
   // Send the data downstream
   setOHandle( "ColorMap",  cHandle_, true );
-
-  post_execute();
 }
 
 } // End namespace SCIRun

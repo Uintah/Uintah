@@ -328,9 +328,6 @@ protected:
   bool inputs_changed_;   // True if either the gui vars or data has cahnged.
   bool execute_error_;    // Error during execution not related to checks.
 
-  void pre_execute();
-  void post_execute();
-
   template<class DH>
   bool getIHandle( std::string name, DH& handle, bool required = true );
 
@@ -369,47 +366,56 @@ private:
 
 };
 
+
 // Used to get handles with error checking.
 template<class DH>
-bool Module::getIHandle( std::string name,
-			 DH& handle,
-			 bool required )
+bool
+Module::getIHandle( std::string name,
+                    DH& handle,
+                    bool required )
 {
   SimpleIPort<DH> *dataport;
 
   handle = 0;
 
   // We always require the port to be there.
-  if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(name))) ) {
-    throw "Unable to initialize input port '" + name + "'.";
+  if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(name))) )
+  {
+    throw "Incorrect data type sent to input port '" + name +
+      "' (dynamic_cast failed).";
     return false;
   }
 
   // Get the handle and check for data.
-  if (dataport->get(handle) && handle.get_rep()) {
-
+  if (dataport->get(handle) && handle.get_rep())
+  {
     // See if the data has changed. Note only change the boolean if
     // it is false this way it can be cascaded with other handle gets.
     if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
 
     // Handle and rep so return true.
     return true;
-
-  } else if( required ) {
+  }
+  else if( required )
+  {
     // The input was required so report an error.
     error( "No field handle or representation for input port '" +
-     name + "'."  );
+           name + "'."  );
     return false;
-  } else {
+  }
+  else
+  {
     return true;
   }
 }
 
+
 // Used to get handles with error checking.
 template<class DH>
-bool Module::getDynamicIHandle( std::string name,
-				vector<DH> &handles,
-				bool required )
+bool
+Module::getDynamicIHandle( std::string name,
+                           vector<DH> &handles,
+                           bool required )
 {
   unsigned int nPorts = 0;
   handles.clear();
@@ -417,21 +423,24 @@ bool Module::getDynamicIHandle( std::string name,
   port_range_type range = get_iports( name );
 
   // If the code does not have the name correct this happens.
-  if( range.first == range.second ) {
-    throw "Or Unable to initialize dynamic input port '" + name + "'.";
-    
+  if( range.first == range.second )
+  {
+    throw "Unable to initialize dynamic input port '" + name + "'.";
     return false;
-
-  } else {
+  }
+  else
+  {
     port_map_type::iterator pi = range.first;
     
-    while (pi != range.second) {
+    while (pi != range.second)
+    {
       SimpleIPort<DH> *dataport;
 
       // We always require the port to be there.
-      if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second))) ) {
+      if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second))) )
+      {
 	throw "Unable to get dynamic input port #" + to_string(nPorts) +
-	       " ' " +name + "'.";
+          " ' " +name + "'.";
 	return false;
       }
 
@@ -441,8 +450,8 @@ bool Module::getDynamicIHandle( std::string name,
 
       // Get the handle and check for data.
       DH handle;
-      if (dataport->get(handle) && handle.get_rep()) {
-
+      if (dataport->get(handle) && handle.get_rep())
+      {
 	handles.push_back(handle);
 
 	// See if the data has changed. Note only change the boolean if
@@ -450,39 +459,40 @@ bool Module::getDynamicIHandle( std::string name,
 	if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
 
 	++nPorts;
-
-      } else if (pi != range.second || nPorts == 0) {
+      }
+      else if (pi != range.second || nPorts == 0)
+      {
 	// The input was required so report an error.
-	if( required ) {
+	if( required )
+        {
 	  error( "No field handle or representation for dynamic input port #" +
-		 to_string(nPorts) +
-		 " ' " +name + "'." );
+		 to_string(nPorts) + " ' " +name + "'." );
 	  return false;
-	} else {
+	}
+        else
+        {
 	  handles.push_back(0);
 	}
       }
     }
   }
-
+  
   return true;
 }
 
 
 // Used to send handles with error checking.
 template<class DH>
-bool Module::setOHandle( string name,
-			 DH& handle,
-			 bool cache )
+bool
+Module::setOHandle( string name, DH& handle, bool cache )
 {
-  if( !handle.get_rep() )
-    return true;
-  
   SimpleOPort<DH> *dataport;
 
   // We always require the port to be there.
-  if( !(dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(name))) ) {
-    throw "Unable to initialize input port '" + name + "'.";
+  if ( !(dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(name))) )
+  {
+    throw "Incorrect data type sent to output port '" + name +
+      "' (dynamic_cast failed).";
     return false;
   }
 
