@@ -60,8 +60,6 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/SearchGrid.h>
 
-#define SET_POINT_DEFINED 1
-
 namespace SCIRun {
 
 template <class Basis>

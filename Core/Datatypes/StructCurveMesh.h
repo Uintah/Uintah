@@ -67,8 +67,6 @@
 #include <float.h>
 #include <sgi_stl_warnings_on.h>
 
-#define SET_POINT_DEFINED 1
-
 namespace SCIRun {
 
 using std::string;
