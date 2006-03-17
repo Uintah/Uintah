@@ -1469,7 +1469,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->computes(lb->mag_grad_temp_CCLabel);
   t->computes(lb->mag_div_vel_CCLabel);
   t->computes(lb->mag_grad_vol_frac_CCLabel);
-  t->computes(lb->mag_grad_press_CCLabel);
+  t->computes(lb->mag_grad_press_CCLabel,d_press_matl);
   
   t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), oims);
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), oims);
