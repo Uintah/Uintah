@@ -33,7 +33,7 @@
 -->
 
 <!-- Top level -->
-<!ELEMENT network (environment?, note?, modules, connections)>
+<!ELEMENT network (environment?, note?, modules, connections?)>
 <!ATTLIST network
         version CDATA #REQUIRED
         name CDATA #IMPLIED
