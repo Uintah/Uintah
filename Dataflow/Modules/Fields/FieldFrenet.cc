@@ -90,8 +90,6 @@ FieldFrenet::~FieldFrenet()
 void
 FieldFrenet::execute()
 {
-  pre_execute();
-
   FieldHandle  fHandle;
 
   if( !getIHandle( "Input Field",  fHandle, true  ) ) return;
@@ -149,8 +147,6 @@ FieldFrenet::execute()
     FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
     ofield_port->send_and_dereference( fHandle_, true );
   }
-
-  post_execute();
 }
 
 
