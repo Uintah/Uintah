@@ -177,6 +177,7 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
   base_class_name_(bcn),
   template_class_name_(tcn),
   template_arg_(tcdec),
+  pre_include_extra_(""),
   post_include_extra_(""),
   ref_cnt(0)
 {
@@ -253,6 +254,12 @@ CompileInfo::add_field_include(const string &inc)
 
 
 void
+CompileInfo::add_pre_include(const string &pre)
+{
+  pre_include_extra_ = pre_include_extra_ + pre;
+}
+
+void
 CompileInfo::add_post_include(const string &post)
 {
   post_include_extra_ = post_include_extra_ + post;
@@ -285,6 +292,12 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
   incl.splice(incl.begin(), mincl);
   incl.splice(incl.begin(), bincl);
   incl.splice(incl.begin(), dincl);
+
+  // Add in any pre_include construction, usually specific define instances.
+  if (pre_include_extra_ != "")
+  {
+    fstr << "\n" << pre_include_extra_ << "\n";
+  }
 
   // generate standard includes
   list<string>::const_iterator iter = incl.begin();
