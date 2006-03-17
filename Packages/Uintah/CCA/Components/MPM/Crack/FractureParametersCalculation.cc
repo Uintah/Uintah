@@ -1129,7 +1129,8 @@ void Crack::OutputCrackFrontResults(const int& m)
                   << setw(15) << cp.z()
                   << setw(15) << cfJ.x()
                   << setw(15) << cfK.x()
-                  << setw(15) << cfK.y();
+                  << setw(15) << cfK.y()
+                  << setw(15) << cfK.z();
         if(cfK.x()!=0.) 
           outCrkFrt << setw(15) << cfK.y()/cfK.x() << endl;
         else 
@@ -1148,7 +1149,8 @@ void Crack::OutputCrackFrontResults(const int& m)
 	            << setw(15) << cp.z()
 	            << setw(15) << cfJ.x()
 	            << setw(15) << cfK.x()
-	            << setw(15) << cfK.y();
+	            << setw(15) << cfK.y()
+                    << setw(15) << cfK.z();
           if(cfK.x()!=0.)
 	    outCrkFrt0 << setw(15) << cfK.y()/cfK.x() << endl;
           else
@@ -1165,7 +1167,8 @@ void Crack::OutputCrackFrontResults(const int& m)
  		     << setw(15) << cp.z()
 	             << setw(15) << cfJ.x()
                      << setw(15) << cfK.x()
-                     << setw(15) << cfK.y();
+                     << setw(15) << cfK.y()
+                     << setw(15) << cfK.z();
           if(cfK.x()!=0.)
             outCrkFrt1 << setw(15) << cfK.y()/cfK.x() << endl;
           else
@@ -1182,7 +1185,8 @@ void Crack::OutputCrackFrontResults(const int& m)
 		     << setw(15) << cp.z()
 	             << setw(15) << cfJ.x()
 	             << setw(15) << cfK.x()
-                     << setw(15) << cfK.y();
+                     << setw(15) << cfK.y()
+		     << setw(15) << cfK.z();
           if(cfK.x()!=0.)
             outCrkFrt2 << setw(15) << cfK.y()/cfK.x() << endl;
           else 
