@@ -396,6 +396,8 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
 }
 
 
+#define EPSILON 1.e-12
+
 template <class TFIELD, class IFIELD>
 void
 InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
@@ -409,6 +411,7 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
   tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E | Mesh::FACES_E);
+  imesh->synchronize(Mesh::EDGES_E);
 
   typename IFIELD::mesh_type::Edge::iterator ibi, iei;
   imesh->begin(ibi);
@@ -424,42 +427,75 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     imesh->get_center(p[1], nodes[1]);
 
     vector<Point> insertpoints;
-    insertpoints.push_back(p[0]);
-    insertpoints.push_back(p[1]);
 
-    typename TFIELD::mesh_type::Edge::iterator tbi, tei;
-    tmesh->begin(tbi);
-    tmesh->end(tei);
-    while (tbi != tei)
+    Point closest0, closest1;
+    typename TFIELD::mesh_type::Elem::index_type elem;
+    typename TFIELD::mesh_type::Elem::index_type elem_end;
+    tmesh->find_closest_face(closest0, elem, p[1]);
+    insertpoints.push_back(closest0);
+    tmesh->find_closest_face(closest1, elem_end, p[0]);
+
+    // TODO: Find closest could and will land on degeneracies meaning
+    // that our choice of elements there is arbitrary.  Need to walk
+    // along near surface elements (breadth first search) instead of
+    // exact elements.
+    int previous_edge = -1;
+    while (elem != elem_end)
     {
-      const double EPSILON = 1.0e-12;
       typename TFIELD::mesh_type::Node::array_type tnodes;
-      tmesh->get_nodes(tnodes, *tbi);
-      Point tp[2];
-      tmesh->get_center(tp[0], tnodes[0]);
-      tmesh->get_center(tp[1], tnodes[1]);
-
-      double s, t;
-      closest_line_to_line(s, t, p[0], p[1], tp[0], tp[1]);
-
-      if (s > EPSILON && s < 1.0 - EPSILON &&
-          t > EPSILON && t < 1.0 - EPSILON)
+      tmesh->get_nodes(tnodes, elem);
+    
+      Point tpoints[3];
+    
+      for (unsigned int k = 0; k < 3; k++)
       {
-        insertpoints.push_back(tp[0] + t * (tp[1] - tp[0]));
+        tmesh->get_center(tpoints[k], tnodes[k]);
       }
-      ++tbi;
+
+      bool found = false;
+      for (int k = 0; k < 3; k++)
+      {
+        if (k != previous_edge)
+        {
+          Point tp[2];
+          tp[0] = tpoints[k];
+          tp[1] = tpoints[(k+1)%3];
+
+          double s, t;
+          closest_line_to_line(s, t, p[0], p[1], tp[0], tp[1]);
+          
+          if (s > EPSILON && s < 1.0 - EPSILON &&
+              t > EPSILON && t < 1.0 - EPSILON)
+          {
+            found = true;
+            insertpoints.push_back(tp[0] + t * (tp[1] - tp[0]));
+            unsigned int nbrhalf;
+            tmesh->get_neighbor(nbrhalf, elem*3+k);
+            elem = nbrhalf / 3;
+            previous_edge = nbrhalf % 3;
+            break;
+          }
+        }
+      }
+      if (!found)
+      {
+        cout << "EDGE WALKER DEAD END! " << elem << " " << *ibi << "\n";
+        break;
+      }
     }
+
+    insertpoints.push_back(closest1);
 
     typename TFIELD::mesh_type::Node::index_type newnode;
     typename TFIELD::mesh_type::Elem::array_type newelems;
     for (unsigned int i = 0; i < insertpoints.size(); i++)
     {
-      typename TFIELD::mesh_type::Elem::index_type elem;
       Point closest;
+      typename TFIELD::mesh_type::Elem::index_type elem;
       tmesh->find_closest_face(closest, elem, insertpoints[i]);
       tmesh->insert_node_in_face(newelems, newnode, elem, closest);
       new_nodes.push_back(newnode);
-      for (unsigned int j = 0; j < newelems.size(); j++)
+      for (int j = newelems.size()-1; j >= 0; j--)
       {
         new_elems.push_back(newelems[j]);
       }
