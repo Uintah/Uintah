@@ -46,14 +46,6 @@ itcl_class SCIRun_FieldsData_MeshSmoother {
         set name MeshSmoother
     }
 
-    method set_defaults {} {
-	global $this-smoothscheme
-	global $this-smoothboundary
-
-	set $this-smoothscheme SmartLaplacian
-	set $this-smoothboundary Off
-    }
-
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

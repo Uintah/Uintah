@@ -72,8 +72,8 @@ DECLARE_MAKER(MeshSmoother)
 
 MeshSmoother::MeshSmoother(GuiContext* ctx)
         : Module("MeshSmoother", ctx, Filter, "FieldsData", "SCIRun"),
-          smooth_boundary_(ctx->subVar("smoothboundary")),
-          smooth_scheme_(ctx->subVar("smoothscheme")),
+          smooth_boundary_(ctx->subVar("smoothboundary"), "Off" ),
+          smooth_scheme_(ctx->subVar("smoothscheme"), "SmartLaplacian" ),
           last_field_generation_(0)
 {
 }
