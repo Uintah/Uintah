@@ -43,22 +43,20 @@
 #ifndef SCI_project_HexVolMesh_h
 #define SCI_project_HexVolMesh_h 1
 
-#include <Core/Thread/Mutex.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/FieldIterator.h>
+#include <Core/Containers/StackVector.h>
+#include <Core/Persistent/PersistentSTL.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Geometry/Plane.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/FieldIterator.h>
-#include <Core/Containers/StackVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <set>
 #include <sci_hash_map.h>
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <Core/Datatypes/SearchGrid.h>
 
 namespace SCIRun {
 
