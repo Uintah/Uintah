@@ -89,6 +89,7 @@ ChooseField::execute()
       (gUseFirstValid_.get() == 1 ) ||      
       (gUseFirstValid_.get() == 0 &&  gPortIndex_.changed( true )) ||
 
+      inputs_changed_ ||
       execute_error_ ) {
 
     execute_error_ = false;
