@@ -100,13 +100,17 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     mergedata_(-1),
     assumesvt_(-1),
 
-    update_(false),
+    mHandle_(0),
+
     which_(-1),
 
     loop_(false),
     error_(false)
 {
-  for( int ic=0; ic<MAX_DIMS; ic++ ) {
+  for( unsigned int ic=0; ic<MAX_PORTS; ic++ )
+    nHandles_[ic] = 0;
+
+  for( unsigned int ic=0; ic<MAX_DIMS; ic++ ) {
     char idx[16];
 
     sprintf( idx, "%d-dim", ic );
@@ -197,8 +201,6 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
 
 void HDF5DataReader::execute() {
 
-  update_state(NeedData);
-
 #ifdef HAVE_HDF5
   filename_.reset();
   datasets_.reset();
@@ -235,7 +237,7 @@ void HDF5DataReader::execute() {
   time_t filemodification = buf.st_mtime;
 #endif
 
-  update_ = false;
+  inputs_changed_ = false;
 
   // If we haven't read yet, or if it's a new filename, 
   //  or if the datestamp has changed -- then read...
@@ -251,10 +253,8 @@ void HDF5DataReader::execute() {
     sel_filename_         = filename;
     sel_datasets_         = datasets;
 
-    update_ = true;
+    inputs_changed_ = true;
   }
-
-  update_state(JustStarted);
 
   bool resend = false;
 
@@ -267,7 +267,7 @@ void HDF5DataReader::execute() {
     mergedata_ = mergeData_.get();
     assumesvt_ = assumeSVT_.get();
 
-    update_ = true;
+    inputs_changed_ = true;
   }
 
   for( int ic=0; ic<MAX_DIMS; ic++ ) {
@@ -280,12 +280,12 @@ void HDF5DataReader::execute() {
       counts_ [ic] = gCounts_ [ic]->get();
       strides_[ic] = gStrides_[ic]->get();
     
-      update_ = true;
+      inputs_changed_ = true;
     }
 
     if( dims_[ic] != gDims_[ic]->get() ) {
       dims_[ic] = gDims_[ic]->get();
-      update_ = true;
+      inputs_changed_ = true;
     }
 
     if( starts_[ic] + (counts_[ic]-1) * strides_[ic] >= dims_[ic] ) {
@@ -324,7 +324,7 @@ void HDF5DataReader::execute() {
 
       if( 0 <= which && which <= (int) frame_paths.size() ) {
 	if( error_ ||
-	    update_ ||
+	    inputs_changed_ ||
 	    current_.get() != which ) {
 	  current_.set(which);
 	  current_.reset();
@@ -352,7 +352,7 @@ void HDF5DataReader::execute() {
       resend = animate_execute( filename, frame_paths, frame_datasets );
     }
   } else if( error_ ||
-	     update_ ){
+	     inputs_changed_ ){
     error_ = false;
 
     ReadandSendData( filename, pathList, datasetList, true, -1 );
@@ -363,42 +363,15 @@ void HDF5DataReader::execute() {
 
   if( resend ) {
     for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
-      // Get a handle to the output double port.
-      if( nHandles_[ic].get_rep() ) {
+      string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
 
-	char portNumber[4];
-	sprintf( portNumber, "%d", ic );
-
-	string portName = string("Output ") +
-	  string(portNumber) +
-	  string( " Nrrd" );
-      
-	NrrdOPort *ofield_port = 
-	  (NrrdOPort *) get_oport(portName);
-    
-	if (!ofield_port) {
-	  error("Unable to initialize "+name+"'s " + portName + " oport\n");
-	  return;
-	}
-
-	ofield_port->send( nHandles_[ic] );
-      }
+      if( nHandles_[ic] != 0 )
+	sendOHandle( portName, nHandles_[ic], true );
     }
 
     // Get a handle to the output double port.
-    if( mHandle_.get_rep() ) {
-      MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Selected Index");
-
-      if (!omatrix_port) {
-	error("Unable to initialize oport 'Selected Index'.");
-	return;
-      }
-
-      omatrix_port->send(mHandle_);
-    }
+    sendOHandle( "Selected Index", mHandle_, true );
   }
-
-  update_state(Completed);
 
 #else  
   error( "No HDF5 availible." );
@@ -601,8 +574,11 @@ void HDF5DataReader::ReadandSendData( string& filename,
       ports[ids[ic][jc]] = cc + (nHandles[ic].size() == 1 ? 0 : jc);
 
     for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
-      if( cc < MAX_PORTS )
+      if( cc < MAX_PORTS ) {
 	nHandles_[cc] = nHandles[ic][jc];
+
+	nHandles_[cc]->set_property("Source", string("HDF5"), false);
+      }
 
       ++cc;
     }
@@ -627,47 +603,22 @@ void HDF5DataReader::ReadandSendData( string& filename,
     warning( "More data than availible ports." );
 
   for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
-    nHandles_[ic] = NULL;
+    nHandles_[ic] = 0;
 
-
-  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
-    // Get a handle to the output double port.
-    if( nHandles_[ic].get_rep() ) {
-
-      nHandles_[ic]->set_property("Source",string("HDF5"), false);
-
-      char portNumber[4];
-      sprintf( portNumber, "%d", ic );
-
-      string portName = string("Output ") +
-	string(portNumber) +
-	string( " Nrrd" );
-      
-      NrrdOPort *ofield_port = (NrrdOPort *) get_oport(portName);
+  for( unsigned int ic=0; ic<cc; ic++ ) {
     
-      if (!ofield_port) {
-	error("Unable to initialize "+name+"'s " + portName + " oport\n");
-	return;
-      }
+    string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
 
-      // Send the data downstream
-      ofield_port->set_cache( cache );
-      ofield_port->send( nHandles_[ic] );
-    }
-  }
-
-  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Selected Index");
-
-  if (!omatrix_port) {
-    error("Unable to initialize oport 'Selected Index'.");
-    return;
+    // Send the data downstream
+    sendOHandle( portName, nHandles_[ic], cache );
   }
 
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
   mHandle_ = MatrixHandle(selected);
-  omatrix_port->send( mHandle_ );
+
+  sendOHandle( "Selected Index", mHandle_, true );
 }
 
 
@@ -1912,10 +1863,6 @@ HDF5DataReader::animate_execute( string new_filename,
 {
   bool resend = false;
 
-  update_state(NeedData);
-
-  reset_vars();
-
   // Cache var
   bool cache = (playmode_.get() != "inc_w_exec");
 
@@ -2000,7 +1947,7 @@ HDF5DataReader::animate_execute( string new_filename,
     else if( execmode == "fforward" )
       which = end;
 
-    if( update_ ||
+    if( inputs_changed_ ||
 	which != which_ ) {
       ReadandSendData( new_filename, frame_paths[which],
 		       frame_datasets[which], cache, which );

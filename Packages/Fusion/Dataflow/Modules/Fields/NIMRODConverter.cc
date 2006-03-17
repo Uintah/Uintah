@@ -54,7 +54,7 @@ using namespace SCIRun;
 class NIMRODConverter : public Module {
 public:
   NIMRODConverter(GuiContext*);
-
+  
   virtual ~NIMRODConverter();
 
   virtual void execute();
@@ -81,7 +81,7 @@ private:
   vector< int > mesh_;
   vector< int > data_;
 
-  vector< int > nGenerations_;
+  unsigned int nHandles_;
 
   NrrdDataHandle nHandle_;
 
@@ -98,8 +98,7 @@ NIMRODConverter::NIMRODConverter(GuiContext* context)
     conversion_(NONE),
     allowUnrolling_(context->subVar("allowUnrolling")),
     unRolling_(context->subVar("unrolling")),
-    unrolling_(0),
-    error_(false)
+    unrolling_(0)
 {
 }
 
@@ -112,54 +111,21 @@ NIMRODConverter::execute(){
   vector< NrrdDataHandle > nHandles;
   NrrdDataHandle nHandle;
 
+  if( !getDynamicIHandle( "Input Nrrd", nHandles, true ) ) return;
+
   string datasetsStr;
 
   string nrrdName;
   string property;
 
-  // Assume a range of ports even though four are needed.
-  port_range_type range = get_iports("Input Nrrd");
-
-  if (range.first == range.second)
-    return;
-
-  port_map_type::iterator pi = range.first;
-
-  while (pi != range.second) {
-    NrrdIPort *inrrd_port = (NrrdIPort*) get_iport(pi->second); 
-
-    ++pi;
-
-    if (!inrrd_port) {
-      error( "Unable to initialize "+name+"'s iport " );
-      return;
-    }
-
-    // Save the field handles.
-    if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
-      // Get the name of the nrrd being worked on.
-      if( !nHandle->get_property( "Name", nrrdName ) ||
-	  nrrdName == "Unknown" ) {
-	error( "Can not find the name of the nrrd or it is unknown." );
-	return;
-      }
-
-      // Get the source of the nrrd being worked on.
-      if( !nHandle->get_property( "Source", property ) ||
-	  (property != "HDF5" && property != "MDSPlus") ) {
-	error( "Can not find the source of the nrrd or it is unknown." );
-	return;
-      }
-
-      nHandles.push_back( nHandle );
-
-    } else if( pi != range.second ) {
-      error( "No handle or representation." );
-      return;
-    }
-  }
-
   for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
+
+    // Get the source of the nrrd being worked on.
+    if( !nHandles[ic]->get_property( "Source", property ) ||
+	(property != "HDF5" && property != "MDSPlus") ) {
+      error( "Can not find the source of the nrrd or it is unknown." );
+      return;
+    }
 
     nHandles[ic]->get_property( "Name", nrrdName );
 
@@ -185,33 +151,17 @@ NIMRODConverter::execute(){
     return;
   }
 
-  int generation = 0;
-
-  // See if input data has been added or removed.
-  if( nGenerations_.size() == 0 ||
-      nGenerations_.size() != nHandles.size() )
-    generation = nHandles.size();
-  else {
-    // See if any of the input data has changed.
-    for( unsigned int ic=0; ic<nHandles.size() &&
-	   ic<nGenerations_.size(); ic++ ) {
-      if( nGenerations_[ic] != nHandles[ic]->generation )
-	++generation;
-    }
-  }
+  if( nHandles_ != nHandles.size() )
+    inputs_changed_ = true;
 
   // If data change, update the GUI the field if needed.
-  if( generation ) {
+  if( inputs_changed_ ) {
     conversion_ = NONE;
 
     remark( "Found new data ... updating." );
 
-    nGenerations_.resize( nHandles.size() );
     mesh_.resize(4);
     mesh_[0] = mesh_[1] = mesh_[2] = mesh_[3] = -1;
-
-    for( unsigned int ic=0; ic<nHandles.size(); ic++ )
-      nGenerations_[ic] = nHandles[ic]->generation;
 
     // Get each of the dataset names for the GUI.
     for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
@@ -500,7 +450,7 @@ NIMRODConverter::execute(){
       updateMode ||
       updateRoll ||
       !nHandle_.get_rep() ||
-      generation ) {
+      inputs_changed_ ) {
     
     error_ = false;
 
@@ -626,18 +576,8 @@ NIMRODConverter::execute(){
       modes_.clear();
   }
   
-  // Get a handle to the output field port.
-  if( nHandle_.get_rep() ) {
-    NrrdOPort *ofield_port = (NrrdOPort *) get_oport("Output Nrrd");
-    
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
-    ofield_port->send( nHandle_ );
-  }
+  // Send the data downstream
+  sendOHandle( "Output Nrrd", nHandle_, true );
 }
 
 void

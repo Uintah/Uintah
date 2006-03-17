@@ -113,10 +113,7 @@ StreamlineAnalyzer::StreamlineAnalyzer(GuiContext* context)
     curveMesh_(1),
     scalarField_(1),
     showIslands_(0),
-    overlaps_(0),
-    slfGeneration_(-1),
-    pccfGeneration_(-1),
-    pcsfGeneration_(-1)
+    overlaps_(0)
 {
 }
 
@@ -127,28 +124,9 @@ StreamlineAnalyzer::~StreamlineAnalyzer()
 void
 StreamlineAnalyzer::execute()
 {
-  bool update = false;
-
-  cerr << "StreamlineAnalyzer getting ports " << endl;
-
-  FieldIPort* ifp = (FieldIPort *)get_iport("Input Streamlines");
   FieldHandle slfieldin;
 
-  cerr << "StreamlineAnalyzer getting field " << endl;
-
-  if (!(ifp->get(slfieldin))) {
-    error( "No handle or representation." );
-    return;
-  }
-
-  cerr << "StreamlineAnalyzer getting field rep" << endl;
-
-  if (!(slfieldin.get_rep())) {
-    error( "No handle or representation." );
-    return;
-  }
-
-  cerr << "StreamlineAnalyzer getting type " << endl;
+  if( !getIHandle( "Input Streamlines", slfieldin, true ) ) return;
 
   string if_name =
     slfieldin->get_type_description(Field::MESH_TD_E)->get_name();
@@ -159,26 +137,17 @@ StreamlineAnalyzer::execute()
     return;
   }
 
-  cerr << "StreamlineAnalyzer getting interface " << endl;
-
   if (!slfieldin->query_scalar_interface(this).get_rep()) {
     error("Only available for Scalar data.");
     return;
   }
 
-  // Check to see if the input field has changed.
-  if( slfGeneration_ != slfieldin->generation ) {
-    slfGeneration_ = slfieldin->generation;
-    update = true;
-  }
-
-
-  // Get a handle to the input centroid field port.
-  ifp = (FieldIPort *) get_iport("Input Centroids");
+  // The centroid field input is optional.
   FieldHandle pccfieldin;
 
-  // The field input is optional.
-  if (ifp->get(pccfieldin) && pccfieldin.get_rep()) {
+  if( !getIHandle( "Input Centroids", pccfieldin, false ) ) return;
+
+  if (pccfieldin.get_rep()) {
     
     string pc_name =
       pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
@@ -195,23 +164,15 @@ StreamlineAnalyzer::execute()
       error("Only available for Scalar data.");
       return;
     }
-
-    // Check to see if the input field has changed.
-    if( pccfGeneration_ != pccfieldin->generation ) {
-      pccfGeneration_ = pccfieldin->generation;
-      update = true;
-    }
-
-  } else {
-    pccfGeneration_ = -1;
   }
 
-  // Get a handle to the input separatrices field port.
-  ifp = (FieldIPort *) get_iport("Input Separatrices");
+  // The separatrices field input is optional.
   FieldHandle pcsfieldin;
 
+  if( !getIHandle( "Input Separatrices", pcsfieldin, false ) ) return;
+
   // The field input is optional.
-  if (ifp->get(pcsfieldin) && pcsfieldin.get_rep()) {
+  if (pcsfieldin.get_rep()) {
     
     string pc_name =
       pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
@@ -228,15 +189,6 @@ StreamlineAnalyzer::execute()
       error("Only available for Scalar data.");
       return;
     }
-
-    // Check to see if the input field has changed.
-    if( pcsfGeneration_ != pcsfieldin->generation ) {
-      pcsfGeneration_ = pcsfieldin->generation;
-      update = true;
-    }
-
-  } else {
-    pcsfGeneration_ = -1;
   }
 
 
@@ -282,7 +234,7 @@ StreamlineAnalyzer::execute()
 
 
   if( planes_.size() != planes.size() ){
-    update = true;
+    inputs_changed_ = true;
 
     planes_.resize(planes.size());
 
@@ -293,55 +245,55 @@ StreamlineAnalyzer::execute()
     for( unsigned int i=0; i<planes.size(); i++ ) {
       if( fabs( planes_[i] - planes[i] ) > 1.0e-4 ) {
 	planes_[i] = planes[i];
-	update = true;
+	inputs_changed_ = true;
       }
     }
   }
 
   if( color_ != (unsigned int) gColor_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     color_ = gColor_.get();
   }
 
   if( maxWindings_ != (unsigned int) gMaxWindings_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     maxWindings_ = gMaxWindings_.get();
   }
 
   if( override_ != (unsigned int) gOverride_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     override_ = gOverride_.get();
   }
 
   if( order_ != (unsigned int) gOrder_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     order_ = gOrder_.get();
   }
 
   if( curveMesh_ != (unsigned int) gCurveMesh_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     curveMesh_ = gCurveMesh_.get();
   }
 
   if( scalarField_ != (unsigned int) gScalarField_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     scalarField_ = gScalarField_.get();
   }
 
   if( showIslands_ != (unsigned int) gShowIslands_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     showIslands_ = gShowIslands_.get();
   }
 
   if( overlaps_ != (unsigned int) gOverlaps_.get() ) {
-    update = true;
+    inputs_changed_ = true;
 
     overlaps_ = gOverlaps_.get();
   }
@@ -349,7 +301,7 @@ StreamlineAnalyzer::execute()
   cerr << "StreamlineAnalyzer executing " << endl;
 
   // If no data or a changed recalcute.
-  if( update ||
+  if( inputs_changed_ ||
       !slfieldout_.get_rep()) {
 
 
@@ -385,29 +337,10 @@ StreamlineAnalyzer::execute()
 		  maxWindings_, override_, order_, topology);
   }
 
-  cerr << "StreamlineAnalyzer sending data " << endl;
-
-  // Get a handle to the output field port.
-  if ( slfieldout_.get_rep() ) {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Poincare");
-
-    // Send the data downstream
-    ofp->send(slfieldout_);
-  }
-
-  if ( pccfieldout_.get_rep() ) {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Centroids");
-
-    // Send the data downstream
-    ofp->send(pccfieldout_);
-  }
-
-  if ( pcsfieldout_.get_rep() ) {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Separatrices");
-
-    // Send the data downstream
-    ofp->send(pcsfieldout_);
-  }
+  // Send the data downstream
+  sendOHandle( "Output Poincare",     slfieldout_,  true );
+  sendOHandle( "Output Centroids",    pccfieldout_, true );
+  sendOHandle( "Output Separatrices", pcsfieldout_, true );
 
   cerr << "StreamlineAnalyzer done " << endl;
 }
