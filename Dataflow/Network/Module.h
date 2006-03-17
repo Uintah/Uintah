@@ -489,6 +489,11 @@ template<class DH>
 bool
 Module::sendOHandle( string name, DH& handle, bool cache )
 {
+  // Don't send on empty, assume cached version is more valid instead.
+  // Dunno if false return value is correct.  We don't check returns
+  // on this one.
+  if (!handle.get_rep()) return false;
+
   SimpleOPort<DH> *dataport;
 
   // We always require the port to be there.
