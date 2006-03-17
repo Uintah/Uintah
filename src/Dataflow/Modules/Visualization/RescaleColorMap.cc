@@ -109,7 +109,7 @@ RescaleColorMap::execute()
   // Check to see if any values have changed.
   if( !cHandle_.get_rep() ||
       (gIsFixed_.get() == 0 && gMakeSymmetric_.changed( true )) ||
-      (gIsFixed_.get() == 0 && (gMin_.changed( true ) ||
+      (gIsFixed_.get() == 1 && (gMin_.changed( true ) ||
 				gMax_.changed( true ))) ||
       inputs_changed_ ||
       execute_error_ ) {
