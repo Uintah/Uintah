@@ -64,8 +64,6 @@
 #include <math.h>
 #include <float.h> // for DBL_MAX
 
-#define SET_POINT_DEFINED 1
-
 namespace SCIRun {
 
 template <class Basis>

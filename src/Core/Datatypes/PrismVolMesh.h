@@ -63,8 +63,6 @@
 
 #include <float.h>
 
-#define SET_POINT_DEFINED 1
-
 namespace SCIRun {
 
 #define TRI_NNODES 3

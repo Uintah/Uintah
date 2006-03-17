@@ -66,8 +66,6 @@
 #include <sgi_stl_warnings_on.h>
 #include <float.h> // for DBL_MAX
 
-#define SET_POINT_DEFINED 1
-
 namespace SCIRun {
 
 using std::vector;
