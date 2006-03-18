@@ -417,11 +417,12 @@ void
 Module::update_progress(double p)
 {
   if (state != Executing) { update_state(Executing); }
-  int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
-  int nrp = (unsigned int)(Clamp(p, 0.0, 1.0) * progress_max_);
+  const double cp = Clamp(p, 0.0, 1.0);
+  const int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
+  const int nrp = (int)(cp * PROGRESS_GRANULARITY);
   if (crp != nrp)
   {
-    progress_current_.set(nrp);
+    progress_current_.set((int)(cp * progress_max_));
     string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
     gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
   }
@@ -432,8 +433,8 @@ void
 Module::update_progress(int current, int maxpr)
 {
   if (state != Executing) { update_state(Executing); }
-  int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
-  int nrp = current * PROGRESS_GRANULARITY / maxpr;
+  const int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
+  const int nrp = current * PROGRESS_GRANULARITY / maxpr;
   if (crp != nrp || maxpr != progress_max_)
   {
     progress_max_ = maxpr;
