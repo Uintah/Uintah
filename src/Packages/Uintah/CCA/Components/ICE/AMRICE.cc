@@ -872,10 +872,42 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
   
   //__________________________________
-  // schedule refluxing
+  // schedule refluxing and bulletproofing
+  // the bulletproofing tasks have no computes or requires
   if(d_doRefluxing){
-    scheduleReflux_computeCorrectionFluxes(coarseLevel, sched);
-    scheduleReflux_applyCorrection(coarseLevel, sched);
+    Task* t; 
+    //__________________________________
+    //  initialize the bullet proofing flags
+    t = scinew Task("AMRICE::reflux_BP_zero_CFI_cells",this,
+                    &AMRICE::reflux_BP_zero_CFI_cells);
+    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());                     
+
+                          
+    scheduleReflux_computeCorrectionFluxes(coarseLevel, sched); // compute correction
+    
+    //__________________________________
+    // check the bullet proofing flags    
+    string desc = "AMRICE:refluxing_computeCorrectionFluxes";
+    t = scinew Task("AMRICE::reflux_BP_check_CFI_cells",this,
+                    &AMRICE::reflux_BP_check_CFI_cells, desc);
+    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
+    
+    
+        
+    //__________________________________
+    //  initialize the bullet proofing flags
+    t = scinew Task("AMRICE::reflux_BP_zero_CFI_cells",this, 
+                    &AMRICE::reflux_BP_zero_CFI_cells);
+    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
+    
+    scheduleReflux_applyCorrection(coarseLevel, sched);     // apply correction
+    
+    //__________________________________
+    // check the bullet proofing flags    
+    string desc2 = "AMRICE:refluxing_computeCorrectionFluxes";
+    t = scinew Task("AMRICE::reflux_BP_check_CFI_cells",this,
+                    &AMRICE::reflux_BP_check_CFI_cells, desc2);
+    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
   }
 }
 
@@ -1088,13 +1120,14 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
              << " Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
-  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
+  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off             
   
+  //__________________________________
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
-    cout_doing <<"  patch " << coarsePatch->getID()<< endl;
-
+    cout_doing <<"  coarsePatches " << *coarsePatches << endl;
+    
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
       constCCVariable<double> cv, rho_CC;
@@ -1106,23 +1139,34 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
       
+      
+      
       for(int i=0; i < finePatches.size();i++){  
-        const Patch* finePatch = finePatches[i];       
+        const Patch* finePatch = finePatches[i]; 
+        
         //__________________________________
         //   compute the correction
+        // one_zero:  used to increment the CFI counter.
         if(finePatch->hasCoarseFineInterfaceFace() ){
- 
-          refluxOperator_computeCorrectionFluxes<double>(rho_CC,  cv, "mass",   indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+          cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
 
+          int one_zero = 1;
+          refluxOperator_computeCorrectionFluxes<double>(rho_CC,  cv, "mass",   indx, 
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
+          
+          one_zero = 0;
           refluxOperator_computeCorrectionFluxes<double>( rho_CC, cv, "sp_vol", indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
 
           refluxOperator_computeCorrectionFluxes<Vector>( rho_CC, cv, "mom",    indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
 
           refluxOperator_computeCorrectionFluxes<double>( rho_CC, cv, "int_eng", indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
           //__________________________________
           //    Model Variables
           if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
@@ -1134,10 +1178,11 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
               if(r_var->matls->contains(indx)){
                 string var_name = r_var->var_CC->getName();
                 refluxOperator_computeCorrectionFluxes<double>(rho_CC, cv, var_name, indx, 
-                              coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                              coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                              one_zero);
               }
             }
-          }
+          }  // model
         }
       }  // finePatch loop 
 
@@ -1150,8 +1195,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
         // need to add something here
       }
     }  // matl loop
-  }  // course patch loop
-  
+  }  // coarse patch loop 
   cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
 }
 
@@ -1171,18 +1215,13 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
 
   // find the intersection of the fine patch face iterator and underlying coarse patch
-  int p_dir = finePatch->faceAxes(patchFace)[0];        // normal face direction, x, y, z
-  IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
+  IntVector dir = finePatch->faceAxes(patchFace);        // face axes
+  int p_dir = dir[0];                                    // normal direction 
+  IntVector f_lo_face = f_iter.begin();                  // fineLevel face indices   
   IntVector f_hi_face = f_iter.end();
 
-  f_lo_face = fineLevel->mapCellToCoarser(f_lo_face);     
-  f_hi_face = fineLevel->mapCellToCoarser(f_hi_face);
-
-  IntVector c_lo_patch = coarsePatch->getLowIndex(); 
-  IntVector c_hi_patch = coarsePatch->getHighIndex();
-
-  IntVector l = Max(f_lo_face, c_lo_patch);             // intersection
-  IntVector h = Min(f_hi_face, c_hi_patch);
+  IntVector l = fineLevel->mapCellToCoarser(f_lo_face);     
+  IntVector h = fineLevel->mapCellToCoarser(f_hi_face);
 
   //__________________________________
   // Offset for the coarse level iterator
@@ -1218,53 +1257,81 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
     h += offset;
   }
 
-  l = Max(l, coarsePatch->getLowIndex());
-  h = Min(h, coarsePatch->getHighIndex());
+  IntVector coarse_Lo = coarsePatch->getLowIndex(); 
+  IntVector coarse_Hi = coarsePatch->getHighIndex();
+  int y = dir[1];  // tangential directions
+  int z = dir[2];  
   
+/*`==========TESTING==========*/
+#if 0
+  if(coarsePatch->getID() == 564){
+    cout << "\nrefluxCoarseLevelIterator " << name
+         << "\n before      " << l << " " << h
+         << "\n finePatch   " << *finePatch
+         << "\n coarsePatch " << *coarsePatch
+         << "\n coarseLevel " << coarsePatch->getLevel()->getIndex()
+         << "\n coarse_Lo   " << coarse_Lo << " coarse_Hi " << coarse_Hi << endl;
+  }
+#endif
+/*===========TESTING==========`*/  
+  
+  l[y] = Max(l[y], coarse_Lo[y]);  // intersection 
+  l[z] = Max(l[z], coarse_Lo[z]);  // only the transerse directions 
+  h[y] = Min(h[y], coarse_Hi[y]);
+  h[z] = Min(h[z], coarse_Hi[z]); 
+  
+  IntVector one(1,1,1);             // subtract of 1 from the transvers directions of (h) 
+  IntVector h_minusOne = h;         // use this to decide if a coarse patch contains (h-1) 
+  h_minusOne[y] -=one[y];
+  h_minusOne[z] -=one[z];
+      
   iter=CellIterator(l,h);
+  
+  // Does this iterator exceed the boundaries of the underlying coarse patch
   isRight_CP_FP_pair = false;
-  if ( coarsePatch->containsCell(l + coarse_FC_offset) ){
+  if ( coarsePatch->containsCell(l) && 
+       coarsePatch->containsCell(h_minusOne) &&
+       coarsePatch->containsCell(l + coarse_FC_offset) && 
+       coarsePatch->containsCell(h_minusOne + coarse_FC_offset) && 
+       l[y] != h[y] && l[z] != h[z] ){
     isRight_CP_FP_pair = true;
   }
-  
-  
+ /*`==========TESTING==========*/
 #if 0
-  cout << "refluxCoarseLevelIterator: face "<< name
-       << " unmodified Iterator " << f_iter.begin() << " " << f_iter.end()
-       << " finePatch " << finePatch->getID()
-       << " coarsePatch " << coarsePatch->getID()
-       << " modified Iterator at " << iter.begin() << " of " << iter.end() 
-       << " coarse_FC_offset " << coarse_FC_offset 
-       << " does this coarse patch own the face centered variable " 
-       << isRight_CP_FP_pair << endl;
-#endif  
+  if(coarsePatch->getID() == 564){
+    cout << " after " << l << " " << h 
+         << " coarse_FC_offset " << coarse_FC_offset
+         << " isRight_CP_FP_pair " << isRight_CP_FP_pair 
+         << "\ncoarsePatch->containsCell(l)                             " << coarsePatch->containsCell(l)
+         << "\ncoarsePatch->containsCell(h_minusOne)                    " << coarsePatch->containsCell(h_minusOne)
+         << "\ncoarsePatch->containsCell(l + coarse_FC_offset)          "<< coarsePatch->containsCell(l + coarse_FC_offset)
+         << "\ncoarsePatch->containsCell(h_minusOne + coarse_FC_offset) " << coarsePatch->containsCell(h_minusOne + coarse_FC_offset)
+         << " \nl[y] != h[y] && l[z] != h[z]                            " << (l[y] != h[y] && l[z] != h[z])<< endl;
+  }
+#endif
+/*===========TESTING==========`*/  
+
+  
   //__________________________________
   //bulletproofing
-  if(l.x() == h.x() || l.y() == h.y() || l.z() == h.z() ) {
-    ostringstream warn;
-    warn << "AMRICE:refluxCoarseLevelIteror:The modified iterator for adding the refluxing correction, \n l = h "
-         << l << " " << h
-         << "\n level " << fineLevel->getIndex()
-         << "\n patch " << finePatch->getGridIndex()
-         << "\n patch face " << name 
-         << "\n offset " << offset << endl;
-    finePatch->printPatchBCs(warn); 
-    throw InternalError(warn.str(), __FILE__, __LINE__ ); 
-  }   
+  if (isRight_CP_FP_pair ){
     IntVector diff = Abs(l - h);
-    if(diff[p_dir] > 1 ) {
-    ostringstream warn;
-    warn << "AMRICE:refluxCoarseLevelIteror:The modified iterator:l - h > 1"
-         << l[p_dir] << " " << h[p_dir] 
-         << "\n level " << fineLevel->getIndex()
-         << "\n patch " << finePatch->getGridIndex()
-         << "\n patch face " << name
-         << "\n offset " << offset << endl;
-    finePatch->printPatchBCs(warn);     
-    throw InternalError(warn.str(), __FILE__, __LINE__ );
+    if( ( l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z() ) || diff[p_dir] > 1) {
+      ostringstream warn;
+      warn << "AMRICE:refluxCoarseLevelIterator : "<< l << " " << h << " "  << name
+           << "\n  Error:Either l >= h OR l - h > 1"
+           << "\n finelevel   " << fineLevel->getIndex()
+           << "\n finePatch   " << *finePatch
+           << "\n CoarsePatch " << *coarsePatch\
+           << "\n coarseLo    " << coarse_Lo << " coarseHi " << coarse_Hi
+           << "\n offset      " << offset
+           << " unmodified Iterator " << f_iter.begin() << " " << f_iter.end();
+      finePatch->printPatchBCs(warn);
+
+      throw InternalError(warn.str(), __FILE__, __LINE__ ); 
+    } 
   }
 }
-
 
 /*___________________________________________________________________
  Function~  AMRICE::scheduleReflux_applyCorrection--  
@@ -1281,7 +1348,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
                           this, &AMRICE::reflux_applyCorrectionFluxes);
   
   Ghost::GhostType gn = Ghost::None;
-  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType gac = Ghost::AroundCells;
   
     
   //__________________________________
@@ -1372,23 +1439,28 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
-//      cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
-
+        //cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
         //__________________________________
         // Apply the correction
+        // one_zero:  used to increment the CFI counter.
         if(finePatch->hasCoarseFineInterfaceFace() ){
-
+          int one_zero = 1;
           refluxOperator_applyCorrectionFluxes<double>(rho_CC,    "mass",  indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
 
+          one_zero = 0;
           refluxOperator_applyCorrectionFluxes<double>(sp_vol_CC, "sp_vol",  indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
 
           refluxOperator_applyCorrectionFluxes<Vector>(vel_CC, "mom",     indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
 
           refluxOperator_applyCorrectionFluxes<double>(temp,  "int_eng", indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
           //__________________________________
           //    Model Variables
           if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
@@ -1403,7 +1475,8 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
                 new_dw->getModifiable(q_CC,  r_var->var_CC, indx, coarsePatch);
 
                 refluxOperator_applyCorrectionFluxes<double>(q_CC, var_name, indx, 
-                              coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                              coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                              one_zero);
 
                 if(switchDebug_AMR_refine){
                   string name = r_var->var_CC->getName();
@@ -1420,15 +1493,107 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       if(switchDebug_AMR_reflux){ 
         ostringstream desc;     
         desc << "Reflux_applyCorrection_Mat_" << indx << "_patch_"<< coarsePatch->getID();
-        printData(indx, coarsePatch,   1, desc.str(), "rho_CC",   rho_CC);
-        printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",sp_vol_CC);
-        printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",  temp);
-        printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,vel_CC);
+        printData(indx, coarsePatch,   0, desc.str(), "rho_CC",   rho_CC);
+        printData(indx, coarsePatch,   0, desc.str(), "sp_vol_CC",sp_vol_CC);
+        printData(indx, coarsePatch,   0, desc.str(), "Temp_CC",  temp);
+        printVector(indx, coarsePatch, 0, desc.str(), "vel_CC", 0,vel_CC);
       }
     }  // matl loop
-  }  // course patch loop 
+  }  // course patch loop
+  
   cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
 }
+
+/*_____________________________________________________________________
+ Function~  AMRICE::reflux_BP_zero_CFI_cells--(bulletproofing)
+ Purpose~   Initialze coarse fine interface "marks"
+______________________________________________________________________*/
+void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
+                                      const PatchSubset* finePatches,
+                                      const MaterialSubset*,
+                                       DataWarehouse*,
+                                       DataWarehouse*)
+{
+  const Level* fineLevel = getLevel(finePatches);
+  cout_doing << d_myworld->myrank() 
+             << " Doing reflux_BP_zero_CFI_cells \t\t\t AMRICE L-"
+             <<fineLevel->getIndex()<< " finePatches " << *finePatches << endl;
+             
+  for(int p=0;p<finePatches->size();p++){  
+    const Patch* finePatch = finePatches->get(p);
+    if(finePatch->hasCoarseFineInterfaceFace() ){
+      vector<Patch::FaceType>::const_iterator iter;  
+      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
+           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+        Patch::FaceType patchFace = *iter;
+        finePatch->setFaceMark(patchFace, 0);
+      }
+    }
+  }
+}
+
+/*___________________________________________________________________
+ Function~  AMRICE::reflux_BP_check_CFI_cells--  (bulletproofing)
+ Purpose~   Check if each coarse fine interface cell was "touched"
+            during refluxing 
+_____________________________________________________________________*/
+void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
+                                       const PatchSubset* finePatches,
+                                       const MaterialSubset*,
+                                       DataWarehouse*,
+                                       DataWarehouse*,
+                                       string description)
+{
+  const Level* fineLevel = getLevel(finePatches);
+  cout_doing << d_myworld->myrank() 
+             << " Doing reflux_bulletproofing \t\t\t\t AMRICE L-"
+             <<fineLevel->getIndex()<< " finePatches " << *finePatches << endl;
+  for(int p=0;p<finePatches->size();p++){  
+    const Patch* finePatch = finePatches->get(p);
+        
+        
+    if(finePatch->hasCoarseFineInterfaceFace() ){
+      
+      vector<Patch::FaceType>::const_iterator iter;  
+      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
+           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+        Patch::FaceType patchFace = *iter;
+
+        //__________________________________
+        // count the number of cells on the CFI
+        int n_CFI_cells = 0;
+        for (CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+             !iter.done();iter++){
+          n_CFI_cells +=1;
+        }
+        
+        // divide the number of cells 
+        IntVector rr= finePatch->getLevel()->getRefinementRatio();
+        IntVector dir = finePatch->faceAxes(patchFace);
+        int y = dir[1];
+        int z = dir[2];
+        n_CFI_cells = n_CFI_cells/(rr[y] * rr[z]);
+
+        int n_touched_cells = finePatch->getFaceMark(patchFace);
+        //__________________________________
+        //  If the number of "marked" cells != n_CFI_cells
+        if ( n_touched_cells != n_CFI_cells){
+          ostringstream warn;
+          warn << description
+               << " \n CFI face: "
+               << finePatch->getFaceName(patchFace)
+               << " cells were 'touched' "<< n_touched_cells << " times"
+               << " it should have been 'touched' " << n_CFI_cells << " times "
+               << "\n patch " << *finePatch 
+               << "\n finePatchLevel " << finePatch->getLevel()->getIndex()<< endl;
+          throw InternalError(warn.str(), __FILE__, __LINE__ );
+        }
+      }  // face iter
+    }  // has CFI
+  }  // finePatches
+}
+
+
 
 /*_____________________________________________________________________
  Function~  AMRICE::scheduleInitialErrorEstimate--
