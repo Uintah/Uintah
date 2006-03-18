@@ -216,7 +216,7 @@ public:
       {
         double temp;
         count_++;
-        if  ( count_%100 == 0 )
+        if  ( count_%50 == 0 )
         {
           if( count_ > anticipated_iterations_ )
           {
