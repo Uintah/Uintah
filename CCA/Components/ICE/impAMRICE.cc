@@ -712,7 +712,8 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
     new_dw->allocateTemporary(one, coarsePatch);
     one.initialize(1.0);
     constCCVariable<double> notUsed = one;
-
+    int one_zero = 1;
+    
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
@@ -720,12 +721,14 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       //__________________________________
       //   compute the correction
+      // one_zero:  used to increment the CFI counter.
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];       
 
         if(finePatch->hasCoarseFineInterfaceFace() ){
           refluxOperator_computeCorrectionFluxes<double>( notUsed, notUsed, "vol_frac", indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
         }
       }
     }  // matl loop
@@ -757,7 +760,8 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     sumRefluxCorrection.initialize(0.0);
 
     //__________________________________
-    // Sum the reflux correction over all materials  
+    // Sum the reflux correction over all materials 
+    // one_zero:  used to increment the CFI counter. 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
@@ -769,9 +773,11 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
         
         if(finePatch->hasCoarseFineInterfaceFace() ){
 
+          int one_zero = 1;
           refluxOperator_applyCorrectionFluxes<double>(
                         sumRefluxCorrection, "vol_frac",  indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
           // Note in the equations the rhs is multiplied by vol, which is automatically canceled
           // This cancelation is mystically handled inside of the the applyCorrectionFluxes
           // operator.  

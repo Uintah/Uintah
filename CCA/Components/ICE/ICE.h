@@ -565,7 +565,8 @@ namespace Uintah {
                               const Patch* finePatch,
                               const Level* coarseLevel,
                               const Level* fineLevel,
-                              DataWarehouse* new_dw);
+                              DataWarehouse* new_dw,
+                              const int one_zero);
                               
     void refluxCoarseLevelIterator(Patch::FaceType patchFace,
                                    const Patch* coarsePatch,
@@ -583,7 +584,8 @@ namespace Uintah {
                               const Patch* finePatch,
                               const Level* coarseLevel,
                               const Level* fineLevel,
-                              DataWarehouse* new_dw);
+                              DataWarehouse* new_dw,
+                              const int one_zero);
 //__________________________________ 
 //  I M P L I C I T   I C E                                                                            
       void setupMatrix(const ProcessorGroup*,
