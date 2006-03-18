@@ -168,7 +168,7 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
     Task* t = scinew Task("JWLpp::computeModelSources", this, 
                           &JWLpp::computeModelSources, mi);
     cout_doing << "JWLpp::scheduleComputeModelSources "<<  endl;  
-    t->requires( Task::OldDW, mi->delT_Label);
+//    t->requires( Task::OldDW, mi->delT_Label);
     Ghost::GhostType  gn  = Ghost::None;
     const MaterialSubset* react_matl = matl0->thisMaterial();
     const MaterialSubset* prod_matl  = matl1->thisMaterial();
@@ -280,7 +280,8 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
                                 const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  const Level* level = getLevel(patches);
+  old_dw->get(delT, mi->delT_Label, level);
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
