@@ -95,7 +95,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps)
   d_is_rigid=false;
   ps->get("is_rigid", d_is_rigid);
    
-  d_includeFlowWork = true;
+  d_includeFlowWork = false;
   ps->get("includeFlowWork",d_includeFlowWork);
 
   // Step 3 -- Loop through all of the pieces in this geometry object
