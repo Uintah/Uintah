@@ -160,17 +160,6 @@ public:
 			    DataWarehouse* old_dw,
 			    DataWarehouse* new_dw);
 
-  void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
-
-  void solveEquationsMotion(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
-
-
-
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
   void actuallyInitialize(const ProcessorGroup*,
