@@ -1329,7 +1329,6 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   } 
 
   t->computes(lb->mom_source_CCLabel);
-  t->computes(lb->press_force_CCLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -2319,7 +2318,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
     
     //__________________________________ 
-    old_dw->get(press,                   lb->press_CCLabel,       0,patch,gn, 0);  
+    old_dw->get(press,                   lb->press_CCLabel,       0,patch,gn,0);
     new_dw->allocateAndPut(press_new,    lb->press_equil_CCLabel, 0,patch);
     new_dw->allocateAndPut(sumKappa,     lb->sumKappaLabel,       0,patch);  
     new_dw->allocateAndPut(sum_imp_delP, lb->sum_imp_delPLabel,   0,patch);
@@ -2336,11 +2335,11 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->get(gamma[m],     lb->gammaLabel,        indx,patch, gn,0);
             
       new_dw->allocateTemporary(rho_micro[m],  patch);
-      new_dw->allocateAndPut(vol_frac[m],  lb->vol_frac_CCLabel,   indx,patch);    
-      new_dw->allocateAndPut(rho_CC_new[m],lb->rho_CCLabel,        indx,patch);    
-      new_dw->allocateAndPut(sp_vol_new[m],lb->sp_vol_CCLabel,     indx,patch);    
-      new_dw->allocateAndPut(f_theta[m],   lb->f_theta_CCLabel,    indx,patch);    
-      new_dw->allocateAndPut(kappa[m],     lb->compressibilityLabel,indx,patch); 
+      new_dw->allocateAndPut(vol_frac[m],  lb->vol_frac_CCLabel,   indx,patch);
+      new_dw->allocateAndPut(rho_CC_new[m],lb->rho_CCLabel,        indx,patch);
+      new_dw->allocateAndPut(sp_vol_new[m],lb->sp_vol_CCLabel,     indx,patch);
+      new_dw->allocateAndPut(f_theta[m],   lb->f_theta_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(kappa[m],     lb->compressibilityLabel,indx,patch);
       new_dw->allocateAndPut(speedSound_new[m], lb->speedSound_CCLabel,
                                                                    indx,patch);
     }
@@ -2466,19 +2465,20 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       if ( fabs(sum - 1.0) > convergence_crit) {  
         throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
+             "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
       }
        
       if ( press_new[c] < 0.0 ){ 
         throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached press_new < 0", __FILE__, __LINE__);
+             "MaxIteration reached press_new < 0", __FILE__, __LINE__);
       }
 
       for (int m = 0; m < numMatls; m++){
         if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) { 
           cout << "m = " << m << endl;
           throw MaxIteration(c,count,n_passes, L_indx,
-                      "MaxIteration reached rho_micro < 0 || vol_frac < 0", __FILE__, __LINE__);
+               "MaxIteration reached rho_micro < 0 || vol_frac < 0",
+                                                 __FILE__, __LINE__);
         }
       }
 
@@ -3763,10 +3763,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,gac,2);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,gn, 0);
-      CCVariable<Vector>   mom_source, press_force;
+      CCVariable<Vector>   mom_source;
       new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
-      new_dw->allocateAndPut(press_force, lb->press_force_CCLabel, indx, patch);
-      press_force.initialize(Vector(0.,0.,0.));
       mom_source.initialize(Vector(0.,0.,0.));
       
       //__________________________________
@@ -3809,10 +3807,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           constSFCYVariable<double> vol_fracY_FC;
           constSFCZVariable<double> vol_fracZ_FC;
            
-          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch,gac, 2);         
-          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch,gac, 2);         
-          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch,gac, 2); 
-                     
+          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch,gac, 2);
+          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch,gac, 2);
+          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch,gac, 2);
+
           computeTauX(patch, vol_fracX_FC, vel_CC,viscosity,dx, tau_X_FC);
           computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,dx, tau_Y_FC);
           computeTauZ(patch, vol_fracZ_FC, vel_CC,viscosity,dx, tau_Z_FC);
@@ -3843,8 +3841,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c]; 
         
-        press_force[c][0] = -pressure_source * areaX; 
-               
         viscous_source=(tau_X_FC[right].x() - tau_X_FC[left].x())  * areaX +
                        (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
                        (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;
@@ -3857,9 +3853,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    Y - M O M E N T U M
         pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c]; 
 
-         
-        press_force[c][1] = -pressure_source * areaY;
-        
         viscous_source=(tau_X_FC[right].y() - tau_X_FC[left].y())  * areaX +
                        (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())* areaY +
                        (tau_Z_FC[front].y() - tau_Z_FC[back].y())  * areaZ;
@@ -3872,9 +3865,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    Z - M O M E N T U M
         pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c]; 
 
-        
-        press_force[c][2] = -pressure_source * areaZ;
-        
         viscous_source=(tau_X_FC[right].z() - tau_X_FC[left].z())  * areaX +
                        (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())* areaY +
                        (tau_Z_FC[front].z() - tau_Z_FC[back].z())  * areaZ;
@@ -3884,14 +3874,11 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                            mass * gravity.z() * include_term) * delT );
       }
 
-      setBC(press_force, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
-
       //---- P R I N T   D A T A ------ 
       if (switchDebug_Source_Sink) {
         ostringstream desc;
         desc << "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printVector(indx, patch, 1, desc.str(), "mom_source",  0, mom_source);
-      //printVector(indx, patch, 1, desc.str(), "press_force", 0, press_force);
       }
     }  // matls loop
   }  //patches
@@ -4002,8 +3989,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       if(includeFlowWork){
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          A = vol * vol_frac[c] * kappa[c] * press_CC[c];
-//          A = TMV_CC[c] * vol_frac[c] * kappa[c] * press_CC[c];
+//          A = vol * vol_frac[c] * kappa[c] * press_CC[c];
+          A = TMV_CC[c] * vol_frac[c] * kappa[c] * press_CC[c];
           int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
         }
       }
