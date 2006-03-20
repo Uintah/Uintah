@@ -39,8 +39,6 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
 
     constructor {config} {
 	set name ColorMapWriter
-
-        initGlobal $this-confirm [envBool SCIRUN_CONFIRM_OVERWRITE]
     }
 
     method overwrite {} {

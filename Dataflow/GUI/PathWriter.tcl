@@ -39,8 +39,6 @@ itcl_class SCIRun_DataIO_PathWriter {
 
     constructor {config} {
 	set name PathWriter
-
-        initGlobal $this-confirm [envBool SCIRUN_CONFIRM_OVERWRITE]
     }
 
     method overwrite {} {

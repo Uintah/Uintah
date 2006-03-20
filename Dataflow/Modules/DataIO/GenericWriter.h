@@ -79,9 +79,9 @@ template <class HType>
 GenericWriter<HType>::GenericWriter(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Sink, cat, pack),
-    filename_(ctx->subVar("filename")),
-    filetype_(ctx->subVar("filetype")),
-    confirm_(ctx->subVar("confirm")),
+    filename_(ctx->subVar("filename"), ""),
+    filetype_(ctx->subVar("filetype"), "Binary"),
+    confirm_(ctx->subVar("confirm"), sci_getenv_p("SCIRUN_CONFIRM_OVERWRITE")),
     exporting_(false)
 {
 }
