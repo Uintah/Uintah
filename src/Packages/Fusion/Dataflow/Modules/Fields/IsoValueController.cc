@@ -39,21 +39,13 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Packages/Fusion/Dataflow/Modules/Fields/IsoValueController.h>
 #include <Dataflow/Ports/FieldPort.h>
-
-#include <Core/Datatypes/FieldInterface.h>
-
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/CurveMesh.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
-#include <Packages/Fusion/Dataflow/Modules/Fields/IsoValueController.h>
 
 namespace Fusion {
 
@@ -80,14 +72,6 @@ IsoValueController::~IsoValueController(){
 }
 
 void IsoValueController::execute() {
-
-  // Get a handle to the input geometery port.
-  GeometryIPort *igeometry_port = (GeometryIPort *)get_iport("Axis Geometry");
-  if (!igeometry_port) {
-    error("Unable to initialize oport 'Axis Geometry'.");
-    return;
-  }
-
 
   // Get the current original field.
   if( !getIHandle( "Input Original Field", fHandle_orig_, true ) ) return;
@@ -194,47 +178,14 @@ void IsoValueController::execute() {
 	--row;
       }
 
-      if( i<isovalues.size()-1 ) {
-	// Get a handle to the output original field port.
-	FieldOPort *ofpo = (FieldOPort *)get_oport("Output Original Field");
-	if (!ofpo) {
-	  error("Unable to initialize iport 'Output Original Field'.");
-	  return;
-	}
+      bool intermediate = ( i<isovalues.size()-1 );
 
-	// Get a handle to the output transformed field port.
-	FieldOPort *ofpt = (FieldOPort *)get_oport("Output Transformed Field");
-	if (!ofpt) {
-	  error("Unable to initialize iport 'Output Transformed Field'.");
-	  return;
-	}
+      sendOHandle( "Output Original Field",    fHandle_orig_,    true, intermediate );
+      sendOHandle( "Output Transformed Field", fHandle_tran_,    true, intermediate );
+      sendOHandle( "Isovalue",                 mHandleIsoValue_, true, intermediate );
+      sendOHandle( "Index",                    mHandleIndex_,    true, intermediate );
 
-	// Get a handle to the output isovalue port.
-	MatrixOPort *omatrixIsovalue_port = (MatrixOPort *)get_oport("Isovalue");
-	if (!omatrixIsovalue_port) {
-	  error("Unable to initialize oport 'Isovalue'.");
-	  return;
-	}
-
-	// Get a handle to the output index port.
-	MatrixOPort *omatrixIndex_port = (MatrixOPort *)get_oport("Index");
-	if (!omatrixIndex_port) {
-	  error("Unable to initialize oport 'Index'.");
-	  return;
-	}
-
-	ofpo->send_intermediate(fHandle_orig_);
-	ofpt->send_intermediate(fHandle_tran_);
-	omatrixIsovalue_port->send_intermediate(mHandleIsoValue_);
-	omatrixIndex_port->send_intermediate(mHandleIndex_);
-
-      } else {
-	sendOHandle( "Output Original Field",    fHandle_orig_,    true );
-	sendOHandle( "Output Transformed Field", fHandle_tran_,    true );
-	sendOHandle( "Isovalue",                 mHandleIsoValue_, true );
-	sendOHandle( "Index",                    mHandleIndex_,    true );
-	str << "  Done";
-      }
+      str << "  Done";
 
       remark( str.str());
 
@@ -256,13 +207,15 @@ void IsoValueController::execute() {
       } else
 	fHandles_N_1D.push_back( fHandleN_1D );
 
+
+      // Get the transformed geometry.
 //    GeomHandle geometryin;
-                
-//    if (!(igeometry_port->getObj(geometryin) && geometryin.get_rep())) {
-// 	error( "No geometry handle or representation." );
-// 	return;
+
+//    if( !getIHandle( "Axis Geometry", geometryin, true ) ) {
+// 	error_ = true;
+//      return;
 //    } else
-// 	gHandles.push_back( geometryin );
+//  	gHandles.push_back( geometryin );
     }
   }
 
@@ -303,21 +256,7 @@ void IsoValueController::execute() {
   sendOHandle( "(N)D Fields",   fHandle_ND_,   true );
   sendOHandle( "(N-1)D Fields", fHandle_N_1D_, true );
 
-  if( gHandles.size() ) {
-    GeometryOPort *ogeometry_port =
-      (GeometryOPort *)get_oport("Axis Geometry");
-
-    if (!ogeometry_port) {
-      error("Unable to initialize oport 'Axis Geometry'.");
-      return;
-    }    
-    
-    for (unsigned int i=0; i<gHandles.size(); i++)
-      ogeometry_port->addObj(gHandles[i],fldname);
-    
-    if (gHandles.size())
-      ogeometry_port->flushViews();
-  }
+  sendOHandle( "Axis Geometry", gHandles, fldname );
 }
 
 void

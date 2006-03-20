@@ -46,7 +46,8 @@ SRCS     += $(SRCDIR)/ComponentNode.cc \
 	$(SRCDIR)/SkeletonFiles.cc \
 	$(SRCDIR)/Scheduler.cc
 
-PSELIBS := Dataflow/Comm Core/XMLUtil Core/Exceptions Core/Thread \
+PSELIBS := Dataflow/Comm Dataflow/Ports \
+	Core/XMLUtil Core/Exceptions Core/Thread \
 	Core/Containers Core/GuiInterface Core/Util Core/GeomInterface \
 	Core/XMLUtil
 LIBS := $(TCL_LIBRARY) $(XML2_LIBRARY)
