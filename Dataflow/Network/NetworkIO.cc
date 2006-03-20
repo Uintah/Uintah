@@ -1195,13 +1195,28 @@ NetworkIO::set_port_caching(const string &id, const string &port,
 			    const string &val)
 {
   xmlNode* mnode = get_module_node(id);
-  
+  xmlNode* pcnode = 0;
   if (! mnode) { 
     cerr << "ERROR: could not find module node with id: " << id << endl;
     return;
   }
-  xmlNode *tmp = xmlNewChild(mnode, 0, BAD_CAST "port_caching", 0);
-  tmp = xmlNewChild(tmp, 0, BAD_CAST "port", 0);
+
+  xmlNode* node = mnode->children;
+  for (; node != 0; node = node->next) {
+    // skip all but the network node.
+    if (node->type == XML_ELEMENT_NODE && 
+	string(to_char_ptr(node->name)) == string("port_caching")) 
+    {
+      pcnode = node;
+    }
+  }
+
+  if (! pcnode) { 
+    pcnode = xmlNewChild(mnode, 0, BAD_CAST "port_caching", 0);
+  }
+
+  xmlNode *tmp;
+  tmp = xmlNewChild(pcnode, 0, BAD_CAST "port", 0);
   xmlNewProp(tmp, BAD_CAST "id", BAD_CAST port.c_str());
   xmlNewProp(tmp, BAD_CAST "val", BAD_CAST val.c_str());
 }
