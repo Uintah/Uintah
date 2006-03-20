@@ -148,21 +148,21 @@ public:
 
   CurveMesh() :
     synchronized_(ALL_ELEMENTS_E),
-    sync_lock_("CurveMesh sync lock")
+    synchronize_lock_("CurveMesh sync lock")
   {}
   CurveMesh(const CurveMesh &copy) :
     nodes_(copy.nodes_),
     edges_(copy.edges_),
     basis_(copy.basis_),
     synchronized_(copy.synchronized_),
-    sync_lock_("CurveMesh sync lock")
+    synchronize_lock_("CurveMesh sync lock")
   {
     CurveMesh &lcopy = (CurveMesh &)copy;
 
-    lcopy.sync_lock_.lock();
+    lcopy.synchronize_lock_.lock();
     node_neighbors_ = copy.node_neighbors_;
     synchronized_ |= copy.synchronized_ & NODE_NEIGHBORS_E;
-    lcopy.sync_lock_.unlock();
+    lcopy.synchronize_lock_.unlock();
   }
   virtual CurveMesh *clone() { return new CurveMesh(*this); }
   virtual ~CurveMesh() {}
@@ -387,7 +387,7 @@ private:
   Basis                   basis_;
 
   unsigned int            synchronized_;
-  Mutex                   sync_lock_;
+  Mutex                   synchronize_lock_;
 
   typedef vector<vector<typename Edge::index_type> > NodeNeighborMap;
   NodeNeighborMap         node_neighbors_;
@@ -714,8 +714,12 @@ template <class Basis>
 bool
 CurveMesh<Basis>::synchronize(unsigned int tosync)
 {
+  synchronize_lock_.lock();
+
   if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
     compute_node_neighbors();
+
+  synchronize_lock_.unlock();
   return true;
 }
 
@@ -724,11 +728,6 @@ template <class Basis>
 void
 CurveMesh<Basis>::compute_node_neighbors()
 {
-  sync_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    sync_lock_.unlock();
-    return;
-  }
   node_neighbors_.clear();
   node_neighbors_.resize(nodes_.size());
   unsigned int i, num_elems = edges_.size();
@@ -738,7 +737,6 @@ CurveMesh<Basis>::compute_node_neighbors()
     node_neighbors_[edges_[i].second].push_back(i);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  sync_lock_.unlock();
 }
 
 
