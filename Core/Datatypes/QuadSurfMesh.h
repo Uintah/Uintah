@@ -437,12 +437,8 @@ private:
   NodeNeighborMap               node_neighbors_;
   vector<int>                   edge_neighbors_;
   vector<Vector>                normals_; //! normalized per node
-  Mutex                         point_lock_;
-  Mutex                         edge_lock_;
-  Mutex                         face_lock_;
-  Mutex                         node_neighbor_lock_;
-  Mutex                         edge_neighbor_lock_;
-  Mutex                         normal_lock_;
+
+  Mutex                         synchronize_lock_;
   unsigned int                  synchronized_;
   Basis                         basis_;
 
@@ -528,12 +524,7 @@ QuadSurfMesh<Basis>::QuadSurfMesh()
     faces_(0),
     edge_neighbors_(0),
     normals_(0),
-    point_lock_("QuadSurfMesh point_lock_"),
-    edge_lock_("QuadSurfMesh edge_lock_"),
-    face_lock_("QuadSurfMesh face_lock_"),
-    node_neighbor_lock_("QuadSurfMesh node_neighbor_lock_"),
-    edge_neighbor_lock_("QuadSurfMesh edge_neighbor_lock_"),
-    normal_lock_("QuadSurfMesh normal_lock_"),
+    synchronize_lock_("QuadSurfMesh synchronize_lock_"),
     synchronized_(NODES_E | FACES_E | CELLS_E)
 {
 }
@@ -546,43 +537,30 @@ QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
     faces_(0),
     edge_neighbors_(0),
     normals_(0),
-    point_lock_("QuadSurfMesh point_lock_"),
-    edge_lock_("QuadSurfMesh edge_lock_"),
-    face_lock_("QuadSurfMesh face_lock_"),
-    node_neighbor_lock_("QuadSurfMesh node_neighbor_lock_"),
-    edge_neighbor_lock_("QuadSurfMesh edge_neighbor_lock_"),
-    normal_lock_("QuadSurfMesh normal_lock_"),
+    synchronize_lock_("QuadSurfMesh synchronize_lock_"),
     synchronized_(NODES_E | FACES_E | CELLS_E)
 {
   QuadSurfMesh &lcopy = (QuadSurfMesh &)copy;
+  
+  lcopy.synchronize_lock_.lock();
 
-  lcopy.point_lock_.lock();
   points_ = copy.points_;
-  lcopy.point_lock_.unlock();
 
-  lcopy.edge_lock_.lock();
   edges_ = copy.edges_;
   synchronized_ |= copy.synchronized_ & EDGES_E;
-  lcopy.edge_lock_.unlock();
 
-  lcopy.face_lock_.lock();
   faces_ = copy.faces_;
-  lcopy.face_lock_.unlock();
 
-  lcopy.node_neighbor_lock_.lock();
   node_neighbors_ = copy.node_neighbors_;
   synchronized_ |= copy.synchronized_ & NODE_NEIGHBORS_E;
-  lcopy.node_neighbor_lock_.unlock();
 
-  lcopy.edge_neighbor_lock_.lock();
   edge_neighbors_ = copy.edge_neighbors_;
   synchronized_ |= copy.synchronized_ & EDGE_NEIGHBORS_E;
-  lcopy.edge_neighbor_lock_.unlock();
 
-  lcopy.normal_lock_.lock();
   normals_ = copy.normals_;
   synchronized_ |= copy.synchronized_ & NORMALS_E;
-  lcopy.normal_lock_.unlock();
+
+  lcopy.synchronize_lock_.unlock();
 }
 
 
@@ -611,7 +589,7 @@ template <class Basis>
 void
 QuadSurfMesh<Basis>::transform(const Transform &t)
 {
-  point_lock_.lock();
+  synchronize_lock_.lock();
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
@@ -619,7 +597,7 @@ QuadSurfMesh<Basis>::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-  point_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1034,6 +1012,8 @@ template <class Basis>
 bool
 QuadSurfMesh<Basis>::synchronize(unsigned int tosync)
 {
+  synchronize_lock_.lock();
+
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E))
     compute_edges();
   if (tosync & NORMALS_E && !(synchronized_ & NORMALS_E))
@@ -1042,6 +1022,8 @@ QuadSurfMesh<Basis>::synchronize(unsigned int tosync)
     compute_node_neighbors();
   if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edge_neighbors();
+
+  synchronize_lock_.unlock();
   return true;
 }
 
@@ -1050,11 +1032,6 @@ template <class Basis>
 void
 QuadSurfMesh<Basis>::compute_normals()
 {
-  normal_lock_.lock();
-  if (synchronized_ & NORMALS_E) {
-    normal_lock_.unlock();
-    return;
-  }
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
@@ -1107,7 +1084,6 @@ QuadSurfMesh<Basis>::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
-  normal_lock_.unlock();
 }
 
 
@@ -1122,12 +1098,10 @@ QuadSurfMesh<Basis>::add_find_point(const Point &p, double err)
   }
   else
   {
-    point_lock_.lock();
-    normal_lock_.lock();
+    synchronize_lock_.lock();
     points_.push_back(p);
     if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
-    point_lock_.unlock();
-    normal_lock_.unlock();
+    synchronize_lock_.unlock();
     return static_cast<typename Node::index_type>((int)points_.size() - 1);
   }
 }
@@ -1140,14 +1114,14 @@ QuadSurfMesh<Basis>::add_quad(typename Node::index_type a,
                               typename Node::index_type c,
                               typename Node::index_type d)
 {
-  face_lock_.lock();
+  synchronize_lock_.lock();
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
   faces_.push_back(d);
-  face_lock_.unlock();
   synchronized_ &= ~NORMALS_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronize_lock_.unlock();
   return static_cast<typename Elem::index_type>(((int)faces_.size() - 1) >> 2);
 }
 
@@ -1157,14 +1131,14 @@ typename QuadSurfMesh<Basis>::Elem::index_type
 QuadSurfMesh<Basis>::add_elem(typename Node::array_type a)
 {
   ASSERTMSG(a.size() == 4, "Tried to add non-quad element.");
-  face_lock_.lock();
+  synchronize_lock_.lock();
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   faces_.push_back(a[3]);
-  face_lock_.unlock();
   synchronized_ &= ~NORMALS_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronize_lock_.unlock();
   return static_cast<typename Elem::index_type>(((int)faces_.size() - 1) >> 2);
 }
 
@@ -1233,12 +1207,6 @@ template <class Basis>
 void
 QuadSurfMesh<Basis>::compute_edges()
 {
-  edge_lock_.lock();
-  if (synchronized_ & EDGES_E) {
-    edge_lock_.unlock();
-    return;
-  }
-
   EdgeMapType edge_map;
 
   for( int i=(int)faces_.size()-1; i >= 0; i--)
@@ -1263,7 +1231,6 @@ QuadSurfMesh<Basis>::compute_edges()
   }
 
   synchronized_ |= EDGES_E;
-  edge_lock_.unlock();
 }
 
 
@@ -1271,11 +1238,6 @@ template <class Basis>
 void
 QuadSurfMesh<Basis>::compute_node_neighbors()
 {
-  node_neighbor_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    node_neighbor_lock_.unlock();
-    return;
-  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   unsigned int i, num_elems = faces_.size();
@@ -1284,7 +1246,6 @@ QuadSurfMesh<Basis>::compute_node_neighbors()
     node_neighbors_[faces_[i]].push_back(i);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  node_neighbor_lock_.unlock();
 }
 
 
@@ -1292,15 +1253,6 @@ template <class Basis>
 void
 QuadSurfMesh<Basis>::compute_edge_neighbors()
 {
-  // TODO: This is probably broken with the new indexed edges.
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on TriSurfMesh first");
-  edge_neighbor_lock_.lock();
-  if (synchronized_ & EDGE_NEIGHBORS_E) {
-    edge_neighbor_lock_.unlock();
-    return;
-  }
-
   EdgeMapType edge_map;
 
   edge_neighbors_.resize(faces_.size());
@@ -1333,7 +1285,6 @@ QuadSurfMesh<Basis>::compute_edge_neighbors()
   }
 
   synchronized_ |= EDGE_NEIGHBORS_E;
-  edge_neighbor_lock_.unlock();
 }
 
 
@@ -1341,12 +1292,10 @@ template <class Basis>
 typename QuadSurfMesh<Basis>::Node::index_type
 QuadSurfMesh<Basis>::add_point(const Point &p)
 {
-  point_lock_.lock();
-  normal_lock_.lock();
+  synchronize_lock_.lock();
   points_.push_back(p);
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
-  point_lock_.unlock();
-  normal_lock_.unlock();
+  synchronize_lock_.unlock();
   return static_cast<typename Node::index_type>((int)points_.size() - 1);
 }
 
