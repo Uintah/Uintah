@@ -150,8 +150,6 @@
       <position x="227" y="155"/>
       <port_caching>
         <port id="1" val="0"/>
-      </port_caching>
-      <port_caching>
         <port id="2" val="0"/>
       </port_caching>
       <var name="main_frame" val="{.uiSCIRun_FieldsCreate_Probe_0}"/>
