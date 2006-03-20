@@ -34,12 +34,10 @@ itcl_class SCIRun_FieldsData_ChangeFieldBasis {
         set name ChangeFieldBasis
 
 	# The width of the first column of the data display.
-	global $this-firstwidth
-	set $this-firstwidth 12
+	setGlobal $this-firstwidth 12
 
 	# Deprecated, use output-basis now
-	global $this-outputdataat
-	set $this-outputdataat "Nodes"
+	setGlobal $this-outputdataat "Nodes"
 	trace variable $this-outputdataat w "$this backcompat-odt"
     }
 
