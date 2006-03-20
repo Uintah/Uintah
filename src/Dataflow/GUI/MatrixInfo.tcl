@@ -34,8 +34,7 @@ itcl_class SCIRun_Math_MatrixInfo {
         set name MatrixInfo
 
 	# The width of the first column of the data display.
-	global $this-firstwidth
-	set $this-firstwidth 12
+	setGlobal $this-firstwidth 12
     }
 
     method set_defaults {} {
