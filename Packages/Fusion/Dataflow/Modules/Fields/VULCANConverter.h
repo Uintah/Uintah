@@ -388,7 +388,7 @@ execute(vector< NrrdDataHandle >& nHandles,
 
 //  int nVal = nHandles[data[0]]->nrrd->axis[1].size;    // Values
 
-  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
+//  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
   NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd->data);
   NTYPE *ptr    = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
@@ -399,7 +399,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   register int i, kj, cc=0;
 
   double w[4];
-  Point p, pts[4];
+  Point p;
 
   for( kj=0; kj<nPhi*nZR; kj++ )
     ndata[kj] = 0;

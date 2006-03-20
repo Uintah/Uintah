@@ -49,6 +49,7 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Network/Network.h>
+#include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
@@ -1077,4 +1078,62 @@ void
 Module::popupUI()
 {
   gui->execute(id+" initialize_ui");
+}
+
+
+// Used to send handles for geometry with error checking.
+bool
+Module::sendOHandle( string port_name,
+		     GeomHandle& handle,
+		     string obj_name )
+{
+  // Don't send on empty, assume cached version is more valid instead.
+  // Dunno if false return value is correct.  We don't check returns
+  // on this one.
+  if (!handle.get_rep()) return false;
+
+  GeometryOPort *dataport;
+
+  // We always require the port to be there.
+  if ( !(dataport = dynamic_cast<GeometryOPort*>(get_oport(port_name))) ) {
+    throw "Incorrect data type sent to output port '" + port_name +
+      "' (dynamic_cast failed).";
+    return false;
+  }
+
+  dataport->delAll();
+  dataport->addObj( handle, obj_name );
+  dataport->flushViews();
+
+  return true;
+}
+
+// Used to send handles for geometry with error checking.
+bool
+Module::sendOHandle( string port_name,
+		     vector<GeomHandle> &handles,
+		     string obj_name )
+{
+  // Don't send on empty, assume cached version is more valid instead.
+  // Dunno if false return value is correct.  We don't check returns
+  // on this one.
+  if (!handles.size()==0) return false;
+
+  GeometryOPort *dataport;
+
+  // We always require the port to be there.
+  if ( !(dataport = dynamic_cast<GeometryOPort*>(get_oport(port_name))) ) {
+    throw "Incorrect data type sent to output port '" + port_name +
+      "' (dynamic_cast failed).";
+    return false;
+  }
+
+  dataport->delAll();
+
+  for (unsigned int i=0; i<handles.size(); i++)
+    dataport->addObj( handles[i], obj_name );
+
+  dataport->flushViews();
+
+  return true;
 }

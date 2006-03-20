@@ -328,9 +328,11 @@ protected:
   bool inputs_changed_;   // True if either the gui vars or data has cahnged.
   bool execute_error_;    // Error during execution not related to checks.
 
+  // Get the handle for a single port.
   template<class DH>
   bool getIHandle( std::string name, DH& handle, bool required = true );
 
+  // Get the handles for dynamic ports.
   template<class DH>
   bool getDynamicIHandle( std::string name, std::vector< DH > &handles,
 			  bool required = true );
@@ -339,7 +341,18 @@ protected:
   // caching of the handle.  Otherwise that will be handled by the
   // port.
   template<class DH>
-  bool sendOHandle( string name, DH& handle, bool cache_in_module = false );
+  bool sendOHandle( string name, DH& handle,
+		    bool cache_in_module = false,
+		    bool send_intermediate = false );
+
+  // Specialization for geometry ports.
+  bool sendOHandle( string port_name,
+		    GeomHandle& handle,
+		    string obj_name );
+
+  bool sendOHandle( string port_name,
+		    vector<GeomHandle>& handle,
+		    string obj_name );
 
 private:
   void remove_iport(int);
@@ -359,14 +372,12 @@ private:
   Thread *helper_thread;
   Network* network;
 
-  bool        show_stats_;
+  bool show_stats_;
 
   GuiString log_string_;
 
   Module(const Module&);
   Module& operator=(const Module&);
-
-
 };
 
 
@@ -487,7 +498,8 @@ Module::getDynamicIHandle( std::string name,
 // Used to send handles with error checking.
 template<class DH>
 bool
-Module::sendOHandle( string name, DH& handle, bool cache )
+Module::sendOHandle( string name, DH& handle,
+		     bool cache, bool send_intermediate )
 {
   // Don't send on empty, assume cached version is more valid instead.
   // Dunno if false return value is correct.  We don't check returns
@@ -504,11 +516,13 @@ Module::sendOHandle( string name, DH& handle, bool cache )
     return false;
   }
 
-  dataport->send_and_dereference( handle, cache );
+  if( send_intermediate )
+    dataport->send_intermediate( handle );
+  else
+    dataport->send_and_dereference( handle, cache );
 
   return true;
 }
-
 
 
 }

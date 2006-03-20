@@ -39,15 +39,13 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-
 #include <Core/Datatypes/FieldInterface.h>
-
-#include <Core/Containers/StringUtil.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
