@@ -1230,7 +1230,6 @@ class FusionViewerApp {
 	global PowerAppSession
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
 	    set saveFile $PowerAppSession
-
 	    load_session_data
 	} else {
 #	    set ignore_callbacks 1
@@ -2321,8 +2320,15 @@ class FusionViewerApp {
 	disableConnectionID $connections(colormap_isosurface_to_showfield)   $disable
 
 #       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_scalarslice_face_to_sync) $disable
-#	disableConnectionID $connections(showfield_scalarslice_edge_to_sync) $disable
+	if { $DEBUG == 1 } {
+	    puts stderr "starting to disable showfield_scalarslice_face_to_sync"
+	}	
+	#	disableConnectionID $connections(showfield_scalarslice_face_to_sync) $disable
+	#	disableConnectionID $connections(showfield_scalarslice_edge_to_sync) $disable
+
+	if { $DEBUG == 1 } {
+	    puts stderr "finished disabling showfield_scalarslice_face_to_sync"
+	}	
 
 	enable_widget $scalarslice_frame0.show
 	enable_widget $scalarslice_frame1.show
@@ -2447,8 +2453,17 @@ class FusionViewerApp {
 	disableConnectionID $connections(choose_to_iso)        $disable
 	disableConnectionID $connections(iso_to_showfield)     $disable
 	disableConnectionID $connections(colormap_iso_to_showfield)     $disable
+
+
 #       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_isosurfaces_to_sync) $disable
+	if { $DEBUG == 1 } {
+	    puts stderr "starting to disable showfield_isosurfaces_to_sync"
+	}	
+
+	disableConnectionID $connections(showfield_isosurfaces_to_sync) $disable
+	if { $DEBUG == 1 } {
+	    puts stderr "finished disabling showfield_isosurfaces_to_sync"
+	}	
 
 	enable_widget $isosurfaces_frame0.show
 	enable_widget $isosurfaces_frame1.show
@@ -2502,8 +2517,14 @@ class FusionViewerApp {
 	disableConnectionID $connections(colormap_gather_to_showfield) $disable
 
 #       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_isocontours_to_sync) $disable
-	
+	if { $DEBUG == 1 } {
+	    puts stderr "starting to disable showfield_isocontours_to_sync"
+	}
+	disableConnectionID $connections(showfield_isocontours_to_sync) $disable
+	if { $DEBUG == 1 } {
+	    puts stderr "finished disabling showfield_isocontours_to_sync"
+	}	
+
 	if { $have_isosurfaces == 1 } {
 	    $mods(ShowField-Isosurface-Contour)-c toggle_display_edges
 	}
@@ -2585,8 +2606,16 @@ class FusionViewerApp {
 	disableConnectionID $connections(rescalecolor_interpolate_to_showfield)    $disable
 
 #       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_streamline_edges_to_sync) $disable
-#	disableConnectionID $connections(sample_to_viewer) $disable
+	if { $DEBUG == 1 } {
+	    puts stderr "starting to disable showfield_streamline_edges_to_sync"
+	}	
+
+	disableConnectionID $connections(showfield_streamline_edges_to_sync) $disable
+	disableConnectionID $connections(sample_to_viewer) $disable
+
+	if { $DEBUG == 1 } {
+	    puts stderr "finsihed disabling showfield_streamline_edges_to_sync"
+	}	
 
 	set "$eviewer-StreamLines rake (4)" $on
 	$eviewer-c redraw
@@ -2669,8 +2698,16 @@ class FusionViewerApp {
 	disableConnectionID $connections(rescalecolor_streamlines_to_showfield)    $disable
 
 #       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_streamline_nodes_to_sync) $disable
+	if { $DEBUG == 1 } {
+	    puts stderr "starting to disable showfield_streamline_nodes_to_sync"
+	}	
+
+	disableConnectionID $connections(showfield_streamline_nodes_to_sync) $disable
 	
+	if { $DEBUG == 1 } {
+	    puts stderr "finished disabling showfield_streamline_nodes_to_sync"
+	}	
+
 	if { $have_streamlines == 1 } {
 	    $mods(ShowField-StreamLines-Scalar)-c toggle_display_nodes
 	}
@@ -2709,8 +2746,19 @@ class FusionViewerApp {
 	    }
 
 	    disableConnectionID $connections(scalar_to_probe)        $disable
+
 #	    Disconnecting a dynamic port causes a hang
-#	    disableConnectionID $connections(probe_scalar_to_viewer) $disable
+	    if { $DEBUG == 1 } {
+		puts stderr "starting to disable probe_scalar_to_viewer"
+	    }	
+
+	    disableConnectionID $connections(probe_scalar_to_viewer) $disable
+
+	    if { $DEBUG == 1 } {
+		puts stderr "finished disabling probe_scalar_to_viewer"
+	    }	
+
+
 	    set "$eviewer-Probe Selection Widget (2)" $probe_scalar
 	    $eviewer-c redraw
 
@@ -2745,8 +2793,16 @@ class FusionViewerApp {
 	    }
 
 	    disableConnectionID $connections(vector_to_probe)        $disable
+
 #	    Disconnecting a dynamic port causes a hang
-#	    disableConnectionID $connections(probe_vector_to_viewer) $disable
+	    if { $DEBUG == 1 } {
+		puts stderr "starting to disable probe_vector_to_viewer"
+	    }	
+	    disableConnectionID $connections(probe_vector_to_viewer) $disable
+	    if { $DEBUG == 1 } {
+		puts stderr "starting to disable probe_vector_to_viewer"
+	    }	
+
 	    set "$eviewer-Probe Selection Widget (3)" $probe_vector
 	    $eviewer-c redraw
 
@@ -3696,7 +3752,9 @@ class FusionViewerApp {
 	    puts stderr "sourcing"
 	}
 
+#	set ignore_callbacks 1
 	source $saveFile
+#	set ignore_callbacks 0
 
 	set DEBUG $debug
 
