@@ -78,7 +78,7 @@ template <class HType>
 GenericReader<HType>::GenericReader(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Source, cat, pack),
-    filename_(ctx->subVar("filename")),
+    filename_(ctx->subVar("filename"), ""),
     old_filemodification_(0),
     importing_(false)
 {

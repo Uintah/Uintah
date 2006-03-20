@@ -39,8 +39,6 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 
     constructor {config} {
 	set name MatrixWriter
-
-        initGlobal $this-confirm [envBool SCIRUN_CONFIRM_OVERWRITE]
     }
 
     method overwrite {} {
