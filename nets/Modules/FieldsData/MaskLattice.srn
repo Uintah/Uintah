@@ -130,7 +130,6 @@
     <module id="m4" package="SCIRun" category="FieldsData" name="MaskLattice" gui_visible="yes">
       <position x="339" y="126"/>
       <var name="maskfunction" val="{x + y + z &lt; 0.000001}"/>
-      <var name="ui_geometry" val="{314x79+1691+1097}"/>
     </module>
     <module id="m5" package="SCIRun" category="Visualization" name="ShowField">
       <position x="229" y="220"/>
