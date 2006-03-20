@@ -1,7 +1,6 @@
 
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/ConnectionList.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
