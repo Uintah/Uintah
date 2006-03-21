@@ -41,54 +41,8 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
     
     method set_defaults {} {
-	global $this-isoval-min 
-	global $this-isoval-max 
-	global $this-isoval
-	global $this-isoval-typed
-	global $this-isoval-quantity
-	global $this-quantity-list
-	global $this-quantity-range
-	global $this-quantity-clusive
-	global $this-quantity-min
-	global $this-quantity-max
-	global $this-isoval-list
-	global $this-matrix-list
-	global $this-active-isoval-selection-tab
 	global $this-continuous
-	global $this-extract-from-new-field
-	global $this-algorithm
-	global $this-build_trisurf
-	global $this-build_geom
-	global $this-np
-	global $this-active_tab
-	global $this-update_type
-	global $this-color-r
-	global $this-color-g
-	global $this-color-b
-
-	set $this-isoval-min 0.0
-	set $this-isoval-max 99.0
-	set $this-isoval 0.0
-	set $this-isoval-typed 0
-	set $this-isoval-quantity 1
-	set $this-quantity-range "field"
-	set $this-quantity-clusive "exclusive"
-	set $this-quantity-min 0
-	set $this-quantity-max 100
-	set $this-quantity-list ""
-	set $this-isoval-list "0.0 1.0 2.0 3.0"
-	set $this-matrix-list "No matrix present - execution needed."
-	set $this-active-isoval-selection-tab 0
 	set $this-continuous 0
-	set $this-extract-from-new-field 1
-	set $this-algorithm 0
-	set $this-build_trisurf 1
-	set $this-build_geom 1
-	set $this-np 1
-	set $this-update_type "On Release"
-	set $this-color-r 0.4
-	set $this-color-g 0.2
-	set $this-color-b 0.9
 
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-update_type w "$this update_type_callback"
@@ -419,19 +373,16 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method update_minmax_callback { name1 name2 op } {
-	global $this-isoval-min
-	global $this-isoval-max
-
-	set_min_max [set $this-isoval-min] [set $this-isoval-max]
+	set_min_max
     }
 
-    method set_min_max { min max } {
+    method set_min_max { } {
 	set w .ui[modname]
 	global $this-isoval-min
 	global $this-isoval-max
 
-	set $this-isoval-min $min
-	set $this-isoval-max $max
+	set min $this-isoval-min
+	set max $this-isoval-max
 
 	if [ expr [winfo exists $w] ] {
 	    set lg [expr floor( log10($max-$min) ) ]
