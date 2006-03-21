@@ -101,7 +101,7 @@ public:
 
   typedef Face Elem;
 
- friend class ElemData;
+  friend class ElemData;
 
   class ElemData
   {
@@ -411,15 +411,6 @@ public:
 
 private:
 
-  static double
-  distance2(const Point &p0, const Point &p1)
-  {
-    const double dx = p0.x() - p1.x();
-    const double dy = p0.y() - p1.y();
-    const double dz = p0.z() - p1.z();
-    return dx * dx + dy * dy + dz * dz;
-  }
-
   const Point &point(typename Node::index_type i) const { return points_[i]; }
 
   void                  compute_edges();
@@ -430,17 +421,17 @@ private:
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
 
-  vector<Point>                 points_;
-  vector<int>                   edges_;
+  vector<Point>                         points_;
   vector<typename Node::index_type>     faces_;
-  typedef vector<vector<typename Cell::index_type> > NodeNeighborMap;
-  NodeNeighborMap               node_neighbors_;
-  vector<int>                   edge_neighbors_;
-  vector<Vector>                normals_; //! normalized per node
+  vector<under_type>                    edges_;
+  typedef vector<vector<typename Elem::index_type> > NodeNeighborMap;
+  NodeNeighborMap                       node_neighbors_;
+  vector<under_type>                    edge_neighbors_;
+  vector<Vector>                        normals_; //! normalized per node
 
-  Mutex                         synchronize_lock_;
-  unsigned int                  synchronized_;
-  Basis                         basis_;
+  Mutex                                 synchronize_lock_;
+  unsigned int                          synchronized_;
+  Basis                                 basis_;
 
 
 #ifdef HAVE_HASH_MAP
@@ -520,8 +511,8 @@ QuadSurfMesh<Basis>::type_name(int n)
 template <class Basis>
 QuadSurfMesh<Basis>::QuadSurfMesh()
   : points_(0),
-    edges_(0),
     faces_(0),
+    edges_(0),
     edge_neighbors_(0),
     normals_(0),
     synchronize_lock_("QuadSurfMesh synchronize_lock_"),
@@ -533,8 +524,8 @@ QuadSurfMesh<Basis>::QuadSurfMesh()
 template <class Basis>
 QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
   : points_(0),
-    edges_(0),
     faces_(0),
+    edges_(0),
     edge_neighbors_(0),
     normals_(0),
     synchronize_lock_("QuadSurfMesh synchronize_lock_"),
@@ -1092,7 +1083,7 @@ typename QuadSurfMesh<Basis>::Node::index_type
 QuadSurfMesh<Basis>::add_find_point(const Point &p, double err)
 {
   typename Node::index_type i;
-  if (locate(i, p) && distance2(points_[i], p) < err)
+  if (locate(i, p) && (points_[i] - p).length2() < err)
   {
     return i;
   }
