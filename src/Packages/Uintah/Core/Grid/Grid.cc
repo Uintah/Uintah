@@ -126,7 +126,7 @@ void Grid::performConsistencyCheck() const
       Vector integerTest_distance(remainder(distance.x(), dx_fineLevel.x() ),
                                   remainder(distance.y(), dx_fineLevel.y() ),
                                   remainder(distance.z(), dx_fineLevel.z() ) );
-      Vector smallNum(1e-16,1e-16,1e-16);
+      Vector smallNum(1e-15,1e-15,1e-15);
       
       if( (integerTest_min >smallNum || integerTest_max > smallNum) && 
            integerTest_distance > smallNum){
