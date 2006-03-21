@@ -574,7 +574,8 @@ namespace Uintah {
                                    const Level* fineLevel,
                                    CellIterator& iter,
                                    IntVector& coarse_FC_offset,
-                                   bool& CP_containsCell);
+                                   bool& CP_containsCell,
+                                   const string& whichTask);
     template<class T>
     void refluxOperator_applyCorrectionFluxes(                             
                               CCVariable<T>& q_CC_coarse,
