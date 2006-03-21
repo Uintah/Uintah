@@ -254,7 +254,9 @@ void ICE::refluxOperator_applyCorrectionFluxes(
     CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
     bool isRight_CP_FP_pair;
     refluxCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
-                               c_iter ,c_FC_offset,isRight_CP_FP_pair);
+                               c_iter ,c_FC_offset,isRight_CP_FP_pair,
+                               "applyRefluxCorrection");
+    
                                
     if (isRight_CP_FP_pair ){  // if the right coarse/fine patch pair
 
@@ -688,7 +690,8 @@ void ICE::refluxOperator_computeCorrectionFluxes(
     CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
     bool isRight_CP_FP_pair;
     refluxCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
-                               c_iter ,c_FC_offset,isRight_CP_FP_pair);
+                               c_iter ,c_FC_offset,isRight_CP_FP_pair,
+                               "computeRefluxCorrection");
 
     // 
     if (isRight_CP_FP_pair){
