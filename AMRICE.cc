@@ -904,7 +904,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     
     //__________________________________
     // check the bullet proofing flags    
-    string desc2 = "AMRICE:refluxing_computeCorrectionFluxes";
+    string desc2 = "AMRICE:refluxing_applyCorrectionFluxes";
     t = scinew Task("AMRICE::reflux_BP_check_CFI_cells",this,
                     &AMRICE::reflux_BP_check_CFI_cells, desc2);
     sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
@@ -1210,9 +1210,12 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
                                const Level* fineLevel,
                                CellIterator& iter,
                                IntVector& coarse_FC_offset,
-                               bool& isRight_CP_FP_pair)
+                               bool& isRight_CP_FP_pair,
+                               const string& whichTask)
 {
   CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+  
+  ASSERT(whichTask == "computeRefluxCorrection" || whichTask == "applyRefluxCorrection" );
 
   // find the intersection of the fine patch face iterator and underlying coarse patch
   IntVector dir = finePatch->faceAxes(patchFace);        // face axes
@@ -1264,8 +1267,8 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   
 /*`==========TESTING==========*/
 #if 0
-  if(coarsePatch->getID() == 564){
-    cout << "\nrefluxCoarseLevelIterator " << name
+  if(finePatch->getID() == 583){
+    cout << "\nrefluxCoarseLevelIterator " << name << " " << whichTask
          << "\n before      " << l << " " << h
          << "\n finePatch   " << *finePatch
          << "\n coarsePatch " << *coarsePatch
@@ -1278,27 +1281,36 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   l[y] = Max(l[y], coarse_Lo[y]);  // intersection 
   l[z] = Max(l[z], coarse_Lo[z]);  // only the transerse directions 
   h[y] = Min(h[y], coarse_Hi[y]);
-  h[z] = Min(h[z], coarse_Hi[z]); 
-  
-  IntVector one(1,1,1);             // subtract of 1 from the transvers directions of (h) 
-  IntVector h_minusOne = h;         // use this to decide if a coarse patch contains (h-1) 
-  h_minusOne[y] -=one[y];
-  h_minusOne[z] -=one[z];
+  h[z] = Min(h[z], coarse_Hi[z]);       
       
   iter=CellIterator(l,h);
   
-  // Does this iterator exceed the boundaries of the underlying coarse patch
+  // Does this iterator exceed the boundaries of the underlying coarse patch?
+  // If your computing/applying the reflux correction the conditional is different
+  // To understand why you need paper a pencil.  Draw a fine patch over a coarse patch
+  // and let the CFI coinside with the boundary  between 2 coarse level patches.
+  
+  IntVector one(1,1,1);            // subtract of 1 (h). 
+  IntVector h_minusOne = h - one;  // h -1 is what we're truely interested in.
+  
   isRight_CP_FP_pair = false;
-  if ( coarsePatch->containsCell(l) && 
-       coarsePatch->containsCell(h_minusOne) &&
+  if ( whichTask == "computeRefluxCorrection"  &&
        coarsePatch->containsCell(l + coarse_FC_offset) && 
        coarsePatch->containsCell(h_minusOne + coarse_FC_offset) && 
        l[y] != h[y] && l[z] != h[z] ){
     isRight_CP_FP_pair = true;
   }
+  if (whichTask == "applyRefluxCorrection" && 
+       coarsePatch->containsCell(l) && 
+       coarsePatch->containsCell(h_minusOne) &&
+       l[y] != h[y] && l[z] != h[z] ){
+    isRight_CP_FP_pair = true;
+  }
+  
+  
  /*`==========TESTING==========*/
 #if 0
-  if(coarsePatch->getID() == 564){
+  if(finePatch->getID() == 583){
     cout << " after " << l << " " << h 
          << " coarse_FC_offset " << coarse_FC_offset
          << " isRight_CP_FP_pair " << isRight_CP_FP_pair 
@@ -1586,6 +1598,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
                << " it should have been 'touched' " << n_CFI_cells << " times "
                << "\n patch " << *finePatch 
                << "\n finePatchLevel " << finePatch->getLevel()->getIndex()<< endl;
+          
           throw InternalError(warn.str(), __FILE__, __LINE__ );
         }
       }  // face iter
