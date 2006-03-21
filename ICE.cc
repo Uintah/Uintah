@@ -328,7 +328,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     stringstream id(index);
     int index_val = -1;
     id >> index_val;
-    cout << "Material attribute = " << index_val << endl;
+    cout_norm << "Material attribute = " << index_val << endl;
 
     // Extract out the type of EOS and the associated parameters
     ICEMaterial *mat = scinew ICEMaterial(ps);
