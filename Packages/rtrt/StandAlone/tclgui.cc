@@ -6,6 +6,7 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
 
+#include <Dataflow/TCLThread/TCLThread.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 
@@ -77,30 +78,21 @@ void RtrtTclGui::tcl_command(GuiArgs& args, void*) {
   }
 }
 
-RtrtTclGui* RtrtTclGui::startup(int argc, char* argv[], char **environment) {
+RtrtTclGui*
+RtrtTclGui::startup(int argc, char* argv[], char **environment) 
+{
   create_sci_environment(environment, 0);
 
-  // Start up TCL...
-  TCLTask* tcl_task = new TCLTask(1, argv);// Only passes program name to TCL
-  // We need to start the thread in the NotActivated state, so we can
-  // change the stack size.  The 0 is a pointer to a ThreadGroup which
-  // will default to the global thread group.
-  Thread* t=new Thread(tcl_task,"TCL main event loop",0, Thread::NotActivated);
-  t->setStackSize(1024*1024);
-  // False here is stating that the tread was stopped or not.  Since
-  // we have never started it the parameter should be false.
-  t->activate(false);
+  // Start up TCL...  // Only pass program name (1 arg) to TCL
+  TCLThread* tcl_thread = new TCLThread(1, argv, NULL, 0);
+  Thread* t=new Thread(tcl_thread,"TCL main event loop",0, Thread::Activated,1024*1024);
   t->detach();
-  tcl_task->mainloop_waitstart();
 
   // Create user interface link
   TCLInterface *gui = new TCLInterface();
   RtrtTclGui* rtrtgui = new RtrtTclGui(gui);
   
   // Here we can execute tcl commands via gui->eval("command");
-  
-  // Now activate the TCL event loop once we started up everthing.
-  tcl_task->release_mainloop();
 
   return rtrtgui;
 }
