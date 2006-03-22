@@ -96,8 +96,8 @@ DECLARE_MAKER(PatchDataVisualizer)
 
   PatchDataVisualizer::PatchDataVisualizer(GuiContext* ctx)
 : Module("PatchDataVisualizer", ctx, Filter, "Visualization", "Uintah"),
-  radius(ctx->subVar("radius")),
-  polygons(ctx->subVar("polygons")),
+  radius(get_ctx()->subVar("radius")),
+  polygons(get_ctx()->subVar("polygons")),
   old_generation(-1), old_timestep(0),
   grid(NULL)
 {
@@ -180,11 +180,11 @@ void PatchDataVisualizer::execute()
   // setup the tickle stuff
   if (new_grid) {
     string visible;
-    gui->eval(id + " isVisible", visible);
+    get_gui()->eval(get_id() + " isVisible", visible);
     if ( visible == "1") {
-      gui->execute(id + " Rebuild");
+      get_gui()->execute(get_id() + " Rebuild");
       
-      gui->execute("update idletasks");
+      get_gui()->execute("update idletasks");
       reset_vars();
     }
   }
@@ -218,7 +218,7 @@ void PatchDataVisualizer::execute()
       PatchData data;
       data.loc = (box.upper() - box.lower()) / 2;
       data.level = l;
-      data.id = patch->getID();
+      data.id = patch->id;
       // data.val can any scalar value castable to a double
       data.val = data.id;
       patch_centers.push_back(data);

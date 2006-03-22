@@ -29,7 +29,7 @@ string DependencyException::makeMessage(const Task* task,
   str << "Task Dependency Error: " << has << " has no corresponding ";
   str << needs << " for " << label->getName();
   if (patch)
-    str << " on patch " << patch->getID();
+    str << " on patch " << patch->get_id();
   str << " for material " << matlIndex;
   if (task != 0) {
     str << " in task " << task->getName();

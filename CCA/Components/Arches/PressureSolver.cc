@@ -406,7 +406,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   tsk->computes(d_lab->d_InitNormLabel);
 
 #ifdef ARCHES_PRES_DEBUG
-  cerr << "Adding computes on patch: " << patch->getID() << '\n';
+  cerr << "Adding computes on patch: " << patch->get_id() << '\n';
 #endif
 
   sched->addTask(tsk, d_perproc_patches, matls);

@@ -102,7 +102,7 @@ VarLabel::getFullName(int matlIndex, const Patch* patch) const
    ostringstream out;
         out << d_name << "(matl=" << matlIndex;
    if(patch)
-        out << ", patch=" << patch->getID();
+        out << ", patch=" << patch->get_id();
    else
         out << ", no patch";
    out << ")";

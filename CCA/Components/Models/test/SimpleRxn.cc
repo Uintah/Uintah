@@ -363,7 +363,7 @@ void SimpleRxn::modifyThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->get_id()<< "\t SIMPLERXN" << endl;
    
     int indx = d_matl->getDWIndex();
     CCVariable<double> diffusionCoeff, gamma, cv, thermalCond, viscosity;
@@ -403,7 +403,7 @@ void SimpleRxn::computeSpecificHeat(CCVariable<double>& cv_new,
                                     DataWarehouse* new_dw,
                                     const int indx)
 { 
-  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->get_id()<< "\t SIMPLERXN" << endl;
 
   int test_indx = d_matl->getDWIndex();
   //__________________________________
@@ -464,7 +464,7 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
+    cout_doing << "Doing computeModelSources... on patch "<<patch->get_id()
                << "\t\tSIMPLERXN" << endl;
 
     double new_f;
@@ -613,7 +613,7 @@ void SimpleRxn::testConservation(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing testConservation on patch "<<patch->getID()
+    cout_doing << "Doing testConservation on patch "<<patch->get_id()
                << "\t\t\t SimpleRxn" << endl;
                
     //__________________________________

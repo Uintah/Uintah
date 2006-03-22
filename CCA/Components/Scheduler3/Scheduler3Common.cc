@@ -608,7 +608,7 @@ Scheduler3Common::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pa
   // For each patch in the patch subset which contains patches in the new grid
 
   for ( int idx = 0; idx < patches->size(); idx++ ) {
-    //cerr << "Patches[ " << idx << " ] = " << patches->get(idx)->getID() << endl;
+    //cerr << "Patches[ " << idx << " ] = " << patches->get(idx)->get_id() << endl;
   }
 
   for ( int p = 0; p < patches->size(); p++ ) {
@@ -665,7 +665,7 @@ Scheduler3Common::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pa
           case TypeDescription::SFCZVariable:
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
-                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
+                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->get_id(), oldPatch, matl,
                                           "in copyDataTo NCVariable"));
               GridVariable* v = dynamic_cast<GridVariable*>(oldDataWarehouse->d_varDB.get(label, matl, oldPatch));
               
@@ -694,7 +694,7 @@ Scheduler3Common::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pa
           case TypeDescription::ParticleVariable:
             {
               if(!oldDataWarehouse->d_varDB.exists(label, matl, oldPatch))
-                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
+                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->get_id(), oldPatch, matl,
                                           "in copyDataTo ParticleVariable"));
               if ( !newDataWarehouse->d_varDB.exists(label, matl, newPatch) ) {
                 PatchSubset* ps = new PatchSubset;
@@ -709,7 +709,7 @@ Scheduler3Common::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pa
                 delete newps;
               } else {
                 cout << "Particle copy not implemented for pre-existent var (BNR Regridder?)\n";
-                SCI_THROW(UnknownVariable(label->getName(), newDataWarehouse->getID(), oldPatch, matl,
+                SCI_THROW(UnknownVariable(label->getName(), newDataWarehouse->get_id(), oldPatch, matl,
                                           "in copyDataTo ParticleVariable"));
               }
             }

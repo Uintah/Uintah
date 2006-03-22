@@ -190,7 +190,7 @@ namespace Uintah {
   {
     cout << "ERROR: ICE Advection operator: "
          << " Influx_outflux error detected, "
-         << " patch " << patch->getID()
+         << " patch " << patch->get_id()
          << ", Level " << patch->getLevel()->getIndex()
          << ", matl indx "<< indx << endl;
          

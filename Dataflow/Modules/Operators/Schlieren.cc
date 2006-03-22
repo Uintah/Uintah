@@ -32,7 +32,7 @@ DECLARE_MAKER(Schlieren)
 
 Schlieren::Schlieren(GuiContext* ctx)
   : Module("Schlieren",ctx,Source, "Operators", "Uintah"),
-    dx_(ctx->subVar("dx")), dy_(ctx->subVar("dy")), dz_(ctx->subVar("dz"))
+    dx_(get_ctx()->subVar("dx")), dy_(get_ctx()->subVar("dy")), dz_(get_ctx()->subVar("dz"))
 {
 }
   

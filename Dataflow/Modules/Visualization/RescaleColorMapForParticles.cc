@@ -22,9 +22,9 @@ using namespace SCIRun;
 
 RescaleColorMapForParticles::RescaleColorMapForParticles(GuiContext* ctx)
 : Module("RescaleColorMapForParticles", ctx, Filter, "Visualization", "Uintah"),
-  minVal(ctx->subVar("minVal")),
-  maxVal(ctx->subVar("maxVal")),
-  scaleMode(ctx->subVar("scaleMode"))
+  minVal(get_ctx()->subVar("minVal")),
+  maxVal(get_ctx()->subVar("maxVal")),
+  scaleMode(get_ctx()->subVar("scaleMode"))
 {
     //    scaleMode.set("auto");
 

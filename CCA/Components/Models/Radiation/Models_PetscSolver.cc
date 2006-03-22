@@ -195,7 +195,7 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
         +start.y()*dcells.x()+start.x();
 #if 0
-      cerr << "Looking at patch: " << neighbor->getID() << '\n';
+      cerr << "Looking at patch: " << neighbor->get_id() << '\n';
       cerr << "low=" << low << '\n';
       cerr << "high=" << high << '\n';
       cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';

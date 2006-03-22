@@ -56,7 +56,7 @@ create_tau_mapping( const string & taskname, const PatchSubset * patches )
     for(int i=0;i<patches->size();i++) {
 
       ostringstream patch_num;
-      patch_num << patches->get(i)->getID();
+      patch_num << patches->get(i)->get_id();
 
       full_name = full_name + "-" + patch_num.str();
     }

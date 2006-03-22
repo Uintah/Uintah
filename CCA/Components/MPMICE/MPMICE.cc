@@ -1083,7 +1083,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       if (d_ice->switchDebug_Initialize){      
         ostringstream desc;
         desc << "MPMICE_Initialization_Mat_" << indx << "_patch_"
-             << patch->getID();
+             << patch->get_id();
         d_ice->printData(indx, patch,  1, desc.str(), "rho_CC",      rho_CC);
         d_ice->printData(indx, patch,  1, desc.str(), "rho_micro_CC",rho_micro);
         d_ice->printData(indx, patch,  1, desc.str(), "sp_vol_CC",   sp_vol_CC);
@@ -1239,7 +1239,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
         desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_"<<indx<<"_patch_"
-            <<  patch->getID();
+            <<  patch->get_id();
         printData(     indx, patch, 1,desc.str(), "gmass",       gmass);
         printData(     indx, patch, 1,desc.str(), "gvolume",     gvolume);
         printData(     indx, patch, 1,desc.str(), "gtemperatue", gtemperature);
@@ -1297,7 +1297,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
      if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
-            <<  patch->getID();
+            <<  patch->get_id();
         d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
         d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
         d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
@@ -1392,7 +1392,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       if(d_ice->switchDebug_LagrangianValues) {
         ostringstream desc;
         desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
-             <<  indx<<patch->getID();
+             <<  indx<<patch->get_id();
         d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
         printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
         d_ice->printData(indx, patch,1,desc.str(), "rho_CC",   rho_CC);
@@ -1496,7 +1496,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       if(d_ice->switchDebug_LagrangianValues) {
         ostringstream desc;
         desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
-            <<  patch->getID();
+            <<  patch->get_id();
         d_ice->printData(  indx,patch, 1,desc.str(), "rho_CC",        rho_CC);
         d_ice->printData(  indx,patch, 1,desc.str(), "int_eng_L",    int_eng_L);
         d_ice->printVector(indx,patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
@@ -1820,14 +1820,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_equil_press)  {
       ostringstream desc1;
-      desc1<< "TOP_equilibration_patch_"<< patch->getID();
+      desc1<< "TOP_equilibration_patch_"<< patch->get_id();
       d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_top", press); 
 
       for (int m = 0; m < numALLMatls; m++)  {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
         ostringstream desc;
-        desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
+        desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->get_id();
         d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
         d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
         d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
@@ -2056,7 +2056,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_equil_press)  { 
       ostringstream desc1;
-      desc1<< "BOT_equilibration_patch_"<<patch->getID();
+      desc1<< "BOT_equilibration_patch_"<<patch->get_id();
 
       d_ice->printData( 0, patch, 1, desc1.str(),"Press_CC_equil",press_new);
       d_ice->printData( 0, patch, 1, desc1.str(),"delPress",      delPress_tmp);
@@ -2064,7 +2064,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          Material* matl = d_sharedState->getMaterial( m );
          int indx = matl->getDWIndex();
          ostringstream desc; 
-         desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->getID();
+         desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->get_id();
          d_ice->printData(indx,patch,1,desc.str(),"rho_CC",      rho_CC_new[m]);
          d_ice->printData(indx,patch,1,desc.str(),"rho_micro_CC",rho_micro[m]);
          d_ice->printData(indx,patch,1,desc.str(),"vol_frac_CC", vol_frac[m]);
@@ -2608,7 +2608,7 @@ MPMICE::refine(const ProcessorGroup*,
 
       //if (cout_doing.active()) {
       cout <<"Doing refine on patch "
-           << patch->getID() << " material # = " << dwi << endl;
+           << patch->get_id() << " material # = " << dwi << endl;
       //}
       
       if(d_ice->doICEOnLevel(L_indx, num_levels)) {

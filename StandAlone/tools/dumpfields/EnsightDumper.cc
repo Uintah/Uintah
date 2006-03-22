@@ -302,7 +302,7 @@ namespace Uintah {
         for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
           const Patch* patch = *iter;
           
-          cout << patch->getID() << " ";
+          cout << patch->get_id() << " ";
           cout.flush();
           
           IntVector ilow, ihigh;

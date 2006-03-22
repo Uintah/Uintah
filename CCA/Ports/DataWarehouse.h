@@ -342,7 +342,7 @@ public:
   // DW is being used for a restarted simulation.  This allows the DW
   // generation number to be kept in sync with the actual number of
   // timesteps for the restarted simulation.
-  int  getID() const { return d_generation; }
+  int  get_id() const { return d_generation; }
   void setID( int id ) { d_generation = id; }
 
   // For timestep abort/restart

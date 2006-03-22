@@ -16,8 +16,8 @@ using namespace SCIRun;
 //--------------------------------------------------------------- 
   ArchiveReader::ArchiveReader(GuiContext* ctx)
   : Module("ArchiveReader", ctx, Filter, "DataIO", "Uintah"),
-    filebase(ctx->subVar("filebase")), 
-    tcl_status(ctx->subVar("tcl_status")), archiveH(0),
+    filebase(get_ctx()->subVar("filebase")), 
+    tcl_status(get_ctx()->subVar("tcl_status")), archiveH(0),
     aName(""), aName_size(0)
 { 
   if( filebase.get() != "" )

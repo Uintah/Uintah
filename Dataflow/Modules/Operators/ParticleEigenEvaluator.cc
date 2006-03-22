@@ -12,8 +12,8 @@ namespace Uintah {
 
 ParticleEigenEvaluator::ParticleEigenEvaluator(GuiContext* ctx)
   : Module("ParticleEigenEvaluator",ctx,Source, "Operators", "Uintah"),
-    guiEigenSelect(ctx->subVar("eigenSelect"))
-    //    gui_status(ctx->subVar("gui_status")),
+    guiEigenSelect(get_ctx()->subVar("eigenSelect"))
+    //    gui_status(get_ctx()->subVar("gui_status")),
 {
 }
   

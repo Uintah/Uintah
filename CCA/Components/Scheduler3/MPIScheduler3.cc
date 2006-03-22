@@ -52,7 +52,7 @@ printTask( ostream& out, DetailedTask3* task )
     for(int p=0;p<patches->size();p++){
       if(p != 0)
 	out << ", ";
-      out << patches->get(p)->getID();
+      out << patches->get(p)->get_id();
     }
   }
 }

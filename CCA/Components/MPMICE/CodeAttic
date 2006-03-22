@@ -194,7 +194,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << "Doing HEChemistry on patch "<< patch->getID()
+    cout_doing << "Doing HEChemistry on patch "<< patch->get_id()
                <<"\t\t\t\t MPMICE" << endl;
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
@@ -350,7 +350,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing << "Doing interpolateCCToNC on patch "<< patch->getID()
+      cout_doing << "Doing interpolateCCToNC on patch "<< patch->get_id()
                  <<"\t\t\t MPMICE L-" <<getLevel(patches)->getIndex()<< endl;
     }
                                                                                 
@@ -452,7 +452,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       if(switchDebug_InterpolateCCToNC) {
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolateCCToNC_mat_"<< indx<<"_patch_"
-            <<patch->getID();
+            <<patch->get_id();
         printData(    indx,patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
         printNCVector(indx,patch, 1,desc.str(),"gvelocity",    0,gvelocity);
         printNCVector(indx,patch, 1,desc.str(),"gacceleration",0,gacceleration);      }

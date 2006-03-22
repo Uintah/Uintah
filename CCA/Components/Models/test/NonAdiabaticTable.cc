@@ -460,7 +460,7 @@ void NonAdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()
+    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->get_id()
                << "\t ADIABATIC_TABLE" << endl;
    
     int indx = d_matl->getDWIndex();
@@ -522,7 +522,7 @@ void NonAdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
                                     DataWarehouse* new_dw,
                                     const int indx)
 { 
-  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->get_id()
              << "\t ADIABATIC_TABLE" << endl;
 
   int test_indx = d_matl->getDWIndex();
@@ -616,7 +616,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
     
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()
+    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->get_id()
                << "\t\tADIABATIC_TABLE" << endl;
 
     for(int m=0;m<matls->size();m++){
@@ -847,7 +847,7 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing testConservation on patch "<<patch->getID()
+    cout_doing << "Doing testConservation on patch "<<patch->get_id()
                << "\t\t\t NonAdiabaticTable" << endl;
                
     //__________________________________

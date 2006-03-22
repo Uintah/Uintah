@@ -136,7 +136,7 @@ GUVParticleCreator::createParticles(MPMMaterial* matl,
       geomvecs::key_type normkey(patch,*obj);
       vector<Vector>::const_iterator normiter = d_norm[normkey].begin();
 
-      vector<Point>* pos = guv->getPosition();
+      vector<Point>* pos = guv->get_position();
       debug <<"GUVPartCreator::create::pos = "<< pos
             <<" size = "<<pos->size()<< endl;
       geompoints::key_type poskey(patch,*obj);
@@ -260,7 +260,7 @@ GUVParticleCreator::countAndCreateParticles(const Patch* patch,
     int numPts = guv->createPoints();
     debug << "GUVPartCreator::count:: numPts = " << numPts << endl;
 
-    vector<Point>* pos = guv->getPosition();
+    vector<Point>* pos = guv->get_position();
     vector<double>* vol = guv->getVolume();
     vector<int>* type = guv->getType();
     vector<double>* thick = guv->getThickness();
