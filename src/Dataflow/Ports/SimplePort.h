@@ -333,8 +333,10 @@ SimpleIPort<T>::get(T& data)
   if (comm->have_data_)
   {
     data = comm->data_;
-    last_generation_ = generation_;
-    generation_ = data->generation;
+    if (data.get_rep()) {
+      last_generation_ = generation_;
+      generation_ = data->generation;
+    }
 
     delete comm;
     if (module->show_stats()) { turn_off(); }
