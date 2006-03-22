@@ -880,17 +880,17 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     //  initialize the bullet proofing flags
     t = scinew Task("AMRICE::reflux_BP_zero_CFI_cells",this,
                     &AMRICE::reflux_BP_zero_CFI_cells);
-    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());                     
+    sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());                     
 
                           
     scheduleReflux_computeCorrectionFluxes(coarseLevel, sched); // compute correction
     
     //__________________________________
     // check the bullet proofing flags    
-    string desc = "AMRICE:refluxing_computeCorrectionFluxes";
+    string desc = "computeRefluxCorrection";
     t = scinew Task("AMRICE::reflux_BP_check_CFI_cells",this,
                     &AMRICE::reflux_BP_check_CFI_cells, desc);
-    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
+    sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
     
     
         
@@ -898,16 +898,16 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     //  initialize the bullet proofing flags
     t = scinew Task("AMRICE::reflux_BP_zero_CFI_cells",this, 
                     &AMRICE::reflux_BP_zero_CFI_cells);
-    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
+    sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
     
     scheduleReflux_applyCorrection(coarseLevel, sched);     // apply correction
     
     //__________________________________
     // check the bullet proofing flags    
-    string desc2 = "AMRICE:refluxing_applyCorrectionFluxes";
+    string desc2 = "applyRefluxCorrection";
     t = scinew Task("AMRICE::reflux_BP_check_CFI_cells",this,
                     &AMRICE::reflux_BP_check_CFI_cells, desc2);
-    sched->addTask(t, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
+    sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
   }
 }
 
@@ -1148,7 +1148,9 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
         //   compute the correction
         // one_zero:  used to increment the CFI counter.
         if(finePatch->hasCoarseFineInterfaceFace() ){
-          cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
+          cout_doing << d_myworld->myrank() 
+                     << "  coarsePatch " << coarsePatch->getID() 
+                     <<" finepatch " << finePatch->getID()<< endl;
 
           int one_zero = 1;
           refluxOperator_computeCorrectionFluxes<double>(rho_CC,  cv, "mass",   indx, 
@@ -1521,27 +1523,37 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
  Purpose~   Initialze coarse fine interface "marks"
 ______________________________________________________________________*/
 void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
-                                      const PatchSubset* finePatches,
+                                      const PatchSubset* coarsePatches,
                                       const MaterialSubset*,
                                        DataWarehouse*,
                                        DataWarehouse*)
 {
-  const Level* fineLevel = getLevel(finePatches);
-  cout_doing << d_myworld->myrank() 
+  const Level* coarseLevel = getLevel(coarsePatches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  for(int c_p=0;c_p<coarsePatches->size();c_p++){  
+    const Patch* coarsePatch = coarsePatches->get(c_p);
+    
+    Level::selectType finePatches;
+    coarsePatch->getFineLevelPatches(finePatches);
+
+    cout_doing << d_myworld->myrank() 
              << " Doing reflux_BP_zero_CFI_cells \t\t\t AMRICE L-"
-             <<fineLevel->getIndex()<< " finePatches " << *finePatches << endl;
+             <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex()<<endl;
              
-  for(int p=0;p<finePatches->size();p++){  
-    const Patch* finePatch = finePatches->get(p);
-    if(finePatch->hasCoarseFineInterfaceFace() ){
-      vector<Patch::FaceType>::const_iterator iter;  
-      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
-        Patch::FaceType patchFace = *iter;
-        finePatch->setFaceMark(patchFace, 0);
-      }
-    }
-  }
+    for(int p=0;p<finePatches.size();p++){  
+      const Patch* finePatch = finePatches[p];
+    
+      if(finePatch->hasCoarseFineInterfaceFace() ){
+        vector<Patch::FaceType>::const_iterator iter;  
+        for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
+             iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+          Patch::FaceType patchFace = *iter;
+          finePatch->setFaceMark(patchFace, 0);
+        }
+      }  // has CFI
+    }  // finePatch loop
+  }  // coarsepatch loop
 }
 
 /*___________________________________________________________________
@@ -1550,60 +1562,80 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
             during refluxing 
 _____________________________________________________________________*/
 void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
-                                       const PatchSubset* finePatches,
+                                       const PatchSubset* coarsePatches,
                                        const MaterialSubset*,
                                        DataWarehouse*,
                                        DataWarehouse*,
                                        string description)
 {
-  const Level* fineLevel = getLevel(finePatches);
-  cout_doing << d_myworld->myrank() 
-             << " Doing reflux_bulletproofing \t\t\t\t AMRICE L-"
-             <<fineLevel->getIndex()<< " finePatches " << *finePatches << endl;
-  for(int p=0;p<finePatches->size();p++){  
-    const Patch* finePatch = finePatches->get(p);
-        
-        
-    if(finePatch->hasCoarseFineInterfaceFace() ){
-      
-      vector<Patch::FaceType>::const_iterator iter;  
-      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
-        Patch::FaceType patchFace = *iter;
+  const Level* coarseLevel = getLevel(coarsePatches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  for(int c_p=0;c_p<coarsePatches->size();c_p++){  
+    const Patch* coarsePatch = coarsePatches->get(c_p);
+    
+    Level::selectType finePatches;
+    coarsePatch->getFineLevelPatches(finePatches);
 
-        //__________________________________
-        // count the number of cells on the CFI
-        int n_CFI_cells = 0;
-        for (CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-             !iter.done();iter++){
-          n_CFI_cells +=1;
-        }
-        
-        // divide the number of cells 
-        IntVector rr= finePatch->getLevel()->getRefinementRatio();
-        IntVector dir = finePatch->faceAxes(patchFace);
-        int y = dir[1];
-        int z = dir[2];
-        n_CFI_cells = n_CFI_cells/(rr[y] * rr[z]);
+    cout_doing << d_myworld->myrank() 
+             << " Doing reflux_BP_check_CFI_cells \t\t\t AMRICE L-"
+             <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex() << endl;
+             
+    for(int p=0;p<finePatches.size();p++){  
+      const Patch* finePatch = finePatches[p]; 
+         
+      if(finePatch->hasCoarseFineInterfaceFace() ){
 
-        int n_touched_cells = finePatch->getFaceMark(patchFace);
-        //__________________________________
-        //  If the number of "marked" cells != n_CFI_cells
-        if ( n_touched_cells != n_CFI_cells){
-          ostringstream warn;
-          warn << description
-               << " \n CFI face: "
-               << finePatch->getFaceName(patchFace)
-               << " cells were 'touched' "<< n_touched_cells << " times"
-               << " it should have been 'touched' " << n_CFI_cells << " times "
-               << "\n patch " << *finePatch 
-               << "\n finePatchLevel " << finePatch->getLevel()->getIndex()<< endl;
+        vector<Patch::FaceType>::const_iterator iter;  
+        for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
+             iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+          Patch::FaceType patchFace = *iter;
           
-          throw InternalError(warn.str(), __FILE__, __LINE__ );
-        }
-      }  // face iter
-    }  // has CFI
-  }  // finePatches
+          //This makes sure that the processor that "touched" the cell is also
+          // going to check it.  Each processor can have a different instance
+          // of a patch.
+          IntVector dummy;
+          bool isRight_CP_FP_pair;
+          CellIterator dummy_iter(IntVector(0,0,0),IntVector(0,0,0));
+          refluxCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
+                               dummy_iter, dummy, isRight_CP_FP_pair, description);
+                               
+          if (isRight_CP_FP_pair){                 
+            //__________________________________
+            // count the number of cells on the CFI
+            int n_CFI_cells = 0;
+            for (CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+                 !iter.done();iter++){
+              n_CFI_cells +=1;
+            }
+
+            // divide the number of cells 
+            IntVector rr= finePatch->getLevel()->getRefinementRatio();
+            IntVector dir = finePatch->faceAxes(patchFace);
+            int y = dir[1];
+            int z = dir[2];
+            n_CFI_cells = n_CFI_cells/(rr[y] * rr[z]);
+
+            int n_touched_cells = finePatch->getFaceMark(patchFace);
+            //__________________________________
+            //  If the number of "marked" cells != n_CFI_cells
+            if ( n_touched_cells != n_CFI_cells){
+              ostringstream warn;
+              warn << d_myworld->myrank() << " AMRICE:refluxing_" << description
+                   << " \n CFI face: "
+                   << finePatch->getFaceName(patchFace)
+                   << " cells were 'touched' "<< n_touched_cells << " times"
+                   << " it should have been 'touched' " << n_CFI_cells << " times "
+                   << "\n patch " << *finePatch 
+                   << "\n finePatchLevel " << finePatch->getLevel()->getIndex()<< endl;
+              //cout << warn.str() << endl;
+              throw InternalError(warn.str(), __FILE__, __LINE__ );
+            }
+          }
+        }  // face iter
+      }  // has CFI
+    }  // //finePatches
+  }  // coarsePatches
 }
 
 
