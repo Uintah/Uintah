@@ -5,6 +5,9 @@
 
 <Uintah_specification>
 
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
    <Meta>
        <title>PerformanceTest</title>
    </Meta>

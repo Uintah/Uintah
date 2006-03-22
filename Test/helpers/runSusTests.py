@@ -192,11 +192,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       if ndt == "no_dbg":
         skip_debug = 1
       if ndt == "do_perf":
-        do_restart = 0
-        skip_dbg = 1
-        do_comparisons = 0
-        do_memory = 0
-        do_performance = 1
+        test_restart = 0
+        skip_debug = 1
+        test_comparisons = 0
+        test_memory = 0
+        test_performance = 1
 
 
     if skip_debug == 1 and mode == "dbg":
