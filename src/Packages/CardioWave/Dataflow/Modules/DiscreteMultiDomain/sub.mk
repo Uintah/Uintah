@@ -14,6 +14,8 @@ SRCDIR   := Packages/CardioWave/Dataflow/Modules/DiscreteMultiDomain
 
 SRCS     += \
 	$(SRCDIR)/DMDAddMembrane.cc\
+	$(SRCDIR)/DMDAddBlockStimulus.cc\
+	$(SRCDIR)/DMDAddReference.cc\
 	$(SRCDIR)/DMDCreateDomain.cc\
 	$(SRCDIR)/DMDCreateSimulator.cc\
 #[INSERT NEW CODE FILE HERE]

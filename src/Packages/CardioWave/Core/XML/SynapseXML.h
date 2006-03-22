@@ -38,7 +38,7 @@ class SynapseItem {
   public:
     std::string synapsename;
     std::string nodetype;
-    std::string file;
+    std::string sourcefile;
     std::string parameters;
     std::string description;
 };

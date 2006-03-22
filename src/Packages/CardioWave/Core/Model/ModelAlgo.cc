@@ -32,6 +32,7 @@
 #include <Packages/ModelCreation/Core/DataIO/DataIOAlgo.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 #include <Packages/CardioWave/Core/Model/BuildMembraneTable.h>
+#include <Packages/CardioWave/Core/Model/BuildStimulusTable.h>
 
 namespace CardioWave {
 
@@ -50,17 +51,160 @@ bool ModelAlgo::DMDBuildMembraneTable(FieldHandle elementtype, FieldHandle membr
   return(algo.BuildMembraneTable(pr_,elementtype,membranemodel,membranetable));
 }
 
-bool ModelAlgo::DMDBuildSimulator(BundleHandle Model, std::string filename)
+bool ModelAlgo::DMDBuildStimulusTable(FieldHandle domainnodetype, FieldHandle stimulus, bool selectbynode, StimulusTableList& stimtable)
 {
+  BuildStimulusTableAlgo algo;
+  return(algo.BuildStimulusTable(pr_,domainnodetype,stimulus,selectbynode,stimtable));
+}
+
+
+bool ModelAlgo::DMDBuildReferenceTable(FieldHandle domainnodetype, FieldHandle stimulus, bool selectbynode, ReferenceTableList& stimtable)
+{
+  BuildStimulusTableAlgo algo;
+  return(algo.BuildStimulusTable(pr_,domainnodetype,stimulus,selectbynode,stimtable));
+}
+
+
+bool ModelAlgo::DMDBuildSimulatorScript(std::string sourcefiles, std::string filename)
+{
+
+  return (true);
+}
+
+
+bool ModelAlgo::DMDBuildSourceFiles(BundleHandle ModelIn, std::string& sourcefiles)
+{
+  // required files
+  sourcefiles += "CardioWaveKernel.cc ";
+  sourcefiles += "NeuroWaveKernel.cc ";
+
+  for (size_t p=0; p < ModelIn->numBundles(); p++)
+  {
+    std::string bundlename = ModelIn->getFieldName(p);
+    if (bundlename.substr(0,9) == "membrane_")
+    {
+      BundleHandle Membrane = ModelIn->getBundle(bundlename);
+      StringHandle SourceFile = Membrane->getString("sourcefile");
+      if (SourceFile.get_rep()) { sourcefiles += FileSource->get(); sourcefiles += " "; }
+    }    
+
+    if (bundlename == "solver")
+    {
+      BundleHandle Solver = ModelIn->getBundle(bundlename);
+      StringHanle SourceFile = Solver->getString("sourcefile";)
+      if (SourceFile.get_rep()) { sourcefiles += FileSource->get(); sourcefiles += " "; }
+    }
+
+    if (bundlename == "timestep")
+    {
+      BundleHandle TimeStep = ModelIn->getBundle(bundlename);
+      StringHanle SourceFile = TimeStep->getString("sourcefile";)
+      if (SourceFile.get_rep()) { sourcefiles += FileSource->get(); sourcefiles += " "; }
+    }
+
+    if (bundlename == "output")
+    {
+      BundleHandle Output = ModelIn->getBundle(bundlename);
+      StringHanle SourceFile = Output->getString("sourcefile";)
+      if (SourceFile.get_rep()) { sourcefiles += FileSource->get(); sourcefiles += " "; }
+    }
+
+    if (bundlename.substr(0,10) == "reference_")
+    {
+      BundleHandle Reference = ModelIn->getBundle(bundlename);
+      StringHanle SourceFile = Reference->getString("sourcefile";)
+      if (SourceFile.get_rep()) { sourcefiles += FileSource->get(); sourcefiles += " "; }
+    }
+
+    if (bundlename.substr(0,9) == "stimulus_")
+    {
+      BundleHandle Stimulus = ModelIn->getBundle(bundlename);
+      StringHanle SourceFile = Stimulus->getString("sourcefile";)
+      if (SourceFile.get_rep()) { sourcefiles += FileSource->get(); sourcefiles += " "; }
+    }
+  }
+  
+  return (true);
+}
+
+
+
+
+bool ModelAlgo::DMDBuildParameters(BundleHandle ModelIn, std::string& parameters)
+{
+  // required files
+  parameters += "CardioWaveKernel.cc ";
+  parameters += "NeuroWaveKernel.cc ";
+
+  for (size_t p=0; p < ModelIn->numBundles(); p++)
+  {
+    std::string bundlename = ModelIn->getFieldName(p);
+    if (bundlename.substr(0,9) == "membrane_")
+    {
+      BundleHandle Membrane = ModelIn->getBundle(bundlename);
+      StringHandle Parameter = Membrane->getString("parameter");
+      if (Parameter.get_rep()) { parameters += FileSource->get(); parameters += " "; }
+    }    
+
+    if (bundlename == "solver")
+    {
+      BundleHandle Solver = ModelIn->getBundle(bundlename);
+      StringHanle Parameter = Solver->getString("parameter";)
+      if (Parameter.get_rep()) { parameters += FileSource->get(); parameters += " "; }
+    }
+
+    if (bundlename == "timestep")
+    {
+      BundleHandle TimeStep = ModelIn->getBundle(bundlename);
+      StringHanle Parameter = TimeStep->getString("parameter";)
+      if (Parameter.get_rep()) { parameters += FileSource->get(); parameters += " "; }
+    }
+
+    if (bundlename == "output")
+    {
+      BundleHandle Output = ModelIn->getBundle(bundlename);
+      StringHanle Parameter = Output->getString("parameter";)
+      if (Parameter.get_rep()) { parameters += FileSource->get(); parameters += " "; }
+    }
+
+    if (bundlename.substr(0,10) == "reference_")
+    {
+      BundleHandle Reference = ModelIn->getBundle(bundlename);
+      StringHanle Parameter = Reference->getString("parameter";)
+      if (Parameter.get_rep()) { parameters += FileSource->get(); parameters += " "; }
+    }
+
+    if (bundlename.substr(0,9) == "stimulus_")
+    {
+      BundleHandle Stimulus = ModelIn->getBundle(bundlename);
+      StringHanle Parameter = Stimulus->getString("parameter";)
+      if (Parameter.get_rep()) { parameters += FileSource->get(); parameters += " "; }
+    }
+  }
+  
+  return (true);
+}
+
+
+
+
+
+
+
+bool ModelAlgo::DMDBuildSimulator(BundleHandle Model, BundleHandle& Simulation, std::string filename)
+{
+  // get algorithms
+  
   ModelCreation::FieldsAlgo  fieldsalgo(pr_);
   ModelCreation::NumericAlgo numericalgo(pr_);
   ModelCreation::ConverterAlgo converteralgo(pr_);
   ModelCreation::DataIOAlgo  dataio(pr_);
-  // Build Filenames output
+  
+  // Step 1: Build Filenames for model
   
   if (filename.size() == 0) 
   {
-    error("DMDBuildDomain: Could not resolve filename");
+    error("DMDBuildSimulator: Could not resolve filename");
     return (false);
   }
 
@@ -69,18 +213,16 @@ bool ModelAlgo::DMDBuildSimulator(BundleHandle Model, std::string filename)
   {
     filenamebase = filename.substr(0,filename.size()-4);
   }
-
-  std::string filename_bundle = filenamebase + ".bdl";
-  std::string filename_parameters = filenamebase + ".param.in";
-  std::string filename_buildsimulator = filenamebase + ".sim.pl";
-
-  // Step one save the model to file
   
-  if (!(dataio.WriteBundle(filename_bundle,Model)))
+  // Step 2: save the model to file
+  
+  if (!(dataio.WriteBundle(std::string(filenamebase+".bdl"),Model)))
   {
     error("DMDBuildSimulator: Could not save model bundle to disk");
     return (false);    
   }
+
+
   
   // Setup Parameter output file
   
@@ -166,41 +308,167 @@ bool ModelAlgo::DMDBuildSimulator(BundleHandle Model, std::string filename)
 
 }
 
-bool ModelAlgo::DMDBuildDomain(FieldHandle elementtype, FieldHandle conductivity, std::vector<FieldHandle> membrane, std::vector<double> nodetypes, std::string filename);   
-{
-  ModelCreation::FieldsAlgo fieldalgo(pr_);
-  ModelCreation::NumericAlgo numericalgo(pr_);
-  ModelCreation::DataIOAlgo dataiocalgo(pr_);
 
-  std::string filename_systemmatrix = filenamebase + ".fem.spr";
-  std::string filename_volumevector = filenamebase + ".vol.vec";
-  std::string filename_nodetypevector = filenamebase + ".nt.vec";
-  std::string filename_visbundle = filenamebase + ".vis.bdl";
+bool ModelAlgo::DMDBuildDomain(FieldHandle elementtype, FieldHandle conductivity, std::vector<FieldHandle> membrane, std::vector<double> nodetypes, std::string filename);   
+
+bool ModelAlgo::DMDBuildDomain(BundleHandle Model)
+{
+  ModelCreation::DataIOAlgo    dataiocalgo(pr_);
+  ModelCreation::ConverterAlgo converteralgo(pr_);
+  ModelCreation::FieldsAlgo    fieldalgo(pr_);
+  ModelCreation::NumericAlgo   numericalgo(pr_);
+
+  StringHandle FileName = Model->getString("filename");
+  if (FileName.get_rep() == 0)
+  {
+    error("DMDBuildDomain: No filename destination for the model was given");
+    return (false);
+  }
+
+  FieldHandle ElementType = Model->getField("elementtype");
+  FieldHandle Conductivity = Model->getField("conductivity");
+
+  if (ElementType.get_rep() == 0)
+  {
+    error("DMDBuildDomain: No field called 'elementtype' was defined");
+    return (false);
+  }
+
+  if (Conductivity.get_rep() == 0)
+  {
+    error("DMDBuildDomain: No field called 'conductivity' was defined");
+    return (false);
+  }
+
+  // Get all the information from the sub bundles
+  // in the model
+
+  std::vector<FieldHandle> Membranes;
+  std::vector<double> nodetypes;
+
+  std::vector<FieldHandle> References;
+  std::vector<double> referencevalues;
+  std::vector<bool>   usereferencevalues;
+
+  std::vector<FieldHandle> Stimulus;
+  std::vector<double> stimulusdomain;
+  std::vector<double> stimuluscurrent;
+  std::vector<double> stimulusstart;
+  std::vector<double> stimulusend;
+  std::vector<bool>   stimulusiscurrentdensity;
+
+  for (size_t p=0; p < Model->numBundles(); p++)
+  {
+    std::string bundlename = Model->getFieldName(p);
+    if (bundlename.substr(0,9) == "membrane_")
+    {
+      BundleHandle MembraneBundle = Model->getBundle(bundlename);
+      FieldHandle Geometry = MembraneBundle->getField("geometry");
+      MatrixHandle NodeType = MembraneBundle->getMatrix("nodetype");
+      if (Geometry.get_rep()||NodeType.get_rep())
+      {
+        double nodetype;
+        converteralgo.MatrixToDouble(NodeType,nodetype);
+        Membranes.push_back(Geometry);
+        nodetypes.push_back(nodetype);
+      }
+    }
+
+    if (bundlename.substr(0,10) == "reference_")
+    {
+      BundleHandle ReferenceBundle =  Model->getBundle(bundlename);
+      FieldHandle Geometry = ReferenceBundle->getField("geometry");
+      MatrixHandle RefValue = ReferenceBundle->getMatrix("refvalue");
+
+      if (Geometry.get_rep())
+      {
+        References.push_back(Geometry);
+        if (RefValue.get_rep())
+        {
+          double refvalue = 0.0;
+          converteralgo.MatrixToDouble(RefValue,refvalue);
+          referencevalues.push_back(refvalue);
+          usereferencevalues.push_back(true);
+        }
+        else
+        {
+          referencevalues.push_back(0.0);
+          usereferencevalues.push_back(false);
+        }
+      }
+    }
+
+    if (bundlename.substr(0,9) == "stimulus_")
+    {
+      BundleHandle StimulusBundle = Model->getBundle(bundlename);
+      FieldHandle  Geometry = StimulusBundle->getField("geometry");
+      MatrixHandle Domain = StimulusBundle->getMatrix("domain");
+      MatrixHandle Current = StimulusBundle->getMatrix("current");
+      MatrixHandle Start = StimulusBundle->getMatrix("start");
+      MatrixHandle End = StimulusBundle->getMatrix("end");
+      MatrixHandle CurrentDensity = StimulusBundle->getMatrix("currentdensity");
+
+      if ((Geometry.get_rep())&&(Domain.get_rep())&&(Start.get_rep())&&(End.get_rep()))
+      {
+        double domain;
+        double start;
+        double end;
+        double current;
+
+        Stimulus.push_back(Geometry);
+        converteralgo.MatrixToDouble(Domain,domain);
+        converteralgo.MatrixToDouble(Start,start);
+        converteralgo.MatrixToDouble(End,end);
+
+        stimulusdomain.push_back(domain);
+        stimulusstart.push_back(end);     
+        stimulusend.push_back(start);
+
+        if (Current.get_rep())
+        {
+          converteralgo.MatrixToDouble(Current,current);
+          stimuluscurrent.push_back(current);
+          stimulusiscurrentdensity.push_back(false);
+        }
+        else if (CurrentDensity.get_rep())
+        {
+          converteralgo.MatrixToDouble(CurrentDensity,current);
+          stimuluscurrent.push_back(current);
+          stimulusiscurrentdensity.push_back(true);
+        }
+        else
+        {
+          stimuluscurrent.push_back(0.0);
+          stimulusiscurrentdensity.push_back(false);
+        }
+      }
+    }
+  }
   
-  size_t nummembranes = membrane.size();
-  std::vector<MembraneTableList> membranetable(nummembranes);
-  std::vector<FieldHandle>       membranefield(nummembranes);
-  std::vector<MatrixHandle>      membranemapping(nummembranes);
-  std::vector<int>               membranenumnodes(nummembranes);
-  std::vector<int>               membranenumelems(nummembranes);
+  size_t num_membranes = membrane.size();
+  std::vector<MembraneTableList> membranetable(num_membranes);
+  std::vector<FieldHandle>       membranefield(num_membranes);
+  std::vector<MatrixHandle>      membranemapping(num_membranes);
+  std::vector<int>               membranenumnodes(num_membranes);
+  std::vector<int>               membranenumelems(num_membranes);
   
   int num_synnodes = 0;
 
   for (size_t p=0; p<membranetable.size();p++)
   {
-    if (!(fieldalgo.GetFieldInfo(membrane[p],membranenumnodes[p],membranenumelems[p])))
+    if (!(fieldalgo.GetFieldInfo(Membranes[p],membranenumnodes[p],membranenumelems[p])))
     {
       error("DMDBuildDomain: Could get information from membrane field");
       return(false);    
     }
     
-    if (!(fieldalgo.ClearAndChangeFieldBasis(membrane[p],membrane[p],"Linear")))
+    if (!(fieldalgo.ClearAndChangeFieldBasis(Membranes[p],Membranes[p],"Linear")))
     {
       error("DMDBuildDomain: Could not build a linear field for the membrane");
       return(false);        
     }
     
-    if (!(DMDBuildMembraneTable(elementtype,membrane[p],mebranetable[p])))
+    if (!(DMDBuildMembraneTable(elementtype,Membranes[p],mebranetable[p])))
     {
       error("DMDBuildDomain: Could build membrane model");
       return(false);
@@ -317,6 +585,13 @@ bool ModelAlgo::DMDBuildDomain(FieldHandle elementtype, FieldHandle conductivity
     error("DMDBuildDomain: Matrix reordering failed");
     return (false);    
   }
+
+
+  std::string filename = FileName->get(); 
+  std::string filename_systemmatrix = filenamebase + ".fem.spr";
+  std::string filename_volumevector = filenamebase + ".vol.vec";
+  std::string filename_nodetypevector = filenamebase + ".nt.vec";
+  std::string filename_visbundle = filenamebase + ".vis.bdl";
   
   // Reorder domain properties
   nodetype = mapping*nodetype;

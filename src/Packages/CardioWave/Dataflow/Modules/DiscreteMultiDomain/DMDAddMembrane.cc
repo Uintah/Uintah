@@ -196,25 +196,33 @@ void DMDAddMembrane::execute()
   paramport->get(Param_from_port);
   if (Param_from_port.get_rep()) 
   {
+    paramstr += "\n";
     paramstr += Param_from_port->get();
+    paramstr += "\n";
   }
 
-  StringHandle Param = scinew String(guimembraneparam_.get());
-  if (Param.get_rep() == 0)
-  {
-    error("Could not create parameter string");
-    return;
-  } 
-  
-  Membrane->setString("parameters",Param);
-  
   std::string membranename = guimembranename_.get();
   StringHandle MembraneName = scinew String(membranename);
   Membrane->setString("name",MembraneName);
   
   SynapseItem item = synapsexml_.get_synapse(membranename);
-  StringHandle NodeTypeName = scinew String(item.nodetype);
-  Membrane->setString("nodetype_name",NodeTypeName);
+  oss.clear();
+  oss << item.nodetype << " = " << membrane_nodetype << "\n";
+  paramstr += oss.str();
+
+  StringHandle Parameters = scinew String(paramstr);
+  if (Parameters.get_rep() == 0)
+  {
+    error("Could not create parameter string");
+    return;
+  } 
+  
+  Membrane->setString("parameters",Parameters);
+  
+
+    
+  StringHandle SourceFile = scinew String(item.sourcefile);
+  Membrane->setString("sourcefile",SourceFile);
   
   if (membranename != "")
   {

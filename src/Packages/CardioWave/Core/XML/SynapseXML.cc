@@ -133,7 +133,7 @@ bool SynapseXML::add_file(std::string filename)
         }
         if (std::string(to_char_ptr(inode->name)) == std::string("file"))
         {
-          item.file = get_serialized_children(inode);
+          item.sourcefile = get_serialized_children(inode);
         }
         if (std::string(to_char_ptr(inode->name)) == std::string("nodetype"))
         {

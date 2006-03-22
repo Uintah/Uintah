@@ -36,6 +36,8 @@ SRCS := \
 	$(SRCDIR)/TimeDataReader.tcl\
 	$(SRCDIR)/ReduceBandWidth.tcl\
 	$(SRCDIR)/DMDAddMembrane.tcl\
+	$(SRCDIR)/DMDAddBlockStimulus.tcl\
+	$(SRCDIR)/DMDAddReference.tcl\
 	$(SRCDIR)/DMDCreateSimulator.tcl\
 #[INSERT NEW TCL FILE HERE]
 
