@@ -60,7 +60,7 @@ class NumericAlgo : public AlgoLibrary {
     NumericAlgo(ProgressReporter* pr); // normal case
 
     // Build the FEMMatrix using a variable number of processes
-    bool BuildFEMMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc);
+    bool BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable = 0, MatrixHandle GeomToComp = 0, MatrixHandle CompToGeom = 0);
     
     // Resize a matrix, Dense or Sparse
     bool ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n);

@@ -47,6 +47,7 @@ class Element {
     inline Scalar area();
     inline Scalar volume();
     inline Scalar dimension();
+    inline Vector normal();
   
     inline void next();
     
@@ -111,6 +112,14 @@ inline Vector Element::center()
   return(v);
 }
 
+inline Vector Element::normal()
+{
+  Vector v;
+  algo_->getnormal(v);
+  return(v);
+}
+
+
 inline void Element::next()
 {
   algo_->next();
@@ -144,6 +153,11 @@ inline Scalar dimension(Element el)
 inline Vector center(Element el)
 {
   return(el.center());
+}
+
+inline Vector normal(Element el)
+{
+  return(el.normal());
 }
 
 } // end namespace

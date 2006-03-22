@@ -264,6 +264,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
     if (Output[p].isfieldscalar())   fcn += "    TensorVectorMath::Scalar " + Output[p].getname() + ";\n";
     if (Output[p].isfieldvector())   fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
     if (Output[p].isfieldtensor())   fcn += "    TensorVectorMath::Tensor " + Output[p].getname() + ";\n";
+    if (Output[p].islocation())      fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
   }
   
   fcn += "\n\n";
@@ -309,6 +310,8 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
     if (Output[p].isfieldscalar())   fcn += "     output_[" + oss.str() + "].setnextfieldscalar(" + Output[p].getname() + ");\n";
     if (Output[p].isfieldvector())   fcn += "     output_[" + oss.str() + "].setnextfieldvector(" + Output[p].getname() + ");\n";
     if (Output[p].isfieldtensor())   fcn += "     output_[" + oss.str() + "].setnextfieldtensor(" + Output[p].getname() + ");\n";
+    if (Output[p].islocation())      fcn += "     output_[" + oss.str() + "].setnextfieldlocation(" + Output[p].getname() + ");\n"; 
+
   }
   
   fcn += std::string("    }\n  }\n\n") +

@@ -30,6 +30,8 @@
 
 namespace ModelCreation {
 
+using namespace SCIRun;
+
 void ArrayObjectFieldDataAlgo::getnextscalar(TensorVectorMath::Scalar& scalar)
 {
   scalar = 0.0;
@@ -127,13 +129,21 @@ SCIRun::CompileInfoHandle
 {
   const SCIRun::TypeDescription *fieldtype = field->get_type_description();
   const SCIRun::TypeDescription *locationtype = field->order_type_description();
-
+  const SCIRun::TypeDescription *meshtype = field->get_type_description(SCIRun::Field::MESH_TD_E);
+  
   // As I use my own Tensor and Vector algorithms they need to be
   // converted when reading the data, hence separate algorithms are
   // implemented for those cases
 
-  std::string algotype ="Node";
+  std::string mesh = meshtype->get_name();
+
+  std::string algotype ="";
   if (field->basis_order() == 0) algotype = "Elem";
+
+  if (((mesh.find("Scanline") != std::string::npos)||
+      (mesh.find("Image") != std::string::npos)||
+      (mesh.find("LatVol") != std::string::npos))&&
+      (algotype == "")) algotype = "Node";
 
   std::string algo_name = "ArrayObjectFieldLocation"+algotype+"AlgoT";
   std::string algo_base = "ArrayObjectFieldLocationAlgo";
@@ -271,6 +281,12 @@ void ArrayObjectFieldElemAlgo::getvolume(TensorVectorMath::Scalar& volume)
   volume = 0.0;
 }
 
+void ArrayObjectFieldElemAlgo::getnormal(TensorVectorMath::Vector& normal)
+{
+  normal = TensorVectorMath::Vector(0.0,0.0,0.0);
+}
+
+
 bool ArrayObjectFieldElemAlgo::ispoint()
 {
   return(false);
@@ -354,7 +370,65 @@ SCIRun::CompileInfoHandle ArrayObjectFieldElemAlgo::get_compile_info(SCIRun::Fie
   return(ci);
 }
 
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+{
+  TriSurfMesh<TriLinearLgn<Point> >::Node::array_type nodes;
+  mesh->get_nodes(nodes,*it);
+  
+  Point p1,p2,p3;
+  if (nodes.size() == 3)
+  {
+    mesh->get_center(p1,nodes[0]);
+    mesh->get_center(p2,nodes[1]);
+    mesh->get_center(p3,nodes[2]);
+    
+    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = TensorVectorMath::cross(vec1,vec2);    
+  }
+  else
+  {
+    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+  }
+}
 
 
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+{
+  SCIRun::QuadSurfMesh<TriLinearLgn<Point> >::Node::array_type nodes;
+  mesh->get_nodes(nodes,*it);
+  
+  Point p1,p2,p3;
+  if (nodes.size() == 3)
+  {
+    mesh->get_center(p1,nodes[0]);
+    mesh->get_center(p2,nodes[1]);
+    mesh->get_center(p3,nodes[2]);
+    
+    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = TensorVectorMath::cross(vec1,vec2);    
+  }
+  else
+  {
+    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+  }
+}
+
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+{
+  SCIRun::Vector v;
+  mesh->synchronize(SCIRun::Mesh::NORMALS_E);
+  mesh->get_normal(v,*it);
+  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+}
+
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+{
+  SCIRun::Vector v;
+  mesh->synchronize(SCIRun::Mesh::NORMALS_E);
+  mesh->get_normal(v,*it);
+  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+}
 
 } // namespace ModelCreation

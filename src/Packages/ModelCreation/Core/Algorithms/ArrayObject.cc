@@ -234,6 +234,45 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
 }
 
 
+
+
+bool ArrayObject::create_outputlocation(SCIRun::FieldHandle& field,  std::string name, SCIRun::FieldHandle& ofield)
+{
+  clear();
+  
+  if (field.get_rep() == 0) 
+  {
+    error("No input data field");
+    return(false);
+  }
+  name_ = name;
+  
+  field_ = field->clone();
+  field_->mesh_detach();
+ 
+  SCIRun::CompileInfoHandle ci2 = ArrayObjectFieldLocationAlgo::get_compile_info(field_);
+  if (!SCIRun::DynamicCompilation::compile(ci2,fieldlocationalgo_,false,pr_))
+  {
+    error("Dynamic compilation failed");
+    return(false);
+  }  
+  
+  if (!(fieldlocationalgo_->setfield(field_)))
+  {
+    error("Could not link field with dynamic algorithm");
+    return(false);  
+  }
+  
+  size_ = fieldlocationalgo_->size();
+  type_ = LOCATION;
+     
+  ofield = field_;
+  return(true);
+}
+
+
+
+
 bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string datatype, std::string basistype, std::string name, SCIRun::FieldHandle& ofield)
 {
   clear();

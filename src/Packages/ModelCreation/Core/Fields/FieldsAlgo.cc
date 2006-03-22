@@ -82,6 +82,7 @@
 #include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
 #include <Packages/ModelCreation/Core/Fields/FieldBoundary.h>
+#include <Packages/ModelCreation/Core/Fields/LinkFieldBoundary.h>
 #include <Packages/ModelCreation/Core/Fields/MappingMatrixToField.h>
 #include <Packages/ModelCreation/Core/Fields/MergeFields.h>
 #include <Packages/ModelCreation/Core/Fields/NrrdToField.h>
@@ -605,6 +606,14 @@ bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
   ConvertToTriSurfAlgo algo;
   return(algo.ConvertToTriSurf(pr_,input,output));
 }
+
+
+bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz)
+{
+  LinkFieldBoundaryAlgo algo;
+  return(algo.LinkFieldBoundary(pr_,input,output,tol,linkx,linky,linkz));
+}
+
 
 bool FieldsAlgo::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
 {

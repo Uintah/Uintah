@@ -117,7 +117,11 @@ class FieldsAlgo : public AlgoLibrary {
     // FieldBoundary:
     // This function extracts the outer boundaries of a field
     bool FieldBoundary(FieldHandle input, FieldHandle& output, MatrixHandle &interpolant);
-    
+
+    // LinkFieldBoundary:
+    // Build a table for the FE Matrix generator so the boundaries will be linked
+    bool LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx = true, bool linky = true, bool linkz = true);
+
     // MappingMatrixToField:
     // This function will assign to each node the value of the original node.
     // Hence by selecting areas in this field one can obtain all nodes located

@@ -57,8 +57,8 @@ itcl_class ModelCreation_FieldsData_SelectAndSetFieldsData {
         frame $infoframe.info
         pack $infoframe.info -side left
         set info $infoframe.info
-        label $info.info1 -text "Selection: SELECTION = function(DATA,A,B,C,...)"
-        label $info.info1a -text "Function: RESULT = function(DATA,A,B,C,...)"
+        label $info.info1 -text "Selection: function(DATA,A,B,C,...)"
+        label $info.info1a -text "Function: function(DATA,A,B,C,...)"
         label $info.info2  -text "Input array: DATA1 (scalar/vector/tensor: data from field port) "
         label $info.info2a -text "Input array: DATA2 (scalar/vector/tensor: data from field port) "
         label $info.info2b -text "Input array: DATA3 (scalar/vector/tensor: data from field port) "
@@ -68,7 +68,7 @@ itcl_class ModelCreation_FieldsData_SelectAndSetFieldsData {
         label $info.info6 -text "Input array: INDEX (scalar: number of the element)"
         label $info.info7 -text "Input array: SIZE (scalar: number of elements)"
         label $info.info8 -text "Input array: ELEMENT (element: object containing element properties)"
-        label $info.info9 -text "Output array: RESULT (scalar)"
+        label $info.info9 -text "Output array: RESULT (scalar/vector/tensor)"
 
         grid $info.info1 -row 0 -column 0 -columnspan 2 -sticky w
         grid $info.info1a -row 1 -column 0 -columnspan 2 -sticky w

@@ -21,6 +21,7 @@ SUBDIRS := \
 	$(SRCDIR)/FieldsProperty\
 	$(SRCDIR)/FieldsGeometry\
 	$(SRCDIR)/FieldsExample\
+	$(SRCDIR)/FiniteElements\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
