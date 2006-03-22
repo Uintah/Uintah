@@ -224,7 +224,7 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
 	+start.y()*dcells.x()+start.x();
 #ifdef ARCHES_PETSC_DEBUG
-      cerr << "Looking at patch: " << neighbor->getID() << '\n';
+      cerr << "Looking at patch: " << neighbor->get_id() << '\n';
       cerr << "low=" << low << '\n';
       cerr << "high=" << high << '\n';
       cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
@@ -364,7 +364,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   double solve_start = Time::currentSeconds();
 
 #ifdef ARCHES_PETSC_DEBUG
-   cerr << "in setPressMatrix on patch: " << patch->getID() << '\n';
+   cerr << "in setPressMatrix on patch: " << patch->get_id() << '\n';
 #endif
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
