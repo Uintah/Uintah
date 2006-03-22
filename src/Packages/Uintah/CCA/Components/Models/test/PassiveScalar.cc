@@ -323,7 +323,7 @@ void PassiveScalar::modifyThermoTransportProperties(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing modifyThermoTransportProperties on patch "
-               <<patch->getID()<< "\t PassiveScalar" << endl;
+               <<patch->get_id()<< "\t PassiveScalar" << endl;
    
     int indx = d_matl->getDWIndex();
     CCVariable<double> diffusionCoeff;
@@ -381,7 +381,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
+    cout_doing << "Doing computeModelSources... on patch "<<patch->get_id()
                << "\t\t\t PassiveScalar" << endl;
    
     constCCVariable<double> f_old, diff_coeff;
@@ -485,7 +485,7 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing testConservation on patch "<<patch->getID()
+    cout_doing << "Doing testConservation on patch "<<patch->get_id()
                << "\t\t\t PassiveScalar" << endl;
                
     //__________________________________

@@ -98,7 +98,7 @@ using namespace SCIRun;
 // ****************************************************************************
 
 struct PointCloudValue {
-  string id;
+  string get_id();
   Point pt;
   float data;
   string data_name;
@@ -339,11 +339,11 @@ DECLARE_MAKER(StreamReader)
 //
 StreamReader::StreamReader(GuiContext* ctx)
   : Module("StreamReader", ctx, Source, "DataIO", "DDDAS"),
-    hostname_(ctx->subVar("hostname")),   
-    port_(ctx->subVar("port")),   
-    file_read_(ctx->subVar("file-read")),   
-    file_write_(ctx->subVar("file-write")),
-    stop_sr_(ctx->subVar("stop-sr")),
+    hostname_(get_ctx()->subVar("hostname")),   
+    port_(get_ctx()->subVar("port")),   
+    file_read_(get_ctx()->subVar("file-read")),   
+    file_write_(get_ctx()->subVar("file-write")),
+    stop_sr_(get_ctx()->subVar("stop-sr")),
     stream_cond_("StreamReader: waits for stream reading/processing to finish."),
     buffer_lock_("StreamReader: controls mutable access to the buffer.")  
 {  
@@ -1339,7 +1339,7 @@ void StreamReader::process_sensor_2( unsigned char * processing_buffer,
   cout << "(StreamReader::process_sensor_2) Inside" << endl;
 
   unsigned char sync[11];
-  unsigned char id[37];
+  unsigned char get_id()[37];
   unsigned char timestamp[22];
   unsigned char num_values[2];
   unsigned char data_name[9];
@@ -1356,8 +1356,8 @@ void StreamReader::process_sensor_2( unsigned char * processing_buffer,
   memcpy( &sync, &processing_buffer[0], 10 * sizeof(unsigned char) );
   sync[10] = '\0';
 
-  memcpy( &id, &processing_buffer[11], 36 * sizeof(unsigned char) );
-  id[36] = '\0';
+  memcpy( &get_id(), &processing_buffer[11], 36 * sizeof(unsigned char) );
+  get_id()[36] = '\0';
 
   memcpy( &timestamp, &processing_buffer[48], 21 * sizeof(unsigned char) );
   timestamp[21] = '\0';
@@ -1378,17 +1378,17 @@ void StreamReader::process_sensor_2( unsigned char * processing_buffer,
   // Do format conversions to get data into the right format
   int num_vals = atoi( (const char *) num_values );
   string dn = (const char *) data_name;
-  string id_str = (const char *) id;
+  string id_str = (const char *) get_id();
 
   // Do format conversions to get 3d coordinates and timestamp
   float x, y, z;
   char prefix[80];
-  sscanf( (const char *) id, "%9s-%f-%f-%f", prefix, &x, &y, &z );  
+  sscanf( (const char *) get_id(), "%9s-%f-%f-%f", prefix, &x, &y, &z );  
 
   double ts = atof( (const char *) timestamp );  
 
   cout << "(StreamReader::process_sensor_2) Sensor data:\n"
-       << "id = " << id << "\n"
+       << "get_id() = " << get_id() << "\n"
        << "x = " << x << "\n"
        << "y = " << y << "\n"
        << "z = " << z << "\n"
@@ -1407,7 +1407,7 @@ void StreamReader::process_sensor_2( unsigned char * processing_buffer,
     return;
   }
 
-  // Check to see if the id prefix is garbage
+  // Check to see if the get_id() prefix is garbage
   if( strcmp(prefix, "VirTelem2") != 0 )
   {
     cerr << "(StreamReader::process_sensor_2) "
@@ -1456,7 +1456,7 @@ void StreamReader::process_sensor_2( unsigned char * processing_buffer,
     // mesh if/when the the CHECKSUM check succeeds
     struct PointCloudValue pcv;
     Point pt( x, y, z );
-    pcv.id = id_str;
+    pcv.get_id() = id_str;
     pcv.pt = pt; 
     pcv.data = data_value;
     pcv.data_name = dn;
@@ -1523,7 +1523,7 @@ void StreamReader::update_pc_mesh( vector<struct PointCloudValue>
   for( int j = 0; j < npv_size; j++ ) 
   {
     struct PointCloudValue new_pcv = new_pc_values[j]; 
-    pcw_->update_node_value( new_pcv.id, new_pcv.pt, new_pcv.data, 
+    pcw_->update_node_value( new_pcv.get_id(), new_pcv.pt, new_pcv.data, 
                              new_pcv.data_name );
   } 
 
@@ -1624,28 +1624,28 @@ void StreamReader::process_sensor_3( unsigned char * processing_buffer,
   //printf( "(StreamReader::process_sensor_3) test = '%s'\n", test );
 
   // Parse the data information the precedeces the actual data values
-  string id;
+  string get_id();
   string timestamp;
   int num_vals;
   string data_name;
   string data_type;
   string header;
 
-  input >> header >> id >> timestamp >> num_vals;
+  input >> header >> get_id() >> timestamp >> num_vals;
 
-  // Parse id tp get the unique x,y,z coordinates
+  // Parse get_id() tp get the unique x,y,z coordinates
 
   // Do format conversions to get 3d coordinates and timestamp
   char id_c_str[80]; 
   float x, y, z;
   char prefix[80];
-  strcpy( id_c_str, id.c_str() );
+  strcpy( id_c_str, get_id().c_str() );
   sscanf( id_c_str, "%9s-%f-%f-%f", prefix, &x, &y, &z );  
 
   double ts = atof( timestamp.c_str() );  
 
   cout << "(StreamReader::process_sensor_3) Sensor data:" << endl
-       << "id = " << id << "\n"
+       << "get_id() = " << get_id() << "\n"
        << "x = " << x << "\n"
        << "y = " << y << "\n"
        << "z = " << z << "\n"
@@ -1668,7 +1668,7 @@ void StreamReader::process_sensor_3( unsigned char * processing_buffer,
     return;
   }
 
-  // Check to see if the id prefix is garbage
+  // Check to see if the get_id() prefix is garbage
   if( strcmp(prefix, "VirTelem2") != 0 )
   {
     cerr << "(StreamReader::process_sensor_3) "
@@ -1796,7 +1796,7 @@ void StreamReader::process_sensor_3( unsigned char * processing_buffer,
   for( int j = 0; j < npv_size; j++ ) 
   {
     struct PointCloudValue new_pcv = new_pc_values[j]; 
-    pcw_->update_node_value( id, new_pcv.pt, new_pcv.data, 
+    pcw_->update_node_value( get_id(), new_pcv.pt, new_pcv.data, 
                              new_pcv.data_name );
   } 
   pcw_->freeze( data_name );

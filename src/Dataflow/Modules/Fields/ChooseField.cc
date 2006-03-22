@@ -65,8 +65,8 @@ private:
 DECLARE_MAKER(ChooseField)
 ChooseField::ChooseField(GuiContext* ctx)
   : Module("ChooseField", ctx, Filter, "FieldsOther", "SCIRun"),
-    gUseFirstValid_(ctx->subVar("use-first-valid"), 1),
-    gPortIndex_(ctx->subVar("port-index"), 0),
+    gUseFirstValid_(get_ctx()->subVar("use-first-valid"), 1),
+    gPortIndex_(get_ctx()->subVar("port-index"), 0),
     fHandle_(0)
 {
 }
@@ -80,7 +80,7 @@ ChooseField::execute()
 {
   std::vector<FieldHandle> fHandles;
 
-  if( !getDynamicIHandle( "Field", fHandles, false ) ) return;
+  if( !get_dynamic_input_handles( "Field", fHandles, false ) ) return;
 
   // Check to see if any values have changed via a matrix or user.
   if( !fHandle_.get_rep() ||
@@ -137,7 +137,7 @@ ChooseField::execute()
   }
 
   // Send the data downstream
-  sendOHandle( "Field",  fHandle_, true );
+  send_output_handle( "Field",  fHandle_, true );
 }
 
 } // End namespace SCIRun

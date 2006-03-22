@@ -62,7 +62,7 @@ void  JoinStrings::execute()
     
   int p = 0;
   StringIPort *iport;
-  while(p < numIPorts())
+  while(p < num_input_ports())
   {
   
       iport = dynamic_cast<StringIPort *>(get_iport(p));

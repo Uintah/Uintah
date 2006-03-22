@@ -76,17 +76,17 @@ DECLARE_MAKER(TendEpireg)
 
 TendEpireg::TendEpireg(SCIRun::GuiContext *ctx) : 
   Module("TendEpireg", ctx, Filter, "Tend", "Teem"), 
-  gradient_list_(ctx->subVar("gradient_list"), ""),
-  reference_(ctx->subVar("reference"), -1),
-  blur_x_(ctx->subVar("blur_x"), 1.0),
-  blur_y_(ctx->subVar("blur_y"), 2.0),
-  use_default_threshold_(ctx->subVar("use-default-threshold"), 1),
-  threshold_(ctx->subVar("threshold"), 0.0),
-  cc_analysis_(ctx->subVar("cc_analysis"), 1),
-  fitting_(ctx->subVar("fitting"), 0.70),
-  kernel_(ctx->subVar("kernel"), "cubicCR"),
-  sigma_(ctx->subVar("sigma"), 0.0),
-  extent_(ctx->subVar("extent"), 0.5)
+  gradient_list_(get_ctx()->subVar("gradient_list"), ""),
+  reference_(get_ctx()->subVar("reference"), -1),
+  blur_x_(get_ctx()->subVar("blur_x"), 1.0),
+  blur_y_(get_ctx()->subVar("blur_y"), 2.0),
+  use_default_threshold_(get_ctx()->subVar("use-default-threshold"), 1),
+  threshold_(get_ctx()->subVar("threshold"), 0.0),
+  cc_analysis_(get_ctx()->subVar("cc_analysis"), 1),
+  fitting_(get_ctx()->subVar("fitting"), 0.70),
+  kernel_(get_ctx()->subVar("kernel"), "cubicCR"),
+  sigma_(get_ctx()->subVar("sigma"), 0.0),
+  extent_(get_ctx()->subVar("extent"), 0.5)
 {
 }
 
@@ -100,7 +100,7 @@ TendEpireg::~TendEpireg()
 bool
 TendEpireg::extract_gradients(vector<double> &d)
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
   istringstream str(gradient_list_.get().c_str());
   for (;;)
   {
@@ -216,7 +216,7 @@ TendEpireg::execute()
 void
 TendEpireg::presave()
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
 }
 
 

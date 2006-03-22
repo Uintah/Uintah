@@ -69,12 +69,12 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       }
 
       ostringstream ostr;
-      ostr << patch->getID() << ':' << idx;
+      ostr << patch->get_id() << ':' << idx;
 
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
 	int pidx = getPatchwiseProcessorAssignment(p);
-        ostr << ' ' << p->getID() << ';' << pidx;
+        ostr << ' ' << p->get_id() << ';' << pidx;
 	ASSERTRANGE(pidx, 0, d_myworld->size());
 	if(pidx != idx){
 	  cerrLock.lock();
@@ -153,12 +153,12 @@ void LoadBalancerCommon::assignResources(DetailedTasks3& graph)
       }
 
       ostringstream ostr;
-      ostr << patch->getID() << ':' << idx;
+      ostr << patch->get_id() << ':' << idx;
 
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
 	int pidx = getPatchwiseProcessorAssignment(p);
-        ostr << ' ' << p->getID() << ';' << pidx;
+        ostr << ' ' << p->get_id() << ';' << pidx;
 	ASSERTRANGE(pidx, 0, d_myworld->size());
 	if(pidx != idx){
 	  cerrLock.lock();
@@ -309,10 +309,10 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
 	    d_neighbors.insert(neighbor);
 	}
         if (d_myworld->myrank() == 0 && clusterDebug.active()) {
-          clusterDebug << patch->getID() << " ";
+          clusterDebug << patch->get_id() << " ";
           for (int i = 0; i < n.size(); i++)
-            if (n[i]->getID() >= 0)
-              clusterDebug << n[i]->getID() << " ";
+            if (n[i]->get_id() >= 0)
+              clusterDebug << n[i]->get_id() << " ";
           clusterDebug << endl;
         }
       }
@@ -328,13 +328,13 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         //const Patch* patch = *iter;
-        //clusterDebug << " Patch " << patch->getID() - low_patch << ": proc " <<getPatchwiseProcessorAssignment(patch) << endl;
+        //clusterDebug << " Patch " << patch->get_id() - low_patch << ": proc " <<getPatchwiseProcessorAssignment(patch) << endl;
       }
     }
   }
   if (neiDebug.active())
     for (std::set<const Patch*>::iterator iter = d_neighbors.begin(); iter != d_neighbors.end(); iter++)
-      cout << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc " << getPatchwiseProcessorAssignment(*iter) << endl;
+      cout << d_myworld->myrank() << "  Neighborhood: " << (*iter)->get_id() << " Proc " << getPatchwiseProcessorAssignment(*iter) << endl;
 
 }
 

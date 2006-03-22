@@ -150,8 +150,8 @@ MeanImageFilter::run( itk::Object *obj_InputImage)
   
     // for each defined object, clear gui
   
-    gui->execute(id.c_str() + string(" clear_radius_gui"));
-    gui->execute(id.c_str() + string(" init_radius_dimensions"));
+    get_gui()->execute(get_id().c_str() + string(" clear_radius_gui"));
+    get_gui()->execute(get_id().c_str() + string(" init_radius_dimensions"));
     
     execute_ = false;
   }
@@ -167,7 +167,7 @@ MeanImageFilter::run( itk::Object *obj_InputImage)
     ostringstream str;
     str << "radius" << i;
     
-    gui_radius_.push_back(new GuiInt(ctx->subVar(str.str())));
+    gui_radius_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
 
   }
 
@@ -214,7 +214,7 @@ DECLARE_MAKER(MeanImageFilter)
 
 MeanImageFilter::MeanImageFilter(GuiContext* ctx)
   : Module("MeanImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_dimension_(ctx->subVar("dimension")), 
+     gui_dimension_(get_ctx()->subVar("dimension")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

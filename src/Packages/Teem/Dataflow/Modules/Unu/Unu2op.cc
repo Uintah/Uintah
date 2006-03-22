@@ -64,10 +64,10 @@ DECLARE_MAKER(Unu2op)
 
 Unu2op::Unu2op(SCIRun::GuiContext *ctx) : 
   Module("Unu2op", ctx, Filter, "UnuAtoM", "Teem"), 
-  operator_(ctx->subVar("operator")),
-  float_input_(ctx->subVar("float_input")),
-  type_(ctx->subVar("type")),
-  usetype_(ctx->subVar("usetype")),
+  operator_(get_ctx()->subVar("operator")),
+  float_input_(get_ctx()->subVar("float_input")),
+  type_(get_ctx()->subVar("type")),
+  usetype_(get_ctx()->subVar("usetype")),
   first_nrrd_(true), second_nrrd_(true)
 {
 }

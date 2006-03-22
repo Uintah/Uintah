@@ -83,21 +83,21 @@ ProgressReporter::compile_error(const std::string &filename)
 }
 
 void
-ProgressReporter::postMessage(const std::string&msg)
+ProgressReporter::post_message(const std::string&msg)
 {
   std::cerr << "Message: " << msg << std::endl;
 }
 
 
 std::ostream &
-ProgressReporter::msgStream()
+ProgressReporter::msg_stream()
 {
   return std::cerr;
 }
 
 
 void
-ProgressReporter::msgStream_flush()
+ProgressReporter::msg_stream_flush()
 {
   std::cerr.flush();
 }

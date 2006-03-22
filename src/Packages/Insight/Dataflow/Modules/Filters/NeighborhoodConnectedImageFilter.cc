@@ -156,11 +156,11 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
   
     // for each defined object, clear gui
   
-    gui->execute(id.c_str() + string(" clear_radius_gui"));
-    gui->execute(id.c_str() + string(" init_radius_dimensions"));
+    get_gui()->execute(get_id().c_str() + string(" clear_radius_gui"));
+    get_gui()->execute(get_id().c_str() + string(" init_radius_dimensions"));
     
-    gui->execute(id.c_str() + string(" clear_seed_point_gui"));
-    gui->execute(id.c_str() + string(" init_seed_point_dimensions"));
+    get_gui()->execute(get_id().c_str() + string(" clear_seed_point_gui"));
+    get_gui()->execute(get_id().c_str() + string(" init_seed_point_dimensions"));
     
     execute_ = false;
   }
@@ -176,7 +176,7 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
     ostringstream str;
     str << "radius" << i;
     
-    gui_radius_.push_back(new GuiInt(ctx->subVar(str.str())));
+    gui_radius_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
 
   }
 
@@ -199,7 +199,7 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
     ostringstream str;
     str << "seed_point" << i;
     
-    gui_seed_point_.push_back(new GuiInt(ctx->subVar(str.str())));
+    gui_seed_point_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
 
   }
 
@@ -252,10 +252,10 @@ DECLARE_MAKER(NeighborhoodConnectedImageFilter)
 
 NeighborhoodConnectedImageFilter::NeighborhoodConnectedImageFilter(GuiContext* ctx)
   : Module("NeighborhoodConnectedImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_replace_value_(ctx->subVar("replace_value")),
-     gui_lower_threshold_(ctx->subVar("lower_threshold")),
-     gui_upper_threshold_(ctx->subVar("upper_threshold")),
-     gui_dimension_(ctx->subVar("dimension")), 
+     gui_replace_value_(get_ctx()->subVar("replace_value")),
+     gui_lower_threshold_(get_ctx()->subVar("lower_threshold")),
+     gui_upper_threshold_(get_ctx()->subVar("upper_threshold")),
+     gui_dimension_(get_ctx()->subVar("dimension")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

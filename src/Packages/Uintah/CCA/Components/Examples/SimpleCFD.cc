@@ -588,7 +588,7 @@ void SimpleCFD::initialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing initialize patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing initialize patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       SFCXVariable<double> xvel;
@@ -859,7 +859,7 @@ void SimpleCFD::advectVelocity(const ProcessorGroup*,
     
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing advectVelocity patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing advectVelocity patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -931,7 +931,7 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing applyForces patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing applyForces patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
@@ -1481,7 +1481,7 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing applyViscosity patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';   
+    cout_doing << "Doing applyViscosity patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';   
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -1633,7 +1633,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing projectVelocity patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing projectVelocity patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -1974,8 +1974,8 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
   //const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing applyProjection patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
-    //cerr << "RANDY: Doing applyProjection on patch " << patch->getID() << endl;
+    cout_doing << "Doing applyProjection patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
+    //cerr << "RANDY: Doing applyProjection on patch " << patch->get_id() << endl;
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -2205,7 +2205,7 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing advectScalars patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing advectScalars patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
    
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -2294,7 +2294,7 @@ void SimpleCFD::diffuseScalar(const ProcessorGroup*,
   double delt=delT;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing diffuseScalar patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing diffuseScalar patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -2360,7 +2360,7 @@ void SimpleCFD::dissipateScalars(const ProcessorGroup*,
   double delt=delT;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing dissipateScalars patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing dissipateScalars patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -2409,7 +2409,7 @@ void SimpleCFD::updatebcs(const ProcessorGroup*,
   if(dbg.active()){
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      cout_doing << "Doing updatebcs patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+      cout_doing << "Doing updatebcs patch " << patch->get_id()<< "\t\t\t SimpleCFD" << '\n';
       
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
@@ -2472,7 +2472,7 @@ void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << "Doing interpolateVelocities patch " << patch->getID()<< "\t\t SimpleCFD" << '\n';
+    cout_doing << "Doing interpolateVelocities patch " << patch->get_id()<< "\t\t SimpleCFD" << '\n';
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 

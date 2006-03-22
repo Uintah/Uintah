@@ -68,10 +68,10 @@ DECLARE_MAKER(NrrdInfo)
 NrrdInfo::NrrdInfo(GuiContext* ctx)
   : Module("NrrdInfo", ctx, Source, "NrrdData", "Teem"),
     generation_(-1),
-    gui_name_(ctx->subVar("name"), "---"),
-    gui_type_(ctx->subVar("type"), "---"),
-    gui_dimension_(ctx->subVar("dimension"), "0"),
-    gui_origin_(ctx->subVar("origin"), "0")
+    gui_name_(get_ctx()->subVar("name"), "---"),
+    gui_type_(get_ctx()->subVar("type"), "---"),
+    gui_dimension_(get_ctx()->subVar("dimension"), "0"),
+    gui_origin_(get_ctx()->subVar("origin"), "0")
 {
 }
 
@@ -87,7 +87,7 @@ NrrdInfo::clear_vals()
   gui_name_.set("---");
   gui_type_.set("---");
 
-  gui->execute(id + " delete_tabs");
+  get_gui()->execute(get_id() + " delete_tabs");
 }
 
 
@@ -96,8 +96,8 @@ NrrdInfo::update_axis_var(const char *name, int axis, const string &val,
                           const char *pname)
 {
   ostringstream ostr;
-  ostr << "set " << id << "-" << name << axis << " {" << val << "}";
-  gui->execute(ostr.str());
+  ostr << "set " << get_id() << "-" << name << axis << " {" << val << "}";
+  get_gui()->execute(ostr.str());
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
     remark("Axis " + to_string(axis) + " " + pname + ": " + val);
@@ -204,7 +204,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     update_axis_var("spaceDir", i, "---", "Spacing Direction");
   }
 
-  gui->execute(id + " add_tabs");
+  get_gui()->execute(get_id() + " add_tabs");
 }
 
 

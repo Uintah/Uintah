@@ -61,7 +61,7 @@ DECLARE_MAKER(TendSim)
 
 TendSim::TendSim(SCIRun::GuiContext *ctx) : 
   Module("TendSim", ctx, Filter, "Tend", "Teem"),
-  bvalue_(ctx->subVar("bvalue"), 1.0)
+  bvalue_(get_ctx()->subVar("bvalue"), 1.0)
 {
 }
 

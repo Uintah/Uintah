@@ -36,9 +36,9 @@ private:
 DECLARE_MAKER(CreateMatrix)
 CreateMatrix::CreateMatrix(GuiContext* ctx)
   : Module("CreateMatrix", ctx, Source, "Math", "SCIRun"),
-    nrows_(ctx->subVar("rows"), 1),
-    ncols_(ctx->subVar("cols"), 1),
-    data_(ctx->subVar("data"), "{0.0}")
+    nrows_(get_ctx()->subVar("rows"), 1),
+    ncols_(get_ctx()->subVar("cols"), 1),
+    data_(get_ctx()->subVar("data"), "{0.0}")
 {
 }
 
@@ -52,7 +52,7 @@ void
 CreateMatrix::execute()
 {
   MatrixHandle handle;
-  gui->execute(id + " update_matrixdata");
+  get_gui()->execute(get_id() + " update_matrixdata");
   
   int nrows = nrows_.get();
   int ncols = ncols_.get();

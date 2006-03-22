@@ -576,7 +576,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
       {
         pr->error(errmsg);
       }
-      pr->msgStream() << SOError() << endl;
+      pr->msg_stream() << SOError() << endl;
       // Remove the null ref for this lib from the map.
       map_lock_.lock();
       algo_map_.erase(info.filename_);
@@ -594,7 +594,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   {
     pr->error("DYNAMIC LIB ERROR: " + full_so +
               " no maker function!!");
-    pr->msgStream() << SOError() << endl;
+    pr->msg_stream() << SOError() << endl;
     // Remove the null ref for this lib from the map.
     map_lock_.lock();
     algo_map_.erase(info.filename_);
@@ -622,7 +622,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   string command = ("cd " + otf_dir() + "; " + MAKE_COMMAND + " " +
 		    info.filename_ + ext);
 
-  pr->msgStream() << "DynamicLoader - Executing: " << command << endl;
+  pr->msg_stream() << "DynamicLoader - Executing: " << command << endl;
 
   FILE *pipe = 0;
   bool result = true;
@@ -718,8 +718,8 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   char buffer[256];
   while (pipe && fgets(buffer, 256, pipe) != NULL)
   {
-    pr->msgStream() << buffer;
-    pr->msgStream_flush();
+    pr->msg_stream() << buffer;
+    pr->msg_stream_flush();
   }
 
 #ifdef __sgi
@@ -730,7 +730,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
 
   if (result)
   {
-    pr->msgStream() << "DynamicLoader - Successfully compiled " <<
+    pr->msg_stream() << "DynamicLoader - Successfully compiled " <<
       info.filename_ << ext << endl;
   }
   return result;
@@ -784,7 +784,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty,
 
   info.create_cc(fstr, empty);
 
-  pr->msgStream() << "DynamicLoader - Successfully created " << full << endl;
+  pr->msg_stream() << "DynamicLoader - Successfully created " << full << endl;
   return true;
 }
 

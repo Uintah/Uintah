@@ -417,26 +417,26 @@ ConductivitySearch::simplex_search()
       }
     }
     if ((num_evals % 10) == 0) {
-      msgStream_ << "ConductivitySearch -- Iter "<<num_evals<<":\n";
+      msg_stream_ << "ConductivitySearch -- Iter "<<num_evals<<":\n";
       for (i=0; i<NSEEDS_; i++) {
-	msgStream_ << "\t";
+	msg_stream_ << "\t";
 	for (j=0; j<NDIM_; j++) {
-	  msgStream_ << conductivities_(i,j) << " ";
+	  msg_stream_ << conductivities_(i,j) << " ";
 	}
-	msgStream_ << "\n";
+	msg_stream_ << "\n";
       }
     }
   }
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(cond_vector_.get_rep());
-  msgStream_ << "ConductivitySearch -- Original conductivities: \n\t";
-  for (i=NDIM_; i<NDIM_*2; i++) msgStream_ << (*cm)[i] << " ";
-  msgStream_ << "\nConductivitiySearch -- Final conductivities: \n";
+  msg_stream_ << "ConductivitySearch -- Original conductivities: \n\t";
+  for (i=NDIM_; i<NDIM_*2; i++) msg_stream_ << (*cm)[i] << " ";
+  msg_stream_ << "\nConductivitiySearch -- Final conductivities: \n";
   for (i=0; i<NSEEDS_; i++) {
-    msgStream_ << "\t";
+    msg_stream_ << "\t";
     for (j=0; j<NDIM_; j++) {
-      msgStream_ << conductivities_(i,j) << " ";
+      msg_stream_ << conductivities_(i,j) << " ";
     }
-    msgStream_ << "(error="<<misfit_[i]<<")\n";
+    msg_stream_ << "(error="<<misfit_[i]<<")\n";
   }
 }
 
@@ -557,14 +557,14 @@ ConductivitySearch::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args[1] == "pause") {
     if (mylock_.tryLock())
-      msgStream_ << "Pausing..."<<endl;
+      msg_stream_ << "Pausing..."<<endl;
     else 
-      msgStream_ << "Can't lock -- already locked"<<endl;
+      msg_stream_ << "Can't lock -- already locked"<<endl;
   } else if (args[1] == "unpause") {
     if (mylock_.tryLock())
-      msgStream_ << "Can't unlock -- already unlocked"<<endl;
+      msg_stream_ << "Can't unlock -- already unlocked"<<endl;
     else
-      msgStream_ << "Unpausing"<<endl;
+      msg_stream_ << "Unpausing"<<endl;
     mylock_.unlock();
   } else if (args[1] == "stop") {
     stop_search_=1;

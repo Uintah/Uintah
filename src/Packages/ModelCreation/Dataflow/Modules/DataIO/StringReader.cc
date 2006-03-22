@@ -68,7 +68,7 @@ DECLARE_MAKER(StringReader)
 
 StringReader::StringReader(GuiContext* ctx)
   : GenericReader<StringHandle>("StringReader", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false))
+    gui_types_(get_ctx()->subVar("types", false))
 {
   gui_types_.set("{ {{textfile} {.txt .asc .doc}} {{all files} {.*}} }");
 }

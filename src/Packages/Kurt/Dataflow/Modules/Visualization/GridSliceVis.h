@@ -80,7 +80,7 @@ private:
   GeomID control_id;
 
 
-  int cmap_id;  // id associated with color map...
+  int cmap_id;  // get_id() associated with color map...
   
 
   GuiInt is_fixed_;

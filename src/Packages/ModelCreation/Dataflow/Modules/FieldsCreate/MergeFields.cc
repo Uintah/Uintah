@@ -61,9 +61,9 @@ private:
 DECLARE_MAKER(MergeFields)
 MergeFields::MergeFields(GuiContext* ctx)
   : Module("MergeFields", ctx, Source, "FieldsCreate", "ModelCreation"),
-  guitolerance_(ctx->subVar("tolerance")),
-  guimergenodes_(ctx->subVar("force-nodemerge")),
-  guiforcepointcloud_(ctx->subVar("force-pointcloud"))
+  guitolerance_(get_ctx()->subVar("tolerance")),
+  guimergenodes_(get_ctx()->subVar("force-nodemerge")),
+  guiforcepointcloud_(get_ctx()->subVar("force-pointcloud"))
 {
 }
 
@@ -72,14 +72,14 @@ MergeFields::~MergeFields(){
 
 void MergeFields::execute()
 {
-  int numiports = numIPorts()-1;
+  int numiports = num_input_ports()-1;
   
   std::vector<SCIRun::FieldHandle> fields(numiports);
   
   for (size_t p = 0; p < numiports; p++)
   {
     FieldIPort *field_iport;
-    if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(p))))
+    if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(p))))
     {
       error("Could not find Field input port");
       return;
@@ -125,7 +125,7 @@ void MergeFields::execute()
     output = temp;
   }
   
-  FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
+  FieldOPort* output_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
   if (output_oport) output_oport->send(output);
 }
 

@@ -218,7 +218,7 @@ public:
    *
    * @return The ID of the annotation
    */
-  inline const string& getID() const { return ID; }
+  inline const string& get_id() const { return ID; }
   
   /**
    * Sets the ID of the annotation
@@ -561,7 +561,7 @@ public:
    * @param  ID          ID of drawing whose color should be changed.
    */
   inline void setDrawingColor( const Color &newColor, const string &ID ) { 
-    CollaborationItem *ci = getID( ID );
+    CollaborationItem *ci = get_id( ID );
     if ( ci == NULL ) return;
     ci->setColor( newColor );
     Log::log( DEBUG, "Setting drawing " + ID + " color to " +
@@ -984,7 +984,7 @@ public:
    * @param        ID           ID of the drawing to clear.
    */
   virtual inline void clearDrawing( const string &ID ) {
-    CollaborationItem *ci = getID( ID );
+    CollaborationItem *ci = get_id( ID );
     
     if ( ci == NULL ) return;
     ci->clearSegments();
@@ -1029,8 +1029,8 @@ public:
     CollaborationItem *ci = getAnnotationAt( x, y );
     if ( ci == NULL ) return "";
     
-    deleteID( ci->getID() );
-    return ci->getID();
+    deleteID( ci->get_id() );
+    return ci->get_id();
   }
 
   /**
@@ -1072,7 +1072,7 @@ public:
    * @param    enable     True to enable the annotation; false to disable 
    */
   virtual void enableAnnotation( const string ID, const bool enable ) {
-    CollaborationItem *ci = getID( ID.substr(1) );
+    CollaborationItem *ci = get_id( ID.substr(1) );
     if ( ci == NULL ) {
       Log::log( WARNING, "No annotation to enable with ID " + ID.substr(1) );
       return;
@@ -1183,7 +1183,7 @@ protected:
     for ( i = collaborationItemList.begin();
 	  i != collaborationItemList.end();
 	  i++ )
-      if ( i->getID() == ID ) {
+      if ( i->get_id() == ID ) {
 	Log::log( DEBUG, "Erasing annotation with ID " + ID );
 	collaborationItemList.erase( i );
 	return;
@@ -1215,11 +1215,11 @@ protected:
   }
 
   /** Returns the annotation with the given ID */
-  CollaborationItem* getID( const string &ID ) {
+  CollaborationItem* get_id( const string &ID ) {
     if ( collaborationItemList.size() == 0 ) return NULL;
 
     for ( int i = 0; i < (int)collaborationItemList.size(); i++ ) {
-      if ( !strcasecmp( collaborationItemList[i].getID(), ID ) )
+      if ( !strcasecmp( collaborationItemList[i].get_id(), ID ) )
 	return &collaborationItemList[i];
     }
     return NULL;

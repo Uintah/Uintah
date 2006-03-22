@@ -62,9 +62,9 @@ private:
 DECLARE_MAKER(FieldSetStringProperty)
   FieldSetStringProperty::FieldSetStringProperty(GuiContext* ctx)
     : Module("FieldSetStringProperty", ctx, Source, "FieldsProperty", "ModelCreation"),
-      guistring1name_(ctx->subVar("string1-name")),
-      guistring2name_(ctx->subVar("string2-name")),
-      guistring3name_(ctx->subVar("string3-name"))
+      guistring1name_(get_ctx()->subVar("string1-name")),
+      guistring2name_(get_ctx()->subVar("string2-name")),
+      guistring3name_(get_ctx()->subVar("string3-name"))
 {
 }
 
@@ -86,7 +86,7 @@ FieldSetStringProperty::execute()
   std::string  fstring;
   StringIPort  *ifport;
         
-  if(!(iport = static_cast<FieldIPort *>(getIPort("Field"))))
+  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
   {
     error("Could not find 'Field' input port");
     return;
@@ -103,7 +103,7 @@ FieldSetStringProperty::execute()
   }
   
   // Scan field input port 1
-  if (!(ifport = static_cast<StringIPort *>(getIPort("String1"))))
+  if (!(ifport = static_cast<StringIPort *>(get_input_port("String1"))))
   {
     error("Could not find String 1 input port");
     return;
@@ -116,7 +116,7 @@ FieldSetStringProperty::execute()
   }
 
   // Scan field input port 2     
-  if (!(ifport = static_cast<StringIPort *>(getIPort("String2"))))
+  if (!(ifport = static_cast<StringIPort *>(get_input_port("String2"))))
     {
       error("Could not find String 2 input port");
       return;
@@ -129,7 +129,7 @@ FieldSetStringProperty::execute()
   }
 
   // Scan field input port 3     
-  if (!(ifport = static_cast<StringIPort *>(getIPort("String3"))))
+  if (!(ifport = static_cast<StringIPort *>(get_input_port("String3"))))
     {
       error("Could not find String 3 input port");
       return;

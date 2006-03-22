@@ -64,10 +64,10 @@ DECLARE_MAKER(BundleSetNrrd)
 
 BundleSetNrrd::BundleSetNrrd(GuiContext* ctx)
   : Module("BundleSetNrrd", ctx, Filter, "Bundle", "SCIRun"),
-    guinrrd1name_(ctx->subVar("nrrd1-name"), "nrrd1"),
-    guinrrd2name_(ctx->subVar("nrrd2-name"), "nrrd2"),
-    guinrrd3name_(ctx->subVar("nrrd3-name"), "nrrd3"),
-    guibundlename_(ctx->subVar("bundlename"), "")
+    guinrrd1name_(get_ctx()->subVar("nrrd1-name"), "nrrd1"),
+    guinrrd2name_(get_ctx()->subVar("nrrd2-name"), "nrrd2"),
+    guinrrd3name_(get_ctx()->subVar("nrrd3-name"), "nrrd3"),
+    guibundlename_(get_ctx()->subVar("bundlename"), "")
 {
 }
 

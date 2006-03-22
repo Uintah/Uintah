@@ -124,6 +124,14 @@ ifeq ($(HAVE_CAMAL),yes)
    LIBS := $(LIBS) $(CAMAL_LIBRARY) $(F_LIBRARY)
 endif
 
+# TetGen http://tetgen.berlios.de
+ifeq ($(HAVE_TETGEN),yes)
+  ifneq ($(HAVE_CAMAL),yes)
+    SRCS += $(SRCDIR)/TetMesher.cc
+  endif
+  LIBS := $(LIBS) $(TETGEN_LIBRARY)
+endif
+
 # VERDICT Mesh Quality Library
 ifeq ($(HAVE_VERDICT),yes)
    SRCS += $(SRCDIR)/MeshQuality.cc

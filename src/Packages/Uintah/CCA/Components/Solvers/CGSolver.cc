@@ -380,7 +380,7 @@ public:
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       if(cout_doing.active())
-        cout_doing << "CGSolver::step2 on patch" << patch->getID()<<endl;
+        cout_doing << "CGSolver::step2 on patch" << patch->get_id()<<endl;
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
         typedef typename Types::sol_type sol_type;
@@ -461,7 +461,7 @@ public:
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       if(cout_doing.active())
-        cout_doing << "CGSolver::step3 on patch" << patch->getID()<<endl;
+        cout_doing << "CGSolver::step3 on patch" << patch->get_id()<<endl;
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
         typedef typename Types::sol_type sol_type;
@@ -506,7 +506,7 @@ public:
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       if(cout_doing.active())
-        cout_doing << "CGSolver::setup on patch " << patch->getID()<< endl;
+        cout_doing << "CGSolver::setup on patch " << patch->get_id()<< endl;
         
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);

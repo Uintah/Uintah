@@ -82,13 +82,13 @@ void IsInsideField::execute()
   FieldIPort *field_iport;
   FieldIPort *object_iport;
   
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
+  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
   {
     error("Could not find Field input port");
     return;
   }
   
-  if (!(object_iport = dynamic_cast<FieldIPort *>(getIPort(1))))
+  if (!(object_iport = dynamic_cast<FieldIPort *>(get_input_port(1))))
   {
     error("Could not find ObjectField input port");
     return;
@@ -134,10 +134,10 @@ void IsInsideField::execute()
       return;
     }
   
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
+    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
     if (output_oport) output_oport->send(output);
 
-    MatrixOPort* data_oport = dynamic_cast<MatrixOPort *>(getOPort(1));
+    MatrixOPort* data_oport = dynamic_cast<MatrixOPort *>(get_output_port(1));
     if (data_oport) 
     {
       MatrixHandle data;

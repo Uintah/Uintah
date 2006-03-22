@@ -177,11 +177,11 @@ public:
 DECLARE_MAKER(NrrdToField)
 NrrdToField::NrrdToField(GuiContext* ctx)
   : Module("NrrdToField", ctx, Source, "Converters", "Teem"),
-    gPermute_(ctx->subVar("permute")),
-    gBuildEigens_(ctx->subVar("build-eigens")),
-    gQuadOrTet_(ctx->subVar("quad-or-tet")),
-    gStructOrUnstruct_(ctx->subVar("struct-or-unstruct")),
-    gDatasets_(ctx->subVar("datasets")),
+    gPermute_(get_ctx()->subVar("permute")),
+    gBuildEigens_(get_ctx()->subVar("build-eigens")),
+    gQuadOrTet_(get_ctx()->subVar("quad-or-tet")),
+    gStructOrUnstruct_(get_ctx()->subVar("struct-or-unstruct")),
+    gDatasets_(get_ctx()->subVar("datasets")),
     data_generation_(-1), points_generation_(-1),
     connect_generation_(-1), origfield_generation_(-1),
     has_error_(false), last_field_(0)
@@ -319,9 +319,9 @@ NrrdToField::execute()
   if( datasetsStr != gDatasets_.get() ) {
     // Update the dataset names and dims in the GUI.
     ostringstream str;
-    str << id << " set_names {" << datasetsStr << "}";
+    str << get_id() << " set_names {" << datasetsStr << "}";
     
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
   }
 
   if( buildEigens_      != gBuildEigens_.get() || 

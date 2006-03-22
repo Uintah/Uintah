@@ -72,7 +72,7 @@ BundleMerge::execute(){
   BundleIPort *iport;
  
  
-  for( int p = 0; p < numIPorts(); p++)
+  for( int p = 0; p < num_input_ports(); p++)
     {
       iport = static_cast<BundleIPort *>(get_iport(p));
       if (iport->get(mh))

@@ -28,7 +28,7 @@ RoundRobinLoadBalancer::~RoundRobinLoadBalancer()
 int
 RoundRobinLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 {
-  int proc = patch->getID()%d_myworld->size();
+  int proc = patch->get_id()%d_myworld->size();
   ASSERTRANGE(proc, 0, d_myworld->size());
   return proc;
 }

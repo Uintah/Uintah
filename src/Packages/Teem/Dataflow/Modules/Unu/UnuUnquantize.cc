@@ -67,11 +67,11 @@ public:
 DECLARE_MAKER(UnuUnquantize)
 UnuUnquantize::UnuUnquantize(GuiContext* ctx)
   : Module("UnuUnquantize", ctx, Source, "UnuNtoZ", "Teem"),
-    min_(ctx->subVar("min"), 0),
-    useinputmin_(ctx->subVar("useinputmin"), 1),
-    max_(ctx->subVar("max"), 0),
-    useinputmax_(ctx->subVar("useinputmax"), 1),
-    double_(ctx->subVar("double"), 0)
+    min_(get_ctx()->subVar("min"), 0),
+    useinputmin_(get_ctx()->subVar("useinputmin"), 1),
+    max_(get_ctx()->subVar("max"), 0),
+    useinputmax_(get_ctx()->subVar("useinputmax"), 1),
+    double_(get_ctx()->subVar("double"), 0)
 {
 }
 

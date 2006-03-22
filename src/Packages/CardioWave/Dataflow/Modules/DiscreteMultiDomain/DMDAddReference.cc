@@ -67,8 +67,8 @@ DECLARE_MAKER(DMDAddReference)
 
 DMDAddReference::DMDAddReference(GuiContext* ctx)
   : Module("DMDAddReference", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
-    guiusefieldvalue_(ctx->subVar("usefieldvalue")),
-    guireferencevalue_(ctx->subVar("referencevalue"))
+    guiusefieldvalue_(get_ctx()->subVar("usefieldvalue")),
+    guireferencevalue_(get_ctx()->subVar("referencevalue"))
 {
 }
 

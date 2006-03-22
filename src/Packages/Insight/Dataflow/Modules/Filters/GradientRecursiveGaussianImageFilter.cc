@@ -171,8 +171,8 @@ DECLARE_MAKER(GradientRecursiveGaussianImageFilter)
 
 GradientRecursiveGaussianImageFilter::GradientRecursiveGaussianImageFilter(GuiContext* ctx)
   : Module("GradientRecursiveGaussianImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_sigma_(ctx->subVar("sigma")),
-     gui_normalize_across_scale_(ctx->subVar("normalize_across_scale")), 
+     gui_sigma_(get_ctx()->subVar("sigma")),
+     gui_normalize_across_scale_(get_ctx()->subVar("normalize_across_scale")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

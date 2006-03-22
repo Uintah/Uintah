@@ -57,8 +57,8 @@ private:
 DECLARE_MAKER(SphericalSurface)
 SphericalSurface::SphericalSurface(GuiContext* ctx)
   : Module("SphericalSurface", ctx, Source, "FieldsExample", "ModelCreation"),
-    guidiscretization_(ctx->subVar("discretization")),
-    guiradius_(ctx->subVar("radius"))    
+    guidiscretization_(get_ctx()->subVar("discretization")),
+    guiradius_(get_ctx()->subVar("radius"))    
 {
 }
 

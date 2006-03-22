@@ -190,7 +190,7 @@ public:
   const Patch* selectPatchForCellIndex( const IntVector& idx) const;
   const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
   const Patch* getPatchByID(int id) const;
-  inline int getID() const {
+  inline int get_id() const {
     return d_id;
   }
   inline int timeRefinementRatio() const {

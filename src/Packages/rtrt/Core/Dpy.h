@@ -161,7 +161,7 @@ public:
   virtual void run();
   void get_barriers(Barrier *& mainBarrier, Barrier *& addSubThreads);
 
-  const Camera * getGuiCam() { return guiCam_; }
+  const Camera * get_guiCam() { return guiCam_; }
 
   int get_num_procs();
   

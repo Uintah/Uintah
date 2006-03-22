@@ -80,7 +80,7 @@ using namespace SCIRun;
       GeomGroup *group;
 
     public:
-      SearchNOISE(const clString& id);
+      SearchNOISE(const clString& get_id());
       virtual ~SearchNOISE();
 
       void execute();
@@ -90,9 +90,9 @@ using namespace SCIRun;
     };
       
     
-    extern "C" Module* make_SearchNOISE(const clString& id)
+    extern "C" Module* make_SearchNOISE(const clString& get_id())
     {
-      return scinew SearchNOISE(id);
+      return scinew SearchNOISE(get_id());
     }
 
     const double epsilon = 1.e-8;
@@ -100,13 +100,13 @@ using namespace SCIRun;
     static clString module_name("SearchNOISE");
     static clString surface_name("NoiseSurface");
 
-    SearchNOISE::SearchNOISE(const clString& id) :
-      Module("SearchNOISE", id, Filter),
-      isoval("isoval", id, this ),
-      isoval_min("isoval_min", id, this ),
-      isoval_max("isoval_max", id, this ),
-      tcl_bbox("bbox", id, this),
-      tcl_np("np",id,this)
+    SearchNOISE::SearchNOISE(const clString& get_id()) :
+      Module("SearchNOISE", get_id(), Filter),
+      isoval("isoval", get_id(), this ),
+      isoval_min("isoval_min", get_id(), this ),
+      isoval_max("isoval_max", get_id(), this ),
+      tcl_bbox("bbox", get_id(), this),
+      tcl_np("np",get_id(),this)
     {
       // Create input ports
       infield=scinew ScalarFieldIPort(this, "ScalarField",

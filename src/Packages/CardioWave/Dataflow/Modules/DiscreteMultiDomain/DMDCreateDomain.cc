@@ -57,14 +57,14 @@ DMDCreateDomain::DMDCreateDomain(GuiContext* ctx)
 
 void DMDCreateDomain::execute()
 {
-  FieldIPort* conductivityport = dynamic_cast<FieldIPort*>(getIPort(0));
+  FieldIPort* conductivityport = dynamic_cast<FieldIPort*>(get_input_port(0));
   if (conductivityport == 0)
   {
     error("Could not find Conductivity port");
     return;
   }
 
-  FieldIPort* elementport = dynamic_cast<FieldIPort*>(getIPort(1));
+  FieldIPort* elementport = dynamic_cast<FieldIPort*>(get_input_port(1));
   if (elementport == 0)
   {
     error("Could not find Element Type port");
@@ -93,7 +93,7 @@ void DMDCreateDomain::execute()
   output->setField("conductivity",Conductivity);
   output->setField("elementtype",Elementtype);
 
-  BundleOPort* output_port = dynamic_cast<BundleOPort*>(getOPort(0));
+  BundleOPort* output_port = dynamic_cast<BundleOPort*>(get_output_port(0));
   if (output_port)
   {
     output_port->send(output);

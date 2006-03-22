@@ -179,7 +179,7 @@ DECLARE_MAKER(GrayscaleErodeImageFilter)
 
 GrayscaleErodeImageFilter::GrayscaleErodeImageFilter(GuiContext* ctx)
   : Module("GrayscaleErodeImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_radius_(ctx->subVar("radius")),
+    gui_radius_(get_ctx()->subVar("radius")),
      last_InputImage_(-1)
 {
   filter_ = 0;

@@ -62,7 +62,7 @@ JavaVM* JNIUtil::getJavaVM()
     if (0 == jvm) {
         Thread *t = new Thread(new JVMThread(), "JVM Thread",
                                0, Thread::NotActivated);
-        t->setStackSize(1024*1024);
+        t->set_stack_size(1024*1024);
         t->activate(false);
         t->detach();
 	    JNIUtil::startup->down();

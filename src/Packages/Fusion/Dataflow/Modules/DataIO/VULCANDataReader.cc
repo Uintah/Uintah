@@ -424,11 +424,11 @@ VULCANDataReader::execute(){
       nHandles_[i]->set_property( "Source", string("Vulcan Reader"), false );
 
       // Send the data downstream
-      sendOHandle( portNames[i], nHandles_[i], true );
+      send_output_handle( portNames[i], nHandles_[i], true );
     }
   }
 
-  sendOHandle( "Time Slice", mHandle_, true );
+  send_output_handle( "Time Slice", mHandle_, true );
 
   if( loop_ ) {
     if ( delay > 0) {

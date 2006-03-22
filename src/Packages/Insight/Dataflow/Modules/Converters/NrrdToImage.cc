@@ -118,7 +118,7 @@ void NrrdToImage::execute(){
   }
 
 
-  //  cerr << id << " nrrd: " << (unsigned int)inrrd_handle_->nrrd;
+  //  cerr << get_id() << " nrrd: " << (unsigned int)inrrd_handle_->nrrd;
 
   Nrrd *n = inrrd_handle_->nrrd;
   int dim = n->dim;
@@ -297,7 +297,7 @@ NrrdToImage::copy_kvp_to_dictionary(Nrrd *n, itk::Object *obj) {
     char *key, *val;
     nrrdKeyValueIndex(n, &key, &val, i);
     if (key && val) { // add the key/value pair to the dictionary
-      //      cerr << id << ": " << key << ", " << val <<std::endl;
+      //      cerr << get_id() << ": " << key << ", " << val <<std::endl;
       itk::EncapsulateMetaData<string>(dic, string(key), string(val));
     }
   }

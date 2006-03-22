@@ -33,19 +33,19 @@ class STreeExtractSurf : public Module {
     GuiString surfid;
     GuiInt remapTCL;
 public:
-    STreeExtractSurf(const clString& id);
+    STreeExtractSurf(const clString& get_id());
     virtual ~STreeExtractSurf();
     virtual void execute();
 };
 
-extern "C" Module* make_STreeExtractSurf(const clString& id)
+extern "C" Module* make_STreeExtractSurf(const clString& get_id())
 {
-    return new STreeExtractSurf(id);
+    return new STreeExtractSurf(get_id());
 }
 
-STreeExtractSurf::STreeExtractSurf(const clString& id)
-: Module("STreeExtractSurf", id, Filter), surfid("surfid", id, this),
-  remapTCL("remapTCL", id, this)
+STreeExtractSurf::STreeExtractSurf(const clString& get_id())
+: Module("STreeExtractSurf", get_id(), Filter), surfid("surfid", get_id(), this),
+  remapTCL("remapTCL", get_id(), this)
 {
     istree=new SurfaceIPort(this, "SurfTreeIn", SurfaceIPort::Atomic);
     add_iport(istree);

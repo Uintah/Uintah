@@ -100,8 +100,8 @@ CubitInterface::CubitInterface(GuiContext* ctx)
   : Module("CubitInterface", ctx, Filter, "FieldsCreate", "SCIRun"),
     field1_generation_(-1),
     pcf_generation_(-1),
-    cubitdir_(ctx->subVar("cubitdir"), "."),
-    ncdump_(ctx->subVar("ncdump"), "ncdump")
+    cubitdir_(get_ctx()->subVar("cubitdir"), "."),
+    ncdump_(get_ctx()->subVar("ncdump"), "ncdump")
 {
 }
 
@@ -385,7 +385,7 @@ CubitInterface::execute()
   
   string tmp(sci_getenv("SCIRUN_TMP_DIR")+string("/"));
   //  string rand(to_string(int(drand48()*1000.00)));
-  base_ = tmp+id+"."+string(sci_getenv("USER"))+".";//+rand+".";
+  base_ = tmp+get_id()+"."+string(sci_getenv("USER"))+".";//+rand+".";
 
   string facetfile = base_+"facet";
   string journalfile = base_+"journal";

@@ -95,16 +95,16 @@ impl_whoc_IDPort__dtor(
  */
 
 #undef __FUNC__
-#define __FUNC__ "impl_whoc_IDPort_getID"
+#define __FUNC__ "impl_whoc_IDPort_get_id"
 
 char*
-impl_whoc_IDPort_getID(
+impl_whoc_IDPort_get_id(
   whoc_IDPort self)
 {
-  /* DO-NOT-DELETE splicer.begin(whoc.IDPort.getID) */
+  /* DO-NOT-DELETE splicer.begin(whoc.IDPort.get_id) */
   char *id="World (in C)";
   char *s=(char*)malloc(strlen(id)+1);
   strcpy(s, id);
   return s;
-  /* DO-NOT-DELETE splicer.end(whoc.IDPort.getID) */
+  /* DO-NOT-DELETE splicer.end(whoc.IDPort.get_id) */
 }

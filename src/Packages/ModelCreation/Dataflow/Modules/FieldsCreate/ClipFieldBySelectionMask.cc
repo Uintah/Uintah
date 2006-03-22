@@ -71,13 +71,13 @@ void ClipFieldBySelectionMask::execute()
   FieldIPort *field_iport;
   MatrixIPort *selmask_iport;
   
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
+  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
   {
     error("Could not find Field input port");
     return;
   }
   
-  if (!(selmask_iport = dynamic_cast<MatrixIPort *>(getIPort(1))))
+  if (!(selmask_iport = dynamic_cast<MatrixIPort *>(get_input_port(1))))
   {
     error("Could not find SelectionMask input port");
     return;
@@ -119,10 +119,10 @@ void ClipFieldBySelectionMask::execute()
       return;
     }
   
-    FieldOPort* field_oport = dynamic_cast<FieldOPort *>(getOPort(0));
+    FieldOPort* field_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
     if (field_oport) field_oport->send(output);
 
-    MatrixOPort* interpolant_oport = dynamic_cast<MatrixOPort *>(getOPort(1));
+    MatrixOPort* interpolant_oport = dynamic_cast<MatrixOPort *>(get_output_port(1));
     if (interpolant_oport) interpolant_oport->send(interpolant);
   }
 }

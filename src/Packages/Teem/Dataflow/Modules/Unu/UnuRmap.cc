@@ -73,13 +73,13 @@ DECLARE_MAKER(UnuRmap)
 UnuRmap::UnuRmap(GuiContext* ctx)
   : Module("UnuRmap", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), idmap_(0), onrrd_(0),
-    rescale_(ctx->subVar("rescale")),
-    min_(ctx->subVar("min")),
-    useinputmin_(ctx->subVar("useinputmin")),
-    max_(ctx->subVar("max")),
-    useinputmax_(ctx->subVar("useinputmax")),
-    type_(ctx->subVar("type")),
-    usetype_(ctx->subVar("usetype"))
+    rescale_(get_ctx()->subVar("rescale")),
+    min_(get_ctx()->subVar("min")),
+    useinputmin_(get_ctx()->subVar("useinputmin")),
+    max_(get_ctx()->subVar("max")),
+    useinputmax_(get_ctx()->subVar("useinputmax")),
+    type_(get_ctx()->subVar("type")),
+    usetype_(get_ctx()->subVar("usetype"))
 {
 }
 

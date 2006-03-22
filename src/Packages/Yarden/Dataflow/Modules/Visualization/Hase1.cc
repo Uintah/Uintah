@@ -422,7 +422,7 @@ class Hase : public Module
 
 public:
 
-  Hase( const clString& id);
+  Hase( const clString& get_id());
   virtual ~Hase();
 
   virtual void execute();
@@ -457,9 +457,9 @@ public:
   void test();
 };
   
-extern "C" Module* make_Hase(const clString& id)
+extern "C" Module* make_Hase(const clString& get_id())
 {
-  return scinew Hase(id);
+  return scinew Hase(get_id());
 }
 
 static clString module_name("Hase");
@@ -470,20 +470,20 @@ static clString surface_name2("HaseBack");
 static clString surface_name3("HasePts");
 static clString shadow_name("HaseShadow");
 
-Hase::Hase(const clString& id)
-  : Module("Hase", id, Filter ), isoval("isoval", id, this),
-    isoval_min("isoval_min", id, this), isoval_max("isoval_max", id, this),
-    tcl_bbox("bbox", id, this), 
-    tcl_scan("scan", id, this),  tcl_value("value", id, this), 
-    tcl_visibility("visibility", id, this),
-    tcl_depth("cutoff_depth", id, this),
-    tcl_reduce("reduce",id,this), tcl_cover("cover",id,this), 
-    tcl_all("all",id,this),
-    tcl_rebuild("rebuild",id,this),
-    tcl_use_hw("use_hw",id,this),
-    tcl_minmax("minmax",id,this),
-    tcl_finish("finish",id,this),
-    tcl_max_area("max_area",id,this)
+Hase::Hase(const clString& get_id())
+  : Module("Hase", get_id(), Filter ), isoval("isoval", get_id(), this),
+    isoval_min("isoval_min", get_id(), this), isoval_max("isoval_max", get_id(), this),
+    tcl_bbox("bbox", get_id(), this), 
+    tcl_scan("scan", get_id(), this),  tcl_value("value", get_id(), this), 
+    tcl_visibility("visibility", get_id(), this),
+    tcl_depth("cutoff_depth", get_id(), this),
+    tcl_reduce("reduce",get_id(),this), tcl_cover("cover",get_id(),this), 
+    tcl_all("all",get_id(),this),
+    tcl_rebuild("rebuild",get_id(),this),
+    tcl_use_hw("use_hw",get_id(),this),
+    tcl_minmax("minmax",get_id(),this),
+    tcl_finish("finish",get_id(),this),
+    tcl_max_area("max_area",get_id(),this)
 {
   init_clock();
   printf( "Hase::Hase :: %d\n", tri_case[136].vertex[4]);
@@ -1206,12 +1206,12 @@ Hase::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
   // interpolate and project vertices
   int v=0;
   for (int t=0; t<tcase->n; t++) {
-    int id = vertex[v++];
-    for ( ; id != -1; id=vertex[v++] ) {
-      int v1 = edge_table[id][0];
-      int v2 = edge_table[id][1];
-      q[id] = Interpolate(vp[v1], vp[v2], val[v1]/(val[v1]-val[v2]));
-      if ( scan && !use_hw ) project( q[id], p[id] );
+    int get_id() = vertex[v++];
+    for ( ; get_id() != -1; get_id()=vertex[v++] ) {
+      int v1 = edge_table[get_id()][0];
+      int v2 = edge_table[get_id()][1];
+      q[get_id()] = Interpolate(vp[v1], vp[v2], val[v1]/(val[v1]-val[v2]));
+      if ( scan && !use_hw ) project( q[get_id()], p[get_id()] );
     }
   }
   
@@ -1299,7 +1299,7 @@ int
 Hase::make_current( int xres, int yres) {
   make_start = read_time();
   TCLTask::lock();
-  clString myname(clString(".ui")+id+".gl.gl");
+  clString myname(clString(".ui")+get_id()+".gl.gl");
   char *name = strdup(myname());
   tkwin=Tk_NameToWindow(the_interp, name, Tk_MainWindow(the_interp));
   if(!tkwin){
@@ -1827,7 +1827,7 @@ Hase::reset_view( GeometryData *gd )
     cerr << "init\n";
     // switch to the other window
     TCLTask::lock();
-    clString myname(clString(".ui")+id+".gl.gl");
+    clString myname(clString(".ui")+get_id()+".gl.gl");
     char *name = strdup(myname());
     tkwin=Tk_NameToWindow(the_interp, name, Tk_MainWindow(the_interp));
     if(!tkwin){

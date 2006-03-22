@@ -102,7 +102,7 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& s
       // here we assume that the per-patch has been set
       PerPatch<PatchFlagP> flaggedPatchCells;
       newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
-      rdbg << "  finest level, patch " << (*iter)->getID() << flaggedPatchCells.get() << endl;
+      rdbg << "  finest level, patch " << (*iter)->get_id() << flaggedPatchCells.get() << endl;
       if (flaggedPatchCells.get().get_rep()->flag) {
 	rdbg << "RegridderCommon::flaggedCellsOnFinestLevel( true ) END" << endl;
         return true;

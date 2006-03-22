@@ -485,7 +485,7 @@ Painter::Painter(GuiContext* ctx) :
   executing_(0)
 {
   runner_ = scinew RealDrawer(this);
-  runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
+  runner_thread_ = scinew Thread(runner_, string(get_id()+" OpenGL drawer").c_str());
   event_.window_ = 0;
   event_.position_ = Point(0,0,0);
   initialize_fonts();
@@ -512,7 +512,7 @@ Painter::static_callback(void *this_ptr) {
 void
 Painter::set_context(Network *net) {
   Module::set_context(net);
-  sched->add_callback(this->static_callback, this);
+  sched_->add_callback(this->static_callback, this);
 }
 
 static SimpleProfiler profiler("RenderWindow", sci_getenv_p("SCIRUN_PROFILE"));
@@ -533,9 +533,9 @@ Painter::render_window(SliceWindow &window) {
     window.autoview_ = false;
     // with EXPERIMENTAL_TCL_LOCK, we need to unlock/lock here to avoid deadlock
     // in the case where you're trying to draw the window while you're creating it
-    gui->unlock();
+    get_gui()->unlock();
     autoview(window);
-    gui->lock();
+    get_gui()->lock();
     window.setup_gl_view();
   }
   CHECK_OPENGL_ERROR();
@@ -607,12 +607,12 @@ Painter::swap_window(SliceWindow &window) {
 void
 Painter::real_draw_all()
 {
-  gui->lock();
+  get_gui()->lock();
   if (for_each(&Painter::render_window)) {
     for_each(&Painter::swap_window);
   }
   
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 
@@ -1297,8 +1297,8 @@ ColorMapHandle
 Painter::get_colormap(int id)
 {
   if (id > 0 && id <= int(colormap_names_.size()) &&
-      colormaps_.find(colormap_names_[id-1]) != colormaps_.end())
-    return colormaps_[colormap_names_[id-1]];
+      colormaps_.find(colormap_names_[id - 1]) != colormaps_.end())
+    return colormaps_[colormap_names_[id - 1]];
   return 0;
 }
     
@@ -1948,7 +1948,7 @@ Painter::extract_data_from_bundles(Bundles &bundles)
   
   update_state(Module::Executing);
 
-  gui->lock();
+  get_gui()->lock();
   NrrdVolumeMap::iterator viter = volume_map_.begin();
   NrrdVolumeMap::iterator vend = volume_map_.end();
 
@@ -1957,14 +1957,14 @@ Painter::extract_data_from_bundles(Bundles &bundles)
     viter = volume_map_.find(name);
     if (viter == vend || viter->second == 0) {
       volume_map_[name] = 
-        new NrrdVolume(ctx->subVar(name), name, nrrds[n]);
+        new NrrdVolume(get_ctx()->subVar(name), name, nrrds[n]);
       show_volume(name);
     } else {
       viter->second->set_nrrd(nrrds[n]);
     }
     volume_map_[name]->keep_ = 1;
   }
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 
@@ -2393,7 +2393,7 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
       scinew TkOpenGLContext(args[2], args.get_int(4), 256, 256);
     XSync(context->display_, 0);
     ASSERT(layouts_.find(args[2]) == layouts_.end());
-    layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
+    layouts_[args[2]] = scinew WindowLayout(get_ctx()->subVar(args[3],0));
     layouts_[args[2]]->opengl_ = context;
     char z = 0;
     Tk_Cursor cursor = 
@@ -2410,7 +2410,7 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
   } else if(args[1] == "add_viewport") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
     WindowLayout *layout = layouts_[args[2]];
-    SliceWindow *window = scinew SliceWindow(this, ctx->subVar(args[3],0));
+    SliceWindow *window = scinew SliceWindow(this, get_ctx()->subVar(args[3],0));
     window->layout_ = layout;
     window->name_ = args[2];
     window->viewport_ = scinew OpenGLViewport(layout->opengl_);
@@ -2460,7 +2460,7 @@ Painter::initialize_fonts() {
   const char *dir = sci_getenv("SCIRUN_FONT_PATH");
   if (dir) 
     font_dir = dir;
-  if (gui->eval("validDir "+font_dir) == "0")
+  if (get_gui()->eval("validDir "+font_dir) == "0")
     font_dir = string(sci_getenv("SCIRUN_SRCDIR"))+"/pixmaps";
   string fontfile = font_dir+"/scirun.ttf";
   
@@ -2585,7 +2585,7 @@ Painter::undo_volume() {
 void
 Painter::recompute_volume_list()
 {
-  gui->lock();
+  get_gui()->lock();
   string currentname = "";
   if (current_volume_)
     currentname = current_volume_->name_.get();
@@ -2635,7 +2635,7 @@ Painter::recompute_volume_list()
     for_each(&Painter::mark_autoview);
 
   redraw_all();  
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 

@@ -58,7 +58,7 @@ class Tikhonov : public Module
 {
   GuiDouble 	lambda_fix_;
   GuiDouble 	lambda_sld_;
-  GuiInt    	haveUI_;
+  GuiInt    	have_ui_;
   GuiString 	reg_method_;
   GuiDouble	lambda_min_;
   GuiDouble	lambda_max_;
@@ -94,7 +94,7 @@ DECLARE_MAKER(Tikhonov)
     Module("Tikhonov", context, Source, "Inverse", "BioPSE"),
     lambda_fix_(context->subVar("lambda_fix")),
     lambda_sld_(context->subVar("lambda_sld")),
-    haveUI_(context->subVar("haveUI")),
+    have_ui_(context->subVar("have_ui")),
     reg_method_(context->subVar("reg_method")),
     lambda_min_(context->subVar("lambda_min")),
     lambda_max_(context->subVar("lambda_max")),
@@ -388,19 +388,19 @@ Tikhonov::execute()
     {
       // Use single fixed lambda value, entered in UI
       lambda = lambda_fix_.get();
-      msgStream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
+      msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
     }
     else if (reg_method_.get() == "slider")
     {
       // Use single fixed lambda value, select via slider
       lambda = tex_var_.get(); //lambda_sld_.get();
-      msgStream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
+      msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
     }
   }
   else if (reg_method_.get() == "lcurve")
   {
     // Use L-curve, lambda from corner of the L-curve
-    msgStream_ << "method = " << reg_method_.get() << "\n";//DISCARD
+    msg_stream_ << "method = " << reg_method_.get() << "\n";//DISCARD
 
     int i, j, k, l, nLambda;
     Array1<double> lambdaArray, rho, eta;
@@ -471,17 +471,17 @@ Tikhonov::execute()
     if (eta[nLambda-1] < lower_y)  
       lower_y = eta[nLambda-1];
 
-    if (haveUI_.get()) 
+    if (have_ui_.get()) 
     {
       ostringstream str;
-      str << id << " plot_graph \" ";
+      str << get_id() << " plot_graph \" ";
       for (i=0; i<nLambda; i++)
 	str << rho[i] << " " << eta[i] << " ";
       str << "\" \" " << rho[0]/10 << " " << eta[lambda_index] << " ";
       str << rho[lambda_index] << " " << eta[lambda_index] << " ";
       str << rho[lambda_index] << " " << lower_y << " \" ";
       str << lambda << " ; update idletasks";
-      gui->execute(str.str().c_str());
+      get_gui()->execute(str.str().c_str());
     }
 
   } // END  else if (reg_method_.get() == "lcurve")

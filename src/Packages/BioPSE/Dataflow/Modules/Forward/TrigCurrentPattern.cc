@@ -61,7 +61,7 @@ public:
 DECLARE_MAKER(TrigCurrentPattern)
 TrigCurrentPattern::TrigCurrentPattern(GuiContext* ctx)
   : Module("TrigCurrentPattern", ctx, Source, "Forward", "BioPSE")
-  , magnitudeTCL_(ctx->subVar("magnitudeTCL"))
+  , magnitudeTCL_(get_ctx()->subVar("magnitudeTCL"))
 {
 }
 
@@ -104,7 +104,7 @@ void
     k=static_cast<int>((*currPatIdx)[0]);
   }
   else{
-    msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
+    msg_stream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
   }
 
   cout << "Supplied current pattern index is " << k << endl;

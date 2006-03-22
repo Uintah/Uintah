@@ -42,7 +42,7 @@
 	global $this-lambda_max
 	global $this-lambda_lc
 	global $this-reg_method
-	global $this-haveUI
+	global $this-have_ui
 	global $this-text_var	
 	
 	
@@ -50,7 +50,7 @@
 	set $this-lambda_sld 1
 	set $this-lambda_lc 0.0
     	set $this-reg_method lcurve
-	set $this-haveUI 0
+	set $this-have_ui 0
 	set $this-lambda_max 100
 	set $this-text_var   1
      }
@@ -116,8 +116,8 @@
             return;
         }
 
-	global $this-haveUI
-	set $this-haveUI 1
+	global $this-have_ui
+	set $this-have_ui 1
 
         ###################################
 	#THIS PART IS FOR MAKING THE TITLE

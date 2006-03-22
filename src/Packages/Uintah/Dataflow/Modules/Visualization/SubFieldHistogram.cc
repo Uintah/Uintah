@@ -79,8 +79,8 @@ static string control_name("Control Widget");
 
   SubFieldHistogram::SubFieldHistogram(GuiContext* ctx)
   : Module("SubFieldHistogram", ctx, Filter, "Visualization", "Uintah"),
-    is_fixed_(ctx->subVar("is_fixed_")),
-    min_(ctx->subVar("min_")), max_(ctx->subVar("max_"))
+    is_fixed_(get_ctx()->subVar("is_fixed_")),
+    min_(get_ctx()->subVar("min_")), max_(get_ctx()->subVar("max_"))
 {
   white = scinew Material(Color(0,0,0), Color(0.6,0.6,0.6), Color(0.6,0.6,0.6), 20);
     
@@ -109,37 +109,37 @@ void SubFieldHistogram::execute(void)
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   
   if (!in_subfield) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   
   if (!incolormap) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!ogeom) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    post_message("Unable to initialize "+name+"'s oport\n");
     return;
   }
 
   if (!infield->get(field)) {
-    postMessage("No incoming scalar field in  "+name+"'s iport\n");
+    post_message("No incoming scalar field in  "+name+"'s iport\n");
     return;
   } else if (!field.get_rep()) {
-    postMessage("No rep  in  "+name+"'s incoming scalar field\n");
+    post_message("No rep  in  "+name+"'s incoming scalar field\n");
     return;
   }
 
   if (!in_subfield->get(sub_field) ) {
-    postMessage("No incoming scalar sub_field in  "+name+"'s iport\n");
+    post_message("No incoming scalar sub_field in  "+name+"'s iport\n");
     return;
   } else if (!sub_field.get_rep()) {
-    postMessage("No rep  in  "+name+"'s incoming scalar sub_field\n");
+    post_message("No rep  in  "+name+"'s incoming scalar sub_field\n");
     return;
   }
   
@@ -152,7 +152,7 @@ void SubFieldHistogram::execute(void)
   const TypeDescription *std = sub_field->get_type_description();
   if( td->get_name().find("double") != string::npos &&
       std->get_name().find("int") != string::npos){
-    postMessage("Field type mismatch in "+name+" cannot make histogram\n");
+    post_message("Field type mismatch in "+name+" cannot make histogram\n");
     return;
   }
 

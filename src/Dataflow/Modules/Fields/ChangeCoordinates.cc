@@ -62,8 +62,8 @@ public:
 DECLARE_MAKER(ChangeCoordinates)
 ChangeCoordinates::ChangeCoordinates(GuiContext* ctx)
   : Module("ChangeCoordinates", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    gui_oldsystem_(ctx->subVar("oldsystem"), "Cartesian"),
-    gui_newsystem_(ctx->subVar("newsystem"), "Spherical")
+    gui_oldsystem_(get_ctx()->subVar("oldsystem"), "Cartesian"),
+    gui_newsystem_(get_ctx()->subVar("newsystem"), "Spherical")
 {
 }
 

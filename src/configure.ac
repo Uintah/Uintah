@@ -290,6 +290,12 @@ SCI_ARG_WITH(verdict,
   [with_verdict="$withval"
    sci_required_verdict=yes],
   [with_verdict=""])
+SCI_ARG_WITH(tetgen,
+  AC_HELP_STRING(--with-tetgen=DIR,
+                 Use the Tetgen installation in DIR),
+  [with_tetgen="$withval"
+   sci_required_tetgen=yes],
+  [with_tetgen=""])
 SCI_ARG_WITH(unipetsc,
   AC_HELP_STRING(--with-unipetsc=DIR,
                  Use the unipetsc installation in DIR),
@@ -3106,6 +3112,41 @@ AC_SUBST(INC_CAMAL_H)
 AC_SUBST(CAMAL_LIB_DIR_FLAG)
 AC_SUBST(DEF_CAMAL)
 AC_SUBST(HAVE_CAMAL)
+
+##  --  search for Tetgen (http://tetgen.berlios.de) ------------------------
+
+_sci_optional=optional
+if test "$with_tetgen" = "yes"; then
+  AC_MSG_ERROR(--with-tetgen must have a have a path to an installation --with-tetgen=/path/to/my/tetgen/installation/dir)
+else 
+  if test "$with_tetgen"; then
+    # If --with-tetgen has a parameter, then use it
+    _sci_lib="$with_tetgen"
+    _sci_inc="$with_tetgen"
+    _sci_optional=specific
+  fi 
+fi
+
+
+SCI_TRY_LINK(TETGEN,TETGEN library,,$_sci_inc,tet,
+			   $_sci_lib,,,$_sci_optional)
+
+
+if test "$HAVE_TETGEN" = "yes"; then
+  DEF_TETGEN="#define HAVE_TETGEN 1"
+fi
+
+if test "$with_tetgen" && test ! "$DEF_TETGEN"; then
+  echo
+  AC_MSG_ERROR(One or more of the TETGEN components is missing.)
+  echo
+fi
+
+AC_SUBST(TETGEN_LIB_FLAG)
+AC_SUBST(INC_TETGEN_H)
+AC_SUBST(TETGEN_LIB_DIR_FLAG)
+AC_SUBST(DEF_TETGEN)
+AC_SUBST(HAVE_TETGEN)
 
 ##  --  search for atlas stuff  -------------------------------------------
 

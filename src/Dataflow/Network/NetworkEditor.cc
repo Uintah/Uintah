@@ -117,8 +117,8 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     Module* mod = net_->add_module(args[2],args[3],args[4]);
     if(!mod)
       throw "netedit addmodule cannot add module "+args[2]+args[3]+args[4];
-    gui_->add_command(mod->id+"-c", mod, 0);
-    args.result(mod->id);
+    gui_->add_command(mod->id_+"-c", mod, 0);
+    args.result(mod->id_);
   } else if (args[1] == "deletemodule") {
     if(args.count() < 3)
       throw "netedit deletemodule needs a module name";
@@ -166,7 +166,7 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     else
     {
       const int owhich = args.get_int(3);
-      if (owhich >= omod->numOPorts())
+      if (owhich >= omod->num_output_ports())
         throw "netedit supportsPortCaching can't find output port";
       args.result(omod->oport_supports_cache_flag(owhich)?"1":"0");
     }
@@ -177,7 +177,7 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     if(!omod)
       throw "netedit isPortCaching can't find output module";
     const int owhich = args.get_int(3);
-    if (owhich >= omod->numOPorts())
+    if (owhich >= omod->num_output_ports())
       throw "netedit isPortCaching can't find output port";
     args.result(omod->get_oport_cache_flag(owhich)?"1":"0");
   } else if(args[1] == "setPortCaching") {
@@ -187,7 +187,7 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     if(!omod)
       throw "netedit setPortCaching can't find output module";
     const int owhich = args.get_int(3);
-    if (owhich >= omod->numOPorts())
+    if (owhich >= omod->num_output_ports())
       throw "netedit setPortCaching can't find output port";
     const int cache =  args.get_int(4);
     omod->set_oport_cache_flag(owhich, cache);
@@ -214,7 +214,7 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "reset_scheduler"){
     for(int i=0;i<net_->nmodules();i++){
       Module* m=net_->module(i);
-      m->need_execute=0;
+      m->need_execute_=0;
     }
   } else if(args[1] == "packageName"){
     if(args.count() != 3)
@@ -222,21 +222,21 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     Module* mod=net_->get_module_by_id(args[2]);
     if(!mod)
       throw "cannot find module "+args[2];
-    args.result(mod->packageName);
+    args.result(mod->package_name_);
   } else if(args[1] == "categoryName"){
     if(args.count() != 3)
       throw "categoryName needs a module id";
     Module* mod=net_->get_module_by_id(args[2]);
     if(!mod)
       throw "cannot find module "+args[2];
-    args.result(mod->categoryName);
+    args.result(mod->category_name_);
   } else if(args[1] == "moduleName"){
     if(args.count() != 3)
       throw "moduleName needs a module id";
     Module* mod=net_->get_module_by_id(args[2]);
     if(!mod)
       throw "cannot find module "+args[2];
-    args.result(mod->moduleName);
+    args.result(mod->module_name_);
   } else if (args[1] == "create_pac_cat_mod") {
     if (args.count()!=7)
       throw "create_pac_cat_mod needs 5 arguments";

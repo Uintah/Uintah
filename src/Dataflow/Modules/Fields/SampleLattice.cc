@@ -109,11 +109,11 @@ DECLARE_MAKER(SampleLattice)
 
 SampleLattice::SampleLattice(GuiContext* ctx)
   : Module("SampleLattice", ctx, Filter, "FieldsCreate", "SCIRun"),
-    size_x_(ctx->subVar("sizex"), 16),
-    size_y_(ctx->subVar("sizey"), 16),
-    size_z_(ctx->subVar("sizez"), 16),
-    padpercent_(ctx->subVar("padpercent"), 0.0),
-    data_at_(ctx->subVar("data-at"), "Nodes")
+    size_x_(get_ctx()->subVar("sizex"), 16),
+    size_y_(get_ctx()->subVar("sizey"), 16),
+    size_z_(get_ctx()->subVar("sizez"), 16),
+    padpercent_(get_ctx()->subVar("padpercent"), 0.0),
+    data_at_(get_ctx()->subVar("data-at"), "Nodes")
 {
 }
 

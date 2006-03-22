@@ -78,23 +78,23 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     assumeSVT_(context->subVar("assumeSVT")),
     animate_(context->subVar("animate")),
 
-    animate_frame_(ctx->subVar("animate_frame")),
-    animate_tab_(ctx->subVar("animate_tab")),
-    basic_tab_(ctx->subVar("basic_tab")),
-    extended_tab_(ctx->subVar("extended_tab")),
-    playmode_tab_(ctx->subVar("playmode_tab")),
+    animate_frame_(get_ctx()->subVar("animate_frame")),
+    animate_tab_(get_ctx()->subVar("animate_tab")),
+    basic_tab_(get_ctx()->subVar("basic_tab")),
+    extended_tab_(get_ctx()->subVar("extended_tab")),
+    playmode_tab_(get_ctx()->subVar("playmode_tab")),
 
-    selectable_min_(ctx->subVar("selectable_min")),
-    selectable_max_(ctx->subVar("selectable_max")),
-    selectable_inc_(ctx->subVar("selectable_inc")),
-    range_min_(ctx->subVar("range_min")),
-    range_max_(ctx->subVar("range_max")),
-    playmode_(ctx->subVar("playmode")),
-    current_(ctx->subVar("current")),
-    execmode_(ctx->subVar("execmode")),
-    delay_(ctx->subVar("delay")),
-    inc_amount_(ctx->subVar("inc-amount")),
-    update_type_(ctx->subVar("update_type")),
+    selectable_min_(get_ctx()->subVar("selectable_min")),
+    selectable_max_(get_ctx()->subVar("selectable_max")),
+    selectable_inc_(get_ctx()->subVar("selectable_inc")),
+    range_min_(get_ctx()->subVar("range_min")),
+    range_max_(get_ctx()->subVar("range_max")),
+    playmode_(get_ctx()->subVar("playmode")),
+    current_(get_ctx()->subVar("current")),
+    execmode_(get_ctx()->subVar("execmode")),
+    delay_(get_ctx()->subVar("delay")),
+    inc_amount_(get_ctx()->subVar("inc-amount")),
+    update_type_(get_ctx()->subVar("update_type")),
     inc_(1),
 
     mergedata_(-1),
@@ -366,11 +366,11 @@ void HDF5DataReader::execute() {
       string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
 
       if( nHandles_[ic] != 0 )
-	sendOHandle( portName, nHandles_[ic], true );
+	send_output_handle( portName, nHandles_[ic], true );
     }
 
     // Get a handle to the output double port.
-    sendOHandle( "Selected Index", mHandle_, true );
+    send_output_handle( "Selected Index", mHandle_, true );
   }
 
 #else  
@@ -594,9 +594,9 @@ void HDF5DataReader::ReadandSendData( string& filename,
   if( cache ) {
     // Update the ports in the GUI.
     ostringstream str;
-    str << id << " updateSelection {" << portStr << "}";
+    str << get_id() << " updateSelection {" << portStr << "}";
 
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
   }
 
   if( cc > MAX_PORTS )
@@ -610,7 +610,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
     string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
 
     // Send the data downstream
-    sendOHandle( portName, nHandles_[ic], cache );
+    send_output_handle( portName, nHandles_[ic], cache );
   }
 
   ColumnMatrix *selected = scinew ColumnMatrix(1);
@@ -618,7 +618,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
   mHandle_ = MatrixHandle(selected);
 
-  sendOHandle( "Selected Index", mHandle_, true );
+  send_output_handle( "Selected Index", mHandle_, true );
 }
 
 
@@ -1582,12 +1582,12 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     
       // Update the treeview in the GUI.
       ostringstream str;
-      str << id << " build_tree " << new_dumpname;
+      str << get_id() << " build_tree " << new_dumpname;
       
-      gui->execute(str.str().c_str());
+      get_gui()->execute(str.str().c_str());
     
       // Update the dims in the GUI.
-      gui->execute(id + " set_size 0 {}");
+      get_gui()->execute(get_id() + " set_size 0 {}");
     }
 
 #else
@@ -1671,9 +1671,9 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
 	// Update the dims in the GUI.
 	ostringstream str;
-	str << id << " set_size " << ndims << " " << dimstr;
+	str << get_id() << " set_size " << ndims << " " << dimstr;
     
-	gui->execute(str.str().c_str());
+	get_gui()->execute(str.str().c_str());
       }
     }
 
@@ -1788,7 +1788,7 @@ HDF5DataReader::createDumpFile( string filename, string dumpname ) {
 
   if( !sPtr ) {
     error( string("Unable to open output file: ") + dumpname );
-    gui->execute( "reset_cursor" );
+    get_gui()->execute( "reset_cursor" );
     return -1;
   }
 
@@ -1796,7 +1796,7 @@ HDF5DataReader::createDumpFile( string filename, string dumpname ) {
 
   if( hdf.file( filename ) < 0 ) {
     error( hdf.error() );
-    gui->execute( "reset_cursor" );
+    get_gui()->execute( "reset_cursor" );
 
     sPtr.flush();
     sPtr.close();

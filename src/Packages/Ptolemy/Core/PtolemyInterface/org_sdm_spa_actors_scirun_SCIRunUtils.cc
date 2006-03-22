@@ -43,7 +43,7 @@ Java_org_sdm_spa_actors_scirun_SCIRunUtils_getScirun(JNIEnv *env, jclass cls, js
 	StartSCIRun *start = new StartSCIRun(nPath, dPath, JNIUtils::modName /*, runNet */);
 
     Thread *t = new Thread(start, "start scirun", 0, Thread::NotActivated);
-    t->setStackSize(1024*2048);
+    t->set_stack_size(1024*2048);
     t->activate(false);
     t->join();
 
@@ -56,7 +56,7 @@ Java_org_sdm_spa_actors_scirun_SCIRunUtils_exitAllSCIRunThreads(JNIEnv *, jclass
     QuitSCIRun *quit = new QuitSCIRun();
 
     Thread *t = new Thread(quit, "quit scirun", 0, Thread::NotActivated);
-    t->setStackSize(1024*1024);
+    t->set_stack_size(1024*1024);
     t->activate(false);
     t->detach();
 }

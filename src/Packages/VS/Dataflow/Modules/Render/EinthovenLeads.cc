@@ -72,9 +72,9 @@ DECLARE_MAKER(EinthovenLeads)
 
 EinthovenLeads::EinthovenLeads(GuiContext* ctx) :
   Module("EinthovenLeads", ctx, Filter, "Render", "VS"),
-  gui_lead_I_(ctx->subVar("lead_I")),
-  gui_lead_II_(ctx->subVar("lead_II")),
-  gui_lead_III_(ctx->subVar("lead_III")),
+  gui_lead_I_(get_ctx()->subVar("lead_I")),
+  gui_lead_II_(get_ctx()->subVar("lead_II")),
+  gui_lead_III_(get_ctx()->subVar("lead_III")),
   last_gen_(-1),
   count_(0),
   nrrd_out_(0),

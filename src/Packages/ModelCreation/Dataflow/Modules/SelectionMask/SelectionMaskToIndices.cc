@@ -74,19 +74,19 @@ void SelectionMaskToIndices::execute()
   
   SCIRun::MatrixHandle input;
   
-  if (!(selection_iport = dynamic_cast<SCIRun::MatrixIPort *>(getIPort(0))))
+  if (!(selection_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(0))))
   {
     error("Could not find input port for selection mask");
     return;
   }
 
-  if (!(indices_oport = dynamic_cast<SCIRun::MatrixOPort *>(getOPort(0))))
+  if (!(indices_oport = dynamic_cast<SCIRun::MatrixOPort *>(get_output_port(0))))
   {
     error("Could not find output port for indices matrix");
     return;
   }
 
-  if (!(length_oport = dynamic_cast<SCIRun::MatrixOPort *>(getOPort(1))))
+  if (!(length_oport = dynamic_cast<SCIRun::MatrixOPort *>(get_output_port(1))))
   {
     error("Could not find output port for length matrix");
     return;

@@ -499,7 +499,7 @@ HypreDriverSStruct::HyprePatch_CC::addToGrid(HYPRE_SStructGrid& grid,
                                              HYPRE_SStructVariable* vars)
 
 {
-  cout_dbg << Parallel::getMPIRank() << " Adding patch " << (_patch?_patch->getID():-1)
+  cout_dbg << Parallel::getMPIRank() << " Adding patch " << (_patch?_patch->get_id():-1)
        << " from "<< _low << " to " << _high
        << " Level " << _level << "\n";
   HYPRE_SStructGridSetExtents(grid, _level,
@@ -522,7 +522,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructGraph& graph,
 
 {
   cout_doing << "Doing makeConnections graph for Patch "
-             << _patch->getID() << " Level " << _level << "\n";
+             << _patch->get_id() << " Level " << _level << "\n";
        
   const GridP grid = _patch->getLevel()->getGrid();
   
@@ -624,7 +624,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
                                                          const bool symmetric /* = false */)
 
 {
-  cout_doing << "Adding interior eqns in patch " << (_patch?_patch->getID():-1)
+  cout_doing << "Adding interior eqns in patch " << (_patch?_patch->get_id():-1)
              << " from "<< _low << " to " << _high << " Level " << _level << "\n";
              
   CCTypes::matrix_type A;

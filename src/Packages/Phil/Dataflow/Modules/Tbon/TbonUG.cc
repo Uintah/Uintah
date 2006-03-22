@@ -34,7 +34,7 @@ class TbonUG : public Module {
 public:
 
   // Functions required by Module inheritance
-  TbonUG(const clString& id);
+  TbonUG(const clString& get_id());
   virtual ~TbonUG();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -69,17 +69,17 @@ private:
 
 
 // More required stuff...
-extern "C" Module* make_TbonUG(const clString& id){
-  return new TbonUG(id);
+extern "C" Module* make_TbonUG(const clString& get_id()){
+  return new TbonUG(get_id());
 }
 
 
 // Constructor
-TbonUG::TbonUG(const clString& id) 
-  : Module("TbonUG", id, Filter), metafilename("metafilename",id,this), 
-    nodebricksize("nodebricksize",id,this), 
-    databricksize("databricksize",id,this), isovalue("isovalue",id,this),
-    timevalue("timevalue",id,this), threshold("threshold",id,this)
+TbonUG::TbonUG(const clString& get_id()) 
+  : Module("TbonUG", get_id(), Filter), metafilename("metafilename",get_id(),this), 
+    nodebricksize("nodebricksize",get_id(),this), 
+    databricksize("databricksize",get_id(),this), isovalue("isovalue",get_id(),this),
+    timevalue("timevalue",get_id(),this), threshold("threshold",get_id(),this)
 {
   timevalue.set(0);
   isovalue.set(0);
@@ -133,7 +133,7 @@ TbonUG::execute()
       metafile >> timesteps;
       
       // update UI to reflect current values
-      TCL::execute( id + " updateFrames");
+      TCL::execute( get_id() + " updateFrames");
       
       // create list of files
       ifstream files( trees, ios::in );
@@ -242,7 +242,7 @@ TbonUG::preprocess( ifstream& metafile ) {
 //  processes a single (time,iso) query
 void
 TbonUG::processQuery() {
-  static int id = -1;
+  static int get_id() = -1;
   iotimer_t t0, t1;
 
   t0 = read_time();
@@ -267,9 +267,9 @@ TbonUG::processQuery() {
     }
 
     // send surface to output port
-    if( id > 0 )
-      geomout->delObj( id );
-    id = geomout->addObj( new GeomMaterial( surface, 
+    if( get_id() > 0 )
+      geomout->delObj( get_id() );
+    get_id() = geomout->addObj( new GeomMaterial( surface, 
 					    new Material( Color(0,0,0),
 							  Color(0.25,0.7,0.7),
 							  Color(0.8,0.8,0.8),
@@ -285,9 +285,9 @@ TbonUG::processQuery() {
       surface = tbon->search( curriso, treefiles[currtime],
 			      datafiles[currtime], 
 			      TbonTreeUG<type>::TIME_CHANGED ); 
-      if( id > 0 )
-	geomout->delObj( id );
-      id = geomout->addObj( surface, "Geometry" );
+      if( get_id() > 0 )
+	geomout->delObj( get_id() );
+      get_id() = geomout->addObj( surface, "Geometry" );
       geomout->flush();
       //  } 
     }

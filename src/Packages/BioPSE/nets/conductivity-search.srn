@@ -101,7 +101,7 @@
     </module>
     <module id="m15" package="SCIRun" category="Math" name="ErrorMetric" gui_visible="yes">
       <position x="174" y="518"/>
-      <var name="haveUI" val="{1}"/>
+      <var name="have_ui" val="{1}"/>
       <var name="pTCL" val="{1}"/>
       <var name="ui_geometry" val="{499x836+53+18}"/>
     </module>

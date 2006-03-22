@@ -56,11 +56,11 @@ private:
 DECLARE_MAKER(CompartmentBoundary)
 CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
   : Module("CompartmentBoundary", ctx, Source, "FieldsCreate", "ModelCreation"),
-    guiuserange_(ctx->subVar("userange")),
-    guiminrange_(ctx->subVar("minrange")),
-    guimaxrange_(ctx->subVar("maxrange")),
-    guiincludeouterboundary_(ctx->subVar("includeouterboundary")),
-    guiinnerboundaryonly_(ctx->subVar("innerboundaryonly"))    
+    guiuserange_(get_ctx()->subVar("userange")),
+    guiminrange_(get_ctx()->subVar("minrange")),
+    guimaxrange_(get_ctx()->subVar("maxrange")),
+    guiincludeouterboundary_(get_ctx()->subVar("includeouterboundary")),
+    guiinnerboundaryonly_(get_ctx()->subVar("innerboundaryonly"))    
 {
 }
 

@@ -77,10 +77,10 @@ DECLARE_MAKER(DMDAddMembrane)
 
 DMDAddMembrane::DMDAddMembrane(GuiContext* ctx)
   : Module("DMDAddMembrane", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
-    guimembranenames_(ctx->subVar("mem-names")),
-    guimembranename_(ctx->subVar("mem-name")),
-    guimembraneparam_(ctx->subVar("mem-param")),
-    guimembranedesc_(ctx->subVar("mem-desc"))
+    guimembranenames_(get_ctx()->subVar("mem-names")),
+    guimembranename_(get_ctx()->subVar("mem-name")),
+    guimembraneparam_(get_ctx()->subVar("mem-param")),
+    guimembranedesc_(get_ctx()->subVar("mem-desc"))
 {
 }
 
@@ -88,7 +88,7 @@ void DMDAddMembrane::execute()
 {
   ModelCreation::ConverterAlgo mc(this);
 
-  BundleIPort* membranebundle_iport = dynamic_cast<BundleIPort*>(getIPort(0));
+  BundleIPort* membranebundle_iport = dynamic_cast<BundleIPort*>(get_input_port(0));
   if (membranebundle_iport == 0)
   {
     error("Could not find membrane input port");
@@ -157,7 +157,7 @@ void DMDAddMembrane::execute()
   
   Membrane->setMatrix("nodetype",NodeType);
   
-  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(getIPort(1));
+  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(get_input_port(1));
   if (geometryport == 0)
   {
     error("Could not find Membrane Geometry port");
@@ -175,7 +175,7 @@ void DMDAddMembrane::execute()
 
   Membrane->setField("geometry",Geometry);
  
-  StringIPort* paramport = dynamic_cast<StringIPort*>(getIPort(2));
+  StringIPort* paramport = dynamic_cast<StringIPort*>(get_input_port(2));
   if (paramport == 0)
   {
     error("Could not find Paramerter input port");
@@ -183,11 +183,11 @@ void DMDAddMembrane::execute()
   } 
 
   std::string cmd;
-  cmd = getID() + " get_param";
-  gui->lock();
-  gui->eval(cmd);
-  gui->unlock();
-  ctx->reset();
+  cmd = get_id() + " get_param";
+  get_gui()->lock();
+  get_gui()->eval(cmd);
+  get_gui()->unlock();
+  get_ctx()->reset();
   
   std::string paramstr;
  
@@ -226,7 +226,7 @@ void DMDAddMembrane::execute()
   
   if (membranename != "")
   {
-    BundleOPort* oport = dynamic_cast<BundleOPort*>(getOPort(0));
+    BundleOPort* oport = dynamic_cast<BundleOPort*>(get_output_port(0));
     if (oport)
     {
       oport->send(MembraneBundle);
@@ -254,7 +254,7 @@ void DMDAddMembrane::tcl_command(GuiArgs& args, void* userdata)
         guimembranename_.set(args[2]);
         guimembraneparam_.set(param);
         guimembranedesc_.set(desc);
-        ctx->reset();
+        get_ctx()->reset();
       }
     }
     else

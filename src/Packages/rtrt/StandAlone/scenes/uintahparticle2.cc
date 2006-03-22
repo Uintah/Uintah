@@ -270,7 +270,7 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
   // 1. If there are no particles over a particular material skip it.
   // 2. If a variable does not exist over a particular data set, pad it
   //    with zeros.
-  float patchid = (float)patch->getID();
+  float patchid = (float)patch->get_id();
   for(unsigned int matind = 0; matind < num_materials; matind++) {
     long num_parts = patchdata.position_x.material_set[matind].ndata;
     if (num_parts > 0) {
@@ -732,7 +732,7 @@ public:
     for(int i = 0; i < sphere_data.size(); i++) {
       sphere_data_all->add(sphere_data[i]);
     }
-    cerr << "Read Patch(" << patch->getID() << ")\n";
+    cerr << "Read Patch(" << patch->get_id() << ")\n";
     amutex->unlock();
     sema->up();
   }

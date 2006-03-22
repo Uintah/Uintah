@@ -55,10 +55,10 @@ private:
 DECLARE_MAKER(LinkFieldBoundary)
 LinkFieldBoundary::LinkFieldBoundary(GuiContext* ctx)
   : Module("LinkFieldBoundary", ctx, Source, "FiniteElements", "ModelCreation"),
-  guilinkx_(ctx->subVar("linkx")),
-  guilinky_(ctx->subVar("linky")),
-  guilinkz_(ctx->subVar("linkz")),
-  guitol_(ctx->subVar("tol"))
+  guilinkx_(get_ctx()->subVar("linkx")),
+  guilinky_(get_ctx()->subVar("linky")),
+  guilinkz_(get_ctx()->subVar("linkz")),
+  guitol_(get_ctx()->subVar("tol"))
 {
 }
 
@@ -66,7 +66,7 @@ void LinkFieldBoundary::execute()
 {
   FieldHandle Field;
   MatrixHandle GeomToComp, CompToGeom;
-  if(!(getIHandle("Field",Field,true))) return;
+  if(!(get_input_handle("Field",Field,true))) return;
 
   double tol = guitol_.get();
   bool   linkx = static_cast<bool>(guilinkx_.get());
@@ -79,9 +79,9 @@ void LinkFieldBoundary::execute()
   Field->get_property("GeomToComp",GeomToComp);
   Field->get_property("CompToGeom",CompToGeom);
   
-  sendOHandle("Field",Field,true);
-  sendOHandle("GeomToComp",GeomToComp,true);
-  sendOHandle("CompToGeom",CompToGeom,true);  
+  send_output_handle("Field",Field,true);
+  send_output_handle("GeomToComp",GeomToComp,true);
+  send_output_handle("CompToGeom",CompToGeom,true);  
 }
 
 } // End namespace ModelCreation

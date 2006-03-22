@@ -382,21 +382,21 @@ DECLARE_MAKER(StatForecast)
 
 StatForecast::StatForecast(GuiContext* ctx) :
   Module("StatForecast", ctx, Filter, "Render", "VS"),
-  gui_time_(ctx->subVar("time")),
-  gui_sample_rate_(ctx->subVar("sample_rate")),
-  gui_sweep_speed_(ctx->subVar("sweep_speed")),
-  gui_play_mode_(ctx->subVar("play_mode")),
-  gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
-  gui_selected_marker_(ctx->subVar("selected_marker")),
-  gui_font_scale_(ctx->subVar("font_scale")),
-  gui_show_name_(ctx->subVar("show_name")),
-  gui_show_alarm_(ctx->subVar("show_alarm")),
-  gui_injury_offset_(ctx->subVar("injury_offset")),
-  gui_threshold_squ_(ctx->subVar("threshold_squ")),
-  gui_threshold_sod_(ctx->subVar("threshold_sod")),
-  gui_threshold_dqu_(ctx->subVar("threshold_dqu")),
-  gui_threshold_ttd_(ctx->subVar("threshold_ttd")),
-  gui_geom_(ctx->subVar("geom")),
+  gui_time_(get_ctx()->subVar("time")),
+  gui_sample_rate_(get_ctx()->subVar("sample_rate")),
+  gui_sweep_speed_(get_ctx()->subVar("sweep_speed")),
+  gui_play_mode_(get_ctx()->subVar("play_mode")),
+  gui_time_markers_mode_(get_ctx()->subVar("time_markers_mode")),
+  gui_selected_marker_(get_ctx()->subVar("selected_marker")),
+  gui_font_scale_(get_ctx()->subVar("font_scale")),
+  gui_show_name_(get_ctx()->subVar("show_name")),
+  gui_show_alarm_(get_ctx()->subVar("show_alarm")),
+  gui_injury_offset_(get_ctx()->subVar("injury_offset")),
+  gui_threshold_squ_(get_ctx()->subVar("threshold_squ")),
+  gui_threshold_sod_(get_ctx()->subVar("threshold_sod")),
+  gui_threshold_dqu_(get_ctx()->subVar("threshold_dqu")),
+  gui_threshold_ttd_(get_ctx()->subVar("threshold_ttd")),
+  gui_geom_(get_ctx()->subVar("geom")),
   ctx_(0),
   dpy_(0),
   win_(0),
@@ -505,7 +505,7 @@ StatForecast::inc_time(double elapsed)
 
   gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
   gui_time_.reset();
-  gui->execute("update idletasks");
+  get_gui()->execute("update idletasks");
 
   setTimeLabel();
 }
@@ -516,12 +516,12 @@ StatForecast::make_current()
   //----------------------------------------------------------------
   // obtain rendering ctx 
   if(!ctx_) {
-    const string myname(".ui" + id + ".f.gl.gl");
+    const string myname(".ui" + get_id() + ".f.gl.gl");
     Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      gui->unlock();
+      get_gui()->unlock();
       return false;
     }
     dpy_ = Tk_Display(tkwin);
@@ -532,7 +532,7 @@ StatForecast::make_current()
     // check if it was created
     if(!ctx_) {
       error("Unable to obtain OpenGL context!");
-      gui->unlock();
+      get_gui()->unlock();
       return false;
     }
     glXMakeCurrent(dpy_, win_, ctx_);
@@ -1016,7 +1016,7 @@ StatForecast::draw_plots()
 void
 StatForecast::redraw_all()
 {
-  gui->lock();
+  get_gui()->lock();
   if (! make_current()) return;
 
   init_plots();
@@ -1032,7 +1032,7 @@ StatForecast::redraw_all()
 
   glXSwapBuffers(dpy_, win_);
   glXMakeCurrent(dpy_, 0, 0);
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 void
@@ -1096,7 +1096,7 @@ StatForecast::setTimeLabel()
     timestr << setw(2) << hrs << ":";
     timestr << setw(2) << min << ":";
     timestr << setw(2) << sec;
-    gui->execute(id + " setTimeLabel {" + timestr.str() + "}");
+    get_gui()->execute(get_id() + " setTimeLabel {" + timestr.str() + "}");
  
     time_text.replace(0, time_text.length(), timestr.str());
 }
@@ -1126,12 +1126,12 @@ StatForecast::addMarkersToMenu()
   }
 
   markers_.clear();
-  gui->execute(id + " clearMarkers");
+  get_gui()->execute(get_id() + " clearMarkers");
 
   set<int>::iterator iter;
   for (iter = keys.begin(); iter != keys.end(); iter++) {
       markers_.push_back(*iter);
-      gui->execute(id + " setMarkers {" + tmpmkrs[*iter] + "}");
+      get_gui()->execute(get_id() + " setMarkers {" + tmpmkrs[*iter] + "}");
   }
 }
 
@@ -1142,13 +1142,13 @@ StatForecast::getNrrd1KeyValues()
 
   if (name != NULL) {
     string title(name);
-    //gui->execute(id + " setWindowTitle {Decision Space: " + name + "}");
-	 gui->execute(id + " setWindowTitle {Statistical Forecast: " + name + "}");
+    //get_gui()->execute(get_id() + " setWindowTitle {Decision Space: " + name + "}");
+	 get_gui()->execute(get_id() + " setWindowTitle {Statistical Forecast: " + name + "}");
 
     ostringstream titlestr;
     titlestr << "Name: " << title;
 
-    //gui->execute(id + " setWindowTitle {" + titlestr.str().c_str() + "}");
+    //get_gui()->execute(get_id() + " setWindowTitle {" + titlestr.str().c_str() + "}");
 
     name_text.replace(0, name_text.length(), titlestr.str());
                                                                                 
@@ -1340,7 +1340,7 @@ StatForecast::execute()
   if (!runner_) {
     //runner_ = scinew RTDraw3(this);
     runner_ = scinew RTDraw3(this, time_viewer_h_);
-    runner_thread_ = scinew Thread(runner_, string(id+" RTDraw3 OpenGL").c_str());
+    runner_thread_ = scinew Thread(runner_, string(get_id()+" RTDraw3 OpenGL").c_str());
   }
 }
 
@@ -1411,7 +1411,7 @@ StatForecast::tcl_command(GuiArgs& args, void* userdata)
 
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
@@ -1424,7 +1424,7 @@ StatForecast::tcl_command(GuiArgs& args, void* userdata)
     }
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
@@ -1437,17 +1437,17 @@ StatForecast::tcl_command(GuiArgs& args, void* userdata)
     }
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
   } else if(args[1] == "configure") {
-    const string myname(".ui" + id + ".f.gl.gl");
+    const string myname(".ui" + get_id() + ".f.gl.gl");
     Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      //gui->unlock();
+      //get_gui()->unlock();
     } else {
       width_ = Tk_Width(tkwin);
       height_ = Tk_Height(tkwin);

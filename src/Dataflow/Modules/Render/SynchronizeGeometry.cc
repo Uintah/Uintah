@@ -83,9 +83,9 @@ DECLARE_MAKER(SynchronizeGeometry)
 SynchronizeGeometry::SynchronizeGeometry(GuiContext* ctx)
   : Module("SynchronizeGeometry", ctx, Filter, "Render", "SCIRun"),
     max_portno_(0),
-    gui_enforce_(ctx->subVar("enforce"), 1)
+    gui_enforce_(get_ctx()->subVar("enforce"), 1)
 {
-  have_own_dispatch = true;
+  have_own_dispatch_ = true;
 }
 
 
@@ -106,10 +106,10 @@ SynchronizeGeometry::execute()
 void
 SynchronizeGeometry::do_execute()
 {
-  ogeom_ = (GeometryOPort*)getOPort("Output Geometry");
+  ogeom_ = (GeometryOPort*)get_output_port("Output Geometry");
   for (;;)
   {
-    MessageBase *msg = mailbox.receive();
+    MessageBase *msg = mailbox_.receive();
     if (process_event(msg) == 86)
     {
       return;
@@ -131,7 +131,7 @@ SynchronizeGeometry::process_event(MessageBase* msg)
 
   case MessageTypes::GeometryInit:
     gmsg->reply->send(GeomReply(max_portno_));
-    physical_portno_.push_back(numIPorts()-1);
+    physical_portno_.push_back(num_input_ports()-1);
     max_portno_++;
     msg_heads_.push_back(NULL);
     msg_tails_.push_back(NULL);
@@ -206,7 +206,7 @@ SynchronizeGeometry::process_event(MessageBase* msg)
     else
     {
       flush_all_msgs();
-      // TODO: verify id found in map.
+      // TODO: verify get_id() found in map.
       ogeom_->delObj(geom_ids_[gmsg->portno][gmsg->serial]);
       geom_ids_[gmsg->portno].erase(gmsg->serial);
     }
@@ -266,12 +266,12 @@ SynchronizeGeometry::process_event(MessageBase* msg)
     {
       flush_all_msgs();
     }
-    sched->report_execution_finished(msg);
+    sched_->report_execution_finished(msg);
     break;
 
   case MessageTypes::SynchronizeModule:
     // We (mostly) ignore these messages.
-    sched->report_execution_finished(msg);
+    sched_->report_execution_finished(msg);
     break;
 
   default:
@@ -359,7 +359,7 @@ SynchronizeGeometry::forward_saved_msg()
   }
   else
   {
-    update_progress(num_flush/double(numIPorts() - 1));
+    update_progress(num_flush/double(num_input_ports() - 1));
   }
 }
 
@@ -389,7 +389,7 @@ SynchronizeGeometry::flush_port(int portno, int count)
     // GeometryDelObj
     else if (gmsg->type == MessageTypes::GeometryDelObj)
     {
-      // TODO: verify id found in map.
+      // TODO: verify get_id() found in map.
       ogeom_->delObj(geom_ids_[gmsg->portno][gmsg->serial]);
       geom_ids_[gmsg->portno].erase(gmsg->serial);
     }

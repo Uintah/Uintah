@@ -47,24 +47,24 @@ class NetSolveSHARE SparseSolve : public Module {
   
 public:
   //! Constructor/Destructor
-  SparseSolve(const string& id);
+  SparseSolve(const string& get_id());
   virtual ~SparseSolve();
 
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" NetSolveSHARE Module* make_SparseSolve(const string& id) {
-  return new SparseSolve(id);
+extern "C" NetSolveSHARE Module* make_SparseSolve(const string& get_id()) {
+  return new SparseSolve(get_id());
 }
 
-SparseSolve::SparseSolve(const string& id)
-  : Module("SparseSolve", id, Source, "Matrix", "NetSolve"), 
-  target_error("target_error", id, this), 
-  final_error("final_error", id, this),
-  final_iterations("final_iterations", id, this), 
-  maxiter("maxiter", id, this),
-  method("method", id, this)
+SparseSolve::SparseSolve(const string& get_id())
+  : Module("SparseSolve", get_id(), Source, "Matrix", "NetSolve"), 
+  target_error("target_error", get_id(), this), 
+  final_error("final_error", get_id(), this),
+  final_iterations("final_iterations", get_id(), this), 
+  maxiter("maxiter", get_id(), this),
+  method("method", get_id(), this)
 {
 }
 
@@ -78,7 +78,7 @@ void SparseSolve::execute(){
   rhsport = (MatrixIPort *)get_iport("RHS");
   solport = (MatrixOPort *)get_oport("Solution");
   if(!matrixport->get(matrix)) {
-    msgStream_ << "The Matrix input is required, but nothing is connected."
+    msg_stream_ << "The Matrix input is required, but nothing is connected."
                << endl;    
     return;
   }
@@ -86,13 +86,13 @@ void SparseSolve::execute(){
   SparseRowMatrix* srm = matrix->sparse(); 
   
   if (!srm) {
-    msgStream_ << "The supplied matrix is not of type SparseRow" << endl;
+    msg_stream_ << "The supplied matrix is not of type SparseRow" << endl;
     return;
   }
   
   MatrixHandle rhs;
   if(!rhsport->get(rhs)) {
-    msgStream_ << "The RHS input is required, but nothing is connected."
+    msg_stream_ << "The RHS input is required, but nothing is connected."
                << endl;
     return;
   }
@@ -100,7 +100,7 @@ void SparseSolve::execute(){
   
 //  if (!matrix.get_rep() || !rhs.get_rep() || !rhs->getColumn()) {
   if (!matrix.get_rep() || !rhs.get_rep() || !rhs->column()) {
-    msgStream_ << "One or more of the inputs are NULL";
+    msg_stream_ << "One or more of the inputs are NULL";
     return;
   }
   
@@ -116,7 +116,7 @@ void SparseSolve::execute(){
    
   double* lhs = NULL; 
  
-  msgStream_ << "Calling NetSolve for 'petsc', blocking :" << endl;
+  msg_stream_ << "Calling NetSolve for 'petsc', blocking :" << endl;
  
   int status = netsl ("iterative_solve_parallel()",
 		      "PETSC",
@@ -136,10 +136,10 @@ void SparseSolve::execute(){
     delete solution;
     return;
   } else {
-    msgStream_ << "NetSolve call succeeded.  Passing solution through port" 
+    msg_stream_ << "NetSolve call succeeded.  Passing solution through port" 
 	       << endl;
     solution->set_data(lhs);
-    msgStream_ << "Tolerance: " << tolerance << ", iterations = " 
+    msg_stream_ << "Tolerance: " << tolerance << ", iterations = " 
 	       << iterations << endl;
     
     solport->send(MatrixHandle(solution));

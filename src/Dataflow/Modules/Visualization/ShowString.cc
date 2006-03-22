@@ -83,12 +83,12 @@ private:
 DECLARE_MAKER(ShowString)
 ShowString::ShowString(GuiContext* ctx)
   : Module("ShowString", ctx, Source, "Visualization", "SCIRun"),
-    iBbox_(ctx->subVar("bbox"), 0),
-    dSize_(ctx->subVar("size"), 2),
-    sLocation_(ctx->subVar("location"), "Top Left"),
-    color_r_(ctx->subVar("color-r"), 1.0),
-    color_g_(ctx->subVar("color-g"), 1.0),
-    color_b_(ctx->subVar("color-b"), 1.0),
+    iBbox_(get_ctx()->subVar("bbox"), 0),
+    dSize_(get_ctx()->subVar("size"), 2),
+    sLocation_(get_ctx()->subVar("location"), "Top Left"),
+    color_r_(get_ctx()->subVar("color-r"), 1.0),
+    color_g_(get_ctx()->subVar("color-g"), 1.0),
+    color_b_(get_ctx()->subVar("color-b"), 1.0),
     color_(1.0, 1.0, 1.0),
     generation_(0),
     update_(false)  

@@ -79,10 +79,10 @@ DECLARE_MAKER(FieldWriter)
 
 FieldWriter::FieldWriter(GuiContext* ctx)
   : GenericWriter<FieldHandle>("FieldWriter", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype")),
-    gui_increment_(ctx->subVar("increment")),
-    gui_current_(ctx->subVar("current"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype")),
+    gui_increment_(get_ctx()->subVar("increment")),
+    gui_current_(get_ctx()->subVar("current"))
 {
     FieldIEPluginManager mgr;
   vector<string> exporters;

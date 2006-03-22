@@ -83,9 +83,9 @@ template <class HType>
 GenericWriter<HType>::GenericWriter(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Sink, cat, pack),
-    filename_(ctx->subVar("filename")),
-    filetype_(ctx->subVar("filetype")),
-    confirm_(ctx->subVar("confirm")),
+    filename_(get_ctx()->subVar("filename")),
+    filetype_(get_ctx()->subVar("filetype")),
+    confirm_(get_ctx()->subVar("confirm")),
     exporting_(false)
 {
 }
@@ -102,9 +102,9 @@ bool
 GenericWriter<HType>::overwrite()
 {
   std::string result;
-  gui->lock();
-  gui->eval(id + " overwrite", result);
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id() + " overwrite", result);
+  get_gui()->unlock();
   if (result == std::string("0"))
   {
     warning("User chose to not save.");
@@ -126,7 +126,7 @@ template <class HType>
 void
 GenericWriter<HType>::execute()
 {
-  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)getIPort(0);
+  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_input_port(0);
   if (!inport) {
     error("Unable to initialize iport.");
     return;
@@ -143,14 +143,14 @@ GenericWriter<HType>::execute()
 
   // CODE FOR FILENAME INPUT PORT ////
   StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>(getIPort("Filename")))
+  if (filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename")))
   {
     StringHandle filenameH;
     filenameport->get(filenameH);
     if (filenameH.get_rep())
     {
       filename_.set(filenameH->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
   ////////////////////////////////////

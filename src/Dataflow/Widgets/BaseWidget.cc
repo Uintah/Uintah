@@ -141,8 +141,8 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
     current_mode_(0),
     widget_scale_(widget_scale),
     epsilon_(1e-3),
-    gui(module->getGui()),
-    tclmat_(ctx=module->getGui()->createContext(id_)),
+    gui(module->get_gui()),
+    tclmat_(ctx=module->get_gui()->createContext(id_)),
     stipple_occluded_(stipple_occluded)
 {
   init_tcl();

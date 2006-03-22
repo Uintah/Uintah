@@ -74,7 +74,7 @@ DECLARE_MAKER(TransformMesh)
 
 TransformMesh::TransformMesh(GuiContext* ctx)
   : Module("TransformMesh", ctx, Filter,"FieldsGeometry", "SCIRun"),
-    gFunction_(ctx->subVar("function"), "result = p + Vector(1.0, 2.0, 3.0);"),
+    gFunction_(get_ctx()->subVar("function"), "result = p + Vector(1.0, 2.0, 3.0);"),
     fGeneration_(-1)
 {
 }
@@ -106,7 +106,7 @@ TransformMesh::execute()
     update = true;
   }
 
-  gui->execute(id + " update_text"); // update gFunction_ before get.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before get.
   string function = gFunction_.get();
 
   if ( function_       != function )
@@ -130,7 +130,7 @@ TransformMesh::execute()
 	TransformMeshAlgo::get_compile_info(ftd, function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)) {
 	error("Your function would not compile.");
-	gui->eval(id + " compile_error "+ci->filename_);
+	get_gui()->eval(get_id() + " compile_error "+ci->filename_);
 	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	return;
       }
@@ -154,7 +154,7 @@ TransformMesh::execute()
 void
 TransformMesh::presave()
 {
-  gui->execute(id + " update_text"); // update gFunction_ before saving.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }
 
 

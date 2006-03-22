@@ -80,7 +80,7 @@ void MappingMatrixToField::execute()
 {
   FieldIPort *field_iport;
   
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
+  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
   {
     error("Could not find Field input port");
     return;
@@ -98,7 +98,7 @@ void MappingMatrixToField::execute()
 
   MatrixIPort *matrix_iport;
   
-  if (!(matrix_iport = dynamic_cast<MatrixIPort *>(getIPort(1))))
+  if (!(matrix_iport = dynamic_cast<MatrixIPort *>(get_input_port(1))))
   {
     error("Could not find MappingMatrix input port");
     return;
@@ -133,7 +133,7 @@ void MappingMatrixToField::execute()
       return;
     }
   
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
+    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
     if (output_oport) output_oport->send(output);
   }
 }

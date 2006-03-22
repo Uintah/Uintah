@@ -97,7 +97,7 @@ public:
 DECLARE_MAKER(FieldToImage)
 FieldToImage::FieldToImage(GuiContext* ctx)
   : Module("FieldToImage", ctx, Source, "Converters", "Insight"),
-    copy_(ctx->subVar("copy"))
+    copy_(get_ctx()->subVar("copy"))
 {
   img_ = scinew ITKDatatype;
 }

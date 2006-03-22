@@ -59,20 +59,20 @@ class SiReInput : public Module {
     GuiInt NPasses;
     GuiString PFileStr;
 public:
-    SiReInput(const clString& id);
+    SiReInput(const clString& get_id());
     virtual ~SiReInput();
     virtual void execute();
 };
 
-extern "C" Module* make_SiReInput(const clString& id)
+extern "C" Module* make_SiReInput(const clString& get_id())
 {
-    return new SiReInput(id);
+    return new SiReInput(get_id());
 }
 
-SiReInput::SiReInput(const clString& id)
-: Module("SiReInput", id, Filter), rcvrIter(-1), slabIter(-1),
-  PFileStr("PFileStr", id, this), ShrinkFactor("ShrinkFactor", id, this),
-  NPasses("NPasses", id, this)
+SiReInput::SiReInput(const clString& get_id())
+: Module("SiReInput", get_id(), Filter), rcvrIter(-1), slabIter(-1),
+  PFileStr("PFileStr", get_id(), this), ShrinkFactor("ShrinkFactor", get_id(), this),
+  NPasses("NPasses", get_id(), this)
 {
     oport = scinew VoidStarOPort(this, "SiReData", VoidStarIPort::Atomic);
     add_oport(oport);

@@ -36,7 +36,7 @@ class Bono : public Module {
 public:
 
   // Functions required by Module inheritance
-  Bono(const clString& id);
+  Bono(const clString& get_id());
   virtual ~Bono();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -76,17 +76,17 @@ private:
 
 
 // More required stuff...
-extern "C" Module* make_Bono(const clString& id){
-  return new Bono(id);
+extern "C" Module* make_Bono(const clString& get_id()){
+  return new Bono(get_id());
 }
 
 
 // Constructor
-Bono::Bono(const clString& id) 
-  : Module("Bono", id, Filter), metafilename("metafilename",id,this), 
-    nodeblocksize("nodeblocksize",id,this), 
-    datablocksize("datablocksize",id,this), isovalue("isovalue",id,this),
-    timevalue("timevalue",id,this)
+Bono::Bono(const clString& get_id()) 
+  : Module("Bono", get_id(), Filter), metafilename("metafilename",get_id(),this), 
+    nodeblocksize("nodeblocksize",get_id(),this), 
+    datablocksize("datablocksize",get_id(),this), isovalue("isovalue",get_id(),this),
+    timevalue("timevalue",get_id(),this)
 {
   portid = -1;
   
@@ -144,7 +144,7 @@ Bono::execute()
     metafile >> timesteps;
 
     // update UI to reflect current values
-    TCL::execute( id + " updateFrames");
+    TCL::execute( get_id() + " updateFrames");
 
     // create list of files
     ifstream files( trees, ios::in );
@@ -298,9 +298,9 @@ Bono::processQuery() {
       surface = bono->search( curriso, treefiles[currtime],
 			      datafiles[currtime], 
 			      BonoTree<type>::TIME_CHANGED ); 
-      if( id > 0 )
-	geomout->delObj( id );
-      id = geomout->addObj( surface, "Geometry" );
+      if( get_id() > 0 )
+	geomout->delObj( get_id() );
+      get_id() = geomout->addObj( surface, "Geometry" );
       geomout->flush();
     }
   } 

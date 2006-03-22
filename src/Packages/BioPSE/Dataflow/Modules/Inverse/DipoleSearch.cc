@@ -200,10 +200,10 @@ DipoleSearch::send_and_get_data(int which_dipole, TVMesh::Cell::index_type ci)
 {
   if (!mylock_.tryLock())
   {
-    msgStream_ << "Thread is paused\n";
+    msg_stream_ << "Thread is paused\n";
     mylock_.lock();
     mylock_.unlock();
-    msgStream_ << "Thread is unpaused\n";
+    msg_stream_ << "Thread is unpaused\n";
   }
   else
   {
@@ -509,7 +509,7 @@ DipoleSearch::simplex_search()
       }
     }
   }
-  msgStream_ << "DipoleSearch -- num_evals = "<<num_evals << "\n";
+  msg_stream_ << "DipoleSearch -- num_evals = "<<num_evals << "\n";
 }
 
 
@@ -576,7 +576,7 @@ DipoleSearch::read_field_ports(int &valid_data, int &new_data)
       PCMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
       if (nsize != (unsigned int)NSEEDS_)
       {
-        msgStream_ << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
+        msg_stream_ << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
         valid_data=0;
       }
       else if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation))
@@ -612,7 +612,7 @@ DipoleSearch::organize_last_send()
   TVMesh::Cell::index_type best_cell_idx;
   vol_mesh_->locate(best_cell_idx, best_pt);
 
-  msgStream_ << "DipoleSearch -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
+  msg_stream_ << "DipoleSearch -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
 
   DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
   for (i=0; i<3; i++)
@@ -719,22 +719,22 @@ DipoleSearch::tcl_command(GuiArgs& args, void* userdata)
   {
     if (mylock_.tryLock())
     {
-      msgStream_ << "TCL initiating pause..."<<endl;
+      msg_stream_ << "TCL initiating pause..."<<endl;
     }
     else
     {
-      msgStream_ << "Can't lock -- already locked"<<endl;
+      msg_stream_ << "Can't lock -- already locked"<<endl;
     }
   }
   else if (args[1] == "unpause")
   {
     if (mylock_.tryLock())
     {
-      msgStream_ << "Can't unlock -- already unlocked"<<endl;
+      msg_stream_ << "Can't unlock -- already unlocked"<<endl;
     }
     else
     {
-      msgStream_ << "TCL initiating unpause..."<<endl;
+      msg_stream_ << "TCL initiating unpause..."<<endl;
     }
     mylock_.unlock();
   }

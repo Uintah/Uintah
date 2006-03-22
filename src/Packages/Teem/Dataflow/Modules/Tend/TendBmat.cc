@@ -66,7 +66,7 @@ DECLARE_MAKER(TendBmat)
 
 TendBmat::TendBmat(SCIRun::GuiContext *ctx) : 
   Module("TendBmat", ctx, Filter, "Tend", "Teem"), 
-  gradient_list_(ctx->subVar("gradient_list"), "")
+  gradient_list_(get_ctx()->subVar("gradient_list"), "")
 {
 }
 
@@ -80,7 +80,7 @@ TendBmat::~TendBmat()
 bool
 TendBmat::extract_gradients(vector<double> &d)
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
   istringstream str(gradient_list_.get().c_str());
   while (true)
   {
@@ -151,7 +151,7 @@ TendBmat::execute()
 void
 TendBmat::presave()
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
 }
 
 

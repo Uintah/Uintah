@@ -182,8 +182,8 @@ DECLARE_MAKER(BinaryErodeImageFilter)
 
 BinaryErodeImageFilter::BinaryErodeImageFilter(GuiContext* ctx)
   : Module("BinaryErodeImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_erodeVal_(ctx->subVar("erodeVal")),
-    gui_radius_(ctx->subVar("radius")),
+    gui_erodeVal_(get_ctx()->subVar("erodeVal")),
+    gui_radius_(get_ctx()->subVar("radius")),
      last_InputImage_(-1)
 {
   filter_ = 0;

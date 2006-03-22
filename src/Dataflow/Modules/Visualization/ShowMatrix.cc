@@ -154,27 +154,27 @@ ShowMatrix::ShowMatrix(GuiContext* ctx)
     white_(scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20)),
     black_(scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 20)),
     swap_row_col_(false),
-    gui_grid_x_(ctx->subVar("grid_x")),
-    gui_grid_y_(ctx->subVar("grid_y")),
-    gui_grid_z_(ctx->subVar("grid_z")),
-    gui_trans_x_(ctx->subVar("xpos")),
-    gui_trans_y_(ctx->subVar("ypos")),
-    gui_scale_(ctx->subVar("xscale")),
-    gui_scale_x_(ctx->subVar("xscale")),
-    gui_scale_y_(ctx->subVar("yscale")),
-    gui_3d_mode_(ctx->subVar("3d_mode")),
-    gui_gmode_(ctx->subVar("gmode")),
-    gui_showtext_(ctx->subVar("showtext")),
-    gui_row_begin_(ctx->subVar("row_begin")),
-    gui_row_end_(ctx->subVar("row_end")),
-    gui_rows_(ctx->subVar("rows")),
-    gui_col_begin_(ctx->subVar("col_begin")),
-    gui_col_end_(ctx->subVar("col_end")),
-    gui_cols_(ctx->subVar("cols")),
-    gui_x_gap_(ctx->subVar("xgap")),
-    gui_z_gap_(ctx->subVar("ygap")),
-    gui_data_face_centered_(ctx->subVar("data_face_centered")),
-    gui_cmode_(ctx->subVar("colormapmode"))
+    gui_grid_x_(get_ctx()->subVar("grid_x")),
+    gui_grid_y_(get_ctx()->subVar("grid_y")),
+    gui_grid_z_(get_ctx()->subVar("grid_z")),
+    gui_trans_x_(get_ctx()->subVar("xpos")),
+    gui_trans_y_(get_ctx()->subVar("ypos")),
+    gui_scale_(get_ctx()->subVar("xscale")),
+    gui_scale_x_(get_ctx()->subVar("xscale")),
+    gui_scale_y_(get_ctx()->subVar("yscale")),
+    gui_3d_mode_(get_ctx()->subVar("3d_mode")),
+    gui_gmode_(get_ctx()->subVar("gmode")),
+    gui_showtext_(get_ctx()->subVar("showtext")),
+    gui_row_begin_(get_ctx()->subVar("row_begin")),
+    gui_row_end_(get_ctx()->subVar("row_end")),
+    gui_rows_(get_ctx()->subVar("rows")),
+    gui_col_begin_(get_ctx()->subVar("col_begin")),
+    gui_col_end_(get_ctx()->subVar("col_end")),
+    gui_cols_(get_ctx()->subVar("cols")),
+    gui_x_gap_(get_ctx()->subVar("xgap")),
+    gui_z_gap_(get_ctx()->subVar("ygap")),
+    gui_data_face_centered_(get_ctx()->subVar("data_face_centered")),
+    gui_cmode_(get_ctx()->subVar("colormapmode"))
 {
 
 }
@@ -673,7 +673,7 @@ ShowMatrix::execute()
     
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
   ogeom->delAll();
-  ogeom->addObj(obj, id+" Plot");
+  ogeom->addObj(obj, get_id()+" Plot");
   ogeom->flushViews();
 }
 

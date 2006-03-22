@@ -706,7 +706,7 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
-    cout_doing <<"  patch " << coarsePatch->getID()<< endl;
+    cout_doing <<"  patch " << coarsePatch->get_id()<< endl;
     CCVariable<double> one;
           
     new_dw->allocateTemporary(one, coarsePatch);
@@ -752,7 +752,7 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
   
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
-    cout_doing << "  patch " << coarsePatch->getID()<< endl;
+    cout_doing << "  patch " << coarsePatch->get_id()<< endl;
 
     CCVariable<double> rhs, sumRefluxCorrection;
     new_dw->getModifiable(rhs,lb->rhsLabel, 0, coarsePatch);
@@ -796,7 +796,7 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     //  Print Data
     if(switchDebug_setupRHS){ 
       ostringstream desc;     
-      desc << "apply_refluxFluxes_RHS"<< "_patch_"<< coarsePatch->getID();
+      desc << "apply_refluxFluxes_RHS"<< "_patch_"<< coarsePatch->get_id();
       printData(0, coarsePatch,   1, desc.str(), "rhs",             rhs);
       printData(0, coarsePatch,   1, desc.str(), "refluxCorrection",sumRefluxCorrection);
     }
@@ -849,7 +849,7 @@ void ICE::coarsen_delP(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(p);
     
     cout_doing << d_myworld->myrank()<< " Doing Coarsen_" << variable->getName()
-               << " on patch " << coarsePatch->getID() 
+               << " on patch " << coarsePatch->get_id() 
                << "\t\t\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
     CCVariable<double> delP;                  
     new_dw->getModifiable(delP, variable, 0, coarsePatch);
@@ -898,7 +898,7 @@ void ICE::coarsen_delP(const ProcessorGroup*,
 
     if (switchDebug_updatePressure) {
       ostringstream desc;
-      desc << "BOT_coarsen_delP" << coarsePatch->getID();
+      desc << "BOT_coarsen_delP" << coarsePatch->get_id();
       printData( 0, coarsePatch, 0,desc.str(), "delP",delP);
     }  
 
@@ -945,7 +945,7 @@ void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
     
     cout_doing << d_myworld->myrank()
                << " Doing zeroMatrix_UnderFinePatches on patch "
-               << coarsePatch->getID() << "\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
+               << coarsePatch->get_id() << "\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
                
     CCVariable<Stencil7> A; 
     new_dw->getModifiable(A,  lb->matrixLabel, 0, coarsePatch);
@@ -987,7 +987,7 @@ void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
 #if 1
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
-      desc << "BOT_zeroMatrix_RHS_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
+      desc << "BOT_zeroMatrix_RHS_UnderFinePatches_coarse_patch_" << coarsePatch->get_id()
            <<  " L-" <<coarseLevel->getIndex()<< endl;
       printStencil( 0, coarsePatch, 1, desc.str(), "A", A);
     }
@@ -1049,8 +1049,8 @@ void ICE::matrixCoarseLevelIterator(Patch::FaceType patchFace,
   
   if (cout_dbg.active()) {
     cout_dbg << "refluxCoarseLevelIterator: face "<< patchFace
-             << " finePatch " << finePatch->getID()
-             << " coarsePatch " << coarsePatch->getID()
+             << " finePatch " << finePatch->get_id()
+             << " coarsePatch " << coarsePatch->get_id()
              << " [CellIterator at " << iter.begin() << " of " << iter.end() << "] "
              << " does this coarse patch own the face centered variable "
              << isRight_CP_FP_pair << endl; 
@@ -1115,7 +1115,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
   // over all coarse patches
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
-    cout_doing << "  patch " << coarsePatch->getID()<< endl;
+    cout_doing << "  patch " << coarsePatch->get_id()<< endl;
          
     CCVariable<Stencil7> A_coarse;
     new_dw->getModifiable(A_coarse, lb->matrixLabel, 0, coarsePatch);
@@ -1214,7 +1214,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
 #if 1
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
-      desc << "BOT_matrixBC_CFI_coarse_patch_" << coarsePatch->getID()
+      desc << "BOT_matrixBC_CFI_coarse_patch_" << coarsePatch->get_id()
           <<  " L-" <<coarseLevel->getIndex()<< endl;
       printStencil( 0, coarsePatch, 1, desc.str(), "A_coarse", A_coarse);
     } 

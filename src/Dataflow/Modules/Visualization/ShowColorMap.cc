@@ -82,15 +82,15 @@ public:
 
 ShowColorMap::ShowColorMap(GuiContext* ctx)
   : Module("ShowColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    gui_length_(ctx->subVar("length"), "half2"),
-    gui_side_(ctx->subVar("side"), "left"),
-    gui_numlabels_(ctx->subVar("numlabels"), 5),
-    gui_scale_(ctx->subVar("scale"), 1.0),
-    gui_num_sig_digits_(ctx->subVar("numsigdigits"), 2),
-    gui_units_(ctx->subVar("units"), ""),
-    gui_text_color_(ctx->subVar("text_color"), 1),
-    gui_text_fontsize_(ctx->subVar("text-fontsize"), 2),
-    gui_extra_padding_(ctx->subVar("extra-padding"), 0)
+    gui_length_(get_ctx()->subVar("length"), "half2"),
+    gui_side_(get_ctx()->subVar("side"), "left"),
+    gui_numlabels_(get_ctx()->subVar("numlabels"), 5),
+    gui_scale_(get_ctx()->subVar("scale"), 1.0),
+    gui_num_sig_digits_(get_ctx()->subVar("numsigdigits"), 2),
+    gui_units_(get_ctx()->subVar("units"), ""),
+    gui_text_color_(get_ctx()->subVar("text_color"), 1),
+    gui_text_fontsize_(get_ctx()->subVar("text-fontsize"), 2),
+    gui_extra_padding_(get_ctx()->subVar("extra-padding"), 0)
 {
 }
 

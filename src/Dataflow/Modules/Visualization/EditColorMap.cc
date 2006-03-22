@@ -160,12 +160,12 @@ DECLARE_MAKER(EditColorMap)
 
 EditColorMap::EditColorMap( GuiContext* ctx)
   : Module("EditColorMap",ctx,Source, "Visualization", "SCIRun"),
-    RGBorHSV_(ctx->subVar("rgbhsv")),
-    lineVSspline_(ctx->subVar("linespline")),
-    rgb_points_pickle_(ctx->subVar("rgb_points")),
-    hsv_points_pickle_(ctx->subVar("hsv_points_pickle")),
-    alphas_pickle_(ctx->subVar("alpha_points")),
-    resolution_(ctx->subVar("resolution")),
+    RGBorHSV_(get_ctx()->subVar("rgbhsv")),
+    lineVSspline_(get_ctx()->subVar("linespline")),
+    rgb_points_pickle_(get_ctx()->subVar("rgb_points")),
+    hsv_points_pickle_(get_ctx()->subVar("hsv_points_pickle")),
+    alphas_pickle_(get_ctx()->subVar("alpha_points")),
+    resolution_(get_ctx()->subVar("resolution")),
     hsv_mode_(0),
     activeLine(-1),
     selNode(-1),
@@ -369,7 +369,7 @@ EditColorMap::Resize(int win)
   glViewport(0,0,winX[win],winY[win]);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 
@@ -428,7 +428,7 @@ EditColorMap::DrawGraphs( int flush)
   ctxs_[0]->swap();
   CHECK_OPENGL_ERROR("");
   ctxs_[0]->release();
-  gui->unlock();  
+  get_gui()->unlock();  
 
   // Update the colormap.
   cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, resolution_.get());
@@ -523,7 +523,7 @@ EditColorMap::DrawGraphs( int flush)
   ctxs_[1]->swap();
   CHECK_OPENGL_ERROR("");
   ctxs_[1]->release();
-  gui->unlock();
+  get_gui()->unlock();
 
   if ( flush )
   {
@@ -581,7 +581,7 @@ EditColorMap::tcl_command( GuiArgs& args, void* userdata)
       }
   } else if(args[1] == "setgl") {
     if (makeCurrent(args.get_int(2)))
-      gui->unlock();
+      get_gui()->unlock();
   }else if (args[1] == "unpickle") {
      tcl_unpickle();
   }else if (args[1] == "toggle-hsv") {
@@ -1037,16 +1037,16 @@ EditColorMap::makeCurrent(int win)
 {
   ASSERT(win == 0 || win == 1);
   // lock a mutex
-  gui->lock();
+  get_gui()->lock();
 
   if (!ctxs_[win]) {
     string myname; 
     int height = 0;
     if (win == 0) {
-      myname = ".ui" + id + ".f.gl1.gl";
+      myname = ".ui" + get_id() + ".f.gl1.gl";
       height = 256;
     } else if (win == 1) {
-      myname = ".ui" + id + ".f.gl3.gl";
+      myname = ".ui" + get_id() + ".f.gl3.gl";
       height = 64;
     }
     try {
@@ -1061,7 +1061,7 @@ EditColorMap::makeCurrent(int win)
   if(!ctxs_[win])
   {
     remark("Unable to create OpenGL context.");
-    gui->unlock();
+    get_gui()->unlock();
     return 0;
   }
   

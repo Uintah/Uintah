@@ -52,21 +52,21 @@ class RayTest : public Module {
 		   int);
 
 public:
-    RayTest(const clString& id);
+    RayTest(const clString& get_id());
     virtual ~RayTest();
     virtual void execute();
 };
 
-extern "C" Module* make_RayTest(const clString& id)
+extern "C" Module* make_RayTest(const clString& get_id())
 {
-    return new RayTest(id);
+    return new RayTest(get_id());
 }
 
 static clString module_name("RayTest");
 
-RayTest::RayTest(const clString& id)
-: Module("RayTest", id, Source), density("density", id, this), 
-  nu("nu",id,this), energy("energy",id,this), init(0)
+RayTest::RayTest(const clString& get_id())
+: Module("RayTest", get_id(), Source), density("density", get_id(), this), 
+  nu("nu",get_id(),this), energy("energy",get_id(),this), init(0)
 {
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);

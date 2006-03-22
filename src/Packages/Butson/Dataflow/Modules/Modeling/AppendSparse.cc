@@ -50,7 +50,7 @@ DECLARE_MAKER(AppendSparse);
 
 AppendSparse::AppendSparse(GuiContext* ctx)
   : Module("AppendSparse", ctx, Filter,"Modeling", "Butson"),
-    rows_or_columns_(ctx->subVar("appendmode"))
+    rows_or_columns_(get_ctx()->subVar("appendmode"))
 {
 }
 

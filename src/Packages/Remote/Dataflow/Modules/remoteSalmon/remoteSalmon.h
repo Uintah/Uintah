@@ -30,7 +30,7 @@ class remoteSalmon : public Salmon {
     
 public:
 
-    remoteSalmon(const clString& id);
+    remoteSalmon(const clString& get_id());
 
     void tcl_command(TCLArgs&, void*);
 

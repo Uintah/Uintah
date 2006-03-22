@@ -74,7 +74,7 @@ DECLARE_MAKER(SepSurfToQuadSurf)
 
 SepSurfToQuadSurf::SepSurfToQuadSurf(GuiContext *ctx)
   : Module("SepSurfToQuadSurf", ctx, Filter, "Modeling", "BioPSE"),
-    data_(ctx->subVar("data"))    
+    data_(get_ctx()->subVar("data"))    
 {
 }
 

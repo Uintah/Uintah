@@ -57,9 +57,9 @@ SCIRunUIPort::~SCIRunUIPort()
 int SCIRunUIPort::ui()
 {
   Module* module = component->getModule();
-  module->popupUI();
+  module->popup_ui();
   //std::cerr << "Warning: need return correct value (0 success, -1 fatal error, other values for other errors !" << std::endl;
-  // Module::popupUI has void return value
+  // Module::popup_ui has void return value
   // TODO: report success or failure of function call
   return 0;
 }

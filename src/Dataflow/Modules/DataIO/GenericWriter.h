@@ -79,9 +79,9 @@ template <class HType>
 GenericWriter<HType>::GenericWriter(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Sink, cat, pack),
-    filename_(ctx->subVar("filename"), ""),
-    filetype_(ctx->subVar("filetype"), "Binary"),
-    confirm_(ctx->subVar("confirm"), sci_getenv_p("SCIRUN_CONFIRM_OVERWRITE")),
+    filename_(get_ctx()->subVar("filename"), ""),
+    filetype_(get_ctx()->subVar("filetype"), "Binary"),
+    confirm_(get_ctx()->subVar("confirm"), sci_getenv_p("SCIRUN_CONFIRM_OVERWRITE")),
     exporting_(false)
 {
 }
@@ -98,9 +98,9 @@ bool
 GenericWriter<HType>::overwrite()
 {
   std::string result;
-  gui->lock();
-  gui->eval(id + " overwrite", result);
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id() + " overwrite", result);
+  get_gui()->unlock();
   if (result == std::string("0"))
   {
     warning("User chose to not save.");
@@ -122,7 +122,7 @@ template <class HType>
 void
 GenericWriter<HType>::execute()
 {
-  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)getIPort(0);
+  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_input_port(0);
   if (!inport) {
     error("Unable to initialize iport.");
     return;

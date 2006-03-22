@@ -60,7 +60,7 @@ class Mesh3dReader : public Module
 DECLARE_MAKER(Mesh3dReader)
 Mesh3dReader::Mesh3dReader(GuiContext* ctx)
   : Module("Mesh3dReader", ctx, Source, "DataIO", "DDDAS"),
-    filename_(ctx->subVar("filename")),
+    filename_(get_ctx()->subVar("filename")),
     old_filemodification_(0)
 {
    // empty
@@ -151,28 +151,28 @@ void Mesh3dReader::execute()
   }
 
   // Send the data downstream.
-  SimpleOPort<FieldHandle> *outport = (SimpleOPort<FieldHandle> *)getOPort(0);
+  SimpleOPort<FieldHandle> *outport = (SimpleOPort<FieldHandle> *)get_output_port(0);
   if (!outport) {
     error("Unable to initialize oport 0.");
     return;
   }
   outport->send(handle_);
 
-  outport = (SimpleOPort<FieldHandle> *)getOPort(1);
+  outport = (SimpleOPort<FieldHandle> *)get_output_port(1);
   if (!outport) {
     error("Unable to initialize oport 1.");
     return;
   }
   outport->send(handle2_);
 
-  SimpleOPort<MatrixHandle> *oport2 = (SimpleOPort<MatrixHandle> *)getOPort(2);
+  SimpleOPort<MatrixHandle> *oport2 = (SimpleOPort<MatrixHandle> *)get_output_port(2);
   if (!oport2) {
     error("Unable to initialize oport 2.");
     return;
   }
   oport2->send(mhandle_);
 
-  oport2 = (SimpleOPort<MatrixHandle> *)getOPort(3);
+  oport2 = (SimpleOPort<MatrixHandle> *)get_output_port(3);
   if (!oport2) {
     error("Unable to initialize oport 3.");
     return;

@@ -91,13 +91,13 @@ DECLARE_MAKER(TextureBuilder)
 TextureBuilder::TextureBuilder(GuiContext* ctx)
   : Module("TextureBuilder", ctx, Source, "Visualization", "SCIRun"),
     tHandle_(new Texture),
-    gui_vminval_(ctx->subVar("vmin"), 0),
-    gui_vmaxval_(ctx->subVar("vmax"), 1),
-    gui_gminval_(ctx->subVar("gmin"), 0),
-    gui_gmaxval_(ctx->subVar("gmax"), 1),
-    gui_fixed_(ctx->subVar("is_fixed"), 0),
-    gui_card_mem_(ctx->subVar("card_mem"), 16),
-    gui_card_mem_auto_(ctx->subVar("card_mem_auto"), 1),
+    gui_vminval_(get_ctx()->subVar("vmin"), 0),
+    gui_vmaxval_(get_ctx()->subVar("vmax"), 1),
+    gui_gminval_(get_ctx()->subVar("gmin"), 0),
+    gui_gmaxval_(get_ctx()->subVar("gmax"), 1),
+    gui_fixed_(get_ctx()->subVar("is_fixed"), 0),
+    gui_card_mem_(get_ctx()->subVar("card_mem"), 16),
+    gui_card_mem_auto_(get_ctx()->subVar("card_mem_auto"), 1),
     card_mem_(video_card_memory_size()),
     vfield_last_generation_(-1), gfield_last_generation_(-1)
 {}

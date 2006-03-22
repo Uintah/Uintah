@@ -246,7 +246,7 @@ EITAnalyticSolution::execute()
     k=static_cast<int>((*currPatIdx)[0]);
   }
   else{
-    msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
+    msg_stream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
   }
 
   // Find the number of electrodes from the input electrode parameters

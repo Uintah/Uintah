@@ -114,9 +114,9 @@ DECLARE_MAKER(NetConnector)
 //
 NetConnector::NetConnector(GuiContext* ctx)
   : Module("NetConnector", ctx, Source, "DataIO", "DDDAS"), 
-    cliserv_(ctx->subVar("cliserv")),
-    test_(ctx->subVar("test")),
-    stop_(ctx->subVar("stop"))
+    cliserv_(get_ctx()->subVar("cliserv")),
+    test_(get_ctx()->subVar("test")),
+    stop_(get_ctx()->subVar("stop"))
 { 
 }
  

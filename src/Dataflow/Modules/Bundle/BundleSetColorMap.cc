@@ -64,10 +64,10 @@ DECLARE_MAKER(BundleSetColorMap)
 
 BundleSetColorMap::BundleSetColorMap(GuiContext* ctx)
   : Module("BundleSetColorMap", ctx, Filter, "Bundle", "SCIRun"),
-    guicolormap1name_(ctx->subVar("colormap1-name"), "colormap1"),
-    guicolormap2name_(ctx->subVar("colormap2-name"), "colormap2"),
-    guicolormap3name_(ctx->subVar("colormap3-name"), "colormap3"),
-    guibundlename_(ctx->subVar("bundlename"), "")
+    guicolormap1name_(get_ctx()->subVar("colormap1-name"), "colormap1"),
+    guicolormap2name_(get_ctx()->subVar("colormap2-name"), "colormap2"),
+    guicolormap3name_(get_ctx()->subVar("colormap3-name"), "colormap3"),
+    guibundlename_(get_ctx()->subVar("bundlename"), "")
 {
 }
 

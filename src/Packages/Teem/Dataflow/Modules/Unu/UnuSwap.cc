@@ -62,8 +62,8 @@ UnuSwap::UnuSwap(GuiContext* ctx)
   : Module("UnuSwap", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0),
     onrrd_(0),
-    axisA_(ctx->subVar("axisA"), 0),
-    axisB_(ctx->subVar("axisB"), 1)
+    axisA_(get_ctx()->subVar("axisA"), 0),
+    axisB_(get_ctx()->subVar("axisB"), 1)
 {
 }
 

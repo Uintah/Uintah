@@ -58,7 +58,7 @@ DECLARE_MAKER(UnuAxinsert)
 
 UnuAxinsert::UnuAxinsert(SCIRun::GuiContext *ctx) : 
   Module("UnuAxinsert", ctx, Filter, "UnuAtoM", "Teem"), 
-  axis_(ctx->subVar("axis")), label_(ctx->subVar("label"))
+  axis_(get_ctx()->subVar("axis")), label_(get_ctx()->subVar("label"))
 {
 }
 

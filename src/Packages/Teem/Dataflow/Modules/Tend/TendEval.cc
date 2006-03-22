@@ -65,10 +65,10 @@ DECLARE_MAKER(TendEval)
 
 TendEval::TendEval(SCIRun::GuiContext *ctx) : 
   Module("TendEval", ctx, Filter, "Tend", "Teem"), 
-  major_(ctx->subVar("major"), 1),
-  medium_(ctx->subVar("medium"), 0),
-  minor_(ctx->subVar("minor"), 0),
-  threshold_(ctx->subVar("threshold"), 0.5)
+  major_(get_ctx()->subVar("major"), 1),
+  medium_(get_ctx()->subVar("medium"), 0),
+  minor_(get_ctx()->subVar("minor"), 0),
+  threshold_(get_ctx()->subVar("threshold"), 0.5)
 {
 }
 

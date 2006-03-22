@@ -155,7 +155,7 @@ main(int argc, char *argv[])
                 if(level->containsPoint(pp)){
                   const Patch* currentpatch =
                     level->selectPatchForCellIndex(level->getCellIndex(pp));
-                  int pid = currentpatch->getID();
+                  int pid = currentpatch->get_id();
                   min = Min(pp,min);
                   max = Max(pp,max);
                   points[pid].push_back(pair<Point,vector<double> >(pp,cols));
@@ -166,7 +166,7 @@ main(int argc, char *argv[])
               for(Level::const_patchIterator iter = level->patchesBegin();
                   iter != level->patchesEnd(); iter++){
                 const Patch* patch = *iter;
-                int pid = patch->getID();
+                int pid = patch->get_id();
                 
                 char fnum[5];
                 sprintf(fnum,".%d",pid);

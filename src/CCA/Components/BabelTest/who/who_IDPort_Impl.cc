@@ -68,13 +68,13 @@ void who::IDPort_impl::_dtor() {
  * Test prot. Return a string as an ID for Hello component
  */
 ::std::string
-who::IDPort_impl::getID () 
+who::IDPort_impl::get_id () 
 throw () 
 
 {
-  // DO-NOT-DELETE splicer.begin(who.IDPort.getID)
+  // DO-NOT-DELETE splicer.begin(who.IDPort.get_id)
   return "World (in C++)";
-  // DO-NOT-DELETE splicer.end(who.IDPort.getID)
+  // DO-NOT-DELETE splicer.end(who.IDPort.get_id)
 }
 
 

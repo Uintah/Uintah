@@ -66,7 +66,7 @@ private:
 DECLARE_MAKER(SprintfString)
 SprintfString::SprintfString(GuiContext* ctx)
   : Module("SprintfString", ctx, Source, "String", "SCIRun"),
-    formatstring_(ctx->subVar("formatstring"), "my string: %s")
+    formatstring_(get_ctx()->subVar("formatstring"), "my string: %s")
 {
 }
 
@@ -145,7 +145,7 @@ void
           str = "";
           if (lastport == false)
           {
-            if (inputport == numIPorts())
+            if (inputport == num_input_ports())
             {
               lastport = true;
             }

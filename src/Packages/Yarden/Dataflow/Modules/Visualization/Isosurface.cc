@@ -198,7 +198,7 @@ using namespace SCIRun;
       Byte cmap[256][3];
       
     public:
-      Isosurface( const clString& id);
+      Isosurface( const clString& get_id());
       virtual ~Isosurface();
       
       virtual void execute();
@@ -225,51 +225,51 @@ using namespace SCIRun;
       int set_view( const View &);
     };
     
-    extern "C" Module* make_Isosurface(const clString& id)
+    extern "C" Module* make_Isosurface(const clString& get_id())
     {
-      return scinew Isosurface(id);
+      return scinew Isosurface(get_id());
     }
     
     static clString module_name("Isosurface");
     clString box_name("SageBox");
     clString surface_name;;
     
-    Isosurface::Isosurface(const clString& id)
-      : Module("Isosurface", id, Filter ), 
-	isoval("isoval", id, this),
-	isoval_min("isoval_min", id, this), 
-	isoval_max("isoval_max", id, this),
-	tcl_red("clr-r", id, this),
-	tcl_green("clr-g", id, this),
-	tcl_blue("clr-b", id, this),
-	tcl_dl("dl", id, this),
-	tcl_bbox("bbox", id, this), 
-	tcl_algorithm("alg", id, this), 
+    Isosurface::Isosurface(const clString& get_id())
+      : Module("Isosurface", get_id(), Filter ), 
+	isoval("isoval", get_id(), this),
+	isoval_min("isoval_min", get_id(), this), 
+	isoval_max("isoval_max", get_id(), this),
+	tcl_red("clr-r", get_id(), this),
+	tcl_green("clr-g", get_id(), this),
+	tcl_blue("clr-b", get_id(), this),
+	tcl_dl("dl", get_id(), this),
+	tcl_bbox("bbox", get_id(), this), 
+	tcl_algorithm("alg", get_id(), this), 
 
 	// SpanSpace UI
 	
-	tcl_span_region_set("span-region-set", id, this),
-	tcl_span_region_x0("span-region-x0", id, this),
-	tcl_span_region_y0("span-region-y0", id, this),
-	tcl_span_region_x1("span-region-x1", id, this),
-	tcl_span_region_y1("span-region-y1", id, this),
-	tcl_span_width("span-width", id, this),
-	tcl_span_height("span-height", id, this),
+	tcl_span_region_set("span-region-set", get_id(), this),
+	tcl_span_region_x0("span-region-x0", get_id(), this),
+	tcl_span_region_y0("span-region-y0", get_id(), this),
+	tcl_span_region_x1("span-region-x1", get_id(), this),
+	tcl_span_region_y1("span-region-y1", get_id(), this),
+	tcl_span_width("span-width", get_id(), this),
+	tcl_span_height("span-height", get_id(), this),
 
 	// Sage UI
-	tcl_value("value", id, this), 
-	tcl_visibility("visibility", id, this),
-	tcl_scan("scan", id, this),  
-	tcl_reduce("reduce",id,this), 
-	tcl_all("all",id,this),
-	tcl_min_size("min_size", id, this),
-	tcl_poll("poll", id, this)
+	tcl_value("value", get_id(), this), 
+	tcl_visibility("visibility", get_id(), this),
+	tcl_scan("scan", get_id(), this),  
+	tcl_reduce("reduce",get_id(),this), 
+	tcl_all("all",get_id(),this),
+	tcl_min_size("min_size", get_id(), this),
+	tcl_poll("poll", get_id(), this)
       
 	// NOISE UI
     {
-      cerr << "ID = " << id << endl;
+      cerr << "ID = " << get_id() << endl;
       char name[20];
-      sscanf( id(), "Dataflow_Visualization_%s",name );
+      sscanf( get_id()(), "Dataflow_Visualization_%s",name );
       surface_name = clString(name);
       box_name = surface_name;
       cerr << "name = " << surface_name << endl;
@@ -802,10 +802,10 @@ using namespace SCIRun;
       }
       
       //std::strstream string;
-      //string << id << " span-read-image "<< filename << '\0';
+      //string << get_id() << " span-read-image "<< filename << '\0';
       //clString str (string.str().c_str());
-      char *str = new char[strlen(filename())+strlen(id())+25];
-      sprintf(str,"%s span-read-image %s",id(),filename());
+      char *str = new char[strlen(filename())+strlen(get_id()())+25];
+      sprintf(str,"%s span-read-image %s",get_id()(),filename());
       TCL::execute(str);
       delete[] str;
     }

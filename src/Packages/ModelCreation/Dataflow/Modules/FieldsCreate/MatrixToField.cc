@@ -56,7 +56,7 @@ private:
 DECLARE_MAKER(MatrixToField)
 MatrixToField::MatrixToField(GuiContext* ctx)
   : Module("MatrixToField", ctx, Source, "FieldsCreate", "ModelCreation"),
-    guidatalocation_(ctx->subVar("datalocation"))
+    guidatalocation_(get_ctx()->subVar("datalocation"))
 {
 }
 

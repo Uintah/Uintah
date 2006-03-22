@@ -204,13 +204,13 @@ FieldSetProperty::execute()
       }
 
       ostringstream str;
-      str << id << " setEntry {";
+      str << get_id() << " setEntry {";
       str << pname << "} ";
       str << type << " {";
       str << value << "} ";
       str << readonly << " ";
 
-      gui->execute(str.str().c_str());
+      get_gui()->execute(str.str().c_str());
     }
 
     update = true;
@@ -258,16 +258,16 @@ FieldSetProperty::execute()
     char idx[24];
 
     sprintf( idx, "property-%d", ic );
-    gProperty_.push_back(new GuiString(ctx->subVar(idx)) );
+    gProperty_.push_back(new GuiString(get_ctx()->subVar(idx)) );
 
     sprintf( idx, "type-%d", ic );
-    gType_.push_back(new GuiString(ctx->subVar(idx)) );
+    gType_.push_back(new GuiString(get_ctx()->subVar(idx)) );
 
     sprintf( idx, "value-%d", ic );
-    gValue_.push_back(new GuiString(ctx->subVar(idx)) );
+    gValue_.push_back(new GuiString(get_ctx()->subVar(idx)) );
 
     sprintf( idx, "readonly-%d", ic );
-    gReadOnly_.push_back(new GuiInt(ctx->subVar(idx)) );
+    gReadOnly_.push_back(new GuiInt(get_ctx()->subVar(idx)) );
 
     properties_.push_back("");
     types_.push_back("");

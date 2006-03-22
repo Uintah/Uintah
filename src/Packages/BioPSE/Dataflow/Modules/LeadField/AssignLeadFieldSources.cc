@@ -174,7 +174,7 @@ AssignLeadFieldSources::execute()
   vector<Vector> vecs2;
   PCMesh *pcm = scinew PCMesh;
   PCMesh *pcm2 = scinew PCMesh;
-  msgStream_ << "\n\n\nFocusing ``spikes'':\n";
+  msg_stream_ << "\n\n\nFocusing ``spikes'':\n";
   double halfMax = maxL/2.;
   for (i=0; i<lengths.size(); i++) {
     Point p;
@@ -186,10 +186,10 @@ AssignLeadFieldSources::execute()
     if (lengths[i]>halfMax) {
       pcm2->add_point(p);
       vecs2.push_back(ofield->fdata()[i]);
-      msgStream_ << "   Magnitude="<<lengths[i]<<" cellIdx="<<i<<" centroid="<<p<<"\n";
+      msg_stream_ << "   Magnitude="<<lengths[i]<<" cellIdx="<<i<<" centroid="<<p<<"\n";
     }
   }
-  msgStream_ << "End of focusing spikes.\n";
+  msg_stream_ << "End of focusing spikes.\n";
   PCMesh::handle_type pcmH(pcm);
   PCField *pc = scinew PCField(pcmH);
   pc->fdata()=vecs;

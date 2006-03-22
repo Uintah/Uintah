@@ -244,7 +244,7 @@ OpenGL::start_helper()
     helper_thread_ = scinew Thread(helper_,
                                    string("OpenGL: "+myname_).c_str(),
                                    0, Thread::NotActivated);
-    helper_thread_->setStackSize(1024*1024);
+    helper_thread_->set_stack_size(1024*1024);
     helper_thread_->activate(false);
   }
 }
@@ -1150,7 +1150,7 @@ OpenGL::redraw_frame()
       }
         
       // Wait for the right time before swapping buffers
-      //gui->unlock();
+      //get_gui()->unlock();
       const double realtime = t * frametime;
       if (animate_num_frames_>1)
       {

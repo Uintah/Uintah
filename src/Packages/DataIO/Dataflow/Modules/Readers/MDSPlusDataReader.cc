@@ -287,17 +287,17 @@ void MDSPlusDataReader::execute(){
     char idx[24];
 
     sprintf( idx, "server-%d", ic );
-    gServer_.push_back(new GuiString(ctx->subVar(idx)) );
+    gServer_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "tree-%d", ic );
-    gTree_.push_back(new GuiString(ctx->subVar(idx)) );
+    gTree_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "shot-%d", ic );
-    gShot_.push_back(new GuiString(ctx->subVar(idx)) );
+    gShot_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "signal-%d", ic );
-    gSignal_.push_back(new GuiString(ctx->subVar(idx)) );
+    gSignal_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "status-%d", ic );
-    gStatus_.push_back(new GuiString(ctx->subVar(idx)) );
+    gStatus_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "port-%d", ic );
-    gPort_.push_back(new GuiString(ctx->subVar(idx)) );
+    gPort_.push_back(new GuiString(get_ctx()->subVar(idx)) );
 
     servers_.push_back("");
     trees_.push_back("");
@@ -584,7 +584,7 @@ void MDSPlusDataReader::execute(){
     string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
     
     // Send the data downstream
-    sendOHandle( portName, nHandles_[ic], cache );
+    send_output_handle( portName, nHandles_[ic], cache );
   }
 #else  
   error( "No MDSPlus availible." );
@@ -992,7 +992,7 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
     if( !sPtr ) {
       error( string("Unable to open output file: ") + dumpname );
-      gui->execute( "reset_cursor" );
+      get_gui()->execute( "reset_cursor" );
       return;
     }
   
@@ -1000,7 +1000,7 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
     if( mdsdump.tree(server, tree, shot, signal, depth ) < 0 ) {
       error( mdsdump.error() );
-      gui->execute( "reset_cursor" );
+      get_gui()->execute( "reset_cursor" );
 
       sPtr.flush();
       sPtr.close();
@@ -1013,9 +1013,9 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
     // Update the treeview in the GUI.
     ostringstream str;
-    str << id << " build_tree " << dumpname << " " << args[3];
+    str << get_id() << " build_tree " << dumpname << " " << args[3];
       
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
 #else
 
   error( "No MDS PLUS availible." );
@@ -1113,9 +1113,9 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
       // Update the list in the GUI.
       ostringstream str;
-      str << id << " setEntry {" << signals[ic] << "}";
+      str << get_id() << " setEntry {" << signals[ic] << "}";
       
-      gui->execute(str.str().c_str());
+      get_gui()->execute(str.str().c_str());
     }
 
 #else

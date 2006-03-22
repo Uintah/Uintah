@@ -60,9 +60,9 @@ public:
 
 ChangeFieldBasis::ChangeFieldBasis(GuiContext* ctx)
   : Module("ChangeFieldBasis", ctx, Filter, "FieldsData", "SCIRun"),
-    outputdataat_(ctx->subVar("output-basis"), "Linear"),
-    inputdataat_(ctx->subVar("inputdataat", false), "---"),
-    fldname_(ctx->subVar("fldname", false), "---"),
+    outputdataat_(get_ctx()->subVar("output-basis"), "Linear"),
+    inputdataat_(get_ctx()->subVar("inputdataat", false), "---"),
+    fldname_(get_ctx()->subVar("fldname", false), "---"),
     generation_(-1)
 {
 }

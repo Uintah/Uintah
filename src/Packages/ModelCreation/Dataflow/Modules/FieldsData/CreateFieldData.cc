@@ -87,9 +87,9 @@ class CreateFieldData : public Module {
 DECLARE_MAKER(CreateFieldData)
 CreateFieldData::CreateFieldData(GuiContext* ctx)
   : Module("CreateFieldData", ctx, Source, "FieldsData", "ModelCreation"),
-  guifunction_(ctx->subVar("function")),
-  guiformat_(ctx->subVar("format")),  
-  guibasis_(ctx->subVar("basis"))
+  guifunction_(get_ctx()->subVar("function")),
+  guiformat_(get_ctx()->subVar("format")),  
+  guibasis_(get_ctx()->subVar("basis"))
 {
 }
 
@@ -99,7 +99,7 @@ CreateFieldData::~CreateFieldData(){
 void CreateFieldData::execute()
 {
   // Get number of matrix ports with data (the last one is always empty)
-  size_t numinputs = numIPorts()-3;
+  size_t numinputs = num_input_ports()-3;
   
   if (numinputs > 23)
   {
@@ -110,7 +110,7 @@ void CreateFieldData::execute()
   ArrayObjectList inputlist(numinputs+3,ArrayObject(this));
   ArrayObjectList outputlist(1,ArrayObject(this));
   
-  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(getIPort(0));
+  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(get_input_port(0));
   if(field_iport == 0)
   {
     error("Could not locate field input port");
@@ -129,7 +129,7 @@ void CreateFieldData::execute()
   // The function can be scripted. If a string is found on the input
   // use this one. It will be set in the GIU, after which it is retrieved the
   // normal way.
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(1));
+  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_input_port(1));
   if(function_iport == 0)
   {
     error("Could not locate function input port");
@@ -143,7 +143,7 @@ void CreateFieldData::execute()
     if (func.get_rep())
     {
       guifunction_.set(func->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
 
@@ -187,7 +187,7 @@ void CreateFieldData::execute()
   
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+2));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_input_port(p+2));
     if(iport == 0)
     {
       error("Could not locate matrix input port");
@@ -240,9 +240,9 @@ void CreateFieldData::execute()
   
 
   
-  gui->lock();
-  gui->eval(getID()+" update_text");
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
   
   std::string function = guifunction_.get();
   
@@ -256,7 +256,7 @@ void CreateFieldData::execute()
   }
   
   // If engine succeeded we have a new field at ofield.
-  FieldOPort *oport = dynamic_cast<FieldOPort *>(getOPort(0));
+  FieldOPort *oport = dynamic_cast<FieldOPort *>(get_output_port(0));
   if (oport)
   {
     oport->send(ofield);
@@ -276,10 +276,10 @@ void
 
   if( args[1] == "gethelp" )
   {
-    gui->lock();
-    gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + tvm_help_field +"}");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval("global " + get_id() +"-help");
+    get_gui()->eval("set " + get_id() + "-help {" + tvm_help_field +"}");
+    get_gui()->unlock();
     return;
   }
   else

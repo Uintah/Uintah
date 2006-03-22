@@ -168,7 +168,7 @@ DECLARE_MAKER(VectorIndexSelectionCastImageFilter)
 
 VectorIndexSelectionCastImageFilter::VectorIndexSelectionCastImageFilter(GuiContext* ctx)
   : Module("VectorIndexSelectionCastImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_index_(ctx->subVar("index")), 
+     gui_index_(get_ctx()->subVar("index")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

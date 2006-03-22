@@ -18,7 +18,7 @@ namespace Uintah {
 
 VectorParticlesOperator::VectorParticlesOperator(GuiContext* ctx)
   : Module("VectorParticlesOperator",ctx,Source, "Operators", "Uintah"),
-    guiOperation(ctx->subVar("operation"))
+    guiOperation(get_ctx()->subVar("operation"))
 {
 }
   

@@ -79,13 +79,13 @@ DECLARE_MAKER(UnuQuantize)
 
 UnuQuantize::UnuQuantize(GuiContext *ctx)
   : Module("UnuQuantize", ctx, Filter, "UnuNtoZ", "Teem"),
-    minf_(ctx->subVar("minf")),
-    maxf_(ctx->subVar("maxf")),
-    useinputmin_(ctx->subVar("useinputmin")),
-    useinputmax_(ctx->subVar("useinputmax")),
-    realmin_(ctx->subVar("realmin")),
-    realmax_(ctx->subVar("realmax")),
-    nbits_(ctx->subVar("nbits")), last_minf_(0),
+    minf_(get_ctx()->subVar("minf")),
+    maxf_(get_ctx()->subVar("maxf")),
+    useinputmin_(get_ctx()->subVar("useinputmin")),
+    useinputmax_(get_ctx()->subVar("useinputmax")),
+    realmin_(get_ctx()->subVar("realmin")),
+    realmax_(get_ctx()->subVar("realmax")),
+    nbits_(get_ctx()->subVar("nbits")), last_minf_(0),
     last_maxf_(0), last_nbits_(0), last_generation_(-1), last_nrrdH_(0)
 {
 }
@@ -151,7 +151,7 @@ UnuQuantize::execute()
 
   Nrrd *nin = nrrdH->nrrd;
 
-  msgStream_ << "Quantizing -- min="<<minf<<
+  msg_stream_ << "Quantizing -- min="<<minf<<
     " max="<<maxf<<" nbits="<<nbits<<endl;
   NrrdRange *range = nrrdRangeNew(minf, maxf);
   NrrdData *nrrd = scinew NrrdData;

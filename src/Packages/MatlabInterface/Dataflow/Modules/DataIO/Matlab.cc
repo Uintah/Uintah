@@ -497,7 +497,7 @@ Matlab::~Matlab()
 void	Matlab::update_status(std::string text)
 {
 	std::string cmd = matlab_update_status_.get() + " \"" + totclstring(text) + "\"";
-	gui->execute(cmd);
+	get_gui()->execute(cmd);
 }
 
 matlabarray::mitype Matlab::convertdataformat(std::string dataformat)
@@ -529,33 +529,33 @@ std::vector<std::string> Matlab::converttcllist(std::string str)
 	
 	// Yeah, it is TCL dependent:
 	// TCL::llength determines the length of the list
-	gui->lock();
-	gui->eval("llength { "+str + " }",result);	
+	get_gui()->lock();
+	get_gui()->eval("llength { "+str + " }",result);	
 	istringstream iss(result);
 	iss >> lengthlist;
-	gui->unlock();
+	get_gui()->unlock();
 	if (lengthlist < 0) return(list);
 	
 	list.resize(lengthlist);
-	gui->lock();
+	get_gui()->lock();
 	for (long p = 0;p<lengthlist;p++)
 	{
 		ostringstream oss;
 		// TCL dependency:
 		// TCL::lindex retrieves the p th element from the list
 		oss << "lindex { " << str <<  " } " << p;
-		gui->eval(oss.str(),result);
+		get_gui()->eval(oss.str(),result);
 		list[p] = result;
 	}
-	gui->unlock();
+	get_gui()->unlock();
 	return(list);
 }
 
 bool Matlab::synchronise_input()
 {
 
-	gui->execute(id+" Synchronise");
-	ctx->reset();
+	get_gui()->execute(get_id()+" Synchronise");
+	get_ctx()->reset();
 
 	std::string str;
 	str = input_matrix_name_.get(); input_matrix_name_list_ = converttcllist(str);
@@ -575,7 +575,7 @@ bool Matlab::synchronise_input()
 	str = input_string_name_.get(); input_string_name_list_ = converttcllist(str);
 	str = output_string_name_.get(); output_string_name_list_ = converttcllist(str);
 
-  gui->execute(id + " update_text"); // update matlab_code_ before use.
+  get_gui()->execute(get_id() + " update_text"); // update matlab_code_ before use.
 	matlab_code_list_ = matlab_code_.get(); 
 	
 	return(true);
@@ -632,7 +632,7 @@ void Matlab::execute()
 
 void Matlab::presave()
 {
-  gui->execute(id + " update_text");  // update matlab-code before saving.
+  get_gui()->execute(get_id() + " update_text");  // update matlab-code before saving.
 }
 
 bool Matlab::send_matlab_job()
@@ -1589,7 +1589,7 @@ void Matlab::tcl_command(GuiArgs& args, void* userdata)
     }
     if (args[1] == "disconnect")
     {
-      ctx->reset();
+      get_ctx()->reset();
       if(!(close_matlab_engine()))
       {
         error("Matlab: Could not close matlab engine");

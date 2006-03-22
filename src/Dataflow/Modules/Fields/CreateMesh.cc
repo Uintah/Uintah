@@ -70,10 +70,10 @@ public:
 DECLARE_MAKER(CreateMesh)
 CreateMesh::CreateMesh(GuiContext* ctx)
   : Module("CreateMesh", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gui_fieldname_(ctx->subVar("fieldname"), "Created Field"),
-    gui_meshname_(ctx->subVar("meshname"), "Created Mesh"),
-    gui_fieldbasetype_(ctx->subVar("fieldbasetype"), "TetVolField"),
-    gui_datatype_(ctx->subVar("datatype"), "double")
+    gui_fieldname_(get_ctx()->subVar("fieldname"), "Created Field"),
+    gui_meshname_(get_ctx()->subVar("meshname"), "Created Mesh"),
+    gui_fieldbasetype_(get_ctx()->subVar("fieldbasetype"), "TetVolField"),
+    gui_datatype_(get_ctx()->subVar("datatype"), "double")
 {
 }
 

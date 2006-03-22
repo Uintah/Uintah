@@ -583,7 +583,7 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
   d_state = idle;
 
   int numPatches = 0;
-  int startingID = (*(grid->getLevel(0)->patchesBegin()))->getID();
+  int startingID = (*(grid->getLevel(0)->patchesBegin()))->get_id();
 
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);

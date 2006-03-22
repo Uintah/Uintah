@@ -380,8 +380,8 @@ ManageFieldDataAlgoMeshT<FOUT>::execute(ProgressReporter *reporter,
   }
 
   reporter->warning("Matrix datasize does not match field geometry.");
-  reporter->msgStream() << "Matrix size : " << rows << " " << columns << '\n';
-  reporter->msgStream() << "Field size : " << nsize << " " << csize << '\n';
+  reporter->msg_stream() << "Matrix size : " << rows << " " << columns << '\n';
+  reporter->msg_stream() << "Field size : " << nsize << " " << csize << '\n';
   return 0;
 }
 

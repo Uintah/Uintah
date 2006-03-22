@@ -91,14 +91,14 @@ DECLARE_MAKER(ClipByFunction)
 
 ClipByFunction::ClipByFunction(GuiContext* ctx)
   : Module("ClipByFunction", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gMode_(ctx->subVar("clipmode"), "cell"),
-    gFunction_(ctx->subVar("clipfunction"), "x < 0"),
-    gui_uservar0_(ctx->subVar("u0"), 0.0),
-    gui_uservar1_(ctx->subVar("u1"), 0.0),
-    gui_uservar2_(ctx->subVar("u2"), 0.0),
-    gui_uservar3_(ctx->subVar("u3"), 0.0),
-    gui_uservar4_(ctx->subVar("u4"), 0.0),
-    gui_uservar5_(ctx->subVar("u5"), 0.0),
+    gMode_(get_ctx()->subVar("clipmode"), "cell"),
+    gFunction_(get_ctx()->subVar("clipfunction"), "x < 0"),
+    gui_uservar0_(get_ctx()->subVar("u0"), 0.0),
+    gui_uservar1_(get_ctx()->subVar("u1"), 0.0),
+    gui_uservar2_(get_ctx()->subVar("u2"), 0.0),
+    gui_uservar3_(get_ctx()->subVar("u3"), 0.0),
+    gui_uservar4_(get_ctx()->subVar("u4"), 0.0),
+    gui_uservar5_(get_ctx()->subVar("u5"), 0.0),
     fGeneration_(-1),
     error_(0)
 {
@@ -166,7 +166,7 @@ ClipByFunction::execute()
 	ClipByFunctionAlgo::get_compile_info(ftd, function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)){
 	  error("Your function would not compile.");
-	  gui->eval(id + " compile_error "+ci->filename_);
+	  get_gui()->eval(get_id() + " compile_error "+ci->filename_);
 	  DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	  error_ = true;
 	  return;

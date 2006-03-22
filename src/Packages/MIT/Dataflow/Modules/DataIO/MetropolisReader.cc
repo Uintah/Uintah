@@ -42,15 +42,15 @@ namespace MIT {
 
 class MetropolisReader : public GenericReader<ResultsHandle> {
 public:
-  MetropolisReader(const string& id);
+  MetropolisReader(const string& get_id());
 };
 
-extern "C" Module* make_MetropolisReader(const string& id) {
-  return new MetropolisReader(id);
+extern "C" Module* make_MetropolisReader(const string& get_id()) {
+  return new MetropolisReader(get_id());
 }
 
-MetropolisReader::MetropolisReader(const string& id)
-  : GenericReader<ResultsHandle>("MetropolisReader", id, "DataIO", "MIT")
+MetropolisReader::MetropolisReader(const string& get_id())
+  : GenericReader<ResultsHandle>("MetropolisReader", get_id(), "DataIO", "MIT")
 {
 }
 

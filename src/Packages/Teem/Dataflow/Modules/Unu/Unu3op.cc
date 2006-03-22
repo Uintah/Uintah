@@ -68,12 +68,12 @@ DECLARE_MAKER(Unu3op)
 
 Unu3op::Unu3op(SCIRun::GuiContext *ctx) : 
   Module("Unu3op", ctx, Filter, "UnuAtoM", "Teem"), 
-  operator_(ctx->subVar("operator")),
-  float1_(ctx->subVar("float1")),
-  float2_(ctx->subVar("float2")),
-  float3_(ctx->subVar("float3")),
-  type_(ctx->subVar("type")),
-  usetype_(ctx->subVar("usetype")),
+  operator_(get_ctx()->subVar("operator")),
+  float1_(get_ctx()->subVar("float1")),
+  float2_(get_ctx()->subVar("float2")),
+  float3_(get_ctx()->subVar("float3")),
+  type_(get_ctx()->subVar("type")),
+  usetype_(get_ctx()->subVar("usetype")),
   first_nrrd_(true), second_nrrd_(true), third_nrrd_(true)
 {
 }

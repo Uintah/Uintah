@@ -234,17 +234,17 @@ DECLARE_MAKER(GeodesicActiveContourLevelSetImageFilter)
 
 GeodesicActiveContourLevelSetImageFilter::GeodesicActiveContourLevelSetImageFilter(GuiContext* ctx)
   : Module("GeodesicActiveContourLevelSetImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_dervSigma_(ctx->subVar("derivativeSigma")),
-     gui_curvature_scaling_(ctx->subVar("curvatureScaling")),
-     gui_propagation_scaling_(ctx->subVar("propagationScaling")),
-     gui_advection_scaling_(ctx->subVar("advectionScaling")),
-     gui_max_iterations_(ctx->subVar("max_iterations")),
-     gui_max_rms_change_(ctx->subVar("max_rms_change")),
-     gui_reverse_expansion_direction_(ctx->subVar("reverse_expansion_direction")),
-     gui_isovalue_(ctx->subVar("isovalue")),
-     gui_update_OutputImage_(ctx->subVar("update_OutputImage")),
-     gui_update_iters_OutputImage_(ctx->subVar("update_iters_OutputImage")),
-     gui_reset_filter_(ctx->subVar("reset_filter")),
+    gui_dervSigma_(get_ctx()->subVar("derivativeSigma")),
+     gui_curvature_scaling_(get_ctx()->subVar("curvatureScaling")),
+     gui_propagation_scaling_(get_ctx()->subVar("propagationScaling")),
+     gui_advection_scaling_(get_ctx()->subVar("advectionScaling")),
+     gui_max_iterations_(get_ctx()->subVar("max_iterations")),
+     gui_max_rms_change_(get_ctx()->subVar("max_rms_change")),
+     gui_reverse_expansion_direction_(get_ctx()->subVar("reverse_expansion_direction")),
+     gui_isovalue_(get_ctx()->subVar("isovalue")),
+     gui_update_OutputImage_(get_ctx()->subVar("update_OutputImage")),
+     gui_update_iters_OutputImage_(get_ctx()->subVar("update_iters_OutputImage")),
+     gui_reset_filter_(get_ctx()->subVar("reset_filter")),
      last_SeedImage_(-1),
     last_FeatureImage_(-1)
 {

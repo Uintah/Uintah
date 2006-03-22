@@ -23,7 +23,7 @@ using namespace SCIRun;
 
 class ElapsedTime : public Module {
 public:
-  ElapsedTime(const clString& id);
+  ElapsedTime(const clString& get_id());
   virtual ~ElapsedTime();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -35,13 +35,13 @@ private:
 
 }; // class ElapsedTime
 
-extern "C" Module* make_ElapsedTime(const clString& id){
-  return new ElapsedTime(id);
+extern "C" Module* make_ElapsedTime(const clString& get_id()){
+  return new ElapsedTime(get_id());
 }
 
-ElapsedTime::ElapsedTime(const clString& id)
-  : Module("ElapsedTime",id,Filter), min("min",id,this), sec("sec",id,this),
-  hsec("hsec",id,this), stop("stop",id,this) {
+ElapsedTime::ElapsedTime(const clString& get_id())
+  : Module("ElapsedTime",get_id(),Filter), min("min",get_id(),this), sec("sec",get_id(),this),
+  hsec("hsec",get_id(),this), stop("stop",get_id(),this) {
   _min = 0;
   _sec = 0;
   _hsec = 0;
@@ -103,7 +103,7 @@ ElapsedTime::execute() {
     sec.set(_sec);
     min.set(_min);
 
-    TCL::execute( id + " update_elapsed_time");
+    TCL::execute( get_id() + " update_elapsed_time");
     stop.reset();
     if( stop.get() == 1 )
       break;

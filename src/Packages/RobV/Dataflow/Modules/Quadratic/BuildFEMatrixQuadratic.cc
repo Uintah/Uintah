@@ -18,7 +18,7 @@ using namespace SCIRun;
 
 class RobVSHARE BuildFEMatrixQuadratic : public Module {
 public:
-  BuildFEMatrixQuadratic(const string& id);
+  BuildFEMatrixQuadratic(const string& get_id());
 
   virtual ~BuildFEMatrixQuadratic();
 
@@ -27,12 +27,12 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" RobVSHARE Module* make_BuildFEMatrixQuadratic(const string& id) {
-  return scinew BuildFEMatrixQuadratic(id);
+extern "C" RobVSHARE Module* make_BuildFEMatrixQuadratic(const string& get_id()) {
+  return scinew BuildFEMatrixQuadratic(get_id());
 }
 
-BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(const string& id)
-  : Module("BuildFEMatrixQuadratic", id, Source, "Quadratic", "RobV")
+BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(const string& get_id())
+  : Module("BuildFEMatrixQuadratic", get_id(), Source, "Quadratic", "RobV")
 {
 }
 
@@ -218,21 +218,21 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 	if((mesh->nodes[i]->bc && DirSub) || (PinZero && i==refnode)){
 	    // This is just a dummy entry...
 //	    (*gbl_matrix)[i][i]=1;
-	    int id=rows[i];
-	    a[id]=1;
+	    int get_id()=rows[i];
+	    a[get_id()]=1;
 	    if (i==refnode && PinZero)
 	      (*rhs)[i]=PINVAL;
 	    else
 	      (*rhs)[i]=mesh->nodes[i]->bc->value;
 	} else if (mesh->nodes[i]->pdBC && DirSub) {
 	    int nd=mesh->nodes[i]->pdBC->diffNode;
-	    int id=rows[i];
+	    int get_id()=rows[i];
 	    if (nd > i) {
-		a[id]=1;
-		a[id+1]=-1;
+		a[get_id()]=1;
+		a[get_id()+1]=-1;
 	    } else {
-		a[id]=-1;
-		a[id+1]=1;
+		a[get_id()]=-1;
+		a[get_id()+1]=1;
 	    }
 	    (*rhs)[i]=mesh->nodes[i]->pdBC->diffVal;
 	} else if (AverageGround && i==refnode) {

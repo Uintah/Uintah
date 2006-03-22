@@ -87,18 +87,18 @@ using namespace SCIRun;
 
 class SiReAll : public Module {
 public:
-    SiReAll(const clString& id);
+    SiReAll(const clString& get_id());
     virtual ~SiReAll();
     virtual void execute();
 };
 
-extern "C" Module* make_SiReAll(const clString& id)
+extern "C" Module* make_SiReAll(const clString& get_id())
 {
-    return new SiReAll(id);
+    return new SiReAll(get_id());
 }
 
-SiReAll::SiReAll(const clString& id)
-: Module("SiReAll", id, Filter)
+SiReAll::SiReAll(const clString& get_id())
+: Module("SiReAll", get_id(), Filter)
 {
 }
 

@@ -126,7 +126,7 @@ namespace BioPSE {
 	typename FMT::Cell::index_type loc;
 	if (mesh->locate(loc, pos))
 	{
-	  PR->msgStream() << "Source pos="<<pos<<" dir="<<dir<<
+	  PR->msg_stream() << "Source pos="<<pos<<" dir="<<dir<<
 	    " found in elem "<<loc<<endl;
 
 	  if (fabs(dir.x()) > 0.000001)
@@ -196,7 +196,7 @@ namespace BioPSE {
 	}
 	else
 	{
-	  PR->msgStream() << "Dipole: "<< pos <<" not located within mesh!"<<endl;
+	  PR->msg_stream() << "Dipole: "<< pos <<" not located within mesh!"<<endl;
 	}
       }
 

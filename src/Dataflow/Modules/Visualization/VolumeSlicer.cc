@@ -127,26 +127,26 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     control_lock_("VolumeSlicer resolution lock"),
     control_widget_(0),
     control_id_(-1),
-    control_pos_saved_(ctx->subVar("control_pos_saved"), 0),
-    control_x_(ctx->subVar("control_x")),
-    control_y_(ctx->subVar("control_y")),
-    control_z_(ctx->subVar("control_z")),
-    draw_x_(ctx->subVar("drawX"), 0),
-    draw_y_(ctx->subVar("drawY"), 0),
-    draw_z_(ctx->subVar("drawZ"), 0),
-    draw_view_(ctx->subVar("drawView"), 0),
-    interp_mode_(ctx->subVar("interp_mode"), 1),
-    draw_phi0_(ctx->subVar("draw_phi_0"), 0),
-    draw_phi1_(ctx->subVar("draw_phi_1"), 0),
-    phi0_(ctx->subVar("phi_0"), 30.0),
-    phi1_(ctx->subVar("phi_1"), 60.0),
-    cyl_active_(ctx->subVar("cyl_active")), 
-    gui_multi_level_(ctx->subVar("multi_level"), 1),
-    gui_color_changed_(ctx->subVar("color_changed"), 1),
-    gui_colors_(ctx->subVar("colors"), ""),
-    gui_level_on_(ctx->subVar("level_on"), ""),
-    gui_outline_levels_(ctx->subVar("outline_levels"), 0),
-    gui_use_stencil_(ctx->subVar("use_stencil"), 0),
+    control_pos_saved_(get_ctx()->subVar("control_pos_saved"), 0),
+    control_x_(get_ctx()->subVar("control_x")),
+    control_y_(get_ctx()->subVar("control_y")),
+    control_z_(get_ctx()->subVar("control_z")),
+    draw_x_(get_ctx()->subVar("drawX"), 0),
+    draw_y_(get_ctx()->subVar("drawY"), 0),
+    draw_z_(get_ctx()->subVar("drawZ"), 0),
+    draw_view_(get_ctx()->subVar("drawView"), 0),
+    interp_mode_(get_ctx()->subVar("interp_mode"), 1),
+    draw_phi0_(get_ctx()->subVar("draw_phi_0"), 0),
+    draw_phi1_(get_ctx()->subVar("draw_phi_1"), 0),
+    phi0_(get_ctx()->subVar("phi_0"), 30.0),
+    phi1_(get_ctx()->subVar("phi_1"), 60.0),
+    cyl_active_(get_ctx()->subVar("cyl_active")), 
+    gui_multi_level_(get_ctx()->subVar("multi_level"), 1),
+    gui_color_changed_(get_ctx()->subVar("color_changed"), 1),
+    gui_colors_(get_ctx()->subVar("colors"), ""),
+    gui_level_on_(get_ctx()->subVar("level_on"), ""),
+    gui_outline_levels_(get_ctx()->subVar("outline_levels"), 0),
+    gui_use_stencil_(get_ctx()->subVar("use_stencil"), 0),
     old_tex_(0),
     old_cmap1_(0),
     old_cmap2_(0),
@@ -237,16 +237,16 @@ void VolumeSlicer::execute()
   }
 
   string s;
-  gui->eval(id + " hasUI", s);
+  get_gui()->eval(get_id() + " hasUI", s);
   if( s == "0" )
-    gui->execute(id + " buildTopLevel");
+    get_gui()->execute(get_id() + " buildTopLevel");
 
   if( tex_->nlevels() > 1 && gui_multi_level_.get() == 1){
     gui_multi_level_.set(tex_->nlevels());
-    gui->execute(id + " build_multi_level");
+    get_gui()->execute(get_id() + " build_multi_level");
   } else if(tex_->nlevels() == 1 && gui_multi_level_.get() > 1){
     gui_multi_level_.set(1);
-    gui->execute(id + " destroy_multi_level");
+    get_gui()->execute(get_id() + " destroy_multi_level");
   }
 
   if( !slice_ren_ && gui_multi_level_.get() >= 1 ) { gui_color_changed_.set(1);}
@@ -317,7 +317,7 @@ void VolumeSlicer::execute()
   if(gui_multi_level_.get() > 1 && gui_color_changed_.get() == 1){
     gui_color_changed_.set(0);
     string outline_colors;
-    gui->eval(id+" getOutlineColors", outline_colors);
+    get_gui()->eval(get_id()+" getOutlineColors", outline_colors);
 
     istringstream is( outline_colors );
     // Slurp in the rgb values.
@@ -362,7 +362,7 @@ void VolumeSlicer::execute()
   if( tex_->nlevels() > 1 ){
     for(int i = 0; i < tex_->nlevels(); i++){
       string result;
-      gui->eval(id + " isOn l" + to_string(i), result);
+      get_gui()->eval(get_id() + " isOn l" + to_string(i), result);
       if ( result == "0"){
   	slice_ren_->set_draw_level(tex_->nlevels()-1 -i, false);
       } else {

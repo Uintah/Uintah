@@ -17,14 +17,14 @@ namespace Remote {
 using namespace SCIRun;
 
 //----------------------------------------------------------------------
-extern "C" Module* make_remoteSalmon(const clString& id) {
-  return new remoteSalmon(id);
+extern "C" Module* make_remoteSalmon(const clString& get_id()) {
+  return new remoteSalmon(get_id());
 }
 
 
 //----------------------------------------------------------------------
-remoteSalmon::remoteSalmon(const clString& id)
-: Salmon(id, "remoteSalmon")
+remoteSalmon::remoteSalmon(const clString& get_id())
+: Salmon(get_id(), "remoteSalmon")
 {
 }
 

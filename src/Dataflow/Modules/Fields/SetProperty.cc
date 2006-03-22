@@ -58,9 +58,9 @@ public:
 DECLARE_MAKER(SetProperty)
 SetProperty::SetProperty(GuiContext* ctx)
 : Module("SetProperty", ctx, Filter,"FieldsOther", "SCIRun"),
-  prop_(ctx->subVar("prop"), "units"),
-  val_(ctx->subVar("val"), "cm"),
-  mesh_prop_(ctx->subVar("meshprop"), 1)
+  prop_(get_ctx()->subVar("prop"), "units"),
+  val_(get_ctx()->subVar("val"), "cm"),
+  mesh_prop_(get_ctx()->subVar("meshprop"), 1)
 {
 }
 

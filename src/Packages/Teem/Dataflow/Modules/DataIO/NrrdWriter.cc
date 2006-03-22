@@ -71,9 +71,9 @@ DECLARE_MAKER(NrrdWriter)
 
 NrrdWriter::NrrdWriter(GuiContext *ctx)
 : Module("NrrdWriter", ctx, Filter, "DataIO", "Teem"), 
-  filename_(ctx->subVar("filename")),
-  filetype_(ctx->subVar("filetype")),
-  exporttype_(ctx->subVar("exporttype"))
+  filename_(get_ctx()->subVar("filename")),
+  filetype_(get_ctx()->subVar("filetype")),
+  exporttype_(get_ctx()->subVar("exporttype"))
 {
 }
 

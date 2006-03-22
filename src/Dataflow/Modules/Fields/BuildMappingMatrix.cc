@@ -75,11 +75,11 @@ public:
 DECLARE_MAKER(BuildMappingMatrix)
 BuildMappingMatrix::BuildMappingMatrix(GuiContext* ctx) : 
   Module("BuildMappingMatrix", ctx, Filter, "FieldsData", "SCIRun"),
-  interpolation_basis_(ctx->subVar("interpolation_basis"), "linear"),
-  map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest"), 0),
-  exhaustive_search_(ctx->subVar("exhaustive_search"), 0),
-  exhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist"), -1.0),
-  np_(ctx->subVar("np"), 1)
+  interpolation_basis_(get_ctx()->subVar("interpolation_basis"), "linear"),
+  map_source_to_single_dest_(get_ctx()->subVar("map_source_to_single_dest"), 0),
+  exhaustive_search_(get_ctx()->subVar("exhaustive_search"), 0),
+  exhaustive_search_max_dist_(get_ctx()->subVar("exhaustive_search_max_dist"), -1.0),
+  np_(get_ctx()->subVar("np"), 1)
 {
 }
 

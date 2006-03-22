@@ -76,7 +76,7 @@ DECLARE_MAKER(MapDataToMeshCoord)
 
 MapDataToMeshCoord::MapDataToMeshCoord(GuiContext* ctx)
   : Module("MapDataToMeshCoord", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    gui_coord_(ctx->subVar("coord"), 2),
+    gui_coord_(get_ctx()->subVar("coord"), 2),
     last_generation_(0)
 {
 }

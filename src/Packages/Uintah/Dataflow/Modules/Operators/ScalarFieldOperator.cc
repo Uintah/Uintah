@@ -40,7 +40,7 @@ DECLARE_MAKER(ScalarFieldOperator)
 
 ScalarFieldOperator::ScalarFieldOperator(GuiContext* ctx)
   : Module("ScalarFieldOperator",ctx,Source, "Operators", "Uintah"),
-    guiOperation(ctx->subVar("operation"))
+    guiOperation(get_ctx()->subVar("operation"))
 {
 }
 

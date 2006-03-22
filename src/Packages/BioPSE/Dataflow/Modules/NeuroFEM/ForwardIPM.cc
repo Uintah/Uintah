@@ -98,9 +98,9 @@ DECLARE_MAKER(ForwardIPM)
 
 ForwardIPM::ForwardIPM(GuiContext* ctx)
   : Module("ForwardIPM", ctx, Filter, "NeuroFEM", "BioPSE"),
-    ipm_pathTCL_(ctx->subVar("ipm_pathTCL")),
-    associativityTCL_(ctx->subVar("associativityTCL")),
-    eps_matTCL_(ctx->subVar("eps_matTCL"))
+    ipm_pathTCL_(get_ctx()->subVar("ipm_pathTCL")),
+    associativityTCL_(get_ctx()->subVar("associativityTCL")),
+    eps_matTCL_(get_ctx()->subVar("eps_matTCL"))
 {
 }
 
@@ -986,13 +986,13 @@ ForwardIPM::execute()
 
     
     // Execute the command.  Last arg just a tmp file for logging.
-    msgStream_flush();
+    msg_stream_flush();
     if (!Exec_execute_command(this, command, tmplog))
     {
       error("The ipm program failed to run for some unknown reason.");
       throw false;
     }
-    msgStream_flush();
+    msg_stream_flush();
 
     // Read in the results and send them along.
     MatrixOPort *pot_oport = (MatrixOPort *)get_oport("Forward Potential");

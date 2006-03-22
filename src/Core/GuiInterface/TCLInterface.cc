@@ -336,11 +336,11 @@ GuiContext* TCLInterface::createContext(const string& name)
   return new GuiContext(this, name);
 }
 
-void TCLInterface::postMessage(const string& errmsg, bool err)
+void TCLInterface::post_message(const string& errmsg, bool err)
 {
   // "Status" could also be "warning", but this function only takes a
   // bool.  In the future, perhas we should update the functions that
-  // call postMessage to be more expressive.
+  // call post_message to be more expressive.
   // displayErrorWarningOrInfo() is a function in NetworkEditor.tcl.
 
   string status = "info";

@@ -30,7 +30,7 @@
     </module>
     <module id="m3" package="SCIRun" category="Math" name="ErrorMetric" gui_visible="yes">
       <position x="391" y="634"/>
-      <var name="haveUI" val="{1}"/>
+      <var name="have_ui" val="{1}"/>
       <var name="pTCL" val="{1}"/>
       <var name="ui_geometry" val="{499x836+59+54}"/>
     </module>

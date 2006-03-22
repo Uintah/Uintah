@@ -28,17 +28,17 @@ class SegFldReader : public Module {
     SegFldHandle handle;
     clString old_filename;
 public:
-    SegFldReader(const clString& id);
+    SegFldReader(const clString& get_id());
     virtual ~SegFldReader();
     virtual void execute();
 };
 
-extern "C" Module* make_SegFldReader(const clString& id) {
-  return new SegFldReader(id);
+extern "C" Module* make_SegFldReader(const clString& get_id()) {
+  return new SegFldReader(get_id());
 }
 
-SegFldReader::SegFldReader(const clString& id)
-: Module("SegFldReader", id, Source), filename("filename", id, this)
+SegFldReader::SegFldReader(const clString& get_id())
+: Module("SegFldReader", get_id(), Source), filename("filename", get_id(), this)
 {
     // Create the output data handle and port
     outport=scinew SegFldOPort(this, "Output Data", SegFldIPort::Atomic);

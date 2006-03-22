@@ -66,8 +66,8 @@ void computeGridEigens(TensorField* tensorField,
 
 EigenEvaluator::EigenEvaluator(GuiContext* ctx)
   : Module("EigenEvaluator",ctx,Source, "Operators", "Uintah"),
-    guiEigenSelect(ctx->subVar("eigenSelect"))
-    //    tcl_status(ctx->subVar("tcl_status")),
+    guiEigenSelect(get_ctx()->subVar("eigenSelect"))
+    //    tcl_status(get_ctx()->subVar("tcl_status")),
 {
 }
   

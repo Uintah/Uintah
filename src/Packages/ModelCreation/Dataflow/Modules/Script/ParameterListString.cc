@@ -64,8 +64,8 @@ private:
 DECLARE_MAKER(ParameterListString)
 ParameterListString::ParameterListString(GuiContext* ctx)
   : Module("ParameterListString", ctx, Source, "Script", "ModelCreation"),
-    guistringname_(ctx->subVar("string-name")),
-    guistrings_(ctx->subVar("string-selection"))
+    guistringname_(get_ctx()->subVar("string-name")),
+    guistrings_(get_ctx()->subVar("string-selection"))
 {
 }
 
@@ -124,7 +124,7 @@ void ParameterListString::execute()
     stringlist += "{" + handle->getStringName(p) + "} ";
   }
   guistrings_.set(stringlist);
-  ctx->reset();
+  get_ctx()->reset();
 
 
   if (!(ofport = static_cast<StringOPort *>(get_oport("String"))))

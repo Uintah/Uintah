@@ -74,7 +74,7 @@ DECLARE_MAKER(UnuMinmax)
 UnuMinmax::UnuMinmax(GuiContext* ctx)
   : Module("UnuMinmax", ctx, Source, "UnuAtoM", "Teem"),
     onrrd_(0), onrrd_handle_(0), in_generation_(0),
-    nrrds_(ctx->subVar("nrrds"), 0)
+    nrrds_(get_ctx()->subVar("nrrds"), 0)
 {
 }
 
@@ -148,12 +148,12 @@ UnuMinmax::execute()
       ostringstream min_str, max_str;
       min_str << "min" << i;
       if ((int)mins_.size() <= i)
-	mins_.push_back(new GuiDouble(ctx->subVar(min_str.str())));
+	mins_.push_back(new GuiDouble(get_ctx()->subVar(min_str.str())));
       max_str << "max" << i;
       if ((int)maxs_.size() <= i)
-	maxs_.push_back(new GuiDouble(ctx->subVar(max_str.str())));
+	maxs_.push_back(new GuiDouble(get_ctx()->subVar(max_str.str())));
     }
-    gui->execute(id + " init_axes");
+    get_gui()->execute(get_id() + " init_axes");
 
     for (int i=0; i<(int)mins.size(); i++) {
       mins_[i]->set(mins[i]);
@@ -161,7 +161,7 @@ UnuMinmax::execute()
       maxs_[i]->set(maxs[i]);
       maxs_[i]->reset();
     }
-    gui->execute(id + " make_min_max");
+    get_gui()->execute(get_id() + " make_min_max");
 
   }
 }

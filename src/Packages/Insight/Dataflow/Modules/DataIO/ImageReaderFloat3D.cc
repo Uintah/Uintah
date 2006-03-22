@@ -70,7 +70,7 @@ public:
 DECLARE_MAKER(ImageReaderFloat3D)
 ImageReaderFloat3D::ImageReaderFloat3D(GuiContext* ctx)
   : Module("ImageReaderFloat3D", ctx, Source, "DataIO", "Insight"),
-    gui_filename_(ctx->subVar("filename"))
+    gui_filename_(get_ctx()->subVar("filename"))
 {
   prevFile = "";
 }

@@ -78,9 +78,9 @@ DECLARE_MAKER(CompareMMS)
 
 CompareMMS::CompareMMS(GuiContext* ctx) :
   Module("CompareMMS", ctx, Sink, "Operators", "Uintah"),
-  gui_field_name_(ctx->subVar("field_name", false)),
-  gui_field_time_(ctx->subVar("field_time", false)),
-  gui_output_choice_(ctx->subVar("output_choice", false))
+  gui_field_name_(get_ctx()->subVar("field_name", false)),
+  gui_field_time_(get_ctx()->subVar("field_time", false)),
+  gui_output_choice_(get_ctx()->subVar("output_choice", false))
 {
 }
 
@@ -110,7 +110,7 @@ CompareMMS::execute()
   {
     remark("No input connected to the Scalar Field input port.");
     remark("Displaying exact solution.");
-    gui->eval( id + " set_to_exact" );
+    get_gui()->eval( get_id() + " set_to_exact" );
     return;
   }
 

@@ -98,7 +98,7 @@ NrrdToMatrix::NrrdToMatrix(GuiContext* ctx)
     ndata_(0), nrows_(0), ncols_(0), omat_(0),
     data_generation_(-1), rows_generation_(-1), 
     cols_generation_(-1), has_error_(false),
-    last_matrix_(0), cols_(ctx->subVar("cols")),
+    last_matrix_(0), cols_(get_ctx()->subVar("cols")),
     old_cols_(-1)
 {
 }

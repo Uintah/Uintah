@@ -100,7 +100,7 @@ FieldSlicer::FieldSlicer(GuiContext *context)
     jIndex_(context->subVar("j-index"), 1),
     kIndex_(context->subVar("k-index"), 1),
 
-    updateType_(ctx->subVar("update_type"), "Manual")
+    updateType_(get_ctx()->subVar("update_type"), "Manual")
 {
 }
 
@@ -115,8 +115,8 @@ FieldSlicer::execute()
 {
   FieldHandle  fHandle;
 
-  if( !getIHandle( "Input Field",  fHandle,  true  ) ) return;
-  if( !getIHandle( "Input Matrix", mHandle_, false ) ) return;
+  if( !get_input_handle( "Input Field",  fHandle,  true  ) ) return;
+  if( !get_input_handle( "Input Matrix", mHandle_, false ) ) return;
 
   // The matrix is optional.
   if( mHandle_ != 0 &&
@@ -161,8 +161,8 @@ FieldSlicer::execute()
   {
     // Dims has callback on it, so it must be set it after i, j, and k.
     ostringstream str;
-    str << id << " set_size ";
-    gui->execute(str.str().c_str());
+    str << get_id() << " set_size ";
+    get_gui()->execute(str.str().c_str());
 
     reset_vars();
   }
@@ -218,9 +218,9 @@ FieldSlicer::execute()
 
     if( mHandle_ != 0 ) {
       ostringstream str;
-      str << id << " update_index ";
+      str << get_id() << " update_index ";
       
-      gui->execute(str.str().c_str());
+      get_gui()->execute(str.str().c_str());
       
       reset_vars();
     }
@@ -281,8 +281,8 @@ FieldSlicer::execute()
   }
 
   // Send the data downstream
-  sendOHandle( "Output Field",  fHandle_, true );
-  sendOHandle( "Output Matrix", mHandle_, true );
+  send_output_handle( "Output Field",  fHandle_, true );
+  send_output_handle( "Output Matrix", mHandle_, true );
 }
 
 

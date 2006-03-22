@@ -140,32 +140,32 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     widget_switch_(),
     clipping_planes_(),
     widget_plane_index_(),
-    gui_sampling_rate_hi_(ctx->subVar("sampling_rate_hi"), 4.0),
-    gui_sampling_rate_lo_(ctx->subVar("sampling_rate_lo"), 1.0),
-    gui_gradient_min_(ctx->subVar("gradient_min"), 0.0),
-    gui_gradient_max_(ctx->subVar("gradient_max"), 0.0),
-    gui_adaptive_(ctx->subVar("adaptive"), 1),
-    gui_cmap_size_(ctx->subVar("cmap_size"), 8),
-    gui_sw_raster_(ctx->subVar("sw_raster"), 0),
-    gui_render_style_(ctx->subVar("render_style"), 0),
-    gui_alpha_scale_(ctx->subVar("alpha_scale"), 0),
-    gui_interp_mode_(ctx->subVar("interp_mode"), 1),
-    gui_shading_(ctx->subVar("shading"), 0),
-    gui_ambient_(ctx->subVar("ambient"), 0.5),
-    gui_diffuse_(ctx->subVar("diffuse"), 0.5),
-    gui_specular_(ctx->subVar("specular"), 0.0),
-    gui_shine_(ctx->subVar("shine"), 30.0),
-    gui_light_(ctx->subVar("light"), 0),
-    gui_blend_res_(ctx->subVar("blend_res"), 8),
-    gui_multi_level_(ctx->subVar("multi_level"), 1),
-    gui_use_stencil_(ctx->subVar("use_stencil"), 0),
-    gui_invert_opacity_(ctx->subVar("invert_opacity"), 0),
-    gui_level_flag_(ctx->subVar("show_level_flag", false), 1),
-    gui_num_slices_(ctx->subVar("num_slices", false), -1), // dont save
-    gui_num_clipping_planes_(ctx->subVar("num_clipping_planes"), 2),
-    gui_show_clipping_widgets_(ctx->subVar("show_clipping_widgets"), 1),
-    gui_level_on_(ctx->subVar("level_on"), ""),
-    gui_level_vals_(ctx->subVar("level_vals"), ""),
+    gui_sampling_rate_hi_(get_ctx()->subVar("sampling_rate_hi"), 4.0),
+    gui_sampling_rate_lo_(get_ctx()->subVar("sampling_rate_lo"), 1.0),
+    gui_gradient_min_(get_ctx()->subVar("gradient_min"), 0.0),
+    gui_gradient_max_(get_ctx()->subVar("gradient_max"), 0.0),
+    gui_adaptive_(get_ctx()->subVar("adaptive"), 1),
+    gui_cmap_size_(get_ctx()->subVar("cmap_size"), 8),
+    gui_sw_raster_(get_ctx()->subVar("sw_raster"), 0),
+    gui_render_style_(get_ctx()->subVar("render_style"), 0),
+    gui_alpha_scale_(get_ctx()->subVar("alpha_scale"), 0),
+    gui_interp_mode_(get_ctx()->subVar("interp_mode"), 1),
+    gui_shading_(get_ctx()->subVar("shading"), 0),
+    gui_ambient_(get_ctx()->subVar("ambient"), 0.5),
+    gui_diffuse_(get_ctx()->subVar("diffuse"), 0.5),
+    gui_specular_(get_ctx()->subVar("specular"), 0.0),
+    gui_shine_(get_ctx()->subVar("shine"), 30.0),
+    gui_light_(get_ctx()->subVar("light"), 0),
+    gui_blend_res_(get_ctx()->subVar("blend_res"), 8),
+    gui_multi_level_(get_ctx()->subVar("multi_level"), 1),
+    gui_use_stencil_(get_ctx()->subVar("use_stencil"), 0),
+    gui_invert_opacity_(get_ctx()->subVar("invert_opacity"), 0),
+    gui_level_flag_(get_ctx()->subVar("show_level_flag", false), 1),
+    gui_num_slices_(get_ctx()->subVar("num_slices", false), -1), // dont save
+    gui_num_clipping_planes_(get_ctx()->subVar("num_clipping_planes"), 2),
+    gui_show_clipping_widgets_(get_ctx()->subVar("show_clipping_widgets"), 1),
+    gui_level_on_(get_ctx()->subVar("level_on"), ""),
+    gui_level_vals_(get_ctx()->subVar("level_vals"), ""),
     volren_(0)
 {
 }
@@ -210,7 +210,7 @@ VolumeVisualizer::execute()
     shading_state = (texture_->nb(0) == 1);
   }
 
-  gui->execute(id + " change_shading_state " + (shading_state?"0":"1"));
+  get_gui()->execute(get_id() + " change_shading_state " + (shading_state?"0":"1"));
   
   ColorMapHandle cmap1;
   
@@ -318,16 +318,16 @@ VolumeVisualizer::execute()
 
 
   string s;
-  gui->eval(id + " hasUI", s);
+  get_gui()->eval(get_id() + " hasUI", s);
   if( s == "0" )
-    gui->execute(id + " buildTopLevel");
+    get_gui()->execute(get_id() + " buildTopLevel");
 
   if( texture_->nlevels() > 1 && gui_multi_level_.get() == 1){
     gui_multi_level_.set(texture_->nlevels());
-    gui->execute(id + " build_multi_level");
+    get_gui()->execute(get_id() + " build_multi_level");
   } else if(texture_->nlevels() == 1 && gui_multi_level_.get() > 1){
     gui_multi_level_.set(1);
-    gui->execute(id + " destroy_multi_level");
+    get_gui()->execute(get_id() + " destroy_multi_level");
   }
 
   cmap2_ = cmap2;
@@ -398,14 +398,14 @@ VolumeVisualizer::execute()
   if( texture_->nlevels() > 1 ){
     for(int i = 0; i < texture_->nlevels(); i++){
       string result;
-      gui->eval(id + " isOn l" + to_string(i), result);
+      get_gui()->eval(get_id() + " isOn l" + to_string(i), result);
       if ( result == "0")
 	volren_->set_draw_level(texture_->nlevels()-1 -i, false);
       else 
 	volren_->set_draw_level(texture_->nlevels()-1 -i, true);
 
 
-      gui->eval(id + " alphaVal s" + to_string(i), result);
+      get_gui()->eval(get_id() + " alphaVal s" + to_string(i), result);
       double val;
       if( string_to_double( result, val )){
 	volren_->set_level_alpha(texture_->nlevels()-1 -i, val);

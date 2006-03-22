@@ -243,21 +243,21 @@ GenAxes::get_GuiBool(const string &str) {
 void
 GenAxes::add_GuiString(const string &str) {
   DEBUGPRINT;
-  vars_.insert(make_pair(str,scinew GuiString(ctx->subVar(str))));
+  vars_.insert(make_pair(str,scinew GuiString(get_ctx()->subVar(str))));
 }
 
 
 void
 GenAxes::add_GuiDouble(const string &str) {
   DEBUGPRINT;
-  vars_.insert(make_pair(str,scinew GuiDouble(ctx->subVar(str))));
+  vars_.insert(make_pair(str,scinew GuiDouble(get_ctx()->subVar(str))));
 }
 
 
 void
 GenAxes::add_GuiInt(const string &str) {
   DEBUGPRINT;
-  vars_.insert(make_pair(str,scinew GuiInt(ctx->subVar(str))));
+  vars_.insert(make_pair(str,scinew GuiInt(get_ctx()->subVar(str))));
 }
 
 void
@@ -670,14 +670,14 @@ void GenAxes::check_for_changed_fonts() {
   string filename = get_GuiString("labelfont");
   if (label_font_.get_rep()) {
     if (label_font_->filename() != filename && 
-	gui->eval("validFile "+filename) == "1") {
+	get_gui()->eval("validFile "+filename) == "1") {
       label_font_ = 0;
     } else if (label_font_->get_ptRez() != get_GuiInt("labelrez")+1) {
       label_font_ = 0;
     }
   }
     
-  if (!label_font_.get_rep() && gui->eval("validFile "+filename) == "1") {
+  if (!label_font_.get_rep() && get_gui()->eval("validFile "+filename) == "1") {
     std::cerr << "loading " << filename;
     label_font_ = scinew GeomFTGLFontRenderer(filename,
 					      get_GuiInt("labelrez")+1,72);
@@ -686,7 +686,7 @@ void GenAxes::check_for_changed_fonts() {
   filename = get_GuiString("valuefont");
   if (value_font_.get_rep()) {
     if (value_font_->filename() != filename && 
-	gui->eval("validFile "+filename) == "1") {
+	get_gui()->eval("validFile "+filename) == "1") {
       value_font_ = 0;
     } else if (value_font_->get_ptRez() != get_GuiInt("valuerez")+1) {
       value_font_ = 0;
@@ -694,7 +694,7 @@ void GenAxes::check_for_changed_fonts() {
   }
 
   
-  if (!value_font_.get_rep() && gui->eval("validFile "+filename) == "1") {
+  if (!value_font_.get_rep() && get_gui()->eval("validFile "+filename) == "1") {
     std::cerr << "loading " << filename << "rez of " << get_GuiInt("valuerez") << std::endl;
     value_font_ = scinew GeomFTGLFontRenderer(filename, 
 					      get_GuiInt("valuerez")+1,72);

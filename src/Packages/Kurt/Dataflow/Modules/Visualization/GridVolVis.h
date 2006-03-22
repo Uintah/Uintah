@@ -61,7 +61,7 @@ private:
   FieldIPort* infield;
   GeometryOPort* ogeom;
    
-  int cmap_id;  // id associated with color map...
+  int cmap_id;  // get_id() associated with color map...
   
   GuiInt is_fixed_;
   GuiInt max_brick_dim_;

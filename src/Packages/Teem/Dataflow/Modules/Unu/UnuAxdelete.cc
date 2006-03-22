@@ -57,7 +57,7 @@ DECLARE_MAKER(UnuAxdelete)
 
 UnuAxdelete::UnuAxdelete(SCIRun::GuiContext *ctx) : 
   Module("UnuAxdelete", ctx, Filter, "UnuAtoM", "Teem"), 
-  axis_(ctx->subVar("axis"), 0)
+  axis_(get_ctx()->subVar("axis"), 0)
 {
 }
 

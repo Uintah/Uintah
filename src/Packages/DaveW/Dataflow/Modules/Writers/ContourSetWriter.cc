@@ -27,18 +27,18 @@ class ContourSetWriter : public Module {
     GuiString filename;
     GuiString filetype;
 public:
-    ContourSetWriter(const clString& id);
+    ContourSetWriter(const clString& get_id());
     virtual ~ContourSetWriter();
     virtual void execute();
 };
 
-extern "C" Module* make_ContourSetWriter(const clString& id) {
-  return new ContourSetWriter(id);
+extern "C" Module* make_ContourSetWriter(const clString& get_id()) {
+  return new ContourSetWriter(get_id());
 }
 
-ContourSetWriter::ContourSetWriter(const clString& id)
-: Module("ContourSetWriter", id, Source), filename("filename", id, this),
-  filetype("filetype", id, this)
+ContourSetWriter::ContourSetWriter(const clString& get_id())
+: Module("ContourSetWriter", get_id(), Source), filename("filename", get_id(), this),
+  filetype("filetype", get_id(), this)
 {
     // Create the output data handle and port
     inport=scinew ContourSetIPort(this, "Input Data", ContourSetIPort::Atomic);

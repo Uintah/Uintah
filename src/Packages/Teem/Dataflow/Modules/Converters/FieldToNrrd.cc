@@ -81,7 +81,7 @@ DECLARE_MAKER(FieldToNrrd)
 
 FieldToNrrd::FieldToNrrd(GuiContext *ctx):
   Module("FieldToNrrd", ctx, Filter, "Converters", "Teem"),
-  label_(ctx->subVar("label"), "unknown"),
+  label_(get_ctx()->subVar("label"), "unknown"),
   ifield_generation_(-1),
   points_handle_(0),  connect_handle_(0),  data_handle_(0)
 {

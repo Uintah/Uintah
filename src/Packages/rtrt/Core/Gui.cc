@@ -2063,7 +2063,7 @@ GGT::startSoundThreadCB( int /*id*/ )
   SoundThread * soundthread = NULL;
 
   cout << "Starting Sound Thread!\n";
-  soundthread = new SoundThread( activeGGT->rtrt_dpy->getGuiCam(), 
+  soundthread = new SoundThread( activeGGT->rtrt_dpy->get_guiCam(), 
 				 activeGGT->rtrt_dpy->scene,
 				 activeGGT );
   Thread * t = new Thread( soundthread, "Sound thread");

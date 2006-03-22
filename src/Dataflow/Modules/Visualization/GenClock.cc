@@ -119,9 +119,9 @@ GenClock::GenClock(GuiContext *context)
     sLocation_(context->subVar("location"), "Top Left"),
     gLocation_x_(context->subVar("location-x"), -31.0/32.0),
     gLocation_y_(context->subVar("location-y"),  31.0/32.0),
-    color_r_(ctx->subVar("color-r"), 1.0),
-    color_g_(ctx->subVar("color-g"), 1.0),
-    color_b_(ctx->subVar("color-b"), 1.0),
+    color_r_(get_ctx()->subVar("color-r"), 1.0),
+    color_g_(get_ctx()->subVar("color-g"), 1.0),
+    color_b_(get_ctx()->subVar("color-b"), 1.0),
     material_(scinew Material(Color(1.0, 1.0, 1.0))),
     update_(false)
 {

@@ -58,29 +58,29 @@ DECLARE_MAKER(Isosurface)
 
 Isosurface::Isosurface(GuiContext* ctx) : 
   Module("Isosurface", ctx, Filter, "Visualization", "SCIRun"), 
-  gui_iso_value_min_(ctx->subVar("isoval-min"),  0.0),
-  gui_iso_value_max_(ctx->subVar("isoval-max"), 99.0),
-  gui_iso_value_(ctx->subVar("isoval"), 0.0),
-  gui_iso_value_typed_(ctx->subVar("isoval-typed"), 0.0),
-  gui_iso_value_quantity_(ctx->subVar("isoval-quantity"), 1),
-  gui_iso_quantity_range_(ctx->subVar("quantity-range"), "field"),
-  gui_iso_quantity_clusive_(ctx->subVar("quantity-clusive"), "exclusive"),
-  gui_iso_quantity_min_(ctx->subVar("quantity-min"),   0),
-  gui_iso_quantity_max_(ctx->subVar("quantity-max"), 100),
-  gui_iso_quantity_list_(ctx->subVar("quantity-list"), ""),
-  gui_iso_value_list_(ctx->subVar("isoval-list"), "No values present."),
-  gui_iso_matrix_list_(ctx->subVar("matrix-list"), "No matrix present - execution needed."),
-  gui_extract_from_new_field_(ctx->subVar("extract-from-new-field"), 1),
-  gui_use_algorithm_(ctx->subVar("algorithm"), 0),
-  gui_build_field_(ctx->subVar("build_trisurf"), 1),
-  gui_build_geom_(ctx->subVar("build_geom"), 1),
-  gui_np_(ctx->subVar("np"), 1),
-  gui_active_isoval_selection_tab_(ctx->subVar("active-isoval-selection-tab"), "0"),
-  gui_active_tab_(ctx->subVar("active_tab"), "0"),
-  gui_update_type_(ctx->subVar("update_type"), "On Release"),
-  gui_color_r_(ctx->subVar("color-r"), 0.4),
-  gui_color_g_(ctx->subVar("color-g"), 0.2),
-  gui_color_b_(ctx->subVar("color-b"), 0.9),
+  gui_iso_value_min_(get_ctx()->subVar("isoval-min"),  0.0),
+  gui_iso_value_max_(get_ctx()->subVar("isoval-max"), 99.0),
+  gui_iso_value_(get_ctx()->subVar("isoval"), 0.0),
+  gui_iso_value_typed_(get_ctx()->subVar("isoval-typed"), 0.0),
+  gui_iso_value_quantity_(get_ctx()->subVar("isoval-quantity"), 1),
+  gui_iso_quantity_range_(get_ctx()->subVar("quantity-range"), "field"),
+  gui_iso_quantity_clusive_(get_ctx()->subVar("quantity-clusive"), "exclusive"),
+  gui_iso_quantity_min_(get_ctx()->subVar("quantity-min"),   0),
+  gui_iso_quantity_max_(get_ctx()->subVar("quantity-max"), 100),
+  gui_iso_quantity_list_(get_ctx()->subVar("quantity-list"), ""),
+  gui_iso_value_list_(get_ctx()->subVar("isoval-list"), "No values present."),
+  gui_iso_matrix_list_(get_ctx()->subVar("matrix-list"), "No matrix present - execution needed."),
+  gui_extract_from_new_field_(get_ctx()->subVar("extract-from-new-field"), 1),
+  gui_use_algorithm_(get_ctx()->subVar("algorithm"), 0),
+  gui_build_field_(get_ctx()->subVar("build_trisurf"), 1),
+  gui_build_geom_(get_ctx()->subVar("build_geom"), 1),
+  gui_np_(get_ctx()->subVar("np"), 1),
+  gui_active_isoval_selection_tab_(get_ctx()->subVar("active-isoval-selection-tab"), "0"),
+  gui_active_tab_(get_ctx()->subVar("active_tab"), "0"),
+  gui_update_type_(get_ctx()->subVar("update_type"), "On Release"),
+  gui_color_r_(get_ctx()->subVar("color-r"), 0.4),
+  gui_color_g_(get_ctx()->subVar("color-g"), 0.2),
+  gui_color_b_(get_ctx()->subVar("color-b"), 0.9),
   fHandle_(0),
   mHandle_(0),
   geomID_(0),
@@ -141,7 +141,7 @@ void
 Isosurface::execute()
 {
   FieldHandle fHandle;
-  if( !getIHandle( "Field", fHandle, true ) ) return;
+  if( !get_input_handle( "Field", fHandle, true ) ) return;
 
   // Check to see if the input field has changed.
   if(inputs_changed_ ) {
@@ -163,8 +163,8 @@ Isosurface::execute()
 	gui_iso_value_min_.changed( true ) ) {
 
       ostringstream str;
-      str << id << " set_min_max ";
-      gui->execute(str.str().c_str());
+      str << get_id() << " set_min_max ";
+      get_gui()->execute(str.str().c_str());
     }
 
     if ( !gui_extract_from_new_field_.get() )
@@ -173,7 +173,7 @@ Isosurface::execute()
 
   // Get the optional colormap for the geometry.
   ColorMapHandle cmHandle = 0;
-  if( !getIHandle( "Optional Color Map", cmHandle, false ) ) return;
+  if( !get_input_handle( "Optional Color Map", cmHandle, false ) ) return;
   
   vector<double> isovals(0);
 
@@ -226,7 +226,7 @@ Isosurface::execute()
 
     ostringstream str;
 
-    str << id << " set-isoquant-list \"";
+    str << get_id() << " set-isoquant-list \"";
 
     if (clusive == "exclusive") {
       // if the min - max range is 2 - 4, and the user requests 3 isovals,
@@ -251,7 +251,7 @@ Isosurface::execute()
 
     str << "\"";
 
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
 
   } else if (gui_active_isoval_selection_tab_.get() == "2") { // list
     istringstream vlist(gui_iso_value_list_.get());
@@ -276,11 +276,11 @@ Isosurface::execute()
   } else if (gui_active_isoval_selection_tab_.get() == "3") { // matrix
 
     MatrixHandle mHandle;
-    if( !getIHandle( "Optional Isovalues", mHandle, true ) ) return;
+    if( !get_input_handle( "Optional Isovalues", mHandle, true ) ) return;
 
     ostringstream str;
     
-    str << id << " set-isomatrix-list \"";
+    str << get_id() << " set-isomatrix-list \"";
 
     for (int i=0; i < mHandle->nrows(); i++) {
       for (int j=0; j < mHandle->ncols(); j++) {
@@ -292,7 +292,7 @@ Isosurface::execute()
 
     str << "\"";
 
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
 
   } else {
     error("Bad active_isoval_selection_tab value");
@@ -525,8 +525,8 @@ Isosurface::execute()
   }
     
   // Send the isosurface field downstream
-  sendOHandle( "Surface", fHandle_, true );
-  sendOHandle( "Mapping", mHandle_, true );
+  send_output_handle( "Surface", fHandle_, true );
+  send_output_handle( "Mapping", mHandle_, true );
 }
 
 CompileInfoHandle

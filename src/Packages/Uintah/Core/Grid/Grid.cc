@@ -482,7 +482,7 @@ namespace Uintah
     out << "Grid has " << grid.numLevels() << " level(s)" << endl;
     for ( int levelIndex = 0; levelIndex < grid.numLevels(); levelIndex++ ) {
       LevelP level = grid.getLevel( levelIndex );
-      out << "  Level " << level->getID() 
+      out << "  Level " << level->get_id() 
           << ", indx: "<< level->getIndex()
           << " has " << level->numPatches() << " patch(es)" << endl;
       for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {

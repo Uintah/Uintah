@@ -466,7 +466,7 @@ GeometryOPort::attach(Connection* c)
   // Set up the outbox_ and portid_ variables.
   if (module->show_stats()) turn_on(Resetting);
   Module* mod = c->iport->get_module();
-  outbox_.push_back(&mod->mailbox);
+  outbox_.push_back(&mod->mailbox_);
   // Send the registration message.
   Mailbox<GeomReply> *tmp = new Mailbox<GeomReply>("Temporary GeometryOPort mailbox", 1);
   outbox_[which]->send(scinew GeometryComm(tmp));

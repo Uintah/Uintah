@@ -633,7 +633,7 @@ class SageVFem : public Module
 
 public:
 
-  SageVFem( const clString& id);
+  SageVFem( const clString& get_id());
   SageVFem( const SageVFem&, int deep );
   virtual ~SageVFem();
 
@@ -667,13 +667,13 @@ public:
   int adjust( double, double, int &);
 };
   
-extern "C" Module* make_SageVFem(const clString& id)
+extern "C" Module* make_SageVFem(const clString& get_id())
 {
   printf("tri_case[136].vertex = {\n");
   for (int i=0; i<16; i++ )
     printf(" %d", tri_case[136].vertex[i] );
   printf("}\n");
-  return scinew SageVFem(id);
+  return scinew SageVFem(get_id());
 }
 
 static clString module_name("SageVFem");
@@ -684,16 +684,16 @@ static clString surface_name2("SageVFemBack");
 static clString surface_name3("SageVFemPts");
 static clString shadow_name("SageVFemShadow");
 
-SageVFem::SageVFem(const clString& id)
-  : Module("SageVFem", id, Filter ), isoval("isoval", id, this),
-    isoval_min("isoval_min", id, this), isoval_max("isoval_max", id, this),
-    tcl_bbox("bbox", id, this), 
-    tcl_scan("scan", id, this),  tcl_value("value", id, this), 
-    tcl_visibility("visibility", id, this),
-    tcl_depth("cutoff_depth", id, this),
-    tcl_reduce("reduce",id,this), tcl_cover("cover",id,this), 
-    tcl_init("init",id,this),
-    tcl_projection("projection",id,this)
+SageVFem::SageVFem(const clString& get_id())
+  : Module("SageVFem", get_id(), Filter ), isoval("isoval", get_id(), this),
+    isoval_min("isoval_min", get_id(), this), isoval_max("isoval_max", get_id(), this),
+    tcl_bbox("bbox", get_id(), this), 
+    tcl_scan("scan", get_id(), this),  tcl_value("value", get_id(), this), 
+    tcl_visibility("visibility", get_id(), this),
+    tcl_depth("cutoff_depth", get_id(), this),
+    tcl_reduce("reduce",get_id(),this), tcl_cover("cover",get_id(),this), 
+    tcl_init("init",get_id(),this),
+    tcl_projection("projection",get_id(),this)
 {
   init_clock();
   printf( "SageVFem::SageVFem :: %d\n", tri_case[136].vertex[4]);
@@ -841,15 +841,15 @@ SageVFem::read_vfem_files()
 }
 
 SageVFem::SageVFem( const SageVFem& copy, int deep ) :
-  Module(copy, deep), isoval("isoval", id, this ),
-    isoval_min("isoval_min", id, this), isoval_max("isoval_max", id, this),
-    tcl_bbox("bbox", id, this), 
-    tcl_scan("scan", id, this),  tcl_value("value", id, this), 
-    tcl_visibility("visibility", id, this),
-    tcl_depth("cutoff_depth", id, this),
-    tcl_reduce("reduce",id,this), tcl_cover("cover",id,this), 
-    tcl_init("init",id,this),
-    tcl_projection("projection",id,this)
+  Module(copy, deep), isoval("isoval", get_id(), this ),
+    isoval_min("isoval_min", get_id(), this), isoval_max("isoval_max", get_id(), this),
+    tcl_bbox("bbox", get_id(), this), 
+    tcl_scan("scan", get_id(), this),  tcl_value("value", get_id(), this), 
+    tcl_visibility("visibility", get_id(), this),
+    tcl_depth("cutoff_depth", get_id(), this),
+    tcl_reduce("reduce",get_id(),this), tcl_cover("cover",get_id(),this), 
+    tcl_init("init",get_id(),this),
+    tcl_projection("projection",get_id(),this)
 {
     NOT_FINISHED("SageVFem::SageVFem");
 }
@@ -1477,16 +1477,16 @@ SageVFem::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
   // interpolate and project vertices
   int v=0;
   for (int t=0; t<tcase->n; t++) {
-    int id = vertex[v++];
-    for ( ; id != -1; id=vertex[v++] ) {
-      int v1 = edge_table[id][0];
-      int v2 = edge_table[id][1];
+    int get_id() = vertex[v++];
+    for ( ; get_id() != -1; get_id()=vertex[v++] ) {
+      int v1 = edge_table[get_id()][0];
+      int v2 = edge_table[get_id()][1];
       if ( val[v1]*val[v2] > 0 ) {
 	printf("BUG at %d\n", mask );
 	continue;
       }
-      q[id] = Interpolate(vp[v1], vp[v2], val[v1]/(val[v1]-val[v2]));
-      if ( scan ) project( q[id], p[id] );
+      q[get_id()] = Interpolate(vp[v1], vp[v2], val[v1]/(val[v1]-val[v2]));
+      if ( scan ) project( q[get_id()], p[get_id()] );
     }
   }
 
@@ -1552,7 +1552,7 @@ int
 SageVFem::make_current( int xres, int yres) {
   make_start = read_time();
   TCLTask::lock();
-  clString myname(clString(".ui")+id+".gl.gl");
+  clString myname(clString(".ui")+get_id()+".gl.gl");
   tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
   if(!tkwin){
     cerr << "Unable to locate window!\n";

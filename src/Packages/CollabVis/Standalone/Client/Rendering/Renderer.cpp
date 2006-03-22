@@ -215,12 +215,12 @@ Renderer::addPointer( const Point3d point, const double zRotation ) {
 
     /* Send pointer to network */
     Collaborate *c = scinew Collaborate( true );
-    c->addPointer( ci.getID(), false, point.x, point.y, point.z,
+    c->addPointer( ci.get_id(), false, point.x, point.y, point.z,
 		   zRotation, lineWidth, pointerColor );
     NetInterface::getInstance().sendDataToServer( c );
     
     cerr << "End of Renderer::addPointer\n";
-    return ci.getID();
+    return ci.get_id();
   }
 
   /**
@@ -242,7 +242,7 @@ Renderer::addPointer( const Point3d point, const double zRotation,
 		      const int width, const Color color ) {
   cerr << "In Renderer::addPointer\n";
   string name = addPointer(point, zRotation );
-  CollaborationItem *ci = getID(name);
+  CollaborationItem *ci = get_id(name);
   ci->setID( ID );
   ci->setLineWidth( width );
   ci->setColor( color );
@@ -271,12 +271,12 @@ Renderer::addText( const Point3d point, const string &text ) {
 
   /* Send text to network */
   Collaborate *c = scinew Collaborate( true );
-  c->addText( ci.getID(), false, point.x, point.y, text,
+  c->addText( ci.get_id(), false, point.x, point.y, text,
 	      textSize, pointerColor );
   NetInterface::getInstance().sendDataToServer( c );
   
   cerr << "End of Renderer::addText\n";
-  return ci.getID();
+  return ci.get_id();
 }
   
   /**
@@ -297,7 +297,7 @@ Renderer::addText( const Point3d point, const string &text,
 		   const Color color ) {
     cerr << "In Renderer::addText\n";
     string name = addText( point, text );
-    CollaborationItem *ci = getID( name );
+    CollaborationItem *ci = get_id( name );
     ci->setID( ID );
     ci->setColor( color );
     ci->setTextSize( size );
@@ -322,7 +322,7 @@ Renderer::newDrawing() {
   drawingMode = true; 
   collaborationItemList.push_back( ci );
   cerr << "End of Renderer::newDrawing\n";
-  return ci.getID();
+  return ci.get_id();
 }
   
 /**
@@ -338,7 +338,7 @@ Renderer::newDrawing( const string ID, const int width,
 		      const Color color ) {
   cerr << "In Renderer::newDrawing\n";
   string name = newDrawing();
-  CollaborationItem *ci = getID(name);
+  CollaborationItem *ci = get_id(name);
   ci->setID(ID);
   ci->setColor(color);
   ci->setLineWidth(width);
@@ -382,7 +382,7 @@ Renderer::drawMode( const bool start ) {
 void  
 Renderer::addDrawingSegment( const Point3d point, const string &ID ) { 
   cerr << "In Renderer::addDrawingSegment\n";
-  CollaborationItem *ci = getID( ID );
+  CollaborationItem *ci = get_id( ID );
   
   if ( ci == NULL ) {
     Log::log( WARNING, "Cannot add point to drawing " + ID +
@@ -406,7 +406,7 @@ Renderer::addDrawingSegment( const Point3d point, const string &ID ) {
 void   
 Renderer::finishDrawing( const string &ID ) {
   cerr << "In Renderer::finishDrawing\n";
-  CollaborationItem *ci = getID( ID );
+  CollaborationItem *ci = get_id( ID );
 
   if ( ci == NULL )
     return;
@@ -439,13 +439,13 @@ Renderer::getAnnotationIDs() {
   for ( unsigned j = 0; j < collaborationItemList.size(); j++ ) {
     if ( collaborationItemList[j].getType() ==
 	 CollaborationItem::POINTER )
-      ids[j] = "P" + collaborationItemList[j].getID();
+      ids[j] = "P" + collaborationItemList[j].get_id();
     else if ( collaborationItemList[j].getType() ==
 	      CollaborationItem::TEXT )
-      ids[j] = "T" + collaborationItemList[j].getID();
+      ids[j] = "T" + collaborationItemList[j].get_id();
     else if ( collaborationItemList[j].getType() ==
 	      CollaborationItem::DRAWING )
-      ids[j] = "D" + collaborationItemList[j].getID();
+      ids[j] = "D" + collaborationItemList[j].get_id();
   }
   cerr << "End of Renderer::getAnnotationIDs\n";
   return ids;

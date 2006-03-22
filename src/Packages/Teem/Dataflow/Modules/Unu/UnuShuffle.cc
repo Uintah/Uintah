@@ -68,9 +68,9 @@ UnuShuffle::UnuShuffle(GuiContext* ctx)
   : Module("UnuShuffle", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0),
     onrrd_(0),
-    ordering_(ctx->subVar("ordering"), "0"),
-    axis_(ctx->subVar("axis"), 0),
-    inverse_(ctx->subVar("inverse"), 0)
+    ordering_(get_ctx()->subVar("ordering"), "0"),
+    axis_(get_ctx()->subVar("axis"), 0),
+    inverse_(get_ctx()->subVar("inverse"), 0)
 {
 }
 

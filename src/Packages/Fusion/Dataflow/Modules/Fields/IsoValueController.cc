@@ -74,10 +74,10 @@ IsoValueController::~IsoValueController(){
 void IsoValueController::execute() {
 
   // Get the current original field.
-  if( !getIHandle( "Input Original Field", fHandle_orig_, true ) ) return;
+  if( !get_input_handle( "Input Original Field", fHandle_orig_, true ) ) return;
 
   // Get the current transformed field.
-  if( !getIHandle( "Input Transformed Field", fHandle_tran_, true ) ) return;
+  if( !get_input_handle( "Input Transformed Field", fHandle_tran_, true ) ) return;
 
   ScalarFieldInterfaceHandle sfi =
     fHandle_tran_->query_scalar_interface(this);
@@ -180,10 +180,10 @@ void IsoValueController::execute() {
 
       bool intermediate = ( i<isovalues.size()-1 );
 
-      sendOHandle( "Output Original Field",    fHandle_orig_,    true, intermediate );
-      sendOHandle( "Output Transformed Field", fHandle_tran_,    true, intermediate );
-      sendOHandle( "Isovalue",                 mHandleIsoValue_, true, intermediate );
-      sendOHandle( "Index",                    mHandleIndex_,    true, intermediate );
+      send_output_handle( "Output Original Field",    fHandle_orig_,    true, intermediate );
+      send_output_handle( "Output Transformed Field", fHandle_tran_,    true, intermediate );
+      send_output_handle( "Isovalue",                 mHandleIsoValue_, true, intermediate );
+      send_output_handle( "Index",                    mHandleIndex_,    true, intermediate );
 
       str << "  Done";
 
@@ -192,7 +192,7 @@ void IsoValueController::execute() {
       // Get the original isosurfaces.
       FieldHandle fHandleND;
 
-      if( !getIHandle( "(N)D Field", fHandleND, true ) ) {
+      if( !get_input_handle( "(N)D Field", fHandleND, true ) ) {
 	error_ = true;
 	return;
       } else
@@ -201,7 +201,7 @@ void IsoValueController::execute() {
       // Get the transformed isosurfaces.
       FieldHandle fHandleN_1D;
            
-      if( !getIHandle( "(N-1)D Field", fHandleN_1D, true ) ) {
+      if( !get_input_handle( "(N-1)D Field", fHandleN_1D, true ) ) {
 	error_ = true;
 	return;
       } else
@@ -211,7 +211,7 @@ void IsoValueController::execute() {
       // Get the transformed geometry.
 //    GeomHandle geometryin;
 
-//    if( !getIHandle( "Axis Geometry", geometryin, true ) ) {
+//    if( !get_input_handle( "Axis Geometry", geometryin, true ) ) {
 // 	error_ = true;
 //      return;
 //    } else
@@ -253,10 +253,10 @@ void IsoValueController::execute() {
   }
 
   // Send the data downstream
-  sendOHandle( "(N)D Fields",   fHandle_ND_,   true );
-  sendOHandle( "(N-1)D Fields", fHandle_N_1D_, true );
+  send_output_handle( "(N)D Fields",   fHandle_ND_,   true );
+  send_output_handle( "(N-1)D Fields", fHandle_N_1D_, true );
 
-  sendOHandle( "Axis Geometry", gHandles, fldname );
+  send_output_handle( "Axis Geometry", gHandles, fldname );
 }
 
 void

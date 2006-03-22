@@ -63,7 +63,7 @@ DECLARE_MAKER(ScalarFieldNormalize)
 
 ScalarFieldNormalize::ScalarFieldNormalize(GuiContext* ctx)
   : Module("ScalarFieldNormalize",ctx,Source, "Operators", "Uintah"),
-    xIndex_(ctx->subVar("xIndex")), yIndex_(ctx->subVar("yIndex")), zIndex_(ctx->subVar("zIndex"))
+    xIndex_(get_ctx()->subVar("xIndex")), yIndex_(get_ctx()->subVar("yIndex")), zIndex_(get_ctx()->subVar("zIndex"))
 {
 }
   

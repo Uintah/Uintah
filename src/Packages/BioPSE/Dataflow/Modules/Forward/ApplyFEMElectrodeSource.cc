@@ -260,7 +260,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   }
   else
   {
-    msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
+    msg_stream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
   }
 
   // Get the FieldBoundary input
@@ -295,7 +295,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   }
   else
   {
-    msgStream_ << "There is an error in the supplied boundary field" << endl;
+    msg_stream_ << "There is an error in the supplied boundary field" << endl;
   }
 
   // If a boundary field was supplied, check for the matrix that maps

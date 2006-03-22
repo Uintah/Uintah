@@ -1698,7 +1698,7 @@ package cca version 0.6.3 {
 	interface IDPort extends cca.Port{
 		/** Test prot. Return a string as an ID for Hello component
         	*/
-		string getID();
+		string get_id();
    	};
 //<<<<<<<<<<<<<<<<<<<<<<<<<
     } // end of package cca.ports

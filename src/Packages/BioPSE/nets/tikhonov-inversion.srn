@@ -18,7 +18,7 @@
     </module>
     <module id="m3" package="BioPSE" category="Inverse" name="Tikhonov" gui_visible="yes">
       <position x="91" y="359"/>
-      <var name="haveUI" val="{1}"/>
+      <var name="have_ui" val="{1}"/>
       <var name="tex_var" val="{1e-06}"/>
       <var name="ui_geometry" val="{505x506+56+36}"/>
     </module>

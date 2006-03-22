@@ -62,13 +62,13 @@ DECLARE_MAKER(UnuHistax)
 
 UnuHistax::UnuHistax(SCIRun::GuiContext *ctx) : 
   Module("UnuHistax", ctx, Filter, "UnuAtoM", "Teem"),
-  axis_(ctx->subVar("axis")),
-  bins_(ctx->subVar("bins")),
-  min_(ctx->subVar("min")),
-  useinputmin_(ctx->subVar("useinputmin")),
-  max_(ctx->subVar("max")),
-  useinputmax_(ctx->subVar("useinputmax")),
-  type_(ctx->subVar("type"))
+  axis_(get_ctx()->subVar("axis")),
+  bins_(get_ctx()->subVar("bins")),
+  min_(get_ctx()->subVar("min")),
+  useinputmin_(get_ctx()->subVar("useinputmin")),
+  max_(get_ctx()->subVar("max")),
+  useinputmax_(get_ctx()->subVar("useinputmax")),
+  type_(get_ctx()->subVar("type"))
 {
 }
 
