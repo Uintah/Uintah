@@ -53,7 +53,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Compute Stable Timestep RF on patch " << patch->getID() 
+    cout_doing << "Doing Compute Stable Timestep RF on patch " << patch->get_id() 
          << "\t\t ICE" << endl;
       
     Vector dx = patch->dCell();
@@ -199,7 +199,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing<<"Doing computeRateFormPressure on patch "
-              << patch->getID() <<"\t\t ICE" << endl;
+              << patch->get_id() <<"\t\t ICE" << endl;
 
     double tmp;
     int numMatls = d_sharedState->getNumICEMatls();
@@ -325,14 +325,14 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
    //---- P R I N T   D A T A ------   
     if (switchDebug_equil_press) {
       ostringstream desc;
-      desc << "BOT_computeRFPress_patch_" << patch->getID();
+      desc << "BOT_computeRFPress_patch_" << patch->get_id();
       printData(0, patch, 1, desc.str(), "Press_CC_RF", press_new);
 
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
        ostringstream desc;
-       desc << "BOT_computeRFPress_Mat_" << indx << "_patch_"<< patch->getID();
+       desc << "BOT_computeRFPress_Mat_" << indx << "_patch_"<< patch->get_id();
        printData( indx, patch, 1, desc.str(), "matl_press",   matl_press[m]);
        printData( indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
        printData( indx, patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]);
@@ -355,7 +355,7 @@ void ICE::computeDivThetaVel_CC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<<"doing computeDivThetaVel_CC on patch "
-              << patch->getID() <<"\t\t\t ICE" << endl;
+              << patch->get_id() <<"\t\t\t ICE" << endl;
 
     Vector dx       = patch->dCell();
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -507,7 +507,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing compute_face_centered_velocitiesRF on patch " 
-         << patch->getID() << "\t ICE" << endl;
+         << patch->get_id() << "\t ICE" << endl;
     int numMatls = d_sharedState->getNumMatls();
 
     delt_vartype delT;
@@ -543,7 +543,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       //---- P R I N T   D A T A ------
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc << "TOP_vel_FC_Mat_" << indx << "_patch_" << patch->getID();
+        desc << "TOP_vel_FC_Mat_" << indx << "_patch_" << patch->get_id();
         printData(  indx, patch,1, desc.str(), "rho_CC",     rho_CC);     
         printData(  indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);  
         printVector(indx, patch,1, desc.str(), "vel_CC",  0, vel_CC);     
@@ -604,7 +604,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       //---- P R I N T   D A T A ------
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc << "BOT_vel_FC_Mat_"<< indx <<"_patch_"<< patch->getID();
+        desc << "BOT_vel_FC_Mat_"<< indx <<"_patch_"<< patch->get_id();
         printData_FC( indx, patch,1, desc.str(), "uvel_FC",       uvel_FC);
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",       vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC",       wvel_FC);
@@ -631,7 +631,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinks_RF on patch " 
-         << patch->getID() << "\t ICE" << endl;
+         << patch->get_id() << "\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -822,7 +822,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebug_Source_Sink) {
         ostringstream desc;
-        desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->get_id();
         printData(indx, patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
 #if 0
         printData(indx, patch,1,desc.str(),"term1", term1);
@@ -884,7 +884,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing doCCMomExchange on patch "<< patch->getID()
+    cout_doing << "Doing doCCMomExchange on patch "<< patch->get_id()
                <<"\t\t\t ICE" << endl;
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -1004,7 +1004,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         int indx = matl->getDWIndex();
         ostringstream desc;
         desc<<"TOP_addExchangeToMomentumAndEnergy_RF"<<indx<<"_patch_"
-            <<patch->getID();
+            <<patch->get_id();
         printData(   indx, patch,1, desc.str(),"Temp_CC",    old_Temp[m]);     
         printData(   indx, patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);   
         printData(   indx, patch,1, desc.str(),"mass_L",     mass_L[m]);      
@@ -1145,7 +1145,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         int indx = matl->getDWIndex();
         ostringstream desc;
         desc<<"addExchangeToMomentumAndEnergy_RF"<<indx<<"_patch_"
-            <<patch->getID();
+            <<patch->get_id();
         printVector(indx, patch,1, desc.str(),"mom_L_ME", 0, mom_L_ME[m]);
         printData(  indx, patch,1, desc.str(),"tot_eng_L_ME",tot_eng_L_ME[m]);
         printData(  indx, patch,1, desc.str(),"Tdot",        Tdot[m]);
@@ -1170,7 +1170,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing computeLagrangianSpecificVolumeRF " <<
-      patch->getID() << "\t\t ICE" << endl;
+      patch->get_id() << "\t\t ICE" << endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -1321,7 +1321,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebug_LagrangianSpecificVol ) {
         ostringstream desc;
-        desc <<"BOT_Lagrangian_spVolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
+        desc <<"BOT_Lagrangian_spVolRF_Mat_"<<indx<< "_patch_"<<patch->get_id();
         printData(indx, patch,1, desc.str(), "Temp",          Temp_CC[m]); 
         printData(indx, patch,1, desc.str(), "vol_frac",      vol_frac[m]);
         printData(indx, patch,1, desc.str(), "rho_CC",        rho_CC);

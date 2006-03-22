@@ -219,7 +219,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         if(switchDebug_AMR_refineInterface){
           ostringstream desc;     
           desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
-               << patch->getID()<< " step " << subCycleProgress;
+               << patch->get_id()<< " step " << subCycleProgress;
 
           printData(indx, patch,   1, desc.str(), "press_CC",    press_CC); 
           printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
@@ -277,7 +277,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         if(switchDebug_AMR_refineInterface){
           ostringstream desc;    
           desc << "BOT_refineInterface_Mat_" << indx << "_patch_"
-               << patch->getID()<< " step " << subCycleProgress;
+               << patch->get_id()<< " step " << subCycleProgress;
           printData(indx, patch,   1, desc.str(), "press_CC",  press_CC);
           printData(indx, patch,   1, desc.str(), "rho_CC",    rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
@@ -539,7 +539,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
         //  Print Data 
         if(switchDebug_AMR_refine){
           ostringstream desc;    
-          desc << "BOT_setBC_FineLevel_Mat_" << indx << "_patch_"<< patch->getID();
+          desc << "BOT_setBC_FineLevel_Mat_" << indx << "_patch_"<< patch->get_id();
           printData(indx, patch,   1, desc.str(), "rho_CC",    rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol_CC[m]);
           printData(indx, patch,   1, desc.str(), "Temp_CC",   temp_CC);
@@ -560,7 +560,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
       if(switchDebug_AMR_refine){
         ostringstream desc;    
-        desc << "BOT_setBC_FineLevel_Mat_" << 0 << "_patch_"<< patch->getID();
+        desc << "BOT_setBC_FineLevel_Mat_" << 0 << "_patch_"<< patch->get_id();
         printData(0, patch, 1, desc.str(), "press_CC", press_CC);
       }      
     }  // patches loop
@@ -652,7 +652,7 @@ void AMRICE::refine(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){  
     const Patch* finePatch = patches->get(p);
-    cout_doing << "  patch " << finePatch->getID()<< endl;
+    cout_doing << "  patch " << finePatch->get_id()<< endl;
     
     Level::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
@@ -727,7 +727,7 @@ void AMRICE::refine(const ProcessorGroup*,
       //  Print Data
       if(switchDebug_AMR_refine){ 
       ostringstream desc;     
-        desc << "BOT_Refine_Mat_" << indx << "_patch_"<< finePatch->getID();
+        desc << "BOT_Refine_Mat_" << indx << "_patch_"<< finePatch->get_id();
         printData(indx, finePatch,   1, desc.str(), "press_CC",  press_CC); 
         printData(indx, finePatch,   1, desc.str(), "rho_CC",    rho_CC);
         printData(indx, finePatch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
@@ -778,8 +778,8 @@ void AMRICE::iteratorTest(const Patch* finePatch,
     }
 #if 0
     cout << " coarsePatch.size() " << coarsePatches.size() 
-         << " coarsePatch " << coarsePatch->getID()
-         << " finePatch " << finePatch->getID() 
+         << " coarsePatch " << coarsePatch->get_id()
+         << " finePatch " << finePatch->get_id() 
          << " fineLevel: fl " << fl << " fh " << fh
          << " coarseLevel: cl " << cl << " ch " << ch 
          << " final Iterator: " << lo << " " << hi << endl;
@@ -799,10 +799,10 @@ void AMRICE::iteratorTest(const Patch* finePatch,
     ostringstream warn;
     warn <<"ERROR AMRICE::Refine Task:iteratorTest "
          << "detected an fine level cell that won't get initialized "
-         << badCell << " Patch " << finePatch->getID() 
+         << badCell << " Patch " << finePatch->get_id() 
          << " Level idx "<<fineLevel->getIndex()<<"\n "
          << "The underlying coarse cell "<< c_badCell 
-         << " belongs to coarse level patch " << patch->getID() << "\n";
+         << " belongs to coarse level patch " << patch->get_id() << "\n";
     throw InvalidValue(warn.str(), __FILE__, __LINE__);
   }  
 }
@@ -933,7 +933,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing <<"  patch " << coarsePatch->getID()<< endl;
+    cout_doing <<"  patch " << coarsePatch->get_id()<< endl;
     
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -1004,7 +1004,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
       //  Print Data 
       if(switchDebug_AMR_coarsen){
         ostringstream desc;     
-        desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
+        desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->get_id();
        // printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
         printData(indx, coarsePatch,   1, desc.str(), "rho_CC",      rho_CC);
         printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
@@ -1150,7 +1150,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
         if(finePatch->hasCoarseFineInterfaceFace() ){
           cout_doing << d_myworld->myrank() 
                      << "  coarsePatch " << coarsePatch->getID() 
-                     <<" finepatch " << finePatch->getID()<< endl;
+                     <<" finepatch " << finePatch->get_id()<< endl;
 
           int one_zero = 1;
           refluxOperator_computeCorrectionFluxes<double>(rho_CC,  cv, "mass",   indx, 
@@ -1193,7 +1193,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       //  Print Data
       if(switchDebug_AMR_reflux){ 
         ostringstream desc;     
-        desc << "RefluxComputeCorrectonFluxes_Mat_" << indx << "_patch_"<< coarsePatch->getID();
+        desc << "RefluxComputeCorrectonFluxes_Mat_" << indx << "_patch_"<< coarsePatch->get_id();
         // need to add something here
       }
     }  // matl loop
@@ -1269,7 +1269,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   
 /*`==========TESTING==========*/
 #if 0
-  if(finePatch->getID() == 583){
+  if(finePatch->get_id() == 583){
     cout << "\nrefluxCoarseLevelIterator " << name << " " << whichTask
          << "\n before      " << l << " " << h
          << "\n finePatch   " << *finePatch
@@ -1312,7 +1312,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   
  /*`==========TESTING==========*/
 #if 0
-  if(finePatch->getID() == 583){
+  if(finePatch->get_id() == 583){
     cout << " after " << l << " " << h 
          << " coarse_FC_offset " << coarse_FC_offset
          << " isRight_CP_FP_pair " << isRight_CP_FP_pair 
@@ -1433,7 +1433,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
   
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
-    cout_doing << "  patch " << coarsePatch->getID()<< endl;
+    cout_doing << "  patch " << coarsePatch->get_id()<< endl;
     
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);     
@@ -1453,7 +1453,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
-        //cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
+        //cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->get_id() <<" finepatch " << finePatch->get_id()<< endl;
         //__________________________________
         // Apply the correction
         // one_zero:  used to increment the CFI counter.
@@ -1506,7 +1506,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       //  Print Data
       if(switchDebug_AMR_reflux){ 
         ostringstream desc;     
-        desc << "Reflux_applyCorrection_Mat_" << indx << "_patch_"<< coarsePatch->getID();
+        desc << "Reflux_applyCorrection_Mat_" << indx << "_patch_"<< coarsePatch->get_id();
         printData(indx, coarsePatch,   0, desc.str(), "rho_CC",   rho_CC);
         printData(indx, coarsePatch,   0, desc.str(), "sp_vol_CC",sp_vol_CC);
         printData(indx, coarsePatch,   0, desc.str(), "Temp_CC",  temp);
@@ -1776,7 +1776,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << " patch " << patch->getID()<< endl;
+    cout_doing << " patch " << patch->get_id()<< endl;
     Ghost::GhostType  gac  = Ghost::AroundCells;
     const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
     const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();

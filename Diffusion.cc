@@ -298,7 +298,7 @@ void computeTauX( const Patch* patch,
 //       cout<<cell<<" tau_XX: "<<tau_X_FC[cell].x()<<
 //       " tau_XY: "<<tau_X_FC[cell].y()<<
 //       " tau_XZ: "<<tau_X_FC[cell].z()<<
-//       " patch: " <<patch->getID()<<endl;     
+//       " patch: " <<patch->get_id()<<endl;     
 //     } 
   }
 }
@@ -427,7 +427,7 @@ void computeTauY( const Patch* patch,
 //       cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
 //       " tau_YY: "<<tau_Y_FC[cell].y()<<
 //       " tau_YZ: "<<tau_Y_FC[cell].z()<<
-//        " patch: "<<patch->getID()<<endl;
+//        " patch: "<<patch->get_id()<<endl;
 //     }
   }
 }
