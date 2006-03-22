@@ -177,7 +177,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   //setup the table
   string tablename = "adiabatic";
   table = TableFactory::readTable(params, tablename);
-  table->addIndependentVariable("F");
+  table->addIndependentVariable("mix_frac");
   if(d_useVariance)
     table->addIndependentVariable("Fvar");
   
@@ -191,7 +191,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     tablevalues.push_back(tv);
   }
   
-  d_temp_index          = table->addDependentVariable("Temp");
+  d_temp_index          = table->addDependentVariable("temp");
   d_density_index       = table->addDependentVariable("density");
   d_gamma_index         = table->addDependentVariable("gamma");
   d_cv_index            = table->addDependentVariable("heat_capac_Cv");
