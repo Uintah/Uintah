@@ -296,7 +296,7 @@ bool ConvertHexVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *p
 template <class FSRC, class FDST>
 bool ConvertHexVolToTetVolAlgoT<FSRC, FDST>::testinput(FieldHandle input)
 {
-  return (dynamic_cast<FSRC*>(input.get_rep()) == 0);
+  return (dynamic_cast<FSRC*>(input.get_rep()));
 }
 
 
@@ -470,7 +470,7 @@ bool ConvertLatVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *p
 template <class FSRC, class FDST>
 bool ConvertLatVolToTetVolAlgoT<FSRC, FDST>::testinput(FieldHandle input)
 {
-  return (dynamic_cast<FSRC*>(input.get_rep()) == 0);
+  return (dynamic_cast<FSRC*>(input.get_rep()));
 }
 
   

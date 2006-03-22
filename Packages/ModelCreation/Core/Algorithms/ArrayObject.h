@@ -64,6 +64,7 @@ class ArrayObject {
     bool create_outputdata(SCIRun::FieldHandle& field, std::string datatype, std::string name,SCIRun::FieldHandle& ofield);
     bool create_outputdata(SCIRun::FieldHandle& field, std::string datatype, std::string basistype, std::string name,SCIRun::FieldHandle& ofield);
     bool create_outputdata(int size, std::string datatype, std::string name,SCIRun::MatrixHandle& omatrix);    
+    bool create_outputlocation(SCIRun::FieldHandle& field, std::string locname,SCIRun::FieldHandle& ofield);
     
     // This inline code should almost give direct data access and should 
     // reduce the function call overhead. For the field data, we still have
@@ -168,6 +169,7 @@ class ArrayObject {
     inline void warning(std::string warning);
 
     void clear();
+    
 };
 
 typedef std::vector<ArrayObject> ArrayObjectList;
@@ -448,7 +450,7 @@ inline void ArrayObject::getnextfieldlocation(TensorVectorMath::Vector& vector)
 
 inline void ArrayObject::setnextfieldlocation(TensorVectorMath::Vector& vector)
 {
-//  fieldlocationalgo_->setnextlocation(vector);
+  fieldlocationalgo_->setnextlocation(vector);
 }
 
 inline void ArrayObject::getelement(TensorVectorMath::Element& elem)

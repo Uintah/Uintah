@@ -32,6 +32,7 @@
 #include <Core/Algorithms/Fields/FieldCount.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
+#include <Core/DataTypes/MatrixOperations.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -46,11 +47,28 @@ NumericAlgo::NumericAlgo(ProgressReporter* pr) :
 {
 }
 
-bool NumericAlgo::BuildFEMMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc)
+bool NumericAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable, MatrixHandle GeomToComp, MatrixHandle CompToGeom)
 {
   BuildFEMatrixAlgo algo;
-  algo.BuildFEMatrix(pr_,field,matrix,num_proc);
+  if(!(algo.BuildFEMatrix(pr_,field,matrix,num_proc))) return(false);
+  
+  if ((GeomToComp.get_rep()==0)&&(CompToGeom.get_rep()==0))
+  {
+    if (field->is_property("GeomToComp")&&field->is_property("CompToGeom"))
+    {
+      field->get_property("GeomToComp",GeomToComp);
+      field->get_property("CompToGeom",CompToGeom);
+      matrix = CompToGeom*matrix*GeomToComp;
+    }  
+    return (true);
+  }
+  
+  if (GeomToComp.get_rep() == 0) CompToGeom = GeomToComp->transpose();
+  if (CompToGeom.get_rep() == 0) GeomToComp = GeomToComp->transpose();
+  matrix = CompToGeom*matrix*GeomToComp;
+  return (true);
 }
+
 
 bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
 { 

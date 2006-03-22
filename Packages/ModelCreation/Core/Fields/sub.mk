@@ -27,6 +27,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
             $(SRCDIR)/GetFieldData.cc\
             $(SRCDIR)/GetFieldInfo.cc\
+            $(SRCDIR)/LinkFieldBoundary.cc\
             $(SRCDIR)/MergeFields.cc\
             $(SRCDIR)/Precompile.cc\
             $(SRCDIR)/ScaleField.cc\

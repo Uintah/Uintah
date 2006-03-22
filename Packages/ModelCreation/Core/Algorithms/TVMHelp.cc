@@ -202,6 +202,7 @@ void TVMHelp::createhelplist_element()
     add("length()","SCALAR = length(ELEMENT)","Compute the length of the element");
     add("area()","SCALAR = area(ELEMENT)","Compute the volume of the element");
     add("volume()","SCALAR = volume(ELEMENT)","Compute the volume of the element");
+    add("normal()","VECTOR = normal(ELEMENT)","Compute the local normal for surface mesh");
 }
 
 
