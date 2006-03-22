@@ -16,12 +16,10 @@ TESTS = [   ("dlb_mpm", "mpmDLBTest.ups", 8, "NONE"), \
             ("switcher", "JP8-switch.ups", 8, "NONE")
         ]
 
-code = runSusTests(argv, TESTS, "UCF")
-
-                            # Scalability tests -
+# Scalability tests -
 # last 6 args are start patches x,y,z and start res x,y,z
 # The 4th argument is the number of times to double the processor count
-SCALE_TESTS = [ ("ice_scale_test", "iceScalabilityTest.ups", 8, "ALL","",1,1,1,10,10,10)]
+SCALE_TESTS = [ ("ice_scale_test", "iceScalabilityTest.ups", 8, "ALL",1,1,1,10,10,10)]
 
 retval = 0
 
@@ -29,15 +27,14 @@ for test in SCALE_TESTS:
   iterations = test[2]
   
   # Starting resolution.  Double each iteration
-  xpatches = test[5]
-  ypatches = test[6]
-  zpatches = test[7]
+  xpatches = test[4]
+  ypatches = test[5]
+  zpatches = test[6]
 
-  xres = test[8]
-  yres = test[9]
-  zres = test[10]
+  xres = test[7]
+  yres = test[8]
+  zres = test[9]
 
-  scale_tests = []
   max_parallelism = float(argv[5])
 
   # do tests n times, double the procs each time, and double res and patches
@@ -50,7 +47,7 @@ for test in SCALE_TESTS:
     # substitute the new resolution and patch configuration in the UPS file.
     newUPS = modUPS("%s/UCF" % (inputs_root()), test[1], \
                     ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
-    scale_tests.append(("%s-%dproc" % (test[0],procs), newUPS, procs, test[3], test[4], test[5], ["do_perf"]))
+    TESTS.append(("%s-%dproc" % (test[0],procs), newUPS, procs, test[3], ["do_perf"]))
 
     # double the patches and resolution for the next run.
     if xpatches <= ypatches and xpatches <= zpatches:
@@ -67,8 +64,10 @@ for test in SCALE_TESTS:
     else:
       zres = zres*2
 
-  # Run al the tests.  Exit if it skips them (because of debug mode)
-  retval = runSusTests(argv, scale_tests, "UCF")
+code = runSusTests(argv, TESTS, "UCF")
+
+for test in SCALE_TESTS:
+
   if retval != 3:
     
     # This dir should exist now, and each tests' subdir should be underneath
