@@ -25,15 +25,15 @@ using namespace SCIRun;
 
 class DistributionReader : public GenericReader<DistributionHandle> {
 public:
-  DistributionReader(const string& id);
+  DistributionReader(const string& get_id());
 };
 
-extern "C" Module* make_DistributionReader(const string& id) {
-  return new DistributionReader(id);
+extern "C" Module* make_DistributionReader(const string& get_id()) {
+  return new DistributionReader(get_id());
 }
 
-DistributionReader::DistributionReader(const string& id)
-  : GenericReader<DistributionHandle>("DistributionReader", id, "DataIO", "MIT")
+DistributionReader::DistributionReader(const string& get_id())
+  : GenericReader<DistributionHandle>("DistributionReader", get_id(), "DataIO", "MIT")
 {
 }
 

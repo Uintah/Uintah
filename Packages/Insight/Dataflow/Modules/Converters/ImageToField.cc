@@ -174,7 +174,7 @@ private:
 DECLARE_MAKER(ImageToField)
 ImageToField::ImageToField(GuiContext* ctx)
   : Module("ImageToField", ctx, Source, "Converters", "Insight"),
-    gui_copy_(ctx->subVar("copy"))
+    gui_copy_(get_ctx()->subVar("copy"))
 {
 }
   

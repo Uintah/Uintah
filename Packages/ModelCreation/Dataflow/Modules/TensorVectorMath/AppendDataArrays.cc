@@ -74,7 +74,7 @@ void AppendDataArrays::execute()
   MatrixIPort *iport;
   MatrixOPort *oport;
   
-  size_t numinputs = (numIPorts()-1);
+  size_t numinputs = (num_input_ports()-1);
   
   std::vector<MatrixHandle> matrixlist;
   int n, m;
@@ -83,7 +83,7 @@ void AppendDataArrays::execute()
   n = 0;
   for (size_t p=0;p<numinputs; p++)
   {
-    if(!(iport = dynamic_cast<MatrixIPort *>(getIPort(p))))
+    if(!(iport = dynamic_cast<MatrixIPort *>(get_input_port(p))))
     {
       error("Could not locate matrix input port");
       return;
@@ -149,7 +149,7 @@ void AppendDataArrays::execute()
     }
   }
   
-  if (oport = dynamic_cast<MatrixOPort *>(getOPort(0)))
+  if (oport = dynamic_cast<MatrixOPort *>(get_output_port(0)))
   {
     oport->send(omatrix);
   }

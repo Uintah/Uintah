@@ -385,7 +385,7 @@ class PowerAppBase {
 	    set m [array nextelement mods $searchID]
 	    foreach v [info vars $mods($m)*] {
 		set var [get_module_variable_name $v]
-		if {$var != "msgStream" && ![array exists $v]} {
+		if {$var != "msg_stream" && ![array exists $v]} {
 		    puts $fileid "set \$mods($m)-$var \{[set $mods($m)-$var]\}"
 		}
 	    }

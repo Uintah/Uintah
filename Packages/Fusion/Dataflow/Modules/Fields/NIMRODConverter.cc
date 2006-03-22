@@ -111,7 +111,7 @@ NIMRODConverter::execute(){
   vector< NrrdDataHandle > nHandles;
   NrrdDataHandle nHandle;
 
-  if( !getDynamicIHandle( "Input Nrrd", nHandles, true ) ) return;
+  if( !get_dynamic_input_handles( "Input Nrrd", nHandles, true ) ) return;
 
   string datasetsStr;
 
@@ -139,9 +139,9 @@ NIMRODConverter::execute(){
   if( datasetsStr != datasetsStr_.get() ) {
     // Update the dataset names and dims in the GUI.
     ostringstream str;
-    str << id << " set_names " << " {" << datasetsStr << "}";
+    str << get_id() << " set_names " << " {" << datasetsStr << "}";
     
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
   }
 
   if( nHandles.size() != 1 && nHandles.size() != 2 &&
@@ -361,9 +361,9 @@ NIMRODConverter::execute(){
   if( (int) (conversion_ & MESH) != allowUnrolling_.get() )
   {
     ostringstream str;
-    str << id << " set_unrolling " << (conversion_ & MESH);
+    str << get_id() << " set_unrolling " << (conversion_ & MESH);
     
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
 
     if( conversion_ & MESH ) {
       warning( "Select the mesh rolling for the calculation" );
@@ -394,7 +394,7 @@ NIMRODConverter::execute(){
       char idx[24];
       
       sprintf( idx, "mode-%d", ic );
-      gModes_.push_back(new GuiInt(ctx->subVar(idx)) );
+      gModes_.push_back(new GuiInt(get_ctx()->subVar(idx)) );
       
       modes_.push_back(0);
     }
@@ -404,9 +404,9 @@ NIMRODConverter::execute(){
 
     // Update the modes in the GUI
     ostringstream str;
-    str << id << " set_modes " << nmodes_ << " 1";
+    str << get_id() << " set_modes " << nmodes_ << " 1";
 
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
     
     if( conversion_ & PERTURBED ) {
       warning( "Select the mode for the calculation" );
@@ -577,7 +577,7 @@ NIMRODConverter::execute(){
   }
   
   // Send the data downstream
-  sendOHandle( "Output Nrrd", nHandle_, true );
+  send_output_handle( "Output Nrrd", nHandle_, true );
 }
 
 void

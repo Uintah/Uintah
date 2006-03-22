@@ -76,10 +76,10 @@ FlowVis2D::FlowVis2D(GuiContext* ctx)
     vfield_prev_generation_(-1),
     cmap_prev_generation_(-1),
     card_mem_(video_card_memory_size()),
-    gui_vis_type_(ctx->subVar("vis_type"), 0),
-    gui_clear_(ctx->subVar("clear"), 1),
-    gui_adv_accums_(ctx->subVar("adv_accums"), 3),
-    gui_conv_accums_(ctx->subVar("conv_accums"), 3),
+    gui_vis_type_(get_ctx()->subVar("vis_type"), 0),
+    gui_clear_(get_ctx()->subVar("clear"), 1),
+    gui_adv_accums_(get_ctx()->subVar("adv_accums"), 3),
+    gui_conv_accums_(get_ctx()->subVar("conv_accums"), 3),
     flowren_(0)
 {}
 

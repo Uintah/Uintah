@@ -33,7 +33,7 @@ using namespace SCIRun;
 
 class RobVSHARE TetVol2QuadraticTetVol : public Module {
 public:
-  TetVol2QuadraticTetVol(const string& id);
+  TetVol2QuadraticTetVol(const string& get_id());
 
   virtual ~TetVol2QuadraticTetVol();
 
@@ -46,12 +46,12 @@ private:
   FieldOPort*              ofld_;
 };
 
-extern "C" RobVSHARE Module* make_TetVol2QuadraticTetVol(const string& id) {
-  return scinew TetVol2QuadraticTetVol(id);
+extern "C" RobVSHARE Module* make_TetVol2QuadraticTetVol(const string& get_id()) {
+  return scinew TetVol2QuadraticTetVol(get_id());
 }
 
-TetVol2QuadraticTetVol::TetVol2QuadraticTetVol(const string& id)
-  : Module("TetVol2QuadraticTetVol", id, Source, "Quadratic", "RobV")
+TetVol2QuadraticTetVol::TetVol2QuadraticTetVol(const string& get_id())
+  : Module("TetVol2QuadraticTetVol", get_id(), Source, "Quadratic", "RobV")
 {
 }
 

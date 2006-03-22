@@ -102,16 +102,16 @@ DECLARE_MAKER(SliceReader)
 
 SliceReader::SliceReader(SCIRun::GuiContext* ctx) : 
   Module("SliceReader", ctx, Filter, "DataIO", "Insight"),
-  p_type_(ctx->subVar("p_type")),
-  size_0_(ctx->subVar("size_0")),
-  size_1_(ctx->subVar("size_1")),
-  size_2_(ctx->subVar("size_2")),
-  spacing_0_(ctx->subVar("spacing_0")),
-  spacing_1_(ctx->subVar("spacing_1")),
-  spacing_2_(ctx->subVar("spacing_2")),
-  slice_(ctx->subVar("slice")),
-  cast_output_(ctx->subVar("cast_output")),
-  filename_(ctx->subVar("filename")),
+  p_type_(get_ctx()->subVar("p_type")),
+  size_0_(get_ctx()->subVar("size_0")),
+  size_1_(get_ctx()->subVar("size_1")),
+  size_2_(get_ctx()->subVar("size_2")),
+  spacing_0_(get_ctx()->subVar("spacing_0")),
+  spacing_1_(get_ctx()->subVar("spacing_1")),
+  spacing_2_(get_ctx()->subVar("spacing_2")),
+  slice_(get_ctx()->subVar("slice")),
+  cast_output_(get_ctx()->subVar("cast_output")),
+  filename_(get_ctx()->subVar("filename")),
   read_handle_(0),
   fp_(0),
   old_filemodification_(0),
@@ -201,7 +201,7 @@ SliceReader::execute()
     if (slice_.get() >= size_2_.get()) 
       slice_.set(0);
 
-    gui->execute(id + " configure_slice_slider " + to_string(size_2_.get()-1));
+    get_gui()->execute(get_id() + " configure_slice_slider " + to_string(size_2_.get()-1));
   }
 
   //NrrdData *nd = scinew NrrdData();

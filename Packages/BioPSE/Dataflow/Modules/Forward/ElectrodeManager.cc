@@ -75,10 +75,10 @@ DECLARE_MAKER(ElectrodeManager)
 
 ElectrodeManager::ElectrodeManager(GuiContext* ctx)
   : Module("ElectrodeManager", ctx, Source, "Forward", "BioPSE"),
-    modelTCL_(ctx->subVar("modelTCL")),
-    numElTCL_(ctx->subVar("numElTCL")),
-    lengthElTCL_(ctx->subVar("lengthElTCL")),
-    startNodeIdxTCL_(ctx->subVar("startNodeIdxTCL"))
+    modelTCL_(get_ctx()->subVar("modelTCL")),
+    numElTCL_(get_ctx()->subVar("numElTCL")),
+    lengthElTCL_(get_ctx()->subVar("lengthElTCL")),
+    startNodeIdxTCL_(get_ctx()->subVar("startNodeIdxTCL"))
 
 {
 }

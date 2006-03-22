@@ -66,8 +66,8 @@ protected:
 DECLARE_MAKER(BundleReader)
   BundleReader::BundleReader(GuiContext* ctx)
     : GenericReader<BundleHandle>("BundleReader", ctx, "DataIO", "ModelCreation"),
-  guiTypes_(ctx->subVar("types")),
-  guiFileType_(ctx->subVar("filetype"))
+  guiTypes_(get_ctx()->subVar("types")),
+  guiFileType_(get_ctx()->subVar("filetype"))
 {
   string importtypes = "{";
   importtypes += "{{SCIRun Bundle File} {.bdl} } ";

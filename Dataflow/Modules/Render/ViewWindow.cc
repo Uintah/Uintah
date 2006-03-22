@@ -1382,7 +1382,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // redraw message gets dispatched.
     ViewerMessage *msg = scinew ViewerMessage
       (MessageTypes::ViewWindowDumpImage,id_,args[2], args[3],args[4],args[5]);
-    viewer_->mailbox.send(msg);
+    viewer_->mailbox_.send(msg);
   } else if (args[1] == "startup") {
     // Fill in the visibility database...
     GeomIndexedGroup::IterIntGeomObj iter = viewer_->ports_.getIter();
@@ -1403,7 +1403,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
     ViewerMessage *tmp = scinew ViewerMessage(id_);
-    if (!viewer_->mailbox.sendIfNotSentLast(tmp, check_for_redraw_msg))
+    if (!viewer_->mailbox_.sendIfNotSentLast(tmp, check_for_redraw_msg))
     {
       // Message wasn't needed, delete it.
       delete tmp;
@@ -1437,7 +1437,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       return;
     }
     ViewerMessage *msg = scinew ViewerMessage(id_, tbeg, tend, num, framerate);
-    if(!viewer_->mailbox.trySend(msg))
+    if(!viewer_->mailbox_.trySend(msg))
        cerr << "Redraw event dropped, mailbox full!\n";
   } else if(args[1] == "mtranslate") {
     do_mouse(&ViewWindow::mouse_translate, args);
@@ -1458,7 +1458,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "gohome") {
     gui_inertia_mode_.set(0);
     gui_view_.set(homeview_);
-    viewer_->mailbox.send(scinew ViewerMessage(id_)); // Redraw
+    viewer_->mailbox_.send(scinew ViewerMessage(id_)); // Redraw
   } else if(args[1] == "autoview") {
     BBox bbox;
     gui_inertia_mode_.set(0);
@@ -1481,7 +1481,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
 	FutureValue<GeometryData*> reply("Geometry getData reply");
 	GeometryComm *msg = scinew GeometryComm
 	  (MessageTypes::GeometryGetData, 0, &reply, vw, GEOM_VIEW);
-	viewer_->mailbox.send(msg);
+	viewer_->mailbox_.send(msg);
 	GeometryData *data = reply.receive();
 	df = *(data->view);
       }
@@ -1532,9 +1532,9 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     sscanf(args[5].c_str(), "%f%f%f", &r, &g, &b);
 
     viewer_->
-      mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowEditLight,
-					id_, lightNo, on, Vector(x,y,z),
-					Color(r,g,b)));
+      mailbox_.send(scinew ViewerMessage(MessageTypes::ViewWindowEditLight,
+					 id_, lightNo, on, Vector(x,y,z),
+					 Color(r,g,b)));
     
   } else if(args[1] == "saveobj") {
     if(args.count() != 6){
@@ -1546,12 +1546,12 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // redraw message gets dispatched.
     ViewerMessage *msg = scinew ViewerMessage
       (MessageTypes::ViewWindowDumpObjects,id_,args[2],args[3],args[4],args[5]);
-    viewer_->mailbox.send(msg);
+    viewer_->mailbox_.send(msg);
   } else if(args[1] == "listvisuals") {
     args.result(TkOpenGLContext::listvisuals());
   } else if(args[1] == "switchvisual") {
     if(args.count() != 6){
-      args.error(args[0]+" needs a window id, visual index, width,and height");
+      args.error(args[0]+" needs a window get_id(), visual index, width,and height");
       return;
     }
     int idx;
@@ -1665,7 +1665,7 @@ ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
   ViewWindowMouseMessage *msg = scinew ViewWindowMouseMessage
     (id_, handler, action, x, y, state, btn, time);
 
-  if (!viewer_->mailbox.trySend(msg))
+  if (!viewer_->mailbox_.trySend(msg))
     cerr << "Mouse event dropped, mailbox full!\n";
 }
 
@@ -1769,7 +1769,7 @@ void
 ViewWindow::animate_to_view(const View& v, double /*time*/)
 {
   gui_view_.set(v);
-  viewer_->mailbox.send(scinew ViewerMessage(id_));
+  viewer_->mailbox_.send(scinew ViewerMessage(id_));
 }
 
 void
@@ -1873,7 +1873,7 @@ ViewWindow::getData(int datamask, FutureValue<GeometryData*>* result)
 void
 ViewWindow::setView(View newView) {
   gui_view_.set(newView);
-  viewer_->mailbox.send(scinew ViewerMessage(id_)); // Redraw
+  viewer_->mailbox_.send(scinew ViewerMessage(id_)); // Redraw
 }
 
 GeomHandle

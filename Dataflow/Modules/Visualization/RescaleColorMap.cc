@@ -56,7 +56,7 @@ namespace SCIRun {
 class RescaleColorMap : public Module {
 public:
 
-  //! Constructor taking [in] id as an identifier
+  //! Constructor taking [in] get_id() as an identifier
   RescaleColorMap(GuiContext* ctx);
 
   virtual ~RescaleColorMap();
@@ -81,11 +81,11 @@ private:
 DECLARE_MAKER(RescaleColorMap)
 RescaleColorMap::RescaleColorMap(GuiContext* ctx)
   : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    gFrame_(ctx->subVar("main_frame"), ""),
-    gIsFixed_(ctx->subVar("isFixed"), 0),
-    gMin_(ctx->subVar("min"), 0),
-    gMax_(ctx->subVar("max"), 1),
-    gMakeSymmetric_(ctx->subVar("makeSymmetric"), 0)
+    gFrame_(get_ctx()->subVar("main_frame"), ""),
+    gIsFixed_(get_ctx()->subVar("isFixed"), 0),
+    gMin_(get_ctx()->subVar("min"), 0),
+    gMax_(get_ctx()->subVar("max"), 1),
+    gMakeSymmetric_(get_ctx()->subVar("makeSymmetric"), 0)
 {
 }
 
@@ -103,8 +103,8 @@ RescaleColorMap::execute()
   if( gIsFixed_.changed( true ) )
     inputs_changed_ = true;
 
-  if( !getIHandle( "ColorMap",     cHandle,  true ) ) return;
-  if( !getDynamicIHandle( "Field", fHandles, !gIsFixed_.get()  ) ) return;
+  if( !get_input_handle( "ColorMap",     cHandle,  true ) ) return;
+  if( !get_dynamic_input_handles( "Field", fHandles, !gIsFixed_.get()  ) ) return;
 
   // Check to see if any values have changed.
   if( !cHandle_.get_rep() ||
@@ -171,7 +171,7 @@ RescaleColorMap::execute()
   }
 
   // Send the data downstream
-  sendOHandle( "ColorMap",  cHandle_, true );
+  send_output_handle( "ColorMap",  cHandle_, true );
 }
 
 } // End namespace SCIRun

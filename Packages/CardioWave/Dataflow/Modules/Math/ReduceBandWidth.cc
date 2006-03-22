@@ -68,9 +68,9 @@ private:
 DECLARE_MAKER(ReduceBandWidth)
 ReduceBandWidth::ReduceBandWidth(GuiContext* ctx)
   : Module("ReduceBandWidth", ctx, Source, "Math", "CardioWave"),
-  guiinputbw_(ctx->subVar("input-bw")),
-  guioutputbw_(ctx->subVar("output-bw")),
-  guimethod_(ctx->subVar("method"))
+  guiinputbw_(get_ctx()->subVar("input-bw")),
+  guioutputbw_(get_ctx()->subVar("output-bw")),
+  guimethod_(get_ctx()->subVar("method"))
 {
 }
 

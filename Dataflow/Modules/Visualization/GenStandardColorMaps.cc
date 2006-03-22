@@ -223,17 +223,17 @@ DECLARE_MAKER(GenStandardColorMaps)
 //--------------------------------------------------------------- 
 GenStandardColorMaps::GenStandardColorMaps(GuiContext* ctx) 
   : Module("GenStandardColorMaps", ctx, Filter, "Visualization", "SCIRun"),
-    positionList(ctx->subVar("positionList")),
-    nodeList(ctx->subVar("nodeList")),
-    width(ctx->subVar("width")),
-    height(ctx->subVar("height")),
-    mapName(ctx->subVar("mapName")),
-    reverse(ctx->subVar("reverse")),
-    minRes(ctx->subVar("minRes")),
-    resolution(ctx->subVar("resolution")),
-    realres(ctx->subVar("realres")),
-    gamma(ctx->subVar("gamma")),
-    faux(ctx->subVar("faux"))
+    positionList(get_ctx()->subVar("positionList")),
+    nodeList(get_ctx()->subVar("nodeList")),
+    width(get_ctx()->subVar("width")),
+    height(get_ctx()->subVar("height")),
+    mapName(get_ctx()->subVar("mapName")),
+    reverse(get_ctx()->subVar("reverse")),
+    minRes(get_ctx()->subVar("minRes")),
+    resolution(get_ctx()->subVar("resolution")),
+    realres(get_ctx()->subVar("realres")),
+    gamma(get_ctx()->subVar("gamma")),
+    faux(get_ctx()->subVar("faux"))
 { 
 } 
 
@@ -249,7 +249,7 @@ GenStandardColorMaps::~GenStandardColorMaps()
 void GenStandardColorMaps::execute() 
 {
    string tclRes;
-   gui->eval(id+" getColorMapString", tclRes);
+   get_gui()->eval(get_id()+" getColorMapString", tclRes);
 
    ColorMapHandle cmap;
    if ( genMap(cmap, tclRes, resolution.get(), gamma.get(), faux.get()) ) 

@@ -89,12 +89,12 @@ RTRTViewer::RTRTViewer(GuiContext* ctx)
 : Module("RTRTViewer", ctx, Filter, "Render", "rtrt"),
   startSoundThread(false),show_gui(true),first_time(true),
   current_scene(0), next_scene(0), rtrt_engine(0),
-  nworkers(ctx->subVar("nworkers")),
-  xres_gui(ctx->subVar("xres_gui")),
-  yres_gui(ctx->subVar("yres_gui")),
-  render_mode(ctx->subVar("render_mode")),
-  scene_opt_type(ctx->subVar("scene_opt_type")),
-  gridcellsize_gui(ctx->subVar("gridcellsize_gui"))
+  nworkers(get_ctx()->subVar("nworkers")),
+  xres_gui(get_ctx()->subVar("xres_gui")),
+  yres_gui(get_ctx()->subVar("yres_gui")),
+  render_mode(get_ctx()->subVar("render_mode")),
+  scene_opt_type(get_ctx()->subVar("scene_opt_type")),
+  gridcellsize_gui(get_ctx()->subVar("gridcellsize_gui"))
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
   //				     ColorMapIPort::Atomic);

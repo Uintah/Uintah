@@ -65,28 +65,28 @@ private:
 DECLARE_MAKER(GageProbe)
 GageProbe::GageProbe(SCIRun::GuiContext *ctx)
   : Module("GageProbe", ctx, Source, "Gage", "Teem"),
-  field_kind_(ctx->subVar("field_kind_")),
-  otype_(ctx->subVar("otype_")),
-  quantity_(ctx->subVar("quantity_")),
+  field_kind_(get_ctx()->subVar("field_kind_")),
+  otype_(get_ctx()->subVar("otype_")),
+  quantity_(get_ctx()->subVar("quantity_")),
   
-  valuesType_(ctx->subVar("valuesType_")),
-  valuesNumParm1_(ctx->subVar("valuesNumParm1_")),
-  valuesNumParm2_(ctx->subVar("valuesNumParm2_")),
-  valuesNumParm3_(ctx->subVar("valuesNumParm3_")),
+  valuesType_(get_ctx()->subVar("valuesType_")),
+  valuesNumParm1_(get_ctx()->subVar("valuesNumParm1_")),
+  valuesNumParm2_(get_ctx()->subVar("valuesNumParm2_")),
+  valuesNumParm3_(get_ctx()->subVar("valuesNumParm3_")),
   
-  dType_(ctx->subVar("dType_")),
-  dNumParm1_(ctx->subVar("dNumParm1_")),
-  dNumParm2_(ctx->subVar("dNumParm2_")),
-  dNumParm3_(ctx->subVar("dNumParm3_")),
+  dType_(get_ctx()->subVar("dType_")),
+  dNumParm1_(get_ctx()->subVar("dNumParm1_")),
+  dNumParm2_(get_ctx()->subVar("dNumParm2_")),
+  dNumParm3_(get_ctx()->subVar("dNumParm3_")),
   
-  ddType_(ctx->subVar("ddType_")),
-  ddNumParm1_(ctx->subVar("ddNumParm1_")),
-  ddNumParm2_(ctx->subVar("ddNumParm2_")),
-  ddNumParm3_(ctx->subVar("ddNumParm3_"))
+  ddType_(get_ctx()->subVar("ddType_")),
+  ddNumParm1_(get_ctx()->subVar("ddNumParm1_")),
+  ddNumParm2_(get_ctx()->subVar("ddNumParm2_")),
+  ddNumParm3_(get_ctx()->subVar("ddNumParm3_"))
 {
   string result;
   string input = "{Scalar Vector}";
-  gui->eval(id + " set_list " + input, result);
+  get_gui()->eval(get_id() + " set_list " + input, result);
   printf("result is %s\n", result.c_str());
 }
 

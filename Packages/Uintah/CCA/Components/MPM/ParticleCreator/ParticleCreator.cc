@@ -481,7 +481,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     int numPts = 0;
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece);
     if(fgp){
-      fgp->readPoints(patch->getID());
+      fgp->readPoints(patch->get_id());
       numPts = fgp->returnPointCount();
     } else {
       Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();    

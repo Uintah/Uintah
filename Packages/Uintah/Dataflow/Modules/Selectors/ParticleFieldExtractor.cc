@@ -73,14 +73,14 @@ Mutex ParticleFieldExtractor::module_lock("PFEMutex");
 //--------------------------------------------------------------- 
   ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx)
   : Module("ParticleFieldExtractor", ctx, Filter, "Selectors", "Uintah"),
-    tcl_status(ctx->subVar("tcl_status")),
+    tcl_status(get_ctx()->subVar("tcl_status")),
     generation(-1),  timestep(-1), material(-1), levelnum(0),
-    level_(ctx->subVar("level")),
-    psVar(ctx->subVar("psVar")),
-    pvVar(ctx->subVar("pvVar")),
-    ptVar(ctx->subVar("ptVar")),
-    onMaterials(ctx->subVar("onMaterials")),
-    pNMaterials(ctx->subVar("pNMaterials")),
+    level_(get_ctx()->subVar("level")),
+    psVar(get_ctx()->subVar("psVar")),
+    pvVar(get_ctx()->subVar("pvVar")),
+    ptVar(get_ctx()->subVar("ptVar")),
+    onMaterials(get_ctx()->subVar("onMaterials")),
+    pNMaterials(get_ctx()->subVar("pNMaterials")),
     positionName(""), particleIDs(""), archiveH(0),
     num_materials(0)
 { 
@@ -253,16 +253,16 @@ bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 //     ptVar.get()<<" (index "<<ptIndex<<")\n";
 
     string visible;
-    gui->eval(id + " isVisible", visible);
+    get_gui()->eval(get_id() + " isVisible", visible);
     if( visible == "1"){
-      gui->execute(id + " destroyFrames");
-      gui->execute(id + " build");
-      gui->execute(id + " buildLevels "+ os.str());
-      //      gui->execute(id + " setParticleScalars " + psNames.c_str());
-      //      gui->execute(id + " setParticleVectors " + pvNames.c_str());
-      //      gui->execute(id + " setParticleTensors " + ptNames.c_str());
-      gui->execute(id + " buildPMaterials " + to_string(num_materials));
-      //      gui->execute(id + " buildVarList");    
+      get_gui()->execute(get_id() + " destroyFrames");
+      get_gui()->execute(get_id() + " build");
+      get_gui()->execute(get_id() + " buildLevels "+ os.str());
+      //      get_gui()->execute(get_id() + " setParticleScalars " + psNames.c_str());
+      //      get_gui()->execute(get_id() + " setParticleVectors " + pvNames.c_str());
+      //      get_gui()->execute(get_id() + " setParticleTensors " + ptNames.c_str());
+      get_gui()->execute(get_id() + " buildPMaterials " + to_string(num_materials));
+      //      get_gui()->execute(get_id() + " buildVarList");    
     }
 
     return found;
@@ -275,7 +275,7 @@ bool ParticleFieldExtractor::showVarsForMatls()
   ConsecutiveRangeSet onMaterials;
   for (int matl = 0; matl < num_materials; matl++) {
      string result;
-     gui->eval(id + " isOn p" + to_string(matl), result);
+     get_gui()->eval(get_id() + " isOn p" + to_string(matl), result);
      if ( result == "0")
 	continue;
      onMaterials.addInOrder(matl);
@@ -293,14 +293,14 @@ bool ParticleFieldExtractor::showVarsForMatls()
   
   if (needToUpdate) {
     string visible;
-    gui->eval(id + " isVisible", visible);
+    get_gui()->eval(get_id() + " isVisible", visible);
     if( visible == "1"){
-      gui->execute(id + " clearVariables");
-      gui->execute(id + " setParticleScalars " + spNames.c_str());
-      gui->execute(id + " setParticleVectors " + vpNames.c_str());
-      gui->execute(id + " setParticleTensors " + tpNames.c_str());
-      gui->execute(id + " buildVarList");    
-      gui->execute("update idletasks");
+      get_gui()->execute(get_id() + " clearVariables");
+      get_gui()->execute(get_id() + " setParticleScalars " + spNames.c_str());
+      get_gui()->execute(get_id() + " setParticleVectors " + vpNames.c_str());
+      get_gui()->execute(get_id() + " setParticleTensors " + tpNames.c_str());
+      get_gui()->execute(get_id() + " buildVarList");    
+      get_gui()->execute("update idletasks");
       reset_vars(); // ?? what is this for?  // It flushes the cache on varibles - Steve
     }
   }
@@ -357,11 +357,11 @@ void ParticleFieldExtractor::addGraphingVars(long64 particleID,
   int i = 0;
   for (iter = vars.begin(); iter != vars.end(); iter++, i++) {
      ostringstream call;
-     call << id << " addGraphingVar " << particleID << " " << (*iter).name <<
+     call << get_id() << " addGraphingVar " << particleID << " " << (*iter).name <<
 	" { " << get_matl_from_particleID(particleID, (*iter).matls) << " } " << type <<
        //	" {" << (*iter).matls.expandedString() << "} " << type <<
 	" " << i;
-     gui->execute(call.str().c_str());
+     get_gui()->execute(call.str().c_str());
   }
 }
 
@@ -371,8 +371,8 @@ void ParticleFieldExtractor::callback(long64 particleID)
 //     particleID << ".\n";
 
   ostringstream call;
-  call << id << " create_part_graph_window " << particleID;
-  gui->execute(call.str().c_str());
+  call << get_id() << " create_part_graph_window " << particleID;
+  get_gui()->execute(call.str().c_str());
   addGraphingVars(particleID, scalarVars, "scalar");
   addGraphingVars(particleID, vectorVars, "vector");
   addGraphingVars(particleID, tensorVars, "matrix3");
@@ -434,14 +434,14 @@ void ParticleFieldExtractor::graph(string idx, string var)
 	vs.add( values[i] );
     
       ostringstream ostr;
-      ostr << id << " graph " << idx+var<<" "<<var << " ";
+      ostr << get_id() << " graph " << idx+var<<" "<<var << " ";
       int j = 0;
       for( i = tpr->GetStartTime(); i <= tpr->GetEndTime();
 	   i += tpr->GetIncrement())
 	{
 	  ostr << i << " " << values[j++] << " ";
 	}
-      gui->execute( ostr.str().c_str() );
+      get_gui()->execute( ostr.str().c_str() );
     }
   }
 }
@@ -477,9 +477,9 @@ void ParticleFieldExtractor::execute()
      
      if (archiveH.get_rep()  == 0 ){
        string visible;
-       gui->eval(id + " isVisible", visible);
+       get_gui()->eval(get_id() + " isVisible", visible);
        if( visible == "0" ){
-	 gui->execute(id + " buildTopLevel");
+	 get_gui()->execute(get_id() + " buildTopLevel");
        }
 
      }
@@ -605,7 +605,7 @@ void PFEThread::run(){
     ParticleSubset* source_subset = 0;
     bool have_subset = false;
 
-    gui->eval(pfe->id + " isOn p" + to_string(matl), result);
+    get_gui()->eval(pfe->get_id() + " isOn p" + to_string(matl), result);
     if ( result == "0")
       continue;
     if (pfe->pvVar.get() != ""){
@@ -809,7 +809,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
 			double startTime, double endTime);
   */
   // clear the current contents of the ticles's material data list
-  gui->execute(id + " reset_var_val");
+  get_gui()->execute(get_id() + " reset_var_val");
 
   // determine type
   const TypeDescription *td = 0;
@@ -826,7 +826,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
   vector< int > indices;
   times.clear();
   archive->queryTimesteps( indices, times );
-  gui->execute(id + " setTime_list " + vector_to_string(indices).c_str());
+  get_gui()->execute(get_id() + " setTime_list " + vector_to_string(indices).c_str());
 
   string name_list("");
   long64 partID = atoll(particleID.c_str());
@@ -859,7 +859,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
       } else {
 // 	cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -885,7 +885,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
       } else {
 // 	cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -910,7 +910,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
       } else {
 // 	cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -936,7 +936,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
       } else {
 // 	cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
@@ -962,7 +962,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
       } else {
 // 	cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
@@ -971,7 +971,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
     return;
   }// else { Tensor,Other}
   //cerr << "callig graph_data with \"particleID="<<particleID<<" varname="<<varname<<" name_list="<<name_list<<endl;
-  gui->execute(id+" "+display_mode.c_str()+"_data "+particleID.c_str()+" "
+  get_gui()->execute(get_id()+" "+display_mode.c_str()+"_data "+particleID.c_str()+" "
                +varname.c_str()+" "
 	       +name_list.c_str());
 

@@ -59,8 +59,8 @@ DECLARE_MAKER(TendAnhist)
 
 TendAnhist::TendAnhist(SCIRun::GuiContext *ctx) : 
   Module("TendAnhist", ctx, Filter, "Tend", "Teem"),
-  westin_(ctx->subVar("westin"), 1),
-  resolution_(ctx->subVar("resolution"), 256)
+  westin_(get_ctx()->subVar("westin"), 1),
+  resolution_(get_ctx()->subVar("resolution"), 256)
 {
 }
 

@@ -192,14 +192,14 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   fld_port_(0),
   out_port_(0),
   out_port_pot_(0),
-  sample_rate_(ctx->subVar("sample_rate")),
-  phase_idx_(ctx->subVar("phase_index")),
-  vol_idx_(ctx->subVar("vol_index")),
-  lvp_idx_(ctx->subVar("lvp_index")),
-  rvp_idx_(ctx->subVar("rvp_index")),
-  qrs_idx_(ctx->subVar("qrs_index")),
-  hr_idx_(ctx->subVar("hr_index")),
-  tm_idx_(ctx->subVar("tm_index")),
+  sample_rate_(get_ctx()->subVar("sample_rate")),
+  phase_idx_(get_ctx()->subVar("phase_index")),
+  vol_idx_(get_ctx()->subVar("vol_index")),
+  lvp_idx_(get_ctx()->subVar("lvp_index")),
+  rvp_idx_(get_ctx()->subVar("rvp_index")),
+  qrs_idx_(get_ctx()->subVar("qrs_index")),
+  hr_idx_(get_ctx()->subVar("hr_index")),
+  tm_idx_(get_ctx()->subVar("tm_index")),
   ppv_generation_(-1),
   crv_generation_(-1),
   phase_info_generation_(-1),
@@ -853,7 +853,7 @@ PVSpaceInterp::execute()
   if (runner_) runner_->unlock();
   if (!runner_) {
     runner_ = scinew InterpController(this, time_viewer_h_);
-    runner_thread_ = scinew Thread(runner_, string(id+" InterpController").c_str());
+    runner_thread_ = scinew Thread(runner_, string(get_id()+" InterpController").c_str());
   }
 
   if (! out_port_) {

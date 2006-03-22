@@ -84,7 +84,7 @@ DECLARE_MAKER(PointLatticeMap)
 
 PointLatticeMap::PointLatticeMap(GuiContext* ctx)
   : Module("PointLatticeMap", ctx, Filter, "FieldsData", "SCIRun"),
-    epsilon_(ctx->subVar("epsilon"), 0.0),
+    epsilon_(get_ctx()->subVar("epsilon"), 0.0),
     pcf_generation_(-1),
     lvf_generation_(-1)
 {

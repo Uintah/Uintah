@@ -213,22 +213,22 @@ DECLARE_MAKER(SolveMatrix)
  
 SolveMatrix::SolveMatrix(GuiContext* ctx)
   : Module("SolveMatrix", ctx, Filter, "Math", "SCIRun"),
-    target_error(ctx->subVar("target_error"), 0.001),
-    flops(ctx->subVar("flops"), 0.0),
-    floprate(ctx->subVar("floprate"), 0.0),
-    memrefs(ctx->subVar("memrefs"), 0.0),
-    memrate(ctx->subVar("memrate"), 0.0),
-    orig_error(ctx->subVar("orig_error"), 0.0),
-    current_error(ctx->subVar("current_error"), ""),
-    method(ctx->subVar("method"), "Conjugate Gradient & Precond. (SCI)"),
-    precond(ctx->subVar("precond"), "jacobi"),
-    iteration(ctx->subVar("iteration"), 0),
-    maxiter(ctx->subVar("maxiter"), 200),
-    use_previous_soln(ctx->subVar("use_previous_soln"), 1),
-    emit_partial(ctx->subVar("emit_partial"), 1),
-    emit_iter(ctx->subVar("emit_iter"), 50),
-    status(ctx->subVar("status"), ""),
-    tcl_np(ctx->subVar("np"), 4)
+    target_error(get_ctx()->subVar("target_error"), 0.001),
+    flops(get_ctx()->subVar("flops"), 0.0),
+    floprate(get_ctx()->subVar("floprate"), 0.0),
+    memrefs(get_ctx()->subVar("memrefs"), 0.0),
+    memrate(get_ctx()->subVar("memrate"), 0.0),
+    orig_error(get_ctx()->subVar("orig_error"), 0.0),
+    current_error(get_ctx()->subVar("current_error"), ""),
+    method(get_ctx()->subVar("method"), "Conjugate Gradient & Precond. (SCI)"),
+    precond(get_ctx()->subVar("precond"), "jacobi"),
+    iteration(get_ctx()->subVar("iteration"), 0),
+    maxiter(get_ctx()->subVar("maxiter"), 200),
+    use_previous_soln(get_ctx()->subVar("use_previous_soln"), 1),
+    emit_partial(get_ctx()->subVar("emit_partial"), 1),
+    emit_iter(get_ctx()->subVar("emit_iter"), 50),
+    status(get_ctx()->subVar("status"), ""),
+    tcl_np(get_ctx()->subVar("np"), 4)
 {
 }
 
@@ -484,7 +484,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
   PETSc_max_err = target_error.get();
 
   //Setup callback to chart graph
-  gui->execute(id+" reset_graph");
+  get_gui()->execute(get_id()+" reset_graph");
   PETSc_errlist.remove_all();
   PETSc_last_update=1;
   PETSc_targetidx.remove_all();
@@ -517,7 +517,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
   }
   else
   {
-    gui->execute(id+" finish_graph");
+    get_gui()->execute(get_id()+" finish_graph");
     append_values(its, PETSc_errlist, PETSc_last_update, 
 		  PETSc_targetidx, PETSc_targetlist, 
 		  PETSc_last_errupdate);
@@ -539,7 +539,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
 
   PetscLock.unlock();
 
-  gui->execute("update idletasks");
+  get_gui()->execute("update idletasks");
 }
 #endif
 
@@ -550,7 +550,7 @@ void SolveMatrix::append_values(int niter, const vector<double>& errlist,
 				int& last_errupdate)
 {
     std::ostringstream str;
-    str << id << " append_graph " << niter << " \"";
+    str << get_id() << " append_graph " << niter << " \"";
     unsigned int i;
     for(i=last_update;i<errlist.size();i++){
       double err = MakeReal(errlist[i]);
@@ -564,7 +564,7 @@ void SolveMatrix::append_values(int niter, const vector<double>& errlist,
 	str << targetidx[i] << " " << targetlist[i] << " ";
     }
     str << "\" ; update idletasks";
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
     last_update=errlist.size();
     last_errupdate=targetidx.size();
 }
@@ -616,7 +616,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	toomany=2*size;
     double max_error=target_error.get();
 
-    double time=timer.time();
+    double time=timer_.time();
     if (time == 0.0)
       time = 0.000001;
     flops.set(gflop*1.e9+flop);
@@ -628,7 +628,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     grefs+=memref/1000000000;
     memref=memref%1000000000;
     
-    gui->execute(id+" reset_graph");
+    get_gui()->execute(get_id()+" reset_graph");
     vector<double> errlist;
     errlist.push_back(err);
     int last_update=0;
@@ -682,7 +682,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
  	if(niter == 1 || niter == 5 || niter%10 == 0){
 	    iteration.set(niter);
 	    current_error.set(to_string(err));
-	    double time=timer.time();
+	    double time=timer_.time();
 	    if (time == 0.0)
 	      time = 0.000001;
 	    flops.set(gflop*1.e9+flop);
@@ -701,7 +701,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     iteration.set(niter);
     current_error.set(to_string(err));
 
-    time=timer.time();
+    time=timer_.time();
     if (time == 0.0)
       time = 0.000001;
     flops.set(gflop*1.e9+flop);
@@ -709,7 +709,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     memrefs.set(grefs*1.e9+memref);
     memrate.set((grefs*1.e3+memref*1.e-6)/time);
 
-    gui->execute(id+" finish_graph");
+    get_gui()->execute(get_id()+" finish_graph");
     append_values(niter, errlist, last_update, targetidx, targetlist, last_errupdate);
 }
 
@@ -722,7 +722,7 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
 					 ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
   CPUTimer timer;
-  timer.start();
+  timer_.start();
   int np = tcl_np.get();
 
   data.module=this;
@@ -738,7 +738,7 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   delete data.timer;
   delete data.stats;
 
-  timer.stop();
+  timer_.stop();
 }
 
 void SolveMatrix::parallel_conjugate_gradient(int processor)
@@ -840,7 +840,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     memrefs.set(stats->grefs*1.e9+stats->memref);
     memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
-    gui->execute(id+" reset_graph");
+    get_gui()->execute(get_id()+" reset_graph");
     errlist.push_back(data.err);
     targetidx.push_back(0);
     targetlist.push_back(data.max_error);
@@ -930,7 +930,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 	if(data.niter <= 60 || data.niter%60 == 0){
 	  iteration.set(data.niter);
 	  current_error.set(to_string(err));
-	  double time=timer.time();
+	  double time=timer_.time();
 	  if (time == 0.0)
 	    time = 0.000001;
 	  flops.set(14*stats->gflop*1.e9+stats->flop);
@@ -965,7 +965,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     memrefs.set(14*stats->grefs*1.e9+stats->memref);
     memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
-    gui->execute(id+" finish_graph");
+    get_gui()->execute(get_id()+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,
 		  last_errupdate);
     
@@ -978,7 +978,7 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
 				       ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
   CPUTimer timer;
-  timer.start();
+  timer_.start();
   int np = tcl_np.get();
   Matrix *trans = matrix->transpose();
 
@@ -997,8 +997,8 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   delete data.timer;
   delete data.stats;
 
-  timer.stop();
-  remark("bi_cg done in " + to_string(timer.time()) + " seconds");
+  timer_.stop();
+  remark("bi_cg done in " + to_string(timer_.time()) + " seconds");
 }
 
 
@@ -1108,7 +1108,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     memrefs.set(stats->grefs*1.e9+stats->memref);
     memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
-    gui->execute(id+" reset_graph");
+    get_gui()->execute(get_id()+" reset_graph");
     errlist.push_back(data.err);
     targetidx.push_back(0);
     targetlist.push_back(data.max_error);
@@ -1225,7 +1225,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 	if(data.niter <= 60 || data.niter%60 == 0){
 	  iteration.set(data.niter);
 	  current_error.set(to_string(err));
-	  double time=timer.time();
+	  double time=timer_.time();
 	  if (time == 0.0)
 	    time = 0.000001;
 	  flops.set(14*stats->gflop*1.e9+stats->flop);
@@ -1263,7 +1263,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
     remark("Done in " + to_string(time) + " seconds.");
     
-    gui->execute(id+" finish_graph");
+    get_gui()->execute(get_id()+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,
 		  last_errupdate);
     

@@ -35,7 +35,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing<<"Doing computeRateFormPressure on patch "
-              << patch->getID() <<"\t\t MPMICE" << endl;
+              << patch->get_id() <<"\t\t MPMICE" << endl;
     }
 
     double tmp;
@@ -277,14 +277,14 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
    //---- P R I N T   D A T A ------   
     if (d_ice->switchDebug_equil_press) {
       ostringstream desc;
-      desc << "BOT_computeRFPress_patch_" << patch->getID();
+      desc << "BOT_computeRFPress_patch_" << patch->get_id();
       d_ice->printData( 0, patch, 1, desc.str(), "Press_CC_RF", press_new);
 
       for (int m = 0; m < numALLMatls; m++)  {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex(); 
         ostringstream desc;
-        desc<< "BOT_computeRFPress_Mat_"<< indx << "_patch_"<<patch->getID();
+        desc<< "BOT_computeRFPress_Mat_"<< indx << "_patch_"<<patch->get_id();
     #if 0
         d_ice->printData(indx,patch,1,desc.str(),"matl_press",  matl_press[m]);         
         d_ice->printData(indx,patch,1,desc.str(),"f_theta",     f_theta[m]);            

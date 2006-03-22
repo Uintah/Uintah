@@ -77,13 +77,13 @@ DECLARE_MAKER(Coregister)
 
 Coregister::Coregister(GuiContext* ctx)
   : Module("Coregister", ctx, Filter, "FieldsOther", "SCIRun"),
-    allowScale_(ctx->subVar("allowScale"), 1),
-    allowRotate_(ctx->subVar("allowRotate"), 1),
-    allowTranslate_(ctx->subVar("allowTranslate"), 1),
-    seed_(ctx->subVar("seed"), 1),
-    iters_(ctx->subVar("iters"), 1000),
-    misfitTol_(ctx->subVar("misfitTol"), 0.001),
-    method_(ctx->subVar("method")),
+    allowScale_(get_ctx()->subVar("allowScale"), 1),
+    allowRotate_(get_ctx()->subVar("allowRotate"), 1),
+    allowTranslate_(get_ctx()->subVar("allowTranslate"), 1),
+    seed_(get_ctx()->subVar("seed"), 1),
+    iters_(get_ctx()->subVar("iters"), 1000),
+    misfitTol_(get_ctx()->subVar("misfitTol"), 0.001),
+    method_(get_ctx()->subVar("method")),
     mr_(0)
 {
 }

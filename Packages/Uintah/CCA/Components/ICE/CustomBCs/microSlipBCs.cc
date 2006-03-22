@@ -222,7 +222,7 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
   //__________________________________
   //  compute the mean free path
   if(setMicroSlipBcs) {
-    cout_doing << "preprocess_microSlip_BCs on patch "<<patch->getID()<< endl;
+    cout_doing << "preprocess_microSlip_BCs on patch "<<patch->get_id()<< endl;
     sv->alpha_momentum    = var_basket->alpha_momentum;
     sv->alpha_temperature = var_basket->alpha_temperature;
     meanFreePath(new_dw, patch, sharedState, sv);

@@ -157,7 +157,7 @@ void DetailedTasks3::initializeScrubs(vector<PatchBasedDataWarehouse3P>& dws)
     scrubout << "Begin initialize scrubs\n";
   for(int i=0;i<(int)dws.size();i++){
     if(dws[i] != 0 && dws[i]->getScrubMode() == DataWarehouse::ScrubComplete){
-      scrubout << "Initializing scrubs on dw: " << dws[i]->getID() << '\n';
+      scrubout << "Initializing scrubs on dw: " << dws[i]->get_id() << '\n';
       dws[i]->initializeScrubs(i, scrubCountMap_);
     }
   }
@@ -197,7 +197,7 @@ DetailedTask3::scrub(vector<PatchBasedDataWarehouse3P>& dws)
 	    const Patch* neighbor=neighbors[i];
 	    for (int m=0;m<matls->size();m++){
 	      if(scrubout.active()){
-		scrubout << "  decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+		scrubout << "  decrementing scrub count for requires of " << dws[dw]->get_id() << "/" << neighbor->get_id() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
 	      }
 	      dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
 	    }
@@ -221,7 +221,7 @@ DetailedTask3::scrub(vector<PatchBasedDataWarehouse3P>& dws)
 	  const Patch* patch = patches->get(i);
 	  for (int m=0;m<matls->size();m++){
 	    if(scrubout.active())
-	      scrubout << "  decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
+	      scrubout << "  decrementing scrub count for modifies of " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
 	    dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
 	  }
 	}
@@ -247,12 +247,12 @@ DetailedTask3::scrub(vector<PatchBasedDataWarehouse3P>& dws)
 	    int count;
 	    if(taskGroup->getScrubCount(comp->var, matl, patch, dw, count)){
 	      if(scrubout.active())
-		scrubout << "  setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
+		scrubout << "  setting scrub count for computes of " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
 	      dws[dw]->setScrubCount(comp->var, matl, patch, count);
 	    } else {
 	      // Not in the scrub map, must be never needed...
 	      if(scrubout.active())
-		scrubout << "  trashing variable immediately after compute: " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
+		scrubout << "  trashing variable immediately after compute: " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
 	      dws[dw]->scrub(comp->var, matl, patch);
 	    }
 	  }
@@ -292,7 +292,7 @@ void DetailedTasks3::setScrubCount(const VarLabel* label, int matlIndex,
       SCI_THROW(InternalError("No scrub count for received MPIVariable: "+label->getName()));
     }
     if(scrubout.active())
-      scrubout << "setting scrubcount for recv of " << dw << "/" << patch->getID() << "/" << matlIndex << "/" << label->getName() << ": " << scrubcount << '\n';
+      scrubout << "setting scrubcount for recv of " << dw << "/" << patch->get_id() << "/" << matlIndex << "/" << label->getName() << ": " << scrubcount << '\n';
     dws[dw]->setScrubCount(label, matlIndex, patch, scrubcount);
   }
 }
@@ -358,7 +358,7 @@ void DetailedTasks3::createScrubCounts()
     for(ScrubCountMap::iterator iter = scrubCountMap_.begin();
 	iter != scrubCountMap_.end(); iter++){
       const VarLabelMatlDW<Patch>& rec = iter->first;
-      scrubout << rec.dw_ << '/' << (rec.domain_?rec.domain_->getID():0) << '/'
+      scrubout << rec.dw_ << '/' << (rec.domain_?rec.domain_->get_id():0) << '/'
 	       << rec.matlIndex_ << '/' <<  rec.label_->getName()
 	       << "\t\t" << iter->second << '\n';
     }
@@ -500,7 +500,7 @@ operator<<(ostream& out, const DetailedTask3& task)
     for(int i=0;i<patches->size();i++){
       if(i>0)
 	out << ",";
-      out << patches->get(i)->getID();
+      out << patches->get(i)->get_id();
     }
   }
   const MaterialSubset* matls = task.getMaterials();
@@ -532,7 +532,7 @@ operator<<(ostream& out, const DetailedDep& dep)
   if (dep.isNonDataDependency())
     out << " non-data dependency";
   else
-    out << " on patch " << dep.fromPatch->getID();
+    out << " on patch " << dep.fromPatch->get_id();
   out << ", matl " << dep.matl << ", low=" << dep.low << ", high=" << dep.high;
   */
   return out;
@@ -760,7 +760,7 @@ public:
   int operator*()
   {
     const Patch* patch = *iter_; //vector<Patch*>::iterator::operator*();
-    return patch ? patch->getID() : -1;
+    return patch ? patch->get_id() : -1;
   }
 
   PatchIDIterator& operator++()

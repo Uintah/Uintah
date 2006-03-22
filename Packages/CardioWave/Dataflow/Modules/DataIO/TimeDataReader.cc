@@ -89,22 +89,22 @@ public:
 DECLARE_MAKER(TimeDataReader)
 TimeDataReader::TimeDataReader(GuiContext* ctx)
   : Module("TimeDataReader", ctx, Filter, "DataIO", "CardioWave"),
-    row_or_col_(ctx->subVar("row_or_col")),
-    selectable_min_(ctx->subVar("selectable_min")),
-    selectable_max_(ctx->subVar("selectable_max")),
-    selectable_inc_(ctx->subVar("selectable_inc")),
-    selectable_units_(ctx->subVar("selectable_units")),
-    range_min_(ctx->subVar("range_min")),
-    range_max_(ctx->subVar("range_max")),
-    playmode_(ctx->subVar("playmode")),
-    dependence_(ctx->subVar("dependence")),
-    current_(ctx->subVar("current")),
-    execmode_(ctx->subVar("execmode")),
-    delay_(ctx->subVar("delay")),
-    inc_amount_(ctx->subVar("inc-amount")),
-    send_amount_(ctx->subVar("send-amount")),
-    guifilename_(ctx->subVar("filename")), 
-    guifilenameset_(ctx->subVar("filename-set")), 
+    row_or_col_(get_ctx()->subVar("row_or_col")),
+    selectable_min_(get_ctx()->subVar("selectable_min")),
+    selectable_max_(get_ctx()->subVar("selectable_max")),
+    selectable_inc_(get_ctx()->subVar("selectable_inc")),
+    selectable_units_(get_ctx()->subVar("selectable_units")),
+    range_min_(get_ctx()->subVar("range_min")),
+    range_max_(get_ctx()->subVar("range_max")),
+    playmode_(get_ctx()->subVar("playmode")),
+    dependence_(get_ctx()->subVar("dependence")),
+    current_(get_ctx()->subVar("current")),
+    execmode_(get_ctx()->subVar("execmode")),
+    delay_(get_ctx()->subVar("delay")),
+    inc_amount_(get_ctx()->subVar("inc-amount")),
+    send_amount_(get_ctx()->subVar("send-amount")),
+    guifilename_(get_ctx()->subVar("filename")), 
+    guifilenameset_(get_ctx()->subVar("filename-set")), 
     inc_(1),
     loop_(false),
     use_row_(false),
@@ -270,26 +270,26 @@ void TimeDataReader::execute()
   std::string filename;
   
   StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(getIPort("Filename"))))
+  if ((filenameport = static_cast<StringIPort *>(get_input_port("Filename"))))
   {
     StringHandle fnH;
     if (filenameport->get(fnH))
     {
         std::string filename = fnH->get();
         guifilename_.set(filename);
-        ctx->reset();
+        get_ctx()->reset();
     }
   }  
   
   filename = guifilename_.get();
 
   StringOPort *filenameoport;
-  if ((filenameoport = static_cast<StringOPort *>(getOPort("Filename"))))
+  if ((filenameoport = static_cast<StringOPort *>(get_output_port("Filename"))))
   {
     StringHandle fnH = scinew SCIRun::String(filename);
     filenameoport->send(fnH);
   }  
-  ctx->reset();
+  get_ctx()->reset();
   
   try
   {
@@ -359,7 +359,7 @@ void TimeDataReader::execute()
     }   
   }
     
-  if (changed_p) gui->execute(id + " update_range");
+  if (changed_p) get_gui()->execute(get_id() + " update_range");
   reset_vars();
 
   int which;
@@ -392,7 +392,7 @@ void TimeDataReader::execute()
   else 
   {
     // Get the current start and end.
-    ctx->reset();
+    get_ctx()->reset();
     const int start = range_min_.get();
     const int end = range_max_.get();
 

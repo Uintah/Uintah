@@ -49,14 +49,14 @@ class PSECORESHARE FEM : public Module
 DECLARE_MAKER(FEM)
 FEM::FEM(GuiContext* ctx)
   : Module("FEM", ctx, Source, "PDESolver", "DDDAS"),
-    gui_method(ctx->subVar("method")),
-    gui_poly_degree(ctx->subVar("poly_degree")),
-    gui_iter_method(ctx->subVar("iter_method")),
-    gui_max_iter(ctx->subVar("max_iter")),
-    gui_restart_iter(ctx->subVar("restart_iter")),
-    gui_print_iter(ctx->subVar("print_iter")),
-    gui_nu(ctx->subVar("nu")),
-    gui_rtol(ctx->subVar("rtol"))
+    gui_method(get_ctx()->subVar("method")),
+    gui_poly_degree(get_ctx()->subVar("poly_degree")),
+    gui_iter_method(get_ctx()->subVar("iter_method")),
+    gui_max_iter(get_ctx()->subVar("max_iter")),
+    gui_restart_iter(get_ctx()->subVar("restart_iter")),
+    gui_print_iter(get_ctx()->subVar("print_iter")),
+    gui_nu(get_ctx()->subVar("nu")),
+    gui_rtol(get_ctx()->subVar("rtol"))
 {
    // empty
 }
@@ -320,7 +320,7 @@ void FEM::execute()
 
    // Send the data downstream.
    SimpleOPort<FieldHandle> *outport =
-      (SimpleOPort<FieldHandle> *)getOPort("Field Output");
+      (SimpleOPort<FieldHandle> *)get_output_port("Field Output");
    if (!outport)
    {
       error("Unable to initialize 'Field Output' port.");

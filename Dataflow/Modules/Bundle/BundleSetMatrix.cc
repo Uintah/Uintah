@@ -64,10 +64,10 @@ DECLARE_MAKER(BundleSetMatrix)
 
 BundleSetMatrix::BundleSetMatrix(GuiContext* ctx)
   : Module("BundleSetMatrix", ctx, Filter, "Bundle", "SCIRun"),
-    guimatrix1name_(ctx->subVar("matrix1-name"), "matrix1"),
-    guimatrix2name_(ctx->subVar("matrix2-name"), "matrix2"),
-    guimatrix3name_(ctx->subVar("matrix3-name"), "matrix3"),
-    guibundlename_(ctx->subVar("bundlename"), "")
+    guimatrix1name_(get_ctx()->subVar("matrix1-name"), "matrix1"),
+    guimatrix2name_(get_ctx()->subVar("matrix2-name"), "matrix2"),
+    guimatrix3name_(get_ctx()->subVar("matrix3-name"), "matrix3"),
+    guibundlename_(get_ctx()->subVar("bundlename"), "")
 {
 }
 

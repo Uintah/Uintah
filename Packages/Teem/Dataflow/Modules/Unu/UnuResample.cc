@@ -85,11 +85,11 @@ DECLARE_MAKER(UnuResample)
 
 UnuResample::UnuResample(GuiContext *ctx) : 
   Module("UnuResample", ctx, Filter, "UnuNtoZ", "Teem"),
-  filtertype_(ctx->subVar("filtertype")),
-  dim_(ctx->subVar("dim")),
-  uis_(ctx->subVar("uis")),
-  sigma_(ctx->subVar("sigma")),
-  extent_(ctx->subVar("extent")),
+  filtertype_(get_ctx()->subVar("filtertype")),
+  dim_(get_ctx()->subVar("dim")),
+  uis_(get_ctx()->subVar("uis")),
+  sigma_(get_ctx()->subVar("sigma")),
+  extent_(get_ctx()->subVar("extent")),
   last_filtertype_(""), 
   last_generation_(-1), 
   last_nrrdH_(0)
@@ -101,7 +101,7 @@ UnuResample::UnuResample(GuiContext *ctx) :
   for (int a = 0; a < 4; a++) {
     ostringstream str;
     str << "resampAxis" << a;
-    resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+    resampAxes_.push_back(new GuiString(get_ctx()->subVar(str.str())));
   }
 }
 
@@ -159,9 +159,9 @@ UnuResample::execute()
       ostringstream str, str2;
       str << "resampAxis" << i;
       str2 << i;
-      resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+      resampAxes_.push_back(new GuiString(get_ctx()->subVar(str.str())));
       last_RA_.push_back(resampAxes_[i]->get());
-      gui->execute(id.c_str() + string(" make_min_max " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_min_max " + str2.str()));
     }
   }
 
@@ -179,7 +179,7 @@ UnuResample::execute()
       vector<string>::iterator iter2 = last_RA_.end();
       resampAxes_.erase(iter, iter);
       last_RA_.erase(iter2, iter2);
-      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+      get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     }
     uis_.set(nrrdH->nrrd->dim);
   } else if (uis_.get() < nrrdH->nrrd->dim) {
@@ -187,9 +187,9 @@ UnuResample::execute()
       ostringstream str, str2;
       str << "resampAxis" << i;
       str2 << i;
-      resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+      resampAxes_.push_back(new GuiString(get_ctx()->subVar(str.str())));
       last_RA_.push_back("x1");
-      gui->execute(id.c_str() + string(" make_min_max " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_min_max " + str2.str()));
     }
     uis_.set(nrrdH->nrrd->dim);
   }
@@ -221,7 +221,7 @@ UnuResample::execute()
   NrrdResampleInfo *info = nrrdResampleInfoNew();
 
   Nrrd *nin = nrrdH->nrrd;
-  msgStream_ << "Resampling with a " << last_filtertype_ << " filter." << endl;
+  msg_stream_ << "Resampling with a " << last_filtertype_ << " filter." << endl;
   NrrdKernel *kern;
   double p[NRRD_KERNEL_PARMS_NUM];
   memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
@@ -249,7 +249,7 @@ UnuResample::execute()
 
   for (int a = 0; a < dim_.get(); a++) {
     info->kernel[a] = kern;
-    msgStream_ << "NrrdResample sizes: ";
+    msg_stream_ << "NrrdResample sizes: ";
     info->samples[a]=nin->axis[a].size;
     char *str = airStrdup(resampAxes_[a]->get().c_str());
     if (nrrdKindSize(nin->axis[a].kind) > 1 && str != "=") {
@@ -261,9 +261,9 @@ UnuResample::execute()
       return;
     }
     if (none) info->kernel[a] = 0;
-    msgStream_ << info->samples[a];
-    if (!info->kernel[a]) msgStream_ << "=";
-    msgStream_ << " ";
+    msg_stream_ << info->samples[a];
+    if (!info->kernel[a]) msg_stream_ << "=";
+    msg_stream_ << " ";
 
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (info->kernel[a] && 
@@ -274,7 +274,7 @@ UnuResample::execute()
     info->min[a] = nrrdH->nrrd->axis[a].min;
     info->max[a] = nrrdH->nrrd->axis[a].max;
   }    
-  msgStream_ << endl;
+  msg_stream_ << endl;
   info->boundary = nrrdBoundaryBleed;
   info->type = nin->type;
   info->renormalize = AIR_TRUE;
@@ -285,7 +285,7 @@ UnuResample::execute()
   if (nrrdSpatialResample(nrrd->nrrd, nin, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
-    msgStream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";
+    msg_stream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";
     free(err);
   }
   nrrdResampleInfoNix(info); 
@@ -309,9 +309,9 @@ UnuResample::tcl_command(GuiArgs& args, void* userdata)
       ostringstream str, str2;
       str << "resampAxis" << i;
       str2 << i;
-      resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+      resampAxes_.push_back(new GuiString(get_ctx()->subVar(str.str())));
       last_RA_.push_back("x1");
-      gui->execute(id.c_str() + string(" make_min_max " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_min_max " + str2.str()));
       uis_.set(uis_.get() + 1);
   }
   else if( args[1] == "remove_axis" ) 
@@ -324,7 +324,7 @@ UnuResample::tcl_command(GuiArgs& args, void* userdata)
     vector<string>::iterator iter2 = last_RA_.end();
     resampAxes_.erase(iter, iter);
     last_RA_.erase(iter2, iter2);
-    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     uis_.set(uis_.get() - 1);
   }
   else 

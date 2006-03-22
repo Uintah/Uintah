@@ -79,8 +79,8 @@ public:
 DECLARE_MAKER(BuildSeedVolume)
 BuildSeedVolume::BuildSeedVolume(GuiContext* ctx)
   : Module("BuildSeedVolume", ctx, Source, "Converters", "Insight"),
-    gui_inside_value_(ctx->subVar("inside_value")),
-    gui_outside_value_(ctx->subVar("outside_value")),
+    gui_inside_value_(get_ctx()->subVar("inside_value")),
+    gui_outside_value_(get_ctx()->subVar("outside_value")),
     generation_(-1)
 {
 }

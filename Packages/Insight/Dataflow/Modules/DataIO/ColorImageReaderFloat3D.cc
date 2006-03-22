@@ -71,7 +71,7 @@ public:
 DECLARE_MAKER(ColorImageReaderFloat3D)
 ColorImageReaderFloat3D::ColorImageReaderFloat3D(GuiContext* ctx)
   : Module("ColorImageReaderFloat3D", ctx, Source, "DataIO", "Insight"),
-    gui_FileName_(ctx->subVar("FileName"))
+    gui_FileName_(get_ctx()->subVar("FileName"))
 {
   prevFile = "";
 }

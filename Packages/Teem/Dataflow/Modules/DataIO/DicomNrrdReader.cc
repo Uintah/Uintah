@@ -146,14 +146,14 @@ DECLARE_MAKER(DicomNrrdReader)
 //
 DicomNrrdReader::DicomNrrdReader(GuiContext* ctx)
   : Module("DicomNrrdReader", ctx, Source, "DataIO", "Teem"),
-    have_gdcm_(ctx->subVar("have-gdcm", false)),
-    dir_(ctx->subVar("dir")),
-    series_uid_(ctx->subVar("series-uid"), ""),
-    series_files_(ctx->subVar("series-files"), ""),
-    messages_(ctx->subVar("messages"), ""),
-    suid_sel_(ctx->subVar("suid-sel"), ""),
-    series_del_(ctx->subVar("series-del"), ""),
-    num_entries_(ctx->subVar("num-entries"), 0),
+    have_gdcm_(get_ctx()->subVar("have-gdcm", false)),
+    dir_(get_ctx()->subVar("dir")),
+    series_uid_(get_ctx()->subVar("series-uid"), ""),
+    series_files_(get_ctx()->subVar("series-files"), ""),
+    messages_(get_ctx()->subVar("messages"), ""),
+    suid_sel_(get_ctx()->subVar("suid-sel"), ""),
+    series_del_(get_ctx()->subVar("series-del"), ""),
+    num_entries_(get_ctx()->subVar("num-entries"), 0),
     z_spacing_(0)
 {
 #ifdef HAVE_GDCM
@@ -190,7 +190,7 @@ void DicomNrrdReader::execute()
 {
 #ifdef HAVE_GDCM
 
-  gui->execute(id + " sync_filenames");
+  get_gui()->execute(get_id() + " sync_filenames");
   
   // If no DICOM series' were specified via the UI, print error and return
   if( all_series_.size() == 0 ) 
@@ -606,15 +606,15 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     ostringstream str1;
     str1 << "entry-dir" << all_series_.size() - 1;
-    entry_dir_.insert(entry_dir_.end(), new GuiString(ctx->subVar(str1.str())));
+    entry_dir_.insert(entry_dir_.end(), new GuiString(get_ctx()->subVar(str1.str())));
 
     ostringstream str2;
     str2 << "entry-suid" << all_series_.size() - 1;
-    entry_suid_.insert(entry_suid_.end(), new GuiString(ctx->subVar(str2.str())));
+    entry_suid_.insert(entry_suid_.end(), new GuiString(get_ctx()->subVar(str2.str())));
 
     ostringstream str3;
     str3 << "entry-files" << all_series_.size() - 1;
-    entry_files_.insert(entry_files_.end(), new GuiFilename(ctx->subVar(str3.str())));
+    entry_files_.insert(entry_files_.end(), new GuiFilename(get_ctx()->subVar(str3.str())));
 
 #endif
   } 

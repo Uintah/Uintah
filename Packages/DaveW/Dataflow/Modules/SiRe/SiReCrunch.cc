@@ -69,18 +69,18 @@ class SiReCrunch : public Module {
     VoidStarOPort* oport;
     float *ScalePt, *RawImgDC, *ScaleFactor;
 public:
-    SiReCrunch(const clString& id);
+    SiReCrunch(const clString& get_id());
     virtual ~SiReCrunch();
     virtual void execute();
 };
 
-extern "C" Module* make_SiReCrunch(const clString& id)
+extern "C" Module* make_SiReCrunch(const clString& get_id())
 {
-    return new SiReCrunch(id);
+    return new SiReCrunch(get_id());
 }
 
-SiReCrunch::SiReCrunch(const clString& id)
-: Module("SiReCrunch", id, Filter), ScalePt(0), RawImgDC(0), ScaleFactor(0)
+SiReCrunch::SiReCrunch(const clString& get_id())
+: Module("SiReCrunch", get_id(), Filter), ScalePt(0), RawImgDC(0), ScaleFactor(0)
 {
     iport = scinew VoidStarIPort(this, "SiReData", VoidStarIPort::Atomic);
     add_iport(iport);

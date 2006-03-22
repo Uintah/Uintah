@@ -69,7 +69,7 @@ UnuInset::UnuInset(GuiContext* ctx)
     inrrd_(0),
     isub_(0),
     onrrd_(0),
-    mins_(ctx->subVar("mins"), "0")
+    mins_(get_ctx()->subVar("mins"), "0")
 {
 }
 

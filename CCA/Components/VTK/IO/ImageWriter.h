@@ -49,7 +49,7 @@ public:
   ~ImageWriter();
   
   //Component interface
-  int popupUI();
+  int popup_ui();
   
 private:
   vtkImageWriter *reader;

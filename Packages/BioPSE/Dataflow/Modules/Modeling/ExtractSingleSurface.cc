@@ -68,7 +68,7 @@ DECLARE_MAKER(ExtractSingleSurface)
 
 ExtractSingleSurface::ExtractSingleSurface(GuiContext *ctx)
   : Module("ExtractSingleSurface", ctx, Filter, "Modeling", "BioPSE"), 
-    surfid_(ctx->subVar("surfid")), data_(ctx->subVar("data"))
+    surfid_(get_ctx()->subVar("surfid")), data_(get_ctx()->subVar("data"))
 {
 }
 

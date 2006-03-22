@@ -79,8 +79,8 @@ DECLARE_MAKER(TransformData2)
 
 TransformData2::TransformData2(GuiContext* ctx)
   : Module("TransformData2", ctx, Filter,"FieldsData", "SCIRun"),
-    gFunction_(ctx->subVar("function"), "result = v0 * 10 + v1;"),
-    gOutputDataType_(ctx->subVar("outputdatatype"), "input 0"),
+    gFunction_(get_ctx()->subVar("function"), "result = v0 * 10 + v1;"),
+    gOutputDataType_(get_ctx()->subVar("outputdatatype"), "input 0"),
     fGeneration0_(-1),
     fGeneration1_(-1),
     error_(0)
@@ -137,7 +137,7 @@ TransformData2::execute()
   }
 
   string outputDataType = gOutputDataType_.get();
-  gui->execute(id + " update_text"); // update gFunction_ before get.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before get.
   string function = gFunction_.get();
 
   if( outputDataType_ != outputDataType ||
@@ -228,7 +228,7 @@ TransformData2::execute()
 					     function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)) {
 	error("Your function would not compile.");
-	gui->eval(id + " compile_error "+ci->filename_);
+	get_gui()->eval(get_id() + " compile_error "+ci->filename_);
 	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	return;
       }
@@ -252,7 +252,7 @@ TransformData2::execute()
 void
 TransformData2::presave()
 {
-  gui->execute(id + " update_text"); // update gFunction_ before saving.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }
 
 

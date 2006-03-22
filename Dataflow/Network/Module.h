@@ -114,8 +114,8 @@ typedef std::pair<port_map_type::iterator,
 template<class T> 
 class PortManager {
 private:
-  port_map_type namemap_;
-  vector<T> ports_;
+  port_map_type    namemap_;
+  vector<T>        ports_;
     
 public:
   int size();
@@ -173,7 +173,8 @@ PortManager<T>::operator[](string item)
   return port_range_type(namemap_.equal_range(item));
 }
 
-class SCISHARE Module : public ProgressReporter, public ModulePickable, public GuiCallback
+class SCISHARE Module : public ProgressReporter, public ModulePickable, 
+			public GuiCallback
 {
 public:
   enum SchedClass {
@@ -188,40 +189,40 @@ public:
   virtual ~Module();
   void kill_helper();
 
-  // Used by SCIRun2
-  Network* getNetwork() {
-    return network;
+  //! Used by SCIRun2
+  Network* get_network() {
+    return network_;
   }
-  bool haveUI();
-  void popupUI();
+  bool have_ui();
+  void popup_ui();
   void delete_warn();
   bool show_stats() { return show_stats_; }
   void set_show_stats(bool v) {show_stats_ = v;}
-  // ProgressReporter function
+  //! ProgressReporter function
   virtual void error(const std::string&);
   virtual void warning(const std::string&);
   virtual void remark(const std::string&);
   virtual void compile_error(const std::string&);
   
-  virtual void postMessage(const std::string&);
-  virtual std::ostream &msgStream() { return msgStream_; }
-  virtual void msgStream_flush();
+  virtual void post_message(const std::string&);
+  virtual std::ostream &msg_stream() { return msg_stream_; }
+  virtual void msg_stream_flush();
   virtual bool in_power_app();
 
-  // Compilation progress.  Should probably have different name.
+  //! Compilation progress.  Should probably have different name.
   virtual void report_progress( ProgressState );
 
-  // Execution time progress.
-  // Percent is number between 0.0-1.0
+  //! Execution time progress.
+  //! Percent is number between 0.0-1.0
   virtual void          update_progress(double percent);
   virtual void          update_progress(int current, int max);
   virtual void          increment_progress();
 
-  port_range_type getIPorts(const string &name);
-  IPort* getIPort(const string &name);
-  OPort* getOPort(const string &name);
-  OPort* getOPort(int idx);
-  IPort* getIPort(int idx);
+  port_range_type get_input_ports(const string &name);
+  IPort* get_input_port(const string &name);
+  OPort* get_output_port(const string &name);
+  OPort* get_output_port(int idx);
+  IPort* get_input_port(int idx);
 
   bool oport_cached(const string &name);
 
@@ -229,36 +230,36 @@ public:
   bool get_oport_cache_flag(int p);
   void set_oport_cache_flag(int p, bool val);
 
-  // next 6 are Deprecated
+  //! next 6 are Deprecated
   port_range_type get_iports(const string &name);
   IPort* get_iport(const string &name);
   OPort* get_oport(const string &name);
   OPort* get_oport(int idx);
   IPort* get_iport(int idx);
 
-  int numIPorts();
-  int numOPorts();
+  int num_input_ports();
+  int num_output_ports();
 
-  // Used by widgets
-  GuiInterface* getGui();
+  //! Used by widgets
+  GuiInterface* get_gui();
 
-  // Used by ModuleHelper
-  void setPid(int pid);
+  //! Used by ModuleHelper
+  void set_pid(int pid);
   virtual void do_execute();
   virtual void do_synchronize();
   virtual void execute() = 0;
 
   void request_multisend(OPort*);
-  Mailbox<MessageBase*> mailbox;
+  Mailbox<MessageBase*> mailbox_;
   virtual void set_context(Network* network);
 
-  // Callbacks
+  //! Callbacks
   virtual void connection(Port::ConnectionState, int, bool);
   virtual void widget_moved(bool last, BaseWidget *widget);
 
-  void getPosition(int& x, int& y){ get_position(x, y); }
-  string getID() const { return id; }
-  // CollabVis code end
+  void get_position(int& x, int& y);
+  string get_id() const { return id_; }
+  //! CollabVis code end
   
   template<class DC>
   bool module_dynamic_compile( CompileInfoHandle ci, DC &result )
@@ -266,37 +267,20 @@ public:
     return DynamicCompilation::compile( ci, result, this );
   }
 
-  //Used by Bridge stuff for SR2
-  int addIPortByName(std::string name, std::string d_type);
-  int addOPortByName(std::string name, std::string d_type);
+  //!Used by Bridge stuff for SR2
+  int add_input_port_by_name(std::string name, std::string d_type);
+  int add_output_port_by_name(std::string name, std::string d_type);
   void want_to_execute();
 
-
 protected:
-  virtual void tcl_command(GuiArgs&, void*);
-  virtual void presave() {}
-
-  GuiInterface* gui;
-  GuiContext* ctx;
 
   friend class ModuleHelper;
   friend class NetworkEditor;
   friend class PackageDB;
-  // name is deprecated
-  string name;
-  string moduleName;
-  string packageName;
-  string categoryName;
-  string description;
-  Scheduler* sched;
-  bool lastportdynamic;
-  int pid_;
-  bool have_own_dispatch;
   friend class Network;
   friend class OPort;
   friend class IPort;
-  string id;
-  bool abort_flag;
+  friend class Scheduler;
 
   enum State {
     NeedData,
@@ -312,87 +296,101 @@ protected:
   };
   void update_state(State);
   void update_msg_state(MsgState);  
-  CPUTimer timer;
-
-  ostringstream msgStream_;
-  void get_position(int& x, int& y);
-  void setStackSize(unsigned long stackSize);
+  virtual void tcl_command(GuiArgs&, void*);
+  virtual void presave() {}
+  GuiContext* get_ctx() { return ctx_; }
+  void set_stack_size(unsigned long stack_size);
   void reset_vars();
 
-  // Used by Scheduler
-  friend class Scheduler;
-  bool need_execute;
-  SchedClass sched_class;
-
-  // Used by the execute module;
-  bool inputs_changed_;   // True if either the gui vars or data has cahnged.
-  bool execute_error_;    // Error during execution not related to checks.
-
-  // Get the handle for a single port.
+  //! Get the handle for a single port.
   template<class DH>
-  bool getIHandle( std::string name, DH& handle, bool required = true );
+  bool get_input_handle(std::string name, DH& handle, bool required = true);
 
-  // Get the handles for dynamic ports.
+  //! Get the handles for dynamic ports.
   template<class DH>
-  bool getDynamicIHandle( std::string name, std::vector< DH > &handles,
-			  bool required = true );
+  bool get_dynamic_input_handles(std::string name, std::vector< DH > &handles,
+				 bool required = true);
 
-  // cache_in_module should be true if the module is doing it's own
-  // caching of the handle.  Otherwise that will be handled by the
-  // port.
+  //! cache_in_module should be true if the module is doing it's own
+  //! caching of the handle.  Otherwise that will be handled by the
+  //! port.
   template<class DH>
-  bool sendOHandle( string name, DH& handle,
-		    bool cache_in_module = false,
-		    bool send_intermediate = false );
+  bool send_output_handle(string name, DH& handle,
+			  bool cache_in_module = false,
+			  bool send_intermediate = false);
 
-  // Specialization for geometry ports.
-  bool sendOHandle( string port_name,
-		    GeomHandle& handle,
-		    string obj_name );
+  //! Specialization for geometry ports.
+  bool send_output_handle(string port_name,
+			  GeomHandle& handle,
+			  string obj_name);
 
-  bool sendOHandle( string port_name,
-		    vector<GeomHandle>& handle,
-		    string obj_name );
+  bool send_output_handle(string port_name,
+			  vector<GeomHandle>& handle,
+			  string obj_name);
+
+  GuiInterface          *gui_;
+  string                 module_name_;
+  string                 package_name_;
+  string                 category_name_;
+  string                 description_;
+  Scheduler             *sched_;
+  bool                   lastportdynamic_;
+  int                    pid_;
+  bool                   have_own_dispatch_;
+  string                 id_;
+  bool                   abort_flag_;
+  CPUTimer               timer_;
+  ostringstream          msg_stream_;
+  bool                   need_execute_;
+  SchedClass             sched_class_;
+
+  //! Used by the execute module;
+  //! True if either the gui vars or data has cahnged.
+  bool                   inputs_changed_;   
+  //! Error during execution not related to checks.
+  bool                   execute_error_;    
 
 private:
+
   void remove_iport(int);
   void add_iport(IPort*);
   void add_oport(OPort*);
-  State state;
-  MsgState msg_state;  
 
-    
-  PortManager<OPort*> oports;
-  PortManager<IPort*> iports;
-  iport_maker dynamic_port_maker;
-  string lastportname;
-  int first_dynamic_port;
-  unsigned long stacksize;
-  ModuleHelper* helper;
-  Thread *helper_thread;
-  Network* network;
-
-  bool show_stats_;
-
-  GuiString log_string_;
+  GuiContext*            ctx_;
+  State                  state_;
+  MsgState               msg_state_;  
+    		         
+  PortManager<OPort*>    oports_;
+  PortManager<IPort*>    iports_;
+  iport_maker            dynamic_port_maker_;
+  string                 lastportname_;
+  int                    first_dynamic_port_;
+  unsigned long          stacksize_;
+  ModuleHelper          *helper_;
+  Thread                *helper_thread_;
+  Network               *network_;
+		         
+  bool                   show_stats_;
+		         
+  GuiString              log_string_;
 
   Module(const Module&);
   Module& operator=(const Module&);
 };
 
 
-// Used to get handles with error checking.
+//! Used to get handles with error checking.
 template<class DH>
 bool
-Module::getIHandle( std::string name,
-                    DH& handle,
-                    bool required )
+Module::get_input_handle(std::string name,
+			 DH& handle,
+			 bool required)
 {
   SimpleIPort<DH> *dataport;
 
   handle = 0;
 
-  // We always require the port to be there.
+  //! We always require the port to be there.
   if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(name))) )
   {
     throw "Incorrect data type sent to input port '" + name +
@@ -400,19 +398,19 @@ Module::getIHandle( std::string name,
     return false;
   }
 
-  // Get the handle and check for data.
+  //! Get the handle and check for data.
   if (dataport->get(handle) && handle.get_rep())
   {
-    // See if the data has changed. Note only change the boolean if
-    // it is false this way it can be cascaded with other handle gets.
+    //! See if the data has changed. Note only change the boolean if
+    //! it is false this way it can be cascaded with other handle gets.
     if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
 
-    // Handle and rep so return true.
+    //! Handle and rep so return true.
     return true;
   }
   else if( required )
   {
-    // The input was required so report an error.
+    //! The input was required so report an error.
     error( "No field handle or representation for input port '" +
            name + "'."  );
     return false;
@@ -424,19 +422,19 @@ Module::getIHandle( std::string name,
 }
 
 
-// Used to get handles with error checking.
+//! Used to get handles with error checking.
 template<class DH>
 bool
-Module::getDynamicIHandle( std::string name,
-                           vector<DH> &handles,
-                           bool required )
+Module::get_dynamic_input_handles(std::string name,
+				  vector<DH> &handles,
+				  bool required)
 {
   unsigned int nPorts = 0;
   handles.clear();
 
   port_range_type range = get_iports( name );
 
-  // If the code does not have the name correct this happens.
+  //! If the code does not have the name correct this happens.
   if( range.first == range.second )
   {
     throw "Unable to initialize dynamic input port '" + name + "'.";
@@ -450,7 +448,7 @@ Module::getDynamicIHandle( std::string name,
     {
       SimpleIPort<DH> *dataport;
 
-      // We always require the port to be there.
+      //! We always require the port to be there.
       if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second))) )
       {
 	throw "Unable to get dynamic input port #" + to_string(nPorts) +
@@ -458,25 +456,25 @@ Module::getDynamicIHandle( std::string name,
 	return false;
       }
 
-      // Increment here!  We do this because last one is always
-      // empty so we can test for it before issuing empty warning.
+      //! Increment here!  We do this because last one is always
+      //! empty so we can test for it before issuing empty warning.
       ++pi;
 
-      // Get the handle and check for data.
+      //! Get the handle and check for data.
       DH handle;
       if (dataport->get(handle) && handle.get_rep())
       {
 	handles.push_back(handle);
 
-	// See if the data has changed. Note only change the boolean if
-	// it is false this way it can be cascaded with other handle gets.
+	//! See if the data has changed. Note only change the boolean if
+	//! it is false this way it can be cascaded with other handle gets.
 	if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
 
 	++nPorts;
       }
       else if (pi != range.second || nPorts == 0)
       {
-	// The input was required so report an error.
+	//! The input was required so report an error.
 	if( required )
         {
 	  error( "No field handle or representation for dynamic input port #" +
@@ -495,20 +493,20 @@ Module::getDynamicIHandle( std::string name,
 }
 
 
-// Used to send handles with error checking.
+//! Used to send handles with error checking.
 template<class DH>
 bool
-Module::sendOHandle( string name, DH& handle,
-		     bool cache, bool send_intermediate )
+Module::send_output_handle(string name, DH& handle,
+			   bool cache, bool send_intermediate)
 {
-  // Don't send on empty, assume cached version is more valid instead.
-  // Dunno if false return value is correct.  We don't check returns
-  // on this one.
+  //! Don't send on empty, assume cached version is more valid instead.
+  //! Dunno if false return value is correct.  We don't check returns
+  //! on this one.
   if (!handle.get_rep()) return false;
 
   SimpleOPort<DH> *dataport;
 
-  // We always require the port to be there.
+  //! We always require the port to be there.
   if ( !(dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(name))) )
   {
     throw "Incorrect data type sent to output port '" + name +

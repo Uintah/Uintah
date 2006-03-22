@@ -1878,7 +1878,7 @@ proc listFindAndRemove { name elem } {
 
 proc initVarStates { var save substitute } {
     set var [string trimleft $var :]
-    if { [string first msgStream $var] != -1 } return
+    if { [string first msg_stream $var] != -1 } return
     global ModuleSavedVars ModleSubstitutedVars
     set ids [split $var -]
     if { [llength $ids] < 2 } return
@@ -1900,7 +1900,7 @@ proc setVarStates { var save substitute } {
 
     global ModuleSavedVars ModuleSubstitutedVars
     set var [string trimleft $var :]
-    if { [string first msgStream $var] != -1 } return
+    if { [string first msg_stream $var] != -1 } return
     set ids [split $var -]
     set module [lindex $ids 0]
     set varname [join [lrange $ids 1 end] -]

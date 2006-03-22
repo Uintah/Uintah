@@ -46,13 +46,13 @@ using namespace SCIRun;
 DECLARE_MAKER(ScalarMinMax)
 ScalarMinMax::ScalarMinMax(GuiContext* ctx)
   : Module("ScalarMinMax", ctx, Sink, "Operators", "Uintah"),
-    gui_field_name_(ctx->subVar("field_name", false)),
-    gui_min_data_(ctx->subVar("min_data", false)),
-    gui_max_data_(ctx->subVar("max_data", false)),
-    gui_min_index_(ctx->subVar("min_index", false)),
-    gui_max_index_(ctx->subVar("max_index", false)),
-    gui_min_values_(ctx->subVar("min_values", false)),
-    gui_max_values_(ctx->subVar("max_values", false)),
+    gui_field_name_(get_ctx()->subVar("field_name", false)),
+    gui_min_data_(get_ctx()->subVar("min_data", false)),
+    gui_max_data_(get_ctx()->subVar("max_data", false)),
+    gui_min_index_(get_ctx()->subVar("min_index", false)),
+    gui_max_index_(get_ctx()->subVar("max_index", false)),
+    gui_min_values_(get_ctx()->subVar("min_values", false)),
+    gui_max_values_(get_ctx()->subVar("max_values", false)),
     generation_(-1)
 {
   gui_min_data_.set("---");

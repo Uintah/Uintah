@@ -238,7 +238,7 @@ JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing checkNeedAddMaterial on patch "<< patch->getID()
+    cout_doing << "Doing checkNeedAddMaterial on patch "<< patch->get_id()
                <<"\t\t\t\t  JWLpp" << endl;
 
     Ghost::GhostType  gn  = Ghost::None;
@@ -289,7 +289,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing computeModelSources on patch "<< patch->getID()
+    cout_doing << "Doing computeModelSources on patch "<< patch->get_id()
                <<"\t\t\t\t  JWLpp" << endl;
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;

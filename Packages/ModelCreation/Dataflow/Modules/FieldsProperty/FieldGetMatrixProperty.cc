@@ -65,10 +65,10 @@ private:
 DECLARE_MAKER(FieldGetMatrixProperty)
   FieldGetMatrixProperty::FieldGetMatrixProperty(GuiContext* ctx)
     : Module("FieldGetMatrixProperty", ctx, Source, "FieldsProperty", "ModelCreation"),
-      guimatrix1name_(ctx->subVar("matrix1-name")),
-      guimatrix2name_(ctx->subVar("matrix2-name")),
-      guimatrix3name_(ctx->subVar("matrix3-name")),
-      guimatrixs_(ctx->subVar("matrix-selection"))
+      guimatrix1name_(get_ctx()->subVar("matrix1-name")),
+      guimatrix2name_(get_ctx()->subVar("matrix2-name")),
+      guimatrix3name_(get_ctx()->subVar("matrix3-name")),
+      guimatrixs_(get_ctx()->subVar("matrix-selection"))
 {
 }
 
@@ -88,7 +88,7 @@ FieldGetMatrixProperty::execute()
   MatrixOPort *ofport;
   MatrixHandle fhandle;
         
-  if(!(iport = static_cast<FieldIPort *>(getIPort("Field"))))
+  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
   {
     error("Could not find 'Field' input port");
     return;
@@ -115,7 +115,7 @@ FieldGetMatrixProperty::execute()
   }
 
   guimatrixs_.set(matrixlist);
-  ctx->reset();
+  get_ctx()->reset();
  
  
   if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix1"))))

@@ -186,7 +186,7 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
 	+start.y()*dcells.x()+start.x();
       //#ifdef ARCHES_PETSC_DEBUG
 #if 0
-      cerr << "Looking at patch: " << neighbor->getID() << '\n';
+      cerr << "Looking at patch: " << neighbor->get_id() << '\n';
       cerr << "low=" << low << '\n';
       cerr << "high=" << high << '\n';
       cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';

@@ -287,7 +287,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
   // Doesn't interpolate between coarse DWs
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
-  dbg << "old_dw: " << old_dw->getID() << ", new_dw: " << new_dw->getID() << ", coarse_old_dw: " << coarse_old_dw->getID() << ", coarse_new_dw: " << coarse_new_dw->getID() << '\n';
+  dbg << "old_dw: " << old_dw->get_id() << ", new_dw: " << new_dw->get_id() << ", coarse_old_dw: " << coarse_old_dw->get_id() << ", coarse_new_dw: " << coarse_new_dw->get_id() << '\n';
   const Level* fineLevel = getLevel(finePatches);
   LevelP coarseLevel = fineLevel->getCoarserLevel();
   double weight1 = double(step)/double(nsteps);

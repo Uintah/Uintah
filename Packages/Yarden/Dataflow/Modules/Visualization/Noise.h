@@ -85,7 +85,7 @@ class Noise : public Module {
   clString my_name;
   
 public:
-  Noise(const clString& id);
+  Noise(const clString& get_id());
   Noise(const Noise&, int deep);
   virtual ~Noise();
   virtual void execute();

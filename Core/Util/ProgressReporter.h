@@ -65,11 +65,11 @@ public:
   virtual void          error(const std::string& msg);
   virtual void          warning(const std::string& msg);
   virtual void          remark(const std::string& msg);
-  virtual void          postMessage(const std::string &msg);
+  virtual void          post_message(const std::string &msg);
   virtual void          compile_error(const std::string &filename);
 
-  virtual std::ostream &msgStream();
-  virtual void          msgStream_flush();
+  virtual std::ostream &msg_stream();
+  virtual void          msg_stream_flush();
 
   // Compilation progress.  Should probably have different name.
   virtual void          report_progress( ProgressState );

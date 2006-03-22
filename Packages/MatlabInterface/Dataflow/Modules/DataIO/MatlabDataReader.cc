@@ -140,11 +140,11 @@ DECLARE_MAKER(MatlabDataReader)
 
 MatlabDataReader::MatlabDataReader(GuiContext* ctx)
   : Module("MatlabDataReader", ctx, Source, "DataIO", "MatlabInterface"),
-    guifilename_(ctx->subVar("filename")),
-    guifilenameset_(ctx->subVar("filename-set")),
-    guimatrixinfotextslist_(ctx->subVar("matrixinfotextslist")),     
-    guimatrixnameslist_(ctx->subVar("matrixnameslist")),    
-    guimatrixname_(ctx->subVar("matrixname"))
+    guifilename_(get_ctx()->subVar("filename")),
+    guifilenameset_(get_ctx()->subVar("filename-set")),
+    guimatrixinfotextslist_(get_ctx()->subVar("matrixinfotextslist")),     
+    guimatrixnameslist_(get_ctx()->subVar("matrixnameslist")),    
+    guimatrixname_(get_ctx()->subVar("matrixname"))
 {
   indexmatlabfile(false);
 }
@@ -161,7 +161,7 @@ MatlabDataReader::~MatlabDataReader()
 void MatlabDataReader::execute()
 {
   StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
+  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
   {
     StringHandle stringH;
     if (filenameport->get(stringH))
@@ -170,7 +170,7 @@ void MatlabDataReader::execute()
       {
         std::string filename = stringH->get();
         guifilename_.set(filename);
-        ctx->reset();
+        get_ctx()->reset();
       }
     }
   }
@@ -309,7 +309,7 @@ void MatlabDataReader::tcl_command(GuiArgs& args, void* userdata)
     // and then assumes they do not change and hence caches the data
     // Why it is done so is unclear to me, but in order to have interactive
     // GUIs I need to reset the context. (this synchronises the data again)
-    ctx->reset();
+    get_ctx()->reset();
     
     // Find out what the .mat file contains
     indexmatlabfile(true);
@@ -336,9 +336,9 @@ matlabarray MatlabDataReader::readmatlabarray(long p)
   std::ostringstream oss;
   oss << "lindex {" << guimatrixname << "} " << p;
   
-  gui->lock();
-  gui->eval(oss.str(),matrixname);
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(oss.str(),matrixname);
+  get_gui()->unlock();
   
   if (matrixname == "")
   {
@@ -409,9 +409,9 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
     // TCL Dependent code
     std::ostringstream oss;
     oss << "lindex { " << matrixname << " } " << p;
-    gui->lock();
-    gui->eval(oss.str(),matrixnamelist[p]);
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval(oss.str(),matrixnamelist[p]);
+    get_gui()->unlock();
     foundmatrixname[p] = false;
   }
 
@@ -537,10 +537,10 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
 
 void MatlabDataReader::displayerror(std::string str)
 {
-  gui->lock();
+  get_gui()->lock();
   // Explicit call to TCL
-  gui->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
-  gui->unlock();
+  get_gui()->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
+  get_gui()->unlock();
 }
 
 

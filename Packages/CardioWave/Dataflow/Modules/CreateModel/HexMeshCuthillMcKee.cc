@@ -180,7 +180,7 @@ HexMeshCuthillMcKee::execute()
     ++nbi;
   }
 
-  msgStream_ << "Bandwidth before re-ordering: "<<max_half_bw*2+1<<"\n";
+  msg_stream_ << "Bandwidth before re-ordering: "<<max_half_bw*2+1<<"\n";
 
   // visit each separate component
   while(curr_new_idx != -1) {
@@ -318,7 +318,7 @@ HexMeshCuthillMcKee::execute()
     ++nbi;
   }
 
-  msgStream_ << "Bandwidth after re-ordering: "<<new_max_half_bw*2+1<<"\n";
+  msg_stream_ << "Bandwidth after re-ordering: "<<new_max_half_bw*2+1<<"\n";
 
   bwfield->copy_properties(hvfield);
   bwfieldH = bwfield;

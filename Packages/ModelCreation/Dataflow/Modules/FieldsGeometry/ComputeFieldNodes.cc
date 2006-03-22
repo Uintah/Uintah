@@ -86,7 +86,7 @@ class ComputeFieldNodes : public Module {
 DECLARE_MAKER(ComputeFieldNodes)
 ComputeFieldNodes::ComputeFieldNodes(GuiContext* ctx)
   : Module("ComputeFieldNodes", ctx, Source, "FieldsGeometry", "ModelCreation"),
-  guifunction_(ctx->subVar("function"))
+  guifunction_(get_ctx()->subVar("function"))
 {
 }
 
@@ -96,7 +96,7 @@ ComputeFieldNodes::~ComputeFieldNodes(){
 void ComputeFieldNodes::execute()
 {
   // Get number of matrix ports with data (the last one is always empty)
-  size_t numinputs = numIPorts()-3;
+  size_t numinputs = num_input_ports()-3;
   size_t mstart = 3;
   
   if (numinputs > 23)
@@ -144,7 +144,7 @@ void ComputeFieldNodes::execute()
     if (func.get_rep())
     {
       guifunction_.set(func->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
 
@@ -237,9 +237,9 @@ void ComputeFieldNodes::execute()
     return;
   }
   
-  gui->lock();
-  gui->eval(getID()+" update_text");
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
   
   std::string function = guifunction_.get();
   
@@ -273,10 +273,10 @@ void
 
   if( args[1] == "gethelp" )
   {
-    gui->lock();
-    gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + tvm_help_field +"}");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval("global " + get_id() +"-help");
+    get_gui()->eval("set " + get_id() + "-help {" + tvm_help_field +"}");
+    get_gui()->unlock();
     return;
   }
   else

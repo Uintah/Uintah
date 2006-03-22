@@ -158,7 +158,7 @@ void ParticleTest1::initialize(const ProcessorGroup*,
           (((float) rand()) / RAND_MAX * ( high.y() - low.y()-1) + low.y()),
           (((float) rand()) / RAND_MAX * ( high.z() - low.z()-1) + low.z()));
         px[i] = pos;
-        pids[i] = patch->getID()*numParticles+i;
+        pids[i] = patch->get_id()*numParticles+i;
         pmass[i] = ((float) rand()) / RAND_MAX * 10;
       }
     }
@@ -201,7 +201,7 @@ void ParticleTest1::timeAdvance(const ProcessorGroup*,
         pidsnew[i] = pids[i];
         pmassnew[i] = pmass[i] *.9;
         if (doOutput_)
-          cout << " Patch " << patch->getID() << ": ID " 
+          cout << " Patch " << patch->get_id() << ": ID " 
                << pidsnew[i] << ", pos " << pxnew[i] 
                << ", mass " << pmassnew[i] << endl;
       }

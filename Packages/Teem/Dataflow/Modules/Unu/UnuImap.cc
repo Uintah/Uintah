@@ -74,14 +74,14 @@ DECLARE_MAKER(UnuImap)
 UnuImap::UnuImap(GuiContext* ctx)
   : Module("UnuImap", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), idmap_(0), onrrd_(0),
-    length_(ctx->subVar("length")),
-    rescale_(ctx->subVar("rescale")),
-    min_(ctx->subVar("min")),
-    useinputmin_(ctx->subVar("useinputmin")),
-    max_(ctx->subVar("max")),
-    useinputmax_(ctx->subVar("useinputmax")),
-    type_(ctx->subVar("type")),
-    usetype_(ctx->subVar("usetype"))
+    length_(get_ctx()->subVar("length")),
+    rescale_(get_ctx()->subVar("rescale")),
+    min_(get_ctx()->subVar("min")),
+    useinputmin_(get_ctx()->subVar("useinputmin")),
+    max_(get_ctx()->subVar("max")),
+    useinputmax_(get_ctx()->subVar("useinputmax")),
+    type_(get_ctx()->subVar("type")),
+    usetype_(get_ctx()->subVar("usetype"))
 {
 }
 

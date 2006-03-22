@@ -128,17 +128,17 @@ Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
   
   // dynamic port safeguard.
-  if (m2->lastportdynamic && p2 >= m2->iports.size()) {
-    p2 = m2->iports.size() - 1;
+  if (m2->lastportdynamic_ && p2 >= m2->iports_.size()) {
+    p2 = m2->iports_.size() - 1;
   }
   
-  if (p1 >= m1->numOPorts() || p2 >= m2->numIPorts())
+  if (p1 >= m1->num_output_ports() || p2 >= m2->num_input_ports())
   {
     return "";
   }
 
   ostringstream ids;
-  ids << m1->id << "_p" << p1 << "_to_" << m2->id << "_p" << p2;
+  ids << m1->id_ << "_p" << p1 << "_to_" << m2->id_ << "_p" << p2;
   Connection* conn=scinew Connection(m1, p1, m2, p2, ids.str());
   connections.push_back(conn);
 
@@ -191,8 +191,8 @@ Network::add_module2(const string& packageName,
                      const string& moduleName)
 {
   Module* module = add_module(packageName, categoryName, moduleName);
-  module->getGui()->eval("addModule2 "+packageName+" "+categoryName+
-			 " "+moduleName+" "+module->id);
+  module->get_gui()->eval("addModule2 "+packageName+" "+categoryName+
+			 " "+moduleName+" "+module->id_);
   return module;
 }
 
@@ -223,8 +223,8 @@ Network::add_module(const string& packageName,
   mod->set_context(this);
 
   // add Module id and ptr to Module to hash table of modules in network
-  module_ids[mod->id] = mod;
-  mod->gui->add_command(mod->id+"-c", mod, 0);
+  module_ids[mod->id_] = mod;
+  mod->gui_->add_command(mod->id_+"-c", mod, 0);
   return mod;
 }
 
@@ -243,13 +243,13 @@ Network::add_instantiated_module(Module* mod)
   mod->set_context(this);
   
   // add Module id and ptr to Module to hash table of modules in network
-  module_ids[mod->id] = mod;
+  module_ids[mod->id_] = mod;
 
-  GuiInterface* gui = mod->gui;
+  GuiInterface* gui = mod->gui_;
   // Add a TCL command for this module...
-  gui->add_command(mod->id+"-c", mod, 0);
+  gui->add_command(mod->id_+"-c", mod, 0);
 
-  gui->eval("addModule2 unknown unknown unknown "+mod->id);
+  gui->eval("addModule2 unknown unknown unknown "+mod->id_);
 }
 
 
@@ -292,7 +292,7 @@ public:
   void run()
   {
     Network::MapStringModule::iterator const mpos = 
-      net_->module_ids.find(module_->getID());
+      net_->module_ids.find(module_->get_id());
     ASSERT(mpos != net_->module_ids.end());
     
     unsigned int vpos = 0;
@@ -346,7 +346,7 @@ Network::schedule_all()
   for(int i=0; i<nmodules(); i++)
   {
     Module* m = module(i);
-    m->need_execute = true;
+    m->need_execute_ = true;
   }
   schedule();
 }

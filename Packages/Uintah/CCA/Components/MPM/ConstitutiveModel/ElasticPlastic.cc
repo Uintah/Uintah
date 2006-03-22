@@ -613,7 +613,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
             << " ElasticPlastic:ComputeStressTensor:Explicit"
             << " Matl = " << matl 
             << " DWI = " << matl->getDWIndex() 
-            <<  " patch = " << (patches->get(0))->getID();
+            <<  " patch = " << (patches->get(0))->get_id();
   }
 
   // General stuff
@@ -655,7 +655,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     vector<Vector> d_S;
     d_S.reserve(interpolator->size());
     
-    //cerr << getpid() << " patch = " << patch->getID() << endl;
+    //cerr << getpid() << " patch = " << patch->get_id() << endl;
     // Get grid size
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -1094,7 +1094,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
             computeStilde(trialS, delT, matl, idx, Stilde, state, delGamma);
 
             /*
-            cout << "After:: patch = " << patch->getID() << " idx = " << idx
+            cout << "After:: patch = " << patch->get_id() << " idx = " << idx
                  << " delGamma = " << delGamma  
                  << " Tau_n+1 = " << state->yieldStress
                  << " Tau_n = " << sqrtThreeTwo*sqrtSxS
@@ -1174,7 +1174,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         /*
         if (pPlasticStrainRate_new[idx] > pStrainRate_new[idx]) {
-          cout << "Patch = " << patch->getID() << " particle = " << idx
+          cout << "Patch = " << patch->get_id() << " particle = " << idx
                << " edot = " << pStrainRate_new[idx] 
                << " epdot = " << pPlasticStrainRate_new[idx] << endl;
         }
@@ -1507,7 +1507,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   //CSTi << getpid() 
   //     << "ComputeStressTensorImplicit: In : Matl = " << matl << " id = " 
   //     << matl->getDWIndex() <<  " patch = " 
-  //     << (patches->get(0))->getID();
+  //     << (patches->get(0))->get_id();
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
@@ -3265,7 +3265,7 @@ void ElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
   if (cout_EP.active()) {
     cout_EP << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
             << " id = " << matl->getDWIndex() <<  " patch = "
-            << (patches->get(0))->getID();
+            << (patches->get(0))->get_id();
   }
 
   double need_add=0.;

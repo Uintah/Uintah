@@ -92,14 +92,14 @@ DECLARE_MAKER(StreamLines)
 
 StreamLines::StreamLines(GuiContext* ctx) : 
   Module("StreamLines", ctx, Source, "Visualization", "SCIRun"),
-  gStepsize_(ctx->subVar("stepsize"), 0.01),
-  gTolerance_(ctx->subVar("tolerance"), 0.0001),
-  gMaxsteps_(ctx->subVar("maxsteps"), 2000),
-  gDirection_(ctx->subVar("direction"), 1),
-  gValue_(ctx->subVar("value"), 1),
-  gRemove_Colinear_(ctx->subVar("remove-colinear"), 1),
-  gMethod_(ctx->subVar("method"), 4),
-  gNp_(ctx->subVar("np"), 1),
+  gStepsize_(get_ctx()->subVar("stepsize"), 0.01),
+  gTolerance_(get_ctx()->subVar("tolerance"), 0.0001),
+  gMaxsteps_(get_ctx()->subVar("maxsteps"), 2000),
+  gDirection_(get_ctx()->subVar("direction"), 1),
+  gValue_(get_ctx()->subVar("value"), 1),
+  gRemove_Colinear_(get_ctx()->subVar("remove-colinear"), 1),
+  gMethod_(get_ctx()->subVar("method"), 4),
+  gNp_(get_ctx()->subVar("np"), 1),
   vfGeneration_(-1),
   sfGeneration_(-1),
   error_(0)

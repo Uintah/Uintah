@@ -72,7 +72,7 @@ DECLARE_MAKER(SegFieldToLatVol)
 
 SegFieldToLatVol::SegFieldToLatVol(GuiContext* ctx)
   : Module("SegFieldToLatVol", ctx, Filter, "Modeling", "BioPSE"), 
-    latVolData_(ctx->subVar("lat_vol_data"))
+    latVolData_(get_ctx()->subVar("lat_vol_data"))
 {
 }
 

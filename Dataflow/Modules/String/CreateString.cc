@@ -51,7 +51,7 @@ private:
 DECLARE_MAKER(CreateString)
 CreateString::CreateString(GuiContext* ctx)
   : Module("CreateString", ctx, Source, "String", "SCIRun"),
-  inputstring_(ctx->subVar("inputstring"), "")
+  inputstring_(get_ctx()->subVar("inputstring"), "")
 {
 }
 
@@ -61,9 +61,9 @@ CreateString::~CreateString()
 
 void CreateString::execute()
 {
-  gui->lock();
-  gui->execute( getID()+" update_text");
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->execute( get_id()+" update_text");
+  get_gui()->unlock();
 
   StringOPort* oport;
   if (!(oport = dynamic_cast<StringOPort *>(get_oport(0))))

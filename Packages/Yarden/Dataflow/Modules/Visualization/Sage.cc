@@ -411,7 +411,7 @@ class Sage : public Module
 
 public:
 
-  Sage( const clString& id);
+  Sage( const clString& get_id());
   virtual ~Sage();
 
   virtual void execute();
@@ -442,9 +442,9 @@ public:
 };
   
 // extern "C" {
-extern "C" Module* make_Sage(const clString& id)
+extern "C" Module* make_Sage(const clString& get_id())
 {
-  return scinew Sage(id);
+  return scinew Sage(get_id());
 }
 // }
 
@@ -456,20 +456,20 @@ static clString surface_name2("SageBack");
 static clString surface_name3("SagePts");
 static clString shadow_name("SageShadow");
 
-Sage::Sage(const clString& id)
-  : Module("Sage", id, Filter ), 
-  isoval("isoval", id, this),
-  isoval_min("isoval_min", id, this), 
-  isoval_max("isoval_max", id, this),
-  tcl_bbox("bbox", id, this), 
-  tcl_value("value", id, this), 
-  tcl_visibility("visibility", id, this),
-  tcl_scan("scan", id, this),  
-  tcl_depth("cutoff_depth", id, this),
-  tcl_reduce("reduce",id,this), 
-  tcl_cover("cover",id,this), 
-  tcl_all("all",id,this),
-  tcl_rebuild("rebuild",id,this)
+Sage::Sage(const clString& get_id())
+  : Module("Sage", get_id(), Filter ), 
+  isoval("isoval", get_id(), this),
+  isoval_min("isoval_min", get_id(), this), 
+  isoval_max("isoval_max", get_id(), this),
+  tcl_bbox("bbox", get_id(), this), 
+  tcl_value("value", get_id(), this), 
+  tcl_visibility("visibility", get_id(), this),
+  tcl_scan("scan", get_id(), this),  
+  tcl_depth("cutoff_depth", get_id(), this),
+  tcl_reduce("reduce",get_id(),this), 
+  tcl_cover("cover",get_id(),this), 
+  tcl_all("all",get_id(),this),
+  tcl_rebuild("rebuild",get_id(),this)
 {
   init_clock();
   printf( "Sage::Sage :: %d\n", tri_case[136].vertex[4]);
@@ -1157,16 +1157,16 @@ Sage::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
   // interpolate and project vertices
   int v=0;
   for (int t=0; t<tcase->n; t++) {
-    int id = vertex[v++];
-    for ( ; id != -1; id=vertex[v++] ) {
-      int v1 = edge_table[id][0];
-      int v2 = edge_table[id][1];
+    int get_id() = vertex[v++];
+    for ( ; get_id() != -1; get_id()=vertex[v++] ) {
+      int v1 = edge_table[get_id()][0];
+      int v2 = edge_table[get_id()][1];
       if ( val[v1]*val[v2] > 0 ) {
 	printf("BUG at %d\n", mask );
 	continue;
       }
-      q[id] = Interpolate(vp[v1], vp[v2], val[v1]/(val[v1]-val[v2]));
-      if ( scan ) project( q[id], p[id] );
+      q[get_id()] = Interpolate(vp[v1], vp[v2], val[v1]/(val[v1]-val[v2]));
+      if ( scan ) project( q[get_id()], p[get_id()] );
     }
   }
   
@@ -1232,7 +1232,7 @@ int
 Sage::make_current( int xres, int yres) {
   make_start = read_time();
   TCLTask::lock();
-  clString myname(clString(".ui")+id+".gl.gl");
+  clString myname(clString(".ui")+get_id()+".gl.gl");
   char *name = strdup(myname());
   tkwin=Tk_NameToWindow(the_interp, name, Tk_MainWindow(the_interp));
   if(!tkwin){

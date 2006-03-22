@@ -62,10 +62,10 @@ DECLARE_MAKER(TendAnplot)
 
 TendAnplot::TendAnplot(SCIRun::GuiContext *ctx) : 
   Module("TendAnplot", ctx, Filter, "Tend", "Teem"),
-  resolution_(ctx->subVar("resolution"), 256),
-  whole_(ctx->subVar("whole"), 0),
-  values_(ctx->subVar("values"), 0),
-  anisotropy_(ctx->subVar("anisotropy"), "cl1")
+  resolution_(get_ctx()->subVar("resolution"), 256),
+  whole_(get_ctx()->subVar("whole"), 0),
+  values_(get_ctx()->subVar("values"), 0),
+  anisotropy_(get_ctx()->subVar("anisotropy"), "cl1")
 {
 }
 

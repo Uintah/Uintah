@@ -70,7 +70,7 @@ public:
 DECLARE_MAKER(ImageReaderFloat2D)
 ImageReaderFloat2D::ImageReaderFloat2D(GuiContext* ctx)
   : Module("ImageReaderFloat2D", ctx, Source, "DataIO", "Insight"),
-    gui_filename_(ctx->subVar("filename"))
+    gui_filename_(get_ctx()->subVar("filename"))
 {
   prevFile = "";
 }

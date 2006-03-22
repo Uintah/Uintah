@@ -181,8 +181,8 @@ DECLARE_MAKER(BinaryDilateImageFilter)
 
 BinaryDilateImageFilter::BinaryDilateImageFilter(GuiContext* ctx)
   : Module("BinaryDilateImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_dialVal_(ctx->subVar("dialVal")),
-    gui_radius_(ctx->subVar("radius")),
+    gui_dialVal_(get_ctx()->subVar("dialVal")),
+    gui_radius_(get_ctx()->subVar("radius")),
      last_InputImage_(-1)
 {
   filter_ = 0;

@@ -142,8 +142,8 @@ ThresholdSegmentationLevelSetImageFilter::set_image_variables(itk::Object *obj) 
   for(int i=0; i<(int)keys.size(); i++) {
     string value;
     if(itk::ExposeMetaData<string>(dic, keys[i], value)) {
-      cerr << id << ": "<< keys[i] << ", " << value << std::endl;
-      GuiContext *subvar = ctx->find_child(keys[i]);
+      cerr << get_id() << ": "<< keys[i] << ", " << value << std::endl;
+      GuiContext *subvar = get_ctx()->find_child(keys[i]);
       if (subvar)
         subvar->set(value);
     }
@@ -274,21 +274,21 @@ DECLARE_MAKER(ThresholdSegmentationLevelSetImageFilter)
 
 ThresholdSegmentationLevelSetImageFilter::ThresholdSegmentationLevelSetImageFilter(GuiContext* ctx)
   : Module("ThresholdSegmentationLevelSetImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_lower_threshold_(ctx->subVar("lower_threshold")),
-     gui_upper_threshold_(ctx->subVar("upper_threshold")),
-     gui_curvature_scaling_(ctx->subVar("curvature_scaling")),
-     gui_propagation_scaling_(ctx->subVar("propagation_scaling")),
-     gui_edge_weight_(ctx->subVar("edge_weight")),
-     gui_max_iterations_(ctx->subVar("max_iterations")),
-     gui_max_rms_change_(ctx->subVar("max_rms_change")),
-     gui_reverse_expansion_direction_(ctx->subVar("reverse_expansion_direction")),
-     gui_isovalue_(ctx->subVar("isovalue")),
-     gui_smoothing_iterations_(ctx->subVar("smoothing_iterations")),
-     gui_smoothing_time_step_(ctx->subVar("smoothing_time_step")),
-     gui_smoothing_conductance_(ctx->subVar("smoothing_conductance")),
-     gui_update_OutputImage_(ctx->subVar("update_OutputImage")),
-     gui_update_iters_OutputImage_(ctx->subVar("update_iters_OutputImage")),
-     gui_reset_filter_(ctx->subVar("reset_filter")),
+     gui_lower_threshold_(get_ctx()->subVar("lower_threshold")),
+     gui_upper_threshold_(get_ctx()->subVar("upper_threshold")),
+     gui_curvature_scaling_(get_ctx()->subVar("curvature_scaling")),
+     gui_propagation_scaling_(get_ctx()->subVar("propagation_scaling")),
+     gui_edge_weight_(get_ctx()->subVar("edge_weight")),
+     gui_max_iterations_(get_ctx()->subVar("max_iterations")),
+     gui_max_rms_change_(get_ctx()->subVar("max_rms_change")),
+     gui_reverse_expansion_direction_(get_ctx()->subVar("reverse_expansion_direction")),
+     gui_isovalue_(get_ctx()->subVar("isovalue")),
+     gui_smoothing_iterations_(get_ctx()->subVar("smoothing_iterations")),
+     gui_smoothing_time_step_(get_ctx()->subVar("smoothing_time_step")),
+     gui_smoothing_conductance_(get_ctx()->subVar("smoothing_conductance")),
+     gui_update_OutputImage_(get_ctx()->subVar("update_OutputImage")),
+     gui_update_iters_OutputImage_(get_ctx()->subVar("update_iters_OutputImage")),
+     gui_reset_filter_(get_ctx()->subVar("reset_filter")),
      last_SeedImage_(-1), 
      last_FeatureImage_(-1)
 {

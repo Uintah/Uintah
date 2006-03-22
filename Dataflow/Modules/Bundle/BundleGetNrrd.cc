@@ -68,13 +68,13 @@ DECLARE_MAKER(BundleGetNrrd)
 
 BundleGetNrrd::BundleGetNrrd(GuiContext* ctx)
   : Module("BundleGetNrrd", ctx, Filter, "Bundle", "SCIRun"),
-    guinrrd1name_(ctx->subVar("nrrd1-name"), "nrrd1"),
-    guinrrd2name_(ctx->subVar("nrrd2-name"), "nrrd2"),
-    guinrrd3name_(ctx->subVar("nrrd3-name"), "nrrd3"),
-    guitransposenrrd1_(ctx->subVar("transposenrrd1"), 0),
-    guitransposenrrd2_(ctx->subVar("transposenrrd2"), 0),
-    guitransposenrrd3_(ctx->subVar("transposenrrd3"), 0),
-    guinrrds_(ctx->subVar("nrrd-selection"), "")
+    guinrrd1name_(get_ctx()->subVar("nrrd1-name"), "nrrd1"),
+    guinrrd2name_(get_ctx()->subVar("nrrd2-name"), "nrrd2"),
+    guinrrd3name_(get_ctx()->subVar("nrrd3-name"), "nrrd3"),
+    guitransposenrrd1_(get_ctx()->subVar("transposenrrd1"), 0),
+    guitransposenrrd2_(get_ctx()->subVar("transposenrrd2"), 0),
+    guitransposenrrd3_(get_ctx()->subVar("transposenrrd3"), 0),
+    guinrrds_(get_ctx()->subVar("nrrd-selection"), "")
 {
 }
 
@@ -127,7 +127,7 @@ BundleGetNrrd::execute()
   }
 
   guinrrds_.set(nrrdlist);
-  ctx->reset();
+  get_ctx()->reset();
  
   if (!(ofport = static_cast<NrrdOPort *>(get_oport("nrrd1"))))
   {

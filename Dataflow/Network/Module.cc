@@ -136,46 +136,45 @@ FindOPort(const string &package, const string &datatype)
 
 Module::Module(const string& name, GuiContext* ctx,
 	       SchedClass sched_class, const string& cat,
-	       const string& pack)
-  : ProgressReporter(),
-    GuiCallback(),
-    mailbox("Module execution FIFO", 100),
-    gui(ctx->getInterface()),
-    ctx(ctx),
-    name(name),
-    moduleName(name),
-    packageName(pack),
-    categoryName(cat),
-    sched(0),
-    pid_(0),
-    have_own_dispatch(0),
-    id(ctx->getfullname()), 
-    abort_flag(0),
-    need_execute(0),
-    sched_class(sched_class),
-    inputs_changed_(false),
-    execute_error_(false),
-    state(NeedData),
-    msg_state(Reset), 
-    helper(0),
-    helper_thread(0),
-    network(0),
-    show_stats_(true),
-    log_string_(ctx->subVar("log_string", false))
+	       const string& pack) : 
+  ProgressReporter(),
+  GuiCallback(),
+  mailbox_("Module execution FIFO", 100),
+  gui_(ctx->getInterface()),
+  module_name_(name),
+  package_name_(pack),
+  category_name_(cat),
+  sched_(0),
+  pid_(0),
+  have_own_dispatch_(0),
+  id_(ctx->getfullname()), 
+  abort_flag_(0),
+  need_execute_(0),
+  sched_class_(sched_class),
+  inputs_changed_(false),
+  execute_error_(false),
+  ctx_(ctx),
+  state_(NeedData),
+  msg_state_(Reset), 
+  helper_(0),
+  helper_thread_(0),
+  network_(0),
+  show_stats_(true),
+  log_string_(ctx->subVar("log_string", false))
 {
-  stacksize=0;
+  stacksize_=0;
 
   IPort* iport;
   OPort* oport;
   
-  first_dynamic_port = -1;
-  lastportdynamic = 0;
-  dynamic_port_maker = 0;
+  first_dynamic_port_ = -1;
+  lastportdynamic_ = 0;
+  dynamic_port_maker_ = 0;
 
   // Auto allocate all ports listed in the .xml file for this module,
   // execpt those whose datatype tag has contents that start with '*'.
-  ModuleInfo* info = packageDB->GetModuleInfo(moduleName, categoryName,
-					      packageName);
+  ModuleInfo* info = packageDB->GetModuleInfo(module_name_, category_name_,
+					      package_name_);
   if (info) {
     oport_maker maker;
     vector<OPortInfo*>::iterator i2 = info->oports_.begin();
@@ -207,34 +206,34 @@ Module::Module(const string& name, GuiContext* ctx,
       char* datatype = new char[strlength+1];
       sscanf(ip->datatype.c_str(),"%[^:]::%s",package,datatype);
       if (package[0]=='*')
-	dynamic_port_maker = FindIPort(&package[1],datatype);
+	dynamic_port_maker_ = FindIPort(&package[1],datatype);
       else
-	dynamic_port_maker = FindIPort(package,datatype);	
-      if (dynamic_port_maker && package[0]!='*') {
-	iport = dynamic_port_maker(this, ip->name);
+	dynamic_port_maker_ = FindIPort(package,datatype);	
+      if (dynamic_port_maker_ && package[0]!='*') {
+	iport = dynamic_port_maker_(this, ip->name);
 	if (iport) {
-	  lastportname = ip->name;
+	  lastportname_ = ip->name;
 	  add_iport(iport);
 	}
       } else {
 	cerr << "Cannot create port: " << datatype << '\n';
-	dynamic_port_maker = 0;
+	dynamic_port_maker_ = 0;
       }
       delete[] package;
       delete[] datatype;
     }
   } else {
     cerr << "Cannot find module info for module: " 
-	 << packageName << "/" << categoryName << "/" << moduleName << '\n';
+	 << package_name_ << "/" << category_name_ << "/" << module_name_ << '\n';
   }
 
   // the last port listed in the .xml file may or may not be dynamic.
   // if found and lastportdynamic is true, the port is dynamic.
   // otherwise it is not dynamic.
-  if (lastportdynamic && !dynamic_port_maker){
-    lastportdynamic = 0;
+  if (lastportdynamic_ && !dynamic_port_maker_){
+    lastportdynamic_ = 0;
   }
-  first_dynamic_port = iports.size()-1;
+  first_dynamic_port_ = iports_.size()-1;
 }
 
 Module::~Module()
@@ -242,18 +241,18 @@ Module::~Module()
   // kill_helper joins the helper thread & waits until module execution is done
   kill_helper();
   // After execution is done, delete the TCL command: $this-c
-  gui->delete_command(id+"-c" );
+  gui_->delete_command(id_+"-c" );
   // Remove the dummy proc $this that was eating up all the TCL commands
   // while the module finished up executing
-  gui->eval("catch {rename "+id+" \"\"}");
+  gui_->eval("catch {rename "+id_+" \"\"}");
   
 }
 
 int
-Module::addOPortByName(std::string name, std::string d_type)
+Module::add_output_port_by_name(std::string name, std::string d_type)
 {
   OPort* oport;
-  dynamic_port_maker = 0;
+  dynamic_port_maker_ = 0;
 
   oport_maker maker;
 
@@ -271,7 +270,7 @@ Module::addOPortByName(std::string name, std::string d_type)
       add_oport(oport);
     else {
       cerr << "Cannot create port: " << datatype << '\n';
-      dynamic_port_maker = 0;
+      dynamic_port_maker_ = 0;
     }
   }
   delete[] package;
@@ -281,28 +280,28 @@ Module::addOPortByName(std::string name, std::string d_type)
 }
 
 int
-Module::addIPortByName(std::string name, std::string d_type)
+Module::add_input_port_by_name(std::string name, std::string d_type)
 {
   IPort* iport;
-  dynamic_port_maker = 0;
+  dynamic_port_maker_ = 0;
 
   unsigned long strlength = d_type.length();
   char* package = new char[strlength+1];
   char* datatype = new char[strlength+1];
   sscanf(d_type.c_str(),"%[^:]::%s",package,datatype);
   if (package[0]=='*')
-    dynamic_port_maker = FindIPort(&package[1],datatype);
+    dynamic_port_maker_ = FindIPort(&package[1],datatype);
   else
-    dynamic_port_maker = FindIPort(package,datatype);	
-  if (dynamic_port_maker && package[0]!='*') {
-    iport = dynamic_port_maker(this,name);
+    dynamic_port_maker_ = FindIPort(package,datatype);	
+  if (dynamic_port_maker_ && package[0]!='*') {
+    iport = dynamic_port_maker_(this,name);
     if (iport) {
-      lastportname = name;
+      lastportname_ = name;
       add_iport(iport);
     }
   } else {
     cerr << "Err: Cannot create port: " << datatype << '\n';
-    dynamic_port_maker = 0;
+    dynamic_port_maker_ = 0;
   }
   delete[] package;
   delete[] datatype;
@@ -315,19 +314,19 @@ Module::delete_warn()
 {
   set_show_stats(false);
   MessageBase *msg = scinew MessageBase(MessageTypes::GoAwayWarn);
-  mailbox.send(msg);
+  mailbox_.send(msg);
 }
 
 void
 Module::kill_helper()
 {
-  if (helper_thread)
+  if (helper_thread_)
   {
     // kill the helper thread
     MessageBase *msg = scinew MessageBase(MessageTypes::GoAway);
-    mailbox.send(msg);
-    helper_thread->join();
-    helper_thread = 0;
+    mailbox_.send(msg);
+    helper_thread_->join();
+    helper_thread_ = 0;
   }
 }
 
@@ -339,11 +338,11 @@ Module::report_progress( ProgressState state )
   case ProgressReporter::Starting:
     break;
   case ProgressReporter::Compiling:
-    gui->execute(id+" set_compiling_p 1");
+    gui_->execute(id_+" set_compiling_p 1");
     remark("Dynamically compiling some code.");
     break;
   case ProgressReporter::CompilationDone:
-    gui->execute(id+" set_compiling_p 0");
+    gui_->execute(id_+" set_compiling_p 0");
     remark("Dynamic compilation completed.");
     break;
   case ProgressReporter::Done:
@@ -354,7 +353,7 @@ Module::report_progress( ProgressState state )
 void
 Module::update_state(State st)
 {
-  state=st;
+  state_=st;
   char* s="unknown";
   switch(st){
   case NeedData:
@@ -370,15 +369,15 @@ Module::update_state(State st)
     s="Completed";
     break;
   }
-  double time = timer.time();
+  double time = timer_.time();
   if(time<0)
     time=0;
   time = Min(time, 1.0e10); // Clamp NaN
-  gui->execute(id+" set_state " + s + " " + to_string(time));
+  gui_->execute(id_+" set_state " + s + " " + to_string(time));
 
   if (sci_getenv_p("SCI_REGRESSION_TESTING") && st == Completed)
   {
-    cout << id  + ":RUNTIME: " + to_string(time) + "\n";
+    cout << id_  + ":RUNTIME: " + to_string(time) + "\n";
   }
 }
 
@@ -388,9 +387,9 @@ Module::update_msg_state(MsgState st)
 {
   // only change the state if the new state
   // is of higher priority
-  if( !( ((msg_state == Error) && (st != Reset))  || 
-	 ((msg_state == Warning) && (st == Remark)) ) ) {
-    msg_state=st;
+  if( !( ((msg_state_ == Error) && (st != Reset))  || 
+	 ((msg_state_ == Warning) && (st == Remark)) ) ) {
+    msg_state_=st;
     char* s="unknown";
     switch(st){
     case Remark:
@@ -406,7 +405,7 @@ Module::update_msg_state(MsgState st)
       s="Reset";
       break;
     }
-    gui->execute(id+" set_msg_state " + s);
+    gui_->execute(id_+" set_msg_state " + s);
   }
 }
 
@@ -417,7 +416,7 @@ Module::update_msg_state(MsgState st)
 void
 Module::update_progress(double p)
 {
-  if (state != Executing) { update_state(Executing); }
+  if (state_ != Executing) { update_state(Executing); }
   const double cp = Clamp(p, 0.0, 1.0);
   const int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
   const int nrp = (int)(cp * PROGRESS_GRANULARITY);
@@ -425,7 +424,7 @@ Module::update_progress(double p)
   {
     progress_current_.set((int)(cp * progress_max_));
     string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
-    gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
+    gui_->execute(id_+" set_progress "+str+" "+to_string(timer_.time()));
   }
 }
 
@@ -433,7 +432,7 @@ Module::update_progress(double p)
 void
 Module::update_progress(int current, int maxpr)
 {
-  if (state != Executing) { update_state(Executing); }
+  if (state_ != Executing) { update_state(Executing); }
   const int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
   const int nrp = current * PROGRESS_GRANULARITY / maxpr;
   if (crp != nrp || maxpr != progress_max_)
@@ -441,7 +440,7 @@ Module::update_progress(int current, int maxpr)
     progress_max_ = maxpr;
     progress_current_.set(current);
     string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
-    gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
+    gui_->execute(id_+" set_progress "+str+" "+to_string(timer_.time()));
   }
 }
 
@@ -449,14 +448,14 @@ Module::update_progress(int current, int maxpr)
 void
 Module::increment_progress()
 {
-  if (state != Executing) { update_state(Executing); }
+  if (state_ != Executing) { update_state(Executing); }
   unsigned int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
   progress_current_++;
   unsigned int nrp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
   if (crp != nrp)
   {
     string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
-    gui->execute(id+" set_progress "+str+" "+to_string(timer.time()));
+    gui_->execute(id_+" set_progress "+str+" "+to_string(timer_.time()));
   }
 }
 
@@ -466,17 +465,17 @@ Module::increment_progress()
 void
 Module::add_iport(IPort* port)
 {
-  port->set_which_port(iports.size());
-  iports.add(port);
-  gui->execute("drawPorts "+id+" i");
+  port->set_which_port(iports_.size());
+  iports_.add(port);
+  gui_->execute("drawPorts "+id_+" i");
 }
 
 void
 Module::add_oport(OPort* port)
 {
-  port->set_which_port(oports.size());
-  oports.add(port);
-  gui->execute("drawPorts "+id+" o");
+  port->set_which_port(oports_.size());
+  oports_.add(port);
+  gui_->execute("drawPorts "+id_+" o");
 }
 
 void
@@ -484,40 +483,40 @@ Module::remove_iport(int which)
 {
   // remove the indicated port, then
   // collapse the remaining ports together
-  iports.remove(which);  
-  gui->execute("removePort {"+id+" "+to_string(which)+" i}");
+  iports_.remove(which);  
+  gui_->execute("removePort {"+id_+" "+to_string(which)+" i}");
   // rename the collapsed ports and their connections
   // to reflect the positions they collapsed to.
-  for (int port=which;port<iports.size();port++) {
-    iports[port]->set_which_port(iports[port]->get_which_port()-1);
-    for (int connNum=0;connNum<iports[port]->nconnections();connNum++)
-      iports[port]->connection(connNum)->makeID();
+  for (int port=which;port<iports_.size();port++) {
+    iports_[port]->set_which_port(iports_[port]->get_which_port()-1);
+    for (int connNum=0;connNum<iports_[port]->nconnections();connNum++)
+      iports_[port]->connection(connNum)->makeID();
   }
-  gui->execute("drawPorts "+id+" i");
+  gui_->execute("drawPorts "+id_+" i");
 }
 
 port_range_type
 Module::get_iports(const string &name)
 {
-  return iports[name];
+  return iports_[name];
 }
 
 IPort*
 Module::get_iport(int item)
 {
-  return iports[item];
+  return iports_[item];
 }
 
 OPort*
 Module::get_oport(int item)
 {
-  return oports[item];
+  return oports_[item];
 }
 
 IPort*
 Module::get_iport(const string& name)
 {
-  IPort *p = getIPort(name);
+  IPort *p = get_input_port(name);
   if (p == 0) throw "Unable to initialize iport '" + name + "'.";
   return p;
 }
@@ -525,52 +524,52 @@ Module::get_iport(const string& name)
 OPort*
 Module::get_oport(const string& name)
 {
-  OPort *p = getOPort(name);
+  OPort *p = get_output_port(name);
   if (p == 0) throw "Unable to initialize oport '" + name + "'.";
   return p;
 }
 
 port_range_type
-Module::getIPorts(const string &name)
+Module::get_input_ports(const string &name)
 {
   return get_iports(name);
 }
 
 IPort*
-Module::getIPort(const string &name)
+Module::get_input_port(const string &name)
 {
-  if (iports[name].first==iports[name].second) {
+  if (iports_[name].first==iports_[name].second) {
     return 0;
   }
-  return getIPort(iports[name].first->second);
+  return get_input_port(iports_[name].first->second);
 }
 
 OPort*
-Module::getOPort(const string &name)
+Module::get_output_port(const string &name)
 {
-  if (oports[name].first==oports[name].second) {
-    //postMessage("Unable to initialize "+name+"'s oports\n");
+  if (oports_[name].first==oports_[name].second) {
+    //post_message("Unable to initialize "+name+"'s oports\n");
     return 0;
   }
-  return getOPort(oports[name].first->second);
+  return get_output_port(oports_[name].first->second);
 }
 
 IPort*
-Module::getIPort(int item)
+Module::get_input_port(int item)
 {
-  return iports[item];
+  return iports_[item];
 }
 
 OPort*
-Module::getOPort(int item)
+Module::get_output_port(int item)
 {
-  return oports[item];
+  return oports_[item];
 }
 
 bool
 Module::oport_cached(const string &name)
 {
-  OPort *p = getOPort(name);
+  OPort *p = get_output_port(name);
   if (p == 0) { throw "Unable to initialize oport '" + name + "'."; }
   return p->have_data();
 }
@@ -578,21 +577,21 @@ Module::oport_cached(const string &name)
 bool
 Module::oport_supports_cache_flag(int p)
 {
-  if (p >= numOPorts()) return false;
+  if (p >= num_output_ports()) return false;
   return get_oport(p)->cache_flag_supported();
 }
 
 bool
 Module::get_oport_cache_flag(int p)
 {
-  ASSERT(p < numOPorts());
+  ASSERT(p < num_output_ports());
   return get_oport(p)->get_cache();
 }
 
 void
 Module::set_oport_cache_flag(int p, bool val)
 {
-  ASSERT(p < numOPorts());
+  ASSERT(p < num_output_ports());
   get_oport(p)->set_cache(val);
 }
 
@@ -600,12 +599,12 @@ Module::set_oport_cache_flag(int p, bool val)
 void
 Module::connection(Port::ConnectionState mode, int which_port, bool is_oport)
 {
-  if(!is_oport && lastportdynamic && 
-     dynamic_port_maker && (which_port >= first_dynamic_port)) {
+  if(!is_oport && lastportdynamic_ && 
+     dynamic_port_maker_ && (which_port >= first_dynamic_port_)) {
     if(mode == Port::Disconnected) {
       remove_iport(which_port);
-    } else if (which_port == iports.size()-1) {
-      add_iport(dynamic_port_maker(this,lastportname));
+    } else if (which_port == iports_.size()-1) {
+      add_iport(dynamic_port_maker_(this,lastportname_));
     }
   }
   
@@ -615,32 +614,32 @@ Module::connection(Port::ConnectionState mode, int which_port, bool is_oport)
 void
 Module::set_context(Network* network)
 {
-  this->network=network;
-  this->sched=network->get_scheduler();
-  ASSERT(helper == 0);
+  this->network_=network;
+  this->sched_=network->get_scheduler();
+  ASSERT(helper_ == 0);
   // Start up the event loop
-  helper=scinew ModuleHelper(this);
-  helper_thread = 
-    scinew Thread(helper, moduleName.c_str(), 0, Thread::NotActivated);
-  if(stacksize)
+  helper_=scinew ModuleHelper(this);
+  helper_thread_ = 
+    scinew Thread(helper_, module_name_.c_str(), 0, Thread::NotActivated);
+  if(stacksize_)
   {
-    helper_thread->setStackSize(stacksize);
+    helper_thread_->set_stack_size(stacksize_);
   }
-  helper_thread->activate(false);
-  //helper_thread->detach();  // Join on delete.
+  helper_thread_->activate(false);
+  //helper_thread_->detach();  // Join on delete.
 }
 
 void
-Module::setStackSize(unsigned long s)
+Module::set_stack_size(unsigned long s)
 {
-   stacksize=s;
+   stacksize_=s;
 }
 
 void
 Module::want_to_execute()
 {
-    need_execute=true;
-    sched->do_scheduling();
+    need_execute_ = true;
+    sched_->do_scheduling();
 }
 
 void
@@ -652,7 +651,7 @@ void
 Module::get_position(int& x, int& y)
 {
   string result;
-  if(!gui->eval(id+" get_x", result)){
+  if(!gui_->eval(id_+" get_x", result)){
     error("Error getting x coordinate.");
     return;
   }
@@ -660,7 +659,7 @@ Module::get_position(int& x, int& y)
     error("Error parsing x coordinate.");
     return;
   }
-  if(!gui->eval(id+" get_y", result)){
+  if(!gui_->eval(id_+" get_y", result)){
     error("Error getting y coordinate.");
     return;
   }
@@ -784,10 +783,10 @@ Module::tcl_command(GuiArgs& args, void*)
     int pnum;
     if (!string_to_int(args[2], pnum))
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
-    if (pnum >= oports.size() || pnum < 0)
+    if (pnum >= oports_.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
     else
-      args.result(oports[pnum]->get_colorname());
+      args.result(oports_[pnum]->get_colorname());
 
   } else if(args[1] == "iportcolor") {
     if (args.count() != 3)
@@ -795,12 +794,12 @@ Module::tcl_command(GuiArgs& args, void*)
     int pnum;
     if (!string_to_int(args[2], pnum))
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
-    if (lastportdynamic && pnum >= iports.size())
-      pnum = iports.size()-1;
-    if (pnum >= iports.size() || pnum < 0)
+    if (lastportdynamic_ && pnum >= iports_.size())
+      pnum = iports_.size()-1;
+    if (pnum >= iports_.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
     else
-      args.result(iports[pnum]->get_colorname());
+      args.result(iports_[pnum]->get_colorname());
 
   } else if(args[1] == "oportname") {
     if (args.count() != 3)
@@ -808,10 +807,10 @@ Module::tcl_command(GuiArgs& args, void*)
     int pnum;
     if (!string_to_int(args[2], pnum))
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
-    if (pnum >= oports.size() || pnum < 0)
+    if (pnum >= oports_.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
     else
-      args.result(oports[pnum]->get_typename()+" "+oports[pnum]->get_portname());
+      args.result(oports_[pnum]->get_typename()+" "+oports_[pnum]->get_portname());
 
   } else if(args[1] == "iportname") {
     if (args.count() != 3)
@@ -820,30 +819,30 @@ Module::tcl_command(GuiArgs& args, void*)
     if (!string_to_int(args[2], pnum))
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
 
-    if (lastportdynamic && pnum >= iports.size())
-      pnum = iports.size()-1;
+    if (lastportdynamic_ && pnum >= iports_.size())
+      pnum = iports_.size()-1;
 
-    if (pnum >= iports.size() || pnum < 0)
+    if (pnum >= iports_.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
     else
-      args.result(iports[pnum]->get_typename()+" "+iports[pnum]->get_portname());
+      args.result(iports_[pnum]->get_typename()+" "+iports_[pnum]->get_portname());
   } else if(args[1] == "oportcount") {
     if (args.count() != 2)
       args.error(args[0]+" "+args[1]+" takes no arguments");
-    args.result(to_string(oports.size()));
+    args.result(to_string(oports_.size()));
   } else if(args[1] == "iportcount") {
     if (args.count() != 2)
       args.error(args[0]+" "+args[1]+" takes no arguments");
-    args.result(to_string(iports.size()));
+    args.result(to_string(iports_.size()));
   } else if(args[1] == "needexecute"){
-    if(!abort_flag){
-      abort_flag=1;
+    if(!abort_flag_){
+      abort_flag_=1;
       want_to_execute();
     }
   } else if(args[1] == "getpid"){
     args.result(to_string(pid_));
   } else if(args[1] == "help"){
-    args.result(parse_description(description));
+    args.result(parse_description(description_));
   } else if(args[1] == "remark"){
     remark(args[2]);
   } else if(args[1] == "warning"){
@@ -856,7 +855,7 @@ Module::tcl_command(GuiArgs& args, void*)
 }
 
 void
-Module::setPid(int pid)
+Module::set_pid(int pid)
 {
   pid_=pid;
 }
@@ -867,12 +866,12 @@ Module::error(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id << ":ERROR: " << str << "\n";
+    cout << id_ << ":ERROR: " << str << "\n";
   }
-  msgStream_flush();
-  msgStream_ << "ERROR: " << str << '\n';
-  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} red");
-  msgStream_.str("");
+  msg_stream_flush();
+  msg_stream_ << "ERROR: " << str << '\n';
+  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} red");
+  msg_stream_.str("");
   update_msg_state(Error); 
 }
 
@@ -881,12 +880,12 @@ Module::warning(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id << ":WARNING: " << str << "\n";
+    cout << id_ << ":WARNING: " << str << "\n";
   }
-  msgStream_flush();
-  msgStream_ << "WARNING: " << str << '\n';
-  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} yellow");
-  msgStream_.str("");
+  msg_stream_flush();
+  msg_stream_ << "WARNING: " << str << '\n';
+  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} yellow");
+  msg_stream_.str("");
   update_msg_state(Warning); 
 }
 
@@ -895,12 +894,12 @@ Module::remark(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id << ":REMARK: " << str << "\n";
+    cout << id_ << ":REMARK: " << str << "\n";
   }
-  msgStream_flush();
-  msgStream_ << "REMARK: " << str << '\n';
-  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} blue");
-  msgStream_.str("");
+  msg_stream_flush();
+  msg_stream_ << "REMARK: " << str << '\n';
+  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} blue");
+  msg_stream_.str("");
   update_msg_state(Remark); 
 }
 
@@ -908,58 +907,58 @@ void Module::compile_error(const string& filename)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id << ":COMPILE ERROR IN FILE: " << filename << "cc" << "\n";
+    cout << id_ << ":COMPILE ERROR IN FILE: " << filename << "cc" << "\n";
   }
 
-  msgStream_flush();
-  msgStream_ << "COMPILE ERROR IN FILE: " << filename << "cc\n";
-  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} OrangeRed");
-  msgStream_.str("");
+  msg_stream_flush();
+  msg_stream_ << "COMPILE ERROR IN FILE: " << filename << "cc\n";
+  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} OrangeRed");
+  msg_stream_.str("");
   update_msg_state(Error); 
   
-  gui->eval(getID() + " compile_error "+filename);
+  gui_->eval(get_id() + " compile_error "+filename);
 }
 
 void
-Module::msgStream_flush()
+Module::msg_stream_flush()
 {
-  if (msgStream_.str() != "")
+  if (msg_stream_.str() != "")
   {
-    gui->execute(id + " append_log_msg {" + msgStream_.str() + "} black");
-    msgStream_.str("");
+    gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} black");
+    msg_stream_.str("");
   }
 }
 
 bool
 Module::in_power_app()
 {
-  return (gui->eval("in_power_app") == "1");
+  return (gui_->eval("in_power_app") == "1");
 }
 
 void
-Module::postMessage(const string& str)
+Module::post_message(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id << ":postMessage: " << str << "\n";
+    cout << id_ << ":post_message: " << str << "\n";
   }
-  gui->postMessage(moduleName + ": " + str, false);
+  gui_->post_message(module_name_ + ": " + str, false);
 }
 
 void
 Module::do_execute()
 {
   int i;
-  abort_flag=0;
+  abort_flag_=0;
 
   // Reset all of the ports.
-  for (i=0; i<oports.size(); i++)
+  for (i=0; i<oports_.size(); i++)
   {
-    oports[i]->reset();
+    oports_[i]->reset();
   }
-  for (i=0; i<iports.size(); i++)
+  for (i=0; i<iports_.size(); i++)
   {
-    iports[i]->reset();
+    iports_[i]->reset();
   }
 
   // Reset the TCL variables.
@@ -972,8 +971,8 @@ Module::do_execute()
   // Call the User's execute function.
   update_msg_state(Reset);
   update_state(JustStarted);
-  timer.clear();
-  timer.start();
+  timer_.clear();
+  timer_.start();
 
   try {
     execute();
@@ -1001,17 +1000,17 @@ Module::do_execute()
     error("Module crashed with no reason given.");
   }
 
-  timer.stop();
+  timer_.stop();
   update_state(Completed);
 
   // Call finish on all ports.
-  for (i=0;i<iports.size(); i++)
+  for (i=0;i<iports_.size(); i++)
   {
-    iports[i]->finish();
+    iports_[i]->finish();
   }
-  for (i=0; i<oports.size(); i++)
+  for (i=0; i<oports_.size(); i++)
   {
-    oports[i]->finish();
+    oports_[i]->finish();
   }
 }
 
@@ -1019,9 +1018,9 @@ Module::do_execute()
 void
 Module::do_synchronize()
 {
-  for (int i=0; i<oports.size(); i++)
+  for (int i=0; i<oports_.size(); i++)
   {
-    oports[i]->synchronize();
+    oports_[i]->synchronize();
   }
 }
 
@@ -1029,38 +1028,38 @@ Module::do_synchronize()
 void
 Module::request_multisend(OPort* p1)
 {
-  sched->request_multisend(p1);
+  sched_->request_multisend(p1);
 }
 
 int
-Module::numOPorts()
+Module::num_output_ports()
 {
-  return oports.size();
+  return oports_.size();
 }
 
 int
-Module::numIPorts()
+Module::num_input_ports()
 {
-  return iports.size();
+  return iports_.size();
 }
 
 GuiInterface*
-Module::getGui()
+Module::get_gui()
 {
-  return gui;
+  return gui_;
 }
 
 void
 Module::reset_vars()
 {
-  ctx->reset();
+  ctx_->reset();
 }
 
 bool
-Module::haveUI()
+Module::have_ui()
 {
   string result;
-  if(!gui->eval(id+" have_ui", result)){
+  if(!gui_->eval(id_+" have_ui", result)){
     error("Could not find UI tcl function.");
     return false;
   }
@@ -1075,15 +1074,15 @@ Module::haveUI()
 }
 
 void
-Module::popupUI()
+Module::popup_ui()
 {
-  gui->execute(id+" initialize_ui");
+  gui_->execute(id_+" initialize_ui");
 }
 
 
 // Used to send handles for geometry with error checking.
 bool
-Module::sendOHandle( string port_name,
+Module::send_output_handle( string port_name,
 		     GeomHandle& handle,
 		     string obj_name )
 {
@@ -1110,7 +1109,7 @@ Module::sendOHandle( string port_name,
 
 // Used to send handles for geometry with error checking.
 bool
-Module::sendOHandle( string port_name,
+Module::send_output_handle( string port_name,
 		     vector<GeomHandle> &handles,
 		     string obj_name )
 {

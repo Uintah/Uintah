@@ -58,19 +58,19 @@ DECLARE_MAKER(TensorFieldOperator)
 
 TensorFieldOperator::TensorFieldOperator(GuiContext* ctx)
   : Module("TensorFieldOperator",ctx,Source, "Operators", "Uintah"),
-    guiOperation(ctx->subVar("operation")),
-    guiRow(ctx->subVar("row")),
-    guiColumn(ctx->subVar("column")),
-    guiPlaneSelect(ctx->subVar("planeSelect")),
-    guiDelta(ctx->subVar("delta")),
-    guiEigen2DCalcType(ctx->subVar("eigen2D-calc-type")),
-    guiNx(ctx->subVar("nx")),
-    guiNy(ctx->subVar("ny")),
-    guiNz(ctx->subVar("nz")),
-    guiTx(ctx->subVar("tx")),
-    guiTy(ctx->subVar("ty")),
-    guiTz(ctx->subVar("tz"))
-    //    tcl_status(ctx->subVar("tcl_status")),
+    guiOperation(get_ctx()->subVar("operation")),
+    guiRow(get_ctx()->subVar("row")),
+    guiColumn(get_ctx()->subVar("column")),
+    guiPlaneSelect(get_ctx()->subVar("planeSelect")),
+    guiDelta(get_ctx()->subVar("delta")),
+    guiEigen2DCalcType(get_ctx()->subVar("eigen2D-calc-type")),
+    guiNx(get_ctx()->subVar("nx")),
+    guiNy(get_ctx()->subVar("ny")),
+    guiNz(get_ctx()->subVar("nz")),
+    guiTx(get_ctx()->subVar("tx")),
+    guiTy(get_ctx()->subVar("ty")),
+    guiTz(get_ctx()->subVar("tz"))
+    //    tcl_status(get_ctx()->subVar("tcl_status")),
 {
 }
   

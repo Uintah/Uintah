@@ -81,7 +81,7 @@ DECLARE_MAKER(SegFieldOps)
 
 SegFieldOps::SegFieldOps(GuiContext* ctx)
   : Module("SegFieldOps", ctx, Filter, "Modeling", "BioPSE"), tclCmd_(""),
-    currFld_(0), minCompSize_(ctx->subVar("min_comp_size")), lastGen_(0)
+    currFld_(0), minCompSize_(get_ctx()->subVar("min_comp_size")), lastGen_(0)
 {
 }
 

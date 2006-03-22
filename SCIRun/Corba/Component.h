@@ -78,7 +78,7 @@ public:
   
   /** Returns the value of \em have_ui, which indicates whether or not the
       component defines a user interface. */
-  bool haveUI();
+  bool have_ui();
   
   /** Returns the port with name \em name */
   Port* getPort(const std::string &name);
@@ -114,7 +114,7 @@ public:
   
   /** Implements the UI.  Each component type must reimplement this method if
       it provides a user interface. */
-  virtual int popupUI();
+  virtual int popup_ui();
 
   void setServices(Services *services);
 

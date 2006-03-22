@@ -111,7 +111,7 @@ void displayProblemLocation(const string& var, int matl,
     "Variable: " << var << endl <<
   "Material: " << matl << endl;
   if (patch != 0)
-    cerr << "Patch: " << patch->getID() <<endl;   
+    cerr << "Patch: " << patch->get_id() <<endl;   
 
 }
 
@@ -120,8 +120,8 @@ void displayProblemLocation(const string& var, int matl,
 			    double time)
 {
   cerr << "Time: " << time << " "<<
-          "Patch1: " << patch->getID() << " " <<
-          "Patch2: " << patch2->getID() << " " <<
+          "Patch1: " << patch->get_id() << " " <<
+          "Patch2: " << patch2->get_id() << " " <<
           "Material: " << matl << " " <<
           "Variable: " << var << endl;
 }
@@ -996,8 +996,8 @@ void buildPatchMap(LevelP level, const string& filebase,
       if (*iter != 0) {
         static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
         if (pw.invoke())
-          cerr << "Patches " << patch->getID() << " and " 
-               << (*iter)->getID() << " overlap on the same file at time " << time
+          cerr << "Patches " << patch->get_id() << " and " 
+               << (*iter)->get_id() << " overlap on the same file at time " << time
                << " in " << filebase << " at index " << iter.getIndex() << endl;
 	//abort_uncomparable();
         
@@ -1230,7 +1230,7 @@ main(int argc, char** argv)
 	      cerr << "The material set is not consistent for variable "
 		   << var << " across patches at time " << time1 << endl;
 	      cerr << "Previously was: " << matls << endl;
-	      cerr << "But on patch " << patch->getID() << ": " <<
+	      cerr << "But on patch " << patch->get_id() << ": " <<
 		da1->queryMaterials(var, patch, time1) << endl;
 	      abort_uncomparable();
 	    }
@@ -1243,7 +1243,7 @@ main(int argc, char** argv)
 	    const Patch* patch = *iter;
 	    if (matls != da2->queryMaterials(var, patch, time2)) {
 	      cerr << "Inconsistent material sets for variable "
-		   << var << " on patch2 = " << patch->getID()
+		   << var << " on patch2 = " << patch->get_id()
 		   << ", time " << time1 << endl;
 	      cerr << filebase1 << " (1) has material set: " << matls << ".\n";
 	      cerr << filebase2 << " (2) has material set: "
@@ -1299,22 +1299,22 @@ main(int argc, char** argv)
 	      const Patch* patch = *iter;
 	      const Patch* patch2 = *iter2;
 
-	      if (patch->getID() != patch2->getID()) {
+	      if (patch->get_id() != patch2->get_id()) {
 		cerr << "Inconsistent patch ids on level " << l
 		     << " at time " << time1 << endl;
-		cerr << filebase1 << " has patch id " << patch->getID()
+		cerr << filebase1 << " has patch id " << patch->get_id()
 		     << " where\n";
-		cerr << filebase2 << " has patch id " << patch2->getID() << endl;
+		cerr << filebase2 << " has patch id " << patch2->get_id() << endl;
 		abort_uncomparable();  
 	      }
 	    
-	      cerr << "\t\tPatch: " << patch->getID() << "\n";
+	      cerr << "\t\tPatch: " << patch->get_id() << "\n";
 
 	      if (!compare(patch->getBox().lower(), patch2->getBox().lower(),
 			   abs_tolerance, rel_tolerance) ||
 		  !compare(patch->getBox().upper(), patch2->getBox().upper(),
 			   abs_tolerance, rel_tolerance)) {
-		cerr << "Inconsistent patch bounds on patch " << patch->getID()
+		cerr << "Inconsistent patch bounds on patch " << patch->get_id()
 		     << " at time " << time1 << endl;
 		cerr << filebase1 << " has bounds " << patch->getBox().lower()
 		     << " - " << patch->getBox().upper() << ".\n";

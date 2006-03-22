@@ -48,7 +48,7 @@ DECLARE_MAKER(ScalarFieldBinaryOperator)
 
 ScalarFieldBinaryOperator::ScalarFieldBinaryOperator(GuiContext* ctx)
   : Module("ScalarFieldBinaryOperator",ctx,Source, "Operators", "Uintah"),
-    guiOperation(ctx->subVar("operation"))
+    guiOperation(get_ctx()->subVar("operation"))
 {
 }
   

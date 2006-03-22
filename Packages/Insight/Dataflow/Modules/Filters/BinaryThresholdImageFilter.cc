@@ -177,10 +177,10 @@ DECLARE_MAKER(BinaryThresholdImageFilter)
 
 BinaryThresholdImageFilter::BinaryThresholdImageFilter(GuiContext* ctx)
   : Module("BinaryThresholdImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_lower_threshold_(ctx->subVar("lower_threshold")),
-     gui_upper_threshold_(ctx->subVar("upper_threshold")),
-     gui_inside_value_(ctx->subVar("inside_value")),
-     gui_outside_value_(ctx->subVar("outside_value")), 
+     gui_lower_threshold_(get_ctx()->subVar("lower_threshold")),
+     gui_upper_threshold_(get_ctx()->subVar("upper_threshold")),
+     gui_inside_value_(get_ctx()->subVar("inside_value")),
+     gui_outside_value_(get_ctx()->subVar("outside_value")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

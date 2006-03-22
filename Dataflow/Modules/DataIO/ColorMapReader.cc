@@ -65,8 +65,8 @@ DECLARE_MAKER(ColorMapReader)
 
 ColorMapReader::ColorMapReader(GuiContext* ctx)
   : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_filetype_(ctx->subVar("filetype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_filetype_(get_ctx()->subVar("filetype"))
 {
   ColorMapIEPluginManager mgr;
   vector<string> importers;
@@ -112,7 +112,7 @@ ColorMapReader::call_importer(const string &filename)
   if (pl)
   {
     handle_ = pl->filereader(this, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return handle_.get_rep();
   }
   return false;

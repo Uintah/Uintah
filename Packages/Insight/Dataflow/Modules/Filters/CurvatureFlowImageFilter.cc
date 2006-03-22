@@ -171,8 +171,8 @@ DECLARE_MAKER(CurvatureFlowImageFilter)
 
 CurvatureFlowImageFilter::CurvatureFlowImageFilter(GuiContext* ctx)
   : Module("CurvatureFlowImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_time_step_(ctx->subVar("time_step")),
-     gui_number_of_iterations_(ctx->subVar("number_of_iterations")), 
+     gui_time_step_(get_ctx()->subVar("time_step")),
+     gui_number_of_iterations_(get_ctx()->subVar("number_of_iterations")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

@@ -87,10 +87,10 @@ DECLARE_MAKER(UnuCrop)
 
 UnuCrop::UnuCrop(SCIRun::GuiContext *ctx) : 
   Module("UnuCrop", ctx, Filter, "UnuAtoM", "Teem"), 
-  num_axes_(ctx->subVar("num-axes")),
-  uis_(ctx->subVar("uis")),
-  reset_data_(ctx->subVar("reset_data")),
-  digits_only_(ctx->subVar("digits_only")),
+  num_axes_(get_ctx()->subVar("num-axes")),
+  uis_(get_ctx()->subVar("uis")),
+  reset_data_(get_ctx()->subVar("reset_data")),
+  digits_only_(get_ctx()->subVar("digits_only")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
@@ -104,13 +104,13 @@ UnuCrop::UnuCrop(SCIRun::GuiContext *ctx) :
   for (int a = 0; a < 4; a++) {
     ostringstream str;
     str << "minAxis" << a;
-    mins_.push_back(new GuiString(ctx->subVar(str.str())));
+    mins_.push_back(new GuiString(get_ctx()->subVar(str.str())));
     ostringstream str1;
     str1 << "maxAxis" << a;
-    maxs_.push_back(new GuiString(ctx->subVar(str1.str())));
+    maxs_.push_back(new GuiString(get_ctx()->subVar(str1.str())));
     ostringstream str2;
     str2 << "absmaxAxis" << a;
-    absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+    absmaxs_.push_back(new GuiInt(get_ctx()->subVar(str2.str())));
   }
 }
 
@@ -147,16 +147,16 @@ UnuCrop::execute()
       str2 << "maxAxis" << i;
       str3 << "absmaxAxis" << i;
       str4 << i;
-      mins_.push_back(new GuiString(ctx->subVar(str.str())));
-      maxs_.push_back(new GuiString(ctx->subVar(str2.str())));
-      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+      mins_.push_back(new GuiString(get_ctx()->subVar(str.str())));
+      maxs_.push_back(new GuiString(get_ctx()->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(get_ctx()->subVar(str3.str())));
 
       mins_[i]->reset();
       maxs_[i]->reset();
       lastmin_.push_back(parse(nrrdH, mins_[i]->get(),i));
       lastmax_.push_back(parse(nrrdH, maxs_[i]->get(),i));  
 
-      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_min_max " + str4.str()));
     }
   }
 
@@ -182,7 +182,7 @@ UnuCrop::execute()
       lastmin_.erase(iter4, iter4);
       lastmax_.erase(iter5, iter5);
 
-      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+      get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     }
     uis_.set(nrrdH->nrrd->dim);
   } else if (uis_.get() < nrrdH->nrrd->dim) {
@@ -192,21 +192,21 @@ UnuCrop::execute()
       str2 << "maxAxis" << i;
       str3 << "absmaxAxis" << i;
       str4 << i;
-      mins_.push_back(new GuiString(ctx->subVar(str.str())));
-      maxs_.push_back(new GuiString(ctx->subVar(str2.str())));
+      mins_.push_back(new GuiString(get_ctx()->subVar(str.str())));
+      maxs_.push_back(new GuiString(get_ctx()->subVar(str2.str())));
       if (digits_only_.get() == 1) {
 	maxs_[i]->set(to_string(nrrdH->nrrd->axis[i].size - 1));
       }
       else {
 	maxs_[i]->set("M");
       }
-      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+      absmaxs_.push_back(new GuiInt(get_ctx()->subVar(str3.str())));
       absmaxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
 
       lastmin_.push_back(0);
       lastmax_.push_back(nrrdH->nrrd->axis[i].size - 1); 
 
-      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_min_max " + str4.str()));
     }
     uis_.set(nrrdH->nrrd->dim);
   }
@@ -239,13 +239,13 @@ UnuCrop::execute()
       }
     }
 
-    gui->execute(id.c_str() + string (" update_sizes "));    
+    get_gui()->execute(get_id().c_str() + string (" update_sizes "));    
   }
 
   if (new_dataset && !first_time && reset_data_.get() == 1) {
     ostringstream str;
-    str << id.c_str() << " reset_vals" << endl; 
-    gui->execute(str.str());  
+    str << get_id().c_str() << " reset_vals" << endl; 
+    get_gui()->execute(str.str());  
   }
   
   if (num_axes_.get() == 0) {
@@ -331,7 +331,7 @@ UnuCrop::execute()
     if (nrrdCrop(nout, nin, min, max)) {
       char *err = biffGetDone(NRRD);
       error(string("Trouble cropping: ") + err + "\nOutputting input Nrrd");
-      msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+      msg_stream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
       free(err);
       for(int a=0; a<nin->dim; a++) {
 	mins_[a]->set(to_string(0));
@@ -406,14 +406,14 @@ UnuCrop::tcl_command(GuiArgs& args, void* userdata)
       str2 << "maxAxis" << i;
       str3 << "absmaxAxis" << i;
       str4 << i;
-      mins_.push_back(new GuiString(ctx->subVar(str.str())));
-      maxs_.push_back(new GuiString(ctx->subVar(str2.str())));
-      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+      mins_.push_back(new GuiString(get_ctx()->subVar(str.str())));
+      maxs_.push_back(new GuiString(get_ctx()->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(get_ctx()->subVar(str3.str())));
 
       lastmin_.push_back(0);
       lastmax_.push_back(0); 
 
-      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_min_max " + str4.str()));
 
       uis_.set(uis_.get() + 1);
   }
@@ -435,7 +435,7 @@ UnuCrop::tcl_command(GuiArgs& args, void* userdata)
     lastmin_.erase(iter4, iter4);
     lastmax_.erase(iter5, iter5);
     
-    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     uis_.set(uis_.get() - 1);
   }
   else 

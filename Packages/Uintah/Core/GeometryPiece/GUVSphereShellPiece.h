@@ -82,7 +82,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle locations */
     //////////////////////////////////////////////////////////////////////
-    inline vector<Point>* getPosition()
+    inline vector<Point>* get_position()
     {
       return &d_pos;
     }

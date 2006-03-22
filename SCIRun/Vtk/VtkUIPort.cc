@@ -69,7 +69,7 @@ VtkUIThread::VtkUIThread(VtkComponentInstance* ci)
 
 void VtkUIThread::run()
 {
-  ci->getComponent()->popupUI();
+  ci->getComponent()->popup_ui();
 }
 
 VtkUIPort::VtkUIPort(VtkComponentInstance* ci)
@@ -88,7 +88,7 @@ VtkUIPort::ui()
   Thread* t = new Thread(new VtkUIThread(ci), "Vtk UI Thread", 0);
   t->detach();
   }else{
-  return ci->getComponent()->popupUI();
+  return ci->getComponent()->popup_ui();
   }
   //return 0 success, -1 fatal error, 
   //other values for other errors.

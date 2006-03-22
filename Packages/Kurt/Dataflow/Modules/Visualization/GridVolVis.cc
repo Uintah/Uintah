@@ -64,13 +64,13 @@ DECLARE_MAKER(GridVolVis)
 GridVolVis::GridVolVis(GuiContext* ctx)
   : Module("GridVolVis", ctx,  Filter, "Visualization", "Kurt"),
     tex(0), gvr(0),
-    is_fixed_(ctx->subVar("is_fixed_")),
-    max_brick_dim_(ctx->subVar("max_brick_dim_")),
-    min_(ctx->subVar("min_")), max_(ctx->subVar("max_")),
-    num_slices(ctx->subVar("num_slices")),
-    render_style(ctx->subVar("render_style")),
-    alpha_scale(ctx->subVar("alpha_scale")),
-    interp_mode(ctx->subVar("interp_mode")),
+    is_fixed_(get_ctx()->subVar("is_fixed_")),
+    max_brick_dim_(get_ctx()->subVar("max_brick_dim_")),
+    min_(get_ctx()->subVar("min_")), max_(get_ctx()->subVar("max_")),
+    num_slices(get_ctx()->subVar("num_slices")),
+    render_style(get_ctx()->subVar("render_style")),
+    alpha_scale(get_ctx()->subVar("alpha_scale")),
+    interp_mode(get_ctx()->subVar("interp_mode")),
     volren(0)
 {
 }
@@ -95,15 +95,15 @@ void GridVolVis::execute(void)
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield) {
-    gui->postMessage("Unable to initialize "+name+"'s iport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!incolormap) {
-    gui->postMessage("Unable to initialize "+name+"'s iport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!ogeom) {
-    gui->postMessage("Unable to initialize "+name+"'s oport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s oport\n");
     return;
   }
 
@@ -132,7 +132,7 @@ void GridVolVis::execute(void)
     std::cerr<<"Need to initialize volren\n";
     old_cmap = cmap;
     old_tex = tex;
-    gui->execute(id + " SetDims " + to_string( volren->get_brick_size()));
+    get_gui()->execute(get_id() + " SetDims " + to_string( volren->get_brick_size()));
     max_brick_dim_.set(  volren->get_brick_size() );
     old_brick_size = max_brick_dim_.get();
     if( is_fixed_.get() !=1 ){

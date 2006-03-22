@@ -58,7 +58,7 @@ using namespace SCIRun;
       int field_generation;
 
     public:
-      Span(const clString& id);
+      Span(const clString& get_id());
       virtual ~Span();
 
       void execute();
@@ -66,15 +66,15 @@ using namespace SCIRun;
     };
       
     
-    extern "C" Module* make_Span(const clString& id)
+    extern "C" Module* make_Span(const clString& get_id())
     {
-      return scinew Span(id);
+      return scinew Span(get_id());
     }
 
     static clString module_name("Span");
 
-    Span::Span(const clString& id) :
-      Module("Span", id, Filter)
+    Span::Span(const clString& get_id()) :
+      Module("Span", get_id(), Filter)
     {
       // Create input ports
       infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);

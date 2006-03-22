@@ -75,7 +75,7 @@ bool SCIRunPortInstance::connect(PortInstance* to)
   if(!canConnectTo(to))
     return false;
   SCIRunPortInstance* p2 = dynamic_cast<SCIRunPortInstance*>(to);
-  Network* net = port->get_module()->getNetwork();
+  Network* net = port->get_module()->get_network();
   if(porttype == Output)
     {
     net->connect(port->get_module(), port->get_which_port(),

@@ -72,7 +72,7 @@ void SelectionMaskXOR::execute()
   MatrixOPort *oport;
   MatrixHandle input, output;
   
-  if (!(iport = dynamic_cast<MatrixIPort *>(getIPort(0))))
+  if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(0))))
   {
     // nothing to do no ports available
     return;
@@ -91,7 +91,7 @@ void SelectionMaskXOR::execute()
     return;
   }
   
-  if (!(iport = dynamic_cast<MatrixIPort *>(getIPort(1))))
+  if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(1))))
   {
     // nothing to do no ports available
     return;
@@ -121,7 +121,7 @@ void SelectionMaskXOR::execute()
   
   output = newmask.gethandle();
   
-  if (!(oport = dynamic_cast<MatrixOPort *>(getOPort(0))))
+  if (!(oport = dynamic_cast<MatrixOPort *>(get_output_port(0))))
   {
     error("No output port is defined");
     return;

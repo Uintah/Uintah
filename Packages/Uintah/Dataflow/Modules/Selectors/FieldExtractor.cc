@@ -70,12 +70,12 @@ FieldExtractor::FieldExtractor(const string& name,
                                const string& pack) :
   Module(name, ctx, Filter, cat, pack),
   generation(-1),  timestep(-1), material(-1), levelnum(0),
-  level_(ctx->subVar("level")), grid(0), 
+  level_(get_ctx()->subVar("level")), grid(0), 
   archiveH(0), mesh_handle_(0),
-  tcl_status(ctx->subVar("tcl_status")), 
-  sVar(ctx->subVar("sVar")),
-  sMatNum(ctx->subVar("sMatNum")),
-  remove_boundary_cells(ctx->subVar("remove_boundary_cells")),
+  tcl_status(get_ctx()->subVar("tcl_status")), 
+  sVar(get_ctx()->subVar("sVar")),
+  sMatNum(get_ctx()->subVar("sMatNum")),
+  remove_boundary_cells(get_ctx()->subVar("remove_boundary_cells")),
   type(0)
 { 
 } 
@@ -91,9 +91,9 @@ FieldExtractor::build_GUI_frame()
 {
   // create the variable extractor interface.
   string visible;
-  gui->eval(id + " isVisible", visible);
+  get_gui()->eval(get_id() + " isVisible", visible);
   if( visible == "0" ){
-    gui->execute(id + " buildTopLevel");
+    get_gui()->execute(get_id() + " buildTopLevel");
   }
 }
 
@@ -167,17 +167,17 @@ FieldExtractor::update_GUI(const string& var,
   os << levels;
 
   string visible;
-  gui->eval(id + " isVisible", visible);
+  get_gui()->eval(get_id() + " isVisible", visible);
   if( visible == "1"){
-    gui->execute(id + " destroyFrames");
-    gui->execute(id + " build");
-    gui->execute(id + " buildLevels "+ os.str());
-    gui->execute(id + " buildMaterials " + matls.expandedString().c_str());
+    get_gui()->execute(get_id() + " destroyFrames");
+    get_gui()->execute(get_id() + " build");
+    get_gui()->execute(get_id() + " buildLevels "+ os.str());
+    get_gui()->execute(get_id() + " buildMaterials " + matls.expandedString().c_str());
       
-    gui->execute(id + " setVars " + varnames.c_str());
-    gui->execute(id + " buildVarList");
+    get_gui()->execute(get_id() + " setVars " + varnames.c_str());
+    get_gui()->execute(get_id() + " buildVarList");
       
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
     reset_vars();
   }
 }

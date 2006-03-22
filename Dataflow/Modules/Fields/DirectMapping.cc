@@ -88,11 +88,11 @@ private:
 DECLARE_MAKER(DirectMapping)
 DirectMapping::DirectMapping(GuiContext* ctx) : 
   Module("DirectMapping", ctx, Filter, "FieldsData", "SCIRun"),
-  gInterpolation_basis_(ctx->subVar("interpolation_basis"), "linear"),
-  gMap_source_to_single_dest_(ctx->subVar("map_source_to_single_dest"), 0),
-  gExhaustive_search_(ctx->subVar("exhaustive_search"), 0),
-  gExhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist"), -1),
-  gNp_(ctx->subVar("np"), 1),
+  gInterpolation_basis_(get_ctx()->subVar("interpolation_basis"), "linear"),
+  gMap_source_to_single_dest_(get_ctx()->subVar("map_source_to_single_dest"), 0),
+  gExhaustive_search_(get_ctx()->subVar("exhaustive_search"), 0),
+  gExhaustive_search_max_dist_(get_ctx()->subVar("exhaustive_search_max_dist"), -1),
+  gNp_(get_ctx()->subVar("np"), 1),
   sfGeneration_(-1),
   dfGeneration_(-1),
   error_(false)

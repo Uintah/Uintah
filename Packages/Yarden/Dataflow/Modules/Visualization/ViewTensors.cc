@@ -96,7 +96,7 @@ using namespace DaveW::Datatypes;
       Window     win;
       
     public:
-      ViewTensors( const clString& id);
+      ViewTensors( const clString& get_id());
       virtual ~ViewTensors();
       
       virtual void execute();
@@ -117,21 +117,21 @@ using namespace DaveW::Datatypes;
       void reconfigure();
     };
     
-    extern "C" Module* make_ViewTensors(const clString& id)
+    extern "C" Module* make_ViewTensors(const clString& get_id())
     {
-      return scinew ViewTensors(id);
+      return scinew ViewTensors(get_id());
     }
     
     static clString module_name("ViewTensors");
     
-    ViewTensors::ViewTensors(const clString& id)
-      : Module("ViewTensors", id, Filter ),
-	tcl_slice("slice", id, this ),
-	tcl_mode("mode", id, this ),
-	tcl_nx("nx", id, this ),
-	tcl_ny("ny", id, this),
-	tcl_nz("nz", id, this ),
-	tcl_num_slices("num-slices", id, this )
+    ViewTensors::ViewTensors(const clString& get_id())
+      : Module("ViewTensors", get_id(), Filter ),
+	tcl_slice("slice", get_id(), this ),
+	tcl_mode("mode", get_id(), this ),
+	tcl_nx("nx", get_id(), this ),
+	tcl_ny("ny", get_id(), this),
+	tcl_nz("nz", get_id(), this ),
+	tcl_num_slices("num-slices", get_id(), this )
     {
       // input ports
       in_tensor=scinew TensorFieldIPort(this, "Tensor Field",
@@ -198,7 +198,7 @@ using namespace DaveW::Datatypes;
 //       tcl_nz.set(nz-1);
 
       ostringstream str;
-      str << id << " new-info " << nx << " " << ny << " " << nz;
+      str << get_id() << " new-info " << nx << " " << ny << " " << nz;
       TCL::execute(str.str().c_str());
 
       input->get_minmax( min, max );
@@ -370,7 +370,7 @@ using namespace DaveW::Datatypes;
       TCLTask::lock();
 
       cerr << "in init " << width << " " << height << endl;
-      clString myname(clString(".ui")+id+".gl.gl");
+      clString myname(clString(".ui")+get_id()+".gl.gl");
       
       Tk_Window tkwin=Tk_NameToWindow(the_interp,
 			    const_cast<char *>(myname()),

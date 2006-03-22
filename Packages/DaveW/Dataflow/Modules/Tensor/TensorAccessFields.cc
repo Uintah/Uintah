@@ -25,7 +25,7 @@ class TensorAccessFields : public Module
   ScalarFieldOPort * o_scal2;
 
 public: 
-  TensorAccessFields(const clString& id); 
+  TensorAccessFields(const clString& get_id()); 
   virtual ~TensorAccessFields(); 
   virtual void execute(); 
 };
@@ -37,15 +37,15 @@ template <class DATA>
 DATA get_value(Array1<Array3<DATA> > in_data, short x, short y, short slice, short tensor);
 
 
-extern "C" Module* make_TensorAccessFields(const clString& id) { 
-    return new TensorAccessFields(id); 
+extern "C" Module* make_TensorAccessFields(const clString& get_id()) { 
+    return new TensorAccessFields(get_id()); 
 } 
   
 int width, num_slices;
 
 //--------------------------------------------------------------- 
-TensorAccessFields::TensorAccessFields(const clString& id) 
-: Module("TensorAccessFields", id, Filter)
+TensorAccessFields::TensorAccessFields(const clString& get_id()) 
+: Module("TensorAccessFields", get_id(), Filter)
 {
   i_tensor = scinew TensorFieldIPort(this, "TensorField", TensorFieldIPort::Atomic);
   add_iport(i_tensor);

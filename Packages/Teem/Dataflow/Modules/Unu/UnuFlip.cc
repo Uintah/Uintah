@@ -57,7 +57,7 @@ DECLARE_MAKER(UnuFlip)
 
 UnuFlip::UnuFlip(SCIRun::GuiContext *ctx) : 
   Module("UnuFlip", ctx, Filter, "UnuAtoM", "Teem"), 
-  axis_(ctx->subVar("axis"), 0)
+  axis_(get_ctx()->subVar("axis"), 0)
 {
 }
 

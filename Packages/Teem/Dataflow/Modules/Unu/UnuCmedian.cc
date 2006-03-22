@@ -76,11 +76,11 @@ DECLARE_MAKER(UnuCmedian)
 
 UnuCmedian::UnuCmedian(SCIRun::GuiContext *ctx) : 
   Module("UnuCmedian", ctx, Filter, "UnuAtoM", "Teem"), 
-  mode_(ctx->subVar("mode")),
-  radius_(ctx->subVar("radius")),
-  weight_(ctx->subVar("weight")),
-  bins_(ctx->subVar("bins")),
-  pad_(ctx->subVar("pad")),
+  mode_(get_ctx()->subVar("mode")),
+  radius_(get_ctx()->subVar("radius")),
+  weight_(get_ctx()->subVar("weight")),
+  bins_(get_ctx()->subVar("bins")),
+  pad_(get_ctx()->subVar("pad")),
   old_mode_(-1), old_radius_(-1), old_weight_(-1.0),
   old_bins_(-1), old_pad_(-1), old_generation_(-1)
 {

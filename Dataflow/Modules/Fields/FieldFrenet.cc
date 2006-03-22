@@ -92,7 +92,7 @@ FieldFrenet::execute()
 {
   FieldHandle  fHandle;
 
-  if( !getIHandle( "Input Field",  fHandle, true  ) ) return;
+  if( !get_input_handle( "Input Field",  fHandle, true  ) ) return;
 
   if( fHandle->mesh()->topology_geometry() ==
       (Mesh::STRUCTURED | Mesh::IRREGULAR) ) {
@@ -117,8 +117,8 @@ FieldFrenet::execute()
   // Check to see if the dimensions have changed.
   if(  Dims_.changed( true ) ) {
     ostringstream str;
-    str << id << " set_size ";
-    gui->execute(str.str().c_str());
+    str << get_id() << " set_size ";
+    get_gui()->execute(str.str().c_str());
   }
 
   // If no data or a changed input field or axis recreate the mesh.

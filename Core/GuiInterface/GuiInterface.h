@@ -68,7 +68,7 @@ namespace SCIRun {
     virtual void pause() = 0;
     virtual void unpause() = 0;
     virtual GuiContext* createContext(const string& name) = 0;
-    virtual void postMessage(const string& errmsg, bool err = false) = 0;
+    virtual void post_message(const string& errmsg, bool err = false) = 0;
     // Get regular var as string
     virtual bool get(const std::string& name, std::string& value) = 0;
     virtual void set(const std::string& name, const std::string& value) = 0;

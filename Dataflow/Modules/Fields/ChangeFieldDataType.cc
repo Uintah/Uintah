@@ -70,9 +70,9 @@ DECLARE_MAKER(ChangeFieldDataType)
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
   : Module("ChangeFieldDataType", ctx, Filter, "FieldsData", "SCIRun"),
-    outputdatatype_(ctx->subVar("outputdatatype"), "double"),
-    inputdatatype_(ctx->subVar("inputdatatype", false), "---"),
-    fldname_(ctx->subVar("fldname", false), "---"),
+    outputdatatype_(get_ctx()->subVar("outputdatatype"), "double"),
+    inputdatatype_(get_ctx()->subVar("inputdatatype", false), "---"),
+    fldname_(get_ctx()->subVar("fldname", false), "---"),
     generation_(-1),
     outputfield_(0)
 {

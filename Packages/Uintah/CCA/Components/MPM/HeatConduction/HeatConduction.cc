@@ -149,9 +149,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()<<"\t\t MPM"<< endl;
+      cout_doing <<"Doing computeInternalHeatRate on patch " << patch->get_id()<<"\t\t MPM"<< endl;
     if (cout_heat.active())
-      cout_heat << " Patch = " << patch->getID() << endl;
+      cout_heat << " Patch = " << patch->get_id() << endl;
 
     ParticleInterpolator* interpolator = d_flag->d_interpolator->clone(patch);
     vector<IntVector> ni;
@@ -392,7 +392,7 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing solveHeatEquations on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
+      cout_doing <<"Doing solveHeatEquations on patch " << patch->get_id() <<"\t\t\t MPM"<< endl;
 
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -464,7 +464,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing integrateTemperatureRate on patch " << patch->getID()<< "\t\t MPM"<< endl;
+      cout_doing <<"Doing integrateTemperatureRate on patch " << patch->get_id()<< "\t\t MPM"<< endl;
 
 
     Ghost::GhostType  gnone = Ghost::None;

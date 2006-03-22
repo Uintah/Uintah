@@ -199,7 +199,7 @@ namespace Uintah {
 ostream& operator<<(ostream& out, ParticleSubset& pset)
 {
     out << &pset
-        << " patch: " << pset.getPatch() << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
+        << " patch: " << pset.getPatch() << " (" << (pset.getPatch()?pset.getPatch()->get_id():0)
         << "), matl "
         << pset.getMatlIndex() << " range [" << pset.getLow() 
         << ", " << pset.getHigh() << ") " 

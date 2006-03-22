@@ -78,7 +78,7 @@ template <class HType>
 GenericReader<HType>::GenericReader(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Source, cat, pack),
-    filename_(ctx->subVar("filename"), ""),
+    filename_(get_ctx()->subVar("filename"), ""),
     old_filemodification_(0),
     importing_(false)
 {
@@ -172,7 +172,7 @@ GenericReader<HType>::execute()
   }
 
   // Send the data downstream.
-  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)getOPort(0);
+  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_output_port(0);
   if (!outport) {
     error("Unable to initialize oport.");
     return;

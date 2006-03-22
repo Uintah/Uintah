@@ -77,7 +77,7 @@ DECLARE_MAKER(UnuPermute)
 
 UnuPermute::UnuPermute(GuiContext *ctx) : 
   Module("UnuPermute", ctx, Filter, "UnuNtoZ", "Teem"),
-  dim_(ctx->subVar("dim")), uis_(ctx->subVar("uis")),
+  dim_(get_ctx()->subVar("dim")), uis_(get_ctx()->subVar("uis")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
@@ -87,7 +87,7 @@ UnuPermute::UnuPermute(GuiContext *ctx) :
   for (int a = 0; a < 4; a++) {
     ostringstream str;
     str << "axis" << a;
-    axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+    axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
     last_axes_.push_back(a);
   }
 }
@@ -141,9 +141,9 @@ UnuPermute::execute()
       ostringstream str, str2;
       str << "axis" << i;
       str2 << i;
-      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
       last_axes_.push_back(axes_[i]->get());
-      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_axis " + str2.str()));
     }
   }
 
@@ -161,7 +161,7 @@ UnuPermute::execute()
       vector<int>::iterator iter2 = last_axes_.end();
       axes_.erase(iter, iter);
       last_axes_.erase(iter2, iter2);
-      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+      get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     }
     uis_.set(nrrdH->nrrd->dim);
   } else if (uis_.get() < nrrdH->nrrd->dim) {
@@ -169,9 +169,9 @@ UnuPermute::execute()
       ostringstream str, str2;
       str << "axis" << i;
       str2 << i;
-      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
       last_axes_.push_back(i);
-      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_axis " + str2.str()));
     }
     uis_.set(nrrdH->nrrd->dim);
   }
@@ -229,9 +229,9 @@ UnuPermute::tcl_command(GuiArgs& args, void* userdata)
       ostringstream str, str2;
       str << "axis" << i;
       str2 << i;
-      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
       last_axes_.push_back(i);
-      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_axis " + str2.str()));
       uis_.set(uis_.get() + 1);
   }
   else if( args[1] == "remove_axis" ) 
@@ -244,7 +244,7 @@ UnuPermute::tcl_command(GuiArgs& args, void* userdata)
     vector<int>::iterator iter2 = last_axes_.end();
     axes_.erase(iter, iter);
     last_axes_.erase(iter2, iter2);
-    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     uis_.set(uis_.get() - 1);
   }
   else 

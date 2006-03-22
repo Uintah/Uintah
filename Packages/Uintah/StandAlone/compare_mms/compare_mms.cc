@@ -178,7 +178,7 @@ main( int argc, char *argv[] )
                       cerr << "The material set is not consistent for variable "
                            << vars[varIndex] << " across patches at time " << times[timeIndex] << endl;
                       cerr << "Previously was: " << matls << endl;
-                      cerr << "But on patch " << patch->getID() << ": " << da1->queryMaterials(vars[varIndex], patch, times[timeIndex]) 
+                      cerr << "But on patch " << patch->get_id() << ": " << da1->queryMaterials(vars[varIndex], patch, times[timeIndex]) 
                            << "\n";
                       exit( 1 );
                     }

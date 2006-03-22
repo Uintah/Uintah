@@ -37,7 +37,7 @@ public:
   int current_generation;
   
 public:
-  BayerAnalysis(const string& id);
+  BayerAnalysis(const string& get_id());
 
   virtual ~BayerAnalysis();
 
@@ -49,15 +49,15 @@ private:
   void compute_statistics();
 };
 
-extern "C" MITSHARE Module* make_BayerAnalysis(const string& id) {
-  return scinew BayerAnalysis(id);
+extern "C" MITSHARE Module* make_BayerAnalysis(const string& get_id()) {
+  return scinew BayerAnalysis(get_id());
 }
 
-BayerAnalysis::BayerAnalysis(const string& id)
-  : Module("BayerAnalysis", id, Source, "Bayer", "MIT"),
+BayerAnalysis::BayerAnalysis(const string& get_id())
+  : Module("BayerAnalysis", get_id(), Source, "Bayer", "MIT"),
     current_generation(-1)
 {
-  graph_ = scinew Graph( id+"-Graph" );
+  graph_ = scinew Graph( get_id()+"-Graph" );
   diagram_ = scinew Diagram( "Histogram");
   graph_->add( "Histogram", diagram_);
 }

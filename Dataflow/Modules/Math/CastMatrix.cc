@@ -68,10 +68,10 @@ public:
 DECLARE_MAKER(CastMatrix)
 CastMatrix::CastMatrix(GuiContext* ctx)
 : Module("CastMatrix", ctx, Filter,"Math", "SCIRun"),
-  oldtype_(ctx->subVar("oldtype"), "Same"),
-  newtype_(ctx->subVar("newtype"), "Unknown"),
-  nrow_(ctx->subVar("nrow"), "??"),
-  ncol_(ctx->subVar("ncol"), "??")
+  oldtype_(get_ctx()->subVar("oldtype"), "Same"),
+  newtype_(get_ctx()->subVar("newtype"), "Unknown"),
+  nrow_(get_ctx()->subVar("nrow"), "??"),
+  ncol_(get_ctx()->subVar("ncol"), "??")
 {
 }
 

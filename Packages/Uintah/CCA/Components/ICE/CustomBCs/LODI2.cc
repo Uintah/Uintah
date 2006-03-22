@@ -184,7 +184,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
                           Lodi_vars* lv,
                           Lodi_variable_basket* var_basket)
 {
-  cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
+  cout_doing << "preprocess_Lodi_BCs on patch "<<patch->get_id()<< endl;
   Ghost::GhostType  gn  = Ghost::None;
 /*`==========TESTING==========*/
   int indx = 0;                 // ICE MATL IS HARD CODED TO 0
@@ -667,7 +667,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
     
     if (is_LODI_face(patch,face, sharedState) ) {
       cout_dbg << " computing LI on face " << face 
-               << " patch " << patch->getID()<<endl;
+               << " patch " << patch->get_id()<<endl;
       //_____________________________________
       // S I D E S
       IntVector axes = patch->faceAxes(face);

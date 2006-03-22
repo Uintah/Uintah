@@ -89,7 +89,7 @@ class ClipFieldByFunction : public Module {
 DECLARE_MAKER(ClipFieldByFunction)
 ClipFieldByFunction::ClipFieldByFunction(GuiContext* ctx)
   : Module("ClipFieldByFunction", ctx, Source, "FieldsCreate", "ModelCreation"),
-    guifunction_(ctx->subVar("function"))
+    guifunction_(get_ctx()->subVar("function"))
 {
 }
 
@@ -99,7 +99,7 @@ ClipFieldByFunction::~ClipFieldByFunction(){
 void ClipFieldByFunction::execute()
 {
   // First execute the function
-  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(getIPort(0));
+  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(get_input_port(0));
   if(field_iport == 0)
   {
     error("Could not locate field input port");
@@ -116,7 +116,7 @@ void ClipFieldByFunction::execute()
   }
 
  // Get number of matrix ports with data (the last one is always empty)
-  size_t numinputs = numIPorts()-3;
+  size_t numinputs = num_input_ports()-3;
   
   if (numinputs > 23)
   {
@@ -132,7 +132,7 @@ void ClipFieldByFunction::execute()
   // The function can be scripted. If a string is found on the input
   // use this one. It will be set in the GIU, after which it is retrieved the
   // normal way.
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(1));
+  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_input_port(1));
   if(function_iport == 0)
   {
     error("Could not locate function input port");
@@ -146,7 +146,7 @@ void ClipFieldByFunction::execute()
     if (func.get_rep())
     {
       guifunction_.set(func->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
 
@@ -185,7 +185,7 @@ void ClipFieldByFunction::execute()
   
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+2));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_input_port(p+2));
     if(iport == 0)
     {
       error("Could not locate matrix input port");
@@ -241,9 +241,9 @@ void ClipFieldByFunction::execute()
     return;
   }
   
-  gui->lock();
-  gui->eval(getID()+" update_text");
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
   
   std::string function = std::string("RESULT = ") + guifunction_.get();
   
@@ -268,10 +268,10 @@ void ClipFieldByFunction::execute()
     return;
   }
 
-  FieldOPort* field_oport = dynamic_cast<FieldOPort *>(getOPort("Field"));
+  FieldOPort* field_oport = dynamic_cast<FieldOPort *>(get_output_port("Field"));
   if (field_oport) field_oport->send(output);
 
-  MatrixOPort* interpolant_oport = dynamic_cast<MatrixOPort *>(getOPort("Mapping"));
+  MatrixOPort* interpolant_oport = dynamic_cast<MatrixOPort *>(get_output_port("Mapping"));
   if (interpolant_oport) interpolant_oport->send(interpolant);
 
 }
@@ -288,10 +288,10 @@ void
   if( args[1] == "gethelp" )
   {
     TensorVectorMath::TVMHelp Help;
-    gui->lock();
-    gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + Help.gethelp(true) +"}");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval("global " + get_id() +"-help");
+    get_gui()->eval("set " + get_id() + "-help {" + Help.gethelp(true) +"}");
+    get_gui()->unlock();
     return;
   }
   else

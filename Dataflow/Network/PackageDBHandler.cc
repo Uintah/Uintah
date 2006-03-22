@@ -50,7 +50,7 @@ PackageDBHandler::~PackageDBHandler()
 void PackageDBHandler::error(const SAXParseException& e)
 {
   foundError=true;
-  gui->postMessage(string("Error at (file ")+xmlto_string(e.getSystemId())
+  gui->post_message(string("Error at (file ")+xmlto_string(e.getSystemId())
 		   +", line "+to_string((int)e.getLineNumber())
 		   +", char "+to_string((int)e.getColumnNumber())
 		   +"): "+xmlto_string(e.getMessage()));
@@ -59,7 +59,7 @@ void PackageDBHandler::error(const SAXParseException& e)
 void PackageDBHandler::fatalError(const SAXParseException& e)
 {
   foundError=true;
-  gui->postMessage(string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
+  gui->post_message(string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
 		   +", line "+to_string((int)e.getLineNumber())
 		   +", char "+to_string((int)e.getColumnNumber())
 		   +"): "+xmlto_string(e.getMessage()));
@@ -67,7 +67,7 @@ void PackageDBHandler::fatalError(const SAXParseException& e)
 
 void PackageDBHandler::warning(const SAXParseException& e)
 {
-  gui->postMessage(string("Warning at (file ")+xmlto_string(e.getSystemId())
+  gui->post_message(string("Warning at (file ")+xmlto_string(e.getSystemId())
 		   +", line "+to_string((int)e.getLineNumber())
 		   +", char "+to_string((int)e.getColumnNumber())
 		   +"): "+xmlto_string(e.getMessage()));

@@ -597,7 +597,7 @@ RadiationDriver::computeCO2_H2O(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeCO2_H2O on patch "<<patch->getID()
+    cout_doing << "Doing computeCO2_H2O on patch "<<patch->get_id()
                << "\t\t\t\t Radiation" << endl;
     int indx = d_matl_G->getDWIndex();
     
@@ -661,7 +661,7 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing set_cellType on patch "<<patch->getID()
+    cout_doing << "Doing set_cellType on patch "<<patch->get_id()
                << "\t\t\t\t Radiation L-" << levelIndex<< endl;
                
     //__________________________________
@@ -930,7 +930,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeProps on patch "<<patch->getID()
+    cout_doing << "Doing computeProps on patch "<<patch->get_id()
                << "\t\t\t\t Radiation" << endl;
     int indx = d_matl_G->getDWIndex();
     
@@ -1077,7 +1077,7 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing boundaryCondition on patch "<<patch->getID()
+    cout_doing << "Doing boundaryCondition on patch "<<patch->get_id()
                << "\t\t\t Radiation" << endl;
     
     int indx = d_matl_G->getDWIndex();
@@ -1181,7 +1181,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing intensitySolve on patch "<<patch->getID()
+    cout_doing << "Doing intensitySolve on patch "<<patch->get_id()
                << "\t\t\t\t Radiation" << endl;
     int indx_G = d_matl_G->getDWIndex();
     
@@ -1279,7 +1279,7 @@ void RadiationDriver::solidEmission(CCVariable<double>& energySrc_solid,
                                     const Patch* patch,                        
                                     DataWarehouse* new_dw)                          
 {   
-  cout_doing << "Doing solidEmission on patch "<<patch->getID()
+  cout_doing << "Doing solidEmission on patch "<<patch->get_id()
              << "\t\t\t\t Radiation" << endl;
 
   Ghost::GhostType  gn  = Ghost::None; 

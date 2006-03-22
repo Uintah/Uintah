@@ -76,7 +76,7 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
     const Patch* patch = patches->get(p);
 //    if (cout_doing.active()) {
 //      cout_doing << "Doing PBXTemperature::switchTest on patch "
-//                 <<  patch->getID() <<"\t " << "\n";
+//                 <<  patch->get_id() <<"\t " << "\n";
 //    }
                                                                                 
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);

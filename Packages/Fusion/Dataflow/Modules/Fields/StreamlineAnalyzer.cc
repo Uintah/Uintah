@@ -126,7 +126,7 @@ StreamlineAnalyzer::execute()
 {
   FieldHandle slfieldin;
 
-  if( !getIHandle( "Input Streamlines", slfieldin, true ) ) return;
+  if( !get_input_handle( "Input Streamlines", slfieldin, true ) ) return;
 
   string if_name =
     slfieldin->get_type_description(Field::MESH_TD_E)->get_name();
@@ -145,7 +145,7 @@ StreamlineAnalyzer::execute()
   // The centroid field input is optional.
   FieldHandle pccfieldin;
 
-  if( !getIHandle( "Input Centroids", pccfieldin, false ) ) return;
+  if( !get_input_handle( "Input Centroids", pccfieldin, false ) ) return;
 
   if (pccfieldin.get_rep()) {
     
@@ -169,7 +169,7 @@ StreamlineAnalyzer::execute()
   // The separatrices field input is optional.
   FieldHandle pcsfieldin;
 
-  if( !getIHandle( "Input Separatrices", pcsfieldin, false ) ) return;
+  if( !get_input_handle( "Input Separatrices", pcsfieldin, false ) ) return;
 
   // The field input is optional.
   if (pcsfieldin.get_rep()) {
@@ -338,9 +338,9 @@ StreamlineAnalyzer::execute()
   }
 
   // Send the data downstream
-  sendOHandle( "Output Poincare",     slfieldout_,  true );
-  sendOHandle( "Output Centroids",    pccfieldout_, true );
-  sendOHandle( "Output Separatrices", pcsfieldout_, true );
+  send_output_handle( "Output Poincare",     slfieldout_,  true );
+  send_output_handle( "Output Centroids",    pccfieldout_, true );
+  send_output_handle( "Output Separatrices", pcsfieldout_, true );
 
   cerr << "StreamlineAnalyzer done " << endl;
 }

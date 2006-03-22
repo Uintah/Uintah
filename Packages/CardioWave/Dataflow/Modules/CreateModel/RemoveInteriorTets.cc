@@ -161,7 +161,7 @@ void RemoveInteriorTets::execute()
     }
     ++cb;
   }
-  msgStream_ << "RemoveInteriorTets: ncells="<<count<<"\n";
+  msg_stream_ << "RemoveInteriorTets: ncells="<<count<<"\n";
 
   // copy the fdata for valid nodes
   TVField_Vector *tv_new = scinew TVField_Vector(new_mesh);

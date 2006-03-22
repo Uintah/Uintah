@@ -97,7 +97,7 @@ impl_whoc_IDPort__dtor(
  */
 
 extern char*
-impl_whoc_IDPort_getID(
+impl_whoc_IDPort_get_id(
   whoc_IDPort);
 
 #ifdef __cplusplus

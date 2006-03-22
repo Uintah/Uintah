@@ -52,7 +52,7 @@ public:
   int xres, yres;
 
 public:
-  ThetaView(const string& id);
+  ThetaView(const string& get_id());
 
   virtual ~ThetaView();
 
@@ -68,15 +68,15 @@ private:
   void print_string( char *);
 };
 
-extern "C" MITSHARE Module* make_ThetaView(const string& id) {
-  return scinew ThetaView(id);
+extern "C" MITSHARE Module* make_ThetaView(const string& get_id()) {
+  return scinew ThetaView(get_id());
 }
 
-ThetaView::ThetaView(const string& id)
-  : Module("ThetaView", id, Source, "Bayer", "MIT"),
-    gui_params("params", id, this ),
-    gui_select("select", id, this ),
-    gui_graph("graph", id, this )
+ThetaView::ThetaView(const string& get_id())
+  : Module("ThetaView", get_id(), Source, "Bayer", "MIT"),
+    gui_params("params", get_id(), this ),
+    gui_select("select", get_id(), this ),
+    gui_graph("graph", get_id(), this )
 {
 }
 
@@ -239,7 +239,7 @@ ThetaView::make_raster_font()
 
   cerr << "Generating new raster font list!\n";
   XFontStruct *fontInfo;
-  Font id;
+  Font get_id();
   unsigned int first, last;
   Display *xdisplay;
   
@@ -251,7 +251,7 @@ ThetaView::make_raster_font()
     exit (0);
   }
   
-  id = fontInfo->fid;
+  get_id() = fontInfo->fid;
   first = fontInfo->min_char_or_byte2;
   last = fontInfo->max_char_or_byte2;
   
@@ -260,7 +260,7 @@ ThetaView::make_raster_font()
     printf ("out of display lists\n");
     exit (0);
   }
-  glXUseXFont(id, first, last-first+1, base+first);
+  glXUseXFont(get_id(), first, last-first+1, base+first);
   /*    *height = fontInfo->ascent + fontInfo->descent;
    *width = fontInfo->max_bounds.width;  */
 }

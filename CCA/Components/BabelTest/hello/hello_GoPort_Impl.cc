@@ -93,7 +93,7 @@ throw ()
   // DO-NOT-DELETE splicer.begin(hello.GoPort.go)
   cerr<<"hello::GoPort::go() starts..."<<endl;
   gov::cca::ports::IDPort s=svc.getPort("idport");
-  if(!s._is_nil()) cerr<<"Hello "<<s.getID()<<endl;
+  if(!s._is_nil()) cerr<<"Hello "<<s.get_id()<<endl;
   else cerr<<"getPort() returns null"<<endl;
   // DO-NOT-DELETE splicer.end(hello.GoPort.go)
 }

@@ -76,7 +76,7 @@ private:
   UNUR_GEN *gen;
 
 public:
-  Sampler(const string& id);
+  Sampler(const string& get_id());
 
   virtual ~Sampler();
 

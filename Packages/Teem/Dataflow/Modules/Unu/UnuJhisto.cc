@@ -77,8 +77,8 @@ public:
 DECLARE_MAKER(UnuJhisto)
 UnuJhisto::UnuJhisto(GuiContext* ctx)
   : Module("UnuJhisto", ctx, Source, "UnuAtoM", "Teem"),
-    bins_(ctx->subVar("bins")), mins_(ctx->subVar("mins")), 
-    maxs_(ctx->subVar("maxs")), type_(ctx->subVar("type")),
+    bins_(get_ctx()->subVar("bins")), mins_(get_ctx()->subVar("mins")), 
+    maxs_(get_ctx()->subVar("maxs")), type_(get_ctx()->subVar("type")),
     old_bins_(""), old_mins_(""), old_maxs_(""), old_type_(""),
     weight_generation_(-1), inrrd1_generation_(-1),
     num_inrrd2_(-1)

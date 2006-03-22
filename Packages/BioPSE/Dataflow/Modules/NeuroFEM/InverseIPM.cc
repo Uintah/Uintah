@@ -95,19 +95,19 @@ DECLARE_MAKER(InverseIPM)
 
 InverseIPM::InverseIPM(GuiContext* ctx)
   : Module("InverseIPM", ctx, Filter, "NeuroFEM", "BioPSE"),
-    ipm_pathTCL_(ctx->subVar("ipm_pathTCL")),
-    numchanTCL_(ctx->subVar("numchanTCL")),
-    numsamplesTCL_(ctx->subVar("numsamplesTCL")),
-    startsampleTCL_(ctx->subVar("startsampleTCL")),
-    stopsampleTCL_(ctx->subVar("stopsampleTCL")),
-    associativityTCL_(ctx->subVar("associativityTCL")),
-    posxTCL_(ctx->subVar("posxTCL")),
-    posyTCL_(ctx->subVar("posyTCL")),
-    poszTCL_(ctx->subVar("poszTCL")),
-    dirxTCL_(ctx->subVar("dirxTCL")),
-    diryTCL_(ctx->subVar("diryTCL")),
-    dirzTCL_(ctx->subVar("dirzTCL")),
-    eps_matTCL_(ctx->subVar("eps_matTCL"))
+    ipm_pathTCL_(get_ctx()->subVar("ipm_pathTCL")),
+    numchanTCL_(get_ctx()->subVar("numchanTCL")),
+    numsamplesTCL_(get_ctx()->subVar("numsamplesTCL")),
+    startsampleTCL_(get_ctx()->subVar("startsampleTCL")),
+    stopsampleTCL_(get_ctx()->subVar("stopsampleTCL")),
+    associativityTCL_(get_ctx()->subVar("associativityTCL")),
+    posxTCL_(get_ctx()->subVar("posxTCL")),
+    posyTCL_(get_ctx()->subVar("posyTCL")),
+    poszTCL_(get_ctx()->subVar("poszTCL")),
+    dirxTCL_(get_ctx()->subVar("dirxTCL")),
+    diryTCL_(get_ctx()->subVar("diryTCL")),
+    dirzTCL_(get_ctx()->subVar("dirzTCL")),
+    eps_matTCL_(get_ctx()->subVar("eps_matTCL"))
 {
 }
 
@@ -601,13 +601,13 @@ InverseIPM::execute()
 
     
     // Execute the command.  Last arg just a tmp file for logging.
-    msgStream_flush();
+    msg_stream_flush();
     if (!Exec_execute_command(this, command, tmplog))
     {
       error("The ipm program failed to run for some unknown reason.");
       throw false;
     }
-    msgStream_flush();
+    msg_stream_flush();
 
     // Read in the results and send them along.
     MatrixOPort *dip1_oport = (MatrixOPort *)get_oport("Dipole Positions");

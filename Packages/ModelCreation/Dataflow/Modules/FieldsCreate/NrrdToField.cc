@@ -56,7 +56,7 @@ private:
 DECLARE_MAKER(NrrdToField)
 NrrdToField::NrrdToField(GuiContext* ctx)
   : Module("NrrdToField", ctx, Source, "FieldsCreate", "ModelCreation"),
-    guidatalocation_(ctx->subVar("datalocation"))
+    guidatalocation_(get_ctx()->subVar("datalocation"))
 {
 }
 

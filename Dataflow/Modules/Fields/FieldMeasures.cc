@@ -76,14 +76,14 @@ DECLARE_MAKER(FieldMeasures)
 
 FieldMeasures::FieldMeasures(GuiContext* ctx)
   : Module("FieldMeasures", ctx, Filter, "FieldsOther", "SCIRun"),
-    simplexString_(ctx->subVar("simplexString"), "Node"),
-    xFlag_(ctx->subVar("xFlag"), 1), 
-    yFlag_(ctx->subVar("yFlag"), 1),
-    zFlag_(ctx->subVar("zFlag"), 1), 
-    idxFlag_(ctx->subVar("idxFlag"), 0),
-    sizeFlag_(ctx->subVar("sizeFlag"), 0),
-    nNbrsFlag_(ctx->subVar("numNbrsFlag"), 0),
-    normalsFlag_(ctx->subVar("normalsFlag"), 0)
+    simplexString_(get_ctx()->subVar("simplexString"), "Node"),
+    xFlag_(get_ctx()->subVar("xFlag"), 1), 
+    yFlag_(get_ctx()->subVar("yFlag"), 1),
+    zFlag_(get_ctx()->subVar("zFlag"), 1), 
+    idxFlag_(get_ctx()->subVar("idxFlag"), 0),
+    sizeFlag_(get_ctx()->subVar("sizeFlag"), 0),
+    nNbrsFlag_(get_ctx()->subVar("numNbrsFlag"), 0),
+    normalsFlag_(get_ctx()->subVar("normalsFlag"), 0)
 {
 }
 

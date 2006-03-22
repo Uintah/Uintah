@@ -404,7 +404,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<< d_myworld->myrank()<<" Doing setupMatrix on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-" 
+              << patch->get_id() <<"\t\t\t\t ICE \tL-" 
               << level->getIndex()<<endl;
               
     // define parent_new/old_dw
@@ -488,7 +488,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebug_setupMatrix ) {
         ostringstream desc;
-        desc << "setupMatrix_Mat_" << indx << "_patch_"<< patch->getID(); 
+        desc << "setupMatrix_Mat_" << indx << "_patch_"<< patch->get_id(); 
         printData_FC( indx, patch,1, desc.str(), "vol_fracX_FC", vol_fracX_FC);
         printData_FC( indx, patch,1, desc.str(), "vol_fracY_FC", vol_fracY_FC);
         printData_FC( indx, patch,1, desc.str(), "vol_fracZ_FC", vol_fracZ_FC);
@@ -527,7 +527,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
     //---- P R I N T   D A T A ------   
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
-      desc << "BOT_setupMatrix_patch_" << patch->getID();
+      desc << "BOT_setupMatrix_patch_" << patch->get_id();
       printStencil( 0, patch, 1, desc.str(), "A", A);
     }         
   }
@@ -551,7 +551,7 @@ void ICE::setupRHS(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<< d_myworld->myrank()<<" Doing setupRHS on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-"
+              << patch->get_id() <<"\t\t\t\t ICE \tL-"
               << level->getIndex()<<endl;
     // define parent_new/old_dw 
     
@@ -629,7 +629,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       //---- P R I N T   D A T A ------  
       if (switchDebug_setupRHS) {
         ostringstream desc;
-        desc << "Top_setupRHS_Mat_"<<indx<<"_patch_"<<patch->getID();
+        desc << "Top_setupRHS_Mat_"<<indx<<"_patch_"<<patch->get_id();
         printData_FC( indx, patch,1, desc.str(), "uvel_FC",    uvel_FC);
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",    vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC",    wvel_FC);
@@ -723,7 +723,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     //---- P R I N T   D A T A ------  
     if (switchDebug_setupRHS) {
       ostringstream desc;
-      desc << "BOT_setupRHS_patch_" << patch->getID();
+      desc << "BOT_setupRHS_patch_" << patch->get_id();
       printData( 0, patch, 0,desc.str(), "rhs",              rhs);
       printData( 0, patch, 0,desc.str(), "sumAdvection",     sumAdvection);
       printData( 0, patch, 0,desc.str(), "sum_impDelP",      sum_imp_delP);
@@ -751,7 +751,7 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<< d_myworld->myrank()<<" Doing maxRHS on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-"
+              << patch->get_id() <<"\t\t\t\t ICE \tL-"
               << level->getIndex()<<endl;
     
     Vector dx  = patch->dCell();
@@ -785,7 +785,7 @@ void ICE::updatePressure(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<< d_myworld->myrank()<<" Doing updatePressure on patch "
-              << patch->getID() <<"\t\t\t ICE \tL-" 
+              << patch->get_id() <<"\t\t\t ICE \tL-" 
               << level->getIndex()<<endl;
 
    // define parent_dw
@@ -844,7 +844,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
       ostringstream desc;
-      desc << "BOT_updatePressure_patch_" << patch->getID();
+      desc << "BOT_updatePressure_patch_" << patch->get_id();
       printData( 0, patch, 1,desc.str(), "imp_delP",      imp_delP); 
       printData( 0, patch, 1,desc.str(), "sum_imp_delP",  sum_imp_delP);
       printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
@@ -874,7 +874,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<< d_myworld->myrank()<<" Doing computeDel_P on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-" 
+              << patch->get_id() <<"\t\t\t\t ICE \tL-" 
               << level->getIndex()<<endl;
             
     int numMatls  = d_sharedState->getNumMatls(); 
@@ -925,7 +925,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     //---- P R I N T   D A T A ------  
     if (switchDebug_computeDelP) {
       ostringstream desc;
-      desc << "BOT_computeDelP_patch_" << patch->getID();
+      desc << "BOT_computeDelP_patch_" << patch->get_id();
       printData( 0, patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
       printData( 0, patch, 1,desc.str(), "sum_imp_delP",  sum_imp_delP);
     //printData( 0, patch, 1,desc.str(), "delP_MassX",    delP_MassX);

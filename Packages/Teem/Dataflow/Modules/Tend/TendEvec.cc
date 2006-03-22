@@ -65,10 +65,10 @@ DECLARE_MAKER(TendEvec)
 
 TendEvec::TendEvec(SCIRun::GuiContext *ctx) : 
   Module("TendEvec", ctx, Filter, "Tend", "Teem"), 
-  major_(ctx->subVar("major")),
-  medium_(ctx->subVar("medium")),
-  minor_(ctx->subVar("minor")),
-  threshold_(ctx->subVar("threshold"))
+  major_(get_ctx()->subVar("major")),
+  medium_(get_ctx()->subVar("medium")),
+  minor_(get_ctx()->subVar("minor")),
+  threshold_(get_ctx()->subVar("threshold"))
 {
 }
 

@@ -58,12 +58,12 @@ namespace SCIRun {
 DECLARE_MAKER(ScalarFieldStats)
 ScalarFieldStats::ScalarFieldStats(GuiContext* ctx)
   : Module("ScalarFieldStats", ctx, Filter, "FieldsOther", "SCIRun"),
-    min_(ctx->subVar("min")), max_(ctx->subVar("max")),
-    mean_(ctx->subVar("mean")),
-    median_(ctx->subVar("median")),
-    sigma_(ctx->subVar("sigma")),
-    is_fixed_(ctx->subVar("is_fixed")),
-    nbuckets_(ctx->subVar("nbuckets"))
+    min_(get_ctx()->subVar("min")), max_(get_ctx()->subVar("max")),
+    mean_(get_ctx()->subVar("mean")),
+    median_(get_ctx()->subVar("median")),
+    sigma_(get_ctx()->subVar("sigma")),
+    is_fixed_(get_ctx()->subVar("is_fixed")),
+    nbuckets_(get_ctx()->subVar("nbuckets"))
 {
 }
 
@@ -77,7 +77,7 @@ ScalarFieldStats::~ScalarFieldStats()
 void
 ScalarFieldStats::clear_histogram()
 {
-  gui->execute(id + " clear_data");
+  get_gui()->execute(get_id() + " clear_data");
 }
 
 
@@ -99,7 +99,7 @@ ScalarFieldStats::fill_histogram( vector<int>& hits)
   string smax( to_string(nmax) );
 
   string data = ostr.str();
-  gui->execute(id + " graph_data " + smin + " "
+  get_gui()->execute(get_id() + " graph_data " + smin + " "
 	       + smax + " " + data );
 }
 

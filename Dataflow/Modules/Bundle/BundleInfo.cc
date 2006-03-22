@@ -60,7 +60,7 @@ DECLARE_MAKER(BundleInfo)
 
 BundleInfo::BundleInfo(GuiContext* ctx)
   : Module("BundleInfo", ctx, Sink, "Bundle", "SCIRun"),
-    tclInfoString_(ctx->subVar("tclinfostring"), "")
+    tclInfoString_(get_ctx()->subVar("tclinfostring"), "")
 {
 }
 

@@ -67,9 +67,9 @@ DECLARE_MAKER(MatrixWriter)
 
 MatrixWriter::MatrixWriter(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype"), "Binary"),
-    split_(ctx->subVar("split"), 0)
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype"), "Binary"),
+    split_(get_ctx()->subVar("split"), 0)
 {
   MatrixIEPluginManager mgr;
   vector<string> exporters;
@@ -115,7 +115,7 @@ MatrixWriter::call_exporter(const string &filename)
   if (pl)
   {
     const bool result = pl->fileWriter_(this, handle_, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return result;
   }
   return false;

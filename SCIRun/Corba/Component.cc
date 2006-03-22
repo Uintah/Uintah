@@ -75,7 +75,7 @@ Component::disableUI()
 }
 
 bool 
-Component::haveUI()
+Component::have_ui()
 {
   return have_ui;
 }
@@ -194,7 +194,7 @@ Component::getProvidesPort(const std::string &name)
 }
 
 int 
-Component::popupUI()
+Component::popup_ui()
 {
   services->letGo();
   return 0;

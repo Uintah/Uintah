@@ -323,72 +323,72 @@ DECLARE_MAKER(HotBox)
 
 HotBox::HotBox(GuiContext* ctx)
   : Module("HotBox", ctx, Filter, "DataFlow", "VS"),
-  gui_label1_(ctx->subVar("gui_label(1)")),
-  gui_label2_(ctx->subVar("gui_label(2)")),
-  gui_label3_(ctx->subVar("gui_label(3)")),
-  gui_label4_(ctx->subVar("gui_label(4)")),
-  gui_label5_(ctx->subVar("gui_label(5)")),
-  gui_label6_(ctx->subVar("gui_label(6)")),
-  gui_label7_(ctx->subVar("gui_label(7)")),
-  gui_label8_(ctx->subVar("gui_label(8)")),
-  gui_label9_(ctx->subVar("gui_label(9)")),
-  gui_is_injured1_(ctx->subVar("gui_is_injured(1)")),
-  gui_is_injured2_(ctx->subVar("gui_is_injured(2)")),
-  gui_is_injured3_(ctx->subVar("gui_is_injured(3)")),
-  gui_is_injured4_(ctx->subVar("gui_is_injured(4)")),
-  gui_is_injured5_(ctx->subVar("gui_is_injured(5)")),
-  gui_is_injured6_(ctx->subVar("gui_is_injured(6)")),
-  gui_is_injured7_(ctx->subVar("gui_is_injured(7)")),
-  gui_is_injured8_(ctx->subVar("gui_is_injured(8)")),
-  gui_is_injured9_(ctx->subVar("gui_is_injured(9)")),
-  gui_diagnosis_(ctx->subVar("gui_diagnosis")),
-  gui_name_(ctx->subVar("gui_name")),
-  gui_parent0_(ctx->subVar("gui_parent(0)")),
-  gui_parent1_(ctx->subVar("gui_parent(1)")),
-  gui_parent2_(ctx->subVar("gui_parent(2)")),
-  gui_parent3_(ctx->subVar("gui_parent(3)")),
-  gui_parent4_(ctx->subVar("gui_parent(4)")),
-  gui_parent5_(ctx->subVar("gui_parent(5)")),
-  gui_parent6_(ctx->subVar("gui_parent(6)")),
-  gui_parent7_(ctx->subVar("gui_parent(7)")),
-  gui_parent_list_(ctx->subVar("gui_parlist_name")),
-  gui_sibling0_(ctx->subVar("gui_sibling(0)")),
-  gui_sibling1_(ctx->subVar("gui_sibling(1)")),
-  gui_sibling2_(ctx->subVar("gui_sibling(2)")),
-  gui_sibling3_(ctx->subVar("gui_sibling(3)")),
-  gui_sibling_list_(ctx->subVar("gui_siblist_name")),
-  gui_child0_(ctx->subVar("gui_child(0)")),
-  gui_child1_(ctx->subVar("gui_child(1)")),
-  gui_child2_(ctx->subVar("gui_child(2)")),
-  gui_child3_(ctx->subVar("gui_child(3)")),
-  gui_child4_(ctx->subVar("gui_child(4)")),
-  gui_child5_(ctx->subVar("gui_child(5)")),
-  gui_child6_(ctx->subVar("gui_child(6)")),
-  gui_child7_(ctx->subVar("gui_child(7)")),
-  gui_child8_(ctx->subVar("gui_child(8)")),
-  gui_child9_(ctx->subVar("gui_child(9)")),
-  gui_child10_(ctx->subVar("gui_child(10)")),
-  gui_child11_(ctx->subVar("gui_child(11)")),
-  gui_child12_(ctx->subVar("gui_child(12)")),
-  gui_child13_(ctx->subVar("gui_child(13)")),
-  gui_child14_(ctx->subVar("gui_child(14)")),
-  gui_child15_(ctx->subVar("gui_child(15)")),
-  gui_child_list_(ctx->subVar("gui_childlist_name")),
-  enableDraw_(ctx->subVar("enableDraw")),
-  datasource_(ctx->subVar("datasource")),
-  querytype_(ctx->subVar("querytype")),
-  selectionsource_(ctx->subVar("selectionsource")),
-  anatomydatasource_(ctx->subVar("anatomydatasource")),
-  adjacencydatasource_(ctx->subVar("adjacencydatasource")),
-  boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
-  injurylistdatasource_(ctx->subVar("injurylistdatasource")),
-  oqafmadatasource_(ctx->subVar("oqafmadatasource")),
+  gui_label1_(get_ctx()->subVar("gui_label(1)")),
+  gui_label2_(get_ctx()->subVar("gui_label(2)")),
+  gui_label3_(get_ctx()->subVar("gui_label(3)")),
+  gui_label4_(get_ctx()->subVar("gui_label(4)")),
+  gui_label5_(get_ctx()->subVar("gui_label(5)")),
+  gui_label6_(get_ctx()->subVar("gui_label(6)")),
+  gui_label7_(get_ctx()->subVar("gui_label(7)")),
+  gui_label8_(get_ctx()->subVar("gui_label(8)")),
+  gui_label9_(get_ctx()->subVar("gui_label(9)")),
+  gui_is_injured1_(get_ctx()->subVar("gui_is_injured(1)")),
+  gui_is_injured2_(get_ctx()->subVar("gui_is_injured(2)")),
+  gui_is_injured3_(get_ctx()->subVar("gui_is_injured(3)")),
+  gui_is_injured4_(get_ctx()->subVar("gui_is_injured(4)")),
+  gui_is_injured5_(get_ctx()->subVar("gui_is_injured(5)")),
+  gui_is_injured6_(get_ctx()->subVar("gui_is_injured(6)")),
+  gui_is_injured7_(get_ctx()->subVar("gui_is_injured(7)")),
+  gui_is_injured8_(get_ctx()->subVar("gui_is_injured(8)")),
+  gui_is_injured9_(get_ctx()->subVar("gui_is_injured(9)")),
+  gui_diagnosis_(get_ctx()->subVar("gui_diagnosis")),
+  gui_name_(get_ctx()->subVar("gui_name")),
+  gui_parent0_(get_ctx()->subVar("gui_parent(0)")),
+  gui_parent1_(get_ctx()->subVar("gui_parent(1)")),
+  gui_parent2_(get_ctx()->subVar("gui_parent(2)")),
+  gui_parent3_(get_ctx()->subVar("gui_parent(3)")),
+  gui_parent4_(get_ctx()->subVar("gui_parent(4)")),
+  gui_parent5_(get_ctx()->subVar("gui_parent(5)")),
+  gui_parent6_(get_ctx()->subVar("gui_parent(6)")),
+  gui_parent7_(get_ctx()->subVar("gui_parent(7)")),
+  gui_parent_list_(get_ctx()->subVar("gui_parlist_name")),
+  gui_sibling0_(get_ctx()->subVar("gui_sibling(0)")),
+  gui_sibling1_(get_ctx()->subVar("gui_sibling(1)")),
+  gui_sibling2_(get_ctx()->subVar("gui_sibling(2)")),
+  gui_sibling3_(get_ctx()->subVar("gui_sibling(3)")),
+  gui_sibling_list_(get_ctx()->subVar("gui_siblist_name")),
+  gui_child0_(get_ctx()->subVar("gui_child(0)")),
+  gui_child1_(get_ctx()->subVar("gui_child(1)")),
+  gui_child2_(get_ctx()->subVar("gui_child(2)")),
+  gui_child3_(get_ctx()->subVar("gui_child(3)")),
+  gui_child4_(get_ctx()->subVar("gui_child(4)")),
+  gui_child5_(get_ctx()->subVar("gui_child(5)")),
+  gui_child6_(get_ctx()->subVar("gui_child(6)")),
+  gui_child7_(get_ctx()->subVar("gui_child(7)")),
+  gui_child8_(get_ctx()->subVar("gui_child(8)")),
+  gui_child9_(get_ctx()->subVar("gui_child(9)")),
+  gui_child10_(get_ctx()->subVar("gui_child(10)")),
+  gui_child11_(get_ctx()->subVar("gui_child(11)")),
+  gui_child12_(get_ctx()->subVar("gui_child(12)")),
+  gui_child13_(get_ctx()->subVar("gui_child(13)")),
+  gui_child14_(get_ctx()->subVar("gui_child(14)")),
+  gui_child15_(get_ctx()->subVar("gui_child(15)")),
+  gui_child_list_(get_ctx()->subVar("gui_childlist_name")),
+  enableDraw_(get_ctx()->subVar("enableDraw")),
+  datasource_(get_ctx()->subVar("datasource")),
+  querytype_(get_ctx()->subVar("querytype")),
+  selectionsource_(get_ctx()->subVar("selectionsource")),
+  anatomydatasource_(get_ctx()->subVar("anatomydatasource")),
+  adjacencydatasource_(get_ctx()->subVar("adjacencydatasource")),
+  boundingboxdatasource_(get_ctx()->subVar("boundingboxdatasource")),
+  injurylistdatasource_(get_ctx()->subVar("injurylistdatasource")),
+  oqafmadatasource_(get_ctx()->subVar("oqafmadatasource")),
 // add tcl gui String: demotype_
-  demotype_(ctx->subVar("demotype")),
-  geometrypath_(ctx->subVar("geometrypath")),
-  hipvarpath_(ctx->subVar("hipvarpath")),
-  currentselection_(ctx->subVar("currentselection")),
-  gui_curTime_(ctx->subVar("currentTime")),
+  demotype_(get_ctx()->subVar("demotype")),
+  geometrypath_(get_ctx()->subVar("geometrypath")),
+  hipvarpath_(get_ctx()->subVar("hipvarpath")),
+  currentselection_(get_ctx()->subVar("currentselection")),
+  gui_curTime_(get_ctx()->subVar("currentTime")),
   currentTime_(0.0),
   lastTime_(-1000.0),
   timeEps_(0.25),
@@ -396,10 +396,10 @@ HotBox::HotBox(GuiContext* ctx)
   timeSyncer_thread_(0),
   injListDoc_(0),
   probeWidget_lock_("PointWidget lock"),
-  gui_probeLocx_(ctx->subVar("gui_probeLocx")),
-  gui_probeLocy_(ctx->subVar("gui_probeLocy")),
-  gui_probeLocz_(ctx->subVar("gui_probeLocz")),
-  gui_probe_scale_(ctx->subVar("gui_probe_scale")),
+  gui_probeLocx_(get_ctx()->subVar("gui_probeLocx")),
+  gui_probeLocy_(get_ctx()->subVar("gui_probeLocy")),
+  gui_probeLocz_(get_ctx()->subVar("gui_probeLocz")),
+  gui_probe_scale_(get_ctx()->subVar("gui_probe_scale")),
   probeWidgetid_(-1)
 {
   // instantiate the HotBox-specific interaction structure
@@ -456,7 +456,7 @@ HotBox::execute()
     {
       timeSyncer_ = scinew TimeSync(this, time_viewer_handle_);
       timeSyncer_thread_ = scinew Thread(timeSyncer_,
-                       string(id+" time syncer").c_str());
+                       string(get_id()+" time syncer").c_str());
     }
   }
 
@@ -906,7 +906,7 @@ HotBox::execute()
   // get output geometry port -- Selection Highlight
   SimpleOPort<FieldHandle> *
   highlightOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Selection Highlight");
+                      get_output_port("Selection Highlight");
 
   // send the selected field (surface) downstream
   if (!highlightOutport) {
@@ -920,7 +920,7 @@ HotBox::execute()
   // get output geometry port -- Injury 0 Highlight
   SimpleOPort<FieldHandle> *
   inj0highlightOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Injury 0 Highlight");
+                      get_output_port("Injury 0 Highlight");
 
   // send the injured field (surface) downstream
   if (!inj0highlightOutport) {
@@ -934,7 +934,7 @@ HotBox::execute()
   // get output geometry port -- Injury 1 Highlight
   SimpleOPort<FieldHandle> *
   inj1highlightOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Injury 1 Highlight");
+                      get_output_port("Injury 1 Highlight");
 
   // send the injured field (surface) downstream
   if (!inj1highlightOutport) {
@@ -952,7 +952,7 @@ HotBox::execute()
   // get output geometry port -- Injury Icon
   SimpleOPort<FieldHandle> *
   injuryOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Injury Icon");
+                      get_output_port("Injury Icon");
 
   // send the injury field (surface) downstream
   if (!injuryOutport) {
@@ -1657,7 +1657,7 @@ cerr << "In OQAFMA: selectName: " << selectName;
   // **** magic occurs here **** //
   // grab control of the Tcl GUI program asynchronously
   std::string tclResult;
-  gui->lock();
+  get_gui()->lock();
   // re-populate Hierarchy Browser lists with array members
   std::string
    evalStr = "set " + gui_parent_list_.get() + " [list [set " + 
@@ -1669,18 +1669,18 @@ cerr << "In OQAFMA: selectName: " << selectName;
              gui_name_.get() + "-gui_parent(5)] [set " +
              gui_name_.get() + "-gui_parent(6)] [set " +
              gui_name_.get() + "-gui_parent(7)]]";
-  cerr << "gui->eval(" << evalStr << ")" << endl;
-  gui->eval(evalStr, tclResult);
+  cerr << "get_gui()->eval(" << evalStr << ")" << endl;
+  get_gui()->eval(evalStr, tclResult);
   istringstream iss(tclResult);
   cerr << iss;
 
-  gui->eval("set " + gui_sibling_list_.get() + " [list [set " +
+  get_gui()->eval("set " + gui_sibling_list_.get() + " [list [set " +
             gui_name_.get() + "-gui_sibling(0)] [set " +
             gui_name_.get() + "-gui_sibling(1)] [set " +
             gui_name_.get() + "-gui_sibling(2)] [set " +
             gui_name_.get() + "-gui_sibling(3)]]", tclResult);
 
-  gui->eval("set " + gui_child_list_.get() + " [list [set " +
+  get_gui()->eval("set " + gui_child_list_.get() + " [list [set " +
             gui_name_.get() + "-gui_child(0)] [set " +
             gui_name_.get() + "-gui_child(1)] [set " +
             gui_name_.get() + "-gui_child(2)] [set " +
@@ -1698,7 +1698,7 @@ cerr << "In OQAFMA: selectName: " << selectName;
             gui_name_.get() + "-gui_child(14)] [set " +
             gui_name_.get() + "-gui_child(15)]]", tclResult);
 
-  gui->unlock();
+  get_gui()->unlock();
 
   // clean up
   for (int i = 0; i < num_struQLret; i++)

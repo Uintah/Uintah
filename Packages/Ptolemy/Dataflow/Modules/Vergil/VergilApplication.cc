@@ -72,7 +72,7 @@ private:
 
 DECLARE_MAKER(VergilApplication)
 VergilApplication::VergilApplication(GuiContext* ctx)
-    : Module("VergilApplication", ctx, Source, "Vergil", "Ptolemy"), filename_(ctx->subVar("filename"))
+    : Module("VergilApplication", ctx, Source, "Vergil", "Ptolemy"), filename_(get_ctx()->subVar("filename"))
 {
     std::cerr << "VergilApplication::VergilApplication" << std::endl;
     jvm = JNIUtil::getJavaVM();
@@ -102,7 +102,7 @@ void VergilApplication::execute()
         }
         Thread *t = new Thread(scinew VergilThread(defaultConfig, file),
             "Ptolemy Thread", 0, Thread::NotActivated);
-        t->setStackSize(1024*1024);
+        t->set_stack_size(1024*1024);
         t->activate(false);
         t->detach();
     }

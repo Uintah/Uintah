@@ -102,7 +102,7 @@ namespace SCIRun {
     virtual void lock();
     virtual void unlock();
     virtual GuiContext* createContext(const string& name);
-    virtual void postMessage(const string& errmsg, bool err = false);
+    virtual void post_message(const string& errmsg, bool err = false);
     // Get TCL array var, which resembles a STL a map<string, string>
     virtual bool get(const std::string& name, std::string& value);
     virtual void set(const std::string& name, const std::string& value);

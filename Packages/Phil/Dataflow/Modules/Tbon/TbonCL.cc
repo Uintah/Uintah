@@ -35,7 +35,7 @@ class TbonCL : public Module {
 public:
 
   // Functions required by Module inheritance
-  TbonCL(const clString& id);
+  TbonCL(const clString& get_id());
   virtual ~TbonCL();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -73,17 +73,17 @@ private:
 
 
 // More required stuff...
-extern "C" Module* make_TbonCL(const clString& id){
-  return new TbonCL(id);
+extern "C" Module* make_TbonCL(const clString& get_id()){
+  return new TbonCL(get_id());
 }
 
 
 // Constructor
-TbonCL::TbonCL(const clString& id) 
-  : Module("TbonCL", id, Filter), metafilename("metafilename",id,this),
-  nodebricksize("nodebricksize",id,this), 
-  databricksize("databricksize",id,this), isovalue("isovalue",id,this),
-  timevalue("timevalue",id,this), resolution("resolution",id,this)
+TbonCL::TbonCL(const clString& get_id()) 
+  : Module("TbonCL", get_id(), Filter), metafilename("metafilename",get_id(),this),
+  nodebricksize("nodebricksize",get_id(),this), 
+  databricksize("databricksize",get_id(),this), isovalue("isovalue",get_id(),this),
+  timevalue("timevalue",get_id(),this), resolution("resolution",get_id(),this)
 {
   timevalue.set(0);
   isovalue.set(0);
@@ -161,7 +161,7 @@ TbonCL::execute()
     tbon = new TbonTreeCL<type>( treesmeta, geomfile );
 
     // update UI to reflect current values
-    TCL::execute( id + " updateFrames");
+    TCL::execute( get_id() + " updateFrames");
     /////////////////
     // uncomment for immediate full resolution
     resolution.set( tbon->getDepth() );
@@ -294,7 +294,7 @@ TbonCL::preprocess( ifstream& metafile ) {
 //  processes a single (time,iso) query
 void
 TbonCL::processQuery() {
-  static int id = -1;
+  static int get_id() = -1;
   static int gotasurface = 0;
   iotimer_t t0, t1;
 
@@ -334,8 +334,8 @@ TbonCL::processQuery() {
     // send surface to output port
     if( havemonitor )
       crowdmonitor->writeUnlock();
-    if( gotasurface && id == -1 ) {
-      id = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry",
+    if( gotasurface && get_id() == -1 ) {
+      get_id() = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry",
 			    crowdmonitor );
     }
     if( gotasurface ) {
@@ -374,8 +374,8 @@ TbonCL::processQuery() {
 
       if( havemonitor )
 	crowdmonitor->writeUnlock();
-      if( gotasurface && id == -1 ) {
-      	id = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry", 
+      if( gotasurface && get_id() == -1 ) {
+      	get_id() = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry", 
       			      crowdmonitor );
       }
       if( gotasurface ) {

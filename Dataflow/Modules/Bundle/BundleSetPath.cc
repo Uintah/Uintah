@@ -62,10 +62,10 @@ private:
 DECLARE_MAKER(BundleSetPath)
   BundleSetPath::BundleSetPath(GuiContext* ctx)
     : Module("BundleSetPath", ctx, Filter, "Bundle", "SCIRun"),
-      guipath1name_(ctx->subVar("path1-name"), "path1"),
-      guipath2name_(ctx->subVar("path2-name"), "path2"),
-      guipath3name_(ctx->subVar("path3-name"), "path3"),
-      guibundlename_(ctx->subVar("bundlename"), "")
+      guipath1name_(get_ctx()->subVar("path1-name"), "path1"),
+      guipath2name_(get_ctx()->subVar("path2-name"), "path2"),
+      guipath3name_(get_ctx()->subVar("path3-name"), "path3"),
+      guibundlename_(get_ctx()->subVar("bundlename"), "")
 {
 }
 

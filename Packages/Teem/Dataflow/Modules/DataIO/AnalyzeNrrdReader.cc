@@ -124,11 +124,11 @@ DECLARE_MAKER(AnalyzeNrrdReader)
 //
 AnalyzeNrrdReader::AnalyzeNrrdReader(GuiContext* ctx)
   : Module("AnalyzeNrrdReader", ctx, Source, "DataIO", "Teem"),
-    have_insight_(ctx->subVar("have-insight", false)),
-    file_(ctx->subVar("file"), ""),
-    file_del_(ctx->subVar("file-del"), ""),
-    messages_(ctx->subVar("messages"), ""),
-    num_files_(ctx->subVar("num-files"), 0)
+    have_insight_(get_ctx()->subVar("have-insight", false)),
+    file_(get_ctx()->subVar("file"), ""),
+    file_del_(get_ctx()->subVar("file-del"), ""),
+    messages_(get_ctx()->subVar("messages"), ""),
+    num_files_(get_ctx()->subVar("num-files"), 0)
 {
 #ifdef HAVE_INSIGHT
   have_insight_.set(1);
@@ -164,7 +164,7 @@ void AnalyzeNrrdReader::execute(){
 
 #ifdef HAVE_INSIGHT
 
-  gui->execute(id + " sync_filenames");
+  get_gui()->execute(get_id() + " sync_filenames");
 
   // If no Analyze files were specified via the UI, print error and return
   if( all_files_.size() == 0 ) 
@@ -241,7 +241,7 @@ AnalyzeNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
       ostringstream str;
       str << "filenames" << all_files_.size()-1;
-      filenames_.insert(filenames_.end(), new GuiString(ctx->subVar(str.str())));
+      filenames_.insert(filenames_.end(), new GuiString(get_ctx()->subVar(str.str())));
     }
 
 #endif

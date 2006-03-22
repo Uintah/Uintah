@@ -76,7 +76,7 @@ public:
 
 private:
   void				tcl_command(GuiArgs&, void*);  
-  void				delete_viewwindow(const string &id);
+  void				delete_viewwindow(const string &);
   void				initPort(Mailbox<GeomReply>*);
   void				detachPort(int portno);
   int				real_portno(int portid);

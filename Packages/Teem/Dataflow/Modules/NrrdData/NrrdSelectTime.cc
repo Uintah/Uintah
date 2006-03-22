@@ -74,16 +74,16 @@ DECLARE_MAKER(NrrdSelectTime)
   
 NrrdSelectTime::NrrdSelectTime(GuiContext* ctx) : 
   Module("NrrdSelectTime", ctx, Iterator,"NrrdData", "Teem"),
-  selectable_min_(ctx->subVar("selectable_min")),
-  selectable_max_(ctx->subVar("selectable_max")),
-  selectable_inc_(ctx->subVar("selectable_inc")),
-  range_min_(ctx->subVar("range_min")),
-  range_max_(ctx->subVar("range_max")),
-  playmode_(ctx->subVar("playmode")),
-  current_(ctx->subVar("current")),
-  execmode_(ctx->subVar("execmode")),
-  delay_(ctx->subVar("delay")),
-  inc_amount_(ctx->subVar("inc-amount")),
+  selectable_min_(get_ctx()->subVar("selectable_min")),
+  selectable_max_(get_ctx()->subVar("selectable_max")),
+  selectable_inc_(get_ctx()->subVar("selectable_inc")),
+  range_min_(get_ctx()->subVar("range_min")),
+  range_max_(get_ctx()->subVar("range_max")),
+  playmode_(get_ctx()->subVar("playmode")),
+  current_(get_ctx()->subVar("current")),
+  execmode_(get_ctx()->subVar("execmode")),
+  delay_(get_ctx()->subVar("delay")),
+  inc_amount_(get_ctx()->subVar("inc-amount")),
   inc_(1),
   loop_(false),
   last_input_(-1),
@@ -252,7 +252,7 @@ NrrdSelectTime::execute()
     selectable_min_.set(0.0);
     selectable_max_.set(nrrd_handle->nrrd->axis[time_axis].size - 1);
 
-    gui->execute(id + " update_range");
+    get_gui()->execute(get_id() + " update_range");
     last_input_ = nrrd_handle->generation;
   }
  

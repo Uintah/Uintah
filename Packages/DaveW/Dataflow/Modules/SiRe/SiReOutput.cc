@@ -58,18 +58,18 @@ class SiReOutput : public Module {
 //    ScalarFieldRG *sf;
     ScalarFieldHandle sfh;
 public:
-    SiReOutput(const clString& id);
+    SiReOutput(const clString& get_id());
     virtual ~SiReOutput();
     virtual void execute();
 };
 
-extern "C" Module* make_SiReOutput(const clString& id)
+extern "C" Module* make_SiReOutput(const clString& get_id())
 {
-    return new SiReOutput(id);
+    return new SiReOutput(get_id());
 }
 
-SiReOutput::SiReOutput(const clString& id)
-: Module("SiReOutput", id, Filter)
+SiReOutput::SiReOutput(const clString& get_id())
+: Module("SiReOutput", get_id(), Filter)
 {
     iport = scinew VoidStarIPort(this, "SiReData", VoidStarIPort::Atomic);
     add_iport(iport);

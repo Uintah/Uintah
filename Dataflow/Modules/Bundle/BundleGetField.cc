@@ -65,10 +65,10 @@ private:
 DECLARE_MAKER(BundleGetField)
   BundleGetField::BundleGetField(GuiContext* ctx)
     : Module("BundleGetField", ctx, Filter, "Bundle", "SCIRun"),
-      guifield1name_(ctx->subVar("field1-name"), "field1"),
-      guifield2name_(ctx->subVar("field2-name"), "field2"),
-      guifield3name_(ctx->subVar("field3-name"), "field3"),
-      guifields_(ctx->subVar("field-selection"), "")
+      guifield1name_(get_ctx()->subVar("field1-name"), "field1"),
+      guifield2name_(get_ctx()->subVar("field2-name"), "field2"),
+      guifield3name_(get_ctx()->subVar("field3-name"), "field3"),
+      guifields_(get_ctx()->subVar("field-selection"), "")
 {
 
 }
@@ -115,7 +115,7 @@ void BundleGetField::execute()
   }
 
   guifields_.set(fieldlist);
-  ctx->reset();
+  get_ctx()->reset();
 
  
   if (!(ofport = static_cast<FieldOPort *>(get_oport("field1"))))

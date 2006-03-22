@@ -64,7 +64,7 @@ class ReplicateDataArray : public Module {
 DECLARE_MAKER(ReplicateDataArray)
 ReplicateDataArray::ReplicateDataArray(GuiContext* ctx)
   : Module("ReplicateDataArray", ctx, Source, "TensorVectorMath", "ModelCreation"),
-    guisize_(ctx->subVar("size"))
+    guisize_(get_ctx()->subVar("size"))
 {
 }
 
@@ -103,9 +103,9 @@ void
   {
     // this widget has trouble updating properly
     // hence force it to update
-    gui->lock();
-    gui->eval(getID()+" update_size");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval(get_id()+" update_size");
+    get_gui()->unlock();
     n = guisize_.get();
   }
   else
@@ -118,7 +118,7 @@ void
     n = static_cast<int>(Size->get(0,0));
    
     guisize_.set(n);
-    ctx->reset(); 
+    get_ctx()->reset(); 
   }
 
   int rows = 0;

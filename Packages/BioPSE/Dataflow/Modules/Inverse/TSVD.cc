@@ -61,7 +61,7 @@ namespace BioPSE
   {
     GuiInt	 	lambda_fix_;
     GuiDouble 	lambda_sld_;
-    GuiInt    	haveUI_;
+    GuiInt    	have_ui_;
     GuiString 	reg_method_;
     GuiInt		lambda_max_;
 	
@@ -97,7 +97,7 @@ namespace BioPSE
       : Module("TSVD", context, Source, "Inverse", "BioPSE"),
       	lambda_fix_(context->subVar("lambda_fix")),
       	lambda_sld_(context->subVar("lambda_sld")),
-      	haveUI_(context->subVar("haveUI")),
+      	have_ui_(context->subVar("have_ui")),
       	reg_method_(context->subVar("reg_method")),
 	lambda_max_(context->subVar("lambda_max"))
 	
@@ -592,20 +592,20 @@ namespace BioPSE
           {
             // Use single fixed lambda value, entered in UI
             lambda = lambda_fix_.get();
-            msgStream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
+            msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
           }
         else if (reg_method_.get() == "slider")
           {
             // Use single fixed lambda value, select via slider
             lambda = (int)floor(lambda_sld_.get()/10*rank);
-            msgStream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
+            msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
           }
 		
       }
     else if (reg_method_.get() == "lcurve")
       {
         // Use L-curve, lambda from corner of the L-curve
-        msgStream_ << "method = " << reg_method_.get() << "\n";//DISCARD
+        msg_stream_ << "method = " << reg_method_.get() << "\n";//DISCARD
 
         int nLambda;
         Array1<double> rho, eta, lambdaArray;
@@ -623,17 +623,17 @@ namespace BioPSE
         if (eta[nLambda-1] < lower_y)  
           lower_y = eta[nLambda-1];
 
-        if (haveUI_.get()) 
+        if (have_ui_.get()) 
           {
             ostringstream str;
-            str << id << " plot_graph \" ";
+            str << get_id() << " plot_graph \" ";
             for (i=0; i<nLambda; i++)
               str << rho[i] << " " << eta[i] << " ";
             str << "\" \" " << rho[nLambda-1]/10 << " " << eta[lambda] << " ";
             str << rho[lambda] << " " << eta[lambda] << " ";
             str << rho[lambda] << " " << lower_y/10 << " \" ";
             str << lambda << " ; update idletasks";
-            gui->execute(str.str().c_str());
+            get_gui()->execute(str.str().c_str());
           }
       } 
 	

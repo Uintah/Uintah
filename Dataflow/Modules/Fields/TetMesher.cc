@@ -46,7 +46,10 @@
 #include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
-#include <CMLTetMesher.hpp>
+
+#if defined(HAVE_CAMAL)
+  #include <CMLTetMesher.hpp>
+#endif
 
 namespace SCIRun {
 
@@ -105,8 +108,10 @@ TetMesher::execute()
     error("Failed read input.");
   }
 
-  // FIX: Camal is NOT THreadsafe hence we need to make it thread safe by adding a mutex
-  // Lock the tetmesher so no other module can address the tetmesher at the same time
+  // FIX: Camal is NOT Threadsafe hence we need to make it 
+  // thread safe by adding a mutex
+  // Lock the tetmesher so no other module can address the 
+  // tetmesher at the same time
   TetMesherMutex.lock();
 
     // mesh the volume
@@ -114,9 +119,11 @@ TetMesher::execute()
   int new_points = 0, num_tets = 0;
   if (ret_value) 
   {
+#if defined(HAVE_CAMAL)
     CMLTetMesher tet_mesher;
     ret_value = tet_mesher.set_boundary_mesh(num_points, points,
                                              num_tris, tris);
+#endif
     if (!ret_value) 
     {
       // printf("Failed setting boundary mesh\n");
@@ -126,7 +133,9 @@ TetMesher::execute()
       // generate the mesh
     if (ret_value) 
     {
+#if defined(HAVE_CAMAL)
       ret_value = tet_mesher.generate_mesh(new_points, num_tets);
+#endif
       if (!ret_value) 
       {
         // printf("Failed generating mesh\n");
@@ -139,7 +148,9 @@ TetMesher::execute()
     {
       tets   = new int [num_tets * 4];
       tetpoints = new double [new_points * 3];
+#if defined(HAVE_CAMAL)
       ret_value = tet_mesher.get_mesh(new_points, tetpoints, num_tets, tets);
+#endif
       if (!ret_value) {
         // printf("Failed reading tet mesh\n");
         error("Failed reading tet mesh.");

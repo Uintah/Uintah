@@ -63,10 +63,10 @@ DECLARE_MAKER(BundleSetString)
 
 BundleSetString::BundleSetString(GuiContext* ctx)
   : Module("BundleSetString", ctx, Filter, "Bundle", "SCIRun"),
-    guistring1name_(ctx->subVar("string1-name"), "string1"),
-    guistring2name_(ctx->subVar("string2-name"), "string2"),
-    guistring3name_(ctx->subVar("string3-name"), "string3"),
-    guibundlename_(ctx->subVar("bundlename"))
+    guistring1name_(get_ctx()->subVar("string1-name"), "string1"),
+    guistring2name_(get_ctx()->subVar("string2-name"), "string2"),
+    guistring3name_(get_ctx()->subVar("string3-name"), "string3"),
+    guibundlename_(get_ctx()->subVar("bundlename"))
 {
 }
 

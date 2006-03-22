@@ -60,9 +60,9 @@ DECLARE_MAKER(TendSlice)
 
 TendSlice::TendSlice(SCIRun::GuiContext *ctx) : 
   Module("TendSlice", ctx, Filter, "Tend", "Teem"),
-  axis_(ctx->subVar("axis"), 1),
-  position_(ctx->subVar("position"), 0),
-  dimension_(ctx->subVar("dimension"), 3)
+  axis_(get_ctx()->subVar("axis"), 1),
+  position_(get_ctx()->subVar("position"), 0),
+  dimension_(get_ctx()->subVar("dimension"), 3)
 {
 }
 

@@ -67,12 +67,12 @@ DECLARE_MAKER(Submatrix)
 
 Submatrix::Submatrix(GuiContext* ctx)
   : Module("Submatrix", ctx, Filter,"Math", "SCIRun"),
-    mincol_(ctx->subVar("mincol"), "---"),
-    maxcol_(ctx->subVar("maxcol"), "---"),
-    minrow_(ctx->subVar("minrow"), "---"),
-    maxrow_(ctx->subVar("maxrow"), "---"),
-    nrow_(ctx->subVar("nrow"), "??"),
-    ncol_(ctx->subVar("ncol"), "??")
+    mincol_(get_ctx()->subVar("mincol"), "---"),
+    maxcol_(get_ctx()->subVar("maxcol"), "---"),
+    minrow_(get_ctx()->subVar("minrow"), "---"),
+    maxrow_(get_ctx()->subVar("maxrow"), "---"),
+    nrow_(get_ctx()->subVar("nrow"), "??"),
+    ncol_(get_ctx()->subVar("ncol"), "??")
 {
 }
 

@@ -108,20 +108,20 @@ DECLARE_MAKER(PatchVisualizer)
 
   PatchVisualizer::PatchVisualizer(GuiContext* ctx)
 : Module("PatchVisualizer", ctx, Filter, "Visualization", "Uintah"),
-  level0_grid_color(ctx->subVar("level0_grid_color")),
-  level1_grid_color(ctx->subVar("level1_grid_color")),
-  level2_grid_color(ctx->subVar("level2_grid_color")),
-  level3_grid_color(ctx->subVar("level3_grid_color")),
-  level4_grid_color(ctx->subVar("level4_grid_color")),
-  level5_grid_color(ctx->subVar("level5_grid_color")),
-  level0_color_scheme(ctx->subVar("level0_color_scheme")),
-  level1_color_scheme(ctx->subVar("level1_color_scheme")),
-  level2_color_scheme(ctx->subVar("level2_color_scheme")),
-  level3_color_scheme(ctx->subVar("level3_color_scheme")),
-  level4_color_scheme(ctx->subVar("level4_color_scheme")),
-  level5_color_scheme(ctx->subVar("level5_color_scheme")),
-  nl(ctx->subVar("nl")),
-  patch_seperate(ctx->subVar("patch_seperate")),
+  level0_grid_color(get_ctx()->subVar("level0_grid_color")),
+  level1_grid_color(get_ctx()->subVar("level1_grid_color")),
+  level2_grid_color(get_ctx()->subVar("level2_grid_color")),
+  level3_grid_color(get_ctx()->subVar("level3_grid_color")),
+  level4_grid_color(get_ctx()->subVar("level4_grid_color")),
+  level5_grid_color(get_ctx()->subVar("level5_grid_color")),
+  level0_color_scheme(get_ctx()->subVar("level0_color_scheme")),
+  level1_color_scheme(get_ctx()->subVar("level1_color_scheme")),
+  level2_color_scheme(get_ctx()->subVar("level2_color_scheme")),
+  level3_color_scheme(get_ctx()->subVar("level3_color_scheme")),
+  level4_color_scheme(get_ctx()->subVar("level4_color_scheme")),
+  level5_color_scheme(get_ctx()->subVar("level5_color_scheme")),
+  nl(get_ctx()->subVar("nl")),
+  patch_seperate(get_ctx()->subVar("patch_seperate")),
   old_generation(-1), old_timestep(0), numLevels(0),
   grid(NULL)
 {
@@ -297,11 +297,11 @@ void PatchVisualizer::execute()
   if (new_grid) {
     nl.set(numLevels);
     string visible;
-    gui->eval(id + " isVisible", visible);
+    get_gui()->eval(get_id() + " isVisible", visible);
     if ( visible == "1") {
-      gui->execute(id + " Rebuild");
+      get_gui()->execute(get_id() + " Rebuild");
       
-      gui->execute("update idletasks");
+      get_gui()->execute("update idletasks");
       reset_vars();
     }
   }

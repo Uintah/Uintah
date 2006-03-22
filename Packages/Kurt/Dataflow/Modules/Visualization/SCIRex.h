@@ -69,7 +69,7 @@ private:
   SCIRexRenderer *volren_;
   GLTexture3DHandle texH_;
    
-  int cmap_id_;  // id associated with color map...
+  int cmap_id_;  // get_id() associated with color map...
   
   GuiInt is_fixed_;
   GuiInt max_brick_dim_;

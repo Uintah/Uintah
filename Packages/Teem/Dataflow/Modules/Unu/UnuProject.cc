@@ -66,8 +66,8 @@ DECLARE_MAKER(UnuProject)
 
 UnuProject::UnuProject(SCIRun::GuiContext *ctx) : 
   Module("UnuProject", ctx, Filter, "UnuNtoZ", "Teem"), 
-  axis_(ctx->subVar("axis"), 0),
-  measure_(ctx->subVar("measure"), 2),
+  axis_(get_ctx()->subVar("axis"), 0),
+  measure_(get_ctx()->subVar("measure"), 2),
   old_generation_(-1),
   old_axis_(-1),
   old_measure_(-1),

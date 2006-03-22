@@ -71,11 +71,11 @@ DECLARE_MAKER(DMDAddBlockStimulus)
 
 DMDAddBlockStimulus::DMDAddBlockStimulus(GuiContext* ctx)
   : Module("DMDAddBlockStimulus", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
-    guidomain_(ctx->subVar("stim-domain")),
-    guicurrent_(ctx->subVar("stim-current")),
-    guistart_(ctx->subVar("stim-start")),
-    guiend_(ctx->subVar("stim-end")),
-    guicurrentdensity_(ctx->subVar("stim-is-current-density"))
+    guidomain_(get_ctx()->subVar("stim-domain")),
+    guicurrent_(get_ctx()->subVar("stim-current")),
+    guistart_(get_ctx()->subVar("stim-start")),
+    guiend_(get_ctx()->subVar("stim-end")),
+    guicurrentdensity_(get_ctx()->subVar("stim-is-current-density"))
 {
 }
 

@@ -70,7 +70,7 @@ private:
 DECLARE_MAKER(SprintfMatrix)
 SprintfMatrix::SprintfMatrix(GuiContext* ctx)
   : Module("SprintfMatrix", ctx, Source, "String", "SCIRun"),
-    formatstring_(ctx->subVar("formatstring"), "time: %5.4f ms")
+    formatstring_(get_ctx()->subVar("formatstring"), "time: %5.4f ms")
 {
 }
 
@@ -195,7 +195,7 @@ void SprintfMatrix::execute()
             if (matrixindex == (int)currentmatrix->get_data_size()) 
             { 
               currentmatrix = 0; 
-              if (inputport == (numIPorts()-1)) { lastdata = true; lastport = true; }
+              if (inputport == (num_input_ports()-1)) { lastdata = true; lastport = true; }
             }
           }
         }

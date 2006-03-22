@@ -60,9 +60,9 @@ DECLARE_MAKER(Unu1op)
 
 Unu1op::Unu1op(SCIRun::GuiContext *ctx) : 
   Module("Unu1op", ctx, Filter, "UnuAtoM", "Teem"), 
-  operator_(ctx->subVar("operator")),
-  type_(ctx->subVar("type")),
-  usetype_(ctx->subVar("usetype"))
+  operator_(get_ctx()->subVar("operator")),
+  type_(get_ctx()->subVar("type")),
+  usetype_(get_ctx()->subVar("usetype"))
 {
 }
 

@@ -75,9 +75,9 @@ UnuJoin::UnuJoin(SCIRun::GuiContext *ctx) :
   onrrd_handle_(0),
   in_generation_(0),
   onrrd_type_(nrrdTypeLast),
-  join_axis_(ctx->subVar("join-axis"), 0),
-  incr_dim_(ctx->subVar("incr-dim"), 0),
-  dim_(ctx->subVar("dim"), 0),
+  join_axis_(get_ctx()->subVar("join-axis"), 0),
+  incr_dim_(get_ctx()->subVar("incr-dim"), 0),
+  dim_(get_ctx()->subVar("dim"), 0),
   old_axis_(0),
   old_incr_dim_(0)
 {

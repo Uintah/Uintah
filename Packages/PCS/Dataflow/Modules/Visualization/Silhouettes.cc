@@ -68,12 +68,12 @@ protected:
 DECLARE_MAKER(Silhouettes)
 Silhouettes::Silhouettes(GuiContext* ctx)
   : Module("Silhouettes", ctx, Source, "Visualization", "PCS"),
-    gui_build_field_(ctx->subVar("build_field")),
-    gui_build_geom_(ctx->subVar("build_geom")),
-    gui_color_r_(ctx->subVar("color-r")),
-    gui_color_g_(ctx->subVar("color-g")),
-    gui_color_b_(ctx->subVar("color-b")),
-    gui_autoexec_(ctx->subVar("autoexecute")),
+    gui_build_field_(get_ctx()->subVar("build_field")),
+    gui_build_geom_(get_ctx()->subVar("build_geom")),
+    gui_color_r_(get_ctx()->subVar("color-r")),
+    gui_color_g_(get_ctx()->subVar("color-g")),
+    gui_color_b_(get_ctx()->subVar("color-b")),
+    gui_autoexec_(get_ctx()->subVar("autoexecute")),
     gui_widget_lock_("Silhouettes widget lock"),
 //    vpWidget_(0),
     build_field_(0),

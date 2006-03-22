@@ -235,8 +235,8 @@ RTTime::run()
 DECLARE_MAKER(TimeControls)
 TimeControls::TimeControls(GuiContext* ctx) : 
   Module("TimeControls", ctx, Source, "Time", "SCIRun"),
-  exec_mode_(ctx->subVar("execmode")),
-  time_sf_(ctx->subVar("scale_factor")),
+  exec_mode_(get_ctx()->subVar("execmode")),
+  time_sf_(get_ctx()->subVar("scale_factor")),
   playing_(false),
   big_rewind_(false),
   fforward_(false),
@@ -248,7 +248,7 @@ TimeControls::TimeControls(GuiContext* ctx) :
 {
   trun_ = scinew RTTime(this);
   trun_thread_ = scinew Thread(trun_, 
-			       string(id+" time global sync").c_str());
+			       string(get_id()+" time global sync").c_str());
 
 }
 
@@ -279,8 +279,8 @@ TimeControls::set_started(double t)
 {
   time_.set_started(t);
   ostringstream str;
-  str << id << " do_update " << Round(time_.view_started());
-  gui->execute(str.str());
+  str << get_id() << " do_update " << Round(time_.view_started());
+  get_gui()->execute(str.str());
 }
 
 void 
@@ -294,9 +294,9 @@ TimeControls::set_time(double t)
 {
   time_.set_now(t);
   ostringstream str;
-  str << id << " do_update " << Round(time_.view_elapsed_since_start());
-  gui->execute(str.str());
-  gui->execute("update idletasks");
+  str << get_id() << " do_update " << Round(time_.view_elapsed_since_start());
+  get_gui()->execute(str.str());
+  get_gui()->execute("update idletasks");
 }
 
 

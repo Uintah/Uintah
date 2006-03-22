@@ -77,7 +77,7 @@ get_attributes(vector<xmlNodePtr> &attr, xmlNodePtr p)
 
 
 
-// static void postMessage(const string& errmsg)
+// static void post_message(const string& errmsg)
 // {
 //     cerr << errmsg << '\n';
 // }
@@ -627,13 +627,13 @@ string get_serialized_children(xmlNode* d)
 // 	allwhite=false;
 //       }
 //     if(!allwhite){
-//       postMessage(string("Extraneous text: ") + str + "after node: " + 
+//       post_message(string("Extraneous text: ") + str + "after node: " + 
 // 		  xmlto_string(n->getNodeName()) + "(in file " + filename + 
 // 		  ")");
 //     }
 //     return;
 //   }
-//   postMessage(string("Do not understand node: ") + 
+//   post_message(string("Do not understand node: ") + 
 // 	      xmlto_string(n->getNodeName()) + "(in file " + filename + ")");
 // }
 

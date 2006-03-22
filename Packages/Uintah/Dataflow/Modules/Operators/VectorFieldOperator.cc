@@ -38,7 +38,7 @@ using namespace Uintah;
 
 VectorFieldOperator::VectorFieldOperator(GuiContext* ctx)
   : Module("VectorFieldOperator",ctx,Source, "Operators", "Uintah"),
-    guiOperation(ctx->subVar("operation"))
+    guiOperation(get_ctx()->subVar("operation"))
 {
 }
   

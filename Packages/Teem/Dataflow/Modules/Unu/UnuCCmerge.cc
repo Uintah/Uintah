@@ -69,10 +69,10 @@ private:
 DECLARE_MAKER(UnuCCmerge)
 UnuCCmerge::UnuCCmerge(GuiContext* ctx)
   : Module("UnuCCmerge", ctx, Source, "UnuAtoM", "Teem"),
-    dir_(ctx->subVar("dir")),
-    maxsize_(ctx->subVar("maxsize")),
-    maxneigh_(ctx->subVar("maxneigh")),
-    connectivity_(ctx->subVar("connectivity"))
+    dir_(get_ctx()->subVar("dir")),
+    maxsize_(get_ctx()->subVar("maxsize")),
+    maxneigh_(get_ctx()->subVar("maxneigh")),
+    connectivity_(get_ctx()->subVar("connectivity"))
 {
 }
 

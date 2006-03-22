@@ -37,7 +37,7 @@ struct UGtetra {
 class ViewMesh : public Module {
 public:
   // Functions required by Module inheritance
-  ViewMesh(const clString& id);
+  ViewMesh(const clString& get_id());
   virtual ~ViewMesh();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -60,14 +60,14 @@ private:
 }; // class ViewMesh
 
 // More required stuff...
-extern "C" Module* make_ViewMesh(const clString& id){
-  return new ViewMesh(id);
+extern "C" Module* make_ViewMesh(const clString& get_id()){
+  return new ViewMesh(get_id());
 }
 
 // Constructor
-ViewMesh::ViewMesh(const clString& id)
-  : Module("ViewMesh", id, Filter), representation("representation",id,this), 
-  radius("radius",id,this), geomfilename("geomfilename",id,this)
+ViewMesh::ViewMesh(const clString& get_id())
+  : Module("ViewMesh", get_id(), Filter), representation("representation",get_id(),this), 
+  radius("radius",get_id(),this), geomfilename("geomfilename",get_id(),this)
 {
   representation.set(0);
   radius.set(0.0);

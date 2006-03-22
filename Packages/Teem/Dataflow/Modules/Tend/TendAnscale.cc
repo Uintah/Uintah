@@ -62,7 +62,7 @@ DECLARE_MAKER(TendAnscale)
 
 TendAnscale::TendAnscale(SCIRun::GuiContext *ctx) : 
   Module("TendAnscale", ctx, Filter, "Tend", "Teem"), 
-  scale_(ctx->subVar("scale"), 1.0)
+  scale_(get_ctx()->subVar("scale"), 1.0)
 {
 }
 

@@ -70,7 +70,7 @@ class FieldDataNodeToElem : public Module {
 DECLARE_MAKER(FieldDataNodeToElem)
 FieldDataNodeToElem::FieldDataNodeToElem(GuiContext* ctx)
   : Module("FieldDataNodeToElem", ctx, Source, "FieldsData", "ModelCreation"),
-    method_(ctx->subVar("method"))
+    method_(get_ctx()->subVar("method"))
 {
 }
 
@@ -83,7 +83,7 @@ void
 
   FieldIPort *field_iport;
   
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
+  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
   {
     error("Could not find Field input port");
     return;
@@ -119,7 +119,7 @@ void
       return;
     }
   
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
+    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
     if (output_oport) output_oport->send(output);
   }
 }

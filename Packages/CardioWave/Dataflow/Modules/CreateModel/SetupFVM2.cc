@@ -108,7 +108,7 @@ void SetupFVM2::execute(){
   m->size(nnodes);
   m->size(ncells);
 
-  msgStream_ << "nnodes="<<nnodes<<" ncells="<<ncells<<"\n";
+  msg_stream_ << "nnodes="<<nnodes<<" ncells="<<ncells<<"\n";
 
   MESH *mesh = new MESH;
   mesh->vtx = new VERTEX[nnodes];

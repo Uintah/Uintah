@@ -68,9 +68,9 @@ DECLARE_MAKER(UnuCCfind)
 UnuCCfind::UnuCCfind(GuiContext* ctx)
   : Module("UnuCCfind", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), onrrd_(0),
-    connectivity_(ctx->subVar("connectivity")),
-    type_(ctx->subVar("type")),
-    usetype_(ctx->subVar("usetype"))
+    connectivity_(get_ctx()->subVar("connectivity")),
+    type_(get_ctx()->subVar("type")),
+    usetype_(get_ctx()->subVar("usetype"))
 {
 }
 

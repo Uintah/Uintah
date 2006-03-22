@@ -113,7 +113,7 @@ private:
   void				init_shader_factory();
   void				build_colormap_texture();
   void				build_histogram_texture();
-  void				draw_texture(GLuint &id);
+  void				draw_texture(GLuint &);
   void				redraw(bool force_cmap_dirty = false,
 				       bool save_ppm = false);
   void				faux_changed();
@@ -243,15 +243,15 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     first_motion_(true),
     mouse_last_x_(0),
     mouse_last_y_(0),
-    pan_x_(ctx->subVar("panx")),
-    pan_y_(ctx->subVar("pany")),
-    scale_(ctx->subVar("scale_factor")),
+    pan_x_(get_ctx()->subVar("panx")),
+    pan_y_(get_ctx()->subVar("pany")),
+    scale_(get_ctx()->subVar("scale_factor")),
     updating_(false),
-    gui_histo_(ctx->subVar("histo")),
-    gui_selected_widget_(ctx->subVar("selected_widget"), -1),
-    gui_selected_object_(ctx->subVar("selected_object"), -1),
-    gui_num_entries_(ctx->subVar("num-entries")),
-    gui_faux_(ctx->subVar("faux")),
+    gui_histo_(get_ctx()->subVar("histo")),
+    gui_selected_widget_(get_ctx()->subVar("selected_widget"), -1),
+    gui_selected_object_(get_ctx()->subVar("selected_object"), -1),
+    gui_num_entries_(get_ctx()->subVar("num-entries")),
+    gui_faux_(get_ctx()->subVar("faux")),
     gui_name_(),
     gui_color_r_(),
     gui_color_g_(),
@@ -260,12 +260,12 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     gui_wstate_(),
     gui_sstate_(),
     gui_onstate_(),
-    filename_(ctx->subVar("filename")),
+    filename_(get_ctx()->subVar("filename")),
     end_marker_(0),
     value_range_(0.0, -1.0)
 {
   // Mac OSX requires 512K of stack space for GL context rendering threads
-  setStackSize(1024*512);
+  set_stack_size(1024*512);
   pan_x_.set(0.0);
   pan_y_.set(0.0);
   scale_.set(1.0);
@@ -681,14 +681,14 @@ EditColorMap2D::resize_gui(int n)
   for (i = gui_name_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
   {
     const string num = to_string(i);
-    gui_name_.push_back(new GuiString(ctx->subVar("name-" + num)));
-    gui_color_r_.push_back(new GuiDouble(ctx->subVar(num +"-color-r")));
-    gui_color_g_.push_back(new GuiDouble(ctx->subVar(num +"-color-g")));
-    gui_color_b_.push_back(new GuiDouble(ctx->subVar(num +"-color-b")));
-    gui_color_a_.push_back(new GuiDouble(ctx->subVar(num +"-color-a")));
-    gui_wstate_.push_back(new GuiString(ctx->subVar("state-" + num)));
-    gui_sstate_.push_back(new GuiInt(ctx->subVar("shadeType-" + num)));
-    gui_onstate_.push_back(new GuiInt(ctx->subVar("on-" + num)));
+    gui_name_.push_back(new GuiString(get_ctx()->subVar("name-" + num)));
+    gui_color_r_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-r")));
+    gui_color_g_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-g")));
+    gui_color_b_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-b")));
+    gui_color_a_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-a")));
+    gui_wstate_.push_back(new GuiString(get_ctx()->subVar("state-" + num)));
+    gui_sstate_.push_back(new GuiInt(get_ctx()->subVar("shadeType-" + num)));
+    gui_onstate_.push_back(new GuiInt(get_ctx()->subVar("on-" + num)));
 
   }
   // This marker stuff is for TCL, its the last variable created, so
@@ -699,7 +699,7 @@ EditColorMap2D::resize_gui(int n)
     delete end_marker_;
   // Second: Create a new marker that marks the end of the variables
   if (i != 0) 
-    end_marker_ = scinew GuiString(ctx->subVar("marker"), "end");
+    end_marker_ = scinew GuiString(get_ctx()->subVar("marker"), "end");
 }
 
 
@@ -724,7 +724,7 @@ EditColorMap2D::update_to_gui(bool forward)
   if (selected < 0 || selected >= int(widgets_.size()))
     gui_selected_widget_.set(widgets_.size()-1);
   if (forward) { 
-    gui->execute(id + " create_entries"); 
+    get_gui()->execute(get_id() + " create_entries"); 
   }
 }
 
@@ -732,7 +732,7 @@ EditColorMap2D::update_to_gui(bool forward)
 void
 EditColorMap2D::update_from_gui()
 {
-  ctx->reset();   // Reset GUI vars cache
+  get_ctx()->reset();   // Reset GUI vars cache
   resize_gui();   // Make sure we have enough GUI vars to read through
   for (unsigned int i = 0; i < widgets_.size(); i++)
   {
@@ -1303,10 +1303,10 @@ void
 EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
 {
   if (!ctx_) return;
-  gui->lock();
+  get_gui()->lock();
 
   if(ctx_->width()<3 || ctx_->height()<3 || !ctx_->make_current()) {
-    gui->unlock(); 
+    get_gui()->unlock(); 
     return; 
   }
   if (force_cmap_dirty) cmap_dirty_ = true;
@@ -1390,7 +1390,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   // windows) if you do it after
   CHECK_OPENGL_ERROR("dummy")
   ctx_->release();
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 

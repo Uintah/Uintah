@@ -132,7 +132,7 @@ void RawToDenseMatrix::execute(){
       //then the filename was saved in a net, not entered into the gui.
       //trigger the list of file names to parse.
       string dummy;
-      gui->eval(id + " working_files " + filename_.get(), dummy);
+      get_gui()->eval(get_id() + " working_files " + filename_.get(), dummy);
     }
 
     DenseMatrix* mat = scinew DenseMatrix(rows, potfiles_.size());

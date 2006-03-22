@@ -86,9 +86,9 @@ DECLARE_MAKER(UnuPad)
 
 UnuPad::UnuPad(GuiContext *ctx) : 
   Module("UnuPad", ctx, Filter, "UnuNtoZ", "Teem"),
-  pad_style_(ctx->subVar("pad-style"), "Bleed"),
-  pad_value_(ctx->subVar("pad-value"), 0.0),
-  dim_(ctx->subVar("dim"), 0),
+  pad_style_(get_ctx()->subVar("pad-style"), "Bleed"),
+  pad_value_(get_ctx()->subVar("pad-value"), 0.0),
+  dim_(get_ctx()->subVar("dim"), 0),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
@@ -111,10 +111,10 @@ UnuPad::load_gui() {
   for (int a = 0; a < dim_.get(); a++) {
     ostringstream str;
     str << "minAxis" << a;
-    mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+    mins_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
     ostringstream str1;
     str1 << "maxAxis" << a;
-    maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
+    maxs_.push_back(new GuiInt(get_ctx()->subVar(str1.str())));
   }
 }
 
@@ -156,14 +156,14 @@ UnuPad::execute()
 	++iter;
       }
       maxs_.clear();
-      gui->execute(id.c_str() + string(" clear_axes"));
+      get_gui()->execute(get_id().c_str() + string(" clear_axes"));
     }
 
     last_generation_ = nrrdH->generation;
     dim_.set(nrrdH->nrrd->dim);
     dim_.reset();
     load_gui();
-    gui->execute(id.c_str() + string(" init_axes"));
+    get_gui()->execute(get_id().c_str() + string(" init_axes"));
   }
 
   dim_.reset();
@@ -221,7 +221,7 @@ UnuPad::execute()
     {
 	char *err = biffGetDone(NRRD);
 	error(string("Trouble resampling: ") + err);
-	msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+	msg_stream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
 	free(err);
     }
 

@@ -197,19 +197,19 @@ ShowDipoles::load_gui()
     if (!new_positions_[i]) {
       ostringstream str;
       str << "newpos" << i;
-      new_positions_[i] = new GuiPoint(ctx->subVar(str.str()));
+      new_positions_[i] = new GuiPoint(get_ctx()->subVar(str.str()));
       new_positions_[i]->reset();
     }
     if (!new_directions_[i]) {
       ostringstream str;
       str << "newdir" << i;
-      new_directions_[i] = new GuiVector(ctx->subVar(str.str()));
+      new_directions_[i] = new GuiVector(get_ctx()->subVar(str.str()));
       new_directions_[i]->reset();
     }
     if (!new_magnitudes_[i]) {
       ostringstream str;
       str << "newmag" << i;
-      new_magnitudes_[i] = new GuiDouble(ctx->subVar(str.str()));
+      new_magnitudes_[i] = new GuiDouble(get_ctx()->subVar(str.str()));
       new_magnitudes_[i]->reset();
     }
 

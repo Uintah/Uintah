@@ -67,8 +67,8 @@ DECLARE_MAKER(ColorMapWriter)
 
 ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype"))
 {
   ColorMapIEPluginManager mgr;
   vector<string> exporters;
@@ -109,7 +109,7 @@ ColorMapWriter::call_exporter(const string &filename)
   if (pl)
   {
     const bool result = pl->filewriter(this, handle_, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return result;
   }
   return false;

@@ -73,11 +73,11 @@ class PSet : public Datatype {
   // GROUP: Access
   //////////
   // return the locations
-  vector<ShareAssignParticleVariable<Point> >&  getPositions()
+  vector<ShareAssignParticleVariable<Point> >&  get_positions()
   { return positions;}
   //////////
   // return the ids
-  vector<ShareAssignParticleVariable<long64> >&  getIDs()
+  vector<ShareAssignParticleVariable<long64> >&  get_ids()
   { return particle_ids;}
   //////////
   // return the patches

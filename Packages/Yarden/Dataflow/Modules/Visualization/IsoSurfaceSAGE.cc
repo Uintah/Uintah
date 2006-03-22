@@ -145,7 +145,7 @@ using namespace SCIRun;
       //int portid;
 
     public:
-      IsoSurfaceSAGE( const clString& id);
+      IsoSurfaceSAGE( const clString& get_id());
       virtual ~IsoSurfaceSAGE();
       
       virtual void execute();
@@ -156,29 +156,29 @@ using namespace SCIRun;
       int set_view( const View &);
     };
     
-    extern "C" Module* make_IsoSurfaceSAGE(const clString& id)
+    extern "C" Module* make_IsoSurfaceSAGE(const clString& get_id())
     {
-      return scinew IsoSurfaceSAGE(id);
+      return scinew IsoSurfaceSAGE(get_id());
     }
     
     static clString module_name("IsoSurfaceSAGE");
     static clString box_name("SageBox");
     static clString surface_name("Sage");
     
-    IsoSurfaceSAGE::IsoSurfaceSAGE(const clString& id)
-      : Module("IsoSurfaceSAGE", id, Filter ), 
-	isoval("isoval", id, this),
-	isoval_min("isoval_min", id, this), 
-	isoval_max("isoval_max", id, this),
-	tcl_bbox("bbox", id, this), 
-	tcl_value("value", id, this), 
-	tcl_visibility("visibility", id, this),
-	tcl_scan("scan", id, this),  
-	tcl_reduce("reduce",id,this), 
-	tcl_all("all",id,this),
-	tcl_min_size("min_size", id, this),
-	tcl_poll("poll", id, this),
-	tcl_dl("dl", id, this)
+    IsoSurfaceSAGE::IsoSurfaceSAGE(const clString& get_id())
+      : Module("IsoSurfaceSAGE", get_id(), Filter ), 
+	isoval("isoval", get_id(), this),
+	isoval_min("isoval_min", get_id(), this), 
+	isoval_max("isoval_max", get_id(), this),
+	tcl_bbox("bbox", get_id(), this), 
+	tcl_value("value", get_id(), this), 
+	tcl_visibility("visibility", get_id(), this),
+	tcl_scan("scan", get_id(), this),  
+	tcl_reduce("reduce",get_id(),this), 
+	tcl_all("all",get_id(),this),
+	tcl_min_size("min_size", get_id(), this),
+	tcl_poll("poll", get_id(), this),
+	tcl_dl("dl", get_id(), this)
     {
       // input ports
       infield=scinew ScalarFieldIPort(this, "Field",ScalarFieldIPort::Atomic);

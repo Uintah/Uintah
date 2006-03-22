@@ -425,22 +425,22 @@ PackageDB::instantiateModule(const string& packageName,
   // Some modules may already know their package and category.
   // If this module doesn't, then set it's package and category here.
   string unknown("unknown");
-  if (unknown == module->packageName)
-    module->packageName = packageName;
-  if (unknown == module->categoryName)
-    module->categoryName = categoryName;
+  if (unknown == module->package_name_)
+    module->package_name_ = packageName;
+  if (unknown == module->category_name_)
+    module->category_name_ = categoryName;
   
   if (moduleInfo->help_description_ != "(null string)")
   {
-    module->description = moduleInfo->help_description_;
+    module->description_ = moduleInfo->help_description_;
   }
   else
   {
-    module->description = "No help found for this module.";
+    module->description_ = "No help found for this module.";
   }
 
   // copy other fields 
-  module->lastportdynamic = moduleInfo->last_port_dynamic_;
+  module->lastportdynamic_ = moduleInfo->last_port_dynamic_;
   
   return module;
 }
@@ -598,7 +598,7 @@ void
 PackageDB::printMessage(const string &msg) 
 {
   if(gui_){
-    gui_->postMessage(msg);
+    gui_->post_message(msg);
     gui_->execute("update idletasks");
   } else {
     cerr << msg << "\n";

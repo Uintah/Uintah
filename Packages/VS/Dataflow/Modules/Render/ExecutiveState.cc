@@ -395,26 +395,26 @@ DECLARE_MAKER(ExecutiveState)
 
 ExecutiveState::ExecutiveState(GuiContext* ctx) :
   Module("ExecutiveState", ctx, Filter, "Render", "VS"),
-  gui_time_(ctx->subVar("time")),
-  gui_sample_rate_(ctx->subVar("sample_rate")),
-  gui_sweep_speed_(ctx->subVar("sweep_speed")),
-  gui_dots_per_inch_(ctx->subVar("dots_per_inch")),
-  gui_plot_height_(ctx->subVar("plot_height")),
-  gui_play_mode_(ctx->subVar("play_mode")),
-  gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
-  gui_selected_marker_(ctx->subVar("selected_marker")),
-  gui_plot_count_(ctx->subVar("plot_count")),
-  gui_font_scale_(ctx->subVar("font_scale")),
-  gui_show_name_(ctx->subVar("show_name")),
-  gui_show_vectors_(ctx->subVar("show_vectors")),
-  gui_horiz_comp_(ctx->subVar("horiz_comp")),
-  gui_both_comp_(ctx->subVar("both_comp")),
-  gui_vector_mode_(ctx->subVar("vector_mode")),
-  gui_show_cross_(ctx->subVar("show_cross")),
-  gui_show_trend_(ctx->subVar("show_trend")),
-  gui_show_threshold_(ctx->subVar("show_threshold")),
-  gui_injury_offset_(ctx->subVar("injury_offset")),
-  gui_geom_(ctx->subVar("geom")),
+  gui_time_(get_ctx()->subVar("time")),
+  gui_sample_rate_(get_ctx()->subVar("sample_rate")),
+  gui_sweep_speed_(get_ctx()->subVar("sweep_speed")),
+  gui_dots_per_inch_(get_ctx()->subVar("dots_per_inch")),
+  gui_plot_height_(get_ctx()->subVar("plot_height")),
+  gui_play_mode_(get_ctx()->subVar("play_mode")),
+  gui_time_markers_mode_(get_ctx()->subVar("time_markers_mode")),
+  gui_selected_marker_(get_ctx()->subVar("selected_marker")),
+  gui_plot_count_(get_ctx()->subVar("plot_count")),
+  gui_font_scale_(get_ctx()->subVar("font_scale")),
+  gui_show_name_(get_ctx()->subVar("show_name")),
+  gui_show_vectors_(get_ctx()->subVar("show_vectors")),
+  gui_horiz_comp_(get_ctx()->subVar("horiz_comp")),
+  gui_both_comp_(get_ctx()->subVar("both_comp")),
+  gui_vector_mode_(get_ctx()->subVar("vector_mode")),
+  gui_show_cross_(get_ctx()->subVar("show_cross")),
+  gui_show_trend_(get_ctx()->subVar("show_trend")),
+  gui_show_threshold_(get_ctx()->subVar("show_threshold")),
+  gui_injury_offset_(get_ctx()->subVar("injury_offset")),
+  gui_geom_(get_ctx()->subVar("geom")),
   gui_x_axis_label_(0),
   gui_x_trend_h_label_(0),
   gui_x_trend_m_label_(0),
@@ -554,7 +554,7 @@ ExecutiveState::inc_time(double elapsed)
 
   gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
   gui_time_.reset();
-  gui->execute("update idletasks");
+  get_gui()->execute("update idletasks");
 
   setTimeLabel();
 }
@@ -565,12 +565,12 @@ ExecutiveState::make_current()
   //----------------------------------------------------------------
   // obtain rendering ctx 
   if(!ctx_) {
-    const string myname(".ui" + id + ".f.gl.gl");
+    const string myname(".ui" + get_id() + ".f.gl.gl");
     Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      gui->unlock();
+      get_gui()->unlock();
       return false;
     }
     dpy_ = Tk_Display(tkwin);
@@ -581,7 +581,7 @@ ExecutiveState::make_current()
     // check if it was created
     if(!ctx_) {
       error("Unable to obtain OpenGL context!");
-      gui->unlock();
+      get_gui()->unlock();
       return false;
     }
     glXMakeCurrent(dpy_, win_, ctx_);
@@ -688,7 +688,7 @@ ExecutiveState::init_plots()
   time_label->bind(font);
 
   if (!gui_x_axis_label_) {
-    gui_x_axis_label_ = scinew GuiString(ctx->subVar("x_axis_label"));
+    gui_x_axis_label_ = scinew GuiString(get_ctx()->subVar("x_axis_label"));
   }
   //if (gui_x_axis_label_->get() != string("")) {
     if (x_axis_label) delete x_axis_label;
@@ -699,7 +699,7 @@ ExecutiveState::init_plots()
   //}
 
   if (!gui_x_trend_h_label_) {
-    gui_x_trend_h_label_ = scinew GuiString(ctx->subVar("x_trend_h_label"));
+    gui_x_trend_h_label_ = scinew GuiString(get_ctx()->subVar("x_trend_h_label"));
   }
   //if (gui_x_trend_h_label_->get() != string("")) {
     if (x_trend_h_label) delete x_trend_h_label;
@@ -709,7 +709,7 @@ ExecutiveState::init_plots()
   //}
 
   if (!gui_x_trend_m_label_) {
-    gui_x_trend_m_label_ = scinew GuiString(ctx->subVar("x_trend_m_label"));
+    gui_x_trend_m_label_ = scinew GuiString(get_ctx()->subVar("x_trend_m_label"));
   }
   //if (gui_x_trend_m_label_->get() != string("")) {
     if (x_trend_m_label) delete x_trend_m_label;
@@ -719,7 +719,7 @@ ExecutiveState::init_plots()
   //}
 
   if (!gui_x_trend_l_label_) {
-    gui_x_trend_l_label_ = scinew GuiString(ctx->subVar("x_trend_l_label"));
+    gui_x_trend_l_label_ = scinew GuiString(get_ctx()->subVar("x_trend_l_label"));
   }
   //if (gui_x_trend_l_label_->get() != string("")) {
     if (x_trend_l_label) delete x_trend_l_label;
@@ -729,7 +729,7 @@ ExecutiveState::init_plots()
   //}
 
   if (!gui_y_axis_label_) {
-    gui_y_axis_label_ = scinew GuiString(ctx->subVar("y_axis_label"));
+    gui_y_axis_label_ = scinew GuiString(get_ctx()->subVar("y_axis_label"));
   }
   //if (gui_y_axis_label_->get() != string("")) {
     if (y_axis_label) delete y_axis_label;
@@ -739,7 +739,7 @@ ExecutiveState::init_plots()
   //}
 
   if (!gui_y_trend_h_label_) {
-    gui_y_trend_h_label_ = scinew GuiString(ctx->subVar("y_trend_h_label"));
+    gui_y_trend_h_label_ = scinew GuiString(get_ctx()->subVar("y_trend_h_label"));
   }
   //if (gui_y_trend_h_label_->get() != string("")) {
     if (y_trend_h_label) delete y_trend_h_label;
@@ -749,7 +749,7 @@ ExecutiveState::init_plots()
   //}
 
   if (!gui_y_trend_m_label_) {
-    gui_y_trend_m_label_ = scinew GuiString(ctx->subVar("y_trend_m_label"));
+    gui_y_trend_m_label_ = scinew GuiString(get_ctx()->subVar("y_trend_m_label"));
   }
   //if (gui_y_trend_m_label_->get() != string("")) {
     if (y_trend_m_label) delete y_trend_m_label;
@@ -759,7 +759,7 @@ ExecutiveState::init_plots()
   //}
 
   if (!gui_y_trend_l_label_) {
-    gui_y_trend_l_label_ = scinew GuiString(ctx->subVar("y_trend_l_label"));
+    gui_y_trend_l_label_ = scinew GuiString(get_ctx()->subVar("y_trend_l_label"));
   }
   //if (gui_y_trend_l_label_->get() != string("")) {
     if (y_trend_l_label) delete y_trend_l_label;
@@ -1345,7 +1345,7 @@ ExecutiveState::get_places(vector<int> &places, int num) const
 void
 ExecutiveState::redraw_all()
 {
-  gui->lock();
+  get_gui()->lock();
   if (! make_current()) return;
 
   init_plots();
@@ -1361,7 +1361,7 @@ ExecutiveState::redraw_all()
 
   glXSwapBuffers(dpy_, win_);
   glXMakeCurrent(dpy_, 0, 0);
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 void
@@ -1425,7 +1425,7 @@ ExecutiveState::setTimeLabel()
     timestr << setw(2) << hrs << ":";
     timestr << setw(2) << min << ":";
     timestr << setw(2) << sec;
-    gui->execute(id + " setTimeLabel {" + timestr.str() + "}");
+    get_gui()->execute(get_id() + " setTimeLabel {" + timestr.str() + "}");
  
     time_text.replace(0, time_text.length(), timestr.str());
 }
@@ -1455,12 +1455,12 @@ ExecutiveState::addMarkersToMenu()
   }
 
   markers_.clear();
-  gui->execute(id + " clearMarkers");
+  get_gui()->execute(get_id() + " clearMarkers");
 
   set<int>::iterator iter;
   for (iter = keys.begin(); iter != keys.end(); iter++) {
       markers_.push_back(*iter);
-      gui->execute(id + " setMarkers {" + tmpmkrs[*iter] + "}");
+      get_gui()->execute(get_id() + " setMarkers {" + tmpmkrs[*iter] + "}");
   }
 }
 
@@ -1471,12 +1471,12 @@ ExecutiveState::getNrrd1KeyValues()
 
   if (name != NULL) {
     string title(name);
-    //gui->execute(id + " setWindowTitle {Decision Space: " + name + "}");
+    //get_gui()->execute(get_id() + " setWindowTitle {Decision Space: " + name + "}");
 
     ostringstream titlestr;
     titlestr << "Decision Space: " << title;
 
-    gui->execute(id + " setWindowTitle {" + titlestr.str().c_str() + "}");
+    get_gui()->execute(get_id() + " setWindowTitle {" + titlestr.str().c_str() + "}");
 
     name_text.replace(0, name_text.length(), titlestr.str());
                                                                                 
@@ -1660,7 +1660,7 @@ ExecutiveState::execute()
   if (!runner_) {
     //runner_ = scinew RTDraw2(this);
     runner_ = scinew RTDraw2(this, time_viewer_h_);
-    runner_thread_ = scinew Thread(runner_, string(id+" RTDraw2 OpenGL").c_str());
+    runner_thread_ = scinew Thread(runner_, string(get_id()+" RTDraw2 OpenGL").c_str());
   }
 }
 
@@ -1731,7 +1731,7 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
 
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
@@ -1744,7 +1744,7 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
     }
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
@@ -1757,17 +1757,17 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
     }
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
   } else if(args[1] == "configure") {
-    const string myname(".ui" + id + ".f.gl.gl");
+    const string myname(".ui" + get_id() + ".f.gl.gl");
     Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      //gui->unlock();
+      //get_gui()->unlock();
     } else {
       width_ = Tk_Width(tkwin);
       height_ = Tk_Height(tkwin);

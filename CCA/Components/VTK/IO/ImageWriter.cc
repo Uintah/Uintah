@@ -54,7 +54,7 @@ SCIRun::vtk::ImageWriter::~ImageWriter()
 }
 
 int
-SCIRun::vtk::ImageWriter::popupUI()
+SCIRun::vtk::ImageWriter::popup_ui()
 {
   QString fn = QFileDialog::getOpenFileName("./","Vtk Image Files");
   if(fn.isNull())

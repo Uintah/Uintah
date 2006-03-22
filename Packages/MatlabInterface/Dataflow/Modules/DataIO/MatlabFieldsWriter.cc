@@ -116,10 +116,10 @@ DECLARE_MAKER(MatlabFieldsWriter)
 
 MatlabFieldsWriter::MatlabFieldsWriter(GuiContext* ctx)
   : Module("MatlabFieldsWriter", ctx, Sink, "DataIO", "MatlabInterface"),
-    guifilename_(ctx->subVar("filename")),
-    guifilenameset_(ctx->subVar("filename-set")),
-    guimatrixname_(ctx->subVar("matrixname")),     
-    guimatrixformat_(ctx->subVar("matrixformat"))
+    guifilename_(get_ctx()->subVar("filename")),
+    guifilenameset_(get_ctx()->subVar("filename-set")),
+    guimatrixname_(get_ctx()->subVar("matrixname")),     
+    guimatrixformat_(get_ctx()->subVar("matrixformat"))
 {
 }
 
@@ -138,7 +138,7 @@ void MatlabFieldsWriter::execute()
   matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
 
   StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
+  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
   {
     StringHandle stringH;
     if (filenameport->get(stringH))
@@ -147,7 +147,7 @@ void MatlabFieldsWriter::execute()
       {
         std::string filename = stringH->get();
         guifilename_.set(filename);
-        ctx->reset();
+        get_ctx()->reset();
       }
     }
   }
@@ -160,7 +160,7 @@ void MatlabFieldsWriter::execute()
 
   for (long p=0; p<NUMPORTS; p++)
   {
-    iport = static_cast<SCIRun::FieldIPort *>(getIPort(p));
+    iport = static_cast<SCIRun::FieldIPort *>(get_input_port(p));
     if (!iport) 
     {
       error("MatlabFieldsWriter: Unable to initialize iport");
@@ -181,8 +181,8 @@ void MatlabFieldsWriter::execute()
   // in orderly STL style vectors.
   
   // First update the GUI to C++ interface
-  gui->execute(id+" Synchronise");
-  ctx->reset();
+  get_gui()->execute(get_id()+" Synchronise");
+  get_ctx()->reset();
 
   // Get the contents of the filename entrybox
   std::string filename = guifilename_.get();
@@ -343,25 +343,25 @@ std::vector<std::string> MatlabFieldsWriter::converttcllist(std::string str)
 
   // Yeah, it is TCL dependent:
   // TCL::llength determines the length of the list
-  gui->lock();
-  gui->eval("llength { "+str + " }",result);	
+  get_gui()->lock();
+  get_gui()->eval("llength { "+str + " }",result);	
   istringstream iss(result);
   iss >> lengthlist;
-  gui->unlock();
+  get_gui()->unlock();
   if (lengthlist < 0) return(list);
 
   list.resize(lengthlist);
-  gui->lock();
+  get_gui()->lock();
   for (long p = 0;p<lengthlist;p++)
   {
     ostringstream oss;
     // TCL dependency:
     // TCL::lindex retrieves the p th element from the list
     oss << "lindex { " << str <<  " } " << p;
-    gui->eval(oss.str(),result);
+    get_gui()->eval(oss.str(),result);
     list[p] = result;
   }
-  gui->unlock();
+  get_gui()->unlock();
   return(list);
 }
 
@@ -371,9 +371,9 @@ std::vector<std::string> MatlabFieldsWriter::converttcllist(std::string str)
 bool MatlabFieldsWriter::overwrite()
 {
   std::string result;
-  gui->lock();
-  gui->eval(id+" overwrite",result);
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" overwrite",result);
+  get_gui()->unlock();
   if (result == std::string("0")) 
   {
     warning("User chose to not save.");
@@ -388,10 +388,10 @@ bool MatlabFieldsWriter::overwrite()
 
 void MatlabFieldsWriter::displayerror(std::string str)
 {
-  gui->lock();
+  get_gui()->lock();
   // Explicit call to TCL
-  gui->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
-  gui->unlock();
+  get_gui()->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
+  get_gui()->unlock();
 }
 
 

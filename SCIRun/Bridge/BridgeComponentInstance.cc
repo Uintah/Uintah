@@ -321,8 +321,8 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
     }
 
     portT = SCIRunPortInstance::Output;
-    bmdl->addOPortByName(portName, portType);
-    dflowport = bmdl->getOPort(portName);
+    bmdl->add_output_port_by_name(portName, portType);
+    dflowport = bmdl->get_output_port(portName);
     
     if (!dflowport) {
       throw sci::cca::CCAException::pointer(new CCAException("Wrong port model for addProvidesPort", sci::cca::BadPortType));
@@ -481,8 +481,8 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     }
 
     portT = SCIRunPortInstance::Input;
-    bmdl->addIPortByName(portName, portType);
-    dflowport = bmdl->getIPort(portName);
+    bmdl->add_input_port_by_name(portName, portType);
+    dflowport = bmdl->get_input_port(portName);
     
     if (!dflowport) {
       throw sci::cca::CCAException::pointer(new CCAException("Wrong port model for addProvidesPort", sci::cca::BadPortType));

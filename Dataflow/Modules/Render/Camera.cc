@@ -106,14 +106,14 @@ public:
 DECLARE_MAKER(Camera)
 Camera::Camera(GuiContext* ctx)
 : Module("Camera", ctx, Filter, "Render", "SCIRun"),
-  frame_(ctx->subVar("frame")),
-  num_frames_(ctx->subVar("num_frames")),
-  time_(ctx->subVar("time")),
-  playmode_(ctx->subVar("playmode")),
-  execmode_(ctx->subVar("execmode")),
-  track_(ctx->subVar("track")),
-  B_(ctx->subVar("B")),
-  C_(ctx->subVar("C")),
+  frame_(get_ctx()->subVar("frame")),
+  num_frames_(get_ctx()->subVar("num_frames")),
+  time_(get_ctx()->subVar("time")),
+  playmode_(get_ctx()->subVar("playmode")),
+  execmode_(get_ctx()->subVar("execmode")),
+  track_(get_ctx()->subVar("track")),
+  B_(get_ctx()->subVar("B")),
+  C_(get_ctx()->subVar("C")),
   keyframe_widgets_(),
   keyframe_znear_zfar_(),
   keyframe_widget_geom_ids_(),
@@ -132,13 +132,13 @@ Camera::~Camera()
 
 void Camera::execute()
 {  
-  GuiInt frameReady(ctx->subVar("frameReady"),false);
+  GuiInt frameReady(get_ctx()->subVar("frameReady"),false);
   do frameReady.reset(); while (!frameReady.get());
   frame_.reset();
   cerr << "displaying frame " << frame_.get() << std::endl;
   ogeom_->setView(0, 0, path_views_[frame_.get()-1]);
   ogeom_->flushViewsAndWait();
-  gui->eval(id+" post_next_frame");
+  get_gui()->eval(get_id()+" post_next_frame");
 }
 
 

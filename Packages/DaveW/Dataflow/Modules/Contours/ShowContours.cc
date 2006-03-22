@@ -38,19 +38,19 @@ class CStoGeom : public Module {
     GuiInt showLines;
     GuiInt showPoints;
 public:
-    CStoGeom(const clString& id);
+    CStoGeom(const clString& get_id());
     virtual ~CStoGeom();
     virtual void execute();
 };
 
-extern "C" Module* make_CStoGeom(const clString& id)
+extern "C" Module* make_CStoGeom(const clString& get_id())
 {
-    return scinew CStoGeom(id);
+    return scinew CStoGeom(get_id());
 }
 
-CStoGeom::CStoGeom(const clString& id)
-: Module("CStoGeom", id, Filter), showPoints("showPoints", id, this),
-  showLines("showLines", id, this)
+CStoGeom::CStoGeom(const clString& get_id())
+: Module("CStoGeom", get_id(), Filter), showPoints("showPoints", get_id(), this),
+  showLines("showLines", get_id(), this)
 {
     // Create the input port
     ics=scinew ContourSetIPort(this, "ContourSet", ContourSetIPort::Atomic);

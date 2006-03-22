@@ -451,13 +451,13 @@ MRITissueClassifier::~MRITissueClassifier()
 
 MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
   Module("MRITissueClassifier",ctx,Filter,"Segmentation","Teem"),
-  gui_max_iter_(ctx->subVar("maxIter")),
-  gui_min_change_(ctx->subVar("minChange")),
-  gui_pixel_dim_(ctx->subVar("pixelDim")),
-  gui_slice_thickness_(ctx->subVar("sliceThickness")),
-  gui_top_(ctx->subVar("top")),
-  gui_anterior_(ctx->subVar("anterior")),
-  gui_eyes_visible_(ctx->subVar("eyesVisible")),
+  gui_max_iter_(get_ctx()->subVar("maxIter")),
+  gui_min_change_(get_ctx()->subVar("minChange")),
+  gui_pixel_dim_(get_ctx()->subVar("pixelDim")),
+  gui_slice_thickness_(get_ctx()->subVar("sliceThickness")),
+  gui_top_(get_ctx()->subVar("top")),
+  gui_anterior_(get_ctx()->subVar("anterior")),
+  gui_eyes_visible_(get_ctx()->subVar("eyesVisible")),
   generation_(4)
     
 {
@@ -3550,7 +3550,7 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
   if (nrrdSpatialResample(nrrd->nrrd, data->nrrd, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
-    msgStream_ << "  input Nrrd: data->nrrd->dim=" << data->nrrd->dim << "\n";
+    msg_stream_ << "  input Nrrd: data->nrrd->dim=" << data->nrrd->dim << "\n";
     free(err);
   }
   nrrdResampleInfoNix(info); 

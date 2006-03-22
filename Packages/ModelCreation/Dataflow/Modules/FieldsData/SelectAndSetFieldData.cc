@@ -93,16 +93,16 @@ class SelectAndSetFieldData : public Module {
 DECLARE_MAKER(SelectAndSetFieldData)
 SelectAndSetFieldData::SelectAndSetFieldData(GuiContext* ctx)
   : Module("SelectAndSetFieldData", ctx, Source, "FieldsData", "ModelCreation"),
-  guiselection1_(ctx->subVar("selection1")),
-  guifunction1_(ctx->subVar("function1")),
-  guiselection2_(ctx->subVar("selection2")),
-  guifunction2_(ctx->subVar("function2")),
-  guiselection3_(ctx->subVar("selection3")),
-  guifunction3_(ctx->subVar("function3")),
-  guiselection4_(ctx->subVar("selection4")),
-  guifunction4_(ctx->subVar("function4")),  
-  guifunctiondef_(ctx->subVar("functiondef")),
-  guiformat_(ctx->subVar("format"))  
+  guiselection1_(get_ctx()->subVar("selection1")),
+  guifunction1_(get_ctx()->subVar("function1")),
+  guiselection2_(get_ctx()->subVar("selection2")),
+  guifunction2_(get_ctx()->subVar("function2")),
+  guiselection3_(get_ctx()->subVar("selection3")),
+  guifunction3_(get_ctx()->subVar("function3")),
+  guiselection4_(get_ctx()->subVar("selection4")),
+  guifunction4_(get_ctx()->subVar("function4")),  
+  guifunctiondef_(get_ctx()->subVar("functiondef")),
+  guiformat_(get_ctx()->subVar("format"))  
 {
 }
 
@@ -112,7 +112,7 @@ SelectAndSetFieldData::~SelectAndSetFieldData(){
 void SelectAndSetFieldData::execute()
 {
   // Get number of matrix ports with data (the last one is always empty)
-  size_t numinputs = numIPorts()-2;
+  size_t numinputs = num_input_ports()-2;
   
   if (numinputs > 23)
   {
@@ -123,7 +123,7 @@ void SelectAndSetFieldData::execute()
   ArrayObjectList inputlist(numinputs+4,ArrayObject(this));
   ArrayObjectList outputlist(1,ArrayObject(this));
   
-  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(getIPort(0));
+  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(get_input_port(0));
   if(field_iport == 0)
   {
     error("Could not locate field input port");
@@ -174,7 +174,7 @@ void SelectAndSetFieldData::execute()
   
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+1));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_input_port(p+1));
     if(iport == 0)
     {
       error("Could not locate matrix input port");
@@ -233,9 +233,9 @@ void SelectAndSetFieldData::execute()
     return;
   }
   
-  gui->lock();
-  gui->eval(getID()+" update_text");
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
   
   std::string function1 = guifunction1_.get();
   std::string selection1 = guiselection1_.get();
@@ -275,7 +275,7 @@ void SelectAndSetFieldData::execute()
   }
   
   // If engine succeeded we have a new field at ofield.
-  FieldOPort *oport = dynamic_cast<FieldOPort *>(getOPort(0));
+  FieldOPort *oport = dynamic_cast<FieldOPort *>(get_output_port(0));
   if (oport)
   {
     oport->send(ofield);
@@ -295,10 +295,10 @@ void
 
   if( args[1] == "gethelp" )
   {
-    gui->lock();
-    gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + tvm_help_field +"}");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval("global " + get_id() +"-help");
+    get_gui()->eval("set " + get_id() + "-help {" + tvm_help_field +"}");
+    get_gui()->unlock();
     return;
   }
   else

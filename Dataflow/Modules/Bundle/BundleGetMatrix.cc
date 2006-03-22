@@ -67,13 +67,13 @@ DECLARE_MAKER(BundleGetMatrix)
 
 BundleGetMatrix::BundleGetMatrix(GuiContext* ctx)
   : Module("BundleGetMatrix", ctx, Filter, "Bundle", "SCIRun"),
-    guimatrix1name_(ctx->subVar("matrix1-name"), "matrix1"),
-    guimatrix2name_(ctx->subVar("matrix2-name"), "matrix2"),
-    guimatrix3name_(ctx->subVar("matrix3-name"), "matrix3"),
-    guitransposenrrd1_(ctx->subVar("transposenrrd1"), 0),
-    guitransposenrrd2_(ctx->subVar("transposenrrd2"), 0),
-    guitransposenrrd3_(ctx->subVar("transposenrrd3"), 0),
-    guimatrixs_(ctx->subVar("matrix-selection"), "")
+    guimatrix1name_(get_ctx()->subVar("matrix1-name"), "matrix1"),
+    guimatrix2name_(get_ctx()->subVar("matrix2-name"), "matrix2"),
+    guimatrix3name_(get_ctx()->subVar("matrix3-name"), "matrix3"),
+    guitransposenrrd1_(get_ctx()->subVar("transposenrrd1"), 0),
+    guitransposenrrd2_(get_ctx()->subVar("transposenrrd2"), 0),
+    guitransposenrrd3_(get_ctx()->subVar("transposenrrd3"), 0),
+    guimatrixs_(get_ctx()->subVar("matrix-selection"), "")
 {
 }
 
@@ -126,7 +126,7 @@ BundleGetMatrix::execute()
   }
 
   guimatrixs_.set(matrixlist);
-  ctx->reset();
+  get_ctx()->reset();
 
   if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix1"))))
   {

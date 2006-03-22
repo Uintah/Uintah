@@ -177,7 +177,7 @@ using namespace Uintah;
       for (int j = low.y(); j<hi.y(); j++) {
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(hi.x()-1,j,k)] = value;
-	  //  cout<<"fillFace xPlus "<<"patch "<<patch->getID()<<" "<<
+	  //  cout<<"fillFace xPlus "<<"patch "<<patch->get_id()<<" "<<
 	  //IntVector(hi.x()-1,j,k)<<endl;
 	}
       }
@@ -186,7 +186,7 @@ using namespace Uintah;
       for (int j = low.y(); j<hi.y(); j++) {
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(low.x(),j,k)] = value;
-	  //cout<<"fillFace xMinus "<<"patch "<<patch->getID()<<" "<<
+	  //cout<<"fillFace xMinus "<<"patch "<<patch->get_id()<<" "<<
 	  //	    IntVector(low.x(),j,k)<<endl;
 	}
       }
@@ -195,7 +195,7 @@ using namespace Uintah;
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(i,hi.y()-1,k)] = value;
-	  //cout<<"fillFace yplus "<<"patch "<<patch->getID()<<" "<<
+	  //cout<<"fillFace yplus "<<"patch "<<patch->get_id()<<" "<<
 	  //IntVector(i,hi.y()-1,k)<<endl;
 	}
       }
@@ -204,7 +204,7 @@ using namespace Uintah;
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(i,low.y(),k)] = value;
-	  //cout<<"fillFace yminus "<<"patch "<<patch->getID()<<" "<<
+	  //cout<<"fillFace yminus "<<"patch "<<patch->get_id()<<" "<<
 	  // IntVector(i,low.y(),k)<<endl;
 	}
       }
@@ -213,7 +213,7 @@ using namespace Uintah;
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int j = low.y(); j<hi.y(); j++) {
 	  var[IntVector(i,j,hi.z()-1)] = value;
-	  //cout<<"fillFace zplus "<<"patch "<<patch->getID()<<" "<<
+	  //cout<<"fillFace zplus "<<"patch "<<patch->get_id()<<" "<<
 	  //IntVector(i,j,hi.z()-1)<<endl;
 	}
       }
@@ -222,7 +222,7 @@ using namespace Uintah;
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int j = low.y(); j<hi.y(); j++) {
 	  var[IntVector(i,j,low.z())] = value;
-	  //cout<<"fillFace zminus "<<"patch "<<patch->getID()<<" "<<
+	  //cout<<"fillFace zminus "<<"patch "<<patch->get_id()<<" "<<
 	  // IntVector(i,j,low.z())<<endl;
 	}
       }

@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(GetFileName)
 GetFileName::GetFileName(GuiContext* ctx)
   : Module("GetFileName", ctx, Source, "String", "SCIRun"),
-    filename_(ctx->subVar("filename"), "")
+    filename_(get_ctx()->subVar("filename"), "")
 {
 }
 

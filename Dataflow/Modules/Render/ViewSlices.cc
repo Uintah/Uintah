@@ -784,7 +784,7 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   }
 
   runner_ = scinew RealDrawer(this);
-  runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
+  runner_thread_ = scinew Thread(runner_, string(get_id()+" OpenGL drawer").c_str());
 
   initialize_fonts();
 }
@@ -2630,7 +2630,7 @@ ViewSlices::execute()
 	delete volumes_[n];
 	volumes_[n] = 0;
       }
-      volumes_[n] = scinew NrrdVolume(ctx->subVar("nrrd"+to_string(n), false));
+      volumes_[n] = scinew NrrdVolume(get_ctx()->subVar("nrrd"+to_string(n), false));
       volumes_[n]->nrrd_ = nrrdH;
       //      if (n == 0) 
       //	extract_mip_slices(volumes_[n]);	
@@ -2983,7 +2983,7 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
       scinew TkOpenGLContext(args[2], args.get_int(4), 512, 512);
     XSync(context->display_, 0);
     ASSERT(layouts_.find(args[2]) == layouts_.end());
-    layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
+    layouts_[args[2]] = scinew WindowLayout(get_ctx()->subVar(args[3],0));
     layouts_[args[2]]->opengl_ = context;
   } else if(args[1] == "destroygl") {
     WindowLayouts::iterator pos = layouts_.find(args[2]);
@@ -2993,7 +2993,7 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
   } else if(args[1] == "add_viewport") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
     WindowLayout *layout = layouts_[args[2]];
-    SliceWindow *window = scinew SliceWindow(ctx->subVar(args[3],0));
+    SliceWindow *window = scinew SliceWindow(get_ctx()->subVar(args[3],0));
     window->layout_ = layout;
     window->name_ = args[2];
     window->viewport_ = scinew OpenGLViewport(layout->opengl_);
@@ -3351,7 +3351,7 @@ ViewSlices::initialize_fonts() {
   const char *dir = sci_getenv("SCIRUN_FONT_PATH");
   if (dir) 
     font_dir = dir;
-  if (gui->eval("validDir "+font_dir) == "0")
+  if (get_gui()->eval("validDir "+font_dir) == "0")
     font_dir = string(sci_getenv("SCIRUN_SRCDIR"))+"/pixmaps";
   string fontfile = font_dir+"/scirun.ttf";
   

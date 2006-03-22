@@ -110,7 +110,7 @@ private:
   MatrixIPort* ivec1P_;
   MatrixIPort* ivec2P_;
   MatrixOPort* errorP_;
-  GuiInt       haveUI_;
+  GuiInt       have_ui_;
   GuiString    methodTCL_;
   GuiString    pTCL_;
 }; 
@@ -119,9 +119,9 @@ private:
 DECLARE_MAKER(ErrorMetric)
 ErrorMetric::ErrorMetric(GuiContext* ctx)
   : Module("ErrorMetric", ctx, Filter, "Math", "SCIRun"),
-    haveUI_(ctx->subVar("haveUI")),
-    methodTCL_(ctx->subVar("methodTCL")),
-    pTCL_(ctx->subVar("pTCL"))
+    have_ui_(get_ctx()->subVar("have_ui")),
+    methodTCL_(get_ctx()->subVar("methodTCL")),
+    pTCL_(get_ctx()->subVar("pTCL"))
 {
 }
 
@@ -207,9 +207,9 @@ ErrorMetric::execute()
      double rmsRel=Min(rms*pow(ne/Norm1,1/pp), 1000000.);
 
 
-     if (haveUI_.get()) {
+     if (have_ui_.get()) {
 	 ostringstream str;
-	 str << id << " append_graph " << MakeReal(ccInv) << " " 
+	 str << get_id() << " append_graph " << MakeReal(ccInv) << " " 
 	     << MakeReal(rmsRel) << " \"";
 	 for (iterate=0; iterate<ne; iterate++)
 	     str << iterate << " " << MakeReal((*ivec1)[iterate]) << " ";
@@ -217,7 +217,7 @@ ErrorMetric::execute()
 	 for (iterate=0; iterate<ne; iterate++)
 	     str << iterate << " " << MakeReal((*ivec2)[iterate]) << " ";
 	 str << "\" ; update idletasks";
-	 gui->execute(str.str().c_str());
+	 get_gui()->execute(str.str().c_str());
      }
 
      const string meth=methodTCL_.get();

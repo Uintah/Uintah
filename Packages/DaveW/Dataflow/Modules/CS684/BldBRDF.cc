@@ -42,22 +42,22 @@ class BldBRDF : public Module {
     int tcl_exec;
     int init;
 public:
-    BldBRDF(const clString& id);
+    BldBRDF(const clString& get_id());
     virtual ~BldBRDF();
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_BldBRDF(const clString& id)
+extern "C" Module* make_BldBRDF(const clString& get_id())
 {
-    return scinew BldBRDF(id);
+    return scinew BldBRDF(get_id());
 }
 
 static clString module_name("BldBRDF");
 
-BldBRDF::BldBRDF(const clString& id)
-: Module("BldBRDF", id, Filter), theta_expr("theta_expr", id, this),
-  phi_expr("phi_expr", id, this), tcl_exec(0), init(0)
+BldBRDF::BldBRDF(const clString& get_id())
+: Module("BldBRDF", get_id(), Filter), theta_expr("theta_expr", get_id(), this),
+  phi_expr("phi_expr", get_id(), this), tcl_exec(0), init(0)
 {
     // Create the input port
     iSurf = scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);

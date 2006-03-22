@@ -112,7 +112,7 @@ namespace who {
      * Test prot. Return a string as an ID for Hello component
      */
     ::std::string
-    getID() throw () 
+    get_id() throw () 
     ;
   };  // end class IDPort_impl
 

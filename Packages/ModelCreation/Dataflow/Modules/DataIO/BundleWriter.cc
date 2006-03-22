@@ -65,8 +65,8 @@ protected:
 DECLARE_MAKER(BundleWriter)
 BundleWriter::BundleWriter(GuiContext* ctx)
   : GenericWriter<BundleHandle>("BundleWriter", ctx, "DataIO", "ModelCreation"),
-    guiTypes_(ctx->subVar("types")),
-    guiFileType_(ctx->subVar("filetype")) 
+    guiTypes_(get_ctx()->subVar("types")),
+    guiFileType_(get_ctx()->subVar("filetype")) 
 {
   string exporttypes = "{";
   exporttypes += "{{SCIRun Bundle File} {.bdl} } ";

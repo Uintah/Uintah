@@ -75,7 +75,7 @@ DECLARE_MAKER(ImageImporter)
 
 ImageImporter::ImageImporter(SCIRun::GuiContext* ctx) : 
   Module("ImageImporter", ctx, Filter, "DataIO", "Teem"),
-  filename_(ctx->subVar("filename"), ""),
+  filename_(get_ctx()->subVar("filename"), ""),
   old_filemodification_(0),
   handle_(0)
 {
@@ -241,7 +241,7 @@ ImageImporter::execute()
       handle_ = scinew NrrdData();
       handle_->nrrd = nrrd;
       
-      NrrdOPort *outport = (NrrdOPort *)getOPort(0);
+      NrrdOPort *outport = (NrrdOPort *)get_output_port(0);
       outport->send(handle_);
       
     }

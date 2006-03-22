@@ -590,7 +590,7 @@ class Painter : public Module
   void                  recompute_volume_list();  
   void                  show_volume(const string & );
   void                  hide_volume(const string & );
-  ColorMapHandle        get_colormap(int id);
+  ColorMapHandle        get_colormap(int);
   void                  send_data();
   void                  receive_filter_bundles(Bundles &);
   void                  receive_normal_bundles(Bundles &);

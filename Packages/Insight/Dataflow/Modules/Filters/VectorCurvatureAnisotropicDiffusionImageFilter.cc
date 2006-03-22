@@ -174,9 +174,9 @@ DECLARE_MAKER(VectorCurvatureAnisotropicDiffusionImageFilter)
 
 VectorCurvatureAnisotropicDiffusionImageFilter::VectorCurvatureAnisotropicDiffusionImageFilter(GuiContext* ctx)
   : Module("VectorCurvatureAnisotropicDiffusionImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_time_step_(ctx->subVar("time_step")),
-     gui_iterations_(ctx->subVar("iterations")),
-     gui_conductance_parameter_(ctx->subVar("conductance_parameter")), 
+     gui_time_step_(get_ctx()->subVar("time_step")),
+     gui_iterations_(get_ctx()->subVar("iterations")),
+     gui_conductance_parameter_(get_ctx()->subVar("conductance_parameter")), 
      last_InputImage_(-1)
 {
   filter_ = 0;
