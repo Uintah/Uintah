@@ -173,8 +173,8 @@
       <save label="vel_CC"/>
       <save label="vol_frac_CC"/>
       <save label="mag_grad_vol_frac_CC"/>
-       <save label="refineFlag"/>
-      <checkpoint interval="0.005" cycle="2"/>"
+      <save label="refineFlag"/>
+      <checkpoint timestepInterval="20" cycle="2"/>"
    </DataArchiver>
    
    <Debug>
