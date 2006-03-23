@@ -44,7 +44,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <ctype.h> // for toupper() (at least for linux RH8)
 
 namespace SCIRun {
 
