@@ -1605,12 +1605,14 @@ Painter::layer_up()
   ASSERT(volumes_[i] == current_volume_);
   if (i == volumes_.size()-1) return;
 
-  NrrdVolumeOrder::iterator voiter1 = 
-    std::find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
+  NrrdVolumeOrder::iterator voiter1 = std::find(volume_order_.begin(), 
+                                                volume_order_.end(), 
+                                                volumes_[i]->name_.get());
 
   //    volume_order_.find();
-  NrrdVolumeOrder::iterator voiter2 =
-    std::find(volume_order_.begin(),volume_order_.end(),volumes_[i+1]->name_.get());
+  NrrdVolumeOrder::iterator voiter2 =std::find(volume_order_.begin(),
+                                               volume_order_.end(),
+                                               volumes_[i+1]->name_.get());
   //    volume_order_.find(volumes_[i+1]->name_.get());
   ASSERT(voiter1 != volume_order_.end());
   ASSERT(voiter2 != volume_order_.end());
@@ -2285,6 +2287,8 @@ Painter::handle_gui_keypress(GuiArgs &args) {
   else if (key == "g") ITKGradientMagnitudeTool temp(this);
   else if (key == "j") ITKBinaryDilateErodeTool temp(this);
   else if (key == "d") ITKCurvatureAnisotropicDiffusionTool temp(this);
+  else if (key == "m") 
+    LayerMergeTool temp(this);
   else if (key == "l") { 
     tools_.push_back(new StatisticsTool(this));
   }
