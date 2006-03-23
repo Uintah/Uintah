@@ -85,7 +85,7 @@ FindLibrarySymbol(const string &package, const string &/* type */,
   string pak_bname, cat_bname;
   if (package == "SCIRun") {
     pak_bname = "libDataflow" + ext;
-    cat_bname = "libDataflow_Ports" + ext;
+    cat_bname = "libDataflow_Network" + ext;
   } else {
     pak_bname =  "libPackages_" + package + "_Dataflow" + ext;
     cat_bname = "libPackages_" + package + "_Dataflow_Ports" + ext;
