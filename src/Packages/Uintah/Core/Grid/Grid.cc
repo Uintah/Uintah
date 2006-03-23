@@ -83,7 +83,7 @@ void Grid::performConsistencyCheck() const
     for(int i=0;i<(int)d_levels.size() -1 ;i++) {
       LevelP level     = d_levels[i];
       LevelP fineLevel = level->getFinerLevel();
-      Vector dx_level     = level->dCell();
+      //Vector dx_level     = level->dCell();
       Vector dx_fineLevel = fineLevel->dCell();
       
       //__________________________________
