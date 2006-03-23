@@ -73,9 +73,9 @@
 
 #include <Packages/DaveW/ThirdParty/SparseLib/Leonid/Vector.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MeshPort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>

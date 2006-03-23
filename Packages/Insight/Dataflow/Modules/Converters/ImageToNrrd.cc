@@ -45,7 +45,7 @@
 
 #include <sci_defs/teem_defs.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace Insight {
 

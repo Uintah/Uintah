@@ -11,9 +11,9 @@
 #include <Core/Malloc/Allocator.h>
 
 //#include <Dataflow/Widgets/ViewPointWidget.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Containers/Handle.h>
 

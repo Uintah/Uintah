@@ -38,7 +38,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 

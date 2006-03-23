@@ -30,8 +30,8 @@
 //    Date   : Mon Feb 27 10:39:28 2006
 
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/BuildSurfNormals.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 
@@ -85,7 +85,7 @@ BuildSurfNormals::execute()
     return;
   }
 
-  const TypeDescription *mtd = input->get_type_description(Field::MESH_TD_E);
+  //const TypeDescription *mtd = input->get_type_description(Field::MESH_TD_E);
 
   // this module only can operate on surface fields.
   if (input->mesh()->dimensionality() != 2) 

@@ -35,7 +35,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 
 // General SCIRun stuff
 #include <Core/Geom/ColorMap.h>

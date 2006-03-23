@@ -109,12 +109,26 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Dataflow/Network Dataflow/Ports  Dataflow/Widgets \
-	Core/Algorithms/Fields \
-	Core/Datatypes Core/Persistent Core/Exceptions Core/ImportExport \
-	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
-	Core/Basis Core/Geometry Core/TkExtensions \
-	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface
+PSELIBS := \
+	Dataflow/Network         \
+	Dataflow/Widgets         \
+	Core/Algorithms/Fields   \
+	Core/Algorithms/Geometry \
+	Core/Basis               \
+	Core/Datatypes           \
+	Core/Exceptions          \
+	Core/Geom                \
+	Core/Geometry            \
+	Core/GeomInterface       \
+	Core/Containers          \
+	Core/GuiInterface        \
+	Core/ImportExport        \
+	Core/Math                \
+	Core/Persistent          \
+	Core/Thread              \
+	Core/TkExtensions        \
+	Core/Util              
+
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(TEEM_LIBRARY)
 

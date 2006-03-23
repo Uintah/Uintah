@@ -37,12 +37,12 @@
 
 #include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/TimePort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/TimePort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/XMLUtil/StrX.h>

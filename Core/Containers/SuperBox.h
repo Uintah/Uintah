@@ -68,7 +68,7 @@ using namespace std;
 // Point getLow();
 // Point getHigh();
 // Volume getVolume()
-// int get_id() -- unique identifier for the box
+// int getID() -- unique identifier for the box
 // static Volume getVolume(Point low, Point high);
 // Value getArea(int side); -- only needed if using
 //                             InternalAreaSuperBoxEvaluator
@@ -254,8 +254,8 @@ public:
     bool operator()(const SB* b1, const SB* b2) const
     {
       return b1->getValue() == b2->getValue() ? 
-        (b1->getBoxes()[0]->get_id() == b2->getBoxes()[0]->get_id() ? b1 > b2 : 
-         b1->getBoxes()[0]->get_id() > b2->getBoxes()[0]->get_id()) :
+        (b1->getBoxes()[0]->getID() == b2->getBoxes()[0]->getID() ? b1 > b2 : 
+         b1->getBoxes()[0]->getID() > b2->getBoxes()[0]->getID()) :
 	b1->getValue() > b2->getValue();
     } 
   };
@@ -1636,10 +1636,10 @@ operator<<(ostream& out,
 
   out << "(";
   typename vector<BoxP>::const_iterator iter = superBox.getBoxes().begin();
-  out << (*iter)->get_id();
+  out << (*iter)->getID();
   
   for (++iter; iter != superBox.getBoxes().end(); ++iter) {
-    out << ", " << (*iter)->get_id();
+    out << ", " << (*iter)->getID();
   }
   out << ")";
   

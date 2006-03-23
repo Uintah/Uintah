@@ -36,8 +36,8 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Core/Geom/Path.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>

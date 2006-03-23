@@ -47,9 +47,9 @@
 #include <Core/Algorithms/Visualization/RenderField.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/ImageMesh.h>

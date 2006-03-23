@@ -39,8 +39,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 

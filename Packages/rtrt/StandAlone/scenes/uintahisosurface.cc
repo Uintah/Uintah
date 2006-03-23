@@ -124,14 +124,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     return(0);
   }
   
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << toCatch.getMessage() 
-	 << '\n';
-    exit( 1 );
-  }
-
   Color surf(.50000, 0.0, 0.00);
   Material* matl0=new Phong( surf*0.6, surf*0.6, 40);
   VolumeDpy* dpy=new VolumeDpy();

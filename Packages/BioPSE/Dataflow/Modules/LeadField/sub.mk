@@ -45,24 +45,23 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-        Dataflow/Modules/Fields \
-        Dataflow/Network \
-        Dataflow/Ports \
         Core/Algorithms/Fields \
-        Core/Datatypes \
-        Core/Persistent \
-        Core/Containers \
-        Core/Util \
-        Core/Exceptions \
-        Core/Thread \
-        Core/GuiInterface \
-        Core/Geom \
-        Core/Datatypes \
-        Core/Geometry \
+        Core/Basis         \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/Geometry      \
         Core/GeomInterface \
-        Core/TkExtensions \
-        Core/Math \
-        Core/Basis
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Util          \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Math          \
+        Dataflow/Modules/Fields \
+        Dataflow/Network        
+
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

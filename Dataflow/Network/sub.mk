@@ -33,28 +33,40 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Network
 
-SRCS     += $(SRCDIR)/ComponentNode.cc \
-	$(SRCDIR)/Connection.cc \
-	$(SRCDIR)/GenFiles.cc \
-	$(SRCDIR)/Module.cc \
-	$(SRCDIR)/ModuleHelper.cc \
-	$(SRCDIR)/Network.cc \
-	$(SRCDIR)/NetworkEditor.cc \
-	$(SRCDIR)/NetworkIO.cc \
-	$(SRCDIR)/PackageDB.cc \
-	$(SRCDIR)/Port.cc \
-	$(SRCDIR)/SkeletonFiles.cc \
-	$(SRCDIR)/Scheduler.cc
+SRCS     += \
+        $(SRCDIR)/ComponentNode.cc \
+        $(SRCDIR)/Connection.cc    \
+        $(SRCDIR)/GenFiles.cc      \
+        $(SRCDIR)/Module.cc        \
+        $(SRCDIR)/ModuleHelper.cc  \
+        $(SRCDIR)/Network.cc       \
+        $(SRCDIR)/NetworkEditor.cc \
+        $(SRCDIR)/NetworkIO.cc     \
+        $(SRCDIR)/PackageDB.cc     \
+        $(SRCDIR)/SkeletonFiles.cc \
+        $(SRCDIR)/Scheduler.cc
 
-PSELIBS := Dataflow/Comm Dataflow/Ports \
-	Core/XMLUtil Core/Exceptions Core/Thread \
-	Core/Containers Core/GuiInterface Core/Util Core/GeomInterface \
-	Core/XMLUtil
+SUBDIRS := $(SRCDIR)/Ports
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
+PSELIBS := \
+        Dataflow/Comm      \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Containers    \
+        Core/Geom          \
+        Core/GeomInterface \
+        Core/GuiInterface  \
+        Core/Util          \
+        Core/Thread        \
+        Core/Volume        \
+        Core/XMLUtil
+
 LIBS := $(TCL_LIBRARY) $(XML2_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 
 ifeq ($(LARGESOS),no)
-SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+  SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
 endif

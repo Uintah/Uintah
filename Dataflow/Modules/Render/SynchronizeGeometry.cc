@@ -37,8 +37,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/GeometryComm.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryComm.h>
 #include <Dataflow/Comm/MessageTypes.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Containers/StringUtil.h>

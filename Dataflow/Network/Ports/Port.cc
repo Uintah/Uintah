@@ -40,7 +40,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <iostream>
@@ -56,28 +56,33 @@ Port::Port(Module* module, const string& type_name,
 {
 }
 
-int Port::nconnections()
+int
+Port::nconnections()
 {
   return connections.size();
 }
 
-Module* Port::get_module()
+Module*
+Port::get_module()
 {
   return module;
 }
 
-int Port::get_which_port()
+int
+Port::get_which_port()
 {
   return which_port;
 }
 
-void Port::attach(Connection* conn)
+void
+Port::attach(Connection* conn)
 {
   connections.push_back(conn);
   module->connection(Connected, which_port, this==conn->oport);
 }
 
-void Port::detach(Connection* conn, bool blocked)
+void
+Port::detach(Connection* conn, bool blocked)
 {
   unsigned int i;
   for (i=0; i<connections.size(); i++)
@@ -90,7 +95,8 @@ void Port::detach(Connection* conn, bool blocked)
   module->connection(Disconnected, which_port, this==conn->oport || blocked);
 }
 
-Connection* Port::connection(int i)
+Connection*
+Port::connection(int i)
 {
   return connections[i];
 }
@@ -107,12 +113,14 @@ OPort::OPort(Module* module, const string& type_name,
 {
 }
 
-void Port::set_which_port(int wp)
+void
+Port::set_which_port(int wp)
 {
     which_port=wp;
 }
 
-void IPort::update_light()
+void
+IPort::update_light()
 {
     char* color;
     switch(portstate){
@@ -135,7 +143,8 @@ void IPort::update_light()
     module->get_gui()->execute(str);
 }
 
-void OPort::update_light()
+void
+OPort::update_light()
 {
     char* color;
     switch(portstate){
@@ -162,29 +171,33 @@ void OPort::update_light()
     module->get_gui()->execute(str);
 }
 
-void Port::turn_on(PortState st)
+void
+Port::turn_on_light(PortState st)
 {
     portstate=st;
     update_light();
 }
 
-void Port::turn_off()
+void
+Port::turn_off_light()
 {
     portstate=Off;
     update_light();
 }
 
-
-void Port::synchronize()
+void
+Port::synchronize()
 {
 }
 
-string Port::get_typename()
+string
+Port::get_typename()
 {
   return type_name;
 }
 
-string Port::get_portname()
+string
+Port::get_portname()
 {
   return port_name;
 }
@@ -201,13 +214,14 @@ OPort::~OPort()
 {
 }
 
-string Port::get_colorname()
+string
+Port::get_colorname()
 {
   return color_name;
 }
 
-
-void OPort::issue_no_port_caching_warning()
+void
+OPort::issue_no_port_caching_warning()
 {
   // Don't really care about thread safety since the worst that happens is
   // multiple warnings are printed.  Not worth creating the lock over.

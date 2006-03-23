@@ -48,7 +48,7 @@
 #include <Dataflow/Constraints/BaseConstraint.h>
 #include <Dataflow/Constraints/ConstraintSolver.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>

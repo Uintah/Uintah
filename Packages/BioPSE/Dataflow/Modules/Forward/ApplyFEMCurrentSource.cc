@@ -39,8 +39,8 @@
 #include <Packages/BioPSE/Dataflow/Modules/Forward/ApplyFEMCurrentSource.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace BioPSE {
 

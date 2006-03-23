@@ -51,8 +51,8 @@
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>

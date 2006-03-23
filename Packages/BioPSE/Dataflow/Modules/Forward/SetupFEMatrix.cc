@@ -46,8 +46,8 @@
  */
 
 #include <Packages/BioPSE/Dataflow/Modules/Forward/SetupFEMatrix.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 namespace BioPSE {

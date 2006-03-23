@@ -39,7 +39,7 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 //#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 

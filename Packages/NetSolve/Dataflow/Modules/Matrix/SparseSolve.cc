@@ -12,7 +12,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <NetSolve/share/share.h>

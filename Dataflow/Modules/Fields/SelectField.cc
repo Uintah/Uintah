@@ -32,8 +32,8 @@
 //    Date   : August 2001
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Fields/SelectField.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Clipper.h>

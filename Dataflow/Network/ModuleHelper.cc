@@ -47,7 +47,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 
 #include <iostream>
 #ifndef _WIN32

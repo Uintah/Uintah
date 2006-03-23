@@ -40,62 +40,71 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Unu
 
 
 SRCS     += \
-	$(SRCDIR)/Unu1op.cc\
-	$(SRCDIR)/Unu2op.cc\
-	$(SRCDIR)/Unu3op.cc\
-	$(SRCDIR)/UnuAxdelete.cc\
-	$(SRCDIR)/UnuAxinfo.cc\
-	$(SRCDIR)/UnuAxinsert.cc\
-	$(SRCDIR)/UnuAxmerge.cc\
-	$(SRCDIR)/UnuAxsplit.cc\
-	$(SRCDIR)/UnuCCadj.cc\
-	$(SRCDIR)/UnuCCfind.cc\
-	$(SRCDIR)/UnuCCmerge.cc\
-	$(SRCDIR)/UnuCCsettle.cc\
-	$(SRCDIR)/UnuCmedian.cc\
-	$(SRCDIR)/UnuConvert.cc\
-	$(SRCDIR)/UnuCrop.cc\
-	$(SRCDIR)/UnuDhisto.cc\
-	$(SRCDIR)/UnuFlip.cc\
-	$(SRCDIR)/UnuGamma.cc\
-	$(SRCDIR)/UnuHeq.cc\
-	$(SRCDIR)/UnuHistax.cc\
-	$(SRCDIR)/UnuHisto.cc\
-	$(SRCDIR)/UnuImap.cc\
-	$(SRCDIR)/UnuInset.cc\
-	$(SRCDIR)/UnuJhisto.cc\
-	$(SRCDIR)/UnuJoin.cc\
-	$(SRCDIR)/UnuLut.cc\
-	$(SRCDIR)/UnuMake.cc\
-	$(SRCDIR)/UnuMinmax.cc\
-	$(SRCDIR)/UnuPad.cc\
-	$(SRCDIR)/UnuPermute.cc\
-	$(SRCDIR)/UnuProject.cc\
-	$(SRCDIR)/UnuQuantize.cc\
-	$(SRCDIR)/UnuResample.cc\
-	$(SRCDIR)/UnuReshape.cc\
-	$(SRCDIR)/UnuRmap.cc\
-	$(SRCDIR)/UnuRmapN.cc\
-	$(SRCDIR)/UnuSave.cc\
-	$(SRCDIR)/UnuSlice.cc\
-	$(SRCDIR)/UnuSplice.cc\
-	$(SRCDIR)/UnuShuffle.cc\
-	$(SRCDIR)/UnuSwap.cc\
-	$(SRCDIR)/UnuUnquantize.cc\
+        $(SRCDIR)/Unu1op.cc\
+        $(SRCDIR)/Unu2op.cc\
+        $(SRCDIR)/Unu3op.cc\
+        $(SRCDIR)/UnuAxdelete.cc\
+        $(SRCDIR)/UnuAxinfo.cc\
+        $(SRCDIR)/UnuAxinsert.cc\
+        $(SRCDIR)/UnuAxmerge.cc\
+        $(SRCDIR)/UnuAxsplit.cc\
+        $(SRCDIR)/UnuCCadj.cc\
+        $(SRCDIR)/UnuCCfind.cc\
+        $(SRCDIR)/UnuCCmerge.cc\
+        $(SRCDIR)/UnuCCsettle.cc\
+        $(SRCDIR)/UnuCmedian.cc\
+        $(SRCDIR)/UnuConvert.cc\
+        $(SRCDIR)/UnuCrop.cc\
+        $(SRCDIR)/UnuDhisto.cc\
+        $(SRCDIR)/UnuFlip.cc\
+        $(SRCDIR)/UnuGamma.cc\
+        $(SRCDIR)/UnuHeq.cc\
+        $(SRCDIR)/UnuHistax.cc\
+        $(SRCDIR)/UnuHisto.cc\
+        $(SRCDIR)/UnuImap.cc\
+        $(SRCDIR)/UnuInset.cc\
+        $(SRCDIR)/UnuJhisto.cc\
+        $(SRCDIR)/UnuJoin.cc\
+        $(SRCDIR)/UnuLut.cc\
+        $(SRCDIR)/UnuMake.cc\
+        $(SRCDIR)/UnuMinmax.cc\
+        $(SRCDIR)/UnuPad.cc\
+        $(SRCDIR)/UnuPermute.cc\
+        $(SRCDIR)/UnuProject.cc\
+        $(SRCDIR)/UnuQuantize.cc\
+        $(SRCDIR)/UnuResample.cc\
+        $(SRCDIR)/UnuReshape.cc\
+        $(SRCDIR)/UnuRmap.cc\
+        $(SRCDIR)/UnuRmapN.cc\
+        $(SRCDIR)/UnuSave.cc\
+        $(SRCDIR)/UnuSlice.cc\
+        $(SRCDIR)/UnuSplice.cc\
+        $(SRCDIR)/UnuShuffle.cc\
+        $(SRCDIR)/UnuSwap.cc\
+        $(SRCDIR)/UnuUnquantize.cc\
 #[INSERT NEW CODE FILE HERE]
 
 # the following are stubs that need implementa
 
 
-PSELIBS := Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
-        Core/TkExtensions Dataflow/Network Dataflow/Ports
+PSELIBS := \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/GeomInterface \
+        Core/Geometry      \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network 
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
-TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+  TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
 endif

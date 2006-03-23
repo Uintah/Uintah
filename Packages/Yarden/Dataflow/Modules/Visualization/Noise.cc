@@ -14,7 +14,7 @@
 #include <time.h>
 #include <Core/Persistent/Pstreams.h>          
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 #include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/BBoxCache.h>

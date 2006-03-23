@@ -35,10 +35,10 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Volume/VideoCardInfo.h>
-#include <Dataflow/Ports/TexturePort.h>
+#include <Dataflow/Network/Ports/TexturePort.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 

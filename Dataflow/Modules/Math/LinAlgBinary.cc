@@ -47,7 +47,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/HashTable.h>
 #include <Dataflow/Modules/Math/LinAlgBinary.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <iostream>
 #include <sstream>
 

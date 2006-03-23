@@ -40,16 +40,27 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/NeuroFEM
 
 
 SRCS     += $(SRCDIR)/ForwardIPM.cc\
-	    $(SRCDIR)/InverseIPM.cc\
-#[INSERT NEW CODE FILE HERE]	
+            $(SRCDIR)/InverseIPM.cc\
+#[INSERT NEW CODE FILE HERE]    
 
 
-PSELIBS := Packages/BioPSE/Core/Datatypes \
-	Dataflow/Network Dataflow/Ports \
-	Core/Datatypes Core/Persistent Core/Containers \
-	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions \
-	Core/ImportExport Core/Basis
+PSELIBS := \
+        Packages/BioPSE/Core/Algorithms/Forward          \
+        Packages/BioPSE/Core/Algorithms/NumApproximation \
+        Packages/BioPSE/Core/Datatypes \
+        Core/Basis         \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/Geometry      \
+        Core/GeomInterface \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network   
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

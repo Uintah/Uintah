@@ -31,8 +31,8 @@
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace CardioWave {
 

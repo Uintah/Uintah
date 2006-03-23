@@ -6,7 +6,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Comm/MessageBase.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/NrrdData.h>

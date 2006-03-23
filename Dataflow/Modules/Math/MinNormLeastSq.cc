@@ -52,7 +52,7 @@
 
 #include <Core/Math/Mat.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>

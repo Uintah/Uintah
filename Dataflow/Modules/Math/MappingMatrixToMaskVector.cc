@@ -44,8 +44,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 namespace SCIRun {
 

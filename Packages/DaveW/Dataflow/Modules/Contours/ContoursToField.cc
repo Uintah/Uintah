@@ -14,7 +14,7 @@
 #include <Packages/DaveW/Core/Datatypes/General/ContourSet.h>
 #include <Packages/DaveW/Core/Datatypes/General/ContourSetPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ScalarFieldRGchar.h>

@@ -39,8 +39,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Basis/Constant.h>

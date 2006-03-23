@@ -13,8 +13,8 @@
 
 #include <Packages/DaveW/Core/Datatypes/SiRe/SiRe.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Datatypes/VoidStar.h>
 #include <Core/Malloc/Allocator.h>

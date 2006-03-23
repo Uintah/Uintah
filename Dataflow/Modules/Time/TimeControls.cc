@@ -29,7 +29,7 @@
 //    Author : Martin Cole
 //    Date   : Thu Apr 14 12:43:53 2005
 
-#include <Dataflow/Ports/TimePort.h>
+#include <Dataflow/Network/Ports/TimePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Runnable.h>

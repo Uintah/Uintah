@@ -55,7 +55,7 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Network/PackageDB.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/GenFiles.h>
 #include <Core/XMLUtil/XMLUtil.h>

@@ -37,7 +37,7 @@
 //
 //  Copyright (C) 2001 SCI Institute
 
-#include <Insight/Core/Datatypes/ITKDatatype.h>
+#include <Packages/Insight/Core/Datatypes/ITKDatatype.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 

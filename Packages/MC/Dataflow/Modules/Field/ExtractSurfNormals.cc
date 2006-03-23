@@ -8,7 +8,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Packages/MC/share/share.h>

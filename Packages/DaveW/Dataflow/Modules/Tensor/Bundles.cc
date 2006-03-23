@@ -11,11 +11,11 @@
  */
 
 #include <Packages/DaveW/Core/Datatypes/General/TensorFieldPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MeshPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/VectorFieldPort.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomPick.h>

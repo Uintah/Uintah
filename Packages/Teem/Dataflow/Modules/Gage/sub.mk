@@ -13,23 +13,22 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Teem/Dataflow/Modules/Gage
 
 SRCS     += \
-	$(SRCDIR)/GageProbe.cc\
+        $(SRCDIR)/GageProbe.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Core/Containers    \
-	Core/Datatypes     \
+        Core/Containers    \
+        Core/Datatypes     \
         Core/Exceptions    \
         Core/Geom          \
         Core/GeomInterface \
-	Core/Geometry      \
-	Core/GuiInterface  \
+        Core/Geometry      \
+        Core/GuiInterface  \
         Core/Persistent    \
-	Core/Thread        \
-	Core/Util          \
-	Core/TkExtensions  \
-	Dataflow/Network   \
-	Dataflow/Ports
+        Core/Thread        \
+        Core/Util          \
+        Core/TkExtensions  \
+        Dataflow/Network   
 
 LIBS := $(TEEM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

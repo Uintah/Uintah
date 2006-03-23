@@ -35,16 +35,16 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
 #include <Core/Volume/VolumeRenderer.h>
-#include <Dataflow/Ports/TexturePort.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/TexturePort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Core/Volume/VideoCardInfo.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/GeomSticky.h>

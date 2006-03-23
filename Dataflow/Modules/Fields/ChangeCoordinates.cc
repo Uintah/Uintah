@@ -41,7 +41,7 @@
 
 #include <Dataflow/Modules/Fields/ChangeCoordinates.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
 #include <Core/GuiInterface/GuiVar.h>

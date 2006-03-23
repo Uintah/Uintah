@@ -36,8 +36,8 @@
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <map>
 #include <iostream>
 #include <sstream>

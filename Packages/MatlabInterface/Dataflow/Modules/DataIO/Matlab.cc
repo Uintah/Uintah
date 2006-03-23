@@ -35,10 +35,10 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/SystemCall/TempFileManager.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>

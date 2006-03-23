@@ -48,13 +48,13 @@
 #include <Core/Util/Timer.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/TimePort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/TimePort.h>
 
 #include <Core/Geom/FreeType.h>
 

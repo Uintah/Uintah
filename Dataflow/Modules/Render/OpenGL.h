@@ -57,7 +57,7 @@
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Modules/Render/Ball.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Datatypes/Image.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/Thread/Runnable.h>

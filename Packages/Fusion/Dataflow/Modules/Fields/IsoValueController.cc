@@ -40,9 +40,9 @@
  */
 
 #include <Packages/Fusion/Dataflow/Modules/Fields/IsoValueController.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <Core/Containers/StringUtil.h>
 

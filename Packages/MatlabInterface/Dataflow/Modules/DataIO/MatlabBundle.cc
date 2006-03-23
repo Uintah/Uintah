@@ -36,7 +36,7 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/SystemCall/TempFileManager.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>

@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
 #include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 

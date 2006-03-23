@@ -31,8 +31,8 @@
 //    Date   : Wed Mar 26 15:20:49 2003
 
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Time.h>
 #include <iostream>

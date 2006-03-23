@@ -32,8 +32,8 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
 
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 

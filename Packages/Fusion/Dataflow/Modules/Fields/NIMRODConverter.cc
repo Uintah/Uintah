@@ -42,8 +42,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Packages/Fusion/Dataflow/Modules/Fields/NIMRODConverter.h>
 

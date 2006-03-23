@@ -35,10 +35,10 @@
 #include <Core/Datatypes/HexVolField.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/TimePort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/TimePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Thread/CleanupManager.h>
