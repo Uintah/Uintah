@@ -158,22 +158,13 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if solotest != "" and nameoftest(test) != solotest:
       continue
 
+    solotest_found = 1 # if there is a solotest, that is
+
     # if test can be run on this OS
     if testOS(test) != environ['OS'] and testOS(test) != "ALL":
       continue
-    solotest_found = 1 # if there is a solotest, that is
-    testname = nameoftest(test)
-    ran_any_tests = 1
 
-    # make sure that this test exists in the gold standard
-    try:
-      chdir(compare_root)
-      chdir(testname)
-    except Exception:
-      chdir(compare_root)
-      mkdir(testname)
-
-    # allow the user to change the defaults for individual tests
+    # allow the user to change the defaults for what runs for individual tests
     test_comparisons = do_comparisons
     test_memory = do_memory
     test_restart = do_restart
@@ -203,6 +194,17 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       continue
 
     tests_to_do = [test_comparisons, test_memory, do_performance]
+
+    testname = nameoftest(test)
+    ran_any_tests = 1
+
+    # make sure that this test exists in the gold standard
+    try:
+      chdir(compare_root)
+      chdir(testname)
+    except Exception:
+      chdir(compare_root)
+      mkdir(testname)
 
     # need to set the inputs dir here, since it could be different per test
     inputsdir = "%s/%s" % (inputpath, ALGO)
