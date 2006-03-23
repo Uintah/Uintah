@@ -498,7 +498,6 @@ itcl_class Module {
 	if {[winfo exists .standalone]} {
 	    app indicate_error [modname] $msg_state
 	}
-	
     }
 
     method get_x {} {
