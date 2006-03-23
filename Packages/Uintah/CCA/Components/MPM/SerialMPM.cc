@@ -1608,7 +1608,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
 
     if (cout_dbg.active()) {
-      cout_dbg << " Patch = " << (patches->get(0))->get_id();
+      cout_dbg << " Patch = " << (patches->get(0))->getID();
       cout_dbg << " Mat = " << m;
     }
 
@@ -1696,7 +1696,7 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
     }
 
     if (cout_dbg.active())
-      cout_dbg <<"Done updateErosionParamter on patch "  << patch->get_id() << "\t MPM"<< endl;
+      cout_dbg <<"Done updateErosionParamter on patch "  << patch->getID() << "\t MPM"<< endl;
 
   }
 }
@@ -2608,7 +2608,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
 
     if (cout_convert.active()) {
       cout_convert << "MPM::convertLocalizeParticles:: on patch"
-           << patch->get_id() << " numMPMMaterials = " << numMPMMatls
+           << patch->getID() << " numMPMMaterials = " << numMPMMatls
            << endl;
     }
 
@@ -2725,7 +2725,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
 
     if (cout_convert.active()) {
       cout_convert <<"Done convertLocalizedParticles on patch " 
-                   << patch->get_id() << "\t MPM"<< endl;
+                   << patch->getID() << "\t MPM"<< endl;
     }
 
   }
@@ -3259,7 +3259,7 @@ SerialMPM::refine(const ProcessorGroup*,
 
       if (cout_doing.active()) {
         cout_doing <<"Doing refine on patch "
-                   << patch->get_id() << " material # = " << dwi << endl;
+                   << patch->getID() << " material # = " << dwi << endl;
       }
 
       // this is a new patch, so create empty particle variables.

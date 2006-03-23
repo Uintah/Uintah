@@ -511,7 +511,7 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->get_id()
+    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()
                << "\t ADIABATIC_TABLE" << endl;
    
     int indx = d_matl->getDWIndex();
@@ -552,7 +552,7 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
                                     DataWarehouse* new_dw,
                                     const int indx)
 { 
-  cout_doing << "Doing computeSpecificHeat on patch "<<patch->get_id()
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()
              << "\t ADIABATIC_TABLE" << endl;
 
   int test_indx = d_matl->getDWIndex();
@@ -637,7 +637,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
     
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->get_id()
+    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()
                << "\t\tADIABATIC_TABLE" << endl;
 
     for(int m=0;m<matls->size();m++){
@@ -799,7 +799,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         new_dw->allocateAndPut(value, tv->label, matl, patch);
         CellIterator iter = patch->getExtraCellIterator();
         table->interpolate(tv->index, value, iter, ind_vars);
-        if(patch->get_id() == 0){ 
+        if(patch->getID() == 0){ 
           cerr << "interpolating " << tv->name << '\n';
         }
       }
@@ -875,7 +875,7 @@ void AdiabaticTable::testConservation(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing testConservation on patch "<<patch->get_id()
+    cout_doing << "Doing testConservation on patch "<<patch->getID()
                << "\t\t\t AdiabaticTable" << endl;
                
     //__________________________________

@@ -254,7 +254,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-//    cerr <<"Doing computeStressTensor on " << patch->get_id()
+//    cerr <<"Doing computeStressTensor on " << patch->getID()
 //       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
     IntVector lowIndex = patch->getInteriorNodeLowIndex();

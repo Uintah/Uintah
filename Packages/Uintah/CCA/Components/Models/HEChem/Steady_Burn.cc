@@ -143,7 +143,7 @@ void Steady_Burn::initialize(const ProcessorGroup*,
 			     DataWarehouse* new_dw){
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Initialize on patch " << patch->get_id()<< "\t\t\t STEADY_BURN" << endl; 
+    cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl; 
   }        
 }
 
@@ -239,7 +239,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing massExchange on patch "<< patch->get_id()<<"\t\t\t\t Steady_Burn"<<endl;
+    cout_doing << "Doing massExchange on patch "<< patch->getID()<<"\t\t\t\t Steady_Burn"<<endl;
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;

@@ -21,8 +21,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/Material.h>

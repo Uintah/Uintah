@@ -40,7 +40,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 
@@ -78,9 +78,9 @@ DECLARE_MAKER(CompareMMS)
 
 CompareMMS::CompareMMS(GuiContext* ctx) :
   Module("CompareMMS", ctx, Sink, "Operators", "Uintah"),
-  gui_field_name_(get_ctx()->subVar("field_name", false)),
-  gui_field_time_(get_ctx()->subVar("field_time", false)),
-  gui_output_choice_(get_ctx()->subVar("output_choice", false))
+  gui_field_name_(ctx->subVar("field_name", false)),
+  gui_field_time_(ctx->subVar("field_time", false)),
+  gui_output_choice_(ctx->subVar("output_choice", false))
 {
 }
 

@@ -32,8 +32,8 @@
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>

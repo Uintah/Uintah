@@ -1169,7 +1169,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           levelElem->appendElement("extraCells", level->getExtraCells());
         levelElem->appendElement("cellspacing", level->dCell());
         levelElem->appendElement("anchor", level->getAnchor());
-        levelElem->appendElement("id", level->get_id());
+        levelElem->appendElement("id", level->getID());
 
 
         Level::const_patchIterator iter;
@@ -1183,7 +1183,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
           Box box = patch->getBox();
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
-          patchElem->appendElement("id", patch->get_id());
+          patchElem->appendElement("id", patch->getID());
           patchElem->appendElement("lowIndex", patch->getCellLowIndex());
           patchElem->appendElement("highIndex", patch->getCellHighIndex());
           if (patch->getCellLowIndex() != patch->getInteriorCellLowIndex())
@@ -1558,7 +1558,7 @@ DataArchiver::output(const ProcessorGroup*,
       if (patches->get(p) == 0)
         dbg << -1;
       else
-        dbg << patches->get(p)->get_id();
+        dbg << patches->get(p)->getID();
     }
   }
   dbg << ", variable: " << var->getName() << ", materials: ";
@@ -1737,7 +1737,7 @@ DataArchiver::output(const ProcessorGroup*,
     // loop through patches and materials
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      int patchID = patch?patch->get_id():-1;
+      int patchID = patch?patch->getID():-1;
       for(int m=0;m<matls->size();m++){
 
         // add info for this variable to the current xml file

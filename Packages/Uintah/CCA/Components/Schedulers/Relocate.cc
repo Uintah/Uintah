@@ -570,7 +570,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
 
 static bool ComparePatches(const Patch* p1, const Patch* p2)
 {
-  return p1->get_id() < p2->get_id();
+  return p1->getID() < p2->getID();
 }
 
 void MPIScatterProcessorRecord::sortPatches()
@@ -824,7 +824,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	pair<maptype::iterator, maptype::iterator> pr;
 	pr = scatter_records.records.equal_range(make_pair(toPatch, matl));
 	for(;pr.first != pr.second; pr.first++){
-	  int patchid = toPatch->get_id();
+	  int patchid = toPatch->getID();
 	  MPI_Pack(&patchid, 1, MPI_INT, buf, sendsize, &position,
 		   pg->getComm());
 	  MPI_Pack(&m, 1, MPI_INT, buf, sendsize, &position,
@@ -915,7 +915,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       MPI_Unpack(buf, size, &position, &patchid, 1, MPI_INT,
 		 pg->getComm());
       const Patch* toPatch = level->getPatchByID(patchid);
-      ASSERT(toPatch != 0 && toPatch->get_id() == patchid);
+      ASSERT(toPatch != 0 && toPatch->getID() == patchid);
       int matl;
       MPI_Unpack(buf, size, &position, &matl, 1, MPI_INT,
 		 pg->getComm());

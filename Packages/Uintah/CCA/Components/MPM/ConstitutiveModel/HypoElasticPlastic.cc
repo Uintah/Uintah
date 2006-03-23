@@ -541,11 +541,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     return;
   }
 
-  //if ((patches->get(0))->get_id() == 19)
+  //if ((patches->get(0))->getID() == 19)
   //  cout_CST << getpid() 
   //           << "ComputeStressTensor: In : Matl = " << matl << " id = " 
   //           << matl->getDWIndex() <<  " patch = " 
-  //           << (patches->get(0))->get_id();
+  //           << (patches->get(0))->getID();
   // General stuff
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
   Matrix3 tensorL(0.0); // Velocity gradient
@@ -584,7 +584,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     vector<Vector> d_S;
     d_S.reserve(interpolator->size());
 
-    //cerr << getpid() << " patch = " << patch->get_id() << endl;
+    //cerr << getpid() << " patch = " << patch->getID() << endl;
     // Get grid size
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -1313,7 +1313,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   //CSTi << getpid() 
   //     << "ComputeStressTensorImplicit: In : Matl = " << matl << " id = " 
   //     << matl->getDWIndex() <<  " patch = " 
-  //     << (patches->get(0))->get_id();
+  //     << (patches->get(0))->getID();
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
@@ -1695,7 +1695,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   //CSTir << getpid() 
   //      << "ComputeStressTensorIteration: In : Matl = " << matl << " id = " 
   //      << matl->getDWIndex() <<  " patch = " 
-  //      << (patches->get(0))->get_id();
+  //      << (patches->get(0))->getID();
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
@@ -3307,7 +3307,7 @@ HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
   if (cout_CST.active()) {
     cout_CST << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
              << " id = " << matl->getDWIndex() <<  " patch = "
-             << (patches->get(0))->get_id();
+             << (patches->get(0))->getID();
   }
 
   double need_add=0.;

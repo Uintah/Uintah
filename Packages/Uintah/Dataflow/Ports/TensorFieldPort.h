@@ -15,7 +15,7 @@
 
 #include <Packages/Uintah/Core/Datatypes/TensorField.h>
 
-#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
 
 namespace Uintah {
 

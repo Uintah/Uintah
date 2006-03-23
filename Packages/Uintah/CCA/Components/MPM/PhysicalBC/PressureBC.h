@@ -62,7 +62,7 @@ WARNING
       bool flagMaterialPoint(const Point& p, const Vector& dxpp) const;
       
       // Get the load curve number for this pressure BC
-      inline int loadCurveID() const {return d_loadCurve->get_id();}
+      inline int loadCurveID() const {return d_loadCurve->getID();}
 
       // Get the surface 
       inline GeometryPiece* getSurface() const {return d_surface;}

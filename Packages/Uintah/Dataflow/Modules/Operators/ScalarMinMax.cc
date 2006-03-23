@@ -28,7 +28,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>

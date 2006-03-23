@@ -15,9 +15,9 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Util/NotFinished.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
@@ -471,54 +471,52 @@ void Hedgehog::execute()
   grid_id = ogeom->addObj(arrows, module_name);
 }
 
-void Hedgehog::widget_moved(bool last, BaseWidget*)
+void
+Hedgehog::widget_moved(bool last, BaseWidget*)
 {
-    if(last && !abort_flag)
-	{
-	    abort_flag=1;
-	    want_to_execute();
-	}
+  if(last && !abort_flag_)
+    {
+      abort_flag_ = true;
+      want_to_execute();
+    }
 }
 
-
-void Hedgehog::tcl_command(GuiArgs& args, void* userdata)
+void
+Hedgehog::tcl_command(GuiArgs& args, void* userdata)
 {
-    if(args.count() < 2)
-	{
-	    args.error("Streamline needs a minor command");
-	    return;
-	}
-    if(args[1] == "findxy")
-	{
-	    if(type.get() == "2D")
-		need_find2d=1;
-	    else
-		need_find3d=1;
-	    want_to_execute();
-	}
-    else if(args[1] == "findyz")
-	{
-	    if(type.get() == "2D")
-		need_find2d=2;
-	    else
-		need_find3d=1;
-	    want_to_execute();
-	}
-    else if(args[1] == "findxz")
-	{
-	    if(type.get() == "2D")
-		need_find2d=3;
-	    else
-		need_find3d=1;
-	    want_to_execute();
-	}
-    else
-	{
-	    Module::tcl_command(args, userdata);
-	}
-
+  if(args.count() < 2)
+    {
+      args.error("Streamline needs a minor command");
+      return;
+    }
+  if(args[1] == "findxy")
+    {
+      if(type.get() == "2D")
+        need_find2d=1;
+      else
+        need_find3d=1;
+      want_to_execute();
+    }
+  else if(args[1] == "findyz")
+    {
+      if(type.get() == "2D")
+        need_find2d=2;
+      else
+        need_find3d=1;
+      want_to_execute();
+    }
+  else if(args[1] == "findxz")
+    {
+      if(type.get() == "2D")
+        need_find2d=3;
+      else
+        need_find3d=1;
+      want_to_execute();
+    }
+  else
+    {
+      Module::tcl_command(args, userdata);
+    }
 }
-
-
 
 } // End namespace Uintah

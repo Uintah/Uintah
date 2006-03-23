@@ -348,7 +348,7 @@ void TaskGraph3::addDependencyEdges(Task* task, GraphSortInfo3Map& sortinfo,
 	if(req->patches){
 	  cerr << req->patches->size() << " Patches: ";
 	  for(int i=0;i<req->patches->size();i++)
-	    cerr << req->patches->get(i)->get_id() << " ";
+	    cerr << req->patches->get(i)->getID() << " ";
 	  cerr << '\n';
 	} else if(req->reductionLevel) {
 	  cerr << "On level " << req->reductionLevel->getIndex() << '\n';
@@ -358,7 +358,7 @@ void TaskGraph3::addDependencyEdges(Task* task, GraphSortInfo3Map& sortinfo,
 	  for(int i=0;i<patches->size();i++){
 	    const PatchSubset* pat=patches->getSubset(i);
 	    for(int i=0;i<pat->size();i++)
-	      cerr << pat->get(i)->get_id() << " ";
+	      cerr << pat->get(i)->getID() << " ";
 	    cerr << " ";
 	  }
 	  cerr << '\n';
@@ -625,7 +625,7 @@ class CompTable3 {
 			  ^(string_hash(comp->var->getName().c_str()))
 			  ^matl);
       if(patch)
-	hash ^= (unsigned int)(patch->get_id()<<4);
+	hash ^= (unsigned int)(patch->getID()<<4);
     }
     ~Data()
     {

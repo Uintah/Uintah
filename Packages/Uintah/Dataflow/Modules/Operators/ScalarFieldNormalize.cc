@@ -10,7 +10,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>

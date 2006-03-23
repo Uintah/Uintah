@@ -137,7 +137,7 @@ void VorticityConfinement::computeModelSources(const ProcessorGroup*,
     
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->get_id()
+    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()
                << "\t\tADIABATIC_TABLE" << endl;
 
     for(int m=0;m<matls->size();m++){
