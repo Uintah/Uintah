@@ -17,6 +17,7 @@ else
         Core/Math         \
         Core/Thread       \
         Core/Util         \
+        Core/Volume       \
         Packages/Uintah/Dataflow/Modules/Operators \
         Packages/Uintah/Core/DataArchive \
         Packages/Uintah/Core/Grid        \
