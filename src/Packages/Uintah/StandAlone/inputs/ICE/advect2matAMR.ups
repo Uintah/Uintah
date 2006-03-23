@@ -17,6 +17,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
+       <max_iterations>     50          </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -131,11 +132,11 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]    </lower>
-              <upper>        [1,1,.1]    </upper>
+              <upper>        [1,1,.05]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [4,4,1]    </patches>
+              <patches>      [2,2,1]    </patches>
            </Box>
-           <spacing>         [0.1,0.1,0.1]    </spacing>
+           <spacing>         [0.025,0.025,0.05]    </spacing>
        </Level>
     </Grid>
 
@@ -146,7 +147,7 @@
     <Regridder>
       <max_levels>2</max_levels>
       <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[2,2,1]]  </lattice_refinement_ratio>
+      <lattice_refinement_ratio> [[5,5,1]]  </lattice_refinement_ratio>
       <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
       <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
       <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
@@ -170,6 +171,7 @@
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="vel_CC"/>
+      <save label="vol_frac_CC"/>
       <save label="mag_grad_vol_frac_CC"/>
        <save label="refineFlag"/>
       <checkpoint interval="0.005" cycle="2"/>"
@@ -206,11 +208,12 @@
          <cfl>0.4</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
         <solution technique = "EqForm" />
                 <!--if gradient is > knob then refine -->
         <AMR>
           <orderOfInterpolation>1  </orderOfInterpolation>
+          <do_Refluxing>  false     </do_Refluxing>
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>
             <Temperature> 1e100    </Temperature>
@@ -258,7 +261,7 @@
                 </box>
              </difference>
                <res>           [2,2,2]                  </res>
-               <velocity>      [10,10,0]                  </velocity>
+               <velocity>      [100,100,0]                  </velocity>
                <density>       1.7899909957225715000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -278,7 +281,7 @@
                     <max>       [ 0.5, 0.5, 0.1 ]        </max>
                 </box>
                <res>            [2,2,2]                 </res>
-               <velocity>       [10,10,0]              </velocity>
+               <velocity>       [100,100,0]              </velocity>
                <density>        1.789990995722571500e+00</density>
                <pressure>       101325.0                </pressure>
                <temperature>    300.0                   </temperature>
