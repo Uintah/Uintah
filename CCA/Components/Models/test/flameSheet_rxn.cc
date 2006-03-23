@@ -297,7 +297,7 @@ void flameSheet_rxn::computeModelSources(const ProcessorGroup*,
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeModelSources on patch "<<patch->get_id()
+    cout_doing << "Doing computeModelSources on patch "<<patch->getID()
                << "\t\t\t\t\t FLAMESHEET" << endl;
 
 
@@ -463,7 +463,7 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing testConservation on patch "<<patch->get_id()
+    cout_doing << "Doing testConservation on patch "<<patch->getID()
                << "\t\t\t FLAMESHEET" << endl;
                
     //__________________________________

@@ -55,7 +55,7 @@ printTask( ostream& out, DetailedTask* task )
     for(int p=0;p<patches->size();p++){
       if(p != 0)
 	out << ", ";
-      out << patches->get(p)->get_id();
+      out << patches->get(p)->getID();
     }
   }
 }
@@ -353,7 +353,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 
       if (dbg.active()) {
         ostr << *req << ' ';
-        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " from dw " << dw->get_id() << '\n';
+        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " from dw " << dw->getID() << '\n';
       }
       const VarLabel* posLabel;
       OnDemandDataWarehouse* posDW;
@@ -490,7 +490,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
       if (dbg.active()) {
         ostr << *req << ' ';
-        dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->get_id() << '\n';
+        dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
       }
       
       OnDemandDataWarehouse* posDW;

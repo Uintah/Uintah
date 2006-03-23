@@ -15,7 +15,7 @@ SRCS     += \
 
 PSELIBS := \
 	Packages/Uintah/Core/Datatypes     \
-	Packages/Uintah/Core/DataArchive     \
+	Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
 	Packages/Uintah/Core/Util          \
@@ -24,7 +24,6 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Exceptions    \
 	Dataflow/Network  \
-	Dataflow/Ports    \
 	Core/Basis        \
 	Core/Containers   \
 	Core/Persistent   \
@@ -34,7 +33,7 @@ PSELIBS := \
 	Core/Datatypes    \
 	Core/Geom         \
 	Core/Util         \
-	Core/Geometry \
+	Core/Geometry     \
 	Core/GeomInterface
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

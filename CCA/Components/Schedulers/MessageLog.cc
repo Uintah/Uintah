@@ -57,12 +57,12 @@ void MessageLog::logSend(const DetailedReq* dep, int bytes,
   if(dep){
 #if 0
       if(dep->d_task->getPatch())
-	 out << dep->d_task->getPatch()->get_id();
+	 out << dep->d_task->getPatch()->getID();
       else
 	 out << "-";
       out << "\t";
       if(dep->d_patch)
-	 out << dep->d_patch->get_id();
+	 out << dep->d_patch->getID();
       else
 	 out << "-";
       out << "\t" << d_myworld->myrank() << "\t" << dep->d_task->getAssignedResourceIndex() << "\t";

@@ -90,17 +90,17 @@ SingleProcessorScheduler3::execute()
     for(int i=0;i<numOldDWs;i++){
       dbg << "from DWs: ";
       if(dws[i])
-	dbg << dws[i]->get_id() << ", ";
+	dbg << dws[i]->getID() << ", ";
       else
 	dbg << "Null, ";
     }
     if(dws.size()-numOldDWs>1){
       dbg << "intermediate DWs: ";
       for(unsigned int i=numOldDWs;i<dws.size()-1;i++)
-	dbg << dws[i]->get_id() << ", ";
+	dbg << dws[i]->getID() << ", ";
     }
     if(dws[dws.size()-1])
-      dbg << " to DW: " << dws[dws.size()-1]->get_id();
+      dbg << " to DW: " << dws[dws.size()-1]->getID();
     else
       dbg << " to DW: Null";
     dbg << "\n";

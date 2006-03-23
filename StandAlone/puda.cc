@@ -393,7 +393,7 @@ int main(int argc, char** argv)
 
         for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
-           cout << "Level: index " << level->getIndex() << ", id " << level->get_id() << endl;
+           cout << "Level: index " << level->getIndex() << ", id " << level->getID() << endl;
 
           for(Level::const_patchIterator iter = level->patchesBegin();
 	         iter != level->patchesEnd(); iter++){
@@ -580,7 +580,7 @@ int main(int argc, char** argv)
 		GridP grid = da->queryGrid(times[t]);
 		for(int l=0;l<grid->numLevels();l++){  //level loop: 7
 		  LevelP level = grid->getLevel(l);
-		  cout << "\t    Level: " << level->getIndex() << ", id " << level->get_id() << endl;
+		  cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
 
 		  //		  int numNode,numPatch;
 		  int numMatl;
@@ -603,7 +603,7 @@ int main(int argc, char** argv)
 		    const Patch* patch = *iter;
 		    lo = patch->getLowIndex();
 		    hi = patch->getHighIndex();
-		    cout << "\t\tPatch: " << patch->get_id() << " Over: " << lo << " to " << hi << endl;
+		    cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
 		    int matlNum = da->queryNumMaterials(patch, time);
 		    if(numMatl < matlNum) numMatl = matlNum;
 		    if(Imax < hi.x()) Imax = hi.x();
@@ -653,7 +653,7 @@ int main(int argc, char** argv)
 			Vector dx = patch->dCell();
 			IntVector lo = patch->getLowIndex();
 			IntVector hi = patch->getHighIndex();
-			cout << "\t\tPatch: " << patch->get_id() << " Over: " << lo << " to " << hi << endl;
+			cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
 			ConsecutiveRangeSet matls = da->queryMaterials(ccVariable, patch, time);
 			for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 			    matlIter != matls.end(); matlIter++){ //material loop: 10
@@ -977,11 +977,11 @@ int main(int argc, char** argv)
 	  cout << "\tVariable: " << var << ", type " << td->getName() << endl;
 	  for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
-	    cout << "\t    Level: " << level->getIndex() << ", id " << level->get_id() << endl;
+	    cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
 	    for(Level::const_patchIterator iter = level->patchesBegin();
 		iter != level->patchesEnd(); iter++){
 	      const Patch* patch = *iter;
-	      cout << "\t\tPatch: " << patch->get_id() << endl;
+	      cout << "\t\tPatch: " << patch->getID() << endl;
 	      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
 	      // loop over materials
 	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -2133,7 +2133,7 @@ int main(int argc, char** argv)
 	      for(Level::const_patchIterator iter = level->patchesBegin();
 		  iter != level->patchesEnd(); iter++){
 		const Patch* patch = *iter;
-		cout << "\t\tPatch: " << patch->get_id() << endl;
+		cout << "\t\tPatch: " << patch->getID() << endl;
                 ConsecutiveRangeSet matls =
 		  da->queryMaterials(var, patch, time);
 	        // loop over materials
@@ -2146,7 +2146,7 @@ int main(int argc, char** argv)
 		  string filename;
 		  unsigned long timestepnum=t+1;
 		  fnum << setw(4) << setfill('0') << timestepnum;
-                  pnum << setw(4) << setfill('0') << patch->get_id();
+                  pnum << setw(4) << setfill('0') << patch->getID();
 		  matnum << setw(4) << setfill('0') << matl;
 		  string partroot("stress.t");
                   string partextp(".p"); 
@@ -2272,7 +2272,7 @@ int main(int argc, char** argv)
 	      iter != level->patchesEnd(); iter++){
 	    const Patch* patch = *iter;
 	    ostringstream tempstr_patch;
-	    tempstr_patch << patch->get_id();
+	    tempstr_patch << patch->getID();
 	    patchID_file = tempstr_patch.str();
 	    fprintf(filelist,"<PATCH>\n");
 
@@ -2713,7 +2713,7 @@ int main(int argc, char** argv)
 			fwrite(&temp_value, sizeof(float), 1, datafile);
 		      }
 		      if (do_patch) {
-			temp_value = (float)patch->get_id();
+			temp_value = (float)patch->getID();
 			fwrite(&temp_value, sizeof(float), 1, datafile);
 		      }
 		      if (do_material) {
@@ -2750,7 +2750,7 @@ int main(int argc, char** argv)
 		    fprintf(headerfile,"%.17g %.17g\n",m_min[i],m_max[i]);
 		  }
 		  if (do_patch) {
-		    fprintf(headerfile,"%.17g %.17g\n",(float)patch->get_id(),(float)patch->get_id());
+		    fprintf(headerfile,"%.17g %.17g\n",(float)patch->getID(),(float)patch->getID());
 		  }
 		  if (do_material) {
 		    fprintf(headerfile,"%.17g %.17g\n",0.0,(float)material_data_list.size());

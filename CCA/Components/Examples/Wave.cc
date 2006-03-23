@@ -229,7 +229,7 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      // cout << " Doing Wave::timeAdvanceEuler on patch " << patch->get_id() << ", matl " << matl << endl;
+      // cout << " Doing Wave::timeAdvanceEuler on patch " << patch->getID() << ", matl " << matl << endl;
       delt_vartype dt;
       old_dw->get(dt, sharedState_->get_delt_label(), level);
 
@@ -349,7 +349,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      //cout << " Doing Wave::timeAdvanceRK4 on patch " << patch->get_id() << ", matl " << matl << endl;
+      //cout << " Doing Wave::timeAdvanceRK4 on patch " << patch->getID() << ", matl " << matl << endl;
       delt_vartype dt;
       old_dw->get(dt, sharedState_->get_delt_label(), level);
 

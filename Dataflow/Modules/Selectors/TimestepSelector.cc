@@ -68,7 +68,7 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
 
 TimestepSelector::~TimestepSelector() {
   // Remove the callback
-  sched->remove_callback(network_finished, this);
+  sched_->remove_callback(network_finished, this);
 } 
 
 //------------------------------------------------------------ 
@@ -284,7 +284,7 @@ void TimestepSelector::update_animate() {
 void TimestepSelector::set_context(Network* network) {
   Module::set_context(network);
   // Set up a callback to call after we finish
-  sched->add_callback(network_finished, this);
+  sched_->add_callback(network_finished, this);
 }
 
 // This will generate a clock given the number of seconds.

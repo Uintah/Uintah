@@ -564,7 +564,7 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, double time,
 				    *patch,  sp, vp, tp, pseth,
 				    scalar_type, have_sp, have_vp,
 				    have_tp, have_ids, sema,
-				    &smutex, &vmutex, &tmutex, &imutex, gui),
+				    &smutex, &vmutex, &tmutex, &imutex, gui_),
 		  "Particle Field Extractor Thread");
     thrd->detach();
 //     PFEThread *thrd = scinew PFEThread( this, archive, *patch,
@@ -605,7 +605,7 @@ void PFEThread::run(){
     ParticleSubset* source_subset = 0;
     bool have_subset = false;
 
-    get_gui()->eval(pfe->get_id() + " isOn p" + to_string(matl), result);
+    gui->eval(pfe->get_id() + " isOn p" + to_string(matl), result);
     if ( result == "0")
       continue;
     if (pfe->pvVar.get() != ""){

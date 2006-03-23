@@ -49,9 +49,9 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
@@ -210,10 +210,10 @@ void FaceCuttingPlane::tcl_command(GuiArgs& args, void* userdata)
 
 void FaceCuttingPlane::widget_moved(bool last, BaseWidget*)
 {
-  if( control_widget_ && trans_ && last && !abort_flag)
+  if( control_widget_ && trans_ && last && !abort_flag_)
   {
     control_ = trans_->unproject(control_widget_->ReferencePoint());
-    abort_flag=1;
+    abort_flag_=1;
     want_to_execute();
   }
 }

@@ -249,7 +249,7 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
     for(int pp=0;pp<patches->size();pp++){
       const Patch* patch = patches->get(pp);
       if (cout_doing.active()) {
-        cout_doing <<"Doing createHCMatrix on patch " << patch->get_id()
+        cout_doing <<"Doing createHCMatrix on patch " << patch->getID()
                    << "\t\t\t\t IMPM"    << "\n" << "\n";
       }
                                                                                 
@@ -378,7 +378,7 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing findFixedHCDOF on patch " << patch->get_id()
+      cout_doing <<"Doing findFixedHCDOF on patch " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
@@ -415,7 +415,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing formHCStiffnessMatrix " << patch->get_id()
+      cout_doing <<"Doing formHCStiffnessMatrix " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
@@ -520,7 +520,7 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing formHCQ on patch " << patch->get_id()
+      cout_doing <<"Doing formHCQ on patch " << patch->getID()
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
@@ -571,7 +571,7 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing adjustHCQAndHCKForBCs on patch " << patch->get_id()
+      cout_doing <<"Doing adjustHCQAndHCKForBCs on patch " << patch->getID()
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
     IntVector nodes = patch->getNInteriorNodes();
@@ -618,7 +618,7 @@ void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing solveForTemp on patch " << patch->get_id()
+      cout_doing <<"Doing solveForTemp on patch " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
@@ -642,7 +642,7 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing getTemperatureIncrement on patch " << patch->get_id()
+      cout_doing <<"Doing getTemperatureIncrement on patch " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
@@ -722,7 +722,7 @@ void ImplicitHeatConduction::fillgTemperatureRate(const ProcessorGroup*,
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing fillgTemperatureRate on patch " << patch->get_id()
+      cout_doing <<"Doing fillgTemperatureRate on patch " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
     int numMatls = d_sharedState->getNumMPMMatls();

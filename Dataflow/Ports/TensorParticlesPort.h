@@ -14,7 +14,7 @@
 #define SCI_project_TensorParticlesPort_h 1
 
 #include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
 
 namespace Uintah {
 

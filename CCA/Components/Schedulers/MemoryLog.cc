@@ -18,7 +18,7 @@ namespace Uintah {
     char tab = '\t';
     out << tab << name << tab << type << tab;
     if(patch)
-      out << patch->get_id();
+      out << patch->getID();
     else
       out << "-";
     out << tab << material << tab << nelems << tab << size << tab << ptr << '\n';

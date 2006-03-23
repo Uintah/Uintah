@@ -32,9 +32,9 @@
 #include <Core/Thread/Mutex.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 
@@ -772,8 +772,8 @@ void NodeHedgehog::execute()
 
 void NodeHedgehog::widget_moved(bool last, BaseWidget*)
 {
-  if(last && !abort_flag) {
-    abort_flag=1;
+  if(last && !abort_flag_) {
+    abort_flag_ = true;
     want_to_execute();
   }
 }

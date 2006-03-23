@@ -726,7 +726,7 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing << "\t\t on patch " << coarsePatch->get_id();
+    cout_doing << "\t\t on patch " << coarsePatch->getID();
     // Find the overlapping regions...
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
@@ -951,8 +951,8 @@ void AMRSimpleCFD::refine ( const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {  
     const Patch* finePatch = patches->get(p);
-    cout_doing << "\t\t on patch " << finePatch->get_id();
-    cout << "RANDY: Patch = " << finePatch->get_id() << endl;
+    cout_doing << "\t\t on patch " << finePatch->getID();
+    cout << "RANDY: Patch = " << finePatch->getID() << endl;
 
     // Find the overlapping regions...
     Level::selectType coarsePatches;
@@ -1268,7 +1268,7 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
     
-    cout_doing << "Doing errorEstimate on patch "<< patch->get_id()<<" \t\t\t AMRSimpleCFD" << '\n';
+    cout_doing << "Doing errorEstimate on patch "<< patch->getID()<<" \t\t\t AMRSimpleCFD" << '\n';
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 

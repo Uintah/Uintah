@@ -21,7 +21,7 @@ using namespace SCIRun;
     aName(""), aName_size(0)
 { 
   if( filebase.get() != "" )
-    need_execute = 1;
+    need_execute_ = true;
 } 
 
 

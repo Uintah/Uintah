@@ -22,7 +22,7 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    s << " requested from DW " << dwid;
    if (patch != NULL) {
       s << ", Level "<< patch->getLevel()->getIndex()
-        << ", patch " << patch->get_id()
+        << ", patch " << patch->getID()
         << "(" << patch->toString() << ")";
    }
    if (matlIndex >= 0)

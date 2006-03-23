@@ -116,7 +116,7 @@ void RigidMPM::computeInternalForce(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active()) {
-      cout_doing <<"Doing computeInternalForce on patch " << patch->get_id()
+      cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
 		 <<"\t\t\t RigidMPM"<< endl;
     }
 
@@ -147,7 +147,7 @@ void RigidMPM::solveEquationsMotion(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Doing solveEquationsMotion on patch " << patch->get_id()
+      cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
 		 <<"\t\t\t RigidMPM"<< endl;
     }
 
@@ -247,7 +247,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     if (cout_doing.active()) {
       cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-		 << patch->get_id() << "\t MPM"<< endl;
+		 << patch->getID() << "\t MPM"<< endl;
     }
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);

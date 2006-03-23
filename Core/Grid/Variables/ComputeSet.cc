@@ -32,7 +32,7 @@ namespace Uintah {
       if(j != 0)
         out << ",";
       const Patch* patch = pss.get(j);
-      out << patch->get_id();
+      out << patch->getID();
     }
     out << "}";
     return out;

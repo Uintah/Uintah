@@ -368,7 +368,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
       // Output particle velocity field code
       cout << "\n*** Particle velocity field generated "
            << "in Crack::ParticleVelocityField ***" << endl;
-      cout << "--patch: " << patch->get_id() << endl;
+      cout << "--patch: " << patch->getID() << endl;
       cout << "--matreial: " << m << endl;
       for(ParticleSubset::iterator iter=pset->begin();
                         iter!=pset->end();iter++) {

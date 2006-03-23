@@ -40,9 +40,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 #ifdef __sgi
@@ -91,55 +91,57 @@ SubFieldHistogram::~SubFieldHistogram()
 
 }
 
-void SubFieldHistogram::widget_moved(bool last,BaseWidget*)
+void
+SubFieldHistogram::widget_moved(bool last,BaseWidget*)
 {
-    if(last && !abort_flag)
+  if(last && !abort_flag_)
     {
-	abort_flag=1;
-	want_to_execute();
+      abort_flag_ = true;
+      want_to_execute();
     }
 }
 
-void SubFieldHistogram::execute(void)
+void
+SubFieldHistogram::execute(void)
 {
 
   infield = (FieldIPort *)get_iport("Scalar Field");
- in_subfield = (FieldIPort *)get_iport("Scalar SubField");
+  in_subfield = (FieldIPort *)get_iport("Scalar SubField");
   incolormap = (ColorMapIPort *)get_iport("Color Map");
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield) {
-    post_message("Unable to initialize "+name+"'s iport\n");
+    post_message("Unable to initialize " + module_name_ + "'s iport\n");
     return;
   }
   
   if (!in_subfield) {
-    post_message("Unable to initialize "+name+"'s iport\n");
+    post_message("Unable to initialize " + module_name_ + "'s iport\n");
     return;
   }
   
   if (!incolormap) {
-    post_message("Unable to initialize "+name+"'s iport\n");
+    post_message("Unable to initialize " + module_name_ + "'s iport\n");
     return;
   }
   if (!ogeom) {
-    post_message("Unable to initialize "+name+"'s oport\n");
+    post_message("Unable to initialize " + module_name_ + "'s oport\n");
     return;
   }
 
   if (!infield->get(field)) {
-    post_message("No incoming scalar field in  "+name+"'s iport\n");
+    post_message("No incoming scalar field in  " + module_name_ + "'s iport\n");
     return;
   } else if (!field.get_rep()) {
-    post_message("No rep  in  "+name+"'s incoming scalar field\n");
+    post_message("No rep  in  " + module_name_ + "'s incoming scalar field\n");
     return;
   }
 
   if (!in_subfield->get(sub_field) ) {
-    post_message("No incoming scalar sub_field in  "+name+"'s iport\n");
+    post_message("No incoming scalar sub_field in  " + module_name_ + "'s iport\n");
     return;
   } else if (!sub_field.get_rep()) {
-    post_message("No rep  in  "+name+"'s incoming scalar sub_field\n");
+    post_message("No rep  in  " + module_name_ + "'s incoming scalar sub_field\n");
     return;
   }
   
@@ -152,7 +154,7 @@ void SubFieldHistogram::execute(void)
   const TypeDescription *std = sub_field->get_type_description();
   if( td->get_name().find("double") != string::npos &&
       std->get_name().find("int") != string::npos){
-    post_message("Field type mismatch in "+name+" cannot make histogram\n");
+    post_message("Field type mismatch in "+ module_name_ + ", cannot make histogram\n");
     return;
   }
 
