@@ -1705,10 +1705,10 @@ void AMRICE::compute_Mag_gradient( constCCVariable<double>& q_CC,
   Vector dx = patch->dCell(); 
   for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
-    IntVector r = c;
-    IntVector l = c;
     Vector grad_q_CC;
     for(int dir = 0; dir <3; dir ++ ) { 
+      IntVector r = c;
+      IntVector l = c;
       double inv_dx = 0.5 /dx[dir];
       r[dir] += 1;
       l[dir] -= 1;
@@ -1728,10 +1728,10 @@ void AMRICE::compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
 
   for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
-    IntVector r = c;
-    IntVector l = c;
     Vector Divergence_q_CC;
     for(int dir = 0; dir <3; dir ++ ) { 
+      IntVector r = c;
+      IntVector l = c;
       double inv_dx = 0.5 /dx[dir];
       r[dir] += 1;
       l[dir] -= 1;
