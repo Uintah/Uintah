@@ -756,7 +756,7 @@ bool MatlabBundle::open_matlab_engine()
     }
 
     
-    thread_info_->gui_ = gui;
+    thread_info_->gui_ = get_gui();
     thread_info_->output_cmd_ = matlab_add_output_.get(); 
     // By cloning the object, it will have the same fields and sockets, but the socket
     // and error handling will be separate. As the thread will invoke its own instructions
