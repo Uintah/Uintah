@@ -34,9 +34,10 @@ PSELIBS := \
         $(ICE)    \
         $(MPM)    \
         $(MPMICE) \
-        $(COMPONENTS)/Examples  \
+        $(COMPONENTS)/Examples             \
+	$(COMPONENTS)/PatchCombiner        \
 	$(COMPONENTS)/ProblemSpecification \
-	$(COMPONENTS)/Solvers \
+	$(COMPONENTS)/Solvers              \
 	$(COMPONENTS)/SwitchingCriteria
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY)
