@@ -60,11 +60,20 @@ SRCS     += \
 	$(SRCDIR)/CreateMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports \
-	Core/Datatypes Core/Persistent Core/Math \
-	Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Geometry Core/Datatypes \
-	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
+PSELIBS := \
+	Core/Datatypes     \
+	Core/Exceptions    \
+	Core/Geom          \
+	Core/GeomInterface \
+	Core/Geometry      \
+	Core/Containers    \
+	Core/GuiInterface  \
+	Core/Math          \
+	Core/Persistent    \
+	Core/Thread        \
+	Core/TkExtensions  \
+	Core/Util          \
+	Dataflow/Network   \
 	Dataflow/Widgets
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(PETSC_UNI_LIBRARY) $(TEEM_LIBRARY)

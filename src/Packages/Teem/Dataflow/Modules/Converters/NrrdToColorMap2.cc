@@ -30,9 +30,9 @@
 //    Date   : Fri Sep 24 09:48:56 2004
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Core/Volume/CM2Widget.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <iostream>
 
 namespace SCIRun {

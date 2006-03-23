@@ -24,7 +24,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <iostream>
 #include <fstream>

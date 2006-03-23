@@ -27,11 +27,11 @@
 //  
 
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomDisc.h>

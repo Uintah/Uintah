@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>

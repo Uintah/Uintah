@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 
 namespace SCIRun {

@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 
 
@@ -63,4 +63,3 @@ PathWriter::PathWriter(GuiContext* ctx)
 }
 
 
-} // End namespace 

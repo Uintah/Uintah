@@ -43,7 +43,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Math/Expon.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h> // for M_PI

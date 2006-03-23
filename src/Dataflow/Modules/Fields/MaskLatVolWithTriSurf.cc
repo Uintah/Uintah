@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Basis/HexTrilinearLgn.h>

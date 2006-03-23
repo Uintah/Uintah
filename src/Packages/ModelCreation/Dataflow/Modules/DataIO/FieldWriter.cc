@@ -47,7 +47,7 @@
  *
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 

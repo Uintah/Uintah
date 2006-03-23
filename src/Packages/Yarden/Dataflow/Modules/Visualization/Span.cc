@@ -28,7 +28,7 @@
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/ScalarFieldRG.h> 
 
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
 #include <Packages/Yarden/Dataflow/Ports/SpanPort.h>
 
 #include <Core/GuiInterface/GuiVar.h>

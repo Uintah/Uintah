@@ -44,19 +44,29 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 
 SRCS     += \
-	$(SRCDIR)/AnalyzeNrrdReader.cc\
-	$(SRCDIR)/DicomNrrdReader.cc\
-	$(SRCDIR)/ImageExporter.cc\
-	$(SRCDIR)/ImageImporter.cc\
-	$(SRCDIR)/NrrdReader.cc\
-	$(SRCDIR)/NrrdWriter.cc\
+        $(SRCDIR)/AnalyzeNrrdReader.cc\
+        $(SRCDIR)/DicomNrrdReader.cc\
+        $(SRCDIR)/ImageExporter.cc\
+        $(SRCDIR)/ImageImporter.cc\
+        $(SRCDIR)/NrrdReader.cc\
+        $(SRCDIR)/NrrdWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
-	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Core/ImportExport Core/OS \
-	Dataflow/Network Dataflow/Ports \
+PSELIBS := \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/Geometry      \
+        Core/GeomInterface \
+        Core/GuiInterface  \
+        Core/ImportExport  \
+        Core/OS            \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network
 
 ifeq ($(HAVE_INSIGHT),yes)
   PSELIBS += Core/Algorithms/DataIO

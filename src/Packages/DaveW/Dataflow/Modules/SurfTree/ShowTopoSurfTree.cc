@@ -11,8 +11,8 @@
  */
 
 #include <Packages/DaveW/Core/Datatypes/General/TopoSurfTree.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>

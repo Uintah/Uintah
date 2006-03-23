@@ -38,8 +38,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 

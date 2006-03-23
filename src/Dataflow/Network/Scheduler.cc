@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>

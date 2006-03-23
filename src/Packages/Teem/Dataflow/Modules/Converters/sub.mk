@@ -44,22 +44,31 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Converters
 
 
 SRCS     += \
-	$(SRCDIR)/ColorMap2ToNrrd.cc\
-	$(SRCDIR)/ColorMapToNrrd.cc\
-	$(SRCDIR)/ConvertToNrrd.cc\
-	$(SRCDIR)/FieldToNrrd.cc\
-	$(SRCDIR)/NrrdToColorMap2.cc\
-	$(SRCDIR)/NrrdToField.cc\
-	$(SRCDIR)/NrrdToMatrix.cc\
-	$(SRCDIR)/MatrixToNrrd.cc\
+        $(SRCDIR)/ColorMap2ToNrrd.cc\
+        $(SRCDIR)/ColorMapToNrrd.cc\
+        $(SRCDIR)/ConvertToNrrd.cc\
+        $(SRCDIR)/FieldToNrrd.cc\
+        $(SRCDIR)/NrrdToColorMap2.cc\
+        $(SRCDIR)/NrrdToField.cc\
+        $(SRCDIR)/NrrdToMatrix.cc\
+        $(SRCDIR)/MatrixToNrrd.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
-	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/GeomInterface \
-        Core/TkExtensions \
-	Dataflow/Network Dataflow/Ports Core/Volume \
-	Core/Basis
+PSELIBS := \
+        Core/Basis         \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/Geometry      \
+        Core/GeomInterface \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Core/Volume        \
+        Dataflow/Network   
 
 ifeq ($(HAVE_INSIGHT),yes)
   PSELIBS += Core/Algorithms/DataIO
@@ -71,5 +80,5 @@ LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
-TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+  TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
 endif

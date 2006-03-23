@@ -17,8 +17,8 @@
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/Stack.h>

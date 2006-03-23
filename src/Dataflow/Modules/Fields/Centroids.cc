@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/Fields/Centroids.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <math.h>

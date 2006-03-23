@@ -39,8 +39,8 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Basis/HexTrilinearLgn.h>

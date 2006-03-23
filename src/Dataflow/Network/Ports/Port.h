@@ -90,8 +90,8 @@ protected:
 
   std::vector<Connection*> connections;
 
-  void turn_on(PortState st=On);
-  void turn_off();
+  void turn_on_light(PortState st=On);
+  void turn_off_light();
   friend class Module;
   void set_which_port(int);
   virtual void update_light() = 0;

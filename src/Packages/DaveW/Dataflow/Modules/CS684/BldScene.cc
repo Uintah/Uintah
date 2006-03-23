@@ -16,8 +16,8 @@
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 #include <Dataflow/Widgets/RingWidget.h>
 #include <Dataflow/Widgets/BoxWidget.h>

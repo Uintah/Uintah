@@ -39,7 +39,7 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 

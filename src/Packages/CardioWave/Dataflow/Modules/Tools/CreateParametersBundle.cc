@@ -35,7 +35,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Bundle/Bundle.h>
 #include <vector>

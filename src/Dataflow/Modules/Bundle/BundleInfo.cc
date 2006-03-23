@@ -38,7 +38,7 @@
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 
 using namespace SCIRun;
 using namespace std;

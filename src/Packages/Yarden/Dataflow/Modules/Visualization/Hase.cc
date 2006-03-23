@@ -18,10 +18,10 @@
 #include <Core/Util/Timer.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 
 #if defined(HAVE_GLEW)
 #include <GL/glew.h>

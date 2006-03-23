@@ -44,9 +44,9 @@
 #include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Util/Endian.h>

@@ -40,12 +40,12 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>

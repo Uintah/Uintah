@@ -36,7 +36,7 @@
 
 #include <Core/Containers/Handle.h>
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Containers/StringUtil.h>

@@ -62,13 +62,24 @@ SRCS     += \
 	$(SRCDIR)/ShowString.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
-	Core/Algorithms/Fields \
-	Core/Datatypes Core/Containers \
-	Core/Exceptions Core/Thread Core/GuiInterface Core/Geom \
-	Core/Persistent Core/Geometry Core/Util \
-	Core/TkExtensions Core/Algorithms/Visualization \
-	Core/GeomInterface Core/Volume Core/Basis
+PSELIBS := \
+	Core/Algorithms/Visualization \
+	Core/Algorithms/Fields        \
+	Core/Basis         \
+	Core/Containers    \
+	Core/Datatypes     \
+	Core/Exceptions    \
+	Core/Geom          \
+	Core/GeomInterface \
+	Core/Geometry      \
+	Core/GuiInterface  \
+	Core/Persistent    \
+	Core/Thread        \
+	Core/TkExtensions  \
+	Core/Util          \
+	Core/Volume        \
+	Dataflow/Network   \
+	Dataflow/Widgets   
 
 LIBS := $(TEEM_LIBRARY) $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

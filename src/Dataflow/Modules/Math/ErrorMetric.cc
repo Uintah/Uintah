@@ -73,7 +73,7 @@ POSSIBLE REVISIONS:
 
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>

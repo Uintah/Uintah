@@ -53,7 +53,7 @@ using std::endl;
 
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiContext.h>

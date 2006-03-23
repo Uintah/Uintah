@@ -28,10 +28,10 @@
 
 #include <Core/Datatypes/ScalarField.h>
 
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 //#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/GuiVar.h>

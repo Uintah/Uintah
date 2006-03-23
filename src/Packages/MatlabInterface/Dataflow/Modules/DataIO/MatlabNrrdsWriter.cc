@@ -40,8 +40,8 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>

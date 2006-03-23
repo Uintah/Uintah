@@ -43,8 +43,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>    
-#include <Dataflow/Ports/FieldPort.h>   
-#include <Dataflow/Ports/MatrixPort.h> 
+#include <Dataflow/Network/Ports/FieldPort.h>   
+#include <Dataflow/Network/Ports/MatrixPort.h> 
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>  
 #include <Core/Datatypes/GenericField.h>

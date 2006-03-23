@@ -26,7 +26,7 @@
 #ifndef MIT_FieldPort_h
 #define MIT_FieldPort_h 
 
-#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
 #include <Packages/MIT/Core/Datatypes/MetropolisData.h>
 
 namespace MIT {

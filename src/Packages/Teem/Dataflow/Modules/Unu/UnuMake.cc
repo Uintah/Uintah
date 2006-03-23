@@ -41,7 +41,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <sys/stat.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #ifdef _WIN32
 #define SCISHARE __declspec(dllimport)

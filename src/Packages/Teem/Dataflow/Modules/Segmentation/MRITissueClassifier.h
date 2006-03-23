@@ -48,7 +48,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 
 namespace SCITeem {

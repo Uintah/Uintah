@@ -30,8 +30,8 @@
 //    Date   : Fri Oct 15 2004
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>

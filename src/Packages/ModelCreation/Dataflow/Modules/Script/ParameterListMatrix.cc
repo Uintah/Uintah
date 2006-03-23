@@ -34,8 +34,8 @@
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>

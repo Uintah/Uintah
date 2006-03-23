@@ -40,7 +40,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 
-#include <Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileWriter.h"
 
 #include "itkRGBPixel.h"

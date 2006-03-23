@@ -15,7 +15,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Geom/Material.h>
 #include <Core/Thread/CrowdMonitor.h>
 

@@ -43,8 +43,8 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Basis/TriLinearLgn.h>

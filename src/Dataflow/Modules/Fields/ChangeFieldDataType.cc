@@ -38,7 +38,7 @@
 #include <Core/Datatypes/FieldInterface.h>
 
 #include <Core/Containers/Handle.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ChangeFieldDataType.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Containers/StringUtil.h>

@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Fields/TransformData3.h>
 #include <Core/Algorithms/Fields/FieldCount.h>

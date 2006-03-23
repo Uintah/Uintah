@@ -41,7 +41,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
 using namespace SCIRun;

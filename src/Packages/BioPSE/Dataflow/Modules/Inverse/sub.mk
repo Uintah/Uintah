@@ -39,20 +39,31 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Inverse
 
 SRCS     += \
-	$(SRCDIR)/AttributeTrf.cc\
-	$(SRCDIR)/ConductivitySearch.cc\
-	$(SRCDIR)/DipoleSearch.cc\
+        $(SRCDIR)/AttributeTrf.cc\
+        $(SRCDIR)/ConductivitySearch.cc\
+        $(SRCDIR)/DipoleSearch.cc\
         $(SRCDIR)/TSVD.cc\
-	$(SRCDIR)/Tikhonov.cc\
+        $(SRCDIR)/Tikhonov.cc\
         $(SRCDIR)/TikhonovSVD.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports \
-	Core/Algorithms/Geometry \
-        Core/Datatypes Core/Persistent Core/Containers \
-	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface Core/Math \
-        Core/TkExtensions Core/Basis
+PSELIBS := \
+        Packages/BioPSE/Core/Algorithms/Forward          \
+        Packages/BioPSE/Core/Algorithms/NumApproximation \
+        Packages/BioPSE/Core/Datatypes \
+        Core/Basis         \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/Geometry      \
+        Core/GeomInterface \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network   
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

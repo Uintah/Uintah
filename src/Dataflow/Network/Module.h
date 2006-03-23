@@ -43,7 +43,7 @@
 #ifndef SCIRun_Dataflow_Network_Module_h
 #define SCIRun_Dataflow_Network_Module_h
 
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Core/Util/Assert.h>
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Thread/Mailbox.h>

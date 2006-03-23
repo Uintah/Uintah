@@ -39,7 +39,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <Packages/Insight/Dataflow/Ports/share.h>

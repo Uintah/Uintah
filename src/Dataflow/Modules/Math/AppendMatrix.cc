@@ -43,7 +43,7 @@
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>

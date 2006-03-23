@@ -43,8 +43,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Comm/MessageBase.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/GeometryComm.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryComm.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Lighting.h>

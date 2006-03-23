@@ -39,9 +39,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>

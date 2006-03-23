@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
 #include <Core/GuiInterface/GuiVar.h>

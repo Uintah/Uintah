@@ -40,7 +40,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
 
 namespace ModelCreation {

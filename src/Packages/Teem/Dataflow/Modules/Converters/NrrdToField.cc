@@ -46,8 +46,8 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/CrvLinearLgn.h>

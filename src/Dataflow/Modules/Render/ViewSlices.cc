@@ -66,13 +66,13 @@
 #include <Core/Geom/TexSquare.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>

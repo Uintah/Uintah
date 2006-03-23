@@ -12,7 +12,7 @@
  */
 
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>

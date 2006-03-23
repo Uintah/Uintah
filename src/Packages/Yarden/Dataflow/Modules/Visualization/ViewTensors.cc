@@ -31,8 +31,8 @@
 #include <Core/GuiInterface/TCL.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 
 #include <Packages/Yarden/Dataflow/Ports/TensorFieldPort.h>
 

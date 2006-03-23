@@ -54,9 +54,9 @@
 #include <sci_algorithm.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Core/Bundle/Bundle.h>
 #include <Core/Containers/Array3.h>

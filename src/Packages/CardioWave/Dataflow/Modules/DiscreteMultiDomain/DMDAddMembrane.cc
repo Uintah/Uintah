@@ -34,9 +34,9 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/String.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/SynapseXML.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 

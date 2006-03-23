@@ -31,7 +31,7 @@
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace ModelCreation {
 

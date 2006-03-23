@@ -17,7 +17,7 @@
 #include <Core/Geom/Material.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <strings.h>
 #include <iostream>

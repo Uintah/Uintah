@@ -68,8 +68,8 @@ POSSIBLE REVISIONS
 ----------------------------------------------------------------------*/
 
 
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Dataflow/Widgets/CrosshairWidget.h>
 
 #include <Core/Geom/View.h>

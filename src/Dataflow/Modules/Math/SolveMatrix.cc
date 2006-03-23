@@ -46,7 +46,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>

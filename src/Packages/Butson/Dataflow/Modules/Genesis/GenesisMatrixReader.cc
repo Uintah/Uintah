@@ -8,7 +8,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/share/share.h>

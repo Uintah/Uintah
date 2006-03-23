@@ -39,7 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/ReplaceScalarDataValue.h>
 #include <Core/Containers/Handle.h>

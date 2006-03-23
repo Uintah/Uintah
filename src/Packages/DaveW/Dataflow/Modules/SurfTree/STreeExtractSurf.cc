@@ -12,7 +12,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 #include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/SurfTree.h>

@@ -39,8 +39,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geometry/BBox.h>
