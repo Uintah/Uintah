@@ -999,5 +999,49 @@ Painter::ITKCurvatureAnisotropicDiffusionTool::ITKCurvatureAnisotropicDiffusionT
 }
 
 
+Painter::LayerMergeTool::LayerMergeTool(Painter *painter):
+  PainterTool(painter, "Layer Merge")
+{
+  NrrdVolumeOrder::iterator volname = 
+    std::find(painter_->volume_order_.begin(), 
+              painter_->volume_order_.end(), 
+              painter_->current_volume_->name_.get());
+  
+  if (volname == painter_->volume_order_.begin()) return;
+  NrrdVolume *vol1 = painter_->volume_map_[*volname];
+  NrrdVolume *vol2 = painter_->volume_map_[*(--volname)];
+    
+
+  NrrdData *nout = new NrrdData();
+  NrrdIter *ni1 = nrrdIterNew();
+  NrrdIter *ni2 = nrrdIterNew();
+  
+  
+  nrrdIterSetNrrd(ni1, vol1->nrrd_->nrrd);
+  nrrdIterSetNrrd(ni2, vol2->nrrd_->nrrd);
+  
+  if (nrrdArithIterBinaryOp(nout->nrrd, nrrdBinaryOpMax, ni1, ni2)) {
+    char *err = biffGetDone(NRRD);
+    string errstr = (err ? err : "");
+    free(err);
+    throw errstr;
+  }
+
+  nrrdIterNix(ni1);
+  nrrdIterNix(ni2);
+
+  nrrdKeyValueCopy(nout->nrrd,  vol1->nrrd_->nrrd);
+  nrrdKeyValueCopy(nout->nrrd,  vol2->nrrd_->nrrd);
+  
+  vol1->nrrd_->nrrd = nout->nrrd;
+  vol2->keep_ = 0;
+  
+  painter_->recompute_volume_list();
+  painter_->current_volume_ = vol1;
+}
+  
+
+  
+
 
 } // End namespace SCIRun

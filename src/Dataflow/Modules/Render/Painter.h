@@ -296,8 +296,10 @@ class Painter : public Module
     Point               center_;
   };
 
-
-
+  class LayerMergeTool : public PainterTool {
+  public:
+    LayerMergeTool(Painter *painter);
+  };
 
   class CropTool : public PainterTool {
   public:
