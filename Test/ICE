@@ -18,6 +18,7 @@ TESTS = [   ("advect", "advect.ups", 1, "Linux"),	\
             ("hotBlob2mat_sym", "hotBlob2mat_sym.ups", 1, "Linux"),     \
             ("impHotBlob", "impHotBlob.ups", 1, "ALL"),     \
             ("hotBlob8patch", "hotBlob2mat8patch.ups", 8, "Linux"),     \
+            ("advect2matAMR", "advect2matAMR.ups", 1, "ALL"),     \
             ("hotBlob_AMR", "hotBlob_AMR.ups", 4, "Linux"), \
             ("hotBlob_AMR_3L", hotBlob_AMR_3L_ups, 4, "Linux"),  \
             ("impAdvectAMR", "impAdvectAMR.ups", 1.1, "Linux")
