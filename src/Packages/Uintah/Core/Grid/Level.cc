@@ -642,18 +642,18 @@ void Level::setBCTypes()
 	  coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
 	  if(neighbors.size() == 0){
 	    patch->setBCType(face, Patch::None);
-            bcout << "  Setting Patch " << patch->get_id() << " face " << face << " to None\n";
+            bcout << "  Setting Patch " << patch->getID() << " face " << face << " to None\n";
 	  } else {
 	    patch->setBCType(face, Patch::Coarse);
-            bcout << "  Setting Patch " << patch->get_id() << " face " << face << " to Coarse\n";
+            bcout << "  Setting Patch " << patch->getID() << " face " << face << " to Coarse\n";
 	  }
 	} else {
 	  patch->setBCType(face, Patch::None);
-          bcout << "  Setting Patch " << patch->get_id() << " face " << face << " to None\n";
+          bcout << "  Setting Patch " << patch->getID() << " face " << face << " to None\n";
 	}
       } else {
 	patch->setBCType(face, Patch::Neighbor);
-        bcout << "  Setting Patch " << patch->get_id() << " face " << face << " to Neighbor\n";
+        bcout << "  Setting Patch " << patch->getID() << " face " << face << " to Neighbor\n";
       }
     }
     patch->finalizePatch();
@@ -738,7 +738,7 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
 
 const Patch* Level::getPatchByID(int id) const
 {
-  return d_realPatches[id - d_realPatches[0]->get_id()];
+  return d_realPatches[id - d_realPatches[0]->getID()];
 }
 
 

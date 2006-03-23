@@ -215,7 +215,7 @@ PatchBasedDataWarehouse3::get(ReductionVariableBase& var,
   checkGetAccess(label, matlIndex, 0);
 
   if(!d_levelDB.exists(label, matlIndex, level)) {
-    SCI_THROW(UnknownVariable(label->getName(), get_id(), level, matlIndex,
+    SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
 			      "on reduction"));
   }
   d_levelDB.get(label, matlIndex, level, var);
@@ -233,7 +233,7 @@ PatchBasedDataWarehouse3::get(SoleVariableBase& var,
   checkGetAccess(label, matlIndex, 0);
 
   if(!d_levelDB.exists(label, matlIndex, level)) {
-    SCI_THROW(UnknownVariable(label->getName(), get_id(), level, matlIndex,
+    SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
 			      "on sole"));
   }
   d_levelDB.get(label, matlIndex, level, var);
@@ -290,7 +290,7 @@ PatchBasedDataWarehouse3::sendMPI(SendState& ss, SendState& rs, DependencyBatch*
   case TypeDescription::ParticleVariable:
     {
       if(!d_varDB.exists(label, matlIndex, patch))
-	SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex,
+	SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
 			      "in sendMPI"));
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
 
@@ -345,7 +345,7 @@ PatchBasedDataWarehouse3::sendMPI(SendState& ss, SendState& rs, DependencyBatch*
 #endif
         ASSERT(batch->messageTag >= 0);
         
-        // dbg << d_myworld->myrank() << " Sending PARTICLE message number " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->get_id() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
+        // dbg << d_myworld->myrank() << " Sending PARTICLE message number " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
 
         MPI_Bsend(&numParticles, 1, MPI_INT, dest,
                   PARTICLESET_TAG|batch->messageTag, d_myworld->getComm());
@@ -358,7 +358,7 @@ PatchBasedDataWarehouse3::sendMPI(SendState& ss, SendState& rs, DependencyBatch*
       int numParticles = sendset->numParticles();
       ssLock.unlock(); // Dd: ??
 
-      // dbg << d_myworld->myrank() << " sendset has " << numParticles << " particles - patch " << patch->get_id() << ' ' << "M: " << matlIndex << " GT: (" << gt << ',' << ngc << "), on dest: " << dest << "\n";
+      // dbg << d_myworld->myrank() << " sendset has " << numParticles << " particles - patch " << patch->getID() << ' ' << "M: " << matlIndex << " GT: (" << gt << ',' << ngc << "), on dest: " << dest << "\n";
 
       if( numParticles > 0){
          var->getMPIBuffer(buffer, sendset);
@@ -374,7 +374,7 @@ PatchBasedDataWarehouse3::sendMPI(SendState& ss, SendState& rs, DependencyBatch*
   case TypeDescription::SFCZVariable:
     {
       if(!d_varDB.exists(label, matlIndex, patch))
-        SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex,
+        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
           "in sendMPI"));
       GridVariable* var;
       var = dynamic_cast<GridVariable*>(d_varDB.get(label, matlIndex, patch));
@@ -445,7 +445,7 @@ PatchBasedDataWarehouse3::recvMPI(SendState& rs, BufferInfo& buffer,
         MPI_Status status;
         ASSERT(batch->messageTag >= 0);
 	ASSERTRANGE(from, 0, d_myworld->size());
-        // dbg << d_myworld->myrank() << " Posting PARTICLES receive for message number " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", patch " << patch->get_id() << ", matl " << matlIndex << ", length=" << 1 << "\n";      
+        // dbg << d_myworld->myrank() << " Posting PARTICLES receive for message number " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << "\n";      
         MPI_Recv(&numParticles, 1, MPI_INT, from,
                  PARTICLESET_TAG|batch->messageTag, d_myworld->getComm(),
                  &status);
@@ -586,7 +586,7 @@ PatchBasedDataWarehouse3::reduceMPI(const VarLabel* label,
       d_levelDB.put(label, matlIndex, level, var, true);
       //cout << "NEWRV3\n";
       //cout << endl;
-      //SCI_THROW(UnknownVariable(label->getName(), get_id(), level, matlIndex,
+      //SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
       //				"on reduceMPI"));
     }
     int sendcount;
@@ -614,7 +614,7 @@ PatchBasedDataWarehouse3::reduceMPI(const VarLabel* label,
     try {
       var = dynamic_cast<ReductionVariableBase*>(d_levelDB.get(label, matlIndex, level));
     } catch (UnknownVariable) {
-      SCI_THROW(UnknownVariable(label->getName(), get_id(), level, matlIndex,
+      SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
                                 "on reduceMPI(pass 2)"));
     }
     var->getMPIData(sendbuf, packindex);
@@ -653,7 +653,7 @@ PatchBasedDataWarehouse3::reduceMPI(const VarLabel* label,
     try {
       var = dynamic_cast<ReductionVariableBase*>(d_levelDB.get(label, matlIndex, level));
     } catch (UnknownVariable) {
-      SCI_THROW(UnknownVariable(label->getName(), get_id(), level, matlIndex,
+      SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
 				"on reduceMPI(pass 2)"));
     }
     var->putMPIData(recvbuf, unpackindex);
@@ -742,7 +742,7 @@ PatchBasedDataWarehouse3::createParticleSubset(particleIndex numParticles,
                                             Ghost::GhostType gt, int numgc)
 {
   d_lock.writeLock();
-  dbg << d_myworld->myrank() << " DW ID " << get_id() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->get_id() << " (" << gt << "," << numgc << ")\n";
+  dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << gt << "," << numgc << ")\n";
 
   ASSERT(!patch->isVirtual());
 
@@ -769,7 +769,7 @@ PatchBasedDataWarehouse3::saveParticleSubset(ParticleSubset* psubset,
   ASSERTEQ(psubset->getMatlIndex(), matlIndex);
   ASSERT(!patch->isVirtual());  
   d_lock.writeLock();
-  dbg << d_myworld->myrank() << " DW ID " << get_id() << " saveParticleSubset: MI: " << matlIndex << " P: " << patch->get_id() << " (" << gt << "," << numgc << ")\n";
+  dbg << d_myworld->myrank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << gt << "," << numgc << ")\n";
   psetDBType::key_type key(patch, matlIndex, gt, numgc);
   if(d_psetDB.find(key) != d_psetDB.end())
     SCI_THROW(InternalError("saveParticleSubset called twice for patch"));
@@ -804,7 +804,7 @@ PatchBasedDataWarehouse3::getParticleSubset(int matlIndex, const Patch* patch,
     d_lock.readUnlock();
     ostringstream s;
     s << "ParticleSet, ghost: (" << gt << ',' << numgc << ')';
-    SCI_THROW(UnknownVariable(s.str().c_str(), get_id(), realPatch, matlIndex,
+    SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
                               "Cannot find particle set on patch"));
   }
   d_lock.readUnlock();
@@ -821,7 +821,7 @@ PatchBasedDataWarehouse3::getDeleteSubset(int matlIndex, const Patch* patch,
    psetDBType::iterator iter = d_delsetDB.find(key);
    if(iter == d_delsetDB.end()){
      d_lock.readUnlock();
-     SCI_THROW(UnknownVariable("DeleteSet", get_id(), realPatch, matlIndex,
+     SCI_THROW(UnknownVariable("DeleteSet", getID(), realPatch, matlIndex,
 			   "Cannot find delete set on patch"));
    }
   d_lock.readUnlock();
@@ -945,7 +945,7 @@ PatchBasedDataWarehouse3::get(constParticleVariableBase& constVar,
   checkGetAccess(label, matlIndex, patch);
 
   if(!d_varDB.exists(label, matlIndex, patch))
-    SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex));
+    SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
   constVar = *dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
    
   d_lock.readUnlock();
@@ -976,7 +976,7 @@ PatchBasedDataWarehouse3::get(constParticleVariableBase& constVar,
     for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor=neighbors[i];
       if(!d_varDB.exists(label, matlIndex, neighbors[i]))
-	SCI_THROW(UnknownVariable(label->getName(), get_id(), neighbor, matlIndex,
+	SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor, matlIndex,
 			      neighbor == patch?"on patch":"on neighbor"));
       neighborvars[i] = var->cloneType();
 
@@ -1011,7 +1011,7 @@ PatchBasedDataWarehouse3::getModifiable(ParticleVariableBase& var,
    
    if(pset->getGhostType() == Ghost::None){
       if(!d_varDB.exists(label, matlIndex, patch))
-	SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex));
+	SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
       d_varDB.get(label, matlIndex, patch, var);
    } else {
      SCI_THROW(InternalError("getParticleVariable should not be used with ghost cells"));
@@ -1047,7 +1047,7 @@ PatchBasedDataWarehouse3::getParticleVariable(const VarLabel* label,
    checkModifyAccess(label, matlIndex, patch);
    
    if(!d_varDB.exists(label, matlIndex, patch))
-     SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex));
+     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
    var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
 
   d_lock.readUnlock();
@@ -1103,7 +1103,7 @@ PatchBasedDataWarehouse3::put(ParticleVariableBase& var,
   if(!replace && d_varDB.exists(label, matlIndex, patch)) {
     ostringstream error_msg;
     error_msg << "Variable already exists: " << label->getName()
-	      << " on patch " << patch->get_id();
+	      << " on patch " << patch->getID();
     SCI_THROW(InternalError(error_msg.str()));
   }
 
@@ -1173,7 +1173,7 @@ PatchBasedDataWarehouse3::get(PerPatchBase& var, const VarLabel* label,
   //checkGetAccess(label);
   d_lock.readLock();
   if(!d_varDB.exists(label, matlIndex, patch))
-    SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex,
+    SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
 			   "perpatch data"));
   d_varDB.get(label, matlIndex, patch, var);
   d_lock.readUnlock();
@@ -1247,7 +1247,7 @@ PatchBasedDataWarehouse3::getRegionGridVar(GridVariable& var,
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
     if(!d_varDB.exists(label, matlIndex, patch->getRealPatch()))
-      SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex));
+      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
     GridVariable* tmpVar = var.cloneType();
     d_varDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
@@ -1550,7 +1550,7 @@ void PatchBasedDataWarehouse3::emit(OutputContext& oc, const VarLabel* label,
      l=h=IntVector(-1,-1,-1);
    if (var == NULL) {
      print();
-     SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex, "on emit"));
+     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit"));
    }
    var->emit(oc, l, h, label->getCompressionMode());
    
@@ -1568,7 +1568,7 @@ void PatchBasedDataWarehouse3::print(ostream& intout, const VarLabel* label,
       dynamic_cast<ReductionVariableBase*>(d_levelDB.get(label, matlIndex, level));
     var->print(intout);
   } catch (UnknownVariable) {
-    SCI_THROW(UnknownVariable(label->getName(), get_id(), level, matlIndex,
+    SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
 			  "on emit reduction"));
   }
   d_lock.readUnlock();
@@ -1716,7 +1716,7 @@ getGridVar(GridVariable& var, const VarLabel* label,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true);
 
   if(!d_varDB.exists(label, matlIndex, patch))
-    SCI_THROW(UnknownVariable(label->getName(), get_id(), patch, matlIndex));
+    SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
   if(patch->isVirtual()){
     d_varDB.get(label, matlIndex, patch->getRealPatch(), var);
     var.offsetGrid(patch->getVirtualOffset());
@@ -1764,7 +1764,7 @@ getGridVar(GridVariable& var, const VarLabel* label,
 	errmsg << d_myworld->myrank() << " Reallocation Error:" <<
 	  " Reallocation needed for " << label->getName();
 	if (patch)
-	  errmsg << " on patch " << patch->get_id();
+	  errmsg << " on patch " << patch->getID();
 	errmsg << " for material " << matlIndex;
 	//SCI_THROW(InternalError(errmsg.str().c_str()));
 	//warn << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
@@ -1776,7 +1776,7 @@ getGridVar(GridVariable& var, const VarLabel* label,
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
 	if(!d_varDB.exists(label, matlIndex, neighbor))
-	  SCI_THROW(UnknownVariable(label->getName(), get_id(), neighbor,
+	  SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor,
 				    matlIndex, neighbor == patch?
 				    "on patch":"on neighbor"));
 	GridVariable* srcvar = var.cloneType();
@@ -2038,7 +2038,7 @@ void PatchBasedDataWarehouse3::transferFrom(DataWarehouse* from,
       case TypeDescription::PerPatch:
       {
         if(!fromDW->d_varDB.exists(var, matl, patch))
-          SCI_THROW(UnknownVariable(var->getName(), get_id(), patch, matl,
+          SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
             "in transferFrom"));
         GridVariable* v = dynamic_cast<GridVariable*>(fromDW->d_varDB.get(var, matl, patch));
         d_varDB.put(var, matl, copyPatch, v->clone(), replace);
@@ -2047,7 +2047,7 @@ void PatchBasedDataWarehouse3::transferFrom(DataWarehouse* from,
       case TypeDescription::ParticleVariable:
 	{
 	  if(!fromDW->d_varDB.exists(var, matl, patch))
-	    SCI_THROW(UnknownVariable(var->getName(), get_id(), patch, matl,
+	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
 
           // or else the readLock in haveParticleSubset will hang
@@ -2205,7 +2205,7 @@ PatchBasedDataWarehouse3::checkGetAccess(const VarLabel* /*label*/,
           accessInfo.encompassOffsets(lowOffset, highOffset);
 
           int ID = 0;
-          if( patch ) ID = patch->get_id();
+          if( patch ) ID = patch->getID();
           string varname = "noname";
           if( label ) varname = label->getName();
 

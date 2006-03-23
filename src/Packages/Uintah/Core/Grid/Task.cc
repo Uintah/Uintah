@@ -629,7 +629,7 @@ namespace Uintah {
         for(int i=0;i<dep.patches->size();i++){
           if(i > 0)
             out << ",";
-          out << dep.patches->get(i)->get_id();
+          out << dep.patches->get(i)->getID();
         }
       } else if(dep.reductionLevel) {
         out << " Level: " << dep.reductionLevel->getIndex();

@@ -64,7 +64,7 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
                         DataWarehouse* new_dw)
 
 {
-  if(patch->getLevel()->get_id() > 0){
+  if(patch->getLevel()->getID() > 0){
     cout << " WARNING: FirstOrderCE doesn't work with multiple levels" << endl;
     cout << " Todd:  you need to set boundary conditions on the transverse vel_FC" << endl;
     throw InternalError(" ERROR", __FILE__, __LINE__);

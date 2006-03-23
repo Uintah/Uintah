@@ -111,7 +111,7 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    //if (patch->getLevel()->getIndex() > 0) cout << "  Doing errorEstimate on patch " << patch->get_id() 
+    //if (patch->getLevel()->getIndex() > 0) cout << "  Doing errorEstimate on patch " << patch->getID() 
     //                                           << " low " << patch->getLowIndex() << " hi " << patch->getHighIndex() 
     //                                           << endl;
     CCVariable<int> refineFlag;
@@ -248,7 +248,7 @@ void AMRWave::refine(const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {  
     const Patch* finePatch = patches->get(p);
-    // amrwave << "    DOING AMRWave::Refine on patch " << finePatch->get_id() << ": " << finePatch->getLowIndex() << " " << finePatch->getHighIndex() <<  endl;
+    // amrwave << "    DOING AMRWave::Refine on patch " << finePatch->getID() << ": " << finePatch->getLowIndex() << " " << finePatch->getHighIndex() <<  endl;
 
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -302,7 +302,7 @@ void AMRWave::coarsen(const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {  
     const Patch* coarsePatch = patches->get(p);
-    //amrwave << "    DOING AMRWave::coarsen on patch " << coarsePatch->get_id() << ": " << coarsePatch->getLowIndex() << " " << coarsePatch->getHighIndex() << endl ;
+    //amrwave << "    DOING AMRWave::coarsen on patch " << coarsePatch->getID() << ": " << coarsePatch->getLowIndex() << " " << coarsePatch->getHighIndex() << endl ;
 
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -378,7 +378,7 @@ void AMRWave::refineFaces(const Patch* finePatch,
       IntVector coarseLow = fineLevel->mapCellToCoarser(low) - IntVector(1,1,1);
       IntVector coarseHigh = fineLevel->mapCellToCoarser(high) + IntVector(1,1,1);
 
-      amrwave << "    DOING AMRWave::RefineFaces on patch " << finePatch->get_id() << ": " << finePatch->getLowIndex() << " " << finePatch->getHighIndex() << " face: " << fineLow << " " << fineHigh << endl;
+      amrwave << "    DOING AMRWave::RefineFaces on patch " << finePatch->getID() << ": " << finePatch->getLowIndex() << " " << finePatch->getHighIndex() << " face: " << fineLow << " " << fineHigh << endl;
 
       constCCVariable<double> coarse_old_var;
       constCCVariable<double> coarse_new_var;

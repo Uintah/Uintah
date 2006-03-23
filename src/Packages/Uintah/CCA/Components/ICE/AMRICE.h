@@ -390,7 +390,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
            << "detected an uninitialized variable: "
            << label->getName() << ", cell " << badCell
            << " Q_CC " << Q[badCell] 
-           << " Patch " << patch->get_id() << " Level idx "
+           << " Patch " << patch->getID() << " Level idx "
            <<fineLevel->getIndex()<<"\n ";
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
@@ -420,7 +420,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
 
   cout_dbg <<" coarseToFineOperator: " << varLabel->getName()
-           <<" finePatch  "<< finePatch->get_id() << " fl " << fl << " fh " << fh
+           <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
            <<" coarseRegion " << cl << " " << ch <<endl;
   
   constCCVariable<T> coarse_q_CC;
@@ -437,7 +437,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
     ostringstream warn;
     warn <<"ERROR AMRICE::Refine Task:CoarseToFineOperator "
          << "detected an uninitialized variable "<< varLabel->getName()
-         << " " << badCell << " Patch " << finePatch->get_id() 
+         << " " << badCell << " Patch " << finePatch->getID() 
          << " Level idx "<<fineLevel->getIndex()<<"\n ";
     throw InvalidValue(warn.str(), __FILE__, __LINE__);
   }

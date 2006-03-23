@@ -352,7 +352,7 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
 	if(req->patches){
 	  cout << req->patches->size() << " Patches: ";
 	  for(int i=0;i<req->patches->size();i++)
-	    cout << req->patches->get(i)->get_id() << " ";
+	    cout << req->patches->get(i)->getID() << " ";
 	  cout << '\n';
 	} else if(req->reductionLevel) {
 	  cout << "On level " << req->reductionLevel->getIndex() << '\n';
@@ -362,7 +362,7 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
 	  for(int i=0;i<patches->size();i++){
 	    const PatchSubset* pat=patches->getSubset(i);
 	    for(int i=0;i<pat->size();i++)
-	      cout << pat->get(i)->get_id() << " ";
+	      cout << pat->get(i)->getID() << " ";
 	    cout << " ";
 	  }
 	  cout << '\n';
@@ -631,7 +631,7 @@ class CompTable {
 			  ^(string_hash(comp->var->getName().c_str()))
 			  ^matl);
       if(patch)
-	hash ^= (unsigned int)(patch->get_id()<<4);
+	hash ^= (unsigned int)(patch->getID()<<4);
     }
     ~Data()
     {
@@ -1009,7 +1009,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                 continue;
               }
             }
-            dbg << d_myworld->myrank() << "        Neighbor: patch " << fromNeighbor->get_id() << " low= " << from_l 
+            dbg << d_myworld->myrank() << "        Neighbor: patch " << fromNeighbor->getID() << " low= " << from_l 
                 << ", high=" << from_h << '\n';
 
 	    for(int m=0;m<matls->size();m++){
@@ -1020,7 +1020,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	      // data task
 	      DetailedTask* creator = 0;
 	      Task::Dependency* comp = 0;
-              //              cout << d_myworld->myrank() << "  asdf var: " << *req->var << " patch " << fromNeighbor->get_id() << " DW " << req->whichdw << " " << req->mapDataWarehouse() << " ISOLD " << sc->isOldDW(req->mapDataWarehouse()) << endl;
+              //              cout << d_myworld->myrank() << "  asdf var: " << *req->var << " patch " << fromNeighbor->getID() << " DW " << req->whichdw << " " << req->mapDataWarehouse() << " ISOLD " << sc->isOldDW(req->mapDataWarehouse()) << endl;
 	      if(sc->isOldDW(req->mapDataWarehouse())){
 	        ASSERT(!modifies);
 	        int proc = findVariableLocation(lb, req, fromNeighbor, matl);
@@ -1092,7 +1092,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                         req_patch->getLevel()->selectPatches(low, high, n);
                         bool found = false;
                         for (int i = 0; i < n.size(); i++) {
-                          if (n[i]->get_id() == p->get_id()) {
+                          if (n[i]->getID() == p->getID()) {
                             found = true;
                             break;
                           }

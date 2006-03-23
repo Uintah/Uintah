@@ -1252,7 +1252,7 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing actuallyInitialize on patch " << patch->get_id()
+      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
   	         <<"\t\t\t MPM"<< endl;
 
     CCVariable<short int> cellNAPID;
@@ -1308,7 +1308,7 @@ void FractureMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing actuallyInitializeAddedMaterial on patch " << patch->get_id() <<"\t\t\t MPM"<< endl;
+      cout_doing <<"Doing actuallyInitializeAddedMaterial on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
 
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -1345,7 +1345,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->get_id()<<"\t\t MPM"<< endl;
+      cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->getID()<<"\t\t MPM"<< endl;
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -1589,7 +1589,7 @@ void FractureMPM::computeStressTensor(const ProcessorGroup*,
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
 
     if (cout_dbg.active()) {
-      cout_dbg << " Patch = " << (patches->get(0))->get_id();
+      cout_dbg << " Patch = " << (patches->get(0))->getID();
       cout_dbg << " Mat = " << m;
     }
     
@@ -1624,7 +1624,7 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())    
-    cout_doing <<"Doing computeArtificialViscosity on patch " << patch->get_id()
+    cout_doing <<"Doing computeArtificialViscosity on patch " << patch->getID()
 	       <<"\t\t MPM"<< endl;
     
 
@@ -1725,7 +1725,7 @@ void FractureMPM::computeContactArea(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 	
     if (cout_doing.active())
-      cout_doing <<"Doing computeContactArea on patch " << patch->get_id() <<"\t\t\t MPM"<< endl;
+      cout_doing <<"Doing computeContactArea on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
 	
 	
     Vector dx = patch->dCell();
@@ -1805,7 +1805,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing computeInternalForce on patch " << patch->get_id()
+      cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
 	         <<"\t\t\t MPM"<< endl;
 
     
@@ -2040,7 +2040,7 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     if (cout_doing.active())
-      cout_doing <<"Doing solveEquationsMotion on patch " << patch->get_id()
+      cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
   	         <<"\t\t\t MPM"<< endl;
 
     Vector gravity = d_sharedState->getGravity();
@@ -2122,7 +2122,7 @@ void FractureMPM::integrateAcceleration(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing integrateAcceleration on patch " << patch->get_id()
+      cout_doing <<"Doing integrateAcceleration on patch " << patch->getID()
   	         <<"\t\t\t MPM"<< endl;
     
 
@@ -2173,7 +2173,7 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing setGridBoundaryConditions on patch " << patch->get_id()
+      cout_doing <<"Doing setGridBoundaryConditions on patch " << patch->getID()
 	         <<"\t\t MPM"<< endl;
 
 
@@ -2276,7 +2276,7 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
 
     if (cout_doing.active())
       cout_doing <<"Doing applyExternalLoads on patch " 
-  	         << patch->get_id() << "\t MPM"<< endl;
+  	         << patch->getID() << "\t MPM"<< endl;
 
     
     // Place for user defined loading scenarios to be defined,
@@ -2403,7 +2403,7 @@ void FractureMPM::calculateDampingRate(const ProcessorGroup*,
 
       if (cout_doing.active())
 	cout_doing <<"Doing calculateDampingRate on patch " 
-	  	   << patch->get_id() << "\t MPM"<< endl;
+	  	   << patch->getID() << "\t MPM"<< endl;
 
       
       double alphaDot = 0.0;
@@ -2474,7 +2474,7 @@ void FractureMPM::addNewParticles(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (cout_doing.active())
-      cout_doing <<"Doing addNewParticles on patch "  << patch->get_id() << "\t MPM"<< endl;
+      cout_doing <<"Doing addNewParticles on patch "  << patch->getID() << "\t MPM"<< endl;
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     // Find the mpm material that the void particles are going to change
@@ -2626,14 +2626,14 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 	
     if (cout_doing.active())
-      cout_doing <<"Doing convertLocalizedParticles on patch " << patch->get_id() << "\t MPM"<< endl;
+      cout_doing <<"Doing convertLocalizedParticles on patch " << patch->getID() << "\t MPM"<< endl;
 	
 	
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 	
     if (cout_convert.active()) {
       cout_convert << "FractureMPM::convertLocalizeParticles:: on patch"
-                   << patch->get_id() << " numMPMMaterials = " << numMPMMatls
+                   << patch->getID() << " numMPMMaterials = " << numMPMMatls
  	           << endl;
     }
 	
@@ -2750,7 +2750,7 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
 	
     if (cout_convert.active()) {
       cout_convert <<"Done convertLocalizedParticles on patch "
-	           << patch->get_id() << "\t MPM"<< endl;
+	           << patch->getID() << "\t MPM"<< endl;
     }
 	
   }
@@ -2838,7 +2838,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     if (cout_doing.active()) {
       cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-	         << patch->get_id() << "\t MPM"<< endl;
+	         << patch->getID() << "\t MPM"<< endl;
     }
     
 
@@ -3131,7 +3131,7 @@ FractureMPM::initialErrorEstimate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     if (amr_doing.active())
-      amr_doing << "Doing FractureMPM::initialErrorEstimate on patch "<< patch->get_id()<< endl;
+      amr_doing << "Doing FractureMPM::initialErrorEstimate on patch "<< patch->getID()<< endl;
 
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
@@ -3184,7 +3184,7 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
       const Patch* coarsePatch = patches->get(p);
 	
       if (amr_doing.active())
-        amr_doing << "Doing FractureMPM::errorEstimate on patch " << coarsePatch->get_id() << endl;
+        amr_doing << "Doing FractureMPM::errorEstimate on patch " << coarsePatch->getID() << endl;
 	
       // Find the overlapping regions...
 	
@@ -3250,7 +3250,7 @@ FractureMPM::refine(const ProcessorGroup*,
 	
       if (cout_doing.active()) {
 	cout_doing <<"Doing refine on patch "
-	<< patch->get_id() << " material # = " << dwi << endl;
+	<< patch->getID() << " material # = " << dwi << endl;
       }
 	
       // this is a new patch, so create empty particle variables.

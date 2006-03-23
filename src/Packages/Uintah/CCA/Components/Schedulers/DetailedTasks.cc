@@ -241,7 +241,7 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws)
     scrubout << "Begin initialize scrubs\n";
   for(int i=0;i<(int)dws.size();i++){
     if(dws[i] != 0 && dws[i]->getScrubMode() == DataWarehouse::ScrubComplete){
-      scrubout << "Initializing scrubs on dw: " << dws[i]->get_id() << '\n';
+      scrubout << "Initializing scrubs on dw: " << dws[i]->getID() << '\n';
       dws[i]->initializeScrubs(i, scrubCountMapPatch_);
       dws[i]->initializeScrubs(i, scrubCountMapLevel_);
     }
@@ -283,7 +283,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	    const Patch* neighbor=neighbors[i];
 	    for (int m=0;m<matls->size();m++){
 	      if(scrubout.active()){
-		scrubout << "  decrementing scrub count for requires of " << dws[dw]->get_id() << "/" << neighbor->get_id() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+		scrubout << "  decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
 	      }
 	      dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
 	    }
@@ -303,7 +303,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  const Patch* patch = patches->get(i);
           for (int m=0;m<matls->size();m++){
             if(scrubout.active()){
-              scrubout << "  decrementing scrub count for requires of " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+              scrubout << "  decrementing scrub count for requires of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
             }
             dws[dw]->decrementScrubCount(req->var, matls->get(m), patch);
           }
@@ -328,7 +328,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  const Patch* patch = patches->get(i);
 	  for (int m=0;m<matls->size();m++){
 	    if(scrubout.active())
-	      scrubout << "  decrementing scrub count for modifies of " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
+	      scrubout << "  decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
 	    dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
 	  }
 	}
@@ -338,7 +338,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  const Patch* patch = patches->get(i);
 	  for (int m=0;m<matls->size();m++){
 	    if(scrubout.active())
-	      scrubout << "  decrementing scrub count for modifies of " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
+	      scrubout << "  decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
 	    dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
 	  }
 	}
@@ -366,12 +366,12 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	    int count;
 	    if(taskGroup->getScrubCount(comp->var, matl, patch, dw, count)){
 	      if(scrubout.active())
-		scrubout << "  setting scrub count for computes of " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
+		scrubout << "  setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
 	      dws[dw]->setScrubCount(comp->var, matl, patch, count);
 	    } else {
 	      // Not in the scrub map, must be never needed...
 	      if(scrubout.active())
-		scrubout << "  trashing variable immediately after compute: " << dws[dw]->get_id() << "/" << patch->get_id() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
+		scrubout << "  trashing variable immediately after compute: " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
 	      dws[dw]->scrub(comp->var, matl, patch);
 	    }
 	  }
@@ -394,12 +394,12 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	    if(taskGroup->getScrubCount(comp->var, matl, patch->getLevel(), 
                                         dw, count)){
 	      if(scrubout.active())
-		scrubout << "  setting scrub count for computes of " << dws[dw]->get_id() << "/" << patch->getLevel()->get_id() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
+		scrubout << "  setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getLevel()->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
 	      dws[dw]->setScrubCount(comp->var, matl, patch,count);
 	    } else {
 	      // Not in the scrub map, must be never needed...
 	      if(scrubout.active())
-		scrubout << "  trashing variable immediately after compute: " << dws[dw]->get_id() << "/" << patch->getLevel()->get_id() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
+		scrubout << "  trashing variable immediately after compute: " << dws[dw]->getID() << "/" << patch->getLevel()->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
 	      dws[dw]->scrub(comp->var, matl, patch);
 	    }
 	  }
@@ -451,7 +451,7 @@ void DetailedTasks::setScrubCount(const VarLabel* label, int matlIndex,
       SCI_THROW(InternalError("No scrub count for received MPIVariable: "+label->getName(), __FILE__, __LINE__));
     }
     if(scrubout.active())
-      scrubout << "setting scrubcount for recv of " << dw << "/" << patch->get_id() << "/" << matlIndex << "/" << label->getName() << ": " << scrubcount << '\n';
+      scrubout << "setting scrubcount for recv of " << dw << "/" << patch->getID() << "/" << matlIndex << "/" << label->getName() << ": " << scrubcount << '\n';
     dws[dw]->setScrubCount(label, matlIndex, patch, scrubcount);
   }
 }
@@ -546,7 +546,7 @@ void DetailedTasks::createScrubCounts()
     for(ScrubCountMapPatch::iterator iter = scrubCountMapPatch_.begin();
 	iter != scrubCountMapPatch_.end(); iter++){
       const VarLabelMatlDW<Patch>& rec = iter->first;
-      scrubout << rec.dw_ << '/' << (rec.domain_?rec.domain_->get_id():0) << '/'
+      scrubout << rec.dw_ << '/' << (rec.domain_?rec.domain_->getID():0) << '/'
 	       << rec.matlIndex_ << '/' <<  rec.label_->getName()
 	       << "\t\t" << iter->second << '\n';
     }
@@ -654,7 +654,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if(dbg.active()) {
       dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
       if (fromPatch)
-	dbg << fromPatch->get_id() << '\n';
+	dbg << fromPatch->getID() << '\n';
       else
 	dbg << "NULL\n";	
     }
@@ -810,7 +810,7 @@ operator<<(ostream& out, const DetailedTask& task)
     for(int i=0;i<patches->size();i++){
       if(i>0)
 	out << ",";
-      out << patches->get(i)->get_id();
+      out << patches->get(i)->getID();
     }
   }
   out << ", Level " << level->getIndex();
@@ -841,7 +841,7 @@ operator<<(ostream& out, const DetailedDep& dep)
   if (dep.isNonDataDependency())
     out << " non-data dependency";
   else
-    out << " on patch " << dep.fromPatch->get_id();
+    out << " on patch " << dep.fromPatch->getID();
   out << ", matl " << dep.matl << ", low=" << dep.low << ", high=" << dep.high;
   return out;
 }
@@ -1060,7 +1060,7 @@ public:
   int operator*()
   {
     const Patch* patch = *iter_; //vector<Patch*>::iterator::operator*();
-    return patch ? patch->get_id() : -1;
+    return patch ? patch->getID() : -1;
   }
 
   PatchIDIterator& operator++()

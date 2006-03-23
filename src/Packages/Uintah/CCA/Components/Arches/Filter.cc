@@ -219,7 +219,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
 	+start.y()*dcells.x()+start.x();
       //#ifdef ARCHES_PETSC_DEBUG
 #if 0
-      cerr << "Looking at patch: " << neighbor->get_id() << '\n';
+      cerr << "Looking at patch: " << neighbor->getID() << '\n';
       cerr << "low=" << low << '\n';
       cerr << "high=" << high << '\n';
       cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
@@ -298,7 +298,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 			constCCVariable<int>& cellType )
 {
 #ifdef ARCHES_PETSC_DEBUG
-   cerr << "in setFilterMatrix on patch: " << patch->get_id() << '\n';
+   cerr << "in setFilterMatrix on patch: " << patch->getID() << '\n';
 #endif
   // Get the patch bounds and the variable bounds
    if (!d_matrixInitialize) {

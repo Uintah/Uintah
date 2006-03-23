@@ -298,4 +298,3 @@ function main()
   endwhile
 endfunction
 
-printf("done\n");

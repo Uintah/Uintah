@@ -26,7 +26,7 @@
 #include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geom/GeomLine.h>
@@ -550,8 +550,8 @@ GridVisualizer::execute()
 void
 GridVisualizer::widget_moved(bool last, BaseWidget*)
 {
-  if(last && !abort_flag) {
-    abort_flag=1;
+  if(last && !abort_flag_) {
+    abort_flag_ = true;
     want_to_execute();
   }
 }

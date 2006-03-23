@@ -162,7 +162,7 @@ void lodi_getVars_pressBC( const Patch* patch,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 {
-  cout_doing << "lodi_getVars_pressBC on patch "<<patch->get_id()<< endl;
+  cout_doing << "lodi_getVars_pressBC on patch "<<patch->getID()<< endl;
   int numMatls = sharedState->getNumMatls();
   StaticArray<constCCVariable<double> > Temp_CC(numMatls);
   StaticArray<constCCVariable<double> > f_theta_CC(numMatls);
@@ -535,7 +535,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
     
     if (is_LODI_face(patch,face, sharedState) ) {
       cout_dbg << " computing DI on face " << face 
-               << " patch " << patch->get_id()<<endl;
+               << " patch " << patch->getID()<<endl;
       //_____________________________________
       // S I D E S
       IntVector axes = patch->faceAxes(face);
@@ -603,7 +603,7 @@ void computeNu(CCVariable<Vector>& nu,
     
     if (is_LODI_face(patch, face, sharedState) ) {
       cout_dbg << " computing Nu on face " << face 
-               << " patch " << patch->get_id()<<endl;   
+               << " patch " << patch->getID()<<endl;   
               
       vector<int> otherDir(2);
       IntVector axes = patch->faceAxes(face);
@@ -713,7 +713,7 @@ void  lodi_bc_preprocess( const Patch* patch,
                           DataWarehouse* new_dw,
                           SimulationStateP& sharedState)
 {
-  cout_doing << "lodi_bc_preprocess on patch "<<patch->get_id()<< endl;
+  cout_doing << "lodi_bc_preprocess on patch "<<patch->getID()<< endl;
   
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;

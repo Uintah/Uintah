@@ -19,8 +19,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomPick.h>
@@ -218,7 +218,7 @@ void PatchDataVisualizer::execute()
       PatchData data;
       data.loc = (box.upper() - box.lower()) / 2;
       data.level = l;
-      data.id = patch->id;
+      data.id = patch->getID();
       // data.val can any scalar value castable to a double
       data.val = data.id;
       patch_centers.push_back(data);

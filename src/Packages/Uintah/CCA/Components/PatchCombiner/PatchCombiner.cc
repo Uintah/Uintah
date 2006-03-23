@@ -194,7 +194,7 @@ void PatchCombiner::readAndSetDelT(const ProcessorGroup*,
 				   DataWarehouse* new_dw,
 				   Scheduler* /*sched*/)
 {
-  int generation = new_dw->get_id();
+  int generation = new_dw->getID();
 
   // The timestep index should be the same as the new_dw generation number - 1
   // (this is a bit of a hack, but it should work).

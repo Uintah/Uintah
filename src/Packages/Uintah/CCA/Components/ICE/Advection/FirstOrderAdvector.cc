@@ -431,14 +431,14 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
                                            
  /*`==========TESTING==========*/    
 #ifdef SPEW                
-    cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->get_id() <<endl;                        
+    cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->getID() <<endl;                        
     vector<Patch::FaceType>::const_iterator itr;  
     for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
          itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
       Patch::FaceType patchFace = *itr;
       string name = patch->getFaceName(patchFace);
 
-      cout << "Patch " << patch->get_id()<<" patchFace " << name << " " ;
+      cout << "Patch " << patch->getID()<<" patchFace " << name << " " ;
       
       IntVector shift = patch->faceDirection(patchFace);
       shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0

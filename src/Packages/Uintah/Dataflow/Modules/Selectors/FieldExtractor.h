@@ -43,7 +43,7 @@ LOG
 #include <Core/Util/DynamicLoader.h>
 
 #include <Dataflow/Network/Module.h> 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>

@@ -69,7 +69,7 @@ WARNING
       }
 
       // Get the load curve id
-      inline int get_id() const {return d_id;}
+      inline int getID() const {return d_id;}
 
       // Get the load at time t
       inline T getLoad(double t) {

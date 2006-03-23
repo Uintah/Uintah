@@ -444,7 +444,7 @@ DataArchive::query( Variable& var, const std::string& name,
   ProblemSpecP vnode = findVariable(name, patch, matlIndex, time, url);
   d_lock.unlock();
   if(vnode == 0){
-    cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->get_id() << ", time " << time << '\n';
+    cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
     throw InternalError("DataArchive::query:Variable not found",
                         __FILE__, __LINE__);
   }
@@ -702,7 +702,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
                 if (labelIter != varMap.end()) {
                   VarLabel* label = labelIter->second;
                   if (label == 0) {
-                    throw UnknownVariable(varIter.get_key(), dw->get_id(), patch, matl,
+                    throw UnknownVariable(varIter.get_key(), dw->getID(), patch, matl,
                                           "on DataArchive::scheduleRestartInitialize",
                                           __FILE__, __LINE__);
                   }
@@ -1103,7 +1103,7 @@ DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
   //  cerr << "PatchHashMaps["<<time<<"]::findPatchData\n";
 
   // Only parse patch.xml files for patches queried
-  int patchid = (patch ? patch->get_id() : -1);
+  int patchid = (patch ? patch->getID() : -1);
   
   // assuming nearby queries will often be made sequentially,
   // checking the lastFound can reduce overall query times.
@@ -1205,7 +1205,7 @@ DataArchive::queryMaterials( const string& name,
   if (matlVarHashMaps == NULL) {
     ostringstream msg;
     msg << "Cannot find data for time = " << time << ", patch = " <<
-      (patch ? patch->get_id() : -1);
+      (patch ? patch->getID() : -1);
     throw InternalError(msg.str(), __FILE__, __LINE__);
   }
    
@@ -1234,7 +1234,7 @@ DataArchive::queryNumMaterials(const Patch* patch, double time)
   if (matlVarHashMaps == NULL) {
     ostringstream msg;
     msg << "Cannot find data for time = " << time << ", patch = " <<
-      (patch ? patch->get_id() : -1);
+      (patch ? patch->getID() : -1);
     throw InternalError(msg.str(), __FILE__, __LINE__);
   }
 
