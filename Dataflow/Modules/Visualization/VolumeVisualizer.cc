@@ -312,7 +312,6 @@ VolumeVisualizer::execute()
 	}
       }
     }
-    cerr << "Early exit\n";
     return;
   }
 
