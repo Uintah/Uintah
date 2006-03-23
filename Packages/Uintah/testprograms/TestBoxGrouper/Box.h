@@ -18,7 +18,7 @@ public:
   const IntVector& getHigh() const
   { return high_; }
 
-  int get_id() const
+  int getID() const
   { return id_; }
 
   int getVolume() const
