@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{62 0 1701 982}" creationDate="{Wed Feb 15 2006}" creationTime="{17:09:15}" geometry="{900x765+0+39}">
+<network version="v1.25.2" name="{Main}" bbox="{8 0 1701 1452}" creationDate="{Thu Mar 23 2006}" creationTime="{11:07:12}" geometry="{1416x1401+0+39}">
   <environment>
     <var name="scisub_datadir" val="SCIRUN_DATA"/>
     <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
@@ -31,7 +31,9 @@ on the number of volumes it can
 display/edit.  Connect them here.}</note>
       <var name="nrrd1-name" val="{Original}"/>
       <var name="nrrd2-name" val="{Analyze}"/>
-      <var name="ui_geometry" val="{324x203+1005+539}"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="bundlename" val="{}"/>
+      <var name="ui_geometry" val="{324x203+45+564}"/>
     </module>
     <module id="m3" package="SCIRun" category="Render" name="Painter" gui_visible="yes">
       <position x="62" y="346"/>
@@ -50,45 +52,37 @@ receiving data from filters downstream}</note>
       <var name="color_font_b" val="{1.0}"/>
       <var name="color_font_a" val="{1.0}"/>
       <var name="font_size" val="{15.0}"/>
-      <var name="ui_geometry" val="{779x773+969+362}"/>
+      <var name="ui_geometry" val="{779x773+1557+712}"/>
       <var name="gl1-viewport0-slice" val="{0}"/>
       <var name="gl1-viewport0-axis" val="{1}"/>
-      <var name="gl1-viewport0-zoom" val="{151.769911504}"/>
+      <var name="gl1-viewport0-zoom" val="{100.0}"/>
       <var name="gl1-viewport0-slab_min" val="{0}"/>
       <var name="gl1-viewport0-slab_max" val="{0}"/>
       <var name="gl1-viewport0-mode" val="{0}"/>
       <var name="gl1-viewport0-show_guidelines" val="{1}"/>
       <var name="gl2-viewport0-slice" val="{0}"/>
       <var name="gl2-viewport0-axis" val="{2}"/>
-      <var name="gl2-viewport0-zoom" val="{133.984375}"/>
+      <var name="gl2-viewport0-zoom" val="{100.0}"/>
       <var name="gl2-viewport0-slab_min" val="{0}"/>
       <var name="gl2-viewport0-slab_max" val="{0}"/>
       <var name="gl2-viewport0-mode" val="{0}"/>
       <var name="gl2-viewport0-show_guidelines" val="{1}"/>
       <var name="gl3-viewport0-slice" val="{0}"/>
       <var name="gl3-viewport0-axis" val="{0}"/>
-      <var name="gl3-viewport0-zoom" val="{139.84375}"/>
+      <var name="gl3-viewport0-zoom" val="{100.0}"/>
       <var name="gl3-viewport0-slab_min" val="{0}"/>
       <var name="gl3-viewport0-slab_max" val="{0}"/>
       <var name="gl3-viewport0-mode" val="{0}"/>
       <var name="gl3-viewport0-show_guidelines" val="{1}"/>
-      <var name="gl4-viewport0-slice" val="{0}"/>
-      <var name="gl4-viewport0-axis" val="{1}"/>
-      <var name="gl4-viewport0-zoom" val="{151.327433628}"/>
-      <var name="gl4-viewport0-slab_min" val="{0}"/>
-      <var name="gl4-viewport0-slab_max" val="{0}"/>
-      <var name="gl4-viewport0-mode" val="{0}"/>
-      <var name="gl4-viewport0-show_guidelines" val="{1}"/>
-      <var name="Original-name" val="{Original}"/>
-      <var name="Original-opacity" val="{1.0}"/>
-      <var name="Original-clut_min" val="{0.0}"/>
-      <var name="Original-clut_max" val="{3272.0}"/>
-      <var name="Original-colormap" val="{0}"/>
     </module>
     <module id="m4" package="SCIRun" category="Bundle" name="BundleSetColorMap">
       <position x="464" y="180"/>
       <note position="{def}" color="{white}">{Bundle them up to make them
 available to the Painter Module}</note>
+      <var name="colormap1-name" val="{colormap1}"/>
+      <var name="colormap2-name" val="{colormap2}"/>
+      <var name="colormap3-name" val="{colormap3}"/>
+      <var name="bundlename" val="{}"/>
     </module>
     <module id="m5" package="SCIRun" category="Visualization" name="GenStandardColorMaps">
       <position x="482" y="0"/>
@@ -109,7 +103,10 @@ Threshold Segmenter}</note>
       <var name="nrrd1-name" val="{ITK Threshold Seed}"/>
       <var name="nrrd2-name" val="{ITK Threshold Source}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Original} }"/>
+      <var name="transposenrrd1" val="{0}"/>
+      <var name="transposenrrd2" val="{0}"/>
+      <var name="transposenrrd3" val="{0}"/>
+      <var name="nrrd-selection" val="{{Connected} {Original} }"/>
       <var name="ui_geometry" val="{324x243+57+1207}"/>
     </module>
     <module id="m7" package="Insight" category="Converters" name="ImageToNrrd">
@@ -135,6 +132,9 @@ Image}</note>
         <port id="0" val="0"/>
       </port_caching>
       <var name="nrrd1-name" val="{ITK Threshold Result}"/>
+      <var name="nrrd2-name" val="{nrrd2}"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="bundlename" val="{}"/>
       <var name="ui_geometry" val="{324x203+102+1185}"/>
     </module>
     <module id="m11" package="Insight" category="Converters" name="NrrdToImage">
@@ -164,6 +164,9 @@ Image}</note>
         <port id="0" val="0"/>
       </port_caching>
       <var name="nrrd1-name" val="{Connected}"/>
+      <var name="nrrd2-name" val="{nrrd2}"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="bundlename" val="{}"/>
       <var name="ui_geometry" val="{324x203+493+1187}"/>
     </module>
     <module id="m15" package="SCIRun" category="Bundle" name="BundleGetNrrd">
@@ -176,7 +179,10 @@ Filter}</note>
       <var name="nrrd1-name" val="{ITK Confidence Connected}"/>
       <var name="nrrd2-name" val="{UNUSED}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Original} }"/>
+      <var name="transposenrrd1" val="{0}"/>
+      <var name="transposenrrd2" val="{0}"/>
+      <var name="transposenrrd3" val="{0}"/>
+      <var name="nrrd-selection" val="{{Connected} {Original} }"/>
       <var name="ui_geometry" val="{324x243+393+1188}"/>
     </module>
     <module id="m16" package="Insight" category="Converters" name="NrrdToImage">
@@ -195,7 +201,11 @@ Image}</note>
       </port_caching>
       <var name="nrrd1-name" val="{ITK Curvature Anisotropic Diffusion}"/>
       <var name="nrrd2-name" val="{ITK Confidence Connected}"/>
-      <var name="nrrd-selection" val="{{Original} }"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="transposenrrd1" val="{0}"/>
+      <var name="transposenrrd2" val="{0}"/>
+      <var name="transposenrrd3" val="{0}"/>
+      <var name="nrrd-selection" val="{{Connected} {Original} }"/>
       <var name="ui_geometry" val="{324x243+393+1188}"/>
     </module>
     <module id="m18" package="Insight" category="Converters" name="NrrdToImage">
@@ -222,6 +232,9 @@ Image}</note>
         <port id="0" val="0"/>
       </port_caching>
       <var name="nrrd1-name" val="{Anisotropic Diffusion}"/>
+      <var name="nrrd2-name" val="{nrrd2}"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="bundlename" val="{}"/>
       <var name="ui_geometry" val="{324x203+823+1212}"/>
     </module>
     <module id="m22" package="SCIRun" category="Bundle" name="BundleGetNrrd">
@@ -233,7 +246,10 @@ Image}</note>
       <var name="nrrd1-name" val="{ITK Gradient Magnitude}"/>
       <var name="nrrd2-name" val="{UNUSED}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Original} }"/>
+      <var name="transposenrrd1" val="{0}"/>
+      <var name="transposenrrd2" val="{0}"/>
+      <var name="transposenrrd3" val="{0}"/>
+      <var name="nrrd-selection" val="{{Connected} {Original} }"/>
       <var name="ui_geometry" val="{352x291+393+1188}"/>
     </module>
     <module id="m23" package="Insight" category="Converters" name="NrrdToImage">
@@ -254,6 +270,9 @@ Image}</note>
         <port id="0" val="0"/>
       </port_caching>
       <var name="nrrd1-name" val="{Gradient}"/>
+      <var name="nrrd2-name" val="{nrrd2}"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="bundlename" val="{}"/>
       <var name="ui_geometry" val="{324x203+738+913}"/>
     </module>
     <module id="m26" package="SCIRun" category="Visualization" name="GenStandardColorMaps">
@@ -292,7 +311,10 @@ in this network}</note>
       <var name="nrrd1-name" val="{ITK Binary Dilate Erode}"/>
       <var name="nrrd2-name" val="{UNUSED}"/>
       <var name="nrrd3-name" val="{UNUSED}"/>
-      <var name="nrrd-selection" val="{{Original} }"/>
+      <var name="transposenrrd1" val="{0}"/>
+      <var name="transposenrrd2" val="{0}"/>
+      <var name="transposenrrd3" val="{0}"/>
+      <var name="nrrd-selection" val="{{Connected} {Original} }"/>
       <var name="ui_geometry" val="{324x243+393+1188}"/>
     </module>
     <module id="m30" package="Insight" category="Converters" name="NrrdToImage">
@@ -323,6 +345,9 @@ First - Dilate the image}</note>
         <port id="0" val="0"/>
       </port_caching>
       <var name="nrrd1-name" val="{Filled}"/>
+      <var name="nrrd2-name" val="{nrrd2}"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="bundlename" val="{}"/>
       <var name="ui_geometry" val="{324x203+1828+1102}"/>
     </module>
     <module id="m34" package="Insight" category="Filters" name="GrayscaleErodeImageFilter">
@@ -351,6 +376,160 @@ handle anything else}</note>
     <module id="m37" package="SCIRun" category="Bundle" name="BundleMerge">
       <position x="62" y="261"/>
     </module>
+    <module id="m38" package="SCIRun" category="Bundle" name="BundleGetNrrd">
+      <position x="41" y="1015"/>
+      <var name="nrrd1-name" val="{Connected}"/>
+      <var name="nrrd2-name" val="{nrrd2}"/>
+      <var name="nrrd3-name" val="{nrrd3}"/>
+      <var name="transposenrrd1" val="{0}"/>
+      <var name="transposenrrd2" val="{0}"/>
+      <var name="transposenrrd3" val="{0}"/>
+      <var name="nrrd-selection" val="{{Connected} {Original} }"/>
+      <var name="ui_geometry" val="{324x243+207+949}"/>
+    </module>
+    <module id="m39" package="Teem" category="UnuAtoM" name="Unu2op">
+      <position x="8" y="1100"/>
+      <var name="operator" val="{x}"/>
+      <var name="ui_geometry" val="{318x179+25+862}"/>
+    </module>
+    <module id="m40" package="Teem" category="NrrdData" name="NrrdSetupTexture">
+      <position x="8" y="1177"/>
+      <var name="realmin" val="{0.0}"/>
+      <var name="realmax" val="{796620.0}"/>
+      <var name="valuesonly" val="{1}"/>
+      <var name="ui_geometry" val="{314x181+25+811}"/>
+    </module>
+    <module id="m41" package="SCIRun" category="Visualization" name="NrrdTextureBuilder">
+      <position x="8" y="1254"/>
+      <var name="vmin" val="{0.0}"/>
+      <var name="vmax" val="{255.0}"/>
+      <var name="gmin" val="{0.0}"/>
+      <var name="gmax" val="{1.0}"/>
+      <var name="is_fixed" val="{0}"/>
+      <var name="card_mem" val="{256}"/>
+      <var name="card_mem_auto" val="{1}"/>
+      <var name="is_uchar" val="{1}"/>
+    </module>
+    <module id="m42" package="SCIRun" category="Visualization" name="VolumeVisualizer">
+      <position x="8" y="1331"/>
+      <var name="sampling_rate_hi" val="{4.0}"/>
+      <var name="sampling_rate_lo" val="{1.0}"/>
+      <var name="gradient_min" val="{0.0}"/>
+      <var name="gradient_max" val="{0.0}"/>
+      <var name="adaptive" val="{1}"/>
+      <var name="cmap_size" val="{8}"/>
+      <var name="sw_raster" val="{0}"/>
+      <var name="render_style" val="{0}"/>
+      <var name="alpha_scale" val="{0.0}"/>
+      <var name="interp_mode" val="{1}"/>
+      <var name="shading" val="{1}"/>
+      <var name="ambient" val="{0.0}"/>
+      <var name="diffuse" val="{0.554}"/>
+      <var name="specular" val="{1.0}"/>
+      <var name="shine" val="{8}"/>
+      <var name="light" val="{0}"/>
+      <var name="blend_res" val="{8}"/>
+      <var name="multi_level" val="{1}"/>
+      <var name="use_stencil" val="{0}"/>
+      <var name="invert_opacity" val="{0}"/>
+      <var name="num_clipping_planes" val="{0}"/>
+      <var name="show_clipping_widgets" val="{1}"/>
+      <var name="level_on" val="{}"/>
+      <var name="level_vals" val="{}"/>
+      <var name="ui_geometry" val="{336x525+115+389}"/>
+    </module>
+    <module id="m43" package="SCIRun" category="Render" name="Viewer">
+      <position x="8" y="1408"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{310.642188004}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{-533.417212584}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{133.075246302}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{109.787063387}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{127.765328799}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{112.18097817}"/>
+      <var name="ViewWindow_0-view-up-x" val="{-0.0225014395717}"/>
+      <var name="ViewWindow_0-view-up-y" val="{-0.0384056666536}"/>
+      <var name="ViewWindow_0-view-up-z" val="{-0.999008864536}"/>
+      <var name="ViewWindow_0-view-fov" val="{20.0}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{1}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0.0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{0.0251782559978}"/>
+      <var name="ViewWindow_0-inertia_x" val="{-0.992963386447}"/>
+      <var name="ViewWindow_0-inertia_y" val="{0.0389235199322}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+    </module>
+    <module id="m44" package="SCIRun" category="Visualization" name="EditColorMap2D">
+      <position x="244" y="1254"/>
+      <var name="panx" val="{0.0}"/>
+      <var name="pany" val="{0.0}"/>
+      <var name="scale_factor" val="{1.0}"/>
+      <var name="histo" val="{0.5}"/>
+      <var name="selected_widget" val="{2}"/>
+      <var name="selected_object" val="{6}"/>
+      <var name="num-entries" val="{3}"/>
+      <var name="name-0" val="{Rectangle}"/>
+      <var name="0-color-r" val="{0.121017890908}"/>
+      <var name="0-color-g" val="{0.107495368256}"/>
+      <var name="0-color-b" val="{0.652372394616}"/>
+      <var name="0-color-a" val="{0.800000011921}"/>
+      <var name="state-0" val="{r 0 0.744558 0.728372 0.203996 0.17982 0.688492}"/>
+      <var name="shadeType-0" val="{0}"/>
+      <var name="on-0" val="{0}"/>
+      <var name="name-1" val="{Rectangle}"/>
+      <var name="1-color-r" val="{0.677608612335}"/>
+      <var name="1-color-g" val="{0.00898577510951}"/>
+      <var name="1-color-b" val="{0.715351658867}"/>
+      <var name="1-color-a" val="{0.800000011921}"/>
+      <var name="state-1" val="{r 0 0.502756 0.800625 0.446191 0.223096 0.365031}"/>
+      <var name="shadeType-1" val="{0}"/>
+      <var name="on-1" val="{0}"/>
+      <var name="ui_geometry" val="{648x688+1303+27}"/>
+      <var name="name-2" val="{ColorMap}"/>
+      <var name="2-color-r" val="{1.0}"/>
+      <var name="2-color-g" val="{1.0}"/>
+      <var name="2-color-b" val="{1.0}"/>
+      <var name="2-color-a" val="{0.629999995232}"/>
+      <var name="state-2" val="{r 0 0.00390625 -0.046875 0.992188 1.03125 0.982283}"/>
+      <var name="shadeType-2" val="{0}"/>
+      <var name="on-2" val="{1}"/>
+      <var name="marker" val="{end}"/>
+    </module>
   </modules>
   <connections>
     <connection id="c1" from="m9" fromport="0" to="m1" toport="0"/>
@@ -378,25 +557,37 @@ handle anything else}</note>
     <connection id="c23" from="m3" fromport="0" to="m17" toport="0"/>
     <connection id="c24" from="m3" fromport="0" to="m22" toport="0"/>
     <connection id="c25" from="m3" fromport="0" to="m29" toport="0"/>
-    <connection id="c26" from="m28" fromport="0" to="m35" toport="0"/>
-    <connection id="c27" from="m7" fromport="0" to="m10" toport="1"/>
-    <connection id="c28" from="m13" fromport="0" to="m14" toport="1"/>
-    <connection id="c29" from="m20" fromport="0" to="m21" toport="1"/>
-    <connection id="c30" from="m24" fromport="0" to="m25" toport="1"/>
-    <connection id="c31" from="m32" fromport="0" to="m33" toport="1"/>
-    <connection id="c32" from="m16" fromport="0" to="m1" toport="1"/>
-    <connection id="c33" from="m8" fromport="0" to="m3" toport="1">
-      <route>{74 926 74 992 1756.0 992 1756.0 336 92 336 92 346}</route>
+    <connection id="c26" from="m3" fromport="0" to="m38" toport="0">
+      <route>{74 403 74 412.0 53 412.0 53 1015}</route>
+    </connection>
+    <connection id="c27" from="m41" fromport="0" to="m42" toport="0"/>
+    <connection id="c28" from="m42" fromport="0" to="m43" toport="0"/>
+    <connection id="c29" from="m28" fromport="0" to="m35" toport="0"/>
+    <connection id="c30" from="m40" fromport="0" to="m41" toport="0"/>
+    <connection id="c31" from="m39" fromport="0" to="m40" toport="0"/>
+    <connection id="c32" from="m35" fromport="0" to="m39" toport="0">
+      <route>{92 129 92 143.0 20 143.0 20 1100}</route>
+    </connection>
+    <connection id="c33" from="m7" fromport="0" to="m10" toport="1"/>
+    <connection id="c34" from="m13" fromport="0" to="m14" toport="1"/>
+    <connection id="c35" from="m20" fromport="0" to="m21" toport="1"/>
+    <connection id="c36" from="m24" fromport="0" to="m25" toport="1"/>
+    <connection id="c37" from="m32" fromport="0" to="m33" toport="1"/>
+    <connection id="c38" from="m16" fromport="0" to="m1" toport="1"/>
+    <connection id="c39" from="m38" fromport="1" to="m39" toport="1"/>
+    <connection id="c40" from="m8" fromport="0" to="m3" toport="1">
+      <route>{74 982 74 992 1756.0 992 1756.0 336 92 336 92 346}</route>
       <note position="{def}" color="{orange}">{Filtered data from the Painter Module returning to be displayed as a layer}</note>
     </connection>
-    <connection id="c34" from="m4" fromport="0" to="m37" toport="1"/>
-    <connection id="c35" from="m14" fromport="0" to="m8" toport="1"/>
-    <connection id="c36" from="m5" fromport="0" to="m4" toport="1"/>
-    <connection id="c37" from="m35" fromport="0" to="m2" toport="1"/>
-    <connection id="c38" from="m21" fromport="0" to="m8" toport="2"/>
-    <connection id="c39" from="m26" fromport="0" to="m4" toport="2"/>
-    <connection id="c40" from="m25" fromport="0" to="m8" toport="3"/>
-    <connection id="c41" from="m27" fromport="0" to="m4" toport="3"/>
-    <connection id="c42" from="m33" fromport="0" to="m8" toport="4"/>
+    <connection id="c41" from="m4" fromport="0" to="m37" toport="1"/>
+    <connection id="c42" from="m14" fromport="0" to="m8" toport="1"/>
+    <connection id="c43" from="m5" fromport="0" to="m4" toport="1"/>
+    <connection id="c44" from="m35" fromport="0" to="m2" toport="1"/>
+    <connection id="c45" from="m21" fromport="0" to="m8" toport="2"/>
+    <connection id="c46" from="m44" fromport="0" to="m42" toport="2"/>
+    <connection id="c47" from="m26" fromport="0" to="m4" toport="2"/>
+    <connection id="c48" from="m25" fromport="0" to="m8" toport="3"/>
+    <connection id="c49" from="m27" fromport="0" to="m4" toport="3"/>
+    <connection id="c50" from="m33" fromport="0" to="m8" toport="4"/>
   </connections>
 </network>
