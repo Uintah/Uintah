@@ -79,7 +79,7 @@ public:
     STRUCTURED		= 1 << 1,
     UNSTRUCTURED	= 1 << 2,
     REGULAR		= 1 << 3,
-    IRREGULAR   	= 1 << 4,
+    IRREGULAR   	= 1 << 4
   };
 
   enum
