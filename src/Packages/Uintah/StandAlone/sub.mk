@@ -279,12 +279,13 @@ else
         Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Core/Exceptions  \
-        Core/Persistent   \
+        Core/Containers  \
         Core/Geometry    \
+        Core/OS          \
+        Core/Persistent  \
         Core/Thread      \
         Core/Util        \
-        Core/OS          \
-        Core/Containers
+	Core/Volume      
 endif
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
