@@ -330,7 +330,10 @@ SimpleIPort<T>::get(T& data)
   {
     data = comm->data_;
     last_generation_ = generation_;
-    generation_ = data->generation;
+    if (data.get_rep()) 
+      generation_ = data->generation;
+    else
+      generation_ = -1;
 
     delete comm;
     turn_off_light();
