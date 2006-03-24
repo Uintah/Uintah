@@ -22,22 +22,28 @@ itcl_class ModelCreation_FiniteElements_LinkFieldBoundary {
         if {[winfo exists $w]} {
             return
         }
+        
         toplevel $w
 
-        checkbutton $w.linkx -variable $this-linkx \
+        iwidgets::Labeledframe $w.f -labelpos nw \
+                    -labeltext "Link Field over opposing boundaries" 
+        pack $w.f -fill x
+        set f [$w.f childsite]
+
+        checkbutton $f.linkx -variable $this-linkx \
           -text "Link in the X-direction"
-        grid $w.linkx -column 0 -row 0 -sticky news
-        checkbutton $w.linky -variable $this-linky \
-          -text "Link in the Y-direction"
-        grid $w.linky -column 0 -row 1 -sticky news
-        checkbutton $w.linkz -variable $this-linkz \
+        grid $f.linkx -column 0 -row 0 -sticky news
+        checkbutton $f.linky -variable $this-linky \
+          -text "Link in the Y-direction"        
+        grid $f.linky -column 0 -row 1 -sticky news
+        checkbutton $f.linkz -variable $this-linkz \
           -text "Link in the Z-direction"
-        grid $w.linkz -column 0 -row 2 -sticky news
+        grid $f.linkz -column 0 -row 2 -sticky news
         
-        iwidgets::entryfield $w.tol \
+        iwidgets::entryfield $f.tol \
           -labeltext "Tolerance for matching node positions" \
           -textvariable $this-tol
-        grid $w.tol -column 0 -row 3 -sticky news
+        grid $f.tol -column 0 -row 3 -sticky news
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

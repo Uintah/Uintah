@@ -513,7 +513,6 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       {
         link[q] = link[link[q]];
       }
-      std::cout << "link["<<q<<"]=" << link[q] << "\n";
     }
 
     MatrixHandle GeomToComp, CompToGeom, MemLink;
@@ -613,14 +612,9 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
   // Find all the faces that are at the edge
   // I.E. find the field boundary
 
-  std::cout << "============================================\n";
-  std::cout << "Start extracting boundary nodes\n";
   
   {
     imesh->synchronize(Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E);
-
-    std::cout << "============================================\n";
-    std::cout << "Done Synchronization\n";
         
     typename FSRC::mesh_type::Elem::iterator be, ee;
     typename FSRC::mesh_type::Elem::index_type nci, ci;
@@ -653,10 +647,6 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
       }
       ++be;
     }
-
-    std::cout << "============================================\n";
-    std::cout << "Find unique boundary nodes\n";
-    std::cout << "number of edge nodes = " << nodelist_create.size() << "\n";
   
     std::sort(nodelist_create.begin(),nodelist_create.end());
     if (nodelist_create.size() > 0) nodelist.push_back(nodelist_create[0]);
@@ -667,10 +657,6 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
     }
     
   }
-  
-  std::cout << "============================================\n";
-  std::cout << "Extracted boundary nodes\n";
-  std::cout << "number of edge nodes = " << nodelist.size() << "\n";
   
   // We now have the boundary
   // Now determine the shifts in the mesh and points of origin
@@ -756,12 +742,6 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
     z0 = zmin.z();
   }
   
-  std::cout << "============================================\n";
-  std::cout << "Determined shift i x,y,z coordiantes\n";
-  std::cout << "shiftx = " << shiftx << "\n";  
-  std::cout << "shifty = " << shifty << "\n";  
-  std::cout << "shiftz = " << shiftz << "\n";  
-  
 
   {
     double h_xshift = shiftx/2;
@@ -780,14 +760,10 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
       if (linky) mp.y(fmod((p.y()-y0+h_yshift),shifty)-h_yshift);
       if (linkz) mp.z(fmod((p.z()-z0+h_zshift),shiftz)-h_zshift);    
       
-      std::cout << "node["<<nodelist[r]<<"]="<< mp << "\n";
       pointmap[nodelist[r]] = mp;
     }
   }
-  
-  std::cout << "============================================\n";
-  std::cout << "Built collapsed coordinate system\n";
-  std::cout << "size pointmap = " << pointmap.size() << "\n"; 
+   
   // Build a key map for each face
   
   size_t facecnt = 0; 
@@ -815,11 +791,6 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
     }  
   }
 
-  std::cout << "============================================\n";
-  std::cout << "Built face-key map \n";
-  std::cout << "size faceidx = " << faceidx.size() << "\n"; 
-
-
   // Set up the translation table: which node it linked to which node
   std::vector<unsigned int> link(numnodes);
   for (unsigned int q=0; q< link.size(); q++) link[q] = q;
@@ -827,10 +798,6 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
   std::vector<LinkElement> memlink;  
     
   // Main loop connect everything    
-
-
-  std::cout << "============================================\n";
-  std::cout << "Before Main loop \n";
 
   double tol2 = tol*tol;
 
@@ -896,7 +863,7 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
                   for (unsigned int v=0;v<facecnt;v++) 
                   {
                     Vector vec(p-pointmap[static_cast<unsigned int>(nodes2[v])]); 
-                     if (vec.length2() <= tol2) { facelink[w] = v; success = true; break;}
+                    if (vec.length2() <= tol2) { facelink[w] = v; success = true; break;}
                   }
                   if (!success) { foundit = false; break; }
                 }
@@ -941,9 +908,6 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
       for (size_t r= 0; r< facecnt; r++) ++it;
     }
   }
-
-   std::cout << "============================================\n";
-  std::cout << "After Main loop \n";
 
   {
     // fix the link vector
@@ -1014,11 +978,19 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
     }
 
 
-    std::vector<LinkElement> memlink2;
-    std::unique_copy(memlink.begin(),memlink.end(),memlink2.begin());
-    std::sort(memlink2.begin(),memlink2.end());     
-  
-    int nnz = memlink2.size();
+    std::sort(memlink.begin(),memlink.end());     
+ 
+    int nnz = 0;
+    if (memlink.size() >0)
+    {
+      int p = 0;
+      nnz = 1;
+      for (int q=0; q< memlink.size();q++)
+      {
+        if (memlink[q] == memlink[p]) continue;
+        p = q; nnz++;
+      }
+    }
     
     // reserve memory
     
@@ -1035,14 +1007,27 @@ bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressRepo
       return (false);
     }
   
-    rows[0] = 0;
+    int p = 0;
+    int kk = 0;
     int q = 0;
-    for (int p=0; p < numnodes; p++)
+    for (int r = 0; r < numnodes; r++)
     {
-      while ((q < memlink2.size())&&(memlink2[q].row <= p)) { cols[q] = memlink2[q].col; vals[q] = 1.0; q++; }
-      rows[p] = q;
-    }   
-  
+      rows[r] = kk;
+      for (; q < memlink.size();q++)
+      {
+        if ((q==0)||(!(memlink[p] == memlink[q])))
+        {
+          p = q;
+          if (memlink[q].row > r) break;
+          cols[kk] = memlink[q].col;
+          vals[kk] = 1.0;
+          kk++; 
+        }
+      }      
+    }
+    rows[numnodes] = kk;
+
+    
     MemLink = dynamic_cast<Matrix *>(scinew SparseRowMatrix(numnodes,numnodes,rows,cols,nnz,vals));
 
     if (MemLink.get_rep() == 0)

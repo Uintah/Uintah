@@ -54,19 +54,13 @@ using namespace SCIRun;
 class AppendDataArrays : public Module {
 public:
   AppendDataArrays(GuiContext*);
-  virtual ~AppendDataArrays();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
 };
-
 
 DECLARE_MAKER(AppendDataArrays)
 AppendDataArrays::AppendDataArrays(GuiContext* ctx)
   : Module("AppendDataArrays", ctx, Source, "TensorVectorMath", "ModelCreation")
 {
-}
-
-AppendDataArrays::~AppendDataArrays(){
 }
 
 void AppendDataArrays::execute()
@@ -153,12 +147,6 @@ void AppendDataArrays::execute()
   {
     oport->send(omatrix);
   }
-}
-
-void
- AppendDataArrays::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace ModelCreation

@@ -27,11 +27,12 @@
 */
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace ModelCreation {
 
@@ -40,76 +41,31 @@ using namespace SCIRun;
 class SplitFieldByElementData : public Module {
 public:
   SplitFieldByElementData(GuiContext*);
-
-  virtual ~SplitFieldByElementData();
-
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
-  private:
-    int fGeneration_;
 };
 
 
 DECLARE_MAKER(SplitFieldByElementData)
 SplitFieldByElementData::SplitFieldByElementData(GuiContext* ctx)
-  : Module("SplitFieldByElementData", ctx, Source, "FieldsCreate", "ModelCreation"),
-    fGeneration_(-1)
+  : Module("SplitFieldByElementData", ctx, Source, "FieldsCreate", "ModelCreation")
 {
 }
 
-SplitFieldByElementData::~SplitFieldByElementData(){
-}
 
 void SplitFieldByElementData::execute()
 {
-  FieldIPort *field_iport;
-  
-  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
-  {
-    error("Could not find Field input port");
-    return;
-  }
-    
   FieldHandle input;
+  FieldHandle output;
   
-  field_iport->get(input);
-  
-  if (input.get_rep() == 0)
-  {
-    warning("No Field was found on input port");
-    return;
-  }
-  
-  bool update = false;
+  if(!(get_input_handle("Field",input,true))) return;
+  FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
+  if(!(fieldmath.SplitFieldByElementData(input,output))) return;
+  send_output_handle("SplitField",output,true);
 
-  if ( (fGeneration_ != input->generation )) {
-    fGeneration_ = input->generation;
-    update = true;
-  }
-
-  if(update)
-  {
-    FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
-    FieldHandle output;
-
-    if(!(fieldmath.SplitFieldByElementData(input,output)))
-    {
-      error("Dynamically compile algorithm failed");
-      return;
-    }
-  
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
-    if (output_oport) output_oport->send(output);
-  }
 }
 
-void
- SplitFieldByElementData::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
+
 
 } // End namespace ModelCreation
 
