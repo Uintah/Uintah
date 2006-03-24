@@ -72,7 +72,6 @@
 using namespace SCIRun;
 using std::string;
 
-SCIRun::ThreadLock SCIRun::TCLTask::tcl_lock_("TCL Thread Lock");
 SCISHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
@@ -81,7 +80,6 @@ namespace SCIRun {
     void* userdata;
   };
 }
-
 
 #ifdef EXPERIMENTAL_TCL_THREAD
 // in windows, we will use a different interface (since it hangs in many
