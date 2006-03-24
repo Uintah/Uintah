@@ -59,9 +59,9 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace ModelCreation {
 
@@ -104,21 +104,21 @@ void ComputeFieldsNodes::execute()
     return;
   }
   
-  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(getIPort(0));
+  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(get_iport(0));
   if(field_iport == 0)
   {
     error("Could not locate field input port 1");
     return;
   }
 
-  FieldIPort* field_iport2 = dynamic_cast<FieldIPort *>(getIPort(1));
+  FieldIPort* field_iport2 = dynamic_cast<FieldIPort *>(get_iport(1));
   if(field_iport2 == 0)
   {
     error("Could not locate field input port 2");
     return;
   }
 
-  FieldIPort* field_iport3 = dynamic_cast<FieldIPort *>(getIPort(2));
+  FieldIPort* field_iport3 = dynamic_cast<FieldIPort *>(get_iport(2));
   if(field_iport3 == 0)
   {
     error("Could not locate field input port 3");
@@ -167,7 +167,7 @@ void ComputeFieldsNodes::execute()
   // The function can be scripted. If a string is found on the input
   // use this one. It will be set in the GIU, after which it is retrieved the
   // normal way.
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(3));
+  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_iport(3));
   if(function_iport == 0)
   {
     error("Could not locate function input port");
@@ -247,7 +247,7 @@ void ComputeFieldsNodes::execute()
   
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+4));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_iport(p+4));
     if(iport == 0)
     {
       error("Could not locate matrix input port");
@@ -325,7 +325,7 @@ void ComputeFieldsNodes::execute()
   }
   
   // If engine succeeded we have a new field at ofield.
-  FieldOPort *oport = dynamic_cast<FieldOPort *>(getOPort(0));
+  FieldOPort *oport = dynamic_cast<FieldOPort *>(get_oport(0));
   if (oport)
   {
     oport->send(ofield);

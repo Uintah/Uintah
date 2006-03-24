@@ -27,8 +27,8 @@
 */
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 
 #include <Dataflow/Network/Module.h>
@@ -65,7 +65,7 @@ LinkFieldBoundary::LinkFieldBoundary(GuiContext* ctx)
 void LinkFieldBoundary::execute()
 {
   FieldHandle Field;
-  MatrixHandle GeomToComp, CompToGeom;
+  MatrixHandle GeomToComp, CompToGeom, MembraneLink;
   if(!(get_input_handle("Field",Field,true))) return;
 
   double tol = guitol_.get();
@@ -74,7 +74,7 @@ void LinkFieldBoundary::execute()
   bool   linkz = static_cast<bool>(guilinkz_.get());
 
   FieldsAlgo fieldsalgo(this);
-  if(!(fieldsalgo.LinkFieldBoundary(Field,Field,tol,linkx,linky,linkz))) return;
+  if(!(fieldsalgo.LinkFieldBoundary(Field,Field,tol,linkx,linky,linkz,false))) return;
   
   Field->get_property("GeomToComp",GeomToComp);
   Field->get_property("CompToGeom",CompToGeom);

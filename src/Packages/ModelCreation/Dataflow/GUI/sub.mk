@@ -56,6 +56,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MatrixToField.tcl\
 	$(SRCDIR)/NrrdToField.tcl\
 	$(SRCDIR)/LinkFieldBoundary.tcl\
+	$(SRCDIR)/LinkFieldBoundaryByElement.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

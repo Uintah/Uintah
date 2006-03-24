@@ -120,7 +120,7 @@ class FieldsAlgo : public AlgoLibrary {
 
     // LinkFieldBoundary:
     // Build a table for the FE Matrix generator so the boundaries will be linked
-    bool LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx = true, bool linky = true, bool linkz = true);
+    bool LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx = true, bool linky = true, bool linkz = true, bool byelements = false);
 
     // MappingMatrixToField:
     // This function will assign to each node the value of the original node.
