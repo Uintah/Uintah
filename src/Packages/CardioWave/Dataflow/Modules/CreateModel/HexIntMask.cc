@@ -395,7 +395,7 @@ HexIntMask::execute()
   FieldOPort *ofp = (FieldOPort *)get_oport("Masked HexVol");
   if (!ofp)
   {
-    error("Unable to initialize " + name + "'s Output port.");
+    error("Unable to initialize Output port.");
     return;
   }
   ofp->send(ofield);

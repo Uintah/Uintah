@@ -34,10 +34,10 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/String.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/SynapseXML.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
@@ -83,7 +83,7 @@ void DMDAddBlockStimulus::execute()
 {
   ModelCreation::ConverterAlgo mc(this);
 
-  BundleIPort* stimulusbundle_iport = dynamic_cast<BundleIPort*>(getIPort(0));
+  BundleIPort* stimulusbundle_iport = dynamic_cast<BundleIPort*>(get_input_port(0));
   if (stimulusbundle_iport == 0)
   {
     error("Could not find stimulus bundle input port");
@@ -135,7 +135,7 @@ void DMDAddBlockStimulus::execute()
   oss << "stimulus_" << stimulus_num; 
   StimulusBundle->setBundle(oss.str(),Stimulus);
     
-  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(getIPort(1));
+  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(get_input_port(1));
   if (geometryport == 0)
   {
     error("Could not find Stimulus Geometry port");
@@ -163,7 +163,7 @@ void DMDAddBlockStimulus::execute()
 
   double val;
   
-  if (matrix_port = dynamic_cast<MatrixIPort*>(getIPort(1)))
+  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(1)))
   {
     error("Could not find Stimulus Domain port");
     return;
@@ -182,7 +182,7 @@ void DMDAddBlockStimulus::execute()
   mc.DoubleToMatrix(val,Domain); 
 
 
-  if (matrix_port = dynamic_cast<MatrixIPort*>(getIPort(2)))
+  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(2)))
   {
     error("Could not find Stimulus Current port");
     return;
@@ -200,7 +200,7 @@ void DMDAddBlockStimulus::execute()
   val = guidomain_.get();
   mc.DoubleToMatrix(val,Current); 
  
-  if (matrix_port = dynamic_cast<MatrixIPort*>(getIPort(3)))
+  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(3)))
   {
     error("Could not find Stimulus Start port");
     return;
@@ -218,7 +218,7 @@ void DMDAddBlockStimulus::execute()
   val = guistart_.get();
   mc.DoubleToMatrix(val,Start); 
  
-  if (matrix_port = dynamic_cast<MatrixIPort*>(getIPort(4)))
+  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(4)))
   {
     error("Could not find Stimulus End port");
     return;
@@ -255,7 +255,7 @@ void DMDAddBlockStimulus::execute()
 
   if (StimulusBundle.get_rep())
   {
-    BundleOPort* oport = dynamic_cast<BundleOPort*>(getOPort(0));
+    BundleOPort* oport = dynamic_cast<BundleOPort*>(get_output_port(0));
     if (oport)
     {
       oport->send(StimulusBundle);

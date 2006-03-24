@@ -42,7 +42,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/CardioWave/Core/Algorithms \
-	Core/Datatypes Dataflow/Network Dataflow/Ports \
+	Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/GeomInterface Core/Datatypes Core/Basis Core/Geometry \
