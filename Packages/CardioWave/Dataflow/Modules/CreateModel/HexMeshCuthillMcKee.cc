@@ -122,7 +122,7 @@ HexMeshCuthillMcKee::execute()
   FieldOPort *ofp = (FieldOPort *)get_oport("Bandwidth Minimized HexVol");
   if (!ofp)
   {
-    error("Unable to initialize " + name + "'s Output port.");
+    error("Unable to initialize Output port.");
     return;
   }
 

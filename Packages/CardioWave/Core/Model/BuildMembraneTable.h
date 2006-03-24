@@ -198,6 +198,29 @@ bool BuildMembraneTableVolAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter
     ++it;
   }
 
+  bool ismemlink = false;
+  int* memlinkrr = 0;
+  int* memlinkcc = 0;
+  
+  MatrixHandle MemLink;
+  elementtypefield->get_property("MembraneLink",MemLink);
+  if (MemLink.get_rep())
+  {
+    if ((numelementnodes != MemLink->nrows())&&(numelementnodes != MemLink->ncols()))
+    {
+      pr->error("BuildMembraneTable: The MembraneLink property is not of the right dimensions");
+      return (false);        
+    }
+    SparseRowMatrix spr = dynamic_cast<SparseRowMatrix *>(MemLink.get_rep());
+    if (spr)
+    {
+      memlinkrr = spr->rows;
+      memlinkcc = spr->columns;
+      ismemlink = true;
+    }
+  }  
+
+
   typename FSURF::mesh_type::Elem::iterator eit, eit_end;
   typename FSURF::mesh_type::Node::array_type nodes;  
 
@@ -275,6 +298,22 @@ bool BuildMembraneTableVolAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter
                     size_t t=0;
                     for (; t< points.size(); t++) { if (point2 == points[t]) break; } 
                     if (t == points.size()) isequal = false;   
+                    
+                    if (!isequal && ismemlink)
+                    {
+                      for (int u= memlinkrr[enodes[q]]; u < memlinkrr[enodes[q]+1]; u++)
+                      {
+                        elementtypemesh->get_center(point2,enodes[q]);
+                        elementtypemesh->get_center(point3,static_cast<typename FSRC::mesh_type::Node::index_type>(memlinkcc[u]));
+                        if ((point3.x()>=point2.x()) && (point3.y()>=point2.y()) && (point3.z()>=point2.z()))
+                        {
+                          isequal = true;
+                          for (t=0; t<points.size(); t++) { if (point3 = points[t]) break; }
+                          if (t == points.size()) isequal = false;
+                          if (isequal) { enodes[q] = static_cast<typename FSRC::mesh_type::Node::index_type>(memlinkcc[u]); break; } 
+                        }
+                      }
+                    }
                   }
                   
                   if (isequal)
@@ -495,6 +534,28 @@ bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporte
     ++it;
   }
 
+  bool ismemlink = false;
+  int* memlinkrr = 0;
+  int* memlinkcc = 0;
+  
+  MatrixHandle MemLink;
+  elementtypefield->get_property("MembraneLink",MemLink);
+  if (MemLink.get_rep())
+  {
+    if ((numelementnodes != MemLink->nrows())&&(numelementnodes != MemLink->ncols()))
+    {
+      pr->error("BuildMembraneTable: The MembraneLink property is not of the right dimensions");
+      return (false);        
+    }
+    SparseRowMatrix spr = dynamic_cast<SparseRowMatrix *>(MemLink.get_rep());
+    if (spr)
+    {
+      memlinkrr = spr->rows;
+      memlinkcc = spr->columns;
+      ismemlink = true;
+    }
+  }  
+
   typename FSURF::mesh_type::Elem::iterator eit, eit_end;
   typename FSURF::mesh_type::Node::array_type nodes;  
 
@@ -577,7 +638,22 @@ bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporte
                     elementtypemesh->get_center(point2,enodes[q]);
                     size_t t=0;
                     for (; t< points.size(); t++) { if (point2 == points[t]) break; } 
-                    if (t == points.size()) isequal = false; 
+                    if (t == points.size()) isequal = false;
+                    if (!isequal && ismemlink)
+                    {
+                      for (int u= memlinkrr[enodes[q]]; u < memlinkrr[enodes[q]+1]; u++)
+                      {
+                        elementtypemesh->get_center(point2,enodes[q]);
+                        elementtypemesh->get_center(point3,static_cast<typename FSRC::mesh_type::Node::index_type>(memlinkcc[u]));
+                        if ((point3.x()>=point2.x()) && (point3.y()>=point2.y()) && (point3.z()>=point2.z()))
+                        {
+                          isequal = true;
+                          for (t=0; t<points.size(); t++) { if (point3 = points[t]) break; }
+                          if (t == points.size()) isequal = false;
+                          if (isequal) { enodes[q] = static_cast<typename FSRC::mesh_type::Node::index_type>(memlinkcc[u]); break; } 
+                        }
+                      }
+                    }
                   }
                   if (isequal)
                   {

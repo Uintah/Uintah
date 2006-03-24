@@ -34,10 +34,10 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/String.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/SynapseXML.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
@@ -76,7 +76,7 @@ void DMDAddReference::execute()
 {
   ModelCreation::ConverterAlgo mc(this);
 
-  BundleIPort* referencebundle_iport = dynamic_cast<BundleIPort*>(getIPort(0));
+  BundleIPort* referencebundle_iport = dynamic_cast<BundleIPort*>(get_input_port(0));
   if (referencebundle_iport == 0)
   {
     error("Could not find reference bundle input port");
@@ -128,7 +128,7 @@ void DMDAddReference::execute()
   oss << "reference_" << reference_num; 
   ReferenceBundle->setBundle(oss.str(),Reference);
     
-  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(getIPort(1));
+  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(get_input_port(1));
   if (geometryport == 0)
   {
     error("Could not find Reference Geometry port");
@@ -150,7 +150,7 @@ void DMDAddReference::execute()
 
   if (usefieldvalue == true)
   {
-    MatrixIPort* referenceval_port = dynamic_cast<MatrixIPort*>(getIPort(2));
+    MatrixIPort* referenceval_port = dynamic_cast<MatrixIPort*>(get_input_port(2));
     if (referenceval_port == 0)
     {
       error("Could not find Reference Value input port");
@@ -182,7 +182,7 @@ void DMDAddReference::execute()
 
   if (ReferenceBundle.get_rep())
   {
-    BundleOPort* oport = dynamic_cast<BundleOPort*>(getOPort(0));
+    BundleOPort* oport = dynamic_cast<BundleOPort*>(get_output_port(0));
     if (oport)
     {
       oport->send(ReferenceBundle);
