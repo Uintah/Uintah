@@ -76,6 +76,8 @@ public:
                             const ProblemSpecP& materials_ps,
                             GridP& grid, SimulationStateP&);
 
+  virtual void outputProblemSpec(ProblemSpecP& ps);
+
   // Set up initial conditions for MPMArches problem	 
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
