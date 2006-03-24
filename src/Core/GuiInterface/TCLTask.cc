@@ -27,45 +27,41 @@
 */
 
 
- 
+
 /*
- *  TCLTask.h:  Handle TCL
+ *  TCLTask.cc
  *
  *  Written by:
- *   Steven G. Parker
+ *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   August 1994
+ *   March 2006
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2006 SCI Group
  */
 
-#ifndef SCI_project_TCLTask_h
-#define SCI_project_TCLTask_h 1
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/Thread/ThreadLock.h>
 
-#include <tcl.h>
-#if (TCL_MINOR_VERSION >= 4)
-#define TCLCONST const
-#else
-#define TCLCONST
-#endif
+using namespace SCIRun;
 
-#include <Core/GuiInterface/share.h>
+SCIRun::ThreadLock SCIRun::TCLTask::tcl_lock_("TCL Thread Lock");
 
-namespace SCIRun {
+void
+TCLTask::lock()
+{
+  tcl_lock_.lock();
+}
 
-class ThreadLock;
-
-class SCISHARE TCLTask {
-private:
-    static ThreadLock           tcl_lock_;
-public:
-    static void lock();
-    static void unlock();
-    static int  try_lock();
-};
-  
-} // End namespace SCIRun
+void
+TCLTask::unlock()
+{
+  tcl_lock_.unlock();
+}
 
 
-#endif
+int
+TCLTask::try_lock()
+{
+  return tcl_lock_.try_lock();
+}
