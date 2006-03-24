@@ -50,7 +50,7 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
     return (false);
   }
 
-  if (!(fi.is_constantdata()))
+  if (!(fi.is_constantdata()||(byelement == false)))
   {
     pr->error("LinkFieldBoundary: This function has not yet been defined for data at the nodes");
     return (false);
@@ -78,7 +78,7 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
   if (byelement) algosubtype = "ByElement";
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "LinkFieldBoundary."+fi.get_field_filename()+".",
+    "LinkFieldBoundary"+algosubtype+"."+fi.get_field_filename()+".",
     "LinkFieldBoundaryAlgo","LinkFieldBoundary"+algotype+algosubtype+"AlgoT",
     fi.get_field_name());
 
