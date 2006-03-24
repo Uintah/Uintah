@@ -51,6 +51,7 @@ PSELIBS := \
         Packages/BioPSE/Core/Algorithms/Forward          \
         Packages/BioPSE/Core/Algorithms/NumApproximation \
         Packages/BioPSE/Core/Datatypes \
+        Core/Algorithms/Geometry  \
         Core/Basis         \
         Core/Containers    \
         Core/Datatypes     \
@@ -59,6 +60,7 @@ PSELIBS := \
         Core/Geometry      \
         Core/GeomInterface \
         Core/GuiInterface  \
+        Core/Math	   \
         Core/Persistent    \
         Core/Thread        \
         Core/TkExtensions  \
