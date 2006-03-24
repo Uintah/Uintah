@@ -260,6 +260,14 @@ void ICE::refluxOperator_applyCorrectionFluxes(
                                
     if (isRight_CP_FP_pair ){  // if the right coarse/fine patch pair
 
+/*`==========TESTING==========*/
+#if 0
+  cout << " ------------ refluxOperator_applyCorrectionFluxes " << varLabel<< endl; 
+  cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
+  cout << finePatch->getFaceName(patchFace)<<  " coarsePatch " << *coarsePatch << endl;
+  cout << "      finePatch   " << *finePatch << endl; 
+#endif 
+/*===========TESTING==========`*/
       //__________________________________
       // Add fine patch face fluxes correction to the coarse cells
       // c_CC:    coarse level cell center index
@@ -721,6 +729,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 #if SPEW
   cout << " ------------ refluxOperator_computeCorrectionFluxes " << fineVarLabel<< endl; 
   IntVector half  = (c_iter.end() - c_iter.begin() )/IntVector(2,2,2) + c_iter.begin();
+  cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
   cout <<name <<  " coarsePatch " << *coarsePatch << endl;
   cout << "      finePatch   " << *finePatch << endl; 
 #endif 
