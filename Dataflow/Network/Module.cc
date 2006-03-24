@@ -154,7 +154,7 @@ Module::Module(const string& name, GuiContext* ctx,
   inputs_changed_(false),
   execute_error_(false),
   ctx_(ctx),
-  state_(NeedData),
+  state_(Completed),
   msg_state_(Reset), 
   helper_(0),
   helper_thread_(0),
@@ -353,21 +353,26 @@ Module::report_progress( ProgressState state )
 void
 Module::update_state(State st)
 {
-  state_=st;
-  char* s="unknown";
+  state_= st;
+  char* s;
+
   switch(st){
-  case NeedData:
-    s="NeedData";
-    break;
   case JustStarted:
-    s="JustStarted";
+    s = "JustStarted";
+    break;
+  case NeedData:
+    s = "NeedData";
     break;
   case Executing:
-    s="Executing";
+    s = "Executing";
     break;
   case Completed:
-    s="Completed";
+    s = "Completed";
     break;
+  default:
+    s = "unknown";
+    break;
+
   }
   double time = timer_.time();
   if(time<0)
@@ -1083,13 +1088,13 @@ Module::popup_ui()
 // Used to send handles for geometry with error checking.
 bool
 Module::send_output_handle( string port_name,
-		     GeomHandle& handle,
-		     string obj_name )
+			    GeomHandle& handle,
+			    string obj_name )
 {
   // Don't send on empty, assume cached version is more valid instead.
   // Dunno if false return value is correct.  We don't check returns
   // on this one.
-  if (!handle.get_rep()) return false;
+  //if (!handle.get_rep()) return false;
 
   GeometryOPort *dataport;
 
@@ -1101,7 +1106,10 @@ Module::send_output_handle( string port_name,
   }
 
   dataport->delAll();
-  dataport->addObj( handle, obj_name );
+
+  if (handle.get_rep())
+    dataport->addObj( handle, obj_name );
+
   dataport->flushViews();
 
   return true;
@@ -1110,13 +1118,13 @@ Module::send_output_handle( string port_name,
 // Used to send handles for geometry with error checking.
 bool
 Module::send_output_handle( string port_name,
-		     vector<GeomHandle> &handles,
-		     string obj_name )
+			    vector<GeomHandle> &handles,
+			    vector<string> &obj_names )
 {
   // Don't send on empty, assume cached version is more valid instead.
   // Dunno if false return value is correct.  We don't check returns
   // on this one.
-  if (!handles.size()==0) return false;
+  //if (!handles.size()==0) return false;
 
   GeometryOPort *dataport;
 
@@ -1130,7 +1138,8 @@ Module::send_output_handle( string port_name,
   dataport->delAll();
 
   for (unsigned int i=0; i<handles.size(); i++)
-    dataport->addObj( handles[i], obj_name );
+    if (handles[i].get_rep())
+      dataport->addObj( handles[i], obj_names[i] );
 
   dataport->flushViews();
 

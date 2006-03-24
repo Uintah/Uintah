@@ -66,13 +66,13 @@ protected:
   bool success_;
 
 private:
-  GuiString gFrame_;
-  GuiInt    gIsFixed_;
-  GuiDouble gMin_;
-  GuiDouble gMax_;
-  GuiInt    gMakeSymmetric_;
+  GuiString gui_frame_;
+  GuiInt    gui_is_fixed_;
+  GuiDouble gui_min_;
+  GuiDouble gui_max_;
+  GuiInt    gui_make_symmetric_;
 
-  ColorMapHandle cHandle_;
+  ColorMapHandle colormap_output_handle_;
 
   pair<double,double> minmax_;
 };
@@ -81,11 +81,11 @@ private:
 DECLARE_MAKER(RescaleColorMap)
 RescaleColorMap::RescaleColorMap(GuiContext* ctx)
   : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    gFrame_(get_ctx()->subVar("main_frame"), ""),
-    gIsFixed_(get_ctx()->subVar("isFixed"), 0),
-    gMin_(get_ctx()->subVar("min"), 0),
-    gMax_(get_ctx()->subVar("max"), 1),
-    gMakeSymmetric_(get_ctx()->subVar("makeSymmetric"), 0)
+    gui_frame_(get_ctx()->subVar("main_frame"), ""),
+    gui_is_fixed_(get_ctx()->subVar("isFixed"), 0),
+    gui_min_(get_ctx()->subVar("min"), 0),
+    gui_max_(get_ctx()->subVar("max"), 1),
+    gui_make_symmetric_(get_ctx()->subVar("makeSymmetric"), 0)
 {
 }
 
@@ -96,31 +96,39 @@ RescaleColorMap::~RescaleColorMap()
 void
 RescaleColorMap::execute()
 {
-  ColorMapHandle cHandle;
-  std::vector<FieldHandle> fHandles;
+  ColorMapHandle colormap_input_handle;
+  std::vector<FieldHandle> field_input_handles;
 
   // Do this first so the ports are optional if a fixed scale is used.
-  if( gIsFixed_.changed( true ) )
+  if( gui_is_fixed_.changed( true ) )
     inputs_changed_ = true;
 
-  if( !get_input_handle( "ColorMap",     cHandle,  true ) ) return;
-  if( !get_dynamic_input_handles( "Field", fHandles, !gIsFixed_.get()  ) ) return;
+  if( !get_input_handle( "ColorMap", colormap_input_handle, true ) ) return;
+
+  if( !get_dynamic_input_handles( "Field",
+				  field_input_handles,
+				  !gui_is_fixed_.get() ) )
+    return;
 
   // Check to see if any values have changed.
-  if( !cHandle_.get_rep() ||
-      (gIsFixed_.get() == 0 && gMakeSymmetric_.changed( true )) ||
-      (gIsFixed_.get() == 1 && (gMin_.changed( true ) ||
-				gMax_.changed( true ))) ||
-      inputs_changed_ ||
+  if( inputs_changed_ ||
+
+      !colormap_output_handle_.get_rep() ||
+
+      (gui_is_fixed_.get() == 0 && gui_make_symmetric_.changed( true )) ||
+      (gui_is_fixed_.get() == 1 && (gui_min_.changed( true ) ||
+				gui_max_.changed( true ))) ||
       execute_error_ ) {
+
+    update_state(Executing);
 
     execute_error_ = false;
 
-    cHandle_ = cHandle;
-    cHandle_.detach();
+    colormap_output_handle_ = colormap_input_handle;
+    colormap_output_handle_.detach();
 
-    if( gIsFixed_.get() ) {
-      cHandle_->Scale( gMin_.get(), gMax_.get());
+    if( gui_is_fixed_.get() ) {
+      colormap_output_handle_->Scale( gui_min_.get(), gui_max_.get());
 
     } else {
 
@@ -128,12 +136,12 @@ RescaleColorMap::execute()
       // warning us about possibly using unitialized variables
       double minv = DBL_MAX, maxv = -DBL_MAX;
 
-      for( unsigned int i=0; i<fHandles.size(); i++ ) {
-	FieldHandle fHandle = fHandles[i];
+      for( unsigned int i=0; i<field_input_handles.size(); i++ ) {
+	FieldHandle fHandle = field_input_handles[i];
 
 	string units;
 	if( fHandle->get_property("units", units) )
-	  cHandle_->set_units(units);
+	  colormap_output_handle_->set_units(units);
 	  
 	ScalarFieldInterfaceHandle sfi;
 	VectorFieldInterfaceHandle vfi;
@@ -158,20 +166,20 @@ RescaleColorMap::execute()
       minmax_.first  = minv;
       minmax_.second = maxv;
 
-      if ( gMakeSymmetric_.get() ) {
+      if ( gui_make_symmetric_.get() ) {
 	float biggest = Max(Abs(minmax_.first), Abs(minmax_.second));
 	minmax_.first  = -biggest;
 	minmax_.second =  biggest;
       }
 
-      cHandle_->Scale( minmax_.first, minmax_.second);
-      gMin_.set( minmax_.first );
-      gMax_.set( minmax_.second );
+      colormap_output_handle_->Scale( minmax_.first, minmax_.second);
+      gui_min_.set( minmax_.first );
+      gui_max_.set( minmax_.second );
     }
   }
 
   // Send the data downstream
-  send_output_handle( "ColorMap",  cHandle_, true );
+  send_output_handle( "ColorMap",  colormap_output_handle_, true );
 }
 
 } // End namespace SCIRun

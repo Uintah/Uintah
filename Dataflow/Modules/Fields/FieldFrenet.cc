@@ -56,16 +56,11 @@ public:
   virtual void execute();
 
 private:
-  GuiInt Direction_;
-  GuiInt Axis_;
-  GuiInt Dims_;
+  GuiInt gui_direction_;
+  GuiInt gui_axis_;
+  GuiInt gui_dims_;
 
-  int direction_;
-  int axis_;
-
-  FieldHandle fHandle_;
-
-  int fGeneration_;
+  FieldHandle field_output_handle_;
 };
 
 
@@ -75,9 +70,9 @@ DECLARE_MAKER(FieldFrenet)
 FieldFrenet::FieldFrenet(GuiContext *context)
   : Module("FieldFrenet", context, Filter, "FieldsOther", "SCIRun"),
     
-    Direction_(context->subVar("direction"), 0),
-    Axis_(context->subVar("axis"), 2),
-    Dims_(context->subVar("dims"), 3)
+    gui_direction_(context->subVar("direction"), 0),
+    gui_axis_(context->subVar("axis"), 2),
+    gui_dims_(context->subVar("dims"), 3)
 {
 }
 
@@ -90,46 +85,49 @@ FieldFrenet::~FieldFrenet()
 void
 FieldFrenet::execute()
 {
-  FieldHandle  fHandle;
+  FieldHandle field_input_handle;
 
-  if( !get_input_handle( "Input Field",  fHandle, true  ) ) return;
+  if( !get_input_handle( "Input Field", field_input_handle, true  ) ) return;
 
-  if( fHandle->mesh()->topology_geometry() ==
+  if( field_input_handle->mesh()->topology_geometry() ==
       (Mesh::STRUCTURED | Mesh::IRREGULAR) ) {
 
-    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
+    error( field_input_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Only availible for topologically structured irregular data." );
     return;
   }
 
-  if( fHandle->basis_order() != 1 ) {
-    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
+  if( field_input_handle->basis_order() != 1 ) {
+    error( field_input_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Currently only availible for node data." );
     return;
   }
 
   // Get the dimensions of the mesh.
   vector<unsigned int> dims;
-  fHandle.get_rep()->mesh()->get_dim( dims );
-
-  Dims_.set( dims.size(), GuiVar::SET_GUI_ONLY );
+  field_input_handle.get_rep()->mesh()->get_dim( dims );
 
   // Check to see if the dimensions have changed.
-  if(  Dims_.changed( true ) ) {
+  if( gui_dims_.get() != (int) dims.size() ) {
+
+    gui_dims_.set( dims.size() );
+
     ostringstream str;
     str << get_id() << " set_size ";
     get_gui()->execute(str.str().c_str());
   }
 
   // If no data or a changed input field or axis recreate the mesh.
-  if( !fHandle_.get_rep() ||
-      Direction_.changed( true ) ||
-      Axis_.changed( true ) || 
-      inputs_changed_ ) {
+  if( inputs_changed_ ||
+      
+      !field_output_handle_.get_rep() ||
+      
+      gui_direction_.changed( true ) ||
+      gui_axis_.changed( true ) ) {
 
-    const TypeDescription *ftd = fHandle->get_type_description();
+    const TypeDescription *ftd = field_input_handle->get_type_description();
     const TypeDescription *btd =
-      fHandle->get_type_description(Field::FIELD_NAME_ONLY_E);
+      field_input_handle->get_type_description(Field::FIELD_NAME_ONLY_E);
 
     CompileInfoHandle ci =
       FieldFrenetAlgo::get_compile_info(ftd, btd, dims.size());
@@ -138,15 +136,13 @@ FieldFrenet::execute()
 
     if (!module_dynamic_compile(ci, algo)) return;
   
-    fHandle_ = algo->execute(fHandle, direction_, axis_ );
+    field_output_handle_ = algo->execute(field_input_handle,
+					 gui_direction_.get(),
+					 gui_axis_.get() );
   }
 
   // Send the data downstream
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
-    ofield_port->send_and_dereference( fHandle_, true );
-  }
+  send_output_handle( "Output Field", field_output_handle_, true );
 }
 
 

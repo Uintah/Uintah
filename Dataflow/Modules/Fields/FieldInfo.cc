@@ -65,8 +65,6 @@ private:
   GuiString gui_sizey_;
   GuiString gui_sizez_;
 
-  int              generation_;
-
   void clear_vals();
   void update_input_attributes(FieldHandle);
 
@@ -93,8 +91,7 @@ FieldInfo::FieldInfo(GuiContext* ctx)
     gui_cz_(get_ctx()->subVar("cz", false), "---"),
     gui_sizex_(get_ctx()->subVar("sizex", false), "---"),
     gui_sizey_(get_ctx()->subVar("sizey", false), "---"),
-    gui_sizez_(get_ctx()->subVar("sizez", false), "---"),
-    generation_(-1)
+    gui_sizez_(get_ctx()->subVar("sizez", false), "---")
 {
 }
 
@@ -251,22 +248,16 @@ FieldInfo::update_input_attributes(FieldHandle f)
 void
 FieldInfo::execute()
 {
-  FieldIPort *iport = (FieldIPort*)get_iport("Input Field");
+  FieldHandle field_input_handle;
 
-  // The input port (with data) is required.
-  FieldHandle fh;
-  if (!iport->get(fh) || !fh.get_rep())
-  {
+  if( !get_input_handle( "Input Field", field_input_handle, true ) ) {
     clear_vals();
-    generation_ = -1;
     return;
   }
 
-  if (generation_ != fh.get_rep()->generation)
-  {
-    generation_ = fh.get_rep()->generation;
-    update_input_attributes(fh);
-  }
+  // If no data or a changed recalcute.
+  if( inputs_changed_ )
+    update_input_attributes(field_input_handle);
 }
 
 

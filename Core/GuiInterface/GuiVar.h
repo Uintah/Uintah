@@ -57,15 +57,13 @@ namespace SCIRun {
 class GuiContext;
 
 class SCISHARE GuiVar {
-  protected:
-    GuiContext* ctx;
-  public:
-  enum SetType {SET_GUI_ONLY=1, SET_C_ONLY=2, SET_ALL=3};
-
-    GuiVar(GuiContext* ctx);
-    virtual ~GuiVar();
-
-    void reset();
+protected:
+  GuiContext* ctx;
+public:
+  GuiVar(GuiContext* ctx);
+  virtual ~GuiVar();
+  
+  void reset();
 };
   
   
@@ -99,13 +97,11 @@ public:
     return gui_value_;
   }
 
-  inline void set(const T value, int which = SET_ALL ) {
-    if( which & SET_C_ONLY )
-      gui_value_ = value;
-
-    if( which & SET_GUI_ONLY )
-      if (ctx)
-	ctx->set(value);
+  inline void set(const T value ) {
+    gui_value_ = value;
+    
+    if (ctx)
+      ctx->set(value);
   }
 
   // Returns true if variable exists in TCL scope and is of type T

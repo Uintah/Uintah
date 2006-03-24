@@ -61,33 +61,33 @@ public:
   virtual void execute();
 
 private:
-  GuiInt power_app_;
+  FieldHandle  field_out_handle_;
+  MatrixHandle matrix_out_handle_;
 
-  GuiInt Wrap_;
-  GuiInt Dims_;
+  GuiInt gui_power_app_;
 
-  GuiInt iDim_;
-  GuiInt jDim_;
-  GuiInt kDim_;
+  GuiInt gui_wrap_;
+  GuiInt gui_dims_;
 
-  GuiInt iStart_;
-  GuiInt jStart_;
-  GuiInt kStart_;
+  GuiInt gui_dim_i_;
+  GuiInt gui_dim_j_;
+  GuiInt gui_dim_k_;
 
-  GuiInt iStop_;
-  GuiInt jStop_;
-  GuiInt kStop_;
+  GuiInt gui_start_i_;
+  GuiInt gui_start_j_;
+  GuiInt gui_start_k_;
 
-  GuiInt iStride_;
-  GuiInt jStride_;
-  GuiInt kStride_;
+  GuiInt gui_stop_i_;
+  GuiInt gui_stop_j_;
+  GuiInt gui_stop_k_;
 
-  GuiInt iWrap_;
-  GuiInt jWrap_;
-  GuiInt kWrap_;
+  GuiInt gui_stride_i_;
+  GuiInt gui_stride_j_;
+  GuiInt gui_stride_k_;
 
-  FieldHandle  fHandle_;
-  MatrixHandle mHandle_;
+  GuiInt gui_wrap_i_;
+  GuiInt gui_wrap_j_;
+  GuiInt gui_wrap_k_;
 };
 
 
@@ -96,30 +96,33 @@ DECLARE_MAKER(FieldSubSample)
 
 FieldSubSample::FieldSubSample(GuiContext *context)
   : Module("FieldSubSample", context, Filter, "FieldsCreate", "SCIRun"),
-    power_app_(context->subVar("power_app")),
+    field_out_handle_( 0 ),
+    matrix_out_handle_( 0 ),
 
-    Wrap_(context->subVar("wrap"), 0 ),
-    Dims_(context->subVar("dims"), 3 ),
+    gui_power_app_(context->subVar("power_app"), 0),
 
-    iDim_(context->subVar("i-dim"), 2),
-    jDim_(context->subVar("j-dim"), 2),
-    kDim_(context->subVar("k-dim"), 2),
+    gui_wrap_(context->subVar("wrap"), 0 ),
+    gui_dims_(context->subVar("dims"), 3 ),
 
-    iStart_(context->subVar("i-start"), 0),
-    jStart_(context->subVar("j-start"), 0),
-    kStart_(context->subVar("k-start"), 0),
+    gui_dim_i_(context->subVar("dim-i"), 2),
+    gui_dim_j_(context->subVar("dim-j"), 2),
+    gui_dim_k_(context->subVar("dim-k"), 2),
 
-    iStop_(context->subVar("i-stop"), 1),
-    jStop_(context->subVar("j-stop"), 1),
-    kStop_(context->subVar("k-stop"), 1),
+    gui_start_i_(context->subVar("start-i"), 0),
+    gui_start_j_(context->subVar("start-j"), 0),
+    gui_start_k_(context->subVar("start-k"), 0),
 
-    iStride_(context->subVar("i-stride"), 1),
-    jStride_(context->subVar("j-stride"), 1),
-    kStride_(context->subVar("k-stride"), 1),
+    gui_stop_i_(context->subVar("stop-i"), 1),
+    gui_stop_j_(context->subVar("stop-j"), 1),
+    gui_stop_k_(context->subVar("stop-k"), 1),
+
+    gui_stride_i_(context->subVar("stride-i"), 1),
+    gui_stride_j_(context->subVar("stride-j"), 1),
+    gui_stride_k_(context->subVar("stride-k"), 1),
  
-    iWrap_(context->subVar("i-wrap"), 0),
-    jWrap_(context->subVar("j-wrap"), 0),
-    kWrap_(context->subVar("k-wrap"), 0)
+    gui_wrap_i_(context->subVar("wrap-i"), 0),
+    gui_wrap_j_(context->subVar("wrap-j"), 0),
+    gui_wrap_k_(context->subVar("wrap-k"), 0)
 {
 }
 
@@ -132,143 +135,177 @@ FieldSubSample::~FieldSubSample()
 void
 FieldSubSample::execute()
 {
-  FieldHandle fHandle;
+  FieldHandle field_in_handle;
 
-  if( !get_input_handle( "Input Field",  fHandle,  true  ) ) return;
-  if( !get_input_handle( "Input Matrix", mHandle_, false ) ) return;
+  if( !get_input_handle( "Input Field",  field_in_handle,  true  ) ) return;
+  if( !get_input_handle( "Input Matrix", matrix_out_handle_, false ) ) return;
+
+  if( !(field_in_handle->mesh()->topology_geometry() & Mesh::STRUCTURED) ) {
+
+    error( field_in_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
+    error( "Only availible for topologically structured data." );
+    return;
+  }
+
+  if( field_in_handle->basis_order() != 0 &&
+      field_in_handle->basis_order() != 1 ) {
+    error( field_in_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
+    error( "Currently only available for cell or node data." );
+    return;
+  }
 
   // The matrix is optional.
-  if( mHandle_ != 0 &&
-      (mHandle_->nrows() != 3 || mHandle_->ncols() != 5) ) {
+  if( matrix_out_handle_.get_rep() &&
+      (matrix_out_handle_->nrows() != 3 || matrix_out_handle_->ncols() != 5) ) {
     error( "Input matrix is not a 3x5 matrix" );
     return;
   }
 
   // Get the type and dimensions of the mesh.
-  if( fHandle->mesh()->topology_geometry() & Mesh::STRUCTURED ) {
+  vector<unsigned int> dims;
+  
+  field_in_handle->mesh()->get_dim( dims );
 
-    vector<unsigned int> dims;
+  bool update_dims = false;
 
-    fHandle->mesh()->get_dim( dims );
-
-    if( dims.size() >= 1 )
-      iDim_.set( dims[0], GuiVar::SET_GUI_ONLY );
-    if( dims.size() >= 2 )
-      jDim_.set( dims[1], GuiVar::SET_GUI_ONLY );
-    if( dims.size() >= 3 )
-      kDim_.set( dims[2], GuiVar::SET_GUI_ONLY );
-
-    Dims_.set( dims.size(), GuiVar::SET_GUI_ONLY );
-
-  } else {
-    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
-    error( "Only availible for topologically structured data." );
-    return;
+  if( gui_dims_.get() != (int) dims.size() ) {
+    gui_dims_.set( dims.size() );
+    update_dims = true;
   }
 
-  if( fHandle->basis_order() != 0 &&
-      fHandle->basis_order() != 1 ) {
-    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
-    error( "Currently only available for cell or node data." );
-    return;
+  if( dims.size() >= 1 ) {
+    if( gui_dim_i_.get() != (int) dims[0] ) {
+      gui_dim_i_.set( dims[1] );
+      update_dims = true;
+    }
+  }
+
+  if( dims.size() >= 2 ) {
+    if( gui_dim_j_.get() != (int) dims[1] ) {
+      gui_dim_j_.set( dims[1] );
+      update_dims = true;
+    }
+  }
+
+  if( dims.size() >= 3 ) {
+    if( gui_dim_k_.get() != (int) dims[2] ) {
+      gui_dim_k_.set( dims[2] );
+      update_dims = true;
+    }
   }
 
   // Structured data with irregular points can be wrapped 
-  if( fHandle->mesh()->topology_geometry() & Mesh::IRREGULAR )
-    Wrap_.set( 1, GuiVar::SET_GUI_ONLY );
-  else
-    Wrap_.set( 0, GuiVar::SET_GUI_ONLY );
+  int wrap = (field_in_handle->mesh()->topology_geometry() & Mesh::IRREGULAR);
+
+  if( gui_wrap_.get() != wrap ) {
+    gui_wrap_.set( wrap );
+    update_dims = true;
+  }
 
   // Check to see if the gui dimensions are different than the field.
-  if( Dims_.changed( true ) ||
-      Wrap_.changed( true ) ||
-      iDim_.changed( true ) ||
-      jDim_.changed( true ) ||
-      kDim_.changed( true ) )
-  {
+  if( update_dims ) {
     // Dims has callback on it, so it must be set it after i, j, and k.
     ostringstream str;
     str << get_id() << " set_size ";
     get_gui()->execute(str.str().c_str());
+
+    cerr << str.str() << endl;
 
     reset_vars();
   }
 
   // An input matrix is present so use the values in it to override
   // the variables set in the gui.
-  if( mHandle_ != 0 ) {
+  if( matrix_out_handle_.get_rep() ) {
 
-    if( iDim_.get() != mHandle_->get(0, 4) ||
-	jDim_.get() != mHandle_->get(1, 4) ||
-	kDim_.get() != mHandle_->get(2, 4) ) {
+    if( gui_dim_i_.get() != matrix_out_handle_->get(0, 4) ||
+	gui_dim_j_.get() != matrix_out_handle_->get(1, 4) ||
+	gui_dim_k_.get() != matrix_out_handle_->get(2, 4) ) {
       ostringstream str;
       str << "The dimensions of the matrix slicing do match the field. "
 	  << " Expected "
-	  << iDim_.get() << " "
-	  << jDim_.get() << " "
-	  << kDim_.get()
+	  << gui_dim_i_.get() << " "
+	  << gui_dim_j_.get() << " "
+	  << gui_dim_k_.get()
 	  << " Got "
-	  << mHandle_->get(0, 2) << " "
-	  << mHandle_->get(1, 2) << " "
-	  << mHandle_->get(2, 2);
+	  << matrix_out_handle_->get(0, 2) << " "
+	  << matrix_out_handle_->get(1, 2) << " "
+	  << matrix_out_handle_->get(2, 2);
       
       error( str.str() );
       return;
     }
 
-    iStart_.set( (int) mHandle_->get(0, 0) );
-    jStart_.set( (int) mHandle_->get(1, 0) );
-    kStart_.set( (int) mHandle_->get(2, 0) );
+    if( gui_start_i_.get() != (int) matrix_out_handle_->get(0, 0) ||
+	gui_start_j_.get() != (int) matrix_out_handle_->get(1, 0) ||
+	gui_start_k_.get() != (int) matrix_out_handle_->get(2, 0) ||
 
-    iStop_.set( (int) mHandle_->get(0, 1) );
-    jStop_.set( (int) mHandle_->get(1, 1) );
-    kStop_.set( (int) mHandle_->get(2, 1) );
+	gui_stop_i_.get() != (int) matrix_out_handle_->get(0, 1) ||
+	gui_stop_j_.get() != (int) matrix_out_handle_->get(1, 1) ||
+	gui_stop_k_.get() != (int) matrix_out_handle_->get(2, 1) ||
 
-    iStride_.set( (int) mHandle_->get(0, 2) );
-    jStride_.set( (int) mHandle_->get(1, 2) );
-    kStride_.set( (int) mHandle_->get(2, 2) );
+	gui_stride_i_.get() != (int) matrix_out_handle_->get(0, 2) ||
+	gui_stride_j_.get() != (int) matrix_out_handle_->get(1, 2) ||
+	gui_stride_k_.get() != (int) matrix_out_handle_->get(2, 2) ||
 
-    iWrap_.set( (int) mHandle_->get(0, 3) );
-    jWrap_.set( (int) mHandle_->get(1, 3) );
-    kWrap_.set( (int) mHandle_->get(2, 3) );
-  }
+	gui_wrap_i_.get() != (int) matrix_out_handle_->get(0, 3) ||
+	gui_wrap_j_.get() != (int) matrix_out_handle_->get(1, 3) ||
+	gui_wrap_k_.get() != (int) matrix_out_handle_->get(2, 3) ) {
 
-  // Check to see if any values have changed via a matrix or user.
-  if( iStart_.changed( true ) ||
-      jStart_.changed( true ) ||
-      kStart_.changed( true ) ||
-      
-      iStop_.changed( true ) ||
-      jStop_.changed( true ) ||
-      kStop_.changed( true ) ||
-      
-      iStride_.changed( true ) ||
-      jStride_.changed( true ) ||
-      kStride_.changed( true ) ||
-      
-      iWrap_.changed( true ) ||
-      jWrap_.changed( true ) ||
-      kWrap_.changed( true ) ) {
+      gui_start_i_.set( (int) matrix_out_handle_->get(0, 0) );
+      gui_start_j_.set( (int) matrix_out_handle_->get(1, 0) );
+      gui_start_k_.set( (int) matrix_out_handle_->get(2, 0) );
+
+      gui_stop_i_.set( (int) matrix_out_handle_->get(0, 1) );
+      gui_stop_j_.set( (int) matrix_out_handle_->get(1, 1) );
+      gui_stop_k_.set( (int) matrix_out_handle_->get(2, 1) );
+
+      gui_stride_i_.set( (int) matrix_out_handle_->get(0, 2) );
+      gui_stride_j_.set( (int) matrix_out_handle_->get(1, 2) );
+      gui_stride_k_.set( (int) matrix_out_handle_->get(2, 2) );
+
+      gui_wrap_i_.set( (int) matrix_out_handle_->get(0, 3) );
+      gui_wrap_j_.set( (int) matrix_out_handle_->get(1, 3) );
+      gui_wrap_k_.set( (int) matrix_out_handle_->get(2, 3) );
+
+      ostringstream str;
+      str << get_id() << " update_index ";
+
+      get_gui()->execute(str.str().c_str());
+	
+      reset_vars();
 
       inputs_changed_ = true;
-
-      if( mHandle_ != 0 ) {
-
-	ostringstream str;
-	str << get_id() << " update_index ";
-
-	get_gui()->execute(str.str().c_str());
-	
-	reset_vars();
-      }
+    }
   }
 
-  // If no data or a changed recreate the mesh.
-  if( !fHandle_.get_rep() || inputs_changed_ ) {
+  // If no data or a change recreate the mesh.
+  if( inputs_changed_ ||
 
-    const TypeDescription *ftd = fHandle->get_type_description();
+      !field_out_handle_.get_rep() ||
+      !matrix_out_handle_.get_rep() ||
+
+      gui_start_i_.changed( true ) ||
+      gui_start_j_.changed( true ) ||
+      gui_start_k_.changed( true ) ||
+      
+      gui_stop_i_.changed( true ) ||
+      gui_stop_j_.changed( true ) ||
+      gui_stop_k_.changed( true ) ||
+      
+      gui_stride_i_.changed( true ) ||
+      gui_stride_j_.changed( true ) ||
+      gui_stride_k_.changed( true ) ||
+      
+      gui_wrap_i_.changed( true ) ||
+      gui_wrap_j_.changed( true ) ||
+      gui_wrap_k_.changed( true ) ) {
+
+    update_state(Executing);
+
+    const TypeDescription *ftd = field_in_handle->get_type_description();
     const bool geom_irreg =
-      (fHandle->mesh()->topology_geometry() & Mesh::IRREGULAR);
+      (field_in_handle->mesh()->topology_geometry() & Mesh::IRREGULAR);
 
     CompileInfoHandle ci =
       FieldSubSampleAlgo::get_compile_info(ftd,geom_irreg);
@@ -276,43 +313,43 @@ FieldSubSample::execute()
     Handle<FieldSubSampleAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fHandle_ = algo->execute(fHandle,
-			     iStart_.get(),  jStart_.get(),  kStart_.get(),
-			     iStop_.get(),   jStop_.get(),   kStop_.get(),
-			     iStride_.get(), jStride_.get(), kStride_.get(),
-			     iWrap_.get(),   jWrap_.get(),   kWrap_.get());
+    field_out_handle_ = algo->execute(field_in_handle,
+	     gui_start_i_.get(),  gui_start_j_.get(),  gui_start_k_.get(),
+	     gui_stop_i_.get(),   gui_stop_j_.get(),   gui_stop_k_.get(),
+	     gui_stride_i_.get(), gui_stride_j_.get(), gui_stride_k_.get(),
+	     gui_wrap_i_.get(),   gui_wrap_j_.get(),   gui_wrap_k_.get());
   }
 
   // Create the output matrix with the axis and index
-  if( mHandle_ == 0 ) {
+  if( matrix_out_handle_ == 0 ) {
     DenseMatrix *selected = scinew DenseMatrix(3,5);
 
-    selected->put(0, 0, iStart_.get() );
-    selected->put(1, 0, jStart_.get() );
-    selected->put(2, 0, kStart_.get() );
+    selected->put(0, 0, gui_start_i_.get() );
+    selected->put(1, 0, gui_start_j_.get() );
+    selected->put(2, 0, gui_start_k_.get() );
 
-    selected->put(0, 1, iStop_.get() );
-    selected->put(1, 1, jStop_.get() );
-    selected->put(2, 1, kStop_.get() );
+    selected->put(0, 1, gui_stop_i_.get() );
+    selected->put(1, 1, gui_stop_j_.get() );
+    selected->put(2, 1, gui_stop_k_.get() );
 
-    selected->put(0, 2, iStride_.get() );
-    selected->put(1, 2, jStride_.get() );
-    selected->put(2, 2, kStride_.get() );
+    selected->put(0, 2, gui_stride_i_.get() );
+    selected->put(1, 2, gui_stride_j_.get() );
+    selected->put(2, 2, gui_stride_k_.get() );
 
-    selected->put(0, 3, iWrap_.get() );
-    selected->put(1, 3, jWrap_.get() );
-    selected->put(2, 3, kWrap_.get() );
+    selected->put(0, 3, gui_wrap_i_.get() );
+    selected->put(1, 3, gui_wrap_j_.get() );
+    selected->put(2, 3, gui_wrap_k_.get() );
 
-    selected->put(0, 4, iDim_.get() );
-    selected->put(1, 4, jDim_.get() );
-    selected->put(2, 4, kDim_.get() );
+    selected->put(0, 4, gui_dim_i_.get() );
+    selected->put(1, 4, gui_dim_j_.get() );
+    selected->put(2, 4, gui_dim_k_.get() );
 
-    mHandle_ = MatrixHandle(selected);
+    matrix_out_handle_ = MatrixHandle(selected);
   }
 
   // Send the data downstream
-  send_output_handle( "Output Field",  fHandle_, true );
-  send_output_handle( "Output Matrix", mHandle_, true );
+  send_output_handle( "Output Field",  field_out_handle_, true );
+  send_output_handle( "Output Matrix", matrix_out_handle_, true );
 }
 
 CompileInfoHandle

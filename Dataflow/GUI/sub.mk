@@ -72,6 +72,7 @@ SRCS := \
         $(SRCDIR)/ChangeFieldBasis.tcl \
         $(SRCDIR)/ChangeFieldDataType.tcl \
         $(SRCDIR)/ChangeFieldBounds.tcl \
+        $(SRCDIR)/ChooseModule.tcl \
         $(SRCDIR)/ChooseColorMap.tcl \
         $(SRCDIR)/ChooseField.tcl \
         $(SRCDIR)/ChooseMatrix.tcl \
@@ -155,6 +156,7 @@ SRCS := \
 	$(SRCDIR)/SeedPoints.tcl \
         $(SRCDIR)/SelectField.tcl \
         $(SRCDIR)/SetProperty.tcl \
+        $(SRCDIR)/SetPropertyModule.tcl \
         $(SRCDIR)/ShowColorMap.tcl \
         $(SRCDIR)/ShowField.tcl \
         $(SRCDIR)/ShowMatrix.tcl \

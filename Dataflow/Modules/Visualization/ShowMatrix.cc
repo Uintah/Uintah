@@ -67,16 +67,17 @@ namespace SCIRun {
 class ShowMatrix : public Module {
 private:
   
+  ColorMapHandle	colormap_input_handle_;
+  GeomHandle            geometery_output_handle_;
+
   // These are the NORMAL vectors for said surface orientation
   const Vector right, left, up, down, front, back;
 
   Point			origin_;
   MaterialHandle	white_;
   MaterialHandle	black_;
-  ColorMapHandle	cmap_;
   int			colormap_generation_;
   bool			swap_row_col_;
-  GeomHandle		plot_;
 
   int			cached_gui_gmode_;
   int			cached_gui_showtext_;
@@ -146,42 +147,126 @@ public:
 
   DECLARE_MAKER(ShowMatrix)
 
-ShowMatrix::ShowMatrix(GuiContext* ctx)
-  : Module("ShowMatrix", ctx, Filter, "Visualization", "SCIRun"),
+ShowMatrix::ShowMatrix(GuiContext* context)
+  : Module("ShowMatrix", context, Filter, "Visualization", "SCIRun"),
+    geometery_output_handle_(0),
     right(1.0,0.0,0.0), left(-1.0,0.0,0.0), 
     up(0.0,1.0,0.0), down(0.0,-1.0,0.0),
     front(0.0,0.0,1.0), back(0.0,0.0,-1.0),
     white_(scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20)),
     black_(scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 20)),
     swap_row_col_(false),
-    gui_grid_x_(get_ctx()->subVar("grid_x")),
-    gui_grid_y_(get_ctx()->subVar("grid_y")),
-    gui_grid_z_(get_ctx()->subVar("grid_z")),
-    gui_trans_x_(get_ctx()->subVar("xpos")),
-    gui_trans_y_(get_ctx()->subVar("ypos")),
-    gui_scale_(get_ctx()->subVar("xscale")),
-    gui_scale_x_(get_ctx()->subVar("xscale")),
-    gui_scale_y_(get_ctx()->subVar("yscale")),
-    gui_3d_mode_(get_ctx()->subVar("3d_mode")),
-    gui_gmode_(get_ctx()->subVar("gmode")),
-    gui_showtext_(get_ctx()->subVar("showtext")),
-    gui_row_begin_(get_ctx()->subVar("row_begin")),
-    gui_row_end_(get_ctx()->subVar("row_end")),
-    gui_rows_(get_ctx()->subVar("rows")),
-    gui_col_begin_(get_ctx()->subVar("col_begin")),
-    gui_col_end_(get_ctx()->subVar("col_end")),
-    gui_cols_(get_ctx()->subVar("cols")),
-    gui_x_gap_(get_ctx()->subVar("xgap")),
-    gui_z_gap_(get_ctx()->subVar("ygap")),
-    gui_data_face_centered_(get_ctx()->subVar("data_face_centered")),
-    gui_cmode_(get_ctx()->subVar("colormapmode"))
+    gui_grid_x_(context->subVar("grid_x")),
+    gui_grid_y_(context->subVar("grid_y")),
+    gui_grid_z_(context->subVar("grid_z")),
+    gui_trans_x_(context->subVar("xpos")),
+    gui_trans_y_(context->subVar("ypos")),
+    gui_scale_(context->subVar("xscale")),
+    gui_scale_x_(context->subVar("xscale")),
+    gui_scale_y_(context->subVar("yscale")),
+    gui_3d_mode_(context->subVar("3d_mode")),
+    gui_gmode_(context->subVar("gmode")),
+    gui_showtext_(context->subVar("showtext")),
+    gui_row_begin_(context->subVar("row_begin")),
+    gui_row_end_(context->subVar("row_end")),
+    gui_rows_(context->subVar("rows")),
+    gui_col_begin_(context->subVar("col_begin")),
+    gui_col_end_(context->subVar("col_end")),
+    gui_cols_(context->subVar("cols")),
+    gui_x_gap_(context->subVar("xgap")),
+    gui_z_gap_(context->subVar("ygap")),
+    gui_data_face_centered_(context->subVar("data_face_centered")),
+    gui_cmode_(context->subVar("colormapmode"))
 {
-
 }
 
 
 ShowMatrix::~ShowMatrix()
 {
+}
+
+
+void
+ShowMatrix::execute()
+{
+  if( !get_input_handle( "ColorMap", colormap_input_handle_, true ) ) return;
+  
+  vector<MatrixHandle> mHandles;
+  if( !get_dynamic_input_handles( "Matrix", mHandles, true ) ) return;
+
+  //! The handles may not have cahnged but the data has so additional
+  //! checks are required.
+  if( !inputs_changed_ ) {
+    for (unsigned int m=0; m<mHandles.size(); m++) {
+      const MatrixData &data = get_matrix_data(mHandles[m]);
+      if (data.changed) {
+	inputs_changed_ = true;
+	break;
+      }
+    }
+  }
+
+  if (inputs_changed_ ||
+      
+      !geometery_output_handle_.get_rep() ||
+      
+      gui_cmode_.changed(true) || 
+      gui_gmode_.changed(true) ||
+      gui_showtext_.changed(true)) {
+
+    update_state(Executing);
+
+    switch (gui_cmode_.get()){
+    case 0: color_mode_ = COLOR_BY_VAL; break;
+    case 1: color_mode_ = COLOR_BY_ROW; break;
+    case 2: color_mode_ = COLOR_BY_COL; break;
+    default:
+      error("Bogus Color Mode Selected" ); return;
+    }
+    
+    GeomGroup *plot = scinew GeomGroup();
+    GeomSwitch *grid = 
+      scinew GeomSwitch(scinew GeomMaterial(generate_grid(gui_3d_mode_.get()),
+					    white_));
+    plot->add(grid);
+    //    plot->add(generate_contour(mHandles[0]));
+
+    for (unsigned int m = 0; m < mHandles.size(); m++) {
+      switch (gui_gmode_.get()){
+      case 1:
+	plot->add(generate_line_graph(mHandles[m]));
+	break;
+      case 2:
+	plot->add(generate_3d_bar_graph(mHandles[m]));
+	break;
+      case 3:
+	plot->add(generate_3d_sheet_graph(mHandles[m]));
+	break;
+      case 4:
+	plot->add(generate_3d_ribbon_graph(mHandles[m],false));
+	break;
+      default:
+      case 5:
+	plot->add(generate_3d_ribbon_graph(mHandles[m],true));
+	break;
+      }
+      if (gui_showtext_.get()) plot->add(generate_text(mHandles[m]));
+    }
+
+    GeomTransform *trans = scinew GeomTransform(plot);
+    geometery_output_handle_ = trans;
+
+    const double scale = gui_scale_.get();
+    trans->scale(Vector(scale, scale, scale));
+    trans->translate(Vector(gui_trans_x_.get(), gui_trans_y_.get(), -1.0));
+    
+    if (!gui_3d_mode_.get()) 
+      geometery_output_handle_ = scinew GeomSticky(trans);
+    
+    send_output_handle( "Geometry", 
+			geometery_output_handle_,
+			get_id() + " Plot" );
+  }
 }
 
 
@@ -205,6 +290,7 @@ ShowMatrix::get_value(MatrixHandle mh, int row, int col)
   return mh->get(row, col);
 }
 
+
 MaterialHandle
 ShowMatrix::get_color(MatrixHandle mh, int row, int col)
 {
@@ -212,15 +298,16 @@ ShowMatrix::get_color(MatrixHandle mh, int row, int col)
   switch (color_mode_)
     {
     case COLOR_BY_ROW: 
-      return cmap_->lookup((row-data.row_begin)/double(data.row_end-data.row_begin));
+      return colormap_input_handle_->lookup((row-data.row_begin)/double(data.row_end-data.row_begin));
     case COLOR_BY_COL:
-      return cmap_->lookup((col-data.col_begin)/double(data.col_end-data.col_begin));
+      return colormap_input_handle_->lookup((col-data.col_begin)/double(data.col_end-data.col_begin));
     case COLOR_BY_VAL: 
-      return cmap_->lookup(get_value(mh,row,col));
+      return colormap_input_handle_->lookup(get_value(mh,row,col));
     default:
       return NULL;
     }
 }
+
 
 void
 ShowMatrix::set_color_scale(MatrixHandle mh)
@@ -228,13 +315,14 @@ ShowMatrix::set_color_scale(MatrixHandle mh)
   switch (color_mode_)
     {
     case COLOR_BY_ROW: 
-    case COLOR_BY_COL: cmap_->Scale(0.0, 1.0); break;
+    case COLOR_BY_COL: colormap_input_handle_->Scale(0.0, 1.0); break;
     default:
-    case COLOR_BY_VAL: cmap_->Scale(get_matrix_data(mh).min,
+    case COLOR_BY_VAL: colormap_input_handle_->Scale(get_matrix_data(mh).min,
 				    get_matrix_data(mh).max); break;
     }  
 }
   
+
 // Generates a very simple half cube grid with X by Y by Z divisions
 GeomHandle
 ShowMatrix::generate_grid(bool do_3d)
@@ -268,6 +356,7 @@ ShowMatrix::generate_grid(bool do_3d)
 
   return graph;
 }
+
 
 GeomHandle
 ShowMatrix::generate_text(MatrixHandle mh)
@@ -469,7 +558,7 @@ ShowMatrix::generate_3d_sheet_graph(MatrixHandle mh)
 		      1.0 / (data.row_end - data.row_begin)));
 		      
 
-  cmap_->ResetScale();
+  colormap_input_handle_->ResetScale();
   return sheet;
 }
 
@@ -489,28 +578,27 @@ ShowMatrix::generate_contour(MatrixHandle mh)
   const double z_off = 0.0;
 
   Vector normal(0.0,1.0,0.0);
-  cmap_->Scale(data.min,data.max);
+  colormap_input_handle_->Scale(data.min,data.max);
   GeomFastQuads *quad = scinew GeomFastQuads();
   for (row = data.row_begin; row < data.row_end; row++) {
     for (col = data.col_begin; col < data.col_end; col++) {
       quad->add(Point(col * dx + x_off, 0.0, row * dz + z_off),
 	       normal,
-	       cmap_->lookup(mh->get(row,col)),
+	       colormap_input_handle_->lookup(mh->get(row,col)),
 	       Point(col * dx + x_off, 0.0, row * dz + z_off + dz),
 	       normal,
-	       cmap_->lookup(mh->get(row+1,col)),
+	       colormap_input_handle_->lookup(mh->get(row+1,col)),
 	       Point(col * dx + x_off + dx, 0.0, row * dz + z_off + dz),
 	       normal,
-	       cmap_->lookup(mh->get(row+1,col+1)),
+	       colormap_input_handle_->lookup(mh->get(row+1,col+1)),
 	       Point(col * dx + x_off + dx, 0.0, row * dz + z_off),
 	       normal,
-	       cmap_->lookup(mh->get(row,col+1)));
+	       colormap_input_handle_->lookup(mh->get(row,col+1)));
     }
   }
-  cmap_->ResetScale();
+  colormap_input_handle_->ResetScale();
   return quad;
 }
-
 
 
 GeomHandle 
@@ -580,102 +668,6 @@ ShowMatrix::generate_3d_bar_graph(MatrixHandle mh)
   return graph;
 }
 
-
-
-
-
-
-void
-ShowMatrix::execute()
-{
-  //int deb = 0;
-  vector<MatrixHandle> matrices;
-  port_range_type range = get_iports("Matrix");
-  if (range.first == range.second) {
-    return;
-  }
-
-  port_map_type::iterator pi = range.first;
-  while (pi != range.second) {
-    MatrixIPort *iport = (MatrixIPort *)get_iport(pi++->second);
-    MatrixHandle matrix;
-    if (iport->get(matrix) && matrix.get_rep())
-      matrices.push_back(matrix);
-  }
-  
-  ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
-  if (!imap->get(cmap_)) { 
-    // TODO: Do greyscale if no cmap
-    error("No input color map. Aborting execution.");
-    return;
-  }
-  
-  switch (gui_cmode_.get()){
-  case 0: color_mode_ = COLOR_BY_VAL; break;
-  case 1: color_mode_ = COLOR_BY_ROW; break;
-  default:
-  case 2: color_mode_ = COLOR_BY_COL; break;
-  }
-    
-  
-  bool recompute_geom = cmap_->generation != colormap_generation_;
-  colormap_generation_ = cmap_->generation;
-  
-  for (unsigned int m = 0; m < matrices.size(); m++) {
-    if (recompute_geom) break;
-    const MatrixData &data = get_matrix_data(matrices[m]);
-    if (data.changed) recompute_geom = true;
-  }
-
-  recompute_geom = (recompute_geom || gui_cmode_.changed() || 
-		    gui_gmode_.changed() || gui_showtext_.changed());
-
-  if (recompute_geom) {
-    GeomGroup *plot = scinew GeomGroup();
-    GeomSwitch *grid = 
-      scinew GeomSwitch(scinew GeomMaterial(generate_grid(gui_3d_mode_.get()),
-					    white_));
-    plot->add(grid);
-    //    plot->add(generate_contour(matrices[0]));
-
-    for (unsigned int m = 0; m < matrices.size(); m++) {
-      switch (gui_gmode_.get()){
-      case 1:
-	plot->add(generate_line_graph(matrices[m]));
-	break;
-      case 2:
-	plot->add(generate_3d_bar_graph(matrices[m]));
-	break;
-      case 3:
-	plot->add(generate_3d_sheet_graph(matrices[m]));
-	break;
-      case 4:
-	plot->add(generate_3d_ribbon_graph(matrices[m],false));
-	break;
-      default:
-      case 5:
-	plot->add(generate_3d_ribbon_graph(matrices[m],true));
-	break;
-      }
-      if (gui_showtext_.get()) plot->add(generate_text(matrices[m]));
-    }
-    plot_ = plot;
-  }
-
-  GeomTransform *trans = scinew GeomTransform(plot_);
-  const double scale = gui_scale_.get();
-  trans->scale(Vector(scale, scale, scale));
-  trans->translate(Vector(gui_trans_x_.get(), gui_trans_y_.get(), -1.0));
-
-  GeomHandle obj = trans;
-  if (!gui_3d_mode_.get()) 
-    obj = scinew GeomSticky(trans);
-    
-  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-  ogeom->delAll();
-  ogeom->addObj(obj, get_id()+" Plot");
-  ogeom->flushViews();
-}
 
 const ShowMatrix::MatrixData &
 ShowMatrix::get_matrix_data(MatrixHandle mh)

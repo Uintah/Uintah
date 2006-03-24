@@ -326,7 +326,7 @@ protected:
 
   bool send_output_handle(string port_name,
 			  vector<GeomHandle>& handle,
-			  string obj_name);
+			  vector<string>& obj_name);
 
   GuiInterface          *gui_;
   string                 module_name_;
@@ -386,6 +386,10 @@ Module::get_input_handle(std::string name,
 			 DH& handle,
 			 bool required)
 {
+  update_state(NeedData);
+
+  bool return_state = true;
+
   SimpleIPort<DH> *dataport;
 
   handle = 0;
@@ -395,30 +399,27 @@ Module::get_input_handle(std::string name,
   {
     throw "Incorrect data type sent to input port '" + name +
       "' (dynamic_cast failed).";
-    return false;
   }
-
+ 
   //! Get the handle and check for data.
-  if (dataport->get(handle) && handle.get_rep())
+  else if (dataport->get(handle) && handle.get_rep())
   {
     //! See if the data has changed. Note only change the boolean if
     //! it is false this way it can be cascaded with other handle gets.
-    if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
-
-    //! Handle and rep so return true.
-    return true;
+    if( inputs_changed_ == false )
+      inputs_changed_ = dataport->changed();
   }
+
   else if( required )
   {
-    //! The input was required so report an error.
-    error( "No field handle or representation for input port '" +
+    //! The first input on the port was required to have a valid
+    //! handle and data so report an error.
+    error( "No handle or representation for input port '" +
            name + "'."  );
-    return false;
+    return_state = false;
   }
-  else
-  {
-    return true;
-  }
+
+  return return_state;
 }
 
 
@@ -429,6 +430,10 @@ Module::get_dynamic_input_handles(std::string name,
 				  vector<DH> &handles,
 				  bool required)
 {
+  bool return_state = true;
+
+  update_state(NeedData);
+
   unsigned int nPorts = 0;
   handles.clear();
 
@@ -438,7 +443,7 @@ Module::get_dynamic_input_handles(std::string name,
   if( range.first == range.second )
   {
     throw "Unable to initialize dynamic input port '" + name + "'.";
-    return false;
+    return_state = false;
   }
   else
   {
@@ -453,43 +458,46 @@ Module::get_dynamic_input_handles(std::string name,
       {
 	throw "Unable to get dynamic input port #" + to_string(nPorts) +
           " ' " +name + "'.";
-	return false;
+	return_state = false;
       }
-
-      //! Increment here!  We do this because last one is always
-      //! empty so we can test for it before issuing empty warning.
-      ++pi;
-
-      //! Get the handle and check for data.
-      DH handle;
-      if (dataport->get(handle) && handle.get_rep())
+      else
       {
-	handles.push_back(handle);
-
-	//! See if the data has changed. Note only change the boolean if
-	//! it is false this way it can be cascaded with other handle gets.
-	if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
-
-	++nPorts;
-      }
-      else if (pi != range.second || nPorts == 0)
-      {
-	//! The input was required so report an error.
-	if( required )
+	//! Increment here!  We do this because last one is always
+	//! empty so we can test for it before issuing empty warning.
+	++pi;
+	
+	//! Get the handle and check for data.
+	DH handle;
+	if (dataport->get(handle) && handle.get_rep())
         {
-	  error( "No field handle or representation for dynamic input port #" +
-		 to_string(nPorts) + " ' " +name + "'." );
-	  return false;
+	  handles.push_back(handle);
+
+	  //! See if the data has changed. Note only change the boolean if
+	  //! it is false this way it can be cascaded with other handle gets.
+	  if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
+	  
+	  ++nPorts;
 	}
-        else
-        {
-	  handles.push_back(0);
+	else if (pi != range.second || nPorts == 0)
+	{
+	  //! The first input on the port was required to have a valid
+	  //! handle and data so report an error.
+	  if( required )
+	  {
+	    error( "No handle or representation for dynamic input port #" +
+		   to_string(nPorts) + " ' " +name + "'." );
+	    return_state = false;
+	  }
+	  else
+          {
+	    handles.push_back(0);
+	  }
 	}
       }
     }
   }
   
-  return true;
+  return return_state;
 }
 
 

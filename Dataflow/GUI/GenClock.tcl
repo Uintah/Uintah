@@ -148,7 +148,8 @@ itcl_class SCIRun_Visualization_GenClock {
 
 # Range - current
 	frame $range.current
-	label $range.current.label -text "Current"  -width 7 -anchor w -just left
+	label $range.current.label -text "Current" \
+	    -width 7 -anchor w -just left
 	entry $range.current.entry -width 6 -text $this-current
 
 	pack $range.current.label $range.current.entry -side left
@@ -278,7 +279,8 @@ itcl_class SCIRun_Visualization_GenClock {
 		 -text $text -command $cmmd
 	 
 	 #pack the node color frame
-	 pack $frame.colorFrame.set_color $frame.colorFrame.col -side left -padx 2
+	 pack $frame.colorFrame.set_color $frame.colorFrame.col \
+				  -side left -padx 2
 	 pack $frame.colorFrame -side left
     }
 }

@@ -69,10 +69,10 @@ public:
   virtual void execute();
 
 private:
-  GuiFilename filename_;
+  GuiFilename gui_filename_;
 
-  NrrdDataHandle nHandles_[9];
-  MatrixHandle mHandle_;
+  NrrdDataHandle nrrd_output_handles_[9];
+  MatrixHandle matrix_output_handle_;
 
   string old_filename_;
   time_t old_filemodification_;
@@ -80,16 +80,18 @@ private:
   bool loop_;
   int  index_;
 
-  bool error_;
+  bool execute_error_;
 };
 
 
 DECLARE_MAKER(VULCANDataReader)
 VULCANDataReader::VULCANDataReader(GuiContext* context)
   : Module("VULCANDataReader", context, Source, "DataIO", "Fusion"),
-    filename_(context->subVar("filename")),
+    gui_filename_(context->subVar("filename")),
+    matrix_output_handle_(0),
     loop_(false),
-    error_(false)
+    index_(0),
+    execute_error_(false)
 {
 }
 
@@ -110,7 +112,7 @@ VULCANDataReader::execute(){
 			   "Cell Angular Velocity",
 			   "Time Slice" };
 
-  string new_filename(filename_.get());
+  string new_filename(gui_filename_.get());
 
   if( new_filename.length() == 0 )
     return;
@@ -138,11 +140,13 @@ VULCANDataReader::execute(){
   int delay = 0;
 
   if( loop_ ||
-      error_ ||
+      execute_error_ ||
       new_filename         != old_filename_ || 
       new_filemodification != old_filemodification_  ) {
 
-    error_ = false;
+    update_state( Executing );
+
+    execute_error_ = false;
 
     old_filemodification_ = new_filemodification;
     old_filename_         = new_filename;
@@ -196,6 +200,7 @@ VULCANDataReader::execute(){
     /* Check to see that the file is accessible */
     if (!(fp = fopen(new_filename.c_str(), "r"))) {
       error("Unable to open " + new_filename);
+      execute_error_ = true;
       return;
     }
 
@@ -210,14 +215,14 @@ VULCANDataReader::execute(){
 
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
 
     // Time 
     ColumnMatrix *selected = scinew ColumnMatrix(1);
     selected->put(0, 0, (double) time);
-    mHandle_ = MatrixHandle(selected);
+    matrix_output_handle_ = MatrixHandle(selected);
 
 
     /* Throw away the next 7 lines of the file. */
@@ -226,7 +231,7 @@ VULCANDataReader::execute(){
 
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
     
@@ -237,7 +242,7 @@ VULCANDataReader::execute(){
 
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
 
@@ -262,7 +267,7 @@ VULCANDataReader::execute(){
 
       if( ferror( fp ) || feof( fp ) ) {
 	error("Unable to read " + new_filename);
-	error_ = true;
+	execute_error_ = true;
 	return;
       }
     }
@@ -293,7 +298,7 @@ VULCANDataReader::execute(){
       nout->set_property( "Name", nrrdName, false );
     }
 
-    nHandles_[0] = NrrdDataHandle( nout );
+    nrrd_output_handles_[0] = NrrdDataHandle( nout );
 
     // Velocity Vector
     nout = scinew NrrdData();
@@ -319,7 +324,7 @@ VULCANDataReader::execute(){
       nout->set_property( "Name", nrrdName, false );
     }
 
-    nHandles_[1] = NrrdDataHandle( nout );
+    nrrd_output_handles_[1] = NrrdDataHandle( nout );
 
 
     // Cell Data
@@ -329,7 +334,7 @@ VULCANDataReader::execute(){
     
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
 
@@ -355,7 +360,7 @@ VULCANDataReader::execute(){
 
       if( ferror( fp ) || feof( fp ) ) {
 	error("Unable to read " + new_filename);
-	error_ = true;
+	execute_error_ = true;
 	return;
       }
     }
@@ -383,7 +388,7 @@ VULCANDataReader::execute(){
       nout->set_property( "Name", nrrdName, false );
     }
 
-    nHandles_[2] = NrrdDataHandle( nout );
+    nrrd_output_handles_[2] = NrrdDataHandle( nout );
 
     // Data
     for( int i=0; i<6; i++ ) {
@@ -405,7 +410,7 @@ VULCANDataReader::execute(){
 	nout->set_property( "Name", nrrdName, false );
       }
  
-      nHandles_[3+i] = NrrdDataHandle( nout );	
+      nrrd_output_handles_[3+i] = NrrdDataHandle( nout );	
     }
 
     // Ignore everything else in the file.
@@ -420,15 +425,17 @@ VULCANDataReader::execute(){
   for( int i=0; i<9; i++ ) {
 
     // Get a handle to the output field port.
-    if( nHandles_[i].get_rep() ) {
-      nHandles_[i]->set_property( "Source", string("Vulcan Reader"), false );
+    if( nrrd_output_handles_[i].get_rep() ) {
+      nrrd_output_handles_[i]->set_property( "Source",
+					     string("Vulcan Reader"),
+					     false );
 
       // Send the data downstream
-      send_output_handle( portNames[i], nHandles_[i], true );
+      send_output_handle( portNames[i], nrrd_output_handles_[i], true );
     }
   }
 
-  send_output_handle( "Time Slice", mHandle_, true );
+  send_output_handle( "Time Slice", matrix_output_handle_, true );
 
   if( loop_ ) {
     if ( delay > 0) {

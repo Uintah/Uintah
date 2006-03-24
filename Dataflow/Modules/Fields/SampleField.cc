@@ -105,27 +105,10 @@ private:
   FrameWidget *frame_;
 
   int widgetid_;
-  int wtype_;      // 0 none, 1 rake, 2 ring, 3 frame
 
+  bool widget_changed_;
 
-  string whichTab_; // widget type name
-  string swtype_;   // widget type name
-
-  double maxSeeds_;
-  int numSeeds_;
-  string randdist_;
-  int rngSeed_;
-  int rngInc_;
-  int clamp_;
-
-  bool widget_change_;
-
-  FieldHandle fHandle_;
-
-  int fGeneration_;
-
-  bool error_;
-
+  FieldHandle field_output_handle_;
 
   BBox  ifield_bbox_;
   BBox  ring_bbox_;
@@ -133,7 +116,7 @@ private:
   Point endpoint0_;
   Point endpoint1_;
 
-  GeometryOPort  *ogport_;
+  GeometryOPort *ogport_;
 
   FieldHandle execute_rake(FieldHandle ifield);
   FieldHandle execute_ring(FieldHandle ifield);
@@ -177,9 +160,9 @@ SampleField::SampleField(GuiContext* ctx)
 
     widgetid_(0),
 
-    widget_change_(0),
-    fGeneration_(-1),
-    error_(0)
+    widget_changed_(false),
+
+    field_output_handle_(0) 
 {
   gui_endpoints_.set( 0 );
 }
@@ -213,7 +196,7 @@ SampleField::widget_moved(bool last, BaseWidget*)
       gui_endpoint1z_.set( endpoint1_.z() );
     }
 
-    widget_change_ = true;
+    widget_changed_ = true;
 
     gui_autoexec_.reset();
     if (gui_autoexec_.get())
@@ -223,7 +206,7 @@ SampleField::widget_moved(bool last, BaseWidget*)
     if (rake_)
       gui_widgetscale_.set(rake_->GetScale());
 
-    widget_change_ = true;
+    widget_changed_ = true;
   }
 }
 
@@ -295,7 +278,7 @@ SampleField::execute_rake(FieldHandle ifield)
       rake_->SetScale(gui_widgetscale_.get()); // do first, widget_moved resets
       rake_->SetEndpoints(endpoint0_, endpoint1_);
       rake_->SetRatio(1/16.0);
-      if (wtype_ == 1) { ogport_->flushViews(); }
+      if (gui_wtype_.get() == string("rake")) { ogport_->flushViews(); }
     }
 
     ifield_bbox_ = ibox;
@@ -310,12 +293,13 @@ SampleField::execute_rake(FieldHandle ifield)
     rake_->SetRatio(1/16.0);
   }
 
-  if (wtype_ != 1) {
+  if (gui_wtype_.get() != string("rake")) {
     if (widgetid_)  { ogport_->delObj(widgetid_); }
     GeomHandle widget = rake_->GetWidget();
-    widgetid_ = ogport_->addObj(widget, "SampleField Rake", &gui_widget_lock_);
+    widgetid_ = ogport_->addObj(widget, "SampleField rake", &gui_widget_lock_);
     ogport_->flushViews();
-    wtype_ = 1;
+    gui_wtype_.set("rake");
+    gui_wtype_.reset();
   }
 
   Point min, max;
@@ -418,12 +402,13 @@ SampleField::execute_ring(FieldHandle ifield)
     ring_bbox_ = ibox;
   }
 
-  if (wtype_ != 2) {
+  if (gui_wtype_.get() != string("ring")) {
     if (widgetid_)  { ogport_->delObj(widgetid_); }
     GeomHandle widget = ring_->GetWidget();
     widgetid_ = ogport_->addObj(widget, "SampleField Ring", &gui_widget_lock_);
     ogport_->flushViews();
-    wtype_ = 2;
+    gui_wtype_.set("ring");
+    gui_wtype_.reset();
   }
   
   double num_seeds = Max(0.0, gui_maxSeeds_.get());
@@ -518,12 +503,13 @@ SampleField::execute_frame(FieldHandle ifield)
     frame_bbox_ = ibox;
   }
 
-  if (wtype_ != 3) {
+  if (gui_wtype_.get() != string("frame") ) {
     if (widgetid_) { ogport_->delObj(widgetid_); }
     GeomHandle widget = frame_->GetWidget();
     widgetid_ = ogport_->addObj(widget, "SampleField Frame", &gui_widget_lock_);
     ogport_->flushViews();
-    wtype_ = 3;
+    gui_wtype_.set( "frame" );
+    gui_wtype_.reset();
   }
 
   double num_seeds = Max(0.0, gui_maxSeeds_.get());
@@ -576,16 +562,22 @@ SampleField::execute_random(FieldHandle ifield)
   Handle<SampleFieldRandomAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return 0;
 
-  FieldHandle seedhandle(algo->execute(this, ifield, numSeeds_,
-				       rngSeed_, randdist_, clamp_));
-  if (rngInc_)
-    gui_rngSeed_.set(rngSeed_+1);
+  FieldHandle seedhandle(algo->execute(this, ifield,
+				       gui_numSeeds_.get(),
+				       gui_rngSeed_.get(),
+				       gui_randdist_.get(), 
+				       gui_clamp_.get()));
+  if (gui_rngInc_.get()) {
+    gui_rngSeed_.set(gui_rngSeed_.get()+1);
+    gui_rngSeed_.reset();
+  }
 
   if (widgetid_) {
     ogport_->delObj(widgetid_);
     ogport_->flushViews();
     widgetid_ = 0;
-    wtype_ = 0;
+    gui_wtype_.set( 0 );
+    gui_wtype_.reset();
   }
 
   update_state(Completed);
@@ -597,100 +589,69 @@ SampleField::execute_random(FieldHandle ifield)
 void
 SampleField::execute()
 {
-  ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
+  inputs_changed_ = gui_force_rake_reset_.get();
 
-  FieldIPort *ifport = (FieldIPort *)get_iport("Field to Sample");
+  FieldHandle field_input_handle;
 
-  FieldHandle fHandle;
-  // The field input is required.
-  if (!(ifport->get(fHandle) && fHandle.get_rep())) {
-    error("Required input field is empty.");
+  if( !get_input_handle( "Field to Sample", field_input_handle, true ) )
     return;
-  }
 
-  bool update = gui_force_rake_reset_.get();
-
-  // Check to see if the source field has changed.
-  if( fGeneration_ != fHandle->generation ) {
-    fGeneration_ = fHandle->generation;
-    update = true;
-  }
+  ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
 
   if (ring_ ) { gui_ringstate_.set(ring_->GetStateString()); }
   if (frame_) { gui_framestate_.set(frame_->GetStateString()); }
 
   // See if the tab has changed.
-  string whichTab = gui_whichTab_.get();
-
-  if( whichTab_ != whichTab ) {
-    whichTab_ = whichTab;
-    update = true;
+  if( gui_whichTab_.changed(true) ) {
+    inputs_changed_ = true;
   }
 
-  if (whichTab == "Widget") {
+  if (gui_whichTab_.get() == "Widget") {
 
     // See if the widget type or number seeds has changed.
-    string swtype = gui_wtype_.get();
-    double maxSeeds = gui_maxSeeds_.get();
+    if( inputs_changed_ ||
 
-    if( !fHandle_.get_rep() ||
-	update ||
-	widget_change_ ||
-	swtype_ != swtype ||
-	maxSeeds_ != maxSeeds ||
-	error_ ) {
+	!field_output_handle_.get_rep() ||
 
-      widget_change_ = false;
-      swtype_ = swtype;
-      maxSeeds_ = maxSeeds;
+	gui_wtype_.changed( true ) ||
+	gui_maxSeeds_.changed( true ) ||
 
-      error_ = false;
+	widget_changed_ ) {
 
-      if (swtype == "rake")
-	fHandle_ = execute_rake(fHandle);
-      else if (swtype == "ring")
-	fHandle_ = execute_ring(fHandle);
-      else if (swtype == "frame")
-	fHandle_ = execute_frame(fHandle);
+      update_state(Executing);
+
+      widget_changed_ = false;
+
+      if (gui_wtype_.get() == "rake")
+	field_output_handle_ = execute_rake(field_input_handle);
+      else if (gui_wtype_.get() == "ring")
+	field_output_handle_ = execute_ring(field_input_handle);
+      else if (gui_wtype_.get() == "frame")
+	field_output_handle_ = execute_frame(field_input_handle);
     }
   }
-  else if (whichTab == "Random") {
-    int numSeeds = gui_numSeeds_.get();
-    string randdist = gui_randdist_.get();
-    int rngSeed  = gui_rngSeed_.get();
-    int rngInc   = gui_rngInc_.get();
-    int clamp   = gui_clamp_.get();
+  else if (gui_whichTab_.get() == "Random") {
 
-    if( numSeeds_ != numSeeds ||
-	randdist_ != randdist ||
-	rngSeed_  != rngSeed ||
-	rngInc_   != rngInc  ||
-	clamp_    != clamp ) {
+    if( inputs_changed_ ||
+	
+	!field_output_handle_.get_rep() ||
+	
+	gui_numSeeds_.changed(true) ||
+	gui_randdist_.changed(true) ||
+	gui_rngSeed_.changed(true) ||
+	gui_rngInc_.changed(true)  ||
+	gui_clamp_.changed(true) ) {
 
-      numSeeds_ = numSeeds;
-      randdist_ = randdist;
-      rngSeed_  = rngSeed;
-      rngInc_   = rngInc;
-      clamp_    = clamp;
+      update_state(Executing);
 
-      update = true;
-   }
-
-    if( !fHandle_.get_rep() ||
-	update ||
-	error_ )
-    {
-      error_ = false;
-
-      fHandle_ = execute_random(fHandle);
+      field_output_handle_ = execute_random(field_input_handle);
     }
   }
 
-
-  if( fHandle_.get_rep() )
+  if( field_output_handle_.get_rep() )
   {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Samples");
-    ofield_port->send_and_dereference(fHandle_, true);
+    ofield_port->send_and_dereference(field_output_handle_, true);
   }
 }
 

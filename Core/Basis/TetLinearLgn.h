@@ -114,7 +114,7 @@ public:
     const double dy = v1[1] - p1y;
     const double dz = v1[2] - p1z;
 
-    for(unsigned i = 0; i <= div_per_unit; i++) {
+    for(unsigned int i = 0; i <= div_per_unit; i++) {
       const double d = (double)i / (double)div_per_unit;
       vector<double> &tmp = coords[i];
       tmp.resize(3);
@@ -141,9 +141,9 @@ public:
     const double *v2 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_faces[face][2]];
     coords.resize(div_per_unit);
     const double d = 1. / div_per_unit;
-    for(unsigned j = 0; j<div_per_unit; j++) {
+    for(unsigned int j = 0; j<div_per_unit; j++) {
       const double dj = (double)j / (double)div_per_unit;
-      unsigned e = 0;
+      unsigned int e = 0;
       coords[j].resize((div_per_unit - j) * 2 + 1);
       vector<double> &tmp = coords[j][e++];
       tmp.resize(3);
@@ -151,7 +151,7 @@ public:
       tmp[1] = v0[1] + dj * (v2[1] - v0[1]);
       tmp[2] = v0[2] + dj * (v2[2] - v0[2]);
 
-      for(unsigned i = 0; i<div_per_unit - j; i++) {
+      for(unsigned int i = 0; i<div_per_unit - j; i++) {
 	const double di = (double)i / (double)div_per_unit;
 	vector<double> &tmp1 = coords[j][e++];
 	tmp1.resize(3);
@@ -203,8 +203,6 @@ protected:
     return false;
   };
   
-
-
   //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
