@@ -242,7 +242,7 @@ EnvironmentMapBackground::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, ambientScale_);
   SCIRun::Pio(str, _width);
   SCIRun::Pio(str, _height);
-  rtrt::Pio(str, _image);
+  SCIRun::Pio(str, _image);
   SCIRun::Pio(str, _up);
   SCIRun::Pio(str, _u);
   SCIRun::Pio(str, _v);

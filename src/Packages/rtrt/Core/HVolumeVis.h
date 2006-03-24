@@ -197,15 +197,15 @@ HVolumeVis<DataT,MetaCT>::HVolumeVis(BrickArray3<DataT>& data,
     depth=1;
   
   datadiag=max-min;
-  sdiag=datadiag/Vector(nx-1,ny-1,nz-1);
+  sdiag=datadiag/Vector(this->nx-1,this->ny-1,this->nz-1);
   
   // Compute all the grid stuff
   xsize=new int[depth];
   ysize=new int[depth];
   zsize=new int[depth];
-  int tx=nx-1;
-  int ty=ny-1;
-  int tz=nz-1;
+  int tx=this->nx-1;
+  int ty=this->ny-1;
+  int tz=this->nz-1;
   for(int i=depth-1;i>=0;i--){
     int nx=(int)(pow(tx, 1./(i+1))+.9);
     tx=(tx+nx-1)/nx;
@@ -234,7 +234,7 @@ HVolumeVis<DataT,MetaCT>::HVolumeVis(BrickArray3<DataT>& data,
     tx*=xsize[i];
   }
   cerr << "(" << tx << ")\n";
-  if(tx<nx-1){
+  if(tx<this->nx-1){
     cerr << "TX TOO SMALL!\n";
     exit(1);
   }
@@ -245,7 +245,7 @@ HVolumeVis<DataT,MetaCT>::HVolumeVis(BrickArray3<DataT>& data,
     ty*=ysize[i];
   }
   cerr << "(" << ty << ")\n";
-  if(ty<ny-1){
+  if(ty<this->ny-1){
     cerr << "TY TOO SMALL!\n";
     exit(1);
   }
@@ -256,11 +256,11 @@ HVolumeVis<DataT,MetaCT>::HVolumeVis(BrickArray3<DataT>& data,
     tz*=zsize[i];
   }
   cerr << "(" << tz << ")\n";
-  if(tz<nz-1){
+  if(tz<this->nz-1){
     cerr << "TZ TOO SMALL!\n";
     exit(1);
   }
-  hierdiag=datadiag*Vector(tx,ty,tz)/Vector(nx-1,ny-1,nz-1);
+  hierdiag=datadiag*Vector(tx,ty,tz)/Vector(this->nx-1,this->ny-1,this->nz-1);
   ihierdiag=Vector(1.,1.,1.)/hierdiag;
   
   if(depth==1){
@@ -312,6 +312,9 @@ void HVolumeVis<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
   int endx=startx+xsize[depth];
   int endy=starty+ysize[depth];
   int endz=startz+zsize[depth];
+  int nx = this->nx;
+  int ny = this->ny;
+  int nz = this->nz;
   if(endx>nx-1)
     endx=nx-1;
   if(endy>ny-1)
@@ -325,6 +328,9 @@ void HVolumeVis<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
   if(depth==0){
     // We are at the data level.  Loop over each voxel and compute the
     // mcell for this group of voxels.
+    BrickArray3<DataT>& data = this->data;
+    DataT data_min = this->data_min;
+    DataT data_max = this->data_max;
     for(int ix=startx;ix<endx;ix++){
       for(int iy=starty;iy<endy;iy++){
 	for(int iz=startz;iz<endz;iz++){
@@ -351,16 +357,16 @@ void HVolumeVis<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
       }
     }
   } else {
-    int nx=xsize[depth-1];
-    int ny=ysize[depth-1];
-    int nz=zsize[depth-1];
+    int nxl=xsize[depth-1];
+    int nyl=ysize[depth-1];
+    int nzl=zsize[depth-1];
     BrickArray3<MetaCT>& mcells=macrocells[depth];
     for(int x=startx;x<endx;x++){
       for(int y=starty;y<endy;y++){
 	for(int z=startz;z<endz;z++){
 	  // Compute the mcell for this block and store it in tmp
 	  MetaCT tmp;
-	  calc_mcell(depth-1, x*nx, y*ny, z*nz, tmp);
+	  calc_mcell(depth-1, x*nxl, y*nyl, z*nzl, tmp);
 	  // Stash it away
 	  mcells(x,y,z)=tmp;
 	  // Now aggregate all the mcells created for this depth by
@@ -421,7 +427,12 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 #ifdef BIGLER_DEBUG
   cerr << "cxyz = ("<<cx<<", "<<cy<<", "<<cz<<")\n";
 #endif
+  BrickArray3<DataT>& data = this->data;
+  
   if(depth==0){
+    int nx = this->nx;
+    int ny = this->ny;
+    int nz = this->nz;
     for(;;){
       int gx=startx+ix;
       int gy=starty+iy;
@@ -475,7 +486,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 	
 	value = ly1 * (1 - x_weight_high) + ly2 * x_weight_high;
 	
-	float alpha_factor = dpy->lookup_alpha(value) * (1-isctx.alpha);
+	float alpha_factor = this->dpy->lookup_alpha(value) * (1-isctx.alpha);
 	if (alpha_factor > 0.001) {
 	  // the point is contributing, so compute the color
 	  
@@ -509,16 +520,16 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
             }
             
             Vector light_dir;
-            Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - min.vector();
+            Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - this->min.vector();
             light_dir = light->get_pos()-current_p;
             
             Color temp = color(gradient, isctx.ray.direction(),
                                light_dir.normal(), 
-                               *(dpy->lookup_color(value)),
+                               *(this->dpy->lookup_color(value)),
                                light->get_color());
             isctx.total += temp * alpha_factor;
           } else {
-            isctx.total += dpy->lookup_color(value)->operator*(alpha_factor);
+            isctx.total += this->dpy->lookup_color(value)->operator*(alpha_factor);
           }
 	  isctx.alpha += alpha_factor;
 	}
@@ -724,7 +735,7 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 				     double atten, const Color& accumcolor,
 				     Context* ctx)
 {
-  bool fast_render_mode = dpy->fast_render_mode;
+  bool fast_render_mode = this->dpy->fast_render_mode;
   // alpha is the accumulating opacities
   // alphas are in levels of opacity: 1 - completly opaque
   //                                  0 - completly transparent
@@ -779,7 +790,7 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   }
 
   Point start_p(orig+dir*t_min);
-  Vector s((start_p-min)*ihierdiag);
+  Vector s((start_p-this->min)*ihierdiag);
   //cout << "s = " << s << "\tdepth = " << depth << endl;
   int cx=xsize[depth-1];
   int cy=ysize[depth-1];
@@ -810,19 +821,19 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   double dtdx, dtdy, dtdz;
 
   double icx=ixsize[depth-1];
-  double x=min.x()+hierdiag.x()*double(ix+ddx)*icx;
+  double x=this->min.x()+hierdiag.x()*double(ix+ddx)*icx;
   double xinv_dir=1./dir.x();
   next_x=(x-orig.x())*xinv_dir;
   dtdx=dix_dx*hierdiag.x()*icx*xinv_dir;
 
   double icy=iysize[depth-1];
-  double y=min.y()+hierdiag.y()*double(iy+ddy)*icy;
+  double y=this->min.y()+hierdiag.y()*double(iy+ddy)*icy;
   double yinv_dir=1./dir.y();
   next_y=(y-orig.y())*yinv_dir;
   dtdy=diy_dy*hierdiag.y()*icy*yinv_dir;
 
   double icz=izsize[depth-1];
-  double z=min.z()+hierdiag.z()*double(iz+ddz)*icz;
+  double z=this->min.z()+hierdiag.z()*double(iz+ddz)*icz;
   double zinv_dir=1./dir.z();
   next_z=(z-orig.z())*zinv_dir;
   dtdz=diz_dz*hierdiag.z()*icz*zinv_dir;
@@ -841,7 +852,7 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   // could use the following code:
   //
   // Vector weights = cellcorner + celldir * t - Vector(ix, iy, iz);
-  Vector cellcorner((orig-min)*ihierdiag*cellsize);
+  Vector cellcorner((orig-this->min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
 
   HVIsectContext isctx;
@@ -850,9 +861,9 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   isctx.dix_dx = dix_dx;
   isctx.diy_dy = diy_dy;
   isctx.diz_dz = diz_dz;
-  isctx.transfunct.course_hash = dpy->course_hash;
+  isctx.transfunct.course_hash = this->dpy->course_hash;
   //  isctx.transfunct.print();
-  isctx.t_inc = dpy->t_inc;
+  isctx.t_inc = this->dpy->t_inc;
   isctx.t_min = t_min;
   isctx.t_max = t_max;
   isctx.t_inc_inv = 1/isctx.t_inc;
@@ -868,13 +879,19 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   total = isctx.total;
 
   } else {
-    float t_inc = dpy->t_inc;
+    float t_inc = this->dpy->t_inc;
+
+    Vector inv_diag(this->inv_diag);
+    BrickArray3<DataT>& data = this->data;
+    int nx = this->nx;
+    int ny = this->ny;
+    int nz = this->nz;
     
     for(float t = t_min; t < t_max; t += t_inc) {
       // opaque values are 0, so terminate the ray at alpha values close to zero
       if (alpha < RAY_TERMINATION_THRESHOLD) {
 	// get the point to interpolate
-	Point current_p = ray.origin() + ray.direction() * t - min.vector();
+	Point current_p = ray.origin() + ray.direction() * t - this->min.vector();
 	
 	////////////////////////////////////////////////////////////
 	// interpolate the point
@@ -921,7 +938,7 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 	
 	//cout << "value = " << value << endl;
 
-	float alpha_factor = dpy->lookup_alpha(value) * (1-alpha);
+	float alpha_factor = this->dpy->lookup_alpha(value) * (1-alpha);
 	if (alpha_factor > 0.001) {
 	  //      if (true) {
 	  // the point is contributing, so compute the color
@@ -958,11 +975,11 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
             light_dir = light->get_pos()-current_p;
 	  
             Color temp = color(gradient, ray.direction(), light_dir.normal(), 
-                               *(dpy->lookup_color(value)),
+                               *(this->dpy->lookup_color(value)),
                                light->get_color());
             total += temp * alpha_factor;
           } else {
-            total += dpy->lookup_color(value)->operator*(alpha_factor);
+            total += this->dpy->lookup_color(value)->operator*(alpha_factor);
           }
 	  alpha += alpha_factor;
 	}
@@ -974,12 +991,12 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   
   if (alpha < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
-    if (child && shade_child) {
+    if (this->child && shade_child) {
       HitInfo hit_child = hit;
-      hit_child.hit_obj = child;
+      hit_child.hit_obj = this->child;
       hit_child.min_t = child_hit;
-      child->get_matl()->shade(bgcolor, ray, hit_child, depth+1,
-                               atten, accumcolor, ctx);
+      this->child->get_matl()->shade(bgcolor, ray, hit_child, depth+1,
+                                     atten, accumcolor, ctx);
     } else {
       // Grab the background color
       Ray r(ray.origin() + ray.direction() * t_max, ray.direction());
@@ -1003,11 +1020,11 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 template<class DataT, class MetaCT>
 void HVolumeVis<DataT,MetaCT>::print(ostream& out) {
   //  out << "name_ = "<<get_name()<<endl;
-  out << "min = "<<min<<", max = "<<max<<endl;
-  out << "datadiag = "<<datadiag<<", hierdiag = "<<hierdiag<<", ihierdiag = "<<ihierdiag<<", sdiag = "<<sdiag<<endl;
-  out << "dim = ("<<nx<<", "<<ny<<", "<<nz<<")\n";
-  out << "data.get_datasize() = "<<data.get_datasize()<<endl;
-  out << "data_min = "<<data_min<<", data_max = "<<data_max<<endl;
+  out << "min = "<<this->min<<", max = "<<this->max<<endl;
+  out << "datadiag = "<<this->datadiag<<", hierdiag = "<<hierdiag<<", ihierdiag = "<<ihierdiag<<", sdiag = "<<sdiag<<endl;
+  out << "dim = ("<<this->nx<<", "<<this->ny<<", "<<this->nz<<")\n";
+  out << "data.get_datasize() = "<<this->data.get_datasize()<<endl;
+  out << "data_min = "<<this->data_min<<", data_max = "<<this->data_max<<endl;
   out << "depth = "<<depth<<endl;
 }
 

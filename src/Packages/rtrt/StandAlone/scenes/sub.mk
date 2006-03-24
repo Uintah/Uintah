@@ -48,8 +48,6 @@ SCENES := $(SRCDIR)/0.$(RSE) \
 	$(SRCDIR)/volume_color.$(RSE) \
 	$(SRCDIR)/ASE-RTRT.$(RSE)\
 	$(SRCDIR)/simple_tri.$(RSE) \
-	$(SRCDIR)/terrain.$(RSE) \
-	$(SRCDIR)/heightfield.$(RSE) \
 	$(SRCDIR)/graphics-museum.$(RSE) \
 	$(SRCDIR)/min-museum.$(RSE) \
 	$(SRCDIR)/3min-museum.$(RSE) \
@@ -70,6 +68,8 @@ SCENES := $(SRCDIR)/0.$(RSE) \
 	$(SRCDIR)/tstdemo.$(RSE) \
 	$(SRCDIR)/living-room2.$(RSE) \
 
+# 	$(SRCDIR)/terrain.$(RSE) \
+# 	$(SRCDIR)/heightfield.$(RSE) \
 #	$(SRCDIR)/vthorax.$(RSE) \
 #	$(SRCDIR)/multihvb.$(RSE) \
 #	$(SRCDIR)/hvolumevg.$(RSE) \

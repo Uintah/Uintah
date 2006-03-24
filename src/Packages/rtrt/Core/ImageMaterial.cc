@@ -366,7 +366,7 @@ ImageMaterial::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, specpow);
   SCIRun::Pio(str, refl);
   SCIRun::Pio(str, transp);
-  rtrt::Pio(str, image);
+  SCIRun::Pio(str, image);
   SCIRun::Pio(str, outcolor);
   SCIRun::Pio(str, valid_);    
   SCIRun::Pio(str, filename_);
