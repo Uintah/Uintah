@@ -1,19 +1,14 @@
 
+#include <Packages/rtrt/Core/Heightfield.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/Light.h>
-#include <Packages/rtrt/Core/Heightfield.h>
-#include <Packages/rtrt/Core/BrickArray2.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1468
 #endif
 
-using rtrt::Array1;
-using rtrt::Array2;
-using rtrt::Heightfield;
-using rtrt::HMCell; 
-using rtrt::BrickArray2;
+using namespace rtrt;
 
 namespace SCIRun {
 template<>
@@ -78,15 +73,6 @@ void Pio(Piostream& stream, rtrt::Array1<double>& array)
   }
   stream.end_class();
 }
-
-}
-
-namespace rtrt {
-  class Object;
-  class VolumeBase;
-  class Volume;
-  class Material;
-
 
 
 template<> void Pio(SCIRun::Piostream& stream, rtrt::Array2<int>& data)
@@ -167,16 +153,21 @@ template<> void Pio(SCIRun::Piostream& stream, rtrt::Array2<double>& data)
   stream.end_class();
 }
 
+} // end namespace SCIRun
+
+
+
+namespace rtrt {
+  class Object;
+  class VolumeBase;
+  class Volume;
+  class Material;
 }
 
 template struct HMCell<float>;
-template class rtrt::BrickArray2<float>;
+template class BrickArray2<float>;
 template class Array2 < HMCell<float> >;
-template class Heightfield<BrickArray2<float>,Array2<HMCell<float > > >;
-
-
-
-
+//template class Heightfield<BrickArray2<float>,Array2<HMCell<float > > >;
 
 template class Array1<Light*>;
 

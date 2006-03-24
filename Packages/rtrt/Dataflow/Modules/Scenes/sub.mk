@@ -12,15 +12,15 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Dataflow/Network Dataflow/Ports \
-	Dataflow/Modules/Visualization Core/Datatypes \
-        Core/Thread Core/Persistent Core/Exceptions \
-        Core/GuiInterface Core/Containers Core/Datatypes \
-        Core/Geom Core/GeomInterface \
-	Core/Geometry Dataflow/Widgets Core/XMLUtil \
-	Core/Util \
-	Packages/rtrt/Core \
-	Packages/rtrt/Dataflow/Ports
+  Dataflow/Network \
+  Dataflow/Modules/Visualization Core/Datatypes \
+  Core/Thread Core/Persistent Core/Exceptions \
+  Core/GuiInterface Core/Containers Core/Datatypes \
+  Core/Geom Core/GeomInterface \
+  Core/Geometry Dataflow/Widgets Core/XMLUtil \
+  Core/Util \
+  Packages/rtrt/Core \
+  Packages/rtrt/Dataflow/Ports
 
 LIBS := $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 

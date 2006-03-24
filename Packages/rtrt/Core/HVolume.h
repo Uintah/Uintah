@@ -35,6 +35,7 @@ namespace rtrt {
 
 using SCIRun::Mutex;
 using SCIRun::WorkQueue;
+  using std::cout;
   using std::cerr;
   using std::endl;
 

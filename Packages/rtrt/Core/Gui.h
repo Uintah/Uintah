@@ -69,8 +69,6 @@ public:
 protected:
   bool on_death_row, opened;
   int mainWindowID;
-  Display *glut_dpy;
-  Window glut_win;
   void cleanup();
   void quit(int all = 0);
 public:

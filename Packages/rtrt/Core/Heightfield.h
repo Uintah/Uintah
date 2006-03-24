@@ -13,14 +13,15 @@
 #include <stdlib.h>
 
 namespace rtrt {
-template<class A, class B> class Heightfield;
-template<class T> struct HMCell;
+  template<class A, class B> class Heightfield;
+  template<class T> struct HMCell;
 }
 
 namespace SCIRun {
-//template<class A, class B> void Pio(Piostream&, rtrt::Heightfield<A,B>*&);
-class WorkQueue;
-template<class T> void Pio(Piostream&, rtrt::HMCell<T>&);
+  template<class A, class B> void Pio(Piostream&, rtrt::Heightfield<A,B>&);
+  template<class T> void Pio(Piostream&, rtrt::HMCell<T>&);
+
+  class WorkQueue;
 }
 
 namespace rtrt {
@@ -32,6 +33,7 @@ struct HMCell {
   T max;
   T min;
 };
+
 
 #define GRIDFLOAT 0
 #define ELEV 1
