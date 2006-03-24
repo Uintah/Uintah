@@ -22,7 +22,7 @@ if test "$hostname" = "$hostname_inf";
     lamboot;
 else
     if test ! -d $test_dir/dbg
-    then 
+        then 
     	/home/jas/bin/smount TestData;
 	did_mount=1;
     fi
@@ -242,11 +242,14 @@ run_test () {
    
     num_proc
    
-    if test $MPI_RUN != "no";
+    if test $MPI_RUN == "yes";
         then 
         if test $numproc -gt 1;
             then
             MPI="mpirun -np $numproc"
+        elif test -n "$MPI" ;
+            then
+            echo $MPI
         else
             MPI=""
         fi
@@ -304,7 +307,7 @@ run_restart () {
         uda_new=`echo $uda | tr -d "/"`
 
         echo; echo "Running $MPI sus $opts -restart -t 0 -copy $uda_new.000"
-        ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
+        $MPI ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
         success=`grep "successfully" $n.out_restart`
         if test -n "$success";
             then 
@@ -345,6 +348,7 @@ mpmf_test () {
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
 	compare_results 
         run_restart
+        MPI=""
     done
 }
 
@@ -355,7 +359,8 @@ mpmice_test () {
 	run_test
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
 	compare_results
-       run_restart
+        run_restart
+        MPI=""
     done
 }
 model_test () {
@@ -369,7 +374,8 @@ model_test () {
 	run_test
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
 	compare_results
-       run_restart
+        run_restart
+        MPI=""
     done
 }
 impm_test () {
@@ -379,7 +385,8 @@ impm_test () {
 	run_test
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
 	compare_results
-       run_restart
+        run_restart
+        MPI=""
     done
 }
 
@@ -390,7 +397,8 @@ smpm_test () {
 	run_test
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
 	compare_results
-       run_restart
+        run_restart
+        MPI=""
     done
 }
 
@@ -402,8 +410,8 @@ ice_test () {
 	run_test
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
 	compare_results
-       run_restart
-
+        run_restart
+        MPI=""
     done
 }
 amr_test () {
@@ -413,8 +421,8 @@ amr_test () {
 	run_test
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
 	compare_results
-       run_restart
-
+        run_restart
+        MPI=""
     done
 }
 
@@ -438,7 +446,8 @@ arches_test () {
 	fi
 
 	compare_results
-       run_restart
+        run_restart
+        MPI=""
     done
 }
 
@@ -454,6 +463,8 @@ mpmarches_test () {
 	cp ../$INPUTS/ARCHES/StaticMixingTables/JP-8/NAE.rxn.new NAE.rxn.new
 	cd ../
 
+        MPI_RUN_OLD=$MPI_RUN
+        MPI_RUN="yes"
 	MPI='mpirun -np 1'
 	run_test
 
@@ -461,6 +472,7 @@ mpmarches_test () {
 	
 	compare_results
         run_restart
+        MPI=""
     done
 }
 
@@ -481,7 +493,8 @@ examples_test () {
 	fi
 
 	compare_results
-       run_restart
+        run_restart
+        MPI=""
     done
 }
 
