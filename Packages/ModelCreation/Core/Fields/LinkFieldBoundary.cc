@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz)
+bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement)
 {
   if (input.get_rep() == 0)
   {
@@ -49,6 +49,12 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
     pr->error("LinkFieldBoundary: This function has not yet been defined for non-linear elements");
     return (false);
   }
+
+  if (!(fi.is_constantdata()))
+  {
+    pr->error("LinkFieldBoundary: This function has not yet been defined for data at the nodes");
+    return (false);
+  }
    
   if (!(fi.is_volume()||fi.is_surface()||fi.is_curve()))
   {
@@ -63,14 +69,17 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
   
   for(size_t p =0; p< precompiled_.size(); p++)
   {
-    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->LinkFieldBoundary(pr,input,output,tol,linkx,linky,linkz));
+    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->LinkFieldBoundary(pr,input,output,tol,linkx,linky,linkz,byelement));
   }
 
   // Setup dynamic files
 
+  std::string algosubtype = "";
+  if (byelement) algosubtype = "ByElement";
+
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "LinkFieldBoundary."+fi.get_field_filename()+".",
-    "LinkFieldBoundaryAlgo","LinkFieldBoundary"+algotype+"AlgoT",
+    "LinkFieldBoundaryAlgo","LinkFieldBoundary"+algotype+algosubtype+"AlgoT",
     fi.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
@@ -88,7 +97,7 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
     return(false);
   }
 
-  return(algo->LinkFieldBoundary(pr,input,output,tol,linkx,linky,linkz));
+  return(algo->LinkFieldBoundary(pr,input,output,tol,linkx,linky,linkz,byelement));
 }
 
 bool LinkFieldBoundaryAlgo::testinput(FieldHandle input)

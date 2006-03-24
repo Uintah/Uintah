@@ -60,9 +60,9 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace ModelCreation {
 
@@ -105,7 +105,7 @@ void ComputeFieldNodes::execute()
     return;
   }
 
-  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(getIPort(0));
+  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(get_iport(0));
   if(field_iport == 0)
   {
     error("Could not locate field input port");
@@ -130,7 +130,7 @@ void ComputeFieldNodes::execute()
   // The function can be scripted. If a string is found on the input
   // use this one. It will be set in the GIU, after which it is retrieved the
   // normal way.
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(1));
+  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_iport(1));
   if(function_iport == 0)
   {
     error("Could not locate function input port");
@@ -178,7 +178,7 @@ void ComputeFieldNodes::execute()
   
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+2));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_iport(p+2));
     if(iport == 0)
     {
       error("Could not locate matrix input port");
@@ -253,7 +253,7 @@ void ComputeFieldNodes::execute()
   }
   
   // If engine succeeded we have a new field at ofield.
-  FieldOPort *oport = dynamic_cast<FieldOPort *>(getOPort(0));
+  FieldOPort *oport = dynamic_cast<FieldOPort *>(get_oport(0));
   if (oport)
   {
     oport->send(ofield);

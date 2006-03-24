@@ -26,10 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-#include <Packages/ModelCreation/Core/Numeric/NumericAlgo.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -38,41 +38,53 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class BuildFEMatrix : public Module {
+class LinkFieldBoundaryByElement : public Module {
 public:
-  BuildFEMatrix(GuiContext*);
-
+  LinkFieldBoundaryByElement(GuiContext*);
   virtual void execute();
-
+  
+private:
+  GuiInt guilinkx_;
+  GuiInt guilinky_;
+  GuiInt guilinkz_;
+  GuiDouble guitol_;
+  
 };
 
 
-DECLARE_MAKER(BuildFEMatrix)
-BuildFEMatrix::BuildFEMatrix(GuiContext* ctx)
-  : Module("BuildFEMatrix", ctx, Source, "FiniteElements", "ModelCreation")
+DECLARE_MAKER(LinkFieldBoundaryByElement)
+LinkFieldBoundaryByElement::LinkFieldBoundaryByElement(GuiContext* ctx)
+  : Module("LinkFieldBoundaryByElement", ctx, Source, "FiniteElements", "ModelCreation"),
+  guilinkx_(ctx->subVar("linkx")),
+  guilinky_(ctx->subVar("linky")),
+  guilinkz_(ctx->subVar("linkz")),
+  guitol_(ctx->subVar("tol"))
 {
 }
 
-
-void BuildFEMatrix::execute()
+void LinkFieldBoundaryByElement::execute()
 {
-  NumericAlgo numericalgo(this);
-  
   FieldHandle Field;
-  MatrixHandle Conductivity;
-  MatrixHandle GeomToComp, CompToGeom;
-  MatrixHandle SysMatrix;
-  if (!get_input_handle("Field",Field,true)) return;
-  if (get_input_handle("ConductivityTable",Conductivity,false)) return;
-  if (get_input_handle("GeomToComp",GeomToComp,false)) return;
-  if (get_input_handle("CompToGeom",CompToGeom,false)) return;
+  MatrixHandle GeomToComp, CompToGeom, MembraneLink;
+  if(!(get_input_handle("Field",Field,true))) return;
+
+  double tol = guitol_.get();
+  bool   linkx = static_cast<bool>(guilinkx_.get());
+  bool   linky = static_cast<bool>(guilinky_.get());
+  bool   linkz = static_cast<bool>(guilinkz_.get());
+
+  FieldsAlgo fieldsalgo(this);
+  if(!(fieldsalgo.LinkFieldBoundary(Field,Field,tol,linkx,linky,linkz,true))) return;
   
-  if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,1,Conductivity,GeomToComp,CompToGeom))) return;
+  Field->get_property("GeomToComp",GeomToComp);
+  Field->get_property("CompToGeom",CompToGeom);
+  Field->get_property("MembraneLink",MembraneLink);
   
-  send_output_handle("FEMatrix",SysMatrix,true);  
+  send_output_handle("Field",Field,true);
+  send_output_handle("GeomToComp",GeomToComp,true);
+  send_output_handle("CompToGeom",CompToGeom,true);  
+  send_output_handle("MembraneLink",MembraneLink,true);  
 }
-
-
 
 } // End namespace ModelCreation
 

@@ -608,10 +608,10 @@ bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
 }
 
 
-bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz)
+bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelements)
 {
   LinkFieldBoundaryAlgo algo;
-  return(algo.LinkFieldBoundary(pr_,input,output,tol,linkx,linky,linkz));
+  return(algo.LinkFieldBoundary(pr_,input,output,tol,linkx,linky,linkz,byelements));
 }
 
 

@@ -42,11 +42,12 @@ class LinkFieldBoundaryAlgo;
 class LinkFieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz);
+  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz,bool byelement = true);
   virtual bool testinput(FieldHandle input);
 
   static AlgoList<LinkFieldBoundaryAlgo> precompiled_;
 };
+
 
 
 class LinkElement {
@@ -72,7 +73,7 @@ template <class FSRC>
 class LinkFieldBoundaryVolumeAlgoT : public LinkFieldBoundaryAlgo
 {
 public:
-  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz);
+  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement);
   virtual bool testinput(FieldHandle input);
 
 private:
@@ -86,10 +87,26 @@ private:
 
 
 template <class FSRC>
+class LinkFieldBoundaryVolumeByElementAlgoT : public LinkFieldBoundaryAlgo
+{
+public:
+  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement);
+  virtual bool testinput(FieldHandle input);
+
+private:
+  class faceidx_type {
+  public: 
+    typename FSRC::mesh_type::Face::index_type face;
+    typename FSRC::value_type                  value; 
+  }; 
+};
+
+
+template <class FSRC>
 class LinkFieldBoundarySurfaceAlgoT : public LinkFieldBoundaryAlgo
 {
 public:
-  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz);
+  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement);
   virtual bool testinput(FieldHandle input);
 
 private:
@@ -98,15 +115,29 @@ private:
     typename FSRC::mesh_type::Edge::index_type edge;
     typename FSRC::value_type                  value; 
   }; 
-
-
 };
+
+template <class FSRC>
+class LinkFieldBoundarySurfaceByElementAlgoT : public LinkFieldBoundaryAlgo
+{
+public:
+  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement);
+  virtual bool testinput(FieldHandle input);
+
+private:
+  class edgeidx_type {
+  public: 
+    typename FSRC::mesh_type::Edge::index_type edge;
+    typename FSRC::value_type                  value; 
+  }; 
+};
+
 
 template <class FSRC>
 class LinkFieldBoundaryCurveAlgoT : public LinkFieldBoundaryAlgo
 {
 public:
-  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz);
+  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement);
   virtual bool testinput(FieldHandle input);
 
 private:
@@ -115,14 +146,26 @@ private:
     typename FSRC::mesh_type::Node::index_type node;
     typename FSRC::value_type                  value; 
   }; 
+};
 
+template <class FSRC>
+class LinkFieldBoundaryCurveByElementAlgoT : public LinkFieldBoundaryAlgo
+{
+public:
+  virtual bool LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement);
+  virtual bool testinput(FieldHandle input);
 
+private:
+  class nodeidx_type {
+  public: 
+    typename FSRC::mesh_type::Node::index_type node;
+    typename FSRC::value_type                  value; 
+  }; 
 };
 
 
-
 template <class FSRC>
-bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz)
+bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -168,7 +211,7 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
   
   {
     imesh->synchronize(Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E);
-    
+        
     typename FSRC::mesh_type::Elem::iterator be, ee;
     typename FSRC::mesh_type::Elem::index_type nci, ci;
     typename FSRC::mesh_type::Face::array_type faces; 
@@ -190,19 +233,25 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
           imesh->get_nodes(nodes,faces[p]);
           for (size_t q=0; q<nodes.size(); q++)
           {
-            nodelist_create.push_back(static_cast<unsigned int>(nodes[q]));
+            nodelist_create.push_back(nodes[q]);
           }
           faceidx_type fidx;
-          fidx.face = static_cast<unsigned int>(faces[p]);
+          fidx.face = faces[p];
           fidx.value = ifield->value(ci); 
           facelist.push_back(fidx);
         }
       }
       ++be;
     }
-
-    std::unique_copy(nodelist_create.begin(),nodelist_create.end(),nodelist.begin());
-    std::sort(nodelist.begin(),nodelist.end());
+  
+    std::sort(nodelist_create.begin(),nodelist_create.end());
+    if (nodelist_create.size() > 0) nodelist.push_back(nodelist_create[0]);
+    size_t v = 0;
+    for (size_t w = 1; w < nodelist_create.size(); w++)
+    {
+      if (nodelist_create[w] != nodelist[v]) {nodelist.push_back(nodelist_create[w]); v++; }
+    }
+    
   }
   
   // We now have the boundary
@@ -277,7 +326,7 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       p = pointmap[nodelist[r]];
       if (((p.x()-xmin.x())> shiftx) && ((p.y()-xmin.y())*(p.y()-xmin.y()) + (p.z()-xmin.z())*(p.z()-xmin.z()) <= tol)) shiftx = p.x()-xmin.x();
       if (((p.y()-ymin.y())> shifty) && ((p.x()-ymin.x())*(p.x()-ymin.x()) + (p.z()-ymin.z())*(p.z()-ymin.z()) <= tol)) shifty = p.y()-ymin.y();
-      if (((p.z()-zmin.z())> shiftz) && ((p.y()-zmin.y())*(p.y()-zmin.y()) + (p.x()-zmin.x())*(p.x()-zmin.x()) <= tol)) shiftx = p.z()-zmin.z();
+      if (((p.z()-zmin.z())> shiftz) && ((p.y()-zmin.y())*(p.y()-zmin.y()) + (p.x()-zmin.x())*(p.x()-zmin.x()) <= tol)) shiftz = p.z()-zmin.z();
     }  
 
     if (linkx) { if ((shiftx) > 0.0 ) xmul = 255/(shiftx); } else { if((maxx-minx) > 0.0) xmul = 255/(maxx-minx); }
@@ -289,7 +338,6 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
     z0 = zmin.z();
   }
   
-
   {
     double h_xshift = shiftx/2;
     double h_yshift = shifty/2;
@@ -303,19 +351,21 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       imesh->get_center(p,idx);
 
       mp = p;
-      if (linkx) mp.x(fmod((p.x()-x0-h_xshift),shiftx+h_xshift));
-      if (linky) mp.y(fmod((p.y()-y0-h_yshift),shifty+h_yshift));
-      if (linkz) mp.z(fmod((p.z()-z0-h_zshift),shiftz+h_zshift));    
+      if (linkx) mp.x(fmod((p.x()-x0+h_xshift),shiftx)-h_xshift);
+      if (linky) mp.y(fmod((p.y()-y0+h_yshift),shifty)-h_yshift);
+      if (linkz) mp.z(fmod((p.z()-z0+h_zshift),shiftz)-h_zshift);    
       
+      std::cout << "node["<<nodelist[r]<<"]="<< mp << "\n";
       pointmap[nodelist[r]] = mp;
     }
   }
-  
 
   // Build a key map for each face
+  
+  size_t facecnt = 0; 
   {
-      
-    for (unsigned int r=0; r<facelist.size();r++) 
+    size_t listsize = facelist.size();   
+    for (unsigned int r=0; r<listsize;r++) 
     {
       typename FSRC::mesh_type::Face::index_type idx;
       typename FSRC::mesh_type::Node::array_type nodes;
@@ -323,13 +373,17 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       Point p;
       
       imesh->get_nodes(nodes,facelist[r].face);
-      p = pointmap[static_cast<unsigned int>(nodes[0])];
-      
-      key = static_cast<int>(p.x()*xmul);
-      key += (static_cast<int>(p.y()*ymul))<<8;
-      key += (static_cast<int>(p.z()*zmul))<<16;  
-      
-      faceidx.insert(typename faceidxmap_type::value_type(key,facelist[r]));
+      for (unsigned int q=0;q<nodes.size();q++)
+      {
+        p = pointmap[static_cast<unsigned int>(nodes[q])];
+        
+        key = static_cast<int>(p.x()*xmul);
+        key += (static_cast<int>(p.y()*ymul))<<8;
+        key += (static_cast<int>(p.z()*zmul))<<16;  
+        
+        faceidx.insert(typename faceidxmap_type::value_type(key,facelist[r]));
+      }
+      facecnt = nodes.size();
     }  
   }
 
@@ -338,9 +392,8 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
   std::vector<unsigned int> link(numnodes);
   for (unsigned int q=0; q< link.size(); q++) link[q] = q;
     
-  std::vector<LinkElement> memlink;  
-    
   // Main loop connect everything    
+
 
   double tol2 = tol*tol;
 
@@ -366,7 +419,7 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       idx = (*it).second.face;
       val1 = (*it).second.value;
       imesh->get_nodes(nodes,idx);
-      for (size_t w=0; w<nodes.size(); w++) imesh->get_center(points[w],nodes[w]);
+      for (size_t w=0; w<facecnt; w++) imesh->get_center(points[w],nodes[w]);
         
       for (int x = -1; x < 2; x++)
       {
@@ -381,59 +434,49 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
               idx2 = (*(lit.first)).second.face;
               val2 = (*(lit.first)).second.value;
               
+              if (idx == idx2) {  ++(lit.first); continue; }
+
               imesh->get_nodes(nodes2,idx2);
-              for (unsigned int w=0;(w<nodes.size())&&(foundit == true); w++)
+              for (unsigned int w=0;(w<facecnt)&&(foundit == true); w++)
               {
                 Point p;
                 imesh->get_center(p,nodes2[w]);
-                for (unsigned int v=0;v<nodes.size();v++)
+                bool success = false;
+                for (unsigned int v=0;v<facecnt;v++)
                 {
                   Vector vec(p - points[v]);
-                  if (vec.length2() <= tol2) { foundit = false; break;}
+                  if (vec.length2() <= tol2) { success = true; break;}
                 }
+                if (success) { foundit = false; break;}
               }
               
               if (foundit)
               {
-                for (unsigned int w=0;(w<nodes.size())&&(foundit == true); w++)
+                for (unsigned int w=0;(w<facecnt)&&(foundit == true); w++)
                 {
                   Point p = pointmap[static_cast<unsigned int>(nodes[w])];
                   bool success = false;         
-                  for (unsigned int v=0;v<nodes.size();v++) 
+                  for (unsigned int v=0;v<facecnt;v++) 
                   {
                     Vector vec(p-pointmap[static_cast<unsigned int>(nodes2[v])]); 
-                     if (vec.length2() < tol2) { facelink[w] = v; success = true; break;}
+                     if (vec.length2() <= tol2) { facelink[w] = v; success = true; break;}
                   }
                   if (!success) { foundit = false; break; }
                 }
               
                 if (foundit)
                 {
-                  if (val1 != val2)
+                  for (unsigned int w=0;w<facecnt; w++)
                   {
-                    for (unsigned int w=0;w<nodes.size(); w++)
+                    unsigned int i1 = static_cast<unsigned int>(nodes[w]);
+                    unsigned int i2 = static_cast<unsigned int>(nodes2[facelink[w]]);
+                    if (link[i1] < link[i2])
                     {
-                      unsigned int i1 = static_cast<unsigned int>(nodes[w]);
-                      unsigned int i2 = static_cast<unsigned int>(nodes2[facelink[w]]);
-                      if (link[i1] < link[i2])
-                      {
-                        link[i2] = link[i1]; 
-                      }
-                      else
-                      {
-                        link[i1] = link[i2];                     
-                      }
+                      link[i2] = link[i1]; 
                     }
-                  }
-                  else
-                  {
-                    for (unsigned int w=0;w<nodes.size(); w++)
+                    else
                     {
-                      unsigned int i1 = static_cast<unsigned int>(nodes[w]);
-                      unsigned int i2 = static_cast<unsigned int>(nodes2[facelink[w]]);
-                      LinkElement elem;
-                      elem.row =i1; elem.col = i2; memlink.push_back(elem);
-                      elem.row =i2; elem.col = i1; memlink.push_back(elem);
+                      link[i1] = link[i2];                     
                     }
                   }
                 }
@@ -443,9 +486,10 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
           }
         }
       }  
-      ++it;
+      for (size_t r= 0; r< facecnt; r++) ++it;
     }
   }
+
 
   {
     // fix the link vector
@@ -454,6 +498,7 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       unsigned int p = q;
       while (link[p] != p) p = link[p];
       link[q] = p;
+      
     }
 
     // Renumber nodes
@@ -468,6 +513,7 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       {
         link[q] = link[link[q]];
       }
+      std::cout << "link["<<q<<"]=" << link[q] << "\n";
     }
 
     MatrixHandle GeomToComp, CompToGeom, MemLink;
@@ -513,57 +559,17 @@ bool LinkFieldBoundaryVolumeAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr,
       return (false);
     }
 
-
-    std::vector<LinkElement> memlink2;
-    std::unique_copy(memlink.begin(),memlink.end(),memlink2.begin());
-    std::sort(memlink2.begin(),memlink2.end());     
-  
-    int nnz = memlink2.size();
-    
-    // reserve memory
-    
-    int *rows =    scinew int[numnodes+1];
-    int *cols =    scinew int[nnz];
-    double *vals = scinew double[nnz];
-    
-    if ((rows == 0)||(cols == 0)||(vals == 0))
-    {
-      if (rows) delete[] rows;
-      if (cols) delete[] cols;
-      if (vals) delete[] vals;
-      pr->error("LinkFieldBoundary: Could not allocate memory for matrix");
-      return (false);
-    }
-  
-    rows[0] = 0;
-    int q = 0;
-    for (int p=0; p < numnodes; p++)
-    {
-      while ((q < memlink2.size())&&(memlink2[q].row <= p)) { cols[q] = memlink2[q].col; vals[q] = 1.0; q++; }
-      rows[p] = q;
-    }   
-  
-    MemLink = dynamic_cast<Matrix *>(scinew SparseRowMatrix(numnodes,numnodes,rows,cols,nnz,vals));
-
-    if (MemLink.get_rep() == 0)
-    {
-      pr->error("LinkFieldBoundary: Coulb not build mapping matrix");
-      return (false);
-    }
-
     output = input->clone();
     output->copy_properties(input.get_rep());  
     output->set_property("GeomToComp",GeomToComp,false);
     output->set_property("CompToGeom",CompToGeom,false);
-    output->set_property("MemLink",MemLink,false);
   }
 
-  return (true);
+return (true);
 }
 
-
 template <class FSRC>
-bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz)
+bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -580,10 +586,10 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
   }
 
 #ifdef HAVE_HASH_MAP
-  typedef hash_multimap<unsigned int,edgeidx_type> edgeidxmap_type;
+  typedef hash_multimap<unsigned int,faceidx_type> faceidxmap_type;
   typedef hash_map<unsigned int, Point> pointmap_type;
 #else
-  typedef multimap<unsigned int, edgeidx_type> edgeidxmap_type;
+  typedef multimap<unsigned int, faceidx_type> faceidxmap_type;
   typedef std::vector<Point> pointmap_type;
 #endif
 
@@ -592,8 +598,8 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
   // A list of all the nodes that are at an edge
   std::vector<typename FSRC::mesh_type::Node::index_type> nodelist;
 
-  // A list of all the edges that are at an edge
-  std::vector<edgeidx_type> edgelist;
+  // A list of all the faces that are at an edge
+  std::vector<faceidx_type> facelist;
   
 
   typename FSRC::mesh_type::Node::size_type numnodes;
@@ -602,17 +608,23 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
   // A list with the actual nodes that are being used 
   pointmap_type pointmap(numnodes);
 
-  edgeidxmap_type edgeidx;
+  faceidxmap_type faceidx;
 
-  // Find all the edges that are at the edge
+  // Find all the faces that are at the edge
   // I.E. find the field boundary
+
+  std::cout << "============================================\n";
+  std::cout << "Start extracting boundary nodes\n";
   
   {
-    imesh->synchronize(Mesh::EDGES_E|Mesh::FACE_NEIGHBORS_E);
-    
+    imesh->synchronize(Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E);
+
+    std::cout << "============================================\n";
+    std::cout << "Done Synchronization\n";
+        
     typename FSRC::mesh_type::Elem::iterator be, ee;
     typename FSRC::mesh_type::Elem::index_type nci, ci;
-    typename FSRC::mesh_type::Edge::array_type edges; 
+    typename FSRC::mesh_type::Face::array_type faces; 
     typename FSRC::mesh_type::Node::array_type nodes; 
     
     std::vector<typename FSRC::mesh_type::Node::index_type> nodelist_create;
@@ -623,28 +635,42 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
     while (be != ee) 
     {
       ci = *be;
-      imesh->get_edges(edges,ci);
-      for (size_t p =0; p < edges.size(); p++)
+      imesh->get_faces(faces,ci);
+      for (size_t p =0; p < faces.size(); p++)
       {
-        if(!(imesh->get_neighbor(nci,ci,edges[p])))
+        if(!(imesh->get_neighbor(nci,ci,faces[p])))
         {
-          imesh->get_nodes(nodes,edges[p]);
+          imesh->get_nodes(nodes,faces[p]);
           for (size_t q=0; q<nodes.size(); q++)
           {
-            nodelist_create.push_back(static_cast<unsigned int>(nodes[q]));
+            nodelist_create.push_back(nodes[q]);
           }
-          edgeidx_type fidx;
-          fidx.edge = static_cast<unsigned int>(edges[p]);
+          faceidx_type fidx;
+          fidx.face = faces[p];
           fidx.value = ifield->value(ci); 
-          edgelist.push_back(fidx);
+          facelist.push_back(fidx);
         }
       }
       ++be;
     }
 
-    std::unique_copy(nodelist_create.begin(),nodelist_create.end(),nodelist.begin());
-    std::sort(nodelist.begin(),nodelist.end());
+    std::cout << "============================================\n";
+    std::cout << "Find unique boundary nodes\n";
+    std::cout << "number of edge nodes = " << nodelist_create.size() << "\n";
+  
+    std::sort(nodelist_create.begin(),nodelist_create.end());
+    if (nodelist_create.size() > 0) nodelist.push_back(nodelist_create[0]);
+    size_t v = 0;
+    for (size_t w = 1; w < nodelist_create.size(); w++)
+    {
+      if (nodelist_create[w] != nodelist[v]) {nodelist.push_back(nodelist_create[w]); v++; }
+    }
+    
   }
+  
+  std::cout << "============================================\n";
+  std::cout << "Extracted boundary nodes\n";
+  std::cout << "number of edge nodes = " << nodelist.size() << "\n";
   
   // We now have the boundary
   // Now determine the shifts in the mesh and points of origin
@@ -718,7 +744,7 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
       p = pointmap[nodelist[r]];
       if (((p.x()-xmin.x())> shiftx) && ((p.y()-xmin.y())*(p.y()-xmin.y()) + (p.z()-xmin.z())*(p.z()-xmin.z()) <= tol)) shiftx = p.x()-xmin.x();
       if (((p.y()-ymin.y())> shifty) && ((p.x()-ymin.x())*(p.x()-ymin.x()) + (p.z()-ymin.z())*(p.z()-ymin.z()) <= tol)) shifty = p.y()-ymin.y();
-      if (((p.z()-zmin.z())> shiftz) && ((p.y()-zmin.y())*(p.y()-zmin.y()) + (p.x()-zmin.x())*(p.x()-zmin.x()) <= tol)) shiftx = p.z()-zmin.z();
+      if (((p.z()-zmin.z())> shiftz) && ((p.y()-zmin.y())*(p.y()-zmin.y()) + (p.x()-zmin.x())*(p.x()-zmin.x()) <= tol)) shiftz = p.z()-zmin.z();
     }  
 
     if (linkx) { if ((shiftx) > 0.0 ) xmul = 255/(shiftx); } else { if((maxx-minx) > 0.0) xmul = 255/(maxx-minx); }
@@ -729,6 +755,12 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
     y0 = ymin.y();
     z0 = zmin.z();
   }
+  
+  std::cout << "============================================\n";
+  std::cout << "Determined shift i x,y,z coordiantes\n";
+  std::cout << "shiftx = " << shiftx << "\n";  
+  std::cout << "shifty = " << shifty << "\n";  
+  std::cout << "shiftz = " << shiftz << "\n";  
   
 
   {
@@ -744,35 +776,48 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
       imesh->get_center(p,idx);
 
       mp = p;
-      if (linkx) mp.x(fmod((p.x()-x0-h_xshift),shiftx+h_xshift));
-      if (linky) mp.y(fmod((p.y()-y0-h_yshift),shifty+h_yshift));
-      if (linkz) mp.z(fmod((p.z()-z0-h_zshift),shiftz+h_zshift));    
+      if (linkx) mp.x(fmod((p.x()-x0+h_xshift),shiftx)-h_xshift);
+      if (linky) mp.y(fmod((p.y()-y0+h_yshift),shifty)-h_yshift);
+      if (linkz) mp.z(fmod((p.z()-z0+h_zshift),shiftz)-h_zshift);    
       
+      std::cout << "node["<<nodelist[r]<<"]="<< mp << "\n";
       pointmap[nodelist[r]] = mp;
     }
   }
   
-
-  // Build a key map for each edge
+  std::cout << "============================================\n";
+  std::cout << "Built collapsed coordinate system\n";
+  std::cout << "size pointmap = " << pointmap.size() << "\n"; 
+  // Build a key map for each face
+  
+  size_t facecnt = 0; 
   {
-      
-    for (unsigned int r=0; r<edgelist.size();r++) 
+    size_t listsize = facelist.size();   
+    for (unsigned int r=0; r<listsize;r++) 
     {
-      typename FSRC::mesh_type::Edge::index_type idx;
+      typename FSRC::mesh_type::Face::index_type idx;
       typename FSRC::mesh_type::Node::array_type nodes;
       unsigned int key;
       Point p;
       
-      imesh->get_nodes(nodes,edgelist[r].edge);
-      p = pointmap[static_cast<unsigned int>(nodes[0])];
-      
-      key = static_cast<int>(p.x()*xmul);
-      key += (static_cast<int>(p.y()*ymul))<<8;
-      key += (static_cast<int>(p.z()*zmul))<<16;  
-      
-      edgeidx.insert(typename edgeidxmap_type::value_type(key,edgelist[r]));
+      imesh->get_nodes(nodes,facelist[r].face);
+      for (unsigned int q=0;q<nodes.size();q++)
+      {
+        p = pointmap[static_cast<unsigned int>(nodes[q])];
+        
+        key = static_cast<int>(p.x()*xmul);
+        key += (static_cast<int>(p.y()*ymul))<<8;
+        key += (static_cast<int>(p.z()*zmul))<<16;  
+        
+        faceidx.insert(typename faceidxmap_type::value_type(key,facelist[r]));
+      }
+      facecnt = nodes.size();
     }  
   }
+
+  std::cout << "============================================\n";
+  std::cout << "Built face-key map \n";
+  std::cout << "size faceidx = " << faceidx.size() << "\n"; 
 
 
   // Set up the translation table: which node it linked to which node
@@ -783,31 +828,35 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
     
   // Main loop connect everything    
 
+
+  std::cout << "============================================\n";
+  std::cout << "Before Main loop \n";
+
   double tol2 = tol*tol;
 
   {
-    typename FSRC::mesh_type::Edge::index_type idx, idx2;
+    typename FSRC::mesh_type::Face::index_type idx, idx2;
     typename FSRC::mesh_type::Node::array_type nodes,nodes2;
-    typename edgeidxmap_type::iterator it, it_end;
+    typename faceidxmap_type::iterator it, it_end;
     typename FSRC::value_type val1,val2;
-    std::pair<typename edgeidxmap_type::iterator,typename edgeidxmap_type::iterator> lit;
+    std::pair<typename faceidxmap_type::iterator,typename faceidxmap_type::iterator> lit;
     unsigned int key;
     
-    it = edgeidx.begin();
-    it_end = edgeidx.end();
+    it = faceidx.begin();
+    it_end = faceidx.end();
 
-    idx = (*it).second.edge;
+    idx = (*it).second.face;
     imesh->get_nodes(nodes,idx);
     std::vector<Point> points(nodes.size());
-    std::vector<unsigned int> edgelink(nodes.size());
+    std::vector<unsigned int> facelink(nodes.size());
          
     while (it != it_end)
     {  
       key = (*it).first;
-      idx = (*it).second.edge;
+      idx = (*it).second.face;
       val1 = (*it).second.value;
       imesh->get_nodes(nodes,idx);
-      for (size_t w=0; w<nodes.size(); w++) imesh->get_center(points[w],nodes[w]);
+      for (size_t w=0; w<facecnt; w++) imesh->get_center(points[w],nodes[w]);
         
       for (int x = -1; x < 2; x++)
       {
@@ -815,47 +864,51 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
         {
           for (int z = -65536; z < 65537; z += 65536)
           {
-            lit = edgeidx.equal_range(key+x+y+z);     
+            lit = faceidx.equal_range(key+x+y+z);     
             while (lit.first != lit.second)
             {
               bool foundit = true;
-              idx2 = (*(lit.first)).second.edge;
+              idx2 = (*(lit.first)).second.face;
               val2 = (*(lit.first)).second.value;
               
+              if (idx == idx2) {  ++(lit.first); continue; }
+
               imesh->get_nodes(nodes2,idx2);
-              for (unsigned int w=0;(w<nodes.size())&&(foundit == true); w++)
+              for (unsigned int w=0;(w<facecnt)&&(foundit == true); w++)
               {
                 Point p;
                 imesh->get_center(p,nodes2[w]);
-                for (unsigned int v=0;v<nodes.size();v++)
+                bool success = false;
+                for (unsigned int v=0;v<facecnt;v++)
                 {
                   Vector vec(p - points[v]);
-                  if (vec.length2() <= tol2) { foundit = false; break;}
+                  if (vec.length2() <= tol2) { success = true; break;}
                 }
+                if (success) { foundit = false; break;}
               }
               
               if (foundit)
               {
-                for (unsigned int w=0;(w<nodes.size())&&(foundit == true); w++)
+                for (unsigned int w=0;(w<facecnt)&&(foundit == true); w++)
                 {
                   Point p = pointmap[static_cast<unsigned int>(nodes[w])];
                   bool success = false;         
-                  for (unsigned int v=0;v<nodes.size();v++) 
+                  for (unsigned int v=0;v<facecnt;v++) 
                   {
                     Vector vec(p-pointmap[static_cast<unsigned int>(nodes2[v])]); 
-                     if (vec.length2() < tol2) { edgelink[w] = v; success = true; break;}
+                     if (vec.length2() <= tol2) { facelink[w] = v; success = true; break;}
                   }
                   if (!success) { foundit = false; break; }
                 }
               
                 if (foundit)
                 {
-                  if (val1 != val2)
+                  if (val1 == val2)
                   {
-                    for (unsigned int w=0;w<nodes.size(); w++)
+                    for (unsigned int w=0;w<facecnt; w++)
                     {
                       unsigned int i1 = static_cast<unsigned int>(nodes[w]);
-                      unsigned int i2 = static_cast<unsigned int>(nodes2[edgelink[w]]);
+                      unsigned int i2 = static_cast<unsigned int>(nodes2[facelink[w]]);
                       if (link[i1] < link[i2])
                       {
                         link[i2] = link[i1]; 
@@ -864,14 +917,15 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
                       {
                         link[i1] = link[i2];                     
                       }
+
                     }
                   }
                   else
                   {
-                    for (unsigned int w=0;w<nodes.size(); w++)
+                    for (unsigned int w=0;w<facecnt; w++)
                     {
                       unsigned int i1 = static_cast<unsigned int>(nodes[w]);
-                      unsigned int i2 = static_cast<unsigned int>(nodes2[edgelink[w]]);
+                      unsigned int i2 = static_cast<unsigned int>(nodes2[facelink[w]]);
                       LinkElement elem;
                       elem.row =i1; elem.col = i2; memlink.push_back(elem);
                       elem.row =i2; elem.col = i1; memlink.push_back(elem);
@@ -884,9 +938,12 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
           }
         }
       }  
-      ++it;
+      for (size_t r= 0; r< facecnt; r++) ++it;
     }
   }
+
+   std::cout << "============================================\n";
+  std::cout << "After Main loop \n";
 
   {
     // fix the link vector
@@ -895,6 +952,7 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
       unsigned int p = q;
       while (link[p] != p) p = link[p];
       link[q] = p;
+      
     }
 
     // Renumber nodes
@@ -909,6 +967,7 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
       {
         link[q] = link[link[q]];
       }
+      std::cout << "link["<<q<<"]=" << link[q] << "\n";
     }
 
     MatrixHandle GeomToComp, CompToGeom, MemLink;
@@ -996,19 +1055,42 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
     output->copy_properties(input.get_rep());  
     output->set_property("GeomToComp",GeomToComp,false);
     output->set_property("CompToGeom",CompToGeom,false);
-    output->set_property("MemLink",MemLink,false);
+    output->set_property("MembraneLink",MemLink,false);
   }
 
   return (true);
+}
 
 
+template <class FSRC>
+bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement)
+{
+
+  return (false);
 }
 
 template <class FSRC>
-bool LinkFieldBoundaryCurveAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz)
+bool LinkFieldBoundaryCurveAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement)
 {
   return (false);
 }
+
+
+
+template <class FSRC>
+bool LinkFieldBoundarySurfaceByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement)
+{
+
+  return (false);
+}
+
+template <class FSRC>
+bool LinkFieldBoundaryCurveByElementAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelement)
+{
+  return (false);
+}
+
+
 
 
 template <class FSRC>
@@ -1025,6 +1107,25 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::testinput(FieldHandle input)
 
 template <class FSRC>
 bool LinkFieldBoundaryCurveAlgoT<FSRC>::testinput(FieldHandle input)
+{
+  return(dynamic_cast<FSRC*>(input.get_rep())!=0);
+}
+
+
+template <class FSRC>
+bool LinkFieldBoundaryVolumeByElementAlgoT<FSRC>::testinput(FieldHandle input)
+{
+  return(dynamic_cast<FSRC*>(input.get_rep())!=0);
+}
+
+template <class FSRC>
+bool LinkFieldBoundarySurfaceByElementAlgoT<FSRC>::testinput(FieldHandle input)
+{
+  return(dynamic_cast<FSRC*>(input.get_rep())!=0);
+}
+
+template <class FSRC>
+bool LinkFieldBoundaryCurveByElementAlgoT<FSRC>::testinput(FieldHandle input)
 {
   return(dynamic_cast<FSRC*>(input.get_rep())!=0);
 }

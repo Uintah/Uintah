@@ -62,4 +62,5 @@ PathWriter::PathWriter(GuiContext* ctx)
 {
 }
 
+}
 

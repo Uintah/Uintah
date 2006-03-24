@@ -43,21 +43,21 @@ SRCDIR   := Packages/ModelCreation/Dataflow/Modules/DataIO
 SRCS     += \
         $(SRCDIR)/BundleReader.cc\
         $(SRCDIR)/BundleWriter.cc\
-	$(SRCDIR)/ColorMap2Reader.cc\
-	$(SRCDIR)/ColorMap2Writer.cc\
-	$(SRCDIR)/ColorMapReader.cc\
-	$(SRCDIR)/ColorMapWriter.cc\
-	$(SRCDIR)/FieldReader.cc\
-	$(SRCDIR)/FieldWriter.cc\
-	$(SRCDIR)/MatrixReader.cc\
-	$(SRCDIR)/MatrixWriter.cc\
-	$(SRCDIR)/PathReader.cc\
-	$(SRCDIR)/PathWriter.cc\
-	$(SRCDIR)/StringReader.cc\
-	$(SRCDIR)/StringWriter.cc\
+        $(SRCDIR)/ColorMap2Reader.cc\
+        $(SRCDIR)/ColorMap2Writer.cc\
+        $(SRCDIR)/ColorMapReader.cc\
+        $(SRCDIR)/ColorMapWriter.cc\
+        $(SRCDIR)/FieldReader.cc\
+        $(SRCDIR)/FieldWriter.cc\
+        $(SRCDIR)/MatrixReader.cc\
+        $(SRCDIR)/MatrixWriter.cc\
+        $(SRCDIR)/PathReader.cc\
+        $(SRCDIR)/PathWriter.cc\
+        $(SRCDIR)/StringReader.cc\
+        $(SRCDIR)/StringWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \
+PSELIBS := Dataflow/Network Core/Datatypes \
 	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes Core/Volume \
 	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
