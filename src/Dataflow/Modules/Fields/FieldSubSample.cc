@@ -27,17 +27,15 @@
 */
 
 
-/*
- *  FieldSubSample.cc:
- *
- *  Written by:
- *   Allen Sanderson
- *   School of Computing
- *   University of Utah
- *   January 2003
- *
- *  Copyright (C) 2003 SCI Group
- */
+//!    File   : FieldSlicer.h
+//!    Author : Michael Callahan &&
+//!             Allen Sanderson
+//!             SCI Institute
+//!             University of Utah
+//!    Date   : March 2006
+//
+//!    Copyright (C) 2006 SCI Group
+
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
@@ -137,16 +135,24 @@ FieldSubSample::execute()
 {
   FieldHandle field_in_handle;
 
+  //! Get the input field handle from the port.
   if( !get_input_handle( "Input Field",  field_in_handle,  true  ) ) return;
+
+  //! Get the optional matrix handle from the port. Note if a matrix is
+  //! present it is sent down stream. Otherwise it will be created.
   if( !get_input_handle( "Input Matrix", matrix_out_handle_, false ) ) return;
 
+  // Because the field slicer is index based it can only work on
+  // structured data. For unstructured data SamplePlane should be used.
   if( !(field_in_handle->mesh()->topology_geometry() & Mesh::STRUCTURED) ) {
 
     error( field_in_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Only availible for topologically structured data." );
+    error( "For topologically unstructured data use SamplePlane." );
     return;
   }
 
+  //! For now ?? Slice only node and cell based data.
   if( field_in_handle->basis_order() != 0 &&
       field_in_handle->basis_order() != 1 ) {
     error( field_in_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
@@ -154,26 +160,24 @@ FieldSubSample::execute()
     return;
   }
 
-  // The matrix is optional.
-  if( matrix_out_handle_.get_rep() &&
-      (matrix_out_handle_->nrows() != 3 || matrix_out_handle_->ncols() != 5) ) {
-    error( "Input matrix is not a 3x5 matrix" );
-    return;
-  }
-
-  // Get the type and dimensions of the mesh.
+  // Get the dimensions of the mesh.
   vector<unsigned int> dims;
-  
+
   field_in_handle->mesh()->get_dim( dims );
 
   bool update_dims = false;
 
-  if( gui_dims_.get() != (int) dims.size() ) {
-    gui_dims_.set( dims.size() );
+  //! Structured data with irregular points can be wrapped 
+  int wrap = (field_in_handle->mesh()->topology_geometry() & Mesh::IRREGULAR);
+
+  //! Check to see if the gui wrap is different than the field.
+  if( gui_wrap_.get() != wrap ) {
+    gui_wrap_.set( wrap );
     update_dims = true;
   }
 
   if( dims.size() >= 1 ) {
+    //! Check to see if the gui dimensions are different than the field.
     if( gui_dim_i_.get() != (int) dims[0] ) {
       gui_dim_i_.set( dims[1] );
       update_dims = true;
@@ -181,6 +185,7 @@ FieldSubSample::execute()
   }
 
   if( dims.size() >= 2 ) {
+    //! Check to see if the gui dimensions are different than the field.
     if( gui_dim_j_.get() != (int) dims[1] ) {
       gui_dim_j_.set( dims[1] );
       update_dims = true;
@@ -188,36 +193,50 @@ FieldSubSample::execute()
   }
 
   if( dims.size() >= 3 ) {
+    //! Check to see if the gui dimensions are different than the field.
     if( gui_dim_k_.get() != (int) dims[2] ) {
       gui_dim_k_.set( dims[2] );
       update_dims = true;
     }
   }
 
-  // Structured data with irregular points can be wrapped 
-  int wrap = (field_in_handle->mesh()->topology_geometry() & Mesh::IRREGULAR);
-
-  if( gui_wrap_.get() != wrap ) {
-    gui_wrap_.set( wrap );
+  //! Check to see if the gui dimensions are different than the field.
+  //! This is last because the GUI var has a callback on it.
+  if( gui_dims_.get() != (int) dims.size() ) {
+    gui_dims_.set( dims.size() );
     update_dims = true;
   }
 
-  // Check to see if the gui dimensions are different than the field.
+  //! If the gui dimensions are different than the field then update the gui.
   if( update_dims ) {
-    // Dims has callback on it, so it must be set it after i, j, and k.
+
     ostringstream str;
     str << get_id() << " set_size ";
     get_gui()->execute(str.str().c_str());
 
-    cerr << str.str() << endl;
-
     reset_vars();
   }
 
-  // An input matrix is present so use the values in it to override
-  // the variables set in the gui.
+  //! An input matrix is present so use the values in it to override
+  //! the variables set in the gui.
+  //! Column 0 start  index to subsample.
+  //! Column 1 stop   index to subsample.
+  //! Column 2 stride value to subsample.
+  //! Column 3 wrap flag.
+  //! Column 4 dimensions of the data.
   if( matrix_out_handle_.get_rep() ) {
 
+    //! The matrix is optional. If present make sure it is a 3x5 matrix.
+    //! The row indices is the axis index. The column is the data.
+    if( (matrix_out_handle_->nrows() != 3 ||
+	 matrix_out_handle_->ncols() != 5) ) {
+      
+      error( "Input matrix is not a 3x5 matrix" );
+      return;
+    }
+
+    //! Sanity check. Make sure the gui dimensions match the matrix
+    //! dimensions.
     if( gui_dim_i_.get() != matrix_out_handle_->get(0, 4) ||
 	gui_dim_j_.get() != matrix_out_handle_->get(1, 4) ||
 	gui_dim_k_.get() != matrix_out_handle_->get(2, 4) ) {
@@ -236,6 +255,8 @@ FieldSubSample::execute()
       return;
     }
 
+    //! Check to see what index has been selected and if it matches
+    //! the gui index.
     if( gui_start_i_.get() != (int) matrix_out_handle_->get(0, 0) ||
 	gui_start_j_.get() != (int) matrix_out_handle_->get(1, 0) ||
 	gui_start_k_.get() != (int) matrix_out_handle_->get(2, 0) ||
@@ -279,7 +300,8 @@ FieldSubSample::execute()
     }
   }
 
-  // If no data or a change recreate the mesh.
+  //! If no data or an input change recreate the field. I.e Only
+  //! execute when neeed.
   if( inputs_changed_ ||
 
       !field_out_handle_.get_rep() ||
@@ -301,8 +323,11 @@ FieldSubSample::execute()
       gui_wrap_j_.changed( true ) ||
       gui_wrap_k_.changed( true ) ) {
 
+    // Update the state. Other state changes are handled in either
+    // getting handles or in the calling method Module::do_execute.
     update_state(Executing);
 
+    //! Create the new field via a dynamically compiled algorithm.
     const TypeDescription *ftd = field_in_handle->get_type_description();
     const bool geom_irreg =
       (field_in_handle->mesh()->topology_geometry() & Mesh::IRREGULAR);
@@ -318,33 +343,34 @@ FieldSubSample::execute()
 	     gui_stop_i_.get(),   gui_stop_j_.get(),   gui_stop_k_.get(),
 	     gui_stride_i_.get(), gui_stride_j_.get(), gui_stride_k_.get(),
 	     gui_wrap_i_.get(),   gui_wrap_j_.get(),   gui_wrap_k_.get());
-  }
 
-  // Create the output matrix with the axis and index
-  if( matrix_out_handle_ == 0 ) {
-    DenseMatrix *selected = scinew DenseMatrix(3,5);
+    //! Create the output matrix with the stop, stop, stride, wrap, and
+    //! dimensions.
+    if( matrix_out_handle_ == 0 ) {
+      DenseMatrix *selected = scinew DenseMatrix(3,5);
 
-    selected->put(0, 0, gui_start_i_.get() );
-    selected->put(1, 0, gui_start_j_.get() );
-    selected->put(2, 0, gui_start_k_.get() );
+      selected->put(0, 0, gui_start_i_.get() );
+      selected->put(1, 0, gui_start_j_.get() );
+      selected->put(2, 0, gui_start_k_.get() );
 
-    selected->put(0, 1, gui_stop_i_.get() );
-    selected->put(1, 1, gui_stop_j_.get() );
-    selected->put(2, 1, gui_stop_k_.get() );
+      selected->put(0, 1, gui_stop_i_.get() );
+      selected->put(1, 1, gui_stop_j_.get() );
+      selected->put(2, 1, gui_stop_k_.get() );
 
-    selected->put(0, 2, gui_stride_i_.get() );
-    selected->put(1, 2, gui_stride_j_.get() );
-    selected->put(2, 2, gui_stride_k_.get() );
+      selected->put(0, 2, gui_stride_i_.get() );
+      selected->put(1, 2, gui_stride_j_.get() );
+      selected->put(2, 2, gui_stride_k_.get() );
 
-    selected->put(0, 3, gui_wrap_i_.get() );
-    selected->put(1, 3, gui_wrap_j_.get() );
-    selected->put(2, 3, gui_wrap_k_.get() );
+      selected->put(0, 3, gui_wrap_i_.get() );
+      selected->put(1, 3, gui_wrap_j_.get() );
+      selected->put(2, 3, gui_wrap_k_.get() );
 
-    selected->put(0, 4, gui_dim_i_.get() );
-    selected->put(1, 4, gui_dim_j_.get() );
-    selected->put(2, 4, gui_dim_k_.get() );
+      selected->put(0, 4, gui_dim_i_.get() );
+      selected->put(1, 4, gui_dim_j_.get() );
+      selected->put(2, 4, gui_dim_k_.get() );
 
-    matrix_out_handle_ = MatrixHandle(selected);
+      matrix_out_handle_ = MatrixHandle(selected);
+    }
   }
 
   // Send the data downstream

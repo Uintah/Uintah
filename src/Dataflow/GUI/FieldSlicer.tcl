@@ -27,13 +27,17 @@
 #
 
 
-# GUI for FieldSlicer module
-# by Michael Callahan &&
-#    Allen Sanderson
-# December 2002
+#    File   : FieldSlicer.tcl
+#    Author : Michael Callahan &&
+#             Allen Sanderson
+#             SCI Institute
+#             University of Utah
+#    Date   : March 2006
+#
+#    Copyright (C) 2006 SCI Group
 
 # This GUI interface is for selecting an axis and index for sub sampling a
-# topologically structured field
+# topologically structured field.
 
 itcl_class SCIRun_FieldsCreate_FieldSlicer {
     inherit Module
@@ -43,12 +47,8 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
     }
 
     method set_defaults {} {
-
-	global $this-dims
-	global $this-axis
-
-	set $this-axis 2
-	set $this-dims 3
+	global power_app_command
+	set    power_app_command ""
 
 	for {set i 0} {$i < 3} {incr i 1} {
 	    if { $i == 0 } {
@@ -60,25 +60,14 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    }
 
 	    global $this-dim-$index
-	    global $this-index-$index
-	    global $this-index2-$index
-
-	    set $this-dim-$index 1
-	    set $this-index-$index 0
-	    set $this-index2-$index "0"
-
 	    trace variable $this-dim-$index w "$this update_set_size_callback"
 	}
 
-	global $this-continuous
-	global $this-update_type
-
-	set $this-continuous 0
-	set $this-update_type "Manual"
-
-	trace variable $this-update_type w "$this update_type_callback"
-
+	global $this-dims
 	trace variable $this-dims w "$this update_set_size_callback"
+
+	global $this-update_type
+	trace variable $this-update_type w "$this update_type_callback"
     }
 
     method ui {} {
@@ -97,8 +86,10 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	frame $w.main
 
 	frame $w.main.l
-	label $w.main.l.direction -text "Direction"       -width 9 -anchor w -just left
-	label $w.main.l.index     -text "Slice Node"      -width 11 -anchor w -just left
+	label $w.main.l.direction -text "Direction"  \
+	    -width 9 -anchor w -just left
+	label $w.main.l.index     -text "Slice Node" \
+	    -width 11 -anchor w -just left
 
 	pack $w.main.l.direction -side left
 	pack $w.main.l.index     -side left -padx 75
@@ -131,7 +122,8 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	}
 
 	if { [set $this-dims] == 3 } {
-	    pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
+	    pack $w.main.l $w.main.i $w.main.j $w.main.k \
+		-side top -padx 10 -pady 5
 
 	} elseif { [set $this-dims] == 2 } {
 	    pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
@@ -304,9 +296,11 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    pack forget $w.main.j
 
 	    if { [set $this-dims] == 3 } {
-		pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
+		pack $w.main.l $w.main.i $w.main.j $w.main.k \
+		    -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 2 } {
-		pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5	    
+		pack $w.main.l $w.main.i $w.main.j \
+		    -side top -padx 10 -pady 5	    
 	    } elseif { [set $this-dims] == 1 } {
 		pack $w.main.l $w.main.i -side top -padx 10 -pady 5	    
 	    }

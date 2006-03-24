@@ -27,11 +27,17 @@
 #
 
 
-# GUI for FieldSubSample module
-# by Allen R. Sanderson
-# March 2002
+#    File   : FieldSlicer.tcl
+#    Author : Michael Callahan &&
+#             Allen Sanderson
+#             SCI Institute
+#             University of Utah
+#    Date   : March 2006
+#
+#    Copyright (C) 2006 SCI Group
 
-# This GUI interface is for sub sampling a topologically structured field.
+# This GUI interface is for selecting values for sub sampling a
+# topologically structured field.
 
 itcl_class SCIRun_FieldsCreate_FieldSubSample {
     inherit Module
@@ -137,7 +143,8 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
 	    frame $w.main.$index
 
-	    label $w.main.$index.l -text " $index :" -width 3 -anchor w -just left
+	    label $w.main.$index.l -text " $index :" \
+		-width 3 -anchor w -just left
 
 	    pack $w.main.$index.l -side left
 
@@ -150,7 +157,8 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		$this-stop-$index $this-stop2-$index
 
 	    scaleEntry2 $w.main.$index.stride \
-		1 [expr [set $this-dim-$index] - 1] 100 $this-stride-$index $this-stride2-$index
+		1 [expr [set $this-dim-$index] - 1] 100 \
+		$this-stride-$index $this-stride2-$index
 
 	    checkbutton $w.main.$index.wrap -variable $this-wrap-$index \
 		    -state $wrap -disabledforeground "" \
@@ -163,7 +171,8 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	}
 
 	if { [set $this-dims] == 3 } {
-	    pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
+	    pack $w.main.l $w.main.i $w.main.j $w.main.k \
+		-side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 2 } {
 	    pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 1 } {
@@ -243,12 +252,13 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    }
 
 	    $w.main.$index.start.s configure -from 0 -to $stop_val
-	    $w.main.$index.stop.s configure -from $start_val -to [expr [set $this-dim-$index] - 1]
+	    $w.main.$index.stop.s configure \
+		-from $start_val -to [expr [set $this-dim-$index] - 1]
 
 	    bind $w.main.$index.start.e <KeyRelease> \
 		"$this manualSliderEntry4 0 $stop_val $this-start-$index $this-start2-$index $index"
 	    bind $w.main.$index.stop.e  <KeyRelease> \
-		"$this manualSliderEntry $start_val  [expr [set $this-dim-$index] - 1] $this-stop-$index $this-stop2-$index"
+		"$this manualSliderEntry $start_val [expr [set $this-dim-$index] - 1] $this-stop-$index $this-stop2-$index"
 	}
     }
 
@@ -331,7 +341,8 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    pack forget $w.main.j
 	    
 	    if { [set $this-dims] == 3 } {
-		pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
+		pack $w.main.l $w.main.i $w.main.j $w.main.k \
+		    -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 2 } {
 		pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 1 } {

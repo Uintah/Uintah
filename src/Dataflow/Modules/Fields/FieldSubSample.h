@@ -27,12 +27,15 @@
 */
 
 
-//    File   : FieldSubSample.h
-//    Author : Michael Callahan &&
-//             Allen Sanderson
-//             School of Computing
-//             University of Utah
-//    Date   : January 2003
+//!    File   : FieldSlicer.h
+//!    Author : Michael Callahan &&
+//!             Allen Sanderson
+//!             SCI Institute
+//!             University of Utah
+//!    Date   : March 2006
+//
+//!    Copyright (C) 2006 SCI Group
+
 
 #if !defined(FieldSubSample_h)
 #define FieldSubSample_h
@@ -139,12 +142,12 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     kdim_in = 1;
   }
 
-  // This happens when _wrapping.
+  //! This happens when _wrapping.
   if( i_stop <= i_start ) i_stop += idim_in;
   if( j_stop <= j_start ) j_stop += jdim_in;
   if( k_stop <= k_start ) k_stop += kdim_in;
 
-  // Add one because we want the last node.
+  //! Add one because we want the last node.
   unsigned int idim_out = (i_stop - i_start) / i_stride + (rank >= 1 ? 1 : 0);
   unsigned int jdim_out = (j_stop - j_start) / j_stride + (rank >= 2 ? 1 : 0);
   unsigned int kdim_out = (k_stop - k_start) / k_stride + (rank >= 3 ? 1 : 0);
@@ -160,8 +163,8 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
       field_name.find( "StructQuadSurfField" ) != string::npos ||
       field_name.find( "StructCurveField"    ) != string::npos ) {
 
-    // Account for the modulo of stride so that the last node will be
-    // included even if it "partial" cell when compared to the others.
+    //! Account for the modulo of stride so that the last node will be
+    //! included even if it "partial" cell when compared to the others.
     if( (i_stop - i_start) % i_stride ) idim_out += (rank >= 1 ? 1 : 0);
     if( (j_stop - j_start) % j_stride ) jdim_out += (rank >= 2 ? 1 : 0);
     if( (k_stop - k_start) % k_stride ) kdim_out += (rank >= 3 ? 1 : 0);
@@ -193,7 +196,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   omesh->set_dim( dim );
 
-  // Now after the mesh has been created, create the field.
+  //! Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh);
 
   ofield->copy_properties(ifield);
@@ -220,7 +223,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   string mesh_name = ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
-  // For structured geometry we need to set the correct location.
+  //! For structured geometry we need to set the correct location.
   if(mesh_name.find("LatVolMesh"  ) != string::npos ||
      mesh_name.find("ImageMesh"   ) != string::npos  ||
      mesh_name.find("ScanlineMesh") != string::npos ) 
@@ -229,15 +232,15 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     imesh->get_min( min );
     omesh->set_min( min );
 
-    // Set the orginal transform.
+    //! Set the orginal transform.
     omesh->set_transform( imesh->get_transform() );
 
     imesh->begin( inodeItr );
 
-    // Get the orgin of mesh. */
+    //! Get the orgin of mesh. */
     imesh->get_center(o, *inodeItr);    
 
-    // Set the iterator to the first point.
+    //! Set the iterator to the first point.
     for (k=0; k<k_start; k++) {
       for( ic=0; ic<jdim_in*idim_in; ic++ )
 	++inodeItr;
@@ -251,10 +254,10 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     for (i=0; i<i_start; i++)
       ++inodeItr;
 
-    // Get the point.
+    //! Get the point.
     imesh->get_center(p, *inodeItr);
 
-    // Put the new field into the correct location.
+    //! Put the new field into the correct location.
     Transform trans;
 
     trans.pre_translate( (Vector) (-o) );
@@ -268,22 +271,22 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     omesh->transform( trans );
   }
 
-  // Index based on the old mesh so that we are assured of getting the last
-  // node even if it forms a "partial" cell.
+  //! Index based on the old mesh so that we are assured of getting the last
+  //! node even if it forms a "partial" cell.
   for( k=k_start; k<k_stop_stride; k+=k_stride ) {
 
-    // Check for going past the stop.
+    //! Check for going past the stop.
     if( k > k_stop )
       k = k_stop;
 
-    // Check for overlap.
+    //! Check for overlap.
     if( k-k_stride <= k_start+kdim_in && k_start+kdim_in <= k )
       knode = k_start;
     else
       knode = k % kdim_in;
 
-    // A hack here so that an iterator can be used.
-    // Set this iterator to be at the correct kth index.
+    //! A hack here so that an iterator can be used.
+    //! Set this iterator to be at the correct kth index.
     imesh->begin( knodeItr );
     imesh->begin( kcellItr );
 
@@ -295,18 +298,18 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
     for( j=j_start; j<j_stop_stride; j+=j_stride ) {
 
-      // Check for going past the stop.
+      //! Check for going past the stop.
       if( j > j_stop )
 	j = j_stop;
 
-      // Check for overlap.
+      //! Check for overlap.
       if( j-j_stride <= j_start+jdim_in && j_start+jdim_in <= j )
 	jnode = j_start;
       else
 	jnode = j % jdim_in;
 
-      // A hack here so that an iterator can be used.
-      // Set this iterator to be at the correct jth index.
+      //! A hack here so that an iterator can be used.
+      //! Set this iterator to be at the correct jth index.
       jnodeItr = knodeItr;
       jcellItr = kcellItr;
 
@@ -318,18 +321,18 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
       for( i=i_start; i<i_stop_stride; i+=i_stride ) {
 
-	// Check for going past the stop.
+	//! Check for going past the stop.
 	if( i > i_stop )
 	  i = i_stop;
 
-	// Check for overlap.
+	//! Check for overlap.
 	if( i-i_stride <= i_start+idim_in && i_start+idim_in <= i )
 	  inode = i_start;
 	else
 	  inode = i % idim_in;
 
-	// A hack here so that an iterator can be used.
-	// Set this iterator to be at the correct ith index.
+	//! A hack here so that an iterator can be used.
+	//! Set this iterator to be at the correct ith index.
 	inodeItr = jnodeItr;
 	icellItr = jcellItr;
 
@@ -381,6 +384,6 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
   return ofield;
 }
 
-} // end namespace SCIRun
+} //! end namespace SCIRun
 
-#endif // FieldSubSample_h
+#endif //! FieldSubSample_h
