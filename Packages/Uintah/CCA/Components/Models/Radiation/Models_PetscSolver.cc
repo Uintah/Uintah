@@ -536,7 +536,7 @@ Models_PetscSolver::radLinearSolve()
     ierr = VecAXPY(&neg_one, d_b, u_tmp);
 #endif
 #if (PETSC_VERSION_MINOR == 3)
-    ierr = VecAXPY(d_b,neg_one, u_tmp);
+    ierr = VecAXPY(u_tmp,neg_one, d_b);
 #endif
 
   if(ierr)
@@ -655,7 +655,7 @@ Models_PetscSolver::radLinearSolve()
   ierr = VecAXPY(&neg_one, d_b, d_u);
 #endif
 #if (PETSC_VERSION_MINOR == 3)
-  ierr = VecAXPY(d_b,neg_one, d_u);
+  ierr = VecAXPY(d_u,neg_one, d_b);
 #endif
   if(ierr)
     throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
