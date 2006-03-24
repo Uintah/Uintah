@@ -56,6 +56,7 @@ PSELIBS := \
         Core/Geometry      \
         Core/GeomInterface \
         Core/GuiInterface  \
+        Core/ImportExport  \
         Core/Persistent    \
         Core/Thread        \
         Core/TkExtensions  \
