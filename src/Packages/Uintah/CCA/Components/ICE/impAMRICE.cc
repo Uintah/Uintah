@@ -709,7 +709,7 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
     cout_doing <<"  patch " << coarsePatch->getID()<< endl;
     CCVariable<double> one;
           
-    new_dw->allocateTemporary(one, coarsePatch);
+    new_dw->allocateTemporary(one, coarsePatch,Ghost::AroundCells, 1);
     one.initialize(1.0);
     constCCVariable<double> notUsed = one;
     int one_zero = 1;
@@ -755,8 +755,10 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     cout_doing << "  patch " << coarsePatch->getID()<< endl;
 
     CCVariable<double> rhs, sumRefluxCorrection;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
     new_dw->getModifiable(rhs,lb->rhsLabel, 0, coarsePatch);
-    new_dw->allocateTemporary(sumRefluxCorrection, coarsePatch);
+    new_dw->allocateTemporary(sumRefluxCorrection, coarsePatch,gac,1);
     sumRefluxCorrection.initialize(0.0);
 
     //__________________________________
