@@ -65,7 +65,7 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 
 private:
-  GuiString IsoValueStr_;
+  GuiString gui_IsoValueStr_;
 
   int nvalues_;
   vector< double > isovalues_;
@@ -83,7 +83,7 @@ private:
   FieldHandle fHandle_N_1D_;
   FieldHandle fHandle_ND_;
 
-  bool error_;
+  bool execute_error_;
 };
 
 class IsoValueControllerAlgo : public DynamicAlgoBase

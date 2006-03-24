@@ -54,12 +54,12 @@ using namespace SCIRun;
 DECLARE_MAKER(IsoValueController)
 IsoValueController::IsoValueController(GuiContext* context)
   : Module("IsoValueController", context, Source, "Fields", "Fusion"),
-    IsoValueStr_(context->subVar("isovalues")),
+    gui_IsoValueStr_(context->subVar("isovalues")),
     prev_min_(0),
     prev_max_(0),
     last_orig_generation_(-1),
     last_tran_generation_(-1),
-    error_(false)
+    execute_error_(false)
 {
   ColumnMatrix *isovalueMtx = scinew ColumnMatrix(1);
   mHandleIsoValue_ = MatrixHandle(isovalueMtx);
@@ -96,7 +96,7 @@ void IsoValueController::execute() {
 
   vector< double > isovalues(0);
 
-  istringstream vlist(IsoValueStr_.get());
+  istringstream vlist(gui_IsoValueStr_.get());
   double val;
   while(!vlist.eof()) {
     vlist >> val;
@@ -146,8 +146,13 @@ void IsoValueController::execute() {
   vector< FieldHandle > fHandles_ND;
   vector< GeomHandle  > gHandles;
 
-  if( inputs_changed_ || error_ ) {
-    error_ = false;
+  if( inputs_changed_ ||
+
+      execute_error_ ) {
+
+    update_state(Executing);
+
+    execute_error_ = false;
 
     unsigned int ncols = (int) sqrt( (double) isovalues.size() );
 
@@ -193,7 +198,7 @@ void IsoValueController::execute() {
       FieldHandle fHandleND;
 
       if( !get_input_handle( "(N)D Field", fHandleND, true ) ) {
-	error_ = true;
+	execute_error_ = true;
 	return;
       } else
 	fHandles_ND.push_back( fHandleND );
@@ -202,7 +207,7 @@ void IsoValueController::execute() {
       FieldHandle fHandleN_1D;
            
       if( !get_input_handle( "(N-1)D Field", fHandleN_1D, true ) ) {
-	error_ = true;
+	execute_error_ = true;
 	return;
       } else
 	fHandles_N_1D.push_back( fHandleN_1D );
@@ -212,7 +217,7 @@ void IsoValueController::execute() {
 //    GeomHandle geometryin;
 
 //    if( !get_input_handle( "Axis Geometry", geometryin, true ) ) {
-// 	error_ = true;
+// 	execute_error_ = true;
 //      return;
 //    } else
 //  	gHandles.push_back( geometryin );
@@ -223,7 +228,6 @@ void IsoValueController::execute() {
   string fldname;
   if (!fHandle_orig_->get_property("name",fldname))
     fldname = string("Isosurface");
-
 
   // Output field.
   if (fHandles_ND.size() && fHandles_ND[0].get_rep()) {
@@ -256,7 +260,11 @@ void IsoValueController::execute() {
   send_output_handle( "(N)D Fields",   fHandle_ND_,   true );
   send_output_handle( "(N-1)D Fields", fHandle_N_1D_, true );
 
-  send_output_handle( "Axis Geometry", gHandles, fldname );
+//   vector< string > names;
+//   for (unsigned int i=0; i<gHandles.size(); i++)
+//     names.push_back(fldname + to_string( i ) );
+
+//   send_output_handle( "Axis Geometry", gHandles, names );
 }
 
 void

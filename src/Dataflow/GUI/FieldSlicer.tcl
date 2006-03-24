@@ -59,15 +59,15 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 		set index k
 	    }
 
-	    global $this-$index-dim
-	    global $this-$index-index
-	    global $this-$index-index2
+	    global $this-dim-$index
+	    global $this-index-$index
+	    global $this-index2-$index
 
-	    set $this-$index-dim 1
-	    set $this-$index-index 0
-	    set $this-$index-index2 "0"
+	    set $this-dim-$index 1
+	    set $this-index-$index 0
+	    set $this-index2-$index "0"
 
-	    trace variable $this-$index-dim w "$this update_set_size_callback"
+	    trace variable $this-dim-$index w "$this update_set_size_callback"
 	}
 
 	global $this-continuous
@@ -112,9 +112,9 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 		set index k
 	    }
 
-	    global $this-$index-dim
-	    global $this-$index-index
-	    global $this-$index-index2
+	    global $this-dim-$index
+	    global $this-index-$index
+	    global $this-index2-$index
 
 	    frame $w.main.$index
 
@@ -124,8 +124,8 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    pack $w.main.$index.l -side left
 
 	    scaleEntry2 $w.main.$index.index \
-		0 [expr [set $this-$index-dim] - 1] 200 \
-		$this-$index-index $this-$index-index2
+		0 [expr [set $this-dim-$index] - 1] 200 \
+		$this-index-$index $this-index2-$index
 
 	    pack $w.main.$index.l $w.main.$index.index -side left
 	}
@@ -321,10 +321,10 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 		set index k
 	    }
 
-	    global $this-$index-index
-	    global $this-$index-index2
+	    global $this-index-$index
+	    global $this-index2-$index
 
-	    set stop_val [expr [set $this-$index-dim]-1]
+	    set stop_val [expr [set $this-dim-$index]-1]
 
 	    if [ expr [winfo exists $w] ] {
 
@@ -332,16 +332,16 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 		$w.main.$index.index.s configure -from 0 -to $stop_val
 
 		bind $w.main.$index.index.e \
-		    <KeyRelease> "$this manualSliderEntry 0 $stop_val $this-$index-index $this-$index-index2"
+		    <KeyRelease> "$this manualSliderEntry 0 $stop_val $this-index-$index $this-index2-$index"
 	    }
 
 	    # Reset all of the slider values to the index values.
-	    if { [set $this-$index-index] > $stop_val } {
-		set $this-$index-index $stop_val
+	    if { [set $this-index-$index] > $stop_val } {
+		set $this-index-$index $stop_val
 	    }
 
 	    # Update the text values.
-	    set $this-$index-index2 [set $this-$index-index]
+	    set $this-index2-$index [set $this-index-$index]
 	}
     }
 

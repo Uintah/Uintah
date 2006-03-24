@@ -43,33 +43,9 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     } 
     
     method set_defaults {} { 
-	global $this-faux
-	global $this-gamma
-	global $this-mapType
-	global $this-mapName
-	global $this-reverse
-	global $this-resolution
-	global $this-realres
-	global $this-minRes
-	global $this-nodeList
-	global $this-positionList
-	global $this-width
-	global $this-height
-        set $this-faux 0
-	set $this-gamma 0
-	set $this-mapType 3
-	set $this-mapName "Rainbow"
-	set $this-reverse 0
-	set $this-resolution 256
-	set $this-realres 256
-	set $this-minRes 2
 	set exposed 0
 	set colorMap {}
 	set selected -1
-	set $this-nodeList {}
-	set $this-positionList {}
-	set $this-width 1
-	set $this-height 1
 
 	trace variable $this-mapType w "$this lookupOldIndex"
     }   
@@ -157,9 +133,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	return [list $maps]
     }
     method ui {} { 
-	global $this-minRes
 	global $this-resolution
-	global $this-realres
 	
 	set w .ui[modname]
 	
@@ -198,14 +172,13 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	
 	Tooltip $w.f3.s "Skews the color map to the left or right."
 
-	scale $w.f3.s2 -from [set $this-minRes] -to 256 -state normal \
+	scale $w.f3.s2 -from 2 -to 256 -state normal \
 		-orient horizontal  -variable $this-resolution -label "Resolution"
 	pack $w.f3.s2 -expand yes -fill x -pady 2 -padx 2
 
 	Tooltip $w.f3.s2 "Sets the number of unique colors used in the color map."
 	
-	bind $w.f3.s2 <ButtonRelease> \
-	    "$this setres; $this update; $this-c needexecute"
+	bind $w.f3.s2 <ButtonRelease> "$this update; $this-c needexecute"
 
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -padx 2 -pady 2 -expand yes -fill both
@@ -244,11 +217,6 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	moveToCursor $w
     }
    
-    method setres {} {
-	global $this-realres
-	set $this-realres [set $this-resolution]
-    }
-
     method change {} {
 	$this update
 	$this-c needexecute
@@ -537,23 +505,20 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     method SetColorMap {} {
 	global $this-resolution
 	global $this-mapName
-	global $this-realres
 	set colorMap {}
 	set map [findByName [set $this-mapName]]
 	set currentMap {}
 	set currentMap [$this makeNewMap $map]
 	set n [llength $currentMap]
-	if { [set $this-resolution] > [set $this-realres] } {
-	      set $this-resolution [set $this-realres]
-	}
-	set m [set $this-resolution]
 
-	set frac [expr ($n-1)/double($m-1)]
-	for { set i 0 } { $i < $m  } { incr i} {
+	set res [set $this-resolution]
+
+	set frac [expr ($n-1)/double($res-1)]
+	for { set i 0 } { $i < $res  } { incr i} {
 	    if { $i == 0 } {
 		set color [lindex $currentMap 0]
 		lappend color [$this getAlpha $i]
-	    } elseif { $i == [expr ($m -1)] } {
+	    } elseif { $i == [expr ($res - 1)] } {
 		set color [lindex $currentMap [expr ($n - 1)]]
 		lappend color [$this getAlpha $i]
 	    } else {
@@ -578,7 +543,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	global $this-gamma
 	global $this-r
 
-	set res [set $this-realres]
+	set res [set $this-resolution]
 	set newMap {}
 	set m [expr int($res + abs( [set $this-gamma] )*(255 - $res))]
 	set n [llength $currentMap]

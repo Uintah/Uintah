@@ -56,36 +56,38 @@ namespace SCIRun {
 DECLARE_MAKER(Isosurface)
 
 
-Isosurface::Isosurface(GuiContext* ctx) : 
-  Module("Isosurface", ctx, Filter, "Visualization", "SCIRun"), 
-  gui_iso_value_min_(get_ctx()->subVar("isoval-min"),  0.0),
-  gui_iso_value_max_(get_ctx()->subVar("isoval-max"), 99.0),
-  gui_iso_value_(get_ctx()->subVar("isoval"), 0.0),
-  gui_iso_value_typed_(get_ctx()->subVar("isoval-typed"), 0.0),
-  gui_iso_value_quantity_(get_ctx()->subVar("isoval-quantity"), 1),
-  gui_iso_quantity_range_(get_ctx()->subVar("quantity-range"), "field"),
-  gui_iso_quantity_clusive_(get_ctx()->subVar("quantity-clusive"), "exclusive"),
-  gui_iso_quantity_min_(get_ctx()->subVar("quantity-min"),   0),
-  gui_iso_quantity_max_(get_ctx()->subVar("quantity-max"), 100),
-  gui_iso_quantity_list_(get_ctx()->subVar("quantity-list"), ""),
-  gui_iso_value_list_(get_ctx()->subVar("isoval-list"), "No values present."),
-  gui_iso_matrix_list_(get_ctx()->subVar("matrix-list"), "No matrix present - execution needed."),
-  gui_extract_from_new_field_(get_ctx()->subVar("extract-from-new-field"), 1),
-  gui_use_algorithm_(get_ctx()->subVar("algorithm"), 0),
-  gui_build_field_(get_ctx()->subVar("build_trisurf"), 1),
-  gui_build_geom_(get_ctx()->subVar("build_geom"), 1),
-  gui_np_(get_ctx()->subVar("np"), 1),
-  gui_active_isoval_selection_tab_(get_ctx()->subVar("active-isoval-selection-tab"), "0"),
-  gui_active_tab_(get_ctx()->subVar("active_tab"), "0"),
-  gui_update_type_(get_ctx()->subVar("update_type"), "On Release"),
-  gui_color_r_(get_ctx()->subVar("color-r"), 0.4),
-  gui_color_g_(get_ctx()->subVar("color-g"), 0.2),
-  gui_color_b_(get_ctx()->subVar("color-b"), 0.9),
-  fHandle_(0),
-  mHandle_(0),
-  geomID_(0),
+Isosurface::Isosurface(GuiContext* context) : 
+  Module("Isosurface", context, Filter, "Visualization", "SCIRun"), 
 
-  error_(0)  
+  field_output_handle_(0),
+  matrix_output_handle_(0),
+  geometry_output_handle_(0),
+
+  gui_iso_value_min_(context->subVar("isoval-min"),  0.0),
+  gui_iso_value_max_(context->subVar("isoval-max"), 99.0),
+  gui_iso_value_(context->subVar("isoval"), 0.0),
+  gui_iso_value_typed_(context->subVar("isoval-typed"), 0.0),
+  gui_iso_value_quantity_(context->subVar("isoval-quantity"), 1),
+  gui_iso_quantity_range_(context->subVar("quantity-range"), "field"),
+  gui_iso_quantity_clusive_(context->subVar("quantity-clusive"), "exclusive"),
+  gui_iso_quantity_min_(context->subVar("quantity-min"),   0),
+  gui_iso_quantity_max_(context->subVar("quantity-max"), 100),
+  gui_iso_quantity_list_(context->subVar("quantity-list"), ""),
+  gui_iso_value_list_(context->subVar("isoval-list"), "No values present."),
+  gui_iso_matrix_list_(context->subVar("matrix-list"),
+		       "No matrix present - execution needed."),
+  gui_extract_from_new_field_(context->subVar("extract-from-new-field"), 1),
+  gui_use_algorithm_(context->subVar("algorithm"), 0),
+  gui_build_field_(context->subVar("build_trisurf"), 1),
+  gui_build_geom_(context->subVar("build_geom"), 1),
+  gui_np_(context->subVar("np"), 1),
+  gui_active_isoval_selection_tab_(context->subVar("active-isoval-selection-tab"),
+				   "0"),
+  gui_active_tab_(context->subVar("active_tab"), "0"),
+  gui_update_type_(context->subVar("update_type"), "On Release"),
+  gui_color_r_(context->subVar("color-r"), 0.4),
+  gui_color_g_(context->subVar("color-g"), 0.2),
+  gui_color_b_(context->subVar("color-b"), 0.9)
 {
 }
 
@@ -96,7 +98,7 @@ Isosurface::~Isosurface()
 
 
 MatrixHandle
-append_sparse(vector<MatrixHandle> &matrices)
+append_sparse_matrices(vector<MatrixHandle> &matrices)
 {
   unsigned int i;
   int j;
@@ -140,13 +142,15 @@ append_sparse(vector<MatrixHandle> &matrices)
 void
 Isosurface::execute()
 {
-  FieldHandle fHandle;
-  if( !get_input_handle( "Field", fHandle, true ) ) return;
+  FieldHandle field_input_handle;
+  if( !get_input_handle( "Field", field_input_handle, true ) ) return;
 
   // Check to see if the input field has changed.
-  if(inputs_changed_ ) {
+  if( inputs_changed_ ) {
 
-    ScalarFieldInterfaceHandle sfi = fHandle->query_scalar_interface(this);
+    ScalarFieldInterfaceHandle sfi =
+      field_input_handle->query_scalar_interface(this);
+
     if (!sfi.get_rep()) {
       error("Input field does not contain scalar data.");
       return;
@@ -155,12 +159,12 @@ Isosurface::execute()
     pair<double, double> minmax;
     sfi->compute_min_max(minmax.first, minmax.second);
 
-    gui_iso_value_min_.set( minmax.first,  GuiVar::SET_GUI_ONLY );
-    gui_iso_value_max_.set( minmax.second, GuiVar::SET_GUI_ONLY );
-
     // Check to see if the gui min max are different than the field.
-    if (gui_iso_value_min_.changed( true ) ||
-	gui_iso_value_min_.changed( true ) ) {
+    if( gui_iso_value_min_.get() != minmax.first ||
+	gui_iso_value_max_.get() != minmax.second ) {
+
+      gui_iso_value_min_.set( minmax.first );
+      gui_iso_value_max_.set( minmax.second );
 
       ostringstream str;
       str << get_id() << " set_min_max ";
@@ -172,8 +176,9 @@ Isosurface::execute()
   }
 
   // Get the optional colormap for the geometry.
-  ColorMapHandle cmHandle = 0;
-  if( !get_input_handle( "Optional Color Map", cmHandle, false ) ) return;
+  ColorMapHandle colormap_input_handle = 0;
+  if( !get_input_handle( "Optional Color Map", colormap_input_handle, false ) )
+    return;
   
   vector<double> isovals(0);
 
@@ -206,12 +211,12 @@ Isosurface::execute()
     string range = gui_iso_quantity_range_.get();
 
     if (range == "colormap") {
-      if (cmHandle != 0 ) {
+      if (colormap_input_handle.get_rep() ) {
 	error("No color colormap for isovalue quantity");
 	return;
       }
-      qmin = cmHandle->getMin();
-      qmax = cmHandle->getMax();
+      qmin = colormap_input_handle->getMin();
+      qmax = colormap_input_handle->getMax();
     } else if (range == "manual") {
       qmin = gui_iso_quantity_min_.get();
       qmax = gui_iso_quantity_max_.get();
@@ -275,16 +280,17 @@ Isosurface::execute()
     }
   } else if (gui_active_isoval_selection_tab_.get() == "3") { // matrix
 
-    MatrixHandle mHandle;
-    if( !get_input_handle( "Optional Isovalues", mHandle, true ) ) return;
+    MatrixHandle matrix_input_handle;
+    if( !get_input_handle( "Optional Isovalues", matrix_input_handle, true ) )
+      return;
 
     ostringstream str;
     
     str << get_id() << " set-isomatrix-list \"";
 
-    for (int i=0; i < mHandle->nrows(); i++) {
-      for (int j=0; j < mHandle->ncols(); j++) {
-	isovals.push_back(mHandle->get(i, j));
+    for (int i=0; i < matrix_input_handle->nrows(); i++) {
+      for (int j=0; j < matrix_input_handle->ncols(); j++) {
+	isovals.push_back(matrix_input_handle->get(i, j));
 
 	str << " " << isovals[i];
       }
@@ -331,21 +337,18 @@ Isosurface::execute()
   const bool build_interp =
     gui_build_field_.get() && omatrix_port->nconnections();
 
-  if( (gui_build_field_.get() && !fHandle_.get_rep()) ||
-      (gui_build_geom_.get()  && geomID_ == 0   ) ||
-      (build_interp           && !mHandle_.get_rep()) ||
-      inputs_changed_ ||
-      error_ ) {
+  if( (gui_build_field_.get() && !field_output_handle_.get_rep()) ||
+      (gui_build_geom_.get()  && !geometry_output_handle_.get_rep()) ||
+      (build_interp           && !matrix_output_handle_.get_rep()) ||
+      inputs_changed_  ) {
 
-    update_state(JustStarted);
+    update_state(Executing);
 
-    error_ = false;
+    vector<GeomHandle > geometry_handles;
+    vector<FieldHandle> field_handles;
+    vector<MatrixHandle> interpolant_handles;
 
-    vector<GeomHandle > geometries;
-    vector<FieldHandle> fields;
-    vector<MatrixHandle> interpolants;
-
-    const TypeDescription *td = fHandle->get_type_description();
+    const TypeDescription *td = field_input_handle->get_type_description();
 
     switch (gui_use_algorithm_.get()) {
     case 0:  // Marching Cubes
@@ -361,16 +364,16 @@ Isosurface::execute()
 	  if (np < 1 ) { np = 1; gui_np_.set(np); }
 	  if (np > 32 ) { np = 32; gui_np_.set(np); }
 	  mc_alg->set_np(np);
-	  mc_alg->set_field( fHandle.get_rep() );
+	  mc_alg->set_field( field_input_handle.get_rep() );
 
 	  for (unsigned int iv=0; iv<isovals.size(); iv++)  {
 	    mc_alg->search( isovals[iv],
 			    gui_build_field_.get(), gui_build_geom_.get() );
-	    geometries.push_back( mc_alg->get_geom() );
+	    geometry_handles.push_back( mc_alg->get_geom() );
 	    for (int i = 0 ; i < np; i++) {
-	      fields.push_back( mc_alg->get_field(i) );
+	      field_handles.push_back( mc_alg->get_field(i) );
 	      if (build_interp)
-		interpolants.push_back( mc_alg->get_interpolant(i) );
+		interpolant_handles.push_back( mc_alg->get_interpolant(i) );
 	    }
 	  }
 	  mc_alg->release();
@@ -383,20 +386,20 @@ Isosurface::execute()
 	if (! noise_alg.get_rep()) {
 	  CompileInfoHandle ci =
 	    NoiseAlg::get_compile_info(td,
-				       fHandle->basis_order() == 0,
+				       field_input_handle->basis_order() == 0,
 				       false);
 	  if (! module_dynamic_compile(ci, noise_alg)) {
 	    error( "NOISE can not work with this field.");
 	    return;
 	  }
-	  noise_alg->set_field(fHandle.get_rep());
+	  noise_alg->set_field(field_input_handle.get_rep());
 
 	  for (unsigned int iv=0; iv<isovals.size(); iv++) {
-	    geometries.push_back(noise_alg->search(isovals[iv],
+	    geometry_handles.push_back(noise_alg->search(isovals[iv],
 			   gui_build_field_.get(), gui_build_geom_.get() ) );
-	    fields.push_back(noise_alg->get_field());
+	    field_handles.push_back(noise_alg->get_field());
 	    if (build_interp)
-	      interpolants.push_back(noise_alg->get_interpolant());
+	      interpolant_handles.push_back(noise_alg->get_interpolant());
 	  }
 	  noise_alg->release();
 	}
@@ -412,13 +415,13 @@ Isosurface::execute()
 	    error( "SAGE can not work with this field.");
 	    return;
 	  }
-	  sage_alg->set_field(fHandle.get_rep());
+	  sage_alg->set_field(field_input_handle.get_rep());
 
 	  for (unsigned int iv=0; iv<isovals.size(); iv++) {
 	    GeomGroup *group = scinew GeomGroup;
 	    GeomPoints *points = scinew GeomPoints();
-	    sage_alg->search(isovals[0], group, points);
-	    geometries.push_back( group );
+	    sage_alg->search(isovals[iv], group, points);
+	    geometry_handles.push_back( group );
 	  }
 	  sage_alg->release();
 	}
@@ -430,103 +433,94 @@ Isosurface::execute()
     }
 
     // Get the output field handle.
-    if (gui_build_field_.get() && fields.size() && fields[0].get_rep()) {
+    if (gui_build_field_.get() && field_handles.size() && field_handles[0].get_rep()) {
 
       // Copy the name of field to the downstream field.
       string fldname;
-      if (fHandle->get_property("name",fldname)) {
-	for (unsigned int i=0; i < fields.size(); i++)
-	  fields[i]->set_property("name",fldname, false);
+      if (field_input_handle->get_property("name",fldname)) {
+	for (unsigned int i=0; i < field_handles.size(); i++)
+	  field_handles[i]->set_property("name",fldname, false);
       } else {
-	for (unsigned int i=0; i < fields.size(); i++)
-	  fields[i]->set_property("name", string("Isosurface"), false);
+	for (unsigned int i=0; i < field_handles.size(); i++)
+	  field_handles[i]->set_property("name", string("Isosurface"), false);
       }
 
       // Single field.
-      if (fields.size() == 1)
-	fHandle_ = fields[0];
+      if (field_handles.size() == 1)
+	field_output_handle_ = field_handles[0];
 
-      // Multiple fields.
+      // Multiple field_handles.
       else {
 
-	const TypeDescription *ftd = fields[0]->get_type_description();
+	const TypeDescription *ftd = field_handles[0]->get_type_description();
 	CompileInfoHandle ci = IsosurfaceAlgo::get_compile_info(ftd);
 	
 	Handle<IsosurfaceAlgo> algo;
 	if (!module_dynamic_compile(ci, algo)) return;
 	
-	fHandle_ = algo->execute(fields);
+	field_output_handle_ = algo->execute(field_handles);
       }
 
       // Get the output interpolant handle.
       if (build_interp) {
-	if (interpolants[0].get_rep()) {
-	  if (interpolants.size() == 1)
-	    mHandle_ = interpolants[0];
+	if (interpolant_handles[0].get_rep()) {
+	  if (interpolant_handles.size() == 1)
+	    matrix_output_handle_ = interpolant_handles[0];
 	  else
-	    mHandle_ = append_sparse(interpolants);
+	    matrix_output_handle_ = append_sparse_matrices(interpolant_handles);
 	}
 	else
 	  warning("Interpolant not computed for this input field type and data location.");
       } else
-	mHandle_ = 0;
+	matrix_output_handle_ = 0;
 
     } else {
 
-      fHandle_ = 0;
-      mHandle_ = 0;
-    }
-  
-    // Output geometry.
-    GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
-
-    // Stop showing the previous geometry.
-    bool geomflush = false;
-
-    if ( geomID_ ) {
-      ogeom_port->delObj( geomID_ );
-      geomID_ = 0;
-      geomflush = true;
+      field_output_handle_ = 0;
+      matrix_output_handle_ = 0;
     }
 
-    if ( gui_build_geom_.get() ) {
-      // Merged send_results.
-      GeomGroup *geom = scinew GeomGroup;;
+    // Merged the geometry results.
+    if( gui_build_geom_.get() && isovals.size() ) {
+      
+      GeomGroup *geomGroup = scinew GeomGroup;
 
       for (unsigned int iv=0; iv<isovals.size(); iv++) {
-	MaterialHandle matl;
+	MaterialHandle material_handle;
 
-	if (cmHandle != 0)
-	  matl= cmHandle->lookup(isovals[iv]);
+	if (colormap_input_handle.get_rep())
+	  material_handle = colormap_input_handle->lookup(isovals[iv]);
 	else
-	  matl = scinew Material(Color(gui_color_r_.get(),
-				       gui_color_g_.get(),
-				       gui_color_b_.get()));
+	  material_handle = scinew Material(Color(gui_color_r_.get(),
+					  gui_color_g_.get(),
+					  gui_color_b_.get()));
 
-	if (geometries[iv].get_rep()) 
-	  geom->add(scinew GeomMaterial( geometries[iv] , matl ));
+	if (geometry_handles[iv].get_rep()) 
+	  geomGroup->add(scinew GeomMaterial( geometry_handles[iv],
+					      material_handle ));
       }
 
-      if (!geom->size())
-	delete geom;
-      else {
-	string fldname;
-	if (fHandle->get_property("name",fldname))
-	  geomID_ = ogeom_port->addObj( geom, fldname );
-	else 
-	  geomID_ = ogeom_port->addObj( geom, string("Isosurface") );
-	
-	geomflush = true;
+      if( geomGroup->size() ) {
+	geometry_output_handle_ = GeomHandle( geomGroup );
+      } else {
+	delete geomGroup;
+	geometry_output_handle_  = 0;
       }
+
+    } else {
+      geometry_output_handle_  = 0;
     }
 
-    if (geomflush)
-      ogeom_port->flushViews();
+    string fldname;
+    if (!field_input_handle->get_property("name", fldname))
+      fldname = string("Isosurface");
+
+    send_output_handle( "Geometry", geometry_output_handle_, fldname );
   }
     
   // Send the isosurface field downstream
-  send_output_handle( "Surface", fHandle_, true );
-  send_output_handle( "Mapping", mHandle_, true );
+  send_output_handle( "Surface", field_output_handle_, true );
+  send_output_handle( "Mapping", matrix_output_handle_, true );
 }
 
 CompileInfoHandle

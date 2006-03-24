@@ -57,15 +57,14 @@ public:
   virtual void execute();
 
 protected:
-  int fGeneration_;
+  FieldHandle field_output_handle_;
 };
 
 
 DECLARE_MAKER(Gradient)
 
 Gradient::Gradient(GuiContext* ctx)
-  : Module("Gradient", ctx, Filter, "FieldsData", "SCIRun"),
-    fGeneration_(-1)
+  : Module("Gradient", ctx, Filter, "FieldsData", "SCIRun")
 {
 }
 
@@ -76,52 +75,43 @@ Gradient::~Gradient()
 void
 Gradient::execute()
 {
-  FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
+  FieldHandle field_input_handle;
 
-  FieldHandle fieldin;
-  if (!(ifp->get(fieldin) && fieldin.get_rep()))
-  {
-    error( "No handle or representation in input field." );
+  if( !get_input_handle( "Input Field", field_input_handle, true ) )
     return;
-  }
 
-  TypeDescription *otd = 0;
-
-  if (fieldin->query_scalar_interface(this).get_rep() )
-  {
-    otd = (TypeDescription *) SCIRun::get_type_description( (Vector*) 0 );
-  }
-  else
-  {
-    error( "This module only works on fields of scalar or data.");
+  if (!field_input_handle->query_scalar_interface(this).get_rep()) {
+    error( "This module only works on scalar data.");
     return;
   }
 
   // If no data or a changed recalcute.
-  FieldHandle fieldout;
-  if( fGeneration_ != fieldin->generation || !oport_cached("Output Gradient"))
-  {
-    fGeneration_ = fieldin->generation;
+  if( inputs_changed_ ||
 
-    const TypeDescription *ftd = fieldin->get_type_description(Field::FIELD_NAME_ONLY_E);
-    const TypeDescription *mtd = fieldin->get_type_description(Field::MESH_TD_E);
-    const TypeDescription *btd = fieldin->get_type_description(Field::BASIS_TD_E);
-    const TypeDescription *dtd = fieldin->get_type_description(Field::FDATA_TD_E);
+      !field_output_handle_.get_rep() ) {
+    update_state(Executing);
+
+    const TypeDescription *ftd =
+      field_input_handle->get_type_description(Field::FIELD_NAME_ONLY_E);
+    const TypeDescription *mtd =
+      field_input_handle->get_type_description(Field::MESH_TD_E);
+    const TypeDescription *btd =
+      field_input_handle->get_type_description(Field::BASIS_TD_E);
+    const TypeDescription *dtd =
+      field_input_handle->get_type_description(Field::FDATA_TD_E);
+    const TypeDescription *otd =
+      (TypeDescription *) SCIRun::get_type_description( (Vector*) 0 );
 
     CompileInfoHandle ci =
       GradientAlgo::get_compile_info(ftd, mtd, btd, dtd, otd);
     Handle<GradientAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fieldout = algo->execute(fieldin);
+    field_output_handle_ = algo->execute(field_input_handle);
   }
 
   // Send the data downstream
-  if ( fieldout.get_rep() )
-  {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
-    ofp->send_and_dereference(fieldout);
-  }
+  send_output_handle( "Output Gradient", field_output_handle_, true );
 }
 
 CompileInfoHandle

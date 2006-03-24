@@ -55,6 +55,10 @@ public:
   virtual void execute();
 
 private:
+  FieldHandle  field_output_handle_;
+  MatrixHandle matrix_output_handle_;
+  GeomHandle   geometry_output_handle_;
+
   //! GUI variables
   GuiDouble  gui_iso_value_min_;
   GuiDouble  gui_iso_value_max_;
@@ -86,12 +90,6 @@ private:
 
   //! status variables
   vector< double > isovals_;
-
-  FieldHandle  fHandle_;
-  MatrixHandle mHandle_;
-  int          geomID_;
-
-  bool error_;
 };
 
 class IsosurfaceAlgo : public DynamicAlgoBase

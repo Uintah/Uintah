@@ -40,13 +40,14 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Dataflow/Modules/Fields/FieldSlicer.h>
+
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
-#include <Dataflow/Modules/Fields/FieldSlicer.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 
 
@@ -61,25 +62,26 @@ public:
   virtual void execute();
 
 private:
-  GuiInt Axis_;
-  GuiInt Dims_;
+  FieldHandle          field_out_handle_;
+  MatrixHandle         matrix_out_handle_;
 
-  GuiInt iDim_;
-  GuiInt jDim_;
-  GuiInt kDim_;
+  GuiInt               gui_axis_;
+  GuiInt               gui_dims_;
 
-  GuiInt iIndex_;
-  GuiInt jIndex_;
-  GuiInt kIndex_;
+  GuiInt               gui_dim_i_;
+  GuiInt               gui_dim_j_;
+  GuiInt               gui_dim_k_;
 
-  //updateType_ must be declared after all gui vars because some are
-  //traced in the tcl code. If updateType_ is set to Auto having it
-  //last will prevent the net from executing when it is instantiated.
+  GuiInt               gui_index_i_;
+  GuiInt               gui_index_j_;
+  GuiInt               gui_index_k_;
 
-  GuiString  updateType_;
+  //! gui_update_type_ must be declared after all gui vars because
+  //! some are traced in the tcl code. If updateType_ is set to Auto
+  //! having it last will prevent the net from executing when it is
+  //! instantiated.
 
-  FieldHandle fHandle_;
-  MatrixHandle mHandle_;
+  GuiString            gui_update_type_;
 };
 
 
@@ -89,18 +91,21 @@ DECLARE_MAKER(FieldSlicer)
 FieldSlicer::FieldSlicer(GuiContext *context)
   : Module("FieldSlicer", context, Filter, "FieldsCreate", "SCIRun"),
     
-    Axis_(context->subVar("axis"), 2),
-    Dims_(context->subVar("dims"), 3),
+    field_out_handle_( 0 ),
+    matrix_out_handle_( 0 ),
 
-    iDim_(context->subVar("i-dim"), 1),
-    jDim_(context->subVar("j-dim"), 1),
-    kDim_(context->subVar("k-dim"), 1),
+    gui_axis_(context->subVar("axis"), 2),
+    gui_dims_(context->subVar("dims"), 3),
 
-    iIndex_(context->subVar("i-index"), 1),
-    jIndex_(context->subVar("j-index"), 1),
-    kIndex_(context->subVar("k-index"), 1),
+    gui_dim_i_(context->subVar("dim-i"), 1),
+    gui_dim_j_(context->subVar("dim-j"), 1),
+    gui_dim_k_(context->subVar("dim-k"), 1),
 
-    updateType_(get_ctx()->subVar("update_type"), "Manual")
+    gui_index_i_(context->subVar("index-i"), 1),
+    gui_index_j_(context->subVar("index-j"), 1),
+    gui_index_k_(context->subVar("index-k"), 1),
+
+    gui_update_type_(context->subVar("update_type"), "Manual")
 {
 }
 
@@ -113,53 +118,69 @@ FieldSlicer::~FieldSlicer()
 void
 FieldSlicer::execute()
 {
-  FieldHandle  fHandle;
+  FieldHandle field_in_handle;
 
-  if( !get_input_handle( "Input Field",  fHandle,  true  ) ) return;
-  if( !get_input_handle( "Input Matrix", mHandle_, false ) ) return;
+  if( !get_input_handle( "Input Field",  field_in_handle,  true  ) ) return;
+  if( !get_input_handle( "Input Matrix", matrix_out_handle_, false ) ) return;
 
-  // The matrix is optional.
-  if( mHandle_ != 0 &&
-      (mHandle_->nrows() != 3 || mHandle_->ncols() != 3) ) {
+  if( !(field_in_handle->mesh()->topology_geometry() & Mesh::STRUCTURED) ) {
+
+    error( field_in_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
+    error( "Only availible for topologically structured data." );
+    return;
+  }
+
+  if( field_in_handle->basis_order() != 1 ) {
+    error( field_in_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
+    error( "Currently only available for node data." );
+    return;
+  }
+
+  //! The matrix is optional.
+  if( matrix_out_handle_.get_rep() &&
+      (matrix_out_handle_->nrows() != 3 || matrix_out_handle_->ncols() != 3) ) {
+
     error( "Input matrix is not a 3x3 matrix" );
     return;
   }
 
   // Get the type and dimensions of the mesh.
-  if( fHandle->mesh()->topology_geometry() & Mesh::STRUCTURED ) {
+  vector<unsigned int> dims;
 
-    vector<unsigned int> dims;
+  field_in_handle->mesh()->get_dim( dims );
 
-    fHandle->mesh()->get_dim( dims );
+  bool update_dims = false;
 
-    if( dims.size() >= 1 )
-      iDim_.set( dims[0], GuiVar::SET_GUI_ONLY );
-    if( dims.size() >= 2 )
-      jDim_.set( dims[1], GuiVar::SET_GUI_ONLY );
-    if( dims.size() >= 3 )
-      kDim_.set( dims[2], GuiVar::SET_GUI_ONLY );
-
-    Dims_.set( dims.size(), GuiVar::SET_GUI_ONLY );
-
-  } else {
-    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
-    error( "Only availible for topologically structured data." );
-    return;
+  if( gui_dims_.get() != (int) dims.size() ) {
+    gui_dims_.set( dims.size() );
+    update_dims = true;
   }
 
-  if( fHandle->basis_order() != 1 ) {
-    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
-    error( "Currently only available for node data." );
-    return;
+  if( dims.size() >= 1 ) {
+    if( gui_dim_i_.get() != (int) dims[0] ) {
+      gui_dim_i_.set( dims[1] );
+      update_dims = true;
+    }
   }
 
-  // Check to see if the gui dimensions are different than the field.
-  if( Dims_.changed( true ) ||
-      iDim_.changed( true ) ||
-      jDim_.changed( true ) ||
-      kDim_.changed( true ) )
-  {
-    // Dims has callback on it, so it must be set it after i, j, and k.
+  if( dims.size() >= 2 ) {
+    if( gui_dim_j_.get() != (int) dims[1] ) {
+      gui_dim_j_.set( dims[1] );
+      update_dims = true;
+    }
+  }
+
+  if( dims.size() >= 3 ) {
+    if( gui_dim_k_.get() != (int) dims[2] ) {
+      gui_dim_k_.set( dims[2] );
+      update_dims = true;
+    }
+  }
+
+  //! Check to see if the gui dimensions are different than the field.
+  if( update_dims ) {
+
+    //! Dims has callback on it, so it must be set it after i, j, and k.
     ostringstream str;
     str << get_id() << " set_size ";
     get_gui()->execute(str.str().c_str());
@@ -167,122 +188,124 @@ FieldSlicer::execute()
     reset_vars();
   }
 
-  // An input matrix is present so use the values in it to override
-  // the variables set in the gui.
-  if( mHandle_ != 0 ) {
+  //! An input matrix is present so use the values in it to override
+  //! the variables set in the gui.
+  if( matrix_out_handle_.get_rep() ) {
 
-    if( iDim_.get() != mHandle_->get(0, 2) ||
-	jDim_.get() != mHandle_->get(1, 2) ||
-	kDim_.get() != mHandle_->get(2, 2) ) {
+    if( gui_dim_i_.get() != matrix_out_handle_->get(0, 2) ||
+	gui_dim_j_.get() != matrix_out_handle_->get(1, 2) ||
+	gui_dim_k_.get() != matrix_out_handle_->get(2, 2) ) {
       ostringstream str;
       str << "The dimensions of the matrix slicing do match the field. "
 	  << " Expected "
-	  << iDim_.get() << " "
-	  << jDim_.get() << " "
-	  << kDim_.get()
+	  << gui_dim_i_.get() << " "
+	  << gui_dim_j_.get() << " "
+	  << gui_dim_k_.get()
 	  << " Got "
-	  << mHandle_->get(0, 2) << " "
-	  << mHandle_->get(1, 2) << " "
-	  << mHandle_->get(2, 2);
+	  << matrix_out_handle_->get(0, 2) << " "
+	  << matrix_out_handle_->get(1, 2) << " "
+	  << matrix_out_handle_->get(2, 2);
       
       error( str.str() );
       return;
     }
 
-    // Check to see what axis has been selected.
-    Axis_.set( -1 );
-
-    for (int i=0; i < mHandle_->nrows(); i++)
-      if( mHandle_->get(i, 0) == 1 )
-	Axis_.set( i );
-
-    if( Axis_.get() == -1 ) {
-      ostringstream str;
-      str << "The input slicing matrix has no axis selected. ";      
-      error( str.str() );
-      return;
+    //! Check to see what axis has been selected.
+    for (int i=0; i < matrix_out_handle_->nrows(); i++) {
+      if( matrix_out_handle_->get(i, 0) == 1 && gui_axis_.get() != i ) {
+	gui_axis_.set( i );	
+	inputs_changed_ = true;
+      }
     }
 
-    iIndex_.set( (int) mHandle_->get(0, GuiVar::SET_GUI_ONLY) );
-    jIndex_.set( (int) mHandle_->get(1, GuiVar::SET_GUI_ONLY) );
-    kIndex_.set( (int) mHandle_->get(2, GuiVar::SET_GUI_ONLY) );
-  }
+    //! Check to see what index has been selected.
+    if( gui_index_i_.get() != matrix_out_handle_->get(0, 1) ||
+	gui_index_j_.get() != matrix_out_handle_->get(1, 1) ||
+	gui_index_k_.get() != matrix_out_handle_->get(2, 1) ) {
 
-  // Check to see if any values have changed via a matrix or user.
-  if( Axis_.changed( true ) ||
-      (Axis_.get() == 0 && iIndex_.changed( true )) ||
-      (Axis_.get() == 1 && jIndex_.changed( true )) ||
-      (Axis_.get() == 2 && kIndex_.changed( true )) ) {
+      gui_index_i_.set( (int) matrix_out_handle_->get(0, 1) );
+      gui_index_j_.set( (int) matrix_out_handle_->get(1, 1) );
+      gui_index_k_.set( (int) matrix_out_handle_->get(2, 1) );
 
-    inputs_changed_ = true;
-
-    if( mHandle_ != 0 ) {
       ostringstream str;
       str << get_id() << " update_index ";
       
       get_gui()->execute(str.str().c_str());
       
       reset_vars();
+
+      inputs_changed_ = true;
     }
   }
 
-  // If no data or ainput change recreate the mesh.
-  if( !fHandle_.get_rep() || inputs_changed_ ) {
-    const TypeDescription *ftd = fHandle->get_type_description();
-    const TypeDescription *ttd = fHandle->get_type_description(Field::FDATA_TD_E);
+  //! If no data or ainput change recreate the mesh.
+  if( inputs_changed_  ||
+      
+      !field_out_handle_.get_rep() ||
+      !matrix_out_handle_.get_rep() ||
+      
+      gui_axis_.changed( true ) ||
+      (gui_axis_.get() == 0 && gui_index_i_.changed( true )) ||
+      (gui_axis_.get() == 1 && gui_index_j_.changed( true )) ||
+      (gui_axis_.get() == 2 && gui_index_k_.changed( true )) ) {
+
+    update_state(Executing);
+
+    const TypeDescription *ftd = field_in_handle->get_type_description();
+    const TypeDescription *ttd =
+      field_in_handle->get_type_description(Field::FDATA_TD_E);
 
     CompileInfoHandle ci = FieldSlicerAlgo::get_compile_info(ftd,ttd);
     Handle<FieldSlicerAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
     unsigned int index;
-    if (Axis_.get() == 0) {
-      index = iIndex_.get();
-    }
-    else if (Axis_.get() == 1) {
-      index = jIndex_.get();
-    }
-    else {
-      index = kIndex_.get();
+    if (gui_axis_.get() == 0) {
+      index = gui_index_i_.get();
+    } else if (gui_axis_.get() == 1) {
+      index = gui_index_j_.get();
+    } else {
+      index = gui_index_k_.get();
     }
 
-    fHandle_ = algo->execute(fHandle, Axis_.get());
+    field_out_handle_ = algo->execute(field_in_handle, gui_axis_.get());
 
-    // Now the new field is defined so do the work on it.
-    const TypeDescription *iftd = fHandle->get_type_description();
-    const TypeDescription *oftd = fHandle_->get_type_description();
+    //! Now the new field is defined so do the work on it.
+    const TypeDescription *iftd = field_in_handle->get_type_description();
+    const TypeDescription *oftd = field_out_handle_->get_type_description();
     const bool geom_irreg =
-      (fHandle->mesh()->topology_geometry() & Mesh::IRREGULAR);
+      (field_in_handle->mesh()->topology_geometry() & Mesh::IRREGULAR);
 
     ci = FieldSlicerWorkAlgo::get_compile_info(iftd,oftd,geom_irreg);
     Handle<FieldSlicerWorkAlgo> workalgo;
 
     if (!module_dynamic_compile(ci, workalgo)) return;
   
-    workalgo->execute(fHandle, fHandle_, index, Axis_.get());
+    workalgo->execute( field_in_handle, field_out_handle_,
+		       index, gui_axis_.get() );
   }
 
-  // Create the output matrix with the axis and index
-  if( mHandle_ == 0 ) {
+  //! Create the output matrix with the axis and index
+  if( matrix_out_handle_ == 0 ) {
     DenseMatrix *selected = scinew DenseMatrix(3,3);
 
     for (int i=0; i < 3; i++)
-      selected->put(i, 0, (double) (Axis_.get() == i) );
+      selected->put(i, 0, (double) (gui_axis_.get() == i) );
 
-    selected->put(0, 1, iIndex_.get() );
-    selected->put(1, 1, jIndex_.get() );
-    selected->put(2, 1, kIndex_.get() );
+    selected->put(0, 1, gui_index_i_.get() );
+    selected->put(1, 1, gui_index_j_.get() );
+    selected->put(2, 1, gui_index_k_.get() );
 
-    selected->put(0, 2, iDim_.get() );
-    selected->put(1, 2, jDim_.get() );
-    selected->put(2, 2, kDim_.get() );
+    selected->put(0, 2, gui_dim_i_.get() );
+    selected->put(1, 2, gui_dim_j_.get() );
+    selected->put(2, 2, gui_dim_k_.get() );
 
-    mHandle_ = MatrixHandle(selected);
+    matrix_out_handle_ = MatrixHandle(selected);
   }
 
   // Send the data downstream
-  send_output_handle( "Output Field",  fHandle_, true );
-  send_output_handle( "Output Matrix", mHandle_, true );
+  send_output_handle( "Output Field",  field_out_handle_, true );
+  send_output_handle( "Output Matrix", matrix_out_handle_, true );
 }
 
 
@@ -290,7 +313,7 @@ CompileInfoHandle
 FieldSlicerAlgo::get_compile_info(const TypeDescription *ftd,
 				  const TypeDescription *ttd)
 {
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  //! use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("FieldSlicerAlgoT");
   static const string base_class_name("FieldSlicerAlgo");
@@ -306,7 +329,7 @@ FieldSlicerAlgo::get_compile_info(const TypeDescription *ftd,
                        ftd->get_name() + ", " +
 		       odat );
 
-  // Add in the include path to compile this obj
+  //! Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
   rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
@@ -326,7 +349,7 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
 				      const TypeDescription *oftd,
 				      bool geometry_irregular)
 {
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  //! use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("FieldSlicerWorkAlgoT");
   static const string base_class_name("FieldSlicerWorkAlgo");
@@ -340,7 +363,7 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
                        iftd->get_name() + ", " +
 		       oftd->get_name() );
 
-  // Add in the include path to compile this obj
+  //! Add in the include path to compile this obj
   if(geometry_irregular)
     rval->add_pre_include( "#define SET_POINT_DEFINED 1");
 
@@ -350,4 +373,4 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
   return rval;
 }
 
-} // End namespace SCIRun
+} //! End namespace SCIRun

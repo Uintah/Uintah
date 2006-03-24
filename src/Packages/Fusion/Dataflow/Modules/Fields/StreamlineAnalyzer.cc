@@ -60,35 +60,22 @@ public:
   virtual void execute();
 
 protected:
-  GuiString gPlanesStr_;
-  GuiInt gPlanesInt_;
-  GuiInt gColor_;
-  GuiInt gMaxWindings_;
-  GuiInt gOverride_;
-  GuiInt gOrder_;
-  GuiInt gCurveMesh_;
-  GuiInt gScalarField_;
-  GuiInt gShowIslands_;
-  GuiInt gOverlaps_;
+  GuiString gui_PlanesStr_;
+  GuiInt gui_PlanesInt_;
+  GuiInt gui_Color_;
+  GuiInt gui_MaxWindings_;
+  GuiInt gui_Override_;
+  GuiInt gui_Order_;
+  GuiInt gui_CurveMesh_;
+  GuiInt gui_ScalarField_;
+  GuiInt gui_ShowIslands_;
+  GuiInt gui_Overlaps_;
 
   vector< double > planes_;
 
-  unsigned int color_;
-  unsigned int maxWindings_;
-  unsigned int override_;
-  unsigned int order_;
-  unsigned int curveMesh_;
-  unsigned int scalarField_;
-  unsigned int showIslands_;
-  unsigned int overlaps_;
-
-  FieldHandle slfieldout_;
-  FieldHandle pccfieldout_;
-  FieldHandle pcsfieldout_;
-
-  int slfGeneration_;
-  int pccfGeneration_;
-  int pcsfGeneration_;
+  FieldHandle sl_field_output_handle_;
+  FieldHandle pcc_field_output_handle_;
+  FieldHandle pcs_field_output_handle_;
 };
 
 
@@ -96,24 +83,19 @@ DECLARE_MAKER(StreamlineAnalyzer)
 
 StreamlineAnalyzer::StreamlineAnalyzer(GuiContext* context)
   : Module("StreamlineAnalyzer", context, Source, "Fields", "Fusion"),
-    gPlanesStr_(context->subVar("planes-list")),
-    gPlanesInt_(context->subVar("planes-quantity")),
-    gColor_(context->subVar("color")),
-    gMaxWindings_(context->subVar("maxWindings")),
-    gOverride_(context->subVar("override")),
-    gOrder_(context->subVar("order")),
-    gCurveMesh_(context->subVar("curve-mesh")),
-    gScalarField_(context->subVar("scalar-field")),
-    gShowIslands_(context->subVar("show-islands")),
-    gOverlaps_(context->subVar("overlaps")),
-    color_(1),
-    maxWindings_(20),
-    override_(0),
-    order_(0),
-    curveMesh_(1),
-    scalarField_(1),
-    showIslands_(0),
-    overlaps_(0)
+    gui_PlanesStr_(context->subVar("planes-list")),
+    gui_PlanesInt_(context->subVar("planes-quantity")),
+    gui_Color_(context->subVar("color")),
+    gui_MaxWindings_(context->subVar("maxWindings")),
+    gui_Override_(context->subVar("override")),
+    gui_Order_(context->subVar("order")),
+    gui_CurveMesh_(context->subVar("curve-mesh")),
+    gui_ScalarField_(context->subVar("scalar-field")),
+    gui_ShowIslands_(context->subVar("show-islands")),
+    gui_Overlaps_(context->subVar("overlaps")),
+    sl_field_output_handle_(0),
+    pcc_field_output_handle_(0),
+    pcs_field_output_handle_(0)
 {
 }
 
@@ -124,12 +106,12 @@ StreamlineAnalyzer::~StreamlineAnalyzer()
 void
 StreamlineAnalyzer::execute()
 {
-  FieldHandle slfieldin;
+  FieldHandle sl_field_input_handle;
 
-  if( !get_input_handle( "Input Streamlines", slfieldin, true ) ) return;
+  if( !get_input_handle( "Input Streamlines", sl_field_input_handle, true ) ) return;
 
   string if_name =
-    slfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+    sl_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
 
   if (if_name.find("CurveMesh")       != string::npos &&
       if_name.find("StructCurveMesh") != string::npos ) {
@@ -137,22 +119,22 @@ StreamlineAnalyzer::execute()
     return;
   }
 
-  if (!slfieldin->query_scalar_interface(this).get_rep()) {
+  if (!sl_field_input_handle->query_scalar_interface(this).get_rep()) {
     error("Only available for Scalar data.");
     return;
   }
 
   // The centroid field input is optional.
-  FieldHandle pccfieldin;
+  FieldHandle pcc_field_input_handle;
 
-  if( !get_input_handle( "Input Centroids", pccfieldin, false ) ) return;
+  if( !get_input_handle( "Input Centroids", pcc_field_input_handle, false ) ) return;
 
-  if (pccfieldin.get_rep()) {
+  if (pcc_field_input_handle.get_rep()) {
     
     string pc_name =
-      pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+      pcc_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
     string pc_type =
-      pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
+      pcc_field_input_handle->get_type_description(Field::FDATA_TD_E)->get_name();
 
     if (pc_name.find( "PointCloudMesh") != string::npos &&
 	pc_type.find( "double")         != string::npos ) {
@@ -160,24 +142,24 @@ StreamlineAnalyzer::execute()
       return;
     }
 
-    if (!pccfieldin->query_scalar_interface(this).get_rep()) {
+    if (!pcc_field_input_handle->query_scalar_interface(this).get_rep()) {
       error("Only available for Scalar data.");
       return;
     }
   }
 
   // The separatrices field input is optional.
-  FieldHandle pcsfieldin;
+  FieldHandle pcs_field_input_handle;
 
-  if( !get_input_handle( "Input Separatrices", pcsfieldin, false ) ) return;
+  if( !get_input_handle( "Input Separatrices", pcs_field_input_handle, false ) ) return;
 
   // The field input is optional.
-  if (pcsfieldin.get_rep()) {
+  if (pcs_field_input_handle.get_rep()) {
     
     string pc_name =
-      pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+      pcc_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
     string pc_type =
-      pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
+      pcc_field_input_handle->get_type_description(Field::FDATA_TD_E)->get_name();
 
     if (pc_name.find( "PointCloudMesh") != string::npos &&
 	pc_type.find( "double")         != string::npos ) {
@@ -185,7 +167,7 @@ StreamlineAnalyzer::execute()
       return;
     }
 
-    if (!pcsfieldin->query_scalar_interface(this).get_rep()) {
+    if (!pcs_field_input_handle->query_scalar_interface(this).get_rep()) {
       error("Only available for Scalar data.");
       return;
     }
@@ -196,16 +178,16 @@ StreamlineAnalyzer::execute()
 
   vector< double > planes(0);
 
-  if( gPlanesInt_.get() ) {
+  if( gui_PlanesInt_.get() ) {
 
-    unsigned int nplanes = gPlanesInt_.get();
+    unsigned int nplanes = gui_PlanesInt_.get();
 
     for( unsigned int i=0; i<nplanes; i++ )
       planes.push_back(2.0 * M_PI * (double) i / (double) nplanes );
 
   } else {
 
-    istringstream plist(gPlanesStr_.get());
+    istringstream plist(gui_PlanesStr_.get());
     double plane;
     while(!plist.eof()) {
       plist >> plane;
@@ -250,74 +232,37 @@ StreamlineAnalyzer::execute()
     }
   }
 
-  if( color_ != (unsigned int) gColor_.get() ) {
-    inputs_changed_ = true;
-
-    color_ = gColor_.get();
-  }
-
-  if( maxWindings_ != (unsigned int) gMaxWindings_.get() ) {
-    inputs_changed_ = true;
-
-    maxWindings_ = gMaxWindings_.get();
-  }
-
-  if( override_ != (unsigned int) gOverride_.get() ) {
-    inputs_changed_ = true;
-
-    override_ = gOverride_.get();
-  }
-
-  if( order_ != (unsigned int) gOrder_.get() ) {
-    inputs_changed_ = true;
-
-    order_ = gOrder_.get();
-  }
-
-  if( curveMesh_ != (unsigned int) gCurveMesh_.get() ) {
-    inputs_changed_ = true;
-
-    curveMesh_ = gCurveMesh_.get();
-  }
-
-  if( scalarField_ != (unsigned int) gScalarField_.get() ) {
-    inputs_changed_ = true;
-
-    scalarField_ = gScalarField_.get();
-  }
-
-  if( showIslands_ != (unsigned int) gShowIslands_.get() ) {
-    inputs_changed_ = true;
-
-    showIslands_ = gShowIslands_.get();
-  }
-
-  if( overlaps_ != (unsigned int) gOverlaps_.get() ) {
-    inputs_changed_ = true;
-
-    overlaps_ = gOverlaps_.get();
-  }
-
   cerr << "StreamlineAnalyzer executing " << endl;
 
   // If no data or a changed recalcute.
   if( inputs_changed_ ||
-      !slfieldout_.get_rep()) {
 
+      !sl_field_output_handle_.get_rep() ||
 
-    const TypeDescription *ftd = slfieldin->get_type_description();
+      gui_Color_.changed( true ) ||
+      gui_MaxWindings_.changed( true ) ||
+      gui_Override_.changed( true ) ||
+      gui_Order_.changed( true ) ||
+      gui_CurveMesh_.changed( true ) ||
+      gui_ScalarField_.changed( true ) ||
+      gui_ShowIslands_.changed( true ) ||
+      gui_Overlaps_.changed( true ) ) {
+
+    update_state( Executing );
+
+    const TypeDescription *ftd = sl_field_input_handle->get_type_description();
 
     const TypeDescription *mtd =
-      ( curveMesh_ ?
+      ( gui_CurveMesh_.get() ?
 	get_type_description( (StreamlineAnalyzerAlgo::CMesh*) 0) : 
 	get_type_description( (StreamlineAnalyzerAlgo::SQSMesh*) 0) );
 
     const TypeDescription *btd =
-      ( curveMesh_ ?
+      ( gui_CurveMesh_.get() ?
 	get_type_description( (StreamlineAnalyzerAlgo::CDatBasis*) 0) : 
 	get_type_description( (StreamlineAnalyzerAlgo::SQSDatBasis*) 0) );
 
-    const TypeDescription *dtd = ( scalarField_ ?
+    const TypeDescription *dtd = ( gui_ScalarField_.get() ?
 				   get_type_description( (double*) 0) : 
 				   get_type_description( (Vector*) 0) );
 
@@ -329,18 +274,19 @@ StreamlineAnalyzer::execute()
 
     vector< pair< unsigned int, unsigned int > > topology;
 
-    algo->execute(slfieldin, slfieldout_,
-		  pccfieldin, pccfieldout_,
-		  pcsfieldin, pcsfieldout_,
+    algo->execute(sl_field_input_handle,   sl_field_output_handle_,
+		  pcc_field_input_handle, pcc_field_output_handle_,
+		  pcs_field_input_handle, pcs_field_output_handle_,
 		  planes_,
-		  color_, showIslands_, overlaps_,
-		  maxWindings_, override_, order_, topology);
+		  gui_Color_.get(), gui_ShowIslands_.get(), gui_Overlaps_.get(),
+		  gui_MaxWindings_.get(), gui_Override_.get(), gui_Order_.get(),
+		  topology);
   }
 
   // Send the data downstream
-  send_output_handle( "Output Poincare",     slfieldout_,  true );
-  send_output_handle( "Output Centroids",    pccfieldout_, true );
-  send_output_handle( "Output Separatrices", pcsfieldout_, true );
+  send_output_handle( "Output Poincare",     sl_field_output_handle_,  true );
+  send_output_handle( "Output Centroids",    pcc_field_output_handle_, true );
+  send_output_handle( "Output Separatrices", pcs_field_output_handle_, true );
 
   cerr << "StreamlineAnalyzer done " << endl;
 }

@@ -39,105 +39,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/ChooseModule.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Containers/Handle.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <iostream>
 
 namespace SCIRun {
 
-class ChooseField : public Module {
-
+class ChooseField : public ChooseModule< FieldHandle > {
 public:
   ChooseField(GuiContext* ctx);
-  virtual ~ChooseField();
-  virtual void execute();
-
-private:
-  GuiInt gUseFirstValid_;
-  GuiInt gPortIndex_;
-
-  FieldHandle fHandle_;
 };
 
 DECLARE_MAKER(ChooseField)
 ChooseField::ChooseField(GuiContext* ctx)
-  : Module("ChooseField", ctx, Filter, "FieldsOther", "SCIRun"),
-    gUseFirstValid_(get_ctx()->subVar("use-first-valid"), 1),
-    gPortIndex_(get_ctx()->subVar("port-index"), 0),
-    fHandle_(0)
+  : ChooseModule< FieldHandle >("ChooseField", ctx, Filter,
+				"FieldsOther", "SCIRun", "Field")
 {
-}
-
-ChooseField::~ChooseField()
-{
-}
-
-void
-ChooseField::execute()
-{
-  std::vector<FieldHandle> fHandles;
-
-  if( !get_dynamic_input_handles( "Field", fHandles, false ) ) return;
-
-  // Check to see if any values have changed via a matrix or user.
-  if( !fHandle_.get_rep() ||
-      gUseFirstValid_.changed( true ) ||
-
-      (gUseFirstValid_.get() == 1 ) ||      
-      (gUseFirstValid_.get() == 0 &&  gPortIndex_.changed( true )) ||
-
-      inputs_changed_ ||
-      execute_error_ ) {
-
-    execute_error_ = false;
-  
-    // use the first valid field
-    if (gUseFirstValid_.get()) {
-
-      unsigned int idx = 0;
-      while( idx < fHandles.size() && !fHandles[idx].get_rep() ) idx++;
-
-      if( idx < fHandles.size() && fHandles[idx].get_rep() ) {
-	fHandle_ = fHandles[idx];
-
-	gPortIndex_.set( idx );
-
-	reset_vars();
-
-      } else {
-	error("Did not find any valid fields.");
-
-	execute_error_ = true;
-	return;
-      }
-
-    } else {
-      // use the index specified
-      int idx = gPortIndex_.get();
-
-      if ( 0 <= idx && idx < (int) fHandles.size() ) {
-	if( fHandles[idx].get_rep() ) {
-	  fHandle_ = fHandles[idx];
-
-	} else {
-	  error( "Port " + to_string(idx) + " did not contain a valid field.");
-	  execute_error_ = true;
-	  return;
-	}
-
-      } else {
-	error("Selected port index out of range.");
-	execute_error_ = true;
-	return;
-      }
-    }
-  }
-
-  // Send the data downstream
-  send_output_handle( "Field",  fHandle_, true );
 }
 
 } // End namespace SCIRun

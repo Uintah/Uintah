@@ -27,7 +27,6 @@
 */
 
 
-
 /*
  *  MDSPlusDataReader.cc:
  *
@@ -69,7 +68,7 @@ public:
 
   virtual ~MDSPlusDataReader();
 
-  bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
+  bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2);
 
   virtual void execute();
   virtual void tcl_command(GuiArgs& args, void* userdata);
@@ -81,45 +80,32 @@ public:
 
 protected:
 
-  GuiInt    power_app_;
-  GuiString loadServer_;
-  GuiString loadTree_;
-  GuiString loadShot_;
-  GuiString loadSignal_;
+  GuiInt    gui_power_app_;
+  GuiString gui_loadServer_;
+  GuiString gui_loadTree_;
+  GuiString gui_loadShot_;
+  GuiString gui_loadSignal_;
 
-  GuiInt    nEntries_;
-  GuiString sServer_;
-  GuiString sTree_;
-  GuiString sShot_;
+  GuiInt    gui_nEntries_;
+  GuiString gui_sServer_;
+  GuiString gui_sTree_;
+  GuiString gui_sShot_;
 
-  GuiString searchServer_;
-  GuiString searchTree_;
-  GuiString searchShot_;
-  GuiString searchSignal_;
-  GuiInt    searchPath_;
+  GuiString gui_searchServer_;
+  GuiString gui_searchTree_;
+  GuiString gui_searchShot_;
+  GuiString gui_searchSignal_;
+  GuiInt    gui_searchPath_;
 
-  GuiInt mergeData_;
-  GuiInt assumeSVT_;
+  GuiInt gui_merge_data_;
+  GuiInt gui_assume_svt_;
 
-  vector< GuiString* > gServer_;
-  vector< GuiString* > gTree_;
-  vector< GuiString* > gShot_;
-  vector< GuiString* > gSignal_;
-  vector< GuiString* > gStatus_;
-  vector< GuiString* > gPort_;
-
-  string loadserver_;
-  string loadtree_;
-  string loadshot_;
-
-  unsigned int entries_;
-
-  string server_;
-  string tree_;
-  string shot_;
-
-  int mergedata_;
-  int assumesvt_;
+  vector< GuiString* > gui_Server_;
+  vector< GuiString* > gui_Tree_;
+  vector< GuiString* > gui_Shot_;
+  vector< GuiString* > gui_Signal_;
+  vector< GuiString* > gui_Status_;
+  vector< GuiString* > gui_Port_;
 
   vector< string > servers_;
   vector< string > trees_;
@@ -128,9 +114,9 @@ protected:
   vector< string > status_;
   vector< unsigned int > ports_;
 
-  bool error_;
+  bool execute_error_;
 
-  NrrdDataHandle nHandles_[MAX_PORTS];
+  NrrdDataHandle nrrd_output_handles_[MAX_PORTS];
 };
 
 
@@ -139,31 +125,31 @@ DECLARE_MAKER(MDSPlusDataReader)
 
 MDSPlusDataReader::MDSPlusDataReader(GuiContext *context)
   : Module("MDSPlusDataReader", context, Source, "Readers", "DataIO"),
-    power_app_(context->subVar("power_app")),
+    gui_power_app_(context->subVar("power_app")),
 
-    loadServer_(context->subVar("load-server")),
-    loadTree_(context->subVar("load-tree")),
-    loadShot_(context->subVar("load-shot")),
-    loadSignal_(context->subVar("load-signal")),
+    gui_loadServer_(context->subVar("load-server")),
+    gui_loadTree_(context->subVar("load-tree")),
+    gui_loadShot_(context->subVar("load-shot")),
+    gui_loadSignal_(context->subVar("load-signal")),
 
-    nEntries_(context->subVar("num-entries")),
-    sServer_(context->subVar("server")),
-    sTree_(context->subVar("tree")),
-    sShot_(context->subVar("shot")),
+    gui_nEntries_(context->subVar("num-entries")),
+    gui_sServer_(context->subVar("server")),
+    gui_sTree_(context->subVar("tree")),
+    gui_sShot_(context->subVar("shot")),
     
-    searchServer_(context->subVar("search-server")),
-    searchTree_(context->subVar("search-tree")),
-    searchShot_(context->subVar("search-shot")),
-    searchSignal_(context->subVar("search-signal")),
-    searchPath_(context->subVar("search-path")),
+    gui_searchServer_(context->subVar("search-server")),
+    gui_searchTree_(context->subVar("search-tree")),
+    gui_searchShot_(context->subVar("search-shot")),
+    gui_searchSignal_(context->subVar("search-signal")),
+    gui_searchPath_(context->subVar("search-path")),
 
-    mergeData_(context->subVar("mergeData")),
-    assumeSVT_(context->subVar("assumeSVT")),
-    entries_(0),
-    error_(-1)
+    gui_merge_data_(context->subVar("mergeData")),
+    gui_assume_svt_(context->subVar("assumeSVT")),
+
+    execute_error_(-1)
 {
   for( unsigned int ic=0; ic<MAX_PORTS; ic++ )
-    nHandles_[ic] = 0;
+    nrrd_output_handles_[ic] = 0;
 }
 
 MDSPlusDataReader::~MDSPlusDataReader(){
@@ -173,7 +159,7 @@ MDSPlusDataReader::~MDSPlusDataReader(){
 // or allows for a multiple identical nrrds to assume a time series, 
 // and be joined along a new time axis. 
 bool
-MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
+MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2)
 {
   std::string::size_type pos;
 
@@ -182,7 +168,7 @@ MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
   h1->get_property( "Name", nrrdName1 );
   h2->get_property( "Name", nrrdName2 );
 
-  if (mergedata_ == MERGE_LIKE) {
+  if ( gui_merge_data_.get() == MERGE_LIKE) {
     grp1 = nrrdName1;
     grp2 = nrrdName2;
     
@@ -251,28 +237,23 @@ void MDSPlusDataReader::execute(){
 #ifdef HAVE_MDSPLUS
 
   // Save off the defaults
-  entries_ = nEntries_.get();            // Number of entries
-  server_ = sServer_.get();              // MDS+ Default Server
-  tree_ = sTree_.get();                  // MDS+ Default Tree 
-  shot_ = atoi( sShot_.get().c_str() );  // MDS+ Default shot
-
-  int entries = gServer_.size();
+  int entries = gui_Server_.size();
 
   // Remove the old entries that are not needed.
-  for( int ic=entries-1; ic>=(int)entries_; ic-- ) {
-    delete( gServer_[ic] );
-    delete( gTree_[ic] );
-    delete( gShot_[ic] );
-    delete( gSignal_[ic] );
-    delete( gStatus_[ic] );
-    delete( gPort_[ic] );
+  for( int ic=entries-1; ic>=gui_nEntries_.get(); ic-- ) {
+    delete( gui_Server_[ic] );
+    delete( gui_Tree_[ic] );
+    delete( gui_Shot_[ic] );
+    delete( gui_Signal_[ic] );
+    delete( gui_Status_[ic] );
+    delete( gui_Port_[ic] );
 
-    gServer_.pop_back();
-    gTree_.pop_back();
-    gShot_.pop_back();
-    gSignal_.pop_back();
-    gStatus_.pop_back();
-    gPort_.pop_back();
+    gui_Server_.pop_back();
+    gui_Tree_.pop_back();
+    gui_Shot_.pop_back();
+    gui_Signal_.pop_back();
+    gui_Status_.pop_back();
+    gui_Port_.pop_back();
 
     servers_.pop_back();
     trees_.pop_back();
@@ -283,21 +264,21 @@ void MDSPlusDataReader::execute(){
   }
 
   // Add new entries that are needed.
-  for( unsigned int ic=entries; ic<entries_; ic++ ) {
+  for( int ic=entries; ic<gui_nEntries_.get(); ic++ ) {
     char idx[24];
 
     sprintf( idx, "server-%d", ic );
-    gServer_.push_back(new GuiString(get_ctx()->subVar(idx)) );
+    gui_Server_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "tree-%d", ic );
-    gTree_.push_back(new GuiString(get_ctx()->subVar(idx)) );
+    gui_Tree_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "shot-%d", ic );
-    gShot_.push_back(new GuiString(get_ctx()->subVar(idx)) );
+    gui_Shot_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "signal-%d", ic );
-    gSignal_.push_back(new GuiString(get_ctx()->subVar(idx)) );
+    gui_Signal_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "status-%d", ic );
-    gStatus_.push_back(new GuiString(get_ctx()->subVar(idx)) );
+    gui_Status_.push_back(new GuiString(get_ctx()->subVar(idx)) );
     sprintf( idx, "port-%d", ic );
-    gPort_.push_back(new GuiString(get_ctx()->subVar(idx)) );
+    gui_Port_.push_back(new GuiString(get_ctx()->subVar(idx)) );
 
     servers_.push_back("");
     trees_.push_back("");
@@ -307,37 +288,37 @@ void MDSPlusDataReader::execute(){
     ports_.push_back(99);
   }
 
-  for( unsigned int ic=0; ic<entries_; ic++ ) {
-    gServer_[ic]->reset();
-    gTree_[ic]->reset();
-    gShot_[ic]->reset();
-    gSignal_[ic]->reset();
+  for( int ic=0; ic<gui_nEntries_.get(); ic++ ) {
+    gui_Server_[ic]->reset();
+    gui_Tree_[ic]->reset();
+    gui_Shot_[ic]->reset();
+    gui_Signal_[ic]->reset();
 
-    gStatus_[ic]->set( string( "Unknown" ) );
-    gPort_[ic]->set( string( "na" ) );
+    gui_Status_[ic]->set( string( "Unknown" ) );
+    gui_Port_[ic]->set( string( "na" ) );
 
     string tmpStr;
 
-    tmpStr = gServer_[ic]->get();
+    tmpStr = gui_Server_[ic]->get();
 
     if( tmpStr != servers_[ic] ) {
       servers_[ic] = tmpStr;
       inputs_changed_ = true;
     }
 
-    tmpStr = gTree_[ic]->get();
+    tmpStr = gui_Tree_[ic]->get();
     if( tmpStr != trees_[ic] ) {
       trees_[ic] = tmpStr;
       inputs_changed_ = true;
     }
     
-    tmpStr = gShot_[ic]->get();
+    tmpStr = gui_Shot_[ic]->get();
     if( atoi( tmpStr.c_str() ) != shots_[ic] ) {
       shots_[ic] = atoi( tmpStr.c_str() );
       inputs_changed_ = true;
     }
     
-    tmpStr = gSignal_[ic]->get();
+    tmpStr = gui_Signal_[ic]->get();
     if( tmpStr != signals_[ic] ) {
       signals_[ic] = tmpStr;
       inputs_changed_ = true;
@@ -346,22 +327,21 @@ void MDSPlusDataReader::execute(){
 
   if( inputs_changed_ == true ||
 
-      error_ == true ||
+      execute_error_ == true ||
 
-      mergedata_ != mergeData_.get() ||
-      assumesvt_ != assumeSVT_.get() ) {
+      gui_merge_data_.changed( true ) ||
+      gui_assume_svt_.changed( true ) ) {
 
-    error_ = false;
+    update_state( Executing );
 
-    mergedata_ = mergeData_.get();
-    assumesvt_ = assumeSVT_.get();
+    execute_error_ = false;
 
     vector< vector<NrrdDataHandle> > nHandles;
     vector< vector<int> > ids;
     
-    for( unsigned int ic=0; ic<entries_; ic++ ) {
+    for( int ic=0; ic<gui_nEntries_.get(); ic++ ) {
 
-      gStatus_[ic]->set( string( "Reading" ) );
+      gui_Status_[ic]->set( string( "Reading" ) );
 
       NrrdDataHandle nHandle =
 	readDataset( servers_[ic], trees_[ic], shots_[ic], signals_[ic] );
@@ -396,13 +376,13 @@ void MDSPlusDataReader::execute(){
 	  idSet.push_back( ic );
 	  ids.push_back( idSet );
 	}
-	gStatus_[ic]->set( string("Okay") );
+	gui_Status_[ic]->set( string("Okay") );
       } else
-	gStatus_[ic]->set( string("Error") );
+	gui_Status_[ic]->set( string("Error") );
     }
 
     // merge the like datatypes together.
-    if( mergedata_ ) {
+    if( gui_merge_data_.get() ) {
 
       vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
       while (iter != nHandles.end()) {
@@ -412,7 +392,7 @@ void MDSPlusDataReader::execute(){
 
 	if (vec.size() > 1) {
 	  
-	  if( assumesvt_ && vec.size() != 3 && vec.size() != 6) {
+	  if( gui_assume_svt_.get() && vec.size() != 3 && vec.size() != 6) {
 	    warning( "Assuming Vector and Tensor data but can not merge into a Vector or Tensor because there are not 3 or 6 nrrds that are alike." );
 	    continue;
 	  }
@@ -452,7 +432,7 @@ void MDSPlusDataReader::execute(){
 	    ++niter;
 	    join_me.push_back(n->nrrd);
 
-	    if (mergedata_ == MERGE_LIKE) {
+	    if (gui_merge_data_.get() == MERGE_LIKE) {
 	      n->get_property( "Name", dataName );
 	      pos = dataName.find_last_of(":"); // Erase the Kind
 	      if( pos != std::string::npos )
@@ -475,18 +455,18 @@ void MDSPlusDataReader::execute(){
 	    char *err = biffGetDone(NRRD);
 	    error(string("Join Error: ") +  err);
 	    free(err);
-	    error_ = true;
+	    execute_error_ = true;
 	    return;
 	  }
 
 	  // set new kinds for joined nrrds
-	  if (assumesvt_ && join_me.size() == 3) {
+	  if (gui_assume_svt_.get() && join_me.size() == 3) {
 	    onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
 	    nrrdName += string(":Vector");
-	  } else if (assumesvt_ && join_me.size() == 6) {
+	  } else if (gui_assume_svt_.get() && join_me.size() == 6) {
 	    onrrd->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
 	    nrrdName += string(":Matrix");
-	  } else if (assumesvt_ && join_me.size() == 9) {
+	  } else if (gui_assume_svt_.get() && join_me.size() == 9) {
 	    onrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
 	    nrrdName += string(":Matrix");
 	  } else {
@@ -499,9 +479,9 @@ void MDSPlusDataReader::execute(){
 	    onrrd->nrrd->axis[i].label = join_me[0]->axis[i].label;
 	  }
 
-	  if (mergedata_ == MERGE_LIKE) {
+	  if (gui_merge_data_.get() == MERGE_LIKE) {
 	    onrrd->nrrd->axis[axis].label = strdup("Merged Data");
-	  } else if (mergedata_ == MERGE_TIME) {
+	  } else if (gui_merge_data_.get() == MERGE_TIME) {
 	    onrrd->nrrd->axis[axis].label = "Time";
 
 	    // remove all numbers from name
@@ -550,9 +530,9 @@ void MDSPlusDataReader::execute(){
 
       for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
 	if( cc < MAX_PORTS ) {
-	  nHandles_[cc] = nHandles[ic][jc];
+	  nrrd_output_handles_[cc] = nHandles[ic][jc];
 
-	  nHandles_[cc]->set_property("Source",string("MDSPlus"), false);
+	  nrrd_output_handles_[cc]->set_property("Source",string("MDSPlus"), false);
 	}
 
 	++cc;
@@ -561,30 +541,31 @@ void MDSPlusDataReader::execute(){
 
     char portStr[6];
 
-    for( unsigned int ic=0; ic<entries_; ic++ ) {
+    for( int ic=0; ic<gui_nEntries_.get(); ic++ ) {
       if( 0 <= ports_[ic] && ports_[ic] <= 7 )
 	sprintf( portStr, "%3d", ports_[ic] );
       else
 	sprintf( portStr, "na" );
 
-      gPort_[ic]->set( string( portStr ) );
+      gui_Port_[ic]->set( string( portStr ) );
     }
 
-    if( cc > MAX_PORTS )
+    if( cc >= MAX_PORTS )
       warning( "More data than availible ports." );
 
     for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
-      nHandles_[ic] = 0;
+      nrrd_output_handles_[ic] = 0;
+
   } else {
     remark( "Already read data " );
   }
 
-  for( unsigned int ic=0; ic<cc; ic++ ) {
+  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
     
     string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
     
     // Send the data downstream
-    send_output_handle( portName, nHandles_[ic], cache );
+    send_output_handle( portName, nrrd_output_handles_[ic], true );
   }
 #else  
   error( "No MDSPlus availible." );
@@ -613,12 +594,12 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
   /* Connect to MDSplus */
   if( retVal == -2 ) {
     error( "Connection to Mds Server " + server + " too busy ... giving up.");
-    error_ = true;
+    execute_error_ = true;
     return NULL;
   }
   else if( retVal < 0 ) {
     error( "Connecting to Mds Server " + server );
-    error_ = true;
+    execute_error_ = true;
     return NULL;
   }
   else
@@ -636,14 +617,14 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
   if( retVal == -2 ) {
     ostringstream str;
     str << "Opening " << tree << " tree and shot " << shot << " too busy ... giving up.";
-    error_ = true;
+    execute_error_ = true;
     return NULL;
   }
   if( retVal < 0 ) {
     ostringstream str;
     str << "Opening " << tree << " tree and shot " << shot;
     error( str.str() );
-    error_ = true;
+    execute_error_ = true;
     return NULL;
   }
   else {
@@ -656,7 +637,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     ostringstream str;
     str << "Invalid signal " << signal;
     error( str.str() );
-    error_ = true;
+    execute_error_ = true;
     return NULL;
   }
 
@@ -668,7 +649,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     ostringstream str;
     str << "Zero dimension signal " << signal;
     error( str.str() );
-    error_ = true;
+    execute_error_ = true;
     return NULL;
   }
 
@@ -706,14 +687,14 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
       ostringstream str;
       str << "String data is not supported for signal " << signal;
       error( str.str() );
-      error_ = true;
+      execute_error_ = true;
     }
   default:
     {
       ostringstream str;
       str << "Unknown type (" << mds_data_type << ") for signal " << signal;
       error( str.str() );
-      error_ = true;
+      execute_error_ = true;
     }
     
     return NULL;
@@ -739,7 +720,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     // assumption is based on the size of the last dimension of the hdf5 data
     // amd will be in the first dimension of the nrrd
     int sz_last_dim = 1;
-    if (assumesvt_)
+    if (gui_assume_svt_.get())
       sz_last_dim = dims[ndims-1];
 
     switch(ndims) {
@@ -956,20 +937,20 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
   if (args[1] == "update_tree") {
 #ifdef HAVE_MDSPLUS
-    loadServer_.reset();
-    loadTree_.reset();
-    loadShot_.reset();
-    loadSignal_.reset();
+    gui_loadServer_.reset();
+    gui_loadTree_.reset();
+    gui_loadShot_.reset();
+    gui_loadSignal_.reset();
 
     // Get the load strings;
-    string server( loadServer_.get() );
-    string tree  ( loadTree_.get() );
-    int    shot  ( atoi( loadShot_.get().c_str() ) );
-    string signal( loadSignal_.get() );
+    string server( gui_loadServer_.get() );
+    string tree  ( gui_loadTree_.get() );
+    int    shot  ( atoi( gui_loadShot_.get().c_str() ) );
+    string signal( gui_loadSignal_.get() );
     unsigned int depth = 1;
 
     if (args[2] == "root") {
-      signal = string( loadSignal_.get() );
+      signal = string( gui_loadSignal_.get() );
     } else {
       signal = string( args[2] );
     }
@@ -1024,18 +1005,18 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
   } else if (args[1] == "search") {
 #ifdef HAVE_MDSPLUS
-    searchServer_.reset();
-    searchTree_.reset();
-    searchShot_.reset();
-    searchSignal_.reset();
-    searchPath_.reset();
+    gui_searchServer_.reset();
+    gui_searchTree_.reset();
+    gui_searchShot_.reset();
+    gui_searchSignal_.reset();
+    gui_searchPath_.reset();
 
     // Get the search strings;
-    string server( searchServer_.get() );
-    string tree  ( searchTree_.get() );
-    int    shot  ( atoi( searchShot_.get().c_str() ) );
-    string signal( searchSignal_.get() );
-    int    path  ( searchPath_.get() );
+    string server( gui_searchServer_.get() );
+    string tree  ( gui_searchTree_.get() );
+    int    shot  ( atoi( gui_searchShot_.get().c_str() ) );
+    string signal( gui_searchSignal_.get() );
+    int    path  ( gui_searchPath_.get() );
 
     MDSPlusReader mds;
 
@@ -1051,12 +1032,12 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
     /* Connect to MDSplus */
     if( retVal == -2 ) {
       error( "Connection to Mds Server " + server + " too busy ... giving up.");
-      error_ = true;
+      execute_error_ = true;
       return;
     }
     else if( retVal < 0 ) {
       error( "Connecting to Mds Server " + server );
-      error_ = true;
+      execute_error_ = true;
       return;
     }
     else
@@ -1074,14 +1055,14 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
     if( retVal == -2 ) {
       ostringstream str;
       str << "Opening " << tree << " tree and shot " << shot << " too busy ... giving up.";
-      error_ = true;
+      execute_error_ = true;
       return;
     }
     if( retVal < 0 ) {
       ostringstream str;
       str << "Opening " << tree << " tree and shot " << shot;
       error( str.str() );
-      error_ = true;
+      execute_error_ = true;
       return;
     }
     else {
