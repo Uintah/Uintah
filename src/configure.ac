@@ -4293,8 +4293,12 @@ if test "$sci_required_glui" = "yes"; then
      fi
    fi
 
+   AC_LANG([C++])
+
    SCI_TRY_LINK(GLUI,glui library and headers,GL/glut.h glui.h,
                 $_sci_inc,glui,$_sci_lib,$libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG,,required)
+
+   AC_LANG([C])
 
   if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
     AC_MSG_WARN("$GLUI_LIB_DIR_FLAG")
@@ -4332,8 +4336,11 @@ if test "$sci_required_oogl" = "yes"; then
   fi
   # Only check for OOGL if the user did not say without-oogl.
   if test "$with_oogl" != "no"; then
+
+    AC_LANG([C++])
     SCI_TRY_LINK(OOGL,oogl library and headers,oogl/basicTexture.h oogl/shadedPrim.h,
                  $_sci_inc,oogl,$_sci_lib,$INC_GLUT_H $INC_GLUI_H,,optional)
+    AC_LANG([C])
   fi
 
   if test "$HAVE_OOGL" = "yes"; then
