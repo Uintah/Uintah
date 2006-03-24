@@ -257,8 +257,9 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   
+  Ghost::GhostType gac = Ghost::AroundCells;
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-    t->requires(Task::NewDW,d_varLabels[i], Ghost::None, 0);
+    t->requires(Task::NewDW,d_varLabels[i], gac, 1);
   }
   t->computes(ps_lb->lastWriteTimeLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -304,16 +305,17 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       constCCVariable<double> q_CC_double;
       constCCVariable<Vector> q_CC_Vector;      
       Ghost::GhostType gn = Ghost::None;
+      Ghost::GhostType gac = Ghost::AroundCells;
       int indx = d_matl->getDWIndex();
 
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
         switch( d_varLabels[i]->typeDescription()->getSubType()->getType()){
         case TypeDescription::double_type:
-          new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gn, 0);
+          new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gac, 1);
           CC_double_data.push_back(q_CC_double);
           break;
         case TypeDescription::Vector:
-          new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gn, 0);
+          new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gac, 1);
           CC_Vector_data.push_back(q_CC_Vector);
           break;
         default:
@@ -346,24 +348,20 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         if(level->getIndex() > 0){ // ignore extra cells on fine patches
           patchDomain = patch->getInteriorBox();
         }
-        
+        // intersection
         start_pt = Max(patchDomain.lower(), start_pt);
         end_pt   = Min(patchDomain.upper(), end_pt);
         
+        //indices
         IntVector start_idx, end_idx;
         patch->findCell(start_pt, start_idx);
         patch->findCell(end_pt,   end_idx);
         
-        // enlarge the index space by 1 except:
-        // a) in the main looping direction
-        // b) if there's a neighboring patch
-        
+        // enlarge the index space by 1 except in the main looping direction
         IntVector one(1,1,1);
-        IntVector neighbors = patch->neighborsHigh();
-        one = one * neighbors;
         one[d_lines[l]->loopDir] = 0;
         end_idx+= one;   
-        
+
         //__________________________________
         // loop over each point in the line on this patch
         CellIterator iterLim = CellIterator(start_idx,end_idx);
