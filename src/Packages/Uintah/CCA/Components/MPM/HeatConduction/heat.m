@@ -1,6 +1,6 @@
 
 # Solve the 1d heat equation:
-# du/dt - k d^2/dx^2 (u) = 0, 
+# rho*Cp*du/dt - k d^2/dx^2 (u) = 0, 
 # u = temperature 
 # k = thermal conductivity.
 
@@ -52,8 +52,15 @@ function [KE,Ca] = element_linear(i,element,points,materials)
   n1 = element(1);
   n2 = element(2);
   pts = [points(n1),points(n2)];
-  [xi,weight] = gauss_quadrature(1);
-  shape = shape_linear(xi,pts);
+
+  [xi,weight] = gauss_quadrature;  
+  for (order=1:3)
+    for (or=1:order)
+      gauss_point = xi(order,or);
+      shape(order,or) = shape_linear(gauss_point,pts);
+    endfor
+  endfor
+
 
   kond = materials.kond(i);
   density = materials.density(i);
@@ -61,8 +68,8 @@ function [KE,Ca] = element_linear(i,element,points,materials)
 
   KE(1:2,1:2)=0;
 
-  Ka = Kalpha(shape,weight,kond);
-  Ca = Capacitance(shape,weight,density,specific_heat);
+  Ka = Kalpha(1,shape,weight,kond); # 1 gauss point for integration
+  Ca = Capacitance(2,shape,weight,density,specific_heat); # 2 gauss pt integ
 
   KE = Ka;
    
@@ -81,26 +88,24 @@ function K = assemble(element,K,KE,C,dt,theta)
 
 endfunction
 
-function [xi,weight] = gauss_quadrature(order)
+function [xi,weight] = gauss_quadrature
  # printf("Doing gauss_quadrature\n");
-  if (order == 1)
-    xi(1) = 0;
-    weight(1) = 2;
-  endif
-  if (order == 2)
-    xi(2,1) = -1/sqrt(3);
-    xi(2,2) = -xi(2,1);
-    weight(2,1) = 1;
-    weight(2,2) = weight(2,1);
-  endif
-  if (order == 3)
-    xi(3,1) = -sqrt(3/5);
-    xi(3,2) = 0;
-    xi(3,3) = -xi(3,1);
-    weight(3,1) = 5/9;
-    weight(3,2) = 8/9;
-    weight(3,3) = weight(3,1);
-  endif
+  xi(1,1) = 0;
+  weight(1,1) = 2;
+  
+  xi(2,1) = -1/sqrt(3);
+  xi(2,2) = -xi(2,1);
+  weight(2,1) = 1;
+  weight(2,2) = weight(2,1);
+  
+  
+  xi(3,1) = -sqrt(3/5);
+  xi(3,2) = 0;
+  xi(3,3) = -xi(3,1);
+  weight(3,1) = 5/9;
+  weight(3,2) = 8/9;
+  weight(3,3) = weight(3,1);
+
 endfunction
 
 function shape = shape_linear(xi,pts)
@@ -126,11 +131,15 @@ function jac = compute_jacobian(pts)
   
 endfunction
 
-function Ka = Kalpha(shape,weight,kond)
+function Ka = Kalpha(order,shape,weight,kond)
 #  printf("Doing Kalpha\n");
   for(i=1:2)
     for(j=1:2)
-      Ka(i,j) = weight*(shape.jac)*shape.dphidx(i)*kond*shape.dphidx(j);
+      value = 0;
+      for (or=1:order)
+        value += weight(order,or)*(shape(order,or).jac)*shape(order,or).dphidx(i)*kond*shape(order,or).dphidx(j);
+      endfor
+      Ka(i,j) = value;
     endfor
   endfor
     
@@ -140,11 +149,16 @@ function Kbeta()
   printf("Doing Kbeta\n");
 endfunction
 
-function C = Capacitance(shape,weight,density,specific_heat)
+function C = Capacitance(order,shape,weight,density,specific_heat)
    # printf("Doing Capacitance\n");
+
     for(i=1:2)
       for(j=1:2)
-        C(i,j) = weight*shape.phi(i)*density*specific_heat*shape.phi(j);
+        value = 0;
+        for (or=1:order)
+          value += weight(order,or)*(shape(order,or).jac)*shape(order,or).phi(i)*density*specific_heat*shape(order,or).phi(j);
+        endfor
+        C(i,j) = value;
       endfor
     endfor
 
@@ -273,7 +287,7 @@ function main()
     dt_critical = 2/(1-2*theta) * 1/lamba_max
     
     if (dt > dt_critical)
-      dt = .5*dt_critical;
+      dt = .9*dt_critical;
     endif
   endif
     
