@@ -141,7 +141,7 @@ std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
   SCIRunTCLThread *thr = new SCIRunTCLThread(net);
   Thread* t = new Thread(thr, "SR2 TCL event loop", 0, Thread::NotActivated);
 
-  t->set_stack_size(1024*1024);
+  t->setStackSize(1024*1024);
   t->activate(false);
   t->detach();
 

@@ -91,7 +91,7 @@ void PtolemyServer::run()
 	ServerTime *st = new ServerTime(gui, wc, 60.0);
 	Thread *idle_time = new Thread(st, "time idleness",0, Thread::NotActivated);
 	idle_time->setDaemon();
-	idle_time->set_stack_size(1024*2);
+	idle_time->setStackSize(1024*2);
 	idle_time->activate(false);
 	idle_time->detach();
 	
@@ -115,7 +115,7 @@ void PtolemyServer::run()
 		ProcessRequest *proc_req = new ProcessRequest(gui,net,connfd,idle_time,wc);
 		Thread *pr = new Thread(proc_req,"process client request", 0, Thread::NotActivated);
 		pr->setDaemon();
-		pr->set_stack_size(1024*512);
+		pr->setStackSize(1024*512);
 		pr->activate(false);
 		pr->detach();
 	}

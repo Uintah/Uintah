@@ -314,7 +314,7 @@ start_eai() {
   Thread* t_int = 
     scinew Thread(internal_service_manager, "internal service manager",
 		  0, Thread::NotActivated);
-  t_int->set_stack_size(1024*20);
+  t_int->setStackSize(1024*20);
   t_int->activate(false);
   t_int->detach();
   
@@ -345,7 +345,7 @@ start_eai() {
   Thread* t_ext = 
     scinew Thread(external_service_manager,"external service manager",
 		  0, Thread::NotActivated);
-  t_ext->set_stack_size(1024*20);
+  t_ext->setStackSize(1024*20);
   t_ext->activate(false);
   t_ext->detach();
 }  

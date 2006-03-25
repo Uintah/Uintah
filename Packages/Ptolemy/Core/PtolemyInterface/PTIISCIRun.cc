@@ -108,7 +108,7 @@ void StartSCIRun::run()
     // change the stack size.  The 0 is a pointer to a ThreadGroup which
     // will default to the global thread group.
     Thread* t=new Thread(tcl_task,"TCL main event loop",0, Thread::NotActivated);
-    t->set_stack_size(1024*1024);
+    t->setStackSize(1024*1024);
     // False here is stating that the tread was stopped or not.  Since
     // we have never started it the parameter should be false.
     t->activate(false);

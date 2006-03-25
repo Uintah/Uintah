@@ -290,12 +290,12 @@ DataTransmitter::run(){
   //cout<<"DataTransmitter is Listening: URL="<<getUrl()<<endl;
 
   Thread *sending_thread = new Thread(new DTThread(this, 1), "Data Transmitter Sending Thread", 0, Thread::NotActivated);
-  sending_thread->set_stack_size(1024*256);
+  sending_thread->setStackSize(1024*256);
   sending_thread->activate(false);
   sending_thread->detach();
 
   Thread *recving_thread = new Thread(new DTThread(this, 2), "Data Transmitter Recving Thread", 0, Thread::NotActivated);
-  recving_thread->set_stack_size(1024*256);
+  recving_thread->setStackSize(1024*256);
   recving_thread->activate(false);
   recving_thread->detach();
 }

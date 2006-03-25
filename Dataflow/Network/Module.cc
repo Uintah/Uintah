@@ -628,7 +628,7 @@ Module::set_context(Network* network)
     scinew Thread(helper_, module_name_.c_str(), 0, Thread::NotActivated);
   if(stacksize_)
   {
-    helper_thread_->set_stack_size(stacksize_);
+    helper_thread_->setStackSize(stacksize_);
   }
   helper_thread_->activate(false);
   //helper_thread_->detach();  // Join on delete.

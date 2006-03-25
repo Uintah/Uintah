@@ -43,7 +43,7 @@ Java_org_sdm_spa_actors_scirun_SCIRunJNIActor_sendSCIRunData(JNIEnv *env, jobjec
 	ExecuteModule *execMod = new ExecuteModule();
 
     Thread *t = new Thread(execMod, "execute converter module", 0, Thread::NotActivated);
-    t->set_stack_size(1024*2048);
+    t->setStackSize(1024*2048);
     t->activate(false);
     t->join();
 

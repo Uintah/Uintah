@@ -346,7 +346,7 @@ Thread::getStackSize() const
 }
 
 void
-Thread::set_stack_size(unsigned long stacksize)
+Thread::setStackSize(unsigned long stacksize)
 {
   if(activated_)
     throw ThreadError("Cannot change stack size on a running thread");

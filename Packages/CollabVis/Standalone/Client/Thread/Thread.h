@@ -117,7 +117,7 @@ DESCRIPTION
 	    // stopped state, set the stack size, and then start the
 	    // thread.  Setting the stack size for a thread that is
 	    // running or has ever been run, will throw an exception.
-	    void set_stack_size(unsigned long stackSize);
+	    void setStackSize(unsigned long stackSize);
 	    
 	    //////////
 	    // Returns the stack size for the thread
