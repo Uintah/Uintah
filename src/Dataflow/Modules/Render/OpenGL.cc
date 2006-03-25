@@ -244,7 +244,7 @@ OpenGL::start_helper()
     helper_thread_ = scinew Thread(helper_,
                                    string("OpenGL: "+myname_).c_str(),
                                    0, Thread::NotActivated);
-    helper_thread_->set_stack_size(1024*1024);
+    helper_thread_->setStackSize(1024*1024);
     helper_thread_->activate(false);
   }
 }
@@ -515,7 +515,7 @@ OpenGL::render_and_save_image(int x, int y,
       string ext = fname.substr(fname.find(".", 0)+1, fname.length());
 
       // FIX ME convert ext to lower case
-      for(int i=0; i<ext.size(); i++) {
+      for(unsigned int i=0; i<ext.size(); i++) {
 	ext[i] = tolower(ext[i]);
       }
 

@@ -135,7 +135,7 @@ DESCRIPTION
 	    // the thread using activate(false).  Setting the stack
 	    // size for a thread that is running or has ever been run,
 	    // will throw an exception.  The units are in bytes.
-	    void set_stack_size(unsigned long stackSize);
+	    void setStackSize(unsigned long stackSize);
 	    
 	    //////////
 	    // Returns the stack size for the thread

@@ -102,7 +102,7 @@ void VergilApplication::execute()
         }
         Thread *t = new Thread(scinew VergilThread(defaultConfig, file),
             "Ptolemy Thread", 0, Thread::NotActivated);
-        t->set_stack_size(1024*1024);
+        t->setStackSize(1024*1024);
         t->activate(false);
         t->detach();
     }

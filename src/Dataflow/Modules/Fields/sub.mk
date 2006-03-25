@@ -140,9 +140,7 @@ endif
 
 # TetGen http://tetgen.berlios.de
 ifeq ($(HAVE_TETGEN),yes)
-  ifneq ($(HAVE_CAMAL),yes)
-    SRCS += $(SRCDIR)/TetMesher.cc
-  endif
+  SRCS += $(SRCDIR)/TetGen.cc
   LIBS := $(LIBS) $(TETGEN_LIBRARY)
 endif
 

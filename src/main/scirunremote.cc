@@ -183,7 +183,7 @@ main(int argc, char *argv[], char **environment) {
   //IComAddress internaladdress("internal","servicemanager");
   //ServiceManager* internal_service_manager = scinew ServiceManager(servicedb,internaladdress,internallogfile); 
   //Thread* t_int = scinew Thread(internal_service_manager,"internal service manager",0,Thread::NotActivated);
-  //t_int->set_stack_size(1024*20);
+  //t_int->setStackSize(1024*20);
   //t_int->activate(false);
   //t_int->detach();
 
@@ -216,7 +216,7 @@ main(int argc, char *argv[], char **environment) {
 	IComAddress externaladdress("scirun","",serviceport_str,ipstr);
 	ServiceManager* external_service_manager = scinew ServiceManager(servicedb,externaladdress,externallogfile); 
 	Thread* t_ext = scinew Thread(external_service_manager,"external service manager",0,Thread::NotActivated);
-	t_ext->set_stack_size(1024*20);
+	t_ext->setStackSize(1024*20);
     t_ext->setDaemon(true);
 	t_ext->activate(false);
 	t_ext->detach();
