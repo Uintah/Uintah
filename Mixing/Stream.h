@@ -132,9 +132,11 @@ namespace Uintah {
       inline double getCO() const {
         return d_co;
       }
-
       inline double getC2H2() const {
                 return d_c2h2;
+      }
+      inline double getCH4() const {
+	      return d_ch4;
       }
       inline bool getSootBool() const {
 	return d_lsoot;
@@ -205,6 +207,7 @@ namespace Uintah {
       double d_co;
 
       double d_c2h2;
+      double d_ch4;
       double d_fvtfive;
       double d_tfour;
       double d_tfive;

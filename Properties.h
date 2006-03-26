@@ -249,6 +249,7 @@ private:
 
       bool d_co_output;
       bool d_sulfur_chem;
+      bool d_soot_precursors;
 
       bool d_filter_drhodt;
       bool d_first_order_drhodt;
