@@ -259,8 +259,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_enthalpyRXNLabel);
       if (d_mixingModel->getNumRxnVars())
         tsk->computes(d_lab->d_reactscalarSRCINLabel);
-      if (d_steadyflamelet)
-        tsk->computes(d_lab->d_c2h2INLabel);
       if (d_thermalNOx)
         tsk->computes(d_lab->d_thermalnoxSRCINLabel);
     }
@@ -284,6 +282,10 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_so2INLabel);
       tsk->computes(d_lab->d_so3INLabel);
     }
+    if (d_soot_precursors) {
+      tsk->computes(d_lab->d_c2h2INLabel);
+      tsk->computes(d_lab->d_ch4INLabel);
+    }
 
     if (d_radiationCalc) {
       tsk->computes(d_lab->d_absorpINLabel);
@@ -300,8 +302,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_enthalpyRXNLabel);
       if (d_mixingModel->getNumRxnVars())
         tsk->modifies(d_lab->d_reactscalarSRCINLabel);
-      if (d_steadyflamelet)
-        tsk->modifies(d_lab->d_c2h2INLabel);
       if (d_thermalNOx)
         tsk->modifies(d_lab->d_thermalnoxSRCINLabel);
     }
@@ -324,6 +324,10 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_h2sINLabel);
       tsk->modifies(d_lab->d_so2INLabel);
       tsk->modifies(d_lab->d_so3INLabel);
+    }
+    if (d_soot_precursors) {
+      tsk->modifies(d_lab->d_c2h2INLabel);
+      tsk->modifies(d_lab->d_ch4INLabel);
     }
 
     if (d_radiationCalc) {
@@ -384,7 +388,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> cp;
     CCVariable<double> co2;
     CCVariable<double> h2o;
-    CCVariable<double> c2h2;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
@@ -404,6 +407,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> h2s;
     CCVariable<double> so2;
     CCVariable<double> so3;
+    CCVariable<double> c2h2;
+    CCVariable<double> ch4;
 
     CCVariable<double> thermalnoxSRC;
     constCCVariable<double> thermalnox;
@@ -471,8 +476,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_mixingModel->getNumRxnVars())
 	  new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			         matlIndex, patch);
-	if (d_steadyflamelet)
-	  new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
         if (d_thermalNOx)
           new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
                                  matlIndex, patch);
@@ -504,6 +507,12 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	new_dw->allocateAndPut(so3, d_lab->d_so3INLabel,
 			       matlIndex, patch);
       }
+      if (d_soot_precursors) {
+        new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel,
+                               matlIndex, patch);
+        new_dw->allocateAndPut(ch4, d_lab->d_ch4INLabel,
+                               matlIndex, patch);
+      }
 
       if (d_radiationCalc) {
         new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
@@ -525,8 +534,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_mixingModel->getNumRxnVars())
 	  new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			         matlIndex, patch);
-	if (d_steadyflamelet)
-          new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
         if (d_thermalNOx)
           new_dw->getModifiable(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
                                  matlIndex, patch);
@@ -558,6 +565,12 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	new_dw->getModifiable(so3, d_lab->d_so3INLabel,
 			      matlIndex, patch);
       }
+      if (d_soot_precursors) {
+        new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel,
+                              matlIndex, patch);
+        new_dw->getModifiable(ch4, d_lab->d_ch4INLabel,
+                              matlIndex, patch);
+      }
 
       if (d_radiationCalc) {
         new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
@@ -576,8 +589,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       enthalpyRXN.initialize(0.0);
         if (d_mixingModel->getNumRxnVars())
 	  reactscalarSRC.initialize(0.0);
-	if (d_steadyflamelet)
-          c2h2.initialize(0.0);
         if (d_thermalNOx)
           thermalnoxSRC.initialize(0.0);
     }    
@@ -600,6 +611,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       h2s.initialize(0.0);
       so2.initialize(0.0);
       so3.initialize(0.0);
+    }
+    if (d_soot_precursors) {
+      c2h2.initialize(0.0);
+      ch4.initialize(0.0);
     }
 
     if (d_radiationCalc) {
@@ -720,6 +735,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    so2[currCell] = outStream.getSO2();
 	    so3[currCell] = outStream.getSO3();
 	  }
+          if (d_soot_precursors) {
+            c2h2[currCell] = outStream.getC2H2();
+            ch4[currCell] = outStream.getCH4();
+          }
 
 	  if (d_calcEnthalpy && (initialize || local_enthalpy_init))
 	    enthalpy[currCell] = outStream.getEnthalpy();
@@ -733,8 +752,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    enthalpyRXN[currCell] -= enthalpy[currCell];
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
-	    if (d_steadyflamelet)
-	      c2h2[currCell] = outStream.getC2H2();
             if (d_thermalNOx)
               thermalnoxSRC[currCell] = outStream.getnoxRxnSource();
 	  }
@@ -946,6 +963,16 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     tsk->computes(d_lab->d_so3INLabel);
   }
 
+  if (d_soot_precursors) {
+    tsk->requires(Task::OldDW, d_lab->d_c2h2INLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_ch4INLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    tsk->computes(d_lab->d_c2h2INLabel);
+    tsk->computes(d_lab->d_ch4INLabel);
+  }
+
   tsk->computes(d_lab->d_oldDeltaTLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -1008,11 +1035,15 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> h2sIN;
     constCCVariable<double> so2IN;
     constCCVariable<double> so3IN;
+    constCCVariable<double> c2h2IN;
+    constCCVariable<double> ch4IN;
 
     CCVariable<double> coIN_new;
     CCVariable<double> h2sIN_new;
     CCVariable<double> so2IN_new;
     CCVariable<double> so3IN_new;
+    CCVariable<double> c2h2IN_new;
+    CCVariable<double> ch4IN_new;
 
     /*
     constCCVariable<double> enthalpyRXN; 
@@ -1200,6 +1231,20 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       new_dw->allocateAndPut(so3IN_new, d_lab->d_so3INLabel,
 			     matlIndex, patch);
       so3IN_new.copyData(so3IN);
+    }
+    
+    if (d_soot_precursors) {
+      old_dw->get(c2h2IN, d_lab->d_c2h2INLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(c2h2IN_new, d_lab->d_c2h2INLabel,
+			     matlIndex, patch);
+      c2h2IN_new.copyData(c2h2IN);      
+
+      old_dw->get(ch4IN, d_lab->d_ch4INLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(ch4IN_new, d_lab->d_ch4INLabel,
+			     matlIndex, patch);
+      ch4IN_new.copyData(ch4IN);
     }
 
     // no need for if (d_MAlab),  since this routine is only 
