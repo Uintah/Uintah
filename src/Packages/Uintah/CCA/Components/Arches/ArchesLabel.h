@@ -306,11 +306,12 @@ namespace Uintah {
       const VarLabel* d_cpINLabel;
       const VarLabel* d_co2INLabel;
       const VarLabel* d_h2oINLabel;
-      const VarLabel* d_c2h2INLabel;
       const VarLabel* d_h2sINLabel;
       const VarLabel* d_so2INLabel;
       const VarLabel* d_so3INLabel;
       const VarLabel* d_coINLabel;
+      const VarLabel* d_c2h2INLabel;
+      const VarLabel* d_ch4INLabel;
       const VarLabel* d_denRefArrayLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;

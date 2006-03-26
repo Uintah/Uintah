@@ -117,7 +117,9 @@ public:
       inline bool getSulfurChem() const{
 	return 0;
       }
-
+      inline bool getSootPrecursors() const{
+	              return 0;
+		            }
       inline int getNumRxnVars() const{
 	return d_numRxnVars;
       }
