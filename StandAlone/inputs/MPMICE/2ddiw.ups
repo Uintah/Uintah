@@ -5,6 +5,9 @@
    <Meta>
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
+   <SimulationComponent>
+        <type> mpmice </type>
+   </SimulationComponent>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -35,6 +38,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0" var = "Dirichlet" label = "Pressure">
@@ -47,6 +53,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -63,6 +72,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0" var = "Neumann" label = "Pressure">
@@ -77,6 +89,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "z-">
         <BCType id = "all"   label = "Symmetric" var = "symmetry">
@@ -89,7 +104,7 @@
     </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>        [0,0,1.1250]    </lower>
+              <lower>        [0.0,0.0,1.125]    </lower>
               <upper>        [4.5,2.5,1.375]    </upper>
                 <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
@@ -115,13 +130,14 @@
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.temperature"/>
+      <checkpoint cycle = "2" timestepInterval = "100"/>
    </DataArchiver>
 
    <Debug>
+   <!--
      <dbg_timeStart>       0.00    </dbg_timeStart>
      <dbg_timeStop>        2.0     </dbg_timeStop>
      <dbg_outputInterval>  1e-9    </dbg_outputInterval>
-   <!--
      <dbg_BeginIndex>     [[0,0,0]]</dbg_BeginIndex>
      <dbg_EndIndex>       [[2,2,2]]</dbg_EndIndex>
      <dbg_SigFigs>         10      </dbg_SigFigs>
@@ -145,10 +161,15 @@
          <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
-        <solution technique = "EqForm" />
+        <advection type = "FirstOrder"/>
+        <solution technique = "EqForm"/>
       </ICE>        
     </CFD>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <nodes8or27>8</nodes8or27>
+        <testForNegTemps_mpm>false</testForNegTemps_mpm>
+    </MPM>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
