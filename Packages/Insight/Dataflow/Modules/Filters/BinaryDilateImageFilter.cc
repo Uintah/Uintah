@@ -190,9 +190,6 @@ BinaryDilateImageFilter::BinaryDilateImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &BinaryDilateImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &BinaryDilateImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
-
 }
 
 BinaryDilateImageFilter::~BinaryDilateImageFilter()

@@ -185,9 +185,6 @@ CurvatureAnisotropicDiffusionImageFilter::CurvatureAnisotropicDiffusionImageFilt
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &CurvatureAnisotropicDiffusionImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &CurvatureAnisotropicDiffusionImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
-
 }
 
 CurvatureAnisotropicDiffusionImageFilter::~CurvatureAnisotropicDiffusionImageFilter() 

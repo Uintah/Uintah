@@ -300,9 +300,6 @@ ThresholdSegmentationLevelSetImageFilter::ThresholdSegmentationLevelSetImageFilt
   m_RedrawCommand->SetCallbackFunction( this, &ThresholdSegmentationLevelSetImageFilter::ConstProcessEvent );
 
   iterationCounter_OutputImage = 0;
-
-  update_progress(0.0);
-
 }
 
 ThresholdSegmentationLevelSetImageFilter::~ThresholdSegmentationLevelSetImageFilter() 

@@ -192,8 +192,6 @@ BinaryErodeImageFilter::BinaryErodeImageFilter(GuiContext* ctx)
   m_RedrawCommand->SetCallbackFunction( this, &BinaryErodeImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &BinaryErodeImageFilter::ConstProcessEvent );
 
-  update_progress(0.0);
-
 }
 
 BinaryErodeImageFilter::~BinaryErodeImageFilter()
