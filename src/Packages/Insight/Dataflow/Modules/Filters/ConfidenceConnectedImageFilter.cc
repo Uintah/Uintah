@@ -270,8 +270,6 @@ ConfidenceConnectedImageFilter::ConfidenceConnectedImageFilter(GuiContext* ctx)
   m_RedrawCommand->SetCallbackFunction( this, &ConfidenceConnectedImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &ConfidenceConnectedImageFilter::ConstProcessEvent );
 
-  update_progress(0.0);
-
 }
 
 ConfidenceConnectedImageFilter::~ConfidenceConnectedImageFilter() 

@@ -174,8 +174,6 @@ GradientMagnitudeImageFilter::GradientMagnitudeImageFilter(GuiContext* ctx)
   m_RedrawCommand->SetCallbackFunction( this, &GradientMagnitudeImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &GradientMagnitudeImageFilter::ConstProcessEvent );
 
-  update_progress(0.0);
-
 }
 
 GradientMagnitudeImageFilter::~GradientMagnitudeImageFilter() 

@@ -187,9 +187,6 @@ GrayscaleDilateImageFilter::GrayscaleDilateImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &GrayscaleDilateImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &GrayscaleDilateImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
-
 }
 
 GrayscaleDilateImageFilter::~GrayscaleDilateImageFilter()
