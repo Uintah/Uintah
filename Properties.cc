@@ -6,13 +6,8 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/FlameletMixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/StaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/SteadyFlameletsTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MeanMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
@@ -54,8 +49,6 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                        d_physicalConsts(phys_const), 
                        d_calcEnthalpy(calcEnthalpy), d_thermalNOx(thermalNOx)
 {
-  d_flamelet = false;
-  d_steadyflamelet = false;
   d_DORadiationCalc = false;
   d_bc = 0;
 #ifdef PetscFilter
@@ -100,31 +93,15 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingModel = scinew ColdflowMixingModel();
     d_reactingFlow = false;
   }
-  else if (mixModel == "pdfMixingModel"){
-    if(!d_thermalNOx)
-    	d_mixingModel = scinew PDFMixingModel();
-    else
-    	d_mixingModel = scinew PDFMixingModel(d_thermalNOx);
-  }
-  else if (mixModel == "meanMixingModel")
-    d_mixingModel = scinew MeanMixingModel();
-  else if (mixModel == "flameletModel") {
-    d_mixingModel = scinew FlameletMixingModel();
-    d_flamelet = true;
-  }
-  else if (mixModel == "StaticMixingTable")
-    d_mixingModel = scinew StaticMixingTable();
   else if (mixModel == "NewStaticMixingTable")
     d_mixingModel = scinew NewStaticMixingTable();
   else if (mixModel == "StandardTable")
     d_mixingModel = scinew StandardTable();
-  else if (mixModel == "SteadyFlameletsTable"){
-    if(!d_thermalNOx)
-    	d_mixingModel = scinew SteadyFlameletsTable();
-    else
-    	d_mixingModel = scinew SteadyFlameletsTable(d_thermalNOx);
-    d_steadyflamelet = true;
-  }
+  
+  else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
+	|| mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
+	|| mixModel == "meanMixingModel" )
+    throw InvalidValue("DEPRECATED: Mixing Model no longer supported: " + mixModel, __FILE__, __LINE__);
   else
     throw InvalidValue("Mixing Model not supported" + mixModel, __FILE__, __LINE__);
   d_mixingModel->problemSetup(db);
@@ -138,13 +115,6 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_sulfur_chem = d_mixingModel->getSulfurChem();
 
   cout << "d_co_output "<< d_co_output << endl;
-
-  if (d_flamelet) {
-    d_reactingFlow = false;
-    d_radiationCalc = false;
-    d_DORadiationCalc = false;
-  }
-
 }
 
 //****************************************************************************
@@ -157,19 +127,10 @@ Properties::computeInletProperties(const InletStream& inStream,
 {
   if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
     d_mixingModel->computeProps(inStream, outStream);
-  else if (dynamic_cast<const FlameletMixingModel*>(d_mixingModel)) {
-    d_mixingModel->computeProps(inStream, outStream);
-  }
-  else if (dynamic_cast<const StaticMixingTable*>(d_mixingModel)) {
-    d_mixingModel->computeProps(inStream, outStream);
-  }
   else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
   else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
-    d_mixingModel->computeProps(inStream, outStream);
-  }
-  else if (dynamic_cast<const SteadyFlameletsTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
   else {
@@ -206,11 +167,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  // Scalar dissipation for steady flamelet tables
-  if (d_steadyflamelet)
-    tsk->requires(Task::NewDW, d_lab->d_scalarDissSPLabel,
-    Ghost::None, Arches::ZEROGHOSTCELLS);
 
    // Added for Thermal NOx :Needed to compute the phi
   if(d_thermalNOx)
@@ -262,18 +218,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       if (d_thermalNOx)
         tsk->computes(d_lab->d_thermalnoxSRCINLabel);
     }
-    if (d_flamelet) {
-      tsk->computes(d_lab->d_tempINLabel);
-      tsk->computes(d_lab->d_sootFVINLabel);
-      tsk->computes(d_lab->d_co2INLabel);
-      tsk->computes(d_lab->d_h2oINLabel);
-      tsk->computes(d_lab->d_fvtfiveINLabel);
-      tsk->computes(d_lab->d_tfourINLabel);
-      tsk->computes(d_lab->d_tfiveINLabel);
-      tsk->computes(d_lab->d_tnineINLabel);
-      tsk->computes(d_lab->d_qrgINLabel);
-      tsk->computes(d_lab->d_qrsINLabel);
-    }
 
     if (d_co_output) 
       tsk->computes(d_lab->d_coINLabel);
@@ -304,18 +248,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
         tsk->modifies(d_lab->d_reactscalarSRCINLabel);
       if (d_thermalNOx)
         tsk->modifies(d_lab->d_thermalnoxSRCINLabel);
-    }
-    if (d_flamelet) {
-      tsk->modifies(d_lab->d_tempINLabel);
-      tsk->modifies(d_lab->d_sootFVINLabel);
-      tsk->modifies(d_lab->d_co2INLabel);
-      tsk->modifies(d_lab->d_h2oINLabel);
-      tsk->modifies(d_lab->d_fvtfiveINLabel);
-      tsk->modifies(d_lab->d_tfourINLabel);
-      tsk->modifies(d_lab->d_tfiveINLabel);
-      tsk->modifies(d_lab->d_tnineINLabel);
-      tsk->modifies(d_lab->d_qrgINLabel);
-      tsk->modifies(d_lab->d_qrsINLabel);
     }
 
     if (d_co_output) 
@@ -444,11 +376,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
-    // Scalar dissipation for steady flamelet tables
-    if (d_steadyflamelet) {
-        new_dw->get(scalarDisp, d_lab->d_scalarDissSPLabel,
-        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
 
     if (d_calcEnthalpy)
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, 
@@ -479,21 +406,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_thermalNOx)
           new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
                                  matlIndex, patch);
-      }
-
-      if (d_flamelet) {
-        new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel,
-			       matlIndex, patch);
-        new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
-        new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
-        new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(fvtfive, d_lab->d_fvtfiveINLabel,
-			       matlIndex, patch);
-        new_dw->allocateAndPut(tfour, d_lab->d_tfourINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(tfive, d_lab->d_tfiveINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(tnine, d_lab->d_tnineINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(qrg, d_lab->d_qrgINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
       }
 
       if (d_co_output)
@@ -539,21 +451,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
                                  matlIndex, patch);
       }
 
-      if (d_flamelet) {
-        new_dw->getModifiable(temperature, d_lab->d_tempINLabel,
-			       matlIndex, patch);
-        new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
-        new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
-        new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-        new_dw->getModifiable(fvtfive, d_lab->d_fvtfiveINLabel,
-			       matlIndex, patch);
-        new_dw->getModifiable(tfour, d_lab->d_tfourINLabel, matlIndex, patch);
-        new_dw->getModifiable(tfive, d_lab->d_tfiveINLabel, matlIndex, patch);
-        new_dw->getModifiable(tnine, d_lab->d_tnineINLabel, matlIndex, patch);
-        new_dw->getModifiable(qrg, d_lab->d_qrgINLabel, matlIndex, patch);
-        new_dw->getModifiable(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
-      }
-
       if (d_co_output)
 	new_dw->getModifiable(co, d_lab->d_coINLabel,
 			      matlIndex, patch);
@@ -592,18 +489,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_thermalNOx)
           thermalnoxSRC.initialize(0.0);
     }    
-    if (d_flamelet) {
-      temperature.initialize(0.0);
-      sootFV.initialize(0.0);
-      co2.initialize(0.0);
-      h2o.initialize(0.0);
-      fvtfive.initialize(0.0);
-      tfour.initialize(0.0);
-      tfive.initialize(0.0);
-      tnine.initialize(0.0);
-      qrg.initialize(0.0);
-      qrs.initialize(0.0);
-    }
 
     if (d_co_output)
       co.initialize(0.0);
@@ -678,21 +563,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
 	  }
 
-	  // Scalar dissipation for steady flamelet tables
-	  if (d_steadyflamelet) {
-	      inStream.d_scalarDisp = scalarDisp[currCell];
-	  }
-
 	  // This will set the flag to compute thermal NOx
 	  if (d_thermalNOx) {
 	      inStream.d_calcthermalNOx = true;
-	  }
-
-	  if (d_flamelet) {
-	    if (colX >= 0)
-	      inStream.d_axialLoc = colX;
-	    else
-	      inStream.d_axialLoc = 0;
 	  }
 
           if (d_calcEnthalpy)
@@ -713,19 +586,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
 	  double local_den = outStream.getDensity();
 	  drhodf[currCell] = outStream.getdrhodf();
-
-	  if (d_flamelet) {
-	    temperature[currCell] = outStream.getTemperature();
-	    sootFV[currCell] = outStream.getSootFV();
-	    co2[currCell] = outStream.getCO2();
-	    h2o[currCell] = outStream.getH2O();
-	    fvtfive[currCell] = outStream.getfvtfive();
-	    tfour[currCell] = outStream.gettfour();
-	    tfive[currCell] = outStream.gettfive();
-	    tnine[currCell] = outStream.gettnine();
-	    qrg[currCell] = outStream.getqrg();
-	    qrs[currCell] = outStream.getqrs();
-	  }
 
 	  if (d_co_output) {
 	    co[currCell] = outStream.getCO();
@@ -758,7 +618,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  
 
 	  if (d_radiationCalc) {
-	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
+	    // bc is the mass-atoms of carbon per mass of reactant mixture
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
 	    if (d_mixingModel->getNumRxnVars()) 
@@ -822,7 +682,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->put(sum_vartype(den_ref),timelabels->ref_density);
     }
 
-    if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
+    if ((d_bc->getIntrusionBC())&& d_reactingFlow )
       d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
 
     if (d_MAlab && d_DORadiationCalc && !initialize) {
