@@ -11,7 +11,7 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 
 #include <string>
 #include <fstream>
