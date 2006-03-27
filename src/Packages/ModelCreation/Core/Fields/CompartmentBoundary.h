@@ -42,7 +42,7 @@ class CompartmentBoundaryAlgo;
 class CompartmentBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
   virtual bool testinput(FieldHandle input);
 
   static AlgoList<CompartmentBoundaryAlgo> precompiled_;
@@ -53,7 +53,7 @@ template <class FSRC, class FDST>
 class CompartmentBoundaryVolumeAlgoT : public CompartmentBoundaryAlgo
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
   virtual bool testinput(FieldHandle input);
 
 private:
@@ -72,7 +72,7 @@ template <class FSRC, class FDST>
 class CompartmentBoundarySurfaceAlgoT : public CompartmentBoundaryAlgo
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
   virtual bool testinput(FieldHandle input);
   
 private:
@@ -87,7 +87,7 @@ private:
 
 
 template <class FSRC, class FDST>
-bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -258,7 +258,7 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::testinput(FieldHandle input)
 
 
 template <class FSRC, class FDST>
-bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="MatrixToField" category="Converter" optional="false">
+<component name="MatrixToString" category="Converter" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      Convert a matrix into a SCIRun Field object.
+      MatrixToString converts a matrix and prints its contents in a string. This module exists mainly for debugging purposes.
 
     </summary>
     <description>
-      <p>        Convert a matrix into a SCIRun Field object.
+      <p>        MatrixToString converts a matrix and prints its contents in a string. This module exists mainly for debugging purposes.
 </p>
     </description>
   </overview>
@@ -23,8 +23,8 @@
     </inputs>
     <outputs>
       <port>
-        <name>Field</name>
-        <datatype>SCIRun::Field</datatype>
+        <name>String</name>
+        <datatype>SCIRun::String</datatype>
       </port>
     </outputs>
   </io>

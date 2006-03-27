@@ -1,4 +1,4 @@
-itcl_class ModelCreation_FieldsCreate_NrrdToField {
+itcl_class ModelCreation_Converter_NrrdToField {
     inherit Module
     constructor {config} {
         set name NrrdToField

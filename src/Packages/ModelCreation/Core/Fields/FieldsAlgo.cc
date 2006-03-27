@@ -589,10 +589,10 @@ bool FieldsAlgo::IsCounterClockWiseSurface(FieldHandle input)
 // NEWLY CREATED FUNCTIONS:
 
 
-bool FieldsAlgo::CompartmentBoundary(FieldHandle input,FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool FieldsAlgo::CompartmentBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   CompartmentBoundaryAlgo algo;
-  return(algo.CompartmentBoundary(pr_,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  return(algo.CompartmentBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
 
 bool FieldsAlgo::ConvertToTetVol(FieldHandle input, FieldHandle& output)
@@ -608,12 +608,17 @@ bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
 }
 
 
-bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx, bool linky, bool linkz, bool byelements)
+bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, double tol, bool linkx, bool linky, bool linkz)
 {
   LinkFieldBoundaryAlgo algo;
-  return(algo.LinkFieldBoundary(pr_,input,output,tol,linkx,linky,linkz,byelements));
+  return(algo.LinkFieldBoundary(pr_,input,GeomToComp,CompToGeom,tol,linkx,linky,linkz));
 }
 
+bool FieldsAlgo::LinkFieldBoundaryByElement(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, MatrixHandle& DomainLink, MatrixHandle& MembraneLink, double tol, bool linkx, bool linky, bool linkz)
+{
+  LinkFieldBoundaryByElementAlgo algo;
+  return(algo.LinkFieldBoundaryByElement(pr_,input,GeomToComp,CompToGeom,DomainLink,MembraneLink,tol,linkx,linky,linkz));
+}
 
 bool FieldsAlgo::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
 {

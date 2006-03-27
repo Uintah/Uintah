@@ -32,8 +32,8 @@
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Datatypes/NrrdData.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -42,9 +42,9 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class MatrixToField : public Module {
+class NrrdToField : public Module {
 public:
-  MatrixToField(GuiContext*);
+  NrrdToField(GuiContext*);
 
   virtual void execute();
 
@@ -53,16 +53,16 @@ private:
 };
 
 
-DECLARE_MAKER(MatrixToField)
-MatrixToField::MatrixToField(GuiContext* ctx)
-  : Module("MatrixToField", ctx, Source, "FieldsCreate", "ModelCreation"),
+DECLARE_MAKER(NrrdToField)
+NrrdToField::NrrdToField(GuiContext* ctx)
+  : Module("NrrdToField", ctx, Source, "Converter", "ModelCreation"),
     guidatalocation_(get_ctx()->subVar("datalocation"))
 {
 }
 
-void MatrixToField::execute()
+void NrrdToField::execute()
 {
-  MatrixIPort* iport = dynamic_cast<MatrixIPort*>(get_iport(0));
+  NrrdIPort* iport = dynamic_cast<NrrdIPort*>(get_iport(0));
   if (iport == 0) 
   {
     error("Could not find input port");
@@ -76,14 +76,14 @@ void MatrixToField::execute()
     return;
   }
 
-  MatrixHandle imatrix;
+  NrrdDataHandle nrrd;
   FieldHandle ofield;
   FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
 
   std::string datalocation = guidatalocation_.get();
   
-  iport->get(imatrix);
-  if(algo.MatrixToField(imatrix,ofield,datalocation)) oport->send(ofield);
+  iport->get(nrrd);
+  if(algo.NrrdToField(nrrd,ofield,datalocation)) oport->send(ofield);
 }
 
 

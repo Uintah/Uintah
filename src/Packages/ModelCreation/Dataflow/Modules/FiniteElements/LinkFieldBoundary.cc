@@ -74,12 +74,8 @@ void LinkFieldBoundary::execute()
   bool   linkz = static_cast<bool>(guilinkz_.get());
 
   FieldsAlgo fieldsalgo(this);
-  if(!(fieldsalgo.LinkFieldBoundary(Field,Field,tol,linkx,linky,linkz,false))) return;
+  if(!(fieldsalgo.LinkFieldBoundary(Field,GeomToComp,CompToGeom,tol,linkx,linky,linkz))) return;
   
-  Field->get_property("GeomToComp",GeomToComp);
-  Field->get_property("CompToGeom",CompToGeom);
-  
-  send_output_handle("Field",Field,true);
   send_output_handle("GeomToComp",GeomToComp,true);
   send_output_handle("CompToGeom",CompToGeom,true);  
 }

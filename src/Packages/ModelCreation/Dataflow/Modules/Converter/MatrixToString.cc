@@ -26,64 +26,81 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/String.h>
 
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
+
 #include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class NrrdToField : public Module {
+class MatrixToString : public Module {
 public:
-  NrrdToField(GuiContext*);
-
+  MatrixToString(GuiContext*);
   virtual void execute();
-
-private:
-  GuiString guidatalocation_;
 };
 
 
-DECLARE_MAKER(NrrdToField)
-NrrdToField::NrrdToField(GuiContext* ctx)
-  : Module("NrrdToField", ctx, Source, "FieldsCreate", "ModelCreation"),
-    guidatalocation_(get_ctx()->subVar("datalocation"))
+DECLARE_MAKER(MatrixToString)
+MatrixToString::MatrixToString(GuiContext* ctx)
+  : Module("MatrixToString", ctx, Source, "Converter", "ModelCreation")
 {
 }
 
-void NrrdToField::execute()
+void MatrixToString::execute()
 {
-  NrrdIPort* iport = dynamic_cast<NrrdIPort*>(get_iport(0));
-  if (iport == 0) 
-  {
-    error("Could not find input port");
-    return;
-  }
-
-  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
-  if (oport == 0) 
-  {
-    error("Could not find output port");
-    return;
-  }
-
-  NrrdDataHandle nrrd;
-  FieldHandle ofield;
-  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
-
-  std::string datalocation = guidatalocation_.get();
+  MatrixHandle Mat;
+  StringHandle Str;
   
-  iport->get(nrrd);
-  if(algo.NrrdToField(nrrd,ofield,datalocation)) oport->send(ofield);
+  if(!(get_input_handle("Matrix",Mat,true))) return;
+  
+  std::ostringstream oss;
+  
+  if (Mat->is_sparse())
+  {
+    SparseRowMatrix* spr = dynamic_cast<SparseRowMatrix*>(Mat.get_rep());
+    int *rr = spr->rows;
+    int *cc = spr->columns;
+    double *d  = spr->a;
+    int m   = spr->nrows();
+    int n   = spr->ncols();
+    
+    oss << "Sparse Matrix ("<<m<<"x"<<n<<"):\n";
+    for (int r = 0; r < m; r++)
+    {
+      for (int c=rr[r]; c<rr[r+1];c++)
+      {
+        oss << "["<<r<<","<<cc[c]<<"] = " << d[c] << "\n";
+      }
+    }
+  }
+  else
+  {
+    Mat = Mat->dense();
+    int m = Mat->nrows();
+    int n = Mat->ncols();
+    double* d = Mat->get_data_pointer();
+    oss << "Dense Matrix ("<<m<<"x"<<n<<"):\n";
+    int k = 0;
+    for (int r=0; r<m;r++)
+    {
+      for (int c=0; c<n;c++)
+      {
+        oss << d[k++] << " ";
+      }
+      oss << "\n";
+    }
+  }
+  
+  Str = scinew String(oss.str());
+  send_output_handle("String",Str,true);
 }
 
 
