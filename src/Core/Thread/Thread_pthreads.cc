@@ -79,6 +79,10 @@ extern "C" {
 #include <unistd.h>
 #include <fstream>
 #include <string>
+#ifdef __APPLE__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
 
 #include <TauProfilerForSCIRun.h>
 
@@ -394,7 +398,13 @@ int
 Thread::numProcessors()
 {
   static int np = 0;
+
   if (np == 0) {
+#ifdef __APPLE__
+    size_t len = sizeof(np); 
+    sysctl((int[2]) {CTL_HW, HW_NCPU}, 2, &np, &len, NULL, 0); 
+#else
+    // Linux
     std::ifstream cpuinfo("/proc/cpuinfo");
     if (cpuinfo) {
       int count = 0;
@@ -407,7 +417,8 @@ Thread::numProcessors()
       }
       np = count;
     }
-    if (np == 0) np = 1;
+#endif
+    if (np <= 0) np = 1;
   }
   return np;
 }
