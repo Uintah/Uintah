@@ -1,4 +1,4 @@
-itcl_class ModelCreation_FieldsCreate_MatrixToField {
+itcl_class ModelCreation_Converter_MatrixToField {
     inherit Module
     constructor {config} {
         set name MatrixToField

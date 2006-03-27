@@ -22,10 +22,6 @@
     </inputs>
     <outputs>
       <port>
-        <name>Field</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
         <name>GeomToComp</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>

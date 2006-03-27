@@ -96,7 +96,7 @@ class FieldsAlgo : public AlgoLibrary {
     // Extract the boundaries between compartments in a volume or surface field
     // The data needs to be on the elements. This function only extracts internal
     // boundaries, use field boundary to extract the outer surfaces.
-    bool CompartmentBoundary(FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+    bool CompartmentBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 
     // ConvertToTetVol:
     // This function converts an hexvol or latvol into a tetvol. The functionality
@@ -120,7 +120,8 @@ class FieldsAlgo : public AlgoLibrary {
 
     // LinkFieldBoundary:
     // Build a table for the FE Matrix generator so the boundaries will be linked
-    bool LinkFieldBoundary(FieldHandle input, FieldHandle& output, double tol, bool linkx = true, bool linky = true, bool linkz = true, bool byelements = false);
+    bool LinkFieldBoundary(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, double tol, bool linkx = true, bool linky = true, bool linkz = true);
+    bool LinkFieldBoundaryByElement(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, MatrixHandle& DomainLink, MatrixHandle& MembraneLink, double tol, bool linkx = true, bool linky = true, bool linkz = true);
 
     // MappingMatrixToField:
     // This function will assign to each node the value of the original node.

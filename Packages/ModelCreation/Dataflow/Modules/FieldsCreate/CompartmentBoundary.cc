@@ -66,23 +66,13 @@ CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
 
 void CompartmentBoundary::execute()
 {
-  FieldIPort* iport = dynamic_cast<FieldIPort*>(get_iport(0));
-  if (iport == 0) 
-  {
-    error("Could not find input port");
-    return;
-  }
-
-  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
-  if (oport == 0) 
-  {
-    error("Could not find output port");
-    return;
-  }
-
   FieldHandle ifield, ofield;
+  MatrixHandle DomainLink;
   FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
-
+ 
+  if(!(get_input_handle("Field",ifield,true))) return;
+  get_input_handle("DomainLink",DomainLink,false);
+  
   double minrange, maxrange;
   bool   userange, includeouterboundary;
   bool   innerboundaryonly;
@@ -93,8 +83,9 @@ void CompartmentBoundary::execute()
   includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
   innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
 
-  iport->get(ifield);
-  if(algo.CompartmentBoundary(ifield,ofield,minrange,maxrange,userange,includeouterboundary,innerboundaryonly)) oport->send(ofield);
+  if(!(algo.CompartmentBoundary(ifield,ofield,DomainLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly))) return;
+  
+  send_output_handle("Field",ofield,true);
 }
 
 } // End namespace ModelCreation

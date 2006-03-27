@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   if (input.get_rep() == 0)
   {
@@ -91,7 +91,7 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
 
   for(size_t p =0; p< precompiled_.size(); p++)
   {
-    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->CompartmentBoundary(pr,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->CompartmentBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
   }
 
   // Setup dynamic files
@@ -117,7 +117,7 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
     return(false);
   }
 
-  return(algo->CompartmentBoundary(pr,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  return(algo->CompartmentBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
 
 bool CompartmentBoundaryAlgo::testinput(FieldHandle input)

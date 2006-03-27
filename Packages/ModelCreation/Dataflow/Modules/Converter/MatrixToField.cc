@@ -26,10 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -38,50 +42,50 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class LinkFieldBoundaryByElement : public Module {
+class MatrixToField : public Module {
 public:
-  LinkFieldBoundaryByElement(GuiContext*);
+  MatrixToField(GuiContext*);
+
   virtual void execute();
-  
+
 private:
-  GuiInt guilinkx_;
-  GuiInt guilinky_;
-  GuiInt guilinkz_;
-  GuiDouble guitol_;
-  
+  GuiString guidatalocation_;
 };
 
 
-DECLARE_MAKER(LinkFieldBoundaryByElement)
-LinkFieldBoundaryByElement::LinkFieldBoundaryByElement(GuiContext* ctx)
-  : Module("LinkFieldBoundaryByElement", ctx, Source, "FiniteElements", "ModelCreation"),
-  guilinkx_(ctx->subVar("linkx")),
-  guilinky_(ctx->subVar("linky")),
-  guilinkz_(ctx->subVar("linkz")),
-  guitol_(ctx->subVar("tol"))
+DECLARE_MAKER(MatrixToField)
+MatrixToField::MatrixToField(GuiContext* ctx)
+  : Module("MatrixToField", ctx, Source, "Converter", "ModelCreation"),
+    guidatalocation_(get_ctx()->subVar("datalocation"))
 {
 }
 
-void LinkFieldBoundaryByElement::execute()
+void MatrixToField::execute()
 {
-  FieldHandle Field;
-  MatrixHandle GeomToComp, CompToGeom, DomainLink, MembraneLink;
-  if(!(get_input_handle("Field",Field,true))) return;
+  MatrixIPort* iport = dynamic_cast<MatrixIPort*>(get_iport(0));
+  if (iport == 0) 
+  {
+    error("Could not find input port");
+    return;
+  }
 
-  double tol = guitol_.get();
-  bool   linkx = static_cast<bool>(guilinkx_.get());
-  bool   linky = static_cast<bool>(guilinky_.get());
-  bool   linkz = static_cast<bool>(guilinkz_.get());
+  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
+  if (oport == 0) 
+  {
+    error("Could not find output port");
+    return;
+  }
 
-  FieldsAlgo fieldsalgo(this);
-  if(!(fieldsalgo.LinkFieldBoundaryByElement(Field,GeomToComp,CompToGeom,DomainLink,MembraneLink,tol,linkx,linky,linkz))) return;
+  MatrixHandle imatrix;
+  FieldHandle ofield;
+  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+
+  std::string datalocation = guidatalocation_.get();
   
-  send_output_handle("GeomToComp",GeomToComp,true);
-  send_output_handle("CompToGeom",CompToGeom,true);  
-  send_output_handle("DomainLink",DomainLink,true);  
-  send_output_handle("MembraneLink",MembraneLink,true);  
-
+  iport->get(imatrix);
+  if(algo.MatrixToField(imatrix,ofield,datalocation)) oport->send(ofield);
 }
+
 
 } // End namespace ModelCreation
 
