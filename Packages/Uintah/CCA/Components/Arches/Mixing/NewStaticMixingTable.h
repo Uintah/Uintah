@@ -134,10 +134,6 @@ public:
       inline ReactionModel* getRxnModel() const {
 	return 0;
       }      
-      inline Integrator* getIntegrator() const {
-	return 0;
-      }
-
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
       }

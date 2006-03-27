@@ -109,7 +109,6 @@ public:
       virtual std::string getMixTableType() const = 0;
       virtual int getTotalVars() const = 0;
       virtual ReactionModel* getRxnModel() const = 0;
-      virtual Integrator* getIntegrator() const = 0;
 
 
 protected :
