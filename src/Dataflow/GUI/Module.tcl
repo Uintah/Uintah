@@ -619,6 +619,7 @@ itcl_class Module {
 
 	set iports [portCount "[modname] 0 i"]
 	set oports [portCount "[modname] 0 o"]
+        if { "$iports" == "" && "$oports" == ""} return
 	set nports [expr $oports>$iports?$oports:$iports]
 	set ports_width [expr 8+$nports*$port_spacing] 
 	set port_diff [expr $ports_width - $initial_width]
