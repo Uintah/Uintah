@@ -260,9 +260,9 @@ ShowColorMap::execute()
     GeomSticky *sticky = scinew GeomSticky(all);
 
     geometry_output_handle_ = GeomHandle( sticky );
-    send_output_handle( "Geometry",
+    send_output_handle( string("Geometry"),
 			geometry_output_handle_,
-			"ShowColorMap Sticky" );
+			string("ShowColorMap Sticky") );
   }
 }
 
