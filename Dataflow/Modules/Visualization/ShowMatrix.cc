@@ -263,9 +263,9 @@ ShowMatrix::execute()
     if (!gui_3d_mode_.get()) 
       geometery_output_handle_ = scinew GeomSticky(trans);
     
-    send_output_handle( "Geometry", 
+    send_output_handle( string("Geometry"),
 			geometery_output_handle_,
-			get_id() + " Plot" );
+			get_id() + string(" Plot") );
   }
 }
 
