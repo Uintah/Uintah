@@ -73,7 +73,7 @@ Component::disableUI()
 }
 
 bool 
-Component::have_ui()
+Component::haveUI()
 {
   return have_ui;
 }
@@ -140,13 +140,13 @@ Component::removePort(const std::string &name)
 }
 
 int 
-Component::num_input_ports()
+Component::numIPorts()
 {
   return iports.size();
 }
 
 int 
-Component::num_output_ports()
+Component::numOPorts()
 {
   return oports.size();
 }
@@ -158,21 +158,21 @@ Component::isThreadedUI()
 }
 
 InPort* 
-Component::get_input_port(unsigned int index)
+Component::getIPort(unsigned int index)
 {
   if(index>iports.size()) return 0;
   return iports[index];
 }
 
 OutPort* 
-Component::get_output_port(unsigned int index)
+Component::getOPort(unsigned int index)
 {
   if(index>oports.size()) return 0;
   return oports[index];
 }
 
 int 
-Component::popup_ui()
+Component::popupUI()
 {
   return 0;
 }

@@ -77,7 +77,7 @@ public:
   
   /** Returns the value of \em have_ui, which indicates whether or not the
       component defines a user interface. */
-  bool have_ui();
+  bool haveUI();
   
   /** Returns the port with name \em name */
   Port* getPort(const std::string &name);
@@ -92,24 +92,24 @@ public:
   void removePort(const std::string &name);
   
   /** Returns the number of component ports that are input ports. */
-  int num_input_ports();
+  int numIPorts();
   
   /** Returns the number of component ports that are output ports. */
-  int num_output_ports(); 
+  int numOPorts(); 
   
   /** Returns \em true if the UI is expected to be threaded and \em false
       otherwise. */
   bool isThreadedUI();
   
   /** Returns the input port indexed by \em index. */
-  InPort* get_input_port(unsigned int index);
+  InPort* getIPort(unsigned int index);
   
   /** Returns the output port indexed by \em index. */
-  OutPort* get_output_port(unsigned int index);
+  OutPort* getOPort(unsigned int index);
   
   /** Implements the UI.  Each component type must reimplement this method if
       it provides a user interface. */
-  virtual int popup_ui();
+  virtual int popupUI();
 
   void updateAllOutPorts(int flag);
   
