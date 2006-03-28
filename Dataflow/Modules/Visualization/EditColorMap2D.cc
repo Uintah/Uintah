@@ -205,6 +205,12 @@ private:
   GuiFilename			filename_;
   GuiString *			end_marker_;
   pair<float,float>		value_range_;
+
+  // For some reason SCIRun will crash when loading a network
+  // containing an EditColorMap2D module when the scale widget is
+  // created in the GUI causing an early redraw.  Skipping the scale
+  // widget creation redraw fixes this problem.
+  bool crash_workaround_for_first_time_redraw_;
 };
 
 
@@ -262,7 +268,8 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     gui_onstate_(),
     filename_(get_ctx()->subVar("filename")),
     end_marker_(0),
-    value_range_(0.0, -1.0)
+    value_range_(0.0, -1.0),
+    crash_workaround_for_first_time_redraw_(false)
 {
   // Mac OSX requires 512K of stack space for GL context rendering threads
   set_stack_size(1024*512);
@@ -424,6 +431,13 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "redraw") {
     histo_dirty_ |= gui_histo_.changed();
     redraw(args.count() >= 3 && args.get_int(2));
+  } else if (args[1] == "redraw-histo") {
+    if (crash_workaround_for_first_time_redraw_)
+    {
+      histo_dirty_ |= gui_histo_.changed();
+      redraw(args.count() >= 3 && args.get_int(2));
+    }
+    crash_workaround_for_first_time_redraw_ = true;
   } else if (args[1] == "destroygl") {
     if (ctx_) {
       delete ctx_;
