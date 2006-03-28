@@ -69,7 +69,7 @@ CorbaUIThread::CorbaUIThread(CorbaComponentInstance* ci)
 
 void CorbaUIThread::run()
 {
-  ci->getComponent()->popup_ui();
+  ci->getComponent()->popupUI();
 }
 
 CorbaUIPort::CorbaUIPort(CorbaComponentInstance* ci)
@@ -88,7 +88,7 @@ CorbaUIPort::ui()
   Thread* t = new Thread(new CorbaUIThread(ci), "Corba UI Thread", 0);
   t->detach();
   }else{
-  return ci->getComponent()->popup_ui();
+  return ci->getComponent()->popupUI();
   }
   //return 0 success, -1 fatal error, 
   //other values for other errors.

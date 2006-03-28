@@ -56,7 +56,7 @@ CorbaComponentInstance::CorbaComponentInstance(
 
 {
     // See if we have a user-interface...
-    if (component->have_ui()) {
+    if (component->haveUI()) {
         specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
                                sci::cca::TypeMap::pointer(0),
                                sci::cca::Port::pointer(new CorbaUIPort(this)),
