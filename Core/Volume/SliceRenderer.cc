@@ -646,9 +646,9 @@ SliceRenderer::multi_level_draw()
 	      draw_z = false;
 	      b->compute_polygon(r, t, vertex, texcoord, size);
 	    }
+            draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+            draw_level_outline(vertex, size, use_fog, j, shader);
 	  }
-	  draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-          draw_level_outline(vertex, size, use_fog, j, shader);
 	}
       }
       if(draw_z_) {
