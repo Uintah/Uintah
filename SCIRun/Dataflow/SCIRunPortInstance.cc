@@ -41,7 +41,7 @@
 #include <SCIRun/Dataflow/SCIRunPortInstance.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <iostream>
 
 namespace SCIRun {

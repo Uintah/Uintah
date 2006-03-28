@@ -41,7 +41,7 @@
 
 #ifndef SCIRUN_BRIDGE_BRIDGESERVICES_H
 #define SCIRUN_BRIDGE_BRIDGESERVICES_H
-                                                                                                            
+
 #include <sci_defs/vtk_defs.h>
 
 //CCA:
@@ -50,7 +50,7 @@
 #include <SCIRun/Babel/framework.hh>
 #include <SCIRun/Babel/gov_cca.hh>
 //Dataflow:
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 
 //Vtk:
 #if HAVE_VTK
