@@ -325,6 +325,13 @@ protected:
 			  string obj_name);
 
   bool send_output_handle(string port_name,
+			  GeomHandle& handle,
+			  const char *obj_name)
+  {
+    return send_output_handle(port_name, handle, string(obj_name));
+  }
+
+  bool send_output_handle(string port_name,
 			  vector<GeomHandle>& handle,
 			  vector<string>& obj_name);
 
