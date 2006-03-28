@@ -55,7 +55,7 @@ VtkComponentInstance::VtkComponentInstance(
   : ComponentInstance(framework, instanceName, className, tm), component(component)
 {
   // See if we have a user-interface...
-  if(component->have_ui()){
+  if(component->haveUI()){
   specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
                                              sci::cca::TypeMap::pointer(0),
                                              sci::cca::Port::pointer(new VtkUIPort(this)),
@@ -108,8 +108,8 @@ void VtkComponentInstance::Iterator::next()
 bool VtkComponentInstance::Iterator::done()
 {
   return index >= (int)ci->specialPorts.size()
-    +ci->component->num_output_ports()
-    +ci->component->num_input_ports();
+    +ci->component->numOPorts()
+    +ci->component->numIPorts();
 }
 
 PortInstance* VtkComponentInstance::Iterator::get()
@@ -119,15 +119,15 @@ PortInstance* VtkComponentInstance::Iterator::get()
   int spsize = static_cast<int>(ci->specialPorts.size());
   if(index < spsize)
     return ci->specialPorts[index];
-  else if(index < spsize+component->num_output_ports())
+  else if(index < spsize+component->numOPorts())
     //TODO: check memory leak
     return new VtkPortInstance(ci,
-                               component->get_output_port(index-spsize),
+                               component->getOPort(index-spsize),
                                VtkPortInstance::Output);
-  else if(index < spsize+component->num_output_ports()
-          +component->num_input_ports())
+  else if(index < spsize+component->numOPorts()
+          +component->numIPorts())
     return new VtkPortInstance(ci,
-                               component->get_input_port(index-spsize-component->num_output_ports()),
+                               component->getIPort(index-spsize-component->numOPorts()),
                                VtkPortInstance::Input);
   else
     return 0; // Illegal
