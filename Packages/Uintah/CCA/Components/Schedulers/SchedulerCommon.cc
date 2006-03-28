@@ -270,6 +270,8 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     const LevelP level = grid->getLevel(levelnum);
     const VarLabel* label = VarLabel::find(trackingVars_[i]);
 
+    cout.precision(16);
+
     if (!label)
       continue;
 
@@ -277,7 +279,7 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     //Level::selectType patches;
     //level->selectPatches(trackingStartIndex_ - IntVector(1,1,1), trackingEndIndex_ + IntVector(1,1,1), patches);
     const PatchSubset* patches = dt->getPatches();
-    if (getLevel(patches)->getIndex() != levelnum)
+    if (!patches || getLevel(patches)->getIndex() != levelnum)
       continue;
     for (int p = 0; patches && p < patches->size(); p++) {
 
@@ -334,7 +336,7 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
               printedHeader = true;
             }
             if (!printedVarName) {
-              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << " matl " << m << endl;
             }
             
             for (int z = start.z(); z < end.z(); z++) {
@@ -791,9 +793,12 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           continue;
 
         // check the level on the case where variables are only computed on certain levels
-        const PatchSet* ps = graph.getTask(i)->getPatchSet();
         int level = -1;
-        if (ps) 
+        const PatchSubset* psub = dep->patches;
+        const PatchSet* ps = graph.getTask(i)->getPatchSet();
+        if (psub)
+          level = getLevel(psub)->getIndex();
+        else if (ps) 
           level = getLevel(ps)->getIndex();
         
         // we don't want data with an invalid level, or requiring from a different level (remember, we are
