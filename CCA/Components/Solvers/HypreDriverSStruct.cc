@@ -847,8 +847,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
     // Keep track of how many connections are added to each coarse
     // cell.  
     CCVariable<int> stencilSize_counter;  
-   // A_dw->allocateTemporary(stencilSize_counter, _patch,Ghost::AroundCells,1);
-    A_dw->allocateTemporary(stencilSize_counter, _patch);
+    A_dw->allocateTemporary(stencilSize_counter, _patch,Ghost::AroundCells,1);
     stencilSize_counter.initialize(stencilSize);
 
     // Loop over all fine patches over the coarse patch
