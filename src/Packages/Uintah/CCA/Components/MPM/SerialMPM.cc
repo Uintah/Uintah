@@ -1116,8 +1116,51 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
   printSchedule(patches,"MPM::scheduleRefine\t\t");
-  Task* task = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
-  sched->addTask(task, patches, d_sharedState->allMPMMaterials());
+  Task* t = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
+
+  t->computes(lb->pXLabel);
+  t->computes(lb->pDispLabel);
+  t->computes(lb->pMassLabel);
+  t->computes(lb->pVolumeLabel);
+  t->computes(lb->pTemperatureLabel);
+  t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
+  t->computes(lb->pdTdtLabel);
+  t->computes(lb->pVelocityLabel);
+  t->computes(lb->pExternalForceLabel);
+  t->computes(lb->pParticleIDLabel);
+  t->computes(lb->pDeformationMeasureLabel);
+  t->computes(lb->pStressLabel);
+  t->computes(lb->pSizeLabel);
+  t->computes(lb->pErosionLabel);
+
+  // Debugging Scalar
+  if (flags->d_with_color) {
+    t->computes(lb->pColorLabel);
+  }
+                                                                                
+  if (flags->d_useLoadCurves) {
+    // Computes the load curve ID associated with each particle
+    t->computes(lb->pLoadCurveIDLabel);
+  }
+                                                                                
+  if (flags->d_accStrainEnergy) {
+    // Computes accumulated strain energy
+    t->computes(lb->AccStrainEnergyLabel);
+  }
+                                                                                
+  if (flags->d_artificialDampCoeff > 0.0) {
+    t->computes(lb->pDampingRateLabel);
+    t->computes(lb->pDampingCoeffLabel);
+  }
+                                                                                
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+  }
+                                                                                
+  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/, 
