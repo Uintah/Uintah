@@ -44,6 +44,7 @@ bool MappingMatrixToFieldAlgo::MappingMatrixToField(ProgressReporter *pr, FieldH
 
   FieldInformation fi(input);
   FieldInformation fo(input);
+  FieldInformation fo2(input);
   
   if (fi.is_quadraticmesh())
   {
@@ -53,13 +54,15 @@ bool MappingMatrixToFieldAlgo::MappingMatrixToField(ProgressReporter *pr, FieldH
   
   fo.set_data_type("unsigned int");
   fo.make_lineardata();
+  fo2.set_data_type("unsigned int");
+  fo2.make_constantdata();
   
 
   // Setup dynamic files
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "MappingMatrixToField."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "MappingMatrixToField."+fi.get_field_filename()+"."+fo.get_field_filename()+"."+fo2.get_field_filename()+".",
     "MappingMatrixToFieldAlgo","MappingMatrixToFieldAlgoT",
-    fi.get_field_name() + "," + fo.get_field_name());
+    fi.get_field_name() + "," + fo.get_field_name() + "," + fo2.get_field_name() );
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
@@ -67,6 +70,7 @@ bool MappingMatrixToFieldAlgo::MappingMatrixToField(ProgressReporter *pr, FieldH
   
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
+  fo2.fill_compile_info(ci);
   
   // Handle dynamic compilation
   SCIRun::Handle<MappingMatrixToFieldAlgo> algo;

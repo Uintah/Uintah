@@ -124,6 +124,32 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRep
   typedef multimap<unsigned int,pointtype> hash_map_type;
 #endif
   
+  typename FSRC::mesh_type::Node::size_type numnodes;
+  imesh->size(numnodes);
+
+
+  bool isdomlink = false;
+  int* domlinkrr = 0;
+  int* domlinkcc = 0;
+  
+  if (DomainLink.get_rep())
+  {
+    if ((numnodes != DomainLink->nrows())&&(numnodes != DomainLink->ncols()))
+    {
+      pr->error("CompartmentBoundary: The Domain Link property is not of the right dimensions");
+      return (false);        
+    }
+    SparseRowMatrix *spr = dynamic_cast<SparseRowMatrix *>(DomainLink.get_rep());
+    if (spr)
+    {
+      domlinkrr = spr->rows;
+      domlinkcc = spr->columns;
+      isdomlink = true;
+    }
+  }  
+
+  
+  
   hash_map_type node_map;
   
   imesh->synchronize(Mesh::NODES_E|Mesh::FACES_E|Mesh::CELLS_E|Mesh::FACE_NEIGHBORS_E);
@@ -157,6 +183,52 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRep
       bool includeface = false;
       
       neighborexist = imesh->get_neighbor(nci,ci,faces[p]);
+
+      if ((!neighborexist)&&(isdomlink))
+      {
+        bool done = false;
+        typename FSRC::mesh_type::Node::array_type nodes;
+        typename FSRC::mesh_type::Elem::array_type elems;
+        typename FSRC::mesh_type::Node::array_type nodes2;
+        typename FSRC::mesh_type::Face::array_type faces2;
+        typename FSRC::mesh_type::Node::index_type idx;
+
+        imesh->get_nodes(nodes,faces[p]);
+        for (int r = domlinkrr[static_cast<int>(nodes[0])]; (r < domlinkrr[static_cast<int>(nodes[0])+1])&&(!done); r++)
+        {
+          imesh->to_index(idx,r);
+          imesh->get_elems(elems,idx);
+          
+          for (int v=0; (v < elems.size())&&(!done); v++)
+          {
+            imesh->get_faces(faces2,elems[v]);
+            for (int w=0; (w < faces2.size())&&(!done); w++)
+            {
+              bool success = true;
+              imesh->get_nodes(nodes2,faces2[w]);
+              for (int x=0; (x<nodes2.size())&&(success); x++)
+              {
+                for (int rr = domlinkrr[static_cast<int>(nodes2[x])]; (rr < domlinkrr[static_cast<int>(nodes[x])+1])&&(success); rr++)
+                {
+                  int y;
+                  for (y=0; (y< nodes.size())&&(success);y++)
+                  {
+                    if (nodes[y] == domlinkcc[rr]) break;
+                  }
+                  if (nodes.size() == y) success = false;
+                }
+              }
+              
+              if (success)
+              {
+                done = true;
+                nci = elems[v];
+                neighborexist = true;
+              }
+            }
+          }
+        }
+      }
 
       if (neighborexist)
       {
@@ -289,7 +361,29 @@ bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRe
     return (false);
   }
   
+  typename FSRC::mesh_type::Node::size_type numnodes;
+  imesh->size(numnodes);
 
+
+  bool isdomlink = false;
+  int* domlinkrr = 0;
+  int* domlinkcc = 0;
+  
+  if (DomainLink.get_rep())
+  {
+    if ((numnodes != DomainLink->nrows())&&(numnodes != DomainLink->ncols()))
+    {
+      pr->error("CompartmentBoundary: The Domain Link property is not of the right dimensions");
+      return (false);        
+    }
+    SparseRowMatrix *spr = dynamic_cast<SparseRowMatrix *>(DomainLink.get_rep());
+    if (spr)
+    {
+      domlinkrr = spr->rows;
+      domlinkcc = spr->columns;
+      isdomlink = true;
+    }
+  }  
 
 
 #ifdef HAVE_HASH_MAP
@@ -331,7 +425,53 @@ bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRe
       bool includeface = false;
       
       neighborexist = imesh->get_neighbor(nci,ci,edges[p]);
+   
+      if ((!neighborexist)&&(isdomlink))
+      {
+        bool done = false;
+        typename FSRC::mesh_type::Node::array_type nodes;
+        typename FSRC::mesh_type::Elem::array_type elems;
+        typename FSRC::mesh_type::Node::array_type nodes2;
+        typename FSRC::mesh_type::Edge::array_type edges2;
+        typename FSRC::mesh_type::Node::index_type idx;
 
+        imesh->get_nodes(nodes,edges[p]);
+        for (int r = domlinkrr[static_cast<int>(nodes[0])]; (r < domlinkrr[static_cast<int>(nodes[0])+1])&&(!done); r++)
+        {
+          imesh->to_index(idx,r);
+          imesh->get_elems(elems,idx);
+          
+          for (int v=0; (v < elems.size())&&(!done); v++)
+          {
+            imesh->get_edges(edges2,elems[v]);
+            for (int w=0; (w < edges2.size())&&(!done); w++)
+            {
+              bool success = true;
+              imesh->get_nodes(nodes2,edges2[w]);
+              for (int x=0; (x<nodes2.size())&&(success); x++)
+              {
+                for (int rr = domlinkrr[static_cast<int>(nodes2[x])]; (rr < domlinkrr[static_cast<int>(nodes[x])+1])&&(success); rr++)
+                {
+                  int y;
+                  for (y=0; (y< nodes.size())&&(success);y++)
+                  {
+                    if (nodes[y] == domlinkcc[rr]) break;
+                  }
+                  if (nodes.size() == y) success = false;
+                }
+              }
+              
+              if (success)
+              {
+                done = true;
+                nci = elems[v];
+                neighborexist = true;
+              }
+            }
+          }
+        }
+      }
+      
       if (neighborexist)
       {
         if (nci > ci)

@@ -73,6 +73,106 @@ public:
 
 template <class FIELD> class FEMBuilder;
 
+
+
+
+// --------------------------------------------------------------------------
+// This piece of code was adapted from BuildFEMatrix.h
+// Code has been modernized a little to meet demands.
+
+template <class FIELD>
+class FEMBuilder : public DynamicAlgoBase
+{
+public:
+
+  // Constructor needed as Barrier needs to have name
+  FEMBuilder() :
+    barrier_("FEMBuilder Barrier")
+  {
+  }
+
+  void build_matrix(FieldHandle input, MatrixHandle& output, int numproc);
+
+private:
+
+  // For parallel implementation
+  Barrier barrier_;
+
+  typename FIELD::mesh_type::basis_type mb_;
+  typename FIELD::mesh_handle_type hMesh_;
+
+  FieldHandle hField_;
+  FIELD *pField_;
+
+  MatrixHandle hA_;
+  SparseRowMatrix* pA_;
+  int np_;
+  int* rows_;
+  int* allCols_;
+  std::vector<int> colIdx_;
+
+  int domain_dimension;
+  int local_dimension_nodes;
+  int local_dimension_add_nodes;
+  int local_dimension_derivatives;
+  int local_dimension;
+  int global_dimension_nodes;
+  int global_dimension_add_nodes;
+  int global_dimension_derivatives;
+  int global_dimension; 
+
+  std::vector<std::pair<string, Tensor> > tens_;
+
+  void parallel(int proc);
+    
+private:
+  
+  // General case where we can indexed or non indexed data
+  template<class T>
+  inline Tensor get_tensor(T& val) const
+  {
+    if (tens_.size() == 0) return(Tensor(static_cast<double>(val)));
+    return (tens_[static_cast<size_t>(val)].second);
+  }
+
+  // Specific case for when we have a tensor as datatype
+  inline Tensor get_tensor(const Tensor& val) const
+  {
+    return (val);
+  }
+
+  inline void add_lcl_gbl(int row, const std::vector<int> &cols, const std::vector<double> &lcl_a)
+  {
+    for (int i = 0; i < (int)lcl_a.size(); i++) pA_->add(row, cols[i], lcl_a[i]);
+  }
+
+private:
+
+  void create_numerical_integration(std::vector<std::vector<double> > &p,std::vector<double> &w,std::vector<std::vector<double> > &d);
+  void build_local_matrix(typename FIELD::mesh_type::Elem::index_type c_ind,int row, std::vector<double> &l_stiff,std::vector<std::vector<double> > &p,std::vector<double> &w,std::vector<std::vector<double> >  &d);
+  void setup();
+  
+};
+
+template <class FIELD>
+void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, int numproc)
+{
+  pField_ = dynamic_cast<FIELD *>(input.get_rep());
+  hMesh_ = pField_->get_typed_mesh();
+
+  int np = Thread::numProcessors();
+  if (np > 5) np = 5;
+  if (numproc > 0) { np = numproc; }
+  np_ = np;
+  
+  pField_->get_property("conductivity_table",tens_);
+  Thread::parallel(this, &FEMBuilder<FIELD>::parallel, np);
+
+  output = hA_;
+}
+
+
+
 template <class FIELD>
 bool BuildFEMatrixAlgoT<FIELD>::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, int numproc)
 {
@@ -97,98 +197,6 @@ bool BuildFEMatrixAlgoT<FIELD>::BuildFEMatrix(ProgressReporter *pr, FieldHandle 
 }
 
 
-
-// --------------------------------------------------------------------------
-// This piece of code was adapted from BuildFEMatrix.h
-// Code has been modernized a little to meet demands.
-
-template <class FIELD>
-class FEMBuilder 
-{
-public:
-
-  // Constructor needed as Barrier needs to have name
-  FEMBuilder() :
-    barrier_("FEMBuilder Barrier")
-  {
-  }
-
-  void build_matrix(FieldHandle input, MatrixHandle& output, int numproc);
-
-private:
-
-  // For parallel implementation
-  Barrier barrier_;
-
-  typename FIELD::mesh_type::basis_type mb_;
-  typename FIELD::mesh_handle_type hMesh_;
-
-  FieldHandle hField_;
-  FIELD *pField_;
-
-  MatrixHandle& hA_;
-  SparseRowMatrix* pA_;
-  int np_;
-  int* rows_;
-  int* allCols_;
-  std::vector<int> colIdx_;
-
-  int domain_dimension;
-  int local_dimension_nodes;
-  int local_dimension_add_nodes;
-  int local_dimension_derivatives;
-  int local_dimension;
-  int global_dimension_nodes;
-  int global_dimension_add_nodes;
-  int global_dimension_derivatives;
-  int global_dimension; 
-
-  std::vector<std::pair<string, Tensor> > tens_;
-    
-private:
-  
-  // General case where we can indexed or non indexed data
-  template<class T>
-  inline const Tensor& get_tensor(T& val) const
-  {
-    if (tens_.size() == 0) return(Tensor(static_cast<double>(val)));
-    return (tens_[static_cast<size_t>(val)].second);
-  }
-
-  // Specific case for when we have a tensor as datatype
-  inline const Tensor& get_tensor(const Tensor& val) const
-  {
-    return (val);
-  }
-
-  inline void add_lcl_gbl(int row, const std::vector<int> &cols, const std::vector<double> &lcl_a)
-  {
-    for (int i = 0; i < (int)lcl_a.size(); i++) pA_->add(row, cols[i], lcl_a[i]);
-  }
-
-private:
-
-  void create_numerical_integration(std::vector<std::vector<double> > &p,std::vector<double> &w,std::vector<std::vector<double> > &d);
-  void build_local_matrix(typename FIELD::mesh_type::Elem::index_type c_ind,int row, std::vector<double> &l_stiff,std::vector<std::vector<double> > &p,std::vector<double> &w,std::vector<std::vector<double> >  &d);
-  void setup();
-  void parallel(int proc);
-};
-
-template <class FIELD>
-void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, int numproc)
-{
-  pField_ = dynamic_cast<FIELD *>(input.get_rep());
-  hMesh_ = pField_->get_typed_mesh();
-
-  int np = Thread::numProcessors();
-  if (np > 5) np = 5;
-  if (numproc > 0) { np = numproc; }
-
-  pField_->get_property("conductivity_table",tens_);
-  Thread::parallel(this, &BuildFEMatrixAlgoT<FIELD>::parallel, np);
-
-  output = hA_;
-}
 
 
 template <class FIELD>
@@ -222,15 +230,15 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
                                             std::vector<double> &w,
                                             std::vector<std::vector<double> >  &d)
 {
-  typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
-  const onerow *C = get_tensor(hField_.get_rep())->value(c_ind).mat_;
+  Tensor T = get_tensor(pField_->value(c_ind));
 
-  double Ca = C[0][0];
-  double Cb = C[0][1];
-  double Cc = C[0][2];
-  double Cd = C[1][1];
-  double Ce = C[1][2];
-  double Cf = C[2][2];
+  double Ca = T.mat_[0][0];
+  double Cb = T.mat_[0][1];
+  double Cc = T.mat_[0][2];
+  double Cd = T.mat_[1][1];
+  double Ce = T.mat_[1][2];
+  double Cf = T.mat_[2][2];
+
 
   for(int i=0; i<local_dimension; i++)
     l_stiff[i] = 0.0;
@@ -291,6 +299,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
       l_stiff[j] += ux*uxyzpabc+uy*uxyzpbde+uz*uxyzpcef;
     }
   }
+
 }
 
 template <class FIELD>
@@ -314,6 +323,8 @@ void FEMBuilder<FIELD>::setup()
 
   hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
   rows_ = scinew int[global_dimension+1];
+  
+  colIdx_.resize(np_+1);
 }
 
 
@@ -325,7 +336,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   {
     setup();
   }
-
+  
   barrier_.wait(np_);
 
   //! distributing dofs among processors
@@ -351,14 +362,28 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
     if (i<global_dimension_nodes)
     {
       //! get neighboring cells for node
-      hMesh_->get_elems(ca, typename FIELD::mesh_type::Node::index_type(i));
+      typename FIELD::mesh_type::Node::index_type idx;
+      hMesh_->to_index(idx,i);
+      hMesh_->get_elems(ca, idx);
     }
     else if (i<global_dimension_nodes+global_dimension_add_nodes)
     {
       //! check for additional nodes at edges
       //! get neighboring cells for node
       const int ii = i-global_dimension_nodes;
-      hMesh_->get_elems(ca, typename FIELD::mesh_type::Edge::index_type(ii));
+      typename FIELD::mesh_type::Edge::index_type idx;
+      typename FIELD::mesh_type::Node::array_type nodes;
+      typename FIELD::mesh_type::Elem::array_type elems;
+      typename FIELD::mesh_type::Elem::array_type elems2;
+
+      hMesh_->to_index(idx,ii);
+      hMesh_->get_nodes(nodes,idx);
+      hMesh_->get_elems(elems,nodes[0]);
+      hMesh_->get_elems(elems2,nodes[1]);
+      ca.clear();
+      for (int v=0; v < elems.size(); v++)
+         for (int w=0; w <elems2.size(); w++)
+            if (elems[v] == elems2[w]) ca.push_back(elems[v]);
     }
     else
     {
@@ -465,14 +490,29 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
     {
       //! check for nodes
       //! get neighboring cells for node
-      hMesh_->get_elems(ca, typename FIELD::mesh_type::Node::index_type(i));
+      typename FIELD::mesh_type::Node::index_type idx;
+      hMesh_->to_index(idx,i);
+      hMesh_->get_elems(ca,idx);
     }
     else if (i < global_dimension_nodes + global_dimension_add_nodes)
     {
       //! check for additional nodes at edges
       //! get neighboring cells for additional nodes
       const int ii=i-global_dimension_nodes;
-      hMesh_->get_elems(ca, typename FIELD::mesh_type::Edge::index_type(ii));
+      typename FIELD::mesh_type::Edge::index_type idx;
+      typename FIELD::mesh_type::Node::array_type nodes;
+      typename FIELD::mesh_type::Elem::array_type elems;
+      typename FIELD::mesh_type::Elem::array_type elems2;
+
+      hMesh_->to_index(idx,ii);
+      hMesh_->get_nodes(nodes,idx);
+      hMesh_->get_elems(elems,nodes[0]);
+      hMesh_->get_elems(elems2,nodes[1]);
+      ca.clear();
+      for (int v=0; v < elems.size(); v++)
+         for (int w=0; w <elems2.size(); w++)
+            if (elems[v] == elems2[w]) ca.push_back(elems[v]);
+
     }
     else
     {
@@ -517,6 +557,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
       sumabs += fabs(pA_->get(i,j));
     }
   }
+  
   barrier_.wait(np_);
 }
 

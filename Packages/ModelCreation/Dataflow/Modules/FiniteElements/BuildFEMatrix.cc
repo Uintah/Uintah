@@ -62,10 +62,10 @@ void BuildFEMatrix::execute()
   MatrixHandle Conductivity;
   MatrixHandle GeomToComp, CompToGeom;
   MatrixHandle SysMatrix;
-  if (!get_input_handle("Field",Field,true)) return;
-  if (get_input_handle("ConductivityTable",Conductivity,false)) return;
-  if (get_input_handle("GeomToComp",GeomToComp,false)) return;
-  if (get_input_handle("CompToGeom",CompToGeom,false)) return;
+  if (!(get_input_handle("Field",Field,true))) return;
+  get_input_handle("ConductivityTable",Conductivity,false);
+  get_input_handle("GeomToComp",GeomToComp,false);
+  get_input_handle("CompToGeom",CompToGeom,false);
   
   if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,1,Conductivity,GeomToComp,CompToGeom))) return;
   
