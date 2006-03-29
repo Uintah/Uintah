@@ -113,6 +113,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 
   d_co_output = d_mixingModel->getCOOutput();
   d_sulfur_chem = d_mixingModel->getSulfurChem();
+  d_soot_precursors = d_mixingModel->getSootPrecursors();
 
   cout << "d_co_output "<< d_co_output << endl;
 }
