@@ -267,6 +267,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
 #if 0
   cout << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
 #endif
+  cout << "Creating the patch matrix... \n Note: if sus crashes here, try reducing your resolution.";
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
