@@ -362,7 +362,8 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
   IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
-  tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E | Mesh::FACES_E);
+  tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E
+                     | Mesh::FACES_E | Mesh::LOCATE_E);
 
   typename IFIELD::mesh_type::Node::iterator ibi, iei;
   imesh->begin(ibi);
@@ -410,7 +411,8 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
   IFIELD *ifield = dynamic_cast<IFIELD *>(insert_h.get_rep());
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
-  tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E | Mesh::FACES_E);
+  tmesh->synchronize(Mesh::EDGES_E | Mesh::EDGE_NEIGHBORS_E
+                     | Mesh::FACES_E | Mesh::LOCATE_E);
   imesh->synchronize(Mesh::EDGES_E);
 
   typename IFIELD::mesh_type::Edge::iterator ibi, iei;
