@@ -398,7 +398,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
         t->modifies(tvar->var);
       }
     }
-    sched->addTask(t, patches, d_sharedState->allMaterials());
+    sched->addTask(t, patches, d_sharedState->allICEMaterials());
   }
 }
 
@@ -421,16 +421,16 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
                << " Doing setBC_FineLevel"<< "\t\t\t\t AMRICE L-" 
                << fineLevel->getIndex() << " Patches: " << *patches <<endl;
                
-    int  numMatls = d_sharedState->getNumMatls();
+    int  numICEMatls = d_sharedState->getNumICEMatls();
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
       
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      StaticArray<CCVariable<double> > sp_vol_CC(numMatls);
-      StaticArray<constCCVariable<double> > sp_vol_const(numMatls);
+      StaticArray<CCVariable<double> > sp_vol_CC(numICEMatls);
+      StaticArray<constCCVariable<double> > sp_vol_const(numICEMatls);
       
       
-      for (int m = 0; m < numMatls; m++) {
+      for (int m = 0; m < numICEMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex(); 
         CCVariable<double> rho_CC, temp_CC, cv, gamma,vol_frac;
@@ -589,7 +589,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     
     subset->add(0);
     Ghost::GhostType  gac = Ghost::AroundCells;
-        
+
     task->requires(Task::NewDW, lb->press_CCLabel,
                    0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
     
@@ -687,7 +687,7 @@ void AMRICE::refine(const ProcessorGroup*,
 
       // refine  
       CoarseToFineOperator<double>(rho_CC,    lb->rho_CCLabel,  indx, new_dw, 
-                         invRefineRatio, finePatch, fineLevel, coarseLevel);      
+                         invRefineRatio, finePatch, fineLevel, coarseLevel);
 
       CoarseToFineOperator<double>(sp_vol_CC, lb->sp_vol_CCLabel,indx, new_dw, 
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
@@ -697,6 +697,7 @@ void AMRICE::refine(const ProcessorGroup*,
        
       CoarseToFineOperator<Vector>( vel_CC,   lb->vel_CCLabel,  indx, new_dw, 
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
+
       //__________________________________
       //    Model Variables                     
       if(d_modelSetup && d_modelSetup->tvars.size() > 0){
