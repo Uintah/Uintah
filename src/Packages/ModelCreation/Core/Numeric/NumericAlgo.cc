@@ -32,7 +32,7 @@
 #include <Core/Algorithms/Fields/FieldCount.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
-#include <Core/DataTypes/MatrixOperations.h>
+#include <Core/Datatypes/MatrixOperations.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
