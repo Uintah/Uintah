@@ -26,57 +26,20 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
-/*
- *  BaseClass: Implementation of SSIDL.BaseClass for PIDL
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   September 1999
- *
- *  Copyright (C) 1999 SCI Group
- */
-
 #include <Core/CCA/SSIDL/sidl_sidl.h>
+#include <Core/Util/NotFinished.h>
 
-//using SSIDL::Class;
-using SSIDL::BaseInterface;
-using SSIDL::BaseClass;
-using SSIDL::ClassInfo;
+using SSIDL::io::Serializable;
+using SSIDL::io::Serializer;
+using SSIDL::io::Deserializer;
 
-/*
- * These are all implemented in SSIDL.interface, so these are just
- * up calls, since they will get generated from cia spec.
- */
 
-//void Object::addReference()
-void BaseClass::addRef()
+void Serializable::packObj(const Serializer::pointer& ser)
 {
-    //BaseInterface::addReference();
-    BaseInterface::addRef();
+    NOT_FINISHED("void .SSIDL.io.Serializeable.packObj(in .SSIDL.io.Serializer ser)");
 }
 
-//void Object::deleteReference()
-void BaseClass::deleteRef()
+void Serializable::unpackObj(const Deserializer::pointer& des)
 {
-    //BaseInterface::deleteReference();
-    BaseInterface::deleteRef();
-}
-
-bool BaseClass::isSame(const BaseInterface::pointer& iobj)
-{
-  return BaseInterface::isSame(iobj);
-}
-
-bool BaseClass::isType(const std::string& name)
-{
-  return BaseInterface::isType(name);
-}
-
-ClassInfo::pointer BaseClass::getClassInfo()
-{
-    return BaseInterface::getClassInfo();
+    NOT_FINISHED("void .SSIDL.io.Serializeable.unpackObj(in .SSIDL.io.Deserializer des)");
 }

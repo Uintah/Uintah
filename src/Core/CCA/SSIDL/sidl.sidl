@@ -39,7 +39,9 @@
 
 version SSIDL 0.9.13;
 
-/* package sidl version 0.9.13 */
+// Babel sidl for PIDL
+// Note: Babel generic arrays are NOT supported by PIDL
+
 package SSIDL {
 
   /**
@@ -707,9 +709,9 @@ package SSIDL {
                             in int ordering, in int dimen,
                             in bool reuse_array )
          throws IOException ;
-      void packGenericArray( in string key, in array<> value,
-                             in bool reuse_array )
-         throws IOException ;
+//       void packGenericArray( in string key, in array<> value,
+//                              in bool reuse_array )
+//          throws IOException ;
       void packSerializableArray( in string key,
                                   in array<Serializable> value,
                                   in int ordering, in int dimen,
@@ -797,8 +799,8 @@ package SSIDL {
                               in int ordering, in int dimen,
                               in bool isRarray  )
          throws IOException ;
-      void unpackGenericArray( in string key, out array<> value)
-         throws IOException ;
+//       void unpackGenericArray( in string key, out array<> value)
+//          throws IOException ;
       void unpackSerializableArray( in string key,
                                     out array<Serializable> value,
                                     in int ordering, in int dimen,

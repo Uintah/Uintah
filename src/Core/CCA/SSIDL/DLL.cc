@@ -29,17 +29,53 @@
 #include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <Core/Util/NotFinished.h>
 
-using SSIDL::io::Serializable;
-using SSIDL::io::Serializer;
-using SSIDL::io::Deserializer;
+using SSIDL::DLL;
+using SSIDL::BaseClass;
 
-
-void Serializable::packObj(/*const CCALib::SmartPointer<Serializer >& ser*/ const Serializer::pointer& ser)
+// bool .SSIDL.DLL.loadLibrary(in string uri, in bool loadGlobally, in bool loadLazy)
+bool DLL::loadLibrary(const std::string& uri, bool loadGlobally, bool loadLazy)
 {
-    NOT_FINISHED("void .SSIDL.io.Serializeable.packObj(in .SSIDL.io.Serializer ser)");
+  NOT_FINISHED("bool .SSIDL.DLL.loadLibrary(in string uri, in bool loadGlobally, in bool loadLazy)");
+  return false;
 }
 
-void Serializable::unpackObj(const Deserializer::pointer& des)
+// string .SSIDL.DLL.getName()
+std::string DLL::getName()
 {
-    NOT_FINISHED("void .SSIDL.io.Serializeable.unpackObj(in .SSIDL.io.Deserializer des)");
+  NOT_FINISHED("string .SSIDL.DLL.getName()");
+  return false;
+}
+
+// bool .SSIDL.DLL.isGlobal()
+bool DLL::isGlobal()
+{
+  NOT_FINISHED("bool .SSIDL.DLL.isGlobal()");
+  return false;
+}
+
+// bool .SSIDL.DLL.isLazy()
+bool DLL::isLazy()
+{
+  NOT_FINISHED("bool .SSIDL.DLL.isLazy()");
+  return false;
+}
+
+// void .SSIDL.DLL.unloadLibrary()
+void DLL::unloadLibrary()
+{
+  NOT_FINISHED("void .SSIDL.DLL.unloadLibrary()");
+}
+
+// void* .SSIDL.DLL.lookupSymbol(in string linker_name)
+void* DLL::lookupSymbol(const std::string& linker_name)
+{
+  NOT_FINISHED("void* .SSIDL.DLL.lookupSymbol(in string linker_name)");
+  return 0;
+}
+
+// .SSIDL.BaseClass .SSIDL.DLL.createClass(in string sidl_name)
+BaseClass::pointer DLL::createClass(const std::string& sidl_name)
+{
+  NOT_FINISHED(".SSIDL.BaseClass .SSIDL.DLL.createClass(in string sidl_name)");
+  return BaseClass::pointer(0);
 }
