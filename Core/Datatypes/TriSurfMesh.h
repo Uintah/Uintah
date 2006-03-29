@@ -2209,10 +2209,10 @@ TriSurfMesh<Basis>::find_closest_face(Point &result,
   oj = Max(Min(oj, grid_->get_nj()-1), 0);
   ok = Max(Min(ok, grid_->get_nk()-1), 0);
 
-
-  int bi, ei = oi;
-  int bj, ej = oj;
-  int bk, ek = ok;
+  int bi, ei, bj, ej, bk, ek;
+  bi = ei = oi;
+  bj = ej = oj;
+  bk = ek = ok;
   
   double dmin = DBL_MAX;
   bool found;
