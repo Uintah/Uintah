@@ -330,7 +330,7 @@ TextureBrick::mask_polygons(vector<int> & size,
 			    vector<Plane *> &planes)
 {
 
-  mask = vector<int>(size.size(), 1);
+  mask = vector<int>(size.size(), 0);
 
   // Iterate through all the cutting planes
   for (unsigned p = 0; p < planes.size(); p++)
@@ -421,7 +421,7 @@ TextureBrick::mask_polygons(vector<int> & size,
 
 	// mask[s] is the clipped state of the current polygon
 	// Only turn on clipping plane mask bits if poly was not clipped
-        if (0) {
+        if (1) {
           newmask.push_back(mask[s] | (clipped ? 0 : clipmask));
         } else {
           if (mask[s] && ((dot > 0) == clipped)) {
