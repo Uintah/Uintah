@@ -47125,7 +47125,11 @@ echo "$as_me: error: PETSC ARCH not set for Tru64.  Need to fix this." >&2;}
     PETSC_ARCH=aix5.1.0.0
     ;;
   *-darwin*)
-    PETSC_ARCH=ppc
+  	if test `uname -p` = "i386"; then
+    	PETSC_ARCH=i386
+    else
+    	PETSC_ARCH=ppc
+    fi
     ;;
   *-pc-mingw*)
     PETSC_ARCH=win

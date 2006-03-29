@@ -3549,7 +3549,11 @@ case $host in
     PETSC_ARCH=aix5.1.0.0
     ;;
   *-darwin*)
-    PETSC_ARCH=ppc
+  	if test `uname -p` = "i386"; then
+    	PETSC_ARCH=i386
+    else 
+    	PETSC_ARCH=ppc
+    fi
     ;;
   *-pc-mingw*)
     PETSC_ARCH=win
