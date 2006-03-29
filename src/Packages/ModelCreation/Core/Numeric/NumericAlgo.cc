@@ -63,9 +63,9 @@ bool NumericAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num
     return (true);
   }
   
-  if (GeomToComp.get_rep() == 0) CompToGeom = GeomToComp->transpose();
-  if (CompToGeom.get_rep() == 0) GeomToComp = GeomToComp->transpose();
-  matrix = CompToGeom*matrix*GeomToComp;
+  if (CompToGeom.get_rep() == 0) CompToGeom = GeomToComp->transpose();
+  if (GeomToComp.get_rep() == 0) GeomToComp = CompToGeom->transpose();
+  matrix = GeomToComp*matrix*CompToGeom;
   return (true);
 }
 

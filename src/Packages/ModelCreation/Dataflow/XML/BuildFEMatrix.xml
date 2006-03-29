@@ -27,6 +27,10 @@
         <name>GeomToComp</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>CompToGeom</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
