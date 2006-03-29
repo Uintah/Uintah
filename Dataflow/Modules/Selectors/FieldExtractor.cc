@@ -525,7 +525,7 @@ FieldExtractorAlgo::set_field_properties( Field* field,
                                           QueryInfo& qinfo,
                                           IntVector& offset )
 {
-  field->set_property( "varname",    string(qinfo.varname), true);
+  field->set_property( "name",    string(qinfo.varname), true);
   field->set_property( "generation", qinfo.generation, true);
   field->set_property( "timestep",   qinfo.timestep, true);
   field->set_property( "offset",     IntVector(offset), true);
