@@ -168,10 +168,14 @@ itcl_class SCIRun_Render_Painter {
         if { ![llength $viewer] } return;
 
  	set eviewer [$viewer ui_embedded]
+        frame $botr.frame -relief flat -borderwidth 15
+ 	pack $botr.frame -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+        frame $botr.frame.sunken -relief sunken -borderwidth 2
+ 	pack $botr.frame.sunken -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 
- 	$eviewer setWindow $botr.gl 300 300
+ 	$eviewer setWindow $botr.frame.sunken.gl 300 300
 
- 	pack $botr.gl -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack $botr.frame.sunken.gl -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
         bind $w <Control-v> "$eviewer-c autoview"
 
 
