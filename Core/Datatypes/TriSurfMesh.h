@@ -49,6 +49,7 @@
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -472,10 +473,16 @@ private:
   void                  compute_node_neighbors();
   void                  compute_edges();
   void                  compute_edge_neighbors(double err = 1.0e-8);
+  void                  compute_grid();
+
+  //! Used to recompute data for individual cells.  Don't use these, they
+  // are not synchronous.  Use create_cell_syncinfo instead.
+  void insert_elem_into_grid(typename Elem::index_type ci);
+  void remove_elem_from_grid(typename Elem::index_type ci);
 
   void                  debug_test_edge_neighbors();
 
-  bool inside3_p(int, const Point &p) const;
+  bool inside3_p(int face_times_three, const Point &p) const;
 
   static int next(int i) { return ((i%3)==2) ? (i-2) : (i+1); }
   static int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
@@ -487,9 +494,12 @@ private:
   vector<under_type>    edge_neighbors_;
   vector<Vector>        normals_;   //! normalized per node normal.
   vector<vector<under_type> > node_neighbors_;
+  LockingHandle<SearchGridConstructor> grid_;
   unsigned int          synchronized_;
   Mutex                 synchronize_lock_;
   Basis                 basis_;
+
+  Vector cell_epsilon_;
 
 #ifdef HAVE_HASH_MAP
 
@@ -610,6 +620,7 @@ TriSurfMesh<Basis>::TriSurfMesh()
     faces_(0),
     edge_neighbors_(0),
     node_neighbors_(0),
+    grid_(0),
     synchronized_(NODES_E | FACES_E | CELLS_E),
     synchronize_lock_("TriSurfMesh synchronize_lock_")
 {
@@ -625,12 +636,14 @@ TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
     edge_neighbors_(0),
     normals_(0),
     node_neighbors_(0),
+    grid_(0),
     synchronized_(NODES_E | FACES_E | CELLS_E),
     synchronize_lock_("TriSurfMesh synchronize_lock_")
 {
   TriSurfMesh &lcopy = (TriSurfMesh &)copy;
 
   lcopy.synchronize_lock_.lock();
+
   points_ = copy.points_;
 
   edges_ = copy.edges_;
@@ -647,6 +660,10 @@ TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
 
   node_neighbors_ = copy.node_neighbors_;
   synchronized_ |= copy.synchronized_ & NODE_NEIGHBORS_E;
+
+  grid_ = copy.grid_;
+  synchronized_ |= copy.synchronized_ & LOCATE_E;
+
   lcopy.synchronize_lock_.unlock();
 }
 
@@ -718,6 +735,8 @@ TriSurfMesh<Basis>::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
+
+  if (grid_.get_rep()) { grid_->transform(t); }
   synchronize_lock_.unlock();
 }
 
@@ -1000,22 +1019,23 @@ TriSurfMesh<Basis>::locate(typename Face::index_type &loc,
                            const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(loc, *this, p);
-  typename Face::iterator fi, fie;
-  begin(fi);
-  end(fie);
 
-  loc = *fi;
-  if (fi == fie)
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "TriSurfMesh::locate requires synchronization.");
+
+  const list<unsigned int> *candidates;
+  if (grid_->lookup(candidates, p))
   {
-    return false;
-  }
-
-  while (fi != fie) {
-    if (inside3_p((*fi)*3, p)) {
-      loc = *fi;
-      return true;
+    list<unsigned int>::const_iterator iter = candidates->begin();
+    while (iter != candidates->end())
+    {
+      if (inside3_p(*iter * 3, p))
+      {
+        loc = typename Face::index_type(*iter);
+        return true;
+      }
+      ++iter;
     }
-    ++fi;
   }
   return false;
 }
@@ -1144,6 +1164,8 @@ TriSurfMesh<Basis>::synchronize(unsigned int tosync)
     compute_node_neighbors();
   if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edge_neighbors();
+  if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E))
+    compute_grid();
   synchronize_lock_.unlock();
   return true;
 }
@@ -2004,6 +2026,79 @@ TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
 
 
 template <class Basis>
+void
+TriSurfMesh<Basis>::insert_elem_into_grid(typename Elem::index_type ci)
+{
+  // TODO:  This can crash if you insert a new cell outside of the grid.
+  // Need to recompute grid at that point.
+
+  BBox box;
+  typename Node::array_type nodes;
+  get_nodes(nodes, ci);
+
+  box.reset();
+  box.extend(points_[nodes[0]]);
+  box.extend(points_[nodes[1]]);
+  box.extend(points_[nodes[2]]);
+  const Point padmin(box.min() - cell_epsilon_);
+  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(padmin);
+  box.extend(padmax);
+  grid_->insert(ci, box);
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::remove_elem_from_grid(typename Elem::index_type ci)
+{
+  BBox box;
+  typename Node::array_type nodes;
+  get_nodes(nodes, ci);
+
+  box.reset();
+  box.extend(points_[nodes[0]]);
+  box.extend(points_[nodes[1]]);
+  box.extend(points_[nodes[2]]);
+  const Point padmin(box.min() - cell_epsilon_);
+  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(padmin);
+  box.extend(padmax);
+  grid_->remove(ci, box);
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::compute_grid()
+{
+  BBox bb = get_bounding_box();
+  if (bb.valid())
+  {
+    // Cubed root of number of cells to get a subdivision ballpark.
+    typename Elem::size_type csize;  size(csize);
+    const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
+    cell_epsilon_ = bb.diagonal() * (1.0e-4 / s);
+    bb.extend(bb.min() - cell_epsilon_ * 2);
+    bb.extend(bb.max() + cell_epsilon_ * 2);
+
+    grid_ = scinew SearchGridConstructor(s, s, s, bb.min(), bb.max());
+
+    typename Node::array_type nodes;
+    typename Elem::iterator ci, cie;
+    begin(ci); end(cie);
+    while(ci != cie)
+    {
+      insert_elem_into_grid(*ci);
+      ++ci;
+    }
+  }
+
+  synchronized_ |= LOCATE_E;
+}
+
+
+template <class Basis>
 typename TriSurfMesh<Basis>::Node::index_type
 TriSurfMesh<Basis>::add_point(const Point &p)
 {
@@ -2102,22 +2197,75 @@ TriSurfMesh<Basis>::find_closest_face(Point &result,
                                       typename TriSurfMesh::Face::index_type &face,
                                       const Point &p) const
 {
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "TriSurfMesh::find_closest_face requires synchronize(LOCATE_E).")
+
+  // Convert to grid coordinates.
+  int oi, oj, ok;
+  grid_->unsafe_locate(oi, oj, ok, p);
+
+  // Clamp to closest point on the grid.
+  oi = Max(Min(oi, grid_->get_ni()-1), 0);
+  oj = Max(Min(oj, grid_->get_nj()-1), 0);
+  ok = Max(Min(ok, grid_->get_nk()-1), 0);
+
+
+  int bi, ei = oi;
+  int bj, ej = oj;
+  int bk, ek = ok;
+  
   double dmin = DBL_MAX;
-  for (unsigned int i = 0; i < faces_.size(); i+=3)
-  {
-    Point rtmp;
-    closest_point_on_tri(rtmp, p,
-                         points_[faces_[i  ]],
-                         points_[faces_[i+1]],
-                         points_[faces_[i+2]]);
-    const double dtmp = (p - rtmp).length2();
-    if (dtmp < dmin)
+  bool found;
+  do {
+    const int bii = Max(bi, 0);
+    const int eii = Min(ei, grid_->get_ni()-1);
+    const int bjj = Max(bj, 0);
+    const int ejj = Min(ej, grid_->get_nj()-1);
+    const int bkk = Max(bk, 0);
+    const int ekk = Min(ek, grid_->get_nk()-1);
+    found = false;
+    for (int i = bii; i <= eii; i++)
     {
-      result = rtmp;
-      face = i/3;
-      dmin = dtmp;
+      for (int j = bjj; j <= ejj; j++)
+      {
+        for (int k = bkk; k <= ekk; k++)
+        {
+          if (i == bi || i == ei || j == bj || j == ej || k == bk || k == ek)
+          {
+            if (grid_->min_distance_squared(p, i, j, k) < dmin)
+            {
+              found = true;
+              const list<unsigned int> *candidates;
+              grid_->lookup_ijk(candidates, i, j, k);
+
+              list<unsigned int>::const_iterator iter = candidates->begin();
+              while (iter != candidates->end())
+              {
+                Point rtmp;
+                unsigned int idx = *iter * 3;
+                closest_point_on_tri(rtmp, p,
+                                     points_[faces_[idx  ]],
+                                     points_[faces_[idx+1]],
+                                     points_[faces_[idx+2]]);
+                const double dtmp = (p - rtmp).length2();
+                if (dtmp < dmin)
+                {
+                  result = rtmp;
+                  face = *iter;
+                  dmin = dtmp;
+                }
+                ++iter;
+              }
+            }
+          }
+        }
+      }
     }
-  }
+    bi--;ei++;
+    bj--;ej++;
+    bk--;ek++;
+  } while (found) ;
+
   return sqrt(dmin);
 }
 
