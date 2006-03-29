@@ -1220,6 +1220,7 @@ template <class Basis>
 void
 TetVolMesh<Basis>::transform(const Transform &t)
 {
+  synchronize_lock_.lock();
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
@@ -1228,7 +1229,6 @@ TetVolMesh<Basis>::transform(const Transform &t)
     ++itr;
   }
 
-  synchronize_lock_.lock();
   if (grid_.get_rep()) { grid_->transform(t); }
   synchronize_lock_.unlock();
 }
