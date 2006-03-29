@@ -95,11 +95,13 @@ public:
                                   const MaterialSet*);
 
   void scheduleCoarsenCC_0(SchedulerP&, 
-                                  const PatchSet*,
-                                  const MaterialSubset*,
-                                  const MaterialSet*);
+                           const PatchSet*,
+                           const MaterialSet*);
 
-  
+  void scheduleCoarsenNCMass(SchedulerP&,
+                             const PatchSet*,
+                             const MaterialSet*);
+
   void scheduleComputeLagrangianValuesMPM(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
@@ -107,7 +109,6 @@ public:
 
   void scheduleCoarsenLagrangianValuesMPM(SchedulerP&, 
                                           const PatchSet*,
-                                          const MaterialSubset*,
                                           const MaterialSet*);
 
   void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
@@ -182,12 +183,6 @@ public:
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
   
-  void coarsenCC_0(const ProcessorGroup*,
-                   const PatchSubset* patch,
-                   const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw);
-  
   void computeLagrangianValuesMPM(const ProcessorGroup*,
                                   const PatchSubset* patch,
                                   const MaterialSubset* matls,
@@ -198,7 +193,8 @@ public:
                                     const PatchSubset* patch,
                                     const MaterialSubset* matls,
                                     DataWarehouse*, 
-                                    DataWarehouse*);
+                                    DataWarehouse*,
+                                    const MaterialSubset* press_matl);
 
 
   void interpolateCCToNC(const ProcessorGroup*,
@@ -316,17 +312,21 @@ public:
                                 const MaterialSet* matls,
                                 const VarLabel* variable);
 
-  void scheduleRefineExtensiveVariableCC(SchedulerP& sched,
-                                         const PatchSet* patches,
-                                         const MaterialSet* matls,
-                                         const VarLabel* variable);
-
   template<typename T>
     void scheduleCoarsenVariableCC(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const VarLabel* variable,
                                    T defaultValue, 
+                                   bool modifies,
+                                   const string& coarsenMethod);
+
+  template<typename T>
+    void scheduleCoarsenVariableNC(SchedulerP& sched,
+                                   const PatchSet* patches,
+                                   const MaterialSet* matls,
+                                   const VarLabel* variable,
+                                   T defaultValue,
                                    bool modifies,
                                    const string& coarsenMethod);
 
@@ -338,13 +338,6 @@ public:
                           DataWarehouse* new_dw,
                           const VarLabel* variable);
 
-  template<typename T>
-    void refineExtensiveVariableCC(const ProcessorGroup*,
-                                   const PatchSubset* patch,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw,
-                                   const VarLabel* variable);
   template<typename T>                                 
     void coarsenDriver_std(IntVector cl, 
                            IntVector ch,
@@ -353,6 +346,15 @@ public:
                            const Level* coarseLevel,
                            constCCVariable<T>& fine_q_CC,
                            CCVariable<T>& coarse_q_CC );
+  template<typename T>
+    void coarsenDriver_stdNC(IntVector cl,
+                             IntVector ch,
+                             IntVector refinementRatio,
+                             double ratio,
+                             const Level* coarseLevel,
+                             constNCVariable<T>& fine_q_NC,
+                             NCVariable<T>& coarse_q_NC );
+
   template<typename T>
     void coarsenDriver_massWeighted(IntVector cl, 
                                     IntVector ch,
@@ -370,6 +372,17 @@ public:
                            DataWarehouse* new_dw,
                            const VarLabel* variable,
                            T defaultValue, 
+                           bool modifies,
+                           const string coarsenMethod);
+
+  template<typename T>
+    void coarsenVariableNC(const ProcessorGroup*,
+                           const PatchSubset* patch,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const VarLabel* variable,
+                           T defaultValue,
                            bool modifies,
                            const string coarsenMethod);
 
