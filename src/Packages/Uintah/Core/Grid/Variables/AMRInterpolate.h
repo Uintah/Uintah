@@ -470,6 +470,11 @@ template<class T>
 void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
                        IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
 
+// As above, but do the same for nodes, and include ghost data requirements
+void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
+                            IntVector& cl, IntVector& ch,
+                            IntVector& fl, IntVector& fh, IntVector ghost);
+
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
 void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 

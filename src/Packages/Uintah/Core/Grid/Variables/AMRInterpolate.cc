@@ -20,6 +20,23 @@ void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
   ch = finePatch->getLevel()->mapCellToCoarser(fh);
 }
 
+void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
+                            IntVector& cl, IntVector& ch,
+                            IntVector& fl, IntVector& fh,IntVector ghost)
+{
+  fl = finePatch->getInteriorNodeLowIndex();
+  fh = finePatch->getInteriorNodeHighIndex();
+  cl = coarsePatch->getNodeLowIndex();
+  ch = coarsePatch->getNodeHighIndex();
+
+  fl = Max(fl, coarsePatch->getLevel()->mapNodeToFiner(cl));
+  fh = Min(fh, coarsePatch->getLevel()->mapNodeToFiner(ch));
+  cl = finePatch->getLevel()->mapNodeToCoarser(fl);
+  ch = finePatch->getLevel()->mapNodeToCoarser(fh);
+  fl-=ghost;
+  fh+=ghost;
+}
+
 void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
                          IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc)
 {
