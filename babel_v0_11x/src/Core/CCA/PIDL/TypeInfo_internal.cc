@@ -53,7 +53,7 @@ TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,
 	tableSize(tableSize), create_proxy(create_proxy), parentclass(0)
 {
   // This is safe because it will not recurse - there are no parents yet.
-  add_castable(this, TypeInfo::vtable_methods_start);
+  add_castable(this, TypeInfo::VTABLE_METHODS_START);
 }
 
 void TypeInfo_internal::add_parentclass(const TypeInfo* ti, int vtoffset)
@@ -91,7 +91,7 @@ void TypeInfo_internal::add_castables(TypeInfo_internal* parent, int vtoffset)
   // our castable list to our parent
   for(MapType::iterator iter=classname_map.begin();
       iter != classname_map.end(); iter++){
-    parent->add_castable(iter->second.first, iter->second.second+vtoffset-TypeInfo::vtable_methods_start);
+    parent->add_castable(iter->second.first, iter->second.second+vtoffset-TypeInfo::VTABLE_METHODS_START);
   }
 }
 

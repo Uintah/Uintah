@@ -151,7 +151,7 @@ Object::_getReferenceCopy(ReferenceMgr** refM) const
     activateObject();
   (*refM) = new ReferenceMgr();
   Reference* ref = new Reference();
-  ref->d_vtable_base=TypeInfo::vtable_methods_start;
+  ref->d_vtable_base = TypeInfo::VTABLE_METHODS_START;
   d_serverContext->bind(*ref);
   (*refM)->insertReference(ref);
 }
