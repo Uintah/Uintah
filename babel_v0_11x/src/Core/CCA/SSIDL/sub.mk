@@ -42,8 +42,8 @@ SRCS     += \
             $(SRCDIR)/ClassInfoI.cc \
             $(SRCDIR)/Deserializer.cc \
             $(SRCDIR)/Serializer.cc \
-            $(SRCDIR)/Serializeable.cc
-#$(SRCDIR)/DLL.cc
+            $(SRCDIR)/Serializable.cc \
+            $(SRCDIR)/DLL.cc
 
 # We cannot use the implicit rule for SSIDL, since it needs that
 # special -cia flag
