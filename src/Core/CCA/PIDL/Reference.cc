@@ -49,13 +49,13 @@ using namespace SCIRun;
 Reference::Reference()
 {
   chan = PIDL::getSpChannel();
-  d_vtable_base=TypeInfo::vtable_invalid;
+  d_vtable_base=TypeInfo::VTABLE_INVALID;
   primary=true;
 }
 
 Reference::Reference(SpChannel* n_chan)
 {
-  d_vtable_base=TypeInfo::vtable_invalid;
+  d_vtable_base=TypeInfo::VTABLE_INVALID;
   chan = n_chan;
   primary=true;
 }
@@ -68,13 +68,13 @@ Reference::Reference(const Reference& copy)
 
 Reference *
 Reference::clone()
-{		    
+{
   Reference * Clone=new Reference();
   Clone->d_vtable_base=d_vtable_base;
   Clone->primary=primary;
   //cannot clone non-primary Reference
-  assert(primary); 
-  
+  assert(primary);
+
   //channel must not be null
   assert(chan!=NULL);
   delete Clone->chan;
@@ -84,15 +84,15 @@ Reference::clone()
 
 void
 Reference::cloneTo(Reference &Clone)
-{		    
+{
   Clone.d_vtable_base=d_vtable_base;
   Clone.primary=primary;
   //cannot clone non-primary Reference
-  assert(primary); 
-  
+  assert(primary);
+
   //channel must not be null
   assert(chan!=NULL);
-  
+
   //this should be removed later
   delete Clone.chan;
 
@@ -116,7 +116,7 @@ Reference& Reference::operator=(const Reference& copy)
 Reference& Reference::_copy(const Reference& copy)
 {
   d_vtable_base=copy.d_vtable_base;
-  if(primary && chan!=NULL) delete chan; 
+  if(primary && chan!=NULL) delete chan;
 
   //cannot copy Reference without a SP channel
   assert(copy.chan != NULL);
@@ -129,11 +129,3 @@ int Reference::getVtableBase() const
 {
   return d_vtable_base;
 }
-
-
-
-
-
-
-
-

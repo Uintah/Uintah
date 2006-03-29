@@ -103,21 +103,21 @@ public:
 
   //////////
   // The number used to represent an invalid vtable offset.
-  static const int vtable_invalid = -1234;
+  static const int VTABLE_INVALID = -1234;
 
   //////////
   // The start of the methods in the vtable.  Do NOT change
   // this number unless the corresponding code generation is
   // changed in the sidl compiler.
-  static const int vtable_methods_start = 3;
+  static const int VTABLE_METHODS_START = 3;
 
   //////////
   // The ID of the remote isa handler
-  static const int vtable_isa_handler = 0;
+  static const int VTABLE_ISA_HANDLER = 0;
 
   //////////
   // The ID of the remote delete reference handler
-  static const int vtable_deleteReference_handler = 1;
+  static const int VTABLE_DELETEREFERENCE_HANDLER = 1;
 
 protected:
 private:

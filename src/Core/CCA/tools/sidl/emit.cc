@@ -520,7 +520,7 @@ void CI::emit_handlers(EmitState& e)
   e.out << "  int result=ti->isa(classname);\n";
   e.out << "  delete[] classname;\n";
   e.out << "  int flag;\n";
-  e.out << "  if(result == ::SCIRun::TypeInfo::vtable_invalid) {\n";
+  e.out << "  if(result == ::SCIRun::TypeInfo::VTABLE_INVALID) {\n";
   e.out << "    flag=0;\n";
   e.out << "  } else {\n";
   e.out << "    flag=1;\n";
