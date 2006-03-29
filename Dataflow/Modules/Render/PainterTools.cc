@@ -680,11 +680,11 @@ Painter::ITKThresholdTool::do_event(Event &event)
   
   if (event.key_ == " " && seed_volume_ && source_volume_) {
     string name = "ITK Threshold Result";
-    temp = painter_->copy_current_volume(name, 2);
-    temp->colormap_.set(2);
+    temp = painter_->copy_current_volume(name, 1);
+    temp->colormap_.set(1);
     temp->data_min_ = -4.0;
     temp->data_max_ = 4.0;
-    temp->clut_min_ = -0.5;
+    temp->clut_min_ = 0.0;
     temp->clut_max_ = 0.5;
 
     name = "ITK Threshold Source";
@@ -698,8 +698,11 @@ Painter::ITKThresholdTool::do_event(Event &event)
     pair<double, double> mean = 
       painter_->compute_mean_and_deviation(source_volume_->nrrd_->nrrd,
                                            seed_volume_->nrrd_->nrrd);
-    double min = mean.first - mean.second;
-    double max = mean.first + mean.second;
+    double factor = 2.5;
+    double min = mean.first - factor*mean.second;
+    double max = mean.first + factor*mean.second;
+    //    min = mean.first;
+    //    max = mean.second;
     nrrdKeyValueAdd(seed_volume_->nrrd_->nrrd,
                     "lower_threshold", to_string(min).c_str());
     nrrdKeyValueAdd(seed_volume_->nrrd_->nrrd,
@@ -849,7 +852,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
     
     name = "Connected";
     temp = new NrrdVolume(volume_, name, 2);
-    temp->colormap_.set(1);
+    temp->colormap_.set(2);
     painter_->volume_map_[name] = temp;
     painter_->show_volume(name);
 
