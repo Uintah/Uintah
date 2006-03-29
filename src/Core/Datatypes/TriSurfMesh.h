@@ -2197,6 +2197,11 @@ TriSurfMesh<Basis>::find_closest_face(Point &result,
                                       typename TriSurfMesh::Face::index_type &face,
                                       const Point &p) const
 {
+  // Walking the grid like this works really well if we're near the
+  // surface.  It's degenerately bad if for example the point is
+  // placed in the center of a sphere (because then we still have to
+  // test all the faces, but with the grid overhead and triangle
+  // duplication as well).
   ASSERTMSG(synchronized_ & LOCATE_E,
             "TriSurfMesh::find_closest_face requires synchronize(LOCATE_E).")
 
