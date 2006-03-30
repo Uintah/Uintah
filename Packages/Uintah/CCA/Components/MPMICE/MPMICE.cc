@@ -2869,8 +2869,8 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
   
   IntVector refineRatio(fineLevel->getRefinementRatio());
   double ratio = 1./(refineRatio.x()*refineRatio.y()*refineRatio.z());
-  
-  for(int p=0;p<patches->size();p++){  
+
+  for(int p=0;p<patches->size();p++){
     const Patch* coarsePatch = patches->get(p);
     ostringstream message;
     message<<"Doing CoarsenVariableCC (" << variable->getName() << ")\t\t\t";
@@ -2922,6 +2922,22 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
                                      cMass, fine_q_CC, coarse_q_CC );
         }
       }  // fine patches
+      // Set BCs on coarsened data.  This sucks--Steve
+      if(variable->getName()=="temp_CC"){
+       setBC(coarse_q_CC, "Temperature",coarsePatch,d_sharedState,indx,new_dw);
+      }
+      else if(variable->getName()=="rho_CC"){
+       setBC(coarse_q_CC, "Density",    coarsePatch,d_sharedState,indx,new_dw);
+      }
+      else if(variable->getName()=="vel_CC"){
+       setBC(coarse_q_CC, "Velocity",   coarsePatch,d_sharedState,indx,new_dw);
+      }
+      else if(variable->getName()=="c.mass"       ||
+              variable->getName()=="sp_vol_CC"    ||
+              variable->getName()=="mom_L_CC"     ||
+              variable->getName()=="int_eng_L_CC" ){
+       setBC(coarse_q_CC,"set_if_sym_BC",coarsePatch,d_sharedState,indx,new_dw);
+      }
     }  // matls
   }  // coarse level
 }
