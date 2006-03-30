@@ -2208,11 +2208,11 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
   int xl=(int)rint(m_center[0])-10;
   int xh=xl+20;
   int xa, ya;
-  int cnt2, cntp;
+  int cnt2, cntp = 0;
   int zlow = m_TopOfHead-(int)rint(15.0/m_SliceThickness);
   int ylow = (int)rint(Max(m_EyePosition[0][1],m_EyePosition[1][1])-10.0/m_PixelDim);
   int zt = m_TopOfEyeSlice+(int)ceil(9.0/m_SliceThickness);
-  float r, rp;
+  float r, rp = 0.0;
   float distth = 15.0/m_PixelDim;  
   float dist, ndx, ndy, val, dl, dh;
   int flag, flag2, xp, yp, xn, yn, yl2, yh2, xl2, xh2;
@@ -2483,7 +2483,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
 
   // connected component analysis to fill bigger holes in brain if any
   unsigned int at_x, at_y, next_x, next_y;
-  int ymin, yc;
+  int ymin, yc = 0;
   for (z=0;z<m_depth;z++)
   {
     tempI = extract_nrrd_slice_int(m_Label, z);
@@ -2646,7 +2646,7 @@ void
 MRITissueClassifier::FindTemporalLobes ()
 {
   // this function removes leakage from temporal lobes into non-brain pixels
-  int x, y, z, m, i, *pcnt, cnt, flag, maxy, max;
+  int x, y, z, m = 0, i, *pcnt, cnt, flag, maxy, max;
   int zt = m_TopTemporalSlice - (int)rint(21.0/m_SliceThickness);
   int zb = m_TopTemporalSlice - (int)rint(28.0/m_SliceThickness);
  

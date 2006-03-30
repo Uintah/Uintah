@@ -654,7 +654,7 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   int s = 0;
   int nnz = 0;
   if (elems.size()) nnz = 1;
-  for (int r=1; r<elems.size(); r++)
+  for (unsigned int r=1; r<elems.size(); r++)
   {
     if (elems[s] == elems[r])
     {
@@ -682,10 +682,15 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   
   rr[0] = 0;
   int q = 0;
-  int k = 0;
-  for (int p=0; p < nrows_; p++)
+  unsigned int k = 0;
+  for( int p=0; p < nrows_; p++ )
   {
-    while ((k < elems.size())&&(elems[k].row == p)) { if (elems[k].val) { cc[q] = elems[k].col; vv[q] = elems[k].val; q++;} k++; }
+    while ((k < elems.size())&&(elems[k].row == p)) { 
+      if (elems[k].val) { 
+        cc[q] = elems[k].col; vv[q] = elems[k].val; q++;
+      } 
+      k++; 
+    }
     rr[p+1] = q;
   }   
   

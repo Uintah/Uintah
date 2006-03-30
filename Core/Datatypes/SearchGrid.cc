@@ -46,6 +46,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MusilRNG.h>
+#include <Core/Math/MiscMath.h>
 #include <vector>
 #include <iostream>
 
@@ -212,9 +213,9 @@ SearchGridConstructor::min_distance_squared(const Point &p,
   transform_.unproject(p, r);
 
   // Determine closest corner.
-  if (round(r.x()) >= i+1) i++;
-  if (round(r.y()) >= j+1) j++;
-  if (round(r.z()) >= k+1) k++;
+  if (Round(r.x()) >= i+1) i++;
+  if (Round(r.y()) >= j+1) j++;
+  if (Round(r.z()) >= k+1) k++;
 
   // Project that corner back to world space.
   Point c(i, j, k), q;
