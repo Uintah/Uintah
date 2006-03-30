@@ -14,23 +14,20 @@
 #ifndef Package_rtrt_Core_Array2_h
 #define Package_rtrt_Core_Array2_h 1
 
+#include <Core/Persistent/Pstreams.h>
 #include <sci_defs/template_defs.h>
 
 namespace rtrt {
-template<class T> class Array2;
+  template<class T> class Array2;
 }
 
 namespace SCIRun {
-template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>& data);
-  /*
-template<> void Pio(SCIRun::Piostream&, rtrt::Array2<int>& data);
-template<> void Pio(SCIRun::Piostream&, rtrt::Array2<float>& data);
-template<> void Pio(SCIRun::Piostream&, rtrt::Array2<double>& data);
-  */
-template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>*& data);
+  template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>& data);
+  template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>*& data);
 }
 
 namespace rtrt{
+
 template<class T>
 class Array2 {
   T** objs;
@@ -61,7 +58,6 @@ public:
   }
   void share(const Array2<T>& copy);
 
-
   //friend template<int> void Pio(SCIRun::Piostream&, rtrt::Array2<int>& data);
   //friend template<float> void Pio(SCIRun::Piostream&, 
   //			  rtrt::Array2<float>& data);
@@ -69,7 +65,6 @@ public:
   //			   rtrt::Array2<double>& data);
   friend void TEMPLATE_TAG SCIRun::Pio TEMPLATE_BOX (SCIRun::Piostream&, Array2<T>&);
   friend void TEMPLATE_TAG SCIRun::Pio TEMPLATE_BOX (SCIRun::Piostream&, Array2<T>*&);
-
 };
 
 } // end namespace rtrt

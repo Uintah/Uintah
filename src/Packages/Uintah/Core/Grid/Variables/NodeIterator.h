@@ -2,7 +2,12 @@
 #ifndef UINTAH_HOMEBREW_NodeIterator_H
 #define UINTAH_HOMEBREW_NodeIterator_H
 
+#include <Core/Geometry/IntVector.h>
+
 namespace Uintah {
+
+  using SCIRun::IntVector;
+
 /**************************************
 
 CLASS
