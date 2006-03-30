@@ -47,6 +47,9 @@ namespace SCIRun {
 class ChooseField : public ChooseModule< FieldHandle > {
 public:
   ChooseField(GuiContext* ctx);
+
+  virtual string get_names( std::vector<FieldHandle>& handles );
+
 };
 
 DECLARE_MAKER(ChooseField)
@@ -55,6 +58,29 @@ ChooseField::ChooseField(GuiContext* ctx)
 				"FieldsOther", "SCIRun", "Field")
 {
 }
+
+string
+ChooseField::get_names( std::vector<FieldHandle>& handles )
+{
+  unsigned int idx = 0;
+  string field_names("");
+  string prop;
+  while( idx < handles.size() ){
+    if( handles[idx].get_rep() ){
+      if( (handles[idx]->get_property("name", prop )) ) {
+        field_names += prop + " ";
+      } else { // use the port index to specify the name
+        field_names += "--port_" + to_string(idx) + "-- ";
+      }
+    } else {
+      field_names += "invalid_field ";
+    }
+    ++idx;
+  }
+  return field_names;
+}
+  
+
 
 } // End namespace SCIRun
 
