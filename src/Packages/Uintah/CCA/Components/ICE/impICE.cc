@@ -174,6 +174,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
 {
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet. 
   //__________________________________
   // update the pressure
@@ -183,10 +184,11 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
   t->requires(Task::OldDW,       lb->sum_imp_delPLabel,  press_matl,oims,gn);
   
-  //  for setting the boundary conditions
+  // for setting the boundary conditions
+  // you need gac,1 for funky multilevel patch configurations
   t->modifies(lb->imp_delPLabel,     press_matl, oims);
   if (level->getIndex() > 0){
-    t->requires(Task::NewDW, lb->imp_delPLabel, 0,Task::CoarseLevel, press_matl, oims, gn,0);
+    t->requires(Task::NewDW, lb->imp_delPLabel, 0,Task::CoarseLevel, press_matl, oims, gac,1);
   }  
 
 
