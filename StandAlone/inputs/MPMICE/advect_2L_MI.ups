@@ -219,6 +219,8 @@
        <var label="specific_heat"/>
        <var label="gamma"/>
        <var label="vol_frac_CC"/>
+       <var label="sp_vol_CC"/>
+       <var label="temp_CC"/>
      </CopyData>
    </Scheduler>
 
