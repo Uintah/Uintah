@@ -60,12 +60,15 @@ public:
   virtual ~ChooseModule();
   virtual void execute();
 
+  virtual string get_names( std::vector< HANDLE_TYPE >& handles );
+
 private:
   string port_name_;
 
   GuiInt gui_use_first_valid_;
   GuiInt gui_port_index_;
 
+  bool gui_is_built_;
   HANDLE_TYPE output_handle_;
 };
 
@@ -79,6 +82,7 @@ ChooseModule< HANDLE_TYPE >::ChooseModule(const std::string& module_name,
     port_name_(port_name),
     gui_use_first_valid_(get_ctx()->subVar("use-first-valid"), 1),
     gui_port_index_(get_ctx()->subVar("port-index"), 0),
+    gui_is_built_(false),
     output_handle_(0)
 {
 }
@@ -89,12 +93,42 @@ ChooseModule< HANDLE_TYPE >::~ChooseModule()
 }
 
 template< class HANDLE_TYPE >
+string
+ChooseModule< HANDLE_TYPE >::get_names( std::vector< HANDLE_TYPE >& handles )
+{
+  unsigned int idx = 0;
+  string port_names("");
+  string prop;
+  while( idx < handles.size() ){
+    if( handles[idx].get_rep() ){
+        port_names += "--port_" + to_string(idx) + "-- ";
+    } else {
+      port_names += "invalid_port ";
+    }
+    ++idx;
+  }
+  return port_names;
+}
+
+template< class HANDLE_TYPE >
 void
 ChooseModule< HANDLE_TYPE >::execute()
 {
   std::vector< HANDLE_TYPE > handles;
+  string port_names("");
+  string visible;
 
   if( !get_dynamic_input_handles( port_name_, handles, false ) ) return;
+
+
+  if( !gui_is_built_) { // build gui first time through
+    gui_->eval(id_ + " isVisible", visible);
+    if( visible == "0" ){
+      gui_->execute(id_ + " build_top_level");
+      gui_is_built_ = true;
+    }
+  }
+
 
   // Check to see if any values have changed.
   if( inputs_changed_ ||
@@ -111,11 +145,23 @@ ChooseModule< HANDLE_TYPE >::execute()
     update_state(Executing);
 
     execute_error_ = false;
+
+
+    port_names += get_names( handles );
+    gui_->eval(id_ + " isVisible", visible);
+    if( visible == "1"){
+      gui_->execute(id_ + " destroy_frames");
+      gui_->execute(id_ + " build_frames");
+      gui_->execute(id_ + " set_ports " + port_names.c_str()); 
+      gui_->execute(id_ + " build_port_list");
+    }
+
+
   
     // use the first valid field
     if (gui_use_first_valid_.get()) {
 
-      unsigned int idx = 0;
+      unsigned int idx = 0;  // reset
       while( idx < handles.size() && !handles[idx].get_rep() ) idx++;
 
       if( idx < handles.size() && handles[idx].get_rep() ) {
