@@ -201,14 +201,25 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       
+      //__________________________________
+      //pressure
+      CCVariable<double> press_CC;
+      fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch);
+      if(switchDebug_AMR_refineInterface){
+        ostringstream desc;     
+        desc << "TOP_refineInterface_patch_"
+               << patch->getID()<< " step " << subCycleProgress;
+        printData(0, patch,   1, desc.str(), "press_CC",    press_CC);
+      }
+      refineCoarseFineBoundaries(patch, press_CC, fine_new_dw, 
+                                 lb->press_CCLabel,  0,   subCycleProgress);
+                                                               
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex();    
-        CCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
+        CCVariable<double> rho_CC, sp_vol_CC, temp_CC;
         CCVariable<Vector> vel_CC;
 
-
-        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch); 
         fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,patch);
         fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch);
         fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,patch);
@@ -220,16 +231,11 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           ostringstream desc;     
           desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
                << patch->getID()<< " step " << subCycleProgress;
-
-          printData(indx, patch,   1, desc.str(), "press_CC",    press_CC); 
           printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
           printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
           printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
         }
-
-        refineCoarseFineBoundaries(patch, press_CC, fine_new_dw, 
-                                   lb->press_CCLabel,  0,   subCycleProgress);
 
         refineCoarseFineBoundaries(patch, rho_CC,   fine_new_dw, 
                                    lb->rho_CCLabel,    indx,subCycleProgress);
@@ -278,7 +284,9 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           ostringstream desc;    
           desc << "BOT_refineInterface_Mat_" << indx << "_patch_"
                << patch->getID()<< " step " << subCycleProgress;
-          printData(indx, patch,   1, desc.str(), "press_CC",  press_CC);
+          if(indx == 0){
+            printData(indx, patch, 1, desc.str(), "press_CC",  press_CC);
+          }
           printData(indx, patch,   1, desc.str(), "rho_CC",    rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
           printData(indx, patch,   1, desc.str(), "Temp_CC",   temp_CC);
