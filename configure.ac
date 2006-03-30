@@ -861,6 +861,10 @@ AC_MSG_RESULT($NUM_CPUS)
 ##  ----------  determine if this is a 32 or 64 bit machine
 AC_LANG([C])
 
+# Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
+# its value first, so... (And AC_CHECK_SIZEOF apparently calls AC_PROG_CC...)
+CFLAGS=$CFLAGS
+
 AC_CHECK_SIZEOF(void*)
 
 case $ac_cv_sizeof_voidp in
@@ -4265,6 +4269,7 @@ AC_SUBST(GLUT_LIB_DIR_FLAG)
 
 
 ##  --  search for glui  -----------------------------------------------
+AC_LANG([C++])
 if test "$sci_required_glui" = "yes"; then
    if test "$with_glui"; then
    
@@ -4315,7 +4320,7 @@ fi # end sci_required_glui
 AC_SUBST(INC_GLUI_H)
 AC_SUBST(GLUI_LIB_FLAG)
 AC_SUBST(GLUI_LIB_DIR_FLAG)
-
+AC_LANG([C])
 
 ##  --  search for oogl  -----------------------------------------------
 if test "$sci_required_oogl" = "yes"; then
