@@ -24,7 +24,7 @@ endif
 unalias rm
 #__________________________________
 # remove your droppings and make a copy of the output file
-rm -f gp .data .plotStats_tmp .tmp
+rm -f gp .data .regridData .plotStats_tmp .tmp
 cp $out .tmp
 
 grep Time= .tmp |grep Mem >& .plotStats_tmp1
@@ -42,9 +42,9 @@ echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
 echo "?">>.meanTime
 echo "?">>.meanTime
 
+grep -b2 regridding .tmp | grep Time | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTimeRegrid
 grep regridding .tmp | cut -d " " -f12 | tr ")" " " >& .scheduleCopy
 grep regridding .tmp | cut -d " " -f7 | tr "," " " >& .regridder
-grep regridding .tmp | cut -d " " -f3 | tr "(" " " >& .regridTotal
 grep regridding .tmp | cut -d " " -f3 | tr "(" " " >& .regridTotal
 grep TASKGRAPH .tmp | cut -d" " -f4 | tr "(" " "   >& .TG_recompile
 grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
@@ -52,10 +52,11 @@ grep mean .plotStats_tmp | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
 grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
 
 
-paste -d "  " .elapsedTime .meanTime .physicalTime .scheduleCopy .regridder .regridTotal .TG_recompile >& .data
+paste -d "  " .elapsedTime .meanTime .physicalTime>& .data
+paste -d "  " .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile >& .regridData
 
-#rm -f .elapsedTime .meanTime .physicalTime .scheduleCopy .regridder .regridTotal .TG_recompile
-#rm -f .plotStats_tmp .plotStats_tmp1 .tmp
+rm -f .elapsedTime .meanTime .physicalTime .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile
+rm -f .plotStats_tmp .plotStats_tmp1 .tmp
 echo "Done extracting data"
 
 echo "" > gp
@@ -85,9 +86,9 @@ set y2tics
 set ylabel 'Physical Time'
 set y2label 'Mean Time/timestep'
 
-plot '.data' using 1:3           t 'Physical Time' with lines,\
-     '.data' using 1:2 axes x1y2 t 'meanTime/timestep' with lines,\
-     '.data' using 1:6 axes x1y2 t 'regridding Time '
+plot '.data'       using 1:3           t 'Physical Time' with lines,\
+     '.data'       using 1:2 axes x1y2 t 'meanTime/timestep' with lines,\
+     '.regridData' using 1:4 axes x1y2 t 'regridding Time '
      
     #----------second plot-------------
 set size 1.0,0.5       
@@ -95,10 +96,10 @@ set origin 0.0,0.0
 set ylabel 'Time [sec.]'
 set y2label
 
-plot '.data' using 1:6           t 'Regridding total',\
-     '.data' using 1:5           t 'Regridding',\
-     '.data' using 1:4           t 'Schedule and copy data',\
-     '.data' using 1:7           t 'Task graph recompile'
+plot '.regridData' using 1:4           t 'Regridding total',\
+     '.regridData' using 1:3           t 'Regridding',\
+     '.regridData' using 1:2           t 'Schedule and copy regridData',\
+     '.regridData' using 1:5           t 'Task graph recompile'
 
 set nomultiplot
 pause -1 "Hit return to exit"
@@ -110,6 +111,6 @@ gnuplot gp
 
 #__________________________________
 # clean up
-rm -f gp .data
+rm -f gp .data .regridData
 
 exit(1)
