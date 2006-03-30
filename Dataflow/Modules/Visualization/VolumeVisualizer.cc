@@ -299,7 +299,7 @@ VolumeVisualizer::execute()
       !gui_shine_.changed() && !gui_light_.changed() &&
       !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
       !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
-      !gui_level_flag_.changed())
+      !gui_level_flag_.changed() && (gui_multi_level_.get() == 0) )
   {
     if (texture_.get_rep())
     {
