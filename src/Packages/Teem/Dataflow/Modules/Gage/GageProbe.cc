@@ -137,15 +137,15 @@ GageProbe::execute()
   
   
   gageContext *ctx;
-  double gmc, ipos[4], opos[4], minx, miny, minz, spx, spy, spz;
+  double gmc, ipos[4], /*opos[4], */ minx, miny, minz, spx, spy, spz;
   float x, y, z;
   float scale[3];
   gageKind *kind = NULL;
-  int a, ansLen, E=0, i, idx, otype, renorm, what;
+  int a, ansLen, E=0, idx, otype, /*renorm,*/ what;
   int six, siy, siz, sox, soy, soz, xi, yi, zi;
   int iBaseDim, oBaseDim;
   gagePerVolume *pvl;
-  char *outS, *err;
+  char /* *outS,*/ *err = NULL;
   NrrdKernelSpec *k00 = NULL, *k11 = NULL, *k22 = NULL;
   gage_t *answer;
   

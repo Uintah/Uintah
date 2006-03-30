@@ -124,11 +124,12 @@ ImageImporter::execute()
       const char * tmp_dir(sci_getenv("SCIRUN_TMP_DIR"));
       
       const string tmp_file = string (tmp_dir + string("/scirun_temp_png.png")); 
-      FILE *fp;
+      FILE *fp = NULL;
       string ext = fn.substr(fn.find(".",0)+1, fn.length());
 
-      for(int i=0; i<(int)ext.size(); i++)
+      for(int i=0; i<(int)ext.size(); i++) {
 	ext[i] = tolower(ext[i]);
+      }
       
       if (ext != "png") {
 	// test for convert program

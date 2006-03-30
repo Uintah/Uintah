@@ -426,7 +426,7 @@ void SegLatVolField::absorbSmallComponents(int min) {
     visit_q.push(idx);
     int max_sz=0;
     int max_comp;
-    int max_matl;
+    int max_matl = -1; // Not sure if this is a good default/bogus value.
     bdry_comps.initialize(0);
     while(!visit_q.empty()) {
       // enqueue non-visited neighbors

@@ -23,6 +23,7 @@ PSELIBS := \
 	Dataflow/Network               \
 	Dataflow/Modules/Visualization \
 	Dataflow/Widgets               \
+	Core/Basis                     \
 	Core/Datatypes                 \
         Core/Thread                    \
 	Core/Persistent                \
