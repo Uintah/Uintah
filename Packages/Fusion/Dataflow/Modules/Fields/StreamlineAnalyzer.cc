@@ -127,10 +127,8 @@ StreamlineAnalyzer::execute()
   // The centroid field input is optional.
   FieldHandle pcc_field_input_handle;
 
-  if( !get_input_handle( "Input Centroids", pcc_field_input_handle, false ) ) return;
-
-  if (pcc_field_input_handle.get_rep()) {
-    
+  if (get_input_handle( "Input Centroids", pcc_field_input_handle, false )) 
+  {
     string pc_name =
       pcc_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
     string pc_type =
@@ -151,11 +149,8 @@ StreamlineAnalyzer::execute()
   // The separatrices field input is optional.
   FieldHandle pcs_field_input_handle;
 
-  if( !get_input_handle( "Input Separatrices", pcs_field_input_handle, false ) ) return;
-
-  // The field input is optional.
-  if (pcs_field_input_handle.get_rep()) {
-    
+  if (get_input_handle( "Input Separatrices", pcs_field_input_handle, false ))
+  {
     string pc_name =
       pcc_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
     string pc_type =

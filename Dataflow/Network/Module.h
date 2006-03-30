@@ -395,7 +395,7 @@ Module::get_input_handle(std::string name,
 {
   update_state(NeedData);
 
-  bool return_state = true;
+  bool return_state = false;
 
   SimpleIPort<DH> *dataport;
 
@@ -413,8 +413,11 @@ Module::get_input_handle(std::string name,
   {
     //! See if the data has changed. Note only change the boolean if
     //! it is false this way it can be cascaded with other handle gets.
-    if( inputs_changed_ == false )
+    if( inputs_changed_ == false ) {
       inputs_changed_ = dataport->changed();
+    }
+    //! we have a valid handle, return true.
+    return_state = true;
   }
 
   else if( required )
@@ -423,7 +426,6 @@ Module::get_input_handle(std::string name,
     //! handle and data so report an error.
     error( "No handle or representation for input port '" +
            name + "'."  );
-    return_state = false;
   }
 
   return return_state;

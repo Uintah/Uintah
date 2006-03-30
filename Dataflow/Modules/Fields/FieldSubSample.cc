@@ -140,7 +140,7 @@ FieldSubSample::execute()
 
   //! Get the optional matrix handle from the port. Note if a matrix is
   //! present it is sent down stream. Otherwise it will be created.
-  if( !get_input_handle( "Input Matrix", matrix_out_handle_, false ) ) return;
+  get_input_handle( "Input Matrix", matrix_out_handle_, false );
 
   // Because the field slicer is index based it can only work on
   // structured data. For unstructured data SamplePlane should be used.

@@ -177,8 +177,8 @@ Isosurface::execute()
 
   // Get the optional colormap for the geometry.
   ColorMapHandle colormap_input_handle = 0;
-  if( !get_input_handle( "Optional Color Map", colormap_input_handle, false ) )
-    return;
+  get_input_handle( "Optional Color Map", colormap_input_handle, false );
+  
   
   vector<double> isovals(0);
 
