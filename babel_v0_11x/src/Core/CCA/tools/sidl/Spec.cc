@@ -462,7 +462,7 @@ std::string Method::fullname() const
 std::string Method::fullsignature() const
 {
   std::string s;
-  switch(modifier){
+  switch(modifier) {
   case Abstract:
     s="abstract ";
     break;
@@ -479,7 +479,7 @@ std::string Method::fullsignature() const
   }
   s += return_type->fullname() + " " + fullname() + "(" + args->fullsignature() + ")";
   if (throws_clause)
-    s += "throws " + throws_clause->fullsignature();
+    s += " throws " + throws_clause->fullsignature();
   return s;
 }
 

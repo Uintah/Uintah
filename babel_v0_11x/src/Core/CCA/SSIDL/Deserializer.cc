@@ -28,54 +28,138 @@
 
 #include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <Core/Util/NotFinished.h>
-#include <complex>
-#include <string>
 
 using SSIDL::io::Deserializer;
 //using SSIDL::io::IOException;
 
-void Deserializer::unpackBool( const std::string &key, bool &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackBool(in string key, out bool value) throws .SSIDL.io.IOException
+void Deserializer::unpackBool(const std::string& key, bool& value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackBool(in string key, out bool value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackBool(in string key, out bool value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackChar( const std::string &key, char &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackChar(in string key, out char value) throws .SSIDL.io.IOException
+void Deserializer::unpackChar(const std::string& key, char& value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackChar(in string key, out char value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackChar(in string key, out char value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackInt( const std::string &key, int &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackInt(in string key, out int value) throws .SSIDL.io.IOException
+void Deserializer::unpackInt(const std::string& key, int& value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackInt(in string key, out int value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackInt(in string key, out int value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackLong( const std::string &key, long &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackLong(in string key, out long value) throws .SSIDL.io.IOException
+void Deserializer::unpackLong(const std::string& key, long& value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackLong(in string key, out long value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackLong(in string key, out long value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackFloat( const std::string &key, float &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackOpaque(in string key, out void* value) throws .SSIDL.io.IOException
+void Deserializer::unpackOpaque(const std::string& key, void*& value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackFloat(in string key, out float value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackOpaque(in string key, out void* value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackDouble( const std::string &key, double &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackFloat(in string key, out float value) throws .SSIDL.io.IOException
+void Deserializer::unpackFloat(const std::string& key, float& value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackDouble(in string key, out double value)throws .SSIDL.io.IOException");
+  NOT_FINISHED(" void .SSIDL.io.Deserializer.Deserializer::unpackFloat(in string key, out float value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackFcomplex( const std::string &key, std::complex<float> &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackDouble(in string key, out double value) throws .SSIDL.io.IOException
+void Deserializer::unpackDouble(const std::string& key, double& value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackFcomplex(in string key, out ::std::complex<float>  value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackDouble(in string key, out double value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackDcomplex( const std::string &key, std::complex<double> &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackFcomplex(in string key, out complex<float>  value) throws .SSIDL.io.IOException
+void Deserializer::unpackFcomplex(const std::string& key, std::complex<float> & value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackDcomplex(in string key, out ::std::complex<double>  value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackFcomplex(in string key, out complex<float>  value) throws .SSIDL.io.IOException");
 }
 
-void Deserializer::unpackString( const std::string &key, std::string &value )
+// void .SSIDL.io.Deserializer.Deserializer::unpackDcomplex(in string key, out complex<double>  value) throws .SSIDL.io.IOException
+void Deserializer::unpackDcomplex(const std::string& key, std::complex<double> & value)
 {
-    NOT_FINISHED("void .SSIDL.io.Deserializer.unpackString(in string key, out string value)throws .SSIDL.io.IOException");
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackDcomplex(in string key, out complex<double>  value) throws .SSIDL.io.IOException");
 }
 
+// void .SSIDL.io.Deserializer.Deserializer::unpackString(in string key, out string value) throws .SSIDL.io.IOException
+void Deserializer::unpackString(const std::string& key, std::string& value)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackString(in string key, out string value) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackSerializable(in string key, out .SSIDL.io.Serializable value) throws .SSIDL.io.IOException
+void Deserializer::unpackSerializable(const std::string& key, Serializable::pointer& value)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackSerializable(in string key, out .SSIDL.io.Serializable value) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackBoolArray(in string key, out array1< bool, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackBoolArray(const std::string& key, ::SSIDL::array1< bool>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackBoolArray(in string key, out array1< bool, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackCharArray(in string key, out array1< char, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackCharArray(const std::string& key, ::SSIDL::array1< char>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackCharArray(in string key, out array1< char, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackIntArray(in string key, out array1< int, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackIntArray(const std::string& key, ::SSIDL::array1< int>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackIntArray(in string key, out array1< int, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackLongArray(in string key, out array1< long, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackLongArray(const std::string& key, ::SSIDL::array1< long>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackLongArray(in string key, out array1< long, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackOpaqueArray(in string key, out array1< void*, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackOpaqueArray(const std::string& key, ::SSIDL::array1< void*>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackOpaqueArray(in string key, out array1< void*, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackFloatArray(in string key, out array1< float, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackFloatArray(const std::string& key, ::SSIDL::array1< float>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackFloatArray(in string key, out array1< float, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackDoubleArray(in string key, out array1< double, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackDoubleArray(const std::string& key, ::SSIDL::array1< double>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackDoubleArray(in string key, out array1< double, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackFcomplexArray(in string key, out array1< complex<float> , 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackFcomplexArray(const std::string& key, ::SSIDL::array1< std::complex<float> >& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackFcomplexArray(in string key, out array1< complex<float> , 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOExceptio");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackDcomplexArray(in string key, out array1< complex<double> , 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackDcomplexArray(const std::string& key, ::SSIDL::array1< std::complex<double> >& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackDcomplexArray(in string key, out array1< complex<double> , 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackStringArray(in string key, out array1< string, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackStringArray(const std::string& key, ::SSIDL::array1< std::string>& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackStringArray(in string key, out array1< string, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
+
+// void .SSIDL.io.Deserializer.Deserializer::unpackSerializableArray(in string key, out array1< .SSIDL.io.Serializable, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException
+void Deserializer::unpackSerializableArray(const std::string& key, ::SSIDL::array1< SSIDL::io::Serializable::pointer >& value, int ordering, int dimen, bool isRarray)
+{
+  NOT_FINISHED("void .SSIDL.io.Deserializer.Deserializer::unpackSerializableArray(in string key, out array1< .SSIDL.io.Serializable, 1> value, in int ordering, in int dimen, in bool isRarray) throws .SSIDL.io.IOException");
+}
