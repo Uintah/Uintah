@@ -430,12 +430,12 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
 
     vector<Point> insertpoints;
 
-    Point closest0, closest1;
+    Point closest[2];
     typename TFIELD::mesh_type::Elem::index_type elem;
     typename TFIELD::mesh_type::Elem::index_type elem_end;
-    tmesh->find_closest_face(closest0, elem, p[1]);
-    insertpoints.push_back(closest0);
-    tmesh->find_closest_face(closest1, elem_end, p[0]);
+    tmesh->find_closest_face(closest[0], elem, p[1]);
+    insertpoints.push_back(closest[0]);
+    tmesh->find_closest_face(closest[1], elem_end, p[0]);
 
     // TODO: Find closest could and will land on degeneracies meaning
     // that our choice of elements there is arbitrary.  Need to walk
@@ -464,7 +464,7 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
           tp[1] = tpoints[(k+1)%3];
 
           double s, t;
-          closest_line_to_line(s, t, p[0], p[1], tp[0], tp[1]);
+          closest_line_to_line(s, t, closest[0], closest[1], tp[0], tp[1]);
           
           if (s > EPSILON && s < 1.0 - EPSILON &&
               t > EPSILON && t < 1.0 - EPSILON)
@@ -486,7 +486,7 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
       }
     }
 
-    insertpoints.push_back(closest1);
+    insertpoints.push_back(closest[1]);
 
     typename TFIELD::mesh_type::Node::index_type newnode;
     typename TFIELD::mesh_type::Elem::array_type newelems;
