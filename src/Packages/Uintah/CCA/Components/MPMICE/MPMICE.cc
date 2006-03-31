@@ -1221,7 +1221,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
-         
+
       new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
       new_dw->get(gvelocity,    Mlb->gVelocityLabel,    indx, patch,gac, 1);
@@ -2417,8 +2417,65 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
 {
   d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
+
+  if(fineLevel->getIndex() > 0 && d_sharedState->isCopyDataTimestep()){
+    cout_doing << d_myworld->myrank() 
+               << " MPMICE::scheduleRefineInterface \t\t\tL-"
+               << fineLevel->getIndex() << endl;
+
+    Task* task = scinew Task("MPMICE::refineCoarseFineInterface",
+                             this, &MPMICE::refineCoarseFineInterface);
+
+    const MaterialSet* all_matls   = d_sharedState->allMaterials();
+    const MaterialSubset* one_matl = d_ice->d_press_matl;
+
+    task->modifies(MIlb->NC_CCweightLabel, one_matl);
+
+    scheduler->addTask(task, fineLevel->eachPatch(), all_matls);
+  }
 }
 
+
+void MPMICE::refineCoarseFineInterface(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset*,
+                                       DataWarehouse* fine_old_dw,
+                                       DataWarehouse* fine_new_dw)
+{
+  // This isn't actually refining anything, it is simply reinitializing
+  // NC_CCweight after regridding on all levels finer than 0 because
+  // copyData doesn't copy extra cell data.
+  const Level* level = getLevel(patches);
+  if(level->getIndex() > 0){
+    cout_doing << d_myworld->myrank()
+               << " Doing refineCoarseFineInterface"<< "\t\t\t MPMICE L-"
+               << level->getIndex() << " Patches: " << *patches << endl;
+
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      //__________________________________
+      //NC_CCweight
+      NCVariable<double> NC_CCweight;
+      fine_new_dw->getModifiable(NC_CCweight, MIlb->NC_CCweightLabel, 0, patch);
+      //__________________________________
+      // - Initialize NC_CCweight = 0.125
+      // - Find the walls with symmetry BC and double NC_CCweight
+      NC_CCweight.initialize(0.125);
+      vector<Patch::FaceType>::const_iterator iter;
+      for (iter  = patch->getBoundaryFaces()->begin();
+           iter != patch->getBoundaryFaces()->end(); ++iter){
+        Patch::FaceType face = *iter;
+        int mat_id = 0;
+        if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+          for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+              !iter.done(); iter++) {
+            NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+          } // cell iterator
+        } // if symmetry
+      } // for patch faces
+    } // for patches
+  } // if level
+}
 //______________________________________________________________________
 void MPMICE::scheduleRefine(const PatchSet* patches, 
                             SchedulerP& sched)

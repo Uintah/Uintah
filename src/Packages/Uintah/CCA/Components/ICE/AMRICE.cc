@@ -177,7 +177,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
         addRefineDependencies(task, tvar->var,ND,  all_matls_sub, step, nsteps);
       }
     }
-    sched->addTask(task, fineLevel->eachPatch(), d_sharedState->allMaterials());
+    sched->addTask(task, fineLevel->eachPatch(), all_matls);
   }
 }
 /*______________________________________________________________________
@@ -237,11 +237,12 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
                << patch->getID()<< " step " << subCycleProgress;
 
-          printData(indx, patch,   1, desc.str(), "press_CC",    press_CC); 
-          printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
+          if(ice_matl){
+            printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
+            printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
+          }
           printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
           printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
-          printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
         }
 
         refineCoarseFineBoundaries(patch, sp_vol_CC,fine_new_dw,
