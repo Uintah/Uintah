@@ -386,6 +386,12 @@ public:
                            bool modifies,
                            const string coarsenMethod);
 
+    void refineCoarseFineInterface(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse* fine_old_dw,
+                                   DataWarehouse* fine_new_dw);
+
 private:
   void setBC_rho_micro(const Patch* patch,
                        MPMMaterial* mpm_matl,

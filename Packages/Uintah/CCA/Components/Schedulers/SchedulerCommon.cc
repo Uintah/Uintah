@@ -851,6 +851,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   vector<Handle<PatchSet> > refineSets(grid->numLevels(),(PatchSet*)0);
   SchedulerP sched(dynamic_cast<Scheduler*>(this));
 
+  d_sharedState->setCopyDataTimestep(true);
+
   for (int i = 0; i < grid->numLevels(); i++) {
     LevelP newLevel = newDataWarehouse->getGrid()->getLevel(i);
 
@@ -942,7 +944,6 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
-  d_sharedState->setCopyDataTimestep(true);
 
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
   this->compile(); 
@@ -979,7 +980,7 @@ void
 SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* patches,
                                    const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-  dbg << "SchedulerCommon::copyDataToNewGrid() BGN" << endl;
+  dbg << "SchedulerCommon::copyDataToNewGrid() BGN on patches " << *patches  << endl;
 
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
@@ -1040,7 +1041,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
           // based on the selectPatches above, we might have patches we don't want to use, so prune them here.
           if (copyLowIndex.x() >= copyHighIndex.x() || copyLowIndex.y() >= copyHighIndex.y() || copyLowIndex.z() >= copyHighIndex.z())
             continue;
-          
+
+ 
           switch(label->typeDescription()->getType()){
           case TypeDescription::NCVariable:
             {
