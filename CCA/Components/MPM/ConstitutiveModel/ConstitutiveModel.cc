@@ -310,6 +310,7 @@ ConstitutiveModel::computePressEOS(double rhoM, double gamma,
 // Convert J-integral into stress intensity (for FRACTURE)
 void 
 ConstitutiveModel::ConvertJToK(const MPMMaterial*,
+		               const string&,
                                const Vector&,
                                const double&,
                                const Vector&,
