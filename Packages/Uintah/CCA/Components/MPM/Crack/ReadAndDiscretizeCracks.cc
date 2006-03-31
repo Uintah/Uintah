@@ -134,6 +134,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   for(ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=0;
                    mat_ps=mat_ps->findNextBlock("material") ) numMPMMatls++;
   // Physical properties of cracks
+  stressState.resize(numMPMMatls);
   crackType.resize(numMPMMatls);
   cmu.resize(numMPMMatls);
 
@@ -198,6 +199,10 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        // Friction coefficient needed for friction contact, zero by default
        cmu[m]=0.0;
        if(crackType[m]=="friction") crk_ps->get("mu",cmu[m]);
+        
+       // Stress state at crack front
+       stressState[m]="planeStress"; 
+       crk_ps->get("stress_state",stressState[m]);  
 
        // Read in crack segments. Presently seven kinds of basic shapes are available.
        // More complicated crack plane can be input by combining the basic shapes.
