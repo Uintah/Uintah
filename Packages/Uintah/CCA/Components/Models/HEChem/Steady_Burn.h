@@ -140,6 +140,8 @@ WARNING
     double Kc; /* HeatConductCondPh */
     double Cp; /* SpecificHeatCondPh */
     double MW; /* MoleWeightGasPh */
+    double BP; /* Number of Particles at Boundary*/
+    double ThresholdPressure; /*Threshold Press for burning*/
     double ignitionTemp; /* IgnitionTemp */
     
     double CC1; /* CC1 = Ac*R*Kc*Ec/Cp        */
