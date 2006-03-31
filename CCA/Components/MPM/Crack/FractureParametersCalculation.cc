@@ -411,7 +411,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   FindJIntegralPath(origin,v1,v2,v3,A);
 
 		  
-                  // Step 3: Find intersection (crossPt) between J-integral ptah 
+                  // Step 3: Find intersection (crossPt) between J-integral contour 
 		  //   and crack plane
                  
                   double d_rJ=rJ; // Radius of J-contour
@@ -762,7 +762,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 		  // cfJ is the components of J-integral in the crack-axis coordinates,
 		  // and its first component is the total energy release rate. 
                   Vector SIF;
-                  cm->ConvertJToK(mpm_matl,cfJ[l],C,D,SIF);
+                  cm->ConvertJToK(mpm_matl,stressState[m],cfJ[l],C,D,SIF);
                   cfK[l]=SIF;
                 } // End if not operated
                 else { // if operated
@@ -1094,7 +1094,7 @@ void Crack::OutputCrackFrontResults(const int& m)
     
     ofstream outCrkFrt(outFileName, ios::app);
 	
-    short out3middlecracks=NO; // for NF grinding problem
+    short out3middlecracks=YES; // for NF grinding problem
     char outFileName0[200];
     char outFileName1[200];
     char outFileName2[200];
