@@ -409,7 +409,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
        	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
 	double burnedMass = computeBurnedMass(Tzero, productPress, solidSp_vol[c], surfArea, delT, solidMass[c]);
 	
-#if 1
+#if 0
 	cout <<"  P = "<< productPress <<"  Tzero = "<< Tzero << endl;
 #endif       
 
