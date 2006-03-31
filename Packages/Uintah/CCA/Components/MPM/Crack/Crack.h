@@ -195,6 +195,7 @@ class Crack
                                    //   between J-integral contour and crack plane; 
 
     // Physical parameters of cracks
+    vector<string> stressState;    // Crack front stress state 
     vector<string> crackType;      // Crack contact type
     vector<double> cmu;            // Crack surface friction coefficient
 
