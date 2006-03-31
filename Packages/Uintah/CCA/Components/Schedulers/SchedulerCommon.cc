@@ -1191,6 +1191,15 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::ParticleVariable:
             {
+              copyLowIndex = Max(copyLowIndex,
+                                 newPatch->getInteriorCellLowIndex());
+              copyHighIndex = Min(copyHighIndex,
+                                 newPatch->getInteriorCellHighIndex()); 
+              if (copyLowIndex.x() >= copyHighIndex.x() ||
+                  copyLowIndex.y() >= copyHighIndex.y() ||
+                  copyLowIndex.z() >= copyHighIndex.z()){
+                  break;
+              }
               if(!oldDataWarehouse->d_particleDB.exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                                           "in copyDataTo ParticleVariable", __FILE__, __LINE__));
