@@ -486,8 +486,8 @@ void HypoElastic::carryForward(const PatchSubset* patches,
 // Convert J-integral into stress intensity factors
 // for Fracture
 void 
-HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
-const double& C,const Vector& D,Vector& SIF)
+HypoElastic::ConvertJToK(const MPMMaterial* matl,const string& stressState,
+const Vector& J,const double& C,const Vector& D,Vector& SIF)
 {                    
   // J--J-integral vector, 
   // C--Crack velocity, 
@@ -506,7 +506,6 @@ const double& C,const Vector& D,Vector& SIF)
   G=d_initialData.G;                  // shear modulus
   K=d_initialData.K;                  // bulk modulus
   v=0.5*(3.*K-2.*G)/(3*K+G);          // Poisson ratio
-  string stressState="planeStress";   // plane stress
   k = (stressState=="planeStress")? (3.-v)/(1.+v) : (3.-4.*v);
 
   // Calculate stress intensity
