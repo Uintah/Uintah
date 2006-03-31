@@ -49,6 +49,7 @@
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/Field.h>
 
 namespace SCIRun {
 
@@ -137,7 +138,7 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *reporter,
     reporter->error("..." + to_string(ecount-9) + " additional bad indices found.");
   }
   
-  FIELD *field = scinew FIELD(mesh, basis_order);
+  FIELD *field = scinew FIELD(mesh);
 
   return FieldHandle(field);
 }

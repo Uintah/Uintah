@@ -62,13 +62,13 @@ itcl_class SCIRun_FieldsCreate_CreateMesh {
 	set fbt [$w.fbt childsite]
 	labelcombo $fbt.l1 "Mesh Type" \
 	    { \
-		  CurveField \
-		  HexVolField \
-		  PointCloudField \
-		  PrismVolField \
-		  QuadSurfField \
-		  TetVolField \
-		  TriSurfField \
+		  Curve \
+		  HexVol \
+		  PointCloud \
+		  PrismVol \
+		  QuadSurf \
+		  TetVol \
+		  TriSurf \
 	      } \
 	    $this-fieldbasetype
 
