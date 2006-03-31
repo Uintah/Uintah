@@ -47,7 +47,9 @@
 #include <CCA/Components/Builder/NetworkCanvas.h>
 #include <CCA/Components/Builder/ComponentIcon.h>
 
-#include "compdialog.h"
+#include <CCA/Components/Builder/ComponentWizardDialog.h>
+
+//#include "compdialog.h"
 
 namespace GUIBuilder {
 
@@ -359,8 +361,9 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
 {
-	MyCustomDialog cwDialog ( this,-1,"Component wizard dialog",wxPoint(100,100),wxSize(400,400));
-	cwDialog.ShowModal();
+  ComponentWizardDialog cwDialog(this, -1, "Component wizard dialog", wxPoint(100,100), wxSize(400,400));
+  // MyCustomDialog cwDialog ( this,-1,"Component wizard dialog",wxPoint(100,100),wxSize(400,400));
+  cwDialog.ShowModal();
 }
 
 
