@@ -39,6 +39,7 @@ ifeq ($(IS_AIX),yes)
         Packages/Uintah/Core/GeometryPiece               \
         Packages/Uintah/CCA/Components/Parent            \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
+	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
         $(DUMMY_LIB)                                     \
         $(ARCHES_SUB_LIBS)
 endif
@@ -55,6 +56,7 @@ else
         Core/Geometry     \
         Core/Util         \
         Core/Math         \
+	Core/Persistent   \
         Packages/Uintah/Core/DataArchive \
         Packages/Uintah/Core/Grid        \
         Packages/Uintah/Core/Parallel    \
@@ -406,7 +408,7 @@ else
       Packages/Uintah/CCA/Ports \
       Packages/Uintah/CCA/Components/ProblemSpecification \
       Core/Exceptions \
-      Core/Geometry
+      Core/Geometry 
 endif
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
