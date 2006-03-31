@@ -1230,7 +1230,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       old_dw->get(sp_vol_CC_ice,Ilb->sp_vol_CCLabel,    indx, patch,gn, 0); 
       old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
       IntVector nodeIdx[8];
-      double sp_vol_orig = 1.0/(mpm_matl->getInitialDensity());
+//      double sp_vol_orig = 1.0/(mpm_matl->getInitialDensity());
       
       //---- P R I N T   D A T A ------ 
 #if 0
@@ -1277,8 +1277,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 //        Temp_CC[c]  =(1.0-one_or_zero)*999.        + one_or_zero*Temp_CC_mpm;
 //        sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_orig + one_or_zero*sp_vol_mpm;
 
-      Temp_CC[c]  =(1.0-one_or_zero)*Temp_CC_ice[c]  +one_or_zero*Temp_CC_mpm;
-      sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;
+        Temp_CC[c]  =(1.0-one_or_zero)*Temp_CC_ice[c]  +one_or_zero*Temp_CC_mpm;
+        sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;
 
         vel_CC[c]   =vel_CC_mpm;
         rho_CC[c]   = cmass[c]/cell_vol;
@@ -1292,13 +1292,13 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
       setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
-     //---- P R I N T   D A T A ------
-     if(switchDebug_InterpolateNCToCC_0) {
+      //---- P R I N T   D A T A ------
+      if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
-        desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
-            <<  patch->getID();
-        d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
-        d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
+	desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
+	    <<  patch->getID();
+	d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
+	d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
         d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
         d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
         d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
@@ -2431,7 +2431,7 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   int num_levels = fineLevel->getGrid()->numLevels();
 
   printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
-  
+
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
   
   if(d_ice->doICEOnLevel(L_indx, num_levels)) {
