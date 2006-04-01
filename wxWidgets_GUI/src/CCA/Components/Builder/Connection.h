@@ -54,25 +54,22 @@ public:
   bool IsMouseOver(const wxPoint& position);
   void HighlightConnection() { highlight = true; }
   void UnhighlightConnection() { highlight = false; }
+  bool IsHighlighted() const { return highlight; }
 
-//   void OnLeftDown(wxMouseEvent& event);
-//   void OnLeftUp(wxMouseEvent& event);
-//   void OnRightClick(wxMouseEvent& event);
-//   void OnMouseMove(wxMouseEvent& event);
-
+  const sci::cca::ConnectionID::pointer GetConnectionID() const { return connectionID; }
+  PortIcon* GetProvidesPortIcon() const { return pProvides; }
+  PortIcon* GetUsesPortIcon() const { return pUses; }
+  static const int GetDrawingPointsSize() { return NUM_DRAW_POINTS; }
+  void GetDrawingPoints(wxPoint **pa, const int size);
 
 protected:
-  //   void drawConnection(const wxPoint[] points, wxPoint[] drawPoints);
-  //   void drawPoints(const wxPoint[] points);
-  //void setColour();
-
   wxColour colour;
   wxColour hColour;
   void setConnection();
 
 private:
-  const int NUM_POINTS;
-  const int NUM_DRAW_POINTS;
+  static const int NUM_POINTS;
+  static const int NUM_DRAW_POINTS;
   wxPoint* points;
   wxPoint* drawPoints;
   PortIcon* pUses;

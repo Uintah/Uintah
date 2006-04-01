@@ -61,6 +61,11 @@ class ComponentIcon : public wxPanel {
 public:
   typedef std::map<std::string, PortIcon*> PortMap;
 
+  enum {
+    ID_MENU_GO = wxID_HIGHEST,
+    ID_MENU_INFO,
+  };
+
   // deal with wxValidator?
   ComponentIcon(const sci::cca::BuilderComponent::pointer& bc, wxWindowID winid, NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y);
   virtual ~ComponentIcon();
@@ -74,6 +79,8 @@ public:
   void OnLeftDown(wxMouseEvent& event);
   void OnLeftUp(wxMouseEvent& event);
   void OnMouseMove(wxMouseEvent& event);
+  void OnRightClick(wxMouseEvent& event);
+  void OnGo(wxCommandEvent& event);
 
   const wxSize& GetBorderSize() const { return borderSize; }
   //void DrawPorts(wxDC& dc);
@@ -102,6 +109,9 @@ protected:
   wxGauge* progressGauge;
   wxSize borderSize;
 
+  wxMenu *popupMenu;
+  wxMenu* menu;
+
   bool hasUIPort;
   bool hasGoPort;
   bool isSciPort;
@@ -110,6 +120,7 @@ protected:
 
   sci::cca::ComponentID::pointer cid;
   sci::cca::BuilderComponent::pointer builder;
+  std::string goPortName;
 
   PortMap ports;
   wxPoint movingStart;

@@ -4910,7 +4910,13 @@ _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ 
 _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
 _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
+ext="$ac_ext"
+ac_ext="cc"
+
 SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+
+# Restore the previous settings.
+ac_ext="$ext"
 
 if test "$HAVE_WX" = "yes"; then
   DEF_WX="#define HAVE_WX 1"

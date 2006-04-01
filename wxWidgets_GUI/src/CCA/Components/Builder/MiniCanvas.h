@@ -36,6 +36,7 @@
 #include <string>
 
 class wxRect;
+class wxPoint;
 class wxScrolledWindow;
 
 namespace GUIBuilder {
@@ -53,8 +54,6 @@ public:
 
   bool Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style = wxHSCROLL|wxVSCROLL|wxSUNKEN_BORDER|wxRETAINED);
 
-  void SetCanvasShapes();
-
   void OnPaint(wxPaintEvent& event);
   void PaintBackground(wxDC& dc);
   void OnDraw(wxDC& dc);
@@ -70,7 +69,8 @@ private:
   std::vector<wxRect> iRects;
   std::vector<Connection*> conns;
 
-  void scaleRect(wxRect& rect, double scaleV, double scaleH);
+  void scaleRect(wxRect& rect, const double scaleV, const double scaleH);
+  void scalePoints(wxPoint **points, const int size, const double scaleV, const double scaleH);
 
   DECLARE_EVENT_TABLE()
   DECLARE_DYNAMIC_CLASS(MiniCanvas)

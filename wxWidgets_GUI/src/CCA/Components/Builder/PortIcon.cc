@@ -101,7 +101,10 @@ void PortIcon::OnLeftDown(wxMouseEvent& event)
 
 void PortIcon::OnLeftUp(wxMouseEvent& event)
 {
-  parent->GetCanvas()->ClearPossibleConnections();
+  std::cerr << "PortIcon::OnLeftUp(..)" << std::endl;
+  // canvas draw connection
+  parent->GetCanvas()->OnConnect(this);
+std::cerr << "PortIcon::OnLeftUp(..): OnConnect done" << std::endl;
 }
 
 void PortIcon::OnMouseMove(wxMouseEvent& WXUNUSED(event))

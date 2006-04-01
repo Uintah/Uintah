@@ -37,6 +37,8 @@
 #include <string>
 
 class wxScrolledWindow;
+class wxMenu;
+class wxMenuItem;
 
 namespace GUIBuilder {
 
@@ -49,7 +51,16 @@ class MiniCanvas;
 class NetworkCanvas : public wxScrolledWindow {
 public:
   typedef std::map<std::string, ComponentIcon*> ComponentMap;
+  typedef std::multimap<PortIcon*, Connection*> ConnectionMap;
+
   friend class MiniCanvas;
+
+  // identifiers are local to each wxWindow, so duplication between different windows is OK
+  enum {
+    ID_MENU_CLEAR = wxID_HIGHEST,
+    ID_MENU_DISCONNECT,
+    ID_MENU_COMPONENTS,
+  };
 
   NetworkCanvas(const sci::cca::BuilderComponent::pointer& bc, BuilderWindow* bw, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size);
   virtual ~NetworkCanvas();
@@ -69,17 +80,22 @@ public:
   void OnLeftUp(wxMouseEvent& event);
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
-  void OnScroll(wxScrollWinEvent& /*event*/);
+  void OnScroll(wxScrollWinEvent& event);
+  void OnClear(wxCommandEvent& event);
 
   //void DrawIcons(wxDC& dc);
   void DrawConnections(wxDC& dc);
+
+  void OnConnect(PortIcon* pUsed);
+  void OnDisconnect(Connection* connection);
   bool ShowPossibleConnections(PortIcon* usesPort);
-  void ClearPossibleConnections();
   void HighlightConnection(const wxPoint& point);
 
   void Clear();
+  void ClearPossibleConnections();
+  void ClearConnections();
 
- //  void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }
+  void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }
   void AddIcon(sci::cca::ComponentID::pointer& compID);
 
   void GetUnscrolledPosition(const wxPoint& p, wxPoint& position);
@@ -90,6 +106,7 @@ public:
   PortIcon* FindPortIconAtPointer(wxPoint& position);
 
   void GetComponentRects(std::vector<wxRect>& rv);
+  void GetConnections(std::vector<Connection*>& cv);
 
 //   const ComponentMap& getComponentIcons() const { return components; }
 //   const std::vector<Connection*>& getConnections() const { return connections; }
@@ -97,28 +114,39 @@ public:
 protected:
   NetworkCanvas();
   void Init();
+  void SetMenus();
 
   // Only call this from a paint event handler or event handler helper function!
-  wxRect NetworkCanvas::GetClientRect();
+  wxRect GetClientRect();
+
+  // canvas menu
+  wxMenu *popupMenu;
+  wxMenu* componentMenu;
+  wxMenuItem* clearMenuItem;
+
+  // connection menu
+  wxMenu *connectionPopupMenu;
+  wxMenuItem* deleteConnection;
 
 private:
   sci::cca::BuilderComponent::pointer builder;
   ComponentMap components;
-  std::vector<Connection*> connections;
-  std::vector<Connection*> possibleConnections;
+  ConnectionMap connections;
+  ConnectionMap possibleConnections;
+//   std::vector<Connection*> connections;
+//   std::vector<Connection*> possibleConnections;
 
   // default scroll window virtual size, scroll rates
   const static int DEFAULT_VWIDTH = 2500;
   const static int DEFAULT_VHEIGHT = 2000;
   const static int DEFAULT_SCROLLX = 10;
   const static int DEFAULT_SCROLLY = 10;
-  const int ID_MENU_POPUP;
 
   BuilderWindow* builderWindow;
-
-//   ComponentIcon* movingIcon;
+  ComponentIcon* movingIcon;
 //   ComponentIcon* connectingIcon;
 //   wxPoint movingStart;
+//   Connection* highlightedConnection;
 
   wxCursor *handCursor;
   wxCursor *arrowCursor;

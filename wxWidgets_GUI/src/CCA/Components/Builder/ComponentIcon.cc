@@ -36,6 +36,7 @@
 #include <wx/stattext.h>
 #include <wx/gbsizer.h>
 #include <wx/gauge.h>
+#include <wx/string.h>
 
 #include <CCA/Components/Builder/ComponentIcon.h>
 #include <CCA/Components/Builder/PortIcon.h>
@@ -52,9 +53,9 @@ BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
   //EVT_ERASE_BACKGROUND(ComponentIcon::OnEraseBackground)
   EVT_LEFT_DOWN(ComponentIcon::OnLeftDown)
   EVT_LEFT_UP(ComponentIcon::OnLeftUp)
-  //EVT_RIGHT_DOWN(ComponentIcon::OnMouseDown)
-  //EVT_MIDDLE_DOWN(ComponentIcon::OnMouseDown)
+  EVT_RIGHT_UP(ComponentIcon::OnRightClick) // show popup menu
   EVT_MOTION(ComponentIcon::OnMouseMove)
+  EVT_MENU(ID_MENU_GO, ComponentIcon::OnGo)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
@@ -70,6 +71,7 @@ ComponentIcon::ComponentIcon(const sci::cca::BuilderComponent::pointer& bc, wxWi
 
 ComponentIcon::~ComponentIcon()
 {
+  builder->unregisterGoPort(goPortName);
 }
 
 bool ComponentIcon::Create(wxWindow* parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style)
@@ -80,8 +82,7 @@ bool ComponentIcon::Create(wxWindow* parent, wxWindowID winid, const wxPoint& po
 
   SetFont(wxFont(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "", wxFONTENCODING_SYSTEM));
 
-// test
-//SetOwnBackgroundColour(wxTheColourDatabase->Find("GOLDENROD"));
+  popupMenu = new wxMenu();
 
   const int GAP_SIZE = 1;
   const int BORDER_SIZE = 4;
@@ -105,9 +106,15 @@ bool ComponentIcon::Create(wxWindow* parent, wxWindowID winid, const wxPoint& po
 	isSciPort = true;
       } else if (providedPorts[i] == "go") {
 	hasGoPort = true;
+	if (builder->registerGoPort(cid->getInstanceName(), cid, false, goPortName)) {
+	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
+	}
       } else if (providedPorts[i] == "sci.go") {
 	hasGoPort = true;
 	isSciPort = true;
+	if (builder->registerGoPort(cid->getInstanceName(), cid, true, goPortName)) {
+	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("SCIRun2 interface for SCIRun execute"));
+	}
       } else {
 	PortIcon *pi = new PortIcon(this, wxID_ANY, Builder::Provides, providedPorts[i]);
 	ports[providedPorts[i]] = pi;
@@ -164,6 +171,9 @@ bool ComponentIcon::Create(wxWindow* parent, wxWindowID winid, const wxPoint& po
   return true;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// event handlers
+
 void ComponentIcon::OnPaint(wxPaintEvent& event)
 {
 std::cerr << "ComponentIcon::OnPaint()" << std::endl;
@@ -216,27 +226,28 @@ std::cerr << "ComponentIcon::OnPaint()" << std::endl;
 
 void ComponentIcon::OnLeftDown(wxMouseEvent& event)
 {
-  wxPoint mp;
-  canvas->GetUnscrolledMousePosition(mp);
-  canvas->GetUnscrolledPosition(event.GetPosition(), movingStart);
+  canvas->GetUnscrolledMousePosition(movingStart);
 
   std::cerr << "ComponentIcon::OnLeftDown(..) pos=(" << movingStart.x << ", " << movingStart.y << ") "
-            << "mouse pos=(" << mp.x << ", " << mp.y << ")"
             << std::endl;
 
   isMoving = true;
+  canvas->SetMovingIcon(this);
 }
 
-void ComponentIcon::OnLeftUp(wxMouseEvent& WXUNUSED(event))
+void ComponentIcon::OnLeftUp(wxMouseEvent& event)
 {
   isMoving = false;
+  canvas->SetMovingIcon(0);
+  //ReleaseMouse();
+  event.StopPropagation();
 }
 
 void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 {
   if (event.LeftIsDown() && event.Dragging() && isMoving) {
-    Show(false);
     CaptureMouse();
+    Show(false);
     wxPoint p;
     canvas->GetUnscrolledPosition(event.GetPosition(), p);
     wxPoint mp;
@@ -247,14 +258,15 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
     //canvas->FindIconAtPointer(pp);
 
     int dx = 0, dy = 0;
-    int newX = pp.x + p.x - movingStart.x;
-    int newY = pp.y + p.y - movingStart.y;
-    //int newX = mp.x + p.x - movingStart.x;
-    //int newY = mp.y + p.y - movingStart.y;
+    //int newX = pp.x + p.x - movingStart.x;
+    //int newY = pp.y + p.y - movingStart.y;
+    int newX = mp.x + pp.x + p.x - movingStart.x;
+    int newY = mp.y + pp.y + p.y - movingStart.y;
     wxPoint topLeft;
     canvas->GetUnscrolledPosition(wxPoint(newX, newY), topLeft);
 
-    std::cerr << "ComponentIcon::OnMouseMove(..) event pos=(" << p.x << ", " << p.y << ")"
+    std::cerr << "ComponentIcon::OnMouseMove(..) "
+      //<< "event pos=(" << p.x << ", " << p.y << ")"
             << std::endl
 	    << "\tmouse canvas pos=(" << mp.x << ", " << mp.y << ")"
             << std::endl
@@ -262,6 +274,10 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
            << std::endl
 	    << "\ttop left pos=(" << topLeft.x << ", " << topLeft.y << ")"
             << std::endl;
+
+//     // test
+//     wxPoint p;
+//     p = mp;
 
     // adjust for canvas boundaries
     if (topLeft.x < 0) {
@@ -284,18 +300,18 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
       dy -= 1;
     }
 
-//     int cw = canvas->GetVirtualSize().GetWidth();
-//     int mw = GetSize().GetWidth();
+    int cw = canvas->GetVirtualSize().GetWidth();
+    int mw = GetSize().GetWidth();
 
-//     if (topLeft.x > cw - mw) {
-//       newX -= topLeft.x - (cw - mw);
-//       if (p.x > cw) {
-//         mp.x -= (p.x - cw);
-//         p.x = cw - mw;
-// 	WarpPointer(mp.x, mp.y);
-//       }
-//       dx = 1;
-//     }
+    if (topLeft.x > cw - mw) {
+      newX -= topLeft.x - (cw - mw);
+      if (p.x > cw) {
+        mp.x -= (p.x - cw);
+        p.x = cw - mw;
+	WarpPointer(mp.x, mp.y);
+      }
+      dx = 1;
+    }
 
     int ch = canvas->GetVirtualSize().GetHeight();
     int mh = GetSize().GetHeight();
@@ -311,14 +327,14 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
     }
 
     movingStart = p;
-//     wxPoint np;
-//     canvas->GetScrolledPosition(wxPoint(newX, newY), np);
+    wxPoint np;
+    canvas->GetScrolledPosition(wxPoint(newX, newY), np);
+
 //     std::cerr << "\tmove to scrolled (" << np.x << ", " << np.y << ") or unscrolled (" << newX << ", " << newY << ")" << std::endl;
     //Move(np.x, np.y);
     Move(newX, newY);
     Show(true);
     ReleaseMouse();
-
     canvas->Refresh();
 
 
@@ -337,8 +353,17 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 //     }
   }
 
+  event.StopPropagation();
+}
 
+void ComponentIcon::OnRightClick(wxMouseEvent& event)
+{
+  PopupMenu(popupMenu, event.GetPosition());
+}
 
+void ComponentIcon::OnGo(wxCommandEvent& event)
+{
+  builder->go(goPortName);
 }
 
 void ComponentIcon::GetCanvasPosition(wxPoint& p)

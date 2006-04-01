@@ -59,10 +59,6 @@ MiniCanvas::~MiniCanvas()
 {
 }
 
-void MiniCanvas::Init()
-{
-}
-
 bool MiniCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
 {
   if (!wxScrolledWindow::Create(parent, id, pos, size, style)) {
@@ -77,13 +73,6 @@ bool MiniCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, con
   return true;
 }
 
-void MiniCanvas::SetCanvasShapes()
-{
-std::cerr << "MiniCanvas::SetCanvasShapes()" << std::endl;
-
-  Refresh();
-}
-
 void MiniCanvas::OnDraw(wxDC& dc)
 {
   wxSize cs = canvas->GetVirtualSize();
@@ -93,25 +82,33 @@ void MiniCanvas::OnDraw(wxDC& dc)
 
   iRects.clear();
   canvas->GetComponentRects(iRects);
-
-  // get connections lines
-
   wxRect canvasRect = canvas->GetClientRect();
-  //std::cerr << "MiniCanvas::OnDraw(wxDC& dc) canvas rect=(" << canvasRect.x << ", " << canvasRect.y << ", " << canvasRect.width << ", " << canvasRect.height <<  ")" << std::endl;
 
+  std::vector<Connection*> conns;
+  canvas->GetConnections(conns);
 
   scaleRect(canvasRect, scaleV, scaleH);
-  //dc.SetPen(wxPen(*wxRED, 1, wxSOLID));
   dc.SetPen(*wxRED_PEN);
   dc.DrawRectangle(canvasRect.x, canvasRect.y, canvasRect.width, canvasRect.height);
-  //dc.DrawRectangle(ceil(canvasRect.x / scaleH), ceil(canvasRect.y / scaleV), ceil(canvasRect.width / scaleH), ceil(canvasRect.height / scaleV));
 
   dc.SetBrush(*wxWHITE);
-  dc.SetPen(wxPen(*wxBLACK, 1, wxSOLID));
-  for (std::vector<wxRect>::iterator it = iRects.begin(); it != iRects.end(); it++) {
-    scaleRect(*it, scaleV, scaleH);
-    dc.DrawRectangle(it->x, it->y, it->width, it->height);
+  dc.SetPen(wxPen(*wxBLACK));
+  for (std::vector<wxRect>::iterator rectIter = iRects.begin(); rectIter != iRects.end(); rectIter++) {
+    scaleRect(*rectIter, scaleV, scaleH);
+    dc.DrawRectangle(rectIter->x, rectIter->y, rectIter->width, rectIter->height);
   }
+
+  dc.SetBrush(*wxTRANSPARENT_BRUSH);
+  dc.SetPen(wxPen(*wxWHITE));
+
+  const int NUM_POINTS = Connection::GetDrawingPointsSize();
+  wxPoint *pointsArray = new wxPoint[NUM_POINTS];
+  for (std::vector<Connection*>::iterator connIter = conns.begin(); connIter != conns.end(); connIter++) {
+    (*connIter)->GetDrawingPoints(&pointsArray, NUM_POINTS);
+    scalePoints(&pointsArray, NUM_POINTS, scaleV, scaleH);
+    dc.DrawLines(NUM_POINTS, pointsArray, 0, 0);
+  }
+  delete [] pointsArray;
 }
 
 void MiniCanvas::OnPaint(wxPaintEvent& event)
@@ -144,14 +141,30 @@ void MiniCanvas::PaintBackground(wxDC& dc)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// protected member functions
+
+void MiniCanvas::Init()
+{
+}
+
+///////////////////////////////////////////////////////////////////////////
 // private member functions
 
-void MiniCanvas::scaleRect(wxRect& rect, double scaleV, double scaleH)
+void MiniCanvas::scaleRect(wxRect& rect, const double scaleV, const double scaleH)
 {
   rect.x = (int) ceil(rect.x / scaleH);
   rect.y = (int) ceil(rect.y / scaleV);
   rect.width = (int) ceil(rect.width / scaleH);
   rect.height = (int) ceil(rect.height / scaleV);
+}
+
+void MiniCanvas::scalePoints(wxPoint **points, const int size,
+			     const double scaleV, const double scaleH)
+{
+  for (int i = 0; i < size; i++) {
+    (*points)[i].x = (int) ceil((*points)[i].x / scaleH);
+    (*points)[i].y = (int) ceil((*points)[i].y / scaleV);
+  }
 }
 
 }

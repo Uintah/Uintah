@@ -59,7 +59,7 @@ public:
     ID_MENUTREE_HIGHEST = ID_MENU_COMPONENTS + 1,
   };
 
-  MenuTree(BuilderWindow* builder, const std::string &url);
+  MenuTree(BuilderWindow* bw, const std::string &url);
   virtual ~MenuTree();
 
   void add(const std::vector<std::string>& name, int nameindex, const sci::cca::ComponentClassDescription::pointer& desc, const std::string& fullname);
@@ -71,7 +71,7 @@ public:
 
 
 private:
-  BuilderWindow* builder;
+  BuilderWindow* builderWindow;
   sci::cca::ComponentClassDescription::pointer cd;
   std::map<std::string, MenuTree*> child;
   std::string url;
@@ -81,7 +81,8 @@ private:
 class BuilderWindow : public wxFrame /*, public sci::cca::ports::ComponentEventListener */ {
 public:
   //typedef std::map<std::string, int> IntMap;
-  typedef std::map<std::string, MenuTree*> MenuMap;
+  typedef std::map<std::string, MenuTree*> MenuTreeMap;
+  typedef std::map<int, wxMenu*> MenuMap;
 
   enum { // user specified ids for widgets, menus
     ID_WINDOW_LEFT = MenuTree::ID_MENUTREE_HIGHEST,
@@ -94,10 +95,12 @@ public:
     ID_MENU_LOAD,
     ID_MENU_INSERT,
     ID_MENU_CLEAR,
+    ID_MENU_CLEAR_MESSAGES,
     //ID_MENU_EXECALL,
     ID_MENU_COMPONENT_WIZARD,
     ID_MENU_WIZARDS,
     ID_MENU_ADDINFO,
+    ID_MENU_ADD_SIDLXML,
     ID_BUILDERWINDOW_HIGHEST = ID_MENU_ADDINFO + 1,
   };
 
@@ -123,10 +126,17 @@ public:
   void OnTest(wxCommandEvent& event);
   void OnClear(wxCommandEvent& event);
   void OnCompWizard(wxCommandEvent& event);
+  void OnClearMessages(wxCommandEvent& event);
 
   void InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd);
 
   void RedrawMiniCanvas();
+  void DisplayMessage(const std::string& line);
+  void DisplayErrorMessage(const std::string& line);
+  void DisplayMessages(const std::vector<std::string>& lines);
+  void DisplayErrorMessages(const std::vector<std::string>& lines);
+
+  const MenuMap& GetComponentMenus() { return menus; }
 
   static int GetNextID() { return ++IdCounter; }
   static int GetCurrentID() { return IdCounter; }
@@ -138,6 +148,7 @@ protected:
   // common initialization
   void Init();
   void SetMenus();
+  void SetLayout();
 
   MiniCanvas* miniCanvas;
   wxTextCtrl* textCtrl;
@@ -150,6 +161,7 @@ protected:
   wxMenuBar* menuBar;
   wxStatusBar* statusBar;
 
+  MenuTreeMap menuTrees;
   MenuMap menus;
 
 private:
@@ -170,6 +182,7 @@ private:
   std::string url;
 
   void buildPackageMenus();
+  void setDefaultText();
 };
 
 }
