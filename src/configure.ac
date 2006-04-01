@@ -228,7 +228,8 @@ SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
                  Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
   [with_ptolemyII="$withval"
-   sci_required_ptolemyII=yes],
+   sci_required_ptolemyII=yes
+   sci_required_java=yes],
   [with_ptolemyII=""])
 SCI_ARG_WITH(java,
   AC_HELP_STRING(--with-java=DIR,
@@ -716,12 +717,18 @@ fi
 
 if test "$pkg_Ptolemy" = "yes"; then
   # check versions?
-  # check --with-ptolemyII
   if test -z "$with_ptolemyII"; then
-    AC_MSG_WARN(Ptolemy II is required by the Ptolemy package.)
-    AC_MSG_ERROR(Use the --with-ptolemyII=DIR option to set the installation directory.)
+    AC_MSG_WARN(The Ptolemy II JNI interface requires Java bindings in the Ptolemy package.)
+    AC_MSG_WARN(Use the --with-ptolemyII=DIR option to set the installation directory.)
+
+    SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
+
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
+    AC_SUBST(HAVE_PTOLEMY_PACKAGE)
+    sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
+  else
+    SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
   fi
-  SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
 fi
 
 
@@ -2973,12 +2980,13 @@ if test "$with_java" = "yes"; then
     fi
   done
 elif test "$with_java"; then
-  _sci_optional=specific
+  _sci_optional=required
   _sci_inc="$with_java/include"
   _java_top=$with_java
+  AC_MSG_RESULT(Found Java top directory $_java_top)
 fi
 
-if test "$_sci_optional" != "optional"; then
+if test "$_sci_optional" = "required"; then
   _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
   if test -d "$_java_lib_dir"; then
     _sci_lib="$_sci_lib $_java_lib_dir"
@@ -2989,9 +2997,25 @@ if test "$_sci_optional" != "optional"; then
     _sci_lib="$_sci_lib $_jvm_lib_dir"
   fi
 
+  _jni_platfrom_h_dir=`find $_sci_inc -follow -name "jni_md.h" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_jni_platfrom_h_dir"; then
+    _sci_inc="$_sci_inc $_jni_platfrom_h_dir"
+  fi
+
   SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
 fi
 
+if test "$HAVE_JAVA" = "yes"; then
+    DEF_JAVA="#define HAVE_JAVA 1"
+fi
+
+if test "$with_java" && test ! "$DEF_JAVA"; then
+  AC_MSG_ERROR(Java installation directory is missing.)
+fi
+
+AC_SUBST(HAVE_JAVA)
+AC_SUBST(DEF_JAVA)
+AC_SUBST(JAVA)
 
 ##  --  search for Mesquite ------------------------
 AC_LANG([C++])
@@ -4068,7 +4092,7 @@ AC_SUBST(GDCM_LIB_DIR_FLAG)
 if test "$sci_required_ptolemyII" = "yes"; then
   AC_MSG_CHECKING(for Ptolemy II.)
   if test "$HAVE_JAVA" != "yes"; then
-    AC_MSG_WARN(Java installation directory is missing.)
+    AC_MSG_ERROR(Java installation directory is missing.)
   fi
 
   # search here
@@ -4084,6 +4108,7 @@ if test "$sci_required_ptolemyII" = "yes"; then
     PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
   else
     AC_MSG_ERROR(Ptolemy II directory is missing.)
   fi
@@ -4091,6 +4116,7 @@ fi
 
 AC_SUBST(HAVE_PTOLEMY)
 AC_SUBST(DEF_PTOLEMY)
+AC_SUBST(HAVE_PTOLEMY_PACKAGE)
 AC_SUBST(PTOLEMY_PATH)
 AC_SUBST(PTOLEMY_CLASSPATH)
 sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"

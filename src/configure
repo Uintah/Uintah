@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW HAVE_PTOLEMY_PACKAGE DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1830,6 +1830,7 @@ if test "${with_ptolemyII+set}" = set; then
   withval="$with_ptolemyII"
   with_ptolemyII="$withval"
    sci_required_ptolemyII=yes
+   sci_required_java=yes
 else
   with_ptolemyII=""
 fi;
@@ -2823,7 +2824,7 @@ case SCIRun2 in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -2859,8 +2860,6 @@ case SCIRun2 in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package SCIRun2" >&5
@@ -2921,7 +2920,7 @@ case Plume in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -2957,8 +2956,6 @@ case Plume in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Plume" >&5
@@ -3163,7 +3160,7 @@ case $i in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3199,8 +3196,6 @@ case $i in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package $i" >&5
@@ -3262,7 +3257,7 @@ case Teem in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3298,8 +3293,6 @@ case Teem in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Teem" >&5
@@ -3361,7 +3354,7 @@ case DataIO in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3397,8 +3390,6 @@ case DataIO in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package DataIO" >&5
@@ -3413,14 +3404,12 @@ fi
 
 if test "$pkg_Ptolemy" = "yes"; then
   # check versions?
-  # check --with-ptolemyII
   if test -z "$with_ptolemyII"; then
-    { echo "$as_me:$LINENO: WARNING: Ptolemy II is required by the Ptolemy package." >&5
-echo "$as_me: WARNING: Ptolemy II is required by the Ptolemy package." >&2;}
-    { { echo "$as_me:$LINENO: error: Use the --with-ptolemyII=DIR option to set the installation directory." >&5
-echo "$as_me: error: Use the --with-ptolemyII=DIR option to set the installation directory." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
+    { echo "$as_me:$LINENO: WARNING: The Ptolemy II JNI interface requires Java bindings in the Ptolemy package." >&5
+echo "$as_me: WARNING: The Ptolemy II JNI interface requires Java bindings in the Ptolemy package." >&2;}
+    { echo "$as_me:$LINENO: WARNING: Use the --with-ptolemyII=DIR option to set the installation directory." >&5
+echo "$as_me: WARNING: Use the --with-ptolemyII=DIR option to set the installation directory." >&2;}
+
 
 
 eval pkg_Ptolemy=yes
@@ -3462,7 +3451,7 @@ case Ptolemy in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3498,8 +3487,6 @@ case Ptolemy in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy" >&5
@@ -3508,6 +3495,97 @@ echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy"
 esac
 
 
+
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
+
+    sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
+  else
+
+
+eval pkg_Ptolemy=yes
+
+case Ptolemy in
+  BioPSE)
+  ;;
+  Teem)
+    sci_required_teem=yes
+  ;;
+  VDT)
+    sci_required_vdt=yes
+  ;;
+  MatlabInterface)
+  ;;
+  Uintah)
+    sci_required_fortran=yes
+    sci_required_mpi=yes
+    sci_required_blas=yes
+    sci_required_lapack=yes
+    sci_required_perl=yes
+    sci_required_tools=yes
+  ;;
+  Fusion)
+  ;;
+  PCS)
+  ;;
+  DataIO)
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
+  ;;
+  SCIRun2)
+    sci_required_babel=yes
+    sci_required_ncurses=yes
+  ;;
+  Plume)
+    if test "$plume_checked" = "no"; then
+      plume_checked=yes
+      sci_required_loki=yes
+      sci_required_boost=yes
+      sci_required_tena=yes
+      #sci_required_qt=no
+      enable_scirun2=yes
+
+      if test "$package" != "all"; then
+        package="$package Plume"
+      fi
+   fi
+  ;;
+  Remote)
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
+  ;;
+  NetSolve)
+    sci_required_netsolve=yes
+  ;;
+  rtrt)
+    sci_required_glut=yes
+    sci_required_glui=yes
+    sci_required_oogl=yes
+    sci_required_audio=yes
+    sci_required_teem=yes
+  ;;
+  Insight)
+    sci_required_insight=yes
+    sci_required_xalan=yes
+  ;;
+  Volume)
+    case $host in
+     *-darwin*)
+	sci_required_glew=yes
+	;;
+     *)
+        ;;
+    esac
+  ;;
+  Ptolemy)
+  ;;
+  *)
+    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy" >&5
+echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy" >&2;}
+  ;;
+esac
+
+
+  fi
 fi
 
 
@@ -6826,7 +6904,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6829:" \
+echo "$as_me:6907:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -33419,12 +33497,14 @@ echo "${ECHO_T}Found Java top directory $_java_top" >&6
     fi
   done
 elif test "$with_java"; then
-  _sci_optional=specific
+  _sci_optional=required
   _sci_inc="$with_java/include"
   _java_top=$with_java
+  echo "$as_me:$LINENO: result: Found Java top directory $_java_top" >&5
+echo "${ECHO_T}Found Java top directory $_java_top" >&6
 fi
 
-if test "$_sci_optional" != "optional"; then
+if test "$_sci_optional" = "required"; then
   _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
   if test -d "$_java_lib_dir"; then
     _sci_lib="$_sci_lib $_java_lib_dir"
@@ -33433,6 +33513,11 @@ if test "$_sci_optional" != "optional"; then
   _jvm_lib_dir=`find $_java_top -follow -name server -prune -o -name "libjvm.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
   if test -d "$_jvm_lib_dir"; then
     _sci_lib="$_sci_lib $_jvm_lib_dir"
+  fi
+
+  _jni_platfrom_h_dir=`find $_sci_inc -follow -name "jni_md.h" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_jni_platfrom_h_dir"; then
+    _sci_inc="$_sci_inc $_jni_platfrom_h_dir"
   fi
 
 
@@ -33932,6 +34017,19 @@ _sci_includes=''
 
 
 fi
+
+if test "$HAVE_JAVA" = "yes"; then
+    DEF_JAVA="#define HAVE_JAVA 1"
+fi
+
+if test "$with_java" && test ! "$DEF_JAVA"; then
+  { { echo "$as_me:$LINENO: error: Java installation directory is missing." >&5
+echo "$as_me: error: Java installation directory is missing." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+
 
 
 ##  --  search for Mesquite ------------------------
@@ -50613,8 +50711,9 @@ if test "$sci_required_ptolemyII" = "yes"; then
   echo "$as_me:$LINENO: checking for Ptolemy II." >&5
 echo $ECHO_N "checking for Ptolemy II.... $ECHO_C" >&6
   if test "$HAVE_JAVA" != "yes"; then
-    { echo "$as_me:$LINENO: WARNING: Java installation directory is missing." >&5
-echo "$as_me: WARNING: Java installation directory is missing." >&2;}
+    { { echo "$as_me:$LINENO: error: Java installation directory is missing." >&5
+echo "$as_me: error: Java installation directory is missing." >&2;}
+   { (exit 1); exit 1; }; }
   fi
 
   # search here
@@ -50631,12 +50730,14 @@ echo "${ECHO_T}$pdir" >&6
     PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
   else
     { { echo "$as_me:$LINENO: error: Ptolemy II directory is missing." >&5
 echo "$as_me: error: Ptolemy II directory is missing." >&2;}
    { (exit 1); exit 1; }; }
   fi
 fi
+
 
 
 
@@ -65675,6 +65776,7 @@ s,@DEF_CHROMIUM@,$DEF_CHROMIUM,;t t
 s,@DEF_NO_DYNAMIC_CAST@,$DEF_NO_DYNAMIC_CAST,;t t
 s,@DEF_BUILD_DATAFLOW@,$DEF_BUILD_DATAFLOW,;t t
 s,@BUILD_DATAFLOW@,$BUILD_DATAFLOW,;t t
+s,@HAVE_PTOLEMY_PACKAGE@,$HAVE_PTOLEMY_PACKAGE,;t t
 s,@DEF_COLLAB_VIS@,$DEF_COLLAB_VIS,;t t
 s,@HAVE_COLLAB_VIS@,$HAVE_COLLAB_VIS,;t t
 s,@IS_OSX@,$IS_OSX,;t t
@@ -65813,6 +65915,9 @@ s,@UNP_LIB_DIR_FLAG@,$UNP_LIB_DIR_FLAG,;t t
 s,@INC_UNP_H@,$INC_UNP_H,;t t
 s,@F_LIB_FLAG@,$F_LIB_FLAG,;t t
 s,@F_LIB_DIR_FLAG@,$F_LIB_DIR_FLAG,;t t
+s,@HAVE_JAVA@,$HAVE_JAVA,;t t
+s,@DEF_JAVA@,$DEF_JAVA,;t t
+s,@JAVA@,$JAVA,;t t
 s,@MESQUITE_LIB_FLAG@,$MESQUITE_LIB_FLAG,;t t
 s,@INC_MESQUITE_H@,$INC_MESQUITE_H,;t t
 s,@MESQUITE_LIB_DIR_FLAG@,$MESQUITE_LIB_DIR_FLAG,;t t

@@ -79,7 +79,7 @@ using std::cout;
 #  pragma set woff 1424
 #endif
 
-#ifdef HAVE_PTOLEMY
+#ifdef HAVE_PTOLEMY_PACKAGE
 #  include <Packages/Ptolemy/Core/Comm/PtolemyServer.h>
 #endif
 
@@ -96,7 +96,7 @@ usage()
   cout << "    [-]-v[ersion]       : prints out version information\n";
   cout << "    [-]-h[elp]          : prints usage information\n";
   cout << "    [-]-p[ort] [PORT]   : start remote services port on port number PORT\n";
-#ifdef HAVE_PTOLEMY
+#ifdef HAVE_PTOLEMY_PACKAGE
   cout << "    [-]-SPAs[erver]     : start the S.P.A. server thread\n";
 #endif
   //  cout << "    [-]-eai             : enable external applications interface\n";
@@ -189,7 +189,7 @@ parse_args( int argc, char *argv[] )
       sci_putenv("SCIRUN_SERVICE_PORT",to_string(port));
       sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
     }
-#ifdef HAVE_PTOLEMY
+#ifdef HAVE_PTOLEMY_PACKAGE
     else if ( ( arg == "--SPAserver" ) || ( arg == "-SPAserver" ) ||
 	      ( arg == "-SPAs" ) || ( arg == "--SPAs" ) || ( arg == "-spas" ) )
     {
@@ -394,15 +394,15 @@ main(int argc, char *argv[], char **environment) {
   }
 
 
-#ifdef HAVE_PTOLEMY
+#ifdef HAVE_PTOLEMY_PACKAGE
   //start the Ptolemy/spa server socket
   const char *pt_str = sci_getenv("PTOLEMY_CLIENT_PORT");
   if (pt_str && string_to_int(pt_str, port)) {
     cerr << "Starting SPA server thread" << std::endl;
     PtolemyServer *ptserv = new PtolemyServer(gui,net);
-    Thread *pt = new Thread(ptserv, "Ptolemy/SPA Server", 0, 
+    Thread *pt = new Thread(ptserv, "Ptolemy/SPA Server", 0,
                             Thread::Activated, 1024*1024);
-    pt->detach();   
+    pt->detach();
     PtolemyServer::servSem().up();
   }
 #endif
