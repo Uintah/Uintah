@@ -38,7 +38,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -55,7 +55,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -72,7 +72,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>                  
@@ -89,7 +89,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -111,15 +111,17 @@
            </Box>
            <spacing>        [0.25,0.25,0.25]  </spacing>
        </Level>
+<!--
        <Level>
            <Box label = " Level 1">
-              <lower>        [0.75,0.0,1.125]    </lower>
-              <upper>        [2.75,2.0,1.375]    </upper>
+              <lower>        [0.5,0.0,1.125]    </lower>
+              <upper>        [2.0,2.0,1.375]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
+              <patches>      [3,4,1]    </patches>
            </Box>
            <spacing>        [0.125,0.125,0.25]  </spacing>
        </Level>
+-->
       <time_refinement_ratio>    1 </time_refinement_ratio>
     </Grid>
    
@@ -135,6 +137,7 @@
       <save label = "press_equil_CC"/>
       <save label = "rho_CC"/>
       <save label = "vol_frac_CC"/>
+      <save label = "sp_vol_CC"/>
       <save label = "temp_CC"/>
       <save label = "p.x"             levels = "1"/>
       <save label = "p.volume"        levels = "1"/>
@@ -198,16 +201,27 @@
 
     <!--____________________________________________________________________-->
     <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________-->  
-    <!--
+    <!--____________________________________________________________________--> 
+
     <Regridder>
       <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[3,2,1][2,2,1]]  </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,2,2]   </cell_creation_dilation>   
-      <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
-      <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+      <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+      <lattice_refinement_ratio> [[9,5,1][2,2,1]]  </lattice_refinement_ratio>
+      <cell_creation_dilation>   [1,1,0]   </cell_creation_dilation>   
+      <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
     </Regridder>
+    <Scheduler>
+     <CopyData>
+       <var label="specific_heat"/>
+       <var label="gamma"/>
+       <var label="vol_frac_CC"/>
+       <var label="sp_vol_CC"/>
+       <var label="temp_CC"/>
+     </CopyData>
+   </Scheduler>
+
+    <!--
     -->
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
