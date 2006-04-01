@@ -1673,12 +1673,13 @@ ______________________________________________________________________*/
 void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
-  if(!doICEOnLevel(coarseLevel->getIndex()+1, coarseLevel->getGrid()->numLevels()))
-    return;
+//  if(!doICEOnLevel(coarseLevel->getIndex()+1, coarseLevel->getGrid()->numLevels()))
+//    return;
+  
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
-  
+
   Task* t = scinew Task("AMRICE::errorEstimate", 
                   this, &AMRICE::errorEstimate, false);  
   
@@ -1700,7 +1701,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), oims);
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), oims);
   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
   
   //__________________________________
   // Models
@@ -1819,9 +1820,9 @@ AMRICE::errorEstimate(const ProcessorGroup*,
                             refinePatchFlag, patch);
     //__________________________________
     //  RHO, TEMP, VEL_CC, VOL_FRAC
-    int numICEMatls = d_sharedState->getNumICEMatls();
-    for(int m=0;m < numICEMatls;m++){
-      Material* matl = d_sharedState->getICEMaterial( m );
+    int numMatls = d_sharedState->getNumMatls();
+    for(int m=0;m < numMatls;m++){
+      Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
               
       constCCVariable<double> rho_CC, temp_CC, vol_frac_CC;
