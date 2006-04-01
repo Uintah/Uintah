@@ -89,7 +89,7 @@ void
 wxGUIThread::run()
 {
     std::cerr << "******************wxGUIThread::run()**********************" << std::endl;
-    wxSCIRunApp::setTopBuilder(builder);
+    wxSCIRunApp::SetTopBuilder(builder);
     int argc = 1;
     char *argv[1];
     argv[0] = "SCIRun2";
@@ -134,15 +134,24 @@ wxSCIRunApp::OnInit()
 }
 
 void
-wxSCIRunApp::addTopWindow(const sci::cca::BuilderComponent::pointer& bc)
+wxSCIRunApp::AddTopWindow(const sci::cca::BuilderComponent::pointer& bc)
 {
   Guard g(&appLock);
-std::cerr << "wxSCIRunApp::AddTopWindow(): from thread " << Thread::self()->getThreadName() << std::endl;
+  //std::cerr << "wxSCIRunApp::AddTopWindow(): from thread " << Thread::self()->getThreadName() << std::endl;
 
   // set the "main" top level window as parent
   wxWindow *top = GetTopWindow();
   BuilderWindow *window = new BuilderWindow(bc, top);
   window->Show(true);
+}
+
+BuilderWindow*
+wxSCIRunApp::GetTopBuilderWindow() const
+{
+  Guard g(&appLock);
+  wxWindow *top = GetTopWindow();
+  BuilderWindow *bw = dynamic_cast<BuilderWindow*>(top);
+  return bw;
 }
 
 Builder::Builder()
@@ -186,7 +195,7 @@ Builder::setServices(const sci::cca::Services::pointer &svc)
     wxSCIRunApp::semDown();
   } else {
     if (Thread::self()->getThreadName() == guiThreadName) {
-      app->addTopWindow(sci::cca::BuilderComponent::pointer(this));
+      app->AddTopWindow(sci::cca::BuilderComponent::pointer(this));
     //} else {
     // add to event queue???
     }
@@ -207,7 +216,11 @@ Builder::createInstance(const std::string& className, const sci::cca::TypeMap::p
     services->releasePort("cca.BuilderService");
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    std::cerr << "Error: Could not create an instance of " << className << "; " <<  e->getNote() << std::endl;
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayMessage(e->getNote());
+    }
+    //std::cerr << "Error: Could not create an instance of " << className << "; " <<  e->getNote() << std::endl;
   }
   return cid;
 }
@@ -316,10 +329,107 @@ Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
   }
 }
 
-bool Builder::go()
+sci::cca::ConnectionID::pointer
+Builder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName, const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName)
 {
-  //Guard g(&builderLock);
+  Guard g(&builderLock);
+  sci::cca::ConnectionID::pointer connID;
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    connID = bs->connect(usesCID, usesPortName, providesCID, providesPortName);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+//     std::cerr << "Error: Could not connect" << usesPortName << " to " << providesPortName << "; " <<  e->getNote() << std::endl;
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayMessage("Error: Could not connect" + usesPortName + " to " + providesPortName + "; " +  e->getNote());
+    }
+  }
+  return connID;
+}
+
+void Builder::disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout)
+{
+  Guard g(&builderLock);
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    bs->disconnect(connID, timeout);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayMessage("Error: Could not disconnect; " +  e->getNote());
+    }
+  }
+}
+
+bool Builder::registerGoPort(const std::string& usesName, const sci::cca::ComponentID::pointer &cid, bool isSciPort, std::string& usesPortName)
+{
+  usesPortName = usesName + "." + "goPort";
+  try {
+    // have dialog to pack typemap? use XML file? set a preference?
+    sci::cca::TypeMap::pointer tm = services->createTypeMap();
+    services->registerUsesPort(usesPortName, "sci.cca.ports.GoPort", tm);
+  } catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayMessage("Error: Could not register go port; " +  e->getNote());
+    }
+    return false;
+  }
+
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    sci::cca::ConnectionID::pointer connID = bs->connect(services->getComponentID(), usesPortName, cid, isSciPort ? "sci.go" : "go");
+    services->releasePort("cca.BuilderService");
+    connections.push_back(connID);
+  } catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayMessage("Error: Could not connect go port; " +  e->getNote());
+    }
+    return false;
+  }
+
   return true;
+}
+
+void Builder::unregisterGoPort(const std::string& goPortName)
+{
+  try {
+    services->unregisterUsesPort(goPortName);
+  } catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayMessage("Error: Could not unregister go port; " +  e->getNote());
+    }
+  }
+}
+
+int Builder::go(const std::string& goPortName)
+{
+  Guard g(&builderLock);
+  sci::cca::ports::GoPort::pointer goPort;
+  try {
+    sci::cca::Port::pointer p = services->getPort(goPortName);
+    goPort = pidl_cast<sci::cca::ports::GoPort::pointer>(p);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayMessage("Error: Could not access go port; " +  e->getNote());
+    }
+    return -1;
+  }
+  int status = goPort->go();
+  // set progress based on status
+  services->releasePort(goPortName);
+  return status;
 }
 
 void Builder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)

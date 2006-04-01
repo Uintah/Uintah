@@ -38,15 +38,17 @@
 #include <wx/dc.h>
 #include <wx/region.h>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
+
 namespace GUIBuilder {
 
-// BEGIN_EVENT_TABLE(Connection, wxEvtHandler)
-//   EVT_LEFT_DOWN(Connection::OnLeftDown)
-//   EVT_LEFT_UP(Connection::OnLeftUp)
-//   EVT_RIGHT_UP(Connection::OnRightClick)
-// END_EVENT_TABLE()
+const int Connection::NUM_POINTS(12);
+const int Connection::NUM_DRAW_POINTS(6);
 
-Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : NUM_POINTS(12), NUM_DRAW_POINTS(6), pUses(pU), pProvides(pP), possibleConnection(possibleConnection), connectionID(connID)
+Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : pUses(pU), pProvides(pP), possibleConnection(possibleConnection), connectionID(connID)
 {
   points = new wxPoint[NUM_POINTS];
   drawPoints = new wxPoint[NUM_DRAW_POINTS];
@@ -56,6 +58,9 @@ Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID:
   // set colour
   if (possibleConnection) {
     colour = wxColour(wxTheColourDatabase->Find("BLACK"));
+  } else {
+    // should match port colour!
+    colour = wxColour(wxTheColourDatabase->Find("GREEN"));
   }
   hColour = wxColour(wxTheColourDatabase->Find("WHITE"));
 }
@@ -89,6 +94,7 @@ void Connection::ResetPoints()
   int h = PortIcon::PORT_HEIGHT;
   int mid;
 
+#if DEBUG
 std::cerr << "Uses icon pos=("
 	  << usesIconPos.x
 	  << ", "
@@ -107,8 +113,7 @@ std::cerr << "Uses icon pos=("
 	  << pp.y
 	  << ")"
           << std::endl;
-
-
+#endif
 
   if ( (up.x + h) < (pp.x - h) ) {
     mid = (up.y + pp.y) / 2;
@@ -202,7 +207,7 @@ void Connection::OnDraw(wxDC& dc)
   } else if (possibleConnection) {
     dc.SetPen(wxPen(colour, 2, wxSOLID));
   } else {
-    dc.SetPen(wxPen(colour, 4, wxSOLID));
+    dc.SetPen(wxPen(colour, 3, wxSOLID));
   }
   dc.SetBrush(*wxTRANSPARENT_BRUSH);
   dc.DrawLines(NUM_DRAW_POINTS, drawPoints, 0, 0);
@@ -210,57 +215,82 @@ void Connection::OnDraw(wxDC& dc)
 
 bool Connection::IsMouseOver(const wxPoint& position)
 {
-//   ResetPoints();
-//   setConnection();
+  const int tolerance = 4;
 
-//   for (int i = 0; i < NUM_DRAW_POINTS; i += 2) {
-// std::cerr << "position=(" << position.x << ", " << position.y << ") " << "point i=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") point i+1=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl;
-
-//     wxRegion r;
-//     if (drawPoints[i].y >= drawPoints[i+1].y) {
-// 	r = wxRegion(drawPoints[i], drawPoints[i+1]);
-//     } else {
-// 	r = wxRegion(drawPoints[i+1], drawPoints[i]);
+  for (int i = 0; i < NUM_DRAW_POINTS; i += 2) {
+    wxRegion r;
+//     if (drawPoints[i].y == drawPoints[i+1].y) {
+      // vertical doesn't work!!!
+      if (drawPoints[i].x > drawPoints[i+1].x) {
+	wxPoint topLeft(drawPoints[i+1].x - tolerance, drawPoints[i+1].y - tolerance);
+	wxPoint bottomRight(drawPoints[i].x + tolerance, drawPoints[i].y + tolerance);
+#if 1
+std::cerr << "Connection::IsMouseOver y_i = y_i+1, x_i > x_i+1" << std::endl
+          << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+          << "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+          << "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+          << "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
+          << "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
+          << std::endl;
+#endif
+	r = wxRegion(topLeft, bottomRight);
+      } else {
+	wxPoint topLeft(drawPoints[i].x - tolerance, drawPoints[i].y - tolerance);
+	wxPoint bottomRight(drawPoints[i+1].x + tolerance, drawPoints[i+1].y + tolerance);
+#if 1
+std::cerr << "Connection::IsMouseOver y_i = y_i+1, x_i <= x_i+1" << std::endl
+          << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+          << "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+          << "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+          << "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
+          << "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
+          << std::endl;
+#endif
+	r = wxRegion(topLeft, bottomRight);
+      }
+//     } else if (drawPoints[i].x == drawPoints[i+1].x) {
+//       if (drawPoints[i].y < drawPoints[i+1].y) {
+// 	wxPoint topLeft(drawPoints[i+1].x - 2, drawPoints[i+1].y);
+// 	wxPoint bottomRight(drawPoints[i].x + 2, drawPoints[i].y);
+// std::cerr << "Connection::IsMouseOver x_i = x_i+1, y_i < y_i+1" << std::endl
+//           << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+//           << "\tpoint i=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+//           << "\tpoint i+1=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+//           << "\ttopLeft=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+//           << "\tbottomRight=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")"
+//           << std::endl;
+// 	r = wxRegion(topLeft, bottomRight);
+//       } else {
+// 	wxPoint topLeft(drawPoints[i].x - 2, drawPoints[i].y);
+// 	wxPoint bottomRight(drawPoints[i+1].x + 2, drawPoints[i+1].y);
+// std::cerr << "Connection::IsMouseOver x_i = x_i+1, y_i >= y_i+1" << std::endl
+//           << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+//           << "\tpoint i=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+//           << "\tpoint i+1=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+//           << "\ttopLeft=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+//           << "\tbottomRight=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")"
+//           << std::endl;
+// 	r = wxRegion(topLeft, bottomRight);
+//       }
 //     }
-//     wxRegionContain c = r.Contains(position);
-//     if (c == wxInRegion || c == wxPartRegion) {
-// std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
-//       return true;
-//     }
-//   }
+    wxRegionContain c = r.Contains(position);
+    if (c == wxInRegion || c == wxPartRegion) {
+std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
+      return true;
+    }
+  }
   return false;
 }
 
-// void Connection::OnLeftDown(wxMouseEvent& event)
-// {
-//   // connecting
-//   std::cerr << "Connection::OnLeftDown(..)" << std::endl;
-// }
-
-// void Connection::OnLeftUp(wxMouseEvent& event)
-// {
-//   std::cerr << "Connection::OnLeftUp(..)" << std::endl;
-// }
-
-// void Connection::OnRightClick(wxMouseEvent& event)
-// {
-//   wxMenu *m = new wxMenu();
-//   m->Append(wxID_ANY, wxT("Connection Menu Item"));
-
-//   NetworkCanvas* canvas = pUses->GetParent()->GetCanvas();
-//   canvas->PopupMenu(m, event.GetPosition());
-// }
-
+void Connection::GetDrawingPoints(wxPoint **pa, const int size)
+{
+  for (int i = 0; i < size && i < NUM_DRAW_POINTS; i++) {
+    (*pa)[i] = drawPoints[i];
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // protected member functions
-
-// void Connection::drawConnection(const wxPoint[] points, wxPoint[] drawPoints)
-// {
-//   for (unsigned int i = 0; i < NUM_POINTS; i++) {
-//     drawPoints[i] = (points[i] + points[NUM_POINTS - 1 - i]) / 2;
-//   }
-// }
 
 void Connection::setConnection()
 {
@@ -268,12 +298,14 @@ void Connection::setConnection()
     drawPoints[i] = (points[i] + points[NUM_POINTS - 1 - i]);
     drawPoints[i].x /= 2;
     drawPoints[i].y /= 2;
+#if DEBUG
+std::cerr << "Connection::setConnection y_i = y_i+1, x_i <= x_i+1" << std::endl
+          << "\tpoint " << i << "=(" << points[i].x << ", " << points[i].y <<  ") " << std::endl
+          << "\tpoint " << NUM_POINTS - 1 - i << "=(" << points[NUM_POINTS - 1 - i].x << ", " << points[NUM_POINTS - 1 - i].y <<  ") " << std::endl
+          << "\tdraw point " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") "
+          << std::endl;
+#endif
   }
 }
-
-// void Connection::drawPoints(const wxPoint[] points)
-// {
-// }
-
 
 }

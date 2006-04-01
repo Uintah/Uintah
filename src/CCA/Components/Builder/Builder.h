@@ -40,9 +40,9 @@
 #include <CCA/Components/Builder/BuilderWindow.h>
 
 #include <string>
-//#include <vector>
+#include <vector>
 
-// check \#if wxUSE_STATUSBAR, wxUSE_MENUS, wxUSE_THREADS...
+// check \#if wxUSE_STATUSBAR, wxUSE_MENUS, wxUSE_THREADS, wxUSE_STREAMS, wxUSE_STD_IOSTREAM...
 
 class SCIRun::Semaphore;
 class SCIRun::Mutex;
@@ -54,9 +54,11 @@ class wxSCIRunApp : public wxApp {
 public:
   virtual bool OnInit();
   // virtual int OnExit() { return wxApp::OnExit(); }
-  void addTopWindow(const sci::cca::BuilderComponent::pointer& bc);
+  void AddTopWindow(const sci::cca::BuilderComponent::pointer& bc);
+  BuilderWindow* GetTopBuilderWindow() const;
 
-  static void setTopBuilder(const sci::cca::BuilderComponent::pointer& bc) { topBuilder = bc; }
+  static void SetTopBuilder(const sci::cca::BuilderComponent::pointer& bc) { topBuilder = bc; }
+
   static void semDown() { sem.down(); }
   static void semUp() { sem.up(); }
 
@@ -94,7 +96,13 @@ public:
 				     const sci::cca::ComponentID::pointer& provider,
 				     SSIDL::array1<std::string>& portArray);
 
-  /* virtual */ bool go();
+
+  virtual sci::cca::ConnectionID::pointer connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName, const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName);
+  virtual void disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
+
+  virtual bool registerGoPort(const std::string& usesName, const sci::cca::ComponentID::pointer &cid, bool isSciPort, std::string& usesPortName);
+  virtual void unregisterGoPort(const std::string& goPortName);
+  virtual int go(const std::string& goPortName);
 
   virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
   virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
@@ -107,6 +115,7 @@ private:
 
   sci::cca::Services::pointer services;
   std::string frameworkURL;
+  std::vector<sci::cca::ConnectionID::pointer> connections;
 
   static const std::string guiThreadName;
   static SCIRun::Mutex builderLock;
