@@ -32,10 +32,14 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Packages/Ptolemy/Core
 
 SUBDIRS := \
-        $(SRCDIR)/Comm \
-        $(SRCDIR)/Datatypes \
-        $(SRCDIR)/PtolemyInterface
+        $(SRCDIR)/Datatypes
+
+ifeq ($(HAVE_JAVA), yes)
+ SUBDIRS += \
+            $(SRCDIR)/PtolemyInterface \
+            $(SRCDIR)/Comm
 #$(SRCDIR)/jni
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
