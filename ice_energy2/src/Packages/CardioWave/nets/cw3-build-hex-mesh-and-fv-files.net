@@ -1,0 +1,256 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+if {[llength [array get env CWDATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the CWDATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv CWDATA /scratch/data/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set CWDATA $env(CWDATA)
+puts "*** Using CWDATA $CWDATA"
+
+if {[llength [array get env CWRES]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the CWRES enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv CWRES 128)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set CWRES $env(CWRES)
+puts "*** Using CWRES $CWRES"
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Thu  Aug 23 2001"
+
+global runTime
+set runTime " 19:49:3"
+
+set bbox {11.0 31.0 733 650}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 241 31]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 501 582]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "SelectField" 241 338]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 519 485]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 537 423]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 537 343]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "CastMLVtoHV" 216 260]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "CastTVtoMLV" 216 200]
+set m8 [addModuleAtPosition "CardioWave" "CreateModel" "SetupFVMatrix" 11 444]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 425 119]
+set m10 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 443 33]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 11 117]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "CastTVtoMLV" 11 178]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "CastMLVtoHV" 11 238]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 29 31]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 167 530]
+set m16 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 185 590]
+set m17 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 11 530]
+set m18 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 31 317]
+set m19 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 388 338]
+
+addConnection $m5 0 $m4 0
+addConnection $m4 0 $m3 1
+addConnection $m7 0 $m6 0
+addConnection $m6 0 $m2 0
+addConnection $m2 1 $m8 2
+addConnection $m6 0 $m8 1
+addConnection $m9 0 $m7 0
+addConnection $m12 0 $m13 0
+addConnection $m13 0 $m8 0
+addConnection $m11 0 $m12 0
+addConnection $m14 0 $m11 1
+addConnection $m10 0 $m9 1
+addConnection $m15 1 $m16 0
+addConnection $m2 0 $m1 0
+addConnection $m3 0 $m1 1
+addConnection $m2 1 $m4 1
+addConnection $m2 1 $m3 0
+addConnection $m0 0 $m11 0
+addConnection $m0 0 $m9 0
+addConnection $m8 0 $m17 0
+addConnection $m13 0 $m18 0
+addConnection $m6 0 $m19 0
+addConnection $m8 0 $m15 0
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-filename $CWDATA/sr-data/2cm/0.1.resized-no-interior.tvv.fld
+set $m1-notes {}
+set $m1-show_status {1}
+$m1 ui
+set $m1-ViewWindow_0-pos {}
+set $m1-ViewWindow_0-caxes {0}
+set $m1-ViewWindow_0-iaxes {-2147483639}
+set $m1-ViewWindow_0-view-eyep-x {-7.21455}
+set $m1-ViewWindow_0-view-eyep-y {-3.33}
+set $m1-ViewWindow_0-view-eyep-z {-5.6566}
+set $m1-ViewWindow_0-view-lookat-x {0.1945}
+set $m1-ViewWindow_0-view-lookat-y {0.0973569}
+set $m1-ViewWindow_0-view-lookat-z {-0.185688}
+set $m1-ViewWindow_0-view-up-x {-0.730229}
+set $m1-ViewWindow_0-view-up-y {0.253717}
+set $m1-ViewWindow_0-view-up-z {0.634345}
+set $m1-ViewWindow_0-view-fov {20}
+set $m1-ViewWindow_0-view-eyep-x {-7.21455}
+set $m1-ViewWindow_0-view-eyep-y {-3.33}
+set $m1-ViewWindow_0-view-eyep-z {-5.6566}
+set $m1-ViewWindow_0-view-eyep-x {-7.21455}
+set $m1-ViewWindow_0-view-eyep-y {-3.33}
+set $m1-ViewWindow_0-view-eyep-z {-5.6566}
+set $m1-ViewWindow_0-view-lookat-x {0.1945}
+set $m1-ViewWindow_0-view-lookat-y {0.0973569}
+set $m1-ViewWindow_0-view-lookat-z {-0.185688}
+set $m1-ViewWindow_0-view-lookat-x {0.1945}
+set $m1-ViewWindow_0-view-lookat-y {0.0973569}
+set $m1-ViewWindow_0-view-lookat-z {-0.185688}
+set $m1-ViewWindow_0-view-up-x {-0.730229}
+set $m1-ViewWindow_0-view-up-y {0.253717}
+set $m1-ViewWindow_0-view-up-z {0.634345}
+set $m1-ViewWindow_0-view-up-x {-0.730229}
+set $m1-ViewWindow_0-view-up-y {0.253717}
+set $m1-ViewWindow_0-view-up-z {0.634345}
+set $m1-ViewWindow_0-view-fov {20}
+set $m1-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m1-ViewWindow_0-bgcolor-r {0}
+set $m1-ViewWindow_0-bgcolor-g {0}
+set $m1-ViewWindow_0-bgcolor-b {0}
+set $m1-ViewWindow_0-bgcolor-r {0}
+set $m1-ViewWindow_0-bgcolor-g {0}
+set $m1-ViewWindow_0-bgcolor-b {0}
+set $m1-ViewWindow_0-shading {}
+set $m1-ViewWindow_0-do_stereo {0}
+set $m1-ViewWindow_0-sbase {1}
+set $m1-ViewWindow_0-sr {1}
+set $m1-ViewWindow_0-do_bawgl {0}
+set $m1-ViewWindow_0-drawimg {-2147483639}
+set $m1-ViewWindow_0-saveprefix {}
+set $m1-ViewWindow_0-unused {1}
+set $m1-ViewWindow_0-unused {1}
+set $m1-ViewWindow_0-unused {1}
+set $m1-ViewWindow_0-unused {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-stampvalue {1}
+set $m2-runmode {2}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-nodes-on {1}
+set $m3-edges-on {1}
+set $m3-faces-on {1}
+set $m3-vectors-on {0}
+set $m3-normalize-vectors {-2147483639}
+set $m3-has_vec_data {0}
+set $m3-def-color-r {0.5}
+set $m3-def-color-g {0.5}
+set $m3-def-color-b {0.5}
+set $m3-node_display_type {Points}
+set $m3-edge_display_type {Lines}
+set $m3-active_tab {Nodes}
+set $m3-node_scale {0.005}
+set $m3-edge_scale {0.005}
+set $m3-vectors_scale {0.005}
+set $m3-show_progress {-2147483639}
+set $m3-resolution {4}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-isFixed {0}
+set $m4-min {0}
+set $m4-max {1}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-tcl_status {Calling GenStandardColorMaps!}
+set $m5-positionList {}
+set $m5-nodeList {}
+set $m5-width {366}
+set $m5-height {40}
+set $m5-mapType {2}
+set $m5-minRes {12}
+set $m5-resolution {12}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-nx $CWRES
+set $m7-ny $CWRES
+set $m7-nz $CWRES
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-sigx1 {1}
+set $m8-sigy1 {1}
+set $m8-sigz1 {1}
+set $m8-sigx2 {1}
+set $m8-sigy2 {1}
+set $m8-sigz2 {1}
+set $m8-sprbwfile $CWDATA/cw-data/2cm/0.1.$CWRES.SPRBW
+set $m8-sprfile $CWDATA/cw-data/2cm/0.1.$CWRES.SPR
+set $m8-volumefile $CWDATA/cw-data/2cm/0.1.$CWRES.VOLUME
+set $m8-visfile $CWDATA/cw-data/2cm/0.1.$CWRES.VIS
+set $m8-BW {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m10-notes {}
+set $m10-show_status 1
+set $m10-filename $CWDATA/sr-data/0.1.f2.mat
+set $m11-notes {}
+set $m11-show_status {1}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-nx $CWRES
+set $m12-ny $CWRES
+set $m12-nz $CWRES
+set $m13-notes {}
+set $m13-show_status {1}
+set $m14-notes {}
+set $m14-filename $CWDATA/sr-data/0.1.f1.mat
+set $m15-notes {}
+set $m15-show_status {1}
+set $m16-notes {}
+set $m16-filename $CWDATA/sr-data/0.1.32.ct.mat
+set $m16-filetype {Binary}
+set $m16-split {0}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m17-filename $CWDATA/sr-data/2cm/0.1.$CWRES.hvs.fld
+set $m17-filetype {Binary}
+set $m18-notes {}
+set $m18-show_status 1
+set $m18-filename $CWDATA/sr-data/2cm/0.1.$CWRES.f1.hvv.fld
+set $m18-filetype {Binary}
+set $m19-notes {}
+set $m19-show_status {1}
+set $m19-filename $CWDATA/sr-data/2cm/0.1.$CWRES.f2.hvv.fld
+set $m19-filetype {Binary}
+
+::netedit scheduleok

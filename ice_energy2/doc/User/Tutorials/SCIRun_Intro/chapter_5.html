@@ -1,0 +1,306 @@
+<html>
+<head>
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>Bioelectric Field Simulation</title>
+</head>
+
+<body bgcolor="#a9a9a9">
+
+<A name="chapter-5">
+
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="../../index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
+</tr>
+
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+<tr>
+<td>
+
+<center>
+<font face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon">
+<H1>Chapter 5: Bioelectric Field Simulation</H1></font>
+</center>
+
+<H2>Chapter Sections</H2>
+
+<UL>
+  <LI> <A href="#section-0">Chapter Overview</A>
+  <LI> <A href="#section-1">Volume Conductor Problem</A>
+  <LI> <A href="#section-2">Finite Element Simulation</A>
+  <LI> <A href="#section-3">FEM User Interface Settings</A>
+  <LI> <A href="#section-4">Running The Simulation</A>
+  <LI> <A href="#summary">Summary</A>
+</UL>    
+
+<H2><A name="section-0">Chapter Overview</A></H2>
+
+Chapters 1-4 discussed various dataflow programming networks.  The
+networks were built to visualize <em>existing</em> datasets. 
+Chapter 5 demonstrates the construction of a network that
+<em>computes</em> simulated voltages for a realistic volume conductor
+problem.
+<P>
+Thus far, modules from the SCIRun package have been used (packages are
+logically grouped sets of modules). <a href="#figure-5.1"><b>Figure 5.1</b></a> shows a SCIRun menu
+bar from a build that features several additional packages. To learn
+more about packages, see <a href="../../Guide/usersguide/srug3.html">User's Guide 3, Packages</a>. Note that in
+addition to the Packages listed (<I>SCIRun, BioPSE</I>, and
+<I>Teem</I>), the Menu Bar has <I>Sub-Networks</I> and <I>Help</I>
+menus.  Sub-Networks are a new addition to SCIRun
+(V1.20). Sub-networks allow modules to be grouped together (e.g., by
+functionality). They are useful for hiding complexity of dataflow
+networks by consolidating groups of modules that work together into a
+single representation on the Network Editory canvas. See <a href="../../Guide/usersguide/srug5.html">User's Guide,
+Chapter 5</a> for more information on Sub-Networks. The <I>Help</I> menu
+allows the user to turn on/off the use of Tooltips, show the
+<I>About</I> splash screen, and review the SCIRun License.
+<P>
+<center>
+<A NAME="figure-5.1">
+<p><img width="385" height="59" src="images/figures/5_1.gif"><br>
+<b>Figure 5.1: SCIRun Package Menus</b></p>
+</center>
+<P>
+Modules within the SCIRun package serve as general purpose tools that
+do not target specific applications. This chapter uses
+modules from the BioPSE package, which contains a set of tools
+specifically written for modeling, simulation, and visualization of
+bioelectric field problems.
+
+<H2><A name="section-1">Volume Conductor Problem</A></H2>
+
+<p>Given a volume conductor model and an equivalent dipole source, the
+user will compute the potentials and electric field induced by the
+source through the domain.
+<p>
+Analytic solutions exist for problems of specific geometric models
+(<i>e.g.</i>, cylinders or spheres). However, for most real-world
+problems, the solution can only be obtained through discretization.
+For this application, the user will discretize the domain into
+tetrahedral finite elements, where each element contains a
+conductivity tensor that defines how electricity travels through its
+region of the domain.  Within each element, a piece-wise linear
+potential field is assumed (piece-wise constant electric field).
+<p>
+The above problem is governed mathematically by Poisson's
+equation:
+<P>
+<center>
+<img src="images/equation.gif" align="absbottom">
+</center>
+<p>
+where <img height="16" width="11" src="images/sigma.gif"> is the local
+conductivity tensor, <img height="16" width="13" src="images/phi.gif">
+is the voltage over the domain, and <img height="19" width="36"
+src="images/i.gif" align="texttop"> is a source term indicating where
+there are current sources within the domain. In plain language: the
+divergence (<img height="16" width="25" src="images/del_dot.gif"
+align="absbottom">) of the electric field (<img height="16" width="15"
+src="images/del.gif" align="absbottom"><img height="16" width="13"
+src="images/phi.gif" align="absbottom">) is zero where there is not a
+current source.
+<p>
+Discretizing Poisson's equation onto the tetrahedral domain, the divergence of the
+electric field with the stiffness matrix <font
+size="4"><b>A</b></font> is approximated. <img height="16" width="13"
+src="images/phi.gif"> is a vector composed of voltages at the
+nodes. And <font size="4"><b>b</b></font> is a source vector
+indicating the flux through the nodes. <font size="4"><b>b</b></font> it is only non-zero for nodes
+that are corners of elements containing a current source. Given a
+stiffness matrix, <font size="4"><b>A</b></font>, and a source vector,
+<font size="4"><b>b</b></font>, the linear system:
+<P>
+<center>
+<img height="15" width="14" src="images/A.gif"><img height="16"
+     width="13" src="images/phi.gif"><img height="16" width="20"
+     src="images/equals.gif"><img height="16" width="10"
+     src="images/b.gif">
+</center>
+<p>
+ can be solved to determine the potentials,<img height="16" width="13"
+src="images/phi.gif">, through the field. Taking the gradient, <img
+height="16" width="15" src="images/del.gif"><img height="16"
+width="13" src="images/phi.gif">, obtains the electric field through
+the domain.
+
+<H2><A name="section-2">Finite Element Simulation Network</A></H2>
+
+To compute the electric and potential fields given a finite element
+volume conductor mesh and a dipolar current source, follow these
+steps:
+<p>
+<ol>
+  <li value="1.">Load the finite element mesh (tet elements, with a conductivity tensors for each cell).</p>
+  <li value="2.">Load dipole sources.</p>
+  <li>Construct the finite element stiffness matrix based on
+      the conductivity mesh.</p>
+  <li>Construct the right side source vector based on
+      the location and orientation of any dipole sources.</p>
+  <li>Solve the linear system <img height="15" width="14"
+	src="images/A.gif"><img height="16" width="13"
+	src="images/phi.gif"><img height="16" width="20"
+	src="images/equals.gif"><img height="16" width="10"
+	src="images/b.gif">, to determine the potentials at the nodes.</p>
+</ol>
+<p>
+Each of the above steps corresponds to a SCIRun module:
+<p>
+<ul>
+  <li>For steps 1 and 2, use two SCIRun-&gt;DataIO-&gt;FieldReader modules.</p>
+  <li>For step 3, use a BioPSE-&gt;Forward-&gt;SetupFEMatrix module.</p>
+  <li>For step 4, use a BioPSE-&gt;Forward-&gt;ApplyFEMCurrentSource module.</p>
+  <li>For step 5, use a SCIRun-&gt;Math-&gt;SolveMatrix module.</p>
+</ul>
+<p>
+All modules should be connected as shown in <a href="#figure-5.2"><b>Figure 5.2</b></a>.
+<p>
+<center>
+<A NAME="figure-5.2">
+<p><img src="images/figures/5_2.gif"><br>
+<b> Figure 5.2: Biolelctric Field Simulation Network</b></p>
+</center>
+
+<H2><A name="section-3">FEM User Interface Settings</A></H2>
+
+The SetupFEMatrix module constructs a finite element stiffness matrix
+from a tetrahedral volume mesh. The user can incorporate the
+local conductivity tensors into the stiffness matrix, or use a
+uniform conductivity as shown in <b>Figure 5.3</b>.  For this
+application, incorporate the local conductivity changes.
+
+<center>
+<p><img width="275" height="133" src="images/figures/5_3.gif"><br>
+<b>Figure 5.3: SetupFEMatrix UI</b></p>
+</center>
+
+The ApplyFEMCurrentSource module modifies the right hand side vector
+to account for current sources within the model.  In the module's UI,
+users can choose whether the current sources are due to a dipole or a
+source/sink electrode pair. For the Source Model option, select the
+dipole setting.
+
+<center>
+<p><img width="299" height="122" src="images/figures/5_4.gif"><br>
+<b>Figure 5.4: ApplyFemCurrentSource UI</b></p>
+</center>
+<p>
+The SolveMatrix module solves a linear system using one of
+several methods as indicated in the UI.
+<p>
+<ol>
+   <li> Beneath the Methods tab, choose Conjugate Gradient & Precond
+        (SCI) method, and set the Target Error to 0.0001.</p>
+   <li>Set the Maximum Iterations to 200.</p>
+</ol>
+	
+<center>
+<p><img src="images/figures/5_5.gif"><br>
+<b>Figure 5.5: SolveMatrix UI</b></p>
+</center>
+<p>
+Finally, for this simulation:
+<p>
+<ol>
+   <li value="1.">For the FieldReader on the left, load the
+	      mesh Field utahtorso-lowres-mesh.tvt.fld.</p>
+   <li>For the FieldReader on the right, load the
+	      dipole Field utahtorso-lowres-dipole.pcv.fld.</p>
+</ol>
+<p>
+The mesh field contains the tetrahedral finite element mesh, which
+forms the geometry of the torso.  The mesh field also contains
+pointers to the electric conductivity values as assigned to each
+element.  In Poisson's equation, these are the values of sigma. The
+dipole field contains a single dipole vector, positioned within the
+torso volume that functions as the bioelectric source.
+
+<H2><A name="section-4">Running The Simulation</A></H2>
+
+Execute the network, and as the simulation progresses, watch the
+residual plot in the SolveMatrix UI converge. To see the solution
+converge again, make sure the &quot;Use previous solution as initial guess&quot; is unchecked in the UI and re-execute the module. A finite element
+problem has just been solved. Save this net, it will be used
+in Chapter 6.
+
+<H2><A name="summary">Summary</A></H2>
+
+Chapter 5 demonstrated the use of modules from the bioelectric
+problem solving environment (BioPSE) package. This chapter also
+illustrated the construction of a simulation network that computes
+simulated voltages for a realistic volume conductor problem.
+<p>
+Chapter 6 will reuse the finite element simulation network from
+chapter 5, and the visualization network from Chapter 4.
+
+<P>
+<A href="#chapter-5">Return to Top</A>
+
+</td>
+</tr>
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg"
+    border="0" usemap="#sub-banner-bottom8ac6e984"><map
+    name="sub-banner-bottom8ac6e984"><area href="chapter_6.html"
+    coords="566,2,589,20" shape="rect"><area href="chapter_4.html"
+    coords="537,1,560,23" shape="rect"><area href="http://www.sci.utah.edu"
+    coords="6,6,68,30" shape="rect" title="SCI Institute"></map></td> 
+</tr>
+</table>
+</body>
+</html>

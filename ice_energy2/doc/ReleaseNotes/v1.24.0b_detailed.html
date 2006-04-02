@@ -1,0 +1,314 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3c.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.24.0b Release Notes (Detailed)</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes (Detailed) for SCIRun Version 1.24.0b<br />February 03, 2004
+    </h1>
+
+    <a id="begin-toc">Content:H1,H2</a>
+
+    <h1> New Modules </h1>
+
+    <h2> SCIRun Modules (Category in parentheses) </h2> 
+
+    <ul>
+      <li>GatherFields (Fields) - more general version of (deprecated) GatherPoints</li>
+      <li>ApplyInterpMatrix (Fields)</li>
+      <li>SCIRun volume rendering was rewritten to add more functionality.
+        <ul>
+          <li>EditColorMap2D module added for editing two dimensional colormaps.</li>
+          <li>GLTextureBuilder module replaced with TextureBuilder.</li>
+          <li>TextureVolVis module replaced with VolumeVisualizer.</li>
+          <li>TexCuttingPlanes module replaced with VolumeSlicer.</li>
+        </ul>
+      </li>
+      <li>EditColorMap (Visualization) replaces GenTransferFunc and
+          provides many more features.</li>
+      <li>ChangeFieldBasis (Fields) module replaces ChangeFieldDataAt</li>
+      <li>ViewSlices (Render) module for viewing 2D slices of 3D Nrrds.</li>
+      <li>The FieldToCanonicalTransform module was removed.</li>
+      <li>The ReplaceScalarDataValue and ScaleFieldData are deprecated and
+          will be replaced with an equivalent TransformData module function
+          in the future.  Use TransformData instead.</li>
+      <li>The BuildInterpolant, ApplyInterpolant, and InterpToTransferMatrix
+          modules will not dynamically compile with a GCC 3.4 compiler and are
+          being phased out.  Use the new BuildInterpMatrix and
+          ApplyInterpMatrix modules instead.</li>
+
+    </ul>
+
+    <h1> Module Enhancements </h1>
+
+    <h2> SCIRun Modules (Category in parentheses) </h2>
+
+    <ul>
+      <li>Viewer (Render)
+        <ul>
+            <li>Add fog color controls to Viewer.</li>
+            <li>Use bounding sphere for fog near/far calculations, rotationally invariant</li>
+            <li>Add fog brightness controls</li>
+            <li>Add fog option for computing using all objects or just visible ones</li>
+	    <li>Major code re-write for clarity and removal of dead code.</li>
+        </ul>
+	</li>
+      <li>Isosurface (Visualization) modules now automatically updates
+          if the user changes the color via the GUI.</li>
+      <li>Auto-interpolation and Interpolant matrix generation added to
+          FieldBoundary, ChangeFieldBasis, ClipByFunction, IsoClip, and
+          IsoSurface modules.</li>
+      <li>GenStandardColormaps (Visualization) - New (better) default
+          rainbow colormap.  All colormaps are now reversible, and 
+	  can be downsampled to a minimum resolution of 2.</li>
+      <li>Disable faces and edges in ShowField if the field dimension
+          precludes them.</li>
+      <li> FieldReader (DataIO) - Added an example wget plugin for
+           fetching SCIRun fields from URLs.</li>
+      <li>ManageFieldData (Fields) - Enhanced to enable 6xN symmetric tensor matrix input.</li>
+      <li>SamplePlane (Fields) - Added customized sample plane support.</li>
+      <li>Gradient (Fields) - Fixed caching crash bug.</li>
+      <li>Isosurface (Visualization) UI improved (includes better value checking).</li>
+      <li>ScalarFieldStats (Fields) - Fixed numbering of Xa axis of histogram.</li>
+      <li>SampleField (Fields) - Now saves ring widget positions correctly.</li>
+      <li>GatherFields (Fields) - Now issues warning instead of error if input is empty.</li>
+      <li>ClipByFunc (Fields), MaskLattice (Fields), TransformData (Fields), TransformData2 (Fields), TransformData3 (Fields), LinAlgUnary (Math), LinearAlgebra (Math), LinAlgBinary (Fields) - Highlights compilation error lines when user inputs invalid code.</li>
+    </ul>
+
+    <h2>Teem Modules (Category in parentheses)</h2>
+    <ul>
+      <li>Move Nrrd converters into Teem/Converters category.</li>
+      <li>Optimize NrrdToField (Converters) to not compute points/connections for
+          lattices and structured fields as appropriate.</li>
+      <li>Implement copyless NrrdToField (Converters) for Vector Field data.</li>
+      <li>NrrdSelectTime (NrrdData) - Default to using the last axis
+          for time (instead of the first one).</li>
+      <li>Fix tcl crash bug in NrrdSelectTime (NrrdData).</li>
+      <li>ColorMapToNrrd (Converters) outputs a 4xN nrrd instead of a Nx4 nrrd.</li>
+      <li>MatrixToNrrd (Converters) - Fixed crash when it was executed
+      twice (non-allocated labels).</li>
+      <li>UnuJhisto (Unu) - check input generation
+      and previous values before executing.</li>
+      <li>UnuProject (Unu) - check input generation and previous
+      values before executing.</li>
+      <li>UnuHisto (Unu) and UnuDhisto (Unu) - Fixed defaults.</li>
+      <li>DicomNrrdReader (DataIO) - Changed to make volume of floats
+      (not ints) and load files based on the file name (like
+      ImageJ). Use DicomImageIO2 from Insight Toolkit to read in Dicom
+      files so that spacing is correct.</li>
+      <li>UnuQuantize (Unu) - Now uses min/max values of inputs.</li>
+      <li>Changed many of the Unu modules that required an execute
+      first to allow the user to input info first and create and
+      delete axes as needed. This effects UnuCrop, UnuJoin,
+      UnuResample, UnuPermute.</li>
+      <li>UnuCrop (Unu) - Now uses text entries instead of sliders and values can
+      be specified in terms of m and M (like the Unu commands).</li>
+      <li>NrrdToField (Converters) - Fixed conversion of cell centered data.</li>
+      <li>FieldToNrrd (Converters) - Now handles unstructured data of
+      constant basis with dimensionality of 0 properly and saves
+      transform as NrrdData property that can be used again if
+      converted back to a Field using NrrdToField.</li>
+      <li>NrrdWriter (DataIO) can write out just .nrrd or .nhdr
+      directly and will only write out a .nd file if specified or if
+      there are NrrdData properties.</li>
+      <li>UnuResample (Unu) - Fixed to pass correct parameters to teem call.</li>
+      <li>NrrdGradient (NrrdData) - Compute the gradient vector for
+      the input Nrrd.</li>
+      <li>NrrdReader (DataIO) can read .vff .pict and .vol files.</li>
+    </ul>
+
+    <h2>Insight Modules (Category in parentheses)</h2>
+    <ul>
+      <li>Fixed setting pixel container when not copying data in
+          FieldToImage (Converters).</li>
+      <li>Handle building with ITK 1.4, 1.6, 1.9, and 1.10 (Note,
+      1.10 will be released soon.  We have preemptively fixed GCC 3.4
+      compile problems).</li>
+    </ul>
+
+    <h1> Deprecated Modules </h1>
+
+    <h2>SCIRun Modules (Category in parentheses)</h2> 
+    <ul>
+      <li>GatherPoints (Fields) - replaced by GatherPoints.</li>
+      <li>GenTransferFunc (Visualization) replaced by EditColorMap.</li>
+      <li>ChangeFieldDataAt (Fields) module renamed to ChangeFieldBasis</li>
+    </ul>
+
+    <h1>Infrastructure Enhancements</h1>
+    <ul>
+
+      <li> PowerApps
+        <ul>
+          <li>Added control-n binding in powerapps to hide/show network editor.</li>
+          <li>Remove double-click to execute behavior from readers in
+              PowerApps so user must use Execute/Update buttons.</li>
+        </ul>
+      </li>
+
+      <li> BioTensor PowerApp
+        <ul>
+          <li>Added option to load a single 4D volume file (B0 and
+          DWI) into BioTensor and have BioTensor slice and crop it
+          into the two separate volumes. Users must specify how many
+          channels there are and which axis is changing the
+          fastest.</li>
+          <li>Allow users to use gradients file to compute B-Matrix in
+          BioTensor even if registration is not being done.</li>
+          <li>Fixed setting constant colors of isosurface, glyphs and fibers.</li>
+        </ul>
+      </li>
+      <li>New BioImage PowerApp and tutorial. BioImage is a PowerApp
+      for visualizing regular, three dimensional scalar volumes.
+      BioImage offers 2D visualization of three standard planes:
+      axial, sagittal, and coronal and provides a powerful volume
+      rendering tool that allows the user to interactively visualize
+      an area of interest by assigning a color to a range of values in
+      the volume.</li>
+
+      <li>Added Bundle support.  Allows multiple data pipes to be
+      combined into a single pipe.  (Can help de-clutter canvas.)</li>
+      <li>Updated numerous files that had '#include "file"' to use the
+      more correct '#include &lt;file&gt;' </li>
+      <li>Preliminary work has been done on a Solaris port.  SCIRun
+      runs well, but advanced visualization does not yet work.  It is
+      yet to be determined how much effort will be put into supporting
+      the Solaris port.</li>
+      <li>Added support for 64 bit linux builds.  We have run preliminary
+      tests of SCIRun on 64 bit Altix and Gentoo linux.</li>
+      <li>Clean up numerous compiler warnings.</li>
+      <li>Added the src/scripts/repair.sh script which can be used to
+      clean up Make dependency files that have become incorrect.</li>
+      <li>Fixed configure to better handle case-insensitive file systems (Macs)
+      when user specifies the packages names (eg: TEEM).</li>
+      <li>NRRD datatype moved from the Teem package into the SCIRun Core.</li>
+      <li>Fixed get_weights mesh_ crash in ImageMesh, bug #2303.</li>
+      <li>Fixed static synchronization crash bug in dynamic compilation code.</li>
+      <li>Fixed std::remove usage associated crashes.</li>
+      <li>Fixed texture map bind order in GeomColorMap (color synchronization bug).</li>
+      <li>Added missing closedir to tcl reader, should fix 'too many open files' bug.</li>
+      <li>Fixed FieldSubSample.net crash bug: preserve types when interpolating.</li>
+      <li>Added a 'to_index' member to the Mesh classes for portably
+      converting unsigned ints into element indices.</li>
+      <li>Make all of the IOable classes inherit from PropertyManager.</li>
+      <li>Added an experimental SCIRUN_NO_PORT_CACHING environment
+      variable.  This should allow SCIRun to work on larger data
+      sets.</li>
+      <li>Added a CleanupManager for registering callbacks to be
+      called just before Thread::exitAll is completed.  Allows modules
+      to clean up after themselves.</li>
+      <li>Optimized most of the Mesh::Node::array_type types by using StackVectors.</li>
+      <li>Use new SearchGrid for faster field locates with less memory usage.</li>
+      <li>Added new range widget.</li>
+      <li>Viewer OpenGL context switching on OSX now works.</li>
+      <li>User input dynamic C++ code now shows error lines in dialog.</li>
+      <li>Loading .net file with disabled connections bug fixed.</li>
+      <li>Loading .net file with saved view bug fixed.</li>
+      <li>Loading .net file with Viewer geometry turned off bug fixed.</li>
+      <li>Major internal code cleanup of Viewer module and related code.</li>
+      <li>Removed dead BaWGL code from Viewer.</li>
+      <li>Ability to reference TCL arrays and lists from GuiVars with [], and () operators.</li>
+      <li>Core/GuiInterface/UIvar class allows for GUI variables with +,-,*,/,==,!=, etc operators.</li>
+      <li>FreeType lib included for TrueType font support in ViewSlices (Render) module.</li>
+      <li>Module icons now re-size correctly when they have more than 9 ports.</li>
+      <li>Move SCIRUN_VERSION to src/main/sci_version.h creates a single place for SCIRun version.</li>
+      <li>All OpenGL contexts are now created as shared contexts. Allows for displaying textures across multiple Viewer windows.</li>
+      <li>Distribution of pre-compiled OSX builds for easy installation</li>
+      <li>Display stack trace when exception encountered.</li>
+      <li>Bug #2277: When saving, backup existing .net file to #filename</li>
+      <li>Bug #2306: Delete GuiContext when GuiVar destroyed fixes memory leak</li>
+      <li>Fix OpenGL context creation crash caused by upgrade to OSX 10.3.6.</li>
+      <li>Disable connections to/from subnets to avoid bug.</li>
+      <li>Bug #2364: Don't allow special TCL characters \{, \}, and \" in Subnet Names</li>
+      <li>Bug #2372: Fixes writing of On-Disk subnets when network is saved</li>
+      <li>Bug #2421 fix.&nbsp; Correct placement of duplicated module when canvas view is not upper-left corner of network.</li>
+      <li>Bug #2428 fix.&nbsp; Fixes duplicated modules shrinking to UI button size</li>
+      <li>Add versioning of .scirunrc file.&nbsp; If ~/.scirunrc file is out of date, ask user to update it.</li>
+      <li>Upgrade RPMS to use Insight Toolkit v1.8.1 (was v1.6.1)</li>
+      <li>Red-Green style subdivision added to Core/Datatypes/TetVolMesh.h</li>
+      <li>When saving a Field, Pio its MeshHandle (rather than its
+      Mesh)</li>
+      <li>Change OSX SCIRUn::Semaphore class to use a
+      ConditionVariable rather than an OSX native Semaphore, since
+      OSX Semaphores are expensive.</li>
+      <li>Added Teem's eigenvector / eigenvalue function calls into
+      Tensor class.</li>
+    </ul>
+
+    <h1>Environment Variables</h1>
+    <ul>
+      <li>SCIRUN_DATAFILE added.  Allows user to specify different datafiles that reside in the same SCIRUN_DATASET directory.</li>
+      <li>SCIRUN_THIRDPARTY_DIR added.  Allows user to manually set location of thirdparty directory after compilation.  Used for re-locatable build.</li>
+      <li>SCIRUN_FONT_PATH added.&nbsp; Allows user to specify location of TrueType fonts.</li>
+      <li>SCIRUN_RCFILE_VERSION added.&nbsp; Allows SCIRun to determine if .scirunrc needs updating.</li>      
+    </ul>
+
+    <h1>GUI Enhancements</h1>
+    <ul>
+      <li>Cleaned up 'Record Movie' dialog window.  Added tool tips to widgets.</li>
+      <li>Right-Clicking on module port opens menu of only Modules that can connect to that port.&nbsp; Selecting a module from the list creates the module and connection to port.</li>
+      <li>'Destroy Selected' on a module removed.&nbsp; Functionality moved to 'Destroy' command.</li>
+    </ul>
+
+    <h1>Documentation</h1>
+    <ul>
+      <li>Platform specific installation guides</li>
+      <li>Tutorial for BioImage PowerApp</li>
+      <li>Tutorial for FusionViewer PowerApp</li>
+    </ul>
+
+    <h1>Known Bugs</h1>
+    <ul>
+      <li>BioTensor does not save out the glyph normalize value when saving sessions.</li>
+      <li>When loading tensors directly into BioTensor, the viewer does not automatically autoview.</li>
+      <li>When loading large datasets into BioImage, the progress indicator indicates the loading process is complete although it hasn't finished loading the dataset and nothing has appeared in the viewer panes. There are still modules executing underneath, there just aren't hooks to indicate that they are still executing.</li>
+      <li>Help and About menu options not defined for BioImage.</li>
+      <li>Loading a new dataset in BioImage when another dataset has been loaded doesn't load on first try.</li>
+      <li>In BioImage, if there are more than two filters in the history, and the user deletes a filter and then addes another one, a tcl error will appear.</li>
+      <li>In BioImage, when loading a session containing crops or resamples in the history, they are reset when the orientation gets set.</li>
+      <li>BioTensor's help produces an error.</li>
+      <li>The thumbnail images of Transfer Function swatches saved from EditColorMap2D may have colors swapped.</li>
+    </ul>
+    
+    <script type="text/javascript">new Toc().build();</script>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+
+</html>

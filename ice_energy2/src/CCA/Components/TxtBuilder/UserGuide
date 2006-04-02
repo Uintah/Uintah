@@ -1,0 +1,35 @@
+To start SCIRun2 with TxtBuilder:
+sr -b txt
+
+F9: activate the menu,
+
+When Menu is activated:
+
+	ESC (or q): exit the menu
+	Arrow Keys: move among menu items
+	Enter: Execute a menu command and quit the menu.
+
+F5: enter the network window
+
+If there is any components, one component is selected (highlighted).
+
+	Tab: switch among components
+	Enter: show all ports
+		Enter: displace compatible ports for selected port
+		Space: disconnect a connection for selected port
+		ESC(or q): quit
+	Space: show a popup menu for (destroy, ui, go)
+	Arrow Keys: move the selected component
+	ESC(or q): quit the Network Window
+
+":": enter the command window
+	help: hint for commands
+	any command: Enter and then execute the command
+	Backspace: modify the command line
+
+"r": refresh all windows (in case there are some unexpected standard output calls).
+
+
+
+
+		
