@@ -60143,8 +60143,6 @@ fi
 
 ##  --  search for wxWidgets  --------------------------------------------
 
-## check wxWidgets configuration???
-
 _sci_inc=
 _sci_optional=optional
 
@@ -61896,6 +61894,9 @@ if test "$sci_required_vtk" = "yes"; then
     _vtk_inc="$sci_thirdparty_include"
   fi
 
+  ext="$ac_ext"
+  ac_ext="cc"
+
   # Only looking for one .h file... assuming all the rest are in the same place.
 
 ##
@@ -62394,6 +62395,8 @@ _sci_includes=''
 
 
 
+  # Restore the previous settings.
+  ac_ext="$ext"
 
   if test "$HAVE_VTK" = "yes"; then
      DEF_VTK="#define HAVE_VTK 1"
