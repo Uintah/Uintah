@@ -105,11 +105,11 @@ RescaleColorMap::execute()
 
   if( !get_input_handle( "ColorMap", colormap_input_handle, true ) ) return;
 
-  if( !get_dynamic_input_handles( "Field",
-				  field_input_handles,
-				  !gui_is_fixed_.get() ) )
-    return;
-
+  if (!get_dynamic_input_handles("Field", field_input_handles,
+				 !gui_is_fixed_.get() ) ) 
+  {
+    if (!gui_is_fixed_.get()) return;
+  }
   // Check to see if any values have changed.
   if( inputs_changed_ ||
 
