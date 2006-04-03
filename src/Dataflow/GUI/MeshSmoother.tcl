@@ -37,9 +37,9 @@
  #  Copyright (C) 2006 SCI Group
  ##
 
-catch {rename SCIRun_FieldsData_MeshSmoother ""}
+catch {rename SCIRun_FieldsGeometry_MeshSmoother ""}
 
-itcl_class SCIRun_FieldsData_MeshSmoother {
+itcl_class SCIRun_FieldsGeometry_MeshSmoother {
     inherit Module
 
     constructor {config} {
