@@ -36,7 +36,7 @@ WARNING
       class Tillotson : public EquationOfState {
       public:
 
-        Tillotson(ProblemSpecP& ps);
+    Tillotson(ProblemSpecP& ps, ICEMaterial* ice_matl);
         virtual ~Tillotson();
 
         virtual void outputProblemSpec(ProblemSpecP& ps);

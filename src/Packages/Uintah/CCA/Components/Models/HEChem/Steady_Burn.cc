@@ -179,7 +179,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
     const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   */
   
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,                  gac,1);
+  t->requires(Task::OldDW, Ilb->otemp_CCLabel,                  gac,1);
   /* t->requires(Task::NewDW, Ilb->temp_CCLabel,      mpm_matls,  gac,1); */
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gac,1);
 
@@ -277,7 +277,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     /* Reactant data */
-    old_dw->get(solidTemp,       MIlb->temp_CCLabel,    m0, patch, gac, 1);
+    old_dw->get(solidTemp,       MIlb->otemp_CCLabel,    m0, patch, gac, 1);
     new_dw->get(solidMass,       MIlb->cMassLabel,      m0, patch, gn, 0);
     new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,   m0, patch, gn, 0);   
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,     m0, patch, gn, 0);
@@ -287,7 +287,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     
     /* Product Data */
 
-       
     /* Misc */
     new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gn,  0);
     old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac, 1);
@@ -308,7 +307,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
-      old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,      indx, patch, gac, 1);
+      old_dw->get(temp_CC[m],       MIlb->otemp_CCLabel,      indx, patch, gac, 1);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,   indx, patch, gac, 1);
     }
     

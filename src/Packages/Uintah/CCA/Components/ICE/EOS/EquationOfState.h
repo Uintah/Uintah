@@ -1,7 +1,9 @@
 #ifndef __EQUATION_OF_STATE_H__
 #define __EQUATION_OF_STATE_H__
 
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/CCA/Components/ICE/PropertyBase.h>
 
 namespace Uintah {
 
@@ -37,9 +39,9 @@ WARNING
   
 ****************************************/
 
-  class EquationOfState {
+  class EquationOfState : public PropertyBase {
   public:
-    EquationOfState();
+    EquationOfState(ICEMaterial* ice_matl);
     virtual ~EquationOfState();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
@@ -54,14 +56,14 @@ WARNING
                                   double& press, double& dp_drho, 
                                   double& dp_de) = 0;
 
-    virtual void computeTempCC(const Patch* patch,
-                               const string& comp_domain,
-                               const CCVariable<double>& press, 
-                               const CCVariable<double>& gamma,
-                               const CCVariable<double>& cv,
-                               const CCVariable<double>& rho_micro, 
-                               CCVariable<double>& Temp,
-                               Patch::FaceType face)=0;
+     virtual void computeTempCC(const Patch* patch,
+                                const string& comp_domain,
+                                const CCVariable<double>& press, 
+                                const CCVariable<double>& gamma,
+                                const CCVariable<double>& cv,
+                                const CCVariable<double>& rho_micro, 
+                                CCVariable<double>& Temp,
+                                Patch::FaceType face)=0;
 
      virtual double getAlpha(double temp,double sp_v,double P, double cv)=0;
 
@@ -78,4 +80,3 @@ WARNING
 } // End namespace Uintah
       
 #endif  // __EQUATION_OF_STATE_H__
-

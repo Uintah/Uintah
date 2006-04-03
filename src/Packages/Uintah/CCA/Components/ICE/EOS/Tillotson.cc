@@ -8,7 +8,8 @@
 
 using namespace Uintah;
 
-Tillotson::Tillotson(ProblemSpecP& ps)
+Tillotson::Tillotson(ProblemSpecP& ps, ICEMaterial* ice_matl)
+  : EquationOfState(ice_matl)
 {
    // Constructor
   ps->require("a",a);

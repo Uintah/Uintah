@@ -76,6 +76,18 @@ namespace Uintah {
 
       virtual void restartInitialize();
       
+      void scheduleComputeInternalEnergy(SchedulerP&, 
+                                         const PatchSet*,
+                                         const MaterialSet*);
+                 
+      void scheduleComputeTemperature(SchedulerP&, 
+                                      const PatchSet*,
+                                      const MaterialSet*);
+                 
+      void scheduleComputeSpeedOfSound(SchedulerP&, 
+                                       const PatchSet*,
+                                       const MaterialSet*);
+                 
       virtual void scheduleComputeStableTimestep(const LevelP&,
                                                 SchedulerP&);
       
@@ -335,6 +347,24 @@ namespace Uintah {
                                      DataWarehouse*, 
                                      DataWarehouse* new_dw);
                                           
+      void computeInternalEnergy(const ProcessorGroup*, 
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse*, 
+                                 DataWarehouse* new_dw);
+                              
+      void computeTemperature(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*, 
+                              DataWarehouse* new_dw);
+                              
+      void computeSpeedOfSound(const ProcessorGroup*, 
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse*, 
+                               DataWarehouse* new_dw);
+                              
       void actuallyComputeStableTimestep(const ProcessorGroup*, 
                                          const PatchSubset* patch,  
                                          const MaterialSubset* matls,
@@ -473,13 +503,11 @@ namespace Uintah {
                                           DataWarehouse*); 
 
       template< class V, class T>
-      void update_q_CC(const std::string& desc,
-                      CCVariable<T>& q_CC,
-                      V& q_Lagrangian,
-                      const CCVariable<T>& q_advected,
-                      const CCVariable<double>& mass_new,
-                      const CCVariable<double>& cv_new,
-                      const Patch* patch); 
+      void update_q_CC(CCVariable<T>& q_CC,
+                       V& q_Lagrangian,
+                       const CCVariable<T>& q_advected,
+                       const CCVariable<double>& mass_new,
+                       const Patch* patch); 
  
       void maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
                                     const PatchSubset* patches,
@@ -1015,10 +1043,12 @@ namespace Uintah {
       ModelInfo* d_modelInfo;
       
       struct TransportedVariable {
-       const MaterialSubset* matls;
-       const VarLabel* var;
-       const VarLabel* src;
-       const VarLabel* var_Lagrangian;
+        const MaterialSubset* matls;
+        Task::WhichDW fromDW;
+        const VarLabel* fromVar;
+        const VarLabel* var;
+        const VarLabel* src;
+        const VarLabel* var_Lagrangian;
       };
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
@@ -1033,8 +1063,10 @@ namespace Uintah {
        ICEModelSetup();
        virtual ~ICEModelSetup();
        virtual void registerTransportedVariable(const MaterialSubset* matls,
-                                           const VarLabel* var,
-                                           const VarLabel* src);
+                                                Task::WhichDW fromDW,
+                                                const VarLabel* fromVar,
+                                                const VarLabel* var,
+                                                const VarLabel* src);
                                            
        virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
 						     const VarLabel* var);  

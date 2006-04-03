@@ -1156,7 +1156,7 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   
   if(d_hasAbsorbingSolid){
     t->requires(Task::NewDW, insideSolidLabel,    mss_S, gn, 0);
-    t->requires(Task::NewDW, Ilb->temp_CCLabel,   mss_S, gn, 0);
+    t->requires(Task::NewDW, Ilb->otemp_CCLabel,  mss_S, gn, 0);
 
     t->modifies(mi->energy_source_CCLabel,mss_S);
     t->computes(solidEmissionLabel,       mss_S);
@@ -1287,7 +1287,7 @@ void RadiationDriver::solidEmission(CCVariable<double>& energySrc_solid,
   constCCVariable<double> Temp_solid;
   constCCVariable<double> insideSolid;
 
-  new_dw->get(Temp_solid,  Ilb->temp_CCLabel,indx_S, patch,gn,0);         
+  new_dw->get(Temp_solid,  Ilb->otemp_CCLabel,indx_S, patch,gn,0);         
   new_dw->get(insideSolid, insideSolidLabel, indx_S, patch,gn,0);         
 
   Vector dx = patch->dCell();

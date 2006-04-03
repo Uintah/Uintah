@@ -8,7 +8,8 @@
 
 using namespace Uintah;
 
-JWLC::JWLC(ProblemSpecP& ps)
+JWLC::JWLC(ProblemSpecP& ps, ICEMaterial* ice_matl)
+  : EquationOfState(ice_matl)
 {
    // Constructor
   ps->require("A",A);

@@ -99,6 +99,9 @@ WARNING
 
    ParticleCreator* getParticleCreator();
 
+   double getThermalConductivity() const;
+   double getSpecificHeat() const;
+
    double getInitialDensity() const;
 
    // Get the specific heats at room temperature
@@ -139,6 +142,9 @@ WARNING
 
    double d_density;
 
+   double d_thermalConductivity;
+
+   double d_specificHeat;
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)
    double d_Cp, d_Cv;

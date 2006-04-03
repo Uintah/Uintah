@@ -14,7 +14,6 @@
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
-  class Point;
   class Vector;
 }
 
@@ -23,6 +22,9 @@ namespace Uintah {
   class ICELabel;
   class EquationOfState;
   class GeometryObject;
+  class PropertyBase;
+  class ThermoInterface;
+  class TransportInterface;
  
 /**************************************
      
@@ -53,9 +55,10 @@ WARNING
 
 ****************************************/
  
+  class ModelSetup;
  class ICEMaterial : public Material {
  public:
-   ICEMaterial(ProblemSpecP&);
+    ICEMaterial(ProblemSpecP&, ModelSetup*);
    
    ~ICEMaterial();
 
@@ -65,28 +68,36 @@ WARNING
    // Return correct EOS model pointer for this material
    EquationOfState* getEOS() const;
    
-   //for HeatConductionModel
-   double getGamma() const;
+   //////////
+   // Return correct Thermo model pointer for this material
+   ThermoInterface* getThermo() const;
+   
+   //////////
+   // Return correct Transport model pointer for this material
+   TransportInterface* getTransport() const;
+   
    double getViscosity() const;
-   double getSpeedOfSound() const;
    bool   isSurroundingMatl() const;
    
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
                      CCVariable<double>& temp, 
-                     CCVariable<double>& ss,
                      CCVariable<double>& volf,  CCVariable<Vector>& vCC,
                      CCVariable<double>& press,
                      int numMatls,
                      const Patch* patch, DataWarehouse* new_dw);
-   
+
+   ICELabel* getLabel() {
+     return lb;
+   }
  private:
    
-   // Specific constitutive model associated with this material
+   // Specific equation of state associated with this material
+   PropertyBase* d_combined;
    EquationOfState *d_eos;
-   double d_speed_of_sound;
+   ThermoInterface* d_thermo;
+   TransportInterface* d_transport;
    double d_viscosity;
-   double d_gamma;
    bool d_isSurroundingMatl; // defines which matl is the background matl.
    
    std::vector<GeometryObject*> d_geom_objs;
@@ -102,8 +113,3 @@ WARNING
 } // End namespace Uintah
 
 #endif // __ICE_MATERIAL_H__
-
-
-
-
-

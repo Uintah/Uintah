@@ -2,6 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -494,12 +495,179 @@ void setBC(CCVariable<double>& press_CC,
 }
 /* --------------------------------------------------------------------- 
  Function~  setBC--
- Purpose~   Takes care any CCvariable<double>, except Pressure
+ Purpose~   Takes care of temperature, density, and other CC variables
+ ---------------------------------------------------------------------  */
+void setBC_Temperature(CCVariable<double>& var_CC,
+                       const Patch* patch,
+                       SimulationStateP& sharedState, 
+                       const int mat_id,
+                       DataWarehouse* old_dw, DataWarehouse* new_dw,
+                       ThermoInterface::State state,
+                       const constCCVariable<double>& sp_vol,
+                       customBC_var_basket* custom_BC_basket)    // NG hack
+{
+  BC_doing << "setBC_Temperature (double) mat_id = " << mat_id << endl;
+  Vector cell_dx = patch->dCell();
+  int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
+
+  //__________________________________
+  //  -Set the LODI BC's first, then let the other BC's wipe out what
+  //   was set in the corners and edges. 
+  //  -Ignore lodi bcs during intialization phase and when
+  //   lv->setLodiBcs = false
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  vector<Patch::FaceType>::const_iterator iter;
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+
+    bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
+    
+    Lodi_vars* lv = custom_BC_basket->lv;
+    if( is_tempBC_lodi 
+        && topLevelTimestep >0 && custom_BC_basket->setLodiBcs ){
+      FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
+    }
+  }
+  //__________________________________
+  //  N O N  -  L O D I
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+          
+    bool IveSetBC = false;
+
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      bool foundIterator = 
+        getIteratorBCValueBCKind<double>( patch, face, child, "Temperature", mat_id,
+					       bc_value, bound,bc_kind); 
+      
+      if (foundIterator && bc_kind != "LODI") {
+        //__________________________________
+        // LOGIC
+        if ( bc_kind == "symmetric"){
+          bc_kind = "zeroNeumann";
+        }
+
+        //__________________________________
+        // Apply the boundary condition
+
+        IveSetBC =  setNeumanDirichletBC<double>
+	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
+         
+        if(bc_kind == "Dirichlet"){
+          // The BC set temperature, so we need to back out energy
+          Material *matl = sharedState->getMaterial(mat_id);
+          ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+          ice_matl->getThermo()->compute_int_eng(bound.begin(), bound.end(), var_CC,
+                                                 old_dw, new_dw, state, patch,
+                                                 matl->getDWIndex(), 0,
+                                                 var_CC, sp_vol);
+        }
+       
+        if ( custom_BC_basket->setMicroSlipBcs) {
+          set_MicroSlipTemperature_BC(patch,face,var_CC,
+                                      "Temperature", bound, bc_kind, bc_value,
+                                      custom_BC_basket->sv);
+        }
+
+        if ( custom_BC_basket->set_MMS_BCs) {
+          set_MMS_Temperature_BC(patch, face, var_CC, 
+                                 "Temperature", bound, bc_kind, 
+                                 custom_BC_basket->mms_var_basket,
+                                 custom_BC_basket->mms_v);
+        }
+        //__________________________________
+        //  debugging
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	        << endl;
+        }
+      }  // if bc_kind != notSet  
+    }  // child loop
+  }  // faces loop
+
+
+  //__________________________________
+  //  Hydrostatic pressure - must be done after bcs are set on all of the faces
+  //  so that we have accurate values on the edges
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+          
+    bool IveSetBC = false;
+
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      bool foundIterator = 
+        getIteratorBCValueBCKind<double>( patch, face, child, "Temperature", mat_id,
+					       bc_value, bound,bc_kind); 
+      
+      if (foundIterator && bc_kind != "LODI") {
+
+        //__________________________________
+        // Temperature and Gravity and ICE Matls
+        // -Ignore this during intialization phase,
+        //  since we backout the temperature field
+        Vector gravity = sharedState->getGravity();                             
+        Material *matl = sharedState->getMaterial(mat_id);
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        int P_dir =  patch->faceAxes(face)[0];  // principal direction
+      
+        if (gravity[P_dir] != 0 && ice_matl 
+             && topLevelTimestep >0) {
+          // Compute temperatures from energy
+          CCVariable<double> temp;
+          new_dw->allocateTemporary(temp, patch);
+          ice_matl->getThermo()->compute_Temp(bound.begin(), bound.end(), temp, old_dw, new_dw,
+                                              state, patch, matl->getDWIndex(), 0,
+                                              var_CC, sp_vol);
+          CCVariable<double> cv;
+          new_dw->allocateTemporary(cv, patch);
+          ice_matl->getThermo()->compute_cv(bound.begin(), bound.end(), cv, old_dw, new_dw,
+                                            state, patch, matl->getDWIndex(), 0,
+                                            var_CC, sp_vol);
+          CCVariable<double> gamma;
+          new_dw->allocateTemporary(gamma, patch);
+          ice_matl->getThermo()->compute_gamma(bound.begin(), bound.end(), gamma, old_dw, new_dw,
+                                               state, patch, matl->getDWIndex(), 0,
+                                               var_CC, sp_vol);
+          ice_matl->getEOS()->
+              hydrostaticTempAdjustment(face, patch, bound, gravity,
+                                        gamma, cv, cell_dx, temp);
+          // And back to energy
+          ice_matl->getThermo()->compute_int_eng(bound.begin(), bound.end(), var_CC, old_dw, new_dw,
+                                                 state, patch, matl->getDWIndex(), 0,
+                                                 temp, sp_vol);
+        }
+      }  // if bc_kind != notSet  
+    }  // child loop
+  }  // faces loop
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setBC--
+ Purpose~   Takes care any CCvariable<double>, except Pressure or Temperature
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& var_CC,
            const string& desc,
-           const CCVariable<double>& gamma,
-           const CCVariable<double>& cv,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
@@ -522,14 +690,9 @@ void setBC(CCVariable<double>& var_CC,
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
 
-    bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
     bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
     Lodi_vars* lv = custom_BC_basket->lv;
-    if( desc == "Temperature"  && is_tempBC_lodi 
-        && topLevelTimestep >0 && custom_BC_basket->setLodiBcs ){
-      FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
-    }   
     if (desc == "Density"  && is_rhoBC_lodi 
         && topLevelTimestep >0 && custom_BC_basket->setLodiBcs){
       FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
@@ -570,34 +733,17 @@ void setBC(CCVariable<double>& var_CC,
         // Apply the boundary condition
         IveSetBC =  setNeumanDirichletBC<double>
 	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
-        
-        if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
-          set_MicroSlipTemperature_BC(patch,face,var_CC,
-                              desc, bound, bc_kind, bc_value,
-                              custom_BC_basket->sv);
-        }
-
-        if ( desc == "Temperature" && custom_BC_basket->set_MMS_BCs) {
-          set_MMS_Temperature_BC(patch, face, var_CC, 
-                              desc, bound, bc_kind, 
-                              custom_BC_basket->mms_var_basket,
-                              custom_BC_basket->mms_v);
-        }
+         
         //__________________________________
-        // Temperature and Gravity and ICE Matls
-        // -Ignore this during intialization phase,
-        //  since we backout the temperature field
-        Vector gravity = sharedState->getGravity();                             
-        Material *matl = sharedState->getMaterial(mat_id);
-        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-        int P_dir =  patch->faceAxes(face)[0];  // principal direction
-        
-        if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
-             && topLevelTimestep >0) {
-          ice_matl->getEOS()->
-              hydrostaticTempAdjustment(face, patch, bound, gravity,
-                                        gamma, cv, cell_dx, var_CC);
+        //  hardwiring for NGC nozzle simulation   
+        if ( desc == "Density" && 
+              bc_kind == "Custom" && custom_BC_basket->setLodiBcs) {
+          setNGC_Nozzle_BC<CCVariable<double>,double>
+                (patch, face, var_CC, desc,"CC", bound, 
+                 bc_kind,mat_id, child, sharedState, 
+                 custom_BC_basket->ng);
         }
+        
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
@@ -611,6 +757,7 @@ void setBC(CCVariable<double>& var_CC,
     }  // child loop
   }  // faces loop
 }
+
 
 /* --------------------------------------------------------------------- 
  Function~  setBC--
@@ -903,8 +1050,30 @@ void setBC(CCVariable<double>& var,
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
   
-  setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
+  setBC(var, type, patch, sharedState, 
         mat_id, new_dw,basket);
+  
+  delete basket;
+} 
+
+void setBC_Temperature(CCVariable<double>& var,     
+                       const Patch* patch,  
+                       SimulationStateP& sharedState,
+                       const int mat_id,
+                       DataWarehouse* old_dw, DataWarehouse* new_dw,
+                       ThermoInterface::State state,
+                       const constCCVariable<double>& sp_vol)
+{
+  customBC_var_basket* basket  = scinew customBC_var_basket();
+  constCCVariable<double> placeHolder;
+  
+  basket->setLodiBcs      = false;
+  basket->setNGBcs        = false;
+  basket->setMicroSlipBcs = false;
+  basket->set_MMS_BCs     = false;
+  
+  setBC_Temperature(var, patch, sharedState, 
+                    mat_id, old_dw, new_dw, state, sp_vol, basket);
   
   delete basket;
 } 

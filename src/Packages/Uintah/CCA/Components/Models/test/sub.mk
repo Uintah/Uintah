@@ -11,17 +11,17 @@ endif
 
 SRCS	+= \
        $(SRCDIR)/Mixing.cc \
-       $(SRCDIR)/SimpleRxn.cc \
-       $(SRCDIR)/AdiabaticTable.cc \
-       $(SRCDIR)/NonAdiabaticTable.cc \
        $(SRCDIR)/ArchesTable.cc \
        $(SRCDIR)/MaterialProperties.cc \
-       $(SRCDIR)/PassiveScalar.cc \
        $(SRCDIR)/TableInterface.cc \
        $(SRCDIR)/TableFactory.cc \
        $(SRCDIR)/TestModel.cc \
-       $(SRCDIR)/VorticityConfinement.cc \
-       $(SRCDIR)/flameSheet_rxn.cc 
+       $(SRCDIR)/VorticityConfinement.cc
+#       $(SRCDIR)/flameSheet_rxn.cc \
+#       $(SRCDIR)/SimpleRxn.cc \
+#       $(SRCDIR)/PassiveScalar.cc \
+#       $(SRCDIR)/AdiabaticTable.cc \
+#       $(SRCDIR)/NonAdiabaticTable.cc \
 #       $(SRCDIR)/Mixing2.cc
 #       $(SRCDIR)/Mixing2.cc \
 #       $(SRCDIR)/Mixing3.cc
