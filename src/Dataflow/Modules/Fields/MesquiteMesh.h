@@ -626,7 +626,7 @@ void MesquiteMesh<FIELD>::vertices_get_fixed_flag(
   size_t i;
   for( i = 0; i < num_vtx; ++i )
   {
-    unsigned int node_id = (unsigned int)vert_array[i];
+    unsigned long node_id = (unsigned long)vert_array[i];
 
       // if the node designated is not valid for the mesh, then set the MSQ 
       //  value so that Mesquite doesn't continue working with invalid data...
@@ -654,7 +654,7 @@ void MesquiteMesh<FIELD>::vertices_get_coordinates(
   {
       //set coordinates to the vertex's position.
     Point p;
-    typename FIELD::mesh_type::Node::index_type node_id = (unsigned int) vert_array[i];
+    typename FIELD::mesh_type::Node::index_type node_id = (unsigned long) vert_array[i];
     mOwner->get_typed_mesh()->get_point( p, node_id );    
     coordinates[i].set( p.x(), p.y(), p.z() );
   }
@@ -668,7 +668,7 @@ void MesquiteMesh<FIELD>::vertex_set_coordinates(
     Mesquite::MsqError &err)
 {
   Point p;
-  typename FIELD::mesh_type::Node::index_type node_id = (unsigned int) vertex;
+  typename FIELD::mesh_type::Node::index_type node_id = (unsigned long) vertex;
   mOwner->get_typed_mesh()->get_point( p, node_id );
   p.x( coordinates[0] );
   p.y( coordinates[1] );
@@ -697,7 +697,7 @@ void MesquiteMesh<FIELD>::vertex_set_byte( VertexHandle vertex,
 //     return;
 //   }
 
-  unsigned int idx = (unsigned int)vertex;
+  unsigned long idx = (unsigned long)vertex;
   bytes_[idx] = byte;
 }
 
@@ -733,7 +733,7 @@ void MesquiteMesh<FIELD>::vertex_get_byte(VertexHandle vertex,
 //     return;
 //   }
 
-  unsigned int idx = (unsigned int)vertex;
+  unsigned long idx = (unsigned long)vertex;
   *byte = bytes_[idx];
 }
 
@@ -776,7 +776,7 @@ void MesquiteMesh<FIELD>::vertices_get_attached_elements(
   {
     offsets.push_back(offset_counter);
     typename FIELD::mesh_type::Elem::array_type attached_elems;
-    typename FIELD::mesh_type::Node::index_type this_node = (unsigned int)vertex_array[i];
+    typename FIELD::mesh_type::Node::index_type this_node = (unsigned long)vertex_array[i];
 
       // if this_node is invalid, set MSQ error to prevent Mesquite from
       // continuing with invalid data...
@@ -863,7 +863,7 @@ void MesquiteMesh<FIELD>::elements_get_attached_vertices(
     offsets.push_back( offset_counter );
     
     typename FIELD::mesh_type::Node::array_type nodes;
-    typename FIELD::mesh_type::Elem::index_type elem_id = (unsigned int)elem_handles[i];
+    typename FIELD::mesh_type::Elem::index_type elem_id = (unsigned long)elem_handles[i];
        
       // if elem_id is invalid, set MSQ error to prevent Mesquite from
       // continuing with invalid data...
