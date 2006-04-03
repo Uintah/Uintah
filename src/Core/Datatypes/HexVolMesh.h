@@ -453,7 +453,7 @@ public:
   void elem_reserve(size_t s) { edges_.reserve(s*8); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 3; }
-  virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
+  virtual int topology_geometry() const { return (Mesh::UNSTRUCTURED | Mesh::IRREGULAR); }
 
   typename Node::index_type add_point(const Point &p);
 
@@ -1047,6 +1047,8 @@ HexVolMesh<Basis>::hash_edge(typename Node::index_type n1,
   } else {
     PEdge e = (*iter).first;
     e.cells_.push_back(ci); // add this cell
+    table.erase(iter);
+    table[e] = 0;
   }
 }
 
@@ -2127,7 +2129,7 @@ HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
   // Get all the nodes that share an edge with this node
   get_neighbors(neighbors, node);
   // Iterate through all those edges
-  for (unsigned int n = 0; n < neighbors.size(); ++n)
+  for (unsigned int n = 0; n < neighbors.size(); n++)
   {
     // Get the edge information for the current edge
     typename edge_ht::const_iterator iter =
@@ -2136,7 +2138,7 @@ HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
               "Edge not found in HexVolMesh::edge_table_");
     // Insert all cells that share this edge into
     // the unique set of cell indices
-    for (unsigned int c = 0; c < (iter->first).cells_.size(); ++c)
+    for (unsigned int c = 0; c < (iter->first).cells_.size(); c++)
       unique_cells.insert((iter->first).cells_[c]);
   }
 
