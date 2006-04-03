@@ -60,7 +60,8 @@ public:
   virtual ~ChooseModule();
   virtual void execute();
 
-  virtual string get_names( std::vector< HANDLE_TYPE >& handles );
+  virtual std::string get_names( std::vector< HANDLE_TYPE >& handles,
+				 std::string prop_name = string("name") );
 
 private:
   string port_name_;
@@ -93,14 +94,18 @@ ChooseModule< HANDLE_TYPE >::~ChooseModule()
 }
 
 template< class HANDLE_TYPE >
-string
-ChooseModule< HANDLE_TYPE >::get_names( std::vector< HANDLE_TYPE >& handles )
+std::string
+ChooseModule< HANDLE_TYPE >::get_names( std::vector< HANDLE_TYPE >& handles,
+					std::string prop_name)
 {
   unsigned int idx = 0;
-  string port_names("");
-  string prop;
+  std::string port_names("");
+  std::string prop;
   while( idx < handles.size() ){
-    if( handles[idx].get_rep() ){
+      if( (handles[idx]->get_property(prop_name, prop )) ) {
+        port_names += prop + " ";
+	// use the port index to specify the name
+      } else if( handles[idx].get_rep() ){
         port_names += "--port_" + to_string(idx) + "-- ";
     } else {
       port_names += "invalid_port ";
