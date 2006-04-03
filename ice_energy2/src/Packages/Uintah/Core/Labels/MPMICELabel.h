@@ -13,7 +13,7 @@ namespace Uintah {
 
       const VarLabel* cMassLabel;
       const VarLabel* vel_CCLabel;
-      const VarLabel* temp_CCLabel;
+      const VarLabel* otemp_CCLabel;
       const VarLabel* press_NCLabel;
       const VarLabel* burnedMassCCLabel;
       const VarLabel* onSurfaceLabel;

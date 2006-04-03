@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
@@ -51,6 +52,8 @@ WARNING
   class ModelSetup {
     public:
     virtual void registerTransportedVariable(const MaterialSubset* matls,
+                                             Task::WhichDW fromDW,
+                                             const VarLabel* fromVar,
 					     const VarLabel* var,
 					     const VarLabel* src) = 0;
                                         
@@ -68,11 +71,10 @@ WARNING
 	      const VarLabel* sp_vol_source,
 	      const VarLabel* density, 
 	      const VarLabel* velocity,
-	      const VarLabel* temperature, 
+              const VarLabel* internalEnergy,
+	      const VarLabel* otemperature, 
 	      const VarLabel* pressure,
-	      const VarLabel* specificVol,
-             const VarLabel* specific_heat,
-             const VarLabel* gamma)
+	      const VarLabel* specificVol)
       : delT_Label(delt), 
         mass_source_CCLabel(mass_source),
         momentum_source_CCLabel(momentum_source),
@@ -80,11 +82,10 @@ WARNING
         sp_vol_source_CCLabel(sp_vol_source),
         density_CCLabel(density), 
         velocity_CCLabel(velocity),
-        temperature_CCLabel(temperature), 
+        internalEnergy_CCLabel(internalEnergy),
+        otemperature_CCLabel(otemperature), 
         pressure_CCLabel(pressure),
-        sp_vol_CCLabel(specificVol),
-        specific_heatLabel(specific_heat),
-        gammaLabel(gamma)
+        sp_vol_CCLabel(specificVol)
       {
       }
     const VarLabel* delT_Label;
@@ -95,7 +96,8 @@ WARNING
     const VarLabel* sp_vol_source_CCLabel;
     const VarLabel* density_CCLabel;
     const VarLabel* velocity_CCLabel;
-    const VarLabel* temperature_CCLabel;
+    const VarLabel* internalEnergy_CCLabel;
+    const VarLabel* otemperature_CCLabel;
     const VarLabel* pressure_CCLabel;
     const VarLabel* sp_vol_CCLabel;
     const VarLabel* specific_heatLabel;
@@ -134,15 +136,6 @@ WARNING
 						    const LevelP& level,
 						    const ModelInfo*) = 0;
                                               
-     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                const LevelP&,
-                                                const MaterialSet*) = 0;
-                                                
-     virtual void computeSpecificHeat(CCVariable<double>&,
-                                     const Patch* patch,
-                                     DataWarehouse* new_dw,
-                                     const int indx) = 0;
-                                     
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched) =0;                                  
     
@@ -156,8 +149,6 @@ WARNING
 
      virtual void setMPMLabel(MPMLabel* MLB);
                                                
-    bool computesThermoTransportProps() const;
-    bool d_modelComputesThermoTransportProps;
     Output* d_dataArchiver;
    
    protected:

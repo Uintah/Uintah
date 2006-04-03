@@ -10,6 +10,7 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
+       $(SRCDIR)/PropertyBase.cc \
        $(SRCDIR)/Turbulence.cc \
        $(SRCDIR)/SmagorinskyModel.cc \
        $(SRCDIR)/DynamicModel.cc \
@@ -18,8 +19,8 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/impAMRICE.cc \
        $(SRCDIR)/customInitialize.cc   \
        $(SRCDIR)/ExchangeCoefficients.cc   	
-       
-SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
+
+SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs $(SRCDIR)/Thermo $(SRCDIR)/Combined
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
@@ -40,7 +41,7 @@ PSELIBS := \
        Core/Exceptions Core/Geometry                   \
        Core/Thread Core/Util
 
-LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CANTERA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

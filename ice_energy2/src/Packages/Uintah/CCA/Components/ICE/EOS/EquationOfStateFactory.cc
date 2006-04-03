@@ -8,21 +8,15 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <fstream>
-#include <iostream>
 #include <string>
 #if 0
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Harlow.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/StiffGas.h>
 #endif
 
-using std::cerr;
-using std::ifstream;
-using std::ofstream;
-
 using namespace Uintah;
 
-EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
+EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps, ICEMaterial* ice_matl)
 {
     ProblemSpecP child = ps->findBlock("EOS");
     if(!child)
@@ -32,17 +26,19 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type for EOS", __FILE__, __LINE__); 
     
     if (mat_type == "ideal_gas") 
-      return(scinew IdealGas(child));
+      return(scinew IdealGas(child, ice_matl));
+#if 0
+    // Others busted - Steve
     else if (mat_type == "JWL") 
-      return(scinew JWL(child));
+      return(scinew JWL(child, ice_matl));
     else if (mat_type == "JWLC") 
-      return(scinew JWLC(child));
+      return(scinew JWLC(child, ice_matl));
     else if (mat_type == "Murnahan") 
-      return(scinew Murnahan(child));
+      return(scinew Murnahan(child, ice_matl));
     else if (mat_type == "Gruneisen") 
-      return(scinew Gruneisen(child));
+      return(scinew Gruneisen(child, ice_matl));
     else if (mat_type == "Tillotson") 
-      return(scinew Tillotson(child));
+      return(scinew Tillotson(child, ice_matl));
 #if 0   // Turn off harlow and stiff gas until everything with ideal
         // gas is working. Todd
     else if (mat_type == "harlow") 
@@ -51,6 +47,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     else if (mat_type == "stiff_gas") 
       return(scinew StiffGas(child));
 #endif    
+#endif
     else
       throw ProblemSetupException("Unknown EOS Type R ("+mat_type+")", __FILE__, __LINE__);
 

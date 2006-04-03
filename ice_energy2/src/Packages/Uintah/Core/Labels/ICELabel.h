@@ -29,8 +29,9 @@ namespace Uintah {
     const VarLabel* compressibilityLabel;
     const VarLabel* sumKappaLabel;
     const VarLabel* rho_CCLabel;
-    const VarLabel* ie_temp_CCLabel;
-    const VarLabel* ie_int_eng_CCLabel;
+    const VarLabel* int_eng_CCLabel;
+    const VarLabel* otemp_CCLabel;
+    const VarLabel* ntemp_CCLabel;
     const VarLabel* temp_CC_XchangeLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* vel_CC_XchangeLabel;
@@ -53,10 +54,7 @@ namespace Uintah {
     const VarLabel* f_theta_CCLabel;
     const VarLabel* Tdot_CCLabel;
     const VarLabel* turb_viscosity_CCLabel;
-    const VarLabel* ie_viscosityLabel;
-    const VarLabel* ie_thermalCondLabel;
-    const VarLabel* ie_gammaLabel;
-    const VarLabel* ie_specific_heatLabel;
+    const VarLabel* viscosityLabel;
     const VarLabel* dTdt_CCLabel;
     const VarLabel* dVdt_CCLabel;
 //__________________________________

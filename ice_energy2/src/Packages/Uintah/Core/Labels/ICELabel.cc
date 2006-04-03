@@ -39,8 +39,12 @@ ICELabel::ICELabel()
     VarLabel::create("sumKappa",     CCVariable<double>::getTypeDescription());
   rho_CCLabel       = 
     VarLabel::create("rho_CC",       CCVariable<double>::getTypeDescription());
-  temp_CCLabel      = 
-    VarLabel::create("temp_CC",      CCVariable<double>::getTypeDescription());
+  int_eng_CCLabel      = 
+    VarLabel::create("int_eng_CC",      CCVariable<double>::getTypeDescription());
+  otemp_CCLabel      = 
+    VarLabel::create("otemp_CC",      CCVariable<double>::getTypeDescription());
+  ntemp_CCLabel      = 
+    VarLabel::create("ntemp_CC",      CCVariable<double>::getTypeDescription());
   vel_CCLabel       = 
     VarLabel::create("vel_CC",       CCVariable<Vector>::getTypeDescription());
   rho_micro_CCLabel = 
@@ -87,12 +91,6 @@ ICELabel::ICELabel()
     VarLabel::create("turb_viscosity_CC",CCVariable<double>::getTypeDescription());
   viscosityLabel =
     VarLabel::create("viscosity",    CCVariable<double>::getTypeDescription());
-  thermalCondLabel =
-    VarLabel::create("thermalCond",  CCVariable<double>::getTypeDescription());
-  gammaLabel =
-    VarLabel::create("gamma",        CCVariable<double>::getTypeDescription());
-  specific_heatLabel =
-    VarLabel::create("specific_heat",CCVariable<double>::getTypeDescription());
   temp_CC_XchangeLabel  = 
     VarLabel::create("temp_CC_Xchange",CCVariable<double>::getTypeDescription());
   vel_CC_XchangeLabel = 
@@ -311,7 +309,9 @@ ICELabel::~ICELabel()
     VarLabel::destroy(sum_rho_CCLabel);
     VarLabel::destroy(compressibilityLabel);
     VarLabel::destroy(sumKappaLabel);    
-    VarLabel::destroy(temp_CCLabel);
+    VarLabel::destroy(otemp_CCLabel);
+    VarLabel::destroy(ntemp_CCLabel);
+    VarLabel::destroy(int_eng_CCLabel);
     VarLabel::destroy(temp_CC_XchangeLabel);
     VarLabel::destroy(vel_CCLabel);
     VarLabel::destroy(vel_CC_XchangeLabel);
@@ -337,9 +337,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(Tdot_CCLabel);
     VarLabel::destroy(turb_viscosity_CCLabel);
     VarLabel::destroy(viscosityLabel);
-    VarLabel::destroy(thermalCondLabel);
-    VarLabel::destroy(gammaLabel);
-    VarLabel::destroy(specific_heatLabel);      
     VarLabel::destroy(dTdt_CCLabel);
     VarLabel::destroy(dVdt_CCLabel);
     

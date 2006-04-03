@@ -2,6 +2,12 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Packages/Uintah/CCA/Components/ICE/PropertyBase.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
+#include <Packages/Uintah/CCA/Components/ICE/Combined/CombinedFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ConstantThermo.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -14,7 +20,6 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <iostream>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 
@@ -23,27 +28,63 @@ using namespace Uintah;
 using namespace SCIRun;
 
  // Constructor
-ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
+ICEMaterial::ICEMaterial(ProblemSpecP& ps, ModelSetup* setup): Material(ps)
 {
+   lb = scinew ICELabel();
+
   // Follow the layout of the input file
   // Steps:
-  // 1.  Determine the type of EOS and create it.
+  // 1a. Look to see if there is a combined EOS/Thermo (and possibly transport) model.
+  // 1b. Determine the type of EOS and create it.
+  // 1c. Determine the thermodynamic model and create it.
+  // 1d. Determine the transport properties model and create it.
   // 2.  Get the general properties of the material such as
   //     density, thermal_conductivity, specific_heat.
   // 3.  Assign the velocity field.
 
-  // Step 1 -- create the constitutive gmodel.
-   d_eos = EquationOfStateFactory::create(ps);
-   if(!d_eos) {
-     throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
-   }
+  // Step 1a -- look for a combined model.  This allows a single subcomponent
+  //   to operate as an equation of state and thermo interface (and possibly a
+  //   a transport interface.
+  if(d_combined){
+    // If the properties object implements the particular model, these casts
+    // will succeed, otherwise they will fail and the model will be specified
+    // below.
+    d_eos = dynamic_cast<EquationOfState*>(d_combined);
+    d_thermo = dynamic_cast<ThermoInterface*>(d_combined);
+    //d_transport = dynamic_cast<TransportInterface*>(d_combined);
+  } else {
+    d_eos = 0;
+    d_thermo = 0;
+  }
+
+  // Step 1b -- create the equation of state if necessary
+  if(!d_eos){
+    d_eos = EquationOfStateFactory::create(ps, this);
+    if(!d_eos) {
+      throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
+    }
+  }
    
+  // Step 1c -- create the thermo model if necessary
+  if(!d_thermo){ // The thermo model may be from a "combined" model
+    d_thermo = ThermoFactory::create(ps, setup, this);
+    if(!d_thermo){
+      // default to constant thermo
+      d_thermo = new ConstantThermo(ps, setup, this);
+    }
+  }
+
+  // Step 1d -- create the transport model if necessary
+  // Not finished
+
    // Step 2 -- get the general material properties
+#if 0
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
-   ps->require("dynamic_viscosity",d_viscosity);
    ps->require("speed_of_sound",d_speed_of_sound);
    ps->require("gamma",d_gamma);
+#endif
+   ps->require("dynamic_viscosity",d_viscosity);
    
    d_isSurroundingMatl = false;
    ps->get("isSurroundingMatl",d_isSurroundingMatl);
@@ -78,13 +119,23 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
       d_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,
                                                   geom_obj_data));
    }
-   lb = scinew ICELabel();
 }
  // Destructor
 ICEMaterial::~ICEMaterial()
 {
-  delete d_eos;
-  delete lb;
+  // Be careful not to delete the combined models twice
+  if(d_eos != dynamic_cast<EquationOfState*>(d_combined)){
+    delete d_eos;
+  }
+  if(d_thermo != dynamic_cast<ThermoInterface*>(d_combined)){
+    delete d_thermo;
+  }
+
+  //if(d_transport != dynamic_cast<TransportInterface*>(d_properties)){
+  //delete d_transport;
+  //}
+  if(d_combined)
+    delete d_combined;
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
   }
@@ -114,13 +165,12 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
 
 EquationOfState * ICEMaterial::getEOS() const
 {
-  // Return the pointer to the constitutive model 
   return d_eos;
 }
 
-double ICEMaterial::getGamma() const
+ThermoInterface* ICEMaterial::getThermo() const
 {
-  return d_gamma;
+  return d_thermo;
 }
 
 double ICEMaterial::getViscosity() const
@@ -128,10 +178,6 @@ double ICEMaterial::getViscosity() const
   return d_viscosity;
 }
 
-double ICEMaterial::getSpeedOfSound() const
-{
-  return d_speed_of_sound;
-}
 bool ICEMaterial::isSurroundingMatl() const
 {
   return d_isSurroundingMatl;
@@ -156,7 +202,6 @@ _____________________________________________________________________*/
 void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
                                   CCVariable<double>& rho_CC,
                                   CCVariable<double>& temp,
-                                  CCVariable<double>& speedSound,
                                   CCVariable<double>& vol_frac_CC,
                                   CCVariable<Vector>& vel_CC,
                                   CCVariable<double>& press_CC,
@@ -173,7 +218,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   rho_CC.initialize(0.);
   temp.initialize(0.);
   vol_frac_CC.initialize(0.);
-  speedSound.initialize(0.);
   IveBeenHere.initialize(-9);
 
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
@@ -210,7 +254,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
-          speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 1;
         }
       }   
@@ -224,7 +267,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
-          speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count > 0){
@@ -237,7 +279,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
-          speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count == 0){

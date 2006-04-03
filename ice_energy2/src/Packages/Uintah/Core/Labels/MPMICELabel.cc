@@ -22,7 +22,7 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription() );
   vel_CCLabel        = VarLabel::create( "vel_CC",
                      CCVariable<Vector>::getTypeDescription() );
-  temp_CCLabel       = VarLabel::create("temp_CC",
+  otemp_CCLabel       = VarLabel::create("otemp_CC",
                      CCVariable<double>::getTypeDescription() );
   press_NCLabel      = VarLabel::create("pressureNC",
                      NCVariable<double>::getTypeDescription());
@@ -62,7 +62,7 @@ MPMICELabel::~MPMICELabel()
   
   VarLabel::destroy(cMassLabel);
   VarLabel::destroy(vel_CCLabel);
-  VarLabel::destroy(temp_CCLabel);
+  VarLabel::destroy(otemp_CCLabel);
   VarLabel::destroy(press_NCLabel);
   VarLabel::destroy(burnedMassCCLabel);
   VarLabel::destroy(surfaceTempLabel);

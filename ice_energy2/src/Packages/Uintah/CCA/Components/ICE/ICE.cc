@@ -1,3 +1,17 @@
+// ICE-ENERGY TODO
+// Look for cv/specific heat everywhere
+// Look for internalerror not finished everywhere
+// Convert models
+// Double-check that all otemp/ntemps are from new dw!!!
+// otemp/ntemp -> temp?
+// Look for cv, gamma
+// Delete combined models?
+// Push cp/cv further into EOS?
+// In spvol - easier to compute cp from temperature than fromenergy?
+// dTdt
+// Do anything to specific volume in react?
+// cv/gamma -> cp/cv
+
 #ifdef __APPLE__
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
 // make the isnan function not work.  This define makes the cmath header
@@ -10,6 +24,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
 #include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
@@ -84,7 +99,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_SMALL_NUM = 1.0e-100;                                                   
   d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
-  d_modelSetup = 0;
   d_analysisModule = 0;
   d_recompile = false;
   d_conservationTest = scinew conservationTest_flags();
@@ -98,6 +112,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_customBC_var_basket->Lodi_var_basket =  scinew Lodi_variable_basket();
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
   d_customBC_var_basket->mms_var_basket =  scinew mms_variable_basket();
+  d_modelSetup = scinew ICEModelSetup();
 }
 
 ICE::~ICE()
@@ -156,9 +171,7 @@ ICE::~ICE()
   if(d_modelInfo){
     delete d_modelInfo;
   }
-  if(d_modelSetup){
-    delete d_modelSetup;
-  }
+  delete d_modelSetup;
   releasePort("solver");
 }
 
@@ -331,7 +344,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     cout_norm << "Material attribute = " << index_val << endl;
 
     // Extract out the type of EOS and the associated parameters
-    ICEMaterial *mat = scinew ICEMaterial(ps);
+    ICEMaterial *mat = scinew ICEMaterial(ps, d_modelSetup);
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
@@ -414,7 +427,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     modelMaker->makeModels(mat_ps, grid, sharedState, d_doAMR);
     d_models = modelMaker->getModels();
     releasePort("ModelMaker");
-    d_modelSetup = scinew ICEModelSetup();
       
     // problem setup for each model  
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
@@ -432,17 +444,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     }
     
     d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
-                               lb->modelMass_srcLabel,
-                               lb->modelMom_srcLabel,
-                               lb->modelEng_srcLabel,
-                               lb->modelVol_srcLabel,
-                               lb->rho_CCLabel,
-                               lb->vel_CCLabel,
-                               lb->temp_CCLabel,
-                               lb->press_CCLabel,
-                               lb->sp_vol_CCLabel,
-                               lb->specific_heatLabel,
-                               lb->gammaLabel);
+                                   lb->modelMass_srcLabel,
+                                   lb->modelMom_srcLabel,
+                                   lb->modelEng_srcLabel,
+                                   lb->modelVol_srcLabel,
+                                   lb->rho_CCLabel,
+                                   lb->vel_CCLabel,
+                                   lb->int_eng_CCLabel,
+                                   lb->otemp_CCLabel,
+                                   lb->press_CCLabel,
+                                   lb->sp_vol_CCLabel);
   }
   
   //__________________________________
@@ -467,7 +478,7 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
     ps = ps->findNextBlock("material") ) {
     // Extract out the type of EOS and the associated parameters
-    ICEMaterial *mat = scinew ICEMaterial(ps);
+    ICEMaterial *mat = scinew ICEMaterial(ps, d_modelSetup);
     sharedState->registerICEMaterial(mat);
   }
 
@@ -541,22 +552,29 @@ void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
                                                                                 
   t->computes(lb->vel_CCLabel,        add_matl);
   t->computes(lb->rho_CCLabel,        add_matl);
-  t->computes(lb->temp_CCLabel,       add_matl);
+  t->computes(lb->ntemp_CCLabel,       add_matl);
   t->computes(lb->sp_vol_CCLabel,     add_matl);
   t->computes(lb->vol_frac_CCLabel,   add_matl);
   t->computes(lb->rho_micro_CCLabel,  add_matl);
-  t->computes(lb->speedSound_CCLabel, add_matl);
-  t->computes(lb->thermalCondLabel,   add_matl);
   t->computes(lb->viscosityLabel,     add_matl);
-  t->computes(lb->gammaLabel,         add_matl);
-  t->computes(lb->specific_heatLabel, add_matl);
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
   // The task will have a reference to add_matl
   if (add_matl->removeReference()){
-    delete add_matl; // shouln't happen, but...
+    delete add_matl; // shouldn't happen, but...
   }
+
+  // Initialize thermo models
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch());
+  }
+
+  // Back out energy from temperature
+  scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
+  scheduleComputeSpeedOfSound(sched, level->eachPatch(), d_sharedState->allICEMaterials());
 }
 
 /*______________________________________________________________________
@@ -573,8 +591,8 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << d_myworld->myrank() << " Doing InitializeAddedMaterial on patch " << patch->getID() 
          << "\t\t\t ICE" << endl;
-    CCVariable<double>  rho_micro, sp_vol_CC, rho_CC, Temp_CC, thermalCond;
-    CCVariable<double>  speedSound,vol_frac_CC, cv, gamma, viscosity,dummy;
+    CCVariable<double>  rho_micro, sp_vol_CC, rho_CC, Temp_CC;
+    CCVariable<double>  speedSound,vol_frac_CC, viscosity,dummy;
     CCVariable<Vector>  vel_CC;
     
     //__________________________________
@@ -584,34 +602,25 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     int indx= ice_matl->getDWIndex();
     cout << "Added Material Index = " << indx << endl;
     new_dw->allocateAndPut(viscosity,     lb->viscosityLabel,    indx,patch);
-    new_dw->allocateAndPut(thermalCond,   lb->thermalCondLabel,  indx,patch);
-    new_dw->allocateAndPut(cv,            lb->specific_heatLabel,indx,patch);
-    new_dw->allocateAndPut(gamma,         lb->gammaLabel,        indx,patch);
     new_dw->allocateAndPut(rho_micro,     lb->rho_micro_CCLabel, indx,patch); 
     new_dw->allocateAndPut(sp_vol_CC,     lb->sp_vol_CCLabel,    indx,patch); 
     new_dw->allocateAndPut(rho_CC,        lb->rho_CCLabel,       indx,patch); 
-    new_dw->allocateAndPut(Temp_CC,       lb->temp_CCLabel,      indx,patch); 
-    new_dw->allocateAndPut(speedSound,    lb->speedSound_CCLabel,indx,patch); 
+    new_dw->allocateAndPut(Temp_CC,       lb->ntemp_CCLabel,      indx,patch); 
     new_dw->allocateAndPut(vol_frac_CC,   lb->vol_frac_CCLabel,  indx,patch); 
     new_dw->allocateAndPut(vel_CC,        lb->vel_CCLabel,       indx,patch);
     new_dw->allocateTemporary(dummy, patch);
     cout << "Done allocateAndPut Index = " << indx << endl;
 
-    gamma.initialize(       ice_matl->getGamma());
-    cv.initialize(          ice_matl->getSpecificHeat());    
     viscosity.initialize  ( ice_matl->getViscosity());
-    thermalCond.initialize( ice_matl->getThermalConductivity());
 
     int numALLMatls = d_sharedState->getNumMatls();
     ice_matl->initializeCells(rho_micro,  rho_CC,
-                              Temp_CC,    speedSound, 
+                              Temp_CC,
                               vol_frac_CC, vel_CC, 
                               dummy, numALLMatls, patch, new_dw);
 
     setBC(rho_CC,     "Density",     patch, d_sharedState, indx, new_dw);
     setBC(rho_micro,  "Density",     patch, d_sharedState, indx, new_dw);
-    setBC(Temp_CC,    "Temperature", patch, d_sharedState, indx, new_dw);
-    setBC(speedSound, "zeroNeumann", patch, d_sharedState, indx, new_dw); 
     setBC(vel_CC,     "Velocity",    patch, d_sharedState, indx, new_dw); 
             
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -641,15 +650,11 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   
   t->computes(lb->vel_CCLabel);
   t->computes(lb->rho_CCLabel); 
-  t->computes(lb->temp_CCLabel);
+  t->computes(lb->ntemp_CCLabel);
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->rho_micro_CCLabel);
-  t->computes(lb->speedSound_CCLabel);
-  t->computes(lb->thermalCondLabel);
   t->computes(lb->viscosityLabel);
-  t->computes(lb->gammaLabel);
-  t->computes(lb->specific_heatLabel);
   t->computes(lb->press_CCLabel,     d_press_matl, oims);
   t->computes(lb->initialGuessLabel, d_press_matl, oims); 
   
@@ -666,6 +671,16 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     }
   }
   
+  //__________________________________
+  // Initialize the thermo manager and get internal energy out of the
+  // initial temperature field
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch());
+  }
+  scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
+
   //__________________________________
   // dataAnalysis 
   if(d_analysisModule){
@@ -5544,11 +5559,15 @@ ICE::ICEModelSetup::~ICEModelSetup()
 }
 
 void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls,
+                                                     Task::WhichDW fromDW,
+                                                     const VarLabel* fromVar,
 						     const VarLabel* var,
 						     const VarLabel* src)
 {
   TransportedVariable* t = scinew TransportedVariable;
   t->matls = matls;
+  t->fromDW = fromDW;
+  t->fromVar = fromVar;
   t->var = var;
   t->src = src;
   t->var_Lagrangian = VarLabel::create(var->getName()+"_L", var->typeDescription());
