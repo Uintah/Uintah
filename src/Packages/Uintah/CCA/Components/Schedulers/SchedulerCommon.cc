@@ -875,7 +875,9 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           
           // get the low/high for what we'll need to get
           IntVector lowIndex, highIndex;
-          newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
+          //newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
+          lowIndex = newPatch->getInteriorCellLowIndex();
+          highIndex = newPatch->getInteriorCellHighIndex();
           
           // find if area on the new patch was not covered by the old patches
           IntVector dist = highIndex-lowIndex;
@@ -886,18 +888,11 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           
           for (int old = 0; old < oldPatches.size(); old++) {
             const Patch* oldPatch = oldPatches[old];
-            IntVector oldLow = oldPatch->getLowIndex();
-            IntVector oldHigh = oldPatch->getHighIndex();
+            IntVector oldLow = oldPatch->getInteriorCellLowIndex();
+            IntVector oldHigh = oldPatch->getInteriorCellHighIndex();
 
-            if (newLevel->getIndex() > 0) {
-              // compensate for the extra cells, we DON'T want to copy them over on non-coarse levels
-              // we'll interpolate those up
-              oldLow += (oldPatch->getInteriorCellLowIndex() - oldPatch->getCellLowIndex());
-              oldHigh -= (oldPatch->getCellHighIndex() - oldPatch->getInteriorCellHighIndex());
-            }
-
-            IntVector low = Max(oldPatch->getLowIndex(), newPatch->getLowIndex());
-            IntVector high = Min(oldPatch->getHighIndex(), newPatch->getHighIndex());
+            IntVector low = Max(oldLow, lowIndex);
+            IntVector high = Min(oldHigh, highIndex);
             IntVector dist = high-low;
             sum += dist.x()*dist.y()*dist.z();
           }  // for oldPatches
@@ -907,8 +902,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           
         } // for patchIterator
       }
-      if (refineSets[i]->size() > 0)
+      if (refineSets[i]->size() > 0) {
+        dbg << d_myworld->myrank() << "  Calling scheduleRefine for patches " << *refineSets[i].get_rep() << endl;
         sim->scheduleRefine(refineSets[i].get_rep(), sched);
+      }
     }
 
     // find the patches that you don't refine
