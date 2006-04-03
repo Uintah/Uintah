@@ -597,7 +597,7 @@ void MesquiteMesh<FIELD>::get_all_elements( vector<Mesquite::Mesh::ElementHandle
 template <class FIELD>
 Mesquite::VertexIterator* MesquiteMesh<FIELD>::vertex_iterator(Mesquite::MsqError &/*err*/)
 {
-  return new MesquiteMesh<FIELD>::VertexIterator(this);
+  return new typename MesquiteMesh<FIELD>::VertexIterator(this);
 }
   
 //! Returns a pointer to an iterator that iterates over the
@@ -608,7 +608,7 @@ Mesquite::VertexIterator* MesquiteMesh<FIELD>::vertex_iterator(Mesquite::MsqErro
 template <class FIELD>
 Mesquite::ElementIterator* MesquiteMesh<FIELD>::element_iterator(Mesquite::MsqError &/*err*/)
 {
-  return new MesquiteMesh<FIELD>::ElementIterator(this);
+  return new typename MesquiteMesh<FIELD>::ElementIterator(this);
 }
 
 //! Returns true or false, indicating whether the vertex
