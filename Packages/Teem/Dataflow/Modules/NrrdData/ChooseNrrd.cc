@@ -39,87 +39,24 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/ChooseModule.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Containers/Handle.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <iostream>
 
 namespace SCITeem {
 using namespace SCIRun;
 
-class ChooseNrrd : public Module {
-private:
-  GuiInt port_index_;
-  GuiInt usefirstvalid_;
+class ChooseNrrd : public ChooseModule< NrrdDataHandle > {
 public:
   ChooseNrrd(GuiContext* ctx);
-  virtual ~ChooseNrrd();
-  virtual void execute();
 };
 
 DECLARE_MAKER(ChooseNrrd)
 ChooseNrrd::ChooseNrrd(GuiContext* ctx)
-  : Module("ChooseNrrd", ctx, Filter, "NrrdData", "Teem"),
-    port_index_(get_ctx()->subVar("port-index"), 0),
-    usefirstvalid_(get_ctx()->subVar("usefirstvalid"), 0)
+  : ChooseModule< NrrdDataHandle >("ChooseNrrd", ctx, Filter,
+				   "NrrdData", "Teem", "Nrrd")
 {
-}
-
-ChooseNrrd::~ChooseNrrd()
-{
-}
-
-void
-ChooseNrrd::execute()
-{
-  NrrdOPort *onrrd = (NrrdOPort *)get_oport("Nrrd");
-
-  port_range_type range = get_iports("Nrrd");
-  if (range.first == range.second)
-    return;
-
-  port_map_type::iterator pi = range.first;
-
-  int usefirstvalid = usefirstvalid_.get();
-
-  NrrdIPort *inrrd = 0;
-  NrrdDataHandle nrrd;
-  
-  if (usefirstvalid) {
-    // iterate over the connections and use the
-    // first valid nrrd
-    int idx = 0;
-    bool found_valid = false;
-    while (pi != range.second) {
-      inrrd = (NrrdIPort *)get_iport(idx);
-      if (inrrd->get(nrrd) && nrrd != 0) {
-	found_valid = true;
-	break;
-      }
-      ++idx;
-      ++pi;
-    }
-    if (!found_valid) {
-      error("Didn't find any valid nrrds.");
-      return;
-    }
-  } else {
-    // use the index specified
-    int idx=port_index_.get();
-    if (idx<0) { error("Can't choose a negative port."); return; }
-    while (pi != range.second && idx != 0) { ++pi ; idx--; }
-    int port_number=pi->second;
-    if (pi == range.second || ++pi == range.second) { 
-      error("Selected port index out of range."); return; 
-    }
-
-    inrrd = (NrrdIPort *)get_iport(port_number);
-    inrrd->get(nrrd);
-  }
-  
-  onrrd->send_and_dereference(nrrd);
 }
 
 } // End namespace SCITeem
+
+
