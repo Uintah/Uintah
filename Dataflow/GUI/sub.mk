@@ -167,6 +167,7 @@ SRCS := \
         $(SRCDIR)/Subnet.tcl \
         $(SRCDIR)/SynchronizeGeometry.tcl \
         $(SRCDIR)/TextureBuilder.tcl \
+        $(SRCDIR)/TetGen.tcl \
         $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \
         $(SRCDIR)/TransformData.tcl \
