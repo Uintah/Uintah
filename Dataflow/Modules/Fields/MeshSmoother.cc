@@ -71,18 +71,21 @@ DECLARE_MAKER(MeshSmoother)
 
 
 MeshSmoother::MeshSmoother(GuiContext* ctx)
-        : Module("MeshSmoother", ctx, Filter, "FieldsData", "SCIRun"),
+        : Module("MeshSmoother", ctx, Filter, "FieldsGeometry", "SCIRun"),
           smooth_boundary_(get_ctx()->subVar("smoothboundary"), "Off" ),
           smooth_scheme_(get_ctx()->subVar("smoothscheme"), "SmartLaplacian" ),
           last_field_generation_(0)
 {
 }
 
+
 MeshSmoother::~MeshSmoother()
 {
 }
 
-void MeshSmoother::execute()
+
+void
+MeshSmoother::execute()
 {
     // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
@@ -111,7 +114,6 @@ void MeshSmoother::execute()
     return;
   }
   last_field_generation_ = ifieldhandle->generation;
-
 
   string ext = "";
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
@@ -167,6 +169,7 @@ void MeshSmoother::execute()
   ofield_port->send_and_dereference(ofield);
 }
 
+
 CompileInfoHandle
 MeshSmootherAlgo::get_compile_info(const TypeDescription *fsrc,
 			      string ext)
@@ -189,6 +192,7 @@ MeshSmootherAlgo::get_compile_info(const TypeDescription *fsrc,
 
   return rval;
 }
+
 
 } // End namespace SCIRun
 

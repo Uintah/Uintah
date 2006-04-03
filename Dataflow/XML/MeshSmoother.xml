@@ -33,7 +33,7 @@
 
 
 
-<component name="MeshSmoother" category="FieldsData" optional="true">
+<component name="MeshSmoother" category="FieldsGeometry" optional="true">
   <overview>
     <authors>
       <author>Jason Shepherd</author>
