@@ -160,14 +160,6 @@ protected:
                           DataWarehouse* new_dw);
 
   //////////
-  // Initialize particle data with a default values using 
-  // a temporary variable
-  void setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
-                                  ParticleSubset* pset,
-                                  DataWarehouse* new_dw,
-                                  double val);
-
-  //////////
   // Initialize particle data with a default values in the
   // new datawarehouse
   void setParticleDefault(ParticleVariable<double>& pvar,

@@ -3103,21 +3103,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 void 
-SerialMPM::setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
-                                      ParticleSubset* pset,
-                                      DataWarehouse* new_dw,
-                                      double val)
-{
-  ParticleVariable<double>  temp;
-  new_dw->allocateTemporary(temp,  pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end();iter++){
-    temp[*iter]=val;
-  }
-  pvar = temp; 
-}
-
-void 
 SerialMPM::setParticleDefault(ParticleVariable<double>& pvar,
                               const VarLabel* label, 
                               ParticleSubset* pset,
@@ -3326,13 +3311,22 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
         new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
-        new_dw->allocateAndPut(pdeform,        lb->pDeformationMeasureLabel, pset);
-        new_dw->allocateAndPut(pstress,        lb->pStressLabel,        pset);
-        if (flags->d_useLoadCurves)
+        if (flags->d_useLoadCurves){
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
+        }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
         new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
 
+        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+                                                           mpm_matl,new_dw);
+#if 0
+          if(flags->d_with_color) {
+            ParticleVariable<double> pcolor;
+            int index = mpm_matl->getDWIndex();
+            ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
+            setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
+          }
+#endif
       }
     }
   }

@@ -70,7 +70,7 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
   ParticleVariable<double>  pdTdt;
   ParticleVariable<Matrix3> pDefGrad, pStress;
 
-  new_dw->allocateAndPut(pdTdt,lb->pdTdtLabel,   pset);
+  new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
   new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
 
@@ -222,7 +222,7 @@ ConstitutiveModel::addSharedRForConvertExplicit(Task* task,
                                                 const PatchSet*) const
 {
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW,lb->pdTdtLabel_preReloc,  mset,gnone);
+  task->requires(Task::NewDW,lb->pdTdtLabel_preReloc,              mset,gnone);
   task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,mset,gnone);
   task->requires(Task::NewDW,lb->pStressLabel_preReloc,            mset,gnone);
 }
@@ -237,7 +237,7 @@ ConstitutiveModel::copyDelToAddSetForConvertExplicit(DataWarehouse* new_dw,
   constParticleVariable<Matrix3> pDefGrad_del;
   constParticleVariable<Matrix3> pStress_del;
 
-  new_dw->get(pIntHeatRate_del, lb->pdTdtLabel_preReloc,   delset);
+  new_dw->get(pIntHeatRate_del, lb->pdTdtLabel_preReloc,               delset);
   new_dw->get(pDefGrad_del,     lb->pDeformationMeasureLabel_preReloc, delset);
   new_dw->get(pStress_del,      lb->pStressLabel_preReloc,             delset);
 
