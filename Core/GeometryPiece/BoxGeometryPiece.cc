@@ -4,10 +4,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 
-#include <string>
-
 #ifndef DMIN
-#define DMIN(a,b) (a < b ? a : b)
+#  define DMIN(a,b) (a < b ? a : b)
 #endif
 
 using namespace Uintah;

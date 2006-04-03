@@ -4,7 +4,9 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 
-#include <Core/Geometry/Point.h>
+namespace SCIRun {
+  class Point;
+}
 
 namespace Uintah {
 
@@ -75,7 +77,7 @@ WARNING
 	 virtual bool inside(const Point &p) const;
 	 
 	 //////////
-	 //  Returns the bounding box surrounding the cylinder.
+	 //  Returns the bounding box surrounding the box (ie, the box itself).
 	 virtual Box getBoundingBox() const;
 	 
 	 //////////

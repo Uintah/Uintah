@@ -1,6 +1,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/ShellGeometryFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/NaaBoxGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/SphereMembraneGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
@@ -13,13 +14,16 @@
 #include <Packages/Uintah/Core/GeometryPiece/IntersectionGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/NullGeometryPiece.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
+
+#include <Core/Malloc/Allocator.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <string>
+#include   <iostream>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
@@ -40,6 +44,9 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
       
       else if (go_type == "box")
 	 objs.push_back(scinew BoxGeometryPiece(child));
+
+      else if (go_type == "parallelepiped")
+	 objs.push_back(scinew NaaBoxGeometryPiece(child));
       
       else if (go_type == "sphere")
 	 objs.push_back(scinew SphereGeometryPiece(child));
