@@ -433,13 +433,15 @@ Module::get_input_handle(std::string name,
 
 
 //! Used to get handles with error checking.
+//! If valid handles are set in the vector, return true.
+//! Only put valid handles in the vector.
 template<class DH>
 bool
 Module::get_dynamic_input_handles(std::string name,
 				  vector<DH> &handles,
-				  bool required)
+				  bool data_required)
 {
-  bool return_state = true;
+  bool return_state = false;
 
   update_state(NeedData);
 
@@ -452,7 +454,6 @@ Module::get_dynamic_input_handles(std::string name,
   if( range.first == range.second )
   {
     throw "Unable to initialize dynamic input port '" + name + "'.";
-    return_state = false;
   }
   else
   {
@@ -461,51 +462,47 @@ Module::get_dynamic_input_handles(std::string name,
     while (pi != range.second)
     {
       SimpleIPort<DH> *dataport;
-
+      dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second));
       //! We always require the port to be there.
-      if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second))) )
+      if(!dataport)
       {
 	throw "Unable to get dynamic input port #" + to_string(nPorts) +
           " ' " +name + "'.";
-	return_state = false;
       }
       else
       {
-	//! Increment here!  We do this because last one is always
-	//! empty so we can test for it before issuing empty warning.
-	++pi;
-	
 	//! Get the handle and check for data.
 	DH handle;
 	if (dataport->get(handle) && handle.get_rep())
         {
 	  handles.push_back(handle);
-
+	  
 	  //! See if the data has changed. Note only change the boolean if
 	  //! it is false this way it can be cascaded with other handle gets.
-	  if( inputs_changed_ == false ) inputs_changed_ = dataport->changed();
-	  
+	  if( inputs_changed_ == false ) {
+	    inputs_changed_ = dataport->changed();
+	  }
 	  ++nPorts;
-	}
-	else if (pi != range.second || nPorts == 0)
-	{
-	  //! The first input on the port was required to have a valid
-	  //! handle and data so report an error.
-	  if( required )
-	  {
-	    error( "No handle or representation for dynamic input port #" +
-		   to_string(nPorts) + " ' " +name + "'." );
-	    return_state = false;
-	  }
-	  else
-          {
-	    handles.push_back(0);
-	  }
+	  return_state = true;
 	}
       }
+      ++pi;
     }
   }
-  
+
+  if (return_state == false) 
+  {
+    //! At least the first input on the port was required to have a valid
+    //! handle and data so report an error.
+    if( data_required ) {
+      error( "No handle or representation for dynamic input port #" +
+	     to_string(nPorts) + " ' " +name + "'." );
+    }
+    //! If we have no valid handles, make sure iteration over 
+    //! the set of handles is empty.
+    handles.clear();
+  }
+ 
   return return_state;
 }
 
