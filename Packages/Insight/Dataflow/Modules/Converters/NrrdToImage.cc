@@ -120,7 +120,7 @@ void NrrdToImage::execute(){
 
   //  cerr << get_id() << " nrrd: " << (unsigned int)inrrd_handle_->nrrd;
 
-  Nrrd *n = inrrd_handle_->nrrd;
+  Nrrd *n = inrrd_handle_->nrrd_;
   int dim = n->dim;
 
   vector_data_ = false;
@@ -167,7 +167,7 @@ void NrrdToImage::execute(){
 template<unsigned int dim>
 void NrrdToImage::determine_nrrd_type() {
 
-  Nrrd* n = inrrd_handle_->nrrd;
+  Nrrd* n = inrrd_handle_->nrrd_;
 
   // determine pixel type
   switch(n->type) {
@@ -225,7 +225,7 @@ void NrrdToImage::determine_nrrd_type() {
 template<class type, unsigned int dim>
 void NrrdToImage::create_image() {
 
-  Nrrd* n = inrrd_handle_->nrrd;
+  Nrrd* n = inrrd_handle_->nrrd_;
   typedef typename itk::Image<type,dim> ImageType;
   typedef typename itk::ImageRegionIterator< ImageType > IteratorType;
 
@@ -309,7 +309,7 @@ NrrdToImage::copy_kvp_to_dictionary(Nrrd *n, itk::Object *obj) {
 template<class type, unsigned int dim>
 void NrrdToImage::create_image2() {
 
-  Nrrd* n = inrrd_handle_->nrrd;
+  Nrrd* n = inrrd_handle_->nrrd_;
   typedef typename itk::Image<itk::Vector<type>,dim> ImageType;
   typedef typename itk::ImageRegionIterator< ImageType > IteratorType;
 

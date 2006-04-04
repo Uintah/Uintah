@@ -105,8 +105,8 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
 
   // create a NrrdData
   NrrdData* nout = scinew NrrdData();
-  nout->nrrd = nrrdNew();
-  Nrrd* nr = nout->nrrd;
+  nout->nrrd_ = nrrdNew();
+  Nrrd* nr = nout->nrrd_;
 
   // Allocate the nrrd data and add an axis of size 1 for the tuple axis.
   // Set the labels and center
@@ -192,8 +192,8 @@ void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
 
   // create a NrrdData
   NrrdData* nout = scinew NrrdData();
-  nout->nrrd = nrrdNew();
-  Nrrd* nr = nout->nrrd;
+  nout->nrrd_ = nrrdNew();
+  Nrrd* nr = nout->nrrd_;
 
   // Allocate the nrrd data and add an axis of size 1 for the tuple axis.
   // Set the labels and center

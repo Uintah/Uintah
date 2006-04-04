@@ -108,17 +108,17 @@ NrrdTextureBuilderAlgoT<VTYPE, GTYPE>::fill_brick(TextureBrickHandle &brick,
     return;
   }
   
-  Nrrd *nv_nrrd = vHandle->nrrd;
-  Nrrd *gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd : 0);
+  Nrrd *nv_nrrd = vHandle->nrrd_;
+  Nrrd *gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd_ : 0);
   
   TextureBrickT<unsigned char>* br =
     (TextureBrickT<unsigned char>*) brick.get_rep();
 
   // Direct memory copies can be done if the data is unisgned chars
   // with no rescaling.
-  bool use_mem_copy = (vHandle->nrrd->type == nrrdTypeUChar &&
+  bool use_mem_copy = (vHandle->nrrd_->type == nrrdTypeUChar &&
 		       vmin == 0 && vmax == 255 &&
-		       gHandle->nrrd->type == nrrdTypeUChar &&
+		       gHandle->nrrd_->type == nrrdTypeUChar &&
 		       gmin == 0 && gmax == 255);
 
   int nc = brick->nc();
