@@ -142,7 +142,7 @@ Unu3op::execute()
   if (!usetype_.get()) {
     if (first_nrrd_) {
       ntmp1 = nrrdNew();
-      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd,
+      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd_,
                       string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
@@ -152,7 +152,7 @@ Unu3op::execute()
     }
     if (second_nrrd_) {
       ntmp2 = nrrdNew();
-      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd,
+      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd_,
                       string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
@@ -162,7 +162,7 @@ Unu3op::execute()
     }
     if (third_nrrd_) {
       ntmp3 = nrrdNew();
-      if (nrrdConvert(ntmp3, nrrd_handle3->nrrd,
+      if (nrrdConvert(ntmp3, nrrd_handle3->nrrd_,
                       string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
@@ -176,19 +176,19 @@ Unu3op::execute()
     if (!usetype_.get())
       nin1 = ntmp1;
     else
-      nin1 = nrrd_handle1->nrrd;
+      nin1 = nrrd_handle1->nrrd_;
   }
   if (second_nrrd_) {
     if (!usetype_.get())
       nin2 = ntmp2;
     else
-      nin2 = nrrd_handle2->nrrd;
+      nin2 = nrrd_handle2->nrrd_;
   }
   if (third_nrrd_) {
     if (!usetype_.get())
       nin3 = ntmp3;
     else
-      nin3 = nrrd_handle3->nrrd;
+      nin3 = nrrd_handle3->nrrd_;
   }
 
 

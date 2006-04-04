@@ -112,7 +112,7 @@ GageProbe::execute()
     return;
   }
   
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
   //Set the GUI variables
@@ -353,7 +353,7 @@ GageProbe::execute()
   nout->axis[2+oBaseDim].label = airStrdup(nin->axis[2+iBaseDim].label);
   
   
-  for (int i = 0; i < nout->dim; i++)
+  for (unsigned int i = 0; i < nout->dim; i++)
   {
     if (!(airExists(nout->axis[i].min) && 
 	  airExists(nout->axis[i].max)))

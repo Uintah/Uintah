@@ -80,7 +80,7 @@ TendShrink::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenShrink(nout, NULL, nin)) {

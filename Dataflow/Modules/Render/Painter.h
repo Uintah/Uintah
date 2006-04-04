@@ -459,7 +459,7 @@ class Painter : public Module
     int                 max_index(int axis);
 
     bool                inside_p(const Point &p);
-    NrrdDataHandle	nrrd_;
+    NrrdDataHandle	nrrd_handle_;
     GuiContext *        gui_context_;
     GuiString           name_;
     string              name_prefix_;
@@ -628,10 +628,10 @@ nrrd_get_value(const Nrrd *nrrd,
                const vector<int> &index, 
                T &value)
 {
-  ASSERT(int(index.size()) == nrrd->dim);
+  ASSERT((unsigned int)(index.size()) == nrrd->dim);
   int position = index[0];
   int mult_factor = nrrd->axis[0].size;
-  for (int a = 1; a < nrrd->dim; ++a) {
+  for (unsigned int a = 1; a < nrrd->dim; ++a) {
     position += index[a] * mult_factor;
     mult_factor *= nrrd->axis[a].size;
   }
@@ -691,10 +691,10 @@ nrrd_set_value(Nrrd *nrrd,
                const vector<int> &index, 
                T val)
 {
-  ASSERT(int(index.size()) == nrrd->dim);
+  ASSERT((unsigned int)(index.size()) == nrrd->dim);
   int position = index[0];
   int mult_factor = nrrd->axis[0].size;
-  for (int a = 1; a < nrrd->dim; ++a) {
+  for (unsigned int a = 1; a < nrrd->dim; ++a) {
     position += index[a] * mult_factor;
     mult_factor *= nrrd->axis[a].size;
   }
@@ -755,7 +755,7 @@ template<class T>
 void
 Painter::NrrdVolume::get_value(const vector<int> &index, T &value) {
   ASSERT(index_valid(index));
-  nrrd_get_value(nrrd_->nrrd, index, value);
+  nrrd_get_value(nrrd_handle_->nrrd_, index, value);
 }
 
 
@@ -763,7 +763,7 @@ template <class T>
 void
 Painter::NrrdVolume::set_value(const vector<int> &index, T value) {
   ASSERT(index_valid(index));
-  nrrd_set_value(nrrd_->nrrd, index, value);
+  nrrd_set_value(nrrd_handle_->nrrd_, index, value);
 }
 
 template <class T>

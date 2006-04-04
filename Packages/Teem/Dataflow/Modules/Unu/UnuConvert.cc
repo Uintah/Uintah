@@ -106,7 +106,7 @@ UnuConvert::execute()
   last_generation_ = nrrdH->generation;
   last_type_ = type;
 
-  Nrrd *nin = nrrdH->nrrd;
+  Nrrd *nin = nrrdH->nrrd_;
   Nrrd *nout = nrrdNew();
   msg_stream_ << "New type is "<<type<<endl;
 

@@ -119,8 +119,8 @@ TendEstim::execute()
 
   int knownB0 = knownB0_.get(); // TRUE for brains, FALSE for dog hearts
   Nrrd* dummy = nrrdNew();
-  if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, 
-			  bmat_handle->nrrd, knownB0, threshold, 
+  if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd_, 
+			  bmat_handle->nrrd_, knownB0, threshold, 
 			  soft_.get(), scale_.get()))
   {
     char *err = biffGetDone(TEN);

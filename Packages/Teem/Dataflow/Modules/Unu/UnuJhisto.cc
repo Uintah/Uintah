@@ -117,13 +117,13 @@ UnuJhisto::execute()
       need_execute = true;
       weight_generation_ = weight_handle->generation;
     }
-    weight = weight_handle->nrrd;
+    weight = weight_handle->nrrd_;
   }
 
   if (!inrrd1_->get(nrrd_handle1))
     return;
   else
-    nin1 = nrrd_handle1->nrrd;
+    nin1 = nrrd_handle1->nrrd_;
 
   if (!nrrd_handle1.get_rep()) {
     error("Empty InputNrrd1.");
@@ -148,8 +148,8 @@ UnuJhisto::execute()
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
     NrrdDataHandle nrrd;
     if (inrrd->get(nrrd) && nrrd.get_rep()) {
-      if (nrrd->nrrd->dim > max_dim)
-	max_dim = nrrd->nrrd->dim;
+      if (nrrd->nrrd_->dim > max_dim)
+	max_dim = nrrd->nrrd_->dim;
       
       nrrds.push_back(nrrd);
     }
@@ -241,7 +241,7 @@ UnuJhisto::execute()
     Nrrd **nrrds_array = scinew Nrrd *[nrrds.size()];
     NrrdRange **range = scinew NrrdRange *[nrrds.size()];
     for (unsigned int d = 0; d< nrrds.size(); d++) {
-      nrrds_array[d] = nrrds[d]->nrrd;
+      nrrds_array[d] = nrrds[d]->nrrd_;
       range[d] = nrrdRangeNew(AIR_NAN, AIR_NAN);
     }
     
@@ -421,9 +421,9 @@ UnuJhisto::execute()
 	if (airIsNaN(range[0]->max)) range[0]->max = minmax->max;
 	nrrdRangeNix(minmax);
       }
-      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_min", 
+      nrrdKeyValueAdd(last_nrrdH_->nrrd_, "jhisto_nrrd0_min", 
 		      to_string(range[0]->min).c_str());
-      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", 
+      nrrdKeyValueAdd(last_nrrdH_->nrrd_, "jhisto_nrrd0_max", 
 		      to_string(range[0]->max).c_str());
     }
     

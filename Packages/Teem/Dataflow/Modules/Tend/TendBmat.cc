@@ -115,7 +115,7 @@ TendBmat::execute()
 
   if (inrrd_->get(nrrd_handle) && nrrd_handle.get_rep()) {
     we_own_the_data = false;
-    nin = nrrd_handle->nrrd;
+    nin = nrrd_handle->nrrd_;
   } else {
     we_own_the_data = true;
     mat = new vector<double>;

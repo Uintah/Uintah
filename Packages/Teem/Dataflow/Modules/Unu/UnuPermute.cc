@@ -102,7 +102,7 @@ UnuPermute::valid_data(unsigned int* axes) {
 
   vector<unsigned int> exists(dim_.get(), 0);
   for (int a = 0; a < dim_.get(); a++) {
-    if (axes[a] < dim_.get() && !exists[axes[a]]) {
+    if (axes[a] < (unsigned int) dim_.get() && !exists[axes[a]]) {
       exists[axes[a]] = 1;
     } else {
       error("Bad axis assignments!");
@@ -127,7 +127,7 @@ UnuPermute::execute()
     return;
   }
 
-  dim_.set(nrrdH->nrrd->dim);
+  dim_.set(nrrdH->nrrd_->dim);
 
   if (dim_.get() == 0) { return; }
 
@@ -148,13 +148,13 @@ UnuPermute::execute()
   }
 
   last_generation_ = nrrdH->generation;
-  dim_.set(nrrdH->nrrd->dim);
+  dim_.set(nrrdH->nrrd_->dim);
   dim_.reset();
 
   // remove any unused uis or add any needes uis
-  if (uis_.get() > nrrdH->nrrd->dim) {
+  if ((unsigned int) uis_.get() > nrrdH->nrrd_->dim) {
     // remove them
-    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+    for(unsigned int i=uis_.get()-1; i>=nrrdH->nrrd_->dim; i--) {
       ostringstream str;
       str << i;
       vector<GuiInt*>::iterator iter = axes_.end();
@@ -163,8 +163,8 @@ UnuPermute::execute()
       last_axes_.erase(iter2, iter2);
       get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
-  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    uis_.set(nrrdH->nrrd_->dim);
+  } else if ((unsigned int) uis_.get() < nrrdH->nrrd_->dim) {
     for (int i=uis_.get()-1; i< dim_.get(); i++) {
       ostringstream str, str2;
       str << "axis" << i;
@@ -173,7 +173,7 @@ UnuPermute::execute()
       last_axes_.push_back(i);
       get_gui()->execute(get_id().c_str() + string(" make_axis " + str2.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
+    uis_.set(nrrdH->nrrd_->dim);
   }
 
   for (int a = 0; a < dim_.get(); a++) {
@@ -189,7 +189,7 @@ UnuPermute::execute()
   }
 
   for (int a = 0; a < dim_.get(); a++) {
-    if (last_axes_[a] != axes_[a]->get()) {
+    if (last_axes_[a] != (unsigned int) axes_[a]->get()) {
       changed = true;
       last_axes_[a] = axes_[a]->get();
     }
@@ -205,7 +205,7 @@ UnuPermute::execute()
   unsigned int* axp = &(last_axes_[0]);
   if (!valid_data(axp)) return;
 
-  Nrrd *nin = nrrdH->nrrd;
+  Nrrd *nin = nrrdH->nrrd_;
   Nrrd *nout = nrrdNew();
 
   nrrdAxesPermute(nout, nin, axp);

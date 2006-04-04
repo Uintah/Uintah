@@ -96,10 +96,10 @@ UnuHisto::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *weight = 0;
   if (wnrrd_->get(weight_handle)) {
-    weight = weight_handle->nrrd;    
+    weight = weight_handle->nrrd_;    
   }
   Nrrd *nout = nrrdNew();
 

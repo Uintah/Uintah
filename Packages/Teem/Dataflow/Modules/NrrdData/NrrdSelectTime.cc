@@ -105,12 +105,12 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
   MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
   NrrdDataHandle onrrd_handle(0);
 
-  if ((int)time_axis == in->nrrd->dim - 1)
+  if ((unsigned int)time_axis == in->nrrd_->dim - 1)
   {
     NrrdData *out = scinew NrrdData(in.get_rep());
 
     // Copy all of the nrrd header from in to out.
-    if (nrrdBasicInfoCopy(out->nrrd, in->nrrd,
+    if (nrrdBasicInfoCopy(out->nrrd_, in->nrrd_,
 			  NRRD_BASIC_INFO_DATA_BIT
 			  | NRRD_BASIC_INFO_CONTENT_BIT
 			  | NRRD_BASIC_INFO_COMMENTS_BIT))
@@ -118,33 +118,33 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
       error(biffGetDone(NRRD));
       return;
     }
-    out->nrrd->dim--;
+    out->nrrd_->dim--;
 
-    if (nrrdAxisInfoCopy(out->nrrd, in->nrrd, NULL, NRRD_AXIS_INFO_NONE))
+    if (nrrdAxisInfoCopy(out->nrrd_, in->nrrd_, NULL, NRRD_AXIS_INFO_NONE))
     {
       error(biffGetDone(NRRD));
       return;
     }
-    if (nrrdContentSet_va(out->nrrd, "slice", in->nrrd, "%d,%d",
+    if (nrrdContentSet_va(out->nrrd_, "slice", in->nrrd_, "%d,%d",
 			  time_axis, which))
     {
       error(biffGetDone(NRRD));
       return;
     }  
     
-    size_t offset = which * nrrdTypeSize[in->nrrd->type];
-    for (int i = 0; i < in->nrrd->dim - 1; i++)
+    size_t offset = which * nrrdTypeSize[in->nrrd_->type];
+    for (unsigned int i = 0; i < in->nrrd_->dim - 1; i++)
     {
-      offset *= in->nrrd->axis[i].size;
+      offset *= in->nrrd_->axis[i].size;
     }
-    out->nrrd->data = ((unsigned char *)(in->nrrd->data)) + offset;
+    out->nrrd_->data = ((unsigned char *)(in->nrrd_->data)) + offset;
     onrrd_handle = out;
   }
   else
   {
     // Do the slice.
     NrrdData *out = scinew NrrdData();
-    if (nrrdSlice(out->nrrd, in->nrrd, time_axis, which))
+    if (nrrdSlice(out->nrrd_, in->nrrd_, time_axis, which))
     {
       char *err = biffGetDone(NRRD);
       error(string("Trouble slicing: ") + err);
@@ -230,10 +230,10 @@ NrrdSelectTime::execute()
 
   // Must have a time axis.
   int time_axis = -1;
-  for (unsigned int i = 0; i < (unsigned int)nrrd_handle->nrrd->dim; i++)
+  for (unsigned int i = 0; i < (unsigned int)nrrd_handle->nrrd_->dim; i++)
   {
-    if (nrrd_handle->nrrd->axis[i].label &&
-	string(nrrd_handle->nrrd->axis[i].label) == string("Time"))
+    if (nrrd_handle->nrrd_->axis[i].label &&
+	string(nrrd_handle->nrrd_->axis[i].label) == string("Time"))
     {
       time_axis = i;
       break;
@@ -243,14 +243,14 @@ NrrdSelectTime::execute()
   if (time_axis == -1) {
     warning("This nrrd has no time axis (Must be labeled 'Time')");
     warning("Using the last axis as the time axis.");
-    time_axis = nrrd_handle->nrrd->dim - 1;
+    time_axis = nrrd_handle->nrrd_->dim - 1;
   }
 
   if (nrrd_handle->generation != last_input_)
   {
     // set the slider values.
     selectable_min_.set(0.0);
-    selectable_max_.set(nrrd_handle->nrrd->axis[time_axis].size - 1);
+    selectable_max_.set(nrrd_handle->nrrd_->axis[time_axis].size - 1);
 
     get_gui()->execute(get_id() + " update_range");
     last_input_ = nrrd_handle->generation;

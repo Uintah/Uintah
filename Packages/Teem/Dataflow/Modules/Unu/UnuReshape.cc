@@ -90,12 +90,12 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // Determine the number of mins given
   string sizes = sz_.get();
-  int szLen = 0;
+  unsigned int szLen = 0;
   char ch;
   int i=0, start=0;
   bool inword = false;
@@ -168,7 +168,7 @@ void
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++) {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 

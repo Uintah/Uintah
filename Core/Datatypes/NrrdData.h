@@ -56,7 +56,7 @@ public:
   // GROUP: public data
   //////////
   // 
-  Nrrd *nrrd;
+  Nrrd *nrrd_;
 
   NrrdData();
   NrrdData(Nrrd *nrrd);

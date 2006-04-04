@@ -134,17 +134,17 @@ FreeTypeTextTexture::render_text_to_texture()
   size[0] = 1;
   size[1] = wid;
   size[2] = hei;
-  NrrdDataHandle nrrd = scinew NrrdData();
-  nrrdAlloc_nva(nrrd->nrrd, nrrdTypeUChar, 3, size);
-  memset(nrrd->nrrd->data, 0, wid*hei);
-  fttext.render(wid, hei, (unsigned char *)nrrd->nrrd->data);
+  NrrdDataHandle nrrd_handle = scinew NrrdData();
+  nrrdAlloc_nva(nrrd_handle->nrrd_, nrrdTypeUChar, 3, size);
+  memset(nrrd_handle->nrrd_->data, 0, wid*hei);
+  fttext.render(wid, hei, (unsigned char *)nrrd_handle->nrrd_->data);
 
   if (texture_) {
     delete texture_;
     texture_ = 0;
   }
 
-  texture_ = scinew NrrdTextureObj(nrrd);
+  texture_ = scinew NrrdTextureObj(nrrd_handle);
   dirty_ = false;
 }
   

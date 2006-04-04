@@ -86,7 +86,7 @@ UnuAxsplit::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdAxesSplit(nout, nin, axis_.get(), fastsize_.get(), slowsize_.get())) {

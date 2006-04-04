@@ -204,17 +204,17 @@ NrrdReader::read_file(string fn)
 {
 
   NrrdData *n = scinew NrrdData;
-  if (nrrdLoad(n->nrrd, airStrdup(fn.c_str()), 0)) {
+  if (nrrdLoad(n->nrrd_, airStrdup(fn.c_str()), 0)) {
     char *err = biffGetDone(NRRD);
     error("Read error on '" + fn + "': " + err);
     free(err);
     return true;
   }
   read_handle_ = n;
-  for (int i = 0; i < read_handle_->nrrd->dim; i++) {
-    if (!(airExists(read_handle_->nrrd->axis[i].min) && 
-	  airExists(read_handle_->nrrd->axis[i].max)))
-      nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+  for (unsigned int i = 0; i < read_handle_->nrrd_->dim; i++) {
+    if (!(airExists(read_handle_->nrrd_->axis[i].min) && 
+	  airExists(read_handle_->nrrd_->axis[i].max)))
+      nrrdAxisInfoMinMaxSet(read_handle_->nrrd_, i, nrrdCenterNode);
   }
   return false;
 }

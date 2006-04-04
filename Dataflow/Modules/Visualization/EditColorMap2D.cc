@@ -1040,11 +1040,11 @@ EditColorMap2D::execute()
 
   if (h.get_rep() && h->generation != hist_generation_) {
     hist_generation_ = h->generation;
-    if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
+    if(h->nrrd_->dim != 2 && h->nrrd_->dim != 3) {
       error("Invalid input histogram dimension.");
       return;
     }
-    histo_ = h->nrrd;
+    histo_ = h->nrrd_;
     histo_dirty_ = true;
 
     if (histo_ && histo_->kvp) {

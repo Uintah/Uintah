@@ -83,7 +83,7 @@ UnuAxmerge::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout[2];
   nout[0] = nrrdNew();
   nout[1] = nrrdNew();

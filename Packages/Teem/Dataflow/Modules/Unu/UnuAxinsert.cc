@@ -81,7 +81,7 @@ UnuAxinsert::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
 
@@ -111,15 +111,15 @@ UnuAxinsert::execute()
 
   // set kind
   // Copy the axis kinds
-  int offset = 0;
-  for (int i=0; i<nin->dim; i++) {
-    if (i == axis) {
+  unsigned int offset = 0;
+  for (unsigned int i=0; i<nin->dim; i++) {
+    if (i == (unsigned int) axis) {
       offset = 1;
       nout->axis[i].kind = nrrdKindStub;
     }
     nout->axis[i+offset].kind = nin->axis[i].kind;
   }
-  if (axis == nin->dim) 
+  if ((unsigned int) axis == nin->dim) 
     nout->axis[axis].kind = nrrdKindStub;
 
   onrrd_->send_and_dereference(out);

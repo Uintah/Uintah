@@ -124,14 +124,14 @@ MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH) {
   size[0] = matrix->nrows();
   
   NrrdData *nd = scinew NrrdData();
-  nrrdAlloc_nva(nd->nrrd, nrrdTypeDouble, 1, size);
-  nrrdAxisInfoSet_nva(nd->nrrd, nrrdAxisInfoLabel, "column-data");
-  nd->nrrd->axis[0].kind = nrrdKindDomain;
+  nrrdAlloc_nva(nd->nrrd_, nrrdTypeDouble, 1, size);
+  nrrdAxisInfoSet_nva(nd->nrrd_, nrrdAxisInfoLabel, "column-data");
+  nd->nrrd_->axis[0].kind = nrrdKindDomain;
 
-  double *val = (double*)nd->nrrd->data;
+  double *val = (double*)nd->nrrd_->data;
   double *data = matrix->get_data();
 
-  for(int i=0; i<size[0]; i++) {
+  for(unsigned int i=0; i<size[0]; i++) {
     *val = *data;
     ++data;
     ++val;
@@ -153,16 +153,16 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   NrrdData *nd = scinew NrrdData();
   size_t size[NRRD_DIM_MAX];
   size[0] = cols; size[1] = rows;
-  nrrdAlloc_nva(nd->nrrd, nrrdTypeDouble, 2, size);
+  nrrdAlloc_nva(nd->nrrd_, nrrdTypeDouble, 2, size);
 
   char *labels[NRRD_DIM_MAX];
   labels[0] = airStrdup("dense-columns");
   labels[1] = airStrdup("dense-rows");
-  nrrdAxisInfoSet_nva(nd->nrrd, nrrdAxisInfoLabel, labels);
-  nd->nrrd->axis[0].kind = nrrdKindDomain;
-  nd->nrrd->axis[1].kind = nrrdKindDomain;
+  nrrdAxisInfoSet_nva(nd->nrrd_, nrrdAxisInfoLabel, labels);
+  nd->nrrd_->axis[0].kind = nrrdKindDomain;
+  nd->nrrd_->axis[1].kind = nrrdKindDomain;
 
-  double *val = (double*)nd->nrrd->data;
+  double *val = (double*)nd->nrrd_->data;
   double *data = matrix->get_data_pointer();
 
   for(int r=0; r<rows; r++) {
@@ -183,30 +183,30 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
 
   size_t nnz[NRRD_DIM_MAX];
   nnz[0] = matrix->get_nnz();
-  int rows = matrix->nrows();
+  unsigned int rows = matrix->nrows();
 
   // create 3 nrrds (data, rows, cols)
   NrrdData *data_n = scinew NrrdData();
-  nrrdAlloc_nva(data_n->nrrd, nrrdTypeDouble, 1, nnz);
-  nrrdAxisInfoSet_nva(data_n->nrrd, nrrdAxisInfoLabel, "sparse-data");
-  data_n->nrrd->axis[0].kind = nrrdKindDomain;
+  nrrdAlloc_nva(data_n->nrrd_, nrrdTypeDouble, 1, nnz);
+  nrrdAxisInfoSet_nva(data_n->nrrd_, nrrdAxisInfoLabel, "sparse-data");
+  data_n->nrrd_->axis[0].kind = nrrdKindDomain;
 
   NrrdData *rows_n = scinew NrrdData();
   size_t sparse_size[NRRD_DIM_MAX];
   sparse_size[0] = rows + 1;
-  nrrdAlloc_nva(rows_n->nrrd, nrrdTypeInt, 1, sparse_size);
-  nrrdAxisInfoSet_nva(rows_n->nrrd, nrrdAxisInfoLabel, "sparse-rows");
-  rows_n->nrrd->axis[0].kind = nrrdKindDomain;
+  nrrdAlloc_nva(rows_n->nrrd_, nrrdTypeInt, 1, sparse_size);
+  nrrdAxisInfoSet_nva(rows_n->nrrd_, nrrdAxisInfoLabel, "sparse-rows");
+  rows_n->nrrd_->axis[0].kind = nrrdKindDomain;
 
   NrrdData *cols_n = scinew NrrdData();
-  nrrdAlloc_nva(cols_n->nrrd, nrrdTypeInt, 1, nnz);
-  nrrdAxisInfoSet_nva(cols_n->nrrd, nrrdAxisInfoLabel, "sparse-columns");
-  cols_n->nrrd->axis[0].kind = nrrdKindDomain;
+  nrrdAlloc_nva(cols_n->nrrd_, nrrdTypeInt, 1, nnz);
+  nrrdAxisInfoSet_nva(cols_n->nrrd_, nrrdAxisInfoLabel, "sparse-columns");
+  cols_n->nrrd_->axis[0].kind = nrrdKindDomain;
 
   // pointers to nrrds
-  double *data_p = (double*)data_n->nrrd->data;
-  int *rows_p = (int*)rows_n->nrrd->data;
-  int *cols_p = (int*)cols_n->nrrd->data;
+  double *data_p = (double*)data_n->nrrd_->data;
+  int *rows_p = (int*)rows_n->nrrd_->data;
+  int *cols_p = (int*)cols_n->nrrd_->data;
 
   // points to matrix arrays
   int *rr = matrix->get_row();
@@ -214,7 +214,7 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
   double *d = matrix->get_val();
 
   // copy data and cols (size nnz)
-  int i = 0;
+  unsigned int i = 0;
   for (i=0; i<nnz[0]; i++) {
     data_p[i] = d[i];
     cols_p[i] = cc[i];

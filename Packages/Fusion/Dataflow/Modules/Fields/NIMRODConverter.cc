@@ -181,18 +181,18 @@ NIMRODConverter::execute(){
 
 	      // Sort the components components.
 	      if( nrrdName.find( "R:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 2 ) {
+		  nHandle->nrrd_->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[R] = ic;
 	      } else if( nrrdName.find( "Z:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 2 ) {
+			 nHandle->nrrd_->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[Z] = ic; 
 	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 1 ) {
+			 nHandle->nrrd_->dim == 1 ) {
 		mesh_[PHI] = ic;
 	      } else if( nrrdName.find( "K:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 1 ) {
+			 nHandle->nrrd_->dim == 1 ) {
 		conversion_ = PERTURBED;
 		mesh_[K] = ic;
 	      } else {
@@ -225,24 +225,24 @@ NIMRODConverter::execute(){
 	  }
 
 	  if( nrrdName.find( "R:Scalar" ) != string::npos &&
-	      nHandle->nrrd->dim == 3 ) {
+	      nHandle->nrrd_->dim == 3 ) {
 	    conversion_ = REALSPACE;
 	    data_[0] = ic;
 	  } else if( nrrdName.find( "Z:Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 3 ) {
+		     nHandle->nrrd_->dim == 3 ) {
 	    conversion_ = REALSPACE;
 	    data_[1] = ic; 
 	  } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 3 ) {
+		     nHandle->nrrd_->dim == 3 ) {
 	    conversion_ = REALSPACE;
 	    data_[2] = ic;
 	  } else if( nrrdName.find( ":Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 3 ) {
+		     nHandle->nrrd_->dim == 3 ) {
 	    conversion_ = SCALAR;
 	    data_[0] = ic;
 	  } else if( (nrrdName.find( "R-Z-PHI:Vector" ) != string::npos || 
 		      nrrdName.find( "PHI-R-Z:Vector" ) != string::npos ) && 
-		     nHandle->nrrd->dim == 4 ) {
+		     nHandle->nrrd_->dim == 4 ) {
 	    conversion_ = REALSPACE;
 	    data_.resize(1);
 	    data_[0] = ic;
@@ -276,25 +276,25 @@ NIMRODConverter::execute(){
 	      
 	      int index = 0;
 	      if( nrrdName.find( "R:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 3 ) {
+		  nHandle->nrrd_->dim == 3 ) {
 		conversion_ = PERTURBED;
 		index = 0 + 3 * offset;
 	      } else if( nrrdName.find( "Z:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 3 ) {
+			 nHandle->nrrd_->dim == 3 ) {
 		conversion_ = PERTURBED;
 		index = 1 + 3 * offset;
 	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 3 ) {
+			 nHandle->nrrd_->dim == 3 ) {
 		conversion_ = PERTURBED;
 		index = 2 + 3 * offset;
 	      } else if( (nrrdName.find( "R-Z-PHI:Vector" ) != string::npos || 
 			  nrrdName.find( "PHI-R-Z:Vector" ) != string::npos ) && 
-			 nHandle->nrrd->dim == 4 ) {
+			 nHandle->nrrd_->dim == 4 ) {
 		conversion_ = PERTURBED;
 		data_.resize(2);
 		index = 0 + 1 * offset;
 	      } else if( nrrdName.find( ":Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 3 ){ // Scalar data
+			 nHandle->nrrd_->dim == 3 ){ // Scalar data
 		conversion_ = PERTURBED;
 		data_.resize(2);
 		index = 0 + 1 * offset;
@@ -373,7 +373,7 @@ NIMRODConverter::execute(){
   if( (conversion_ & PERTURBED) &&
       nrrd_input_handles[mesh_[K]]->get_property( "Coordinate System", property ) &&
       property.find("Cylindrical - NIMROD") != string::npos )
-    nmodes_ = nrrd_input_handles[mesh_[K]]->nrrd->axis[0].size; // Modes
+    nmodes_ = nrrd_input_handles[mesh_[K]]->nrrd_->axis[0].size; // Modes
   else
     nmodes_ = 0;
 
@@ -455,14 +455,14 @@ NIMRODConverter::execute(){
     unsigned int ntype;
     
     if( conversion_ & MESH ) {
-      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd_->type;
 
       nrrd_input_handles[mesh_[PHI]]->get_property( "Coordinate System", property );
       
-      if( nrrd_input_handles[mesh_[R]]->nrrd->axis[0].size != 
-	  nrrd_input_handles[mesh_[Z]]->nrrd->axis[0].size ||
-	  nrrd_input_handles[mesh_[R]]->nrrd->axis[1].size != 
-	  nrrd_input_handles[mesh_[Z]]->nrrd->axis[1].size ) {
+      if( nrrd_input_handles[mesh_[R]]->nrrd_->axis[0].size != 
+	  nrrd_input_handles[mesh_[Z]]->nrrd_->axis[0].size ||
+	  nrrd_input_handles[mesh_[R]]->nrrd_->axis[1].size != 
+	  nrrd_input_handles[mesh_[Z]]->nrrd_->axis[1].size ) {
 	error( "R-Z Mesh dimension mismatch." );
 	execute_error_ = true;
 	return;
@@ -474,19 +474,19 @@ NIMRODConverter::execute(){
       convertStr = "Mesh";
       
     } else if( conversion_ & SCALAR ) {
-      ntype = nrrd_input_handles[data_[0]]->nrrd->type;
+      ntype = nrrd_input_handles[data_[0]]->nrrd_->type;
 
       convertStr = "Scalar";
       
     } else if( conversion_ & REALSPACE ) {
-      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd_->type;
       
       nrrd_input_handles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
 	if(  data_.size() == 1 ) {
-	  if( nrrd_input_handles[mesh_[PHI]]->nrrd->axis[0].size !=
-	      nrrd_input_handles[data_[  0]]->nrrd->axis[3].size ) {
+	  if( nrrd_input_handles[mesh_[PHI]]->nrrd_->axis[0].size !=
+	      nrrd_input_handles[data_[  0]]->nrrd_->axis[3].size ) {
 	    error( "Phi Mesh - Data dimension mismatch." );
 	    execute_error_ = true;
 	    return;
@@ -494,17 +494,17 @@ NIMRODConverter::execute(){
 
 	} else if( data_.size() == 3 ) {
 	  if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	    if( nrrd_input_handles[mesh_[PHI]]->nrrd->axis[0].size !=
-		nrrd_input_handles[data_[  0]]->nrrd->axis[3].size ) {
+	    if( nrrd_input_handles[mesh_[PHI]]->nrrd_->axis[0].size !=
+		nrrd_input_handles[data_[  0]]->nrrd_->axis[3].size ) {
 	      error( "Phi Mesh - Data dimension mismatch." );
 	      execute_error_ = true;
 	      return;
 	    }
 
 	    for( unsigned int ic=1; ic<data_.size(); ic++ ) {
-	      for( int jc=1; jc<nrrd_input_handles[data_[0]]->nrrd->dim; jc++ ) {
-		if( nrrd_input_handles[data_[ 0]]->nrrd->axis[jc].size !=
-		    nrrd_input_handles[data_[ic]]->nrrd->axis[jc].size ) {
+	      for( unsigned int jc=1; jc<nrrd_input_handles[data_[0]]->nrrd_->dim; jc++ ) {
+		if( nrrd_input_handles[data_[ 0]]->nrrd_->axis[jc].size !=
+		    nrrd_input_handles[data_[ic]]->nrrd_->axis[jc].size ) {
 		  error( "Data dimension mismatch." );
 		  execute_error_ = true;
 		  return;
@@ -518,16 +518,16 @@ NIMRODConverter::execute(){
       convertStr = "RealSpace";
 
     } else if( conversion_ & PERTURBED ) {
-      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd_->type;
 
       nrrd_input_handles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
 
-	int cc = nrrd_input_handles[data_[0]]->nrrd->dim;
+	int cc = nrrd_input_handles[data_[0]]->nrrd_->dim;
 
-	if( nrrd_input_handles[mesh_[K]]->nrrd->axis[0].size !=
-	    nrrd_input_handles[data_[0]]->nrrd->axis[cc-1].size ) {
+	if( nrrd_input_handles[mesh_[K]]->nrrd_->axis[0].size !=
+	    nrrd_input_handles[data_[0]]->nrrd_->axis[cc-1].size ) {
 	  error( "Complex Mode Mesh - Data dimension mismatch." );
 	  execute_error_ = true;
 	  return;
@@ -536,8 +536,8 @@ NIMRODConverter::execute(){
 	for( unsigned int ic=1; ic<data_.size(); ic++ ) {
 	  for( int jc=0; jc<cc; jc++ ) {
 	    
-	    if( nrrd_input_handles[data_[ 0]]->nrrd->axis[jc].size !=
-		nrrd_input_handles[data_[ic]]->nrrd->axis[jc].size ) {
+	    if( nrrd_input_handles[data_[ 0]]->nrrd_->axis[jc].size !=
+		nrrd_input_handles[data_[ic]]->nrrd_->axis[jc].size ) {
 	      error( "Data dimension mismatch." );
 	      execute_error_ = true;
 	      return;

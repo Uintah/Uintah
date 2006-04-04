@@ -279,16 +279,16 @@ VULCANDataReader::execute(){
     size_t size[NRRD_DIM_MAX];
     size[0] = rank;
     size[1] = npos;
-    nrrdWrap_nva(nout->nrrd, pdata, nrrdTypeDouble, ndims+1, size);
+    nrrdWrap_nva(nout->nrrd_, pdata, nrrdTypeDouble, ndims+1, size);
 
-    nout->nrrd->axis[0].kind  = nrrdKind3Vector;
-    nout->nrrd->axis[0].label = strdup("ZR");
-    nout->nrrd->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
+    nout->nrrd_->axis[0].label = strdup("ZR");
+    nout->nrrd_->axis[1].label = strdup("Domain");
 
     unsigned int centers[NRRD_DIM_MAX];
     centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
     centers[2] = nrrdCenterNode;
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
     nout->set_property( "Topology",          string("Unstructured"), false );
     nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
@@ -307,13 +307,13 @@ VULCANDataReader::execute(){
     // Velocity Vector
     nout = scinew NrrdData();
 
-    nrrdWrap_nva(nout->nrrd, vdata, nrrdTypeDouble, ndims+1, size);
+    nrrdWrap_nva(nout->nrrd_, vdata, nrrdTypeDouble, ndims+1, size);
 
-    nout->nrrd->axis[0].kind  = nrrdKind3Vector;
-    nout->nrrd->axis[0].label = strdup("ZR");
-    nout->nrrd->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
+    nout->nrrd_->axis[0].label = strdup("ZR");
+    nout->nrrd_->axis[1].label = strdup("Domain");
     
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
     nout->set_property( "DataSpace",         string("REALSPACE"), false );
     nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
@@ -374,12 +374,12 @@ VULCANDataReader::execute(){
     size_t con_size[NRRD_DIM_MAX];
     con_size[0] = 4;
     con_size[1] = ncon;
-    nrrdWrap_nva(nout->nrrd, cdata, nrrdTypeDouble, ndims+1, con_size);
+    nrrdWrap_nva(nout->nrrd_, cdata, nrrdTypeDouble, ndims+1, con_size);
 
-    nout->nrrd->axis[0].label = strdup("Connections");
-    nout->nrrd->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].label = strdup("Connections");
+    nout->nrrd_->axis[1].label = strdup("Domain");
     
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
     nout->set_property( "Topology",  string("Unstructured"), false );
     nout->set_property( "Cell Type", string("Quad"), false );
@@ -402,9 +402,9 @@ VULCANDataReader::execute(){
 
       nout = scinew NrrdData();
 
-      nrrdWrap_nva(nout->nrrd, data[i], nrrdTypeDouble, ndims, data_size);
+      nrrdWrap_nva(nout->nrrd_, data[i], nrrdTypeDouble, ndims, data_size);
 
-      nout->nrrd->axis[0].label = strdup("Domain");
+      nout->nrrd_->axis[0].label = strdup("Domain");
     
       nout->set_property( "DataSpace",         string("REALSPACE"), false );
       nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );

@@ -95,7 +95,7 @@ UnuCCadj::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdCCAdjacency(nout, nin, connectivity_.get())) {

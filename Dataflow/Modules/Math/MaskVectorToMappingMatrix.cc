@@ -82,7 +82,7 @@ MaskVectorToMappingMatrix::execute()
   if (!nrrdH.get_rep())
     throw "No input MaskVector";
 
-  Nrrd *nrrd = nrrdH->nrrd;
+  Nrrd *nrrd = nrrdH->nrrd_;
   if (!nrrd)
     throw "Input MaskVector Nrrd empty";
 

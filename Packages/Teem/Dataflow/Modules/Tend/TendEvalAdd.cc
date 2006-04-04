@@ -86,7 +86,7 @@ TendEvalAdd::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenEigenvalueAdd(nout, nin, value_.get())) {

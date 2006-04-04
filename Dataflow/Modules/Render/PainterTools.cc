@@ -274,8 +274,9 @@ Painter::CropTool::do_event(Event &event) {
     for (int i = 0; i < 2; ++i)
       for (unsigned int a = 0; a < minmax_[0].size(); ++a)
 	minmax[i][a] = minmax_[i][a]-(i==1?1:0);
-    NrrdDataHandle nout = new NrrdData();
-    if (nrrdCrop(nout->nrrd, painter_->current_volume_->nrrd_->nrrd,
+    NrrdDataHandle nout_handle = new NrrdData();
+    if (nrrdCrop(nout_handle->nrrd_,
+		 painter_->current_volume_->nrrd_handle_->nrrd_,
 		 minmax[0], minmax[1])) {
       char *err = biffGetDone(NRRD);
       string str = string("nrrdcrop: ") + err;
@@ -283,7 +284,7 @@ Painter::CropTool::do_event(Event &event) {
       throw str;
     }
 
-    painter_->current_volume_->nrrd_ = nout;
+    painter_->current_volume_->nrrd_handle_ = nout_handle;
     painter_->current_volume_->build_index_to_world_matrix();
     delete[] minmax[0];
     delete[] minmax[1];
@@ -573,21 +574,21 @@ Painter::FloodfillTool::do_floodfill()
   todo.push_back(index);
 
   // Allocated a nrrd to mark where the flood fill has visited
-  NrrdDataHandle done = new NrrdData();
+  NrrdDataHandle done_handle = new NrrdData();
   size_t size[NRRD_DIM_MAX];
-  size[0] = volume->nrrd_->nrrd->axis[0].size;
-  size[1] = volume->nrrd_->nrrd->axis[1].size;
-  size[2] = volume->nrrd_->nrrd->axis[2].size;
-  size[3] = volume->nrrd_->nrrd->axis[3].size;
-  nrrdAlloc_nva(done->nrrd, nrrdTypeUChar, 4, size);
+  size[0] = volume->nrrd_handle_->nrrd_->axis[0].size;
+  size[1] = volume->nrrd_handle_->nrrd_->axis[1].size;
+  size[2] = volume->nrrd_handle_->nrrd_->axis[2].size;
+  size[3] = volume->nrrd_handle_->nrrd_->axis[3].size;
+  nrrdAlloc_nva(done_handle->nrrd_, nrrdTypeUChar, 4, size);
 
 
   // Set the visited nrrd to empty
-  memset(done->nrrd->data, 0, 
-         volume->nrrd_->nrrd->axis[0].size *
-         volume->nrrd_->nrrd->axis[1].size *
-         volume->nrrd_->nrrd->axis[2].size * 
-         volume->nrrd_->nrrd->axis[3].size);
+  memset(done_handle->nrrd_->data, 0, 
+         volume->nrrd_handle_->nrrd_->axis[0].size *
+         volume->nrrd_handle_->nrrd_->axis[1].size *
+         volume->nrrd_handle_->nrrd_->axis[2].size * 
+         volume->nrrd_handle_->nrrd_->axis[3].size);
   int count  = 0;
   unsigned int axes = index.size();
   while (!todo.empty()) {
@@ -621,7 +622,7 @@ Painter::FloodfillTool::do_floodfill()
           
           // Check to see if flood fill has already been here
           unsigned char visited;
-          nrrd_get_value(done->nrrd, neighbor_index, visited);
+          nrrd_get_value(done_handle->nrrd_, neighbor_index, visited);
           // Bail if the voxel has been visited
           if (visited) continue;
           
@@ -631,7 +632,7 @@ Painter::FloodfillTool::do_floodfill()
           // Bail if the voxel is outside the flood fill range
           if (neighborval < min_ || neighborval > max_) continue;
           // Mark this voxel as visited
-          nrrd_set_value(done->nrrd, neighbor_index, (unsigned char)1);
+          nrrd_set_value(done_handle->nrrd_, neighbor_index, (unsigned char)1);
           
           todo.push_back(neighbor_index);
         }
@@ -699,16 +700,16 @@ Painter::ITKThresholdTool::do_event(Event &event)
 
     name = "ITK Threshold Seed";
     pair<double, double> mean = 
-      painter_->compute_mean_and_deviation(source_volume_->nrrd_->nrrd,
-                                           seed_volume_->nrrd_->nrrd);
+      painter_->compute_mean_and_deviation(source_volume_->nrrd_handle_->nrrd_,
+                                           seed_volume_->nrrd_handle_->nrrd_);
     double factor = 2.5;
     double min = mean.first - factor*mean.second;
     double max = mean.first + factor*mean.second;
     //    min = mean.first;
     //    max = mean.second;
-    nrrdKeyValueAdd(seed_volume_->nrrd_->nrrd,
+    nrrdKeyValueAdd(seed_volume_->nrrd_handle_->nrrd_,
                     "lower_threshold", to_string(min).c_str());
-    nrrdKeyValueAdd(seed_volume_->nrrd_->nrrd,
+    nrrdKeyValueAdd(seed_volume_->nrrd_handle_->nrrd_,
                     "upper_threshold", to_string(max).c_str());
     
     
@@ -835,15 +836,15 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
     if (!volume_->index_valid(seed_))
       return QUIT_E;
     
-    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+    nrrdKeyValueAdd(volume_->nrrd_handle_->nrrd_, 
                     "seed_point0", to_string(seed_[1]).c_str());
-    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+    nrrdKeyValueAdd(volume_->nrrd_handle_->nrrd_, 
                     "seed_point1", to_string(seed_[2]).c_str());
-    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+    nrrdKeyValueAdd(volume_->nrrd_handle_->nrrd_, 
                     "seed_point2", to_string(seed_[3]).c_str());
 
     unsigned long ptr = (unsigned long)painter_;
-    nrrdKeyValueAdd(volume_->nrrd_->nrrd, 
+    nrrdKeyValueAdd(volume_->nrrd_handle_->nrrd_, 
                     "progress_ptr", to_string(ptr).c_str());
 
 
@@ -994,7 +995,7 @@ Painter::ITKCurvatureAnisotropicDiffusionTool::ITKCurvatureAnisotropicDiffusionT
   painter_->show_volume(name);
 
   unsigned long ptr = (unsigned long)painter_;
-  nrrdKeyValueAdd(vol->nrrd_->nrrd, 
+  nrrdKeyValueAdd(vol->nrrd_handle_->nrrd_, 
                   "progress_ptr", to_string(ptr).c_str());
 
 
@@ -1023,10 +1024,10 @@ Painter::LayerMergeTool::LayerMergeTool(Painter *painter):
   NrrdIter *ni2 = nrrdIterNew();
   
   
-  nrrdIterSetNrrd(ni1, vol1->nrrd_->nrrd);
-  nrrdIterSetNrrd(ni2, vol2->nrrd_->nrrd);
+  nrrdIterSetNrrd(ni1, vol1->nrrd_handle_->nrrd_);
+  nrrdIterSetNrrd(ni2, vol2->nrrd_handle_->nrrd_);
   
-  if (nrrdArithIterBinaryOp(nout->nrrd, nrrdBinaryOpMax, ni1, ni2)) {
+  if (nrrdArithIterBinaryOp(nout->nrrd_, nrrdBinaryOpMax, ni1, ni2)) {
     char *err = biffGetDone(NRRD);
     string errstr = (err ? err : "");
     free(err);
@@ -1036,10 +1037,10 @@ Painter::LayerMergeTool::LayerMergeTool(Painter *painter):
   nrrdIterNix(ni1);
   nrrdIterNix(ni2);
 
-  nrrdKeyValueCopy(nout->nrrd,  vol1->nrrd_->nrrd);
-  nrrdKeyValueCopy(nout->nrrd,  vol2->nrrd_->nrrd);
+  nrrdKeyValueCopy(nout->nrrd_,  vol1->nrrd_handle_->nrrd_);
+  nrrdKeyValueCopy(nout->nrrd_,  vol2->nrrd_handle_->nrrd_);
   
-  vol1->nrrd_->nrrd = nout->nrrd;
+  vol1->nrrd_handle_->nrrd_ = nout->nrrd_;
   vol2->keep_ = 0;
   
   painter_->recompute_volume_list();

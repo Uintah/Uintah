@@ -105,7 +105,7 @@ ImageExporter::execute()
       return;
     }
   
-  const Nrrd *nrrd = handle->nrrd;
+  const Nrrd *nrrd = handle->nrrd_;
   
   if (nrrd->dim != 3)
     {
@@ -158,10 +158,10 @@ ImageExporter::execute()
     }
   
   unsigned int type_size = 8;
-  Nrrd *convert_nrrd = handle->nrrd;
+  Nrrd *convert_nrrd = handle->nrrd_;
 
   if (nrrd->type == nrrdTypeUShort) {
-    NrrdRange *range = nrrdRangeNewSet(handle->nrrd, nrrdBlind8BitRangeState);
+    NrrdRange *range = nrrdRangeNewSet(handle->nrrd_, nrrdBlind8BitRangeState);
     convert_nrrd = nrrdNew();
     nrrdQuantize(convert_nrrd, nrrd, range, 8);
     type_size = 8;
@@ -170,13 +170,13 @@ ImageExporter::execute()
     type_size = 8;
   }
   else if (nrrd->type == nrrdTypeFloat) {
-    NrrdRange *range = nrrdRangeNewSet(handle->nrrd, nrrdBlind8BitRangeState);
+    NrrdRange *range = nrrdRangeNewSet(handle->nrrd_, nrrdBlind8BitRangeState);
     convert_nrrd = nrrdNew();
     nrrdQuantize(convert_nrrd, nrrd, range, 8);
     type_size = 8;
   }
   else {
-    NrrdRange *range = nrrdRangeNewSet(handle->nrrd, nrrdBlind8BitRangeState);
+    NrrdRange *range = nrrdRangeNewSet(handle->nrrd_, nrrdBlind8BitRangeState);
     convert_nrrd = nrrdNew();
     nrrdQuantize(convert_nrrd, nrrd, range, 8);
     type_size = 8;

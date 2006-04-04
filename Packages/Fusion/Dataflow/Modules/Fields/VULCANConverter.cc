@@ -187,15 +187,15 @@ VULCANConverter::execute(){
 
 	      // Sort the components.
 	      if( nrrdName.find( "ZR:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 2 ) {
+		  nHandle->nrrd_->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[ZR] = ic;
 	      } else if( nrrdName.find( "ZR:Vector" ) != string::npos &&
-			 nHandle->nrrd->dim == 2 ) {
+			 nHandle->nrrd_->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[ZR] = ic;
 	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 1 ) {
+			 nHandle->nrrd_->dim == 1 ) {
 		mesh_[PHI] = ic;
 	      } else {
 		error( nrrdName + " is unknown VULCAN mesh data." );
@@ -230,15 +230,15 @@ VULCANConverter::execute(){
 	  }
 
 	  if( nrrdName.find( "ZR:Scalar" ) != string::npos && 
-	      nHandle->nrrd->dim == 2 ) {
+	      nHandle->nrrd_->dim == 2 ) {
 	    conversion_ = REALSPACE;
 	    data_[ZR] = ic; 
 	  } else if( nrrdName.find( "ZR:Vector" ) != string::npos && 
-	      nHandle->nrrd->dim == 2 ) {
+	      nHandle->nrrd_->dim == 2 ) {
 	    conversion_ = REALSPACE;
 	    data_[ZR] = ic; 
 	  } else if( nrrdName.find( ":Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 1 ) {
+		     nHandle->nrrd_->dim == 1 ) {
 	    conversion_ = SCALAR;
 	    data_[0] = ic;
 	  } else {
@@ -381,7 +381,7 @@ VULCANConverter::execute(){
     unsigned int ntype;
 
     if( conversion_ & MESH ) {
-      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd_->type;
 
       nrrd_input_handles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
@@ -393,7 +393,7 @@ VULCANConverter::execute(){
       convertStr = "Mesh";
 
     } else if( conversion_ & CONNECTION ) {
-      ntype = nrrd_input_handles[mesh_[LIST]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[LIST]]->nrrd_->type;
 
       nrrd_input_handles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
@@ -405,12 +405,12 @@ VULCANConverter::execute(){
       convertStr = "Connection";
 
     } else if( conversion_ & SCALAR ) {
-      ntype = nrrd_input_handles[data_[0]]->nrrd->type;
+      ntype = nrrd_input_handles[data_[0]]->nrrd_->type;
 
       convertStr = "Scalar";
 
      } else if( conversion_ & REALSPACE ) {
-      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd_->type;
 
       convertStr = "RealSpace";
     }

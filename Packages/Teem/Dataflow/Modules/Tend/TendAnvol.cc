@@ -158,7 +158,7 @@ TendAnvol::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenAnisoVolume(nout, nin, get_method(aniso_metric_.get()), 

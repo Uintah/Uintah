@@ -90,7 +90,7 @@ TendSlice::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenSlice(nout, nin, axis_.get(), position_.get(), dimension_.get())) {

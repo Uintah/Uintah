@@ -233,7 +233,7 @@ TendFiber::execute()
     error("Empty input Nrrd.");
     return;
   }
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
 
   FieldHandle fldH;
   if (!iseeds_->get(fldH))
@@ -358,7 +358,7 @@ TendFiber::execute()
     if (!failed) {
       fibers[fiberIdx].resize(nout->axis[1].size);
       double *data = (double *)(nout->data);
-      for (int i=0; i<nout->axis[1].size * 3; i+=3)
+      for (unsigned int i=0; i<nout->axis[1].size * 3; i+=3)
 	fibers[fiberIdx][i/3] = Point(data[i]*spacing.x(),
 				      data[i+1]*spacing.y(),
 				      data[i+2]*spacing.z())+min;

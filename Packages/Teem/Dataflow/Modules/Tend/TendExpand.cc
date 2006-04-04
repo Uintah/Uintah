@@ -50,8 +50,8 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiInt          threshold_;
-  GuiInt          scale_;
+  GuiDouble       threshold_;
+  GuiDouble       scale_;
 
 };
 
@@ -88,7 +88,7 @@ TendExpand::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenExpand(nout, nin, scale_.get(), threshold_.get())) {

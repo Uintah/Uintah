@@ -88,7 +88,7 @@ TendAnscale::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenAnisoScale(nout, nin, scale_.get(), true, true)) {

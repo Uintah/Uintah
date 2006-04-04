@@ -207,8 +207,8 @@ MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2)
   if( !pass )
     return false;
 
-  Nrrd* n1 = h1->nrrd; 
-  Nrrd* n2 = h2->nrrd;
+  Nrrd* n1 = h1->nrrd_; 
+  Nrrd* n2 = h2->nrrd_;
     
   if (n1->type != n2->type)
     return false;
@@ -223,7 +223,7 @@ MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2)
     start = n1->dim;
 
   // Compare the dimensions.
-  for (int i=0; i<n1->dim; i++) {
+  for (unsigned int i=0; i<n1->dim; i++) {
     if (n1->axis[i].size != n2->axis[i].size)
       return false;
   }
@@ -402,7 +402,7 @@ void MDSPlusDataReader::execute(){
 
 	  NrrdDataHandle n = *niter;
 	  ++niter;
-	  join_me.push_back(n->nrrd);
+	  join_me.push_back(n->nrrd_);
 
 	  string nrrdName, groupName, dataName;
 	  std::string::size_type pos;
@@ -430,7 +430,7 @@ void MDSPlusDataReader::execute(){
 	  while (niter != vec.end()) {
 	    NrrdDataHandle n = *niter;
 	    ++niter;
-	    join_me.push_back(n->nrrd);
+	    join_me.push_back(n->nrrd_);
 
 	    if (gui_merge_data_.get() == MERGE_LIKE) {
 	      n->get_property( "Name", dataName );
@@ -450,8 +450,8 @@ void MDSPlusDataReader::execute(){
 	  int axis = 0; // axis
 	  int incr = 1; // incr.
 	
-	  onrrd->nrrd = nrrdNew();
-	  if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
+	  onrrd->nrrd_ = nrrdNew();
+	  if (nrrdJoin(onrrd->nrrd_, &join_me[0], join_me.size(), axis, incr)) {
 	    char *err = biffGetDone(NRRD);
 	    error(string("Join Error: ") +  err);
 	    free(err);
@@ -461,28 +461,28 @@ void MDSPlusDataReader::execute(){
 
 	  // set new kinds for joined nrrds
 	  if (gui_assume_svt_.get() && join_me.size() == 3) {
-	    onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
+	    onrrd->nrrd_->axis[0].kind = nrrdKind3Vector;
 	    nrrdName += string(":Vector");
 	  } else if (gui_assume_svt_.get() && join_me.size() == 6) {
-	    onrrd->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+	    onrrd->nrrd_->axis[0].kind = nrrdKind3DSymMatrix;
 	    nrrdName += string(":Matrix");
 	  } else if (gui_assume_svt_.get() && join_me.size() == 9) {
-	    onrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
+	    onrrd->nrrd_->axis[0].kind = nrrdKind3DMatrix;
 	    nrrdName += string(":Matrix");
 	  } else {
-	    onrrd->nrrd->axis[0].kind = nrrdKindDomain;
+	    onrrd->nrrd_->axis[0].kind = nrrdKindDomain;
 	    nrrdName += string(":Scalar");
 	  }
 
-	  for(int i=1; i<onrrd->nrrd->dim; i++) {
-	    onrrd->nrrd->axis[i].kind = nrrdKindDomain;
-	    onrrd->nrrd->axis[i].label = join_me[0]->axis[i].label;
+	  for(unsigned int i=1; i<onrrd->nrrd_->dim; i++) {
+	    onrrd->nrrd_->axis[i].kind = nrrdKindDomain;
+	    onrrd->nrrd_->axis[i].label = join_me[0]->axis[i].label;
 	  }
 
 	  if (gui_merge_data_.get() == MERGE_LIKE) {
-	    onrrd->nrrd->axis[axis].label = strdup("Merged Data");
+	    onrrd->nrrd_->axis[axis].label = strdup("Merged Data");
 	  } else if (gui_merge_data_.get() == MERGE_TIME) {
-	    onrrd->nrrd->axis[axis].label = "Time";
+	    onrrd->nrrd_->axis[axis].label = "Time";
 
 	    // remove all numbers from name
 	    string s(nrrdName);
@@ -727,10 +727,10 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     switch(ndims) {
     case 1: 
       size[0] = dims[0];
-      nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);
+      nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, size);
       unsigned int centers[NRRD_DIM_MAX];
       centers[0] = nrrdCenterNode;
-      nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+      nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
       break;
       
     case 2: 
@@ -739,15 +739,15 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	case 3: // Vector data
 	case 6: // Tensor data
 	  size[0] = sz_last_dim;
-	  size[1] = dims[0]
+	  size[1] = dims[0];
 	  size[2] = dims[1];
-	  nrrdWrap_nva_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
-	  size[0] = dims[0]
+	  size[0] = dims[0];
 	  size[1] = dims[1];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size); 
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, size); 
 	  break;
 	};
 
@@ -755,7 +755,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	unsigned int centers[NRRD_DIM_MAX];
 	centers[0] = nrrdCenterNode;
 	centers[1] = nrrdCenterNode;
-	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+	nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
       }
       break;
       
@@ -768,14 +768,14 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	  size[1] = dims[0];
 	  size[2] = dims[1];
 	  size[3] = dims[2];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
 	  size[0] = dims[0];
 	  size[1] = dims[1];
 	  size[2] = dims[2];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);  
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, size);  
 	  break;
 	};
 
@@ -783,7 +783,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	centers[0] = nrrdCenterNode;
 	centers[1] = nrrdCenterNode;
 	centers[2] = nrrdCenterNode;
-	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+	nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
       }
       break;
       
@@ -797,7 +797,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	  size[2] = dims[1];
 	  size[3] = dims[2];
 	  size[4] = dims[3];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
@@ -805,7 +805,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	  size[1] = dims[1];
 	  size[2] = dims[2];
 	  size[3] = dims[3];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);  
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, size);  
 	  break;
 	};
 
@@ -815,7 +815,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	centers[2] = nrrdCenterNode;
 	centers[3] = nrrdCenterNode;
 	
-	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+	nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
       }
       break;
       
@@ -830,7 +830,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	  size[3] = dims[2];
 	  size[4] = dims[3];
 	  size[5] = dims[4];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
@@ -839,7 +839,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	  size[2] = dims[2];
 	  size[3] = dims[3];
 	  size[4] = dims[4];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);  
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, size);  
 	  break;
 	};
 
@@ -849,7 +849,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	centers[2] = nrrdCenterNode;
 	centers[3] = nrrdCenterNode;
 	centers[4] = nrrdCenterNode;
-	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+	nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
       }
       
       break;
@@ -866,7 +866,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	  size[4] = dims[3];
 	  size[5] = dims[4];
 	  size[6] = dims[5];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
@@ -876,7 +876,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	  size[3] = dims[3];
 	  size[4] = dims[4];
 	  size[5] = dims[5];
-	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);
+	  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, size);
 	  break;
 	};
 
@@ -887,7 +887,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	centers[3] = nrrdCenterNode;
 	centers[4] = nrrdCenterNode;
 	centers[5] = nrrdCenterNode;
-	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+	nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
       }
       break;
     }
@@ -921,27 +921,27 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     switch (sz_last_dim) {
     case 3: // Vector data
       nrrdName += ":Vector";
-      nout->nrrd->axis[0].kind = nrrdKind3Vector;
+      nout->nrrd_->axis[0].kind = nrrdKind3Vector;
       break;
 	  
     case 6: // Matrix data
       nrrdName += ":Matrix";
-      nout->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+      nout->nrrd_->axis[0].kind = nrrdKind3DSymMatrix;
       break;
 	  
     case 9: // Matrix data
       nrrdName += ":Matrix";
-      nout->nrrd->axis[0].kind = nrrdKind3DMatrix;
+      nout->nrrd_->axis[0].kind = nrrdKind3DMatrix;
       break;
 	  
     default: // treat the rest as Scalar data
       nrrdName += ":Scalar";
-      nout->nrrd->axis[0].kind = nrrdKindDomain;
+      nout->nrrd_->axis[0].kind = nrrdKindDomain;
       break;
     };
 
     for( int i=1; i<ndims; i++ )
-      nout->nrrd->axis[i].kind = nrrdKindDomain;
+      nout->nrrd_->axis[i].kind = nrrdKindDomain;
 
 
     nout->set_property( "Name", nrrdName, false );

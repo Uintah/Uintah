@@ -99,7 +99,7 @@ UnuShuffle::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // Determine the number of mins given
@@ -160,7 +160,7 @@ UnuShuffle::execute()
   }
   
   // error checking
-  if (axis_.get() >= nin->dim) {
+  if ((unsigned int) axis_.get() >= nin->dim) {
     error("Axis " + to_string(axis_.get()) + " not in valid range [0," + to_string(nin->dim-1) + "]");
     return;
   }
@@ -177,12 +177,12 @@ UnuShuffle::execute()
       error("Couldn't compute inverse of given permutation");
       return;
     }
-    for (int i = 0; i < ordLen; i++) {
+    for (unsigned int i = 0; i < ordLen; i++) {
       whichperm[i] = iperm[i];
     }
   }
   else {
-    for (int i = 0; i < ordLen; i++) {
+    for (unsigned int i = 0; i < ordLen; i++) {
       whichperm[i] = ord[i];
     }
   }
@@ -199,7 +199,7 @@ UnuShuffle::execute()
   out->copy_properties(nrrd_handle.get_rep());
   
   // Copy the axis kinds
-  for (int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++) {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 

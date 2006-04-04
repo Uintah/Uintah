@@ -84,11 +84,11 @@ UnuAxdelete::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
-  int axis = axis_.get();
-  int a = axis;
+  unsigned int axis = axis_.get();
+  unsigned int a = axis;
   if (axis == -1) {
     Nrrd *ntmp = nrrdNew();
     if (nrrdCopy(nout, nin)) {
@@ -133,7 +133,7 @@ UnuAxdelete::execute()
     // Copy the axis kinds
     int offset = 0;
 
-    for (int i=0; i<nin->dim; i++) {
+    for (unsigned int i=0; i<nin->dim; i++) {
       if (i == axis) {
 	offset = 1;
       } else 

@@ -97,7 +97,7 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdCCMerge(nout, nin, 0, dir_.get(), maxsize_.get(), maxneigh_.get(), 

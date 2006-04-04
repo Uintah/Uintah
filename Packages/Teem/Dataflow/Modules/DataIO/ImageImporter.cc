@@ -243,7 +243,7 @@ ImageImporter::execute()
       
       //   Send the data downstream.
       handle_ = scinew NrrdData();
-      handle_->nrrd = nrrd;
+      handle_->nrrd_ = nrrd;
       
       NrrdOPort *outport = (NrrdOPort *)get_output_port(0);
       outport->send(handle_);

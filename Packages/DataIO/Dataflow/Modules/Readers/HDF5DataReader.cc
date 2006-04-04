@@ -175,8 +175,8 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2)
   if( !pass )
     return false;
 
-  Nrrd* n1 = h1->nrrd; 
-  Nrrd* n2 = h2->nrrd;
+  Nrrd* n1 = h1->nrrd_; 
+  Nrrd* n2 = h2->nrrd_;
     
   if (n1->type != n2->type)
     return false;
@@ -185,7 +185,7 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2)
     return false;
   
   // Compare the dimensions.
-  for (int i=0; i<n1->dim; i++) {
+  for (unsigned int i=0; i<n1->dim; i++) {
     if (n1->axis[i].size != n2->axis[i].size)
       return false;
   }
@@ -438,7 +438,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
 	NrrdDataHandle n = *niter;
 	++niter;
-	join_me.push_back(n->nrrd);
+	join_me.push_back(n->nrrd_);
 
 	string nrrdName, groupName, dataName;
 
@@ -460,7 +460,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	while (niter != vec.end()) {
 	  NrrdDataHandle n = *niter;
 	  ++niter;
-	  join_me.push_back(n->nrrd);
+	  join_me.push_back(n->nrrd_);
 
 	  if (gui_merge_data_.get() == MERGE_LIKE) {
 	    n->get_property( "Name", dataName );
@@ -480,8 +480,8 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	int axis = 0; // axis
 	int incr = 1; // incr.
 	
-	onrrd->nrrd = nrrdNew();
-	if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
+	onrrd->nrrd_ = nrrdNew();
+	if (nrrdJoin(onrrd->nrrd_, &join_me[0], join_me.size(), axis, incr)) {
 	  char *err = biffGetDone(NRRD);
 	  error(string("Join Error: ") +  err);
 	  free(err);
@@ -491,28 +491,28 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
 	// set new kinds for joined nrrds
 	if (gui_assume_svt_.get() && join_me.size() == 3) {
-	  onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
+	  onrrd->nrrd_->axis[0].kind = nrrdKind3Vector;
 	  nrrdName += string(":Vector");
 	} else if (gui_assume_svt_.get() && join_me.size() == 6) {
-	  onrrd->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+	  onrrd->nrrd_->axis[0].kind = nrrdKind3DSymMatrix;
 	  nrrdName += string(":Matrix");
 	} else if (gui_assume_svt_.get() && join_me.size() == 9) {
-	  onrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
+	  onrrd->nrrd_->axis[0].kind = nrrdKind3DMatrix;
 	  nrrdName += string(":Matrix");
 	} else {
-	  onrrd->nrrd->axis[0].kind = nrrdKindDomain;
+	  onrrd->nrrd_->axis[0].kind = nrrdKindDomain;
 	  nrrdName += string(":Scalar");
 	}
 
-	for(int i=1; i<onrrd->nrrd->dim; i++) {
-	  onrrd->nrrd->axis[i].kind = nrrdKindDomain;
-	  onrrd->nrrd->axis[i].label = join_me[0]->axis[i].label;
+	for(unsigned int i=1; i<onrrd->nrrd_->dim; i++) {
+	  onrrd->nrrd_->axis[i].kind = nrrdKindDomain;
+	  onrrd->nrrd_->axis[i].label = join_me[0]->axis[i].label;
 	}
 
 	if (gui_merge_data_.get() == MERGE_LIKE) {
-	  onrrd->nrrd->axis[axis].label = strdup("Merged Data");
+	  onrrd->nrrd_->axis[axis].label = strdup("Merged Data");
 	} else if (gui_merge_data_.get() == MERGE_TIME) {
-	  onrrd->nrrd->axis[axis].label = "Time";
+	  onrrd->nrrd_->axis[axis].label = "Time";
 
 	  // remove all numbers from name
 	  string s(nrrdName);
@@ -1320,30 +1320,30 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   centers[4] = nrrdCenterNode; centers[5] = nrrdCenterNode;
   switch(ndims) {
   case 1: 
-    nrrdWrap_nva(nout->nrrd, data,
+    nrrdWrap_nva(nout->nrrd_, data,
 	     nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 2: 
     sz[1] = count[1];
-    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 3: 
     sz[1] = count[1];
     sz[2] = count[2];
-    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);  
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);  
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 4: 
     sz[1] = count[1];
     sz[2] = count[2];
     sz[3] = count[3];
-    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);  
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);  
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 5: 
@@ -1351,8 +1351,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     sz[2] = count[2];
     sz[3] = count[3];
     sz[4] = count[4];
-    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 6: 
@@ -1361,8 +1361,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     sz[3] = count[3];
     sz[4] = count[4];
     sz[5] = count[5];
-    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
   }
    
@@ -1385,27 +1385,27 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   switch (sz_last_dim) {
   case 3: // Vector data
     nrrdName += ":Vector";
-    nout->nrrd->axis[0].kind = nrrdKind3Vector;
+    nout->nrrd_->axis[0].kind = nrrdKind3Vector;
     break;
 	  
   case 6: // Matrix data
     nrrdName += ":Matrix";
-    nout->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+    nout->nrrd_->axis[0].kind = nrrdKind3DSymMatrix;
     break;
 	  
   case 9: // Matrix data
     nrrdName += ":Matrix";
-    nout->nrrd->axis[0].kind = nrrdKind3DMatrix;
+    nout->nrrd_->axis[0].kind = nrrdKind3DMatrix;
     break;
 	  
   default: // treat the rest as Scalar data
     nrrdName += ":Scalar";
-    nout->nrrd->axis[0].kind = nrrdKindDomain;
+    nout->nrrd_->axis[0].kind = nrrdKindDomain;
     break;
   };
 
   for( int i=1; i<ndims; i++ )
-    nout->nrrd->axis[i].kind = nrrdKindDomain;
+    nout->nrrd_->axis[i].kind = nrrdKindDomain;
 
 
   nout->set_property( "Name", nrrdName, false );
