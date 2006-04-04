@@ -38,33 +38,28 @@
  *
  */
 
-#include <sci_defs/qt_defs.h>
-#include <iostream>
-#include <vtkStructuredPointsReader.h>
+// #include <sci_defs/qt_defs.h>
+
 #include <vtkStructuredPoints.h>
+#include <vtkStructuredGrid.h>
+#include <vtkImageData.h>
+#include <vtkPointData.h>
+#include <vtkFloatArray.h>
+#include <vtkUnsignedCharArray.h>
+#include <vtkPoints.h>
+#include <vtkCellArray.h>
+#include <vtkStructuredPointsReader.h>
 #include <vtkPolyData.h>
 
-#include "StructuredPointsReader.h"
+#include <CCA/Components/VTK/IO/StructuredPointsReader.h>
 
-#if HAVE_QT
- #include <qfiledialog.h>
-#endif
+#include <iostream>
 
+// #if HAVE_QT
+//  #include <qfiledialog.h>
+// #endif
 
-#include "vtkStructuredPoints.h"
-#include "vtkStructuredGrid.h"
-#include "vtkImageData.h"
-#include "vtkPolyData.h"
-
-#include "vtkPointData.h"
-#include "vtkFloatArray.h"
-#include "vtkUnsignedCharArray.h"
-#include "vtkPoints.h"
-#include "vtkCellArray.h"
-
-
-
-using namespace std;
+// using namespace std;
 using namespace SCIRun;
 using namespace vtk;
 
@@ -73,19 +68,20 @@ extern "C" vtk::Component* make_Vtk_StructuredPointsReader()
   return new StructuredPointsReader;
 }
 
-StructuredPointsReader::StructuredPointsReader(){
+StructuredPointsReader::StructuredPointsReader()
+{
   //set output port name
   OutPort::setName("StructuredPointsReader::output");
-  reader=vtkStructuredPointsReader::New();
+  reader = vtkStructuredPointsReader::New();
 
-  vol=vtkStructuredPoints::New();
+  vol = vtkStructuredPoints::New();
   vol->SetDimensions(1, 1, 1);
-  float origin[3]={0,0,0};
-  float spacing[3]={0,0,0};
+  float origin[3] = {0,0,0};
+  float spacing[3] = {0,0,0};
   vol->SetScalarTypeToFloat();
-  vtkFloatArray *scalars=vtkFloatArray::New();
+  vtkFloatArray *scalars = vtkFloatArray::New();
   scalars->SetNumberOfValues(1);
-  int offset=0;
+  int offset = 0;
   scalars->SetValue(0, 0);
   vol->GetPointData()->SetScalars(scalars);
   scalars->Delete();
@@ -95,28 +91,31 @@ StructuredPointsReader::StructuredPointsReader(){
   enableUI();
 }
 
-StructuredPointsReader::~StructuredPointsReader(){
+StructuredPointsReader::~StructuredPointsReader()
+{
   reader->Delete();
 }
 
 
 int
-StructuredPointsReader::popupUI(){
-#if HAVE_QT
-  QString fn = QFileDialog::getOpenFileName(
-	    "./","Vtk StructuredPoints Files(*.vtk)");
-  if(fn.isNull())   return 1;
-  reader->SetFileName(fn);
-  update(Port::RESETCAMERA);
-#endif
+StructuredPointsReader::popupUI()
+{
+// #if HAVE_QT
+//   QString fn = QFileDialog::getOpenFileName(
+// 	    "./","Vtk StructuredPoints Files(*.vtk)");
+//   if(fn.isNull())   return 1;
+//   reader->SetFileName(fn);
+//   update(Port::RESETCAMERA);
+// #endif
   return 0;
 }
 
 vtkObject*
-StructuredPointsReader::getOutput(){
-  if(reader->IsFileStructuredPoints()){
+StructuredPointsReader::getOutput()
+{
+  if (reader->IsFileStructuredPoints()) {
     return reader->GetOutput();
-  }else{
+  } else {
     return vol;
   }
 }
