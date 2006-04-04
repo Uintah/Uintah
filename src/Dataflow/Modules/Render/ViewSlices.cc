@@ -2293,8 +2293,8 @@ ViewSlices::extract_slice(NrrdSlice &slice)
     NRRD_EXEC(nrrdSlice(tmp1->nrrd, volume, axis, slice.slice_num_));
   }
   
-  int minp[2] = { 0, 0 };
-  int maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
+  ptrdiff_t minp[2] = { 0, 0 };
+  ptrdiff_t maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
   NRRD_EXEC(nrrdPad_nva(slice.nrrd_->nrrd,tmp1->nrrd,minp,maxp,nrrdBoundaryBleed, 0));
 
   slice.nrrd_dirty_ = false;
@@ -2342,8 +2342,8 @@ ViewSlices::extract_mip_slices(NrrdVolume *volume)
     slice.tex_hei_ = Pow2(slice.hei_);
     slice.opacity_ = slice.volume_->opacity_;
     
-    int minp[2] = { 0, 0 };
-    int maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
+    ptrdiff_t minp[2] = { 0, 0 };
+    ptrdiff_t maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
     
     NRRD_EXEC(nrrdPad_nva(slice.nrrd_->nrrd, temp1->nrrd, 
 		      minp,maxp,nrrdBoundaryPad, 0.0));

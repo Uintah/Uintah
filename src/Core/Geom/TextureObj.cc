@@ -92,10 +92,10 @@ TextureObj::pad_to_power_of_2()
       IsPowerOf2(nrrd_->nrrd->axis[2].size)) 
     return;
   NrrdDataHandle nout = scinew NrrdData();
-  int minp[3] = { 0, 0, 0 };
-  int maxp[3] = { nrrd_->nrrd->axis[0].size-1, 
-                  Pow2(nrrd_->nrrd->axis[1].size)-1, 
-                  Pow2(nrrd_->nrrd->axis[2].size)-1 };
+  ptrdiff_t minp[3] = { 0, 0, 0 };
+  ptrdiff_t maxp[3] = { nrrd_->nrrd->axis[0].size-1, 
+			Pow2(nrrd_->nrrd->axis[1].size)-1, 
+			Pow2(nrrd_->nrrd->axis[2].size)-1 };
 
   if (nrrdPad_nva(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed, 1)) {
     char *err = biffGetDone(NRRD);

@@ -125,7 +125,7 @@ UnuShuffle::execute()
     i++;
   }
 
-  unsigned int *ord = new unsigned int[ordLen];
+  unsigned int ord[ordLen];
 
   
   i=0, start=0;
@@ -169,30 +169,29 @@ UnuShuffle::execute()
     return;
   }
 
-  unsigned int *iperm;
-  size_t **whichperm;
+  unsigned int iperm[ordLen];
+  size_t whichperm[ordLen];
+
   if (inverse_.get()) {
-    iperm = new unsigned int[ordLen];
     if (nrrdInvertPerm(iperm, ord, ordLen)) {
       error("Couldn't compute inverse of given permutation");
       return;
     }
-    whichperm = &iperm;
+    for (int i = 0; i < ordLen; i++) {
+      whichperm[i] = iperm[i];
+    }
   }
   else {
-    whichperm = &ord;
+    for (int i = 0; i < ordLen; i++) {
+      whichperm[i] = ord[i];
+    }
   }
 
-  if (nrrdShuffle(nout, nin, axis_.get(), *whichperm)) {
+  if (nrrdShuffle(nout, nin, axis_.get(), whichperm)) {
     char *err = biffGetDone(NRRD);
     error(string("Error Shuffling nrrd: ") + err);
     free(err);
   }
-
-  if (inverse_.get())
-    delete iperm;
-
-  delete ord;
 
   NrrdDataHandle out(scinew NrrdData(nout));
 

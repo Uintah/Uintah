@@ -187,7 +187,7 @@ UnuPad::execute()
     changed = true;
   }
 
-  vector<int> min(dim_.get()), max(dim_.get());
+  vector<ptrdiff_t> min(dim_.get()), max(dim_.get());
   for (int a = 0; a < dim_.get(); a++) {
     if (last_mins_[a] != mins_[a]->get()) {
       changed = true;
@@ -209,8 +209,8 @@ UnuPad::execute()
   {
     Nrrd *nin = nrrdH->nrrd;
     Nrrd *nout = nrrdNew();
-    int *minp = &(min[0]);
-    int *maxp = &(max[0]);
+    ptrdiff_t *minp = &(min[0]);
+    ptrdiff_t *maxp = &(max[0]);
 
     if( (last_pad_style_ == "Bleed" &&
 	 nrrdPad_nva(nout, nin, minp, maxp, nrrdBoundaryBleed, 0)) ||
