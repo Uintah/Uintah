@@ -464,12 +464,12 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
 
   // Join all nrrds together into one 4D nrrd object
   NrrdData *sciNrrd = scinew NrrdData();
-  sciNrrd->nrrd = nrrdNew();
+  sciNrrd->nrrd_ = nrrdNew();
   
   bool incr = true;
   if (num_nrrds == 1) { incr = false; }
   
-  if( nrrdJoin(sciNrrd->nrrd, &arr[0], num_nrrds, 0, incr) ) 
+  if( nrrdJoin(sciNrrd->nrrd_, &arr[0], num_nrrds, 0, incr) ) 
   {
     char *err = biffGetDone(NRRD);
     error( string("(AnalyzeNrrdReader::join_nrrds) Join Error: ") +  err );
@@ -481,7 +481,7 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
   centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
   centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
   centers[4] = nrrdCenterNode; centers[5] = nrrdCenterNode;
-  nrrdAxisInfoSet_nva(sciNrrd->nrrd, nrrdAxisInfoCenter, centers);
+  nrrdAxisInfoSet_nva(sciNrrd->nrrd_, nrrdAxisInfoCenter, centers);
 
   string new_label("");
   for( int i = 0; i < num_nrrds; i++ )
@@ -495,21 +495,21 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
       new_label += string(",") + string(arr[i]->axis[0].label);
     }
   }
-  switch (sciNrrd->nrrd->dim) {
+  switch (sciNrrd->nrrd_->dim) {
   case 4:
     if (incr) {
-      sciNrrd->nrrd->axis[0].label = airStrdup( new_label.c_str() );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[3].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
-      sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
+      sciNrrd->nrrd_->axis[0].label = airStrdup( new_label.c_str() );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[3].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[3].spacing = arr[0]->axis[2].spacing; 
 
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 3, nrrdCenterNode);
     } else {
       return 0;
     }
@@ -517,35 +517,35 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
     break;
   case 3:
     if (incr) {
-      sciNrrd->nrrd->axis[0].label = airStrdup( new_label.c_str() );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( new_label.c_str() );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[2].spacing;
     }
     
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
     break;
   case 2:
     if (incr) {
       return 0;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
 
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
     }
     break;
   default:
