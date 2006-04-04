@@ -37,8 +37,6 @@
 #define GTB_BEGIN_NAMESPACE namespace gtb {
 #define GTB_END_NAMESPACE }
 
-#define assert(x)
-
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>

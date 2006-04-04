@@ -81,14 +81,14 @@ inline typename tPoint3<T>::value_type tPoint3<T>::z() const
 template<class T>
 inline typename tPoint3<T>::value_type tPoint3<T>::operator[](unsigned i) const
 {
-	assert(i < 3);
+	ASSERT(i < 3);
 	return _p[i];
 }
 
 template<class T>
 inline typename tPoint3<T>::value_type &tPoint3<T>::operator[](unsigned i)
 {
-	assert(i < 3);
+	ASSERT(i < 3);
 	return _p[i];
 }
 
@@ -189,7 +189,7 @@ inline tVector3<T> &tVector3<T>::operator=(const tVector3 &v)
 template<class T>
 inline typename tVector3<T>::value_type tVector3<T>::operator[](unsigned i) const
 {
-	assert(i < 3);
+	ASSERT(i < 3);
 	return _v[i];
 }
 
@@ -332,7 +332,7 @@ inline tBox3<T>::tBox3(const tPoint3<T> &min_pt, const tPoint3<T> &max_pt)
         : _min_pt(min_pt),
           _max_pt(max_pt)
 {
-	assert(is_order_correct());
+	ASSERT(is_order_correct());
 }
 
 template<class T>
@@ -341,7 +341,7 @@ inline tBox3<T>::tBox3(value_type xmin, value_type ymin, value_type zmin,
         : _min_pt(xmin, ymin, zmin),
           _max_pt(xmax, ymax, zmax)
 {
-	assert(is_order_correct());
+	ASSERT(is_order_correct());
 }
 
 template<class T>
@@ -350,7 +350,7 @@ inline tBox3<T> &tBox3<T>::operator=(const tBox3 &b)
   if (&b != this) {
     _min_pt = b._min_pt;
     _max_pt = b._max_pt;
-    assert(is_order_correct());
+    ASSERT(is_order_correct());
   }
   return *this;
 }
@@ -443,7 +443,7 @@ inline void tBox3<T>::update(const tPoint3<T>& p)
 template<class T>
 inline tBox3<T> tBox3<T>::bounding_box(const std::vector<tPoint3<T> > &v)
 {
-	assert(v.size() > 0);
+	ASSERT(v.size() > 0);
 	tPoint3<T> p = v[0];
 	value_type min_x = p.x(), min_y = p.y(), min_z = p.z();
 	value_type max_x = p.x(), max_y = p.y(), max_z = p.z();
