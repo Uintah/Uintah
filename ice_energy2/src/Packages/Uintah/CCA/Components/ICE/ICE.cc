@@ -699,12 +699,17 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     Task* t2 = scinew Task("ICE::initializeSubTask_hydrostaticAdj",
                      this, &ICE::initializeSubTask_hydrostaticAdj);
     Ghost::GhostType  gn  = Ghost::None;
-    t2->requires(Task::NewDW,lb->gammaLabel,         ice_matls_sub, gn);
-    t2->requires(Task::NewDW,lb->specific_heatLabel, ice_matls_sub, gn);
-   
-    t2->modifies(lb->rho_micro_CCLabel);
-    t2->modifies(lb->temp_CCLabel);
+    t2->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
+    t2->modifies(lb->int_eng_CCLabel);
     t2->modifies(lb->press_CCLabel, d_press_matl, oims); 
+
+    int numICEMatls = d_sharedState->getNumICEMatls();
+    for(int m = 0;m < numICEMatls; m++){
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      ice_matl->getThermo()->addTaskDependencies_cv(t2, ThermoInterface::NewState, 0);
+      ice_matl->getThermo()->addTaskDependencies_gamma(t2, ThermoInterface::NewState, 0);
+      ice_matl->getThermo()->addTaskDependencies_int_eng(t2, ThermoInterface::NewState, 0);
+    }
 
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
@@ -773,14 +778,30 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
                             
-  t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);  
-  t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
-  t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0);
-  t->requires(Task::NewDW, lb->gammaLabel,         gn,  0);
-  t->requires(Task::NewDW, lb->specific_heatLabel, gn,  0);   
+  int numGhostCells;
+  if (d_delT_scheme == "aggressive") {
+    // Agressive scheme
+    numGhostCells = 0;
+  } else {
+    // Conservative scheme - needs 1 layer of ghost cells on velocity and speed of sound
+    numGhostCells = 1;
+  }
+  Ghost::GhostType ghostType = numGhostCells == 0? Ghost::None:Ghost::AroundCells;
+
+  t->requires(Task::NewDW, lb->speedSound_CCLabel, ghostType, numGhostCells);
+
+  // Thermo/EOS dependencies may vary per material
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    // Require data to compute thermal diffusivity
+    ice_matl->getThermo()->addTaskDependencies_thermalDiffusivity(t, ThermoInterface::NewState, 0);
+  }
+
+  t->requires(Task::NewDW, lb->vel_CCLabel,        ghostType, numGhostCells);  
+  t->requires(Task::NewDW, lb->int_eng_CCLabel, Ghost::None);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0);   
   t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0);        
-  
   t->computes(d_sharedState->get_delt_label());
   sched->addTask(t,level->eachPatch(), ice_matls); 
   
@@ -794,6 +815,87 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     }
   }
 }
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleComputeInternalEnergy--
+_____________________________________________________________________*/
+void ICE::scheduleComputeInternalEnergy(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* ice_matls)
+{
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
+    return;
+  
+  cout_doing << "ICE::scheduleComputeInternalEnergy \t\t\tL-"
+             << levelIndex << endl;
+  Task* t = scinew Task("ICE::computeInternalEnergy",
+                        this, &ICE::computeInternalEnergy);
+  t->requires(Task::NewDW, lb->ntemp_CCLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->addTaskDependencies_int_eng(t, ThermoInterface::NewState, 0);
+  }
+  t->computes(lb->int_eng_CCLabel);
+  sched->addTask(t, patches, ice_matls);
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleComputeTemperature--
+_____________________________________________________________________*/
+void ICE::scheduleComputeTemperature(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* ice_matls)
+{
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
+    return;
+  
+  cout_doing << "ICE::scheduleComputeTemperature \t\t\tL-"
+             << levelIndex << endl;
+  Task* t = scinew Task("ICE::computeTemperature",
+                        this, &ICE::computeTemperature);
+  t->requires(Task::NewDW, lb->int_eng_CCLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->addTaskDependencies_int_eng(t, ThermoInterface::NewState, 0);
+  }
+  t->computes(lb->ntemp_CCLabel);
+  sched->addTask(t, patches, ice_matls);
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleComputeSpeedOfSound--
+_____________________________________________________________________*/
+void ICE::scheduleComputeSpeedOfSound(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* ice_matls)
+{
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
+    return;
+  
+  cout_doing << "ICE::scheduleComputeSpeedOfSound \t\t\tL-"
+             << levelIndex << endl;
+  Task* t = scinew Task("ICE::computeSpeedOfSound",
+                        this, &ICE::computeSpeedOfSound);
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->int_eng_CCLabel, Ghost::None);
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->addTaskDependencies_cv(t, ThermoInterface::NewState, 0);
+    ice_matl->getThermo()->addTaskDependencies_gamma(t, ThermoInterface::NewState, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::NewState, 0);
+  }
+  t->computes(lb->speedSound_CCLabel);
+  sched->addTask(t, patches, ice_matls);
+}
+
 /* _____________________________________________________________________
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
@@ -833,6 +935,13 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
                                                           maxMach_PSS);
                                                           
+  // schedule reactions
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->scheduleReactions(sched, level->eachPatch());
+  }
+  
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
   
   scheduleComputePressure(                sched, patches, d_press_matl,
@@ -947,6 +1056,8 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
                                 const LevelP& level,
                                 const MaterialSet* ice_matls)
 { 
+  cerr << "WARNING: computeThermoTransportProperties should go away\n";
+
   if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
 
@@ -963,10 +1074,6 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   //}           
   
   t->computes(lb->viscosityLabel);
-  t->computes(lb->thermalCondLabel);
-  t->computes(lb->gammaLabel);
-  t->computes(lb->specific_heatLabel);
-  
   sched->addTask(t, level->eachPatch(), ice_matls);
 
   //__________________________________
