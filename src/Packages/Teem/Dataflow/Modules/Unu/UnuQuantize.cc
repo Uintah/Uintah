@@ -120,8 +120,6 @@ UnuQuantize::execute()
     useinputmax_.reset();
   }
 
-
-
   double minf=minf_.get();
   double maxf=maxf_.get();
 
