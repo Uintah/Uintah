@@ -1420,6 +1420,8 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
     //for each new node on the clipped boundary, project a new node to the isosurface
     //  create a map between the clipped boundary nodes and the new nodes to help us create
     //  hexes with the correct connectivity later...
+
+  tri_mesh->synchronize( Mesh::LOCATE_E );
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map;
   unsigned int i;  
   for( i = 0; i < node_list.size(); i++ )
