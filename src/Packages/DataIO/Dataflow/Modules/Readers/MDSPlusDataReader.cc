@@ -723,11 +723,14 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     if (gui_assume_svt_.get())
       sz_last_dim = dims[ndims-1];
 
+    size_t size[NRRD_DIM_MAX];
     switch(ndims) {
     case 1: 
-      nrrdWrap(nout->nrrd, data,
-	       nrrd_type, ndims, (unsigned int) dims[0]);
-      nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
+      size[0] = dims[0];
+      nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
       break;
       
     case 2: 
@@ -735,18 +738,24 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	switch (sz_last_dim) {
 	case 3: // Vector data
 	case 6: // Tensor data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sz_last_dim, 
-		   (unsigned int) dims[0], (unsigned int) dims[1]);
+	  size[0] = sz_last_dim;
+	  size[1] = dims[0]
+	  size[2] = dims[1];
+	  nrrdWrap_nva_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-		   (unsigned int) dims[0], (unsigned int) dims[1]);
+	  size[0] = dims[0]
+	  size[1] = dims[1];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size); 
 	  break;
 	};
 
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode);
+
+	unsigned int centers[NRRD_DIM_MAX];
+	centers[0] = nrrdCenterNode;
+	centers[1] = nrrdCenterNode;
+	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
       }
       break;
       
@@ -755,21 +764,26 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	switch (sz_last_dim) {
 	case 3: // Vector data
 	case 6: // Tensor data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sz_last_dim, 
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2]);
+	  size[0] = sz_last_dim;
+	  size[1] = dims[0];
+	  size[2] = dims[1];
+	  size[3] = dims[2];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2]);
+	  size[0] = dims[0];
+	  size[1] = dims[1];
+	  size[2] = dims[2];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);  
 	  break;
 	};
 
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
-
+	unsigned int centers[NRRD_DIM_MAX];
+	centers[0] = nrrdCenterNode;
+	centers[1] = nrrdCenterNode;
+	centers[2] = nrrdCenterNode;
+	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
       }
       break;
       
@@ -778,21 +792,30 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	switch (sz_last_dim) {
 	case 3: // Vector data
 	case 6: // Tensor data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sz_last_dim, 
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2], (unsigned int) dims[3]);
+	  size[0] = sz_last_dim;
+	  size[1] = dims[0];
+	  size[2] = dims[1];
+	  size[3] = dims[2];
+	  size[4] = dims[3];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2], (unsigned int) dims[3]);
+	  size[0] = dims[0];
+	  size[1] = dims[1];
+	  size[2] = dims[2];
+	  size[3] = dims[3];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);  
 	  break;
 	};
 
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-			nrrdCenterNode);
+	unsigned int centers[NRRD_DIM_MAX];
+	centers[0] = nrrdCenterNode;
+	centers[1] = nrrdCenterNode;
+	centers[2] = nrrdCenterNode;
+	centers[3] = nrrdCenterNode;
+	
+	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
       }
       break;
       
@@ -801,23 +824,32 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	switch (sz_last_dim) {
 	case 3: // Vector data
 	case 6: // Tensor data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sz_last_dim, 
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2], (unsigned int) dims[3], 
-		   (unsigned int) dims[4]);
+	  size[0] = sz_last_dim;
+	  size[1] = dims[0];
+	  size[2] = dims[1];
+	  size[3] = dims[2];
+	  size[4] = dims[3];
+	  size[5] = dims[4];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2], (unsigned int) dims[3], 
-		   (unsigned int) dims[4]);
+	  size[0] = dims[0];
+	  size[1] = dims[1];
+	  size[2] = dims[2];
+	  size[3] = dims[3];
+	  size[4] = dims[4];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);  
 	  break;
 	};
 
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-			nrrdCenterNode);
+	unsigned int centers[NRRD_DIM_MAX];
+	centers[0] = nrrdCenterNode;
+	centers[1] = nrrdCenterNode;
+	centers[2] = nrrdCenterNode;
+	centers[3] = nrrdCenterNode;
+	centers[4] = nrrdCenterNode;
+	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
       }
       
       break;
@@ -827,23 +859,35 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 	switch (sz_last_dim) {
 	case 3: // Vector data
 	case 6: // Tensor data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sz_last_dim, 
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2], (unsigned int) dims[3], 
-		   (unsigned int) dims[4], dims[5]);
+	  size[0] = sz_last_dim;
+	  size[1] = dims[0];
+	  size[2] = dims[1];
+	  size[3] = dims[2];
+	  size[4] = dims[3];
+	  size[5] = dims[4];
+	  size[6] = dims[5];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims+1, size);
 	  break;
 	  
 	default: // treat the rest as Scalar data
-	  nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-		   (unsigned int) dims[0], (unsigned int) dims[1], 
-		   (unsigned int) dims[2], (unsigned int) dims[3], 
-		   (unsigned int) dims[4], dims[5]);
+	  size[0] = dims[0];
+	  size[1] = dims[1];
+	  size[2] = dims[2];
+	  size[3] = dims[3];
+	  size[4] = dims[4];
+	  size[5] = dims[5];
+	  nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, size);
 	  break;
 	};
 
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
+	unsigned int centers[NRRD_DIM_MAX];
+	centers[0] = nrrdCenterNode;
+	centers[1] = nrrdCenterNode;
+	centers[2] = nrrdCenterNode;
+	centers[3] = nrrdCenterNode;
+	centers[4] = nrrdCenterNode;
+	centers[5] = nrrdCenterNode;
+	nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
       }
       break;
     }

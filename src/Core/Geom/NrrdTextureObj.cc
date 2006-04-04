@@ -100,7 +100,7 @@ NrrdTextureObj::pad_to_power_of_2()
                   Pow2(nrrd_->nrrd->axis[1].size)-1, 
                   Pow2(nrrd_->nrrd->axis[2].size)-1 };
 
-  if (nrrdPad(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed)) {
+  if (nrrdPad_nva(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed, 0)) {
     char *err = biffGetDone(NRRD);
     string error = string("Trouble resampling: ") + err;
     free (err);

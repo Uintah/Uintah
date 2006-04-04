@@ -24,7 +24,7 @@
 #include <sstream>
 #include <iostream>
 
-#define SPACING(spc) (AIR_EXISTS(spc) ? spc: nrrdDefSpacing)
+#define SPACING(spc) (AIR_EXISTS(spc) ? spc: nrrdDefaultSpacing)
 
 namespace SCITeem {
 
@@ -147,7 +147,6 @@ GageProbe::execute()
   gagePerVolume *pvl;
   char /* *outS,*/ *err = NULL;
   NrrdKernelSpec *k00 = NULL, *k11 = NULL, *k22 = NULL;
-  gage_t *answer;
   
   //attempt to set gageKind
   if (nin->axis[0].size == 1){
@@ -291,18 +290,22 @@ GageProbe::execute()
     error(biffGet(GAGE));
     return;
   }
-  answer = gageAnswerPointer(ctx, pvl, what);
+  const gage_t *answer = gageAnswerPointer(ctx, pvl, what);
   gageParmSet(ctx, gageParmVerbose, 0);
   //end gage setup
   
   if (ansLen > 1) {
     printf("creating %d x %d x %d x %d output\n", 
 	   ansLen, sox, soy, soz);
-    if (!E) E |= nrrdMaybeAlloc(nout=nrrdNew(), otype, 4,
-				ansLen, sox, soy, soz);
+    size_t size[NRRD_DIM_MAX];
+    size[0] = ansLen; size[1] = sox;
+    size[2] = soy;    size[3] = soz;
+    if (!E) E |= nrrdMaybeAlloc_nva(nout=nrrdNew(), otype, 4, size);
   } else {
+    size_t size[NRRD_DIM_MAX];
+    size[0] = sox; size[1] = soy; size[2] = soz;
     printf("creating %d x %d x %d output\n", sox, soy, soz);
-    if (!E) E |= nrrdMaybeAlloc(nout=nrrdNew(), otype, 3, sox, soy, soz);
+    if (!E) E |= nrrdMaybeAlloc_nva(nout=nrrdNew(), otype, 3, size);
   }
   if (E) {
     error(err);
@@ -323,7 +326,7 @@ GageProbe::execute()
 	ipos[2] = zi;
 	
 	if (gageProbe(ctx, ipos[0], ipos[1], ipos[2])) {
-          error(gageErrStr);
+          error(ctx->errStr);
         }
         
 	if (1 == ansLen) {	
@@ -338,7 +341,7 @@ GageProbe::execute()
     }
   }
   
-  nrrdContentSet(nout, "probe", nin, "%s", airEnumStr(kind->enm, what));
+  nrrdContentSet_va(nout, "probe", nin, "%s", airEnumStr(kind->enm, what));
   nout->axis[0+oBaseDim].spacing = 
     ((double)six/sox)*SPACING(nin->axis[0+iBaseDim].spacing);
   nout->axis[0+oBaseDim].label = airStrdup(nin->axis[0+iBaseDim].label);

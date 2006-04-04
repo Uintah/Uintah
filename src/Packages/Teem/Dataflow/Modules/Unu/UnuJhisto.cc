@@ -206,7 +206,7 @@ UnuJhisto::execute()
     }
     
     // get bins
-    int *bin = new int[nrrds.size()];
+    size_t *bin = new size_t[nrrds.size()];
     i=0, start=0;
     int which = 0, end=0, counter=0;
     inword = false;
@@ -400,7 +400,7 @@ UnuJhisto::execute()
     }
 
     if (nrrdHistoJoint(nout, nrrds_array, range,
-		       (int)nrrds.size(), weight, bin,
+		       (unsigned int)nrrds.size(), weight, bin,
                        string_to_nrrd_type(type_.get()), 
 		       clamp))
     {

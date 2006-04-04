@@ -152,10 +152,16 @@ TendEvecRGB::execute()
 
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
+  
+  tenEvecRGBParm *rgbp = tenEvecRGBParmNew();
+  rgbp->which = evec_.get(); 
+  rgbp->aniso = get_method(aniso_metric_.get()); 
+  rgbp->confThresh = threshold_.get(); 
+  rgbp->gamma = gamma_.get(); 
+  rgbp->bgGray = background_.get(); 
+  rgbp->isoGray = gray_.get(); 
 
-  if (tenEvecRGB(nout, nin, evec_.get(), get_method(aniso_metric_.get()), 
-		 threshold_.get(), gamma_.get(), background_.get(), 
-		 gray_.get())) {
+  if (tenEvecRGB(nout, nin, rgbp)) {
     char *err = biffGetDone(TEN);
     error(string("Error making tendEvecRGB volume: ") + err);
     free(err);

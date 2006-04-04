@@ -996,7 +996,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           unsigned int nrrdtype = convertmitype(mlarray.gettype());
                   
           // obtain the dimensions of the new nrrd
-          int nrrddims[NRRD_DIM_MAX];
+          size_t nrrddims[NRRD_DIM_MAX];
           std::vector<long> dims = mlarray.getdims();
           int nrrddim = static_cast<int>(dims.size());
           

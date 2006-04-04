@@ -341,7 +341,7 @@ void UnuMake::read_file_and_create_nrrd() {
 
       /* start new */      
       nio_->dataFileDim = nout_->nrrd->dim;
-      airArraySetLen(nio_->dataFNArr, 1);
+      airArrayLenSet(nio_->dataFNArr, 1);
       nio_->dataFN[0] = airStrdup(fn.c_str());
       /* end new */
 

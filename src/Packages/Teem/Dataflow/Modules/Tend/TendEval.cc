@@ -119,8 +119,10 @@ TendEval::execute()
   }
 
   NrrdData *nout = new NrrdData();
-
-  nrrdAlloc(nout->nrrd, nrrdTypeFloat, 4, compLen, sx, sy, sz);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = compLen; size[1] = sx;
+  size[2] = sy; size[3] = sz;
+  nrrdAlloc_nva(nout->nrrd, nrrdTypeFloat, 4, size);
   if (tenTensorCheck(nin, nrrdTypeFloat, AIR_TRUE, AIR_TRUE)) {
     error("Input Nrrd was not a Tensor field of floats");
     return;

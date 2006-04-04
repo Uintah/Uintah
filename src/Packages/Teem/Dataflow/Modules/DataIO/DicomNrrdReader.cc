@@ -793,17 +793,24 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
     // determine if it is 2D, or 3D
     if (nZ > 1) {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY; size[2] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
     } else {
       // 2D
-      nrrdAlloc(nrrd, pType, 2, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY;
+      nrrdAlloc_nva(nrrd, pType, 2, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
     }
@@ -811,18 +818,25 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
      // determine if it is 2D, or 3D vector data
     if (nZ > 1) {
       // 4D
-      nrrdAlloc(nrrd, pType, 4, num_comp, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX; 
+      size[2] = nY; size[3] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 4, size);
+      unsigned int centers[4] = {nrrdCenterUnknown, nrrdCenterNode,
+				 nrrdCenterNode, nrrdCenterNode};
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
       nrrd->axis[3].kind = nrrdKindDomain;
     } else {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, num_comp, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX; size[2] = nY;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[3] = {nrrdCenterUnknown, nrrdCenterNode, 
+				 nrrdCenterNode};
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
@@ -961,17 +975,24 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
     // determine if it is 2D, or 3D
     if (nZ > 1) {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY; size[2] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
     } else {
       // 2D
-      nrrdAlloc(nrrd, pType, 2, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY;
+      nrrdAlloc_nva(nrrd, pType, 2, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
     }
@@ -979,18 +1000,28 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
      // determine if it is 2D, or 3D vector data
     if (nZ > 1) {
       // 4D
-      nrrdAlloc(nrrd, pType, 4, num_comp, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX;
+      size[2] = nY; size[3] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 4, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterUnknown; centers[1] =  nrrdCenterNode;
+      centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
       nrrd->axis[3].kind = nrrdKindDomain;
     } else {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, num_comp, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX;
+      size[2] = nY;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterUnknown; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
@@ -1163,9 +1194,12 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
     sciNrrd = scinew NrrdData(arr[0]);
   }
 
-  nrrdAxisInfoSet(sciNrrd->nrrd, nrrdAxisInfoCenter,
-			nrrdCenterNode, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
+  unsigned int *centers = (unsigned int *)malloc(sizeof(unsigned int) * 
+						 sciNrrd->nrrd->dim);
+  for(int i=0; i<sciNrrd->nrrd->dim; i++)
+    centers[i] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(sciNrrd->nrrd, nrrdAxisInfoCenter, &centers);
+		      
   sciNrrd->nrrd->axis[2].spacing = z_spacing_;
 
 

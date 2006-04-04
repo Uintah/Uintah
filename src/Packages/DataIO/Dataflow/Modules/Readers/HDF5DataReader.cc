@@ -1312,55 +1312,57 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     count[ndims-1-i] = swap;
   }
 
+  size_t sz[NRRD_DIM_MAX];
+  sz[0] = count[0];
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  centers[4] = nrrdCenterNode; centers[5] = nrrdCenterNode;
   switch(ndims) {
   case 1: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims, (unsigned int) count[0]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
+    nrrdWrap_nva(nout->nrrd, data,
+	     nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
     break;
       
   case 2: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-	     (unsigned int) count[0], (unsigned int) count[1]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode);
+    sz[1] = count[1];
+    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
     break;
       
   case 3: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);  
+    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
     break;
       
   case 4: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2], (unsigned int) count[3]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-		    nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    sz[3] = count[3];
+    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);  
+    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
     break;
       
   case 5: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2], (unsigned int) count[3], 
-	     (unsigned int) count[4]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    sz[3] = count[3];
+    sz[4] = count[4];
+    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
     break;
       
   case 6: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2], (unsigned int) count[3], 
-	     (unsigned int) count[4], count[5]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    sz[3] = count[3];
+    sz[4] = count[4];
+    sz[5] = count[5];
+    nrrdWrap_nva(nout->nrrd, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
     break;
   }
    

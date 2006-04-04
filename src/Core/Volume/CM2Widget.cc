@@ -1453,7 +1453,7 @@ ImageCM2Widget::resize(int width, int height)
         (!(airExists(nin->axis[a].min) && 
            airExists(nin->axis[a].max)))) {
       nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
-                            nin->axis[a].center : nrrdDefCenter);
+                            nin->axis[a].center : nrrdDefaultCenter);
     }
     info->min[a] = nin->axis[a].min;
     info->max[a] = nin->axis[a].max;

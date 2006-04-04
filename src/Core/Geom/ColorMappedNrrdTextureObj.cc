@@ -88,8 +88,8 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin,
   nrrd_ = new NrrdData;
 
   if (min_slice != max_slice) {
-    int *min = new int[nin->nrrd->dim];
-    int *max = new int[nin->nrrd->dim];
+    size_t *min = new size_t[nin->nrrd->dim];
+    size_t *max = new size_t[nin->nrrd->dim];
     for (int i = 0; i < nin->nrrd->dim; i++) {
       min[i] = 0;
       max[i] = nin->nrrd->axis[i].size-1;

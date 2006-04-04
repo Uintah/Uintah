@@ -145,16 +145,22 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   nHandles[mesh[PHI]]->get_property( string("Source"), source);
 
+  size_t size[NRRD_DIM_MAX];
+  size[0] = rank;
+  size[1] = idim;
+  size[2] = jdim;
+  size[3] = kdim;
   if( source == string("MDSPlus") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim );
+    nrrdWrap_nva(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
+	     ndims+1, size );
   else if( source == string("HDF5") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
+	     ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
 
   string nrrdName;
   nHandles[mesh[PHI]]->get_property( "Name", nrrdName );
@@ -229,16 +235,22 @@ NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   string source;
 
   nHandles[data[0]]->get_property( string("Source"), source);
-
+  
+  size_t size[NRRD_DIM_MAX];
+  size[0] = idim;
+  size[1] = jdim;
+  size[2] = kdim;
   if( source == string("MDSPlus") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	     ndims, size);
   else if( source == string("HDF5") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	     ndims, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; 
+  nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
 
   string nrrdName;
   nHandles[data[0]]->get_property( "Name", nrrdName );
@@ -372,16 +384,22 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 
   nHandles[data[0]]->get_property( string("Source"), source);
 
+  size_t size[NRRD_DIM_MAX];
+  size[0] = rank;
+  size[1] = idim;
+  size[2] = jdim;
+  size[3] = kdim;
   if( source == string("MDSPlus") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	     ndims+1, size);
   else if( source == string("HDF5") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	     ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
 
   nHandles[data[0]]->get_property( "Name", nrrdName );
 
@@ -551,22 +569,33 @@ NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles
   nHandles[data[0]]->get_property( string("Source"), source);
 
   if( rank == 1 ) {
+    size_t size[NRRD_DIM_MAX];
+    size[0] = idim;
+    size[1] = jdim;
+    size[2] = kdim;
     if( source == string("MDSPlus") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims, idim, jdim, kdim);
+      nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims, size);
     else if( source == string("HDF5") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims, idim, jdim, kdim);
+      nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims, size);
 
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+    unsigned int centers[NRRD_DIM_MAX];
+    centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+    centers[2] = nrrdCenterNode;
+    nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
   } else {
+    size_t size[NRRD_DIM_MAX];
+    size[0] = rank;
+    size[1] = idim;
+    size[2] = jdim;
+    size[3] = kdim;
     if( source == string("MDSPlus") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims+1, rank, kdim, idim, jdim);
+      nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims+1, size);
     else if( source == string("HDF5") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims+1, rank, idim, jdim, kdim);
+      nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims+1, size);
 
     nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
 		    nrrdCenterNode, nrrdCenterNode,

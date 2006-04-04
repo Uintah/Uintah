@@ -295,8 +295,8 @@ NrrdSetupTexture::execute()
   last_maxf_ = maxf;
   last_valuesonly_ = valuesonly;
 
-  int nvsize[NRRD_DIM_MAX];
-  int gmsize[NRRD_DIM_MAX];
+  size_t nvsize[NRRD_DIM_MAX];
+  size_t gmsize[NRRD_DIM_MAX];
   int dim;
 
   // Create a local array of axis sizes, so we can allocate the output Nrrd

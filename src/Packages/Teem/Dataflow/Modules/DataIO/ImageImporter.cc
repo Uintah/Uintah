@@ -210,7 +210,10 @@ ImageImporter::execute()
       
       Nrrd *nrrd = nrrdNew();
 
-      if (nrrdAlloc(nrrd,nrrd_type, 3, type_size, w, h)) {
+      size_t size[NRRD_DIM_MAX];
+      size[0] = type_size; size[1] = w;
+      size[2] = h;
+      if (nrrdAlloc_nva(nrrd,nrrd_type, 3, size)) {
 	error("Error allocating NRRD.");
 	png_destroy_read_struct(&png, &info, NULL);
 	system(string("rm " + tmp_file).c_str());

@@ -138,7 +138,7 @@ UnuInset::execute()
     return;
   }
 
-  int *min = new int[nin->dim];
+  size_t *min = new size_t[nin->dim];
   // Size/samples
   i=0, start=0;
   int which = 0, end=0, counter=0;

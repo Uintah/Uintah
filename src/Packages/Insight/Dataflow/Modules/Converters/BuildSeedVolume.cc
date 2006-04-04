@@ -166,8 +166,11 @@ BuildSeedVolume::execute()
   min_y = in_img->GetOrigin()[1];
 
   // create nrrd
+  size_t size[NRRD_DIM_MAX];
+  size[0] = samples_x;
+  size[1] = samples_y;
   NrrdData *n = scinew NrrdData();
-  nrrdAlloc(n->nrrd, nrrdTypeFloat, 2, samples_x, samples_y);
+  nrrdAlloc_nva(n->nrrd, nrrdTypeFloat, 2, size);
   n->nrrd->axis[0].spacing = spacing_x;
   n->nrrd->axis[1].spacing = spacing_y;
   n->nrrd->axis[0].min = min_x;

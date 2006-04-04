@@ -154,7 +154,8 @@ TendEpireg::execute()
       return;
     }
     ngrad = nrrdNew();
-    nrrdWrap(ngrad, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
+    size_t size[2] = {3, (*mat).size()/3};
+    nrrdWrap_nva(ngrad, &(*mat)[0], nrrdTypeDouble, 2, size);
   }
 
   reset_vars();

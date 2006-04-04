@@ -130,7 +130,7 @@ JNIUtils::getMesh(NrrdDataHandle points_handle_, NrrdDataHandle connections_hand
         connNrrd = connections_handle_.get_rep();
 
         ptsNrrdDim = UNSTRUCTURED_REGULAR_NRRD_DIM;
-        int ptsNrrdDims[NRRD_DIM_MAX];
+        size_t ptsNrrdDims[NRRD_DIM_MAX];
         ptsNrrdDims[0] = ptsDim; // should be 3D points
         ptsNrrdDims[1] = ptsNum;
         nrrdAlloc_nva(ptsNrrd->nrrd, nrrdTypeDouble, ptsNrrdDim, ptsNrrdDims);
@@ -141,7 +141,7 @@ JNIUtils::getMesh(NrrdDataHandle points_handle_, NrrdDataHandle connections_hand
         nrrdAxisInfoSet_nva(ptsNrrd->nrrd, nrrdAxisInfoLabel, ptslabelptr);
 
         connNrrdDim = UNSTRUCTURED_REGULAR_NRRD_DIM;
-        int connNrrdDims[NRRD_DIM_MAX];
+        size_t connNrrdDims[NRRD_DIM_MAX];
         connNrrdDims[0] = connDim; // initial test case: tetrahedron
         connNrrdDims[1] = connNum;
         nrrdAlloc_nva(connNrrd->nrrd, nrrdTypeDouble, connNrrdDim, connNrrdDims);

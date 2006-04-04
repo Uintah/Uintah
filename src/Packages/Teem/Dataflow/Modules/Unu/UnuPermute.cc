@@ -53,7 +53,7 @@ using namespace SCIRun;
 
 class UnuPermute : public Module {
 public:
-  int valid_data(int* axes);
+  int valid_data(unsigned int* axes);
   UnuPermute(GuiContext *ctx);
   virtual ~UnuPermute();
   virtual void execute();
@@ -65,7 +65,7 @@ private:
   GuiInt               dim_;
   GuiInt               uis_;
   vector<GuiInt*>      axes_;
-  vector<int>          last_axes_;
+  vector<unsigned int> last_axes_;
   int                  last_generation_;
   NrrdDataHandle       last_nrrdH_;
 };
@@ -98,9 +98,9 @@ UnuPermute::~UnuPermute() {
 
 // check to see that the axes specified are in bounds
 int
-UnuPermute::valid_data(int* axes) {
+UnuPermute::valid_data(unsigned int* axes) {
 
-  vector<int> exists(dim_.get(), 0);
+  vector<unsigned int> exists(dim_.get(), 0);
   for (int a = 0; a < dim_.get(); a++) {
     if (axes[a] < dim_.get() && !exists[axes[a]]) {
       exists[axes[a]] = 1;
@@ -158,7 +158,7 @@ UnuPermute::execute()
       ostringstream str;
       str << i;
       vector<GuiInt*>::iterator iter = axes_.end();
-      vector<int>::iterator iter2 = last_axes_.end();
+      vector<unsigned int>::iterator iter2 = last_axes_.end();
       axes_.erase(iter, iter);
       last_axes_.erase(iter2, iter2);
       get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
@@ -202,7 +202,7 @@ UnuPermute::execute()
 
 
 
-  int* axp = &(last_axes_[0]);
+  unsigned int* axp = &(last_axes_[0]);
   if (!valid_data(axp)) return;
 
   Nrrd *nin = nrrdH->nrrd;
@@ -241,7 +241,7 @@ UnuPermute::tcl_command(GuiArgs& args, void* userdata)
     ostringstream str;
     str << i;
     vector<GuiInt*>::iterator iter = axes_.end();
-    vector<int>::iterator iter2 = last_axes_.end();
+    vector<unsigned int>::iterator iter2 = last_axes_.end();
     axes_.erase(iter, iter);
     last_axes_.erase(iter2, iter2);
     get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));

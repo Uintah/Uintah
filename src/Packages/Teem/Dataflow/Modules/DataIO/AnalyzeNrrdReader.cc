@@ -364,21 +364,23 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
-               3, image.get_size(0), 
-               image.get_size(1), image.get_size(2)) ) 
-      {
-        error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
-        err = biffGetDone(NRRD);
-        // There was an error. "err" is a char* error message, pass it
-        // to whatever kind of error handler you are using.  In case
-        // you're picky about memory leaks, its up to you to:
-        free(err);
-      }
-  
-      nrrdAxisInfoSet( nrrd, nrrdAxisInfoCenter,
-	    	       nrrdCenterNode, nrrdCenterNode, 
-		       nrrdCenterNode, nrrdCenterNode );
+      size_t size[3] = {image.get_size(0), image.get_size(1),
+			image.get_size(2)};
+      if( nrrdWrap_nva(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
+		       3, size )) 
+	{
+	  error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
+	  err = biffGetDone(NRRD);
+	  // There was an error. "err" is a char* error message, pass it
+	  // to whatever kind of error handler you are using.  In case
+	  // you're picky about memory leaks, its up to you to:
+	  free(err);
+	}
+      
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva( nrrd, nrrdAxisInfoCenter, centers);
 
       //nrrd->axis[0].label = "Unknown:Scalar";
       nrrd->axis[0].label = airStrdup("x");
@@ -395,8 +397,9 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
-               2, image.get_size(0), image.get_size(1)) ) 
+      size_t size[2] = {image.get_size(0), image.get_size(1)};
+      if( nrrdWrap_nva(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
+		       2, size ) )
       {
         error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
         err = biffGetDone(NRRD);
@@ -406,9 +409,10 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
         free(err);
       }
   
-      nrrdAxisInfoSet( nrrd, nrrdAxisInfoCenter,
-	    	       nrrdCenterNode, nrrdCenterNode, 
-		       nrrdCenterNode, nrrdCenterNode );
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva( nrrd, nrrdAxisInfoCenter, centers);
 
       //nrrd->axis[0].label = "Unknown:Scalar";
       nrrd->axis[0].label = airStrdup("x");
@@ -473,9 +477,11 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
     return 0;
   }
 
-  nrrdAxisInfoSet(sciNrrd->nrrd, nrrdAxisInfoCenter,
-			nrrdCenterNode, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  centers[4] = nrrdCenterNode; centers[5] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(sciNrrd->nrrd, nrrdAxisInfoCenter, centers);
 
   string new_label("");
   for( int i = 0; i < num_nrrds; i++ )

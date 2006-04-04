@@ -389,9 +389,16 @@ bool Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
     if (transposeNrrd_)
     {
       nrrdH = scinew NrrdData();
-      nrrdAlloc(nrrdH->nrrd, nrrdTypeDouble, 2, cols, rows);
-      nrrdAxisInfoSet(nrrdH->nrrd, nrrdAxisInfoLabel, 
-                                          "dense-columns" , "dense-rows");
+      size_t size[NRRD_DIM_MAX];
+      size[0] = cols; size[1] = rows;
+      nrrdAlloc_nva(nrrdH->nrrd, nrrdTypeDouble, 2, size);
+
+
+      const char *labels[NRRD_DIM_MAX];
+      labels[0] = airStrdup("dense-columns");
+      labels[1] = airStrdup("dense-rows");
+
+      nrrdAxisInfoSet_nva(nrrdH->nrrd, nrrdAxisInfoLabel, labels);
       nrrdH->nrrd->axis[0].kind = nrrdKindDomain;
       nrrdH->nrrd->axis[1].kind = nrrdKindDomain;
 
@@ -413,9 +420,14 @@ bool Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
     else
     {
       nrrdH = scinew NrrdData();
-      nrrdAlloc(nrrdH->nrrd, nrrdTypeDouble, 2, rows, cols);
-      nrrdAxisInfoSet(nrrdH->nrrd, nrrdAxisInfoLabel, 
-                                          "dense-rows" , "dense-columns");
+      size_t size[NRRD_DIM_MAX];
+      size[0] = rows; size[1] = cols;
+      nrrdAlloc_nva(nrrdH->nrrd, nrrdTypeDouble, 2, size);
+
+      const char *labels[NRRD_DIM_MAX];
+      labels[0] = airStrdup("dense-rows");
+      labels[1] = airStrdup("dense-columns");
+      nrrdAxisInfoSet_nva(nrrdH->nrrd, nrrdAxisInfoLabel, labels);
       nrrdH->nrrd->axis[0].kind = nrrdKindDomain;
       nrrdH->nrrd->axis[1].kind = nrrdKindDomain;
 
@@ -437,17 +449,18 @@ bool Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
   {
     Matrix* matrixptr = matH.get_rep();
     ColumnMatrix* matrix = dynamic_cast<ColumnMatrix*>(matrixptr);
-    int size = matrix->nrows();
+    size_t size[NRRD_DIM_MAX];
+    size[0] = matrix->nrows();
 
     nrrdH = scinew NrrdData();
-    nrrdAlloc(nrrdH->nrrd, nrrdTypeDouble, 1, size);
-    nrrdAxisInfoSet(nrrdH->nrrd, nrrdAxisInfoLabel, "column-data");
+    nrrdAlloc_nva(nrrdH->nrrd, nrrdTypeDouble, 1, size);
+    nrrdAxisInfoSet_nva(nrrdH->nrrd, nrrdAxisInfoLabel, "column-data");
     nrrdH->nrrd->axis[0].kind = nrrdKindDomain;
 
     double *val = (double*)nrrdH->nrrd->data;
     double *data = matrix->get_data();
 
-    for(int i=0; i<size; i++) 
+    for(int i=0; i<matrix->nrows(); i++) 
     {
       *val = *data;
       ++data;
