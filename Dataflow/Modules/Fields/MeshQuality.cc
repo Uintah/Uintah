@@ -72,9 +72,11 @@ MeshQuality::MeshQuality(GuiContext* ctx)
 {
 }
 
+
 MeshQuality::~MeshQuality()
 {
 }
+
 
 void
 MeshQuality::execute()
@@ -142,6 +144,7 @@ MeshQuality::execute()
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Checked");
   ofield_port->send_and_dereference(ofield);
 }
+
 
 CompileInfoHandle
 MeshQualityAlgo::get_compile_info(const TypeDescription *fsrc,

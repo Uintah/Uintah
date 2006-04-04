@@ -96,8 +96,9 @@ private:
 
 
 template <class FIELD>
-FieldHandle MeshSmootherAlgoTet<FIELD>::execute(
-                                                ProgressReporter *mod, FieldHandle fieldh, bool boundary, string scheme )
+FieldHandle
+MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
+                                    bool boundary, string scheme )
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
@@ -165,6 +166,7 @@ FieldHandle MeshSmootherAlgoTet<FIELD>::execute(
     return ofh;
   }
 }
+
 
 template <class FIELD>
 FieldHandle

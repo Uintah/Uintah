@@ -87,7 +87,7 @@ MeshSmoother::~MeshSmoother()
 void
 MeshSmoother::execute()
 {
-    // Get input field.
+  // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle ifieldhandle;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
