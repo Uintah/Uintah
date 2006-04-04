@@ -156,7 +156,7 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
   Nrrd* nv_nrrd = vHandle->nrrd;
   Nrrd* gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd : 0);
 
-  int axis_size[4];
+  size_t axis_size[4];
   nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
   double axis_min[4];
   nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMin, axis_min);
