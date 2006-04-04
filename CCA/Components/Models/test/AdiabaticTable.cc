@@ -177,7 +177,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   //setup the table
   string tablename = "adiabatic";
   table = TableFactory::readTable(params, tablename);
-  table->addIndependentVariable("mix_frac");
+  table->addIndependentVariable("mixture_fraction");
   if(d_useVariance)
     table->addIndependentVariable("Fvar");
   
@@ -191,7 +191,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     tablevalues.push_back(tv);
   }
   
-  d_temp_index          = table->addDependentVariable("temp");
+  d_temp_index          = table->addDependentVariable("temperature");
   d_density_index       = table->addDependentVariable("density");
   d_gamma_index         = table->addDependentVariable("gamma");
   d_cv_index            = table->addDependentVariable("heat_capac_Cv");
@@ -200,7 +200,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_ref_cv_index    = table->addDependentVariable("reference_heat_capac_Cv");
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
-//  d_MW_index        = table->addDependentVariable("mix_mol_wt");
+//  d_MW_index        = table->addDependentVariable("mixture_molecular_weight");
   
   bool cerrSwitch = (d_myworld->myrank() == 0); 
   table->setup(cerrSwitch);
