@@ -153,8 +153,8 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
                               int card_mem,
                               int is_uchar)
 {
-  Nrrd* nv_nrrd = vHandle->nrrd;
-  Nrrd* gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd : 0);
+  Nrrd* nv_nrrd = vHandle->nrrd_;
+  Nrrd* gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd_ : 0);
 
   size_t axis_size[4];
   nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
@@ -218,9 +218,9 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
     // NrrdTextureBricks can be used if specifically requested or if
     // the data is unisgned chars with no rescaling.
     bool use_nrrd_brick =
-      is_uchar || (vHandle->nrrd->type == nrrdTypeUChar &&
+      is_uchar || (vHandle->nrrd_->type == nrrdTypeUChar &&
 		   vmin == 0 && vmax == 255 &&
-		   gHandle->nrrd->type == nrrdTypeUChar &&
+		   gHandle->nrrd_->type == nrrdTypeUChar &&
 		   gmin == 0 && gmax == 255);
 
     if ( use_nrrd_brick &&
@@ -231,9 +231,9 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
     }
     else
     {
-      if( vHandle->nrrd->type == nrrdTypeUChar &&
+      if( vHandle->nrrd_->type == nrrdTypeUChar &&
 	  vmin == 0 && vmax == 255 &&
-	  gHandle->nrrd->type == nrrdTypeUChar &&
+	  gHandle->nrrd_->type == nrrdTypeUChar &&
 	  gmin == 0 && gmax == 255 )
       texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem,
 			   use_nrrd_brick );

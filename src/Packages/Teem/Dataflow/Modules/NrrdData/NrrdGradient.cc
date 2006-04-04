@@ -77,10 +77,10 @@ NrrdGradient::execute()
     return;
   }
 
-  Nrrd *nin = nin_handle->nrrd;
+  Nrrd *nin = nin_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   size_t size[NRRD_DIM_MAX];
-  int dim;
+  unsigned int dim;
 
   // Create a local array of axis sizes, so we can allocate the output Nrrd
   for (dim=0; dim<nin->dim; dim++)
@@ -143,7 +143,7 @@ NrrdGradient::execute()
   //   dimension, 'dim'
   Nrrd *deriv=nrrdNew();
   for (dim=0; dim<nin->dim; dim++) {
-    for (int d=0; d<nin->dim; d++) 
+    for (unsigned int d=0; d<nin->dim; d++) 
       if (d==dim)
 	infoD->kernel[d]=nrrdKernelCentDiff;
       else

@@ -140,12 +140,12 @@ TendEpireg::execute()
     error("Empty input Nrrd.");
     return;
   }
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *ngrad;
 
   if (igrad_->get(grad_handle) && grad_handle.get_rep()) {
     we_own_the_data = false;
-    ngrad = grad_handle->nrrd;
+    ngrad = grad_handle->nrrd_;
   } else {
     we_own_the_data = false;
     mat = new vector<double>;

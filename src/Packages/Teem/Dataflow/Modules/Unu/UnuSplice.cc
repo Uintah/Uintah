@@ -107,12 +107,12 @@ UnuSplice::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *slice = slice_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *slice = slice_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // position could be an integer or M-<integer>
-  if (!( AIR_IN_CL(0, axis_.get(), nin->dim-1) )) {
+  if (!( AIR_IN_CL(0, (unsigned int) axis_.get(), nin->dim-1) )) {
     error("Axis " + to_string(axis_.get()) + " not in range [0," + to_string(nin->dim-1) + "]");
     return;
   }
@@ -131,7 +131,7 @@ UnuSplice::execute()
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim && i<nout->dim; i++)
+  for (unsigned int i=0; i<nin->dim && i<nout->dim; i++)
   {
     nout->axis[i].kind = nin->axis[i].kind;
   }

@@ -105,9 +105,9 @@ void UnuAxinfo::execute()
       return;
     }
   
-  int axis = axis_.get();
+  unsigned int axis = axis_.get();
   if( !nh.get_rep() || generation_ != nh->generation ) {
-    if (axis >= nh->nrrd->dim) {
+    if (axis >= nh->nrrd_->dim) {
       error("Please specify an axis within proper range.");
       return;
     }
@@ -117,7 +117,7 @@ void UnuAxinfo::execute()
   
   reset_vars();
 
-  Nrrd *nin = nh->nrrd;
+  Nrrd *nin = nh->nrrd_;
   Nrrd *nout = nrrdNew();
   
   // copy input nrrd and modify its label, kind, min, max and spacing

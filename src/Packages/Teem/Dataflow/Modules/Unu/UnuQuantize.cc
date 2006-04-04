@@ -110,7 +110,7 @@ UnuQuantize::execute()
 
   if (last_generation_ != nrrdH->generation) {
     // set default values for min,max
-    NrrdRange *range = nrrdRangeNewSet(nrrdH->nrrd, nrrdBlind8BitRangeState);
+    NrrdRange *range = nrrdRangeNewSet(nrrdH->nrrd_, nrrdBlind8BitRangeState);
     realmin_.set(range->min);
     realmax_.set(range->max);
     nrrdRangeNix(range);
@@ -147,20 +147,20 @@ UnuQuantize::execute()
   last_generation_ = nrrdH->generation;
   nrrdH.detach(); 
 
-  Nrrd *nin = nrrdH->nrrd;
+  Nrrd *nin = nrrdH->nrrd_;
 
   msg_stream_ << "Quantizing -- min="<<minf<<
     " max="<<maxf<<" nbits="<<nbits<<endl;
   NrrdRange *range = nrrdRangeNew(minf, maxf);
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdQuantize(nrrd->nrrd, nin, range, nbits)) {
+  if (nrrdQuantize(nrrd->nrrd_, nin, range, nbits)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble quantizing: ") + err);
     free(err);
     return;
   }
 
-  nrrdKeyValueCopy(nrrd->nrrd, nin);
+  nrrdKeyValueCopy(nrrd->nrrd_, nin);
   last_minf_ = minf;
   last_maxf_ = maxf;
   last_nbits_ = nbits;

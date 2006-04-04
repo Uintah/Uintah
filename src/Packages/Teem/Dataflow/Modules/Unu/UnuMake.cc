@@ -199,50 +199,50 @@ void UnuMake::read_file_and_create_nrrd() {
     // set first axes kind to be what user specified
     string kind = kind_.get();
     if (kind == "nrrdKindDomain") 
-      nout_->nrrd->axis[0].kind = nrrdKindDomain;
+      nout_->nrrd_->axis[0].kind = nrrdKindDomain;
     else if (kind == "nrrdKindScalar")
-      nout_->nrrd->axis[0].kind = nrrdKindScalar;
+      nout_->nrrd_->axis[0].kind = nrrdKindScalar;
     else if (kind == "nrrdKind3Color")
-      nout_->nrrd->axis[0].kind = nrrdKind3Color;
+      nout_->nrrd_->axis[0].kind = nrrdKind3Color;
     else if (kind == "nrrdKind3Vector")
-      nout_->nrrd->axis[0].kind = nrrdKind3Vector;
+      nout_->nrrd_->axis[0].kind = nrrdKind3Vector;
     else if (kind == "nrrdKind3Normal")
-      nout_->nrrd->axis[0].kind = nrrdKind3Normal;
+      nout_->nrrd_->axis[0].kind = nrrdKind3Normal;
     else if (kind == "nrrdKind3DSymMatrix")
-      nout_->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+      nout_->nrrd_->axis[0].kind = nrrdKind3DSymMatrix;
     else if (kind == "nrrdKind3DMaskedSymMatrix")
-      nout_->nrrd->axis[0].kind = nrrdKind3DMaskedSymMatrix;
+      nout_->nrrd_->axis[0].kind = nrrdKind3DMaskedSymMatrix;
     else if (kind == "nrrdKind3DMatrix")
-      nout_->nrrd->axis[0].kind = nrrdKind3DMatrix;
+      nout_->nrrd_->axis[0].kind = nrrdKind3DMatrix;
     else if (kind == "nrrdKindList")
-      nout_->nrrd->axis[1].kind = nrrdKindList;
+      nout_->nrrd_->axis[1].kind = nrrdKindList;
     else if (kind == "nrrdKindStub")
-      nout_->nrrd->axis[1].kind = nrrdKindStub;
+      nout_->nrrd_->axis[1].kind = nrrdKindStub;
     else
-      nout_->nrrd->axis[0].kind = nrrdKindUnknown;
+      nout_->nrrd_->axis[0].kind = nrrdKindUnknown;
 
     
     string data_type = data_type_.get();
     if (data_type == "char") {
-      nout_->nrrd->type = nrrdTypeChar;
+      nout_->nrrd_->type = nrrdTypeChar;
     } else if (data_type == "unsigned char") {
-      nout_->nrrd->type = nrrdTypeUChar;
+      nout_->nrrd_->type = nrrdTypeUChar;
     } else if (data_type == "short") {
-      nout_->nrrd->type = nrrdTypeShort;
+      nout_->nrrd_->type = nrrdTypeShort;
     } else if (data_type == "unsigned short") {
-      nout_->nrrd->type = nrrdTypeUShort;
+      nout_->nrrd_->type = nrrdTypeUShort;
     } else if (data_type == "int") {
-      nout_->nrrd->type = nrrdTypeInt;
+      nout_->nrrd_->type = nrrdTypeInt;
     } else if (data_type == "unsigned int") {
-      nout_->nrrd->type = nrrdTypeUInt;
+      nout_->nrrd_->type = nrrdTypeUInt;
     } else if (data_type == "long long") {
-      nout_->nrrd->type = nrrdTypeLLong;
+      nout_->nrrd_->type = nrrdTypeLLong;
     } else if (data_type == "unsigned long long") {
-      nout_->nrrd->type = nrrdTypeULLong;
+      nout_->nrrd_->type = nrrdTypeULLong;
     } else if (data_type == "float") {
-      nout_->nrrd->type = nrrdTypeFloat;
+      nout_->nrrd_->type = nrrdTypeFloat;
     } else if (data_type == "double") {
-      nout_->nrrd->type = nrrdTypeDouble;
+      nout_->nrrd_->type = nrrdTypeDouble;
     } else {
       error("Unkown data type");
       return;
@@ -254,23 +254,23 @@ void UnuMake::read_file_and_create_nrrd() {
       return;
     }
     
-    nout_->nrrd->dim = dimension_;
+    nout_->nrrd_->dim = dimension_;
 
     // set the rest of the axes to have a kind of nrrdKindDomain
     for (int i=1; i<dimension_; i++) {
-      nout_->nrrd->axis[i].kind = nrrdKindDomain;
+      nout_->nrrd_->axis[i].kind = nrrdKindDomain;
     }
     
     // Set the nrrd's labels, sizes, and spacings that were
     // parsed in the parse_gui_vars function
     for(int i=0; i<dimension_; i++) {
-      nout_->nrrd->axis[i].label = airStrdup(lb_[i].c_str());
-      nout_->nrrd->axis[i].size = sz_[i];
-      nout_->nrrd->axis[i].spacing = sp_[i];
-      nrrdAxisInfoMinMaxSet(nout_->nrrd, i, nrrdCenterUnknown);
+      nout_->nrrd_->axis[i].label = airStrdup(lb_[i].c_str());
+      nout_->nrrd_->axis[i].size = sz_[i];
+      nout_->nrrd_->axis[i].spacing = sp_[i];
+      nrrdAxisInfoMinMaxSet(nout_->nrrd_, i, nrrdCenterUnknown);
     }
     
-    nout_->nrrd->content = airStrdup(content_.get().c_str());
+    nout_->nrrd_->content = airStrdup(content_.get().c_str());
     
     // Key/Value pairs
     string t_key = airOneLinify((char*)key1_.get().c_str());
@@ -279,7 +279,7 @@ void UnuMake::read_file_and_create_nrrd() {
       string temp = "\"" + t_key + ":=" + t_val + "\"";
       nio_->line = (char*)temp.c_str();
 #ifndef _WIN32
-      if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
+      if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd_, nio_, AIR_TRUE)) {
 	string err = biffGetDone(NRRD);
 	error(err);
 	nio_->line = NULL;
@@ -294,7 +294,7 @@ void UnuMake::read_file_and_create_nrrd() {
       string temp = "\"" + t_key + ":=" + t_val + "\"";
       nio_->line = (char*)temp.c_str();
 #ifndef _WIN32
-      if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
+      if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd_, nio_, AIR_TRUE)) {
 	string err = biffGetDone(NRRD);
 	error(err);
 	nio_->line = NULL;
@@ -309,7 +309,7 @@ void UnuMake::read_file_and_create_nrrd() {
       string temp = "\"" + t_key + ":=" + t_val + "\"";
       nio_->line = (char*)temp.c_str();
 #ifndef _WIN32
-      if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
+      if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd_, nio_, AIR_TRUE)) {
 	string err = biffGetDone(NRRD);
 	error(err);
 	nio_->line = NULL;
@@ -340,7 +340,7 @@ void UnuMake::read_file_and_create_nrrd() {
       }
 
       /* start new */      
-      nio_->dataFileDim = nout_->nrrd->dim;
+      nio_->dataFileDim = nout_->nrrd_->dim;
       airArrayLenSet(nio_->dataFNArr, 1);
       nio_->dataFN[0] = airStrdup(fn.c_str());
       /* end new */
@@ -362,7 +362,7 @@ void UnuMake::read_file_and_create_nrrd() {
 	  error("Error opening header file for writing.");
 	  return;
 	} else {
-	  nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
+	  nrrdFormatNRRD->write(fileOut, nout_->nrrd_, nio_);
 	  airFclose(fileOut);
 	}
       } else {
@@ -370,7 +370,7 @@ void UnuMake::read_file_and_create_nrrd() {
 	  error("Error opening header file for writing.");
 	  return;
 	} else {
-	  nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
+	  nrrdFormatNRRD->write(fileOut, nout_->nrrd_, nio_);
 	  airFclose(fileOut);
 	}
       }
@@ -414,21 +414,21 @@ void UnuMake::read_file_and_create_nrrd() {
       return;
     } 
     if(!nio_->encoding->isCompression) {
-      if(nrrdByteSkip(dataFile, nout_->nrrd, nio_)) {
+      if(nrrdByteSkip(dataFile, nout_->nrrd_, nio_)) {
 	error("Couldn't skip bytes.");
 	airFclose(dataFile);
 	return;
       }
     }
-    nout_->nrrd->data = calloc(nrrdElementNumber(nout_->nrrd), 
-			       nrrdElementSize(nout_->nrrd));
-    if (NULL == nout_->nrrd->data) {
+    nout_->nrrd_->data = calloc(nrrdElementNumber(nout_->nrrd_), 
+				nrrdElementSize(nout_->nrrd_));
+    if (NULL == nout_->nrrd_->data) {
       error("Allocation failure");
       return;
     }
-    if (nio_->encoding->read(dataFile, nout_->nrrd->data, 
-			     nrrdElementNumber(nout_->nrrd), 
-			     nout_->nrrd, nio_)) {
+    if (nio_->encoding->read(dataFile, nout_->nrrd_->data, 
+			     nrrdElementNumber(nout_->nrrd_), 
+			     nout_->nrrd_, nio_)) {
       error("Error reading data.");
       string err = biffGetDone(NRRD);
       error(err);
@@ -438,10 +438,10 @@ void UnuMake::read_file_and_create_nrrd() {
     
     airFclose(dataFile);
     
-    if(1 < nrrdElementSize(nout_->nrrd)
+    if(1 < nrrdElementSize(nout_->nrrd_)
        && nio_->encoding->endianMatters
        && nio_->endian != AIR_ENDIAN) {
-      nrrdSwapEndian(nout_->nrrd);
+      nrrdSwapEndian(nout_->nrrd_);
     }
     
     read_handle_ = nout_;

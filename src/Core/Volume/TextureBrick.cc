@@ -529,13 +529,13 @@ NrrdTextureBrick::~NrrdTextureBrick()
 int
 NrrdTextureBrick::sx()
 {
-  if (data_[0]->nrrd->dim == 3)
+  if (data_[0]->nrrd_->dim == 3)
   {
-    return data_[0]->nrrd->axis[0].size;
+    return data_[0]->nrrd_->axis[0].size;
   }
   else
   {
-    return data_[0]->nrrd->axis[1].size;
+    return data_[0]->nrrd_->axis[1].size;
   }
 }
 
@@ -543,13 +543,13 @@ NrrdTextureBrick::sx()
 int
 NrrdTextureBrick::sy()
 {
-  if (data_[0]->nrrd->dim == 3)
+  if (data_[0]->nrrd_->dim == 3)
   {
-    return data_[0]->nrrd->axis[1].size;
+    return data_[0]->nrrd_->axis[1].size;
   }
   else
   {
-    return data_[0]->nrrd->axis[2].size;
+    return data_[0]->nrrd_->axis[2].size;
   }
 }
 
@@ -560,7 +560,7 @@ NrrdTextureBrick::tex_type()
   // TODO: Only support unsigned bytes at this time, since that's all we
   // currently create.  Add rest later.  (Need to add texture
   // transform to make min/max work without resampling data anyway).
-  ASSERT(data_[0]->nrrd->type == nrrdTypeUChar);
+  ASSERT(data_[0]->nrrd_->type == nrrdTypeUChar);
   return GL_UNSIGNED_BYTE;
 }
 
@@ -569,7 +569,7 @@ void *
 NrrdTextureBrick::tex_data(int c)
 {
   ASSERT(c == 0 || c == 1);
-  unsigned char *ptr = (unsigned char *)(data_[c]->nrrd->data);
+  unsigned char *ptr = (unsigned char *)(data_[c]->nrrd_->data);
 
   const size_t offset = (oz() * sx() * sy() + oy() * sx() + ox()) * nb(c);
 

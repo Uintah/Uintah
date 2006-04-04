@@ -90,7 +90,7 @@ UnuSlice::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
   if (nrrdSlice(nout, nin, axis_.get(), position_.get())) {

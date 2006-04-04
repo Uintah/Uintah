@@ -100,11 +100,11 @@ TendAnhist::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   Nrrd *weight = NULL;
   if (weight_handle.get_rep())
-    weight = weight_handle->nrrd;
+    weight = weight_handle->nrrd_;
 
   if (tenAnisoHistogram(nout, nin, weight, right_.get(), westin_.get(), resolution_.get())) {
     char *err = biffGetDone(TEN);

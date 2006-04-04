@@ -170,7 +170,7 @@ void NrrdWriter::execute()
     if (writing_nhdr) nrrd_fn += ".nhdr";
     else nrrd_fn += ".nrrd";
 
-    Nrrd *nin = handle->nrrd;
+    Nrrd *nin = handle->nrrd_;
     
     NrrdIoState *nio = nrrdIoStateNew();
     // set encoding to be raw

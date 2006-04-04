@@ -98,9 +98,9 @@ TendMake::execute()
     return;
   }
 
-  Nrrd *confidence = conf_handle->nrrd;
-  Nrrd *eval = eval_handle->nrrd;
-  Nrrd *evec = evec_handle->nrrd;
+  Nrrd *confidence = conf_handle->nrrd_;
+  Nrrd *eval = eval_handle->nrrd_;
+  Nrrd *evec = evec_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenMake(nout, confidence, eval, evec)) {

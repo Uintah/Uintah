@@ -112,8 +112,8 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *dmap = dmap_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *dmap = dmap_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   NrrdRange *range = NULL;
 
@@ -155,7 +155,7 @@ void
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim && i<nout->dim; i++)
+  for (unsigned int i=0; i<nin->dim && i<nout->dim; i++)
   {
     nout->axis[i].kind = nin->axis[i].kind;
   }

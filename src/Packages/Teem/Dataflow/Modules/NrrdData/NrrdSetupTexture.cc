@@ -228,7 +228,7 @@ NrrdSetupTexture::execute()
     return;
   }
 
-  Nrrd *nin = nin_handle->nrrd;
+  Nrrd *nin = nin_handle->nrrd_;
 
   if (!(nin->dim == 3 || nin->dim == 4))
   {
@@ -297,7 +297,7 @@ NrrdSetupTexture::execute()
 
   size_t nvsize[NRRD_DIM_MAX];
   size_t gmsize[NRRD_DIM_MAX];
-  int dim;
+  unsigned int dim;
 
   // Create a local array of axis sizes, so we can allocate the output Nrrd
   for (dim=0; dim < nin->dim; dim++)
@@ -312,7 +312,7 @@ NrrdSetupTexture::execute()
 
   if (compute_justvalue)
   {
-    nvout = last_nvnrrd_->nrrd;
+    nvout = last_nvnrrd_->nrrd_;
   }
   else
   {

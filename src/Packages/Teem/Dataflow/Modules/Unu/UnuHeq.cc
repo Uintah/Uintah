@@ -90,7 +90,7 @@ UnuHeq::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdHistoEq(nout, nin, NULL, bins_.get(), sbins_.get(), amount_.get())) {

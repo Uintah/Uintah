@@ -106,13 +106,13 @@ UnuInset::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *sub = sub_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *sub = sub_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // Determine the number of mins given
   string mins = mins_.get();
-  int minsLen = 0;
+  unsigned int minsLen = 0;
   char ch;
   int i=0, start=0;
   bool inword = false;
@@ -186,7 +186,7 @@ UnuInset::execute()
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++) {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 

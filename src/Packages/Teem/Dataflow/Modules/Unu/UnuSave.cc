@@ -100,7 +100,7 @@ UnuSave::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
 
   NrrdIoState *nio = nrrdIoStateNew();
 

@@ -270,7 +270,7 @@ Painter::WindowLayout::WindowLayout(GuiContext */*ctx*/) :
 Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
                                 const string &name,
                                 NrrdDataHandle &nrrd) :
-  nrrd_(0),
+  nrrd_handle_(0),
   gui_context_(ctx),
   name_(gui_context_->subVar("name"), name),
   name_prefix_(""),
@@ -293,7 +293,7 @@ Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
 
 Painter::NrrdVolume::~NrrdVolume() {
   mutex_.lock();
-  nrrd_ = 0;
+  nrrd_handle_ = 0;
   //  delete gui_context_;
   mutex_.unlock();
 
@@ -326,7 +326,7 @@ nrrd_data_size(Nrrd *nrrd)
 {
   if (!nrrd->dim) return 0;
   unsigned int size = nrrd->axis[0].size;
-  for (int a = 1; a < nrrd->dim; ++a)
+  for (unsigned int a = 1; a < nrrd->dim; ++a)
     size *= nrrd->axis[a].size;
   return size*nrrd_type_size(nrrd);
 }
@@ -335,7 +335,7 @@ nrrd_data_size(Nrrd *nrrd)
 Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy, 
                                 const string &name,
                                 int clear) :
-  nrrd_(0),
+  nrrd_handle_(0),
   gui_context_(copy->gui_context_->get_parent()->subVar(name,0)),
   name_(gui_context_->subVar("name"), name),
   name_prefix_(copy->name_prefix_),
@@ -354,12 +354,12 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
   mutex_.lock();
 
   if (clear == 2) {
-    nrrd_ = copy->nrrd_;
+    nrrd_handle_ = copy->nrrd_handle_;
   } else {
-    nrrd_ = scinew NrrdData();
-    nrrdCopy(nrrd_->nrrd, copy->nrrd_->nrrd);
+    nrrd_handle_ = scinew NrrdData();
+    nrrdCopy(nrrd_handle_->nrrd_, copy->nrrd_handle_->nrrd_);
     if (clear) 
-      memset(nrrd_->nrrd->data, 0, nrrd_data_size(nrrd_->nrrd));
+      memset(nrrd_handle_->nrrd_->data, 0, nrrd_data_size(nrrd_handle_->nrrd_));
   }
 
   mutex_.unlock();
@@ -373,44 +373,44 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
 
 
 void
-Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
+Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle) 
 {
   mutex_.lock();
-  nrrd_ = nrrd;
-  nrrd_.detach();
-  //  nrrdBasicInfoCopy(nrrd_->nrrd, nrrd->nrrd,0);
-  //  nrrdAxisInfoCopy(nrrd_->nrrd, nrrd->nrrd, 0,0);
-  //  nrrdCopy(nrrd_->nrrd, nrrd->nrrd);
+  nrrd_handle_ = nrrd_handle;
+  nrrd_handle_.detach();
+  //  nrrdBasicInfoCopy(nrrd_handle_->nrrd_, nrrd->nrrd,0);
+  //  nrrdAxisInfoCopy(nrrd_handle_->nrrd_, nrrd->nrrd, 0,0);
+  //  nrrdCopy(nrrd_handle_->nrrd_, nrrd->nrrd);
 
   stub_axes_.clear();
-  if (nrrd_->nrrd->axis[0].size > 4) {
-    nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 0);
-    nrrd_->nrrd->axis[0].min = 0.0;
-    nrrd_->nrrd->axis[0].max = 1.0;
-    nrrd_->nrrd->axis[0].spacing = 1.0;
+  if (nrrd_handle_->nrrd_->axis[0].size > 4) {
+    nrrdAxesInsert(nrrd_handle_->nrrd_, nrrd_handle_->nrrd_, 0);
+    nrrd_handle_->nrrd_->axis[0].min = 0.0;
+    nrrd_handle_->nrrd_->axis[0].max = 1.0;
+    nrrd_handle_->nrrd_->axis[0].spacing = 1.0;
     stub_axes_.push_back(0);
   }
 
-  if (nrrd_->nrrd->dim == 3) {
-    nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 3);
-    nrrd_->nrrd->axis[3].min = 0.0;
-    nrrd_->nrrd->axis[3].max = 1.0;
-    nrrd_->nrrd->axis[3].spacing = 1.0;
+  if (nrrd_handle_->nrrd_->dim == 3) {
+    nrrdAxesInsert(nrrd_handle_->nrrd_, nrrd_handle_->nrrd_, 3);
+    nrrd_handle_->nrrd_->axis[3].min = 0.0;
+    nrrd_handle_->nrrd_->axis[3].max = 1.0;
+    nrrd_handle_->nrrd_->axis[3].spacing = 1.0;
     stub_axes_.push_back(3);
   }
 
 
-  for (int a = 0; a < nrrd_->nrrd->dim; ++a) {
-    if (nrrd_->nrrd->axis[a].center == nrrdCenterUnknown)
-      nrrd_->nrrd->axis[a].center = nrrdCenterNode;
-    if (nrrd_->nrrd->axis[a].min > nrrd_->nrrd->axis[a].max)
-      SWAP(nrrd_->nrrd->axis[a].min,nrrd_->nrrd->axis[a].max);
-    if (nrrd_->nrrd->axis[a].spacing < 0.0)
-      nrrd_->nrrd->axis[a].spacing *= -1.0;
+  for (unsigned int a = 0; a < nrrd_handle_->nrrd_->dim; ++a) {
+    if (nrrd_handle_->nrrd_->axis[a].center == nrrdCenterUnknown)
+      nrrd_handle_->nrrd_->axis[a].center = nrrdCenterNode;
+    if (nrrd_handle_->nrrd_->axis[a].min > nrrd_handle_->nrrd_->axis[a].max)
+      SWAP(nrrd_handle_->nrrd_->axis[a].min,nrrd_handle_->nrrd_->axis[a].max);
+    if (nrrd_handle_->nrrd_->axis[a].spacing < 0.0)
+      nrrd_handle_->nrrd_->axis[a].spacing *= -1.0;
   }
 
   NrrdRange range;
-  nrrdRangeSet(&range, nrrd_->nrrd, 0);
+  nrrdRangeSet(&range, nrrd_handle_->nrrd_, 0);
   if (data_min_ != range.min || data_max_ != range.max) {
     data_min_ = range.min;
     data_max_ = range.max;
@@ -427,25 +427,25 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
 NrrdDataHandle
 Painter::NrrdVolume::get_nrrd() 
 {
-  NrrdDataHandle nrrd = nrrd_;
-  nrrd.detach();
-  NrrdDataHandle nrrd2 = scinew NrrdData();
+  NrrdDataHandle nrrd_handle = nrrd_handle_;
+  nrrd_handle.detach();
+  NrrdDataHandle nrrd2_handle = scinew NrrdData();
 
-  //   nrrdBasicInfoCopy(nrrd->nrrd, nrrd_->nrrd,0);
-  //   nrrdAxisInfoCopy(nrrd->nrrd, nrrd_->nrrd, 0,0);
-  //   nrrd->nrrd->data = nrrd_->nrrd->data;
+  //   nrrdBasicInfoCopy(nrrd->nrrd, nrrd_handle_->nrrd_,0);
+  //   nrrdAxisInfoCopy(nrrd->nrrd, nrrd_handle_->nrrd_, 0,0);
+  //   nrrd->nrrd->data = nrrd_handle_->nrrd_->data;
 
   for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
-    nrrdAxesDelete(nrrd2->nrrd, nrrd->nrrd, stub_axes_[s]);
-    nrrd = nrrd2;
+    nrrdAxesDelete(nrrd2_handle->nrrd_, nrrd_handle->nrrd_, stub_axes_[s]);
+    nrrd_handle = nrrd2_handle;
   }
-  nrrdKeyValueCopy(nrrd->nrrd, nrrd_->nrrd);
+  nrrdKeyValueCopy(nrrd_handle->nrrd_, nrrd_handle_->nrrd_);
   
   //  unsigned long ptr = (unsigned long)(&painter_);
-  //  nrrdKeyValueAdd(nrrd->nrrd, 
+  //  nrrdKeyValueAdd(nrrd_handle->nrrd_, 
   //                  "progress_ptr", to_string(ptr).c_str());
 
-  return nrrd;
+  return nrrd_handle;
 }
 
 
@@ -698,7 +698,7 @@ Painter::draw_slice_lines(SliceWindow &window)
   profiler("scale");
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  vector<int> zero_idx(current_volume_->nrrd_->nrrd->dim, 0);
+  vector<int> zero_idx(current_volume_->nrrd_handle_->nrrd_->dim, 0);
   WindowLayouts::iterator liter = layouts_.begin();
   WindowLayouts::iterator lend = layouts_.end();
   while (liter != lend) {
@@ -719,7 +719,7 @@ Painter::draw_slice_lines(SliceWindow &window)
       vector<int> min_idx = pos_idx;
       min_idx[span_axis] = 0;
       vector<int> max_idx = pos_idx;
-      max_idx[span_axis] = current_volume_->nrrd_->nrrd->axis[span_axis].size;
+      max_idx[span_axis] = current_volume_->nrrd_handle_->nrrd_->axis[span_axis].size;
       Point min = current_volume_->index_to_world(min_idx);
       Point max = current_volume_->index_to_world(max_idx);
       vector<int> one_idx = zero_idx;
@@ -958,11 +958,11 @@ Painter::SliceWindow::render_grid()
 
 Point
 Painter::NrrdVolume::center(int axis, int slice) {
-  vector<int> index(nrrd_->nrrd->dim,0);
+  vector<int> index(nrrd_handle_->nrrd_->dim,0);
   for (unsigned int a = 0; a < index.size(); ++a) 
-    index[a] = nrrd_->nrrd->axis[a].size/2;
+    index[a] = nrrd_handle_->nrrd_->axis[a].size/2;
   if (axis >= 0 && axis < int(index.size()))
-    index[axis] = Clamp(slice, 0, nrrd_->nrrd->axis[axis].size-1);
+    index[axis] = Clamp(slice, 0, nrrd_handle_->nrrd_->axis[axis].size-1);
   ASSERT(index_valid(index));
   return index_to_world(index);
 }
@@ -970,9 +970,9 @@ Painter::NrrdVolume::center(int axis, int slice) {
 
 Point
 Painter::NrrdVolume::min(int axis, int slice) {
-  vector<int> index(nrrd_->nrrd->dim,0);
+  vector<int> index(nrrd_handle_->nrrd_->dim,0);
   if (axis >= 0 && axis < int(index.size()))
-    index[axis] = Clamp(slice, 0, nrrd_->nrrd->axis[axis].size-1);
+    index[axis] = Clamp(slice, 0, nrrd_handle_->nrrd_->axis[axis].size-1);
   ASSERT(index_valid(index));
   return index_to_world(index);
 }
@@ -981,7 +981,7 @@ Point
 Painter::NrrdVolume::max(int axis, int slice) {
   vector<int> index = max_index();
   if (axis >= 0 && axis < int(index.size()))
-    index[axis] = Clamp(slice, 0, nrrd_->nrrd->axis[axis].size-1);
+    index[axis] = Clamp(slice, 0, nrrd_handle_->nrrd_->axis[axis].size-1);
   ASSERT(index_valid(index));
   return index_to_world(index);
 }
@@ -990,15 +990,15 @@ Painter::NrrdVolume::max(int axis, int slice) {
 
 Vector
 Painter::NrrdVolume::scale() {
-  vector<int> index_zero(nrrd_->nrrd->dim,0);
-  vector<int> index_one(nrrd_->nrrd->dim,1);
+  vector<int> index_zero(nrrd_handle_->nrrd_->dim,0);
+  vector<int> index_one(nrrd_handle_->nrrd_->dim,1);
   return index_to_world(index_one) - index_to_world(index_zero);
 }
 
 
 double
 Painter::NrrdVolume::scale(int axis) {
-  ASSERT(axis >= 0 && axis < nrrd_->nrrd->dim);
+  ASSERT(axis >= 0 && (unsigned int) axis < nrrd_handle_->nrrd_->dim);
   return scale()[axis];
 }
 
@@ -1006,15 +1006,15 @@ Painter::NrrdVolume::scale(int axis) {
 
 vector<int>
 Painter::NrrdVolume::max_index() {
-  vector<int> max_index(nrrd_->nrrd->dim,0);
-  for (int a = 0; a < nrrd_->nrrd->dim; ++a)
-    max_index[a] = nrrd_->nrrd->axis[a].size;
+  vector<int> max_index(nrrd_handle_->nrrd_->dim,0);
+  for (unsigned int a = 0; a < nrrd_handle_->nrrd_->dim; ++a)
+    max_index[a] = nrrd_handle_->nrrd_->axis[a].size;
   return max_index;
 }
 
 int
 Painter::NrrdVolume::max_index(int axis) {
-  ASSERT(axis >= 0 && axis < nrrd_->nrrd->dim);
+  ASSERT(axis >= 0 && (unsigned int) axis < nrrd_handle_->nrrd_->dim);
   return max_index()[axis];
 }
 
@@ -1195,10 +1195,10 @@ Painter::NrrdSlice::bind()
   if (!texture_) {
     vector<int> index = volume_->world_to_index(plane_.project(Point(0,0,0)));
     unsigned int ax = axis();
-    int slice = index[ax];
+    unsigned int slice = index[ax];
     volume_->mutex_.lock();
-    if (slice>=0 && slice < volume_->nrrd_->nrrd->axis[ax].size)
-      texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_, 
+    if (slice>=0 && slice < volume_->nrrd_handle_->nrrd_->axis[ax].size)
+      texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_handle_, 
                                                   ax,
                                                   slice, 
                                                   slice);
@@ -1478,15 +1478,15 @@ Painter::NrrdSlice::set_coords() {
   vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
   unsigned int ax = axis();
   pos_ = volume_->min(ax, sindex[ax]);
-  vector<int> index(volume_->nrrd_->nrrd->dim,0);
+  vector<int> index(volume_->nrrd_handle_->nrrd_->dim,0);
 
   int primary = (ax == 1) ? 2 : 1;
-  index[primary] = volume_->nrrd_->nrrd->axis[primary].size;
+  index[primary] = volume_->nrrd_handle_->nrrd_->axis[primary].size;
   xdir_ = volume_->index_to_world(index) - pos_;
   index[primary] = 0;
 
   int secondary = (ax == 3) ? 2 : 3;
-  index[secondary] = volume_->nrrd_->nrrd->axis[secondary].size;
+  index[secondary] = volume_->nrrd_handle_->nrrd_->axis[secondary].size;
   ydir_ = volume_->index_to_world(index) - pos_;
 }
 
@@ -1830,7 +1830,7 @@ Painter::NrrdVolume::index_to_vector(const vector<double> &index) {
 
 void
 Painter::NrrdVolume::build_index_to_world_matrix() {
-  Nrrd *nrrd = nrrd_->nrrd;
+  Nrrd *nrrd = nrrd_handle_->nrrd_;
   int dim = nrrd->dim+1;
   DenseMatrix matrix(dim, dim);
   matrix.zero();
@@ -1857,10 +1857,11 @@ Painter::NrrdVolume::build_index_to_world_matrix() {
 
 bool
 Painter::NrrdVolume::index_valid(const vector<int> &index) {
-  unsigned int dim = nrrd_->nrrd->dim;
+  unsigned int dim = nrrd_handle_->nrrd_->dim;
   if (index.size() != dim) return false;
   for (unsigned int a = 0; a < dim; ++a) 
-    if (index[a] < 0 || index[a] >= nrrd_->nrrd->axis[a].size) {
+    if (index[a] < 0 ||
+	(unsigned int) index[a] >= nrrd_handle_->nrrd_->axis[a].size) {
       return false;
     }
   return true;
@@ -1928,7 +1929,7 @@ Painter::extract_data_from_bundles(Bundles &bundles)
       string name = bundles[b]->getNrrdName(n);
       NrrdDataHandle nrrdH = bundles[b]->getNrrd(name);
       if (!nrrdH.get_rep()) continue;
-      if (nrrdH->nrrd->dim < 2)
+      if (nrrdH->nrrd_->dim < 2)
       {
         warning("Nrrd with dim < 2, skipping.");
         continue;
@@ -2540,15 +2541,15 @@ Painter::autoview(SliceWindow &window) {
   int xax = window.x_axis();
   int yax = window.y_axis();
 
-  vector<int> zero(current_volume_->nrrd_->nrrd->dim,0);
+  vector<int> zero(current_volume_->nrrd_handle_->nrrd_->dim,0);
   vector<int> index = zero;
-  index[xax+1] = current_volume_->nrrd_->nrrd->axis[xax+1].size;
+  index[xax+1] = current_volume_->nrrd_handle_->nrrd_->axis[xax+1].size;
   double w_wid = (current_volume_->index_to_world(index) - 
                   current_volume_->index_to_world(zero)).length();
   double w_ratio = wid/w_wid;
 
   index = zero;
-  index[yax+1] = current_volume_->nrrd_->nrrd->axis[yax+1].size;
+  index[yax+1] = current_volume_->nrrd_handle_->nrrd_->axis[yax+1].size;
   double w_hei = (current_volume_->index_to_world(index) - 
                   current_volume_->index_to_world(zero)).length();
   double h_ratio = hei/w_hei;
@@ -2577,8 +2578,8 @@ Painter::undo_volume() {
   if (!undo_volume_) return;
   NrrdVolume *vol = volume_map_[undo_volume_->name_.get()];
   if (!vol) return;
-  vol->nrrd_ = undo_volume_->nrrd_;
-  vol->nrrd_.detach();
+  vol->nrrd_handle_ = undo_volume_->nrrd_handle_;
+  vol->nrrd_handle_.detach();
   for_each(&Painter::extract_window_slices);
   redraw_all();
   //  delete undo_volume_;
@@ -2676,7 +2677,7 @@ Painter::compute_mean_and_deviation(Nrrd *nrrd, Nrrd *mask) {
          mask->type == nrrdTypeFloat);
 
   unsigned int size = nrrd->axis[0].size;
-  for (int a = 1; a < nrrd->dim; ++a)
+  for (unsigned int a = 1; a < nrrd->dim; ++a)
     size *= nrrd->axis[a].size;
 
   float *src = (float *)nrrd->data;

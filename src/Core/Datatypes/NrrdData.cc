@@ -56,7 +56,7 @@ PersistentTypeID NrrdData::type_id("NrrdData", "PropertyManager", maker);
 
 
 NrrdData::NrrdData() : 
-  nrrd(nrrdNew()),
+  nrrd_(nrrdNew()),
   write_nrrd_(true),
   embed_object_(false),
   data_owner_(0)
@@ -65,7 +65,7 @@ NrrdData::NrrdData() :
 
 
 NrrdData::NrrdData(Nrrd *n) :
-  nrrd(n),
+  nrrd_(n),
   write_nrrd_(true),
   embed_object_(false),
   data_owner_(0)
@@ -74,7 +74,7 @@ NrrdData::NrrdData(Nrrd *n) :
 
 
 NrrdData::NrrdData(LockingHandle<Datatype> data_owner) : 
-  nrrd(nrrdNew()),
+  nrrd_(nrrdNew()),
   write_nrrd_(true),
   embed_object_(false),
   data_owner_(data_owner)
@@ -83,11 +83,11 @@ NrrdData::NrrdData(LockingHandle<Datatype> data_owner) :
 
 
 NrrdData::NrrdData(const NrrdData &copy) :
-  nrrd(nrrdNew()),
+  nrrd_(nrrdNew()),
   data_owner_(0),
   nrrd_fname_(copy.nrrd_fname_)
 {
-  nrrdCopy(nrrd, copy.nrrd);
+  nrrdCopy(nrrd_, copy.nrrd_);
 }
 
 
@@ -95,11 +95,11 @@ NrrdData::~NrrdData()
 {
   if(!data_owner_.get_rep())
   {
-    nrrdNuke(nrrd);
+    nrrdNuke(nrrd_);
   }
   else
   {
-    nrrdNix(nrrd);
+    nrrdNix(nrrd_);
     data_owner_ = 0;
   }
 }
@@ -158,19 +158,19 @@ void NrrdData::io(Piostream& stream)
 		
       // Added a check against dumping a pointer without deallocation
       // memory. 
-      if (nrrd)
+      if (nrrd_)
       {   // make sure we free any existing Nrrd Data set
 	if (!data_owner_.get_rep()) 
 	{
-	  nrrdNuke(nrrd);
+	  nrrdNuke(nrrd_);
 	} 
 	else 
 	{
-	  nrrdNix(nrrd);
+	  nrrdNix(nrrd_);
 	  data_owner_ = 0;
 	}
 	// Make sure we put a zero pointer in the field. There is no nrrd
-	nrrd = nrrdNew();
+	nrrd_ = nrrdNew();
       }
 
       // This is the old code, which needs some update in the way
@@ -195,7 +195,7 @@ void NrrdData::io(Piostream& stream)
 	nrrd_fname_ = path + nrrd_fname_.substr(2,nrrd_fname_.length());
       }
 
-      if (nrrdLoad(nrrd, nrrd_fname_.c_str(), 0)) 
+      if (nrrdLoad(nrrd_, nrrd_fname_.c_str(), 0)) 
       {
 	// Need to upgade error reporting
 	char *err = biffGet(NRRD);
@@ -212,36 +212,36 @@ void NrrdData::io(Piostream& stream)
       // memory.
       // Any existing data will be purged, so we do not have a memory leak
 		
-      if (nrrd)
+      if (nrrd_)
       {   // make sure we free any existing Nrrd Data set
 	if(!data_owner_.get_rep())
 	{
-	  nrrdNuke(nrrd);
+	  nrrdNuke(nrrd_);
 	}
 	else
 	{
-	  nrrdNix(nrrd);
+	  nrrdNix(nrrd_);
 	  data_owner_ = 0;
 	}
       }
 
       // Create a new nrrd structure
-      if (!(nrrd = nrrdNew())) 
+      if (!(nrrd_ = nrrdNew())) 
       {   // Needs to be replaced with proper exception code
 	std::cerr << "Error allocating memory for nrrd" << std::endl;
       }
 		
       stream.begin_cheap_delim();
-      stream.io(nrrd->type);  // the type of the nrrd
+      stream.io(nrrd_->type);  // the type of the nrrd
 		
       // We dump the dimensions right at the start, so when reading
       // the data we can directly allocate the proper amount of memory
 		
       stream.begin_cheap_delim();
-      stream.io(nrrd->dim);
+      stream.io(nrrd_->dim);
 		
       size_t nrrddims[NRRD_DIM_MAX]; // defined in nrrd.h
-      for (int p = 0; p<nrrd->dim; p++)
+      for (unsigned int p = 0; p<nrrd_->dim; p++)
       {
 	stream.io(nrrddims[p]);
       }	
@@ -253,7 +253,7 @@ void NrrdData::io(Piostream& stream)
       // Need to upgade error reporting
 
 		 
-      if(nrrdAlloc_nva(nrrd,nrrd->type,nrrd->dim,nrrddims))	
+      if(nrrdAlloc_nva(nrrd_,nrrd_->type,nrrd_->dim,nrrddims))	
       {
 	char *err = biffGet(NRRD);
 	std::cerr << "Error reading nrrd: " << err << std::endl;
@@ -269,15 +269,15 @@ void NrrdData::io(Piostream& stream)
       // These object are used as intermediates
       std::string label, unit;
 		
-      for (int q=0; q< nrrd->dim; q++)
+      for (unsigned int q=0; q< nrrd_->dim; q++)
       {
 	stream.begin_cheap_delim();
-	stream.io(nrrd->axis[q].size);
-	stream.io(nrrd->axis[q].spacing);
-	stream.io(nrrd->axis[q].min);
-	stream.io(nrrd->axis[q].max);
-	stream.io(nrrd->axis[q].center);
-	stream.io(nrrd->axis[q].kind);
+	stream.io(nrrd_->axis[q].size);
+	stream.io(nrrd_->axis[q].spacing);
+	stream.io(nrrd_->axis[q].min);
+	stream.io(nrrd_->axis[q].max);
+	stream.io(nrrd_->axis[q].center);
+	stream.io(nrrd_->axis[q].kind);
 	stream.io(label);
 	stream.io(unit);
 	// dupiclate the strings so they are not deallocated when label and
@@ -285,8 +285,8 @@ void NrrdData::io(Piostream& stream)
 	// for the strings, we should not mix malloc and scinew..
 			
 	// Need error checking here as well
-	nrrd->axis[q].label= airStrdup(label.c_str());
-	nrrd->axis[q].units= airStrdup(unit.c_str());
+	nrrd_->axis[q].label= airStrdup(label.c_str());
+	nrrd_->axis[q].units= airStrdup(unit.c_str());
 	stream.end_cheap_delim();
       }
       stream.end_cheap_delim();
@@ -295,10 +295,10 @@ void NrrdData::io(Piostream& stream)
       // Same construct as above for label and unit
       std::string content;
       stream.io(content);
-      nrrd->content = airStrdup(content.c_str());
-      stream.io(nrrd->blockSize);
-      stream.io(nrrd->oldMin);
-      stream.io(nrrd->oldMax);
+      nrrd_->content = airStrdup(content.c_str());
+      stream.io(nrrd_->blockSize);
+      stream.io(nrrd_->oldMin);
+      stream.io(nrrd_->oldMax);
 
       // Dummies for the moment until I figure out how to read
       // AirArrays
@@ -324,47 +324,47 @@ void NrrdData::io(Piostream& stream)
 		
       // Ugly but necessary:
       // big switch statement going over every type of the nrrd structure
-      switch(nrrd->type)
+      switch(nrrd_->type)
       {
       case nrrdTypeChar:
 	{
-	  char *ptr = static_cast<char *>(nrrd->data);
+	  char *ptr = static_cast<char *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeUChar:
 	{
-	  unsigned char *ptr = static_cast<unsigned char *>(nrrd->data);
+	  unsigned char *ptr = static_cast<unsigned char *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeShort:
 	{
-	  short *ptr = static_cast<short *>(nrrd->data);
+	  short *ptr = static_cast<short *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeUShort:
 	{
-	  unsigned short *ptr = static_cast<unsigned short *>(nrrd->data);
+	  unsigned short *ptr = static_cast<unsigned short *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeInt:
 	{
-	  int *ptr = static_cast<int *>(nrrd->data);
+	  int *ptr = static_cast<int *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeUInt:
 	{
-	  unsigned short *ptr = static_cast<unsigned short *>(nrrd->data);
+	  unsigned short *ptr = static_cast<unsigned short *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeLLong:
 	{
-	  long long *ptr = static_cast<long long *>(nrrd->data);
+	  long long *ptr = static_cast<long long *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
@@ -372,26 +372,27 @@ void NrrdData::io(Piostream& stream)
 	{
 	  // Currently PIO does not support unsigned long long
 	  // Need to fix this bug in the Persistent.h
-	  long long *ptr = static_cast<long long *>(nrrd->data);
+	  long long *ptr = static_cast<long long *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;			
       case nrrdTypeFloat:
 	{
-	  float *ptr = static_cast<float *>(nrrd->data);
+	  float *ptr = static_cast<float *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeDouble:
 	{
-	  double *ptr = static_cast<double *>(nrrd->data);
+	  double *ptr = static_cast<double *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;			
       case nrrdTypeBlock:
 	{
-	  char *ptr = static_cast<char *>(nrrd->data);
-	  for (int p=0; p < (size*nrrd->blockSize); p ++) stream.io(ptr[p]);
+	  char *ptr = static_cast<char *>(nrrd_->data);
+	  for (unsigned int p=0; p < (size*nrrd_->blockSize); p ++)
+	    stream.io(ptr[p]);
 	}
 	break;			
       default:
@@ -447,7 +448,7 @@ void NrrdData::io(Piostream& stream)
 	no = nrrdIoStateNew();
 	no->encoding = nrrdEncodingAscii;
       } 
-      if (nrrdSave(nrrd_fname_.c_str(), nrrd, no))
+      if (nrrdSave(nrrd_fname_.c_str(), nrrd_, no))
       {
 	char *err = biffGet(NRRD);      
 	cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << endl;
@@ -461,43 +462,43 @@ void NrrdData::io(Piostream& stream)
     {
       // Save the type of data
       stream.begin_cheap_delim();
-      stream.io(nrrd->type);
+      stream.io(nrrd_->type);
 
       // We dump the dimensions right at the start, so when reading
       // the data we can directly allocate the proper amount of memory
 				
       stream.begin_cheap_delim();
-      stream.io(nrrd->dim);
-      for (int q=0; q < nrrd->dim; q++)
+      stream.io(nrrd_->dim);
+      for (unsigned int q=0; q < nrrd_->dim; q++)
       {
-	stream.io(nrrd->axis[q].size);
+	stream.io(nrrd_->axis[q].size);
       }
 		
       stream.end_cheap_delim();		
       // Save the contents of the axis
 
       stream.begin_cheap_delim();		
-      for (int q=0; q< nrrd->dim; q++)
+      for (unsigned int q=0; q< nrrd_->dim; q++)
       {
 	stream.begin_cheap_delim();
-	stream.io(nrrd->axis[q].size);
-	stream.io(nrrd->axis[q].spacing);
-	stream.io(nrrd->axis[q].min);
-	stream.io(nrrd->axis[q].max);
-	stream.io(nrrd->axis[q].center);
-	stream.io(nrrd->axis[q].kind);
+	stream.io(nrrd_->axis[q].size);
+	stream.io(nrrd_->axis[q].spacing);
+	stream.io(nrrd_->axis[q].min);
+	stream.io(nrrd_->axis[q].max);
+	stream.io(nrrd_->axis[q].center);
+	stream.io(nrrd_->axis[q].kind);
 	std::string label, unit;
-	if ( nrrd->axis[q].label) { label = nrrd->axis[q].label; } else { label = ""; };
-	if ( nrrd->axis[q].units) { label = nrrd->axis[q].units; } else { unit = ""; };
+	if ( nrrd_->axis[q].label) { label = nrrd_->axis[q].label; } else { label = ""; };
+	if ( nrrd_->axis[q].units) { label = nrrd_->axis[q].units; } else { unit = ""; };
 	stream.io(label);
 	stream.io(unit);
 	stream.end_cheap_delim();
       }
       stream.end_cheap_delim();
 		
-      if (nrrd->content)
+      if (nrrd_->content)
       {
-	std::string content = nrrd->content;
+	std::string content = nrrd_->content;
 	stream.io(content);
       }
       else
@@ -505,9 +506,9 @@ void NrrdData::io(Piostream& stream)
 	std::string content = "";
 	stream.io(content);
       }
-      stream.io(nrrd->blockSize);
-      stream.io(nrrd->oldMin);
-      stream.io(nrrd->oldMax);
+      stream.io(nrrd_->blockSize);
+      stream.io(nrrd_->oldMin);
+      stream.io(nrrd_->oldMax);
 
       // Make entry point for comments and keyvalue pair
       // arrays
@@ -525,81 +526,82 @@ void NrrdData::io(Piostream& stream)
 		
       // Figure out how many data bytes we have
 		
-      int dim = nrrd->dim;
+      int dim = nrrd_->dim;
       int size = 1;
       for (int p = 0; p < dim ; p++)
       {
-	size *= nrrd->axis[p].size;
+	size *= nrrd_->axis[p].size;
       }
 		
       stream.begin_cheap_delim();	
       stream.io(size);
-      switch(nrrd->type)
+      switch(nrrd_->type)
       {
       case nrrdTypeChar:
 	{
-	  char *ptr = static_cast<char *>(nrrd->data);
+	  char *ptr = static_cast<char *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeUChar:
 	{
-	  unsigned char *ptr = static_cast<unsigned char *>(nrrd->data);
+	  unsigned char *ptr = static_cast<unsigned char *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeShort:
 	{
-	  short *ptr = static_cast<short *>(nrrd->data);
+	  short *ptr = static_cast<short *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeUShort:
 	{
-	  unsigned short *ptr = static_cast<unsigned short *>(nrrd->data);
+	  unsigned short *ptr = static_cast<unsigned short *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeInt:
 	{
-	  int *ptr = static_cast<int *>(nrrd->data);
+	  int *ptr = static_cast<int *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeUInt:
 	{
-	  unsigned short *ptr = static_cast<unsigned short *>(nrrd->data);
+	  unsigned short *ptr = static_cast<unsigned short *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeLLong:
 	{
-	  long long *ptr = static_cast<long long *>(nrrd->data);
+	  long long *ptr = static_cast<long long *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeULLong:
 	{
-	  long long *ptr = static_cast<long long *>(nrrd->data);
+	  long long *ptr = static_cast<long long *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;			
       case nrrdTypeFloat:
 	{
-	  float *ptr = static_cast<float *>(nrrd->data);
+	  float *ptr = static_cast<float *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;
       case nrrdTypeDouble:
 	{
-	  double *ptr = static_cast<double *>(nrrd->data);
+	  double *ptr = static_cast<double *>(nrrd_->data);
 	  for (int p=0; p <size; p ++) stream.io(ptr[p]);
 	}
 	break;			
       case nrrdTypeBlock:
 	{
-	  char *ptr = static_cast<char *>(nrrd->data);
-	  for (int p=0; p < (size*nrrd->blockSize); p ++) stream.io(ptr[p]);
+	  char *ptr = static_cast<char *>(nrrd_->data);
+	  for (unsigned int p=0; p < (size*nrrd_->blockSize); p ++)
+	    stream.io(ptr[p]);
 	}
 	break;			
       default:

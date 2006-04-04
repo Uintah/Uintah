@@ -52,18 +52,20 @@ namespace SCIRun {
 
 
 
-NrrdTextureObj::NrrdTextureObj(NrrdDataHandle nrrd) :
-  nrrd_(nrrd),
+NrrdTextureObj::NrrdTextureObj(NrrdDataHandle nrrd_handle) :
+  nrrd_handle_(nrrd_handle),
   width_(-1),
   height_(-1),
   dirty_(true),
   texture_id_(0)
 {
-  if (!nrrd_.get_rep() || !nrrd_->nrrd || nrrd_->nrrd->dim != 3) 
+  if (!nrrd_handle_.get_rep() ||
+      !nrrd_handle_->nrrd_ ||
+       nrrd_handle_->nrrd_->dim != 3) 
     throw "NrrdTextureObj::NrrdTextureObj(nrrd) nrrd not valid";
 
-  width_ = nrrd_->nrrd->axis[1].size;
-  height_ = nrrd_->nrrd->axis[2].size;
+  width_  = nrrd_handle_->nrrd_->axis[1].size;
+  height_ = nrrd_handle_->nrrd_->axis[2].size;
   color_[0] = color_[1] = color_[2] = color_[3] = 1.0;
   pad_to_power_of_2();
 }
@@ -75,7 +77,7 @@ NrrdTextureObj::~NrrdTextureObj()
     glDeleteTextures(1, &texture_id_);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
-  nrrd_ = 0;
+  nrrd_handle_ = 0;
 }
 
 
@@ -93,27 +95,28 @@ NrrdTextureObj::set_color(double r, double g, double b, double a)
 void
 NrrdTextureObj::pad_to_power_of_2()
 {
-  if (!nrrd_.get_rep() || !nrrd_->nrrd) return;
-  NrrdDataHandle nout = scinew NrrdData();
+  if (!nrrd_handle_.get_rep() || !nrrd_handle_->nrrd_) return;
+  NrrdDataHandle nout_handle = scinew NrrdData();
   ptrdiff_t minp[3] = { 0, 0, 0 };
   ptrdiff_t maxp[3] = { 0, 
-			Pow2(nrrd_->nrrd->axis[1].size)-1, 
-			Pow2(nrrd_->nrrd->axis[2].size)-1 };
+			Pow2(nrrd_handle_->nrrd_->axis[1].size)-1, 
+			Pow2(nrrd_handle_->nrrd_->axis[2].size)-1 };
 
-  if (nrrdPad_nva(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed, 0)) {
+  if (nrrdPad_nva(nout_handle->nrrd_, nrrd_handle_->nrrd_,
+		  minp, maxp, nrrdBoundaryBleed, 0)) {
     char *err = biffGetDone(NRRD);
     string error = string("Trouble resampling: ") + err;
     free (err);
     throw error;
   }
-  nrrd_ = nout;
+  nrrd_handle_ = nout_handle;
 }
 
 
 bool
 NrrdTextureObj::bind()
 {
-  if (!nrrd_.get_rep() || !nrrd_->nrrd) return false;
+  if (!nrrd_handle_.get_rep() || !nrrd_handle_->nrrd_) return false;
 
   const bool bound = glIsTexture(texture_id_);
 
@@ -124,7 +127,7 @@ NrrdTextureObj::bind()
   CHECK_OPENGL_ERROR();
   if (bound && !dirty_) return true;
   dirty_ = false;
-  Nrrd nrrd = *nrrd_->nrrd;
+  Nrrd nrrd = *nrrd_handle_->nrrd_;
   int prim = 1;
   GLenum pixtype;
   if (nrrd.axis[0].size == 1) 
@@ -186,8 +189,8 @@ NrrdTextureObj::draw_quad(double x, double y, double w, double h)
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   CHECK_OPENGL_ERROR();
 
-  double tx = double(width_)/nrrd_->nrrd->axis[1].size;
-  double ty = double(height_)/nrrd_->nrrd->axis[2].size;
+  double tx = double(width_ )/nrrd_handle_->nrrd_->axis[1].size;
+  double ty = double(height_)/nrrd_handle_->nrrd_->axis[2].size;
   glBegin(GL_QUADS);
   glTexCoord2d(0.0, 0.0);
   glVertex3d(x, y, 0.0);

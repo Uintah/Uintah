@@ -1181,9 +1181,9 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
 
   if (arr.size() > 1) {
     sciNrrd = scinew NrrdData();
-    sciNrrd->nrrd = nrrdNew();
+    sciNrrd->nrrd_ = nrrdNew();
 
-    if( nrrdJoin(sciNrrd->nrrd, &arr[0], num_nrrds, position, incr) ) 
+    if( nrrdJoin(sciNrrd->nrrd_, &arr[0], num_nrrds, position, incr) ) 
       {
 	char *err = biffGetDone(NRRD);
 	error( string("(DicomNrrdReader::join_nrrds) Join Error: ") +  err );
@@ -1195,36 +1195,36 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
   }
 
   unsigned int *centers = (unsigned int *)malloc(sizeof(unsigned int) * 
-						 sciNrrd->nrrd->dim);
-  for(int i=0; i<sciNrrd->nrrd->dim; i++)
+						 sciNrrd->nrrd_->dim);
+  for(unsigned int i=0; i<sciNrrd->nrrd_->dim; i++)
     centers[i] = nrrdCenterNode;
-  nrrdAxisInfoSet_nva(sciNrrd->nrrd, nrrdAxisInfoCenter, &centers);
+  nrrdAxisInfoSet_nva(sciNrrd->nrrd_, nrrdAxisInfoCenter, &centers);
 		      
-  sciNrrd->nrrd->axis[2].spacing = z_spacing_;
+  sciNrrd->nrrd_->axis[2].spacing = z_spacing_;
 
 
   if (arr[0]->dim == 2)
     incr = false;
 
-  switch (sciNrrd->nrrd->dim) {
+  switch (sciNrrd->nrrd_->dim) {
   case 4:
     if (incr) {
-      if (sciNrrd->nrrd->axis[0].size > 4)
-	sciNrrd->nrrd->axis[0].label = airStrdup( "TensorData" );
+      if (sciNrrd->nrrd_->axis[0].size > 4)
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "TensorData" );
       else
-	sciNrrd->nrrd->axis[0].label = airStrdup( "VectorData" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[3].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
-      //sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
-      sciNrrd->nrrd->axis[3].spacing = z_spacing_; 
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "VectorData" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[3].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
+      //sciNrrd->nrrd_->axis[3].spacing = arr[0]->axis[2].spacing; 
+      sciNrrd->nrrd_->axis[3].spacing = z_spacing_; 
       
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 3, nrrdCenterNode);
     } else {
       return 0;
     }
@@ -1232,39 +1232,39 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
     break;
   case 3:
     if (incr) {
-      if (sciNrrd->nrrd->axis[0].size > 4)
-	sciNrrd->nrrd->axis[0].label = airStrdup( "TensorData" );
+      if (sciNrrd->nrrd_->axis[0].size > 4)
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "TensorData" );
       else
-	sciNrrd->nrrd->axis[0].label = airStrdup( "VectorData" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "VectorData" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
-      //sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
-      sciNrrd->nrrd->axis[2].spacing = z_spacing_;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
+      //sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[2].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = z_spacing_;
     }
     
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
     break;
   case 2:
     if (incr) {
       return 0;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
 
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
     }
     break;
   default:

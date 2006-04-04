@@ -160,7 +160,7 @@ UnuPad::execute()
     }
 
     last_generation_ = nrrdH->generation;
-    dim_.set(nrrdH->nrrd->dim);
+    dim_.set(nrrdH->nrrd_->dim);
     dim_.reset();
     load_gui();
     get_gui()->execute(get_id().c_str() + string(" init_axes"));
@@ -198,16 +198,16 @@ UnuPad::execute()
       last_maxs_[a] = maxs_[a]->get();
     }
     min[a] = 0 - mins_[a]->get();
-    max[a] = (nrrdH->nrrd->axis[a].size - 1) + maxs_[a]->get();  
+    max[a] = (nrrdH->nrrd_->axis[a].size - 1) + maxs_[a]->get();  
 
-    if (nrrdKindSize(nrrdH->nrrd->axis[a].kind) > 1 && (min[a] !=0 || max[a] != 0)) {
+    if (nrrdKindSize(nrrdH->nrrd_->axis[a].kind) > 1 && (min[a] !=0 || max[a] != 0)) {
       warning("Trying to pad axis " + to_string(a) + " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
     }
   }
 
   if ( changed || !last_nrrdH_.get_rep())
   {
-    Nrrd *nin = nrrdH->nrrd;
+    Nrrd *nin = nrrdH->nrrd_;
     Nrrd *nout = nrrdNew();
     ptrdiff_t *minp = &(min[0]);
     ptrdiff_t *maxp = &(max[0]);
@@ -230,7 +230,7 @@ UnuPad::execute()
     // Copy the properies, kinds, and labels.
     last_nrrdH_->copy_properties(nrrdH.get_rep());
 
-    for( int i=0; i<nin->dim; i++ )
+    for( unsigned int i=0; i<nin->dim; i++ )
     {
       nout->axis[i].kind  = nin->axis[i].kind;
       nout->axis[i].label = airStrdup(nin->axis[i].label);

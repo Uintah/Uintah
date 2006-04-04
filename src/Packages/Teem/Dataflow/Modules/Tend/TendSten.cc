@@ -89,7 +89,7 @@ TendSten::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (gageStructureTensor(nout, nin, diffscale_.get(), intscale_.get(), 

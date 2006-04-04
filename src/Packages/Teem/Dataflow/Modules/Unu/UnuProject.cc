@@ -112,7 +112,7 @@ UnuProject::execute()
 
   if (need_execute || !last_nrrdH_.get_rep())
   {
-    Nrrd *nin = nrrd_handle->nrrd;
+    Nrrd *nin = nrrd_handle->nrrd_;
     Nrrd *nout = nrrdNew();
     
     if (nrrdProject(nout, nin, axis_.get(), measure_.get(), nrrdTypeDefault)) {

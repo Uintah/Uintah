@@ -136,7 +136,8 @@ UnuMinmax::execute()
       ++iter;
 
       NrrdData* cur_nrrd = nh.get_rep();
-      NrrdRange *range = nrrdRangeNewSet(cur_nrrd->nrrd, nrrdBlind8BitRangeFalse);
+      NrrdRange *range = nrrdRangeNewSet(cur_nrrd->nrrd_,
+					 nrrdBlind8BitRangeFalse);
       mins.push_back(range->min);
       maxs.push_back(range->max);
       ++i;

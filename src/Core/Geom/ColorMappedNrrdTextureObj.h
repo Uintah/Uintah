@@ -88,7 +88,7 @@ private:
 
 class SCISHARE ColorMappedNrrdTextureObj {
 public:
-  ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd, 
+  ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd_handle, 
                             int axis, 
                             int min_slice, int max_slice,
                             int time = 0);
@@ -103,7 +103,7 @@ public:
 
   void                  apply_colormap(int, int, int, int, int border=0);
   ColorMapHandle        colormap_;
-  NrrdDataHandle	nrrd_;
+  NrrdDataHandle	nrrd_handle_;
 
 private:
   void                  create_data();

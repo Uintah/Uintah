@@ -123,7 +123,6 @@ Painter::BrushTool::key_press(Event &event)
     return QUIT_E;
   if (event.key_ == "v") 
     {
-      double val;
       printf("Enter value: ");
       scanf("%f",&value_);
       printf("Value set to: %f\n",value_);
@@ -160,7 +159,7 @@ Painter::BrushTool::button_press(Event &event)
     last_index_ = vol->world_to_index(event.position_);
     last_index_.erase(last_index_.begin()+slice_->axis());
 
-    splat(slice_->texture_->nrrd_->nrrd, radius_, 
+    splat(slice_->texture_->nrrd_handle_->nrrd_, radius_, 
           last_index_[1], last_index_[2]);
 
     slice_->texture_->apply_colormap(last_index_[1], last_index_[2],
@@ -206,13 +205,13 @@ Painter::BrushTool::button_release(Event &event)
     int axis = slice_->axis();
     vol->mutex_.lock();
 
-    //    nrrdSave("/tmp/vol.nrrd", vol->nrrd_->nrrd, 0);
-    //    nrrdSave("/tmp/slice.nrrd", slice_->texture_->nrrd_->nrrd, 0);
-    vol->nrrd_->nrrd->content[0] = 0;
+    //    nrrdSave("/tmp/vol.nrrd", vol->nrrd_handle_->nrrd_, 0);
+    //    nrrdSave("/tmp/slice.nrrd", slice_->texture_->nrrd_handle_->nrrd_, 0);
+    vol->nrrd_handle_->nrrd_->content[0] = 0;
     
-    if (nrrdSplice(vol->nrrd_->nrrd,
-                   vol->nrrd_->nrrd,
-                   slice_->texture_->nrrd_->nrrd,
+    if (nrrdSplice(vol->nrrd_handle_->nrrd_,
+                   vol->nrrd_handle_->nrrd_,
+                   slice_->texture_->nrrd_handle_->nrrd_,
                    axis, window_center[axis])) {
       vol->mutex_.unlock();
       char *err = biffGetDone(NRRD);
@@ -258,7 +257,7 @@ Painter::BrushTool::my_mouse_motion(Event &event)
     //    vector<int> index = = vol->world_to_index(event.position_);
     index.erase(index.begin()+slice_->axis());
 
-    line(slice_->texture_->nrrd_->nrrd, radius_, 
+    line(slice_->texture_->nrrd_handle_->nrrd_, radius_, 
          last_index_[1], last_index_[2],
          index[1], index[2], true);
 
@@ -353,9 +352,9 @@ void
 Painter::BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
 {
   vector<int> index(3,0);
-  const int wid = Round(radius);
-  for (int y = y0-wid; y <= y0+wid; ++y)
-    for (int x = x0-wid; x <= x0+wid; ++x)
+  const unsigned int wid = Round(radius);
+  for (unsigned int y = y0-wid; y <= y0+wid; ++y)
+    for (unsigned int x = x0-wid; x <= x0+wid; ++x)
       if (x >= 0 && x < nrrd->axis[1].size &&
           y >= 0 && y < nrrd->axis[2].size) 
         {
@@ -377,10 +376,10 @@ void
 Painter::BrushTool::line(Nrrd *nrrd, double radius,
                      int x0, int y0, int x1, int y1, bool first)
 {
-  if (x0 < 0 || x0 >= nrrd->axis[1].size || 
-      x1 < 0 || x1 >= nrrd->axis[1].size || 
-      y0 < 0 || y0 >= nrrd->axis[2].size || 
-      y1 < 0 || y1 >= nrrd->axis[2].size) return;
+  if (x0 < 0 || x0 >= (int) nrrd->axis[1].size || 
+      x1 < 0 || x1 >= (int) nrrd->axis[1].size || 
+      y0 < 0 || y0 >= (int) nrrd->axis[2].size || 
+      y1 < 0 || y1 >= (int) nrrd->axis[2].size) return;
   int dy = y1 - y0;
   int dx = x1 - x0;
   int sx = 1;

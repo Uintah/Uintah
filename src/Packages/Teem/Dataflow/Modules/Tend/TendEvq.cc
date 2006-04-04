@@ -92,7 +92,7 @@ TendEvq::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenEvqVolume(nout, nin, index_.get(), get_anisotropy(anisotropy_.get()), ns_.get())) {

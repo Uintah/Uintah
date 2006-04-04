@@ -161,13 +161,13 @@ UnuCrop::execute()
   }
 
   last_generation_ = nrrdH->generation;
-  num_axes_.set(nrrdH->nrrd->dim);
+  num_axes_.set(nrrdH->nrrd_->dim);
   num_axes_.reset();
 
   // remove any unused uis or add any needes uis
-  if (uis_.get() > nrrdH->nrrd->dim) {
+  if ((unsigned  int)uis_.get() > nrrdH->nrrd_->dim) {
     // remove them
-    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+    for(unsigned int i=uis_.get()-1; i>=nrrdH->nrrd_->dim; i--) {
       ostringstream str;
       str << i;
       vector<GuiString*>::iterator iter = mins_.end();
@@ -184,8 +184,8 @@ UnuCrop::execute()
 
       get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
-  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    uis_.set(nrrdH->nrrd_->dim);
+  } else if ((unsigned  int)uis_.get() < nrrdH->nrrd_->dim) {
     for (int i=uis_.get(); i < num_axes_.get(); i++) {
       ostringstream str, str2, str3, str4;
       str << "minAxis" << i;
@@ -195,28 +195,28 @@ UnuCrop::execute()
       mins_.push_back(new GuiString(get_ctx()->subVar(str.str())));
       maxs_.push_back(new GuiString(get_ctx()->subVar(str2.str())));
       if (digits_only_.get() == 1) {
-	maxs_[i]->set(to_string(nrrdH->nrrd->axis[i].size - 1));
+	maxs_[i]->set(to_string(nrrdH->nrrd_->axis[i].size - 1));
       }
       else {
 	maxs_[i]->set("M");
       }
       absmaxs_.push_back(new GuiInt(get_ctx()->subVar(str3.str())));
-      absmaxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
+      absmaxs_[i]->set(nrrdH->nrrd_->axis[i].size - 1);
 
       lastmin_.push_back(0);
-      lastmax_.push_back(nrrdH->nrrd->axis[i].size - 1); 
+      lastmax_.push_back(nrrdH->nrrd_->axis[i].size - 1); 
 
       get_gui()->execute(get_id().c_str() + string(" make_min_max " + str4.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
+    uis_.set(nrrdH->nrrd_->dim);
   }
   
 
   if (new_dataset) {
     for (int a=0; a<num_axes_.get(); a++) {
-      int max = nrrdH->nrrd->axis[a].size - 1;
+      int max = nrrdH->nrrd_->axis[a].size - 1;
       maxs_[a]->reset();
-      absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
+      absmaxs_[a]->set(nrrdH->nrrd_->axis[a].size - 1);
       absmaxs_[a]->reset();
       if (parse(nrrdH, maxs_[a]->get(),a) > max) {
 	if (digits_only_.get() == 1) {
@@ -302,7 +302,7 @@ UnuCrop::execute()
       !last_nrrdH_.get_rep() ||
       !last_matrixH_.get_rep())
   {
-    Nrrd *nin = nrrdH->nrrd;
+    Nrrd *nin = nrrdH->nrrd_;
     Nrrd *nout = nrrdNew();
 
     size_t *min = scinew size_t[num_axes_.get()];
@@ -321,7 +321,7 @@ UnuCrop::execute()
       indexMat->put(i, 1, (double) max[i]);
 
       if (nrrdKindSize(nin->axis[i].kind) > 1 &&
-	  (min[i] != 0 || max[i] != absmaxs_[i]->get())) {
+	  (min[i] != 0 || max[i] != (size_t) absmaxs_[i]->get())) {
 	warning("Trying to crop axis " + to_string(i) +
 		" which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
       }
@@ -333,7 +333,7 @@ UnuCrop::execute()
       error(string("Trouble cropping: ") + err + "\nOutputting input Nrrd");
       msg_stream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
       free(err);
-      for(int a=0; a<nin->dim; a++) {
+      for(unsigned int a=0; a<nin->dim; a++) {
 	mins_[a]->set(to_string(0));
 	maxs_[a]->set(to_string(nin->axis[a].size-1));
 	lastmin_[a] = min[a];
@@ -341,7 +341,7 @@ UnuCrop::execute()
       }
       crop_successful = false;
     } else {
-      for(int a=0; a<nin->dim; a++) {
+      for(unsigned int a=0; a<nin->dim; a++) {
 	lastmin_[a] = min[a];
 	lastmax_[a] = max[a];
       }
@@ -366,7 +366,7 @@ UnuCrop::execute()
     // Copy the properies, kinds, and labels.
     nrrd->copy_properties(nrrdH.get_rep());
 
-    for( int i=0; i<nin->dim; i++ ) {
+    for( unsigned int i=0; i<nin->dim; i++ ) {
       nout->axis[i].kind  = nin->axis[i].kind;
       nout->axis[i].label = airStrdup(nin->axis[i].label);
     }
@@ -473,7 +473,7 @@ UnuCrop::parse(const NrrdDataHandle& nH, const string& val, const int a) {
   
   if (new_val[0] == 'M') {
     has_base = true;
-    base = nH->nrrd->axis[a].size - 1;
+    base = nH->nrrd_->axis[a].size - 1;
   } else if (new_val[0] == 'm') { 
     has_base = true;
     base = parse(nH, mins_[a]->get(), a);

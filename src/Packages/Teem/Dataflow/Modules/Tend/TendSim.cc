@@ -104,9 +104,9 @@ TendSim::execute()
     return;
   }
   
-  Nrrd *bmat = bmat_handle->nrrd;
-  Nrrd *referenceimg = referenceimg_handle->nrrd;
-  Nrrd *tensor = tensor_handle->nrrd;
+  Nrrd *bmat = bmat_handle->nrrd_;
+  Nrrd *referenceimg = referenceimg_handle->nrrd_;
+  Nrrd *tensor = tensor_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenSimulate(nout, referenceimg, tensor, bmat, bvalue_.get())) {

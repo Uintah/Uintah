@@ -121,7 +121,7 @@ NrrdTextureBuilder::execute()
     return;
   }
 
-  Nrrd* nv_nrrd = vHandle->nrrd;
+  Nrrd* nv_nrrd = vHandle->nrrd_;
 
   if (nv_nrrd->dim != 3 && nv_nrrd->dim != 4) {
     error("Invalid dimension for input value nrrd.");
@@ -136,14 +136,14 @@ NrrdTextureBuilder::execute()
   }
 
   // The input nrrd type must be unsigned char.
-  if (gui_uchar_.get() && vHandle->nrrd->type != nrrdTypeUChar) {
+  if (gui_uchar_.get() && vHandle->nrrd_->type != nrrdTypeUChar) {
     error("Normal/Value input nrrd type must be unsigned char.");
     return;
   }
 
   if( !gui_fixed_.get() ){
     // set vmin/vmax
-    NrrdRange *range = nrrdRangeNewSet(vHandle->nrrd, nrrdBlind8BitRangeFalse);
+    NrrdRange *range = nrrdRangeNewSet(vHandle->nrrd_, nrrdBlind8BitRangeFalse);
 
     gui_vminval_.set(range->min);
     gui_vmaxval_.set(range->max);
@@ -178,7 +178,7 @@ NrrdTextureBuilder::execute()
       gnrrd_last_generation_ = -1;
 
     } else {
-      Nrrd* gm_nrrd = gHandle->nrrd;
+      Nrrd* gm_nrrd = gHandle->nrrd_;
 
       if (gm_nrrd->dim != 3 && gm_nrrd->dim != 4) {
 	error("Invalid dimension for input gradient magnitude nrrd.");
@@ -194,7 +194,7 @@ NrrdTextureBuilder::execute()
       }
 
       // The input nrrd type must be unsigned char.
-      if (gui_uchar_.get() && gHandle->nrrd->type != nrrdTypeUChar) {
+      if (gui_uchar_.get() && gHandle->nrrd_->type != nrrdTypeUChar) {
 	error("Gradient magnitude input nrrd type must be unsigned char.");
 	return;
       }
@@ -202,7 +202,7 @@ NrrdTextureBuilder::execute()
       if( !gui_fixed_.get() ){
 	// set gmin/gmax
 	NrrdRange *range =
-	  nrrdRangeNewSet(gHandle->nrrd, nrrdBlind8BitRangeFalse);
+	  nrrdRangeNewSet(gHandle->nrrd_, nrrdBlind8BitRangeFalse);
 
 	gui_gminval_.set(range->min);
 	gui_gmaxval_.set(range->max);
@@ -236,10 +236,10 @@ NrrdTextureBuilder::execute()
   if( update ) {
 
     CompileInfoHandle ci =
-      NrrdTextureBuilderAlgo::get_compile_info(vHandle->nrrd->type,
+      NrrdTextureBuilderAlgo::get_compile_info(vHandle->nrrd_->type,
 					       gHandle.get_rep() ? 
-					       gHandle->nrrd->type :
-					       vHandle->nrrd->type);
+					       gHandle->nrrd_->type :
+					       vHandle->nrrd_->type);
     
     Handle<NrrdTextureBuilderAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;

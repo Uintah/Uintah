@@ -166,13 +166,13 @@ UnuResample::execute()
   }
 
   last_generation_ = nrrdH->generation;
-  dim_.set(nrrdH->nrrd->dim);
+  dim_.set(nrrdH->nrrd_->dim);
   dim_.reset();
 
   // remove any unused uis or add any needes uis
-  if (uis_.get() > nrrdH->nrrd->dim) {
+  if ((unsigned int) uis_.get() > nrrdH->nrrd_->dim) {
     // remove them
-    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+    for(unsigned int i=uis_.get()-1; i>=nrrdH->nrrd_->dim; i--) {
       ostringstream str;
       str << i;
       vector<GuiString*>::iterator iter = resampAxes_.end();
@@ -181,8 +181,8 @@ UnuResample::execute()
       last_RA_.erase(iter2, iter2);
       get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
-  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    uis_.set(nrrdH->nrrd_->dim);
+  } else if ((unsigned int) uis_.get() < nrrdH->nrrd_->dim) {
     for (int i=uis_.get()-1; i< dim_.get(); i++) {
       ostringstream str, str2;
       str << "resampAxis" << i;
@@ -191,7 +191,7 @@ UnuResample::execute()
       last_RA_.push_back("x1");
       get_gui()->execute(get_id().c_str() + string(" make_min_max " + str2.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
+    uis_.set(nrrdH->nrrd_->dim);
   }
 
   filtertype_.reset();
@@ -220,7 +220,7 @@ UnuResample::execute()
   
   NrrdResampleInfo *info = nrrdResampleInfoNew();
 
-  Nrrd *nin = nrrdH->nrrd;
+  Nrrd *nin = nrrdH->nrrd_;
   msg_stream_ << "Resampling with a " << last_filtertype_ << " filter." << endl;
   NrrdKernel *kern;
   double p[NRRD_KERNEL_PARMS_NUM];
@@ -268,11 +268,11 @@ UnuResample::execute()
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (info->kernel[a] && 
 	(!(airExists(nin->axis[a].min) && airExists(nin->axis[a].max)))) {
-      nrrdAxisInfoMinMaxSet(nrrdH->nrrd, a, nin->axis[a].center ? 
+      nrrdAxisInfoMinMaxSet(nrrdH->nrrd_, a, nin->axis[a].center ? 
 			nin->axis[a].center : nrrdDefaultCenter);
     }
-    info->min[a] = nrrdH->nrrd->axis[a].min;
-    info->max[a] = nrrdH->nrrd->axis[a].max;
+    info->min[a] = nrrdH->nrrd_->axis[a].min;
+    info->max[a] = nrrdH->nrrd_->axis[a].max;
   }    
   msg_stream_ << endl;
   info->boundary = nrrdBoundaryBleed;
@@ -282,7 +282,7 @@ UnuResample::execute()
   last_generation_ = nrrdH->generation;
 
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdSpatialResample(nrrd->nrrd, nin, info)) {
+  if (nrrdSpatialResample(nrrd->nrrd_, nin, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
     msg_stream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";

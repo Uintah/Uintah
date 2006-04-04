@@ -331,9 +331,9 @@ MRITissueClassifier::execute()
       generation_[3] = m_FATSAT_Data.get_rep()->generation;
 
     // Get the dimensions of the volume
-    m_width = m_T1_Data->nrrd->axis[X_AXIS].size;
-    m_height = m_T1_Data->nrrd->axis[Y_AXIS].size;
-    m_depth = m_T1_Data->nrrd->axis[Z_AXIS].size;
+    m_width = m_T1_Data->nrrd_->axis[X_AXIS].size;
+    m_height = m_T1_Data->nrrd_->axis[Y_AXIS].size;
+    m_depth = m_T1_Data->nrrd_->axis[Z_AXIS].size;
 
     // Get the GUI Variables
     m_MaxIteration = gui_max_iter_.get();
@@ -349,19 +349,19 @@ MRITissueClassifier::execute()
     update_state(Module::Executing);
     if (!m_Top) {
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_T1_Data->nrrd, 2);
+      nrrdFlip(temp->nrrd_, m_T1_Data->nrrd_, 2);
       m_T1_Data = temp;
 
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_T2_Data->nrrd, 2);
+      nrrdFlip(temp->nrrd_, m_T2_Data->nrrd_, 2);
       m_T2_Data = temp;
 
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_PD_Data->nrrd, 2);
+      nrrdFlip(temp->nrrd_, m_PD_Data->nrrd_, 2);
       m_PD_Data = temp;
       
       if (m_FatSat) {
-	nrrdFlip(temp->nrrd, m_FATSAT_Data->nrrd, 2);
+	nrrdFlip(temp->nrrd_, m_FATSAT_Data->nrrd_, 2);
 	m_FATSAT_Data = temp;
       }
     }
@@ -369,19 +369,19 @@ MRITissueClassifier::execute()
 
     if (!m_Anterior) {
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_T1_Data->nrrd, 1);
+      nrrdFlip(temp->nrrd_, m_T1_Data->nrrd_, 1);
       m_T1_Data = temp;
 
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_T2_Data->nrrd, 1);
+      nrrdFlip(temp->nrrd_, m_T2_Data->nrrd_, 1);
       m_T2_Data = temp;
 
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_PD_Data->nrrd, 1);
+      nrrdFlip(temp->nrrd_, m_PD_Data->nrrd_, 1);
       m_PD_Data = temp;
       
       if (m_FatSat) {
-	nrrdFlip(temp->nrrd, m_FATSAT_Data->nrrd, 1);
+	nrrdFlip(temp->nrrd_, m_FATSAT_Data->nrrd_, 1);
 	m_FATSAT_Data = temp;
       }
     }
@@ -392,7 +392,7 @@ MRITissueClassifier::execute()
     m_Energy		= create_nrrd_of_floats(m_width, m_height, m_depth);
     m_CSF_Energy	= create_nrrd_of_floats(m_width, m_height, m_depth);
 
-    memset(m_Label->nrrd->data, T_BACKGROUND, m_width*m_height*m_depth*sizeof(int));
+    memset(m_Label->nrrd_->data, T_BACKGROUND, m_width*m_height*m_depth*sizeof(int));
 
     update_state(Module::Executing);
     for (int x=0;x<m_width;x++)
@@ -427,14 +427,14 @@ MRITissueClassifier::execute()
 
     if (!m_Top) {
       temp = create_nrrd_of_ints(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_Label->nrrd, 2);
+      nrrdFlip(temp->nrrd_, m_Label->nrrd_, 2);
       m_Label = temp;
     }
     update_state(Module::Executing);
 
     if (!m_Anterior) {
       temp = create_nrrd_of_ints(m_width, m_height, m_depth);
-      nrrdFlip(temp->nrrd, m_Label->nrrd, 1);
+      nrrdFlip(temp->nrrd_, m_Label->nrrd_, 1);
       m_Label = temp;
     }
   }
@@ -3528,29 +3528,29 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
   kern = nrrdKernelGaussian; 
   p[1] = sigma; 
   p[2] = 6.0; 
-  for (int a = 0; a < data->nrrd->dim; a++) {
+  for (unsigned int a = 0; a < data->nrrd_->dim; a++) {
     info->kernel[a] = kern;
-    info->samples[a]=data->nrrd->axis[a].size;
+    info->samples[a]=data->nrrd_->axis[a].size;
     if (a==0) {
       info->kernel[0]=0;
     } 
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (info->kernel[a] && 
-	(!(airExists(data->nrrd->axis[a].min) && airExists(data->nrrd->axis[a].max)))) {
-      nrrdAxisInfoMinMaxSet(data->nrrd, a, data->nrrd->axis[a].center ? 
-			data->nrrd->axis[a].center : nrrdDefaultCenter);
+	(!(airExists(data->nrrd_->axis[a].min) && airExists(data->nrrd_->axis[a].max)))) {
+      nrrdAxisInfoMinMaxSet(data->nrrd_, a, data->nrrd_->axis[a].center ? 
+			data->nrrd_->axis[a].center : nrrdDefaultCenter);
     }
-    info->min[a] = data->nrrd->axis[a].min;
-    info->max[a] = data->nrrd->axis[a].max;
+    info->min[a] = data->nrrd_->axis[a].min;
+    info->max[a] = data->nrrd_->axis[a].max;
   }    
   info->boundary = nrrdBoundaryBleed;
-  info->type = data->nrrd->type;
+  info->type = data->nrrd_->type;
   info->renormalize = AIR_TRUE;
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdSpatialResample(nrrd->nrrd, data->nrrd, info)) {
+  if (nrrdSpatialResample(nrrd->nrrd_, data->nrrd_, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
-    msg_stream_ << "  input Nrrd: data->nrrd->dim=" << data->nrrd->dim << "\n";
+    msg_stream_ << "  input Nrrd: data->nrrd_->dim=" << data->nrrd_->dim << "\n";
     free(err);
   }
   nrrdResampleInfoNix(info); 
@@ -3700,14 +3700,14 @@ MRITissueClassifier::ScalpClassification ()
 NrrdDataHandle
 MRITissueClassifier::dilate(NrrdDataHandle data, NrrdDataHandle mask)
 {
-  ASSERT(data->nrrd->type == nrrdTypeInt);
+  ASSERT(data->nrrd_->type == nrrdTypeInt);
 
   int val;
   int x, y, xm, ym, xo, yo;
-  const int w = data->nrrd->axis[X_AXIS].size;
-  const int h = data->nrrd->axis[Y_AXIS].size;
-  const int wm = mask->nrrd->axis[X_AXIS].size;
-  const int hm = mask->nrrd->axis[Y_AXIS].size;
+  const int w = data->nrrd_->axis[X_AXIS].size;
+  const int h = data->nrrd_->axis[Y_AXIS].size;
+  const int wm = mask->nrrd_->axis[X_AXIS].size;
+  const int hm = mask->nrrd_->axis[Y_AXIS].size;
   const int cx = (wm-1)/2;
   const int cy = (hm-1)/2;
   NrrdDataHandle r = create_nrrd_of_ints(w, h);
@@ -3742,13 +3742,13 @@ MRITissueClassifier::dilate(NrrdDataHandle data, NrrdDataHandle mask)
 NrrdDataHandle
 MRITissueClassifier::erode(NrrdDataHandle data, NrrdDataHandle mask)
 {
-  ASSERT(data->nrrd->type == nrrdTypeInt);
+  ASSERT(data->nrrd_->type == nrrdTypeInt);
   int val;
   int x, y, xm, ym, xo, yo;
-  const int w = data->nrrd->axis[X_AXIS].size;
-  const int h = data->nrrd->axis[Y_AXIS].size;
-  const int wm = mask->nrrd->axis[X_AXIS].size;
-  const int hm = mask->nrrd->axis[Y_AXIS].size;
+  const int w = data->nrrd_->axis[X_AXIS].size;
+  const int h = data->nrrd_->axis[Y_AXIS].size;
+  const int wm = mask->nrrd_->axis[X_AXIS].size;
+  const int hm = mask->nrrd_->axis[Y_AXIS].size;
   const int cx = (wm-1)/2;
   const int cy = (hm-1)/2;
 
@@ -3792,18 +3792,18 @@ MRITissueClassifier::opening(NrrdDataHandle data, NrrdDataHandle mask)
 NrrdDataHandle
 MRITissueClassifier::closing(NrrdDataHandle data, NrrdDataHandle mask)
 {
-  const int mw = mask->nrrd->axis[X_AXIS].size;
-  const int mh = mask->nrrd->axis[Y_AXIS].size;
+  const int mw = mask->nrrd_->axis[X_AXIS].size;
+  const int mh = mask->nrrd_->axis[Y_AXIS].size;
   const int px = (mw-1)/2;
   const int py = (mh-1)/2;
-  const int w = data->nrrd->axis[X_AXIS].size;
-  const int h = data->nrrd->axis[Y_AXIS].size;
+  const int w = data->nrrd_->axis[X_AXIS].size;
+  const int h = data->nrrd_->axis[Y_AXIS].size;
   // we need to pad the image because dilation might spill outside the
   // boundaries of the original image making it impossible to recover the
   // original with erosion
   //  VISImage <T> padim = VISImage<T> (w+mask.width(), h+mask.height());
   NrrdDataHandle padim = create_nrrd_of_ints(w+mw, h+mh);
-  memset(padim->nrrd->data, 0, (w+mw)*(h+mh)*sizeof(int));
+  memset(padim->nrrd_->data, 0, (w+mw)*(h+mh)*sizeof(int));
   int x, y;
   for (x=0;x<w;x++)
     for (y=0;y<h;y++)     
@@ -3824,7 +3824,7 @@ MRITissueClassifier::closing(NrrdDataHandle data, NrrdDataHandle mask)
   min[Y_AXIS] = py;
   max[Y_AXIS] = py+h-1;
   
-  if (nrrdCrop(temp->nrrd, padim->nrrd, min, max)) {
+  if (nrrdCrop(temp->nrrd_, padim->nrrd_, min, max)) {
     char *err = biffGetDone(NRRD);
     error("Trouble cropping nrrd: "+string(err));
     free(err);
@@ -3968,12 +3968,12 @@ MRITissueClassifier::floodFill(NrrdDataHandle data, int label_from, int label_to
 NrrdDataHandle
 MRITissueClassifier::extract_nrrd_slice_int(NrrdDataHandle data, int z)
 {
-  const int dx = data->nrrd->axis[X_AXIS].size;
-  const int dy = data->nrrd->axis[Y_AXIS].size;
+  const int dx = data->nrrd_->axis[X_AXIS].size;
+  const int dy = data->nrrd_->axis[Y_AXIS].size;
   
   NrrdDataHandle ret = create_nrrd_of_ints(dx, dy);
-  const int *source = (int *)data->nrrd->data;
-  memcpy(ret->nrrd->data, source + z*dx*dy, dx*dy*sizeof(int));
+  const int *source = (int *)data->nrrd_->data;
+  memcpy(ret->nrrd_->data, source + z*dx*dy, dx*dy*sizeof(int));
   return ret;
 }
 
@@ -3984,7 +3984,7 @@ MRITissueClassifier::create_nrrd_of_ints(int x, int y, int z)
   NrrdData *data = scinew NrrdData();
   size_t size[NRRD_DIM_MAX];
   size[0] = x; size[1] = y; size[2] = z;
-  if (nrrdAlloc_nva(data->nrrd, nrrdTypeInt, 3, size)) {
+  if (nrrdAlloc_nva(data->nrrd_, nrrdTypeInt, 3, size)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble create_nrrd_of_ints: ") +  err);
     free(err);
@@ -3998,7 +3998,7 @@ MRITissueClassifier::create_nrrd_of_floats(int x, int y, int z)
   NrrdData *data = scinew NrrdData();
   size_t size[NRRD_DIM_MAX];
   size[0] = x; size[1] = y; size[2] = z;
-  nrrdAlloc_nva(data->nrrd, nrrdTypeFloat, 3, size);
+  nrrdAlloc_nva(data->nrrd_, nrrdTypeFloat, 3, size);
   return data;
 }
 
@@ -4006,9 +4006,9 @@ bool
 MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, 
 				       int x, int y, int z) 
 {
-  return (x >= 0 && x < data->nrrd->axis[X_AXIS].size &&
-	  y >= 0 && y < data->nrrd->axis[Y_AXIS].size &&
-	  z >= 0 && z < data->nrrd->axis[Z_AXIS].size);
+  return (x >= 0 && x < (int) data->nrrd_->axis[X_AXIS].size &&
+	  y >= 0 && y < (int) data->nrrd_->axis[Y_AXIS].size &&
+	  z >= 0 && z < (int) data->nrrd_->axis[Z_AXIS].size);
 }
 
 
@@ -4018,7 +4018,7 @@ MRITissueClassifier::create_nrrd_of_ints(int x, int y)
   NrrdData *data = scinew NrrdData();
   size_t size[NRRD_DIM_MAX];
   size[0] = x; size[1] = y;
-  nrrdAlloc_nva(data->nrrd, nrrdTypeInt, 2, size);
+  nrrdAlloc_nva(data->nrrd_, nrrdTypeInt, 2, size);
   return data;
 }
 
@@ -4028,15 +4028,15 @@ MRITissueClassifier::create_nrrd_of_floats(int x, int y)
   NrrdData *data = scinew NrrdData();
   size_t size[NRRD_DIM_MAX];
   size[0] = x; size[1] = y;
-  nrrdAlloc_nva(data->nrrd, nrrdTypeFloat, 2, size);
+  nrrdAlloc_nva(data->nrrd_, nrrdTypeFloat, 2, size);
   return data;
 }
 
 bool
 MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, int x, int y) 
 {
-  return (x >= 0 && x < data->nrrd->axis[X_AXIS].size &&
-	  y >= 0 && y < data->nrrd->axis[Y_AXIS].size);
+  return (x >= 0 && x < (int) data->nrrd_->axis[X_AXIS].size &&
+	  y >= 0 && y < (int) data->nrrd_->axis[Y_AXIS].size);
 }
 
 ColumnMatrix
@@ -4075,16 +4075,16 @@ MRITissueClassifier::write_flat_volume(NrrdDataHandle data, string filename)
   r[21] = 50;  g[21] = 100; b[21] = 200;
   r[22] = 200; g[22] = 100; b[22] = 50;
 
-  const int *idata = (int *)data->nrrd->data;
-  const float *fdata = (float *)data->nrrd->data;
+  const int *idata = (int *)data->nrrd_->data;
+  const float *fdata = (float *)data->nrrd_->data;
   
-  const int dx = data->nrrd->axis[X_AXIS].size;
-  const int dy = data->nrrd->axis[Y_AXIS].size;
-  const int dz = data->nrrd->axis[Z_AXIS].size;
+  const int dx = data->nrrd_->axis[X_AXIS].size;
+  const int dy = data->nrrd_->axis[Y_AXIS].size;
+  const int dz = data->nrrd_->axis[Z_AXIS].size;
   const int max = dx*dy*dz;
 
   set<int> done;
-  const bool isfloat = (data->nrrd->type == nrrdTypeFloat);
+  const bool isfloat = (data->nrrd_->type == nrrdTypeFloat);
   float fmax=0.0, fmin=0.0;
   int imax=0, imin=0, cnt=0;
   if (isfloat)
@@ -4187,16 +4187,16 @@ MRITissueClassifier::write_image(NrrdDataHandle data, string filename)
   r[21] = 50;  g[21] = 100; b[21] = 200;
   r[22] = 200; g[22] = 100; b[22] = 50;
 
-  const int *idata = (int *)data->nrrd->data;
-  const float *fdata = (float *)data->nrrd->data;
+  const int *idata = (int *)data->nrrd_->data;
+  const float *fdata = (float *)data->nrrd_->data;
 
-  const bool greyscale = (data->nrrd->type == nrrdTypeFloat);
+  const bool greyscale = (data->nrrd_->type == nrrdTypeFloat);
   float fmax=0.0, fmin=0.0;
   if (greyscale)
   {
     fmax = fmin = fdata[0];
-      for (int y=0;y<data->nrrd->axis[Y_AXIS].size;y++)
-	for (int x=0;x<data->nrrd->axis[X_AXIS].size;x++)
+      for (unsigned int y=0;y<data->nrrd_->axis[Y_AXIS].size;y++)
+	for (unsigned int x=0;x<data->nrrd_->axis[X_AXIS].size;x++)
 	{
 	  float fval = get_nrrd_float2(data, x, y);
 	  if (fval>fmax) fmax=fval;
@@ -4204,8 +4204,8 @@ MRITissueClassifier::write_image(NrrdDataHandle data, string filename)
 	}
   }
   
-  const int dx = data->nrrd->axis[X_AXIS].size;
-  const int dy = data->nrrd->axis[Y_AXIS].size;
+  const int dx = data->nrrd_->axis[X_AXIS].size;
+  const int dy = data->nrrd_->axis[Y_AXIS].size;
   const int max = dx*dy;
 
   const int zero = 0;

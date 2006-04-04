@@ -407,7 +407,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
 
   // Make sure the points and data coming in make sense.
-  if (has_points_ && pointsH->nrrd->axis[0].size != 3) {
+  if (has_points_ && pointsH->nrrd_->axis[0].size != 3) {
     error("Points Nrrd must contain 3D points.");
     error("If the points are 2D use UnuPad to turn in to 3D points.");
     has_error_ = true;
@@ -416,11 +416,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
   unsigned int data_rank;
 
-  if (has_data_ && nrrdKindSize( dataH->nrrd->axis[0].kind ) > 1) {
-    if (dataH->nrrd->axis[0].size == 3) {
+  if (has_data_ && nrrdKindSize( dataH->nrrd_->axis[0].kind ) > 1) {
+    if (dataH->nrrd_->axis[0].size == 3) {
       data_rank = 3;
-    } else if (dataH->nrrd->axis[0].size >= 6) {
-      data_rank = dataH->nrrd->axis[0].size;
+    } else if (dataH->nrrd_->axis[0].size >= 6) {
+      data_rank = dataH->nrrd_->axis[0].size;
     } else {
       error("Data Nrrd must contain 3D scalars, vectors, or tensors.");
       has_error_ = true;
@@ -432,14 +432,14 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   if( has_points_ && has_data_ ) {
     // Data and points must have the same number of dimensions and
     // the all but the first dimension must have the same size.
-    if (!(dataH->nrrd->dim == pointsH->nrrd->dim ||
-	  dataH->nrrd->dim == (pointsH->nrrd->dim-1))) {
+    if (!(dataH->nrrd_->dim == pointsH->nrrd_->dim ||
+	  dataH->nrrd_->dim == (pointsH->nrrd_->dim-1))) {
       error ("Data and Points must have the same dimension for the domain.");
       has_error_ = true;
       return 0;
     }
-    for (int d = dataH->nrrd->dim-1, p = pointsH->nrrd->dim-1; p > 0; d--, p--) {
-      if (dataH->nrrd->axis[d].size != pointsH->nrrd->axis[p].size) {
+    for (int d = dataH->nrrd_->dim-1, p = pointsH->nrrd_->dim-1; p > 0; d--, p--) {
+      if (dataH->nrrd_->axis[d].size != pointsH->nrrd_->axis[p].size) {
 	error("Data and Points must have the same size for all domain axes.");
 	has_error_ = true;
 	return 0;
@@ -469,13 +469,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	CompileInfoHandle ci;
 	  
 	ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
-						    dataH->nrrd->type, 
+						    dataH->nrrd_->type, 
 						    data_rank);
 	  
 	Handle<NrrdToFieldFieldAlgo> algo;
 	if (!module_dynamic_compile(ci, algo)) return 0;
 	  
-	if ((nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) && build_eigens) {
+	if ((nrrdKindSize( dataH->nrrd_->axis[0].kind) == 9) && build_eigens) {
 	  warning("Attempting to build eigendecomposition of Tensors with non symmetric tensor");
 	}
 	  
@@ -489,7 +489,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       // Now create field based on the mesh created above and send it
       CompileInfoHandle ci;
       ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
-						  pointsH->nrrd->type, 
+						  pointsH->nrrd_->type, 
 						  data_rank);
       
       Handle<NrrdToFieldFieldAlgo> algo;
@@ -513,7 +513,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   // No field given, does it have points and connections and possibly data?
   if (has_points_ && has_connect_) {
 
-    Nrrd* connect = connectH->nrrd;
+    Nrrd* connect = connectH->nrrd_;
 
     if (connect->dim != 1 && connect->dim != 2) {
       error("Connections Nrrd must be two dimensional (number of points in each connection by the number of elements)");
@@ -696,8 +696,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     CompileInfoHandle ci_mesh =
       NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
 					    mtd,
-					    pointsH->nrrd->type,
-					    connectH->nrrd->type);
+					    pointsH->nrrd_->type,
+					    connectH->nrrd_->type);
       
     Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
       
@@ -711,11 +711,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
   } else if (has_points_) { // does it have points and possibly data?
 
-    Nrrd* points = pointsH->nrrd;
+    Nrrd* points = pointsH->nrrd_;
 
     geometry_ = IRREGULAR;
 
-    switch (pointsH->nrrd->dim) {
+    switch (pointsH->nrrd_->dim) {
     case 1:
       mHandle = scinew PCMesh();
       btd = get_type_description((ConstantBasis<double>*)0);
@@ -843,13 +843,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       if (has_data_) {
 	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
 							mtd,
-							pointsH->nrrd->type,
-							dataH->nrrd->type);
+							pointsH->nrrd_->type,
+							dataH->nrrd_->type);
       } else {
 	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
 							mtd,
-							pointsH->nrrd->type,
-							pointsH->nrrd->type);
+							pointsH->nrrd_->type,
+							pointsH->nrrd_->type);
       }
 	  
       Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
@@ -869,8 +869,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       CompileInfoHandle ci_mesh =
 	NrrdToFieldMeshAlgo::get_compile_info( "Structured",
 					       mtd,
-					       pointsH->nrrd->type,
-					       pointsH->nrrd->type);
+					       pointsH->nrrd_->type,
+					       pointsH->nrrd_->type);
 	  
       Handle<StructuredNrrdToFieldMeshAlgo> algo_mesh;
 	  
@@ -881,7 +881,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
 
   } else if( has_data_ ) { // No points just data.
-    Nrrd* data = dataH->nrrd;
+    Nrrd* data = dataH->nrrd_;
 
     vector<double> min_pt;
     vector<double> sp;
@@ -917,13 +917,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
     // handle the spaceOrigin first because it might contain
     // more elements than the nrrd dimension
-    for (int i=0; i<dataH->nrrd->spaceDim; i++) {
+    for ( unsigned int i=0; i<dataH->nrrd_->spaceDim; i++) {
       double min = 0.0;
 
       if (airExists(data->spaceOrigin[i])) 
 	min = data->spaceOrigin[i];
 
-      if ((int)min_pt.size() == i)
+      if (min_pt.size() == i)
 	min_pt.push_back( min );
       else
 	min_pt[i] = min;
@@ -931,7 +931,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
     // for each axis, determine the min/max/spacing or 
     // spaceDirection vector
-    for (int i=data_off; i<dataH->nrrd->dim; i++, domain_axis++) {
+    for (unsigned int i=data_off; i<dataH->nrrd_->dim; i++, domain_axis++) {
       // the origin may have all ready been set if it was coming
       // from the spaceOrigin, otherwise use the min points
       // we are guaranteed that both the spaceOrigin and min
@@ -1053,7 +1053,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     // set to because the transform will overwrite them.
     Point minpt(0,0,0), maxpt(1,1,1);
 
-    switch (dataH->nrrd->dim-data_off) {
+    switch (dataH->nrrd_->dim-data_off) {
     case 1:
       {
 	//get data from x axis and stuff into a Scanline
@@ -1163,9 +1163,9 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   const TypeDescription *dtd = 0;
   //determine the basis type.
   int data_center = nrrdCenterUnknown;
-  for (int a = 0; a<dataH->nrrd->dim; a++) {
-    if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
-      data_center = dataH->nrrd->axis[a].center;
+  for (unsigned int a = 0; a<dataH->nrrd_->dim; a++) {
+    if (dataH->nrrd_->axis[a].center != nrrdCenterUnknown)
+      data_center = dataH->nrrd_->axis[a].center;
   }
   if (data_center == nrrdCenterCell) {
     btd = get_type_description((ConstantBasis<double>*) 0);
@@ -1179,11 +1179,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
   if (has_data_) {
     ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
-						dataH->nrrd->type, 
+						dataH->nrrd_->type, 
 						data_rank);
   } else {
     ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
-						pointsH->nrrd->type, 
+						pointsH->nrrd_->type, 
 						data_rank);
   }
   
@@ -1191,7 +1191,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   
   if (!module_dynamic_compile(ci, algo)) return 0;
   
-  if (has_data_ && (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) && build_eigens) {
+  if (has_data_ && (nrrdKindSize( dataH->nrrd_->axis[0].kind) == 9) && build_eigens) {
     warning("Attempting to build eigen decomposition of Tensors with non symmetric tensor");
   }
   

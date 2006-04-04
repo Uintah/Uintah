@@ -221,7 +221,7 @@ ClipByFunction::execute()
     size_t dim[NRRD_DIM_MAX];
     dim[0] = matrix->ncols();    
     NrrdDataHandle nrrdH = scinew NrrdData;
-    Nrrd *nrrd = nrrdH->nrrd;
+    Nrrd *nrrd = nrrdH->nrrd_;
     nrrdAlloc_nva(nrrd, nrrdTypeUChar, 1, dim);
     unsigned char *mask = (unsigned char *)nrrd->data;
     memset(mask, 0, dim[0]*sizeof(unsigned char));
