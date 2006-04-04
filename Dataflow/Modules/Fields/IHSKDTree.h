@@ -413,7 +413,7 @@ private:
         
           // actually have to split
 				objects.clear();
-				assert(!children[0] && !children[1]);
+				ASSERT(!children[0] && !children[1]);
         
 				children[0] = new BoxKDTree(cobjects[0], boxclass, (axis+1)%3);
 				children[1] = new BoxKDTree(cobjects[1], boxclass, (axis+1)%3);
