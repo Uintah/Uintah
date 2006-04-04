@@ -55,14 +55,36 @@ public:
   void ComponentClassDefinitionCode();
   void ComponentSourceFileCode();
 
-  void PortClassDefinitionCode();
   void GenerateCode();
 
 private:
-  const std::string sp;
+
+  // generate header file
+  void writeHeaderInit();
+  void writeComponentDefinitionCode();
+  void writePortClassDefinitionCode();
+
+  // generate implementation
+  void writeLibraryHandle();
+  void writeSourceInit();
+  void writeSourceClassImpl();
+
+  // frequently used string tokens
+  const static std::string SP;
+  const static std::string QT;
+  const static std::string DIR_SEP;
+
+  const static std::string DEFAULT_NAMESPACE;
+  const static std::string DEFAULT_SIDL_NAMESPACE;
+  const static std::string DEFAULT_PORT_NAMESPACE;
+  const static std::string DEFAULT_SIDL_PORT_NAMESPACE;
+  const std::string SERVICES_POINTER;
+
   std::string compName;
+
   std::vector<PortDescriptor*> providesPortsList;
   std::vector<PortDescriptor*> usesPortsList;
+
   std::ofstream componentSourceFile;
   std::ofstream componentHeaderFile;
 };
