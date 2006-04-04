@@ -104,7 +104,7 @@ UnuShuffle::execute()
 
   // Determine the number of mins given
   string order = ordering_.get();
-  int ordLen = 0;
+  unsigned int ordLen = 0;
   char ch;
   int i=0, start=0;
   bool inword = false;
@@ -125,7 +125,7 @@ UnuShuffle::execute()
     i++;
   }
 
-  int *ord = new int[ordLen];
+  unsigned int *ord = new unsigned int[ordLen];
 
   
   i=0, start=0;
@@ -169,10 +169,10 @@ UnuShuffle::execute()
     return;
   }
 
-  int *iperm;
-  int **whichperm;
+  unsigned int *iperm;
+  size_t **whichperm;
   if (inverse_.get()) {
-    iperm = new int[ordLen];
+    iperm = new unsigned int[ordLen];
     if (nrrdInvertPerm(iperm, ord, ordLen)) {
       error("Couldn't compute inverse of given permutation");
       return;

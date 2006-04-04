@@ -56,7 +56,7 @@ using namespace SCIRun;
 
 class UnuResample : public Module {
 public:
-  int getint(const char *str, int *n, int *none);
+  int getint(const char *str, size_t *n, int *none);
   UnuResample(GuiContext *ctx);
   virtual ~UnuResample();
   virtual void execute();
@@ -111,7 +111,7 @@ UnuResample::~UnuResample()
 
 
 int 
-UnuResample::getint(const char *str, int *n, int *none) 
+UnuResample::getint(const char *str, size_t *n, int *none) 
 {
   if (!strlen(str)) return 1;
   if (str[0] == 'x') {
@@ -269,7 +269,7 @@ UnuResample::execute()
     if (info->kernel[a] && 
 	(!(airExists(nin->axis[a].min) && airExists(nin->axis[a].max)))) {
       nrrdAxisInfoMinMaxSet(nrrdH->nrrd, a, nin->axis[a].center ? 
-			nin->axis[a].center : nrrdDefCenter);
+			nin->axis[a].center : nrrdDefaultCenter);
     }
     info->min[a] = nrrdH->nrrd->axis[a].min;
     info->max[a] = nrrdH->nrrd->axis[a].max;

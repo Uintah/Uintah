@@ -119,16 +119,20 @@ EinthovenLeads::execute()
 			 gui_lead_III_.get(), values, pos)) 
     {
       if (count_ % 100 == 0) {
-	int sz = (count_ / 100 + 1) * 100;
+	size_t sz[NRRD_DIM_MAX];
+	sz[0] = (count_ / 100 + 1) * 100;
 	ndata = new NrrdData();
 
 	ndata->nrrd->axis[0].kind = nrrdKindDomain;
 	ndata->nrrd->axis[1].kind = nrrdKindDomain;
-	nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode);
+
+	unsigned int centers[NRRD_DIM_MAX];
+	centers[0] = nrrdCenterNode;
+	centers[1] = nrrdCenterNode;
+	nrrdAxisInfoSet_nva(ndata->nrrd, nrrdAxisInfoCenter, centers);
 	ndata->nrrd->axis[0].label = strdup("leads");
 	ndata->nrrd->axis[1].label = strdup("time");
-	nrrdAlloc(ndata->nrrd, nrrdTypeFloat, 2, 3, sz);
+	nrrdAlloc_nva(ndata->nrrd, nrrdTypeFloat, 2, 3, sz);
 	memset(ndata->nrrd->data, 0, count_ * 3 * sizeof(float));
 	if (nrrd_out_.get_rep()) {
 	  memcpy(ndata->nrrd->data, nrrd_out_->nrrd->data, 

@@ -96,7 +96,9 @@ ColorMapToNrrd::execute()
     const unsigned int size = cmapH->resolution();
   
     NrrdData *nd = scinew NrrdData();
-    nrrdAlloc(nd->nrrd, nrrdTypeFloat, 2, 4, size);
+    size_t s[NRRD_DIM_MAX];
+    s[0] = 4; s[1] = size;
+    nrrdAlloc_nva(nd->nrrd, nrrdTypeFloat, 2, s);
     nd->nrrd->axis[0].kind = nrrdKind4Color;
     nd->nrrd->axis[1].kind = nrrdKindDomain;
 

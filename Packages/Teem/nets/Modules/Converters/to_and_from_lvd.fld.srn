@@ -82,7 +82,7 @@
       <var name="ViewWindow_0-global-dl" val="{0}"/>
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
     </module>
-    <module id="m5" package="SCIRun" category="Visualization" name="ShowField" gui_visible="yes">
+    <module id="m5" package="SCIRun" category="Visualization" name="ShowField" gui_visible="no">
       <position x="267" y="420"/>
       <var name="use-transparency" val="{1}"/>
       <var name="normalize-vectors" val="{}"/>

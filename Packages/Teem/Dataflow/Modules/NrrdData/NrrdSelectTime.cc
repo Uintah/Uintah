@@ -125,13 +125,13 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
       error(biffGetDone(NRRD));
       return;
     }
-    if (nrrdContentSet(out->nrrd, "slice", in->nrrd, "%d,%d",
-		       time_axis, which))
+    if (nrrdContentSet_va(out->nrrd, "slice", in->nrrd, "%d,%d",
+			  time_axis, which))
     {
       error(biffGetDone(NRRD));
       return;
-    }
-
+    }  
+    
     size_t offset = which * nrrdTypeSize[in->nrrd->type];
     for (int i = 0; i < in->nrrd->dim - 1; i++)
     {

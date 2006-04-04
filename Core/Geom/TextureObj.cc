@@ -32,7 +32,7 @@ TextureObj::TextureObj(int components, int x, int y) :
 {
   set_color(1.0, 1.0, 1.0, 1.0);
 
-  int size[NRRD_DIM_MAX];
+  size_t size[NRRD_DIM_MAX];
   size[0] = components;
   size[1] = x;
   size[2] = y;
@@ -97,7 +97,7 @@ TextureObj::pad_to_power_of_2()
                   Pow2(nrrd_->nrrd->axis[1].size)-1, 
                   Pow2(nrrd_->nrrd->axis[2].size)-1 };
 
-  if (nrrdPad(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed)) {
+  if (nrrdPad_nva(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed, 1)) {
     char *err = biffGetDone(NRRD);
     string error = string("Trouble resampling: ") + err;
     free (err);

@@ -240,7 +240,10 @@ int main(int argc, char* argv[]) {
   
   // Create codebook nrrd
   Nrrd* cbNrrd=nrrdNew();
-  if (nrrdAlloc(cbNrrd, nrrdTypeFloat, 2, Cluster::ndims, ncwords)) {
+  size_t size[NRRD_DIM_MAX];
+  size[0] = cluster::ndims;
+  size[1] = ncwords;
+  if (nrrdAlloc_nva(cbNrrd, nrrdTypeFloat, 2, size)) {
     err=biffGet(NRRD);
     cerr<<me<<":  error allocating codebook nrrd:  "<<err<<endl;
     free(err);
@@ -271,7 +274,9 @@ int main(int argc, char* argv[]) {
   // Create index nrrd
   Nrrd* idxNrrd=nrrdNew();
   if (!idx_fname) {
-    if (nrrdWrap(idxNrrd, vc_map, nrrdTypeInt, 1, nvecs)) {
+    size_t size[NRRD_DIM_MAX];
+    size[0] = nvecs;
+    if (nrrdWrap_nva(idxNrrd, vc_map, nrrdTypeInt, 1, size)) {
       err=biffGet(NRRD);
       cerr<<me<<":  error creating index nrrd:  "<<err<<endl;
       free(err);

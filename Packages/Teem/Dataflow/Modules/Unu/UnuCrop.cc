@@ -305,8 +305,8 @@ UnuCrop::execute()
     Nrrd *nin = nrrdH->nrrd;
     Nrrd *nout = nrrdNew();
 
-    int *min = scinew int[num_axes_.get()];
-    int *max = scinew int[num_axes_.get()];
+    size_t *min = scinew size_t[num_axes_.get()];
+    size_t *max = scinew size_t[num_axes_.get()];
 
     DenseMatrix *indexMat = scinew DenseMatrix( num_axes_.get(), 2 );
     last_matrixH_ = MatrixHandle(indexMat);

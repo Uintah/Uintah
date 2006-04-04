@@ -218,12 +218,13 @@ ClipByFunction::execute()
     omatrix_port->send(mHandle_);
 
     SparseRowMatrix *matrix = dynamic_cast<SparseRowMatrix *>(mHandle_.get_rep());
-    const unsigned int dim = matrix->ncols();    
+    size_t dim[NRRD_DIM_MAX];
+    dim[0] = matrix->ncols();    
     NrrdDataHandle nrrdH = scinew NrrdData;
     Nrrd *nrrd = nrrdH->nrrd;
-    nrrdAlloc(nrrd, nrrdTypeUChar, 1, dim);
+    nrrdAlloc_nva(nrrd, nrrdTypeUChar, 1, dim);
     unsigned char *mask = (unsigned char *)nrrd->data;
-    memset(mask, 0, dim*sizeof(unsigned char));
+    memset(mask, 0, dim[0]*sizeof(unsigned char));
     int *rr = matrix->rows;
     int *cc = matrix->columns;
     double *data = matrix->a;

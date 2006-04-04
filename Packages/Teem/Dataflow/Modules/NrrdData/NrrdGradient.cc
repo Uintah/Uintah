@@ -79,7 +79,7 @@ NrrdGradient::execute()
 
   Nrrd *nin = nin_handle->nrrd;
   Nrrd *nout = nrrdNew();
-  int size[NRRD_DIM_MAX];
+  size_t size[NRRD_DIM_MAX];
   int dim;
 
   // Create a local array of axis sizes, so we can allocate the output Nrrd

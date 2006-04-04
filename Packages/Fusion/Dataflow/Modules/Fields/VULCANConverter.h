@@ -134,11 +134,15 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[ZR]]->nrrd->type,
-	   ndims+1, 3, nPhi*nZR);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 3;
+  size[1] = nPhi*nZR;
+  nrrdWrap_nva(nout->nrrd, ndata, nHandles[mesh[ZR]]->nrrd->type,
+	   ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
 
   nout->nrrd->axis[0].kind  = nrrdKind3Vector;
   nout->nrrd->axis[0].label = nHandles[mesh[ZR]]->nrrd->axis[0].label;
@@ -254,11 +258,15 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[LIST]]->nrrd->type,
-	   ndims+1, hex, cc);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = hex;
+  size[1] = cc;
+  nrrdWrap_nva(nout->nrrd, ndata, nHandles[mesh[LIST]]->nrrd->type,
+	   ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
 
   nout->nrrd->axis[0].kind  = nrrdKindUnknown;
   nout->nrrd->axis[0].label = nHandles[mesh[LIST]]->nrrd->axis[0].label;
@@ -454,10 +462,14 @@ execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	   ndims, nPhi*nZR);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = nPhi*nZR;
+  nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	   ndims, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
 
   nout->nrrd->axis[0].kind  = nrrdKindUnknown;
   nout->nrrd->axis[0].label = nHandles[mesh[LIST]]->nrrd->axis[0].label;
@@ -523,11 +535,16 @@ execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[data[ZR]]->nrrd->type,
-	   ndims+1, 3, nPhi*nZR);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 3;
+  size[1] = nPhi*nZR;
+  nrrdWrap_nva(nout->nrrd, ndata, nHandles[data[ZR]]->nrrd->type,
+	   ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode;
+  centers[1] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd, nrrdAxisInfoCenter, centers);
 
   nout->nrrd->axis[0].kind  = nrrdKind3Vector;
   nout->nrrd->axis[0].label = nHandles[data[ZR]]->nrrd->axis[0].label;

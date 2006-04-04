@@ -124,7 +124,8 @@ TendBmat::execute()
       return;
     }
     nin = nrrdNew();
-    nrrdWrap(nin, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
+    size_t size[2] = {3, (*mat).size()/3};
+    nrrdWrap_nva(nin, &(*mat)[0], nrrdTypeDouble, 2, size);
   }
 
   Nrrd *nout = nrrdNew();

@@ -187,7 +187,9 @@ int main(int argc, char* argv[]) {
   // Save mean vector
   Nrrd* meanNrrd=nrrdNew();
   int E=0;
-  if (!E) E|=nrrdWrap(meanNrrd, mean, nrrdTypeDouble, 1, ndims);
+  size_t size2[NRRD_DIM_MAX];
+  size2[0] = ndims;
+  if (!E) E|=nrrdWrap_nva(meanNrrd, mean, nrrdTypeDouble, 1, size2);
   if (!E) E|=saveNrrd(meanNrrd, "-mean", nrrd_ext);
   if (E)
     cerr<<me<<":  error saving mean vector"<<endl;
@@ -223,11 +225,19 @@ int main(int argc, char* argv[]) {
   // Save basis vectors
   Nrrd* basisNrrd=nrrdNew();
   E=0;
-  if (!E) E|=nrrdWrap(basisNrrd, basis, nrrdTypeDouble, 2, ndims, nbases);
+  size_t size3[NRRD_DIM_MAX];
+  size3[0] = ndims;
+  size3[1] = nbases;
+  if (!E) E|=nrrdWrap_nva(basisNrrd, basis, nrrdTypeDouble, 2, size3);
   if (E)
     cerr<<me<<":  error wrapping basis vectors"<<endl;
 
-  nrrdAxisInfoSet(basisNrrd, nrrdAxisInfoLabel, "width*height", "basis");
+
+  const char *labelptr1[NRRD_DIM_MAX];
+  labelptr1[0] = airStrdup("width*height");
+  labelptr1[1] = airStrdup("basis");
+  
+  nrrdAxisInfoSet_nva(basisNrrd, nrrdAxisInfoLabel, labelptr1);
   
   if (!E) E|=saveNrrd(basisNrrd, "-basis", nrrd_ext);
   if (E)
@@ -279,7 +289,10 @@ int main(int argc, char* argv[]) {
   nio=nrrdIoStateNew();
   nio->skipData=1;
   
-  if (nrrdWrap(coeffNrrd, (void*)1, nrrdTypeDouble, 2, nbases, nvectors)) {
+  size_t size1[NRRD_DIM_MAX];
+  size1[0] = nbases;
+  size1[1] = nvectors;
+  if (nrrdWrap_nva(coeffNrrd, (void*)1, nrrdTypeDouble, 2, size1)) {
     err=biffGet(NRRD);
     cerr<<me<<":  error creating header:  "<<err<<endl;
     free(err);
@@ -287,7 +300,10 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
   
-  nrrdAxisInfoSet(coeffNrrd, nrrdAxisInfoLabel, "basis", "vector");
+  const char *labelptr2[NRRD_DIM_MAX];
+  labelptr2[0] = airStrdup("basis");
+  labelptr2[1] = airStrdup("vector");
+  nrrdAxisInfoSet_nva(coeffNrrd, nrrdAxisInfoLabel, labelptr2);
 
   if (nrrdSave(nhdr_fname, coeffNrrd, nio)) {
     err=biffGet(NRRD);

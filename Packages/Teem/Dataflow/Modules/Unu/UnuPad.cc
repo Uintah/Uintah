@@ -213,11 +213,11 @@ UnuPad::execute()
     int *maxp = &(max[0]);
 
     if( (last_pad_style_ == "Bleed" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryBleed)) ||
+	 nrrdPad_nva(nout, nin, minp, maxp, nrrdBoundaryBleed, 0)) ||
 	(last_pad_style_ == "Wrap" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryWrap)) ||
+	 nrrdPad_nva(nout, nin, minp, maxp, nrrdBoundaryWrap, 0)) ||
 	(last_pad_style_ == "Pad" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) )
+	 nrrdPad_nva(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) )
     {
 	char *err = biffGetDone(NRRD);
 	error(string("Trouble resampling: ") + err);

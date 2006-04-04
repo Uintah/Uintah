@@ -110,25 +110,35 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
 
   // Allocate the nrrd data and add an axis of size 1 for the tuple axis.
   // Set the labels and center
+  size_t size[NRRD_DIM_MAX];
+  size[0] = im->GetRequestedRegion().GetSize()[0];
+  size[1] = im->GetRequestedRegion().GetSize()[1];
+  size[2] = im->GetRequestedRegion().GetSize()[2];
+
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode;
+
+  char *labels[NRRD_DIM_MAX];
+  labels[0] = airStrdup("x");
+  labels[1] = airStrdup("y");
+  labels[2] = airStrdup("z");
+
   switch(dim) {
   case 1:
-    nrrdAlloc(nr, nrrdtype, dim, im->GetRequestedRegion().GetSize()[0]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "x");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterNode);
+    nrrdAlloc_nva(nr, nrrdtype, dim, size);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoLabel, labels);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoCenter, centers);
     break;
   case 2:
-    nrrdAlloc(nr, nrrdtype, dim, im->GetRequestedRegion().GetSize()[0],
-	      im->GetRequestedRegion().GetSize()[1]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "x", "y");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterNode,  nrrdCenterNode);
+    nrrdAlloc_nva(nr, nrrdtype, dim, size);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoLabel, labels);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoCenter, centers);
     break;
   case 3:
-    nrrdAlloc(nr, nrrdtype, dim, im->GetRequestedRegion().GetSize()[0],
-	      im->GetRequestedRegion().GetSize()[1],
-	      im->GetRequestedRegion().GetSize()[2]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "x", "y", "z");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterNode,
-		    nrrdCenterNode, nrrdCenterNode);
+    nrrdAlloc_nva(nr, nrrdtype, dim, size);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoLabel, labels);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoCenter, centers);
     break;
   default:
     error("Can only convert images of dimension < 4.");
@@ -187,26 +197,37 @@ void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
 
   // Allocate the nrrd data and add an axis of size 1 for the tuple axis.
   // Set the labels and center
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 3;
+  size[1] = im->GetRequestedRegion().GetSize()[0];
+  size[2] = im->GetRequestedRegion().GetSize()[1];
+  size[3] = im->GetRequestedRegion().GetSize()[2];
+
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+
+  char *labels[NRRD_DIM_MAX];
+  labels[0] = airStrdup("rgb");
+  labels[1] = airStrdup("x");
+  labels[2] = airStrdup("y");
+  labels[3] = airStrdup("z");
+
   switch(dim) {
   case 1:
-    nrrdAlloc(nr, nrrdtype, dim+1, 3, im->GetRequestedRegion().GetSize()[0]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "rgb", "x");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode);
+    nrrdAlloc_nva(nr, nrrdtype, dim+1, size);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoLabel, labels);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoCenter, centers);
     break;
   case 2:
-    nrrdAlloc(nr, nrrdtype, dim+1, 3, im->GetRequestedRegion().GetSize()[0],
-	      im->GetRequestedRegion().GetSize()[1]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "rgb", "x", "y");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode,  
-		    nrrdCenterNode);
+    nrrdAlloc_nva(nr, nrrdtype, dim+1, size);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoLabel, labels);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoCenter, centers);
     break;
   case 3:
-    nrrdAlloc(nr, nrrdtype, dim+1, 3, im->GetRequestedRegion().GetSize()[0],
-	      im->GetRequestedRegion().GetSize()[1],
-	      im->GetRequestedRegion().GetSize()[2]);
-    nrrdAxisInfoSet(nr, nrrdAxisInfoLabel, "rgb", "x", "y", "z");
-    nrrdAxisInfoSet(nr, nrrdAxisInfoCenter, nrrdCenterUnknown, nrrdCenterNode,
-		    nrrdCenterNode, nrrdCenterNode);
+    nrrdAlloc_nva(nr, nrrdtype, dim+1, size);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoLabel, labels);
+    nrrdAxisInfoSet_nva(nr, nrrdAxisInfoCenter, centers);
     break;
   default:
     error("Can only convert images of dimension < 4.");

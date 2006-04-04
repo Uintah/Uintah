@@ -3538,7 +3538,7 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
     if (info->kernel[a] && 
 	(!(airExists(data->nrrd->axis[a].min) && airExists(data->nrrd->axis[a].max)))) {
       nrrdAxisInfoMinMaxSet(data->nrrd, a, data->nrrd->axis[a].center ? 
-			data->nrrd->axis[a].center : nrrdDefCenter);
+			data->nrrd->axis[a].center : nrrdDefaultCenter);
     }
     info->min[a] = data->nrrd->axis[a].min;
     info->max[a] = data->nrrd->axis[a].max;
@@ -3817,8 +3817,8 @@ MRITissueClassifier::closing(NrrdDataHandle data, NrrdDataHandle mask)
   NrrdDataHandle temp = dilate(padim, mask);
   padim = erode(temp, mask);
 
-  int *min = scinew int[2];
-  int *max = scinew int[2];
+  size_t *min = scinew size_t[2];
+  size_t *max = scinew size_t[2];
   min[X_AXIS] = px;
   max[X_AXIS] = px+w-1;
   min[Y_AXIS] = py;
@@ -3982,7 +3982,9 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_ints(int x, int y, int z)
 {
   NrrdData *data = scinew NrrdData();
-  if (nrrdAlloc(data->nrrd, nrrdTypeInt, 3, x, y, z)) {
+  size_t size[NRRD_DIM_MAX];
+  size[0] = x; size[1] = y; size[2] = z;
+  if (nrrdAlloc_nva(data->nrrd, nrrdTypeInt, 3, size)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble create_nrrd_of_ints: ") +  err);
     free(err);
@@ -3994,7 +3996,9 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y, int z) 
 {
   NrrdData *data = scinew NrrdData();
-  nrrdAlloc(data->nrrd, nrrdTypeFloat, 3, x, y, z);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = x; size[1] = y; size[2] = z;
+  nrrdAlloc_nva(data->nrrd, nrrdTypeFloat, 3, size);
   return data;
 }
 
@@ -4012,7 +4016,9 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_ints(int x, int y)
 {
   NrrdData *data = scinew NrrdData();
-  nrrdAlloc(data->nrrd, nrrdTypeInt, 2, x, y);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = x; size[1] = y;
+  nrrdAlloc_nva(data->nrrd, nrrdTypeInt, 2, size);
   return data;
 }
 
@@ -4020,7 +4026,9 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y) 
 {
   NrrdData *data = scinew NrrdData();
-  nrrdAlloc(data->nrrd, nrrdTypeFloat, 2, x, y);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = x; size[1] = y;
+  nrrdAlloc_nva(data->nrrd, nrrdTypeFloat, 2, size);
   return data;
 }
 

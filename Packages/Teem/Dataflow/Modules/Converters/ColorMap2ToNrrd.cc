@@ -110,7 +110,9 @@ ColorMap2ToNrrd::execute()
 
     // Create the nrrd.
     NrrdData *nd = scinew NrrdData();
-    nrrdAlloc(nd->nrrd, nrrdTypeFloat, 3, 4, 512, 256);
+    size_t size[NRRD_DIM_MAX];
+    size[0] = 4; size[1] = 512; size[2] = 256;
+    nrrdAlloc_nva(nd->nrrd, nrrdTypeFloat, 3, size);
     nd->nrrd->axis[2].kind = nrrdKindDomain;
     nd->nrrd->axis[2].label = airStrdup("Gradient Magnitude");
     nd->nrrd->axis[1].kind = nrrdKindDomain;

@@ -100,7 +100,7 @@ UnuRmapN::execute()
   
   const int offset = nmap->dim - zerosize;
   int noutdim = nin->dim - ninstart + nmap->dim - zerosize;
-  int nsize[NRRD_DIM_MAX];
+  size_t nsize[NRRD_DIM_MAX];
   for (int i = 0; i < offset; i++)
   {
     nsize[i] = nmap->axis[i].size;

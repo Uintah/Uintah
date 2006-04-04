@@ -269,7 +269,8 @@ Painter::CropTool::do_event(Event &event) {
 
   if (event.type_ == Event::KEY_PRESS_E &&
       event.key_ == " ") {
-    int *minmax[2] = { new int[minmax_[0].size()], new int[minmax_[1].size()] };
+    //int *minmax[2] = { new int[minmax_[0].size()], new int[minmax_[1].size()] };
+    size_t *minmax[2] = { new size_t[minmax_[0].size()], new size_t[minmax_[1].size()] };
     for (int i = 0; i < 2; ++i)
       for (unsigned int a = 0; a < minmax_[0].size(); ++a)
 	minmax[i][a] = minmax_[i][a]-(i==1?1:0);
@@ -573,11 +574,13 @@ Painter::FloodfillTool::do_floodfill()
 
   // Allocated a nrrd to mark where the flood fill has visited
   NrrdDataHandle done = new NrrdData();
-  nrrdAlloc(done->nrrd, nrrdTypeUChar, 4, 
-            volume->nrrd_->nrrd->axis[0].size, 
-            volume->nrrd_->nrrd->axis[1].size, 
-            volume->nrrd_->nrrd->axis[2].size, 
-            volume->nrrd_->nrrd->axis[3].size);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = volume->nrrd_->nrrd->axis[0].size;
+  size[1] = volume->nrrd_->nrrd->axis[1].size;
+  size[2] = volume->nrrd_->nrrd->axis[2].size;
+  size[3] = volume->nrrd_->nrrd->axis[3].size;
+  nrrdAlloc_nva(done->nrrd, nrrdTypeUChar, 4, size);
+
 
   // Set the visited nrrd to empty
   memset(done->nrrd->data, 0, 

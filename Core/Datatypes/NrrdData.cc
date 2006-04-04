@@ -240,7 +240,7 @@ void NrrdData::io(Piostream& stream)
       stream.begin_cheap_delim();
       stream.io(nrrd->dim);
 		
-      int nrrddims[NRRD_DIM_MAX]; // defined in nrrd.h
+      size_t nrrddims[NRRD_DIM_MAX]; // defined in nrrd.h
       for (int p = 0; p<nrrd->dim; p++)
       {
 	stream.io(nrrddims[p]);

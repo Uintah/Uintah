@@ -2278,7 +2278,7 @@ ViewSlices::extract_slice(NrrdSlice &slice)
   NrrdDataHandle tmp1 = scinew NrrdData;
   NrrdDataHandle tmp2 = scinew NrrdData;
   if (slice.mode_ == mip_e || slice.mode_ == slab_e) {
-    int min[3], max[3];
+    size_t min[3], max[3];
     for (int i = 0; i < 3; i++) {
       min[i] = 0;
       max[i] = max_slice_[i];
@@ -2295,7 +2295,7 @@ ViewSlices::extract_slice(NrrdSlice &slice)
   
   int minp[2] = { 0, 0 };
   int maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
-  NRRD_EXEC(nrrdPad(slice.nrrd_->nrrd,tmp1->nrrd,minp,maxp,nrrdBoundaryBleed));
+  NRRD_EXEC(nrrdPad_nva(slice.nrrd_->nrrd,tmp1->nrrd,minp,maxp,nrrdBoundaryBleed, 0));
 
   slice.nrrd_dirty_ = false;
   slice.tex_dirty_ = true;
@@ -2345,7 +2345,7 @@ ViewSlices::extract_mip_slices(NrrdVolume *volume)
     int minp[2] = { 0, 0 };
     int maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
     
-    NRRD_EXEC(nrrdPad(slice.nrrd_->nrrd, temp1->nrrd, 
+    NRRD_EXEC(nrrdPad_nva(slice.nrrd_->nrrd, temp1->nrrd, 
 		      minp,maxp,nrrdBoundaryPad, 0.0));
     set_slice_coords(slice, true);
     slice.do_unlock();
@@ -3430,8 +3430,12 @@ ViewSlices::setup_slice_nrrd(NrrdSlice &slice)
 
   if (!slice.nrrd_.get_rep()) {
     slice.nrrd_ = scinew NrrdData;
-    nrrdAlloc(slice.nrrd_->nrrd, nrrdTypeFloat, 3, // 3 dim = RGBA x X x Y
-	      4, slice.tex_wid_, slice.tex_hei_);
+    size_t size[NRRD_DIM_MAX];
+    size[0] = 4;
+    size[1] = slice.tex_wid_;
+    size[2] = slice.tex_hei_;
+    nrrdAlloc_nva(slice.nrrd_->nrrd, nrrdTypeFloat, 3, // 3 dim = RGBA x X x Y
+	      size);
     slice.tex_dirty_ = true;
   }
 
@@ -3446,8 +3450,12 @@ ViewSlices::setup_slice_nrrd(NrrdSlice &slice)
   }
   
   if (!slice.nrrd_->nrrd->data) {
-    nrrdAlloc(slice.nrrd_->nrrd, nrrdTypeFloat, 3, // 3 dim = RGBA x X x Y
-	      4, slice.tex_wid_, slice.tex_hei_);
+    size_t size[NRRD_DIM_MAX];
+    size[0] = 4;
+    size[1] = slice.tex_wid_;
+    size[2] = slice.tex_hei_;
+    nrrdAlloc_nva(slice.nrrd_->nrrd, nrrdTypeFloat, 3, // 3 dim = RGBA x X x Y
+	      size);
     slice.tex_dirty_ = true;
   }
   set_slice_coords(slice, true);

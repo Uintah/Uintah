@@ -130,8 +130,12 @@ FreeTypeTextTexture::render_text_to_texture()
   const int hei = Ceil(bbox.diagonal().y());
 
   // 3 dimensions = alpha x X x Y
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 1;
+  size[1] = wid;
+  size[2] = hei;
   NrrdDataHandle nrrd = scinew NrrdData();
-  nrrdAlloc(nrrd->nrrd, nrrdTypeUChar, 3, 1, wid, hei);
+  nrrdAlloc_nva(nrrd->nrrd, nrrdTypeUChar, 3, size);
   memset(nrrd->nrrd->data, 0, wid*hei);
   fttext.render(wid, hei, (unsigned char *)nrrd->nrrd->data);
 

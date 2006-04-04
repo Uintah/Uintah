@@ -48,8 +48,10 @@ public:
 
 private:
   NrrdIPort*      inrrd_;
+  NrrdIPort*      iweight_;
   NrrdOPort*      onrrd_;
-
+  
+  GuiInt          right_;
   GuiInt          westin_;
   GuiInt          resolution_;
 
@@ -59,8 +61,9 @@ DECLARE_MAKER(TendAnhist)
 
 TendAnhist::TendAnhist(SCIRun::GuiContext *ctx) : 
   Module("TendAnhist", ctx, Filter, "Tend", "Teem"),
-  westin_(get_ctx()->subVar("westin"), 1),
-  resolution_(get_ctx()->subVar("resolution"), 256)
+  right_(ctx->subVar("right"), 0),
+  westin_(ctx->subVar("westin"), 1),
+  resolution_(ctx->subVar("resolution"), 256)
 {
 }
 
@@ -78,6 +81,8 @@ TendAnhist::execute()
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
 
+  iweight_ = (NrrdIPort *)get_iport("WeightNrrd");
+
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_->get(nrrd_handle))
@@ -88,10 +93,20 @@ TendAnhist::execute()
     return;
   }
 
+  // weights nrrd optional
+  NrrdDataHandle weight_handle;
+  if (iweight_->get(weight_handle) && !weight_handle.get_rep()) {
+    error("Empty input WeightNrrd.");
+    return;
+  }
+
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
+  Nrrd *weight = NULL;
+  if (weight_handle.get_rep())
+    weight = weight_handle->nrrd;
 
-  if (tenAnisoHistogram(nout, nin, westin_.get(), resolution_.get())) {
+  if (tenAnisoHistogram(nout, nin, weight, right_.get(), westin_.get(), resolution_.get())) {
     char *err = biffGetDone(TEN);
     error(string("Error generating barycentric histograms of anisotropy: ") + err);
     free(err);

@@ -104,7 +104,11 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial
   
   // Set up the fake nrrd we can use to setup the gage stuff
   Nrrd *nin = nrrdNew();
-  nrrdWrap(nin, data.get_dataptr(), nrrdTypeShort, 3, nx, ny, nz);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = nx;
+  size[1] = ny;
+  size[2] = nz;
+  nrrdWrap_nva(nin, data.get_dataptr(), nrrdTypeShort, 3, size);
   // Setup the spacing for the data.  This assums node centered data,
   // which is what rtrt uses.
   nin->axis[0].spacing = diag.x()/(nx-1);
