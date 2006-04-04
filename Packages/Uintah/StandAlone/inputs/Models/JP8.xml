@@ -1,39 +1,39 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!--JP8 constants, inlet fuel temperature = 300.0 density = 6.41537 -->
-<!--
+<!---->
 <Uintah_Include>
   <defaultValue name="heat_loss">             0.0</defaultValue>
   <defaultValue name="Fvar">                  0.0</defaultValue>
 
   <constantValue name="viscosity">            0.000020  </constantValue>  
   <constantValue name="thermal_conductivity"> 0.1       </constantValue>  
-  <constantValue name="reference_Temp">       298.0     </constantValue>
+  <constantValue name="reference_Temp">       311     </constantValue>
   
-  <derivedValue name="heat_capac_Cv">[heat_capacity]-8314*[mix_mol_wt] </derivedValue>
+  <derivedValue name="heat_capac_Cv">[heat_capacity]-8314*[mixture_molecular_weight] </derivedValue>
   <derivedValue name="gamma">         [heat_capacity]/[heat_capac_Cv]  </derivedValue>
   
-  <derivedValue name="reference_heat_capac_Cp"> 1006.16*(1-{mix_frac}) + 1422.02*{mix_frac}           </derivedValue>
-  <derivedValue name="reference_mix_mol_wt">    0.0346616*(1-{mix_frac}) + 0.00695439*{mix_frac}      </derivedValue>
-  <derivedValue name="reference_heat_capac_Cv"> [reference_heat_capac_Cp]-8314*[reference_mix_mol_wt] </derivedValue>
+  <derivedValue name="reference_heat_capac_Cp"> 1011.08*(1-{mixture_fraction}) + 1999.38*{mixture_fraction}           </derivedValue>
+  <derivedValue name="reference_mixture_molecular_weight">    0.0346616*(1-{mixture_fraction}) + 0.0312402*{mixture_fraction}      </derivedValue>
+  <derivedValue name="reference_heat_capac_Cv"> [reference_heat_capac_Cp]-8314*[reference_mixture_molecular_weight] </derivedValue>
   <derivedValue name="reference_gamma">         [reference_heat_capac_Cp]/[reference_heat_capac_Cv]   </derivedValue>
-  <filename>inputs/ARCHES/NewStaticMixingTables/jp8/jp8_hl_equil.rxn</filename>
-</Uintah_Include> -->
+  <filename>inputs/ARCHES/NewStaticMixingTables/Newjp8_hl_equil.rxn</filename>
+</Uintah_Include> 
 
 
-<!--JP8 constants, inlet fuel temperature = 419.4444 density = 0.930025 -->
+<!--JP8 constants, inlet fuel temperature = 419.4444 density = 0.930025 
 <Uintah_Include>
   <defaultValue name="heat_loss">             0.0</defaultValue>
   <defaultValue name="Fvar">                  0.0</defaultValue>
   <constantValue name="viscosity">            0.000020    </constantValue>
   <constantValue name="thermal_conductivity"> 0.1         </constantValue>
   
-  <derivedValue name="heat_capac_Cv">       [heat_capacity]-8314*[mix_mol_wt]                               </derivedValue>
+  <derivedValue name="heat_capac_Cv">       [heat_capacity]-8314*[mixture_molecular_weight]                               </derivedValue>
   <derivedValue name="gamma">               [heat_capacity]/[heat_capac_Cv]                                 </derivedValue>
 
-  <derivedValue name="reference_Temp">          300*(1-{mix_frac})+419.4444*{mix_frac}                      </derivedValue>
-  <derivedValue name="reference_heat_capac_Cp"> 1009.6699999996*(1-{mix_frac}) + 1971.65999998987*{mix_frac}</derivedValue>
-  <derivedValue name="reference_mix_mol_wt">    0.034661600*(1-{mix_frac}) + 0.0312402*{mix_frac}           </derivedValue>
-  <derivedValue name="reference_heat_capac_Cv"> [reference_heat_capac_Cp]-8314*[reference_mix_mol_wt]       </derivedValue>
+  <derivedValue name="reference_Temp">          300*(1-{mixture_fraction})+419.4444*{mixture_fraction}                      </derivedValue>
+  <derivedValue name="reference_heat_capac_Cp"> 1009.6699999996*(1-{mixture_fraction}) + 1971.65999998987*{mixture_fraction}</derivedValue>
+  <derivedValue name="reference_mixture_molecular_weight">    0.034661600*(1-{mixture_fraction}) + 0.0312402*{mixture_fraction}           </derivedValue>
+  <derivedValue name="reference_heat_capac_Cv"> [reference_heat_capac_Cp]-8314*[reference_mixture_molecular_weight]       </derivedValue>
   <derivedValue name="reference_gamma">         [reference_heat_capac_Cp]/[reference_heat_capac_Cv]         </derivedValue>
   <filename>inputs/ARCHES/NewStaticMixingTables/JP8_reaction.tbl</filename>
-</Uintah_Include> 
+</Uintah_Include> -->
