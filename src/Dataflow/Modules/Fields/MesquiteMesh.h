@@ -321,14 +321,13 @@ private:
     virtual bool is_at_end() const;
 
   private:
-//    unsigned int mIndex; 
-//    typename FIELD::mesh_type::Elem::iterator actualIndex; 
     typedef typename FIELD::mesh_type::Elem::iterator elem_iter_t;   
     elem_iter_t elem_iter_;
 
     MesquiteMesh* meshPtr;
   };
 };
+
 
   // MesquiteMesh constructor
 template <class FIELD> 
@@ -398,7 +397,6 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
       interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
       
       fixed_[*cols] = true;
-//      cout << "Fixing node " << *cols << endl;
     }
   }
   else if (mtd->get_name().find("TriSurfMesh") != string::npos)
@@ -421,7 +419,6 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
       interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
 
       fixed_[*cols] = true;
-//      cout << "Fixing node " << *cols << endl;
     }    
   }
   else if (mtd->get_name().find("HexVolMesh") != string::npos)
@@ -444,7 +441,6 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
       interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
 
       fixed_[*cols] = true;
-//      cout << "Fixing node " << *cols << endl;
     }    
   }
   else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
@@ -467,96 +463,56 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
       interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
 
       fixed_[*cols] = true;
-//      cout << "Fixing node " << *cols << endl;
     }    
   }
   else
   {
     return;
   }
-
-
-    //Get boundary elements (code from FieldBoundary) and set the fixed flags
-//   mOwner->get_typed_mesh()->synchronize( SCIRun::Mesh::NODE_NEIGHBORS_E | 
-//                                          SCIRun::Mesh::FACE_NEIGHBORS_E | 
-//                                          SCIRun::Mesh::FACES_E );
-
-//     // Walk all the cells in the mesh.
-//   typename FIELD::mesh_type::Cell::iterator citer; 
-//   mOwner->get_typed_mesh()->begin( citer );
-//   typename FIELD::mesh_type::Cell::iterator citere; 
-//   mOwner->get_typed_mesh()->end( citere );
-  
-//   while (citer != citere)
-//   {
-//     typename FIELD::mesh_type::Cell::index_type ci = *citer;
-//     ++citer;
-    
-//       // Get all the faces in the cell.
-//     typename FIELD::mesh_type::Face::array_type faces;
-//     mOwner->get_typed_mesh()->get_faces( faces, ci );
-    
-//       // Check each face for neighbors.
-//     typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
-//     while( fiter != faces.end() )
-//     {
-//       typename FIELD::mesh_type::Cell::index_type nci;
-//       typename FIELD::mesh_type::Face::index_type fi = *fiter;
-//       ++fiter;
-      
-//       if ( !mOwner->get_typed_mesh()->get_neighbor( nci , ci, fi ) )
-//       {
-//           // Faces with no neighbors are on the boundary...
-//         typename FIELD::mesh_type::Node::array_type nodes;
-//         mOwner->get_typed_mesh()->get_nodes( nodes, fi );
-        
-//         typename FIELD::mesh_type::Node::array_type::iterator niter = nodes.begin();
-        
-//         for( unsigned int i = 0; i < nodes.size(); i++ )
-//         {
-//           fixed_[*niter] = true;
-//           ++niter;
-//         }
-//       }
-//     }
-//   }
 }
+
 
   //destructor
 template <class FIELD>
 MesquiteMesh<FIELD>::~MesquiteMesh()
-{}
+{
+}
+
   
   /*! We always pass in nodes in with three coordinates.  This may change
     in the future if we want to do smoothing in a parametric space, but
     !for now, we are always in three-dimensions. */
 template <class FIELD>
-int MesquiteMesh<FIELD>::get_geometric_dimension(
-  Mesquite::MsqError &/*err*/)
+int
+MesquiteMesh<FIELD>::get_geometric_dimension(Mesquite::MsqError &/*err*/)
 {
   return 3;
 }
 
+
   //! Returns the number of verticies for the entity.
 template <class FIELD>
-size_t MesquiteMesh<FIELD>::get_total_vertex_count(
-  Mesquite::MsqError &/*err*/) const
+size_t
+MesquiteMesh<FIELD>::get_total_vertex_count(Mesquite::MsqError &/*err*/) const
 {
   return (size_t) numNodes;
 }
+
   
   //! Returns the number of elements for the entity.
 template <class FIELD>
-size_t MesquiteMesh<FIELD>::get_total_element_count(
-  Mesquite::MsqError &/*err*/) const
+size_t
+MesquiteMesh<FIELD>::get_total_element_count(Mesquite::MsqError &/*err*/) const
 {
   return (size_t) numElements;
 }
 
+
   //! Fills array with handles to all vertices in the mesh.
 template <class FIELD>
-void MesquiteMesh<FIELD>::get_all_vertices( vector<Mesquite::Mesh::VertexHandle> &vertices,
-                                            Mesquite::MsqError &/*err*/)
+void
+MesquiteMesh<FIELD>::get_all_vertices( vector<Mesquite::Mesh::VertexHandle> &vertices,
+                                       Mesquite::MsqError &/*err*/)
 {
   vertices.clear();
   typename FIELD::mesh_type::Node::iterator node_iter = niterBegin;
@@ -571,10 +527,12 @@ void MesquiteMesh<FIELD>::get_all_vertices( vector<Mesquite::Mesh::VertexHandle>
   }
 }
 
+
   //! Fills array with handles to all elements in the mesh.
 template <class FIELD>
-void MesquiteMesh<FIELD>::get_all_elements( vector<Mesquite::Mesh::ElementHandle> &elements,      
-                                            Mesquite::MsqError &/*err*/ )
+void
+MesquiteMesh<FIELD>::get_all_elements( vector<Mesquite::Mesh::ElementHandle> &elements,      
+                                       Mesquite::MsqError &/*err*/ )
 {
   elements.clear();
   typename FIELD::mesh_type::Elem::iterator elem_iter = eiterBegin;  
@@ -588,6 +546,7 @@ void MesquiteMesh<FIELD>::get_all_elements( vector<Mesquite::Mesh::ElementHandle
     ++elem_iter;
   }
 }
+
   
 //! Returns a pointer to an iterator that iterates over the
 //! set of all vertices in this mesh.  The calling code should
@@ -595,10 +554,12 @@ void MesquiteMesh<FIELD>::get_all_elements( vector<Mesquite::Mesh::ElementHandle
 //! If vertices are added or removed from the Mesh after obtaining
 //! an iterator, the behavior of that iterator is undefined.
 template <class FIELD>
-Mesquite::VertexIterator* MesquiteMesh<FIELD>::vertex_iterator(Mesquite::MsqError &/*err*/)
+Mesquite::VertexIterator*
+MesquiteMesh<FIELD>::vertex_iterator(Mesquite::MsqError &/*err*/)
 {
   return new typename MesquiteMesh<FIELD>::VertexIterator(this);
 }
+
   
 //! Returns a pointer to an iterator that iterates over the
 //! set of all top-level elements in this mesh.  The calling code should
@@ -606,10 +567,12 @@ Mesquite::VertexIterator* MesquiteMesh<FIELD>::vertex_iterator(Mesquite::MsqErro
 //! If elements are added or removed from the Mesh after obtaining
 //! an iterator, the behavior of that iterator is undefined.
 template <class FIELD>
-Mesquite::ElementIterator* MesquiteMesh<FIELD>::element_iterator(Mesquite::MsqError &/*err*/)
+Mesquite::ElementIterator*
+MesquiteMesh<FIELD>::element_iterator(Mesquite::MsqError &/*err*/)
 {
   return new typename MesquiteMesh<FIELD>::ElementIterator(this);
 }
+
 
 //! Returns true or false, indicating whether the vertex
 //! is allowed to moved.
@@ -617,7 +580,8 @@ Mesquite::ElementIterator* MesquiteMesh<FIELD>::element_iterator(Mesquite::MsqEr
 //! property; this flag can't be modified by users of the
 //! Mesquite::Mesh interface.
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertices_get_fixed_flag(
+void
+MesquiteMesh<FIELD>::vertices_get_fixed_flag(
   const Mesquite::Mesh::VertexHandle vert_array[], 
   bool fixed_flag_array[],
   size_t num_vtx, 
@@ -627,15 +591,6 @@ void MesquiteMesh<FIELD>::vertices_get_fixed_flag(
   for( i = 0; i < num_vtx; ++i )
   {
     unsigned long node_id = (unsigned long)vert_array[i];
-
-      // if the node designated is not valid for the mesh, then set the MSQ 
-      //  value so that Mesquite doesn't continue working with invalid data...
-//     if(node_ptr==NULL)
-//     {
-//       MSQ_SETERR(err)("MesquiteMesh::vertex_is_on_boundary: Null pointer to vertex.", Mesquite::MsqError::INVALID_STATE);
-//       return;
-//     }
-
     fixed_flag_array[i] = fixed_[node_id];
   }
 }
@@ -643,7 +598,8 @@ void MesquiteMesh<FIELD>::vertices_get_fixed_flag(
   
 //! Get location of a vertex
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertices_get_coordinates(
+void
+MesquiteMesh<FIELD>::vertices_get_coordinates(
     const Mesquite::Mesh::VertexHandle vert_array[],
     Mesquite::MsqVertex* coordinates,
     size_t num_vtx,
@@ -659,10 +615,12 @@ void MesquiteMesh<FIELD>::vertices_get_coordinates(
     coordinates[i].set( p.x(), p.y(), p.z() );
   }
 }
+
   
 //! Set the location of a vertex.
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertex_set_coordinates(
+void
+MesquiteMesh<FIELD>::vertex_set_coordinates(
     VertexHandle vertex,
     const Mesquite::Vector3D &coordinates,
     Mesquite::MsqError &err)
@@ -678,6 +636,7 @@ void MesquiteMesh<FIELD>::vertex_set_coordinates(
   update_progress();
 }
 
+
 //! Each vertex has a byte-sized flag that can be used to store
 //! flags.  This byte's value is neither set nor used by the mesh
 //! implementation.  It is intended to be used by Mesquite algorithms.
@@ -685,25 +644,20 @@ void MesquiteMesh<FIELD>::vertex_set_coordinates(
 //! Cubit stores the byte on the TDMesquiteFlag associated with the
 //! node.
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertex_set_byte( VertexHandle vertex,
-                                           unsigned char byte,
-                                           Mesquite::MsqError &err)
+void
+MesquiteMesh<FIELD>::vertex_set_byte( VertexHandle vertex,
+                                      unsigned char byte,
+                                      Mesquite::MsqError &err)
 {
-    // if the idx is invalid, set MSQ error to prevent Mesquite from
-    // continuing with invalid data...
-//   if(node_ptr==NULL)
-//   {
-//     MSQ_SETERR(err)("MesquiteMesh::vertex_set_byte: invalid vertex handle.", Mesquite::MsqError::INVALID_STATE);
-//     return;
-//   }
-
   unsigned long idx = (unsigned long)vertex;
   bytes_[idx] = byte;
 }
 
+
 //! Set the byte for a given array of vertices.
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertices_set_byte (
+void
+MesquiteMesh<FIELD>::vertices_set_byte (
   const VertexHandle *vert_array,
   const unsigned char *byte_array,
   size_t array_size,
@@ -716,30 +670,26 @@ void MesquiteMesh<FIELD>::vertices_set_byte (
     vertex_set_byte( vert_array[i], byte_array[i], err );
   }
 }
+
   
 //! Retrieve the byte value for the specified vertex or vertices.
 //! The byte value is 0 if it has not yet been set via one of the
 //! *_set_byte() functions.
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertex_get_byte(VertexHandle vertex,
-                                          unsigned char *byte,
-                                          Mesquite::MsqError &err)
+void
+MesquiteMesh<FIELD>::vertex_get_byte(VertexHandle vertex,
+                                     unsigned char *byte,
+                                     Mesquite::MsqError &err)
 {
-    // if the idx is invalid, set MSQ error to prevent Mesquite from
-    // continuing with invalid data...
-//   if(node_ptr==NULL)   
-//   {  
-//     MSQ_SETERR(err)("MesquiteMesh::vertex_get_byte: invalid vertex handle.", Mesquite::MsqError::INVALID_STATE);
-//     return;
-//   }
-
   unsigned long idx = (unsigned long)vertex;
   *byte = bytes_[idx];
 }
 
+
 //! get the bytes associated with the vertices in a given array.
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertices_get_byte(
+void
+MesquiteMesh<FIELD>::vertices_get_byte(
   const VertexHandle *vertex_array,
   unsigned char *byte_array,
   size_t array_size,
@@ -752,10 +702,12 @@ void MesquiteMesh<FIELD>::vertices_get_byte(
     vertex_get_byte( vertex_array[i], &byte_array[i], err );
   }
 }
+
   
 //! Gets the elements attached to this vertex.
 template <class FIELD>
-void MesquiteMesh<FIELD>::vertices_get_attached_elements(
+void
+MesquiteMesh<FIELD>::vertices_get_attached_elements(
     const VertexHandle* vertex_array,
     size_t num_vertex,
     msq_std::vector<ElementHandle>& elements,
@@ -778,14 +730,6 @@ void MesquiteMesh<FIELD>::vertices_get_attached_elements(
     typename FIELD::mesh_type::Elem::array_type attached_elems;
     typename FIELD::mesh_type::Node::index_type this_node = (unsigned long)vertex_array[i];
 
-      // if this_node is invalid, set MSQ error to prevent Mesquite from
-      // continuing with invalid data...
-//      if(node_ptr==NULL) 
-//      {
-//           MSQ_SETERR(err)("MesquiteMesh::vertex_get_attached_elements: invalid vertex handle.", Mesquite::MsqError::INVALID_STATE);
-//         return;
-//       }
-    
     mOwner->get_typed_mesh()->get_elems( attached_elems, this_node );
     for( j = 0; j < attached_elems.size(); ++j ) 
     {
@@ -798,6 +742,7 @@ void MesquiteMesh<FIELD>::vertices_get_attached_elements(
   }
   offsets.push_back( offset_counter );
 }
+
   
 /*! \brief  
   Returns the vertices that are part of the topological definition of each
@@ -836,7 +781,8 @@ void MesquiteMesh<FIELD>::vertices_get_attached_elements(
   \code VertexHandle vh = vert_handles[ csr_data[ csr_offsets[3]+1 ] ] \endcode
 */
 template <class FIELD>
-void MesquiteMesh<FIELD>::elements_get_attached_vertices(
+void
+MesquiteMesh<FIELD>::elements_get_attached_vertices(
   const Mesquite::Mesh::ElementHandle *elem_handles,
   size_t num_elems,
   vector<Mesquite::Mesh::VertexHandle>& vert_handles,
@@ -865,14 +811,6 @@ void MesquiteMesh<FIELD>::elements_get_attached_vertices(
     typename FIELD::mesh_type::Node::array_type nodes;
     typename FIELD::mesh_type::Elem::index_type elem_id = (unsigned long)elem_handles[i];
        
-      // if elem_id is invalid, set MSQ error to prevent Mesquite from
-      // continuing with invalid data...
-//      if(elem_ptr==NULL) 
-//      {
-//           MSQ_SETERR(err)("MesquiteMesh::elements_get_attached_vertices: invalid element handle.", Mesquite::MsqError::INVALID_STATE);
-//         return;
-//       }
-    
     mOwner->get_typed_mesh()->get_nodes( nodes, elem_id );
     VertexHandle temp_v_handle = NULL;
       //loop over the vertices, to add them to the given array.
@@ -881,15 +819,6 @@ void MesquiteMesh<FIELD>::elements_get_attached_vertices(
       unsigned int temp_id = nodes[j];
       temp_v_handle = (void*)temp_id;
 
-        // if the vertex handle is invalid, set MSQ error to prevent Mesquite
-        // from continuing with invalid data...
-//       if(temp_v_handle==NULL)
-//       {
-//         MSQ_SETERR(err)("Unexpected null pointer.",
-//                         Mesquite::MsqError::INVALID_STATE);
-//         return;
-//       }
-
       vert_handles.push_back( temp_v_handle );
       ++offset_counter;
     }
@@ -897,10 +826,12 @@ void MesquiteMesh<FIELD>::elements_get_attached_vertices(
   offsets.push_back(offset_counter);
 }
 
+
 //! Returns the topologies of the given entities.  The "entity_topologies"
 //! array must be at least "num_elements" in size.
 template <class FIELD>
-void MesquiteMesh<FIELD>::elements_get_topologies(
+void
+MesquiteMesh<FIELD>::elements_get_topologies(
   const ElementHandle *element_handle_array,
   Mesquite::EntityTopology *element_topologies,
   size_t num_elements,
@@ -936,10 +867,12 @@ void MesquiteMesh<FIELD>::elements_get_topologies(
   }
 }
 
+
 //! Tells the mesh that the client is finished with a given
 //! entity handle.  
 template <class FIELD>
-void MesquiteMesh<FIELD>::release_entity_handles(
+void
+MesquiteMesh<FIELD>::release_entity_handles(
   const EntityHandle */*handle_array*/,
   size_t /*num_handles*/,
   Mesquite::MsqError &/*err*/)
@@ -947,13 +880,15 @@ void MesquiteMesh<FIELD>::release_entity_handles(
     // Do nothing...
 }
   
+
 //! Instead of deleting a Mesh when you think you are done,
 //! call release().  In simple cases, the implementation could
 //! just call the destructor.  More sophisticated implementations
 //! may want to keep the Mesh object to live longer than Mesquite
 //! is using it.
 template <class FIELD>
-void MesquiteMesh<FIELD>::release()
+void
+MesquiteMesh<FIELD>::release()
 {
     // We allocate on the stack, so don't delete this...
 }
@@ -969,16 +904,20 @@ MesquiteMesh<FIELD>::VertexIterator::VertexIterator( MesquiteMesh* mesh_ptr )
   restart();
 }
 
+
 //! Moves the iterator back to the first entity in the list.
 template <class FIELD>
-void MesquiteMesh<FIELD>::VertexIterator::restart()
+void
+MesquiteMesh<FIELD>::VertexIterator::restart()
 {
   node_iter_ = meshPtr->niterBegin;
 }
+
         
 //! *iterator. Return the handle currently being pointed at by the iterator.
 template <class FIELD>
-Mesquite::Mesh::EntityHandle MesquiteMesh<FIELD>::VertexIterator::operator*() const
+Mesquite::Mesh::EntityHandle
+MesquiteMesh<FIELD>::VertexIterator::operator*() const
 {
   node_iter_t ni = node_iter_;
   unsigned int i = *ni;  
@@ -988,24 +927,30 @@ Mesquite::Mesh::EntityHandle MesquiteMesh<FIELD>::VertexIterator::operator*() co
   return 0;
 }
 
+
 //! ++iterator
 template <class FIELD>
-void MesquiteMesh<FIELD>::VertexIterator::operator++()
+void
+MesquiteMesh<FIELD>::VertexIterator::operator++()
 {
   ++node_iter_;
 }
 
+
 //! iterator++
 template <class FIELD>
-void MesquiteMesh<FIELD>::VertexIterator::operator++(int)
+void
+MesquiteMesh<FIELD>::VertexIterator::operator++(int)
 {
   ++node_iter_;
 }
+
 
 //! Returns false until the iterator has been advanced PAST the last entity.
 //! Once is_at_end() returns true, *iterator returns 0.
 template <class FIELD>
-bool MesquiteMesh<FIELD>::VertexIterator::is_at_end() const
+bool
+MesquiteMesh<FIELD>::VertexIterator::is_at_end() const
 {
   if( node_iter_ == meshPtr->niterEnd )
   {
@@ -1013,6 +958,7 @@ bool MesquiteMesh<FIELD>::VertexIterator::is_at_end() const
   }
   return false;
 }
+
 
 // ********* ElementIterator functions ********
 //constructor
@@ -1023,16 +969,20 @@ MesquiteMesh<FIELD>::ElementIterator::ElementIterator( MesquiteMesh* mesh_ptr )
   restart();
 }
 
+
 //! Moves the iterator back to the first entity in the list.
 template <class FIELD>
-void MesquiteMesh<FIELD>::ElementIterator::restart()
+void
+MesquiteMesh<FIELD>::ElementIterator::restart()
 {
   elem_iter_ = meshPtr->eiterBegin;
 }
 
+
 //! *iterator.  Return the handle currently being pointed at by the iterator.
 template <class FIELD>
-Mesquite::Mesh::EntityHandle MesquiteMesh<FIELD>::ElementIterator::operator*() const
+Mesquite::Mesh::EntityHandle
+MesquiteMesh<FIELD>::ElementIterator::operator*() const
 {
   elem_iter_t ei = elem_iter_;
   unsigned int i = *ei;  
@@ -1043,24 +993,30 @@ Mesquite::Mesh::EntityHandle MesquiteMesh<FIELD>::ElementIterator::operator*() c
   return 0;
 }
 
+
 //! ++iterator
 template <class FIELD>
-void MesquiteMesh<FIELD>::ElementIterator::operator++()
+void
+MesquiteMesh<FIELD>::ElementIterator::operator++()
 {
   ++elem_iter_;
 }
 
+
 //! iterator++
 template <class FIELD>
-void MesquiteMesh<FIELD>::ElementIterator::operator++(int)
+void
+MesquiteMesh<FIELD>::ElementIterator::operator++(int)
 {
   ++elem_iter_;
 }
+
 
 //! Returns false until the iterator has been advanced PAST the last entity.
 //! Once is_at_end() returns true, *iterator returns 0.
 template <class FIELD>
-bool MesquiteMesh<FIELD>::ElementIterator::is_at_end() const
+bool
+MesquiteMesh<FIELD>::ElementIterator::is_at_end() const
 {
   if( elem_iter_ == meshPtr->eiterEnd )
   {
