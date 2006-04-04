@@ -285,7 +285,7 @@ void ComponentSkeletonWriter::writeSourceClassImpl()
       else if(strcmp(portType.c_str(),"StringPort")==0)
 	{
 
-	  tempPortCategory=std::string("std::string");
+	  tempPortCategory=std::string("string");
 	}
 
 
