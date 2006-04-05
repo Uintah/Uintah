@@ -6,6 +6,8 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlDW.h>
+#include <Packages/Uintah/Core/Grid/Variables/ScrubItem.h>
+#include <Core/Containers/FastHashTable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>
@@ -22,6 +24,7 @@ namespace Uintah {
   using SCIRun::Max;
   using SCIRun::Mutex;
   using SCIRun::Semaphore;
+  using SCIRun::FastHashTable;
 
   class ProcessorGroup;
   class DataWarehouse;
@@ -130,16 +133,7 @@ namespace Uintah {
     unsigned long satisfiedGeneration;
   };
 
-  struct ScrubItem {
-    ScrubItem* next;
-    const VarLabel* var;
-    int dw;
-    ScrubItem(ScrubItem* next, const VarLabel* var, int dw)
-      : next(next), var(var), dw(dw)
-    {}
-  };
-
-  typedef map<VarLabelMatlDW<Patch>, int> ScrubCountMapPatch;
+  typedef FastHashTable<ScrubItem> ScrubCountTable;
   typedef map<VarLabelMatlDW<Level>, int> ScrubCountMapLevel;
   
   class DetailedTask {
@@ -349,7 +343,7 @@ namespace Uintah {
     Mutex readyQueueMutex_;
     Semaphore readyQueueSemaphore_;
 
-    ScrubCountMapPatch scrubCountMapPatch_;
+    ScrubCountTable scrubCountTable_;
     ScrubCountMapLevel scrubCountMapLevel_;
 
     DetailedTasks(const DetailedTasks&);

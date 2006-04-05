@@ -242,8 +242,8 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws)
   for(int i=0;i<(int)dws.size();i++){
     if(dws[i] != 0 && dws[i]->getScrubMode() == DataWarehouse::ScrubComplete){
       scrubout << "Initializing scrubs on dw: " << dws[i]->getID() << '\n';
-      dws[i]->initializeScrubs(i, scrubCountMapPatch_);
-      dws[i]->initializeScrubs(i, scrubCountMapLevel_);
+      dws[i]->initializeScrubs(i, &scrubCountTable_);
+      //dws[i]->initializeScrubs(i, scrubCountMapLevel_);
     }
   }
   if(scrubout.active())
@@ -414,13 +414,14 @@ void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
 {
   if(patch->isVirtual())
     patch = patch->getRealPatch();
-  VarLabelMatlDW<Patch> key(var, matlindex, patch, dw);
-  ScrubCountMapPatch::iterator iter = scrubCountMapPatch_.find(key);
-  if(iter == scrubCountMapPatch_.end()){
-    scrubCountMapPatch_.insert(make_pair(key, 1));
-  } else {
-    iter->second++;
+  ScrubItem key(var, matlindex, patch, dw);
+  ScrubItem* result;
+  result = scrubCountTable_.lookup(&key);
+  if(!result){
+     result = new ScrubItem(var, matlindex, patch, dw);
+     scrubCountTable_.insert(result);
   }
+  result->count++;
 }
 
 void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
@@ -460,15 +461,15 @@ bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 				  const Patch* patch, int dw, int& count)
 {
   ASSERT(!patch->isVirtual());
-  VarLabelMatlDW<Patch> key(label, matlIndex, patch, dw);
-  ScrubCountMapPatch::iterator iter = scrubCountMapPatch_.find(key);
-
-  if(iter == scrubCountMapPatch_.end())
+  ScrubItem key(label, matlIndex, patch, dw);
+  ScrubItem* result = scrubCountTable_.lookup(&key);
+  if(result){
+    count = result->count;
+    return true;
+  } else {
     return false;
-  count=iter->second;
-  return true;
+  }
 }
-
 
 bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 				  const Level* level, int dw, int& count)
@@ -484,7 +485,7 @@ bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 
 void DetailedTasks::createScrubCounts()
 {
-  scrubCountMapPatch_.clear();
+  scrubCountTable_.remove_all();
   scrubCountMapLevel_.clear();
   
   // Go through each of the tasks and determine which variables it will require
@@ -543,12 +544,12 @@ void DetailedTasks::createScrubCounts()
   if(scrubout.active()){
     scrubout << "scrub counts:\n";
     scrubout << "DW/Patch/Matl/Label\tCount\n";
-    for(ScrubCountMapPatch::iterator iter = scrubCountMapPatch_.begin();
-	iter != scrubCountMapPatch_.end(); iter++){
-      const VarLabelMatlDW<Patch>& rec = iter->first;
-      scrubout << rec.dw_ << '/' << (rec.domain_?rec.domain_->getID():0) << '/'
-	       << rec.matlIndex_ << '/' <<  rec.label_->getName()
-	       << "\t\t" << iter->second << '\n';
+    for(FastHashTableIter<ScrubItem> iter(&scrubCountTable_);
+	iter.ok(); ++iter){
+      const ScrubItem* rec = iter.get_key();
+      scrubout << rec->dw << '/' << (rec->patch?rec->patch->getID():0) << '/'
+	       << rec->matl << '/' <<  rec->label->getName()
+	       << "\t\t" << rec->count << '\n';
     }
     scrubout << "end scrub counts\n";
   }

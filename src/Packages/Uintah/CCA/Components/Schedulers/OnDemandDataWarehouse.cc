@@ -949,8 +949,9 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
     low = patch->getLowIndex();
     high = patch->getHighIndex();
   }
+  const Patch* realPatch = patch->getRealPatch();
 
-   psetDBType::key_type key(patch->getRealPatch(), matlIndex, low, high, getID());
+   psetDBType::key_type key(realPatch, matlIndex, low, high, getID());
    psetDBType::iterator iter = d_psetDB.find(key);
    if (iter != d_psetDB.end()) {
      d_lock.readUnlock();
@@ -960,7 +961,7 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
    // if not found, look for an encompassing particle subset
    for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
      const PSPatchMatlGhost& pmg = iter->first;
-     if (pmg.patch_ == patch && pmg.matl_ == matlIndex &&
+     if (pmg.patch_ == realPatch && pmg.matl_ == matlIndex &&
          pmg.dwid_ == getID() && 
          low.x() >= pmg.low_.x() && low.y() >= pmg.low_.y() && low.z() >= pmg.low_.z() &&
          high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z())
@@ -1013,7 +1014,15 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       }
       ParticleSubset* pset;
 
+      if (patch != neighbor) {
+        patch->cullIntersection(Patch::CellBased, IntVector(0,0,0), neighbor, newLow, newHigh);
+        if (newLow == newHigh) {
+          cout << "  Ignoring intersection of " << newLow << " " << newHigh << " between " << patch->getID() << " and " << neighbor->getID() << endl;
+          continue;
+        }
+      }
       pset = getParticleSubset(matlIndex, neighbor, newLow, newHigh);
+
       constParticleVariable<Point> pos;
 
       get(pos, pos_var, pset);
@@ -1373,8 +1382,8 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
-    IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
-    IntVector h(Min(patch->getHighIndex(Patch::NodeBased, label->getBoundaryLayer()), high));
+    IntVector l(Max(patch->getInteriorLowIndex(Patch::NodeBased), low));
+    IntVector h(Min(patch->getInteriorHighIndex(Patch::NodeBased), high));
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
     if(!d_ncDB.exists(label, matlIndex, patch->getRealPatch()))
@@ -1387,14 +1396,23 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
       // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
       tmpVar->offset(patch->getVirtualOffset());
     }
-    
+
+    IntVector vl(tmpVar->getLow()), vh(tmpVar->getHigh());
+    if (vl.x() > l.x() || vl.y() > l.y() || vl.z() > l.z() || vh.x() < h.x() || vh.y() < h.y() || vh.z() < h.z()) {
+      cout << d_myworld->myrank() << "   Naughty: patch " << patch->getID() << " range " << l << " " << h << ": avail: "<< vl << " " << vh << " orig req: " << low << " " <<high << endl;
+    }
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
     totalCells += diff.x()*diff.y()*diff.z();
   }
   IntVector diff(high-low);
-  ASSERTEQ(diff.x()*diff.y()*diff.z(), totalCells);
+  //ASSERTEQ(diff.x()*diff.y()*diff.z(), totalCells);
+  if (diff.x()*diff.y()*diff.z() != totalCells) {
+    static ProgressiveWarning warn("GetRegion Warning", 100);
+    warn.invoke();
+  }
+
   d_lock.readUnlock();
  
   constVar = *var;
@@ -2025,7 +2043,7 @@ OnDemandDataWarehouse::scrub(const VarLabel* var, int matlIndex,
 
 void
 OnDemandDataWarehouse::initializeScrubs(int dwid, 
-	const map<VarLabelMatlDW<Patch>, int>& scrubcounts)
+	const FastHashTable<ScrubItem>* scrubcounts)
 {
   d_lock.writeLock();
   d_ncDB.initializeScrubs(dwid, scrubcounts);
@@ -2035,15 +2053,6 @@ OnDemandDataWarehouse::initializeScrubs(int dwid,
   d_sfczDB.initializeScrubs(dwid, scrubcounts);
   d_particleDB.initializeScrubs(dwid, scrubcounts);
   d_perpatchDB.initializeScrubs(dwid, scrubcounts);
-  d_lock.writeUnlock();
-}
-
-void
-OnDemandDataWarehouse::initializeScrubs(int dwid, 
-      const map<VarLabelMatlDW<Level>, int>& scrubcounts)
-{
-  d_lock.writeLock();
-  d_soleDB.initializeScrubs(dwid, scrubcounts);
   d_lock.writeUnlock();
 }
 
@@ -2106,6 +2115,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
       if (!ignore && !warned ) {
 	warned = true;
         static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 5, warn);
+        cout << "   BAd for var " << *label << " patch " << patch->getID() << " matl " << matlIndex << endl;
         if (rw.invoke()) {
           // print out this message if the ProgressiveWarning does
           ostringstream errmsg;
