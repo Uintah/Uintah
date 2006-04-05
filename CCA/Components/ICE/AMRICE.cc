@@ -158,13 +158,14 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
     const MaterialSet* all_matls = d_sharedState->allMaterials();
     const MaterialSubset* all_matls_sub = all_matls->getUnion();
+    const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
 
     addRefineDependencies(task,lb->press_CCLabel, oims,d_press_matl,
                                                                    step,nsteps);
-    addRefineDependencies(task,lb->rho_CCLabel,   ND,all_matls_sub,step,nsteps);
+    addRefineDependencies(task,lb->rho_CCLabel,   ND,ice_matls    ,step,nsteps);
     addRefineDependencies(task,lb->sp_vol_CCLabel,ND,all_matls_sub,step,nsteps);
     addRefineDependencies(task,lb->temp_CCLabel,  ND,all_matls_sub,step,nsteps);
-    addRefineDependencies(task,lb->vel_CCLabel,   ND,all_matls_sub,step,nsteps);
+    addRefineDependencies(task,lb->vel_CCLabel,   ND,ice_matls    ,step,nsteps);
     
     //__________________________________
     // Model Variables.
@@ -392,15 +393,19 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     t->requires(Task::NewDW, lb->specific_heatLabel,0, Task::CoarseLevel, 0, ND, gn,0);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,  0, Task::CoarseLevel, 0, ND, gn,0);
     
+    const MaterialSubset* all_matls = d_sharedState->allMaterials()->getUnion();
+
 
     t->modifies(lb->press_CCLabel, d_press_matl, oims);     
     t->modifies(lb->rho_CCLabel);
     t->modifies(lb->sp_vol_CCLabel);
     t->modifies(lb->temp_CCLabel);
     t->modifies(lb->vel_CCLabel);
-    t->computes(lb->gammaLabel);
-    t->computes(lb->specific_heatLabel);
-    t->computes(lb->vol_frac_CCLabel);
+
+    // we really only do the ice matls, but we need to tell CopyData to do the right thing
+    t->computes(lb->gammaLabel, all_matls, oims);
+    t->computes(lb->specific_heatLabel, all_matls, oims);
+    t->computes(lb->vol_frac_CCLabel, all_matls, oims);
     
     //__________________________________
     // Model Variables.
