@@ -51,8 +51,11 @@ namespace SCIRun {
 class InsertHexSheet : public Module
 {
 private:
+  GuiString add_to_side_;
   int       last_field_generation_;
 
+  string last_add_to_side_;
+  
 public:
   InsertHexSheet(GuiContext* ctx);
   virtual ~InsertHexSheet();
@@ -66,6 +69,7 @@ DECLARE_MAKER(InsertHexSheet)
 
 InsertHexSheet::InsertHexSheet(GuiContext* ctx)
         : Module("InsertHexSheet", ctx, Filter, "FieldsCreate", "SCIRun"),
+          add_to_side_(get_ctx()->subVar("side"), "side1" ),
           last_field_generation_(0)
 {
 }
@@ -91,11 +95,18 @@ void InsertHexSheet::execute()
     return;
   }
 
+  bool changed = false;
+  add_to_side_.reset();
+  if( last_add_to_side_ != add_to_side_.get() )
+  {
+    last_add_to_side_ = add_to_side_.get();
+    changed = true;
+  }
+  
   if (last_field_generation_ == hexfieldhandle->generation &&
       last_field_generation_ == trifieldhandle->generation &&
-      oport_cached( "IntersectField" )&&
       oport_cached( "Side1Field" )&&
-      oport_cached( "Side2Field" ) )
+      oport_cached( "Side2Field" ) && !changed )
   {
     // We're up to date, return.
     return;
@@ -134,12 +145,14 @@ void InsertHexSheet::execute()
     return;
   }
 
-  FieldHandle side1field, side2field, intersectfield;
-  algo->execute( this, hexfieldhandle, trifieldhandle, 
-                 side1field, side2field, intersectfield );
+  bool add_to_side1 = false;
+  if( last_add_to_side_ == "side1" )
+      add_to_side1 = true;
   
-  FieldOPort *ofield_port1 = (FieldOPort *)get_oport("IntersectField");
-  ofield_port1->send_and_dereference(intersectfield);  
+  FieldHandle side1field, side2field;
+  algo->execute( this, hexfieldhandle, trifieldhandle, 
+                 side1field, side2field, add_to_side1 );
+  
   FieldOPort *ofield_port2 = (FieldOPort *)get_oport("Side1Field");
   ofield_port2->send_and_dereference(side1field);
   FieldOPort *ofield_port3 = (FieldOPort *)get_oport("Side2Field");

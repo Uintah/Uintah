@@ -57,10 +57,6 @@
     </inputs>
     <outputs>
       <port>
-	<name>IntersectField</name>
-	<datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
 	<name>Side1Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>

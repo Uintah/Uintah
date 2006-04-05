@@ -113,6 +113,7 @@ SRCS := \
         $(SRCDIR)/GenStandardColorMaps.tcl \
         $(SRCDIR)/GenTitle.tcl \
         $(SRCDIR)/ToolTipText.tcl \
+	$(SRCDIR)/InsertHexSheet.tcl \
         $(SRCDIR)/Isosurface.tcl \
         $(SRCDIR)/IsoClip.tcl \
         $(SRCDIR)/LightWidget.tcl \
