@@ -92,7 +92,7 @@ main( int argc, char *argv[] )
      ProblemSpecReader psr( udaFileName + "/input.xml" );
      ProblemSpecP docTop = psr.readInputFile();
      double dyVis;
-     int    sos;
+     //int    sos;
      double A;
      Vector resolution;
 
