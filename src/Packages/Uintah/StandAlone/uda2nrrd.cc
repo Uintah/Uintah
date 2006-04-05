@@ -362,7 +362,7 @@ template<class FIELD>
 Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
   Nrrd *out = nrrdNew();
   int dim = 3;
-  int size[5];
+  size_t size[5];
   
   size[0] = source->fdata().dim3();
   size[1] = source->fdata().dim2();
