@@ -17,6 +17,7 @@ SRCS     += \
 	$(SRCDIR)/VarLabel.cc \
 	$(SRCDIR)/VarLabelLevelDW.cc \
 	$(SRCDIR)/VarLabelMatlPatch.cc \
+	$(SRCDIR)/ScrubItem.cc \
 	$(SRCDIR)/PSPatchMatlGhost.cc \
 	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/PerPatchBase.cc \

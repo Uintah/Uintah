@@ -1203,16 +1203,22 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                                           "in copyDataTo ParticleVariable", __FILE__, __LINE__));
               if ( !newDataWarehouse->d_particleDB.exists(label, matl, newPatch) ) {
-                PatchSubset* ps = new PatchSubset;
-                ps->add(oldPatch);
-                PatchSubset* newps = new PatchSubset;
-                newps->add(newPatch);
-                MaterialSubset* ms = new MaterialSubset;
-                ms->add(matl);
-                newDataWarehouse->transferFrom(oldDataWarehouse, label, ps, ms, false, newps);
-                delete ps;
-                delete ms;
-                delete newps;
+                ParticleSubset* subset;
+                if (!newDataWarehouse->haveParticleSubset(matl, newPatch, 
+                                                          newPatch->getInteriorCellLowIndex(),
+                                                          newPatch->getInteriorCellHighIndex())) {
+                  ParticleSubset* oldsubset = oldDataWarehouse->getParticleSubset(matl, oldPatch, 
+                                                                                  newPatch->getInteriorCellLowIndex(),
+                                                                                  newPatch->getInteriorCellHighIndex());
+                  subset = newDataWarehouse->createParticleSubset(oldsubset->numParticles(), matl, newPatch);
+                }
+                else
+                  subset = newDataWarehouse->getParticleSubset(matl, newPatch);
+                ParticleVariableBase* v = oldDataWarehouse->d_particleDB.get(label, matl, oldPatch);
+                ParticleVariableBase* newv = v->cloneType();
+                newv->copyPointer(*v);
+                newv->setParticleSubset(subset);
+                newDataWarehouse->d_particleDB.put(label, matl, newPatch, newv, false);
               } else {
                 cout << "Particle copy not implemented for pre-existent var (BNR Regridder?)\n";
                 SCI_THROW(UnknownVariable(label->getName(), newDataWarehouse->getID(), oldPatch, matl,

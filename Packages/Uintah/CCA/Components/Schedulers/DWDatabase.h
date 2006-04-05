@@ -6,9 +6,11 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlDW.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
+#include <Packages/Uintah/Core/Grid/Variables/ScrubItem.h>
 
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 
+#include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>
@@ -26,6 +28,7 @@ namespace Uintah {
 using std::vector;
 using std::iostream;
 using std::ostringstream;
+using SCIRun::FastHashTable;
 
    /**************************************
      
@@ -79,8 +82,7 @@ using std::ostringstream;
    void setScrubCount(const VarLabel* label, int matlindex,
 		      const DomainType* dom, int count);
    void scrub(const VarLabel* label, int matlindex, const DomainType* dom);
-   void initializeScrubs(int dwid, const map<VarLabelMatlDW<DomainType>, 
-			 int>& scrubcounts);
+   void initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts);
 
    void logMemoryUse(ostream& out, unsigned long& total,
 		     const std::string& tag, int dwid);
@@ -258,7 +260,7 @@ DWDatabase<VarType, DomainType>::scrub(const VarLabel* var, int matlIndex,
 template<class VarType, class DomainType>
 void
 DWDatabase<VarType, DomainType>::initializeScrubs(int dwid,
-		      const map<VarLabelMatlDW<DomainType>, int>& scrubcounts)
+		      const FastHashTable<ScrubItem>* scrubcounts)
 {
   // loop over each variable, probing the scrubcount map. Set the
   // scrubcount appropriately.  if the variable has no entry in
@@ -272,14 +274,14 @@ DWDatabase<VarType, DomainType>::initializeScrubs(int dwid,
       for(int i=0;i<(int)rr->getVars().size();i++){
 	if(rr->getVars()[i].var){
 	  // See if it is in the scrubcounts map.  matls are offset by 1
-	  VarLabelMatlDW<DomainType> key(nr->label, i-1, rr->getDomain(), dwid);
-	  typename map<VarLabelMatlDW<DomainType>, int>::const_iterator iter = scrubcounts.find(key);
-	  if(iter == scrubcounts.end()){
+          ScrubItem key(nr->label, i-1, rr->getDomain(), dwid);
+          ScrubItem* result = scrubcounts->lookup(&key);
+          if(!result){
 	    // Delete this...
 	    rr->removeVar(i-1);
 	  } else {
 	    ASSERTEQ(rr->getDataItem(i-1)->scrubCount, 0);
-	    rr->getDataItem(i-1)->scrubCount = iter->second;
+	    rr->getDataItem(i-1)->scrubCount = result->count;
 	  }
 	}
       }

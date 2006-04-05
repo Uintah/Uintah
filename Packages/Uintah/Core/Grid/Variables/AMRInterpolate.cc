@@ -24,17 +24,23 @@ void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
                             IntVector& cl, IntVector& ch,
                             IntVector& fl, IntVector& fh,IntVector ghost)
 {
-  fl = finePatch->getInteriorNodeLowIndex();
-  fh = finePatch->getInteriorNodeHighIndex();
   cl = coarsePatch->getNodeLowIndex();
   ch = coarsePatch->getNodeHighIndex();
+  fl = coarsePatch->getLevel()->mapNodeToFiner(cl) - ghost;
+  fh = coarsePatch->getLevel()->mapNodeToFiner(ch) + ghost;
 
-  fl = Max(fl, coarsePatch->getLevel()->mapNodeToFiner(cl));
-  fh = Min(fh, coarsePatch->getLevel()->mapNodeToFiner(ch));
-  cl = finePatch->getLevel()->mapNodeToCoarser(fl);
-  ch = finePatch->getLevel()->mapNodeToCoarser(fh);
-  fl-=ghost;
-  fh+=ghost;
+  fl = Max(fl, finePatch->getInteriorNodeLowIndex());
+  fh = Min(fh, finePatch->getInteriorNodeHighIndex());
+
+  cl = Max(cl, finePatch->getLevel()->mapNodeToCoarser(fl));
+  ch = Min(ch, finePatch->getLevel()->mapNodeToCoarser(fh));
+
+  if (ch.x() <= cl.x() || ch.y() <= cl.y() || ch.z() <= cl.z()) {
+    // the expanded fine region was outside the coarse region, so
+    // return an invalid fine region
+    fl = fh;
+  }
+
 }
 
 void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
