@@ -2630,7 +2630,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Task::DomainSpec ND   = Task::NormalDomain;
 
-  const Level* fineLevel = getLevel(patches);
+  const LevelP fineLevel = getLevel(patches)->getFinerLevel();
   IntVector refineRatio(fineLevel->getRefinementRatio());
   int ghost = max(refineRatio.x(),refineRatio.y());
   ghost = max(ghost,refineRatio.z());
@@ -2837,42 +2837,38 @@ void MPMICE::coarsenDriver_stdNC(IntVector cl,
 {
   T zero(0.0);
   // iterate over coarse level cells
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  Vector DX = coarseLevel->dCell();
+  IntVector range(refinementRatio.x()/2, refinementRatio.y()/2, refinementRatio.z()/2);
+
+  IntVector varLow = fine_q_NC.getLowIndex();
+  IntVector varHigh = fine_q_NC.getHighIndex();
+
+  if (Min(cl,coarse_q_NC.getLowIndex()) != coarse_q_NC.getLowIndex() ||
+      Max(ch,coarse_q_NC.getHighIndex()) != coarse_q_NC.getHighIndex()) {
+    cout << d_myworld->myrank() << "  Naughty, coarsen: " << cl << " " << ch << " valid range " << coarse_q_NC.getLowIndex() << " " << coarse_q_NC.getHighIndex() << endl;
+  }
+
   for(NodeIterator iter(cl, ch); !iter.done(); iter++){
     IntVector c = *iter;
-    IntVector fineStart = coarseLevel->mapNodeToFiner(c);
-
+    IntVector fineNode = coarseLevel->mapNodeToFiner(c);
     Point coarseLoc=coarseLevel->getNodePosition(c);
-    Vector DX = coarseLevel->dCell();
 
-    int rangex = refinementRatio.x()/2;
-    int rangey = refinementRatio.y()/2;
-    int rangez = refinementRatio.z()/2;
-
-    int sx=fineStart.x()-rangex;
-    int sy=fineStart.y()-rangey;
-    int sz=fineStart.z()-rangez;
-
-    int ex=fineStart.x()+rangex;
-    int ey=fineStart.y()+rangey;
-    int ez=fineStart.z()+rangez;
+    IntVector start = Max(fineNode-range, varLow);
+    IntVector end = Min(fineNode+range, varHigh);
 
     // for each coarse level cell iterate over the fine level cells
     T q_NC_tmp(zero);
-    const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
 
-    for(int i = sx;i<=ex;i++){
-      for(int j = sy;j<=ey;j++){
-        for(int k = sz;k<=ez;k++){
-          IntVector fc(i,j,k);
-          Point fineLoc=fineLevel->getNodePosition(fc);
-          Vector C2F = fineLoc - coarseLoc;
-          Vector Vweight = C2F/DX;
-          double weight = (1.-fabs(Vweight.x()))*
-                          (1.-fabs(Vweight.y()))*
-                          (1.-fabs(Vweight.z()));
-          q_NC_tmp += fine_q_NC[fc]*weight;
-        }
-      }
+    for (NodeIterator inner(start, end); !inner.done(); inner++) {
+      IntVector fc(*inner);
+      Point fineLoc=fineLevel->getNodePosition(fc);
+      Vector C2F = fineLoc - coarseLoc;
+      Vector Vweight = C2F/DX;
+      double weight = (1.-fabs(Vweight.x()))*
+        (1.-fabs(Vweight.y()))*
+        (1.-fabs(Vweight.z()));
+      q_NC_tmp += fine_q_NC[fc]*weight;
     }
     coarse_q_NC[c] =q_NC_tmp;
   }
@@ -3046,7 +3042,7 @@ void MPMICE::coarsenVariableNC(const ProcessorGroup*,
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }
-        
+
         constNCVariable<T> fine_q_NC;
         new_dw->getRegion(fine_q_NC,  variable, indx, fineLevel, fl, fh);
 
