@@ -1272,7 +1272,7 @@ EditColorMap2D::build_histogram_texture()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #endif
-  int axis_size[3];
+  size_t axis_size[3];
 
   if (!histo_) {
     unsigned char zero = 0;
