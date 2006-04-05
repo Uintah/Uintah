@@ -128,7 +128,7 @@ NrrdTextureBuilder::execute()
     return;
   }
 
-  int axis_size[4];
+  size_t axis_size[4];
   nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
   if (nv_nrrd->dim == 4 && axis_size[0] != 1 && axis_size[0] != 4) {
     error("Invalid axis size for Normal/Value nrrd.");
