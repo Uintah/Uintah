@@ -141,8 +141,8 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
     omesh->size(ns);
     size_t dim[NRRD_DIM_MAX];
     dim[0] = ns;
-    nrrdAlloc_nva(nrrdh->nrrd, nrrdTypeUChar, 1, dim);
-    unsigned char *mask = (unsigned char *)nrrdh->nrrd->data;
+    nrrdAlloc_nva(nrrdh->nrrd_, nrrdTypeUChar, 1, dim);
+    unsigned char *mask = (unsigned char *)nrrdh->nrrd_->data;
     memset(mask, 0, dim[0]*sizeof(unsigned char));
     while (si != ei)
     {
@@ -167,8 +167,8 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
     omesh->size(ns);
     size_t dim[NRRD_DIM_MAX];
     dim[0] = ns;
-    nrrdAlloc_nva(nrrdh->nrrd, nrrdTypeUChar, 1, dim);
-    unsigned char *mask = (unsigned char *)nrrdh->nrrd->data;
+    nrrdAlloc_nva(nrrdh->nrrd_, nrrdTypeUChar, 1, dim);
+    unsigned char *mask = (unsigned char *)nrrdh->nrrd_->data;
     memset(mask, 0, dim[0]*sizeof(unsigned char));
     while (si != ei)
     {
