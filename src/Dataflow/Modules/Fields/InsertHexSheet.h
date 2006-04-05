@@ -71,7 +71,7 @@ public:
       ProgressReporter *reporter, 
       FieldHandle hexfieldh, FieldHandle trifieldh, 
       FieldHandle& side1field, FieldHandle& side2field,
-      FieldHandle& intersectfield ) = 0;
+      bool add_to_side1 ) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -87,27 +87,28 @@ public:
       ProgressReporter *reporter, 
       FieldHandle hexfieldh, FieldHandle trifieldh, 
       FieldHandle& side1field, FieldHandle& side2field,
-      FieldHandle& intersectfield );
+      bool add_to_side1 );
   
-  void write_tri_off_file( FieldHandle trifieldh );
-  void write_hexes_to_file( FieldHandle hexfieldh );
+//   void write_tri_off_file( FieldHandle trifieldh );
+//   void write_hexes_to_file( FieldHandle hexfieldh );
 
   void load_hex_mesh( FieldHandle hexfieldh );
   void load_tri_mesh( FieldHandle trifieldh );
   
-  void compute_intersections( 
-    HexVolMesh<HexTrilinearLgn<Point> >* original_mesh,
-    HexVolMesh<HexTrilinearLgn<Point> >*& intersect_mesh,
-    HexVolMesh<HexTrilinearLgn<Point> >*& side1_mesh,
-    HexVolMesh<HexTrilinearLgn<Point> >*& side2_mesh );
-
+  void compute_intersections(
+      ProgressReporter* mod,
+      HexVolMesh<HexTrilinearLgn<Point> >* original_mesh,
+      HexVolMesh<HexTrilinearLgn<Point> >*& side1_mesh,
+      HexVolMesh<HexTrilinearLgn<Point> >*& side2_mesh, bool add_to_side1 );
+  
   bool interferes(const vector<Vector3> &p, const Vector3 &axis, int split);
   
   bool intersects( const HexMesh &hexmesh, int hex_index,
                    const TriangleMesh &trimesh, int face_index);
-  void compute_intersections_KDTree( vector<int> &crosses,
-                                   const TriangleMesh& trimesh,
-                                   const HexMesh& hexmesh);
+  void compute_intersections_KDTree( ProgressReporter* mod,
+                                     vector<int> &crosses,
+                                     const TriangleMesh& trimesh,
+                                     const HexMesh& hexmesh);
 
   class TriangleMeshFaceTree 
   {
@@ -129,50 +130,39 @@ public:
 private:
   TriangleMesh trimesh;
   HexMesh hexmesh;
-  
-//   HexMesh side1;
-//   HexMesh side2;
-//   HexMesh intersect; 
-  
-//   const TriangleMesh &c_trimesh = gtb::trimesh;
-//   const HexMesh &c_hexmesh = gtb::hexmesh;
 };
 
 template <class FIELD>
 void InsertHexSheetAlgoHex<FIELD>::execute(
     ProgressReporter *mod, FieldHandle hexfieldh, FieldHandle trifieldh,
     FieldHandle& side1field, FieldHandle& side2field,
-    FieldHandle& intersectfield )
+    bool add_to_side1 )
 {
   typename FIELD::mesh_type *original_mesh =
       dynamic_cast<typename FIELD::mesh_type *>(hexfieldh->mesh().get_rep());
 
-//  FIELD *hexfield = dynamic_cast<FIELD*>( hexfieldh.get_rep() );
 //for debugging...
 //  write_tri_off_file( trifieldh );
 //  write_hexes_to_file( hexfieldh );
 
-  load_hex_mesh( hexfieldh );
   load_tri_mesh( trifieldh );
-
-  typename FIELD::mesh_type *intersect_mesh = scinew typename FIELD::mesh_type();  
+  mod->update_progress( 0.05 );
+  load_hex_mesh( hexfieldh );
+  mod->update_progress( 0.15 );
+  
   typename FIELD::mesh_type *mesh_rep = 
       dynamic_cast<typename FIELD::mesh_type *>(hexfieldh->mesh().get_rep());
-  intersect_mesh->copy_properties( mesh_rep );  
   typename FIELD::mesh_type *side1_mesh = scinew typename FIELD::mesh_type();
   side1_mesh->copy_properties( mesh_rep );
   typename FIELD::mesh_type *side2_mesh = scinew typename FIELD::mesh_type();
   side2_mesh->copy_properties( mesh_rep );
 
-  compute_intersections( original_mesh, intersect_mesh, side1_mesh, side2_mesh );
+  compute_intersections( mod, original_mesh, side1_mesh, side2_mesh, add_to_side1 );
 
   side1field = scinew FIELD( side1_mesh );
   side2field = scinew FIELD( side2_mesh );
-  intersectfield = scinew FIELD( intersect_mesh );
   side1field->copy_properties( hexfieldh.get_rep() );
   side2field->copy_properties( hexfieldh.get_rep() );
-  intersectfield->copy_properties( hexfieldh.get_rep() );
-
 }
     
 template <class FIELD>
@@ -185,22 +175,6 @@ void InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( FieldHandle trifieldh )
   sci_tri_mesh->size( num_nodes );
   sci_tri_mesh->size( num_tris );
   
-//   read_a_line(f, line, 2048);
-//   int vnum, fnum;
-//   sscanf(line, "%d %d", &vnum, &fnum);
-  
-//   for (int i = 0; i < vnum; ++i)
-//   {
-//     if (!read_a_line(f, line, 2048))
-//     {
-//       cerr<<"Mesh::ReadOFF() - EOF" << endl;
-//       Clear();	fclose(f);	return false;
-//     }
-//     float x,y,z;
-//     sscanf(line, "%f %f %f", &x, &y, &z);
-// 		verts.push_back(TriangleMeshVertex(Point3(x, y, z)));
-//   }
-
   typename TriSurfMesh<TriLinearLgn<Point> >::Node::iterator nbi, nei;
   sci_tri_mesh->begin( nbi );
   sci_tri_mesh->end( nei );
@@ -211,28 +185,11 @@ void InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( FieldHandle trifieldh )
         cout << "ERROR: Assumption of node id order is incorrect." << endl;
     Point p;
     sci_tri_mesh->get_center( p, *nbi );
-//    fprintf( fp, "%f %f %f\n", p.x(), p.y(), p.z() );
     trimesh.add_point( p.x(), p.y(), p.z() );
     ++nbi;
     count++;
   }
   
-//   for (int i = 0; i < fnum; ++i)
-//   {
-//     if (!read_a_line(f, line, 2048))
-//     {
-//       cerr<<"Mesh::ReadOFF() - EOF" << endl;
-//       Clear();	fclose(f);	return false;
-//     }
-//     int n, vi[3];
-//     sscanf(line, "%d %d %d %d", &n, vi, vi+1, vi+2);
-//     if (n != 3)
-//     {
-//       cerr<<"Mesh::ReadOFF() - only triangle meshaes are suppored" << endl;
-//         // continue anyway
-//     }
-// 		faces.push_back(TriangleMeshFace(vi));
-//   }
   typename TriSurfMesh<TriLinearLgn<Point> >::Face::iterator bi, ei;
   sci_tri_mesh->begin(bi); 
   sci_tri_mesh->end(ei);
@@ -241,21 +198,15 @@ void InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( FieldHandle trifieldh )
     typename TriSurfMesh<TriLinearLgn<Point> >::Node::array_type onodes;
     sci_tri_mesh->get_nodes(onodes, *bi);
     int vi[3];
-//     fprintf( fp, "3 %d %d %d\n", (unsigned int)onodes[0], 
-//              (unsigned int)onodes[1],
-//              (unsigned int)onodes[2] );
     vi[0] = (unsigned int)onodes[0];
     vi[1] = (unsigned int)onodes[1];
     vi[2] = (unsigned int)onodes[2];
-//    trimesh.faces.push_back(TriangleMeshFace(vi));
     trimesh.add_tri( vi );
     ++bi;
   }
   
     // we've read all the data - build the actual structures now
  	std::vector<int> facemap, vertmap;
-//  	trimesh.IdentityMap(facemap, fnum);
-//  	trimesh.IdentityMap(vertmap, vnum);
  	trimesh.IdentityMap(facemap, num_tris);
  	trimesh.IdentityMap(vertmap, num_nodes);
   trimesh.build_structures(facemap, vertmap);
@@ -272,21 +223,9 @@ void InsertHexSheetAlgoHex<FIELD>::load_hex_mesh( FieldHandle hexfieldh )
   hex_mesh->size( num_nodes );
   hex_mesh->size( num_hexes );
   
-//   ifstream in(filename);
-//   int nverts, nhexes;
-//   in >> nverts >> nhexes;
-  
-//   hexes.resize(nhexes);
-//   points.resize(nverts); 
   hexmesh.hexes.resize( num_hexes );
   hexmesh.points.resize( num_nodes );
   
-//   for (int i=0; i<nverts; ++i) 
-//   {
-//     float x, y, z;
-//     in >> x >> y >> z;
-//     points[i] = Point3(x,y,z);
-//   }
   typename FIELD::mesh_type::Node::iterator nbi, nei;
   hex_mesh->begin( nbi );
   hex_mesh->end( nei );
@@ -297,20 +236,11 @@ void InsertHexSheetAlgoHex<FIELD>::load_hex_mesh( FieldHandle hexfieldh )
         cout << "ERROR: Assumption of node id order is incorrect." << endl;
     Point p;
     hex_mesh->get_center( p, *nbi );
-//    fprintf( fp, "%f %f %f\n", p.x(), p.y(), p.z() );
     hexmesh.points[count] = gtb::Point3( p.x(), p.y(), p.z() );
     ++nbi;
     count++;
   }
   
-//   for (int i=0; i<nhexes; ++i) 
-//   {
-//     for (unsigned j=0; j<8; ++j)
-//         in >> hexes[i].verts[j];
-//     for (unsigned j=0; j<6; ++j)
-//         in >> hexes[i].acrossface[j];
-//   }
-//}
   hex_mesh->synchronize( Mesh::FACES_E );   
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   hex_mesh->begin(bi); 
@@ -345,6 +275,112 @@ void InsertHexSheetAlgoHex<FIELD>::load_hex_mesh( FieldHandle hexfieldh )
         hexmesh.hexes[count].verts[j] = onodes[j];
     for (unsigned j=0; j<6; ++j)
         hexmesh.hexes[count].acrossface[j] = n[j];
+    ++bi;
+    count++;
+  }
+}
+
+// template <class FIELD>
+// void InsertHexSheetAlgoHex<FIELD>::write_tri_off_file( FieldHandle trifieldh )
+// {
+//   FILE *fp = fopen( "trifield.off", "w" );
+// //  FIELD *trifield = dynamic_cast<FIELD*>( trifieldh.get_rep() );
+//   TriSurfMesh<TriLinearLgn<Point> > *tri_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(trifieldh->mesh().get_rep());
+
+//   typename TriSurfMesh<TriLinearLgn<Point> >::Node::size_type num_nodes;
+//   typename TriSurfMesh<TriLinearLgn<Point> >::Elem::size_type num_tris;
+//   tri_mesh->size( num_nodes );
+//   tri_mesh->size( num_tris );
+  
+//   fprintf( fp, "OFF\n" );
+//   fprintf( fp, "%d %d 0\n", (unsigned int)num_nodes, (unsigned int)num_tris );
+  
+//   typename TriSurfMesh<TriLinearLgn<Point> >::Node::iterator nbi, nei;
+//   tri_mesh->begin( nbi );
+//   tri_mesh->end( nei );
+//   unsigned int count = 0;
+//   while( nbi != nei )
+//   {
+//     if( count != *nbi )
+//         cout << "ERROR: Assumption of node id order is incorrect." << endl;
+//     Point p;
+//     tri_mesh->get_center( p, *nbi );
+//     fprintf( fp, "%f %f %f\n", p.x(), p.y(), p.z() );
+//     ++nbi;
+//     count++;
+//   }
+  
+//   typename TriSurfMesh<TriLinearLgn<Point> >::Face::iterator bi, ei;
+//   tri_mesh->begin(bi); 
+//   tri_mesh->end(ei);
+//   while (bi != ei)
+//   {
+//     typename TriSurfMesh<TriLinearLgn<Point> >::Node::array_type onodes;
+//     tri_mesh->get_nodes(onodes, *bi);
+//     fprintf( fp, "3 %d %d %d\n", (unsigned int)onodes[0], 
+//              (unsigned int)onodes[1],
+//              (unsigned int)onodes[2] );
+//     ++bi;
+//   }
+//   fclose( fp );
+// }
+
+// template <class FIELD>
+// void InsertHexSheetAlgoHex<FIELD>::write_hexes_to_file( FieldHandle hexfieldh )
+// {
+//   FILE *fp = fopen( "hexfield.txt", "w" );
+// //  FIELD *hexfield = dynamic_cast<FIELD*>( hexfieldh.get_rep() );
+//   typename FIELD::mesh_type *hex_mesh =
+//     dynamic_cast<typename FIELD::mesh_type *>(hexfieldh->mesh().get_rep());
+
+//   typename FIELD::mesh_type::Node::size_type num_nodes;
+//   typename FIELD::mesh_type::Elem::size_type num_hexes;
+//   hex_mesh->size( num_nodes );
+//   hex_mesh->size( num_hexes );
+  
+//   fprintf( fp, "%d %d\n", (unsigned int)num_nodes, (unsigned int)num_hexes );
+  
+//   typename FIELD::mesh_type::Node::iterator nbi, nei;
+//   hex_mesh->begin( nbi );
+//   hex_mesh->end( nei );
+//   unsigned int count = 0;
+//   while( nbi != nei )
+//   {
+//     if( count != *nbi )
+//         cout << "ERROR: Assumption of node id order is incorrect." << endl;
+//     Point p;
+//     hex_mesh->get_center( p, *nbi );
+//     fprintf( fp, "%f %f %f\n", p.x(), p.y(), p.z() );
+//     ++nbi;
+//     count++;
+//   }
+  
+//   typename FIELD::mesh_type::Elem::iterator bi, ei;
+//   hex_mesh->begin(bi); 
+//   hex_mesh->end(ei);
+//   while (bi != ei)
+//   {
+//     typename FIELD::mesh_type::Node::array_type onodes;
+//     typename FIELD::mesh_type::Cell::array_type neighbors;
+    
+//     hex_mesh->synchronize( Mesh::FACES_E );    
+//     hex_mesh->get_nodes(onodes, *bi);
+//     hex_mesh->get_neighbors( neighbors, *bi );
+
+//     typename FIELD::mesh_type::Cell::array_type::iterator iter = neighbors.begin();
+//     unsigned int i;
+//     int n[6];
+//     for( i = 0; i < 6; i++ )
+//     {
+//       if( i < neighbors.size() )
+//           n[i] = neighbors[i];
+//       else
+//           n[i] = -1;
+//     }
+
+//     if( neighbors.size() > 6 )
+//         cout << "ERROR: More than six neighbors reported..." << count << endl;
+
 //     fprintf( fp, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", 
 //              (unsigned int)onodes[0], 
 //              (unsigned int)onodes[1],
@@ -355,126 +391,10 @@ void InsertHexSheetAlgoHex<FIELD>::load_hex_mesh( FieldHandle hexfieldh )
 //              (unsigned int)onodes[7], 
 //              (unsigned int)onodes[6],
 //              n[0], n[1], n[2], n[3], n[4], n[5] );
-    ++bi;
-    count++;
-  }
-}
-
-template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::write_tri_off_file( FieldHandle trifieldh )
-{
-  FILE *fp = fopen( "trifield.off", "w" );
-//  FIELD *trifield = dynamic_cast<FIELD*>( trifieldh.get_rep() );
-  TriSurfMesh<TriLinearLgn<Point> > *tri_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(trifieldh->mesh().get_rep());
-
-  typename TriSurfMesh<TriLinearLgn<Point> >::Node::size_type num_nodes;
-  typename TriSurfMesh<TriLinearLgn<Point> >::Elem::size_type num_tris;
-  tri_mesh->size( num_nodes );
-  tri_mesh->size( num_tris );
-  
-  fprintf( fp, "OFF\n" );
-  fprintf( fp, "%d %d 0\n", (unsigned int)num_nodes, (unsigned int)num_tris );
-  
-  typename TriSurfMesh<TriLinearLgn<Point> >::Node::iterator nbi, nei;
-  tri_mesh->begin( nbi );
-  tri_mesh->end( nei );
-  unsigned int count = 0;
-  while( nbi != nei )
-  {
-    if( count != *nbi )
-        cout << "ERROR: Assumption of node id order is incorrect." << endl;
-    Point p;
-    tri_mesh->get_center( p, *nbi );
-    fprintf( fp, "%f %f %f\n", p.x(), p.y(), p.z() );
-    ++nbi;
-    count++;
-  }
-  
-  typename TriSurfMesh<TriLinearLgn<Point> >::Face::iterator bi, ei;
-  tri_mesh->begin(bi); 
-  tri_mesh->end(ei);
-  while (bi != ei)
-  {
-    typename TriSurfMesh<TriLinearLgn<Point> >::Node::array_type onodes;
-    tri_mesh->get_nodes(onodes, *bi);
-    fprintf( fp, "3 %d %d %d\n", (unsigned int)onodes[0], 
-             (unsigned int)onodes[1],
-             (unsigned int)onodes[2] );
-    ++bi;
-  }
-  fclose( fp );
-}
-
-template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::write_hexes_to_file( FieldHandle hexfieldh )
-{
-  FILE *fp = fopen( "hexfield.txt", "w" );
-//  FIELD *hexfield = dynamic_cast<FIELD*>( hexfieldh.get_rep() );
-  typename FIELD::mesh_type *hex_mesh =
-    dynamic_cast<typename FIELD::mesh_type *>(hexfieldh->mesh().get_rep());
-
-  typename FIELD::mesh_type::Node::size_type num_nodes;
-  typename FIELD::mesh_type::Elem::size_type num_hexes;
-  hex_mesh->size( num_nodes );
-  hex_mesh->size( num_hexes );
-  
-  fprintf( fp, "%d %d\n", (unsigned int)num_nodes, (unsigned int)num_hexes );
-  
-  typename FIELD::mesh_type::Node::iterator nbi, nei;
-  hex_mesh->begin( nbi );
-  hex_mesh->end( nei );
-  unsigned int count = 0;
-  while( nbi != nei )
-  {
-    if( count != *nbi )
-        cout << "ERROR: Assumption of node id order is incorrect." << endl;
-    Point p;
-    hex_mesh->get_center( p, *nbi );
-    fprintf( fp, "%f %f %f\n", p.x(), p.y(), p.z() );
-    ++nbi;
-    count++;
-  }
-  
-  typename FIELD::mesh_type::Elem::iterator bi, ei;
-  hex_mesh->begin(bi); 
-  hex_mesh->end(ei);
-  while (bi != ei)
-  {
-    typename FIELD::mesh_type::Node::array_type onodes;
-    typename FIELD::mesh_type::Cell::array_type neighbors;
-    
-    hex_mesh->synchronize( Mesh::FACES_E );    
-    hex_mesh->get_nodes(onodes, *bi);
-    hex_mesh->get_neighbors( neighbors, *bi );
-
-    typename FIELD::mesh_type::Cell::array_type::iterator iter = neighbors.begin();
-    unsigned int i;
-    int n[6];
-    for( i = 0; i < 6; i++ )
-    {
-      if( i < neighbors.size() )
-          n[i] = neighbors[i];
-      else
-          n[i] = -1;
-    }
-
-    if( neighbors.size() > 6 )
-        cout << "ERROR: More than six neighbors reported..." << count << endl;
-
-    fprintf( fp, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", 
-             (unsigned int)onodes[0], 
-             (unsigned int)onodes[1],
-             (unsigned int)onodes[4],
-             (unsigned int)onodes[5], 
-             (unsigned int)onodes[3],
-             (unsigned int)onodes[2],
-             (unsigned int)onodes[7], 
-             (unsigned int)onodes[6],
-             n[0], n[1], n[2], n[3], n[4], n[5] );
-    ++bi;
-  }
-  fclose( fp );
-}
+//     ++bi;
+//   }
+//   fclose( fp );
+// }
 
 //! \brief projects points on the axis, tests overlap
 template <class FIELD>
@@ -560,7 +480,8 @@ bool InsertHexSheetAlgoHex<FIELD>::intersects(
 
 template <class FIELD>
 void InsertHexSheetAlgoHex<FIELD>::compute_intersections_KDTree(
-    vector<int> &crosses, const TriangleMesh& trimesh, const HexMesh& hexmesh )
+    ProgressReporter *mod, vector<int> &crosses, 
+    const TriangleMesh& trimesh, const HexMesh& hexmesh )
 {
 	vector<int> kdfi;
 	for (unsigned i=0; i<trimesh.faces.size(); i++) 
@@ -569,6 +490,8 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections_KDTree(
 	}
 	TriangleMeshFaceTree kdtreebbox(trimesh);
 	gtb::BoxKDTree<int, TriangleMeshFaceTree> kdtree(kdfi, kdtreebbox);
+  
+  int total_hexes = (int)hexmesh.hexes.size();
   
 	for (int h=0; h<(int)hexmesh.hexes.size(); h++) 
   {  
@@ -592,15 +515,22 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections_KDTree(
 				break;
 			}
 		}
+
+    if( h%100 == 0 )
+    {
+      double temp = 0.15 + 0.5*h/total_hexes;
+      mod->update_progress( temp );
+    }
 	}
 }
 
 template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::compute_intersections( 
+void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
+    ProgressReporter* mod,
     HexVolMesh<HexTrilinearLgn<Point> >* original_mesh,
-    HexVolMesh<HexTrilinearLgn<Point> >*& intersect_mesh,
     HexVolMesh<HexTrilinearLgn<Point> >*& side1_mesh,
-    HexVolMesh<HexTrilinearLgn<Point> >*& side2_mesh )
+    HexVolMesh<HexTrilinearLgn<Point> >*& side2_mesh,
+    bool add_to_side1 )
 {
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -635,9 +565,11 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   Box3 b = Box3::make_union(c_trimesh.bounding_box(),
                             c_hexmesh.bounding_box());
   
-	compute_intersections_KDTree(crosses, trimesh, hexmesh);
+	compute_intersections_KDTree( mod, crosses, trimesh, hexmesh);
   
     //flood the two sides
+  mod->update_progress( 0.65 );
+  
 	for (int side=0; side<2; side++) 
   {
 		int start = -1;
@@ -678,6 +610,8 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
 		}
 	}
 
+  mod->update_progress( 0.70 );
+
 //NOTE TO JS: for debugging...
     // inefficient, but whatever, it's just for drawing
 //   side1.points = hexmesh.points;
@@ -701,7 +635,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
 //end NOTE TO JS
 
 //need to add elements from the three sets of elements...
-  hash_type intersect_nodemap, side1_nodemap, side2_nodemap;
+  hash_type side1_nodemap, side2_nodemap;
   for( unsigned int k = 0; k < crosses.size(); ++k )
   {
     typename FIELD::mesh_type::Node::array_type onodes;
@@ -711,24 +645,65 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   
     if( crosses[k] == 0 )
     {
-        //add to intersect_mesh
-      for (unsigned int i = 0; i < onodes.size(); i++)
+//         //add to intersect_mesh
+//       for (unsigned int i = 0; i < onodes.size(); i++)
+//       {
+//         if( intersect_nodemap.find((unsigned int)onodes[i]) == intersect_nodemap.end())
+//         {
+//           Point np;
+//           original_mesh->get_center( np, onodes[i] );
+//           const typename FIELD::mesh_type::Node::index_type nodeindex =
+//               intersect_mesh->add_point( np );
+//           intersect_nodemap[(unsigned int)onodes[i]] = nodeindex;
+//           nnodes[i] = nodeindex;
+//         }
+//         else
+//         {
+//           nnodes[i] = intersect_nodemap[(unsigned int)onodes[i]];
+//         }
+//       }
+//       intersect_mesh->add_elem( nnodes );
+      if( add_to_side1 )
       {
-        if( intersect_nodemap.find((unsigned int)onodes[i]) == intersect_nodemap.end())
+        for (unsigned int i = 0; i < onodes.size(); i++)
         {
-          Point np;
-          original_mesh->get_center( np, onodes[i] );
-          const typename FIELD::mesh_type::Node::index_type nodeindex =
-              intersect_mesh->add_point( np );
-          intersect_nodemap[(unsigned int)onodes[i]] = nodeindex;
-          nnodes[i] = nodeindex;
+          if( side1_nodemap.find((unsigned int)onodes[i]) == side1_nodemap.end())
+          {
+            Point np;
+            original_mesh->get_center( np, onodes[i] );
+            const typename FIELD::mesh_type::Node::index_type nodeindex =
+                side1_mesh->add_point( np );
+            side1_nodemap[(unsigned int)onodes[i]] = nodeindex;
+            nnodes[i] = nodeindex;
+          }
+          else
+          {
+            nnodes[i] = side1_nodemap[(unsigned int)onodes[i]];
+          }
         }
-        else
-        {
-          nnodes[i] = intersect_nodemap[(unsigned int)onodes[i]];
-        }
+        side1_mesh->add_elem( nnodes );
       }
-      intersect_mesh->add_elem( nnodes );
+      else
+      {
+          //add to side2_mesh
+        for (unsigned int i = 0; i < onodes.size(); i++)
+        {
+          if( side2_nodemap.find((unsigned int)onodes[i]) == side2_nodemap.end())
+          {
+            Point np;
+            original_mesh->get_center( np, onodes[i] );
+            const typename FIELD::mesh_type::Node::index_type nodeindex =
+                side2_mesh->add_point( np );
+            side2_nodemap[(unsigned int)onodes[i]] = nodeindex;
+            nnodes[i] = nodeindex;
+          }
+          else
+          {
+            nnodes[i] = side2_nodemap[(unsigned int)onodes[i]];
+          }
+        }
+        side2_mesh->add_elem( nnodes );
+      }
     }
     else if( crosses[k] == 1 )
     {
@@ -773,20 +748,20 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
       side2_mesh->add_elem( nnodes );
     }
   }
+
+  mod->update_progress( 0.75 );
+
   typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type original_size;
   typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type side1_size;
   typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type side2_size;
-  typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type intersect_size;
   side1_mesh->size( side1_size );
   side2_mesh->size( side2_size );
-  intersect_mesh->size( intersect_size );
   original_mesh->size( original_size );
   
   cout << endl;
   cout << "Hexmesh has " << original_size << " hexes." << endl;
   cout << "Side1 has " << side1_size << " hexes." << endl;
   cout << "Side2 has " << side2_size << " hexes." << endl;
-  cout << "Intersect has " << intersect_size << " hexes." << endl << endl;
 }
 
 } // end namespace SCIRun

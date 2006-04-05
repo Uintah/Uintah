@@ -26,28 +26,69 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+##
+ #  InsertHexSheet.tcl: The InsertHexSheet UI
+ #  Written by:
+ #   Jason Shepherd
+ #   Department of Computer Science
+ #   University of Utah
+ #   April 2006
+ #  Copyright (C) 2006 SCI Group
+ ##
 
-itcl_class SCIRun_FieldsData_InsertHexSheet {
+catch {rename SCIRun_FieldsCreate_InsertHexSheet ""}
+
+itcl_class SCIRun_FieldsCreate_InsertHexSheet {
     inherit Module
+
     constructor {config} {
         set name InsertHexSheet
-        set_defaults
-    }
-
-    method set_defaults {} {
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            return
+            raise $w
+            return;
         }
 
         toplevel $w
+        wm minsize $w 150 80
 
-	frame       $w.f
+	frame $w.bound1
+	label $w.bound1.t1 -text "Intersected Hexes in"
+	pack $w.bound1.t1
+	pack $w.bound1
 
-	makeSciButtonPanel $w $w $this
+	frame $w.bound
+	radiobutton $w.bound.side_1 -text "Side 1" \
+	    -variable $this-side -value "side1"
+	radiobutton $w.bound.side_2 -text "Side 2" \
+	    -variable $this-side -value "side2"
+	pack $w.bound.side_1 $w.bound.side_2 \
+	    -side left -anchor nw -padx 3
+	pack $w.bound -side top
+
+# 	frame $w.sep
+# 	label $w.sep.t1
+#  	label $w.sep.t2 -text "Smoothing Scheme"
+# 	pack $w.sep.t1 $w.sep.t2
+# 	pack $w.sep
+
+# 	frame $w.style
+# 	radiobutton $w.style.smartlaplacian -text "Smart Laplacian" \
+# 	    -variable $this-smoothscheme -value "SmartLaplacian"
+# 	radiobutton $w.style.shapeimprovement -text "Shape Improvement" \
+# 	    -variable $this-smoothscheme -value "ShapeImprovement"
+# 	pack $w.style.smartlaplacian $w.style.shapeimprovement \
+# 	    -side left -anchor nw -padx 3
+# 	pack $w.style
+
+        frame $w.f
+ 	frame $w.fb
+	pack $w.f $w.fb -padx 2 -pady 2 -side top -expand yes
+
+        makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
 }
