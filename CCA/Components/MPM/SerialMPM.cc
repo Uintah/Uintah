@@ -3298,7 +3298,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
-        ParticleVariable<double> pErosion;
+        ParticleVariable<double> pErosion, pTempPrev;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
@@ -3308,6 +3308,7 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
         new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
         new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
+        new_dw->allocateAndPut(pTempPrev,      lb->pTempPreviousLabel,  pset);
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
         new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
