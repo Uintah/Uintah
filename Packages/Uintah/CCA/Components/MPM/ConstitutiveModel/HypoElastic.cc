@@ -494,7 +494,8 @@ const Vector& J,const double& C,const Vector& D,Vector& SIF)
   // D--COD near crack tip in local coordinates.  
 
   double GT,CC,D1,D2,D3;
-  double KI,KII,KIII,K1,K2,K3;
+  double KI,KII,KIII,
+         K1=0,K2=0,K3=0;
 
   GT=fabs(J.x());                     // total energy release rate
   CC=C*C;                             // square of crack propagating velocity

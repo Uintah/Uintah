@@ -125,9 +125,8 @@ UnuShuffle::execute()
     i++;
   }
 
-  unsigned int ord[ordLen];
+  unsigned int * ord = new unsigned int[ordLen];
 
-  
   i=0, start=0;
   int which = 0, end=0, counter=0;
   inword = false;
@@ -162,6 +161,7 @@ UnuShuffle::execute()
   // error checking
   if ((unsigned int) axis_.get() >= nin->dim) {
     error("Axis " + to_string(axis_.get()) + " not in valid range [0," + to_string(nin->dim-1) + "]");
+    delete [] ord;
     return;
   }
   if (ordLen != nin->axis[axis_.get()].size) {
@@ -169,12 +169,15 @@ UnuShuffle::execute()
     return;
   }
 
-  unsigned int iperm[ordLen];
-  size_t whichperm[ordLen];
+  unsigned int * iperm     = new unsigned int[ordLen];
+  size_t       * whichperm = new size_t[ordLen];
 
   if (inverse_.get()) {
     if (nrrdInvertPerm(iperm, ord, ordLen)) {
       error("Couldn't compute inverse of given permutation");
+      delete [] ord;
+      delete [] iperm;
+      delete [] whichperm;
       return;
     }
     for (unsigned int i = 0; i < ordLen; i++) {
@@ -193,6 +196,10 @@ UnuShuffle::execute()
     free(err);
   }
 
+  delete [] ord;
+  delete [] iperm;
+  delete [] whichperm;
+
   NrrdDataHandle out(scinew NrrdData(nout));
 
   // Copy the properties.
@@ -204,7 +211,6 @@ UnuShuffle::execute()
   }
 
   onrrd_->send_and_dereference(out);
-
 }
 
 } // End namespace Teem
