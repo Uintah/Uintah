@@ -323,8 +323,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
