@@ -81,15 +81,113 @@ public:
 
 
 template <class FIELD>
-class MeshSmootherAlgoTet : public MeshSmootherAlgo
+class MeshSmootherAlgoShared : public MeshSmootherAlgo
+{
+public:
+  //! virtual interface. 
+  //  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
+  //                               bool boundary, string scheme );
+protected:
+  virtual FieldHandle compute_domain_surface( ProgressReporter *reporter,
+                                              FieldHandle fieldh );
+
+  FieldHandle smart_laplacian_smoother( ProgressReporter *reporter,
+                                        FieldHandle fieldh );
+  //  FieldHandle shape_improvement_wrapper( ProgressReporter *reporter,
+  //                                         FieldHandle fieldh );
+};
+
+
+template <class FIELD>
+FieldHandle
+MeshSmootherAlgoShared<FIELD>::compute_domain_surface( ProgressReporter *mod,
+                                                       FieldHandle fieldh )
+{
+  return 0;
+}
+
+
+template <class FIELD>
+FieldHandle
+MeshSmootherAlgoShared<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
+                                                         FieldHandle fieldh )
+{
+  // Need to make a copy of the field, so that the previous one is not damaged.
+  FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
+  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
+  ofield->copy_properties( fieldh.get_rep() );
+  ofield->mesh_detach();
+  
+  double cull_eps = 1e-4;
+  Mesquite::MsqError err;
+  Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
+  // Set stopping criterion.
+  Mesquite::TerminationCriterion term_inner, term_outer;
+  term_inner.set_culling_type( Mesquite::TerminationCriterion::VERTEX_MOVEMENT_ABSOLUTE, cull_eps, err );
+  term_outer.add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 100, err );
+  term_outer.add_criterion_type_with_double( Mesquite::TerminationCriterion::CPU_TIME, 600, err );
+  // Sets a culling method on the first QualityImprover.
+  sl_smoother.set_inner_termination_criterion(&term_inner);
+  sl_smoother.set_outer_termination_criterion(&term_outer);
+  Mesquite::InstructionQueue iqueue;
+    
+  iqueue.disable_automatic_quality_assessment();
+  iqueue.disable_automatic_midnode_adjustment();
+    
+  iqueue.set_master_quality_improver( &sl_smoother, err );  
+    
+  if ( err )
+  {
+    mod->error( "Unexpected error from Mesquite code." );
+    return field;
+  }
+
+  MesquiteMesh<FIELD> entity_mesh( ofield, mod );  
+
+  FieldHandle domain_field_h = compute_domain_surface( mod, fieldh );
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = 0;
+  if (domain_field_h.get_rep())
+  {
+    domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(domain_field_h->mesh().get_rep());
+  }
+
+  // TODO: This looks unreachable.  err is unused since we last checked it.
+  if (err)
+  {
+    mod->error( "Error occured during Mesquite initialization" );
+    return field;
+  }
+
+  if (domain_mesh)
+  {
+    domain_mesh->synchronize(Mesh::EDGES_E | Mesh::NORMALS_E | Mesh::LOCATE_E);
+    MesquiteDomain domain( domain_mesh );
+    iqueue.run_instructions( &entity_mesh, &domain, err ); 
+  }
+  else
+  {
+    iqueue.run_instructions( &entity_mesh, err ); 
+  }
+
+  MSQ_CHKERR(err);
+  if (err)
+  {
+    mod->error( "Error occured during Mesquite smart laplacian smoothing." );
+    return field;
+  }
+
+  return ofield;
+}
+
+
+template <class FIELD>
+class MeshSmootherAlgoTet : public MeshSmootherAlgoShared<FIELD>
 {
 public:
   //! virtual interface. 
   virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
                                bool boundary, string scheme );
-private:
-  FieldHandle smart_laplacian_smoother( ProgressReporter *mod,
-                                        FieldHandle fieldh );
+protected:
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod,
                                          FieldHandle fieldh );
 };
@@ -154,7 +252,7 @@ MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   
   if( scheme == "SmartLaplacian" )
   {
-    return smart_laplacian_smoother( mod, ofh );
+    return this->smart_laplacian_smoother( mod, ofh );
   }
   else if( scheme == "ShapeImprovement" )
   {
@@ -165,64 +263,6 @@ MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     mod->error( "Unknown Smoothing Scheme." );
     return ofh;
   }
-}
-
-
-template <class FIELD>
-FieldHandle
-MeshSmootherAlgoTet<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
-                                                      FieldHandle fieldh )
-{
-  // Need to make a copy of the field so that this one is not damaged.
-  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
-  ofield->mesh_detach();
-
-  double cull_eps=1e-4;
-  Mesquite::MsqError err;
-  Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
-  // Set stopping criterion.
-  Mesquite::TerminationCriterion term_inner, term_outer;
-  term_inner.set_culling_type( Mesquite::TerminationCriterion::VERTEX_MOVEMENT_ABSOLUTE, cull_eps, err );
-  term_outer.add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 100, err );
-  term_outer.add_criterion_type_with_double( Mesquite::TerminationCriterion::CPU_TIME, 600, err );
-  // Sets a culling method on the first QualityImprover.
-  sl_smoother.set_inner_termination_criterion(&term_inner);
-  sl_smoother.set_outer_termination_criterion(&term_outer);
-  Mesquite::InstructionQueue iqueue;
-    
-  iqueue.disable_automatic_quality_assessment();
-  iqueue.disable_automatic_midnode_adjustment();
-    
-  iqueue.set_master_quality_improver(&sl_smoother, err);
-    
-  if(err)
-  {
-    mod->error( "Unexpected error from Mesquite code.\n" );
-    return field;
-  }
-
-  MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-        
-  // Run smoother.
-  if(err)
-  {
-    mod->error( "Error occured during Mesquite initialization\n" );
-    return field;
-  }
-  else
-  {
-    iqueue.run_instructions( &entity_mesh, err ); 
-    MSQ_CHKERR(err);
-    if(err)
-    {
-      mod->error( "Error occured during Mesquite smart laplacian smoothing.\n" );
-      return field;
-    }
-  }
-
-  return ofield;
 }
 
 
@@ -341,15 +381,13 @@ MeshSmootherAlgoTet<FIELD>::shape_improvement_wrapper( ProgressReporter *mod,
 
 
 template <class FIELD>
-class MeshSmootherAlgoHex : public MeshSmootherAlgo
+class MeshSmootherAlgoHex : public MeshSmootherAlgoShared<FIELD>
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
-                              bool boundary, string scheme );
-private:
-  FieldHandle smart_laplacian_smoother( ProgressReporter *mod,
-                                        FieldHandle fieldh );
+  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
+                               bool boundary, string scheme );
+protected:
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod,
                                          FieldHandle fieldh );
 };
@@ -414,7 +452,7 @@ MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
   if( scheme == "SmartLaplacian" )
   { 
-    return smart_laplacian_smoother( mod, ofh );
+    return this->smart_laplacian_smoother( mod, ofh );
   }
   else if( scheme == "ShapeImprovement" )
   {
@@ -425,63 +463,6 @@ MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     mod->error( "Unknown Smoothing Scheme." );
     return ofh;
   }
-}
-
-
-template <class FIELD>
-FieldHandle
-MeshSmootherAlgoHex<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
-                                                      FieldHandle fieldh )
-{
-  // Need to make a copy of the field, so that the previous one is not damaged.
-  FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
-  ofield->mesh_detach();
-  
-  double cull_eps = 1e-4;
-  Mesquite::MsqError err;
-  Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
-  // Set stopping criterion.
-  Mesquite::TerminationCriterion term_inner, term_outer;
-  term_inner.set_culling_type( Mesquite::TerminationCriterion::VERTEX_MOVEMENT_ABSOLUTE, cull_eps, err );
-  term_outer.add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 100, err );
-  term_outer.add_criterion_type_with_double( Mesquite::TerminationCriterion::CPU_TIME, 600, err );
-  // Sets a culling method on the first QualityImprover.
-  sl_smoother.set_inner_termination_criterion(&term_inner);
-  sl_smoother.set_outer_termination_criterion(&term_outer);
-  Mesquite::InstructionQueue iqueue;
-    
-  iqueue.disable_automatic_quality_assessment();
-  iqueue.disable_automatic_midnode_adjustment();
-    
-  iqueue.set_master_quality_improver( &sl_smoother, err );  
-    
-  if( err )
-  {
-    mod->error( "Unexpected error from Mesquite code.\n" );
-    return field;
-  }
-
-  MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-
-  if(err)
-  {
-    mod->error( "Error occured during Mesquite initialization\n" );
-    return field;
-  }
-  else
-  {
-    iqueue.run_instructions( &entity_mesh, err ); 
-    MSQ_CHKERR(err);
-    if(err)
-    {
-      mod->error( "Error occured during Mesquite smart laplacian smoothing.\n" );
-      return field;
-    }
-  }
-
-  return ofield;
 }
 
 
@@ -600,15 +581,17 @@ MeshSmootherAlgoHex<FIELD>::shape_improvement_wrapper( ProgressReporter *mod,
 
 
 template <class FIELD>
-class MeshSmootherAlgoTri : public MeshSmootherAlgo
+class MeshSmootherAlgoTri : public MeshSmootherAlgoShared<FIELD>
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
-                              bool boundary, string scheme );
-private:
-  FieldHandle smart_laplacian_smoother( ProgressReporter *mod,
-                                        FieldHandle fieldh );
+  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
+                               bool boundary, string scheme );
+protected:
+
+  virtual FieldHandle compute_domain_surface( ProgressReporter *reporter,
+                                              FieldHandle fieldh );
+
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod,
                                          FieldHandle fieldh );
 };
@@ -627,7 +610,7 @@ MeshSmootherAlgoTri<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
   
   if( scheme == "SmartLaplacian" )
   { 
-    return smart_laplacian_smoother( mod, fieldh );
+    return this->smart_laplacian_smoother( mod, fieldh );
   }
   else if( scheme == "ShapeImprovement" )
   {
@@ -643,62 +626,10 @@ MeshSmootherAlgoTri<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
 
 template <class FIELD>
 FieldHandle
-MeshSmootherAlgoTri<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
-                                                      FieldHandle fieldh )
+MeshSmootherAlgoTri<FIELD>::compute_domain_surface( ProgressReporter *mod,
+                                                    FieldHandle fieldh )
 {
-  // Need to make a copy of the field, so that the previous one is not damaged.
-  FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
-  ofield->mesh_detach();
-  
-  double cull_eps = 1e-4;
-  Mesquite::MsqError err;
-  Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
-  // Set stopping criterion.
-  Mesquite::TerminationCriterion term_inner, term_outer;
-  term_inner.set_culling_type( Mesquite::TerminationCriterion::VERTEX_MOVEMENT_ABSOLUTE, cull_eps, err );
-  term_outer.add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 100, err );
-  term_outer.add_criterion_type_with_double( Mesquite::TerminationCriterion::CPU_TIME, 600, err );
-  // Sets a culling method on the first QualityImprover.
-  sl_smoother.set_inner_termination_criterion(&term_inner);
-  sl_smoother.set_outer_termination_criterion(&term_outer);
-  Mesquite::InstructionQueue iqueue;
-    
-  iqueue.disable_automatic_quality_assessment();
-  iqueue.disable_automatic_midnode_adjustment();
-    
-  iqueue.set_master_quality_improver( &sl_smoother, err );  
-    
-  if( err )
-  {
-    mod->error( "Unexpected error from Mesquite code.\n" );
-    return field;
-  }
-
-  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(ofield->mesh().get_rep());
-  domain_mesh->synchronize( Mesh::EDGES_E | Mesh::NORMALS_E | Mesh::LOCATE_E);
-
-  MesquiteMesh<FIELD> entity_mesh( ofield, mod );
-  MesquiteDomain domain( domain_mesh );
-
-  if(err)
-  {
-    mod->error( "Error occured during Mesquite initialization\n" );
-    return field;
-  }
-  else
-  {
-    iqueue.run_instructions( &entity_mesh, &domain, err ); 
-    MSQ_CHKERR(err);
-    if(err)
-    {
-      mod->error( "Error occured during Mesquite smart laplacian smoothing.\n" );
-      return field;
-    }
-  }
-
-  return ofield;
+  return fieldh;
 }
 
 
@@ -825,15 +756,17 @@ MeshSmootherAlgoTri<FIELD>::shape_improvement_wrapper( ProgressReporter *mod,
 
 
 template <class FIELD>
-class MeshSmootherAlgoQuad : public MeshSmootherAlgo
+class MeshSmootherAlgoQuad : public MeshSmootherAlgoShared<FIELD>
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
-                              bool boundary, string scheme );
-private:
-  FieldHandle smart_laplacian_smoother( ProgressReporter *mod,
-                                        FieldHandle fieldh );
+  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
+                               bool boundary, string scheme );
+protected:
+
+  virtual FieldHandle compute_domain_surface( ProgressReporter *reporter,
+                                              FieldHandle fieldh );
+
   FieldHandle shape_improvement_wrapper( ProgressReporter *mod,
                                          FieldHandle fieldh );
 };
@@ -854,7 +787,7 @@ MeshSmootherAlgoQuad<FIELD>::execute( ProgressReporter *mod,
   
   if( scheme == "SmartLaplacian" )
   {
-    return smart_laplacian_smoother( mod, fieldh );
+    return this->smart_laplacian_smoother( mod, fieldh );
   }
   else if( scheme == "ShapeImprovement" )
   {
@@ -870,41 +803,9 @@ MeshSmootherAlgoQuad<FIELD>::execute( ProgressReporter *mod,
 
 template <class FIELD>
 FieldHandle
-MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
-                                                       FieldHandle fieldh )
+MeshSmootherAlgoQuad<FIELD>::compute_domain_surface( ProgressReporter *mod,
+                                                    FieldHandle fieldh )
 {
-  // Need to make a copy of the field, so that the previous one is not damaged.
-  FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
-  ofield->mesh_detach();
-  
-  double cull_eps = 1e-4;
-  Mesquite::MsqError err;
-  Mesquite::SmartLaplacianSmoother sl_smoother(NULL,err);
-  // Set stopping criterion.
-  Mesquite::TerminationCriterion term_inner, term_outer;
-  term_inner.set_culling_type( Mesquite::TerminationCriterion::VERTEX_MOVEMENT_ABSOLUTE, cull_eps, err );
-  term_outer.add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 100, err );
-  term_outer.add_criterion_type_with_double( Mesquite::TerminationCriterion::CPU_TIME, 600, err );
-  // Sets a culling method on the first QualityImprover.
-  sl_smoother.set_inner_termination_criterion(&term_inner);
-  sl_smoother.set_outer_termination_criterion(&term_outer);
-  Mesquite::InstructionQueue iqueue;
-    
-  iqueue.disable_automatic_quality_assessment();
-  iqueue.disable_automatic_midnode_adjustment();
-    
-  iqueue.set_master_quality_improver( &sl_smoother, err );  
-    
-  if( err )
-  {
-    mod->error( "Unexpected error from Mesquite code.\n" );
-    return field;
-  }
-
-  MesquiteMesh<FIELD> entity_mesh( ofield, mod );  
-
   // The QuadSurfMesh class doesn't currently support a 'snap_to'
   // function, so we'll convert the quads to tris for the domain 
   // functions until the classes can be updated appropriately.
@@ -916,31 +817,10 @@ MeshSmootherAlgoQuad<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
   if( !qalgo.get_rep() || !qalgo->execute( mod, fieldh, tri_surf_h ) )
   {
     mod->warning( "QuadToTri conversion failed to copy data." );
-    return fieldh;
+    return 0;
   }
     
-  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_surf_h->mesh().get_rep());  
-  domain_mesh->synchronize( Mesh::EDGES_E | Mesh::NORMALS_E | Mesh::LOCATE_E);
-  MesquiteDomain domain( domain_mesh );
-
-  if(err)
-  {
-    mod->error( "Error occured during Mesquite initialization\n" );
-    return field;
-  }
-  else
-  {
-    iqueue.run_instructions( &entity_mesh, &domain, err ); 
-
-    MSQ_CHKERR(err);
-    if(err)
-    {
-      mod->error( "Error occured during Mesquite smart laplacian smoothing.\n" );
-      return field;
-    }
-  }
-
-  return ofield;
+  return tri_surf_h;
 }
 
 
