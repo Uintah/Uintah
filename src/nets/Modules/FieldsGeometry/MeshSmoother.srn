@@ -62,7 +62,7 @@
     <module id="m14" package="SCIRun" category="FieldsGeometry" name="MeshSmoother">
       <position x="417" y="492"/>
       <var name="smoothboundary" val="{On}"/>
-      <var name="smoothscheme" val="{ShapeImprovement}"/>
+      <var name="smoothscheme" val="{SmartLaplacian}"/>
       <var name="ui_geometry" val="{314x159+377+781}"/>
     </module>
     <module id="m15" package="SCIRun" category="FieldsGeometry" name="MeshSmoother">
@@ -74,7 +74,7 @@
     <module id="m16" package="SCIRun" category="FieldsGeometry" name="MeshSmoother">
       <position x="643" y="488"/>
       <var name="smoothboundary" val="{Off}"/>
-      <var name="smoothscheme" val="{ShapeImprovement}"/>
+      <var name="smoothscheme" val="{SmartLaplacian}"/>
       <var name="ui_geometry" val="{314x159+600+777}"/>
     </module>
     <module id="m17" package="SCIRun" category="FieldsData" name="MeshQuality">
