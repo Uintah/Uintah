@@ -16,6 +16,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
+#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -2843,11 +2844,6 @@ void MPMICE::coarsenDriver_stdNC(IntVector cl,
 
   IntVector varLow = fine_q_NC.getLowIndex();
   IntVector varHigh = fine_q_NC.getHighIndex();
-
-  if (Min(cl,coarse_q_NC.getLowIndex()) != coarse_q_NC.getLowIndex() ||
-      Max(ch,coarse_q_NC.getHighIndex()) != coarse_q_NC.getHighIndex()) {
-    cout << d_myworld->myrank() << "  Naughty, coarsen: " << cl << " " << ch << " valid range " << coarse_q_NC.getLowIndex() << " " << coarse_q_NC.getHighIndex() << endl;
-  }
 
   for(NodeIterator iter(cl, ch); !iter.done(); iter++){
     IntVector c = *iter;
