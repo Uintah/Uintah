@@ -28,6 +28,13 @@ void JWL::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("EOS");
   eos_ps->setAttribute("type","JWL");
+
+  eos_ps->appendElement("A",A);
+  eos_ps->appendElement("B",B);
+  eos_ps->appendElement("R1",R1);
+  eos_ps->appendElement("R2",R2);
+  eos_ps->appendElement("om",om);
+  eos_ps->appendElement("rho0",rho0);
 }
 
 //__________________________________
