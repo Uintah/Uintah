@@ -1138,6 +1138,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       return NULL;
     }
     break;
+
   case H5T_COMPOUND:
     error("At this time HDF5 Compound types can not be converted into Nrrds.");
     execute_error_ = true;

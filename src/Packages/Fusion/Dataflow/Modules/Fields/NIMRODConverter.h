@@ -597,9 +597,10 @@ NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles
       nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
 	       ndims+1, size);
 
-    nrrdAxisInfoSet(nout->nrrd_, nrrdAxisInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode,
-		    nrrdCenterNode, nrrdCenterNode);
+    unsigned int centers[NRRD_DIM_MAX];
+    centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+    centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
   }
 
   nHandles[data[0]]->get_property( "Name", nrrdName );
