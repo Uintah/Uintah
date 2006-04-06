@@ -41,6 +41,7 @@
 #ifndef SCIRun_PortInstance_h
 #define SCIRun_PortInstance_h
 
+#include <Core/CCA/spec/cca_sidl.h>
 #include <string>
 
 namespace SCIRun
@@ -57,39 +58,52 @@ class PortInstance
 public:
   PortInstance();
   virtual ~PortInstance();
-  
+
   enum PortType {
-    From=0,
-    To=1
+    Uses = 0,
+    Provides = 1
   };
 
   /** */
   virtual bool connect(PortInstance*) = 0;
+
   /** */
   virtual PortType portType() = 0;
+
   /** */
   virtual std::string getType();
+
   /** */
   virtual std::string getModel();
+
   /** */
   virtual std::string getUniqueName() = 0;
+
   /** */
   virtual bool disconnect(PortInstance*) =0;
+
   /** */
   virtual bool canConnectTo(PortInstance *)=0;
+
   /** */
   virtual bool available();
+
+  /** */
+  virtual sci::cca::TypeMap::pointer getProperties() = 0;
+
+  /** */
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm) = 0;
+
   /** */
   virtual PortInstance* getPeer();
 
-protected:
   // default keys
   static const std::string MAX_C;
   static const std::string MIN_C;
   static const std::string PROXY;
   static const std::string NAME;
   static const std::string TYPE;
-
+  static const std::string MODEL;
 
 private:
   PortInstance(const PortInstance&);

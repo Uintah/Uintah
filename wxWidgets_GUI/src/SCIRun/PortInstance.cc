@@ -49,6 +49,7 @@ const std::string PortInstance::MIN_C("MIN_CONNECTIONS");
 const std::string PortInstance::PROXY("ABLE_TO_PROXY");
 const std::string PortInstance::NAME("cca.portName");
 const std::string PortInstance::TYPE("cca.portType");
+const std::string PortInstance::MODEL("sci.model");
 
 std::string PortInstance::getType()
 {

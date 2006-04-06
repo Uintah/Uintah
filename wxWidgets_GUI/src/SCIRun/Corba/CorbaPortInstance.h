@@ -58,36 +58,44 @@ class CorbaComponentInstance;
  */
 class CorbaPortInstance : public PortInstance {
 public:
-  enum PortType {
-    Provides, Uses
-  };
-  CorbaPortInstance(CorbaComponentInstance* ci, corba::Port* port, PortType type);
+  CorbaPortInstance(CorbaComponentInstance* ci, corba::Port* port,
+                    const sci::cca::TypeMap::pointer& properties, PortType type);
   ~CorbaPortInstance();
 
   /**? */
   virtual bool connect(PortInstance*);
+
   /** ? */
   virtual PortInstance::PortType portType();
+
   /** ? */
   virtual std::string getUniqueName();
+
   /** ? */
   virtual std::string getModel();
+
   /** ? */
   virtual bool disconnect(PortInstance*);
+
   /** ? */
   virtual bool canConnectTo(PortInstance *);
 
   virtual std::string getType();
-  
+
+  virtual sci::cca::TypeMap::pointer getProperties() { return properties; }
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm);
+
 private:
   friend class BridgeComponentInstance;
-  
+
   CorbaPortInstance(const CorbaPortInstance&);
   CorbaPortInstance& operator=(const CorbaPortInstance&);
-  
+  void setDefaultProperties();
+
   CorbaComponentInstance* ci;
   corba::Port* port;
   PortType porttype;
+  sci::cca::TypeMap::pointer properties;
 
   int nConnections;
 };

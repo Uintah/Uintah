@@ -28,7 +28,7 @@
 
 
 /*
- *  VtkPortInstance.cc: 
+ *  VtkPortInstance.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -48,20 +48,19 @@
 using namespace SCIRun;
 using namespace vtk;
 
-VtkPortInstance::VtkPortInstance(VtkComponentInstance* ci,
-                                 vtk::Port* port, PortType porttype)
-  : ci(ci), port(port), porttype(porttype)
+const std::string VtkPortInstance::VTK_OUT_PORT("VTK::OutPort");
+const std::string VtkPortInstance::VTK_IN_PORT("VTK::InPort");
+
+
+VtkPortInstance::VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port,
+                                 const sci::cca::TypeMap::pointer& properties, VTKPortType porttype)
+  : ci(ci), port(port), porttype(porttype), properties(properties), nConnections(0)
 {
-  nConnections=0;
+  setDefaultProperties();
 }
 
 VtkPortInstance::~VtkPortInstance()
 {
-}
-
-std::string
-VtkPortInstance::getModel(){
-  return "vtk";
 }
 
 std::string VtkPortInstance::getUniqueName()
@@ -71,36 +70,38 @@ std::string VtkPortInstance::getUniqueName()
 
 PortInstance::PortType VtkPortInstance::portType()
 {
-  if(porttype == Output)
-    return PortInstance::From;
-  else
-    return PortInstance::To;
+  if (porttype == Output) {
+    return PortInstance::Uses;
+  } else {
+    return PortInstance::Provides;
+  }
 }
 
 bool VtkPortInstance::connect(PortInstance* to)
 {
-  // TODO: build the connection, do we really need a separate 
-  // data struture? I guess the framework/component/port structure already 
+  // TODO: build the connection, do we really need a separate
+  // data struture? I guess the framework/component/port structure already
   // record the connections.
-  if(!canConnectTo(to))
+  if (! canConnectTo(to)) {
     return false;
+  }
 
   // VtkPortInstance* p2 = dynamic_cast<VtkPortInstance*>(to);
-  VtkPortInstance* peer=(VtkPortInstance*)to;
+  VtkPortInstance* peer = (VtkPortInstance*) to;
 
   port->addConnectedPort(peer->port);
   peer->port->addConnectedPort(port);
 
   nConnections++;
   peer->nConnections++;
-  
+
   //  Network* net = port->get_module()->getNetwork();
-  if(porttype == Output){
-    ((vtk::InPort*)peer->port)->connect((vtk::OutPort*)port);
+  if (porttype == Output) {
+    ( (vtk::InPort*) peer->port)->connect( (vtk::OutPort*) port);
     port->update(Port::REFRESH);
-    //    ((vtk::OutPort*)port)->setOutput(((vtk::OutPort*)port)->getOutput());
+    // ((vtk::OutPort*)port)->setOutput(((vtk::OutPort*)port)->getOutput());
   } else {
-    ((vtk::InPort*)port)->connect((vtk::OutPort*)peer->port);
+    ( (vtk::InPort*) port)->connect( (vtk::OutPort*) peer->port);
     port->update(Port::REFRESH);
   }
   return true;
@@ -120,7 +121,7 @@ bool VtkPortInstance::disconnect(PortInstance*)
     port->update(); //((vtk::OutPort*)peer->port)->setOutput(((vtk::OutPort*)peer->port)->getOutput());
   }
   */
-  
+
 // need setOutput(0) ?
   return false;
 }
@@ -128,24 +129,54 @@ bool VtkPortInstance::disconnect(PortInstance*)
 bool VtkPortInstance::canConnectTo(PortInstance *to)
 {
   //skip connections between different component models
-  //particuarlly connections between UI ports (CCA) and Vtk ports. 
-  if(getModel()!=to->getModel()) return false;
-  if(porttype == Input){
-    if(((VtkPortInstance*)to)->porttype ==Input) return false;
+  //particuarlly connections between UI ports (CCA) and Vtk ports.
+  if (getModel() != to->getModel()) {
+    return false;
+  }
+  if (porttype == Input) {
+    if ( ( (VtkPortInstance*) to)->porttype == Input) {
+      return false;
+    }
+
     // Input port does not allow multiple connections.
-    vtk::InPort* inport = (vtk::InPort*)port;
-    vtk::OutPort* outport =(vtk::OutPort*)(((VtkPortInstance*)to)->port);
-    if(nConnections>1) return false; 
-    if(inport->accept(outport)) return true;
-  }else{
-    if(((VtkPortInstance*)to)->porttype ==Output) return false;
+    vtk::InPort* inport = (vtk::InPort*) port;
+    vtk::OutPort* outport = (vtk::OutPort*) ( ( (VtkPortInstance*) to)->port);
+    if (nConnections > 1) {
+      return false;
+    }
+    if (inport->accept(outport)) {
+      return true;
+    }
+  } else {
+    if ( ( (VtkPortInstance*) to)->porttype == Output) {
+      return false;
+    }
     // Input port does not allow multiple connections.
-    vtk::OutPort* outport = (vtk::OutPort*)port;
-    vtk::InPort* inport =(vtk::InPort*)(((VtkPortInstance*)to)->port);
-    if(((VtkPortInstance*)to)->nConnections>1) return false; 
-    if(inport->accept(outport)) return true;
+    vtk::OutPort* outport = (vtk::OutPort*) port;
+    vtk::InPort* inport = (vtk::InPort*) ( ( (VtkPortInstance*) to)->port);
+    if ( ( (VtkPortInstance*) to)->nConnections > 1) {
+      return false;
+    }
+    if (inport->accept(outport)) {
+      return true;
+    }
   }
   return false;
 }
 
+void VtkPortInstance::setProperties(const sci::cca::TypeMap::pointer& tm)
+{
+  properties = tm;
+  setDefaultProperties();
+}
 
+void VtkPortInstance::setDefaultProperties()
+{
+  properties->putString(PortInstance::NAME, port->getName());
+  if (porttype == Output) {
+    properties->putString(PortInstance::TYPE, VTK_OUT_PORT);
+  } else {
+    properties->putString(PortInstance::TYPE, VTK_IN_PORT);
+  }
+  properties->putString(PortInstance::MODEL, this->getModel());
+}

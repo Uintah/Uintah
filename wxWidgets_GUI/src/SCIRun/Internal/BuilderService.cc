@@ -235,7 +235,7 @@ BuilderService::getProvidedPortNames(const sci::cca::ComponentID::pointer &cid)
     for (PortInstanceIterator* iter = ci->getPorts();
 	    !iter->done(); iter->next()) {
 	PortInstance* port = iter->get();
-	if (port->portType() == PortInstance::To) {
+	if (port->portType() == PortInstance::Provides) {
 	    result.push_back(port->getUniqueName());
 	}
     }
@@ -255,7 +255,7 @@ BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
     for (PortInstanceIterator* iter = ci->getPorts();
 	    !iter->done(); iter->next()) {
 	PortInstance* port = iter->get();
-	if (port->portType() == PortInstance::From) {
+	if (port->portType() == PortInstance::Uses) {
 	    result.push_back(port->getUniqueName());
 	}
     }
@@ -271,19 +271,24 @@ BuilderService::getPortProperties(const sci::cca::ComponentID::pointer &cid, con
     if (! comp) {
 	return framework->createTypeMap();
     }
-    CCAComponentInstance* ccaComp = dynamic_cast<CCAComponentInstance*>(comp);
-    if (! ccaComp) {
-	return framework->createTypeMap();
-    }
-    return ccaComp->getPortProperties(portname);
+    return comp->getPortProperties(portname);
+//     CCAComponentInstance* ccaComp = dynamic_cast<CCAComponentInstance*>(comp);
+//     if (! ccaComp) {
+// 	return framework->createTypeMap();
+//     }
+//     return ccaComp->getPortProperties(portname);
 }
 
-void BuilderService::setPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
-		       const std::string& /*portname*/,
-		       const sci::cca::TypeMap::pointer& /*map*/)
+void BuilderService::setPortProperties(const sci::cca::ComponentID::pointer& cid,
+		       const std::string& portname,
+		       const sci::cca::TypeMap::pointer& map)
 {
-    // TODO: finish this!!!
-    std::cerr << "BuilderService::setPortProperties not finished\n";
+    ComponentInstance* comp = framework->lookupComponent(cid->getInstanceName());
+    if (! comp) {
+	// with warning?
+	return;
+    }
+    return comp->setPortProperties(portname, map);
 }
 
 SSIDL::array1<sci::cca::ConnectionID::pointer>

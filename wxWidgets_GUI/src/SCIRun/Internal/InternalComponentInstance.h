@@ -28,7 +28,7 @@
 
 
 /*
- *  InternalComponentInstance.h: 
+ *  InternalComponentInstance.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -54,19 +54,21 @@ class InternalComponentInstance : public ComponentInstance
 {
 public:
   InternalComponentInstance(SCIRunFramework* framework,
-                            const std::string& intanceName,
-                            const std::string& className);
-  
+			    const std::string& intanceName,
+			    const std::string& className);
+
   virtual PortInstance* getPortInstance(const std::string& name);
   virtual ~InternalComponentInstance();
-  
+
   virtual PortInstanceIterator* getPorts();
-  
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& /*portName*/) { return sci::cca::TypeMap::pointer(0); }
+  virtual void setPortProperties(const std::string& /*portName*/, const sci::cca::TypeMap::pointer& /*tm*/) {}
+
   void incrementUseCount();
   bool decrementUseCount();
 private:
   int useCount;
-  
+
   InternalComponentInstance(const InternalComponentInstance&);
   InternalComponentInstance& operator=(const InternalComponentInstance&);
 };

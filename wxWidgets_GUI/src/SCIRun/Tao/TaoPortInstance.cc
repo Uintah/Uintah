@@ -46,17 +46,19 @@ namespace SCIRun {
 
 TaoPortInstance::TaoPortInstance(const std::string& name,
                                  const std::string& type,
+				 const sci::cca::TypeMap::pointer& properties,
                                  PortType porttype)
-  : name(name), type(type), porttype(porttype),
+  : name(name), type(type), properties(properties), porttype(porttype),
     useCount(0)
 {
 }
 
 TaoPortInstance::TaoPortInstance(const std::string& name,
                                  const std::string& type,
+				 const sci::cca::TypeMap::pointer& properties,
                                  const sci::cca::Port::pointer& port,
                                  PortType porttype)
-  : name(name), type(type), port(port),
+  : name(name), type(type), properties(properties), port(port),
     porttype(porttype), useCount(0)
 {
 }
@@ -76,7 +78,7 @@ bool TaoPortInstance::connect(PortInstance* to)
     return false;
   }
 
-  if (portType() == From && p2->portType() == To) {
+  if (portType() == Uses && p2->portType() == Provides) {
     connections.push_back(p2);
   } else {
       p2->connect(this);
@@ -86,11 +88,7 @@ bool TaoPortInstance::connect(PortInstance* to)
 
 PortInstance::PortType TaoPortInstance::portType()
 {
-    if (porttype == Uses) {
-        return From;
-    } else {
-        return To;
-    }
+  return porttype;
 }
 
 
@@ -151,7 +149,7 @@ bool TaoPortInstance::canConnectTo(PortInstance* to)
 
 bool TaoPortInstance::available()
 {
-    return portType() == To || connections.size() == 0;
+    return portType() == Provides || connections.size() == 0;
 }
 
 // return a PortInstance on the other side of the connection
@@ -179,6 +177,19 @@ bool TaoPortInstance::decrementUseCount()
     }
     useCount--;
     return true;
+}
+
+void TaoPortInstance::setProperties(const sci::cca::TypeMap::pointer& tm)
+{
+  properties = tm;
+  setDefaultProperties();
+}
+
+void TaoPortInstance::setDefaultProperties()
+{
+  properties->putString(PortInstance::NAME, name);
+  properties->putString(PortInstance::TYPE, type);
+  properties->putString(PortInstance::MODEL, this->getModel());
 }
 
 } // end namespace SCIRun

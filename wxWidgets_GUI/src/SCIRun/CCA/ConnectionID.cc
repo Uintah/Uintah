@@ -37,21 +37,25 @@
  *   April 2002
  *
  */
-
+#include <SCIRun/CCA/ConnectionID.h>
 #include <SCIRun/CCA/ComponentID.h>
 #include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/TypeMap.h>
 #include <Core/CCA/PIDL/URL.h>
-#include <SCIRun/CCA/ConnectionID.h>
+
 #include <iostream>
 
 namespace SCIRun {
+
+const std::string ConnectionID::IS_IN_USE("cca.isInUse");
 
 ConnectionID::ConnectionID(const sci::cca::ComponentID::pointer& user,
                            const std::string& uPortName,
                            const sci::cca::ComponentID::pointer& provider,
                            const std::string& pPortName)
-    : userPortName(uPortName), providerPortName(pPortName), user(user), provider(provider)
+  : userPortName(uPortName), providerPortName(pPortName), user(user), provider(provider), properties(new TypeMap)
 {
+  properties->putBool(IS_IN_USE, false);
 }
 
 ConnectionID::~ConnectionID()
@@ -76,6 +80,13 @@ std::string ConnectionID::getProviderPortName()
 std::string ConnectionID::getUserPortName()
 {
   return userPortName;
+}
+
+void ConnectionID::setProperties(const sci::cca::TypeMap::pointer &tm)
+{
+  bool inUse = properties->getBool(IS_IN_USE, false);
+  properties = tm;
+  properties->putBool(IS_IN_USE, inUse);
 }
 
 } // end namespace SCIRun

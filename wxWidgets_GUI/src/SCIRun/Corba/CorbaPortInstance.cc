@@ -28,7 +28,7 @@
 
 
 /*
- *  CorbaPortInstance.cc: 
+ *  CorbaPortInstance.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -48,11 +48,10 @@
 using namespace SCIRun;
 using namespace corba;
 
-CorbaPortInstance::CorbaPortInstance(CorbaComponentInstance* ci,
-                                 corba::Port* port, PortType porttype)
-  : ci(ci), port(port), porttype(porttype)
+CorbaPortInstance::CorbaPortInstance(CorbaComponentInstance* ci, corba::Port* port,
+                                     const sci::cca::TypeMap::pointer& properties, PortType porttype)
+  : ci(ci), port(port), porttype(porttype), properties(properties), nConnections(0)
 {
-  nConnections=0;
 }
 
 CorbaPortInstance::~CorbaPortInstance()
@@ -60,7 +59,8 @@ CorbaPortInstance::~CorbaPortInstance()
 }
 
 std::string
-CorbaPortInstance::getModel(){
+CorbaPortInstance::getModel()
+{
   return "corba";
 }
 
@@ -71,16 +71,13 @@ std::string CorbaPortInstance::getUniqueName()
 
 PortInstance::PortType CorbaPortInstance::portType()
 {
-  if(porttype == Provides)
-    return PortInstance::From;
-  else
-    return PortInstance::To;
+  return porttype;
 }
 
 bool CorbaPortInstance::connect(PortInstance* to)
 {
-  // TODO: build the connection, do we really need a separate 
-  // data struture? I guess the framework/component/port structure already 
+  // TODO: build the connection, do we really need a separate
+  // data struture? I guess the framework/component/port structure already
   // record the connections.
   if(!canConnectTo(to))
     return false;
@@ -93,7 +90,7 @@ bool CorbaPortInstance::connect(PortInstance* to)
 
   nConnections++;
   peer->nConnections++;
-  
+
   return true;
 }
 
@@ -111,7 +108,7 @@ bool CorbaPortInstance::disconnect(PortInstance*)
     port->update(); //((corba::OutPort*)peer->port)->setOutput(((corba::OutPort*)peer->port)->getOutput());
   }
   */
-  
+
 // need setOutput(0) ?
   return false;
 }
@@ -119,17 +116,17 @@ bool CorbaPortInstance::disconnect(PortInstance*)
 bool CorbaPortInstance::canConnectTo(PortInstance *to)
 {
   //skip connections between different component models
-  //particuarlly connections between UI ports (CCA) and Corba ports. 
+  //particuarlly connections between UI ports (CCA) and Corba ports.
   if(getModel()!=to->getModel()) return false;
   if(porttype == Uses){
     if(((CorbaPortInstance*)to)->porttype ==Uses) return false;
     // Uses port does not allow multiple connections.
-    if(nConnections>=1) return false; 
+    if(nConnections>=1) return false;
     return port->getType()==((CorbaPortInstance*)to)->port->getType();
   }else{
     if(((CorbaPortInstance*)to)->porttype ==Provides) return false;
     // Uses port does not allow multiple connections.
-    if(((CorbaPortInstance*)to)->nConnections>=1) return false; 
+    if(((CorbaPortInstance*)to)->nConnections>=1) return false;
     return port->getType()==((CorbaPortInstance*)to)->port->getType();
   }
   return false;
@@ -137,6 +134,20 @@ bool CorbaPortInstance::canConnectTo(PortInstance *to)
 
 
 std::string
-CorbaPortInstance::getType(){
+CorbaPortInstance::getType()
+{
   return port->getType();
+}
+
+void CorbaPortInstance::setProperties(const sci::cca::TypeMap::pointer& tm)
+{
+  properties = tm;
+  setDefaultProperties();
+}
+
+void CorbaPortInstance::setDefaultProperties()
+{
+  properties->putString(PortInstance::NAME, port->getName());
+  properties->putString(PortInstance::TYPE, port->getType());
+  properties->putString(PortInstance::MODEL, this->getModel());
 }

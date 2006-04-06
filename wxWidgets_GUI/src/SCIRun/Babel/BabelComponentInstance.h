@@ -98,26 +98,32 @@ public:
                          const gov::cca::Component& component,
                          const framework::Services& svc);
   virtual ~BabelComponentInstance();
-  
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   gov::cca::Port getPort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   gov::cca::Port getPortNonblocking(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void releasePort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   gov::cca::TypeMap createTypeMap();
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */ 
+      SCIRunFramework::Services. */
   void registerUsesPort(const std::string& name, const std::string& type,
                         const gov::cca::TypeMap& properties);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void unregisterUsesPort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void addProvidesPort(const gov::cca::Port& port,
@@ -125,17 +131,24 @@ public:
                        const std::string& type,
                        const gov::cca::TypeMap& properties);
   void removeProvidesPort(const std::string& name);
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
-  gov::cca::TypeMap getPortProperties(const std::string& portName);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   gov::cca::ComponentID getComponentID();
-  
+
   /** ? */
   virtual PortInstance* getPortInstance(const std::string& name);
   /** ? */
   virtual PortInstanceIterator* getPorts();
+
+
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
+//   gov::cca::TypeMap getPortProperties(const std::string& portName);
+  // these do nothing at the moment - implement after compiler changeover
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& /*portName*/);
+  virtual void setPortProperties(const std::string& /*portName*/, const sci::cca::TypeMap::pointer& /*tm*/) {}
+
 private:
   framework::Services svc;
   /** ? */
@@ -154,7 +167,7 @@ private:
     Iterator& operator=(const Iterator&);
     //sci::cca::ComponentID::pointer cid;
   };
-  
+
   gov::cca::Component component;
   BabelComponentInstance(const BabelComponentInstance&);
   BabelComponentInstance& operator=(const BabelComponentInstance&);
