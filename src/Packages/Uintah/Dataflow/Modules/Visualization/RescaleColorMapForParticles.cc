@@ -43,6 +43,7 @@ void RescaleColorMapForParticles::execute()
   omap= (ColorMapOPort *) get_oport("ColorMap");
 
     ColorMapHandle cmap;
+    ColorMapHandle out_cmap;
     if(!imap->get(cmap))
 	return;
 
@@ -55,6 +56,7 @@ void RescaleColorMapForParticles::execute()
     double mx = -1e30;
     double mn = 1e30;
  
+   out_cmap = new ColorMap(*cmap.get_rep());
    if( scaleMode.get() == "auto") {
 
       part->get_minmax(mn, mx);
@@ -65,13 +67,13 @@ void RescaleColorMapForParticles::execute()
 	mn -= 0.001;
       }
       
-      cmap->Scale( mn, mx);
+      out_cmap->Scale( mn, mx);
       minVal.set( mn );
       maxVal.set( mx );
    } else {
-     cmap->Scale( minVal.get(), maxVal.get());
+     out_cmap->Scale( minVal.get(), maxVal.get());
    }
-   omap->send(cmap);
+   omap->send_and_dereference(out_cmap);
 }
   
 DECLARE_MAKER(RescaleColorMapForParticles)
