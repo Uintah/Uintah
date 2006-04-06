@@ -70,7 +70,6 @@ CCAComponentInstance::CCAComponentInstance(
 
 CCAComponentInstance::~CCAComponentInstance()
 {
-std::cerr << "CCAComponentInstance::~CCAComponentInstance() " << instanceName << std::endl;
 }
 
 PortInstance*
@@ -198,6 +197,9 @@ void CCAComponentInstance::registerUsesPort(const std::string& portName,
                              const sci::cca::TypeMap::pointer& properties)
 {
     SCIRun::Guard g1(&lock_ports);
+
+std::cerr << "CCAComponentInstance::registerUsesPort(..): " << portName << ", " << portType << std::endl;
+
     PortInstanceMap::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == CCAPortInstance::Provides) {
@@ -238,6 +240,9 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
                                            const std::string& portType,
                                            const sci::cca::TypeMap::pointer& properties)
 {
+
+std::cerr << "CCAComponentInstance::addProvidesPort(..): " << portName << ", " << portType << std::endl;
+
   if (port.isNull()) {
     throw sci::cca::CCAException::pointer(
       new CCAException("Null port argument for " + portName + ", " + portType));
@@ -260,8 +265,8 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
     // If port is collective.
     size = properties->getInt("size", 1);
     rank = properties->getInt("rank", 0);
-    
-    Guard g1(&lock_instance); 
+
+    Guard g1(&lock_instance);
     PreportMap::iterator iter = preports.find(portName);
     if (iter == preports.end()) { // new preport
       std::vector<Object::pointer> urls(size);
@@ -330,9 +335,29 @@ void CCAComponentInstance::removeProvidesPort(const std::string& name)
 
 sci::cca::TypeMap::pointer
 CCAComponentInstance::getPortProperties(const std::string& portName)
-{ 
-  NOT_FINISHED("sci::cca::TypeMap::pointer CCAComponentInstance::getPortProperties(const std::string& portName)");
-  return sci::cca::TypeMap::pointer(0);
+{
+  lock_ports.lock();
+  PortInstanceMap::iterator iter = ports.find(portName);
+  lock_ports.unlock();
+  if (iter == ports.end()) {
+    return sci::cca::TypeMap::pointer(new TypeMap);
+  }
+
+  return iter->second->getProperties();
+}
+
+void
+CCAComponentInstance::setPortProperties(const std::string& portName, const sci::cca::TypeMap::pointer& tm)
+{
+  lock_ports.lock();
+  PortInstanceMap::iterator iter = ports.find(portName);
+  lock_ports.unlock();
+  if (iter == ports.end()) {
+    // with warning?
+    return;
+  }
+
+  return iter->second->setProperties(tm);
 }
 
 sci::cca::ComponentID::pointer

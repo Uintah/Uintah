@@ -43,6 +43,7 @@
 #include <SCIRun/Corba/CorbaUIPort.h>
 #include <SCIRun/Corba/Component.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
+#include <SCIRun/TypeMap.h>
 
 namespace SCIRun {
 
@@ -57,10 +58,10 @@ CorbaComponentInstance::CorbaComponentInstance(
 {
     // See if we have a user-interface...
     if (component->haveUI()) {
-        specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
-                               sci::cca::TypeMap::pointer(0),
-                               sci::cca::Port::pointer(new CorbaUIPort(this)),
-                               CCAPortInstance::Provides));
+	specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
+			       sci::cca::TypeMap::pointer(0),
+			       sci::cca::Port::pointer(new CorbaUIPort(this)),
+			       CCAPortInstance::Provides));
     }
 }
 
@@ -72,27 +73,34 @@ PortInstance* CorbaComponentInstance::getPortInstance(const std::string& name)
 {
     //if the port is CCA port, find it from the specialPorts
     if (name=="ui" || name=="go") {
-        for(unsigned int i=0; i < specialPorts.size(); i++) {
-            if (specialPorts[i]->getName() == name) {
-                return specialPorts[i];
-            }
-            return 0;
-        }
+	for(unsigned int i=0; i < specialPorts.size(); i++) {
+	    if (specialPorts[i]->getName() == name) {
+		return specialPorts[i];
+	    }
+	    return 0;
+	}
     }
 
     //otherwise it is corba port
     corba::Port* port = component->getPort(name);
     if (!port) {
-        return 0;
+	return 0;
     }
+    sci::cca::TypeMap::pointer tm(new TypeMap);
     //TODO: check memory leak
-    return new CorbaPortInstance(this, port, port->isUses() ?
-        CorbaPortInstance::Uses : CorbaPortInstance::Provides);
+    return new CorbaPortInstance(this, port, tm,
+				 port->isUses() ? CorbaPortInstance::Uses : CorbaPortInstance::Provides);
 }
 
 PortInstanceIterator* CorbaComponentInstance::getPorts()
 {
     return new Iterator(this);
+}
+
+// does nothing at the moment -> implement!
+sci::cca::TypeMap::pointer CorbaComponentInstance::getPortProperties(const std::string& /*portName*/)
+{
+  return sci::cca::TypeMap::pointer(new TypeMap);
 }
 
 CorbaComponentInstance::Iterator::Iterator(CorbaComponentInstance* ci)
@@ -118,20 +126,20 @@ bool CorbaComponentInstance::Iterator::done()
 
 PortInstance* CorbaComponentInstance::Iterator::get()
 {
-  
   corba::Component* component = ci->component;
   int spsize = static_cast<int>(ci->specialPorts.size());
   if (index < spsize) {
     return ci->specialPorts[index];
   } else if (index < spsize+component->numProvidesPorts()) {
+    sci::cca::TypeMap::pointer tm(new TypeMap);
     //TODO: check memory leak
-    return new CorbaPortInstance(ci,
-                               component->getProvidesPort(index-spsize),
-                               CorbaPortInstance::Provides);
+    return new CorbaPortInstance(ci, component->getProvidesPort(index-spsize),
+				 tm, CorbaPortInstance::Provides);
   } else if (index < spsize+component->numProvidesPorts() +component->numUsesPorts()) {
-    return new CorbaPortInstance(ci,
-                               component->getUsesPort(index-spsize-component->numProvidesPorts()),
-                               CorbaPortInstance::Uses);
+    sci::cca::TypeMap::pointer tm(new TypeMap);
+    //TODO: check memory leak
+    return new CorbaPortInstance(ci, component->getUsesPort(index-spsize-component->numProvidesPorts()),
+				 tm, CorbaPortInstance::Uses);
   } else {
     return 0; // Illegal
   }

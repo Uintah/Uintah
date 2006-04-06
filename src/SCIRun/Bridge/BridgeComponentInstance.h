@@ -70,70 +70,74 @@
 namespace SCIRun {
   class Services;
   class Mutex;
-  class BridgeComponentInstance : public ComponentInstance, public BridgeServices {
-  public:
-    BridgeComponentInstance(SCIRunFramework* framework,
-			 const std::string& instanceName,
-			 const std::string& className,
-             const sci::cca::TypeMap::pointer &tm,
-			 BridgeComponent* component);
-    virtual ~BridgeComponentInstance();
 
-    // Methods from BridgeServices
-    Port* getDataflowIPort(const std::string& name);
-    Port* getDataflowOPort(const std::string& name);
-    sci::cca::Port::pointer getCCAPort(const std::string& name);
-    gov::cca::Port getBabelPort(const std::string& name);
+class BridgeComponentInstance : public ComponentInstance, public BridgeServices {
+public:
+  BridgeComponentInstance(SCIRunFramework* framework,
+			  const std::string& instanceName,
+			  const std::string& className,
+			  const sci::cca::TypeMap::pointer &tm,
+			  BridgeComponent* component);
+  virtual ~BridgeComponentInstance();
+
+  // Methods from BridgeServices
+  Port* getDataflowIPort(const std::string& name);
+  Port* getDataflowOPort(const std::string& name);
+  sci::cca::Port::pointer getCCAPort(const std::string& name);
+  gov::cca::Port getBabelPort(const std::string& name);
 
 #if HAVE_VTK
-    vtk::Port* getVtkPort(const std::string& name);
-    void addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT);
+  vtk::Port* getVtkPort(const std::string& name);
+  void addVtkPort(vtk::Port* vtkport, VtkPortInstance::VTKPortType portT);
 #endif
 
-    void releasePort(const std::string& name,const modelT model);
-    void registerUsesPort(const std::string& name, const std::string& type,
-			  const modelT model);
-    void unregisterUsesPort(const std::string& name, const modelT model);
-    void addProvidesPort(void* port,
-			 const std::string& name,
-			 const std::string& type,
-			 const modelT model);
-    void removeProvidesPort(const std::string& name, const modelT model);
-    sci::cca::ComponentID::pointer getComponentID();
+  void releasePort(const std::string& name,const modelT model);
+  void registerUsesPort(const std::string& name, const std::string& type,
+			const modelT model);
+  void unregisterUsesPort(const std::string& name, const modelT model);
+  void addProvidesPort(void* port,
+		       const std::string& name,
+		       const std::string& type,
+		       const modelT model);
+  void removeProvidesPort(const std::string& name, const modelT model);
+  sci::cca::ComponentID::pointer getComponentID();
 
-    // Methods from ComponentInstance
-    virtual PortInstance* getPortInstance(const std::string& name);
-    virtual PortInstanceIterator* getPorts();
+  // Methods from ComponentInstance
+  virtual PortInstance* getPortInstance(const std::string& name);
+  virtual PortInstanceIterator* getPorts();
 
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
+  virtual void setPortProperties(const std::string& portName, const sci::cca::TypeMap::pointer& tm);
+
+private:
+  //ITERATOR CLASS
+  class Iterator : public PortInstanceIterator {
+    std::map<std::string, PortInstance*>::iterator iter;
+    BridgeComponentInstance* comp;
+  public:
+    Iterator(BridgeComponentInstance*);
+    virtual ~Iterator();
+    virtual PortInstance* get();
+    virtual bool done();
+    virtual void next();
   private:
-    //ITERATOR CLASS
-    class Iterator : public PortInstanceIterator {
-      std::map<std::string, PortInstance*>::iterator iter;
-      BridgeComponentInstance* comp;
-    public:
-      Iterator(BridgeComponentInstance*);
-      virtual ~Iterator();
-      virtual PortInstance* get();
-      virtual bool done();
-      virtual void next();
-    private:
-      Iterator(const Iterator&);
-      Iterator& operator=(const Iterator&);
-    };
-    //EOF ITERATOR CLASS
-
-    std::map<std::string, PortInstance*> ports;
-    SCIRun::Mutex lock_ports;
-  
-    BridgeComponent* component;
-    Mutex *mutex;
-
-    //Dataflow:
-    BridgeModule* bmdl; 
-   
-    BridgeComponentInstance(const BridgeComponentInstance&);
-    BridgeComponentInstance& operator=(const BridgeComponentInstance&);
+    Iterator(const Iterator&);
+    Iterator& operator=(const Iterator&);
   };
+  //EOF ITERATOR CLASS
+
+  std::map<std::string, PortInstance*> ports;
+  SCIRun::Mutex lock_ports;
+
+  BridgeComponent* component;
+  Mutex *mutex;
+
+  //Dataflow:
+  BridgeModule* bmdl;
+
+  BridgeComponentInstance(const BridgeComponentInstance&);
+  BridgeComponentInstance& operator=(const BridgeComponentInstance&);
+};
 }
 
 #endif

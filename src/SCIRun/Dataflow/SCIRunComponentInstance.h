@@ -74,6 +74,10 @@ public:
   /** Returns an iterator for the list of ports associated with this component. */
   virtual PortInstanceIterator* getPorts();
 
+  // does nothing at the moment -> implement!
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& /*portName*/);
+  virtual void setPortProperties(const std::string& /*portName*/, const sci::cca::TypeMap::pointer& /*tm*/) {}
+
   /** Return the stored pointer to the SCIRun Module class. */
   Module* getModule() const { return module; }
 

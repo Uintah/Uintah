@@ -41,7 +41,7 @@
 
 #ifndef SCIRUN_BRIDGE_BRIDGESERVICES_H
 #define SCIRUN_BRIDGE_BRIDGESERVICES_H
-                                                                                                            
+
 #include <sci_defs/vtk_defs.h>
 
 //CCA:
@@ -69,22 +69,22 @@ namespace SCIRun {
     Vtk,
     Tao
   } modelT;
-  
+
   class BridgeServices {
   public:
     BridgeServices::BridgeServices() { }
     virtual BridgeServices::~BridgeServices() { }
 
-    virtual Port* getDataflowIPort(const std::string& name) = 0;    
+    virtual Port* getDataflowIPort(const std::string& name) = 0;
     virtual Port* getDataflowOPort(const std::string& name) = 0;
     virtual sci::cca::Port::pointer getCCAPort(const std::string& name) = 0;
     virtual gov::cca::Port getBabelPort(const std::string& name) = 0;
 
 #if HAVE_VTK
-    virtual vtk::Port* getVtkPort(const std::string& name) = 0; 
-    virtual void addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT) = 0;
+    virtual vtk::Port* getVtkPort(const std::string& name) = 0;
+    virtual void addVtkPort(vtk::Port* vtkport, VtkPortInstance::VTKPortType portT) = 0;
 #endif
- 
+
     virtual void releasePort(const std::string& name, const modelT model) = 0;
     virtual void registerUsesPort(const std::string& name, const std::string& type,
 			  const modelT model) = 0;
@@ -95,7 +95,7 @@ namespace SCIRun {
 			 const modelT model) = 0;
     virtual void removeProvidesPort(const std::string& name, const modelT model) = 0;
     virtual sci::cca::ComponentID::pointer getComponentID() = 0;
-  };    
+  };
 }
 
 #endif

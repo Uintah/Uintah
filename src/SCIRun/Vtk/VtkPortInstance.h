@@ -41,11 +41,13 @@
 #ifndef SCIRun_Vtk_VtkPortInstance_h
 #define SCIRun_Vtk_VtkPortInstance_h
 
+#include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/Vtk/Port.h>
 #include <SCIRun/PortInstance.h>
+
 #include <map>
 #include <string>
 #include <vector>
-#include <SCIRun/Vtk/Port.h>
 
 namespace SCIRun
 {
@@ -58,34 +60,51 @@ class VtkComponentInstance;
  */
 class VtkPortInstance : public PortInstance {
 public:
-  enum PortType {
+  enum VTKPortType {
     Output, Input
   };
-  VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port, PortType type);
+
+  VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port,
+                  const sci::cca::TypeMap::pointer& properties, VTKPortType type);
   virtual ~VtkPortInstance();
 
   /**? */
   virtual bool connect(PortInstance*);
+
   /** ? */
   virtual PortInstance::PortType portType();
+
   /** ? */
   virtual std::string getUniqueName();
+
   /** ? */
-  virtual std::string getModel();
+  virtual std::string getModel() { return "vtk"; }
+
   /** ? */
   virtual bool disconnect(PortInstance*);
+
   /** ? */
   virtual bool canConnectTo(PortInstance *);
-  
+
+  // move this to PortInstance after Babel compiler changeover
+  virtual sci::cca::TypeMap::pointer getProperties() { return properties; }
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm);
+
+  static const std::string VTK_OUT_PORT;
+  static const std::string VTK_IN_PORT;
+
 private:
   friend class BridgeComponentInstance;
-  
+
   VtkPortInstance(const VtkPortInstance&);
   VtkPortInstance& operator=(const VtkPortInstance&);
-  
+  void setDefaultProperties();
+
   VtkComponentInstance* ci;
   vtk::Port* port;
-  PortType porttype;
+  VTKPortType porttype;
+  sci::cca::TypeMap::pointer properties;
+
   int nConnections;
 };
 

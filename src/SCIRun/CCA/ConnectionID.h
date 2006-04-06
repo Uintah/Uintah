@@ -79,14 +79,17 @@ public:
   /** Returns the uses port name from the using component. */
   virtual std::string getUserPortName();
 
-  inline sci::cca::TypeMap::pointer getProperties() { return properties; }
-  inline void setProperties(const sci::cca::TypeMap::pointer &tm) { properties = tm; }
+  sci::cca::TypeMap::pointer getProperties() { return properties; }
+  void setProperties(const sci::cca::TypeMap::pointer &tm);
 
 private:
   ConnectionID(const ConnectionID&);
   ConnectionID& operator=(const ConnectionID&);
+
   std::string userPortName;
   std::string providerPortName;
+  static const std::string IS_IN_USE;
+
   sci::cca::ComponentID::pointer user;
   sci::cca::ComponentID::pointer provider;
   sci::cca::TypeMap::pointer properties;

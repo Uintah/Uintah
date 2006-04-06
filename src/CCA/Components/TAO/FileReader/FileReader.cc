@@ -4,8 +4,10 @@
 #include "FileReader.h"
 #include <iostream>
 #include <fstream>
+
 #include <Core/Util/Environment.h>
-                                                                                           
+#include <SCIRun/TypeMap.h>
+
 ACE_RCSID(FileReader, FileReader, "FileReader.cc,v 1.3 2002/01/29 20:21:07 okellogg Exp")
 
 FileReader::FileReader (CORBA::ORB_ptr orb)
@@ -17,12 +19,13 @@ FileReader* _main (int argc, char *argv[]);
 
 extern "C" SCIRun::tao::Component* make_Tao_FileReader()
 {
-  return _main(0,NULL);  
+  return _main(0,NULL);
 }
 
-void FileReader::setServices(sci::cca::TaoServices::pointer services) 
+void FileReader::setServices(sci::cca::TaoServices::pointer services)
 {
-  services->addProvidesPort("hello", "corba.FileReader");
+  sci::cca::TypeMap::pointer props(new SCIRun::TypeMap);
+  services->addProvidesPort("hello", "corba.FileReader", props);
 }
 
 CORBA::Long 

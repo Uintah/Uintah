@@ -60,8 +60,6 @@ namespace SCIRun {
 class BabelPortInstance : public PortInstance
 {
 public:
-  enum PortType {  Uses, Provides  };
-  
   BabelPortInstance(const std::string& portname, const std::string& classname,
                     const gov::cca::TypeMap& properties,
                     PortType porttype);
@@ -79,23 +77,30 @@ public:
   virtual bool canConnectTo(PortInstance*);
   virtual bool available();
   virtual PortInstance* getPeer();
+
   std::string getName();
   void incrementUseCount();
   bool decrementUseCount();
+
 public:
   PortType porttype;
   std::vector<PortInstance*> connections;
   SCIRun::Mutex lock_connections;
   friend class BabelComponentInstance;
+
   std::string name;
   std::string type;
   gov::cca::TypeMap properties;
   gov::cca::Port port;
-  
   int useCount;
-  
+
+private:
   BabelPortInstance(const BabelPortInstance&);
   BabelPortInstance& operator=(const BabelPortInstance&);
+
+  // this will have to be updated
+  virtual sci::cca::TypeMap::pointer getProperties() { return sci::cca::TypeMap::pointer(0); }
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm) {}
 };
 
 } //namespace SCIRun
