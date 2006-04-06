@@ -993,6 +993,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   particleIndex totalParticles = 0;
   vector<ParticleVariableBase*> neighborvars;
   vector<ParticleSubset*> subsets;
+  vector<const Patch*> vneighbors;
   
   for(int i=0;i<(int)neighbors.size();i++){
     const Patch* neighbor = neighbors[i];
@@ -1039,12 +1040,10 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 
       totalParticles+=subset->numParticles();
       subsets.push_back(subset);
+      vneighbors.push_back(neighbors[i]);
     }
   }
   ParticleSet* newset = scinew ParticleSet(totalParticles);
-  vector<const Patch*> vneighbors(neighbors.size());
-  for(int i=0;i<neighbors.size();i++)
-    vneighbors[i]=neighbors[i];
   ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
                                                     matlIndex, patch,
                                                     lowIndex, highIndex,
@@ -1472,6 +1471,9 @@ OnDemandDataWarehouse::getRegion(constCCVariableBase& constVar,
       // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
       tmpVar->offset(patch->getVirtualOffset());
     }
+    
+    IntVector vl(tmpVar->getLow()), vh(tmpVar->getHigh());
+
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);

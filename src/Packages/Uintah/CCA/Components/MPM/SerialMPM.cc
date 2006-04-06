@@ -18,6 +18,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -1518,7 +1519,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
-      old_dw->get(px,             lb->pXLabel,             pset);
+      try {
+        old_dw->get(px,             lb->pXLabel,             pset);
+      } catch (UnknownVariable& e) {
+        cout << "  BAD boy - trying to inter patch " << patch->getID() << endl;
+      }
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
@@ -3246,7 +3251,7 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
         constCCVariable<int> fineErrorFlag;
         new_dw->getRegion(fineErrorFlag, 
                           d_sharedState->get_refineFlag_label(), 0, 
-                          fineLevel,fl, fh);
+                          fineLevel,fl, fh, false);
         
         //__________________________________
         //if the fine level flag has been set
