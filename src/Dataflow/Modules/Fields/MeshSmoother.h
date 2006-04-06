@@ -85,8 +85,14 @@ class MeshSmootherAlgoShared : public MeshSmootherAlgo
 {
 public:
   //! virtual interface. 
-  //  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
-  //                               bool boundary, string scheme );
+  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
+                               bool boundary, string scheme );
+
+protected:
+  virtual FieldHandle compute_boundary( ProgressReporter *reporter,
+                                        FieldHandle fieldh,
+                                        string scheme ) = 0;
+
   virtual bool compute_domain_surface( ProgressReporter *reporter,
                                        FieldHandle fieldh,
                                        FieldHandle &ofieldh);
@@ -96,6 +102,35 @@ public:
   FieldHandle shape_improvement_wrapper( ProgressReporter *reporter,
                                          FieldHandle fieldh );
 };
+
+
+template <class FIELD>
+FieldHandle
+MeshSmootherAlgoShared<FIELD>::execute( ProgressReporter *reporter,
+                                        FieldHandle fieldh,
+                                        bool boundary,
+                                        string scheme )
+{
+  if ( boundary )
+  {
+    fieldh = compute_boundary( reporter, fieldh, scheme );
+  }
+  
+  if( scheme == "SmartLaplacian" )
+  { 
+    return smart_laplacian_smoother( reporter, fieldh );
+  }
+  else if( scheme == "ShapeImprovement" )
+  {
+    return shape_improvement_wrapper( reporter, fieldh );
+  }
+  else
+  {
+    reporter->error( "Unknown Smoothing Scheme." );
+    return fieldh;
+  }
+}
+
 
 
 template <class FIELD>
@@ -356,17 +391,19 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
 template <class FIELD>
 class MeshSmootherAlgoTet : public MeshSmootherAlgoShared<FIELD>
 {
-public:
+protected:
   //! virtual interface. 
-  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
-                               bool boundary, string scheme );
+  virtual FieldHandle compute_boundary( ProgressReporter *reporter,
+                                        FieldHandle fieldh,
+                                        string scheme );
 };
 
 
 template <class FIELD>
 FieldHandle
-MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
-                                    bool boundary, string scheme )
+MeshSmootherAlgoTet<FIELD>::compute_boundary( ProgressReporter *mod,
+                                              FieldHandle fieldh,
+                                              string scheme )
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
@@ -374,82 +411,68 @@ MeshSmootherAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   ofield->mesh_detach();
   FieldHandle ofh = ofield;
   
-  if( boundary )
-  { 
-    const TypeDescription *mtd = ofh->mesh()->get_type_description();
-    CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
-    Handle<FieldBoundaryAlgo> boundary_algo;
-    FieldHandle boundary_field_h;
-    if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) )
-    {
-      mod->error( "Unable to obtain a list of boundary elements for smoothing the boundary." );
-      return ofh;
-    }
-
-    MatrixHandle interp1(0);  
-    boundary_algo->execute( mod, ofh->mesh(), boundary_field_h, interp1, 1 );
-  
-    const TypeDescription *std = boundary_field_h->get_type_description();
-    CompileInfoHandle ci_boundary_smooth = MeshSmootherAlgo::get_compile_info( std, "Tri" );
-    Handle<MeshSmootherAlgo> bound_smooth_algo;
-    if (!DynamicCompilation::compile( ci_boundary_smooth, bound_smooth_algo, false, mod ) )
-    {
-      mod->error( "Unable to compile MeshSmoother algorithm for smoothing the boundary." );
-      return ofh;
-    }
-
-    FieldHandle smoothfield = bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
-
-    TriSurfMesh<TriLinearLgn<Point> > *smooth_boundary = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(smoothfield->mesh().get_rep());
-    TriSurfMesh<TriLinearLgn<Point> >::Node::iterator bound_iter;
-    smooth_boundary->begin( bound_iter );
-    TriSurfMesh<TriLinearLgn<Point> >::Node::iterator bound_itere; 
-    smooth_boundary->end( bound_itere );
-    while( bound_iter != bound_itere )
-    {
-      TriSurfMesh<TriLinearLgn<Point> >::Node::index_type bi = *bound_iter;
-      ++bound_iter;
-      
-      int size, stride, *cols;
-      double *vals;
-      interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
-      
-      Point p;
-      smooth_boundary->get_point( p, bi );
-      ofield->get_typed_mesh()->set_point( p, *cols );
-    }
-  }
-  
-  if( scheme == "SmartLaplacian" )
+  const TypeDescription *mtd = ofh->mesh()->get_type_description();
+  CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
+  Handle<FieldBoundaryAlgo> boundary_algo;
+  FieldHandle boundary_field_h;
+  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) )
   {
-    return this->smart_laplacian_smoother( mod, ofh );
-  }
-  else if( scheme == "ShapeImprovement" )
-  {
-    return this->shape_improvement_wrapper( mod, ofh );
-  }
-  else
-  {
-    mod->error( "Unknown Smoothing Scheme." );
+    mod->error( "Unable to obtain a list of boundary elements for smoothing the boundary." );
     return ofh;
   }
+
+  MatrixHandle interp1(0);  
+  boundary_algo->execute( mod, ofh->mesh(), boundary_field_h, interp1, 1 );
+  
+  const TypeDescription *std = boundary_field_h->get_type_description();
+  CompileInfoHandle ci_boundary_smooth = MeshSmootherAlgo::get_compile_info( std, "Tri" );
+  Handle<MeshSmootherAlgo> bound_smooth_algo;
+  if (!DynamicCompilation::compile( ci_boundary_smooth, bound_smooth_algo, false, mod ) )
+  {
+    mod->error( "Unable to compile MeshSmoother algorithm for smoothing the boundary." );
+    return ofh;
+  }
+
+  FieldHandle smoothfield = bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
+
+  TriSurfMesh<TriLinearLgn<Point> > *smooth_boundary = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(smoothfield->mesh().get_rep());
+  TriSurfMesh<TriLinearLgn<Point> >::Node::iterator bound_iter;
+  smooth_boundary->begin( bound_iter );
+  TriSurfMesh<TriLinearLgn<Point> >::Node::iterator bound_itere; 
+  smooth_boundary->end( bound_itere );
+  while( bound_iter != bound_itere )
+  {
+    TriSurfMesh<TriLinearLgn<Point> >::Node::index_type bi = *bound_iter;
+    ++bound_iter;
+      
+    int size, stride, *cols;
+    double *vals;
+    interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
+      
+    Point p;
+    smooth_boundary->get_point( p, bi );
+    ofield->get_typed_mesh()->set_point( p, *cols );
+  }
+  return ofh;
 }
 
 
 template <class FIELD>
 class MeshSmootherAlgoHex : public MeshSmootherAlgoShared<FIELD>
 {
-public:
+protected:
   //! virtual interface. 
-  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
-                               bool boundary, string scheme );
+  virtual FieldHandle compute_boundary( ProgressReporter *reporter,
+                                        FieldHandle fieldh,
+                                        string scheme );
 };
 
 
 template <class FIELD>
 FieldHandle
-MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
-                                    bool boundary, string scheme )
+MeshSmootherAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
+                                              FieldHandle fieldh,
+                                              string scheme )
 { 
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
@@ -457,75 +480,60 @@ MeshSmootherAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   ofield->mesh_detach();
   FieldHandle ofh = ofield;
 
-  if( boundary )
-  { 
-    const TypeDescription *mtd = ofh->mesh()->get_type_description();
-    CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
-    Handle<FieldBoundaryAlgo> boundary_algo;
-    FieldHandle boundary_field_h;
-    if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) )
-    {
-      mod->error( "Unable to obtain a list of boundary elements for smoothing the boundary." );
-      return ofh;
-    }
-
-    MatrixHandle interp1(0);  
-    boundary_algo->execute( mod, ofh->mesh(), boundary_field_h, interp1, 1 );
-  
-    const TypeDescription *std = boundary_field_h->get_type_description();
-    CompileInfoHandle ci_boundary_smooth = MeshSmootherAlgo::get_compile_info( std, "Quad" );
-    Handle<MeshSmootherAlgo> bound_smooth_algo;
-    if (!DynamicCompilation::compile( ci_boundary_smooth, bound_smooth_algo, false, mod ) )
-    {
-      mod->error( "Unable to compile MeshSmoother algorithm for smoothing the boundary." );
-      return ofh;
-    }
-
-    FieldHandle smoothfield = bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
-
-    QuadSurfMesh<QuadBilinearLgn<Point> > *smooth_boundary = dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> >*>(smoothfield->mesh().get_rep());
-    QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator bound_iter; 
-    smooth_boundary->begin( bound_iter );
-    QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator bound_itere; 
-    smooth_boundary->end( bound_itere );
-    while( bound_iter != bound_itere )
-    {
-      QuadSurfMesh<QuadBilinearLgn<Point> >::Node::index_type bi = *bound_iter;
-      ++bound_iter;
-      
-      int size, stride, *cols;
-      double *vals;
-      interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
-      
-      Point p;
-      smooth_boundary->get_point( p, bi );
-      ofield->get_typed_mesh()->set_point( p, *cols );
-    }
-  }
-
-  if( scheme == "SmartLaplacian" )
-  { 
-    return this->smart_laplacian_smoother( mod, ofh );
-  }
-  else if( scheme == "ShapeImprovement" )
+  const TypeDescription *mtd = ofh->mesh()->get_type_description();
+  CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
+  Handle<FieldBoundaryAlgo> boundary_algo;
+  FieldHandle boundary_field_h;
+  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) )
   {
-    return this->shape_improvement_wrapper( mod, ofh );
-  }
-  else
-  {
-    mod->error( "Unknown Smoothing Scheme." );
+    mod->error( "Unable to obtain a list of boundary elements for smoothing the boundary." );
     return ofh;
   }
+
+  MatrixHandle interp1(0);  
+  boundary_algo->execute( mod, ofh->mesh(), boundary_field_h, interp1, 1 );
+  
+  const TypeDescription *std = boundary_field_h->get_type_description();
+  CompileInfoHandle ci_boundary_smooth = MeshSmootherAlgo::get_compile_info( std, "Quad" );
+  Handle<MeshSmootherAlgo> bound_smooth_algo;
+  if (!DynamicCompilation::compile( ci_boundary_smooth, bound_smooth_algo, false, mod ) )
+  {
+    mod->error( "Unable to compile MeshSmoother algorithm for smoothing the boundary." );
+    return ofh;
+  }
+
+  FieldHandle smoothfield = bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
+
+  QuadSurfMesh<QuadBilinearLgn<Point> > *smooth_boundary = dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> >*>(smoothfield->mesh().get_rep());
+  QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator bound_iter; 
+  smooth_boundary->begin( bound_iter );
+  QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator bound_itere; 
+  smooth_boundary->end( bound_itere );
+  while( bound_iter != bound_itere )
+  {
+    QuadSurfMesh<QuadBilinearLgn<Point> >::Node::index_type bi = *bound_iter;
+    ++bound_iter;
+      
+    int size, stride, *cols;
+    double *vals;
+    interp1->getRowNonzerosNoCopy( bi, size, stride, cols, vals );
+      
+    Point p;
+    smooth_boundary->get_point( p, bi );
+    ofield->get_typed_mesh()->set_point( p, *cols );
+  }
+
+  return ofh;
 }
 
 
 template <class FIELD>
 class MeshSmootherAlgoTri : public MeshSmootherAlgoShared<FIELD>
 {
-public:
-  //! virtual interface. 
-  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
-                               bool boundary, string scheme );
+protected:
+  virtual FieldHandle compute_boundary( ProgressReporter *reporter,
+                                        FieldHandle fieldh,
+                                        string scheme );
 
   virtual bool compute_domain_surface( ProgressReporter *reporter,
                                        FieldHandle fieldh,
@@ -535,28 +543,13 @@ public:
 
 template <class FIELD>
 FieldHandle
-MeshSmootherAlgoTri<FIELD>::execute( ProgressReporter *mod, FieldHandle fieldh,
-                                     bool boundary, string scheme )
+MeshSmootherAlgoTri<FIELD>::compute_boundary( ProgressReporter *reporter,
+                                              FieldHandle fieldh,
+                                              string scheme )
 {
-  if( boundary )
-  {
-    mod->warning( "Currently unable to smooth the boundary of triangle meshes." );
-    mod->remark( "Proceeding with smoothing of the interior elements." );
-  }
-  
-  if( scheme == "SmartLaplacian" )
-  { 
-    return this->smart_laplacian_smoother( mod, fieldh );
-  }
-  else if( scheme == "ShapeImprovement" )
-  {
-    return this->shape_improvement_wrapper( mod, fieldh );
-  }
-  else
-  {
-    mod->error( "Unknown Smoothing Scheme." );
-    return fieldh;
-  }
+  reporter->warning( "Currently unable to smooth the boundary of triangle meshes." );
+  reporter->remark( "Proceeding with smoothing of the interior elements." );
+  return fieldh;
 }
 
 
@@ -574,10 +567,10 @@ MeshSmootherAlgoTri<FIELD>::compute_domain_surface( ProgressReporter *mod,
 template <class FIELD>
 class MeshSmootherAlgoQuad : public MeshSmootherAlgoShared<FIELD>
 {
-public:
-  //! virtual interface. 
-  virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
-                               bool boundary, string scheme );
+protected:
+  virtual FieldHandle compute_boundary( ProgressReporter *reporter,
+                                        FieldHandle fieldh,
+                                        string scheme );
 
   virtual bool compute_domain_surface( ProgressReporter *reporter,
                                        FieldHandle fieldh,
@@ -587,30 +580,13 @@ public:
 
 template <class FIELD>
 FieldHandle
-MeshSmootherAlgoQuad<FIELD>::execute( ProgressReporter *mod,
-                                      FieldHandle fieldh,
-                                      bool boundary,
-                                      string scheme )
+MeshSmootherAlgoQuad<FIELD>::compute_boundary( ProgressReporter *reporter,
+                                               FieldHandle fieldh,
+                                               string scheme )
 {
-  if( boundary )
-  {
-    mod->warning( "Currently unable to smooth the boundary of quadrilateral meshes." );
-    mod->remark( "Proceeding with smoothing of the interior elements." );
-  }
-  
-  if( scheme == "SmartLaplacian" )
-  {
-    return this->smart_laplacian_smoother( mod, fieldh );
-  }
-  else if( scheme == "ShapeImprovement" )
-  {
-    return this->shape_improvement_wrapper( mod, fieldh );
-  }
-  else
-  {
-    mod->error( "Unknown Smoothing Scheme." );
-    return fieldh;
-  }
+  reporter->warning( "Currently unable to smooth the boundary of quadrilateral meshes." );
+  reporter->remark( "Proceeding with smoothing of the interior elements." );
+  return fieldh;
 }
 
 
