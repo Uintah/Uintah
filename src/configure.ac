@@ -3914,7 +3914,7 @@ if test "$sci_required_insight" = "yes"; then
 
     AC_MSG_RESULT($dir)
   else
-    AC_MSG_RESULT(not found.)
+    AC_MSG_ERROR(not found... Insight is required to build)
   fi
  
   if test "$with_insight" && test ! "$DEF_INSIGHT"; then
