@@ -436,7 +436,7 @@ VolumeVisualizer::execute()
   while (gui_num_clipping_planes_.get() >= 0 &&
          gui_num_clipping_planes_.get() != (int)widget_.size())
   {
-    double scale = (bbox.diagonal()).length()/30.0;
+    double scale = (bbox.diagonal()).length()/60.0;
     Point p = (bbox.min()+bbox.diagonal()/2.0);
 
     ArrowWidget *widget = scinew ArrowWidget(this, &widget_lock_, scale, true);
