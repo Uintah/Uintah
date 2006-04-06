@@ -1017,7 +1017,6 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       if (patch != neighbor) {
         patch->cullIntersection(Patch::CellBased, IntVector(0,0,0), neighbor, newLow, newHigh);
         if (newLow == newHigh) {
-          cout << "  Ignoring intersection of " << newLow << " " << newHigh << " between " << patch->getID() << " and " << neighbor->getID() << endl;
           continue;
         }
       }
@@ -1038,7 +1037,6 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
         }
       }
 
-      //      cout << d_myworld->myrank() << " Adding " << subset->numParticles() << " particles from patch " << neighbor->getID() << endl;
       totalParticles+=subset->numParticles();
       subsets.push_back(subset);
     }
@@ -1064,8 +1062,10 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
   checkGetAccess(label, matlIndex, patch);
 
-  if(!d_particleDB.exists(label, matlIndex, patch))
+  if(!d_particleDB.exists(label, matlIndex, patch)) {
+    print();
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+  }
   constVar = *d_particleDB.get(label, matlIndex, patch);
    
   d_lock.readUnlock();
@@ -1079,7 +1079,6 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
-  //cout << d_myworld->myrank() << " get: " << *pset <<endl;
   if((pset->getLow() == patch->getLowIndex() && pset->getHigh() == patch->getHighIndex()) ||
      pset->getNeighbors().size() == 0){
     get(constVar, label, matlIndex, patch);
@@ -1372,6 +1371,10 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
 
   Patch::selectType patches;
 
+  // if in AMR and one node intersects from another patch and that patch is missing
+  // ignore the error instead of throwing an exception
+  vector<const Patch*> missing_patches;
+
   // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
   // selectPatches doesn't detect
   IntVector tmpLow(low-IntVector(1,1,1));
@@ -1386,8 +1389,10 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
     IntVector h(Min(patch->getInteriorHighIndex(Patch::NodeBased), high));
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
-    if(!d_ncDB.exists(label, matlIndex, patch->getRealPatch()))
-      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+    if(!d_ncDB.exists(label, matlIndex, patch->getRealPatch())) {
+      missing_patches.push_back(patch->getRealPatch());
+      continue;
+    }
     NCVariableBase* tmpVar = constVar.cloneType();
     d_ncDB.get(label, matlIndex, patch, *tmpVar);
 
@@ -1398,16 +1403,22 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
     }
 
     IntVector vl(tmpVar->getLow()), vh(tmpVar->getHigh());
-    if (vl.x() > l.x() || vl.y() > l.y() || vl.z() > l.z() || vh.x() < h.x() || vh.y() < h.y() || vh.z() < h.z()) {
-      cout << d_myworld->myrank() << "   Naughty: patch " << patch->getID() << " range " << l << " " << h << ": avail: "<< vl << " " << vh << " orig req: " << low << " " <<high << endl;
-    }
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
     totalCells += diff.x()*diff.y()*diff.z();
   }
   IntVector diff(high-low);
-  //ASSERTEQ(diff.x()*diff.y()*diff.z(), totalCells);
+
+  if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
+    cout << d_myworld->myrank() << "  Unknown Variable " << *label << " matl " << matlIndex << " for patch(es): ";
+    for (unsigned i = 0; i < missing_patches.size(); i++) 
+      cout << missing_patches[i]->getID() << " ";
+    cout << endl;
+    throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
+  }
+
+  ASSERT(diff.x()*diff.y()*diff.z() <= totalCells);
   if (diff.x()*diff.y()*diff.z() != totalCells) {
     static ProgressiveWarning warn("GetRegion Warning", 100);
     warn.invoke();
@@ -1847,7 +1858,6 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
    else
      l=h=IntVector(-1,-1,-1);
    if (var == NULL) {
-     print();
      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
    }
    var->emit(oc, l, h, label->getCompressionMode());
@@ -2115,7 +2125,6 @@ getGridVar(VariableBase& var, DWDatabase& db,
       if (!ignore && !warned ) {
 	warned = true;
         static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 5, warn);
-        cout << "   BAd for var " << *label << " patch " << patch->getID() << " matl " << matlIndex << endl;
         if (rw.invoke()) {
           // print out this message if the ProgressiveWarning does
           ostringstream errmsg;

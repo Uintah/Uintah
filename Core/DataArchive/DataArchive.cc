@@ -760,7 +760,7 @@ DataArchive::initVariable(const Patch* patch,
   ParticleVariableBase* particles;
   if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
     if (!dw->haveParticleSubset(matl, patch)) {
-      cerr << "Saved ParticleSubset on matl " << matl << " patch " << patch << endl;
+      //cerr << "Saved ParticleSubset on matl " << matl << " patch " << patch << endl;
       dw->saveParticleSubset(particles->getParticleSubset(), matl, patch);
     }
     else {
@@ -1185,8 +1185,9 @@ DataArchive::MaterialHashMaps::add(const string& name, int matl,
     d_varHashMaps.resize(matl + 1);
   pair<ProblemSpecP, string> value(varNode, url);
   pair<ProblemSpecP, string> dummy;
-  if (d_varHashMaps[matl].lookup(name, dummy) == 1)
-    cerr << "Duplicate variable name: " << name << endl;
+  if (d_varHashMaps[matl].lookup(name, dummy) == 1) {
+    //cerr << "Duplicate variable name: " << name << endl;
+  }
   else
     d_varHashMaps[matl].insert(name, value);
 }
