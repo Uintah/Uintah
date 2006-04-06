@@ -16,7 +16,6 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
-#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -2784,7 +2783,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
       
       constCCVariable<T> coarse_q_CC;
 
-      new_dw->getRegion(coarse_q_CC, variable, indx, coarseLevel, cl, ch);
+      new_dw->getRegion(coarse_q_CC, variable, indx, coarseLevel, cl, ch, false);
     
       // Only interpolate over the intersection of the fine and coarse patches
       // coarse cell 
@@ -2948,7 +2947,7 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
         }
         
         constCCVariable<T> fine_q_CC;
-        new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh);
+        new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh, false);
         
         //__________________________________
         //  call the coarsening function
@@ -2965,7 +2964,7 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
         }
         if(coarsenMethod == "massWeighted"){
           constCCVariable<double> cMass;
-          new_dw->getRegion(cMass,  MIlb->cMassLabel, indx, fineLevel, fl, fh);
+          new_dw->getRegion(cMass,  MIlb->cMassLabel, indx, fineLevel, fl, fh, false);
           
           coarsenDriver_massWeighted(cl,ch,refineRatio,coarseLevel,
                                      cMass, fine_q_CC, coarse_q_CC );
