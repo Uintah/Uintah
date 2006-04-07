@@ -93,6 +93,7 @@ public:
   };
 
   typedef Edge Elem;
+  typedef Node DElem;
 
   friend class ElemData;
 

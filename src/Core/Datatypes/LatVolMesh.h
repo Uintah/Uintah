@@ -414,6 +414,7 @@ public:
   };
 
   typedef Cell Elem;
+  typedef Face DElem;
 
   friend class NodeIter;
   friend class CellIter;

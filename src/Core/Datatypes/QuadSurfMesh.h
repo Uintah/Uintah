@@ -100,6 +100,7 @@ public:
   };
 
   typedef Face Elem;
+  typedef Edge DElem;
 
   friend class ElemData;
 

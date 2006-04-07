@@ -98,6 +98,8 @@ public:
   };
 
   typedef Cell Elem;
+  typedef Face DElem;
+
   friend class ElemData;
 
   class ElemData
