@@ -1,3 +1,29 @@
+// For more information, please see: http://software.sci.utah.edu
+//
+// The MIT License
+//
+// Copyright (c) 2004 Scientific Computing and Imaging Institute,
+// University of Utah.
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          framework_TypeMap_Impl.cxx
 // Symbol:        framework.TypeMap-v1.0
@@ -39,14 +65,14 @@
 // user defined constructor
 void framework::TypeMap_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap._ctor)
-  // Insert-Code-Here {framework.TypeMap._ctor} (constructor)
+  typeMap = new SCIRun::TypeMap();
   // DO-NOT-DELETE splicer.end(framework.TypeMap._ctor)
 }
 
 // user defined destructor
 void framework::TypeMap_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap._dtor)
-  // Insert-Code-Here {framework.TypeMap._dtor} (destructor)
+  delete typeMap;
   // DO-NOT-DELETE splicer.end(framework.TypeMap._dtor)
 }
 
@@ -61,6 +87,33 @@ void framework::TypeMap_impl::_load() {
 
 // user defined non-static methods:
 /**
+ * Method:  setInternalData[]
+ */
+void
+framework::TypeMap_impl::setInternalData_impl (
+  /* in */void* data ) 
+{
+  // DO-NOT-DELETE splicer.begin(framework.TypeMap.setInternalData)
+  SCIRun::TypeMap* tm = (SCIRun::TypeMap*) data;
+  if (tm) {
+    typeMap = tm;
+  }
+  // DO-NOT-DELETE splicer.end(framework.TypeMap.setInternalData)
+}
+
+/**
+ * Method:  getInternalData[]
+ */
+void*
+framework::TypeMap_impl::getInternalData_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(framework.TypeMap.getInternalData)
+  return &typeMap;
+  // DO-NOT-DELETE splicer.end(framework.TypeMap.getInternalData)
+}
+
+/**
  * Create an exact copy of this Map 
  */
 UCXX ::gov::cca::TypeMap
@@ -68,7 +121,13 @@ framework::TypeMap_impl::cloneTypeMap_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.cloneTypeMap)
-  // Insert-Code-Here {framework.TypeMap.cloneTypeMap} (cloneTypeMap method)
+  sci::cca::TypeMap::pointer tmp = this->typeMap->cloneTypeMap();
+  SCIRun::TypeMap* tm = (SCIRun::TypeMap*) tmp.getPointer();
+
+  UCXX ::framework::TypeMap ftm = UCXX ::framework::TypeMap::_create();
+  ftm.setInternalData(this->getInternalData());
+  UCXX ::gov::cca::TypeMap gctm = UCXX ::sidl::babel_cast<UCXX ::gov::cca::TypeMap>(ftm);
+  return gctm;
   // DO-NOT-DELETE splicer.end(framework.TypeMap.cloneTypeMap)
 }
 

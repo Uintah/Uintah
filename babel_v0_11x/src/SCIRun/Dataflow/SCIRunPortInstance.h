@@ -61,8 +61,8 @@ class SCIRunComponentInstance;
 class SCIRunPortInstance : public PortInstance
 {
 public:
-  enum PortType {    Output, Input  };
-  SCIRunPortInstance(SCIRunComponentInstance*, Port* port, PortType type);
+  enum DataflowPortType { Output, Input };
+  SCIRunPortInstance(SCIRunComponentInstance*, Port* port, DataflowPortType type);
   ~SCIRunPortInstance();
 
   /** */
@@ -79,16 +79,16 @@ public:
   virtual std::string getType();
   /** */
   virtual std::string getModel();
-  
+
 private:
   friend class BridgeComponentInstance;
-  
+
   SCIRunPortInstance(const SCIRunPortInstance&);
   SCIRunPortInstance& operator=(const SCIRunPortInstance&);
-  
+
   SCIRunComponentInstance* component;
   Port* port;
-  PortType porttype;
+  DataflowPortType porttype;
 };
 
 } // end namespace SCIRun

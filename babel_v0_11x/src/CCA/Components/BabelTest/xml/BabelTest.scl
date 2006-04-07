@@ -2,6 +2,7 @@
 <scl>
   <library uri="libCCA_Components_BabelTest_hello.so" scope="global" resolution="now">
     <class name="hello.GoPort" desc="ior/impl" />
+    <class name="hello.IDPort" desc="ior/impl" />
     <class name="hello.Com"    desc="ior/impl" />
   </library>
   <library uri="libCCA_Components_BabelTest_who.so" scope="global" resolution="now">

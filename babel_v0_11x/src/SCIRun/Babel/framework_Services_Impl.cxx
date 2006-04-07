@@ -1,3 +1,29 @@
+// For more information, please see: http://software.sci.utah.edu
+//
+// The MIT License
+//
+// Copyright (c) 2004 Scientific Computing and Imaging Institute,
+// University of Utah.
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          framework_Services_Impl.cxx
 // Symbol:        framework.Services-v1.0
@@ -39,20 +65,28 @@
 #include "sidl_RuntimeException.hxx"
 #endif
 // DO-NOT-DELETE splicer.begin(framework.Services._includes)
-// Insert-Code-Here {framework.Services._includes} (additional includes or code)
+#include <SCIRun/CCA/CCAException.h>
+#include <Core/Thread/Guard.h>
+
+#include "framework_TypeMap.hxx"
+#include "framework_ComponentID.hxx"
+
+#include <iostream>
 // DO-NOT-DELETE splicer.end(framework.Services._includes)
 
 // user defined constructor
 void framework::Services_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(framework.Services._ctor)
-  // Insert-Code-Here {framework.Services._ctor} (constructor)
+  lockServices = new Mutex("lock framework::Services_impl");
+  lockPorts = new Mutex("lock framework::Services_impl ports map");
   // DO-NOT-DELETE splicer.end(framework.Services._ctor)
 }
 
 // user defined destructor
 void framework::Services_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(framework.Services._dtor)
-  // Insert-Code-Here {framework.Services._dtor} (destructor)
+  delete lockServices;
+  delete lockPorts;
   // DO-NOT-DELETE splicer.end(framework.Services._dtor)
 }
 
@@ -70,11 +104,11 @@ void framework::Services_impl::_load() {
  * Method:  getData[]
  */
 void*
-framework::Services_impl::getData_impl () 
+framework::Services_impl::getData_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.getData)
-  // Insert-Code-Here {framework.Services.getData} (getData method)
+  return &ports;
   // DO-NOT-DELETE splicer.end(framework.Services.getData)
 }
 
@@ -113,8 +147,37 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.getPort)
-  // Insert-Code-Here {framework.Services.getPort} (getPort method)
-  // DO-NOT-DELETE splicer.end(framework.Services.getPort)
+  Guard g(lockServices);
+
+  lockPorts->lock();
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  lockPorts->unlock();
+  if (iter == ports.end()) {
+    // Using SCIRun2's version of CCAException for now.
+    // Replace with Babelized CCA exceptions!
+    throw sci::cca::CCAException::pointer(
+      new CCAException("Port " + portName + " not registered", sci::cca::PortNotDefined));
+  }
+
+  BabelPortInstance* pr = dynamic_cast<BabelPortInstance*>(iter->second);
+  if (pr->portType() == PortInstance::Provides) {
+    // Using SCIRun2's version of CCAException for now.
+    // Replace with Babelized CCA exceptions!
+    throw sci::cca::CCAException::pointer(
+      new CCAException("Cannot call getPort on a Provides port", sci::cca::BadPortName));
+  }
+
+  // registered, but not yet connected
+  if (pr->getConnectionCount() != 1) {
+    // Using SCIRun2's version of CCAException for now.
+    // Replace with Babelized CCA exceptions!
+    throw sci::cca::CCAException::pointer(
+	    new CCAException("Port " + portName + " not connected", sci::cca::PortNotConnected));
+  }
+  pr->incrementUseCount();
+  BabelPortInstance *pi = dynamic_cast<BabelPortInstance*>(pr->getPeer());
+  return pi->getPort();
+// DO-NOT-DELETE splicer.end(framework.Services.getPort)
 }
 
 /**
@@ -140,7 +203,31 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.getPortNonblocking)
-  // Insert-Code-Here {framework.Services.getPortNonblocking} (getPortNonblocking method)
+  lockPorts->lock();
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  lockPorts->unlock();
+  if (iter == ports.end()) {
+    return 0;
+  }
+
+  BabelPortInstance* pr = dynamic_cast<BabelPortInstance*>(iter->second);
+  if (pr->portType() == PortInstance::Provides) {
+    // Using SCIRun2's version of CCAException for now.
+    // Replace with Babelized CCA exceptions!
+      throw sci::cca::CCAException::pointer(new CCAException("Cannot call getPort on a Provides port", sci::cca::BadPortType));
+  }
+
+  // registered, but not yet connected
+  if (pr->getConnectionCount() != 1) {
+      return 0;
+  }
+
+  lockServices->lock();
+  pr->incrementUseCount();
+  lockServices->unlock();
+
+  BabelPortInstance *pi = dynamic_cast<BabelPortInstance*> (pr->getPeer());
+  return pi->getPort();
   // DO-NOT-DELETE splicer.end(framework.Services.getPortNonblocking)
 }
 
@@ -163,7 +250,26 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.releasePort)
-  // Insert-Code-Here {framework.Services.releasePort} (releasePort method)
+  Guard g(lockServices);
+
+  lockPorts->lock();
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  lockPorts->unlock();
+  if (iter == ports.end()) {
+    throw sci::cca::CCAException::pointer(
+      new CCAException("Released an unknown port: " + portName, sci::cca::PortNotDefined));
+  }
+
+  BabelPortInstance* pr = dynamic_cast<BabelPortInstance*>(iter->second);
+  if (pr->portType() == PortInstance::Provides) {
+    throw sci::cca::CCAException::pointer(
+      new CCAException("Cannot call releasePort on a Provides port", sci::cca::PortNotDefined));
+  }
+
+  if (! pr->decrementUseCount()) {
+      throw sci::cca::CCAException::pointer(
+	    new CCAException("Port released without correspond get", sci::cca::PortNotInUse));
+  }
   // DO-NOT-DELETE splicer.end(framework.Services.releasePort)
 }
 
@@ -179,7 +285,10 @@ throw (
 )
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.createTypeMap)
-  // Insert-Code-Here {framework.Services.createTypeMap} (createTypeMap method)
+  UCXX ::framework::TypeMap tm = UCXX ::framework::TypeMap::_create();
+  UCXX ::gov::cca::TypeMap gtm = UCXX ::sidl::babel_cast<UCXX ::gov::cca::TypeMap>(tm);
+
+  return gtm;
   // DO-NOT-DELETE splicer.end(framework.Services.createTypeMap)
 }
 
@@ -224,7 +333,22 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.registerUsesPort)
-  // Insert-Code-Here {framework.Services.registerUsesPort} (registerUsesPort method)
+  Guard g(lockPorts);
+
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  if (iter != ports.end()) {
+    BabelPortInstance *pr = dynamic_cast<BabelPortInstance*> (iter->second);
+    if (pr->portType() == PortInstance::Provides) {
+      throw sci::cca::CCAException::pointer(
+        new CCAException("name conflict between uses and provides ports for " + portName,
+	  sci::cca::PortAlreadyDefined));
+    } else {
+      throw sci::cca::CCAException::pointer(
+        new CCAException("registerUsesPort called twice for " + portName + " " + type,
+          sci::cca::PortAlreadyDefined));
+    }
+  }
+  ports.insert(make_pair(portName, new BabelPortInstance(portName, type, properties, PortInstance::Uses)));
   // DO-NOT-DELETE splicer.end(framework.Services.registerUsesPort)
 }
 
@@ -245,7 +369,28 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.unregisterUsesPort)
-  // Insert-Code-Here {framework.Services.unregisterUsesPort} (unregisterUsesPort method)
+  Guard g(lockPorts);
+
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  if (iter != ports.end()) {
+    BabelPortInstance *pr = dynamic_cast<BabelPortInstance*>(iter->second);
+    if (pr->portType() == PortInstance::Provides) {
+      throw sci::cca::CCAException::pointer(
+        new CCAException("name conflict between uses and provides ports for " + portName,
+	  sci::cca::PortAlreadyDefined));
+    } else {
+      if (pr->portInUse()) {
+	throw sci::cca::CCAException::pointer(new CCAException("Uses port " +
+	  portName + " has not been released", sci::cca:: UsesPortNotReleased));
+      }
+      ports.erase(iter);
+      delete pr;
+    }
+  } else {
+    throw sci::cca::CCAException::pointer(
+      new CCAException("port name not found for " + portName, sci::cca::PortNotDefined));
+  }
+
   // DO-NOT-DELETE splicer.end(framework.Services.unregisterUsesPort)
 }
 
@@ -298,7 +443,23 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.addProvidesPort)
-  // Insert-Code-Here {framework.Services.addProvidesPort} (addProvidesPort method)
+  lockPorts->lock();
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  lockPorts->unlock();
+
+  if (iter != ports.end()) {
+    BabelPortInstance *pr = dynamic_cast<BabelPortInstance*>(iter->second);
+    if (pr->portType() == PortInstance::Uses) {
+      throw sci::cca::CCAException::pointer(
+	new CCAException("Name conflict between uses and provides ports for " + portName, sci::cca::PortAlreadyDefined));
+    } else {
+      throw sci::cca::CCAException::pointer(
+	new CCAException("addProvidesPort called twice for " + portName, sci::cca::PortAlreadyDefined));
+    }
+  }
+  Guard g(lockPorts);
+  ports.insert(make_pair(portName, new BabelPortInstance(portName, type, properties, inPort, PortInstance::Provides)));
+
   // DO-NOT-DELETE splicer.end(framework.Services.addProvidesPort)
 }
 
@@ -317,7 +478,19 @@ framework::Services_impl::getPortProperties_impl (
   /* in */const ::std::string& name ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.getPortProperties)
-  // Insert-Code-Here {framework.Services.getPortProperties} (getPortProperties method)
+//   lockPorts->lock();
+//   std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+//   lockPorts->unlock();
+//   if (iter != ports.end()) {
+//     BabelPortInstance *pr = dynamic_cast<BabelPortInstance*>(iter->second);
+//     pr->getProperties(); // implement a getProperties method!
+//   }
+
+  // return empty properties for now
+  UCXX ::framework::TypeMap tm = UCXX ::framework::TypeMap::_create();
+  UCXX ::gov::cca::TypeMap gctm = UCXX ::sidl::babel_cast<UCXX ::gov::cca::TypeMap>(gctm);
+
+  return gctm;
   // DO-NOT-DELETE splicer.end(framework.Services.getPortProperties)
 }
 
@@ -337,7 +510,19 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.removeProvidesPort)
-  // Insert-Code-Here {framework.Services.removeProvidesPort} (removeProvidesPort method)
+  lockPorts->lock();
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  lockPorts->unlock();
+  if (iter == ports.end()) { // port can't be found
+    throw sci::cca::CCAException::pointer(
+      new CCAException("Port " + portName + " is not defined.", sci::cca::PortNotDefined));
+  }
+
+  // check if port is in use???
+  BabelPortInstance *pr = dynamic_cast<BabelPortInstance*>(iter->second);
+  Guard g1(lockPorts);
+  ports.erase(iter);
+  delete pr;
   // DO-NOT-DELETE splicer.end(framework.Services.removeProvidesPort)
 }
 
@@ -350,7 +535,13 @@ framework::Services_impl::getComponentID_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.getComponentID)
-  // Insert-Code-Here {framework.Services.getComponentID} (getComponentID method)
+  // no facility for looking up ComponentIDs yet
+
+  // no instance name information yet
+  UCXX ::framework::ComponentID cid = UCXX ::framework::ComponentID::_create();
+  UCXX ::gov::cca::ComponentID gccid = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ComponentID>(cid);
+
+  return gccid;
   // DO-NOT-DELETE splicer.end(framework.Services.getComponentID)
 }
 

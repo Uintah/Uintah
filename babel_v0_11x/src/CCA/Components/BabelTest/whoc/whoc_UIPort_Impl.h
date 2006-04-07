@@ -30,23 +30,37 @@
  * File:          whoc_UIPort_Impl.h
  * Symbol:        whoc.UIPort-v1.0
  * Symbol Type:   class
- * Babel Version: 0.7.4
- * SIDL Created:  20030915 14:58:57 MST
- * Generated:     20030915 14:59:01 MST
+ * Babel Version: 0.11.0
  * Description:   Server-side implementation for whoc.UIPort
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
- * babel-version = 0.7.4
- * source-line   = 10
- * source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/whoc/whoc.sidl
+ * babel-version = 0.11.0
  */
 
 #ifndef included_whoc_UIPort_Impl_h
 #define included_whoc_UIPort_Impl_h
 
-#ifndef included_SIDL_header_h
-#include "SIDL_header.h"
+#ifndef included_sidl_header_h
+#include "sidl_header.h"
+#endif
+#ifndef included_gov_cca_Port_h
+#include "gov_cca_Port.h"
+#endif
+#ifndef included_gov_cca_ports_UIPort_h
+#include "gov_cca_ports_UIPort.h"
+#endif
+#ifndef included_sidl_BaseClass_h
+#include "sidl_BaseClass.h"
+#endif
+#ifndef included_sidl_BaseInterface_h
+#include "sidl_BaseInterface.h"
+#endif
+#ifndef included_sidl_ClassInfo_h
+#include "sidl_ClassInfo.h"
+#endif
+#ifndef included_sidl_RuntimeException_h
+#include "sidl_RuntimeException.h"
 #endif
 #ifndef included_whoc_UIPort_h
 #include "whoc_UIPort.h"
@@ -84,22 +98,105 @@ whoc_UIPort__set_data(
   whoc_UIPort,
   struct whoc_UIPort__data*);
 
-extern void
-impl_whoc_UIPort__ctor(
-  whoc_UIPort);
+extern
+void
+impl_whoc_UIPort__load(
+  /* out */ sidl_BaseInterface *_ex);
 
-extern void
+extern
+void
+impl_whoc_UIPort__ctor(
+  /* in */ whoc_UIPort self,
+  /* out */ sidl_BaseInterface *_ex);
+
+extern
+void
 impl_whoc_UIPort__dtor(
-  whoc_UIPort);
+  /* in */ whoc_UIPort self,
+  /* out */ sidl_BaseInterface *_ex);
 
 /*
  * User-defined object methods
  */
 
-extern int32_t
+extern struct gov_cca_Port__object* 
+  impl_whoc_UIPort_fconnect_gov_cca_Port(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct gov_cca_Port__object* impl_whoc_UIPort_fcast_gov_cca_Port(void* 
+  bi, sidl_BaseInterface* _ex);
+extern struct gov_cca_ports_UIPort__object* 
+  impl_whoc_UIPort_fconnect_gov_cca_ports_UIPort(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct gov_cca_ports_UIPort__object* 
+  impl_whoc_UIPort_fcast_gov_cca_ports_UIPort(void* bi,
+  sidl_BaseInterface* _ex);
+extern struct sidl_BaseClass__object* 
+  impl_whoc_UIPort_fconnect_sidl_BaseClass(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_BaseClass__object* 
+  impl_whoc_UIPort_fcast_sidl_BaseClass(void* bi, sidl_BaseInterface* _ex);
+extern struct sidl_BaseInterface__object* 
+  impl_whoc_UIPort_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_BaseInterface__object* 
+  impl_whoc_UIPort_fcast_sidl_BaseInterface(void* bi, sidl_BaseInterface* _ex);
+extern struct sidl_ClassInfo__object* 
+  impl_whoc_UIPort_fconnect_sidl_ClassInfo(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_ClassInfo__object* 
+  impl_whoc_UIPort_fcast_sidl_ClassInfo(void* bi, sidl_BaseInterface* _ex);
+extern struct sidl_RuntimeException__object* 
+  impl_whoc_UIPort_fconnect_sidl_RuntimeException(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_RuntimeException__object* 
+  impl_whoc_UIPort_fcast_sidl_RuntimeException(void* bi,
+  sidl_BaseInterface* _ex);
+extern struct whoc_UIPort__object* impl_whoc_UIPort_fconnect_whoc_UIPort(const 
+  char* url, sidl_bool ar, sidl_BaseInterface *_ex);
+extern struct whoc_UIPort__object* impl_whoc_UIPort_fcast_whoc_UIPort(void* bi,
+  sidl_BaseInterface* _ex);
+extern
+int32_t
 impl_whoc_UIPort_ui(
-  whoc_UIPort);
+  /* in */ whoc_UIPort self,
+  /* out */ sidl_BaseInterface *_ex);
 
+extern struct gov_cca_Port__object* 
+  impl_whoc_UIPort_fconnect_gov_cca_Port(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct gov_cca_Port__object* impl_whoc_UIPort_fcast_gov_cca_Port(void* 
+  bi, sidl_BaseInterface* _ex);
+extern struct gov_cca_ports_UIPort__object* 
+  impl_whoc_UIPort_fconnect_gov_cca_ports_UIPort(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct gov_cca_ports_UIPort__object* 
+  impl_whoc_UIPort_fcast_gov_cca_ports_UIPort(void* bi,
+  sidl_BaseInterface* _ex);
+extern struct sidl_BaseClass__object* 
+  impl_whoc_UIPort_fconnect_sidl_BaseClass(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_BaseClass__object* 
+  impl_whoc_UIPort_fcast_sidl_BaseClass(void* bi, sidl_BaseInterface* _ex);
+extern struct sidl_BaseInterface__object* 
+  impl_whoc_UIPort_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_BaseInterface__object* 
+  impl_whoc_UIPort_fcast_sidl_BaseInterface(void* bi, sidl_BaseInterface* _ex);
+extern struct sidl_ClassInfo__object* 
+  impl_whoc_UIPort_fconnect_sidl_ClassInfo(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_ClassInfo__object* 
+  impl_whoc_UIPort_fcast_sidl_ClassInfo(void* bi, sidl_BaseInterface* _ex);
+extern struct sidl_RuntimeException__object* 
+  impl_whoc_UIPort_fconnect_sidl_RuntimeException(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex);
+extern struct sidl_RuntimeException__object* 
+  impl_whoc_UIPort_fcast_sidl_RuntimeException(void* bi,
+  sidl_BaseInterface* _ex);
+extern struct whoc_UIPort__object* impl_whoc_UIPort_fconnect_whoc_UIPort(const 
+  char* url, sidl_bool ar, sidl_BaseInterface *_ex);
+extern struct whoc_UIPort__object* impl_whoc_UIPort_fcast_whoc_UIPort(void* bi,
+  sidl_BaseInterface* _ex);
 #ifdef __cplusplus
 }
 #endif

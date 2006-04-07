@@ -50,7 +50,12 @@
 #include "whoc_Com_Impl.h"
 
 /* DO-NOT-DELETE splicer.begin(whoc.Com._includes) */
-/* Put additional includes or other arbitrary code here... */
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "whoc_IDPort.h"
+#include "sidl_Exception.h"
+
 /* DO-NOT-DELETE splicer.end(whoc.Com._includes) */
 
 /*
@@ -89,7 +94,10 @@ impl_whoc_Com__ctor(
 {
   *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.Com._ctor) */
-  /* Insert the implementation of the constructor method here... */
+  struct whoc_Com__data* data = (struct whoc_Com__data*) malloc(sizeof(struct whoc_Com__data));
+  data->services = NULL;
+
+  whoc_Com__set_data(self, data);
   /* DO-NOT-DELETE splicer.end(whoc.Com._ctor) */
 }
 
@@ -110,7 +118,14 @@ impl_whoc_Com__dtor(
 {
   *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.Com._dtor) */
-  /* Insert the implementation of the destructor method here... */
+  struct whoc_Com__data* data = whoc_Com__get_data(self);
+
+  if (data->services != NULL) {
+    gov_cca_Services_deleteRef(data->services, _ex);
+  }
+
+  free((void*) data);
+  whoc_Com__set_data(self, NULL);
   /* DO-NOT-DELETE splicer.end(whoc.Com._dtor) */
 }
 
@@ -146,12 +161,22 @@ impl_whoc_Com_setServices(
 {
   *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.Com.setServices) */
+  struct whoc_Com__data* data = whoc_Com__get_data(self);
+  sidl_BaseInterface ex;
+  gov_cca_Port ip;
+  whoc_IDPort idPort = whoc_IDPort__create(&ex);
+  ip = gov_cca_Port__cast(idPort, _ex);
+  SIDL_CHECK(*_ex);
 
-  /* sidl_BaseException ex; */
-  gov_cca_TypeMap properties = gov_cca_Services_createTypeMap(services, _ex);
+  gov_cca_TypeMap properties = gov_cca_Services_createTypeMap(services, &ex);
+  gov_cca_Services_addProvidesPort(services, ip, "IDPort", "gov.cca.ports.IDPort", properties, &ex);
+  gov_cca_Port_deleteRef(ip, _ex);
+  SIDL_CHECK(*_ex);
 
-  gov_cca_Port idport = gov_cca_Port__cast(whoc_IDPort__ctor(), _ex);
-  gov_cca_Services_addProvidesPort(services, idport, "idport", "gov.cca.ports.IDPort", properties, _ex);
+  data->services = services;
+  gov_cca_Services_addRef(services, _ex);
+  SIDL_CHECK(*_ex);
+ EXIT:;
   /* DO-NOT-DELETE splicer.end(whoc.Com.setServices) */
 }
 /* Babel internal methods, Users should not edit below this line. */

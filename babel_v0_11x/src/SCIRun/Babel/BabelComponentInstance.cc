@@ -88,8 +88,7 @@ BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
   this->svc = svc;
   BabelPortInstance *go = dynamic_cast<BabelPortInstance*>(getPortInstance("go"));
   if (go != 0) {
-    std::map<std::string, PortInstance*> *pports=
-      (std::map<std::string, PortInstance*>* ) (this->svc.getData());
+    PortInstanceMap *pports = (PortInstanceMap*) (this->svc.getData());
 
     UCXX ::gov::cca::ports::GoPort g = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ports::GoPort>(go->getPort());
     sci::cca::ports::GoPort::pointer goPort(new BabelCCAGoPort(g));
@@ -104,8 +103,7 @@ BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
 
   BabelPortInstance *ui = dynamic_cast<BabelPortInstance*>(getPortInstance("ui"));
   if (ui != 0) {
-    std::map<std::string, PortInstance*> *pports=
-      (std::map<std::string, PortInstance*>* ) (this->svc.getData());
+    PortInstanceMap *pports= (PortInstanceMap*) (this->svc.getData());
 
     UCXX ::gov::cca::ports::UIPort u = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ports::UIPort>(ui->getPort());
     sci::cca::ports::UIPort::pointer uiPort(new BabelCCAUIPort(u));
@@ -128,14 +126,18 @@ BabelComponentInstance::~BabelComponentInstance()
 PortInstance*
 BabelComponentInstance::getPortInstance(const std::string& portname)
 {
-  std::map<std::string, PortInstance*> *pports=
-    (std::map<std::string, PortInstance*>*)svc.getData();
+  PortInstanceMap *pports = (PortInstanceMap*) svc.getData();
 
-  std::map<std::string, PortInstance*>::iterator iter = pports->find(portname);
-  if (iter == pports->end()) {
-    return 0;
+  if (pports != 0) {
+    PortInstanceMap::iterator iter = pports->find(portname);
+    if (iter == pports->end()) {
+      return 0;
+    } else {
+      return iter->second;
+    }
   } else {
-    return iter->second;
+    std::cerr << "Warning: NULL pports!" << std::endl;
+    return 0;
   }
 }
 
@@ -211,7 +213,7 @@ BabelComponentInstance::getPorts()
 
 BabelComponentInstance::Iterator::Iterator(BabelComponentInstance* comp)
 {
-  ports = (std::map<std::string, PortInstance*>*) (comp->svc.getData());
+  ports = (PortInstanceMap*) (comp->svc.getData());
   iter = ports->begin();
 }
 

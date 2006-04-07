@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentModel.h: 
+ *  ComponentModel.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -85,8 +85,8 @@ public:
       on failure. */
   virtual ComponentInstance*
   createInstance(const std::string &name,
-                 const std::string &type,
-                 const sci::cca::TypeMap::pointer &tm);
+		 const std::string &type,
+		 const sci::cca::TypeMap::pointer &tm);
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */

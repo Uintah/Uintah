@@ -80,7 +80,7 @@ bool CCAPortInstance::connect(PortInstance* to)
     return false;
   }
 
-  if (portType() == From && p2->portType() == To) {
+  if (portType() == Uses && p2->portType() == Provides) {
     lock_connections.lock();
     connections.push_back(p2);
     lock_connections.unlock();
@@ -92,11 +92,7 @@ bool CCAPortInstance::connect(PortInstance* to)
 
 PortInstance::PortType CCAPortInstance::portType()
 {
-    if (porttype == Uses) {
-        return From;
-    } else {
-        return To;
-    }
+  return porttype;
 }
 
 
@@ -125,9 +121,9 @@ bool CCAPortInstance::disconnect(PortInstance* to)
   }
 
   if (porttype != Uses) {
-    std::cerr << "disconnect can be called only by user" << std::endl; 
+    std::cerr << "disconnect can be called only by user" << std::endl;
     return false;
-  } 
+  }
   std::vector<PortInstance*>::iterator iter;
   SCIRun::Guard g1(&lock_connections);
   for (iter = connections.begin(); iter < connections.end(); iter++) {
@@ -167,7 +163,7 @@ bool CCAPortInstance::canConnectTo(PortInstance* to)
  */
 bool CCAPortInstance::available()
 {
-    return portType() == To || connections.size() == 0;
+    return portType() == Provides || connections.size() == 0;
 }
 
 // return a PortInstance on the other side of the connection

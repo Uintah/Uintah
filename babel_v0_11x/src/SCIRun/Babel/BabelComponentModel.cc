@@ -228,11 +228,13 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
   UCXX ::sidl::DLL library = UCXX ::sidl::Loader::findLibrary(type, "ior/impl", UCXX ::sidl::Scope_SCLSCOPE, UCXX ::sidl::Resolve_SCLRESOLVE);
 #if DEBUG
   std::cerr << "sidl::Loader::getSearchPath=" << UCXX ::sidl::Loader::getSearchPath() << std::endl;
+  // get default finder and report search path
   UCXX ::sidl::Finder f = UCXX ::sidl::Loader::getFinder();
   std::cerr << "sidl::Finder::getSearchPath=" << f.getSearchPath() << std::endl;
 #endif
   if (library._is_nil()) {
-    std::cerr << "Could not find library for type " << type
+    std::cerr << "Could not find library for type " << type << ". "
+	      << "Check your environment settings as described in the Babel and SCIRun2 usage instructions."
 	      << std::endl;
     return 0;
   }

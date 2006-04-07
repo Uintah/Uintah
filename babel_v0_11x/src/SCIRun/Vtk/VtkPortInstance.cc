@@ -49,7 +49,7 @@ using namespace SCIRun;
 using namespace vtk;
 
 VtkPortInstance::VtkPortInstance(VtkComponentInstance* ci,
-                                 vtk::Port* port, PortType porttype)
+                                 vtk::Port* port, VTKPortType porttype)
   : ci(ci), port(port), porttype(porttype)
 {
   nConnections=0;
@@ -72,9 +72,9 @@ std::string VtkPortInstance::getUniqueName()
 PortInstance::PortType VtkPortInstance::portType()
 {
   if(porttype == Output)
-    return PortInstance::From;
+    return PortInstance::Uses;
   else
-    return PortInstance::To;
+    return PortInstance::Provides;
 }
 
 bool VtkPortInstance::connect(PortInstance* to)
