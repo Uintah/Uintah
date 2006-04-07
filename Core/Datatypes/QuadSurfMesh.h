@@ -223,6 +223,13 @@ public:
       result.push_back(node_neighbors_[idx][i]/4);
   }
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_edges(result, idx);
+  }
+
   bool get_neighbor(typename Face::index_type &neighbor,
                     typename Face::index_type from,
                     typename Edge::index_type idx) const;

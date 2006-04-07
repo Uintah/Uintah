@@ -222,7 +222,7 @@ public:
   void get_faces(typename Face::array_type &,
                  typename Elem::index_type) const {}
 
-  //! get the parent element(s) of the given index
+  //! Get the parent element(s) of the given node index.
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   {
@@ -231,6 +231,12 @@ public:
       result.push_back(node_neighbors_[idx][i]);
   }
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_nodes(result, idx);
+  }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
