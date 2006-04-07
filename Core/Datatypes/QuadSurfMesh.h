@@ -270,7 +270,7 @@ public:
   int get_weights(const Point & , typename Cell::array_type & , double * )
   {ASSERTFAIL("QuadSurfMesh::get_weights(Cells) not supported."); }
 
-  bool inside3_p(typename Face::index_type i, const Point &p) const;
+  bool inside4_p(typename Face::index_type i, const Point &p) const;
 
   void get_point(Point &p, typename Node::index_type i) const { p = points_[i]; }
   void get_normal(Vector &n, typename Node::index_type i) const { n = normals_[i]; }
@@ -852,26 +852,14 @@ QuadSurfMesh<Basis>::locate(typename Edge::index_type &loc,
 
 template <class Basis>
 bool
-QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i,
+QuadSurfMesh<Basis>::inside4_p(typename Face::index_type idx,
                                const Point &p) const
 {
-  typename Node::array_type nodes;
-  get_nodes(nodes, i);
-
-  unsigned int n = nodes.size();
-
-  Point * pts = new Point[n];
-
-  for (unsigned int i = 0; i < n; i++)
+  for (unsigned int i = 0; i < 4; i+=2)
   {
-    get_center(pts[i], nodes[i]);
-  }
-
-  for (unsigned int i = 0; i < n; i+=2)
-  {
-    Point p0 = pts[(i+0)%n];
-    Point p1 = pts[(i+1)%n];
-    Point p2 = pts[(i+2)%n];
+    const Point &p0 = points_[faces_[idx*4 + ((i+0)%4)]];
+    const Point &p1 = points_[faces_[idx*4 + ((i+1)%4)]];
+    const Point &p2 = points_[faces_[idx*4 + ((i+2)%4)]];
 
     Vector v01(p0-p1);
     Vector v02(p0-p2);
@@ -888,11 +876,10 @@ QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i,
     // of the four triangles that can be formed by using three of the
     // quad vertices and the point in question.
     if( fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL ) {
-      delete [] pts;
       return true;
     }
   }
-  delete [] pts;
+
   return false;
 }
 
@@ -908,7 +895,7 @@ QuadSurfMesh<Basis>::locate(typename Face::index_type &face,
   end(ei);
 
   while (bi != ei) {
-    if( inside3_p( *bi, p ) ) {
+    if( inside4_p( *bi, p ) ) {
       face = *bi;
       return true;
     }
