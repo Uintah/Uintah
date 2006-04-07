@@ -104,47 +104,59 @@ public:
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   UCXX ::gov::cca::Port getPort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   UCXX ::gov::cca::Port getPortNonblocking(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void releasePort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   UCXX ::gov::cca::TypeMap createTypeMap();
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void registerUsesPort(const std::string& name, const std::string& type,
 			const UCXX ::gov::cca::TypeMap& properties);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void unregisterUsesPort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void addProvidesPort(const UCXX ::gov::cca::Port& port,
 		       const std::string& name,
 		       const std::string& type,
 		       const UCXX ::gov::cca::TypeMap& properties);
+
   void removeProvidesPort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   UCXX ::gov::cca::TypeMap getPortProperties(const std::string& portName);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   UCXX ::gov::cca::ComponentID getComponentID();
 
   /** ? */
   virtual PortInstance* getPortInstance(const std::string& name);
+
   /** ? */
   virtual PortInstanceIterator* getPorts();
+
 private:
   UCXX ::framework::Services svc;
+
   /** ? */
   class Iterator : public PortInstanceIterator
   {
-    std::map<std::string, PortInstance*> *ports;
-    std::map<std::string, PortInstance*>::iterator iter;
+    PortInstanceMap *ports;
+    PortInstanceMap::iterator iter;
   public:
     Iterator(BabelComponentInstance*);
     virtual ~Iterator();

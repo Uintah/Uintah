@@ -49,10 +49,18 @@ ${OUTPUTDIR}/cca.make: ${CCASIDL}
 	$(BABEL) --client=UC++ --output-directory=${dir $@} --suppress-timestamp $<
 	mv $(dir $@)babel.make $@
 
-SRCS := $(SRCS) $(SRCDIR)/BabelComponentModel.cc \
-	$(SRCDIR)/BabelComponentInstance.cc \
-	$(SRCDIR)/BabelComponentDescription.cc \
-	$(SRCDIR)/BabelPortInstance.cc
+# SRCS := $(SRCS) $(SRCDIR)/BabelComponentModel.cc \
+# 	$(SRCDIR)/BabelComponentInstance.cc \
+# 	$(SRCDIR)/BabelComponentDescription.cc \
+# 	$(SRCDIR)/BabelPortInstance.cc
+
+SRCS += \
+        $(SRCDIR)/BabelComponentModel.cc \
+        $(SRCDIR)/BabelComponentInstance.cc \
+        $(SRCDIR)/BabelComponentDescription.cc \
+        $(SRCDIR)/BabelPortInstance.cc
+
+
 
 # Get these from framework.make
 IORSRCS :=

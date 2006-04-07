@@ -44,7 +44,6 @@
 #include <SCIRun/Babel/gov_cca.hxx>
 
 #include <SCIRun/PortInstance.h>
-
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -63,8 +62,6 @@ namespace SCIRun {
 class BabelPortInstance : public PortInstance
 {
 public:
-  enum PortType {  Uses, Provides  };
-
   BabelPortInstance(const std::string& portname, const std::string& classname,
 		    const UCXX ::gov::cca::TypeMap& properties,
 		    PortType porttype);
@@ -82,17 +79,25 @@ public:
   virtual bool canConnectTo(PortInstance*);
   virtual bool available();
   virtual PortInstance* getPeer();
+
   std::string getName();
+  int getConnectionCount() { return connections.size(); }
+
   void incrementUseCount();
   bool decrementUseCount();
 
+  /** Test use counter. */
+  bool portInUse();
+
   const UCXX ::gov::cca::Port& getPort() { return port; }
+  //UCXX ::gov::cca::TypeMap getProperties();
 
 private:
+  //friend class BabelComponentInstance;
+
   PortType porttype;
   std::vector<PortInstance*> connections;
   SCIRun::Mutex lock_connections;
-  friend class BabelComponentInstance;
   std::string name;
   std::string type;
   UCXX ::gov::cca::TypeMap properties;

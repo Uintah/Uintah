@@ -32,17 +32,17 @@
 
 package hello version 1.0 {
 
-  class GoPort implements-all gov.cca.ports.GoPort{
+  class GoPort implements-all gov.cca.ports.GoPort {
     void setServices(in gov.cca.Services services);
-  };
+  }
 
-  class IDPort implements-all gov.cca.ports.IDPort{
-  };
+  class IDPort implements-all gov.cca.ports.IDPort {
+  }
 
-  class Com implements-all gov.cca.Component{
-  };
+  class Com implements-all gov.cca.Component {
+  }
 
-};
+}
 
 
 

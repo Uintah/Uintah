@@ -28,7 +28,7 @@
 
 
 /*
- *  BridgeComponentInstance.h: 
+ *  BridgeComponentInstance.h:
  *
  *  Written by:
  *   Kostadin Damevski
@@ -75,7 +75,7 @@ namespace SCIRun {
     BridgeComponentInstance(SCIRunFramework* framework,
 			 const std::string& instanceName,
 			 const std::string& className,
-             const sci::cca::TypeMap::pointer &tm,
+	     const sci::cca::TypeMap::pointer &tm,
 			 BridgeComponent* component);
     virtual ~BridgeComponentInstance();
 
@@ -108,7 +108,7 @@ namespace SCIRun {
   private:
     //ITERATOR CLASS
     class Iterator : public PortInstanceIterator {
-      std::map<std::string, PortInstance*>::iterator iter;
+      PortInstanceMap::iterator iter;
       BridgeComponentInstance* comp;
     public:
       Iterator(BridgeComponentInstance*);
@@ -122,15 +122,15 @@ namespace SCIRun {
     };
     //EOF ITERATOR CLASS
 
-    std::map<std::string, PortInstance*> ports;
+    PortInstanceMap ports;
     SCIRun::Mutex lock_ports;
-  
+
     BridgeComponent* component;
     Mutex *mutex;
 
     //Dataflow:
-    BridgeModule* bmdl; 
-   
+    BridgeModule* bmdl;
+
     BridgeComponentInstance(const BridgeComponentInstance&);
     BridgeComponentInstance& operator=(const BridgeComponentInstance&);
   };

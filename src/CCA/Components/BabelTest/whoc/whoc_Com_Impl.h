@@ -76,8 +76,7 @@
 
 struct whoc_Com__data {
   /* DO-NOT-DELETE splicer.begin(whoc.Com._data) */
-  /* Put private data members here... */
-  int ignore; /* dummy to force non-empty struct; remove if you add data */
+  gov_cca_Services services;
   /* DO-NOT-DELETE splicer.end(whoc.Com._data) */
 };
 

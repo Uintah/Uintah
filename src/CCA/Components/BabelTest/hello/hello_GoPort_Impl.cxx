@@ -51,8 +51,10 @@
 #endif
 // DO-NOT-DELETE splicer.begin(hello.GoPort._includes)
 //#include "gov_cca_ports_GoPort.hh"
-#include "gov_cca_ports_IDPort.hxx"
 #include <iostream.h>
+
+#include "sidl_String.h"
+#include "gov_cca_ports_IDPort.hxx"
 // DO-NOT-DELETE splicer.end(hello.GoPort._includes)
 
 // user defined constructor

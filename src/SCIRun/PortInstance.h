@@ -57,10 +57,10 @@ class PortInstance
 public:
   PortInstance();
   virtual ~PortInstance();
-  
+
   enum PortType {
-    From=0,
-    To=1
+    Uses = 0,
+    Provides
   };
 
   /** */

@@ -58,10 +58,10 @@ class VtkComponentInstance;
  */
 class VtkPortInstance : public PortInstance {
 public:
-  enum PortType {
+  enum VTKPortType {
     Output, Input
   };
-  VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port, PortType type);
+  VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port, VTKPortType type);
   virtual ~VtkPortInstance();
 
   /**? */
@@ -76,16 +76,16 @@ public:
   virtual bool disconnect(PortInstance*);
   /** ? */
   virtual bool canConnectTo(PortInstance *);
-  
+
 private:
   friend class BridgeComponentInstance;
-  
+
   VtkPortInstance(const VtkPortInstance&);
   VtkPortInstance& operator=(const VtkPortInstance&);
-  
+
   VtkComponentInstance* ci;
   vtk::Port* port;
-  PortType porttype;
+  VTKPortType porttype;
   int nConnections;
 };
 

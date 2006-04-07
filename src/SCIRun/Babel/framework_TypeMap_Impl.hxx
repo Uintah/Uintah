@@ -46,7 +46,7 @@
 
 
 // DO-NOT-DELETE splicer.begin(framework.TypeMap._includes)
-// Insert-Code-Here {framework.TypeMap._includes} (includes or arbitrary code)
+#include <SCIRun/TypeMap.h>
 // DO-NOT-DELETE splicer.end(framework.TypeMap._includes)
 
 namespace framework { 
@@ -65,7 +65,7 @@ namespace framework {
   protected:
 
     // DO-NOT-DELETE splicer.begin(framework.TypeMap._implementation)
-    // Insert-Code-Here {framework.TypeMap._implementation} (additional details)
+    SCIRun::TypeMap* typeMap;
     // DO-NOT-DELETE splicer.end(framework.TypeMap._implementation)
 
   public:
@@ -92,6 +92,20 @@ namespace framework {
 
     public:
 
+      /**
+       * user defined non-static method.
+       */
+      void
+      setInternalData_impl (
+        /* in */void* data
+      )
+      ;
+
+      /**
+       * user defined non-static method.
+       */
+      void*
+      getInternalData_impl() ;
 
       /**
        * Create an exact copy of this Map 

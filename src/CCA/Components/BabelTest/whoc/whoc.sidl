@@ -30,40 +30,10 @@
 
 //version whoc 1.0;
 
-package whoc version 1.0{
+package whoc version 1.0 {
+  class IDPort implements-all gov.cca.ports.IDPort {}
 
-  class IDPort implements-all gov.cca.ports.IDPort{
-  };
+  class UIPort implements-all gov.cca.ports.UIPort {}
 
-  class UIPort implements-all gov.cca.ports.UIPort{
-  };	
-
-  class Com implements-all gov.cca.Component{
-  };
-
+  class Com implements-all gov.cca.Component {}
 };
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

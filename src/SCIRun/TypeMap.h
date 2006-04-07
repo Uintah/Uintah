@@ -53,7 +53,7 @@ class TypeMap : public sci::cca::TypeMap {
 public:
   TypeMap();
   virtual ~TypeMap();
-    
+
   virtual TypeMap::pointer cloneTypeMap();
   virtual TypeMap::pointer cloneEmpty();
 
