@@ -197,9 +197,6 @@ void CCAComponentInstance::registerUsesPort(const std::string& portName,
                              const sci::cca::TypeMap::pointer& properties)
 {
     SCIRun::Guard g1(&lock_ports);
-
-std::cerr << "CCAComponentInstance::registerUsesPort(..): " << portName << ", " << portType << std::endl;
-
     PortInstanceMap::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == CCAPortInstance::Provides) {
@@ -240,9 +237,6 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
                                            const std::string& portType,
                                            const sci::cca::TypeMap::pointer& properties)
 {
-
-std::cerr << "CCAComponentInstance::addProvidesPort(..): " << portName << ", " << portType << std::endl;
-
   if (port.isNull()) {
     throw sci::cca::CCAException::pointer(
       new CCAException("Null port argument for " + portName + ", " + portType));
@@ -313,8 +307,10 @@ std::cerr << "CCAComponentInstance::addProvidesPort(..): " << portName << ", " <
 void CCAComponentInstance::removeProvidesPort(const std::string& name)
 {
     if (size < 1) {
+#if DEBUG
         std::cerr << "CCAComponentInstance::removeProvidesPort: name="
                   << name << std::endl;
+#endif
         lock_ports.lock();
         PortInstanceMap::iterator iter = ports.find(name);
         lock_ports.unlock();

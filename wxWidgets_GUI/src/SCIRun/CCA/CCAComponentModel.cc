@@ -192,7 +192,6 @@ CCAComponentModel::createInstance(const std::string& name,
     for (StringVector::iterator it = possible_paths.begin();
 	 it != possible_paths.end(); it++) {
       std::string so_name = *it + "/" + iter->second->getLibrary();
-std::cerr << "CCAComponentModel::createInstance: " << *it << ", " << iter->second->getLibrary() << std::endl;
       handle = GetLibraryHandle(so_name.c_str());
       if (handle) { break; }
     }
