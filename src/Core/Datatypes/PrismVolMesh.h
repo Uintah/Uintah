@@ -662,6 +662,13 @@ public:
                  typename Node::index_type idx) const
   { get_cells(result, idx); }
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_faces(result, idx);
+  }
+
   // This function is redundant, the next one can be used with less parameters
   bool get_neighbor(typename Cell::index_type &neighbor, typename Cell::index_type from,
                    typename Face::index_type idx) const;

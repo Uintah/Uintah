@@ -290,6 +290,13 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type node) const;
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_faces(result, idx);
+  }
+
 
   bool get_neighbor(typename Cell::index_type &neighbor,
                     typename Cell::index_type from,

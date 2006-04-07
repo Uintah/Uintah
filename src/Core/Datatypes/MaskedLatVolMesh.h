@@ -965,6 +965,13 @@ public:
   void get_elems(typename Cell::array_type &result,
                  const typename Node::index_type &idx) const;
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_faces(result, idx);
+  }
+
   // returns 26 pairs in ijk order
   void  get_neighbors_stencil(
                               vector<pair<bool,typename Cell::index_type> > &nbrs,
