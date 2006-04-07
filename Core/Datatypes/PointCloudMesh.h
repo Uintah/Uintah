@@ -98,6 +98,7 @@ public:
   };
 
   typedef Node Elem;
+  // No DElem for PointCloudMesh
 
   friend class ElemData;
 

@@ -489,6 +489,8 @@ public:
   };
 
   typedef Cell Elem;
+  typedef Face DElem;
+
   enum { ELEMENTS_E = CELLS_E };
 
 

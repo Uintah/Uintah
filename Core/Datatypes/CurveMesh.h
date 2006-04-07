@@ -100,6 +100,7 @@ public:
   };
 
   typedef Edge Elem;
+  typedef Node DElem;
 
   typedef pair<typename Node::index_type,
                typename Node::index_type> index_pair_type;

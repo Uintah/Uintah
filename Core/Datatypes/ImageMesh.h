@@ -242,6 +242,7 @@ public:
   };
 
   typedef Face Elem;
+  typedef Edge DElem;
 
   friend class INodeIter;
   friend class IFaceIter;
