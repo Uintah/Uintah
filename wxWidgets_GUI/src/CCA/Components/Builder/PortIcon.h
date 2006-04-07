@@ -46,45 +46,46 @@ class ComponentIcon;
 
 class PortIcon : public wxWindow {
 public:
-  PortIcon(ComponentIcon *parent, wxWindowID id, Builder::PortType pt, const std::string& name);
+  PortIcon(const sci::cca::BuilderComponent::pointer& bc, ComponentIcon *parent,
+           wxWindowID id, Builder::PortType pt, const std::string& name);
   virtual ~PortIcon();
   bool Create(wxWindow *parent, wxWindowID id, const wxString &name);
+
+  void OnPaint(wxPaintEvent& event);
   void OnLeftDown(wxMouseEvent& event);
   void OnLeftUp(wxMouseEvent& event);
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
 
-  wxColour GetPortColour() { return pColour; }
+  wxColor GetPortColor() { return pColor; }
   const std::string GetPortName() const { return name; }
-  Builder::PortType GetPortType() const { return type; }
+  Builder::PortType GetPortType() const { return portType; }
 
   ComponentIcon* GetParent() const { return parent; }
 
-  //void PortIcon::OnDraw(wxDC& dc)
-
   const static int PORT_WIDTH = 7;
   const static int PORT_HEIGHT = 10;
-  const static int HIGHLIGHT_WIDTH = 2;
-  //const static int PORT_DISTANCE = 10;
+  const static int HIGHLIGHT_WIDTH = 3;
 
 protected:
   PortIcon();
   void Init();
 
-private:
-  PortIcon(const PortIcon&);
-  PortIcon& operator=(const PortIcon&);
-
+  sci::cca::BuilderComponent::pointer builder;
   ComponentIcon* parent;
-  Builder::PortType type;
+  Builder::PortType portType;
   std::string name;
+  std::string model;
+  std::string type;
   bool connecting;
 
   wxRect hRect;
-  //wxRegion region;
+  wxColor hColor;
+  wxColor pColor;
 
-  wxColour hColour;
-  wxColour pColour;
+private:
+  PortIcon(const PortIcon&);
+  PortIcon& operator=(const PortIcon&);
 
   const int ID_MENU_POPUP;
 

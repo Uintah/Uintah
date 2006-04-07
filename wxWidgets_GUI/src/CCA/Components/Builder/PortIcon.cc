@@ -37,7 +37,7 @@
 //#include <wx/dc.h>
 
 #include <wx/dcbuffer.h>
-#include <wx/gdicmn.h> // color database
+#include <wx/gdicmn.h>
 
 #include <CCA/Components/Builder/PortIcon.h>
 #include <CCA/Components/Builder/ComponentIcon.h>
@@ -50,20 +50,23 @@ namespace GUIBuilder {
 using namespace SCIRun;
 
 BEGIN_EVENT_TABLE(PortIcon, wxWindow)
+  EVT_PAINT(PortIcon::OnPaint)
   EVT_LEFT_DOWN(PortIcon::OnLeftDown)
   EVT_LEFT_UP(PortIcon::OnLeftUp)
   EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu
-// EVT_MIDDLE_DOWN(PortIcon::OnMouseDown)
+  //EVT_MIDDLE_DOWN(PortIcon::OnMouseDown)
   EVT_MOTION(PortIcon::OnMouseMove)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(PortIcon, wxWindow)
 
-PortIcon::PortIcon(ComponentIcon* parent, wxWindowID id, Builder::PortType pt, const std::string& name) : parent(parent), type(pt), name(name), connecting(false), ID_MENU_POPUP(BuilderWindow::GetNextID())
+PortIcon::PortIcon(const sci::cca::BuilderComponent::pointer& bc, ComponentIcon* parent,
+                   wxWindowID id, Builder::PortType pt, const std::string& name)
+  : builder(bc), parent(parent), portType(pt), name(name), connecting(false),
+    ID_MENU_POPUP(BuilderWindow::GetNextID())
 {
   Init();
   Create(parent, id, wxT(name));
-
 }
 
 PortIcon::~PortIcon()
@@ -76,35 +79,34 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
     return false;
   }
 
-  //need database of port types/colours
-  if (type == Builder::Uses) {
-    pColour = wxColour(wxTheColourDatabase->Find("FIREBRICK"));
-    hColour = wxColour(wxTheColourDatabase->Find("GREEN"));
-  } else {
-    pColour = wxColour(wxTheColourDatabase->Find("SLATE BLUE"));
-    hColour = wxColour(wxTheColourDatabase->Find("RED"));
-  }
-  SetBackgroundColour(pColour);
-  //hRect = wxRect(, , HIGHLIGHT_WIDTH, PORT_HEIGHT);
+  builder->getPortInfo(this->parent->GetComponentInstance(), name, model, type);
 
-  SetToolTip(name);
+  void* c = builder->getPortColor(type);
+  pColor = wxColor(*((wxColor*) c));
+
+  //need database of port types/colours
+  if (portType == Builder::Uses) {
+    hColor = wxTheColourDatabase->Find("GREEN");
+  } else {
+    hColor = wxTheColourDatabase->Find("RED");
+  }
+  SetBackgroundColour(pColor);
+  SetToolTip(wxT(type + " " + this->name));
 
   return true;
 }
 
 void PortIcon::OnLeftDown(wxMouseEvent& event)
 {
-  if (type == Builder::Uses) {
+  if (portType == Builder::Uses) {
     connecting = parent->GetCanvas()->ShowPossibleConnections(this);
   }
 }
 
 void PortIcon::OnLeftUp(wxMouseEvent& event)
 {
-  std::cerr << "PortIcon::OnLeftUp(..)" << std::endl;
   // canvas draw connection
   parent->GetCanvas()->OnConnect(this);
-std::cerr << "PortIcon::OnLeftUp(..): OnConnect done" << std::endl;
 }
 
 void PortIcon::OnMouseMove(wxMouseEvent& WXUNUSED(event))
@@ -128,9 +130,36 @@ void PortIcon::OnRightClick(wxMouseEvent& event)
   PopupMenu(m, event.GetPosition());
 }
 
-// void PortIcon::OnDraw(wxDC& dc)
-// {
-// }
+void PortIcon::OnPaint(wxPaintEvent& event)
+{
+  wxPaintDC dc(this);
+
+  wxRect windowRect(wxPoint(0, 0), GetClientSize());
+  if (IsExposed(windowRect)) {
+    wxPen* pen = wxThePenList->FindOrCreatePen(pColor, 1, wxSOLID);
+    wxBrush* brush = wxTheBrushList->FindOrCreateBrush(pColor, wxSOLID);
+    dc.SetPen(*pen);
+    dc.SetBrush(*brush);
+
+    dc.DrawRectangle(windowRect);
+  }
+  wxRect hRect;
+  if (portType == Builder::Uses) {
+    hRect = wxRect(0, 0, HIGHLIGHT_WIDTH, PORT_HEIGHT);
+  } else {
+    hRect = wxRect(PORT_WIDTH - HIGHLIGHT_WIDTH, 0, HIGHLIGHT_WIDTH, PORT_HEIGHT);
+  }
+
+  if (IsExposed(hRect)) {
+    wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 1, wxSOLID);
+    wxBrush* brush = wxTheBrushList->FindOrCreateBrush(hColor, wxSOLID);
+    dc.SetPen(*pen);
+    dc.SetBrush(*brush);
+
+    dc.DrawRectangle(hRect);
+  }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // protected constructor and member functions

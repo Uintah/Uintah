@@ -39,7 +39,7 @@
 #include <wx/region.h>
 
 #ifndef DEBUG
-#  define DEBUG 0
+#  define DEBUG 1
 #endif
 
 
@@ -55,14 +55,13 @@ Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID:
 
   ResetPoints();
   setConnection();
-  // set colour
+  // set color
   if (possibleConnection) {
-    colour = wxColour(wxTheColourDatabase->Find("BLACK"));
+    color = wxTheColourDatabase->Find("BLACK");
   } else {
-    // should match port colour!
-    colour = wxColour(wxTheColourDatabase->Find("GREEN"));
+    color = pUses->GetPortColor();
   }
-  hColour = wxColour(wxTheColourDatabase->Find("WHITE"));
+  hColor = wxTheColourDatabase->Find("WHITE");
 }
 
 Connection::~Connection()
@@ -203,11 +202,14 @@ void Connection::OnDraw(wxDC& dc)
   ResetPoints();
   setConnection();
   if (highlight) {
-    dc.SetPen(wxPen(hColour, 2, wxSOLID));
-  } else if (possibleConnection) {
-    dc.SetPen(wxPen(colour, 2, wxSOLID));
+    wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 2, wxSOLID);
+    dc.SetPen(*pen);
+  //} else if (possibleConnection) {
   } else {
-    dc.SetPen(wxPen(colour, 3, wxSOLID));
+    wxPen* pen = wxThePenList->FindOrCreatePen(color, 2, wxSOLID);
+    dc.SetPen(*pen);
+//   } else {
+//     dc.SetPen(wxPen(color, 3, wxSOLID));
   }
   dc.SetBrush(*wxTRANSPARENT_BRUSH);
   dc.DrawLines(NUM_DRAW_POINTS, drawPoints, 0, 0);

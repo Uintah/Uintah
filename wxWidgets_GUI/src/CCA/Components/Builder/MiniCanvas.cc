@@ -28,6 +28,7 @@
 
 #include <wx/dcbuffer.h>
 #include <wx/scrolwin.h>
+#include <wx/string.h>
 #include <wx/event.h>
 
 #include <CCA/Components/Builder/MiniCanvas.h>
@@ -57,6 +58,9 @@ IMPLEMENT_DYNAMIC_CLASS(MiniCanvas, wxScrolledWindow)
 
 MiniCanvas::~MiniCanvas()
 {
+  delete goldenrodPen;
+  delete lightGreyPen;
+  delete lightGreyBrush;
 }
 
 bool MiniCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
@@ -68,6 +72,13 @@ bool MiniCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, con
   SetBackgroundStyle(wxBG_STYLE_COLOUR);
   SetBackgroundColour(BuilderWindow::BACKGROUND_COLOUR);
   //SetScrollRate(DEFAULT_SCROLLX, DEFAULT_SCROLLY);
+
+  vBoxColor = wxTheColourDatabase->Find("GOLDENROD");
+  goldenrodPen = new wxPen(vBoxColor, 1, wxSOLID);
+
+  iRectColor = wxTheColourDatabase->Find("LIGHT GREY");
+  lightGreyPen = new wxPen(iRectColor, 1, wxSOLID);
+  lightGreyBrush = new wxBrush(iRectColor, wxSOLID);
 
   SetCursor(wxCursor(wxCURSOR_ARROW));
   return true;
@@ -88,18 +99,18 @@ void MiniCanvas::OnDraw(wxDC& dc)
   canvas->GetConnections(conns);
 
   scaleRect(canvasRect, scaleV, scaleH);
-  dc.SetPen(*wxRED_PEN);
+  dc.SetPen(*goldenrodPen);
   dc.DrawRectangle(canvasRect.x, canvasRect.y, canvasRect.width, canvasRect.height);
 
-  dc.SetBrush(*wxWHITE);
-  dc.SetPen(wxPen(*wxBLACK));
+  dc.SetBrush(*lightGreyBrush);
+  dc.SetPen(*wxBLACK_PEN);
   for (std::vector<wxRect>::iterator rectIter = iRects.begin(); rectIter != iRects.end(); rectIter++) {
     scaleRect(*rectIter, scaleV, scaleH);
     dc.DrawRectangle(rectIter->x, rectIter->y, rectIter->width, rectIter->height);
   }
 
   dc.SetBrush(*wxTRANSPARENT_BRUSH);
-  dc.SetPen(wxPen(*wxWHITE));
+  dc.SetPen(*lightGreyPen);
 
   const int NUM_POINTS = Connection::GetDrawingPointsSize();
   wxPoint *pointsArray = new wxPoint[NUM_POINTS];
@@ -125,7 +136,7 @@ void MiniCanvas::OnPaint(wxPaintEvent& event)
 void MiniCanvas::PaintBackground(wxDC& dc)
 {
   dc.Clear();
-  wxColour backgroundColour = GetBackgroundColour();
+  wxColor backgroundColour = GetBackgroundColour();
   if (! backgroundColour.Ok()) {
     backgroundColour =
       wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE);

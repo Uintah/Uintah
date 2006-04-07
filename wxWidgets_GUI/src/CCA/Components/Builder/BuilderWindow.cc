@@ -195,14 +195,6 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
   int statusBarWidths[] = { 350, -1 };
   statusBar->SetStatusWidths(2, statusBarWidths);
-//     const wxString statusBar_fields[] = {
-//         wxT(""),
-//         wxT("")
-//     };
-//     for(int i = 0; i < statusBar->GetFieldsCount(); ++i) {
-//         statusBar->SetStatusText(statusBar_fields[i], i);
-//     }
-
   statusBar->SetStatusText("SCIRun2 started", 0);
 
   return true;
