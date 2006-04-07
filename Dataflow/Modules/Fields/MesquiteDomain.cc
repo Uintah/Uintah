@@ -22,7 +22,7 @@ MesquiteDomain::snap_to( Mesquite::Mesh::EntityHandle entity_handle,
   n_p.y( coordinate[1] );
   n_p.z( coordinate[2] );
   TriSurfMesh<TriLinearLgn<Point> >::Face::index_type face_id;
-  domain_mesh_->find_closest_face( new_result, face_id, n_p );    
+  domain_mesh_->find_closest_elem( new_result, face_id, n_p );    
   coordinate.set( new_result.x(), new_result.y(), new_result.z() );
 }
 
@@ -46,7 +46,7 @@ MesquiteDomain::normal_at( Mesquite::Mesh::EntityHandle entity_handle,
   n_p.y( coordinate[1] );
   n_p.z( coordinate[2] );
   TriSurfMesh<TriLinearLgn<Point> >::Face::index_type face_id;
-  domain_mesh_->find_closest_face( new_result, face_id, n_p );  
+  domain_mesh_->find_closest_elem( new_result, face_id, n_p );  
   Vector result;
   vector<double> bogus;
   bogus.push_back( new_result.x() );
@@ -83,7 +83,7 @@ MesquiteDomain::closest_point( Mesquite::Mesh::EntityHandle handle,
   p.y( position[1] );
   p.z( position[2] );
   TriSurfMesh<TriLinearLgn<Point> >::Face::index_type face_id;
-  domain_mesh_->find_closest_face( close_pt, face_id, p );    
+  domain_mesh_->find_closest_elem( close_pt, face_id, p );    
   closest.set( close_pt.x(), close_pt.y(), close_pt.z() );
  
   // Need to set the normal.

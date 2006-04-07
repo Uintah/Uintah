@@ -376,7 +376,7 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
 
     Point cp;
     typename TFIELD::mesh_type::Elem::index_type cf;
-    tmesh->find_closest_face(cp, cf, p);
+    tmesh->find_closest_elem(cp, cf, p);
 
     typename TFIELD::mesh_type::Node::index_type newnode;
     typename TFIELD::mesh_type::Elem::array_type newelems;
@@ -433,9 +433,9 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     Point closest[2];
     typename TFIELD::mesh_type::Elem::index_type elem;
     typename TFIELD::mesh_type::Elem::index_type elem_end;
-    tmesh->find_closest_face(closest[0], elem, p[1]);
+    tmesh->find_closest_elem(closest[0], elem, p[1]);
     insertpoints.push_back(closest[0]);
-    tmesh->find_closest_face(closest[1], elem_end, p[0]);
+    tmesh->find_closest_elem(closest[1], elem_end, p[0]);
 
     // TODO: Find closest could and will land on degeneracies meaning
     // that our choice of elements there is arbitrary.  Need to walk
@@ -494,7 +494,7 @@ InsertFieldAlgoTri<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     {
       Point closest;
       typename TFIELD::mesh_type::Elem::index_type elem;
-      tmesh->find_closest_face(closest, elem, insertpoints[i]);
+      tmesh->find_closest_elem(closest, elem, insertpoints[i]);
       tmesh->insert_node_in_face(newelems, newnode, elem, closest);
       new_nodes.push_back(newnode);
       for (int j = newelems.size()-1; j >= 0; j--)

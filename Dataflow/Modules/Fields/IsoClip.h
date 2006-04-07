@@ -1432,7 +1432,7 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
 
     Point new_result;
     typename FIELD::mesh_type::Face::index_type face_id;
-    tri_mesh->find_closest_face( new_result, face_id, n_p );
+    tri_mesh->find_closest_elem( new_result, face_id, n_p );
 
       //since finding the closest face can be slow, update the progress meter to let the
       // user know that we are performing calculations and the process is not hung up...

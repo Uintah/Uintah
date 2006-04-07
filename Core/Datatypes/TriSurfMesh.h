@@ -451,7 +451,7 @@ public:
     basis_.derivate(coords, ed, J);
   }
 
-  double find_closest_face(Point &result, typename Elem::index_type &face,
+  double find_closest_elem(Point &result, typename Elem::index_type &elem,
                            const Point &p) const;
 
   static const TypeDescription* node_type_description();
@@ -2210,8 +2210,8 @@ TriSurfMesh<Basis>::size(typename TriSurfMesh::Cell::size_type &s) const
 
 template <class Basis>
 double
-TriSurfMesh<Basis>::find_closest_face(Point &result,
-                                      typename TriSurfMesh::Face::index_type &face,
+TriSurfMesh<Basis>::find_closest_elem(Point &result,
+                                      typename TriSurfMesh::Elem::index_type &face,
                                       const Point &p) const
 {
   // Walking the grid like this works really well if we're near the
@@ -2220,7 +2220,7 @@ TriSurfMesh<Basis>::find_closest_face(Point &result,
   // test all the faces, but with the grid overhead and triangle
   // duplication as well).
   ASSERTMSG(synchronized_ & LOCATE_E,
-            "TriSurfMesh::find_closest_face requires synchronize(LOCATE_E).")
+            "TriSurfMesh::find_closest_elem requires synchronize(LOCATE_E).")
 
   // Convert to grid coordinates.
   int oi, oj, ok;
