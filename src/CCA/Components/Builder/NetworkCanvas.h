@@ -48,11 +48,11 @@ class ComponentIcon;
 class Connection;
 class MiniCanvas;
 
+typedef std::map<std::string, ComponentIcon*> ComponentMap;
+typedef std::multimap<PortIcon*, Connection*> ConnectionMap;
+
 class NetworkCanvas : public wxScrolledWindow {
 public:
-  typedef std::map<std::string, ComponentIcon*> ComponentMap;
-  typedef std::multimap<PortIcon*, Connection*> ConnectionMap;
-
   friend class MiniCanvas;
 
   // identifiers are local to each wxWindow, so duplication between different windows is OK
@@ -97,6 +97,7 @@ public:
 
   void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }
   void AddIcon(sci::cca::ComponentID::pointer& compID);
+  void DeleteIcon(const std::string& instanceName);
 
   void GetUnscrolledPosition(const wxPoint& p, wxPoint& position);
   void GetUnscrolledMousePosition(wxPoint& position);
@@ -133,8 +134,6 @@ private:
   ComponentMap components;
   ConnectionMap connections;
   ConnectionMap possibleConnections;
-//   std::vector<Connection*> connections;
-//   std::vector<Connection*> possibleConnections;
 
   // default scroll window virtual size, scroll rates
   const static int DEFAULT_VWIDTH = 2500;

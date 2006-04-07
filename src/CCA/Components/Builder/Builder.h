@@ -40,12 +40,17 @@
 #include <CCA/Components/Builder/BuilderWindow.h>
 
 #include <string>
-#include <vector>
+#include <map>
 
 // check \#if wxUSE_STATUSBAR, wxUSE_MENUS, wxUSE_THREADS, wxUSE_STREAMS, wxUSE_STD_IOSTREAM...
 
 class SCIRun::Semaphore;
 class SCIRun::Mutex;
+
+class wxColor;
+
+typedef std::map<std::string, sci::cca::ConnectionID::pointer> ConnectionMap;
+typedef std::map<std::string, wxColor> PortColorMap;
 
 namespace GUIBuilder {
 
@@ -78,8 +83,10 @@ public:
 
   Builder();
   virtual ~Builder();
+
   virtual void setServices(const sci::cca::Services::pointer &svc);
   virtual std::string getFrameworkURL() { return frameworkURL; }
+  virtual void getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::string& portName, std::string& model, std::string& type);
 
   virtual sci::cca::ComponentID::pointer createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties);
   virtual void destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout);
@@ -97,15 +104,36 @@ public:
 				     SSIDL::array1<std::string>& portArray);
 
 
-  virtual sci::cca::ConnectionID::pointer connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName, const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName);
-  virtual void disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
+  virtual sci::cca::ConnectionID::pointer
+  connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName,
+          const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName);
+  virtual void
+  disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
 
-  virtual bool registerGoPort(const std::string& usesName, const sci::cca::ComponentID::pointer &cid, bool isSciPort, std::string& usesPortName);
+  virtual bool
+  registerGoPort(const std::string& usesName, const sci::cca::ComponentID::pointer &cid,
+                 bool isSciPort, std::string& usesPortName);
   virtual void unregisterGoPort(const std::string& goPortName);
   virtual int go(const std::string& goPortName);
 
   virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
   virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
+
+  // Note: make both setPortColor functions static when support for static functions is available
+
+  // Use if color is in wxColorDatabase and is being used by another port, if not returns false.
+  virtual bool setPortColor(const std::string& portName, const std::string& colorName);
+
+  // Add color using RGB values if color has not been used before.  Returns false if wxWidgets
+  // is unable to create the color, or if the color is beign used by another port.
+  // Opaque type is wxColor.
+
+  // see Bugzilla bug #2834:
+  //virtual bool setPortColor(const std::string& portName, void* color);
+
+  // Get stored port colour, if it doesn't exist then return a default.
+  //void Builder::getPortColor(const std::string& portName, char& red, char& green, char& blue);
+  void* Builder::getPortColor(const std::string& portName);
 
   static void setApp(wxSCIRunApp& a) { app = &a; }
 
@@ -113,9 +141,19 @@ private:
   Builder(const Builder &);
   Builder& operator=(const Builder &);
 
+  // Note: make setDefaultPortColors static when support for static methods is available
+  void setDefaultPortColors();
+
   sci::cca::Services::pointer services;
   std::string frameworkURL;
-  std::vector<sci::cca::ConnectionID::pointer> connections;
+  // Uses port names will be unique since they are generated from unique component instance names.
+  ConnectionMap connectionMap;
+
+  // Set of port colours: the Builder will set up standard SCIRun2 ports (see SCIRun2Ports.sidl),
+  // or component authors can add their own.
+  // Note: make this map static when support for static functions is available
+  // Note: implement using wxColorDatabase instead?
+  PortColorMap portColors;
 
   static const std::string guiThreadName;
   static SCIRun::Mutex builderLock;

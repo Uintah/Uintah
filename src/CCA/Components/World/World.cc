@@ -70,16 +70,14 @@ World::~World()
 void World::setServices(const sci::cca::Services::pointer& svc)
 {
     services = svc;
-    sci::cca::TypeMap::pointer props = svc->createTypeMap();
-
     StringPort *sp = new StringPort();
     sp->setParent(this);
     svc->addProvidesPort(StringPort::pointer(sp), "stringport",
-                         "sci.cca.ports.StringPort", props);
+                         "sci.cca.ports.StringPort", svc->createTypeMap());
 
     WUIPort *uip = new WUIPort();
     uip->setParent(this);
-    svc->addProvidesPort(WUIPort::pointer(uip),"ui","sci.cca.ports.UIPort", props);
+    svc->addProvidesPort(WUIPort::pointer(uip),"ui","sci.cca.ports.UIPort", svc->createTypeMap());
 
 //     svc->addProvidesPort(ComponentIcon::pointer(new ComponentIcon), "icon",
 //                          "sci.cca.ports.ComponentIcon", props);

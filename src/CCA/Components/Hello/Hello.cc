@@ -100,11 +100,11 @@ void Hello::releaseServices(const sci::cca::Services::pointer& svc)
 {
 std::cerr << "Hello::releaseServices" << std::endl;
 
-//     svc->unregisterUsesPort("stringport");
+    svc->unregisterUsesPort("stringport");
 //     svc->unregisterUsesPort("progress");
 
 //     svc->removeProvidesPort("ui");
-//     svc->removeProvidesPort("go");
+    svc->removeProvidesPort("go");
 //     svc->removeProvidesPort("icon");
 }
 

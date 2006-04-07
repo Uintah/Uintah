@@ -35,7 +35,7 @@
 
 class wxPoint;
 class wxDC;
-class wxColour;
+class wxColor;
 
 // should probably check for wxUSE_THREADS
 
@@ -45,7 +45,8 @@ class PortIcon;
 
 class Connection /*: public wxEvtHandler*/ {
 public:
-  Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection=false);
+  Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID,
+             bool possibleConnection = false);
   virtual ~Connection();
 
   void ResetPoints();
@@ -63,8 +64,8 @@ public:
   void GetDrawingPoints(wxPoint **pa, const int size);
 
 protected:
-  wxColour colour;
-  wxColour hColour;
+  wxColor color;
+  wxColor hColor;
   void setConnection();
 
 private:

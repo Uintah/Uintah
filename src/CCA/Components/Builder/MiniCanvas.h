@@ -38,6 +38,8 @@
 class wxRect;
 class wxPoint;
 class wxScrolledWindow;
+class wxPen;
+class wxBrush;
 
 namespace GUIBuilder {
 
@@ -64,13 +66,18 @@ protected:
   void OnEraseBackground(wxEraseEvent& event) {}
 
 private:
-  NetworkCanvas *canvas;
+  void scaleRect(wxRect& rect, const double scaleV, const double scaleH);
+  void scalePoints(wxPoint **points, const int size, const double scaleV, const double scaleH);
 
+  NetworkCanvas *canvas;
   std::vector<wxRect> iRects;
   std::vector<Connection*> conns;
 
-  void scaleRect(wxRect& rect, const double scaleV, const double scaleH);
-  void scalePoints(wxPoint **points, const int size, const double scaleV, const double scaleH);
+  wxColor vBoxColor;
+  wxColor iRectColor;
+  wxPen* goldenrodPen;
+  wxPen* lightGreyPen;
+  wxBrush* lightGreyBrush;
 
   DECLARE_EVENT_TABLE()
   DECLARE_DYNAMIC_CLASS(MiniCanvas)

@@ -202,7 +202,7 @@ void NetworkCanvas::OnDraw(wxDC& dc)
 void NetworkCanvas::PaintBackground(wxDC& dc)
 {
   dc.Clear();
-  wxColour backgroundColour = GetBackgroundColour();
+  wxColor backgroundColour = GetBackgroundColour();
   if (! backgroundColour.Ok()) {
     backgroundColour =
       wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE);
@@ -252,6 +252,8 @@ void NetworkCanvas::OnConnect(PortIcon* usesPortIcon)
 void NetworkCanvas::OnDisconnect(Connection* connection)
 {
   // disconnect
+  // connection multimap: uses port icon : connections...
+  //builder->disconnect();
 }
 
 bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
@@ -262,7 +264,8 @@ bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
     ComponentIcon* ci_ = iter->second;
 
     SSIDL::array1<std::string> portArray;
-    builder->getCompatiblePortList(pCI->GetComponentInstance(), port->GetPortName(), ci_->GetComponentInstance(), portArray);
+    builder->getCompatiblePortList(pCI->GetComponentInstance(),
+                                   port->GetPortName(), ci_->GetComponentInstance(), portArray);
 
     for (unsigned int j = 0; j < portArray.size(); j++) {
       Connection *con;
@@ -322,10 +325,10 @@ void NetworkCanvas::ClearConnections()
     Connection *c = iter->second;
     if (c) {
       builder->disconnect(c->GetConnectionID(), 0);
+      delete c;
     }
     connections.erase(iter);
     iter = connections.begin();
-    delete c;
   }
   connections.clear();
   Refresh();
@@ -467,6 +470,54 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
   ci->Move(max_row, max_col);
   ci->Show(true);
   //builderWindow->RedrawMiniCanvas();
+  Refresh();
+}
+
+void NetworkCanvas::DeleteIcon(const std::string& instanceName)
+{
+  ComponentMap::iterator iter = components.find(instanceName);
+  if (iter != components.end()) {
+    ComponentIcon *ci = iter->second;
+
+    // disconnect
+    PortList upl = ci->GetUsesPorts();
+    for (PortList::const_iterator plIter = upl.begin(); plIter != upl.end(); plIter++) {
+      ConnectionMap::iterator lb = connections.lower_bound(*plIter);
+      ConnectionMap::iterator ub = connections.upper_bound(*plIter);
+
+      ConnectionMap::iterator cIter = lb;
+      while (cIter != ub) {
+	Connection *c = cIter->second;
+	builder->disconnect(c->GetConnectionID(), 0);
+	delete c;
+	ConnectionMap::iterator tmp = cIter;
+	connections.erase(tmp);
+	cIter++;
+      }
+    }
+
+    PortList ppl = ci->GetProvidesPorts();
+    for (PortList::const_iterator plIter = ppl.begin(); plIter != ppl.end(); plIter++) {
+      ConnectionMap::iterator cIter = connections.begin();
+      while (cIter != connections.end()) {
+	Connection* c = cIter->second;
+	if (c->GetProvidesPortIcon() == *plIter) {
+	  builder->disconnect(c->GetConnectionID(), 0);
+	  delete c;
+	  connections.erase(cIter);
+	  cIter = connections.begin();
+	} else {
+	  cIter++;
+	}
+      }
+    }
+    ci->Show(false);
+
+    delete ci;
+   // destroy instance
+    builder->destroyInstance(ci->GetComponentInstance(), 0);
+    components.erase(iter);
+  }
   Refresh();
 }
 

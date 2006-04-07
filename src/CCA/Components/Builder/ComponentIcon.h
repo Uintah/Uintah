@@ -32,8 +32,8 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-#include <map>
-//#include <vector>
+//#include <map>
+#include <vector>
 
 //class wxRegion;
 
@@ -57,13 +57,19 @@ class PortIcon;
 // private:
 // };
 
+//typedef std::map<std::string, PortIcon*> PortMap;
+typedef std::vector<PortIcon*> PortList;
+
 class ComponentIcon : public wxPanel {
 public:
-  typedef std::map<std::string, PortIcon*> PortMap;
-
   enum {
     ID_MENU_GO = wxID_HIGHEST,
     ID_MENU_INFO,
+    ID_MENU_DELETE,
+    ID_MENU_POPUP,
+    ID_BUTTON_UI,
+    ID_BUTTON_STATUS,
+    ID_PROGRESS,
   };
 
   // deal with wxValidator?
@@ -81,13 +87,18 @@ public:
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
   void OnGo(wxCommandEvent& event);
+  void OnDelete(wxCommandEvent& event);
 
-  const wxSize& GetBorderSize() const { return borderSize; }
+  //const wxSize& GetBorderSize() const { return borderSize; }
   //void DrawPorts(wxDC& dc);
 
   const sci::cca::ComponentID::pointer GetComponentInstance() const { return cid; }
   const std::string GetComponentInstanceName() { return cid->getInstanceName(); }
-  PortIcon* GetPortIcon(const std::string& portName) { return ports[portName]; }
+  //PortIcon* GetPortIcon(const std::string& portName) { return ports[portName]; }
+  PortIcon* GetPortIcon(const std::string& portName);
+
+  const PortList& GetProvidesPorts() const { return providesPorts; }
+  const PortList& GetUsesPorts() const { return usesPorts; }
 
   void GetCanvasPosition(wxPoint& p);
   NetworkCanvas* GetCanvas() const { return canvas; }
@@ -97,7 +108,8 @@ public:
 protected:
   ComponentIcon();
   void Init();
-  //void setLayout();
+  void SetLayout();
+  void SetPortIcons();
 
   NetworkCanvas *canvas;
 
@@ -107,32 +119,34 @@ protected:
   wxButton* uiButton;
   wxButton* msgButton;
   wxGauge* progressGauge;
-  wxSize borderSize;
+  //wxSize borderSize;
 
   wxMenu *popupMenu;
-  wxMenu* menu;
+  //wxMenu* goMenu;
 
   bool hasUIPort;
   bool hasGoPort;
   bool isSciPort;
-
   bool isMoving;
 
   sci::cca::ComponentID::pointer cid;
   sci::cca::BuilderComponent::pointer builder;
   std::string goPortName;
 
-  PortMap ports;
+  //PortMap ports;
+  PortList usesPorts;
+  PortList providesPorts;
   wxPoint movingStart;
+
+  static const int PROV_PORT_COL = 0;
+  static const int USES_PORT_COL = 5;
+  static const int GAP_SIZE = 1;
+  static const int BORDER_SIZE = 4;
+  static const int PORT_BORDER_SIZE = 10;
 
 private:
   ComponentIcon(const ComponentIcon&);
   ComponentIcon& operator=(const ComponentIcon&);
-
-  const int ID_MENU_POPUP;
-  const int ID_BUTTON_UI;
-  const int ID_BUTTON_STATUS;
-  const int ID_PROGRESS;
 
   DECLARE_EVENT_TABLE()
   DECLARE_DYNAMIC_CLASS(ComponentIcon)
