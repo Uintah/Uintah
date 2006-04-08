@@ -688,11 +688,12 @@ TriSurfMesh<Basis>::~TriSurfMesh()
 template <class Basis>
 void
 TriSurfMesh<Basis>::get_random_point(Point &p,
-                                     typename Face::index_type ei, int seed) const
+                                     typename Face::index_type ei,
+                                     int seed) const
 {
   static MusilRNG rng;
 
-  // get the positions of the vertices
+  // Get the positions of the vertices.
   typename Node::array_type ra;
   get_nodes(ra,ei);
   Point p0,p1,p2;
@@ -700,7 +701,7 @@ TriSurfMesh<Basis>::get_random_point(Point &p,
   get_point(p1,ra[1]);
   get_point(p2,ra[2]);
 
-  // generate the barrycentric coordinates
+  // Generate the barrycentric coordinates.
   double u,v;
   if (seed) {
     MusilRNG rng1(seed);
@@ -711,7 +712,7 @@ TriSurfMesh<Basis>::get_random_point(Point &p,
     v = rng()*(1.-u);
   }
 
-  // compute the position of the random point
+  // Compute the position of the random point.
   p = p0+((p1-p0)*u)+((p2-p0)*v);
 }
 
@@ -743,7 +744,6 @@ TriSurfMesh<Basis>::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-
   if (grid_.get_rep()) { grid_->transform(t); }
   synchronize_lock_.unlock();
 }
