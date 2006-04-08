@@ -204,6 +204,7 @@ void Precompile_FieldsAlgo()
 
 #ifdef PRECOMPILE_ALGOS
 
+/*
   // ToPointCloud precompiles
   ToPointCloudAlgo::precompiled_.add(scinew ToPointCloudAlgoT<QS_ND,PC_ND>);
   ToPointCloudAlgo::precompiled_.add(scinew ToPointCloudAlgoT<QS_CD_DBL,PC_ND>);
@@ -270,6 +271,7 @@ void Precompile_FieldsAlgo()
   ConvertToTetVolAlgo::precompiled_.add(scinew ConvertLatVolToTetVolAlgoT<LV_LD_DBL,TV_LD_DBL>);
   ConvertToTetVolAlgo::precompiled_.add(scinew ConvertLatVolToTetVolAlgoT<LV_LD_VCTR,TV_LD_VCTR>);
   ConvertToTetVolAlgo::precompiled_.add(scinew ConvertLatVolToTetVolAlgoT<LV_LD_TNSR,TV_LD_TNSR>);
+*/
 
 #endif
 

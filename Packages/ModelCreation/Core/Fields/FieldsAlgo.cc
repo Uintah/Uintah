@@ -79,10 +79,13 @@
 #include <Packages/ModelCreation/Core/Fields/ConvertToTriSurf.h>
 #include <Packages/ModelCreation/Core/Fields/CompartmentBoundary.h>
 #include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
+#include <Packages/ModelCreation/Core/Fields/DistanceField.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
 #include <Packages/ModelCreation/Core/Fields/FieldBoundary.h>
+#include <Packages/ModelCreation/Core/Fields/IsInsideField.h>
 #include <Packages/ModelCreation/Core/Fields/LinkFieldBoundary.h>
+#include <Packages/ModelCreation/Core/Fields/LinkToCompGridByDomain.h>
 #include <Packages/ModelCreation/Core/Fields/MappingMatrixToField.h>
 #include <Packages/ModelCreation/Core/Fields/MergeFields.h>
 #include <Packages/ModelCreation/Core/Fields/NrrdToField.h>
@@ -90,11 +93,12 @@
 #include <Packages/ModelCreation/Core/Fields/GetFieldInfo.h>
 #include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
 #include <Packages/ModelCreation/Core/Fields/ScaleField.h>
-#include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
+#include <Packages/ModelCreation/Core/Fields/SplitFieldByDomain.h>
 #include <Packages/ModelCreation/Core/Fields/SplitByConnectedRegion.h>
 #include <Packages/ModelCreation/Core/Fields/TransformField.h>
 #include <Packages/ModelCreation/Core/Fields/ToPointCloud.h>
 #include <Packages/ModelCreation/Core/Fields/Unstructure.h>
+#include <Packages/ModelCreation/Core/Fields/TriSurfPhaseFilter.h>
 
 
 #include <sgi_stl_warnings_off.h>
@@ -108,212 +112,6 @@ using namespace SCIRun;
 FieldsAlgo::FieldsAlgo(ProgressReporter* pr) :
   AlgoLibrary(pr)
 {
-}
-
-bool FieldsAlgo::DistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object)
-{
-
-  if (input.get_rep() == 0)
-  {
-    error("DistanceToField: No input field");
-    return(false);
-  }
-  
-  if (object.get_rep() == 0)
-  {
-    error("DistanceToField: No Object Field is given");
-    return(false);
-  }
-  
-  // If the object is a volume, just extract the outer boundary
-  // This should speed up the calculation 
-  bool isvol = false;
-
-  if (object->mesh()->dimensionality() > 2)
-  {
-    error("DistanceToField: This function has only been implemented for a surface mesh, a line mesh, or a point cloud");
-    return(false);
-  }  
-
-  if ((dynamic_cast<TriSurfMesh<TriLinearLgn<Point> > *>(object->mesh().get_rep())) ||
-      (dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) || 
-      (dynamic_cast<ImageMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||       
-      (dynamic_cast<StructQuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) || 
-      (dynamic_cast<CurveMesh<CrvLinearLgn<Point> > *>(object->mesh().get_rep())) ||  
-      (dynamic_cast<StructCurveMesh<CrvLinearLgn<Point> > *>(object->mesh().get_rep())) ||   
-      (dynamic_cast<ScanlineMesh<CrvLinearLgn<Point> > *>(object->mesh().get_rep())) ||       
-      (dynamic_cast<PointCloudMesh<ConstantBasis<Point> >*>(object->mesh().get_rep())))   
-  {
-
-    Handle<DistanceToFieldAlgo> algo;
-    
-    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(input,object);
-    
-    if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
-    {
-      error("DistanceToField: Could not dynamically compile algorithm");
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-      return(false);
-    }
-    
-    if (isvol)
-    {
-      if(!(algo->execute_unsigned(pr_, input, output, object)))
-      {
-        error("DistanceToField: The dynamically compiled function return error");
-        return(false);
-      }    
-    }
-    else
-    {
-      if(!(algo->execute(pr_, input, output, object)))
-      {
-        error("DistanceToField: The dynamically compiled function return error");
-        return(false);
-      }
-    }
-    
-    return(true);    
-  }
-  else
-  {
-    error("DistanceToField: Algorithm for this type of field has not yet been implemented");
-    return(false);  
-  }
-}
-
-
-bool FieldsAlgo::SignedDistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object)
-{
-
-  if (input.get_rep() == 0)
-  {
-    error("SignedDistanceToField: No input field");
-    return(false);
-  }
-  
-  if (object.get_rep() == 0)
-  {
-    error("SignedDistanceToField: No Object Field is given");
-    return(false);
-  }
-  
-  // If the object is a volume, just extract the outer boundary
-  // This should speed up the calculation 
-  if (object->mesh()->dimensionality() == 3)
-  {
-    MatrixHandle dummy;
-    FieldHandle  objectsurf;
-    if(!(FieldBoundary(object,objectsurf,dummy)))
-    {
-      error("SignedDistanceToField: Getting surface mesh of object failed");
-      return(false);
-    }
-    object = objectsurf;
-  }
-
-  if (object->mesh()->dimensionality() != 2)
-  {
-    error("SignedDistanceToField: This function has only been implemented for a surface mesh");
-    return(false);
-  }
-
-  if ((dynamic_cast<TriSurfMesh<TriLinearLgn<Point> > *>(object->mesh().get_rep())) ||
-      (dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||  
-      (dynamic_cast<ImageMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||
-      (dynamic_cast<StructQuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())))
-  {  
-    Handle<DistanceToFieldAlgo> algo;
-    
-    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(input,object);
-    
-    if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
-    {
-      error("SignedDistanceToField: Could not dynamically compile algorithm");
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-      return(false);
-    }
-    
-    if(!(algo->execute_signed(pr_, input, output, object)))
-    {
-      error("SignedDistanceToField: The dynamically compiled function return error");
-      return(false);
-    }
-    
-    return(true);    
-  }
-  else
-  {
-    error("SignedDistanceToField: Algorithm for this type of field has not yet been implemented");
-    return(false);  
-  }
-}
-
-
-bool FieldsAlgo::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, FieldHandle object)
-{
-
-  if (input.get_rep() == 0)
-  {
-    error("IsInsideSurfaceField: No input field");
-    return(false);
-  }
-  
-  if (object.get_rep() == 0)
-  {
-    error("IsInsideSurfaceField: No Object Field is given");
-    return(false);
-  }
-  
-  // If the object is a volume, just extract the outer boundary
-  // This should speed up the calculation 
-  if (object->mesh()->dimensionality() == 3)
-  {
-    MatrixHandle dummy;
-    FieldHandle  objectsurf;
-    if(!(FieldBoundary(object,objectsurf,dummy)))
-    {
-      error("IsInsideSurfaceField: Getting surface mesh of object failed");
-      return(false);
-    }
-    object = objectsurf;
-  }
-
-  if (object->mesh()->dimensionality() != 2)
-  {
-    error("IsInsideSurfaceField: This function has only been implemented for a surface mesh");
-    return(false);
-  }
-
-  if ((dynamic_cast<TriSurfMesh<TriLinearLgn<Point> > *>(object->mesh().get_rep())) ||
-      (dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||  
-      (dynamic_cast<ImageMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||
-      (dynamic_cast<StructQuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())))
-  {  
-    Handle<DistanceToFieldAlgo> algo;
-    
-    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(input,object);
-    
-    if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
-    {
-      error("IsInsideSurfaceField: Could not dynamically compile algorithm");
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-      return(false);
-    }
-    
-    if(!(algo->execute_isinside(pr_, input, output, object)))
-    {
-      error("IsInsideSurfaceField: The dynamically compiled function return error");
-      return(false);
-    }
-    
-    return(true);    
-  }
-  else
-  {
-    error("IsInsideSurfaceField: Algorithm for this type of field has not yet been implemented");
-    return(false);  
-  }
 }
 
 
@@ -607,17 +405,124 @@ bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
   return(algo.ConvertToTriSurf(pr_,input,output));
 }
 
-
-bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, double tol, bool linkx, bool linky, bool linkz)
+bool FieldsAlgo::IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle objectfield)
 {
-  LinkFieldBoundaryAlgo algo;
-  return(algo.LinkFieldBoundary(pr_,input,GeomToComp,CompToGeom,tol,linkx,linky,linkz));
+  IsInsideFieldAlgo algo;
+  return(algo.IsInsideField(pr_,input,output,objectfield));
 }
 
-bool FieldsAlgo::LinkFieldBoundaryByElement(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, MatrixHandle& DomainLink, MatrixHandle& MembraneLink, double tol, bool linkx, bool linky, bool linkz)
+
+bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, MatrixHandle& NodeLink, MatrixHandle& ElemLink, double tol, bool linkx, bool linky, bool linkz)
 {
-  LinkFieldBoundaryByElementAlgo algo;
-  return(algo.LinkFieldBoundaryByElement(pr_,input,GeomToComp,CompToGeom,DomainLink,MembraneLink,tol,linkx,linky,linkz));
+  LinkFieldBoundaryAlgo algo;
+  return(algo.LinkFieldBoundary(pr_,input,NodeLink,ElemLink,tol,linkx,linky,linkz));
+}
+
+bool FieldsAlgo::LinkToCompGrid(MatrixHandle NodeLink, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom)
+{
+  if (NodeLink.get_rep() == 0)
+  {
+    error("LinkToCompGrid: No matrix on input");
+    return (false);
+  }
+
+  if (!(NodeLink->is_sparse()))
+  {
+    error("LinkToCompGrid: NodeLink Matrix is not sparse");
+    return (false);  
+  }
+
+  if (NodeLink->nrows() != NodeLink->ncols())
+  {
+    error("LinkToCompGrid: NodeLink Matrix needs to be square");
+    return (false);      
+  }
+  
+  SparseRowMatrix* spr = dynamic_cast<SparseRowMatrix*>(NodeLink.get_rep());
+  int m = spr->ncols();
+  int *rows = spr->rows;
+  int *cols = spr->columns;
+  double *vals = spr->a;
+  
+  int *rr = scinew int[m+1];
+  int *cc = scinew int[m];
+  double *vv = scinew double[m];  
+  if ((rr == 0)||(cc == 0)||(vv == 0))
+  {
+    if (rr) delete[] rr;
+    if (cc) delete[] cc;
+    if (vv) delete[] vv;
+    
+    error("LinkToCompGrid: Could not allocate memory for sparse matrix");
+    return (false);        
+  }
+  
+  for (int r=0; r<m; r++) rr[r] = r;
+
+  for (int r=0; r<m; r++)
+  {
+    for (int c=rows[r]; c<rows[r+1]; c++)
+    {
+      if (cols[c] > r) 
+      {
+        rr[cols[c]] = r;
+      }
+    }
+  }
+
+  for (int r=0; r< m; r++)
+  {
+    int p = r;
+    while (rr[p] != p) p = rr[p];
+    rr[r] = p;      
+  }
+
+  int k=0;
+  for (int r=0; r<m; r++)
+  {
+    if (rr[r] == r) 
+    {
+      rr[r] = k++;
+    }
+    else
+    {
+      rr[r] = rr[rr[r]];
+    }
+  }
+
+  for (int r = 0; r < m; r++)
+  {
+    cc[r] = rr[r];
+    rr[r] = r;
+    vv[r] = 1.0;
+  }
+  rr[m] = m; // An extra entry goes on the end of rr.
+
+  spr = scinew SparseRowMatrix(m, k, rr, cc, m, vv);
+
+  if (spr == 0)
+  {
+    error("LinkToCompGrid: Could build geometry to computational mesh mapping matrix");
+    return (false);
+  }
+
+  CompToGeom = spr;
+  GeomToComp = spr->transpose();
+
+  if ((GeomToComp.get_rep() == 0)||(CompToGeom.get_rep() == 0))
+  {
+    error("LinkToCompGrid: Could build geometry to computational mesh mapping matrix");
+    return (false);
+  }
+  
+  return (true);
+}
+
+
+bool FieldsAlgo::LinkToCompGridByDomain(FieldHandle Geometry, MatrixHandle NodeLink, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom)
+{
+  LinkToCompGridByDomainAlgo algo;
+  return (algo.LinkToCompGridByDomain(pr_,Geometry,NodeLink,GeomToComp,CompToGeom));
 }
 
 bool FieldsAlgo::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
@@ -661,12 +566,12 @@ bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double toler
 }
 
 
-bool FieldsAlgo::SplitFieldByElementData(FieldHandle input, FieldHandle& output)
+bool FieldsAlgo::SplitFieldByDomain(FieldHandle input, FieldHandle& output)
 {
   FieldHandle input_editable;
   if (!MakeEditable(input,input_editable)) return (false);
-  SplitFieldByElementDataAlgo algo;
-  return(algo.SplitFieldByElementData(pr_,input_editable,output));
+  SplitFieldByDomainAlgo algo;
+  return(algo.SplitFieldByDomain(pr_,input_editable,output));
 }
 
 
@@ -800,7 +705,7 @@ bool FieldsAlgo::NrrdToField(NrrdDataHandle input, FieldHandle& output,std::stri
     return (false);    
   } 
 
-  Nrrd *nrrd = input->nrrd;
+  Nrrd *nrrd = input->nrrd_;
 
   if (nrrd == 0)
   {
@@ -832,6 +737,66 @@ bool FieldsAlgo::NrrdToField(NrrdDataHandle input, FieldHandle& output,std::stri
       error("NrrdToField: This datatype is not supported");
       return (false);
   }
+}
+
+
+bool FieldsAlgo::DistanceField(FieldHandle input, FieldHandle& output, FieldHandle object)
+{
+  if (object->mesh()->dimensionality() == 3)
+  {
+    FieldHandle dobject;
+    MatrixHandle dummy;
+    FieldBoundary(object,dobject,dummy);
+    if (dobject.get_rep() == 0)
+    {
+      error("DistanceField: Could not compute field boundary");
+      return (false);
+    }
+    
+    DistanceFieldCellAlgo algo;
+    return(algo.DistanceField(pr_,input,output,object,dobject));
+  }
+  else if (object->mesh()->dimensionality() == 2)
+  {
+    // Some how find_closest_face has not been implemented for other fields
+    // THe following will call Unstructure internally
+    if(!(MakeEditable(object,object))) return (false);
+    DistanceFieldFaceAlgo algo;
+    return(algo.DistanceField(pr_,input,output,object));
+  }
+  else if (object->mesh()->dimensionality() == 1)
+  {
+    DistanceFieldEdgeAlgo algo;
+    return(algo.DistanceField(pr_,input,output,object));  
+  }
+  else if (object->mesh()->dimensionality() == 0)
+  {
+    DistanceFieldNodeAlgo algo;
+    return(algo.DistanceField(pr_,input,output,object));  
+  }
+  
+  return (false);
+}
+
+bool FieldsAlgo::SignedDistanceField(FieldHandle input, FieldHandle& output, FieldHandle object)
+{
+  if (object->mesh()->dimensionality() == 2)
+  {
+    if(!(MakeEditable(object,object))) return (false);
+    DistanceFieldFaceAlgo algo;
+    return(algo.DistanceField(pr_,input,output,object));  
+  }
+  else
+  {
+    error("SignedDistanceField: This function is only available for surface meshes");
+    return (false);
+  }
+}
+
+bool FieldsAlgo::TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline)
+{
+  TriSurfPhaseFilterAlgo algo;
+  return(algo.TriSurfPhaseFilter(pr_,input,output,phaseline));  
 }
 
 

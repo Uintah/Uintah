@@ -27,9 +27,11 @@
 */
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -38,47 +40,34 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class LinkFieldBoundary : public Module {
+class LinkToCompGrid : public Module {
 public:
-  LinkFieldBoundary(GuiContext*);
+  LinkToCompGrid(GuiContext*);
   virtual void execute();
-  
-private:
-  GuiInt guilinkx_;
-  GuiInt guilinky_;
-  GuiInt guilinkz_;
-  GuiDouble guitol_;
-  
 };
 
 
-DECLARE_MAKER(LinkFieldBoundary)
-LinkFieldBoundary::LinkFieldBoundary(GuiContext* ctx)
-  : Module("LinkFieldBoundary", ctx, Source, "FiniteElements", "ModelCreation"),
-  guilinkx_(get_ctx()->subVar("linkx")),
-  guilinky_(get_ctx()->subVar("linky")),
-  guilinkz_(get_ctx()->subVar("linkz")),
-  guitol_(get_ctx()->subVar("tol"))
+DECLARE_MAKER(LinkToCompGrid)
+LinkToCompGrid::LinkToCompGrid(GuiContext* ctx)
+  : Module("LinkToCompGrid", ctx, Source, "FiniteElements", "ModelCreation")
 {
 }
 
-void LinkFieldBoundary::execute()
+
+void LinkToCompGrid::execute()
 {
-  FieldHandle Field;
-  MatrixHandle GeomToComp, CompToGeom, MembraneLink;
-  if(!(get_input_handle("Field",Field,true))) return;
-
-  double tol = guitol_.get();
-  bool   linkx = static_cast<bool>(guilinkx_.get());
-  bool   linky = static_cast<bool>(guilinky_.get());
-  bool   linkz = static_cast<bool>(guilinkz_.get());
-
-  FieldsAlgo fieldsalgo(this);
-  if(!(fieldsalgo.LinkFieldBoundary(Field,GeomToComp,CompToGeom,tol,linkx,linky,linkz))) return;
+  MatrixHandle NodeLink;
+  MatrixHandle GeomToComp, CompToGeom;
   
+  if (!(get_input_handle("NodeLink",NodeLink,true))) return;
+  
+  FieldsAlgo algo(this);
+  algo.LinkToCompGrid(NodeLink,GeomToComp,CompToGeom);
+
   send_output_handle("GeomToComp",GeomToComp,true);
-  send_output_handle("CompToGeom",CompToGeom,true);  
+  send_output_handle("CompToGeom",CompToGeom,true);
 }
+
 
 } // End namespace ModelCreation
 

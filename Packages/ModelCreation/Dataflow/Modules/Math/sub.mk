@@ -10,12 +10,12 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FiniteElements
+SRCDIR   := Packages/ModelCreation/Dataflow/Modules/Math
 
 SRCS     += \
-	$(SRCDIR)/BuildFEMatrix.cc\
-	$(SRCDIR)/LinkToCompGrid.cc\
-	$(SRCDIR)/LinkToCompGridByDomain.cc\
+	$(SRCDIR)/ResizeMatrix.cc\
+	$(SRCDIR)/ReverseCuthillMcKee.cc\
+	$(SRCDIR)/CuthillMcKee.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -23,9 +23,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Fields \
-        Packages/ModelCreation/Core/Numeric 
-        
+        Packages/ModelCreation/Core/Numeric \
+        Packages/ModelCreation/Core/Converter \
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

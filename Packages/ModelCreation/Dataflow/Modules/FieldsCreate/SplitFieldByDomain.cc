@@ -38,29 +38,29 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class SplitFieldByElementData : public Module {
+class SplitFieldByDomain : public Module {
 public:
-  SplitFieldByElementData(GuiContext*);
+  SplitFieldByDomain(GuiContext*);
   virtual void execute();
 
 };
 
 
-DECLARE_MAKER(SplitFieldByElementData)
-SplitFieldByElementData::SplitFieldByElementData(GuiContext* ctx)
-  : Module("SplitFieldByElementData", ctx, Source, "FieldsCreate", "ModelCreation")
+DECLARE_MAKER(SplitFieldByDomain)
+SplitFieldByDomain::SplitFieldByDomain(GuiContext* ctx)
+  : Module("SplitFieldByDomain", ctx, Source, "FieldsCreate", "ModelCreation")
 {
 }
 
 
-void SplitFieldByElementData::execute()
+void SplitFieldByDomain::execute()
 {
   FieldHandle input;
   FieldHandle output;
   
   if(!(get_input_handle("Field",input,true))) return;
   FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
-  if(!(fieldmath.SplitFieldByElementData(input,output))) return;
+  if(!(fieldmath.SplitFieldByDomain(input,output))) return;
   send_output_handle("SplitField",output,true);
 
 }

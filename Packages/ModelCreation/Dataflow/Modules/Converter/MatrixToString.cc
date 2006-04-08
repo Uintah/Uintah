@@ -73,11 +73,14 @@ void MatrixToString::execute()
     int n   = spr->ncols();
     
     oss << "Sparse Matrix ("<<m<<"x"<<n<<"):\n";
-    for (int r = 0; r < m; r++)
+    if ((rr)&&(cc)&&(d))
     {
-      for (int c=rr[r]; c<rr[r+1];c++)
+      for (int r = 0; r < m; r++)
       {
-        oss << "["<<r<<","<<cc[c]<<"] = " << d[c] << "\n";
+        for (int c=rr[r]; c<rr[r+1];c++)
+        {
+          oss << "["<<r<<","<<cc[c]<<"] = " << d[c] << "\n";
+        }
       }
     }
   }

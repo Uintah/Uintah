@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="LinkFieldBoundary" category="FiniteElements" optional="false">
+<component name="LinkFieldBoundary" category="FieldsGeometry" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
@@ -22,11 +22,11 @@
     </inputs>
     <outputs>
       <port>
-        <name>GeomToComp</name>
+        <name>NodeLink</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>CompToGeom</name>
+        <name>ElemLink</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>

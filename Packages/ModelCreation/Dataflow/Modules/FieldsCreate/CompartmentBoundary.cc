@@ -67,11 +67,11 @@ CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
 void CompartmentBoundary::execute()
 {
   FieldHandle ifield, ofield;
-  MatrixHandle DomainLink;
+  MatrixHandle ElemLink;
   FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
  
   if(!(get_input_handle("Field",ifield,true))) return;
-  get_input_handle("DomainLink",DomainLink,false);
+  get_input_handle("ElemLink",ElemLink,false);
   
   double minrange, maxrange;
   bool   userange, includeouterboundary;
@@ -83,7 +83,7 @@ void CompartmentBoundary::execute()
   includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
   innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
 
-  if(!(algo.CompartmentBoundary(ifield,ofield,DomainLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly))) return;
+  if(!(algo.CompartmentBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly))) return;
   
   send_output_handle("Field",ofield,true);
 }

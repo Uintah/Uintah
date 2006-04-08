@@ -26,14 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  DistanceToBoundary.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -44,7 +36,6 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
-#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -54,106 +45,30 @@ using namespace SCIRun;
 class DistanceToBoundary : public Module {
 public:
   DistanceToBoundary(GuiContext*);
-
-  virtual ~DistanceToBoundary();
-
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
-
-private:
-  int fGeneration_;
 };
 
 
 DECLARE_MAKER(DistanceToBoundary)
 DistanceToBoundary::DistanceToBoundary(GuiContext* ctx)
-  : Module("DistanceToBoundary", ctx, Source, "FieldsData", "ModelCreation"),
-  fGeneration_(-1)
+  : Module("DistanceToBoundary", ctx, Source, "FieldsData", "ModelCreation")
 {
-}
-
-DistanceToBoundary::~DistanceToBoundary(){
 }
 
 void DistanceToBoundary::execute()
 {
-  FieldIPort *field_iport;
-  
-  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
-  {
-    error("Could not find Field input port");
-    return;
-  }
-  
-  FieldHandle input;
+  FieldHandle input,output;
   FieldHandle object;
+
+  if (!(get_input_handle("Field",input,true))) return;  
   
-  field_iport->get(input);
-  
-  if (input.get_rep() == 0)
-  {
-    warning("No Field was found on input port");
-    return;
-  }
+  FieldsAlgo algo(this);
 
-  FieldsAlgo fieldmath(this);
+  MatrixHandle dummy;
+  if(!(algo.FieldBoundary(input,object,dummy))) return;
+  if(!(algo.DistanceField(input,output,object))) return;
 
-  bool update = false;
-
-  if ( fGeneration_ != input->generation ) {
-    fGeneration_ = input->generation;
-    update = true;
-  }
-
-  if (update)
-  {
-    {
-      MatrixHandle dummy;
-      if (!(fieldmath.FieldBoundary(input,object,dummy)))
-      {
-        error("FieldBoundary failed to compute boundary");
-        return;
-      }
-    }
-
-    if (object.get_rep() == 0)
-    {
-      warning("Could not create boundary field");
-      return;
-    }
-
-    FieldHandle output;
-
-    if(!(fieldmath.DistanceToField(input,output,object)))
-    {
-      return;
-    }
-  
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
-    if (output_oport) output_oport->send(output);
-
-    MatrixOPort* data_oport = dynamic_cast<MatrixOPort *>(get_output_port(1));
-    if (data_oport) 
-    {
-      MatrixHandle data;
-      if(fieldmath.GetFieldData(output,data))
-      {
-        data_oport->send(data);
-      }
-      else
-      {
-        error("Could not retrieve data from field, so no data matrix is generated");
-        return;        
-      }
-    }
-  }
-}
-
-void
- DistanceToBoundary::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  send_output_handle("DistanceField",output,true);
 }
 
 } // End namespace ModelCreation

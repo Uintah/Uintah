@@ -67,11 +67,7 @@ class FieldsAlgo : public AlgoLibrary {
     bool GetFieldInfo(FieldHandle input, int& numnodes, int& numelems);
     
     bool ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle SelectionMask,MatrixHandle &interpolant);
-    bool DistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object);
-    bool SignedDistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object);
     
-    bool IsInsideSurfaceField(FieldHandle input, FieldHandle& output, FieldHandle object);
-    bool IsInsideVolumeField(FieldHandle input, FieldHandle& output, FieldHandle object);
 
     // Change where the data is located
     bool FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method);
@@ -110,6 +106,10 @@ class FieldsAlgo : public AlgoLibrary {
     // on unconnected data.
     bool ConvertToTriSurf(FieldHandle input, FieldHandle& output);
 
+    // Compute distance fields
+    bool DistanceField(FieldHandle input, FieldHandle& output, FieldHandle object);
+    bool SignedDistanceField(FieldHandle input, FieldHandle& output, FieldHandle object);
+
     // FieldArrayToBundle
     // Created an vector of fields out of the bundle type
     bool FieldArrayToBundle(std::vector<FieldHandle>& input, BundleHandle output);
@@ -118,10 +118,21 @@ class FieldsAlgo : public AlgoLibrary {
     // This function extracts the outer boundaries of a field
     bool FieldBoundary(FieldHandle input, FieldHandle& output, MatrixHandle &interpolant);
 
+    // IsInsiedField:
+    // This is an implementation of locate
+    bool IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle object);
+
     // LinkFieldBoundary:
-    // Build a table for the FE Matrix generator so the boundaries will be linked
-    bool LinkFieldBoundary(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, double tol, bool linkx = true, bool linky = true, bool linkz = true);
-    bool LinkFieldBoundaryByElement(FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, MatrixHandle& DomainLink, MatrixHandle& MembraneLink, double tol, bool linkx = true, bool linky = true, bool linkz = true);
+    // Compute the node-to-node link and the edge-elementy-to-edge-element matrix
+    bool LinkFieldBoundary(FieldHandle input, MatrixHandle& NodeLink, MatrixHandle& ElemLink, double tol, bool linkx = true, bool linky = true, bool linkz = true);
+    
+    // LinkToCompGrid:
+    // Compute the mapping to merge nodes over the outer boundary of the mesh
+    bool LinkToCompGrid(MatrixHandle NodeLink,MatrixHandle& GeomToComp, MatrixHandle& CompToGeom);
+
+    // LinkToCompGrid:
+    // Compute the mapping to merge nodes over the outer boundary of the mesh for elements of the same domain type    
+    bool LinkToCompGridByDomain(FieldHandle input, MatrixHandle NodeLink, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom);
 
     // MappingMatrixToField:
     // This function will assign to each node the value of the original node.
@@ -152,11 +163,11 @@ class FieldsAlgo : public AlgoLibrary {
     // Scales FieldData and MeshData, used to change units properly
     bool ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh);
 
-    // SplitFieldByElementData:
+    // SplitFieldByDomain:
     // Use the element data to segment the input field into volumes/areas with a
     // constant value. This means node splitting at the edges between the
     // different areas/volumes.
-    bool SplitFieldByElementData(FieldHandle input, FieldHandle& output);    
+    bool SplitFieldByDomain(FieldHandle input, FieldHandle& output);    
 
     // SplitFieldByConnectedRegion:
     // Use the connectivity data to split the field so each unconnected region is its own
@@ -173,6 +184,10 @@ class FieldsAlgo : public AlgoLibrary {
     // Unstructure: Unstructure a mesh from a regular or structured mesh into
     // an unstructured mesh. This is often needed to make a mesh editable
     bool Unstructure(FieldHandle input,FieldHandle& output);
+    
+    // TriSurfPhaseFilter
+    // Created an vector of fields out of the bundle type
+    bool TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline);    
     
 };
 

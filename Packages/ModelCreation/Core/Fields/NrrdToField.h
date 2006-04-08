@@ -61,7 +61,7 @@ public:
 template<class T>
 bool NrrdToFieldAlgo::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, FieldHandle& output,std::string datalocation)
 {
-  Nrrd *nrrd = input->nrrd;
+  Nrrd *nrrd = input->nrrd_;
 
   if (nrrd == 0)
   {

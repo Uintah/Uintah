@@ -58,7 +58,7 @@ using namespace SCIRun;
 class BuildFEMatrixAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, int numproc = 1);
+  virtual bool BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc = 1);
 
 
 };
@@ -67,7 +67,7 @@ template <class FIELD>
 class BuildFEMatrixAlgoT : public BuildFEMatrixAlgo
 {
 public:
-  virtual bool BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, int numproc = 1);
+  virtual bool BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc = 1);
   
 };
 
@@ -91,7 +91,7 @@ public:
   {
   }
 
-  void build_matrix(FieldHandle input, MatrixHandle& output, int numproc);
+  void build_matrix(FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc);
 
 private:
 
@@ -155,7 +155,7 @@ private:
 };
 
 template <class FIELD>
-void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, int numproc)
+void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc)
 {
   pField_ = dynamic_cast<FIELD *>(input.get_rep());
   hMesh_ = pField_->get_typed_mesh();
@@ -166,6 +166,69 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, in
   np_ = np;
   
   pField_->get_property("conductivity_table",tens_);
+  
+  if (ctable.get_rep())
+  {
+    DenseMatrix* mat = ctable->dense();
+    if (mat)
+    {
+      double* data = ctable->get_data_pointer();
+      int m = ctable->nrows();
+      Tensor T; 
+
+      if (mat->ncols() == 1)
+      {
+        for (int p=0; p<m;p++)
+        {
+          T.mat_[0][0] = data[0*m+p];
+          T.mat_[1][0] = 0.0;
+          T.mat_[2][0] = 0.0;
+          T.mat_[0][1] = 0.0;
+          T.mat_[1][1] = data[0*m+p];
+          T.mat_[2][1] = 0.0;
+          T.mat_[0][2] = 0.0;
+          T.mat_[1][2] = 0.0;
+          T.mat_[2][2] = data[0*m+p];
+          tens_.push_back(std::pair<string, Tensor>("",T));
+        }
+      }
+       
+      if (mat->ncols() == 6)
+      {
+        for (int p=0; p<m;p++)
+        {
+          T.mat_[0][0] = data[0*m+p];
+          T.mat_[1][0] = data[1*m+p];
+          T.mat_[2][0] = data[2*m+p];
+          T.mat_[0][1] = data[1*m+p];
+          T.mat_[1][1] = data[3*m+p];
+          T.mat_[2][1] = data[4*m+p];
+          T.mat_[0][2] = data[2*m+p];
+          T.mat_[1][2] = data[4*m+p];
+          T.mat_[2][2] = data[5*m+p];
+          tens_.push_back(std::pair<string, Tensor>("",T));
+        }
+      }
+
+      if (mat->ncols() == 9)
+      {
+        for (int p=0; p<m;p++)
+        {
+          T.mat_[0][0] = data[0*m+p];
+          T.mat_[1][0] = data[1*m+p];
+          T.mat_[2][0] = data[2*m+p];
+          T.mat_[0][1] = data[1*m+p];
+          T.mat_[1][1] = data[4*m+p];
+          T.mat_[2][1] = data[5*m+p];
+          T.mat_[0][2] = data[2*m+p];
+          T.mat_[1][2] = data[5*m+p];
+          T.mat_[2][2] = data[8*m+p];
+          tens_.push_back(std::pair<string, Tensor>("",T));
+        }
+      }
+    }
+  }
+  
   Thread::parallel(this, &FEMBuilder<FIELD>::parallel, np);
 
   output = hA_;
@@ -174,7 +237,7 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, in
 
 
 template <class FIELD>
-bool BuildFEMatrixAlgoT<FIELD>::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, int numproc)
+bool BuildFEMatrixAlgoT<FIELD>::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc)
 {
   // Some sanity checks
   FIELD* field = dynamic_cast<FIELD *>(input.get_rep());
@@ -184,8 +247,23 @@ bool BuildFEMatrixAlgoT<FIELD>::BuildFEMatrix(ProgressReporter *pr, FieldHandle 
     return (false);
   }
 
+  if (ctable.get_rep())
+  {
+    if ((ctable->ncols() != 2)||(ctable->ncols() != 6)||(ctable->ncols() != 9))
+    {
+      pr->error("BuildFEMatrix: Conductivity table needs to have 1, 6, or 9 columns");
+      return (false);
+    } 
+    if (ctable->nrows() == 0)
+    { 
+      pr->error("BuildFEMatrix: ConductivityTable is empty");
+      return (false);
+    }
+  }
+
+
   Handle<FEMBuilder<FIELD> > builder = scinew FEMBuilder<FIELD>;
-  builder->build_matrix(input,output,numproc);
+  builder->build_matrix(input,output,ctable,numproc);
 
   if (output.get_rep() == 0)
   {    

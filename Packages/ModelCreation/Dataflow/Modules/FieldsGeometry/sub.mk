@@ -13,13 +13,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsGeometry
 
 SRCS     += \
-  $(SRCDIR)/ComputeFieldNodes.cc\
-  $(SRCDIR)/ComputeFieldsNodes.cc\
-	$(SRCDIR)/Unstructure.cc\
+ 	$(SRCDIR)/ComputeFieldNodes.cc\
+  	$(SRCDIR)/ComputeFieldsNodes.cc\
 	$(SRCDIR)/ConvertToPointCloud.cc\
 	$(SRCDIR)/ConvertToTetVol.cc\
 	$(SRCDIR)/ConvertToTriSurf.cc\
 	$(SRCDIR)/MergeNodes.cc\
+	$(SRCDIR)/LinkFieldBoundary.cc\
+	$(SRCDIR)/Unstructure.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

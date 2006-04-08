@@ -32,15 +32,13 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, double tol, bool linkx, bool linky, bool linkz)
+bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle input, MatrixHandle& NodeLink, MatrixHandle& ElemLink, double tol, bool linkx, bool linky, bool linkz)
 {
   if (input.get_rep() == 0)
   {
     pr->error("LinkFieldBoundary: No input field");
     return (false);
   }
-
-  // no precompiled version available, so compile one
 
   FieldInformation fi(input);
   
@@ -61,11 +59,6 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
   if (fi.is_surface()) algotype = "Surface";
   if (fi.is_curve()) algotype = "Curve";
   
-  for(size_t p =0; p< precompiled_.size(); p++)
-  {
-    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->LinkFieldBoundary(pr,input,GeomToComp,CompToGeom,tol,linkx,linky,linkz));
-  }
-
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
@@ -84,94 +77,12 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->LinkFieldBoundary(pr,input,GeomToComp,CompToGeom,tol,linkx,linky,linkz));
+  return(algo->LinkFieldBoundary(pr,input,NodeLink,ElemLink,tol,linkx,linky,linkz));
 }
-
-bool LinkFieldBoundaryAlgo::testinput(FieldHandle input)
-{
-  return (false);
-}
-
-AlgoList<LinkFieldBoundaryAlgo> LinkFieldBoundaryAlgo::precompiled_;
-
-
-bool LinkFieldBoundaryByElementAlgo::LinkFieldBoundaryByElement(ProgressReporter *pr, FieldHandle input, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom, MatrixHandle& DomainLink, MatrixHandle& MembraneLink, double tol, bool linkx, bool linky, bool linkz)
-{
-  if (input.get_rep() == 0)
-  {
-    pr->error("LinkFieldBoundary: No input field");
-    return (false);
-  }
-
-  // no precompiled version available, so compile one
-
-  FieldInformation fi(input);
-  
-  if (fi.is_nonlinear())
-  {
-    pr->error("LinkFieldBoundary: This function has not yet been defined for non-linear elements");
-    return (false);
-  }
-
-  if (!(fi.is_constantdata()))
-  {
-    pr->error("LinkFieldBoundary: This function has not yet been defined for data at the nodes");
-    return (false);
-  }
-   
-  if (!(fi.is_volume()||fi.is_surface()||fi.is_curve()))
-  {
-    pr->error("LinkFieldBoundary: this function is only defined for curve, surface and volume data");
-    return (false);
-  }
-
-  std::string algotype = "";  
-  if (fi.is_volume()) algotype = "Volume";
-  if (fi.is_surface()) algotype = "Surface";
-  if (fi.is_curve()) algotype = "Curve";
-  
-  for(size_t p =0; p< precompiled_.size(); p++)
-  {
-    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->LinkFieldBoundaryByElement(pr,input,GeomToComp,CompToGeom,DomainLink,MembraneLink,tol,linkx,linky,linkz));
-  }
-
-  // Setup dynamic files
-
-  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "LinkFieldBoundaryByElement."+fi.get_field_filename()+".",
-    "LinkFieldBoundaryByElementAlgo","LinkFieldBoundary"+algotype+"ByElementAlgoT",
-    fi.get_field_name());
-
-  ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("ModelCreation");
-  ci->add_namespace("SCIRun");
-  
-  fi.fill_compile_info(ci);
-  
-  // Handle dynamic compilation
-  SCIRun::Handle<LinkFieldBoundaryByElementAlgo> algo;
-  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
-  {
-    pr->compile_error(ci->filename_);
-//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
-    return(false);
-  }
-
-  return(algo->LinkFieldBoundaryByElement(pr,input,GeomToComp,CompToGeom,DomainLink,MembraneLink,tol,linkx,linky,linkz));
-}
-
-bool LinkFieldBoundaryByElementAlgo::testinput(FieldHandle input)
-{
-  return (false);
-}
-
-AlgoList<LinkFieldBoundaryByElementAlgo> LinkFieldBoundaryByElementAlgo::precompiled_;
-
-
 
 
 } // End namespace ModelCreation

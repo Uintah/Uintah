@@ -26,20 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  MappingMatrixToField.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -48,36 +38,46 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class MappingMatrixToField : public Module {
+class LinkFieldBoundary : public Module {
 public:
-  MappingMatrixToField(GuiContext*);
+  LinkFieldBoundary(GuiContext*);
   virtual void execute();
-
+  
+private:
+  GuiInt guilinkx_;
+  GuiInt guilinky_;
+  GuiInt guilinkz_;
+  GuiDouble guitol_;
+  
 };
 
 
-DECLARE_MAKER(MappingMatrixToField)
-MappingMatrixToField::MappingMatrixToField(GuiContext* ctx)
-  : Module("MappingMatrixToField", ctx, Source, "FieldsData", "ModelCreation")
+DECLARE_MAKER(LinkFieldBoundary)
+LinkFieldBoundary::LinkFieldBoundary(GuiContext* ctx)
+  : Module("LinkFieldBoundary", ctx, Source, "FieldsGeometry", "ModelCreation"),
+  guilinkx_(get_ctx()->subVar("linkx")),
+  guilinky_(get_ctx()->subVar("linky")),
+  guilinkz_(get_ctx()->subVar("linkz")),
+  guitol_(get_ctx()->subVar("tol"))
 {
 }
 
-
-void MappingMatrixToField::execute()
+void LinkFieldBoundary::execute()
 {
-  FieldHandle input;
-  FieldHandle output;
-  MatrixHandle matrix;
-  
-  if (!(get_input_handle("Field",input,true))) return;
-  if (!(get_input_handle("MappingMatrix",matrix,true))) return;
+  FieldHandle Field;
+  MatrixHandle NodeLink, ElemLink;
+  if(!(get_input_handle("Field",Field,true))) return;
 
-  FieldsAlgo fieldmath(this);  
+  double tol = guitol_.get();
+  bool   linkx = static_cast<bool>(guilinkx_.get());
+  bool   linky = static_cast<bool>(guilinky_.get());
+  bool   linkz = static_cast<bool>(guilinkz_.get());
 
-  send_output_handle("IndicesField",output,true);
-  if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
+  FieldsAlgo fieldsalgo(this);
+  if(!(fieldsalgo.LinkFieldBoundary(Field,NodeLink,ElemLink,tol,linkx,linky,linkz))) return;
   
-  send_output_handle("IndicesField",output,true);
+  send_output_handle("NodeLink",NodeLink,true);
+  send_output_handle("ElemLink",ElemLink,true);  
 }
 
 } // End namespace ModelCreation

@@ -26,17 +26,23 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldBoundary.h>
+#include <Packages/ModelCreation/Core/Fields/IsInsideField.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle& mapping)
+bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle objfield)
 {
   if (input.get_rep() == 0)
   {
-    pr->error("FieldBoundary: No input field");
+    pr->error("IsInsideField: No input field");
+    return (false);
+  }
+
+  if (objfield.get_rep() == 0)
+  {
+    pr->error("IsInsideField: No object field");
     return (false);
   }
 
@@ -44,54 +50,20 @@ bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, F
 
   FieldInformation fi(input);
   FieldInformation fo(input);
+  FieldInformation fobj(objfield);
   
   if (fi.is_nonlinear())
   {
-    pr->error("FieldBoundary: This function has not yet been defined for non-linear elements");
+    pr->error("IsInsideField: This function has not yet been defined for non-linear elements");
     return (false);
   }
+    
+  fo.set_data_type("double");
   
-  if (!(fi.is_constantdata()))
-  {
-    pr->error("FieldBoundary: This function needs a compartment definition on the elements (constant element data)");
-    return (false);    
-  }
-  
-  if (!(fi.is_volume()||fi.is_surface()||fi.is_curve()))
-  {
-    pr->error("FieldBoundary: this function is only defined for curve, surface and volume data");
-    return (false);
-  }
-  
-  std::string mesh_type = fi.get_mesh_type();
-  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh")||(mesh_type == "HexVolMesh"))
-  {
-    fo.set_mesh_type("QuadSurfMesh");
-  }
-  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "TriSurfMesh"))
-  {
-    fo.set_mesh_type("CurveMesh");
-  }
-  else if (mesh_type == "TetVolMesh")
-  {
-    fo.set_mesh_type("TriSurfMesh");
-  }
-  else if ((mesh_type == "CurveMesh")||(mesh_type == "StructCurveMesh")||(mesh_type == "ScanlineMesh"))
-  {
-    fo.set_mesh_type("PointCloudMesh");
-  }
-  else
-  {
-    pr->error("No method available for mesh: " + mesh_type);
-    return (false);
-  }
-
-  // Setup dynamic files
-
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "FieldBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
-    "FieldBoundaryAlgo","FieldBoundaryAlgoT",
-    fi.get_field_name() + "," + fo.get_field_name());
+    "IsInsideField."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
+    "IsInsideFieldAlgo","IsInsideFieldAlgoT",
+    fi.get_field_name() + "," + fo.get_field_name() + "," + fobj.get_field_name() );
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
@@ -99,9 +71,10 @@ bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, F
   
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
+  fobj.fill_compile_info(ci);
   
   // Handle dynamic compilation
-  SCIRun::Handle<FieldBoundaryAlgo> algo;
+  SCIRun::Handle<IsInsideFieldAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
@@ -109,8 +82,7 @@ bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, F
     return(false);
   }
 
-  return(algo->FieldBoundary(pr,input,output,mapping));
+  return(algo->IsInsideField(pr,input,output,objfield));
 }
-
 
 } // End namespace ModelCreation

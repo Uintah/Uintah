@@ -26,61 +26,53 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-
+/*
+ *  TriSurfPhaseFilter.cc:
+ *
+ *  Written by:
+ *   jeroen
+ *   TODAY'S DATE HERE
+ *
+ */
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
+
+#include <Dataflow/Network/Ports/FieldPort.h>
+
+#include <Core/Datatypes/Field.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class LinkFieldBoundaryByElement : public Module {
-public:
-  LinkFieldBoundaryByElement(GuiContext*);
-  virtual void execute();
-  
-private:
-  GuiInt guilinkx_;
-  GuiInt guilinky_;
-  GuiInt guilinkz_;
-  GuiDouble guitol_;
-  
+class TriSurfPhaseFilter : public Module {
+  public:
+    TriSurfPhaseFilter(GuiContext*);
+    virtual void execute();   
 };
 
 
-DECLARE_MAKER(LinkFieldBoundaryByElement)
-LinkFieldBoundaryByElement::LinkFieldBoundaryByElement(GuiContext* ctx)
-  : Module("LinkFieldBoundaryByElement", ctx, Source, "FiniteElements", "ModelCreation"),
-  guilinkx_(ctx->subVar("linkx")),
-  guilinky_(ctx->subVar("linky")),
-  guilinkz_(ctx->subVar("linkz")),
-  guitol_(ctx->subVar("tol"))
+DECLARE_MAKER(TriSurfPhaseFilter)
+TriSurfPhaseFilter::TriSurfPhaseFilter(GuiContext* ctx)
+  : Module("TriSurfPhaseFilter", ctx, Source, "FieldsData", "ModelCreation")
 {
 }
 
-void LinkFieldBoundaryByElement::execute()
+void TriSurfPhaseFilter::execute()
 {
-  FieldHandle Field;
-  MatrixHandle GeomToComp, CompToGeom, DomainLink, MembraneLink;
-  if(!(get_input_handle("Field",Field,true))) return;
+  FieldHandle input, output;
+  FieldHandle phaseline;
 
-  double tol = guitol_.get();
-  bool   linkx = static_cast<bool>(guilinkx_.get());
-  bool   linky = static_cast<bool>(guilinky_.get());
-  bool   linkz = static_cast<bool>(guilinkz_.get());
-
-  FieldsAlgo fieldsalgo(this);
-  if(!(fieldsalgo.LinkFieldBoundaryByElement(Field,GeomToComp,CompToGeom,DomainLink,MembraneLink,tol,linkx,linky,linkz))) return;
+  if (!(get_input_handle("PhaseField",input,true))) return;
   
-  send_output_handle("GeomToComp",GeomToComp,true);
-  send_output_handle("CompToGeom",CompToGeom,true);  
-  send_output_handle("DomainLink",DomainLink,true);  
-  send_output_handle("MembraneLink",MembraneLink,true);  
-
+  FieldsAlgo algo(this);
+  
+  if(!(algo.TriSurfPhaseFilter(input,output,object,phaseline))) return;
+ 
+  send_output_handle("PhaseField",output,true);
+  send_output_handle("PhaseLine",phaseline,true);
 }
 
 } // End namespace ModelCreation

@@ -20,6 +20,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/CompartmentBoundary.cc\
             $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/DistanceToField.cc\
+            $(SRCDIR)/DistanceField.cc\
             $(SRCDIR)/FieldsAlgo.cc\
             $(SRCDIR)/ExampleFields.cc\
             $(SRCDIR)/FieldBoundary.cc\
@@ -27,18 +28,21 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
             $(SRCDIR)/GetFieldData.cc\
             $(SRCDIR)/GetFieldInfo.cc\
+            $(SRCDIR)/IsInsideField.cc\
             $(SRCDIR)/LinkFieldBoundary.cc\
+            $(SRCDIR)/LinkToCompGridByDomain.cc\
             $(SRCDIR)/MergeFields.cc\
             $(SRCDIR)/Precompile.cc\
             $(SRCDIR)/ScaleField.cc\
             $(SRCDIR)/SplitByConnectedRegion.cc\
-            $(SRCDIR)/SplitFieldByElementData.cc\
+            $(SRCDIR)/SplitFieldByDomain.cc\
             $(SRCDIR)/SelectionMask.cc\
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
             $(SRCDIR)/TransformField.cc\
             $(SRCDIR)/ToPointCloud.cc\
             $(SRCDIR)/Unstructure.cc\
+            $(SRCDIR)/TriSurfPhaseFilter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
