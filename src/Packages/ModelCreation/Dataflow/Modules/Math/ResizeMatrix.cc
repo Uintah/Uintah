@@ -26,20 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  MappingMatrixToField.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
+
+#include <Packages/ModelCreation/Core/Numeric/NumericAlgo.h>
+#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -48,37 +39,60 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class MappingMatrixToField : public Module {
+class ResizeMatrix : public Module {
 public:
-  MappingMatrixToField(GuiContext*);
+  ResizeMatrix(GuiContext*);
   virtual void execute();
+
+private:
+  GuiInt guim_;
+  GuiInt guin_;
 
 };
 
 
-DECLARE_MAKER(MappingMatrixToField)
-MappingMatrixToField::MappingMatrixToField(GuiContext* ctx)
-  : Module("MappingMatrixToField", ctx, Source, "FieldsData", "ModelCreation")
+DECLARE_MAKER(ResizeMatrix)
+ResizeMatrix::ResizeMatrix(GuiContext* ctx)
+  : Module("ResizeMatrix", ctx, Source, "Math", "ModelCreation"),
+  guim_(get_ctx()->subVar("dim-m")),
+  guin_(get_ctx()->subVar("dim-n"))
 {
 }
 
 
-void MappingMatrixToField::execute()
+void ResizeMatrix::execute()
 {
-  FieldHandle input;
-  FieldHandle output;
-  MatrixHandle matrix;
-  
-  if (!(get_input_handle("Field",input,true))) return;
-  if (!(get_input_handle("MappingMatrix",matrix,true))) return;
+ MatrixHandle Mat, M, N;
+ 
+ if(!(get_input_handle("Matrix",Mat,true))) return;
+ get_input_handle("M",M,false);
+ get_input_handle("N",N,false);
+ 
+ NumericAlgo nalgo(this);
+ ConverterAlgo calgo(this);
+ int n,m;
+ 
+ if (M.get_rep())
+ {
+  if(calgo.MatrixToInt(M,m)) guim_.set(m);
+  get_ctx()->reset();
+ }
 
-  FieldsAlgo fieldmath(this);  
+ if (N.get_rep())
+ {
+  if(calgo.MatrixToInt(N,n)) guin_.set(n);
+  get_ctx()->reset();
+ }
 
-  send_output_handle("IndicesField",output,true);
-  if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
-  
-  send_output_handle("IndicesField",output,true);
+ m = guim_.get();
+ n = guin_.get();
+ 
+ if(!(nalgo.ResizeMatrix(Mat,Mat,m,n))) return;
+ 
+ send_output_handle("Matrix",Mat,true);
 }
+
+
 
 } // End namespace ModelCreation
 

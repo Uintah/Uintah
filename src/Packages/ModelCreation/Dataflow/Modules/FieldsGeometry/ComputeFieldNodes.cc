@@ -152,12 +152,19 @@ void ComputeFieldNodes::execute()
   
   // Create the DATA object for the function
   // DATA is the data on the field
-  if(!(inputlist[k++].create_inputdata(field,"DATA")))
+  if (field->basis_order() == 1)
   {
-    error("Failed to read field data");
-    return;
+    if(!(inputlist[k++].create_inputdata(field,"DATA")))
+    {
+      error("Failed to read field data");
+      return;
+    }
   }
-
+  else
+  {
+    warning("DATA is not available because there is no data or it is located at the elements");
+  }
+  
   // Create the POS, X,Y,Z, data location objects.  
   if(!(inputlist[k++].create_inputlocation(field,"POS","X","Y","Z")))
   {

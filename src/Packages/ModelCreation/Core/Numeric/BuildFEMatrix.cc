@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, int numproc)
+bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc)
 {
   if (input.get_rep() == 0)
   {
@@ -46,13 +46,13 @@ bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, M
   
   if (fi.is_vector())
   {
-    pr->error("BuildFEMatrix: This function has not yet been defined forelements with vector data");
+    pr->error("BuildFEMatrix: This function has not yet been defined for elements with vector data");
     return (false);
   }
 
   if (!fi.is_constantdata())
   {
-    pr->error("BuildFEMatrix: This function has only been defined or  data");
+    pr->error("BuildFEMatrix: This function has only been defined for data that is located at the elements");
     return (false);
   }
   
@@ -74,11 +74,11 @@ bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, M
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->BuildFEMatrix(pr,input,output,numproc));
+  return(algo->BuildFEMatrix(pr,input,output,ctable,numproc));
 }
 
 

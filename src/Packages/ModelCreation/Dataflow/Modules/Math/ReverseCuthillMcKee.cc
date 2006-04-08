@@ -26,20 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  MappingMatrixToField.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Core/Datatypes/Field.h>
+#include <Packages/ModelCreation/Core/Numeric/NumericAlgo.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -48,37 +37,36 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class MappingMatrixToField : public Module {
+class ReverseCuthillMcKee : public Module {
 public:
-  MappingMatrixToField(GuiContext*);
+  ReverseCuthillMcKee(GuiContext*);
   virtual void execute();
 
 };
 
 
-DECLARE_MAKER(MappingMatrixToField)
-MappingMatrixToField::MappingMatrixToField(GuiContext* ctx)
-  : Module("MappingMatrixToField", ctx, Source, "FieldsData", "ModelCreation")
+DECLARE_MAKER(ReverseCuthillMcKee)
+ReverseCuthillMcKee::ReverseCuthillMcKee(GuiContext* ctx)
+  : Module("ReverseCuthillMcKee", ctx, Source, "Math", "ModelCreation")
 {
 }
 
 
-void MappingMatrixToField::execute()
+void ReverseCuthillMcKee::execute()
 {
-  FieldHandle input;
-  FieldHandle output;
-  MatrixHandle matrix;
-  
-  if (!(get_input_handle("Field",input,true))) return;
-  if (!(get_input_handle("MappingMatrix",matrix,true))) return;
+  MatrixHandle Mat, Mapping, InverseMapping;
+  if(!(get_input_handle("Matrix",Mat,true))) return;
 
-  FieldsAlgo fieldmath(this);  
-
-  send_output_handle("IndicesField",output,true);
-  if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
+  NumericAlgo algo(this);
+  if(!(algo.ReverseCuthillmcKee(Mat,Mat,InverseMapping,true))) return;
   
-  send_output_handle("IndicesField",output,true);
+  Mapping = InverseMapping->transpose();
+  
+  send_output_handle("Matrix",Mat,true);
+  send_output_handle("Mapping",Mapping,true);
+  send_output_handle("InverseMapping",InverseMapping,true);
 }
+
 
 } // End namespace ModelCreation
 

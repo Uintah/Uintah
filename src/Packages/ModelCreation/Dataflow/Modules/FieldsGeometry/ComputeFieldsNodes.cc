@@ -189,19 +189,30 @@ void ComputeFieldsNodes::execute()
   // DATA is the data on the field
   size_t k = 0;
   
-  if(!(inputlist[k++].create_inputdata(field,"DATA1"))&&(field->basis_order()==1))
+  if (field.get_rep()&&(field->basis_order()==1))
   {
-    error("Failed to read field data");
-    return;
+    if(!(inputlist[k++].create_inputdata(field,"DATA1")))
+    {
+      error("Failed to read field data");
+      return;
+    }
   }
-  
-  if ((field2.get_rep())&&(field2->basis_order()==1))
+  else
+  {
+    warning("DATA1 is not available");
+  }
+
+  if (field2.get_rep()&&(field2->basis_order()==1))
   {
     if(!(inputlist[k++].create_inputdata(field2,"DATA2")))
     {
       error("Failed to read field data");
       return;
     }
+  }
+  else
+  {
+    warning("DATA2 is not available");
   }
 
   if (field3.get_rep()&&(field3->basis_order()==1))
@@ -212,28 +223,54 @@ void ComputeFieldsNodes::execute()
       return;
     }
   }
-
-  // Create the POS, X,Y,Z, data location objects.  
-  if(!(inputlist[k++].create_inputlocation(field,"POS1","X1","Y1","Z1")))
+  else
   {
-    error("Failed to read node/element location data");
-    return;
+    warning("DATA3 is not available");
   }
-
+  
+  
   // Create the POS, X,Y,Z, data location objects.  
-  if(!(inputlist[k++].create_inputlocation(field2,"POS2","X2","Y2","Z2")))
+  if (field.get_rep())
   {
-    error("Failed to read node/element location data");
-    return;
+    if(!(inputlist[k++].create_inputlocation(field,"POS1","X1","Y1","Z1")))
+    {
+      error("Failed to read node/element location data");
+      return;
+    }
   }
-
+  else
+  {
+    warning("POS, X, Y, Z are not available");
+  }
+    
   // Create the POS, X,Y,Z, data location objects.  
-  if(!(inputlist[k++].create_inputlocation(field3,"POS3","X3","Y3","Z3")))
-  {
-    error("Failed to read node/element location data");
-    return;
+  if (field.get_rep())
+    {  
+    if(!(inputlist[k++].create_inputlocation(field2,"POS2","X2","Y2","Z2")))
+    {
+      error("Failed to read node/element location data");
+      return;
+    }
   }
-
+  else
+  {
+    warning("POS2, X2, Y2, Z2 are not available");
+  }
+  
+  // Create the POS, X,Y,Z, data location objects.
+  if (field.get_rep())
+  {  
+    if(!(inputlist[k++].create_inputlocation(field3,"POS3","X3","Y3","Z3")))
+    {
+      error("Failed to read node/element location data");
+      return;
+    }
+  }
+  else
+  {
+    warning("POS3, X3, Y3, Z3 are not available");
+  }
+  
   // Add an object for getting the index and size of the array.
   if(!(inputlist[k++].create_inputindex("INDEX","SIZE")))
   {

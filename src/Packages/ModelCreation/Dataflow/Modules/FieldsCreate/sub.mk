@@ -15,7 +15,7 @@ SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsCreate
 SRCS     += \
 	$(SRCDIR)/ClipFieldBySelectionMask.cc\
 	$(SRCDIR)/ClipFieldByFunction.cc\
-	$(SRCDIR)/SplitFieldByElementData.cc\
+	$(SRCDIR)/SplitFieldByDomain.cc\
   $(SRCDIR)/MergeFields.cc\
 	$(SRCDIR)/CompartmentBoundary.cc\
 	$(SRCDIR)/SplitFieldByConnectedRegion.cc\

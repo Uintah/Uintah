@@ -101,8 +101,6 @@ public:
   virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
   virtual bool testinput(FieldHandle input);
 
-public:
-  static AlgoList<ToPointCloudAlgo> precompiled_;
 
 };
 

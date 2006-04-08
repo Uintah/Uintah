@@ -1,42 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="LinkFieldBoundaryByElement" category="FiniteElements" optional="false">
+<component name="ResizeMatrix" category="Math" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module will build a table which will indicate which nodes at the edges are connected to the opposite edges.
+      This module resizes a matrix.
 
     </summary>
     <description>
-      <p>        This module will build a table which will indicate which nodes at the edges are connected to the opposite edges. </p>
+      <p>        This module resizes a matrix. One can specify the new size of the matrix by connecting scalar values to the input or by setting the appropriate values in the GUI. </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Field</name>
-        <datatype>SCIRun::Field</datatype>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>M</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>N</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>GeomToComp</name>
+        <name>Matrix</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
-      <port>
-        <name>CompToGeom</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>DomainLink</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>MembraneLink</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
-    </outputs>
+    </outputs>  
   </io>
 </component>

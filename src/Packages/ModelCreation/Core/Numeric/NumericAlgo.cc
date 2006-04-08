@@ -50,7 +50,7 @@ NumericAlgo::NumericAlgo(ProgressReporter* pr) :
 bool NumericAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable, MatrixHandle GeomToComp, MatrixHandle CompToGeom)
 {
   BuildFEMatrixAlgo algo;
-  if(!(algo.BuildFEMatrix(pr_,field,matrix,num_proc))) return(false);
+  if(!(algo.BuildFEMatrix(pr_,field,matrix,ConductivityTable,num_proc))) return(false);
   
   if ((GeomToComp.get_rep()==0)&&(CompToGeom.get_rep()==0))
   {
@@ -82,11 +82,11 @@ bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, 
     int nnz = input->get_data_size();
   
     int newnnz =  0;
-    for (int p=0; p<nnz; p++) if (col[p] < m) newnnz++;
+    for (int p=0; p<nnz; p++) if (col[p] < n) newnnz++;
     
     double* newval = scinew double[newnnz];  
     int* newcol = scinew int[newnnz];
-    int* newrow = scinew int[n+1];
+    int* newrow = scinew int[m+1];
     
     if ((newval == 0)||(newcol == 0)||(newrow == 0))
     {
@@ -98,18 +98,19 @@ bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, 
     }
     
     int k = 0;
-    for (int p=0; p<nnz; p++) if (col[p] < m) 
+    for (int p=0; p<nnz; p++) 
+    if (col[p] < n) 
     {
-      newval[k] = val[k];
-      newcol[k] = col[k];
+      newval[k] = val[p];
+      newcol[k] = col[p];
       k++;
     }
     
     int r=0;
     newrow[0] = 0;
-    for (int p=1; p<n+1; p++)
+    for (int p=1; p<(m+1); p++)
     {
-      for (int q = row[p-1]; q < row[p]; q++) if (col[q] < m) r++;
+      if (p <= sm) for (int q = row[p-1]; q < row[p]; q++) if (col[q] < n) r++;
       newrow[p] = r;
     }
     
@@ -145,12 +146,13 @@ bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, 
     {
       for (q=0;(q<n)&&(q<sn);q++)
       {
-        dst[q+p*m] = src[q+p*sm];
+        dst[q+p*n] = src[q+p*sn];
       }
-      for (;q<n;q++) dst[q+p*m] = 0.0;
+      for (;q<n;q++) dst[q+p*n] = 0.0;
     }
     for (;p<m;p++)
-      for (q=0;q<n;q++) dst[q+p*m]= 0.0;
+      for (q=0;q<n;q++) dst[q+p*n]= 0.0;
+   
     return (true);
   }
   
@@ -212,6 +214,18 @@ bool NumericAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHan
   int *rr, *cc;
   double *d;
   int n,m,nnz;
+  
+  if (im.get_rep() == 0)
+  {
+    error("ReverseCuthillmcKee: No input matrix was found");
+    return (false);
+  }
+  
+  if (im->ncols() != im->nrows())
+  {
+    error("ReverseCuthillmcKee: Matrix is not square");
+    return (false);  
+  }
   
   if (im->is_sparse() == false) 
   {
@@ -385,6 +399,18 @@ bool NumericAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& ma
  int *rr, *cc;
   double *d;
   int n,m,nnz;
+
+  if (im.get_rep() == 0)
+  {
+    error("ReverseCuthillmcKee: No input matrix was found");
+    return (false);
+  }
+  
+  if (im->ncols() != im->nrows())
+  {
+    error("ReverseCuthillmcKee: Matrix is not square");
+    return (false);  
+  }
   
   if (im->is_sparse() == false) 
   {

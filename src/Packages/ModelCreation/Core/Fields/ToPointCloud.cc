@@ -109,17 +109,6 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
     // Though we can still perform the operation
     fo.set_basis_type("NoDataBasis");
   }
-
-  // Step 2: Check if algorithm is present in precompiled_ list
-
-  precompiled_.lock();
-  for (size_t p=0; p < precompiled_.size(); p++)
-  {
-    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->ToPointCloud(pr,input,output));
-  }
-  precompiled_.unlock();
-  
-  // We have now figured out the input and output type
   
   // Step 3: Build information structure for the dynamic compilation
   
@@ -195,8 +184,5 @@ bool ToPointCloudAlgo::testinput(FieldHandle input)
   return(false);
 }
 
-// We need to define static variables explicitly as they need to exist somewhere
-// independently from the class
-AlgoList<ToPointCloudAlgo> ToPointCloudAlgo::precompiled_;
 
 } // End namespace ModelCreation

@@ -26,91 +26,63 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldBoundary.h>
+#include <Packages/ModelCreation/Core/Fields/LinkToCompGridByDomain.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle& mapping)
+bool LinkToCompGridByDomainAlgo::LinkToCompGridByDomain(ProgressReporter *pr, FieldHandle input, MatrixHandle NodeLink, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom)
 {
   if (input.get_rep() == 0)
   {
-    pr->error("FieldBoundary: No input field");
+    pr->error("LinkToCompGridByDomain: No input field");
     return (false);
   }
 
   // no precompiled version available, so compile one
 
   FieldInformation fi(input);
-  FieldInformation fo(input);
   
   if (fi.is_nonlinear())
   {
-    pr->error("FieldBoundary: This function has not yet been defined for non-linear elements");
+    pr->error("LinkToCompGridByDomain: This function has not yet been defined for non-linear elements");
     return (false);
   }
-  
+
   if (!(fi.is_constantdata()))
   {
-    pr->error("FieldBoundary: This function needs a compartment definition on the elements (constant element data)");
-    return (false);    
+    pr->error("LinkToCompGridByDomain: The field needs to have data assigned to the elements");
+    return (false);   
   }
-  
+   
   if (!(fi.is_volume()||fi.is_surface()||fi.is_curve()))
   {
-    pr->error("FieldBoundary: this function is only defined for curve, surface and volume data");
+    pr->error("LinkToCompGridByDomain: this function is only defined for curve, surface and volume data");
     return (false);
   }
-  
-  std::string mesh_type = fi.get_mesh_type();
-  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh")||(mesh_type == "HexVolMesh"))
-  {
-    fo.set_mesh_type("QuadSurfMesh");
-  }
-  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "TriSurfMesh"))
-  {
-    fo.set_mesh_type("CurveMesh");
-  }
-  else if (mesh_type == "TetVolMesh")
-  {
-    fo.set_mesh_type("TriSurfMesh");
-  }
-  else if ((mesh_type == "CurveMesh")||(mesh_type == "StructCurveMesh")||(mesh_type == "ScanlineMesh"))
-  {
-    fo.set_mesh_type("PointCloudMesh");
-  }
-  else
-  {
-    pr->error("No method available for mesh: " + mesh_type);
-    return (false);
-  }
-
-  // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "FieldBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
-    "FieldBoundaryAlgo","FieldBoundaryAlgoT",
-    fi.get_field_name() + "," + fo.get_field_name());
+    "LinkToCompGridByDomain."+fi.get_field_filename()+".",
+    "LinkToCompGridByDomainAlgo","LinkToCompGridByDomainAlgoT",
+    fi.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
   ci->add_namespace("SCIRun");
   
   fi.fill_compile_info(ci);
-  fo.fill_compile_info(ci);
   
   // Handle dynamic compilation
-  SCIRun::Handle<FieldBoundaryAlgo> algo;
+  SCIRun::Handle<LinkToCompGridByDomainAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->FieldBoundary(pr,input,output,mapping));
+  return(algo->LinkToCompGridByDomain(pr,input,NodeLink,GeomToComp,CompToGeom));
 }
-
 
 } // End namespace ModelCreation

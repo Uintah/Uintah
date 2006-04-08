@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
-
-<!--
+/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -29,39 +24,50 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
--->
+*/
 
-<component name="SplitFieldByElementData" category="FieldsCreate">
-  <overview>
-    <authors>
-      <author>Jeroen Stinstra</author>
-    </authors>
-    <summary>
-      This module uses the data at the elements to split the mesh into mesh segements that all have the same element data.
-    </summary>
-    <description>
-      <p>
-      This module uses the data at the elements to split the mesh into mesh 
-      segements that all have the same element data.  Where two elements with 
-      different values at the elements meet the nodes are split into two nodes 
-      and the elements are unlinked. The result of this module is a field in 
-      which all the elements are only linked to elements with the same value.
-      </p>
-    </description>
-  </overview>
-  <io>
-    <inputs lastportdynamic="no">
-      <port>
-        <name>Field</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-    </inputs>
-    <outputs>
-      <port>
-        <name>SplitField</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-    </outputs>
-  </io>
-</component>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+
+namespace ModelCreation {
+
+using namespace SCIRun;
+
+class LinkToCompGridByDomain : public Module {
+public:
+  LinkToCompGridByDomain(GuiContext*);
+  virtual void execute();
+};
+
+
+DECLARE_MAKER(LinkToCompGridByDomain)
+LinkToCompGridByDomain::LinkToCompGridByDomain(GuiContext* ctx)
+  : Module("LinkToCompGridByDomain", ctx, Source, "FiniteElements", "ModelCreation")
+{
+}
+
+void LinkToCompGridByDomain::execute()
+{
+  MatrixHandle NodeLink;
+  FieldHandle Geometry;
+  MatrixHandle GeomToComp, CompToGeom;
+  
+  if (!(get_input_handle("Field",Geometry,true))) return;
+  if (!(get_input_handle("NodeLink",NodeLink,true))) return;
+  
+  FieldsAlgo algo(this);
+  algo.LinkToCompGridByDomain(Geometry,NodeLink,GeomToComp,CompToGeom);
+
+  send_output_handle("GeomToComp",GeomToComp,true);
+  send_output_handle("CompToGeom",CompToGeom,true);
+}
+
+} // End namespace ModelCreation
+
 

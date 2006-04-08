@@ -27,6 +27,7 @@ SRCS     += \
 	$(SRCDIR)/SelectByFieldsData.cc\
 	$(SRCDIR)/SignedDistanceToField.cc\
 	$(SRCDIR)/MappingMatrixToField.cc\
+	$(SRCDIR)/TriSurfPhaseFilter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

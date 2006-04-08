@@ -21,7 +21,7 @@
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>DomainLink</name>
+        <name>ElemLink</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>

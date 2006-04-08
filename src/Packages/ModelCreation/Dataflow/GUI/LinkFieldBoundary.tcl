@@ -1,4 +1,4 @@
-itcl_class ModelCreation_FiniteElements_LinkFieldBoundary {
+itcl_class ModelCreation_FieldsGeometry_LinkFieldBoundary {
     inherit Module
     constructor {config} {
         set name LinkFieldBoundary

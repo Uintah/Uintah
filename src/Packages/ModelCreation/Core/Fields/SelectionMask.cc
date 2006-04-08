@@ -99,10 +99,10 @@ bool SelectionMask::create(SCIRun::MatrixHandle& handle,size_t size)
     {
       if (data[i] > maxind) maxind = data[i];
     }
-    size = static_cast<int>(maxind);
+    size = static_cast<int>(maxind)+1;
   }
   
-  create(static_cast<size_t>(size+1));
+  create(static_cast<size_t>(size));
   
   int idx;  
   for (int i=0; i<s; i++)
