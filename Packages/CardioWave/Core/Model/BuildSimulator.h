@@ -26,40 +26,40 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef PACAKGES_CARDIOWAVE_CORE_XML_MEMBRANE_H
-#define PACAKGES_CARDIOWAVE_CORE_XML_MEMBRANE_H 1
 
+#ifndef PACKAGES_CARDIOWAVE_CORE_MODEL_MODELALGO_H
+#define PACKAGES_CARDIOWAVE_CORE_MODEL_MODELALGO_H 1
+
+#include <Core/Util/AlgoLibrary.h>
+
+#include <Core/Bundle/Bundle.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/DenseMatrix.h>
+
+#include <Dataflow/Network/Module.h>
+#include <Packages/CardioWave/Core/Model/BuildMembraneTable.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <list>
+#include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 namespace CardioWave {
 
-class MembraneItem {
+using namespace SCIRun;
+using namespace ModelCreation;
+
+class ModelAlgo : public AlgoLibrary {
+
   public:
-    std::string membranename;
-    std::string nodetype;
-    std::string file;
-    std::string parameters;
-    std::string description;
-};
+    ModelAlgo(ProgressReporter* pr); // normal case
 
-typedef std::vector<MembraneItem> MembraneList;
+    bool DMDBuildDomain(FieldHandle elementtype, FieldHandle conductivity, std::vector<FieldHandle> membrane, MatrixHandle& femmatrix, MatrixHandle& volvec, MatrixHandle& nodetype);    
+    bool DMDBuildSimulator(BundleHandle Model, std::string filename);
+    bool DMDBuildMembraneTable(FieldHandle elementtype, FieldHandle membranemodel, MembraneTableList& table);
 
-class MembraneXML {
-public:
-  MembraneXML();
-  
-  std::string         get_default_name();
-  std::vector<std::string> get_names();
-  MembraneItem        get_membrane(std::string name);
 
-private:
-
-  bool parse_xml_files();
-  bool add_file(std::string filename);
-  
-  std::string   default_name_;
-  MembraneList list_;
 };
 
 }

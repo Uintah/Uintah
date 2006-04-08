@@ -26,56 +26,71 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Packages/CardioWave/Core/Model/ModelAlgo.h>
+
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-
-#include <Core/Bundle/Bundle.h>
-#include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/BundlePort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class DMDCreateDomain : public Module {
+class BuildMembraneTable : public Module {
 public:
-  DMDCreateDomain(GuiContext*);
+  BuildMembraneTable(GuiContext*);
+
+  virtual ~BuildMembraneTable();
+
   virtual void execute();
 
+  virtual void tcl_command(GuiArgs&, void*);
 };
 
-DECLARE_MAKER(DMDCreateDomain)
 
-DMDCreateDomain::DMDCreateDomain(GuiContext* ctx)
-  : Module("DMDCreateDomain", ctx, Source, "DiscreteMultiDomain", "CardioWave")
+DECLARE_MAKER(BuildMembraneTable)
+BuildMembraneTable::BuildMembraneTable(GuiContext* ctx)
+  : Module("BuildMembraneTable", ctx, Source, "Model", "CardioWave")
 {
 }
 
-void DMDCreateDomain::execute()
-{
+BuildMembraneTable::~BuildMembraneTable(){
+}
 
-  FieldHandle Conductivity;
+void BuildMembraneTable::execute()
+{
   FieldHandle ElementType;
-  MatrixHandle ConductivityTable;
+  FieldHandle MembraneModel;
+  MatrixHandle CompToGeom;
   MatrixHandle NodeLink;
   MatrixHandle ElemLink;
+  MatrixHandle Table;
+  MatrixHandle MappingMatrix;
   
-  if (!(get_input_handle("Conductivity",Conductivity,true))) return;
   if (!(get_input_handle("ElementType",ElementType,true))) return;
-
-  get_input_handle("ConductivityTable",ConductivityTable,false); 
-  get_input_handle("NodeLink",NodeLink,false);
+  if (!(get_input_handle("MembraneModel",MembraneModel,true))) return;
+  
+  get_input_handle("CompToGeom",CompToGeom,false);
   get_input_handle("ElemLink",ElemLink,false);
+  get_input_handle("NodeLink",NodeLink,false);
+  
+  MembraneTable MemTable;
+  ModelAlgo algo(this);
+  algo.DMDBuildMembraneTable(ElementType,MembraneModel,CompToGeom,NodeLink,ElemLink,MemTable,MappingMatrix);
+  algo.DMDMembraneTableToMatrix(MemTable,Table);
+  
+  send_output_handle("MembraneTable",Table,true);
+  send_output_handle("MappingMatrix",MappingMatrix,true);
 
-  BundleHandle output = scinew Bundle();
-  output->setField("Conductivity",Conductivity);
-  output->setField("ElementType",ElementType);
-  output->setMatrix("ConductivityTable",ConductivityTable);
-  output->setMatrix("NodeLink",NodeLink);
-  output->setMatrix("ElemLink",ElemLink);
+}
 
-  send_output_handle("DomainBundle",output,true);
+void
+ BuildMembraneTable::tcl_command(GuiArgs& args, void* userdata)
+{
+  Module::tcl_command(args, userdata);
 }
 
 } // End namespace CardioWave

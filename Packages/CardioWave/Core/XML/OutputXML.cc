@@ -30,7 +30,7 @@
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/OS/Dir.h>
-#include <Packages/CardioWave/Core/XML/MembraneXML.h>
+#include <Packages/CardioWave/Core/XML/OutputXML.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,12 +49,12 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-MembraneXML::MembraneXML()
+OutputXML::OutputXML()
 {
   parse_xml_files();
 }
 
-bool MembraneXML::parse_xml_files()
+bool OutputXML::parse_xml_files()
 {
   const char *srcdir = sci_getenv("SCIRUN_SRCDIR");
 
@@ -80,8 +80,8 @@ bool MembraneXML::parse_xml_files()
    closedir(dir);
   }
   
-  MembraneItem item;
-  item.membranename = "NONE";
+  OutputItem item;
+  item.name = "NONE";
   list_.push_back(item);
   
   for (size_t p = 0; p < files.size(); p++)
@@ -92,7 +92,7 @@ bool MembraneXML::parse_xml_files()
   return (true);
 }
 
-bool MembraneXML::add_file(std::string filename)
+bool OutputXML::add_file(std::string filename)
 {
 
   LIBXML_TEST_VERSION;
@@ -120,23 +120,19 @@ bool MembraneXML::add_file(std::string filename)
   
   for (; node != 0; node = node->next) 
   {
-    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("membrane")) 
+    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("output")) 
     {
-      MembraneItem item;
+      OutputItem item;
       xmlNodePtr inode = node->children;
       for (;inode != 0; inode = inode->next)
       {
         if (std::string(to_char_ptr(inode->name)) == std::string("name"))
         {
-          item.membranename = get_serialized_children(inode);
+          item.name = get_serialized_children(inode);
         }
         if (std::string(to_char_ptr(inode->name)) == std::string("file"))
         {
           item.file = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("nodetype"))
-        {
-          item.nodetype = get_serialized_children(inode);
         }
         if (std::string(to_char_ptr(inode->name)) == std::string("parameters"))
         {
@@ -150,7 +146,7 @@ bool MembraneXML::add_file(std::string filename)
       list_.push_back(item);
     } 
     
-    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("defaultmembrane"))
+    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("defaultoutput"))
     {
       xmlNodePtr inode = node->children;
       for (;inode != 0; inode = inode->next)
@@ -168,23 +164,23 @@ bool MembraneXML::add_file(std::string filename)
   xmlCleanupParser();
 }
 
-std::vector<std::string> MembraneXML::get_names()
+std::vector<std::string> OutputXML::get_names()
 {
   std::vector<std::string> names(list_.size());
-  for (size_t p=0; p < names.size();p++) names[p] = list_[p].membranename;
+  for (size_t p=0; p < names.size();p++) names[p] = list_[p].name;
   return (names);
 }
 
-std::string MembraneXML::get_default_name()
+std::string OutputXML::get_default_name()
 {
   if (default_name_.size()) return(default_name_);
   return ("NONE");
 }
 
-MembraneItem MembraneXML::get_membrane(std::string name)
+OutputItem OutputXML::get_output(std::string name)
 {
-  MembraneItem item;
-  for (size_t p=0; p < list_.size();p++) if(list_[p].membranename == name) item = list_[p];
+  OutputItem item;
+  for (size_t p=0; p < list_.size();p++) if(list_[p].name == name) item = list_[p];
   return (item);
 }
 

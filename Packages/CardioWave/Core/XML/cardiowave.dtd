@@ -63,6 +63,17 @@
 <!ELEMENT nwsolver    (name, file+, parameters, description?)>
 <!ELEMENT cwtimestep  (name, file+, parameters, description?)>
 <!ELEMENT nwtimestep  (name, file+, parameters, description?)>
+<!ELEMENT cardiowave  (file+, parameters, description?)>
+<!ELEMENT neurowave   (file+, parameters, description?)>
+<!ELEMENT output      (name, file+, parameters, description?)>
+
+<!ELEMENT defaultmembrane (name)>
+<!ELEMENT defaultsynapse  (name)>
+<!ELEMENT defaultcwsolver (name)>
+<!ELEMENT defaultnwsolver (name)>
+<!ELEMENT defaultcwtimestep (name)>
+<!ELEMENT defaultnwtimestep (name)>
+<!ELEMENT defaultoutput   (name)>
 
 <!ELEMENT name %Inline;>
 <!ELEMENT file %filename;>

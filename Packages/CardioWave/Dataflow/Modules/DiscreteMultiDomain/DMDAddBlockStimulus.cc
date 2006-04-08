@@ -64,6 +64,7 @@ private:
   GuiDouble  guistart_;
   GuiDouble  guiend_;
   GuiInt     guicurrentdensity_;
+  GuiInt     guiuseelements_;
 };
 
 
@@ -75,55 +76,61 @@ DMDAddBlockStimulus::DMDAddBlockStimulus(GuiContext* ctx)
     guicurrent_(get_ctx()->subVar("stim-current")),
     guistart_(get_ctx()->subVar("stim-start")),
     guiend_(get_ctx()->subVar("stim-end")),
-    guicurrentdensity_(get_ctx()->subVar("stim-is-current-density"))
+    guicurrentdensity_(get_ctx()->subVar("stim-is-current-density")),
+    guiuseelements_(get_ctx()->subVar("stim-useelements"))
 {
 }
 
 void DMDAddBlockStimulus::execute()
 {
-  ModelCreation::ConverterAlgo mc(this);
-
-  BundleIPort* stimulusbundle_iport = dynamic_cast<BundleIPort*>(get_input_port(0));
-  if (stimulusbundle_iport == 0)
-  {
-    error("Could not find stimulus bundle input port");
-    return;
-  }
-  
-  int stimulus_num = 0;
-  
   BundleHandle StimulusBundle;
-  BundleHandle Stimulus;
+  FieldHandle Geometry;
+  MatrixHandle Domain;
+  MatrixHandle Current;
+  MatrixHandle Start;
+  MatrixHandle End;
+  MatrixHandle FieldDensity;
   
-  if (stimulusbundle_iport->get(StimulusBundle))
-  {
-    // In case we already have a few other stimuli lined up
-    
-    // Determine the nodetype numbers already used.
+  // required ones
+  if(!(get_input_handle("Geometry",Geometry,true))) return;
+  // optional ones
+  get_input_handle("StimulusBundle",StimulusBundle,false);
+  get_input_handle("Domain",Domain,false);
+  get_input_handle("Current",Current,false);
+  get_input_handle("Start",Start,false);
+  get_input_handle("End",End,false);
 
-    std::ostringstream oss;
-    oss << "stimulus_" << stimulus_num;
-    while (StimulusBundle->isBundle(oss.str()))
-    {
-      stimulus_num++;
-      oss.clear();
-      oss << "stimulus_" << stimulus_num;
-    }
-  }
-  else
-  {
-    // Create a new output bundle
+  ModelCreation::ConverterAlgo mc(this);
+  double val;
+
+  if (mc.MatrixToDouble(Domain,val)) guidomain_.set(val);
+  if (mc.MatrixToDouble(Current,val)) guicurrent_.set(val);
+  if (mc.MatrixToDouble(Start,val)) guistart_.set(val);      
+  if (mc.MatrixToDouble(End,val)) guiend_.set(val);  
   
+  if (StimulusBundle.get_rep() == 0)
+  {
     StimulusBundle = scinew Bundle();
     if (StimulusBundle.get_rep() == 0)
     {
       error("Could not allocate new stimulus bundle");
       return;
-    } 
+    }
   }
 
-  // Add a new bundle to the bundle with the data
-  // from this module
+
+  
+  int stimulus_num = 0;
+  std::ostringstream oss;
+  oss << "Stimulus_" << stimulus_num;
+  while (StimulusBundle->isBundle(oss.str()))
+  {
+    stimulus_num++;
+    oss.clear();
+    oss << "Stimulus_" << stimulus_num;
+  }
+
+  BundleHandle Stimulus;
   Stimulus = scinew Bundle();
   if (Stimulus.get_rep() == 0)
   {
@@ -131,136 +138,38 @@ void DMDAddBlockStimulus::execute()
     return;
   }
   
-  std::ostringstream oss;
-  oss << "stimulus_" << stimulus_num; 
+  oss.clear();
+  oss << "Stimulus_" << stimulus_num; 
   StimulusBundle->setBundle(oss.str(),Stimulus);
     
-  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(get_input_port(1));
-  if (geometryport == 0)
-  {
-    error("Could not find Stimulus Geometry port");
-    return;
-  }
+  Stimulus->setField("Geometry",Geometry);
 
-  FieldHandle Geometry;
-  geometryport->get(Geometry);
-  
-  if (Geometry.get_rep() == 0)
-  {
-    error("Stimulus Geometry field is empty");
-    return;  
-  }
-
-  Stimulus->setField("field",Geometry);
-
-
-  MatrixHandle Domain;
-  MatrixHandle Current;
-  MatrixHandle Start;
-  MatrixHandle End;
-  MatrixHandle FieldDensity;
-  MatrixIPort* matrix_port;
-
-  double val;
-  
-  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(1)))
-  {
-    error("Could not find Stimulus Domain port");
-    return;
-  }
-
-  matrix_port->get(Domain);
-  if (Domain.get_rep())
-  {
-    if (mc.MatrixToDouble(Domain,val))
-    {
-      guidomain_.set(val);
-    }    
-  }
-
-  val = guidomain_.get();
-  mc.DoubleToMatrix(val,Domain); 
-
-
-  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(2)))
-  {
-    error("Could not find Stimulus Current port");
-    return;
-  }
-
-  matrix_port->get(Current);
-  if (Current.get_rep())
-  {
-    if (mc.MatrixToDouble(Current,val))
-    {
-      guidomain_.set(val);
-    }    
-  }
-
-  val = guidomain_.get();
-  mc.DoubleToMatrix(val,Current); 
+  val = guidomain_.get(); mc.DoubleToMatrix(val,Domain); 
+  val = guidomain_.get(); mc.DoubleToMatrix(val,Current); 
+  val = guistart_.get(); mc.DoubleToMatrix(val,Start); 
+  val = guiend_.get(); mc.DoubleToMatrix(val,End); 
  
-  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(3)))
-  {
-    error("Could not find Stimulus Start port");
-    return;
-  }
-
-  matrix_port->get(Current);
-  if (Start.get_rep())
-  {
-    if (mc.MatrixToDouble(Start,val))
-    {
-      guistart_.set(val);
-    }    
-  }
-
-  val = guistart_.get();
-  mc.DoubleToMatrix(val,Start); 
- 
-  if (matrix_port = dynamic_cast<MatrixIPort*>(get_input_port(4)))
-  {
-    error("Could not find Stimulus End port");
-    return;
-  }
-
-  matrix_port->get(End);
-  if (End.get_rep())
-  {
-    if (mc.MatrixToDouble(End,val))
-    {
-      guiend_.set(val);
-    }    
-  }
-
-  val = guiend_.get();
-  mc.DoubleToMatrix(val,End); 
- 
-  int fielddensity;
-  fielddensity = guicurrentdensity_.get();
+  int fielddensity = guicurrentdensity_.get();
   mc.IntToMatrix(fielddensity,FieldDensity); 
 
-  Stimulus->setMatrix("domain",Domain);
-  Stimulus->setMatrix("current",Current);
-  Stimulus->setMatrix("start",Start);
-  Stimulus->setMatrix("end",End);
-  Stimulus->setMatrix("fielddensity",FieldDensity);
+  MatrixHandle UseElements;
+  int useelements = guiuseelements_.get();
+  mc.IntToMatrix(useelements,UseElements);
+
+  Stimulus->setMatrix("Domain",Domain);
+  Stimulus->setMatrix("Current",Current);
+  Stimulus->setMatrix("Start",Start);
+  Stimulus->setMatrix("End",End);
+  Stimulus->setMatrix("FieldDensity",FieldDensity);
+  Stimulus->setMatrix("UseElements",UseElements);
 
   StringHandle SourceFile = scinew String("StimFile.cc ");
-  Stimulus->setString("sourcefile",SourceFile);
+  Stimulus->setString("SourceFile",SourceFile);
 
   StringHandle Parameters = scinew String("");
-  Stimulus->setString("parameters",Parameters);
+  Stimulus->setString("Parameters",Parameters);
 
-
-  if (StimulusBundle.get_rep())
-  {
-    BundleOPort* oport = dynamic_cast<BundleOPort*>(get_output_port(0));
-    if (oport)
-    {
-      oport->send(StimulusBundle);
-    }  
-  }
+  send_output_handle("StimulusBundle",StimulusBundle,true);
 }
 
 } // End namespace CardioWave

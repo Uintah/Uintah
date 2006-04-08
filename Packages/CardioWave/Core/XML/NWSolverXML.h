@@ -26,32 +26,31 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef PACAKGES_CARDIOWAVE_CORE_XML_MEMBRANE_H
-#define PACAKGES_CARDIOWAVE_CORE_XML_MEMBRANE_H 1
+#ifndef PACAKGES_CARDIOWAVE_CORE_XML_NWSOLVER_H
+#define PACAKGES_CARDIOWAVE_CORE_XML_NWSOLVER_H 1
 
 #include <string>
 #include <list>
 
 namespace CardioWave {
 
-class MembraneItem {
+class NWSolverItem {
   public:
-    std::string membranename;
-    std::string nodetype;
+    std::string name;
     std::string file;
     std::string parameters;
     std::string description;
 };
 
-typedef std::vector<MembraneItem> MembraneList;
+typedef std::vector<NWSolverItem> NWSolverList;
 
-class MembraneXML {
+class NWSolverXML {
 public:
-  MembraneXML();
+  NWSolverXML();
   
   std::string         get_default_name();
   std::vector<std::string> get_names();
-  MembraneItem        get_membrane(std::string name);
+  NWSolverItem        get_nwsolver(std::string name);
 
 private:
 
@@ -59,7 +58,7 @@ private:
   bool add_file(std::string filename);
   
   std::string   default_name_;
-  MembraneList list_;
+  NWSolverList list_;
 };
 
 }

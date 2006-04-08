@@ -57,9 +57,10 @@ public:
   virtual void execute();
 
 private:  
-  // TCL tools
+  GuiInt    guiuseelements_;
   GuiInt    guiusefieldvalue_;
   GuiDouble guireferencevalue_;
+  GuiDouble guireferencedomain_;
 };
 
 
@@ -68,126 +69,108 @@ DECLARE_MAKER(DMDAddReference)
 DMDAddReference::DMDAddReference(GuiContext* ctx)
   : Module("DMDAddReference", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
     guiusefieldvalue_(get_ctx()->subVar("usefieldvalue")),
-    guireferencevalue_(get_ctx()->subVar("referencevalue"))
+    guireferencevalue_(get_ctx()->subVar("referencevalue")),
+    guireferencedomain_(get_ctx()->subVar("referencedomain")),
+    guiuseelements_(get_ctx()->subVar("useelements"))
 {
 }
 
 void DMDAddReference::execute()
 {
-  ModelCreation::ConverterAlgo mc(this);
-
-  BundleIPort* referencebundle_iport = dynamic_cast<BundleIPort*>(get_input_port(0));
-  if (referencebundle_iport == 0)
-  {
-    error("Could not find reference bundle input port");
-    return;
-  }
-  
-  int reference_num = 0;
-  
+  // Make sure we have a reference bundle
   BundleHandle ReferenceBundle;
-  BundleHandle Reference;
+  FieldHandle  Geometry;
+  MatrixHandle RefVal;
+  MatrixHandle RefDomain;
   
-  if (referencebundle_iport->get(ReferenceBundle))
-  {
-    // In case we already have a few other membranes lined up
-    
-    // Determine the nodetype numbers already used.
-
-    std::ostringstream oss;
-    oss << "reference_" << reference_num;
-    while (ReferenceBundle->isBundle(oss.str()))
-    {
-      reference_num++;
-      oss.clear();
-      oss << "reference_" << reference_num;
-    }
-  }
-  else
-  {
-    // Create a new output bundle
+  // required ones
+  if (!(get_input_handle("Geometry",Geometry,true))) return;
+  // optional ones
+  get_input_handle("ReferenceBundle",ReferenceBundle,false);
+  get_input_handle("Value",RefVal,false);
+  get_input_handle("Domain",RefDomain,false);
   
+  if (ReferenceBundle.get_rep() == 0) 
+  {
     ReferenceBundle = scinew Bundle();
     if (ReferenceBundle.get_rep() == 0)
     {
       error("Could not allocate new reference bundle");
       return;
     } 
+  } 
+  
+  // Try to find which reference numbers have already been taken
+  int reference_num = 0;
+  std::ostringstream oss;
+  oss << "Reference_" << reference_num;
+  while (ReferenceBundle->isBundle(oss.str()))
+  {
+    reference_num++;
+    oss.clear();
+    oss << "Reference_" << reference_num;
   }
-
+  
   // Add a new bundle to the bundle with the data
   // from this module
-  Reference = scinew Bundle();
+  BundleHandle Reference = scinew Bundle();
   if (Reference.get_rep() == 0)
   {
     error("Could not allocate new reference bundle");
     return;
   }
-  
-  std::ostringstream oss;
-  oss << "reference_" << reference_num; 
+
+  // Link new Bundle to main Bundle
+  oss.clear();
+  oss << "Reference_" << reference_num; 
   ReferenceBundle->setBundle(oss.str(),Reference);
-    
-  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(get_input_port(1));
-  if (geometryport == 0)
+
+  ModelCreation::ConverterAlgo mc(this);
+
+  // fill out bundle with data
+  Reference->setField("Geometry",Geometry);
+
+  bool usefieldvalue = static_cast<bool>(guiusefieldvalue_.get());
+
+  // If user wants to set the reference value explicitly
+  if (usefieldvalue == false)
   {
-    error("Could not find Reference Geometry port");
-    return;
-  }
-
-  FieldHandle Geometry;
-  geometryport->get(Geometry);
-  
-  if (Geometry.get_rep() == 0)
-  {
-    error("Reference Geometry field is empty");
-    return;  
-  }
-
-  Reference->setField("field",Geometry);
- 
-  bool usefieldvalue = guiusefieldvalue_.get();
-
-  if (usefieldvalue == true)
-  {
-    MatrixIPort* referenceval_port = dynamic_cast<MatrixIPort*>(get_input_port(2));
-    if (referenceval_port == 0)
-    {
-      error("Could not find Reference Value input port");
-      return;
-    } 
-
-    MatrixHandle RefVal;
-    referenceval_port->get(RefVal);  
-
     double referencevalue = 0.0;
     if (RefVal.get_rep())
     {
       mc.MatrixToDouble(RefVal,referencevalue);
     	guireferencevalue_.set(referencevalue);
     }
-
     referencevalue = guireferencevalue_.get();
     mc.DoubleToMatrix(referencevalue,RefVal);
-
-    Reference->setMatrix("value",RefVal);
+    Reference->setMatrix("Value",RefVal);
   }
-  
+
+  double referencedomain = 0.0;
+  if (RefDomain.get_rep())
+  {
+    mc.MatrixToDouble(RefDomain,referencedomain);
+    guireferencedomain_.set(referencedomain);
+  }
+  referencedomain = guireferencedomain_.get();
+  mc.DoubleToMatrix(referencedomain,RefDomain);
+  Reference->setMatrix("Domain",RefDomain);
+
+  bool useelement = static_cast<bool>(guiuseelements_.get());
+  if (useelement)
+  {
+    MatrixHandle UseElement;
+    mc.DoubleToMatrix(1.0,UseElement);
+    Reference->setMatrix("UseElement",UseElement);
+  }
   
   StringHandle SourceFile = scinew String("BCondZero.cc ");
-  Reference->setString("sourcefile",SourceFile);
+  Reference->setString("SourceFile",SourceFile);
 
   StringHandle Parameters = scinew String("");
-  Reference->setString("parameters",Parameters);
+  Reference->setString("Parameters",Parameters);
 
-  if (ReferenceBundle.get_rep())
-  {
-    BundleOPort* oport = dynamic_cast<BundleOPort*>(get_output_port(0));
-    if (oport)
-    {
-      oport->send(ReferenceBundle);
-    }  
-  }
+  send_output_handle("ReferenceBundle",ReferenceBundle,true);
 }
 
 

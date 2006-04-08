@@ -706,15 +706,15 @@ void TimeDataFile::getcolnrrd(SCIRun::NrrdDataHandle& mh,int colstart,int colend
   if (nrrd == 0) throw TimeDataFileException("Could not allocate nrrd object");
   SCIRun::NrrdDataHandle handle = nrrd;
 
-  nrrd->nrrd = nrrdNew();
-  if (nrrd->nrrd == 0) throw TimeDataFileException("Could not allocate nrrd");
+  nrrd->nrrd_ = nrrdNew();
+  if (nrrd->nrrd_ == 0) throw TimeDataFileException("Could not allocate nrrd");
 
   size_t size[NRRD_DIM_MAX];
   size[0] = nrows_;
   size[1] = numcols;
-  nrrdAlloc_nva(nrrd->nrrd,ntype_,2,size);
+  nrrdAlloc_nva(nrrd->nrrd_,ntype_,2,size);
 
-  if (nrrd->nrrd->data == 0) throw TimeDataFileException("Could not allocate nrrd");
+  if (nrrd->nrrd_->data == 0) throw TimeDataFileException("Could not allocate nrrd");
 
 
   double spacings[NRRD_DIM_MAX];
@@ -725,11 +725,11 @@ void TimeDataFile::getcolnrrd(SCIRun::NrrdDataHandle& mh,int colstart,int colend
   maxs[0] = static_cast<double>(nrows_);
   maxs[1] = static_cast<double>(numcols);
 
-  nrrdAxisInfoSet_nva(nrrd->nrrd,nrrdAxisInfoSpacing, spacings);
-  nrrdAxisInfoSet_nva(nrrd->nrrd,nrrdAxisInfoMin, mins);  
-  nrrdAxisInfoSet_nva(nrrd->nrrd,nrrdAxisInfoMax, maxs);
+  nrrdAxisInfoSet_nva(nrrd->nrrd_,nrrdAxisInfoSpacing, spacings);
+  nrrdAxisInfoSet_nva(nrrd->nrrd_,nrrdAxisInfoMin, mins);  
+  nrrdAxisInfoSet_nva(nrrd->nrrd_,nrrdAxisInfoMax, maxs);
   
-  char* buffer = reinterpret_cast<char *>(nrrd->nrrd->data);
+  char* buffer = reinterpret_cast<char *>(nrrd->nrrd_->data);
 
   int c = colstart;
   while(c<=colend)
@@ -1058,15 +1058,15 @@ void TimeDataFile::getrownrrd(SCIRun::NrrdDataHandle& mh,int rowstart,int rowend
   if (nrrd == 0) throw TimeDataFileException("Could not allocate nrrd object");
   SCIRun::NrrdDataHandle handle = nrrd;
 
-  nrrd->nrrd = nrrdNew();
-  if (nrrd->nrrd == 0)  throw TimeDataFileException("Could not allocate nrrd");
+  nrrd->nrrd_ = nrrdNew();
+  if (nrrd->nrrd_ == 0)  throw TimeDataFileException("Could not allocate nrrd");
   
   size_t size[NRRD_DIM_MAX];
   size[0] = numrows;
   size[1] = ncols_;
-  nrrdAlloc_nva(nrrd->nrrd,ntype_,2,size);
+  nrrdAlloc_nva(nrrd->nrrd_,ntype_,2,size);
   
-  if (nrrd->nrrd->data == 0) throw TimeDataFileException("Could not allocate nrrd");
+  if (nrrd->nrrd_->data == 0) throw TimeDataFileException("Could not allocate nrrd");
   
   double spacings[NRRD_DIM_MAX];
   spacings[0] = 1.0; spacings[1] = 1.0;
@@ -1076,11 +1076,11 @@ void TimeDataFile::getrownrrd(SCIRun::NrrdDataHandle& mh,int rowstart,int rowend
   maxs[0] = static_cast<double>(numrows);
   maxs[1] = static_cast<double>(ncols_);
   
-  nrrdAxisInfoSet_nva(nrrd->nrrd,nrrdAxisInfoSpacing,spacings);
-  nrrdAxisInfoSet_nva(nrrd->nrrd,nrrdAxisInfoMin,mins);  
-  nrrdAxisInfoSet_nva(nrrd->nrrd,nrrdAxisInfoMax,maxs);
+  nrrdAxisInfoSet_nva(nrrd->nrrd_,nrrdAxisInfoSpacing,spacings);
+  nrrdAxisInfoSet_nva(nrrd->nrrd_,nrrdAxisInfoMin,mins);  
+  nrrdAxisInfoSet_nva(nrrd->nrrd_,nrrdAxisInfoMax,maxs);
   
-  char* buffer = reinterpret_cast<char *>(nrrd->nrrd->data);  
+  char* buffer = reinterpret_cast<char *>(nrrd->nrrd_->data);  
   
   int c =0;
   while (c<ncols_)

@@ -30,7 +30,7 @@
 #ifndef PACKAGES_CARDIOWAVE_CORE_MODEL_MODELALGO_H
 #define PACKAGES_CARDIOWAVE_CORE_MODEL_MODELALGO_H 1
 
-#include <Core/Util/AlgoLibrary.h>
+#include <Core/Algorithms/Util/AlgoLibrary.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
@@ -39,6 +39,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Packages/CardioWave/Core/Model/BuildMembraneTable.h>
+#include <Packages/CardioWave/Core/Model/BuildStimulusTable.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -48,17 +49,25 @@
 namespace CardioWave {
 
 using namespace SCIRun;
-using namespace ModelCreation;
 
 class ModelAlgo : public AlgoLibrary {
 
   public:
     ModelAlgo(ProgressReporter* pr); // normal case
 
-    bool DMDBuildDomain(FieldHandle elementtype, FieldHandle conductivity, std::vector<FieldHandle> membrane, MatrixHandle& femmatrix, MatrixHandle& volvec, MatrixHandle& nodetype);    
-    bool DMDBuildSimulator(BundleHandle Model, std::string filename);
-    bool DMDBuildMembraneTable(FieldHandle elementtype, FieldHandle membranemodel, MembraneTableList& table);
+    bool DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& Table, MatrixHandle& MappingMatrix);
+    bool DMDMembraneTableToMatrix(MembraneTable MemTable, MatrixHandle& MemMatrix);
 
+    bool DMDBuildStimulusTable(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom, double domain, StimulusTable& Table);
+    bool DMDBuildStimulusTableByElement(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom, double domain, StimulusTable& Table);
+    bool DMDStimulusTableToMatrix(StimulusTable StimTable, MatrixHandle& StimulusMatrix);
+
+    bool DMDBuildReferenceTable(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom, double domain, ReferenceTable& Table);
+    bool DMDBuildReferenceTableByElement(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom, double domain, ReferenceTable& Table);
+    bool DMDReferenceTableToMatrix(ReferenceTable StimTable, MatrixHandle& ReferenceMatrix);
+
+
+    bool DMDBuildSimulator(BundleHandle Model, std::string filename);
 
 };
 

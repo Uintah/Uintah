@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
-
-<!--
+/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -29,27 +24,43 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
--->
+*/
 
-<component name="CreateParametersBundle" category="Tools">
-  <overview>
-    <authors>
-      <author>Jeroen Stinstra</author>
-    </authors>
-    <summary>
-    </summary>
-    <description>
-    </description>
-  </overview>
-  <io>
-    <inputs lastportdynamic="no">
-    </inputs>
-    <outputs>
-      <port>
-        <name>Parameters</name>
-        <datatype>SCIRun::Bundle</datatype>
-      </port>
-    </outputs>
-  </io>
-</component>
+#ifndef PACAKGES_CARDIOWAVE_CORE_XML_CWSOLVER_H
+#define PACAKGES_CARDIOWAVE_CORE_XML_CWSOLVER_H 1
 
+#include <string>
+#include <list>
+
+namespace CardioWave {
+
+class CWSolverItem {
+  public:
+    std::string name;
+    std::string file;
+    std::string parameters;
+    std::string description;
+};
+
+typedef std::vector<CWSolverItem> CWSolverList;
+
+class CWSolverXML {
+public:
+  CWSolverXML();
+  
+  std::string         get_default_name();
+  std::vector<std::string> get_names();
+  CWSolverItem        get_cwsolver(std::string name);
+
+private:
+
+  bool parse_xml_files();
+  bool add_file(std::string filename);
+  
+  std::string   default_name_;
+  CWSolverList list_;
+};
+
+}
+
+#endif

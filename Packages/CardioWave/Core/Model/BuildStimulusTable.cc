@@ -32,28 +32,28 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-bool BuildStimulusTableAlgo::BuildStimulusTable(ProgressReporter *pr,  FieldHandle domainnodetype, FieldHandle stimulus, double domaintype, bool selectbynode, StimulusTableList& stimulustablelist)
+bool BuildStimulusTableAlgo::BuildStimulusTable(ProgressReporter *pr,  FieldHandle ElementType, FieldHandle Stimulus, MatrixHandle CompToGeom, double domaintype, bool selectbynode, StimulusTable& stimulustable)
 {
-  if (domainnodetype.get_rep() == 0)
+  if (ElementType.get_rep() == 0)
   {
     pr->error("BuildStimulusTable: No domain nodetype field");
     return (false);
   }
 
-  if (stimulus.get_rep() == 0)
+  if (Stimulus.get_rep() == 0)
   {
-    pr->error("BuildStimulusTable: No stimulus model field");
+    pr->error("BuildStimulusTable: No Stimulus model field");
     return (false);
   }
 
   // no precompiled version available, so compile one
 
-  FieldInformation fi(domainnodetype);
-  FieldInformation fi2(stimulus);
+  FieldInformation fi(ElementType);
+  FieldInformation fi2(Stimulus);
   
-  if (!(fi.is_lineardata()))
+  if (!(fi.is_constantdata()))
   {
-    pr->error("BuildStimulusTable: The domain nodetype field needs to have one data value assigned to each node");
+    pr->error("BuildStimulusTable: The ElementType field needs to have one data value assigned to each element");
     return (false);
   }
   
@@ -63,7 +63,7 @@ bool BuildStimulusTableAlgo::BuildStimulusTable(ProgressReporter *pr,  FieldHand
     return (false);
   }  
 
-  if (!(fi.is_volume()||(fi.is_surface()))
+  if (!(fi.is_volume()||fi.is_surface()))
   {
     pr->error("BuildStimulusTable: The domain nodetype field needs to be a volume or surface");
     return (false);
@@ -78,15 +78,18 @@ bool BuildStimulusTableAlgo::BuildStimulusTable(ProgressReporter *pr,  FieldHand
     if (fi2.is_volume()) algotype = "BuildStimulusTableCellAlgoT";
   }
 
+  std::cout << "algotype = " << algotype << "\n";
+
+
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "BuildStimulusTable."+fi.get_field_filename()+"."+fi2.get_field_filename()+".",
+    algotype+"."+fi.get_field_filename()+"."+fi2.get_field_filename()+".",
     "BuildStimulusTableAlgo",algotype,
     fi.get_field_name()+","+fi2.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("ModelCreation");
+  ci->add_namespace("CardioWave");
   ci->add_namespace("SCIRun");
 
   fi.fill_compile_info(ci);
@@ -101,7 +104,7 @@ bool BuildStimulusTableAlgo::BuildStimulusTable(ProgressReporter *pr,  FieldHand
     return(false);
   }
 
-  return(algo->BuildStimulusTable(pr,domainnodetype,stimulus,selectbynode,stimulustable));
+  return(algo->BuildStimulusTable(pr,ElementType,Stimulus,CompToGeom,domaintype,selectbynode,stimulustable));
 }
 
 

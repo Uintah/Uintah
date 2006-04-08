@@ -86,56 +86,41 @@ DMDAddMembrane::DMDAddMembrane(GuiContext* ctx)
 
 void DMDAddMembrane::execute()
 {
-  ModelCreation::ConverterAlgo mc(this);
-
-  BundleIPort* membranebundle_iport = dynamic_cast<BundleIPort*>(get_input_port(0));
-  if (membranebundle_iport == 0)
-  {
-    error("Could not find membrane input port");
-    return;
-  }
-  
-  int membrane_nodetype = 0;
-  
   BundleHandle MembraneBundle;
   BundleHandle Membrane;
-  MatrixHandle NodeType;
+  FieldHandle  Geometry;
+  StringHandle Parameters_from_port;
   
-  if (membranebundle_iport->get(MembraneBundle))
-  {
-    // In case we already have a few other membranes lined up
-    
-    // Determine the nodetype numbers already used.
-    int numbundles = MembraneBundle->numBundles();
-    for (size_t p = 0; p< numbundles; p++)
-    {
-      Membrane = MembraneBundle->getBundle(MembraneBundle->getBundleName(p));
-      if (Membrane.get_rep())
-      {
-        NodeType = Membrane->getMatrix("nodetype");
-        if (NodeType.get_rep())
-        {
-          int nodetype;
-          if(mc.MatrixToInt(NodeType,nodetype))
-          {
-            if (nodetype >= membrane_nodetype) membrane_nodetype = nodetype + 1;
-          }
-        }
-      }
-    }
-  }
-  else
-  {
-    // Create a new output bundle
+  // required ones
+  if (!(get_input_handle("Geometry",Geometry,true))) return;
+  //optional ones
+  get_input_handle("MembraneBundle",MembraneBundle,false);
+  get_input_handle("Parameters",Parameters_from_port,false);
   
+  
+  if (MembraneBundle.get_rep() == 0)
+  {
     MembraneBundle = scinew Bundle();
     if (MembraneBundle.get_rep() == 0)
     {
       error("Could not allocate new membrane bundle");
       return;
-    } 
+    }   
   }
 
+  int membrane_num = 0;
+  std::ostringstream oss;
+  oss << "Membrane_" << membrane_num;
+  while (MembraneBundle->isBundle(oss.str()))
+  {
+    membrane_num++;
+    oss.clear();
+    oss << "Membrane_" << membrane_num;
+  }
+
+  ModelCreation::ConverterAlgo mc(this);
+
+  
   // Add a new bundle to the bundle with the data
   // from this module
   Membrane = scinew Bundle();
@@ -145,43 +130,12 @@ void DMDAddMembrane::execute()
     return;
   }
   
-  std::ostringstream oss;
-  oss << "membrane_" << membrane_nodetype; 
+  oss.clear();
+  oss << "Membrane_" << membrane_num; 
   MembraneBundle->setBundle(oss.str(),Membrane);
   
-  if(!(mc.IntToMatrix(membrane_nodetype,NodeType)))
-  {
-    error("Could not build nodetype matrix");
-    return;  
-  }
-  
-  Membrane->setMatrix("nodetype",NodeType);
-  
-  FieldIPort* geometryport = dynamic_cast<FieldIPort*>(get_input_port(1));
-  if (geometryport == 0)
-  {
-    error("Could not find Membrane Geometry port");
-    return;
-  }
-
-  FieldHandle Geometry;
-  geometryport->get(Geometry);
-  
-  if (Geometry.get_rep() == 0)
-  {
-    error("Membrane Geometry field is empty");
-    return;  
-  }
-
   Membrane->setField("geometry",Geometry);
  
-  StringIPort* paramport = dynamic_cast<StringIPort*>(get_input_port(2));
-  if (paramport == 0)
-  {
-    error("Could not find Paramerter input port");
-    return;
-  } 
-
   std::string cmd;
   cmd = get_id() + " get_param";
   get_gui()->lock();
@@ -189,25 +143,22 @@ void DMDAddMembrane::execute()
   get_gui()->unlock();
   get_ctx()->reset();
   
-  std::string paramstr;
- 
+  std::string paramstr; 
   paramstr = guimembraneparam_.get();
-  StringHandle Param_from_port;
-  paramport->get(Param_from_port);
-  if (Param_from_port.get_rep()) 
+  if (Parameters_from_port.get_rep()) 
   {
     paramstr += "\n";
-    paramstr += Param_from_port->get();
+    paramstr += Parameters_from_port->get();
     paramstr += "\n";
   }
 
   std::string membranename = guimembranename_.get();
   StringHandle MembraneName = scinew String(membranename);
-  Membrane->setString("name",MembraneName);
+  Membrane->setString("Name",MembraneName);
   
   SynapseItem item = synapsexml_.get_synapse(membranename);
   oss.clear();
-  oss << item.nodetype << " = " << membrane_nodetype << "\n";
+  oss << "\n" << item.nodetype << " = " << membrane_num << "\n";
   paramstr += oss.str();
 
   StringHandle Parameters = scinew String(paramstr);
@@ -216,22 +167,12 @@ void DMDAddMembrane::execute()
     error("Could not create parameter string");
     return;
   } 
-  
-  Membrane->setString("parameters",Parameters);
-  
-
+  Membrane->setString("Parameters",Parameters);
     
   StringHandle SourceFile = scinew String(item.sourcefile);
-  Membrane->setString("sourcefile",SourceFile);
+  Membrane->setString("SourceFile",SourceFile);
   
-  if (membranename != "")
-  {
-    BundleOPort* oport = dynamic_cast<BundleOPort*>(get_output_port(0));
-    if (oport)
-    {
-      oport->send(MembraneBundle);
-    }  
-  }
+  send_output_handle("MembraneBundle",MembraneBundle,true);
 }
 
 
@@ -239,6 +180,11 @@ void DMDAddMembrane::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() > 1)
   {
+    if (args[1] == "get_default_name")
+    {
+      std::string defaultname = synapsexml_.get_default_name();
+      guimembranename_.set(defaultname);
+    }
     if (args[1] == "get_membrane_names")
     {
       std::vector<std::string> names = synapsexml_.get_names(); 

@@ -16,6 +16,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddMembrane {
       set $this-mem-param ""
       set $this-mem-desc ""
   
+      $this-c get_default_name
     }
 
     method ui {} {
