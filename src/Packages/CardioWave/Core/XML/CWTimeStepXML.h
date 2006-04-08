@@ -26,32 +26,31 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef PACAKGES_CARDIOWAVE_CORE_XML_MEMBRANE_H
-#define PACAKGES_CARDIOWAVE_CORE_XML_MEMBRANE_H 1
+#ifndef PACAKGES_CARDIOWAVE_CORE_XML_CWTIMESTEP_H
+#define PACAKGES_CARDIOWAVE_CORE_XML_CWTIMESTEP_H 1
 
 #include <string>
 #include <list>
 
 namespace CardioWave {
 
-class MembraneItem {
+class CWTimeStepItem {
   public:
-    std::string membranename;
-    std::string nodetype;
+    std::string name;
     std::string file;
     std::string parameters;
     std::string description;
 };
 
-typedef std::vector<MembraneItem> MembraneList;
+typedef std::vector<CWTimeStepItem> CWTimeStepList;
 
-class MembraneXML {
+class CWTimeStepXML {
 public:
-  MembraneXML();
+  CWTimeStepXML();
   
   std::string         get_default_name();
   std::vector<std::string> get_names();
-  MembraneItem        get_membrane(std::string name);
+  CWTimeStepItem        get_cwtimestep(std::string name);
 
 private:
 
@@ -59,7 +58,7 @@ private:
   bool add_file(std::string filename);
   
   std::string   default_name_;
-  MembraneList list_;
+  CWTimeStepList list_;
 };
 
 }

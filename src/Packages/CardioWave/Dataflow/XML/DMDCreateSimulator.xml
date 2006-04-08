@@ -21,21 +21,35 @@
         <datatype>SCIRun::String</datatype>
       </port>
       <port>
-        <name>Domain</name>
+        <name>DomainBundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
-        <name>Membrane</name>
+        <name>MembraneBundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
-        <name>Stimulation</name>
+        <name>StimulationBundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
-        <name>Reference</name>
+        <name>ReferenceBundle</name>
         <datatype>SCIRun::Bunde</datatype>
       </port>
+      <port>
+        <name>ParameterBundle</name>
+        <datatype>SCIRun::Bunde</datatype>
+      </port>      
     </inputs>
+    <outputs>
+      <port>
+        <name>SimulationBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>VisualizationBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
   </io>
 </component>

@@ -32,15 +32,15 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MembraneTableList& membranetable)
+bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& membranetable, MatrixHandle& MappingMatrix)
 {
-  if (elementtypevol.get_rep() == 0)
+  if (ElementType.get_rep() == 0)
   {
     pr->error("BuildMembraneTable: No element type field");
     return (false);
   }
 
-  if (membranesurf.get_rep() == 0)
+  if (MembraneModel.get_rep() == 0)
   {
     pr->error("BuildMembraneTable: No membrane model field");
     return (false);
@@ -48,8 +48,8 @@ bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandl
 
   // no precompiled version available, so compile one
 
-  FieldInformation fi(elementtypevol);
-  FieldInformation fi2(membranesurf);
+  FieldInformation fi(ElementType);
+  FieldInformation fi2(MembraneModel);
   
   if (!(fi.is_constantdata()))
   {
@@ -65,7 +65,7 @@ bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandl
 
   if (!((fi.is_volume()&&fi2.is_surface())||(fi.is_surface()&&fi2.is_curve())))
   {
-    pr->error("BuildMembraneTable: The element type field and the membranesurface needs to be a volumea and a surface OR a surface and a curve");
+    pr->error("BuildMembraneTable: The element type field and the MembraneModelace needs to be a volumea and a surface OR a surface and a curve");
     return (false);
   }  
   
@@ -86,7 +86,7 @@ bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandl
     fi.get_field_name()+","+fi2.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("ModelCreation");
+  ci->add_namespace("CardioWave");
   ci->add_namespace("SCIRun");
 
   fi.fill_compile_info(ci);
@@ -101,7 +101,7 @@ bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandl
     return(false);
   }
 
-  return(algo->BuildMembraneTable(pr,elementtypevol,membranesurf,membranetable));
+  return(algo->BuildMembraneTable(pr,ElementType,MembraneModel,CompToGeom,NodeLink,ElemLink,membranetable,MappingMatrix));
 }
 
 

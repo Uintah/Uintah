@@ -31,6 +31,13 @@ SRCDIR   := Packages/CardioWave/Core/XML
 SRCS     += \
             $(SRCDIR)/MembraneXML.cc\
             $(SRCDIR)/SynapseXML.cc\
+            $(SRCDIR)/OutputXML.cc\
+            $(SRCDIR)/CWSolverXML.cc\
+            $(SRCDIR)/NWSolverXML.cc\
+            $(SRCDIR)/CWTimeStepXML.cc\
+            $(SRCDIR)/NWTimeStepXML.cc\
+            $(SRCDIR)/CardioWaveXML.cc\
+            $(SRCDIR)/NeuroWaveXML.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers Core/Util \

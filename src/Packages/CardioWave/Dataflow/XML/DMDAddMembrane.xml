@@ -16,11 +16,11 @@
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>Membrane Bundle</name>
+        <name>MembraneBundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
-        <name>Membrane Geometry</name>
+        <name>Geometry</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
@@ -28,13 +28,13 @@
         <datatype>SCIRun::String</datatype>
       </port>
       <port>
-        <name>Parameter Field</name>
+        <name>Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Membrane Bundle</name>
+        <name>MembraneBundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
     </outputs>

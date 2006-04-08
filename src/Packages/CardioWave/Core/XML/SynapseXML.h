@@ -49,6 +49,7 @@ class SynapseXML {
 public:
   SynapseXML();
   
+  std::string        get_default_name();  
   std::vector<std::string> get_names();
   SynapseItem        get_synapse(std::string name);
 
@@ -56,7 +57,8 @@ private:
 
   bool parse_xml_files();
   bool add_file(std::string filename);
-  
+
+  std::string   default_name_;
   SynapseList list_;
 };
 

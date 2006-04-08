@@ -150,6 +150,18 @@ bool SynapseXML::add_file(std::string filename)
       }
       list_.push_back(item);
     } 
+    
+    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("defaultsynapse"))
+    {
+      xmlNodePtr inode = node->children;
+      for (;inode != 0; inode = inode->next)
+      {
+        if (std::string(to_char_ptr(inode->name)) == std::string("name"))
+        {
+          default_name_ = get_serialized_children(inode);
+        }
+      }
+    }    
   }
 
   xmlFreeDoc(doc);
@@ -169,6 +181,12 @@ SynapseItem SynapseXML::get_synapse(std::string name)
   SynapseItem item;
   for (size_t p=0; p < list_.size();p++) if(list_[p].synapsename == name) item = list_[p];
   return (item);
+}
+
+std::string SynapseXML::get_default_name()
+{
+  if (default_name_.size()) return(default_name_);
+  return ("NONE");
 }
 
 } // end namespace

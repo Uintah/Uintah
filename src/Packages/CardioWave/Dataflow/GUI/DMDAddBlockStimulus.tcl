@@ -11,12 +11,14 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddBlockStimulus {
       global $this-stim-start
       global $this-stim-end
       global $this-stim-is-current-density
+      global $this-stim-uselements
       
       set $this-stim-domain 0
       set $this-stim-current 1.0
       set $this-stim-start 0.400
       set $this-stim-end 0.800
-	set $this-is-current-density 0
+      set $this-is-current-density 0
+      set $this-stim-useelements 1
   
     }
 
@@ -34,7 +36,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddBlockStimulus {
       set stim [$w.m childsite]
       pack $w.m -fill both -expand yes
 
-	label $stim.lab1 -text "Stimulus Domain (Element type)"
+      label $stim.lab1 -text "Stimulus Domain (Element type)"
       label $stim.lab2 -text "Stimulus Current (mA)"
       label $stim.lab3 -text "Stimulus Start (ms)"
       label $stim.lab4 -text "Stimulus End (ms)"
@@ -45,16 +47,18 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddBlockStimulus {
       entry $stim.en4 -textvariable $this-stim-end
 	
       checkbutton $stim.cb1 -text "Current is Current Density" -variable $this-stim-is-current-density
-
-	grid $stim.lab1 -row 0 -column 0
-	grid $stim.lab2 -row 1 -column 0
-	grid $stim.lab3 -row 2 -column 0
-	grid $stim.lab4 -row 3 -column 0
-	grid $stim.en1 -row 0 -column 1
-	grid $stim.en2 -row 1 -column 1
-	grid $stim.en3 -row 2 -column 1
-	grid $stim.en4 -row 3 -column 1
+      checkbutton $stim.cb2 -text "Define stimulus only for elements contained within geometry" -variable $this-stim-useelements
+      grid $stim.lab1 -row 0 -column 0
+      grid $stim.lab2 -row 1 -column 0
+      grid $stim.lab3 -row 2 -column 0
+      grid $stim.lab4 -row 3 -column 0
+      grid $stim.en1 -row 0 -column 1
+      grid $stim.en2 -row 1 -column 1
+      grid $stim.en3 -row 2 -column 1
+      grid $stim.en4 -row 3 -column 1
       grid $stim.cb1 -row 4 -column 0 -columnspan 2      
+      grid $stim.cb2 -row 5 -column 0 -columnspan 2      
+
 
       makeSciButtonPanel $w $w $this
       moveToCursor $w
