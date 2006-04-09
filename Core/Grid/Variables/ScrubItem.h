@@ -15,21 +15,23 @@ struct ScrubItem {
   int matl;
   const Patch* patch;
   int dw;
-  unsigned int hash;
+  size_t hash;
   int count;
   
   ScrubItem(const VarLabel* l, int m, const Patch* p, int dw) :
     label(l), matl(m), patch(p), dw(dw), count(0)
   {
-      hash = ((unsigned int) l)
-      ^ (m << 3)
-      ^ (p->getID() << 4)
-      ^ (dw << 2);
+    size_t ptr = (size_t) l;
+
+    hash = ptr ^ (m << 3) ^ (p->getID() << 4) ^ (dw << 2);
   }
+
   bool operator==(const ScrubItem& d) {
     return label == d.label && matl == d.matl && patch == d.patch && dw == d.dw;
   }
+
   static TrivialAllocator scrub_alloc;
+
   void* operator new(size_t)
   {
     return scrub_alloc.alloc();
@@ -39,7 +41,6 @@ struct ScrubItem {
   {	
     scrub_alloc.free(rp);
   }
-
 
 };
 
