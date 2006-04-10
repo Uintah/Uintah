@@ -27,19 +27,14 @@
 #
 
 
-itcl_class ModelCreation_FieldsCreate_MergeFields {
+itcl_class ModelCreation_FieldsGeometry_MergeNodes {
     inherit Module
     constructor {config} {
-        set name MergeFields
+        set name MergeNodes
         set_defaults
     }
 
     method set_defaults {} {
-      global $this-force-pointcloud
-      set    $this-force-pointcloud 0
-
-      global $this-force-nodemerge
-      set    $this-force-nodemerge 1
 
       global $this-force-matchval
       set    $this-force-matchval 0
@@ -55,15 +50,6 @@ itcl_class ModelCreation_FieldsCreate_MergeFields {
         }
 
         toplevel $w
-
-        checkbutton $w.fpc -text "Force PointCloudField as output" \
-          -variable $this-force-pointcloud
-        pack $w.fpc
-
-        checkbutton $w.fnm -text "Merge duplicate nodes" \
-          -variable $this-force-nodemerge
-        pack $w.fnm
-
         checkbutton $w.fnm -text "Only merge nodes with same value" \
           -variable $this-force-matchval
         pack $w.fnm

@@ -63,16 +63,18 @@ TriSurfPhaseFilter::TriSurfPhaseFilter(GuiContext* ctx)
 void TriSurfPhaseFilter::execute()
 {
   FieldHandle input, output;
-  FieldHandle phaseline;
+  FieldHandle phaseline, phasepoint;
 
   if (!(get_input_handle("PhaseField",input,true))) return;
   
   FieldsAlgo algo(this);
   
-  if(!(algo.TriSurfPhaseFilter(input,output,object,phaseline))) return;
+  if(!(algo.TriSurfPhaseFilter(input,output,phaseline,phasepoint))) return;
  
   send_output_handle("PhaseField",output,true);
   send_output_handle("PhaseLine",phaseline,true);
+  send_output_handle("PhasePoint",phasepoint,true);
+
 }
 
 } // End namespace ModelCreation

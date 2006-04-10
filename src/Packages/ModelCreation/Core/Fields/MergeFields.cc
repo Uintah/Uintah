@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements)
+bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements, bool matchval)
 {
 
   // Step 0:
@@ -89,6 +89,12 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
     // just passing true
     output = input[0];
     return (true);
+  }
+  
+  if ((fi.is_constantdata()||fi.is_nodata())&&(matchval))
+  {
+    pr->error("MergeFields: Value matching failed, because no values are associated with the nodes");
+    return (false);    
   }
   
   // Step 2: Build information structure for the dynamic compilation
@@ -157,7 +163,7 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
   // is returned. 
   // As error messages are reportered to the ProgressReporter we do not need to
   // handle any error messages here, they automatically are forwarded to the user. 
-  return(algo->MergeFields(pr,input,output,tolerance,mergenodes,mergeelements));
+  return(algo->MergeFields(pr,input,output,tolerance,mergenodes,mergeelements,matchval));
 }   
 
 } // namespace ModelCreation
