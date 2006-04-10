@@ -379,7 +379,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
   bool do_linear = (fld->basis_order() < 2 && 
-		    mesh->get_basis().polynomial_order() < 2);
+		    mesh->get_basis().polynomial_order() < 2 && div == 1);
 
   if (nodes)
   {
