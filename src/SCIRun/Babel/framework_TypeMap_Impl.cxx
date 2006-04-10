@@ -139,7 +139,9 @@ framework::TypeMap_impl::cloneEmpty_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.cloneEmpty)
-  // Insert-Code-Here {framework.TypeMap.cloneEmpty} (cloneEmpty method)
+  UCXX ::framework::TypeMap ftm = UCXX ::framework::TypeMap::_create();
+  UCXX ::gov::cca::TypeMap gctm = UCXX ::sidl::babel_cast<UCXX ::gov::cca::TypeMap>(ftm);
+  return gctm;
   // DO-NOT-DELETE splicer.end(framework.TypeMap.cloneEmpty)
 }
 
@@ -155,7 +157,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getInt)
-  // Insert-Code-Here {framework.TypeMap.getInt} (getInt method)
+  return typeMap->getInt(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getInt)
 }
 
@@ -171,7 +173,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getLong)
-  // Insert-Code-Here {framework.TypeMap.getLong} (getLong method)
+  return typeMap->getLong(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getLong)
 }
 
@@ -187,7 +189,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getFloat)
-  // Insert-Code-Here {framework.TypeMap.getFloat} (getFloat method)
+  return typeMap->getFloat(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getFloat)
 }
 
@@ -203,7 +205,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getDouble)
-  // Insert-Code-Here {framework.TypeMap.getDouble} (getDouble method)
+  return typeMap->getDouble(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getDouble)
 }
 
@@ -219,7 +221,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getFcomplex)
-  // Insert-Code-Here {framework.TypeMap.getFcomplex} (getFcomplex method)
+  return typeMap->getFcomplex(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getFcomplex)
 }
 
@@ -235,7 +237,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getDcomplex)
-  // Insert-Code-Here {framework.TypeMap.getDcomplex} (getDcomplex method)
+  return typeMap->getDcomplex(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getDcomplex)
 }
 
@@ -251,7 +253,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getString)
-  // Insert-Code-Here {framework.TypeMap.getString} (getString method)
+  return typeMap->getString(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getString)
 }
 
@@ -267,7 +269,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getBool)
-  // Insert-Code-Here {framework.TypeMap.getBool} (getBool method)
+  return typeMap->getBool(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getBool)
 }
 
@@ -283,7 +285,7 @@ throw (
   UCXX ::sidl::RuntimeException
 ){
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getIntArray)
-  // Insert-Code-Here {framework.TypeMap.getIntArray} (getIntArray method)
+  //return typeMap->getIntArray(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getIntArray)
 }
 
@@ -409,7 +411,7 @@ framework::TypeMap_impl::putInt_impl (
   /* in */int32_t value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putInt)
-  // Insert-Code-Here {framework.TypeMap.putInt} (putInt method)
+  typeMap->putInt(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putInt)
 }
 
@@ -422,7 +424,7 @@ framework::TypeMap_impl::putLong_impl (
   /* in */int64_t value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putLong)
-  // Insert-Code-Here {framework.TypeMap.putLong} (putLong method)
+  typeMap->putLong(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putLong)
 }
 
@@ -435,7 +437,7 @@ framework::TypeMap_impl::putFloat_impl (
   /* in */float value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putFloat)
-  // Insert-Code-Here {framework.TypeMap.putFloat} (putFloat method)
+  typeMap->putFloat(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putFloat)
 }
 
@@ -448,7 +450,7 @@ framework::TypeMap_impl::putDouble_impl (
   /* in */double value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putDouble)
-  // Insert-Code-Here {framework.TypeMap.putDouble} (putDouble method)
+  typeMap->putDouble(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putDouble)
 }
 
@@ -461,7 +463,7 @@ framework::TypeMap_impl::putFcomplex_impl (
   /* in */const ::std::complex<float>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putFcomplex)
-  // Insert-Code-Here {framework.TypeMap.putFcomplex} (putFcomplex method)
+  typeMap->putFcomplex(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putFcomplex)
 }
 
@@ -474,7 +476,7 @@ framework::TypeMap_impl::putDcomplex_impl (
   /* in */const ::std::complex<double>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putDcomplex)
-  // Insert-Code-Here {framework.TypeMap.putDcomplex} (putDcomplex method)
+  typeMap->putDcomplex(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putDcomplex)
 }
 
@@ -487,7 +489,7 @@ framework::TypeMap_impl::putString_impl (
   /* in */const ::std::string& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putString)
-  // Insert-Code-Here {framework.TypeMap.putString} (putString method)
+  typeMap->putString(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putString)
 }
 
@@ -500,7 +502,7 @@ framework::TypeMap_impl::putBool_impl (
   /* in */bool value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putBool)
-  // Insert-Code-Here {framework.TypeMap.putBool} (putBool method)
+  typeMap->putBool(key, value);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.putBool)
 }
 
@@ -616,7 +618,7 @@ framework::TypeMap_impl::remove_impl (
   /* in */const ::std::string& key ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.remove)
-  // Insert-Code-Here {framework.TypeMap.remove} (remove method)
+  typeMap->remove(key);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.remove)
 }
 
@@ -643,7 +645,7 @@ framework::TypeMap_impl::hasKey_impl (
   /* in */const ::std::string& key ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.hasKey)
-  // Insert-Code-Here {framework.TypeMap.hasKey} (hasKey method)
+  return typeMap->hasKey(key);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.hasKey)
 }
 
