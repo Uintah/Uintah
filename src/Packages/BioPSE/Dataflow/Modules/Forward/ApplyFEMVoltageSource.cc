@@ -118,7 +118,7 @@ ApplyFEMVoltageSource::execute()
   ColumnMatrix* rhs = scinew ColumnMatrix(nsize);
   
   MatrixHandle  hRhsIn;
-  ColumnMatrix* rhsIn;
+  ColumnMatrix* rhsIn = NULL;
   
   // -- if the user passed in a vector the right size, copy it into ours 
   if (iportRhs_->get(hRhsIn) && 

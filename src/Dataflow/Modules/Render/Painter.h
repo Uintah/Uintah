@@ -453,10 +453,10 @@ class Painter : public Module
     Point               max(int axis = -1, int slice = -1);
 
     Vector              scale();
-    double              scale(int axis);
+    double              scale(unsigned int axis);
 
     vector<int>         max_index();
-    int                 max_index(int axis);
+    int                 max_index(unsigned int axis);
 
     bool                inside_p(const Point &p);
     NrrdDataHandle	nrrd_handle_;

@@ -236,7 +236,7 @@ EITAnalyticSolution::execute()
   // Get the current pattern index  
   MatrixHandle  hCurrentPatternIndex;
   ColumnMatrix* currPatIdx;
-  int           k;
+  int           k = 0;
 
   // -- copy the input current index into local variable, k 
   if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) && 

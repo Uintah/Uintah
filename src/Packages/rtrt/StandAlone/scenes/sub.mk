@@ -63,10 +63,16 @@ SCENES := $(SRCDIR)/0.$(RSE) \
 	$(SRCDIR)/VolumeVisMod.$(RSE) \
 	$(SRCDIR)/VolumeVis2DMod.$(RSE) \
 	$(SRCDIR)/VolumeVisRGBAMod.$(RSE) \
-	$(SRCDIR)/sketch.$(RSE) \
 	$(SRCDIR)/pt_particle.$(RSE) \
 	$(SRCDIR)/tstdemo.$(RSE) \
 	$(SRCDIR)/living-room2.$(RSE) \
+
+
+# sketch uses SketchMaterial, which uses an old version of teem...  If
+# at some point we need this scene, then we will need to re-implement 
+# SketchMaterial.h.
+#	$(SRCDIR)/sketch.$(RSE) \
+
 
 # 	$(SRCDIR)/terrain.$(RSE) \
 # 	$(SRCDIR)/heightfield.$(RSE) \

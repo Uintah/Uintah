@@ -418,7 +418,7 @@ DipoleSearch::simplex_search()
     for (j=0; j<NDIM_; j++)
       sum[j]+=dipoles_(i,j);
 
-  double relative_tolerance;
+  double relative_tolerance = 0;
   int num_evals = 0;
 
   for( ;; )

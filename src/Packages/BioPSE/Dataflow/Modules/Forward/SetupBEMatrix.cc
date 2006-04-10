@@ -47,7 +47,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 unsigned int first_time_run = 1;
-vector<int> filed_generation_no_old, old_nesting;
+vector<int> field_generation_no_old, old_nesting;
 vector<double> old_conductivities;
 
 SetupBEMatrix::SetupBEMatrix(GuiContext *context):
@@ -76,7 +76,7 @@ SetupBEMatrix::execute()
   vector<FieldHandle> fields;
   vector<TSMesh::handle_type> meshes;
   vector<double> conductivities;
-  vector<int> filed_generation_no_new;
+  vector<int> field_generation_no_new;
   string condStr; double condVal;
   port_map_type::iterator pi = range.first;
   int input=-1, output=-1;
@@ -121,11 +121,11 @@ SetupBEMatrix::execute()
       conductivities.push_back(Abs(condVal));
       if(first_time_run)
        {
-        filed_generation_no_old.push_back(-1);
+        field_generation_no_old.push_back(-1);
         old_conductivities.push_back(-1);
         old_nesting.push_back(-1);
        }
-      filed_generation_no_new.push_back(field->generation);
+      field_generation_no_new.push_back(field->generation);
     }
     ++pi;
   }
@@ -156,10 +156,10 @@ SetupBEMatrix::execute()
    int no_of_fields =  nesting.size();
    for (int i=0; i < no_of_fields; i++)
     {
-      new_fields += Abs( filed_generation_no_new[i] - filed_generation_no_old[i] );
+      new_fields += Abs( field_generation_no_new[i] - field_generation_no_old[i] );
       new_nesting += Abs( nesting[i] - old_nesting[i] );
       new_conductivities += Abs( conductivities[i] - old_conductivities[i] );
-      filed_generation_no_old[i] = filed_generation_no_new[i];
+      field_generation_no_old[i] = field_generation_no_new[i];
       old_nesting[i] = nesting[i];
       old_conductivities[i] = conductivities[i];
     }

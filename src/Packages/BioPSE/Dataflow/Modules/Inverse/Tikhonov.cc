@@ -366,7 +366,7 @@ Tikhonov::execute()
 
   int beg = -1; 
   int end = -1;
-  double lambda, lambda2;
+  double lambda = 0, lambda2 = 0;
   double temp;
   int	lambda_index;
 
