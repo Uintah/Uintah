@@ -25,9 +25,9 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : RemoveFaces.cc
+//    File   : RemoveOrphanNodes.cc
 //    Author : Martin Cole
-//    Date   : Sun Feb 27 07:36:54 2005
+//    Date   : Wed Apr  5 10:01:24 2006
 
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
@@ -44,6 +44,7 @@ using std::endl;
 
 using namespace SCIRun;
 typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+
 
 int
 main(int argc, char **argv) {
@@ -67,25 +68,14 @@ main(int argc, char **argv) {
     cerr << "Input not a TriSurf. Exiting..." << endl;
     exit(3);
   }
-  vector<int> faces;
-  for (int i = 2; i < argc - 1; i++) {
-    faces.push_back(atoi(argv[i]));
-  }
-  bool altered = false;
-  // remove last index first.
-  sort(faces.begin(), faces.end());
-  vector<int>::reverse_iterator iter  = faces.rbegin();
-  while (iter != faces.rend()) {
-    int face = *iter++;
-    altered |= tsm->remove_face(face);
-    cout << "removed face " << face << endl;
-  }
 
+  bool altered = tsm->remove_orphan_nodes();
+  
   if (altered) {
     BinaryPiostream out_stream(argv[argc - 1], Piostream::Write);
     Pio(out_stream, handle);
   } else {
-    cerr << "No faces removed. Exiting..." << endl;
+    cerr << "No orphan nodes. Exiting..." << endl;
     exit(3);
   }
   return 0;  

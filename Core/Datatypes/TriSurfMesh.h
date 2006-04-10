@@ -373,6 +373,7 @@ public:
   //! swap the shared edge between 2 faces, if they share an edge.
   bool swap_shared_edge(typename Face::index_type, typename Face::index_type);
   bool remove_face(typename Face::index_type);
+  bool remove_orphan_nodes();
   //! walk all the faces, enforcing consistent face orientations.
   void orient_faces();
   //! flip the orientaion of all the faces
@@ -1846,6 +1847,45 @@ TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1,
   return true;
 }
 
+template <class Basis>
+bool
+TriSurfMesh<Basis>::remove_orphan_nodes()
+{
+  bool rval = false;
+  
+  //! find the orphan nodes.
+  vector<under_type> onodes;
+  //! check each point against the face list.
+  for (under_type i = 0; i < points_.size(); i++) {
+    if (find(faces_.begin(), faces_.end(), i) == faces_.end()) {
+      //! node does not belong to a face
+      onodes.push_back(i);
+    }
+  }
+
+  if (onodes.size()) rval = true;
+
+  //! check each point against the face list.
+  vector<under_type>::reverse_iterator orph_iter = onodes.rbegin();
+  while (orph_iter != onodes.rend()) {
+    unsigned int i = *orph_iter++;
+    vector<under_type>::iterator iter = faces_.begin();
+    while (iter != faces_.end()) {
+      under_type &node = *iter++;
+      if (node > i) {
+	node--;
+      }
+    }
+    vector<Point>::iterator niter = points_.begin();
+    niter += i;
+    points_.erase(niter);
+  }
+
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  return rval;
+}
 
 template <class Basis>
 bool
