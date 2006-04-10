@@ -62,6 +62,14 @@ PROGRAM := $(SRCDIR)/RemoveFaces
 SRCS := $(SRCDIR)/RemoveFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/RemoveConnectedFaces
+SRCS := $(SRCDIR)/RemoveConnectedFaces.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/RemoveOrphanNodes
+SRCS := $(SRCDIR)/RemoveOrphanNodes.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/FieldBin1Test
 SRCS := $(SRCDIR)/FieldBin1Test.cc
 include $(SCIRUN_SCRIPTS)/program.mk

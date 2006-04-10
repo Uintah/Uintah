@@ -25,9 +25,10 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : RemoveFaces.cc
+//    File   : RemoveConnectedFaces.cc
 //    Author : Martin Cole
-//    Date   : Sun Feb 27 07:36:54 2005
+//    Date   : Wed Apr  5 08:41:36 2006
+
 
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
@@ -44,6 +45,48 @@ using std::endl;
 
 using namespace SCIRun;
 typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+
+//slow recursive funtion...
+void 
+find_connected_faces(unsigned face, TSMesh *tsm, 
+		     vector<unsigned> &connected)
+{
+  tsm->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::EDGE_NEIGHBORS_E | 
+		   Mesh::EDGES_E);
+  
+  unsigned n = connected.size();
+  if (n % 50 == 0) {
+    cout << endl << "status: num connected: " << n << endl;
+  } else {
+    cout << ".";
+  }
+
+  if (connected.end() == find(connected.begin(), connected.end(), face)) {
+    connected.push_back(face);
+  }
+
+  TSMesh::Edge::array_type edges;
+  tsm->get_edges(edges, (TSMesh::Face::index_type)face);
+  
+  TSMesh::Face::index_type f0;
+  tsm->get_neighbor(f0, face, edges[0]);
+  if (connected.end() == find(connected.begin(), connected.end(), f0)) {
+    find_connected_faces(f0, tsm, connected);
+  }
+
+  TSMesh::Face::index_type f1;
+  tsm->get_neighbor(f1, face, edges[1]);
+  if (connected.end() == find(connected.begin(), connected.end(), f1)) {
+    find_connected_faces(f1, tsm, connected);
+  }
+
+  TSMesh::Face::index_type f2;
+  tsm->get_neighbor(f2, face, edges[2]);
+  if (connected.end() == find(connected.begin(), connected.end(), f2)) {
+    find_connected_faces(f2, tsm, connected);
+  }
+}
+
 
 int
 main(int argc, char **argv) {
@@ -67,18 +110,16 @@ main(int argc, char **argv) {
     cerr << "Input not a TriSurf. Exiting..." << endl;
     exit(3);
   }
-  vector<int> faces;
-  for (int i = 2; i < argc - 1; i++) {
-    faces.push_back(atoi(argv[i]));
-  }
+  vector<unsigned> faces;
+  find_connected_faces(atoi(argv[2]), tsm, faces);
+
   bool altered = false;
   // remove last index first.
   sort(faces.begin(), faces.end());
-  vector<int>::reverse_iterator iter  = faces.rbegin();
+  vector<unsigned>::reverse_iterator iter  = faces.rbegin();
   while (iter != faces.rend()) {
     int face = *iter++;
     altered |= tsm->remove_face(face);
-    cout << "removed face " << face << endl;
   }
 
   if (altered) {
