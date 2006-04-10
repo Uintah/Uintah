@@ -448,10 +448,7 @@ Painter::NrrdVolume::get_nrrd()
   return nrrd_handle;
 }
 
-
-
-
-DECLARE_MAKER(Painter);
+DECLARE_MAKER(Painter)
 
 Painter::Painter(GuiContext* ctx) :
   Module("Painter", ctx, Filter, "Render", "SCIRun"),
@@ -997,7 +994,7 @@ Painter::NrrdVolume::scale() {
 
 
 double
-Painter::NrrdVolume::scale(int axis) {
+Painter::NrrdVolume::scale(unsigned int axis) {
   ASSERT(axis >= 0 && (unsigned int) axis < nrrd_handle_->nrrd_->dim);
   return scale()[axis];
 }
@@ -1013,7 +1010,7 @@ Painter::NrrdVolume::max_index() {
 }
 
 int
-Painter::NrrdVolume::max_index(int axis) {
+Painter::NrrdVolume::max_index(unsigned int axis) {
   ASSERT(axis >= 0 && (unsigned int) axis < nrrd_handle_->nrrd_->dim);
   return max_index()[axis];
 }

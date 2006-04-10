@@ -394,6 +394,8 @@ int
 SketchMaterial<ArrayType, DataType>::rtrtGageProbe(gageContext *ctx,
 						gage_t x, gage_t y, gage_t z)
 {
+  cerr << "rtrtGageProbe is not yet implemented\n";
+#if 0
   //  char me[]="rtrtgageProbe";
   
   if (_gageLocationSet(ctx, x, y, z)) {
@@ -402,7 +404,7 @@ SketchMaterial<ArrayType, DataType>::rtrtGageProbe(gageContext *ctx,
     return 1;
   } 
     
-  for (int i=0; i<ctx->numPvl; i++) {
+  for (int i=0; i<ctx->pvlNum; i++) {
     // Need to copy the data over to the iv3 struct in pvl
     gage_t *iv3 = ctx->pvl[i]->iv3;
     // This is the filter diameter.  You will have to copy fd*fd*fd
@@ -451,6 +453,7 @@ SketchMaterial<ArrayType, DataType>::rtrtGageProbe(gageContext *ctx,
   }
   
   /* fprintf(stderr, "##%s: bingo 5\n", me); */
+#endif
   return 0;
 }
   
