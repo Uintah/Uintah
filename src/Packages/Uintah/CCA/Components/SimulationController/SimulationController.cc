@@ -398,20 +398,36 @@ namespace Uintah {
     d_sumOfWallTimeSquares = 0; // sum all squares of walltimes
   }
 
-  void SimulationController::printSimulationStats ( int timestep, double delt, double time )
-  {
+string
+toHumanUnits( unsigned long value )
+{
+  char tmp[64];
+  
+  if( value > 1000000 ) {
+    sprintf( tmp, "%.2lf MBs", value / 1000000.0 );
+  } else if( value > 1000 ) {
+    sprintf( tmp, "%.2lf KBs", value / 1000.0 );
+  } else {
+    sprintf( tmp, "%.2lf Bs", (double)value );
+  }
+  return tmp;
+}
+
+void
+SimulationController::printSimulationStats ( int timestep, double delt, double time )
+{
 #ifndef _WIN32 // win32 doesn't have sci-malloc or sbrk
-    // get memory stats for output
+  // get memory stats for output
 #ifndef DISABLE_SCI_MALLOC
-    size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
-      nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-      highwater_mmap;
-      
-    GetGlobalStats(DefaultAllocator(),
-		   nalloc, sizealloc, nfree, sizefree,
-		   nfillbin, nmmap, sizemmap, nmunmap,
-		   sizemunmap, highwater_alloc, highwater_mmap);
-    unsigned long memuse = sizealloc - sizefree;
+  size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
+    nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
+    highwater_mmap;
+  
+  GetGlobalStats(DefaultAllocator(),
+                 nalloc, sizealloc, nfree, sizefree,
+                 nfillbin, nmmap, sizemmap, nmunmap,
+                 sizemunmap, highwater_alloc, highwater_mmap);
+  unsigned long memuse = sizealloc - sizefree;
     unsigned long highwater = highwater_mmap;
 #else
     unsigned long memuse = 0;
@@ -509,18 +525,18 @@ namespace Uintah {
 #ifndef _WIN32
       dbg << ", Mem Use = ";
       if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
-	dbg << avg_memuse;
+	dbg << toHumanUnits(avg_memuse);
 	if(avg_highwater) {
-	  dbg << "/" << avg_highwater;
+	  dbg << "/" << toHumanUnits(avg_highwater);
 	}
       } else {
 	dbg << avg_memuse;
 	if(avg_highwater) {
-	  dbg << "/" << avg_highwater;
+	  dbg << "/" << toHumanUnits(avg_highwater);
 	}
-	dbg << " (avg), " << max_memuse;
+	dbg << " (avg), " << toHumanUnits(max_memuse);
 	if(max_highwater) {
-	  dbg << "/" << max_highwater;
+	  dbg << "/" << toHumanUnits(max_highwater);
 	}
 	dbg << " (max)";
       }
