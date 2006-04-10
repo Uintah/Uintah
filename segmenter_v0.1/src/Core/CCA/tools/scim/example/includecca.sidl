@@ -1,0 +1,4 @@
+#include "cca.sidl"
+
+%inoutomit
+%inoutremap Services

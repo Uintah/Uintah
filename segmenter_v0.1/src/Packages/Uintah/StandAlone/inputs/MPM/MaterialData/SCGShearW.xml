@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Tungsten -->
+<Uintah_Include>
+  <shear_modulus_model type="scg_shear">
+    <mu_0> 160.0e9 </mu_0> 
+    <A> 9.4e-12 </A>
+    <B> 0.14e-3 </B>
+  </shear_modulus_model>
+</Uintah_Include>

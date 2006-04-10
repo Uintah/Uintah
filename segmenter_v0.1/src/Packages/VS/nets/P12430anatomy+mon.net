@@ -1,0 +1,764 @@
+# SCIRun Network v1.25.0
+
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+addSubnetToDatabase {
+   set name {Models}
+   set bbox {21 89 504 304}
+   set creationDate {Mon May 16 2005}
+   set creationTime {10:05:33}
+   set runDate {}
+   set runTime {}
+   set notes {}
+   set geometry {344x348+0+0}
+
+   # Create a SCIRun->Math->LinearAlgebra Module
+   set m1 [addModuleAtPosition "SCIRun" "Math" "LinearAlgebra" 339 91]
+
+   # Create a SCIRun->DataIO->FieldReader Module
+   set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 21 89]
+   set Notes($m2) {Heart}
+   set Notes($m2-Position) {n}
+   set Notes($m2-Color) {white}
+
+   # Create a SCIRun->FieldsGeometry->TransformField Module
+   set m3 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 21 171]
+
+   # Create a SCIRun->Visualization->ShowField Module
+   set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 21 247]
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m2 0 $m3 0]
+   set c2 [addConnection $m3 0 $m4 0]
+   set c3 [addConnection $m4 0 Subnet 0]
+   set c4 [addConnection $m1 0 $m3 1]
+   set c5 [addConnection $m1 0 Subnet 1]
+
+   # Set GUI variables for the SCIRun->Math->LinearAlgebra Module
+   set $m1-function {DenseMatrix *m = scinew DenseMatrix(4, 4);
+//row 0
+m->put(0, 0, 0.449);
+m->put(0, 1, 0.0);
+m->put(0, 2, 0.0);
+m->put(0, 3, 0.0);
+ 
+//row 1
+m->put(1, 0, 0.0);
+m->put(1, 1, 0.449);
+m->put(1, 2, 0.0);
+m->put(1, 3, 0.0);
+ 
+//row 2
+m->put(2, 0, 0.0);
+m->put(2, 1, 0.0);
+m->put(2, 2, 0.5);
+m->put(2, 3, 2.0);
+ 
+//row 3
+m->put(3, 0, 0.0);
+m->put(3, 1, 0.0);
+m->put(3, 2, 0.0);
+m->put(3, 3, 1.0);
+                                                                                
+o1 = m;
+
+
+}
+
+   # Set GUI variables for the SCIRun->DataIO->FieldReader Module
+   set $m2-filename "$DATADIR/$DATASET/P124/P12430models/Heart.fld"
+   set $m2-filetype {SCIRun Field File (*.fld)}
+
+   # Set GUI variables for the SCIRun->Visualization->ShowField Module
+   set $m4-nodes-transparency {1}
+   set $m4-nodes-usedefcolor {1}
+   set $m4-edges-on {0}
+   set $m4-faces-on {0}
+   set $m4-has_scalar_data {1}
+   set $m4-def-color-r {1.0}
+   set $m4-def-color-a {0.6}
+   set $m4-scalars_scale {0.3}
+}
+
+addSubnetToDatabase {
+   set name {Torso}
+   set bbox {183 40 759 541}
+   set creationDate {Mon May 16 2005}
+   set creationTime {10:05:34}
+   set runDate {}
+   set runTime {}
+   set notes {}
+   set geometry {344x348+0+0}
+
+   # Create a Teem->UnuNtoZ->UnuQuantize Module
+   set m1 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 293 248]
+   set Notes($m1) {Quantize to UChar
+(min->0, max->255)}
+   set Notes($m1-Position) {n}
+   set Notes($m1-Color) {white}
+
+   # Create a Teem->UnuAtoM->UnuJoin Module
+   set m2 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 183 335]
+   set Notes($m2) {NV_UC}
+   set Notes($m2-Position) {none}
+   set Notes($m2-Color) {white}
+
+   # Create a Teem->UnuNtoZ->UnuQuantize Module
+   set m3 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 295 425]
+   set Notes($m3) {N_UC}
+   set Notes($m3-Position) {none}
+   set Notes($m3-Color) {white}
+
+   # Create a SCIRun->Visualization->NrrdTextureBuilder Module
+   set m4 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 183 398]
+
+   # Create an instance of a NrrdGradient Sub-Network
+   set m5 [instanceSubnet "NrrdGradient" 234 328]
+
+   # Create a SCIRun->Visualization->EditColorMap2D Module
+   set m6 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 376 399]
+
+   # Create a SCIRun->Visualization->VolumeVisualizer Module
+   set m7 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 225 484]
+
+   # Create a Teem->DataIO->NrrdReader Module
+   set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 414 40]
+   set Notes($m8) {Input Scalar Nrrd Volume
+}
+   set Notes($m8-Position) {e}
+   set Notes($m8-Color) {white}
+
+   # Create a Teem->UnuAtoM->UnuFlip Module
+   set m9 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 415 158]
+
+   # Create an instance of a TransferFuncHisto Sub-Network
+   set m10 [instanceSubnet "TransferFuncHisto" 493 249]
+
+   # Create a Teem->UnuNtoZ->UnuProject Module
+   set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 524 365]
+   set Notes($m11) {Gradient Magnitude}
+   set Notes($m11-Position) {n}
+   set Notes($m11-Color) {white}
+
+   # Create a Teem->UnuNtoZ->UnuQuantize Module
+   set m12 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 594 442]
+   set Notes($m12) {GM_UC}
+   set Notes($m12-Position) {none}
+   set Notes($m12-Color) {white}
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m4 0 $m7 0]
+   set c2 [addConnection $m7 0 Subnet 0]
+   set c3 [addConnection $m5 0 $m11 0]
+   set c4 [addConnection $m5 0 $m3 0]
+   set c5 [addConnection $m8 0 $m9 0]
+   set c6 [addConnection $m9 0 $m5 0]
+   set c7 [addConnection $m9 0 $m10 0]
+   set c8 [addConnection $m9 0 $m1 0]
+   set c9 [addConnection $m2 0 $m4 0]
+   set c10 [addConnection $m11 0 $m12 0]
+   set c11 [addConnection $m3 0 $m2 0]
+   set c12 [addConnection $m10 0 $m6 1]
+   set c13 [addConnection $m11 0 $m10 1]
+   set c14 [addConnection $m1 0 $m2 1]
+   set c15 [addConnection $m12 0 $m4 1]
+   set c16 [addConnection $m6 0 $m7 2]
+
+   # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+   set $m1-minf {0.0}
+   set $m1-maxf {4095.0}
+   set $m1-realmin {0.0}
+   set $m1-realmax {255.0}
+   set $m1-nbits {8}
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuJoin Module
+   set $m2-dim {4}
+
+   # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+   set $m3-minf {0.0}
+   set $m3-maxf {2180.43}
+   set $m3-realmin {-233.0}
+   set $m3-realmax {241.0}
+   set $m3-nbits {8}
+
+   # Set GUI variables for the SCIRun->Visualization->NrrdTextureBuilder Module
+   set $m4-card_mem {128}
+
+   # Set GUI variables for the SCIRun->Visualization->EditColorMap2D Module
+   set $m6-panx {0.0}
+   set $m6-pany {0.0}
+   set $m6-scale_factor {1.0}
+   set $m6-selected_widget {1}
+   set $m6-selected_object {6}
+   set $m6-num-entries {6}
+   set $m6-faux {1}
+   set $m6-name-0 {Generic}
+   set $m6-0-color-r {1.0}
+   set $m6-0-color-g {0.73}
+   set $m6-0-color-b {0.76}
+   set $m6-0-color-a {0.600000023842}
+   set $m6-state-0 {r 0 0.173829 0.335938 0.523438 0.382812 0.929102}
+   set $m6-shadeType-0 {0}
+   set $m6-on-0 {1}
+   set $m6-name-1 {Generic}
+   set $m6-1-color-r {1.0}
+   set $m6-1-color-g {1.0}
+   set $m6-1-color-b {1.0}
+   set $m6-1-color-a {1.0}
+   set $m6-state-1 {r 0 0.0195307 0.160156 0.775391 0.574219 0.61461}
+   set $m6-shadeType-1 {0}
+   set $m6-on-1 {1}
+   set $m6-name-2 {Generic}
+   set $m6-2-color-r {1.0}
+   set $m6-2-color-g {1.0}
+   set $m6-2-color-b {1.0}
+   set $m6-2-color-a {0.860000014305}
+   set $m6-state-2 {t 0.609375 -0.127344 0.429688 0.692188 0.727272}
+   set $m6-shadeType-2 {1936028769}
+   set $m6-on-2 {0}
+   set $m6-name-3 {Generic}
+   set $m6-3-color-r {0.53}
+   set $m6-3-color-g {0.0}
+   set $m6-3-color-b {0.0}
+   set $m6-3-color-a {0.930000007153}
+   set $m6-state-3 {t 0.144531 0.0757813 0.359375 0.399219 0.532609}
+   set $m6-shadeType-3 {1936028769}
+   set $m6-on-3 {0}
+   set $m6-name-4 {Generic}
+   set $m6-4-color-r {1.0}
+   set $m6-4-color-g {0.78}
+   set $m6-4-color-b {0.78}
+   set $m6-4-color-a {0.610000014305}
+   set $m6-state-4 {t 0.066406 -0.0101565 0.148438 1.24688 1}
+   set $m6-shadeType-4 {1936028769}
+   set $m6-on-4 {0}
+   set $m6-name-5 {Generic}
+   set $m6-5-color-r {0.78}
+   set $m6-5-color-g {0.33}
+   set $m6-5-color-b {0.34}
+   set $m6-5-color-a {0.899999976158}
+   set $m6-state-5 {r 0 0.957031 0.0859375 0.0566406 0.03125 0.541667}
+   set $m6-shadeType-5 {1936028769}
+   set $m6-on-5 {0}
+   set $m6-marker {end}
+
+   # Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
+   set $m7-sw_raster {1}
+   set $m7-alpha_scale {-0.554}
+   set $m7-shading {1}
+   set $m7-specular {0.388}
+   set $m7-shine {24}
+
+   # Set GUI variables for the Teem->DataIO->NrrdReader Module
+   set $m8-filename "$DATADIR/$DATASET/P124/P12430Dicom.nrrd"
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuFlip Module
+   set $m9-axis {1}
+
+   # Set GUI variables for the Teem->UnuNtoZ->UnuProject Module
+   set $m11-measure {9}
+
+   # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+   set $m12-minf {0.0}
+   set $m12-maxf {255.0}
+   set $m12-realmin {0.0}
+   set $m12-realmax {248.70765686}
+   set $m12-nbits {8}
+}
+
+addSubnetToDatabase {
+   set name {Hotbox}
+   set bbox {55 63 913 432}
+   set creationDate {Mon May 16 2005}
+   set creationTime {10:05:35}
+   set runDate {}
+   set runTime {}
+   set notes {}
+   set geometry {903x569+12+40}
+
+   # Create a VS->DataFlow->HotBox Module
+   set m1 [addModuleAtPosition "VS" "DataFlow" "HotBox" 121 63]
+
+   # Create a SCIRun->FieldsGeometry->TransformField Module
+   set m2 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 748 230]
+
+   # Create a SCIRun->FieldsGeometry->TransformField Module
+   set m3 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 501 233]
+
+   # Create a SCIRun->FieldsGeometry->TransformField Module
+   set m4 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 72 275]
+
+   # Create a SCIRun->Visualization->ShowField Module
+   set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 748 353]
+
+   # Create a SCIRun->Visualization->ShowField Module
+   set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 511 351]
+
+   # Create a SCIRun->Visualization->GenStandardColorMaps Module
+   set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 617 65]
+
+   # Create a SCIRun->Visualization->ShowField Module
+   set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 55 375]
+   set Notes($m8) {Highlight Color}
+   set Notes($m8-Position) {n}
+   set Notes($m8-Color) {white}
+
+   # Create a SCIRun->Visualization->ShowColorMap Module
+   set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 277 355]
+
+   # Create a SCIRun->Visualization->RescaleColorMap Module
+   set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 319 172]
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m2 0 $m5 0]
+   set c2 [addConnection $m3 0 $m6 0]
+   set c3 [addConnection $m4 0 $m8 0]
+   set c4 [addConnection $m7 0 $m10 0]
+   set c5 [addConnection $m10 0 $m9 0]
+   set c6 [addConnection $m8 0 Subnet 0]
+   set c7 [addConnection Subnet 1 $m1 0]
+   set c8 [addConnection $m1 2 $m4 0]
+   set c9 [addConnection $m1 3 $m2 0]
+   set c10 [addConnection $m1 4 $m3 0]
+   set c11 [addConnection $m10 0 $m5 1]
+   set c12 [addConnection $m10 0 $m6 1]
+   set c13 [addConnection $m5 0 Subnet 1]
+   set c14 [addConnection Subnet 0 $m2 1]
+   set c15 [addConnection Subnet 0 $m3 1]
+   set c16 [addConnection Subnet 0 $m4 1]
+   set c17 [addConnection Subnet 2 $m1 1]
+   set c18 [addConnection Subnet 3 $m1 2]
+   set c19 [addConnection $m1 1 Subnet 2]
+   set c20 [addConnection $m6 0 Subnet 3]
+   set c21 [addConnection $m9 0 Subnet 4]
+   set c22 [addConnection $m1 6 Subnet 5]
+
+   # Set GUI variables for the VS->DataFlow->HotBox Module
+   set $m1-gui_label(1) {unknown}
+   set $m1-gui_label(2) {Left ventricle}
+   set $m1-gui_label(3) {Right ventricle}
+   set $m1-gui_label(4) {unknown}
+   set $m1-gui_label(5) {unknown}
+   set $m1-gui_label(6) {-----}
+   set $m1-gui_label(7) {-----}
+   set $m1-gui_label(8) {-----}
+   set $m1-gui_label(9) {-----}
+   set $m1-gui_is_injured(1) {1}
+   set $m1-gui_name {::VS_DataFlow_HotBox_0}
+   set $m1-gui_parent(0) {Heart}
+   set $m1-gui_parent(1) {Cardiovascular system}
+   set $m1-gui_parent(2) {Right side of heart}
+   set $m1-gui_parent(3) {Trunk}
+   set $m1-gui_parent(4) {Body compartment}
+   set $m1-gui_parent(5) {Thoracic cavity}
+   set $m1-gui_parent(6) {Thorax}
+   set $m1-gui_parent(7) {Mediastinum}
+   set $m1-gui_parlist_name {::VS_DataFlow_HotBox_0-gui_parent_list}
+   set $m1-gui_sibling(0) {Right ventricle}
+   set $m1-gui_siblist_name {::VS_DataFlow_HotBox_0-gui_sibling_list}
+   set $m1-gui_child(0) {Interventricular septum}
+   set $m1-gui_child(1) {Muscular part of interventricular septum}
+   set $m1-gui_child(2) {Membranous part of interventricular septum}
+   set $m1-gui_child(3) {Atrioventricular septum}
+   set $m1-gui_child(4) {Outflow part of right ventricle}
+   set $m1-gui_child(5) {Tricuspid valve}
+   set $m1-gui_child(6) {Anterior leaflet of tricuspid valve}
+   set $m1-gui_child(7) {Posterior leaflet of tricuspid valve}
+   set $m1-gui_child(8) {Septal leaflet of tricuspid valve}
+   set $m1-gui_child(9) {Pulmonary valve}
+   set $m1-gui_child(10) {Left anterior cusp of pulmonary valve}
+   set $m1-gui_child(11) {Right anterior cusp of pulmonary valve}
+   set $m1-gui_child(12) {Posterior cusp of pulmonary valve}
+   set $m1-gui_child(13) {Papillary muscle of right ventricle}
+   set $m1-gui_child(14) {Anterior papillary muscle of right ventricle}
+   set $m1-gui_child(15) {Posterior papillary muscle of right ventricle}
+   set $m1-gui_childlist_name {::VS_DataFlow_HotBox_0-gui_child_list}
+   set $m1-querytype {3}
+   set $m1-selectionsource {fromProbe}
+   set $m1-anatomydatasource $DATADIR/$DATASET/P124/P12430MasterAnatomy.csv
+   set $m1-adjacencydatasource $DATADIR/$DATASET/P124/P12430AdjacentAnatomyLabels.csv
+   set $m1-boundingboxdatasource $DATADIR/$DATASET/P124/P12430AnatomyBoundingBoxes.csv
+   set $m1-injurylistdatasource $DATADIR/$DATASET/VS/P124StatInjuryList.xml
+   set $m1-oqafmadatasource {http://fme.biostr.washington.edu:8082/OQAFMA_Service/services/ServiceInterface}
+   set $m1-geometrypath $DATADIR/$DATASET/P124/P12430models
+   set $m1-hipvarpath $DATADIR/$DATASET/P124
+   set $m1-currentselection {unknown}
+   set $m1-currentTime {0}
+   set $m1-gui_probeLocx {0.0}
+   set $m1-gui_probeLocy {0.0}
+   set $m1-gui_probeLocz {0.0}
+
+   # Open the VS->DataFlow->HotBox UI
+   $m1 initialize_ui
+
+   # Set GUI variables for the SCIRun->Visualization->ShowField Module
+   set $m5-nodes-on {0}
+   set $m5-edges-on {0}
+   set $m5-faces-on {0}
+   set $m5-has_scalar_data {1}
+   set $m5-active_tab {Faces}
+   set $m5-scalars_scale {0.3}
+
+   # Set GUI variables for the SCIRun->Visualization->ShowField Module
+   set $m6-nodes-on {0}
+   set $m6-edges-on {0}
+   set $m6-faces-on {0}
+   set $m6-has_scalar_data {1}
+   set $m6-scalars_scale {0.3}
+
+   # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+   set $m7-width {319}
+   set $m7-height {40}
+
+   # Set GUI variables for the SCIRun->Visualization->ShowField Module
+   set $m8-nodes-usedefcolor {1}
+   set $m8-edges-on {0}
+   set $m8-faces-on {0}
+   set $m8-has_scalar_data {1}
+   set $m8-def-color-r {0.0}
+   set $m8-def-color-g {0.0}
+   set $m8-def-color-b {1.0}
+   set $m8-def-color-a {0.58}
+   set $m8-scalars_scale {0.3}
+
+   # Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
+   set $m9-numlabels {11}
+   set $m9-text-fontsize {1}
+
+   # Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+   set $m10-main_frame {.uiSCIRun_Visualization_RescaleColorMap_0}
+   set $m10-isFixed {1}
+}
+
+addSubnetToDatabase {
+   set name {NrrdGradient}
+   set bbox {334 15 499 191}
+   set creationDate {Mon May 16 2005}
+   set creationTime {10:05:34}
+   set runDate {}
+   set runTime {}
+   set notes {}
+   set geometry {344x348+0+0}
+
+   # Create a Teem->Converters->NrrdToField Module
+   set m1 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 334 15]
+   set Notes($m1) {GM_F}
+   set Notes($m1-Position) {none}
+   set Notes($m1-Color) {white}
+
+   # Create a SCIRun->FieldsData->NodeGradient Module
+   set m2 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 334 75]
+
+   # Create a Teem->Converters->FieldToNrrd Module
+   set m3 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 334 134]
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m2 0 $m3 0]
+   set c2 [addConnection $m3 2 Subnet 0]
+   set c3 [addConnection $m1 0 $m2 0]
+   set c4 [addConnection Subnet 0 $m1 2]
+
+   # Set GUI variables for the Teem->Converters->NrrdToField Module
+   set $m1-datasets {{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }
+}
+
+addSubnetToDatabase {
+   set name {TransferFuncHisto}
+   set bbox {1064 9 1247 377}
+   set creationDate {Mon May 16 2005}
+   set creationTime {10:05:34}
+   set runDate {}
+   set runTime {}
+   set notes {}
+   set geometry {344x348+0+0}
+
+   # Create a Teem->UnuAtoM->UnuHeq Module
+   set m1 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 1064 196]
+
+   # Create a Teem->UnuAtoM->UnuGamma Module
+   set m2 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 1064 258]
+
+   # Create a Teem->UnuNtoZ->UnuQuantize Module
+   set m3 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 1064 320]
+
+   # Create a Teem->UnuAtoM->UnuJhisto Module
+   set m4 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 1082 9]
+
+   # Create a Teem->UnuAtoM->Unu2op Module
+   set m5 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 1064 71]
+
+   # Create a Teem->UnuAtoM->Unu1op Module
+   set m6 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 1064 132]
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m6 0 $m1 0]
+   set c2 [addConnection $m5 0 $m6 0]
+   set c3 [addConnection $m2 0 $m3 0]
+   set c4 [addConnection $m1 0 $m2 0]
+   set c5 [addConnection $m3 0 Subnet 0]
+   set c6 [addConnection Subnet 0 $m4 1]
+   set c7 [addConnection $m4 0 $m5 1]
+   set c8 [addConnection Subnet 1 $m4 2]
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuHeq Module
+   set $m1-bins {3000}
+   set $m1-sbins {1}
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuGamma Module
+   set $m2-gamma {0.5}
+
+   # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+   set $m3-minf {0.0}
+   set $m3-maxf {8.70234}
+   set $m3-realmin {0.0}
+   set $m3-realmax {13.0900382996}
+   set $m3-nbits {8}
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuJhisto Module
+   set $m4-bins {512 256}
+   set $m4-mins {nan nan}
+   set $m4-maxs {nan nan}
+   set $m4-type {nrrdTypeFloat}
+
+   # Set GUI variables for the Teem->UnuAtoM->Unu2op Module
+   set $m5-operator {+}
+
+   # Set GUI variables for the Teem->UnuAtoM->Unu1op Module
+   set $m6-operator {log}
+}
+
+
+set name {Main}
+set bbox {23 4 1054 493}
+set creationDate {Mon May 16 2005}
+set creationTime {10:05:24}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {903x569+6+20}
+
+# Create an instance of a Models Sub-Network
+set m1 [instanceSubnet "Models" 845 88]
+
+# Create a SCIRun->Render->Viewer Module
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 714 350]
+
+# Create a Teem->DataIO->NrrdReader Module
+set m3 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 24 13]
+
+# Create a Teem->Converters->NrrdToField Module
+set m4 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 25 180]
+
+# Create a Teem->UnuAtoM->UnuFlip Module
+set m5 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 23 103]
+
+# Create a SCIRun->Math->LinearAlgebra Module
+set m6 [addModuleAtPosition "SCIRun" "Math" "LinearAlgebra" 402 23]
+
+# Create an instance of a Torso Sub-Network
+set m7 [instanceSubnet "Torso" 618 89]
+
+# Create an instance of a Hotbox Sub-Network
+set m8 [instanceSubnet "Hotbox" 364 234]
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m9 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 196 354]
+
+# Create a VS->Render->ICUMonitor Module
+set m10 [addModuleAtPosition "VS" "Render" "ICUMonitor" 510 356]
+
+# Create a SCIRun->Time->TimeControls Module
+set m11 [addModuleAtPosition "SCIRun" "Time" "TimeControls" 231 4]
+
+# Create a Teem->NrrdData->NrrdInfo Module
+set m12 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 435 436]
+
+# Create the Connections between Modules
+set c1 [addConnection $m11 0 $m10 0]
+set c2 [addConnection $m1 0 $m2 0]
+set c3 [addConnection $m1 1 $m8 0]
+set c4 [addConnection $m8 5 $m12 0]
+set c5 [addConnection $m3 0 $m5 0]
+set c6 [addConnection $m9 0 $m8 1]
+set c7 [addConnection $m7 0 $m2 1]
+set c8 [addConnection $m8 5 $m10 1]
+set c9 [addConnection $m11 0 $m8 2]
+set c10 [addConnection $m8 2 $m2 2]
+set c11 [addConnection $m5 0 $m4 2]
+set c12 [addConnection $m6 0 $m8 3]
+set c13 [addConnection $m8 1 $m2 3]
+set c14 [addConnection $m8 3 $m2 4]
+set c15 [addConnection $m8 0 $m2 5]
+set c16 [addConnection $m8 4 $m2 6]
+
+$m2 addViewer
+set $m2-ViewWindow_0-geometry 751x744+536+233
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m2-ViewWindow_0-view-eyep-x {109.979136295}
+set $m2-ViewWindow_0-view-eyep-y {-420.795979466}
+set $m2-ViewWindow_0-view-eyep-z {-267.249714468}
+set $m2-ViewWindow_0-view-lookat-x {63.1101350246}
+set $m2-ViewWindow_0-view-lookat-y {63.9337521225}
+set $m2-ViewWindow_0-view-lookat-z {48.1022142657}
+set $m2-ViewWindow_0-view-up-x {-0.757256489342}
+set $m2-ViewWindow_0-view-up-y {0.303140055603}
+set $m2-ViewWindow_0-view-up-z {-0.578505588597}
+set $m2-ViewWindow_0-view-fov {20.0}
+set $m2-ViewWindow_0-sr {1}
+set $m2-ViewWindow_0-do_stereo {0}
+set $m2-ViewWindow_0-ortho-view {0}
+set $m2-ViewWindow_0-trackViewWindow0 {1}
+set $m2-ViewWindow_0-raxes {1}
+set $m2-ViewWindow_0-ambient-scale {1.0}
+set $m2-ViewWindow_0-diffuse-scale {1.0}
+set $m2-ViewWindow_0-specular-scale {0.4}
+set $m2-ViewWindow_0-emission-scale {1.0}
+set $m2-ViewWindow_0-shininess-scale {1.0}
+set $m2-ViewWindow_0-polygon-offset-factor {1.0}
+set $m2-ViewWindow_0-polygon-offset-units {0.0}
+set $m2-ViewWindow_0-point-size {1.0}
+set $m2-ViewWindow_0-line-width {1.0}
+set $m2-ViewWindow_0-sbase {0.4}
+set $m2-ViewWindow_0-bgcolor-r {0.0}
+set $m2-ViewWindow_0-bgcolor-g {0.0}
+set $m2-ViewWindow_0-bgcolor-b {0.0}
+set $m2-ViewWindow_0-fogusebg {1}
+set $m2-ViewWindow_0-fogcolor-r {0.0}
+set $m2-ViewWindow_0-fogcolor-g {0.0}
+set $m2-ViewWindow_0-fogcolor-b {1.0}
+set $m2-ViewWindow_0-fog-start {0.0}
+set $m2-ViewWindow_0-fog-end {0.714265}
+set $m2-ViewWindow_0-fog-visibleonly {1}
+set $m2-ViewWindow_0-currentvisual {0}
+set $m2-ViewWindow_0-caxes {0}
+set $m2-ViewWindow_0-pos {y1_z0}
+set $m2-ViewWindow_0-global-light0 {1}
+set $m2-ViewWindow_0-global-light1 {0}
+set $m2-ViewWindow_0-global-light2 {0}
+set $m2-ViewWindow_0-global-light3 {0}
+set $m2-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m2-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m2-ViewWindow_0-global-light {1}
+set $m2-ViewWindow_0-global-fog {0}
+set $m2-ViewWindow_0-global-debug {0}
+set $m2-ViewWindow_0-global-clip {1}
+set $m2-ViewWindow_0-global-cull {0}
+set $m2-ViewWindow_0-global-dl {0}
+set $m2-ViewWindow_0-global-type {Gouraud}
+set "$m2-ViewWindow_0-ShowColorMap Sticky (7)" {1}
+set "$m2-ViewWindow_0-Probe Selection Widget (3)" {1}
+set "$m2-ViewWindow_0-Nodes (6)" {1}
+set "$m2-ViewWindow_0-Transparent Nodes (1)" {1}
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m3-filename "$DATADIR/$DATASET/P124/P12430LabelMaps.nrrd"
+set $m3-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
+
+# Set GUI variables for the Teem->Converters->NrrdToField Module
+set $m4-datasets {{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }
+
+# Set GUI variables for the Teem->UnuAtoM->UnuFlip Module
+set $m5-axis {1}
+
+# Set GUI variables for the SCIRun->Math->LinearAlgebra Module
+set $m6-function {DenseMatrix *m = scinew DenseMatrix(4, 4);
+//row 0
+m->put(0, 0, 0.25);
+m->put(0, 1, 0.0);
+m->put(0, 2, 0.0);
+m->put(0, 3, -5.0);
+ 
+//row 1
+m->put(1, 0, 0.0);
+m->put(1, 1, 0.25);
+m->put(1, 2, 0.0);
+m->put(1, 3, -60.0);
+ 
+//row 2
+m->put(2, 0, 0.0);
+m->put(2, 1, 0.0);
+m->put(2, 2, 0.25);
+m->put(2, 3, 0.0);
+ 
+//row 3
+m->put(3, 0, 0.0);
+m->put(3, 1, 0.0);
+m->put(3, 2, 0.0);
+m->put(3, 3, 1.0);
+                                                                                
+o1 = m;
+
+
+}
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m9-filename "$DATADIR/$DATASET/VS/P12430.fld"
+set $m9-filetype {SCIRun Field File (*.fld)}
+
+# Set GUI variables for the VS->Render->ICUMonitor Module
+set $m10-time {0.000494655949121}
+set $m10-sample_rate {500.0}
+set $m10-show_time {1}
+set $m10-plot_count {3}
+set $m10-geom {640x640+583+219}
+set $m10-nw_label-0 {I}
+set $m10-sw_label-0 {F}
+set $m10-min_ref_label-0 {0}
+set $m10-max_ref_label-0 {30}
+set $m10-label-0 {ECG}
+set $m10-aux_data_label-0 {""}
+set $m10-min-0 {-20.0}
+set $m10-max-0 {90.0}
+set $m10-idx-0 {1}
+set $m10-snd-0 {0}
+set $m10-clamp-0 {0}
+set $m10-lines-0 {0}
+set $m10-auxidx-0 {0}
+set $m10-draw_aux_data-0 {0}
+set $m10-plot_color-0-r {0.91}
+set $m10-plot_color-0-g {0.63}
+set $m10-plot_color-0-b {0.0}
+set $m10-nw_label-1 {ABP}
+set $m10-sw_label-1 {mmHg}
+set $m10-label-1 {APB}
+set $m10-aux_data_label-1 {""}
+set $m10-min-1 {0.0}
+set $m10-max-1 {120.0}
+set $m10-idx-1 {2}
+set $m10-snd-1 {0}
+set $m10-clamp-1 {0}
+set $m10-lines-1 {0}
+set $m10-auxidx-1 {0}
+set $m10-draw_aux_data-1 {0}
+set $m10-plot_color-1-r {0.11}
+set $m10-plot_color-1-g {0.67}
+set $m10-plot_color-1-b {0.5}
+set $m10-nw_label-2 {LVP}
+set $m10-sw_label-2 {mmHg}
+set $m10-label-2 {LVP}
+set $m10-aux_data_label-2 {""}
+set $m10-min-2 {0.0}
+set $m10-max-2 {30.0}
+set $m10-idx-2 {3}
+set $m10-snd-2 {0}
+set $m10-clamp-2 {0}
+set $m10-lines-2 {0}
+set $m10-auxidx-2 {0}
+set $m10-draw_aux_data-2 {0}
+set $m10-plot_color-2-r {1.0}
+set $m10-plot_color-2-g {1.0}
+set $m10-plot_color-2-b {0.0}
+
+# Open the VS->Render->ICUMonitor UI
+$m10 initialize_ui
+
+# Set GUI variables for the SCIRun->Time->TimeControls Module
+set $m11-execmode {pause}
+
+# Open the SCIRun->Time->TimeControls UI
+$m11 initialize_ui
+
+
+::netedit scheduleok

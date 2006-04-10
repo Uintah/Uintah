@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="DMDAddMembrane" category="DiscreteMultiDomain" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module lets the user add a geometry with a specific model.
+    </summary>
+    <description>
+      <p>        This module lets the user add a geometry with a specific model.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>MembraneBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Parameters</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>MembraneBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
