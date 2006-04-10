@@ -9,9 +9,6 @@ namespace Uintah {
  *   different data types 
  *______________________________________________________________________*/ 
   struct fflux { double d_fflux[6]; };          //face flux
-  struct eflux { double d_eflux[12]; };         //edge flux
-  struct cflux { double d_cflux[8]; };          //corner flux
-
   //__________________________________
   // face data
   template <class T> struct facedata {
@@ -82,9 +79,7 @@ namespace Uintah {
     return td;
   }  
   
-  const TypeDescription* fun_getTypeDescription(fflux*);    
-  const TypeDescription* fun_getTypeDescription(eflux*);
-  const TypeDescription* fun_getTypeDescription(cflux*); 
+  const TypeDescription* fun_getTypeDescription(fflux*);
 
 }  // Uintah namespace
 
@@ -104,8 +99,6 @@ namespace SCIRun {
       swapbytes(v.d_vrtx[i]);
   }
   
-  void swapbytes( Uintah::fflux& ); 
-  void swapbytes( Uintah::eflux& );
-  void swapbytes( Uintah::cflux& );
+  void swapbytes( Uintah::fflux& );
 
 }

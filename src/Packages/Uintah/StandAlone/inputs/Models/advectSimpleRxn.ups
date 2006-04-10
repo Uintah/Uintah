@@ -192,7 +192,7 @@
          <cfl>0.25</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE" />
+        <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
