@@ -546,15 +546,15 @@ bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
 }
 
 
-bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements)
+bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements, bool matchvalue)
 {
   for (size_t p = 0; p < inputs.size(); p++) if (!MakeEditable(inputs[0],inputs[0])) return (false);
   MergeFieldsAlgo algo;
-  return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields,mergeelements));
+  return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields,mergeelements,matchvalue));
 }
 
 
-bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements)
+bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements, bool matchvalue)
 {
   if (MakeEditable(input,input)) return (false);
   
@@ -562,7 +562,7 @@ bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double toler
   inputs[0] = input;
   
   MergeFieldsAlgo algo;
-  return(algo.MergeFields(pr_,inputs,output,tolerance,true,mergeelements));
+  return(algo.MergeFields(pr_,inputs,output,tolerance,true,mergeelements,matchvalue));
 }
 
 
@@ -793,10 +793,10 @@ bool FieldsAlgo::SignedDistanceField(FieldHandle input, FieldHandle& output, Fie
   }
 }
 
-bool FieldsAlgo::TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline)
+bool FieldsAlgo::TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline, FieldHandle& phasepoint)
 {
   TriSurfPhaseFilterAlgo algo;
-  return(algo.TriSurfPhaseFilter(pr_,input,output,phaseline));  
+  return(algo.TriSurfPhaseFilter(pr_,input,output,phaseline,phasepoint));  
 }
 
 

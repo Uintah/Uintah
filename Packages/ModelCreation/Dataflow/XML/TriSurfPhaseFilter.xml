@@ -30,6 +30,10 @@
         <name>PhaseLine</name>
         <datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <name>PhasePoint</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
   </io>
 </component>

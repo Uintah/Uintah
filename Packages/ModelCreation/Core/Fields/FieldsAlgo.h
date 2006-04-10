@@ -153,11 +153,11 @@ class FieldsAlgo : public AlgoLibrary {
     // MergeFields: Merge a set of fields of the same type together into one
     // new output field. If mergenodes is true, nodes will be merge if the
     // distance between them is smaller than tolerance  
-    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true, bool mergeelements = true);
+    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true, bool mergeelements = true, bool matchvalue = true);
 
     // MergeNodes: Merge the nodes in a field together if the distance between
     // them is smaller than tolerance.
-    bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true);
+    bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true, bool matchvalue = true);
 
     // ScaleField:
     // Scales FieldData and MeshData, used to change units properly
@@ -186,8 +186,7 @@ class FieldsAlgo : public AlgoLibrary {
     bool Unstructure(FieldHandle input,FieldHandle& output);
     
     // TriSurfPhaseFilter
-    // Created an vector of fields out of the bundle type
-    bool TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline);    
+    bool TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline, FieldHandle& phasepoint);    
     
 };
 

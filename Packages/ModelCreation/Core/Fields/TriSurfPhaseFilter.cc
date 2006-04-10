@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool TriSurfPhaseFilterAlgo::TriSurfPhaseFilter(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle& phaseline)
+bool TriSurfPhaseFilterAlgo::TriSurfPhaseFilter(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle& phaseline, FieldHandle& phasepoint)
 {
   if (input.get_rep() == 0)
   {
@@ -45,6 +45,7 @@ bool TriSurfPhaseFilterAlgo::TriSurfPhaseFilter(ProgressReporter *pr, FieldHandl
   FieldInformation fi(input);
   FieldInformation fo(input);
   FieldInformation fo2(input);
+  FieldInformation fo3(input);
   
   if (!(fi.is_linear()))
   {
@@ -60,17 +61,19 @@ bool TriSurfPhaseFilterAlgo::TriSurfPhaseFilter(ProgressReporter *pr, FieldHandl
     return (false);
   }
   
-  fo.set_mesh_type("QuadSurfMesh");
+  fo.set_mesh_type("TriSurfMesh");
   fo.set_data_type("double");
   fo2.set_mesh_type("CurveMesh");
   fo2.set_data_type("double");
+  fo3.set_mesh_type("PointCloudMesh");
+  fo3.set_data_type("double");
 
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "TriSurfPhaseFilter."+fi.get_field_filename()+"."+fo.get_field_filename()+"."+fo2.get_field_filename()+".",
+    "TriSurfPhaseFilter."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "TriSurfPhaseFilterAlgo","TriSurfPhaseFilterAlgoT",
-    fi.get_field_name() + "," + fo.get_field_name() + "," + fo2.get_field_name());
+    fi.get_field_name() + "," + fo.get_field_name() + "," + fo2.get_field_name() + "," + fo3.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
@@ -79,17 +82,18 @@ bool TriSurfPhaseFilterAlgo::TriSurfPhaseFilter(ProgressReporter *pr, FieldHandl
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   fo2.fill_compile_info(ci);
+  fo3.fill_compile_info(ci);
   
   // Handle dynamic compilation
   SCIRun::Handle<TriSurfPhaseFilterAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->TriSurfPhaseFilter(pr,input,output,phaseline));
+  return(algo->TriSurfPhaseFilter(pr,input,output,phaseline,phasepoint));
 }
 
 
