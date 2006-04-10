@@ -210,7 +210,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Allocate memory for codebook
-  cluster=new Cluster[nvecs];
+  cluster = new Cluster[nvecs];
   if (!cluster) {
     cerr<<me<<":  error allocating memory for codebook"<<endl;
     exit(1);
@@ -241,7 +241,7 @@ int main(int argc, char* argv[]) {
   // Create codebook nrrd
   Nrrd* cbNrrd=nrrdNew();
   size_t size[NRRD_DIM_MAX];
-  size[0] = cluster::ndims;
+  size[0] = Cluster::ndims;
   size[1] = ncwords;
   if (nrrdAlloc_nva(cbNrrd, nrrdTypeFloat, 2, size)) {
     err=biffGet(NRRD);
