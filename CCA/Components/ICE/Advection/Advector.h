@@ -78,19 +78,10 @@ namespace Uintah {
     int IF_slab[6];          // influx flab
     IntVector S_ac[6];       // slab adj. cell
     
-    int OF_edge[6][4];      // outflux edge
-    int IF_edge[6][4];      // influx edge
-    IntVector E_ac[6][4];   // edge adj. cell
-    
-    int OF_corner[6][4];    // outflux corner
-    int IF_corner[6][4];    // influx corner
-    IntVector C_ac[6][4];   // corner adj. cell
-    
     SFCXVariable<double> d_notUsedX;
     SFCYVariable<double> d_notUsedY; 
     SFCZVariable<double> d_notUsedZ;
     CCVariable<double> d_notUsed_D;
-
   }; 
   
   //__________________________________
@@ -102,25 +93,16 @@ namespace Uintah {
                                  DataWarehouse* new_dw);
 				 
   inline double equalZero(double d1, double d2, double d3)
-    {
-      return d1 == 0.0 ? d2:d3;
-    }
+  {
+    return d1 == 0.0 ? d2:d3;
+  }
     
 
  /*______________________________________________________________________
  *   C O M M O N L Y   U S E D 
  *______________________________________________________________________*/ 
   
-  enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};    
-  enum EDGE {TOP_R = 0, TOP_FR, TOP_L, TOP_BK, BOT_R, BOT_FR, BOT_L, BOT_BK,
-            RIGHT_BK, RIGHT_FR, LEFT_BK, LEFT_FR };
-  enum CORNER {TOP_R_BK = 0, TOP_R_FR, TOP_L_BK, TOP_L_FR, BOT_R_BK, 
-             BOT_R_FR, BOT_L_BK, BOT_L_FR}; 
-
-  //__________________________________
-  // converts patch face into cell Face
-  int patchFaceToCellFace(Patch::FaceType face);
-
+  enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
    // These inlined functions are passed into advect() and calculate the face
    // value of q_CC.  Note only one version of advectQ needs to compute q_FC thus
    // we have the ignoreFaceFluxes functions.  This really cuts down on Code

@@ -144,7 +144,7 @@
          <cfl>0.25</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE"/>
+        <advection type = "FirstOrder"/>
         <solution technique = "EqForm"/>
         <ADD_HEAT>
           <add_heat_matls>   [2]      </add_heat_matls>

@@ -159,7 +159,7 @@
          <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE" />
+        <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         <add_delP_Dilatate>false</add_delP_Dilatate>
       </ICE>        
