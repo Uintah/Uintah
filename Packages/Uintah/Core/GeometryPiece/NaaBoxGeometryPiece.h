@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 
 #include <Core/Geometry/Vector.h>
 
@@ -41,17 +42,18 @@ class NaaBoxGeometryPiece : public GeometryPiece {
 	 
 public:
   //////////
-  // Construct a box from four points.
-  //
-  //       *------------------*
-  //      / \                / \
-  //    P4___\..............*   \
-  //      \   \             .    \
-  //       \   P2-----------------*
-  //        \  /             .   /
-  //         \/               . /
-  //         P1---------------P3
-  //
+  // Construct a box from four points.  //
+  //                                    //
+  //       *------------------*         //
+  //      / \                / \        //
+  //    P4...\..............*   \       //
+  //      \   \             .    \      //
+  //       \   P2-----------------*     //
+  //        \  /             .   /      //
+  //         \/               . /       //
+  //         P1---------------P3        //
+  //                                    //
+  // (The order of p2, p3, and p4 don't really matter.)
   NaaBoxGeometryPiece( const Point& p1, const Point& p2, 
                        const Point& p3, const Point& p4 );
 
@@ -90,9 +92,8 @@ private:
   void init( const Point& p1, const Point& p2, 
              const Point& p3, const Point& p4 );
 
-  Point  p1_, p2_, p3_, p4_;
-  Vector p2minusP1_,    p3minusP1_,    p4minusP1_;
-  double p2minusP1mag_, p3minusP1mag_, p4minusP1mag_;
+  Point   p1_, p2_, p3_, p4_;
+  Matrix3 toUnitCube_;
 
   Box boundingBox_;
 	 

@@ -16,7 +16,7 @@ using namespace SCIRun;
 
 NaaBoxGeometryPiece::NaaBoxGeometryPiece(ProblemSpecP& ps)
 {
-  setName("NaaBox");
+  setName("Unnamed NaaBox (from ProblemSpec)");
 
   Point p1, p2, p3, p4;
   ps->require("p1", p1);
@@ -24,8 +24,6 @@ NaaBoxGeometryPiece::NaaBoxGeometryPiece(ProblemSpecP& ps)
   ps->require("p3", p3);
   ps->require("p4", p4); 
   
-  //  SCI_THROW(ProblemSetupException("Input File Error: box max <= min coordinates", __FILE__, __LINE__));
-
   init( p1, p2, p3, p4 );
 }
 
@@ -34,6 +32,7 @@ NaaBoxGeometryPiece::NaaBoxGeometryPiece( const Point& p1,
                                           const Point& p3,
                                           const Point& p4 )
 {
+  setName("Unnamed NaaBox (from points)");
   init( p1, p2, p3, p4 );
 }
   
@@ -48,23 +47,22 @@ NaaBoxGeometryPiece::init( const Point& p1,
   p3_ = p3;
   p4_ = p4;
 
-  // Calculate the bounding box
-  Point max = Max( Max( Max( p1, p2 ), p3 ), p4 );
-  Point min = Min( Min( Min( p1, p2 ), p3 ), p4 );
+  Vector  p2minusP1, p3minusP1, p4minusP1;
+  p2minusP1 = p2 - p1;
+  p3minusP1 = p3 - p1;
+  p4minusP1 = p4 - p1;
 
-  boundingBox_ = Box( min, max );
+  // p5 is the opposite corner to p1 and is used for the bounding box.
+  Point p5 = p1 + (p2minusP1 + p3minusP1 + p4minusP1);
 
-  p2minusP1_ = p2 - p1;
-  p3minusP1_ = p3 - p1;
-  p4minusP1_ = p4 - p1;
+  boundingBox_ = Box( p1, p5 );
 
-  p2minusP1mag_ = p2minusP1_.length();
-  p3minusP1mag_ = p3minusP1_.length();
-  p4minusP1mag_ = p4minusP1_.length();
+  // Map the arbitrary box to a unix cube... 
+  Matrix3 mat( p2minusP1.x(), p3minusP1.x(),  p4minusP1.x(), 
+               p2minusP1.y(), p3minusP1.y(),  p4minusP1.y(), 
+               p2minusP1.z(), p3minusP1.z(),  p4minusP1.z() );
 
-  if( p2minusP1mag_ < 0.000001 || p3minusP1mag_ < 0.000001 || p4minusP1mag_ < 0.000001 ) {
-    SCI_THROW(ProblemSetupException("degenerate box", __FILE__, __LINE__));
-  }
+  toUnitCube_ = mat.Inverse();
 }
 
 NaaBoxGeometryPiece::~NaaBoxGeometryPiece()
@@ -88,79 +86,33 @@ NaaBoxGeometryPiece::clone()
   return scinew NaaBoxGeometryPiece(*this);
 }
 
-//********************************************************************
-// This code is a modified version of the code found here:
-//
-// http://www.csit.fsu.edu/~burkardt/m_src/geometry/parallelepiped_contains_point_3d.m
-//
-//  The author, John Burkardt, has graciously permitted us to use it.
-//
-//  Discussion:
-//
-//    A parallelepiped is a "slanted box", that is, opposite
-//    sides are parallel planes.
-//
-//         *------------------*
-//        / \                / \
-//       /   \              /   \
-//      /     \            /     \
-//    P4------------------*       \
-//      \        .         \       \
-//       \        .         \       \
-//        \        .         \       \
-//         \       P2.........\-------\
-//          \     /            \     /
-//           \   /              \   /
-//            \ /                \ /
-//             P1----------------P3
-//
-//  Author:
-//
-//    Based on the code by John Burkardt
+//********************************************
+//                                          //
+//             *-------------*              //
+//            / .           / \             //
+//           /   .         /   \            //
+//          P4-------------*    \           //
+//           \    .         \    \          //
+//            \   P2.........\....*         //
+//             \ .            \  /          //
+//             P1--------------P3           //
 //
 //  Returns true if the point is inside (or on) the parallelepiped.
+//  (The order of p2, p3, and p4 don't really matter.)
+//
+//  The arbitrary box has been transformed into a unit cube... we take
+//  the Point to check and transform it the same way, then just check
+//  to see if the Pt is in the unit cube.
 //
 bool
 NaaBoxGeometryPiece::inside( const Point& pt ) const
 {
-  //cout << "check inside for pt: " << pt << " ... ";
+  Vector result = toUnitCube_ * (pt - p1_);
 
-  double dot;
-
-  Vector ptMinusP1 = pt - p1_;
-
-  dot = Dot( p2minusP1_, ptMinusP1 );
-
-  if ( dot < 0.0 ) {
-    //cout << "no\n";
+  if( ( result.minComponent() > 0 ) && ( result.maxComponent() <= 1.0 ) )
+    return true;
+  else
     return false;
-  }
-  else if( Dot( p2minusP1_, p2minusP1_ ) < dot ) {
-    //cout << "no\n";
-    return false;
-  }
-
-  dot = Dot( p3minusP1_, ptMinusP1 );
-  if ( dot < 0.0 ) {
-    //cout << "no\n";
-    return false;
-  }
-  else if ( Dot( p3minusP1_, p3minusP1_ ) < dot ) {
-    //cout << "no\n";
-    return false;
-  }
-
-  dot = Dot( p4minusP1_, ptMinusP1 );
-  if ( dot < 0.0 ) {
-    //cout << "no\n";
-    return false;
-  }
-  else if ( Dot( p4minusP1_, p4minusP1_ ) < dot ) {
-    //cout << "no\n";
-    return false;
-  }
-  //cout << "yes\n";
-  return true;
 }
 
 Box

@@ -1,4 +1,6 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/GeometryPiece/ShellGeometryFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/NaaBoxGeometryPiece.h>
@@ -26,63 +28,100 @@
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-using std::cerr;
-using std::endl;
-
 using namespace Uintah;
+using namespace std;
 
-void GeometryPieceFactory::create(const ProblemSpecP& ps,
-				  std::vector<GeometryPiece*>& objs)
+// Static class variable definition:
+map<string,GeometryPiece*> GeometryPieceFactory::namedPieces_;
 
+void
+GeometryPieceFactory::create( const ProblemSpecP& ps,
+                              vector<GeometryPiece*>& objs)
 {
    for(ProblemSpecP child = ps->findBlock(); child != 0;
        child = child->findNextBlock()){
-      std::string go_type = child->getNodeName();
+      string go_type = child->getNodeName();
+      string go_label;
+      if( !child->getAttribute( "label", go_label ) ) {
+        child->getAttribute( "name", go_label );
+      }
 
+      if( go_label != "" ) {
+        cout << "Looking at " << go_label << "\n";
+      }
+
+      if( go_label != "" ) {
+
+        ProblemSpecP childBlock = child->findBlock();
+        GeometryPiece * gp = namedPieces_[go_label];
+
+        if( gp && childBlock ) {
+          cout << "Error: GeometryPiece " << go_label 
+               << " has already been specified...  You can't change its values.\n"
+               << "Please just reference the original by only using the label (no values)\n";
+          throw ProblemSetupException("Duplicate GeomPiece definition not allowed",
+                                      __FILE__, __LINE__);
+        }
+
+        if( !childBlock ) {
+          cout << "Referencing already created GeomPiece: " << go_label << "\n";
+          if( gp != NULL ) {
+            objs.push_back( gp );
+          } else {
+            cout << "Error... couldn't find a referenced GeomPiece named " << go_label 
+                 << "!\n";
+            throw ProblemSetupException("Referenced GeomPiece does not exist",
+                                        __FILE__, __LINE__);
+          }
+          return;
+        }
+      }
+
+      GeometryPiece * newGeomPiece = NULL;
       if (go_type == "shell") 
         ShellGeometryFactory::create(child, objs);
       
       else if (go_type == "box")
-	 objs.push_back(scinew BoxGeometryPiece(child));
+        newGeomPiece = scinew BoxGeometryPiece(child);
 
       else if (go_type == "parallelepiped")
-	 objs.push_back(scinew NaaBoxGeometryPiece(child));
+        newGeomPiece = scinew NaaBoxGeometryPiece(child);
       
       else if (go_type == "sphere")
-	 objs.push_back(scinew SphereGeometryPiece(child));
+        newGeomPiece = scinew SphereGeometryPiece(child);
 
       else if (go_type == "sphere_membrane")
-	 objs.push_back(scinew SphereMembraneGeometryPiece(child));
+        newGeomPiece = scinew SphereMembraneGeometryPiece(child);
 
       else if (go_type ==  "cylinder")
-	 objs.push_back(scinew CylinderGeometryPiece(child));
+        newGeomPiece = scinew CylinderGeometryPiece(child);
 
       else if (go_type ==  "smoothcyl")
-	 objs.push_back(scinew SmoothCylGeomPiece(child));
+        newGeomPiece = scinew SmoothCylGeomPiece(child);
 
       else if (go_type ==  "corrugated")
-	 objs.push_back(scinew CorrugEdgeGeomPiece(child));
+        newGeomPiece = scinew CorrugEdgeGeomPiece(child);
 
       else if (go_type ==  "cone")
-	 objs.push_back(scinew ConeGeometryPiece(child));
+        newGeomPiece = scinew ConeGeometryPiece(child);
 
       else if (go_type == "tri")
-	 objs.push_back(scinew TriGeometryPiece(child));
+        newGeomPiece = scinew TriGeometryPiece(child);
  
       else if (go_type == "union")
-	 objs.push_back(scinew UnionGeometryPiece(child));
+        newGeomPiece = scinew UnionGeometryPiece(child);
    
       else if (go_type == "difference")
-	 objs.push_back(scinew DifferenceGeometryPiece(child));
+        newGeomPiece = scinew DifferenceGeometryPiece(child);
 
       else if (go_type == "file")
-	 objs.push_back(scinew FileGeometryPiece(child));
+        newGeomPiece = scinew FileGeometryPiece(child);
 
       else if (go_type == "intersection")
-	 objs.push_back(scinew IntersectionGeometryPiece(child));
+        newGeomPiece = scinew IntersectionGeometryPiece(child);
 
       else if (go_type == "null")
-	objs.push_back(scinew NullGeometryPiece(child));
+	newGeomPiece = scinew NullGeometryPiece(child);
 
       else if (go_type == "res" || go_type == "velocity" || 
                go_type == "temperature" || go_type == "#comment")  {
@@ -95,9 +134,16 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
 	       << endl;
         continue;    // restart loop to avoid accessing name of empty object
       }
+      // Look for the "name" of the object.  (Can also be referenced as "label").
       string name;
       if(child->getAttribute("name", name)){
-	objs[objs.size()-1]->setName(name);
+	newGeomPiece->setName(name);
+      } else if(child->getAttribute("label", name)){
+	newGeomPiece->setName(name);
       }
+      if( name != "" ) {
+        namedPieces_[name] = newGeomPiece;
+      }
+      objs.push_back( newGeomPiece );
    }
 }
