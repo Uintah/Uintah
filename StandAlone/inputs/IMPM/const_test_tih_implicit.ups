@@ -58,6 +58,9 @@
 		    <c5>100</c5>
 		    <fiber_stretch>2.0</fiber_stretch>
 		    <direction_of_symm>[0,1,0]</direction_of_symm>
+                    <max_fiber_strain>2.0</max_fiber_strain>
+                    <max_matrix_strain>2.0</max_matrix_strain>
+                    <failure_option>0</failure_option>
                 </constitutive_model>
 		<is_rigid>true</is_rigid>
 		<thermal_conductivity>1.0</thermal_conductivity>
@@ -85,6 +88,9 @@
 		    <c5>100</c5>
 		    <fiber_stretch>2.0</fiber_stretch>
 		    <direction_of_symm>[0,1,0]</direction_of_symm>
+                    <max_fiber_strain>2.0</max_fiber_strain>
+                    <max_matrix_strain>2.0</max_matrix_strain>
+                    <failure_option>0</failure_option>
                 </constitutive_model>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
