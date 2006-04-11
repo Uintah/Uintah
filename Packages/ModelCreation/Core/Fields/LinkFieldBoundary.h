@@ -665,7 +665,7 @@ bool LinkFieldBoundarySurfaceAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr
   // A list of all the edges that are at an edge
   std::vector<edgeidx_type> edgelist;
   
-  imesh->synchronize(Mesh::EDGES_E|Mesh::FACE_NEIGHBORS_E);
+  imesh->synchronize(Mesh::EDGES_E|Mesh::EDGE_NEIGHBORS_E);
 
   typename FSRC::mesh_type::Node::size_type numnodes;
   typename FSRC::mesh_type::Edge::size_type numedges;

@@ -52,7 +52,7 @@
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Object</name>
+        <name>ObjectField</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>

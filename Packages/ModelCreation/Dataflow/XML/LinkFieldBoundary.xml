@@ -22,6 +22,10 @@
     </inputs>
     <outputs>
       <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
         <name>NodeLink</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>

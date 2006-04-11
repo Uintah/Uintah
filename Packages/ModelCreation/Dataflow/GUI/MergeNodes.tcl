@@ -36,8 +36,8 @@ itcl_class ModelCreation_FieldsGeometry_MergeNodes {
 
     method set_defaults {} {
 
-      global $this-force-matchval
-      set    $this-force-matchval 0
+      global $this-matchval
+      set    $this-matchval 0
 
       global $this-tolerance
       set    $this-tolerance 0.0001
@@ -51,7 +51,7 @@ itcl_class ModelCreation_FieldsGeometry_MergeNodes {
 
         toplevel $w
         checkbutton $w.fnm -text "Only merge nodes with same value" \
-          -variable $this-force-matchval
+          -variable $this-matchval
         pack $w.fnm
 
         iwidgets::entryfield $w.prec \

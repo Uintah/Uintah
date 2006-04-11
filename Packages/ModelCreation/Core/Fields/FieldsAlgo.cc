@@ -625,7 +625,7 @@ bool FieldsAlgo::BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>
 }
 
 
-bool FieldsAlgo::FieldArrayToBundle(std::vector<FieldHandle>& input, BundleHandle output)
+bool FieldsAlgo::FieldArrayToBundle(std::vector<FieldHandle> input, BundleHandle& output)
 {
   output = scinew Bundle();
   if (output.get_rep() == 0)

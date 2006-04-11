@@ -20,10 +20,6 @@
         <name>Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
-      <port>
-        <name>ElemLink</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
     </inputs>
     <outputs>
       <port>

@@ -101,8 +101,7 @@ bool SplitByConnectedRegionAlgoT<FSRC>::SplitByConnectedRegion(ProgressReporter 
     // if list of elements to process is empty ad the next one
     if (buffer.size() == 0)
     {
-      if(visited[static_cast<unsigned int>(*bi)] == 0) buffer.push_back(*bi);
-      k++;
+      if(visited[static_cast<unsigned int>(*bi)] == 0) { buffer.push_back(*bi); k++; }
     }
     
     if (buffer.size() > 0)
@@ -112,18 +111,23 @@ bool SplitByConnectedRegionAlgoT<FSRC>::SplitByConnectedRegion(ProgressReporter 
         if (visited[static_cast<unsigned int>(buffer[i])] > 0) { continue; }
         visited[static_cast<unsigned int>(buffer[i])] = 1;
         
+        typename FSRC::mesh_type::Node::array_type nnodes;
         typename FSRC::mesh_type::Elem::array_type neighbors;
  
-        imesh->get_neighbors(neighbors, buffer[i]);
-        for (unsigned int p=0; p<neighbors.size(); p++)
+        imesh->get_nodes(nnodes,buffer[i]);
+        for (unsigned int q=0; q<nnodes.size(); q++)
         {
-          if(visited[static_cast<unsigned int>(neighbors[p])] == 0)
+          imesh->get_elems(neighbors,nnodes[q]);
+          for (unsigned int p=0; p<neighbors.size(); p++)
           {
-            buffer.push_back(neighbors[p]);
-            visited[static_cast<unsigned int>(neighbors[p])] = -1;            
+            if(visited[static_cast<unsigned int>(neighbors[p])] == 0)
+            {
+              buffer.push_back(neighbors[p]);
+              visited[static_cast<unsigned int>(neighbors[p])] = -1;            
+            }
           }
         }
-       
+ 
         typename FSRC::mesh_type::Node::array_type elemnodes;
         imesh->get_nodes(elemnodes, buffer[i]);
         
