@@ -50,6 +50,14 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+// find a more 'consolidated' place to put this...
+#include <tcl.h>
+#if (TCL_MINOR_VERSION >= 4)
+#define TCLCONST const
+#else
+#define TCLCONST
+#endif
+
 #include <Core/GuiInterface/share.h>
 
 namespace SCIRun {

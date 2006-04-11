@@ -400,6 +400,7 @@ void
 TkOpenGLContext::make_x11_gl_context(const string &id, int visualid, 
                                      int width, int height)
 {
+#ifndef _WIN32
   visualid_ = visualid;
   id_ = id;
 
@@ -526,6 +527,7 @@ TkOpenGLContext::make_x11_gl_context(const string &id, int visualid,
   context_ = glXCreateContext(display_, vi_, first_context, 1);
   if (!context_) 
     throw scinew InternalError("Cannot create GLX Context",__FILE__,__LINE__);
+#endif
 }
 
 
@@ -534,6 +536,7 @@ void
 TkOpenGLContext::make_win32_gl_context(const string &id, int visualid, 
                                        int width, int height)
 {
+#ifdef _WIN32
   visualid_ = visualid;
   id_ = id;
 
@@ -618,6 +621,7 @@ TkOpenGLContext::make_win32_gl_context(const string &id, int visualid,
   XSync(display_, False);
 
   release();
+#endif
 }
 
 
@@ -735,12 +739,16 @@ TkOpenGLContext::listvisuals()
   return string("");
 #endif
 
+#ifndef EXPERIMENTAL_TCL_THREAD
   TCLTask::lock();
+#endif
   Tk_Window topwin=Tk_MainWindow(the_interp);
   if(!topwin)
   {
     cerr << "Unable to locate main window!\n";
+#ifndef EXPERIMENTAL_TCL_THREAD
     TCLTask::unlock();
+#endif
     return string("");
   }
 #ifndef _WIN32
@@ -754,7 +762,9 @@ TkOpenGLContext::listvisuals()
   if(!vinfo)
   {
     cerr << "XGetVisualInfo failed";
+#ifndef EXPERIMENTAL_TCL_THREAD
     TCLTask::unlock();
+#endif
     return string("");
   }
   for(int i=0;i<nvis;i++)
@@ -848,7 +858,9 @@ TkOpenGLContext::listvisuals()
   string ret_val;
   for (unsigned int k = 0; k < visualtags.size(); ++k)
     ret_val = ret_val + "{" + visualtags[k] +"} ";
-  TCLTask::unlock();
+#ifndef EXPERIMENTAL_TCL_THREAD
+    TCLTask::unlock();
+#endif
   return ret_val;
 #else // _WIN32
 

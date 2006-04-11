@@ -48,7 +48,7 @@
 namespace SCIRun {
 
 template< class HANDLE_TYPE >
-class SCISHARE ChooseModule : public Module {
+class ChooseModule : public Module {
 
 public:
   ChooseModule(const std::string& module_name,

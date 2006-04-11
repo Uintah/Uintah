@@ -122,7 +122,7 @@ all: $(OTF_LIBS)
 # don't create deps with ms yet
 %.obj : %.cc
 	rm -f $@ $(*).dll
-	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $< -o $@ 
+	$(CXX) -c $(CXXFLAGS) @WIN_OTFFLAGS@ $(INCLUDES) $< -o $@ 
 
 %.so : %.o 
 	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
@@ -131,7 +131,7 @@ all: $(OTF_LIBS)
 	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
 
 %.dll : %.obj
-	$(CXX) $(CXXFLAGS) $(LIBRARY)  $< -o $@ $(SOFLAGS) -LIBPATH:$(LIBDIR) $(patsubst -l%,lib%.lib, $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)  $(CONDITIONAL_LIBS)) 
+	$(CXX) $(CXXFLAGS) $(LIBRARY)  $< -o $@ $(SOFLAGS) -LIBPATH:$(LIBDIR) $(patsubst -l%,lib%.lib, $(LIBS)) $(patsubst -l%,%.lib, $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)  $(CONDITIONAL_LIBS)) 
 
 clean::
 	@rm -rf *.o *.d *.cc *.h *.dll *.dylib *.so *.log *~ ii_files

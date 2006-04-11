@@ -52,7 +52,7 @@
 #include <vector>
 #include <list>
 
-#include <Dataflow/Network/Ports/share.h>
+#include <Dataflow/Network/share.h>
 
 namespace SCIRun {
 
