@@ -65,8 +65,9 @@ void DMDCreateDomain::execute()
   if (!(get_input_handle("ElementType",ElementType,true))) return;
 
   get_input_handle("ConductivityTable",ConductivityTable,false); 
-  get_input_handle("NodeLink",NodeLink,false);
-  get_input_handle("ElemLink",ElemLink,false);
+
+  if(ElementType->is_property("NodeLink")) ElementType->get_property("NodeLink",NodeLink);
+  if(ElementType->is_property("ElemLink")) ElementType->get_property("ElemLink",ElemLink);
 
   BundleHandle output = scinew Bundle();
   output->setField("Conductivity",Conductivity);
