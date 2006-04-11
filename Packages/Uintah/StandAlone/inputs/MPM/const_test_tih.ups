@@ -74,6 +74,9 @@
 		    <c4>48</c4>
 		    <c5>467</c5>
 		    <fiber_stretch>1.062</fiber_stretch>
+		    <max_fiber_strain>2.0</max_fiber_strain>
+		    <max_matrix_strain>2.0</max_matrix_strain>
+		    <failure_option>0</failure_option>
                 </constitutive_model>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>

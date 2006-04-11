@@ -73,7 +73,7 @@
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
-                    <box label="gp1">
+                    <box label="gp2">
                         <min>[ 0.70, 0.0, 0.0 ]</min>
                         <max>[ 0.75, 1.0, 0.05]</max>
                     </box>
