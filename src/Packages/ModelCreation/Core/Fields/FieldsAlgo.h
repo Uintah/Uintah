@@ -112,7 +112,7 @@ class FieldsAlgo : public AlgoLibrary {
 
     // FieldArrayToBundle
     // Created an vector of fields out of the bundle type
-    bool FieldArrayToBundle(std::vector<FieldHandle>& input, BundleHandle output);
+    bool FieldArrayToBundle(std::vector<FieldHandle> input, BundleHandle& output);
     
     // FieldBoundary:
     // This function extracts the outer boundaries of a field

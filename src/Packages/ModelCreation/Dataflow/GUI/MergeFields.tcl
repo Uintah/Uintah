@@ -41,8 +41,8 @@ itcl_class ModelCreation_FieldsCreate_MergeFields {
       global $this-force-nodemerge
       set    $this-force-nodemerge 1
 
-      global $this-force-matchval
-      set    $this-force-matchval 0
+      global $this-matchval
+      set    $this-matchval 0
 
       global $this-tolerance
       set    $this-tolerance 0.0001
@@ -64,9 +64,9 @@ itcl_class ModelCreation_FieldsCreate_MergeFields {
           -variable $this-force-nodemerge
         pack $w.fnm
 
-        checkbutton $w.fnm -text "Only merge nodes with same value" \
-          -variable $this-force-matchval
-        pack $w.fnm
+        checkbutton $w.fnm2 -text "Only merge nodes with same value" \
+          -variable $this-matchval
+        pack $w.fnm2
 
         iwidgets::entryfield $w.prec \
           -labeltext "Tolerance (in distance) for merging nodes" \

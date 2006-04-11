@@ -64,9 +64,9 @@ LinkFieldBoundary::LinkFieldBoundary(GuiContext* ctx)
 
 void LinkFieldBoundary::execute()
 {
-  FieldHandle Field;
+  FieldHandle input, output;
   MatrixHandle NodeLink, ElemLink;
-  if(!(get_input_handle("Field",Field,true))) return;
+  if(!(get_input_handle("Field",input,true))) return;
 
   double tol = guitol_.get();
   bool   linkx = static_cast<bool>(guilinkx_.get());
@@ -74,8 +74,13 @@ void LinkFieldBoundary::execute()
   bool   linkz = static_cast<bool>(guilinkz_.get());
 
   FieldsAlgo fieldsalgo(this);
-  if(!(fieldsalgo.LinkFieldBoundary(Field,NodeLink,ElemLink,tol,linkx,linky,linkz))) return;
+  if(!(fieldsalgo.LinkFieldBoundary(input,NodeLink,ElemLink,tol,linkx,linky,linkz))) return;
   
+  output = input->clone();
+  output->set_property("NodeLink",NodeLink,false);
+  output->set_property("ElemLink",ElemLink,false);
+  
+  send_output_handle("Field",output,true);
   send_output_handle("NodeLink",NodeLink,true);
   send_output_handle("ElemLink",ElemLink,true);  
 }

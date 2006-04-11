@@ -72,6 +72,7 @@ bool DistanceFieldCellAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   }
   
   fo.set_data_type("double");
+  if (fo.is_nodata()) fo.make_lineardata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "DistanceFieldCell."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
@@ -138,6 +139,7 @@ bool DistanceFieldFaceAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   }
   
   fo.set_data_type("double");
+  if (fo.is_nodata()) fo.make_lineardata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "DistanceFieldFace."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
@@ -197,6 +199,7 @@ bool DistanceFieldEdgeAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   }
 
   fo.set_data_type("double");
+  if (fo.is_nodata()) fo.make_lineardata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "DistanceFieldEdge."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
@@ -256,6 +259,7 @@ bool DistanceFieldNodeAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   }
   
   fo.set_data_type("double");
+  if (fo.is_nodata()) fo.make_lineardata();  
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "DistanceFieldNode."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
@@ -322,6 +326,7 @@ bool SignedDistanceFieldFaceAlgo::DistanceField(ProgressReporter *pr, FieldHandl
   }
   
   fo.set_data_type("double");
+  if (fo.is_nodata()) fo.make_lineardata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "SignedDistanceFieldFace."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",

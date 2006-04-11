@@ -104,8 +104,6 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   if (imesh->dimensionality() == 2) imesh->synchronize(Mesh::EDGES_E|Mesh::FACES_E|Mesh::EDGE_NEIGHBORS_E);
   if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E|Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E);
   
-  imesh->synchronize();
-    
   typename FSRC::mesh_type::Node::size_type numnodes;
   imesh->size(numnodes);
   typename FSRC::mesh_type::DElem::size_type numfaces;

@@ -244,19 +244,22 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
             key += (static_cast<int>((P.z()-Zmin)*Zmul))<<16;
           
             mindist = tol2;
-            for (int x = -1; x < 2; x++)
-              for (int y = -256; y < 257; y += 256)
-                for (int z = -65536; z < 65537; z += 65536)
+            
+            bool foundit = false;
+            for (int x = -1; x < 2 && !foundit; x++)
+              for (int y = -256; y < 257 && !foundit; y += 256)
+                for (int z = -65536; z < 65537 && !foundit; z += 65536)
                 {
                   lit = node_index_.equal_range(key+x+y+z);
                   
-                  while (lit.first != lit.second)
+                  while (lit.first != lit.second && !foundit)
                   {
                     typename FIELD::mesh_type::Node::index_type idx = (*(lit.first)).second;
                     omesh->get_center(Q,idx);
+                    
                     if (matchval) 
                     {
-                      v2 = ofield->value(idx);
+                      v2 = ofield->value(idx);                 
                       if (v1 == v2)
                       {
                         dist = (P.x()-Q.x())*(P.x()-Q.x()) + (P.y()-Q.y())*(P.y()-Q.y()) + (P.z()-Q.z())*(P.z()-Q.z());
@@ -266,6 +269,7 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
                           localindex[nodeq] = newnodes[q];
                           localindex_assigned[nodeq] = true;
                           mindist = dist;
+                          foundit = true;
                         }
                       }
                     }
@@ -278,9 +282,10 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
                         localindex[nodeq] = newnodes[q];
                         localindex_assigned[nodeq] = true;
                         mindist = dist;
+                        foundit = true;
                       }
                     }
-                    ++(lit.first);
+                    ++(lit.first);  
                   }
                 }
                 

@@ -71,7 +71,7 @@ void CompartmentBoundary::execute()
   FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
  
   if(!(get_input_handle("Field",ifield,true))) return;
-  get_input_handle("ElemLink",ElemLink,false);
+  if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
   
   double minrange, maxrange;
   bool   userange, includeouterboundary;
