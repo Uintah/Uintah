@@ -4204,22 +4204,23 @@ elif test "$with_babel"; then
 fi
 
 SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
-  
+
 BABEL_BIN=
 AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
 AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
-  
+
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
-  SCI_CHECK_VERSION($BABEL_BIN,--version,0.10.0,,echo configure: error: wrong Babel version.; exit)
+  ## check for compatible version (0.11.0 or greater)
+  SCI_CHECK_VERSION($BABEL_BIN,--version,0.11.0,,echo configure: error: wrong Babel version.; exit)
   DEF_BABEL="#define HAVE_BABEL 1"
   HAVE_BABEL="yes"
 fi
-  
+
+## make missing babel an error!
 if test "$with_babel" && test ! "$DEF_BABEL"; then
   echo
   AC_MSG_ERROR(One or more of the Babel components is missing.)
-fi 
+fi
 
 AC_SUBST(HAVE_BABEL)
 AC_SUBST(DEF_BABEL)
@@ -4919,7 +4920,7 @@ AC_CHECK_PROG(QT_MOC_BIN,moc,$qt_bin/moc,NOMOC,)
 
 # Restore the previous settings.
 ac_ext="$ext"
-
+  
 if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
    DEF_QT="#define HAVE_QT 1"
    HAVE_QT="yes"
@@ -5027,7 +5028,7 @@ if test "$sci_required_vtk" = "yes"; then
 
   ext="$ac_ext"
   ac_ext="cc"
-
+  
   # Only looking for one .h file... assuming all the rest are in the same place.
   SCI_TRY_LINK(VTK,vtk library, vtkImageData.h,$_vtk_inc,vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib,$_sci_lib,,,optional)
 

@@ -66,36 +66,9 @@ void BaseClass::deleteRef()
     BaseInterface::deleteRef();
 }
 
-/*Class::pointer Object::getClass()
-{
-  return  BaseInterface::getClass();
-}*/
-
 bool BaseClass::isSame(const BaseInterface::pointer& iobj)
 {
   return BaseInterface::isSame(iobj);
-}
-/*
-bool BaseClass::isInstanceOf(const Class::pointer& c)
-{
-  return BaseInterface::isInstanceOf(c);
-}
-
-bool BaseClass::supportsInterface(const Class::pointer& c)
-{
-  return BaseInterface::supportsInterface(c);
-}*/
-
-/*
-BaseInterface::pointer BaseClass::queryInterface(const Class::pointer& c)
-{
-  return BaseInterface::queryInterface(c);
-}
-*/
- //BaseInterface::pointer Object::queryInterface(const std::string& c)
-BaseInterface::pointer BaseClass::queryInt(const std::string& name)
-{
-  return BaseInterface::queryInt(name);
 }
 
 bool BaseClass::isType(const std::string& name)

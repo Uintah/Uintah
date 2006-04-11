@@ -41,44 +41,43 @@
  */
 
 #include <Core/CCA/SSIDL/sidl_sidl.h>
+#include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/Util/NotFinished.h>
 
 using SSIDL::BaseInterface;
-//using SSIDL::BaseClass;
 using SSIDL::ClassInfo;
 
 
 void BaseInterface::addRef()
 {
-    SCIRun::Object::addReference();
+  SCIRun::Object::addReference();
 }
 
 void BaseInterface::deleteRef()
 {
-    SCIRun::Object::deleteReference();
+  SCIRun::Object::deleteReference();
 }
 
-bool BaseInterface::isSame(const BaseInterface::pointer& /*object*/)
+bool BaseInterface::isSame(const BaseInterface::pointer& object)
 {
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isSame(in .SSIDL.BaseInterface object)");
+  // Not tested!
+  return this == object.getPointer();
+}
+
+bool BaseInterface::isType(const std::string& name)
+{
+  const SCIRun::TypeInfo* typeInfo = BaseInterface::_static_getTypeInfo();
+  // Not tested!
+  // Is there likely to be a naming clash between the PIDL and babel component-based objects?
+  if (typeInfo->isa(name) == SCIRun::TypeInfo::VTABLE_INVALID) {
     return false;
+  } else {
+    return true;
+  }
 }
 
-BaseInterface::pointer BaseInterface::queryInt(const std::string& /*name*/)
-{
-    NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInt(in .SSIDL.string name)");
-    return BaseInterface::pointer(0);
-}
-
-bool BaseInterface::isType(const std::string& /*name*/)
-{
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isType(in .SSIDL.string name)");
-    return false;
-}
-
-// SSIDL::ClassInfo BaseInterface::getClassInfo()
 ClassInfo::pointer BaseInterface::getClassInfo()
 {
-    NOT_FINISHED("ClassInfo .SSIDL.getClassInfo()");
-    return ClassInfo::pointer(0);
+  NOT_FINISHED("ClassInfo .SSIDL.getClassInfo()");
+  return ClassInfo::pointer(0);
 }

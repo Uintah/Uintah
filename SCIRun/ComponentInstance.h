@@ -52,6 +52,8 @@ class SCIRunFramework;
 class PortInstance;
 class PortInstanceIterator;
 
+typedef std::map<std::string, PortInstance*> PortInstanceMap;
+
 /**
  * \class ComponentInstance
  *

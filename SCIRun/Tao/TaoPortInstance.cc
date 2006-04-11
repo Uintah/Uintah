@@ -76,7 +76,7 @@ bool TaoPortInstance::connect(PortInstance* to)
     return false;
   }
 
-  if (portType() == From && p2->portType() == To) {
+  if (portType() == Uses && p2->portType() == Provides) {
     connections.push_back(p2);
   } else {
       p2->connect(this);
@@ -86,11 +86,7 @@ bool TaoPortInstance::connect(PortInstance* to)
 
 PortInstance::PortType TaoPortInstance::portType()
 {
-    if (porttype == Uses) {
-        return From;
-    } else {
-        return To;
-    }
+  return porttype;
 }
 
 
@@ -151,7 +147,7 @@ bool TaoPortInstance::canConnectTo(PortInstance* to)
 
 bool TaoPortInstance::available()
 {
-    return portType() == To || connections.size() == 0;
+    return portType() == Provides || connections.size() == 0;
 }
 
 // return a PortInstance on the other side of the connection

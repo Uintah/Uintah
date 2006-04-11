@@ -38,11 +38,12 @@
  *
  */
 
+#include <SCIRun/Babel/framework.hxx>
+#include <SCIRun/Babel/sidl.hxx>
+
 #include <SCIRun/Babel/BabelComponentModel.h>
 #include <SCIRun/Babel/BabelComponentDescription.h>
 #include <SCIRun/Babel/BabelComponentInstance.h>
-#include <SCIRun/Babel/framework.hh>
-#include <SCIRun/Babel/sidl.hh>
 
 #include <SCIRun/SCIRunFramework.h>
 #include <Core/Containers/StringUtil.h>
@@ -94,7 +95,7 @@ void BabelComponentModel::buildComponentList(const StringVector& files)
   destroyComponentList();
 
   // update SIDL Loader
-  std::string search_path = sidl::Loader::getSearchPath();
+  std::string search_path = UCXX ::sidl::Loader::getSearchPath();
   if (files.empty()) {
     StringVector xmlPaths_;
     getXMLPaths(framework, xmlPaths_);
@@ -106,7 +107,7 @@ void BabelComponentModel::buildComponentList(const StringVector& files)
 	  // This is the ';' separated path that sidl::Loader will search for
 	  // *.scl files. Babel *.scl files are necessary for mapping component
 	  // names with their DLLs.
-	  sidl::Loader::addSearchPath(path);
+	  UCXX ::sidl::Loader::addSearchPath(path);
 	}
       }
     }
@@ -118,7 +119,7 @@ void BabelComponentModel::buildComponentList(const StringVector& files)
 	  // This is the ';' separated path that sidl::Loader will search for
 	  // *.scl files. Babel *.scl files are necessary for mapping component
 	  // names with their DLLs.
-	  sidl::Loader::addSearchPath(path);
+	  UCXX ::sidl::Loader::addSearchPath(path);
 	}
       }
     }
@@ -138,14 +139,14 @@ BabelComponentModel::setComponentDescription(const std::string& type, const std:
   }
 }
 
-gov::cca::Services
+UCXX ::gov::cca::Services
 BabelComponentModel::createServices(const std::string& instanceName,
 				    const std::string& className,
-				    const gov::cca::TypeMap& properties)
+				    const UCXX ::gov::cca::TypeMap& properties)
 {
   /*
-  gov::cca::Component nullCom;
-  gov::cca::Services svc;
+  UCXX ::gov::cca::Component nullCom;
+  UCXX ::gov::cca::Services svc;
   cerr<<"need associate svc with ci in createServices!"<<endl;
   BabelComponentInstance* ci = new BabelComponentInstance(framework,
 			      instanceName, className,
@@ -158,8 +159,8 @@ BabelComponentModel::createServices(const std::string& instanceName,
 
   */
   // is this supposed to be called by AbstractFramework.getServices???
-  NOT_FINISHED("gov::cca::Services BabelComponentModel::createServices(const std::string& instanceName, const std::string& className, const gov::cca::TypeMap& properties)");
-  gov::cca::Services svc;
+  NOT_FINISHED("gov::cca::Services BabelComponentModel::createServices(const std::string& instanceName, const std::string& className, const UCXX ::gov::cca::TypeMap& properties)");
+  UCXX ::gov::cca::Services svc;
   return svc;
 }
 
@@ -224,31 +225,32 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
    *
    * Note for *nix: make sure library path is in LD_LIBRARY_PATH
    */
-  sidl::DLL library = sidl::Loader::findLibrary(type, "ior/impl",
-						sidl::Scope_SCLSCOPE, sidl::Resolve_SCLRESOLVE);
+  UCXX ::sidl::DLL library = UCXX ::sidl::Loader::findLibrary(type, "ior/impl", UCXX ::sidl::Scope_SCLSCOPE, UCXX ::sidl::Resolve_SCLRESOLVE);
 #if DEBUG
-  std::cerr << "sidl::Loader::getSearchPath=" << sidl::Loader::getSearchPath() << std::endl;
-  sidl::Finder f = sidl::Loader::getFinder();
+  std::cerr << "sidl::Loader::getSearchPath=" << UCXX ::sidl::Loader::getSearchPath() << std::endl;
+  // get default finder and report search path
+  UCXX ::sidl::Finder f = UCXX ::sidl::Loader::getFinder();
   std::cerr << "sidl::Finder::getSearchPath=" << f.getSearchPath() << std::endl;
 #endif
   if (library._is_nil()) {
-    std::cerr << "Could not find library for type " << type
+    std::cerr << "Could not find library for type " << type << ". "
+	      << "Check your environment settings as described in the Babel and SCIRun2 usage instructions."
 	      << std::endl;
     return 0;
   }
 
-  sidl::BaseClass sidl_class = library.createClass(type);
+  UCXX ::sidl::BaseClass sidl_class = library.createClass(type);
   // cast BaseClass instance to Component
-  // Note: when changing to UCxx bindings, use babel_cast<>()
-  gov::cca::Component component = sidl_class;
+  // babel_cast<>() introduced in UC++ bindings, returns nil pointer on bad cast
+  UCXX ::gov::cca::Component component = UCXX ::sidl::babel_cast<UCXX ::gov::cca::Component>(sidl_class);
   if ( component._is_nil() ) {
     std::cerr << "Cannot load babel component of type " << type
 	      << ". Babel component not created." << std::endl;
     return 0;
   }
-  framework::Services svc = framework::Services::_create();
+  UCXX ::framework::Services svc = UCXX ::framework::Services::_create();
   component.setServices(svc);
-  gov::cca::Component nullMap;
+  UCXX ::gov::cca::TypeMap nullMap;
 
   BabelComponentInstance* ci =
     new BabelComponentInstance(framework, name, type, nullMap, component, svc);

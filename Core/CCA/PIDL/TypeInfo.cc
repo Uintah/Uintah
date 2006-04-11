@@ -69,7 +69,7 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
       ti->d_priv->fullclassname + " should be an ancestor of " +
       d_priv->fullclassname + ", but is not!", __FILE__, __LINE__);
   }
-  return iter->second.second-vtable_methods_start;
+  return iter->second.second - VTABLE_METHODS_START;
 }
 
 
@@ -98,7 +98,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   message->marshalInt(&addRef);
 
   // Send the message
-  int handler=vtable_isa_handler;
+  int handler=VTABLE_ISA_HANDLER;
   message->sendMessage(handler);
 
   // Wait for the reply
@@ -163,7 +163,7 @@ int TypeInfo::isa(const std::string& classname) const
   TypeInfo_internal::MapType::iterator classname_iter =
     d_priv->classname_map.find(classname);
   if (classname_iter == d_priv->classname_map.end()) {
-    return vtable_invalid;
+    return VTABLE_INVALID;
   }
   // unused:
   //const TypeInfo_internal* tip = classname_iter->second.first;

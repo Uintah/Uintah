@@ -28,7 +28,7 @@
 
 
 /*
- *  CCAComponentInstance.h: 
+ *  CCAComponentInstance.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -58,6 +58,8 @@ class CCAPortInstance;
 class Services;
 class Mutex;
 
+typedef std::map<std::string, CCAPortInstance*> CCAPortInstanceMap;
+
 /**
  * \class CCAComponentInstance
  *
@@ -66,36 +68,36 @@ class Mutex;
  * instantiation that is used by the framework.
  */
 class CCAComponentInstance : public ComponentInstance,
-                             public sci::cca::Services
+			     public sci::cca::Services
 {
 public:
   CCAComponentInstance(SCIRunFramework* framework,
-                       const std::string& instanceName,
-                       const std::string& className,
-                       const sci::cca::TypeMap::pointer& typemap,
-                       const sci::cca::Component::pointer& component);
+		       const std::string& instanceName,
+		       const std::string& className,
+		       const sci::cca::TypeMap::pointer& typemap,
+		       const sci::cca::Component::pointer& component);
   virtual ~CCAComponentInstance();
-  
-/**
- * @param portName The previously registered port (through addProvidePort or registerUsesPort) the component now wants to use.
- * @exception CCAException with the following types: NotConnected, PortNotDefined, 
- *                NetworkError, OutOfMemory.
- */
-sci::cca::Port::pointer getPort(const std::string& name);
 
-/**
- * @return The named port, if it exists and is connected or self-provided,
- * 	      or NULL if it is registered and is not yet connected. Does not
- * 	      return if the Port is neither registered nor provided, but rather
- * 	      throws an exception.
- * @param portName previously registered or provided port that
- * 	     the component now wants to use.
- * @throws CCAException with the following types: PortNotConnected,
- *         PortNotDefined, NetworkError, OutOfMemory.
- */
-// throws CCA exception if port type is PROVIDES (??)
-// returns null if port's connections vector size != 1
-// otherwise returns port peer (1st element of connections vector)
+  /**
+   * @param portName The previously registered port (through addProvidePort or registerUsesPort) the component now wants to use.
+   * @exception CCAException with the following types: NotConnected, PortNotDefined,
+   *                NetworkError, OutOfMemory.
+   */
+  sci::cca::Port::pointer getPort(const std::string& name);
+
+  /**
+   * @return The named port, if it exists and is connected or self-provided,
+   *	      or NULL if it is registered and is not yet connected. Does not
+   *	      return if the Port is neither registered nor provided, but rather
+   *	      throws an exception.
+   * @param portName previously registered or provided port that
+   *	     the component now wants to use.
+   * @throws CCAException with the following types: PortNotConnected,
+   *         PortNotDefined, NetworkError, OutOfMemory.
+   */
+  // throws CCA exception if port type is PROVIDES (??)
+  // returns null if port's connections vector size != 1
+  // otherwise returns port peer (1st element of connections vector)
   sci::cca::Port::pointer getPortNonblocking(const std::string& name);
 
   /**
@@ -103,7 +105,7 @@ sci::cca::Port::pointer getPort(const std::string& name);
    * @return
    * @param
    * @throws
-   */ 
+   */
   void releasePort(const std::string& name);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
@@ -125,8 +127,8 @@ sci::cca::Port::pointer getPort(const std::string& name);
    *   framework not to use network proxy for for this port
    */
   void registerUsesPort(const std::string& name,
-                        const std::string& type,
-                        const sci::cca::TypeMap::pointer& properties);
+			const std::string& type,
+			const sci::cca::TypeMap::pointer& properties);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
@@ -154,9 +156,9 @@ sci::cca::Port::pointer getPort(const std::string& name);
    * OutOfMemory, Nonstandard (null port argument)
    */
   void addProvidesPort(const sci::cca::Port::pointer& port,
-                       const std::string& name,
-                       const std::string& type,
-                       const sci::cca::TypeMap::pointer& properties);
+		       const std::string& name,
+		       const std::string& type,
+		       const sci::cca::TypeMap::pointer& properties);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding
       method in SCIRunFramework::Services. */
@@ -177,7 +179,7 @@ sci::cca::Port::pointer getPort(const std::string& name);
   /** A proxy method for gov::cca::Services.  Calls the corresponding
       method in SCIRunFramework::Services. */
   sci::cca::ComponentID::pointer getComponentID();
-  
+
   // Methods from ComponentInstance
   virtual PortInstance* getPortInstance(const std::string& name);
   virtual PortInstanceIterator* getPorts();
@@ -186,7 +188,7 @@ sci::cca::Port::pointer getPort(const std::string& name);
 private:
   class Iterator : public PortInstanceIterator
   {
-    std::map<std::string, CCAPortInstance*>::iterator iter;
+    CCAPortInstanceMap::iterator iter;
     CCAComponentInstance* comp;
   public:
     Iterator(CCAComponentInstance*);
@@ -198,9 +200,10 @@ private:
     Iterator(const Iterator&);
     Iterator& operator=(const Iterator&);
   };
-  typedef std::map<std::string, CCAPortInstance*> PortInstanceMap;
+
   typedef std::map<std::string, std::vector<Object::pointer> > PreportMap;
-  PortInstanceMap ports;
+
+  CCAPortInstanceMap ports;
   PreportMap preports;
   SCIRun::Mutex lock_ports;
   SCIRun::Mutex lock_preports;
@@ -212,7 +215,7 @@ private:
   sci::cca::Component::pointer component;
   int size;
   int rank;
-  
+
   CCAComponentInstance(const CCAComponentInstance&);
   CCAComponentInstance& operator=(const CCAComponentInstance&);
 };

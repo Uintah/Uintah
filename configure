@@ -50563,8 +50563,9 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
     echo "$as_me:$LINENO: result: $dir" >&5
 echo "${ECHO_T}$dir" >&6
   else
-    echo "$as_me:$LINENO: result: not found." >&5
-echo "${ECHO_T}not found." >&6
+    { { echo "$as_me:$LINENO: error: not found... Insight is required to build" >&5
+echo "$as_me: error: not found... Insight is required to build" >&2;}
+   { (exit 1); exit 1; }; }
   fi
 
   if test "$with_insight" && test ! "$DEF_INSIGHT"; then
@@ -51467,18 +51468,18 @@ fi
 
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
+  ## check for compatible version (0.11.0 or greater)
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
     _SCI_VER_1_="0"
-    _SCI_VER_2_="0.10.0"
+    _SCI_VER_2_="0.11.0"
     _CUR_1_=""
     _CUR_2_=""
 
-    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.10.0" >&5
-echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.10.0... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.11.0" >&5
+echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.11.0... $ECHO_C" >&6
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -51531,6 +51532,7 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
   HAVE_BABEL="yes"
 fi
 
+## make missing babel an error!
 if test "$with_babel" && test ! "$DEF_BABEL"; then
   echo
   { { echo "$as_me:$LINENO: error: One or more of the Babel components is missing." >&5

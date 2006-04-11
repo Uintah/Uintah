@@ -28,7 +28,7 @@
 
 
 /*
- *  BridgeComponentInstance.h: 
+ *  BridgeComponentInstance.h:
  *
  *  Written by:
  *   Kostadin Damevski
@@ -41,7 +41,7 @@
 #ifndef SCIRun_Framework_BridgeComponentInstance_h
 #define SCIRun_Framework_BridgeComponentInstance_h
 
-#include <sci_defs/vtk_defs.h>
+#include <sci_metacomponents.h>
 
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstance.h>
@@ -75,7 +75,7 @@ namespace SCIRun {
     BridgeComponentInstance(SCIRunFramework* framework,
 			 const std::string& instanceName,
 			 const std::string& className,
-             const sci::cca::TypeMap::pointer &tm,
+	     const sci::cca::TypeMap::pointer &tm,
 			 BridgeComponent* component);
     virtual ~BridgeComponentInstance();
 
@@ -83,11 +83,11 @@ namespace SCIRun {
     Port* getDataflowIPort(const std::string& name);
     Port* getDataflowOPort(const std::string& name);
     sci::cca::Port::pointer getCCAPort(const std::string& name);
-    gov::cca::Port getBabelPort(const std::string& name);
+    UCXX ::gov::cca::Port getBabelPort(const std::string& name);
 
 #if HAVE_VTK
     vtk::Port* getVtkPort(const std::string& name);
-    void addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT);
+    void addVtkPort(vtk::Port* vtkport, VtkPortInstance::VTKPortType portT);
 #endif
 
     void releasePort(const std::string& name,const modelT model);
@@ -108,7 +108,7 @@ namespace SCIRun {
   private:
     //ITERATOR CLASS
     class Iterator : public PortInstanceIterator {
-      std::map<std::string, PortInstance*>::iterator iter;
+      PortInstanceMap::iterator iter;
       BridgeComponentInstance* comp;
     public:
       Iterator(BridgeComponentInstance*);
@@ -122,15 +122,15 @@ namespace SCIRun {
     };
     //EOF ITERATOR CLASS
 
-    std::map<std::string, PortInstance*> ports;
+    PortInstanceMap ports;
     SCIRun::Mutex lock_ports;
-  
+
     BridgeComponent* component;
     Mutex *mutex;
 
     //Dataflow:
-    BridgeModule* bmdl; 
-   
+    BridgeModule* bmdl;
+
     BridgeComponentInstance(const BridgeComponentInstance&);
     BridgeComponentInstance& operator=(const BridgeComponentInstance&);
   };
