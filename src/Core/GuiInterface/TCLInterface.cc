@@ -59,11 +59,19 @@
 #include <iostream>
 #include <string>
 
+// find a more 'consolidated' place to put this...
+#if (TCL_MINOR_VERSION >= 4)
+#define TCLCONST const
+#else
+#define TCLCONST
+#endif
+
 //#  define EXPERIMENTAL_TCL_THREAD
 
 #ifdef _WIN32
 #  include <windows.h>
-#  define SCISHARE __declspec(dllimport)
+#  undef SCISHARE
+#  define SCISHARE __declspec(dllexport)
 #  define EXPERIMENTAL_TCL_THREAD
 #else
 #  define SCISHARE
@@ -72,7 +80,6 @@
 using namespace SCIRun;
 using std::string;
 
-SCISHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
   struct TCLCommandData {
@@ -91,11 +98,14 @@ static Mailbox<EventMessage*> tclQueue("TCL command mailbox", 50);
 static Tcl_Time tcl_time = {0,0};
 static Tcl_ThreadId tclThreadId = 0;
 int eventCallback(Tcl_Event* event, int flags);
-void eventSetup(ClientData cd, int flags);
+SCISHARE void eventSetup(ClientData cd, int flags);
+SCISHARE void eventCheck(ClientData cd, int flags);
 
 #endif
 
-extern "C" SCISHARE Tcl_Interp* the_interp;
+extern "C" {
+  SCISHARE Tcl_Interp* the_interp;
+}
 
 TCLInterface::TCLInterface() :
   pause_semaphore_(new Semaphore("TCL Task Pause Semaphore",0)),

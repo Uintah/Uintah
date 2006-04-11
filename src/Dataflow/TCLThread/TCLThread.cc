@@ -42,6 +42,13 @@
 #include <tk.h>
 #include <itk.h>
 
+// find a more 'consolidated' place to put this...
+#if (TCL_MINOR_VERSION >= 4)
+#define TCLCONST const
+#else
+#define TCLCONST
+#endif
+
 typedef void (Tcl_LockProc)();
 
 using namespace SCIRun;
@@ -72,24 +79,21 @@ extern "C" SCISHARE Tcl_Interp* the_interp;
 //EXTERN int		TkConsoleInit(Tcl_Interp *interp);
 //extern "C" int Table_Init _ANSI_ARGS_((Tcl_Interp* interp));
 
-extern "C" int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
+extern "C" SCISHARE int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
                                       Tcl_Interp *interp, 
                                       int argc, TCLCONST char **argv));
-extern "C" int BevelCmd _ANSI_ARGS_((ClientData clientData,
-                                     Tcl_Interp *interp, 
-                                     int argc, TCLCONST char **argv));
-extern "C" int Tk_RangeObjCmd _ANSI_ARGS_((ClientData clientData, 
-                                           Tcl_Interp *interp, 
-                                           int objc, Tcl_Obj *CONST objv[])); 
-extern "C" int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
-                                         Tcl_Interp *interp, 
-                                         int argc, TCLCONST char **argv));
-extern "C" int BLineInit _ANSI_ARGS_((void));
+extern "C" SCISHARE int BevelCmd _ANSI_ARGS_((ClientData clientData,
+                                              Tcl_Interp *interp, 
+                                              int argc, TCLCONST char **argv));
+extern "C" SCISHARE int Tk_RangeObjCmd _ANSI_ARGS_((ClientData clientData, 
+                                                    Tcl_Interp *interp, 
+                                                    int objc, Tcl_Obj *CONST objv[])); 
+extern "C" SCISHARE int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
+                                                  Tcl_Interp *interp, 
+                                                  int argc, TCLCONST char **argv));
+extern "C" SCISHARE int BLineInit _ANSI_ARGS_((void));
 extern "C" int Blt_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
 extern "C" int Blt_Init _ANSI_ARGS_((Tcl_Interp *interp));
-
-
-
 
 using namespace std;
 
@@ -159,8 +163,8 @@ TCLThread::check_for_newer_scirunrc() {
 }
   
 #ifdef EXPERIMENTAL_TCL_THREAD
-void eventCheck(ClientData cd, int flags);
-void eventSetup(ClientData cd, int flags);
+SCISHARE void eventCheck(ClientData cd, int flags);
+SCISHARE void eventSetup(ClientData cd, int flags);
 #endif
 
 static

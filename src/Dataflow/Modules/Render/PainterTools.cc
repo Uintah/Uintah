@@ -81,7 +81,9 @@
 #include <Core/Util/Timer.h>
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
-
+#include <sgi_stl_warnings_off.h> 
+#include <algorithm>
+#include <sgi_stl_warnings_on.h> 
 
 #ifdef _WIN32
 #define SCISHARE __declspec(dllimport)

@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Network/Ports/share.h>
-
 #undef SCISHARE
 #ifdef _WIN32
 #define SCISHARE __declspec(dllexport)

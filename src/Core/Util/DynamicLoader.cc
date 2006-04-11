@@ -74,6 +74,7 @@ void set_vc_dirs()
 }
 
 #endif
+#undef SCISHARE
 #define SCISHARE __declspec(dllexport)
 #else
 #include <unistd.h>

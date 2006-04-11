@@ -52,6 +52,7 @@
 #include <sgi_stl_warnings_off.h>  // Turned back on at end of file. 
 
 #include <iostream>
+#include <algorithm>
 using std::cerr;
 using std::endl;
 

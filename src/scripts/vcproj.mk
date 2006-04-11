@@ -2,10 +2,12 @@ ifeq ($(MAKE_WHAT),LIB)
   FILENAME:=$(subst lib/,projects/,$(LIBNAME).vcproj)
   $(FILENAME)_CONF:=2
   $(FILENAME)_OUTDIR:=../lib
+  $(FILENAME)_NAME:=$(basename $(notdir $(FILENAME)))
 else
   FILENAME:=projects/$(subst /,_,$(PROGRAM)).exe.vcproj
   $(FILENAME)_CONF:=1
   $(FILENAME)_OUTDIR:=../$(dir $(PROGRAM))
+  $(FILENAME)_NAME:=$(notdir $(PROGRAM)).exe
 endif
 
 $(FILENAME)_SRCDIR:=$(SRCDIR)
@@ -77,7 +79,7 @@ else
 endif
 
 # this line is required for TkExtensions...
-ifeq ($(FILENAME),projects/libCore_TkExtensions.dll.vcproj)
+ifeq ($(FILENAME),projects/libDataflow_TCLThread.dll.vcproj)
   $(FILENAME)_OTHER="IgnoreDefaultLibraryNames=\"libc.lib\""
 else
   $(FILENAME)_OTHER=""
@@ -124,11 +126,11 @@ $(FILENAME):
 			<Tool \
 				Name=\"VCLinkerTool\" \
 				AdditionalDependencies=\"$($@_LIBS)\" \
-				OutputFile=\"`echo '$$\(OutDir)' | sed 's,\\\(,\(,g'`/$(basename $(notdir $@))\" \
+				OutputFile=\"`echo '$$\(OutDir)' | sed 's,\\\(,\(,g'`/$($@_NAME)\" \
 				LinkIncremental=\"$(CONF_LINK_INC)\" \
 				AdditionalLibraryDirectories=\"$($@_LIBPATHS)../lib\" \
 				GenerateDebugInformation=\"TRUE\" \
-				ProgramDatabaseFile=\"../$($@_SRCDIR)/$(basename $(notdir $@)).pdb\" \
+				ProgramDatabaseFile=\"../$($@_SRCDIR)/$($@_NAME).pdb\" \
 				SubSystem=\"1\" \
 				$(CONF_LINK_OTHER) \
 				$($@_OTHER) \

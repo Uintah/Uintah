@@ -48,7 +48,7 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Geom/GeomObj.h>
 
-#include <Dataflow/Network/Ports/share.h>
+#include <Dataflow/Network/share.h>
 
 namespace SCIRun {
 class Semaphore;

@@ -34,7 +34,7 @@
 
 #include <Dataflow/Network/Ports/SimplePort.h>
 
-#include <Dataflow/Network/Ports/share.h>
+#include <Dataflow/Network/share.h>
 
 namespace SCIRun {
 

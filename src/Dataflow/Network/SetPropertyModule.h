@@ -47,7 +47,7 @@
 namespace SCIRun {
 
 template< class HANDLE_TYPE >
-class SCISHARE SetPropertyModule : public Module {
+class SetPropertyModule : public Module {
 
 public:
   SetPropertyModule(const std::string& module_name,
