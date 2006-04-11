@@ -31,9 +31,7 @@
 	<save label="g.mass"/>
 	<save label="g.stressFS"/>
 	<save label="g.velocity"/>
-	<save label="g.momexedvelocity"/>
 	<save label="g.velocity_star"/>
-	<save label="g.momexedvelocity_star"/>
    </DataArchiver>
 
     <MPM>

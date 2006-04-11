@@ -142,7 +142,7 @@
 
 	    <contact>
               <type>friction</type>
-              <materials>[0,1]</materials>
+              <materials>[0,1,2]</materials>
               <mu> 0.5 </mu>
 	    </contact>
 	</MPM>
@@ -151,24 +151,24 @@
 	
     <Grid>
 	<BoundaryConditions>
-	        <Face side = "x-">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>
-                <Face side = "x+">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>
-                <Face side = "y-">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>                  
-		<Face side = "y+">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>
-                <Face side = "z-">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>
-                <Face side = "z+">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>
+        <Face side = "x-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "x+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "y-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>                  
+	<Face side = "y+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
 	</BoundaryConditions>
 	<Level>
 	    <Box label = "1">

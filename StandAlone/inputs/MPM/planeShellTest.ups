@@ -124,7 +124,7 @@
            <include href="MaterialData/IsotropicElastic4340Steel.xml"/>
          </constitutive_model>
          <geom_object>
-           <cylinder label = "outer cylinder">
+           <cylinder label = "outer cylinder1">
              <bottom> [0.0,0.0,2.3e-2] </bottom>
              <top>    [0.0,0.0,3.0e-2] </top>
              <radius> 0.5e-2           </radius>
