@@ -2012,8 +2012,9 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::orient_faces()
 {
-  synchronize_lock_.lock();
   synchronize(EDGES_E | EDGE_NEIGHBORS_E);
+  synchronize_lock_.lock();
+
   int nfaces = (int)faces_.size() / 3;
   vector<bool> tested(nfaces, false);
   vector<bool> flip(nfaces, false);
@@ -2201,6 +2202,9 @@ TriSurfMesh<Basis>::io(Piostream &stream)
 
   Pio(stream, points_);
   Pio(stream, faces_);
+  if (stream.writing()) {
+    synchronize(EDGE_NEIGHBORS_E);
+  }
   Pio(stream, edge_neighbors_);
 
   if (version >= 2) {

@@ -65,7 +65,7 @@ find_connected_faces(unsigned face, TSMesh *tsm,
     connected.push_back(face);
   }
 
-  TSMesh::Edge::array_type edges;
+  TSMesh::Edge::array_type edges(3);
   tsm->get_edges(edges, (TSMesh::Face::index_type)face);
   
   TSMesh::Face::index_type f0;
