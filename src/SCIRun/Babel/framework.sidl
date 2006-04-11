@@ -30,24 +30,22 @@
 
 //version framework 1.0;
 
-package framework version 1.0{
+package framework version 1.0 {
 
-  class Services implements-all gov.cca.Services{
-	opaque getData();
-  };
+  class Services implements-all gov.cca.Services {
+    opaque getData();
+  }
 
-  class Component implements-all gov.cca.Component{
-  };
+  class Component implements-all gov.cca.Component {}
 
-  class Port implements-all gov.cca.Port{
-  };
+  class Port implements-all gov.cca.Port {}
 
-  class TypeMap implements-all gov.cca.TypeMap{
-  };
-	
+  class TypeMap implements-all gov.cca.TypeMap {
+    // use to set internal SCI::TypeMap data for now
+    void setInternalData(in opaque data);
+    opaque getInternalData();
+  }
 
-  class ComponentID implements-all gov.cca.ComponentID{
-
-  };
-	
+  class ComponentID implements-all gov.cca.ComponentID {}
+  //class CCAException implements-all gov.cca.CCAException {}
 };

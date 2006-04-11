@@ -58,9 +58,6 @@ class CorbaComponentInstance;
  */
 class CorbaPortInstance : public PortInstance {
 public:
-  enum PortType {
-    Provides, Uses
-  };
   CorbaPortInstance(CorbaComponentInstance* ci, corba::Port* port, PortType type);
   ~CorbaPortInstance();
 

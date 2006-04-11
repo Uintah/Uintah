@@ -46,7 +46,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := SCIRun Core/Exceptions Core/Thread Core/Util \
 			 Core/CCA/Comm Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL
-  ifeq ($(HAVE_GLOBUS),yes)   
+  ifeq ($(HAVE_GLOBUS),yes)
 	PSELIBS += Core/globus_threads
   endif
 endif
@@ -54,7 +54,7 @@ endif
 LIBS := $(GLOBUS_LIBRARY)
 
 ifeq ($(HAVE_MPI),yes)
-  LIBS += $(MPI_LIBRARY) 
+  LIBS += $(MPI_LIBRARY)
 endif
 
 PROGRAM := sr

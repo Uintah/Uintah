@@ -41,11 +41,13 @@
 #ifndef SCIRun_Babel_BabelComponentModel_h
 #define SCIRun_Babel_BabelComponentModel_h
 
+#include <SCIRun/Babel/gov_cca.hxx>
+
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
-#include <SCIRun/Babel/gov_cca.hh>
+
 #include <string>
 #include <map>
 
@@ -70,13 +72,13 @@ class BabelComponentModel : public ComponentModel
 {
 public:
   BabelComponentModel(SCIRunFramework* framework,
-		      const StringVector& xmlPaths=StringVector());
+                      const StringVector& xmlPaths=StringVector());
   virtual ~BabelComponentModel();
 
   /** ? */
-  gov::cca::Services createServices(const std::string& instanceName,
-				    const std::string& className,
-				    const gov::cca::TypeMap& properties);
+  UCXX ::gov::cca::Services createServices(const std::string& instanceName,
+                                    const std::string& className,
+                                    const UCXX ::gov::cca::TypeMap& properties);
 
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
@@ -91,11 +93,11 @@ public:
    * Remote components are currently NOT supported.
    */
   virtual ComponentInstance* createInstance(const std::string& name,
-					    const std::string& type);
+                                            const std::string& type);
 
   /** ? */
   virtual std::string createComponent(const std::string& name,
-				      const std::string& type);
+                                      const std::string& type);
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */

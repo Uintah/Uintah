@@ -47,7 +47,7 @@
 namespace SCIRun {
 
 SCIRunPortInstance::SCIRunPortInstance(SCIRunComponentInstance* component,
-                                       Port* port, PortType porttype)
+                                       Port* port, DataflowPortType porttype)
   : component(component), port(port), porttype(porttype)
 {
 }
@@ -64,9 +64,9 @@ std::string SCIRunPortInstance::getUniqueName()
 PortInstance::PortType SCIRunPortInstance::portType()
 {
   if(porttype == Output)
-    return PortInstance::From;
+    return PortInstance::Uses;
   else
-    return PortInstance::To;
+    return PortInstance::Provides;
 }
 
 bool SCIRunPortInstance::connect(PortInstance* to)

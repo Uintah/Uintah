@@ -73,7 +73,7 @@ const char* find_cpp()
 char* find_builtin()
 {
 #ifndef SIDL_BUILTINS
-#error SIDL_BUILTINS should point to the directory containing cia.sidl
+#error SIDL_BUILTINS should point to the directory containing sidl.sidl
 #endif
   return SIDL_BUILTINS "sidl.sidl";
 }
@@ -144,6 +144,7 @@ int main(int argc, char* argv[])
           perror("pclose");
           failed = true;
         }
+	parse_spec->isImport = true;
         specs.add(parse_spec);
         parse_spec = 0;
         done_builtin = true;

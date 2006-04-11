@@ -235,7 +235,7 @@ BuilderService::getProvidedPortNames(const sci::cca::ComponentID::pointer &cid)
     for (PortInstanceIterator* iter = ci->getPorts();
             !iter->done(); iter->next()) {
         PortInstance* port = iter->get();
-        if (port->portType() == PortInstance::To) {
+        if (port->portType() == PortInstance::Provides) {
             result.push_back(port->getUniqueName());
         }
     }
@@ -255,7 +255,7 @@ BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
     for (PortInstanceIterator* iter = ci->getPorts();
             !iter->done(); iter->next()) {
         PortInstance* port = iter->get();
-        if (port->portType() == PortInstance::From) {
+        if (port->portType() == PortInstance::Uses) {
             result.push_back(port->getUniqueName());
         }
     }

@@ -30,16 +30,12 @@
  * File:          whoc_UIPort_Impl.c
  * Symbol:        whoc.UIPort-v1.0
  * Symbol Type:   class
- * Babel Version: 0.7.4
- * SIDL Created:  20030915 14:58:57 MST
- * Generated:     20030915 14:59:01 MST
+ * Babel Version: 0.11.0
  * Description:   Server-side implementation for whoc.UIPort
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
- * babel-version = 0.7.4
- * source-line   = 10
- * source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/whoc/whoc.sidl
+ * babel-version = 0.11.0
  */
 
 /*
@@ -58,16 +54,40 @@
 /* DO-NOT-DELETE splicer.end(whoc.UIPort._includes) */
 
 /*
+ * Static class initializer called exactly once before any user-defined method is dispatched
+ */
+
+#undef __FUNC__
+#define __FUNC__ "impl_whoc_UIPort__load"
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void
+impl_whoc_UIPort__load(
+  /* out */ sidl_BaseInterface *_ex)
+{
+  *_ex = 0;
+  /* DO-NOT-DELETE splicer.begin(whoc.UIPort._load) */
+  /* Insert-Code-Here {whoc.UIPort._load} (static class initializer method) */
+  /* DO-NOT-DELETE splicer.end(whoc.UIPort._load) */
+}
+/*
  * Class constructor called when the class is created.
  */
 
 #undef __FUNC__
 #define __FUNC__ "impl_whoc_UIPort__ctor"
 
+#ifdef __cplusplus
+extern "C"
+#endif
 void
 impl_whoc_UIPort__ctor(
-  whoc_UIPort self)
+  /* in */ whoc_UIPort self,
+  /* out */ sidl_BaseInterface *_ex)
 {
+  *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.UIPort._ctor) */
   /* Insert the implementation of the constructor method here... */
   /* DO-NOT-DELETE splicer.end(whoc.UIPort._ctor) */
@@ -80,10 +100,15 @@ impl_whoc_UIPort__ctor(
 #undef __FUNC__
 #define __FUNC__ "impl_whoc_UIPort__dtor"
 
+#ifdef __cplusplus
+extern "C"
+#endif
 void
 impl_whoc_UIPort__dtor(
-  whoc_UIPort self)
+  /* in */ whoc_UIPort self,
+  /* out */ sidl_BaseInterface *_ex)
 {
+  *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.UIPort._dtor) */
   /* Insert the implementation of the destructor method here... */
   /* DO-NOT-DELETE splicer.end(whoc.UIPort._dtor) */
@@ -96,11 +121,78 @@ impl_whoc_UIPort__dtor(
 #undef __FUNC__
 #define __FUNC__ "impl_whoc_UIPort_ui"
 
+#ifdef __cplusplus
+extern "C"
+#endif
 int32_t
 impl_whoc_UIPort_ui(
-  whoc_UIPort self)
+  /* in */ whoc_UIPort self,
+  /* out */ sidl_BaseInterface *_ex)
 {
+  *_ex = 0;
   /* DO-NOT-DELETE splicer.begin(whoc.UIPort.ui) */
   /* Insert the implementation of the ui method here... */
   /* DO-NOT-DELETE splicer.end(whoc.UIPort.ui) */
+}
+/* Babel internal methods, Users should not edit below this line. */
+struct gov_cca_Port__object* impl_whoc_UIPort_fconnect_gov_cca_Port(const char* 
+  url, sidl_bool ar, sidl_BaseInterface *_ex) {
+  return gov_cca_Port__connectI(url, ar, _ex);
+}
+struct gov_cca_Port__object* impl_whoc_UIPort_fcast_gov_cca_Port(void* bi,
+  sidl_BaseInterface* _ex) {
+  return gov_cca_Port__cast(bi, _ex);
+}
+struct gov_cca_ports_UIPort__object* 
+  impl_whoc_UIPort_fconnect_gov_cca_ports_UIPort(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex) {
+  return gov_cca_ports_UIPort__connectI(url, ar, _ex);
+}
+struct gov_cca_ports_UIPort__object* 
+  impl_whoc_UIPort_fcast_gov_cca_ports_UIPort(void* bi,
+  sidl_BaseInterface* _ex) {
+  return gov_cca_ports_UIPort__cast(bi, _ex);
+}
+struct sidl_BaseClass__object* impl_whoc_UIPort_fconnect_sidl_BaseClass(const 
+  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
+  return sidl_BaseClass__connectI(url, ar, _ex);
+}
+struct sidl_BaseClass__object* impl_whoc_UIPort_fcast_sidl_BaseClass(void* bi,
+  sidl_BaseInterface* _ex) {
+  return sidl_BaseClass__cast(bi, _ex);
+}
+struct sidl_BaseInterface__object* 
+  impl_whoc_UIPort_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex) {
+  return sidl_BaseInterface__connectI(url, ar, _ex);
+}
+struct sidl_BaseInterface__object* 
+  impl_whoc_UIPort_fcast_sidl_BaseInterface(void* bi, sidl_BaseInterface* _ex) {
+  return sidl_BaseInterface__cast(bi, _ex);
+}
+struct sidl_ClassInfo__object* impl_whoc_UIPort_fconnect_sidl_ClassInfo(const 
+  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
+  return sidl_ClassInfo__connectI(url, ar, _ex);
+}
+struct sidl_ClassInfo__object* impl_whoc_UIPort_fcast_sidl_ClassInfo(void* bi,
+  sidl_BaseInterface* _ex) {
+  return sidl_ClassInfo__cast(bi, _ex);
+}
+struct sidl_RuntimeException__object* 
+  impl_whoc_UIPort_fconnect_sidl_RuntimeException(const char* url, sidl_bool ar,
+  sidl_BaseInterface *_ex) {
+  return sidl_RuntimeException__connectI(url, ar, _ex);
+}
+struct sidl_RuntimeException__object* 
+  impl_whoc_UIPort_fcast_sidl_RuntimeException(void* bi,
+  sidl_BaseInterface* _ex) {
+  return sidl_RuntimeException__cast(bi, _ex);
+}
+struct whoc_UIPort__object* impl_whoc_UIPort_fconnect_whoc_UIPort(const char* 
+  url, sidl_bool ar, sidl_BaseInterface *_ex) {
+  return whoc_UIPort__connectI(url, ar, _ex);
+}
+struct whoc_UIPort__object* impl_whoc_UIPort_fcast_whoc_UIPort(void* bi,
+  sidl_BaseInterface* _ex) {
+  return whoc_UIPort__cast(bi, _ex);
 }

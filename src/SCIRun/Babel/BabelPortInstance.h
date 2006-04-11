@@ -28,7 +28,7 @@
 
 
 /*
- *  BabelPortInstance.h: 
+ *  BabelPortInstance.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -41,11 +41,13 @@
 #ifndef SCIRun_Babel_BabelPortInstance_h
 #define SCIRun_Babel_BabelPortInstance_h
 
+#include <SCIRun/Babel/gov_cca.hxx>
+
+#include <SCIRun/PortInstance.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Babel/gov_cca.hh>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -60,15 +62,13 @@ namespace SCIRun {
 class BabelPortInstance : public PortInstance
 {
 public:
-  enum PortType {  Uses, Provides  };
-  
   BabelPortInstance(const std::string& portname, const std::string& classname,
-                    const gov::cca::TypeMap& properties,
-                    PortType porttype);
+		    const UCXX ::gov::cca::TypeMap& properties,
+		    PortType porttype);
   BabelPortInstance(const std::string& portname, const std::string& classname,
-                    const gov::cca::TypeMap& properties,
-                    const gov::cca::Port& port,
-                    PortType porttype);
+		    const UCXX ::gov::cca::TypeMap& properties,
+		    const UCXX ::gov::cca::Port& port,
+		    PortType porttype);
   virtual ~BabelPortInstance();
   virtual bool connect(PortInstance*);
   virtual PortInstance::PortType portType();
@@ -79,21 +79,32 @@ public:
   virtual bool canConnectTo(PortInstance*);
   virtual bool available();
   virtual PortInstance* getPeer();
+
   std::string getName();
+  int getConnectionCount() { return connections.size(); }
+
   void incrementUseCount();
   bool decrementUseCount();
-public:
+
+  /** Test use counter. */
+  bool portInUse();
+
+  const UCXX ::gov::cca::Port& getPort() { return port; }
+  //UCXX ::gov::cca::TypeMap getProperties();
+
+private:
+  //friend class BabelComponentInstance;
+
   PortType porttype;
   std::vector<PortInstance*> connections;
   SCIRun::Mutex lock_connections;
-  friend class BabelComponentInstance;
   std::string name;
   std::string type;
-  gov::cca::TypeMap properties;
-  gov::cca::Port port;
-  
+  UCXX ::gov::cca::TypeMap properties;
+  UCXX ::gov::cca::Port port;
+
   int useCount;
-  
+
   BabelPortInstance(const BabelPortInstance&);
   BabelPortInstance& operator=(const BabelPortInstance&);
 };
@@ -101,4 +112,3 @@ public:
 } //namespace SCIRun
 
 #endif
-
