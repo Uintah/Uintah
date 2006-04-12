@@ -251,10 +251,7 @@
                     <min>       [ 0.0, 0.0, 0.0 ]       </min>
                     <max>       [ 0.2, 0.03, 0.03 ]     </max>
                 </box>
-                <box label="gpmpm">
-                  <min>         [ 0.00,  0.0,  0.0 ]    </min>
-                  <max>         [ 0.005, 0.02, 0.02 ]   </max>   
-                </box>
+                <box label="gpmpm"> </box>
              </difference>
                <res>           [1,2,2]                  </res>
                <velocity>      [0,0,0]                  </velocity>

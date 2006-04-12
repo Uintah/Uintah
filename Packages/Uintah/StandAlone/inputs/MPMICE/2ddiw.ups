@@ -104,7 +104,7 @@
     </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>        [0.0,0.0,1.125]    </lower>
+              <lower>        [0,0,1.1250]    </lower>
               <upper>        [4.5,2.5,1.375]    </upper>
                 <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
@@ -130,7 +130,6 @@
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.temperature"/>
-      <checkpoint cycle = "2" timestepInterval = "100"/>
    </DataArchiver>
 
    <Debug>
@@ -168,7 +167,6 @@
     <MPM>
         <time_integrator>explicit</time_integrator>
         <nodes8or27>8</nodes8or27>
-        <testForNegTemps_mpm>false</testForNegTemps_mpm>
     </MPM>
 
     <!--____________________________________________________________________-->

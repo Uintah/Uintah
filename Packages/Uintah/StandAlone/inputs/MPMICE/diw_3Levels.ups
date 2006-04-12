@@ -266,7 +266,7 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
               <difference>
-                <box label = "D">
+                <box label = "Db">
                     <min>           [-10,-10,-10]    </min>
                     <max>           [ 10, 10, 10 ]   </max>
                 </box>
