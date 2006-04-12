@@ -51,6 +51,8 @@
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
 
+#include <sci_defs/teem_defs.h>
+
 #ifdef HAVE_TEEM
 #include <teem/nrrd.h>
 #else

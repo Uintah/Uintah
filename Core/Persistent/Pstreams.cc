@@ -47,6 +47,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
 
+#include <sci_defs/teem_defs.h>
+
 #ifdef HAVE_TEEM
 #include <teem/air.h>
 #include <teem/nrrd.h>
