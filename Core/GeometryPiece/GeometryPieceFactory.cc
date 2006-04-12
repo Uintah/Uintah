@@ -22,6 +22,7 @@
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <iostream>
@@ -30,6 +31,8 @@
 
 using namespace Uintah;
 using namespace std;
+
+DebugStream dbg( "GeometryPieceFactory", false );
 
 // Static class variable definition:
 map<string,GeometryPiece*> GeometryPieceFactory::namedPieces_;
@@ -47,7 +50,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       }
 
       if( go_label != "" ) {
-        cout << "Looking at " << go_label << "\n";
+        dbg << "Looking at GeometryPiece (" << go_type << ") labeled: " << go_label << "\n";
       }
 
       if( go_label != "" ) {
@@ -56,20 +59,21 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
         GeometryPiece * gp = namedPieces_[go_label];
 
         if( gp && childBlock ) {
-          cout << "Error: GeometryPiece " << go_label 
-               << " has already been specified...  You can't change its values.\n"
+          cout << "Error: GeometryPiece (" << go_type << ")" << " labeled: '" << go_label 
+               << "' has already been specified...  You can't change its values.\n"
                << "Please just reference the original by only using the label (no values)\n";
           throw ProblemSetupException("Duplicate GeomPiece definition not allowed",
                                       __FILE__, __LINE__);
         }
 
         if( !childBlock ) {
-          cout << "Referencing already created GeomPiece: " << go_label << "\n";
+          dbg << "Referencing already created GeomPiece: " << go_label << "\n";
           if( gp != NULL ) {
             objs.push_back( gp );
           } else {
-            cout << "Error... couldn't find a referenced GeomPiece named " << go_label 
-                 << "!\n";
+            cout << "Error... couldn't find the referenced GeomPiece (" << go_type 
+                 << ")" << " labeled '" << go_label 
+                 << "'!\n";
             throw ProblemSetupException("Referenced GeomPiece does not exist",
                                         __FILE__, __LINE__);
           }
