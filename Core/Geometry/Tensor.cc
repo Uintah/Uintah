@@ -46,17 +46,22 @@
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Math/MiscMath.h>
+
+#include <sci_defs/teem_defs.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
+
 using std::istream;
 using std::ostream;
+
 #include <stdio.h>
 
 #ifdef HAVE_TEEM
-#include <teem/ten.h>
+#  include <teem/ten.h>
 #else
-#include <Core/Exceptions/InternalError.h>
+#  include <Core/Exceptions/InternalError.h>
 #endif
 
 namespace SCIRun {
