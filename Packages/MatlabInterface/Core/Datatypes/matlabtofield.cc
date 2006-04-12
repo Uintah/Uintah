@@ -287,9 +287,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   }
 
   mlfield     = findfield(mlarray,"field;scalarfield;scalardata;potvals;data;");
-  mlfieldedge = findfield(mlarray,"fieldedge;edge;");
-  mlfieldface = findfield(mlarray,"fieldface;face;");
-  mlfieldcell = findfield(mlarray,"fieldcell;cell;");
+  mlfieldedge = findfield(mlarray,"fieldedge;edge;line;");
+  mlfieldface = findfield(mlarray,"fieldface;face;quad;fac;tri;");
+  mlfieldcell = findfield(mlarray,"fieldcell;cell;prism;hex;tet;");
 
   mlfieldderivatives  = findfield(mlarray,"fieldderivatives;derivatives;");
   mlfieldscalefactors = findfield(mlarray,"fieldscalefactors;scalefactors;");
@@ -297,6 +297,8 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   mlfieldtype =       findfield(mlarray,"fieldtype;datatype;");
   mlfieldbasis =      findfield(mlarray,"fieldbasis;basis;");
   mlfieldbasisorder = findfield(mlarray,"fieldbasisorder;basisorder;fieldat;fieldlocation;dataat;");
+
+  mlchannels        = findfield(mlarray,"channels;");
 
   // Figure out the basis type
   // Since we went through several systems over the time
@@ -2457,9 +2459,6 @@ bool MatlabToFieldAlgo::addfield(std::vector<SCIRun::Tensor> &fdata)
 
   return(true);
 }
-
-
-
 
 
 } // end namespace
