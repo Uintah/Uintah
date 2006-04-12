@@ -178,6 +178,8 @@ class MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
     matlabarray mlfieldbasisorder;
     matlabarray mlfieldtype;
 
+    matlabarray mlchannels;
+
     std::string fdatatype;
     std::string fieldtype;
     std::string meshtype;
