@@ -183,7 +183,7 @@ TransformMeshAlgo::get_compile_info(const TypeDescription *field_td,
     string("template <class FIELD>\n") +
     "class " + template_name + " : public TransformMeshAlgoT<FIELD>\n" +
     "{\n" +
-    "  virtual void function(Point &result, const Point &p)\n" +
+    "  virtual void function(Point &result, const Point &p, unsigned idx)\n" +
     "  {\n" +
     "    " + function + "\n" +
     "  }\n" +

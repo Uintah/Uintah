@@ -48,7 +48,7 @@ itcl_class SCIRun_FieldsGeometry_TransformMesh {
         }
         toplevel $w
 
-	label $w.info -text "Function (note: The variable p contains the original location)"
+	label $w.info -text "Function (note: The variable p contains the original location,\nand idx has the node index for the point.)"
 
 	option add *textBackground white	
 	iwidgets::scrolledtext $w.row1 -height 60 -hscrollmode dynamic
