@@ -49,7 +49,7 @@ typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 //slow recursive funtion...
 void 
 find_connected_faces(unsigned face, TSMesh *tsm, 
-		     vector<unsigned> &connected)
+		     vector<TSMesh::Face::index_type> &connected)
 {
   tsm->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::EDGE_NEIGHBORS_E | 
 		   Mesh::EDGES_E);
@@ -87,6 +87,19 @@ find_connected_faces(unsigned face, TSMesh *tsm,
   }
 }
 
+bool node_idx_p = false;
+void 
+parse_args(int argc, char **argv) {
+  if (argc != 5) {
+    cerr << "arguments: <in field> <-(n | f)> <index> <out field>"
+	 << endl << "where n and f specify the index type (node or face)"
+	 << endl;
+      exit(3);
+  }
+  if (string(argv[2]) == "-n") {
+    node_idx_p = true;
+  } 
+}
 
 int
 main(int argc, char **argv) {
@@ -103,6 +116,8 @@ main(int argc, char **argv) {
 	 << endl;
     exit(2);
   }
+
+  parse_args(argc, argv);
   
   MeshHandle mb = handle->mesh();
   TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
@@ -110,13 +125,17 @@ main(int argc, char **argv) {
     cerr << "Input not a TriSurf. Exiting..." << endl;
     exit(3);
   }
-  vector<unsigned> faces;
-  find_connected_faces(atoi(argv[2]), tsm, faces);
-
+  vector<TSMesh::Face::index_type> faces;
+  if (node_idx_p) {
+    tsm->synchronize(Mesh::NODE_NEIGHBORS_E);
+    tsm->get_elems(faces, atoi(argv[3]));
+  } else {
+    find_connected_faces(atoi(argv[3]), tsm, faces);
+  }
   bool altered = false;
   // remove last index first.
   sort(faces.begin(), faces.end());
-  vector<unsigned>::reverse_iterator iter  = faces.rbegin();
+  vector<TSMesh::Face::index_type>::reverse_iterator iter  = faces.rbegin();
   while (iter != faces.rend()) {
     int face = *iter++;
     altered |= tsm->remove_face(face);
