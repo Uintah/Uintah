@@ -2082,7 +2082,7 @@
         </sphere>
  
 	            </union>
-			    <box label = "1">
+			    <box label = "box1">
 				<min>[0.0,0.0,0.0]</min>
 				<max>[0.1041,0.1041,0.2082]</max>
 			    </box>
@@ -3736,10 +3736,7 @@
         </sphere>
  
 	       	    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -5060,10 +5057,7 @@
         </sphere>
  
 	       	    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -6164,10 +6158,7 @@
         </sphere>
  
 	    	    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -7103,10 +7094,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -7842,10 +7830,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -8471,10 +8456,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -8965,10 +8947,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -9434,10 +9413,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -9708,10 +9684,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -9922,10 +9895,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -10011,10 +9981,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -10085,10 +10052,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -10134,10 +10098,7 @@
         </sphere>
  
 		    </union>
-			    <box label = "1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1041,0.1041,0.2082]</max>
-			    </box>
+			    <box label = "box1" />
 		</intersection>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
@@ -10156,7 +10117,7 @@
 	
     <Grid>
 	<Level>
-	    <Box label = "1">
+	    <Box label = "box2">
 		<lower>[0.0,0.0,0.0]</lower>
 		<upper>[0.1041,0.1041,0.2207]</upper>
 		<patches>[1,1,1]</patches>
