@@ -270,10 +270,7 @@
          </constants>
          <geom_object>
             <difference>
-            <box label="wholeDomain">
-                <min>       [ -1., -1., -1. ]       </min>
-                <max>       [  1.,  1.,  1. ]       </max>
-            </box>
+            <box label="wholeDomain">             </box>
             <box label="scalarSlug">
               <min>         [-0.1,-0.1,-0.1]       </min>
               <max>         [ 0.1, 0.1, 0.1]       </max>
