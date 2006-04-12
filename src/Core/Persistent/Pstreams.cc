@@ -65,7 +65,6 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#include <ctype.h>
 #ifdef _WIN32
 #include <io.h>
 #endif
@@ -1432,9 +1431,6 @@ TextPiostream::io(double& data)
       ibuf[3] = '\0';
       // Make sure the comparison is case insensitive.
       airToLower(ibuf);
-      for(int i=0; i < strlen(ibuf); ++i) {
-        ibuf[i] = tolower(ibuf[i])
-      }
 
       if (strcmp(ibuf,"nan")==0)
       {
