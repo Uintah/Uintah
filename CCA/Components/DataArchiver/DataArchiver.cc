@@ -1140,7 +1140,10 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       // make a timestep.xml file for this timestep 
       // we need to do it here in case there is a timestesp restart
       ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
-
+      
+      ProblemSpecP metaElem = rootElem->appendChild("Meta");
+      metaElem->appendElement("endianness", endianness().c_str());
+      metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8);
       ProblemSpecP timeElem = rootElem->appendChild("Time");
       timeElem->appendElement("timestepNumber", timestep);
       timeElem->appendElement("currentTime", d_tempElapsedTime);
