@@ -47,7 +47,13 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
 
+#ifdef HAVE_TEEM
 #include <teem/air.h>
+#include <teem/nrrd.h>
+#else
+#include <Core/Util/Endian.h>
+#include <Core/Exceptions/InternalError.h>
+#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
@@ -59,7 +65,7 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#include <teem/nrrd.h>
+#include <ctype.h>
 #ifdef _WIN32
 #include <io.h>
 #endif
@@ -266,10 +272,15 @@ BinaryPiostream::reset_post_header()
 const char *
 BinaryPiostream::endianness()
 {
+#ifdef HAVE_TEEM
   if (airMyEndian == airEndianLittle)
+#else
+  if( isLittleEndian() )
+#endif
     return "LIT\n";
   else
     return "BIG\n";
+
 }
 
 
@@ -595,7 +606,11 @@ BinarySwapPiostream::~BinarySwapPiostream()
 const char *
 BinarySwapPiostream::endianness()
 {
+#ifdef HAVE_TEEM
   if (airMyEndian == airEndianLittle)
+#else
+  if ( isLittleEndian() )
+#endif
     return "LIT\n";
   else
     return "BIG\n";
@@ -1399,6 +1414,9 @@ TextPiostream::io(unsigned long long& data)
 void
 TextPiostream::io(double& data)
 {
+#ifndef HAVE_TEEM
+  throw InternalError("Using PTextPiostream with Teem undefined", __FILE__, __LINE__);
+#else
   if (err) return;
   if (dir==Read)
   {
@@ -1414,6 +1432,10 @@ TextPiostream::io(double& data)
       ibuf[3] = '\0';
       // Make sure the comparison is case insensitive.
       airToLower(ibuf);
+      for(int i=0; i < strlen(ibuf); ++i) {
+        ibuf[i] = tolower(ibuf[i])
+      }
+
       if (strcmp(ibuf,"nan")==0)
       {
         data = (double) AIR_NAN;
@@ -1452,12 +1474,17 @@ TextPiostream::io(double& data)
     ostream& out=*ostr;
     out << data << " ";
   }
+#endif
 }
 
 
 void
 TextPiostream::io(float& data)
 {
+#ifndef HAVE_TEEM
+  throw InternalError("Using PTextPiostream with Teem undefined", __FILE__, __LINE__);
+#else
+
   if (err) return;
   if (dir==Read)
   {
@@ -1510,6 +1537,7 @@ TextPiostream::io(float& data)
     ostream& out=*ostr;
     out << data << " ";
   }
+#endif
 }
 
 
@@ -1689,7 +1717,11 @@ FastPiostream::FastPiostream(const string& filename, Direction dir,
     if (version() > 1)
     {
       char hdr[16];
+#ifdef HAVE_TEEM
       if (airMyEndian == airEndianLittle)
+#else
+      if ( isLittleEndian() )
+#endif
 	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version_);
       else
 	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version_);
@@ -1758,7 +1790,11 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     if (version() > 1)
     {
       char hdr[16];
+#ifdef HAVE_TEEM
       if (airMyEndian == airEndianLittle)
+#else
+      if ( isLittleEndian() )
+#endif
 	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version_);
       else
 	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version_);

@@ -39,6 +39,7 @@
  *  Copyright (C) 200  SCI Group
  */
 
+
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Util/TypeDescription.h>
@@ -52,7 +53,11 @@ using std::istream;
 using std::ostream;
 #include <stdio.h>
 
+#ifdef HAVE_TEEM
 #include <teem/ten.h>
+#else
+#include <Core/Exceptions/InternalError.h>
+#endif
 
 namespace SCIRun {
 
@@ -312,7 +317,11 @@ void Tensor::build_eigens_from_mat()
   ten[6] = mat_[2][2];
   float eval[3];
   float evec[9];
+#ifdef HAVE_TEEM
   tenEigensolve_f(eval, evec, ten);
+#else
+  throw InternalError("Trying to eigensolve without Teem", __FILE__, __LINE__);
+#endif
   e1_ = Vector(evec[0], evec[1], evec[2]);
   e2_ = Vector(evec[3], evec[4], evec[5]);
   e3_ = Vector(evec[6], evec[7], evec[8]);

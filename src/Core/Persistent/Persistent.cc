@@ -50,7 +50,12 @@
 #include <iostream>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
+
+#ifdef HAVE_TEEM
 #include <teem/nrrd.h>
+#else
+#include <Core/Util/Endian.cc>
+#endif
 
 using namespace std;
 
@@ -566,7 +571,11 @@ auto_istream(const string& filename, ProgressReporter *pr)
     // the version = 1, readHeader would return BIG, otherwise it will
     // read it from the header.
     int machine_endian = Piostream::Big;
+#ifdef HAVE_TEEM
     if (airMyEndian == airEndianLittle) 
+#else
+    if ( isLittleEndian() )
+#endif
       machine_endian = Piostream::Little;
 
     if (file_endian == machine_endian) 
