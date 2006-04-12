@@ -254,10 +254,7 @@
            
            
            <geom_object>
-                <box label="rightpartition">          
-                    <min>           [ 0.5,-1.0, -1.0 ]   </min>
-                    <max>           [ 2.0, 2.0,  2.0 ]   </max>
-                </box>
+                <box label="rightpartition"/>          
                 <res>           [2,2,2]                 </res>
                <velocity>       [0.0,0.0,0.0]           </velocity>
                <temperature>    300.0                   </temperature>

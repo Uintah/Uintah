@@ -333,10 +333,7 @@
            </geom_object>
            
            <geom_object>
-                <box label="hot_spot">
-                    <min>[ -0.05, -0.05, -0.05 ]         </min>   
-                    <max>[  0.05,  0.05,  0.05 ]         </max>   
-                </box>
+                <box label="hot_spot">                   </box>
                <res>           [2,2,2]                   </res>
                <velocity>      [0.0,0.0,0.0]             </velocity>
                <density>       1.7899909957225715000     </density>

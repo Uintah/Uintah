@@ -206,13 +206,9 @@
               <temperature>   300.0                    </temperature>
            </geom_object>
            <geom_object>
-                <cylinder label = "He Vortex">
-                   <bottom>           [0.0,0.0,-1]    </bottom>
-                   <top>              [0.0,0.0, 1]    </top>
-                   <radius>           0.5              </radius>
-                </cylinder>
+                <cylinder label = "He Vortex">         </cylinder>
               <res>                [2,2,2]             </res>
-              <velocity>           [0.0,10.0,0.0]       </velocity>
+              <velocity>           [0.0,10.0,0.0]      </velocity>
               <density>        0.162527864325          </density>
               <pressure>      101325.0                 </pressure>     
               <temperature>   300.0                    </temperature>
