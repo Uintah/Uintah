@@ -90,9 +90,9 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   int rank = 3;
   int ndims = 3;
 
-  int idim = nHandles[mesh[R  ]]->nrrd->axis[0].size; // Radial
-  int jdim = nHandles[mesh[Z  ]]->nrrd->axis[1].size; // Theta
-  int kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
+  int idim = nHandles[mesh[R  ]]->nrrd_->axis[0].size; // Radial
+  int jdim = nHandles[mesh[Z  ]]->nrrd_->axis[1].size; // Theta
+  int kdim = nHandles[mesh[PHI]]->nrrd_->axis[0].size; // Phi
 
   NrrdData *nout = scinew NrrdData();
 
@@ -100,9 +100,9 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   register int i,j,k,cc = 0;
 
-  NTYPE *ptrR   = (NTYPE *)(nHandles[mesh[R]]->nrrd->data);
-  NTYPE *ptrZ   = (NTYPE *)(nHandles[mesh[Z]]->nrrd->data);
-  NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+  NTYPE *ptrR   = (NTYPE *)(nHandles[mesh[R]]->nrrd_->data);
+  NTYPE *ptrZ   = (NTYPE *)(nHandles[mesh[Z]]->nrrd_->data);
+  NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd_->data);
     
   if( modes[0] ) {
     for( k=0; k<kdim; k++ ) {
@@ -145,16 +145,22 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   nHandles[mesh[PHI]]->get_property( string("Source"), source);
 
+  size_t size[NRRD_DIM_MAX];
+  size[0] = rank;
+  size[1] = idim;
+  size[2] = jdim;
+  size[3] = kdim;
   if( source == string("MDSPlus") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim );
+    nrrdWrap_nva(nout->nrrd_, ndata, nHandles[mesh[PHI]]->nrrd_->type,
+	     ndims+1, size );
   else if( source == string("HDF5") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd_, ndata, nHandles[mesh[PHI]]->nrrd_->type,
+	     ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   string nrrdName;
   nHandles[mesh[PHI]]->get_property( "Name", nrrdName );
@@ -164,11 +170,11 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     nrrdName.replace( pos, 10, "XYZ:Vector" );
 
 
-  nout->nrrd->axis[0].kind  = nrrdKind3Vector;
-  nout->nrrd->axis[0].label = strdup("Mesh Points");
-  nout->nrrd->axis[1].label = strdup("Radial");
-  nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Phi");
+  nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
+  nout->nrrd_->axis[0].label = strdup("Mesh Points");
+  nout->nrrd_->axis[1].label = strdup("Radial");
+  nout->nrrd_->axis[2].label = strdup("Theta");
+  nout->nrrd_->axis[3].label = strdup("Phi");
 
 
   *((PropertyManager *)nout) =
@@ -202,9 +208,9 @@ NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 {
   int ndims = 3;
 
-  int idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
-  int jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
-  int kdim = nHandles[data[0]]->nrrd->axis[2].size; // Phi
+  int idim = nHandles[data[0]]->nrrd_->axis[0].size; // Radial
+  int jdim = nHandles[data[0]]->nrrd_->axis[1].size; // Theta
+  int kdim = nHandles[data[0]]->nrrd_->axis[2].size; // Phi
 
   NrrdData *nout = scinew NrrdData();
 
@@ -212,7 +218,7 @@ NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   register int i,j,k,cc = 0;
 
-  NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+  NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd_->data);
     
   for( k=0; k<kdim; k++ ) {
     for( j=0; j<jdim; j++ ) {
@@ -229,24 +235,30 @@ NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   string source;
 
   nHandles[data[0]]->get_property( string("Source"), source);
-
+  
+  size_t size[NRRD_DIM_MAX];
+  size[0] = idim;
+  size[1] = jdim;
+  size[2] = kdim;
   if( source == string("MDSPlus") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	     ndims, size);
   else if( source == string("HDF5") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	     ndims, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; 
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   string nrrdName;
   nHandles[data[0]]->get_property( "Name", nrrdName );
 
-  nout->nrrd->axis[0].kind  = nrrdKindDomain;
-  nout->nrrd->axis[0].label = strdup("Radial");
-  nout->nrrd->axis[1].label = strdup("Theta");
-  nout->nrrd->axis[2].label = strdup("Phi");
+  nout->nrrd_->axis[0].kind  = nrrdKindDomain;
+  nout->nrrd_->axis[0].label = strdup("Radial");
+  nout->nrrd_->axis[1].label = strdup("Theta");
+  nout->nrrd_->axis[2].label = strdup("Phi");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
@@ -280,9 +292,9 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
   int rank = 0;
   int ndims = 3;
 
-  int idim = nHandles[data[0]]->nrrd->axis[1].size; // Radial
-  int jdim = nHandles[data[0]]->nrrd->axis[2].size; // Theta
-  int kdim = nHandles[data[0]]->nrrd->axis[3].size; // Phi
+  int idim = nHandles[data[0]]->nrrd_->axis[1].size; // Radial
+  int jdim = nHandles[data[0]]->nrrd_->axis[2].size; // Theta
+  int kdim = nHandles[data[0]]->nrrd_->axis[3].size; // Phi
 
   string nrrdName;
   if( data.size() == 1 ) {
@@ -302,8 +314,8 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
   register int i,j,k,cc = 0;
 
   if( data.size() == 1 ) {
-    NTYPE *ptr        = (NTYPE *)(nHandles[data[0  ]]->nrrd->data);  
-    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+    NTYPE *ptr        = (NTYPE *)(nHandles[data[0  ]]->nrrd_->data);  
+    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd_->data);
 
     if( rank == 1 ) {
       for( k=0; k<kdim; k++ ) {
@@ -342,11 +354,11 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
     }
 
   } else if( data.size() == 3 ) {
-    NTYPE *ptrR   = (NTYPE *)(nHandles[data[R]]->nrrd->data);
-    NTYPE *ptrZ   = (NTYPE *)(nHandles[data[Z]]->nrrd->data);
-    NTYPE *ptrPhi = (NTYPE *)(nHandles[data[PHI]]->nrrd->data);
+    NTYPE *ptrR   = (NTYPE *)(nHandles[data[R]]->nrrd_->data);
+    NTYPE *ptrZ   = (NTYPE *)(nHandles[data[Z]]->nrrd_->data);
+    NTYPE *ptrPhi = (NTYPE *)(nHandles[data[PHI]]->nrrd_->data);
   
-    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd_->data);
 
     for( k=0; k<kdim; k++ ) {
       double cosPhi = cos( ptrMeshPhi[k] );
@@ -372,16 +384,22 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 
   nHandles[data[0]]->get_property( string("Source"), source);
 
+  size_t size[NRRD_DIM_MAX];
+  size[0] = rank;
+  size[1] = idim;
+  size[2] = jdim;
+  size[3] = kdim;
   if( source == string("MDSPlus") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	     ndims+1, size);
   else if( source == string("HDF5") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, rank, idim, jdim, kdim);
+    nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	     ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   nHandles[data[0]]->get_property( "Name", nrrdName );
 
@@ -397,12 +415,12 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
   if( pos != string::npos )
     nrrdName.replace( pos, 14, "XYZ:Vector" );
 
-  nout->nrrd->axis[0].kind = nrrdKind3Vector;
+  nout->nrrd_->axis[0].kind = nrrdKind3Vector;
 
-  nout->nrrd->axis[0].label = strdup("Vector Data");
-  nout->nrrd->axis[1].label = strdup("Radial");
-  nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Phi");
+  nout->nrrd_->axis[0].label = strdup("Vector Data");
+  nout->nrrd_->axis[1].label = strdup("Radial");
+  nout->nrrd_->axis[2].label = strdup("Theta");
+  nout->nrrd_->axis[3].label = strdup("Phi");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
@@ -441,22 +459,22 @@ NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles
 
   if( data.size() == 2 ) {
     if( nrrdName.find( ":Scalar" ) != string::npos ) {
-      idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
-      jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
+      idim = nHandles[data[0]]->nrrd_->axis[0].size; // Radial
+      jdim = nHandles[data[0]]->nrrd_->axis[1].size; // Theta
       rank = 1;
     } else if( nrrdName.find( ":Vector" ) != string::npos ) {
-      idim = nHandles[data[0]]->nrrd->axis[1].size; // Radial
-      jdim = nHandles[data[0]]->nrrd->axis[2].size; // Theta
+      idim = nHandles[data[0]]->nrrd_->axis[1].size; // Radial
+      jdim = nHandles[data[0]]->nrrd_->axis[2].size; // Theta
       rank = 3;
     }
   } else if( data.size() == 6 ) {
-    idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
-    jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
+    idim = nHandles[data[0]]->nrrd_->axis[0].size; // Radial
+    jdim = nHandles[data[0]]->nrrd_->axis[1].size; // Theta
     rank = 3;
   }
 
 
-  kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
+  kdim = nHandles[mesh[PHI]]->nrrd_->axis[0].size; // Phi
 
   NrrdData *nout = scinew NrrdData();
 
@@ -466,12 +484,12 @@ NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles
   NTYPE *ptrs[data.size()];
 
   for( unsigned int i=0; i<data.size(); i++ )
-    ptrs[i] = (NTYPE *)(nHandles[data[i]]->nrrd->data);
+    ptrs[i] = (NTYPE *)(nHandles[data[i]]->nrrd_->data);
 
-  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
-  NTYPE *ptrMeshK   = (NTYPE *)(nHandles[mesh[K]]->nrrd->data);
+  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd_->data);
+  NTYPE *ptrMeshK   = (NTYPE *)(nHandles[mesh[K]]->nrrd_->data);
 
-  int nmodes = nHandles[mesh[K]]->nrrd->axis[0].size;
+  int nmodes = nHandles[mesh[K]]->nrrd_->axis[0].size;
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
 
@@ -551,26 +569,38 @@ NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles
   nHandles[data[0]]->get_property( string("Source"), source);
 
   if( rank == 1 ) {
+    size_t size[NRRD_DIM_MAX];
+    size[0] = idim;
+    size[1] = jdim;
+    size[2] = kdim;
     if( source == string("MDSPlus") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims, idim, jdim, kdim);
+      nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	       ndims, size);
     else if( source == string("HDF5") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims, idim, jdim, kdim);
+      nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	       ndims, size);
 
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+    unsigned int centers[NRRD_DIM_MAX];
+    centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+    centers[2] = nrrdCenterNode;
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
   } else {
+    size_t size[NRRD_DIM_MAX];
+    size[0] = rank;
+    size[1] = idim;
+    size[2] = jdim;
+    size[3] = kdim;
     if( source == string("MDSPlus") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims+1, rank, kdim, idim, jdim);
+      nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	       ndims+1, size);
     else if( source == string("HDF5") )
-      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims+1, rank, idim, jdim, kdim);
+      nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	       ndims+1, size);
 
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode,
-		    nrrdCenterNode, nrrdCenterNode);
+    unsigned int centers[NRRD_DIM_MAX];
+    centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+    centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
   }
 
   nHandles[data[0]]->get_property( "Name", nrrdName );
@@ -589,16 +619,16 @@ NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles
     nrrdName.replace( pos, 10, "XYZ:Vector" );
 
   if( rank == 1 ) {
-    nout->nrrd->axis[0].kind  = nrrdKindDomain;
-    nout->nrrd->axis[0].label = strdup("Radial");
-    nout->nrrd->axis[1].label = strdup("Theta");
-    nout->nrrd->axis[2].label = strdup("Phi");
+    nout->nrrd_->axis[0].kind  = nrrdKindDomain;
+    nout->nrrd_->axis[0].label = strdup("Radial");
+    nout->nrrd_->axis[1].label = strdup("Theta");
+    nout->nrrd_->axis[2].label = strdup("Phi");
   } else {
-    nout->nrrd->axis[0].kind  = nrrdKind3Vector; 
-    nout->nrrd->axis[0].label = strdup("Vector Data");
-    nout->nrrd->axis[1].label = strdup("Radial");
-    nout->nrrd->axis[2].label = strdup("Theta");
-    nout->nrrd->axis[3].label = strdup("Phi");
+    nout->nrrd_->axis[0].kind  = nrrdKind3Vector; 
+    nout->nrrd_->axis[0].label = strdup("Vector Data");
+    nout->nrrd_->axis[1].label = strdup("Radial");
+    nout->nrrd_->axis[2].label = strdup("Theta");
+    nout->nrrd_->axis[3].label = strdup("Phi");
   }
 
   *((PropertyManager *)nout) =

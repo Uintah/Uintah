@@ -29,7 +29,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_SPLITFIELDBYELEMENTDATA_H
 #define MODELCREATION_CORE_FIELDS_SPLITFIELDBYELEMENTDATA_H 1
 
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
 
 namespace ModelCreation {

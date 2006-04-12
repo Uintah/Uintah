@@ -13,7 +13,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 
-#include <values.h>
+#include <sci_values.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -75,8 +75,8 @@ private:
 template <class T>
 NCScalarField<T>::NCScalarField()
   :ScalarFieldRGBase(),
-   high(-MAXINT,-MAXINT,-MAXINT),
-   low(MAXINT,MAXINT,MAXINT)
+   high(-INT_MAX,-INT_MAX,-INT_MAX),
+   low(INT_MAX,INT_MAX,INT_MAX)
 {
 }
 
@@ -85,8 +85,8 @@ NCScalarField<T>::NCScalarField(const NCScalarField<T>& copy)
   //  : ScalarField( copy )
   :ScalarFieldRGBase( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex), 
-   high(-MAXINT,-MAXINT,-MAXINT),
-   low(MAXINT,MAXINT,MAXINT)
+   high(-INT_MAX,-INT_MAX,-INT_MAX),
+   low(INT_MAX,INT_MAX,INT_MAX)
 {
   for(int i = 0; i < (int)copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
@@ -105,8 +105,8 @@ NCScalarField<T>::NCScalarField(GridP grid, LevelP level,
   //  : ScalarField( grid, level, var, mat )
   : ScalarFieldRGBase(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
-   high(-MAXINT,-MAXINT,-MAXINT),
-   low(MAXINT,MAXINT,MAXINT)
+   high(-INT_MAX,-INT_MAX,-INT_MAX),
+   low(INT_MAX,INT_MAX,INT_MAX)
 {
   for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);
@@ -181,7 +181,7 @@ ScalarField*  NCScalarField<T>::clone()
 template<class T>
 void NCScalarField<T>::compute_minmax()
 {
-  T min = T(MAXSHORT), max = T(-MAXSHORT);
+  T min = T(SHRT_MAX), max = T(-SHRT_MAX);
   int i = 0;
   for(Level::const_patchIterator r = _level->patchesBegin();
 	      r != _level->patchesEnd(); r++, i++ ){

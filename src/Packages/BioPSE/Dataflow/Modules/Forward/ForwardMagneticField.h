@@ -32,7 +32,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Thread/Thread.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geometry/Tensor.h>
@@ -269,7 +269,7 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_f
   // cache per cell calculations that are used over and over again.
   set_up_cell_cache();
   
-  mod->update_progress(1, sz);
+  mod->update_progress(1.0/sz);
  
   data_out_.resize(np_);
 

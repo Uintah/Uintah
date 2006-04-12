@@ -1,18 +1,13 @@
 itcl_class SCIRun_String_GetFileName {
     inherit Module
+
     constructor {config} {
         set name GetFileName
-        set_defaults
-    }
-
-    method set_defaults {} {
-    		global $this-filename
-        set $this-filename ""
     }
 
     method ui {} {
 
-    		global $this-filename
+        global $this-filename
         
         set w .ui[modname]
         if {[winfo exists $w]} {

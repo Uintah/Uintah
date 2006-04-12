@@ -420,7 +420,7 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
   glyph_info->tex_coords_[v++] = x_/float(tex_width);
   glyph_info->tex_coords_[v++] = y_/float(tex_height);
 
-  unsigned char *data = (unsigned char *)texture_->nrrd_->nrrd->data;
+  unsigned char *data = (unsigned char *)texture_->nrrd_handle_->nrrd_->data;
 
   // render glyph to texture data
   for (int y = 0; y < height; ++y) {

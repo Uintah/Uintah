@@ -15,14 +15,13 @@ SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsCreate
 SRCS     += \
 	$(SRCDIR)/ClipFieldBySelectionMask.cc\
 	$(SRCDIR)/ClipFieldByFunction.cc\
-	$(SRCDIR)/SplitFieldByElementData.cc\
+	$(SRCDIR)/SplitFieldByDomain.cc\
   $(SRCDIR)/MergeFields.cc\
 	$(SRCDIR)/CompartmentBoundary.cc\
 	$(SRCDIR)/SplitFieldByConnectedRegion.cc\
-	$(SRCDIR)/MatrixToField.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
+PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \

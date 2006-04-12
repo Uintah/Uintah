@@ -69,7 +69,8 @@ DataArchive::~DataArchive()
   // need to delete the nodes
   int size = static_cast<int>(d_tstop.size());
   for (int i = 0; i < size; i++) {
-    d_tstop[i]->releaseDocument();
+    if(d_tstop[i])
+      d_tstop[i]->releaseDocument();
   }
 }
 
@@ -147,27 +148,46 @@ DataArchive::queryTimesteps( std::vector<int>& index,
             throw InternalError("DataArchive::queryTimesteps:timestep href not found",
                                 __FILE__, __LINE__);
           
-          string ts = d_filebase + "/" + tsfile;
-          ProblemSpecReader psr(ts.c_str());
-          
-          ProblemSpecP top = psr.readInputFile();
-          
-          d_tstop.push_back(top);
-          d_tsurl.push_back(ts);
-          ProblemSpecP time = top->findBlock("Time");
-          if(time == 0)
-            throw InternalError("DataArchive::queryTimesteps:Cannot find Time block",
-                                __FILE__, __LINE__);
-          
+
           int timestepNumber;
-          if(!time->get("timestepNumber", timestepNumber))
-            throw InternalError("DataArchive::queryTimesteps:Cannot find timestepNumber",
-                                __FILE__, __LINE__);
-          
           double currentTime;
-          if(!time->get("currentTime", currentTime))
-            throw InternalError("DataArchive::queryTimesteps:Cannot find currentTime",
-                                __FILE__, __LINE__);
+          string ts = d_filebase + "/" + tsfile;
+
+          if(attributes["delt"] == "" || attributes["time"] == "") {
+            // This block if for earlier versions of the index.xml file that do not
+            // contain delt and time information as attributes of the timestep field.
+
+            ProblemSpecReader psr(ts.c_str());
+            
+            ProblemSpecP top = psr.readInputFile();
+            
+            d_tstop.push_back(top);
+            d_tsurl.push_back(ts);
+            ProblemSpecP time = top->findBlock("Time");
+            if(time == 0)
+              throw InternalError("DataArchive::queryTimesteps:Cannot find Time block",
+                                  __FILE__, __LINE__);
+            
+            if(!time->get("timestepNumber", timestepNumber))
+              throw InternalError("DataArchive::queryTimesteps:Cannot find timestepNumber",
+                                  __FILE__, __LINE__);
+            
+            if(!time->get("currentTime", currentTime))
+              throw InternalError("DataArchive::queryTimesteps:Cannot find currentTime",
+                                  __FILE__, __LINE__);
+          } else {
+            // This block will read delt and time info from the index.xml file instead of
+            // opening every single timestep.xml file to get this information
+            istringstream timeVal(attributes["time"]);
+            istringstream timestepVal(t->getNodeValue());
+
+            timeVal >> currentTime;
+            timestepVal >> timestepNumber;
+
+            d_tstop.push_back(0);
+            d_tsurl.push_back(ts);
+          }
+
           d_tsindex.push_back(timestepNumber);
           d_tstimes.push_back(currentTime);
         }
@@ -196,7 +216,7 @@ DataArchive::getTimestep(double searchtime)
       break;
   if(i == (int)d_tstimes.size())
     return 0; 
-  return d_tstop[i];
+  return getTimestepCache(i);
 }
 
 ProblemSpecP
@@ -524,6 +544,17 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, string url,
   d_lock.unlock();  
 }
 
+ProblemSpecP
+DataArchive::getTimestepCache(int i)
+{
+  if(!d_tstop[i]) {
+    ProblemSpecReader psr(d_tsurl[i].c_str());      
+    d_tstop[i] = psr.readInputFile();
+  }
+
+  return d_tstop[i];
+}
+
 void 
 DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
                                long64 particleID, int matlIndex,
@@ -617,7 +648,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   *pTime = times[i];
   timestep = indices[i];
 
-  d_restartTimestepDoc = d_tstop[i];
+  d_restartTimestepDoc = getTimestepCache(i);
   d_restartTimestepURL = d_tsurl[i];
 
   if (lb)
@@ -632,9 +663,9 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   ASSERTL3(d_tsurl.size() == d_tstop.size());
 
   PatchHashMaps patchMap;
-  patchMap.init(d_tsurl[i], d_tstop[i], d_processor, d_numProcessors);
+  patchMap.init(d_tsurl[i], getTimestepCache(i));
 
-  ProblemSpecP timeBlock = d_tstop[i]->findBlock("Time");
+  ProblemSpecP timeBlock = getTimestepCache(i)->findBlock("Time");
   if (!timeBlock->get("delt", *pDelt))
     *pDelt = 0;
   
@@ -729,7 +760,7 @@ DataArchive::initVariable(const Patch* patch,
   ParticleVariableBase* particles;
   if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
     if (!dw->haveParticleSubset(matl, patch)) {
-      cerr << "Saved ParticleSubset on matl " << matl << " patch " << patch << endl;
+      //cerr << "Saved ParticleSubset on matl " << matl << " patch " << patch << endl;
       dw->saveParticleSubset(particles->getParticleSubset(), matl, patch);
     }
     else {
@@ -783,8 +814,11 @@ DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
   long double total_num_procs = 0;
   for (int i = 0; i < (int)tsTimes.size(); i++) {
     d_patchHashMaps[tsTimes[i]].setTime(tsTimes[i]);
-    d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
-                                     processor, numProcessors);
+
+    // No longer calling init on all timesteps as soon as we create the TimeHashMap
+    // since we are not loading all files initially.
+    //d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
+    //                                 processor, numProcessors);
     total_num_procs += d_patchHashMaps[tsTimes[i]].numSimProcessors();
   }
    
@@ -805,7 +839,6 @@ DataArchive::TimeHashMaps::findVariable(const string& name,
                                         const Patch* patch, int matl,
                                         double time, string& foundUrl)
 {
-  //  cerr << "TimeHashMaps::findVariable\n";
   PatchHashMaps* timeData = findTimeData(time);
   return (timeData == NULL) ? scinew ProblemSpec(0) :
     timeData->findVariable(name, patch, matl, foundUrl);
@@ -816,7 +849,7 @@ DataArchive::TimeHashMaps::findPatchData(double time, const Patch* patch)
 {
   //  cerr << "TimeHashMaps::findPatchData\n";
   PatchHashMaps* timeData = findTimeData(time);
-  return (timeData == NULL) ? NULL : timeData->findPatchData(patch);
+  return timeData == NULL ? NULL : timeData->findPatchData(patch);
 }
 
 DataArchive::PatchHashMaps*
@@ -860,6 +893,19 @@ DataArchive::TimeHashMaps::findTimeData(double time)
     d_lastNtimesteps.push_front(foundIt);
 
     d_lastFoundIt = foundIt;
+
+    PatchHashMaps* timeData = &foundIt->second;
+    if( !timeData->isInitialized() ) {
+      // Convert the time into a timestep
+      int timestep;
+      for(timestep=0;timestep<(int)archive->d_tstimes.size();timestep++)
+        if(time == archive->d_tstimes[timestep])
+          break;
+      if(timestep == (int)archive->d_tstimes.size())
+        return 0;  
+      timeData->init(archive->d_tsurl[timestep], archive->getTimestepCache(timestep));
+    }
+
     return &(*foundIt).second;
   }
 
@@ -903,7 +949,7 @@ DataArchive::TimeHashMaps::updateCacheSize(int new_size)
 
 DataArchive::PatchHashMaps::PatchHashMaps()
   : d_matHashMaps(),
-    d_allParsed(false)
+    d_allParsed(false), d_initialized(false)
 {
   // d_lastFoundIt must be initialized in init.  The value here
   // doesn't persist and causes problems.
@@ -915,9 +961,9 @@ DataArchive::PatchHashMaps::~PatchHashMaps() {
 }
 
 void
-DataArchive::PatchHashMaps::init(string tsUrl, ProblemSpecP tsTopNode,
-                                 int /*processor*/, int /*numProcessors*/)
+DataArchive::PatchHashMaps::init(string tsUrl, ProblemSpecP tsTopNode)
 {
+  d_initialized=true;
   //  cerr << "PatchHashMaps["<<time<<"]::init\n";
   d_allParsed = false;
   // grab the data xml files from the timestep xml file
@@ -1139,8 +1185,9 @@ DataArchive::MaterialHashMaps::add(const string& name, int matl,
     d_varHashMaps.resize(matl + 1);
   pair<ProblemSpecP, string> value(varNode, url);
   pair<ProblemSpecP, string> dummy;
-  if (d_varHashMaps[matl].lookup(name, dummy) == 1)
-    cerr << "Duplicate variable name: " << name << endl;
+  if (d_varHashMaps[matl].lookup(name, dummy) == 1) {
+    //cerr << "Duplicate variable name: " << name << endl;
+  }
   else
     d_varHashMaps[matl].insert(name, value);
 }

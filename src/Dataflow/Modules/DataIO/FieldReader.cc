@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 
@@ -56,6 +56,7 @@ protected:
 
 public:
   FieldReader(GuiContext* ctx);
+  virtual ~FieldReader();
 
   virtual void execute();
 };
@@ -65,8 +66,8 @@ DECLARE_MAKER(FieldReader)
 
 FieldReader::FieldReader(GuiContext* ctx)
   : GenericReader<FieldHandle>("FieldReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_filetype_(ctx->subVar("filetype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_filetype_(get_ctx()->subVar("filetype"))
 {
   FieldIEPluginManager mgr;
   vector<string> importers;
@@ -95,6 +96,11 @@ FieldReader::FieldReader(GuiContext* ctx)
 }
 
 
+FieldReader::~FieldReader()
+{
+}
+
+
 bool
 FieldReader::call_importer(const string &filename)
 {
@@ -107,7 +113,7 @@ FieldReader::call_importer(const string &filename)
   if (pl)
   {
     handle_ = pl->filereader(this, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return handle_.get_rep();
   }
   return false;

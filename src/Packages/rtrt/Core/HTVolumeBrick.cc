@@ -34,8 +34,8 @@ namespace rtrt {
 void HTVolumeBrick::tetra_bounds(int *nodes, int *sx, int *ex,
 				 int *sy, int *ey, int *sz, int *ez)
 {
-  Point min(MAXFLOAT,MAXFLOAT,MAXFLOAT);
-  Point max(-MAXFLOAT,-MAXFLOAT,-MAXFLOAT);
+  Point min(FLT_MAX,FLT_MAX,FLT_MAX);
+  Point max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
   for(int j=0; j < 4; j++) {
     float *p=points+nodes[j]*4;
     min=Min(min, Point(p[0],p[1],p[2]));
@@ -461,8 +461,8 @@ HTVolumeBrick::HTVolumeBrick(Material* matl, VolumeDpy* dpy,
 	int *nodes=tetra+i*4;
 	// determine bounds of tetra
 #if 0
-	Point min(MAXFLOAT,MAXFLOAT,MAXFLOAT);
-	Point max(-MAXFLOAT,-MAXFLOAT,-MAXFLOAT);
+	Point min(FLT_MAX,FLT_MAX,FLT_MAX);
+	Point max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
 	for(int j=0; j < 4; j++) {
 	  float *p=points+nodes[j]*4;
 	  min=Min(min, Point(p[0],p[1],p[2]));
@@ -545,8 +545,8 @@ HTVolumeBrick::HTVolumeBrick(Material* matl, VolumeDpy* dpy,
 	int *nodes=tetra+i*4;
 	// determine bounds of tetra
 #if 0
-	Point min(MAXFLOAT,MAXFLOAT,MAXFLOAT);
-	Point max(-MAXFLOAT,-MAXFLOAT,-MAXFLOAT);
+	Point min(FLT_MAX,FLT_MAX,FLT_MAX);
+	Point max(-FLT_MAX,-FLT_MAX,-FLT_MAX);
 	for(int j=0; j < 4; j++) {
 	  float *p=points+nodes[j]*4;
 	  min=Min(min, Point(p[0],p[1],p[2]));
@@ -653,8 +653,8 @@ void HTVolumeBrick::preprocess(double, int&, int&)
 void HTVolumeBrick::calc_mcell(int depth, int startx, int starty, int startz,
 			       VMCell& mcell)
 {
-  mcell.min=MAXFLOAT;
-  mcell.max=-MAXFLOAT;
+  mcell.min=FLT_MAX;
+  mcell.max=-FLT_MAX;
   int endx=startx+xsize[depth];
   int endy=starty+ysize[depth];
   int endz=startz+zsize[depth];
@@ -794,7 +794,7 @@ void HTVolumeBrick::isect(int depth, float isoval, double t,
 	  for (int i=0; i < n; i ++) {
 	    int *nodes=tetra+4*lists[list+i];
 	    // does the isovalue lie in this tetrahedron
-	    float min=MAXFLOAT, max=-MAXFLOAT;
+	    float min=FLT_MAX, max=-FLT_MAX;
 	    for(int j=0; j < 4; j++) {
 	      float *p=points+nodes[j]*4;
 	      min=Min(min, p[3]);
@@ -1156,7 +1156,7 @@ void HTVolumeBrick::compute_hist(int nhist, int* hist,
     float scale=(nhist-1)/(datamax-datamin);
     for(int i=0; i < ntetra; i++) {
       int *nodes=tetra+i*4;
-      float min=MAXFLOAT;
+      float min=FLT_MAX;
       float max=-min;
       for(int j=0; j < 4; j++) {
 	min=Min(min,points[nodes[j]*4+3]);

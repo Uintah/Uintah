@@ -51,13 +51,13 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>format string</name>
+        <name>Format String</name>
         <datatype>SCIRun::String</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>title</name>
+        <name>Title</name>
         <datatype>SCIRun::Geometry</datatype>
       </port>
     </outputs>

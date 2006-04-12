@@ -47,7 +47,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/HashTable.h>
 #include <Dataflow/Modules/Math/LinAlgBinary.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <iostream>
 #include <sstream>
 
@@ -69,7 +69,8 @@ public:
 DECLARE_MAKER(LinAlgBinary)
 LinAlgBinary::LinAlgBinary(GuiContext* ctx)
 : Module("LinAlgBinary", ctx, Filter,"Math", "SCIRun"),
-  op_(ctx->subVar("op")), function_(ctx->subVar("function"))
+  op_(get_ctx()->subVar("op"), "Mult"),
+  function_(get_ctx()->subVar("function"), "x+y")
 {
 }
 
@@ -162,7 +163,7 @@ void LinAlgBinary::execute() {
       if (!DynamicCompilation::compile(ci, algo, false, this))
       {
 	error("Your function would not compile.");
-       	gui->eval(id + " compile_error "+ci->filename_);
+       	get_gui()->eval(get_id() + " compile_error "+ci->filename_);
 	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	return;
       }

@@ -1,14 +1,8 @@
 itcl_class SCIRun_String_SprintfMatrix {
     inherit Module
+
     constructor {config} {
         set name SprintfMatrix
-        set_defaults
-    }
-
-    method set_defaults {} {
-        global $this-formatstring
-        set    $this-formatstring "time: %5.4f ms"    
-    
     }
 
     method ui {} {

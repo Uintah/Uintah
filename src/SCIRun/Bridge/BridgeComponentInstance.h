@@ -41,7 +41,7 @@
 #ifndef SCIRun_Framework_BridgeComponentInstance_h
 #define SCIRun_Framework_BridgeComponentInstance_h
 
-#include <sci_defs/vtk_defs.h>
+#include <sci_metacomponents.h>
 
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstance.h>
@@ -83,11 +83,11 @@ namespace SCIRun {
     Port* getDataflowIPort(const std::string& name);
     Port* getDataflowOPort(const std::string& name);
     sci::cca::Port::pointer getCCAPort(const std::string& name);
-    gov::cca::Port getBabelPort(const std::string& name);
+    UCXX ::gov::cca::Port getBabelPort(const std::string& name);
 
 #if HAVE_VTK
     vtk::Port* getVtkPort(const std::string& name);
-    void addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT);
+    void addVtkPort(vtk::Port* vtkport, VtkPortInstance::VTKPortType portT);
 #endif
 
     void releasePort(const std::string& name,const modelT model);

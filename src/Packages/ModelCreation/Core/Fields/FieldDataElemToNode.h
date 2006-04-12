@@ -87,7 +87,6 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
                               FieldHandle& output,
                               std::string method)
 {     
-
   output = 0;
   
   FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
@@ -110,325 +109,110 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
      return(false);   
   }
 
-
   // Create the field with the new mesh and data location.
   OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
   ofield->resize_fdata();
   
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
+  typename FIELD::mesh_type::Elem::array_type elems;
+  typename FIELD::mesh_type::Node::iterator it, eit;
 
-  if (mesh->dimensionality() == 1)
+  mesh->synchronize(SCIRun::Mesh::NODE_NEIGHBORS_E);
+  mesh->begin(it);
+  mesh->end(eit);
+
+  if ((method == "Interpolate")||(method == "Average"))
   {
-    typename FIELD::mesh_type::Edge::array_type edgearray;
-    typename FIELD::mesh_type::Node::iterator it, eit;
-
-    mesh->synchronize(SCIRun::Mesh::EDGES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
-    mesh->begin(it);
-    mesh->end(eit);
-
-    if ((method == "Interpolate")||(method == "Average"))
+    while (it != eit)
     {
-      while (it != eit)
+      mesh->get_elems(elems, *(it));
+      int nsize = elems.size();
+      typename FIELD::value_type val = 0.0;
+      for (size_t p = 0; p < nsize; p++)
       {
-        mesh->get_edges(edgearray, *(it));
-        int nsize = edgearray.size();
-        typename FIELD::value_type val = 0.0;
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val = val + field->value(edgearray[p]);
-        }
-        val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
-        ofield->set_value(val,*(it));
-        ++it;
+        val = val + field->value(elems[p]);
       }
+      val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
+      ofield->set_value(val,*(it));
+      ++it;
     }
-    
-    if (method == "Max")
+  }
+  
+  if (method == "Max")
+  {
+    while (it != eit)
     {
-      while (it != eit)
+      mesh->get_elems(elems, *(it));
+      int nsize = elems.size();
+      typename FIELD::value_type val = 0.0;
+      typename FIELD::value_type tval = 0.0;
+      if (nsize > 0)
       {
-        mesh->get_edges(edgearray, *(it));
-        int nsize = edgearray.size();
-        typename FIELD::value_type val = 0.0;
-        typename FIELD::value_type tval = 0.0;
-        if (nsize > 0)
+        val = field->value(elems[0]);
+        for (size_t p = 1; p < nsize; p++)
         {
-          val = field->value(edgearray[0]);
-          for (size_t p = 1; p < nsize; p++)
-          {
-            tval = field->value(edgearray[p]);
-            if (tval > val) val = tval;
-          }
+          tval = field->value(elems[p]);
+          if (tval > val) val = tval;
         }
-        ofield->set_value(val,*(it));
-        ++it;
       }
+      ofield->set_value(val,*(it));
+      ++it;
     }
-    
-    if (method == "Min")
+  }
+  
+  if (method == "Min")
+  {
+    while (it != eit)
     {
-      while (it != eit)
+      mesh->get_elems(elems, *it);
+      int nsize = elems.size();
+      typename FIELD::value_type val = 0.0;
+      typename FIELD::value_type tval = 0.0;
+      if (nsize > 0)
       {
-        mesh->get_edges(edgearray, *it);
-        int nsize = edgearray.size();
-        typename FIELD::value_type val = 0.0;
-        typename FIELD::value_type tval = 0.0;
-        if (nsize > 0)
+        val = field->value(elems[0]);
+        for (size_t p = 1; p < nsize; p++)
         {
-          val = field->value(edgearray[0]);
-          for (size_t p = 1; p < nsize; p++)
-          {
-            tval = field->value(edgearray[p]);
-            if (tval < val) val = tval;
-          }
+          tval = field->value(elems[p]);
+          if (tval < val) val = tval;
         }
-        ofield->set_value(val,*(it));
-        ++it;
-      }    
-    }
+      }
+      ofield->set_value(val,*(it));
+      ++it;
+    }    
+  }
 
-    if (method == "Sum")
+  if (method == "Sum")
+  {
+    while (it != eit)
     {
-      while (it != eit)
+      mesh->get_elems(elems, *(it));
+      int nsize = elems.size();
+      typename FIELD::value_type val = 0.0;
+      for (size_t p = 0; p < nsize; p++)
       {
-        mesh->get_edges(edgearray, *(it));
-        int nsize = edgearray.size();
-        typename FIELD::value_type val = 0.0;
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val += field->value(edgearray[p]);
-        }
-        ofield->set_value(val,*(it));
-        ++it;
+        val += field->value(elems[p]);
       }
-    }
-
-    if (method == "Median")
-    {
-      while (it != eit)
-      {
-        mesh->get_edges(edgearray, *(it));
-        int nsize = edgearray.size();
-        std::vector<typename FIELD::value_type> valarray(nsize);
-        for (size_t p = 0; p < nsize; p++)
-        {
-          valarray[p] = field->value(edgearray[p]);
-        }
-        sort(valarray.begin(),valarray.end());
-        int idx = static_cast<int>((valarray.size()/2));
-        ofield->set_value(valarray[idx],*(it));
-        ++it;
-      }
+      ofield->set_value(val,*(it));
+      ++it;
     }
   }
 
-  if (mesh->dimensionality() == 2)
+  if (method == "Median")
   {
-    typename FIELD::mesh_type::Face::array_type facearray;
-    typename FIELD::mesh_type::Node::iterator it, eit;
-
-    mesh->synchronize(SCIRun::Mesh::FACES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
-    mesh->begin(it);
-    mesh->end(eit);
-
-    if ((method == "Interpolate")||(method == "Average"))
+    while (it != eit)
     {
-      while (it != eit)
+      mesh->get_elems(elems, *(it));
+      int nsize = elems.size();
+      std::vector<typename FIELD::value_type> valarray(nsize);
+      for (size_t p = 0; p < nsize; p++)
       {
-        mesh->get_faces(facearray, *(it));
-        int nsize = facearray.size();
-        typename FIELD::value_type val = 0.0;
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val = val + field->value(facearray[p]);
-        }
-        val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
-        ofield->set_value(val,*(it));
-        ++it;
+        valarray[p] = field->value(elems[p]);
       }
-    }
-    
-    if (method == "Max")
-    {
-      while (it != eit)
-      {
-        mesh->get_faces(facearray, *(it));
-        int nsize = facearray.size();
-        typename FIELD::value_type val = 0.0;
-        typename FIELD::value_type tval = 0.0;
-        if (nsize > 0)
-        {
-          val = field->value(facearray[0]);
-          for (size_t p = 1; p < nsize; p++)
-          {
-            tval = field->value(facearray[p]);
-            if (tval > val) val = tval;
-          }
-        }
-        ofield->set_value(val,*(it));
-        ++it;
-      }
-    }
-    
-    if (method == "Min")
-    {
-      while (it != eit)
-      {
-        mesh->get_faces(facearray, *it);
-        int nsize = facearray.size();
-        typename FIELD::value_type val = 0.0;
-        typename FIELD::value_type tval = 0.0;
-        if (nsize > 0)
-        {
-          val = field->value(facearray[0]);
-          for (size_t p = 1; p < nsize; p++)
-          {
-            tval = field->value(facearray[p]);
-            if (tval < val) val = tval;
-          }
-        }
-        ofield->set_value(val,*(it));
-        ++it;
-      }    
-    }
-
-    if (method == "Sum")
-    {
-      while (it != eit)
-      {
-        mesh->get_faces(facearray, *(it));
-        int nsize = facearray.size();
-        typename FIELD::value_type val = 0.0;
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val += field->value(facearray[p]);
-        }
-        ofield->set_value(val,*(it));
-        ++it;
-      }
-    }
-
-    if (method == "Median")
-    {
-      while (it != eit)
-      {
-        mesh->get_faces(facearray, *(it));
-        int nsize = facearray.size();
-        std::vector<typename FIELD::value_type> valarray(nsize);
-        for (size_t p = 0; p < nsize; p++)
-        {
-          valarray[p] = field->value(facearray[p]);
-        }
-        sort(valarray.begin(),valarray.end());
-        int idx = static_cast<int>((valarray.size()/2));
-        ofield->set_value(valarray[idx],*(it));
-        ++it;
-      }
-    }
-  }
-
-  if (mesh->dimensionality() == 3)
-  {
-    typename FIELD::mesh_type::Cell::array_type cellarray;
-    typename FIELD::mesh_type::Node::iterator it, eit;
-
-    mesh->synchronize(SCIRun::Mesh::CELLS_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
-    mesh->begin(it);
-    mesh->end(eit);
-
-    if ((method == "Interpolate")||(method == "Average"))
-    {
-      while (it != eit)
-      {
-        mesh->get_cells(cellarray, *(it));
-        int nsize = cellarray.size();
-        typename FIELD::value_type val = 0.0;
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val = val + field->value(cellarray[p]);
-        }
-        val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
-        ofield->set_value(val,*(it));
-        ++it;
-      }
-    }
-    
-    if (method == "Max")
-    {
-      while (it != eit)
-      {
-        mesh->get_cells(cellarray, *(it));
-        int nsize = cellarray.size();
-        typename FIELD::value_type val = 0.0;
-        typename FIELD::value_type tval = 0.0;
-        if (nsize > 0)
-        {
-          val = field->value(cellarray[0]);
-          for (size_t p = 1; p < nsize; p++)
-          {
-            tval = field->value(cellarray[p]);
-            if (tval > val) val = tval;
-          }
-        }
-        ofield->set_value(val,*(it));
-        ++it;
-      }
-    }
-    
-    if (method == "Min")
-    {
-      while (it != eit)
-      {
-        mesh->get_cells(cellarray, *it);
-        int nsize = cellarray.size();
-        typename FIELD::value_type val = 0.0;
-        typename FIELD::value_type tval = 0.0;
-        if (nsize > 0)
-        {
-          val = field->value(cellarray[0]);
-          for (size_t p = 1; p < nsize; p++)
-          {
-            tval = field->value(cellarray[p]);
-            if (tval < val) val = tval;
-          }
-        }
-        ofield->set_value(val,*(it));
-        ++it;
-      }    
-    }
-
-    if (method == "Sum")
-    {
-      while (it != eit)
-      {
-        mesh->get_cells(cellarray, *(it));
-        int nsize = cellarray.size();
-        typename FIELD::value_type val = 0.0;
-        for (size_t p = 0; p < nsize; p++)
-        {
-          val += field->value(cellarray[p]);
-        }
-        ofield->set_value(val,*(it));
-        ++it;
-      }
-    }
-
-    if (method == "Median")
-    {
-      while (it != eit)
-      {
-        mesh->get_cells(cellarray, *(it));
-        int nsize = cellarray.size();
-        std::vector<typename FIELD::value_type> valarray(nsize);
-        for (size_t p = 0; p < nsize; p++)
-        {
-          valarray[p] = field->value(cellarray[p]);
-        }
-        sort(valarray.begin(),valarray.end());
-        int idx = static_cast<int>((valarray.size()/2));
-        ofield->set_value(valarray[idx],*(it));
-        ++it;
-      }
+      sort(valarray.begin(),valarray.end());
+      int idx = static_cast<int>((valarray.size()/2));
+      ofield->set_value(valarray[idx],*(it));
+      ++it;
     }
   }
 

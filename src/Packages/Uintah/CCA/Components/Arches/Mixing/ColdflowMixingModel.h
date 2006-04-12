@@ -35,7 +35,6 @@ POSSIBLE REVISIONS
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Integrator.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -106,6 +105,9 @@ public:
       inline bool getSulfurChem() const{
 	return 0;
       }
+      inline bool getSootPrecursors() const{
+        return 0; 
+      }
 
       inline int getTableDimension() const{
 	return 0;
@@ -118,9 +120,6 @@ public:
 	return 0;
       }
       inline ReactionModel* getRxnModel() const {
-        return 0;
-      }
-      inline Integrator* getIntegrator() const {
         return 0;
       }
       inline double getAdiabaticAirEnthalpy() const{

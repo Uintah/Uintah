@@ -27,11 +27,11 @@
 //  
 
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomDisc.h>
@@ -53,48 +53,40 @@ public:
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
 
-  GeomHandle generate();
-  GeomHandle generateTitle( int &nchars, int &nlines );
-  
+protected:
+  GeomHandle generate( string str );
+  GeomHandle generateTitle( string str, int &nchars, int &nlines );
+
 private:
+  GeomHandle geometry_out_handle_;
 
-  GuiInt    iBbox_;
-  GuiInt    dSize_;
-  GuiString sLocation_;
-  GuiDouble color_r_;
-  GuiDouble color_g_;
-  GuiDouble color_b_;
-  
-  
-  int    bbox_;
-  int    size_;
-  string location_;
-  Color  color_;
-  MaterialHandle material_;
-  
-  int    generation_;
-  bool   update_;
+  GuiInt    gui_bbox_;
+  GuiInt    gui_size_;
+  GuiDouble gui_location_x_;
+  GuiDouble gui_location_y_;
+  GuiDouble gui_color_r_;
+  GuiDouble gui_color_g_;
+  GuiDouble gui_color_b_;
 
-  std::string str_;  
+  MaterialHandle material_handle_;
 
+  bool color_changed_;
 };
 
 
 DECLARE_MAKER(ShowString)
-ShowString::ShowString(GuiContext* ctx)
-  : Module("ShowString", ctx, Source, "Visualization", "SCIRun"),
-    iBbox_(ctx->subVar("bbox")),
-    dSize_(ctx->subVar("size")),
-    sLocation_(ctx->subVar("location")),
-    color_r_(ctx->subVar("color-r")),
-    color_g_(ctx->subVar("color-g")),
-    color_b_(ctx->subVar("color-b")),
-    color_(1., 1., 1.),
-    generation_(0),
-    update_(false)  
+ShowString::ShowString(GuiContext* context)
+  : Module("ShowString", context, Source, "Visualization", "SCIRun"),
+    gui_bbox_(context->subVar("bbox"), 1),
+    gui_size_(context->subVar("size"), 1),
+    gui_location_x_(context->subVar("location-x"), -31.0/32.0),
+    gui_location_y_(context->subVar("location-y"),  31.0/32.0),
+    gui_color_r_(context->subVar("color-r"), 1.0),
+    gui_color_g_(context->subVar("color-g"), 1.0),
+    gui_color_b_(context->subVar("color-b"), 1.0),
+    material_handle_(scinew Material(Color(1.0, 1.0, 1.0))),
+    color_changed_(false)
 {
-    material_ = scinew Material;
-    material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
 }
 
 ShowString::~ShowString()
@@ -103,53 +95,37 @@ ShowString::~ShowString()
 
 void ShowString::execute()
 {
-  // Get a handle to the output geom port.
-  GeometryOPort *ogeom_port = (GeometryOPort *) get_oport(0);
+  StringHandle string_input_handle;
+  if( !get_input_handle( "Format String", string_input_handle, true ) ) return;
 
-  // Get the time via a matrix
-  StringIPort *istring_port = (StringIPort *)get_iport(0);
-  
-  StringHandle stringH;
+  if( !geometry_out_handle_.get_rep() ||
+      
+      inputs_changed_ == true ||
 
-  if( istring_port->get(stringH) && stringH.get_rep()) 
-  {
-    str_ = stringH->get();
-  } 
-  else 
-  {
-    error( "No string on input port" );
-    return;
+      gui_bbox_.changed( true ) ||
+      gui_size_.changed( true ) ||
+      gui_location_x_.changed( true ) ||
+      gui_location_y_.changed( true ) ||
+
+      color_changed_  == true ) {
+
+    update_state(Executing);
+
+    color_changed_ = false;
+
+    material_handle_->diffuse =
+      Color(gui_color_r_.get(), gui_color_g_.get(), gui_color_b_.get());
+
+    geometry_out_handle_ = generate( string_input_handle->get() );
+
+    send_output_handle( string("Title"),
+			geometry_out_handle_,
+			string("Title Sticky") );
   }
-
-
-
-  if( update_   == true ||
-      bbox_      != iBbox_.get() ||
-      size_      != dSize_.get() ||
-      location_  != sLocation_.get() ||
-      generation_ != stringH->generation) 
-  {
-    generation_ = stringH->generation;
-
-    update_ = false;
-
-    bbox_      = iBbox_.get();
-    size_      = dSize_.get();
-    location_  = sLocation_.get();
-    color_ = Color(color_r_.get(), color_g_.get(), color_b_.get());
-
-    material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
-    ogeom_port->delAll();
-    ogeom_port->addObj(generate(), string("Title"));
-  }
-
-  // Send the data downstream
-  ogeom_port->flushViews();
-
 }
 
 
-GeomHandle ShowString::generate()
+GeomHandle ShowString::generate( string str )
 {
   GeomGroup *group = scinew GeomGroup();
 
@@ -160,12 +136,12 @@ GeomHandle ShowString::generate()
   double scale = .000225;
   double fsizes[5] = { 60,100,140,180,240 };  
 
-  group->add( generateTitle( nchars, nlines ) );
+  group->add( generateTitle( str, nchars, nlines ) );
     
-  double dx = (nchars * 0.75 * fsizes[size_] * scale + 2.0 * border);
-  double dy = (nlines * 1.8 * fsizes[size_] * scale + 2.0 * border);
+  double dx = (nchars * 0.75 * fsizes[gui_size_.get()] * scale + 2.0 * border);
+  double dy = (nlines * 1.80 * fsizes[gui_size_.get()] * scale + 2.0 * border);
 
-  if( bbox_ ) 
+  if( gui_bbox_.get() ) 
   {
     GeomGroup *box = scinew GeomGroup();
     
@@ -181,19 +157,25 @@ GeomHandle ShowString::generate()
     box->add( new GeomLine( Point(-border,dy,0),
 			    Point(-border,-border,0) ) );
     
-    group->add( scinew GeomMaterial(box, material_) );
+    group->add( scinew GeomMaterial(box, material_handle_) );
   }
 
-  Vector refVec;
+  // Use an offset so the edge of the title is visable.
+  Vector refVec = 31.0/32.0 *
+    Vector( gui_location_x_.get(), gui_location_y_.get(), 0.0 );
 
-  if( location_ == "Top Left" )
-    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) - Vector(  0, dy, 0 );
-  else if( location_ == "Top Center" )
-    refVec = Vector(    0/32.0, 31.0/32.0, 0 ) - Vector( dx/2, dy, 0 );
-  else if( location_ == "Bottom Left" )
-    refVec = Vector(-31.0/32.0,-31.0/32.0, 0 ) - Vector( 0,  0, 0 );
-  else if( location_ == "Bottom Center" )
-    refVec = Vector(    0/32.0,-31.0/32.0, 0 ) - Vector( dx/2,  0, 0 );
+  if( gui_location_x_.get() <= 0 &&
+      gui_location_y_.get() >= 0 )       // Top Left
+    refVec += Vector(   0, -dy, 0 );
+  else if( gui_location_x_.get() >= 0 &&
+	   gui_location_y_.get() >= 0 )  // Top Right
+    refVec += Vector( -dx/2, -dy, 0 );
+  else if( gui_location_x_.get() <= 0 &&
+	   gui_location_y_.get() <= 0 )  // Bottom Left
+    refVec += Vector(   0,  0, 0 ) ;
+  else if( gui_location_x_.get() >= 0 &&
+	   gui_location_y_.get() <= 0 )  // Bottom Right
+    refVec += Vector( -dx/2,  0, 0 );
 
   Transform trans;
   trans.pre_translate( refVec );
@@ -202,41 +184,40 @@ GeomHandle ShowString::generate()
 }
 
 
-GeomHandle ShowString::generateTitle( int &nchars, int &nlines )
+GeomHandle ShowString::generateTitle( string istr, int &nchars, int &nlines )
 {
   nchars = 0;
   nlines = 0;
-  size_ = dSize_.get();  
     
   GeomTexts* texts = scinew GeomTexts();
-  texts->set_font_index(size_);
+  texts->set_font_index(gui_size_.get());
  
-  std::string str;
+  std::string ostr;
   double scale = .000225;  
   double fsizes[5] = { 60,100,140,180,240 };  
   
-  double dy =  (1.8 * fsizes[size_] * scale);
+  double dy =  (1.8 * fsizes[gui_size_.get()] * scale);
   double offset = 0.025;
 
   size_t ind = 0;
   size_t oldind = 0;
-  while( (nlines < 10)&&(ind < str_.size()))
+  while( (nlines < 10)&&(ind < istr.size()))
   {
     oldind =ind;
-    for (;ind<str_.size();ind++) { if (str_[ind] == '\n') break; }
-    if (str_[ind] == '\n') 
+    for (;ind<istr.size();ind++) { if (istr[ind] == '\n') break; }
+    if (istr[ind] == '\n') 
     {
-        str = str_.substr(oldind,ind-oldind);
+        ostr = istr.substr(oldind,ind-oldind);
         ind++;
     }
     else
     {
-        str = str_.substr(oldind);
+        ostr = istr.substr(oldind);
         ind++;      
     }
-    if (str.size() > 0)
+    if (ostr.size() > 0)
     {
-      if (nchars < str.size()) nchars = str.size();
+      if (nchars < (int) ostr.size()) nchars = ostr.size();
       nlines++;
     }
   }
@@ -246,24 +227,25 @@ GeomHandle ShowString::generateTitle( int &nchars, int &nlines )
   nlines = 0;
   ind = 0;
   oldind = 0;
-  while( (nlines < 10)&&(ind < str_.size()))
+  while( (nlines < 10)&&(ind < istr.size()))
   {
     oldind =ind;
-    for (;ind<str_.size();ind++) { if (str_[ind] == '\n') break; }
-    if (str_[ind] == '\n') 
+    for (;ind<istr.size();ind++) { if (istr[ind] == '\n') break; }
+    if (istr[ind] == '\n') 
     {
-        str = str_.substr(oldind,ind-oldind);
+        ostr = istr.substr(oldind,ind-oldind);
         ind++;
     }
     else
     {
-        str = str_.substr(oldind);
+        ostr = istr.substr(oldind);
         ind++;      
     }
-    if (str.size() > 0)
+    if (ostr.size() > 0)
     {
       nlines++;
-      texts->add(str,Point(0,(totlines-nlines)*dy+offset,0),color_);
+      texts->add(ostr,Point(0,(totlines-nlines)*dy+offset,0),
+		 material_handle_->diffuse);
     }
   }
   
@@ -283,7 +265,7 @@ void ShowString::tcl_command(GuiArgs& args, void* userdata)
 
   if (args[1] == "color_change") 
   {
-    update_ = true;
+    color_changed_ = true;
   } 
   else 
   {

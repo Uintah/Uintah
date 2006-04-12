@@ -29,19 +29,9 @@
 
 itcl_class SCIRun_FieldsOther_SelectField {
     inherit Module
+
     constructor {config} {
         set name SelectField
-
-	global $this-stampvalue
-	global $this-runmode
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-stampvalue 100
-	set $this-runmode 0
-	# 0 nothing 1 accumulate 2 replace
     }
 
     method replace {} {

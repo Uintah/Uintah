@@ -31,26 +31,11 @@
 
 itcl_class Teem_UnuNtoZ_UnuSave {
     inherit Module
+
     constructor {config} {
         set name UnuSave
-        set_defaults
-    }
 
-    method set_defaults {} {
-	global $this-format
-	set $this-format "nrrd"
-
-	global $this-encoding
-	set $this-encoding "raw"
-
-	global $this-endian
-	set $this-endian "little"
-
-	global $this-filename
-	set $this-filename ""
-
-	global $this-filetype
-	set $this-filetype Binary
+        setGlobal $this-filetype Binary
     }
 
     method create_filebox {} {

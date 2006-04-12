@@ -42,7 +42,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/MeshQuality.h>
 #include <Core/Containers/StringUtil.h>
@@ -72,11 +72,14 @@ MeshQuality::MeshQuality(GuiContext* ctx)
 {
 }
 
+
 MeshQuality::~MeshQuality()
 {
 }
 
-void MeshQuality::execute()
+
+void
+MeshQuality::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
@@ -141,6 +144,7 @@ void MeshQuality::execute()
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Checked");
   ofield_port->send_and_dereference(ofield);
 }
+
 
 CompileInfoHandle
 MeshQualityAlgo::get_compile_info(const TypeDescription *fsrc,

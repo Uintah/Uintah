@@ -36,7 +36,7 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/SystemCall/TempFileManager.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
@@ -424,7 +424,7 @@ MatlabBundle::~MatlabBundle()
 void	MatlabBundle::update_status(std::string text)
 {
   std::string cmd = matlab_update_status_.get() + " \"" + totclstring(text) + "\"";
-  gui->execute(cmd);
+  get_gui()->execute(cmd);
 }
 
 // converttcllist:
@@ -439,33 +439,33 @@ std::vector<std::string> MatlabBundle::converttcllist(std::string str)
   
   // Yeah, it is TCL dependent:
   // TCL::llength determines the length of the list
-  gui->lock();
-  gui->eval("llength { "+str + " }",result);	
+  get_gui()->lock();
+  get_gui()->eval("llength { "+str + " }",result);	
   istringstream iss(result);
   iss >> lengthlist;
-  gui->unlock();
+  get_gui()->unlock();
   if (lengthlist < 0) return(list);
   
   list.resize(lengthlist);
-  gui->lock();
+  get_gui()->lock();
   for (long p = 0;p<lengthlist;p++)
   {
     ostringstream oss;
     // TCL dependency:
     // TCL::lindex retrieves the p th element from the list
     oss << "lindex { " << str <<  " } " << p;
-    gui->eval(oss.str(),result);
+    get_gui()->eval(oss.str(),result);
     list[p] = result;
   }
-  gui->unlock();
+  get_gui()->unlock();
   return(list);
 }
 
 
 bool MatlabBundle::synchronise_input()
 {
-  gui->execute(id+" Synchronise");
-  ctx->reset();
+  get_gui()->execute(get_id()+" Synchronise");
+  get_ctx()->reset();
 
   std::string str;
 
@@ -475,7 +475,7 @@ bool MatlabBundle::synchronise_input()
   str = output_bundle_pnrrds_.get(); output_bundle_pnrrds_list_ = converttcllist(str);
   str = output_bundle_pbundles_.get(); output_bundle_pbundles_list_ = converttcllist(str);
 
-  gui->execute(id + " update_text"); // update matlab_code_ before use.
+  get_gui()->execute(get_id() + " update_text"); // update matlab_code_ before use.
   matlab_code_list_ = matlab_code_.get(); 
   
   return(true);
@@ -587,7 +587,7 @@ bool MatlabBundle::send_matlab_job()
 
 void MatlabBundle::presave()
 {
-  gui->execute(id + " update_text"); // update matlab_code_ before use.
+  get_gui()->execute(get_id() + " update_text"); // update matlab_code_ before use.
 }
 
 
@@ -756,7 +756,7 @@ bool MatlabBundle::open_matlab_engine()
     }
 
     
-    thread_info_->gui_ = gui;
+    thread_info_->gui_ = get_gui();
     thread_info_->output_cmd_ = matlab_add_output_.get(); 
     // By cloning the object, it will have the same fields and sockets, but the socket
     // and error handling will be separate. As the thread will invoke its own instructions
@@ -1143,7 +1143,7 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
 
     if (args[1] == "disconnect")
     {
-      ctx->reset();
+      get_ctx()->reset();
       if(!(close_matlab_engine()))
       {
         error("Matlab: Could not close matlab engine");

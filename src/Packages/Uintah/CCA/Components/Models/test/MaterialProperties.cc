@@ -13,7 +13,8 @@ MaterialProperties::~MaterialProperties()
 {
 }
 
-void MaterialProperties::parse(ProblemSpecP& p)
+void
+MaterialProperties::parse(ProblemSpecP& p)
 {
   ProblemSpecP params = p->findBlock("properties");
   if(!params)
@@ -22,9 +23,9 @@ void MaterialProperties::parse(ProblemSpecP& p)
   params->require("molecularweight", molecularWeight);
 }
 
-void MaterialProperties::outputProblemSpec(ProblemSpecP& ps)
+void
+MaterialProperties::outputProblemSpec(ProblemSpecP& ps)
 {
-  ps->appendElement("cp",Cp,false,4);
-  ps->appendElement("molecularweight",molecularWeight,false,4);
-
+  ps->appendElement("cp",Cp);
+  ps->appendElement("molecularweight",molecularWeight);
 }

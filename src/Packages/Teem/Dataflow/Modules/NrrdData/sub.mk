@@ -40,23 +40,32 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/NrrdData
 
 
 SRCS     += \
-	$(SRCDIR)/ChooseNrrd.cc\
-	$(SRCDIR)/NrrdGradient.cc\
-	$(SRCDIR)/NrrdInfo.cc\
-	$(SRCDIR)/NrrdSelectTime.cc\
-	$(SRCDIR)/NrrdSetProperty.cc\
-	$(SRCDIR)/NrrdSetupTexture.cc\
+        $(SRCDIR)/ChooseNrrd.cc\
+        $(SRCDIR)/NrrdGradient.cc\
+        $(SRCDIR)/NrrdInfo.cc\
+        $(SRCDIR)/NrrdSelectTime.cc\
+        $(SRCDIR)/NrrdSetProperty.cc\
+        $(SRCDIR)/NrrdSetupTexture.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Core/Persistent Core/Containers Core/Util \
-	Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Datatypes Core/Geom Core/GeomInterface Core/Geometry \
-        Core/TkExtensions Dataflow/Network Dataflow/Ports
+PSELIBS := \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/GeomInterface \
+        Core/Geometry      \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network 
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
-TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+  TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
 endif

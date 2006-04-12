@@ -27,18 +27,18 @@ class SegFldWriter : public Module {
     GuiString filename;
     GuiString filetype;
 public:
-    SegFldWriter(const clString& id);
+    SegFldWriter(const clString& get_id());
     virtual ~SegFldWriter();
     virtual void execute();
 };
 
-extern "C" Module* make_SegFldWriter(const clString& id) {
-  return new SegFldWriter(id);
+extern "C" Module* make_SegFldWriter(const clString& get_id()) {
+  return new SegFldWriter(get_id());
 }
 
-SegFldWriter::SegFldWriter(const clString& id)
-: Module("SegFldWriter", id, Source), filename("filename", id, this),
-  filetype("filetype", id, this)
+SegFldWriter::SegFldWriter(const clString& get_id())
+: Module("SegFldWriter", get_id(), Source), filename("filename", get_id(), this),
+  filetype("filetype", get_id(), this)
 {
     // Create the output data handle and port
     inport=scinew SegFldIPort(this, "Input Data", SegFldIPort::Atomic);

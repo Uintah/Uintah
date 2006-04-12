@@ -39,10 +39,11 @@ ProblemSpecP Material::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP mat = 0;
   if (haveName) {
-    mat = ps->appendChild("material",true,2);
+    mat = ps->appendChild("material");
     mat->setAttribute("name",name);
-  } else 
-    mat = ps->appendChild("material",true,2);
+  } else {
+    mat = ps->appendChild("material");
+  }
 
   std::stringstream strstream;
   strstream << getDWIndex();

@@ -711,8 +711,8 @@ FlowRenderer2D::build_flow_tex()
       // Field needs to be scaled, use min and max for now...
       // To do: add Tcl variable for fixing the scale
 #if 0
-      double min_x = MAXDOUBLE, min_y = MAXDOUBLE, 
-        max_x = -MAXDOUBLE, max_y = -MAXDOUBLE;
+      double min_x = DBL_MAX, min_y = DBL_MAX, 
+        max_x = -DBL_MAX, max_y = -DBL_MAX;
 #endif
       if( field_->basis_order() == 0){
         // Set texture coords

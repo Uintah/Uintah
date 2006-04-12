@@ -49,12 +49,10 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Util/Timer.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/AtomicCounter.h>
 
 #include <Core/Util/share.h>
 namespace SCIRun {
-
-  //using namespace std;
 
 class SCISHARE ProgressReporter 
 {
@@ -64,29 +62,27 @@ public:
   ProgressReporter();
   virtual ~ProgressReporter();
 
-  virtual void error(const std::string& msg);
-  virtual void warning(const std::string& msg);
-  virtual void remark(const std::string& msg);
-  virtual void postMessage(const std::string &msg);
-  virtual void compile_error(const std::string &filename);
+  virtual void          error(const std::string& msg);
+  virtual void          warning(const std::string& msg);
+  virtual void          remark(const std::string& msg);
+  virtual void          post_message(const std::string &msg);
+  virtual void          compile_error(const std::string &filename);
 
-  virtual std::ostream &msgStream();
-  virtual void msgStream_flush();
+  virtual std::ostream &msg_stream();
+  virtual void          msg_stream_flush();
 
   // Compilation progress.  Should probably have different name.
-  virtual void report_progress( ProgressState );
+  virtual void          report_progress( ProgressState );
 
   // Execution time progress.
   // Percent is number between 0.0-1.0
-  // unsigned int will probably become size_t
-  virtual void update_progress(double percent);
-  virtual void update_progress(unsigned int n, unsigned int max);
+  virtual void          update_progress(double percent);
+  virtual void          update_progress(int current, int max);
+  virtual void          increment_progress();
 
 protected:
-  // accumulation storage;
-  int                current_;
-  int                max_;
-  Mutex              progress_lock_;
+  AtomicCounter         progress_current_;
+  int                   progress_max_;
 };
 
 

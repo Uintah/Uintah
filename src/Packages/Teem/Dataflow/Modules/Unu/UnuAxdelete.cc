@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
@@ -57,12 +57,15 @@ DECLARE_MAKER(UnuAxdelete)
 
 UnuAxdelete::UnuAxdelete(SCIRun::GuiContext *ctx) : 
   Module("UnuAxdelete", ctx, Filter, "UnuAtoM", "Teem"), 
-  axis_(ctx->subVar("axis"))
+  axis_(get_ctx()->subVar("axis"), 0)
 {
 }
 
-UnuAxdelete::~UnuAxdelete() {
+
+UnuAxdelete::~UnuAxdelete()
+{
 }
+
 
 void 
 UnuAxdelete::execute()
@@ -81,11 +84,11 @@ UnuAxdelete::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
-  int axis = axis_.get();
-  int a = axis;
+  unsigned int axis = axis_.get();
+  unsigned int a = axis;
   if (axis == -1) {
     Nrrd *ntmp = nrrdNew();
     if (nrrdCopy(nout, nin)) {
@@ -130,7 +133,7 @@ UnuAxdelete::execute()
     // Copy the axis kinds
     int offset = 0;
 
-    for (int i=0; i<nin->dim; i++) {
+    for (unsigned int i=0; i<nin->dim; i++) {
       if (i == axis) {
 	offset = 1;
       } else 

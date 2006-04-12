@@ -32,20 +32,16 @@ itcl_class SCIRun_FieldsData_TransformData {
     constructor {config} {
         set name TransformData
 	
-	global $this-function
+	# Trace variable for optionmenu so that it will display
+	# the correct value when opening a saved network.
 	global $this-outputdatatype
-
-        set_defaults
+	trace variable $this-outputdatatype w \
+	    "$this set_combobox .otype.c $this-outputdatatype"
     }
 
     method set_defaults {} {
-	set $this-function "result = v * 10;"
-	set $this-outputdatatype "input"
-
-	# trace variable for optionmenu so that it will display
-	# the correct value when opening a saved network
-	trace variable $this-outputdatatype w \
-	    "$this set_combobox .otype.c $this-outputdatatype"
+	setGlobal $this-function "result = v * 10;"
+	setGlobal $this-outputdatatype "input"
     }
 
     method update_text {} {

@@ -30,7 +30,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_COMPARTMENTBOUNDARY_H
 #define MODELCREATION_CORE_FIELDS_COMPARTMENTBOUNDARY_H 1
 
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
 
 namespace ModelCreation {
@@ -40,28 +40,30 @@ using namespace SCIRun;
 class CompartmentBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 };
 
 
 template <class FSRC, class FDST>
-class CompartmentBoundaryVolumeAlgoT : public CompartmentBoundaryAlgo
+class CompartmentBoundaryAlgoT : public CompartmentBoundaryAlgo
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+
+private:
+  typedef class {
+  public:
+    typename FDST::mesh_type::Node::index_type node;
+    typename FSRC::value_type val1;
+    typename FSRC::value_type val2;      
+    bool hasneighbor;
+  } pointtype;
+
 };
 
 
 template <class FSRC, class FDST>
-class CompartmentBoundarySurfaceAlgoT : public CompartmentBoundaryAlgo
-{
-public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
-};
-
-
-template <class FSRC, class FDST>
-bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -93,18 +95,45 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRep
   }
   
 #ifdef HAVE_HASH_MAP
-  typedef hash_map<unsigned int,unsigned int> hash_map_type;
+  typedef hash_multimap<unsigned int,pointtype> hash_map_type;
 #else
-  typedef map<unsigned int,unsigned int> hash_map_type;
+  typedef multimap<unsigned int,pointtype> hash_map_type;
 #endif
+
+  if (imesh->dimensionality() == 1) imesh->synchronize(Mesh::NODES_E|Mesh::EDGES_E);
+  if (imesh->dimensionality() == 2) imesh->synchronize(Mesh::EDGES_E|Mesh::FACES_E|Mesh::EDGE_NEIGHBORS_E);
+  if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E|Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E);
   
+  typename FSRC::mesh_type::Node::size_type numnodes;
+  imesh->size(numnodes);
+  typename FSRC::mesh_type::DElem::size_type numfaces;
+  imesh->size(numfaces);
+
+  bool isdomlink = false;
+  int* domlinkrr = 0;
+  int* domlinkcc = 0;
+  
+  if (DomainLink.get_rep())
+  {
+    if ((numfaces != DomainLink->nrows())&&(numfaces != DomainLink->ncols()))
+    {
+      pr->error("CompartmentBoundary: The Domain Link property is not of the right dimensions");
+      return (false);        
+    }
+    SparseRowMatrix *spr = dynamic_cast<SparseRowMatrix *>(DomainLink.get_rep());
+    if (spr)
+    {
+      domlinkrr = spr->rows;
+      domlinkcc = spr->columns;
+      isdomlink = true;
+    }
+  }  
+
   hash_map_type node_map;
-  
-  imesh->synchronize(Mesh::NODES_E|Mesh::FACES_E|Mesh::CELLS_E|Mesh::FACE_NEIGHBORS_E);
   
   typename FSRC::mesh_type::Elem::iterator be, ee;
   typename FSRC::mesh_type::Elem::index_type nci, ci;
-  typename FSRC::mesh_type::Face::array_type faces; 
+  typename FSRC::mesh_type::DElem::array_type delems; 
   typename FSRC::mesh_type::Node::array_type inodes; 
   typename FDST::mesh_type::Node::array_type onodes; 
   typename FSRC::mesh_type::Node::index_type a;
@@ -124,13 +153,42 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRep
   while (be != ee) 
   {
     ci = *be;
-    imesh->get_faces(faces,ci);
-    for (size_t p =0; p < faces.size(); p++)
+    imesh->get_delems(delems,ci);
+    for (size_t p =0; p < delems.size(); p++)
     {
       bool neighborexist = false;
       bool includeface = false;
       
-      neighborexist = imesh->get_neighbor(nci,ci,faces[p]);
+      neighborexist = imesh->get_neighbor(nci,ci,delems[p]);
+
+      if ((!neighborexist)&&(isdomlink))
+      {
+        for (int rr = domlinkrr[static_cast<int>(delems[p])]; rr < domlinkrr[static_cast<int>(delems[p])+1]; rr++)
+        {
+          int cc = domlinkcc[rr];
+          typename FSRC::mesh_type::Node::array_type nodes;
+          typename FSRC::mesh_type::Elem::array_type elems;           
+          typename FSRC::mesh_type::DElem::array_type delems;           
+          typename FSRC::mesh_type::DElem::array_type delems2;           
+          typename FSRC::mesh_type::DElem::index_type idx;
+
+          imesh->to_index(idx,cc);
+          imesh->get_nodes(nodes,idx);       
+          imesh->get_elems(elems,nodes[0]);
+          
+          for (int r=0; r<elems.size(); r++)
+          {
+            imesh->get_delems(delems2,elems[r]);
+            for (int s=0; s<delems2.size(); s++)
+            {
+              if (delems2[s]==idx) { nci = elems[r]; neighborexist = true; break; }
+            }
+            if (neighborexist) break;
+          }
+          if (neighborexist) break;
+        }
+      }
+
 
       if (neighborexist)
       {
@@ -162,156 +220,56 @@ bool CompartmentBoundaryVolumeAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRep
 
       if (includeface)
       {
-        imesh->get_nodes(inodes,faces[p]);
+        imesh->get_nodes(inodes,delems[p]);
         if (onodes.size() == 0) onodes.resize(inodes.size());
         for (int q=0; q< onodes.size(); q++)
         {
           a = inodes[q];
-          hash_map_type::iterator it = node_map.find(static_cast<unsigned int>(a));
-          if (it == node_map.end())
+          
+          std::pair<typename hash_map_type::iterator,typename hash_map_type::iterator> lit;
+          lit = node_map.equal_range(static_cast<unsigned int>(a));
+          
+          typename FDST::mesh_type::Node::index_type nodeidx;
+          typename FSRC::value_type v1, v2;
+          bool hasneighbor;
+          
+          if (neighborexist)
           {
-            imesh->get_center(point,a);
-            onodes[q] = omesh->add_point(point);
-            ifield->value(val1,ci);
-            ofield->fdata().push_back(val1);
+            if (val1 < val2) { v1 = val1; v2 = val2; } else { v1 = val2; v2 = val1; }
+            hasneighbor = true;
           }
           else
           {
-            onodes[q] = static_cast<typename FDST::mesh_type::Node::index_type>(node_map[a]);
+            v1 = val1; v2 = 0;
+            hasneighbor = false;
           }
-        }
-        omesh->add_elem(onodes);
-      }
-    }
-    ++be;
-  }
-  
-  // copy property manager
-	output->copy_properties(input.get_rep());
-  return (true);
-}
-
-
-template <class FSRC, class FDST>
-bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
-{
-  FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
-  if (ifield == 0)
-  {
-    pr->error("CompartmentBoundary: Could not obtain input field");
-    return (false);
-  }
-
-  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
-  if (imesh == 0)
-  {
-    pr->error("CompartmentBoundary: No mesh associated with input field");
-    return (false);
-  }
-
-  typename FDST::mesh_handle_type omesh = scinew typename FDST::mesh_type();
-  if (omesh == 0)
-  {
-    pr->error("CompartmentBoundary: Could not create output field");
-    return (false);
-  }
-  
-  FDST *ofield = scinew FDST(omesh);
-  output = dynamic_cast<Field*>(ofield);
-  if (ofield == 0)
-  {
-    pr->error("CompartmentBoundary: Could not create output field");
-    return (false);
-  }
-  
-#ifdef HAVE_HASH_MAP
-  typedef hash_map<unsigned int,unsigned int> hash_map_type;
-#else
-  typedef map<unsigned int,unsigned int> hash_map_type;
-#endif
-  
-  hash_map_type node_map;
-  
-  imesh->synchronize(Mesh::NODES_E|Mesh::EDGES_E|Mesh::FACES_E|Mesh::EDGE_NEIGHBORS_E);
-  
-  typename FSRC::mesh_type::Elem::iterator be, ee;
-  typename FSRC::mesh_type::Elem::index_type nci, ci;
-  typename FSRC::mesh_type::Edge::index_type fi;
-  typename FSRC::mesh_type::Edge::array_type edges; 
-  typename FSRC::mesh_type::Node::array_type inodes; 
-  typename FDST::mesh_type::Node::array_type onodes; 
-  typename FSRC::mesh_type::Node::index_type a;
-  typename FSRC::value_type val1, val2, minval, maxval;
-
-  inodes.clear();
-  onodes.clear();
-
-  minval = static_cast<typename FSRC::value_type>(minrange);
-  maxval = static_cast<typename FSRC::value_type>(maxrange);
-  
-  Point point;
-
-  imesh->begin(be); 
-  imesh->end(ee);
-
-  while (be != ee) 
-  {
-    ci = *be;
-    imesh->get_edges(edges,ci);
-    for (size_t p =0; p < edges.size(); p++)
-    {
-      bool neighborexist = false;
-      bool includeedge = false;
-      
-      neighborexist = imesh->get_neighbor(nci,ci,edges[p]);
-
-      if (neighborexist)
-      {
-        if (nci > ci)
-        {
-          ifield->value(val1,ci);
-          ifield->value(val2,nci);
-          if (innerboundaryonly == false)
+          
+          while (lit.first != lit.second)
           {
-            if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+            if (((*(lit.first)).second.val1 == v1)&&((*(lit.first)).second.val2 == v2)&&((*(lit.first)).second.hasneighbor == hasneighbor))
             {
-              if (!(val1 == val2)) includeedge = true;             
+              nodeidx = (*(lit.first)).second.node;
+              break;
             }
+            ++(lit.first);
           }
-          else
+          
+          if (lit.first == lit.second)
           {
-            if ((((val1 >= minval)&&(val2 >= minval))&&((val1 <= maxval)&&(val2 <= maxval)))||(userange == false))
-            {
-              if (!(val1 == val2)) includeedge = true;             
-            }          
-          }
-        }
-      }
-      else if ((addouterboundary)&&(innerboundaryonly == false))
-      {
-        ifield->value(val1,ci);
-        if (((val1 >= minval)&&(val1 <= maxval))||(userange == false)) includeedge = true;
-      }
-
-      if (includeedge)
-      {
-        imesh->get_nodes(inodes,edges[p]);
-        if (onodes.size() == 0) onodes.resize(inodes.size());
-        for (int q=0; q< onodes.size(); q++)
-        {
-          a = inodes[q];
-          hash_map_type::iterator it = node_map.find(static_cast<unsigned int>(a));
-          if (it == node_map.end())
-          {
+            pointtype newpoint;
             imesh->get_center(point,a);
             onodes[q] = omesh->add_point(point);
-            ifield->value(val1,ci);
-            ofield->fdata().push_back(val1);
+            newpoint.node = onodes[q];
+            newpoint.val1 = v1;
+            newpoint.val2 = v2;
+            newpoint.hasneighbor = hasneighbor;
+            node_map.insert(typename hash_map_type::value_type(a,newpoint));
           }
           else
           {
-            onodes[q] = static_cast<typename FDST::mesh_type::Node::index_type>(node_map[a]);
+            onodes[q] = nodeidx;
           }
+          
         }
         omesh->add_elem(onodes);
       }
@@ -323,8 +281,6 @@ bool CompartmentBoundarySurfaceAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressRe
 	output->copy_properties(input.get_rep());
   return (true);
 }
-
-
 
 } // end namespace ModelCreation
 

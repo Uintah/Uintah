@@ -195,6 +195,7 @@ class Crack
                                    //   between J-integral contour and crack plane; 
 
     // Physical parameters of cracks
+    vector<string> stressState;    // Crack front stress state 
     vector<string> crackType;      // Crack contact type
     vector<double> cmu;            // Crack surface friction coefficient
 
@@ -274,7 +275,7 @@ class Crack
     void   DiscretizePartialEllipticCracks(const int&,int&);
     void   CombineCrackSegments(const int&);
     short  TwoPointsCoincide(const Point&,const Point&);
-    short  TwoDoublesEqual(const double&, const double&);
+    short  TwoDoublesEqual(const double&, const double&, const double&);
     void   ResetCrackNodes(const int&, const int&, const int&);
     void   ResetCrackElements(const int&, const int&, const int&);
     void   ResetCrackFrontNodes(const int&, const int&, const int&);

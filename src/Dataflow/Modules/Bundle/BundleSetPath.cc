@@ -35,9 +35,9 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Geom/Path.h>
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -62,10 +62,10 @@ private:
 DECLARE_MAKER(BundleSetPath)
   BundleSetPath::BundleSetPath(GuiContext* ctx)
     : Module("BundleSetPath", ctx, Filter, "Bundle", "SCIRun"),
-      guipath1name_(ctx->subVar("path1-name")),
-      guipath2name_(ctx->subVar("path2-name")),
-      guipath3name_(ctx->subVar("path3-name")),
-      guibundlename_(ctx->subVar("bundlename"))
+      guipath1name_(get_ctx()->subVar("path1-name"), "path1"),
+      guipath2name_(get_ctx()->subVar("path2-name"), "path2"),
+      guipath3name_(get_ctx()->subVar("path3-name"), "path3"),
+      guibundlename_(get_ctx()->subVar("bundlename"), "")
 {
 }
 

@@ -31,14 +31,9 @@
 
 itcl_class Teem_Tend_TendSim {
     inherit Module
+
     constructor {config} {
         set name TendSim
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-bvalue
-	set $this-bvalue 1.0
     }
 
     method ui {} {

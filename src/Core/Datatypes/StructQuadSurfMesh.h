@@ -67,7 +67,6 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-
 namespace SCIRun {
 
 using std::string;
@@ -93,6 +92,8 @@ public:
     points_.resize(dims[0], dims[1]);
     normals_.resize(dims[0], dims[1]);
   }
+
+  virtual int topology_geometry() const { return (Mesh::STRUCTURED | Mesh::IRREGULAR); }
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(const typename ImageMesh<Basis>::Node::index_type &) const

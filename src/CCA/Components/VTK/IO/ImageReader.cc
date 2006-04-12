@@ -57,7 +57,7 @@ SCIRun::vtk::ImageReader::~ImageReader()
 }
 
 int
-SCIRun::vtk::ImageReader::popupUI()
+SCIRun::vtk::ImageReader::popup_ui()
 {
 #if HAVE_QT
   QString fn = QFileDialog::getOpenFileName("./","Vtk Image Files");

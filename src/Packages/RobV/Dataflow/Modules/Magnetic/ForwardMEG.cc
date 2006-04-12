@@ -18,7 +18,7 @@ using namespace SCIRun;
 
 class RobVSHARE ForwardMEG : public Module {
 public:
-  ForwardMEG(const string& id);
+  ForwardMEG(const string& get_id());
 
   virtual ~ForwardMEG();
 
@@ -27,12 +27,12 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" RobVSHARE Module* make_ForwardMEG(const string& id) {
-  return scinew ForwardMEG(id);
+extern "C" RobVSHARE Module* make_ForwardMEG(const string& get_id()) {
+  return scinew ForwardMEG(get_id());
 }
 
-ForwardMEG::ForwardMEG(const string& id)
-  : Module("ForwardMEG", id, Source, "Magnetic", "RobV")
+ForwardMEG::ForwardMEG(const string& get_id())
+  : Module("ForwardMEG", get_id(), Source, "Magnetic", "RobV")
 {
 }
 

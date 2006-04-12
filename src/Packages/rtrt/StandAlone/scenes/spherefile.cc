@@ -192,8 +192,8 @@ void write_header(char* header, SphereData &sphere_data) {
   sphere_data.maxs.resize(sphere_data.numvars);
   // setup min/max values
   for(int j = 0; j < sphere_data.numvars; j++){
-    sphere_data.mins[j] =  MAXFLOAT;
-    sphere_data.maxs[j] = -MAXFLOAT;
+    sphere_data.mins[j] =  FLT_MAX;
+    sphere_data.maxs[j] = -FLT_MAX;
   }
   
   // loop through the data and find min/max
@@ -476,8 +476,8 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
     maxs = (float*)malloc(numvars*sizeof(float));
     // setup min/max values
     for(int j=0;j<numvars;j++){
-      mins[j]=MAXFLOAT;
-      maxs[j]=-MAXFLOAT;
+      mins[j]=FLT_MAX;
+      maxs[j]=-FLT_MAX;
     }
 
     // loop through the data and find min/max

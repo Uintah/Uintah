@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -67,16 +67,19 @@ DECLARE_MAKER(TendEstim)
 
 TendEstim::TendEstim(SCIRun::GuiContext *ctx) : 
   Module("TendEstim", ctx, Filter, "Tend", "Teem"), 
-  knownB0_(ctx->subVar("knownB0")),
-  use_default_threshold_(ctx->subVar("use-default-threshold")),
-  threshold_(ctx->subVar("threshold")),
-  soft_(ctx->subVar("soft")),
-  scale_(ctx->subVar("scale"))
+  knownB0_(get_ctx()->subVar("knownB0"), 1),
+  use_default_threshold_(get_ctx()->subVar("use-default-threshold"), 1),
+  threshold_(get_ctx()->subVar("threshold"), 0.0),
+  soft_(get_ctx()->subVar("soft"), 0.0),
+  scale_(get_ctx()->subVar("scale"), 1.0)
 {
 }
 
-TendEstim::~TendEstim() {
+
+TendEstim::~TendEstim()
+{
 }
+
 
 void 
 TendEstim::execute()
@@ -116,8 +119,8 @@ TendEstim::execute()
 
   int knownB0 = knownB0_.get(); // TRUE for brains, FALSE for dog hearts
   Nrrd* dummy = nrrdNew();
-  if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, 
-			  bmat_handle->nrrd, knownB0, threshold, 
+  if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd_, 
+			  bmat_handle->nrrd_, knownB0, threshold, 
 			  soft_.get(), scale_.get()))
   {
     char *err = biffGetDone(TEN);

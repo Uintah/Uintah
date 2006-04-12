@@ -9,6 +9,7 @@ SRCS     += \
 	$(SRCDIR)/GeometryPiece.cc \
 	$(SRCDIR)/SphereGeometryPiece.cc \
 	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
+	$(SRCDIR)/NaaBoxGeometryPiece.cc \
 	$(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc \
 	$(SRCDIR)/ConeGeometryPiece.cc \
@@ -32,12 +33,16 @@ SRCS     += \
 
 PSELIBS := \
 	Core/Exceptions \
-	Core/Geometry \
-	Core/Util \
-	Packages/Uintah/Core/Util \
-	Packages/Uintah/Core/Grid \
+	Core/Geometry   \
+	Core/Util       \
+	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Math        \
+	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Exceptions \
+	Packages/Uintah/Core/Util
+
+
+LIBS       := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -36,8 +36,8 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Core/Geom/Path.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -64,10 +64,10 @@ private:
 DECLARE_MAKER(BundleGetPath)
   BundleGetPath::BundleGetPath(GuiContext* ctx)
     : Module("BundleGetPath", ctx, Filter, "Bundle", "SCIRun"),
-      guipath1name_(ctx->subVar("path1-name")),
-      guipath2name_(ctx->subVar("path2-name")),
-      guipath3name_(ctx->subVar("path3-name")),
-      guipaths_(ctx->subVar("path-selection"))
+      guipath1name_(get_ctx()->subVar("path1-name"), "path1"),
+      guipath2name_(get_ctx()->subVar("path2-name"), "path2"),
+      guipath3name_(get_ctx()->subVar("path3-name"), "path3"),
+      guipaths_(get_ctx()->subVar("path-selection"), "")
 {
 
 }
@@ -115,7 +115,7 @@ void BundleGetPath::execute()
 
 
   guipaths_.set(pathlist);
-  ctx->reset();
+  get_ctx()->reset();
 
  
   if (!(ofport = static_cast<PathOPort *>(get_oport("path1"))))

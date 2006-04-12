@@ -44,11 +44,11 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <sys/stat.h>
 
@@ -69,10 +69,10 @@ public:
   virtual void execute();
 
 private:
-  GuiFilename filename_;
+  GuiFilename gui_filename_;
 
-  NrrdDataHandle nHandles_[9];
-  MatrixHandle mHandle_;
+  NrrdDataHandle nrrd_output_handles_[9];
+  MatrixHandle matrix_output_handle_;
 
   string old_filename_;
   time_t old_filemodification_;
@@ -80,16 +80,18 @@ private:
   bool loop_;
   int  index_;
 
-  bool error_;
+  bool execute_error_;
 };
 
 
 DECLARE_MAKER(VULCANDataReader)
 VULCANDataReader::VULCANDataReader(GuiContext* context)
   : Module("VULCANDataReader", context, Source, "DataIO", "Fusion"),
-    filename_(context->subVar("filename")),
+    gui_filename_(context->subVar("filename")),
+    matrix_output_handle_(0),
     loop_(false),
-    error_(false)
+    index_(0),
+    execute_error_(false)
 {
 }
 
@@ -110,7 +112,7 @@ VULCANDataReader::execute(){
 			   "Cell Angular Velocity",
 			   "Time Slice" };
 
-  string new_filename(filename_.get());
+  string new_filename(gui_filename_.get());
 
   if( new_filename.length() == 0 )
     return;
@@ -138,11 +140,13 @@ VULCANDataReader::execute(){
   int delay = 0;
 
   if( loop_ ||
-      error_ ||
+      execute_error_ ||
       new_filename         != old_filename_ || 
       new_filemodification != old_filemodification_  ) {
 
-    error_ = false;
+    update_state( Executing );
+
+    execute_error_ = false;
 
     old_filemodification_ = new_filemodification;
     old_filename_         = new_filename;
@@ -196,6 +200,7 @@ VULCANDataReader::execute(){
     /* Check to see that the file is accessible */
     if (!(fp = fopen(new_filename.c_str(), "r"))) {
       error("Unable to open " + new_filename);
+      execute_error_ = true;
       return;
     }
 
@@ -210,14 +215,14 @@ VULCANDataReader::execute(){
 
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
 
     // Time 
     ColumnMatrix *selected = scinew ColumnMatrix(1);
     selected->put(0, 0, (double) time);
-    mHandle_ = MatrixHandle(selected);
+    matrix_output_handle_ = MatrixHandle(selected);
 
 
     /* Throw away the next 7 lines of the file. */
@@ -226,7 +231,7 @@ VULCANDataReader::execute(){
 
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
     
@@ -237,7 +242,7 @@ VULCANDataReader::execute(){
 
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
 
@@ -262,7 +267,7 @@ VULCANDataReader::execute(){
 
       if( ferror( fp ) || feof( fp ) ) {
 	error("Unable to read " + new_filename);
-	error_ = true;
+	execute_error_ = true;
 	return;
       }
     }
@@ -271,15 +276,19 @@ VULCANDataReader::execute(){
 
     // Points
     NrrdData *nout = scinew NrrdData();
+    size_t size[NRRD_DIM_MAX];
+    size[0] = rank;
+    size[1] = npos;
+    nrrdWrap_nva(nout->nrrd_, pdata, nrrdTypeDouble, ndims+1, size);
 
-    nrrdWrap(nout->nrrd, pdata, nrrdTypeDouble, ndims+1, rank, npos);
+    nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
+    nout->nrrd_->axis[0].label = strdup("ZR");
+    nout->nrrd_->axis[1].label = strdup("Domain");
 
-    nout->nrrd->axis[0].kind  = nrrdKind3Vector;
-    nout->nrrd->axis[0].label = strdup("ZR");
-    nout->nrrd->axis[1].label = strdup("Domain");
-    
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode);
+    unsigned int centers[NRRD_DIM_MAX];
+    centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+    centers[2] = nrrdCenterNode;
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
     nout->set_property( "Topology",          string("Unstructured"), false );
     nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
@@ -293,19 +302,18 @@ VULCANDataReader::execute(){
       nout->set_property( "Name", nrrdName, false );
     }
 
-    nHandles_[0] = NrrdDataHandle( nout );
+    nrrd_output_handles_[0] = NrrdDataHandle( nout );
 
     // Velocity Vector
     nout = scinew NrrdData();
 
-    nrrdWrap(nout->nrrd, vdata, nrrdTypeDouble, ndims+1, rank, npos);
+    nrrdWrap_nva(nout->nrrd_, vdata, nrrdTypeDouble, ndims+1, size);
 
-    nout->nrrd->axis[0].kind  = nrrdKind3Vector;
-    nout->nrrd->axis[0].label = strdup("ZR");
-    nout->nrrd->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
+    nout->nrrd_->axis[0].label = strdup("ZR");
+    nout->nrrd_->axis[1].label = strdup("Domain");
     
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
     nout->set_property( "DataSpace",         string("REALSPACE"), false );
     nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
@@ -319,7 +327,7 @@ VULCANDataReader::execute(){
       nout->set_property( "Name", nrrdName, false );
     }
 
-    nHandles_[1] = NrrdDataHandle( nout );
+    nrrd_output_handles_[1] = NrrdDataHandle( nout );
 
 
     // Cell Data
@@ -329,7 +337,7 @@ VULCANDataReader::execute(){
     
     if( ferror( fp ) || feof( fp ) ) {
       error("Unable to read " + new_filename);
-      error_ = true;
+      execute_error_ = true;
       return;
     }
 
@@ -355,7 +363,7 @@ VULCANDataReader::execute(){
 
       if( ferror( fp ) || feof( fp ) ) {
 	error("Unable to read " + new_filename);
-	error_ = true;
+	execute_error_ = true;
 	return;
       }
     }
@@ -363,13 +371,15 @@ VULCANDataReader::execute(){
     // Connections
     nout = scinew NrrdData();
 
-    nrrdWrap(nout->nrrd, cdata, nrrdTypeDouble, ndims+1, 4, ncon);
+    size_t con_size[NRRD_DIM_MAX];
+    con_size[0] = 4;
+    con_size[1] = ncon;
+    nrrdWrap_nva(nout->nrrd_, cdata, nrrdTypeDouble, ndims+1, con_size);
 
-    nout->nrrd->axis[0].label = strdup("Connections");
-    nout->nrrd->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].label = strdup("Connections");
+    nout->nrrd_->axis[1].label = strdup("Domain");
     
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
     nout->set_property( "Topology",  string("Unstructured"), false );
     nout->set_property( "Cell Type", string("Quad"), false );
@@ -383,15 +393,18 @@ VULCANDataReader::execute(){
       nout->set_property( "Name", nrrdName, false );
     }
 
-    nHandles_[2] = NrrdDataHandle( nout );
+    nrrd_output_handles_[2] = NrrdDataHandle( nout );
 
     // Data
     for( int i=0; i<6; i++ ) {
+      size_t data_size[NRRD_DIM_MAX];
+      data_size[0] = ncon;
+
       nout = scinew NrrdData();
 
-      nrrdWrap(nout->nrrd, data[i], nrrdTypeDouble, ndims, ncon);
+      nrrdWrap_nva(nout->nrrd_, data[i], nrrdTypeDouble, ndims, data_size);
 
-      nout->nrrd->axis[0].label = strdup("Domain");
+      nout->nrrd_->axis[0].label = strdup("Domain");
     
       nout->set_property( "DataSpace",         string("REALSPACE"), false );
       nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
@@ -405,7 +418,7 @@ VULCANDataReader::execute(){
 	nout->set_property( "Name", nrrdName, false );
       }
  
-      nHandles_[3+i] = NrrdDataHandle( nout );	
+      nrrd_output_handles_[3+i] = NrrdDataHandle( nout );	
     }
 
     // Ignore everything else in the file.
@@ -420,31 +433,17 @@ VULCANDataReader::execute(){
   for( int i=0; i<9; i++ ) {
 
     // Get a handle to the output field port.
-    if( nHandles_[i].get_rep() ) {
-      NrrdOPort *ofield_port = (NrrdOPort *) get_oport(portNames[i]);
-    
-      if (!ofield_port) {
-	error("Unable to initialize "+name+"'s oport" + portNames[i]+ "\n");
-	return;
-      }
-
-      nHandles_[i]->set_property( "Source", string("Vulcan Reader"), false );
+    if( nrrd_output_handles_[i].get_rep() ) {
+      nrrd_output_handles_[i]->set_property( "Source",
+					     string("Vulcan Reader"),
+					     false );
 
       // Send the data downstream
-      ofield_port->send( nHandles_[i] );
+      send_output_handle( portNames[i], nrrd_output_handles_[i], true );
     }
   }
 
-  if( mHandle_.get_rep() ) {
-    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Time Slice");
-    
-    if (!omatrix_port) {
-      error("Unable to initialize oport 'Time Slice'.");
-      return;
-    }
-    
-    omatrix_port->send(mHandle_ );
-  }
+  send_output_handle( "Time Slice", matrix_output_handle_, true );
 
   if( loop_ ) {
     if ( delay > 0) {

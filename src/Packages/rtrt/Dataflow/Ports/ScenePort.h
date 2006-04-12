@@ -15,7 +15,7 @@
 
 #include <Packages/rtrt/Core/Scene.h>
 
-#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/Persistent.h>

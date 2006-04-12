@@ -41,7 +41,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
 using namespace SCIRun;
@@ -72,17 +72,17 @@ DECLARE_MAKER(UnuAxinfo)
 
 UnuAxinfo::UnuAxinfo(GuiContext* ctx)
   : Module("UnuAxinfo", ctx, Source, "UnuAtoM", "Teem"),
-    axis_(ctx->subVar("axis")),
-    label_(ctx->subVar("label")),
-    kind_(ctx->subVar("kind")),
-    min_(ctx->subVar("min")),
-    max_(ctx->subVar("max")),
-    spacing_(ctx->subVar("spacing")),
-    use_label_(ctx->subVar("use_label")),
-    use_kind_(ctx->subVar("use_kind")),
-    use_min_(ctx->subVar("use_min")),
-    use_max_(ctx->subVar("use_max")),
-    use_spacing_(ctx->subVar("use_spacing")),
+    axis_(get_ctx()->subVar("axis"), 0),
+    label_(get_ctx()->subVar("label"), "---"),
+    kind_(get_ctx()->subVar("kind"), "nrrdKindUnknown"),
+    min_(get_ctx()->subVar("min"), 0.0),
+    max_(get_ctx()->subVar("max"), 1.0),
+    spacing_(get_ctx()->subVar("spacing"), 1.0),
+    use_label_(get_ctx()->subVar("use_label"), 1),
+    use_kind_(get_ctx()->subVar("use_kind"), 1),
+    use_min_(get_ctx()->subVar("use_min"), 1),
+    use_max_(get_ctx()->subVar("use_max"), 1),
+    use_spacing_(get_ctx()->subVar("use_spacing"), 1),
     generation_(-1)
 {
 }
@@ -105,9 +105,9 @@ void UnuAxinfo::execute()
       return;
     }
   
-  int axis = axis_.get();
+  unsigned int axis = axis_.get();
   if( !nh.get_rep() || generation_ != nh->generation ) {
-    if (axis >= nh->nrrd->dim) {
+    if (axis >= nh->nrrd_->dim) {
       error("Please specify an axis within proper range.");
       return;
     }
@@ -117,14 +117,14 @@ void UnuAxinfo::execute()
   
   reset_vars();
 
-  Nrrd *nin = nh->nrrd;
+  Nrrd *nin = nh->nrrd_;
   Nrrd *nout = nrrdNew();
   
   // copy input nrrd and modify its label, kind, min, max and spacing
   if (nrrdCopy(nout, nin)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble copying input nrrd: ") +  err);
-    msgStream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";
+    msg_stream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";
     free(err);
     return;
   }

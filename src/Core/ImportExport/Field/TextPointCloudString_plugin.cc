@@ -122,9 +122,9 @@ TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
     ptsstream.getline(buffer, 1024);
     strings.push_back(string(buffer));
 
-    pr->msgStream() << "Added point " << p <<
+    pr->msg_stream() << "Added point " << p <<
       " with text '" << string(buffer) << "'" << endl;
-    pr->msgStream_flush();
+    pr->msg_stream_flush();
   }
 
   PCField *pc = scinew PCField(pcm);

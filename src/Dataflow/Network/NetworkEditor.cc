@@ -55,7 +55,7 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Network/PackageDB.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/GenFiles.h>
 #include <Core/XMLUtil/XMLUtil.h>
@@ -77,16 +77,19 @@ using namespace std;
   
 namespace SCIRun {
 
+// init the static pointer. 
+Network* NetworkEditor::net_ = 0;
 
 NetworkEditor::NetworkEditor(Network* net, GuiInterface* gui) :
-  net(net), gui(gui)
+  gui_(gui)
 {
+  net_ = net;
   // Create User interface...
-  gui->add_command("netedit", this, 0);
+  gui_->add_command("netedit", this, 0);
   ASSERT(sci_getenv("SCIRUN_SRCDIR"));
-  gui->source_once(sci_getenv("SCIRUN_SRCDIR")+
+  gui_->source_once(sci_getenv("SCIRUN_SRCDIR")+
                    string("/Dataflow/GUI/NetworkEditor.tcl"));
-  gui->execute("makeNetworkEditor");
+  gui_->execute("makeNetworkEditor");
 }
 
 NetworkEditor::~NetworkEditor()
@@ -111,22 +114,22 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
       throw "netedit addmodule needs a package name,"
 	" category name and module name";
 
-    Module* mod = net->add_module(args[2],args[3],args[4]);
+    Module* mod = net_->add_module(args[2],args[3],args[4]);
     if(!mod)
       throw "netedit addmodule cannot add module "+args[2]+args[3]+args[4];
-    gui->add_command(mod->id+"-c", mod, 0);
-    args.result(mod->id);
+    gui_->add_command(mod->id_+"-c", mod, 0);
+    args.result(mod->id_);
   } else if (args[1] == "deletemodule") {
     if(args.count() < 3)
       throw "netedit deletemodule needs a module name";
 
-    if(!net->delete_module(args[2])) 
+    if(!net_->delete_module(args[2])) 
       throw GuiException("Cannot delete module "+args[2]);
   } else if (args[1] == "deletemodule_warn") {
     if(args.count() < 3)
       throw "netedit deletemodule_warn needs a module name";
 
-    Module* mod=net->get_module_by_id(args[2]);
+    Module* mod=net_->get_module_by_id(args[2]);
     // I don't think the following should happen, but due to what
     // I think is a race condition, it has happened.  This check 
     // avoids a core dump (bad memory access).
@@ -136,28 +139,26 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "addconnection") {
     if(args.count() < 6)
       throw "netedit addconnection needs 4 args";
-    Module* omod = net->get_module_by_id(args[2]);
+    Module* omod = net_->get_module_by_id(args[2]);
     if(!omod)
       throw "netedit addconnection can't find output module";
     int owhich = args.get_int(3);
-    Module* imod = net->get_module_by_id(args[4]);
+    Module* imod = net_->get_module_by_id(args[4]);
     if(!imod)
       throw "netedit addconnection can't find input module";
     int iwhich = args.get_int(5);
-    if (imod->lastportdynamic && iwhich >= imod->iports.size())
-      iwhich = imod->iports.size()-1;
-    args.result(net->connect(omod, owhich, imod, iwhich));
+    args.result(net_->connect(omod, owhich, imod, iwhich));
   } else if(args[1] == "deleteconnection") {
     if (args.count() < 3)
       throw "netedit deleteconnection needs 1 arg";
     if (args.count() == 4 && args[3] == "1")
-      net->disable_connection(args[2]);
-    if (!net->disconnect(args[2]))
+      net_->disable_connection(args[2]);
+    if (!net_->disconnect(args[2]))
       throw "Cannot find connection "+args[2]+" for deletion";
   } else if(args[1] == "supportsPortCaching") {
     if(args.count() < 4)
       throw "netedit supportsPortCaching needs 2 args";
-    Module* omod = net->get_module_by_id(args[2]);
+    Module* omod = net_->get_module_by_id(args[2]);
     if(!omod)
     {
       args.result("0");
@@ -165,28 +166,28 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     else
     {
       const int owhich = args.get_int(3);
-      if (owhich >= omod->numOPorts())
+      if (owhich >= omod->num_output_ports())
         throw "netedit supportsPortCaching can't find output port";
       args.result(omod->oport_supports_cache_flag(owhich)?"1":"0");
     }
   } else if(args[1] == "isPortCaching") {
     if(args.count() < 4)
       throw "netedit isPortCaching needs 4 args";
-    Module* omod = net->get_module_by_id(args[2]);
+    Module* omod = net_->get_module_by_id(args[2]);
     if(!omod)
       throw "netedit isPortCaching can't find output module";
     const int owhich = args.get_int(3);
-    if (owhich >= omod->numOPorts())
+    if (owhich >= omod->num_output_ports())
       throw "netedit isPortCaching can't find output port";
     args.result(omod->get_oport_cache_flag(owhich)?"1":"0");
   } else if(args[1] == "setPortCaching") {
     if(args.count() < 5)
       throw "netedit setPortCaching needs 5 args";
-    Module* omod = net->get_module_by_id(args[2]);
+    Module* omod = net_->get_module_by_id(args[2]);
     if(!omod)
       throw "netedit setPortCaching can't find output module";
     const int owhich = args.get_int(3);
-    if (owhich >= omod->numOPorts())
+    if (owhich >= omod->num_output_ports())
       throw "netedit setPortCaching can't find output port";
     const int cache =  args.get_int(4);
     omod->set_oport_cache_flag(owhich, cache);
@@ -207,35 +208,35 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     args.result(packageDB->getCategoryName(args[2], args[3], args[4]));
   } else if(args[1] == "dontschedule"){
   } else if(args[1] == "scheduleok"){
-    net->schedule();
+    net_->schedule();
   } else if(args[1] == "scheduleall"){
-    net->schedule_all();
+    net_->schedule_all();
   } else if(args[1] == "reset_scheduler"){
-    for(int i=0;i<net->nmodules();i++){
-      Module* m=net->module(i);
-      m->need_execute=0;
+    for(int i=0;i<net_->nmodules();i++){
+      Module* m=net_->module(i);
+      m->need_execute_=0;
     }
   } else if(args[1] == "packageName"){
     if(args.count() != 3)
       throw "packageName needs a module id";
-    Module* mod=net->get_module_by_id(args[2]);
+    Module* mod=net_->get_module_by_id(args[2]);
     if(!mod)
       throw "cannot find module "+args[2];
-    args.result(mod->packageName);
+    args.result(mod->package_name_);
   } else if(args[1] == "categoryName"){
     if(args.count() != 3)
       throw "categoryName needs a module id";
-    Module* mod=net->get_module_by_id(args[2]);
+    Module* mod=net_->get_module_by_id(args[2]);
     if(!mod)
       throw "cannot find module "+args[2];
-    args.result(mod->categoryName);
+    args.result(mod->category_name_);
   } else if(args[1] == "moduleName"){
     if(args.count() != 3)
       throw "moduleName needs a module id";
-    Module* mod=net->get_module_by_id(args[2]);
+    Module* mod=net_->get_module_by_id(args[2]);
     if(!mod)
       throw "cannot find module "+args[2];
-    args.result(mod->moduleName);
+    args.result(mod->module_name_);
   } else if (args[1] == "create_pac_cat_mod") {
     if (args.count()!=7)
       throw "create_pac_cat_mod needs 5 arguments";
@@ -290,9 +291,9 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if (args[1] == "setenv" && args.count() == 4){
     sci_putenv(args[2], args[3]);
   } else if (args[1] == "net_read_lock" && args.count() == 2){
-    net->read_lock();
+    net_->read_lock();
   } else if (args[1] == "net_read_unlock" && args.count() == 2){
-    net->read_unlock();
+    net_->read_unlock();
   } else if (args[1] == "module_oport_datatypes") {
     if (args.count() != 5)
       throw "netedit module_oport_datatypes expects a "
@@ -327,8 +328,8 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     }
     args.result(result);
   } else if (args[1] == "presave") {
-    for(int i=0;i<net->nmodules();i++)
-      net->module(i)->presave();
+    for(int i=0;i<net_->nmodules();i++)
+      net_->module(i)->presave();
   } else if (args[1] == "start-net-doc") {
     if (netio) {
       delete netio;
@@ -374,6 +375,10 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     netio->add_module_variable(args[2], args[3], args[4]);
   } else if (args[1] == "add-modgui-callback") {
     netio->add_module_gui_callback(args[2], args[3]);
+  } else if (args[1] == "subnet-start") {
+    netio->push_subnet_scope(args[2], args[3]);
+  } else if (args[1] == "subnet-end") {
+    netio->pop_subnet_scope();
   } else if (args[1] == "load_srn") {
     NetworkIO::load_net(args[2]);
     NetworkIO ln;

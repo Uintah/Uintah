@@ -55,7 +55,7 @@ HypreSolverAMG::solve(void)
     //HYPRE_BoomerAMGSetMaxLevels(parSolver, 4);
     HYPRE_BoomerAMGSetTol(parSolver, params->tolerance);
 #if HAVE_HYPRE_1_9
-    HYPRE_BoomerAMGSetPrintLevel(parSolver, 0);
+    HYPRE_BoomerAMGSetPrintLevel(parSolver, params->logging);
     HYPRE_BoomerAMGSetPrintFileName(parSolver, "sstruct.out.log");
 #else
     ostringstream msg;

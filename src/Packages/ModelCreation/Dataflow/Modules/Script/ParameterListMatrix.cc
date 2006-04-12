@@ -34,8 +34,8 @@
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -64,8 +64,8 @@ private:
 DECLARE_MAKER(ParameterListMatrix)
 ParameterListMatrix::ParameterListMatrix(GuiContext* ctx)
   : Module("ParameterListMatrix", ctx, Source, "Script", "ModelCreation"),
-    guimatrixname_(ctx->subVar("matrix-name")),
-    guimatrices_(ctx->subVar("matrix-selection"))
+    guimatrixname_(get_ctx()->subVar("matrix-name")),
+    guimatrices_(get_ctx()->subVar("matrix-selection"))
 {
 }
 
@@ -124,7 +124,7 @@ void ParameterListMatrix::execute()
     matrixlist += "{" + handle->getMatrixName(p) + "} ";
   }
   guimatrices_.set(matrixlist);
-  ctx->reset();
+  get_ctx()->reset();
 
 
   if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix"))))

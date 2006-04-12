@@ -56,8 +56,8 @@ DECLARE_MAKER(ScalarFieldAverage)
 
 ScalarFieldAverage::ScalarFieldAverage(GuiContext* ctx)
   : Module("ScalarFieldAverage",ctx,Source, "Operators", "Uintah"),
-    t0_(ctx->subVar("t0_")), t1_(ctx->subVar("t1_")),
-    tsteps_(ctx->subVar("tsteps_")),
+    t0_(get_ctx()->subVar("t0_")), t1_(get_ctx()->subVar("t1_")),
+    tsteps_(get_ctx()->subVar("tsteps_")),
     aveFieldHandle(0), varname(""), time(0)
 {
 }

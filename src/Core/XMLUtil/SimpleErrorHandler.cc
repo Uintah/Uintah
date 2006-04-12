@@ -55,7 +55,7 @@ static string sehToString(int i)
   return string(buf);
 }
 
-static void postMessage(const string& errmsg)
+static void post_message(const string& errmsg)
 {
   cerr << errmsg << '\n';
 }
@@ -63,7 +63,7 @@ static void postMessage(const string& errmsg)
 void SimpleErrorHandler::error(const SAXParseException& e)
 {
   foundError=true;
-  postMessage("Error at (file " + xmlto_string(e.getSystemId())
+  post_message("Error at (file " + xmlto_string(e.getSystemId())
 	      + ", line " + to_string((int)e.getLineNumber())
 	      + ", char " + to_string((int)e.getColumnNumber())
 	      + "): " + xmlto_string(e.getMessage()));
@@ -72,7 +72,7 @@ void SimpleErrorHandler::error(const SAXParseException& e)
 void SimpleErrorHandler::fatalError(const SAXParseException& e)
 {
   foundError=true;
-  postMessage("Fatal Error at (file " + xmlto_string(e.getSystemId())
+  post_message("Fatal Error at (file " + xmlto_string(e.getSystemId())
 	      + ", line " + sehToString((int)e.getLineNumber())
 	      + ", char " + sehToString((int)e.getColumnNumber())
 	      + "): " + xmlto_string(e.getMessage()));
@@ -80,7 +80,7 @@ void SimpleErrorHandler::fatalError(const SAXParseException& e)
 
 void SimpleErrorHandler::warning(const SAXParseException& e)
 {
-  postMessage("Warning at (file " + xmlto_string(e.getSystemId())
+  post_message("Warning at (file " + xmlto_string(e.getSystemId())
 	      + ", line " + sehToString((int)e.getLineNumber())
 	      + ", char " + sehToString((int)e.getColumnNumber())
 	      + "): " + xmlto_string(e.getMessage()));

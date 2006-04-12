@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 
 namespace SCITeem {
@@ -57,12 +57,15 @@ DECLARE_MAKER(UnuAxmerge)
 
 UnuAxmerge::UnuAxmerge(SCIRun::GuiContext *ctx) : 
   Module("UnuAxmerge", ctx, Filter, "UnuAtoM", "Teem"), 
-  axes_(ctx->subVar("axes"))
+  axes_(get_ctx()->subVar("axes"), "0")
 {
 }
 
-UnuAxmerge::~UnuAxmerge() {
+
+UnuAxmerge::~UnuAxmerge()
+{
 }
+
 
 void 
 UnuAxmerge::execute()
@@ -80,7 +83,7 @@ UnuAxmerge::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout[2];
   nout[0] = nrrdNew();
   nout[1] = nrrdNew();

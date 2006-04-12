@@ -30,15 +30,15 @@
 # Epilogue fragment for subdirectories.  This is included from
 # either smallso_epilogue.mk or largeso_epilogue.mk
 
-OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
-	   $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS))) \
-	   $(patsubst %.cxx,%.o,$(filter %.cxx,$(SRCS))) \
-	   $(patsubst %.s,%.o,$(filter %.s,$(SRCS))) \
-	   $(patsubst %.F,%.o,$(filter %.F,$(SRCS))) \
-	   $(patsubst %.f,%.o,$(filter %.f,$(SRCS))) \
-	   $(patsubst %.fif,%.o,$(filter %.fif,$(SRCS))) \
-	   $(patsubst %.y,%.o,$(filter %.y,$(SRCS))) \
-	   $(patsubst %.l,%.o,$(filter %.l,$(SRCS)))
+OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS))) \
+	   $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS))) \
+	   $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
+	   $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS))) \
+	   $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS))) \
+	   $(patsubst %.f,%.$(OBJEXT),$(filter %.f,$(SRCS))) \
+	   $(patsubst %.fif,%.$(OBJEXT),$(filter %.fif,$(SRCS))) \
+	   $(patsubst %.y,%.$(OBJEXT),$(filter %.y,$(SRCS))) \
+	   $(patsubst %.l,%.$(OBJEXT),$(filter %.l,$(SRCS)))
 
 LIBNAME := $(LIBDIR)/lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 
@@ -83,10 +83,10 @@ endif
 
 TMPPSELIBS = $(patsubst %,lib%.$(SO_OR_A_FILE),$(PSELIBS)) 
 TMPP = $(patsubst libPackages_%,PACKAGE%,$(TMPPSELIBS))
-TMP = $(patsubst lib%,SCIRUN%,$(TMPP))
-TMP_CORE_PSELIBS = $(patsubst SCIRUN%,lib%,$(TMP))
+TMPLIBS = $(patsubst lib%,SCIRUN%,$(TMPP))
+TMP_CORE_PSELIBS = $(patsubst SCIRUN%,lib%,$(TMPLIBS))
 CORE_PSELIBS = $(patsubst PACKAGE%,,$(TMP_CORE_PSELIBS))
-TMP_PACK_PSELIBS = $(patsubst PACKAGE%,libPackages_%,$(TMP))
+TMP_PACK_PSELIBS = $(patsubst PACKAGE%,libPackages_%,$(TMPLIBS))
 PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
 
 $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)/%,$(PACK_PSELIBS))
@@ -96,31 +96,31 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst 
 	rm -f $@
   endif
   ifeq ($(IS_AIX),yes)
-	ar -v -q $@ $(filter %.o,$^)
+	ar -v -q $@ $(filter %.$(OBJEXT),$^)
   else
     ifeq ($(IS_OSX),yes)
       ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Linking:   $@"
-	@$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+	@$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
       else
-	$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+	$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
       endif
     else
       ifeq ($(IS_WIN),yes)
-	$(CXX) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS) $(LDFLAGS) $(SOFLAGS) $(SCI_THIRDPARTY_LIBRARY) -Wl,--output-def=$(subst dll,def,$@) -Wl,--export-all-symbols -Wl,--out-implib=$(subst dll,a,$@) -Wl,--enable-auto-image-base
+	$(CXX) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/%.$(SO_OR_A_FILE),%.lib,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS) $(SOFLAGS) $(SCI_THIRDPARTY_LIBRARY) 
       else
         ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Linking:   $@"
-	@$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+	@$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
         else
-	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
         endif
       endif
     endif
   endif
 
 #$(LIBNAME).pure: $(LIBNAME)
-#	$(purify) $(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@.pure $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
+#	$(purify) $(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@.pure $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
 
 #  These will get removed on make clean
 CLEANLIBS := $(CLEANLIBS) $(LIBNAME)

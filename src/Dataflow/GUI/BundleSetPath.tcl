@@ -32,28 +32,10 @@ itcl_class SCIRun_Bundle_BundleSetPath {
     inherit Module
     constructor {config} {
         set name BundleSetPath
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-path1-name
-        global $this-path2-name
-        global $this-path3-name
-        global $this-path1-usename
-        global $this-path2-usename
-        global $this-path3-usename
-        global $this-bundlename
-        
-
-        set $this-path1-name "path1"
-        set $this-path2-name "path2"
-        set $this-path3-name "path3"
-        set $this-path1-usename 0
-        set $this-path2-usename 0
-        set $this-path3-usename 0
-        set $this-bundlename ""
-
+        initGlobal $this-path1-usename 0
+        initGlobal $this-path2-usename 0
+        initGlobal $this-path3-usename 0
     }
 
     method ui {} {

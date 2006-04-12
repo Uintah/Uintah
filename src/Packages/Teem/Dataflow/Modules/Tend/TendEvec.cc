@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -65,10 +65,10 @@ DECLARE_MAKER(TendEvec)
 
 TendEvec::TendEvec(SCIRun::GuiContext *ctx) : 
   Module("TendEvec", ctx, Filter, "Tend", "Teem"), 
-  major_(ctx->subVar("major")),
-  medium_(ctx->subVar("medium")),
-  minor_(ctx->subVar("minor")),
-  threshold_(ctx->subVar("threshold"))
+  major_(get_ctx()->subVar("major")),
+  medium_(get_ctx()->subVar("medium")),
+  minor_(get_ctx()->subVar("minor")),
+  threshold_(get_ctx()->subVar("threshold"))
 {
 }
 
@@ -91,7 +91,7 @@ TendEvec::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
 
   int N, sx, sy, sz;
   if (nin->dim > 3) {
@@ -116,14 +116,16 @@ TendEvec::execute()
   }
 
   NrrdData *nout = new NrrdData();
-
-  nrrdAlloc(nout->nrrd, nrrdTypeFloat, 4, 3*compLen, sx, sy, sz);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 3*compLen; size[1] = sx;
+  size[2] = sy; size[3] = sz;
+  nrrdAlloc_nva(nout->nrrd_, nrrdTypeFloat, 4, size);
   if (tenTensorCheck(nin, nrrdTypeFloat, AIR_TRUE, AIR_TRUE)) {
     error("Input Nrrd was not a Tensor field of floats");
     return;
   }
 
-  float *edata = (float *)(nout->nrrd->data);
+  float *edata = (float *)(nout->nrrd_->data);
   float *tdata = (float *)(nin->data);
   float eval[3], evec[9];
   
@@ -141,7 +143,7 @@ TendEvec::execute()
     edata += 3*compLen;
     tdata += 7;
   }
-  nrrdAxisInfoCopy(nout->nrrd, nin, NULL, NRRD_AXIS_INFO_SIZE_BIT);
+  nrrdAxisInfoCopy(nout->nrrd_, nin, NULL, NRRD_AXIS_INFO_SIZE_BIT);
 
   NrrdDataHandle ntmp(nout);
   onrrd_->send_and_dereference(ntmp);

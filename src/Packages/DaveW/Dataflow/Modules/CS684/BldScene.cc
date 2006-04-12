@@ -16,8 +16,8 @@
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 #include <Dataflow/Widgets/RingWidget.h>
 #include <Dataflow/Widgets/BoxWidget.h>
@@ -94,7 +94,7 @@ class BldScene : public Module {
     int init;
 
 public:
-    BldScene(const clString& id);
+    BldScene(const clString& get_id());
     virtual ~BldScene();
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
@@ -108,16 +108,16 @@ public:
     virtual void widget_moved2(int last, void *userdata);    
 };
 
-extern "C" Module* make_BldScene(const clString& id)
+extern "C" Module* make_BldScene(const clString& get_id())
 {
-    return scinew BldScene(id);
+    return scinew BldScene(get_id());
 }
 
 static clString module_name("BldScene");
 
-BldScene::BldScene(const clString& id)
-: Module("BldScene", id, Source),
-  atten("atten", id, this), material("material", id, this), nb("nb", id, this),
+BldScene::BldScene(const clString& get_id())
+: Module("BldScene", get_id(), Source),
+  atten("atten", get_id(), this), material("material", get_id(), this), nb("nb", get_id(), this),
   tcl_exec(0), widgetMoved(0), matlChanged(0), widget_lock("BldScene widget lock")
 {
     // Create the input port

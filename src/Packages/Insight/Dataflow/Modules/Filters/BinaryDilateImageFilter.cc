@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkBinaryDilateImageFilter.h>
@@ -49,7 +48,7 @@ namespace Insight
 
 using namespace SCIRun;
 
-class InsightSHARE BinaryDilateImageFilter : public Module
+class BinaryDilateImageFilter : public Module
 {
 public:
 
@@ -182,8 +181,8 @@ DECLARE_MAKER(BinaryDilateImageFilter)
 
 BinaryDilateImageFilter::BinaryDilateImageFilter(GuiContext* ctx)
   : Module("BinaryDilateImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_dialVal_(ctx->subVar("dialVal")),
-    gui_radius_(ctx->subVar("radius")),
+    gui_dialVal_(get_ctx()->subVar("dialVal")),
+    gui_radius_(get_ctx()->subVar("radius")),
      last_InputImage_(-1)
 {
   filter_ = 0;
@@ -191,9 +190,6 @@ BinaryDilateImageFilter::BinaryDilateImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &BinaryDilateImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &BinaryDilateImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
-
 }
 
 BinaryDilateImageFilter::~BinaryDilateImageFilter()

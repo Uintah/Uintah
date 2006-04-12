@@ -42,15 +42,29 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/ShowDipoles.cc\
-	$(SRCDIR)/ShowLeads.cc\
+        $(SRCDIR)/ShowDipoles.cc\
+        $(SRCDIR)/ShowLeads.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-	Dataflow/Widgets Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
-        Core/TkExtensions 
+PSELIBS := \
+        Packages/BioPSE/Core/Algorithms/Forward          \
+        Packages/BioPSE/Core/Algorithms/NumApproximation \
+        Packages/BioPSE/Core/Datatypes \
+        Core/Basis         \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/Geometry      \
+        Core/GeomInterface \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network   \
+        Dataflow/Widgets
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

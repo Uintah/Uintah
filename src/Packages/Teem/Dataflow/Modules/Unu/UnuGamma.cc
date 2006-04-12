@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
 
@@ -60,11 +60,11 @@ DECLARE_MAKER(UnuGamma)
 
 UnuGamma::UnuGamma(SCIRun::GuiContext *ctx) : 
   Module("UnuGamma", ctx, Filter, "UnuAtoM", "Teem"), 
-  gamma_(ctx->subVar("gamma")),
-  min_(ctx->subVar("min")),
-  useinputmin_(ctx->subVar("useinputmin")),
-  max_(ctx->subVar("max")),
-  useinputmax_(ctx->subVar("useinputmax"))
+  gamma_(get_ctx()->subVar("gamma"), 0.0),
+  min_(get_ctx()->subVar("min"), 1.0),
+  useinputmin_(get_ctx()->subVar("useinputmin"), 1),
+  max_(get_ctx()->subVar("max"), 1.0),
+  useinputmax_(get_ctx()->subVar("useinputmax"), 1)
 {
 }
 
@@ -92,7 +92,7 @@ UnuGamma::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   NrrdRange *range = NULL;

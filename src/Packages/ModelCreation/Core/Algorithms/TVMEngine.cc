@@ -178,8 +178,8 @@ bool TVMEngine::engine(TVMArrayList& Input, TVMArrayList& Output, std::string fu
       error("Function did not compile.");
       if (module_)
       {
-        SCIRun::GuiInterface* gui = module_->getGui();
-        gui->eval(module_->getID() + " compile_error "+ci->filename_);
+        SCIRun::GuiInterface* gui = module_->get_gui();
+        gui->eval(module_->get_id() + " compile_error "+ci->filename_);
       }
       SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       return(false);

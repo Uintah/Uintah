@@ -322,8 +322,8 @@ Bundle::io(Piostream& stream)
 bool Bundle::NrrdToMatrixConvertible(NrrdDataHandle nrrdH)
 {
   if (nrrdH.get_rep() == 0) return(false);
-  if (nrrdH->nrrd == 0) return(false);
-  switch (nrrdH->nrrd->type)
+  if (nrrdH->nrrd_ == 0) return(false);
+  switch (nrrdH->nrrd_->type)
   {
   case nrrdTypeChar: case nrrdTypeUChar:
   case nrrdTypeShort: case nrrdTypeUShort:
@@ -333,7 +333,7 @@ bool Bundle::NrrdToMatrixConvertible(NrrdDataHandle nrrdH)
   default:
     return(false);
   }
-  if (nrrdH->nrrd->dim < 3) return(true);
+  if (nrrdH->nrrd_->dim < 3) return(true);
   return(false);
 }
 
@@ -342,8 +342,8 @@ bool
 Bundle::NrrdToMatrix(NrrdDataHandle nrrdH,MatrixHandle& matH)
 {
   if (nrrdH.get_rep() == 0) return false;
-  if (nrrdH->nrrd == 0) return false;
-  switch(nrrdH->nrrd->type)
+  if (nrrdH->nrrd_ == 0) return false;
+  switch(nrrdH->nrrd_->type)
     {
     case nrrdTypeChar:
       return(NrrdToMatrixHelper<char>(nrrdH,matH));
@@ -389,13 +389,20 @@ bool Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
     if (transposeNrrd_)
     {
       nrrdH = scinew NrrdData();
-      nrrdAlloc(nrrdH->nrrd, nrrdTypeDouble, 2, cols, rows);
-      nrrdAxisInfoSet(nrrdH->nrrd, nrrdAxisInfoLabel, 
-                                          "dense-columns" , "dense-rows");
-      nrrdH->nrrd->axis[0].kind = nrrdKindDomain;
-      nrrdH->nrrd->axis[1].kind = nrrdKindDomain;
+      size_t size[NRRD_DIM_MAX];
+      size[0] = cols; size[1] = rows;
+      nrrdAlloc_nva(nrrdH->nrrd_, nrrdTypeDouble, 2, size);
 
-      double *val = (double*)nrrdH->nrrd->data;
+
+      const char *labels[NRRD_DIM_MAX];
+      labels[0] = airStrdup("dense-columns");
+      labels[1] = airStrdup("dense-rows");
+
+      nrrdAxisInfoSet_nva(nrrdH->nrrd_, nrrdAxisInfoLabel, labels);
+      nrrdH->nrrd_->axis[0].kind = nrrdKindDomain;
+      nrrdH->nrrd_->axis[1].kind = nrrdKindDomain;
+
+      double *val = (double*)nrrdH->nrrd_->data;
       double *data = matrix->get_data_pointer();
 
       int i,j;
@@ -413,13 +420,18 @@ bool Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
     else
     {
       nrrdH = scinew NrrdData();
-      nrrdAlloc(nrrdH->nrrd, nrrdTypeDouble, 2, rows, cols);
-      nrrdAxisInfoSet(nrrdH->nrrd, nrrdAxisInfoLabel, 
-                                          "dense-rows" , "dense-columns");
-      nrrdH->nrrd->axis[0].kind = nrrdKindDomain;
-      nrrdH->nrrd->axis[1].kind = nrrdKindDomain;
+      size_t size[NRRD_DIM_MAX];
+      size[0] = rows; size[1] = cols;
+      nrrdAlloc_nva(nrrdH->nrrd_, nrrdTypeDouble, 2, size);
 
-      double *val = (double*)nrrdH->nrrd->data;
+      const char *labels[NRRD_DIM_MAX];
+      labels[0] = airStrdup("dense-rows");
+      labels[1] = airStrdup("dense-columns");
+      nrrdAxisInfoSet_nva(nrrdH->nrrd_, nrrdAxisInfoLabel, labels);
+      nrrdH->nrrd_->axis[0].kind = nrrdKindDomain;
+      nrrdH->nrrd_->axis[1].kind = nrrdKindDomain;
+
+      double *val = (double*)nrrdH->nrrd_->data;
       double *data = matrix->get_data_pointer();
 
       for(int c=0; c<cols; c++) 
@@ -437,17 +449,18 @@ bool Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
   {
     Matrix* matrixptr = matH.get_rep();
     ColumnMatrix* matrix = dynamic_cast<ColumnMatrix*>(matrixptr);
-    int size = matrix->nrows();
+    size_t size[NRRD_DIM_MAX];
+    size[0] = matrix->nrows();
 
     nrrdH = scinew NrrdData();
-    nrrdAlloc(nrrdH->nrrd, nrrdTypeDouble, 1, size);
-    nrrdAxisInfoSet(nrrdH->nrrd, nrrdAxisInfoLabel, "column-data");
-    nrrdH->nrrd->axis[0].kind = nrrdKindDomain;
+    nrrdAlloc_nva(nrrdH->nrrd_, nrrdTypeDouble, 1, size);
+    nrrdAxisInfoSet_nva(nrrdH->nrrd_, nrrdAxisInfoLabel, "column-data");
+    nrrdH->nrrd_->axis[0].kind = nrrdKindDomain;
 
-    double *val = (double*)nrrdH->nrrd->data;
+    double *val = (double*)nrrdH->nrrd_->data;
     double *data = matrix->get_data();
 
-    for(int i=0; i<size; i++) 
+    for(int i=0; i<matrix->nrows(); i++) 
     {
       *val = *data;
       ++data;
@@ -467,19 +480,19 @@ bool Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
 LockingHandle<Matrix>
 Bundle::getMatrix(string name) 
 { 
-  MatrixHandle matrix;
-  matrix = get<Matrix>(name);
-  if (matrix.get_rep() == 0)
+  MatrixHandle matrixH;
+  matrixH = get<Matrix>(name);
+  if (matrixH.get_rep() == 0)
   {
-    NrrdDataHandle nrrd;
-    nrrd = get<NrrdData>(name);
-    if (nrrd.get_rep())
+    NrrdDataHandle nrrdH;
+    nrrdH = get<NrrdData>(name);
+    if (nrrdH.get_rep())
     {
-      if (NrrdToMatrixConvertible(nrrd))
-        NrrdToMatrix(nrrd,matrix);
+      if (NrrdToMatrixConvertible(nrrdH))
+        NrrdToMatrix(nrrdH,matrixH);
     }
   }
-  return matrix;
+  return matrixH;
 }
 
 bool Bundle::isMatrix(string name)  
@@ -551,19 +564,19 @@ string Bundle::getHandleType(int index)
 
 LockingHandle<NrrdData> Bundle::getNrrd(string name) 
 { 
-  NrrdDataHandle nrrd;
-  nrrd = get<NrrdData>(name);
-  if (nrrd.get_rep() == 0)
+  NrrdDataHandle nrrdH;
+  nrrdH = get<NrrdData>(name);
+  if (nrrdH.get_rep() == 0)
   {
-    MatrixHandle matrix;
-    matrix = get<Matrix>(name);
-    if (matrix.get_rep())
+    MatrixHandle matrixH;
+    matrixH = get<Matrix>(name);
+    if (matrixH.get_rep())
     {
-      if (MatrixToNrrdConvertible(matrix))
-                      MatrixToNrrd(matrix,nrrd);
+      if (MatrixToNrrdConvertible(matrixH))
+                      MatrixToNrrd(matrixH,nrrdH);
     }
   }
-  return(nrrd);
+  return(nrrdH);
 }
 
 bool

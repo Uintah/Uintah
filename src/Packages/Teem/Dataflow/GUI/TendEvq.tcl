@@ -31,21 +31,9 @@
 
 itcl_class Teem_Tend_TendEvq {
     inherit Module
+
     constructor {config} {
         set name TendEvq
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-index
-	set $this-index 0
-
-	global $this-anisotropy
-	set $this-anisotropy "cl1"
-
-	global $this-ns
-	set $this-ns 0
-
     }
 
     method ui {} {

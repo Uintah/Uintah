@@ -29,24 +29,12 @@
 
 itcl_class SCIRun_FieldsCreate_CreateMesh {
     inherit Module
+
     constructor {config} {
         set name CreateMesh
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	set $this-firstwidth 12
-
-	global $this-fieldname
-	global $this-meshname
-	global $this-fieldbasetype
-	global $this-datatype
-	set $this-meshname "Created Mesh"
-	set $this-fieldname "Created Field"
-	set $this-fieldbasetype "TetVolField"
-	set $this-datatype "double"
+	# The width of the first column of the data display.
+	setGlobal $this-firstwidth 12
     }
 
     method ui {} {
@@ -74,13 +62,13 @@ itcl_class SCIRun_FieldsCreate_CreateMesh {
 	set fbt [$w.fbt childsite]
 	labelcombo $fbt.l1 "Mesh Type" \
 	    { \
-		  CurveField \
-		  HexVolField \
-		  PointCloudField \
-		  PrismVolField \
-		  QuadSurfField \
-		  TetVolField \
-		  TriSurfField \
+		  Curve \
+		  HexVol \
+		  PointCloud \
+		  PrismVol \
+		  QuadSurf \
+		  TetVol \
+		  TriSurf \
 	      } \
 	    $this-fieldbasetype
 
@@ -101,19 +89,6 @@ itcl_class SCIRun_FieldsCreate_CreateMesh {
 	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.exec.execute -side top -e n
     }
-
-
-    method labelpair { win text1 text2 } {
-	frame $win 
-	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
-		-fore darkred
-	pack $win.l1 $win.colon $win.l2 -side left
-    } 
-
 
     method labelcombo { win text1 arglist var} {
 	frame $win 

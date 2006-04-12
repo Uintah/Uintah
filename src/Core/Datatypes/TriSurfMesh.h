@@ -49,6 +49,7 @@
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -65,7 +66,6 @@
 #include <set>
 #include <sgi_stl_warnings_on.h>
 #include <float.h> // for DBL_MAX
-
 
 namespace SCIRun {
 
@@ -109,6 +109,7 @@ public:
   };
 
   typedef Face Elem;
+  typedef Edge DElem;
 
   friend class ElemData;
 
@@ -184,6 +185,7 @@ public:
   virtual void transform(const Transform &t);
 
   bool get_dim(vector<unsigned int>&) const { return false;  }
+  virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   void begin(typename Node::iterator &) const;
   void begin(typename Edge::iterator &) const;
@@ -220,14 +222,25 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   {
+    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+	      "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first");
     result.clear();
     for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
       result.push_back(node_neighbors_[idx][i]/3);
   }
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_edges(result, idx);
+  }
+
   bool get_neighbor(typename Face::index_type &neighbor,
                     typename Face::index_type face,
                     typename Edge::index_type edge) const;
+  bool get_neighbor(unsigned int &nbr_half_edge,
+                    unsigned int half_edge) const;
   void get_neighbors(vector<typename Node::index_type> &array,
                      typename Node::index_type idx) const;
 
@@ -293,7 +306,11 @@ public:
   void get_point(Point &result, typename Node::index_type index) const
   { result = points_[index]; }
   void get_normal(Vector &result, typename Node::index_type index) const
-  { result = normals_[index]; }
+  {
+    ASSERTMSG(synchronized_ & NORMALS_E,
+	      "Must call synchronize NORMALS_E on TriSurfMesh first"); 
+    result = normals_[index]; 
+  }
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }
 
@@ -301,6 +318,9 @@ public:
                   typename Elem::index_type eidx, unsigned int)
   {
     if (basis_.polynomial_order() < 2) {
+      ASSERTMSG(synchronized_ & NORMALS_E,
+		"Must call synchronize NORMALS_E on TriSurfMesh first");
+      
       typename Node::array_type arr(3);
       get_nodes(arr, eidx);
 
@@ -353,6 +373,7 @@ public:
   //! swap the shared edge between 2 faces, if they share an edge.
   bool swap_shared_edge(typename Face::index_type, typename Face::index_type);
   bool remove_face(typename Face::index_type);
+  bool remove_orphan_nodes();
   //! walk all the faces, enforcing consistent face orientations.
   void orient_faces();
   //! flip the orientaion of all the faces
@@ -372,6 +393,21 @@ public:
   bool                  insert_node(const Point &p);
   void                  insert_node(typename Face::index_type face, const Point &p);
   void                  bisect_element(const typename Face::index_type);
+
+  bool              insert_node_in_edge_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            unsigned int halfedge,
+                                            const Point &p);
+
+  bool              insert_node_in_face_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            typename Face::index_type face,
+                                            const Point &p);
+
+  bool                  insert_node_in_face(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            typename Face::index_type face,
+                                            const Point &p);
 
 
   const Point &point(typename Node::index_type i) { return points_[i]; }
@@ -423,7 +459,7 @@ public:
     basis_.derivate(coords, ed, J);
   }
 
-  double find_closest_face(Point &result, typename Elem::index_type &face,
+  double find_closest_elem(Point &result, typename Elem::index_type &elem,
                            const Point &p) const;
 
   static const TypeDescription* node_type_description();
@@ -438,13 +474,24 @@ public:
 
 private:
   void                  walk_face_orient(typename Face::index_type face,
-                                         vector<bool> &tested);
+                                         vector<bool> &tested,
+                                         vector<bool> &flip);
+
+  // These require the synchronize_lock_ to be held before calling.
   void                  compute_normals();
   void                  compute_node_neighbors();
   void                  compute_edges();
   void                  compute_edge_neighbors(double err = 1.0e-8);
+  void                  compute_grid();
 
-  bool inside3_p(int, const Point &p) const;
+  //! Used to recompute data for individual cells.  Don't use these, they
+  // are not synchronous.  Use create_cell_syncinfo instead.
+  void insert_elem_into_grid(typename Elem::index_type ci);
+  void remove_elem_from_grid(typename Elem::index_type ci);
+
+  void                  debug_test_edge_neighbors();
+
+  bool inside3_p(int face_times_three, const Point &p) const;
 
   static int next(int i) { return ((i%3)==2) ? (i-2) : (i+1); }
   static int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
@@ -456,14 +503,12 @@ private:
   vector<under_type>    edge_neighbors_;
   vector<Vector>        normals_;   //! normalized per node normal.
   vector<vector<under_type> > node_neighbors_;
-  Mutex                 point_lock_;
-  Mutex                 edge_lock_;
-  Mutex                 face_lock_;
-  Mutex                 edge_neighbor_lock_;
-  Mutex                 normal_lock_;
-  Mutex                 node_neighbor_lock_;
+  LockingHandle<SearchGridConstructor> grid_;
   unsigned int          synchronized_;
+  Mutex                 synchronize_lock_;
   Basis                 basis_;
+
+  Vector cell_epsilon_;
 
 #ifdef HAVE_HASH_MAP
 
@@ -584,13 +629,9 @@ TriSurfMesh<Basis>::TriSurfMesh()
     faces_(0),
     edge_neighbors_(0),
     node_neighbors_(0),
-    point_lock_("TriSurfMesh point_lock_"),
-    edge_lock_("TriSurfMesh edge_lock_"),
-    face_lock_("TriSurfMesh face_lock_"),
-    edge_neighbor_lock_("TriSurfMesh edge_neighbor_lock_"),
-    normal_lock_("TriSurfMesh normal_lock_"),
-    node_neighbor_lock_("TriSurfMesh node_neighbor_lock_"),
-    synchronized_(NODES_E | FACES_E | CELLS_E)
+    grid_(0),
+    synchronized_(NODES_E | FACES_E | CELLS_E),
+    synchronize_lock_("TriSurfMesh synchronize_lock_")
 {
 }
 
@@ -604,44 +645,35 @@ TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
     edge_neighbors_(0),
     normals_(0),
     node_neighbors_(0),
-    point_lock_("TriSurfMesh point_lock_"),
-    edge_lock_("TriSurfMesh edge_lock_"),
-    face_lock_("TriSurfMesh face_lock_"),
-    edge_neighbor_lock_("TriSurfMesh edge_neighbor_lock_"),
-    normal_lock_("TriSurfMesh normal_lock_"),
-    node_neighbor_lock_("TriSurfMesh node_neighbor_lock_"),
-    synchronized_(NODES_E | FACES_E | CELLS_E)
+    grid_(0),
+    synchronized_(NODES_E | FACES_E | CELLS_E),
+    synchronize_lock_("TriSurfMesh synchronize_lock_")
 {
   TriSurfMesh &lcopy = (TriSurfMesh &)copy;
 
-  lcopy.point_lock_.lock();
-  points_ = copy.points_;
-  lcopy.point_lock_.unlock();
+  lcopy.synchronize_lock_.lock();
 
-  lcopy.edge_lock_.lock();
+  points_ = copy.points_;
+
   edges_ = copy.edges_;
   halfedge_to_edge_ = copy.halfedge_to_edge_;
   synchronized_ |= copy.synchronized_ & EDGES_E;
-  lcopy.edge_lock_.unlock();
 
-  lcopy.face_lock_.lock();
   faces_ = copy.faces_;
-  lcopy.face_lock_.unlock();
 
-  lcopy.edge_neighbor_lock_.lock();
   edge_neighbors_ = copy.edge_neighbors_;
   synchronized_ |= copy.synchronized_ & EDGE_NEIGHBORS_E;
-  lcopy.edge_neighbor_lock_.unlock();
 
-  lcopy.normal_lock_.lock();
   normals_ = copy.normals_;
   synchronized_ |= copy.synchronized_ & NORMALS_E;
-  lcopy.normal_lock_.unlock();
 
-  lcopy.node_neighbor_lock_.lock();
   node_neighbors_ = copy.node_neighbors_;
   synchronized_ |= copy.synchronized_ & NODE_NEIGHBORS_E;
-  lcopy.node_neighbor_lock_.unlock();
+
+  grid_ = copy.grid_;
+  synchronized_ |= copy.synchronized_ & LOCATE_E;
+
+  lcopy.synchronize_lock_.unlock();
 }
 
 
@@ -657,11 +689,12 @@ TriSurfMesh<Basis>::~TriSurfMesh()
 template <class Basis>
 void
 TriSurfMesh<Basis>::get_random_point(Point &p,
-                                     typename Face::index_type ei, int seed) const
+                                     typename Face::index_type ei,
+                                     int seed) const
 {
   static MusilRNG rng;
 
-  // get the positions of the vertices
+  // Get the positions of the vertices.
   typename Node::array_type ra;
   get_nodes(ra,ei);
   Point p0,p1,p2;
@@ -669,7 +702,7 @@ TriSurfMesh<Basis>::get_random_point(Point &p,
   get_point(p1,ra[1]);
   get_point(p2,ra[2]);
 
-  // generate the barrycentric coordinates
+  // Generate the barrycentric coordinates.
   double u,v;
   if (seed) {
     MusilRNG rng1(seed);
@@ -680,7 +713,7 @@ TriSurfMesh<Basis>::get_random_point(Point &p,
     v = rng()*(1.-u);
   }
 
-  // compute the position of the random point
+  // Compute the position of the random point.
   p = p0+((p1-p0)*u)+((p2-p0)*v);
 }
 
@@ -704,7 +737,7 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::transform(const Transform &t)
 {
-  point_lock_.lock();
+  synchronize_lock_.lock();
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
@@ -712,7 +745,8 @@ TriSurfMesh<Basis>::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-  point_lock_.unlock();
+  if (grid_.get_rep()) { grid_->transform(t); }
+  synchronize_lock_.unlock();
 }
 
 
@@ -872,14 +906,21 @@ TriSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
 
 
 template <class Basis>
+bool
+TriSurfMesh<Basis>::get_neighbor(unsigned int &nbr_half_edge,
+                                 unsigned int half_edge) const
+{
+  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
+            "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
+  nbr_half_edge = edge_neighbors_[half_edge];
+  return nbr_half_edge != MESH_NO_NEIGHBOR;
+}
+
+
+template <class Basis>
 void
 TriSurfMesh<Basis>::compute_node_neighbors()
 {
-  node_neighbor_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    node_neighbor_lock_.unlock();
-    return;
-  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   unsigned int nfaces = faces_.size();
@@ -888,7 +929,6 @@ TriSurfMesh<Basis>::compute_node_neighbors()
     node_neighbors_[faces_[f]].push_back(f);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  node_neighbor_lock_.unlock();
 }
 
 
@@ -988,22 +1028,23 @@ TriSurfMesh<Basis>::locate(typename Face::index_type &loc,
                            const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(loc, *this, p);
-  typename Face::iterator fi, fie;
-  begin(fi);
-  end(fie);
 
-  loc = *fi;
-  if (fi == fie)
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "TriSurfMesh::locate requires synchronization.");
+
+  const list<unsigned int> *candidates;
+  if (grid_->lookup(candidates, p))
   {
-    return false;
-  }
-
-  while (fi != fie) {
-    if (inside3_p((*fi)*3, p)) {
-      loc = *fi;
-      return true;
+    list<unsigned int>::const_iterator iter = candidates->begin();
+    while (iter != candidates->end())
+    {
+      if (inside3_p(*iter * 3, p))
+      {
+        loc = typename Face::index_type(*iter);
+        return true;
+      }
+      ++iter;
     }
-    ++fi;
   }
   return false;
 }
@@ -1122,6 +1163,7 @@ template <class Basis>
 bool
 TriSurfMesh<Basis>::synchronize(unsigned int tosync)
 {
+  synchronize_lock_.lock();
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
       tosync & LOCATE_E && !(synchronized_ & EDGES_E))
     compute_edges();
@@ -1131,6 +1173,9 @@ TriSurfMesh<Basis>::synchronize(unsigned int tosync)
     compute_node_neighbors();
   if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edge_neighbors();
+  if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E))
+    compute_grid();
+  synchronize_lock_.unlock();
   return true;
 }
 
@@ -1139,11 +1184,6 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_normals()
 {
-  normal_lock_.lock();
-  if (synchronized_ & NORMALS_E) {
-    normal_lock_.unlock();
-    return;
-  }
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
@@ -1193,7 +1233,6 @@ TriSurfMesh<Basis>::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
-  normal_lock_.unlock();
 }
 
 
@@ -1209,9 +1248,7 @@ TriSurfMesh<Basis>::insert_node(typename Face::index_type face, const Point &p)
   const unsigned f1 = faces_.size();
   const unsigned f2 = f1+3;
 
-  face_lock_.lock();
-  edge_neighbor_lock_.lock();
-  normal_lock_.lock();
+  synchronize_lock_.lock();
 
   faces_.push_back(faces_[f0+1]);
   faces_.push_back(faces_[f0+2]);
@@ -1264,11 +1301,8 @@ TriSurfMesh<Basis>::insert_node(typename Face::index_type face, const Point &p)
   synchronized_ &= ~EDGES_E;
   if (!do_normals) synchronized_ &= ~NORMALS_E;
 
-  face_lock_.unlock();
-  edge_neighbor_lock_.unlock();
-  normal_lock_.unlock();
+  synchronize_lock_.unlock();
 }
-
 
 
 template <class Basis>
@@ -1279,6 +1313,243 @@ TriSurfMesh<Basis>::insert_node(const Point &p)
   if (!locate(face,p)) return false;
   insert_node(face,p);
   return true;
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::debug_test_edge_neighbors()
+{
+  for (unsigned int i = 0; i < edge_neighbors_.size(); i++)
+  {
+    if (edge_neighbors_[i] != MESH_NO_NEIGHBOR &&
+        edge_neighbors_[edge_neighbors_[i]] != i)
+    {
+      cout << "bad nbr[" << i << "] = " << edge_neighbors_[i] << ", nbr[" << edge_neighbors_[i] << "] = " << edge_neighbors_[edge_neighbors_[i]] << "\n";
+    }
+  }
+}
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::insert_node_in_edge_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            unsigned int halfedge,
+                                            const Point &p)
+{
+  ni = add_point(p);
+
+  synchronize_lock_.lock();
+
+  remove_elem_from_grid(halfedge/3);
+
+  tris.clear();
+
+  const unsigned int nbr = edge_neighbors_[halfedge];
+
+  // f1
+  const unsigned int f1 = faces_.size();
+  
+  tris.push_back(f1 / 3);
+  faces_.push_back(ni);
+  faces_.push_back(faces_[next(halfedge)]);
+  faces_.push_back(faces_[prev(halfedge)]);
+  edge_neighbors_.push_back(nbr);
+  edge_neighbors_.push_back(edge_neighbors_[next(halfedge)]);
+  edge_neighbors_.push_back(next(halfedge));
+
+  if (edge_neighbors_[next(halfedge)] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[next(halfedge)]] = next(f1);
+  }
+
+  const unsigned int f3 = faces_.size(); // Only created if there's a neighbor.
+
+  // f0
+  tris.push_back(halfedge / 3);
+  faces_[next(halfedge)] = ni;
+  edge_neighbors_[halfedge] = (nbr!=MESH_NO_NEIGHBOR)?f3:MESH_NO_NEIGHBOR;
+  edge_neighbors_[next(halfedge)] = prev(f1);
+  edge_neighbors_[prev(halfedge)] = edge_neighbors_[prev(halfedge)];
+
+  if (nbr != MESH_NO_NEIGHBOR)
+  {
+    remove_elem_from_grid(nbr / 3);
+
+    // f3
+    tris.push_back(f3 / 3);
+    faces_.push_back(ni);
+    faces_.push_back(faces_[next(nbr)]);
+    faces_.push_back(faces_[prev(nbr)]);
+    edge_neighbors_.push_back(halfedge);
+    edge_neighbors_.push_back(edge_neighbors_[next(nbr)]);
+    edge_neighbors_.push_back(next(nbr));
+    
+    if (edge_neighbors_[next(nbr)] != MESH_NO_NEIGHBOR)
+    {
+      edge_neighbors_[edge_neighbors_[next(nbr)]] = next(f3);
+    }
+
+    // f2
+    tris.push_back(nbr / 3);
+    faces_[next(nbr)] = ni;
+    edge_neighbors_[nbr] = f1;
+    edge_neighbors_[next(nbr)] = f3+2;
+  }
+
+  debug_test_edge_neighbors();
+
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~EDGES_E;
+  synchronized_ &= ~NORMALS_E;
+
+  for (unsigned int i = 0; i < tris.size(); i++)
+  {
+    insert_elem_into_grid(tris[i]);
+  }
+
+  synchronize_lock_.unlock();
+
+  return true;
+}
+
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::insert_node_in_face_aux(typename Face::array_type &tris,
+                                            typename Node::index_type &ni,
+                                            typename Face::index_type face,
+                                            const Point &p)
+{
+  ni = add_point(p);
+
+  synchronize_lock_.lock();
+
+  remove_elem_from_grid(face);
+  
+  const unsigned f0 = face*3;
+  const unsigned f1 = faces_.size();
+  const unsigned f2 = f1+3;
+
+  tris.clear();
+
+  if (edge_neighbors_[f0+1] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[f0+1]] = f1+0;
+  }
+  if (edge_neighbors_[f0+2] != MESH_NO_NEIGHBOR)
+  {
+    edge_neighbors_[edge_neighbors_[f0+2]] = f2+0;
+  }
+
+  tris.push_back(faces_.size() / 3);
+  faces_.push_back(faces_[f0+1]);
+  faces_.push_back(faces_[f0+2]);
+  faces_.push_back(ni);
+  edge_neighbors_.push_back(edge_neighbors_[f0+1]);
+  edge_neighbors_.push_back(f2+2);
+  edge_neighbors_.push_back(f0+1);
+
+  tris.push_back(faces_.size() / 3);
+  faces_.push_back(faces_[f0+2]);
+  faces_.push_back(faces_[f0+0]);
+  faces_.push_back(ni);
+  edge_neighbors_.push_back(edge_neighbors_[f0+2]);
+  edge_neighbors_.push_back(f0+2);
+  edge_neighbors_.push_back(f1+1);
+
+  // Must do last
+  tris.push_back(face);
+  faces_[f0+2] = ni;
+  edge_neighbors_[f0+1] = f1+2;
+  edge_neighbors_[f0+2] = f2+1;
+
+  debug_test_edge_neighbors();
+
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~EDGES_E;
+  synchronized_ &= ~NORMALS_E;
+
+  for (unsigned int i = 0; i < tris.size(); i++)
+  {
+    insert_elem_into_grid(tris[i]);
+  }
+
+  synchronize_lock_.unlock();
+
+  return true;
+}
+
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::insert_node_in_face(typename Face::array_type &tris,
+                                        typename Node::index_type &ni,
+                                        typename Face::index_type face,
+                                        const Point &p)
+{
+  const Point &p0 = point(faces_[face * 3 + 0]);
+  const Point &p1 = point(faces_[face * 3 + 1]);
+  const Point &p2 = point(faces_[face * 3 + 2]);
+
+  const double a0 = Cross(p - p1, p - p2).length2();
+  const double a1 = Cross(p - p2, p - p0).length2();
+  const double a2 = Cross(p - p0, p - p1).length2();
+
+  unsigned int mask = 0;
+  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
+  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
+  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
+
+  if (mask == 7)
+  {
+    // Point is inside the face, do a three split.
+    return insert_node_in_face_aux(tris, ni, face, p);
+  }
+  else if (mask == 0)
+  {
+    // Tri is degenerate, just return first point.
+    tris.clear();
+    tris.push_back(face);
+    ni = faces_[face * 3 + 0];
+    return true;
+  }
+  // The point is on a corner, return that corner.
+  else if (mask == 1)
+  {
+    tris.clear();
+    tris.push_back(face);
+    ni = faces_[face * 3 + 0];
+    return true;
+  }
+  else if (mask == 2)
+  {
+    tris.clear();
+    tris.push_back(face);
+    ni = faces_[face * 3 + 1];
+    return true;
+  }
+  else if (mask == 4)
+  {
+    tris.clear();
+    tris.push_back(face);
+    ni = faces_[face * 3 + 2];
+    return true;
+  }
+  // The point is on an edge, split that edge and neighboring triangle.
+  else if (mask == 3)
+  {
+    return insert_node_in_edge_aux(tris, ni, face*3+0, p);
+  }
+  else if (mask == 5)
+  {
+    return insert_node_in_edge_aux(tris, ni, face*3+2, p);
+  }
+  else if (mask == 6)
+  {
+    return insert_node_in_edge_aux(tris, ni, face*3+1, p);
+  }
+  return false;
 }
 
 
@@ -1320,9 +1591,8 @@ TriSurfMesh<Basis>::bisect_element(const typename Face::index_type face)
       normals[edge].safe_normalize();
     }
   }
-  face_lock_.lock();
-  edge_neighbor_lock_.lock();
-  normal_lock_.lock();
+
+  synchronize_lock_.lock();
 
   const unsigned f1 = faces_.size();
   faces_.push_back(nodes[0]);
@@ -1459,9 +1729,7 @@ TriSurfMesh<Basis>::bisect_element(const typename Face::index_type face)
   synchronized_ &= ~EDGES_E;
   if (!do_normals) synchronized_ &= ~NORMALS_E;
 
-  face_lock_.unlock();
-  edge_neighbor_lock_.unlock();
-  normal_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1469,12 +1737,6 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_edges()
 {
-  edge_lock_.lock();
-  if (synchronized_ & EDGES_E) {
-    edge_lock_.unlock();
-    return;
-  }
-
   EdgeMapType2 edge_map;
 
   int i;
@@ -1493,6 +1755,7 @@ TriSurfMesh<Basis>::compute_edges()
   }
 
   typename EdgeMapType2::iterator itr;
+  edges_.clear();
   edges_.reserve(edge_map.size());
   halfedge_to_edge_.resize(faces_.size());
   for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
@@ -1508,7 +1771,6 @@ TriSurfMesh<Basis>::compute_edges()
   }
 
   synchronized_ |= EDGES_E;
-  edge_lock_.unlock();
 }
 
 
@@ -1523,12 +1785,10 @@ TriSurfMesh<Basis>::add_find_point(const Point &p, double err)
   }
   else
   {
-    node_neighbor_lock_.lock();
-    point_lock_.lock();
+    synchronize_lock_.lock();
     points_.push_back(p);
     node_neighbors_.push_back(vector<under_type>());
-    node_neighbor_lock_.unlock();
-    point_lock_.unlock();
+    synchronize_lock_.unlock();
     return static_cast<typename Node::index_type>(points_.size() - 1);
   }
 }
@@ -1569,7 +1829,8 @@ TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1,
   iter = shared.begin();
   int s1 = *iter++;
   int s2 = *iter;
-  face_lock_.lock();
+
+  synchronize_lock_.lock();
   faces_[face1] = s1;
   faces_[face1 + 1] = not_shar[0];
   faces_[face1 + 2] = s2;
@@ -1581,17 +1842,58 @@ TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1,
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
+
   return true;
 }
 
+template <class Basis>
+bool
+TriSurfMesh<Basis>::remove_orphan_nodes()
+{
+  bool rval = false;
+  
+  //! find the orphan nodes.
+  vector<under_type> onodes;
+  //! check each point against the face list.
+  for (under_type i = 0; i < points_.size(); i++) {
+    if (find(faces_.begin(), faces_.end(), i) == faces_.end()) {
+      //! node does not belong to a face
+      onodes.push_back(i);
+    }
+  }
+
+  if (onodes.size()) rval = true;
+
+  //! check each point against the face list.
+  vector<under_type>::reverse_iterator orph_iter = onodes.rbegin();
+  while (orph_iter != onodes.rend()) {
+    unsigned int i = *orph_iter++;
+    vector<under_type>::iterator iter = faces_.begin();
+    while (iter != faces_.end()) {
+      under_type &node = *iter++;
+      if (node > i) {
+	node--;
+      }
+    }
+    vector<Point>::iterator niter = points_.begin();
+    niter += i;
+    points_.erase(niter);
+  }
+
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  return rval;
+}
 
 template <class Basis>
 bool
 TriSurfMesh<Basis>::remove_face(typename Face::index_type f)
 {
   bool rval = true;
-  face_lock_.lock();
+
+  synchronize_lock_.lock();
   vector<under_type>::iterator fb = faces_.begin() + f*3;
   vector<under_type>::iterator fe = fb + 3;
 
@@ -1603,7 +1905,8 @@ TriSurfMesh<Basis>::remove_face(typename Face::index_type f)
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
+
   return rval;
 }
 
@@ -1614,14 +1917,14 @@ TriSurfMesh<Basis>::add_triangle(typename Node::index_type a,
                                  typename Node::index_type b,
                                  typename Node::index_type c)
 {
-  face_lock_.lock();
+  synchronize_lock_.lock();
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1629,14 +1932,16 @@ template <class Basis>
 typename TriSurfMesh<Basis>::Elem::index_type
 TriSurfMesh<Basis>::add_elem(typename Node::array_type a)
 {
-  face_lock_.lock();
+  ASSERTMSG(a.size() == 3, "Tried to add non-tri element.");
+
+  synchronize_lock_.lock();
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
   return static_cast<typename Elem::index_type>((faces_.size() - 1) / 3);
 }
 
@@ -1645,7 +1950,7 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::flip_faces()
 {
-  face_lock_.lock();
+  synchronize_lock_.lock();
   typename Face::iterator fiter, fend;
   begin(fiter);
   end(fend);
@@ -1658,7 +1963,7 @@ TriSurfMesh<Basis>::flip_faces()
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1666,7 +1971,7 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::flip_face(typename Face::index_type face)
 {
-  unsigned int base = face * 3;
+  const unsigned int base = face * 3;
   int tmp = faces_[base + 1];
   faces_[base + 1] = faces_[base + 2];
   faces_[base + 2] = tmp;
@@ -1681,86 +1986,65 @@ TriSurfMesh<Basis>::flip_face(typename Face::index_type face)
 template <class Basis>
 void
 TriSurfMesh<Basis>::walk_face_orient(typename Face::index_type face,
-                                     vector<bool> &tested)
+                                     vector<bool> &tested,
+                                     vector<bool> &flip)
 {
-  typename Face::index_type nbor;
-  typename Edge::array_type edges(3);
-  get_edges(edges, face);
-
-  typename Node::array_type nodes;
-  get_nodes(nodes, face);
-
-
-  typename Edge::array_type::iterator iter = edges.begin();
-  while (iter != edges.end())
+  tested[face] = true;
+  for (unsigned int i = 0; i < 3; i++)
   {
-    unsigned a = edges_[*iter];
-    unsigned b = faces_[a - a % 3 + (a+1) % 3];
-    a = faces_[a];
-    //set order according to orientation in face
-    if (((nodes[0] == b) && (nodes[1] == a)) ||
-        ((nodes[1] == b) && (nodes[2] == a)) ||
-        ((nodes[0] == a) && (nodes[2] == b)))
+    const unsigned int edge = face * 3 + i;
+    const unsigned int nbr = edge_neighbors_[edge];
+    if (nbr != MESH_NO_NEIGHBOR && !tested[nbr])
     {
-      //swap
-      unsigned tmp = b;
-      b = a;
-      a = tmp;
-    }
-
-    if (get_neighbor(nbor, face, *iter) && !tested[nbor])
-    {
-      tested[nbor] = true;
-
-      typename Node::array_type nbor_nodes;
-      get_nodes(nbor_nodes, nbor);
-
-      //order should be opposite of a,b
-      if (((nbor_nodes[0] == a) && (nbor_nodes[1] == b)) ||
-          ((nbor_nodes[1] == a) && (nbor_nodes[2] == b)) ||
-          ((nbor_nodes[0] == b) && (nbor_nodes[2] == a)))
+      if (!flip[face] && faces_[edge] == faces_[nbr] ||
+          flip[face] && faces_[next(edge)] == faces_[nbr])
       {
-        flip_face(nbor);
-        synchronized_ &= ~EDGES_E;
-        synchronized_ &= ~EDGE_NEIGHBORS_E;
-        edges_.clear();
-        halfedge_to_edge_.clear();
-        compute_edges();
-        compute_edge_neighbors(0.0);
+        flip[nbr] = true;
       }
-
-      // recurse...
-      walk_face_orient(nbor, tested);
+      walk_face_orient(nbr/3, tested, flip);
     }
-    ++iter;
   }
 }
 
 
+// TODO:  This deadlocks on synchronize_lock_.
 template <class Basis>
 void
 TriSurfMesh<Basis>::orient_faces()
 {
-  face_lock_.lock();
   synchronize(EDGES_E | EDGE_NEIGHBORS_E);
+  synchronize_lock_.lock();
+
   int nfaces = (int)faces_.size() / 3;
   vector<bool> tested(nfaces, false);
+  vector<bool> flip(nfaces, false);
 
   typename Face::iterator fiter, fend;
   begin(fiter);
   end(fend);
-  while (fiter != fend) {
-    if (! tested[*fiter]) {
-      tested[*fiter] = true;
-      walk_face_orient(*fiter, tested);
+  while (fiter != fend)
+  {
+    if (! tested[*fiter])
+    {
+      walk_face_orient(*fiter, tested, flip);
     }
     ++fiter;
   }
 
+  begin(fiter);
+  while (fiter != fend)
+  {
+    if (flip[*fiter])
+    {
+      flip_face(*fiter);
+    }
+    ++fiter;
+  }
+
+  synchronized_ &= ~EDGES_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
-  synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
-  face_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1768,15 +2052,6 @@ template <class Basis>
 void
 TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
 {
-  // TODO: This is probably broken with the new indexed edges.
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on TriSurfMesh first");
-  edge_neighbor_lock_.lock();
-  if (synchronized_ & EDGE_NEIGHBORS_E) {
-    edge_neighbor_lock_.unlock();
-    return;
-  }
-
   EdgeMapType edge_map;
 
   edge_neighbors_.resize(faces_.size());
@@ -1809,8 +2084,82 @@ TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
     edge_map[nodes] = i;
   }
 
+  debug_test_edge_neighbors();
+
   synchronized_ |= EDGE_NEIGHBORS_E;
-  edge_neighbor_lock_.unlock();
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::insert_elem_into_grid(typename Elem::index_type ci)
+{
+  // TODO:  This can crash if you insert a new cell outside of the grid.
+  // Need to recompute grid at that point.
+
+  BBox box;
+  typename Node::array_type nodes;
+  get_nodes(nodes, ci);
+
+  box.reset();
+  box.extend(points_[nodes[0]]);
+  box.extend(points_[nodes[1]]);
+  box.extend(points_[nodes[2]]);
+  const Point padmin(box.min() - cell_epsilon_);
+  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(padmin);
+  box.extend(padmax);
+  grid_->insert(ci, box);
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::remove_elem_from_grid(typename Elem::index_type ci)
+{
+  BBox box;
+  typename Node::array_type nodes;
+  get_nodes(nodes, ci);
+
+  box.reset();
+  box.extend(points_[nodes[0]]);
+  box.extend(points_[nodes[1]]);
+  box.extend(points_[nodes[2]]);
+  const Point padmin(box.min() - cell_epsilon_);
+  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(padmin);
+  box.extend(padmax);
+  grid_->remove(ci, box);
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::compute_grid()
+{
+  BBox bb = get_bounding_box();
+  if (bb.valid())
+  {
+    // Cubed root of number of cells to get a subdivision ballpark.
+    typename Elem::size_type csize;  size(csize);
+    const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
+    cell_epsilon_ = bb.diagonal() * (1.0e-4 / s);
+    bb.extend(bb.min() - cell_epsilon_ * 2);
+    bb.extend(bb.max() + cell_epsilon_ * 2);
+
+    grid_ = scinew SearchGridConstructor(s, s, s, bb.min(), bb.max());
+
+    typename Node::array_type nodes;
+    typename Elem::iterator ci, cie;
+    begin(ci); end(cie);
+    while(ci != cie)
+    {
+      insert_elem_into_grid(*ci);
+      ++ci;
+    }
+  }
+
+  synchronized_ |= LOCATE_E;
 }
 
 
@@ -1818,18 +2167,14 @@ template <class Basis>
 typename TriSurfMesh<Basis>::Node::index_type
 TriSurfMesh<Basis>::add_point(const Point &p)
 {
-  normal_lock_.lock();
-  node_neighbor_lock_.lock();
-  point_lock_.lock();
+  synchronize_lock_.lock();
   points_.push_back(p);
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
   if (synchronized_ & NODE_NEIGHBORS_E)
   {
     node_neighbors_.push_back(vector<under_type>());
   }
-  normal_lock_.unlock();
-  node_neighbor_lock_.unlock();
-  point_lock_.unlock();
+  synchronize_lock_.unlock();
   return static_cast<typename Node::index_type>(points_.size() - 1);
 }
 
@@ -1857,6 +2202,9 @@ TriSurfMesh<Basis>::io(Piostream &stream)
 
   Pio(stream, points_);
   Pio(stream, faces_);
+  if (stream.writing()) {
+    synchronize(EDGE_NEIGHBORS_E);
+  }
   Pio(stream, edge_neighbors_);
 
   if (version >= 2) {
@@ -1913,11 +2261,92 @@ TriSurfMesh<Basis>::size(typename TriSurfMesh::Cell::size_type &s) const
 
 template <class Basis>
 double
-TriSurfMesh<Basis>::find_closest_face(Point &result,
-                                      typename TriSurfMesh::Face::index_type &face,
+TriSurfMesh<Basis>::find_closest_elem(Point &result,
+                                      typename TriSurfMesh::Elem::index_type &face,
                                       const Point &p) const
 {
+  // Walking the grid like this works really well if we're near the
+  // surface.  It's degenerately bad if for example the point is
+  // placed in the center of a sphere (because then we still have to
+  // test all the faces, but with the grid overhead and triangle
+  // duplication as well).
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "TriSurfMesh::find_closest_elem requires synchronize(LOCATE_E).")
+
+  // Convert to grid coordinates.
+  int oi, oj, ok;
+  grid_->unsafe_locate(oi, oj, ok, p);
+
+  // Clamp to closest point on the grid.
+  oi = Max(Min(oi, grid_->get_ni()-1), 0);
+  oj = Max(Min(oj, grid_->get_nj()-1), 0);
+  ok = Max(Min(ok, grid_->get_nk()-1), 0);
+
+  int bi, ei, bj, ej, bk, ek;
+  bi = ei = oi;
+  bj = ej = oj;
+  bk = ek = ok;
+  
   double dmin = DBL_MAX;
+  bool found;
+  do {
+    const int bii = Max(bi, 0);
+    const int eii = Min(ei, grid_->get_ni()-1);
+    const int bjj = Max(bj, 0);
+    const int ejj = Min(ej, grid_->get_nj()-1);
+    const int bkk = Max(bk, 0);
+    const int ekk = Min(ek, grid_->get_nk()-1);
+    found = false;
+    for (int i = bii; i <= eii; i++)
+    {
+      for (int j = bjj; j <= ejj; j++)
+      {
+        for (int k = bkk; k <= ekk; k++)
+        {
+          if (i == bi || i == ei || j == bj || j == ej || k == bk || k == ek)
+          {
+            if (grid_->min_distance_squared(p, i, j, k) < dmin)
+            {
+              found = true;
+              const list<unsigned int> *candidates;
+              grid_->lookup_ijk(candidates, i, j, k);
+
+              list<unsigned int>::const_iterator iter = candidates->begin();
+              while (iter != candidates->end())
+              {
+                Point rtmp;
+                unsigned int idx = *iter * 3;
+                closest_point_on_tri(rtmp, p,
+                                     points_[faces_[idx  ]],
+                                     points_[faces_[idx+1]],
+                                     points_[faces_[idx+2]]);
+                const double dtmp = (p - rtmp).length2();
+                if (dtmp < dmin)
+                {
+                  result = rtmp;
+                  face = *iter;
+                  dmin = dtmp;
+                }
+                ++iter;
+              }
+            }
+          }
+        }
+      }
+    }
+    bi--;ei++;
+    bj--;ej++;
+    bk--;ek++;
+  } while (found) ;
+
+#if 0
+  // The old code, useful for debugging purposes.  Note that the old
+  // and new code don't necessarily return the same face because if
+  // you hit an edge or corner any of the edge or corner faces are
+  // valid.
+  double dmin2 = DBL_MAX;
+  Point result2;
+  typename Face::index_type face2;
   for (unsigned int i = 0; i < faces_.size(); i+=3)
   {
     Point rtmp;
@@ -1926,13 +2355,20 @@ TriSurfMesh<Basis>::find_closest_face(Point &result,
                          points_[faces_[i+1]],
                          points_[faces_[i+2]]);
     const double dtmp = (p - rtmp).length2();
-    if (dtmp < dmin)
+    if (dtmp < dmin2)
     {
-      result = rtmp;
-      face = i/3;
-      dmin = dtmp;
+      result2 = rtmp;
+      face2 = i/3;
+      dmin2 = dtmp;
     }
   }
+  if (face != face2)
+  {
+    cout << "face != face2 (" << face << " " << face2 << "\n";
+    cout << "dmin = " << dmin << ", dmin2 = " << dmin2 << "\n";
+  }
+#endif
+
   return sqrt(dmin);
 }
 

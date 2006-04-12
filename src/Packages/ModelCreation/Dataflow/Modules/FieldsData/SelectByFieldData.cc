@@ -52,7 +52,7 @@
 #include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
 #include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
 
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/String.h>
@@ -60,9 +60,9 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace ModelCreation {
 
@@ -86,7 +86,7 @@ class SelectByFieldData : public Module {
 DECLARE_MAKER(SelectByFieldData)
 SelectByFieldData::SelectByFieldData(GuiContext* ctx)
   : Module("SelectByFieldData", ctx, Source, "FieldsData", "ModelCreation"),
-  guifunction_(ctx->subVar("function"))
+  guifunction_(get_ctx()->subVar("function"))
 {
 }
 
@@ -96,7 +96,7 @@ SelectByFieldData::~SelectByFieldData(){
 void SelectByFieldData::execute()
 {
   // Get number of matrix ports with data (the last one is always empty)
-  size_t numinputs = numIPorts()-3;
+  size_t numinputs = num_input_ports()-3;
   
   if (numinputs > 23)
   {
@@ -107,7 +107,7 @@ void SelectByFieldData::execute()
   ArrayObjectList inputlist(numinputs+4,ArrayObject(this));
   ArrayObjectList outputlist(1,ArrayObject(this));
   
-  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(getIPort(0));
+  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(get_input_port(0));
   if(field_iport == 0)
   {
     error("Could not locate field input port");
@@ -126,7 +126,7 @@ void SelectByFieldData::execute()
   // The function can be scripted. If a string is found on the input
   // use this one. It will be set in the GIU, after which it is retrieved the
   // normal way.
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(1));
+  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_input_port(1));
   if(function_iport == 0)
   {
     error("Could not locate function input port");
@@ -140,7 +140,7 @@ void SelectByFieldData::execute()
     if (func.get_rep())
     {
       guifunction_.set(func->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
 
@@ -179,7 +179,7 @@ void SelectByFieldData::execute()
   
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+2));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_input_port(p+2));
     if(iport == 0)
     {
       error("Could not locate matrix input port");
@@ -236,9 +236,9 @@ void SelectByFieldData::execute()
     return;
   }
   
-  gui->lock();
-  gui->eval(getID()+" update_text");
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
   
   std::string function = guifunction_.get();
   
@@ -252,7 +252,7 @@ void SelectByFieldData::execute()
   }
   
   // If engine succeeded we have a new field at ofield.
-  MatrixOPort *oport = dynamic_cast<MatrixOPort *>(getOPort(0));
+  MatrixOPort *oport = dynamic_cast<MatrixOPort *>(get_output_port(0));
   if (oport)
   {
     oport->send(omatrix);
@@ -264,7 +264,7 @@ void SelectByFieldData::execute()
     MatrixHandle idxmatrix;
     mask.get_indices(idxmatrix);
 
-    oport = dynamic_cast<MatrixOPort *>(getOPort(1));
+    oport = dynamic_cast<MatrixOPort *>(get_output_port(1));
     if (oport)
     {
       oport->send(idxmatrix);
@@ -286,10 +286,10 @@ void
   if( args[1] == "gethelp" )
   {
     TensorVectorMath::TVMHelp Help;
-    gui->lock();
-    gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + tvm_help_field +"}");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval("global " + get_id() +"-help");
+    get_gui()->eval("set " + get_id() + "-help {" + tvm_help_field +"}");
+    get_gui()->unlock();
     return;
   }
   else

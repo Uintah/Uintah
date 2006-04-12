@@ -95,6 +95,8 @@ inline int Clamp(int i, int min, int max)
 // return:   min - if d<=min
 //           max - if d>=max
 //           hermite curve if d>min && d<max
+//
+// Make sure fixes end up in both the float and double versions.
 inline double SmoothStep(double d, double min, double max)
 {
   double ret;
@@ -110,11 +112,32 @@ inline double SmoothStep(double d, double min, double max)
   return ret;
 }
 
+// Make sure fixes end up in both the float and double versions.
+inline float SmoothStep(float d, float min, float max)
+{
+  float ret;
+  if(d <= min){
+    ret=0;
+  } else if(d >= max){
+    ret=1;
+  } else {
+    float dm=max-min;
+    float t=(d-min)/dm;
+    ret=t*t*(3-2*t);
+  }
+  return ret;
+}
+
 // Interpolation:
 template <class T>
 inline T Interpolate(T d1, T d2, double weight)
 {
   return T(d2*weight+d1*(1.0-weight));
+}
+template <class T>
+inline T Interpolate(T d1, T d2, float weight)
+{
+  return T(d2*weight+d1*(1-weight));
 }
 
 

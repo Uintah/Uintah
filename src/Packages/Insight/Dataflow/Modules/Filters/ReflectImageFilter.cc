@@ -168,7 +168,7 @@ DECLARE_MAKER(ReflectImageFilter)
 
 ReflectImageFilter::ReflectImageFilter(GuiContext* ctx)
   : Module("ReflectImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_direction_(ctx->subVar("direction")), 
+     gui_direction_(get_ctx()->subVar("direction")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

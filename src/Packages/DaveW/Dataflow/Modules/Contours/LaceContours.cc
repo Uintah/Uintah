@@ -42,14 +42,14 @@ public:
 };
 
 extern "C" {
-Module* make_LaceContours(const clString& id)
+Module* make_LaceContours(const clString& get_id())
 {
-    return new LaceContours(id);
+    return new LaceContours(get_id());
 }
 }
 
-LaceContours::LaceContours(const clString& id)
-: Module("LaceContours", id, Filter)
+LaceContours::LaceContours(const clString& get_id())
+: Module("LaceContours", get_id(), Filter)
 {
     // Create the input port
     incontour=new ContourSetIPort(this, "ContourSet", 

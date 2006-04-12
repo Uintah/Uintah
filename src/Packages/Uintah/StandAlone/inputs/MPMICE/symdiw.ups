@@ -136,8 +136,8 @@
      <dbg_timeStop>        2.0     </dbg_timeStop>
      <dbg_outputInterval>  1e-9    </dbg_outputInterval>
    <!--
-     <dbg_BeginIndex>      [0,0,0] </dbg_BeginIndex> 
-     <dbg_EndIndex>        [2,2,2] </dbg_EndIndex>   
+     <dbg_BeginIndex>     [[0,0,0]]</dbg_BeginIndex> 
+     <dbg_EndIndex>       [[2,2,2]]</dbg_EndIndex>   
      <dbg_SigFigs>         10      </dbg_SigFigs>    
     -->
      <!--
@@ -159,7 +159,7 @@
          <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE" />
+        <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         <add_delP_Dilatate>false</add_delP_Dilatate>
       </ICE>        
@@ -220,10 +220,7 @@
                     <min>           [-1.0,-1.0,-1.0]    </min>
                     <max>           [5.0,4.0,4.0 ]      </max>
                 </box>
-              <box label = "block">
-                    <min>           [2.0,0.0,1.00]       </min>
-                    <max>           [2.5,1.5,1.25]       </max>
-                </box>
+              <box label = "block"> </box>
               </difference>
                <res>                      [2,2,2]        </res>
                <velocity>           [0.0,0.0,0.0]        </velocity>

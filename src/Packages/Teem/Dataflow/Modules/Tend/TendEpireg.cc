@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -76,30 +76,31 @@ DECLARE_MAKER(TendEpireg)
 
 TendEpireg::TendEpireg(SCIRun::GuiContext *ctx) : 
   Module("TendEpireg", ctx, Filter, "Tend", "Teem"), 
-  gradient_list_(ctx->subVar("gradient_list")),
-  reference_(ctx->subVar("reference")),
-  blur_x_(ctx->subVar("blur_x")),
-  blur_y_(ctx->subVar("blur_y")),
-  use_default_threshold_(ctx->subVar("use-default-threshold")),
-  threshold_(ctx->subVar("threshold")),
-  cc_analysis_(ctx->subVar("cc_analysis")),
-  fitting_(ctx->subVar("fitting")),
-  kernel_(ctx->subVar("kernel")),
-  sigma_(ctx->subVar("sigma")),
-  extent_(ctx->subVar("extent"))
+  gradient_list_(get_ctx()->subVar("gradient_list"), ""),
+  reference_(get_ctx()->subVar("reference"), -1),
+  blur_x_(get_ctx()->subVar("blur_x"), 1.0),
+  blur_y_(get_ctx()->subVar("blur_y"), 2.0),
+  use_default_threshold_(get_ctx()->subVar("use-default-threshold"), 1),
+  threshold_(get_ctx()->subVar("threshold"), 0.0),
+  cc_analysis_(get_ctx()->subVar("cc_analysis"), 1),
+  fitting_(get_ctx()->subVar("fitting"), 0.70),
+  kernel_(get_ctx()->subVar("kernel"), "cubicCR"),
+  sigma_(get_ctx()->subVar("sigma"), 0.0),
+  extent_(get_ctx()->subVar("extent"), 0.5)
 {
 }
 
-TendEpireg::~TendEpireg() {
-}
 
+TendEpireg::~TendEpireg()
+{
+}
 
 
 // Create a memory for a new nrrd, that is arranged 3 x n;
 bool
 TendEpireg::extract_gradients(vector<double> &d)
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
   istringstream str(gradient_list_.get().c_str());
   for (;;)
   {
@@ -139,12 +140,12 @@ TendEpireg::execute()
     error("Empty input Nrrd.");
     return;
   }
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *ngrad;
 
   if (igrad_->get(grad_handle) && grad_handle.get_rep()) {
     we_own_the_data = false;
-    ngrad = grad_handle->nrrd;
+    ngrad = grad_handle->nrrd_;
   } else {
     we_own_the_data = false;
     mat = new vector<double>;
@@ -153,7 +154,8 @@ TendEpireg::execute()
       return;
     }
     ngrad = nrrdNew();
-    nrrdWrap(ngrad, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
+    size_t size[2] = {3, (*mat).size()/3};
+    nrrdWrap_nva(ngrad, &(*mat)[0], nrrdTypeDouble, 2, size);
   }
 
   reset_vars();
@@ -215,7 +217,7 @@ TendEpireg::execute()
 void
 TendEpireg::presave()
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
 }
 
 

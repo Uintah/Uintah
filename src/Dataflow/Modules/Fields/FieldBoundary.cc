@@ -39,8 +39,8 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 
@@ -140,8 +140,7 @@ FieldBoundary::execute()
       Handle<ApplyMappingMatrixAlgo> algo;
       if (module_dynamic_compile(ci, algo))
       {
-	tri_fh_ = algo->execute(input, tri_fh_->mesh(),
-				interp_mh_);
+	tri_fh_ = algo->execute(this, input, tri_fh_->mesh(), interp_mh_);
       }
     }
   }

@@ -50,8 +50,8 @@ SingleVelContact::~SingleVelContact()
 
 void SingleVelContact::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP contact_ps = ps->appendChild("contact",true,2);
-  contact_ps->appendElement("type","single_velocity",false,3);
+  ProblemSpecP contact_ps = ps->appendChild("contact");
+  contact_ps->appendElement("type","single_velocity");
   d_matls.outputProblemSpec(contact_ps);
   
 

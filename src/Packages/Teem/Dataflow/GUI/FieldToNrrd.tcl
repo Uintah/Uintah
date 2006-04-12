@@ -31,17 +31,12 @@
 
 itcl_class Teem_Converters_FieldToNrrd {
     inherit Module
+
     constructor {config} {
         set name FieldToNrrd
-        set_defaults
     }
 
-    method set_defaults {} {
-	global $this-label
-	set $this-label "unknown"
-    }
-   
-    # do not allow spaces in the label
+    # Do not allow spaces in the label.
     method valid_string {ind str} {
 	set char "a"
 	

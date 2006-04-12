@@ -392,8 +392,11 @@ long matlabconverter::sciColorMapCompatible(matlabarray &ma, std::string &infote
 long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext, bool postremark)
 {
   infotext = "";
-  if (ma.isempty()) return(0);
-  if (ma.getnumelements() == 0) return(0);
+  if (ma.isempty())
+  { 
+    if (postremark) remark(std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (empty matrix)."));
+    return(0);
+  }
 
   matlabarray::mlclass mclass;
   mclass = ma.getclass();
@@ -411,7 +414,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
         if (postremark) remark(std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)."));
         return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
       }
-      if (ma.getnumelements() == 0)
+      if ((ma.getnumelements() == 0)&&(!ma.issparse()))
       {   
         if (postremark) remark(std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (0x0 matrix)."));
         return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
@@ -984,7 +987,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
         {
           // new nrrd data handle
           nrrddataptr = scinew NrrdData(); // nrrd is owned by the object
-          nrrddataptr->nrrd = nrrdNew();
+          nrrddataptr->nrrd_ = nrrdNew();
                   
           // obtain the type of the new nrrd
           // we want to keep the nrrd type the same
@@ -993,7 +996,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           unsigned int nrrdtype = convertmitype(mlarray.gettype());
                   
           // obtain the dimensions of the new nrrd
-          int nrrddims[NRRD_DIM_MAX];
+          size_t nrrddims[NRRD_DIM_MAX];
           std::vector<long> dims = mlarray.getdims();
           int nrrddim = static_cast<int>(dims.size());
           
@@ -1001,39 +1004,39 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           ASSERT(nrrddim <= NRRD_DIM_MAX);
           for (int p=0;p<nrrddim;p++) nrrddims[p] = dims[p];
                               
-          nrrdAlloc_nva(nrrddataptr->nrrd,nrrdtype,nrrddim,nrrddims);
+          nrrdAlloc_nva(nrrddataptr->nrrd_,nrrdtype,nrrddim,nrrddims);
                                       
           switch (nrrdtype)
           {
             case nrrdTypeChar:
-              mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeUChar:
-              mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeShort:
-              mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeUShort:
-              mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeInt:
-              mlarray.getnumericarray(static_cast<signed long *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<signed long *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeUInt:
-              mlarray.getnumericarray(static_cast<unsigned long *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<unsigned long *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeLLong:
-              mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeULLong:
-              mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeFloat:
-              mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeDouble:
-              mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
+              mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             default:
               throw matlabconverter_error();
@@ -1062,7 +1065,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
             // nrrd
           }
                                       
-          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoLabel,labelptr);
+          nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoLabel,labelptr);
            
           double spacing[NRRD_DIM_MAX];
           for (long p=0;p<NRRD_DIM_MAX;p++)
@@ -1070,7 +1073,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
             spacing[p] = 1.0;
           }
                           
-          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoSpacing,spacing);
+          nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoSpacing,spacing);
           
           double mindata[NRRD_DIM_MAX];
           for (long p=0;p<NRRD_DIM_MAX;p++)
@@ -1078,7 +1081,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
             mindata[p] = 0.0;
           }
                           
-          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoMin,mindata);            
+          nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoMin,mindata);            
           
           double maxdata[NRRD_DIM_MAX];
           for (long p=0;p<NRRD_DIM_MAX;p++)
@@ -1087,7 +1090,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
             else maxdata[p] = 1.0;
           }
                           
-          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoMax,maxdata); 
+          nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoMax,maxdata); 
           
           int centerdata[NRRD_DIM_MAX];
           for (long p=0;p<NRRD_DIM_MAX;p++)
@@ -1096,7 +1099,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           }
           
                           
-          nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoCenter,centerdata); 
+          nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoCenter,centerdata); 
                                            
           scinrrd = nrrddataptr;
         }
@@ -1220,7 +1223,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                 } 
               }
                       
-              nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoLabel,clabels);
+              nrrdAxisInfoSet_nva(scinrrd->nrrd_,nrrdAxisInfoLabel,clabels);
             }
 
                                             
@@ -1255,7 +1258,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                     }
                 }
                       
-              nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoUnits,cunits);
+              nrrdAxisInfoSet_nva(scinrrd->nrrd_,nrrdAxisInfoUnits,cunits);
             }
                         
                 // insert spacing information
@@ -1284,7 +1287,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                           }
                       }
                             
-                    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoSpacing,spacing);
+                    nrrdAxisInfoSet_nva(scinrrd->nrrd_,nrrdAxisInfoSpacing,spacing);
                   }
 
                 // insert minimum information
@@ -1313,7 +1316,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                           }
                       }
                             
-                    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoMin,mindata);
+                    nrrdAxisInfoSet_nva(scinrrd->nrrd_,nrrdAxisInfoMin,mindata);
                   }
                         
                         
@@ -1343,7 +1346,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                     }
                   }
                           
-                  nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoMax,maxdata);
+                  nrrdAxisInfoSet_nva(scinrrd->nrrd_,nrrdAxisInfoMax,maxdata);
                 }
                     
                 // insert centering information
@@ -1358,7 +1361,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                           
                   for (long p=0;p<NRRD_DIM_MAX;p++)
                   {
-                    centerdata[p] = 0;
+                    centerdata[p] = 2;
                   }
                           
                   for (long p=0;p<numaxis;p++)
@@ -1371,7 +1374,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                     }
                   }
                           
-                  nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoCenter,centerdata);
+                  nrrdAxisInfoSet_nva(scinrrd->nrrd_,nrrdAxisInfoCenter,centerdata);
                 }
               }
         }
@@ -1425,7 +1428,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
 
   // first determine the size of a nrrd
   std::vector<long> dims;
-  nrrdptr = scinrrd->nrrd;
+  nrrdptr = scinrrd->nrrd_;
   
   if (!nrrdptr)
   {
@@ -1505,7 +1508,7 @@ void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray 
   axisfieldnames[6] = "unit";
         
   Nrrd  *nrrdptr;
-  nrrdptr = scinrrd->nrrd;
+  nrrdptr = scinrrd->nrrd_;
                                 
   matlabarray axisma;
   vector<long> dims(2);

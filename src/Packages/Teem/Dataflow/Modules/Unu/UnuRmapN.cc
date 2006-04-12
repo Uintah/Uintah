@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
@@ -91,8 +91,8 @@ UnuRmapN::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *nmap = dmap_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *nmap = dmap_handle->nrrd_;
 
   int zerosize = nin->axis[0].size;
   int ninstart = 1;
@@ -100,12 +100,12 @@ UnuRmapN::execute()
   
   const int offset = nmap->dim - zerosize;
   int noutdim = nin->dim - ninstart + nmap->dim - zerosize;
-  int nsize[NRRD_DIM_MAX];
+  size_t nsize[NRRD_DIM_MAX];
   for (int i = 0; i < offset; i++)
   {
     nsize[i] = nmap->axis[i].size;
   }
-  for (int i = ninstart; i < nin->dim; i++)
+  for (unsigned int i = ninstart; i < nin->dim; i++)
   {
     nsize[offset + i - ninstart] = nin->axis[i].size;
   }
@@ -115,7 +115,7 @@ UnuRmapN::execute()
   // Copy from nmap->axis[i] to nout->axis[i]
   // Compute colorsize while we're here.
   size_t colorsize = nrrdTypeSize[nmap->type];
-  for (int i = 0; i < offset; i++)
+  for ( int i = 0; i < offset; i++)
   {
     colorsize *= nmap->axis[i].size;
 
@@ -126,7 +126,7 @@ UnuRmapN::execute()
     nout->axis[i].max = nmap->axis[i].max;
   }
   // Copy from nin->axis[i] to nout->axix[offset + i - 1].
-  for (int i = ninstart; i < nin->dim; i++)
+  for (unsigned int i = ninstart; i < nin->dim; i++)
   {
     nout->axis[offset + i - ninstart].kind = nin->axis[i].kind;
     nout->axis[offset + i - ninstart].center = nin->axis[i].center;
@@ -137,7 +137,7 @@ UnuRmapN::execute()
 
 
   size_t pixelcount = 1;
-  for (int i = ninstart; i < nin->dim; i++)
+  for (unsigned int i = ninstart; i < nin->dim; i++)
   {
     pixelcount *= nin->axis[i].size;
   }

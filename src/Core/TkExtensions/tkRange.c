@@ -66,6 +66,12 @@
 #include "tclMath.h"
 #include "tkRange.h"
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
 /*
  * The following table defines the legal values for the -orient option.
  * It is used together with the "enum orient" declaration in tkRange.h.
@@ -269,7 +275,7 @@ static TkClassProcs rangeClass = {
  *--------------------------------------------------------------
  */
 
-int
+SCISHARE int
 Tk_RangeObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp;		/* Current interpreter. */

@@ -47,9 +47,9 @@
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
@@ -105,14 +105,14 @@ DECLARE_MAKER(SeedPoints)
 SeedPoints::SeedPoints(GuiContext* ctx)
   : Module("SeedPoints", ctx, Filter, "FieldsCreate", "SCIRun"),
     widget_lock_("SeedPoints widget lock"),
-    gui_num_seeds_(ctx->subVar("num_seeds")),
-    gui_probe_scale_(ctx->subVar("probe_scale")),
-    gui_send_(ctx->subVar("send")),
-    gui_widget_(ctx->subVar("widget")),
-    red_(ctx->subVar("red")),
-    green_(ctx->subVar("green")),
-    blue_(ctx->subVar("blue")),
-    gui_auto_execute_(ctx->subVar("auto_execute"))
+    gui_num_seeds_(get_ctx()->subVar("num_seeds"), 1),
+    gui_probe_scale_(get_ctx()->subVar("probe_scale"), 5.0),
+    gui_send_(get_ctx()->subVar("send"), 0),
+    gui_widget_(get_ctx()->subVar("widget"), 0),
+    red_(get_ctx()->subVar("red"), 0.5),
+    green_(get_ctx()->subVar("green"), 0.5),
+    blue_(get_ctx()->subVar("blue"), 0.5),
+    gui_auto_execute_(get_ctx()->subVar("auto_execute"), 1)
 {
 }
 
@@ -166,7 +166,7 @@ SeedPoints::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
-    error("Unable to initialize " +name + "'s iport.");
+    error("Unable to initialize " + module_name_ + "'s iport.");
     return;
   }
 
@@ -219,7 +219,7 @@ SeedPoints::execute()
     GeometryOPort *ogport = (GeometryOPort*)get_oport("SeedPoints Widget");
     if (!ogport)
     {
-      error("Unable to initialize " + name + "'s oport.");
+      error("Unable to initialize " + module_name_ + "'s oport.");
       return;
     }
     ogport->flushViews();
@@ -235,7 +235,7 @@ SeedPoints::execute()
     GeometryOPort *ogport = (GeometryOPort*)get_oport("SeedPoints Widget");
     if (!ogport)
     {
-      error("Unable to initialize " + name + "'s oport.");
+      error("Unable to initialize " + module_name_ + "'s oport.");
       return;
     }
 
@@ -251,7 +251,7 @@ SeedPoints::execute()
 	  //delete in tcl side
 	  ostringstream str;
 	  str << i;
-	  gui->execute(id.c_str() + string(" clear_seed " + str.str()));
+	  get_gui()->execute(get_id().c_str() + string(" clear_seed " + str.str()));
 
 	}
       widget_switch_.resize(numSeeds);
@@ -283,15 +283,15 @@ SeedPoints::execute()
 	  ostringstream strX, strY, strZ;
 	  
 	  strX << "seedX" << i;
-	  GuiDouble* gui_locx = new GuiDouble(ctx->subVar(strX.str()));
+	  GuiDouble* gui_locx = new GuiDouble(get_ctx()->subVar(strX.str()));
 	  seeds_.push_back(gui_locx);
 	  
 	  strY << "seedY" << i;
-	  GuiDouble* gui_locy = new GuiDouble(ctx->subVar(strY.str()));
+	  GuiDouble* gui_locy = new GuiDouble(get_ctx()->subVar(strY.str()));
 	  seeds_.push_back(gui_locy);
 	  
 	  strZ << "seedZ" << i;
-	  GuiDouble* gui_locz = new GuiDouble(ctx->subVar(strZ.str()));
+	  GuiDouble* gui_locz = new GuiDouble(get_ctx()->subVar(strZ.str()));
 	  seeds_.push_back(gui_locz);
 	  
 	  Point curloc(gui_locx->get(),gui_locy->get(),gui_locz->get());
@@ -303,10 +303,10 @@ SeedPoints::execute()
 	    {
 	      center = curloc;
 	    } else {
-	      gui->execute(id.c_str() + string(" make_seed " + to_string((int)i)));
+	      get_gui()->execute(get_id().c_str() + string(" make_seed " + to_string((int)i)));
 	    }
 
-	  gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
+	  get_gui()->execute(get_id().c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
 	  
 	  seed->SetPosition(center);
 	  seed->SetScale(gui_probe_scale_.get() * l2norm_ * 0.003);
@@ -335,15 +335,15 @@ SeedPoints::execute()
 	  ostringstream strX, strY, strZ;
 	  
 	  strX << "seedX" << i;
-	  GuiDouble* gui_locx = new GuiDouble(ctx->subVar(strX.str()));
+	  GuiDouble* gui_locx = new GuiDouble(get_ctx()->subVar(strX.str()));
 	  seeds_.push_back(gui_locx);
 	  
 	  strY << "seedY" << i;
-	  GuiDouble* gui_locy = new GuiDouble(ctx->subVar(strY.str()));
+	  GuiDouble* gui_locy = new GuiDouble(get_ctx()->subVar(strY.str()));
 	  seeds_.push_back(gui_locy);
 	  
 	  strZ << "seedZ" << i;
-	  GuiDouble* gui_locz = new GuiDouble(ctx->subVar(strZ.str()));
+	  GuiDouble* gui_locz = new GuiDouble(get_ctx()->subVar(strZ.str()));
 	  seeds_.push_back(gui_locz);
 	  
 	  Point curloc(gui_locx->get(),gui_locy->get(),gui_locz->get());
@@ -355,11 +355,11 @@ SeedPoints::execute()
 	    {
 	      center = curloc;
 	    } else {
-	      gui->execute(id.c_str() + string(" make_seed " + to_string((int)i)));
+	      get_gui()->execute(get_id().c_str() + string(" make_seed " + to_string((int)i)));
 	    }
 
-	  //	  gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
-	  gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string(135) + " " + to_string(293) + " " + to_string(0.1)));
+	  //	  get_gui()->execute(get_id().c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
+	  get_gui()->execute(get_id().c_str() + string(" set_seed " + to_string((int)i) + " " + to_string(135) + " " + to_string(293) + " " + to_string(0.1)));
 	  
 	  double r = gui_probe_scale_.get();
 	  Vector normal(0.0, 0.0, 1.0);
@@ -391,18 +391,18 @@ SeedPoints::execute()
       widget_[i]->SetScale(gui_probe_scale_.get() * l2norm_ * 0.003);
       const Point location = widget_[i]->GetPosition();
 
-      gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)location.x()) + " " + to_string((double)location.y()) + " " + to_string((double)location.z())));
+      get_gui()->execute(get_id().c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)location.x()) + " " + to_string((double)location.y()) + " " + to_string((double)location.z())));
 
     } else {
-      Point location;
+      //Point location;
       double r;
       Vector normal;
       widget_ring_[i]->GetPosition(center, normal, r);
       widget_ring_[i]->SetScale(max*0.02);
 
       // place rings at slight distance as seeds are added
-      //      gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
-      gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string(135) + " " + to_string(293) + " " + to_string(0.1)));
+      //      get_gui()->execute(get_id().c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
+      get_gui()->execute(get_id().c_str() + string(" set_seed " + to_string((int)i) + " " + to_string(135) + " " + to_string(293) + " " + to_string(0.1)));
       
     }
   }

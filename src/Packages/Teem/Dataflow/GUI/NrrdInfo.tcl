@@ -31,45 +31,22 @@
 
 itcl_class Teem_NrrdData_NrrdInfo {
     inherit Module
+
     constructor {config} {
         set name NrrdInfo
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	global $this-name
-	global $this-type
-	global $this-dimension
-	global $this-origin
-	global $this-active_tab
-	global $this-label0
-	global $this-kind0
-	global $this-center0
-	global $this-size0
-	global $this-spacing0
-	global $this-min0
-	global $this-max0
-	global $this-spaceDir0
-	global $this-initialized
-		    
-	# these won't be saved 
-	set $this-firstwidth 15
-	set $this-name "---"
-	set $this-type "---"
-	set $this-dimension 0
-	set $this-origin 0
-	set $this-active_tab "Axis 0"
-	set $this-label0 "---"
-	set $this-kind0 "---"
-	set $this-center0 "---"
-	set $this-size0 "---"
-	set $this-spacing0 "---"
-	set $this-min0 "---"
-	set $this-max0 "---"
-	set $this-spaceDir0 "---"
-	set $this-initialized 0
+	# These won't be saved .
+	setGlobal $this-firstwidth 15
+	setGlobal $this-active_tab "Axis 0"
+	setGlobal $this-label0 "---"
+	setGlobal $this-kind0 "---"
+	setGlobal $this-center0 "---"
+	setGlobal $this-size0 "---"
+	setGlobal $this-spacing0 "---"
+	setGlobal $this-min0 "---"
+	setGlobal $this-max0 "---"
+	setGlobal $this-spaceDir0 "---"
+	setGlobal $this-initialized 0
     }
 
     method set_active_tab {act} {
@@ -216,20 +193,6 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
-
-
-    method labelpair { win text1 text2 } {
-	frame $win 
-	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
-		-fore darkred
-	pack $win.l1 $win.colon -side left
-	pack $win.l2 -side left -fill x -expand yes
-    } 
-
 }
 
 

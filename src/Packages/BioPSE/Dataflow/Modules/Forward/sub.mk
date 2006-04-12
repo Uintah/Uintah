@@ -40,38 +40,47 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 
 SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
-	    $(SRCDIR)/ApplyFEMCurrentSource.cc\
-	    $(SRCDIR)/ApplyFEMElectrodeSource.cc\
-	    $(SRCDIR)/ApplyFEMVoltageSource.cc\
-	    $(SRCDIR)/ComputeCurrent.cc\
-	    $(SRCDIR)/ConfigureElectrode.cc\
-	    $(SRCDIR)/ConfigureWireElectrode.cc\
-	    $(SRCDIR)/CreateDisAnisoSpheres.cc\
-	    $(SRCDIR)/DipoleInSphere.cc\
-	    $(SRCDIR)/DipoleInAnisoSpheres.cc\
-	    $(SRCDIR)/ForwardMagneticField.cc\
-	    $(SRCDIR)/IndicesToTensors.cc\
-	    $(SRCDIR)/InsertElectrodes.cc\
-	    $(SRCDIR)/InsertVoltageSource.cc\
-	    $(SRCDIR)/IntegrateCurrent.cc\
-	    $(SRCDIR)/SetupBEMatrix.cc\
-	    $(SRCDIR)/SetupFEMatrix.cc\
-	    $(SRCDIR)/TensorsToIndices.cc\
+            $(SRCDIR)/ApplyFEMCurrentSource.cc\
+            $(SRCDIR)/ApplyFEMElectrodeSource.cc\
+            $(SRCDIR)/ApplyFEMVoltageSource.cc\
+            $(SRCDIR)/ComputeCurrent.cc\
+            $(SRCDIR)/ConfigureElectrode.cc\
+            $(SRCDIR)/ConfigureWireElectrode.cc\
+            $(SRCDIR)/CreateDisAnisoSpheres.cc\
+            $(SRCDIR)/DipoleInSphere.cc\
+            $(SRCDIR)/DipoleInAnisoSpheres.cc\
+            $(SRCDIR)/ForwardMagneticField.cc\
+            $(SRCDIR)/IndicesToTensors.cc\
+            $(SRCDIR)/InsertElectrodes.cc\
+            $(SRCDIR)/InsertVoltageSource.cc\
+            $(SRCDIR)/IntegrateCurrent.cc\
+            $(SRCDIR)/SetupBEMatrix.cc\
+            $(SRCDIR)/SetupFEMatrix.cc\
+            $(SRCDIR)/TensorsToIndices.cc\
             $(SRCDIR)/ElectrodeManager.cc\
             $(SRCDIR)/EITAnalyticSolution.cc\
             $(SRCDIR)/SetEITGround.cc\
             $(SRCDIR)/TrigCurrentPattern.cc\
-#[INSERT NEW CODE FILE HERE]	
+#[INSERT NEW CODE FILE HERE]    
 
 
-PSELIBS := Packages/BioPSE/Core/Datatypes \
-	Packages/BioPSE/Core/Algorithms/Forward \
-	Packages/BioPSE/Core/Algorithms/NumApproximation \
-	Dataflow/Network Dataflow/Ports \
-	Core/Datatypes Core/Persistent Core/Containers \
-	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions \
-	Core/Basis
+PSELIBS := \
+        Packages/BioPSE/Core/Algorithms/Forward          \
+        Packages/BioPSE/Core/Algorithms/NumApproximation \
+        Packages/BioPSE/Core/Datatypes \
+        Core/Basis         \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/Geometry      \
+        Core/GeomInterface \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network   
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

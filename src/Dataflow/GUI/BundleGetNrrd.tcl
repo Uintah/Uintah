@@ -30,42 +30,16 @@
 
 itcl_class SCIRun_Bundle_BundleGetNrrd {
     inherit Module
+
     constructor {config} {
         set name BundleGetNrrd
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-nrrd1-name
-        global $this-nrrd2-name
-        global $this-nrrd3-name
-        global $this-nrrd1-listbox
-        global $this-nrrd2-listbox
-        global $this-nrrd3-listbox
-        global $this-nrrd-selection
-        global $this-nrrd1-entry
-        global $this-nrrd2-entry
-        global $this-nrrd3-entry
-        global $this-transposenrrd1
-        global $this-transposenrrd2
-        global $this-transposenrrd3
-
-        set $this-nrrd1-name "nrrd1"
-        set $this-nrrd2-name "nrrd2"
-        set $this-nrrd3-name "nrrd3"
-        set $this-nrrd-selection ""
-
-        set $this-nrrd1-listbox ""
-        set $this-nrrd2-listbox ""
-        set $this-nrrd3-listbox ""
-        set $this-nrrd1-entry ""
-        set $this-nrrd2-entry ""
-        set $this-nrrd3-entry ""
-        set $this-transposenrrd1 0
-        set $this-transposenrrd2 0
-        set $this-transposenrrd3 0
-
+        initGlobal $this-nrrd1-listbox ""
+        initGlobal $this-nrrd2-listbox ""
+        initGlobal $this-nrrd3-listbox ""
+        initGlobal $this-nrrd1-entry ""
+        initGlobal $this-nrrd2-entry ""
+        initGlobal $this-nrrd3-entry ""
     }
 
     method ui {} {

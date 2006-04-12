@@ -6,6 +6,9 @@
    <Meta>
 	<title>Crack propogation in double-edge-notched specimen under compressive impact</title>
    </Meta>
+   <SimulationComponent>
+        <type> mpmf </type>
+   </SimulationComponent>
 
    <Time>
 	<maxTime>12e-6</maxTime>

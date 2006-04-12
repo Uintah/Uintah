@@ -44,8 +44,8 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Modules/Fields/MapDataToMeshCoord.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -76,7 +76,8 @@ DECLARE_MAKER(MapDataToMeshCoord)
 
 MapDataToMeshCoord::MapDataToMeshCoord(GuiContext* ctx)
   : Module("MapDataToMeshCoord", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    gui_coord_(ctx->subVar("coord")), last_generation_(0)
+    gui_coord_(get_ctx()->subVar("coord"), 2),
+    last_generation_(0)
 {
 }
 

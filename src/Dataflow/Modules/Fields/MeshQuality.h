@@ -34,7 +34,7 @@
 #if !defined(MeshQuality_h)
 #define MeshQuality_h
 
-#include "/home/sci/jfsheph/Mesquite-and-Verdict/verdict-1.0.1/verdict.h"
+#include <verdict.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -126,6 +126,7 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
   int inversions = 0;
+  int first_time_thru = 1;
 
   while (bi != ei)
   {
@@ -146,7 +147,7 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
 //    int verdict_metric = metricBitFlags[V_TET_ALL];
     int verdict_metric = V_TET_ALL;
     v_tet_quality(4, node_pos, verdict_metric, &values);
-    
+
     double aspect = values.aspect_beta;
     double aspect_gamma = values.aspect_gamma;
     double volume = values.volume;
@@ -156,6 +157,29 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
     double shape = values.shape;
     double shape_size = values.shape_and_size;
     double distortion = values.distortion;
+
+    if( first_time_thru )
+    {
+      aspect_high = aspect;
+      aspect_low = aspect;
+      aspect_gamma_high = aspect_gamma;
+      aspect_gamma_low = aspect_gamma;
+      volume_high = volume;
+      volume_low = volume;
+      condition_high = condition;
+      condition_low = condition;
+      jacobian_high = jacobian;
+      jacobian_low = jacobian;
+      scaled_jacobian_high = scaled_jacobian;
+      scaled_jacobian_low = scaled_jacobian;
+      shape_high = shape;
+      shape_low = shape;
+      shape_size_high = shape_size;
+      shape_size_low = shape_size;
+      distortion_high = distortion;
+      distortion_low = distortion;
+      first_time_thru = 0;
+    }
 
     if( aspect > aspect_high )
         aspect_high = aspect;
@@ -337,7 +361,8 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
   int inversions = 0;
-
+  int first_time_thru = 1;
+  
   while (bi != ei)
   {
     typename FIELD::mesh_type::Node::array_type onodes;
@@ -374,6 +399,39 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
     double shear_size = values.shear_and_size;
     double shape_size = values.shape_and_size;
     double distortion = values.distortion;
+
+    if( first_time_thru )
+    {
+      aspect_high = aspect;
+      aspect_low = aspect;
+      skew_high = skew;
+      skew_low = skew;
+      taper_high = taper;
+      taper_low = taper;
+      volume_high = volume;
+      volume_low = volume;
+      stretch_high = stretch;
+      stretch_low = stretch;
+      diagonal_high = diagonal;
+      diagonal_low = diagonal;
+      condition_high = condition;
+      condition_low = condition;
+      jacobian_high = jacobian;
+      jacobian_low = jacobian;
+      scaled_jacobian_high = scaled_jacobian;
+      scaled_jacobian_low = scaled_jacobian;
+      shear_high = shear;
+      shear_low = shear;
+      shape_high = shape;
+      shape_low = shape;
+      shape_size_high = shape_size;
+      shape_size_low = shape_size;
+      shear_size_high = shear_size;
+      shear_size_low = shear_size;
+      distortion_high = distortion;
+      distortion_low = distortion;
+      first_time_thru = 0;
+    }
 
     if( aspect > aspect_high )
         aspect_high = aspect;
@@ -587,6 +645,7 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
   int inversions = 0;
+  int first_time_thru = 1;
   
   while (bi != ei)
   {
@@ -633,6 +692,29 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
     double shape = values.shape;
     double shape_size = values.shape_and_size;
     double distortion = values.distortion;
+
+    if( first_time_thru )
+    {
+      area_high = area;
+      area_low = area;
+      minimum_angle_high = minimum_angle;
+      minimum_angle_low = minimum_angle;
+      maximum_angle_high = maximum_angle;
+      maximum_angle_low = maximum_angle;
+      condition_high = condition;
+      condition_low = condition;
+//      jacobian_high = jacobian;
+//      jacobian_low = jacobian;
+      scaled_jacobian_high = scaled_jacobian;
+      scaled_jacobian_low = scaled_jacobian;
+      shape_high = shape;
+      shape_low = shape;
+      shape_size_high = shape_size;
+      shape_size_low = shape_size;
+      distortion_high = distortion;
+      distortion_low = distortion;
+      first_time_thru = 0;
+    }
 
     if( area > area_high )
         area_high = area;
@@ -811,7 +893,8 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   double distortion_high = 0, distortion_low = 0, distortion_ave = 0;
   
   int inversions = 0;
-
+  int first_time_thru;
+  
   while (bi != ei)
   {
     typename FIELD::mesh_type::Node::array_type onodes;
@@ -848,6 +931,43 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
     double shear_size = values.shear_and_size;
     double shape_size = values.shape_and_size;
     double distortion = values.distortion;
+
+    if( first_time_thru )
+    {
+      aspect_high = aspect;
+      aspect_low = aspect;
+      skew_high = skew;
+      skew_low = skew;
+      taper_high = taper;
+      taper_low = taper;
+      warpage_high = warpage;
+      warpage_low = warpage;
+      area_high = area;
+      area_low = area;
+      stretch_high = stretch;
+      stretch_low = stretch;
+      minimum_angle_high = minimum_angle;
+      minimum_angle_low = minimum_angle;
+      maximum_angle_high = maximum_angle;
+      maximum_angle_low = maximum_angle;
+      condition_high = condition;
+      condition_low = condition;
+      jacobian_high = jacobian;
+      jacobian_low = jacobian;
+      scaled_jacobian_high = scaled_jacobian;
+      scaled_jacobian_low = scaled_jacobian;
+      shear_high = shear;
+      shear_low = shear;
+      shape_high = shape;
+      shape_low = shape;
+      shape_size_high = shape_size;
+      shape_size_low = shape_size;
+      shear_size_high = shear_size;
+      shear_size_low = shear_size;
+      distortion_high = distortion;
+      distortion_low = distortion;
+      first_time_thru = 0;
+    }
 
     if( aspect > aspect_high )
         aspect_high = aspect;

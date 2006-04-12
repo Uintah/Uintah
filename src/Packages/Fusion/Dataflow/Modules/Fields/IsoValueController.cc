@@ -39,21 +39,13 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-
-#include <Core/Datatypes/FieldInterface.h>
-
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/CurveMesh.h>
+#include <Packages/Fusion/Dataflow/Modules/Fields/IsoValueController.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
-#include <Packages/Fusion/Dataflow/Modules/Fields/IsoValueController.h>
 
 namespace Fusion {
 
@@ -62,12 +54,12 @@ using namespace SCIRun;
 DECLARE_MAKER(IsoValueController)
 IsoValueController::IsoValueController(GuiContext* context)
   : Module("IsoValueController", context, Source, "Fields", "Fusion"),
-    IsoValueStr_(context->subVar("isovalues")),
+    gui_IsoValueStr_(context->subVar("isovalues")),
     prev_min_(0),
     prev_max_(0),
     last_orig_generation_(-1),
     last_tran_generation_(-1),
-    error_(false)
+    execute_error_(false)
 {
   ColumnMatrix *isovalueMtx = scinew ColumnMatrix(1);
   mHandleIsoValue_ = MatrixHandle(isovalueMtx);
@@ -81,114 +73,30 @@ IsoValueController::~IsoValueController(){
 
 void IsoValueController::execute() {
 
-  // Get a handle to the input original field port.
-  FieldIPort *ifpo = (FieldIPort *)get_iport("Input Original Field");
-  if (!ifpo) {
-    error("Unable to initialize iport 'Input Original Field'.");
-    return;
-  }
-
-  // Get a handle to the input transformed field port.
-  FieldIPort *ifpt = (FieldIPort *)get_iport("Input Transformed Field");
-  if (!ifpt) {
-    error("Unable to initialize iport 'Input Transformed Field'.");
-    return;
-  }
-
-  // Get a handle to the input (N-1)D field port.
-  FieldIPort *ifieldN_1D_port = (FieldIPort *)get_iport("(N-1)D Field");
-  if (!ifieldN_1D_port) {
-    error("Unable to initialize oport '(N-1)D Field'.");
-    return;
-  }
-
-  // Get a handle to the input (N)D field port.
-  FieldIPort *ifieldND_port = (FieldIPort *)get_iport("(N)D Field");
-  if (!ifieldND_port) {
-    error("Unable to initialize oport '(N)D Field'.");
-    return;
-  }
-
-  // Get a handle to the input geometery port.
-  GeometryIPort *igeometry_port = (GeometryIPort *)get_iport("Axis Geometry");
-  if (!igeometry_port) {
-    error("Unable to initialize oport 'Axis Geometry'.");
-    return;
-  }
-
-
-  // Get a handle to the output original field port.
-  FieldOPort *ofpo = (FieldOPort *)get_oport("Output Original Field");
-  if (!ofpo) {
-    error("Unable to initialize iport 'Output Original Field'.");
-    return;
-  }
-
-  // Get a handle to the output transformed field port.
-  FieldOPort *ofpt = (FieldOPort *)get_oport("Output Transformed Field");
-  if (!ofpt) {
-    error("Unable to initialize iport 'Output Transformed Field'.");
-    return;
-  }
-
-  // Get a handle to the output isovalue port.
-  MatrixOPort *omatrixIsovalue_port = (MatrixOPort *)get_oport("Isovalue");
-  if (!omatrixIsovalue_port) {
-    error("Unable to initialize oport 'Isovalue'.");
-    return;
-  }
-
-  // Get a handle to the output index port.
-  MatrixOPort *omatrixIndex_port = (MatrixOPort *)get_oport("Index");
-  if (!omatrixIndex_port) {
-    error("Unable to initialize oport 'Index'.");
-    return;
-  }
-
-
-  bool update = false;
-
   // Get the current original field.
-  if (!(ifpo->get(fHandle_orig_) && fHandle_orig_.get_rep())) {
-    error( "No field handle or representation." );
-    return;
-  }
-
-  if ( fHandle_orig_->generation != last_orig_generation_ ) {
-    last_orig_generation_ = fHandle_orig_->generation;
-    update = true;
-  }
+  if( !get_input_handle( "Input Original Field", fHandle_orig_, true ) ) return;
 
   // Get the current transformed field.
-  if (!(ifpt->get(fHandle_tran_) && fHandle_tran_.get_rep())) {
-    error( "No field handle or representation." );
+  if( !get_input_handle( "Input Transformed Field", fHandle_tran_, true ) ) return;
+
+  ScalarFieldInterfaceHandle sfi =
+    fHandle_tran_->query_scalar_interface(this);
+  if (!sfi.get_rep()) {
+    error("Input field does not contain scalar data.");
     return;
   }
-
-  if ( fHandle_tran_->generation != last_tran_generation_ ) {
-    // new field
-    ScalarFieldInterfaceHandle sfi =
-      fHandle_tran_->query_scalar_interface(this);
-    if (!sfi.get_rep()) {
-      error("Input field does not contain scalar data.");
-      return;
-    }
     
-    // Set min/max
-    pair<double, double> minmax;
-    sfi->compute_min_max(minmax.first, minmax.second);
-    if (minmax.first != prev_min_ || minmax.second != prev_max_) {
-      prev_min_ = minmax.first;
-      prev_max_ = minmax.second;
-    }
-
-    last_tran_generation_ = fHandle_tran_->generation;
-    update = true;
+  // Set min/max
+  pair<double, double> minmax;
+  sfi->compute_min_max(minmax.first, minmax.second);
+  if (minmax.first != prev_min_ || minmax.second != prev_max_) {
+    prev_min_ = minmax.first;
+    prev_max_ = minmax.second;
   }
 
   vector< double > isovalues(0);
 
-  istringstream vlist(IsoValueStr_.get());
+  istringstream vlist(gui_IsoValueStr_.get());
   double val;
   while(!vlist.eof()) {
     vlist >> val;
@@ -219,7 +127,7 @@ void IsoValueController::execute() {
   }
 
   if( isovalues_.size() != isovalues.size() ){
-    update = true;
+    inputs_changed_ = true;
 
     isovalues_.resize(isovalues.size());
 
@@ -229,7 +137,7 @@ void IsoValueController::execute() {
   } else {
     for( unsigned int i=0; i<isovalues.size(); i++ )
       if( fabs( isovalues_[i] - isovalues[i] ) > 1.0e-4 ) {
-	update = true;
+	inputs_changed_ = true;
 	break;
       }
   }
@@ -238,8 +146,13 @@ void IsoValueController::execute() {
   vector< FieldHandle > fHandles_ND;
   vector< GeomHandle  > gHandles;
 
-  if( update || error_ ) {
-    error_ = false;
+  if( inputs_changed_ ||
+
+      execute_error_ ) {
+
+    update_state(Executing);
+
+    execute_error_ = false;
 
     unsigned int ncols = (int) sqrt( (double) isovalues.size() );
 
@@ -270,28 +183,22 @@ void IsoValueController::execute() {
 	--row;
       }
 
-      if( i<isovalues.size()-1 ) {
-	ofpo->send_intermediate(fHandle_orig_);
-	ofpt->send_intermediate(fHandle_tran_);
-	omatrixIsovalue_port->send_intermediate(mHandleIsoValue_);
-	omatrixIndex_port->send_intermediate(mHandleIndex_);
+      bool intermediate = ( i<isovalues.size()-1 );
 
-      } else {
-	ofpo->send(fHandle_orig_);
-	ofpt->send(fHandle_tran_);
-	omatrixIsovalue_port->send(mHandleIsoValue_);
-	omatrixIndex_port->send(mHandleIndex_);
-	str << "  Done";
-      }
+      send_output_handle( "Output Original Field",    fHandle_orig_,    true, intermediate );
+      send_output_handle( "Output Transformed Field", fHandle_tran_,    true, intermediate );
+      send_output_handle( "Isovalue",                 mHandleIsoValue_, true, intermediate );
+      send_output_handle( "Index",                    mHandleIndex_,    true, intermediate );
+
+      str << "  Done";
 
       remark( str.str());
 
       // Get the original isosurfaces.
       FieldHandle fHandleND;
 
-      if (!(ifieldND_port->get(fHandleND) && fHandleND.get_rep())) {
-	error( "No (N)D field handle or representation." );
-	error_ = true;
+      if( !get_input_handle( "(N)D Field", fHandleND, true ) ) {
+	execute_error_ = true;
 	return;
       } else
 	fHandles_ND.push_back( fHandleND );
@@ -299,20 +206,21 @@ void IsoValueController::execute() {
       // Get the transformed isosurfaces.
       FieldHandle fHandleN_1D;
            
-      if (!(ifieldN_1D_port->get(fHandleN_1D) && fHandleN_1D.get_rep())) {
-	error( "No (N-1)D field handle or representation." );
-	error_ = true;
+      if( !get_input_handle( "(N-1)D Field", fHandleN_1D, true ) ) {
+	execute_error_ = true;
 	return;
       } else
 	fHandles_N_1D.push_back( fHandleN_1D );
 
+
+      // Get the transformed geometry.
 //    GeomHandle geometryin;
-                
-//    if (!(igeometry_port->getObj(geometryin) && geometryin.get_rep())) {
-// 	error( "No geometry handle or representation." );
-// 	return;
+
+//    if( !get_input_handle( "Axis Geometry", geometryin, true ) ) {
+// 	execute_error_ = true;
+//      return;
 //    } else
-// 	gHandles.push_back( geometryin );
+//  	gHandles.push_back( geometryin );
     }
   }
 
@@ -320,7 +228,6 @@ void IsoValueController::execute() {
   string fldname;
   if (!fHandle_orig_->get_property("name",fldname))
     fldname = string("Isosurface");
-
 
   // Output field.
   if (fHandles_ND.size() && fHandles_ND[0].get_rep()) {
@@ -349,39 +256,15 @@ void IsoValueController::execute() {
     }
   }
 
-  if (fHandles_ND.size() && fHandles_ND[0].get_rep()) {
+  // Send the data downstream
+  send_output_handle( "(N)D Fields",   fHandle_ND_,   true );
+  send_output_handle( "(N-1)D Fields", fHandle_N_1D_, true );
 
-    FieldOPort *ofieldND_port = (FieldOPort *)get_oport("(N)D Fields");
-    if (!ofieldND_port) {
-      error("Unable to initialize oport '(N)D Fields'.");
-      return;
-    }
+//   vector< string > names;
+//   for (unsigned int i=0; i<gHandles.size(); i++)
+//     names.push_back(fldname + to_string( i ) );
 
-    FieldOPort *ofieldN_1D_port = (FieldOPort *)get_oport("(N-1)D Fields");
-    if (!ofieldN_1D_port) {
-      error("Unable to initialize oport '(N-1)D Fields'.");
-      return;
-    }
-  
-    ofieldND_port->send(fHandle_ND_);
-    ofieldN_1D_port->send(fHandle_N_1D_);
-  }
-
-  if( gHandles.size() ) {
-    GeometryOPort *ogeometry_port =
-      (GeometryOPort *)get_oport("Axis Geometry");
-
-    if (!ogeometry_port) {
-      error("Unable to initialize oport 'Axis Geometry'.");
-      return;
-    }    
-    
-    for (unsigned int i=0; i<gHandles.size(); i++)
-      ogeometry_port->addObj(gHandles[i],fldname);
-    
-    if (gHandles.size())
-      ogeometry_port->flushViews();
-  }
+//   send_output_handle( "Axis Geometry", gHandles, names );
 }
 
 void

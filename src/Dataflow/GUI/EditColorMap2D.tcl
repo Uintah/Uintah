@@ -333,7 +333,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	scale $frame.shisto -variable $this-histo \
 	    -from 0.0 -to 1.0 -label "Histogram Opacity" \
 	    -showvalue true -resolution 0.001 \
-	    -orient horizontal -command "$this-c redraw"
+	    -orient horizontal -command "$this-c redraw-histo"
 	pack $frame.shisto -side top -fill x -padx 4
 
 	# faux shading
@@ -390,8 +390,8 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     method bind_events {w} {
         bind $w <Destroy>		"$this-c destroygl"
         # every time the OpenGL widget is displayed, redraw it
-        bind $w <Expose>		"$this-c redraw"
-        bind $w <Configure>		"$this-c redraw"
+        bind $w <Expose>		"$this-c redraw 1"
+        bind $w <Configure>		"$this-c redraw 1"
         bind $w <ButtonPress-1>		"$this-c mouse push %x %y %b"
         bind $w <ButtonPress-2>		"$this-c mouse push %x %y %b"
         bind $w <ButtonPress-3>		"$this-c mouse push %x %y %b"

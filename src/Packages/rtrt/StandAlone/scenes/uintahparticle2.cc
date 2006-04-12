@@ -856,15 +856,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     usage("", argv[0]);
     return(0);
   }
-
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << toCatch.getMessage() 
-         << '\n';
-    exit( 1 );
-  }
-  
   
   Group* all = new Group();
   // the value of colordata will be checked later and the

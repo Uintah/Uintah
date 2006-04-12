@@ -38,7 +38,8 @@ namespace SCIRun {
 class ChangeCoordinatesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshHandle src, const string &o, const string &n) = 0;
+  virtual void execute(ProgressReporter *reporter,
+                       MeshHandle src, const string &o, const string &n) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc);
@@ -50,12 +51,14 @@ class ChangeCoordinatesAlgoT : public ChangeCoordinatesAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshHandle src, const string &o, const string &n);
+  virtual void execute(ProgressReporter *reporter,
+                       MeshHandle src, const string &o, const string &n);
 };
 
 template <class MESH>
 void 
-ChangeCoordinatesAlgoT<MESH>::execute(MeshHandle mesh_h,
+ChangeCoordinatesAlgoT<MESH>::execute(ProgressReporter *reporter,
+                                      MeshHandle mesh_h,
 				      const string &oldsystem,
 				      const string &newsystem)
 {
@@ -65,8 +68,16 @@ ChangeCoordinatesAlgoT<MESH>::execute(MeshHandle mesh_h,
   double theta, phi, r, x, y, z;
   node_iter_type ni; mesh->begin(ni);
   node_iter_type nie; mesh->end(nie);
+
+  typename MESH::Node::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   while (ni != nie)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     Point pO, pE, pN; // point in "Old", "Cartesian", and "New" coordinates
     mesh->get_point(pO, *ni);
 

@@ -43,7 +43,7 @@
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>
@@ -71,9 +71,9 @@ public:
 DECLARE_MAKER(AppendMatrix)
 AppendMatrix::AppendMatrix(GuiContext* ctx)
 : Module("AppendMatrix", ctx, Filter,"Math", "SCIRun"),
-  append_(ctx->subVar("append")),
-  row_(ctx->subVar("row")),
-  front_(ctx->subVar("front"))
+  append_(get_ctx()->subVar("append"), 0),
+  row_(get_ctx()->subVar("row"), 0),
+  front_(get_ctx()->subVar("front"), 0)
 {
 }
 

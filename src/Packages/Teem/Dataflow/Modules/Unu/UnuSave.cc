@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
@@ -68,15 +68,16 @@ DECLARE_MAKER(UnuSave)
 UnuSave::UnuSave(GuiContext* ctx)
   : Module("UnuSave", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), 
-    format_(ctx->subVar("format")),
-    encoding_(ctx->subVar("encoding")),
-    endian_(ctx->subVar("endian")),
-    filename_(ctx->subVar("filename"))
+    format_(get_ctx()->subVar("format"), "nrrd"),
+    encoding_(get_ctx()->subVar("encoding"), "raw"),
+    endian_(get_ctx()->subVar("endian"), "little"),
+    filename_(get_ctx()->subVar("filename"), "")
 {
 }
 
 
-UnuSave::~UnuSave(){
+UnuSave::~UnuSave()
+{
 }
 
 
@@ -99,7 +100,7 @@ UnuSave::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
 
   NrrdIoState *nio = nrrdIoStateNew();
 

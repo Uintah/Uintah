@@ -39,7 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 
@@ -52,8 +52,8 @@ private:
   GuiString maxcol_;
   GuiString minrow_;
   GuiString maxrow_;
-  GuiInt nrow_;
-  GuiInt ncol_;
+  GuiString nrow_;
+  GuiString ncol_;
 
 public:
   Submatrix(GuiContext* ctx);
@@ -67,12 +67,12 @@ DECLARE_MAKER(Submatrix)
 
 Submatrix::Submatrix(GuiContext* ctx)
   : Module("Submatrix", ctx, Filter,"Math", "SCIRun"),
-    mincol_(ctx->subVar("mincol")),
-    maxcol_(ctx->subVar("maxcol")),
-    minrow_(ctx->subVar("minrow")),
-    maxrow_(ctx->subVar("maxrow")),
-    nrow_(ctx->subVar("nrow")),
-    ncol_(ctx->subVar("ncol"))
+    mincol_(get_ctx()->subVar("mincol"), "---"),
+    maxcol_(get_ctx()->subVar("maxcol"), "---"),
+    minrow_(get_ctx()->subVar("minrow"), "---"),
+    maxrow_(get_ctx()->subVar("maxrow"), "---"),
+    nrow_(get_ctx()->subVar("nrow"), "??"),
+    ncol_(get_ctx()->subVar("ncol"), "??")
 {
 }
 
@@ -91,8 +91,8 @@ Submatrix::execute()
   {
     return;
   }
-  nrow_.set(imatrix->nrows());
-  ncol_.set(imatrix->ncols());
+  nrow_.set(to_string(imatrix->nrows()));
+  ncol_.set(to_string(imatrix->ncols()));
   
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   if (!omp)

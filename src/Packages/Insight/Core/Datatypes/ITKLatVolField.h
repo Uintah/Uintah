@@ -49,6 +49,7 @@
 // -- jeroen
 
 
+#include <Packages/Insight/Core/Datatypes/share.h>
 namespace Insight {
 
 template <class Data> class ITKFData3d;
@@ -58,17 +59,17 @@ template <class Data> class ITKLatVolField;
 
 namespace SCIRun {
   
-  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
 }
 
 #include <Core/Containers/LockingHandle.h>

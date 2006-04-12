@@ -23,12 +23,12 @@ Murnahan::~Murnahan()
 
 void Murnahan::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  ProblemSpecP eos_ps = ps->appendChild("EOS");
   eos_ps->setAttribute("type","Murnahan");
-  eos_ps->appendElement("n",n,false,4);
-  eos_ps->appendElement("K",K,false,4);
-  eos_ps->appendElement("rho0",rho0,false,4);
-  eos_ps->appendElement("P0",P0,false,4);
+  eos_ps->appendElement("n",n);
+  eos_ps->appendElement("K",K);
+  eos_ps->appendElement("rho0",rho0);
+  eos_ps->appendElement("P0",P0);
 }
 
 

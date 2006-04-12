@@ -48,7 +48,8 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     if (!child->get("input_file",in))
       throw ProblemSetupException("Need input file for subcomponent", __FILE__, __LINE__);
 
-    UintahParallelComponent* comp = ComponentFactory::create(child, myworld, doAMR);
+    // it will get the component name from the input file, and the uda arg is not needed for normal sims
+    UintahParallelComponent* comp = ComponentFactory::create(child, myworld, doAMR, "", "");
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
     attachPort("sim", sim);
     attachPort("problem spec", scinew ProblemSpecReader(in));
@@ -489,8 +490,8 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 
 void Switcher::addToTimestepXML(ProblemSpecP& spec)
 {
-  spec->appendElement("switcherComponentIndex", (int) d_componentIndex, true);
-  spec->appendElement("switcherState", (int) d_switchState, true);
+  spec->appendElement( "switcherComponentIndex", (int) d_componentIndex );
+  spec->appendElement( "switcherState", (int) d_switchState );
 }
 
 void Switcher::readFromTimestepXML(const ProblemSpecP& spec)

@@ -3,7 +3,7 @@
 
 \section exec Executables
 
-SCIRun2 requires that an MPI service be running.
+Executing parallel components in SCIRun2 requires that an MPI service be running.
 If you're using Lam-MPI, start \b lamd using \b lamboot. 
 <!-- and MPICH? -->
 
@@ -23,6 +23,10 @@ components.
 Examples are written for the bash shell; modify as required for
 other shells.
 
+Add the SCIRun Thirdparty library path to <b>LD_LIBRARY_PATH</b>.
+If you plan to use Babel components, then the path to your SCIRun2 build
+lib directory should also be added to <b>LD_LIBRARY_PATH</b> or configured
+using ldconfig.
 
 <!-- add configuration file information -->
 
@@ -59,9 +63,9 @@ Be sure to include Babel jar files and either the \em all directories to
 component class files or paths to component jar files.
 
 \code
-export CLASSPATH="$BABEL_HOME/lib/babel-0.10.2.jar:\
+export CLASSPATH="$BABEL_HOME/lib/babel-0.11.0.jar:\
 $BABEL_HOME/lib/java-getopt-1.0.7.jar:\
-$BABEL_HOME/lib/sidl-0.10.2.jar:\
+$BABEL_HOME/lib/sidl-0.11.0.jar:\
 $BABEL_HOME/lib/xerces-2.4.0.jar:\
 $BABEL_HOME/lib/xml-apis.jar:\
 $BUILD_DIR/CCA/Components/Babel/MyBabelComponent/MyBabelComponent.jar"

@@ -19,7 +19,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <iostream>
 #include <fstream>
@@ -42,7 +42,7 @@ class Tbon : public Module {
 public:
 
   // Functions required by Module inheritance
-  Tbon(const clString& id);
+  Tbon(const clString& get_id());
   virtual ~Tbon();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -84,18 +84,18 @@ private:
 
 
 // More required stuff...
-extern "C" Module* make_Tbon(const clString& id){
-  return new Tbon(id);
+extern "C" Module* make_Tbon(const clString& get_id()){
+  return new Tbon(get_id());
 }
 
 
 // Constructor
-Tbon::Tbon(const clString& id) 
-  : Module("Tbon", id, Filter), metafilename("metafilename",id,this), 
-    nodebricksize("nodebricksize",id,this), 
-    databricksize("databricksize",id,this), isovalue("isovalue",id,this),
-    timevalue("timevalue",id,this), resolution("resolution",id,this),
-    red("red",id,this), green("green",id,this), blue("blue",id,this)
+Tbon::Tbon(const clString& get_id()) 
+  : Module("Tbon", get_id(), Filter), metafilename("metafilename",get_id(),this), 
+    nodebricksize("nodebricksize",get_id(),this), 
+    databricksize("databricksize",get_id(),this), isovalue("isovalue",get_id(),this),
+    timevalue("timevalue",get_id(),this), resolution("resolution",get_id(),this),
+    red("red",get_id(),this), green("green",get_id(),this), blue("blue",get_id(),this)
 {
   timevalue.set(0);
   isovalue.set(0);
@@ -176,7 +176,7 @@ Tbon::execute()
     tbon = new TbonTree<type>( treesmeta, DX, DY, DZ );
     
     // update UI to reflect current values
-    TCL::execute( id + " updateFrames");
+    TCL::execute( get_id() + " updateFrames");
     /////////////////
     // uncomment for immediate full resolution
     resolution.set( tbon->getDepth() );

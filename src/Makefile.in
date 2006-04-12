@@ -244,11 +244,11 @@ clean::
 	@echo "If you really want to clean up everything in the whole tree,"
 	@echo "type 'make cleanreally'.  If you want to clean this directory"
 	@echo "on down, type:"
-	@echo "   find . -name \"*.o\" -o -name depend.mk -o -name \\"
+	@echo "   find . -name \"*.$(OBJEXT)\" -o -name depend.mk -o -name \\"
 	@echo "                      ii_files -print | xargs rm -rf"
 
 cleanreally::
-	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
@@ -277,25 +277,25 @@ distclean:: clean
 cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
 
 cleanai::
-	rm -f $(patsubst %,%/[a-i]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/[a-i]*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLOBJSUBDIRS))
 cleanAI::
-	rm -f $(patsubst %,%/[A-I]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/[A-I]*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLOBJSUBDIRS))
 cleanjs::
-	rm -f $(patsubst %,%/[j-s]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/[j-s]*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLOBJSUBDIRS))
 cleanJS::
-	rm -f $(patsubst %,%/[J-S]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/[J-S]*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLOBJSUBDIRS))
 cleantz::
-	rm -f $(patsubst %,%/[t-z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/[t-z]*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLOBJSUBDIRS))
 cleanTZ::
-	rm -f $(patsubst %,%/[T-Z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/[T-Z]*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLOBJSUBDIRS))
 cleanrest::
-	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLOBJSUBDIRS))
@@ -310,9 +310,9 @@ cleanrest::
 objs: $(CLEANOBJS)
 
 cleantau:
-	rm -f Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.o
-	rm -f Packages/Uintah/CCA/Components/Schedulers/ThreadPool.o
-	rm -f Packages/Uintah/StandAlone/sus.o
+	rm -f Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.$(OBJEXT)
+	rm -f Packages/Uintah/CCA/Components/Schedulers/ThreadPool.$(OBJEXT)
+	rm -f Packages/Uintah/StandAlone/sus.$(OBJEXT)
 
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path
@@ -321,7 +321,7 @@ ifeq (,$(findstring objs,$(MAKECMDGOALS)))
   ifeq ($(CC_DEPEND_EXT),depend.mk)
     -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
   else
-    -include $(patsubst %.o,$(OBJTOP_ABS)/%.$(CC_DEPEND_EXT), $(CLEANOBJS))
+    -include $(patsubst %.$(OBJEXT),$(OBJTOP_ABS)/%.$(CC_DEPEND_EXT), $(CLEANOBJS))
   endif
 else
   # If we are making the special target "objs", we skip the dependencies.

@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <sstream>
 #include <iostream>
@@ -62,13 +62,16 @@ DECLARE_MAKER(UnuSlice)
 
 UnuSlice::UnuSlice(SCIRun::GuiContext *ctx) : 
   Module("UnuSlice", ctx, Filter, "UnuNtoZ", "Teem"), 
-  axis_(ctx->subVar("axis")),
-  position_(ctx->subVar("position"))
+  axis_(get_ctx()->subVar("axis"), 0),
+  position_(get_ctx()->subVar("position"), 0)
 {
 }
 
-UnuSlice::~UnuSlice() {
+
+UnuSlice::~UnuSlice()
+{
 }
+
 
 void 
 UnuSlice::execute()
@@ -87,7 +90,7 @@ UnuSlice::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
   if (nrrdSlice(nout, nin, axis_.get(), position_.get())) {

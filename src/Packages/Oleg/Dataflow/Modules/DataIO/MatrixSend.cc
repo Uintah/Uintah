@@ -10,7 +10,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
@@ -33,20 +33,20 @@ class OlegSHARE MatrixSend : public Module
  MatrixOPort *omat;
 
  public:
-  MatrixSend(const clString& id);
+  MatrixSend(const clString& get_id());
   virtual ~MatrixSend();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" OlegSHARE Module* make_MatrixSend(const clString& id) 
+extern "C" OlegSHARE Module* make_MatrixSend(const clString& get_id()) 
 {
-  return scinew MatrixSend(id);
+  return scinew MatrixSend(get_id());
 }
 
-MatrixSend::MatrixSend(const clString& id)
-: Module("MatrixSend", id, Filter), hpTCL("hpTCL",id,this)
-//  : Module("MatrixSend", id, Source, "DataIO", "Oleg")
+MatrixSend::MatrixSend(const clString& get_id())
+: Module("MatrixSend", get_id(), Filter), hpTCL("hpTCL",get_id(),this)
+//  : Module("MatrixSend", get_id(), Source, "DataIO", "Oleg")
 {
     imat1=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(imat1);

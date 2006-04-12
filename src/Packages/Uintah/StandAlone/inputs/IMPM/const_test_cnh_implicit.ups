@@ -33,7 +33,7 @@
     <MPM>
 	<time_integrator>implicit</time_integrator>
         <dynamic>false</dynamic>
-        <solver>simple</solver>
+        <solver>petsc</solver>
         <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
         <boundary_traction_faces>[yminus]</boundary_traction_faces>

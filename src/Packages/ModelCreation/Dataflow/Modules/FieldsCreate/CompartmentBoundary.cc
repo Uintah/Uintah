@@ -31,7 +31,7 @@
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace ModelCreation {
 
@@ -56,33 +56,23 @@ private:
 DECLARE_MAKER(CompartmentBoundary)
 CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
   : Module("CompartmentBoundary", ctx, Source, "FieldsCreate", "ModelCreation"),
-    guiuserange_(ctx->subVar("userange")),
-    guiminrange_(ctx->subVar("minrange")),
-    guimaxrange_(ctx->subVar("maxrange")),
-    guiincludeouterboundary_(ctx->subVar("includeouterboundary")),
-    guiinnerboundaryonly_(ctx->subVar("innerboundaryonly"))    
+    guiuserange_(get_ctx()->subVar("userange")),
+    guiminrange_(get_ctx()->subVar("minrange")),
+    guimaxrange_(get_ctx()->subVar("maxrange")),
+    guiincludeouterboundary_(get_ctx()->subVar("includeouterboundary")),
+    guiinnerboundaryonly_(get_ctx()->subVar("innerboundaryonly"))    
 {
 }
 
 void CompartmentBoundary::execute()
 {
-  FieldIPort* iport = dynamic_cast<FieldIPort*>(get_iport(0));
-  if (iport == 0) 
-  {
-    error("Could not find input port");
-    return;
-  }
-
-  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
-  if (oport == 0) 
-  {
-    error("Could not find output port");
-    return;
-  }
-
   FieldHandle ifield, ofield;
+  MatrixHandle ElemLink;
   FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
-
+ 
+  if(!(get_input_handle("Field",ifield,true))) return;
+  if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
+  
   double minrange, maxrange;
   bool   userange, includeouterboundary;
   bool   innerboundaryonly;
@@ -93,8 +83,9 @@ void CompartmentBoundary::execute()
   includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
   innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
 
-  iport->get(ifield);
-  if(algo.CompartmentBoundary(ifield,ofield,minrange,maxrange,userange,includeouterboundary,innerboundaryonly)) oport->send(ofield);
+  if(!(algo.CompartmentBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly))) return;
+  
+  send_output_handle("Field",ofield,true);
 }
 
 } // End namespace ModelCreation

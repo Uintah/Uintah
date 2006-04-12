@@ -46,7 +46,7 @@
  */
 
 
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Datatypes/String.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
@@ -82,7 +82,7 @@ template <class HType>
 GenericReader<HType>::GenericReader(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Source, cat, pack),
-    filename_(ctx->subVar("filename")),
+    filename_(get_ctx()->subVar("filename")),
     old_filemodification_(0),
     importing_(false)
 {
@@ -109,14 +109,14 @@ GenericReader<HType>::execute()
 
   // CODE FOR FILENAME INPUT PORT ////
   StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>(getIPort("Filename")))
+  if (filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename")))
   {
     StringHandle filenameH;
     filenameport->get(filenameH);
     if (filenameH.get_rep())
     {
       filename_.set(filenameH->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
   ////////////////////////////////////
@@ -191,7 +191,7 @@ GenericReader<HType>::execute()
   }
 
   // Send the data downstream.
-  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)getOPort(0);
+  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_output_port(0);
   if (!outport) {
     error("Unable to initialize oport.");
     return;

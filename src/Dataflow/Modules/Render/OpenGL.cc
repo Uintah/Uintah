@@ -40,23 +40,23 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
+#include <sci_values.h>
+
 #include <sci_defs/bits_defs.h>
+#include <sci_defs/image_defs.h>
+
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
 #include <Core/Geom/GeomViewerItem.h>
-#include <sci_values.h>
 
-#ifdef HAVE_MAGICK
-namespace C_Magick {
-#include <magick/api.h>
-}
+#if defined(HAVE_PNG) && HAVE_PNG
+#  include <png.h>
 #endif
 
 #include <sgi_stl_warnings_off.h>
@@ -64,27 +64,27 @@ namespace C_Magick {
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
-#include <Core/Thread/Time.h>
-#undef near
-#undef far
-#undef min
-#undef max
-#define SCISHARE __declspec(dllimport)
+#  include <Core/Thread/Time.h>
+#  undef near
+#  undef far
+#  undef min
+#  undef max
+#  define SCISHARE __declspec(dllimport)
 #else
-#define SCISHARE
+#  define SCISHARE
 #endif
 
 extern "C" SCISHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
-#define DO_REDRAW 0
-#define DO_PICK 1
-#define DO_GETDATA 2
-#define REDRAW_DONE 4
-#define PICK_DONE 5
-#define DO_IMAGE 6
-#define IMAGE_DONE 7
+#define DO_REDRAW     0
+#define DO_PICK       1
+#define DO_GETDATA    2
+#define REDRAW_DONE   4
+#define PICK_DONE     5
+#define DO_IMAGE      6
+#define IMAGE_DONE    7
 #define DO_SYNC_FRAME 8
 
 
@@ -499,13 +499,38 @@ void
 OpenGL::render_and_save_image(int x, int y,
                               const string& fname, const string &ftype)
 {
+  bool use_convert = false;
 
-#ifndef HAVE_MAGICK
+#if defined(HAVE_PNG) && HAVE_PNG
+
+  bool write_png = false;
+  // Either the user specified the type to be ppm or raw (in that case
+  // we create that type of image), or they specified the "by_extension"
+  // type in which case we need to look at the extension and try to write
+  // out a temporary png and then use convert if it is available to write
+  // out the appropriate image.
   if (ftype != "ppm" && ftype != "raw")
-  {
-    cerr << "Error - ImageMagick is not enabled.  Only .ppm or .raw files are supported.\n";
-    return;
-  }
+    {
+      // determine the extension
+      string ext = fname.substr(fname.find(".", 0)+1, fname.length());
+
+      // FIX ME convert ext to lower case
+      for(unsigned int i=0; i<ext.size(); i++) {
+	ext[i] = tolower(ext[i]);
+      }
+
+      if (ext != "png") {
+	if (system("convert -version") != 0) {
+	  cerr << "Error - Unsupported extension " << ext << ". Program \"convert\" not found in the path.\n";
+	  return;
+	} else {
+	  use_convert = true;
+	  write_png = true;
+	}
+      } else {
+	write_png = true;
+      }
+    }
 #endif
 
   cout << "Saving " + to_string(x) + "x" + to_string(y) +
@@ -548,12 +573,42 @@ OpenGL::render_and_save_image(int x, int y,
   const int ncols = (int)ceil(hi_res_.ncols);
 
   ofstream *image_file = NULL;
-#ifdef HAVE_MAGICK
-  C_Magick::Image *image = NULL;
-  C_Magick::ImageInfo *image_info = NULL;
+
+
+#if defined(HAVE_PNG) && HAVE_PNG
+  /* create png struct */
+  png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+  if (png == NULL) {
+    cerr << "ERROR - Failed to create PNG write struct\n";
+    return;
+  }
+
+  /* create image info struct */
+  png_infop info = png_create_info_struct(png);
+
+  if (info == NULL) {
+    cerr << "ERROR - Failed to create PNG info struct\n";
+    png_destroy_write_struct(&png, NULL);
+    return;
+  }
+
+  if (setjmp(png_jmpbuf(png))) {
+    cerr << "ERROR - Initializing PNG.\n";
+    png_destroy_write_struct(&png, &info);
+    return;
+  }  
+
 #endif
+  ASSERT(sci_getenv("SCIRUN_TMP_DIR"));
+
+  const char * tmp_dir(sci_getenv("SCIRUN_TMP_DIR"));
+
+  const string tmp_file = string (tmp_dir + string("/scirun_temp_png.png"));  
+
+
   int channel_bytes, num_channels;
-  bool do_magick;
+  FILE *fp = NULL;
 
   if (ftype == "ppm" || ftype == "raw")
   {
@@ -573,7 +628,6 @@ OpenGL::render_and_save_image(int x, int y,
     else
       num_channels = 4;
 
-    do_magick = false;
     if (ftype == "ppm")
     {
       (*image_file) << "P6" << std::endl;
@@ -602,18 +656,30 @@ OpenGL::render_and_save_image(int x, int y,
   }
   else
   {
-#ifdef HAVE_MAGICK
-    C_Magick::InitializeMagick(0);
-    num_channels = 4;
-    channel_bytes = 2;
-    do_magick = true;
-    image_info=C_Magick::CloneImageInfo((C_Magick::ImageInfo *)0);
-    strcpy(image_info->filename,fname.c_str());
-    image_info->colorspace = C_Magick::RGBColorspace;
-    image_info->quality = 90;
-    image=C_Magick::AllocateImage(image_info);
-    image->columns=hi_res_.resx;
-    image->rows=hi_res_.resy;
+
+
+#if defined(HAVE_PNG) && HAVE_PNG
+    channel_bytes = 1;
+    num_channels = 3;
+
+    if (use_convert) {
+      /* write out temporary png in /tmp with same root */
+      // determine the extension      
+      fp = fopen(tmp_file.c_str(), "wb");
+    } else {
+      fp = fopen(fname.c_str(), "wb");
+    }
+
+    /* initialize IO */
+    png_init_io(png, fp);
+    
+    png_set_IHDR(png, info, hi_res_.resx, hi_res_.resy,
+		 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    /* write header */
+    png_write_info(png, info);      
+    
 #endif
   }
 
@@ -631,17 +697,9 @@ OpenGL::render_and_save_image(int x, int y,
     int read_height = hi_res_.resy - hi_res_.row * vp[3];
     read_height = (vp[3] < read_height) ? vp[3] : read_height;
 
-    if (do_magick)
-    {
-#ifdef HAVE_MAGICK
-      pixels = (unsigned char *)C_Magick::SetImagePixels
-        (image, 0, vp[3]*(nrows - 1 - hi_res_.row), hi_res_.resx,read_height);
-#endif
-    }
-
     if (!pixels)
     {
-      cerr << "No ImageMagick Memory! Aborting...\n";
+      cerr << "No Memory! Aborting...\n";
       break;
     }
 
@@ -685,38 +743,59 @@ OpenGL::render_and_save_image(int x, int y,
       memcpy(top_row, bot_row, hi_res_.resx*pix_size);
       memcpy(bot_row, tmp_row, hi_res_.resx*pix_size);
     }
-    if (do_magick)
+
+#if defined(HAVE_PNG) && HAVE_PNG
+    if (write_png)
     {
-#ifdef HAVE_MAGICK
-      C_Magick::SyncImagePixels(image);
-#endif
+      // run loop to divide memory into "row" chunks
+      png_bytep *rows = (png_bytep*)malloc(sizeof(png_bytep)*hi_res_.resy);
+      for(int hi=0; hi < hi_res_.resy; hi++) {
+	rows[hi] = &((png_bytep)pixels)[hi*hi_res_.resx*num_channels];
+      }
+
+      png_set_rows(png, info, rows);
+
+      png_write_image(png, rows);
     }
     else
+#endif
     {
       image_file->write((char *)pixels, hi_res_.resx*read_height*pix_size);
     }
   }
+
   gui_->lock();
 
   // Set OpenGL back to nice PixelStore values for somebody else
   glPixelStorei(GL_PACK_SKIP_PIXELS,0);
   glPixelStorei(GL_PACK_ROW_LENGTH,0);
 
-  if (do_magick)
-  {
-#ifdef HAVE_MAGICK
-    if (!C_Magick::WriteImage(image_info,image))
+#if defined(HAVE_PNG) && HAVE_PNG
+  if (write_png)
     {
-      cerr << "\nCannont Write " << fname << " because: "
-           << image->exception.reason << std::endl;
-    }
-        
-    C_Magick::DestroyImageInfo(image_info);
-    C_Magick::DestroyImage(image);
-    C_Magick::DestroyMagick();
-#endif
+      /* end write */
+      if (setjmp(png_jmpbuf(png))) {
+	cerr << "Error during end of PNG write\n";
+	png_destroy_write_struct(&png, &info);
+	return;
+      }
+      
+      /* finish writing */
+      png_write_end(png, NULL);
+      
+      /* more clean up */
+      png_destroy_write_struct(&png, &info);
+      fclose(fp);
+
+      if (use_convert) {
+	if (system(string("convert " + tmp_file + " " + fname).c_str()) != 0) {
+	  cerr << "ERROR - Using convert to write image.\n";
+	}
+	system(string("rm " + tmp_file).c_str());
+      }
   }
   else
+#endif
   {
     image_file->close();
     delete[] pixels;
@@ -1071,7 +1150,7 @@ OpenGL::redraw_frame()
       }
         
       // Wait for the right time before swapping buffers
-      //gui->unlock();
+      //get_gui()->unlock();
       const double realtime = t * frametime;
       if (animate_num_frames_>1)
       {
@@ -1943,8 +2022,8 @@ OpenGL::pick_scene( int x, int y, Point *p )
 bool
 OpenGL::compute_depth(const View& view, double& znear, double& zfar)
 {
-  znear = MAXDOUBLE;
-  zfar =- MAXDOUBLE;
+  znear = DBL_MAX;
+  zfar =- DBL_MAX;
   BBox bb;
   view_window_->get_bounds(bb);
   if (bb.valid())
@@ -1999,8 +2078,8 @@ bool
 OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar,
                           bool visible_only)
 {
-  znear = MAXDOUBLE;
-  zfar = -MAXDOUBLE;
+  znear = DBL_MAX;
+  zfar = -DBL_MAX;
   BBox bb;
   if (visible_only)
   {

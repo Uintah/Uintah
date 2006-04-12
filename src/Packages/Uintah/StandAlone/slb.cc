@@ -90,7 +90,7 @@ void bisect(const string& div, int num, int factor,
     
     if (extraCells != IntVector(0,0,0))
       box->appendElement("extraCells", extraCells);
-    box->appendElement("resolution", res, true);
+    box->appendElement("resolution", res);
 
     cerr << idx++ << ": patch: " << low << "-" << high << ',' 
          << low_point << "-" << high_point << '\n';

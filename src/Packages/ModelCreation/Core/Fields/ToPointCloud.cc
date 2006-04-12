@@ -29,6 +29,7 @@
 // Get all the class definitions. 
 #include <Packages/ModelCreation/Core/Fields/ToPointCloud.h>
 
+
 // As we already included DynamicAlgorithm.h in the header we do not need to
 // include it again here.
 
@@ -109,9 +110,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
     fo.set_basis_type("NoDataBasis");
   }
   
-  // We have now figured out the input and output type
-  
-  // Step 2: Build information structure for the dynamic compilation
+  // Step 3: Build information structure for the dynamic compilation
   
   // The only object we need to build to perform a dynamic compilation is the
   // CompileInfo. This object is created and we use the handle to the object
@@ -179,5 +178,11 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   // handle any error messages here, they automatically are forwarded to the user. 
   return(algo->ToPointCloud(pr,input,output));
 }
+
+bool ToPointCloudAlgo::testinput(FieldHandle input)
+{
+  return(false);
+}
+
 
 } // End namespace ModelCreation

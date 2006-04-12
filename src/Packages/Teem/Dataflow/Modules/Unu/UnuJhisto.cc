@@ -40,7 +40,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
@@ -77,8 +77,8 @@ public:
 DECLARE_MAKER(UnuJhisto)
 UnuJhisto::UnuJhisto(GuiContext* ctx)
   : Module("UnuJhisto", ctx, Source, "UnuAtoM", "Teem"),
-    bins_(ctx->subVar("bins")), mins_(ctx->subVar("mins")), 
-    maxs_(ctx->subVar("maxs")), type_(ctx->subVar("type")),
+    bins_(get_ctx()->subVar("bins")), mins_(get_ctx()->subVar("mins")), 
+    maxs_(get_ctx()->subVar("maxs")), type_(get_ctx()->subVar("type")),
     old_bins_(""), old_mins_(""), old_maxs_(""), old_type_(""),
     weight_generation_(-1), inrrd1_generation_(-1),
     num_inrrd2_(-1)
@@ -117,13 +117,13 @@ UnuJhisto::execute()
       need_execute = true;
       weight_generation_ = weight_handle->generation;
     }
-    weight = weight_handle->nrrd;
+    weight = weight_handle->nrrd_;
   }
 
   if (!inrrd1_->get(nrrd_handle1))
     return;
   else
-    nin1 = nrrd_handle1->nrrd;
+    nin1 = nrrd_handle1->nrrd_;
 
   if (!nrrd_handle1.get_rep()) {
     error("Empty InputNrrd1.");
@@ -148,8 +148,8 @@ UnuJhisto::execute()
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
     NrrdDataHandle nrrd;
     if (inrrd->get(nrrd) && nrrd.get_rep()) {
-      if (nrrd->nrrd->dim > max_dim)
-	max_dim = nrrd->nrrd->dim;
+      if (nrrd->nrrd_->dim > max_dim)
+	max_dim = nrrd->nrrd_->dim;
       
       nrrds.push_back(nrrd);
     }
@@ -206,7 +206,7 @@ UnuJhisto::execute()
     }
     
     // get bins
-    int *bin = new int[nrrds.size()];
+    size_t *bin = new size_t[nrrds.size()];
     i=0, start=0;
     int which = 0, end=0, counter=0;
     inword = false;
@@ -241,7 +241,7 @@ UnuJhisto::execute()
     Nrrd **nrrds_array = scinew Nrrd *[nrrds.size()];
     NrrdRange **range = scinew NrrdRange *[nrrds.size()];
     for (unsigned int d = 0; d< nrrds.size(); d++) {
-      nrrds_array[d] = nrrds[d]->nrrd;
+      nrrds_array[d] = nrrds[d]->nrrd_;
       range[d] = nrrdRangeNew(AIR_NAN, AIR_NAN);
     }
     
@@ -400,7 +400,7 @@ UnuJhisto::execute()
     }
 
     if (nrrdHistoJoint(nout, nrrds_array, range,
-		       (int)nrrds.size(), weight, bin,
+		       (unsigned int)nrrds.size(), weight, bin,
                        string_to_nrrd_type(type_.get()), 
 		       clamp))
     {
@@ -421,9 +421,9 @@ UnuJhisto::execute()
 	if (airIsNaN(range[0]->max)) range[0]->max = minmax->max;
 	nrrdRangeNix(minmax);
       }
-      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_min", 
+      nrrdKeyValueAdd(last_nrrdH_->nrrd_, "jhisto_nrrd0_min", 
 		      to_string(range[0]->min).c_str());
-      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", 
+      nrrdKeyValueAdd(last_nrrdH_->nrrd_, "jhisto_nrrd0_max", 
 		      to_string(range[0]->max).c_str());
     }
     

@@ -38,11 +38,13 @@ itcl_class Uintah_Selectors_FieldExtractor {
 	global $this-sMatNum;
 	global $this-level
         global $this-remove_boundary_cells
+        global $this-want_all_levels
 	set $this-sVar ""
 	set $this-sMatNum 0
 	set $this-level 0
 	set $this-tcl_status "Idle"
         set $this-remove_boundary_cells 0
+        set $this-want_all_levels 0
     } 
     
     method ui {} { 
@@ -152,15 +154,19 @@ itcl_class Uintah_Selectors_FieldExtractor {
             $buttontype $w.lf.bf.b$j -text $j \
                 -variable $this-level  -value $j -command $c
             pack $w.lf.bf.b$j -side left
+            bind $w.lf.bf.b$j <ButtonRelease> "set $this-want_all_levels 0"
         }
  
        if {$levels > 1} {
             $buttontype $w.lf.bf.b$levels -text all \
                 -variable $this-level -value $levels -command $c
             pack $w.lf.bf.b$levels -side left
+            bind $w.lf.bf.b$j <ButtonRelease> "set $this-want_all_levels 1"
         }
-	
-	if { [set $this-level] > $levels } {
+        
+        if { [set $this-want_all_levels] == 1 } {
+            set $this-level $levels
+        } elseif { [set $this-level] > $levels } {
 	    set $this-level [expr $levels -1]
 	}
     }

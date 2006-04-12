@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <iostream>
 using std::endl;
@@ -53,7 +53,7 @@ using namespace SCIRun;
 
 class UnuPermute : public Module {
 public:
-  int valid_data(int* axes);
+  int valid_data(unsigned int* axes);
   UnuPermute(GuiContext *ctx);
   virtual ~UnuPermute();
   virtual void execute();
@@ -65,7 +65,7 @@ private:
   GuiInt               dim_;
   GuiInt               uis_;
   vector<GuiInt*>      axes_;
-  vector<int>          last_axes_;
+  vector<unsigned int> last_axes_;
   int                  last_generation_;
   NrrdDataHandle       last_nrrdH_;
 };
@@ -77,7 +77,7 @@ DECLARE_MAKER(UnuPermute)
 
 UnuPermute::UnuPermute(GuiContext *ctx) : 
   Module("UnuPermute", ctx, Filter, "UnuNtoZ", "Teem"),
-  dim_(ctx->subVar("dim")), uis_(ctx->subVar("uis")),
+  dim_(get_ctx()->subVar("dim")), uis_(get_ctx()->subVar("uis")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
@@ -87,7 +87,7 @@ UnuPermute::UnuPermute(GuiContext *ctx) :
   for (int a = 0; a < 4; a++) {
     ostringstream str;
     str << "axis" << a;
-    axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+    axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
     last_axes_.push_back(a);
   }
 }
@@ -98,11 +98,11 @@ UnuPermute::~UnuPermute() {
 
 // check to see that the axes specified are in bounds
 int
-UnuPermute::valid_data(int* axes) {
+UnuPermute::valid_data(unsigned int* axes) {
 
-  vector<int> exists(dim_.get(), 0);
+  vector<unsigned int> exists(dim_.get(), 0);
   for (int a = 0; a < dim_.get(); a++) {
-    if (axes[a] < dim_.get() && !exists[axes[a]]) {
+    if (axes[a] < (unsigned int) dim_.get() && !exists[axes[a]]) {
       exists[axes[a]] = 1;
     } else {
       error("Bad axis assignments!");
@@ -127,7 +127,7 @@ UnuPermute::execute()
     return;
   }
 
-  dim_.set(nrrdH->nrrd->dim);
+  dim_.set(nrrdH->nrrd_->dim);
 
   if (dim_.get() == 0) { return; }
 
@@ -141,39 +141,39 @@ UnuPermute::execute()
       ostringstream str, str2;
       str << "axis" << i;
       str2 << i;
-      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
       last_axes_.push_back(axes_[i]->get());
-      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_axis " + str2.str()));
     }
   }
 
   last_generation_ = nrrdH->generation;
-  dim_.set(nrrdH->nrrd->dim);
+  dim_.set(nrrdH->nrrd_->dim);
   dim_.reset();
 
   // remove any unused uis or add any needes uis
-  if (uis_.get() > nrrdH->nrrd->dim) {
+  if ((unsigned int) uis_.get() > nrrdH->nrrd_->dim) {
     // remove them
-    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+    for(unsigned int i=uis_.get()-1; i>=nrrdH->nrrd_->dim; i--) {
       ostringstream str;
       str << i;
       vector<GuiInt*>::iterator iter = axes_.end();
-      vector<int>::iterator iter2 = last_axes_.end();
+      vector<unsigned int>::iterator iter2 = last_axes_.end();
       axes_.erase(iter, iter);
       last_axes_.erase(iter2, iter2);
-      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+      get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
-  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    uis_.set(nrrdH->nrrd_->dim);
+  } else if ((unsigned int) uis_.get() < nrrdH->nrrd_->dim) {
     for (int i=uis_.get()-1; i< dim_.get(); i++) {
       ostringstream str, str2;
       str << "axis" << i;
       str2 << i;
-      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
       last_axes_.push_back(i);
-      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_axis " + str2.str()));
     }
-    uis_.set(nrrdH->nrrd->dim);
+    uis_.set(nrrdH->nrrd_->dim);
   }
 
   for (int a = 0; a < dim_.get(); a++) {
@@ -189,7 +189,7 @@ UnuPermute::execute()
   }
 
   for (int a = 0; a < dim_.get(); a++) {
-    if (last_axes_[a] != axes_[a]->get()) {
+    if (last_axes_[a] != (unsigned int) axes_[a]->get()) {
       changed = true;
       last_axes_[a] = axes_[a]->get();
     }
@@ -202,10 +202,10 @@ UnuPermute::execute()
 
 
 
-  int* axp = &(last_axes_[0]);
+  unsigned int* axp = &(last_axes_[0]);
   if (!valid_data(axp)) return;
 
-  Nrrd *nin = nrrdH->nrrd;
+  Nrrd *nin = nrrdH->nrrd_;
   Nrrd *nout = nrrdNew();
 
   nrrdAxesPermute(nout, nin, axp);
@@ -229,9 +229,9 @@ UnuPermute::tcl_command(GuiArgs& args, void* userdata)
       ostringstream str, str2;
       str << "axis" << i;
       str2 << i;
-      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
       last_axes_.push_back(i);
-      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+      get_gui()->execute(get_id().c_str() + string(" make_axis " + str2.str()));
       uis_.set(uis_.get() + 1);
   }
   else if( args[1] == "remove_axis" ) 
@@ -241,10 +241,10 @@ UnuPermute::tcl_command(GuiArgs& args, void* userdata)
     ostringstream str;
     str << i;
     vector<GuiInt*>::iterator iter = axes_.end();
-    vector<int>::iterator iter2 = last_axes_.end();
+    vector<unsigned int>::iterator iter2 = last_axes_.end();
     axes_.erase(iter, iter);
     last_axes_.erase(iter2, iter2);
-    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    get_gui()->execute(get_id().c_str() + string(" clear_axis " + str.str()));
     uis_.set(uis_.get() - 1);
   }
   else 

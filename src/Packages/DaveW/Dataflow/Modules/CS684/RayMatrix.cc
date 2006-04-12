@@ -14,8 +14,8 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Core/Datatypes/VoidStar.h>
 #define Colormap XColormap
 #include <GL/gl.h>
@@ -82,7 +82,7 @@ class RayMatrix : public Module {
     int min, max, num;
     double spacing;
 public:
-    RayMatrix(const clString& id);
+    RayMatrix(const clString& get_id());
     virtual ~RayMatrix();
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
@@ -93,19 +93,19 @@ public:
 
 static RayMatrix* current_drawer=0;
 
-extern "C" Module* make_RayMatrix(const clString& id)
+extern "C" Module* make_RayMatrix(const clString& get_id())
 {
-    return scinew RayMatrix(id);
+    return scinew RayMatrix(get_id());
 }
 
 static clString module_name("RayMatrix");
 
-RayMatrix::RayMatrix(const clString& id)
-: Module("RayMatrix", id, Source), tclFName("tclFname", id, this),
-  tclSpectrum("tclSpectrum", id, this), tclLType("tclLType", id, this),
-  tclDiff("tclDiff", id, this), tclSpec("tclSpec", id, this),
-  tclMin("tclMin", id, this), tclMax("tclMax", id, this),
-  tclNum("tclNum", id, this), xyz(0), scale("scale", id, this)
+RayMatrix::RayMatrix(const clString& get_id())
+: Module("RayMatrix", get_id(), Source), tclFName("tclFname", get_id(), this),
+  tclSpectrum("tclSpectrum", get_id(), this), tclLType("tclLType", get_id(), this),
+  tclDiff("tclDiff", get_id(), this), tclSpec("tclSpec", get_id(), this),
+  tclMin("tclMin", get_id(), this), tclMax("tclMax", get_id(), this),
+  tclNum("tclNum", get_id(), this), xyz(0), scale("scale", get_id(), this)
 {
     // Create the input port
     iRM = scinew VoidStarIPort(this, "ImageRM", VoidStarIPort::Atomic);
@@ -408,7 +408,7 @@ void RayMatrix::tcl_command(TCLArgs& args, void* userdata) {
 
 int RayMatrix::makeCurrent() {
     TCLTask::lock();
-    clString myname(clString(".ui")+id+".gl.gl");
+    clString myname(clString(".ui")+get_id()+".gl.gl");
     char *myn=strdup(myname());
     tkwin=Tk_NameToWindow(the_interp, myn, Tk_MainWindow(the_interp));
     if(!tkwin){

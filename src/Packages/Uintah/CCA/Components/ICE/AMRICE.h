@@ -152,30 +152,20 @@ namespace Uintah {
                                       const PatchSubset* coarsePatches,
                                       const MaterialSubset* matls,
                                       DataWarehouse*,
-                                      DataWarehouse* new_dw);                                      
- 
-    void scheduleReflux(const LevelP& coarseLevel,
-                        SchedulerP& sched);
-
-    template<class T>
-    void refluxOperator(CCVariable<T>& q_CC_coarse,
-                        CCVariable<double>& rho_CC_coarse,
-                        constCCVariable<double>& cv,
-                        const string& fineVarLabel,
-                        const int indx,
-                        const Patch* coarsePatch,
-                        const Patch* finePatch,
-                        const Level* coarseLevel,
-                        const Level* fineLevel,
-                        DataWarehouse* new_dw);
-
-                
-    void reflux(const ProcessorGroup*,
-                const PatchSubset* coarsePatches,
-                const MaterialSubset* matls,
-                DataWarehouse*,
-                DataWarehouse* new_dw);               
-
+                                      DataWarehouse* new_dw);
+    // bullet proofing
+    void reflux_BP_zero_CFI_cells(const ProcessorGroup*,
+                                      const PatchSubset* finePatches,
+                                      const MaterialSubset*,
+                                       DataWarehouse*,
+                                       DataWarehouse*);
+                        
+    void reflux_BP_check_CFI_cells(const ProcessorGroup*,
+                                   const PatchSubset* finePatches,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse*,
+                                   string description);
                  
     void errorEstimate(const ProcessorGroup*,
                        const PatchSubset* patches,
@@ -226,7 +216,8 @@ void ICE::refluxOperator_applyCorrectionFluxes(
                               const Patch* finePatch,
                               const Level* coarseLevel,
                               const Level* fineLevel,
-                              DataWarehouse* new_dw)
+                              DataWarehouse* new_dw,
+                              const int one_zero)
 {
   // form the fine patch flux label names
   string x_name = varLabel + "_X_FC_flux";
@@ -257,50 +248,63 @@ void ICE::refluxOperator_applyCorrectionFluxes(
   for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
        iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
     Patch::FaceType patchFace = *iter;
- 
+
     // determine the iterator for the coarse level.
     IntVector c_FC_offset;
     CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
     bool isRight_CP_FP_pair;
     refluxCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
-                               c_iter ,c_FC_offset,isRight_CP_FP_pair);
-
-    // eject if this is not the right coarse/fine patch pair
-    if (isRight_CP_FP_pair == false ){
-      return;
-    };
-
-#if 0    
-    cout << name << " l " << l << " h " << h << endl;
-    cout << " coarsePatch " << *coarsePatch << endl;
-    cout << " finePatch " << *finePatch << endl; 
-#endif    
+                               c_iter ,c_FC_offset,isRight_CP_FP_pair,
+                               "applyRefluxCorrection");
     
-    //__________________________________
-    // Add fine patch face fluxes correction to the coarse cells
-    // c_CC:    coarse level cell center index
-    // c_FC:    coarse level face center index
-    if(patchFace == Patch::xminus || patchFace == Patch::xplus){
-      for(; !c_iter.done(); c_iter++){
-        IntVector c_CC = *c_iter;
-        IntVector c_FC = c_CC + c_FC_offset;                
-        q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
+                               
+    if (isRight_CP_FP_pair ){  // if the right coarse/fine patch pair
+
+/*`==========TESTING==========*/
+#if 0
+  cout << " ------------ refluxOperator_applyCorrectionFluxes " << varLabel<< endl; 
+  cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
+  cout << finePatch->getFaceName(patchFace)<<  " coarsePatch " << *coarsePatch << endl;
+  cout << "      finePatch   " << *finePatch << endl; 
+#endif 
+/*===========TESTING==========`*/
+      //__________________________________
+      // Add fine patch face fluxes correction to the coarse cells
+      // c_CC:    coarse level cell center index
+      // c_FC:    coarse level face center index
+      int count = finePatch->getFaceMark(patchFace);
+      
+      if(patchFace == Patch::xminus || patchFace == Patch::xplus){
+        for(; !c_iter.done(); c_iter++){
+          IntVector c_CC = *c_iter;
+          IntVector c_FC = c_CC + c_FC_offset;                
+          q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
+                
+          count += one_zero;                       // keep track of how that face                        
+          finePatch->setFaceMark(patchFace,count); // has been touched
+        }
       }
-    }
-    if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-      for(; !c_iter.done(); c_iter++){
-         IntVector c_CC = *c_iter;
-         IntVector c_FC = c_CC + c_FC_offset;
-         q_CC_coarse[c_CC] += Q_Y_coarse_flux[c_FC];
+      if(patchFace == Patch::yminus || patchFace == Patch::yplus){
+        for(; !c_iter.done(); c_iter++){
+          IntVector c_CC = *c_iter;
+          IntVector c_FC = c_CC + c_FC_offset;
+          q_CC_coarse[c_CC] += Q_Y_coarse_flux[c_FC];
+          
+          count += one_zero;                              
+          finePatch->setFaceMark(patchFace,count);
+        }
       }
-    }
-    if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-      for(; !c_iter.done(); c_iter++){
-         IntVector c_CC = *c_iter;
-         IntVector c_FC = c_CC + c_FC_offset;             
-         q_CC_coarse[c_CC] += Q_Z_coarse_flux[c_FC];
+      if(patchFace == Patch::zminus || patchFace == Patch::zplus){
+        for(; !c_iter.done(); c_iter++){
+          IntVector c_CC = *c_iter;
+          IntVector c_FC = c_CC + c_FC_offset;             
+          q_CC_coarse[c_CC] += Q_Z_coarse_flux[c_FC];
+          
+          count += one_zero;                              
+          finePatch->setFaceMark(patchFace,count);
+        }
       }
-    }
+    }  // is the right coarse/fine patch pair
   }  // coarseFineInterface faces
 } 
 
@@ -560,7 +564,8 @@ void ICE::refluxOperator_computeCorrectionFluxes(
                               const Patch* finePatch,
                               const Level* coarseLevel,
                               const Level* fineLevel,
-                              DataWarehouse* new_dw)
+                              DataWarehouse* new_dw,
+                              const int one_zero)
 {
   // form the fine patch flux label names
   string x_name = fineVarLabel + "_X_FC_flux";
@@ -673,17 +678,13 @@ void ICE::refluxOperator_computeCorrectionFluxes(
     switch2 = 0.0;   // 
     switch3 = 0.0;
   }
-
-
-  
-  
   
   //__________________________________
   // Iterate over coarsefine interface faces
   vector<Patch::FaceType>::const_iterator iter;  
   for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
        iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
-    Patch::FaceType patchFace = *iter;   
+    Patch::FaceType patchFace = *iter;
     
     if (!do_x && (patchFace == Patch::xminus || patchFace == Patch::xplus))
       continue;
@@ -697,73 +698,77 @@ void ICE::refluxOperator_computeCorrectionFluxes(
     CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
     bool isRight_CP_FP_pair;
     refluxCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
-                               c_iter ,c_FC_offset,isRight_CP_FP_pair);
+                               c_iter ,c_FC_offset,isRight_CP_FP_pair,
+                               "computeRefluxCorrection");
 
-    // eject if this is not the right coarse/fine patch pair
-    if (isRight_CP_FP_pair == false ){
-      return;
-    }
-    
-    // Offset for the fine cell loop (fineStart)
-    // shift (+-refinement ratio) for x-, y-, z- finePatch faces
-    // shift 0 cells              for x+, y+, z+ finePatchFaces
-    
-    string name = finePatch->getFaceName(patchFace);
-    IntVector offset = finePatch->faceDirection(patchFace);;
-    IntVector f_offset(0,0,0);
-    double c_FaceNormal = 0;
-    double f_FaceNormal = 0;
-    
-    if(name == "xminus" || name == "yminus" || name == "zminus"){
-      f_offset = r_Ratio * -offset;
-      c_FaceNormal = +1;
-      f_FaceNormal = -1;
-    }
-    if(name == "xplus" || name == "yplus" || name == "zplus"){
-      c_FaceNormal = -1;
-      f_FaceNormal = +1;
-    } 
+    // 
+    if (isRight_CP_FP_pair){
 
-    
+      // Offset for the fine cell loop (fineStart)
+      // shift (+-refinement ratio) for x-, y-, z- finePatch faces
+      // shift 0 cells              for x+, y+, z+ finePatchFaces
+
+      string name = finePatch->getFaceName(patchFace);
+      IntVector offset = finePatch->faceDirection(patchFace);
+      IntVector f_offset(0,0,0);
+      double c_FaceNormal = 0;
+      double f_FaceNormal = 0;
+
+      if(name == "xminus" || name == "yminus" || name == "zminus"){
+        f_offset = r_Ratio * -offset;
+        c_FaceNormal = +1;
+        f_FaceNormal = -1;
+      }
+      if(name == "xplus" || name == "yplus" || name == "zplus"){
+        c_FaceNormal = -1;
+        f_FaceNormal = +1;
+      } 
+
+
 /*`==========TESTING==========*/
 #if SPEW
   cout << " ------------ refluxOperator_computeCorrectionFluxes " << fineVarLabel<< endl; 
   IntVector half  = (c_iter.end() - c_iter.begin() )/IntVector(2,2,2) + c_iter.begin();
+  cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
   cout <<name <<  " coarsePatch " << *coarsePatch << endl;
   cout << "      finePatch   " << *finePatch << endl; 
 #endif 
 /*===========TESTING==========`*/
-    //__________________________________
-    // Add fine patch face fluxes to the coarse cells
-    // c_CC f_CC:    coarse/fine level cell center index
-    // c_FC f_FC:    coarse/fine level face center index
-    if(patchFace == Patch::xminus || patchFace == Patch::xplus){    // X+ X-
-    
       //__________________________________
-      // sum all of the fluxes passing from the 
-      // fine level to the coarse level
-      for(; !c_iter.done(); c_iter++){
-         IntVector c_CC = *c_iter;
-         IntVector c_FC = c_CC + c_FC_offset;
-         
-         T sum_fineLevelFlux(0.0);
-         IntVector fineStart = coarseLevel->mapCellToFiner(c_CC) + f_offset;
-         IntVector rRatio_X(1,r_Ratio.y(), r_Ratio.z()); 
-         
-         for(CellIterator inside(IntVector(0,0,0),rRatio_X );!inside.done(); inside++){
-           IntVector f_FC = fineStart + *inside;
-           sum_fineLevelFlux += Q_X_fine_flux[f_FC];
-         }
-         // Q_CC = mass * q_CC = cellVol * rho * q_CC
+      // Add fine patch face fluxes to the coarse cells
+      // c_CC f_CC:    coarse/fine level cell center index
+      // c_FC f_FC:    coarse/fine level face center index
+      int count = finePatch->getFaceMark(patchFace);
+      if(patchFace == Patch::xminus || patchFace == Patch::xplus){    // X+ X-
+        
+        //__________________________________
+        // sum all of the fluxes passing from the 
+        // fine level to the coarse level
+ 
+        for(; !c_iter.done(); c_iter++){
+           IntVector c_CC = *c_iter;
+           IntVector c_FC = c_CC + c_FC_offset;
 
-         double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
-         double denominator = oneZero
-                            + switch1 * coarseCellVol     
-                            + switch2 * mass_CC_coarse
-                            + switch3 * mass_CC_coarse * cv[c_CC];          
-                            
-         Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal*sum_fineLevelFlux) /denominator;
-         
+           T sum_fineLevelFlux(0.0);
+           IntVector fineStart = coarseLevel->mapCellToFiner(c_CC) + f_offset;
+           IntVector rRatio_X(1,r_Ratio.y(), r_Ratio.z()); 
+
+           for(CellIterator inside(IntVector(0,0,0),rRatio_X );!inside.done(); inside++){
+             IntVector f_FC = fineStart + *inside;
+             sum_fineLevelFlux += Q_X_fine_flux[f_FC];
+           }
+           // Q_CC = mass * q_CC = cellVol * rho * q_CC
+
+           double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
+           double denominator = oneZero
+                              + switch1 * coarseCellVol     
+                              + switch2 * mass_CC_coarse
+                              + switch3 * mass_CC_coarse * cv[c_CC]; 
+
+           Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal*sum_fineLevelFlux) /denominator;
+
+           count += one_zero;                              
+           finePatch->setFaceMark(patchFace,count);
 /*`==========TESTING==========*/
 #if SPEW
         if (c_CC.y() == half.y() && c_CC.z() == half.z() ) {
@@ -776,32 +781,36 @@ void ICE::refluxOperator_computeCorrectionFluxes(
         }
 #endif 
 /*===========TESTING==========`*/
+        }
       }
-    }
-    if(patchFace == Patch::yminus || patchFace == Patch::yplus){    // Y+ Y-
-    
-      for(; !c_iter.done(); c_iter++){
-         IntVector c_CC = *c_iter;
-         IntVector c_FC = c_CC + c_FC_offset;
-         
-         T sum_fineLevelFlux(0.0);
-         IntVector fineStart = coarseLevel->mapCellToFiner(c_CC) + f_offset;
-         IntVector rRatio_Y(r_Ratio.x(),1, r_Ratio.z()); 
-         
-         for(CellIterator inside(IntVector(0,0,0),rRatio_Y );!inside.done(); inside++){
-           IntVector f_FC = fineStart + *inside;
-           sum_fineLevelFlux += Q_Y_fine_flux[f_FC];          
-         }
-         // Q_CC = mass * q_CC = cellVol * rho * q_CC
-         // coeff accounts for the different cell sizes on the different levels
-         double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
-         double denominator = oneZero
-                            + switch1 * coarseCellVol     
-                            + switch2 * mass_CC_coarse
-                            + switch3 * mass_CC_coarse * cv[c_CC];
-                            
-         Q_Y_coarse_flux[c_FC] = (c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
-         
+      
+      if(patchFace == Patch::yminus || patchFace == Patch::yplus){    // Y+ Y-
+        
+        for(; !c_iter.done(); c_iter++){
+           IntVector c_CC = *c_iter;
+           IntVector c_FC = c_CC + c_FC_offset;
+
+           T sum_fineLevelFlux(0.0);
+           IntVector fineStart = coarseLevel->mapCellToFiner(c_CC) + f_offset;
+           IntVector rRatio_Y(r_Ratio.x(),1, r_Ratio.z()); 
+
+           for(CellIterator inside(IntVector(0,0,0),rRatio_Y );!inside.done(); inside++){
+             IntVector f_FC = fineStart + *inside;
+             sum_fineLevelFlux += Q_Y_fine_flux[f_FC];          
+           }
+           // Q_CC = mass * q_CC = cellVol * rho * q_CC
+           // coeff accounts for the different cell sizes on the different levels
+           double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
+           double denominator = oneZero
+                              + switch1 * coarseCellVol     
+                              + switch2 * mass_CC_coarse
+                              + switch3 * mass_CC_coarse * cv[c_CC];
+
+
+           Q_Y_coarse_flux[c_FC] = (c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
+
+           count += one_zero;                       // keep track of how many times              
+           finePatch->setFaceMark(patchFace,count); // the face has been touched
 /*`==========TESTING==========*/
 #if SPEW
         if (c_CC.x() == half.x() && c_CC.z() == half.z() ) {
@@ -814,33 +823,35 @@ void ICE::refluxOperator_computeCorrectionFluxes(
         }
 #endif 
 /*===========TESTING==========`*/
+        }
       }
-    }
-    if(patchFace == Patch::zminus || patchFace == Patch::zplus){    // Z+ Z-
-    
- 
-      for(; !c_iter.done(); c_iter++){
-         IntVector c_CC = *c_iter;
-         IntVector c_FC = c_CC + c_FC_offset;
-         
-         T sum_fineLevelFlux(0.0);
-         IntVector fineStart = coarseLevel->mapCellToFiner(c_CC) + f_offset;
-         IntVector rRatio_Z(r_Ratio.x(),r_Ratio.y(), 1); 
-         
-         for(CellIterator inside(IntVector(0,0,0),rRatio_Z );!inside.done(); inside++){
-           IntVector f_FC = fineStart + *inside;
-           sum_fineLevelFlux += Q_Z_fine_flux[f_FC];
-         }
-         // Q_CC = mass * q_CC = cellVol * rho * q_CC
-         // coeff accounts for the different cell sizes on the different levels
-         double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
-         double denominator = oneZero
-                            + switch1 * coarseCellVol     
-                            + switch2 * mass_CC_coarse
-                            + switch3 * mass_CC_coarse * cv[c_CC];
-                            
-         Q_Z_coarse_flux[c_FC] = (c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
-         
+      
+      
+      if(patchFace == Patch::zminus || patchFace == Patch::zplus){    // Z+ Z-
+
+        for(; !c_iter.done(); c_iter++){
+           IntVector c_CC = *c_iter;
+           IntVector c_FC = c_CC + c_FC_offset;
+
+           T sum_fineLevelFlux(0.0);
+           IntVector fineStart = coarseLevel->mapCellToFiner(c_CC) + f_offset;
+           IntVector rRatio_Z(r_Ratio.x(),r_Ratio.y(), 1); 
+
+           for(CellIterator inside(IntVector(0,0,0),rRatio_Z );!inside.done(); inside++){
+             IntVector f_FC = fineStart + *inside;
+             sum_fineLevelFlux += Q_Z_fine_flux[f_FC];
+           }
+           // Q_CC = mass * q_CC = cellVol * rho * q_CC
+           // coeff accounts for the different cell sizes on the different levels
+           double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
+           double denominator = oneZero
+                              + switch1 * coarseCellVol     
+                              + switch2 * mass_CC_coarse
+                              + switch3 * mass_CC_coarse * cv[c_CC];
+           Q_Z_coarse_flux[c_FC] = (c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
+           
+            count += one_zero;                              
+           finePatch->setFaceMark(patchFace,count);
 /*`==========TESTING==========*/
 #if SPEW
         if (c_CC.x() == half.x() && c_CC.y() == half.y() ) {
@@ -853,8 +864,9 @@ void ICE::refluxOperator_computeCorrectionFluxes(
         }
 #endif 
 /*===========TESTING==========`*/
+        }
       }
-    }
+    }  // is right coarse/fine patch pair
   }  // coarseFineInterface faces 
 } // end refluxOperator_computeCorrectionFluxes()
 

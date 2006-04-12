@@ -26,16 +26,16 @@ JWLC::~JWLC()
 
 void JWLC::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP eos_ps = ps->appendChild("EOS",true,3);
+  ProblemSpecP eos_ps = ps->appendChild("EOS");
   eos_ps->setAttribute("type","JWLC");
 
-  eos_ps->appendElement("A",A,false,4);
-  eos_ps->appendElement("B",B,false,4);
-  eos_ps->appendElement("C",C,false,4);
-  eos_ps->appendElement("R1",R1,false,4);
-  eos_ps->appendElement("R2",R2,false,4);
-  eos_ps->appendElement("om",om,false,4);
-  eos_ps->appendElement("rho0",rho0,false,4);
+  eos_ps->appendElement("A",A);
+  eos_ps->appendElement("B",B);
+  eos_ps->appendElement("C",C);
+  eos_ps->appendElement("R1",R1);
+  eos_ps->appendElement("R2",R2);
+  eos_ps->appendElement("om",om);
+  eos_ps->appendElement("rho0",rho0);
 }
 
 //__________________________________

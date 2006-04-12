@@ -19,7 +19,7 @@ ConstantMeltTemp::~ConstantMeltTemp()
 
 void ConstantMeltTemp::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP temp_ps = ps->appendChild("melting_temp_model",true,4);
+  ProblemSpecP temp_ps = ps->appendChild("melting_temp_model");
   temp_ps->setAttribute("type","constant_Tm");
 }
 

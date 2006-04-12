@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/Unstructure.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>

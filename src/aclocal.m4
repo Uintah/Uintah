@@ -1158,7 +1158,7 @@ case $1 in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes  
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -1194,8 +1194,6 @@ case $1 in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)

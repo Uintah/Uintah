@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 namespace SCITeem {
@@ -60,14 +60,17 @@ DECLARE_MAKER(TendSten)
 
 TendSten::TendSten(SCIRun::GuiContext *ctx) : 
   Module("TendSten", ctx, Filter, "Tend", "Teem"),
-  diffscale_(ctx->subVar("diffscale")),
-  intscale_(ctx->subVar("intscale")),
-  factor_(ctx->subVar("factor"))
+  diffscale_(get_ctx()->subVar("diffscale"), 1),
+  intscale_(get_ctx()->subVar("intscale"), 2),
+  factor_(get_ctx()->subVar("factor"), 1)
 {
 }
 
-TendSten::~TendSten() {
+
+TendSten::~TendSten()
+{
 }
+
 
 void 
 TendSten::execute()
@@ -86,7 +89,7 @@ TendSten::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (gageStructureTensor(nout, nin, diffscale_.get(), intscale_.get(), 

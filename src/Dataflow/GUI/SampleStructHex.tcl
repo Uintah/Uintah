@@ -29,22 +29,9 @@
 
 itcl_class SCIRun_FieldsCreate_SampleStructHex {
     inherit Module
+
     constructor {config} {
         set name SampleStructHex
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-sizex
-	global $this-sizey
-	global $this-sizez
-	global $this-padpercent
-	global $this-data-at
-	set $this-sizex 16
-	set $this-sizey 16
-	set $this-sizez 16
-	set $this-padpercent 0
-	set $this-data-at Nodes
     }
 
     method ui {} {

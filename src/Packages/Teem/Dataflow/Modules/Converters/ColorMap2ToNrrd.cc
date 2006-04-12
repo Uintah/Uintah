@@ -30,8 +30,8 @@
 //    Date   : Fri Oct 15 2004
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
@@ -110,16 +110,18 @@ ColorMap2ToNrrd::execute()
 
     // Create the nrrd.
     NrrdData *nd = scinew NrrdData();
-    nrrdAlloc(nd->nrrd, nrrdTypeFloat, 3, 4, 512, 256);
-    nd->nrrd->axis[2].kind = nrrdKindDomain;
-    nd->nrrd->axis[2].label = airStrdup("Gradient Magnitude");
-    nd->nrrd->axis[1].kind = nrrdKindDomain;
-    nd->nrrd->axis[1].label = airStrdup("Data Value");
-    nd->nrrd->axis[0].kind = nrrdKind4Color;
-    nd->nrrd->axis[0].label = airStrdup("Colors");
+    size_t size[NRRD_DIM_MAX];
+    size[0] = 4; size[1] = 512; size[2] = 256;
+    nrrdAlloc_nva(nd->nrrd_, nrrdTypeFloat, 3, size);
+    nd->nrrd_->axis[2].kind = nrrdKindDomain;
+    nd->nrrd_->axis[2].label = airStrdup("Gradient Magnitude");
+    nd->nrrd_->axis[1].kind = nrrdKindDomain;
+    nd->nrrd_->axis[1].label = airStrdup("Data Value");
+    nd->nrrd_->axis[0].kind = nrrdKind4Color;
+    nd->nrrd_->axis[0].label = airStrdup("Colors");
 
     // Move the image to the nrrd.
-    float *data = (float *)nd->nrrd->data;
+    float *data = (float *)nd->nrrd_->data;
     const int h = adata.dim1() - 1;
     for (int i=0; i<adata.dim1(); i++)
     {

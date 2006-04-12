@@ -163,7 +163,7 @@ void StartSCIRun::run()
 		if(! dataPath.empty() && ! readerName.empty()){
 			
 			mod = net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
-			GuiInterface* modGui = mod->getGui();
+			GuiInterface* modGui = mod->get_gui();
 			
 			//for testing
 			//std::string result;
@@ -279,7 +279,7 @@ void Iterate::run()
 			return;
 		}
 		i++;
-		modGui = modptr->getGui();
+		modGui = modptr->get_gui();
 		ASSERT(modGui);
 		
 		//std::cout << "doOnce " << doOnce[i-1] << " " << doOnce[i] << " " << doOnce[i+1] << std::endl;
@@ -306,7 +306,7 @@ void Iterate::run()
 				return;
 			}
 			j++;
-			modGui = modptr->getGui();
+			modGui = modptr->get_gui();
 			ASSERT(modGui);
 		
 			//std::cout << "iterate " << iterate[j-1] << " " << iterate[j] << " " << iterate[j+i+1] << std::endl;

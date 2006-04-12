@@ -13,7 +13,7 @@
 #ifndef SCI_project_SpanPort_h
 #define SCI_project_SpanPort_h 1
 
-#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
 #include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
 
 namespace Yarden {

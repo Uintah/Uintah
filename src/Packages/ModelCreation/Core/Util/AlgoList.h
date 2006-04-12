@@ -27,19 +27,19 @@
 */
 
 
-#ifndef MODELCREATION_CORE_UTIL_ALGOLIST_H
-#define MODELCREATION_CORE_UTIL_ALGOLIST_H 1
+#ifndef CORE_UTIL_ALGOLIST_H
+#define CORE_UTIL_ALGOLIST_H 1
 
 #include <Core/Containers/Handle.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <list>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 
 template<class ALGO>
-class AlgoList : public std::list<SCIRun::Handle<ALGO> > {
+class AlgoList : public std::vector<SCIRun::Handle<ALGO> > {
 public:  
   AlgoList();
   void      lock();

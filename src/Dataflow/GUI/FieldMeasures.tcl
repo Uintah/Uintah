@@ -29,29 +29,9 @@
 
 itcl_class SCIRun_FieldsOther_FieldMeasures {
     inherit Module
+
     constructor {config} {
         set name FieldMeasures
-
-	global $this-simplexString
-	global $this-xFlag
-	global $this-yFlag
-	global $this-zFlag
-	global $this-idxFlag
-	global $this-sizeFlag
-	global $this-numNbrsFlag
-	global $this-normalsFlag
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-simplexString Node
-	set $this-xFlag 1
-	set $this-yFlag 1
-	set $this-zFlag 1
-	set $this-idxFlag 0
-	set $this-sizeFlag 0
-	set $this-numNbrsFlag 0
-	set $this-normalsFlag 0
     }
 
     method ui {} {

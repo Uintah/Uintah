@@ -2,7 +2,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <iostream>
 #include <math.h>
@@ -38,7 +38,7 @@ using namespace Uintah;
 
 VectorFieldOperator::VectorFieldOperator(GuiContext* ctx)
   : Module("VectorFieldOperator",ctx,Source, "Operators", "Uintah"),
-    guiOperation(ctx->subVar("operation"))
+    guiOperation(get_ctx()->subVar("operation"))
 {
 }
   

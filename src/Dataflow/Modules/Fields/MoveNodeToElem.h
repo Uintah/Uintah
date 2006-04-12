@@ -73,7 +73,7 @@ public:
 
 template <class FSRC, class FDST>
 FieldHandle
-MoveNodeToElemAlgoLat<FSRC, FDST>::execute(ProgressReporter *mod,
+MoveNodeToElemAlgoLat<FSRC, FDST>::execute(ProgressReporter *reporter,
                                            FieldHandle fieldh)
 {
   FSRC *ifield = dynamic_cast<FSRC*>(fieldh.get_rep());
@@ -135,7 +135,7 @@ public:
 
 template <class FSRC, class FDST>
 FieldHandle
-MoveNodeToElemAlgoImg<FSRC, FDST>::execute(ProgressReporter *mod,
+MoveNodeToElemAlgoImg<FSRC, FDST>::execute(ProgressReporter *reporter,
                                            FieldHandle fieldh)
 {
   FSRC *ifield = dynamic_cast<FSRC*>(fieldh.get_rep());

@@ -31,22 +31,12 @@
 
 itcl_class Teem_UnuAtoM_UnuJoin {
     inherit Module
+
     constructor {config} {
         set name UnuJoin
-        set_defaults
     }
 
-    method set_defaults {} {
-	global $this-dim
-	global $this-join-axis
-	global $this-incr-dim
-
-	set $this-dim 0
-	set $this-join-axis 0
-	set $this-incr-dim 0
-    }
-   
-    # do not allow spaces in the label
+    # Do not allow spaces in the label.
     method valid_string {ind str} {
 	set char "a"
 	

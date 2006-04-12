@@ -36,8 +36,8 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -61,19 +61,24 @@ private:
 
 
 DECLARE_MAKER(BundleGetColorMap2)
-  BundleGetColorMap2::BundleGetColorMap2(GuiContext* ctx)
-    : Module("BundleGetColorMap2", ctx, Filter, "Bundle", "SCIRun"),
-      guicolormap21name_(ctx->subVar("colormap21-name")),
-      guicolormap22name_(ctx->subVar("colormap22-name")),
-      guicolormap23name_(ctx->subVar("colormap23-name")),
-      guicolormap2s_(ctx->subVar("colormap2-selection"))
+
+BundleGetColorMap2::BundleGetColorMap2(GuiContext* ctx)
+  : Module("BundleGetColorMap2", ctx, Filter, "Bundle", "SCIRun"),
+    guicolormap21name_(get_ctx()->subVar("colormap21-name"), "colormap21"),
+    guicolormap22name_(get_ctx()->subVar("colormap22-name"), "colormap22"),
+    guicolormap23name_(get_ctx()->subVar("colormap23-name"), "colormap23"),
+    guicolormap2s_(get_ctx()->subVar("colormap2-selection"), "")
 {
 }
 
-BundleGetColorMap2::~BundleGetColorMap2(){
+
+BundleGetColorMap2::~BundleGetColorMap2()
+{
 }
 
-void BundleGetColorMap2::execute()
+
+void
+BundleGetColorMap2::execute()
 {
   string colormap21name = guicolormap21name_.get();
   string colormap22name = guicolormap22name_.get();
@@ -112,7 +117,7 @@ void BundleGetColorMap2::execute()
   }
 
   guicolormap2s_.set(colormap2list);
-  ctx->reset();
+  get_ctx()->reset();
 
  
   if (!(ofport = static_cast<ColorMap2OPort *>(get_oport("colormap21"))))

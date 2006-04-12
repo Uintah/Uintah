@@ -61,6 +61,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
 
+  if (!mpm_flag_ps)
+    return;
+
   mpm_flag_ps->get("time_integrator", d_integrator_type);
   if (d_integrator_type == "implicit") 
     d_integrator = Implicit;
@@ -68,8 +71,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     d_integrator = Fracture;
     d_fracture = true;
   }
-  else 
+  else{
     d_integrator = Explicit;
+  }
   mpm_flag_ps->get("nodes8or27", d_8or27);
   mpm_flag_ps->get("reference_temperature", d_ref_temp); // for thermal stress
   mpm_flag_ps->get("withColor",  d_with_color);
@@ -142,35 +146,34 @@ void
 MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 {
 
-  ps->appendElement("time_integrator", d_integrator_type,false,1);
+  ps->appendElement("time_integrator", d_integrator_type);
 
-  ps->appendElement("nodes8or27", d_8or27,false,1);
-  ps->appendElement("reference_temperature", d_ref_temp,false,1);
-  ps->appendElement("withColor",  d_with_color,false,1);
-  ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff,false,1);
-  ps->appendElement("artificial_viscosity",     d_artificial_viscosity,false,1);
-  ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1,false,1);
-  ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2,false,1);
-  ps->appendElement("accumulate_strain_energy", d_accStrainEnergy,false,1);
-  ps->appendElement("use_load_curves", d_useLoadCurves,false,1);
-  ps->appendElement("turn_on_adiabatic_heating", d_adiabaticHeatingOn,false,1);
-  ps->appendElement("min_grid_level", d_minGridLevel,false,1);
-  ps->appendElement("max_grid_level", d_maxGridLevel, false,1);
-  ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor,
-                    false,1);
-  ps->appendElement("create_new_particles", d_createNewParticles,false,1);
-  ps->appendElement("manual_new_material", d_addNewMaterial,false,1);
-  ps->appendElement("CanAddMPMMaterial", d_canAddMPMMaterial,false,1);
-  ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction,false,1);
-  ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction,false,1);
-  ps->appendElement("DoThermalExpansion", d_doThermalExpansion,false,1);
+  ps->appendElement("nodes8or27", d_8or27);
+  ps->appendElement("reference_temperature", d_ref_temp);
+  ps->appendElement("withColor",  d_with_color);
+  ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff);
+  ps->appendElement("artificial_viscosity",     d_artificial_viscosity);
+  ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1);
+  ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
+  ps->appendElement("accumulate_strain_energy", d_accStrainEnergy);
+  ps->appendElement("use_load_curves", d_useLoadCurves);
+  ps->appendElement("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
+  ps->appendElement("min_grid_level", d_minGridLevel);
+  ps->appendElement("max_grid_level", d_maxGridLevel);
+  ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
+  ps->appendElement("create_new_particles", d_createNewParticles);
+  ps->appendElement("manual_new_material", d_addNewMaterial);
+  ps->appendElement("CanAddMPMMaterial", d_canAddMPMMaterial);
+  ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction);
+  ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
+  ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
 
-  ps->appendElement("do_contact_friction_heating", d_do_contact_friction,false,1);
+  ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
 
-  ProblemSpecP erosion_ps = ps->appendChild("erosion",true,1);
+  ProblemSpecP erosion_ps = ps->appendChild("erosion");
   erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
 
-  ps->appendElement("extra_solver_flushes", d_extraSolverFlushes,false,1);
+  ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
 }
 
 

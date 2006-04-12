@@ -17,7 +17,6 @@ SRCS     += $(SRCDIR)/TVMEngine.cc\
             $(SRCDIR)/ArrayObject.cc\
             $(SRCDIR)/ArrayEngine.cc\
             $(SRCDIR)/ArrayObjectFieldAlgo.cc\
-            $(SRCDIR)/MatrixConverter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Util Core/Containers \

@@ -85,15 +85,15 @@ C
 C       Test prot. Return a string as an ID for Hello component
 C       
 
-        subroutine whof77_IDPort_getID_impl(self, retval)
+        subroutine whof77_IDPort_get_id_impl(self, retval)
         implicit none
         integer*8 self
         character*(*) retval
-C       DO-NOT-DELETE splicer.begin(whof77.IDPort.getID)
+C       DO-NOT-DELETE splicer.begin(whof77.IDPort.get_id)
 C       Insert the implementation here...
 C        write(*,*) 'World (in F77) should be returned, but how?'
 C        retval="World (in F77)"
-C       DO-NOT-DELETE splicer.end(whof77.IDPort.getID)
+C       DO-NOT-DELETE splicer.end(whof77.IDPort.get_id)
         end
 
 

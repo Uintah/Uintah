@@ -27,12 +27,15 @@
 */
 
 
-//    File   : FieldSubSample.h
-//    Author : Michael Callahan &&
-//             Allen Sanderson
-//             School of Computing
-//             University of Utah
-//    Date   : January 2003
+//!    File   : FieldSlicer.h
+//!    Author : Michael Callahan &&
+//!             Allen Sanderson
+//!             SCI Institute
+//!             University of Utah
+//!    Date   : March 2006
+//
+//!    Copyright (C) 2006 SCI Group
+
 
 #if !defined(FieldSubSample_h)
 #define FieldSubSample_h
@@ -54,21 +57,22 @@ class FieldSubSampleAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle& src,
-			      unsigned int istart,
-			      unsigned int jstart,
-			      unsigned int kstart,
-			      unsigned int istop,
-			      unsigned int jstop,
-			      unsigned int kstop,
-			      unsigned int istride,
-			      unsigned int jstride,
-			      unsigned int kstride,
-			      unsigned int iwrap,
-			      unsigned int jwrap,
-			      unsigned int kwrap) = 0;
+			      unsigned int i_start,
+			      unsigned int j_start,
+			      unsigned int k_start,
+			      unsigned int i_stop,
+			      unsigned int j_stop,
+			      unsigned int k_stop,
+			      unsigned int i_stride,
+			      unsigned int j_stride,
+			      unsigned int k_stride,
+			      unsigned int i_wrap,
+			      unsigned int j_wrap,
+			      unsigned int k_wrap) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *ftd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    bool geometry_irregular);
 };
 
 
@@ -78,36 +82,36 @@ class FieldSubSampleAlgoT : public FieldSubSampleAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle& src,
-			      unsigned int istart,
-			      unsigned int jstart,
-			      unsigned int kstart,
-			      unsigned int istop,
-			      unsigned int jstop,
-			      unsigned int kstop,
-			      unsigned int istride,
-			      unsigned int jstride,
-			      unsigned int kstride,
-			      unsigned int iwrap,
-			      unsigned int jwrap,
-			      unsigned int kwrap);
+			      unsigned int i_start,
+			      unsigned int j_start,
+			      unsigned int k_start,
+			      unsigned int i_stop,
+			      unsigned int j_stop,
+			      unsigned int k_stop,
+			      unsigned int i_stride,
+			      unsigned int j_stride,
+			      unsigned int k_stride,
+			      unsigned int i_wrap,
+			      unsigned int j_wrap,
+			      unsigned int k_wrap);
 };
 
 
 template <class FIELD>
 FieldHandle
 FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
-				    unsigned int istart,
-				    unsigned int jstart,
-				    unsigned int kstart,
-				    unsigned int istop,
-				    unsigned int jstop,
-				    unsigned int kstop,
-				    unsigned int istride,
-				    unsigned int jstride,
-				    unsigned int kstride,
-				    unsigned int iwrap,
-				    unsigned int jwrap,
-				    unsigned int kwrap)
+				    unsigned int i_start,
+				    unsigned int j_start,
+				    unsigned int k_start,
+				    unsigned int i_stop,
+				    unsigned int j_stop,
+				    unsigned int k_stop,
+				    unsigned int i_stride,
+				    unsigned int j_stride,
+				    unsigned int k_stride,
+				    unsigned int i_wrap,
+				    unsigned int j_wrap,
+				    unsigned int k_wrap)
 {
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
   typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
@@ -138,19 +142,19 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     kdim_in = 1;
   }
 
-  // This happens when wrapping.
-  if( istop <= istart ) istop += idim_in;
-  if( jstop <= jstart ) jstop += jdim_in;
-  if( kstop <= kstart ) kstop += kdim_in;
+  //! This happens when _wrapping.
+  if( i_stop <= i_start ) i_stop += idim_in;
+  if( j_stop <= j_start ) j_stop += jdim_in;
+  if( k_stop <= k_start ) k_stop += kdim_in;
 
-  // Add one because we want the last node.
-  unsigned int idim_out = (istop - istart) / istride + (rank >= 1 ? 1 : 0);
-  unsigned int jdim_out = (jstop - jstart) / jstride + (rank >= 2 ? 1 : 0);
-  unsigned int kdim_out = (kstop - kstart) / kstride + (rank >= 3 ? 1 : 0);
+  //! Add one because we want the last node.
+  unsigned int idim_out = (i_stop - i_start) / i_stride + (rank >= 1 ? 1 : 0);
+  unsigned int jdim_out = (j_stop - j_start) / j_stride + (rank >= 2 ? 1 : 0);
+  unsigned int kdim_out = (k_stop - k_start) / k_stride + (rank >= 3 ? 1 : 0);
 
-  unsigned int istop_stride;
-  unsigned int jstop_stride;
-  unsigned int kstop_stride; 
+  unsigned int i_stop_stride;
+  unsigned int j_stop_stride;
+  unsigned int k_stop_stride; 
 
   string field_name =
     ifield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name();
@@ -159,20 +163,20 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
       field_name.find( "StructQuadSurfField" ) != string::npos ||
       field_name.find( "StructCurveField"    ) != string::npos ) {
 
-    // Account for the modulo of stride so that the last node will be
-    // included even if it "partial" cell when compared to the others.
-    if( (istop - istart) % istride ) idim_out += (rank >= 1 ? 1 : 0);
-    if( (jstop - jstart) % jstride ) jdim_out += (rank >= 2 ? 1 : 0);
-    if( (kstop - kstart) % kstride ) kdim_out += (rank >= 3 ? 1 : 0);
+    //! Account for the modulo of stride so that the last node will be
+    //! included even if it "partial" cell when compared to the others.
+    if( (i_stop - i_start) % i_stride ) idim_out += (rank >= 1 ? 1 : 0);
+    if( (j_stop - j_start) % j_stride ) jdim_out += (rank >= 2 ? 1 : 0);
+    if( (k_stop - k_start) % k_stride ) kdim_out += (rank >= 3 ? 1 : 0);
 
-    istop_stride = istop + (rank >= 1 ? istride : 0); 
-    jstop_stride = jstop + (rank >= 2 ? jstride : 0); 
-    kstop_stride = kstop + (rank >= 3 ? kstride : 0); 
+    i_stop_stride = i_stop + (rank >= 1 ? i_stride : 0); 
+    j_stop_stride = j_stop + (rank >= 2 ? j_stride : 0); 
+    k_stop_stride = k_stop + (rank >= 3 ? k_stride : 0); 
 
   } else {
-    istop_stride = istop + (rank >= 1 ? 1 : 0);
-    jstop_stride = jstop + (rank >= 2 ? 1 : 0);
-    kstop_stride = kstop + (rank >= 3 ? 1 : 0); 
+    i_stop_stride = i_stop + (rank >= 1 ? 1 : 0);
+    j_stop_stride = j_stop + (rank >= 2 ? 1 : 0);
+    k_stop_stride = k_stop + (rank >= 3 ? 1 : 0); 
   }
 
   typename FIELD::mesh_handle_type omesh = scinew typename FIELD::mesh_type();
@@ -192,7 +196,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   omesh->set_dim( dim );
 
-  // Now after the mesh has been created, create the field.
+  //! Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh);
 
   ofield->copy_properties(ifield);
@@ -219,7 +223,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   string mesh_name = ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
-  // For structured geometery we need to set the correct location.
+  //! For structured geometry we need to set the correct location.
   if(mesh_name.find("LatVolMesh"  ) != string::npos ||
      mesh_name.find("ImageMesh"   ) != string::npos  ||
      mesh_name.find("ScanlineMesh") != string::npos ) 
@@ -228,37 +232,37 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     imesh->get_min( min );
     omesh->set_min( min );
 
-    // Set the orginal transform.
+    //! Set the orginal transform.
     omesh->set_transform( imesh->get_transform() );
 
     imesh->begin( inodeItr );
 
-    // Get the orgin of mesh. */
+    //! Get the orgin of mesh. */
     imesh->get_center(o, *inodeItr);    
 
-    // Set the iterator to the first point.
-    for (k=0; k<kstart; k++) {
+    //! Set the iterator to the first point.
+    for (k=0; k<k_start; k++) {
       for( ic=0; ic<jdim_in*idim_in; ic++ )
 	++inodeItr;
     }
      
-    for (j=0; j<jstart; j++) {
+    for (j=0; j<j_start; j++) {
       for( ic=0; ic<idim_in; ic++ )
 	++inodeItr;
     }
 	
-    for (i=0; i<istart; i++)
+    for (i=0; i<i_start; i++)
       ++inodeItr;
 
-    // Get the point.
+    //! Get the point.
     imesh->get_center(p, *inodeItr);
 
-    // Put the new field into the correct location.
+    //! Put the new field into the correct location.
     Transform trans;
 
     trans.pre_translate( (Vector) (-o) );
 
-    trans.pre_scale( Vector( istride, jstride, kstride ) );
+    trans.pre_scale( Vector( i_stride, j_stride, k_stride ) );
 
     trans.pre_translate( (Vector) (o) );
 
@@ -267,22 +271,22 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     omesh->transform( trans );
   }
 
-  // Index based on the old mesh so that we are assured of getting the last
-  // node even if it forms a "partial" cell.
-  for( k=kstart; k<kstop_stride; k+=kstride ) {
+  //! Index based on the old mesh so that we are assured of getting the last
+  //! node even if it forms a "partial" cell.
+  for( k=k_start; k<k_stop_stride; k+=k_stride ) {
 
-    // Check for going past the stop.
-    if( k > kstop )
-      k = kstop;
+    //! Check for going past the stop.
+    if( k > k_stop )
+      k = k_stop;
 
-    // Check for overlap.
-    if( k-kstride <= kstart+kdim_in && kstart+kdim_in <= k )
-      knode = kstart;
+    //! Check for overlap.
+    if( k-k_stride <= k_start+kdim_in && k_start+kdim_in <= k )
+      knode = k_start;
     else
       knode = k % kdim_in;
 
-    // A hack here so that an iterator can be used.
-    // Set this iterator to be at the correct kth index.
+    //! A hack here so that an iterator can be used.
+    //! Set this iterator to be at the correct kth index.
     imesh->begin( knodeItr );
     imesh->begin( kcellItr );
 
@@ -292,20 +296,20 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
     for( ic=0; ic<knode*(jdim_in-1)*(idim_in-1); ic++ )
       ++kcellItr;
 
-    for( j=jstart; j<jstop_stride; j+=jstride ) {
+    for( j=j_start; j<j_stop_stride; j+=j_stride ) {
 
-      // Check for going past the stop.
-      if( j > jstop )
-	j = jstop;
+      //! Check for going past the stop.
+      if( j > j_stop )
+	j = j_stop;
 
-      // Check for overlap.
-      if( j-jstride <= jstart+jdim_in && jstart+jdim_in <= j )
-	jnode = jstart;
+      //! Check for overlap.
+      if( j-j_stride <= j_start+jdim_in && j_start+jdim_in <= j )
+	jnode = j_start;
       else
 	jnode = j % jdim_in;
 
-      // A hack here so that an iterator can be used.
-      // Set this iterator to be at the correct jth index.
+      //! A hack here so that an iterator can be used.
+      //! Set this iterator to be at the correct jth index.
       jnodeItr = knodeItr;
       jcellItr = kcellItr;
 
@@ -315,20 +319,20 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
       for( ic=0; ic<jnode*(idim_in-1); ic++ )
 	++jcellItr;
 
-      for( i=istart; i<istop_stride; i+=istride ) {
+      for( i=i_start; i<i_stop_stride; i+=i_stride ) {
 
-	// Check for going past the stop.
-	if( i > istop )
-	  i = istop;
+	//! Check for going past the stop.
+	if( i > i_stop )
+	  i = i_stop;
 
-	// Check for overlap.
-	if( i-istride <= istart+idim_in && istart+idim_in <= i )
-	  inode = istart;
+	//! Check for overlap.
+	if( i-i_stride <= i_start+idim_in && i_start+idim_in <= i )
+	  inode = i_start;
 	else
 	  inode = i % idim_in;
 
-	// A hack here so that an iterator can be used.
-	// Set this iterator to be at the correct ith index.
+	//! A hack here so that an iterator can be used.
+	//! Set this iterator to be at the correct ith index.
 	inodeItr = jnodeItr;
 	icellItr = jcellItr;
 
@@ -352,9 +356,9 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 	  break;
 	case 0:
 
-	  if( i+istride<istop_stride &&
-	      j+jstride<jstop_stride &&
-	      k+kstride<kstop_stride ) {
+	  if( i+i_stride<i_stop_stride &&
+	      j+j_stride<j_stop_stride &&
+	      k+k_stride<k_stop_stride ) {
 	    ifield->value(value, *icellItr);
 	    ofield->set_value(value, *ocellItr);
 
@@ -380,6 +384,6 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
   return ofield;
 }
 
-} // end namespace SCIRun
+} //! end namespace SCIRun
 
-#endif // FieldSubSample_h
+#endif //! FieldSubSample_h

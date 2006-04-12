@@ -31,10 +31,10 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <VS/Dataflow/Modules/Render/EinthovenLeads.h>
 #include <Core/Geom/GeomSwitch.h>
@@ -72,9 +72,9 @@ DECLARE_MAKER(EinthovenLeads)
 
 EinthovenLeads::EinthovenLeads(GuiContext* ctx) :
   Module("EinthovenLeads", ctx, Filter, "Render", "VS"),
-  gui_lead_I_(ctx->subVar("lead_I")),
-  gui_lead_II_(ctx->subVar("lead_II")),
-  gui_lead_III_(ctx->subVar("lead_III")),
+  gui_lead_I_(get_ctx()->subVar("lead_I")),
+  gui_lead_II_(get_ctx()->subVar("lead_II")),
+  gui_lead_III_(get_ctx()->subVar("lead_III")),
   last_gen_(-1),
   count_(0),
   nrrd_out_(0),
@@ -119,16 +119,20 @@ EinthovenLeads::execute()
 			 gui_lead_III_.get(), values, pos)) 
     {
       if (count_ % 100 == 0) {
-	int sz = (count_ / 100 + 1) * 100;
+	size_t sz[NRRD_DIM_MAX];
+	sz[0] = (count_ / 100 + 1) * 100;
 	ndata = new NrrdData();
 
 	ndata->nrrd->axis[0].kind = nrrdKindDomain;
 	ndata->nrrd->axis[1].kind = nrrdKindDomain;
-	nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode);
+
+	unsigned int centers[NRRD_DIM_MAX];
+	centers[0] = nrrdCenterNode;
+	centers[1] = nrrdCenterNode;
+	nrrdAxisInfoSet_nva(ndata->nrrd, nrrdAxisInfoCenter, centers);
 	ndata->nrrd->axis[0].label = strdup("leads");
 	ndata->nrrd->axis[1].label = strdup("time");
-	nrrdAlloc(ndata->nrrd, nrrdTypeFloat, 2, 3, sz);
+	nrrdAlloc_nva(ndata->nrrd, nrrdTypeFloat, 2, 3, sz);
 	memset(ndata->nrrd->data, 0, count_ * 3 * sizeof(float));
 	if (nrrd_out_.get_rep()) {
 	  memcpy(ndata->nrrd->data, nrrd_out_->nrrd->data, 

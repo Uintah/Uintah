@@ -35,6 +35,7 @@ namespace rtrt {
 
 using SCIRun::Mutex;
 using SCIRun::WorkQueue;
+  using std::cout;
   using std::cerr;
   using std::endl;
 
@@ -67,8 +68,8 @@ public:
 template<>
 class TypeInfo<short> {
 public:
-  static short get_min() { return MAXSHORT+1; }
-  static short get_max() { return MAXSHORT; }
+  static short get_min() { return SHRT_MAX+1; }
+  static short get_max() { return SHRT_MAX; }
 };
 
 template<>
@@ -81,22 +82,22 @@ public:
 template<>
 class TypeInfo<int> {
 public:
-  static int get_min() { return -MAXINT-1; }
-  static int get_max() { return MAXINT; }
+  static int get_min() { return -INT_MAX-1; }
+  static int get_max() { return INT_MAX; }
 };
 
 template<>
 class TypeInfo<float> {
 public:
-  static float get_min() { return -MAXFLOAT; }
-  static float get_max() { return MAXFLOAT; }
+  static float get_min() { return -FLT_MAX; }
+  static float get_max() { return FLT_MAX; }
 };
   
 template<>
 class TypeInfo<double> {
 public:
-  static double get_min() { return -MAXDOUBLE; }
-  static double get_max() { return MAXDOUBLE; }
+  static double get_min() { return -DBL_MAX; }
+  static double get_max() { return DBL_MAX; }
 };
   
 template<class T, class A, class B>

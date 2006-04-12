@@ -30,23 +30,9 @@
 
 itcl_class SCIRun_Bundle_BundleSetField {
     inherit Module
+
     constructor {config} {
         set name BundleSetField
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-        global $this-field1-name
-        global $this-field2-name
-        global $this-field3-name
-        global $this-bundlename
-        
-        set $this-field1-name "field1"
-        set $this-field2-name "field2"
-        set $this-field3-name "field3"
-        set $this-bundlename ""
-
     }
 
     method ui {} {

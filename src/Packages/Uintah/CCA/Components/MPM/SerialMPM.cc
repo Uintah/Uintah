@@ -18,6 +18,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -118,11 +119,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   d_sharedState = sharedState;
 
   ProblemSpecP restart_mat_ps = 0;
-  if (materials_ps)
+  if (materials_ps){
     restart_mat_ps = materials_ps;
-  else
+  }
+  else{
     restart_mat_ps = prob_spec;
-
+  }
 
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
@@ -130,8 +132,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
     // Read all MPM flags (look in MPMFlags.cc)
     flags->readMPMFlags(restart_mat_ps);
-    if (flags->d_integrator_type == "implicit")
-      throw ProblemSetupException("Can't use implicit integration with -mpm", __FILE__, __LINE__);
+    if (flags->d_integrator_type == "implicit"){
+      throw ProblemSetupException("Can't use implicit integration with -mpm",
+                                   __FILE__, __LINE__);
+    }
 
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
@@ -203,49 +207,6 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   }
 }
 
-#if 0
-void 
-SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
-                                SimulationStateP& sharedState,
-                                MPMFlags* flags)
-{
-  //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    string index("");
-    ps->getAttribute("index",index);
-    stringstream id(index);
-    int index_val = -1;
-    id >> index_val;
-    cout << "Material attribute = " << index_val << endl;
-
-    //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps);
-    // When doing restart, we need to make sure that we load the materials
-    // in the same order that they were initially created.  Restarts will
-    // ALWAYS have an index number as in <material index = "0">.
-    // Index_val = -1 means that we don't register the material by its 
-    // index number.
-    if (index_val > -1) 
-      sharedState->registerMPMMaterial(mat,index_val);
-    else
-      sharedState->registerMPMMaterial(mat);
-      
-
-    // If new particles are to be created, create a copy of each material
-    // without the associated geometry
-    if (flags->d_createNewParticles) {
-      MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(ps,mat, flags);    
-      sharedState->registerMPMMaterial(mat_copy);
-    }
-  }
-}
-
-#endif
-
 void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 {
   ProblemSpecP root = root_ps->getRootNode();
@@ -259,13 +220,12 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");
     
-  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM",true,1);
+  ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
   for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
     MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
   contactModel->outputProblemSpec(mpm_ps);
-
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -859,11 +819,6 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
   //Uncomment  the next line to use damping
   //t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
-#if 0
-  if(d_with_ice){
-    t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
-  }
-#endif
   t->computes(lb->gAccelerationLabel);
   sched->addTask(t, patches, matls);
 }
@@ -1162,8 +1117,51 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
   printSchedule(patches,"MPM::scheduleRefine\t\t");
-  Task* task = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
-  sched->addTask(task, patches, d_sharedState->allMPMMaterials());
+  Task* t = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
+
+  t->computes(lb->pXLabel);
+  t->computes(lb->pDispLabel);
+  t->computes(lb->pMassLabel);
+  t->computes(lb->pVolumeLabel);
+  t->computes(lb->pTemperatureLabel);
+  t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
+  t->computes(lb->pdTdtLabel);
+  t->computes(lb->pVelocityLabel);
+  t->computes(lb->pExternalForceLabel);
+  t->computes(lb->pParticleIDLabel);
+  t->computes(lb->pDeformationMeasureLabel);
+  t->computes(lb->pStressLabel);
+  t->computes(lb->pSizeLabel);
+  t->computes(lb->pErosionLabel);
+
+  // Debugging Scalar
+  if (flags->d_with_color) {
+    t->computes(lb->pColorLabel);
+  }
+                                                                                
+  if (flags->d_useLoadCurves) {
+    // Computes the load curve ID associated with each particle
+    t->computes(lb->pLoadCurveIDLabel);
+  }
+                                                                                
+  if (flags->d_accStrainEnergy) {
+    // Computes accumulated strain energy
+    t->computes(lb->AccStrainEnergyLabel);
+  }
+                                                                                
+  if (flags->d_artificialDampCoeff > 0.0) {
+    t->computes(lb->pDampingRateLabel);
+    t->computes(lb->pDampingCoeffLabel);
+  }
+                                                                                
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+  }
+                                                                                
+  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/, 
@@ -1521,7 +1519,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
-      old_dw->get(px,             lb->pXLabel,             pset);
+      try {
+        old_dw->get(px,             lb->pXLabel,             pset);
+      } catch (UnknownVariable& e) {
+        cout << "  BAD boy - trying to inter patch " << patch->getID() << endl;
+      }
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
@@ -3106,21 +3108,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 void 
-SerialMPM::setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
-                                      ParticleSubset* pset,
-                                      DataWarehouse* new_dw,
-                                      double val)
-{
-  ParticleVariable<double>  temp;
-  new_dw->allocateTemporary(temp,  pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end();iter++){
-    temp[*iter]=val;
-  }
-  pvar = temp; 
-}
-
-void 
 SerialMPM::setParticleDefault(ParticleVariable<double>& pvar,
                               const VarLabel* label, 
                               ParticleSubset* pset,
@@ -3180,52 +3167,6 @@ void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
   }
 }
 
-void
-SerialMPM::scheduleParticleVelocityField(SchedulerP&,  const PatchSet*,
-                                         const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleAdjustCrackContactInterpolated(SchedulerP&, 
-                                                  const PatchSet*,
-                                                  const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleAdjustCrackContactIntegrated(SchedulerP&, 
-                                                const PatchSet*,
-                                                const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleCalculateFractureParameters(SchedulerP&, 
-                                               const PatchSet*,
-                                               const MaterialSet*)
-{
-}
-
-void
-SerialMPM::scheduleDoCrackPropagation(SchedulerP& /*sched*/, 
-                                      const PatchSet* /*patches*/, 
-                                      const MaterialSet* /*matls*/)
-{
-}
-
-void
-SerialMPM::scheduleMoveCracks(SchedulerP& /*sched*/,const PatchSet* /*patches*/,
-                              const MaterialSet* /*matls*/)
-{
-}
-
-void
-SerialMPM::scheduleUpdateCrackFront(SchedulerP& /*sched*/,
-                                    const PatchSet* /*patches*/,
-                                    const MaterialSet* /*matls*/)
-{
-}
 //______________________________________________________________________
 void
 SerialMPM::initialErrorEstimate(const ProcessorGroup*,
@@ -3310,7 +3251,7 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
         constCCVariable<int> fineErrorFlag;
         new_dw->getRegion(fineErrorFlag, 
                           d_sharedState->get_refineFlag_label(), 0, 
-                          fineLevel,fl, fh);
+                          fineLevel,fl, fh, false);
         
         //__________________________________
         //if the fine level flag has been set
@@ -3362,7 +3303,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
-        ParticleVariable<double> pErosion;
+        ParticleVariable<double> pErosion, pTempPrev;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
@@ -3372,16 +3313,26 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
         new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
         new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
+        new_dw->allocateAndPut(pTempPrev,      lb->pTempPreviousLabel,  pset);
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
         new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
-        new_dw->allocateAndPut(pdeform,        lb->pDeformationMeasureLabel, pset);
-        new_dw->allocateAndPut(pstress,        lb->pStressLabel,        pset);
-        if (flags->d_useLoadCurves)
+        if (flags->d_useLoadCurves){
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
+        }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
         new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
 
+        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+                                                           mpm_matl,new_dw);
+#if 0
+          if(flags->d_with_color) {
+            ParticleVariable<double> pcolor;
+            int index = mpm_matl->getDWIndex();
+            ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
+            setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
+          }
+#endif
       }
     }
   }

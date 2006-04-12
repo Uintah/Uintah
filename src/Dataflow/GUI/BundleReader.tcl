@@ -34,14 +34,9 @@
 
 itcl_class SCIRun_DataIO_BundleReader {
     inherit Module
+
     constructor {config} {
         set name BundleReader
-        set_defaults
-    }
-
-    method set_defaults {} {
-        global $this-types
-        global $this-filetype
     }
 
     method ui {} {

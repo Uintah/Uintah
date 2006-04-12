@@ -34,8 +34,8 @@
  *
  */
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Datatypes/String.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -65,10 +65,10 @@ private:
 DECLARE_MAKER(FieldGetStringProperty)
   FieldGetStringProperty::FieldGetStringProperty(GuiContext* ctx)
     : Module("FieldGetStringProperty", ctx, Source, "FieldsProperty", "ModelCreation"),
-      guistring1name_(ctx->subVar("string1-name")),
-      guistring2name_(ctx->subVar("string2-name")),
-      guistring3name_(ctx->subVar("string3-name")),
-      guistrings_(ctx->subVar("string-selection"))
+      guistring1name_(get_ctx()->subVar("string1-name")),
+      guistring2name_(get_ctx()->subVar("string2-name")),
+      guistring3name_(get_ctx()->subVar("string3-name")),
+      guistrings_(get_ctx()->subVar("string-selection"))
 {
 }
 
@@ -90,7 +90,7 @@ FieldGetStringProperty::execute()
   StringHandle fhandle;
   std::string fstring;
           
-  if(!(iport = static_cast<FieldIPort *>(getIPort("Field"))))
+  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
   {
     error("Could not find 'Field' input port");
     return;
@@ -124,7 +124,7 @@ FieldGetStringProperty::execute()
   }
 
   guistrings_.set(stringlist);
-  ctx->reset();
+  get_ctx()->reset();
   
   if (!(ofport = static_cast<StringOPort *>(get_oport("String1"))))
   {

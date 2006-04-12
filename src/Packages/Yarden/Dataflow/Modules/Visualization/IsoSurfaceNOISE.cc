@@ -28,10 +28,10 @@
 
 #include <Core/Datatypes/ScalarField.h>
 
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 //#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -77,7 +77,7 @@ using namespace SCIRun;
       GeomGroup *group;
 
     public:
-      IsoSurfaceNOISE(const clString& id);
+      IsoSurfaceNOISE(const clString& get_id());
       virtual ~IsoSurfaceNOISE();
 
       void execute();
@@ -87,9 +87,9 @@ using namespace SCIRun;
     };
       
     
-    extern "C" Module* make_IsoSurfaceNOISE(const clString& id)
+    extern "C" Module* make_IsoSurfaceNOISE(const clString& get_id())
     {
-      return scinew IsoSurfaceNOISE(id);
+      return scinew IsoSurfaceNOISE(get_id());
     }
 
     const double epsilon = 1.e-8;
@@ -97,13 +97,13 @@ using namespace SCIRun;
     static clString module_name("IsoSurfaceNOISE");
     static clString surface_name("NoiseSurface");
 
-    IsoSurfaceNOISE::IsoSurfaceNOISE(const clString& id) :
-      Module("IsoSurfaceNOISE", id, Filter),
-      isoval("isoval", id, this ),
-      isoval_min("isoval_min", id, this ),
-      isoval_max("isoval_max", id, this ),
-      tcl_bbox("bbox", id, this),
-      tcl_np("np",id,this)
+    IsoSurfaceNOISE::IsoSurfaceNOISE(const clString& get_id()) :
+      Module("IsoSurfaceNOISE", get_id(), Filter),
+      isoval("isoval", get_id(), this ),
+      isoval_min("isoval_min", get_id(), this ),
+      isoval_max("isoval_max", get_id(), this ),
+      tcl_bbox("bbox", get_id(), this),
+      tcl_np("np",get_id(),this)
     {
       // Create input ports
       infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);

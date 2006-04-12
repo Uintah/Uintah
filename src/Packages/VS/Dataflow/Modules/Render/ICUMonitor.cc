@@ -48,13 +48,13 @@
 #include <Core/Util/Timer.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/TimePort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/TimePort.h>
 
 #include <Core/Geom/FreeType.h>
 
@@ -408,28 +408,28 @@ DECLARE_MAKER(ICUMonitor)
 
 ICUMonitor::ICUMonitor(GuiContext* ctx) :
   Module("ICUMonitor", ctx, Filter, "Render", "VS"),
-  gui_time_(ctx->subVar("time")),
-  gui_sample_rate_(ctx->subVar("sample_rate")),
-  gui_sweep_speed_(ctx->subVar("sweep_speed")),
-  gui_dots_per_inch_(ctx->subVar("dots_per_inch")),
-  gui_plot_height_(ctx->subVar("plot_height")),
-  gui_play_mode_(ctx->subVar("play_mode")),
-  gui_dump_frames_(ctx->subVar("dump_frames")),
-  gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
-  gui_selected_marker_(ctx->subVar("selected_marker")),
-  gui_injury_offset_(ctx->subVar("injury_offset")),
-  gui_top_margin_(ctx->subVar("top_margin")),
-  gui_left_margin_(ctx->subVar("left_margin")),
-  gui_plot_spacing_(ctx->subVar("plot_spacing")),
-  gui_font_scale_(ctx->subVar("font_scale")),
-  gui_show_name_(ctx->subVar("show_name")),
-  gui_show_date_(ctx->subVar("show_date")),
-  gui_show_time_(ctx->subVar("show_time")),
-  gui_plot_count_(ctx->subVar("plot_count")),
-  gui_geom_(ctx->subVar("geom")),
-  gui_2ndred_(ctx->subVar("2ndplot_color-r")),
-  gui_2ndgreen_(ctx->subVar("2ndplot_color-g")),
-  gui_2ndblue_(ctx->subVar("2ndplot_color-b")),
+  gui_time_(get_ctx()->subVar("time")),
+  gui_sample_rate_(get_ctx()->subVar("sample_rate")),
+  gui_sweep_speed_(get_ctx()->subVar("sweep_speed")),
+  gui_dots_per_inch_(get_ctx()->subVar("dots_per_inch")),
+  gui_plot_height_(get_ctx()->subVar("plot_height")),
+  gui_play_mode_(get_ctx()->subVar("play_mode")),
+  gui_dump_frames_(get_ctx()->subVar("dump_frames")),
+  gui_time_markers_mode_(get_ctx()->subVar("time_markers_mode")),
+  gui_selected_marker_(get_ctx()->subVar("selected_marker")),
+  gui_injury_offset_(get_ctx()->subVar("injury_offset")),
+  gui_top_margin_(get_ctx()->subVar("top_margin")),
+  gui_left_margin_(get_ctx()->subVar("left_margin")),
+  gui_plot_spacing_(get_ctx()->subVar("plot_spacing")),
+  gui_font_scale_(get_ctx()->subVar("font_scale")),
+  gui_show_name_(get_ctx()->subVar("show_name")),
+  gui_show_date_(get_ctx()->subVar("show_date")),
+  gui_show_time_(get_ctx()->subVar("show_time")),
+  gui_plot_count_(get_ctx()->subVar("plot_count")),
+  gui_geom_(get_ctx()->subVar("geom")),
+  gui_2ndred_(get_ctx()->subVar("2ndplot_color-r")),
+  gui_2ndgreen_(get_ctx()->subVar("2ndplot_color-g")),
+  gui_2ndblue_(get_ctx()->subVar("2ndplot_color-b")),
   ctx_(0),
   dpy_(0),
   win_(0),
@@ -528,7 +528,7 @@ ICUMonitor::inc_time(double elapsed)
 
   gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
   gui_time_.reset();
-  gui->execute("update idletasks");
+  get_gui()->execute("update idletasks");
 
   setTimeLabel();
 }
@@ -539,12 +539,12 @@ ICUMonitor::make_current()
   //----------------------------------------------------------------
   // obtain rendering ctx 
   if(!ctx_) {
-    const string myname(".ui" + id + ".f.gl.gl");
+    const string myname(".ui" + get_id() + ".f.gl.gl");
     Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      gui->unlock();
+      get_gui()->unlock();
       return false;
     }
     dpy_ = Tk_Display(tkwin);
@@ -555,7 +555,7 @@ ICUMonitor::make_current()
     // check if it was created
     if(!ctx_) {
       error("Unable to obtain OpenGL context!");
-      gui->unlock();
+      get_gui()->unlock();
       return false;
     }
     glXMakeCurrent(dpy_, win_, ctx_);
@@ -703,7 +703,7 @@ ICUMonitor::init_plots()
     font->set_points(12.0 * gui_font_scale_.get());
 
     if (! gui_nw_label_[i]) {
-      gui_nw_label_[i] = scinew GuiString(ctx->subVar("nw_label-" + num));
+      gui_nw_label_[i] = scinew GuiString(get_ctx()->subVar("nw_label-" + num));
     }
     if (gui_nw_label_[i]->get() != string("")) {
       if (g.nw_label_) delete g.nw_label_;
@@ -712,7 +712,7 @@ ICUMonitor::init_plots()
     }
 
     if (! gui_sw_label_[i]) {
-      gui_sw_label_[i] = scinew GuiString(ctx->subVar("sw_label-" + num));
+      gui_sw_label_[i] = scinew GuiString(get_ctx()->subVar("sw_label-" + num));
     }
     if (gui_sw_label_[i]->get() != string("")) {
       if (g.sw_label_) delete g.sw_label_;
@@ -722,7 +722,7 @@ ICUMonitor::init_plots()
 
     if (! gui_min_ref_label_[i]) {
       gui_min_ref_label_[i] = scinew GuiString(
-					ctx->subVar("min_ref_label-" + num));
+					get_ctx()->subVar("min_ref_label-" + num));
     }
     if (gui_min_ref_label_[i]->get() != string("")) {
       if (g.min_ref_label_) delete g.min_ref_label_;
@@ -732,7 +732,7 @@ ICUMonitor::init_plots()
 
     if (! gui_max_ref_label_[i]) {
       gui_max_ref_label_[i] = scinew GuiString(
-					 ctx->subVar("max_ref_label-" + num));
+					 get_ctx()->subVar("max_ref_label-" + num));
     }
     if (gui_max_ref_label_[i]->get() != string("")) {
       if (g.max_ref_label_) delete g.max_ref_label_;
@@ -743,7 +743,7 @@ ICUMonitor::init_plots()
     font->set_points(14.0 * gui_font_scale_.get());
 
     if (! gui_label_[i]) {
-      gui_label_[i] = scinew GuiString(ctx->subVar("label-" + num));
+      gui_label_[i] = scinew GuiString(get_ctx()->subVar("label-" + num));
     }
     if (gui_label_[i]->get() != string("")) {
       if (g.label_) delete g.label_;
@@ -751,7 +751,7 @@ ICUMonitor::init_plots()
       g.label_->bind(font);
     }
     if (! gui_aux_data_label_[i]) {
-      gui_aux_data_label_[i] = scinew GuiString(ctx->subVar("aux_data_label-" + num));
+      gui_aux_data_label_[i] = scinew GuiString(get_ctx()->subVar("aux_data_label-" + num));
     }
     if (gui_aux_data_label_[i]->get() != string("")) {
       if (g.aux_data_label_) delete g.aux_data_label_;
@@ -761,54 +761,54 @@ ICUMonitor::init_plots()
 
       
     if (! gui_min_[i]) {
-      gui_min_[i] = scinew GuiDouble(ctx->subVar("min-" + num));
+      gui_min_[i] = scinew GuiDouble(get_ctx()->subVar("min-" + num));
     }
     g.min_ = gui_min_[i]->get();
     if (! gui_max_[i]) {
-      gui_max_[i] = scinew GuiDouble(ctx->subVar("max-" + num));
+      gui_max_[i] = scinew GuiDouble(get_ctx()->subVar("max-" + num));
     }
     g.max_ = gui_max_[i]->get();
     if (! gui_idx_[i]) {
-      gui_idx_[i] = scinew GuiInt(ctx->subVar("idx-" + num));
+      gui_idx_[i] = scinew GuiInt(get_ctx()->subVar("idx-" + num));
     }
     g.index_ = gui_idx_[i]->get();
     if (! gui_snd_[i]) {
-      gui_snd_[i] = scinew GuiInt(ctx->subVar("snd-" + num));
+      gui_snd_[i] = scinew GuiInt(get_ctx()->subVar("snd-" + num));
     }
     g.snd_ = gui_snd_[i]->get();
     if (! gui_clamp_[i]) {
-      gui_clamp_[i] = scinew GuiInt(ctx->subVar("clamp-" + num));
+      gui_clamp_[i] = scinew GuiInt(get_ctx()->subVar("clamp-" + num));
     }
     g.clamp_ = gui_clamp_[i]->get();
     if (! gui_lines_[i]) {
-      gui_lines_[i] = scinew GuiInt(ctx->subVar("lines-" + num));
+      gui_lines_[i] = scinew GuiInt(get_ctx()->subVar("lines-" + num));
     }
     g.lines_ = gui_lines_[i]->get();
     if (! gui_auxidx_[i]) {
-      gui_auxidx_[i] = scinew GuiInt(ctx->subVar("auxidx-" + num));
+      gui_auxidx_[i] = scinew GuiInt(get_ctx()->subVar("auxidx-" + num));
     }
     g.auxindex_ = gui_auxidx_[i]->get();
     if (! gui_draw_aux_data_[i]) {
-      gui_draw_aux_data_[i] = scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
+      gui_draw_aux_data_[i] = scinew GuiInt(get_ctx()->subVar("draw_aux_data-" + num));
     }
     g.draw_aux_data_ = gui_draw_aux_data_[i]->get();
     if (! gui_use_plot_color_[i]) {
-      gui_use_plot_color_[i] = scinew GuiInt(ctx->subVar("use_plot_color-" + num));
+      gui_use_plot_color_[i] = scinew GuiInt(get_ctx()->subVar("use_plot_color-" + num));
     }
     g.use_plot_color_ = gui_use_plot_color_[i]->get();
 
     if (! gui_red_[i]) {
-      gui_red_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
+      gui_red_[i] = scinew GuiDouble(get_ctx()->subVar("plot_color-" + num + "-r"));
     }
     g.r_ = gui_red_[i]->get();
 
     if (! gui_green_[i]) {
-      gui_green_[i]= scinew GuiDouble(ctx->subVar("plot_color-" + num + "-g"));
+      gui_green_[i]= scinew GuiDouble(get_ctx()->subVar("plot_color-" + num + "-g"));
     }
     g.g_ = gui_green_[i]->get();
 
     if (! gui_blue_[i]) {
-      gui_blue_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-b"));
+      gui_blue_[i] = scinew GuiDouble(get_ctx()->subVar("plot_color-" + num + "-b"));
     }
     g.b_ = gui_blue_[i]->get();
     ++i;
@@ -1111,7 +1111,7 @@ ICUMonitor::get_places(vector<int> &places, int num) const
 void
 ICUMonitor::redraw_all()
 {
-  gui->lock();
+  get_gui()->lock();
   if (! make_current()) return;
   init_plots();
 
@@ -1126,13 +1126,13 @@ ICUMonitor::redraw_all()
 
   glXSwapBuffers(dpy_, win_);
   glXMakeCurrent(dpy_, 0, 0);
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 void
 ICUMonitor::setup_gl_view()
 {
-  gui->lock();
+  get_gui()->lock();
   if (! make_current()) return;
   glViewport(0, 0, width_, height_);
 
@@ -1149,7 +1149,7 @@ ICUMonitor::setup_gl_view()
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
 
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 void 
@@ -1180,7 +1180,7 @@ ICUMonitor::setTimeLabel()
     timestr << setw(2) << hrs << ":";
     timestr << setw(2) << min << ":";
     timestr << setw(2) << sec;
-    gui->execute(id + " setTimeLabel {" + timestr.str() + "}");
+    get_gui()->execute(get_id() + " setTimeLabel {" + timestr.str() + "}");
 
     time_text.replace(0, time_text.length(), timestr.str());
 }
@@ -1211,12 +1211,12 @@ ICUMonitor::addMarkersToMenu()
   }
 
   markers_.clear();
-  gui->execute(id + " clearMarkers");
+  get_gui()->execute(get_id() + " clearMarkers");
 
   set<int>::iterator iter;
   for (iter = keys.begin(); iter != keys.end(); iter++) {
       markers_.push_back(*iter);
-      gui->execute(id + " setMarkers {" + tmpmkrs[*iter] + "}");
+      get_gui()->execute(get_id() + " setMarkers {" + tmpmkrs[*iter] + "}");
   }
 }
 
@@ -1266,7 +1266,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_nw_label_[i])
          {
-           gui_nw_label_[i] = scinew GuiString(ctx->subVar("nw_label-" + num));
+           gui_nw_label_[i] = scinew GuiString(get_ctx()->subVar("nw_label-" + num));
          }
          // set label string value
          gui_nw_label_[i]->set(value);
@@ -1280,7 +1280,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_sw_label_[i])
          {
-           gui_sw_label_[i] = scinew GuiString(ctx->subVar("sw_label-" + num));
+           gui_sw_label_[i] = scinew GuiString(get_ctx()->subVar("sw_label-" + num));
          }
          // set label string value
          gui_sw_label_[i]->set(value);
@@ -1295,7 +1295,7 @@ ICUMonitor::setConfigFromData()
          if (! gui_min_ref_label_[i])
          {
            gui_min_ref_label_[i] = scinew GuiString(
-                                         ctx->subVar("min_ref_label-" + num));
+                                         get_ctx()->subVar("min_ref_label-" + num));
          }
          // set label string value
          gui_min_ref_label_[i]->set(value);
@@ -1310,7 +1310,7 @@ ICUMonitor::setConfigFromData()
          if (! gui_max_ref_label_[i])
          {
            gui_max_ref_label_[i] = scinew GuiString(
-                                         ctx->subVar("max_ref_label-" + num));
+                                         get_ctx()->subVar("max_ref_label-" + num));
          }
          // set label string value
          gui_max_ref_label_[i]->set(value);
@@ -1324,7 +1324,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_label_[i])
          {
-           gui_label_[i] = scinew GuiString(ctx->subVar("label-" + num));
+           gui_label_[i] = scinew GuiString(get_ctx()->subVar("label-" + num));
          }
          // set label string value
          gui_label_[i]->set(value);
@@ -1339,7 +1339,7 @@ ICUMonitor::setConfigFromData()
          if (! gui_aux_data_label_[i])
          {
            gui_aux_data_label_[i] =
-             scinew GuiString(ctx->subVar("aux_data_label-" + num));
+             scinew GuiString(get_ctx()->subVar("aux_data_label-" + num));
          }
          // set label string value
          gui_aux_data_label_[i]->set(value);
@@ -1353,7 +1353,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_min_[i])
          {
-           gui_min_[i] = scinew GuiDouble(ctx->subVar("min-" + num));
+           gui_min_[i] = scinew GuiDouble(get_ctx()->subVar("min-" + num));
          }
          // set plot min float value
          gui_min_[i]->set(floatValue);
@@ -1367,7 +1367,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_max_[i])
          {
-           gui_max_[i] = scinew GuiDouble(ctx->subVar("max-" + num));
+           gui_max_[i] = scinew GuiDouble(get_ctx()->subVar("max-" + num));
          }
 
          // set plot max float value
@@ -1382,7 +1382,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_idx_[i])
          {
-           gui_idx_[i] = scinew GuiInt(ctx->subVar("idx-" + num));
+           gui_idx_[i] = scinew GuiInt(get_ctx()->subVar("idx-" + num));
          }
 
          // set plot idx int value
@@ -1397,7 +1397,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_snd_[i])
          {
-           gui_snd_[i] = scinew GuiInt(ctx->subVar("snd-" + num));
+           gui_snd_[i] = scinew GuiInt(get_ctx()->subVar("snd-" + num));
          }
          // set plot snd int value
          gui_snd_[i]->set(intValue);
@@ -1411,7 +1411,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_clamp_[i])
          {
-           gui_clamp_[i] = scinew GuiInt(ctx->subVar("clamp-" + num));
+           gui_clamp_[i] = scinew GuiInt(get_ctx()->subVar("clamp-" + num));
          }
          // set plot clamp int value
          gui_clamp_[i]->set(intValue);
@@ -1425,7 +1425,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_lines_[i])
          {
-           gui_lines_[i] = scinew GuiInt(ctx->subVar("lines-" + num));
+           gui_lines_[i] = scinew GuiInt(get_ctx()->subVar("lines-" + num));
          }
          // set plot lines int value
          gui_lines_[i]->set(intValue);
@@ -1439,7 +1439,7 @@ ICUMonitor::setConfigFromData()
          const string num = to_string(i);
          if (! gui_auxidx_[i])
          {
-           gui_auxidx_[i] = scinew GuiInt(ctx->subVar("auxidx-" + num));
+           gui_auxidx_[i] = scinew GuiInt(get_ctx()->subVar("auxidx-" + num));
          }
          // set plot auxidx int value
          gui_auxidx_[i]->set(intValue);
@@ -1454,7 +1454,7 @@ ICUMonitor::setConfigFromData()
          if (! gui_draw_aux_data_[i])
          {
            gui_draw_aux_data_[i] =
-               scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
+               scinew GuiInt(get_ctx()->subVar("draw_aux_data-" + num));
          }
          // set plot draw_aux_data int value
          gui_draw_aux_data_[i]->set(intValue);
@@ -1470,17 +1470,17 @@ ICUMonitor::setConfigFromData()
          if (! gui_red_[i])
          {
            gui_red_[i] =
-             scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
+             scinew GuiDouble(get_ctx()->subVar("plot_color-" + num + "-r"));
          }
          if (! gui_green_[i])
          {
            gui_green_[i] =
-             scinew GuiDouble(ctx->subVar("plot_color-" + num + "-g"));
+             scinew GuiDouble(get_ctx()->subVar("plot_color-" + num + "-g"));
          }
          if (! gui_blue_[i])
          {
            gui_blue_[i] =
-             scinew GuiDouble(ctx->subVar("plot_color-" + num + "-b"));
+             scinew GuiDouble(get_ctx()->subVar("plot_color-" + num + "-b"));
          }
 
          string primaryStr = string(ICUvarName, 12+idxDigits, 1);
@@ -1515,7 +1515,7 @@ ICUMonitor::setNameAndDateAndTime()
 
   if (name != NULL) {
     string title(name);
-    gui->execute(id + " setWindowTitle {Physiology Monitor: " + name + "}");
+    get_gui()->execute(get_id() + " setWindowTitle {Physiology Monitor: " + name + "}");
 
     ostringstream titlestr;
     titlestr << "Name: " << title;
@@ -1614,7 +1614,7 @@ ICUMonitor::execute()
   
   if (!runner_) {
     runner_ = scinew RTDraw(this, time_viewer_h_);
-    runner_thread_ = scinew Thread(runner_, string(id+" RTDraw OpenGL").c_str());
+    runner_thread_ = scinew Thread(runner_, string(get_id()+" RTDraw OpenGL").c_str());
   }
 }
 
@@ -1651,7 +1651,7 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
 
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
@@ -1664,7 +1664,7 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
     }
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
@@ -1677,17 +1677,17 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
     }
     gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
     gui_time_.reset();
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
 
     setTimeLabel();
 
   } else if(args[1] == "configure") {
-    const string myname(".ui" + id + ".f.gl.gl");
+    const string myname(".ui" + get_id() + ".f.gl.gl");
     Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      //gui->unlock();
+      //get_gui()->unlock();
     } else {
       width_ = Tk_Width(tkwin);
       height_ = Tk_Height(tkwin);

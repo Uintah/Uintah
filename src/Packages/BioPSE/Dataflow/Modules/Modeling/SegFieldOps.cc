@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
@@ -81,7 +81,7 @@ DECLARE_MAKER(SegFieldOps)
 
 SegFieldOps::SegFieldOps(GuiContext* ctx)
   : Module("SegFieldOps", ctx, Filter, "Modeling", "BioPSE"), tclCmd_(""),
-    currFld_(0), minCompSize_(ctx->subVar("min_comp_size")), lastGen_(0)
+    currFld_(0), minCompSize_(get_ctx()->subVar("min_comp_size")), lastGen_(0)
 {
 }
 

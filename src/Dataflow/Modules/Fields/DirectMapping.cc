@@ -43,7 +43,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/DirectMapping.h>
@@ -65,37 +65,24 @@ public:
   virtual void execute();
 
 private:
-  GuiString  gInterpolation_basis_;
-  GuiInt     gMap_source_to_single_dest_;
-  GuiInt     gExhaustive_search_;
-  GuiDouble  gExhaustive_search_max_dist_;
-  GuiInt     gNp_;
+  GuiString  gui_interpolation_basis_;
+  GuiInt     gui_map_source_to_single_dest_;
+  GuiInt     gui_exhaustive_search_;
+  GuiDouble  gui_exhaustive_search_max_dist_;
+  GuiInt     gui_npts_;
 
-  std::string  interpolation_basis_;
-  int     map_source_to_single_dest_;
-  int     exhaustive_search_;
-  double  exhaustive_search_max_dist_;
-  int     np_;
-
-  FieldHandle fHandle_;
-
-  int sfGeneration_;
-  int dfGeneration_;
-
-  bool error_;
+  FieldHandle field_output_handle_;
 };
 
 DECLARE_MAKER(DirectMapping)
 DirectMapping::DirectMapping(GuiContext* ctx) : 
   Module("DirectMapping", ctx, Filter, "FieldsData", "SCIRun"),
-  gInterpolation_basis_(ctx->subVar("interpolation_basis")),
-  gMap_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
-  gExhaustive_search_(ctx->subVar("exhaustive_search")),
-  gExhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist")),
-  gNp_(ctx->subVar("np")),
-  sfGeneration_(-1),
-  dfGeneration_(-1),
-  error_(false)
+  gui_interpolation_basis_(get_ctx()->subVar("interpolation_basis"), "linear"),
+  gui_map_source_to_single_dest_(get_ctx()->subVar("map_source_to_single_dest"), 0),
+  gui_exhaustive_search_(get_ctx()->subVar("exhaustive_search"), 0),
+  gui_exhaustive_search_max_dist_(get_ctx()->subVar("exhaustive_search_max_dist"), -1),
+  gui_npts_(get_ctx()->subVar("np"), 1),
+  field_output_handle_(0)
 {
 }
 
@@ -106,114 +93,64 @@ DirectMapping::~DirectMapping()
 void
 DirectMapping::execute()
 {
-  update_state(NeedData);
+  FieldHandle field_src_handle;
+  FieldHandle field_dst_handle;
 
-  FieldIPort * sfield_port = (FieldIPort *)get_iport("Source");
-  FieldHandle sfHandle;
-  if (!(sfield_port->get(sfHandle) && sfHandle.get_rep())) {
-    error( "No source field handle or representation" );
-    return;
-  }
-  if (sfHandle->basis_order() == -1) {
-    error("No data basis in source field to interpolate from.");
-    return;
-  }
+  if( !get_input_handle( "Source",      field_src_handle, true ) ) return;
+  if( !get_input_handle( "Destination", field_dst_handle, true ) ) return;
 
-  FieldIPort *dfield_port = (FieldIPort *)get_iport("Destination");
-  FieldHandle dfHandle;
-  if (!(dfield_port->get(dfHandle) && dfHandle.get_rep())) {
-    error( "No destination field handle or representation" );
-    return;
-  }
-  if (dfHandle->basis_order() == -1) {
-    error("No data basis in destination field to interpolate to.");
-    return;
-  }
+  if( inputs_changed_  ||
+      
+      !field_src_handle.get_rep() ||
+      !field_dst_handle.get_rep() ||
+      
+      gui_interpolation_basis_.changed( true ) ||
+      gui_map_source_to_single_dest_ .changed( true )  ||
+      gui_exhaustive_search_.changed( true ) ||
+      gui_exhaustive_search_max_dist_.changed( true ) ||
+      gui_npts_.changed( true ) ) {
 
-  bool update = false;
-
-  // Check to see if the source field has changed.
-  if( sfGeneration_ != sfHandle->generation ) {
-    sfGeneration_ = sfHandle->generation;
-    update = true;
-  }
-
-  // Check to see if the destination field has changed.
-  if( dfGeneration_ != dfHandle->generation ) {
-    dfGeneration_ = dfHandle->generation;
-    update = true;
-  }
-
-  if (!oport_cached("Remapped Destination")) {
-    update = true;
-  }
-
-  std::string interpolation_basis = gInterpolation_basis_.get();
-  int map_source_to_single_dest = gMap_source_to_single_dest_.get();
-  int exhaustive_search = gExhaustive_search_.get();
-  double exhaustive_search_max_dist = gExhaustive_search_max_dist_.get();
-  int np = gNp_.get();
-  
-  if( interpolation_basis_ != interpolation_basis ||
-      map_source_to_single_dest_  != map_source_to_single_dest  ||
-      exhaustive_search_ != exhaustive_search ||
-      exhaustive_search_max_dist_     != exhaustive_search_max_dist ||
-      np_        != np ) {
-
-    interpolation_basis_ = interpolation_basis;
-    map_source_to_single_dest_  = map_source_to_single_dest;
-    exhaustive_search_ = exhaustive_search;
-    exhaustive_search_max_dist_     = exhaustive_search_max_dist;
-    np_        = np;
-
-    update = true;
-  }
-
-  if( !fHandle_.get_rep() || update || error_ )
-  {
-    error_ = false;
+    update_state(Executing);
 
     TypeDescription::td_vec *tdv = 
-      sfHandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
+      field_src_handle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     const string outputDataType = (*tdv)[0]->get_name();
     const string oftn =
-      dfHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-      dfHandle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
-      dfHandle->get_type_description(Field::BASIS_TD_E)->get_similar_name(outputDataType, 
+      field_dst_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      field_dst_handle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      field_dst_handle->get_type_description(Field::BASIS_TD_E)->get_similar_name(outputDataType, 
                                                           0, "<", " >, ") +
-      dfHandle->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
+      field_dst_handle->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
                                                           0, "<", " >") + " >";
 
     CompileInfoHandle ci =
-      DirectMappingAlgo::get_compile_info(sfHandle->get_type_description(),
-                                          sfHandle->order_type_description(),
-                                          dfHandle->get_type_description(),
-                                          dfHandle->order_type_description(),
+      DirectMappingAlgo::get_compile_info(field_src_handle->get_type_description(),
+                                          field_src_handle->order_type_description(),
+                                          field_dst_handle->get_type_description(),
+                                          field_dst_handle->order_type_description(),
 					  oftn);
 
     Handle<DirectMappingAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    sfHandle->mesh()->synchronize(Mesh::LOCATE_E);
+    field_src_handle->mesh()->synchronize(Mesh::LOCATE_E);
 
-    fHandle_ = algo->execute(sfHandle, dfHandle->mesh(),
-			     dfHandle->basis_order(),
-			     interpolation_basis_,
-			     map_source_to_single_dest_,
-			     exhaustive_search_,
-			     exhaustive_search_max_dist_, np_);
+    field_output_handle_ =
+      algo->execute(field_src_handle, field_dst_handle->mesh(),
+		    field_dst_handle->basis_order(),
+		    gui_interpolation_basis_.get(),
+		    gui_map_source_to_single_dest_.get(),
+		    gui_exhaustive_search_.get(),
+		    gui_exhaustive_search_max_dist_.get(),
+		    gui_npts_.get());
 
     // Copy the properties from source field.
-    if (fHandle_.get_rep())
-      fHandle_->copy_properties(sfHandle.get_rep());
+    if (field_output_handle_.get_rep())
+      field_output_handle_->copy_properties(field_src_handle.get_rep());
   }
 
   // Send the data downstream
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Remapped Destination");
-    ofield_port->send_and_dereference( fHandle_, true );
-  }
+  send_output_handle("Remapped Destination", field_output_handle_, true);
 }
 
 CompileInfoHandle

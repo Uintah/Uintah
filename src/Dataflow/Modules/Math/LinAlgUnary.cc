@@ -38,7 +38,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -69,7 +69,8 @@ public:
 DECLARE_MAKER(LinAlgUnary)
 LinAlgUnary::LinAlgUnary(GuiContext* ctx)
 : Module("LinAlgUnary", ctx, Filter,"Math", "SCIRun"),
-  op_(ctx->subVar("op")), function_(ctx->subVar("function"))
+  op_(get_ctx()->subVar("op"), "Function"),
+  function_(get_ctx()->subVar("function"), "x+10")
 {
 }
 
@@ -196,7 +197,7 @@ void LinAlgUnary::execute() {
       if (!DynamicCompilation::compile(ci, algo, false, this))
       {
 	error("Your function would not compile.");
-	gui->eval(id + " compile_error "+ci->filename_);
+	get_gui()->eval(get_id() + " compile_error "+ci->filename_);
 	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	return;
       }

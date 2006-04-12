@@ -41,7 +41,7 @@
 
 #include <Dataflow/Modules/Fields/ChangeCoordinates.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -62,8 +62,8 @@ public:
 DECLARE_MAKER(ChangeCoordinates)
 ChangeCoordinates::ChangeCoordinates(GuiContext* ctx)
   : Module("ChangeCoordinates", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    gui_oldsystem_(ctx->subVar("oldsystem")),
-    gui_newsystem_(ctx->subVar("newsystem"))
+    gui_oldsystem_(get_ctx()->subVar("oldsystem"), "Cartesian"),
+    gui_newsystem_(get_ctx()->subVar("newsystem"), "Spherical")
 {
 }
 
@@ -92,7 +92,7 @@ ChangeCoordinates::execute()
   CompileInfoHandle ci = ChangeCoordinatesAlgo::get_compile_info(meshtd);
   Handle<ChangeCoordinatesAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
-  algo->execute(field->mesh(), oldsystem, newsystem);
+  algo->execute(this, field->mesh(), oldsystem, newsystem);
 
   FieldOPort *ofld = (FieldOPort *)get_oport("Output Field");
   ofld->send_and_dereference(field);

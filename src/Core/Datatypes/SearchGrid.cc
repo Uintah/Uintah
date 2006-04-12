@@ -46,6 +46,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MusilRNG.h>
+#include <Core/Math/MiscMath.h>
 #include <vector>
 #include <iostream>
 
@@ -54,7 +55,7 @@ namespace SCIRun {
 using namespace std;
 
 
-SearchGridBase::SearchGridBase(unsigned x, unsigned y, unsigned z,
+SearchGridBase::SearchGridBase(int x, int y, int z,
                                const Point &min, const Point &max)
   : ni_(x), nj_(y), nk_(z)
 {
@@ -65,7 +66,7 @@ SearchGridBase::SearchGridBase(unsigned x, unsigned y, unsigned z,
   transform_.compute_imat();
 }
 
-SearchGridBase::SearchGridBase(unsigned x, unsigned y, unsigned z,
+SearchGridBase::SearchGridBase(int x, int y, int z,
                                const Transform &t)
   : ni_(x), nj_(y), nk_(z), transform_(t)
 {
@@ -87,7 +88,7 @@ SearchGridBase::get_canonical_transform(Transform &t)
 
 
 bool
-SearchGridBase::locate(unsigned int &i, unsigned int &j, unsigned int &k,
+SearchGridBase::locate(int &i, int &j, int &k,
                        const Point &p) const
 {
   const Point r = transform_.unproject(p);
@@ -103,16 +104,16 @@ SearchGridBase::locate(unsigned int &i, unsigned int &j, unsigned int &k,
     return false;
   }
 
-  i = (unsigned int)rx;
-  j = (unsigned int)ry;
-  k = (unsigned int)rz;
+  i = (int)rx;
+  j = (int)ry;
+  k = (int)rz;
   return true;
 }
 
 
 void
-SearchGridBase::unsafe_locate(unsigned int &i, unsigned int &j,
-                              unsigned int &k, const Point &p) const
+SearchGridBase::unsafe_locate(int &i, int &j,
+                              int &k, const Point &p) const
 {
   Point r;
   transform_.unproject(p, r);
@@ -121,15 +122,15 @@ SearchGridBase::unsafe_locate(unsigned int &i, unsigned int &j,
   r.y(floor(r.y()));
   r.z(floor(r.z()));
 
-  i = (unsigned int)r.x();
-  j = (unsigned int)r.y();
-  k = (unsigned int)r.z();
+  i = (int)r.x();
+  j = (int)r.y();
+  k = (int)r.z();
 }
 
 
-SearchGridConstructor::SearchGridConstructor(unsigned int x,
-                                             unsigned int y,
-                                             unsigned int z,
+SearchGridConstructor::SearchGridConstructor(int x,
+                                             int y,
+                                             int z,
                                              const Point &min,
                                              const Point &max)
   : SearchGridBase(x, y, z, min, max), size_(0)
@@ -141,16 +142,16 @@ SearchGridConstructor::SearchGridConstructor(unsigned int x,
 void
 SearchGridConstructor::insert(under_type val, const BBox &bbox)
 {
-  unsigned int mini, minj, mink, maxi, maxj, maxk;
+  int mini, minj, mink, maxi, maxj, maxk;
 
   unsafe_locate(mini, minj, mink, bbox.min());
   unsafe_locate(maxi, maxj, maxk, bbox.max());
 
-  for (unsigned int i = mini; i <= maxi; i++)
+  for (int i = mini; i <= maxi; i++)
   {
-    for (unsigned int j = minj; j <= maxj; j++)
+    for (int j = minj; j <= maxj; j++)
     {
-      for (unsigned int k = mink; k <= maxk; k++)
+      for (int k = mink; k <= maxk; k++)
       {
         bin_[linearize(i, j, k)].push_back(val);
         size_++;
@@ -163,16 +164,16 @@ SearchGridConstructor::insert(under_type val, const BBox &bbox)
 void
 SearchGridConstructor::remove(under_type val, const BBox &bbox)
 {
-  unsigned int mini, minj, mink, maxi, maxj, maxk;
+  int mini, minj, mink, maxi, maxj, maxk;
 
   unsafe_locate(mini, minj, mink, bbox.min());
   unsafe_locate(maxi, maxj, maxk, bbox.max());
 
-  for (unsigned int i = mini; i <= maxi; i++)
+  for (int i = mini; i <= maxi; i++)
   {
-    for (unsigned int j = minj; j <= maxj; j++)
+    for (int j = minj; j <= maxj; j++)
     {
-      for (unsigned int k = mink; k <= maxk; k++)
+      for (int k = mink; k <= maxk; k++)
       {
         bin_[linearize(i, j, k)].remove(val);
         size_++;
@@ -186,7 +187,7 @@ bool
 SearchGridConstructor::lookup(const list<under_type> *&candidates,
                               const Point &p) const
 {
-  unsigned int i, j, k;
+  int i, j, k;
   if (locate(i, j, k, p))
   {
     candidates = &(bin_[linearize(i, j, k)]);
@@ -194,6 +195,36 @@ SearchGridConstructor::lookup(const list<under_type> *&candidates,
   }
   return false;
 }
+
+
+void
+SearchGridConstructor::lookup_ijk(const list<under_type> *&candidates,
+                                  int i, int j, int k) const
+{
+  candidates = &(bin_[linearize(i, j, k)]);
+}
+
+
+double
+SearchGridConstructor::min_distance_squared(const Point &p,
+                                            int i, int j, int k) const
+{
+  Point r;
+  transform_.unproject(p, r);
+
+  // Determine closest corner.
+  if (Round(r.x()) >= i+1) i++;
+  if (Round(r.y()) >= j+1) j++;
+  if (Round(r.z()) >= k+1) k++;
+
+  // Project that corner back to world space.
+  Point c(i, j, k), q;
+  transform_.project(c, q);
+  
+  // Return distance from point to projected closest corner.
+  return (p - q).length2();
+}
+
 
 
 PersistentTypeID SearchGrid::type_id("SearchGrid", "Datatype", maker);
@@ -212,13 +243,13 @@ SearchGrid::SearchGrid(const SearchGridConstructor &c)
   accum_.resize(ni_ * nj_ * nk_ + 1);
   vals_ = new under_type[c.size_];
 
-  unsigned int counter = 0;
+  int counter = 0;
   accum_[0] = 0;
-  for (unsigned int i = 0; i < ni_; i++)
+  for (int i = 0; i < ni_; i++)
   {
-    for (unsigned int j = 0; j < nj_; j++)
+    for (int j = 0; j < nj_; j++)
     {
-      for (unsigned int k = 0; k < nk_; k++)
+      for (int k = 0; k < nk_; k++)
       {
         // NOTE: Sort by size so more likely to get hit is checked first?
         // NOTE: Quick testing showed a 3% performance gain in heavy
@@ -227,7 +258,7 @@ SearchGrid::SearchGrid(const SearchGridConstructor &c)
         // element index on an between-element hit because of the way
         // these things are built.
         list<under_type>::const_iterator itr = c.bin_[counter].begin();
-        unsigned int size = 0;
+        int size = 0;
         while (itr != c.bin_[counter].end())
         {
           vals_[accum_[counter] + size] = *itr;
@@ -252,7 +283,7 @@ SearchGrid::~SearchGrid()
 bool
 SearchGrid::lookup(under_type **begin, under_type **end, const Point &p) const
 {
-  unsigned int i, j, k;
+  int i, j, k;
   if (locate(i, j, k, p))
   {
     const unsigned int index = linearize(i, j, k);

@@ -170,30 +170,30 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
 
 void flameSheet_rxn::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","flameSheet_rxn");
 
-  model_ps->appendElement("material",d_matl->getName(),false,4);
-  ProblemSpecP scalar_ps = model_ps->appendChild("scalar",true,4);
+  model_ps->appendElement("material",d_matl->getName());
+  ProblemSpecP scalar_ps = model_ps->appendChild("scalar");
   scalar_ps->setAttribute("name","f");
-  scalar_ps->appendElement("test_conservation",d_test_conservation,false,4);
+  scalar_ps->appendElement("test_conservation",d_test_conservation);
 
-  ProblemSpecP const_ps = scalar_ps->appendChild("reaction_constants",true,4);
-  const_ps->appendElement("f_stoichometric",       d_f_stoic, false,4);  
-  const_ps->appendElement("delta_H_combustion",    d_del_h_comb,false, 4);  
-  const_ps->appendElement("oxidizer_temp_infinity",d_T_oxidizer_inf,false,4);
-  const_ps->appendElement("initial_fuel_temp",     d_T_fuel_init,false,4);    
-  const_ps->appendElement("diffusivity",           d_diffusivity,false,4);
+  ProblemSpecP const_ps = scalar_ps->appendChild("reaction_constants");
+  const_ps->appendElement("f_stoichometric",       d_f_stoic);  
+  const_ps->appendElement("delta_H_combustion",    d_del_h_comb);  
+  const_ps->appendElement("oxidizer_temp_infinity",d_T_oxidizer_inf);
+  const_ps->appendElement("initial_fuel_temp",     d_T_fuel_init);    
+  const_ps->appendElement("diffusivity",           d_diffusivity);
 
-  const_ps->appendElement("smear_initialDistribution_knob",       
-                            d_smear_initialDistribution_knob, false,4);   
+  const_ps->appendElement("smear_initialDistribution_knob",
+                            d_smear_initialDistribution_knob);   
 
   
   for (vector<Region*>::const_iterator it = d_scalar->regions.begin();
        it != d_scalar->regions.end(); it++) {
-    ProblemSpecP geom_ps = scalar_ps->appendChild("geom_object",true,3);
+    ProblemSpecP geom_ps = scalar_ps->appendChild("geom_object");
     (*it)->piece->outputProblemSpec(geom_ps);
-    geom_ps->appendElement("scalar",(*it)->initialScalar,false,4);
+    geom_ps->appendElement("scalar",(*it)->initialScalar);
   }
 
 }

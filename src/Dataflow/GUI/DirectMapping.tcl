@@ -29,22 +29,17 @@
 
 itcl_class SCIRun_FieldsData_DirectMapping {
     inherit Module
+
     constructor {config} {
         set name DirectMapping
-        set_defaults
     }
 
     method set_defaults {} {
-	global $this-interpolation_basis
-	global $this-map_source_to_single_dest
-	global $this-exhaustive_search
-	global $this-exhaustive_search_max_dist
-	global $this-np
-	set $this-interpolation_basis linear
-	set $this-map_source_to_single_dest 0
-	set $this-exhaustive_search 0
-	set $this-exhaustive_search_max_dist -1
-	set $this-np 1
+	setGlobal $this-interpolation_basis linear
+	setGlobal $this-map_source_to_single_dest 0
+	setGlobal $this-exhaustive_search 0
+	setGlobal $this-exhaustive_search_max_dist -1
+	setGlobal $this-np 1
     }
 
     method ui {} {

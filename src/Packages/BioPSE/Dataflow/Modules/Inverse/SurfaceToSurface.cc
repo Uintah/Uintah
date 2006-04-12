@@ -73,9 +73,9 @@
 
 #include <Packages/DaveW/ThirdParty/SparseLib/Leonid/Vector.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MeshPort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -236,7 +236,7 @@ SurfaceToSurface::setBdryCorticalBC(double *Phi_c, SurfTree *st,
   {
     st->data[i+ns]=Phi_c[i+1];
   }
-  msgStream_ << "WRITING FROM "<<nc<<" to "<<nc+ns<<"\n";
+  msg_stream_ << "WRITING FROM "<<nc<<" to "<<nc+ns<<"\n";
 }
 
     
@@ -289,7 +289,7 @@ SurfaceToSurface::parallel(int proc)
   }
   freeVector(t1);
   mutex.lock();
-  msgStream_ << "proc="<<proc<<" sc="<<start_col<<" ec="<<end_col<<"\n";
+  msg_stream_ << "proc="<<proc<<" sc="<<start_col<<" ec="<<end_col<<"\n";
   mutex.unlock();
 }
 
@@ -311,11 +311,11 @@ SurfaceToSurface::buildAc(double **Ac, int ns, int nc,
       idx=ll;
     }
   }
-  msgStream_ <<"  STATS::: Most connected element Avv["<<idx<<"] has " << kk;
-  msgStream_ << " connections.  Avg. has "<< tt/nv <<"\n";
+  msg_stream_ <<"  STATS::: Most connected element Avv["<<idx<<"] has " << kk;
+  msg_stream_ << " connections.  Avg. has "<< tt/nv <<"\n";
   double **t = (double **) malloc (sizeof(double*)*(nv+1));
   int i;
-  msgStream_ << "Starting Cuthill-McKee algorithm.\n";
+  msg_stream_ << "Starting Cuthill-McKee algorithm.\n";
 
   fwdMap = (int *) malloc (sizeof(int)*(nv+1));
   invMap = (int *) malloc (sizeof(int)*(nv+1));
@@ -324,7 +324,7 @@ SurfaceToSurface::buildAc(double **Ac, int ns, int nc,
   //    printSparseMatrix(Avv,nv);
   int tries=cuthillMcKee(Avv, nv, fwdMap);
   bldInvMap(fwdMap, invMap, nv);
-  msgStream_ << "Done with Cuthill-McKee.\n";
+  msg_stream_ << "Done with Cuthill-McKee.\n";
 
   for (i=1; i<=nv; i++)
   {
@@ -368,18 +368,18 @@ SurfaceToSurface::buildAc(double **Ac, int ns, int nc,
     }
   }	
   double d;
-  msgStream_ << "Starting SVD ("<<nv<<")...(timer="<<timer.time()<<") ";
+  msg_stream_ << "Starting SVD ("<<nv<<")...(timer="<<timer.time()<<") ";
   bandec(AvvU, nv, m1, m2, AvvV, LUMap, &d);
-  msgStream_ << "Done!  (timer="<<timer.time()<<")\n";
+  msg_stream_ << "Done!  (timer="<<timer.time()<<")\n";
 
   AvcTmp = makeMatrix(nv, nc);
 
   np=Thread::numProcessors();
   if (np>4) np/=2;	// being nice - just using half the processors. :)
-  msgStream_ << "np="<<np<<"\n";
-  msgStream_ << "Starting back substitution ("<<nc<<")...("<<timer.time()<<")... ";
+  msg_stream_ << "np="<<np<<"\n";
+  msg_stream_ << "Starting back substitution ("<<nc<<")...("<<timer.time()<<")... ";
   Thread::parallel(this, &SurfaceToSurface::parallel, np);
-  msgStream_ << "Done! (timer="<<timer.time()<<")\n";
+  msg_stream_ << "Done! (timer="<<timer.time()<<")\n";
 
   free(fwdMap);
   free(invMap);
@@ -389,12 +389,12 @@ SurfaceToSurface::buildAc(double **Ac, int ns, int nc,
 
   double **AcTmp = makeMatrix(ns, nc); // to store Asv*AvvI*Avc
 
-  msgStream_ << "Multiplying Asv * AvcTmp (to get AcTmp) (timer="<<timer.time()<<").\n";
+  msg_stream_ << "Multiplying Asv * AvcTmp (to get AcTmp) (timer="<<timer.time()<<").\n";
   matMatMult(ns, nv, nc, Asv, AvcTmp, AcTmp);
 	
   freeMatrix(AvcTmp);
 
-  msgStream_ << "Subtracting AcTmp - Asc (to get Ac). (timer="<<timer.time()<<")\n";
+  msg_stream_ << "Subtracting AcTmp - Asc (to get Ac). (timer="<<timer.time()<<")\n";
   matSub(ns, nc, AcTmp, Asc, Ac);
 }
 
@@ -501,7 +501,7 @@ SurfaceToSurface::splitMatrix(double **Ass, double **Asv, double **Asc,
   }
 
   Avv = makeMatrix(nv, maxvrow*2+2);
-  msgStream_ << "nv="<<nv<<"  maxvrow="<<maxvrow<<"\n";
+  msg_stream_ << "nv="<<nv<<"  maxvrow="<<maxvrow<<"\n";
   for (i=1; i<=nv; i++)
     for (int j=0; j<maxvrow*2+2; j++)
       Avv[i][j]=0;
@@ -586,7 +586,7 @@ SurfaceToSurface::jacobi_sci(Matrix* matrix,
     niter++;
 
     double new_error;
-    if(get_gui_doublevar(id, "target_error", new_error)
+    if(get_gui_doublevar(get_id(), "target_error", new_error)
        && new_error != max_error)
     {
       targetidx.add(niter);
@@ -677,13 +677,13 @@ SurfaceToSurface::solveSparse(int nr, int ncol, double **AA, double *X,
   }
   rows[i]=rowtotal;
 
-  msgStream_ << "Sorting columns,,,\n";
+  msg_stream_ << "Sorting columns,,,\n";
   for (int ii=0; ii<nr; ii++)
   {
     sortem2(&(columns[rows[ii]]), &(data[rows[ii]]), rows[ii+1]-rows[ii]);
   }
 
-  msgStream_ << "Allocating sparse matrix...\n";
+  msg_stream_ << "Allocating sparse matrix...\n";
   SparseRowMatrix *matrix = new SparseRowMatrix(nr, ncol, rows, columns, 
 						nc, data); 
 
@@ -806,7 +806,7 @@ SurfaceToSurface::solveDense(int nr, int nc, double **A, double *x,
       W[i]=0;
       trunc++;
     }
-  msgStream_ << "nr = "<<nr<<"  nc = "<<nc<<"  trunc="<<trunc<<"\n";
+  msg_stream_ << "nr = "<<nr<<"  nc = "<<nc<<"  trunc="<<trunc<<"\n";
   //    dsvbksb(A, W, V, nr, nc, b, x);
 #endif
 
@@ -816,9 +816,9 @@ SurfaceToSurface::solveDense(int nr, int nc, double **A, double *x,
   double err;
   int iter;
   int nnew=Max(nr,nc);
-  msgStream_ << "Allocating new (square) matrix...(timer="<<timer.time()<<")\n";
+  msg_stream_ << "Allocating new (square) matrix...(timer="<<timer.time()<<")\n";
   double **squareA = makeMatrix(nnew, nnew);
-  msgStream_ << "Copying into new (square) matrix...(timer="<<timer.time()<<")\n";
+  msg_stream_ << "Copying into new (square) matrix...(timer="<<timer.time()<<")\n";
   double *xx = makeVector(nnew);
   double *bb = makeVector(nnew);
   for (int rr=1; rr<=nnew; rr++) 
@@ -841,19 +841,19 @@ SurfaceToSurface::solveDense(int nr, int nc, double **A, double *x,
   {
     if (bb[ll] < -10000)
     {
-      msgStream_ << "error in bb["<<ll<<"]\n";
+      msg_stream_ << "error in bb["<<ll<<"]\n";
     }
     for (int mm=1; mm<=nnew; mm++)
     {
       if (squareA[ll][mm] < -10000)
       {
-	msgStream_ << "error in squareA["<<ll<<"]["<<mm<<"]\n";
+	msg_stream_ << "error in squareA["<<ll<<"]["<<mm<<"]\n";
       }
     }
   }
-  msgStream_ << "Calling BiCG...(timer="<<timer.time()<<")\n";
+  msg_stream_ << "Calling BiCG...(timer="<<timer.time()<<")\n";
   int maxiter = Max(nr,nc)*.8;
-  msgStream_ << "   maxiter = "<<maxiter<<"\n";
+  msg_stream_ << "   maxiter = "<<maxiter<<"\n";
   linbcg(nnew, bb, xx, 1, 0.0001, maxiter, &iter, &err, squareA);
   for (int cc=1; cc<=nc; cc++) x[cc]=xx[cc];	// copy back to sol'n
 #endif
@@ -872,7 +872,7 @@ SurfaceToSurface::solveDense(int nr, int nc, double **A, double *x,
   MatrixDense<double> AA(nr, nc, matrix);
   ZVector<double> bb(nr, &(b[1]));
   ZVector<double> xx(nc, &(x[1]));
-  msgStream_ << xx <<"\n";
+  msg_stream_ << xx <<"\n";
 
   //    LinearSystem<double> L1(AA,bb,"copy");
   //    L1.solve();
@@ -938,10 +938,9 @@ SurfaceToSurface::execute()
   nc = st->idx.size()-ns;
   nv = mesh->nodes.size()-ns-nc;
 
-  msgStream_ << "(ns,nv,nc)="<<ns<<" "<<nv<<" "<<nc<<"\n";
+  msg_stream_ << "(ns,nv,nc)="<<ns<<" "<<nv<<" "<<nc<<"\n";
 
-  update_progress(1,2);
-  update_progress(2,2);
+  update_progress(0.5);
 
   // The problem is stated as:  A * Phi = 0
   // Where:      +-           -+
@@ -983,7 +982,7 @@ SurfaceToSurface::execute()
   double *Phi_c = makeVector(nc);
   double *Phi_s = makeVector(ns);
     
-  msgStream_ << "Splitting matrix into submatrices...(time="<<timer.time()<<").\n";
+  msg_stream_ << "Splitting matrix into submatrices...(time="<<timer.time()<<").\n";
   Avv=splitMatrix(Ass,Asv,Asc,Avs,Avc, ns, nv, nc, mh);
 
   //    printf("Here's Ass:\n");
@@ -999,16 +998,16 @@ SurfaceToSurface::execute()
   //    printf("Here's Avc:\n");
   //    printMatrix(Avc, nv, nc);
     
-  msgStream_ << "\n\nns="<<ns<<"   nv="<<nv<<"  nc="<<nc<<"\n\n";
+  msg_stream_ << "\n\nns="<<ns<<"   nv="<<nv<<"  nc="<<nc<<"\n\n";
 
 
-  msgStream_ << "Reading boundary conditions (time="<<timer.time()<<").\n";
+  msg_stream_ << "Reading boundary conditions (time="<<timer.time()<<").\n";
   for (int ii=0; ii<ns; ii++) Phi_s[ii+1]=mesh->nodes[ii]->bc->value;
 
   double **Ac = makeMatrix(ns,nc);
 
   buildAc(Ac, ns, nc, nv, Avv, Avc, Asv, Asc);
-  msgStream_ << "Done building Ac - timer="<<timer.time()<<"\n";
+  msg_stream_ << "Done building Ac - timer="<<timer.time()<<"\n";
   // now we have Ac... which we'll call M
 
   double **M=Ac;
@@ -1023,9 +1022,9 @@ SurfaceToSurface::execute()
   matVecMult(nv, ns, Avs, Phi_s, q);
     
   // t = Avv^(-1) * q
-  msgStream_ << "Starting Solve sparse ("<<nv<<")...(time="<<timer.time()<<") ";
+  msg_stream_ << "Starting Solve sparse ("<<nv<<")...(time="<<timer.time()<<") ";
   solveSparse(nv, nv, Avv, t, q);  // Avv * t = q    
-  msgStream_ << "Done!  (time="<<timer.time()<<")\n";
+  msg_stream_ << "Done!  (time="<<timer.time()<<")\n";
 
   // s = Asv * t
   matVecMult(ns, nv, Asv, t, s);
@@ -1037,31 +1036,31 @@ SurfaceToSurface::execute()
   vectorSub(ns, r, s, u);
     
   // Phi_c = M^(-1) * u;
-  msgStream_ << "Starting solve dense ("<<ns<<","<<nc<<")...(timer="
+  msg_stream_ << "Starting solve dense ("<<ns<<","<<nc<<")...(timer="
 	     <<timer.time()<<") ";
   solveDense(ns, nc, M, Phi_c, u); // M * Phi_c = u
-  msgStream_ << "Done!  (time="<<timer.time()<<")\n";
+  msg_stream_ << "Done!  (time="<<timer.time()<<")\n";
 
-  msgStream_ << "going in...\n";
+  msg_stream_ << "going in...\n";
   setBdryCorticalBC(Phi_c, st, ns, nc);
-  msgStream_ << "made it out!\n";
+  msg_stream_ << "made it out!\n";
 
   osurf->send_and_dereference(surfHandle);
 
   int i;
-  for (i=0; i<ns; i++) if (mesh->nodes[i]->bc == 0) msgStream_ << "WRONG!\n";
+  for (i=0; i<ns; i++) if (mesh->nodes[i]->bc == 0) msg_stream_ << "WRONG!\n";
   for (i=0; i<ns; i++) mesh->nodes[i]->bc=0;
   for (i=ns+nv; i<ns+nv+nc; i++)
   {
     mesh->nodes[i]->bc = new DirichletBC(SurfaceHandle(0), 
 					 Phi_c[i-ns-nv+1]);
     //if ((st->points[st->bcIdx[i-nv]]-mesh->nodes[i]->p).length2() > .000001)
-    //   msgStream_ << "ERROR - not same node: surf="<<
+    //   msg_stream_ << "ERROR - not same node: surf="<<
     //   st->points[st->bcIdx[i-nv]]<<"  mesh="<<mesh->nodes[i]->p<<"!\n";
   }
 
   omesh->send_and_dereference(mesh);
-  msgStream_ << "Done with SurfaceToSurface::execute (timer="
+  msg_stream_ << "Done with SurfaceToSurface::execute (timer="
 	     <<timer.time()<<")\n";
   timer.stop();
 }

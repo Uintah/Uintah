@@ -40,42 +40,49 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Tend
 
 
 SRCS     += \
-	$(SRCDIR)/TendAnscale.cc\
-	$(SRCDIR)/TendAnvol.cc\
-	$(SRCDIR)/TendBmat.cc\
-	$(SRCDIR)/TendEpireg.cc\
-	$(SRCDIR)/TendEstim.cc\
-	$(SRCDIR)/TendEval.cc\
-	$(SRCDIR)/TendEvalClamp.cc\
-	$(SRCDIR)/TendEvalPow.cc\
-	$(SRCDIR)/TendEvec.cc\
-	$(SRCDIR)/TendEvecRGB.cc\
-	$(SRCDIR)/TendFiber.cc\
-	$(SRCDIR)/TendNorm.cc\
-	$(SRCDIR)/TendPoint.cc\
-	$(SRCDIR)/TendSim.cc\
-	$(SRCDIR)/TendSten.cc\
-	$(SRCDIR)/TendAnplot.cc\
-	$(SRCDIR)/TendAnhist.cc\
-	$(SRCDIR)/TendSlice.cc\
-	$(SRCDIR)/TendEvalAdd.cc\
-	$(SRCDIR)/TendEvq.cc\
-	$(SRCDIR)/TendExpand.cc\
-	$(SRCDIR)/TendMake.cc\
-	$(SRCDIR)/TendSatin.cc\
-	$(SRCDIR)/TendShrink.cc\
+        $(SRCDIR)/TendAnscale.cc\
+        $(SRCDIR)/TendAnvol.cc\
+        $(SRCDIR)/TendBmat.cc\
+        $(SRCDIR)/TendEpireg.cc\
+        $(SRCDIR)/TendEstim.cc\
+        $(SRCDIR)/TendEval.cc\
+        $(SRCDIR)/TendEvalClamp.cc\
+        $(SRCDIR)/TendEvalPow.cc\
+        $(SRCDIR)/TendEvec.cc\
+        $(SRCDIR)/TendEvecRGB.cc\
+        $(SRCDIR)/TendFiber.cc\
+        $(SRCDIR)/TendNorm.cc\
+        $(SRCDIR)/TendPoint.cc\
+        $(SRCDIR)/TendSim.cc\
+        $(SRCDIR)/TendSten.cc\
+        $(SRCDIR)/TendAnplot.cc\
+        $(SRCDIR)/TendAnhist.cc\
+        $(SRCDIR)/TendSlice.cc\
+        $(SRCDIR)/TendEvalAdd.cc\
+        $(SRCDIR)/TendEvq.cc\
+        $(SRCDIR)/TendExpand.cc\
+        $(SRCDIR)/TendMake.cc\
+        $(SRCDIR)/TendSatin.cc\
+        $(SRCDIR)/TendShrink.cc\
 
-PSELIBS := Core/Datatypes \
-	Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
-        Core/TkExtensions
+PSELIBS := \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/GeomInterface \
+        Core/Geometry      \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network   
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
-TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+  TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
 endif

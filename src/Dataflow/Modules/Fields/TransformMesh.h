@@ -59,7 +59,7 @@ template <class FIELD>
 class TransformMeshAlgoT : public TransformMeshAlgo
 {
 public:
-  virtual void function(Point &result, const Point &p) = 0;
+  virtual void function(Point &result, const Point &p, unsigned idx) = 0;
 
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src);
@@ -85,7 +85,7 @@ TransformMeshAlgoT<FIELD>::execute(FieldHandle field_h)
   {
     mesh->get_center(p, *ibi);
     result = p;
-    function(result, p);
+    function(result, p, *ibi);
     mesh->set_point(result, *ibi);
 
     ++ibi;

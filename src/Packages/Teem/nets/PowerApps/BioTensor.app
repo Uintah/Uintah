@@ -1619,6 +1619,33 @@ set $m137-kind {nrrdKind3DMaskedSymTensor}
 
 set $m138-filename {/tmp/tensors.nrrd}
 
+set $m23-use-first-valid {0}
+set $m24-use-first-valid {0} 
+set $m27-use-first-valid {0}
+set $m33-use-first-valid {0}
+set $m45-use-first-valid {0}
+set $m49-use-first-valid {0}
+set $m82-use-first-valid {0}
+set $m83-use-first-valid {0}
+set $m93-use-first-valid {0}
+set $m98-use-first-valid {0}
+set $m104-use-first-valid {0}
+set $m105-use-first-valid {0}
+set $m113-use-first-valid {0}
+set $m114-use-first-valid {0}
+set $m117-use-first-valid {0}
+set $m118-use-first-valid {0}
+set $m120-use-first-valid {0}
+set $m122-use-first-valid {0}
+set $m132-use-first-valid {0}
+set $m133-use-first-valid {0}
+set $m134-use-first-valid {0}
+set $m135-use-first-valid {0}
+set $m136-use-first-valid {0}
+set $m139-use-first-valid {0}
+set $m157-use-first-valid {0}
+set $m167-use-first-valid {0}
+
 ::netedit scheduleok
 
 

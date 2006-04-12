@@ -2,7 +2,7 @@
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
 <?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
-                                                                                       
+
 <component name="PTIIDataToNrrd" category="Converters">
   <overview>
     <authors>
@@ -35,6 +35,4 @@
   </io>
   <gui>
   </gui>
-  <testing>
-  </testing>
 </component>

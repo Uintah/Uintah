@@ -39,10 +39,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Modules/Visualization/RescaleColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
@@ -53,16 +52,40 @@
 
 namespace SCIRun {
 
+
+class RescaleColorMap : public Module {
+public:
+
+  //! Constructor taking [in] get_id() as an identifier
+  RescaleColorMap(GuiContext* ctx);
+
+  virtual ~RescaleColorMap();
+  virtual void execute();
+
+protected:
+  bool success_;
+
+private:
+  GuiString gui_frame_;
+  GuiInt    gui_is_fixed_;
+  GuiDouble gui_min_;
+  GuiDouble gui_max_;
+  GuiInt    gui_make_symmetric_;
+
+  ColorMapHandle colormap_output_handle_;
+
+  pair<double,double> minmax_;
+};
+
+
 DECLARE_MAKER(RescaleColorMap)
 RescaleColorMap::RescaleColorMap(GuiContext* ctx)
   : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    gFrame_(ctx->subVar("main_frame")),
-    gIsFixed_(ctx->subVar("isFixed")),
-    gMin_(ctx->subVar("min")),
-    gMax_(ctx->subVar("max")),
-    gMakeSymmetric_(ctx->subVar("makeSymmetric")),
-    cGeneration_(-1),
-    error_(false)
+    gui_frame_(get_ctx()->subVar("main_frame"), ""),
+    gui_is_fixed_(get_ctx()->subVar("isFixed"), 0),
+    gui_min_(get_ctx()->subVar("min"), 0),
+    gui_max_(get_ctx()->subVar("max"), 1),
+    gui_make_symmetric_(get_ctx()->subVar("makeSymmetric"), 0)
 {
 }
 
@@ -73,114 +96,53 @@ RescaleColorMap::~RescaleColorMap()
 void
 RescaleColorMap::execute()
 {
-  ColorMapHandle cHandle;
-  ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("ColorMap");
- 
-  // The colormap input is required.
-  if (!cmap_port->get(cHandle) || !(cHandle.get_rep())) {
-    error( "No colormap handle or representation" );
-    return;
-  }
+  ColorMapHandle colormap_input_handle;
+  std::vector<FieldHandle> field_input_handles;
 
-  bool update = false;
+  // Do this first so the ports are optional if a fixed scale is used.
+  if( gui_is_fixed_.changed( true ) )
+    inputs_changed_ = true;
 
-  // Check to see if the input colormap has changed.
-  if( cGeneration_ != cHandle->generation )
+  if( !get_input_handle( "ColorMap", colormap_input_handle, true ) ) return;
+
+  if (!get_dynamic_input_handles("Field", field_input_handles,
+				 !gui_is_fixed_.get() ) ) 
   {
-    cGeneration_ = cHandle->generation;
-    update = true;
+    if (!gui_is_fixed_.get()) return;
   }
- 
-  string units;
-  unsigned int nFields = 0;
-  std::vector<FieldHandle> fHandles;
+  // Check to see if any values have changed.
+  if( inputs_changed_ ||
 
-  port_range_type range = get_iports("Field");
-  if (range.first != range.second) {
-    port_map_type::iterator pi = range.first;
-    
-    while (pi != range.second) {
-      FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
-      
-      // Increment here!  We do this because last one is always
-      // empty so we can test for it before issuing empty warning.
-      ++pi;
+      !colormap_output_handle_.get_rep() ||
 
-      FieldHandle fHandle;
-      if (ifield->get(fHandle) && fHandle.get_rep()) {
+      (gui_is_fixed_.get() == 0 && gui_make_symmetric_.changed( true )) ||
+      (gui_is_fixed_.get() == 1 && (gui_min_.changed( true ) ||
+				gui_max_.changed( true ))) ||
+      execute_error_ ) {
 
-	fHandles.push_back(fHandle);
-	fHandle->get_property("units", units);
+    update_state(Executing);
 
-	if( nFields == fGeneration_.size() ) {
-	  fGeneration_.push_back( fHandle->generation );
-	  update = true;
-	} else if ( fGeneration_[nFields] != fHandle->generation ) {
-	  fGeneration_[nFields] = fHandle->generation;
-	  update = true;
-	}
+    execute_error_ = false;
 
-	nFields++;
-      } else if (pi != range.second) {
-	warning("Input port " + to_string(nFields) + " contained no data.");
-	return;
-      }
-    }
-  }
+    colormap_output_handle_ = colormap_input_handle;
+    colormap_output_handle_.detach();
 
-  while( fGeneration_.size() > nFields ) {
-    update = true;
-    fGeneration_.pop_back();
-  }
-
-  int isFixed = gIsFixed_.get();
-  double min = gMin_.get();
-  double max = gMax_.get();
-  int makeSymmetric = gMakeSymmetric_.get();
-
-  if( isFixed_ != isFixed ||
-      min_  != min  ||
-      max_  != max  ||
-      makeSymmetric_ != makeSymmetric ) {
-
-    isFixed_ = isFixed;
-    min_ = min;
-    max_ = max;
-    makeSymmetric_ = makeSymmetric;
-
-    update = true;
-  }
-
-  if( !cHandle_.get_rep() ||
-      update ||
-      error_ ) {
-
-    error_ = false;
-    cHandle_ = cHandle;
-
-    cHandle_.detach();
-
-    if( units.length() != 0 )
-      cHandle_->set_units(units);
-
-    if( isFixed ){
-      cHandle_->Scale(min, max);
+    if( gui_is_fixed_.get() ) {
+      colormap_output_handle_->Scale( gui_min_.get(), gui_max_.get());
 
     } else {
 
-      if (fHandles.size() == 0) {
-	error("No field(s) provided -- Color map can not be rescaled.");
-	error_ = true;
-	return;
-      }
-
       // initialize the following so that the compiler will stop
       // warning us about possibly using unitialized variables
-      double minv = MAXDOUBLE, maxv = -MAXDOUBLE;
+      double minv = DBL_MAX, maxv = -DBL_MAX;
 
-      for( unsigned int i=0; i<fHandles.size(); i++ ) {
-	FieldHandle fHandle = fHandles[i];
+      for( unsigned int i=0; i<field_input_handles.size(); i++ ) {
+	FieldHandle fHandle = field_input_handles[i];
 
+	string units;
+	if( fHandle->get_property("units", units) )
+	  colormap_output_handle_->set_units(units);
+	  
 	ScalarFieldInterfaceHandle sfi;
 	VectorFieldInterfaceHandle vfi;
 
@@ -190,37 +152,34 @@ RescaleColorMap::execute()
 	  vfi->compute_length_min_max(minmax_.first, minmax_.second);
 	} else {
 	  error("An input field is not a scalar or vector field.");
-	  error_ = true;
+	  execute_error_ = true;
 	  return;
 	}
 
 	if ( minv > minmax_.first)
-	  minv=minmax_.first;
+	  minv = minmax_.first;
 
 	if ( maxv < minmax_.second)
-	  maxv=minmax_.second;
+	  maxv = minmax_.second;
       }
 
       minmax_.first  = minv;
       minmax_.second = maxv;
 
-      if ( makeSymmetric_ ) {
+      if ( gui_make_symmetric_.get() ) {
 	float biggest = Max(Abs(minmax_.first), Abs(minmax_.second));
 	minmax_.first  = -biggest;
 	minmax_.second =  biggest;
       }
 
-      cHandle_->Scale( minmax_.first, minmax_.second);
-      gMin_.set( minmax_.first );
-      gMax_.set( minmax_.second );
+      colormap_output_handle_->Scale( minmax_.first, minmax_.second);
+      gui_min_.set( minmax_.first );
+      gui_max_.set( minmax_.second );
     }
   }
 
   // Send the data downstream
-  if( cHandle_.get_rep() )
-  {
-    ColorMapOPort *ocolormap_port = (ColorMapOPort *) get_oport("ColorMap");
-    ocolormap_port->send_and_dereference( cHandle_, true );
-  }
+  send_output_handle( "ColorMap",  colormap_output_handle_, true );
 }
+
 } // End namespace SCIRun

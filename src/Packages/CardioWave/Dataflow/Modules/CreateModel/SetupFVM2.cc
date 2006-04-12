@@ -11,7 +11,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
@@ -108,7 +108,7 @@ void SetupFVM2::execute(){
   m->size(nnodes);
   m->size(ncells);
 
-  msgStream_ << "nnodes="<<nnodes<<" ncells="<<ncells<<"\n";
+  msg_stream_ << "nnodes="<<nnodes<<" ncells="<<ncells<<"\n";
 
   MESH *mesh = new MESH;
   mesh->vtx = new VERTEX[nnodes];

@@ -45,7 +45,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
 
@@ -71,7 +71,9 @@ public:
 
 CastTVtoMLV::CastTVtoMLV(GuiContext* ctx)
   : Module("CastTVtoMLV", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    nx_(ctx->subVar("nx")), ny_(ctx->subVar("ny")), nz_(ctx->subVar("nz"))
+    nx_(get_ctx()->subVar("nx"), 8),
+    ny_(get_ctx()->subVar("ny"), 8),
+    nz_(get_ctx()->subVar("nz"), 8)
 {
 }
 

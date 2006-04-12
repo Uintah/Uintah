@@ -496,6 +496,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     patches = lb->createPerProcessorPatchSet(level);
   else
     patches = level->allPatches();
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
   this->lb=lb;
 }
@@ -628,6 +629,9 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw)
 {
+  // in AMR cases, it makes sense to give more procs than there are patches (because
+  // there might be more patches later)
+  if (patches->size() == 0) return;
   const Level* level = getLevel(patches);
   
   int total_reloc[3], v;

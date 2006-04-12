@@ -28,7 +28,7 @@
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Dataflow/Network/Module.h>
 
@@ -43,17 +43,13 @@ using namespace SCIRun;
 class MergeFields : public Module {
 public:
   MergeFields(GuiContext*);
-
-  virtual ~MergeFields();
-
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 
 private:
   GuiDouble guitolerance_;
   GuiInt    guimergenodes_;
   GuiInt    guiforcepointcloud_;
+  GuiInt    guimatchval_;
 
 };
 
@@ -61,79 +57,44 @@ private:
 DECLARE_MAKER(MergeFields)
 MergeFields::MergeFields(GuiContext* ctx)
   : Module("MergeFields", ctx, Source, "FieldsCreate", "ModelCreation"),
-  guitolerance_(ctx->subVar("tolerance")),
-  guimergenodes_(ctx->subVar("force-nodemerge")),
-  guiforcepointcloud_(ctx->subVar("force-pointcloud"))
+  guitolerance_(get_ctx()->subVar("tolerance")),
+  guimergenodes_(get_ctx()->subVar("force-nodemerge")),
+  guiforcepointcloud_(get_ctx()->subVar("force-pointcloud")),
+  guimatchval_(get_ctx()->subVar("matchval"))
 {
-}
-
-MergeFields::~MergeFields(){
 }
 
 void MergeFields::execute()
 {
-  int numiports = numIPorts()-1;
-  
-  std::vector<SCIRun::FieldHandle> fields(numiports);
-  
-  for (size_t p = 0; p < numiports; p++)
-  {
-    FieldIPort *field_iport;
-    if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(p))))
-    {
-      error("Could not find Field input port");
-      return;
-    }
-    FieldHandle input;
-    field_iport->get(input);
-    
-    if (input.get_rep() == 0)
-    {
-      warning("No Field was found on input port");
-      return;
-    }
-    
-    fields[p] = input;
-  }
-  
+  std::vector<SCIRun::FieldHandle> fields;
+  if(!(get_dynamic_input_handles("Field",fields,true))) return;
+
   FieldHandle output;
 
   double tolerance = 0.0;
   bool   mergenodes = false;
   bool   forcepointcloud = false;
-
+  bool   matchval = false;
+  
   tolerance = guitolerance_.get();
   if (guimergenodes_.get()) mergenodes = true;
   if (guiforcepointcloud_.get()) forcepointcloud = true;
+  if (guimatchval_.get()) matchval = true;
 
-  FieldsAlgo fieldalgo(dynamic_cast<ProgressReporter *>(this));  
+  FieldsAlgo algo(this);  
 
-  if (!(fieldalgo.MergeFields(fields,output,tolerance,mergenodes)))
-  {
-    error("The MergeFields algorithm failed.");
-    return;
-  }
+  if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval))) return;
 
   if (forcepointcloud)
   {
     FieldHandle temp;
-    if (!(fieldalgo.ToPointCloud(output,temp)))
-    {
-      error("The ToPointCloud algorithm failed");
-      return;
-    }
+    if (!(algo.ToPointCloud(output,temp))) return;
     output = temp;
   }
   
-  FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
-  if (output_oport) output_oport->send(output);
+  send_output_handle("Field",output,true);
 }
 
-void
- MergeFields::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace ModelCreation
 

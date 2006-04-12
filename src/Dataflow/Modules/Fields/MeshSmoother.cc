@@ -26,8 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
 /*
  *  MeshSmoother.cc:  Smooth a given mesh.
  *
@@ -42,8 +40,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/MeshSmoother.h>
 #include <Core/Containers/StringUtil.h>
@@ -54,7 +52,12 @@ namespace SCIRun {
 class MeshSmoother : public Module
 {
 private:
-  int       last_field_generation_;
+  GuiString smooth_boundary_;
+  GuiString smooth_scheme_;
+  int last_field_generation_;
+
+  string last_smooth_boundary_;
+  string last_smooth_scheme_;
 
 public:
   MeshSmoother(GuiContext* ctx);
@@ -68,16 +71,21 @@ DECLARE_MAKER(MeshSmoother)
 
 
 MeshSmoother::MeshSmoother(GuiContext* ctx)
-        : Module("MeshSmoother", ctx, Filter, "FieldsData", "SCIRun"),
+        : Module("MeshSmoother", ctx, Filter, "FieldsGeometry", "SCIRun"),
+          smooth_boundary_(get_ctx()->subVar("smoothboundary"), "Off" ),
+          smooth_scheme_(get_ctx()->subVar("smoothscheme"), "SmartLaplacian" ),
           last_field_generation_(0)
 {
 }
+
 
 MeshSmoother::~MeshSmoother()
 {
 }
 
-void MeshSmoother::execute()
+
+void
+MeshSmoother::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
@@ -87,8 +95,20 @@ void MeshSmoother::execute()
     return;
   }
 
-  if (last_field_generation_ == ifieldhandle->generation &&
-      oport_cached("Smoothed") )
+  bool changed = false;
+  smooth_scheme_.reset();
+  smooth_boundary_.reset();
+  
+  if( last_smooth_scheme_ != smooth_scheme_.get() ||
+      last_smooth_boundary_ != smooth_boundary_.get() )
+  {
+    last_smooth_scheme_ = smooth_scheme_.get();
+    last_smooth_boundary_ = smooth_boundary_.get();
+    changed = true;
+  }
+
+  if( last_field_generation_ == ifieldhandle->generation &&
+       oport_cached( "Smoothed" ) && !changed )
   {
     // We're up to date, return.
     return;
@@ -103,20 +123,15 @@ void MeshSmoother::execute()
   }
   else if (mtd->get_name().find("TriSurfMesh") != string::npos)
   {
-//    ext = "Tri";
-    error( "TriSurfMesh Fields are not currently supported by the MeshSmoother.");
-    return;
+    ext = "Tri";
   }
   else if (mtd->get_name().find("HexVolMesh") != string::npos)
   {
     ext = "Hex";
-//    error("HexVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting a SCIRun::FieldsGeometry::HexToTet module upstream.");
-//    return;
   }
   else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
   {
-    error("QuadSurfFields are not currently supported in the MeshSmoother  module.");
-    return;
+    ext = "Quad";
   }
   else if (mtd->get_name().find("LatVolMesh") != string::npos)
   {
@@ -134,18 +149,6 @@ void MeshSmoother::execute()
     return;
   }
 
-//   if (!ifieldhandle->query_scalar_interface(this).get_rep())
-//   {
-//     error("Input field must contain scalar data.");
-//     return;
-//   }
-  
-//   if (ifieldhandle->basis_order() != 1)
-//   {
-//     error("Isoclipping can only be done for fields with data at nodes.  Note: you can insert a ChangeFieldDataAt module (and an ApplyInterpMatrix module) upstream to push element data to the nodes.");
-//     return;
-//   }
-
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = MeshSmootherAlgo::get_compile_info(ftd, ext);
   Handle<MeshSmootherAlgo> algo;
@@ -155,17 +158,17 @@ void MeshSmoother::execute()
     return;
   }
 
-//   FieldHandle ofield = algo->execute(this, ifieldhandle,
-// 				     isoval, gui_lte_.get(),
-// 				     interp);
-  FieldHandle ofield = algo->execute(this, ifieldhandle);
+  bool sb = false;
+  if( last_smooth_boundary_ == "On" )
+      sb = true;
+
+  FieldHandle ofield = algo->execute(this, ifieldhandle, 
+                                     sb, last_smooth_scheme_ );
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Smoothed");
   ofield_port->send_and_dereference(ofield);
-
-//   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-//   omatrix_port->send_and_dereference(interp);
 }
+
 
 CompileInfoHandle
 MeshSmootherAlgo::get_compile_info(const TypeDescription *fsrc,

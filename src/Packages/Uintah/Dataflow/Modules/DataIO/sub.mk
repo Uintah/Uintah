@@ -9,22 +9,22 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Packages/Uintah/Core/Datatypes \
+	Packages/Uintah/Core/Datatypes   \
 	Packages/Uintah/Core/DataArchive \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Math \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Ports \
-	Dataflow/Network \
-	Dataflow/Ports \
-	Core/Containers \
-	Core/Persistent \
-	Core/Exceptions \
-	Core/GuiInterface \
-	Core/Thread \
-	Core/Datatypes \
-	Core/Geom \
-	Core/GeomInterface
+	Dataflow/Network   \
+	Core/Containers    \
+	Core/Datatypes     \
+	Core/Exceptions    \
+	Core/Geom          \
+	Core/GeomInterface \
+	Core/GuiInterface  \
+	Core/Persistent    \
+	Core/Thread       
+
 LIBS := $(XML2_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

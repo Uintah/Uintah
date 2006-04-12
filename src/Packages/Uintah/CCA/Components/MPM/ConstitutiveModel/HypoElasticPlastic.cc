@@ -219,38 +219,37 @@ void HypoElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","hypoelastic_plastic");
   }
 
-  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk,false,4);
-  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
-  cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha,false,4);
-  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
-  cm_ps->appendElement("remove_particles",d_removeParticles,false,4);
-  cm_ps->appendElement("zero_stress_upon_failure",d_setStressToZero,false,4);
-  cm_ps->appendElement("evolve_porosity",d_evolvePorosity,false,4);
-  cm_ps->appendElement("evolve_damage",d_evolveDamage,false,4);
+  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear);
+  cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
+  cm_ps->appendElement("remove_particles",d_removeParticles);
+  cm_ps->appendElement("zero_stress_upon_failure",d_setStressToZero);
+  cm_ps->appendElement("evolve_porosity",d_evolvePorosity);
+  cm_ps->appendElement("evolve_damage",d_evolveDamage);
   cm_ps->appendElement("check_TEPLA_failure_criterion",
-                       d_checkTeplaFailureCriterion,false,4);
-  cm_ps->appendElement("tolerance",d_tol,false,4);
+                       d_checkTeplaFailureCriterion);
+  cm_ps->appendElement("tolerance",d_tol);
   cm_ps->appendElement("initial_material_temperature",
-                       d_initialMaterialTemperature,false,4);
+                       d_initialMaterialTemperature);
 
-  cm_ps->appendElement("initial_mean_porosity",d_porosity.f0,false,4);
-  cm_ps->appendElement("initial_std_porosity",d_porosity.f0_std,false,4);
-  cm_ps->appendElement("critical_porosity",d_porosity.fc,false,4);
-  cm_ps->appendElement("frac_nucleation",d_porosity.fn,false,4);
-  cm_ps->appendElement("meanstrain_nucleation",d_porosity.en,false,4);
-  cm_ps->appendElement("stddevstrain_nucleation",d_porosity.sn,false,4);
-  cm_ps->appendElement("initial_porosity_distrib",d_porosity.porosityDist,
-                       false,4);
+  cm_ps->appendElement("initial_mean_porosity",d_porosity.f0);
+  cm_ps->appendElement("initial_std_porosity",d_porosity.f0_std);
+  cm_ps->appendElement("critical_porosity",d_porosity.fc);
+  cm_ps->appendElement("frac_nucleation",d_porosity.fn);
+  cm_ps->appendElement("meanstrain_nucleation",d_porosity.en);
+  cm_ps->appendElement("stddevstrain_nucleation",d_porosity.sn);
+  cm_ps->appendElement("initial_porosity_distrib",d_porosity.porosityDist);
 
-  cm_ps->appendElement("initial_mean_scalar_damage",d_scalarDam.D0,false,4);
-  cm_ps->appendElement("initial_std_scalar_damage",d_scalarDam.D0_std,false,4);
-  cm_ps->appendElement("critical_scalar_damage",d_scalarDam.Dc,false,4);
+  cm_ps->appendElement("initial_mean_scalar_damage",d_scalarDam.D0);
+  cm_ps->appendElement("initial_std_scalar_damage",d_scalarDam.D0_std);
+  cm_ps->appendElement("critical_scalar_damage",d_scalarDam.Dc);
   cm_ps->appendElement("initial_scalar_damage_distrib",
-                       d_scalarDam.scalarDamageDist,false,4);
+                       d_scalarDam.scalarDamageDist);
 
   d_yield->outputProblemSpec(cm_ps);
   d_stable->outputProblemSpec(cm_ps);

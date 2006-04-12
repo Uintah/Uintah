@@ -29,25 +29,12 @@
 
 itcl_class SCIRun_FieldsData_ChangeFieldDataType {
     inherit Module
+
     constructor {config} {
         set name ChangeFieldDataType
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	set $this-firstwidth 12
-
-	# these won't be saved 
-	global $this-fldname
-	global $this-inputdatatype
-	set $this-fldname "---"
-	set $this-inputdatatype "---"
-
-	# these will be saved
-	global $this-outputdatatype
-	set $this-outputdatatype "double"
+	# The width of the first column of the data display.
+	setGlobal $this-firstwidth 12
     }
 
     method ui {} {
@@ -82,18 +69,6 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataType {
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
-
-
-    method labelpair { win text1 text2 } {
-	frame $win 
-	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
-		-fore darkred
-	pack $win.l1 $win.colon $win.l2 -side left
-    } 
 
 
     method labelcombo { win text1 arglist var} {

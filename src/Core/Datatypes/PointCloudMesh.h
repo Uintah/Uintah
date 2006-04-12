@@ -98,6 +98,7 @@ public:
   };
 
   typedef Node Elem;
+  // No DElem for PointCloudMesh
 
   friend class ElemData;
 
@@ -234,12 +235,16 @@ public:
   typename Node::index_type add_node(const Point &p) { return add_point(p); }
   typename Node::index_type add_point(const Point &p);
   typename Elem::index_type add_elem(typename Node::array_type a)
-  { return a[0]; }
+  {
+    ASSERTMSG(a.size() == 1, "Tried to add non-point element.");
+    return a[0];
+  }
   void node_reserve(size_t s) { points_.reserve(s); }
   void elem_reserve(size_t s) { points_.reserve(s); }
 
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 0; }
+  virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

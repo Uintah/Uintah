@@ -72,6 +72,7 @@ SRCS := \
         $(SRCDIR)/ChangeFieldBasis.tcl \
         $(SRCDIR)/ChangeFieldDataType.tcl \
         $(SRCDIR)/ChangeFieldBounds.tcl \
+        $(SRCDIR)/ChooseModule.tcl \
         $(SRCDIR)/ChooseColorMap.tcl \
         $(SRCDIR)/ChooseField.tcl \
         $(SRCDIR)/ChooseMatrix.tcl \
@@ -112,6 +113,7 @@ SRCS := \
         $(SRCDIR)/GenStandardColorMaps.tcl \
         $(SRCDIR)/GenTitle.tcl \
         $(SRCDIR)/ToolTipText.tcl \
+	$(SRCDIR)/InsertHexSheet.tcl \
         $(SRCDIR)/Isosurface.tcl \
         $(SRCDIR)/IsoClip.tcl \
         $(SRCDIR)/LightWidget.tcl \
@@ -155,6 +157,7 @@ SRCS := \
 	$(SRCDIR)/SeedPoints.tcl \
         $(SRCDIR)/SelectField.tcl \
         $(SRCDIR)/SetProperty.tcl \
+        $(SRCDIR)/SetPropertyModule.tcl \
         $(SRCDIR)/ShowColorMap.tcl \
         $(SRCDIR)/ShowField.tcl \
         $(SRCDIR)/ShowMatrix.tcl \
@@ -165,6 +168,7 @@ SRCS := \
         $(SRCDIR)/Subnet.tcl \
         $(SRCDIR)/SynchronizeGeometry.tcl \
         $(SRCDIR)/TextureBuilder.tcl \
+        $(SRCDIR)/TetGen.tcl \
         $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \
         $(SRCDIR)/TransformData.tcl \
@@ -185,6 +189,11 @@ SRCS := \
 	$(SRCDIR)/CreateMatrix.tcl\
 	$(SRCDIR)/GetFileName.tcl\
 #[INSERT NEW TCL FILE HERE]
+
+# MESQUITE Mesh Optimization Library
+ifeq ($(HAVE_MESQUITE),yes)
+   SRCS += $(SRCDIR)/MeshSmoother.tcl
+endif
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 

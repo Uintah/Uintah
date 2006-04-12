@@ -171,8 +171,8 @@ DECLARE_MAKER(WatershedImageFilter)
 
 WatershedImageFilter::WatershedImageFilter(GuiContext* ctx)
   : Module("WatershedImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_threshold_(ctx->subVar("threshold")),
-     gui_level_(ctx->subVar("level")), 
+     gui_threshold_(get_ctx()->subVar("threshold")),
+     gui_level_(get_ctx()->subVar("level")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

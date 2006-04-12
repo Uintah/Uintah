@@ -77,7 +77,7 @@ SRCS += ${SRCDIR}/BinaryDilateImageFilter.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \
-	Core/Datatypes Dataflow/Network Dataflow/Ports \
+	Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface 

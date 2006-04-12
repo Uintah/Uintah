@@ -1,7 +1,8 @@
 #if !defined(__APPLE__) && !defined(__sgi)
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
-#ifdef LAM_MPI
+// We mustn't call the PMPI routines when using TAU, or they won't get profiled.
+#if defined(LAM_MPI) && !defined(USE_TAU_PROFILING)
 #include <iostream>
 #include <vector>
 #include <queue>

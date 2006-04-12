@@ -65,12 +65,12 @@ void Membrane::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","membrane");
   }
 
-  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
-  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear);
 }
 
 

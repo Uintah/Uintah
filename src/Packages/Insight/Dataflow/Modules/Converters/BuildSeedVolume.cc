@@ -40,20 +40,18 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 
 #include <Core/Datatypes/GenericField.h>
 
-#include <Packages/Insight/share/share.h>
-
 namespace Insight {
   
 using namespace SCIRun;
   
-class InsightSHARE BuildSeedVolume : public Module {  
+class BuildSeedVolume : public Module {  
 public:
   GuiDouble  gui_inside_value_;
   GuiDouble  gui_outside_value_;
@@ -81,8 +79,8 @@ public:
 DECLARE_MAKER(BuildSeedVolume)
 BuildSeedVolume::BuildSeedVolume(GuiContext* ctx)
   : Module("BuildSeedVolume", ctx, Source, "Converters", "Insight"),
-    gui_inside_value_(ctx->subVar("inside_value")),
-    gui_outside_value_(ctx->subVar("outside_value")),
+    gui_inside_value_(get_ctx()->subVar("inside_value")),
+    gui_outside_value_(get_ctx()->subVar("outside_value")),
     generation_(-1)
 {
 }
@@ -168,19 +166,22 @@ BuildSeedVolume::execute()
   min_y = in_img->GetOrigin()[1];
 
   // create nrrd
+  size_t size[NRRD_DIM_MAX];
+  size[0] = samples_x;
+  size[1] = samples_y;
   NrrdData *n = scinew NrrdData();
-  nrrdAlloc(n->nrrd, nrrdTypeFloat, 2, samples_x, samples_y);
-  n->nrrd->axis[0].spacing = spacing_x;
-  n->nrrd->axis[1].spacing = spacing_y;
-  n->nrrd->axis[0].min = min_x;
-  n->nrrd->axis[1].min = min_y;
+  nrrdAlloc_nva(n->nrrd_, nrrdTypeFloat, 2, size);
+  n->nrrd_->axis[0].spacing = spacing_x;
+  n->nrrd_->axis[1].spacing = spacing_y;
+  n->nrrd_->axis[0].min = min_x;
+  n->nrrd_->axis[1].min = min_y;
 
   // iterate over each node with position x,y,z
   PCField::mesh_handle_type imesh = f->get_typed_mesh();
   PCMesh::Node::iterator ibi, iei;
   imesh->begin(ibi);
   imesh->end(iei);
-  float *data = (float*)n->nrrd->data;
+  float *data = (float*)n->nrrd_->data;
   float inside = (float)gui_inside_value_.get();
   float outside = (float)gui_outside_value_.get();
 

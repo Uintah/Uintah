@@ -1396,11 +1396,12 @@ ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* /*pbuffer*/)
   glPixelTransferf(GL_ALPHA_SCALE, trans);
 
 
-  Nrrd *nout = pixels_->nrrd;
+  Nrrd *nout = pixels_->nrrd_;
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
 
-  if (vp[2] != nout->axis[1].size || vp[3] != nout->axis[2].size) 
+  if ((unsigned int) vp[2] != nout->axis[1].size ||
+      (unsigned int) vp[3] != nout->axis[2].size) 
   {
     nout = resize(vp[2], vp[3]);
   }
@@ -1408,7 +1409,7 @@ ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* /*pbuffer*/)
 
   glDrawPixels(vp[2], vp[3], GL_RGBA, GL_FLOAT, (float*)nout->data);
 
-  if (nout != pixels_->nrrd)
+  if (nout != pixels_->nrrd_)
     nrrdNuke(nout);
 
   // restore default values
@@ -1424,7 +1425,7 @@ ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* /*pbuffer*/)
 Nrrd*
 ImageCM2Widget::resize(int width, int height) 
 {
-  Nrrd *nin   = pixels_->nrrd;
+  Nrrd *nin   = pixels_->nrrd_;
   NrrdResampleInfo *info = nrrdResampleInfoNew();
   NrrdKernel *kern;
   double p[NRRD_KERNEL_PARMS_NUM];
@@ -1453,7 +1454,7 @@ ImageCM2Widget::resize(int width, int height)
         (!(airExists(nin->axis[a].min) && 
            airExists(nin->axis[a].max)))) {
       nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
-                            nin->axis[a].center : nrrdDefCenter);
+                            nin->axis[a].center : nrrdDefaultCenter);
     }
     info->min[a] = nin->axis[a].min;
     info->max[a] = nin->axis[a].max;
@@ -1485,12 +1486,12 @@ void
 ImageCM2Widget::rasterize(Array3<float>& array)
 {
   if (! pixels_.get_rep()) return;
-  ASSERT(pixels_->nrrd->type == nrrdTypeFloat);
+  ASSERT(pixels_->nrrd_->type == nrrdTypeFloat);
   if(array.dim3() != 4) return;
 
   Nrrd *nout = 0;
-  if (array.dim2() != pixels_->nrrd->axis[1].size || 
-      array.dim1() != pixels_->nrrd->axis[2].size) 
+  if (array.dim2() != pixels_->nrrd_->axis[1].size || 
+      array.dim1() != pixels_->nrrd_->axis[2].size) 
   {
     nout = resize(array.dim2(), array.dim1());
   }
@@ -2161,16 +2162,16 @@ ClippingCM2Widget::io(Piostream &/*stream*/)
 
 ClippingCM2Widget::ClippingCM2Widget() : 
   CM2Widget(),
-  bboxes_()
+  plane_()
 {
   name_ = "Clipping";
 }
 
-ClippingCM2Widget::ClippingCM2Widget(vector<BBox> &bboxes)
+ClippingCM2Widget::ClippingCM2Widget(const Plane &plane)
   : CM2Widget(),
-    bboxes_(bboxes)
+    plane_(plane)
 {
-  name_ = "Clipping";
+  name_ = "Clipping P,ane";
 }
 
 ClippingCM2Widget::~ClippingCM2Widget()
@@ -2178,7 +2179,7 @@ ClippingCM2Widget::~ClippingCM2Widget()
 
 ClippingCM2Widget::ClippingCM2Widget(ClippingCM2Widget& copy) : 
   CM2Widget(copy),
-  bboxes_(copy.bboxes_)
+  plane_(copy.plane_)
 {}
 
 CM2Widget*

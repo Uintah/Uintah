@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Tensor.h>
@@ -90,18 +90,18 @@ DECLARE_MAKER(SamplePlane)
   
 SamplePlane::SamplePlane(GuiContext* ctx) : 
   Module("SamplePlane", ctx, Filter, "FieldsCreate", "SCIRun"),
-  size_x_(ctx->subVar("sizex")),
-  size_y_(ctx->subVar("sizey")),
-  size_z_(ctx->subVar("sizez")),
-  z_value_(ctx->subVar("z_value")),
-  auto_size_(ctx->subVar("auto_size")),
-  axis_(ctx->subVar("axis")),
-  padpercent_(ctx->subVar("padpercent")),
-  position_(ctx->subVar("pos")),
-  data_at_(ctx->subVar("data-at")),
-  update_type_(ctx->subVar("update_type")),
-  custom_origin_(ctx->subVar("corigin")),
-  custom_normal_(ctx->subVar("cnormal"))
+  size_x_(get_ctx()->subVar("sizex"), 20),
+  size_y_(get_ctx()->subVar("sizey"), 20),
+  size_z_(get_ctx()->subVar("sizez"), 2),
+  z_value_(get_ctx()->subVar("z_value"), 0),
+  auto_size_(get_ctx()->subVar("auto_size"), 0),
+  axis_(get_ctx()->subVar("axis"), 0),
+  padpercent_(get_ctx()->subVar("padpercent"), 0),
+  position_(get_ctx()->subVar("pos"), 0),
+  data_at_(get_ctx()->subVar("data-at"), "Nodes"),
+  update_type_(get_ctx()->subVar("update_type"), "On Release"),
+  custom_origin_(get_ctx()->subVar("corigin"), Point(0.0, 0.0, 0.0)),
+  custom_normal_(get_ctx()->subVar("cnormal"), Vector(1.0, 1.0, 1.0))
 {
 }
 
@@ -207,7 +207,7 @@ SamplePlane::execute()
           } else {
             size_z_.set( sizez );
           }
-          gui->execute(id+" edit_scale");
+          get_gui()->execute(get_id()+" edit_scale");
           break;
         case 1: 
           sizex =  Max(2, (int)lvm->get_ni());
@@ -220,7 +220,7 @@ SamplePlane::execute()
           } else {
             size_z_.set( sizez );
           }
-          gui->execute(id+" edit_scale");
+          get_gui()->execute(get_id()+" edit_scale");
           break;
         case 2:
           sizex =  Max(2, (int)lvm->get_ni());
@@ -233,7 +233,7 @@ SamplePlane::execute()
           } else {
             size_z_.set( sizez );
           }
-          gui->execute(id+" edit_scale");
+          get_gui()->execute(get_id()+" edit_scale");
           break;
         default:
           warning("Custom axis, resize manually.");
@@ -246,7 +246,7 @@ SamplePlane::execute()
         sizex = Max(2, size_x_.get());
         sizey = Max(2, size_y_.get());
         auto_size_.set(0);
-        gui->execute(id+" edit_scale");
+        get_gui()->execute(get_id()+" edit_scale");
       }
     } else {
       // Create blank mesh.

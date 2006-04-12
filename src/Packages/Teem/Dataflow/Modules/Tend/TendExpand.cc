@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 namespace SCITeem {
@@ -50,8 +50,8 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiInt          threshold_;
-  GuiInt          scale_;
+  GuiDouble       threshold_;
+  GuiDouble       scale_;
 
 };
 
@@ -59,13 +59,16 @@ DECLARE_MAKER(TendExpand)
 
 TendExpand::TendExpand(SCIRun::GuiContext *ctx) : 
   Module("TendExpand", ctx, Filter, "Tend", "Teem"),
-  threshold_(ctx->subVar("threshold")),
-  scale_(ctx->subVar("scale"))
+  threshold_(get_ctx()->subVar("threshold"), 0.5),
+  scale_(get_ctx()->subVar("scale"), 1.0)
 {
 }
 
-TendExpand::~TendExpand() {
+
+TendExpand::~TendExpand()
+{
 }
+
 
 void 
 TendExpand::execute()
@@ -85,7 +88,7 @@ TendExpand::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenExpand(nout, nin, scale_.get(), threshold_.get())) {

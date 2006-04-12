@@ -11,8 +11,8 @@
  */
 
 #include <Packages/DaveW/Core/Datatypes/General/TopoSurfTree.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
@@ -43,20 +43,20 @@ class TopoSurfToGeom : public Module {
 
     void surf_to_geom(const SurfaceHandle&, GeomGroup*);
 public:
-    TopoSurfToGeom(const clString& id);
+    TopoSurfToGeom(const clString& get_id());
     virtual ~TopoSurfToGeom();
     virtual void execute();
 };
 
-extern "C" Module* make_TopoSurfToGeom(const clString& id)
+extern "C" Module* make_TopoSurfToGeom(const clString& get_id())
 {
-    return scinew TopoSurfToGeom(id);
+    return scinew TopoSurfToGeom(get_id());
 }
 
-TopoSurfToGeom::TopoSurfToGeom(const clString& id)
-: Module("TopoSurfToGeom", id, Filter), patchMode("patchMode", id, this),
-  wireMode("wireMode", id, this), junctionMode("junctionMode", id, this),
-  rad("rad", id, this), nonjunctionMode("nonjunctionMode", id, this)
+TopoSurfToGeom::TopoSurfToGeom(const clString& get_id())
+: Module("TopoSurfToGeom", get_id(), Filter), patchMode("patchMode", get_id(), this),
+  wireMode("wireMode", get_id(), this), junctionMode("junctionMode", get_id(), this),
+  rad("rad", get_id(), this), nonjunctionMode("nonjunctionMode", get_id(), this)
 {
     // Create the input port
     isurface=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);

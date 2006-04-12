@@ -30,10 +30,11 @@
 #ifndef MODELCREATION_CORE_FIELDS_FIELDALGO_H
 #define MODELCREATION_CORE_FIELDS_FIELDALGO_H 1
 
-#include <Packages/ModelCreation/Core/Util/AlgoLibrary.h>
+#include <Core/Algorithms/Util/AlgoLibrary.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
@@ -52,9 +53,9 @@ class FieldsAlgo : public AlgoLibrary {
 
   public:
     FieldsAlgo(ProgressReporter* pr); // normal case
-
+  
     // Funtions borrow from Core of SCIRun
-    bool ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield);
+    bool ApplyMappingMatrix(FieldHandle fsrc,  FieldHandle fdst, FieldHandle& output, MatrixHandle mapping);
     bool ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis);
     
     // ManageFieldData split into two parts
@@ -66,11 +67,7 @@ class FieldsAlgo : public AlgoLibrary {
     bool GetFieldInfo(FieldHandle input, int& numnodes, int& numelems);
     
     bool ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle SelectionMask,MatrixHandle &interpolant);
-    bool DistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object);
-    bool SignedDistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object);
     
-    bool IsInsideSurfaceField(FieldHandle input, FieldHandle& output, FieldHandle object);
-    bool IsInsideVolumeField(FieldHandle input, FieldHandle& output, FieldHandle object);
 
     // Change where the data is located
     bool FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method);
@@ -82,23 +79,20 @@ class FieldsAlgo : public AlgoLibrary {
     bool IsClosedSurface(FieldHandle input);
     bool IsClockWiseSurface(FieldHandle input);
     bool IsCounterClockWiseSurface(FieldHandle input);
-
-    // BuildMembraneTable
-    // Find the surfaces in membranemodel and fir them to the ones found in
-    // elementtype. This will produce a table that can be used to see which surfaces
-    // in the elementtype mesh can be used to model the membrane model.
-    // This is a support function for the CardioWave Interface
-    bool BuildMembraneTable(FieldHandle elementtype, FieldHandle membranemodel, MatrixHandle& table);
   
     // BundleToFieldArray
     // Created an vector of fields out of the bundle type
     bool BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>& output);
 
+    // ClearAndChangeFieldBasis
+    // Similar to ChangeBasis but do not do the interpolation stuff
+    bool ClearAndChangeFieldBasis(FieldHandle input,FieldHandle& output, std::string newbasis);
+
     // CompartmentBoundary
     // Extract the boundaries between compartments in a volume or surface field
     // The data needs to be on the elements. This function only extracts internal
     // boundaries, use field boundary to extract the outer surfaces.
-    bool CompartmentBoundary(FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+    bool CompartmentBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 
     // ConvertToTetVol:
     // This function converts an hexvol or latvol into a tetvol. The functionality
@@ -112,14 +106,34 @@ class FieldsAlgo : public AlgoLibrary {
     // on unconnected data.
     bool ConvertToTriSurf(FieldHandle input, FieldHandle& output);
 
+    // Compute distance fields
+    bool DistanceField(FieldHandle input, FieldHandle& output, FieldHandle object);
+    bool SignedDistanceField(FieldHandle input, FieldHandle& output, FieldHandle object);
+
     // FieldArrayToBundle
     // Created an vector of fields out of the bundle type
-    bool FieldArrayToBundle(std::vector<FieldHandle>& input, BundleHandle output);
+    bool FieldArrayToBundle(std::vector<FieldHandle> input, BundleHandle& output);
     
     // FieldBoundary:
     // This function extracts the outer boundaries of a field
     bool FieldBoundary(FieldHandle input, FieldHandle& output, MatrixHandle &interpolant);
+
+    // IsInsiedField:
+    // This is an implementation of locate
+    bool IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle object);
+
+    // LinkFieldBoundary:
+    // Compute the node-to-node link and the edge-elementy-to-edge-element matrix
+    bool LinkFieldBoundary(FieldHandle input, MatrixHandle& NodeLink, MatrixHandle& ElemLink, double tol, bool linkx = true, bool linky = true, bool linkz = true);
     
+    // LinkToCompGrid:
+    // Compute the mapping to merge nodes over the outer boundary of the mesh
+    bool LinkToCompGrid(MatrixHandle NodeLink,MatrixHandle& GeomToComp, MatrixHandle& CompToGeom);
+
+    // LinkToCompGrid:
+    // Compute the mapping to merge nodes over the outer boundary of the mesh for elements of the same domain type    
+    bool LinkToCompGridByDomain(FieldHandle input, MatrixHandle NodeLink, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom);
+
     // MappingMatrixToField:
     // This function will assign to each node the value of the original node.
     // Hence by selecting areas in this field one can obtain all nodes located
@@ -133,20 +147,27 @@ class FieldsAlgo : public AlgoLibrary {
     // MatrixToField: Convert the Field into a Matrix
     bool MatrixToField(MatrixHandle input, FieldHandle& output, std::string datalocation);
 
+    // NrrdToField: Convert the Field into a Matrix
+    bool NrrdToField(NrrdDataHandle input, FieldHandle& output, std::string datalocation);
+
     // MergeFields: Merge a set of fields of the same type together into one
     // new output field. If mergenodes is true, nodes will be merge if the
     // distance between them is smaller than tolerance  
-    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true, bool mergeelements = true);
+    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true, bool mergeelements = true, bool matchvalue = true);
 
     // MergeNodes: Merge the nodes in a field together if the distance between
     // them is smaller than tolerance.
-    bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true);
+    bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true, bool matchvalue = true);
 
-    // SplitFieldByElementData:
+    // ScaleField:
+    // Scales FieldData and MeshData, used to change units properly
+    bool ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh);
+
+    // SplitFieldByDomain:
     // Use the element data to segment the input field into volumes/areas with a
     // constant value. This means node splitting at the edges between the
     // different areas/volumes.
-    bool SplitFieldByElementData(FieldHandle input, FieldHandle& output);    
+    bool SplitFieldByDomain(FieldHandle input, FieldHandle& output);    
 
     // SplitFieldByConnectedRegion:
     // Use the connectivity data to split the field so each unconnected region is its own
@@ -163,6 +184,9 @@ class FieldsAlgo : public AlgoLibrary {
     // Unstructure: Unstructure a mesh from a regular or structured mesh into
     // an unstructured mesh. This is often needed to make a mesh editable
     bool Unstructure(FieldHandle input,FieldHandle& output);
+    
+    // TriSurfPhaseFilter
+    bool TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline, FieldHandle& phasepoint);    
     
 };
 

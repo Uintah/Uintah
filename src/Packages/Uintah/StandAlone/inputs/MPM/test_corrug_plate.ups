@@ -9,6 +9,9 @@
     <title>Corrugated Plate Impact</title>
   </Meta>
 
+   <SimulationComponent>
+        <type> mpm </type>
+   </SimulationComponent>
   <Time>
     <maxTime>0.0016</maxTime>
     <initTime>0.0</initTime>

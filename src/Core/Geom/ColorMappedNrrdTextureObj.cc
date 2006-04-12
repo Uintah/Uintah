@@ -65,12 +65,12 @@ namespace SCIRun {
   }
 
 
-ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin, 
+ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin_handle, 
                                int axis, 
                                int min_slice, int max_slice,
                                int time) :
   colormap_(0),
-  nrrd_(0),
+  nrrd_handle_(0),
   nrrd_dirty_(true),
   dirty_(4,true),
   dirty_region_(),
@@ -82,26 +82,28 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin,
   data_(0),
   own_data_(false)
 {
-  if (!nin.get_rep() || !nin->nrrd)// || nin->nrrd->dim != 3) 
+  if (!nin_handle.get_rep() ||
+      !nin_handle->nrrd_)
+    // || nin_handle->nrrd_->dim != 3) 
     throw "ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(nrrd)"
       "nrrd not valid";
-  nrrd_ = new NrrdData;
+  nrrd_handle_ = new NrrdData;
 
   if (min_slice != max_slice) {
-    int *min = new int[nin->nrrd->dim];
-    int *max = new int[nin->nrrd->dim];
-    for (int i = 0; i < nin->nrrd->dim; i++) {
+    size_t *min = new size_t[nin_handle->nrrd_->dim];
+    size_t *max = new size_t[nin_handle->nrrd_->dim];
+    for (unsigned int i = 0; i < nin_handle->nrrd_->dim; i++) {
       min[i] = 0;
-      max[i] = nin->nrrd->axis[i].size-1;
+      max[i] = nin_handle->nrrd_->axis[i].size-1;
     }
     min[axis] = Min(min_slice, max_slice);
     max[axis] = Max(min_slice, max_slice);
-    NrrdDataHandle tmp1 = new NrrdData;
-    NRRD_EXEC(nrrdCrop(tmp1->nrrd, nin->nrrd, min, max));
-    NRRD_EXEC(nrrdProject(nrrd_->nrrd, tmp1->nrrd, axis, 
+    NrrdDataHandle tmp1_handle = new NrrdData;
+    NRRD_EXEC(nrrdCrop(tmp1_handle->nrrd_, nin_handle->nrrd_, min, max));
+    NRRD_EXEC(nrrdProject(nrrd_handle_->nrrd_, tmp1_handle->nrrd_, axis, 
                           nrrdMeasureMax, nrrdTypeDefault));
   } else {
-    NRRD_EXEC(nrrdSlice(nrrd_->nrrd, nin->nrrd, axis, min_slice));
+    NRRD_EXEC(nrrdSlice(nrrd_handle_->nrrd_, nin_handle->nrrd_, axis, min_slice));
   }
   nrrd_dirty_ = true;
 }
@@ -168,16 +170,16 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
   if (!data_ || !own_data_) return;
   if (x1 > x2) SWAP(x1,x2);
   if (y1 > y2) SWAP(y1,y2);
-  x1 = Clamp(x1-border, 0, nrrd_->nrrd->axis[1].size);
-  x2 = Clamp(x2+border+1, 0, nrrd_->nrrd->axis[1].size);
-  y1 = Clamp(y1-border, 0, nrrd_->nrrd->axis[2].size);
-  y2 = Clamp(y2+border+1, 0, nrrd_->nrrd->axis[2].size);
+  x1 = Clamp(x1-border,   0, nrrd_handle_->nrrd_->axis[1].size);
+  x2 = Clamp(x2+border+1, 0, nrrd_handle_->nrrd_->axis[1].size);
+  y1 = Clamp(y1-border,   0, nrrd_handle_->nrrd_->axis[2].size);
+  y2 = Clamp(y2+border+1, 0, nrrd_handle_->nrrd_->axis[2].size);
 
   const float range = (clut_max_ - clut_min_);
   const float scale = (range > 0.00001) ? (1.0 / range) : 1.0;
   const float bias =  (range > 0.00001) ? -clut_min_*scale : 0.0;
 
-  const int row_width = nrrd_->nrrd->axis[1].size;
+  const int row_width = nrrd_handle_->nrrd_->axis[1].size;
   const int region_start = row_width * y1 + x1;
   const int region_wid = x2 - x1;
   const int region_hei = y2 - y1;
@@ -197,58 +199,58 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
     rgba = colormap_->get_rgba();
   }
 
-  switch (nrrd_->nrrd->type) {
+  switch (nrrd_handle_->nrrd_->type) {
   case nrrdTypeChar: {
-    apply_colormap_to_raw_data(data_, (char *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (char *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUChar: {
-    apply_colormap_to_raw_data(data_, (unsigned char *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (unsigned char *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeShort: {
-    apply_colormap_to_raw_data(data_, (short *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (short *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUShort: {
-    apply_colormap_to_raw_data(data_, (unsigned short *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (unsigned short *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeInt: {
-    apply_colormap_to_raw_data(data_, (int *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (int *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUInt: {
-    apply_colormap_to_raw_data(data_, (unsigned int *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (unsigned int *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeLLong: {
-    apply_colormap_to_raw_data(data_, (signed long long *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (signed long long *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeULLong: {
-    apply_colormap_to_raw_data(data_, (unsigned long long *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (unsigned long long *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeFloat: {
-    apply_colormap_to_raw_data(data_, (float *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (float *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeDouble: {
-    apply_colormap_to_raw_data(data_, (double *)nrrd_->nrrd->data,
+    apply_colormap_to_raw_data(data_, (double *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
-  default: throw "Unsupported data type: "+to_string(nrrd_->nrrd->type);
+  default: throw "Unsupported data type: "+to_string(nrrd_handle_->nrrd_->type);
   }
 
   if (!colormap_.get_rep())
@@ -257,7 +259,7 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
   Point min(x1, y1, 0), max(x2, y2, 1);
   BBox bbox(min,max);
   for (int i = 0; i < 4; ++i) {
-    Point min2(xdiv_[i%2].first, ydiv_[i/2].first, 0);
+    Point min2(xdiv_[i%2].first,  ydiv_[i/2].first,  0);
     Point max2(xdiv_[i%2].second, ydiv_[i/2].second, 1);
     BBox bbox2(min2, max2);
     if (bbox.overlaps(bbox2)) {
@@ -277,7 +279,8 @@ ColorMappedNrrdTextureObj::create_data()
 {
 
   if (data_ && own_data_) delete[] data_;
-  const int num = nrrd_->nrrd->axis[1].size*nrrd_->nrrd->axis[2].size;
+  const int num = nrrd_handle_->nrrd_->axis[1].size * 
+                  nrrd_handle_->nrrd_->axis[2].size;
   data_ = new float[4*num];
   own_data_ = true;
 }
@@ -286,7 +289,7 @@ ColorMappedNrrdTextureObj::create_data()
 bool
 ColorMappedNrrdTextureObj::bind(int x, int y)
 {
-  if (!nrrd_.get_rep() || !nrrd_->nrrd)
+  if (!nrrd_handle_.get_rep() || !nrrd_handle_->nrrd_)
     return false;
 
   int pos = y*2+x;
@@ -305,11 +308,13 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
 
 
   if (nrrd_dirty_) {
-    if (nrrd_->nrrd->axis[0].size == 1) {
+    if (nrrd_handle_->nrrd_->axis[0].size == 1) {
       create_data();
-      apply_colormap(0,0,nrrd_->nrrd->axis[1].size,nrrd_->nrrd->axis[2].size);
+      apply_colormap(0,0,
+		     nrrd_handle_->nrrd_->axis[1].size,
+		     nrrd_handle_->nrrd_->axis[2].size);
     } else {
-      data_ = (float *)nrrd_->nrrd->data;
+      data_ = (float *)nrrd_handle_->nrrd_->data;
       own_data_ = false;
     }
     if (!data_) 
@@ -321,35 +326,35 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   }
 
   GLenum type = GL_FLOAT;
-  if (nrrd_->nrrd->axis[0].size != 1) {
-    switch (nrrd_->nrrd->type) {
-    case nrrdTypeChar: type = GL_BYTE; break;
-    case nrrdTypeUChar: type = GL_UNSIGNED_BYTE; break;
-    case nrrdTypeShort: type = GL_SHORT; break;
+  if (nrrd_handle_->nrrd_->axis[0].size != 1) {
+    switch (nrrd_handle_->nrrd_->type) {
+    case nrrdTypeChar:   type = GL_BYTE;           break;
+    case nrrdTypeUChar:  type = GL_UNSIGNED_BYTE;  break;
+    case nrrdTypeShort:  type = GL_SHORT;          break;
     case nrrdTypeUShort: type = GL_UNSIGNED_SHORT; break;	
-    case nrrdTypeInt: type = GL_INT; break;
-    case nrrdTypeUInt: type = GL_UNSIGNED_INT; break;
-    case nrrdTypeFloat: type = GL_FLOAT; break;
-    default: throw "Cant bind nrrd"; break;
+    case nrrdTypeInt:    type = GL_INT;            break;
+    case nrrdTypeUInt:   type = GL_UNSIGNED_INT;   break;
+    case nrrdTypeFloat:  type = GL_FLOAT;          break;
+    default: throw "Cant bind nrrd";               break;
     }
   }
 
 
   GLint format = GL_RGBA;
-  if (nrrd_->nrrd->axis[0].size == 3)
+  if (nrrd_handle_->nrrd_->axis[0].size == 3)
     format = GL_RGB;
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, nrrd_->nrrd->axis[1].size);  
-  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, nrrd_->nrrd->axis[2].size);  
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, nrrd_handle_->nrrd_->axis[1].size);  
+  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, nrrd_handle_->nrrd_->axis[2].size);  
   CHECK_OPENGL_ERROR();  
 
   if (x == 0) {
     xdiv_[x].first = 0;
-    xdiv_[x].second = LargestPowerOf2(nrrd_->nrrd->axis[1].size);
+    xdiv_[x].second = LargestPowerOf2(nrrd_handle_->nrrd_->axis[1].size);
   } else if (x == 1) {
-    int wid = Pow2(nrrd_->nrrd->axis[1].size - xdiv_[0].second);
-    xdiv_[1].second = nrrd_->nrrd->axis[1].size;
+    int wid = Pow2(nrrd_handle_->nrrd_->axis[1].size - xdiv_[0].second);
+    xdiv_[1].second = nrrd_handle_->nrrd_->axis[1].size;
     xdiv_[1].first = xdiv_[1].second - wid;
     glPixelStorei(GL_UNPACK_SKIP_PIXELS, xdiv_[1].first);
   }
@@ -358,10 +363,10 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
 
   if (y == 0) {
     ydiv_[y].first = 0;
-    ydiv_[y].second = LargestPowerOf2(nrrd_->nrrd->axis[2].size);
+    ydiv_[y].second = LargestPowerOf2(nrrd_handle_->nrrd_->axis[2].size);
   } else if (y == 1) {
-    int wid = Pow2(nrrd_->nrrd->axis[2].size - ydiv_[0].second);
-    ydiv_[1].second = nrrd_->nrrd->axis[2].size;
+    int wid = Pow2(nrrd_handle_->nrrd_->axis[2].size - ydiv_[0].second);
+    ydiv_[1].second = nrrd_handle_->nrrd_->axis[2].size;
     ydiv_[1].first = ydiv_[1].second - wid;
     glPixelStorei(GL_UNPACK_SKIP_ROWS, ydiv_[1].first);
   }
@@ -373,8 +378,8 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   
 
 //   cerr << "X: " << x << " Y: " << y
-//        << " Xdim: " << nrrd_->nrrd->axis[0].size
-//        << " ydim: " << nrrd_->nrrd->axis[1].size
+//        << " Xdim: " << nrrd_handle_->nrrd_->axis[0].size
+//        << " ydim: " << nrrd_handle_->nrrd_->axis[1].size
 //        << " Xdiv first: " << xdiv_[x].first
 //        << " Xdiv second: " << xdiv_[x].second
 //        << " Xdiv size: " <<  xdiv_[x].second -  xdiv_[x].first 
@@ -414,10 +419,10 @@ ColorMappedNrrdTextureObj::draw_quad(Point &min, Vector &xdir, Vector &ydir)
       if (!bind(x,y)) continue;
       //      glDisable(GL_TEXTURE_2D);
       //      glColor4d(1.0, 0.0, 0.3, 1.0);
-      float x1 = xoff / float(nrrd_->nrrd->axis[1].size);
-      float y1 = yoff / float(nrrd_->nrrd->axis[2].size);
-      float x2 = xdiv_[x].second / float(nrrd_->nrrd->axis[1].size);
-      float y2 = ydiv_[y].second / float(nrrd_->nrrd->axis[2].size);
+      float x1 = xoff / float(nrrd_handle_->nrrd_->axis[1].size);
+      float y1 = yoff / float(nrrd_handle_->nrrd_->axis[2].size);
+      float x2 = xdiv_[x].second / float(nrrd_handle_->nrrd_->axis[1].size);
+      float y2 = ydiv_[y].second / float(nrrd_handle_->nrrd_->axis[2].size);
 
       float tx = (xoff - xdiv_[x].first) / float(xdiv_[x].second - xdiv_[x].first);
       float ty = (yoff - ydiv_[y].first) / float(ydiv_[y].second - ydiv_[y].first);

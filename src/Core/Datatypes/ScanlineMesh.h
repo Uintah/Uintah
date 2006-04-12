@@ -93,6 +93,7 @@ public:
   };
 
   typedef Edge Elem;
+  typedef Node DElem;
 
   friend class ElemData;
 
@@ -209,6 +210,13 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const;
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_nodes(result, idx);
+  }
+
   //! return all edge_indecies that overlap the BBox in arr.
   void get_edges(typename Edge::array_type &arr, const BBox &box) const;
 
@@ -274,6 +282,7 @@ public:
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 1; }
+  virtual int topology_geometry() const { return (STRUCTURED | REGULAR); }
   Basis& get_basis() { return basis_; }
 
  //! Generate the list of points that make up a sufficiently accurate

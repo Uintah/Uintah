@@ -98,10 +98,6 @@
    </DataArchiver>
 
    <Debug>
-       <dbg_timeStart>       0.00   </dbg_timeStart>
-       <dbg_timeStop>        2.5  </dbg_timeStop>
-       <dbg_outputInterval>  1e-2   </dbg_outputInterval>
- 
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->

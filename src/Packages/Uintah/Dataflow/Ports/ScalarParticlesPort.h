@@ -14,7 +14,7 @@
 #define SCI_project_ScalarParticlesPort_h 1
 
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
 
 namespace Uintah {
 

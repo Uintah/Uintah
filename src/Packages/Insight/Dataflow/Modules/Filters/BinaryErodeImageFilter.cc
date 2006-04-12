@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkBinaryErodeImageFilter.h>
@@ -49,7 +48,7 @@ namespace Insight
 
 using namespace SCIRun;
 
-class InsightSHARE BinaryErodeImageFilter : public Module
+class BinaryErodeImageFilter : public Module
 {
 public:
 
@@ -183,8 +182,8 @@ DECLARE_MAKER(BinaryErodeImageFilter)
 
 BinaryErodeImageFilter::BinaryErodeImageFilter(GuiContext* ctx)
   : Module("BinaryErodeImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_erodeVal_(ctx->subVar("erodeVal")),
-    gui_radius_(ctx->subVar("radius")),
+    gui_erodeVal_(get_ctx()->subVar("erodeVal")),
+    gui_radius_(get_ctx()->subVar("radius")),
      last_InputImage_(-1)
 {
   filter_ = 0;
@@ -192,8 +191,6 @@ BinaryErodeImageFilter::BinaryErodeImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &BinaryErodeImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &BinaryErodeImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 
 }
 

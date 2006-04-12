@@ -55,11 +55,24 @@ SRCS     += \
 	$(SRCDIR)/PathWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \
-	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Geometry Core/Datatypes Core/Volume \
-	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
-	Core/ImportExport Core/Basis Core/Bundle
+PSELIBS := \
+	Dataflow/Network   \
+	Core/Basis         \
+	Core/Bundle        \
+	Core/Datatypes     \
+	Core/Exceptions    \
+	Core/ImportExport  \
+	Core/Containers    \
+	Core/Geom          \
+	Core/GeomInterface \
+	Core/Geometry      \
+	Core/GuiInterface  \
+	Core/Persistent    \
+	Core/Thread        \
+	Core/TkExtensions  \
+	Core/Util          \
+	Core/Volume        
+
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

@@ -29,18 +29,9 @@
 
 itcl_class SCIRun_FieldsOther_FieldCage {
     inherit Module
+
     constructor {config} {
         set name FieldCage
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-sizex
-	global $this-sizey
-	global $this-sizez
-	set $this-sizex 10
-	set $this-sizey 10
-	set $this-sizez 10
     }
 
     method ui {} {

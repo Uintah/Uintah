@@ -102,32 +102,29 @@ void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
 
 void IandG::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","IandG");
 
-  model_ps->appendElement("fromMaterial",matl0->getName(),false,4);
-  model_ps->appendElement("toMaterial",matl1->getName(),false,4);
-  model_ps->appendElement("I",  d_I,false,4);
-  model_ps->appendElement("G1", d_G1,false,4);
-  model_ps->appendElement("G2", d_G2,false,4);
-  model_ps->appendElement("a",  d_a,false,4);
-  model_ps->appendElement("b",  d_b,false,4);
-  model_ps->appendElement("c",  d_c,false,4);
-  model_ps->appendElement("d",  d_d,false,4);
-  model_ps->appendElement("e",  d_e,false,4);
-  model_ps->appendElement("g",  d_g,false,4);
-  model_ps->appendElement("x",  d_x,false,4);
-  model_ps->appendElement("y",  d_y,false,4);
-  model_ps->appendElement("z",  d_z,false,4);
-  model_ps->appendElement("Figmax", d_Figmax,false,4);
-  model_ps->appendElement("FG1max", d_FG1max,false,4);
-  model_ps->appendElement("FG2min", d_FG2min,false,4);
-  model_ps->appendElement("rho0",   d_rho0,false,4);
-  model_ps->appendElement("E0",     d_E0,false,4);
-  model_ps->appendElement("ThresholdPressure",   d_threshold_pressure,false,4);
-  
-
-
+  model_ps->appendElement("fromMaterial",matl0->getName());
+  model_ps->appendElement("toMaterial",matl1->getName());
+  model_ps->appendElement("I",  d_I);
+  model_ps->appendElement("G1", d_G1);
+  model_ps->appendElement("G2", d_G2);
+  model_ps->appendElement("a",  d_a);
+  model_ps->appendElement("b",  d_b);
+  model_ps->appendElement("c",  d_c);
+  model_ps->appendElement("d",  d_d);
+  model_ps->appendElement("e",  d_e);
+  model_ps->appendElement("g",  d_g);
+  model_ps->appendElement("x",  d_x);
+  model_ps->appendElement("y",  d_y);
+  model_ps->appendElement("z",  d_z);
+  model_ps->appendElement("Figmax", d_Figmax);
+  model_ps->appendElement("FG1max", d_FG1max);
+  model_ps->appendElement("FG2min", d_FG2min);
+  model_ps->appendElement("rho0",   d_rho0);
+  model_ps->appendElement("E0",     d_E0);
+  model_ps->appendElement("ThresholdPressure",   d_threshold_pressure);
 }
 
 

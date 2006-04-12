@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Containers/StringUtil.h>
 #include <sys/stat.h>
@@ -85,7 +85,7 @@ DECLARE_MAKER(NrrdReader)
 
 NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) : 
   Module("NrrdReader", ctx, Filter, "DataIO", "Teem"),
-  filename_(ctx->subVar("filename")),
+  filename_(get_ctx()->subVar("filename"), ""),
   read_handle_(0),
   old_filemodification_(0),
   cached_label_generation_(0),
@@ -204,17 +204,17 @@ NrrdReader::read_file(string fn)
 {
 
   NrrdData *n = scinew NrrdData;
-  if (nrrdLoad(n->nrrd, airStrdup(fn.c_str()), 0)) {
+  if (nrrdLoad(n->nrrd_, airStrdup(fn.c_str()), 0)) {
     char *err = biffGetDone(NRRD);
     error("Read error on '" + fn + "': " + err);
     free(err);
     return true;
   }
   read_handle_ = n;
-  for (int i = 0; i < read_handle_->nrrd->dim; i++) {
-    if (!(airExists(read_handle_->nrrd->axis[i].min) && 
-	  airExists(read_handle_->nrrd->axis[i].max)))
-      nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+  for (unsigned int i = 0; i < read_handle_->nrrd_->dim; i++) {
+    if (!(airExists(read_handle_->nrrd_->axis[i].min) && 
+	  airExists(read_handle_->nrrd_->axis[i].max)))
+      nrrdAxisInfoMinMaxSet(read_handle_->nrrd_, i, nrrdCenterNode);
   }
   return false;
 }

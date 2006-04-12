@@ -20,7 +20,7 @@ ConstantShear::~ConstantShear()
 
 void ConstantShear::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model",true,4);
+  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model");
   shear_ps->setAttribute("type","constant_shear");
 }
 	 

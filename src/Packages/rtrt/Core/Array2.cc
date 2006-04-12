@@ -117,12 +117,13 @@ Array2<T>& Array2<T>::operator=(const Array2<T>& copy)
     return *this;
 
 }
-
+} // end namespace rtrt
 
 #define Array2_VERSION 1
 
+namespace SCIRun {
 template<class T>
-void Pio(SCIRun::Piostream& stream, Array2<T>& data)
+void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>& data)
 {
   stream.begin_class("rtrtArray2", Array2_VERSION);
   if(stream.reading()){
@@ -144,11 +145,11 @@ void Pio(SCIRun::Piostream& stream, Array2<T>& data)
 }
 
 template<class T>
-void Pio(SCIRun::Piostream& stream, Array2<T>*& data) {
+void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>*& data) {
   if (stream.reading()) {
-    data=new Array2<T>;
+    data=new rtrt::Array2<T>;
   }
   Pio(stream, *data);
 }
 
-} // End namespace rtrt
+} // End namespace SCIRun

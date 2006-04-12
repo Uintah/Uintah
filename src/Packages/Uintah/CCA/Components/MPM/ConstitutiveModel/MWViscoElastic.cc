@@ -58,18 +58,16 @@ void MWViscoElastic::outputProblemSpec(ProblemSpecP& ps,
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","mw_visco_elastic");
   }
 
-  cm_ps->appendElement("e_shear_modulus",d_initialData.E_Shear,false,4);
-  cm_ps->appendElement("e_bulk_modulus",d_initialData.E_Bulk,false,4);
-  cm_ps->appendElement("ve_shear_modulus",d_initialData.VE_Shear,false,4);
-  cm_ps->appendElement("ve_bulk_modulus",d_initialData.VE_Bulk,false,4);
-  cm_ps->appendElement("ve_volumetric_viscosity",d_initialData.V_Viscosity,
-                       false,4);
-  cm_ps->appendElement("ve_deviatoric_viscosity",d_initialData.D_Viscosity,
-                       false,4);
+  cm_ps->appendElement("e_shear_modulus",d_initialData.E_Shear);
+  cm_ps->appendElement("e_bulk_modulus",d_initialData.E_Bulk);
+  cm_ps->appendElement("ve_shear_modulus",d_initialData.VE_Shear);
+  cm_ps->appendElement("ve_bulk_modulus",d_initialData.VE_Bulk);
+  cm_ps->appendElement("ve_volumetric_viscosity",d_initialData.V_Viscosity);
+  cm_ps->appendElement("ve_deviatoric_viscosity",d_initialData.D_Viscosity);
 }
 
 

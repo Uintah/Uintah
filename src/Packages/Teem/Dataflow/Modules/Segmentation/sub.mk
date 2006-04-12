@@ -40,20 +40,29 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Segmentation
 
 
 SRCS     += \
-	$(SRCDIR)/MRITissueClassifier.cc\
+        $(SRCDIR)/MRITissueClassifier.cc\
 
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
-        Core/TkExtensions Dataflow/Network Dataflow/Ports
+PSELIBS := \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/GeomInterface \
+        Core/Geometry      \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Dataflow/Network
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
-TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+  TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
 endif

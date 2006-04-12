@@ -17,7 +17,7 @@
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/Array1.h>
 
 namespace CardioWave {

@@ -49,13 +49,13 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace MatlabIO {
 
@@ -132,12 +132,12 @@ DECLARE_MAKER(MatlabMatricesReader)
 
 MatlabMatricesReader::MatlabMatricesReader(GuiContext* ctx)
   : Module("MatlabMatricesReader", ctx, Source, "DataIO", "MatlabInterface"),
-    guifilename_(ctx->subVar("filename")),
-    guifilenameset_(ctx->subVar("filename-set")),
-    guimatrixinfotexts_(ctx->subVar("matrixinfotexts")),     
-    guimatrixnames_(ctx->subVar("matrixnames")),    
-    guimatrixname_(ctx->subVar("matrixname")),
-    guidisabletranspose_(ctx->subVar("disable-transpose"))
+    guifilename_(get_ctx()->subVar("filename")),
+    guifilenameset_(get_ctx()->subVar("filename-set")),
+    guimatrixinfotexts_(get_ctx()->subVar("matrixinfotexts")),     
+    guimatrixnames_(get_ctx()->subVar("matrixnames")),    
+    guimatrixname_(get_ctx()->subVar("matrixname")),
+    guidisabletranspose_(get_ctx()->subVar("disable-transpose"))
 {
 	indexmatlabfile(false);
 }
@@ -155,7 +155,7 @@ void MatlabMatricesReader::execute()
 {
 
   StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
+  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
   {
     StringHandle stringH;
     if (filenameport->get(stringH))
@@ -164,7 +164,7 @@ void MatlabMatricesReader::execute()
       {
         std::string filename = stringH->get();
         guifilename_.set(filename);
-        ctx->reset();
+        get_ctx()->reset();
       }
     }
   }
@@ -273,7 +273,7 @@ void MatlabMatricesReader::tcl_command(GuiArgs& args, void* userdata)
     // and then assumes they do not change and hence caches the data
     // Why it is done so is unclear to me, but in order to have interactive
     // GUIs I need to reset the context. (this synchronises the data again)
-    ctx->reset();
+    get_ctx()->reset();
     
     // Find out what the .mat file contains
     indexmatlabfile(true);
@@ -300,9 +300,9 @@ matlabarray MatlabMatricesReader::readmatlabarray(long p)
   std::ostringstream oss;
   oss << "lindex {" << guimatrixname << "} " << p;
 
-  gui->lock();
-  gui->eval(oss.str(),matrixname);
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(oss.str(),matrixname);
+  get_gui()->unlock();
 
   if (matrixname == "")
   {
@@ -369,9 +369,9 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
     // TCL Dependent code
     std::ostringstream oss;
     oss << "lindex { " << matrixname << " } " << p;
-    gui->lock();
-    gui->eval(oss.str(),matrixnamelist[p]);
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval(oss.str(),matrixnamelist[p]);
+    get_gui()->unlock();
     foundmatrixname[p] = false;
   }
 
@@ -482,10 +482,10 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
 
 void MatlabMatricesReader::displayerror(std::string str)
 {
-  gui->lock();
+  get_gui()->lock();
   // Explicit call to TCL
-  gui->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
-  gui->unlock();
+  get_gui()->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
+  get_gui()->unlock();
 }
 
 

@@ -41,7 +41,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
@@ -87,21 +87,21 @@ DECLARE_MAKER(MatrixSelectVector)
 
 MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
   : Module("MatrixSelectVector", ctx, Filter,"Math", "SCIRun"),
-    row_or_col_(ctx->subVar("row_or_col")),
-    selectable_min_(ctx->subVar("selectable_min")),
-    selectable_max_(ctx->subVar("selectable_max")),
-    selectable_inc_(ctx->subVar("selectable_inc")),
-    selectable_units_(ctx->subVar("selectable_units")),
-    range_min_(ctx->subVar("range_min")),
-    range_max_(ctx->subVar("range_max")),
-    playmode_(ctx->subVar("playmode")),
-    dependence_(ctx->subVar("dependence")),
-    current_(ctx->subVar("current")),
-    execmode_(ctx->subVar("execmode")),
-    delay_(ctx->subVar("delay")),
-    inc_amount_(ctx->subVar("inc-amount")),
-    send_amount_(ctx->subVar("send-amount")),
-    data_series_done_(ctx->subVar("data_series_done")),
+    row_or_col_(get_ctx()->subVar("row_or_col")),
+    selectable_min_(get_ctx()->subVar("selectable_min")),
+    selectable_max_(get_ctx()->subVar("selectable_max")),
+    selectable_inc_(get_ctx()->subVar("selectable_inc")),
+    selectable_units_(get_ctx()->subVar("selectable_units")),
+    range_min_(get_ctx()->subVar("range_min")),
+    range_max_(get_ctx()->subVar("range_max")),
+    playmode_(get_ctx()->subVar("playmode")),
+    dependence_(get_ctx()->subVar("dependence")),
+    current_(get_ctx()->subVar("current")),
+    execmode_(get_ctx()->subVar("execmode")),
+    delay_(get_ctx()->subVar("delay")),
+    inc_amount_(get_ctx()->subVar("inc-amount")),
+    send_amount_(get_ctx()->subVar("send-amount")),
+    data_series_done_(get_ctx()->subVar("data_series_done")),
     inc_(1),
     loop_(false),
     use_row_(-1),
@@ -324,7 +324,7 @@ MatrixSelectVector::execute()
   }
 
   if (changed_p)
-    gui->execute(id + " update_range");
+    get_gui()->execute(get_id() + " update_range");
   
   reset_vars();
 

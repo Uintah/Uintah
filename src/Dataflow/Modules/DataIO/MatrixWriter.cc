@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
@@ -57,6 +57,7 @@ protected:
 
 public:
   MatrixWriter(GuiContext* ctx);
+  virtual ~MatrixWriter();
 
   virtual void execute();
 };
@@ -66,9 +67,9 @@ DECLARE_MAKER(MatrixWriter)
 
 MatrixWriter::MatrixWriter(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype")),
-    split_(ctx->subVar("split"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype"), "Binary"),
+    split_(get_ctx()->subVar("split"), 0)
 {
   MatrixIEPluginManager mgr;
   vector<string> exporters;
@@ -97,6 +98,11 @@ MatrixWriter::MatrixWriter(GuiContext* ctx)
 }
 
 
+MatrixWriter::~MatrixWriter()
+{
+}
+
+
 bool
 MatrixWriter::call_exporter(const string &filename)
 {
@@ -109,7 +115,7 @@ MatrixWriter::call_exporter(const string &filename)
   if (pl)
   {
     const bool result = pl->fileWriter_(this, handle_, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return result;
   }
   return false;

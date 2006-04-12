@@ -26,10 +26,10 @@
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -80,7 +80,7 @@ private:
   GeomID control_id;
 
 
-  int cmap_id;  // id associated with color map...
+  int cmap_id;  // get_id() associated with color map...
   
 
   GuiInt is_fixed_;

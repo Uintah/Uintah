@@ -95,15 +95,15 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   register int i, kj, cc = 0;
 
-  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
-  NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd_->data);
+  NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd_->data);
   
-  int nPhi = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
-  int nZR  = nHandles[mesh[ZR ]]->nrrd->axis[1].size; // Points
+  int nPhi = nHandles[mesh[PHI]]->nrrd_->axis[0].size; // Phi
+  int nZR  = nHandles[mesh[ZR ]]->nrrd_->axis[1].size; // Points
 
   NTYPE* ndata = scinew NTYPE[nPhi*nZR*3];
 
-  int rank = nHandles[mesh[ZR]]->nrrd->axis[0].size;
+  int rank = nHandles[mesh[ZR]]->nrrd_->axis[0].size;
 
   // Mesh uprolling.
   if( modes[0] ) {
@@ -134,15 +134,19 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[ZR]]->nrrd->type,
-	   ndims+1, 3, nPhi*nZR);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 3;
+  size[1] = nPhi*nZR;
+  nrrdWrap_nva(nout->nrrd_, ndata, nHandles[mesh[ZR]]->nrrd_->type,
+	   ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
-  nout->nrrd->axis[0].kind  = nrrdKind3Vector;
-  nout->nrrd->axis[0].label = nHandles[mesh[ZR]]->nrrd->axis[0].label;
-  nout->nrrd->axis[1].label = nHandles[mesh[ZR]]->nrrd->axis[1].label;
+  nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
+  nout->nrrd_->axis[0].label = nHandles[mesh[ZR]]->nrrd_->axis[0].label;
+  nout->nrrd_->axis[1].label = nHandles[mesh[ZR]]->nrrd_->axis[1].label;
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[ZR]].get_rep()));
@@ -192,18 +196,18 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
 
   register int i, j, kj, cc = 0;
 
-  NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd->data);
+  NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd_->data);
   
-  int nCon = nHandles[mesh[LIST]]->nrrd->axis[1].size; // Connection list
-  int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[0].size; // Phi
-  int nZR  = nHandles[mesh[ZR  ]]->nrrd->axis[1].size; // Points
+  int nCon = nHandles[mesh[LIST]]->nrrd_->axis[1].size; // Connection list
+  int nPhi = nHandles[mesh[PHI ]]->nrrd_->axis[0].size; // Phi
+  int nZR  = nHandles[mesh[ZR  ]]->nrrd_->axis[1].size; // Points
 
   if( nPhi == 1 )
     hex = 4;
 
   NTYPE* ndata = scinew NTYPE[nPhi*nCon*hex];
 
-  int rank = nHandles[mesh[LIST]]->nrrd->axis[0].size;
+  int rank = nHandles[mesh[LIST]]->nrrd_->axis[0].size;
 
   // Mesh
   if( 0 && modes[0] ) { // Wrapping
@@ -254,15 +258,19 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[LIST]]->nrrd->type,
-	   ndims+1, hex, cc);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = hex;
+  size[1] = cc;
+  nrrdWrap_nva(nout->nrrd_, ndata, nHandles[mesh[LIST]]->nrrd_->type,
+	   ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
-  nout->nrrd->axis[0].kind  = nrrdKindUnknown;
-  nout->nrrd->axis[0].label = nHandles[mesh[LIST]]->nrrd->axis[0].label;
-  nout->nrrd->axis[1].label = nHandles[mesh[LIST]]->nrrd->axis[1].label;
+  nout->nrrd_->axis[0].kind  = nrrdKindUnknown;
+  nout->nrrd_->axis[0].label = nHandles[mesh[LIST]]->nrrd_->axis[0].label;
+  nout->nrrd_->axis[1].label = nHandles[mesh[LIST]]->nrrd_->axis[1].label;
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[LIST]].get_rep()));
@@ -382,15 +390,15 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   NrrdData *nout = scinew NrrdData();
 
-  int nCon = nHandles[mesh[LIST]]->nrrd->axis[1].size; // Connection list
-  int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[0].size; // Phi
-  int nZR  = nHandles[mesh[ZR  ]]->nrrd->axis[1].size; // Points
+  int nCon = nHandles[mesh[LIST]]->nrrd_->axis[1].size; // Connection list
+  int nPhi = nHandles[mesh[PHI ]]->nrrd_->axis[0].size; // Phi
+  int nZR  = nHandles[mesh[ZR  ]]->nrrd_->axis[1].size; // Points
 
-  int nVal = nHandles[data[0]]->nrrd->axis[1].size;    // Values
+//  int nVal = nHandles[data[0]]->nrrd_->axis[1].size;    // Values
 
-  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
-  NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd->data);
-  NTYPE *ptr    = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+//  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd_->data);
+  NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd_->data);
+  NTYPE *ptr    = (NTYPE *)(nHandles[data[0]]->nrrd_->data);
 
   NTYPE* ndata = scinew NTYPE[nPhi*nZR];
 
@@ -399,7 +407,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   register int i, kj, cc=0;
 
   double w[4];
-  Point p, pts[4];
+  Point p;
 
   for( kj=0; kj<nPhi*nZR; kj++ )
     ndata[kj] = 0;
@@ -407,7 +415,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   for( kj=0; kj<nZR; kj++ )
     wt[kj] = 0;
 
-  int rank = nHandles[mesh[LIST]]->nrrd->axis[0].size;
+  int rank = nHandles[mesh[LIST]]->nrrd_->axis[0].size;
 
   for( kj=0; kj<nCon; kj++ ) {
     int c0 = (int) ptrCon[kj*rank];
@@ -454,13 +462,17 @@ execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	   ndims, nPhi*nZR);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = nPhi*nZR;
+  nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
+	   ndims, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
-  nout->nrrd->axis[0].kind  = nrrdKindUnknown;
-  nout->nrrd->axis[0].label = nHandles[mesh[LIST]]->nrrd->axis[0].label;
+  nout->nrrd_->axis[0].kind  = nrrdKindUnknown;
+  nout->nrrd_->axis[0].label = nHandles[mesh[LIST]]->nrrd_->axis[0].label;
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[LIST]].get_rep()));
@@ -494,19 +506,19 @@ execute(vector< NrrdDataHandle >& nHandles,
 {
   int ndims = 1;
 
-  int nPhi = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
-  int nZR  = nHandles[data[ZR ]]->nrrd->axis[1].size; // Radial
+  int nPhi = nHandles[mesh[PHI]]->nrrd_->axis[0].size; // Phi
+  int nZR  = nHandles[data[ZR ]]->nrrd_->axis[1].size; // Radial
   
   NrrdData *nout = scinew NrrdData();
 
   register int i,kj,cc = 0;
 
-  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
-  NTYPE *ptrZR      = (NTYPE *)(nHandles[data[ZR ]]->nrrd->data);
+  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd_->data);
+  NTYPE *ptrZR      = (NTYPE *)(nHandles[data[ZR ]]->nrrd_->data);
 
   NTYPE* ndata = scinew NTYPE[nPhi*nZR*3];
 
-  int rank = nHandles[data[ZR]]->nrrd->axis[0].size;
+  int rank = nHandles[data[ZR]]->nrrd_->axis[0].size;
 
   for( i=0; i<nPhi; i++ ) {
     double cosPhi = cos( ptrMeshPhi[i] );
@@ -523,15 +535,20 @@ execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[data[ZR]]->nrrd->type,
-	   ndims+1, 3, nPhi*nZR);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 3;
+  size[1] = nPhi*nZR;
+  nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[ZR]]->nrrd_->type,
+	   ndims+1, size);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode;
+  centers[1] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
-  nout->nrrd->axis[0].kind  = nrrdKind3Vector;
-  nout->nrrd->axis[0].label = nHandles[data[ZR]]->nrrd->axis[0].label;
-  nout->nrrd->axis[1].label = nHandles[data[ZR]]->nrrd->axis[1].label;
+  nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
+  nout->nrrd_->axis[0].label = nHandles[data[ZR]]->nrrd_->axis[0].label;
+  nout->nrrd_->axis[1].label = nHandles[data[ZR]]->nrrd_->axis[1].label;
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[ZR]].get_rep()));

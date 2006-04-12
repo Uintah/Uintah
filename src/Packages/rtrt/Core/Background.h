@@ -16,9 +16,10 @@
 // the current abmbient levels, however, Ambient and EnvironmentMap do.
 //   -- James
 
-#include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Persistent.h>
+
+#include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array2.h>
 
 namespace rtrt {

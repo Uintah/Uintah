@@ -33,28 +33,9 @@ catch {rename Teem_Tend_TendEvecRGB ""}
 
 itcl_class Teem_Tend_TendEvecRGB {
     inherit Module
+
     constructor {config} {
         set name TendEvecRGB
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-evec
-        set $this-evec 2
-
-        global $this-aniso_metric
-        set $this-aniso_metric  "tenAniso_FA"
-
-        global $this-background
-        set $this-background 0.0
-
-	global $this-gray
-	set $this-gray 0.0
-
-	global $this-gamma
-	set $this-gamma 1.0
-
-	global $this-threshold
-	set $this-threshold 0.5
     }
 
     method ui {} {
@@ -104,18 +85,22 @@ itcl_class Teem_Tend_TendEvecRGB {
         iwidgets::entryfield $w.f.options.background -labeltext \
 	    "Background:" -textvariable $this-background
         pack $w.f.options.background -side top -expand yes -fill x
+	Tooltip $w.f.options.background "Gray level to use\nfor voxels who's\nconfidence is zero"
 
         iwidgets::entryfield $w.f.options.gray -labeltext \
 	    "Gray:" -textvariable $this-gray
         pack $w.f.options.gray -side top -expand yes -fill x
+	Tooltip $w.f.options.gray "Gray level to desaturate\ntowards an anisotropy"
 
         iwidgets::entryfield $w.f.options.gamma -labeltext \
 	    "Gamma:" -textvariable $this-gamma
         pack $w.f.options.gamma -side top -expand yes -fill x
+	Tooltip $w.f.options.gamma "Gamma to use on color components"
 
         iwidgets::entryfield $w.f.options.threshold -labeltext \
 	    "Threshold:" -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x
+	Tooltip $w.f.options.threshold "Confidence Threshold"
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

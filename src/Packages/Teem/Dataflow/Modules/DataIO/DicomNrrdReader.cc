@@ -52,7 +52,7 @@
 // SCIRun includes
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <sci_defs/teem_defs.h> 
@@ -146,14 +146,14 @@ DECLARE_MAKER(DicomNrrdReader)
 //
 DicomNrrdReader::DicomNrrdReader(GuiContext* ctx)
   : Module("DicomNrrdReader", ctx, Source, "DataIO", "Teem"),
-    have_gdcm_(ctx->subVar("have-gdcm", false)),
-    dir_(ctx->subVar("dir")),
-    series_uid_(ctx->subVar("series-uid")),    
-    series_files_(ctx->subVar("series-files")),    
-    messages_(ctx->subVar("messages")),    
-    suid_sel_(ctx->subVar("suid-sel")),    
-    series_del_(ctx->subVar("series-del")),
-    num_entries_(ctx->subVar("num-entries")),
+    have_gdcm_(get_ctx()->subVar("have-gdcm", false)),
+    dir_(get_ctx()->subVar("dir")),
+    series_uid_(get_ctx()->subVar("series-uid"), ""),
+    series_files_(get_ctx()->subVar("series-files"), ""),
+    messages_(get_ctx()->subVar("messages"), ""),
+    suid_sel_(get_ctx()->subVar("suid-sel"), ""),
+    series_del_(get_ctx()->subVar("series-del"), ""),
+    num_entries_(get_ctx()->subVar("num-entries"), 0),
     z_spacing_(0)
 {
 #ifdef HAVE_GDCM
@@ -190,7 +190,7 @@ void DicomNrrdReader::execute()
 {
 #ifdef HAVE_GDCM
 
-  gui->execute(id + " sync_filenames");
+  get_gui()->execute(get_id() + " sync_filenames");
   
   // If no DICOM series' were specified via the UI, print error and return
   if( all_series_.size() == 0 ) 
@@ -606,15 +606,15 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     ostringstream str1;
     str1 << "entry-dir" << all_series_.size() - 1;
-    entry_dir_.insert(entry_dir_.end(), new GuiString(ctx->subVar(str1.str())));
+    entry_dir_.insert(entry_dir_.end(), new GuiString(get_ctx()->subVar(str1.str())));
 
     ostringstream str2;
     str2 << "entry-suid" << all_series_.size() - 1;
-    entry_suid_.insert(entry_suid_.end(), new GuiString(ctx->subVar(str2.str())));
+    entry_suid_.insert(entry_suid_.end(), new GuiString(get_ctx()->subVar(str2.str())));
 
     ostringstream str3;
     str3 << "entry-files" << all_series_.size() - 1;
-    entry_files_.insert(entry_files_.end(), new GuiFilename(ctx->subVar(str3.str())));
+    entry_files_.insert(entry_files_.end(), new GuiFilename(get_ctx()->subVar(str3.str())));
 
 #endif
   } 
@@ -793,17 +793,24 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
     // determine if it is 2D, or 3D
     if (nZ > 1) {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY; size[2] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
     } else {
       // 2D
-      nrrdAlloc(nrrd, pType, 2, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY;
+      nrrdAlloc_nva(nrrd, pType, 2, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
     }
@@ -811,18 +818,25 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
      // determine if it is 2D, or 3D vector data
     if (nZ > 1) {
       // 4D
-      nrrdAlloc(nrrd, pType, 4, num_comp, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX; 
+      size[2] = nY; size[3] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 4, size);
+      unsigned int centers[4] = {nrrdCenterUnknown, nrrdCenterNode,
+				 nrrdCenterNode, nrrdCenterNode};
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
       nrrd->axis[3].kind = nrrdKindDomain;
     } else {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, num_comp, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX; size[2] = nY;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[3] = {nrrdCenterUnknown, nrrdCenterNode, 
+				 nrrdCenterNode};
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
@@ -961,17 +975,24 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
     // determine if it is 2D, or 3D
     if (nZ > 1) {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY; size[2] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
     } else {
       // 2D
-      nrrdAlloc(nrrd, pType, 2, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, 
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nX; size[1] = nY;
+      nrrdAlloc_nva(nrrd, pType, 2, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKindDomain;
       nrrd->axis[1].kind = nrrdKindDomain;
     }
@@ -979,18 +1000,28 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
      // determine if it is 2D, or 3D vector data
     if (nZ > 1) {
       // 4D
-      nrrdAlloc(nrrd, pType, 4, num_comp, nX, nY, nZ);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX;
+      size[2] = nY; size[3] = nZ;
+      nrrdAlloc_nva(nrrd, pType, 4, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterUnknown; centers[1] =  nrrdCenterNode;
+      centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
       nrrd->axis[3].kind = nrrdKindDomain;
     } else {
       // 3D
-      nrrdAlloc(nrrd, pType, 3, num_comp, nX, nY);
-      nrrdAxisInfoSet(nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-		      nrrdCenterNode, nrrdCenterNode);
+      size_t size[NRRD_DIM_MAX];
+      size[0] = num_comp; size[1] = nX;
+      size[2] = nY;
+      nrrdAlloc_nva(nrrd, pType, 3, size);
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterUnknown; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
       nrrd->axis[0].kind = nrrdKind3Vector;
       nrrd->axis[1].kind = nrrdKindDomain;
       nrrd->axis[2].kind = nrrdKindDomain;
@@ -1150,9 +1181,9 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
 
   if (arr.size() > 1) {
     sciNrrd = scinew NrrdData();
-    sciNrrd->nrrd = nrrdNew();
+    sciNrrd->nrrd_ = nrrdNew();
 
-    if( nrrdJoin(sciNrrd->nrrd, &arr[0], num_nrrds, position, incr) ) 
+    if( nrrdJoin(sciNrrd->nrrd_, &arr[0], num_nrrds, position, incr) ) 
       {
 	char *err = biffGetDone(NRRD);
 	error( string("(DicomNrrdReader::join_nrrds) Join Error: ") +  err );
@@ -1163,34 +1194,37 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
     sciNrrd = scinew NrrdData(arr[0]);
   }
 
-  nrrdAxisInfoSet(sciNrrd->nrrd, nrrdAxisInfoCenter,
-			nrrdCenterNode, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
-  sciNrrd->nrrd->axis[2].spacing = z_spacing_;
+  unsigned int *centers = (unsigned int *)malloc(sizeof(unsigned int) * 
+						 sciNrrd->nrrd_->dim);
+  for(unsigned int i=0; i<sciNrrd->nrrd_->dim; i++)
+    centers[i] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(sciNrrd->nrrd_, nrrdAxisInfoCenter, &centers);
+		      
+  sciNrrd->nrrd_->axis[2].spacing = z_spacing_;
 
 
   if (arr[0]->dim == 2)
     incr = false;
 
-  switch (sciNrrd->nrrd->dim) {
+  switch (sciNrrd->nrrd_->dim) {
   case 4:
     if (incr) {
-      if (sciNrrd->nrrd->axis[0].size > 4)
-	sciNrrd->nrrd->axis[0].label = airStrdup( "TensorData" );
+      if (sciNrrd->nrrd_->axis[0].size > 4)
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "TensorData" );
       else
-	sciNrrd->nrrd->axis[0].label = airStrdup( "VectorData" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[3].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
-      //sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
-      sciNrrd->nrrd->axis[3].spacing = z_spacing_; 
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "VectorData" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[3].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
+      //sciNrrd->nrrd_->axis[3].spacing = arr[0]->axis[2].spacing; 
+      sciNrrd->nrrd_->axis[3].spacing = z_spacing_; 
       
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 3, nrrdCenterNode);
     } else {
       return 0;
     }
@@ -1198,39 +1232,39 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
     break;
   case 3:
     if (incr) {
-      if (sciNrrd->nrrd->axis[0].size > 4)
-	sciNrrd->nrrd->axis[0].label = airStrdup( "TensorData" );
+      if (sciNrrd->nrrd_->axis[0].size > 4)
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "TensorData" );
       else
-	sciNrrd->nrrd->axis[0].label = airStrdup( "VectorData" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
+	sciNrrd->nrrd_->axis[0].label = airStrdup( "VectorData" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
-      //sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
-      sciNrrd->nrrd->axis[2].spacing = z_spacing_;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
+      //sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[2].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = z_spacing_;
     }
     
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
     break;
   case 2:
     if (incr) {
       return 0;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
 
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
     }
     break;
   default:

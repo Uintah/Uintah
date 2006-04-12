@@ -52,6 +52,7 @@
 #include <sgi_stl_warnings_off.h>  // Turned back on at end of file. 
 
 #include <iostream>
+#include <algorithm>
 using std::cerr;
 using std::endl;
 
@@ -245,6 +246,51 @@ SparseRowMatrix::get_data_size()
   return nnz;
 }
 
+
+SparseRowMatrix *
+SparseRowMatrix::transpose() const
+{
+  double *t_a = scinew double[nnz];
+  int *t_columns = scinew int[nnz];
+  int *t_rows = scinew int[ncols_+1];
+  int t_nnz = nnz;
+  int t_nncols = nrows_;
+  int t_nnrows = ncols_;
+  SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
+					      t_columns, t_nnz, t_a);
+
+  int *at = scinew int[t_nnrows+1];
+  int i;
+  for (i=0; i<t_nnrows+1;i++)
+  {
+    at[i] = 0;
+  }
+  for (i=0; i<t_nnz;i++)
+  {
+    at[columns[i]+1]++;
+  }
+  t_rows[0] = 0;
+  for (i=1; i<t_nnrows+1; i++)
+  {
+    at[i] += at[i-1];
+    t_rows[i] = at[i];
+  }
+
+  int c = 0;
+  for (int r=0; r<nrows_; r++)
+  {
+    for (; c<rows[r+1]; c++)
+    {
+      int mcol = columns[c];
+      t_columns[at[mcol]] = r;
+      t_a[at[mcol]] = a[c];
+      at[mcol]++;
+    }
+  }
+
+  delete at;
+  return t;
+}
 
 SparseRowMatrix *
 SparseRowMatrix::transpose()
@@ -547,49 +593,111 @@ SparseRowMatrix::sparse_mult_transXB(const DenseMatrix& x,
 }
 
 
+class SparseSparseElement {
+public:
+  int     row; 
+  int     col;
+  double  val;
+};
+
+inline bool operator<(const SparseSparseElement& s1, const SparseSparseElement& s2)
+{
+  if (s1.row < s2.row) return(true);
+  if ((s1.row == s2.row)&&(s1.col < s2.col)) return(true);
+  return (false);
+}
+
+inline bool operator==(const SparseSparseElement& s1, const SparseSparseElement& s2)
+{
+  if ((s1.row == s2.row)&&(s1.col == s2.col)) return(true);
+  return (false);
+}
 
 MatrixHandle
 SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
 {
   // Compute A*B=C
   ASSERT(b.nrows() == ncols_);
-
-  int i, j, k;
-
-  int *crow = scinew int[nrows_+1];
-  vector<int> ccolv;
-  vector<double> cdatav;
-
-  crow[0] = 0;
-  for (i = 0; i < nrows_; i++)
+  
+  MatrixHandle output = 0;
+  
+  int bncols = b.ncols_;
+  int *brows = b.rows;
+  int *bcolumns = b.columns;
+  double* ba = b.a;  
+  
+  // Rough estimate
+  std::vector<SparseSparseElement> elems;
+  
+  for (int r =0; r<nrows_; r++)
   {
-    crow[i+1] = crow[i];
-    for (j = 0; j < b.ncols(); j++)
+    int ps = rows[r];
+    int pe = rows[r+1];   
+    for (int p = ps; p < pe; p++)
     {
-      double sum = 0.0;
-      for (k = rows[i]; k < rows[i+1]; k++)
+      int s = columns[p];
+      double v = a[p];
+      int qs = brows[s];
+      int qe = brows[s+1];
+      for (int q=qs; q<qe; q++)
       {
-        sum += a[k] * b.get(columns[k], j);
-      }
-      if (sum != 0.0)
-      {
-        ccolv.push_back(j);
-        cdatav.push_back(sum);
-        crow[i+1]++;
+        SparseSparseElement el;
+        el.row = r;
+        el.col = bcolumns[q];
+        el.val = v*ba[q];
+        elems.push_back(el);
       }
     }
   }
-
-  int *ccol = scinew int[ccolv.size()];
-  double *cdata = scinew double[cdatav.size()];
-  for (i=0; i < (int)ccolv.size(); i++)
+  
+  std::sort(elems.begin(),elems.end());
+  
+  int s = 0;
+  int nnz = 0;
+  if (elems.size()) nnz = 1;
+  for (unsigned int r=1; r<elems.size(); r++)
   {
-    ccol[i] = ccolv[i];
-    cdata[i] = cdatav[i];
+    if (elems[s] == elems[r])
+    {
+      elems[s].val += elems[r].val;
+      elems[r].val = 0.0;
+    }
+    else
+    {
+      nnz++;
+      s = r;
+    }
   }
-
-  return scinew SparseRowMatrix(nrows_, b.ncols(), crow, ccol,
-                                cdatav.size(), cdata);
+  
+  int *rr = scinew int[nrows_+1];
+  int *cc = scinew int[nnz];
+  double *vv = scinew double[nnz];
+  
+  if ((rr == 0)||(cc == 0)||(vv == 0))
+  {
+    if (rr) delete[] rr;
+    if (cc) delete[] cc;
+    if (vv) delete[] vv;
+    return (output);  
+  }
+  
+  rr[0] = 0;
+  int q = 0;
+  unsigned int k = 0;
+  for( int p=0; p < nrows_; p++ )
+  {
+    while ((k < elems.size())&&(elems[k].row == p)) { 
+      if (elems[k].val) { 
+        cc[q] = elems[k].col; vv[q] = elems[k].val; q++;
+      } 
+      k++; 
+    }
+    rr[p+1] = q;
+  }   
+  
+  output = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows_,bncols,rr,cc,nnz,vv));
+  
+  return (output);
 }
 
 

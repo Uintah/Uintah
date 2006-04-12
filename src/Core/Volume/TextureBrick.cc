@@ -183,7 +183,7 @@ TextureBrick::compute_polygons(const Ray& view, double dt,
   compute_polygons(view, tmin, tmax, dt, vertex, texcoord, size);
 }
 
-
+static Vector view_vector;
 // compute polygon list of edge plane intersections
 //
 // This is never called externally and could be private.
@@ -203,6 +203,7 @@ TextureBrick::compute_polygons(const Ray& view,
   
   // find up and right vectors
   Vector vdir = view.direction();
+  view_vector = vdir;
   Vector up;
   Vector right;
   switch(MinIndex(fabs(vdir.x()),
@@ -326,18 +327,21 @@ TextureBrick::mask_polygons(vector<int> & size,
 			    vector<float> &vertex,
 			    vector<float> &texcoord,
 			    vector<int> &mask,
-			    vector<Plane> &planes)
+			    vector<Plane *> &planes)
 {
 
   mask = vector<int>(size.size(), 0);
 
   // Iterate through all the cutting planes
   for (unsigned p = 0; p < planes.size(); p++)
-  {
-    const Plane &clipplane = planes[p];
+  {   
+    const Plane &clipplane = *planes[p];
+    Vector clipnormal = clipplane.normal();
+    double dot = Dot(clipnormal, view_vector);
+      
     //    cerr << "Plane: " << b1 << b2 << b3 << std::endl;
     // Some cutting planes can share a bit pattern to create convex hulls
-    const int clipmask = 1 << p;
+    const int clipmask = 1 << (p+0);
 
     // New vertices, tex coords, bitmasks, and poly sizes created when clipping
     vector<float>  newvertex(0);
@@ -417,7 +421,17 @@ TextureBrick::mask_polygons(vector<int> & size,
 
 	// mask[s] is the clipped state of the current polygon
 	// Only turn on clipping plane mask bits if poly was not clipped
-	newmask.push_back(mask[s] | (clipped ? 0 : clipmask));
+        if (1) {
+          newmask.push_back(mask[s] | (clipped ? 0 : clipmask));
+        } else {
+          if (mask[s] && ((dot > 0) == clipped)) {
+            newmask.push_back(1);
+          }
+          else {
+            newmask.push_back(0);
+          }
+        }
+        //	newmask.push_back(mask[s] | (clipped ? 0 : clipmask));
 	  
 	// Iterate through the indicies and create the new polygon
 	for (unsigned int i = 0; i < index.size(); ++i) {
@@ -515,13 +529,13 @@ NrrdTextureBrick::~NrrdTextureBrick()
 int
 NrrdTextureBrick::sx()
 {
-  if (data_[0]->nrrd->dim == 3)
+  if (data_[0]->nrrd_->dim == 3)
   {
-    return data_[0]->nrrd->axis[0].size;
+    return data_[0]->nrrd_->axis[0].size;
   }
   else
   {
-    return data_[0]->nrrd->axis[1].size;
+    return data_[0]->nrrd_->axis[1].size;
   }
 }
 
@@ -529,13 +543,13 @@ NrrdTextureBrick::sx()
 int
 NrrdTextureBrick::sy()
 {
-  if (data_[0]->nrrd->dim == 3)
+  if (data_[0]->nrrd_->dim == 3)
   {
-    return data_[0]->nrrd->axis[1].size;
+    return data_[0]->nrrd_->axis[1].size;
   }
   else
   {
-    return data_[0]->nrrd->axis[2].size;
+    return data_[0]->nrrd_->axis[2].size;
   }
 }
 
@@ -546,7 +560,7 @@ NrrdTextureBrick::tex_type()
   // TODO: Only support unsigned bytes at this time, since that's all we
   // currently create.  Add rest later.  (Need to add texture
   // transform to make min/max work without resampling data anyway).
-  ASSERT(data_[0]->nrrd->type == nrrdTypeUChar);
+  ASSERT(data_[0]->nrrd_->type == nrrdTypeUChar);
   return GL_UNSIGNED_BYTE;
 }
 
@@ -555,7 +569,7 @@ void *
 NrrdTextureBrick::tex_data(int c)
 {
   ASSERT(c == 0 || c == 1);
-  unsigned char *ptr = (unsigned char *)(data_[c]->nrrd->data);
+  unsigned char *ptr = (unsigned char *)(data_[c]->nrrd_->data);
 
   const size_t offset = (oz() * sx() * sy() + oy() * sx() + ox()) * nb(c);
 

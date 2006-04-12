@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <sstream>
 #include <iostream>
@@ -64,15 +64,18 @@ DECLARE_MAKER(UnuDhisto)
 
 UnuDhisto::UnuDhisto(SCIRun::GuiContext *ctx) : 
   Module("UnuDhisto", ctx, Filter, "UnuAtoM", "Teem"), 
-  height_(ctx->subVar("height")),
-  log_(ctx->subVar("log")),
-  max_(ctx->subVar("max")),
-  usemax_(ctx->subVar("usemax"))
+  height_(get_ctx()->subVar("height"), 0),
+  log_(get_ctx()->subVar("log"), 1),
+  max_(get_ctx()->subVar("max"), 0),
+  usemax_(get_ctx()->subVar("usemax"), 1)
 {
 }
 
-UnuDhisto::~UnuDhisto() {
+
+UnuDhisto::~UnuDhisto()
+{
 }
+
 
 void 
 UnuDhisto::execute()
@@ -92,7 +95,7 @@ UnuDhisto::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (usemax_.get()) {

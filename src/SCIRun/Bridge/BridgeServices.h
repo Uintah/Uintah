@@ -41,16 +41,18 @@
 
 #ifndef SCIRUN_BRIDGE_BRIDGESERVICES_H
 #define SCIRUN_BRIDGE_BRIDGESERVICES_H
-                                                                                                            
-#include <sci_defs/vtk_defs.h>
+
+#include <sci_metacomponents.h>
 
 //CCA:
 #include <Core/CCA/spec/cca_sidl.h>
+
 //Babel:
-#include <SCIRun/Babel/framework.hh>
-#include <SCIRun/Babel/gov_cca.hh>
+#include <SCIRun/Babel/framework.hxx>
+#include <SCIRun/Babel/gov_cca.hxx>
+
 //Dataflow:
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 
 //Vtk:
 #if HAVE_VTK
@@ -62,40 +64,41 @@
 
 namespace SCIRun {
 
-  typedef enum {
-    CCA = 1,
-    Babel,
-    Dataflow,
-    Vtk,
-    Tao
-  } modelT;
-  
-  class BridgeServices {
-  public:
-    BridgeServices::BridgeServices() { }
-    virtual BridgeServices::~BridgeServices() { }
+typedef enum {
+  CCA = 1,
+  Babel,
+  Dataflow,
+  Vtk,
+  Tao
+} modelT;
 
-    virtual Port* getDataflowIPort(const std::string& name) = 0;    
-    virtual Port* getDataflowOPort(const std::string& name) = 0;
-    virtual sci::cca::Port::pointer getCCAPort(const std::string& name) = 0;
-    virtual gov::cca::Port getBabelPort(const std::string& name) = 0;
+class BridgeServices {
+public:
+  BridgeServices::BridgeServices() { }
+  virtual BridgeServices::~BridgeServices() { }
+
+  virtual Port* getDataflowIPort(const std::string& name) = 0;
+  virtual Port* getDataflowOPort(const std::string& name) = 0;
+  virtual sci::cca::Port::pointer getCCAPort(const std::string& name) = 0;
+  virtual UCXX ::gov::cca::Port getBabelPort(const std::string& name) = 0;
 
 #if HAVE_VTK
-    virtual vtk::Port* getVtkPort(const std::string& name) = 0; 
-    virtual void addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT) = 0;
+  virtual vtk::Port* getVtkPort(const std::string& name) = 0;
+  virtual void addVtkPort(vtk::Port* vtkport, VtkPortInstance::VTKPortType portT) = 0;
 #endif
- 
-    virtual void releasePort(const std::string& name, const modelT model) = 0;
-    virtual void registerUsesPort(const std::string& name, const std::string& type,
-			  const modelT model) = 0;
-    virtual void unregisterUsesPort(const std::string& name, const modelT model) = 0;
-    virtual void addProvidesPort(void* port,
-			 const std::string& name,
-			 const std::string& type,
-			 const modelT model) = 0;
-    virtual void removeProvidesPort(const std::string& name, const modelT model) = 0;
-    virtual sci::cca::ComponentID::pointer getComponentID() = 0;
-  };    
+
+  virtual void releasePort(const std::string& name, const modelT model) = 0;
+  virtual void registerUsesPort(const std::string& name, const std::string& type,
+				const modelT model) = 0;
+  virtual void unregisterUsesPort(const std::string& name, const modelT model) = 0;
+  virtual void addProvidesPort(void* port,
+			       const std::string& name,
+			       const std::string& type,
+			       const modelT model) = 0;
+  virtual void removeProvidesPort(const std::string& name, const modelT model) = 0;
+  virtual sci::cca::ComponentID::pointer getComponentID() = 0;
+};
+
 }
 
 #endif

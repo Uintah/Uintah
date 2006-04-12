@@ -742,9 +742,9 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     }
     set splitname [file split $filename]
     set netname [lindex $splitname end]
-    if { [string last .net $netname] != [expr [string length $netname]-4] } {
-	set netname ${netname}.net
-    }
+#     if { [string last .srn $netname] != [expr [string length $netname]-4] } {
+# 	set netname ${netname}.srn
+#     }
     if { [llength $splitname] == 1 } {
 	set filename [file join [netedit getenv SCIRUN_SRCDIR] Subnets $netname]
 	if ![file exists $filename] {
@@ -850,7 +850,7 @@ proc isaDefaultValue { module varname classname } {
 
 proc writeSubnetOnDisk { id } {
     global Subnet
-    set filename [file join ~ SCIRun Subnets $Subnet(Subnet${id}_Name).net]
+    set filename [file join ~ SCIRun Subnets $Subnet(Subnet${id}_Name).srn]
     if { [info exists Subnet(Subnet${id}_Filename)] } {
 	set filename $Subnet(Subnet${id}_Filename)
     }
@@ -1105,7 +1105,6 @@ proc subDATADIRandDATASET { val } {
     return $tmpval
 }
 
-
 proc genSubnetScript { subnet { tab "__auto__" }  } {
     netedit presave
 
@@ -1132,44 +1131,56 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	incr i
-	set modVar($module) "m$i"
-
 	if { [isaSubnetIcon $module] } {
+            incr i
+            set modVar($module) "m$i"
 	    set number $Subnet(${module}_num)
-	    set name $Subnet(Subnet${number}_Name)
-	    if { $Subnet(Subnet${number}_State) == "ondisk" } {
-		if { [info exists Subnet(Subnet${number}_Filename)] } {
-		    set name $Subnet(Subnet${number}_Filename)
-		}
-		append script "${tab}\# Load $name Sub-Network from disk\n"
-		append script "${tab}set m$i \[loadSubnetFromDisk \"${name}\" "
+            netedit subnet-start m$i $Subnet(Subnet${number}_Name)
+            genSubnetScript $number
+            netedit subnet-end 
+            # Write the x,y position of the modules icon on the network graph
+            netedit module-position m$i [expr int([$module get_x])] [expr int([$module get_y])]
+            
+            # Cache all connections to a big list to write out later in the file
+            eval lappend connections $Subnet(${module}_connections)
+            # Write user notes 
+            if { [info exists Notes($module)]&&[string length $Notes($module)] } {
+                netedit mod-note m$i \{$Notes($module)\}
+                if { [info exists Notes($module-Position)] } {
+                    netedit mod-note-pos m$i \{$Notes($module-Position)\}
+                }
+                if { [info exists Notes($module-Color)] } {
+                    netedit mod-note-col m$i \{$Notes($module-Color)\}
+                }
+            }
+        }
+    }
 
-	    } else {
-		append script "${tab}\# Create an instance of a $name Sub-Network\n"
-		append script "${tab}set m$i \[instanceSubnet \"${name}\" "
-	    }
-	} else {
+    set num_subnets $i
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	if { ![isaSubnetIcon $module] } {
+            incr i
+            set modVar($module) "m$i"
 	    set modpath [modulePath $module]	    
 	    set args "add-module m$i " 
 	    foreach elem $modpath { append args "\"${elem}\" " }
 	    eval netedit $args
-	}
-	# Write the x,y position of the modules icon on the network graph
-	netedit module-position m$i [expr int([$module get_x])] [expr int([$module get_y])]
-
-	# Cache all connections to a big list to write out later in the file
-	eval lappend connections $Subnet(${module}_connections)
-	# Write user notes 
-	if { [info exists Notes($module)]&&[string length $Notes($module)] } {
-	    netedit mod-note m$i \{$Notes($module)\}
-	    if { [info exists Notes($module-Position)] } {
-		netedit mod-note-pos m$i \{$Notes($module-Position)\}
-	    }
-	    if { [info exists Notes($module-Color)] } {
-		netedit mod-note-col m$i \{$Notes($module-Color)\}
-	    }
-	}
+            # Write the x,y position of the modules icon on the network graph
+            netedit module-position m$i [expr int([$module get_x])] [expr int([$module get_y])]
+            
+            # Cache all connections to a big list to write out later in the file
+            eval lappend connections $Subnet(${module}_connections)
+            # Write user notes 
+            if { [info exists Notes($module)]&&[string length $Notes($module)] } {
+                netedit mod-note m$i \{$Notes($module)\}
+                if { [info exists Notes($module-Position)] } {
+                    netedit mod-note-pos m$i \{$Notes($module-Position)\}
+                }
+                if { [info exists Notes($module-Color)] } {
+                    netedit mod-note-col m$i \{$Notes($module-Color)\}
+                }
+            }
+        }
     }
 
     # Uniquely sort connections list by output port # to handle dynamic ports
@@ -1222,9 +1233,12 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
         }
     }
 
-    set i 0
+    set i $num_subnets
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	$module writeStateToScript script "m[incr i]" $tab
+	if { ! [isaSubnetIcon $module] } {
+	    incr i
+	    $module writeStateToScript script "m$i" $tab
+	}
     }
 
     return $script
@@ -1283,12 +1297,13 @@ proc saveSubnetDialog { subnet_id ask } {
     }
     if { $ask } {
 	set types {
-	    {{SCIRun Net} {.net} }
-	    {{Other} { * } }
+	    {{SCIRun Net} {.srn} }
 	} 
-	set Subnet(Subnet${subnet_id}_Filename) \
-	    [tk_getSaveFile -defaultextension {.net} -filetypes $types \
-		 -initialdir "[netedit getenv HOME]/SCIRun/Subnets"]
+	set name [tk_getSaveFile -defaultextension {.srn} -filetypes $types \
+		      -initialdir "[netedit getenv HOME]/SCIRun/Subnets"]
+
+	set name [append_srn_filename $name]
+	set Subnet(Subnet${subnet_id}_Filename) $name
     }
     if { [string length $Subnet(Subnet${subnet_id}_Filename)]} {
 	writeNetwork $Subnet(Subnet${subnet_id}_Filename) $subnet_id
@@ -1299,6 +1314,9 @@ proc loadSubnetScriptsFromDisk { } {
     global SubnetScripts
     set files [glob -nocomplain "[netedit getenv SCIRUN_SRCDIR]/Subnets/*.net"]
     eval lappend files [glob -nocomplain "[netedit getenv HOME]/SCIRun/Subnets/*.net"]
+    eval lappend files [glob -nocomplain "[netedit getenv SCIRUN_SRCDIR]/Subnets/*.srn"]
+    eval lappend files [glob -nocomplain "[netedit getenv HOME]/SCIRun/Subnets/*.srn"]
+    
     foreach file $files {
 	set script ""
 	set handle [open $file RDONLY]
@@ -1310,9 +1328,9 @@ proc loadSubnetScriptsFromDisk { } {
     }
 }
 
-proc generateSubnetScriptsFromNetwork { } {
-    global Subnet
-    for {set i 1} {$i <= $Subnet(num)} {incr i} {
-	addSubnetToDatabase [genSubnetScript $i]
-    }    
-}
+# proc generateSubnetScriptsFromNetwork { } {
+#     global Subnet
+#     for {set i 1} {$i <= $Subnet(num)} {incr i} {
+# 	addSubnetToDatabase [genSubnetScript $i]
+#     }    
+# }

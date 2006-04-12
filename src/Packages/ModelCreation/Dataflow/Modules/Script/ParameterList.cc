@@ -37,7 +37,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Bundle/Bundle.h>
 
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -76,9 +76,9 @@ private:
 DECLARE_MAKER(ParameterList)
 ParameterList::ParameterList(GuiContext* ctx)
   : Module("ParameterList", ctx, Source, "Script", "ModelCreation"),
-    data_(ctx->subVar("data")),
-    fieldnamecount_(ctx->subVar("new_field_count")),
-    update_all_data_(ctx->subVar("update_all"))
+    data_(get_ctx()->subVar("data")),
+    fieldnamecount_(get_ctx()->subVar("new_field_count")),
+    update_all_data_(get_ctx()->subVar("update_all"))
 {
 }
 
@@ -92,10 +92,10 @@ void ParameterList::execute()
   // mouse to another part of the GUI and activate some other element. If not
   // the data is not updated. Here we force TCL to update all the data.
   // It's ugly but it solves some usability problems
-  gui->lock();
-  gui->eval(update_all_data_.get());
-  gui->unlock();
-  ctx->reset();
+  get_gui()->lock();
+  get_gui()->eval(update_all_data_.get());
+  get_gui()->unlock();
+  get_ctx()->reset();
   
   std::string data = data_.get();
   
@@ -261,25 +261,25 @@ std::vector<std::string> ParameterList::converttcllist(std::string str)
 
   // Yeah, it is TCL dependent:
   // TCL::llength determines the length of the list
-  gui->lock();
-  gui->eval("llength { "+str + " }",result);	
+  get_gui()->lock();
+  get_gui()->eval("llength { "+str + " }",result);	
   istringstream iss(result);
   iss >> lengthlist;
-  gui->unlock();
+  get_gui()->unlock();
   if (lengthlist < 0) return(list);
 
   list.resize(lengthlist);
-  gui->lock();
+  get_gui()->lock();
   for (long p = 0;p<lengthlist;p++)
   {
     ostringstream oss;
     // TCL dependency:
     // TCL::lindex retrieves the p th element from the list
     oss << "lindex { " << str <<  " } " << p;
-    gui->eval(oss.str(),result);
+    get_gui()->eval(oss.str(),result);
     list[p] = result;
   }
-  gui->unlock();
+  get_gui()->unlock();
   return(list);
 }
 

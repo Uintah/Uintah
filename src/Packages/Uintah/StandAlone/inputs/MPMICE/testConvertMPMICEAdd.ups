@@ -7,6 +7,9 @@
     <title>Constitutive Model Tester</title>
    </Meta>
 
+   <SimulationComponent>
+        <type> mpmice </type>
+   </SimulationComponent>
    <Time>
      <maxTime>1.6e-5</maxTime>
      <initTime>0.0</initTime>
@@ -106,7 +109,7 @@
             <initial_scalar_damage_distrib> constant </initial_scalar_damage_distrib>
           </constitutive_model>
           <geom_object>
-            <box label = "box">
+            <box label = "box1">
               <min>[0.0,10.0e-3,0.0]</min>
               <max>[6.0e-3,60.0e-3,6.0e-3]</max>
             </box>
@@ -138,10 +141,7 @@
                  <min>           [-2.0,-2.0,-2.0] </min>
                  <max>           [ 2.0, 2.0, 2.0] </max>
                </box>
-               <box label = "box">
-                 <min>[0.0,10.0e-3,0.0]</min>
-                 <max>[6.0e-3,60.0e-3,6.0e-3]</max>
-               </box>
+               <box label = "box1"> </box>
              </difference>
              <res>                      [2,2,2]       </res>
              <velocity>           [0.0,0.0,0.0]       </velocity>

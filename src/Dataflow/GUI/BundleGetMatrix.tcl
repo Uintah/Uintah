@@ -30,42 +30,16 @@
 
 itcl_class SCIRun_Bundle_BundleGetMatrix {
     inherit Module
+
     constructor {config} {
         set name BundleGetMatrix
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-matrix1-name
-        global $this-matrix2-name
-        global $this-matrix3-name
-        global $this-matrix1-listbox
-        global $this-matrix2-listbox
-        global $this-matrix3-listbox
-        global $this-matrix-selection
-        global $this-matrix1-entry
-        global $this-matrix2-entry
-        global $this-matrix3-entry
-        global $this-transposenrrd1
-        global $this-transposenrrd2
-        global $this-transposenrrd3
-
-        set $this-matrix1-name "matrix1"
-        set $this-matrix2-name "matrix2"
-        set $this-matrix3-name "matrix3"
-        set $this-matrix-selection ""
-
-        set $this-matrix1-listbox ""
-        set $this-matrix2-listbox ""
-        set $this-matrix3-listbox ""
-        set $this-matrix1-entry ""
-        set $this-matrix2-entry ""
-        set $this-matrix3-entry ""
-        set $this-transposenrrd1 0
-        set $this-transposenrrd2 0
-        set $this-transposenrrd3 0
-
+        initGlobal $this-matrix1-listbox ""
+        initGlobal $this-matrix2-listbox ""
+        initGlobal $this-matrix3-listbox ""
+        initGlobal $this-matrix1-entry ""
+        initGlobal $this-matrix2-entry ""
+        initGlobal $this-matrix3-entry ""
     }
 
     method ui {} {

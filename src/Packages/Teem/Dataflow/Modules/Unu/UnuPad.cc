@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 #include <iostream>
@@ -86,9 +86,9 @@ DECLARE_MAKER(UnuPad)
 
 UnuPad::UnuPad(GuiContext *ctx) : 
   Module("UnuPad", ctx, Filter, "UnuNtoZ", "Teem"),
-  pad_style_(ctx->subVar("pad-style")),
-  pad_value_(ctx->subVar("pad-value")),
-  dim_(ctx->subVar("dim")),
+  pad_style_(get_ctx()->subVar("pad-style"), "Bleed"),
+  pad_value_(get_ctx()->subVar("pad-value"), 0.0),
+  dim_(get_ctx()->subVar("dim"), 0),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
@@ -111,10 +111,10 @@ UnuPad::load_gui() {
   for (int a = 0; a < dim_.get(); a++) {
     ostringstream str;
     str << "minAxis" << a;
-    mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+    mins_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
     ostringstream str1;
     str1 << "maxAxis" << a;
-    maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
+    maxs_.push_back(new GuiInt(get_ctx()->subVar(str1.str())));
   }
 }
 
@@ -156,14 +156,14 @@ UnuPad::execute()
 	++iter;
       }
       maxs_.clear();
-      gui->execute(id.c_str() + string(" clear_axes"));
+      get_gui()->execute(get_id().c_str() + string(" clear_axes"));
     }
 
     last_generation_ = nrrdH->generation;
-    dim_.set(nrrdH->nrrd->dim);
+    dim_.set(nrrdH->nrrd_->dim);
     dim_.reset();
     load_gui();
-    gui->execute(id.c_str() + string(" init_axes"));
+    get_gui()->execute(get_id().c_str() + string(" init_axes"));
   }
 
   dim_.reset();
@@ -187,7 +187,7 @@ UnuPad::execute()
     changed = true;
   }
 
-  vector<int> min(dim_.get()), max(dim_.get());
+  vector<ptrdiff_t> min(dim_.get()), max(dim_.get());
   for (int a = 0; a < dim_.get(); a++) {
     if (last_mins_[a] != mins_[a]->get()) {
       changed = true;
@@ -198,30 +198,30 @@ UnuPad::execute()
       last_maxs_[a] = maxs_[a]->get();
     }
     min[a] = 0 - mins_[a]->get();
-    max[a] = (nrrdH->nrrd->axis[a].size - 1) + maxs_[a]->get();  
+    max[a] = (nrrdH->nrrd_->axis[a].size - 1) + maxs_[a]->get();  
 
-    if (nrrdKindSize(nrrdH->nrrd->axis[a].kind) > 1 && (min[a] !=0 || max[a] != 0)) {
+    if (nrrdKindSize(nrrdH->nrrd_->axis[a].kind) > 1 && (min[a] !=0 || max[a] != 0)) {
       warning("Trying to pad axis " + to_string(a) + " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
     }
   }
 
   if ( changed || !last_nrrdH_.get_rep())
   {
-    Nrrd *nin = nrrdH->nrrd;
+    Nrrd *nin = nrrdH->nrrd_;
     Nrrd *nout = nrrdNew();
-    int *minp = &(min[0]);
-    int *maxp = &(max[0]);
+    ptrdiff_t *minp = &(min[0]);
+    ptrdiff_t *maxp = &(max[0]);
 
     if( (last_pad_style_ == "Bleed" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryBleed)) ||
+	 nrrdPad_nva(nout, nin, minp, maxp, nrrdBoundaryBleed, 0)) ||
 	(last_pad_style_ == "Wrap" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryWrap)) ||
+	 nrrdPad_nva(nout, nin, minp, maxp, nrrdBoundaryWrap, 0)) ||
 	(last_pad_style_ == "Pad" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) )
+	 nrrdPad_nva(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) )
     {
 	char *err = biffGetDone(NRRD);
 	error(string("Trouble resampling: ") + err);
-	msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+	msg_stream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
 	free(err);
     }
 
@@ -230,7 +230,7 @@ UnuPad::execute()
     // Copy the properies, kinds, and labels.
     last_nrrdH_->copy_properties(nrrdH.get_rep());
 
-    for( int i=0; i<nin->dim; i++ )
+    for( unsigned int i=0; i<nin->dim; i++ )
     {
       nout->axis[i].kind  = nin->axis[i].kind;
       nout->axis[i].label = airStrdup(nin->axis[i].label);

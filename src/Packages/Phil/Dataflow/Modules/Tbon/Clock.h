@@ -41,9 +41,9 @@ inline iotimer_t read_time(void) { return *(iotimer_addr); }
 void init_clock(int n = 1);
 void fPrintTime(FILE *fp, iotimer_t s, iotimer_t e, char *txt);
 void PrintTime(iotimer_t s, iotimer_t e, char *txt);
-void AddTime(iotimer_t s, iotimer_t e, int id);
-void PrintAvgTime(FILE *fp, int id, int n, char *txt);
-void ClearTime( int id );
+void AddTime(iotimer_t s, iotimer_t e, int get_id());
+void PrintAvgTime(FILE *fp, int get_id(), int n, char *txt);
+void ClearTime( int get_id() );
 
 static double *clocks;
 } // End namespace Phil

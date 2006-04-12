@@ -24,7 +24,7 @@ template<> void fillFaceNormal<Vector>(NCVariable<Vector>& var,
 	var[IntVector(hi.x()-1,j,k)] =
 	  Vector(0.0,var[IntVector(hi.x()-1,j,k)].y(),
 		 var[IntVector(hi.x()-1,j,k)].z());
-	//cout<<"fillFaceFlux xPlus "<<"patch "<<patch->getID()<<" "<<
+	//cout<<"fillFaceFlux xPlus "<<"patch "<<patch->get_id()<<" "<<
 	//    IntVector(hi.x()-1,j,k)<<endl;
       }
     }
@@ -35,7 +35,7 @@ template<> void fillFaceNormal<Vector>(NCVariable<Vector>& var,
 	var[IntVector(low.x(),j,k)] = 
 	  Vector(0.0,var[IntVector(low.x(),j,k)].y(),
 		 var[IntVector(low.x(),j,k)].z());
-	//cout<<"fillFaceFlux xMinus "<<"patch "<<patch->getID()<<" "<<
+	//cout<<"fillFaceFlux xMinus "<<"patch "<<patch->get_id()<<" "<<
 	//    IntVector(low.x(),j,k)<<endl;
       }
     }
@@ -46,7 +46,7 @@ template<> void fillFaceNormal<Vector>(NCVariable<Vector>& var,
 	var[IntVector(i,hi.y()-1,k)] =
 	  Vector(var[IntVector(i,hi.y()-1,k)].x(),0.0,
 		 var[IntVector(i,hi.y()-1,k)].z());
-	//cout<<"fillFaceFlux yplus "<<"patch "<<patch->getID()<<" "<<
+	//cout<<"fillFaceFlux yplus "<<"patch "<<patch->get_id()<<" "<<
 	//     IntVector(i,hi.y()-1,k)<<endl;
       }
     }
@@ -57,7 +57,7 @@ template<> void fillFaceNormal<Vector>(NCVariable<Vector>& var,
 	var[IntVector(i,low.y(),k)] =
 	  Vector(var[IntVector(i,low.y(),k)].x(),0.0,
 		 var[IntVector(i,low.y(),k)].z());
-	//cout<<"fillFaceFlux yminus "<<"patch "<<patch->getID()<<" "<<
+	//cout<<"fillFaceFlux yminus "<<"patch "<<patch->get_id()<<" "<<
 	//     IntVector(i,low.y(),k)<<endl;
       }
     }
@@ -68,7 +68,7 @@ template<> void fillFaceNormal<Vector>(NCVariable<Vector>& var,
 	var[IntVector(i,j,hi.z()-1)] =
 	  Vector(var[IntVector(i,j,hi.z()-1)].x(),
 		 var[IntVector(i,j,hi.z()-1)].y(),0.0);
-	//cout<<"fillFaceFlux zplus "<<"patch "<<patch->getID()<<" "<<
+	//cout<<"fillFaceFlux zplus "<<"patch "<<patch->get_id()<<" "<<
 	//     IntVector(i,j,hi.z()-1)<<endl;
       }
     }
@@ -79,7 +79,7 @@ template<> void fillFaceNormal<Vector>(NCVariable<Vector>& var,
 	var[IntVector(i,j,low.z())] =
 	  Vector(var[IntVector(i,j,low.z())].x(),
 		 var[IntVector(i,j,low.z())].y(),0.0);
-	//cout<<"fillFace zminus "<<"patch "<<patch->getID()<<" "<<
+	//cout<<"fillFace zminus "<<"patch "<<patch->get_id()<<" "<<
 	//     IntVector(i,j,low.z())<<endl;
       }
     }

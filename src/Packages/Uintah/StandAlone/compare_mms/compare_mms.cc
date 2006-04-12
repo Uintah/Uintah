@@ -89,34 +89,66 @@ main( int argc, char *argv[] )
     DataArchive* da1 = scinew DataArchive(udaFileName);
 
 //     // Sample of how to read data from the DA xml file.
-//     ProblemSpecReader psr( udaFileName + "/input.xml" );
-//     ProblemSpecP docTop = psr.readInputFile();
-//     double dyVis;
-//     int    sos;
+     ProblemSpecReader psr( udaFileName + "/input.xml" );
+     ProblemSpecP docTop = psr.readInputFile();
+     double dyVis;
+     //int    sos;
+     double A;
+     Vector resolution;
 
-//     ProblemSpecP matBlock = ((docTop->findBlock("MaterialProperties"))->findBlock("ICE"))->findBlock("material");
+     ProblemSpecP cfdBlock = ((docTop->findBlock("CFD"))->findBlock("ICE")
+		     ->findBlock("customInitialization"))
+	     ->findBlock("manufacturedSolution");
 
-//     if( matBlock == 0 )
-//       {
-//         printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");
-//         exit(1);
-//       }
+     if( cfdBlock == 0 )
+       {
+         printf("Failed to find CFD->ICE->customInitialization->manufacturedSolution in input.xml file.\n");
+         exit(1);
+       }
 
-//     if( matBlock->get( string("dynamic_viscosity"), dyVis ) == 0 )
-//       {
-//         printf("Failed to find dynamic_viscosity in input.xml file.\n");
-//         exit(1);
-//       }
+     if( cfdBlock->get( string("A"), A ) == 0 )
+       {
+         printf("Failed to find A in input.xml file.\n");
+         exit(1);
+       }
+     ProblemSpecP GridBlock = ((docTop->findBlock("Grid"))->findBlock("Level")
+		     ->findBlock("Box"));
 
-//     if( matBlock->get( string("speed_of_sound"), sos ) == 0 )
-//       {
-//         printf("Failed to find speed_of_sound in input.xml file.\n");
-//         exit(1);
-//       }
+     if( GridBlock == 0 )
+       {
+         printf("Failed to find Grid->Level->Box in input.xml file.\n");
+         exit(1);
+       }
+     if( GridBlock->get( string("resolution"), resolution ) == 0 )
+       {
+         printf("Failed to find resolution in input.xml file.\n");
+         exit(1);
+       }
+     
+     ProblemSpecP matBlock = ((docTop->findBlock("MaterialProperties"))->findBlock("ICE"))->findBlock("material");
 
-//     printf( "read dynamic viscosity value of %lf\nSpeed of sound: %d\n", dyVis, sos );
+     if( matBlock == 0 )
+       {
+         printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");
+         exit(1);
+       }
+
+     if( matBlock->get( string("dynamic_viscosity"), dyVis ) == 0 )
+       {
+         printf("Failed to find dynamic_viscosity in input.xml file.\n");
+         exit(1);
+       }
+
+/*     if( matBlock->get( string("speed_of_sound"), sos ) == 0 )
+       {
+         printf("Failed to find speed_of_sound in input.xml file.\n");
+         exit(1);
+       }
+*/     
+     printf( "read dynamic viscosity value of %lf\nA: %lf\n", dyVis, A );
+     cout <<  "read resolution value of resolution" << resolution << "\n";
 //     // When done, free up problem spec:
-//     docTop->releaseDocument();
+     docTop->releaseDocument();
 
 
     vector<int> index;
@@ -136,8 +168,7 @@ main( int argc, char *argv[] )
     ////////////////////////////
     // Iterate over TIME
     //
-    for( unsigned int timeIndex = 0; timeIndex < index.size(); timeIndex++ )
-      {
+    for( unsigned int timeIndex = 0; timeIndex < index.size(); timeIndex++ ) {
         printf( "here: %d, %lf\n", index[timeIndex], times[timeIndex] );
 
         GridP grid = da1->queryGrid( times[timeIndex] );
@@ -145,49 +176,50 @@ main( int argc, char *argv[] )
         ////////////////////////////
         // Iterate over the levels
         //
-        for( int levIndex = 0; levIndex < grid->numLevels(); levIndex++ )
-          {
+        for( int levIndex = 0; levIndex < grid->numLevels(); levIndex++ ) {
             printf( "Looking at level %d.\n", levIndex );
             LevelP level = grid->getLevel(levIndex);
             
-            ////////////////////////////
-            // Iterate over the patches
-            for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
-              {
-                ConsecutiveRangeSet matls;
-                bool first = true;
+            //////////////////////////////
+            // Iterate over the variables
+            for( unsigned int varIndex = 0; varIndex < vars.size(); varIndex++ ) {
+            // for( unsigned int varIndex = 0; varIndex < 1; varIndex++ ) 
+	    // JUST LOOK AT THE FIRST ONE FOR NOW FOR TESTING!!!
+                  
+	        int i=0;
+	        double total_error=0.0;
+                printf("variable %s is a %s\n", vars[varIndex].c_str(), types[varIndex]->getName().c_str() );
 
-                const Patch* patch = *iter;
+                if( vars[varIndex] != "press_CC" ) continue;
+		////////////////////////////
+		// Iterate over the patches
+		for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+		    ConsecutiveRangeSet matls;
+                    bool first = true;
 
-                printf( "Looking at patch:\n");
-                cout << *patch << "\n";
+                    const Patch* patch = *iter;
 
-                //////////////////////////////
-                // Iterate over the variables
-                for( unsigned int varIndex = 0; varIndex < vars.size(); varIndex++ )
-                //for( unsigned int varIndex = 0; varIndex < 1; varIndex++ ) // JUST LOOK AT THE FIRST ONE FOR NOW FOR TESTING!!!
-                  {
-                    printf("variable %s is a %s\n", vars[varIndex].c_str(), types[varIndex]->getName().c_str() );
+                    printf( "Looking at patch:\n");
+                    cout << *patch << "\n";
 
-                    if( vars[varIndex] != "press_CC" ) continue;
 
-                    if( first ) {
-                      matls = da1->queryMaterials( vars[varIndex], patch, times[timeIndex] );
+                    if ( first ) {
+                        matls = da1->queryMaterials( vars[varIndex], patch, times[timeIndex] );
                     }
                     else if (matls != da1->queryMaterials(vars[varIndex], patch, times[timeIndex])) {
-                      cerr << "The material set is not consistent for variable "
-                           << vars[varIndex] << " across patches at time " << times[timeIndex] << endl;
-                      cerr << "Previously was: " << matls << endl;
-                      cerr << "But on patch " << patch->getID() << ": " << da1->queryMaterials(vars[varIndex], patch, times[timeIndex]) 
-                           << "\n";
-                      exit( 1 );
+                      	cerr << "The material set is not consistent for variable "
+                             << vars[varIndex] << " across patches at time " << times[timeIndex] << endl;
+                        cerr << "Previously was: " << matls << endl;
+                        cerr << "But on patch " << patch->getID() << ": " 
+			     << da1->queryMaterials(vars[varIndex], patch, times[timeIndex]) << "\n";
+                        exit( 1 );
                     }
                     first = false;
                     
                     //////////////////////////////
                     // Iterate over the materials
-                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();  matlIter != matls.end(); matlIter++)
-                      {
+                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();  matlIter != matls.end(); 
+					matlIter++) {
                         int matl = *matlIter;
                         printf("working on matl: %d\n", matl);
 
@@ -202,31 +234,41 @@ main( int argc, char *argv[] )
                         cout << "High: " << high << "\n";
                         cout << "Size: " << size << "\n";
 
-                        float maxDiff = -FLT_MAX, minDiff = FLT_MAX;
+                        double maxDiff = -FLT_MAX, minDiff = FLT_MAX;
+			
+			
                         //////////////////////////////
                         // Iterate over the cells
-                        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++) 
-                          {
+                        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++) {
                             IntVector cell = *iter;
                             cout << cell << "\n";
-                            float analytic_value = mms->pressure( cell[0], cell[1], times[timeIndex] );
-                            float diff = pressure[cell] - analytic_value;
+			    double x_pos = -0.5 + (cell[0]+0.5)*1.0/resolution.x();
+			    double y_pos = -0.5 + (cell[1]+0.5)*1.0/resolution.y();
+			    cout << "x_pos= " << x_pos << " y_pos= " << y_pos << "\n";
+//                            double analytic_value = mms->pressure( cell[0], cell[1], times[timeIndex] );
+			    double analytic_value = mms->pressure( x_pos, y_pos, times[timeIndex] );
+                            double diff = pressure[cell] - analytic_value;
+			    total_error+=diff*diff;
 
                             if( diff > maxDiff ) maxDiff = diff;
                             if( diff < minDiff ) minDiff = diff;
-                            printf( "UDA value: %f, Analytic Value: %f.  Diff: %f\n", pressure[cell], analytic_value, diff );
-                          }
+                            printf( "UDA value: %f, Analytic Value: %f.  Diff: %f, fabs(Diff): %f\n", 
+				    pressure[cell], analytic_value, diff, fabs(diff) );
+			    i=i+1;
+                        }
                         printf( "Max diff: %f, Min diff %f\n", maxDiff, minDiff );
+			
+                    } // end materials iteration
 
-                      } // end materials iteration
+                } // end patch iteration
+		
+                cout << "i= " << i << ", L2norm of error= " << sqrt(total_error/i) << "\n";
+		
+            } // end variable iteration
 
-                  } // end variable iteration
-                
-              } // end patch iteration
+        } // end levels iteration
 
-          } // end levels iteration
-
-      } // end time iteration
+    } // end time iteration
 
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';

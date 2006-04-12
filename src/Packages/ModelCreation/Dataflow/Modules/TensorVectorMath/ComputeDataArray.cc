@@ -57,8 +57,8 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace ModelCreation {
 
@@ -83,8 +83,8 @@ private:
 DECLARE_MAKER(ComputeDataArray)
 ComputeDataArray::ComputeDataArray(GuiContext* ctx)
   : Module("ComputeDataArray", ctx, Source, "TensorVectorMath", "ModelCreation"),
-  guifunction_(ctx->subVar("function")),
-  guiformat_(ctx->subVar("format"))
+  guifunction_(get_ctx()->subVar("function")),
+  guiformat_(get_ctx()->subVar("format"))
 {
 }
 
@@ -93,12 +93,12 @@ ComputeDataArray::~ComputeDataArray(){
 
 void ComputeDataArray::execute()
 {
-  size_t numinputs = (numIPorts()-3);
+  size_t numinputs = (num_input_ports()-3);
   
   ArrayObjectList inputlist(numinputs+1,ArrayObject(this));
   ArrayObjectList outputlist(1,ArrayObject(this));
   
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(1));
+  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_input_port(1));
   if(function_iport == 0)
   {
     error("Could not locate function input port");
@@ -112,7 +112,7 @@ void ComputeDataArray::execute()
     if (func.get_rep())
     {
       guifunction_.set(func->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
 
@@ -127,7 +127,7 @@ void ComputeDataArray::execute()
   
   int n = 1;
 
-  MatrixIPort *size_iport = dynamic_cast<MatrixIPort *>(getIPort(0));
+  MatrixIPort *size_iport = dynamic_cast<MatrixIPort *>(get_input_port(0));
   MatrixHandle size;
   size_iport->get(size);
   if (size.get_rep())
@@ -150,7 +150,7 @@ void ComputeDataArray::execute()
    
   for (size_t p = 0; p < numinputs; p++)
   {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+2));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_input_port(p+2));
     MatrixHandle handle;
     iport->get(handle);
     
@@ -191,9 +191,9 @@ void ComputeDataArray::execute()
   MatrixHandle omatrix;  
   outputlist[0].create_outputdata(n,format,"RESULT",omatrix);
     
-  gui->lock();
-  gui->eval(getID()+" update_text");
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
   
   std::string function = guifunction_.get();
   
@@ -224,10 +224,10 @@ void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
 
   if( args[1] == "gethelp" )
   {
-    gui->lock();
-    gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + tvm_help_matrix +"}");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval("global " + get_id() +"-help");
+    get_gui()->eval("set " + get_id() + "-help {" + tvm_help_matrix +"}");
+    get_gui()->unlock();
   }
 
   else

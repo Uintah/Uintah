@@ -63,7 +63,10 @@ main(int argc, char **argv) {
   
   MeshHandle mb = handle->mesh();
   TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
-
+  if (!tsm) {
+    cerr << "Input not a TriSurf. Exiting..." << endl;
+    exit(3);
+  }
   vector<int> faces;
   for (int i = 2; i < argc - 1; i++) {
     faces.push_back(atoi(argv[i]));

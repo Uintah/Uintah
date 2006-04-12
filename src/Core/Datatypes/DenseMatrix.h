@@ -157,8 +157,8 @@ SCISHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseM
 SCISHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
 SCISHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 SCISHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-void Concat_rows(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
-void Concat_cols(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
+SCISHARE void Concat_rows(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
+SCISHARE void Concat_cols(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
 
 } // End namespace SCIRun
 

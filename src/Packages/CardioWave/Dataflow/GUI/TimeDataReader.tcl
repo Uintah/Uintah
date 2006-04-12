@@ -61,7 +61,6 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     setGlobal $this-delay             0
     setGlobal $this-inc-amount        1
     setGlobal $this-send-amount       1
-    trace variable $this-current w "update idletasks;\#"
     setGlobal $this-scrollbar         ""
     setGlobal $this-cur               ""
     setGlobal $this-filename          ""
@@ -154,7 +153,7 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     global $this-execmode
     global $this-current
     global $this-range_max
-    
+ 
     set w .ui[modname]
 		
 		# test whether gui is already out there
@@ -276,7 +275,8 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     frame $scrollbar.max
     frame $scrollbar.inc
     pack $scrollbar.min $scrollbar.cur $scrollbar.max $scrollbar.inc -side top -anchor w -fill x -expand yes
-       
+    
+
     scale $scrollbar.min.slider -variable $this-range_min -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
     iwidgets::spinint $scrollbar.min.count -range {0 86400000} -justify right -width 5 -step 1 -textvariable $this-range_min -repeatdelay 300 -repeatinterval 10 -command "$this Restart"
     pack $scrollbar.min.slider -side left -anchor w -fill x -expand yes
@@ -299,13 +299,11 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     pack $scrollbar.inc.slider -side left -anchor w -fill x -expand yes
     pack $scrollbar.inc.count -side left
 
-    update_range
-
+    # update_range
     # Restore range to pre-loaded value
     set $this-range_min $rmin
     set $this-range_max $rmax
-
-
+       
     # Create and pack the play mode frame
     label $playmode.label -text "Play Mode"
     radiobutton $playmode.once -text "Once" -variable $this-playmode -value once -command "$this maybeRestart"
@@ -313,11 +311,12 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     radiobutton $playmode.bounce1 -text "Bounce" -variable $this-playmode -value bounce1 -command "$this maybeRestart"
     radiobutton $playmode.bounce2 -text "Bounce with repeating endpoints" -variable $this-playmode -value bounce2 -command "$this maybeRestart"
     iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {0 86400000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
-    trace variable $this-delay w "$this maybeRestart;\#"
 
     pack $playmode.label -side top -expand yes -fill both
     pack $playmode.once $playmode.loop $playmode.bounce1 $playmode.bounce2 $playmode.delay -side top -anchor w
 
+    trace variable $this-current w "update idletasks;\#"
+    trace variable $this-delay w "$this maybeRestart;\#"
     makeSciButtonPanel $w $w $this 
 
     moveToCursor $w

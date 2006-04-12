@@ -43,14 +43,14 @@ public:
 };
 
 extern "C" {
-Module* make_TransformContours(const clString& id)
+Module* make_TransformContours(const clString& get_id())
 {
-    return new TransformContours(id);
+    return new TransformContours(get_id());
 }
 }
 
-TransformContours::TransformContours(const clString& id)
-: Module("TransformContours", id, Filter)
+TransformContours::TransformContours(const clString& get_id())
+: Module("TransformContours", get_id(), Filter)
 {
     // Create the input port
     icontour=new ContourSetIPort(this, "ContourSet", ContourSetIPort::Atomic);

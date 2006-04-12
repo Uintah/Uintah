@@ -43,8 +43,8 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Basis/TriLinearLgn.h>
@@ -236,7 +236,7 @@ EITAnalyticSolution::execute()
   // Get the current pattern index  
   MatrixHandle  hCurrentPatternIndex;
   ColumnMatrix* currPatIdx;
-  int           k;
+  int           k = 0;
 
   // -- copy the input current index into local variable, k 
   if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) && 
@@ -246,7 +246,7 @@ EITAnalyticSolution::execute()
     k=static_cast<int>((*currPatIdx)[0]);
   }
   else{
-    msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
+    msg_stream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
   }
 
   // Find the number of electrodes from the input electrode parameters

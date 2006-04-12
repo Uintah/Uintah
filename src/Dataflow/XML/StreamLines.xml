@@ -41,27 +41,27 @@
     </authors>
     <summary>
          The StreamLines module visualizes vector fields by generating
-curves that interpolate the flow of vectors in a Field. 
+curves that interpolate the vector of vectors in a Field. 
     </summary>
     <description>
       <p>
 The StreamLines module visualizes vector fields by generating curves
-that interpolate the flow of vectors in a Field.
+that interpolate the vector of vectors in a Field.
       </p>
 
-      <p> The Flow Field input port is the vector field on which the
+      <p> The Vector Field input port is the vector field on which the
 path intergration of the seed points will be performed.  This may be a
 vector field with any volume geometry type.  Surfaces and lower order
 fields do not currently work due to numerical error.  The second input
-port, Seeds, contains the initial values for which the flow will be
+port, Seeds, contains the initial values for which the vector will be
 computed.  This may be a field of any type, as just the node positions
-are used.  Seeds which are not contained within the flow field are
+are used.  Seeds which are not contained within the vector field are
 just discarded.  The module requires use of both field inputs in order
 to execute.</p>
 
       <p> The StreamLines module has one output, Streamlines, a
 CurveMesh, representing a collection of stream lines computed for the
-Flow field given the set of initial seed points.</p>
+Vector field given the set of initial seed points.</p>
 
       <p> This module uses one of several similar numeric integration
 methods.  They are taken directly from Numerical Analysis by David
@@ -77,7 +77,7 @@ excellent results in general.  Adaptive Runge-Kutta-Fehlberg is a 5/6
 order solver which provides the best overall results at the cost of
 more computation time.  It is also the only adaptive method, meaning
 the step size of the algorithm is adjusted dynamically as the stream
-moves through the flow field. </p>
+moves through the vector field. </p>
 
 
       <p> All of the computation methods are similar in that they take
@@ -118,12 +118,12 @@ retaining their visual appearance.</p>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Flow field</name>
+        <name>Vector Field</name>
         <description>
           <p>
-            Flow field is the field to be visualized.  It can be 2D or
+            Vector field is the field to be visualized.  It can be 2D or
 3D and can be structured or unstructured. StreamLines is more
-effective if Flow field represents the flow present in a field rather
+effective if vector field represents the vector present in a field rather
 than the gradient of a generic field. 
           </p>
         </description>
@@ -132,7 +132,7 @@ than the gradient of a generic field.
         <componentname>ReadField</componentname>
       </port>
       <port>
-        <name>Seeds</name>
+        <name>Seed Points</name>
         <description>
           <p>
             Seeds is a field whose nodes will be used as seed points,

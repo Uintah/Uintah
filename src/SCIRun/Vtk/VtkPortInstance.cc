@@ -94,7 +94,7 @@ bool VtkPortInstance::connect(PortInstance* to)
   nConnections++;
   peer->nConnections++;
   
-  //  Network* net = port->get_module()->getNetwork();
+  //  Network* net = port->get_module()->get_network();
   if(porttype == Output){
     ((vtk::InPort*)peer->port)->connect((vtk::OutPort*)port);
     port->update(Port::REFRESH);

@@ -42,8 +42,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
@@ -84,7 +84,7 @@ DECLARE_MAKER(PointLatticeMap)
 
 PointLatticeMap::PointLatticeMap(GuiContext* ctx)
   : Module("PointLatticeMap", ctx, Filter, "FieldsData", "SCIRun"),
-    epsilon_(ctx->subVar("epsilon")),
+    epsilon_(get_ctx()->subVar("epsilon"), 0.0),
     pcf_generation_(-1),
     lvf_generation_(-1)
 {

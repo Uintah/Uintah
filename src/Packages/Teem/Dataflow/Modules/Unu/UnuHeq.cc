@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
 
@@ -59,14 +59,17 @@ DECLARE_MAKER(UnuHeq)
 
 UnuHeq::UnuHeq(SCIRun::GuiContext *ctx) : 
   Module("UnuHeq", ctx, Filter, "UnuAtoM", "Teem"),
-  bins_(ctx->subVar("bins")),
-  sbins_(ctx->subVar("sbins")),
-  amount_(ctx->subVar("amount"))
+  bins_(get_ctx()->subVar("bins"), 0),
+  sbins_(get_ctx()->subVar("sbins"), 0),
+  amount_(get_ctx()->subVar("amount"), 1.0)
 {
 }
 
-UnuHeq::~UnuHeq() {
+
+UnuHeq::~UnuHeq()
+{
 }
+
 
 void 
 UnuHeq::execute()
@@ -87,7 +90,7 @@ UnuHeq::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdHistoEq(nout, nin, NULL, bins_.get(), sbins_.get(), amount_.get())) {

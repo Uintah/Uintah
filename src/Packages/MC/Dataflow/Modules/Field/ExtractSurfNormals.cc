@@ -8,7 +8,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Packages/MC/share/share.h>
@@ -20,7 +20,7 @@ using namespace SCIRun;
 class MCSHARE ExtractSurfNormals : public Module {
 public:
   typedef   LockingHandle<PointCloudField<Vector> > pcv_t;
-  ExtractSurfNormals(const string& id);
+  ExtractSurfNormals(const string& get_id());
 
   virtual ~ExtractSurfNormals();
 
@@ -36,12 +36,12 @@ private:
   pcv_t                       out1_;
 };
 
-extern "C" MCSHARE Module* make_ExtractSurfNormals(const string& id) {
-  return scinew ExtractSurfNormals(id);
+extern "C" MCSHARE Module* make_ExtractSurfNormals(const string& get_id()) {
+  return scinew ExtractSurfNormals(get_id());
 }
 
-ExtractSurfNormals::ExtractSurfNormals(const string& id) : 
-  Module("ExtractSurfNormals", id, Source, "Field", "MC"),
+ExtractSurfNormals::ExtractSurfNormals(const string& get_id()) : 
+  Module("ExtractSurfNormals", get_id(), Source, "Field", "MC"),
   out1_(scinew PointCloudField<Vector>)
 {
   // Create the input port

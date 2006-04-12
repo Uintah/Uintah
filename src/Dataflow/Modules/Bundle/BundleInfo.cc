@@ -38,7 +38,7 @@
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -57,14 +57,18 @@ private:
 
 
 DECLARE_MAKER(BundleInfo)
-  BundleInfo::BundleInfo(GuiContext* ctx)
-    : Module("BundleInfo", ctx, Sink, "Bundle", "SCIRun"),
-      tclInfoString_(ctx->subVar("tclinfostring"))
+
+BundleInfo::BundleInfo(GuiContext* ctx)
+  : Module("BundleInfo", ctx, Sink, "Bundle", "SCIRun"),
+    tclInfoString_(get_ctx()->subVar("tclinfostring"), "")
 {
 }
 
-BundleInfo::~BundleInfo(){
+
+BundleInfo::~BundleInfo()
+{
 }
+
 
 void
 BundleInfo::execute()

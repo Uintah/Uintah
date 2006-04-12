@@ -40,8 +40,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Geom/ColorMapTex.h>
@@ -67,7 +67,18 @@
 namespace SCIRun {
 
 class GenAxes : public Module {
+public:
+  GenAxes(GuiContext* ctx);
+
+  virtual ~GenAxes();
+
+  virtual void execute();
+
+  virtual void tcl_command(GuiArgs& args, void* userdata);
+
 private:
+  vector< GeomHandle >          geometry_out_handles_;
+
 #ifdef HAVE_FTGL
   GeomFTGLFontRendererHandle    label_font_;
   GeomFTGLFontRendererHandle    value_font_;
@@ -99,16 +110,10 @@ private:
 
   string			get_GuiString(const string &str);
   double			get_GuiDouble(const string &str);
-  int		        get_GuiInt(const string &str);
-  bool		        get_GuiBool(const string &str);
+  int		                get_GuiInt(const string &str);
+  bool		                get_GuiBool(const string &str);
 
   void				check_for_changed_fonts();
-  
-public:
-  GenAxes(GuiContext* ctx);
-  virtual ~GenAxes();
-  virtual void execute();
-  virtual void tcl_command(GuiArgs& args, void* userdata);
 };
 
 DECLARE_MAKER(GenAxes)
@@ -185,6 +190,51 @@ GenAxes::~GenAxes()
 {
 }
 
+void
+GenAxes::execute()
+{
+  vector< FieldHandle > field_input_handles;
+
+  if( !get_dynamic_input_handles( "Field", field_input_handles, true ) )
+    return;
+
+  if( !geometry_out_handles_.size() == 0 ||
+
+      inputs_changed_ ) {
+
+    update_state(Executing);
+
+    geometry_out_handles_.clear();
+
+    bbox_.reset();
+    for( unsigned int i=0; field_input_handles.size(); i++ )
+      bbox_.extend(field_input_handles[i]->mesh()->get_bounding_box());
+
+    vector< string > names;
+
+    geometry_out_handles_.push_back(generateAxisLines(0,1,2));
+    geometry_out_handles_.push_back(generateAxisLines(1,2,0));
+    geometry_out_handles_.push_back(generateAxisLines(0,2,1));
+
+    names.push_back(string("XY Plane"));
+    names.push_back(string("XZ Plane"));
+    names.push_back(string("YZ Plane"));
+
+  //ostringstream str;
+  //int prim = i/3*3+i%3/2;
+  //int sec = i/3*3+(i%3+1)/2+1;
+  //int ter = i-(i+1)%3+1;
+  
+  //str << "Plane-" << prim << sec << "-" << ter << "-Axis-";
+  //geometry_handles.push_back(generateAxisLines(prim,sec,ter));
+  //names.push_back(str.c_str());
+  //  check_for_changed_fonts();
+
+    send_output_handle( string("Axes"), geometry_out_handles_, names );
+  }
+}
+
+
 //#define DEBUGPRINT  std::cerr << "[set " << str << "] { " << ret << " } " << std::endl; std::cerr.flush();
 #define DEBUGPRINT
 
@@ -243,21 +293,21 @@ GenAxes::get_GuiBool(const string &str) {
 void
 GenAxes::add_GuiString(const string &str) {
   DEBUGPRINT;
-  vars_.insert(make_pair(str,scinew GuiString(ctx->subVar(str))));
+  vars_.insert(make_pair(str,scinew GuiString(get_ctx()->subVar(str))));
 }
 
 
 void
 GenAxes::add_GuiDouble(const string &str) {
   DEBUGPRINT;
-  vars_.insert(make_pair(str,scinew GuiDouble(ctx->subVar(str))));
+  vars_.insert(make_pair(str,scinew GuiDouble(get_ctx()->subVar(str))));
 }
 
 
 void
 GenAxes::add_GuiInt(const string &str) {
   DEBUGPRINT;
-  vars_.insert(make_pair(str,scinew GuiInt(ctx->subVar(str))));
+  vars_.insert(make_pair(str,scinew GuiInt(get_ctx()->subVar(str))));
 }
 
 void
@@ -625,59 +675,19 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
 }
 		   
 
-void
-GenAxes::execute()
-{
-  
-  update_state(NeedData);
-
-  port_range_type range = get_iports("Field");
-  if (range.first == range.second) return;
-
-  port_map_type::iterator pi = range.first;
-  
-  bbox_.reset();
-  while (pi != range.second) {
-    FieldIPort *iport = (FieldIPort *)get_iport(pi->second);
-    FieldHandle fh;
-    if (iport->get(fh) && fh.get_rep()) {
-      bbox_.extend(fh->mesh()->get_bounding_box());
-    }
-    ++pi;
-  }
-
-  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Axes");
-  ogeom->delAll();
-
-  //ostringstream str;
-  //  int prim = i/3*3+i%3/2;
-  //int sec = i/3*3+(i%3+1)/2+1;
-  //int ter = i-(i+1)%3+1;
-  
-  //str << "Plane-" << prim << sec << "-" << ter << "-Axis-";
-  //ogeom->addObj(generateAxisLines(prim,sec,ter),str.str());
-  //  check_for_changed_fonts();
-  ogeom->addObj(generateAxisLines(0,1,2),string("XY Plane"));
-  ogeom->addObj(generateAxisLines(1,2,0),string("XZ Plane"));
-  ogeom->addObj(generateAxisLines(0,2,1),string("YZ Plane"));
-
-  ogeom->flushViews();
-}
-
-
 void GenAxes::check_for_changed_fonts() {
 #ifdef HAVE_FTGL
   string filename = get_GuiString("labelfont");
   if (label_font_.get_rep()) {
     if (label_font_->filename() != filename && 
-	gui->eval("validFile "+filename) == "1") {
+	get_gui()->eval("validFile "+filename) == "1") {
       label_font_ = 0;
     } else if (label_font_->get_ptRez() != get_GuiInt("labelrez")+1) {
       label_font_ = 0;
     }
   }
     
-  if (!label_font_.get_rep() && gui->eval("validFile "+filename) == "1") {
+  if (!label_font_.get_rep() && get_gui()->eval("validFile "+filename) == "1") {
     std::cerr << "loading " << filename;
     label_font_ = scinew GeomFTGLFontRenderer(filename,
 					      get_GuiInt("labelrez")+1,72);
@@ -686,7 +696,7 @@ void GenAxes::check_for_changed_fonts() {
   filename = get_GuiString("valuefont");
   if (value_font_.get_rep()) {
     if (value_font_->filename() != filename && 
-	gui->eval("validFile "+filename) == "1") {
+	get_gui()->eval("validFile "+filename) == "1") {
       value_font_ = 0;
     } else if (value_font_->get_ptRez() != get_GuiInt("valuerez")+1) {
       value_font_ = 0;
@@ -694,7 +704,7 @@ void GenAxes::check_for_changed_fonts() {
   }
 
   
-  if (!value_font_.get_rep() && gui->eval("validFile "+filename) == "1") {
+  if (!value_font_.get_rep() && get_gui()->eval("validFile "+filename) == "1") {
     std::cerr << "loading " << filename << "rez of " << get_GuiInt("valuerez") << std::endl;
     value_font_ = scinew GeomFTGLFontRenderer(filename, 
 					      get_GuiInt("valuerez")+1,72);

@@ -42,8 +42,8 @@
 
 #include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/InsertField.h>
 #include <Core/Containers/StringUtil.h>
@@ -89,11 +89,22 @@ void
 InsertField::execute()
 {
   // Get input field 0.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Tetrahedral Volume");
+  FieldIPort *ifp = (FieldIPort *)get_iport("Container Mesh");
   FieldHandle tet_field;
   if (!(ifp->get(tet_field) && tet_field.get_rep())) {
-    error("Required input Tetrahedral Volume is empty.");
+    error("Required input Container Mesh is empty.");
     return;
+  }
+
+  bool tri = false;
+  const TypeDescription *ftd0 = tet_field->get_type_description();
+  if (ftd0->get_name().find("TriSurfMesh") != string::npos)
+  {
+    tri = true;
+  }
+  else if (ftd0->get_name().find("TetVolMesh") == string::npos)
+  {
+    error("Container Mesh must contain a TetVolMesh or TriSurfMesh.");
   }
 
   // Get input field 1.
@@ -120,11 +131,9 @@ InsertField::execute()
 
   if( !combined_.get_rep() || update)
   {
-    const TypeDescription *ftd0 = tet_field->get_type_description();
     const TypeDescription *ftd1 = insert_field->get_type_description();
 
-    CompileInfoHandle ci =
-      InsertFieldAlgo::get_compile_info(ftd0, ftd1);
+    CompileInfoHandle ci = InsertFieldAlgo::get_compile_info(ftd0, ftd1, tri);
     Handle<InsertFieldAlgo> algo;
     if (!DynamicCompilation::compile(ci, algo, this)) {
       error("Dynamic compilation failed.");
@@ -142,17 +151,23 @@ InsertField::execute()
     if (dim == 0)
     {
       algo->execute_0(combined_, insert_field, added_nodes, added_elems);
-      algo->extract_0(extended_, mapping_,
-                      combined_, added_nodes, added_elems);
     }
     if (dim >= 1)
     {
       algo->execute_1(combined_, insert_field, added_nodes, added_elems);
     }
-    if (dim >= 2)
+    if (dim >= 2 && !tri)
     {
       algo->execute_2(combined_, insert_field, added_nodes, added_elems);
     }
+
+    CompileInfoHandle ci2 = InsertFieldExtract::get_compile_info(ftd0, dim);
+    Handle<InsertFieldExtract> algo2;
+    if (!DynamicCompilation::compile(ci2, algo2, this)) {
+      error("Dynamic compilation failed.");
+      return;
+    }
+    algo2->extract(extended_, mapping_, combined_, added_nodes, added_elems);
   }
 
   if( combined_.get_rep() )
@@ -178,19 +193,19 @@ InsertField::execute()
 
 CompileInfoHandle
 InsertFieldAlgo::get_compile_info(const TypeDescription *ftet,
-                                  const TypeDescription *finsert)
+                                  const TypeDescription *finsert,
+                                  bool tri)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("InsertFieldAlgoT");
   static const string base_class_name("InsertFieldAlgo");
 
   CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
+    scinew CompileInfo(base_class_name + (tri?"Tri":"Tet") + "." +
 		       ftet->get_filename() + "." +
                        finsert->get_filename() + ".",
                        base_class_name, 
-                       template_class_name, 
+                       base_class_name + (tri?"Tri":"Tet"), 
                        ftet->get_name() + ", " +
                        finsert->get_name());
 
@@ -198,10 +213,72 @@ InsertFieldAlgo::get_compile_info(const TypeDescription *ftet,
   rval->add_include(include_path);
   ftet->fill_compile_info(rval);
   finsert->fill_compile_info(rval);
-  
-  rval->add_basis_include("../src/Core/Basis/Constant.h");
-  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
 
+  return rval;
+}
+
+
+CompileInfoHandle
+InsertFieldExtract::get_compile_info(const TypeDescription *ftet,
+                                     int dim)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("InsertFieldExtractT");
+  static const string base_class_name("InsertFieldExtract");
+
+  string outname;
+  if (dim == 0)
+  {
+    outname = "GenericField<PointCloudMesh<ConstantBasis<Point> >, ConstantBasis<double>, vector<double> > ";
+  }
+  else if (dim == 1)
+  {
+    outname = "GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double>, vector<double> > ";
+  }
+  else if (dim == 2)
+  {
+    outname = "GenericField<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double>, vector<double> > ";
+  }
+  else if (dim == 3)
+  {
+    outname = "GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, vector<double> > ";
+  }
+
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftet->get_filename() + "." + to_string(dim) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftet->get_name() + ", " +
+                       outname);
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftet->fill_compile_info(rval);
+
+  if (dim == 0)
+  {
+    rval->add_basis_include("../src/Core/Basis/Constant.h");
+    rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+  }
+  else if (dim == 1)
+  {
+    rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+    rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
+  }
+  else if (dim == 2)
+  {
+    rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+    rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  }
+  else if (dim == 3)
+  {
+    rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
+    rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
+  }
+  
   return rval;
 }
 

@@ -32,6 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
+
 bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
   if (input.get_rep() == 0)
@@ -55,22 +56,24 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
   if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh"))
   {
     fo.set_mesh_type("HexVolMesh");
-    fo.set_container_type("vector");
   }
   else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh"))
   {
     fo.set_mesh_type("QuadSurfMesh");
-    fo.set_container_type("vector");
   }
   else if ((mesh_type == "ScanlineMesh")||(mesh_type == "StructCurveMesh"))
   {
     fo.set_mesh_type("CurveMesh");
-    fo.set_container_type("vector");
   }
   else
   {
     pr->error("No unstructure method available for mesh: " + mesh_type);
     return (false);
+  }
+
+  for(size_t p =0; p< precompiled_.size(); p++)
+  {
+    if (precompiled_[p]->testinput(input)) return(precompiled_[p]->Unstructure(pr,input,output));
   }
 
   // Setup dynamic files
@@ -99,5 +102,11 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
   return(algo->Unstructure(pr,input,output));
 }
 
+bool UnstructureAlgo::testinput(FieldHandle input)
+{
+  return (false);
+}
+
+AlgoList<UnstructureAlgo> UnstructureAlgo::precompiled_;
 
 } // End namespace ModelCreation

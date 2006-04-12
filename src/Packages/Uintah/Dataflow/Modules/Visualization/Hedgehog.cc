@@ -15,9 +15,9 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Util/NotFinished.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
@@ -173,14 +173,14 @@ static string widget_name("Hedgehog Widget");
 Hedgehog::Hedgehog(GuiContext* ctx)
 : Module("Hedgehog", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("Hedgehog widget lock"),
-  length_scale(ctx->subVar("length_scale")),
-  width_scale(ctx->subVar("width_scale")),
-  head_length(ctx->subVar("head_length")),
-  type(ctx->subVar("type")),
-  exhaustive_flag(ctx->subVar("exhaustive_flag")),
-  vector_default_color(ctx->subVar("vector_default_color")),
-  drawcylinders(ctx->subVar("drawcylinders")),
-  shaft_rad(ctx->subVar("shaft_rad")),
+  length_scale(get_ctx()->subVar("length_scale")),
+  width_scale(get_ctx()->subVar("width_scale")),
+  head_length(get_ctx()->subVar("head_length")),
+  type(get_ctx()->subVar("type")),
+  exhaustive_flag(get_ctx()->subVar("exhaustive_flag")),
+  vector_default_color(get_ctx()->subVar("vector_default_color")),
+  drawcylinders(get_ctx()->subVar("drawcylinders")),
+  shaft_rad(get_ctx()->subVar("shaft_rad")),
   shaft(new Material(Color(0,0,0), Color(.6, .6, .6),
 		     Color(.6, .6, .6), 10)),
   head(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10)),
@@ -471,54 +471,52 @@ void Hedgehog::execute()
   grid_id = ogeom->addObj(arrows, module_name);
 }
 
-void Hedgehog::widget_moved(bool last, BaseWidget*)
+void
+Hedgehog::widget_moved(bool last, BaseWidget*)
 {
-    if(last && !abort_flag)
-	{
-	    abort_flag=1;
-	    want_to_execute();
-	}
+  if(last && !abort_flag_)
+    {
+      abort_flag_ = true;
+      want_to_execute();
+    }
 }
 
-
-void Hedgehog::tcl_command(GuiArgs& args, void* userdata)
+void
+Hedgehog::tcl_command(GuiArgs& args, void* userdata)
 {
-    if(args.count() < 2)
-	{
-	    args.error("Streamline needs a minor command");
-	    return;
-	}
-    if(args[1] == "findxy")
-	{
-	    if(type.get() == "2D")
-		need_find2d=1;
-	    else
-		need_find3d=1;
-	    want_to_execute();
-	}
-    else if(args[1] == "findyz")
-	{
-	    if(type.get() == "2D")
-		need_find2d=2;
-	    else
-		need_find3d=1;
-	    want_to_execute();
-	}
-    else if(args[1] == "findxz")
-	{
-	    if(type.get() == "2D")
-		need_find2d=3;
-	    else
-		need_find3d=1;
-	    want_to_execute();
-	}
-    else
-	{
-	    Module::tcl_command(args, userdata);
-	}
-
+  if(args.count() < 2)
+    {
+      args.error("Streamline needs a minor command");
+      return;
+    }
+  if(args[1] == "findxy")
+    {
+      if(type.get() == "2D")
+        need_find2d=1;
+      else
+        need_find3d=1;
+      want_to_execute();
+    }
+  else if(args[1] == "findyz")
+    {
+      if(type.get() == "2D")
+        need_find2d=2;
+      else
+        need_find3d=1;
+      want_to_execute();
+    }
+  else if(args[1] == "findxz")
+    {
+      if(type.get() == "2D")
+        need_find2d=3;
+      else
+        need_find3d=1;
+      want_to_execute();
+    }
+  else
+    {
+      Module::tcl_command(args, userdata);
+    }
 }
-
-
 
 } // End namespace Uintah

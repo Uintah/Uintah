@@ -284,7 +284,7 @@ string TypeDescription::cc_to_h(const string &dot_cc)
 }
 
 
-TypeDescription::Register::Register(const TypeDescription*/* td*/)
+TypeDescription::Register::Register(const TypeDescription* /* td*/)
 {
   // Registration happens in CTOR
 }

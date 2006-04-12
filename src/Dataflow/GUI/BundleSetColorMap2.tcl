@@ -30,24 +30,9 @@
 
 itcl_class SCIRun_Bundle_BundleSetColorMap2 {
     inherit Module
+
     constructor {config} {
         set name BundleSetColorMap2
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-        global $this-colormap21-name
-        global $this-colormap22-name
-        global $this-colormap23-name
-        global $this-bundlename
-        
-
-        set $this-colormap21-name "colormap21"
-        set $this-colormap22-name "colormap22"
-        set $this-colormap23-name "colormap23"
-        set $this-bundlename ""
-
     }
 
     method ui {} {

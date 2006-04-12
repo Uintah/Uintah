@@ -376,7 +376,7 @@ ViewServerHelper::getParallelWindow( RenderGroupInfo * groupInfo ) {
 ViewWindow *
 ViewServerHelper::createNewViewWindow( ViewWindow *window, int whichDisplay ){
   // Create the appropriate command
-  string viewerName = window->manager->getID();
+  string viewerName = window->manager->get_id();
   //cerr << "CNVW: Viewer name == " << viewerName << endl;
   string display = parallelDisplays[ whichDisplay ];
   //cerr << "CNVW: Display == " << display << endl;
@@ -386,7 +386,7 @@ ViewServerHelper::createNewViewWindow( ViewWindow *window, int whichDisplay ){
   // Execute the tcl command
   string str_result;
   Log::log( SemotusVisum::Logging::DEBUG, "Calling TCL::eval()");
-  int result = window->manager->getGui()->eval( command, str_result );
+  int result = window->manager->get_gui()->eval( command, str_result );
   Log::log( SemotusVisum::Logging::DEBUG, "Done calling TCL::eval()");
   
   if ( !result ) {
@@ -1085,14 +1085,14 @@ ViewServerHelper::getZTex( const RenderRequest &request,
   bool lighting = false;
   string val;
   //  if ( !window->get_gui_stringvar(window->id, "global-light", val ) )
-  if ( ! window->getGui()->get( "global-light", val ) )
+  if ( ! window->get_gui()->get( "global-light", val ) )
     cerr << "Huh? We can't access global lighting?!?!?!" << endl;
   else {
     if ( val == "1" )
       lighting = true;
     if ( lighting )
       //window->set_guivar( window->id, "global-light", "0" );
-      window->getGui()->set( "global-light", "0" );
+      window->get_gui()->set( "global-light", "0" );
   }
   Log::log( MESSAGE, "*2* Forcing redraw!" );
   window->force_redraw();
@@ -1113,7 +1113,7 @@ ViewServerHelper::getZTex( const RenderRequest &request,
   // TURN LIGHTING BACK ON if needed
   if ( lighting )
     //window->set_guivar( window->id, "global-light", "1" );
-    window->getGui()->set( "global-light", "1" );
+    window->get_gui()->set( "global-light", "1" );
 
   sendZTex( gd, eye, (ZTexRenderer *)request.groupInfo->group->getRenderer() );
   Log::log( MESSAGE, "*9* Sent ztex" );
@@ -1971,13 +1971,13 @@ ViewServer::doRemoteModuleCallback( MessageData *input ) {
     cerr << "We have " << network->nmodules() << " modules!" << endl;
     for ( int i = 0; i < network->nmodules(); i++ ) {
       module = network->module(i);
-      cerr << "Module full name: " << module->getID() << endl;
-      char * conn = ccast_unsafe( module->getID() );
+      cerr << "Module full name: " << module->get_id() << endl;
+      char * conn = ccast_unsafe( module->get_id() );
       char * modName = getBaseName( conn, 0, strlen( conn ) );
       string mName( modName );
       cerr << "Module small name: " << mName << endl;
       //cerr << "Adding module " << module->id << endl;
-      module->getPosition( x, y );
+      module->get_position( x, y );
       m =
 	scinew SemotusVisum::Message::Module( //ccast_unsafe( module->id ),
 					   ccast_unsafe(mName),
@@ -2019,7 +2019,7 @@ ViewServer::doRemoteModuleCallback( MessageData *input ) {
     char * name = NULL;
     char * baseName;
     for ( int i = 0; i < network->nmodules(); i++ ) {
-      name = ccast_unsafe( network->module(i)->getID() );
+      name = ccast_unsafe( network->module(i)->get_id() );
       baseName = getBaseName( name, 0, strlen(name) );
       if ( !strcmp( module, baseName ) ) {
 	cerr << "Got a match! Base name = " << baseName << ", fullname = " <<

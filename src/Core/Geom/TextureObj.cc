@@ -11,20 +11,20 @@ namespace SCIRun {
 
 
 
-TextureObj::TextureObj(NrrdDataHandle &nrrd) :
-  nrrd_(0),
+TextureObj::TextureObj(NrrdDataHandle &nrrd_handle) :
+  nrrd_handle_(0),
   width_(-1),
   height_(-1),
   dirty_(true),
   texture_id_(0)
 {
   set_color(1.0, 1.0, 1.0, 1.0);
-  set_nrrd(nrrd);
+  set_nrrd(nrrd_handle);
 }
 
 
 TextureObj::TextureObj(int components, int x, int y) :
-  nrrd_(0),
+  nrrd_handle_(0),
   width_(-1),
   height_(-1),
   dirty_(true),
@@ -32,23 +32,25 @@ TextureObj::TextureObj(int components, int x, int y) :
 {
   set_color(1.0, 1.0, 1.0, 1.0);
 
-  int size[NRRD_DIM_MAX];
+  size_t size[NRRD_DIM_MAX];
   size[0] = components;
   size[1] = x;
   size[2] = y;
-  NrrdDataHandle nrrd = scinew NrrdData();
-  nrrdAlloc_nva(nrrd->nrrd, nrrdTypeUChar, 3, size);
+  NrrdDataHandle nrrd_handle = scinew NrrdData();
+  nrrdAlloc_nva(nrrd_handle->nrrd_, nrrdTypeUChar, 3, size);
     
-  set_nrrd(nrrd);
+  set_nrrd(nrrd_handle);
 }
 
 void
-TextureObj::set_nrrd(NrrdDataHandle &nrrd) {
-  if (!nrrd.get_rep() || !nrrd->nrrd || nrrd->nrrd->dim != 3) 
-    throw "TextureObj::set_nrrd(NrrdDataHandle &nrrd): nrrd not valid";
-  nrrd_ = nrrd;
-  width_ = nrrd_->nrrd->axis[1].size;
-  height_ = nrrd_->nrrd->axis[2].size;
+TextureObj::set_nrrd(NrrdDataHandle &nrrd_handle) {
+  if (!nrrd_handle.get_rep() ||
+      !nrrd_handle->nrrd_ ||
+       nrrd_handle->nrrd_->dim != 3) 
+    throw "TextureObj::set_nrrd(NrrdDataHandle &nrrd_handle): nrrd not valid";
+  nrrd_handle_ = nrrd_handle;
+  width_  = nrrd_handle_->nrrd_->axis[1].size;
+  height_ = nrrd_handle_->nrrd_->axis[2].size;
 
   pad_to_power_of_2();
 }
@@ -60,7 +62,7 @@ TextureObj::~TextureObj()
     glDeleteTextures(1, &texture_id_);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
-  nrrd_ = 0;
+  nrrd_handle_ = 0;
 }
 
 
@@ -86,24 +88,25 @@ TextureObj::pad_to_power_of_2()
 {
   if (ShaderProgramARB::texture_non_power_of_two()) 
     return;
-  if (!nrrd_.get_rep() || !nrrd_->nrrd)
+  if (!nrrd_handle_.get_rep() || !nrrd_handle_->nrrd_)
     return;
-  if (IsPowerOf2(nrrd_->nrrd->axis[1].size) &&
-      IsPowerOf2(nrrd_->nrrd->axis[2].size)) 
+  if (IsPowerOf2(nrrd_handle_->nrrd_->axis[1].size) &&
+      IsPowerOf2(nrrd_handle_->nrrd_->axis[2].size)) 
     return;
-  NrrdDataHandle nout = scinew NrrdData();
-  int minp[3] = { 0, 0, 0 };
-  int maxp[3] = { nrrd_->nrrd->axis[0].size-1, 
-                  Pow2(nrrd_->nrrd->axis[1].size)-1, 
-                  Pow2(nrrd_->nrrd->axis[2].size)-1 };
+  NrrdDataHandle nout_handle = scinew NrrdData();
+  ptrdiff_t minp[3] = { 0, 0, 0 };
+  ptrdiff_t maxp[3] = { nrrd_handle_->nrrd_->axis[0].size-1, 
+			Pow2(nrrd_handle_->nrrd_->axis[1].size)-1, 
+			Pow2(nrrd_handle_->nrrd_->axis[2].size)-1 };
 
-  if (nrrdPad(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed)) {
+  if (nrrdPad_nva(nout_handle->nrrd_, nrrd_handle_->nrrd_,
+		  minp, maxp, nrrdBoundaryBleed, 1)) {
     char *err = biffGetDone(NRRD);
     string error = string("Trouble resampling: ") + err;
     free (err);
     throw error;
   }
-  nrrd_ = nout;
+  nrrd_handle_ = nout_handle;
   set_dirty();
 }
 
@@ -111,7 +114,7 @@ TextureObj::pad_to_power_of_2()
 bool
 TextureObj::bind()
 {
-  if (!nrrd_.get_rep() || !nrrd_->nrrd) return false;
+  if (!nrrd_handle_.get_rep() || !nrrd_handle_->nrrd_) return false;
 
   const bool bound = glIsTexture(texture_id_);
 
@@ -122,7 +125,7 @@ TextureObj::bind()
   CHECK_OPENGL_ERROR();
   if (bound && !dirty_) return true;
   dirty_ = false;
-  Nrrd nrrd = *nrrd_->nrrd;
+  Nrrd nrrd = *nrrd_handle_->nrrd_;
   int prim = 1;
   GLenum pixtype;
   if (nrrd.axis[0].size == 1) 
@@ -188,8 +191,8 @@ TextureObj::draw(int n, Point *vertices, float *tex_coords)
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   if (n == 4) {
-    float x_scale = double(width_)/float(nrrd_->nrrd->axis[1].size);
-    float y_scale = double(height_)/float(nrrd_->nrrd->axis[2].size);
+    float x_scale = double(width_ )/float(nrrd_handle_->nrrd_->axis[1].size);
+    float y_scale = double(height_)/float(nrrd_handle_->nrrd_->axis[2].size);
     glBegin(GL_QUADS);
     
     for (int v = 0; v < 4; ++v) {

@@ -89,7 +89,7 @@ else
 endif
 
 ifeq ($(BUILD_DATAFLOW),yes)
- PSELIBS += Dataflow/Network
+ PSELIBS += Dataflow/Network Dataflow/TCLThread
 endif
 
 LIBS := $(XML2_LIBRARY)

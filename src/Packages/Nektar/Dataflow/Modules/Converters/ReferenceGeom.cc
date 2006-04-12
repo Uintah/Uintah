@@ -29,18 +29,18 @@ using namespace SCIRun;
       Packages/NektarVectorFieldHandle vector_handle;
       clString old_filename;
     public:
-      ReferenceGeom(const clString& id);
+      ReferenceGeom(const clString& get_id());
       virtual ~ReferenceGeom();
       virtual void execute();
     };
     
-    extern "C" Module* make_ReferenceGeom(const clString& id) {
-      return new ReferenceGeom(id);
+    extern "C" Module* make_ReferenceGeom(const clString& get_id()) {
+      return new ReferenceGeom(get_id());
     }
     
-    ReferenceGeom::ReferenceGeom(const clString& id)
-      : Module("ReferenceGeom", id, Source), 
-      filename("filename", id, this)
+    ReferenceGeom::ReferenceGeom(const clString& get_id())
+      : Module("ReferenceGeom", get_id(), Source), 
+      filename("filename", get_id(), this)
     {
       // Create the output data handle and port
       osport =scinew Packages/NektarScalarFieldOPort(this, 

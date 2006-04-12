@@ -29,14 +29,11 @@
 
 itcl_class SCIRun_Math_BuildNoise {
     inherit Module
+
     constructor {config} {
         set name BuildNoise
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-snr
-	set $this-snr 10
-    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

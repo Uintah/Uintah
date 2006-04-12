@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkGrayscaleErodeImageFilter.h>
@@ -49,7 +48,7 @@ namespace Insight
 
 using namespace SCIRun;
 
-class InsightSHARE GrayscaleErodeImageFilter : public Module
+class GrayscaleErodeImageFilter : public Module
 {
 public:
 
@@ -180,7 +179,7 @@ DECLARE_MAKER(GrayscaleErodeImageFilter)
 
 GrayscaleErodeImageFilter::GrayscaleErodeImageFilter(GuiContext* ctx)
   : Module("GrayscaleErodeImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_radius_(ctx->subVar("radius")),
+    gui_radius_(get_ctx()->subVar("radius")),
      last_InputImage_(-1)
 {
   filter_ = 0;
@@ -188,9 +187,6 @@ GrayscaleErodeImageFilter::GrayscaleErodeImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &GrayscaleErodeImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &GrayscaleErodeImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
-
 }
 
 GrayscaleErodeImageFilter::~GrayscaleErodeImageFilter()

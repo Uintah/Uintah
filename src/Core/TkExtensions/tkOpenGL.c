@@ -46,6 +46,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
 #endif
 
 #ifdef HAVE_GLEW
@@ -153,7 +156,7 @@ static int		OpenGLListVisuals _ANSI_ARGS_((Tcl_Interp *interp,
  *--------------------------------------------------------------
  */
 
-int
+SCISHARE int
 OpenGLCmd(clientData, interp, argc, argv)
     ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */

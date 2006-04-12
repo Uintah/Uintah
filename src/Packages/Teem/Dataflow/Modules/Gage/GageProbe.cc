@@ -19,12 +19,12 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <sstream>
 #include <iostream>
 
-#define SPACING(spc) (AIR_EXISTS(spc) ? spc: nrrdDefSpacing)
+#define SPACING(spc) (AIR_EXISTS(spc) ? spc: nrrdDefaultSpacing)
 
 namespace SCITeem {
 
@@ -65,28 +65,28 @@ private:
 DECLARE_MAKER(GageProbe)
 GageProbe::GageProbe(SCIRun::GuiContext *ctx)
   : Module("GageProbe", ctx, Source, "Gage", "Teem"),
-  field_kind_(ctx->subVar("field_kind_")),
-  otype_(ctx->subVar("otype_")),
-  quantity_(ctx->subVar("quantity_")),
+  field_kind_(get_ctx()->subVar("field_kind_")),
+  otype_(get_ctx()->subVar("otype_")),
+  quantity_(get_ctx()->subVar("quantity_")),
   
-  valuesType_(ctx->subVar("valuesType_")),
-  valuesNumParm1_(ctx->subVar("valuesNumParm1_")),
-  valuesNumParm2_(ctx->subVar("valuesNumParm2_")),
-  valuesNumParm3_(ctx->subVar("valuesNumParm3_")),
+  valuesType_(get_ctx()->subVar("valuesType_")),
+  valuesNumParm1_(get_ctx()->subVar("valuesNumParm1_")),
+  valuesNumParm2_(get_ctx()->subVar("valuesNumParm2_")),
+  valuesNumParm3_(get_ctx()->subVar("valuesNumParm3_")),
   
-  dType_(ctx->subVar("dType_")),
-  dNumParm1_(ctx->subVar("dNumParm1_")),
-  dNumParm2_(ctx->subVar("dNumParm2_")),
-  dNumParm3_(ctx->subVar("dNumParm3_")),
+  dType_(get_ctx()->subVar("dType_")),
+  dNumParm1_(get_ctx()->subVar("dNumParm1_")),
+  dNumParm2_(get_ctx()->subVar("dNumParm2_")),
+  dNumParm3_(get_ctx()->subVar("dNumParm3_")),
   
-  ddType_(ctx->subVar("ddType_")),
-  ddNumParm1_(ctx->subVar("ddNumParm1_")),
-  ddNumParm2_(ctx->subVar("ddNumParm2_")),
-  ddNumParm3_(ctx->subVar("ddNumParm3_"))
+  ddType_(get_ctx()->subVar("ddType_")),
+  ddNumParm1_(get_ctx()->subVar("ddNumParm1_")),
+  ddNumParm2_(get_ctx()->subVar("ddNumParm2_")),
+  ddNumParm3_(get_ctx()->subVar("ddNumParm3_"))
 {
   string result;
   string input = "{Scalar Vector}";
-  gui->eval(id + " set_list " + input, result);
+  get_gui()->eval(get_id() + " set_list " + input, result);
   printf("result is %s\n", result.c_str());
 }
 
@@ -112,7 +112,7 @@ GageProbe::execute()
     return;
   }
   
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
   //Set the GUI variables
@@ -137,17 +137,16 @@ GageProbe::execute()
   
   
   gageContext *ctx;
-  double gmc, ipos[4], opos[4], minx, miny, minz, spx, spy, spz;
+  double gmc, ipos[4], /*opos[4], */ minx, miny, minz, spx, spy, spz;
   float x, y, z;
   float scale[3];
   gageKind *kind = NULL;
-  int a, ansLen, E=0, i, idx, otype, renorm, what;
+  int a, ansLen, E=0, idx, otype, /*renorm,*/ what;
   int six, siy, siz, sox, soy, soz, xi, yi, zi;
   int iBaseDim, oBaseDim;
   gagePerVolume *pvl;
-  char *outS, *err;
+  char /* *outS,*/ *err = NULL;
   NrrdKernelSpec *k00 = NULL, *k11 = NULL, *k22 = NULL;
-  gage_t *answer;
   
   //attempt to set gageKind
   if (nin->axis[0].size == 1){
@@ -291,18 +290,22 @@ GageProbe::execute()
     error(biffGet(GAGE));
     return;
   }
-  answer = gageAnswerPointer(ctx, pvl, what);
+  const gage_t *answer = gageAnswerPointer(ctx, pvl, what);
   gageParmSet(ctx, gageParmVerbose, 0);
   //end gage setup
   
   if (ansLen > 1) {
     printf("creating %d x %d x %d x %d output\n", 
 	   ansLen, sox, soy, soz);
-    if (!E) E |= nrrdMaybeAlloc(nout=nrrdNew(), otype, 4,
-				ansLen, sox, soy, soz);
+    size_t size[NRRD_DIM_MAX];
+    size[0] = ansLen; size[1] = sox;
+    size[2] = soy;    size[3] = soz;
+    if (!E) E |= nrrdMaybeAlloc_nva(nout=nrrdNew(), otype, 4, size);
   } else {
+    size_t size[NRRD_DIM_MAX];
+    size[0] = sox; size[1] = soy; size[2] = soz;
     printf("creating %d x %d x %d output\n", sox, soy, soz);
-    if (!E) E |= nrrdMaybeAlloc(nout=nrrdNew(), otype, 3, sox, soy, soz);
+    if (!E) E |= nrrdMaybeAlloc_nva(nout=nrrdNew(), otype, 3, size);
   }
   if (E) {
     error(err);
@@ -323,7 +326,7 @@ GageProbe::execute()
 	ipos[2] = zi;
 	
 	if (gageProbe(ctx, ipos[0], ipos[1], ipos[2])) {
-          error(gageErrStr);
+          error(ctx->errStr);
         }
         
 	if (1 == ansLen) {	
@@ -338,7 +341,7 @@ GageProbe::execute()
     }
   }
   
-  nrrdContentSet(nout, "probe", nin, "%s", airEnumStr(kind->enm, what));
+  nrrdContentSet_va(nout, "probe", nin, "%s", airEnumStr(kind->enm, what));
   nout->axis[0+oBaseDim].spacing = 
     ((double)six/sox)*SPACING(nin->axis[0+iBaseDim].spacing);
   nout->axis[0+oBaseDim].label = airStrdup(nin->axis[0+iBaseDim].label);
@@ -350,7 +353,7 @@ GageProbe::execute()
   nout->axis[2+oBaseDim].label = airStrdup(nin->axis[2+iBaseDim].label);
   
   
-  for (int i = 0; i < nout->dim; i++)
+  for (unsigned int i = 0; i < nout->dim; i++)
   {
     if (!(airExists(nout->axis[i].min) && 
 	  airExists(nout->axis[i].max)))

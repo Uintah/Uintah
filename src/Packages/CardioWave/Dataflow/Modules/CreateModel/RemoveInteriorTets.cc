@@ -11,7 +11,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
@@ -161,7 +161,7 @@ void RemoveInteriorTets::execute()
     }
     ++cb;
   }
-  msgStream_ << "RemoveInteriorTets: ncells="<<count<<"\n";
+  msg_stream_ << "RemoveInteriorTets: ncells="<<count<<"\n";
 
   // copy the fdata for valid nodes
   TVField_Vector *tv_new = scinew TVField_Vector(new_mesh);

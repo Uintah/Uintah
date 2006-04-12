@@ -963,7 +963,7 @@ TaskGraph3::createDetailedDependencies(DetailedTasks3* dt,
 		  DetailedTask3* prevReqTask = *reqTaskIter;
 		  if(prevReqTask->task == task->task){
 		    if(!task->task->getHasSubScheduler()) {
-		      cerr << "\n\n\nWARNING - task that requires with Ghost cells *and* modifies may not be correct\n";
+		      cerr << "\n\n\nWARNING - task ("<< task->getName() << ") requires with Ghost cells *and* modifies and may not be correct \n";
                       dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
                     }
 		  } else if(prevReqTask != task){

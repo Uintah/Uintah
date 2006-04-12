@@ -414,6 +414,7 @@ public:
   };
 
   typedef Cell Elem;
+  typedef Face DElem;
 
   friend class NodeIter;
   friend class CellIter;
@@ -673,6 +674,13 @@ public:
   void get_elems(typename Elem::array_type &result,
                  const typename Node::index_type &idx) const;
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  const typename Elem::index_type &idx) const
+  {
+    get_faces(result, idx);
+  }
+
   //! return all cell_indecies that overlap the BBox in arr.
   void get_cells(typename Cell::array_type &arr, const BBox &box);
   //! returns the min and max indices that fall within or on the BBox
@@ -754,6 +762,7 @@ public:
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 3; }
+  virtual int topology_geometry() const { return (STRUCTURED | REGULAR); }
 
   // returns a LatVolMesh
   static Persistent *maker() { return new LatVolMesh(); }

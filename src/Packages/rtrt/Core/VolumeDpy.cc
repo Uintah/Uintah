@@ -47,8 +47,8 @@ void VolumeDpy::init() {
   // Compute the global minmax
   if(vols.size()==0)
     exit(0);
-  datamax=-MAXFLOAT;
-  datamin=MAXFLOAT;
+  datamax=-FLT_MAX;
+  datamin=FLT_MAX;
   for(int i=0;i<vols.size();i++){
     float min, max;
     vols[i]->get_minmax(min, max);

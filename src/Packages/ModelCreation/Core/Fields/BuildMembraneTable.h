@@ -31,7 +31,7 @@
 
 // The following include file will include all tools needed for doing 
 // dynamic compilation and will include all the standard dataflow types
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 #include <sci_hash_map.h>
 #include <sgi_stl_warnings_off.h>
@@ -52,6 +52,8 @@ class membraneparam_type {
     
 };
 
+typedef std::vector<membraneparam_type> MembraneTableList;
+
 inline bool operator==(const membraneparam_type& p1,const membraneparam_type& p2)
 {
   if ((p1.node1 == p2.node1)&&(p1.node2 == p2.node2)) return (true);
@@ -69,7 +71,7 @@ inline bool operator<(const membraneparam_type& p1, const membraneparam_type& p2
 class BuildMembraneTableAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable);
+  virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MembraneTableList& membranetablelist);
 
 };
 
@@ -77,13 +79,13 @@ template <class FVOL, class FSURF>
 class BuildMembraneTableVolAlgoT : public BuildMembraneTableAlgo
 {
 public:
-  virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable);
+  virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MembraneTableList& membranetablelist);
   
 };
 
 
 template <class FVOL, class FSURF>
-bool BuildMembraneTableVolAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable)
+bool BuildMembraneTableVolAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MembraneTableList& membranetablelist)
 {
 
   FVOL *elementtypefield = dynamic_cast<FVOL *>(elementtypevol.get_rep());
@@ -221,7 +223,7 @@ bool BuildMembraneTableVolAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter
   int k = 0;
   typename FSURF::mesh_type::Elems::size_type numelems;
   membranemesh->size(numelems);
-  std::vector<membraneparam_type> membranetablelist(nodespersurf*numelems);
+  membranetablelist.resize(nodespersurf*numelems);
   
   if (points.size() > 1)
   {
@@ -352,32 +354,13 @@ bool BuildMembraneTableVolAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter
         tablesize++;
       }
     }
-    
-    membranetable = dynamic_cast<Matrix *>(scinew DenseMatrix(tablesize,3));
-    if (membranetable.get_rep() == 0)
-    {
-      pr->error("BuildMembraneTable: Could not allocate Membrane table");
-      return (false);  
-    }
-
-    double* dataptr = membranetable->get_data_pointer();
-    q = 0;
-    for (size_t p=0; p < membranetablelist.size(); p++)
-    {
-      if (membranetablelist[p].surface != 0.0)
-      {
-        dataptr[q++] = membranetablelist[p].node1;
-        dataptr[q++] = membranetablelist[p].node2;
-        dataptr[q++] = membranetablelist[p].surface;        
-      }
-    }
   }
   else
   {
     pr->warning("BuildMembraneTable: The Membrane geometry does not correspond to any of the element faces/edges of the element type field");
     return (true);    
   }
-
+        
   // Success:
   return (true);
 }
@@ -386,7 +369,7 @@ template <class FVOL, class FSURF>
 class BuildMembraneTableSurfAlgoT : public BuildMembraneTableAlgo
 {
 public:
-  virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable);
+  virtual bool BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MembraneTableList& membranetablelist);
 
 
   
@@ -394,7 +377,7 @@ public:
 
 
 template <class FVOL, class FSURF>
-bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MatrixHandle& membranetable)
+bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *pr, FieldHandle elementtypevol, FieldHandle membranesurf, MembraneTableList& membranetablelist)
 {
 
   FVOL *elementtypefield = dynamic_cast<FVOL *>(elementtypevol.get_rep());
@@ -532,7 +515,7 @@ bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporte
   int k = 0;
   typename FSURF::mesh_type::Elem::size_type numelems;
   membranemesh->size(numelems);
-  std::vector<membraneparam_type> membranetablelist(nodespersurf*numelems);
+  membranetablelist.resize(nodespersurf*numelems);
   
   if (points.size() > 1)
   {
@@ -664,25 +647,6 @@ bool BuildMembraneTableSurfAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporte
       {
         q = p;
         tablesize++;
-      }
-    }
-    
-    membranetable = dynamic_cast<Matrix *>(scinew DenseMatrix(tablesize,3));
-    if (membranetable.get_rep() == 0)
-    {
-      pr->error("BuildMembraneTable: Could not allocate Membrane table");
-      return (false);  
-    }
-
-    double* dataptr = membranetable->get_data_pointer();
-    q = 0;
-    for (size_t p=0; p < membranetablelist.size(); p++)
-    {
-      if (membranetablelist[p].surface != 0.0)
-      {
-        dataptr[q++] = membranetablelist[p].node1;
-        dataptr[q++] = membranetablelist[p].node2;
-        dataptr[q++] = membranetablelist[p].surface;        
       }
     }
   }

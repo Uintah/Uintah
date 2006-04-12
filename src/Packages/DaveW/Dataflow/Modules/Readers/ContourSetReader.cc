@@ -28,17 +28,17 @@ class ContourSetReader : public Module {
     ContourSetHandle handle;
     clString old_filename;
 public:
-    ContourSetReader(const clString& id);
+    ContourSetReader(const clString& get_id());
     virtual ~ContourSetReader();
     virtual void execute();
 };
 
-extern "C" Module* make_ContourSetReader(const clString& id) {
-  return new ContourSetReader(id);
+extern "C" Module* make_ContourSetReader(const clString& get_id()) {
+  return new ContourSetReader(get_id());
 }
 
-ContourSetReader::ContourSetReader(const clString& id)
-: Module("ContourSetReader", id, Source), filename("filename", id, this)
+ContourSetReader::ContourSetReader(const clString& get_id())
+: Module("ContourSetReader", get_id(), Source), filename("filename", get_id(), this)
 {
     // Create the output data handle and port
     outport=scinew ContourSetOPort(this, "Output Data", ContourSetIPort::Atomic);

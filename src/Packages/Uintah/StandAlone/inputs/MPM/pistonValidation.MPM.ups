@@ -91,7 +91,7 @@
       <save label = "p.velocity"/>
       <save label = "p.stress"/>
       <save label = "p.particleID"/>
-      <save label = "g.internalHeatRate"/>
+      <save label = "g.dTdt"/>
       <checkpoint cycle = "2" timestepInterval = "500"/>
 <!--
       <save label = "press_CC"/>

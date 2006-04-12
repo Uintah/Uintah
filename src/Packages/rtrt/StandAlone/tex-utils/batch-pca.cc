@@ -330,8 +330,13 @@ int main(int argc, char* argv[]) {
   // Save mean vector
   Nrrd* meanNrrd=nrrdNew();
   int E=0;
-  if (!E) E|=nrrdWrap(meanNrrd, mean, nrrdTypeFloat, 1, ndims);
-  nrrdAxisInfoSet(meanNrrd, nrrdAxisInfoLabel, "mean");
+  size_t size1[NRRD_DIM_MAX];
+  size1[0] = ndims;
+  if (!E) E|=nrrdWrap_nva(meanNrrd, mean, nrrdTypeFloat, 1, size1);
+
+  const char *labelptr1[NRRD_DIM_MAX];
+  labelptr1[0] = airStrdup("mean");
+  nrrdAxisInfoSet_nva(meanNrrd, nrrdAxisInfoLabel, labelptr1);
   if (!E) E|=saveNrrd(meanNrrd, "-mean", nrrd_ext);
   if (E)
     cerr<<me<<":  error saving mean vector"<<endl;
@@ -363,8 +368,14 @@ int main(int argc, char* argv[]) {
   // Save basis vectors
   Nrrd* basisNrrd=nrrdNew();
   E=0;
-  if (!E) E|=nrrdWrap(basisNrrd, basis, nrrdTypeFloat, 2, ndims, nbases);
-  nrrdAxisInfoSet(basisNrrd, nrrdAxisInfoLabel, "width*height", "basis");
+  size_t size2[NRRD_DIM_MAX];
+  size2[0] = ndims;
+  size2[1] = nbases;
+  if (!E) E|=nrrdWrap_nva(basisNrrd, basis, nrrdTypeFloat, 2, size2);
+  const char *labelptr2[NRRD_DIM_MAX];
+  labelptr2[0] = airStrdup("width*height");
+  labelptr2[1] = airStrdup("basis");
+  nrrdAxisInfoSet_nva(basisNrrd, nrrdAxisInfoLabel, labelptr2);
   if (!E) E|=saveNrrd(basisNrrd, "-basis", nrrd_ext);
   if (E)
     cerr<<me<<":  error saving basis vectors"<<endl;
@@ -420,7 +431,10 @@ int main(int argc, char* argv[]) {
   }
   
   Nrrd* coeffNrrd=nrrdNew();
-  if (nrrdWrap(coeffNrrd, (void*)1, nrrdTypeFloat, 2, nbases, nvectors)) {
+  size_t size3[NRRD_DIM_MAX];
+  size3[0] = nbases;
+  size3[1] = nvectors;
+  if (nrrdWrap_nva(coeffNrrd, (void*)1, nrrdTypeFloat, 2, size3)) {
     err=biffGet(NRRD);
     cerr<<me<<":  error creating header:  "<<err<<endl;
     free(err);
@@ -428,7 +442,10 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  nrrdAxisInfoSet(coeffNrrd, nrrdAxisInfoLabel, "basis", "vector");
+  const char *labelptr3[NRRD_DIM_MAX];
+  labelptr3[0] = airStrdup("basis");
+  labelptr3[0] = airStrdup("vector");
+  nrrdAxisInfoSet_nva(coeffNrrd, nrrdAxisInfoLabel, labelptr3);
 
   nio->skipData=1;
   if (nrrdSave(nhdr_fname, coeffNrrd, nio)) {

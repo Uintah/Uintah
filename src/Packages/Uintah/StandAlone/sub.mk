@@ -39,6 +39,7 @@ ifeq ($(IS_AIX),yes)
         Packages/Uintah/Core/GeometryPiece               \
         Packages/Uintah/CCA/Components/Parent            \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
+	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
         $(DUMMY_LIB)                                     \
         $(ARCHES_SUB_LIBS)
 endif
@@ -55,6 +56,7 @@ else
         Core/Geometry     \
         Core/Util         \
         Core/Math         \
+	Core/Persistent   \
         Packages/Uintah/Core/DataArchive \
         Packages/Uintah/Core/Grid        \
         Packages/Uintah/Core/Parallel    \
@@ -279,12 +281,13 @@ else
         Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Core/Exceptions  \
-        Core/Persistent   \
+        Core/Containers  \
         Core/Geometry    \
+        Core/OS          \
+        Core/Persistent  \
         Core/Thread      \
         Core/Util        \
-        Core/OS          \
-        Core/Containers
+	Core/Volume      
 endif
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
@@ -405,7 +408,7 @@ else
       Packages/Uintah/CCA/Ports \
       Packages/Uintah/CCA/Components/ProblemSpecification \
       Core/Exceptions \
-      Core/Geometry
+      Core/Geometry 
 endif
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
@@ -427,9 +430,9 @@ link_regression_tester:
 	   fi )
 
 faster_gmake:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS))
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 fake_arches:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS))
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 

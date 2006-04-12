@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileReader.h"
 #include "itkVector.h"
 
@@ -71,7 +71,7 @@ public:
 DECLARE_MAKER(ColorImageReaderFloat3D)
 ColorImageReaderFloat3D::ColorImageReaderFloat3D(GuiContext* ctx)
   : Module("ColorImageReaderFloat3D", ctx, Source, "DataIO", "Insight"),
-    gui_FileName_(ctx->subVar("FileName"))
+    gui_FileName_(get_ctx()->subVar("FileName"))
 {
   prevFile = "";
 }

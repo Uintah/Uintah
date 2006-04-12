@@ -14,7 +14,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Core/Datatypes/VoidStar.h>
 #define Colormap XColormap
 #include <GL/gl.h>
@@ -69,7 +69,7 @@ class XYZtoRGB : public Module {
 public:
     void parallel_raytrace(int proc);
 
-    XYZtoRGB(const clString& id);
+    XYZtoRGB(const clString& get_id());
     virtual ~XYZtoRGB();
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
@@ -80,20 +80,20 @@ public:
 
 static XYZtoRGB* current_drawer=0;
 
-extern "C" Module* make_XYZtoRGB(const clString& id)
+extern "C" Module* make_XYZtoRGB(const clString& get_id())
 {
-    return scinew XYZtoRGB(id);
+    return scinew XYZtoRGB(get_id());
 }
 
 static clString module_name("XYZtoRGB");
 
-XYZtoRGB::XYZtoRGB(const clString& id)
-: Module("XYZtoRGB", id, Source), 
-  WX("wx", id, this), WY("wy", id, this), 
-  RX("rx", id, this), RY("ry", id, this), 
-  GX("gx", id, this), GY("gy", id, this), 
-  BX("bx", id, this), BY("by", id, this), 
-  MAX("max", id, this)
+XYZtoRGB::XYZtoRGB(const clString& get_id())
+: Module("XYZtoRGB", get_id(), Source), 
+  WX("wx", get_id(), this), WY("wy", get_id(), this), 
+  RX("rx", get_id(), this), RY("ry", get_id(), this), 
+  GX("gx", get_id(), this), GY("gy", get_id(), this), 
+  BX("bx", get_id(), this), BY("by", get_id(), this), 
+  MAX("max", get_id(), this)
 {
     // Create the input port
     iXYZ = scinew VoidStarIPort(this, "ImageXYZ", VoidStarIPort::Atomic);
@@ -258,7 +258,7 @@ void XYZtoRGB::tcl_command(TCLArgs& args, void* userdata) {
 
 int XYZtoRGB::makeCurrent() {
     TCLTask::lock();
-    clString myname(clString(".ui")+id+".gl.gl");
+    clString myname(clString(".ui")+get_id()+".gl.gl");
     char *myn=strdup(myname());
     tkwin=Tk_NameToWindow(the_interp, myn, Tk_MainWindow(the_interp));
     if(!tkwin){

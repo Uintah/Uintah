@@ -51,19 +51,19 @@ using std::string;
 
 class TextureObj {
 public:
-  TextureObj(NrrdDataHandle &nrrd);
+  TextureObj(NrrdDataHandle &nrrd_handle);
   TextureObj(int, int, int);
 
   ~TextureObj();
   //  void                  draw(int n, float *vertices, float *tex_coords);
   void                  draw(int n, Point *vertices, float *tex_coords);
-  void                  set_nrrd(NrrdDataHandle &nrrd);
+  void                  set_nrrd(NrrdDataHandle &nrrd_handle);
   void			set_color(float, float, float, float);
   void			set_color(float rgba[4]);
   int			width() { return width_; };
   int		        height() { return height_; };
   void                  set_dirty() { dirty_ = true; }
-  NrrdDataHandle	nrrd_;
+  NrrdDataHandle	nrrd_handle_;
   bool			bind();
 private:
 

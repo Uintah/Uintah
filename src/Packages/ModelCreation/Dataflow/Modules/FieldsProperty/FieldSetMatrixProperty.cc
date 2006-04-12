@@ -35,9 +35,9 @@
  */
 
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -66,9 +66,9 @@ private:
 DECLARE_MAKER(FieldSetMatrixProperty)
   FieldSetMatrixProperty::FieldSetMatrixProperty(GuiContext* ctx)
     : Module("FieldSetMatrixProperty", ctx, Source, "FieldsProperty", "ModelCreation"),
-      guimatrix1name_(ctx->subVar("matrix1-name")),
-      guimatrix2name_(ctx->subVar("matrix2-name")),
-      guimatrix3name_(ctx->subVar("matrix3-name"))
+      guimatrix1name_(get_ctx()->subVar("matrix1-name")),
+      guimatrix2name_(get_ctx()->subVar("matrix2-name")),
+      guimatrix3name_(get_ctx()->subVar("matrix3-name"))
 {
 }
 
@@ -88,7 +88,7 @@ FieldSetMatrixProperty::execute()
   MatrixHandle fhandle;
   MatrixIPort  *ifport;
         
-  if(!(iport = static_cast<FieldIPort *>(getIPort("Field"))))
+  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
   {
     error("Could not find 'Field' input port");
     return;
@@ -105,7 +105,7 @@ FieldSetMatrixProperty::execute()
   }
   
   // Scan matrix input port 1
-  if (!(ifport = static_cast<MatrixIPort *>(getIPort("Matrix1"))))
+  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix1"))))
   {
     error("Could not find matrix 1 input port");
     return;
@@ -117,7 +117,7 @@ FieldSetMatrixProperty::execute()
   }
 
   // Scan matrix input port 2     
-  if (!(ifport = static_cast<MatrixIPort *>(getIPort("Matrix2"))))
+  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix2"))))
   {
     error("Could not find matrix 2 input port");
     return;
@@ -129,7 +129,7 @@ FieldSetMatrixProperty::execute()
   }
 
   // Scan matrix input port 3     
-  if (!(ifport = static_cast<MatrixIPort *>(getIPort("Matrix3"))))
+  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix3"))))
   {
     error("Could not find matrix 3 input port");
     return;

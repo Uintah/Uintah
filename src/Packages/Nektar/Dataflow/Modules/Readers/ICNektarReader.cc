@@ -29,18 +29,18 @@ using namespace SCIRun;
       Packages/NektarVectorFieldHandle vector_handle;
       clString old_filename;
     public:
-      ICPackages/NektarReader(const clString& id);
+      ICPackages/NektarReader(const clString& get_id());
       virtual ~ICPackages/NektarReader();
       virtual void execute();
     };
     
-    extern "C" Module* make_ICPackages/NektarReader(const clString& id) {
-      return new ICPackages/NektarReader(id);
+    extern "C" Module* make_ICPackages/NektarReader(const clString& get_id()) {
+      return new ICPackages/NektarReader(get_id());
     }
     
-    ICPackages/NektarReader::ICPackages/NektarReader(const clString& id)
-      : Module("ICPackages/NektarReader", id, Source), 
-      filename("filename", id, this)
+    ICPackages/NektarReader::ICPackages/NektarReader(const clString& get_id())
+      : Module("ICPackages/NektarReader", get_id(), Source), 
+      filename("filename", get_id(), this)
     {
       // Create the output data handle and port
       osport =scinew Packages/NektarScalarFieldOPort(this, 

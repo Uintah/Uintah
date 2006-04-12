@@ -115,10 +115,6 @@
    </DataArchiver>
 
    <Debug>
-       <dbg_timeStart>       99.9   </dbg_timeStart>
-       <dbg_timeStop>        99.99  </dbg_timeStop>
-       <dbg_outputInterval>  1e-4   </dbg_outputInterval>
-       <dbg_Matls>           [0,1]   </dbg_Matls>
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -215,11 +211,7 @@
            <speed_of_sound>         374.17              </speed_of_sound>
            <gamma>                  1.4                 </gamma>
            <geom_object>
-               <cylinder label = "stick">
-                    <bottom>       [0.0,0.0,0.0]   </bottom>
-                    <top>          [0.1,0.0,0.0]   </top>
-                    <radius>       0.006           </radius>
-               </cylinder>
+               <cylinder label = "stick"> </cylinder>
                <res>            [2,2,2]                 </res>
                <velocity>       [0.0,0.0,0.0]           </velocity>
                <temperature>    300.0                   </temperature>
@@ -269,15 +261,9 @@
                    <max>           [100.0, 100.0, 100.0 ]   </max>
                </box>
                <union>
-                 <cylinder label = "stick">
-                    <bottom>       [0.0,0.0,0.0]   </bottom>
-                    <top>          [0.1,0.0,0.0]   </top>
-                    <radius>       0.008           </radius>
+                 <cylinder label = "copper cylinder">
                  </cylinder>
                  <cylinder label = "whacker">
-                    <bottom>       [-0.005,0.0,0.0]  </bottom>
-                    <top>          [ 0.0,  0.0,0.0]  </top>
-                    <radius>       0.0050            </radius>
                  </cylinder>
                </union>
              </difference>

@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Fields/MaskLattice.h>
 #include <Core/Util/DynamicCompilation.h>
@@ -69,7 +69,7 @@ DECLARE_MAKER(MaskLattice)
 
 MaskLattice::MaskLattice(GuiContext* ctx)
   : Module("MaskLattice", ctx, Filter, "FieldsData", "SCIRun"),
-    maskfunction_(ctx->subVar("maskfunction"))
+    maskfunction_(get_ctx()->subVar("maskfunction"), "v > 0")
 {
 }
 
@@ -119,7 +119,7 @@ MaskLattice::execute()
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
       error("Your function would not compile.");
-      gui->eval(id + " compile_error "+ci->filename_);
+      get_gui()->eval(get_id() + " compile_error "+ci->filename_);
       DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       return;
     }

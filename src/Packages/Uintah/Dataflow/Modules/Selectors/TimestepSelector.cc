@@ -36,39 +36,39 @@ DECLARE_MAKER(TimestepSelector)
 
 TimestepSelector::TimestepSelector(GuiContext* ctx) :
   Module("TimestepSelector", ctx, Filter, "Selectors", "Uintah"),
-  tcl_status(ctx->subVar("tcl_status")), 
-  time(ctx->subVar("time")),
-  max_time(ctx->subVar("max_time")),
-  timeval(ctx->subVar("timeval")),
-  animate(ctx->subVar("animate")),
-  tinc(ctx->subVar("tinc")),
+  tcl_status(get_ctx()->subVar("tcl_status")), 
+  time(get_ctx()->subVar("time")),
+  max_time(get_ctx()->subVar("max_time")),
+  timeval(get_ctx()->subVar("timeval")),
+  animate(get_ctx()->subVar("animate")),
+  tinc(get_ctx()->subVar("tinc")),
   in(0), out(0), ogeom(0), time_port(0),
   archiveH(0),
-  def_color_r_(ctx->subVar("def-color-r")),
-  def_color_g_(ctx->subVar("def-color-g")),
-  def_color_b_(ctx->subVar("def-color-b")),
-  def_color_a_(ctx->subVar("def-color-a")),
+  def_color_r_(get_ctx()->subVar("def-color-r")),
+  def_color_g_(get_ctx()->subVar("def-color-g")),
+  def_color_b_(get_ctx()->subVar("def-color-b")),
+  def_color_a_(get_ctx()->subVar("def-color-a")),
   def_mat_handle_(scinew Material(Color(1.0, 1.0, 1.0))),
-  font_size_(ctx->subVar("font_size")),
-  timeposition_x(ctx->subVar("timeposition_x")),
-  timeposition_y(ctx->subVar("timeposition_y")),
+  font_size_(get_ctx()->subVar("font_size")),
+  timeposition_x(get_ctx()->subVar("timeposition_x")),
+  timeposition_y(get_ctx()->subVar("timeposition_y")),
   timestep_text(0),
   timestep_geom_id(0),
   clock_geom_id(0),
   // Clock variables
-  short_hand_res(ctx->subVar("short_hand_res")),
-  long_hand_res(ctx->subVar("long_hand_res")),
-  short_hand_ticks(ctx->subVar("short_hand_ticks")),
-  long_hand_ticks(ctx->subVar("long_hand_ticks")),
-  clock_position_x(ctx->subVar("clock_position_x")),
-  clock_position_y(ctx->subVar("clock_position_y")),
-  clock_radius(ctx->subVar("clock_radius"))
+  short_hand_res(get_ctx()->subVar("short_hand_res")),
+  long_hand_res(get_ctx()->subVar("long_hand_res")),
+  short_hand_ticks(get_ctx()->subVar("short_hand_ticks")),
+  long_hand_ticks(get_ctx()->subVar("long_hand_ticks")),
+  clock_position_x(get_ctx()->subVar("clock_position_x")),
+  clock_position_y(get_ctx()->subVar("clock_position_y")),
+  clock_radius(get_ctx()->subVar("clock_radius"))
 { 
 } 
 
 TimestepSelector::~TimestepSelector() {
   // Remove the callback
-  sched->remove_callback(network_finished, this);
+  sched_->remove_callback(network_finished, this);
 } 
 
 //------------------------------------------------------------ 
@@ -95,7 +95,7 @@ TimestepSelector::execute()
   try {
     archive->queryTimesteps( indices, times );
     if( archiveH.get_rep() == 0 || archiveH != handle){
-      gui->execute(id + " SetTimeRange " + to_string((int)times.size()));
+      get_gui()->execute(get_id() + " SetTimeRange " + to_string((int)times.size()));
       archiveH = handle;
     }
   }
@@ -284,7 +284,7 @@ void TimestepSelector::update_animate() {
 void TimestepSelector::set_context(Network* network) {
   Module::set_context(network);
   // Set up a callback to call after we finish
-  sched->add_callback(network_finished, this);
+  sched_->add_callback(network_finished, this);
 }
 
 // This will generate a clock given the number of seconds.

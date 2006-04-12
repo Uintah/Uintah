@@ -33,25 +33,9 @@ catch {rename Teem_Tend_TendNorm ""}
 
 itcl_class Teem_Tend_TendNorm {
     inherit Module
+
     constructor {config} {
         set name TendNorm
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-major-weight
-        set $this-major-weight 1.0
-
-        global $this-medium-weight
-        set $this-medium-weight 1.0
-
-        global $this-minor-weight
-        set $this-minor-weight 1.0
-
-        global $this-amount
-        set $this-amount 1.0
-
-        global $this-target
-        set $this-target 1.0
     }
 
     method ui {} {

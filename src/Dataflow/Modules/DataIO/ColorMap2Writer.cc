@@ -39,7 +39,7 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
 //#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
@@ -56,6 +56,7 @@ protected:
 
 public:
   ColorMap2Writer(GuiContext* ctx);
+  virtual ~ColorMap2Writer();
 
   virtual void execute();
 };
@@ -65,8 +66,8 @@ DECLARE_MAKER(ColorMap2Writer)
 
 ColorMap2Writer::ColorMap2Writer(GuiContext* ctx)
   : GenericWriter<ColorMap2Handle>("ColorMap2Writer", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype"))
 {
   string exporttypes = "{";
   exporttypes += "{{SCIRun ColorMap2 Binary} {.cmap} } ";
@@ -74,6 +75,11 @@ ColorMap2Writer::ColorMap2Writer(GuiContext* ctx)
   exporttypes += "}";
 
   gui_types_.set(exporttypes);
+}
+
+
+ColorMap2Writer::~ColorMap2Writer()
+{
 }
 
 

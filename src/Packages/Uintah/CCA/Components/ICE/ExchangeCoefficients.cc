@@ -67,21 +67,18 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps)
 
 void ExchangeCoefficients::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP exch_prop_ps = ps->appendChild("exchange_properties",true,2);
+  ProblemSpecP exch_prop_ps = ps->appendChild("exchange_properties");
   ProblemSpecP exch_coeff_ps = 
-    exch_prop_ps->appendChild("exchange_coefficients",true,2);
+    exch_prop_ps->appendChild("exchange_coefficients");
   
   
-  exch_coeff_ps->appendElement("momentum",d_K_mom,false,3);
-  exch_coeff_ps->appendElement("heat",d_K_heat,false,3);
+  exch_coeff_ps->appendElement("momentum",d_K_mom);
+  exch_coeff_ps->appendElement("heat",d_K_heat);
 
   if (d_convective) {
-    exch_coeff_ps->appendElement("do_convective_heat_transfer",d_convective,
-                                 false,3);
-    exch_coeff_ps->appendElement("convective_fluid",d_conv_fluid_matlindex,
-                                 false,3);
-    exch_coeff_ps->appendElement("convective_solid",d_conv_solid_matlindex,
-                                 false,3);
+    exch_coeff_ps->appendElement("do_convective_heat_transfer",d_convective);
+    exch_coeff_ps->appendElement("convective_fluid",d_conv_fluid_matlindex);
+    exch_coeff_ps->appendElement("convective_solid",d_conv_solid_matlindex);
   }
 
 }

@@ -130,17 +130,21 @@ FreeTypeTextTexture::render_text_to_texture()
   const int hei = Ceil(bbox.diagonal().y());
 
   // 3 dimensions = alpha x X x Y
-  NrrdDataHandle nrrd = scinew NrrdData();
-  nrrdAlloc(nrrd->nrrd, nrrdTypeUChar, 3, 1, wid, hei);
-  memset(nrrd->nrrd->data, 0, wid*hei);
-  fttext.render(wid, hei, (unsigned char *)nrrd->nrrd->data);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 1;
+  size[1] = wid;
+  size[2] = hei;
+  NrrdDataHandle nrrd_handle = scinew NrrdData();
+  nrrdAlloc_nva(nrrd_handle->nrrd_, nrrdTypeUChar, 3, size);
+  memset(nrrd_handle->nrrd_->data, 0, wid*hei);
+  fttext.render(wid, hei, (unsigned char *)nrrd_handle->nrrd_->data);
 
   if (texture_) {
     delete texture_;
     texture_ = 0;
   }
 
-  texture_ = scinew NrrdTextureObj(nrrd);
+  texture_ = scinew NrrdTextureObj(nrrd_handle);
   dirty_ = false;
 }
   

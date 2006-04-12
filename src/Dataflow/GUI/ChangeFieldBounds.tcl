@@ -29,53 +29,12 @@
 
 itcl_class SCIRun_FieldsGeometry_ChangeFieldBounds {
     inherit Module
+
     constructor {config} {
         set name ChangeFieldBounds
-        set_defaults
-    }
 
-    method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	set $this-firstwidth 12
-
-	global $this-box-scale
-	set $this-box-scale -1.0
-
-	global $this-resetting
-	set $this-resetting 0
-
-	# these won't be saved 
-        global $this-inputcenterx
-        global $this-inputcentery
-        global $this-inputcenterz
-        global $this-inputsizex
-        global $this-inputsizey
-        global $this-inputsizez
-        set $this-inputcenterx "---"
-        set $this-inputcentery "---"
-        set $this-inputcenterz "---"
-        set $this-inputsizex "---"
-        set $this-inputsizey "---"
-        set $this-inputsizez "---"
-
-	# these will be saved
-        global $this-outputcenterx
-        global $this-outputcentery
-        global $this-outputcenterz
-	global $this-useoutputcenter
-        global $this-outputsizex
-        global $this-outputsizey
-        global $this-outputsizez
-	global $this-useoutputsize
-        set $this-outputcenterx 0
-        set $this-outputcentery 0
-        set $this-outputcenterz 0
-	set $this-useoutputcenter 0
-        set $this-outputsizex 0
-        set $this-outputsizey 0
-        set $this-outputsizez 0
-	set $this-useoutputsize 0
+	# The width of the first column of the data display.
+	setGlobal $this-firstwidth 12
     }
 
     method ui {} {
@@ -123,67 +82,6 @@ itcl_class SCIRun_FieldsGeometry_ChangeFieldBounds {
 	global $this-resetting
 	set $this-resetting 1
 	$this-c needexecute
-    }
-
-    method labelpair3 { win text1 text2x text2y text2z } {
-	frame $win 
-	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-		      -anchor w -just left
-	label $win.colon  -text ": " -width 2 -anchor w -just left
-	label $win.l2x -textvar $text2x -anchor w -just left \
-	    -fore darkred -borderwidth 0
-	label $win.comma1  -text ", " -anchor w -just left  \
-	    -fore darkred -borderwidth 0
-	label $win.l2y -textvar $text2y -anchor w -just left \
-	    -fore darkred -borderwidth 0
-	label $win.comma2  -text ", " -anchor w -just left \
-	    -fore darkred -borderwidth 0
-	label $win.l2z -textvar $text2z -anchor w -just left \
-	    -fore darkred -borderwidth 0
-	pack $win.l1 $win.colon \
-	    $win.l2x $win.comma1 $win.l2y $win.comma2 $win.l2z \
-	    -side left -padx 0
-    } 
-
-    method labelentry2 { win text1 text2 text3 var } {
-	frame $win 
-	pack $win -side top -padx 5
-	global $var
-	checkbutton $win.b -var $var
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	entry $win.l2 -width 10 -just left \
-		-fore darkred -text $text2
-	entry $win.l3 -width 10 -just left \
-		-fore darkred -text $text3
-	label $win.l4 -width 40
-	pack $win.b $win.l1 $win.colon -side left
-	pack $win.l2 $win.l3 $win.l4 -padx 5 -side left
-    }
-
-    method labelentry3 { win text1 text2 text3 text4 func var } {
-	frame $win 
-	pack $win -side top -padx 5
-	global $var
-	checkbutton $win.b -var $var
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	entry $win.l2 -width 10 -just left \
-		-fore darkred -text $text2
-	entry $win.l3 -width 10 -just left \
-		-fore darkred -text $text3
-	entry $win.l4 -width 10 -just left \
-		-fore darkred -text $text4
-	label $win.l5 -width 40
-	pack $win.b $win.l1 $win.colon -side left
-	pack $win.l2 $win.l3 $win.l4 $win.l5 -padx 5 -side left
-
-	bind $win.l2 <Return> $func
-	bind $win.l3 <Return> $func
-	bind $win.l4 <Return> $func
     }
 
     method copy_attributes {} {

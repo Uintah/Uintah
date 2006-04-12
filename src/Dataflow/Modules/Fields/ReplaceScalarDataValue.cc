@@ -39,7 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/ReplaceScalarDataValue.h>
 #include <Core/Containers/Handle.h>
@@ -64,7 +64,8 @@ DECLARE_MAKER(ReplaceScalarDataValue)
 
 ReplaceScalarDataValue::ReplaceScalarDataValue(GuiContext* ctx)
   : Module("ReplaceScalarDataValue", ctx, Filter,"FieldsData", "SCIRun"),
-    oldvalue_(ctx->subVar("oldvalue")), newvalue_(ctx->subVar("newvalue"))
+    oldvalue_(get_ctx()->subVar("oldvalue"), 0.0),
+    newvalue_(get_ctx()->subVar("newvalue"), 0.0)
 {
 }
 

@@ -103,15 +103,14 @@ FileGeometryPiece::~FileGeometryPiece()
 
 void FileGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP file_ps = ps->appendChild("file",true,4);
+  ProblemSpecP file_ps = ps->appendChild("file");
 
-  file_ps->appendElement("name",d_file_name,false,5);
-  file_ps->appendElement("format",d_file_format,false,5);
-  file_ps->appendElement("split",d_presplit,false,5);
-  for (list<string>::const_iterator it = d_vars.begin(); it != d_vars.end(); 
-       it++)
-    file_ps->appendElement("var",*it,false,5);
-  
+  file_ps->appendElement("name",d_file_name);
+  file_ps->appendElement("format",d_file_format);
+  file_ps->appendElement("split",d_presplit);
+  for (list<string>::const_iterator it = d_vars.begin(); it != d_vars.end(); it++) {
+    file_ps->appendElement("var",*it);
+  }
 }
 
 FileGeometryPiece* FileGeometryPiece::clone()

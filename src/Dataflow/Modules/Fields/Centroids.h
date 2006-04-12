@@ -45,7 +45,7 @@ namespace SCIRun {
 class CentroidsAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src) = 0;
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
@@ -57,13 +57,13 @@ class CentroidsAlgoT : public CentroidsAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src);
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle src);
 };
 
 
 template <class FIELD>
 FieldHandle
-CentroidsAlgoT<FIELD>::execute(FieldHandle field_h)
+CentroidsAlgoT<FIELD>::execute(ProgressReporter *reporter, FieldHandle field_h)
 {
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
   typename FIELD::mesh_handle_type mesh = ifield->get_typed_mesh();
@@ -76,9 +76,16 @@ CentroidsAlgoT<FIELD>::execute(FieldHandle field_h)
   mesh->begin(bi);
   mesh->end(ei);
 
+  typename FIELD::mesh_type::Elem::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   Point p;
   while (bi != ei)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     mesh->get_center(p, *bi);
     pcm->add_node(p);
     ++bi;

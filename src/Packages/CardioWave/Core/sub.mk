@@ -23,6 +23,8 @@ SRCDIR := Packages/CardioWave/Core
 SUBDIRS := \
         $(SRCDIR)/Algorithms \
         $(SRCDIR)/Datatypes \
+        $(SRCDIR)/Model \
+        $(SRCDIR)/XML \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

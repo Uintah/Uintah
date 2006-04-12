@@ -39,8 +39,8 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/GuiVar.cc \
 	$(SRCDIR)/MemStats.cc \
 	$(SRCDIR)/TCLInterface.cc \
-	$(SRCDIR)/TCLTask.cc \
 	$(SRCDIR)/TclObj.cc \
+	$(SRCDIR)/TCLTask.cc \
 	$(SRCDIR)/UIvar.cc
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \

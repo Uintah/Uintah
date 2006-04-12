@@ -44,12 +44,12 @@ namespace MIT {
 
 using namespace SCIRun;
 
-extern "C" MITSHARE Module* make_Sampler(const string& id) {
-  return scinew Sampler(id);
+extern "C" MITSHARE Module* make_Sampler(const string& get_id()) {
+  return scinew Sampler(get_id());
 }
 
-Sampler::Sampler(const string& id)
-  : Module("Sampler", id, Source, "Metropolis", "MIT"),
+Sampler::Sampler(const string& get_id())
+  : Module("Sampler", get_id(), Source, "Metropolis", "MIT"),
     Part( 0, "Sampler"),
     pdsim_( 0, "PDSim" )
 {
@@ -316,15 +316,15 @@ void
 Sampler::tcl_command( TCLArgs &args, void *data)
 {
   if ( args[1] == "set-window" ) {
-    SamplerGui *gui = new SamplerGui( id+"-gui" );
-    gui->set_window( args[2] );
+    SamplerGui *gui = new SamplerGui( get_id()+"-gui" );
+    get_gui()->set_window( args[2] );
 
-    connect( gui->num_iter, interface_, &SamplerInterface::num_iterations );
-    connect( gui->subsample, interface_, &SamplerInterface::subsample );
-    connect( gui->kappa, interface_, &SamplerInterface::kappa);
-    connect( gui->go, interface_, &SamplerInterface::go);
-    connect( gui->theta, interface_, &SamplerInterface::theta);
-    connect( gui->sigma, interface_, &SamplerInterface::sigma);
+    connect( get_gui()->num_iter, interface_, &SamplerInterface::num_iterations );
+    connect( get_gui()->subsample, interface_, &SamplerInterface::subsample );
+    connect( get_gui()->kappa, interface_, &SamplerInterface::kappa);
+    connect( get_gui()->go, interface_, &SamplerInterface::go);
+    connect( get_gui()->theta, interface_, &SamplerInterface::theta);
+    connect( get_gui()->sigma, interface_, &SamplerInterface::sigma);
     
     connect( interface_->kappa_changed, gui, &SamplerGui::set_kappa );
     connect( interface_->current_iter_changed, gui, &SamplerGui::set_iter );

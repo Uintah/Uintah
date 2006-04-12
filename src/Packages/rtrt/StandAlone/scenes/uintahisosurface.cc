@@ -2,9 +2,14 @@
 //#define USE_HVBRICK 1
 
 // now for the SCI stuff
+
 #include <Core/Thread/Thread.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Exceptions/Exception.h>
+
+#include <Packages/rtrt/Core/Background.h> // Must be included before Uintah Grid.h
+                                           // or SGI compiler has Pio resolution problems...
+
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
@@ -16,10 +21,12 @@
 #include <Core/XMLUtil/XMLUtil.h>
 
 // rtrt stuff
+
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/Group.h>
+#include <Packages/rtrt/Core/Color.h>
 #ifdef USE_HVBRICK
 #  include <Packages/rtrt/Core/HVolumeBrick.h>
 #else
@@ -38,7 +45,7 @@
 #undef None
 
 #ifdef Success
-#undef Success
+#  undef Success
 #endif
 // standard c files
 #include <fstream>
@@ -46,28 +53,9 @@
 #include <math.h>
 #include <string.h>
 
-//using namespace rtrt;
 using namespace std;
+using namespace rtrt;
 using namespace SCIRun;
-//using SCIRun::Thread;
-using rtrt::Scene;
-using rtrt::Color;
-using rtrt::Material;
-#ifdef USE_HVBRICK
-using rtrt::HVolumeBrick;
-#else
-using rtrt::HVolume;
-using rtrt::BrickArray3;
-using rtrt::VMCell;
-#endif
-using rtrt::Group;
-using rtrt::Phong;
-using rtrt::Camera;
-using rtrt::Light;
-using rtrt::LinearBackground;
-using rtrt::VolumeDpy;
-using rtrt::TimeObj;
-
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int nworkers)
@@ -124,14 +112,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     return(0);
   }
   
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << toCatch.getMessage() 
-	 << '\n';
-    exit( 1 );
-  }
-
   Color surf(.50000, 0.0, 0.00);
   Material* matl0=new Phong( surf*0.6, surf*0.6, 40);
   VolumeDpy* dpy=new VolumeDpy();
@@ -562,10 +542,4 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(dpy);
   return scene;
 }
-
-
-
-
-
-
 

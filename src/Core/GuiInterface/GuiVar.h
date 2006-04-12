@@ -53,29 +53,34 @@
 #include <Core/GuiInterface/share.h>
 
 namespace SCIRun {
-  class GuiContext;
 
-  class SCISHARE GuiVar {
-  protected:
-    GuiContext* ctx;
-  public:
-    GuiVar(GuiContext* ctx);
-    virtual ~GuiVar();
+class GuiContext;
 
-    void reset();
-  };
+class SCISHARE GuiVar {
+protected:
+  GuiContext* ctx;
+public:
+  GuiVar(GuiContext* ctx);
+  virtual ~GuiVar();
+  
+  void reset();
+};
   
   
   
 template <class T>
 class SCISHARE GuiSingle : public GuiVar
 {
-  T value_;
+private:
+  T gui_value_;
 public:
+
   GuiSingle(GuiContext* context) : GuiVar(context) {}
-  GuiSingle(GuiContext* context, const T &val) : GuiVar(context), value_(val)
+  GuiSingle(GuiContext* context, const T &val) :
+    GuiVar(context),
+    gui_value_(val)
   {
-    ctx->set(value_);
+    ctx->set(gui_value_);
   }
 
   virtual ~GuiSingle() {}
@@ -83,32 +88,41 @@ public:
   inline void set_context(GuiContext *context) {
     if (ctx) delete ctx;
     ctx = context;
-    this->set(value_);
+    this->set(gui_value_);
   }
 
   inline T get() {
     if (ctx)
-      ctx->get(value_);
-    return value_;
+      ctx->get(gui_value_);
+    return gui_value_;
   }
-  inline void set(const T value) {
-    value_ = value;
+
+  inline void set(const T value ) {
+    gui_value_ = value;
+    
     if (ctx)
-      ctx->set(value_);
+      ctx->set(value);
   }
+
   // Returns true if variable exists in TCL scope and is of type T
   inline bool valid() {
     ASSERT(ctx);
-    return ctx->get(value_);
+    return ctx->get(gui_value_);
   }
 
-  inline bool changed() {
+  // Returns true if the gui variable and current state var different.
+  inline bool changed( bool update = false ) {
     ASSERT(ctx);
     ctx->reset();
     T temp;
     ctx->get(temp);
     ctx->reset();
-    return temp != value_;
+    bool change = (gui_value_ != temp);
+
+    if( update )
+      gui_value_ = temp;
+
+    return change;
   }
 
 };
@@ -131,6 +145,17 @@ public:
     y_(ctx->subVar("y")),
     z_(ctx->subVar("z"))
   {}
+  GuiTriple(GuiContext* context, const T &val) :
+    GuiVar(context),
+    x_(ctx->subVar("x")),
+    y_(ctx->subVar("y")),
+    z_(ctx->subVar("z"))
+  {
+    x_.set(val.x());
+    y_.set(val.y());
+    z_.set(val.z());
+  }
+
   virtual ~GuiTriple() {}
 
   inline T get() {

@@ -170,7 +170,7 @@ set $m15-op {Function}
 set $m15-function {x-y}
 set $m16-notes {}
 set $m16-show_status {1}
-set $m16-haveUI {1}
+set $m16-have_ui {1}
 set $m16-methodTCL {CCinv}
 set $m16-pTCL {1}
 set $m17-notes {}
@@ -357,7 +357,7 @@ set $m31-op {Function}
 set $m31-function {x-y}
 set $m32-notes {}
 set $m32-show_status {1}
-set $m32-haveUI {1}
+set $m32-have_ui {1}
 set $m32-methodTCL {CCinv}
 set $m32-pTCL {1}
 $m16 initialize_ui

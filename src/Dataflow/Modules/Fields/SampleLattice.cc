@@ -44,7 +44,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Tensor.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/NoData.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
@@ -109,11 +109,11 @@ DECLARE_MAKER(SampleLattice)
 
 SampleLattice::SampleLattice(GuiContext* ctx)
   : Module("SampleLattice", ctx, Filter, "FieldsCreate", "SCIRun"),
-    size_x_(ctx->subVar("sizex")),
-    size_y_(ctx->subVar("sizey")),
-    size_z_(ctx->subVar("sizez")),
-    padpercent_(ctx->subVar("padpercent")),
-    data_at_(ctx->subVar("data-at"))
+    size_x_(get_ctx()->subVar("sizex"), 16),
+    size_y_(get_ctx()->subVar("sizey"), 16),
+    size_z_(get_ctx()->subVar("sizez"), 16),
+    padpercent_(get_ctx()->subVar("padpercent"), 0.0),
+    data_at_(get_ctx()->subVar("data-at"), "Nodes")
 {
 }
 

@@ -28,7 +28,8 @@
 
 
 /*
- *  ImageExporter.cc: Use ImageMagick to write various image formats.
+ *  ImageExporter.cc: Use PNG and ImageMagick's convert to write 
+ *                    various image formats.
  *
  *  Written by:
  *   Michael Callahan
@@ -40,14 +41,12 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <sci_defs/image_defs.h>
 
-#ifdef HAVE_MAGICK
-namespace C_Magick {
-#include <magick/api.h>
-}
+#if defined HAVE_PNG && HAVE_PNG
+#include <png.h>
 #endif
 
 using namespace SCIRun;
@@ -67,8 +66,8 @@ DECLARE_MAKER(ImageExporter)
 
 ImageExporter::ImageExporter(GuiContext *ctx)
   : Module("ImageExporter", ctx, Filter, "DataIO", "Teem"), 
-    filename_(ctx->subVar("filename")),
-    filetype_(ctx->subVar("filetype"))
+    filename_(get_ctx()->subVar("filename"), ""),
+    filetype_(get_ctx()->subVar("filetype"), "Binary")
 {
 }
 
@@ -77,28 +76,6 @@ ImageExporter::~ImageExporter()
 {
 }
 
-
-#ifdef HAVE_MAGICK
-static
-C_Magick::Quantum
-TO_QUANTUM(double f)
-{
-  if (sizeof(C_Magick::Quantum) == 1)
-  {
-    int tmp = (int)(f * 0xff);
-    if (tmp > 0xff) return 0xff;
-    if (tmp < 0) return 0;
-    return tmp;
-  }
-  else
-  {
-    int tmp = (int)(f * 0xffff);
-    if (tmp > 0xffff) return 0xffff;
-    if (tmp < 0) return 0;
-    return tmp;
-  }
-}
-#endif
 
 void
 ImageExporter::execute()
@@ -117,221 +94,181 @@ ImageExporter::execute()
     error("Null input");
     return;
   }
+  
+#if defined HAVE_PNG && HAVE_PNG
 
-#ifdef HAVE_MAGICK
   // If no name is provided, return.
   string fn(filename_.get());
   if(fn == "")
-  {
-    error("Warning: no filename in ImageExporter");
-    return;
-  }
-
-  const Nrrd *nrrd = handle->nrrd;
-
-  if (nrrd->dim != 3)
-  {
-    error("Only 3 dimensional nrrds at this time (1-4, height, width).");
-    return;
-  }
+    {
+      error("Warning: no filename in ImageExporter");
+      return;
+    }
   
+  const Nrrd *nrrd = handle->nrrd_;
+  
+  if (nrrd->dim != 3)
+    {
+      error("Only 3 dimensional nrrds at this time (1-4, height, width).");
+      return;
+    }
+
+  const unsigned int w = nrrd->axis[1].size;
+  const unsigned int h = nrrd->axis[2].size;
+
+
   bool grey = false;
   bool alpha = true;
+  unsigned int color_type = PNG_COLOR_TYPE_GRAY;
   if (nrrd->axis[0].size == 1)
-  {
-    grey = true;
-    alpha = false;
-  }
+    {
+      grey = true;
+      alpha = false;
+      color_type = PNG_COLOR_TYPE_GRAY;
+    }
   if (nrrd->axis[0].size == 2)
-  {
-    grey = true;
-    alpha = true;
-  }
+    {
+      grey = true;
+      alpha = true;
+      color_type = PNG_COLOR_TYPE_GRAY_ALPHA;
+    }
   else if (nrrd->axis[0].size == 3)
-  {
-    grey = false;
-    alpha = false;
-  }
+    {
+      grey = false;
+      alpha = false;
+      color_type = PNG_COLOR_TYPE_RGB;
+    }
   else if (nrrd->axis[0].size == 4)
-  {
-    grey = false;
-    alpha = true;
-  }
+    {
+      grey = false;
+      alpha = true;
+      color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+    }
   else
-  {
-    error("Nrrd axis zero must contain Grayscale, RGB or RGBA data.");
-    return;
-  }
-
+    {
+      error("Nrrd axis zero must contain Grayscale, RGB or RGBA data.");
+      return;
+    }
+  
   if (!(nrrd->type == nrrdTypeUShort || nrrd->type == nrrdTypeUChar ||
-	nrrd->type == nrrdTypeFloat || nrrd->type == nrrdTypeDouble))
-  {
-    error("Only Nrrds of type UShort and UChar, Float, and Double are currently supported.");
+ 	nrrd->type == nrrdTypeFloat || nrrd->type == nrrdTypeDouble))
+    {
+      error("Only Nrrds of type UShort and UChar, Float, and Double are currently supported.");
+      return;
+    }
+  
+  unsigned int type_size = 8;
+  Nrrd *convert_nrrd = handle->nrrd_;
+
+  if (nrrd->type == nrrdTypeUShort) {
+    NrrdRange *range = nrrdRangeNewSet(handle->nrrd_, nrrdBlind8BitRangeState);
+    convert_nrrd = nrrdNew();
+    nrrdQuantize(convert_nrrd, nrrd, range, 8);
+    type_size = 8;
+  }
+  else if (nrrd->type == nrrdTypeUChar) {
+    type_size = 8;
+  }
+  else if (nrrd->type == nrrdTypeFloat) {
+    NrrdRange *range = nrrdRangeNewSet(handle->nrrd_, nrrdBlind8BitRangeState);
+    convert_nrrd = nrrdNew();
+    nrrdQuantize(convert_nrrd, nrrd, range, 8);
+    type_size = 8;
+  }
+  else {
+    NrrdRange *range = nrrdRangeNewSet(handle->nrrd_, nrrdBlind8BitRangeState);
+    convert_nrrd = nrrdNew();
+    nrrdQuantize(convert_nrrd, nrrd, range, 8);
+    type_size = 8;
+  }
+
+  png_structp png;
+  png_infop info;
+  png_bytep *row;
+
+  /* create png struct */
+  png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  
+  if (png == NULL) {
+    error("ERROR - failed to create PNG write struct\n");
     return;
   }
   
-  C_Magick::InitializeMagick(0);
-
-  C_Magick::ImageInfo *image_info =
-    C_Magick::CloneImageInfo((C_Magick::ImageInfo *)0);
-  strncpy(image_info->filename, fn.c_str(), MaxTextExtent);
-  image_info->colorspace = C_Magick::RGBColorspace;
-  image_info->quality = 90;
-  C_Magick::Image *image = C_Magick::AllocateImage(image_info);
-  const unsigned int w = image->columns = nrrd->axis[1].size;
-  const unsigned int h = image->rows = nrrd->axis[2].size;
-
-#if MagickLibVersion > 0x0543
-  image->matte = alpha?C_Magick::MagickTrue:C_Magick::MagickFalse;
-#else
-  image->matte = alpha;
-#endif
-
-  C_Magick::PixelPacket *pixels =
-    C_Magick::SetImagePixels(image, 0, 0, w, h);
-
-  if (nrrd->type == nrrdTypeUShort)
-  {
-    unsigned short *data = (unsigned short *)nrrd->data;
-
-    // Copy pixels from nrrd to Image.
-    for (unsigned int j = 0; j < h; j++)
-    {
-      for (unsigned int i = 0; i < w; i++)
-      {
-	if (grey)
-	{
-	  pixels[j * w + i].red = *data;
-	  pixels[j * w + i].green = *data;
-	  pixels[j * w + i].blue = *data++;
-	}
-	else
-	{
-	  pixels[j * w + i].red = *data++;
-	  pixels[j * w + i].green = *data++;
-	  pixels[j * w + i].blue = *data++;
-	}
-
-	if (alpha)
-	{
-	  pixels[j * w + i].opacity = 0xffff - *data++;
-	}
-	else
-	{
-	  pixels[j * w + i].opacity = 0;
-	}
-      }
-    }
-  }
-  else if (nrrd->type == nrrdTypeUChar)
-  {
-    unsigned char *data = (unsigned char *)nrrd->data;
-
-    // Copy pixels from nrrd to Image.
-    for (unsigned int j = 0; j < h; j++)
-    {
-      for (unsigned int i = 0; i < w; i++)
-      {
-	if (grey)
-	{
-	  pixels[j * w + i].red = *data << 8;
-	  pixels[j * w + i].green = *data << 8;
-	  pixels[j * w + i].blue = *data++ << 8;
-	}
-	else
-	{
-	  pixels[j * w + i].red = *data++ << 8;
-	  pixels[j * w + i].green = *data++ << 8;
-	  pixels[j * w + i].blue = *data++ << 8;
-	}
-
-	if (alpha)
-	{
-	  pixels[j * w + i].opacity = 0xffff - (*data++ << 8);
-	}
-	else
-	{
-	  pixels[j * w + i].opacity = 0;
-	}
-      }
-    }
-  }
-  else if (nrrd->type == nrrdTypeFloat)
-  {
-    float *data = (float *)nrrd->data;
-
-    // Copy pixels from nrrd to Image.
-    for (unsigned int j = 0; j < h; j++)
-    {
-      for (unsigned int i = 0; i < w; i++)
-      {
-	if (grey)
-	{
-	  pixels[j * w + i].red = TO_QUANTUM(*data);
-	  pixels[j * w + i].green = TO_QUANTUM(*data);
-	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
-	}
-	else
-	{
-	  pixels[j * w + i].red = TO_QUANTUM(*data++);
-	  pixels[j * w + i].green = TO_QUANTUM(*data++);
-	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
-	}
-
-	if (alpha)
-	{
-	  pixels[j * w + i].opacity = 0xffff - TO_QUANTUM(*data++);
-	}
-	else
-	{
-	  pixels[j * w + i].opacity = 0;
-	}
-      }
-    }
-  }
-  else if (nrrd->type == nrrdTypeDouble)
-  {
-    double *data = (double *)nrrd->data;
-
-    // Copy pixels from nrrd to Image.
-    for (unsigned int j = 0; j < h; j++)
-    {
-      for (unsigned int i = 0; i < w; i++)
-      {
-	if (grey)
-	{
-	  pixels[j * w + i].red = TO_QUANTUM(*data);
-	  pixels[j * w + i].green = TO_QUANTUM(*data);
-	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
-	}
-	else
-	{
-	  pixels[j * w + i].red = TO_QUANTUM(*data++);
-	  pixels[j * w + i].green = TO_QUANTUM(*data++);
-	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
-	}
-
-	if (alpha)
-	{
-	  pixels[j * w + i].opacity = 0xffff - TO_QUANTUM(*data++);
-	}
-	else
-	{
-	  pixels[j * w + i].opacity = 0;
-	}
-      }
-    }
-  }
-
-  C_Magick::SyncImagePixels(image);
-
-  C_Magick::WriteImage(image_info, image);
+  /* create image info struct */
+  info = png_create_info_struct(png);
   
-  C_Magick::DestroyImage(image);
-  C_Magick::DestroyImageInfo(image_info);
-  C_Magick::DestroyMagick();
+  if (info == NULL) {
+    error("ERROR - Failed to create PNG info struct\n");
+    png_destroy_write_struct(&png, NULL);
+    return;
+  }
+  
+  ASSERT(sci_getenv("SCIRUN_TMP_DIR"));
+  
+  const char * tmp_dir(sci_getenv("SCIRUN_TMP_DIR"));
+  
+  const string tmp_file = string (tmp_dir + string("/scirun_temp_png.png")); 
+
+
+  // write out a temporary png file
+  FILE *fp;
+  bool use_convert = false;
+  string ext = fn.substr(fn.find(".",0)+1, fn.length());
+
+  for(int i=0; i<(int)ext.size(); i++)
+    ext[i] = tolower(ext[i]);
+  
+  if (ext != "png") {
+    // test for convert program
+    if (system("convert -version") != 0) {
+      error(string("Unsupported extension " + ext + ". Program convert not found in path."));
+      return;
+    }
+    use_convert = true;
+    fp = fopen(tmp_file.c_str(), "wb");
+  } else {
+    fp = fopen(fn.c_str(), "wb");
+  }
+
+  // initialize IO 
+  png_init_io(png, fp);
+
+  png_set_IHDR(png, info, w, h,
+	       type_size, color_type, PNG_INTERLACE_NONE,
+	       PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+  
+  /* write header */
+  png_write_info(png, info);
+  
+  row = (png_bytep*)malloc(sizeof(png_bytep)*h);
+  for (int hi=0; hi<(int)h; hi++) {
+    row[hi] = &((png_bytep)convert_nrrd->data)[hi * w * 
+					       convert_nrrd->axis[0].size];
+  }
+  png_set_rows(png, info, row);
+  
+  /* write the entire image in one pass */
+  png_write_image(png, row);
+  
+  /* finish writing */
+  png_write_end(png, info);
+  
+  /* clean up */
+  row = (png_bytep*)airFree(row);   
+  png_destroy_write_struct(&png, &info);
+  fclose(fp);
+
+  if (use_convert) {
+    // convert from temporary png to correct type 
+    // and remove temporary png
+    if (system(string("convert " + tmp_file + " " + fn).c_str()) != 0) {
+      error("Error using convert to write image.");
+    }
+    system(string("rm " + tmp_file).c_str());
+  }
+  
 #else
-  error("ImageMagick not found.  Please verify that you have the application development installation of ImageMagick.");
+  error("PNG library not found.");
   return;
 #endif
 }

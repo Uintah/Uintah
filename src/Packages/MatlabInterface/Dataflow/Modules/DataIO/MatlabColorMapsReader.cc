@@ -47,13 +47,13 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace MatlabIO {
 
@@ -130,12 +130,12 @@ DECLARE_MAKER(MatlabColorMapsReader)
 
 MatlabColorMapsReader::MatlabColorMapsReader(GuiContext* ctx)
   : Module("MatlabColorMapsReader", ctx, Source, "DataIO", "MatlabInterface"),
-    guifilename_(ctx->subVar("filename")),
-    guifilenameset_(ctx->subVar("filename-set")),
-    guicolormapinfotexts_(ctx->subVar("colormapinfotexts")),     
-    guicolormapnames_(ctx->subVar("colormapnames")),    
-    guicolormapname_(ctx->subVar("colormapname")),
-    guidisabletranspose_(ctx->subVar("disable-transpose"))
+    guifilename_(get_ctx()->subVar("filename")),
+    guifilenameset_(get_ctx()->subVar("filename-set")),
+    guicolormapinfotexts_(get_ctx()->subVar("colormapinfotexts")),     
+    guicolormapnames_(get_ctx()->subVar("colormapnames")),    
+    guicolormapname_(get_ctx()->subVar("colormapname")),
+    guidisabletranspose_(get_ctx()->subVar("disable-transpose"))
 {
   indexmatlabfile(false);
 }
@@ -153,7 +153,7 @@ void MatlabColorMapsReader::execute()
 {
 
   StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
+  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
   {
     StringHandle stringH;
     if (filenameport->get(stringH))
@@ -162,7 +162,7 @@ void MatlabColorMapsReader::execute()
       {
         std::string filename = stringH->get();
         guifilename_.set(filename);
-        ctx->reset();
+        get_ctx()->reset();
       }
     }
   }
@@ -273,7 +273,7 @@ void MatlabColorMapsReader::tcl_command(GuiArgs& args, void* userdata)
     // and then assumes they do not change and hence caches the data
     // Why it is done so is unclear to me, but in order to have interactive
     // GUIs I need to reset the context. (this synchronises the data again)
-    ctx->reset();
+    get_ctx()->reset();
     
     // Find out what the .mat file contains
     indexmatlabfile(true);
@@ -300,9 +300,9 @@ matlabarray MatlabColorMapsReader::readmatlabarray(long p)
   std::ostringstream oss;
   oss << "lindex {" << guicolormapname << "} " << p;
   
-  gui->lock();
-  gui->eval(oss.str(),colormapname);
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(oss.str(),colormapname);
+  get_gui()->unlock();
   
   if (colormapname == "")
   {
@@ -369,9 +369,9 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
           // TCL Dependent code
           std::ostringstream oss;
           oss << "lindex { " << colormapname << " } " << p;
-          gui->lock();
-          gui->eval(oss.str(),colormapnamelist[p]);
-          gui->unlock();
+          get_gui()->lock();
+          get_gui()->eval(oss.str(),colormapnamelist[p]);
+          get_gui()->unlock();
           foundcolormapname[p] = false;
   }
 
@@ -482,10 +482,10 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
 
 void MatlabColorMapsReader::displayerror(std::string str)
 {
-  gui->lock();
+  get_gui()->lock();
   // Explicit call to TCL
-  gui->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
-  gui->unlock();
+  get_gui()->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
+  get_gui()->unlock();
 }
 
 

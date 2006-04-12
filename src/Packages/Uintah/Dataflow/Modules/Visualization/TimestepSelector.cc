@@ -57,9 +57,9 @@ void TimestepSelector::execute()
 
    if (archiveH.get_rep()  == 0 ){
      string visible;
-     TCL::eval(id + " isVisible", visible);
+     TCL::eval(get_id() + " isVisible", visible);
      if( visible == "0" ){
-       TCL::execute(id + " buildTopLevel");
+       TCL::execute(get_id() + " buildTopLevel");
      }
    }
 
@@ -70,7 +70,7 @@ void TimestepSelector::execute()
      archive.queryTimesteps( indices, times );
      if( archiveH.get_rep() == 0 ||
 	 archiveH.get_rep() != handle.get_rep()){
-       TCL::execute(id + " SetTimeRange " + to_string((int)times.size()));
+       TCL::execute(get_id() + " SetTimeRange " + to_string((int)times.size()));
        archiveH = handle;
      }
    }

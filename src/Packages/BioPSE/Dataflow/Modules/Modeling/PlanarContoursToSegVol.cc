@@ -318,14 +318,14 @@ public:
     virtual void tcl_command(TCLArgs& args, void* userdata);
 };
 
-extern "C" Module* make_PlanarContoursToSegVol(const clString& id)
+extern "C" Module* make_PlanarContoursToSegVol(const clString& get_id())
 {
-    return new PlanarContoursToSegVol(id);
+    return new PlanarContoursToSegVol(get_id());
 }
 
-PlanarContoursToSegVol::PlanarContoursToSegVol(const clString& id)
-: Module("PlanarContoursToSegVol", id, Filter), nxTCL("nxTCL", id, this), 
-  nyTCL("nyTCL", id, this)
+PlanarContoursToSegVol::PlanarContoursToSegVol(const clString& get_id())
+: Module("PlanarContoursToSegVol", get_id(), Filter), nxTCL("nxTCL", get_id(), this), 
+  nyTCL("nyTCL", get_id(), this)
 
 {
     // Create the input port

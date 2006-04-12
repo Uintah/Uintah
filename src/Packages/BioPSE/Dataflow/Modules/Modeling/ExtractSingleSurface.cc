@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <map>
@@ -68,7 +68,7 @@ DECLARE_MAKER(ExtractSingleSurface)
 
 ExtractSingleSurface::ExtractSingleSurface(GuiContext *ctx)
   : Module("ExtractSingleSurface", ctx, Filter, "Modeling", "BioPSE"), 
-    surfid_(ctx->subVar("surfid")), data_(ctx->subVar("data"))
+    surfid_(get_ctx()->subVar("surfid")), data_(get_ctx()->subVar("data"))
 {
 }
 

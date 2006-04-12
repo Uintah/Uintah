@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW HAVE_PTOLEMY_PACKAGE DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -954,7 +954,7 @@ Optional Packages:
 --with-camal=DIR        Use the CMLTET installation in DIR
 --with-mesquite=DIR     Use the Mesquite installation in DIR
 --with-verdict=DIR      Use the Verdict installation in DIR
---with-magick=DIR       Use the Image Magick installation in DIR
+--with-tetgen=DIR       Use the Tetgen installation in DIR
 --with-unipetsc=DIR     Use the unipetsc installation in DIR
 --with-tau=<tau-makefile>
                           Specify a Tau Makefile
@@ -1830,6 +1830,7 @@ if test "${with_ptolemyII+set}" = set; then
   withval="$with_ptolemyII"
   with_ptolemyII="$withval"
    sci_required_ptolemyII=yes
+   sci_required_java=yes
 else
   with_ptolemyII=""
 fi;
@@ -2023,18 +2024,18 @@ echo "$as_me: error: The file or directory parameter ($verdict) specified for --
 
 
 
-# Check whether --with-magick or --without-magick was given.
-if test "${with_magick+set}" = set; then
-  withval="$with_magick"
-  with_magick="$withval"
-   sci_required_magick=yes
+# Check whether --with-tetgen or --without-tetgen was given.
+if test "${with_tetgen+set}" = set; then
+  withval="$with_tetgen"
+  with_tetgen="$withval"
+   sci_required_tetgen=yes
 else
-  with_magick=""
+  with_tetgen=""
 fi;
-  sci_arg_with_list="$sci_arg_with_list --with-magick --without-magick"
-  if test -n "$magick" -a ! -e "$magick"; then
-    { { echo "$as_me:$LINENO: error: The file or directory parameter ($magick) specified for --with-magick does not exist!  Please verify that the path and file are correct." >&5
-echo "$as_me: error: The file or directory parameter ($magick) specified for --with-magick does not exist!  Please verify that the path and file are correct." >&2;}
+  sci_arg_with_list="$sci_arg_with_list --with-tetgen --without-tetgen"
+  if test -n "$tetgen" -a ! -e "$tetgen"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($tetgen) specified for --with-tetgen does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($tetgen) specified for --with-tetgen does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -2823,7 +2824,7 @@ case SCIRun2 in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -2859,8 +2860,6 @@ case SCIRun2 in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package SCIRun2" >&5
@@ -2921,7 +2920,7 @@ case Plume in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -2957,8 +2956,6 @@ case Plume in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Plume" >&5
@@ -3163,7 +3160,7 @@ case $i in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3199,8 +3196,6 @@ case $i in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package $i" >&5
@@ -3262,7 +3257,7 @@ case Teem in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3298,8 +3293,6 @@ case Teem in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Teem" >&5
@@ -3361,7 +3354,7 @@ case DataIO in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3397,8 +3390,6 @@ case DataIO in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package DataIO" >&5
@@ -3413,14 +3404,12 @@ fi
 
 if test "$pkg_Ptolemy" = "yes"; then
   # check versions?
-  # check --with-ptolemyII
   if test -z "$with_ptolemyII"; then
-    { echo "$as_me:$LINENO: WARNING: Ptolemy II is required by the Ptolemy package." >&5
-echo "$as_me: WARNING: Ptolemy II is required by the Ptolemy package." >&2;}
-    { { echo "$as_me:$LINENO: error: Use the --with-ptolemyII=DIR option to set the installation directory." >&5
-echo "$as_me: error: Use the --with-ptolemyII=DIR option to set the installation directory." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
+    { echo "$as_me:$LINENO: WARNING: The Ptolemy II JNI interface requires Java bindings in the Ptolemy package." >&5
+echo "$as_me: WARNING: The Ptolemy II JNI interface requires Java bindings in the Ptolemy package." >&2;}
+    { echo "$as_me:$LINENO: WARNING: Use the --with-ptolemyII=DIR option to set the installation directory." >&5
+echo "$as_me: WARNING: Use the --with-ptolemyII=DIR option to set the installation directory." >&2;}
+
 
 
 eval pkg_Ptolemy=yes
@@ -3462,7 +3451,7 @@ case Ptolemy in
       sci_required_loki=yes
       sci_required_boost=yes
       sci_required_tena=yes
-	#    sci_required_qt=no
+      #sci_required_qt=no
       enable_scirun2=yes
 
       if test "$package" != "all"; then
@@ -3498,8 +3487,6 @@ case Ptolemy in
     esac
   ;;
   Ptolemy)
-    sci_required_ptolemyII=yes
-    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy" >&5
@@ -3507,6 +3494,109 @@ echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy"
   ;;
 esac
 
+
+
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
+
+    sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
+  else
+
+
+eval pkg_Ptolemy=yes
+
+case Ptolemy in
+  BioPSE)
+  ;;
+  Teem)
+    sci_required_teem=yes
+  ;;
+  VDT)
+    sci_required_vdt=yes
+  ;;
+  MatlabInterface)
+  ;;
+  Uintah)
+    sci_required_fortran=yes
+    sci_required_mpi=yes
+    sci_required_blas=yes
+    sci_required_lapack=yes
+    sci_required_perl=yes
+    sci_required_tools=yes
+  ;;
+  Fusion)
+  ;;
+  PCS)
+  ;;
+  DataIO)
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
+  ;;
+  SCIRun2)
+    sci_required_babel=yes
+    sci_required_ncurses=yes
+  ;;
+  Plume)
+    if test "$plume_checked" = "no"; then
+      plume_checked=yes
+      sci_required_loki=yes
+      sci_required_boost=yes
+      sci_required_tena=yes
+      #sci_required_qt=no
+      enable_scirun2=yes
+
+      if test "$package" != "all"; then
+        package="$package Plume"
+      fi
+   fi
+  ;;
+  Remote)
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
+  ;;
+  NetSolve)
+    sci_required_netsolve=yes
+  ;;
+  rtrt)
+    sci_required_glut=yes
+    sci_required_glui=yes
+    sci_required_oogl=yes
+    sci_required_audio=yes
+    sci_required_teem=yes
+  ;;
+  Insight)
+    sci_required_insight=yes
+    sci_required_xalan=yes
+  ;;
+  Volume)
+    case $host in
+     *-darwin*)
+	sci_required_glew=yes
+	;;
+     *)
+        ;;
+    esac
+  ;;
+  Ptolemy)
+  ;;
+  *)
+    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy" >&5
+echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy" >&2;}
+  ;;
+esac
+
+
+  fi
+fi
+
+
+if test "$pkg_Insight" = "yes"; then
+  if test -z "$sci_required_insight"; then
+    { echo "$as_me:$LINENO: WARNING: Insight is required by the Insight package." >&5
+echo "$as_me: WARNING: Insight is required by the Insight package." >&2;}
+    { echo "$as_me:$LINENO: WARNING: Use the --with-insight=DIR option if Insight is not located in Thirdparty." >&5
+echo "$as_me: WARNING: Use the --with-insight=DIR option if Insight is not located in Thirdparty." >&2;}
+    sci_required_insight=yes
+  fi
 
 fi
 
@@ -3888,7 +3978,9 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-MY_TEMP=$CPPFLAGS
+# Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
+# its value first, so... (And AC_CHECK_SIZEOF apparently calls AC_PROG_CC...)
+CFLAGS=$CFLAGS
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5780,10 +5872,6 @@ echo "$as_me: error: This machine has some strange sizeof(void*): $ac_cv_sizeof_
   ;;
 esac
 
-# the next two lines were moved to a later stage to allow us to change this default based on --enable-32/64bit
-#AC_SUBST(NBITS)
-#sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
-
 ## --------------
 
 ac_ext=cc
@@ -6816,7 +6904,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6819:" \
+echo "$as_me:6907:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7285,6 +7373,7 @@ fi
 # This flag is for the windows compiler - so it can generate correct
 # SHARE flags.
 WIN_DLLFLAGS=""
+WIN_OTFFLAGS=""
 
 case $host in
   *-irix*)
@@ -7697,10 +7786,14 @@ echo "$as_me: error: Looked in $COMPILER_DIR" >&2;}
 
     if test "$enable_64bit" = "yes"; then
       if test $NBITS = "32"; then
+        # The machine defaults to 32 bits (as found above by void* check).
+        # This flag tries to force it to give us 64 bits...
         BINARYFLAGS="-64 -mips4"
       fi
       NBITS=64
     else
+      # FIX ME - we might want to check NBITS at this point... if it is 64 then the machine default
+      # is 64 bits and we are trying to switch it to 32 bits... perhaps should let the user know...
       NBITS=32
       BINARYFLAGS="-n32 -mips4"
     fi
@@ -7792,6 +7885,7 @@ echo "${ECHO_T}no" >&6
 
          if test "$enable_64bit" = "yes"; then
             BIT64FLAG=-q64
+            NBITS=64
          fi
          CFLAGS="-qrtti=all $BIT64FLAG $CFLAGS"
 
@@ -7929,11 +8023,12 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
 
           if test "$debug" = yes; then
             #  no debug information for dynamic compilation yet - the threaded compilations will overwrite the db file
-            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -Gm -MD -W1 -Wp64"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@) /Fd"../$(dir $@)vc70.pdb"'
+            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -Gm -Zi -MD -W1 -Wp64"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)" -Fd"$(dir $@)vc70.pdb"'
+            WIN_OTFFLAGS=' -Fd"$(basename $@).pdb"'
           else
-            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -O2 -MD -W1"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@)'
+            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -O2 -MD -W1"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)"'
           fi
           CXXFLAGS="$CXXFLAGS $CFLAGS"
           WOFF=" -w0"
@@ -8775,14 +8870,14 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
 
     echo "$as_me:$LINENO: checking if special 32/64 bits flags required" >&5
 echo $ECHO_N "checking if special 32/64 bits flags required... $ECHO_C" >&6
-    if test "$enable_32bit" = "yes" -a $NBITS=64; then
+    if test "$enable_32bit" = "yes" -a $NBITS = 64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"
        CXXFLAGS="-m32 $CXXFLAGS"
        echo "$as_me:$LINENO: result: -m32" >&5
 echo "${ECHO_T}-m32" >&6
     else
-      if test "$enable_64bit" = "yes" -a $NBITS=32; then
+      if test "$enable_64bit" = "yes" -a $NBITS = 32; then
         NBITS=64
         # Do not set this flag when using intel compilers
         if test "$CC" != "icc"; then
@@ -9542,6 +9637,12 @@ fi
     ;;
 esac
 
+OBJEXT=$ac_objext
+
+
+
+
+
 
 
 
@@ -9551,6 +9652,7 @@ esac
 sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 
 ###
+
 
 
 
@@ -9633,6 +9735,13 @@ if test $CC_DEPEND_MODE = unknown; then
       break
     fi
   done
+fi
+
+if test $IS_WIN = "yes"; then
+  # for the moment, don't gen deps on win32
+  CC_DEPEND_MODE=normal
+  CC_DEPEND_REGEN=""
+  CC_DEPEND_EXT=""
 fi
 
 if test $CC_DEPEND_MODE = unknown; then
@@ -10490,7 +10599,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.25.2
+  sci_tp_version=1.25.3
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -13165,7 +13274,7 @@ if test "$IS_WIN" = "yes"; then
 ## arg 2 : OpenGL libraries and headers
 ## arg 3 : windows.h GL/gl.h GL/glu.h
 ## arg 4 : $_sci_inc
-## arg 5 : glu32 opengl32 gdi32 $GLU_OTHERS
+## arg 5 : glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -13248,10 +13357,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "glu32 opengl32 gdi32 $GLU_OTHERS"; then
+if test -n "glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS"; then
 
    found_framework=no
-   for lib in "" glu32 opengl32 gdi32 $GLU_OTHERS; do
+   for lib in "" glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -13593,7 +13702,7 @@ echo "$as_me: error: Specifically requested GL include file '$_sci_inc/$i' was n
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" glu32 opengl32 gdi32 $GLU_OTHERS; do
+  for i in "" glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS; do
     if test -z "$i"; then
        continue
     fi
@@ -21505,7 +21614,7 @@ _sci_includes=''
 if test "$IS_WIN" = "yes"; then
   # Windows BLT needs these other libs
   if test $IS_VC = "yes"; then
-    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib"
+    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib user32.lib advapi32.lib"
   else
     BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
   fi
@@ -27165,671 +27274,6 @@ fi
   _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
   _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
   eval MPEGE_LIB_DIR_FLAG='"$_new_path"'
-
-
-
-
-
-
-##  --  search for ImageMagick --------------------------------------
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-# Default values:
-_sci_lib="$sci_thirdparty_lib"
-_sci_optional=optional
-
-if test "$with_magick"; then
-  if test "$with_magick" != "yes"; then
-    # If --with-magick has a parameter, then use it
-    _sci_lib="$with_magick/lib"
-
-##
-## BASE_LIB_PATH:
-##
-## This macro takes the base path of a library and determines
-## if there is a lib32, lib64, or just plain lib that is
-## associated with it.  It sets the full path to the value of
-## the first argument.
-##
-## eg:  if arg 2 is /usr/sci/local, and the machine has a
-## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
-##
-## arguments mean:
-## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
-##
-## This function assums the enable_64bit variable is in scope
-##
-
-  _new_lib_path=$_sci_lib/lib
-
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
-  fi
-  eval _sci_lib='"$_new_lib_path"'
-
-    _sci_optional=optional
-  fi
-fi
-
-echo "$as_me:$LINENO: checking for $_sci_optional ImageMagick" >&5
-echo $ECHO_N "checking for $_sci_optional ImageMagick... $ECHO_C" >&6
-
-if test ! -e $_sci_lib/../bin/Magick-config; then
-   echo "$as_me:$LINENO: result: Not found under $_sci_lib" >&5
-echo "${ECHO_T}Not found under $_sci_lib" >&6
-   echo "$as_me:$LINENO: checking for Magick-config in your path" >&5
-echo $ECHO_N "checking for Magick-config in your path... $ECHO_C" >&6
-   # ImageMagick not in SCIRun Thirdparty... Therefore it probably is
-   # just in /usr/lib...
-   MAGICK_DIR=`Magick-config --prefix`
-   if test -e "$MAGICK_DIR/lib"; then
-      _sci_lib=$MAGICK_DIR/lib
-      echo "$as_me:$LINENO: result: Magick-config found..." >&5
-echo "${ECHO_T}Magick-config found..." >&6
-   else
-      { echo "$as_me:$LINENO: WARNING: Magick-config program not found..." >&5
-echo "$as_me: WARNING: Magick-config program not found..." >&2;}
-   fi
-fi
-
-found_magic_config="no"
-
-if test -e $_sci_lib/../bin/Magick-config; then
-    found_magic_config="yes"
-    echo
-    { echo "$as_me:$LINENO: WARNING: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&5
-echo "$as_me: WARNING: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&2;}
-
-    MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
-    MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
-
-    MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --libs`
-    includes=`$_sci_lib/../bin/Magick-config --cppflags`
-    if test "$includes" = "-I/usr/include";then
-      includes=""
-    fi
-
-    MAGICK_LDFLAGS=""
-    MAGICK_LIB_PATH=""
-    for i in $MAGICK_LIB_DIR_FLAG;do
-      is_lib_path=`echo $i | sed -n -e "s/-L//p"`
-      if test -z "$is_lib_path";then
-        MAGICK_LDFLAGS="$MAGICK_LDFLAGS $i"
-      else
-        if ! test $i = "-L/usr/lib";then
-    	MAGICK_LIB_PATH="$MAGICK_LIB_PATH $i"
-        fi
-      fi
-    done
-
-
-##
-## SCI_TRY_LINK (MAGICK):  ImageMagick library and headers
-##
-## arguments mean:
-## arg 1 : variable base name (e.g., MATH)
-## arg 2 : checking message
-## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
-##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
-##           Any other -? args are removed.  (-faltivec is ok on mac)
-##           (Only one may be given if "Specific" (arg9) is chosen.)
-## arg 5 : list of libs to link against
-##           If the libraries do not have a '-l' on them, it is appeneded.
-##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
-##           is removed completely.  (-framework is also allowed for Mac support.)
-##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
-##           if the link is successful.
-## arg 6 : lib paths
-##           If the arg does not have -L on it, then -L will be added.
-##           If it has any other -?, then the arg is removed.
-##           (only one may be givein if "Specific" (arg9) is chosen.)
-## arg 7 : extra link flags
-##           This is where to put anything else you need for the compilation
-##           line.  NOTE, none of these args propagate anywhere.
-## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
-## arg 9 : 'optional' or 'required' or 'specific' required argument
-##             If specific, then SCI_TRY_LINK will take only one lib
-##             path and one include path and will verify that the
-##             libs/includes are in that path.
-##
-## Here are the specific values for this invocation:
-##
-## arg 1 : MAGICK
-## arg 2 : ImageMagick library and headers
-## arg 3 : time.h stdio.h stdlib.h magick/api.h
-## arg 4 : $includes
-## arg 5 : $MAGICK_LDFLAGS
-## arg 6 : $MAGICK_LIB_PATH
-## arg 7 :
-## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : $_sci_optional
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_MAGICK        => lib path
-##      MAGICK_LIB_DIR_FLAG   => all the -L's
-##      MAGICK_LIB_FLAG       => all the -l's
-##      HAVE_MAGICK           => yes or no
-##      INC_MAGICK_H          => all the -I's
-##      HAVE_MAGICK_H         => yes or no
-
-if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for ImageMagick library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for ImageMagick library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-
-echo "$as_me:$LINENO: checking for ImageMagick library and headers ($_sci_optional)" >&5
-echo $ECHO_N "checking for ImageMagick library and headers ($_sci_optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
-     echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-# If $includes (the -I paths) is blank, do nothing, else do the for statement.
-
-for inc in $includes; do
-
-  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
-     echo ""
-     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for MAGICK include files." >&5
-echo "$as_me: error: Please do not specify /usr/include as the location for MAGICK include files." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-
-  # Make sure it doesn't have any thing but -I
-  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
-  has_minus_faltivec=no
-  has_minus=`echo $inc | sed 's/-.*//'`
-  if test -z "$has_minus"; then
-     has_minus_i=`echo $inc | sed 's/-I.*//'`
-     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
-     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
-        # Has some other -?.
-        if test "$debugging" = "yes"; then
-          echo
-          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($includes) of MAGICK check.  Skipping $inc." >&5
-echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($includes) of MAGICK check.  Skipping $inc." >&2;}
-        fi
-        continue
-     fi
-  fi
-
-  the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
-     # If the include arg does not already have -I on it.
-     if test -d $inc; then
-        # If the directory exists
-        _sci_includes="$_sci_includes -I$inc"
-     fi
-  else
-     # It already has -I so just add it directly.
-     _sci_includes="$_sci_includes $inc"
-  fi
-done
-
-### Take care of arg 5 (the list of libs)
-
-if test -n "$MAGICK_LDFLAGS"; then
-
-   found_framework=no
-   for lib in "" $MAGICK_LDFLAGS; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
-
-      if test "$found_framework" = "one"; then
-         found_framework=two
-      else
-         found_framework=no
-      fi
-
-      # Make sure it doesn't have any thing but -l
-      has_minus=`echo $lib | sed 's/-.*//'`
-      if test -z "$has_minus"; then
-         has_minus_l=`echo $lib | sed 's/-l.*//'`
-         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-
-         if test -z "$has_minus_framework"; then
-            # Two rounds for this loop with respect to frameworks.
-            # First round is to skip adding -l to the beginning of -framework.
-            # Second round is to not add -l to the framework lib.
-            found_framework=one
-         fi
-
-         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
-            # Has some other -?.
-            if test "$debugging" = "yes"; then
-              echo
-              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MAGICK check (disregarding $lib)." >&5
-echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MAGICK check (disregarding $lib)." >&2;}
-            fi
-            continue
-         fi
-      fi
-
-      the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib" && test "$found_framework" = "no"; then
-         # If the lib arg does not have -l on it, then add -l.
-         if test "$IS_VC" = "yes"; then
-           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
-             final_lib=$lib.lib
-           else
-             final_lib=$lib
-           fi
-         else
-           final_lib=-l$lib
-         fi
-      else
-         # It already has -l so just add it directly.
-         final_lib=$lib
-      fi
-      _sci_libs="$_sci_libs $final_lib"
-   done
-fi
-
-### Take care of arg 6 (the list of lib paths)
-
-if test -n "$MAGICK_LIB_PATH"; then
-
-   for path in "" $MAGICK_LIB_PATH; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
-
-      # Make sure it doesn't have any thing but -L
-      has_minus=`echo $path | sed 's/-.*//'`
-      if test -z "$has_minus"; then
-         has_minus_L=`echo $path | sed 's/-L.*//'`
-         if test -n "$has_minus_L"; then
-            # Has some other -?.
-            if test "$debugging" = "yes"; then
-              echo
-              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of MAGICK check (disregarding $path)." >&5
-echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MAGICK check (disregarding $path)." >&2;}
-            fi
-            continue
-         fi
-      fi
-
-      # Remove the '-L' (if it has one).
-      the_path=`echo $path | sed 's/-L//'`
-      if test -d "$the_path"; then
-         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
-      else
-         echo
-         { echo "$as_me:$LINENO: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
-      fi
-   done
-fi
-
-if test "$_sci_optional" = "specific"; then
-  # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $MAGICK_LIB_PATH (I don't know of a better way to do this.)
-  __sci_pass=false
-  __sci_first_time=true
-
-  # Must have the "" for the SGI sh.
-  for value in "" $MAGICK_LIB_PATH; do
-    if test "$value" = ""; then
-      continue
-    fi
-    if test $__sci_first_time = "true"; then
-      __sci_first_time=false
-      __sci_pass=true
-    else
-      __sci_pass=false
-    fi
-  done
-  if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for MAGICK only one library path may be specified for arg 6 (you had: $MAGICK_LIB_PATH).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for MAGICK only one library path may be specified for arg 6 (you had: $MAGICK_LIB_PATH).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-  # and only one include path:
-  ### Determine if there is only one item in $includes
-  __sci_pass=false
-  __sci_first_time=true
-  for value in "" $includes; do
-    if test "$value" = ""; then
-      continue
-    fi
-    if test $__sci_first_time = "true"; then
-      __sci_first_time=false
-      __sci_pass=true
-    else
-      __sci_pass=false
-    fi
-  done
-  if test -n "$includes" && test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for MAGICK only one include path may be specified for arg 4 (you had: $includes).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for MAGICK only one include path may be specified for arg 4 (you had: $includes).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-fi
-
-### Debug messages:
-#echo "sci_includes: $_sci_includes"
-#echo "sci_libs: $_sci_libs"
-#echo "sci_lib_path: $_sci_lib_path"
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-if test "$IS_VC" = "yes"; then
-  oldLIB=$LIB
-  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
-else
-  LDFLAGS="$_sci_lib_path $LDFLAGS"
-fi
-
-LIBS="$_sci_libs  $LIBS"
-
-# Build up a list of the #include <file> lines for use in compilation:
-__extern_c="no"
-__sci_pound_includes=""
-
-for inc in "" time.h stdio.h stdlib.h magick/api.h; do
-    if test "$inc" = "extern_C"; then
-       __sci_pound_includes="extern \"C\" {"
-       __extern_c=yes
-    else
-      # Have to have the "" for the SGI sh.
-      if test "$inc" = ""; then
-        continue
-      fi
-      __sci_pound_includes="$__sci_pound_includes
-#include <$inc>"
-    fi
-done
-
-if test "$__extern_c" = "yes"; then
-    __sci_pound_includes="$__sci_pound_includes
-}"
-fi
-
-
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-$__sci_pound_includes
-int
-main ()
-{
-
-         Image *image = NULL;
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-
-if test "$IS_VC" = "yes"; then
-  LIB=$oldLIB
-fi
-
-eval LIB_DIR_MAGICK='"$MAGICK_LIB_PATH"'
-
-# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
-_final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
-    _final_dirs="$_final_dirs $_dir"
-  fi
-done
-
-# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
-
-# Remove leading spaces
-_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
-
-eval MAGICK_LIB_DIR_FLAG="'$_final_dirs'"
-
-# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
-final_libs=
-for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
-  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
-    final_libs="$final_libs $_lib"
-  fi
-done
-
-# Remove leading spaces
-final_libs=`echo $final_libs | sed "s/^ *//"`
-eval MAGICK_LIB_FLAG="'$final_libs'"
-eval HAVE_MAGICK="yes"
-
-final_incs=
-for inc in "" $_sci_includes; do
-   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
-      final_incs="$final_incs $inc"
-   fi
-done
-
-# Remove leading spaces
-final_incs=`echo $final_incs | sed "s/^ *//"`
-
-eval INC_MAGICK_H="'$final_incs'"
-eval HAVE_MAGICK_H="yes"
-
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_MAGICK=''
-eval MAGICK_LIB_DIR_FLAG=''
-eval MAGICK_LIB_FLAG=''
-eval HAVE_MAGICK="no"
-eval INC_MAGICK_H=''
-eval HAVE_MAGICK_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "$_sci_optional" != "optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required MAGICK failed.
-    To see the failed compile information, look in config.log,
-    search for MAGICK. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required MAGICK failed.
-    To see the failed compile information, look in config.log,
-    search for MAGICK. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-
-if test "$_sci_optional" = "specific"; then
-  #echo specific
-  # Make sure the exact includes were found
-  for i in "" time.h stdio.h stdlib.h magick/api.h; do
-    #echo looking for $includes/$i
-    if test ! -e $includes/$i; then
-     { { echo "$as_me:$LINENO: error: Specifically requested MAGICK include file '$includes/$i' was not found" >&5
-echo "$as_me: error: Specifically requested MAGICK include file '$includes/$i' was not found" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-  done
-  # Make sure the exact libraries were found
-  for i in "" $MAGICK_LDFLAGS; do
-    if test -z "$i"; then
-       continue
-    fi
-    has_minus=`echo $i | sed 's/-.*//'`
-    if test -z "$has_minus"; then
-       i=`echo $i | sed 's/-l//g'`
-    fi
-    if test ! -e $MAGICK_LIB_PATH/lib$i.so && test ! -e $MAGICK_LIB_PATH/lib$i.a && test ! -e $MAGICK_LIB_PATH/$i.lib; then
-     { { echo "$as_me:$LINENO: error: Specifically requested MAGICK library file '$MAGICK_LIB_PATH/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested MAGICK library file '$MAGICK_LIB_PATH/$i' (.so or .a) was not found" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-  done
-fi
-
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-##
-## END of SCI_TRY_LINK (MAGICK):  ImageMagick library and headers
-##
-
-
-
-    DEF_MAGICK="#define HAVE_MAGICK 1"
-    break
-fi
-
-if test "$found_magic_config" = "no"; then
-   echo "$as_me:$LINENO: result: no." >&5
-echo "${ECHO_T}no." >&6
-   if test "$_sci_optional" != "optional"; then
-     echo
-     { echo "$as_me:$LINENO: WARNING: Cannot find a Magick-config file to get ImageMagick variables." >&5
-echo "$as_me: WARNING: Cannot find a Magick-config file to get ImageMagick variables." >&2;}
-     { echo "$as_me:$LINENO: WARNING: This file usually resides in Magicklib_dir/../bin/Magick-config." >&5
-echo "$as_me: WARNING: This file usually resides in Magicklib_dir/../bin/Magick-config." >&2;}
-     { echo "$as_me:$LINENO: WARNING: Please install ImageMagick and then reconfigure." >&5
-echo "$as_me: WARNING: Please install ImageMagick and then reconfigure." >&2;}
-   fi
-fi
-
-if test "$with_magick" && test ! "$DEF_MAGICK"; then
-  echo
-  { { echo "$as_me:$LINENO: error: One or more of the ImageMagick components is missing." >&5
-echo "$as_me: error: One or more of the ImageMagick components is missing." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-
-##
-## SCI_SUBST_THIRDPARTY_DIR:
-##
-## arguments mean:
-## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
-## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
-##
-  _new_path=${MAGICK_LIB_DIR_FLAG}
-  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
-  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  eval MAGICK_LIB_DIR_FLAG='"$_new_path"'
-
-
-##
-## SCI_SUBST_THIRDPARTY_DIR:
-##
-## arguments mean:
-## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
-## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
-##
-  _new_path=${INC_MAGICK_H}
-  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
-  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  eval INC_MAGICK_H='"$_new_path"'
-
 
 
 
@@ -34053,12 +33497,14 @@ echo "${ECHO_T}Found Java top directory $_java_top" >&6
     fi
   done
 elif test "$with_java"; then
-  _sci_optional=specific
+  _sci_optional=required
   _sci_inc="$with_java/include"
   _java_top=$with_java
+  echo "$as_me:$LINENO: result: Found Java top directory $_java_top" >&5
+echo "${ECHO_T}Found Java top directory $_java_top" >&6
 fi
 
-if test "$_sci_optional" != "optional"; then
+if test "$_sci_optional" = "required"; then
   _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
   if test -d "$_java_lib_dir"; then
     _sci_lib="$_sci_lib $_java_lib_dir"
@@ -34067,6 +33513,11 @@ if test "$_sci_optional" != "optional"; then
   _jvm_lib_dir=`find $_java_top -follow -name server -prune -o -name "libjvm.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
   if test -d "$_jvm_lib_dir"; then
     _sci_lib="$_sci_lib $_jvm_lib_dir"
+  fi
+
+  _jni_platfrom_h_dir=`find $_sci_inc -follow -name "jni_md.h" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_jni_platfrom_h_dir"; then
+    _sci_inc="$_sci_inc $_jni_platfrom_h_dir"
   fi
 
 
@@ -34566,6 +34017,19 @@ _sci_includes=''
 
 
 fi
+
+if test "$HAVE_JAVA" = "yes"; then
+    DEF_JAVA="#define HAVE_JAVA 1"
+fi
+
+if test "$with_java" && test ! "$DEF_JAVA"; then
+  { { echo "$as_me:$LINENO: error: Java installation directory is missing." >&5
+echo "$as_me: error: Java installation directory is missing." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+
 
 
 ##  --  search for Mesquite ------------------------
@@ -36760,6 +36224,539 @@ if test "$with_camal" && test ! "$DEF_CAMAL"; then
   echo
   { { echo "$as_me:$LINENO: error: One or more of the CAMAL components is missing." >&5
 echo "$as_me: error: One or more of the CAMAL components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+  echo
+fi
+
+
+
+
+
+
+
+##  --  search for Tetgen (http://tetgen.berlios.de) ------------------------
+
+_sci_optional=optional
+if test "$with_tetgen" = "yes"; then
+  { { echo "$as_me:$LINENO: error: --with-tetgen must have a have a path to an installation --with-tetgen=/path/to/my/tetgen/installation/dir" >&5
+echo "$as_me: error: --with-tetgen must have a have a path to an installation --with-tetgen=/path/to/my/tetgen/installation/dir" >&2;}
+   { (exit 1); exit 1; }; }
+else
+  if test "$with_tetgen"; then
+    # If --with-tetgen has a parameter, then use it
+    _sci_lib="$with_tetgen"
+    _sci_inc="$with_tetgen"
+    _sci_optional=specific
+  fi
+fi
+
+
+
+##
+## SCI_TRY_LINK (TETGEN):  TETGEN library
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : TETGEN
+## arg 2 : TETGEN library
+## arg 3 :
+## arg 4 : $_sci_inc
+## arg 5 : tet
+## arg 6 : $_sci_lib
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : $_sci_optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_TETGEN        => lib path
+##      TETGEN_LIB_DIR_FLAG   => all the -L's
+##      TETGEN_LIB_FLAG       => all the -l's
+##      HAVE_TETGEN           => yes or no
+##      INC_TETGEN_H          => all the -I's
+##      HAVE_TETGEN_H         => yes or no
+
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for TETGEN library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for TETGEN library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+echo "$as_me:$LINENO: checking for TETGEN library ($_sci_optional)" >&5
+echo $ECHO_N "checking for TETGEN library ($_sci_optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+     echo
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for TETGEN library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for TETGEN library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $_sci_inc; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for TETGEN include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for TETGEN include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of TETGEN check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of TETGEN check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "tet"; then
+
+   found_framework=no
+   for lib in "" tet; do
+
+      if test -z "$lib"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TETGEN check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TETGEN check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$_sci_lib"; then
+
+   for path in "" $_sci_lib; do
+
+      if test -z "$path"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of TETGEN check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of TETGEN check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { echo "$as_me:$LINENO: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "$_sci_optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_sci_lib; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for TETGEN only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for TETGEN only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_sci_inc
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $_sci_inc; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$_sci_inc" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for TETGEN only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for TETGEN only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" ; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval LIB_DIR_TETGEN='"$_sci_lib"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in "" $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval TETGEN_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $LIBS; do
+  bad_l_arg=`echo "$_lib" | grep "\-L"`
+  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval TETGEN_LIB_FLAG="'$final_libs'"
+eval HAVE_TETGEN="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_TETGEN_H="'$final_incs'"
+eval HAVE_TETGEN_H="yes"
+
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_TETGEN=''
+eval TETGEN_LIB_DIR_FLAG=''
+eval TETGEN_LIB_FLAG=''
+eval HAVE_TETGEN="no"
+eval INC_TETGEN_H=''
+eval HAVE_TETGEN_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "$_sci_optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required TETGEN failed.
+    To see the failed compile information, look in config.log,
+    search for TETGEN. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required TETGEN failed.
+    To see the failed compile information, look in config.log,
+    search for TETGEN. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+
+if test "$_sci_optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" ; do
+    #echo looking for $_sci_inc/$i
+    if test ! -e $_sci_inc/$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested TETGEN include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested TETGEN include file '$_sci_inc/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" tet; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested TETGEN library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested TETGEN library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (TETGEN):  TETGEN library
+##
+
+
+
+
+if test "$HAVE_TETGEN" = "yes"; then
+  DEF_TETGEN="#define HAVE_TETGEN 1"
+fi
+
+if test "$with_tetgen" && test ! "$DEF_TETGEN"; then
+  echo
+  { { echo "$as_me:$LINENO: error: One or more of the TETGEN components is missing." >&5
+echo "$as_me: error: One or more of the TETGEN components is missing." >&2;}
    { (exit 1); exit 1; }; }
   echo
 fi
@@ -44024,8 +44021,45 @@ echo "$as_me: checking for required MPI components......" >&6;}
               _sci_optional=required
            else
               _sci_optional=specific
-              _sci_lib="$with_mpi/lib"
               _sci_inc="$with_mpi/include"
+              # Account for lib64 or lib32 or just lib...
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$with_mpi/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$with_mpi/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$with_mpi/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$with_mpi/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$with_mpi/lib
+    fi
+  fi
+  eval _sci_lib='"$_new_lib_path"'
+
            fi
         fi
 
@@ -44534,16 +44568,16 @@ _sci_includes=''
 
 
         if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-           test ! -e $with_mpi/lib/$the_file.so &&
-           test ! -e $with_mpi/lib/$the_file.a &&
-           test ! -e $with_mpi/lib/$the_file.dylib; then
-             { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&5
-echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+           test ! -e $_sci_lib/$the_file.so &&
+           test ! -e $_sci_lib/$the_file.a &&
+           test ! -e $_sci_lib/$the_file.dylib; then
+             { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $_sci_lib" >&5
+echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >&2;}
 	     HAVE_MPI="no"
         fi
 
         if test "$HAVE_MPI" != "yes"; then
-          # Try without pmpi (and with pthreads) (for the newer version
+          # Try without pmpi (and with pthreads) for the newer version
           # of lam mpi.
           # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
@@ -45046,11 +45080,11 @@ _sci_includes=''
 
           # verify that it was found in the location requested.
           if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-             test ! -e $with_mpi/lib/$the_file.so &&
-             test ! -e $with_mpi/lib/$the_file.a &&
-             test ! -e $with_mpi/lib/$the_file.dylib; then
-             { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&5
-echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+             test ! -e $_sci_lib/$the_file.so &&
+             test ! -e $_sci_lib/$the_file.a &&
+             test ! -e $_sci_lib/$the_file.dylib; then
+             { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $_sci_lib" >&5
+echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >&2;}
 	     HAVE_MPI="no"
           fi
 
@@ -45555,11 +45589,11 @@ _sci_includes=''
 
              # verify that it was found in the location requested
              if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-                test ! -e $with_mpi/lib/$the_file.so &&
-                test ! -e $with_mpi/lib/$the_file.a &&
-                test ! -e $with_mpi/lib/$the_file.dylib; then
-                { echo "$as_me:$LINENO: WARNING: Found libmpi but not in the requested directory: $with_mpi/lib" >&5
-echo "$as_me: WARNING: Found libmpi but not in the requested directory: $with_mpi/lib" >&2;}
+                test ! -e $_sci_lib/$the_file.so &&
+                test ! -e $_sci_lib/$the_file.a &&
+                test ! -e $_sci_lib/$the_file.dylib; then
+                { echo "$as_me:$LINENO: WARNING: Found libmpi but not in the requested directory: $_sci_lib" >&5
+echo "$as_me: WARNING: Found libmpi but not in the requested directory: $_sci_lib" >&2;}
                 HAVE_MPI="no"
              fi
 
@@ -46063,11 +46097,11 @@ _sci_includes=''
 
                 # verify that it was found in the location requested.
                 if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-                   test ! -e $with_mpi/lib/$the_file.so &&
-                   test ! -e $with_mpi/lib/$the_file.a &&
-                   test ! -e $with_mpi/lib/$the_file.dylib; then
-                   { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&5
-echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+                   test ! -e $_sci_lib/$the_file.so &&
+                   test ! -e $_sci_lib/$the_file.a &&
+                   test ! -e $_sci_lib/$the_file.dylib; then
+                   { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $_sci_lib" >&5
+echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >&2;}
                    HAVE_MPI="no"
                 fi
 
@@ -46569,6 +46603,505 @@ _sci_includes=''
 
 
 
+                   # try mpich again without the pmpich
+                   if test "$HAVE_MPI" != "yes"; then
+
+##
+## SCI_TRY_LINK (MPI):  mpich library and header-2
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : MPI
+## arg 2 : mpich library and header-2
+## arg 3 : mpi.h
+## arg 4 : $_sci_inc /usr/include/mpi
+## arg 5 : mpich
+## arg 6 : $_sci_lib
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_MPI        => lib path
+##      MPI_LIB_DIR_FLAG   => all the -L's
+##      MPI_LIB_FLAG       => all the -l's
+##      HAVE_MPI           => yes or no
+##      INC_MPI_H          => all the -I's
+##      HAVE_MPI_H         => yes or no
+
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for mpich library and header-2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for mpich library and header-2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+echo "$as_me:$LINENO: checking for mpich library and header-2 (optional)" >&5
+echo $ECHO_N "checking for mpich library and header-2 (optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+     echo
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for mpich library and header-2 must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for mpich library and header-2 must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If $_sci_inc /usr/include/mpi (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $_sci_inc /usr/include/mpi; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for MPI include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for MPI include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/mpi) of MPI check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/mpi) of MPI check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "mpich"; then
+
+   found_framework=no
+   for lib in "" mpich; do
+
+      if test -z "$lib"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$_sci_lib"; then
+
+   for path in "" $_sci_lib; do
+
+      if test -z "$path"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of MPI check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MPI check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { echo "$as_me:$LINENO: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_sci_lib; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for MPI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for MPI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_sci_inc /usr/include/mpi
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $_sci_inc /usr/include/mpi; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$_sci_inc /usr/include/mpi" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for MPI only one include path may be specified for arg 4 (you had: $_sci_inc /usr/include/mpi).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for MPI only one include path may be specified for arg 4 (you had: $_sci_inc /usr/include/mpi).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" mpi.h; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval LIB_DIR_MPI='"$_sci_lib"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in "" $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $LIBS; do
+  bad_l_arg=`echo "$_lib" | grep "\-L"`
+  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval MPI_LIB_FLAG="'$final_libs'"
+eval HAVE_MPI="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_MPI_H="'$final_incs'"
+eval HAVE_MPI_H="yes"
+
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_MPI=''
+eval MPI_LIB_DIR_FLAG=''
+eval MPI_LIB_FLAG=''
+eval HAVE_MPI="no"
+eval INC_MPI_H=''
+eval HAVE_MPI_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required MPI failed.
+    To see the failed compile information, look in config.log,
+    search for MPI. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required MPI failed.
+    To see the failed compile information, look in config.log,
+    search for MPI. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+
+if test "optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" mpi.h; do
+    #echo looking for $_sci_inc /usr/include/mpi/$i
+    if test ! -e $_sci_inc /usr/include/mpi/$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" mpich; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (MPI):  mpich library and header-2
+##
+
+
+                   fi
                    if test "$HAVE_MPI" = "yes"; then
                       HAVE_MPICH="yes"
                    fi
@@ -46578,20 +47111,25 @@ _sci_includes=''
         fi
 
         if test "$HAVE_MPI" = "yes"; then
-
+           if test "$IS_WIN" = "yes"; then
+             header=""
+           else
+             header="lib"
+           fi
            if test "$_sci_optional" = "specific"; then
-              the_file=libmpi
+              the_file="$header"mpi
               if test "$HAVE_MPICH" = "yes"; then
-                the_file=libmpich
+                the_file="$header"mpich
               fi
 
               # verify that it was found in the location requested.
-              if test ! -e $with_mpi/lib/$the_file.so &&
-                 test ! -e $with_mpi/lib/$the_file.a &&
-                 test ! -e $with_mpi/lib/$the_file.dylib; then
+              if test ! -e $_sci_lib/$the_file.so &&
+                 test ! -e $_sci_lib/$the_file.a &&
+                 test ! -e $_sci_lib/$the_file.lib &&
+                 test ! -e $_sci_lib/$the_file.dylib; then
                    echo
-                   { { echo "$as_me:$LINENO: error: Found libmpi but not in requested directory: $with_mpi/lib" >&5
-echo "$as_me: error: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+                   { { echo "$as_me:$LINENO: error: Found libmpi but not in requested directory: $_sci_lib" >&5
+echo "$as_me: error: Found libmpi but not in requested directory: $_sci_lib" >&2;}
    { (exit 1); exit 1; }; }
               fi
            fi
@@ -46726,7 +47264,11 @@ echo "$as_me: error: PETSC ARCH not set for Tru64.  Need to fix this." >&2;}
     PETSC_ARCH=aix5.1.0.0
     ;;
   *-darwin*)
-    PETSC_ARCH=ppc
+  	if test `uname -p` = "i386"; then
+    	PETSC_ARCH=i386
+    else
+    	PETSC_ARCH=ppc
+    fi
     ;;
   *-pc-mingw*)
     PETSC_ARCH=win
@@ -49922,24 +50464,32 @@ if test "$sci_required_insight" = "yes"; then
 echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
 
   if test "$with_insight"; then
-    dir="$with_insight"
+    dir="$with_insight/lib/InsightToolkit"
   else
-    dir="/usr/local/lib/InsightToolkit"
+    dir="$sci_thirdparty_lib/InsightToolkit"
   fi
 
   if test -a "$dir/ITKConfig.cmake"; then
     INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -lITKniftiio -lITKznz -litkvnl -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
 
-    if test -a "$insight_libs_dir/libitkzlib.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test "$IS_WIN" = "yes"; then
+	  libBegin=""
+	  ext="lib" #windows's so is dll, not lib, but we link against the lib
+	else
+	  libBegin="lib"
+	  ext="$SO_OR_ARCHIVE_EXTENSION"
+	fi
+
+    if test -a "$insight_libs_dir/"$libBegin"itkzlib.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
     elif test "$HAVE_Z" = "yes"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG"
     fi
 
-    if test -a "$insight_libs_dir/libitktiff.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itktiff.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
     elif test "$HAVE_TIFF" = "yes"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $TIFF_LIB_DIR_FLAG $TIFF_LIB_FLAG"
@@ -49948,7 +50498,7 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
 
     INSIGHT_JPEG_LINKED=no
 
-    if test -a "$insight_libs_dir/libitkjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg8.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg8"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -49956,7 +50506,7 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg12.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg12"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -49964,7 +50514,7 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg16.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -49972,7 +50522,7 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg.$SO_OR_ARCHIVE_EXTENSION" && test "$INSIGHT_JPEG_LINKED" = "no"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg.$ext" && test "$INSIGHT_JPEG_LINKED" = "no"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no"; then
@@ -49980,7 +50530,7 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libITKNrrdIO.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"ITKNrrdIO.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO"
     fi
 
@@ -50007,14 +50557,15 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
 
 #    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`"
 
-    DEF_INSIGHT="#define HAVE_INSIGHT"
+    DEF_INSIGHT="#define HAVE_INSIGHT 1"
     HAVE_INSIGHT="yes"
 
     echo "$as_me:$LINENO: result: $dir" >&5
 echo "${ECHO_T}$dir" >&6
   else
-    echo "$as_me:$LINENO: result: not found." >&5
-echo "${ECHO_T}not found." >&6
+    { { echo "$as_me:$LINENO: error: not found... Insight is required to build" >&5
+echo "$as_me: error: not found... Insight is required to build" >&2;}
+   { (exit 1); exit 1; }; }
   fi
 
   if test "$with_insight" && test ! "$DEF_INSIGHT"; then
@@ -50050,7 +50601,7 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
   if test "$with_gdcm"; then
     dir="$with_gdcm"
   elif test "$with_insight"; then
-    dir="$with_insight"
+    dir="$with_insight/lib/InsightToolkit"
   else
     dir="/usr/local"
   fi
@@ -50098,9 +50649,14 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
       insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
       gdcm_src="$insight_src/Utilities/gdcm/src"
 
-      insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
+      if test "$IS_WIN" = "no"; then
+        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
+      else
+        # the sed '; -> \n' doesn't quite produce the right results - awk off the first entry instead
+        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"//' | sed 's/\")//' | awk -F ';' '{print $1}'`"
+      fi
 
-      if test -a "$insigt_include/gdcm/src"; then
+      if test -a "$insight_include/gdcm/src"; then
            INC_GDCM_H="-I$gdcm_src -I$insight_include/gdcm/src"
            gdcm_libs_dir="$dir"
            found_gdcm_comp="yes"
@@ -50129,6 +50685,10 @@ echo "$as_me: error: Cannot find GDCM configure files." >&2;}
 
      if test $using_itk = "yes"; then
        GDCM_LIB_FLAG="-litkgdcm"
+       if test $IS_WIN = "yes"; then
+         # don't know why, but windows needs them...
+         GDCM_LIB_FLAG="$GDCM_LIB_FLAG SnmpAPI.lib ws2_32.lib"
+       fi
      else
        GDCM_LIB_FLAG="-lgdcm"
      fi
@@ -50189,8 +50749,9 @@ if test "$sci_required_ptolemyII" = "yes"; then
   echo "$as_me:$LINENO: checking for Ptolemy II." >&5
 echo $ECHO_N "checking for Ptolemy II.... $ECHO_C" >&6
   if test "$HAVE_JAVA" != "yes"; then
-    { echo "$as_me:$LINENO: WARNING: Java installation directory is missing." >&5
-echo "$as_me: WARNING: Java installation directory is missing." >&2;}
+    { { echo "$as_me:$LINENO: error: Java installation directory is missing." >&5
+echo "$as_me: error: Java installation directory is missing." >&2;}
+   { (exit 1); exit 1; }; }
   fi
 
   # search here
@@ -50207,12 +50768,14 @@ echo "${ECHO_T}$pdir" >&6
     PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
   else
     { { echo "$as_me:$LINENO: error: Ptolemy II directory is missing." >&5
 echo "$as_me: error: Ptolemy II directory is missing." >&2;}
    { (exit 1); exit 1; }; }
   fi
 fi
+
 
 
 
@@ -50367,7 +50930,6 @@ elif test "$with_babel"; then
   _sci_optional=specific
 fi
 
-#SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl sidlx sidlstub_ucxx,$_sci_lib,,,$_sci_optional)
 
 ##
 ## SCI_TRY_LINK (SIDL):  sidl library and headers
@@ -50906,7 +51468,7 @@ fi
 
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
+  ## check for compatible version (0.11.0 or greater)
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
@@ -52113,6 +52675,12 @@ fi #end sci_required_glut
 
 
 ##  --  search for glui  -----------------------------------------------
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
 if test "$sci_required_glui" = "yes"; then
    if test "$with_glui"; then
 
@@ -52288,6 +52856,13 @@ if test "$sci_required_glui" = "yes"; then
        _sci_inc="$sci_thirdparty_include /usr/X11R6/include"
      fi
    fi
+
+   ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
 
 
 ##
@@ -52616,7 +53191,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -52786,6 +53361,13 @@ _sci_includes=''
 
 
 
+   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
   if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
     { echo "$as_me:$LINENO: WARNING: \"$GLUI_LIB_DIR_FLAG\"" >&5
 echo "$as_me: WARNING: \"$GLUI_LIB_DIR_FLAG\"" >&2;}
@@ -52799,6 +53381,11 @@ fi # end sci_required_glui
 
 
 
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 ##  --  search for oogl  -----------------------------------------------
@@ -52824,6 +53411,13 @@ if test "$sci_required_oogl" = "yes"; then
   fi
   # Only check for OOGL if the user did not say without-oogl.
   if test "$with_oogl" != "no"; then
+
+    ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
 
 ##
 ## SCI_TRY_LINK (OOGL):  oogl library and headers
@@ -53151,7 +53745,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -53319,6 +53913,12 @@ _sci_includes=''
 ## END of SCI_TRY_LINK (OOGL):  oogl library and headers
 ##
 
+
+    ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   fi
 
@@ -53940,6 +54540,20 @@ if test -e $freetype_bin/freetype-config; then
 echo "${ECHO_T}Using $freetype_bin/freetype-config to set freetype variables." >&6
 
     includes=`$freetype_bin/freetype-config --cflags`
+elif test -e $sci_thirdparty_dir/bin/freetype-config; then
+    echo "$as_me:$LINENO: result: Using $sci_thirdparty_dir/bin/freetype-config to set freetype variables." >&5
+echo "${ECHO_T}Using $sci_thirdparty_dir/bin/freetype-config to set freetype variables." >&6
+    found_freetype_config="yes"
+    includes=`$sci_thirdparty_dir/bin/freetype-config --cflags`
+    _sci_lib="$sci_thirdparty_lib"
+else
+    echo "$as_me:$LINENO: result: No 'freetype-config' file found in $freetype_bin." >&5
+echo "${ECHO_T}No 'freetype-config' file found in $freetype_bin." >&6
+    # try the 3P for windows
+    _sci_lib="$sci_thirdparty_lib"
+    _sci_inc="$sci_thirdparty_include"
+    includes=""
+fi
 
 ##
 ## SCI_TRY_LINK (FREETYPE):  freetype library and headers
@@ -54437,14 +55051,10 @@ _sci_includes=''
 
 
 
-    INC_FREETYPE_H="$INC_FREETYPE_H $includes"
-
-    DEF_FREETYPE="#define HAVE_FREETYPE 1"
-fi
-
-if test "$found_freetype_config" = "no"; then
-   echo "$as_me:$LINENO: result: No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check." >&5
-echo "${ECHO_T}No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check." >&6
+if test "$HAVE_FREETYPE" = "yes"; then
+  INC_FREETYPE_H="$INC_FREETYPE_H $includes"
+  DEF_FREETYPE="#define HAVE_FREETYPE 1"
+elif test "$found_freetype_config" = "no"; then
    if test "$_sci_optional" != "optional"; then
      echo
      { echo "$as_me:$LINENO: WARNING: Cannot find a freetype-config file to get freetype variables." >&5
@@ -55494,7 +56104,7 @@ if test "$with_teem"; then
 echo "$as_me: WARNING: Teem is already required - you do not need to specify --with-teem." >&2;}
   else
     # If --with-teem has a parameter, then use it
-    _sci_lib="$with_teem/lib"
+    _sci_lib="$with_teem"
     _sci_inc="$with_teem/include"
 
 ##
@@ -64489,6 +65099,10 @@ fi
 
   case $host in
     *aix*)
+        { echo "$as_me:$LINENO: WARNING: Changing the compiler for AIX computers..." >&5
+echo "$as_me: WARNING: Changing the compiler for AIX computers..." >&2;}
+        { echo "$as_me:$LINENO: WARNING: ...to (probably) mpxlC" >&5
+echo "$as_me: WARNING: ...to (probably) mpxlC" >&2;}
 	CC=`echo $CC | sed 's,x,mpx,g'`
 	CXX=`echo $CXX | sed 's,x,mpx,g'`
 	F77=`echo $F77 | sed 's,x,mpx,g'`
@@ -65201,6 +65815,7 @@ s,@DEF_CHROMIUM@,$DEF_CHROMIUM,;t t
 s,@DEF_NO_DYNAMIC_CAST@,$DEF_NO_DYNAMIC_CAST,;t t
 s,@DEF_BUILD_DATAFLOW@,$DEF_BUILD_DATAFLOW,;t t
 s,@BUILD_DATAFLOW@,$BUILD_DATAFLOW,;t t
+s,@HAVE_PTOLEMY_PACKAGE@,$HAVE_PTOLEMY_PACKAGE,;t t
 s,@DEF_COLLAB_VIS@,$DEF_COLLAB_VIS,;t t
 s,@HAVE_COLLAB_VIS@,$HAVE_COLLAB_VIS,;t t
 s,@IS_OSX@,$IS_OSX,;t t
@@ -65235,6 +65850,7 @@ s,@NEED_OSX_HACK@,$NEED_OSX_HACK,;t t
 s,@DEF_NEED_OSX_HACK@,$DEF_NEED_OSX_HACK,;t t
 s,@NBITS@,$NBITS,;t t
 s,@WIN_DLLFLAGS@,$WIN_DLLFLAGS,;t t
+s,@WIN_OTFFLAGS@,$WIN_OTFFLAGS,;t t
 s,@CC_DEPEND_MODE@,$CC_DEPEND_MODE,;t t
 s,@CC_DEPEND_REGEN@,$CC_DEPEND_REGEN,;t t
 s,@CC_DEPEND_EXT@,$CC_DEPEND_EXT,;t t
@@ -65325,14 +65941,11 @@ s,@PNG_LIB_FLAG@,$PNG_LIB_FLAG,;t t
 s,@PNG_LIB_DIR_FLAG@,$PNG_LIB_DIR_FLAG,;t t
 s,@INC_PNG_H@,$INC_PNG_H,;t t
 s,@DEF_PNG@,$DEF_PNG,;t t
+s,@HAVE_PNG@,$HAVE_PNG,;t t
 s,@EXCEPTIONS_CRASH_DEF@,$EXCEPTIONS_CRASH_DEF,;t t
 s,@MPEGE_LIB_FLAG@,$MPEGE_LIB_FLAG,;t t
 s,@MPEGE_LIB_DIR_FLAG@,$MPEGE_LIB_DIR_FLAG,;t t
 s,@DEF_MPEG@,$DEF_MPEG,;t t
-s,@MAGICK_LIB_FLAG@,$MAGICK_LIB_FLAG,;t t
-s,@MAGICK_LIB_DIR_FLAG@,$MAGICK_LIB_DIR_FLAG,;t t
-s,@INC_MAGICK_H@,$INC_MAGICK_H,;t t
-s,@DEF_MAGICK@,$DEF_MAGICK,;t t
 s,@SCISOCK_LIB_FLAG@,$SCISOCK_LIB_FLAG,;t t
 s,@SCISOCK_LIB_DIR_FLAG@,$SCISOCK_LIB_DIR_FLAG,;t t
 s,@INC_SCISOCK_H@,$INC_SCISOCK_H,;t t
@@ -65341,6 +65954,9 @@ s,@UNP_LIB_DIR_FLAG@,$UNP_LIB_DIR_FLAG,;t t
 s,@INC_UNP_H@,$INC_UNP_H,;t t
 s,@F_LIB_FLAG@,$F_LIB_FLAG,;t t
 s,@F_LIB_DIR_FLAG@,$F_LIB_DIR_FLAG,;t t
+s,@HAVE_JAVA@,$HAVE_JAVA,;t t
+s,@DEF_JAVA@,$DEF_JAVA,;t t
+s,@JAVA@,$JAVA,;t t
 s,@MESQUITE_LIB_FLAG@,$MESQUITE_LIB_FLAG,;t t
 s,@INC_MESQUITE_H@,$INC_MESQUITE_H,;t t
 s,@MESQUITE_LIB_DIR_FLAG@,$MESQUITE_LIB_DIR_FLAG,;t t
@@ -65356,6 +65972,11 @@ s,@INC_CAMAL_H@,$INC_CAMAL_H,;t t
 s,@CAMAL_LIB_DIR_FLAG@,$CAMAL_LIB_DIR_FLAG,;t t
 s,@DEF_CAMAL@,$DEF_CAMAL,;t t
 s,@HAVE_CAMAL@,$HAVE_CAMAL,;t t
+s,@TETGEN_LIB_FLAG@,$TETGEN_LIB_FLAG,;t t
+s,@INC_TETGEN_H@,$INC_TETGEN_H,;t t
+s,@TETGEN_LIB_DIR_FLAG@,$TETGEN_LIB_DIR_FLAG,;t t
+s,@DEF_TETGEN@,$DEF_TETGEN,;t t
+s,@HAVE_TETGEN@,$HAVE_TETGEN,;t t
 s,@HAVE_CBLAS@,$HAVE_CBLAS,;t t
 s,@DEF_CBLAS@,$DEF_CBLAS,;t t
 s,@HAVE_BLAS@,$HAVE_BLAS,;t t

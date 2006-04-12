@@ -59,7 +59,8 @@ typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
 class QuadToTriAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle &dst) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -71,14 +72,15 @@ class QuadToTriAlgoT : public QuadToTriAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *);
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle& dst);
 };
 
 
 template <class FSRC>
 bool
-QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
-                              ProgressReporter *mod)
+QuadToTriAlgoT<FSRC>::execute(ProgressReporter *reporter,
+                              FieldHandle srcH, FieldHandle& dstH)
 {
   FSRC *qsfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -230,8 +232,11 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TSMesh::Node::index_type)(i));
       ++iter; ++i;
     }
-  } else {
-    mod->warning("Could not load data values, use DirectInterp if needed.");
+  }
+  else
+  {
+    reporter->warning("Could not load data values onto output field.");
+    reporter->warning("Use DirectInterp if data values are required.");
   }
 
   dstH->copy_properties(qsfield);
@@ -244,7 +249,8 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 class ImgToTriAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle &dst) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -256,14 +262,15 @@ class ImgToTriAlgoT : public ImgToTriAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle& dst);
 };
 
 
 template <class FSRC>
 bool
-ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-                             ProgressReporter *mod)
+ImgToTriAlgoT<FSRC>::execute(ProgressReporter *reporter,
+                             FieldHandle srcH, FieldHandle& dstH)
 {
   FSRC *ifield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -361,8 +368,11 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tfield->set_value(val, (TSMesh::Node::index_type)(unsigned int)(*nbi));
       ++nbi;
     }
-  } else {
-    mod->warning("Could not load data values, use DirectInterp if needed.");
+  }
+  else
+  {
+    reporter->warning("Could not load data values onto output field.");
+    reporter->warning("Use DirectInterp if data values are required.");
   }
   
   return true;

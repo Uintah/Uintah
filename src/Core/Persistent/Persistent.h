@@ -161,15 +161,15 @@ public:
   virtual bool block_io(void*, size_t, size_t) { return false; }
 
   SCISHARE friend Piostream* auto_istream(const string& filename,
-                                 ProgressReporter *pr = 0);
+                                 ProgressReporter *pr);
   SCISHARE friend Piostream* auto_ostream(const string& filename, const string& type,
-                                 ProgressReporter *pr = 0);
+                                 ProgressReporter *pr);
 };
 
   SCISHARE Piostream* auto_istream(const string& filename,
-                                   ProgressReporter *pr);
+                                   ProgressReporter *pr = 0);
   SCISHARE Piostream* auto_ostream(const string& filename, const string& type,
-                                   ProgressReporter *pr);
+                                   ProgressReporter *pr = 0);
 
 
 //----------------------------------------------------------------------

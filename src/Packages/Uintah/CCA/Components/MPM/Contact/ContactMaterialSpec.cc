@@ -31,7 +31,7 @@ void ContactMaterialSpec::outputProblemSpec(ProblemSpecP& ps)
       matls.push_back(i);
   }
   
-  ps->appendElement("materials",matls,false,3);
+  ps->appendElement("materials",matls);
 
 }
 

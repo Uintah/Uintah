@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 
 namespace SCITeem {
@@ -60,14 +60,18 @@ private:
 DECLARE_MAKER(UnuSwap)
 UnuSwap::UnuSwap(GuiContext* ctx)
   : Module("UnuSwap", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), onrrd_(0), axisA_(ctx->subVar("axisA")),
-    axisB_(ctx->subVar("axisB"))
+    inrrd_(0),
+    onrrd_(0),
+    axisA_(get_ctx()->subVar("axisA"), 0),
+    axisB_(get_ctx()->subVar("axisB"), 1)
 {
 }
+
 
 UnuSwap::~UnuSwap()
 {
 }
+
 
 void
 UnuSwap::execute()
@@ -86,7 +90,7 @@ UnuSwap::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdAxesSwap(nout, nin, axisA_.get(), axisB_.get())) {
@@ -101,7 +105,7 @@ UnuSwap::execute()
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim && i<nout->dim; i++)
+  for (unsigned int i=0; i<nin->dim && i<nout->dim; i++)
   {
     nout->axis[i].kind = nin->axis[i].kind;
   }

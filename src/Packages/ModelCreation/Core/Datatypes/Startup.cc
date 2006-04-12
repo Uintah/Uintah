@@ -28,6 +28,7 @@
 
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
+#include <Packages/ModelCreation/Core/Fields/Precompile.h>
 
 namespace ModelCreation
 {
@@ -41,9 +42,11 @@ extern "C" void * ModelCreationInit(void *param)
   tvm_help_matrix = Help.gethelp(false);
   tvm_help_field  = Help.gethelp(true);
 
+  std::cout << "Initializing FieldsAlgo\n";
+  Precompile_FieldsAlgo();
+
   return 0;
 }
-
 
 } // end namespace
 

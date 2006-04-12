@@ -27,11 +27,17 @@
 #
 
 
-# GUI for FieldSubSample module
-# by Allen R. Sanderson
-# March 2002
+#    File   : FieldSlicer.tcl
+#    Author : Michael Callahan &&
+#             Allen Sanderson
+#             SCI Institute
+#             University of Utah
+#    Date   : March 2006
+#
+#    Copyright (C) 2006 SCI Group
 
-# This GUI interface is for sub sampling a topologically structured field.
+# This GUI interface is for selecting values for sub sampling a
+# topologically structured field.
 
 itcl_class SCIRun_FieldsCreate_FieldSubSample {
     inherit Module
@@ -44,12 +50,6 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	global power_app_command
 	set    power_app_command ""
 
-	global $this-wrap
-	global $this-dims
-
-	set $this-wrap 0
-	set $this-dims 3
-
 	for {set i 0} {$i < 3} {incr i 1} {
 	    if { $i == 0 } {
 		set index i
@@ -59,28 +59,12 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		set index k
 	    }
 
-	    global $this-$index-dim
-	    global $this-$index-start
-	    global $this-$index-start2
-	    global $this-$index-stop
-	    global $this-$index-stop2
-	    global $this-$index-stride
-	    global $this-$index-stride2
-	    global $this-$index-wrap
-
-	    set $this-$index-dim     2
-	    set $this-$index-start   0
-	    set $this-$index-start2 "0"
-	    set $this-$index-stop    1
-	    set $this-$index-stop2  "1"
-	    set $this-$index-stride    1
-	    set $this-$index-stride2  "1"
-	    set $this-$index-wrap    0
-
-	    trace variable $this-$index-dim w "$this update_setsize_callback"
+	    global $this-dim-$index
+	    trace variable $this-dim-$index w "$this update_set_size_callback"
 	}
 	
-	trace variable $this-dims w "$this update_setsize_callback"
+	global $this-dims
+	trace variable $this-dims w "$this update_set_size_callback"
     }
 
     method set_power_app_cmd { cmd } {
@@ -118,7 +102,7 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	label $w.main.l.stride    -text "Stride" -width 6 -anchor w -just left
 	label $w.main.l.wrap      -text "Wrap"   -width 4 -anchor w -just left
 
-	pack $w.main.l.direction -side left
+	pack $w.main.l.direction -side left -padx  20
 	pack $w.main.l.start     -side left -padx  70
 	pack $w.main.l.stop      -side left -padx 110
 	pack $w.main.l.stride    -side left -padx  40
@@ -135,46 +119,48 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		set index k
 	    }
 
-	    global $this-$index-dim
-	    global $this-$index-start
-	    global $this-$index-start2
-	    global $this-$index-stop
-	    global $this-$index-stop2
-	    global $this-$index-stride
-	    global $this-$index-stride2
-	    global $this-$index-wrap
+	    global $this-dim-$index
+	    global $this-start-$index
+	    global $this-start2-$index
+	    global $this-stop-$index
+	    global $this-stop2-$index
+	    global $this-stride-$index
+	    global $this-stride2-$index
+	    global $this-wrap-$index
 
 	    # Update the sliders to have the new end values.
 	    if { [set $this-wrap] == 0 } {    
-		set $this-$index-wrap 0
+		set $this-wrap-$index 0
 	    }
 
-	    if [set $this-$index-wrap] {
+	    if [set $this-wrap-$index] {
 		set start_val 0
-		set stop_val [expr [set $this-$index-dim] - 1]
+		set stop_val [expr [set $this-dim-$index] - 1]
 	    } else {
 		set start_val 1
-		set stop_val [expr [set $this-$index-dim] - 2]
+		set stop_val [expr [set $this-dim-$index] - 2]
 	    }
 
 	    frame $w.main.$index
 
-	    label $w.main.$index.l -text " $index :" -width 3 -anchor w -just left
+	    label $w.main.$index.l -text " $index :" \
+		-width 3 -anchor w -just left
 
 	    pack $w.main.$index.l -side left
 
 	    scaleEntry4 $w.main.$index.start \
 		0 $stop_val 200 \
-		$this-$index-start $this-$index-start2 $index
+		$this-start-$index $this-start2-$index $index
 
 	    scaleEntry2 $w.main.$index.stop \
-		$start_val [expr [set $this-$index-dim] - 1] 200 \
-		$this-$index-stop $this-$index-stop2
+		$start_val [expr [set $this-dim-$index] - 1] 200 \
+		$this-stop-$index $this-stop2-$index
 
 	    scaleEntry2 $w.main.$index.stride \
-		1 [expr [set $this-$index-dim] - 1] 100 $this-$index-stride $this-$index-stride2
+		1 [expr [set $this-dim-$index] - 1] 100 \
+		$this-stride-$index $this-stride2-$index
 
-	    checkbutton $w.main.$index.wrap -variable $this-$index-wrap \
+	    checkbutton $w.main.$index.wrap -variable $this-wrap-$index \
 		    -state $wrap -disabledforeground "" \
 		    -command "$this wrap $index"
 
@@ -185,7 +171,8 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	}
 
 	if { [set $this-dims] == 3 } {
-	    pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
+	    pack $w.main.l $w.main.i $w.main.j $w.main.k \
+		-side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 2 } {
 	    pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 1 } {
@@ -243,12 +230,12 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
     method wrap { index } {
 
-	global $this-$index-start
-	global $this-$index-start2
-	global $this-$index-stop
-	global $this-$index-stop2
-	global $this-$index-dim
-	global $this-$index-wrap
+	global $this-start-$index
+	global $this-start2-$index
+	global $this-stop-$index
+	global $this-stop2-$index
+	global $this-dim-$index
+	global $this-wrap-$index
 
 	set w .ui[modname]
 
@@ -256,21 +243,22 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
 	    # Update the sliders to have the new end values.
 
-	    if [ set $this-$index-wrap ] {
+	    if [ set $this-wrap-$index ] {
 		set start_val 0
-		set stop_val  [expr [set $this-$index-dim] - 1]
+		set stop_val  [expr [set $this-dim-$index] - 1]
 	    } else {
-		set start_val [expr [set $this-$index-start] + 1]
-		set stop_val  [expr [set $this-$index-dim] - 2]
+		set start_val [expr [set $this-start-$index] + 1]
+		set stop_val  [expr [set $this-dim-$index] - 2]
 	    }
 
 	    $w.main.$index.start.s configure -from 0 -to $stop_val
-	    $w.main.$index.stop.s configure -from $start_val -to [expr [set $this-$index-dim] - 1]
+	    $w.main.$index.stop.s configure \
+		-from $start_val -to [expr [set $this-dim-$index] - 1]
 
 	    bind $w.main.$index.start.e <KeyRelease> \
-		"$this manualSliderEntry4 0 $stop_val $this-$index-start $this-$index-start2 $index"
+		"$this manualSliderEntry4 0 $stop_val $this-start-$index $this-start2-$index $index"
 	    bind $w.main.$index.stop.e  <KeyRelease> \
-		"$this manualSliderEntry $start_val  [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
+		"$this manualSliderEntry $start_val [expr [set $this-dim-$index] - 1] $this-stop-$index $this-stop2-$index"
 	}
     }
 
@@ -293,15 +281,15 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
     method updateSliderEntry4 { index someUknownVar } {
 
-	global $this-$index-start
-	global $this-$index-start2
-	global $this-$index-stop
-	global $this-$index-stop2
+	global $this-start-$index
+	global $this-start2-$index
+	global $this-stop-$index
+	global $this-stop2-$index
 
 	wrap $index
 
-	set $this-$index-start2 [set $this-$index-start]
-	set $this-$index-stop2  [set $this-$index-stop]
+	set $this-start2-$index [set $this-start-$index]
+	set $this-stop2-$index  [set $this-stop-$index]
     }
 
     method manualSliderEntry4 { start stop var1 var2 index } {
@@ -320,32 +308,30 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	updateSliderEntry4 $index 0
     }
 
-    method update_setsize_callback { name1 name2 op } {
-	global $this-dims
-	global $this-i-dim
-	global $this-j-dim
-	global $this-k-dim
-	global $this-wrap
+    method update_index { } {
+	global $this-index-i
+	global $this-index-j
+	global $this-index-k
 
-	set_size [set $this-dims] \
-	    [set $this-i-dim] \
-	    [set $this-j-dim] \
-	    [set $this-k-dim] \
-	    [set $this-wrap]
+	global $this-index2-i
+	global $this-index2-j
+	global $this-index2-k
+
+	set $this-index2-i [set $this-index-i]
+	set $this-index2-j [set $this-index-j]
+	set $this-index2-k [set $this-index-k]
     }
 
-    method set_size { dims idim jdim kdim wrap } {
+    method update_set_size_callback { name1 name2 op } {
+	set_size
+    }
+
+    method set_size { } {
 	global $this-dims
 	global $this-i-dim
 	global $this-j-dim
 	global $this-k-dim
 	global $this-wrap
-
-	set $this-dims  $dims
-	set $this-i-dim $idim
-	set $this-j-dim $jdim
-	set $this-k-dim $kdim
-	set $this-wrap  $wrap
 
 	set w .ui[modname]
 
@@ -355,7 +341,8 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    pack forget $w.main.j
 	    
 	    if { [set $this-dims] == 3 } {
-		pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
+		pack $w.main.l $w.main.i $w.main.j $w.main.k \
+		    -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 2 } {
 		pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 1 } {
@@ -372,17 +359,17 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		set index k
 	    }
 
-	    global $this-$index-start
-	    global $this-$index-start2
-	    global $this-$index-stop
-	    global $this-$index-stop2
-	    global $this-$index-stride
-	    global $this-$index-stride2
+	    global $this-start-$index
+	    global $this-start2-$index
+	    global $this-stop-$index
+	    global $this-stop2-$index
+	    global $this-stride-$index
+	    global $this-stride2-$index
 
-	    set $this-$index-wrap 0
+	    set $this-wrap-$index 0
 
-	    set stop_val1 [expr [set $this-$index-dim] - 1]
-	    set stop_val2 [expr [set $this-$index-dim] - 2]
+	    set stop_val1 [expr [set $this-dim-$index] - 1]
+	    set stop_val2 [expr [set $this-dim-$index] - 2]
 
 	    if [ expr [winfo exists $w] ] {
 
@@ -398,22 +385,22 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		$w.main.$index.stride.s  configure -from 1 -to $stop_val1
 
 		bind $w.main.$index.start.e <KeyRelease> \
-		    "$this manualSliderEntry4 0 $stop_val2 $this-$index-start $this-$index-start2 $index"
+		    "$this manualSliderEntry4 0 $stop_val2 $this-start-$index $this-start2-$index $index"
 		bind $w.main.$index.stop.e  <KeyRelease> \
-		    "$this manualSliderEntry  1 $stop_val1 $this-$index-stop $this-$index-stop2"
+		    "$this manualSliderEntry  1 $stop_val1 $this-stop-$index $this-stop2-$index"
 		bind $w.main.$index.stride.e  <KeyRelease> \
-		    "$this manualSliderEntry  1 $stop_val1 $this-$index-stride $this-$index-stride2"
+		    "$this manualSliderEntry  1 $stop_val1 $this-stride-$index $this-stride2-$index"
 	    }
 
 	    # Update the stop values to be at the initials values.
-	    set $this-$index-start 0	    
-	    set $this-$index-stop  $stop_val1
-	    set $this-$index-stride  1
+	    set $this-start-$index 0	    
+	    set $this-stop-$index  $stop_val1
+	    set $this-stride-$index  1
 
 	    # Update the text values.
-	    set $this-$index-start2 [set $this-$index-start]
-	    set $this-$index-stop2  [set $this-$index-stop]
-	    set $this-$index-stride2  [set $this-$index-stride]
+	    set $this-start2-$index  [set $this-start-$index]
+	    set $this-stop2-$index   [set $this-stop-$index]
+	    set $this-stride2-$index [set $this-stride-$index]
 	}
     }
 }

@@ -33,20 +33,9 @@ catch {rename Teem_UnuAtoM_UnuHeq ""}
 
 itcl_class Teem_UnuAtoM_UnuHeq {
     inherit Module
+
     constructor {config} {
         set name UnuHeq
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-bins
-        set $this-bins 0
-
-        global $this-sbins
-        set $this-sbins 0
-
-	global $this-amount
-	set $this-amount {1.0}
-
     }
 
     method ui {} {

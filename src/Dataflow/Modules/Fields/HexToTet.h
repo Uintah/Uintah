@@ -57,7 +57,8 @@ typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 class HexToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle &dst) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -69,14 +70,15 @@ class HexToTetAlgoT : public HexToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle& dst);
 };
 
 
 template <class FSRC>
 bool
-HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-			     ProgressReporter *mod)
+HexToTetAlgoT<FSRC>::execute(ProgressReporter *reporter,
+                             FieldHandle srcH, FieldHandle& dstH) 
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
   typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
@@ -98,13 +100,14 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     ++nbi;
   }
 
-  hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
+  hvmesh->synchronize(Mesh::FACE_NEIGHBORS_E);
 
   tvmesh->elem_reserve((unsigned int)hesize * 5);
 
   vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
 
   vector<bool> visited(hesize, false);
+  vector<bool> nodeisdiagonal(hnsize, false);
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   hvmesh->begin(bi); hvmesh->end(ei);
@@ -123,6 +126,13 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       buffers[flipflop].clear();
       buffers[flipflop].push_back(*bi);
 
+      typename FSRC::mesh_type::Node::array_type hvnodes;
+      hvmesh->get_nodes(hvnodes, *bi);
+      nodeisdiagonal[hvnodes[0]] = true;
+      nodeisdiagonal[hvnodes[2]] = true;
+      nodeisdiagonal[hvnodes[5]] = true;
+      nodeisdiagonal[hvnodes[7]] = true;
+
       while (buffers[flipflop].size() > 0)
       {
 	for (unsigned int i = 0; i < buffers[flipflop].size(); i++)
@@ -130,11 +140,16 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 	  if (visited[(unsigned int)buffers[flipflop][i]]) { continue; }
 	  visited[(unsigned int)buffers[flipflop][i]] = true;
 
-	  typename FSRC::mesh_type::Node::array_type hvnodes;
 	  hvmesh->get_nodes(hvnodes, buffers[flipflop][i]);
 	  ASSERT(hvnodes.size() == 8);
-	  if (flipflop)
+
+	  if (nodeisdiagonal[hvnodes[0]] || nodeisdiagonal[hvnodes[2]] ||
+              nodeisdiagonal[hvnodes[5]] || nodeisdiagonal[hvnodes[7]])
 	  {
+            nodeisdiagonal[hvnodes[0]] = true;
+            nodeisdiagonal[hvnodes[2]] = true;
+            nodeisdiagonal[hvnodes[5]] = true;
+            nodeisdiagonal[hvnodes[7]] = true;
 	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[0]),
 			    (TVMesh::Node::index_type)(hvnodes[1]),
 			    (TVMesh::Node::index_type)(hvnodes[2]),
@@ -162,6 +177,10 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 	  }
 	  else
 	  {
+            nodeisdiagonal[hvnodes[1]] = true;
+            nodeisdiagonal[hvnodes[3]] = true;
+            nodeisdiagonal[hvnodes[4]] = true;
+            nodeisdiagonal[hvnodes[6]] = true;
 	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[0]),
 			    (TVMesh::Node::index_type)(hvnodes[1]),
 			    (TVMesh::Node::index_type)(hvnodes[3]),
@@ -241,8 +260,11 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TVMesh::Node::index_type)(i));
     }
-  } else {
-    mod->warning("Could not load data values, use DirectInterp if needed.");
+  }
+  else
+  {
+    reporter->warning("Could not load data values onto output field.");
+    reporter->warning("Use DirectInterp if data values are required.");
   }
 
   dstH->copy_properties(hvfield);
@@ -253,7 +275,8 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 class LatToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle &dst) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -265,14 +288,15 @@ class LatToTetAlgoT : public LatToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
+  virtual bool execute(ProgressReporter *reporter,
+                       FieldHandle src, FieldHandle& dst);
 };
 
 
 template <class FSRC>
 bool
-LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-			     ProgressReporter *mod)
+LatToTetAlgoT<FSRC>::execute(ProgressReporter *reporter,
+                             FieldHandle srcH, FieldHandle& dstH) 
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -401,8 +425,11 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TVMesh::Node::index_type)(unsigned int)(*nbi));
       ++nbi;
     }
-  } else {
-    mod->warning("Could not load data values, use DirectInterp if needed.");
+  }
+  else
+  {
+    reporter->warning("Could not load data values onto output field.");
+    reporter->warning("Use DirectInterp if data values are required.");
   }
   
   dstH->copy_properties(hvfield);

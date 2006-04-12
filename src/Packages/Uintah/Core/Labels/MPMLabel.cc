@@ -236,7 +236,7 @@ MPMLabel::MPMLabel()
   gTemperatureRateLabel = VarLabel::create("g.temperatureRate",
 			NCVariable<double>::getTypeDescription());
 
-  gInternalHeatRateLabel = VarLabel::create("g.internalHeatRate",
+  gdTdtLabel = VarLabel::create("g.dTdt",
 			NCVariable<double>::getTypeDescription());
 
   gExternalHeatRateLabel = VarLabel::create("g.externalHeatRate",
@@ -245,8 +245,8 @@ MPMLabel::MPMLabel()
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
 
-  gThermalContactHeatExchangeRateLabel = 
-     VarLabel::create("g.thermalContactHeatExchangeRate",
+  gThermalContactTemperatureRateLabel = 
+     VarLabel::create("g.thermalContactTemperatureRate",
      NCVariable<double>::getTypeDescription());
 
   gNormTractionLabel = VarLabel::create( "g.normtraction",
@@ -477,14 +477,14 @@ MPMLabel::MPMLabel()
   GExternalHeatRateLabel = VarLabel::create("G.externalheatrate",
                   NCVariable<double>::getTypeDescription());
 
-  GThermalContactHeatExchangeRateLabel = VarLabel::create(
-                  "G.thermalContactHeatExchangeRate",
+  GThermalContactTemperatureRateLabel = VarLabel::create(
+                  "G.thermalContactTemperatureRate",
                   NCVariable<double>::getTypeDescription());
 
   GInternalForceLabel = VarLabel::create("G.internalforce",
                   NCVariable<Vector>::getTypeDescription());
 
-  GInternalHeatRateLabel = VarLabel::create("G.internalHeatRate",
+  GdTdtLabel = VarLabel::create("G.dTdt",
                   NCVariable<double>::getTypeDescription());   
 
   GTemperatureRateLabel = VarLabel::create("G.temperatureRate",
@@ -646,10 +646,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gTemperatureNoBCLabel);
   VarLabel::destroy(gTemperatureStarLabel);
   VarLabel::destroy(gTemperatureRateLabel);
-  VarLabel::destroy(gInternalHeatRateLabel);
+  VarLabel::destroy(gdTdtLabel);
   VarLabel::destroy(gExternalHeatRateLabel);
   VarLabel::destroy(NC_CCweightLabel);
-  VarLabel::destroy(gThermalContactHeatExchangeRateLabel);
+  VarLabel::destroy(gThermalContactTemperatureRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
   VarLabel::destroy(gVolumeLabel);
   VarLabel::destroy(cVolumeLabel);
@@ -730,9 +730,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(GTemperatureNoBCLabel);
   VarLabel::destroy(GExternalForceLabel);
   VarLabel::destroy(GExternalHeatRateLabel);
-  VarLabel::destroy(GThermalContactHeatExchangeRateLabel);
+  VarLabel::destroy(GThermalContactTemperatureRateLabel);
   VarLabel::destroy(GInternalForceLabel);
-  VarLabel::destroy(GInternalHeatRateLabel);
+  VarLabel::destroy(GdTdtLabel);
   VarLabel::destroy(GTemperatureRateLabel);
   VarLabel::destroy(GTemperatureStarLabel);
   VarLabel::destroy(GVelocityStarLabel);

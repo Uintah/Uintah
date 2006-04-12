@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
@@ -72,7 +72,7 @@ DECLARE_MAKER(SegFieldToLatVol)
 
 SegFieldToLatVol::SegFieldToLatVol(GuiContext* ctx)
   : Module("SegFieldToLatVol", ctx, Filter, "Modeling", "BioPSE"), 
-    latVolData_(ctx->subVar("lat_vol_data"))
+    latVolData_(get_ctx()->subVar("lat_vol_data"))
 {
 }
 

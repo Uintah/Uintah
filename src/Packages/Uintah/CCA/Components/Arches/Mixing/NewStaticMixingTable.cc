@@ -57,6 +57,7 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
 
   db->getWithDefault("co_output",d_co_output,false);
   db->getWithDefault("sulfur_chem",d_sulfur_chem,false);
+  db->getWithDefault("soot_precursors",d_soot_precursors,false);
 
   db->require("inputfile",d_inputfile);
   if ((db->findBlock("h_fuel"))&&(db->findBlock("h_air"))) {
@@ -74,8 +75,8 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
     if (!(Enthalpy_index == -1))
       d_H_air=tableLookUp(0.0, 0.0, 0.0, Enthalpy_index);
     else {
-      cout << "No way provided to compute adiabatic enthalpy" << endl;
-      exit (1);
+      throw InvalidValue("No way provided to compute adiabatic enthalpy",
+                         __FILE__, __LINE__);
     }
   }
 }
@@ -125,8 +126,8 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
 	else if (d_adiab_enth_inputs)
 	  adia_enthalpy=interp_adiab_enthalpy;
 	else {
-	  cout << "No way provided to compute adiabatic enthalpy" << endl;
-	  exit (1);
+          throw InvalidValue("No way provided to compute adiabatic enthalpy",
+                             __FILE__, __LINE__);
 	}
 
         if ((inStream.d_initEnthalpy)||
@@ -171,6 +172,11 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   }
   if (d_co_output)
     outStream.d_co=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co_index);  
+  if (d_soot_precursors) {
+    outStream.d_c2h2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, c2h2_index);
+    outStream.d_ch4=tableLookUp(mixFrac, mixFracVars, current_heat_loss, ch4_index);
+  }
+
   /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){
   	cout<<"Temperature for properties outbound is:  "<<outStream.d_temperature<<endl;
   	cout<<"Density for properties outbound is:  "<<outStream.d_density<<endl;
@@ -310,11 +316,15 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   cout << "Preparing to read the inputfile:   " << inputfile << endl;
   ifstream fd(inputfile.c_str());
   if(fd.fail()){
-	cout<<" Unable to open the given input file " << inputfile << endl;
-	exit(1);
+        throw InvalidValue(" Unable to open the given input file " + inputfile,
+                           __FILE__, __LINE__);
   }
-  fd >> d_indepvarscount;
+  std::string header;
+  while (getline(fd, header) && header[0] == '#') { /* skip header lines */ }
+
+  sscanf(header.c_str(), "%i", &d_indepvarscount);
   cout<< "d_indepvars count: " << d_indepvarscount << endl;
+  
   indepvars_names = vector<string>(d_indepvarscount);
   Hl_index = -1;
   F_index = -1;
@@ -324,9 +334,9 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     fd >> indepvars_names[ii];
     if(indepvars_names[ii]== "heat_loss")
 	    Hl_index = ii;
-    else if(indepvars_names[ii]== "mix_frac")
+    else if(indepvars_names[ii]== "mixture_fraction")
 	    F_index = ii;
-    else if(indepvars_names[ii]== "mix_frac_var")
+    else if(indepvars_names[ii]== "mixture_fraction_variance")
 	    Fvar_index = ii;
     cout<<indepvars_names[ii]<<endl;
   }
@@ -358,42 +368,74 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   so2_index = -1;
   so3_index = -1;
   co_index = -1;
+  c2h2_index = -1;
+  ch4_index = -1;
   for (int ii = 0; ii < d_varscount; ii++) {
     fd >> vars_names[ii];
-    if(vars_names[ii]== "Rho" || vars_names[ii]== "density")
+    if(vars_names[ii]==  "density")
 	    Rho_index = ii;
-    else if(vars_names[ii]== "T" || vars_names[ii]== "temperature")
+    else if(vars_names[ii]== "temperature")
 	    T_index = ii;
-    else if(vars_names[ii]== "Cp" || vars_names[ii]== "heat_capacity")
+    else if(vars_names[ii]== "heat_capacity")
 	    Cp_index = ii;
-    else if(vars_names[ii]== "Enthalpy")
+    else if(vars_names[ii]== "enthalpy")
 	    Enthalpy_index = ii;
-    else if(vars_names[ii]== "Hs" || vars_names[ii]== "sensible_heat")
+    else if(vars_names[ii]== "sensible_heat")
 	    Hs_index = ii;
-    else if(vars_names[ii]== "CO2" || vars_names[ii]== "co2")
+    else if(vars_names[ii]== "CO2")
 	    co2_index = ii;
-    else if(vars_names[ii]== "H2O" || vars_names[ii]== "co2")
+    else if(vars_names[ii]== "H2O")
 	    h2o_index = ii;
-    else if(vars_names[ii]== "H2S" || vars_names[ii]== "h2s")
+    else if(vars_names[ii]== "H2S")
 	    h2s_index = ii;
-    else if(vars_names[ii]== "SO2" || vars_names[ii]== "so2")
+    else if(vars_names[ii]== "SO2")
 	    so2_index = ii;
-    else if(vars_names[ii]== "SO3" || vars_names[ii]== "so3")
+    else if(vars_names[ii]== "SO3")
 	    so3_index = ii;
-    else if(vars_names[ii]== "CO" || vars_names[ii]== "co")
+    else if(vars_names[ii]== "CO")
 	    co_index = ii;
+    else if(vars_names[ii]== "C2H2")
+	    c2h2_index = ii;
+    else if(vars_names[ii]== "CH4")
+	     ch4_index = ii;
     cout<<vars_names[ii]<<endl;
   }
-  if ((Hs_index == -1)&&(!(d_adiabatic))) {
-    cout << "No Hs found in table" << endl;
-    exit(1);
-  }
-  cout<<"CO2 index is " << co2_index<<endl;
-  cout<<"H2O index is " << h2o_index<<endl;
-  cout<<"H2S index is " << h2s_index<<endl;
-  cout<<"SO2 index is " << so2_index<<endl;
-  cout<<"SO3 index is " << so3_index<<endl;
-  cout<<"CO index is " << co_index<<endl;
+  if ((F_index == -1)||(Rho_index == -1)) 
+    throw InvalidValue("No mixture fraction or density found in table"
+                       + inputfile, __FILE__, __LINE__);
+
+  if (((Hs_index == -1)||(Hl_index == -1))&&(!(d_adiabatic))) 
+    throw InvalidValue("No sensible heat or heat loss found in table"
+                       + inputfile, __FILE__, __LINE__);
+
+  if ((Fvar_index == -1)&&(d_numMixStatVars > 0)) 
+    throw InvalidValue("No variance found in table" + inputfile,
+                       __FILE__, __LINE__);
+
+  if ((T_index == -1)||(Cp_index == -1)||(co2_index == -1)||(h2o_index == -1)) 
+    throw InvalidValue("No temperature or Cp or CO2 or H2O found in table"
+                       + inputfile, __FILE__, __LINE__);
+  if ((d_sulfur_chem)&&
+      ((h2s_index == -1)||(so2_index == -1)||(so3_index == -1))) 
+    throw InvalidValue("No H2S, SO2 or SO3 for sulfur chemistry found in table"
+                       + inputfile, __FILE__, __LINE__);
+
+  if ((d_co_output)&&(co_index == -1))
+    throw InvalidValue("No CO found in table" + inputfile,
+                       __FILE__, __LINE__);
+
+  if ((d_soot_precursors)&&((c2h2_index == -1)||(ch4_index == -1)))
+    throw InvalidValue("No C2H2 or CH4 found in table" + inputfile,
+                       __FILE__, __LINE__);
+
+  cout << "CO2 index is "  << co2_index  << endl;
+  cout << "H2O index is "  << h2o_index  << endl;
+  cout << "H2S index is "  << h2s_index  << endl;
+  cout << "SO2 index is "  << so2_index  << endl;
+  cout << "SO3 index is "  << so3_index  << endl;
+  cout << "CO index is "   << co_index   << endl;
+  cout << "C2H2 index is " << c2h2_index << endl;
+  cout << "CH4 index is "  << ch4_index  << endl;
 
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);

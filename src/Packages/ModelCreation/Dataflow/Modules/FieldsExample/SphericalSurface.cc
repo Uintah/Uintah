@@ -30,12 +30,13 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Packages/ModelCreation/Core/Fields/ExampleFields.h>
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 namespace ModelCreation {
 
@@ -56,8 +57,8 @@ private:
 DECLARE_MAKER(SphericalSurface)
 SphericalSurface::SphericalSurface(GuiContext* ctx)
   : Module("SphericalSurface", ctx, Source, "FieldsExample", "ModelCreation"),
-    guidiscretization_(ctx->subVar("discretization")),
-    guiradius_(ctx->subVar("radius"))    
+    guidiscretization_(get_ctx()->subVar("discretization")),
+    guiradius_(get_ctx()->subVar("radius"))    
 {
 }
 
@@ -87,7 +88,7 @@ void
   
   MatrixHandle radius, disc;
 
-  MatrixConverter mc(dynamic_cast<ProgressReporter *>(this));
+  ConverterAlgo mc(dynamic_cast<ProgressReporter *>(this));
   
   if (!(disc_port->get(disc))) mc.DoubleToMatrix(guidiscretization_.get(),disc);
   if (!(radius_port->get(radius))) mc.DoubleToMatrix(guiradius_.get(),radius);

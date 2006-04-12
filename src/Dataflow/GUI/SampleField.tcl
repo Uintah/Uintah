@@ -31,33 +31,9 @@ package require Iwidgets 3.0
 
 itcl_class SCIRun_FieldsCreate_SampleField {
     inherit Module
+
     constructor {config} {
         set name SampleField
-
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-wtype
-	global $this-maxseeds
-	global $this-dist
-	global $this-numseeds
-	global $this-rngseed
-	global $this-rnginc
-	global $this-whichtab
-        global $this-clamp
-        global $this-autoexecute
-        global $this-force-rake-reset
-	set $this-wtype rake
-	set $this-maxseeds 15
-	set $this-dist uniuni
-	set $this-numseeds 10
-	set $this-rngseed 1
-	set $this-rnginc 1
-	set $this-whichtab Widget
-        set $this-clamp 0
-        set $this-autoexecute 1
-        set $this-force-rake-reset 0
     }
 
     method ui {} {

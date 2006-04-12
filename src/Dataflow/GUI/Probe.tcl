@@ -29,46 +29,9 @@
 
 itcl_class SCIRun_FieldsCreate_Probe {
     inherit Module
+
     constructor {config} {
         set name Probe	
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-main_frame
-	set $this-main_frame ""
-
-	global $this-value
-	global $this-show-value
-	global $this-locx
-	global $this-locy
-	global $this-locz
-	global $this-node
-	global $this-edge
-	global $this-face
-	global $this-cell
-	global $this-show-node
-	global $this-show-edge
-	global $this-show-face
-	global $this-show-cell
-	global $this-moveto
-	global $this-probe_scale
-
-	set $this-value ""
-	set $this-show-value 1
-	set $this-locx ""
-	set $this-locy ""
-	set $this-locz ""
-	set $this-node ""
-	set $this-edge ""
-	set $this-face ""
-	set $this-cell ""
-	set $this-show-node 1
-	set $this-show-edge 0
-	set $this-show-face 0
-	set $this-show-cell 1
-	set $this-moveto ""
-	set $this-probe_scale 5.0
     }
 
     method move_location {} {

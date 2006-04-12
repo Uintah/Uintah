@@ -46,21 +46,20 @@ Models_PetscSolver::~Models_PetscSolver()
 void 
 Models_PetscSolver::outputProblemSpec(ProblemSpecP& ps)
 {
-  ps->appendElement("linear_solver","petsc",false,4);
+  ps->appendElement("linear_solver","petsc");
 
-  ProblemSpecP solver_ps = ps->appendChild("LinearSolver",true,4);
+  ProblemSpecP solver_ps = ps->appendChild("LinearSolver");
 
-  solver_ps->appendElement("underrelax",d_underrelax,false,4);
-  solver_ps->appendElement("max_iter", d_maxSweeps,false,4);
+  solver_ps->appendElement("underrelax",d_underrelax);
+  solver_ps->appendElement("max_iter", d_maxSweeps);
   if (d_shsolver) 
-    solver_ps->appendElement("ksptype", d_kspType,false,4);
-  solver_ps->appendElement("tolerance", d_tolerance,false,4);
-  solver_ps->appendElement("pctype", d_pcType,false,4);
+    solver_ps->appendElement("ksptype", d_kspType);
+  solver_ps->appendElement("tolerance", d_tolerance);
+  solver_ps->appendElement("pctype", d_pcType);
   if (d_pcType == "asm")
-    solver_ps->appendElement("overlap", d_overlap,false,4);
+    solver_ps->appendElement("overlap", d_overlap);
   if (d_pcType == "ilu")
-    solver_ps->appendElement("fill", d_fill,false,4);
-
+    solver_ps->appendElement("fill", d_fill);
 }
 
 // ****************************************************************************
@@ -533,7 +532,13 @@ Models_PetscSolver::radLinearSolve()
   ierr = MatMult(A, d_x, u_tmp);
   if(ierr)
     throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
-  ierr = VecAXPY(&neg_one, d_b, u_tmp);
+#if (PETSC_VERSION_MINOR == 2)
+    ierr = VecAXPY(&neg_one, d_b, u_tmp);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+    ierr = VecAXPY(u_tmp,neg_one, d_b);
+#endif
+
   if(ierr)
     throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
@@ -646,7 +651,12 @@ Models_PetscSolver::radLinearSolve()
   ierr = MatMult(A, d_x, d_u);
   if(ierr)
     throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
+#if (PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, d_u);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+  ierr = VecAXPY(d_u,neg_one, d_b);
+#endif
   if(ierr)
     throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(d_u,NORM_2,&norm);

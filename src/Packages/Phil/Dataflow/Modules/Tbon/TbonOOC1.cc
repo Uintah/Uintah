@@ -20,7 +20,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <iostream>
 #include <fstream>
@@ -45,7 +45,7 @@ class TbonOOC1 : public Module {
 public:
 
   // Functions required by Module inheritance
-  TbonOOC1(const clString& id);
+  TbonOOC1(const clString& get_id());
   virtual ~TbonOOC1();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -81,17 +81,17 @@ private:
 
 
 // More required stuff...
-extern "C" Module* make_TbonOOC1(const clString& id){
-  return new TbonOOC1(id);
+extern "C" Module* make_TbonOOC1(const clString& get_id()){
+  return new TbonOOC1(get_id());
 }
 
 
 // Constructor
-TbonOOC1::TbonOOC1(const clString& id) 
-  : Module("TbonOOC1", id, Filter), metafilename("metafilename",id,this), 
-    nodebricksize("nodebricksize",id,this), 
-    databricksize("databricksize",id,this), isovalue("isovalue",id,this),
-    timevalue("timevalue",id,this)
+TbonOOC1::TbonOOC1(const clString& get_id()) 
+  : Module("TbonOOC1", get_id(), Filter), metafilename("metafilename",get_id(),this), 
+    nodebricksize("nodebricksize",get_id(),this), 
+    databricksize("databricksize",get_id(),this), isovalue("isovalue",get_id(),this),
+    timevalue("timevalue",get_id(),this)
 {
   timevalue.set(0);
   isovalue.set(0);
@@ -166,7 +166,7 @@ TbonOOC1::execute()
     tbon = new TbonTreeOOC1<type>( treesmeta, NODEBRICKS, DATABRICKS );
     
     // update UI to reflect current values
-    TCL::execute( id + " updateFrames");
+    TCL::execute( get_id() + " updateFrames");
 
     processQuery();
   } else {
@@ -258,7 +258,7 @@ TbonOOC1::preprocess( ifstream& metafile ) {
 //  processes a single (time,iso) query
 void
 TbonOOC1::processQuery() {
-  static int id = -1;
+  static int get_id() = -1;
   static int gotasurface = 0;
   iotimer_t t0, t1;
 
@@ -294,8 +294,8 @@ TbonOOC1::processQuery() {
     // send surface to output port
     if( havemonitor )
       crowdmonitor->writeUnlock();
-    if( gotasurface && id == -1 ) {
-      id = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry",
+    if( gotasurface && get_id() == -1 ) {
+      get_id() = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry",
 			    crowdmonitor );
     }
     if( gotasurface ) {
@@ -335,8 +335,8 @@ TbonOOC1::processQuery() {
       if( havemonitor )
 	crowdmonitor->writeUnlock();
 
-      if( gotasurface && id == -1 ) {
-	id = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry", 
+      if( gotasurface && get_id() == -1 ) {
+	get_id() = geomout->addObj( new GeomMaterial( surface, matl ), "Geometry", 
 			      crowdmonitor );
       }
       if( gotasurface ) {

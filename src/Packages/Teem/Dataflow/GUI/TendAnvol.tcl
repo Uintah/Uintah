@@ -33,18 +33,9 @@ catch {rename Teem_Tend_TendAnvol ""}
 
 itcl_class Teem_Tend_TendAnvol {
     inherit Module
+
     constructor {config} {
         set name TendAnvol
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-aniso_metric
-        set $this-aniso_metric  "tenAniso_FA"
-
-        global $this-threshold
-        set $this-threshold 0.5
-
-
     }
 
     method ui {} {

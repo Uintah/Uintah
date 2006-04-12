@@ -16,9 +16,9 @@ UNUSED_TESTS = [   ("methane_explicit", "methane_explicit_table.ups", "", 1.1, "
 TESTS = []
 
 def chemfile (test):
-    return test[5]
+    return test[4]
 
-def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
+def chemfileCallback (test, susdir, inputsdir, compare_root, mode, max_parallelism):
   symlink("%s/input.dtd" % (inputsdir), "input.dtd")
   cfile = chemfile(test)
   if platform[0:5] == "linux":
@@ -27,5 +27,5 @@ def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_par
       cfile = cfile + ".bin"
   symlink("%s/chem_bins/%s" % (inputsdir, cfile), "chem.bin")
 
-exit(runSusTests(argv, TESTS, "arches", chemfileCallback))
+exit(runSusTests(argv, TESTS, "ARCHES", chemfileCallback))
 

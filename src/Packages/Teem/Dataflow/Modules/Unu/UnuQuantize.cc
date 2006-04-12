@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <sstream>
 #include <iostream>
@@ -79,13 +79,13 @@ DECLARE_MAKER(UnuQuantize)
 
 UnuQuantize::UnuQuantize(GuiContext *ctx)
   : Module("UnuQuantize", ctx, Filter, "UnuNtoZ", "Teem"),
-    minf_(ctx->subVar("minf")),
-    maxf_(ctx->subVar("maxf")),
-    useinputmin_(ctx->subVar("useinputmin")),
-    useinputmax_(ctx->subVar("useinputmax")),
-    realmin_(ctx->subVar("realmin")),
-    realmax_(ctx->subVar("realmax")),
-    nbits_(ctx->subVar("nbits")), last_minf_(0),
+    minf_(get_ctx()->subVar("minf")),
+    maxf_(get_ctx()->subVar("maxf")),
+    useinputmin_(get_ctx()->subVar("useinputmin")),
+    useinputmax_(get_ctx()->subVar("useinputmax")),
+    realmin_(get_ctx()->subVar("realmin")),
+    realmax_(get_ctx()->subVar("realmax")),
+    nbits_(get_ctx()->subVar("nbits")), last_minf_(0),
     last_maxf_(0), last_nbits_(0), last_generation_(-1), last_nrrdH_(0)
 {
 }
@@ -110,7 +110,7 @@ UnuQuantize::execute()
 
   if (last_generation_ != nrrdH->generation) {
     // set default values for min,max
-    NrrdRange *range = nrrdRangeNewSet(nrrdH->nrrd, nrrdBlind8BitRangeState);
+    NrrdRange *range = nrrdRangeNewSet(nrrdH->nrrd_, nrrdBlind8BitRangeState);
     realmin_.set(range->min);
     realmax_.set(range->max);
     nrrdRangeNix(range);
@@ -119,8 +119,6 @@ UnuQuantize::execute()
     useinputmin_.reset();
     useinputmax_.reset();
   }
-
-
 
   double minf=minf_.get();
   double maxf=maxf_.get();
@@ -149,20 +147,20 @@ UnuQuantize::execute()
   last_generation_ = nrrdH->generation;
   nrrdH.detach(); 
 
-  Nrrd *nin = nrrdH->nrrd;
+  Nrrd *nin = nrrdH->nrrd_;
 
-  msgStream_ << "Quantizing -- min="<<minf<<
+  msg_stream_ << "Quantizing -- min="<<minf<<
     " max="<<maxf<<" nbits="<<nbits<<endl;
   NrrdRange *range = nrrdRangeNew(minf, maxf);
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdQuantize(nrrd->nrrd, nin, range, nbits)) {
+  if (nrrdQuantize(nrrd->nrrd_, nin, range, nbits)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble quantizing: ") + err);
     free(err);
     return;
   }
 
-  nrrdKeyValueCopy(nrrd->nrrd, nin);
+  nrrdKeyValueCopy(nrrd->nrrd_, nin);
   last_minf_ = minf;
   last_maxf_ = maxf;
   last_nbits_ = nbits;

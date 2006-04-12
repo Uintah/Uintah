@@ -31,17 +31,9 @@
 
 itcl_class Teem_Tend_TendExpand {
     inherit Module
+
     constructor {config} {
         set name TendExpand
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-threshold
-	set $this-threshold 0.5
-
-	global $this-scale
-	set $this-scale 1.0
     }
 
     method ui {} {

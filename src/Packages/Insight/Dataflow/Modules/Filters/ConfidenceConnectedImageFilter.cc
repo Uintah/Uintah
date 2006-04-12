@@ -115,8 +115,8 @@ ConfidenceConnectedImageFilter::set_image_variables(itk::Object *obj) {
   for(int i=0; i<(int)keys.size(); i++) {
     string value;
     if(itk::ExposeMetaData<string>(dic, keys[i], value)) {
-      //      cerr << id << ": "<< keys[i] << ", " << value << std::endl;
-      GuiContext *subvar = ctx->find_child(keys[i]);
+      //      cerr << get_id() << ": "<< keys[i] << ", " << value << std::endl;
+      GuiContext *subvar = get_ctx()->find_child(keys[i]);
       if (subvar)
         subvar->set(value);
     }
@@ -180,8 +180,8 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   
     // for each defined object, clear gui
   
-    gui->execute(id.c_str() + string(" clear_seed_point_gui"));
-    gui->execute(id.c_str() + string(" init_seed_point_dimensions"));
+    get_gui()->execute(get_id().c_str() + string(" clear_seed_point_gui"));
+    get_gui()->execute(get_id().c_str() + string(" init_seed_point_dimensions"));
     
     execute_ = false;
   }
@@ -201,7 +201,7 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
     ostringstream str;
     str << "seed_point" << i;
     
-    gui_seed_point_.push_back(new GuiInt(ctx->subVar(str.str())));
+    gui_seed_point_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
 
   }
 
@@ -255,11 +255,11 @@ DECLARE_MAKER(ConfidenceConnectedImageFilter)
 
 ConfidenceConnectedImageFilter::ConfidenceConnectedImageFilter(GuiContext* ctx)
   : Module("ConfidenceConnectedImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_number_of_iterations_(ctx->subVar("number_of_iterations")),
-     gui_multiplier_(ctx->subVar("multiplier")),
-     gui_replace_value_(ctx->subVar("replace_value")),
-     gui_initial_radius_(ctx->subVar("initial_radius")),
-     gui_dimension_(ctx->subVar("dimension")), 
+     gui_number_of_iterations_(get_ctx()->subVar("number_of_iterations")),
+     gui_multiplier_(get_ctx()->subVar("multiplier")),
+     gui_replace_value_(get_ctx()->subVar("replace_value")),
+     gui_initial_radius_(get_ctx()->subVar("initial_radius")),
+     gui_dimension_(get_ctx()->subVar("dimension")), 
      last_InputImage_(-1)
 {
   filter_ = 0;
@@ -269,8 +269,6 @@ ConfidenceConnectedImageFilter::ConfidenceConnectedImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &ConfidenceConnectedImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &ConfidenceConnectedImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 
 }
 

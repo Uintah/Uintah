@@ -29,7 +29,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_MAPPINGMATRIXTOFIELD_H
 #define MODELCREATION_CORE_FIELDS_MAPPINGMATRIXTOFIELD_H 1
 
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 namespace ModelCreation {
 
@@ -42,15 +42,15 @@ class MappingMatrixToFieldAlgo : public DynamicAlgoBase
 
 };
 
-template<class FIELD, class OFIELD>
+template<class FIELD, class OFIELD, class OFIELD2>
 class MappingMatrixToFieldAlgoT: public MappingMatrixToFieldAlgo
 {
   public:
     virtual bool MappingMatrixToField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle mapping);
 };
 
-template<class FIELD, class OFIELD>
-bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::MappingMatrixToField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle mapping)
+template<class FIELD, class OFIELD, class OFIELD2>
+bool MappingMatrixToFieldAlgoT<FIELD,OFIELD,OFIELD2>::MappingMatrixToField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle mapping)
 {
   FIELD *field = dynamic_cast<FIELD *>(input.get_rep());
   if (field == 0)
@@ -83,15 +83,15 @@ bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::MappingMatrixToField(ProgressRepor
   }
 
   typename FIELD::mesh_type *mesh = dynamic_cast<typename FIELD::mesh_type *>(field->mesh().get_rep());  
-  typename FIELD::mesh_typ::Elem::size_type nelems;
-  typename FIELD::mesh_typ::Node::size_type nnodes;
+  typename FIELD::mesh_type::Elem::size_type nelems;
+  typename FIELD::mesh_type::Node::size_type nnodes;
   mesh->size(nelems);
   mesh->size(nnodes);
 
-  if (m == nnodes)
+  if (m == nelems)
   {
-    output = dynamic_cast<Field*>(scinew OFIELD(field->mesh,0));
-    OFIELD *ofield = dynamic_cast<OFIELD*>(output.get_rep());
+    output = dynamic_cast<Field*>(scinew OFIELD2(mesh));
+    OFIELD2 *ofield = dynamic_cast<OFIELD2*>(output.get_rep());
 
     if (ofield == 0)
     {
@@ -111,9 +111,9 @@ bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::MappingMatrixToField(ProgressRepor
       ++bei;
     }
   }  
-  else if (m == nelems)
+  else if (m == nnodes)
   {
-    output = dynamic_cast<Field*>(scinew OFIELD(field->mesh,1));
+    output = dynamic_cast<Field*>(scinew OFIELD(mesh));
     OFIELD *ofield = dynamic_cast<OFIELD*>(output.get_rep());
 
     if (ofield == 0)
@@ -123,13 +123,13 @@ bool MappingMatrixToFieldAlgoT<FIELD,OFIELD>::MappingMatrixToField(ProgressRepor
     }
 
     typename FIELD::mesh_type::Node::iterator bni, eni;
-    typename FIELD::value_type val;
+    typename OFIELD::value_type val;
     mesh->begin(bni); mesh->end(eni); 
     
     size_t p = 0;
     while (bni != eni)
     {
-      val = static_cast<typename FIELD::value_type>(cc[p++]);
+      val = static_cast<typename OFIELD::value_type>(cc[p++]);
       ofield->set_value(val,(*bni));    
       ++bni;
     }

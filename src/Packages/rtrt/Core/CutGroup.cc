@@ -72,7 +72,7 @@ void CutGroup::light_intersect(Ray& ray, HitInfo& hit,
 
 
   //see intersect for an idea of what is going on here
-  double min_t = MAXDOUBLE;
+  double min_t = DBL_MAX;
   if (!bbox.intersect(ray, min_t)) return;
 
   if (on) {
@@ -130,7 +130,7 @@ void CutGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
   //basic idea, check if we hit the cuttplane first. If we do check the interiors.
-  double min_t = MAXDOUBLE;
+  double min_t = DBL_MAX;
   if (!bbox.intersect(ray, min_t)) return;
 
   if (on) {

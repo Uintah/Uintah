@@ -71,10 +71,7 @@ std::string CorbaPortInstance::getUniqueName()
 
 PortInstance::PortType CorbaPortInstance::portType()
 {
-  if(porttype == Provides)
-    return PortInstance::From;
-  else
-    return PortInstance::To;
+  return porttype;
 }
 
 bool CorbaPortInstance::connect(PortInstance* to)

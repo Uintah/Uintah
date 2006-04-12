@@ -104,7 +104,11 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial
   
   // Set up the fake nrrd we can use to setup the gage stuff
   Nrrd *nin = nrrdNew();
-  nrrdWrap(nin, data.get_dataptr(), nrrdTypeShort, 3, nx, ny, nz);
+  size_t size[NRRD_DIM_MAX];
+  size[0] = nx;
+  size[1] = ny;
+  size[2] = nz;
+  nrrdWrap_nva(nin, data.get_dataptr(), nrrdTypeShort, 3, size);
   // Setup the spacing for the data.  This assums node centered data,
   // which is what rtrt uses.
   nin->axis[0].spacing = diag.x()/(nx-1);
@@ -390,6 +394,8 @@ int
 SketchMaterial<ArrayType, DataType>::rtrtGageProbe(gageContext *ctx,
 						gage_t x, gage_t y, gage_t z)
 {
+  cerr << "rtrtGageProbe is not yet implemented\n";
+#if 0
   //  char me[]="rtrtgageProbe";
   
   if (_gageLocationSet(ctx, x, y, z)) {
@@ -398,7 +404,7 @@ SketchMaterial<ArrayType, DataType>::rtrtGageProbe(gageContext *ctx,
     return 1;
   } 
     
-  for (int i=0; i<ctx->numPvl; i++) {
+  for (int i=0; i<ctx->pvlNum; i++) {
     // Need to copy the data over to the iv3 struct in pvl
     gage_t *iv3 = ctx->pvl[i]->iv3;
     // This is the filter diameter.  You will have to copy fd*fd*fd
@@ -447,6 +453,7 @@ SketchMaterial<ArrayType, DataType>::rtrtGageProbe(gageContext *ctx,
   }
   
   /* fprintf(stderr, "##%s: bingo 5\n", me); */
+#endif
   return 0;
 }
   

@@ -11,7 +11,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
@@ -33,18 +33,18 @@ class OlegSHARE MatrixReceive : public Module
  MatrixOPort *omat2;
 
 public:
-  MatrixReceive(const clString& id);
+  MatrixReceive(const clString& get_id());
   virtual ~MatrixReceive();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" OlegSHARE Module* make_MatrixReceive(const clString& id) {
-  return scinew MatrixReceive(id);
+extern "C" OlegSHARE Module* make_MatrixReceive(const clString& get_id()) {
+  return scinew MatrixReceive(get_id());
 }
 
-MatrixReceive::MatrixReceive(const clString& id)
-  : Module("MatrixReceive", id, Source, "DataIO", "Oleg") , hpTCL("hpTCL",id,this)
+MatrixReceive::MatrixReceive(const clString& get_id())
+  : Module("MatrixReceive", get_id(), Source, "DataIO", "Oleg") , hpTCL("hpTCL",get_id(),this)
 {
     imat1=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(imat1);

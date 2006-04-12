@@ -75,6 +75,15 @@ public:
 
   enum
   { 
+    UNKNOWN		= 0,
+    STRUCTURED		= 1 << 1,
+    UNSTRUCTURED	= 1 << 2,
+    REGULAR		= 1 << 3,
+    IRREGULAR   	= 1 << 4
+  };
+
+  enum
+  { 
     NONE_E		= 0,
     NODES_E		= 1 << 0,
     EDGES_E		= 1 << 1,
@@ -95,6 +104,7 @@ public:
   virtual bool has_normals() const { return false; }
   virtual bool is_editable() const { return false; } // supports add_elem(...)
   virtual int  dimensionality() const = 0;
+  virtual int  topology_geometry() const = 0;
   virtual bool get_dim(vector<unsigned int>&) const { return false;  }
   // Required interfaces
   

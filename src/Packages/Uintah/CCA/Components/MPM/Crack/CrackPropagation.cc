@@ -121,7 +121,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
             double KII = cfSegK[m][i].y();
 	    double Vc  = cfSegVel[m][i];
 	    // If KI less than zero, set it to zero.
-	    if(KI<0.) KI=0.;    	    
+	    // if(KI<0.) KI=0.;    	    
 	     
             // Determine if the node propagates and the propagation direction
             cp[i]=NO;

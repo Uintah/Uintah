@@ -489,6 +489,8 @@ public:
   };
 
   typedef Cell Elem;
+  typedef Face DElem;
+
   enum { ELEMENTS_E = CELLS_E };
 
 
@@ -659,6 +661,13 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   { get_cells(result, idx); }
+
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_faces(result, idx);
+  }
 
   // This function is redundant, the next one can be used with less parameters
   bool get_neighbor(typename Cell::index_type &neighbor, typename Cell::index_type from,
@@ -839,9 +848,10 @@ public:
                                 typename Face::array_type *faces = 0);
 
 
-  virtual bool          is_editable() const { return true; }
-  virtual int           dimensionality() const { return 3; }
-  Basis&                get_basis() { return basis_; }
+  virtual bool is_editable() const { return true; }
+  virtual int  dimensionality() const { return 3; }
+  virtual int  topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
+  Basis&       get_basis() { return basis_; }
 
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -2532,7 +2542,7 @@ template <class Basis>
 typename PrismVolMesh<Basis>::Elem::index_type
 PrismVolMesh<Basis>::add_elem(typename Node::array_type a)
 {
-  ASSERT(a.size() == PRISM_NNODES);
+  ASSERTMSG(a.size() == PRISM_NNODES, "Tried to add non-prism element.");
 
   const unsigned int idx = cells_.size() / PRISM_NNODES;
 

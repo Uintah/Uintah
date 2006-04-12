@@ -30,9 +30,12 @@
 //    File   : FieldSlicer.h
 //    Author : Michael Callahan &&
 //             Allen Sanderson
-//             School of Computing
+//             SCI Institute
 //             University of Utah
-//    Date   : December 2002
+//    Date   : March 2006
+//
+//    Copyright (C) 2006 SCI Group
+
 
 #if !defined(FieldSlicer_h)
 #define FieldSlicer_h
@@ -54,7 +57,6 @@
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Math/Trig.h>
 #include <Core/Util/TypeDescription.h>
 
 #ifdef HAVE_INSIGHT
@@ -98,7 +100,8 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
-					    const TypeDescription *oftd);
+					    const TypeDescription *oftd,
+					    bool geomtery_irregular);
 };
 
 template< class IFIELD, class OFIELD >
@@ -133,6 +136,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   vector<unsigned int> min;
   imesh->get_min( min );
 
+  //! Get the dimensions of the old field.
   if( dim.size() == 3 ) {
     old_min_i = min[0];           old_i = dim[0];
     old_min_j = min[1];           old_j = dim[1];
@@ -148,6 +152,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     old_min_j = 0;                old_k = 1;
   }
 
+  //! Get the dimensions of the new field.
   if (axis == 0) {
     new_i = old_j;                new_min_i = old_min_j;
     new_j = old_k;                new_min_j = old_min_k;
@@ -159,12 +164,12 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     new_j = old_j;                new_min_j = old_min_j;
   }
 
-  // Build the correct output field given the input field and and type.
+  //! Build the correct output field given the input field and and type.
   string mesh_type =
     ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
-  // 3D LatVol to 2D Image
-  if( mesh_type.find("LatVolMesh"  ) != string::npos ) {  
+  //! 3D LatVol to 2D Image
+  if( mesh_type.find("LatVolMesh") != string::npos ) {  
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
 
     IMesh *omesh = scinew IMesh();
@@ -193,12 +198,12 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 
-    // 3D ITKLatVolField to 2D ITKImage
+    //! 3D ITKLatVolField to 2D ITKImage
 #ifdef HAVE_INSIGHT
   } else if( mesh_type.find("ITKLatVolField") != string::npos ) {
     
-    // These really should be ITKImageFields but the conversion will
-    // not work so for now make the ImageFields instead.
+    //! These really should be ITKImageFields but the conversion will
+    //! not work so for now make the ImageFields instead.
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
     IMesh *omesh = scinew IMesh();
     omesh->copy_properties(imesh.get_rep());
@@ -225,7 +230,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 #endif
-    // 3D StructHexVol to 2D StructQuadSurf
+    //! 3D StructHexVol to 2D StructQuadSurf
   } else if( mesh_type.find("StructHexVolMesh") != string::npos ) {
 
     typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQMesh;
@@ -250,9 +255,9 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 
-    // 2D Image to 1D Scanline or 
-    // 1D Scanline to 0D Scanline
-  } else if( mesh_type.find("ImageMesh") != string::npos || 
+    //! 2D Image to 1D Scanline or 
+    //! 1D Scanline to 0D Scanline (perhaps it should be pointcloud).
+  } else if( mesh_type.find("ImageMesh")    != string::npos || 
 	     mesh_type.find("ScanlineMesh") != string::npos) {
 
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
@@ -280,12 +285,12 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 
-    // 2D ITKImage to 1D Scanline
+    //! 2D ITKImage to 1D Scanline
 #ifdef HAVE_INSIGHT
   } else if( mesh_type.find("ITKImageField") != string::npos ) {
 
-    // These really should be ITKScanlineFields but the conversion will
-    // not work so for now make the ScanlineFields instead.
+    //! These really should be ITKScanlineFields but the conversion will
+    //! not work so for now make the ScanlineFields instead.
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
 
     SLMesh *omesh = scinew SLMesh();
@@ -311,7 +316,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 #endif
-    // 2D StructQuadSurf to 1D StructCurve
+    //! 2D StructQuadSurf to 1D StructCurve
   } else if( mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef StructCurveMesh<CrvLinearLgn<Point> > SCMesh;
 
@@ -385,11 +390,11 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
   } else if( dim.size() == 2 ) {
     old_i = dim[0];
     old_j = dim[1];
-    old_k = 1;        // By setting this it is possible to slice from 2D to 1D easily.
+    old_k = 1;      //! This makes it is possible to slice from 1D to 0D easily.
   } else if( dim.size() == 1 ) {
     old_i = dim[0];
     old_j = 1;
-    old_k = 1;        // By setting this it is possible to slice from 1D to 0D easily.
+    old_k = 1;      //! This makes it is possible to slice from 1D to 0D easily.
   }
 
   if (axis == 0) {
@@ -418,7 +423,7 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
   unsigned int it, jt, kt;
 
 #ifndef SET_POINT_DEFINED
-  // For structured geometery we need to set the correct plane.
+  //! For structured geometry we need to set the correct plane.
   string mesh_type =
     ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
@@ -450,9 +455,10 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 
   imesh->begin( inodeItr );
 
-  // Slicing along the i axis. In order to get the slice in this direction only one
-  // location can be obtained at a time. So the iterator must increment to the correct
-  // column (i) index, the location samples, and then incremented to the end of the row.
+  //! Slicing along the i axis. In order to get the slice in this
+  //! direction only one location can be obtained at a time. So the
+  //! iterator must increment to the correct column (i) index, the
+  //! location samples, and then incremented to the end of the row.
   if (axis == 0) {                  // node.i_ = index
     for (j=0; j<new_j; j++) {       // node.j_ = i
       for (i=0; i<new_i; i++) {     // node.k_ = j
@@ -476,21 +482,22 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 	  ++inodeItr;
       }
     }
-    // Slicing along the j axis. In order to get the slice in this direction a complete
-    // row can be obtained at a time. So the iterator must increment to the correct
-    // row (j) index, the location samples, and then incremented to the end of the slice.
+    //! Slicing along the j axis. In order to get the slice in this
+    //! direction a complete row can be obtained at a time. So the
+    //! iterator must increment to the correct row (j) index, the
+    //! location samples, and then incremented to the end of the slice.
   } else if(axis == 1) {              // node.i_ = i
     for (j=0; j < new_j; j++) {       // node.j_ = index
                                       // node.k_ = j
-      // Set the iterator to the correct row (j).
+      //! Set the iterator to the correct row (j).
       for (jt=0; jt<index; jt++)
 	for (it=0; it<old_i; it++) 
 	  ++inodeItr;
 
-      // Get all of the points and values along this row.
+      //! Get all of the points and values along this row.
       for (i=0; i<new_i; i++) {
 
-	// Get the point and value at this location
+	//! Get the point and value at this location
 #ifdef SET_POINT_DEFINED
 	imesh->get_center(p, *inodeItr);
 	omesh->set_point(p, *onodeItr);
@@ -502,28 +509,28 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 	++onodeItr;
       }
 
-      // Just got one full row line so increment.
+      //! Just got one full row line so increment.
       jt++;
 
-      // Move to the end of all the rows..
+      //! Move to the end of all the rows..
       for (; jt<old_j; jt++)
 	for (it=0; it<old_i; it++)
 	  ++inodeItr;
     }
 
-    // Slicing along the k axis.
+    //! Slicing along the k axis.
   } else if(axis == 2) {
-    // Set the iterator to the correct k slice.
+    //! Set the iterator to the correct k slice.
     for (kt=0; kt<index; kt++)        // node.i_ = i
       for (j=0; j<old_j; j++)         // node.j_ = j
 	for (i=0; i<old_i; i++)       // node.k_ = index
 	  ++inodeItr;
 
-    // Get all of the points and values along this slice.
+    //! Get all of the points and values along this slice.
     for (j=0; j < new_j; j++) {
       for (i=0; i < new_i; i++) {
 
-	// Get the point and value at this location
+	//! Get the point and value at this location
 #ifdef SET_POINT_DEFINED
 	imesh->get_center(p, *inodeItr);
 	omesh->set_point(p, *onodeItr);
@@ -538,6 +545,6 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
   }
 }
 
-} // end namespace SCIRun
+} //! end namespace SCIRun
 
-#endif // FieldSlicer_h
+#endif //! FieldSlicer_h

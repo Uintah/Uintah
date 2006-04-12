@@ -55,33 +55,42 @@ template <class Data> class ITKLatVolField;
 
 }
 
+// gotta put here (instead of in one of the .h files that also declare them)
+// to satisfy templating issues in gcc3.4+
+#undef SCISHARE
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
+
 namespace SCIRun {
   
-  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<long>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<long>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
 
-  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
 
 }
 
@@ -95,7 +104,7 @@ namespace SCIRun {
 #include <Packages/Insight/Core/Datatypes/ITKImageField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Core/Datatypes/GenericField.h>
 
@@ -165,7 +174,7 @@ private:
 DECLARE_MAKER(ImageToField)
 ImageToField::ImageToField(GuiContext* ctx)
   : Module("ImageToField", ctx, Source, "Converters", "Insight"),
-    gui_copy_(ctx->subVar("copy"))
+    gui_copy_(get_ctx()->subVar("copy"))
 {
 }
   

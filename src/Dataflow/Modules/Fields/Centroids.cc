@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/Fields/Centroids.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <math.h>
@@ -86,7 +86,7 @@ Centroids::execute()
   Handle<CentroidsAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  FieldHandle ofieldhandle(algo->execute(ifieldhandle));
+  FieldHandle ofieldhandle(algo->execute(this, ifieldhandle));
   
   FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
   ofieldPort->send_and_dereference(ofieldhandle);

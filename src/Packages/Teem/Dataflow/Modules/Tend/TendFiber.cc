@@ -33,13 +33,13 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -97,30 +97,32 @@ DECLARE_MAKER(TendFiber)
 
 TendFiber::TendFiber(SCIRun::GuiContext *ctx) : 
   Module("TendFiber", ctx, Filter, "Tend", "Teem"), 
-  fibertype_(ctx->subVar("fibertype")),
-  puncture_(ctx->subVar("puncture")),
-  neighborhood_(ctx->subVar("neighborhood")),
-  stepsize_(ctx->subVar("stepsize")),
-  integration_(ctx->subVar("integration")),
-  use_aniso_(ctx->subVar("use-aniso")),
-  aniso_metric_(ctx->subVar("aniso-metric")),
-  aniso_thresh_(ctx->subVar("aniso-thresh")),
-  use_length_(ctx->subVar("use-length")),
-  length_(ctx->subVar("length")),
-  use_steps_(ctx->subVar("use-steps")),
-  steps_(ctx->subVar("steps")),
-  use_conf_(ctx->subVar("use-conf")),
-  conf_thresh_(ctx->subVar("conf-thresh")),
-  kernel_(ctx->subVar("kernel")),
+  fibertype_(get_ctx()->subVar("fibertype"), "tensorline"),
+  puncture_(get_ctx()->subVar("puncture"), 0.0),
+  neighborhood_(get_ctx()->subVar("neighborhood"), 2.0),
+  stepsize_(get_ctx()->subVar("stepsize"), 0.01),
+  integration_(get_ctx()->subVar("integration"), "Euler"),
+  use_aniso_(get_ctx()->subVar("use-aniso"), 1),
+  aniso_metric_(get_ctx()->subVar("aniso-metric"), "tenAniso_Cl2"),
+  aniso_thresh_(get_ctx()->subVar("aniso-thresh"), 0.4),
+  use_length_(get_ctx()->subVar("use-length"), 1),
+  length_(get_ctx()->subVar("length"), 1),
+  use_steps_(get_ctx()->subVar("use-steps"), 0),
+  steps_(get_ctx()->subVar("steps"), 200),
+  use_conf_(get_ctx()->subVar("use-conf"), 1),
+  conf_thresh_(get_ctx()->subVar("conf-thresh"), 0.5),
+  kernel_(get_ctx()->subVar("kernel"), "tent"),
   tfx(0),
   tfx_nrrd(0)
 {
 }
 
-TendFiber::~TendFiber() {
-  if (tfx)
-    tenFiberContextNix(tfx);
+
+TendFiber::~TendFiber()
+{
+  if (tfx) tenFiberContextNix(tfx);
 }
+
 
 unsigned 
 TendFiber::get_aniso(const string &s)
@@ -231,7 +233,7 @@ TendFiber::execute()
     error("Empty input Nrrd.");
     return;
   }
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
 
   FieldHandle fldH;
   if (!iseeds_->get(fldH))
@@ -356,7 +358,7 @@ TendFiber::execute()
     if (!failed) {
       fibers[fiberIdx].resize(nout->axis[1].size);
       double *data = (double *)(nout->data);
-      for (int i=0; i<nout->axis[1].size * 3; i+=3)
+      for (unsigned int i=0; i<nout->axis[1].size * 3; i+=3)
 	fibers[fiberIdx][i/3] = Point(data[i]*spacing.x(),
 				      data[i+1]*spacing.y(),
 				      data[i+2]*spacing.z())+min;

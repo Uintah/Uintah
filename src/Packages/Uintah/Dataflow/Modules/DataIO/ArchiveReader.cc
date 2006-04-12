@@ -1,9 +1,12 @@
-#include "ArchiveReader.h"
+
+#include <Packages/Uintah/Dataflow/Modules/DataIO/ArchiveReader.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/Exception.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <iostream> 
+
 using std::endl;
 using std::cerr;
 
@@ -16,12 +19,12 @@ using namespace SCIRun;
 //--------------------------------------------------------------- 
   ArchiveReader::ArchiveReader(GuiContext* ctx)
   : Module("ArchiveReader", ctx, Filter, "DataIO", "Uintah"),
-    filebase(ctx->subVar("filebase")), 
-    tcl_status(ctx->subVar("tcl_status")), archiveH(0),
+    filebase(get_ctx()->subVar("filebase")), 
+    tcl_status(get_ctx()->subVar("tcl_status")), archiveH(0),
     aName(""), aName_size(0)
 { 
   if( filebase.get() != "" )
-    need_execute = 1;
+    need_execute_ = true;
 } 
 
 

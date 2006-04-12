@@ -417,7 +417,7 @@ Camera::updatePosition( Stealth & stealth,
     double height_off_ground = 5;
 
 
-    if( time < MAXDOUBLE ) // Ie: ray hit the ground
+    if( time < DBL_MAX ) // Ie: ray hit the ground
       {
 	double gravity = stealth.getGravityForce();
 

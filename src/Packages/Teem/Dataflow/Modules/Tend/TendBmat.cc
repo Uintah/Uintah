@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -66,11 +66,13 @@ DECLARE_MAKER(TendBmat)
 
 TendBmat::TendBmat(SCIRun::GuiContext *ctx) : 
   Module("TendBmat", ctx, Filter, "Tend", "Teem"), 
-  gradient_list_(ctx->subVar("gradient_list"))
+  gradient_list_(get_ctx()->subVar("gradient_list"), "")
 {
 }
 
-TendBmat::~TendBmat() {
+
+TendBmat::~TendBmat()
+{
 }
 
 
@@ -78,7 +80,7 @@ TendBmat::~TendBmat() {
 bool
 TendBmat::extract_gradients(vector<double> &d)
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
   istringstream str(gradient_list_.get().c_str());
   while (true)
   {
@@ -113,7 +115,7 @@ TendBmat::execute()
 
   if (inrrd_->get(nrrd_handle) && nrrd_handle.get_rep()) {
     we_own_the_data = false;
-    nin = nrrd_handle->nrrd;
+    nin = nrrd_handle->nrrd_;
   } else {
     we_own_the_data = true;
     mat = new vector<double>;
@@ -122,7 +124,8 @@ TendBmat::execute()
       return;
     }
     nin = nrrdNew();
-    nrrdWrap(nin, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
+    size_t size[2] = {3, (*mat).size()/3};
+    nrrdWrap_nva(nin, &(*mat)[0], nrrdTypeDouble, 2, size);
   }
 
   Nrrd *nout = nrrdNew();
@@ -149,7 +152,7 @@ TendBmat::execute()
 void
 TendBmat::presave()
 {
-  gui->execute(id + " update_text"); // make gradient_list current
+  get_gui()->execute(get_id() + " update_text"); // make gradient_list current
 }
 
 

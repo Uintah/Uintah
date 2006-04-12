@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -65,20 +65,23 @@ private:
   GuiDouble    threshold_;
 };
 
+
 DECLARE_MAKER(TendEvecRGB)
 
 TendEvecRGB::TendEvecRGB(SCIRun::GuiContext *ctx) : 
   Module("TendEvecRGB", ctx, Filter, "Tend", "Teem"), 
-  evec_(ctx->subVar("evec")),
-  aniso_metric_(ctx->subVar("aniso_metric")),
-  background_(ctx->subVar("background")),
-  gray_(ctx->subVar("gray")),
-  gamma_(ctx->subVar("gamma")),
-  threshold_(ctx->subVar("threshold"))
+  evec_(get_ctx()->subVar("evec"), 2),
+  aniso_metric_(get_ctx()->subVar("aniso_metric"), "tendAniso_FA"),
+  background_(get_ctx()->subVar("background"), 0.0),
+  gray_(get_ctx()->subVar("gray"), 0.0),
+  gamma_(get_ctx()->subVar("gamma"), 1.0),
+  threshold_(get_ctx()->subVar("threshold"), 0.5)
 {
 }
 
-TendEvecRGB::~TendEvecRGB() {
+
+TendEvecRGB::~TendEvecRGB()
+{
 }
 
 
@@ -147,12 +150,18 @@ TendEvecRGB::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
+  
+  tenEvecRGBParm *rgbp = tenEvecRGBParmNew();
+  rgbp->which = evec_.get(); 
+  rgbp->aniso = get_method(aniso_metric_.get()); 
+  rgbp->confThresh = threshold_.get(); 
+  rgbp->gamma = gamma_.get(); 
+  rgbp->bgGray = background_.get(); 
+  rgbp->isoGray = gray_.get(); 
 
-  if (tenEvecRGB(nout, nin, evec_.get(), get_method(aniso_metric_.get()), 
-		 threshold_.get(), gamma_.get(), background_.get(), 
-		 gray_.get())) {
+  if (tenEvecRGB(nout, nin, rgbp)) {
     char *err = biffGetDone(TEN);
     error(string("Error making tendEvecRGB volume: ") + err);
     free(err);

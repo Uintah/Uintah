@@ -62,8 +62,8 @@ itcl_class SCIRun_Math_ErrorMetric {
 	set $this-rms 0
 	global $this-cc
 	set $this-cc 0
-	global $this-haveUI
-	set $this-haveUI 0
+	global $this-have_ui
+	set $this-have_ui 0
     }
     method make_entry {w text v c} {
         frame $w
@@ -79,8 +79,8 @@ itcl_class SCIRun_Math_ErrorMetric {
         if {[winfo exists $w]} {
             return
         }
-	global $this-haveUI
-	set $this-haveUI 1
+	global $this-have_ui
+	set $this-have_ui 1
         toplevel $w
         wm minsize $w 300 80
         frame $w.f

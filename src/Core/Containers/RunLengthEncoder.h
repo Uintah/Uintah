@@ -37,7 +37,13 @@
 #include <sstream>
 #include <string>
 #include <sgi_stl_warnings_on.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#else
+typedef long ssize_t;
+#endif
+
 #include <errno.h>
 
 #include <Core/Exceptions/ErrnoException.h>

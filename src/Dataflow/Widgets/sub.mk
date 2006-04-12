@@ -46,9 +46,18 @@ SRCS +=	$(SRCDIR)/ArrowWidget.cc           \
 	$(SRCDIR)/RingWidget.cc		   \
 	$(SRCDIR)/ViewWidget.cc
 
-PSELIBS := Core/Datatypes Dataflow/Constraints Dataflow/Ports \
-	Core/Exceptions Core/Geom Core/Thread Core/GuiInterface \
-	Core/Containers Core/Geometry Core/GeomInterface Dataflow/Network
+PSELIBS := \
+	Core/Datatypes       \
+	Core/Exceptions      \
+	Core/Geom            \
+	Core/Geometry        \
+	Core/GeomInterface   \
+	Core/Containers      \
+	Core/GuiInterface    \
+	Core/Thread          \
+	Dataflow/Constraints \
+	Dataflow/Network
+
 LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

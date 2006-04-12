@@ -91,7 +91,7 @@ set $m5-tensors_scale {0.176}
 set $m5-data-resolution {17}
 
 $m6 addViewer
-set $m6-ViewWindow_0-geometry 654x612+605+197
+set $m6-ViewWindow_0-geometry 654x812+605+197
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m6-ViewWindow_0-view-eyep-x {-2.37499694327}

@@ -64,59 +64,58 @@ DECLARE_MAKER(HDF5DataReader)
 
 HDF5DataReader::HDF5DataReader(GuiContext *context)
   : Module("HDF5DataReader", context, Source, "Readers", "DataIO"),
-    power_app_(context->subVar("power_app")),
-    power_app_cmd_(context->subVar("power_app_commmand")),
+    gui_power_app_(context->subVar("power_app")),
+    gui_power_app_cmd_(context->subVar("power_app_commmand")),
 
-    filename_(context->subVar("filename")),
-    datasets_(context->subVar("datasets")),
-    dumpname_(context->subVar("dumpname")),
-    ports_(context->subVar("ports")),
+    gui_filename_(context->subVar("filename")),
+    gui_datasets_(context->subVar("datasets")),
+    gui_dumpname_(context->subVar("dumpname")),
+    gui_ports_(context->subVar("ports")),
 
-    nDims_(context->subVar("ndims")),
+    gui_ndims_(context->subVar("ndims")),
 
-    mergeData_(context->subVar("mergeData")),
-    assumeSVT_(context->subVar("assumeSVT")),
-    animate_(context->subVar("animate")),
+    gui_merge_data_(context->subVar("mergeData")),
+    gui_assume_svt_(context->subVar("assumeSVT")),
+    gui_animate_(context->subVar("animate")),
 
-    animate_frame_(ctx->subVar("animate_frame")),
-    animate_tab_(ctx->subVar("animate_tab")),
-    basic_tab_(ctx->subVar("basic_tab")),
-    extended_tab_(ctx->subVar("extended_tab")),
-    playmode_tab_(ctx->subVar("playmode_tab")),
+    gui_animate_frame_(get_ctx()->subVar("animate_frame")),
+    gui_animate_tab_(get_ctx()->subVar("animate_tab")),
+    gui_basic_tab_(get_ctx()->subVar("basic_tab")),
+    gui_extended_tab_(get_ctx()->subVar("extended_tab")),
+    gui_playmode_tab_(get_ctx()->subVar("playmode_tab")),
 
-    selectable_min_(ctx->subVar("selectable_min")),
-    selectable_max_(ctx->subVar("selectable_max")),
-    selectable_inc_(ctx->subVar("selectable_inc")),
-    range_min_(ctx->subVar("range_min")),
-    range_max_(ctx->subVar("range_max")),
-    playmode_(ctx->subVar("playmode")),
-    current_(ctx->subVar("current")),
-    execmode_(ctx->subVar("execmode")),
-    delay_(ctx->subVar("delay")),
-    inc_amount_(ctx->subVar("inc-amount")),
-    update_type_(ctx->subVar("update_type")),
+    gui_selectable_min_(get_ctx()->subVar("selectable_min")),
+    gui_selectable_max_(get_ctx()->subVar("selectable_max")),
+    gui_selectable_inc_(get_ctx()->subVar("selectable_inc")),
+    gui_range_min_(get_ctx()->subVar("range_min")),
+    gui_range_max_(get_ctx()->subVar("range_max")),
+    gui_playmode_(get_ctx()->subVar("playmode")),
+    gui_current_(get_ctx()->subVar("current")),
+    gui_execmode_(get_ctx()->subVar("execmode")),
+    gui_delay_(get_ctx()->subVar("delay")),
+    gui_inc_amount_(get_ctx()->subVar("inc-amount")),
+    gui_update_type_(get_ctx()->subVar("update_type")),
     inc_(1),
 
-    mergedata_(-1),
-    assumesvt_(-1),
-
-    update_(false),
-    which_(-1),
+    matrix_output_handle_(0),
 
     loop_(false),
-    error_(false)
+    execute_error_(false)
 {
-  for( int ic=0; ic<MAX_DIMS; ic++ ) {
+  for( unsigned int ic=0; ic<MAX_PORTS; ic++ )
+    nrrd_output_handles_[ic] = 0;
+
+  for( unsigned int ic=0; ic<MAX_DIMS; ic++ ) {
     char idx[16];
 
     sprintf( idx, "%d-dim", ic );
-    gDims_   .push_back(new GuiInt(context->subVar(idx)) );
+    gui_dims_   .push_back(new GuiInt(context->subVar(idx)) );
     sprintf( idx, "%d-start", ic );
-    gStarts_ .push_back(new GuiInt(context->subVar(idx)) );
+    gui_starts_ .push_back(new GuiInt(context->subVar(idx)) );
     sprintf( idx, "%d-count", ic );
-    gCounts_ .push_back(new GuiInt(context->subVar(idx)) );
+    gui_counts_ .push_back(new GuiInt(context->subVar(idx)) );
     sprintf( idx, "%d-stride", ic );
-    gStrides_.push_back(new GuiInt(context->subVar(idx)) );
+    gui_strides_.push_back(new GuiInt(context->subVar(idx)) );
 
     dims_[ic] = 0;
     starts_[ic] =  0;
@@ -134,7 +133,7 @@ HDF5DataReader::~HDF5DataReader() {
 // or allows for a multiple identical nrrds to assume a time series, 
 // and be joined along a new time axis. 
 bool
-HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
+HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2)
 {
   std::string::size_type pos;
 
@@ -143,7 +142,7 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
   h1->get_property( "Name", nrrdName1 );
   h2->get_property( "Name", nrrdName2 );
 
-  if (mergedata_ == MERGE_LIKE) {
+  if (gui_merge_data_.get() == MERGE_LIKE) {
     grp1 = nrrdName1;
     grp2 = nrrdName2;
 
@@ -176,8 +175,8 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
   if( !pass )
     return false;
 
-  Nrrd* n1 = h1->nrrd; 
-  Nrrd* n2 = h2->nrrd;
+  Nrrd* n1 = h1->nrrd_; 
+  Nrrd* n2 = h2->nrrd_;
     
   if (n1->type != n2->type)
     return false;
@@ -186,7 +185,7 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
     return false;
   
   // Compare the dimensions.
-  for (int i=0; i<n1->dim; i++) {
+  for (unsigned int i=0; i<n1->dim; i++) {
     if (n1->axis[i].size != n2->axis[i].size)
       return false;
   }
@@ -197,14 +196,9 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
 
 void HDF5DataReader::execute() {
 
-  update_state(NeedData);
-
 #ifdef HAVE_HDF5
-  filename_.reset();
-  datasets_.reset();
-
-  string filename(filename_.get());
-  string datasets(datasets_.get());
+  string filename(gui_filename_.get());
+  string datasets(gui_datasets_.get());
 
   if( filename.length() == 0 ) {
     error( string("No HDF5 file selected.") );
@@ -235,8 +229,6 @@ void HDF5DataReader::execute() {
   time_t filemodification = buf.st_mtime;
 #endif
 
-  update_ = false;
-
   // If we haven't read yet, or if it's a new filename, 
   //  or if the datestamp has changed -- then read...
   if( filename         != old_filename_ || 
@@ -251,41 +243,33 @@ void HDF5DataReader::execute() {
     sel_filename_         = filename;
     sel_datasets_         = datasets;
 
-    update_ = true;
+    inputs_changed_ = true;
   }
-
-  update_state(JustStarted);
 
   bool resend = false;
 
   // get all the actual values from gui.
-  reset_vars();
-
-  if( mergedata_ != mergeData_.get() ||
-      assumesvt_ != assumeSVT_.get() ) {
-
-    mergedata_ = mergeData_.get();
-    assumesvt_ = assumeSVT_.get();
-
-    update_ = true;
+  if( gui_merge_data_.changed( true ) ||
+      gui_assume_svt_.changed( true ) ) {
+    inputs_changed_ = true;
   }
 
   for( int ic=0; ic<MAX_DIMS; ic++ ) {
 
-    if( starts_ [ic] != gStarts_ [ic]->get() ||
-	counts_ [ic] != gCounts_ [ic]->get() ||
-	strides_[ic] != gStrides_[ic]->get() ) {
+    if( starts_ [ic] != gui_starts_ [ic]->get() ||
+	counts_ [ic] != gui_counts_ [ic]->get() ||
+	strides_[ic] != gui_strides_[ic]->get() ) {
 
-      starts_ [ic] = gStarts_ [ic]->get();
-      counts_ [ic] = gCounts_ [ic]->get();
-      strides_[ic] = gStrides_[ic]->get();
+      starts_ [ic] = gui_starts_ [ic]->get();
+      counts_ [ic] = gui_counts_ [ic]->get();
+      strides_[ic] = gui_strides_[ic]->get();
     
-      update_ = true;
+      inputs_changed_ = true;
     }
 
-    if( dims_[ic] != gDims_[ic]->get() ) {
-      dims_[ic] = gDims_[ic]->get();
-      update_ = true;
+    if( dims_[ic] != gui_dims_[ic]->get() ) {
+      dims_[ic] = gui_dims_[ic]->get();
+      inputs_changed_ = true;
     }
 
     if( starts_[ic] + (counts_[ic]-1) * strides_[ic] >= dims_[ic] ) {
@@ -301,7 +285,7 @@ void HDF5DataReader::execute() {
   
   parseDatasets( datasets, pathList, datasetList );
 
-  if( animate_.get() ) {
+  if( gui_animate_.get() ) {
 
     vector< vector<string> > frame_paths;
     vector< vector<string> > frame_datasets;
@@ -323,11 +307,11 @@ void HDF5DataReader::execute() {
       int which = (int) (mHandle->get(0, 0));
 
       if( 0 <= which && which <= (int) frame_paths.size() ) {
-	if( error_ ||
-	    update_ ||
-	    current_.get() != which ) {
-	  current_.set(which);
-	  current_.reset();
+	if( execute_error_ ||
+	    inputs_changed_ ||
+	    gui_current_.get() != which ) {
+	  gui_current_.set(which);
+	  gui_current_.reset();
 	  
 	  ReadandSendData( filename, frame_paths[which],
 			   frame_datasets[which], true, which );
@@ -344,16 +328,16 @@ void HDF5DataReader::execute() {
 	return;
       }
     } else {
-      if( nframes-1 != selectable_max_.get() ) {
-	selectable_max_.set(nframes-1);
-	selectable_max_.reset();
+      if( nframes-1 != gui_selectable_max_.get() ) {
+	gui_selectable_max_.set(nframes-1);
+	gui_selectable_max_.reset();
       }
 
       resend = animate_execute( filename, frame_paths, frame_datasets );
     }
-  } else if( error_ ||
-	     update_ ){
-    error_ = false;
+  } else if( execute_error_ ||
+	     inputs_changed_ ){
+    execute_error_ = false;
 
     ReadandSendData( filename, pathList, datasetList, true, -1 );
 
@@ -363,42 +347,15 @@ void HDF5DataReader::execute() {
 
   if( resend ) {
     for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
-      // Get a handle to the output double port.
-      if( nHandles_[ic].get_rep() ) {
+      string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
 
-	char portNumber[4];
-	sprintf( portNumber, "%d", ic );
-
-	string portName = string("Output ") +
-	  string(portNumber) +
-	  string( " Nrrd" );
-      
-	NrrdOPort *ofield_port = 
-	  (NrrdOPort *) get_oport(portName);
-    
-	if (!ofield_port) {
-	  error("Unable to initialize "+name+"'s " + portName + " oport\n");
-	  return;
-	}
-
-	ofield_port->send( nHandles_[ic] );
-      }
+      if( nrrd_output_handles_[ic] != 0 )
+	send_output_handle( portName, nrrd_output_handles_[ic], true );
     }
 
     // Get a handle to the output double port.
-    if( mHandle_.get_rep() ) {
-      MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Selected Index");
-
-      if (!omatrix_port) {
-	error("Unable to initialize oport 'Selected Index'.");
-	return;
-      }
-
-      omatrix_port->send(mHandle_);
-    }
+    send_output_handle( "Selected Index", matrix_output_handle_, true );
   }
-
-  update_state(Completed);
 
 #else  
   error( "No HDF5 availible." );
@@ -460,7 +417,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
   }
 
   // Merge the like datatypes together.
-  if( mergedata_ ) {
+  if( gui_merge_data_.get() ) {
 
     vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
     while (iter != nHandles.end()) {
@@ -470,7 +427,8 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
       if( vec.size() > 1) {
 
-	if( assumesvt_ && vec.size() != 3 && vec.size() != 6 && vec.size() != 9) {
+	if( gui_assume_svt_.get() && 
+	    vec.size() != 3 && vec.size() != 6 && vec.size() != 9) {
 	  warning( "Assuming Vector and Matrix data but can not merge into a Vector or Matrix because there are not 3, 6, or 9 nrrds that are alike." );
 	  continue;
 	}
@@ -480,7 +438,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
 	NrrdDataHandle n = *niter;
 	++niter;
-	join_me.push_back(n->nrrd);
+	join_me.push_back(n->nrrd_);
 
 	string nrrdName, groupName, dataName;
 
@@ -502,9 +460,9 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	while (niter != vec.end()) {
 	  NrrdDataHandle n = *niter;
 	  ++niter;
-	  join_me.push_back(n->nrrd);
+	  join_me.push_back(n->nrrd_);
 
-	  if (mergedata_ == MERGE_LIKE) {
+	  if (gui_merge_data_.get() == MERGE_LIKE) {
 	    n->get_property( "Name", dataName );
 	    pos = dataName.find_last_of("-"); // Erase the Group
 	    if( pos != std::string::npos )
@@ -522,39 +480,39 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	int axis = 0; // axis
 	int incr = 1; // incr.
 	
-	onrrd->nrrd = nrrdNew();
-	if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
+	onrrd->nrrd_ = nrrdNew();
+	if (nrrdJoin(onrrd->nrrd_, &join_me[0], join_me.size(), axis, incr)) {
 	  char *err = biffGetDone(NRRD);
 	  error(string("Join Error: ") +  err);
 	  free(err);
-	  error_ = true;
+	  execute_error_ = true;
 	  return;
 	}
 
 	// set new kinds for joined nrrds
-	if (assumesvt_ && join_me.size() == 3) {
-	  onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
+	if (gui_assume_svt_.get() && join_me.size() == 3) {
+	  onrrd->nrrd_->axis[0].kind = nrrdKind3Vector;
 	  nrrdName += string(":Vector");
-	} else if (assumesvt_ && join_me.size() == 6) {
-	  onrrd->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+	} else if (gui_assume_svt_.get() && join_me.size() == 6) {
+	  onrrd->nrrd_->axis[0].kind = nrrdKind3DSymMatrix;
 	  nrrdName += string(":Matrix");
-	} else if (assumesvt_ && join_me.size() == 9) {
-	  onrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
+	} else if (gui_assume_svt_.get() && join_me.size() == 9) {
+	  onrrd->nrrd_->axis[0].kind = nrrdKind3DMatrix;
 	  nrrdName += string(":Matrix");
 	} else {
-	  onrrd->nrrd->axis[0].kind = nrrdKindDomain;
+	  onrrd->nrrd_->axis[0].kind = nrrdKindDomain;
 	  nrrdName += string(":Scalar");
 	}
 
-	for(int i=1; i<onrrd->nrrd->dim; i++) {
-	  onrrd->nrrd->axis[i].kind = nrrdKindDomain;
-	  onrrd->nrrd->axis[i].label = join_me[0]->axis[i].label;
+	for(unsigned int i=1; i<onrrd->nrrd_->dim; i++) {
+	  onrrd->nrrd_->axis[i].kind = nrrdKindDomain;
+	  onrrd->nrrd_->axis[i].label = join_me[0]->axis[i].label;
 	}
 
-	if (mergedata_ == MERGE_LIKE) {
-	  onrrd->nrrd->axis[axis].label = strdup("Merged Data");
-	} else if (mergedata_ == MERGE_TIME) {
-	  onrrd->nrrd->axis[axis].label = "Time";
+	if (gui_merge_data_.get() == MERGE_LIKE) {
+	  onrrd->nrrd_->axis[axis].label = strdup("Merged Data");
+	} else if (gui_merge_data_.get() == MERGE_TIME) {
+	  onrrd->nrrd_->axis[axis].label = "Time";
 
 	  // remove all numbers from name
 	  string s(nrrdName);
@@ -601,8 +559,11 @@ void HDF5DataReader::ReadandSendData( string& filename,
       ports[ids[ic][jc]] = cc + (nHandles[ic].size() == 1 ? 0 : jc);
 
     for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
-      if( cc < MAX_PORTS )
-	nHandles_[cc] = nHandles[ic][jc];
+      if( cc < MAX_PORTS ) {
+	nrrd_output_handles_[cc] = nHandles[ic][jc];
+
+	nrrd_output_handles_[cc]->set_property("Source", string("HDF5"), false);
+      }
 
       ++cc;
     }
@@ -618,56 +579,31 @@ void HDF5DataReader::ReadandSendData( string& filename,
   if( cache ) {
     // Update the ports in the GUI.
     ostringstream str;
-    str << id << " updateSelection {" << portStr << "}";
+    str << get_id() << " updateSelection {" << portStr << "}";
 
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
   }
 
   if( cc > MAX_PORTS )
     warning( "More data than availible ports." );
 
   for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
-    nHandles_[ic] = NULL;
+    nrrd_output_handles_[ic] = 0;
 
-
-  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
-    // Get a handle to the output double port.
-    if( nHandles_[ic].get_rep() ) {
-
-      nHandles_[ic]->set_property("Source",string("HDF5"), false);
-
-      char portNumber[4];
-      sprintf( portNumber, "%d", ic );
-
-      string portName = string("Output ") +
-	string(portNumber) +
-	string( " Nrrd" );
-      
-      NrrdOPort *ofield_port = (NrrdOPort *) get_oport(portName);
+  for( unsigned int ic=0; ic<cc; ic++ ) {
     
-      if (!ofield_port) {
-	error("Unable to initialize "+name+"'s " + portName + " oport\n");
-	return;
-      }
+    string portName = string("Output ") + to_string(ic) + string( " Nrrd" );
 
-      // Send the data downstream
-      ofield_port->set_cache( cache );
-      ofield_port->send( nHandles_[ic] );
-    }
-  }
-
-  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Selected Index");
-
-  if (!omatrix_port) {
-    error("Unable to initialize oport 'Selected Index'.");
-    return;
+    // Send the data downstream
+    send_output_handle( portName, nrrd_output_handles_[ic], cache );
   }
 
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
-  mHandle_ = MatrixHandle(selected);
-  omatrix_port->send( mHandle_ );
+  matrix_output_handle_ = MatrixHandle(selected);
+
+  send_output_handle( "Selected Index", matrix_output_handle_, true );
 }
 
 
@@ -1198,26 +1134,27 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
     } else {
       error("Undefined HDF5 float");
-      error_ = true;
+      execute_error_ = true;
       return NULL;
     }
     break;
+
   case H5T_COMPOUND:
     error("At this time HDF5 Compound types can not be converted into Nrrds.");
-    error_ = true;
+    execute_error_ = true;
     return NULL;
     break;
 
   case H5T_REFERENCE:
     error("At this time HDF5 Reference types are not followed.");
     error("Please select the actual object.");
-    error_ = true;
+    execute_error_ = true;
     return NULL;
     break;
 
   default:
     error("Unknown or unsupported HDF5 data type");
-    error_ = true;
+    execute_error_ = true;
     return NULL;
   }
 
@@ -1253,7 +1190,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
       if( (data = new char[size]) == NULL ) {
 	error( "Can not allocate enough memory for the data" );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
 
@@ -1261,7 +1198,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 			    H5S_ALL, H5S_ALL, H5P_DEFAULT, 
 			    data)) < 0 ) {
 	error( "Error reading dataset." );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
     } else {
@@ -1274,14 +1211,14 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
       if( ndim != ndims ) {
 	error( "Data dimensions not match. " );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
 
-      for( int ic=0; ic<nDims_.get(); ic++ ) {
+      for( int ic=0; ic<gui_ndims_.get(); ic++ ) {
 	if( (unsigned int) dims_[ic] != dims[ic] ) {
 	  error( "Data do not have the same number of elements. " );
-	  error_ = true;
+	  execute_error_ = true;
 	  return NULL;
 	}
       }
@@ -1294,14 +1231,14 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       hsize_t *stride = new hsize_t[ndims];
       hsize_t *block  = new hsize_t[ndims];
 
-      for( int ic=0; ic<nDims_.get(); ic++ ) {
+      for( int ic=0; ic<gui_ndims_.get(); ic++ ) {
 	start[ic]  = starts_[ic];
 	stride[ic] = strides_[ic];
 	count[ic]  = counts_[ic];
 	block[ic]  = 1;
       }
 
-      for( int ic=nDims_.get(); ic<ndims; ic++ ) {
+      for( int ic=gui_ndims_.get(); ic<ndims; ic++ ) {
 	start[ic]  = 0;
 	stride[ic] = 1;
 	count[ic]  = dims[ic];
@@ -1311,7 +1248,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       if( (status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
 					start, stride, count, block)) < 0 ) {
 	error( "Can not select data slab requested." );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
 
@@ -1325,7 +1262,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       if( (status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
 					start, stride, count, block)) < 0 ) {
 	error( "Can not select memory for the data slab requested." );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
 
@@ -1334,7 +1271,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
       if( (data = new char[size]) == NULL ) {
 	error( "Can not allocate enough memory for the data" );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
 
@@ -1342,14 +1279,14 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 			    mem_space_id, file_space_id, H5P_DEFAULT, 
 			    data)) < 0 ) {
 	error( "Can not read the data slab requested." );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
 
       /* Terminate access to the data space. */
       if( (status = H5Sclose(mem_space_id)) < 0 ) {
 	error( "Can not cloase the memory data slab requested." );
-	error_ = true;
+	execute_error_ = true;
 	return NULL;
       }
 
@@ -1366,7 +1303,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   // assumption is based on the size of the last dimension of the hdf5 data
   // amd will be in the first dimension of the nrrd
   int sz_last_dim = 1;
-  if (assumesvt_)
+  if (gui_assume_svt_.get())
     sz_last_dim = dims[ndims-1];
 
   // The nrrd ordering is opposite of HDF5 ordering so swap the dimensions
@@ -1376,55 +1313,57 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     count[ndims-1-i] = swap;
   }
 
+  size_t sz[NRRD_DIM_MAX];
+  sz[0] = count[0];
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  centers[4] = nrrdCenterNode; centers[5] = nrrdCenterNode;
   switch(ndims) {
   case 1: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims, (unsigned int) count[0]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
+    nrrdWrap_nva(nout->nrrd_, data,
+	     nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 2: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-	     (unsigned int) count[0], (unsigned int) count[1]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode);
+    sz[1] = count[1];
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 3: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);  
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 4: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2], (unsigned int) count[3]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-		    nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    sz[3] = count[3];
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);  
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 5: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2], (unsigned int) count[3], 
-	     (unsigned int) count[4]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    sz[3] = count[3];
+    sz[4] = count[4];
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
       
   case 6: 
-    nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-	     (unsigned int) count[0], (unsigned int) count[1], 
-	     (unsigned int) count[2], (unsigned int) count[3], 
-	     (unsigned int) count[4], count[5]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+    sz[1] = count[1];
+    sz[2] = count[2];
+    sz[3] = count[3];
+    sz[4] = count[4];
+    sz[5] = count[5];
+    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
+    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
     break;
   }
    
@@ -1447,27 +1386,27 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   switch (sz_last_dim) {
   case 3: // Vector data
     nrrdName += ":Vector";
-    nout->nrrd->axis[0].kind = nrrdKind3Vector;
+    nout->nrrd_->axis[0].kind = nrrdKind3Vector;
     break;
 	  
   case 6: // Matrix data
     nrrdName += ":Matrix";
-    nout->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+    nout->nrrd_->axis[0].kind = nrrdKind3DSymMatrix;
     break;
 	  
   case 9: // Matrix data
     nrrdName += ":Matrix";
-    nout->nrrd->axis[0].kind = nrrdKind3DMatrix;
+    nout->nrrd_->axis[0].kind = nrrdKind3DMatrix;
     break;
 	  
   default: // treat the rest as Scalar data
     nrrdName += ":Scalar";
-    nout->nrrd->axis[0].kind = nrrdKindDomain;
+    nout->nrrd_->axis[0].kind = nrrdKindDomain;
     break;
   };
 
   for( int i=1; i<ndims; i++ )
-    nout->nrrd->axis[i].kind = nrrdKindDomain;
+    nout->nrrd_->axis[i].kind = nrrdKindDomain;
 
 
   nout->set_property( "Name", nrrdName, false );
@@ -1553,9 +1492,9 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
   if (args[1] == "check_dumpfile") {
 #ifdef HAVE_HDF5
-    filename_.reset();
+    gui_filename_.reset();
 
-    string filename(filename_.get());
+    string filename(gui_filename_.get());
   
     if( filename.length() == 0 )
       return;
@@ -1563,9 +1502,9 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     // Dump file name change
     string dumpname = getDumpFileName( filename );
 
-    if( dumpname != dumpname_.get() ) {
-      dumpname_.set( dumpname );
-      dumpname_.reset();
+    if( dumpname != gui_dumpname_.get() ) {
+      gui_dumpname_.set( dumpname );
+      gui_dumpname_.reset();
     }
 
     // Dump file not available or out of date .
@@ -1582,8 +1521,8 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
     bool update = false;
 
-    filename_.reset();
-    string new_filename(filename_.get());
+    gui_filename_.reset();
+    string new_filename(gui_filename_.get());
 
     if( new_filename.length() == 0 ) {
       error( string("No HDF5 file.") );
@@ -1631,12 +1570,12 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     
       // Update the treeview in the GUI.
       ostringstream str;
-      str << id << " build_tree " << new_dumpname;
+      str << get_id() << " build_tree " << new_dumpname;
       
-      gui->execute(str.str().c_str());
+      get_gui()->execute(str.str().c_str());
     
       // Update the dims in the GUI.
-      gui->execute(id + " set_size 0 {}");
+      get_gui()->execute(get_id() + " set_size 0 {}");
     }
 
 #else
@@ -1645,10 +1584,10 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
   } else if (args[1] == "update_selection") {
 #ifdef HAVE_HDF5
-    filename_.reset();
-    datasets_.reset();
-    string new_filename(filename_.get());
-    string new_datasets(datasets_.get());
+    gui_filename_.reset();
+    gui_datasets_.reset();
+    string new_filename(gui_filename_.get());
+    string new_datasets(gui_datasets_.get());
 
     if( new_datasets.length() == 0 )
       return;
@@ -1691,13 +1630,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 	}
       }
 
-      nDims_.reset();
-      bool set = (ndims != (unsigned int) nDims_.get());
+      gui_ndims_.reset();
+      bool set = (ndims != (unsigned int) gui_ndims_.get());
 
       if( !set ) {
 	for( unsigned int ic=0; ic<ndims; ic++ ) {
-	  gDims_[ic]->reset();
-	  if( dims_[ic] != gDims_[ic]->get() ) {
+	  gui_dims_[ic]->reset();
+	  if( dims_[ic] != gui_dims_[ic]->get() ) {
 	    set = true;
 	  }
 	}
@@ -1720,25 +1659,25 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
 	// Update the dims in the GUI.
 	ostringstream str;
-	str << id << " set_size " << ndims << " " << dimstr;
+	str << get_id() << " set_size " << ndims << " " << dimstr;
     
-	gui->execute(str.str().c_str());
+	get_gui()->execute(str.str().c_str());
       }
     }
 
-    animate_.reset();
+    gui_animate_.reset();
 
     // If animate is one figure out how many frames we have.
-    if( animate_.get() == 1 ) {
+    if( gui_animate_.get() == 1 ) {
       vector< vector<string> > frame_paths;
       vector< vector<string> > frame_datasets;
 
       int nframes =
 	parseAnimateDatasets( pathList, datasetList, frame_paths, frame_datasets);
 
-      if( nframes-1 != selectable_max_.get() ) {
-	selectable_max_.set(nframes-1);
-	selectable_max_.reset();
+      if( nframes-1 != gui_selectable_max_.get() ) {
+	gui_selectable_max_.set(nframes-1);
+	gui_selectable_max_.reset();
       }
     }
 #else
@@ -1837,7 +1776,7 @@ HDF5DataReader::createDumpFile( string filename, string dumpname ) {
 
   if( !sPtr ) {
     error( string("Unable to open output file: ") + dumpname );
-    gui->execute( "reset_cursor" );
+    get_gui()->execute( "reset_cursor" );
     return -1;
   }
 
@@ -1845,7 +1784,7 @@ HDF5DataReader::createDumpFile( string filename, string dumpname ) {
 
   if( hdf.file( filename ) < 0 ) {
     error( hdf.error() );
-    gui->execute( "reset_cursor" );
+    get_gui()->execute( "reset_cursor" );
 
     sPtr.flush();
     sPtr.close();
@@ -1865,39 +1804,39 @@ HDF5DataReader::increment(int which, int lower, int upper)
 {
   // Do nothing if no range.
   if (upper == lower) {
-    if (playmode_.get() == "once")
-      execmode_.set( "stop" );
+    if (gui_playmode_.get() == "once")
+      gui_execmode_.set( "stop" );
     return upper;
   }
 
-  const int inc_amount = Max(1, Min(upper, inc_amount_.get()));
+  const int inc_amount = Max(1, Min(upper, gui_inc_amount_.get()));
 
   which += inc_ * inc_amount;
 
   if (which > upper) {
-    if (playmode_.get() == "bounce1") {
+    if (gui_playmode_.get() == "bounce1") {
       inc_ *= -1;
       return increment(upper, lower, upper);
-    } else if (playmode_.get() == "bounce2") {
+    } else if (gui_playmode_.get() == "bounce2") {
       inc_ *= -1;
       return upper;
     } else {
-      if (playmode_.get() == "once")
-	execmode_.set( "stop" );
+      if (gui_playmode_.get() == "once")
+	gui_execmode_.set( "stop" );
       return lower;
     }
   }
 
   if (which < lower) {
-    if (playmode_.get() == "bounce1") {
+    if (gui_playmode_.get() == "bounce1") {
       inc_ *= -1;
       return increment(lower, lower, upper);
-    } else if (playmode_.get() == "bounce2") {
+    } else if (gui_playmode_.get() == "bounce2") {
       inc_ *= -1;
       return lower;
     } else {
-      if (playmode_.get() == "once")
-	execmode_.set( "stop" );
+      if (gui_playmode_.get() == "once")
+	gui_execmode_.set( "stop" );
       return upper;
     }
   }
@@ -1912,48 +1851,44 @@ HDF5DataReader::animate_execute( string new_filename,
 {
   bool resend = false;
 
-  update_state(NeedData);
-
-  reset_vars();
-
   // Cache var
-  bool cache = (playmode_.get() != "inc_w_exec");
+  bool cache = (gui_playmode_.get() != "inc_w_exec");
 
   // Get the current start and end.
-  const int start = range_min_.get();
-  const int end   = range_max_.get();
+  const int start = gui_range_min_.get();
+  const int end   = gui_range_max_.get();
 
   int lower = start;
   int upper = end;
   if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
 
   // Update the increment.
-  if (playmode_.get() == "once" || playmode_.get() == "loop")
+  if (gui_playmode_.get() == "once" || gui_playmode_.get() == "loop")
     inc_ = (start>end)?-1:1;
 
   // If the current value is invalid, reset it to the start.
-  if (current_.get() < lower || upper < current_.get()) {
-    current_.set(start);
+  if (gui_current_.get() < lower || upper < gui_current_.get()) {
+    gui_current_.set(start);
     inc_ = (start>end)?-1:1;
   }
 
   // Cache execmode and reset it in case we bail out early.
-  const string execmode = execmode_.get();
+  const string execmode = gui_execmode_.get();
   
-  int which = current_.get();
+  int which = gui_current_.get();
 
   // If updating, we're done for now.
   if (execmode == "update") {
 
   } else if (execmode == "step") {
-    which = increment(current_.get(), lower, upper);
+    which = increment(gui_current_.get(), lower, upper);
 
     ReadandSendData( new_filename, frame_paths[which],
 		     frame_datasets[which], cache, which );
 
   } else if (execmode == "stepb") {
     inc_ *= -1;
-    which = increment(current_.get(), lower, upper);
+    which = increment(gui_current_.get(), lower, upper);
     inc_ *= -1;
 
     ReadandSendData( new_filename, frame_paths[which],
@@ -1962,7 +1897,7 @@ HDF5DataReader::animate_execute( string new_filename,
   } else if (execmode == "play") {
 
     if( !loop_ ) {
-      if (playmode_.get() == "once" && which >= end)
+      if (gui_playmode_.get() == "once" && which >= end)
 	which = start;
     }
 
@@ -1970,9 +1905,9 @@ HDF5DataReader::animate_execute( string new_filename,
 		     frame_datasets[which], cache, which );
     
     // User may have changed the execmode to stop so recheck.
-    execmode_.reset();
-    if ( loop_ = (execmode_.get() == "play") ) {
-      const int delay = delay_.get();
+    gui_execmode_.reset();
+    if ( loop_ = (gui_execmode_.get() == "play") ) {
+      const int delay = gui_delay_.get();
       
       if( delay > 0) {
 	const unsigned int secs = delay / 1000;
@@ -1984,8 +1919,8 @@ HDF5DataReader::animate_execute( string new_filename,
       int next = increment(which, lower, upper);    
 
       // Incrementing may cause a stop in the execmode so recheck.
-      execmode_.reset();
-      if( loop_ = (execmode_.get() == "play") ) {
+      gui_execmode_.reset();
+      if( loop_ = (gui_execmode_.get() == "play") ) {
 	which = next;
 
 	want_to_execute();
@@ -2000,22 +1935,20 @@ HDF5DataReader::animate_execute( string new_filename,
     else if( execmode == "fforward" )
       which = end;
 
-    if( update_ ||
-	which != which_ ) {
+    if( inputs_changed_ ||
+	which != gui_current_.get() ) {
       ReadandSendData( new_filename, frame_paths[which],
 		       frame_datasets[which], cache, which );
     }
     else
       resend = true;
 
-    if (playmode_.get() == "inc_w_exec") {
+    if (gui_playmode_.get() == "inc_w_exec") {
       which = increment(which, lower, upper);
     }
   }
 
-  which_ = which;
-
-  current_.set(which);
+  gui_current_.set(which);
 
   return resend;
 }

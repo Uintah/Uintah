@@ -15,8 +15,8 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Core/Datatypes/VoidStar.h>
 #define Colormap XColormap
 #include <GL/gl.h>
@@ -111,7 +111,7 @@ class RTrace : public Module {
 public:
     void parallel_raytrace(int proc);
 
-    RTrace(const clString& id);
+    RTrace(const clString& get_id());
     virtual ~RTrace();
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
@@ -127,24 +127,24 @@ public:
 
 static RTrace* current_drawer=0;
 
-extern "C" Module* make_RTrace(const clString& id)
+extern "C" Module* make_RTrace(const clString& get_id())
 {
-    return scinew RTrace(id);
+    return scinew RTrace(get_id());
 }
 
 static clString module_name("RTrace");
 
-RTrace::RTrace(const clString& id)
-: Module("RTrace", id, Source), widget_lock("RTrace widget lock"),
-  nx("nx", id, this), ny("ny", id, this),
-  ns("ns", id, this), abrt("abrt", id, this), app("app", id, this), 
+RTrace::RTrace(const clString& get_id())
+: Module("RTrace", get_id(), Source), widget_lock("RTrace widget lock"),
+  nx("nx", get_id(), this), ny("ny", get_id(), this),
+  ns("ns", get_id(), this), abrt("abrt", get_id(), this), app("app", get_id(), this), 
   camera_id(0), tcl_exec(0), widgetMoved(0),
-  specMin("specMin", id, this), specMax("specMax", id, this),
-  specNum("specNum", id, this), tweak("tweak", id, this),
-  bGlMin("bGlMin", id, this), bGlMax("bGlMax", id, this),
-  bmin("bmin", id, this), bmax("bmax", id, this),
-  numProc("numProc", id, this), maxProc("maxProc", id, this),
-  scale("scale", id, this)
+  specMin("specMin", get_id(), this), specMax("specMax", get_id(), this),
+  specNum("specNum", get_id(), this), tweak("tweak", get_id(), this),
+  bGlMin("bGlMin", get_id(), this), bGlMax("bGlMax", get_id(), this),
+  bmin("bmin", get_id(), this), bmax("bmax", get_id(), this),
+  numProc("numProc", get_id(), this), maxProc("maxProc", get_id(), this),
+  scale("scale", get_id(), this)
 {
     // Create the input port
     iRT = scinew VoidStarIPort(this, "DRaytracer", VoidStarIPort::Atomic);
@@ -488,7 +488,7 @@ void RTrace::tcl_command(TCLArgs& args, void* userdata) {
 int RTrace::makeCurrent() {
     TCLTask::lock();
 
-    clString myname(clString(".ui")+id+".gl.gl");
+    clString myname(clString(".ui")+get_id()+".gl.gl");
     char *myn=strdup(myname());
     tkwin=Tk_NameToWindow(the_interp, myn, Tk_MainWindow(the_interp));
     if(!tkwin){

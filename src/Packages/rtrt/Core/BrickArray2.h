@@ -27,9 +27,20 @@
 
 namespace rtrt {
 template<class T> class BrickArray2;
-template<class T> void Pio(SCIRun::Piostream& stream, BrickArray2<T>& data);
-template<class T> void Pio(SCIRun::Piostream& stream, BrickArray2<T>*& data);
+}
 
+namespace SCIRun {
+template<class T> void Pio(SCIRun::Piostream& stream, rtrt::BrickArray2<T>& data);
+template<class T> void Pio(SCIRun::Piostream& stream, rtrt::BrickArray2<T>*& data);
+  /*
+template<> void Pio(SCIRun::Piostream& stream, rtrt::BrickArray2<int>& data);
+template<> void Pio(SCIRun::Piostream& stream, rtrt::BrickArray2<float>& data);
+template<> void Pio(SCIRun::Piostream& stream, rtrt::BrickArray2<double>& data);
+  */
+}
+
+
+namespace rtrt {
 template<class T>
 class BrickArray2 {
   T* objs;
@@ -65,8 +76,8 @@ public:
   }
   void share(const BrickArray2<T>& copy);
 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, BrickArray2<T>&);
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, BrickArray2<T>*&);
+  friend void TEMPLATE_TAG SCIRun::Pio TEMPLATE_BOX (SCIRun::Piostream&, BrickArray2<T>&);
+  friend void TEMPLATE_TAG SCIRun::Pio TEMPLATE_BOX (SCIRun::Piostream&, BrickArray2<T>*&);
 
 };
 
@@ -207,8 +218,12 @@ void BrickArray2<T>::share(const BrickArray2<T>& copy)
   L2=copy.L2;
   (*refcnt)++;
 }
+} // end namespace rtrt
 
 #define BrickArray2_VERSION 1
+
+namespace SCIRun {
+  using namespace rtrt;
 
 template<class T>
 void Pio(SCIRun::Piostream& stream, BrickArray2<T>& data)
@@ -241,6 +256,6 @@ void Pio(SCIRun::Piostream& stream, BrickArray2<T>*& data) {
   Pio(stream, *data);
 }
 
-} // end namespace rtrt
+} // end namespace SCIRun
 
 #endif

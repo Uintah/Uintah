@@ -24,11 +24,11 @@ HancockMacKenzieDamage::~HancockMacKenzieDamage()
 
 void HancockMacKenzieDamage::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP damage_ps = ps->appendChild("damage_model",true,4);
+  ProblemSpecP damage_ps = ps->appendChild("damage_model");
   damage_ps->setAttribute("type","hancock_mackenzie");
 
-  damage_ps->appendElement("D0",d_initialData.D0,false,5);
-  damage_ps->appendElement("Dc",d_initialData.Dc,false,5);
+  damage_ps->appendElement("D0",d_initialData.D0);
+  damage_ps->appendElement("Dc",d_initialData.Dc);
 }
 
          

@@ -28,7 +28,7 @@
 
 
 /*
- *  ChooseMatrix.cc: Choose one input matrix to be passed downstream
+ *  ChooseMatrix.cc: Choose one input field to be passed downstream
  *
  *  Written by:
  *   David Weinstein
@@ -39,85 +39,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Containers/Handle.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <iostream>
+#include <Dataflow/Network/ChooseModule.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 namespace SCIRun {
 
-class ChooseMatrix : public Module {
-private:
-  GuiInt port_index_;
-  GuiInt usefirstvalid_;
+class ChooseMatrix : public ChooseModule< MatrixHandle > {
 public:
   ChooseMatrix(GuiContext* ctx);
-  virtual ~ChooseMatrix();
-  virtual void execute();
 };
 
 DECLARE_MAKER(ChooseMatrix)
 ChooseMatrix::ChooseMatrix(GuiContext* ctx)
-  : Module("ChooseMatrix", ctx, Filter, "Math", "SCIRun"),
-    port_index_(ctx->subVar("port-index")),
-    usefirstvalid_(ctx->subVar("usefirstvalid"))
+  : ChooseModule< MatrixHandle >("ChooseMatrix", ctx, Filter,
+				 "Math", "SCIRun", "Matrix")
 {
-}
-
-ChooseMatrix::~ChooseMatrix()
-{
-}
-
-void
-ChooseMatrix::execute()
-{
-  MatrixOPort *ofld = (MatrixOPort *)get_oport("Matrix");
-  port_range_type range = get_iports("Matrix");
-  if (range.first == range.second)
-    return;
-
-  port_map_type::iterator pi = range.first;
-
-  int usefirstvalid = usefirstvalid_.get();
-
-  MatrixIPort *imatrix = 0;
-  MatrixHandle matrix;
-  
-  if (usefirstvalid) {
-    // iterate over the connections and use the
-    // first valid matrix
-    int idx = 0;
-    bool found_valid = false;
-    while (pi != range.second) {
-      imatrix = (MatrixIPort *)get_iport(idx);
-      if (imatrix->get(matrix) && matrix != 0) {
-	found_valid = true;
-	break;
-      }
-      ++idx;
-      ++pi;
-    }
-    if (!found_valid) {
-      error("Didn't find any valid matrices.");
-      return;
-    }
-  } else {
-    // use the index specified
-    int idx=port_index_.get();
-    if (idx<0) { error("Can't choose a negative port."); return; }
-    while (pi != range.second && idx != 0) { ++pi ; idx--; }
-    int port_number=pi->second;
-    if (pi == range.second || ++pi == range.second) { 
-      error("Selected port index out of range."); return; 
-    }
-
-    imatrix = (MatrixIPort *)get_iport(port_number);
-    imatrix->get(matrix);
-  }
-  
-  ofld->send_and_dereference(matrix);
 }
 
 } // End namespace SCIRun

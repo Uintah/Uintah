@@ -39,8 +39,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Basis/Constant.h>
@@ -197,19 +197,19 @@ ShowDipoles::load_gui()
     if (!new_positions_[i]) {
       ostringstream str;
       str << "newpos" << i;
-      new_positions_[i] = new GuiPoint(ctx->subVar(str.str()));
+      new_positions_[i] = new GuiPoint(get_ctx()->subVar(str.str()));
       new_positions_[i]->reset();
     }
     if (!new_directions_[i]) {
       ostringstream str;
       str << "newdir" << i;
-      new_directions_[i] = new GuiVector(ctx->subVar(str.str()));
+      new_directions_[i] = new GuiVector(get_ctx()->subVar(str.str()));
       new_directions_[i]->reset();
     }
     if (!new_magnitudes_[i]) {
       ostringstream str;
       str << "newmag" << i;
-      new_magnitudes_[i] = new GuiDouble(ctx->subVar(str.str()));
+      new_magnitudes_[i] = new GuiDouble(get_ctx()->subVar(str.str()));
       new_magnitudes_[i]->reset();
     }
 

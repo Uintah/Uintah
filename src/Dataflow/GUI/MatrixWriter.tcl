@@ -36,22 +36,11 @@ catch {rename SCIRun_DataIO_MatrixWriter ""}
 
 itcl_class SCIRun_DataIO_MatrixWriter {
     inherit Module
+
     constructor {config} {
 	set name MatrixWriter
-	set_defaults
     }
-    method set_defaults {} {
-	global $this-filetype $this-confirm $this-split
-	set $this-filetype Binary
-	set $this-split 0
-	set $this-confirm 1
-	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
-	    set $this-confirm 0
-	}
 
-	global $this-types
-	global $this-exporttype
-    }
     method overwrite {} {
 	global $this-confirm $this-filetype
 	if {[info exists $this-confirm] && [info exists $this-filename] && \

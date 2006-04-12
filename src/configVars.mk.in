@@ -187,6 +187,10 @@ HAVE_VERDICT    := @HAVE_VERDICT@
 VERDICT_LIBRARY := @VERDICT_LIB_DIR_FLAG@ @VERDICT_LIB_FLAG@
 VERDICT_INCLUDE := @INC_VERDICT_H@
 
+HAVE_TETGEN    := @HAVE_TETGEN@
+TETGEN_LIBRARY := @TETGEN_LIB_DIR_FLAG@ @TETGEN_LIB_FLAG@
+TETGEN_INCLUDE := @INC_TETGEN_H@
+
 PERFEX_LIBRARY := @PERFEX_LIB_DIR_FLAG@ @PERFEX_LIB_FLAG@
 
 HAVE_BLAS      := @HAVE_BLAS@
@@ -289,6 +293,7 @@ TIFF_LIBRARY := @TIFF_LIB_FLAG@ @TIFF_LIB_DIR_FLAG@
 
 PNG_INCLUDE := @INC_PNG_H@
 PNG_LIBRARY := @PNG_LIB_DIR_FLAG@ @PNG_LIB_FLAG@
+HAVE_PNG := @HAVE_PNG@
 
 HAVE_INSIGHT := @HAVE_INSIGHT@
 INSIGHT_LIBRARY := @INSIGHT_LIB_DIR_FLAG@ @INSIGHT_LIB_FLAG@ 
@@ -360,9 +365,6 @@ endif
 VDT_INCLUDE := @INC_VDT_H@
 VDT_LIBRARY := @VDT_LIB_DIR_FLAG@ @VDT_LIB_FLAG@
 
-MAGICK_INCLUDE := @INC_MAGICK_H@
-MAGICK_LIBRARY := @MAGICK_LIB_DIR_FLAG@ @MAGICK_LIB_FLAG@
-
 HAVE_HYPRE     := @HAVE_HYPRE@
 HAVE_HYPRE_1_9 := @HAVE_HYPRE_1_9@
 HYPRE_LIBRARY  := @HYPRE_LIB_DIR_FLAG@ @HYPRE_LIB_FLAG@
@@ -374,7 +376,7 @@ PETSC_LIBRARY  := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@
 
 PETSC_UNI_LIBRARY := @PETSC_UNI_LIB_DIR_FLAG@ @PETSC_UNI_LIB_FLAG@ @MPI_UNI_LIB_DIR_FLAG@ @MPI_UNI_LIB_FLAG@
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include -I$(SRCTOP)/Packages @INC_SCI_THIRDPARTY_H@ @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_ITK_H@ @INC_BLT_H@ @INC_GLOBUS_H@ $(QT_INCLUDE) @INC_XML2_H@ @INC_PETSC_H@ $(MPI_INCLUDE) @INC_MPI_UNI_H@ @INC_PETSC_UNI_H@ @INC_GLUI_H@ @INC_GLUT_H@ @INC_GL_H@ @INC_GLEW_H@ @INC_OOGL_H@ @INC_Z_H@ @INC_HYPRE_H@ @INC_SIDL_H@ @INC_CAMAL_H@ @INC_MESQUITE_H@ @INC_VERDICT_H@ $(TAUINC) 
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include -I$(SRCTOP)/Packages @INC_SCI_THIRDPARTY_H@ @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_ITK_H@ @INC_BLT_H@ @INC_GLOBUS_H@ $(QT_INCLUDE) @INC_XML2_H@ @INC_PETSC_H@ $(MPI_INCLUDE) @INC_MPI_UNI_H@ @INC_PETSC_UNI_H@ @INC_GLUI_H@ @INC_GLUT_H@ @INC_GL_H@ @INC_GLEW_H@ @INC_OOGL_H@ @INC_Z_H@ @INC_HYPRE_H@ @INC_SIDL_H@ @INC_CAMAL_H@ @INC_MESQUITE_H@ @INC_VERDICT_H@ @INC_TETGEN_H@ $(TAUINC) @INC_PNG_H@
 FINCLUDES += -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include
 
 
@@ -392,13 +394,20 @@ AS              := @AS@
 LD              := @LD@
 CFLAGS          := @CFLAGS@ $(CFLAGS) $(QT_DEFS) @WOFF_STRING@
 CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) $(QT_DEFS) @WOFF_STRING@
-SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
-LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CXXFLAGS)
+ifneq ($(IS_WIN),yes)
+  SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
+  LDFLAGS         := $(CXXFLAGS) @LDFLAGS@ -L$(LIBDIR)
+else
+  SOFLAGS         := $(CFLAGS) @SOFLAGS@ -LIBPATH:$(LIBDIR)
+  LDFLAGS         := $(CXXFLAGS) @LDFLAGS@
+  PROGRAM_LDFLAGS := -link -LIBPATH:$(LIBDIR)
+endif
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
 F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
+OBJEXT := @OBJEXT@
 
 ################################################################
 # Auto dependency generation flags
@@ -426,9 +435,9 @@ else
   SONAMEFLAG = 
 endif
 
-.SUFFIXES: .cc .c .o .s .F .f .cpp .cxx
+.SUFFIXES: .cc .c .$(OBJEXT) .s .F .f .cpp .cxx
 
-.cc.o: $<
+.cc.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
@@ -437,13 +446,13 @@ endif
 ifeq ($(CC_DEPEND_MODE),normal)
   ifneq ($(TAU_MAKEFILE),)
     ifneq ($(PDTDIR),)
-	-echo "Building $*.o ..." ; \
+	-echo "Building $*.$(OBJEXT) ..." ; \
 	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
 	pdbfile=`basename $< .cc`.pdb ; \
 	$(TAUINSTR) $$pdbfile $< -o $*.inst.cc -f $(SRCTOP)/tau/select.dat ; \
         $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $*.inst.cc -o $@ ; \
 	if [ -f $@ ] ; then  \
-	echo "Instrumented $*.o successfully  " ; \
+	echo "Instrumented $*.$(OBJEXT) successfully  " ; \
 	else \
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; \
 	ls -l $@; \
@@ -497,7 +506,7 @@ else
   endif
 endif
 
-.cpp.o: $<
+.cpp.$(OBJEXT): $<
 	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
@@ -533,7 +542,7 @@ endif
 endif
 endif
 
-.F.o: $<
+.F.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
@@ -578,7 +587,7 @@ endif
 endif
 endif
 
-.f.o: $<
+.f.$(OBJEXT): $<
 	-rm -f $@
 ifeq ($(F77_DEPEND_MODE),normal)
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
@@ -614,7 +623,7 @@ endif
 endif
 endif
 
-.c.o: $<
+.c.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
@@ -623,9 +632,9 @@ endif
 ifeq ($(CC_DEPEND_MODE),normal)
   ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
-	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN)  -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
   else
-	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN)  -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
   endif
 else
   ifeq ($(CC_DEPEND_MODE),modify)
@@ -660,7 +669,7 @@ else
   endif
 endif
 
-.s.o: $<
+.s.$(OBJEXT): $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
 
 .cxx.o: $<

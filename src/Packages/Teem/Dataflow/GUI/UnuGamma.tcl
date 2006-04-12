@@ -33,25 +33,9 @@ catch {rename Teem_UnuAtoM_UnuGamma ""}
 
 itcl_class Teem_UnuAtoM_UnuGamma {
     inherit Module
+
     constructor {config} {
         set name UnuGamma
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-gamma
-        set $this-gamma 0
-
-        global $this-min
-        set $this-min 1.0
-
-	global $this-useinputmin
-	set $this-useinputmin 1
-
-        global $this-max
-        set $this-max 1.0
-
-	global $this-useinputmax
-	set $this-useinputmax 1
     }
 
     method ui {} {

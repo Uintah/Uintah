@@ -40,7 +40,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/TypeDescription.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geometry/BBox.h>
 #include <Packages/Insight/Core/Datatypes/ITKImageField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
@@ -97,7 +97,7 @@ public:
 DECLARE_MAKER(FieldToImage)
 FieldToImage::FieldToImage(GuiContext* ctx)
   : Module("FieldToImage", ctx, Source, "Converters", "Insight"),
-    copy_(ctx->subVar("copy"))
+    copy_(get_ctx()->subVar("copy"))
 {
   img_ = scinew ITKDatatype;
 }

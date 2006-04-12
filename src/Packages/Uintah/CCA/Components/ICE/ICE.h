@@ -308,6 +308,12 @@ namespace Uintah {
        delete lb;
        lb = Ilb;
       };
+
+       void setWithMPM()
+       {
+         d_with_mpm = true;
+       };
+
       
     public:
       
@@ -380,14 +386,16 @@ namespace Uintah {
                                        constCCVariable<double>& sp_vol_CC,
                                        constCCVariable<Vector>& vel_CC,
                                        constCCVariable<double>& press_CC,
-                                       T& vel_FC);
+                                       T& vel_FC,
+                                       T& gradP_FC);
                                        
       template<class T> void updateVelFace(int dir, CellIterator it,
                                        IntVector adj_offset,double dx,
                                        double delT,
                                        constCCVariable<double>& sp_vol_CC,
                                        constCCVariable<double>& press_CC,
-                                       T& vel_FC);
+                                       T& vel_FC,
+                                       T& grad_dp_FC);
                                        
       template<class V, class T>
         void add_vel_FC_exchange( CellIterator it,
@@ -557,7 +565,8 @@ namespace Uintah {
                               const Patch* finePatch,
                               const Level* coarseLevel,
                               const Level* fineLevel,
-                              DataWarehouse* new_dw);
+                              DataWarehouse* new_dw,
+                              const int one_zero);
                               
     void refluxCoarseLevelIterator(Patch::FaceType patchFace,
                                    const Patch* coarsePatch,
@@ -565,7 +574,8 @@ namespace Uintah {
                                    const Level* fineLevel,
                                    CellIterator& iter,
                                    IntVector& coarse_FC_offset,
-                                   bool& CP_containsCell);
+                                   bool& CP_containsCell,
+                                   const string& whichTask);
     template<class T>
     void refluxOperator_applyCorrectionFluxes(                             
                               CCVariable<T>& q_CC_coarse,
@@ -575,7 +585,8 @@ namespace Uintah {
                               const Patch* finePatch,
                               const Level* coarseLevel,
                               const Level* fineLevel,
-                              DataWarehouse* new_dw);
+                              DataWarehouse* new_dw,
+                              const int one_zero);
 //__________________________________ 
 //  I M P L I C I T   I C E                                                                            
       void setupMatrix(const ProcessorGroup*,
@@ -828,6 +839,7 @@ namespace Uintah {
       bool d_recompile;
       bool d_useLockStep;
       bool d_canAddICEMaterial;
+      bool d_with_mpm;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
@@ -960,11 +972,11 @@ namespace Uintah {
       bool   d_dbgGnuPlot;
       bool   d_dbgTime_to_printData;
       bool   d_dbgSymmetryTest;
-      IntVector d_dbgBeginIndx;
-      IntVector d_dbgEndIndx;
+      vector<IntVector> d_dbgBeginIndx;
+      vector<IntVector> d_dbgEndIndx;
       IntVector d_dbgSymPlanes;
       vector<int> d_dbgMatls;
-      int d_dbgLevel; 
+      vector<int> d_dbgLevel; 
       int d_dbgSigFigs;
       
       //__________________________________

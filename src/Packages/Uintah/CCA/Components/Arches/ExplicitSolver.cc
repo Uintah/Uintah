@@ -211,6 +211,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   }
   db->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
   db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
+  db->getWithDefault("restartOnNegativeDensityGuess",
+		     d_restart_on_negative_density_guess,false);
 
 #ifdef PetscFilter
     d_props->setFilter(d_turbModel->getFilter());
@@ -2514,10 +2516,18 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,
 		     matlIndex, patch);
     if (negativeDensityGuess > 0.0) {
-      if (pc->myrank() == 0)
-        cout << "WARNING: got negative density guess. Reverting to old density" << endl;
-      old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
-		             matlIndex, patch);
+      if (d_restart_on_negative_density_guess) {
+        if (pc->myrank() == 0)
+          cout << "WARNING: got negative density guess. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
+        new_dw->abortTimestep();
+        new_dw->restartTimestep();
+      }
+      else {
+        if (pc->myrank() == 0)
+          cout << "WARNING: got negative density guess. Reverting to old density." << endl;
+        old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
+		               matlIndex, patch);
+      }
     }   
   }
 }

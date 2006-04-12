@@ -50,7 +50,7 @@ class SampleFieldRandomAlgo : public DynamicAlgoBase
 {
 public:
   typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
-  virtual FieldHandle execute(ProgressReporter *mod,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp) = 0;
 
@@ -81,7 +81,7 @@ private:
 
 public:
 
-  virtual FieldHandle execute(ProgressReporter *mod,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp);
 };
@@ -170,7 +170,7 @@ SampleFieldRandomAlgoT<Mesh>::build_table(Mesh *mesh,
 
 template <class Mesh>
 FieldHandle
-SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
+SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *reporter,
 				      FieldHandle field,
 				      unsigned int num_seeds,
 				      int rng_seed,
@@ -181,7 +181,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
   Mesh *mesh = dynamic_cast<Mesh *>(field->mesh().get_rep());
   if (mesh == 0)
   {
-    mod->error("Invalid input mesh.");
+    reporter->error("Invalid input mesh.");
     return 0;
   }
 
@@ -205,26 +205,26 @@ SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
   {
     if (!build_table(mesh, 0, 0, table, distmode))
     {
-      mod->error("Unable to build unweighted weight table for this mesh.");
-      mod->error("Mesh is likely to be empty.");
+      reporter->error("Unable to build unweighted weight table for this mesh.");
+      reporter->error("Mesh is likely to be empty.");
       return 0;
     }
   }
-  else if ((sfi = field->query_scalar_interface(mod)).get_rep() ||
-	   (vfi = field->query_vector_interface(mod)).get_rep())
+  else if ((sfi = field->query_scalar_interface(reporter)).get_rep() ||
+	   (vfi = field->query_vector_interface(reporter)).get_rep())
   {
     mesh->synchronize(Mesh::LOCATE_E);
     if (!build_table(mesh, sfi, vfi, table, distmode))
     {
-      mod->error("Invalid weights in mesh, probably all zero.");
-      mod->error("Try using an unweighted option.");
+      reporter->error("Invalid weights in mesh, probably all zero.");
+      reporter->error("Try using an unweighted option.");
       return 0;
     }
   }
   else
   {
-    mod->error("Mesh contains non-weight data.");
-    mod->error("Try using an unweighted option.");
+    reporter->error("Mesh contains non-weight data.");
+    reporter->error("Try using an unweighted option.");
     return 0;
   }
 
