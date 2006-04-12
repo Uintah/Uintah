@@ -242,6 +242,7 @@ public:
   };
 
   typedef Face Elem;
+  typedef Edge DElem;
 
   friend class INodeIter;
   friend class IFaceIter;
@@ -444,6 +445,13 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const;
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  const typename Elem::index_type &idx) const
+  {
+    get_edges(result, idx);
+  }
+
   //! return all face_indecies that overlap the BBox in arr.
   void get_faces(typename Face::array_type &arr, const BBox &box);
 
@@ -535,6 +543,8 @@ public:
   { transform_ = trans; return transform_; }
 
   virtual int dimensionality() const { return 2; }
+  virtual int  topology_geometry() const { return (STRUCTURED | REGULAR); }
+
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();

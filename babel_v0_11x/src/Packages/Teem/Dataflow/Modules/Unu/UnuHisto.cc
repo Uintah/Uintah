@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
 
@@ -62,12 +62,12 @@ DECLARE_MAKER(UnuHisto)
 
 UnuHisto::UnuHisto(SCIRun::GuiContext *ctx) : 
   Module("UnuHisto", ctx, Filter, "UnuAtoM", "Teem"), 
-  bins_(ctx->subVar("bins")),
-  min_(ctx->subVar("min")),
-  useinputmin_(ctx->subVar("useinputmin")),
-  max_(ctx->subVar("max")),
-  useinputmax_(ctx->subVar("useinputmax")),
-  type_(ctx->subVar("type"))
+  bins_(get_ctx()->subVar("bins")),
+  min_(get_ctx()->subVar("min")),
+  useinputmin_(get_ctx()->subVar("useinputmin")),
+  max_(get_ctx()->subVar("max")),
+  useinputmax_(get_ctx()->subVar("useinputmax")),
+  type_(get_ctx()->subVar("type"))
 {
 }
 
@@ -96,10 +96,10 @@ UnuHisto::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *weight = 0;
   if (wnrrd_->get(weight_handle)) {
-    weight = weight_handle->nrrd;    
+    weight = weight_handle->nrrd_;    
   }
   Nrrd *nout = nrrdNew();
 

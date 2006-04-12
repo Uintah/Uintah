@@ -30,21 +30,22 @@
 # Utility functions
 
 # To link two variables, so that when one changes the other changes, too
-# (update_vars is just the helper function, link_vars is the one to use
-
-proc update_vars {v2 v1 vtmp op} {
-    global $v1
-    global $v2
-    if {[set $v1] != [set $v2]} {
-	set $v2 [set $v1]
-    }
-}
+# (update_vars is just the helper function, link_vars is the one to use)
 
 proc link_vars {v1 v2} {
     global $v1
     global $v2
     trace variable $v1 w "update_vars $v2"
     trace variable $v2 w "update_vars $v1"
+}
+
+# Helper function, do NOT call directly.
+proc update_vars {v2 v1 vtmp op} {
+    global $v1
+    global $v2
+    if {[set $v1] != [set $v2]} {
+	set $v2 [set $v1]
+    }
 }
 
 
@@ -378,3 +379,33 @@ proc centerWindow { w1 { w2 "" } } {
     grab $w1
 }
 
+#############################################################################
+# label_pair frame "Label Text" "Label Var"
+#
+# - frame         : The tcl path to the location name the frame should be created at (eg: .w.f1)
+# - Label Text    : Text to use as the label 
+# - Label Var     : Variable that will be used to update this field
+# - [Label Width] : Optional width of the label text (defaults to 12) 
+#
+# Example use:
+#
+#  set temp 212
+#  label_pair "Temperature" tempature
+#
+#  Creates a new 'frame' displaying:
+#
+#    Temperature  :  212
+# 
+# If the var 'tempature' is updated, the label will automatically update too.
+#
+
+proc label_pair { f text_label text_var {first_width 12} } {
+    frame $f 
+
+    label $f.l1 -text $text_label -width $first_width -anchor w -just left
+
+    label $f.colon  -text ":" -width 2 -anchor w -just left 
+
+    label $f.l2 -textvar $text_var -width 40 -anchor w -just left -fore darkred -borderwidth 0
+    pack $f.l1 $f.colon $f.l2 -side left
+} 

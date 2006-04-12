@@ -35,7 +35,13 @@
 #define TCLCONST
 #endif
 
-int
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
+SCISHARE int
 Tk_CursorCmd(clientData, interp, argc, argv)
      ClientData clientData;
      Tcl_Interp *interp;                 /* Current interpreter. */

@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
 
@@ -58,14 +58,17 @@ DECLARE_MAKER(UnuAxsplit)
 
 UnuAxsplit::UnuAxsplit(SCIRun::GuiContext *ctx) : 
   Module("UnuAxsplit", ctx, Filter, "UnuAtoM", "Teem"), 
-  axis_(ctx->subVar("axis")),
-  fastsize_(ctx->subVar("fastsize")),
-  slowsize_(ctx->subVar("slowsize"))
+  axis_(get_ctx()->subVar("axis"), 0),
+  fastsize_(get_ctx()->subVar("fastsize"), 0),
+  slowsize_(get_ctx()->subVar("slowsize"), 0)
 {
 }
 
-UnuAxsplit::~UnuAxsplit() {
+
+UnuAxsplit::~UnuAxsplit()
+{
 }
+
 
 void 
 UnuAxsplit::execute()
@@ -83,7 +86,7 @@ UnuAxsplit::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdAxesSplit(nout, nin, axis_.get(), fastsize_.get(), slowsize_.get())) {

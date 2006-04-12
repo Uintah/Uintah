@@ -38,7 +38,7 @@
 #include <Core/Datatypes/FieldInterface.h>
 
 #include <Core/Containers/Handle.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ChangeFieldDataType.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Containers/StringUtil.h>
@@ -70,9 +70,9 @@ DECLARE_MAKER(ChangeFieldDataType)
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
   : Module("ChangeFieldDataType", ctx, Filter, "FieldsData", "SCIRun"),
-    outputdatatype_(ctx->subVar("outputdatatype")),
-    inputdatatype_(ctx->subVar("inputdatatype", false)),
-    fldname_(ctx->subVar("fldname", false)),
+    outputdatatype_(get_ctx()->subVar("outputdatatype"), "double"),
+    inputdatatype_(get_ctx()->subVar("inputdatatype", false), "---"),
+    fldname_(get_ctx()->subVar("fldname", false), "---"),
     generation_(-1),
     outputfield_(0)
 {

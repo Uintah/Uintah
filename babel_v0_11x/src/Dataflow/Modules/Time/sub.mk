@@ -17,12 +17,21 @@ SRCS += $(SRCDIR)/TimeControls.cc
 
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry \
-        Core/GeomInterface Core/TkExtensions \
-        Core/Bundle Core/Volume
+PSELIBS := \
+        Core/Bundle         \
+	Core/Containers     \
+	Core/Datatypes      \
+        Core/Exceptions     \
+        Core/Geom           \
+	Core/Geometry       \
+        Core/GeomInterface  \
+	Core/GuiInterface   \
+        Core/Persistent     \
+	Core/Thread         \
+	Core/TkExtensions   \
+	Core/Util           \
+	Core/Volume         \
+	Dataflow/Network    
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

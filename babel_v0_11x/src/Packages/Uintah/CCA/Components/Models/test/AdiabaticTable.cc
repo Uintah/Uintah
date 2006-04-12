@@ -103,23 +103,23 @@ AdiabaticTable::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 
 void AdiabaticTable::Region::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP geom_obj_ps = ps->appendChild("geom_object",true,4);
+  ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
   piece->outputProblemSpec(geom_obj_ps);
-  geom_obj_ps->appendElement("scalar", initialScalar,false,4);
+  geom_obj_ps->appendElement("scalar", initialScalar);
 }
 
 void AdiabaticTable::Scalar::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP scalar_ps = ps->appendChild("scalar",true,3);
+  ProblemSpecP scalar_ps = ps->appendChild("scalar");
   scalar_ps->setAttribute("name",name);
 
-  scalar_ps->appendElement("test_conservation", d_test_conservation,false,4);
-  scalar_ps->appendElement("doTableTest", d_doTableTest,false,4);
+  scalar_ps->appendElement("test_conservation", d_test_conservation);
+  scalar_ps->appendElement("doTableTest", d_doTableTest);
 
-  ProblemSpecP constants_ps = scalar_ps->appendChild("constants",true,4);
-  constants_ps->appendElement("diffusivity",diff_coeff,false,4);
+  ProblemSpecP constants_ps = scalar_ps->appendChild("constants");
+  constants_ps->appendElement("diffusivity",diff_coeff);
   constants_ps->appendElement("AMR_Refinement_Criteria",
-                              refineCriteria,false,4);
+                              refineCriteria);
   
   for (vector<Region*>::const_iterator it = regions.begin();
        it != regions.end(); ++it) {
@@ -131,20 +131,20 @@ void AdiabaticTable::Scalar::outputProblemSpec(ProblemSpecP& ps)
 
 void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","AdiabaticTable");
 
   for (vector<TableValue*>::const_iterator it = tablevalues.begin();
        it != tablevalues.end(); ++it)
     (*it)->outputProblemSpec(model_ps);
 
-  model_ps->appendElement("material",d_matl->getName(),false,4);
+  model_ps->appendElement("material",d_matl->getName());
 
-  model_ps->appendElement("varianceScale",varianceScale,false,4);
-  model_ps->appendElement("varianceMax",varianceMax,false,4);
+  model_ps->appendElement("varianceScale",varianceScale);
+  model_ps->appendElement("varianceMax",varianceMax);
 
 #if 1
-  ProblemSpecP table_ps = model_ps->appendChild("table",true,4);
+  ProblemSpecP table_ps = model_ps->appendChild("table");
   table_ps->setAttribute("name","adiabatic");
   table->outputProblemSpec(table_ps);
 #endif
@@ -177,7 +177,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   //setup the table
   string tablename = "adiabatic";
   table = TableFactory::readTable(params, tablename);
-  table->addIndependentVariable("F");
+  table->addIndependentVariable("mixture_fraction");
   if(d_useVariance)
     table->addIndependentVariable("Fvar");
   
@@ -191,7 +191,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     tablevalues.push_back(tv);
   }
   
-  d_temp_index          = table->addDependentVariable("Temp");
+  d_temp_index          = table->addDependentVariable("temperature");
   d_density_index       = table->addDependentVariable("density");
   d_gamma_index         = table->addDependentVariable("gamma");
   d_cv_index            = table->addDependentVariable("heat_capac_Cv");
@@ -200,7 +200,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_ref_cv_index    = table->addDependentVariable("reference_heat_capac_Cv");
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
-//  d_MW_index        = table->addDependentVariable("mix_mol_wt");
+//  d_MW_index        = table->addDependentVariable("mixture_molecular_weight");
   
   bool cerrSwitch = (d_myworld->myrank() == 0); 
   table->setup(cerrSwitch);

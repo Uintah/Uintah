@@ -355,8 +355,8 @@
        <Model type = "AdiabaticTable">
         <tableValue>CO2</tableValue>
         <tableValue>H2O</tableValue>      
-        <tableValue>Temp</tableValue>     
-        <tableValue>density</tableValue>          
+       <!-- <tableValue>temperature</tableValue>     
+        <tableValue>density</tableValue>     -->     
         <table name = "adiabatic" type = "Arches">
           <include href="inputs/Models/JP8.xml"/>
         </table>
@@ -366,10 +366,7 @@
            <diffusivity>0</diffusivity>
         </constants> 
         <geom_object>
-           <box label = "world">
-                <min>       [-5, -5, -5]   </min>
-                <max>       [5,   8,  5]   </max>
-           </box>
+           <box label = "world"/>
            <scalar>    0.00   </scalar>
         </geom_object>
         
@@ -382,8 +379,8 @@
       <Model type = "Radiation">
         <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
-        <!--<calcFreq>                  5    </calcFreq> -->
-        <calcInterval>           0.005   </calcInterval>
+        <calcFreq>                  5    </calcFreq>  <!-- CHANGE THIS -->
+        <!--<calcInterval>           0.005   </calcInterval> -->
         <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
         <useTableValues>            true </useTableValues>
         

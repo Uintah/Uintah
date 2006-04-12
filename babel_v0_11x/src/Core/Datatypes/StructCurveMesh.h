@@ -67,7 +67,6 @@
 #include <float.h>
 #include <sgi_stl_warnings_on.h>
 
-
 namespace SCIRun {
 
 using std::string;
@@ -93,6 +92,8 @@ public:
   }
 
   bool get_dim(vector<unsigned int>&) const;
+
+  virtual int topology_geometry() const { return (Mesh::STRUCTURED | Mesh::IRREGULAR); }
 
   //! get the child elements of the given index
   void get_nodes(typename ScanlineMesh<Basis>::Node::array_type &,

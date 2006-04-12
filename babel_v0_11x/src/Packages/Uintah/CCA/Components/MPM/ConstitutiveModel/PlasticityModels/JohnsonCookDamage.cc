@@ -37,16 +37,16 @@ JohnsonCookDamage::~JohnsonCookDamage()
 
 void JohnsonCookDamage::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP damage_ps = ps->appendChild("damage_model",true,4);
+  ProblemSpecP damage_ps = ps->appendChild("damage_model");
   damage_ps->setAttribute("type","johnson_cook");
 
-  damage_ps->appendElement("D1",d_initialData.D1,false,5);
-  damage_ps->appendElement("D2",d_initialData.D2,false,5);
-  damage_ps->appendElement("D3",d_initialData.D3,false,5);
-  damage_ps->appendElement("D4",d_initialData.D4,false,5);
-  damage_ps->appendElement("D5",d_initialData.D5,false,5);
-  damage_ps->appendElement("D0",d_initialData.D0,false,5);
-  damage_ps->appendElement("Dc",d_initialData.Dc,false,5);
+  damage_ps->appendElement("D1",d_initialData.D1);
+  damage_ps->appendElement("D2",d_initialData.D2);
+  damage_ps->appendElement("D3",d_initialData.D3);
+  damage_ps->appendElement("D4",d_initialData.D4);
+  damage_ps->appendElement("D5",d_initialData.D5);
+  damage_ps->appendElement("D0",d_initialData.D0);
+  damage_ps->appendElement("Dc",d_initialData.Dc);
 }
 
 	 

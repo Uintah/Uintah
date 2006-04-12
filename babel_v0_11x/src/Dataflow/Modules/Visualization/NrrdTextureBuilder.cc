@@ -35,10 +35,10 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Volume/VideoCardInfo.h>
-#include <Dataflow/Ports/TexturePort.h>
+#include <Dataflow/Network/Ports/TexturePort.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
@@ -80,14 +80,14 @@ DECLARE_MAKER(NrrdTextureBuilder)
 NrrdTextureBuilder::NrrdTextureBuilder(GuiContext* ctx)
   : Module("NrrdTextureBuilder", ctx, Source, "Visualization", "SCIRun"),
     tHandle_(new Texture),
-    gui_vminval_(ctx->subVar("vmin")),
-    gui_vmaxval_(ctx->subVar("vmax")),
-    gui_gminval_(ctx->subVar("gmin")),
-    gui_gmaxval_(ctx->subVar("gmax")),
-    gui_fixed_(ctx->subVar("is_fixed")),
-    gui_card_mem_(ctx->subVar("card_mem")),
-    gui_card_mem_auto_(ctx->subVar("card_mem_auto")),
-    gui_uchar_(ctx->subVar("is_uchar")),
+    gui_vminval_(get_ctx()->subVar("vmin"), 0),
+    gui_vmaxval_(get_ctx()->subVar("vmax"), 1),
+    gui_gminval_(get_ctx()->subVar("gmin"), 0),
+    gui_gmaxval_(get_ctx()->subVar("gmax"), 1),
+    gui_fixed_(get_ctx()->subVar("is_fixed"), 0),
+    gui_card_mem_(get_ctx()->subVar("card_mem"), 16),
+    gui_card_mem_auto_(get_ctx()->subVar("card_mem_auto"), 1),
+    gui_uchar_(get_ctx()->subVar("is_uchar"), 1),
     card_mem_(video_card_memory_size()),
     is_uchar_(1),
     vnrrd_last_generation_(-1),
@@ -121,14 +121,14 @@ NrrdTextureBuilder::execute()
     return;
   }
 
-  Nrrd* nv_nrrd = vHandle->nrrd;
+  Nrrd* nv_nrrd = vHandle->nrrd_;
 
   if (nv_nrrd->dim != 3 && nv_nrrd->dim != 4) {
     error("Invalid dimension for input value nrrd.");
     return;
   }
 
-  int axis_size[4];
+  size_t axis_size[4];
   nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
   if (nv_nrrd->dim == 4 && axis_size[0] != 1 && axis_size[0] != 4) {
     error("Invalid axis size for Normal/Value nrrd.");
@@ -136,14 +136,14 @@ NrrdTextureBuilder::execute()
   }
 
   // The input nrrd type must be unsigned char.
-  if (gui_uchar_.get() && vHandle->nrrd->type != nrrdTypeUChar) {
+  if (gui_uchar_.get() && vHandle->nrrd_->type != nrrdTypeUChar) {
     error("Normal/Value input nrrd type must be unsigned char.");
     return;
   }
 
   if( !gui_fixed_.get() ){
     // set vmin/vmax
-    NrrdRange *range = nrrdRangeNewSet(vHandle->nrrd, nrrdBlind8BitRangeFalse);
+    NrrdRange *range = nrrdRangeNewSet(vHandle->nrrd_, nrrdBlind8BitRangeFalse);
 
     gui_vminval_.set(range->min);
     gui_vmaxval_.set(range->max);
@@ -178,7 +178,7 @@ NrrdTextureBuilder::execute()
       gnrrd_last_generation_ = -1;
 
     } else {
-      Nrrd* gm_nrrd = gHandle->nrrd;
+      Nrrd* gm_nrrd = gHandle->nrrd_;
 
       if (gm_nrrd->dim != 3 && gm_nrrd->dim != 4) {
 	error("Invalid dimension for input gradient magnitude nrrd.");
@@ -194,7 +194,7 @@ NrrdTextureBuilder::execute()
       }
 
       // The input nrrd type must be unsigned char.
-      if (gui_uchar_.get() && gHandle->nrrd->type != nrrdTypeUChar) {
+      if (gui_uchar_.get() && gHandle->nrrd_->type != nrrdTypeUChar) {
 	error("Gradient magnitude input nrrd type must be unsigned char.");
 	return;
       }
@@ -202,7 +202,7 @@ NrrdTextureBuilder::execute()
       if( !gui_fixed_.get() ){
 	// set gmin/gmax
 	NrrdRange *range =
-	  nrrdRangeNewSet(gHandle->nrrd, nrrdBlind8BitRangeFalse);
+	  nrrdRangeNewSet(gHandle->nrrd_, nrrdBlind8BitRangeFalse);
 
 	gui_gminval_.set(range->min);
 	gui_gmaxval_.set(range->max);
@@ -236,10 +236,10 @@ NrrdTextureBuilder::execute()
   if( update ) {
 
     CompileInfoHandle ci =
-      NrrdTextureBuilderAlgo::get_compile_info(vHandle->nrrd->type,
+      NrrdTextureBuilderAlgo::get_compile_info(vHandle->nrrd_->type,
 					       gHandle.get_rep() ? 
-					       gHandle->nrrd->type :
-					       vHandle->nrrd->type);
+					       gHandle->nrrd_->type :
+					       vHandle->nrrd_->type);
     
     Handle<NrrdTextureBuilderAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;

@@ -171,8 +171,8 @@ DECLARE_MAKER(DiscreteGaussianImageFilter)
 
 DiscreteGaussianImageFilter::DiscreteGaussianImageFilter(GuiContext* ctx)
   : Module("DiscreteGaussianImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_variance_(ctx->subVar("variance")),
-     gui_maximum_error_(ctx->subVar("maximum_error")), 
+     gui_variance_(get_ctx()->subVar("variance")),
+     gui_maximum_error_(get_ctx()->subVar("maximum_error")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

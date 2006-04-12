@@ -59,12 +59,12 @@ DECLARE_MAKER(SimpleScene)
 SimpleScene::SimpleScene(GuiContext* ctx)
   : Module("SimpleScene", ctx, Filter, "Scenes", "rtrt"),
     sphere_matl_(0),
-    color_r_(ctx->subVar("color-r")),
-    color_g_(ctx->subVar("color-g")),
-    color_b_(ctx->subVar("color-b")),
-    color_a_(ctx->subVar("color-a")),
-    reflectance_(ctx->subVar("reflectance")),
-    shininess_(ctx->subVar("shininess"))
+    color_r_(get_ctx()->subVar("color-r")),
+    color_g_(get_ctx()->subVar("color-g")),
+    color_b_(get_ctx()->subVar("color-b")),
+    color_a_(get_ctx()->subVar("color-a")),
+    reflectance_(get_ctx()->subVar("reflectance")),
+    shininess_(get_ctx()->subVar("shininess"))
 {
 }
 

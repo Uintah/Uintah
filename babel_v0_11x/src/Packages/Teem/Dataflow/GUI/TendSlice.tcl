@@ -31,20 +31,9 @@
 
 itcl_class Teem_Tend_TendSlice {
     inherit Module
+
     constructor {config} {
         set name TendSlice
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-axis
-	set $this-axis 1
-
-	global $this-position
-	set $this-position 0
-
-	global $this-dimension
-	set $this-dimension 3
     }
 
     method ui {} {

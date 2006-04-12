@@ -2138,16 +2138,19 @@ GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (!pre_draw(di, matl, 0)) return;
   di->polycount_++;
   // Set line width. Set it
-  GLfloat lw;
-  glGetFloatv(GL_LINE_WIDTH, &lw);
-  glLineWidth(lineWidth_);
+
+  if( line_width_ > 0.0 ){
+    glLineWidth(line_width_);
+  }
+
   glBegin(GL_LINE_STRIP);
   glVertex3d(p1.x(), p1.y(), p1.z());
   glVertex3d(p2.x(), p2.y(), p2.z());
   glEnd();
+
   // HACK set line width back to default
   // our scenegraph needs more graceful control of such state.
-  glLineWidth(lw);
+  glLineWidth(di->line_width_);
   post_draw(di);
 }
 
@@ -2159,7 +2162,8 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   di->polycount_+=points_.size()/6;
 
-  glLineWidth(line_width_);
+  if( line_width_ > 0.0 )
+    glLineWidth(line_width_);
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -2268,7 +2272,8 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glLineWidth(line_width_);
+  if( line_width_ > 0.0 )
+    glLineWidth(line_width_);
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
   glEnableClientState(GL_VERTEX_ARRAY);

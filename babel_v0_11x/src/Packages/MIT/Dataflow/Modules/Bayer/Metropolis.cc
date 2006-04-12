@@ -105,7 +105,7 @@ private:
   Bayer bayer;
 
 public:
-  Metropolis(const string& id);
+  Metropolis(const string& get_id());
 
   virtual ~Metropolis();
 
@@ -123,17 +123,17 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" MITSHARE Module* make_Metropolis(const string& id) {
-  return scinew Metropolis(id);
+extern "C" MITSHARE Module* make_Metropolis(const string& get_id()) {
+  return scinew Metropolis(get_id());
 }
 
-Metropolis::Metropolis(const string& id)
-  : Module("Metropolis", id, Source, "Bayer", "MIT"),
-    gui_burning("burning", id, this),
-    gui_monitor("monitor", id, this),
-    gui_thin("thin", id, this),
-    gui_kappa("kappa", id, this),
-    gui_use_cvode("use-cvode", id, this)
+Metropolis::Metropolis(const string& get_id())
+  : Module("Metropolis", get_id(), Source, "Bayer", "MIT"),
+    gui_burning("burning", get_id(), this),
+    gui_monitor("monitor", get_id(), this),
+    gui_thin("thin", get_id(), this),
+    gui_kappa("kappa", get_id(), this),
+    gui_use_cvode("use-cvode", get_id(), this)
 {
   init();
 }
@@ -201,8 +201,8 @@ Metropolis::init()
   theta = 0;
   star = 0;
 
-  monitor_ = scinew CrowdMonitor( id.c_str() );
-  graph = scinew Graph( id+"-Graph" );
+  monitor_ = scinew CrowdMonitor( get_id().c_str() );
+  graph = scinew Graph( get_id()+"-Graph" );
   diagram = scinew Diagram("Metropolis");
   graph->add("Theta", diagram);
 

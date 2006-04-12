@@ -357,17 +357,14 @@ BuildFEMatrix<Field>::parallel(int proc)
 
   barrier_.wait(np_);
 
-  //typename Mesh::Elem::iterator ci, cb, ce;
-  //hMesh_->begin(cb);
-  //hMesh_->end(ce);
-
   //! distributing dofs among processors
   const int start_gd = global_dimension * proc/np_;
   const int end_gd  = global_dimension * (proc+1)/np_;
 
   //! creating sparse matrix structure
   vector<unsigned int> mycols;
-  mycols.reserve((end_gd - start_gd)*local_dimension*8);  //<! rough estimate
+  //! estimate for elements in submatrix of sparse matrix
+  mycols.reserve((end_gd - start_gd)*local_dimension*8);  
 
   typename Mesh::Elem::array_type ca;
   typename Mesh::Node::array_type na;
@@ -375,7 +372,7 @@ BuildFEMatrix<Field>::parallel(int proc)
   vector<int> neib_dofs;
 
   //! loop over system dofs for this thread
-  for (int i = start_gd; i<end_gd; i++)
+  for (unsigned int i = start_gd; i<end_gd; i++)
   {
     rows_[i] = mycols.size();
 
@@ -383,15 +380,18 @@ BuildFEMatrix<Field>::parallel(int proc)
     //! check for nodes
     if (i<global_dimension_nodes)
     {
+      //! convert int index to node index 
+      typename Mesh::Node::index_type ii;
+      hMesh_->to_index(ii, i);
       //! get neighboring cells for node
-      hMesh_->get_cells(ca, typename Mesh::Node::index_type(i));
+      hMesh_->get_elems(ca, ii);
     }
     else if (i<global_dimension_nodes+global_dimension_add_nodes)
     {
       //! check for additional nodes at edges
       //! get neighboring cells for node
       const int ii = i-global_dimension_nodes;
-      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
+      //      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
     }
     else
     {
@@ -502,20 +502,22 @@ BuildFEMatrix<Field>::parallel(int proc)
   lsml.resize(local_dimension);
       	
   //! loop over system dofs for this thread
-  for (int i = start_gd; i<end_gd; i++)
+  for (unsigned int i = start_gd; i<end_gd; i++)
   {
     if (i < global_dimension_nodes)
     {
-      //! check for nodes
+      //! convert int index to node index 
+      typename Mesh::Node::index_type ii;
+      hMesh_->to_index(ii, i);
       //! get neighboring cells for node
-      hMesh_->get_cells(ca, typename Mesh::Node::index_type(i));
+      hMesh_->get_elems(ca, ii);
     }
     else if (i < global_dimension_nodes + global_dimension_add_nodes)
     {
       //! check for additional nodes at edges
       //! get neighboring cells for additional nodes
       const int ii=i-global_dimension_nodes;
-      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
+      //      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
     }
     else
     {
@@ -530,6 +532,7 @@ BuildFEMatrix<Field>::parallel(int proc)
       hMesh_->get_nodes(na, ca[j]); //!< get neighboring nodes
       for(int k = 0; k < (int)na.size(); k++)
       {
+	//	cerr << na[k] << endl;
 	neib_dofs.push_back((int)(na[k])); // Must cast to (int) for SGI compiler :-(
 	if ((int)na[k] == i)
 	  dofi = neib_dofs.size()-1;
@@ -545,11 +548,13 @@ BuildFEMatrix<Field>::parallel(int proc)
 	    dofi = neib_dofs.size() - 1;
 	}
       }
-      ASSERT(dofi!=-1);
-      ASSERT((int)neib_dofs.size() == local_dimension);
 #ifdef BUILDFEM_DEBUG
       cerr << i << ", " << j << " (" << dofi << ") ";
 #endif
+
+      ASSERT(dofi!=-1);
+      ASSERT((int)neib_dofs.size() == local_dimension);
+
       build_local_matrix(ca[j], dofi, lsml, ni_points, ni_weights, ni_derivatives);
 #ifdef BUILDFEM_DEBUG
       for(unsigned int j=0 ; j<lsml.size(); j++)

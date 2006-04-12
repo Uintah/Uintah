@@ -154,9 +154,9 @@
      <dbg_timeStart>       2.00    </dbg_timeStart>
      <dbg_timeStop>        2.0     </dbg_timeStop>
      <dbg_outputInterval>  1e-9    </dbg_outputInterval>
-     <dbg_BeginIndex>      [16,6,-1] </dbg_BeginIndex>
-     <dbg_EndIndex>        [18,9,2] </dbg_EndIndex>
-     <dbg_Level>           0        </dbg_Level>
+     <dbg_BeginIndex>     [[16,6,-1]]</dbg_BeginIndex>
+     <dbg_EndIndex>       [[18,9,2]]</dbg_EndIndex>
+     <dbg_Level>          [0]       </dbg_Level>
      <dbg_Matls>           [0 1]    </dbg_Matls>
      <dbg_SigFigs>         3       </dbg_SigFigs>
      <!--
@@ -266,7 +266,7 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
               <difference>
-                <box label = "D">
+                <box label = "Db">
                     <min>           [-10,-10,-10]    </min>
                     <max>           [ 10, 10, 10 ]   </max>
                 </box>

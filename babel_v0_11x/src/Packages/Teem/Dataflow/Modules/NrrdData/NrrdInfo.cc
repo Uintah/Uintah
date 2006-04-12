@@ -32,7 +32,7 @@
 
 #include <Dataflow/Network/Module.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
@@ -68,10 +68,10 @@ DECLARE_MAKER(NrrdInfo)
 NrrdInfo::NrrdInfo(GuiContext* ctx)
   : Module("NrrdInfo", ctx, Source, "NrrdData", "Teem"),
     generation_(-1),
-    gui_name_(ctx->subVar("name")),
-    gui_type_(ctx->subVar("type")),
-    gui_dimension_(ctx->subVar("dimension")),
-    gui_origin_(ctx->subVar("origin"))
+    gui_name_(get_ctx()->subVar("name"), "---"),
+    gui_type_(get_ctx()->subVar("type"), "---"),
+    gui_dimension_(get_ctx()->subVar("dimension"), "0"),
+    gui_origin_(get_ctx()->subVar("origin"), "0")
 {
 }
 
@@ -87,7 +87,7 @@ NrrdInfo::clear_vals()
   gui_name_.set("---");
   gui_type_.set("---");
 
-  gui->execute(id + " delete_tabs");
+  get_gui()->execute(get_id() + " delete_tabs");
 }
 
 
@@ -96,8 +96,8 @@ NrrdInfo::update_axis_var(const char *name, int axis, const string &val,
                           const char *pname)
 {
   ostringstream ostr;
-  ostr << "set " << id << "-" << name << axis << " {" << val << "}";
-  gui->execute(ostr.str());
+  ostr << "set " << get_id() << "-" << name << axis << " {" << val << "}";
+  get_gui()->execute(ostr.str());
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
     remark("Axis " + to_string(axis) + " " + pname + ": " + val);
@@ -118,32 +118,32 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
   if (regressing) { remark("Name: " + name); }
 
   string nrrdtype, stmp;
-  get_nrrd_compile_type(nh->nrrd->type, nrrdtype, stmp);
+  get_nrrd_compile_type(nh->nrrd_->type, nrrdtype, stmp);
   gui_type_.set(nrrdtype);
   if (regressing) { remark("Data Type: " + nrrdtype); }
 
-  gui_dimension_.set(to_string(nh->nrrd->dim));
-  if (regressing) { remark("Dimension: " + to_string(nh->nrrd->dim)); }
+  gui_dimension_.set(to_string(nh->nrrd_->dim));
+  if (regressing) { remark("Dimension: " + to_string(nh->nrrd_->dim)); }
 
   // TODO: Set Origin here.
 
   // Tuple Axis
-  for (int i = 0; i < nh->nrrd->dim; i++)
+  for (unsigned int i = 0; i < nh->nrrd_->dim; i++)
   {
     string labelstr;
-    if (nh->nrrd->axis[i].label == NULL ||
-        string(nh->nrrd->axis[i].label).length() == 0)
+    if (nh->nrrd_->axis[i].label == NULL ||
+        string(nh->nrrd_->axis[i].label).length() == 0)
     {
       labelstr = "---";
     }
     else
     {
-      labelstr = nh->nrrd->axis[i].label;
+      labelstr = nh->nrrd_->axis[i].label;
     }
     update_axis_var("label", i, labelstr, "Label");
 
     string kindstr;
-    switch(nh->nrrd->axis[i].kind) {
+    switch(nh->nrrd_->axis[i].kind) {
     case nrrdKindDomain:
       kindstr = "nrrdKindDomain";
       break;
@@ -175,19 +175,19 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
       kindstr = "nrrdKindStub";
       break;	
     default:
-      nh->nrrd->axis[i].kind = nrrdKindUnknown;
+      nh->nrrd_->axis[i].kind = nrrdKindUnknown;
       kindstr = "nrrdKindUnknown";
       break;
     }
     update_axis_var("kind", i, kindstr, "Kind");
 
-    update_axis_var("size", i, to_string(nh->nrrd->axis[i].size), "Size");
+    update_axis_var("size", i, to_string(nh->nrrd_->axis[i].size), "Size");
 
-    update_axis_var("min", i, to_string(nh->nrrd->axis[i].min), "Min");
-    update_axis_var("max", i, to_string(nh->nrrd->axis[i].max), "Max");
+    update_axis_var("min", i, to_string(nh->nrrd_->axis[i].min), "Min");
+    update_axis_var("max", i, to_string(nh->nrrd_->axis[i].max), "Max");
 
     string locstr;
-    switch (nh->nrrd->axis[i].center) {
+    switch (nh->nrrd_->axis[i].center) {
     case nrrdCenterUnknown :
       locstr = "Unknown";
       break;
@@ -200,11 +200,11 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     }
     update_axis_var("center", i, locstr, "Center");
 
-    update_axis_var("spacing", i, to_string(nh->nrrd->axis[i].spacing), "Spacing");
+    update_axis_var("spacing", i, to_string(nh->nrrd_->axis[i].spacing), "Spacing");
     update_axis_var("spaceDir", i, "---", "Spacing Direction");
   }
 
-  gui->execute(id + " add_tabs");
+  get_gui()->execute(get_id() + " add_tabs");
 }
 
 

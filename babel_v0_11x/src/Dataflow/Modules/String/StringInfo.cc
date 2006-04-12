@@ -26,7 +26,7 @@
 //  DEALINGS IN THE SOFTWARE.
 //  
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -44,8 +44,6 @@ public:
 
 private:
   GuiString  inputstring_;
-  GuiString  update_;
-  
 };
 
 
@@ -53,8 +51,7 @@ private:
 DECLARE_MAKER(StringInfo)
 StringInfo::StringInfo(GuiContext* ctx)
   : Module("StringInfo", ctx, Source, "String", "SCIRun"),
-    inputstring_(ctx->subVar("inputstring")),
-    update_(ctx->subVar("update"))    
+    inputstring_(get_ctx()->subVar("inputstring"), "")
 {
 }
 
@@ -85,9 +82,9 @@ void StringInfo::execute()
     inputstring_.set(handle->get());
   }
 
-  gui->lock();
-  gui->execute(update_.get());
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->execute(get_id() + " update");
+  get_gui()->unlock();
 }
 
 } // End namespace SCIRun

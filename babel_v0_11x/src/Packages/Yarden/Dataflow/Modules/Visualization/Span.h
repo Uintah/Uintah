@@ -35,7 +35,7 @@ public:
   int forest_generation;
   
 public:
-  Span(const clString& id);
+  Span(const clString& get_id());
   virtual ~Span();
   virtual void execute();
   void execute_ext();

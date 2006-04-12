@@ -31,7 +31,7 @@
 
 // The following include file will include all tools needed for doing 
 // dynamic compilation and will include all the standard dataflow types
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 // Additionally we include sci_hash_map here as it is needed by the algorithm
 
@@ -39,10 +39,15 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
+class ConvertToTetVolAlgo;
+
 class ConvertToTetVolAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool ConvertToTetVol(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool testinput(FieldHandle input);
+
+  static AlgoList<ConvertToTetVolAlgo> precompiled_;
 };
 
 template <class FSRC, class FDST>
@@ -50,6 +55,7 @@ class ConvertLatVolToTetVolAlgoT : public ConvertToTetVolAlgo
 {
 public:
   virtual bool ConvertToTetVol(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool testinput(FieldHandle input);
 };
 
 template <class FSRC, class FDST>
@@ -57,6 +63,7 @@ class ConvertHexVolToTetVolAlgoT : public ConvertToTetVolAlgo
 {
 public:
   virtual bool ConvertToTetVol(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool testinput(FieldHandle input);
 };
 
 
@@ -286,6 +293,12 @@ bool ConvertHexVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *p
   return (true);
 }
 
+template <class FSRC, class FDST>
+bool ConvertHexVolToTetVolAlgoT<FSRC, FDST>::testinput(FieldHandle input)
+{
+  return (dynamic_cast<FSRC*>(input.get_rep()));
+}
+
 
 template <class FSRC, class FDST>
 bool ConvertLatVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
@@ -453,6 +466,13 @@ bool ConvertLatVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *p
   // Success:
   return (true);
 }
+
+template <class FSRC, class FDST>
+bool ConvertLatVolToTetVolAlgoT<FSRC, FDST>::testinput(FieldHandle input)
+{
+  return (dynamic_cast<FSRC*>(input.get_rep()));
+}
+
   
 } // end namespace ModelCreation
 

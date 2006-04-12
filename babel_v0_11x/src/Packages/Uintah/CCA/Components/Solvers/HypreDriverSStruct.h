@@ -173,7 +173,7 @@ namespace Uintah {
                              HYPRE_SStructVariable* vars) = 0;
 
       // C/F graph connections construction
-      virtual void makeConnections(HYPRE_SStructGraph& graph,
+      virtual void makeGraphConnections(HYPRE_SStructGraph& graph,
                                    const CoarseFineViewpoint& viewpoint) = 0;
 
       // Interior matrix connections construction
@@ -236,7 +236,7 @@ namespace Uintah {
                              HYPRE_SStructVariable* vars);
 
       // C/F graph connections construction
-      virtual void makeConnections(HYPRE_SStructGraph& graph,
+      virtual void makeGraphConnections(HYPRE_SStructGraph& graph,
                                    const CoarseFineViewpoint& viewpoint);
 
       // Interior matrix connections construction

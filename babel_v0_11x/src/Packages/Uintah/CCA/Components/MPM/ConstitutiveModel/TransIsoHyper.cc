@@ -92,22 +92,22 @@ void TransIsoHyper::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","trans_iso_hyper");
   }
 
-  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk,false,4);
-  cm_ps->appendElement("c1", d_initialData.c1,false,4);
-  cm_ps->appendElement("c2", d_initialData.c2,false,4);
-  cm_ps->appendElement("c3", d_initialData.c3,false,4);
-  cm_ps->appendElement("c4", d_initialData.c4,false,4);
-  cm_ps->appendElement("c5", d_initialData.c5,false,4);
-  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star,false,4);
-  cm_ps->appendElement("direction_of_symm", d_initialData.a0,false,4);
-  cm_ps->appendElement("failure_option",d_initialData.failure,false,4);
-  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch,false,4);
-  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear,false,4);
-  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
+  cm_ps->appendElement("bulk_modulus", d_initialData.Bulk);
+  cm_ps->appendElement("c1", d_initialData.c1);
+  cm_ps->appendElement("c2", d_initialData.c2);
+  cm_ps->appendElement("c3", d_initialData.c3);
+  cm_ps->appendElement("c4", d_initialData.c4);
+  cm_ps->appendElement("c5", d_initialData.c5);
+  cm_ps->appendElement("fiber_stretch", d_initialData.lambda_star);
+  cm_ps->appendElement("direction_of_symm", d_initialData.a0);
+  cm_ps->appendElement("failure_option",d_initialData.failure);
+  cm_ps->appendElement("max_fiber_strain",d_initialData.crit_stretch);
+  cm_ps->appendElement("max_matrix_strain",d_initialData.crit_shear);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
 }
 
 

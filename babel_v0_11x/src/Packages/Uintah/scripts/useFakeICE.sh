@@ -5,15 +5,26 @@ usage()
     echo
     echo "Usage:"
     echo
-    echo "   $0 <path/to/top/of/scirun/<bin>>"
+    echo "   $0 <path/to/top/of/scirun/<bin>> <on|off>"
     echo
-    echo "For example: $0 /home/user/SCIRun/sgi64opt"
+    echo "For example: $0 /home/user/SCIRun/sgi64opt on"
+    echo "  on|off : whether to turn 'on' or 'off' fake arches."
     echo
     exit
 }
 
-if test $# != 1; then
+if test $# != 2; then
     usage
+fi
+
+APPLY=$2
+
+if test "$APPLY" != "on" -a "$APPLY" != "off"; then
+    echo
+    echo "Error: Parameter two must be either 'on' or 'off'."
+    echo "       You specified: '$APPLY'"
+    echo
+    exit
 fi
 
 if test ! -d $1/include/sci_defs; then
@@ -82,6 +93,13 @@ using_fake_ice=`grep "#ICE_LIB" $filename`
 
 if test -z "$using_fake_ice"; then
 
+    if test "$APPLY" == "off" ; then
+        echo
+        echo "Fake ICE is already off... Exiting script."
+        echo
+        exit
+    fi
+
     echo "Applying FakeICE to $filename..."
 
     # Handle Dummy lib if necessary...  (If it is already in file,
@@ -118,6 +136,13 @@ if test -z "$using_fake_ice"; then
     rm $filename.tmp
 
 else # REVERSE FakeICE
+
+    if test "$APPLY" == "on" ; then
+        echo
+        echo "Fake ICE is already applied... Exiting script."
+        echo
+        exit
+    fi
 
     filename=$1/../src/Packages/Uintah/StandAlone/sub.mk
     echo "Reversing FakeICE from $filename..."

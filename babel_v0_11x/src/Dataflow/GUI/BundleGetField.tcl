@@ -32,36 +32,13 @@ itcl_class SCIRun_Bundle_BundleGetField {
     inherit Module
     constructor {config} {
         set name BundleGetField
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-field1-name
-        global $this-field2-name
-        global $this-field3-name
-        global $this-field1-listbox
-        global $this-field2-listbox
-        global $this-field3-listbox
-        global $this-field-selection
-        global $this-field1-entry
-        global $this-field2-entry
-        global $this-field3-entry
-
-
-        set $this-field1-name "field1"
-        set $this-field2-name "field2"
-        set $this-field3-name "field3"
-        set $this-field-selection ""
-
-        set $this-field1-listbox ""
-        set $this-field2-listbox ""
-        set $this-field3-listbox ""
-        set $this-field1-entry ""
-        set $this-field2-entry ""
-        set $this-field3-entry ""
-
-
+        initGlobal $this-field1-listbox ""
+        initGlobal $this-field2-listbox ""
+        initGlobal $this-field3-listbox ""
+        initGlobal $this-field1-entry ""
+        initGlobal $this-field2-entry ""
+        initGlobal $this-field3-entry ""
     }
 
     method ui {} {

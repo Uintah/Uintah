@@ -31,7 +31,7 @@
 
 #include <Core/Containers/Handle.h>
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Network/NetworkEditor.h>
@@ -67,12 +67,12 @@ public:
 
 MatrixInfo::MatrixInfo(GuiContext* ctx)
   : Module("MatrixInfo", ctx, Sink, "DataInfo", "ModelCreation"),
-    gui_matrixname_(ctx->subVar("matrixname", false)),
-    gui_generation_(ctx->subVar("generation", false)),
-    gui_typename_(ctx->subVar("typename", false)),
-    gui_rows_(ctx->subVar("rows", false)),
-    gui_cols_(ctx->subVar("cols", false)),
-    gui_elements_(ctx->subVar("elements", false)),
+    gui_matrixname_(get_ctx()->subVar("matrixname", false)),
+    gui_generation_(get_ctx()->subVar("generation", false)),
+    gui_typename_(get_ctx()->subVar("typename", false)),
+    gui_rows_(get_ctx()->subVar("rows", false)),
+    gui_cols_(get_ctx()->subVar("cols", false)),
+    gui_elements_(get_ctx()->subVar("elements", false)),
     generation_(-1)
 {
   gui_matrixname_.set("---");

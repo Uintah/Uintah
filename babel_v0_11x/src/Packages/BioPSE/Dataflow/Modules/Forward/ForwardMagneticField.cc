@@ -31,7 +31,7 @@
 //    Date   : Mon Aug  4 14:46:51 2003
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/BioPSE/Dataflow/Modules/Forward/ForwardMagneticField.h>
 

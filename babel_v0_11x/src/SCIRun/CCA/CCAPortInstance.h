@@ -92,6 +92,7 @@ public:
   virtual PortInstance *getPeer();
   /** */
   std::string getName();
+  int getConnectionCount() { return connections.size(); }
 
   /**
    * Keep track of when a port is in use.

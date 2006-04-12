@@ -106,11 +106,7 @@
 			<min>[10.0,20.0,0.0]</min>
 			<max>[20.0,25.0,0.1]</max>
 		       </box>
-		      <cylinder label = "cyl1">
-              	          <bottom>[10.,25.,0.]</bottom>
-        		  <top>[10.,25.,0.1]</top>
-                          <radius>5.0</radius>
-                      </cylinder>
+		      <cylinder label = "cyl1"/>
 		     </difference>
 
 		     <box label = "three">

@@ -46,9 +46,10 @@
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
-class GeomTexRectangle : public GeomObj {
+class SCISHARE GeomTexRectangle : public GeomObj {
   float tex_coords_[8];
   float pos_coords_[12];
   float normal_[3];

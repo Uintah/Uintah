@@ -49,7 +49,7 @@ public:
   ~JPEGReader();
   
   //Component interface
-  int popupUI();
+  int popup_ui();
 
   vtkObject* getOutput();  
 private:

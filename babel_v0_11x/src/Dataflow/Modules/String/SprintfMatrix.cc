@@ -39,11 +39,11 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #ifdef _WIN32
 #define snprintf _snprintf
@@ -70,7 +70,7 @@ private:
 DECLARE_MAKER(SprintfMatrix)
 SprintfMatrix::SprintfMatrix(GuiContext* ctx)
   : Module("SprintfMatrix", ctx, Source, "String", "SCIRun"),
-    formatstring_(ctx->subVar("formatstring"))
+    formatstring_(get_ctx()->subVar("formatstring"), "time: %5.4f ms")
 {
 }
 
@@ -87,10 +87,10 @@ void SprintfMatrix::execute()
   StringHandle  stringH;
   
   MatrixHandle currentmatrix;
-  int          inputport = 1;
-  int          matrixindex = 0;
-  double       datavalue;
-  double*      dataptr;
+  unsigned int inputport = 1;
+  unsigned int matrixindex = 0;
+  double       datavalue = 0;
+  double*      dataptr = NULL;
   bool         lastport = false;
   bool         lastdata = false;
   bool         isformat = false;
@@ -183,11 +183,28 @@ void SprintfMatrix::execute()
           
           if(currentmatrix.get_rep())
           {
+
             dataptr = currentmatrix->get_data_pointer();
             if (matrixindex < (int)currentmatrix->get_data_size())
+
             {
-              datavalue = dataptr[matrixindex++];
+
+              dataptr = currentmatrix->get_data_pointer();
+              if (matrixindex < currentmatrix->get_data_size())
+              {
+                datavalue = dataptr[matrixindex++];
+              }
+              else
+              {
+                datavalue = 0.0;
+              }
+              if (matrixindex == currentmatrix->get_data_size()) 
+              { 
+                currentmatrix = 0; 
+                if (inputport == (num_input_ports()-1)) { lastdata = true; lastport = true; }
+              }
             }
+
             else
             {
               datavalue = 0.0;
@@ -195,7 +212,7 @@ void SprintfMatrix::execute()
             if (matrixindex == (int)currentmatrix->get_data_size()) 
             { 
               currentmatrix = 0; 
-              if (inputport == (numIPorts()-1)) { lastdata = true; lastport = true; }
+              if (inputport == (num_input_ports()-1)) { lastdata = true; lastport = true; }
             }
           }
         }

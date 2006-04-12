@@ -9,7 +9,7 @@ namespace Uintah {
 DECLARE_MAKER(TensorToTensorConvertor)
 TensorToTensorConvertor::TensorToTensorConvertor(GuiContext* ctx)
   : Module("TensorToTensorConvertor", ctx, Source, "Operators", "Uintah"),
-  guiOperation(ctx->subVar("operation"))
+  guiOperation(get_ctx()->subVar("operation"))
 {
 }
 

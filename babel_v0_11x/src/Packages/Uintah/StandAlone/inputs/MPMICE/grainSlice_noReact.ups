@@ -107,8 +107,8 @@
      <dbg_timeStop>        3.0e-5  </dbg_timeStop>
      <dbg_outputInterval>  1e-9    </dbg_outputInterval>
    
-     <dbg_BeginIndex>      [0,22,0] </dbg_BeginIndex>
-     <dbg_EndIndex>        [1,27,1] </dbg_EndIndex>
+     <dbg_BeginIndex>     [[0,22,0]]</dbg_BeginIndex>
+     <dbg_EndIndex>       [[1,27,1]]</dbg_EndIndex>
      <dbg_SigFigs>         16      </dbg_SigFigs>
      <dbg_Matls>          [0,1,2] </dbg_Matls>
 
@@ -136,7 +136,7 @@
        <cfl>0.4</cfl>
        <ICE>
         <max_iteration_equilibration> 250 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE" />
+        <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
       </ICE>        
     </CFD>
@@ -228,10 +228,7 @@
            <speed_of_sound>             376.0e-4        </speed_of_sound>
            <gamma>                      1.4             </gamma>           
            <geom_object> 
-               <sphere label = "void">               
-                 <origin>             [0.0,0.0,0.0]     </origin>
-                 <radius>             0.0015            </radius>
-               </sphere>                             
+               <sphere label = "void">               </sphere>                             
 
                <res>                  [2,2,2]           </res>
                <velocity>             [0.0,0.0,0.0]     </velocity>
@@ -263,10 +260,7 @@
                    </box>
                  </difference>
 
-                  <sphere label = "grain">
-                    <origin>           [0.0,0.0,0.0]   </origin>
-                    <radius>            0.0025         </radius>
-                  </sphere>
+                  <sphere label = "grain"> </sphere>
                </difference>
 
                <res>                  [2,2,2]           </res>

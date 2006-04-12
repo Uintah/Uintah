@@ -100,6 +100,7 @@ public:
   };
 
   typedef Edge Elem;
+  typedef Node DElem;
 
   typedef pair<typename Node::index_type,
                typename Node::index_type> index_pair_type;
@@ -148,21 +149,21 @@ public:
 
   CurveMesh() :
     synchronized_(ALL_ELEMENTS_E),
-    sync_lock_("CurveMesh sync lock")
+    synchronize_lock_("CurveMesh sync lock")
   {}
   CurveMesh(const CurveMesh &copy) :
     nodes_(copy.nodes_),
     edges_(copy.edges_),
     basis_(copy.basis_),
     synchronized_(copy.synchronized_),
-    sync_lock_("CurveMesh sync lock")
+    synchronize_lock_("CurveMesh sync lock")
   {
     CurveMesh &lcopy = (CurveMesh &)copy;
 
-    lcopy.sync_lock_.lock();
+    lcopy.synchronize_lock_.lock();
     node_neighbors_ = copy.node_neighbors_;
     synchronized_ |= copy.synchronized_ & NODE_NEIGHBORS_E;
-    lcopy.sync_lock_.unlock();
+    lcopy.synchronize_lock_.unlock();
   }
   virtual CurveMesh *clone() { return new CurveMesh(*this); }
   virtual ~CurveMesh() {}
@@ -221,7 +222,7 @@ public:
   void get_faces(typename Face::array_type &,
                  typename Elem::index_type) const {}
 
-  //! get the parent element(s) of the given index
+  //! Get the parent element(s) of the given node index.
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   {
@@ -230,6 +231,12 @@ public:
       result.push_back(node_neighbors_[idx][i]);
   }
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_nodes(result, idx);
+  }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
@@ -350,6 +357,7 @@ public:
   }
   typename Elem::index_type add_elem(typename Node::array_type a)
   {
+    ASSERTMSG(a.size() == 2, "Tried to add non-line element.");
     edges_.push_back(index_pair_type(a[0],a[1]));
     return static_cast<under_type>(edges_.size()-1);
   }
@@ -357,7 +365,8 @@ public:
   void elem_reserve(size_t s) { edges_.reserve(s*2); }
 
   virtual bool is_editable() const { return true; }
-  virtual int dimensionality() const { return 1; }
+  virtual int  dimensionality() const { return 1; }
+  virtual int  topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   virtual bool synchronize(unsigned int mask);
 
@@ -385,7 +394,7 @@ private:
   Basis                   basis_;
 
   unsigned int            synchronized_;
-  Mutex                   sync_lock_;
+  Mutex                   synchronize_lock_;
 
   typedef vector<vector<typename Edge::index_type> > NodeNeighborMap;
   NodeNeighborMap         node_neighbors_;
@@ -712,8 +721,12 @@ template <class Basis>
 bool
 CurveMesh<Basis>::synchronize(unsigned int tosync)
 {
+  synchronize_lock_.lock();
+
   if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
     compute_node_neighbors();
+
+  synchronize_lock_.unlock();
   return true;
 }
 
@@ -722,11 +735,6 @@ template <class Basis>
 void
 CurveMesh<Basis>::compute_node_neighbors()
 {
-  sync_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    sync_lock_.unlock();
-    return;
-  }
   node_neighbors_.clear();
   node_neighbors_.resize(nodes_.size());
   unsigned int i, num_elems = edges_.size();
@@ -736,7 +744,6 @@ CurveMesh<Basis>::compute_node_neighbors()
     node_neighbors_[edges_[i].second].push_back(i);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
-  sync_lock_.unlock();
 }
 
 

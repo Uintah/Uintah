@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace SCIRun {
 
@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(GetFileName)
 GetFileName::GetFileName(GuiContext* ctx)
   : Module("GetFileName", ctx, Source, "String", "SCIRun"),
-    filename_(ctx->subVar("filename"))
+    filename_(get_ctx()->subVar("filename"), "")
 {
 }
 

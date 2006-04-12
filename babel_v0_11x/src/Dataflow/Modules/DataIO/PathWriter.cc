@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
 
 namespace SCIRun {
@@ -49,6 +49,7 @@ template class GenericWriter<PathHandle>;
 class PathWriter : public GenericWriter<PathHandle> {
 public:
   PathWriter(GuiContext* ctx);
+  virtual ~PathWriter();
 };
 
 
@@ -56,6 +57,10 @@ DECLARE_MAKER(PathWriter)
 
 PathWriter::PathWriter(GuiContext* ctx)
   : GenericWriter<PathHandle>("PathWriter", ctx, "DataIO", "SCIRun")
+{
+}
+
+PathWriter::~PathWriter()
 {
 }
 

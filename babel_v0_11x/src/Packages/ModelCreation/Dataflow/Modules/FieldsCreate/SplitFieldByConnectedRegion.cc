@@ -29,9 +29,9 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -59,7 +59,7 @@ void SplitFieldByConnectedRegion::execute()
 {
   FieldIPort *field_iport;
   
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
+  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
   {
     error("Could not find Field input port");
     return;
@@ -102,7 +102,7 @@ void SplitFieldByConnectedRegion::execute()
       return;
     }
   
-    BundleOPort* output_oport = dynamic_cast<BundleOPort *>(getOPort(0));
+    BundleOPort* output_oport = dynamic_cast<BundleOPort *>(get_output_port(0));
     if (output_oport) output_oport->send(output);
   }
 }

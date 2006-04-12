@@ -8,7 +8,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 
@@ -66,8 +66,8 @@ void computeGridEigens(TensorField* tensorField,
 
 EigenEvaluator::EigenEvaluator(GuiContext* ctx)
   : Module("EigenEvaluator",ctx,Source, "Operators", "Uintah"),
-    guiEigenSelect(ctx->subVar("eigenSelect"))
-    //    tcl_status(ctx->subVar("tcl_status")),
+    guiEigenSelect(get_ctx()->subVar("eigenSelect"))
+    //    tcl_status(get_ctx()->subVar("tcl_status")),
 {
 }
   

@@ -58,13 +58,25 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
-	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
+PSELIBS := \
 	Core/Algorithms/Fields \
-	Core/Geom Core/Thread Core/Containers \
-	Core/GuiInterface Core/TkExtensions Core/Util \
-	Core/TkExtensions Core/Datatypes Core/GeomInterface \
-	Core/Basis Core/Volume Core/Bundle
+	Core/Basis         \
+	Core/Bundle        \
+	Core/Datatypes     \
+	Core/Exceptions    \
+	Core/Geometry      \
+	Core/Geom          \
+	Core/GeomInterface \
+	Core/Containers    \
+	Core/GuiInterface  \
+	Core/Persistent    \
+	Core/Thread        \
+	Core/TkExtensions  \
+	Core/Util          \
+	Core/Volume        \
+	Dataflow/Comm      \
+	Dataflow/Network   \
+	Dataflow/Widgets 
 
 INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE) $(TEEM_INCLUDE)
 

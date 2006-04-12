@@ -31,14 +31,9 @@
 
 itcl_class Teem_UnuNtoZ_UnuReshape {
     inherit Module
+
     constructor {config} {
         set name UnuReshape
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-sz
-	set $this-sz "0"
     }
 
     method ui {} {

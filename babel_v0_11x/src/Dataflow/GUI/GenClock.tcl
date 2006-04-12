@@ -42,38 +42,6 @@ itcl_class SCIRun_Visualization_GenClock {
    
     constructor {config} {
         set name GenClock
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-type
-	global $this-bbox
-	global $this-format
-	global $this-min
-	global $this-max
-	global $this-current
-	global $this-size
-	global $this-location
-	global $this-location-x
-	global $this-location-y
-	global $this-color-r
-	global $this-color-g
-	global $this-color-b
-
-	set $this-type 0
-	set $this-bbox 1
-	set $this-format "%8.3f seconds"
-	set $this-min 0
-	set $this-max 1
-	set $this-current 0
-	set $this- 1.0
-	set $this-size 100
-	set $this-location "Top Left"
-	set $this-location-x [expr -31.0/32.0]
-	set $this-location-y [expr  31.0/32.0]
-	set $this-color-r 1.0
-	set $this-color-g 1.0
-	set $this-color-b 1.0
     }
 
     method ui {} {
@@ -180,7 +148,8 @@ itcl_class SCIRun_Visualization_GenClock {
 
 # Range - current
 	frame $range.current
-	label $range.current.label -text "Current"  -width 7 -anchor w -just left
+	label $range.current.label -text "Current" \
+	    -width 7 -anchor w -just left
 	entry $range.current.entry -width 6 -text $this-current
 
 	pack $range.current.label $range.current.entry -side left
@@ -310,7 +279,8 @@ itcl_class SCIRun_Visualization_GenClock {
 		 -text $text -command $cmmd
 	 
 	 #pack the node color frame
-	 pack $frame.colorFrame.set_color $frame.colorFrame.col -side left -padx 2
+	 pack $frame.colorFrame.set_color $frame.colorFrame.col \
+				  -side left -padx 2
 	 pack $frame.colorFrame -side left
     }
 }

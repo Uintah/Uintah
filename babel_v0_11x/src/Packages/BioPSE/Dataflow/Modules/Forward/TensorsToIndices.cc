@@ -41,7 +41,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/BioPSE/Dataflow/Modules/Forward/TensorsToIndices.h>
 #include <Core/Geometry/Tensor.h>
 #include <iostream>

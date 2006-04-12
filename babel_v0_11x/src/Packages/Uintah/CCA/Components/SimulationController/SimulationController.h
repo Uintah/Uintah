@@ -91,7 +91,7 @@ class DataArchive;
       //! adjust delt based on timeinfo and other parameters
       void adjustDelT(double& delt, double prev_delt, int iterations, double t);
       void initSimulationStatsVars ( void );
-      void printSimulationStats    ( Uintah::SimulationStateP sharedState, double delt, double time );
+      void printSimulationStats    ( int timestep, double delt, double time );
 
       ProblemSpecP d_ups;
       SimulationStateP d_sharedState;

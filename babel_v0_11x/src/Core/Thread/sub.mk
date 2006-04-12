@@ -42,6 +42,7 @@ SRCS     += \
 	$(SRCDIR)/Thread.cc \
 	$(SRCDIR)/ThreadError.cc \
 	$(SRCDIR)/SimpleReducer.cc \
+	$(SRCDIR)/ThreadLock.cc \
 	$(SRCDIR)/ThreadGroup.cc \
 	$(SRCDIR)/Thread_unix.cc \
 	$(SRCDIR)/ThreadPool.cc \

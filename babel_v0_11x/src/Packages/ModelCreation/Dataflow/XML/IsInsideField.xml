@@ -61,18 +61,14 @@
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Object</name>
+        <name>ObjectField</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>SelectionField</name>
+        <name>Field</name>
         <datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
-        <name>SelectionVector</name>
-        <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>

@@ -29,20 +29,11 @@
 
 itcl_class SCIRun_Math_AppendMatrix {
     inherit Module
+
     constructor {config} {
         set name AppendMatrix
-        set_defaults
     }
-    method set_defaults {} {
-        global $this-row
-	set $this-row 0
-        global $this-append
-	set $this-append 0
-        global $this-front
-	set $this-front 0
-        global $this-clear
-	set $this-front 0
-    }
+
     method make_entry {w text v c} {
         frame $w
         label $w.l -text "$text"
@@ -52,6 +43,7 @@ itcl_class SCIRun_Math_AppendMatrix {
         bind $w.e <Return> $c
         pack $w.e -side right
     }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {

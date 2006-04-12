@@ -36,8 +36,8 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Geom/ColorMap.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -64,10 +64,10 @@ private:
 DECLARE_MAKER(BundleGetColorMap)
   BundleGetColorMap::BundleGetColorMap(GuiContext* ctx)
     : Module("BundleGetColorMap", ctx, Filter, "Bundle", "SCIRun"),
-      guicolormap1name_(ctx->subVar("colormap1-name")),
-      guicolormap2name_(ctx->subVar("colormap2-name")),
-      guicolormap3name_(ctx->subVar("colormap3-name")),
-      guicolormaps_(ctx->subVar("colormap-selection"))
+      guicolormap1name_(get_ctx()->subVar("colormap1-name"), "colormap1"),
+      guicolormap2name_(get_ctx()->subVar("colormap2-name"), "colormap2"),
+      guicolormap3name_(get_ctx()->subVar("colormap3-name"), "colormap3"),
+      guicolormaps_(get_ctx()->subVar("colormap-selection"), "")
 {
 }
 
@@ -113,7 +113,7 @@ void BundleGetColorMap::execute()
   }
 
   guicolormaps_.set(colormaplist);
-  ctx->reset();
+  get_ctx()->reset();
 
   if (!(ofport = static_cast<ColorMapOPort *>(get_oport("colormap1"))))
   {

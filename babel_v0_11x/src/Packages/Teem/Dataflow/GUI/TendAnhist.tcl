@@ -31,12 +31,15 @@
 
 itcl_class Teem_Tend_TendAnhist {
     inherit Module
+
     constructor {config} {
         set name TendAnhist
-        set_defaults
     }
 
     method set_defaults {} {
+	global $this-right
+	set $this-right 0
+
 	global $this-westin
 	set $this-westin 1
 
@@ -56,6 +59,10 @@ itcl_class Teem_Tend_TendAnhist {
 	
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
+	
+	checkbutton $w.f.options.right \
+	    -text "Sample a right-triangle-shaped region, instead of a roughly equilateral triangle." \
+	    -variable $this-right
 
 	radiobutton $w.f.options.westin1 \
 	    -text "Version 1 of Westin's Anisotropy Metric Triple" \
@@ -67,7 +74,8 @@ itcl_class Teem_Tend_TendAnhist {
 	    -variable $this-westin \
 	    -value 2
 
-        pack $w.f.options.westin1 $w.f.options.westin2 \
+        pack $w.f.options.right \
+	    $w.f.options.westin1 $w.f.options.westin2 \
 	    -side top -expand yes -fill x
 	
 

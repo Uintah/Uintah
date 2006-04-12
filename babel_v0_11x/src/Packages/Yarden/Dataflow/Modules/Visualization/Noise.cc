@@ -14,7 +14,7 @@
 #include <time.h>
 #include <Core/Persistent/Pstreams.h>          
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Network/Ports/SurfacePort.h>
 #include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/BBoxCache.h>
@@ -43,9 +43,9 @@ namespace Yarden {
 using namespace SCIRun;
 using std::cerr;
 
-extern "C" Module* make_Noise(const clString& id)
+extern "C" Module* make_Noise(const clString& get_id())
 {
-    return scinew Noise(id);
+    return scinew Noise(get_id());
 }
 
 const double epsilon = 1.e-8;
@@ -63,16 +63,16 @@ static clString transparent_name("NoiseSurfaceMultiTransParent");
 
 static int my_number  = 0;
 
-Noise::Noise(const clString& id) :
-  Module("Noise", id, Filter),
-  isoval("isoval", id, this ),
-  isoval_min("isoval_min", id, this ),
-  isoval_max("isoval_max", id, this ),
-  tcl_bbox("bbox", id, this),
-  tcl_alpha("alpha", id, this),
-  tcl_trans("trans",id,this),
-  tcl_np("np",id,this),
-  tcl_map_type("map",id,this),
+Noise::Noise(const clString& get_id()) :
+  Module("Noise", get_id(), Filter),
+  isoval("isoval", get_id(), this ),
+  isoval_min("isoval_min", get_id(), this ),
+  isoval_max("isoval_max", get_id(), this ),
+  tcl_bbox("bbox", get_id(), this),
+  tcl_alpha("alpha", get_id(), this),
+  tcl_trans("trans",get_id(),this),
+  tcl_np("np",get_id(),this),
+  tcl_map_type("map",get_id(),this),
   lock("Noise search lock")
 {
     // Create input ports

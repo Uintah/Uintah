@@ -101,7 +101,7 @@ StructuredPointsReader::~StructuredPointsReader(){
 
 
 int
-StructuredPointsReader::popupUI(){
+StructuredPointsReader::popup_ui(){
 #if HAVE_QT
   QString fn = QFileDialog::getOpenFileName(
 	    "./","Vtk StructuredPoints Files(*.vtk)");

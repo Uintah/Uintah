@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
@@ -168,7 +168,7 @@ Scheduler::main_loop()
 void
 Scheduler::request_multisend(OPort* p1)
 {
-  mailbox.send(new Module_Scheduler_Message(p1));
+  mailbox.send(scinew Module_Scheduler_Message(p1));
 }
 
 
@@ -181,9 +181,9 @@ Scheduler::multisend_real(OPort* oport)
     Connection* conn=oport->connection(c);
     IPort* iport=conn->iport;
     Module* m=iport->get_module();
-    if (!m->need_execute)
+    if (!m->need_execute_)
     {
-      m->need_execute = true;
+      m->need_execute_ = true;
     }
   }
 }
@@ -192,7 +192,7 @@ Scheduler::multisend_real(OPort* oport)
 void
 Scheduler::do_scheduling()
 {
-  mailbox.send(new Module_Scheduler_Message());
+  mailbox.send(scinew Module_Scheduler_Message());
 }
 
 
@@ -210,7 +210,7 @@ Scheduler::do_scheduling_real(Module* exclude)
   for(i=0;i<nmodules;i++)
   {
     Module* module=net->module(i);
-    if (module->need_execute)
+    if (module->need_execute_)
     {
       needexecute.push(module);
     }
@@ -231,40 +231,40 @@ Scheduler::do_scheduling_real(Module* exclude)
     Module* module = needexecute.front();
     needexecute.pop();
     // Add oports
-    int no=module->numOPorts();
+    int no=module->num_output_ports();
     int i;
     for (i=0;i<no;i++)
     {
-      OPort* oport=module->getOPort(i);
+      OPort* oport=module->get_output_port(i);
       int nc=oport->nconnections();
       for (int c=0;c<nc;c++)
       {
 	Connection* conn=oport->connection(c);
 	IPort* iport=conn->iport;
 	Module* m=iport->get_module();
-	if (m != exclude && !m->need_execute)
+	if (m != exclude && !m->need_execute_)
         {
-	  m->need_execute = true;
+	  m->need_execute_ = true;
 	  needexecute.push(m);
 	}
       }
     }
 
     // Now, look upstream.
-    int ni=module->numIPorts();
+    int ni=module->num_input_ports();
     for (i=0;i<ni;i++)
     {
-      IPort* iport=module->getIPort(i);
+      IPort* iport=module->get_input_port(i);
       if (iport->nconnections())
       {
 	Connection* conn=iport->connection(0);
 	OPort* oport=conn->oport;
 	Module* m=oport->get_module();
-	if (!m->need_execute)
+	if (!m->need_execute_)
         {
 	  if (m != exclude)
           {
-	    if (module->sched_class != Module::ViewerSpecial)
+	    if (module->sched_class_ != Module::ViewerSpecial)
             {
 	      // If this oport already has the data, add it
 	      // to the to_trigger list.
@@ -274,7 +274,7 @@ Scheduler::do_scheduling_real(Module* exclude)
 	      }
               else
               {
-		m->need_execute = true;
+		m->need_execute_ = true;
 		needexecute.push(m);
 	      }
 	    }
@@ -292,9 +292,9 @@ Scheduler::do_scheduling_real(Module* exclude)
     Module* module=oport->get_module();
 
     // Only tricker the non-executing modules.
-    if (!module->need_execute)
+    if (!module->need_execute_)
     {
-      module->mailbox.send(scinew Scheduler_Module_Message(conn));
+      module->mailbox_.send(scinew Scheduler_Module_Message(conn));
     }
   }
 
@@ -316,15 +316,15 @@ Scheduler::do_scheduling_real(Module* exclude)
     {
       report_execution_finished_real(serial_base + i);
     }
-    else if (module->need_execute)
+    else if (module->need_execute_)
     {
-      module->mailbox.send(scinew Scheduler_Module_Message(serial_base + i));
-      module->need_execute = false;
+      module->mailbox_.send(scinew Scheduler_Module_Message(serial_base + i));
+      module->need_execute_ = false;
     }
     else
     {
       // Already done, just synchronize.
-      module->mailbox.send(scinew Scheduler_Module_Message(serial_base + i,
+      module->mailbox_.send(scinew Scheduler_Module_Message(serial_base + i,
                                                            false));
     }
   }

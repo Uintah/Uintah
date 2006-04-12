@@ -121,7 +121,7 @@ Viewer::Viewer(GuiContext* ctx)
 
   default_material_ =
     scinew Material(Color(.1,.1,.1), Color(.6,0,0), Color(.7,.7,.7), 50);
-  have_own_dispatch=true;
+  have_own_dispatch_=true;
 
   // Create port 0 - we use this for global objects such as cameras,
   // light source icons, etc.
@@ -152,7 +152,7 @@ Viewer::do_execute()
 {
   for(;;)
   {
-    if(!stop_rendering_ && mailbox.numItems() == 0)
+    if(!stop_rendering_ && mailbox_.numItems() == 0)
     {
       // See if anything needs to be redrawn.
       int did_some=1;
@@ -193,7 +193,7 @@ Viewer::do_execute()
 int 
 Viewer::process_event()
 {
-  MessageBase* msg=mailbox.receive();
+  MessageBase* msg=mailbox_.receive();
   GeometryComm* gmsg=(GeometryComm*)msg;
   switch(msg->type)
   {
@@ -212,7 +212,7 @@ Viewer::process_event()
     if (synchronized_debt_ < 0)
     {
       synchronized_debt_++;
-      sched->report_execution_finished(msg);
+      sched_->report_execution_finished(msg);
     }
     else
     {
@@ -223,7 +223,7 @@ Viewer::process_event()
 
   case MessageTypes::SynchronizeModule:
     // We (mostly) ignore these messages.
-    sched->report_execution_finished(msg);
+    sched_->report_execution_finished(msg);
     break;
 
   case MessageTypes::ViewWindowRedraw:
@@ -239,7 +239,7 @@ Viewer::process_event()
       }
       if(i==view_window_.size())
       {
-	warning("ViewWindow not found for redraw! (id=" + rmsg->rid + ").");
+	warning("ViewWindow not found for redraw! (get_id()=" + rmsg->rid + ").");
       }
       else if(rmsg->nframes == 0)
       {
@@ -377,7 +377,7 @@ Viewer::process_event()
       } else {
 	li = ((*it).second).find(gmsg->lserial);
 	if( li == (*it).second.end() ){
-	  error("Error while deleting a light: no light with id " +
+	  error("Error while deleting a light: no light with get_id() " +
 		to_string(gmsg->lserial) + "in database for port number" +
 		to_string(gmsg->portno));
 	} else {
@@ -672,7 +672,8 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
       return;
     }
     view_window_lock_.lock();
-    ViewWindow* r=scinew ViewWindow(this, gui, gui->createContext(args[2]));
+    ViewWindow* r=scinew ViewWindow(this, get_gui(), 
+				    get_gui()->createContext(args[2]));
 #ifdef __linux
     CleanupManager::add_callback(delete_viewwindow_callback, (void *)r);
 #endif
@@ -685,11 +686,11 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
       return;
     }
 #ifndef EXPERIMENTAL_TCL_THREAD
-    gui->unlock();
+    get_gui()->unlock();
 #endif
     delete_viewwindow(args[2]);
 #ifndef EXPERIMENTAL_TCL_THREAD
-    gui->lock();
+    get_gui()->lock();
 #endif
   } else {
     Module::tcl_command(args, userdata);
@@ -890,7 +891,7 @@ Viewer::finishPort(int portid)
       cout << "\n";
 #endif
       
-      sched->report_execution_finished(serial);
+      sched_->report_execution_finished(serial);
 
       // This turns on synchronous movie making.  It's very useful for
       // making movies that are driven by an event loop (such as
@@ -919,7 +920,7 @@ Viewer::set_context(Network* network)
   Module::set_context(network);
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
-    sched->add_callback(save_image_callback, this, -1);
+    sched_->add_callback(save_image_callback, this, -1);
   }
 }
 

@@ -1,7 +1,7 @@
 #include <Packages/DaveW/Core/Datatypes/General/TensorField.h>
 #include <Packages/DaveW/Core/Datatypes/General/TensorFieldPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/VectorFieldPort.h>
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/VectorField.h>
@@ -31,7 +31,7 @@ class TensorAnisotropy : public Module
   ScalarFieldRGdouble * sf_1_volume_ratio;
 
 public: 
-  TensorAnisotropy(const clString& id);
+  TensorAnisotropy(const clString& get_id());
   virtual ~TensorAnisotropy();
   virtual void execute();
 
@@ -49,13 +49,13 @@ private:
     DATA get_value(Array1<Array3<DATA> > *in_data, short x, short y, short slice, short tensor);
 };
 
-extern "C" Module* make_TensorAnisotropy(const clString& id) { 
-    return new TensorAnisotropy(id); 
+extern "C" Module* make_TensorAnisotropy(const clString& get_id()) { 
+    return new TensorAnisotropy(get_id()); 
 } 
   
 //--------------------------------------------------------------- 
-TensorAnisotropy::TensorAnisotropy(const clString& id) 
-: Module("TensorAnisotropy", id, Filter)
+TensorAnisotropy::TensorAnisotropy(const clString& get_id()) 
+: Module("TensorAnisotropy", get_id(), Filter)
 {
   /*TensorPorts*/
   i_tensor = scinew TensorFieldIPort(this, "TensorField", TensorFieldIPort::Atomic);

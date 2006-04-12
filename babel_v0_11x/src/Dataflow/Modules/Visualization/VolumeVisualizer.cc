@@ -35,16 +35,16 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
 #include <Core/Volume/VolumeRenderer.h>
-#include <Dataflow/Ports/TexturePort.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/TexturePort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Core/Volume/VideoCardInfo.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/GeomSticky.h>
@@ -87,7 +87,8 @@ private:
   vector<int> widget_id_;
   vector<ArrowWidget*> widget_;
   vector<GeomHandle>       widget_switch_;
-  vector<Plane>	clipping_planes_;
+  vector<Plane *>	clipping_planes_;
+  vector<Plane>         widget_clipping_planes_;
   map<ArrowWidget *, int> widget_plane_index_;
 
   GuiDouble gui_sampling_rate_hi_;
@@ -139,32 +140,32 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     widget_switch_(),
     clipping_planes_(),
     widget_plane_index_(),
-    gui_sampling_rate_hi_(ctx->subVar("sampling_rate_hi")),
-    gui_sampling_rate_lo_(ctx->subVar("sampling_rate_lo")),
-    gui_gradient_min_(ctx->subVar("gradient_min")),
-    gui_gradient_max_(ctx->subVar("gradient_max")),
-    gui_adaptive_(ctx->subVar("adaptive")),
-    gui_cmap_size_(ctx->subVar("cmap_size")),
-    gui_sw_raster_(ctx->subVar("sw_raster")),
-    gui_render_style_(ctx->subVar("render_style")),
-    gui_alpha_scale_(ctx->subVar("alpha_scale")),
-    gui_interp_mode_(ctx->subVar("interp_mode")),
-    gui_shading_(ctx->subVar("shading")),
-    gui_ambient_(ctx->subVar("ambient")),
-    gui_diffuse_(ctx->subVar("diffuse")),
-    gui_specular_(ctx->subVar("specular")),
-    gui_shine_(ctx->subVar("shine")),
-    gui_light_(ctx->subVar("light")),
-    gui_blend_res_(ctx->subVar("blend_res")),
-    gui_multi_level_(ctx->subVar("multi_level")),
-    gui_use_stencil_(ctx->subVar("use_stencil")),
-    gui_invert_opacity_(ctx->subVar("invert_opacity")),
-    gui_level_flag_(ctx->subVar("show_level_flag", false)),
-    gui_num_slices_(ctx->subVar("num_slices", false)), // dont save
-    gui_num_clipping_planes_(ctx->subVar("num_clipping_planes"), 2),
-    gui_show_clipping_widgets_(ctx->subVar("show_clipping_widgets")),
-    gui_level_on_(ctx->subVar("level_on")),
-    gui_level_vals_(ctx->subVar("level_vals")),
+    gui_sampling_rate_hi_(get_ctx()->subVar("sampling_rate_hi"), 4.0),
+    gui_sampling_rate_lo_(get_ctx()->subVar("sampling_rate_lo"), 1.0),
+    gui_gradient_min_(get_ctx()->subVar("gradient_min"), 0.0),
+    gui_gradient_max_(get_ctx()->subVar("gradient_max"), 0.0),
+    gui_adaptive_(get_ctx()->subVar("adaptive"), 1),
+    gui_cmap_size_(get_ctx()->subVar("cmap_size"), 8),
+    gui_sw_raster_(get_ctx()->subVar("sw_raster"), 0),
+    gui_render_style_(get_ctx()->subVar("render_style"), 0),
+    gui_alpha_scale_(get_ctx()->subVar("alpha_scale"), 0),
+    gui_interp_mode_(get_ctx()->subVar("interp_mode"), 1),
+    gui_shading_(get_ctx()->subVar("shading"), 0),
+    gui_ambient_(get_ctx()->subVar("ambient"), 0.5),
+    gui_diffuse_(get_ctx()->subVar("diffuse"), 0.5),
+    gui_specular_(get_ctx()->subVar("specular"), 0.0),
+    gui_shine_(get_ctx()->subVar("shine"), 30.0),
+    gui_light_(get_ctx()->subVar("light"), 0),
+    gui_blend_res_(get_ctx()->subVar("blend_res"), 8),
+    gui_multi_level_(get_ctx()->subVar("multi_level"), 1),
+    gui_use_stencil_(get_ctx()->subVar("use_stencil"), 0),
+    gui_invert_opacity_(get_ctx()->subVar("invert_opacity"), 0),
+    gui_level_flag_(get_ctx()->subVar("show_level_flag", false), 1),
+    gui_num_slices_(get_ctx()->subVar("num_slices", false), -1), // dont save
+    gui_num_clipping_planes_(get_ctx()->subVar("num_clipping_planes"), 2),
+    gui_show_clipping_widgets_(get_ctx()->subVar("show_clipping_widgets"), 1),
+    gui_level_on_(get_ctx()->subVar("level_on"), ""),
+    gui_level_vals_(get_ctx()->subVar("level_vals"), ""),
     volren_(0)
 {
 }
@@ -181,9 +182,9 @@ VolumeVisualizer::widget_moved(bool release, BaseWidget *widget)
   map<ArrowWidget *, int>::iterator pos = widget_plane_index_.find(arrow);
   if (pos == widget_plane_index_.end()) return;
   const int idx = pos->second;
-  if (idx < 0 || idx >= int(clipping_planes_.size())) return;
+  if (idx < 0 || idx >= int(widget_clipping_planes_.size())) return;
   Point up = texture_->transform().unproject(arrow->GetPosition());
-  clipping_planes_[idx].ChangePlane(up,-arrow->GetDirection());
+  widget_clipping_planes_[idx].ChangePlane(up,-arrow->GetDirection());
 }
   
 
@@ -209,12 +210,12 @@ VolumeVisualizer::execute()
     shading_state = (texture_->nb(0) == 1);
   }
 
-  gui->execute(id + " change_shading_state " + (shading_state?"0":"1"));
+  get_gui()->execute(get_id() + " change_shading_state " + (shading_state?"0":"1"));
   
   ColorMapHandle cmap1;
   
   bool c1 = (cmap1_iport_->get(cmap1) && cmap1.get_rep());
-
+  vector<Plane *> cm2_planes(0);
   vector<int> cmap2_generation;
   port_range_type range = get_iports("ColorMap2");
   port_map_type::iterator pi = range.first;
@@ -226,6 +227,13 @@ VolumeVisualizer::execute()
     if (cmap2_iport && cmap2_iport->get(cmap2H) && cmap2H.get_rep()) {
       cmap2_generation.push_back(cmap2H->generation);
       cmap2.push_back(cmap2H.get_rep());
+      for (unsigned int w = 0; w < cmap2H->widgets().size(); ++w) {
+        ClippingCM2Widget *clip = 
+          dynamic_cast<ClippingCM2Widget *>(cmap2H->widgets()[w].get_rep());
+        if (clip) {
+          cm2_planes.push_back(&clip->plane());
+        }
+      }
     }
     ++pi;
   }
@@ -291,7 +299,7 @@ VolumeVisualizer::execute()
       !gui_shine_.changed() && !gui_light_.changed() &&
       !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
       !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
-      !gui_level_flag_.changed())
+      !gui_level_flag_.changed() && (gui_multi_level_.get() == 0) )
   {
     if (texture_.get_rep())
     {
@@ -304,22 +312,21 @@ VolumeVisualizer::execute()
 	}
       }
     }
-    cerr << "Early exit\n";
     return;
   }
 
 
   string s;
-  gui->eval(id + " hasUI", s);
+  get_gui()->eval(get_id() + " hasUI", s);
   if( s == "0" )
-    gui->execute(id + " buildTopLevel");
+    get_gui()->execute(get_id() + " buildTopLevel");
 
   if( texture_->nlevels() > 1 && gui_multi_level_.get() == 1){
     gui_multi_level_.set(texture_->nlevels());
-    gui->execute(id + " build_multi_level");
+    get_gui()->execute(get_id() + " build_multi_level");
   } else if(texture_->nlevels() == 1 && gui_multi_level_.get() > 1){
     gui_multi_level_.set(1);
-    gui->execute(id + " destroy_multi_level");
+    get_gui()->execute(get_id() + " destroy_multi_level");
   }
 
   cmap2_ = cmap2;
@@ -390,14 +397,14 @@ VolumeVisualizer::execute()
   if( texture_->nlevels() > 1 ){
     for(int i = 0; i < texture_->nlevels(); i++){
       string result;
-      gui->eval(id + " isOn l" + to_string(i), result);
+      get_gui()->eval(get_id() + " isOn l" + to_string(i), result);
       if ( result == "0")
 	volren_->set_draw_level(texture_->nlevels()-1 -i, false);
       else 
 	volren_->set_draw_level(texture_->nlevels()-1 -i, true);
 
 
-      gui->eval(id + " alphaVal s" + to_string(i), result);
+      get_gui()->eval(get_id() + " alphaVal s" + to_string(i), result);
       double val;
       if( string_to_double( result, val )){
 	volren_->set_level_alpha(texture_->nlevels()-1 -i, val);
@@ -429,7 +436,7 @@ VolumeVisualizer::execute()
   while (gui_num_clipping_planes_.get() >= 0 &&
          gui_num_clipping_planes_.get() != (int)widget_.size())
   {
-    double scale = (bbox.diagonal()).length()/30.0;
+    double scale = (bbox.diagonal()).length()/60.0;
     Point p = (bbox.min()+bbox.diagonal()/2.0);
 
     ArrowWidget *widget = scinew ArrowWidget(this, &widget_lock_, scale, true);
@@ -454,12 +461,19 @@ VolumeVisualizer::execute()
     widget->Move(p);
     widget->redraw();
     widget_plane_index_[widget] = clipping_planes_.size();
-    clipping_planes_.push_back(Plane(1,1,1,1));
+    widget_clipping_planes_.push_back(Plane(1,1,1,1));
     Point up = texture_->transform().unproject(widget->GetPosition());
-    clipping_planes_.back().ChangePlane(up,-bbox.diagonal());
+    widget_clipping_planes_.back().ChangePlane(up,-bbox.diagonal());
   }
 
+  clipping_planes_.clear();
+  for (unsigned int p = 0; p < widget_clipping_planes_.size(); ++p)
+    clipping_planes_.push_back(&widget_clipping_planes_[p]);
 
+  for (unsigned int p = 0; p < cm2_planes.size(); ++p) {
+    clipping_planes_.push_back(cm2_planes[p]);
+  }
+  
   for (unsigned int w = 0; w < widget_switch_.size(); ++w) 
     ((GeomSwitch*)widget_switch_[w].get_rep())->set_state(gui_show_clipping_widgets_.get());
 

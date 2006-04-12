@@ -33,7 +33,7 @@
 -->
 
 <!-- Top level -->
-<!ELEMENT network (environment?, note?, modules, connections)>
+<!ELEMENT network (environment?, note?, modules, connections?)>
 <!ATTLIST network
         version CDATA #REQUIRED
         name CDATA #IMPLIED
@@ -60,7 +60,16 @@
 
 <!-- modules an id for use later in connections, 
      the module instantiation info, and the position in the network editor -->
-<!ELEMENT modules (module+)>
+<!ELEMENT modules (subnet*, module*)>
+
+<!ELEMENT subnet (network, position, note?, port_caching?)>
+<!ATTLIST subnet
+          id CDATA #REQUIRED
+          package CDATA #REQUIRED
+          category CDATA #REQUIRED
+          name CDATA #REQUIRED>
+
+
 <!ELEMENT module (position, gui_callback?, note?, port_caching?, var*)>
 <!ATTLIST module
           id CDATA #REQUIRED

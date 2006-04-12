@@ -42,8 +42,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/IsoClip.h>
 #include <Core/Containers/StringUtil.h>
@@ -103,8 +103,8 @@ DECLARE_MAKER(IsoClip)
 
 IsoClip::IsoClip(GuiContext* ctx)
   : Module("IsoClip", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gui_isoval_(ctx->subVar("isoval")),
-    gui_lte_(ctx->subVar("lte")),
+    gui_isoval_(get_ctx()->subVar("isoval"), 0.0),
+    gui_lte_(get_ctx()->subVar("lte"), 1),
     last_field_generation_(0),
     last_isoval_(0),
     last_lte_(-1),

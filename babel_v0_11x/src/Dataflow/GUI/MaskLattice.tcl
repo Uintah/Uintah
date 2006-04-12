@@ -29,20 +29,9 @@
 
 itcl_class SCIRun_FieldsData_MaskLattice {
     inherit Module
+
     constructor {config} {
         set name MaskLattice
-	
-	global $this-maskfunction
-	
-        set_defaults
-    }
-
-    method set_defaults {} {
-	set $this-maskfunction "v > 0"
-    }
-    method execrunmode {} {
-	set $this-execmode execute
-	$this-c needexecute
     }
 
     method ui {} {

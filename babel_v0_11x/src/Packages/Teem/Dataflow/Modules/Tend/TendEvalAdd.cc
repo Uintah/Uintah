@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 namespace SCITeem {
@@ -58,12 +58,15 @@ DECLARE_MAKER(TendEvalAdd)
 
 TendEvalAdd::TendEvalAdd(SCIRun::GuiContext *ctx) : 
   Module("TendEvalAdd", ctx, Filter, "Tend", "Teem"),
-  value_(ctx->subVar("value"))
+  value_(get_ctx()->subVar("value"), 1.0)
 {
 }
 
-TendEvalAdd::~TendEvalAdd() {
+
+TendEvalAdd::~TendEvalAdd()
+{
 }
+
 
 void 
 TendEvalAdd::execute()
@@ -83,7 +86,7 @@ TendEvalAdd::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenEigenvalueAdd(nout, nin, value_.get())) {

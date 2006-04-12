@@ -26,8 +26,8 @@ Point BBox::center() const {
 }
 
 bool BBox::intersect_nontrivial(const Ray& ray, double &min_t) {
-  double Tnear = -MAXDOUBLE;
-  double Tfar = MAXDOUBLE;
+  double Tnear = -DBL_MAX;
+  double Tfar = DBL_MAX;
   double ray_dir[3];
   double bbox_min[3];
   double bbox_max[3];

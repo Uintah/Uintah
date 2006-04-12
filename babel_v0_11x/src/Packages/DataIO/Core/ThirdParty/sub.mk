@@ -48,10 +48,7 @@ SRCS     += \
 
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Dataflow/Network Dataflow/Ports
+PSELIBS := Core/Thread
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY) 
 

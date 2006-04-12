@@ -56,11 +56,15 @@ namespace SCIRun {
 
 SCISHARE bool string_to_int(const string &str, int &result);
 SCISHARE bool string_to_double(const string &str, double &result);
+SCISHARE bool string_to_unsigned_long(const string &str, unsigned long &res);
 
 SCISHARE string to_string(int val);
 SCISHARE string to_string(unsigned int val);
 SCISHARE string to_string(unsigned long val);
 SCISHARE string to_string(double val);
+
+SCISHARE string string_toupper(string);
+SCISHARE string string_tolower(string);
 
 //////////
 // Remove directory name
@@ -71,7 +75,7 @@ SCISHARE string basename(const string &path);
 SCISHARE string pathname(const string &path);
 
 // Split a string into multiple parts, separated by the character sep
-SCISHARE vector<string> split_string(const std::string& str, char sep);
+SCISHARE vector<string> split_string(const string& str, char sep);
 
 /////////
 // C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.
@@ -82,10 +86,12 @@ SCISHARE string string_Cify(const string &str);
 SCISHARE char* ccast_unsafe(const string &str);
 
 // replaces all occurances of 'substr' in 'str' with 'replacement'
-SCISHARE string replace_substring(string str, string substr, string replacement);
+SCISHARE string replace_substring(string str, 
+                                  const string &substr, 
+                                  const string &replacement);
 
 // Returns true if 'str' ends with the string 'substr'
-SCISHARE bool ends_with(string str, string substr);
+SCISHARE bool ends_with(const string &str, const string &substr);
 
 
 } // End namespace SCIRun

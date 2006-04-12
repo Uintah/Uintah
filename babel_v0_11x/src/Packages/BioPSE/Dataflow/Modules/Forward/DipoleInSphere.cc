@@ -53,8 +53,8 @@
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
@@ -163,13 +163,13 @@ DipoleInSphere::execute()
       
       DenseMatrix dip_mtrx((int)pos.size(), 6);
       unsigned int i;
-      msgStream_ << "Dipoles: " << endl;
+      msg_stream_ << "Dipoles: " << endl;
       for (i=0; i<pos.size(); ++i){
 	qdip = dips[i];
 	p = pos[i];
 	dip_mtrx[i][0] = p.x(); dip_mtrx[i][1] = p.y();  dip_mtrx[i][2] = p.z();
 	dip_mtrx[i][3] = qdip.x(); dip_mtrx[i][4] = qdip.y();  dip_mtrx[i][5] = qdip.z();
-	msgStream_ << "Pos: " << p << ", moment: " << qdip << endl;
+	msg_stream_ << "Pos: " << p << ", moment: " << qdip << endl;
       }
       
       update_state(JustStarted);
@@ -210,7 +210,7 @@ DipoleInSphere::fillOneSphere(DenseMatrix& dips, TSFieldS* hSurf,
   
   double gamma=1;
   double E[3];
-  msgStream_ << "Radius of the sphere is " << R << endl;
+  msg_stream_ << "Radius of the sphere is " << R << endl;
   Point p;
 
   TSMesh::Node::iterator niter; hMesh->begin(niter);

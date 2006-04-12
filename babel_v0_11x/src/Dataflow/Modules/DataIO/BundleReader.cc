@@ -37,7 +37,7 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
@@ -62,8 +62,8 @@ protected:
 DECLARE_MAKER(BundleReader)
   BundleReader::BundleReader(GuiContext* ctx)
     : GenericReader<BundleHandle>("BundleReader", ctx, "DataIO", "SCIRun"),
-  guiTypes_(ctx->subVar("types")),
-  guiFileType_(ctx->subVar("filetype"))
+  guiTypes_(get_ctx()->subVar("types")),
+  guiFileType_(get_ctx()->subVar("filetype"))
 {
   string importtypes = "{";
   importtypes += "{{SCIRun Bundle File} {.bdl} } ";
@@ -73,8 +73,11 @@ DECLARE_MAKER(BundleReader)
   guiTypes_.set(importtypes);
 }
 
-BundleReader::~BundleReader(){
+
+BundleReader::~BundleReader()
+{
 }
+
 
 void
 BundleReader::execute()

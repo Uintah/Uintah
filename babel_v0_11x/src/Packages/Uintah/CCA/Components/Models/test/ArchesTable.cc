@@ -85,7 +85,7 @@ ArchesTable::~ArchesTable()
 void ArchesTable::outputProblemSpec(ProblemSpecP& ps)
 {
   ps->setAttribute("type", "Arches");
-  ps->appendElement("filename",filename,false,4);
+  ps->appendElement("filename",filename);
   for (vector<DefaultValue*>::const_iterator it = defaults.begin();
        it != defaults.end(); ++it)
     (*it)->outputProblemSpec(ps);
@@ -995,11 +995,11 @@ void ArchesTable::Dep::outputProblemSpec(ProblemSpecP& ps)
   if (type == Dep::ConstantValue) {
     stringstream ss;
     ss << constantValue;
-    ProblemSpecP cv_ps = ps->appendElement("constantValue",ss.str(), false,4);
+    ProblemSpecP cv_ps = ps->appendElement("constantValue",ss.str());
     cv_ps->setAttribute("name",name);
   }
   if (type == Dep::DerivedValue) {
-    ProblemSpecP dv_ps = ps->appendElement("derivedValue",expr_string,false,4);
+    ProblemSpecP dv_ps = ps->appendElement("derivedValue",expr_string);
     dv_ps->setAttribute("name",name);
   }
 

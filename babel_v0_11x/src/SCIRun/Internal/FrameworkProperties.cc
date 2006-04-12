@@ -95,19 +95,34 @@ sci::cca::Port::pointer FrameworkProperties::getService(const std::string& name)
 
 void FrameworkProperties::initSidlPaths()
 {
+    std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+    std::string fullCCAXMLPath(srcDir + CCAComponentModel::DEFAULT_PATH);
     SSIDL::array1<std::string> sArray;
+
     // ';' seperated list of directories where one can find SIDL xml files
     // getenv may return NULL if SIDL_XML_PATH was not set
     const char *component_path = getenv("SIDL_XML_PATH");
     if (component_path) {
         std::string s(component_path);
         parseEnvVariable(s, ';', sArray);
+	// Check to make sure that the default CCA path is in the array.
+	// If not found, add it.
+	bool found = false;
+	for (SSIDL::array1<std::string>::iterator iter = sArray.begin();
+	     iter != sArray.end(); iter++) {
+	  if (*iter == fullCCAXMLPath) {
+	    found = true;
+	    break;
+	  }
+	}
+	if (! found) {
+	  sArray.push_back(fullCCAXMLPath);
+	}
         frameworkProperties->putStringArray("sidl_xml_path", sArray);
     } else if (readPropertiesFromFile()) {
         return;
     } else {
-        std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-        sArray.push_back(srcDir + CCAComponentModel::DEFAULT_PATH);
+        sArray.push_back(fullCCAXMLPath);
 #if HAVE_BABEL
         sArray.push_back(srcDir + BabelComponentModel::DEFAULT_PATH);
 #endif

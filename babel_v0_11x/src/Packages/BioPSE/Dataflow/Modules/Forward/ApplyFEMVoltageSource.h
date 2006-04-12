@@ -44,8 +44,8 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Trig.h>
@@ -55,78 +55,82 @@
 
 namespace BioPSE {
 
-  using namespace SCIRun;
+using namespace SCIRun;
 
-  class ApplyFEMVoltageSourceAlgo : public DynamicAlgoBase
-  {
-  public:
-    virtual void execute(FieldHandle &hField, ColumnMatrix *rhsIn, SparseRowMatrix *matIn, string bcFlag, SparseRowMatrix *mat, ColumnMatrix* rhs) = 0;
+class ApplyFEMVoltageSourceAlgo : public DynamicAlgoBase
+{
+public:
+  virtual void execute(FieldHandle &hField, ColumnMatrix *rhsIn, 
+		       SparseRowMatrix *matIn, string bcFlag, 
+		       SparseRowMatrix *mat, ColumnMatrix* rhs) = 0;
 
-    //! support the dynamically compiled algorithm concept
-    static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
-					      const TypeDescription *mtd,
-					      const TypeDescription *btd,
-					      const TypeDescription *dtd);
-  };
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    const TypeDescription *mtd,
+					    const TypeDescription *btd,
+					    const TypeDescription *dtd);
+};
 
 
-  template<class FIELD>
+template<class FIELD>
 class ApplyFEMVoltageSourceAlgoT : public ApplyFEMVoltageSourceAlgo {
-  public:
-    ApplyFEMVoltageSourceAlgoT() {}
+public:
+  ApplyFEMVoltageSourceAlgoT() {}
 
-    virtual ~ApplyFEMVoltageSourceAlgoT() {}
+  virtual ~ApplyFEMVoltageSourceAlgoT() {}
   
-    //! Public methods
-    virtual void execute(FieldHandle &hField, ColumnMatrix *rhsIn, SparseRowMatrix *matIn, string bcFlag, SparseRowMatrix *mat, ColumnMatrix* rhs)
-    {
-      //-- polling Field for Dirichlet BC
-      vector<pair<int, double> > dirBC;
-      if (bcFlag=="GroundZero") 
-	dirBC.push_back(pair<int, double>(0,0.0));
-      else if (bcFlag == "DirSub") 
-	hField->get_property("dirichlet", dirBC);
+  //! Public methods
+  virtual void execute(FieldHandle &hField, ColumnMatrix *rhsIn, 
+		       SparseRowMatrix *matIn, string bcFlag, 
+		       SparseRowMatrix *mat, ColumnMatrix* rhs)
+  {
+    //-- polling Field for Dirichlet BC
+    vector<pair<int, double> > dirBC;
+    if (bcFlag=="GroundZero") 
+      dirBC.push_back(pair<int, double>(0,0.0));
+    else if (bcFlag == "DirSub") 
+      hField->get_property("dirichlet", dirBC);
 
-      //! adjusting matrix for Dirichlet BC
-      int *idcNz; 
-      double *valNz;
-      int idcNzsize;
-      int idcNzstride;
+    //! adjusting matrix for Dirichlet BC
+    int *idcNz; 
+    double *valNz;
+    int idcNzsize;
+    int idcNzstride;
       
-      vector<double> dbc;
-      unsigned int idx;
-      for(idx = 0; idx<dirBC.size(); ++idx){
-	int ni = dirBC[idx].first;
-	double val = dirBC[idx].second;
+    vector<double> dbc;
+    unsigned int idx;
+    for(idx = 0; idx<dirBC.size(); ++idx){
+      int ni = dirBC[idx].first;
+      double val = dirBC[idx].second;
     
-	// -- getting column indices of non-zero elements for the current row
-	mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
+      // -- getting column indices of non-zero elements for the current row
+      mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
     
-	// -- updating rhs
-	for (int i=0; i<idcNzsize; ++i){
-	  int j = idcNz?idcNz[i*idcNzstride]:i;
-	  (*rhs)[j] += - val * valNz[i*idcNzstride]; 
-	}
+      // -- updating rhs
+      for (int i=0; i<idcNzsize; ++i){
+	int j = idcNz?idcNz[i*idcNzstride]:i;
+	(*rhs)[j] += - val * valNz[i*idcNzstride]; 
       }
+    }
    
-      //! zeroing matrix row and column corresponding to the dirichlet nodes
-      for(idx = 0; idx<dirBC.size(); ++idx){
-	int ni = dirBC[idx].first;
-	double val = dirBC[idx].second;
+    //! zeroing matrix row and column corresponding to the dirichlet nodes
+    for(idx = 0; idx<dirBC.size(); ++idx){
+      int ni = dirBC[idx].first;
+      double val = dirBC[idx].second;
     
-	mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
+      mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
       
-	for (int i=0; i<idcNzsize; ++i){
-	  int j = idcNz?idcNz[i*idcNzstride]:i;
-	  mat->put(ni, j, 0.0);
-	  mat->put(j, ni, 0.0); 
-	}
-      
-	//! updating dirichlet node and corresponding entry in rhs
-	mat->put(ni, ni, 1);
-	(*rhs)[ni] = val;
+      for (int i=0; i<idcNzsize; ++i){
+	int j = idcNz?idcNz[i*idcNzstride]:i;
+	mat->put(ni, j, 0.0);
+	mat->put(j, ni, 0.0); 
       }
-     }
-  };
+      
+      //! updating dirichlet node and corresponding entry in rhs
+      mat->put(ni, ni, 1);
+      (*rhs)[ni] = val;
+    }
+  }
+};
     
 } // End namespace BioPSE

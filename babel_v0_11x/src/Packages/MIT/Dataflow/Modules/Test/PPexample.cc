@@ -32,7 +32,7 @@ class MITSHARE PPexample : public Module {
   GraphPart *graph_;
 
 public:
-  PPexample(const string& id);
+  PPexample(const string& get_id());
 
   virtual ~PPexample();
 
@@ -41,12 +41,12 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" MITSHARE Module* make_PPexample(const string& id) {
-  return scinew PPexample(id);
+extern "C" MITSHARE Module* make_PPexample(const string& get_id()) {
+  return scinew PPexample(get_id());
 }
 
-PPexample::PPexample(const string& id)
-  : Module("PPexample", id, Source, "Test", "MIT")
+PPexample::PPexample(const string& get_id())
+  : Module("PPexample", get_id(), Source, "Test", "MIT")
 {
   interface_ = new PPInterface( (Part*)this, 0 );
   graph_ = new GraphPart( interface_, "example");
@@ -86,13 +86,13 @@ void PPexample::execute()
 void PPexample::tcl_command(TCLArgs& args, void* data)
 {
   if ( args[1] == "set-window" ) {
-    PPexampleGui *gui = new PPexampleGui( id+"-gui" );
-    gui->set_window( args[2] );
+    PPexampleGui *gui = new PPexampleGui( get_id()+"-gui" );
+    get_gui()->set_window( args[2] );
 
-    connect( gui->burning, interface_, &PPInterface::burning );
-    connect( gui->monitor, interface_, &PPInterface::monitor );
-    connect( gui->thin, interface_, &PPInterface::thin );
-    connect( gui->go, interface_, &PPInterface::go);
+    connect( get_gui()->burning, interface_, &PPInterface::burning );
+    connect( get_gui()->monitor, interface_, &PPInterface::monitor );
+    connect( get_gui()->thin, interface_, &PPInterface::thin );
+    connect( get_gui()->go, interface_, &PPInterface::go);
     connect( interface_->has_child, (PartGui* )gui, &PartGui::add_child );
 
     interface_->report_children( (PartGui* )gui, &PartGui::add_child );

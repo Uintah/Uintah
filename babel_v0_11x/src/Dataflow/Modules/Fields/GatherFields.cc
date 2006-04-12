@@ -44,7 +44,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Modules/Fields/GatherFields.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
@@ -76,10 +76,10 @@ private:
 DECLARE_MAKER(GatherFields)
 GatherFields::GatherFields(GuiContext* ctx)
   : Module("GatherFields", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gui_force_pointcloud_(ctx->subVar("force-pointcloud")),
-    gui_accumulating_(ctx->subVar("accumulating")),
-    gui_clear_(ctx->subVar("clear", false)),
-    gui_precision_(ctx->subVar("precision")),
+    gui_force_pointcloud_(get_ctx()->subVar("force-pointcloud"), 0),
+    gui_accumulating_(get_ctx()->subVar("accumulating"), 0),
+    gui_clear_(get_ctx()->subVar("clear", false), 0),
+    gui_precision_(get_ctx()->subVar("precision"), 4),
     force_pointcloud_(0),
     precision_(0),
     error_(0)

@@ -26,7 +26,7 @@
  *  Copyright (C) 1994, 2001 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/HexVolMesh.h>
@@ -395,7 +395,7 @@ HexIntMask::execute()
   FieldOPort *ofp = (FieldOPort *)get_oport("Masked HexVol");
   if (!ofp)
   {
-    error("Unable to initialize " + name + "'s Output port.");
+    error("Unable to initialize Output port.");
     return;
   }
   ofp->send(ofield);

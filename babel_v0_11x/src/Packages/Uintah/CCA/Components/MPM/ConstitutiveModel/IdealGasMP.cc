@@ -52,14 +52,13 @@ void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","ideal_gas");
   }
 
-  cm_ps->appendElement("gamma", d_initialData.gamma,false,4);
-  cm_ps->appendElement("specific_heat",d_initialData.cv,false,4);
-  cm_ps->appendElement("specific_heat",d_initialData.UseArtificialViscosity,
-                       false,4);
+  cm_ps->appendElement("gamma", d_initialData.gamma);
+  cm_ps->appendElement("specific_heat",d_initialData.cv);
+  cm_ps->appendElement("specific_heat",d_initialData.UseArtificialViscosity);
 }
 
 
@@ -169,7 +168,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     Matrix3 velGrad,deformationGradientInc;
-    double J,p,se=0.;
+    double p,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Matrix3 Identity;
@@ -261,9 +260,6 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
                                      deformationGradient[idx];
-
-      // get the volumetric part of the deformation
-      J    = deformationGradient_new[idx].Determinant();
 
       pvolume_deformed[idx]=pvolume[idx]*Jinc;
       double rhoM = pmass[idx]/pvolume_deformed[idx];

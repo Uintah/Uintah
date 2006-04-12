@@ -32,8 +32,8 @@
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
@@ -51,23 +51,23 @@ using namespace SCIRun;
 
 ParticleVis::ParticleVis(GuiContext* ctx) :
   Module("ParticleVis", ctx, Filter, "Visualization", "Uintah"), 
-  min_(ctx->subVar("min_")),  max_(ctx->subVar("max_")),
-  isFixed(ctx->subVar("isFixed")),
-  current_time(ctx->subVar("current_time")),
-  radius(ctx->subVar("radius")), 
-  auto_radius(ctx->subVar("auto_radius")), 
-  drawcylinders(ctx->subVar("drawcylinders")),
-  length_scale(ctx->subVar("length_scale")),
-  auto_length_scale(ctx->subVar("auto_length_scale")),
-  min_crop_length(ctx->subVar("min_crop_length")),
-  max_crop_length(ctx->subVar("max_crop_length")),
-  head_length(ctx->subVar("head_length")), 
-  width_scale(ctx->subVar("width_scale")),
-  shaft_rad(ctx->subVar("shaft_rad")),
-  show_nth(ctx->subVar("show_nth")),
-  drawVectors(ctx->subVar("drawVectors")),
-  drawspheres(ctx->subVar("drawspheres")),
-  polygons(ctx->subVar("polygons")),
+  min_(get_ctx()->subVar("min_")),  max_(get_ctx()->subVar("max_")),
+  isFixed(get_ctx()->subVar("isFixed")),
+  current_time(get_ctx()->subVar("current_time")),
+  radius(get_ctx()->subVar("radius")), 
+  auto_radius(get_ctx()->subVar("auto_radius")), 
+  drawcylinders(get_ctx()->subVar("drawcylinders")),
+  length_scale(get_ctx()->subVar("length_scale")),
+  auto_length_scale(get_ctx()->subVar("auto_length_scale")),
+  min_crop_length(get_ctx()->subVar("min_crop_length")),
+  max_crop_length(get_ctx()->subVar("max_crop_length")),
+  head_length(get_ctx()->subVar("head_length")), 
+  width_scale(get_ctx()->subVar("width_scale")),
+  shaft_rad(get_ctx()->subVar("shaft_rad")),
+  show_nth(get_ctx()->subVar("show_nth")),
+  drawVectors(get_ctx()->subVar("drawVectors")),
+  drawspheres(get_ctx()->subVar("drawspheres")),
+  polygons(get_ctx()->subVar("polygons")),
   MIN_POLYS(8), MAX_POLYS(400),
   MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
@@ -136,15 +136,15 @@ void ParticleVis::execute()
     if(spin1->get(scaleSet)){
       if( scaleSet.get_rep() ) {
 	hasScale = true;
-	gui->execute(id + " scalable 1");
+	get_gui()->execute(get_id() + " scalable 1");
       } else {
-	gui->execute(id + " scalable 0");
+	get_gui()->execute(get_id() + " scalable 0");
       }
     } else {
-      gui->execute(id + " scalable 0");
+      get_gui()->execute(get_id() + " scalable 0");
     }
   } else {
-    gui->execute(id + " scalable 0");
+    get_gui()->execute(get_id() + " scalable 0");
   }
   
   if(vpin){
@@ -199,8 +199,8 @@ void ParticleVis::execute()
   // so just grab one
   PSet *pset = part->getParticleSet();
   cbClass = pset->getCallBackClass();
-  vector<ShareAssignParticleVariable<Point> >& points = pset->getPositions();
-  vector<ShareAssignParticleVariable<long64> >& ids = pset->getIDs();
+  vector<ShareAssignParticleVariable<Point> >& points = pset->get_positions();
+  vector<ShareAssignParticleVariable<long64> >& ids = pset->get_ids();
   vector<ShareAssignParticleVariable<long64> >::iterator id_it = ids.begin();
   vector<ShareAssignParticleVariable<double> >& values = part->get();
   vector<ShareAssignParticleVariable<Point> >::iterator p_it = points.begin();
@@ -484,7 +484,7 @@ void ParticleVis::geom_pick(GeomPickHandle pick,
 #endif
   
   // This variable should not need to be initialized, because if the
-  // getID fails then we don't use the value.  If it succeeds then we
+  // get_id fails then we don't use the value.  If it succeeds then we
   // initialize it.
   
   long long id;

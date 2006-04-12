@@ -32,46 +32,14 @@
 
 itcl_class Teem_UnuAtoM_UnuAxinfo {
     inherit Module
+
     constructor {config} {
         set name UnuAxinfo
-        set_defaults
+
+	setGlobal $this-firstwidth 15
+	setGlobal $this-spaceDir "0,0,0"
+	setGlobal $this-use_spaceDir 0
     }
-    
-    method set_defaults {} {
-	# the width of the first column of the data display
-	global $this-firstwidth
-	global $this-axis
-	global $this-label
-	global $this-kind
-	global $this-min
-	global $this-max
-	global $this-spacing
-	global $this-spaceDir
-	global $this-reset
-	global $this-use_label
-	global $this-use_kind
-	global $this-use_min
-	global $this-use_max
-	global $this-use_spacing
-	global $this-use_spaceDir
-	
-	set $this-firstwidth 15
-	set $this-axis 0
-	set $this-label "---"
-	set $this-kind "nrrdKindUnknown"
-	set $this-spacing 1.0
-	set $this-min 0
-	set $this-max 1.0
-	set $this-spaceDir "0,0,0"
-	set $this-reset 0
-	set $this-use_label 1
-	set $this-use_kind 1
-	set $this-use_min 1
-	set $this-use_max 1
-	set $this-use_spacing 1
-	set $this-use_spaceDir 0
-    }
-    	
     
     method ui {} {
         set w .ui[modname]
@@ -123,21 +91,6 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
-    
-    
-    method labelpair { win text1 text2 } {
-	global $text2
-	
-	frame $win 
-	pack $win -side top -padx 5 -pady 1
-	label $win.l1 -text $text1 -width [set $this-firstwidth] \
-	    -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
-	    -fore darkred
-	pack $win.l1 $win.colon -side left -anchor nw
-	pack $win.l2 -side left -fill x -expand 1 -anchor nw
-    } 
     
     method makelabelentry { win l var} {
 	global $var

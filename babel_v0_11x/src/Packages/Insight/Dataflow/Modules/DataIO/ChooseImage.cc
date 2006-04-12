@@ -41,7 +41,7 @@
 
 #include <Core/Containers/StringUtil.h>
 
-#include <Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 namespace Insight {
 
@@ -65,8 +65,8 @@ public:
 DECLARE_MAKER(ChooseImage)
 ChooseImage::ChooseImage(GuiContext* ctx)
   : Module("ChooseImage", ctx, Source, "DataIO", "Insight"),
-    port_index_(ctx->subVar("port-index")),
-    usefirstvalid_(ctx->subVar("usefirstvalid"))
+    port_index_(get_ctx()->subVar("port-index")),
+    usefirstvalid_(get_ctx()->subVar("usefirstvalid"))
 {
 }
 

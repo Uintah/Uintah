@@ -36,8 +36,8 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Datatypes/String.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -62,20 +62,24 @@ private:
 
 
 DECLARE_MAKER(BundleGetString)
-  BundleGetString::BundleGetString(GuiContext* ctx)
-    : Module("BundleGetString", ctx, Filter, "Bundle", "SCIRun"),
-      guistring1name_(ctx->subVar("string1-name")),
-      guistring2name_(ctx->subVar("string2-name")),
-      guistring3name_(ctx->subVar("string3-name")),
-      guistrings_(ctx->subVar("string-selection"))
+
+BundleGetString::BundleGetString(GuiContext* ctx)
+  : Module("BundleGetString", ctx, Filter, "Bundle", "SCIRun"),
+    guistring1name_(get_ctx()->subVar("string1-name"), "string1"),
+    guistring2name_(get_ctx()->subVar("string2-name"), "string2"),
+    guistring3name_(get_ctx()->subVar("string3-name"), "string3"),
+    guistrings_(get_ctx()->subVar("string-selection"), "")
 {
-
 }
 
-BundleGetString::~BundleGetString(){
+
+BundleGetString::~BundleGetString()
+{
 }
 
-void BundleGetString::execute()
+
+void
+BundleGetString::execute()
 {
   string string1name = guistring1name_.get();
   string string2name = guistring2name_.get();
@@ -115,7 +119,7 @@ void BundleGetString::execute()
 
 
   guistrings_.set(stringlist);
-  ctx->reset();
+  get_ctx()->reset();
 
  
   if (!(ofport = static_cast<StringOPort *>(get_oport("string1"))))

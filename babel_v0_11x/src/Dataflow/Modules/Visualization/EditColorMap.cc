@@ -32,9 +32,9 @@
 #include <sci_glx.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <Core/Math/CatmullRomSpline.h>
 #include <Core/Malloc/Allocator.h>
@@ -160,12 +160,12 @@ DECLARE_MAKER(EditColorMap)
 
 EditColorMap::EditColorMap( GuiContext* ctx)
   : Module("EditColorMap",ctx,Source, "Visualization", "SCIRun"),
-    RGBorHSV_(ctx->subVar("rgbhsv")),
-    lineVSspline_(ctx->subVar("linespline")),
-    rgb_points_pickle_(ctx->subVar("rgb_points_pickle")),
-    hsv_points_pickle_(ctx->subVar("hsv_points_pickle")),
-    alphas_pickle_(ctx->subVar("alphas_pickle")),
-    resolution_(ctx->subVar("resolution")),
+    RGBorHSV_(get_ctx()->subVar("rgbhsv")),
+    lineVSspline_(get_ctx()->subVar("linespline")),
+    rgb_points_pickle_(get_ctx()->subVar("rgb_points")),
+    hsv_points_pickle_(get_ctx()->subVar("hsv_points_pickle")),
+    alphas_pickle_(get_ctx()->subVar("alpha_points")),
+    resolution_(get_ctx()->subVar("resolution")),
     hsv_mode_(0),
     activeLine(-1),
     selNode(-1),
@@ -245,37 +245,26 @@ EditColorMap::loadTs( double Ax, double Ay, double ax, double ay,
 void
 EditColorMap::tcl_pickle()
 {
-#if 0
   unsigned int i;
 
   ostringstream rgbstream;
-  for (i = 0; i < rgb_points_.size(); i++)
+  for (i = 0; i < rgbs_.size(); i++)
   {
-    rgbstream << rgb_points_[i]._t << " "
-	      << rgb_points_[i]._rgb.r() << " "
-	      << rgb_points_[i]._rgb.g() << " "
-	      << rgb_points_[i]._rgb.b() << " ";
+    rgbstream << rgbs_[i].r() << " "
+	      << rgbs_[i].g() << " "
+	      << rgbs_[i].b() << " "
+              << rgbT_[i] << " ";
   }
   rgb_points_pickle_.set(rgbstream.str());
 
-  ostringstream hsvstream;
-  for (i = 0; i < hsv_points_.size(); i++)
-  {
-    hsvstream << hsv_points_[i]._t << " "
-	      << hsv_points_[i]._rgb.r() << " "
-	      << hsv_points_[i]._rgb.g() << " "
-	      << hsv_points_[i]._rgb.b() << " ";
-  }
-  hsv_points_pickle_.set(hsvstream.str());
 
   ostringstream astream;
   for (i = 0; i < alphas_.size(); i++)
   {
-    astream << alphas_[i]._t << " "
-	    << alphas_[i]._alpha << " ";
+    astream << alphas_[i] << " "
+	    << alphaT_[i] << " ";
   }
   alphas_pickle_.set(astream.str());
-#endif
 }
 
 
@@ -380,7 +369,7 @@ EditColorMap::Resize(int win)
   glViewport(0,0,winX[win],winY[win]);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 
@@ -439,7 +428,7 @@ EditColorMap::DrawGraphs( int flush)
   ctxs_[0]->swap();
   CHECK_OPENGL_ERROR("");
   ctxs_[0]->release();
-  gui->unlock();  
+  get_gui()->unlock();  
 
   // Update the colormap.
   cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, resolution_.get());
@@ -534,7 +523,7 @@ EditColorMap::DrawGraphs( int flush)
   ctxs_[1]->swap();
   CHECK_OPENGL_ERROR("");
   ctxs_[1]->release();
-  gui->unlock();
+  get_gui()->unlock();
 
   if ( flush )
   {
@@ -592,7 +581,7 @@ EditColorMap::tcl_command( GuiArgs& args, void* userdata)
       }
   } else if(args[1] == "setgl") {
     if (makeCurrent(args.get_int(2)))
-      gui->unlock();
+      get_gui()->unlock();
   }else if (args[1] == "unpickle") {
      tcl_unpickle();
   }else if (args[1] == "toggle-hsv") {
@@ -1048,16 +1037,16 @@ EditColorMap::makeCurrent(int win)
 {
   ASSERT(win == 0 || win == 1);
   // lock a mutex
-  gui->lock();
+  get_gui()->lock();
 
   if (!ctxs_[win]) {
     string myname; 
     int height = 0;
     if (win == 0) {
-      myname = ".ui" + id + ".f.gl1.gl";
+      myname = ".ui" + get_id() + ".f.gl1.gl";
       height = 256;
     } else if (win == 1) {
-      myname = ".ui" + id + ".f.gl3.gl";
+      myname = ".ui" + get_id() + ".f.gl3.gl";
       height = 64;
     }
     try {
@@ -1072,7 +1061,7 @@ EditColorMap::makeCurrent(int win)
   if(!ctxs_[win])
   {
     remark("Unable to create OpenGL context.");
-    gui->unlock();
+    get_gui()->unlock();
     return 0;
   }
   

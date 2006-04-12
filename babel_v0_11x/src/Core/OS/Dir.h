@@ -44,6 +44,7 @@
 #define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
 #endif
 
+#include <Core/OS/share.h>
 namespace SCIRun {
    
    /**************************************
@@ -73,7 +74,7 @@ namespace SCIRun {
       
      ****************************************/
     
-   class Dir {
+   class SCISHARE Dir {
    public:
       Dir();
       Dir(const Dir&);

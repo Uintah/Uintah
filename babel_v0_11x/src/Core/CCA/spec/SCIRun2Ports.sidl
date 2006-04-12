@@ -49,7 +49,7 @@ interface FrameworkProxyService extends sci.cca.Port
 //Temp test (Bridge)
 interface IDPort extends sci.cca.Port
 {
-  collective string getID();
+  collective string get_id();
 }
 
 interface BridgeTestPort extends sci.cca.Port

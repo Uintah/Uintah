@@ -30,7 +30,7 @@ namespace rtrt {
 #endif
 
   // template<class T>
-class VolumeVis2DDpy;
+class Volvis2DDpy;
 
 template<class T>
 class Voxel2D {

@@ -14,7 +14,7 @@
 #ifndef SCI_Datatypes_TensorFieldPort_h
 #define SCI_Datatypes_TensorFieldPort_h 
 
-#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
 #include <Packages/Yarden/Core/Datatypes/TensorField.h>
 
 namespace Yarden {

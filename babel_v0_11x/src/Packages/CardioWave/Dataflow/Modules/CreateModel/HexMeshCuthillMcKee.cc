@@ -26,7 +26,7 @@
  *  Copyright (C) 1994, 2001 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/HexVolMesh.h>
@@ -122,7 +122,7 @@ HexMeshCuthillMcKee::execute()
   FieldOPort *ofp = (FieldOPort *)get_oport("Bandwidth Minimized HexVol");
   if (!ofp)
   {
-    error("Unable to initialize " + name + "'s Output port.");
+    error("Unable to initialize Output port.");
     return;
   }
 
@@ -180,7 +180,7 @@ HexMeshCuthillMcKee::execute()
     ++nbi;
   }
 
-  msgStream_ << "Bandwidth before re-ordering: "<<max_half_bw*2+1<<"\n";
+  msg_stream_ << "Bandwidth before re-ordering: "<<max_half_bw*2+1<<"\n";
 
   // visit each separate component
   while(curr_new_idx != -1) {
@@ -318,7 +318,7 @@ HexMeshCuthillMcKee::execute()
     ++nbi;
   }
 
-  msgStream_ << "Bandwidth after re-ordering: "<<new_max_half_bw*2+1<<"\n";
+  msg_stream_ << "Bandwidth after re-ordering: "<<new_max_half_bw*2+1<<"\n";
 
   bwfield->copy_properties(hvfield);
   bwfieldH = bwfield;

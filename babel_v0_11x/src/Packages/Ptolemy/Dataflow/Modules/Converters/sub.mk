@@ -46,15 +46,18 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
            Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-           Core/Geom Core/Geometry Core/GeomInterface \
-           Core/TkExtensions Core/Algorithms/DataIO \
-           Dataflow/Network Dataflow/Ports Core/Volume \
+           Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions \
+           Dataflow/Network Core/Volume \
            Dataflow/Modules/Render \
-           Packages/Ptolemy/Core/PtolemyInterface \
            Packages/Ptolemy/Core/Datatypes
+#Core/Algorithms/DataIO
+
+ifeq ($(HAVE_JAVA), yes)
+ PSELIBS += Packages/Ptolemy/Core/PtolemyInterface
+endif
 
 LIBS := $(TK_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
-#LIBS := $(LIBS) $(TK_LIBRARY) $(TEEM_LIBRARY) 
+#LIBS := $(LIBS) $(TK_LIBRARY) $(TEEM_LIBRARY)
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

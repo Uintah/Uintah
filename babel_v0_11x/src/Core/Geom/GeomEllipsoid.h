@@ -54,10 +54,11 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomSphere.h>
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
 
-class GeomEllipsoid : public GeomSphere {
+class SCISHARE GeomEllipsoid : public GeomSphere {
 public:
     double m_tensor_matrix[16];
     double mev;

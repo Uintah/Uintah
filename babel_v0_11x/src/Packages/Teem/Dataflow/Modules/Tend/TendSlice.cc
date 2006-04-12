@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 namespace SCITeem {
@@ -60,14 +60,17 @@ DECLARE_MAKER(TendSlice)
 
 TendSlice::TendSlice(SCIRun::GuiContext *ctx) : 
   Module("TendSlice", ctx, Filter, "Tend", "Teem"),
-  axis_(ctx->subVar("axis")),
-  position_(ctx->subVar("position")),
-  dimension_(ctx->subVar("dimension"))
+  axis_(get_ctx()->subVar("axis"), 1),
+  position_(get_ctx()->subVar("position"), 0),
+  dimension_(get_ctx()->subVar("dimension"), 3)
 {
 }
 
-TendSlice::~TendSlice() {
+
+TendSlice::~TendSlice()
+{
 }
+
 
 void 
 TendSlice::execute()
@@ -87,7 +90,7 @@ TendSlice::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenSlice(nout, nin, axis_.get(), position_.get(), dimension_.get())) {

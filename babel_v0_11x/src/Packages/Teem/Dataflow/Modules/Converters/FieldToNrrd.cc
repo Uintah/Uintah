@@ -41,8 +41,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -81,7 +81,7 @@ DECLARE_MAKER(FieldToNrrd)
 
 FieldToNrrd::FieldToNrrd(GuiContext *ctx):
   Module("FieldToNrrd", ctx, Filter, "Converters", "Teem"),
-  label_(ctx->subVar("label")),
+  label_(get_ctx()->subVar("label"), "unknown"),
   ifield_generation_(-1),
   points_handle_(0),  connect_handle_(0),  data_handle_(0)
 {

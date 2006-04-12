@@ -83,7 +83,7 @@ GeomLine::GeomLine(const Point& p1, const Point& p2) :
   GeomObj(), 
   p1(p1), 
   p2(p2),
-  lineWidth_(1.0)
+  line_width_(0.0)
 {
 }
 
@@ -91,7 +91,7 @@ GeomLine::GeomLine(const GeomLine& copy) :
   GeomObj(), 
   p1(copy.p1), 
   p2(copy.p2),
-  lineWidth_(1.0)
+  line_width_(0.0)
 {
 }
 
@@ -112,7 +112,7 @@ void GeomLine::get_bounds(BBox& bb)
 void
 GeomLine::setLineWidth(float val) 
 {
-  lineWidth_ = val;
+  line_width_ = val;
 }
 
 #define GEOMLINE_VERSION 1
@@ -135,7 +135,7 @@ Persistent* make_GeomLines()
 PersistentTypeID GeomLines::type_id("GeomLines", "GeomObj", make_GeomLines);
 
 GeomLines::GeomLines()
-  : line_width_(1.0)
+  : line_width_(0.0)
 {
 }
 
@@ -608,7 +608,7 @@ Persistent* make_GeomCLineStrips()
 PersistentTypeID GeomCLineStrips::type_id("GeomCLineStrips", "GeomObj", make_GeomCLineStrips);
 
 GeomCLineStrips::GeomCLineStrips()
-  : line_width_(1.0)
+  : line_width_(0.0)
 {
 }
 

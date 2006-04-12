@@ -309,6 +309,10 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     //__________________________________
     //  what's produced from this task
     t->computes(lb->press_CCLabel,      patches, nd, press_matl,oims);
+    t->computes(lb->matrixLabel,        patches, nd, one_matl,  oims);
+    t->computes(lb->grad_dp_XFCLabel,   patches, nd, press_matl,oims);
+    t->computes(lb->grad_dp_YFCLabel,   patches, nd, press_matl,oims);
+    t->computes(lb->grad_dp_ZFCLabel,   patches, nd, press_matl,oims);
     t->modifies(lb->sum_imp_delPLabel,  patches, nd, press_matl,oims);
     t->modifies(lb->term2Label,         patches, nd, one_matl,  oims);   
     t->modifies(lb->rhsLabel,           patches, nd, one_matl,  oims);
@@ -571,6 +575,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
   ParentNewDW->transferFrom(subNewDW,           // press
                     lb->press_CCLabel,         patches,  d_press_matl, replace);
+  ParentNewDW->transferFrom(subNewDW,           // press
+                    lb->matrixLabel,           patches,  one_matl, replace);
   ParentNewDW->transferFrom(subNewDW,
                     lb->sum_imp_delPLabel,     patches,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,           // term2
@@ -583,7 +589,14 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->transferFrom(subNewDW,           // vvel_FC
                     lb->vvel_FCMELabel,        patches,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,           // wvel_FC
-                    lb->wvel_FCMELabel,        patches,  all_matls_sub,replace);
+                    lb->wvel_FCMELabel,        patches,  all_matls_sub,replace);  
+  
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_XFC
+                    lb->grad_dp_XFCLabel,     patches,   d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_YFC
+                    lb->grad_dp_YFCLabel,     patches,   d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_ZFC
+                    lb->grad_dp_ZFCLabel,     patches,   d_press_matl, replace);
                      
   ParentNewDW->transferFrom(subNewDW,          // vol_fracX_FC
                     lb->vol_fracX_FCLabel,     patches, all_matls_sub,replace); 
@@ -696,10 +709,11 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
     cout_doing <<"  patch " << coarsePatch->getID()<< endl;
     CCVariable<double> one;
           
-    new_dw->allocateTemporary(one, coarsePatch);
+    new_dw->allocateTemporary(one, coarsePatch,Ghost::AroundCells, 1);
     one.initialize(1.0);
     constCCVariable<double> notUsed = one;
-
+    int one_zero = 1;
+    
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
@@ -707,12 +721,14 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       //__________________________________
       //   compute the correction
+      // one_zero:  used to increment the CFI counter.
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];       
 
         if(finePatch->hasCoarseFineInterfaceFace() ){
           refluxOperator_computeCorrectionFluxes<double>( notUsed, notUsed, "vol_frac", indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
         }
       }
     }  // matl loop
@@ -739,12 +755,15 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     cout_doing << "  patch " << coarsePatch->getID()<< endl;
 
     CCVariable<double> rhs, sumRefluxCorrection;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
     new_dw->getModifiable(rhs,lb->rhsLabel, 0, coarsePatch);
-    new_dw->allocateTemporary(sumRefluxCorrection, coarsePatch);
+    new_dw->allocateTemporary(sumRefluxCorrection, coarsePatch,gac,1);
     sumRefluxCorrection.initialize(0.0);
 
     //__________________________________
-    // Sum the reflux correction over all materials  
+    // Sum the reflux correction over all materials 
+    // one_zero:  used to increment the CFI counter. 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
@@ -756,9 +775,11 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
         
         if(finePatch->hasCoarseFineInterfaceFace() ){
 
+          int one_zero = 1;
           refluxOperator_applyCorrectionFluxes<double>(
                         sumRefluxCorrection, "vol_frac",  indx, 
-                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
+                        coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                        one_zero);
           // Note in the equations the rhs is multiplied by vol, which is automatically canceled
           // This cancelation is mystically handled inside of the the applyCorrectionFluxes
           // operator.  
@@ -778,7 +799,8 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     if(switchDebug_setupRHS){ 
       ostringstream desc;     
       desc << "apply_refluxFluxes_RHS"<< "_patch_"<< coarsePatch->getID();
-      printData(0, coarsePatch,   1, desc.str(), "rhs",rhs);
+      printData(0, coarsePatch,   1, desc.str(), "rhs",             rhs);
+      printData(0, coarsePatch,   1, desc.str(), "refluxCorrection",sumRefluxCorrection);
     }
   }  // course patch loop 
 }

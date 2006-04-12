@@ -95,6 +95,15 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
 {
    d_sharedState = sharedState;
 
+   ProblemSpecP restart_mat_ps = 0;
+   if (materials_ps){
+     restart_mat_ps = materials_ps;
+   }
+   else{
+     restart_mat_ps = prob_spec;
+   }
+
+
    ProblemSpecP db = prob_spec->findBlock("Multimaterial");
    db->require("heatExchange", d_calcEnergyExchange);
    db->require("fluidThermalConductivity", d_tcond);
@@ -138,6 +147,13 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
      d_radiation = false;
    }
 }
+
+void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
+{
+  d_mpm->outputProblemSpec(root_ps);
+}
+
+
 
 // ****************************************************************************
 // Schedule initialization
@@ -4476,6 +4492,13 @@ void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
 bool MPMArches::needRecompile(double time, double dt, 
 			      const GridP& grid) {
   return d_recompile;
+}
+double MPMArches::recomputeTimestep(double current_dt) {
+  return d_arches->recomputeTimestep(current_dt);
+}
+      
+bool MPMArches::restartableTimesteps() {
+  return d_arches->restartableTimesteps();
 }
 
 namespace Uintah {

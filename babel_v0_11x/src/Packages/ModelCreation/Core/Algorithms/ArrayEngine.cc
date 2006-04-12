@@ -150,8 +150,8 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
       error("Function did not compile.");
       if (module_)
       {
-        SCIRun::GuiInterface* gui = module_->getGui();
-        gui->eval(module_->getID() + " compile_error "+ci->filename_);
+        SCIRun::GuiInterface* gui = module_->get_gui();
+        gui->eval(module_->get_id() + " compile_error "+ci->filename_);
       }
       SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       return(false);
@@ -264,6 +264,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
     if (Output[p].isfieldscalar())   fcn += "    TensorVectorMath::Scalar " + Output[p].getname() + ";\n";
     if (Output[p].isfieldvector())   fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
     if (Output[p].isfieldtensor())   fcn += "    TensorVectorMath::Tensor " + Output[p].getname() + ";\n";
+    if (Output[p].islocation())      fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
   }
   
   fcn += "\n\n";
@@ -309,6 +310,8 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
     if (Output[p].isfieldscalar())   fcn += "     output_[" + oss.str() + "].setnextfieldscalar(" + Output[p].getname() + ");\n";
     if (Output[p].isfieldvector())   fcn += "     output_[" + oss.str() + "].setnextfieldvector(" + Output[p].getname() + ");\n";
     if (Output[p].isfieldtensor())   fcn += "     output_[" + oss.str() + "].setnextfieldtensor(" + Output[p].getname() + ");\n";
+    if (Output[p].islocation())      fcn += "     output_[" + oss.str() + "].setnextfieldlocation(" + Output[p].getname() + ");\n"; 
+
   }
   
   fcn += std::string("    }\n  }\n\n") +

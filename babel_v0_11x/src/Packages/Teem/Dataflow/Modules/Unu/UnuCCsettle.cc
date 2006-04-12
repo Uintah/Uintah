@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
@@ -89,7 +89,7 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdCCSettle(nout, NULL, nin)) { 
@@ -104,7 +104,7 @@ void
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim && i<nout->dim; i++)
+  for (unsigned int i=0; i<nin->dim && i<nout->dim; i++)
   {
     nout->axis[i].kind = nin->axis[i].kind;
   }

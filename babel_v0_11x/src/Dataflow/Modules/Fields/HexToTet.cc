@@ -38,7 +38,7 @@
  *  Copyright (C) 1994, 2001 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Dataflow/Modules/Fields/HexToTet.h>
@@ -108,7 +108,7 @@ HexToTet::execute()
   Handle<HexToTetAlgo> halgo;
   if (DynamicCompilation::compile(hci, halgo, true, this))
   {
-    if (!halgo->execute(ifieldhandle, ofieldhandle_, this))
+    if (!halgo->execute(this, ifieldhandle, ofieldhandle_))
     {
       warning("HexToTet conversion failed to copy data.");
       return;
@@ -120,7 +120,7 @@ HexToTet::execute()
     Handle<LatToTetAlgo> lalgo;
     if (DynamicCompilation::compile(lci, lalgo, true, this))
     {
-      if (!lalgo->execute(ifieldhandle, ofieldhandle_, this))
+      if (!lalgo->execute(this, ifieldhandle, ofieldhandle_))
       {
 	warning("LatToTet conversion failed to copy data.");
 	return;

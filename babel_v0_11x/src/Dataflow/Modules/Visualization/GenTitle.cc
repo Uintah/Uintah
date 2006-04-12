@@ -44,8 +44,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomDisc.h>
@@ -65,6 +65,7 @@ public:
 
   virtual void execute();
 
+protected:
   GeomHandle generate();
   GeomHandle generateTitle( int &nchars );
 
@@ -72,24 +73,21 @@ public:
 
 protected:
 
-  GuiInt    iShowValue_;
-  GuiDouble dValue_;
-  GuiString sFormat_;
-  GuiInt    dSize_;
-  GuiString sLocation_;
-  GuiDouble color_r_;
-  GuiDouble color_g_;
-  GuiDouble color_b_;
+  GeomHandle geometry_out_handle_;
 
-  int    showValue_;
-  double value_;
-  string format_;
-  int    size_;
-  string location_;
+  GuiInt    gui_show_value_;
+  GuiString gui_value_;
+  GuiString gui_format_;
+  GuiInt    gui_size_;
+  GuiDouble gui_location_x_;
+  GuiDouble gui_location_y_;
+  GuiDouble gui_color_r_;
+  GuiDouble gui_color_g_;
+  GuiDouble gui_color_b_;
 
-  MaterialHandle material_;
+  MaterialHandle material_handle_;
 
-  bool update_;
+  bool color_changed_;
 };
 
 
@@ -98,20 +96,18 @@ DECLARE_MAKER(GenTitle)
 
 GenTitle::GenTitle(GuiContext *context)
   : Module("GenTitle", context, Source, "Visualization", "SCIRun"),
-    iShowValue_(context->subVar("showValue")),
-    dValue_(context->subVar("value")),
-    sFormat_(context->subVar("format")),
-    dSize_(context->subVar("size")),
-    sLocation_(context->subVar("location")),
-    color_r_(ctx->subVar("color-r")),
-    color_g_(ctx->subVar("color-g")),
-    color_b_(ctx->subVar("color-b")),
-
-    value_(0),
-
-    material_(scinew Material(Color(1., 1., 1.))),
-
-    update_(false)
+    geometry_out_handle_(0),
+    gui_show_value_(context->subVar("showValue"), 0),
+    gui_value_(context->subVar("value"), ""),
+    gui_format_(context->subVar("format"), "My Title"),
+    gui_size_(context->subVar("size"), 100),
+    gui_location_x_(context->subVar("location-x"), -31.0/32.0),
+    gui_location_y_(context->subVar("location-y"),  31.0/32.0),
+    gui_color_r_(context->subVar("color-r"), 1.0),
+    gui_color_g_(context->subVar("color-g"), 1.0),
+    gui_color_b_(context->subVar("color-b"), 1.0),
+    material_handle_(scinew Material(Color(1.0, 1.0, 1.0))),
+    color_changed_(false)
 {
 }
 
@@ -120,50 +116,54 @@ GenTitle::~GenTitle(){
 
 void GenTitle::execute(){
 
-  // Get a handle to the output geom port.
-  GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Title");
+  // Get the value via a matrix - Optional
+  MatrixHandle matrix_in_handle;
+  if( !get_input_handle( "Time Matrix",
+			 matrix_in_handle, gui_show_value_.get() ) )
+    return;
 
-  // Get the time via a matrix
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Time Matrix");
-  
-  if (iShowValue_.get() ) {
-    MatrixHandle mHandle;
+  if( matrix_in_handle.get_rep() ) {
+    if( gui_value_.get() != to_string( matrix_in_handle->get(0, 0) ) ) {
+      gui_value_.set( to_string( matrix_in_handle->get(0, 0) ) ); 
+      gui_value_.reset();
 
-    if( imatrix_port->get(mHandle) && mHandle.get_rep()) {
-      value_ = (double) (mHandle->get(0, 0));
-    } else {
-      error( "No matrix representation." );
-      return;
+      inputs_changed_  = true;
+    }
+  } else {
+    if( gui_value_.get() != "" ) {
+      gui_value_.set( "" );
+      gui_value_.reset();
+      
+      inputs_changed_  = true;
     }
   }
 
-  if( update_   == true ||
+  if( !geometry_out_handle_.get_rep() ||
+      
+      inputs_changed_ == true ||
 
-      showValue_ != iShowValue_.get() ||
-      value_     != dValue_.get() ||
-      format_    != sFormat_.get() ||
-      size_      != dSize_.get() ||
-      location_  != sLocation_.get() ) {
+      (gui_show_value_.get() && gui_value_.changed( true )) ||
+      (gui_show_value_.get() && gui_format_.changed( true )) ||
 
-    update_ = false;
+      gui_size_.changed( true ) ||
+      gui_location_x_.changed( true ) ||
+      gui_location_y_.changed( true ) ||
 
-    dValue_.set(value_);
-    dValue_.reset();
+      color_changed_  == true ) {
 
-    showValue_ = iShowValue_.get();
-    format_    = sFormat_.get();
-    size_      = dSize_.get();
-    location_  = sLocation_.get();
+    update_state(Executing);
 
-    material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
+    color_changed_ = false;
 
-    ogeom_port->delAll();
+    material_handle_->diffuse =
+      Color(gui_color_r_.get(), gui_color_g_.get(), gui_color_b_.get());
 
-    ogeom_port->addObj(generate(), string("Title"));
+    geometry_out_handle_ = generate();
+
+    send_output_handle( string("Title"),
+			geometry_out_handle_,
+			string("Title Sticky") );
   }
-
-  // Send the data downstream
-  ogeom_port->flushViews();
 }
 
 
@@ -178,19 +178,27 @@ GeomHandle GenTitle::generate()
   double border = 0.025;    
   double scale = .00225;
     
-  double dx = (nchars * 14.0 * size_/100.0 * scale + 2.0 * border) / 2;
-  double dy =  1.0    * 15.0 * size_/100.0 * scale + 2.0 * border;
+  double dx =
+    (nchars * 14.0 * gui_size_.get()/100.0 * scale + 2.0 * border) / 2;
+  double dy =
+     1.0    * 15.0 * gui_size_.get()/100.0 * scale + 2.0 * border;
 
-  Vector refVec;
+  // Use an offset so the edge of the title is visable.
+  Vector refVec = 31.0/32.0 *
+    Vector( gui_location_x_.get(), gui_location_y_.get(), 0.0 );
 
-  if( location_ == "Top Left" )
-    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) - Vector(  0, dy, 0 );
-  else if( location_ == "Top Center" )
-    refVec = Vector(    0/32.0, 31.0/32.0, 0 ) - Vector( dx, dy, 0 );
-  else if( location_ == "Bottom Left" )
-    refVec = Vector(-31.0/32.0,-31.0/32.0, 0 );
-  else if( location_ == "Bottom Center" )
-    refVec = Vector(    0/32.0,-31.0/32.0, 0 ) - Vector( dx,  0, 0 );
+  if( gui_location_x_.get() <= 0 &&
+      gui_location_y_.get() >= 0 )       // Top Left
+    refVec += Vector(   0, -dy, 0 );
+  else if( gui_location_x_.get() >= 0 &&
+	   gui_location_y_.get() >= 0 )  // Top Right
+    refVec += Vector( -dx, -dy, 0 );
+  else if( gui_location_x_.get() <= 0 &&
+	   gui_location_y_.get() <= 0 )  // Bottom Left
+    refVec += Vector(   0,  0, 0 ) ;
+  else if( gui_location_x_.get() >= 0 &&
+	   gui_location_y_.get() <= 0 )  // Bottom Right
+    refVec += Vector( -dx,  0, 0 );
 
   Transform trans;
   trans.pre_translate( refVec );
@@ -203,7 +211,7 @@ GeomHandle GenTitle::generateTitle( int &nchars )
 {
   char fontstr[8];
 
-  int fontsize = (int) (12.0 * size_/100.0);
+  int fontsize = (int) (12.0 * gui_size_.get()/100.0);
 
   if( fontsize <  6 ) fontsize = 6;
   if( fontsize > 16 ) fontsize = 16;
@@ -212,29 +220,33 @@ GeomHandle GenTitle::generateTitle( int &nchars )
 
   char titlestr[64];
 
-  if( showValue_ ) {
-    if( format_.find("%") == std::string::npos ||
-	format_.find("%") != format_.find_last_of("%") ) {
+  string format = gui_format_.get();
+
+  if( gui_show_value_.get() ) {
+    if( format.find("%") == std::string::npos ||
+	format.find("%") != format.find_last_of("%") ) {
       error( "Bad C Style format for the title.");
       error( "The format should be of the form: 'Blah blah %7.4f blah blah'");
       sprintf( titlestr, "Bad Format" );
     } else {
-      sprintf( titlestr, format_.c_str(), value_ );
+      double value;
+      string_to_double(gui_value_.get(), value );
+      sprintf( titlestr, format.c_str(), value );
     }
   } else {
-    if( format_.find("%") != std::string::npos ) {
+    if( format.find("%") != std::string::npos ) {
       error( "Bad C Style format for the title.");
       error( "The format should be of the form: 'Blah blah blah blah'");
       sprintf( titlestr, "Bad Format" );
     } else
-      sprintf( titlestr, format_.c_str() );
+      sprintf( titlestr, format.c_str() );
   }
 
   nchars = strlen( titlestr );
 
   return scinew GeomText( titlestr,
 			  Point(0,0,0),
-			  material_->diffuse,
+			  material_handle_->diffuse,
 			  string( fontstr ) );
 }
 
@@ -248,18 +260,20 @@ GenTitle::tcl_command(GuiArgs& args, void* userdata) {
   }
 
   if (args[1] == "color_change") {
-    update_ = true;
+    color_changed_ = true;
 
     // The below works for only the geometry not for the text so update.
     /*
     // Get a handle to the output geom port.
     GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Title");
     
-    color_r_.reset();
-    color_g_.reset();
-    color_b_.reset();
+    gui_color_r_.reset();
+    gui_color_g_.reset();
+    gui_color_b_.reset();
 
-    material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
+    material_handle_->diffuse = Color(gui_color_r_.get(),
+                                      gui_color_g_.get(),
+                                      gui_color_b_.get());
     
     if (ogeom_port) ogeom_port->flushViews();
     */

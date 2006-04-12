@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-//static char *id="@(#) $Id$";
+//static char *get_id()="@(#) $Id$";
 
 /*
  *  SmoothSepSurf.cc:  
@@ -94,7 +94,7 @@ class SmoothSepSurf : public Module {
     SurfTree *st;
     MusilRNG mr;
 public:
-    SmoothSepSurf(const clString& id);
+    SmoothSepSurf(const clString& get_id());
     virtual ~SmoothSepSurf();
     void bldMatrices();
     void bldCols();
@@ -105,18 +105,18 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" Module* make_SmoothSepSurf(const clString& id)
+extern "C" Module* make_SmoothSepSurf(const clString& get_id())
 {
-   return scinew SmoothSepSurf(id);
+   return scinew SmoothSepSurf(get_id());
 }
 
 //static clString module_name("SmoothSepSurf");
 
-SmoothSepSurf::SmoothSepSurf(const clString& id)
-: Module("SmoothSepSurf", id, Source), gamma("gamma", id, this), pb("pb", id, this),
-  N("N", id, this), tcl_exec(0), reset(0), init(0), gen(-1),
-  constrainedTCL("constrainedTCL", id, this),
-  constraintTCL("constraintTCL", id, this), jitterTCL("jitterTCL", id, this)
+SmoothSepSurf::SmoothSepSurf(const clString& get_id())
+: Module("SmoothSepSurf", get_id(), Source), gamma("gamma", get_id(), this), pb("pb", get_id(), this),
+  N("N", get_id(), this), tcl_exec(0), reset(0), init(0), gen(-1),
+  constrainedTCL("constrainedTCL", get_id(), this),
+  constraintTCL("constraintTCL", get_id(), this), jitterTCL("jitterTCL", get_id(), this)
 {
    // Create the input port
    isurf=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);

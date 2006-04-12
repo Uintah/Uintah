@@ -422,7 +422,9 @@ int main(int argc, char* argv[]) {
       
   // Write the output file
   Nrrd* nout=nrrdNew();
-  if (nrrdWrap(nout, error, nrrdTypeFloat, 1, nvectors)) {
+  size_t size[NRRD_DIM_MAX];
+  size[0] = nvectors;
+  if (nrrdWrap_nva(nout, error, nrrdTypeFloat, 1, size)) {
     err=biffGet(NRRD);
     cerr<<me<<":  error creating error nrrd:  "<<err<<endl;
     free(err);

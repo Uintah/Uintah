@@ -10,8 +10,8 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Dataflow/Network/Module.h>
 

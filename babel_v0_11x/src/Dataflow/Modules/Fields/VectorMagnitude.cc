@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/Handle.h>
 
 #include <Dataflow/Modules/Fields/VectorMagnitude.h>
@@ -57,17 +57,14 @@ public:
   virtual void execute();
 
 protected:
-  FieldHandle fieldout_;
-
-  int fGeneration_;
+  FieldHandle field_output_handle_;
 };
 
 
 DECLARE_MAKER(VectorMagnitude)
 
 VectorMagnitude::VectorMagnitude(GuiContext* ctx)
-  : Module("VectorMagnitude", ctx, Filter, "FieldsData", "SCIRun"),
-    fGeneration_(-1)
+  : Module("VectorMagnitude", ctx, Filter, "FieldsData", "SCIRun")
 {
 }
 
@@ -78,51 +75,39 @@ VectorMagnitude::~VectorMagnitude()
 void
 VectorMagnitude::execute()
 {
-  FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
-  FieldHandle fieldin;
+  FieldHandle field_input_handle;
 
-  if (!(ifp->get(fieldin) && fieldin.get_rep()))
-  {
-    error( "No handle or representation." );
+  if( !get_input_handle( "Input Field", field_input_handle, true ) )
     return;
-  }
 
-  if (!fieldin->query_vector_interface(this).get_rep())
-  {
-    error("Only available for Vector data.");
+  if (!field_input_handle->query_vector_interface(this).get_rep()) {
+    error( "This module only works on vector data.");
     return;
   }
 
   // If no data or a changed recalcute.
-  if( !fieldout_.get_rep() || fGeneration_ != fieldin->generation )
-  {
-    fGeneration_ = fieldin->generation;
+  if( inputs_changed_ ||
 
-    const TypeDescription *vftd = fieldin->get_type_description();
+      !field_output_handle_.get_rep() ) {
+    update_state(Executing);
+
+    const TypeDescription *vftd = field_input_handle->get_type_description();
     const string oftn = 
-      fieldin->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-      fieldin->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
-      fieldin->get_type_description(Field::BASIS_TD_E)->get_similar_name("double",
+      field_input_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      field_input_handle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      field_input_handle->get_type_description(Field::BASIS_TD_E)->get_similar_name("double",
                                                          0, "<", " >, ") +
-      fieldin->get_type_description(Field::FDATA_TD_E)->get_similar_name("double",
+      field_input_handle->get_type_description(Field::FDATA_TD_E)->get_similar_name("double",
 							 0, "<", " >") + " > ";
     CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(vftd, oftn);
 
     Handle<VectorMagnitudeAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fieldout_ = algo->execute(fieldin);
+    field_output_handle_ = algo->execute(field_input_handle);
   }
 
-  // Get a handle to the output field port.
-  if ( fieldout_.get_rep() )
-  {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output VectorMagnitude");
-
-    // Send the data downstream
-    ofp->send(fieldout_);
-    if (!ofp->have_data()) { fieldout_ = 0; }
-  }
+  send_output_handle( "Output VectorMagnitude", field_output_handle_, true );
 }
 
 

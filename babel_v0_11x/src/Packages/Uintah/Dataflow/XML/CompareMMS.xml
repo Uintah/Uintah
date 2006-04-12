@@ -16,13 +16,13 @@
   <io>
     <inputs>
       <port>
-        <name>Data Archive</name>
-        <datatype>Uintah::Archive</datatype>
+        <name>Scalar Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Comparison Field</name>
+        <name>Scalar Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </outputs>

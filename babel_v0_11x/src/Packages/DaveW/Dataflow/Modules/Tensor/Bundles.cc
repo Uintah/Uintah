@@ -11,11 +11,11 @@
  */
 
 #include <Packages/DaveW/Core/Datatypes/General/TensorFieldPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MeshPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/VectorFieldPort.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomPick.h>
@@ -616,31 +616,31 @@ class Bundles : public Module {
     CrowdMonitor widget_lock;
     int gid;
 public:
-    Bundles(const clString& id);
+    Bundles(const clString& get_id());
     virtual ~Bundles();
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_Bundles(const clString& id)
+extern "C" Module* make_Bundles(const clString& get_id())
 {
-    return scinew Bundles(id);
+    return scinew Bundles(get_id());
 }
 
 static clString module_name("Bundles");
 
-Bundles::Bundles(const clString& id)
-: Module(module_name, id, Filter), first_execute(1), gid(0),
-  nsteps("nsteps", id, this), nfibers("nfibers", id, this),
-  stepsize("stepsize", id, this), whichdir("whichdir", id, this),
-  niters("niters", id, this), bundleradx("bundleradx", id, this),
-  bundlescy("bundlescy", id, this), bundlescz("bundlescz", id, this),
-  puncture("puncture", id, this), demarcelle("demarcelle", id, this),
-  startx("startx", id, this), starty("starty", id, this), 
-  startz("startz", id, this), endx("endx", id, this),
-  endy("endy", id, this), endz("endz", id, this),
-  uniform("uniform", id, this), seed("seed", id, this),
-  bundlers("bundlers", id, this), widget_lock("Bundles widget_lock")
+Bundles::Bundles(const clString& get_id())
+: Module(module_name, get_id(), Filter), first_execute(1), gid(0),
+  nsteps("nsteps", get_id(), this), nfibers("nfibers", get_id(), this),
+  stepsize("stepsize", get_id(), this), whichdir("whichdir", get_id(), this),
+  niters("niters", get_id(), this), bundleradx("bundleradx", get_id(), this),
+  bundlescy("bundlescy", get_id(), this), bundlescz("bundlescz", get_id(), this),
+  puncture("puncture", get_id(), this), demarcelle("demarcelle", get_id(), this),
+  startx("startx", get_id(), this), starty("starty", get_id(), this), 
+  startz("startz", get_id(), this), endx("endx", get_id(), this),
+  endy("endy", get_id(), this), endz("endz", get_id(), this),
+  uniform("uniform", get_id(), this), seed("seed", get_id(), this),
+  bundlers("bundlers", get_id(), this), widget_lock("Bundles widget_lock")
 {
     // Create the input ports
     itfport=scinew TensorFieldIPort(this, "Tensor Field",

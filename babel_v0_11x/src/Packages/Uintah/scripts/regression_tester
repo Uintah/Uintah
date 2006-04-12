@@ -22,7 +22,7 @@ if test "$hostname" = "$hostname_inf";
     lamboot;
 else
     if test ! -d $test_dir/dbg
-    then 
+        then 
     	/home/jas/bin/smount TestData;
 	did_mount=1;
     fi
@@ -53,7 +53,9 @@ if test ! -d $results
 fi
 
 do_mpm=0
+do_mpmf=0
 do_ice=0
+do_amr=0
 do_mpmice=0
 do_models=0
 do_impm=0
@@ -74,6 +76,7 @@ usage () {
     echo "  -main          run the mpm,ice,mpmice,arches and mpmarches tests"
     echo "  -all           run all tests (overrides other tests flags)"
     echo "  -ar            run the arches tests"
+    echo "  -amr           run the tests involving AMR"
     echo "  -e             run the example tests"
     echo "  -m             run the mpm tests"
     echo "  -models        run the Models tests"
@@ -102,14 +105,18 @@ for arg in $*; do
 	    echo; echo "Running mpm, ice, and mpmice tests . . ."
 	    do_ice=1
 	    do_mpm=1
+            do_mpmf=1
 	    do_mpmice=1
-           do_models=1
+            do_models=1
 	    do_arches=1
 	    do_mpmarches=1
 	    do_examples=1;;
 	-ar)
 	    echo; echo "Running the arches tests . . ."
 	    do_arches=1;;
+	-amr)
+	    echo; echo "Running the AMR tests . . ."
+	    do_amr=1;;
 	-e)
 	    echo; echo "Running the examples tests . . ."
 	    do_examples=1;;
@@ -119,6 +126,9 @@ for arg in $*; do
 	-m)
 	    echo; echo "Running the mpm tests . . ."
 	    do_mpm=1;;
+	-mf)
+	    echo; echo "Running the mpmfracture tests . . ."
+	    do_mpmf=1;;
 	-models)
 	    echo; echo "Running the models tests . . ."
 	    do_models=1;;
@@ -166,14 +176,24 @@ echo;echo "Using the "$DIR "gold standard directory"
 
 
 mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts testConvert1MAdd"
+mpmf_test_cases="regressionFMPM"
 ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch impHotBlob"
-mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz testConvertMPMICEAdd"
+amr_test_cases="hotBlob_AMR advect2matAMR"
+mpmice_test_cases="advect massX guni2dRT TRWnoz testConvertMPMICEAdd"
 model_test_cases="HePlume"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="jp8cyl"
 examples_test_cases="poisson1 poisson2"
+
+#IRIX tests
+OS=`uname -s`
+if test $OS = "IRIX64"; then
+  mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz testConvertMPMICEAdd"
+fi
+
+
 
 # Check if the applications sus and compare_uda are available
 
@@ -222,11 +242,14 @@ run_test () {
    
     num_proc
    
-    if test $MPI_RUN != "no";
+    if test $MPI_RUN == "yes";
         then 
         if test $numproc -gt 1;
             then
             MPI="mpirun -np $numproc"
+        elif test -n "$MPI" ;
+            then
+            echo $MPI
         else
             MPI=""
         fi
@@ -254,9 +277,16 @@ run_test () {
 
 compare_results () {
     cd $results
-    echo "Comparing results"
-    echo "compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare"
-    ../compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare
+    
+    #Inside of the component directory find the location of the 
+    #gold standard uda and pass it to compare_uda
+    
+    uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
+    goldStandard=`find $test_dir/$DIR/$CASE -maxdepth 3 -type d -name $uda_tmp`
+    echo "Comparing $uda results against $goldStandard"
+    
+    ../compare_uda $goldStandard $uda &> $n.compare
+    
     compare=`grep "passed" $n.compare`
     if test -n "$compare";
 	then
@@ -277,7 +307,7 @@ run_restart () {
         uda_new=`echo $uda | tr -d "/"`
 
         echo; echo "Running $MPI sus $opts -restart -t 0 -copy $uda_new.000"
-        ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
+        $MPI ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
         success=`grep "successfully" $n.out_restart`
         if test -n "$success";
             then 
@@ -304,19 +334,21 @@ mpm_test () {
     
     for n in $mpm_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
+	compare_results 
+       run_restart
+    done
+}
 
-	udadir=$n
-	if test "$n" = "disks2mat4patch"; 
-	    then
-	    udadir=disks2mat4patch4proc
-	fi
-
-	compare_results
-        
+mpmf_test () {
+    echo; echo "Testing $mpmf_test_cases"
+    
+    for n in $mpmf_test_cases; do
+	run_test
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
+	compare_results 
         run_restart
-
+        MPI=""
     done
 }
 
@@ -325,24 +357,10 @@ mpmice_test () {
     
     for n in $mpmice_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-
-	udadir=$n
-	if test "$n" = "advect"; then
-	    udadir=advect_mpmice
-	fi
-	if test "$n" = "guni2dRT"; 
-	    then
-	    udadir=guni2d
-	fi
-        if test "$n" = "TRWnoz";
-            then
-            cp ../$INPUTS/$CASE/complex_MPM_geometries/trwnozzlentop3_01mesh.{pts,tri} ../
-        fi
-          	
 	compare_results
         run_restart
+        MPI=""
     done
 }
 model_test () {
@@ -354,17 +372,10 @@ model_test () {
     
     for n in $model_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-
-	udadir=$n
-	if test "$n" = "He_Plume"; then
-	    udadir=HE_Plume
-	fi
-	
 	compare_results
         run_restart
-
+        MPI=""
     done
 }
 impm_test () {
@@ -372,16 +383,10 @@ impm_test () {
     
     for n in $impm_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-
-	udadir=$n
-	if test "$n" = "4disks_2d.1mat"; then
-	    udadir=4disks1mat
-	fi
-	
 	compare_results
         run_restart
+        MPI=""
     done
 }
 
@@ -390,13 +395,10 @@ smpm_test () {
     
     for n in $smpm_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-
-	udadir=$n
-
 	compare_results
         run_restart
+        MPI=""
     done
 }
 
@@ -406,17 +408,21 @@ ice_test () {
     
     for n in $ice_test_cases; do
 	run_test
-
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-
-	udadir=$n
-	if test "$n" = "hotBlob2mat8patch"; then
-	    udadir=hotBlob8patch
-	fi
-
 	compare_results
         run_restart
-
+        MPI=""
+    done
+}
+amr_test () {
+    echo; echo "Testing $amr_test_cases"
+    
+    for n in $amr_test_cases; do
+	run_test
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	compare_results
+        run_restart
+        MPI=""
     done
 }
 
@@ -438,13 +444,10 @@ arches_test () {
 	    echo; echo "FAILURE running sus . . ."
 	    continue;
 	fi
-	udadir=$n
-	if test "$n" = "methane_explicit_table"; then
-	    udadir=methane_explicit
-	fi
 
 	compare_results
         run_restart
+        MPI=""
     done
 }
 
@@ -460,14 +463,16 @@ mpmarches_test () {
 	cp ../$INPUTS/ARCHES/StaticMixingTables/JP-8/NAE.rxn.new NAE.rxn.new
 	cd ../
 
+        MPI_RUN_OLD=$MPI_RUN
+        MPI_RUN="yes"
 	MPI='mpirun -np 1'
 	run_test
 
 #	mpirun -np 1 sus -mpmarches $INPUTS/$CASE/$n.ups &> $n.out
-	udadir=$n
 	
 	compare_results
         run_restart
+        MPI=""
     done
 }
 
@@ -486,17 +491,19 @@ examples_test () {
 	    echo; echo "FAILURE running sus . . ."
 	    continue;
 	fi
-	udadir=$n
 
 	compare_results
         run_restart
+        MPI=""
     done
 }
 
 if test -n "$ALL"; then
     echo; echo "Running all the tests (Using $test_dir)"
     mpm_test;
+    mpmf_test;
     ice_test;
+    amr_test;
     smpm_test;
     mpmice_test;
     model_test;
@@ -518,18 +525,28 @@ if test $do_mpm -eq 1; then
     mpm_test
 fi
 
+if test $do_mpmf -eq 1; then
+    CASE=MPMF
+    opts=-mpmf
+    mpmf_test
+fi
+
 if test $do_ice -eq 1; then
     CASE=ICE
     opts=-ice
     ice_test
 fi
-
+if test $do_amr -eq 1; then
+    CASE=ICE    # this won't work when we have MPMICE AMR
+    opts=-ice
+    amr_test
+fi
 if test $do_mpmice -eq 1; then
     CASE=MPMICE
     opts=-mpmice
     mpmice_test
 fi
-if test $do_models -eq 1; then
+if test $do_models -eq 1; then 
     CASE=Models
     opts=-ice
     model_test

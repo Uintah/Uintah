@@ -51,13 +51,12 @@ void HypoElasticImplicit::outputProblemSpec(ProblemSpecP& ps,
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","hypo_elastic");
   }
 
-  cm_ps->appendElement("G",d_initialData.G,false,4);
-  cm_ps->appendElement("K",d_initialData.K,false,4);
-
+  cm_ps->appendElement("G",d_initialData.G);
+  cm_ps->appendElement("K",d_initialData.K);
 }
 
 

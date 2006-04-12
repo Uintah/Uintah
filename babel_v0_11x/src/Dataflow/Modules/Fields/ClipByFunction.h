@@ -86,7 +86,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
+ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *reporter,
 				    FieldHandle fieldh,
 				    int clipmode,
 				    MatrixHandle &interpolant)
@@ -121,10 +121,17 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
     field->order_type_description()->get_name() == 
     msh_type::elem_type_description()->get_name();
 
+  typename FIELD::mesh_type::Elem::size_type prsizetmp;
+  mesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
   {
+    reporter->update_progress(prcounter, prsize);
+
     bool inside = false;
     if (clipmode == 0)
     {
@@ -313,8 +320,8 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
   }
   else
   {
-    mod->warning("Unable to copy data at this field data location.");
-    mod->warning("No interpolant computed for field data location.");
+    reporter->warning("Unable to copy data at this field data location.");
+    reporter->warning("No interpolant computed for field data location.");
     interpolant = 0;
   }
 

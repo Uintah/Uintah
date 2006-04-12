@@ -49,7 +49,7 @@ UnionGeometryPiece& UnionGeometryPiece::operator=(const UnionGeometryPiece& rhs)
 
 void UnionGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP union_ps = ps->appendChild("union",true,4);
+  ProblemSpecP union_ps = ps->appendChild("union");
 
   for (vector<GeometryPiece*>::const_iterator it = child.begin();
        it != child.end(); ++it)

@@ -38,7 +38,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
@@ -58,8 +58,9 @@ public:
 DECLARE_MAKER(SetProperty)
 SetProperty::SetProperty(GuiContext* ctx)
 : Module("SetProperty", ctx, Filter,"FieldsOther", "SCIRun"),
-  prop_(ctx->subVar("prop")), val_(ctx->subVar("val")),
-  mesh_prop_(ctx->subVar("meshprop"))
+  prop_(get_ctx()->subVar("prop"), "units"),
+  val_(get_ctx()->subVar("val"), "cm"),
+  mesh_prop_(get_ctx()->subVar("meshprop"), 1)
 {
 }
 

@@ -32,7 +32,6 @@
 
 @DEF_PNG@
 @DEF_MPEG@
-@DEF_MAGICK@
 
 #endif
 

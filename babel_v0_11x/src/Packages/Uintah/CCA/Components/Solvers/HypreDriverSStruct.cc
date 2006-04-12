@@ -297,7 +297,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     //__________________________________
     //  fine level: coarse fine interfaces
     if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
-      hpatch.makeConnections(_graph,DoingFineToCoarse);
+      hpatch.makeGraphConnections(_graph,DoingFineToCoarse);
     } 
 
     if (level < numLevels-1) {
@@ -309,7 +309,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       printLine("=",50);
       cout_dbg << _pg->myrank() << " Building coarse-to-fine connections" << "\n";
       printLine("=",50);
-      hpatch.makeConnections(_graph,DoingCoarseToFine);
+      hpatch.makeGraphConnections(_graph,DoingCoarseToFine);
     } 
   } 
   
@@ -377,8 +377,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       // C/F interface faces.
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingFineToCoarse);
-    } 
-    
+    }     
     if (level < numLevels-1) {
       // If not at finest level, examine the connection list that
       // impAMRICE.cc provides us and add the coarse-to-fine
@@ -389,7 +388,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
                              _stencilSize, DoingCoarseToFine);
     } 
   } 
-
   HYPRE_SStructMatrixAssemble(_HA);
   _exists[SStructA] = SStructAssembled;
 
@@ -517,12 +515,13 @@ HypreDriverSStruct::HyprePatch_CC::addToGrid(HYPRE_SStructGrid& grid,
 // prepared for this patch by ICE.
 //___________________________________________________________________
 void
-HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructGraph& graph,
+HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& graph,
                                                    const CoarseFineViewpoint& viewpoint)
 
 {
   cout_doing << "Doing makeConnections graph for Patch "
-             << _patch->getID() << " Level " << _level << "\n";
+             << _patch->getID() << " Level " << _level 
+             << " viewpoint " << viewpoint << "\n";
        
   const GridP grid = _patch->getLevel()->getGrid();
   
@@ -593,8 +592,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructGraph& graph,
             // the face and divide by the refinement ratio to obtain
             // "coarseLevel"-level index. Then add the connection between
             // the fine and coarse cells to the graph.
-            IntVector fineCell = *f_iter;                        // in patch
-            IntVector coarseCell = (fineCell + offset) / refRat; // outside p.
+            IntVector fineCell = *f_iter;                        
+            IntVector coarseCell = (fineCell + offset) / refRat; 
 
             HYPRE_SStructGraphAddEntries(graph,
                                          coarseLevel,coarseCell.get_pointer(),
@@ -695,7 +694,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
     delete[] values;
     cout_dbg << "Finished interior equation loop" << "\n";
   } 
-} // end HyprePatch_CC::makeInteriorConnections()
+}
 
 //___________________________________________________________________
 //makeInteriorVector.
@@ -768,6 +767,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
   // entries in the Hypre graph.
   const GridP grid = _patch->getLevel()->getGrid();
   const double ZERO = 0.0;
+  
   if (viewpoint == DoingFineToCoarse) {
     //==================================================================
     // Add fine-to-coarse entries to matrix
@@ -777,13 +777,9 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
     CCTypes::matrix_type A;
     A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
       
-    // Keep track of how many connections are added to each coarse
-    // cell, because getFaceCellIterator() lexicographically loops
-    // over fine cell, so this is not contiguous looping from a single
-    // coarse cell's viewpoint.
+    // Keep track of how many connections are added to each coarse cell
     CCVariable<int> entryFine;
     A_dw->allocateTemporary(entryFine, _patch);
-    // Initialize coutner to # structured entries; no unstructured yet
     entryFine.initialize(stencilSize);
 
     // Loop over all C/F interface faces
@@ -811,12 +807,12 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
         cout_dbg << "F-C " 
                  << " fLev " << fineLevel << " fCell " << fineCell
                  << " entry " << graphEntries[0]
-                 << " value " << graphValues[0];
+                 << " value " << graphValues[0] << endl;
+                 
         HYPRE_SStructMatrixSetValues(HA, _level,
                                      fineCell.get_pointer(),
                                      CC_VAR, numGraphEntries, graphEntries,
                                      const_cast<double*>(graphValues));
-        cout_dbg << " done" << "\n";
         entryFine[fineCell]++;    // Update #unstructured connection counter
 
         // The corresponding structured connection is set to 0.
@@ -824,12 +820,12 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
         cout_dbg << "F-F " 
              << " fLev " << _level << " fCell " << fineCell
              << " entry " << stencilEntries[0]
-             << " value " << stencilValues[0];
+             << " value " << stencilValues[0] << endl;
+
         HYPRE_SStructMatrixSetValues(HA, fineLevel,
                                      fineCell.get_pointer(),
                                      CC_VAR, numStencilEntries, stencilEntries,
                                      const_cast<double*>(stencilValues));
-        cout_dbg << " done" << "\n";
       }
     }
   } else { // now viewpoint == DoingCoarseToFine
@@ -846,21 +842,18 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
     Level::selectType finePatches;
     _patch->getFineLevelPatches(finePatches); 
     if (finePatches.size() < 1) {
-      // No fine patches over me
       return;
     }
     // Keep track of how many connections are added to each coarse
-    // cell, because getFaceCellIterator() lexicographically loops
-    // over fine cell, so this is not contiguous looping from a single
-    // coarse cell's viewpoint.
-    CCVariable<int> entryCoarse;
-    A_dw->allocateTemporary(entryCoarse, _patch);
-    // Initialize coutner to # structured entries; no unstructured yet
-    entryCoarse.initialize(stencilSize);
+    // cell.  
+    CCVariable<int> stencilSize_counter;  
+    A_dw->allocateTemporary(stencilSize_counter, _patch,Ghost::AroundCells,1);
+    stencilSize_counter.initialize(stencilSize);
 
-    // Loop over all fine patches contained in the coarse patch
+    // Loop over all fine patches over the coarse patch
     for(int i = 0; i < finePatches.size(); i++){  
-      const Patch* finePatch = finePatches[i];        
+      const Patch* finePatch = finePatches[i];   
+           
       if (finePatch->hasCoarseFineInterfaceFace()) {
         printLine("@",40);
         cout_doing << Parallel::getMPIRank() << " finePatch " << i << " / " << finePatches.size() << "\n"
@@ -874,21 +867,22 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
           continue;
         }
 
-        // Retrieve A of the fine patch, not this patch
-        CCTypes::matrix_type AF;
-        A_dw->getRegion(AF, A_label, _matl, fine.get_rep(), fl, fh);
+        // Retrieve A of the fine patch
+        CCTypes::matrix_type A_fine;
+        A_dw->getRegion(A_fine, A_label, _matl, fine.get_rep(), fl, fh);
         
         // Iterate over C/F interface cells
         vector<Patch::FaceType>::const_iterator iter; 
         for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
              iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter) { 
-          Patch::FaceType face = *iter;                   // e.g. xminus=0
+          Patch::FaceType face = *iter;                   
           IntVector offset = _patch->faceDirection(face); // e.g. (-1,0,0)
           CellIterator f_iter = finePatch->getFaceCellIterator(face,"alongInteriorFaceCells");
 
           // check to make sure the face belongs to this coarse patch
           IntVector coarseLow = (f_iter.begin() + offset) / refRat;
-          // // add extra to make sure range is >= 1 if it is a valid range
+          
+          //add extra to make sure range is >= 1 if it is a valid range
           IntVector coarseHigh = (f_iter.end() + offset) / refRat + Abs(offset); 
           IntVector cl = Max(coarseLow, _patch->getLowIndex());
           IntVector ch = Min(coarseHigh, _patch->getHighIndex());
@@ -896,57 +890,47 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
             continue;
           }
           
-
           // "opposite" = direction opposite to the patch face "face"
           int opposite = face - int(patchFaceSide(face));
-          cout_dbg << "C/F Face " << face << " offset " << offset << "\n";
-          cout_dbg << "opposite = " << opposite << "\n";
-          const int numStencilEntries = 1;
-          int stencilEntries[numStencilEntries] = {opposite};
-          const double* stencilValues = &ZERO;
-
+          cout_dbg << "C/F Face " << finePatch->getFaceName(face)
+                   << " offset " << offset
+                   << " opposite = " << opposite << "\n";
+                   
+          //__________________________________
+          // For each fine cell at C/F interface, find the index of
+          // the neighboring coarse cell (add offset = outward normal to
+          // the face and divide by the refinement ratio to obtain
+          // "coarseLevel"-level index. Then add the connection between
+          // the fine and coarse cells to the graph.
           for(; !f_iter.done(); f_iter++) {
-            // For each fine cell at C/F interface, compute the index of
-            // the neighboring coarse cell (add offset = outward normal to
-            // the face and divide by the refinement ratio to obtain
-            // "coarseLevel"-level index. Then add the connection between
-            // the fine and coarse cells to the graph.
-            IntVector fineCell = *f_iter;                        // in patch
-            IntVector coarseCell = (fineCell + offset) / refRat; // outside p.
-            const int numGraphEntries = 1;
-            int graphEntries[numGraphEntries] = {entryCoarse[coarseCell]};
-            const double* graphValues = &AF[fineCell][face];
+            
+            IntVector fineCell = *f_iter;                        
+            IntVector coarseCell = (fineCell + offset) / refRat;
+            
+            const int numStencilEntries = 1;
+            int stencilEntries[numStencilEntries] = {stencilSize_counter[coarseCell]};
+            const double* stencilValue = &A_fine[fineCell][face];
             
             HYPRE_SStructMatrixSetValues(HA, coarseLevel,
                                          coarseCell.get_pointer(),
-                                         CC_VAR, numGraphEntries, graphEntries,
-                                         const_cast<double*>(graphValues));
-                                         
-            cout_dbg << "C-F matrix" 
-                 << " cLev " << coarseLevel << " cCell " << coarseCell
-                 << " (fLev " << fineLevel << " fCell " << fineCell << ")"
-                 << " entry " << graphEntries[0];
-            cout_dbg << " value " << graphValues[0];                                         
-            cout_dbg << " done" << "\n";
-            // The corresponding C-C structured connection is already set to 0
-            // in impAMRICE.cc.
-            if (entryCoarse[coarseCell] == stencilSize) {
-              // Hmmm, maybe not. Let's do it outselves. Do it only for one
-              // fine cell, hence this if.
-              cout_dbg << "C-C " 
-                   << " cLev " << _level << " cCell " << coarseCell
-                   << " entry " << stencilEntries[0]
-                   << " value " << stencilValues[0];
+                                         CC_VAR, numStencilEntries, stencilEntries,
+                                         const_cast<double*>(stencilValue));
+            //__________________________________
+            // The corresponding Coarse-Coarse structured connection should be set to 0
+            // in impAMRICE.cc.  This justs catches any cell that isn't
+            if (stencilSize_counter[coarseCell] == stencilSize) {
+
+              int stencilEntries[numStencilEntries] = {opposite};
+              stencilValue = &ZERO;
               HYPRE_SStructMatrixSetValues(HA, _level,
                                            coarseCell.get_pointer(),
                                            CC_VAR, numStencilEntries, stencilEntries,
-                                           const_cast<double*>(stencilValues));
-              cout_dbg << " done" << "\n";
-            } // end if first fine child
+                                           const_cast<double*>(stencilValue));
+            } 
 
-            entryCoarse[coarseCell]++;    // Update #unstructured connection counter
-          }  // end fine cell interator
-        }  // coarseFineInterface faces
+            stencilSize_counter[coarseCell]++;    // Update connection counter
+          }  
+        }  // CFI faces
       }  // patch has a coarseFineInterface
     }  // finePatch loop 
   } // end if viewpoint == DoingCoarseToFine

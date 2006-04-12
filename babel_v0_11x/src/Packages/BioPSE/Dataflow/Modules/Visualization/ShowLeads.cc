@@ -37,7 +37,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 
@@ -95,15 +95,15 @@ void ShowLeads::execute(){
   gen_ = mh->generation;
 
   ostringstream clr;
-  clr << id << " clear";
-  gui->execute(clr.str().c_str());
+  clr << get_id() << " clear";
+  get_gui()->execute(clr.str().c_str());
   
 
   int rows = mh->nrows();
   int cols = mh->ncols();
   ostringstream set_mm;
-  set_mm << id << " set_min_max_index 0 " << rows - 1; 
-  gui->execute(set_mm.str().c_str());
+  set_mm << get_id() << " set_min_max_index 0 " << rows - 1; 
+  get_gui()->execute(set_mm.str().c_str());
 
   for(int i = 0; i < rows; i++) {
     ostringstream cmmd;
@@ -111,7 +111,7 @@ void ShowLeads::execute(){
     ostringstream ystr;
     xstr << "{";
     ystr << " {";
-    cmmd << id << " add_lead " << i << " ";
+    cmmd << get_id() << " add_lead " << i << " ";
     for (int j = 0; j < cols; j++) {
       xstr << j/(float)cols << " "; // the time inc we are at
       ystr << mh->get(i, j) << " "; // the value at i
@@ -120,7 +120,7 @@ void ShowLeads::execute(){
     ystr << "}";
     cmmd << xstr.str();
     cmmd << ystr.str();
-    gui->execute(cmmd.str().c_str());
+    get_gui()->execute(cmmd.str().c_str());
   }
 
   // set params from properties before drawing leads
@@ -138,8 +138,8 @@ void ShowLeads::execute(){
   }  
 
   ostringstream cmmd;
-  cmmd << id << " draw_leads";
-  gui->execute(cmmd.str().c_str());
+  cmmd << get_id() << " draw_leads";
+  get_gui()->execute(cmmd.str().c_str());
 }
 
 } // End namespace BioPSE

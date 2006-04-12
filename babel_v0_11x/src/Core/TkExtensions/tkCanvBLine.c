@@ -41,6 +41,12 @@
 #include "tkInt.h"
 #include "tcl.h"
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
 void Tk_DrawBeveledLine(Display* display, Drawable drawable,
 			Tk_3DBorder border, XPoint *pointPtr,
 			int numPoints, int width, int borderWidth,
@@ -1036,7 +1042,7 @@ BLineToPostscript(interp, canvas, itemPtr, prepass)
 /*
  * Register the item...
  */
-void BLineInit()
+SCISHARE void BLineInit()
 {
     Tk_CreateItemType(&TkBLineType);
 }

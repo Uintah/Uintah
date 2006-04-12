@@ -35,7 +35,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Bundle/Bundle.h>
 #include <vector>
@@ -77,11 +77,11 @@ private:
 DECLARE_MAKER(CreateParametersBundle)
 CreateParametersBundle::CreateParametersBundle(GuiContext* ctx)
   : Module("CreateParametersBundle", ctx, Source, "Tools", "CardioWave"),
-  guiparnames_(ctx->subVar("par-names")),
-  guiparvalues_(ctx->subVar("par-values")),
-  guipartypes_(ctx->subVar("par-types")),
-  guipardescriptions_(ctx->subVar("par-descriptions")),
-  guisynchronise_(ctx->subVar("synchronise"))  
+  guiparnames_(get_ctx()->subVar("par-names")),
+  guiparvalues_(get_ctx()->subVar("par-values")),
+  guipartypes_(get_ctx()->subVar("par-types")),
+  guipardescriptions_(get_ctx()->subVar("par-descriptions")),
+  guisynchronise_(get_ctx()->subVar("synchronise"))  
 {
 }
 
@@ -92,9 +92,9 @@ void CreateParametersBundle::execute()
 {
   BundleOPort *oport;
   
-  gui->lock();
-  gui->execute(guisynchronise_.get());
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->execute(guisynchronise_.get());
+  get_gui()->unlock();
   
   if (!(oport = static_cast<BundleOPort *>(get_oport("Parameters"))))
   {
@@ -168,25 +168,25 @@ std::vector<std::string> CreateParametersBundle::converttcllist(std::string str)
 	
 	// Yeah, it is TCL dependent:
 	// TCL::llength determines the length of the list
-	gui->lock();
-	gui->eval("llength { "+str + " }",result);	
+	get_gui()->lock();
+	get_gui()->eval("llength { "+str + " }",result);	
 	istringstream iss(result);
 	iss >> lengthlist;
-	gui->unlock();
+	get_gui()->unlock();
 	if (lengthlist < 0) return(list);
 	
 	list.resize(lengthlist);
-	gui->lock();
+	get_gui()->lock();
 	for (long p = 0;p<lengthlist;p++)
 	{
 		ostringstream oss;
 		// TCL dependency:
 		// TCL::lindex retrieves the p th element from the list
 		oss << "lindex { " << str <<  " } " << p;
-		gui->eval(oss.str(),result);
+		get_gui()->eval(oss.str(),result);
 		list[p] = result;
 	}
-	gui->unlock();
+	get_gui()->unlock();
 	return(list);
 }
 

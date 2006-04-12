@@ -55,9 +55,9 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Core/Bundle/Bundle.h>
 #include <Core/Containers/Array3.h>
@@ -70,7 +70,7 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Core/Geom/OpenGLContext.h>
+#include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
 #include <Core/Geometry/Plane.h>
@@ -96,19 +96,16 @@ class Painter : public Module
 {
   struct SliceWindow;
   struct Event {
+    void                update_state(GuiArgs &args, Painter &painter);
     bool                button(unsigned int);
     bool                shift();
     bool                control();
     bool                alt();
-    int                 button_;
-    int                 dx_;
-    int                 dy_;
     int                 x_;
     int                 y_;
     int                 X_;
     int                 Y_;
-    int                 pick_x_;
-    int                 pick_y_;
+    int                 button_;
     int                 state_;
     Point               position_;
     SliceWindow *       window_;
@@ -143,6 +140,7 @@ class Painter : public Module
       FOCUS_OUT_E       = 1 << 6
     };
   };
+  friend struct Event;
   
   class NrrdVolume;
   struct WindowLayout;
@@ -175,6 +173,8 @@ class Painter : public Module
   struct SliceWindow { 
     SliceWindow(Painter *painter, GuiContext *ctx);
     void                setup_gl_view();
+    void                push_gl_2d_view();
+    void                pop_gl_2d_view();
     void		next_slice();
     void		prev_slice();
     void		zoom_in();
@@ -191,6 +191,7 @@ class Painter : public Module
     void		render_frame(double,double,double,double,
                                      double *color1 = 0, double *color2=0);
     void		render_guide_lines(Point);
+    void		render_progress_bar();
 
     Painter *           painter_;
     string		name_;
@@ -241,12 +242,8 @@ class Painter : public Module
     const string &      get_name()      { return name_; }
     const string &      err() { return err_msg_; }
 
-    virtual string *    mouse_button_press(Event &) { return 0; }
-    virtual string *    mouse_button_release(Event &) { return 0; }
-    virtual string *    mouse_motion(Event &) { return 0; }
-
-    virtual string *    draw(SliceWindow &) { return 0; }
-    virtual string *    draw_mouse_cursor(Event &) { return 0; }
+    virtual int         draw(SliceWindow &) { return 0; }
+    virtual int         draw_mouse_cursor(Event &) { return 0; }
     
     virtual int         do_event(Event &) { return 0; }
 
@@ -261,6 +258,7 @@ class Painter : public Module
     CLUTLevelsTool(Painter *painter);
     virtual int         do_event(Event &);
   private:
+    Event               press_event_;
     double              scale_;
     double              ww_;
     double              wl_;
@@ -272,8 +270,8 @@ class Painter : public Module
     ZoomTool(Painter *painter);
     virtual int         do_event(Event &);
   private:
+    Event               press_event_;
     double              zoom_;
-    SliceWindow *       window_;
   };
 
   class AutoviewTool : public PainterTool {
@@ -294,45 +292,31 @@ class Painter : public Module
     PanTool(Painter *painter);
     virtual int         do_event(Event &);
   private:
+    Event               press_event_;
     Point               center_;
-    SliceWindow *       window_;
   };
 
-
-
+  class LayerMergeTool : public PainterTool {
+  public:
+    LayerMergeTool(Painter *painter);
+  };
 
   class CropTool : public PainterTool {
   public:
     CropTool(Painter *painter);
     ~CropTool();
-    string *            mouse_button_press(Event &);
-    string *            mouse_button_release(Event &);
-    string *            mouse_motion(Event &);
-    string *            draw(SliceWindow &window);
+    int                 do_event(Event &);
+    int                 draw(SliceWindow &window);
   private:
     typedef vector<BBox> BBoxes;
-    void                compute_crop_pick_boxes(SliceWindow &);
-    void                update_bbox_from_gui();
-    void                update_bbox_to_gui();
-    int                 get_pick_from_event(Event &event);
+    void                pick_mouse_motion(Event &);
     void                set_window_cursor(SliceWindow &window, int cursor);
-    pair<Vector,Vector> get_crop_vectors(SliceWindow &window, int pick);
     
     int                 pick_;
-    BBox	        bbox_;
-    BBox		draw_bbox_;
-    BBoxes		pick_boxes_;
-    
-    int			crop_min_x_;
-    int			crop_min_y_;
-    int			crop_min_z_;
-    
-    int			crop_max_x_;
-    int			crop_max_y_;
-    int			crop_max_z_;
-    
-    double              x_;
-    double              y_;
+    vector<int>         minmax_[2];
+    vector<int>         pick_minmax_[2];
+    vector<double>	pick_index_;
+    double              pick_dist_[2][3];
   };
 
 
@@ -342,8 +326,7 @@ class Painter : public Module
     ~BrushTool();
     int                 do_event(Event &);
 
-    //    string *            draw(SliceWindow &window);
-    string *            draw_mouse_cursor(Event &);
+    int                 draw_mouse_cursor(Event &);
   private:
     int                 button_press(Event &);
     int                 button_release(Event &);
@@ -363,11 +346,10 @@ class Painter : public Module
   public:
     FloodfillTool(Painter *painter);
     ~FloodfillTool();
-    string *            mouse_button_press(Event &);
-    string *            mouse_button_release(Event &);
-    string *            mouse_motion(Event &);
-    string *            draw(SliceWindow &window);
+    int                 do_event(Event &);
+    int                 draw(SliceWindow &window);
   private:
+    void                do_floodfill();
     double              value_;
     double              min_;
     double              max_;
@@ -389,7 +371,7 @@ class Painter : public Module
   public:
     ITKConfidenceConnectedImageFilterTool(Painter *painter);
     int                 do_event(Event &);
-    string *            draw(SliceWindow &window);
+    int                 draw(SliceWindow &window);
   private:
     vector<int>         seed_;
     NrrdVolume *        volume_;
@@ -419,16 +401,14 @@ class Painter : public Module
   class StatisticsTool : public PainterTool {
   public:
     StatisticsTool(Painter *painter);
-    ~StatisticsTool();
-    //    string *            mouse_button_press(Event &);
-    string *            mouse_button_release(Event &);
-    string *            mouse_motion(Event &);
-    string *            draw(SliceWindow &window);
+    int                 do_event(Event &);
+    int                 draw(SliceWindow &window);
   private:
-    void                recompute();
     double              standard_deviation_;
     double              mean_;
-    vector<double>      values_;
+    double              sum_;
+    double              squared_sum_;
+    int                 count_;
   };
 
 
@@ -473,13 +453,13 @@ class Painter : public Module
     Point               max(int axis = -1, int slice = -1);
 
     Vector              scale();
-    double              scale(int axis);
+    double              scale(unsigned int axis);
 
     vector<int>         max_index();
-    int                 max_index(int axis);
+    int                 max_index(unsigned int axis);
 
     bool                inside_p(const Point &p);
-    NrrdDataHandle	nrrd_;
+    NrrdDataHandle	nrrd_handle_;
     GuiContext *        gui_context_;
     GuiString           name_;
     string              name_prefix_;
@@ -530,7 +510,6 @@ class Painter : public Module
 
   colormap_map_t	colormaps_;
   vector<string>        colormap_names_;
-  PainterTool *         tool_;
   typedef vector<PainterTool *> Tools_t;
   Tools_t               tools_;
   Event                 event_;
@@ -548,7 +527,8 @@ class Painter : public Module
 
   //! Ports
   BundleOPort *         bundle_oport_;
-  vector<BundleHandle>  bundles_;
+  typedef vector<BundleHandle> Bundles;
+
 
   FreeTypeLibrary *	freetype_lib_;
   typedef		map<string, FreeTypeFace *> FontMap;
@@ -583,10 +563,8 @@ class Painter : public Module
   void			set_axis(SliceWindow &, unsigned int axis);
 
   // Methods called by tcl_command
-  void                  update_event_state(GuiArgs &args, bool reset = false);
-  void			handle_gui_mouse_motion(GuiArgs &args);
+  void                  update_event_state(GuiArgs &args);
   void			handle_gui_mouse_button_press(GuiArgs &args);
-  void			handle_gui_mouse_button_release(GuiArgs &args);
   void			handle_gui_keypress(GuiArgs &args);
   void			handle_gui_mouse_enter(GuiArgs &args);
   void			handle_gui_mouse_leave(GuiArgs &args);
@@ -614,9 +592,11 @@ class Painter : public Module
   void                  recompute_volume_list();  
   void                  show_volume(const string & );
   void                  hide_volume(const string & );
-  ColorMapHandle        get_colormap(int id);
+  ColorMapHandle        get_colormap(int);
   void                  send_data();
-  bool                  receive_filter_data();
+  void                  receive_filter_bundles(Bundles &);
+  void                  receive_normal_bundles(Bundles &);
+  void                  extract_data_from_bundles(Bundles &);
   void                  layer_up();
   void                  layer_down();
   void                  create_undo_volume();
@@ -648,10 +628,10 @@ nrrd_get_value(const Nrrd *nrrd,
                const vector<int> &index, 
                T &value)
 {
-  ASSERT(int(index.size()) == nrrd->dim);
+  ASSERT((unsigned int)(index.size()) == nrrd->dim);
   int position = index[0];
   int mult_factor = nrrd->axis[0].size;
-  for (int a = 1; a < nrrd->dim; ++a) {
+  for (unsigned int a = 1; a < nrrd->dim; ++a) {
     position += index[a] * mult_factor;
     mult_factor *= nrrd->axis[a].size;
   }
@@ -711,10 +691,10 @@ nrrd_set_value(Nrrd *nrrd,
                const vector<int> &index, 
                T val)
 {
-  ASSERT(int(index.size()) == nrrd->dim);
+  ASSERT((unsigned int)(index.size()) == nrrd->dim);
   int position = index[0];
   int mult_factor = nrrd->axis[0].size;
-  for (int a = 1; a < nrrd->dim; ++a) {
+  for (unsigned int a = 1; a < nrrd->dim; ++a) {
     position += index[a] * mult_factor;
     mult_factor *= nrrd->axis[a].size;
   }
@@ -775,7 +755,7 @@ template<class T>
 void
 Painter::NrrdVolume::get_value(const vector<int> &index, T &value) {
   ASSERT(index_valid(index));
-  nrrd_get_value(nrrd_->nrrd, index, value);
+  nrrd_get_value(nrrd_handle_->nrrd_, index, value);
 }
 
 
@@ -783,7 +763,7 @@ template <class T>
 void
 Painter::NrrdVolume::set_value(const vector<int> &index, T value) {
   ASSERT(index_valid(index));
-  nrrd_set_value(nrrd_->nrrd, index, value);
+  nrrd_set_value(nrrd_handle_->nrrd_, index, value);
 }
 
 template <class T>

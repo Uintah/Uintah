@@ -165,14 +165,15 @@
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <save label="CenterOfMassVelocity"/>
+	<outputInitTimestep/>
    </DataArchiver>
 
   <Debug>
       <dbg_timeStart>       1.00   </dbg_timeStart>
       <dbg_timeStop>        0.01   </dbg_timeStop>
       <dbg_outputInterval>  1e-9   </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,25,0] </dbg_BeginIndex>
-      <dbg_EndIndex>        [3,27,1] </dbg_EndIndex>
+      <dbg_BeginIndex>   [[-1,25,0]] </dbg_BeginIndex>
+      <dbg_EndIndex>      [[3,27,1]] </dbg_EndIndex>
       <dbg_Matls>           [0]      </dbg_Matls>
       <dbg_SigFigs>         8        </dbg_SigFigs>
       <debug label = "switchDebug_vel_FC"/>
@@ -190,7 +191,7 @@
         <solution technique = "EqForm" />
         <customInitialization>
           <manufacturedSolution>
-            <A>   100    </A>
+            <A>   1    </A>
           </manufacturedSolution> 
         </customInitialization>
              
@@ -239,7 +240,7 @@
          <material name = "BackgroundGas">
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>   0.01                    </dynamic_viscosity>
+           <dynamic_viscosity>   0.00002                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <speed_of_sound>     376                     </speed_of_sound>

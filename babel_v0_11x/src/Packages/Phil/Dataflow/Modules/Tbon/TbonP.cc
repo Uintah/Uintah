@@ -24,7 +24,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <iostream>
 #include <fstream>
@@ -47,7 +47,7 @@ class TbonP : public Module {
 
 public:
   // functions required by Module inheritance
-  TbonP( const clString& id);
+  TbonP( const clString& get_id());
   virtual ~TbonP();
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
@@ -96,18 +96,18 @@ private:
 }; // class TbonP
 
 // More required stuff...
-extern "C" Module* make_TbonP(const clString& id){
-  return new TbonP(id);
+extern "C" Module* make_TbonP(const clString& get_id()){
+  return new TbonP(get_id());
 }
 
 // Constructor
-TbonP::TbonP( const clString& id )
-  : Module("TbonP", id, Filter), metafilename("metafilename",id,this), 
-    nodebricksize("nodebricksize",id,this), 
-    databricksize("databricksize",id,this), isovalue("isovalue",id,this),
-    timevalue("timevalue",id,this), resolution("resolution",id,this),
-    red("red",id,this), green("green",id,this), blue("blue",id,this),
-    alpha("alpha",id,this)
+TbonP::TbonP( const clString& get_id() )
+  : Module("TbonP", get_id(), Filter), metafilename("metafilename",get_id(),this), 
+    nodebricksize("nodebricksize",get_id(),this), 
+    databricksize("databricksize",get_id(),this), isovalue("isovalue",get_id(),this),
+    timevalue("timevalue",get_id(),this), resolution("resolution",get_id(),this),
+    red("red",get_id(),this), green("green",get_id(),this), blue("blue",get_id(),this),
+    alpha("alpha",get_id(),this)
 {
   timevalue.set(0);
   isovalue.set(0);
@@ -197,7 +197,7 @@ TbonP::execute() {
     tbon = new TbonTreeP<type>( treesmeta, np, DX, DY, DZ );
     
     // update UI to reflect current values
-    TCL::execute( id + " updateFrames");
+    TCL::execute( get_id() + " updateFrames");
     /////////////////
     // uncomment for immediate full resolution
     resolution.set( tbon->getDepth() );
@@ -302,7 +302,7 @@ TbonP::preprocess( ifstream& metafile ) {
 //  processes a single (time,iso) query
 void
 TbonP::processQuery() {
-  static int id = -1;
+  static int get_id() = -1;
   static int firsttime = 1;
   iotimer_t t0, t1;
   iotimer_t t2, t3;
@@ -376,9 +376,9 @@ TbonP::processQuery() {
     PrintTime( t2, t3, "2nd pass" );
 
     // send surface to output port
-    if( gotasurface && id == -1 ) {
+    if( gotasurface && get_id() == -1 ) {
       theIsosurface = new GeomMaterial( group, matl );
-      id = geomout->addObj( theIsosurface, "Geometry", crowdmonitor );
+      get_id() = geomout->addObj( theIsosurface, "Geometry", crowdmonitor );
     }
     if( gotasurface ) {
       geomout->flushViews();
@@ -444,8 +444,8 @@ TbonP::processQuery() {
       t1 = read_time();
       PrintTime( t0, t1, "2nd pass" );
 
-      if( gotasurface && id == -1 ) {
-	id = geomout->addObj( new GeomMaterial( group, matl ), "Geometry", 
+      if( gotasurface && get_id() == -1 ) {
+	get_id() = geomout->addObj( new GeomMaterial( group, matl ), "Geometry", 
 			      crowdmonitor );
       }
       if( gotasurface ) {

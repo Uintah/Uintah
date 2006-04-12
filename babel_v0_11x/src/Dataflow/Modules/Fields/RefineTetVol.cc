@@ -39,7 +39,7 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
@@ -77,14 +77,13 @@ private:
 
 DECLARE_MAKER(RefineTetVol)
   
-  RefineTetVol::RefineTetVol(GuiContext* ctx) : 
-    Module("RefineTetVol", ctx, Filter, "FieldsCreate", "SCIRun"),
-    input_generation_(-1),
-    subdivided_(0),
-    cell_index_(ctx->subVar("cell_index")),
-    execution_mode_(ctx->subVar("execution_mode"))
+RefineTetVol::RefineTetVol(GuiContext* ctx) : 
+  Module("RefineTetVol", ctx, Filter, "FieldsCreate", "SCIRun"),
+  input_generation_(-1),
+  subdivided_(0),
+  cell_index_(get_ctx()->subVar("cell_index"), -1),
+  execution_mode_(get_ctx()->subVar("execution_mode"), "sub_one")
 {
-  
 }
 
 

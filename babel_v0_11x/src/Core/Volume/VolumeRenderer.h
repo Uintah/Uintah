@@ -52,7 +52,7 @@ public:
   VolumeRenderer(TextureHandle tex, 
 		 ColorMapHandle cmap1, 
 		 vector<ColorMap2Handle> &cmap2,
-		 vector<Plane> &planes,
+		 vector<Plane *> &planes,
                  int tex_mem);
   VolumeRenderer(const VolumeRenderer&);
   ~VolumeRenderer();
@@ -89,7 +89,7 @@ protected:
   bool adaptive_;
   vector< bool > draw_level_;
   vector< double > level_alpha_;
-  vector<Plane> &planes_;
+  vector<Plane *> &planes_;
 
 };
 

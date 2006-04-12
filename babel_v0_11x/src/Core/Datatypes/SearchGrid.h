@@ -59,18 +59,17 @@ class SCISHARE SearchGridBase
 {
 public:
 
-  SearchGridBase(unsigned int x, unsigned int y, unsigned int z,
+  SearchGridBase(int x, int y, int z,
 		 const Point &min, const Point &max);
 
-  SearchGridBase(unsigned int x, unsigned int y, unsigned int z,
-		 const Transform &t);
+  SearchGridBase(int x, int y, int z, const Transform &t);
 
   virtual ~SearchGridBase() {}
   
   //! get the mesh statistics
-  unsigned get_ni() const { return ni_; }
-  unsigned get_nj() const { return nj_; }
-  unsigned get_nk() const { return nk_; }
+  int get_ni() const { return ni_; }
+  int get_nj() const { return nj_; }
+  int get_nk() const { return nk_; }
 
   //virtual BBox get_bounding_box() const;
   void transform(const Transform &t);
@@ -79,19 +78,18 @@ public:
   Transform &set_transform(const Transform &trans) 
   { transform_ = trans; return transform_; }
 
-protected:
-  bool locate(unsigned int &i, unsigned int &j, unsigned int &k,
-	      const Point &) const;
-  void unsafe_locate(unsigned int &i, unsigned int &j, unsigned int &k,
-		     const Point &) const;
+  bool locate(int &i, int &j, int &k, const Point &) const;
+  void unsafe_locate(int &i, int &j, int &k, const Point &) const;
 
-  unsigned int linearize(unsigned int i, unsigned int j, unsigned int k) const
+protected:
+
+  unsigned int linearize(int i, int j, int k) const
   {
     // k inner loops
     return ((i * nj_) + j) * nk_ + k;
   }
 
-  unsigned int ni_, nj_, nk_;
+  int ni_, nj_, nk_;
 
   Transform transform_;
 };
@@ -102,13 +100,16 @@ class SCISHARE SearchGridConstructor : public Datatype, public SearchGridBase
   friend class SearchGrid;
   
 public:
-  SearchGridConstructor(unsigned int x, unsigned int y, unsigned int z,
+  SearchGridConstructor(int x, int y, int z,
 			const Point &min, const Point &max);
 
   void insert(under_type val, const BBox &bbox);
   void remove(under_type val, const BBox &bbox);
   bool lookup(const std::list<under_type> *&candidates, const Point &p) const;
-  
+  void lookup_ijk(const std::list<under_type> *&candidates,
+                  int i, int j, int k) const;
+  double min_distance_squared(const Point &p, int i, int j, int k) const;
+
   virtual void io(Piostream&) {}
 
 protected:
@@ -128,8 +129,6 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  //static  const string type_name(int n = -1);
-  //virtual const TypeDescription *get_type_description() const;
 
 protected:
   SearchGrid();

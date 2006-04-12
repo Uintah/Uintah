@@ -35,16 +35,8 @@ itcl_class SCIRun_FieldsGeometry_ChangeCoordinates {
     
     constructor {config} {
 	set name ChangeCoordinates
-	set_defaults
     }
     
-    method set_defaults {} {
-	global $this-oldsystem
-	global $this-newsystem
-	set $this-oldsystem "Cartesian"
-	set $this-newsystem "Spherical"
-    }
-
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {

@@ -44,17 +44,17 @@ using namespace SCIRun;
 
 class MetropolisWriter : public GenericWriter<ResultsHandle> {
 public:
-  MetropolisWriter(const string& id);
+  MetropolisWriter(const string& get_id());
 };
 
 
-extern "C" Module* make_MetropolisWriter(const string& id) {
-  return new MetropolisWriter(id);
+extern "C" Module* make_MetropolisWriter(const string& get_id()) {
+  return new MetropolisWriter(get_id());
 }
 
 
-MetropolisWriter::MetropolisWriter(const string& id)
-  : GenericWriter<ResultsHandle>("MetropolisWriter", id, "DataIO", "MIT")
+MetropolisWriter::MetropolisWriter(const string& get_id())
+  : GenericWriter<ResultsHandle>("MetropolisWriter", get_id(), "DataIO", "MIT")
 {
 }
 

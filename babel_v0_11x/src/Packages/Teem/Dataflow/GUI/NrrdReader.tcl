@@ -35,15 +35,9 @@ catch {rename Teem_DataIO_NrrdReader ""}
 
 itcl_class Teem_DataIO_NrrdReader {
     inherit Module
+
     constructor {config} {
 	set name NrrdReader
-	set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-filename
-
-	set $this-filename ""
     }
 
     method ui {} {

@@ -3,7 +3,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <math.h>
@@ -40,7 +40,7 @@ DECLARE_MAKER(ScalarFieldOperator)
 
 ScalarFieldOperator::ScalarFieldOperator(GuiContext* ctx)
   : Module("ScalarFieldOperator",ctx,Source, "Operators", "Uintah"),
-    guiOperation(ctx->subVar("operation"))
+    guiOperation(get_ctx()->subVar("operation"))
 {
 }
 

@@ -32,8 +32,8 @@
 //    Date   : August 2001
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Fields/SelectField.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Clipper.h>
@@ -68,8 +68,8 @@ DECLARE_MAKER(SelectField)
 SelectField::SelectField(GuiContext* ctx)
   : Module("SelectField", ctx, Filter, "FieldsOther", "SCIRun"),
     widget_lock_("SelectField widget lock"),
-    value_(ctx->subVar("stampvalue")),
-    mode_(ctx->subVar("runmode")),
+    value_(get_ctx()->subVar("stampvalue"), 100),
+    mode_(get_ctx()->subVar("runmode"), 0),
     last_generation_(0),
     widgetid_(0)
 {

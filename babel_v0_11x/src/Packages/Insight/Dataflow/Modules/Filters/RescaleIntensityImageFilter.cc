@@ -173,8 +173,8 @@ DECLARE_MAKER(RescaleIntensityImageFilter)
 
 RescaleIntensityImageFilter::RescaleIntensityImageFilter(GuiContext* ctx)
   : Module("RescaleIntensityImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_minimum_(ctx->subVar("minimum")),
-     gui_maximum_(ctx->subVar("maximum")), 
+     gui_minimum_(get_ctx()->subVar("minimum")),
+     gui_maximum_(get_ctx()->subVar("maximum")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

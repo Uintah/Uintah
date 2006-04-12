@@ -26,14 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
+#include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
 
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
@@ -44,93 +44,33 @@ using namespace SCIRun;
 class ClipFieldBySelectionMask : public Module {
   public:
     ClipFieldBySelectionMask(GuiContext*);
-
-    virtual ~ClipFieldBySelectionMask();
-
     virtual void execute();
 
-    virtual void tcl_command(GuiArgs&, void*);
-
-  private:
-    int fGeneration_;
 };
 
 
 DECLARE_MAKER(ClipFieldBySelectionMask)
 ClipFieldBySelectionMask::ClipFieldBySelectionMask(GuiContext* ctx)
-  : Module("ClipFieldBySelectionMask", ctx, Source, "FieldsCreate", "ModelCreation"),
-  fGeneration_(-1)
+  : Module("ClipFieldBySelectionMask", ctx, Source, "FieldsCreate", "ModelCreation")
 {
 }
 
-ClipFieldBySelectionMask::~ClipFieldBySelectionMask(){
-}
 
 void ClipFieldBySelectionMask::execute()
 {
-  FieldIPort *field_iport;
-  MatrixIPort *selmask_iport;
-  
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
-  {
-    error("Could not find Field input port");
-    return;
-  }
-  
-  if (!(selmask_iport = dynamic_cast<MatrixIPort *>(getIPort(1))))
-  {
-    error("Could not find SelectionMask input port");
-    return;
-  }
-  
   FieldHandle input;
+  FieldHandle output;
   MatrixHandle selmask;
+  MatrixHandle interpolant;
   
-  field_iport->get(input);
-  selmask_iport->get(selmask);
+  if (!(get_input_handle("Field",input,true))) return;
+  if (!(get_input_handle("SelectionMask",selmask,true))) return;
+
+  FieldsAlgo fieldmath(this);
+  if(!(fieldmath.ClipFieldBySelectionMask(input,output,selmask,interpolant))) return;
   
-  if (input.get_rep() == 0)
-  {
-    warning("No Field was found on input port");
-    return;
-  }
-  
-  if (selmask.get_rep() == 0)
-  {
-    warning("No SelectionMask was found on the input");
-    return;
-  }
-
-  bool update = false;
-
-  if( fGeneration_ != input->generation ) {
-    fGeneration_ = input->generation;
-    update = true;
-  }
-
-  if(update)
-  {
-    FieldsAlgo fieldmath(this);
-  
-    FieldHandle output;
-    MatrixHandle interpolant;
-    if(!(fieldmath.ClipFieldBySelectionMask(input,output,selmask,interpolant)))
-    {
-      return;
-    }
-  
-    FieldOPort* field_oport = dynamic_cast<FieldOPort *>(getOPort(0));
-    if (field_oport) field_oport->send(output);
-
-    MatrixOPort* interpolant_oport = dynamic_cast<MatrixOPort *>(getOPort(1));
-    if (interpolant_oport) interpolant_oport->send(interpolant);
-  }
-}
-
-void
- ClipFieldBySelectionMask::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  send_output_handle("ClippedField",output,true);
+  send_output_handle("MappingMatrix",interpolant, true);
 }
 
 } // End namespace ModelCreation

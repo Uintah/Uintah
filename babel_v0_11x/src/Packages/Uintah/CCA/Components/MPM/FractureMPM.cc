@@ -79,131 +79,25 @@ static Vector face_norm(Patch::FaceType f)
 FractureMPM::FractureMPM(const ProcessorGroup* myworld) :
   SerialMPM(myworld)
 {
-  lb = scinew MPMLabel();
-  flags = scinew MPMFlags();
-  n8or27 = flags->d_8or27;
-
-  d_nextOutputTime=0.;
-  d_SMALL_NUM_MPM=1e-200;
-  d_with_ice    = false;
   crackModel          = 0;
-  contactModel        = 0;
-  thermalContactModel = 0;
-  heatConductionModel = 0;
-  d_min_part_mass = 3.e-15;
-  d_max_vel = 3.e105;
-  NGP     = 1;
-  NGN     = 1;
-  d_doGridReset = true;
-  d_recompile = false;
-  dataArchiver = 0;
 }
 
 FractureMPM::~FractureMPM()
 {
-  delete lb;
-  delete flags;
   delete crackModel;
-  delete contactModel;
-  delete thermalContactModel;
-  delete heatConductionModel;
-  MPMPhysicalBCFactory::clean();
 }
 
 void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, 
                                const ProblemSpecP& materials_ps,GridP& grid,
 			       SimulationStateP& sharedState)
 {
-  d_sharedState = sharedState;
-  
-  ProblemSpecP mpm_soln_ps = 0;
-  if (materials_ps)
-    mpm_soln_ps = materials_ps->findBlock("MPM");
-  else
-    mpm_soln_ps = prob_spec->findBlock("MPM");
-      
-  if(mpm_soln_ps) {
-	        
-    // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(mpm_soln_ps);
-    if (flags->d_integrator_type == "implicit")
-      throw ProblemSetupException("Can't use implicit integration with -mpm", __FILE__, __LINE__);
-
-    mpm_soln_ps->get("do_grid_reset", d_doGridReset);
-    mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
-    mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
-	
-    std::vector<std::string> bndy_face_txt_list;
-    mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
-
-    // convert text representation of face into FaceType
-    for(std::vector<std::string>::const_iterator ftit(bndy_face_txt_list.begin());
-      ftit!=bndy_face_txt_list.end();ftit++) {
-      Patch::FaceType face = Patch::invalidFace;
-      for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
-          ft=Patch::nextFace(ft)) {
-        if(Patch::getFaceName(ft)==*ftit) face =  ft;
-      } 
-      if(face!=Patch::invalidFace) {
-        d_bndy_traction_faces.push_back(face);
-      } else {
-         std::cerr << "warning: ignoring unknown face '" << *ftit<< "'" << std::endl;
-      }
-    }
-  }
-
-  if(flags->d_canAddMPMMaterial){
-    cout << "Addition of new material for particle failure is possible"<< endl;
-    if(!flags->d_addNewMaterial){
-      throw ProblemSetupException("To use material addition, one must specify manual_add_material==true in the input file.",
-                                  __FILE__, __LINE__);
-    }
-  }
-
-  if(n8or27==8){
-    NGP=1;
-    NGN=1;
-  } else if(n8or27==27){
-    NGP=2;
-    NGN=2;
-  }
-
-  MPMPhysicalBCFactory::create(prob_spec);
-
-  contactModel = ContactFactory::create(d_myworld, prob_spec,sharedState,lb,flags);
-  thermalContactModel =
-    ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
-
-  heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
-
-  ProblemSpecP p = prob_spec->findBlock("DataArchiver");
-  if(!p->get("outputInterval", d_outputInterval))
-	    d_outputInterval = 1.0;
+  SerialMPM::problemSetup(prob_spec,materials_ps,grid,sharedState);
 
   // for FractureMPM
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   crackModel =  scinew Crack(prob_spec,sharedState,dataArchiver,lb,flags);
 
-  materialProblemSetup(prob_spec, d_sharedState, flags);
-//  GridP grid;
-//  addMaterial(prob_spec, grid ,sharedState);
 }
-
-void FractureMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
-                              SimulationStateP& sharedState)
-{
-  // For adding materials mid-Simulation
-  d_recompile = true;
-  ProblemSpecP mat_ps =  prob_spec->findBlock("AddMaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps);
-    sharedState->registerMPMMaterial(mat);
-  }
-}
-
 
 void
 FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
@@ -275,7 +169,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   // artificial damping coeff initialized to 0.0
   if (cout_dbg.active())
     cout_doing << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
-               << " 8 or 27 = " << n8or27 << endl;
+               << " 8 or 27 = " << flags->d_8or27 << endl;
 
   if (flags->d_artificialDampCoeff > 0.0) {
      t->computes(lb->pDampingRateLabel); 
@@ -358,15 +252,6 @@ void FractureMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   // The task will have a reference to add_matl
   if (add_matl->removeReference())
     delete add_matl; // shouln't happen, but...
-}
-
-void FractureMPM::schedulePrintParticleCount(const LevelP& level,
-                                             SchedulerP& sched)
-{
-  Task* t = scinew Task("FractureMPM::printParticleCount",
-                        this, &FractureMPM::printParticleCount);
-  t->requires(Task::NewDW, lb->partCountLabel);
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
 void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
@@ -1228,23 +1113,6 @@ void FractureMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
-void FractureMPM::printParticleCount(const ProcessorGroup* pg,
-                                     const PatchSubset*,
-                                     const MaterialSubset*,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw)
-{
-  sumlong_vartype pcount;
-  new_dw->get(pcount, lb->partCountLabel);
-
-  if(pg->myrank() == 0){
-    static bool printed=false;
-    if(!printed){
-      cerr << "Created " << (long) pcount << " total particles\n";
-      printed=true;
-    }
-  }
-}
 
 void FractureMPM::computeAccStrainEnergy(const ProcessorGroup*,
                                          const PatchSubset*,
@@ -1629,7 +1497,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
 	// Add each particles contribution to the local mass & velocity 
 	// Must use the node indices
-	for(int k = 0; k < n8or27; k++) {
+	for(int k = 0; k < flags->d_8or27; k++) {
 	  if(patch->containsNode(ni[k])) {
             if(pgCode[idx][k]==1) {   // above crack
               gmass[ni[k]]          += pmass[idx]                     * S[k];
@@ -1656,7 +1524,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	} // End of loop over k
       } // End of loop over iter
 
-      for(NodeIterator iter = patch->getNodeIterator(n8or27);!iter.done();iter++){
+      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);!iter.done();iter++){
         IntVector c = *iter; 
         totalmass      += (gmass[c]+Gmass[c]);
         gmassglobal[c] += (gmass[c]+Gmass[c]);
@@ -1686,15 +1554,15 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       
       MPMBoundCond bc;
       // above crack
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,      n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,      n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp,n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,   n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,      flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,      flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,   flags->d_8or27);
       // below crack
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   Gvelocity,      n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  Gvelocity,      n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  GvelocityInterp,n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature,   n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",   Gvelocity,      flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  Gvelocity,      flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  GvelocityInterp,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature,   flags->d_8or27);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
 
@@ -1815,7 +1683,7 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
         // get particle's velocity gradients 
         Vector gvel;
 	velGrad.set(0.0);
-	for(int k = 0; k < n8or27; k++) {
+	for(int k = 0; k < flags->d_8or27; k++) {
           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
 	  for(int j = 0; j<3; j++){
@@ -2051,7 +1919,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 	stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
         partvoldef += pvol[idx];
 
-	for (int k = 0; k < n8or27; k++){
+	for (int k = 0; k < flags->d_8or27; k++){
 	  if(patch->containsNode(ni[k])){
 	    Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 		       d_S[k].z()*oodx[2]);
@@ -2122,8 +1990,8 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       } // faces
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Ginternalforce,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Ginternalforce,flags->d_8or27);
 
 #ifdef KUMAR
       internalforce.initialize(Vector(0,0,0));
@@ -2224,7 +2092,7 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocateAndPut(Gacceleration,lb->GAccelerationLabel, dwi, patch);
       Gacceleration.initialize(Vector(0.,0.,0.));
 
-       for(NodeIterator iter = patch->getNodeIterator(n8or27); 
+       for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27); 
 		        !iter.done(); iter++){
          IntVector c = *iter;
          // above crack
@@ -2283,7 +2151,7 @@ void FractureMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(Gvelocity_star,lb->GVelocityStarLabel, dwi, patch);
       Gvelocity_star.initialize(Vector(0.0));
 
-      for(NodeIterator iter = patch->getNodeIterator(n8or27); 
+      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27); 
 		       !iter.done(); iter++){
         IntVector c = *iter;
         // above crack
@@ -2334,18 +2202,18 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
       // acceleration before interpolating back to the particles
       
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star,n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star,n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star,n8or27);
-      //bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration,n8or27);
-      //bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration,n8or27);
-      //bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,n8or27);
-      //obc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star,flags->d_8or27);
+      //bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration,flags->d_8or27);
+      //bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration,flags->d_8or27);
+      //bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,flags->d_8or27);
+      //obc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration,flags->d_8or27);
       
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getNodeIterator(n8or27); !iter.done();
+      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27); !iter.done();
                                                                iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
@@ -2353,8 +2221,8 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
       }
       
       // Set symmetry BCs on acceleration if called for
-      bc.setBoundaryCondition(patch, dwi, "Symmetric", gacceleration, n8or27);
-      bc.setBoundaryCondition(patch, dwi, "Symmetric", Gacceleration, n8or27);
+      bc.setBoundaryCondition(patch, dwi, "Symmetric", gacceleration, flags->d_8or27);
+      bc.setBoundaryCondition(patch, dwi, "Symmetric", Gacceleration, flags->d_8or27);
 
     } // matl loop
   }  // patch loop
@@ -2582,7 +2450,7 @@ void FractureMPM::calculateDampingRate(const ProcessorGroup*,
 							      d_S,psize[idx]);
 
 	  Vector vel(0.0,0.0,0.0);
-	  for (int k = 0; k < n8or27; k++) {
+	  for (int k = 0; k < flags->d_8or27; k++) {
             if(pgCode[idx][k]==1) vel += gvelocity_star[ni[k]]*S[k];
             if(pgCode[idx][k]==2) vel += Gvelocity_star[ni[k]]*S[k];
           }
@@ -2943,7 +2811,7 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
 	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
 	                                                    psize[idx]);
 	// Accumulate the contribution from each surrounding vertex
-	for (int k = 0; k < n8or27; k++) {
+	for (int k = 0; k < flags->d_8or27; k++) {
 	  IntVector node = ni[k];
 	  if(pgCode[idx][k]==1) {
 	    pTemp += gTemperature[node] * S[k];
@@ -3134,7 +3002,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	double burnFraction = 0;
 
 	// Accumulate the contribution from each surrounding vertex
-	for (int k = 0; k < n8or27; k++) {
+	for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
 	  fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
           if(pgCode[idx][k]==1) {
@@ -3252,81 +3120,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   }
 }    
       
-void
-FractureMPM::setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
-	                                ParticleSubset* pset,
-	                                DataWarehouse* new_dw,
-	                                double val)
-{
-  ParticleVariable<double>  temp;
-  new_dw->allocateTemporary(temp,  pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end();iter++){
-    temp[*iter]=val;
-  }
-  pvar = temp;
-}
-
-void
-FractureMPM::setParticleDefault(ParticleVariable<double>& pvar,
-	                        const VarLabel* label,
-	                        ParticleSubset* pset,
-	                        DataWarehouse* new_dw,
-	                        double val)
-{
-  new_dw->allocateAndPut(pvar, label, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-    pvar[*iter] = val;
-  }
-}
-
-void
-FractureMPM::setParticleDefault(ParticleVariable<Vector>& pvar,
-	                        const VarLabel* label,
-	                        ParticleSubset* pset,
-	                        DataWarehouse* new_dw,
-	                        const Vector& val)
-{
-  new_dw->allocateAndPut(pvar, label, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-     pvar[*iter] = val;
-  }
-}
-
-void
-FractureMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
-	                        const VarLabel* label,
-	                        ParticleSubset* pset,
-	                        DataWarehouse* new_dw,
-	                        const Matrix3& val)
-{
-  new_dw->allocateAndPut(pvar, label, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-    pvar[*iter] = val;
-  }
-}
-
-void FractureMPM::setSharedState(SimulationStateP& ssp)
-{
-  d_sharedState = ssp;
-}
-
-void FractureMPM::printParticleLabels(vector<const VarLabel*> labels,
-	                              DataWarehouse* dw, int dwi,
-	                              const Patch* patch)
-{
-  for (vector<const VarLabel*>::const_iterator it = labels.begin();
-                                               it != labels.end(); it++) {
-    if (dw->exists(*it,dwi,patch))
-      cout << (*it)->getName() << " does exists" << endl;
-    else
-      cout << (*it)->getName() << " does NOT exists" << endl;
-  }
-}
-
 void
 FractureMPM::initialErrorEstimate(const ProcessorGroup*,
 	                          const PatchSubset* patches,
@@ -3492,84 +3285,10 @@ FractureMPM::refine(const ProcessorGroup*,
 
 } // end refine()
 
-void FractureMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
-	                                          const PatchSet* patches,
-	                                          const MaterialSet* matls)
-{
 
-  if (cout_doing.active())
-    cout_doing << "FractureMPM::scheduleCheckNeedAddMaterial" << endl;
 
-  int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("FractureMPM::checkNeedAddMPMMaterial",
-                         this, &FractureMPM::checkNeedAddMPMMaterial);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->scheduleCheckNeedAddMPMMaterial(t, mpm_matl, patches);
-  }
 
-  sched->addTask(t, patches, matls);
-}
 
-void FractureMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
-	                                  const PatchSubset* patches,
-	                                  const MaterialSubset* ,
-	                                  DataWarehouse* old_dw,
-	                                  DataWarehouse* new_dw)
-{
 
-  if (cout_doing.active())
-    cout_doing <<"Doing checkNeedAddMPMMaterial:MPM: \n" ;
 
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->checkNeedAddMPMMaterial(patches, mpm_matl, old_dw, new_dw);
-  }
-}
-
-void FractureMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
-	                                         const LevelP& level,
-	                                         const MaterialSet* all_matls)
-{
-
-  if (cout_doing.active())
-    cout_doing << "FractureMPM::scheduleSetNeedAddMaterialFlag" << endl;
-
-  Task* t= scinew Task("FractureMPM::setNeedAddMaterialFlag",
-                        this, &FractureMPM::setNeedAddMaterialFlag);
-  t->requires(Task::NewDW, lb->NeedAddMPMMaterialLabel);
-  sched->addTask(t, level->eachPatch(), all_matls);
-}
-
-void FractureMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
-	                                 const PatchSubset* ,
-                                         const MaterialSubset* ,
-                                         DataWarehouse* ,
-                                         DataWarehouse* new_dw)
-{
-  sum_vartype need_add_flag;
-  new_dw->get(need_add_flag, lb->NeedAddMPMMaterialLabel);
-
-  if(need_add_flag < -0.1){
-    d_sharedState->setNeedAddMaterial(-99);
-    flags->d_canAddMPMMaterial=false;
-    cout << "MPM setting NAM to -99" << endl;
-  }
-  else{
-    d_sharedState->setNeedAddMaterial(0);
-  }
-}
-
-bool FractureMPM::needRecompile(double , double , const GridP& )
-{
-  if(d_recompile){
-    d_recompile = false;
-    return true;
-  }
-  else{
-    return false;
-  }
-}
     

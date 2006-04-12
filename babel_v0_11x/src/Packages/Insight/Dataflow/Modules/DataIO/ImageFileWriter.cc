@@ -40,7 +40,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 
-#include <Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileWriter.h"
 
 #include "itkRGBPixel.h"
@@ -104,7 +104,7 @@ DECLARE_MAKER(ImageFileWriter)
 
 ImageFileWriter::ImageFileWriter(GuiContext* ctx)
   : Module("ImageFileWriter", ctx, Source, "DataIO", "Insight"),
-    gui_FileName_(ctx->subVar("FileName"))
+    gui_FileName_(get_ctx()->subVar("FileName"))
 {
 }
 

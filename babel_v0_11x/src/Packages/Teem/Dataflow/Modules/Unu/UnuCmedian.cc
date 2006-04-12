@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <sstream>
 #include <iostream>
@@ -76,11 +76,11 @@ DECLARE_MAKER(UnuCmedian)
 
 UnuCmedian::UnuCmedian(SCIRun::GuiContext *ctx) : 
   Module("UnuCmedian", ctx, Filter, "UnuAtoM", "Teem"), 
-  mode_(ctx->subVar("mode")),
-  radius_(ctx->subVar("radius")),
-  weight_(ctx->subVar("weight")),
-  bins_(ctx->subVar("bins")),
-  pad_(ctx->subVar("pad")),
+  mode_(get_ctx()->subVar("mode")),
+  radius_(get_ctx()->subVar("radius")),
+  weight_(get_ctx()->subVar("weight")),
+  bins_(get_ctx()->subVar("bins")),
+  pad_(get_ctx()->subVar("pad")),
   old_mode_(-1), old_radius_(-1), old_weight_(-1.0),
   old_bins_(-1), old_pad_(-1), old_generation_(-1)
 {
@@ -154,7 +154,7 @@ UnuCmedian::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   NrrdDataHandle nsend(0);
 
   bool do_execute = false;
@@ -180,19 +180,19 @@ UnuCmedian::execute()
 
 
   int min[NRRD_DIM_MAX], max[NRRD_DIM_MAX];
-  for (int i = 0; i < nrrd_handle->nrrd->dim; i++)
+  for (unsigned int i = 0; i < nrrd_handle->nrrd_->dim; i++)
   {
     min[i] = 0;
-    max[i] = nrrd_handle->nrrd->axis[i].size - 1;
+    max[i] = nrrd_handle->nrrd_->axis[i].size - 1;
   }
 
 
   //! Slice a scalar out of the tuple axis and filter it. So for Vectors
   //! and Tensors, a component wise filtering occurs.
 
-  if(nrrdKindSize(nrrd_handle->nrrd->axis[0].kind) > 1) {
+  if(nrrdKindSize(nrrd_handle->nrrd_->axis[0].kind) > 1) {
     vector<Nrrd*> out;
-    for (int i = 0; i < nrrd_handle->nrrd->axis[0].size; i++) 
+    for (unsigned int i = 0; i < nrrd_handle->nrrd_->axis[0].size; i++) 
     { 
       Nrrd *sliced = nrrdNew();
       if (nrrdSlice(sliced, nin, 0, i)) {
@@ -211,7 +211,7 @@ UnuCmedian::execute()
     }
     // Join the filtered nrrds along the first axis
     NrrdData *nrrd_joined = scinew NrrdData;
-    if (nrrdJoin(nrrd_joined->nrrd, &out[0], out.size(), 0, 1)) {
+    if (nrrdJoin(nrrd_joined->nrrd_, &out[0], out.size(), 0, 1)) {
       char *err = biffGetDone(NRRD);
       error(string("Join Error: ") +  err);
       free(err);
@@ -221,7 +221,7 @@ UnuCmedian::execute()
     onrrd_->send_and_dereference(ntmp);
   } else {
     Nrrd *nout_filtered;
-    nout_filtered = do_filter(nrrd_handle->nrrd);
+    nout_filtered = do_filter(nrrd_handle->nrrd_);
     if (!nout_filtered) {
       error("Error filtering, returning");
       return;

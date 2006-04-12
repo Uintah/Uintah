@@ -38,7 +38,7 @@ itcl_class ModelCreation_FieldsData_ComputeFieldData {
         frame $infoframe.info
         pack $infoframe.info -side left
         set info $infoframe.info
-        label $info.info1 -text "Function: RESULT = function(DATA,A,B,C,...)"
+        label $info.info1 -text "Function: RESULT = function(DATA,POS,ELEMENT,INDEX,A,B,C,...)"
         label $info.info2 -text "Input array: DATA (scalar/vector/tensor: data from field port) "
         label $info.info3 -text "Input array: X, Y, Z (scalar: Cartensian coordinates of node/element)"
         label $info.info4 -text "Input array: POS (vector: vector with node/element position)"
@@ -46,7 +46,7 @@ itcl_class ModelCreation_FieldsData_ComputeFieldData {
         label $info.info6 -text "Input array: INDEX (scalar: number of the element)"
         label $info.info7 -text "Input array: SIZE (scalar: number of elements)"
         label $info.info8 -text "Input array: ELEMENT (element: object containing element properties)"
-        label $info.info9 -text "Output array: RESULT (scalar)"
+        label $info.info9 -text "Output array: RESULT (scalar/vector/tensor)"
 
         grid $info.info1 -row 0 -column 0 -columnspan 2 -sticky w
         grid $info.info2 -row 1 -column 0 -sticky w

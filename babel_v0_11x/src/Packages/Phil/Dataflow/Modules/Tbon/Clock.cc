@@ -41,7 +41,7 @@ init_clock(int n)
 }
 
 void
-AddTime( iotimer_t s, iotimer_t e, int id ) {
+AddTime( iotimer_t s, iotimer_t e, int get_id() ) {
   long long res = e-s;
   iotimer_t diff;
   if (res < 0) { // you wrapped...
@@ -50,15 +50,15 @@ AddTime( iotimer_t s, iotimer_t e, int id ) {
   } else {
     diff = e-s;
   }
-  clocks[id] += diff*(cycleval*1.0)*1E-12;
+  clocks[get_id()] += diff*(cycleval*1.0)*1E-12;
 }
 
-void PrintAvgTime(FILE *fp, int id, int n, char *txt) {
-  fprintf(fp, "%s %lfs\n",txt, clocks[id] / (double)n);
+void PrintAvgTime(FILE *fp, int get_id(), int n, char *txt) {
+  fprintf(fp, "%s %lfs\n",txt, clocks[get_id()] / (double)n);
 }
 
-void ClearTime( int id ) {
-  clocks[id] = 0.0;
+void ClearTime( int get_id() ) {
+  clocks[get_id()] = 0.0;
 }
 
 void 

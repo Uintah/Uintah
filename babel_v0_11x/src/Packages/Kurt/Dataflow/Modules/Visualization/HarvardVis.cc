@@ -26,8 +26,8 @@
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/GuiContext.h>
@@ -331,10 +331,10 @@ DECLARE_MAKER(HarvardVis)
 HarvardVis::HarvardVis(GuiContext* ctx)
   : Module("HarvardVis", ctx,  Filter, "Visualization", "Kurt"),
     current_filename(""), reread_datafile(true),
-    which_I_var_(ctx->subVar("which_I_var_")),
-    num_timesteps_(ctx->subVar("num_timesteps_")),
-    which_timestep_(ctx->subVar("which_timestep_")),
-    file_name_(ctx->subVar("file_name_")),
+    which_I_var_(get_ctx()->subVar("which_I_var_")),
+    num_timesteps_(get_ctx()->subVar("num_timesteps_")),
+    which_timestep_(get_ctx()->subVar("which_timestep_")),
+    file_name_(get_ctx()->subVar("file_name_")),
     time_data(0)
 {
 }
@@ -362,7 +362,7 @@ bool HarvardVis::read_data() {
       if (which_timestep_.get() > num_timesteps_.get()) {
 	which_timestep_.set(num_timesteps_.get());
       }
-      gui->execute(id + " update_slider");
+      get_gui()->execute(get_id() + " update_slider");
     }
   }
 

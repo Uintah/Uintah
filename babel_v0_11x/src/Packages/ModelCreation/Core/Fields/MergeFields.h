@@ -29,7 +29,7 @@
 
 // The following include file will include all tools needed for doing 
 // dynamic compilation and will include all the standard dataflow types
-#include <Packages/ModelCreation/Core/Util/DynamicAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 // Additionally we include sci_hash_map here as it is needed by the algorithm
 #include <sci_hash_map.h>
@@ -39,7 +39,7 @@ namespace ModelCreation {
 class MergeFieldsAlgo : public SCIRun::DynamicAlgoBase
 {
   public:
-    virtual bool MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements);  
+    virtual bool MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements, bool matchval);  
 };
 
 
@@ -47,12 +47,12 @@ template <class FIELD>
 class  MergeFieldsAlgoT : public MergeFieldsAlgo
 {
   public:
-    virtual bool MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements);
+    virtual bool MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements, bool matchval);
  
 };
 
 template <class FIELD>
-bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> fieldvec, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements)
+bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> fieldvec, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements, bool matchval)
 {
 
 #ifdef HAVE_HASH_MAP
@@ -215,8 +215,9 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
   
     typename FIELD::mesh_type::Node::array_type nodes;
     typename FIELD::mesh_type::Node::array_type newnodes;
-    double tol2 = tol*tol;
+    typename FIELD::value_type v1,v2;
     double dist, mindist;
+    double tol2 = tol*tol;
     
     while (it != it_end)
     {
@@ -237,31 +238,54 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
             std::pair<typename node_index_type::iterator,typename node_index_type::iterator> lit;
             SCIRun::Point P,Q;
             imesh->get_center(P,nodeq);
-            
+            if (matchval) v1 = ifield->value(nodeq);
             key = static_cast<int>((P.x()-Xmin)*Xmul);
             key += (static_cast<int>((P.y()-Ymin)*Ymul))<<8;
             key += (static_cast<int>((P.z()-Zmin)*Zmul))<<16;
           
             mindist = tol2;
-            for (int x = -1; x < 2; x++)
-              for (int y = -256; y < 257; y += 256)
-                for (int z = -65536; z < 65537; z += 65536)
+            
+            bool foundit = false;
+            for (int x = -1; x < 2 && !foundit; x++)
+              for (int y = -256; y < 257 && !foundit; y += 256)
+                for (int z = -65536; z < 65537 && !foundit; z += 65536)
                 {
                   lit = node_index_.equal_range(key+x+y+z);
                   
-                  while (lit.first != lit.second)
+                  while (lit.first != lit.second && !foundit)
                   {
                     typename FIELD::mesh_type::Node::index_type idx = (*(lit.first)).second;
                     omesh->get_center(Q,idx);
-                    dist = (P.x()-Q.x())*(P.x()-Q.x()) + (P.y()-Q.y())*(P.y()-Q.y()) + (P.z()-Q.z())*(P.z()-Q.z());
-                    if (dist <= mindist)
+                    
+                    if (matchval) 
                     {
-                      newnodes[q] = idx;
-                      localindex[nodeq] = newnodes[q];
-                      localindex_assigned[nodeq] = true;
-                      mindist = dist;
+                      v2 = ofield->value(idx);                 
+                      if (v1 == v2)
+                      {
+                        dist = (P.x()-Q.x())*(P.x()-Q.x()) + (P.y()-Q.y())*(P.y()-Q.y()) + (P.z()-Q.z())*(P.z()-Q.z());
+                        if (dist <= mindist)
+                        {
+                          newnodes[q] = idx;
+                          localindex[nodeq] = newnodes[q];
+                          localindex_assigned[nodeq] = true;
+                          mindist = dist;
+                          foundit = true;
+                        }
+                      }
                     }
-                    ++(lit.first);
+                    else
+                    {
+                      dist = (P.x()-Q.x())*(P.x()-Q.x()) + (P.y()-Q.y())*(P.y()-Q.y()) + (P.z()-Q.z())*(P.z()-Q.z());
+                      if (dist <= mindist)
+                      {
+                        newnodes[q] = idx;
+                        localindex[nodeq] = newnodes[q];
+                        localindex_assigned[nodeq] = true;
+                        mindist = dist;
+                        foundit = true;
+                      }
+                    }
+                    ++(lit.first);  
                   }
                 }
                 

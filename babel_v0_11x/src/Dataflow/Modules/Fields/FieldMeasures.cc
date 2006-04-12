@@ -42,8 +42,8 @@
 
 #include <Dataflow/Modules/Fields/FieldMeasures.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -76,14 +76,14 @@ DECLARE_MAKER(FieldMeasures)
 
 FieldMeasures::FieldMeasures(GuiContext* ctx)
   : Module("FieldMeasures", ctx, Filter, "FieldsOther", "SCIRun"),
-    simplexString_(ctx->subVar("simplexString")),
-    xFlag_(ctx->subVar("xFlag")), 
-    yFlag_(ctx->subVar("yFlag")),
-    zFlag_(ctx->subVar("zFlag")), 
-    idxFlag_(ctx->subVar("idxFlag")),
-    sizeFlag_(ctx->subVar("sizeFlag")),
-    nNbrsFlag_(ctx->subVar("numNbrsFlag")),
-    normalsFlag_(ctx->subVar("normalsFlag"))
+    simplexString_(get_ctx()->subVar("simplexString"), "Node"),
+    xFlag_(get_ctx()->subVar("xFlag"), 1), 
+    yFlag_(get_ctx()->subVar("yFlag"), 1),
+    zFlag_(get_ctx()->subVar("zFlag"), 1), 
+    idxFlag_(get_ctx()->subVar("idxFlag"), 0),
+    sizeFlag_(get_ctx()->subVar("sizeFlag"), 0),
+    nNbrsFlag_(get_ctx()->subVar("numNbrsFlag"), 0),
+    normalsFlag_(get_ctx()->subVar("normalsFlag"), 0)
 {
 }
 

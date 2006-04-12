@@ -6,10 +6,11 @@
 class MMS1 : public MMS {
 
 public:
-  MMS1() {};
-  virtual ~MMS1() {};
-  virtual double pressure( int x, int y, double time );
-  virtual double uVelocity( int x, int y, double time );
+  MMS1() {}
+  virtual ~MMS1() {}
+  virtual double pressure( double x_pos, double y_pos, double time );
+  virtual double uVelocity( double x_pos, double y_pos, double time );
+  virtual double vVelocity( double x_pos, double y_pos, double time );
   
 };
 

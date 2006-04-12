@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -62,13 +62,15 @@ DECLARE_MAKER(TendEvalPow)
 
 TendEvalPow::TendEvalPow(SCIRun::GuiContext *ctx) : 
   Module("TendEvalPow", ctx, Filter, "Tend", "Teem"), 
-  exponent_(ctx->subVar("exponent"))
+  exponent_(get_ctx()->subVar("exponent"), 1.0)
 {
 }
+
 
 TendEvalPow::~TendEvalPow()
 {
 }
+
 
 void 
 TendEvalPow::execute()
@@ -87,7 +89,7 @@ TendEvalPow::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenEigenvaluePower(nout, nin, exponent_.get())) {

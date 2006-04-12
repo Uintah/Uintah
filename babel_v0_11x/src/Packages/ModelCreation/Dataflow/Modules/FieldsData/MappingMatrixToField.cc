@@ -38,8 +38,8 @@
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -51,96 +51,33 @@ using namespace SCIRun;
 class MappingMatrixToField : public Module {
 public:
   MappingMatrixToField(GuiContext*);
-
-  virtual ~MappingMatrixToField();
-
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
-
-private:
-  int fGeneration_;
-  int mGeneration_;
 
 };
 
 
 DECLARE_MAKER(MappingMatrixToField)
 MappingMatrixToField::MappingMatrixToField(GuiContext* ctx)
-  : Module("MappingMatrixToField", ctx, Source, "FieldsData", "ModelCreation"),
-  fGeneration_(-1),
-  mGeneration_(-1)
+  : Module("MappingMatrixToField", ctx, Source, "FieldsData", "ModelCreation")
 {
 }
 
-MappingMatrixToField::~MappingMatrixToField(){
-}
 
 void MappingMatrixToField::execute()
 {
-  FieldIPort *field_iport;
-  
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
-  {
-    error("Could not find Field input port");
-    return;
-  }
-    
   FieldHandle input;
-  
-  field_iport->get(input);
-  
-  if (input.get_rep() == 0)
-  {
-    warning("No Field was found on input port");
-    return;
-  }
-
-  MatrixIPort *matrix_iport;
-  
-  if (!(matrix_iport = dynamic_cast<MatrixIPort *>(getIPort(1))))
-  {
-    error("Could not find MappingMatrix input port");
-    return;
-  }
-    
+  FieldHandle output;
   MatrixHandle matrix;
   
-  matrix_iport->get(matrix);
+  if (!(get_input_handle("Field",input,true))) return;
+  if (!(get_input_handle("MappingMatrix",matrix,true))) return;
+
+  FieldsAlgo fieldmath(this);  
+
+  send_output_handle("IndicesField",output,true);
+  if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
   
-  if (matrix.get_rep() == 0)
-  {
-    warning("No MappingMatrix was found on input port");
-    return;
-  }
-
-  bool update = false;
-
-  if ( ((fGeneration_ != input->generation )&&(mGeneration_ != matrix->generation))) {
-    fGeneration_ = input->generation;
-    mGeneration_ = matrix->generation;
-    update = true;
-  }
-
-  if(update)
-  {
-    FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
-    FieldHandle output;
-
-    if(!(fieldmath.MappingMatrixToField(input,output,matrix)))
-    {
-      error("Dynamically compile algorithm failed");
-      return;
-    }
-  
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
-    if (output_oport) output_oport->send(output);
-  }
-}
-
-void MappingMatrixToField::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  send_output_handle("IndicesField",output,true);
 }
 
 } // End namespace ModelCreation

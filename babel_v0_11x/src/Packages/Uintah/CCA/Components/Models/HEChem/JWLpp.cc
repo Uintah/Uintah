@@ -91,17 +91,17 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
 
 void JWLpp::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP model_ps = ps->appendChild("Model",true,3);
+  ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","JWLpp");
 
-  model_ps->appendElement("Active",d_active,false,4);
-  model_ps->appendElement("ThresholdPressure",d_threshold_pressure,false,4);
-  model_ps->appendElement("fromMaterial",fromMaterial,false,4);
-  model_ps->appendElement("toMaterial",toMaterial,false,4);
-  model_ps->appendElement("G",    d_G,false,4);
-  model_ps->appendElement("b",    d_b,false,4);
-  model_ps->appendElement("E0",   d_E0,false,4);
-  model_ps->appendElement("rho0", d_rho0,false,4);
+  model_ps->appendElement("Active",d_active);
+  model_ps->appendElement("ThresholdPressure",d_threshold_pressure);
+  model_ps->appendElement("fromMaterial",fromMaterial);
+  model_ps->appendElement("toMaterial",toMaterial);
+  model_ps->appendElement("G",    d_G);
+  model_ps->appendElement("b",    d_b);
+  model_ps->appendElement("E0",   d_E0);
+  model_ps->appendElement("rho0", d_rho0);
   
 }
 
@@ -168,7 +168,7 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
     Task* t = scinew Task("JWLpp::computeModelSources", this, 
                           &JWLpp::computeModelSources, mi);
     cout_doing << "JWLpp::scheduleComputeModelSources "<<  endl;  
-    t->requires( Task::OldDW, mi->delT_Label);
+//    t->requires( Task::OldDW, mi->delT_Label);
     Ghost::GhostType  gn  = Ghost::None;
     const MaterialSubset* react_matl = matl0->thisMaterial();
     const MaterialSubset* prod_matl  = matl1->thisMaterial();
@@ -280,7 +280,8 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
                                 const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  const Level* level = getLevel(patches);
+  old_dw->get(delT, mi->delT_Label, level);
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();

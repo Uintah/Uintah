@@ -239,7 +239,7 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 			return doOnce[i] + " not present in the network";
 		}
 		i++;
-		modGui = modptr->getGui();
+		modGui = modptr->get_gui();
 		ASSERT(modGui);
 		
 		//std::cout << "doOnce " << doOnce[i-1] << " " << doOnce[i] << " " << doOnce[i+1] << std::endl;
@@ -265,7 +265,7 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 				return iterate[j] + " not present in the network";
 			}
 			j++;
-			modGui = modptr->getGui();
+			modGui = modptr->get_gui();
 			ASSERT(modGui);
 		
 			//std::cout << "iterate " << iterate[j-1] << " " << iterate[j] << " " << iterate[j+i+1] << std::endl;

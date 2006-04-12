@@ -4,8 +4,8 @@
 #include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 

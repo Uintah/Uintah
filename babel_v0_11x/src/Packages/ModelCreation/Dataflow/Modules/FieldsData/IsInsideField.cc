@@ -38,13 +38,13 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -54,110 +54,29 @@ using namespace SCIRun;
 class IsInsideField : public Module {
   public:
     IsInsideField(GuiContext*);
-
-    virtual ~IsInsideField();
-
-    virtual void execute();
-
-    virtual void tcl_command(GuiArgs&, void*);
-  private:
-    int fGeneration_;
-    int oGeneration_;    
+    virtual void execute();   
 };
 
 
 DECLARE_MAKER(IsInsideField)
 IsInsideField::IsInsideField(GuiContext* ctx)
-  : Module("IsInsideField", ctx, Source, "FieldsData", "ModelCreation"),
-  fGeneration_(-1),
-  oGeneration_(-1)  
+  : Module("IsInsideField", ctx, Source, "FieldsData", "ModelCreation")
 {
-}
-
-IsInsideField::~IsInsideField(){
 }
 
 void IsInsideField::execute()
 {
-  FieldIPort *field_iport;
-  FieldIPort *object_iport;
-  
-  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
-  {
-    error("Could not find Field input port");
-    return;
-  }
-  
-  if (!(object_iport = dynamic_cast<FieldIPort *>(getIPort(1))))
-  {
-    error("Could not find ObjectField input port");
-    return;
-  }
-  
-  FieldHandle input;
+  FieldHandle input, output;
   FieldHandle object;
+
+  if (!(get_input_handle("Field",input,true))) return;
+  if (!(get_input_handle("ObjectField",object,true))) return;
   
-  field_iport->get(input);
-  object_iport->get(object);
+  FieldsAlgo algo(this);
   
-  if (input.get_rep() == 0)
-  {
-    warning("No Field was found on input port");
-    return;
-  }
-  
-  if (object.get_rep() == 0)
-  {
-    warning("No Object Field was found on the object port");
-    return;
-  }
-
-  bool update = false;
-
-  if ( (fGeneration_ != input->generation ) ||
-        (oGeneration_ != object->generation )) {
-    fGeneration_ = input->generation;
-    oGeneration_ = object->generation;
-    update = true;
-  }
-
-
-  if(update)
-  {
-    FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));
-  
-    FieldHandle output;
-
-    if(!(fieldmath.IsInsideSurfaceField(input,output,object)))
-    {
-      error("Dynamically compile algorithm failed");
-      return;
-    }
-  
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
-    if (output_oport) output_oport->send(output);
-
-    MatrixOPort* data_oport = dynamic_cast<MatrixOPort *>(getOPort(1));
-    if (data_oport) 
-    {
-      MatrixHandle data;
-      if(fieldmath.GetFieldData(output,data))
-      {
-        data_oport->send(data);
-      }
-      else
-      {
-        error("Could not retrieve data from field, so no data matrix is generated");
-        return;        
-      }
-    }
-  }
-}
-
-void
- IsInsideField::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  if(!(algo.IsInsideField(input,output,object))) return;
+ 
+  send_output_handle("Field",output,true);
 }
 
 } // End namespace ModelCreation

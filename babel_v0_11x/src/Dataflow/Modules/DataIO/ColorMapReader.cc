@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 #include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
@@ -56,6 +56,7 @@ protected:
 
 public:
   ColorMapReader(GuiContext* ctx);
+  virtual ~ColorMapReader();
 
   virtual void execute();
 };
@@ -64,8 +65,8 @@ DECLARE_MAKER(ColorMapReader)
 
 ColorMapReader::ColorMapReader(GuiContext* ctx)
   : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_filetype_(ctx->subVar("filetype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_filetype_(get_ctx()->subVar("filetype"))
 {
   ColorMapIEPluginManager mgr;
   vector<string> importers;
@@ -94,6 +95,11 @@ ColorMapReader::ColorMapReader(GuiContext* ctx)
 }
 
 
+ColorMapReader::~ColorMapReader()
+{
+}
+
+
 bool
 ColorMapReader::call_importer(const string &filename)
 {
@@ -106,7 +112,7 @@ ColorMapReader::call_importer(const string &filename)
   if (pl)
   {
     handle_ = pl->filereader(this, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return handle_.get_rep();
   }
   return false;

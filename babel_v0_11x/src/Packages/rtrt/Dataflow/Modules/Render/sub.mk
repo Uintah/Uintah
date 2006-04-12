@@ -9,7 +9,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Dataflow/Network Dataflow/Ports \
+	Dataflow/Network \
 	Dataflow/Modules/Visualization Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
         Core/GuiInterface Core/Containers Core/Datatypes \

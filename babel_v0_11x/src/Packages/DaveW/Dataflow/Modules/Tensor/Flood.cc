@@ -13,11 +13,11 @@
 #include <Packages/DaveW/Core/Datatypes/General/SegFld.h>
 #include <Packages/DaveW/Core/Datatypes/General/TensorFieldPort.h>
 #include <Packages/DaveW/Core/Datatypes/General/TensorField.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MeshPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/VectorFieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Geom/GeomGroup.h>
@@ -67,15 +67,15 @@ class Flood : public Module {
     PointWidget *pw;
     CrowdMonitor widget_lock;
 public:
-    Flood(const clString& id);
+    Flood(const clString& get_id());
     virtual ~Flood();
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_Flood(const clString& id)
+extern "C" Module* make_Flood(const clString& get_id())
 {
-    return scinew Flood(id);
+    return scinew Flood(get_id());
 }
 
 static clString module_name("Flood");
@@ -120,11 +120,11 @@ double laplacian(Array1<double> &C) {
     return ((C[4]+C[10]+C[12]+C[16]+C[22]/(4*C[14]))-1);
 }
 
-Flood::Flood(const clString& id)
-: Module(module_name, id, Filter), initialized(0),
-  nsteps("nsteps", id, this), stepsize("stepsize", id, this),
-  seed_x("seed_x", id, this), seed_y("seed_y", id, this), 
-  seed_z("seed_z", id, this), widget_lock("flood widget_lock")
+Flood::Flood(const clString& get_id())
+: Module(module_name, get_id(), Filter), initialized(0),
+  nsteps("nsteps", get_id(), this), stepsize("stepsize", get_id(), this),
+  seed_x("seed_x", get_id(), this), seed_y("seed_y", get_id(), this), 
+  seed_z("seed_z", get_id(), this), widget_lock("flood widget_lock")
 {
     // Create the input ports
     itport=scinew TensorFieldIPort(this, "Tensor Field",

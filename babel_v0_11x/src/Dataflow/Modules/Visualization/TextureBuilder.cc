@@ -43,9 +43,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Volume/VideoCardInfo.h>
 
-#include <Dataflow/Ports/TexturePort.h>
+#include <Dataflow/Network/Ports/TexturePort.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <sci_defs/ogl_defs.h>
 
@@ -91,13 +91,13 @@ DECLARE_MAKER(TextureBuilder)
 TextureBuilder::TextureBuilder(GuiContext* ctx)
   : Module("TextureBuilder", ctx, Source, "Visualization", "SCIRun"),
     tHandle_(new Texture),
-    gui_vminval_(ctx->subVar("vmin")),
-    gui_vmaxval_(ctx->subVar("vmax")),
-    gui_gminval_(ctx->subVar("gmin")),
-    gui_gmaxval_(ctx->subVar("gmax")),
-    gui_fixed_(ctx->subVar("is_fixed")),
-    gui_card_mem_(ctx->subVar("card_mem")),
-    gui_card_mem_auto_(ctx->subVar("card_mem_auto")),
+    gui_vminval_(get_ctx()->subVar("vmin"), 0),
+    gui_vmaxval_(get_ctx()->subVar("vmax"), 1),
+    gui_gminval_(get_ctx()->subVar("gmin"), 0),
+    gui_gmaxval_(get_ctx()->subVar("gmax"), 1),
+    gui_fixed_(get_ctx()->subVar("is_fixed"), 0),
+    gui_card_mem_(get_ctx()->subVar("card_mem"), 16),
+    gui_card_mem_auto_(get_ctx()->subVar("card_mem_auto"), 1),
     card_mem_(video_card_memory_size()),
     vfield_last_generation_(-1), gfield_last_generation_(-1)
 {}

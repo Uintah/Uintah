@@ -63,6 +63,13 @@
 #define TCLCONST
 #endif
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
+
 /*
  * A data structure of the following type is kept for each Bevel
  * widget managed by this file:
@@ -183,7 +190,7 @@ static int		BevelWidgetCmd _ANSI_ARGS_((ClientData clientData,
  *--------------------------------------------------------------
  */
 
-int
+SCISHARE int
 BevelCmd(clientData, interp, argc, argv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */

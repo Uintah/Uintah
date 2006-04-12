@@ -64,6 +64,7 @@
 #include <iostream>
 #include <assert.h>
 
+#include <Core/Algorithms/DataIO/share.h>
 namespace SCIRun {
 
 // ****************************************************************************
@@ -73,7 +74,7 @@ namespace SCIRun {
 typedef float PixelType;
 typedef itk::Image<PixelType, 3> ImageNDType;
 
-class AnalyzeImage
+class SCISHARE AnalyzeImage
 {
 
 public:

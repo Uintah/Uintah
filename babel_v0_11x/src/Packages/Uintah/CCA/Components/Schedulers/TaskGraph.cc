@@ -992,6 +992,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
               continue;
             IntVector from_l;
             IntVector from_h;
+
             if (req->patches_dom == Task::OtherGridDomain && fromNeighbor->getLevel()->getIndex() > 0) {
               // DON'T send extra cells (unless they're on the domain boundary)
               from_l = Max(fromNeighbor->getInteriorLowIndexWithBoundary(basis), l);
@@ -1009,8 +1010,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                 continue;
               }
             }
-            dbg << d_myworld->myrank() << "        Neighbor: patch " << fromNeighbor->getID() << " low= " << from_l 
-                << ", high=" << from_h << '\n';
 
 	    for(int m=0;m<matls->size();m++){
 	      int matl = matls->get(m);
@@ -1056,9 +1055,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		  DetailedTask* prevReqTask = *reqTaskIter;
 		  if(prevReqTask->task == task->task){
 		    if(!task->task->getHasSubScheduler()) {
-                      static ProgressiveWarning warn("WARNING - task that requires with Ghost cells *and* modifies may not be correct",10);
+                      ostringstream message;
+                      message << " WARNING - task ("<< task->getName() << ") requires with Ghost cells *and* modifies and may not be correct" << endl;
+                      static ProgressiveWarning warn(message.str(),10);
                       warn.invoke();
-                      dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
+                      if (dbg.active())
+                        dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
                       // cout <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
                       //      << *creator << " mod " << *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << endl;
                     }

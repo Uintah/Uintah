@@ -58,7 +58,7 @@ DifferenceGeometryPiece& DifferenceGeometryPiece::operator=(const DifferenceGeom
 
 void DifferenceGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP difference_ps = ps->appendChild("difference",true,4);
+  ProblemSpecP difference_ps = ps->appendChild("difference");
 
   left->outputProblemSpec(difference_ps);
   right->outputProblemSpec(difference_ps);

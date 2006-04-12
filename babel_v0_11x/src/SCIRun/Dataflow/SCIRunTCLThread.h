@@ -32,6 +32,7 @@
 
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
+#include <tcl.h>
 
 namespace SCIRun {
 
@@ -43,11 +44,14 @@ class SCIRunTCLThread : public Runnable {
 public:
     SCIRunTCLThread(Network *net);
     virtual void run();
-    void startTCL();
+    int startTCL();
     void tclWait();
     inline TCLInterface* getTclInterface() { return gui;};
 
 private:
+    static int wait(Tcl_Interp *interp);
+    static SCIRunTCLThread *init_ptr_;
+
     TCLInterface* gui;
     Network* net;
     Semaphore start;

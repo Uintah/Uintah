@@ -42,9 +42,9 @@
 
 #include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
@@ -105,22 +105,22 @@ Probe::Probe(GuiContext* ctx)
   : Module("Probe", ctx, Filter, "FieldsCreate", "SCIRun"),
     widget_lock_("Probe widget lock"),
     last_input_generation_(0),
-    gui_frame_(ctx->subVar("main_frame")),
-    gui_locx_(ctx->subVar("locx")),
-    gui_locy_(ctx->subVar("locy")),
-    gui_locz_(ctx->subVar("locz")),
-    gui_value_(ctx->subVar("value")),
-    gui_node_(ctx->subVar("node")),
-    gui_edge_(ctx->subVar("edge")),
-    gui_face_(ctx->subVar("face")),
-    gui_cell_(ctx->subVar("cell")),
-    gui_show_value_(ctx->subVar("show-value")),
-    gui_show_node_(ctx->subVar("show-node")),
-    gui_show_edge_(ctx->subVar("show-edge")),
-    gui_show_face_(ctx->subVar("show-face")),
-    gui_show_cell_(ctx->subVar("show-cell")),
-    gui_moveto_(ctx->subVar("moveto", false)),
-    gui_probe_scale_(ctx->subVar("probe_scale")),
+    gui_frame_(get_ctx()->subVar("main_frame"), ""),
+    gui_locx_(get_ctx()->subVar("locx"), 0.0),
+    gui_locy_(get_ctx()->subVar("locy"), 0.0),
+    gui_locz_(get_ctx()->subVar("locz"), 0.0),
+    gui_value_(get_ctx()->subVar("value"), ""),
+    gui_node_(get_ctx()->subVar("node"), ""),
+    gui_edge_(get_ctx()->subVar("edge"), ""),
+    gui_face_(get_ctx()->subVar("face"), ""),
+    gui_cell_(get_ctx()->subVar("cell"), ""),
+    gui_show_value_(get_ctx()->subVar("show-value"), 1),
+    gui_show_node_(get_ctx()->subVar("show-node"), 1),
+    gui_show_edge_(get_ctx()->subVar("show-edge"), 0),
+    gui_show_face_(get_ctx()->subVar("show-face"), 0),
+    gui_show_cell_(get_ctx()->subVar("show-cell"), 1),
+    gui_moveto_(get_ctx()->subVar("moveto", false), ""),
+    gui_probe_scale_(get_ctx()->subVar("probe_scale"), 5.0),
     widgetid_(0)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);

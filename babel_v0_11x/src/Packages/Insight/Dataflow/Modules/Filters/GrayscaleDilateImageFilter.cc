@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkGrayscaleDilateImageFilter.h>
@@ -49,7 +48,7 @@ namespace Insight
 
 using namespace SCIRun;
 
-class InsightSHARE GrayscaleDilateImageFilter : public Module
+class GrayscaleDilateImageFilter : public Module
 {
 public:
 
@@ -180,7 +179,7 @@ DECLARE_MAKER(GrayscaleDilateImageFilter)
 
 GrayscaleDilateImageFilter::GrayscaleDilateImageFilter(GuiContext* ctx)
   : Module("GrayscaleDilateImageFilter", ctx, Source, "Filters", "Insight"),
-    gui_radius_(ctx->subVar("radius")),
+    gui_radius_(get_ctx()->subVar("radius")),
      last_InputImage_(-1)
 {
   filter_ = 0;
@@ -188,9 +187,6 @@ GrayscaleDilateImageFilter::GrayscaleDilateImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &GrayscaleDilateImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &GrayscaleDilateImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
-
 }
 
 GrayscaleDilateImageFilter::~GrayscaleDilateImageFilter()

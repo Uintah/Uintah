@@ -49,9 +49,9 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
@@ -121,14 +121,15 @@ FaceCuttingPlane::FaceCuttingPlane(GuiContext* ctx) :
   control_lock_("FaceCuttingPlane lock"),
   control_widget_(0),
   control_id_(-1),
-  drawX_(ctx->subVar("drawX")),
-  drawY_(ctx->subVar("drawY")),
-  drawZ_(ctx->subVar("drawZ")),
-  need_find(ctx->subVar("need_find")), 
-  where(ctx->subVar("where")),
-  face_name(ctx->subVar("face_name")), 
-  line_size(ctx->subVar("line_size")),
-  trans_(0)
+  drawX_(get_ctx()->subVar("drawX")),
+  drawY_(get_ctx()->subVar("drawY")),
+  drawZ_(get_ctx()->subVar("drawZ")),
+  need_find(get_ctx()->subVar("need_find")), 
+  where(get_ctx()->subVar("where")),
+  face_name(get_ctx()->subVar("face_name")), 
+  line_size(get_ctx()->subVar("line_size")),
+  trans_(0),
+  grid_id(0)
 {
     need_find.set(1);
     
@@ -209,10 +210,10 @@ void FaceCuttingPlane::tcl_command(GuiArgs& args, void* userdata)
 
 void FaceCuttingPlane::widget_moved(bool last, BaseWidget*)
 {
-  if( control_widget_ && trans_ && last && !abort_flag)
+  if( control_widget_ && trans_ && last && !abort_flag_)
   {
     control_ = trans_->unproject(control_widget_->ReferencePoint());
-    abort_flag=1;
+    abort_flag_=1;
     want_to_execute();
   }
 }
@@ -312,17 +313,17 @@ void FaceCuttingPlane::execute(void)
     if(need_find.get() == 2)
       need_find.set(1); //or need_find.set(3);
     face_name.set(string("X faces"));
-    gui->execute(id + " update_control");
+    get_gui()->execute(get_id() + " update_control");
   } else if(td == TypeDescription::SFCYVariable){
       if(need_find.get() == 3)
 	need_find.set(1); //or need_find.set(2);
       face_name.set(string("Y faces"));
-      gui->execute(id + " update_control");
+      get_gui()->execute(get_id() + " update_control");
   } else {
     if(need_find.get() == 1)
 	need_find.set(2); //or need_find.set(3);
     face_name.set(string("Z faces"));
-    gui->execute(id + " update_control");
+    get_gui()->execute(get_id() + " update_control");
   }
   int u_num, v_num;
   Point corner(b.min());

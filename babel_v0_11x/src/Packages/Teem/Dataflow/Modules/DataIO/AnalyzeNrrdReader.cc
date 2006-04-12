@@ -51,7 +51,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <sci_defs/insight_defs.h> 
@@ -124,11 +124,11 @@ DECLARE_MAKER(AnalyzeNrrdReader)
 //
 AnalyzeNrrdReader::AnalyzeNrrdReader(GuiContext* ctx)
   : Module("AnalyzeNrrdReader", ctx, Source, "DataIO", "Teem"),
-    have_insight_(ctx->subVar("have-insight", false)),
-    file_(ctx->subVar("file")),
-    file_del_(ctx->subVar("file-del")),
-    messages_(ctx->subVar("messages")),
-    num_files_(ctx->subVar("num-files"))
+    have_insight_(get_ctx()->subVar("have-insight", false)),
+    file_(get_ctx()->subVar("file"), ""),
+    file_del_(get_ctx()->subVar("file-del"), ""),
+    messages_(get_ctx()->subVar("messages"), ""),
+    num_files_(get_ctx()->subVar("num-files"), 0)
 {
 #ifdef HAVE_INSIGHT
   have_insight_.set(1);
@@ -164,7 +164,7 @@ void AnalyzeNrrdReader::execute(){
 
 #ifdef HAVE_INSIGHT
 
-  gui->execute(id + " sync_filenames");
+  get_gui()->execute(get_id() + " sync_filenames");
 
   // If no Analyze files were specified via the UI, print error and return
   if( all_files_.size() == 0 ) 
@@ -241,7 +241,7 @@ AnalyzeNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
       ostringstream str;
       str << "filenames" << all_files_.size()-1;
-      filenames_.insert(filenames_.end(), new GuiString(ctx->subVar(str.str())));
+      filenames_.insert(filenames_.end(), new GuiString(get_ctx()->subVar(str.str())));
     }
 
 #endif
@@ -364,21 +364,23 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
-               3, image.get_size(0), 
-               image.get_size(1), image.get_size(2)) ) 
-      {
-        error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
-        err = biffGetDone(NRRD);
-        // There was an error. "err" is a char* error message, pass it
-        // to whatever kind of error handler you are using.  In case
-        // you're picky about memory leaks, its up to you to:
-        free(err);
-      }
-  
-      nrrdAxisInfoSet( nrrd, nrrdAxisInfoCenter,
-	    	       nrrdCenterNode, nrrdCenterNode, 
-		       nrrdCenterNode, nrrdCenterNode );
+      size_t size[3] = {image.get_size(0), image.get_size(1),
+			image.get_size(2)};
+      if( nrrdWrap_nva(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
+		       3, size )) 
+	{
+	  error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
+	  err = biffGetDone(NRRD);
+	  // There was an error. "err" is a char* error message, pass it
+	  // to whatever kind of error handler you are using.  In case
+	  // you're picky about memory leaks, its up to you to:
+	  free(err);
+	}
+      
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva( nrrd, nrrdAxisInfoCenter, centers);
 
       //nrrd->axis[0].label = "Unknown:Scalar";
       nrrd->axis[0].label = airStrdup("x");
@@ -395,8 +397,9 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
-               2, image.get_size(0), image.get_size(1)) ) 
+      size_t size[2] = {image.get_size(0), image.get_size(1)};
+      if( nrrdWrap_nva(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
+		       2, size ) )
       {
         error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
         err = biffGetDone(NRRD);
@@ -406,9 +409,10 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
         free(err);
       }
   
-      nrrdAxisInfoSet( nrrd, nrrdAxisInfoCenter,
-	    	       nrrdCenterNode, nrrdCenterNode, 
-		       nrrdCenterNode, nrrdCenterNode );
+      unsigned int centers[NRRD_DIM_MAX];
+      centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+      centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+      nrrdAxisInfoSet_nva( nrrd, nrrdAxisInfoCenter, centers);
 
       //nrrd->axis[0].label = "Unknown:Scalar";
       nrrd->axis[0].label = airStrdup("x");
@@ -460,12 +464,12 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
 
   // Join all nrrds together into one 4D nrrd object
   NrrdData *sciNrrd = scinew NrrdData();
-  sciNrrd->nrrd = nrrdNew();
+  sciNrrd->nrrd_ = nrrdNew();
   
   bool incr = true;
   if (num_nrrds == 1) { incr = false; }
   
-  if( nrrdJoin(sciNrrd->nrrd, &arr[0], num_nrrds, 0, incr) ) 
+  if( nrrdJoin(sciNrrd->nrrd_, &arr[0], num_nrrds, 0, incr) ) 
   {
     char *err = biffGetDone(NRRD);
     error( string("(AnalyzeNrrdReader::join_nrrds) Join Error: ") +  err );
@@ -473,9 +477,11 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
     return 0;
   }
 
-  nrrdAxisInfoSet(sciNrrd->nrrd, nrrdAxisInfoCenter,
-			nrrdCenterNode, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+  centers[4] = nrrdCenterNode; centers[5] = nrrdCenterNode;
+  nrrdAxisInfoSet_nva(sciNrrd->nrrd_, nrrdAxisInfoCenter, centers);
 
   string new_label("");
   for( int i = 0; i < num_nrrds; i++ )
@@ -489,21 +495,21 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
       new_label += string(",") + string(arr[i]->axis[0].label);
     }
   }
-  switch (sciNrrd->nrrd->dim) {
+  switch (sciNrrd->nrrd_->dim) {
   case 4:
     if (incr) {
-      sciNrrd->nrrd->axis[0].label = airStrdup( new_label.c_str() );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[3].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
-      sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
+      sciNrrd->nrrd_->axis[0].label = airStrdup( new_label.c_str() );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[3].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[3].spacing = arr[0]->axis[2].spacing; 
 
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 3, nrrdCenterNode);
     } else {
       return 0;
     }
@@ -511,35 +517,35 @@ NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
     break;
   case 3:
     if (incr) {
-      sciNrrd->nrrd->axis[0].label = airStrdup( new_label.c_str() );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( new_label.c_str() );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[1].spacing;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[2].label = airStrdup( "z" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
-      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[2].label = airStrdup( "z" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[2].spacing = arr[0]->axis[2].spacing;
     }
     
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 2, nrrdCenterNode);
     break;
   case 2:
     if (incr) {
       return 0;
     } else {
-      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
-      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
-      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
-      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd_->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd_->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd_->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd_->axis[1].spacing = arr[0]->axis[1].spacing;
 
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd_, 1, nrrdCenterNode);
     }
     break;
   default:

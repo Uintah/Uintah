@@ -26,13 +26,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-proc show_fname_trace { args } {
-    puts $args
-    return 0
-}
-
-trace variable SCIRun_DataIO_FieldReader_0-filename u show_fname_trace
-
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/defaults.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Module.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
@@ -569,7 +562,7 @@ proc createModulesMenu { menu subnet } {
 proc createSubnetMenu { { menu "" } { subnet 0 } } {
     global SubnetScripts
     loadSubnetScriptsFromDisk
-    generateSubnetScriptsFromNetwork
+    #generateSubnetScriptsFromNetwork
 
     if { [winfo exists $menu ] } {
 	$menu.subnet delete 0 end
@@ -657,7 +650,7 @@ proc findMovedModulePath { packvar catvar modvar } {
 }	        
 
 
-proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { absolute 0 } } {
+proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { absolute 0 } { modid "" } } {
     # Look up the real category for a module.  This allows networks to
     # be read in if the modules change categories.
     findMovedModulePath package category module
@@ -667,9 +660,12 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { abso
     set unknown_body [info body unknown]
     proc unknown { args } {}
     
-    # Tell the C++ network to create the requested module
-    set modid [netedit addmodule "$package" "$category" "$module"]
-
+    # default argument is empty, but if C already created the module, 
+    # it will pass the id in.
+    if { $modid == "" } {
+	# Tell the C++ network to create the requested module
+	set modid [netedit addmodule "$package" "$category" "$module"]
+    }
     # Reset the unknown proc to default behavior
     proc unknown { args } $unknown_body
 
@@ -736,11 +732,32 @@ proc addModule2 {package category module modid} {
     return $modid
 }
 
+proc append_srn_filename {name} {
+
+    set ext_ind [expr [string length $name] - 4]
+    set ext [string range $name $ext_ind end]
+    
+    if { $ext == ".net" } {
+	set name [string range $name 0 $ext_ind]srn
+	createSciDialog -warning -title "Save Warning" -button1 "Ok"\
+	    -message "SCIRun no longer saves .net files.\nSaving $name instead."
+	set ext ".srn"
+    } 
+    
+    if { $ext != ".srn" } {
+	set name $name.srn
+    } 
+    return $name
+}
+
 
 proc popupSaveMenu {} {
     global netedit_savefile NetworkChanged
     if { $netedit_savefile != "" } {
 	# We know the name of the savefile, dont ask for name, just save it
+	# make sure we only save .srn files
+	set netedit_savefile [append_srn_filename $netedit_savefile]
+	wm title . "SCIRun ([lindex [file split $netedit_savefile] end])"
 	writeNetwork $netedit_savefile
 	set NetworkChanged 0
     } else { ;# Otherwise, ask the user for the name to save as
@@ -751,9 +768,6 @@ proc popupSaveMenu {} {
 proc popupSaveAsMenu {} {
     set types {
 	{{SCIRun Net} {.srn} }
-	{{Uintah Script} {.uin} }
-	{{Dataflow Script} {.sr} }
-	{{Other} { * } }
     } 
 
     global netedit_savefile NetworkChanged
@@ -772,10 +786,11 @@ proc popupSaveAsMenu {} {
     set netedit_savefile \
 	[tk_getSaveFile -defaultextension {.srn} -filetypes $types -initialdir $initialdir]
     if { $netedit_savefile != "" } {
+	# make sure we only save .srn files
+	set netedit_savefile [append_srn_filename $netedit_savefile]
+	wm title . "SCIRun ([lindex [file split $netedit_savefile] end])"
 	writeNetwork $netedit_savefile
 	set NetworkChanged 0
-	# Cut off the path from the net name and put in on the title bar:
-	wm title . "SCIRun ([lindex [file split "$netedit_savefile"] end])"
     }
 }
 
@@ -787,11 +802,12 @@ proc popupInsertMenu { {subnet 0} } {
     set types {
 	{{SCIRun Net} {.srn} }
 	{{old SCIRun Net} {.net} }
-	{{Uintah Script} {.uin} }
-	{{Dataflow Script} {.sr} }
-	{{Other} { * } }
     } 
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
+    if { [check_filename $netedit_loadnet] == "invalid" } {
+	set netedit_loadnet ""
+	return
+    }
     if { $netedit_loadnet == "" || ![file exists $netedit_loadnet]} { 
 	return
     }
@@ -912,6 +928,23 @@ proc compute_bbox { canvas { items "" } { cheat 0 } } {
     return [list $minx $miny $maxx $maxy]
 }
 
+
+proc check_filename {name} {
+
+    set ext_ind [expr [string length $name] - 4]
+    set ext [string range $name $ext_ind end]
+    
+    if { $ext != ".net" && $ext != ".srn"} {
+	set name [string range $name 0 $ext_ind]srn
+	set msg "Valid net files end with .srn (or .net prior to v1.25.2)"
+	createSciDialog -warning -title "Save Warning" -button1 "Ok"\
+	    -message $msg
+	return "invalid"
+    } 
+    return "valid"
+}
+
+
 proc popupLoadMenu {} {
     global NetworkChanged
     if $NetworkChanged {
@@ -924,19 +957,21 @@ proc popupLoadMenu {} {
     set types {
 	{{SCIRun Net} {.srn} }
 	{{old SCIRun Net} {.net} }
-	{{Uintah Script} {.uin} }
-	{{Dataflow Script} {.sr} }
-	{{Other} { * } }
     } 
     
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
+    if { [check_filename $netedit_loadnet] == "invalid" } {
+	set netedit_loadnet ""
+	return
+    }
+
     if { $netedit_loadnet == ""} return
     #dont ask user before clearing canvas
     ClearCanvas 0
-    if {[string match *.net $netedit_loadnet]} {
-	loadnet $netedit_loadnet
+    if {[string match *.srn $netedit_loadnet]} {
+	after 500 "uplevel \#0 netedit load_srn $netedit_loadnet"
     } else {
-	uplevel \#0 netedit load_srn $netedit_loadnet
+	loadnet $netedit_loadnet 
     }
 }
 
@@ -968,7 +1003,7 @@ proc ClearCanvas { { confirm 1 } { subnet 0 } } {
 	setGlobal netedit_savefile ""
 	setGlobal CurrentlySelectedModules ""
 	setGlobal NetworkChanged 0
-    }   
+    }
 }
 
 proc NiceQuit {} {
@@ -1843,7 +1878,7 @@ proc listFindAndRemove { name elem } {
 
 proc initVarStates { var save substitute } {
     set var [string trimleft $var :]
-    if { [string first msgStream $var] != -1 } return
+    if { [string first msg_stream $var] != -1 } return
     global ModuleSavedVars ModleSubstitutedVars
     set ids [split $var -]
     if { [llength $ids] < 2 } return
@@ -1865,7 +1900,7 @@ proc setVarStates { var save substitute } {
 
     global ModuleSavedVars ModuleSubstitutedVars
     set var [string trimleft $var :]
-    if { [string first msgStream $var] != -1 } return
+    if { [string first msg_stream $var] != -1 } return
     set ids [split $var -]
     set module [lindex $ids 0]
     set varname [join [lrange $ids 1 end] -]
@@ -1995,7 +2030,6 @@ proc writeNetwork { filename { subnet 0 } } {
     
     #maybeWriteTCLStyleCopyright $out
     maybeWrite_init_DATADIR_and_DATASET $out
-    writeSubnets $out $subnet
     genSubnetScript $subnet ""
 
     netedit write-net-doc

@@ -52,7 +52,7 @@
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Object</name>
+        <name>ObjectField</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
@@ -60,10 +60,6 @@
       <port>
         <name>DistanceField</name>
         <datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
-        <name>DistanceMap</name>
-        <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>

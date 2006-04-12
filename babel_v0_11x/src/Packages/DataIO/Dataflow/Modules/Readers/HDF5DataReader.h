@@ -40,9 +40,9 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 
@@ -101,49 +101,49 @@ protected:
 
   int increment(int which, int lower, int upper);
 
-  bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
+  bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2);
 
 protected:
-  GuiInt         power_app_;
-  GuiString      power_app_cmd_;
+  GuiInt         gui_power_app_;
+  GuiString      gui_power_app_cmd_;
 
-  GuiFilename filename_;
-  GuiString datasets_;
-  GuiString dumpname_;
-  GuiString ports_;
+  GuiFilename    gui_filename_;
+  GuiString      gui_datasets_;
+  GuiString      gui_dumpname_;
+  GuiString      gui_ports_;
 
-  GuiInt nDims_;
+  GuiInt         gui_ndims_;
 
-  GuiInt mergeData_;
-  GuiInt assumeSVT_;
-  GuiInt animate_;
+  GuiInt         gui_merge_data_;
+  GuiInt         gui_assume_svt_;
+  GuiInt         gui_animate_;
 
-  GuiString      animate_frame_;
-  GuiString	 animate_tab_;
-  GuiString	 basic_tab_;
-  GuiString	 extended_tab_;
-  GuiString	 playmode_tab_;
+  GuiString      gui_animate_frame_;
+  GuiString	 gui_animate_tab_;
+  GuiString	 gui_basic_tab_;
+  GuiString	 gui_extended_tab_;
+  GuiString	 gui_playmode_tab_;
 
-  GuiDouble      selectable_min_;
-  GuiDouble      selectable_max_;
-  GuiInt         selectable_inc_;
-  GuiInt         range_min_;
-  GuiInt         range_max_;
-  GuiString      playmode_;
-  GuiInt         current_;
-  GuiString      execmode_;
-  GuiInt         delay_;
-  GuiInt         inc_amount_;
+  GuiDouble      gui_selectable_min_;
+  GuiDouble      gui_selectable_max_;
+  GuiInt         gui_selectable_inc_;
+  GuiInt         gui_range_min_;
+  GuiInt         gui_range_max_;
+  GuiString      gui_playmode_;
+  GuiInt         gui_current_;
+  GuiString      gui_execmode_;
+  GuiInt         gui_delay_;
+  GuiInt         gui_inc_amount_;
   //update_type_ must be declared after selectable_max_ which is
   //traced in the tcl code. If update_type_ is set to Auto having it
   //last will prevent the net from executing when it is instantiated.
-  GuiString      update_type_;
+  GuiString      gui_update_type_;
   int            inc_;
 
-  vector< GuiInt* > gDims_;
-  vector< GuiInt* > gStarts_;
-  vector< GuiInt* > gCounts_;
-  vector< GuiInt* > gStrides_;
+  vector< GuiInt* > gui_dims_;
+  vector< GuiInt* > gui_starts_;
+  vector< GuiInt* > gui_counts_;
+  vector< GuiInt* > gui_strides_;
 
   string old_filename_;
   string old_datasets_;
@@ -153,22 +153,16 @@ protected:
   string sel_datasets_;
   time_t sel_filemodification_;
 
-  int mergedata_;
-  int assumesvt_;
-
   int dims_[MAX_DIMS];
   int starts_[MAX_DIMS];
   int counts_[MAX_DIMS];
   int strides_[MAX_DIMS];
 
-  NrrdDataHandle nHandles_[MAX_PORTS];
-  MatrixHandle mHandle_;
-
-  bool update_;
-  int which_;
+  NrrdDataHandle nrrd_output_handles_[MAX_PORTS];
+  MatrixHandle matrix_output_handle_;
 
   bool loop_;
-  bool error_;
+  bool execute_error_;
 };
 
 

@@ -32,22 +32,14 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 
     constructor {config} { 
         set name RescaleColorMap 
-        set_defaults 
     } 
   
     method set_defaults {} { 
-	global $this-main_frame
-	set $this-main_frame ""
-
-	global $this-isFixed
-	global $this-min
-	global $this-max
-	global $this-makeSymmetric
-
-	set $this-isFixed 0
-	set $this-min 0
-	set $this-max 1
-	set $this-makeSymmetric 0
+	setGlobal $this-main_frame ""
+	setGlobal $this-isFixed 0
+	setGlobal $this-min 0
+	setGlobal $this-max 1
+	setGlobal $this-makeSymmetric 0
     }   
 
     method ui {} { 

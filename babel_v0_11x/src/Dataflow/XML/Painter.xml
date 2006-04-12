@@ -48,16 +48,7 @@ a 2D OpenGL window.</p>
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="yes">
-      <!-- one of (device port file) -->
-      <port>
-	<name>Filter Data</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::Bundle</datatype>
-      </port>
+    <inputs lastportdynamic="no">
 
       <port>
 	<name>Paint Data</name>
@@ -67,6 +58,16 @@ a 2D OpenGL window.</p>
 	</description>
 	<datatype>SCIRun::Bundle</datatype>
       </port>
+
+      <port>
+	<name>Filter Data</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Bundle</datatype>
+      </port>
+
     </inputs>
     <outputs>
       <port>

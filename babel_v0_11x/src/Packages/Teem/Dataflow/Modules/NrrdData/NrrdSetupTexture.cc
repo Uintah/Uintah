@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geom/ShaderProgramARB.h>
@@ -68,13 +68,13 @@ DECLARE_MAKER(NrrdSetupTexture)
 
 NrrdSetupTexture::NrrdSetupTexture(SCIRun::GuiContext *ctx) : 
   Module("NrrdSetupTexture", ctx, Filter, "NrrdData", "Teem"),
-  minf_(ctx->subVar("minf")),
-  maxf_(ctx->subVar("maxf")),
-  useinputmin_(ctx->subVar("useinputmin")),
-  useinputmax_(ctx->subVar("useinputmax")),
-  realmin_(ctx->subVar("realmin")),
-  realmax_(ctx->subVar("realmax")),
-  valuesonly_(ctx->subVar("valuesonly")),
+  minf_(get_ctx()->subVar("minf")),
+  maxf_(get_ctx()->subVar("maxf")),
+  useinputmin_(get_ctx()->subVar("useinputmin")),
+  useinputmax_(get_ctx()->subVar("useinputmax")),
+  realmin_(get_ctx()->subVar("realmin")),
+  realmax_(get_ctx()->subVar("realmax")),
+  valuesonly_(get_ctx()->subVar("valuesonly")),
   last_minf_(0),
   last_maxf_(0),
   last_valuesonly_(-1),
@@ -228,7 +228,7 @@ NrrdSetupTexture::execute()
     return;
   }
 
-  Nrrd *nin = nin_handle->nrrd;
+  Nrrd *nin = nin_handle->nrrd_;
 
   if (!(nin->dim == 3 || nin->dim == 4))
   {
@@ -295,9 +295,9 @@ NrrdSetupTexture::execute()
   last_maxf_ = maxf;
   last_valuesonly_ = valuesonly;
 
-  int nvsize[NRRD_DIM_MAX];
-  int gmsize[NRRD_DIM_MAX];
-  int dim;
+  size_t nvsize[NRRD_DIM_MAX];
+  size_t gmsize[NRRD_DIM_MAX];
+  unsigned int dim;
 
   // Create a local array of axis sizes, so we can allocate the output Nrrd
   for (dim=0; dim < nin->dim; dim++)
@@ -312,7 +312,7 @@ NrrdSetupTexture::execute()
 
   if (compute_justvalue)
   {
-    nvout = last_nvnrrd_->nrrd;
+    nvout = last_nvnrrd_->nrrd_;
   }
   else
   {

@@ -34,12 +34,12 @@ MTSShear::~MTSShear()
 
 void MTSShear::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model",true,4);
+  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model");
   shear_ps->setAttribute("type","mts_shear");
 
-  shear_ps->appendElement("mu_0",d_mu0,false,5);
-  shear_ps->appendElement("D",d_D,false,5);
-  shear_ps->appendElement("T_0",d_T0,false,5);
+  shear_ps->appendElement("mu_0",d_mu0);
+  shear_ps->appendElement("D",d_D);
+  shear_ps->appendElement("T_0",d_T0);
 }
 
 	 

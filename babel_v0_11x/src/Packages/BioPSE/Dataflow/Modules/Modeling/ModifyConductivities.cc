@@ -42,8 +42,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geometry/Tensor.h>
@@ -125,17 +125,17 @@ ModifyConductivities::resize_gui(int num)
   for (i = gui_names_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
   {
     const string num = to_string(i);
-    gui_names_.push_back(new GuiString(ctx->subVar("names-" + num)));
-    gui_sizes_.push_back(new GuiDouble(ctx->subVar("sizes-" + num)));
-    gui_m00_.push_back(new GuiDouble(ctx->subVar("m00-" + num)));
-    gui_m01_.push_back(new GuiDouble(ctx->subVar("m01-" + num)));
-    gui_m02_.push_back(new GuiDouble(ctx->subVar("m02-" + num)));
-    gui_m10_.push_back(new GuiDouble(ctx->subVar("m10-" + num)));
-    gui_m11_.push_back(new GuiDouble(ctx->subVar("m11-" + num)));
-    gui_m12_.push_back(new GuiDouble(ctx->subVar("m12-" + num)));
-    gui_m20_.push_back(new GuiDouble(ctx->subVar("m20-" + num)));
-    gui_m21_.push_back(new GuiDouble(ctx->subVar("m21-" + num)));
-    gui_m22_.push_back(new GuiDouble(ctx->subVar("m22-" + num)));
+    gui_names_.push_back(new GuiString(get_ctx()->subVar("names-" + num)));
+    gui_sizes_.push_back(new GuiDouble(get_ctx()->subVar("sizes-" + num)));
+    gui_m00_.push_back(new GuiDouble(get_ctx()->subVar("m00-" + num)));
+    gui_m01_.push_back(new GuiDouble(get_ctx()->subVar("m01-" + num)));
+    gui_m02_.push_back(new GuiDouble(get_ctx()->subVar("m02-" + num)));
+    gui_m10_.push_back(new GuiDouble(get_ctx()->subVar("m10-" + num)));
+    gui_m11_.push_back(new GuiDouble(get_ctx()->subVar("m11-" + num)));
+    gui_m12_.push_back(new GuiDouble(get_ctx()->subVar("m12-" + num)));
+    gui_m20_.push_back(new GuiDouble(get_ctx()->subVar("m20-" + num)));
+    gui_m21_.push_back(new GuiDouble(get_ctx()->subVar("m21-" + num)));
+    gui_m22_.push_back(new GuiDouble(get_ctx()->subVar("m22-" + num)));
   }
 }
 
@@ -162,7 +162,7 @@ ModifyConductivities::update_to_gui(vector<pair<string, Tensor> > &tensors)
     gui_m21_[i]->set(tensors[i].second.mat_[2][1]);
     gui_m22_[i]->set(tensors[i].second.mat_[2][2]);
   }
-  gui->execute(id + " create_entries");
+  get_gui()->execute(get_id() + " create_entries");
 }
 
 
@@ -455,9 +455,9 @@ ModifyConductivities::tcl_command(GuiArgs &args, void *extra)
   if (args.count() == 2 && args[1] == "reset_gui")
   {
     reset_gui_ = true;
-    if (!abort_flag)
+    if (!abort_flag_)
     {
-      abort_flag = 1;
+      abort_flag_ = 1;
       want_to_execute();
     }
   }      

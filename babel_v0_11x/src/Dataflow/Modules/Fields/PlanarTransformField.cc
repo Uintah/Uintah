@@ -41,8 +41,8 @@
  */
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -83,9 +83,9 @@ DECLARE_MAKER(PlanarTransformField)
 
 PlanarTransformField::PlanarTransformField(GuiContext* context)
   : Module("PlanarTransformField", context, Filter, "FieldsGeometry", "SCIRun"),
-    Axis_(context->subVar("axis")),
-    TransX_(context->subVar("trans_x")),
-    TransY_(context->subVar("trans_y")),
+    Axis_(context->subVar("axis"), 2),
+    TransX_(context->subVar("trans_x"), 0),
+    TransY_(context->subVar("trans_y"), 0),
     axis_(2),
     tx_(0),
     ty_(0),

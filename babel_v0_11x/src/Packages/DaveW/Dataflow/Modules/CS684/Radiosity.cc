@@ -17,8 +17,8 @@
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/VoidStarPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/VoidStarPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/Stack.h>
@@ -73,7 +73,7 @@ class Radiosity : public Module {
     double drawRad;
     double CSCALE;
 public:
-    Radiosity(const clString& id);
+    Radiosity(const clString& get_id());
     virtual ~Radiosity();
     virtual void execute();
     void removeGeom();
@@ -98,18 +98,18 @@ public:
     virtual void geom_pick(GeomPick*, void *);
 };
 
-extern "C" Module* make_Radiosity(const clString& id)
+extern "C" Module* make_Radiosity(const clString& get_id())
 {
-    return scinew Radiosity(id);
+    return scinew Radiosity(get_id());
 }
 
 static clString module_name("Radiosity");
 
-Radiosity::Radiosity(const clString& id)
-: Module("Radiosity", id, Source), rtGen(0), ns("ns", id, this),
-  nl("nl", id, this), ni("ni", id, this), raderr("raderr", id, this),
-  cscale("cscale", id, this), nrmls("nrmls", id, this), lnx("lnx", id, this),
-  vissamp("vissamp", id, this), ffsamp("ffsamp", id, this)
+Radiosity::Radiosity(const clString& get_id())
+: Module("Radiosity", get_id(), Source), rtGen(0), ns("ns", get_id(), this),
+  nl("nl", get_id(), this), ni("ni", get_id(), this), raderr("raderr", get_id(), this),
+  cscale("cscale", get_id(), this), nrmls("nrmls", get_id(), this), lnx("lnx", get_id(), this),
+  vissamp("vissamp", get_id(), this), ffsamp("ffsamp", get_id(), this)
 {
     // Create the input port
     iRT = scinew VoidStarIPort(this, "DRaytracer", VoidStarIPort::Atomic);

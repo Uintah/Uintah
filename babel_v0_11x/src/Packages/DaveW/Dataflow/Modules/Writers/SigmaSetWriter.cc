@@ -27,18 +27,18 @@ class SigmaSetWriter : public Module {
     GuiString filename;
     GuiString filetype;
 public:
-    SigmaSetWriter(const clString& id);
+    SigmaSetWriter(const clString& get_id());
     virtual ~SigmaSetWriter();
     virtual void execute();
 };
 
-extern "C" Module* make_SigmaSetWriter(const clString& id) {
-  return new SigmaSetWriter(id);
+extern "C" Module* make_SigmaSetWriter(const clString& get_id()) {
+  return new SigmaSetWriter(get_id());
 }
 
-SigmaSetWriter::SigmaSetWriter(const clString& id)
-: Module("SigmaSetWriter", id, Source), filename("filename", id, this),
-  filetype("filetype", id, this)
+SigmaSetWriter::SigmaSetWriter(const clString& get_id())
+: Module("SigmaSetWriter", get_id(), Source), filename("filename", get_id(), this),
+  filetype("filetype", get_id(), this)
 {
     // Create the output data handle and port
     inport=scinew SigmaSetIPort(this, "Input Data", SigmaSetIPort::Atomic);

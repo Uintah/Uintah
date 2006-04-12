@@ -26,7 +26,7 @@
 #include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geom/GeomLine.h>
@@ -109,6 +109,7 @@ protected:
   GuiString level6_node_color;
   GuiInt plane_on; // the selection plane
   GuiInt node_select_on; // the nodes
+  GuiInt show_boundary_values;
   GuiInt use_default_radius;
   GuiDouble default_radius;
   GuiDouble radius;
@@ -140,30 +141,31 @@ using namespace Uintah;
 
 GridVisualizer::GridVisualizer(GuiContext* ctx):
   VariablePlotter("GridVisualizer", ctx),
-  level1_grid_color(ctx->subVar("level1_grid_color")),
-  level2_grid_color(ctx->subVar("level2_grid_color")),
-  level3_grid_color(ctx->subVar("level3_grid_color")),
-  level4_grid_color(ctx->subVar("level4_grid_color")),
-  level5_grid_color(ctx->subVar("level5_grid_color")),
-  level6_grid_color(ctx->subVar("level6_grid_color")),
-  level1_node_color(ctx->subVar("level1_node_color")),
-  level2_node_color(ctx->subVar("level2_node_color")),
-  level3_node_color(ctx->subVar("level3_node_color")),
-  level4_node_color(ctx->subVar("level4_node_color")),
-  level5_node_color(ctx->subVar("level5_node_color")),
-  level6_node_color(ctx->subVar("level6_node_color")),
-  plane_on(ctx->subVar("plane_on")),
-  node_select_on(ctx->subVar("node_select_on")),
-  use_default_radius(ctx->subVar("use_default_radius")),
-  default_radius(ctx->subVar("default_radius")),
-  radius(ctx->subVar("radius")),
-  polygons(ctx->subVar("polygons")),
+  level1_grid_color(get_ctx()->subVar("level1_grid_color")),
+  level2_grid_color(get_ctx()->subVar("level2_grid_color")),
+  level3_grid_color(get_ctx()->subVar("level3_grid_color")),
+  level4_grid_color(get_ctx()->subVar("level4_grid_color")),
+  level5_grid_color(get_ctx()->subVar("level5_grid_color")),
+  level6_grid_color(get_ctx()->subVar("level6_grid_color")),
+  level1_node_color(get_ctx()->subVar("level1_node_color")),
+  level2_node_color(get_ctx()->subVar("level2_node_color")),
+  level3_node_color(get_ctx()->subVar("level3_node_color")),
+  level4_node_color(get_ctx()->subVar("level4_node_color")),
+  level5_node_color(get_ctx()->subVar("level5_node_color")),
+  level6_node_color(get_ctx()->subVar("level6_node_color")),
+  plane_on(get_ctx()->subVar("plane_on")),
+  node_select_on(get_ctx()->subVar("node_select_on")),
+  show_boundary_values(get_ctx()->subVar("show_boundary_vals")),
+  use_default_radius(get_ctx()->subVar("use_default_radius")),
+  default_radius(get_ctx()->subVar("default_radius")),
+  radius(get_ctx()->subVar("radius")),
+  polygons(get_ctx()->subVar("polygons")),
   widget_lock("GridVusualizer widget lock"),
   init(1),
   iPoint_(Point(0,0,0)),
   need_2d(1),
   selected_sphere_geom_id(0),
-  show_selected_node(ctx->subVar("show_selected_node"))
+  show_selected_node(get_ctx()->subVar("show_selected_node"))
 {
   float INIT(0.1);
   widget2d = scinew FrameWidget(this, &widget_lock, INIT, false);
@@ -419,6 +421,7 @@ GridVisualizer::execute()
   int nu,nv;
   double rad = 1;
   bool node_on = node_select_on.get() != 0;
+  bool boundary_on = show_boundary_values.get() == 1;
   Box widget_box;
 
   if (node_on) {
@@ -461,11 +464,20 @@ GridVisualizer::execute()
       case NC_VAR:
         //------------------------------------
         // for each node in the patch
-        for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-          nodes->add(patch->nodePosition(*iter),
-                     node_color[color_index].get_rep());
+        if( boundary_on ){ //include boundary cells
+          for(NodeIterator iter = NodeIterator( patch->getNodeLowIndex(),
+                                                patch->getNodeHighIndex());
+              !iter.done(); iter++){
+            nodes->add(patch->nodePosition(*iter),
+                       node_color[color_index].get_rep());
+          }
+        } else {
+          for(NodeIterator iter = patch->getNodeIterator();
+              !iter.done(); iter++){
+            nodes->add(patch->nodePosition(*iter),
+                       node_color[color_index].get_rep());
+          }
         }
-        
         //------------------------------------
         // for each node in the patch that intersects the widget space
         if(node_on) {
@@ -482,9 +494,18 @@ GridVisualizer::execute()
       case CC_VAR:
         //------------------------------------
         // for each node in the patch
-        for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-          nodes->add(patch->cellPosition(*iter),
-                     node_color[color_index].get_rep());
+        if(boundary_on){ // include boundary cells
+          for( CellIterator iter = patch->getExtraCellIterator();
+               !iter.done(); iter++){
+            nodes->add(patch->cellPosition(*iter),
+                       node_color[color_index].get_rep());
+          }
+        } else { // don't include boundary cells
+          for(CellIterator iter = patch->getCellIterator();
+              !iter.done(); iter++){
+            nodes->add(patch->cellPosition(*iter),
+                       node_color[color_index].get_rep());
+          }
         }
         
         //------------------------------------
@@ -529,8 +550,8 @@ GridVisualizer::execute()
 void
 GridVisualizer::widget_moved(bool last, BaseWidget*)
 {
-  if(last && !abort_flag) {
-    abort_flag=1;
+  if(last && !abort_flag_) {
+    abort_flag_ = true;
     want_to_execute();
   }
 }

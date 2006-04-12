@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
@@ -66,8 +66,8 @@ public:
 DECLARE_MAKER(MatrixReader)
 MatrixReader::MatrixReader(GuiContext* ctx)
   : GenericReader<MatrixHandle>("MatrixReader", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_filetype_(ctx->subVar("filetype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_filetype_(get_ctx()->subVar("filetype"))
 {
   MatrixIEPluginManager mgr;
   vector<string> importers;
@@ -108,7 +108,7 @@ MatrixReader::call_importer(const string &filename)
   if (pl)
   {
     handle_ = pl->fileReader_(this, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return handle_.get_rep();
   }
   return false;

@@ -44,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/ApplyMappingMatrix.cc\
 	$(SRCDIR)/AttractNormals.cc\
 	$(SRCDIR)/BuildMappingMatrix.cc\
+	$(SRCDIR)/BuildSurfNormals.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
@@ -72,6 +73,7 @@ SRCS     += \
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/HexToTet.cc\
 	$(SRCDIR)/InsertField.cc\
+	$(SRCDIR)/InsertHexSheet.cc\
 	$(SRCDIR)/IsoClip.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldMesh.cc\
@@ -108,12 +110,26 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Dataflow/Network Dataflow/Ports  Dataflow/Widgets \
-	Core/Algorithms/Fields \
-	Core/Datatypes Core/Persistent Core/Exceptions Core/ImportExport \
-	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
-	Core/Basis Core/Geometry Core/TkExtensions \
-	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface
+PSELIBS := \
+	Dataflow/Network         \
+	Dataflow/Widgets         \
+	Core/Algorithms/Fields   \
+	Core/Algorithms/Geometry \
+	Core/Basis               \
+	Core/Datatypes           \
+	Core/Exceptions          \
+	Core/Geom                \
+	Core/Geometry            \
+	Core/GeomInterface       \
+	Core/Containers          \
+	Core/GuiInterface        \
+	Core/ImportExport        \
+	Core/Math                \
+	Core/Persistent          \
+	Core/Thread              \
+	Core/TkExtensions        \
+	Core/Util              
+
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(TEEM_LIBRARY)
 
@@ -121,6 +137,12 @@ LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY
 ifeq ($(HAVE_CAMAL),yes)
    SRCS += $(SRCDIR)/TetMesher.cc
    LIBS := $(LIBS) $(CAMAL_LIBRARY) $(F_LIBRARY)
+endif
+
+# TetGen http://tetgen.berlios.de
+ifeq ($(HAVE_TETGEN),yes)
+  SRCS += $(SRCDIR)/TetGen.cc
+  LIBS := $(LIBS) $(TETGEN_LIBRARY)
 endif
 
 # VERDICT Mesh Quality Library
@@ -131,7 +153,8 @@ endif
 
 # MESQUITE Mesh Optimization Library
 ifeq ($(HAVE_MESQUITE),yes)
-   SRCS += $(SRCDIR)/MeshSmoother.cc
+   SRCS += $(SRCDIR)/MeshSmoother.cc\
+	$(SRCDIR)/MesquiteDomain.cc
    LIBS := $(LIBS) $(MESQUITE_LIBRARY)
 endif
 

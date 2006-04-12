@@ -13,6 +13,9 @@
     <title>Projectile penetration </title>
   </Meta>
 
+   <SimulationComponent>
+        <type> mpm </type>
+   </SimulationComponent>
   <Time>
     <maxTime>2.1e-5</maxTime>
     <initTime>0.0</initTime>

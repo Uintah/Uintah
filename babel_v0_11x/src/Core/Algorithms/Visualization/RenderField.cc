@@ -59,7 +59,7 @@ RenderFieldBase::get_compile_info(const TypeDescription *ftd,
 
   string template_class_name0 = template_class_name;
   const string fldname = ftd->get_name();
-  if (fldname.size() > 10 && fldname.substr(0, 10) == "ImageField")
+  if ( fldname.find( "ImageMesh" ) != string::npos )
   {
     template_class_name0 += "Image";
   }

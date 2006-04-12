@@ -68,8 +68,8 @@ POSSIBLE REVISIONS
 ----------------------------------------------------------------------*/
 
 
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/PathPort.h>
 #include <Dataflow/Widgets/CrosshairWidget.h>
 
 #include <Core/Geom/View.h>
@@ -150,24 +150,24 @@ public:
 DECLARE_MAKER(EditPath)
 EditPath::EditPath(GuiContext* ctx)
 : Module("EditPath", ctx, Filter, "Render", "SCIRun"),
-  tcl_num_views(ctx->subVar("tcl_num_views")),
-  tcl_is_looped(ctx->subVar("tcl_is_looped")),
-  tcl_is_backed(ctx->subVar("tcl_is_backed")),
-  tcl_curr_viewwindow(ctx->subVar("tcl_curr_viewwindow")),
-  tcl_step_size(ctx->subVar("tcl_step_size")),
-  tcl_acc_val(ctx->subVar("tcl_acc_val")),
-  tcl_rate(ctx->subVar("tcl_rate")), 
-  tcl_speed_val(ctx->subVar("tcl_speed_val")), 
-  UI_Init(ctx->subVar("UI_Init")),
-  tcl_send_dir(ctx->subVar("tcl_send_dir")),
-  tcl_msg_box(ctx->subVar("tcl_msg_box")),
-  tcl_intrp_type(ctx->subVar("tcl_intrp_type")),   
-  tcl_acc_mode(ctx->subVar("tcl_acc_mode")),
-  tcl_widg_show(ctx->subVar("tcl_widg_show")),
-  tcl_curr_view(ctx->subVar("tcl_curr_view")),
-  tcl_is_new(ctx->subVar("tcl_is_new")), 
-  tcl_stop(ctx->subVar("tcl_stop")),
-  tcl_info(ctx->subVar("tcl_info")),
+  tcl_num_views(get_ctx()->subVar("tcl_num_views")),
+  tcl_is_looped(get_ctx()->subVar("tcl_is_looped")),
+  tcl_is_backed(get_ctx()->subVar("tcl_is_backed")),
+  tcl_curr_viewwindow(get_ctx()->subVar("tcl_curr_viewwindow")),
+  tcl_step_size(get_ctx()->subVar("tcl_step_size")),
+  tcl_acc_val(get_ctx()->subVar("tcl_acc_val")),
+  tcl_rate(get_ctx()->subVar("tcl_rate")), 
+  tcl_speed_val(get_ctx()->subVar("tcl_speed_val")), 
+  UI_Init(get_ctx()->subVar("UI_Init")),
+  tcl_send_dir(get_ctx()->subVar("tcl_send_dir")),
+  tcl_msg_box(get_ctx()->subVar("tcl_msg_box")),
+  tcl_intrp_type(get_ctx()->subVar("tcl_intrp_type")),   
+  tcl_acc_mode(get_ctx()->subVar("tcl_acc_mode")),
+  tcl_widg_show(get_ctx()->subVar("tcl_widg_show")),
+  tcl_curr_view(get_ctx()->subVar("tcl_curr_view")),
+  tcl_is_new(get_ctx()->subVar("tcl_is_new")), 
+  tcl_stop(get_ctx()->subVar("tcl_stop")),
+  tcl_info(get_ctx()->subVar("tcl_info")),
   acc_val(0),
   speed_val(0),
   rate(1),
@@ -195,7 +195,7 @@ EditPath::EditPath(GuiContext* ctx)
   init_tcl_update();
     
   is_init=false;
-  need_execute=1;
+  need_execute_=1;
   
   sem.up();
 }
@@ -722,9 +722,9 @@ void EditPath::init_tcl_update(){
   tcl_curr_view.set(curr_view);
   
   if (UI_Init.get()){
-    gui->lock();
-    gui->execute(id+" refresh ");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->execute(get_id()+" refresh ");
+    get_gui()->unlock();
   }
 }
 
@@ -739,18 +739,18 @@ void EditPath::update_tcl_var(){
   message="";
   
   if (UI_Init.get()){
-    gui->lock();
-    gui->execute(id+" refresh ");
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->execute(get_id()+" refresh ");
+    get_gui()->unlock();
   }
 }
 
 bool EditPath::Msg_Box(const string& title, const string& message){
   tcl_msg_box.set(0);
   if (UI_Init.get()){
-     gui->lock();
-         gui->execute(id+" EraseWarn "+ "\""+title +"\""+ " " + "\""+message+"\"");
-     gui->unlock();
+     get_gui()->lock();
+         get_gui()->execute(get_id()+" EraseWarn "+ "\""+title +"\""+ " " + "\""+message+"\"");
+     get_gui()->unlock();
   }
 
   if (tcl_msg_box.get()>0){

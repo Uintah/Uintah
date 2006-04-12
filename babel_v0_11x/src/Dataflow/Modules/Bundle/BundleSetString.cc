@@ -35,9 +35,9 @@
  */
 
 #include <Core/Bundle/Bundle.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -60,17 +60,21 @@ private:
 
 
 DECLARE_MAKER(BundleSetString)
-  BundleSetString::BundleSetString(GuiContext* ctx)
-    : Module("BundleSetString", ctx, Filter, "Bundle", "SCIRun"),
-      guistring1name_(ctx->subVar("string1-name")),
-      guistring2name_(ctx->subVar("string2-name")),
-      guistring3name_(ctx->subVar("string3-name")),
-      guibundlename_(ctx->subVar("bundlename"))
+
+BundleSetString::BundleSetString(GuiContext* ctx)
+  : Module("BundleSetString", ctx, Filter, "Bundle", "SCIRun"),
+    guistring1name_(get_ctx()->subVar("string1-name"), "string1"),
+    guistring2name_(get_ctx()->subVar("string2-name"), "string2"),
+    guistring3name_(get_ctx()->subVar("string3-name"), "string3"),
+    guibundlename_(get_ctx()->subVar("bundlename"))
 {
 }
 
-BundleSetString::~BundleSetString(){
+
+BundleSetString::~BundleSetString()
+{
 }
+
 
 void
 BundleSetString::execute()

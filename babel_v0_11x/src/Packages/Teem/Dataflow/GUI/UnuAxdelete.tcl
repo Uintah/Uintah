@@ -33,13 +33,9 @@ catch {rename Teem_UnuAtoM_UnuAxdelete ""}
 
 itcl_class Teem_UnuAtoM_UnuAxdelete {
     inherit Module
+
     constructor {config} {
         set name UnuAxdelete
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
     }
 
     method ui {} {

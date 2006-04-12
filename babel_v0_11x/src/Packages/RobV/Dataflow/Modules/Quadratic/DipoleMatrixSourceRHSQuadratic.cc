@@ -18,7 +18,7 @@ using namespace SCIRun;
 
 class RobVSHARE DipoleMatrixSourceRHSQuadratic : public Module {
 public:
-  DipoleMatrixSourceRHSQuadratic(const string& id);
+  DipoleMatrixSourceRHSQuadratic(const string& get_id());
 
   virtual ~DipoleMatrixSourceRHSQuadratic();
 
@@ -27,12 +27,12 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" RobVSHARE Module* make_DipoleMatrixSourceRHSQuadratic(const string& id) {
-  return scinew DipoleMatrixSourceRHSQuadratic(id);
+extern "C" RobVSHARE Module* make_DipoleMatrixSourceRHSQuadratic(const string& get_id()) {
+  return scinew DipoleMatrixSourceRHSQuadratic(get_id());
 }
 
-DipoleMatrixSourceRHSQuadratic::DipoleMatrixSourceRHSQuadratic(const string& id)
-  : Module("DipoleMatrixSourceRHSQuadratic", id, Source, "Quadratic", "RobV")
+DipoleMatrixSourceRHSQuadratic::DipoleMatrixSourceRHSQuadratic(const string& get_id())
+  : Module("DipoleMatrixSourceRHSQuadratic", get_id(), Source, "Quadratic", "RobV")
 {
 }
 

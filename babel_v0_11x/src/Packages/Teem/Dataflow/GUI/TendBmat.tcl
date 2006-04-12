@@ -33,15 +33,9 @@ catch {rename Teem_Tend_TendBmat ""}
 
 itcl_class Teem_Tend_TendBmat {
     inherit Module
+
     constructor {config} {
         set name TendBmat
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-gradient_list
-        set $this-gradient_list ""
-
-
     }
 
     method update_text {} {

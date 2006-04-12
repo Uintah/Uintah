@@ -44,8 +44,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 namespace SCIRun {
 
@@ -87,13 +87,14 @@ MappingMatrixToMaskVector::execute()
   if (!matrix)
     throw "Input matrix not sparse";
 
-  const unsigned int dim = matrix->ncols();
+  size_t dim[NRRD_DIM_MAX];
+  dim[0] = matrix->ncols();
 
   NrrdDataHandle nrrdH = scinew NrrdData;
-  Nrrd *nrrd = nrrdH->nrrd;
-  nrrdAlloc(nrrd, nrrdTypeUChar, 1, dim);
+  Nrrd *nrrd = nrrdH->nrrd_;
+  nrrdAlloc_nva(nrrd, nrrdTypeUChar, 1, dim);
   unsigned char *mask = (unsigned char *)nrrd->data;
-  memset(mask, 0, dim*sizeof(unsigned char));
+  memset(mask, 0, dim[0]*sizeof(unsigned char));
   int *rr = matrix->rows;
   int *cc = matrix->columns;
   double *data = matrix->a;

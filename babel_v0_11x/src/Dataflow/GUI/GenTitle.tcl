@@ -42,29 +42,6 @@ itcl_class SCIRun_Visualization_GenTitle {
    
     constructor {config} {
         set name GenTitle
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-showValue
-	global $this-value
-	global $this-bbox
-	global $this-format
-	global $this-size
-	global $this-location
-	global $this-color-r
-	global $this-color-g
-	global $this-color-b
-
-	set $this-showValue 0
-	set $this-value 0
-	set $this-bbox 1
-	set $this-format "My Title"
-	set $this-size 100
-	set $this-location "Top Left"
-	set $this-color-r 1.0
-	set $this-color-g 1.0
-	set $this-color-b 1.0
     }
 
     method ui {} {
@@ -116,18 +93,6 @@ itcl_class SCIRun_Visualization_GenTitle {
 	iwidgets::labeledframe $w.style -labeltext "Title Style"
 	set style [$w.style childsite]
 
-# Style - box
-	#frame $style.bbox
-
-	#checkbutton $style.bbox.button -variable $this-bbox \
-	#    -command "$this-c needexecute"
-	#label $style.bbox.label -text "Box" -width 4 \
-	#    -anchor w -just left
-	
-	#pack $style.bbox.button $style.bbox.label -side left
-
-	#pack $style.bbox -side left
-
 # Style - color
 	frame $style.color
 	addColorSelection $style.color "Color" $this-color "color_change"
@@ -146,9 +111,11 @@ itcl_class SCIRun_Visualization_GenTitle {
 	pack $style.format -side left -padx 5
 
 
+	frame $w.twocol
+	
 # Size
-	iwidgets::labeledframe $w.size -labeltext "Title Size"
-	set size [$w.size childsite]
+	iwidgets::labeledframe $w.twocol.size -labeltext "Clock Size"
+	set size [$w.twocol.size childsite]
 
 # Size - small
 	frame $size.small
@@ -159,7 +126,7 @@ itcl_class SCIRun_Visualization_GenTitle {
 	    -anchor w -just left
 	
 	pack $size.small.button $size.small.label -side left
-	pack $size.small -side left -padx 5
+	pack $size.small -side top -padx 5
 
 # Size - medium
 	frame $size.medium
@@ -170,7 +137,7 @@ itcl_class SCIRun_Visualization_GenTitle {
 	    -anchor w -just left
 	
 	pack $size.medium.button $size.medium.label -side left
-	pack $size.medium -side left -padx 5
+	pack $size.medium -side top -padx 5
 
 # Size - large
 	frame $size.large
@@ -181,7 +148,7 @@ itcl_class SCIRun_Visualization_GenTitle {
 	    -anchor w -just left
 	
 	pack $size.large.button $size.large.label -side left
-	pack $size.large -side left -padx 5
+	pack $size.large -side top -padx 5
 
 # Size - custom
 	frame $size.custom
@@ -191,61 +158,24 @@ itcl_class SCIRun_Visualization_GenTitle {
 
 	pack $size.custom.label $size.custom.entry $size.custom.percent \
 	    -side left
-	pack $size.custom -side left -padx 5
-	
-#	pack $w.size -fill x -expand yes -side top
-
-
+	pack $size.custom -side top -padx 5
 
 # Location
-	iwidgets::labeledframe $w.location -labeltext "Title Location"
-	set location [$w.location childsite]
+	iwidgets::labeledframe $w.twocol.location -labeltext "Title Location"
+	set location [$w.twocol.location childsite]
 
-# Location - top left
-	frame $location.top_left
+	set locator [makeStickyLocator $location.gui \
+			 $this-location-x $this-location-y \
+			 100 100]
 
-	radiobutton $location.top_left.button -variable $this-location \
-	    -value "Top Left" -command "$this-c needexecute"
-	label $location.top_left.label -text "Top Left" -width 9 \
-	    -anchor w -just left
-	
-	pack $location.top_left.button $location.top_left.label -side left
+	$locator bind movable <ButtonRelease> "$this-c needexecute"
 
-# Location - top center
-	frame $location.top_center
-
-	radiobutton $location.top_center.button -variable $this-location \
-	    -value "Top Center" -command "$this-c needexecute"
-	label $location.top_center.label -text "Top Center" -width 10 \
-	    -anchor w -just left
-	
-	pack $location.top_center.button $location.top_center.label -side left
-
-# Location - bottom left
-	frame $location.bottom_left
-
-	radiobutton $location.bottom_left.button -variable $this-location \
-	    -value "Bottom Left" -command "$this-c needexecute"
-	label $location.bottom_left.label -text "Bottom Left" -width 12 \
-	    -anchor w -just left
-	
-	pack $location.bottom_left.button $location.bottom_left.label -side left
-
-# Location - bottom center
-	frame $location.bottom_center
-
-	radiobutton $location.bottom_center.button -variable $this-location \
-	    -value "Bottom Center" -command "$this-c needexecute"
-	label $location.bottom_center.label -text "Bottom Center" -width 13 \
-	    -anchor w -just center
-	
-	pack $location.bottom_center.button $location.bottom_center.label -side left
+	pack $location.gui -fill x -expand yes -side top
 
 
-	pack $location.top_left $location.top_center \
-	    $location.bottom_left $location.bottom_center -side left
-	
-	pack $w.location -fill x -expand yes -side top
+	pack $w.twocol.size $w.twocol.location -fill both -expand yes -side left
+
+	pack $w.twocol -fill x -expand yes -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
@@ -301,7 +231,8 @@ itcl_class SCIRun_Visualization_GenTitle {
 		 -text $text -command $cmmd
 	 
 	 #pack the node color frame
-	 pack $frame.colorFrame.set_color $frame.colorFrame.col -side left -padx 2
+	 pack $frame.colorFrame.set_color $frame.colorFrame.col \
+				  -side left -padx 2
 	 pack $frame.colorFrame -side left
     }
 }

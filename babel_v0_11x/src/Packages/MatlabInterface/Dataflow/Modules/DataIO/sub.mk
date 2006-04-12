@@ -60,12 +60,11 @@ SRCS     += \
 PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Dataflow/Network Dataflow/Ports \
-	Core/XMLUtil \
-	Packages/MatlabInterface/Core/Datatypes \
-	Core/Services Core/ICom Core/SystemCall
+        Core/TkExtensions Dataflow/Network Core/XMLUtil \
+        Packages/MatlabInterface/Core/Datatypes \
+        Core/Services Core/ICom Core/SystemCall
 
-LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY) $(XML2_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

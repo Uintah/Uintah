@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Math/LinearAlgebra.h>
 #include <Core/Util/DynamicCompilation.h>
@@ -67,7 +67,7 @@ DECLARE_MAKER(LinearAlgebra)
 
 LinearAlgebra::LinearAlgebra(GuiContext* ctx)
   : Module("LinearAlgebra", ctx, Filter,"Math", "SCIRun"),
-    function_(ctx->subVar("function"))
+    function_(get_ctx()->subVar("function"), "o1 = i1 * 12;")
 {
 }
 
@@ -128,7 +128,7 @@ LinearAlgebra::execute()
   Handle<LinearAlgebraAlgo> algo;
 
   // Remove trailing white-space from the function string
-  gui->execute(id + " update_text"); // update gFunction_ before get.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before get.
   string func=function_.get();
   while (func.size() && isspace(func[func.size()-1]))
     func.resize(func.size()-1);
@@ -140,7 +140,7 @@ LinearAlgebra::execute()
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
       error("Your function would not compile.");
-      gui->eval(id + " compile_error "+ci->filename_);
+      get_gui()->eval(get_id() + " compile_error "+ci->filename_);
       DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       return;
     }
@@ -174,7 +174,7 @@ LinearAlgebra::execute()
 void
 LinearAlgebra::presave()
 {
-  gui->execute(id + " update_text"); // update gFunction_ before saving.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }
 
 

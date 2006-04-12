@@ -67,7 +67,7 @@ SCIRunErrorHandler::~SCIRunErrorHandler()
 {
 }
 
-void SCIRunErrorHandler::postMessage(const std::string& message)
+void SCIRunErrorHandler::post_message(const std::string& message)
 {
   std::cerr << message << std::endl;
 }
@@ -75,7 +75,7 @@ void SCIRunErrorHandler::postMessage(const std::string& message)
 void SCIRunErrorHandler::error(const SAXParseException& e)
 {
   foundError=true;
-  postMessage(std::string("Error at (file ")+xmlto_string(e.getSystemId())
+  post_message(std::string("Error at (file ")+xmlto_string(e.getSystemId())
 	      +", line "+to_string((int)e.getLineNumber())
 	      +", char "+to_string((int)e.getColumnNumber())
 	      +"): "+xmlto_string(e.getMessage()));
@@ -84,7 +84,7 @@ void SCIRunErrorHandler::error(const SAXParseException& e)
 void SCIRunErrorHandler::fatalError(const SAXParseException& e)
 {
   foundError=true;
-  postMessage(std::string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
+  post_message(std::string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
 	      +", line "+to_string((int)e.getLineNumber())
 	      +", char "+to_string((int)e.getColumnNumber())
 	      +"): "+xmlto_string(e.getMessage()));
@@ -92,7 +92,7 @@ void SCIRunErrorHandler::fatalError(const SAXParseException& e)
 
 void SCIRunErrorHandler::warning(const SAXParseException& e)
 {
-  postMessage(std::string("Warning at (file ")+xmlto_string(e.getSystemId())
+  post_message(std::string("Warning at (file ")+xmlto_string(e.getSystemId())
 	      +", line "+to_string((int)e.getLineNumber())
 	      +", char "+to_string((int)e.getColumnNumber())
 	      +"): "+xmlto_string(e.getMessage()));

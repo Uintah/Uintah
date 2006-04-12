@@ -70,7 +70,7 @@ main(int argc, char **argv) {
   int n3 = atoi(argv[4]);
 
   tsm->add_triangle(n1, n2, n3);
-  TextPiostream out_stream(argv[5], Piostream::Write);
+  BinaryPiostream out_stream(argv[5], Piostream::Write);
   Pio(out_stream, handle);
   return 0;  
 }    

@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -62,12 +62,15 @@ DECLARE_MAKER(TendAnscale)
 
 TendAnscale::TendAnscale(SCIRun::GuiContext *ctx) : 
   Module("TendAnscale", ctx, Filter, "Tend", "Teem"), 
-  scale_(ctx->subVar("scale"))
+  scale_(get_ctx()->subVar("scale"), 1.0)
 {
 }
 
-TendAnscale::~TendAnscale() {
+
+TendAnscale::~TendAnscale()
+{
 }
+
 void 
 TendAnscale::execute()
 {
@@ -85,7 +88,7 @@ TendAnscale::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenAnisoScale(nout, nin, scale_.get(), true, true)) {

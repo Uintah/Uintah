@@ -120,8 +120,8 @@
       <dbg_timeStart>       1.0        </dbg_timeStart>
       <dbg_timeStop>        1.0        </dbg_timeStop>
       <dbg_outputInterval>  1e-9       </dbg_outputInterval>
-      <dbg_BeginIndex>      [31,18,0]  </dbg_BeginIndex>
-      <dbg_EndIndex>        [35,22,1]  </dbg_EndIndex>
+      <dbg_BeginIndex>     [[31,18,0]] </dbg_BeginIndex>
+      <dbg_EndIndex>       [[35,22,1]] </dbg_EndIndex>
       <dbg_SigFigs>         5          </dbg_SigFigs>
      <!--
      <debug label = "switchDebug_Initialize"/>
@@ -144,7 +144,7 @@
          <cfl>0.25</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE"/>
+        <advection type = "FirstOrder"/>
         <solution technique = "EqForm"/>
         <ADD_HEAT>
           <add_heat_matls>   [2]      </add_heat_matls>
@@ -219,11 +219,7 @@
                     <min>           [-1.0,-1.0,-1.0]    </min>
                     <max>           [3.0,3.0,1.0]       </max>
                   </box>
-                 <cylinder label = "outer cylinder">
-                     <bottom>       [0.0,0.0,0.0]       </bottom>
-                     <top>          [0.0,0.0,.02]       </top>
-                     <radius>       1.0                 </radius>
-                 </cylinder>
+                 <cylinder label = "outer cylinder"> </cylinder>
                </difference>
              <res>                      [2,2,1]        </res>
              <velocity>           [0.0,0.0,0.0]        </velocity>
@@ -241,11 +237,7 @@
            <speed_of_sound>             376            </speed_of_sound>
            <gamma>                      1.4            </gamma>
            <geom_object>
-              <cylinder label = "inner cylinder">
-                     <bottom>       [0.0,0.0,0.0]       </bottom>
-                     <top>          [0.0,0.0,.02]       </top>
-                     <radius>       0.5                 </radius>
-              </cylinder>
+              <cylinder label = "inner cylinder"> </cylinder>
              <res>                      [2,2,1]        </res>
              <velocity>           [0.0,0.0,0.0]        </velocity>
              <temperature>        300.0                </temperature>

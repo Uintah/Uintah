@@ -33,55 +33,9 @@ catch {rename Teem_Tend_TendFiber ""}
 
 itcl_class Teem_Tend_TendFiber {
     inherit Module
+
     constructor {config} {
         set name TendFiber
-        set_defaults
-    }
-    method set_defaults {} {
-        global $this-fibertype
-        set $this-fibertype "tensorline"
-
-        global $this-puncture
-        set $this-puncture 0.0
-
-        global $this-neighborhood
-        set $this-neighborhood 2.0
-
-	global $this-stepsize
-	set $this-stepsize 0.01
-
-	global $this-integration
-	set $this-integration "Euler"
-
-	global $this-use-aniso
-	set $this-use-aniso 1
-
-	global $this-aniso-metric
-	set $this-aniso-metric "tenAniso_Cl2"
-
-	global $this-aniso-thresh
-	set $this-aniso-thresh 0.4
-
-	global $this-use-length
-	set $this-use-length 1
-	
-	global $this-length
-	set $this-length 1
-
-	global $this-use-steps
-	set $this-use-steps 0
-	
-	global $this-steps
-	set $this-steps 200
-
-	global $this-use-conf
-	set $this-use-conf 1
-
-	global $this-conf-thresh
-	set $this-conf-thresh 0.5
-
-	global $this-kernel
-	set $this-kernel "tent"
     }
 
     method ui {} {

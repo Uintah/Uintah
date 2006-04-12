@@ -26,9 +26,9 @@
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
@@ -69,18 +69,18 @@ SCIRex::SCIRex(GuiContext* ctx)
     tex_(0),
     volren_(0),
     texH_(0),
-    is_fixed_(ctx->subVar("is_fixed_")),
-    max_brick_dim_(ctx->subVar("max_brick_dim_")),
-    min_(ctx->subVar("min_")), max_(ctx->subVar("max_")),
-    draw_mode_(ctx->subVar("draw_mode")),
-    num_slices_(ctx->subVar("num_slices")),
-    render_style_(ctx->subVar("render_style")),
-    alpha_scale_(ctx->subVar("alpha_scale")),
-    interp_mode_(ctx->subVar("interp_mode")),
-    dump_frames_(ctx->subVar("dump_frames")),
-    use_depth_(ctx->subVar("use_depth")),
-    displays_(ctx->subVar("displays")),
-    compositers_(ctx->subVar("compositers"))
+    is_fixed_(get_ctx()->subVar("is_fixed_")),
+    max_brick_dim_(get_ctx()->subVar("max_brick_dim_")),
+    min_(get_ctx()->subVar("min_")), max_(get_ctx()->subVar("max_")),
+    draw_mode_(get_ctx()->subVar("draw_mode")),
+    num_slices_(get_ctx()->subVar("num_slices")),
+    render_style_(get_ctx()->subVar("render_style")),
+    alpha_scale_(get_ctx()->subVar("alpha_scale")),
+    interp_mode_(get_ctx()->subVar("interp_mode")),
+    dump_frames_(get_ctx()->subVar("dump_frames")),
+    use_depth_(get_ctx()->subVar("use_depth")),
+    displays_(get_ctx()->subVar("displays")),
+    compositers_(get_ctx()->subVar("compositers"))
 {
 }
 
@@ -106,15 +106,15 @@ void SCIRex::execute(void)
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield_) {
-    gui->postMessage("Unable to initialize "+name+"'s iport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!incolormap_) {
-    gui->postMessage("Unable to initialize "+name+"'s iport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!ogeom_) {
-    gui->postMessage("Unable to initialize "+name+"'s oport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s oport\n");
     return;
   }
 
@@ -169,7 +169,7 @@ void SCIRex::execute(void)
 //     std::cerr<<"Need to initialize volren\n";
     old_cmap = cmap;
     old_tex = tex_;
-    gui->execute(id + " SetDims " + to_string( volren_->getBrickSize()));
+    get_gui()->execute(get_id() + " SetDims " + to_string( volren_->getBrickSize()));
     max_brick_dim_.set(  volren_->getBrickSize() );
     old_brick_size = max_brick_dim_.get();
     if( is_fixed_.get() !=1 ){
@@ -255,6 +255,6 @@ void SCIRex::execute(void)
 //   dump_string += num.str();
   //  DumpAllocator(default_allocator, dump_string.c_str() );
 
-  gui->execute(id + " disableDpy");
+  get_gui()->execute(get_id() + " disableDpy");
 }
 

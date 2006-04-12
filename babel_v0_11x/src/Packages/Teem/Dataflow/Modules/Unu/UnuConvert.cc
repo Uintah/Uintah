@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <iostream>
 using std::endl;
@@ -71,7 +71,7 @@ DECLARE_MAKER(UnuConvert)
 
 UnuConvert::UnuConvert(SCIRun::GuiContext *ctx)
   : Module("UnuConvert", ctx, Filter, "UnuAtoM", "Teem"), 
-  type_(ctx->subVar("type")),
+  type_(get_ctx()->subVar("type")),
   last_type_(0), last_generation_(-1), last_nrrdH_(0)
 {
 }
@@ -106,14 +106,14 @@ UnuConvert::execute()
   last_generation_ = nrrdH->generation;
   last_type_ = type;
 
-  Nrrd *nin = nrrdH->nrrd;
+  Nrrd *nin = nrrdH->nrrd_;
   Nrrd *nout = nrrdNew();
-  msgStream_ << "New type is "<<type<<endl;
+  msg_stream_ << "New type is "<<type<<endl;
 
   if (nrrdConvert(nout, nin, type)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") + err);
-    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    msg_stream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
     free(err);
   }
 

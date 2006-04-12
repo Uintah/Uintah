@@ -48,6 +48,7 @@
 // I just put the missing ones here, to make the Insight Package compile properly.
 // -- jeroen
 
+#include <Packages/Insight/Core/Datatypes/share.h>
 namespace Insight {
 
 template <class Data> class ITKFData2d;
@@ -57,18 +58,18 @@ template <class Data> class ITKImageField;
 
 namespace SCIRun {
 
-  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
-  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
 
 }
 

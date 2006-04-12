@@ -377,22 +377,38 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh,
     npoints = scinew NrrdData();
     switch(ndims.size()) {
     case 1:
-      nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 2, 3, ndims[0]);
-      break;
+      {
+	size_t size[NRRD_DIM_MAX];
+	size[0] = 3;
+	size[1] = ndims[0];
+	nrrdAlloc_nva(npoints->nrrd_, nrrdTypeDouble, 2, size);
+	break;
+      }
     case 2:
-      nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 3, 3,
-                ndims[0], ndims[1]);
+      {
+	size_t size[NRRD_DIM_MAX];
+	size[0] = 3;
+	size[1] = ndims[0];
+	size[2] = ndims[1];
+	nrrdAlloc_nva(npoints->nrrd_, nrrdTypeDouble, 3, size);
       break;
+      }
     case 3:
-      nrrdAlloc(npoints->nrrd, nrrdTypeDouble, 4, 3,
-                ndims[0], ndims[1], ndims[2]);
-      break;
+      {
+	size_t size[NRRD_DIM_MAX];
+	size[0] = 3;
+	size[1] = ndims[0];
+	size[2] = ndims[1];
+	size[3] = ndims[2];
+	nrrdAlloc_nva(npoints->nrrd_, nrrdTypeDouble, 4, size);
+	break;
+      }
     }
 
     typename Fld::mesh_type::Node::iterator iter, end;
     m->begin(iter);
     m->end(end);
-    double *data = (double*)npoints->nrrd->data;
+    double *data = (double*)npoints->nrrd_->data;
     while(iter != end) {
       Point p;
       m->get_point(p,*iter);
@@ -418,12 +434,19 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh,
     // and allocate the nrrd
     m->size(nelems);
     m->get_nodes(array ,*iter2);
-    if (array.size() == 1) 
-      nrrdAlloc(nconnect->nrrd, nrrdTypeInt, 1, (int)nelems);
-    else
-      nrrdAlloc(nconnect->nrrd, nrrdTypeInt, 2, array.size(), (int)nelems);
+    if (array.size() == 1) {
+      size_t size[NRRD_DIM_MAX];
+      size[0] = nelems;
+      nrrdAlloc_nva(nconnect->nrrd_, nrrdTypeInt, 1, size);
+    }
+    else {
+      size_t size[NRRD_DIM_MAX];
+      size[0] = array.size();
+      size[1] = nelems;
+      nrrdAlloc_nva(nconnect->nrrd_, nrrdTypeInt, 2, size);
+    }
 
-    int* data2 = (int*)nconnect->nrrd->data;
+    int* data2 = (int*)nconnect->nrrd_->data;
 
     while(iter2 != end2) {
       m->get_nodes(array ,*iter2);
@@ -468,77 +491,91 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh,
 	  return false;
 	}
 	
-	nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		 get_nrrd_type<val_t>(), 1, ddims[0]);
+	size_t size[NRRD_DIM_MAX];
+	size[0] = ddims[0];
+	nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		 get_nrrd_type<val_t>(), 1, size);
 	
 	if (f->basis_order() == 1) {
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			  nrrdCenterNode);
+	  unsigned int centers[NRRD_DIM_MAX] = {nrrdCenterNode};
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	} else if (f->basis_order() == 0) {
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterCell,
-			  nrrdCenterCell);
+	  unsigned int centers[NRRD_DIM_MAX] = {nrrdCenterCell};
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	} else  {
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-			  nrrdCenterUnknown);
+	  unsigned int centers[NRRD_DIM_MAX] = {nrrdCenterUnknown};
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	}
-	ndata->nrrd->axis[0].label = airStrdup("x");
+	ndata->nrrd_->axis[0].label = airStrdup("x");
 	
 	if (with_spacing) {
-	  ndata->nrrd->axis[0].min=minP.x();
-	  ndata->nrrd->axis[0].max=maxP.x();
-	  ndata->nrrd->axis[0].spacing=spc.x();
+	  ndata->nrrd_->axis[0].min=minP.x();
+	  ndata->nrrd_->axis[0].max=maxP.x();
+	  ndata->nrrd_->axis[0].spacing=spc.x();
 	}
 	
-	ndata->nrrd->axis[0].kind = nrrdKindDomain;
+	ndata->nrrd_->axis[0].kind = nrrdKindDomain;
       }
       break;
     case 2:
       {
 	// vector/tensor data stored as [x][3] or [x][7]
 	if (pad_data > 0) {
-	  nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		   get_nrrd_type<val_t>(), 2, pad_data, ddims[0]);
-	  ndata->nrrd->axis[0].kind = kind;
+	  size_t size[NRRD_DIM_MAX];
+	  size[0] = pad_data;
+	  size[1] = ddims[0];
+	  nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		   get_nrrd_type<val_t>(), 2, size);
+	  ndata->nrrd_->axis[0].kind = kind;
 	} else {
-	  nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		   get_nrrd_type<val_t>(), 2, ddims[0], ddims[1]);
-	  ndata->nrrd->axis[0].kind = nrrdKindDomain;
+	  size_t size[NRRD_DIM_MAX];
+	  size[0] = ddims[0];
+	  size[1] = ddims[1];
+	  nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		   get_nrrd_type<val_t>(), 2, size);
+	  ndata->nrrd_->axis[0].kind = nrrdKindDomain;
 	}
-	ndata->nrrd->axis[1].kind = nrrdKindDomain;
+	ndata->nrrd_->axis[1].kind = nrrdKindDomain;
 
 	if (f->basis_order() == 1) {
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	  unsigned int centers[NRRD_DIM_MAX];
+	  centers[0] = nrrdCenterNode;
+	  centers[1] = nrrdCenterNode;
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	} else if (f->basis_order() == 0) {
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
+	  unsigned int centers[NRRD_DIM_MAX];
+	  centers[0] = nrrdCenterCell;
+	  centers[1] = nrrdCenterCell;
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	} else  {
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
-			  nrrdCenterUnknown, nrrdCenterUnknown);
+	  unsigned int centers[NRRD_DIM_MAX];
+	  centers[0] = nrrdCenterUnknown;
+	  centers[1] = nrrdCenterUnknown;
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	}
 
 	if (pad_data > 0) {
 	  // 1D nrrd with vector/tensor
-	  ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
-	  ndata->nrrd->axis[1].label = airStrdup("x");
+	  ndata->nrrd_->axis[0].label = airStrdup(sink_label.c_str());
+	  ndata->nrrd_->axis[1].label = airStrdup("x");
 
 	  if (with_spacing) {
-	    ndata->nrrd->axis[1].min=minP.x();
-	    ndata->nrrd->axis[1].max=maxP.x();
-	    ndata->nrrd->axis[1].spacing=spc.x();
+	    ndata->nrrd_->axis[1].min=minP.x();
+	    ndata->nrrd_->axis[1].max=maxP.x();
+	    ndata->nrrd_->axis[1].spacing=spc.x();
 	  }
 	} else {
 	  // 2D nrrd of scalars
-	  ndata->nrrd->axis[0].label = airStrdup("x");
-	  ndata->nrrd->axis[1].label = airStrdup("y");
+	  ndata->nrrd_->axis[0].label = airStrdup("x");
+	  ndata->nrrd_->axis[1].label = airStrdup("y");
 
 	  if (with_spacing) {
-	    ndata->nrrd->axis[0].min=minP.x();
-	    ndata->nrrd->axis[0].max=maxP.x();
-	    ndata->nrrd->axis[0].spacing=spc.x();
-	    ndata->nrrd->axis[1].min=minP.y();
-	    ndata->nrrd->axis[1].max=maxP.y();
-	    ndata->nrrd->axis[1].spacing=spc.y();
+	    ndata->nrrd_->axis[0].min=minP.x();
+	    ndata->nrrd_->axis[0].max=maxP.x();
+	    ndata->nrrd_->axis[0].spacing=spc.x();
+	    ndata->nrrd_->axis[1].min=minP.y();
+	    ndata->nrrd_->axis[1].max=maxP.y();
+	    ndata->nrrd_->axis[1].spacing=spc.y();
 	  }
 	}
       }
@@ -548,73 +585,90 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh,
 	if (f->basis_order() == 1) {
 	  if (pad_data > 0) {
 	    // 2D nrrd with vector/tensor NODE
-	    nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		     get_nrrd_type<val_t>(), 3, pad_data,
-		     ddims[0], ddims[1]);
-	    ndata->nrrd->axis[0].kind = kind;
+	    size_t size[NRRD_DIM_MAX];
+	    size[0] = pad_data;
+	    size[1] = ddims[0];
+	    size[2] = ddims[1];
+	    nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		     get_nrrd_type<val_t>(), 3, size);
+	    ndata->nrrd_->axis[0].kind = kind;
 	  } else {
 	    // 3D nrrd of scalars NODE
-	    nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		     get_nrrd_type<val_t>(), 3, ddims[0], ddims[1], ddims[2]);
-	    ndata->nrrd->axis[0].kind = nrrdKindDomain;
+	    size_t size[NRRD_DIM_MAX];
+	    size[0] = ddims[0];
+	    size[1] = ddims[1];
+	    size[2] = ddims[2];
+	    nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		     get_nrrd_type<val_t>(), 3, size);
+	    ndata->nrrd_->axis[0].kind = nrrdKindDomain;
 	  }
-	  ndata->nrrd->axis[1].kind = nrrdKindDomain;
-	  ndata->nrrd->axis[2].kind = nrrdKindDomain;
+	  ndata->nrrd_->axis[1].kind = nrrdKindDomain;
+	  ndata->nrrd_->axis[2].kind = nrrdKindDomain;
 
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterNode, nrrdCenterNode, 
-			  nrrdCenterNode, nrrdCenterNode);
+	  unsigned int centers[NRRD_DIM_MAX];
+	  centers[0] = nrrdCenterNode; 	  
+	  centers[1] = nrrdCenterNode;
+	  centers[2] = nrrdCenterNode;
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	} else if (f->basis_order() == 0) {
 	  if (pad_data > 0) {
 	    // 2D nrrd with vector/tensor CELL
-	    nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		     get_nrrd_type<val_t>(), 3, pad_data, 
-		     ddims[0], ddims[1]);
+	    size_t size[NRRD_DIM_MAX];
+	    size[0] = pad_data;
+	    size[1] = ddims[0];
+	    size[2] = ddims[1];
+	    nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		     get_nrrd_type<val_t>(), 3, size);
 	  } else {
 	    // 3D nrrd of scalars CELL
-	    nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		     get_nrrd_type<val_t>(), 3, 
-		     ddims[0], ddims[1], ddims[2]);
+	    size_t size[NRRD_DIM_MAX];
+	    size[0] = ddims[0];
+	    size[1] = ddims[1];
+	    size[2] = ddims[2];
+	    nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		     get_nrrd_type<val_t>(), 3, size);
 	  }
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterCell, nrrdCenterCell, 
-			  nrrdCenterCell, nrrdCenterCell);
+	  unsigned int centers[NRRD_DIM_MAX];
+	  centers[0] = nrrdCenterCell;
+	  centers[1] = nrrdCenterCell;
+	  centers[2] = nrrdCenterCell;
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	} else  {
 	  ASSERTFAIL("no support for edge or face centers");
 	}
 
 	// set labels
 	if (pad_data > 0) {
-	  ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
-	  ndata->nrrd->axis[1].label = airStrdup("x");
-	  ndata->nrrd->axis[2].label = airStrdup("y");
+	  ndata->nrrd_->axis[0].label = airStrdup(sink_label.c_str());
+	  ndata->nrrd_->axis[1].label = airStrdup("x");
+	  ndata->nrrd_->axis[2].label = airStrdup("y");
 	} else {
-	  ndata->nrrd->axis[0].label = airStrdup("x");
-	  ndata->nrrd->axis[1].label = airStrdup("y");
-	  ndata->nrrd->axis[2].label = airStrdup("z");
+	  ndata->nrrd_->axis[0].label = airStrdup("x");
+	  ndata->nrrd_->axis[1].label = airStrdup("y");
+	  ndata->nrrd_->axis[2].label = airStrdup("z");
 	}
 
 	// set min, max, and spacing
 	if (with_spacing) {
 	  if (pad_data > 0) {
 	    // 2D nrrd with vector/tensor
-	    ndata->nrrd->axis[1].min=minP.x();
-	    ndata->nrrd->axis[1].max=maxP.x();
-	    ndata->nrrd->axis[1].spacing=spc.x();
-	    ndata->nrrd->axis[2].min=minP.y();
-	    ndata->nrrd->axis[2].max=maxP.y();
-	    ndata->nrrd->axis[2].spacing=spc.y();
+	    ndata->nrrd_->axis[1].min=minP.x();
+	    ndata->nrrd_->axis[1].max=maxP.x();
+	    ndata->nrrd_->axis[1].spacing=spc.x();
+	    ndata->nrrd_->axis[2].min=minP.y();
+	    ndata->nrrd_->axis[2].max=maxP.y();
+	    ndata->nrrd_->axis[2].spacing=spc.y();
 	  } else {
 	    // 3D nrrd with scalars
-	    ndata->nrrd->axis[0].min=minP.x();
-	    ndata->nrrd->axis[0].max=maxP.x();
-	    ndata->nrrd->axis[0].spacing=spc.x();
-	    ndata->nrrd->axis[1].min=minP.y();
-	    ndata->nrrd->axis[1].max=maxP.y();
-	    ndata->nrrd->axis[1].spacing=spc.y();
-	    ndata->nrrd->axis[2].min=minP.z();
-	    ndata->nrrd->axis[2].max=maxP.z();
-	    ndata->nrrd->axis[2].spacing=spc.z();
+	    ndata->nrrd_->axis[0].min=minP.x();
+	    ndata->nrrd_->axis[0].max=maxP.x();
+	    ndata->nrrd_->axis[0].spacing=spc.x();
+	    ndata->nrrd_->axis[1].min=minP.y();
+	    ndata->nrrd_->axis[1].max=maxP.y();
+	    ndata->nrrd_->axis[1].spacing=spc.y();
+	    ndata->nrrd_->axis[2].min=minP.z();
+	    ndata->nrrd_->axis[2].max=maxP.z();
+	    ndata->nrrd_->axis[2].spacing=spc.z();
 	  }
 	}
       }
@@ -627,47 +681,53 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh,
 	  return false;
 	}
 
-	ndata->nrrd->axis[0].kind = kind;
-	ndata->nrrd->axis[1].kind = nrrdKindDomain;
-	ndata->nrrd->axis[2].kind = nrrdKindDomain;
-	ndata->nrrd->axis[3].kind = nrrdKindDomain;
+	ndata->nrrd_->axis[0].kind = kind;
+	ndata->nrrd_->axis[1].kind = nrrdKindDomain;
+	ndata->nrrd_->axis[2].kind = nrrdKindDomain;
+	ndata->nrrd_->axis[3].kind = nrrdKindDomain;
 
-	if (f->basis_order() == 1) {
-	  nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		   get_nrrd_type<val_t>(), 4, pad_data,
-		   ddims[0], ddims[1], ddims[2]);
-
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterNode, nrrdCenterNode, 
-			  nrrdCenterNode, nrrdCenterNode);
-	} else if (f->basis_order() == 0) {
-	  nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-		   get_nrrd_type<val_t>(), 4, pad_data, 
-		   ddims[0], ddims[1], ddims[2]);
+	size_t size[NRRD_DIM_MAX];
+	size[0] = pad_data;
+	size[1] = ddims[0];
+	size[2] = ddims[1];
+	size[3] = ddims[2];
 	
-	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterCell, nrrdCenterCell, 
-			  nrrdCenterCell, nrrdCenterCell);
+	if (f->basis_order() == 1) {
+	  nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		   get_nrrd_type<val_t>(), 4, size);
+
+	  unsigned int centers[NRRD_DIM_MAX];
+	  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
+	  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
+	} else if (f->basis_order() == 0) {
+	  nrrdWrap_nva(ndata->nrrd_, get_raw_data_ptr(f->fdata(), pad_data), 
+		   get_nrrd_type<val_t>(), 4, size);
+	
+	  unsigned int centers[NRRD_DIM_MAX];
+	  centers[0] = nrrdCenterCell; centers[1] = nrrdCenterCell;
+	  centers[2] = nrrdCenterCell; centers[3] = nrrdCenterCell;
+	  nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
 	} else  {
 	  ASSERTFAIL("no support for edge or face centers");
 	}
 
 	// set labels
-	ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
-	ndata->nrrd->axis[1].label = airStrdup("x");
-	ndata->nrrd->axis[2].label = airStrdup("y");
-	ndata->nrrd->axis[3].label = airStrdup("z");
+	ndata->nrrd_->axis[0].label = airStrdup(sink_label.c_str());
+	ndata->nrrd_->axis[1].label = airStrdup("x");
+	ndata->nrrd_->axis[2].label = airStrdup("y");
+	ndata->nrrd_->axis[3].label = airStrdup("z");
       
 	if (with_spacing) {
-	  ndata->nrrd->axis[1].min=minP.x();
-	  ndata->nrrd->axis[1].max=maxP.x();
-	  ndata->nrrd->axis[1].spacing=spc.x();
-	  ndata->nrrd->axis[2].min=minP.y();
-	  ndata->nrrd->axis[2].max=maxP.y();
-	  ndata->nrrd->axis[2].spacing=spc.y();
-	  ndata->nrrd->axis[3].min=minP.z();
-	  ndata->nrrd->axis[3].max=maxP.z();
-	  ndata->nrrd->axis[3].spacing=spc.z();
+	  ndata->nrrd_->axis[1].min=minP.x();
+	  ndata->nrrd_->axis[1].max=maxP.x();
+	  ndata->nrrd_->axis[1].spacing=spc.x();
+	  ndata->nrrd_->axis[2].min=minP.y();
+	  ndata->nrrd_->axis[2].max=maxP.y();
+	  ndata->nrrd_->axis[2].spacing=spc.y();
+	  ndata->nrrd_->axis[3].min=minP.z();
+	  ndata->nrrd_->axis[3].max=maxP.z();
+	  ndata->nrrd_->axis[3].spacing=spc.z();
 	} 
       }
       break;

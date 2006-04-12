@@ -39,8 +39,8 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Basis/HexTrilinearLgn.h>
@@ -96,10 +96,12 @@ FieldCage::FieldCage(GuiContext* ctx) :
   Module("FieldCage", ctx, Filter, "FieldsOther", "SCIRun"), 
   infield_(0),
   ogeom_(0),
-  sizex_(ctx->subVar("sizex")),
-  sizey_(ctx->subVar("sizey")),
-  sizez_(ctx->subVar("sizez")),
-  old_x_(-1), old_y_(-1), old_z_(-1),
+  sizex_(get_ctx()->subVar("sizex"), 10),
+  sizey_(get_ctx()->subVar("sizey"), 10),
+  sizez_(get_ctx()->subVar("sizez"), 10),
+  old_x_(-1),
+  old_y_(-1),
+  old_z_(-1),
   field_generation_(-1), 
   mesh_generation_(-1), 
   fieldcage_id_(0),

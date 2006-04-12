@@ -70,7 +70,7 @@ public:
   void resetErrors();
   
 private:
-  void postMessage(const std::string& message);
+  void post_message(const std::string& message);
   SCIRunErrorHandler(const SCIRunErrorHandler&);
   void operator=(const SCIRunErrorHandler&);
 };

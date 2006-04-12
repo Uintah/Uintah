@@ -15,8 +15,8 @@
 #include <Core/Geom/GeomSphere.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 
 
 namespace Phil {
@@ -25,7 +25,7 @@ using namespace SCIRun;
 class ViewGrid : public Module {
 public:
   // Functions required by Module inheritance
-  ViewGrid(const clString& id);
+  ViewGrid(const clString& get_id());
   virtual ~ViewGrid();
   virtual void execute();
 
@@ -44,21 +44,21 @@ private:
 }; // class ViewGrid
 
 // More required stuff...
-extern "C" Module* make_ViewGrid(const clString& id){
-  return new ViewGrid(id);
+extern "C" Module* make_ViewGrid(const clString& get_id()){
+  return new ViewGrid(get_id());
 }
 
 // Constructor
-ViewGrid::ViewGrid(const clString& id)
-  : Module("ViewGrid", id, Filter), gridtype("gridtype",id,this),
-  representation("representation",id,this), radius("radius",id,this),
-  geomfilename("geomfilename",id,this), numzones("numzones",id,this),
-  showzone1("showzone1",id,this), showzone2("showzone2",id,this), 
-  showzone3("showzone3",id,this), showzone4("showzone4",id,this), 
-  nx1("nx1",id,this), ny1("ny1",id,this), nz1("nz1",id,this),
-  nx2("nx2",id,this), ny2("ny2",id,this), nz2("nz2",id,this),
-  nx3("nx3",id,this), ny3("ny3",id,this), nz3("nz3",id,this),
-  nx4("nx4",id,this), ny4("ny4",id,this), nz4("nz4",id,this)
+ViewGrid::ViewGrid(const clString& get_id())
+  : Module("ViewGrid", get_id(), Filter), gridtype("gridtype",get_id(),this),
+  representation("representation",get_id(),this), radius("radius",get_id(),this),
+  geomfilename("geomfilename",get_id(),this), numzones("numzones",get_id(),this),
+  showzone1("showzone1",get_id(),this), showzone2("showzone2",get_id(),this), 
+  showzone3("showzone3",get_id(),this), showzone4("showzone4",get_id(),this), 
+  nx1("nx1",get_id(),this), ny1("ny1",get_id(),this), nz1("nz1",get_id(),this),
+  nx2("nx2",get_id(),this), ny2("ny2",get_id(),this), nz2("nz2",get_id(),this),
+  nx3("nx3",get_id(),this), ny3("ny3",get_id(),this), nz3("nz3",get_id(),this),
+  nx4("nx4",get_id(),this), ny4("ny4",get_id(),this), nz4("nz4",get_id(),this)
 {
   gridtype.set(0);
   representation.set(0);

@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 namespace SCITeem {
@@ -48,8 +48,10 @@ public:
 
 private:
   NrrdIPort*      inrrd_;
+  NrrdIPort*      iweight_;
   NrrdOPort*      onrrd_;
-
+  
+  GuiInt          right_;
   GuiInt          westin_;
   GuiInt          resolution_;
 
@@ -59,13 +61,17 @@ DECLARE_MAKER(TendAnhist)
 
 TendAnhist::TendAnhist(SCIRun::GuiContext *ctx) : 
   Module("TendAnhist", ctx, Filter, "Tend", "Teem"),
-  westin_(ctx->subVar("westin")),
-  resolution_(ctx->subVar("resolution"))
+  right_(ctx->subVar("right"), 0),
+  westin_(ctx->subVar("westin"), 1),
+  resolution_(ctx->subVar("resolution"), 256)
 {
 }
 
-TendAnhist::~TendAnhist() {
+
+TendAnhist::~TendAnhist()
+{
 }
+
 
 void 
 TendAnhist::execute()
@@ -74,6 +80,8 @@ TendAnhist::execute()
 
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
+
+  iweight_ = (NrrdIPort *)get_iport("WeightNrrd");
 
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
@@ -85,10 +93,20 @@ TendAnhist::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *nout = nrrdNew();
+  // weights nrrd optional
+  NrrdDataHandle weight_handle;
+  if (iweight_->get(weight_handle) && !weight_handle.get_rep()) {
+    error("Empty input WeightNrrd.");
+    return;
+  }
 
-  if (tenAnisoHistogram(nout, nin, westin_.get(), resolution_.get())) {
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *nout = nrrdNew();
+  Nrrd *weight = NULL;
+  if (weight_handle.get_rep())
+    weight = weight_handle->nrrd_;
+
+  if (tenAnisoHistogram(nout, nin, weight, right_.get(), westin_.get(), resolution_.get())) {
     char *err = biffGetDone(TEN);
     error(string("Error generating barycentric histograms of anisotropy: ") + err);
     free(err);

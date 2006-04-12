@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -65,12 +65,14 @@ DECLARE_MAKER(TendAnvol)
 
 TendAnvol::TendAnvol(SCIRun::GuiContext *ctx) : 
   Module("TendAnvol", ctx, Filter, "Tend", "Teem"), 
-  aniso_metric_(ctx->subVar("aniso_metric")),
-  threshold_(ctx->subVar("threshold"))
+  aniso_metric_(get_ctx()->subVar("aniso_metric"), "tenAniso_FA"),
+  threshold_(get_ctx()->subVar("threshold"), 0.5)
 {
 }
 
-TendAnvol::~TendAnvol() {
+
+TendAnvol::~TendAnvol()
+{
 }
 
 
@@ -156,7 +158,7 @@ TendAnvol::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenAnisoVolume(nout, nin, get_method(aniso_metric_.get()), 

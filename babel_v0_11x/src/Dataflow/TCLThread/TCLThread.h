@@ -30,33 +30,29 @@
 #define SCI_project_TCLThread_h 1
 
 #include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
 
 #include <Dataflow/TCLThread/share.h>
+#include <tcl.h>
 
 namespace SCIRun {
 
 class Network;
 class TCLInterface;
-
 class SCISHARE TCLThread : public Runnable
 {
 public:
   TCLThread(int argc, char* argv[], Network* net, int startnetno);
-  inline TCLInterface* getTclInterface() { return gui;};
   virtual void run();
-  void mainloop_waitstart();
-  void release_mainloop();
-  void mainloop_wait();
-  void startNetworkEditor();
+
 private:
+  static int appInit(Tcl_Interp *interp);
+  int startNetworkEditor();
+  static TCLThread *init_ptr_;
   bool check_for_newer_scirunrc();
   int argc;
   char** argv;
   Network* net;
   int startnetno;
-  Semaphore cont;
-  Semaphore start;
   TCLInterface* gui;
 };
 

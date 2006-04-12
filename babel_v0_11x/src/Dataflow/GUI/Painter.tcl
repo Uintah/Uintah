@@ -163,7 +163,20 @@ itcl_class SCIRun_Render_Painter {
  	pack [gl_frame $topl.gl1] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
  	pack [gl_frame $topr.gl2] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
  	pack [gl_frame $botl.gl3] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
- 	pack [gl_frame $botr.gl4] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+
+        set viewer [info commands SCIRun_Render_Viewer_0]
+        if { ![llength $viewer] } return;
+
+ 	set eviewer [$viewer ui_embedded]
+        frame $botr.frame -relief flat -borderwidth 15
+ 	pack $botr.frame -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+        frame $botr.frame.sunken -relief sunken -borderwidth 2
+ 	pack $botr.frame.sunken -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+
+ 	$eviewer setWindow $botr.frame.sunken.gl 300 300
+
+ 	pack $botr.frame.sunken.gl -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+        bind $w <Control-v> "$eviewer-c autoview"
 
 
     }

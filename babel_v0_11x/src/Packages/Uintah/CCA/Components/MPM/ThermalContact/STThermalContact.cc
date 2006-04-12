@@ -37,12 +37,12 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
 
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<constNCVariable<double> > gTemp(numMatls);
-    StaticArray<NCVariable<double> > thermalContactHeatExchangeRate(numMatls);
+    StaticArray<NCVariable<double> > thermalContactTemperatureRate(numMatls);
     vector<double> Cp(numMatls);
     // for Fracture (additional field)-----------------------------------------
     StaticArray<constNCVariable<double> > Gmass(numMatls);
     StaticArray<constNCVariable<double> > GTemp(numMatls);
-    StaticArray<NCVariable<double> > GthermalContactHeatExchangeRate(numMatls);
+    StaticArray<NCVariable<double> > GthermalContactTemperatureRate(numMatls);
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -52,17 +52,17 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[dwi], lb->gMassLabel,        dwi, patch, Ghost::None,0);
       new_dw->get(gTemp[dwi], lb->gTemperatureLabel, dwi, patch, Ghost::None,0);
-      new_dw->allocateAndPut(thermalContactHeatExchangeRate[dwi],
-                            lb->gThermalContactHeatExchangeRateLabel,dwi,patch);
-      thermalContactHeatExchangeRate[dwi].initialize(0.);
+      new_dw->allocateAndPut(thermalContactTemperatureRate[dwi],
+                            lb->gThermalContactTemperatureRateLabel,dwi,patch);
+      thermalContactTemperatureRate[dwi].initialize(0.);
       Cp[m]=mpm_matl->getSpecificHeat();
       if (flag->d_fracture) {
         // for Fracture (for additional field)----------------------------------
         new_dw->get(Gmass[dwi],lb->GMassLabel,       dwi, patch, Ghost::None,0);
         new_dw->get(GTemp[dwi],lb->GTemperatureLabel,dwi, patch, Ghost::None,0);
-        new_dw->allocateAndPut(GthermalContactHeatExchangeRate[dwi],
-                           lb->GThermalContactHeatExchangeRateLabel,dwi,patch);
-        GthermalContactHeatExchangeRate[dwi].initialize(0);
+        new_dw->allocateAndPut(GthermalContactTemperatureRate[dwi],
+                           lb->GThermalContactTemperatureRateLabel,dwi,patch);
+        GthermalContactTemperatureRate[dwi].initialize(0);
       }
       // -------------------------------------------------------------------
     }
@@ -74,29 +74,23 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
         int n = mpm_matl->getDWIndex();
-        if (!flag->d_fracture) {
-          numerator   += (gTemp[n][c] * gmass[n][c]  * Cp[m]);
+        numerator   += (gTemp[n][c] * gmass[n][c]  * Cp[m]);
+        denominator += (gmass[n][c]  * Cp[m]);
+        if (flag->d_fracture) {
+          numerator   += GTemp[n][c] * Gmass[n][c]  * Cp[m];
+          denominator += Gmass[n][c]  * Cp[m];  // add in second field;
         }
-        else
-          //add second
-          numerator   += (gTemp[n][c] * gmass[n][c]  * Cp[m]
-                        + GTemp[n][c] * Gmass[n][c]  * Cp[m]);
-        if (!flag->d_fracture)
-          denominator += (gmass[n][c]  * Cp[m]);
-        else
-          denominator += (gmass[n][c]  * Cp[m]
-                         +Gmass[n][c]  * Cp[m]);  // add in second field;
       }
       
       double contactTemperature = numerator/denominator;
 
       for(int m = 0; m < numMatls; m++) {
-        if (!flag->d_fracture)
-          thermalContactHeatExchangeRate[m][c] =
-          (contactTemperature - gTemp[m][c])/delT;
-        else
-          GthermalContactHeatExchangeRate[m][c] =
-          (contactTemperature - GTemp[m][c])/delT;
+        thermalContactTemperatureRate[m][c] =
+                                      (contactTemperature - gTemp[m][c])/delT;
+        if (flag->d_fracture){
+          GthermalContactTemperatureRate[m][c] =
+                                      (contactTemperature - GTemp[m][c])/delT;
+        }
       }
     }
   }
@@ -114,11 +108,11 @@ void STThermalContact::addComputesAndRequires(Task* t, const PatchSet*,
   t->requires(Task::OldDW, lb->delTLabel);  
   t->requires(Task::NewDW, lb->gMassLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
-  t->computes(lb->gThermalContactHeatExchangeRateLabel);
+  t->computes(lb->gThermalContactTemperatureRateLabel);
   if (flag->d_fracture) {
     // for second field, for Fracture ---------------------------------
     t->requires(Task::NewDW, lb->GMassLabel,        Ghost::None);
     t->requires(Task::NewDW, lb->GTemperatureLabel, Ghost::None);
-    t->computes(lb->GThermalContactHeatExchangeRateLabel);
+    t->computes(lb->GThermalContactTemperatureRateLabel);
   }
 }

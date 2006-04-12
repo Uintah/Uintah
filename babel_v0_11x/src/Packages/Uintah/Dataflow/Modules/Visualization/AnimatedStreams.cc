@@ -14,9 +14,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
 
@@ -40,13 +40,13 @@ AnimatedStreams::AnimatedStreams(GuiContext* ctx)
   : Module("AnimatedStreams", ctx, Filter, "Visualization", "Uintah"),
     vf(0), anistreams(0), 
     generation(-1), timestep(-1),
-    pause(ctx->subVar("pause")),
-    normals(ctx->subVar("normals")),
-    lighting(ctx->subVar("lighting")),
-    normal_method(ctx->subVar("normal_method")),
-    use_deltat(ctx->subVar("use_deltat")),
-    stepsize(ctx->subVar("stepsize")),
-    linewidth(ctx->subVar("linewidth")),
+    pause(get_ctx()->subVar("pause")),
+    normals(get_ctx()->subVar("normals")),
+    lighting(get_ctx()->subVar("lighting")),
+    normal_method(get_ctx()->subVar("normal_method")),
+    use_deltat(get_ctx()->subVar("use_deltat")),
+    stepsize(get_ctx()->subVar("stepsize")),
+    linewidth(get_ctx()->subVar("linewidth")),
     control_lock("AnimatedStreams position lock"),
     control_widget(0), control_id(-1),
     mutex("Animated Streams")

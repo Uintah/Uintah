@@ -228,7 +228,8 @@ SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
                  Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
   [with_ptolemyII="$withval"
-   sci_required_ptolemyII=yes],
+   sci_required_ptolemyII=yes
+   sci_required_java=yes],
   [with_ptolemyII=""])
 SCI_ARG_WITH(java,
   AC_HELP_STRING(--with-java=DIR,
@@ -290,12 +291,12 @@ SCI_ARG_WITH(verdict,
   [with_verdict="$withval"
    sci_required_verdict=yes],
   [with_verdict=""])
-SCI_ARG_WITH(magick,
-  AC_HELP_STRING(--with-magick=DIR,
-                 Use the Image Magick installation in DIR),
-  [with_magick="$withval"
-   sci_required_magick=yes],
-  [with_magick=""])
+SCI_ARG_WITH(tetgen,
+  AC_HELP_STRING(--with-tetgen=DIR,
+                 Use the Tetgen installation in DIR),
+  [with_tetgen="$withval"
+   sci_required_tetgen=yes],
+  [with_tetgen=""])
 SCI_ARG_WITH(unipetsc,
   AC_HELP_STRING(--with-unipetsc=DIR,
                  Use the unipetsc installation in DIR),
@@ -716,12 +717,28 @@ fi
 
 if test "$pkg_Ptolemy" = "yes"; then
   # check versions?
-  # check --with-ptolemyII
   if test -z "$with_ptolemyII"; then
-    AC_MSG_WARN(Ptolemy II is required by the Ptolemy package.)
-    AC_MSG_ERROR(Use the --with-ptolemyII=DIR option to set the installation directory.)
+    AC_MSG_WARN(The Ptolemy II JNI interface requires Java bindings in the Ptolemy package.)
+    AC_MSG_WARN(Use the --with-ptolemyII=DIR option to set the installation directory.)
+
+    SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
+
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
+    AC_SUBST(HAVE_PTOLEMY_PACKAGE)
+    sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
+  else
+    SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
   fi
-  SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
+fi
+
+
+if test "$pkg_Insight" = "yes"; then
+  if test -z "$sci_required_insight"; then
+    AC_MSG_WARN(Insight is required by the Insight package.)
+    AC_MSG_WARN(Use the --with-insight=DIR option if Insight is not located in Thirdparty.)
+    sci_required_insight=yes
+  fi
+
 fi
 
 # Make sure the Package directories exist.
@@ -851,7 +868,9 @@ AC_MSG_RESULT($NUM_CPUS)
 ##  ----------  determine if this is a 32 or 64 bit machine
 AC_LANG([C])
 
-MY_TEMP=$CPPFLAGS
+# Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
+# its value first, so... (And AC_CHECK_SIZEOF apparently calls AC_PROG_CC...)
+CFLAGS=$CFLAGS
 
 AC_CHECK_SIZEOF(void*)
 
@@ -874,10 +893,6 @@ case $ac_cv_sizeof_voidp in
   Exiting due to size of void* problem! Read above warnings!])
   ;;
 esac
-
-# the next two lines were moved to a later stage to allow us to change this default based on --enable-32/64bit
-#AC_SUBST(NBITS)
-#sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 
 ## --------------
 
@@ -1130,6 +1145,7 @@ fi
 # This flag is for the windows compiler - so it can generate correct
 # SHARE flags.
 WIN_DLLFLAGS=""
+WIN_OTFFLAGS=""
 
 case $host in 
   *-irix*)
@@ -1174,10 +1190,14 @@ case $host in
 
     if test "$enable_64bit" = "yes"; then
       if test $NBITS = "32"; then
+        # The machine defaults to 32 bits (as found above by void* check).
+        # This flag tries to force it to give us 64 bits...
         BINARYFLAGS="-64 -mips4"
       fi
       NBITS=64
     else
+      # FIX ME - we might want to check NBITS at this point... if it is 64 then the machine default
+      # is 64 bits and we are trying to switch it to 32 bits... perhaps should let the user know...
       NBITS=32
       BINARYFLAGS="-n32 -mips4"
     fi
@@ -1265,6 +1285,7 @@ case $host in
 
          if test "$enable_64bit" = "yes"; then
             BIT64FLAG=-q64
+            NBITS=64
          fi
          CFLAGS="-qrtti=all $BIT64FLAG $CFLAGS"
 
@@ -1344,11 +1365,12 @@ case $host in
           
           if test "$debug" = yes; then
             #  no debug information for dynamic compilation yet - the threaded compilations will overwrite the db file
-            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -Gm -MD -W1 -Wp64"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@) /Fd"../$(dir $@)vc70.pdb"'
+            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -Gm -Zi -MD -W1 -Wp64"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)" -Fd"$(dir $@)vc70.pdb"'
+            WIN_OTFFLAGS=' -Fd"$(basename $@).pdb"'
           else
-            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -O2 -MD -W1"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) /Fo"../$(dir $@)'
+            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -O2 -MD -W1"
+            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)"'
           fi
           CXXFLAGS="$CXXFLAGS $CFLAGS"
           WOFF=" -w0"
@@ -1453,13 +1475,13 @@ case $host in
     fi
 
     AC_MSG_CHECKING(if special 32/64 bits flags required)
-    if test "$enable_32bit" = "yes" -a $NBITS=64; then
+    if test "$enable_32bit" = "yes" -a $NBITS = 64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"
        CXXFLAGS="-m32 $CXXFLAGS"
        AC_MSG_RESULT(-m32)
     else 
-      if test "$enable_64bit" = "yes" -a $NBITS=32; then
+      if test "$enable_64bit" = "yes" -a $NBITS = 32; then
         NBITS=64
         # Do not set this flag when using intel compilers
         if test "$CC" != "icc"; then
@@ -1516,9 +1538,15 @@ case $host in
     ;;
 esac
 
+OBJEXT=$ac_objext
+
 AC_SUBST(NEED_OSX_SYSTEMSTUBS)
 AC_SUBST(NEED_OSX_HACK)
 AC_SUBST(DEF_NEED_OSX_HACK)
+AC_SUBST(OBJEXT)
+
+
+
 
 # now that we know which NBITS the user wants, we can save this info
 AC_SUBST(NBITS)
@@ -1527,6 +1555,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 ###
 
 AC_SUBST(WIN_DLLFLAGS)
+AC_SUBST(WIN_OTFFLAGS)
 
 AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
@@ -1606,6 +1635,13 @@ if test $CC_DEPEND_MODE = unknown; then
       break
     fi
   done
+fi
+
+if test $IS_WIN = "yes"; then
+  # for the moment, don't gen deps on win32
+  CC_DEPEND_MODE=normal
+  CC_DEPEND_REGEN=""
+  CC_DEPEND_EXT=""
 fi
 
 if test $CC_DEPEND_MODE = unknown; then
@@ -1770,7 +1806,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.25.2
+  sci_tp_version=1.25.3
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -2123,7 +2159,7 @@ AC_LANG(C++)
 
 if test "$IS_WIN" = "yes"; then
   SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
-               $_sci_inc,glu32 opengl32 gdi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+               $_sci_inc,glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
 else
   SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
 	       $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
@@ -2389,7 +2425,7 @@ SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_
 if test "$IS_WIN" = "yes"; then
   # Windows BLT needs these other libs
   if test $IS_VC = "yes"; then
-    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib"
+    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib user32.lib advapi32.lib"
   else
     BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
   fi
@@ -2742,7 +2778,7 @@ AC_SUBST(PNG_LIB_FLAG)
 AC_SUBST(PNG_LIB_DIR_FLAG)
 AC_SUBST(INC_PNG_H)
 AC_SUBST(DEF_PNG)
-
+AC_SUBST(HAVE_PNG)
 
 ##  --  check if exceptions work properly --------------------------------
 
@@ -2803,101 +2839,6 @@ SCI_SUBST_THIRDPARTY_DIR(MPEGE_LIB_DIR_FLAG)
 AC_SUBST(MPEGE_LIB_FLAG)
 AC_SUBST(MPEGE_LIB_DIR_FLAG)
 AC_SUBST(DEF_MPEG)
-
-##  --  search for ImageMagick --------------------------------------
-AC_LANG(C)
-# Default values:
-_sci_lib="$sci_thirdparty_lib"
-_sci_optional=optional
-
-if test "$with_magick"; then
-  if test "$with_magick" != "yes"; then
-    # If --with-magick has a parameter, then use it
-    _sci_lib="$with_magick/lib"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=optional
-  fi 
-fi
-
-AC_MSG_CHECKING(for $_sci_optional ImageMagick)
-
-if test ! -e $_sci_lib/../bin/Magick-config; then
-   AC_MSG_RESULT(Not found under $_sci_lib)
-   AC_MSG_CHECKING(for Magick-config in your path)
-   # ImageMagick not in SCIRun Thirdparty... Therefore it probably is
-   # just in /usr/lib...
-   MAGICK_DIR=`Magick-config --prefix`
-   if test -e "$MAGICK_DIR/lib"; then
-      _sci_lib=$MAGICK_DIR/lib
-      AC_MSG_RESULT(Magick-config found...)	
-   else
-      AC_MSG_WARN(Magick-config program not found...)
-   fi
-fi
-
-found_magic_config="no"
-
-if test -e $_sci_lib/../bin/Magick-config; then
-    found_magic_config="yes"
-    echo
-    AC_MSG_WARN(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
-
-    MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
-    MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
-
-    MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --libs`
-    includes=`$_sci_lib/../bin/Magick-config --cppflags`
-    if test "$includes" = "-I/usr/include";then
-      includes=""
-    fi
-
-    MAGICK_LDFLAGS=""
-    MAGICK_LIB_PATH=""
-    for i in $MAGICK_LIB_DIR_FLAG;do
-      is_lib_path=`echo $i | sed -n -e "s/-L//p"`
-      if test -z "$is_lib_path";then
-        MAGICK_LDFLAGS="$MAGICK_LDFLAGS $i"
-      else 
-        if ! test $i = "-L/usr/lib";then
-    	MAGICK_LIB_PATH="$MAGICK_LIB_PATH $i"
-        fi
-      fi
-    done
-
-    SCI_TRY_LINK(MAGICK, ImageMagick library and headers,
-                 time.h stdio.h stdlib.h magick/api.h,
-                 $includes,$MAGICK_LDFLAGS,$MAGICK_LIB_PATH,,
-       [
-         Image *image = NULL;
-       ],
-       $_sci_optional)
-
-    DEF_MAGICK="#define HAVE_MAGICK 1"
-    break
-fi
-
-if test "$found_magic_config" = "no"; then
-   AC_MSG_RESULT(no.)
-   if test "$_sci_optional" != "optional"; then
-     echo
-     AC_MSG_WARN(Cannot find a Magick-config file to get ImageMagick variables.)
-     AC_MSG_WARN(This file usually resides in Magicklib_dir/../bin/Magick-config.)
-     AC_MSG_WARN(Please install ImageMagick and then reconfigure.)
-   fi
-fi
-
-if test "$with_magick" && test ! "$DEF_MAGICK"; then
-  echo
-  AC_MSG_ERROR(One or more of the ImageMagick components is missing.)
-fi
-
-SCI_SUBST_THIRDPARTY_DIR(MAGICK_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_MAGICK_H)
-
-AC_SUBST(MAGICK_LIB_FLAG)
-AC_SUBST(MAGICK_LIB_DIR_FLAG)
-AC_SUBST(INC_MAGICK_H)
-AC_SUBST(DEF_MAGICK)
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
 
@@ -3039,12 +2980,13 @@ if test "$with_java" = "yes"; then
     fi
   done
 elif test "$with_java"; then
-  _sci_optional=specific
+  _sci_optional=required
   _sci_inc="$with_java/include"
   _java_top=$with_java
+  AC_MSG_RESULT(Found Java top directory $_java_top)
 fi
 
-if test "$_sci_optional" != "optional"; then
+if test "$_sci_optional" = "required"; then
   _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
   if test -d "$_java_lib_dir"; then
     _sci_lib="$_sci_lib $_java_lib_dir"
@@ -3055,9 +2997,25 @@ if test "$_sci_optional" != "optional"; then
     _sci_lib="$_sci_lib $_jvm_lib_dir"
   fi
 
+  _jni_platfrom_h_dir=`find $_sci_inc -follow -name "jni_md.h" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_jni_platfrom_h_dir"; then
+    _sci_inc="$_sci_inc $_jni_platfrom_h_dir"
+  fi
+
   SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
 fi
 
+if test "$HAVE_JAVA" = "yes"; then
+    DEF_JAVA="#define HAVE_JAVA 1"
+fi
+
+if test "$with_java" && test ! "$DEF_JAVA"; then
+  AC_MSG_ERROR(Java installation directory is missing.)
+fi
+
+AC_SUBST(HAVE_JAVA)
+AC_SUBST(DEF_JAVA)
+AC_SUBST(JAVA)
 
 ##  --  search for Mesquite ------------------------
 AC_LANG([C++])
@@ -3182,6 +3140,41 @@ AC_SUBST(INC_CAMAL_H)
 AC_SUBST(CAMAL_LIB_DIR_FLAG)
 AC_SUBST(DEF_CAMAL)
 AC_SUBST(HAVE_CAMAL)
+
+##  --  search for Tetgen (http://tetgen.berlios.de) ------------------------
+
+_sci_optional=optional
+if test "$with_tetgen" = "yes"; then
+  AC_MSG_ERROR(--with-tetgen must have a have a path to an installation --with-tetgen=/path/to/my/tetgen/installation/dir)
+else 
+  if test "$with_tetgen"; then
+    # If --with-tetgen has a parameter, then use it
+    _sci_lib="$with_tetgen"
+    _sci_inc="$with_tetgen"
+    _sci_optional=specific
+  fi 
+fi
+
+
+SCI_TRY_LINK(TETGEN,TETGEN library,,$_sci_inc,tet,
+			   $_sci_lib,,,$_sci_optional)
+
+
+if test "$HAVE_TETGEN" = "yes"; then
+  DEF_TETGEN="#define HAVE_TETGEN 1"
+fi
+
+if test "$with_tetgen" && test ! "$DEF_TETGEN"; then
+  echo
+  AC_MSG_ERROR(One or more of the TETGEN components is missing.)
+  echo
+fi
+
+AC_SUBST(TETGEN_LIB_FLAG)
+AC_SUBST(INC_TETGEN_H)
+AC_SUBST(TETGEN_LIB_DIR_FLAG)
+AC_SUBST(DEF_TETGEN)
+AC_SUBST(HAVE_TETGEN)
 
 ##  --  search for atlas stuff  -------------------------------------------
 
@@ -3410,8 +3403,9 @@ if test "$sci_required_mpi" = "yes"; then
               _sci_optional=required
            else
               _sci_optional=specific
-              _sci_lib="$with_mpi/lib"
               _sci_inc="$with_mpi/include"
+              # Account for lib64 or lib32 or just lib...
+              BASE_LIB_PATH(_sci_lib,$with_mpi)
            fi
         fi
 
@@ -3426,61 +3420,66 @@ if test "$sci_required_mpi" = "yes"; then
                      $_sci_inc /usr/include/mpi,mpi lam util pmpi,$_sci_lib,,,optional)
 
         if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-           test ! -e $with_mpi/lib/$the_file.so &&
-           test ! -e $with_mpi/lib/$the_file.a &&
-           test ! -e $with_mpi/lib/$the_file.dylib; then
-             AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+           test ! -e $_sci_lib/$the_file.so &&
+           test ! -e $_sci_lib/$the_file.a &&
+           test ! -e $_sci_lib/$the_file.dylib; then
+             AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
 	     HAVE_MPI="no"
         fi
 
         if test "$HAVE_MPI" != "yes"; then
-          # Try without pmpi (and with pthreads) (for the newer version
+          # Try without pmpi (and with pthreads) for the newer version
           # of lam mpi.
           # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-          $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
+                       $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
 
           # verify that it was found in the location requested.
           if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-             test ! -e $with_mpi/lib/$the_file.so &&
-             test ! -e $with_mpi/lib/$the_file.a &&
-             test ! -e $with_mpi/lib/$the_file.dylib; then
-             AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+             test ! -e $_sci_lib/$the_file.so &&
+             test ! -e $_sci_lib/$the_file.a &&
+             test ! -e $_sci_lib/$the_file.dylib; then
+             AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
 	     HAVE_MPI="no"
           fi
 
           if test "$HAVE_MPI" != "yes"; then
              # If building with newer LAM on OSX, pthreads and util not needed.
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
-             $_sci_inc /usr/include/mpi,lam mpi,$_sci_lib,-DMPIPP_H,,optional)
+                          $_sci_inc /usr/include/mpi,lam mpi,$_sci_lib,-DMPIPP_H,,optional)
 
              # verify that it was found in the location requested
              if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-                test ! -e $with_mpi/lib/$the_file.so &&
-                test ! -e $with_mpi/lib/$the_file.a &&
-                test ! -e $with_mpi/lib/$the_file.dylib; then
-                AC_MSG_WARN(Found libmpi but not in the requested directory: $with_mpi/lib)
+                test ! -e $_sci_lib/$the_file.so &&
+                test ! -e $_sci_lib/$the_file.a &&
+                test ! -e $_sci_lib/$the_file.dylib; then
+                AC_MSG_WARN(Found libmpi but not in the requested directory: $_sci_lib)
                 HAVE_MPI="no"
              fi                        
 
              if test "$HAVE_MPI" != "yes"; then
                 SCI_TRY_LINK(MPI,mpi library and header-4,mpi.h,
-                $_sci_inc /usr/include/mpi,mpi,$_sci_lib,-DMPIPP_H,,optional)
+                             $_sci_inc /usr/include/mpi,mpi,$_sci_lib,-DMPIPP_H,,optional)
 
                 # verify that it was found in the location requested.
                 if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-                   test ! -e $with_mpi/lib/$the_file.so &&
-                   test ! -e $with_mpi/lib/$the_file.a &&
-                   test ! -e $with_mpi/lib/$the_file.dylib; then
-                   AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+                   test ! -e $_sci_lib/$the_file.so &&
+                   test ! -e $_sci_lib/$the_file.a &&
+                   test ! -e $_sci_lib/$the_file.dylib; then
+                   AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
                    HAVE_MPI="no"
                 fi
 
                 if test "$HAVE_MPI" != "yes"; then
                    SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
-                   $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
+                                $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
 
+                   # try mpich again without the pmpich
+                   if test "$HAVE_MPI" != "yes"; then
+                     SCI_TRY_LINK(MPI,mpich library and header-2,mpi.h,
+                                  $_sci_inc /usr/include/mpi,mpich,$_sci_lib,,,optional)
+                   fi
                    if test "$HAVE_MPI" = "yes"; then
                       HAVE_MPICH="yes"
                    fi
@@ -3490,19 +3489,24 @@ if test "$sci_required_mpi" = "yes"; then
         fi
         
         if test "$HAVE_MPI" = "yes"; then
-
+           if test "$IS_WIN" = "yes"; then
+             header=""
+           else
+             header="lib"
+           fi
            if test "$_sci_optional" = "specific"; then
-              the_file=libmpi
+              the_file="$header"mpi
               if test "$HAVE_MPICH" = "yes"; then
-                the_file=libmpich
+                the_file="$header"mpich
               fi
 
               # verify that it was found in the location requested.
-              if test ! -e $with_mpi/lib/$the_file.so &&
-                 test ! -e $with_mpi/lib/$the_file.a &&
-                 test ! -e $with_mpi/lib/$the_file.dylib; then
+              if test ! -e $_sci_lib/$the_file.so &&
+                 test ! -e $_sci_lib/$the_file.a &&
+                 test ! -e $_sci_lib/$the_file.lib &&
+                 test ! -e $_sci_lib/$the_file.dylib; then
                    echo
-                   AC_MSG_ERROR(Found libmpi but not in requested directory: $with_mpi/lib)
+                   AC_MSG_ERROR(Found libmpi but not in requested directory: $_sci_lib)
               fi
            fi
 
@@ -3574,7 +3578,11 @@ case $host in
     PETSC_ARCH=aix5.1.0.0
     ;;
   *-darwin*)
-    PETSC_ARCH=ppc
+  	if test `uname -p` = "i386"; then
+    	PETSC_ARCH=i386
+    else 
+    	PETSC_ARCH=ppc
+    fi
     ;;
   *-pc-mingw*)
     PETSC_ARCH=win
@@ -3808,24 +3816,32 @@ if test "$sci_required_insight" = "yes"; then
   AC_MSG_CHECKING(for Insight.)
 
   if test "$with_insight"; then
-    dir="$with_insight"
+    dir="$with_insight/lib/InsightToolkit"
   else
-    dir="/usr/local/lib/InsightToolkit"
+    dir="$sci_thirdparty_lib/InsightToolkit"
   fi
 
   if test -a "$dir/ITKConfig.cmake"; then
     INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -lITKniftiio -lITKznz -litkvnl -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
 
-    if test -a "$insight_libs_dir/libitkzlib.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test "$IS_WIN" = "yes"; then
+	  libBegin=""
+	  ext="lib" #windows's so is dll, not lib, but we link against the lib
+	else
+	  libBegin="lib"
+	  ext="$SO_OR_ARCHIVE_EXTENSION"
+	fi
+
+    if test -a "$insight_libs_dir/"$libBegin"itkzlib.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
     elif test "$HAVE_Z" = "yes"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG"
     fi
 
-    if test -a "$insight_libs_dir/libitktiff.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itktiff.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
     elif test "$HAVE_TIFF" = "yes"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $TIFF_LIB_DIR_FLAG $TIFF_LIB_FLAG"
@@ -3834,7 +3850,7 @@ if test "$sci_required_insight" = "yes"; then
 
     INSIGHT_JPEG_LINKED=no
 
-    if test -a "$insight_libs_dir/libitkjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg8.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg8"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -3842,7 +3858,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg12.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg12"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -3850,7 +3866,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg16.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
@@ -3858,7 +3874,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libitkjpeg.$SO_OR_ARCHIVE_EXTENSION" && test "$INSIGHT_JPEG_LINKED" = "no"; then
+    if test -a "$insight_libs_dir/"$libBegin"itkjpeg.$ext" && test "$INSIGHT_JPEG_LINKED" = "no"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no"; then
@@ -3866,7 +3882,7 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_JPEG_LINKED=yes
     fi
 
-    if test -a "$insight_libs_dir/libITKNrrdIO.$SO_OR_ARCHIVE_EXTENSION"; then
+    if test -a "$insight_libs_dir/"$libBegin"ITKNrrdIO.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO"
     fi
 
@@ -3893,12 +3909,12 @@ if test "$sci_required_insight" = "yes"; then
 
 #    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
 
-    DEF_INSIGHT="#define HAVE_INSIGHT"
+    DEF_INSIGHT="#define HAVE_INSIGHT 1"
     HAVE_INSIGHT="yes"
 
     AC_MSG_RESULT($dir)
   else
-    AC_MSG_RESULT(not found.)
+    AC_MSG_ERROR(not found... Insight is required to build)
   fi
  
   if test "$with_insight" && test ! "$DEF_INSIGHT"; then
@@ -3932,7 +3948,7 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
   if test "$with_gdcm"; then
     dir="$with_gdcm"
   elif test "$with_insight"; then
-    dir="$with_insight"
+    dir="$with_insight/lib/InsightToolkit"
   else
     dir="/usr/local"
   fi
@@ -3980,9 +3996,14 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
       insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
       gdcm_src="$insight_src/Utilities/gdcm/src"
 
-      insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
+      if test "$IS_WIN" = "no"; then
+        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
+      else
+        # the sed '; -> \n' doesn't quite produce the right results - awk off the first entry instead
+        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"//' | sed 's/\")//' | awk -F ';' '{print $1}'`"
+      fi
 
-      if test -a "$insigt_include/gdcm/src"; then     
+      if test -a "$insight_include/gdcm/src"; then     
            INC_GDCM_H="-I$gdcm_src -I$insight_include/gdcm/src"
            gdcm_libs_dir="$dir"
            found_gdcm_comp="yes"
@@ -4009,6 +4030,10 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
 
      if test $using_itk = "yes"; then
        GDCM_LIB_FLAG="-litkgdcm"
+       if test $IS_WIN = "yes"; then
+         # don't know why, but windows needs them...
+         GDCM_LIB_FLAG="$GDCM_LIB_FLAG SnmpAPI.lib ws2_32.lib"
+       fi
      else
        GDCM_LIB_FLAG="-lgdcm"
      fi
@@ -4068,7 +4093,7 @@ AC_SUBST(GDCM_LIB_DIR_FLAG)
 if test "$sci_required_ptolemyII" = "yes"; then
   AC_MSG_CHECKING(for Ptolemy II.)
   if test "$HAVE_JAVA" != "yes"; then
-    AC_MSG_WARN(Java installation directory is missing.)
+    AC_MSG_ERROR(Java installation directory is missing.)
   fi
 
   # search here
@@ -4084,6 +4109,7 @@ if test "$sci_required_ptolemyII" = "yes"; then
     PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
+    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
   else
     AC_MSG_ERROR(Ptolemy II directory is missing.)
   fi
@@ -4091,6 +4117,7 @@ fi
 
 AC_SUBST(HAVE_PTOLEMY)
 AC_SUBST(DEF_PTOLEMY)
+AC_SUBST(HAVE_PTOLEMY_PACKAGE)
 AC_SUBST(PTOLEMY_PATH)
 AC_SUBST(PTOLEMY_CLASSPATH)
 sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
@@ -4176,7 +4203,6 @@ elif test "$with_babel"; then
   _sci_optional=specific
 fi
 
-#SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl sidlx sidlstub_ucxx,$_sci_lib,,,$_sci_optional)
 SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
 
 BABEL_BIN=
@@ -4184,7 +4210,7 @@ AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
 AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
+  ## check for compatible version (0.11.0 or greater)
   SCI_CHECK_VERSION($BABEL_BIN,--version,0.11.0,,echo configure: error: wrong Babel version.; exit)
   DEF_BABEL="#define HAVE_BABEL 1"
   HAVE_BABEL="yes"
@@ -4271,6 +4297,7 @@ AC_SUBST(GLUT_LIB_DIR_FLAG)
 
 
 ##  --  search for glui  -----------------------------------------------
+AC_LANG([C++])
 if test "$sci_required_glui" = "yes"; then
    if test "$with_glui"; then
    
@@ -4303,8 +4330,12 @@ if test "$sci_required_glui" = "yes"; then
      fi
    fi
 
+   AC_LANG([C++])
+
    SCI_TRY_LINK(GLUI,glui library and headers,GL/glut.h glui.h,
                 $_sci_inc,glui,$_sci_lib,$libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG,,required)
+
+   AC_LANG([C])
 
   if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
     AC_MSG_WARN("$GLUI_LIB_DIR_FLAG")
@@ -4317,7 +4348,7 @@ fi # end sci_required_glui
 AC_SUBST(INC_GLUI_H)
 AC_SUBST(GLUI_LIB_FLAG)
 AC_SUBST(GLUI_LIB_DIR_FLAG)
-
+AC_LANG([C])
 
 ##  --  search for oogl  -----------------------------------------------
 if test "$sci_required_oogl" = "yes"; then
@@ -4342,8 +4373,11 @@ if test "$sci_required_oogl" = "yes"; then
   fi
   # Only check for OOGL if the user did not say without-oogl.
   if test "$with_oogl" != "no"; then
+
+    AC_LANG([C++])
     SCI_TRY_LINK(OOGL,oogl library and headers,oogl/basicTexture.h oogl/shadedPrim.h,
                  $_sci_inc,oogl,$_sci_lib,$INC_GLUT_H $INC_GLUI_H,,optional)
+    AC_LANG([C])
   fi
 
   if test "$HAVE_OOGL" = "yes"; then
@@ -4460,16 +4494,25 @@ if test -e $freetype_bin/freetype-config; then
     AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
     includes=`$freetype_bin/freetype-config --cflags`
-    SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                 $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
-
-    INC_FREETYPE_H="$INC_FREETYPE_H $includes"
-
-    DEF_FREETYPE="#define HAVE_FREETYPE 1"
+elif test -e $sci_thirdparty_dir/bin/freetype-config; then
+    AC_MSG_RESULT(Using $sci_thirdparty_dir/bin/freetype-config to set freetype variables.)
+    found_freetype_config="yes"
+    includes=`$sci_thirdparty_dir/bin/freetype-config --cflags`
+    _sci_lib="$sci_thirdparty_lib"
+else
+    AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.)
+    # try the 3P for windows
+    _sci_lib="$sci_thirdparty_lib"
+    _sci_inc="$sci_thirdparty_include"
+    includes=""
 fi
+SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
+             $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
 
-if test "$found_freetype_config" = "no"; then
-   AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check.)
+if test "$HAVE_FREETYPE" = "yes"; then
+  INC_FREETYPE_H="$INC_FREETYPE_H $includes"
+  DEF_FREETYPE="#define HAVE_FREETYPE 1"
+elif test "$found_freetype_config" = "no"; then
    if test "$_sci_optional" != "optional"; then
      echo
      AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)
@@ -4559,7 +4602,7 @@ if test "$with_teem"; then
     AC_MSG_WARN(Teem is already required - you do not need to specify --with-teem.)
   else
     # If --with-teem has a parameter, then use it
-    _sci_lib="$with_teem/lib"
+    _sci_lib="$with_teem"
     _sci_inc="$with_teem/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
@@ -4882,7 +4925,7 @@ if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
    DEF_QT="#define HAVE_QT 1"
    HAVE_QT="yes"
 fi
-  
+
 if test "$with_qt" && test ! "$DEF_QT"; then
   echo
   AC_MSG_ERROR(One or more of the QT components is missing.)
@@ -4950,22 +4993,22 @@ if test "$sci_required_tao" = "yes"; then
     _tao_inc="$with_tao $with_tao/ace $with_tao/TAO $with_tao/TAO/tao"
    fi
   fi
-                                                                                                                                                
+
   # Only looking for one .h file... assuming all the rest are in the same place.
   SCI_TRY_LINK(TAO,tao corba library,pre.h,$_tao_inc,TAO_IORTable TAO_PortableServer TAO_IORInterceptor TAO ACE,$_sci_lib,,,optional)
-                                                                                                                                                
+
   if test "$HAVE_TAO" = "yes"; then
      DEF_TAO="#define HAVE_TAO 1"
      HAVE_TAO="yes"
   fi
-                                                                                                                                                
+
   if test "$with_tao" && test ! "$DEF_TAO"; then
     echo
     AC_MSG_ERROR(One or more of the Tao components are missing.)
     echo
   fi
 fi # end sci_required_tao
-                                                                                                                                                
+
 AC_SUBST(HAVE_TAO)
 AC_SUBST(DEF_TAO)
 AC_SUBST(INC_TAO_H)
@@ -4996,7 +5039,7 @@ if test "$sci_required_vtk" = "yes"; then
      DEF_VTK="#define HAVE_VTK 1"
      HAVE_VTK="yes"
   fi
-  
+
   if test "$with_vtk" && test ! "$DEF_VTK"; then
     echo
     AC_MSG_ERROR(One or more of the vtk components are missing.)
@@ -5358,6 +5401,8 @@ AC_SUBST(BUILD_SCIRUN2)
 
   case $host in
     *aix*)
+        AC_MSG_WARN(Changing the compiler for AIX computers...)
+        AC_MSG_WARN(...to (probably) mpxlC, etc, and removing MPI flags...)
 	CC=`echo $CC | sed 's,x,mpx,g'`
 	CXX=`echo $CXX | sed 's,x,mpx,g'`
 	F77=`echo $F77 | sed 's,x,mpx,g'`

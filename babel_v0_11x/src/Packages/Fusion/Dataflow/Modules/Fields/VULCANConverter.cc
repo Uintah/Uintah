@@ -42,8 +42,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Packages/Fusion/Dataflow/Modules/Fields/VULCANConverter.h>
 
@@ -65,41 +65,39 @@ private:
   enum { NONE = 0, MESH = 1, SCALAR = 2, REALSPACE = 4, CONNECTION = 8 };
   enum { ZR = 0, PHI = 1, LIST = 2 };
 
-  GuiString datasetsStr_;
-  GuiInt nModes_;
-  vector< GuiInt* > gModes_;
+  GuiString gui_datasets_;
+  GuiInt gui_nmodes_;
+  vector< GuiInt* > gui_modes_;
 
   int nmodes_;
   vector< int > modes_;
 
   unsigned int conversion_;
 
-  GuiInt allowUnrolling_;
-  GuiInt unRolling_;
-  int unrolling_;
+  GuiInt gui_allow_unrolling_;
+  GuiInt gui_unrolling_;
 
   vector< int > mesh_;
   vector< int > data_;
 
-  vector< int > nGenerations_;
+  unsigned int nHandles_;
 
-  NrrdDataHandle nHandle_;
+  NrrdDataHandle nrrd_output_handle_;
 
-  bool error_;
+  bool execute_error_;
 };
 
 
 DECLARE_MAKER(VULCANConverter)
 VULCANConverter::VULCANConverter(GuiContext* context)
   : Module("VULCANConverter", context, Source, "Fields", "Fusion"),
-    datasetsStr_(context->subVar("datasets")),
-    nModes_(context->subVar("nmodes")),
-    nmodes_(0),
+    gui_datasets_(context->subVar("datasets")),
+    gui_nmodes_(context->subVar("nmodes")),
     conversion_(NONE),
-    allowUnrolling_(context->subVar("allowUnrolling")),
-    unRolling_(context->subVar("unrolling")),
-    unrolling_(0),
-    error_(false)
+    gui_allow_unrolling_(context->subVar("allowUnrolling")),
+    gui_unrolling_(context->subVar("unrolling")),
+    nrrd_output_handle_(0),
+    execute_error_(false)
 {
 }
 
@@ -109,115 +107,69 @@ VULCANConverter::~VULCANConverter(){
 void
 VULCANConverter::execute(){
 
-  vector< NrrdDataHandle > nHandles;
-  NrrdDataHandle nHandle;
+  vector< NrrdDataHandle > nrrd_input_handles;
+  NrrdDataHandle nrrd_input_handle;
+
+  if( !get_dynamic_input_handles( "Input Nrrd", nrrd_input_handles, true ) )
+    return;
 
   string datasetsStr;
 
   string nrrdName;
   string property;
 
-  // Assume a range of ports even though four are needed.
-  port_range_type range = get_iports("Input Nrrd");
+  for( unsigned int ic=0; ic<nrrd_input_handles.size(); ic++ ) {
 
-  if (range.first == range.second)
-    return;
-
-  port_map_type::iterator pi = range.first;
-
-  while (pi != range.second) {
-    NrrdIPort *inrrd_port = (NrrdIPort*) get_iport(pi->second); 
-
-    ++pi;
-
-    if (!inrrd_port) {
-      error( "Unable to initialize "+name+"'s iport " );
+    // Get the source of the nrrd being worked on.
+    if( !nrrd_input_handles[ic]->get_property( "Source", property ) ||
+	property == "Unknown" ) {
+      error( "Can not find the source of the nrrd or it is unknown." );
       return;
     }
 
-    // Save the field handles.
-    if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
-      // Get the name of the nrrd being worked on.
-      if( !nHandle->get_property( "Name", nrrdName ) ||
-	  nrrdName == "Unknown" ) {
-
-	error( "Can not find the name of the nrrd or it is unknown." );
-	return;
-      }
-
-      // Get the source of the nrrd being worked on.
-      if( !nHandle->get_property( "Source", property ) ||
-	  property == "Unknown" ) {
-	error( "Can not find the source of the nrrd or it is unknown." );
-	return;
-      }
-
-      nHandles.push_back( nHandle );
-
-    } else if( pi != range.second ) {
-      error( "No handle or representation." );
-      return;
-    }
-  }
-
-  for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
-
-    nHandles[ic]->get_property( "Name", nrrdName );
+    nrrd_input_handles[ic]->get_property( "Name", nrrdName );
 
     // Save the name of the dataset.
-    if( nHandles.size() == 1 )
+    if( nrrd_input_handles.size() == 1 )
       datasetsStr.append( nrrdName );
     else
       datasetsStr.append( "{" + nrrdName + "} " );
   }
 
-  if( datasetsStr != datasetsStr_.get() ) {
+  if( datasetsStr != gui_datasets_.get() ) {
     // Update the dataset names and dims in the GUI.
     ostringstream str;
-    str << id << " set_names " << " {" << datasetsStr << "}";
+    str << get_id() << " set_names " << " {" << datasetsStr << "}";
     
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
   }
 
-  if( nHandles.size() != 1 && nHandles.size() != 2 &&
-      nHandles.size() != 3 &&
-      nHandles.size() != 4 && nHandles.size() != 8 ){
+  if( nrrd_input_handles.size() != 1 && nrrd_input_handles.size() != 2 &&
+      nrrd_input_handles.size() != 3 &&
+      nrrd_input_handles.size() != 4 && nrrd_input_handles.size() != 8 ){
     error( "Not enough or too many handles or representations" );
     return;
   }
 
-  int generation = 0;
-
-  // See if input data has been added or removed.
-  if( nGenerations_.size() == 0 ||
-      nGenerations_.size() != nHandles.size() )
-    generation = nHandles.size();
-  else {
-    // See if any of the input data has changed.
-    for( unsigned int ic=0; ic<nHandles.size() &&
-	   ic<nGenerations_.size(); ic++ ) {
-      if( nGenerations_[ic] != nHandles[ic]->generation )
-	++generation;
-    }
-  }
+  if( nHandles_ != nrrd_input_handles.size() )
+    inputs_changed_ = true;
 
   // If data change, update the GUI the field if needed.
-  if( generation ) {
+  if( inputs_changed_ ) {
+
+    nHandles_ = nrrd_input_handles.size();
+
     conversion_ = NONE;
 
     remark( "Found new data ... updating." );
 
-    nGenerations_.resize( nHandles.size() );
     mesh_.resize(4);
     mesh_[0] = mesh_[1] = mesh_[2] = mesh_[3] = -1;
 
-    for( unsigned int ic=0; ic<nHandles.size(); ic++ )
-      nGenerations_[ic] = nHandles[ic]->generation;
-
     // Get each of the dataset names for the GUI.
-    for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
+    for( unsigned int ic=0; ic<nrrd_input_handles.size(); ic++ ) {
 
-      nHandle = nHandles[ic];
+      NrrdDataHandle nHandle = nrrd_input_handles[ic];
 
       // Get the name of the nrrd being worked on.
       nHandle->get_property( "Name", nrrdName );
@@ -235,24 +187,24 @@ VULCANConverter::execute(){
 
 	      // Sort the components.
 	      if( nrrdName.find( "ZR:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 2 ) {
+		  nHandle->nrrd_->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[ZR] = ic;
 	      } else if( nrrdName.find( "ZR:Vector" ) != string::npos &&
-			 nHandle->nrrd->dim == 2 ) {
+			 nHandle->nrrd_->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[ZR] = ic;
 	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 1 ) {
+			 nHandle->nrrd_->dim == 1 ) {
 		mesh_[PHI] = ic;
 	      } else {
 		error( nrrdName + " is unknown VULCAN mesh data." );
-		error_ = true;
+		execute_error_ = true;
 		return;
 	      }
 	    } else {
 	      error( nrrdName + " " + property + " is an unsupported coordinate system." );
-	      error_ = true;
+	      execute_error_ = true;
 	      return;
 	    }
 	  } else if( nHandle->get_property( "Cell Type", property ) ) {
@@ -260,12 +212,12 @@ VULCANConverter::execute(){
 	    mesh_[LIST] = ic;
 	  } else {
 	    error( nrrdName + "No coordinate system or cell type found." );
-	    error_ = true;
+	    execute_error_ = true;
 	    return;
 	  }
 	} else {
 	  error( nrrdName + " " + property + " is an unsupported topology." );
-	  error_ = true;
+	  execute_error_ = true;
 	  return;
 	}
       } else if( nHandle->get_property( "DataSpace", property ) ) {
@@ -278,30 +230,30 @@ VULCANConverter::execute(){
 	  }
 
 	  if( nrrdName.find( "ZR:Scalar" ) != string::npos && 
-	      nHandle->nrrd->dim == 2 ) {
+	      nHandle->nrrd_->dim == 2 ) {
 	    conversion_ = REALSPACE;
 	    data_[ZR] = ic; 
 	  } else if( nrrdName.find( "ZR:Vector" ) != string::npos && 
-	      nHandle->nrrd->dim == 2 ) {
+	      nHandle->nrrd_->dim == 2 ) {
 	    conversion_ = REALSPACE;
 	    data_[ZR] = ic; 
 	  } else if( nrrdName.find( ":Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 1 ) {
+		     nHandle->nrrd_->dim == 1 ) {
 	    conversion_ = SCALAR;
 	    data_[0] = ic;
 	  } else {
 	    error( nrrdName + " is unknown VULCAN node data." );
-	    error_ = true;
+	    execute_error_ = true;
 	    return;
 	  }
 	} else {	
 	  error( nrrdName + " " + property + " Unsupported Data Space." );
-	  error_ = true;
+	  execute_error_ = true;
 	  return;
 	}
       } else {
 	error( nrrdName + " No DataSpace property." );
-	error_ = true;
+	execute_error_ = true;
 	return;
       }
     }
@@ -314,13 +266,13 @@ VULCANConverter::execute(){
   if( conversion_ & MESH ) {
     if( mesh_[PHI] == -1 || mesh_[ZR] == -1 ) {
       error( "Not enough data for the mesh conversion." );
-      error_ = true;
+      execute_error_ = true;
       return;
     }
   } else if( conversion_ & CONNECTION ) {
     if( mesh_[PHI] == -1 || mesh_[ZR] == -1 || mesh_[LIST] == -1 ) {
       error( "Not enough data for the connection conversion." );
-      error_ = true;
+      execute_error_ = true;
       return;
     }
   } else if ( conversion_ & REALSPACE ) {
@@ -328,7 +280,7 @@ VULCANConverter::execute(){
 
       error( "Not enough data for the realspace conversion." );
 
-      error_ = true;
+      execute_error_ = true;
       return;
     }
   } else if ( conversion_ & SCALAR ) {
@@ -336,32 +288,32 @@ VULCANConverter::execute(){
 
       error( "Not enough data for the scalar conversion." );
 
-      error_ = true;
+      execute_error_ = true;
       return;
     }
   }
 
-  if( (int) (conversion_ & MESH) != allowUnrolling_.get() ) {
+  if( (int) (conversion_ & MESH) != gui_allow_unrolling_.get() ) {
     ostringstream str;
-    str << id << " set_unrolling " << (conversion_ & MESH);
+    str << get_id() << " set_unrolling " << (conversion_ & MESH);
     
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
 
     if( conversion_ & MESH ) {
       warning( "Select the mesh rolling for the calculation" );
-      error_ = true; // Not really an error but it so it will execute.
+      execute_error_ = true; // Not really an error but it so it will execute.
       return;
     }
   }
 
   nmodes_ = 0;
 
-  int nmodes = gModes_.size();
+  int nmodes = gui_modes_.size();
 
   // Remove the GUI entries that are not needed.
   for( int ic=nmodes-1; ic>nmodes_; ic-- ) {
-    delete( gModes_[ic] );
-    gModes_.pop_back();
+    delete( gui_modes_[ic] );
+    gui_modes_.pop_back();
     modes_.pop_back();
   }
 
@@ -371,19 +323,19 @@ VULCANConverter::execute(){
       char idx[24];
       
       sprintf( idx, "mode-%d", ic );
-      gModes_.push_back(new GuiInt(ctx->subVar(idx)) );
+      gui_modes_.push_back(new GuiInt(get_ctx()->subVar(idx)) );
       
       modes_.push_back(0);
     }
   }
 
-  if( nModes_.get() != nmodes_ ) {
+  if( gui_nmodes_.get() != nmodes_ ) {
 
     // Update the modes in the GUI
     ostringstream str;
-    str << id << " set_modes " << nmodes_ << " 1";
+    str << get_id() << " set_modes " << nmodes_ << " 1";
 
-    gui->execute(str.str().c_str());
+    get_gui()->execute(str.str().c_str());
     
   }
 
@@ -394,9 +346,9 @@ VULCANConverter::execute(){
     bool haveMode = false;
 
     for( int ic=0; ic<=nmodes_; ic++ ) {
-      gModes_[ic]->reset();
-      if( modes_[ic] != gModes_[ic]->get() ) {
-	modes_[ic] = gModes_[ic]->get();
+      gui_modes_[ic]->reset();
+      if( modes_[ic] != gui_modes_[ic]->get() ) {
+	modes_[ic] = gui_modes_[ic]->get();
 	updateMode = true;
       }
 
@@ -405,61 +357,60 @@ VULCANConverter::execute(){
 
     if( !haveMode ) {
       warning( "Select the mode for the calculation" );
-      error_ = true; // Not really an error but it so it will execute.
+      execute_error_ = true; // Not really an error but it so it will execute.
       return;
     }
   }
 
-  bool updateRoll = false;
-
-  if( unrolling_ != unRolling_.get() ) {
-    unrolling_ = unRolling_.get();
-    updateRoll = true;
-  }
-
   // If no data or data change, recreate the field.
-  if( error_ ||
+  if( inputs_changed_ ||
+
+      !nrrd_output_handle_.get_rep() ||
+
+      gui_unrolling_.changed( true ) ||
+
       updateMode ||
-      updateRoll ||
-      !nHandle_.get_rep() ||
-      generation ) {
+
+      execute_error_ ) {
     
-    error_ = false;
+    update_state( Executing );
+
+    execute_error_ = false;
 
     string convertStr;
     unsigned int ntype;
 
     if( conversion_ & MESH ) {
-      ntype = nHandles[mesh_[PHI]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd_->type;
 
-      nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
+      nrrd_input_handles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - VULCAN") != string::npos ) {
 	modes_.resize(1);
-	modes_[0] = unrolling_;
+	modes_[0] = gui_unrolling_.get();
       }
 
       convertStr = "Mesh";
 
     } else if( conversion_ & CONNECTION ) {
-      ntype = nHandles[mesh_[LIST]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[LIST]]->nrrd_->type;
 
-      nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
+      nrrd_input_handles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - VULCAN") != string::npos ) {
 	modes_.resize(1);
-	modes_[0] = unrolling_;
+	modes_[0] = gui_unrolling_.get();
       }
 
       convertStr = "Connection";
 
     } else if( conversion_ & SCALAR ) {
-      ntype = nHandles[data_[0]]->nrrd->type;
+      ntype = nrrd_input_handles[data_[0]]->nrrd_->type;
 
       convertStr = "Scalar";
 
      } else if( conversion_ & REALSPACE ) {
-      ntype = nHandles[mesh_[PHI]]->nrrd->type;
+      ntype = nrrd_input_handles[mesh_[PHI]]->nrrd_->type;
 
       convertStr = "RealSpace";
     }
@@ -475,13 +426,15 @@ VULCANConverter::execute(){
 
       if( !module_dynamic_compile(ci_mesh, algo_mesh) ) {
 	error( "No Module" );
+	execute_error_ = true;
 	return;
       }
 
-      nHandle_ = algo_mesh->execute( nHandles, mesh_, data_, modes_ );
+      nrrd_output_handle_ =
+	algo_mesh->execute( nrrd_input_handles, mesh_, data_, modes_ );
     } else {
       error( "Nothing to convert." );
-      error_ = true;
+      execute_error_ = true;
       return;
     }
 
@@ -489,18 +442,8 @@ VULCANConverter::execute(){
       modes_.clear();
   }
   
-  // Get a handle to the output field port.
-  if( nHandle_.get_rep() ) {
-    NrrdOPort *ofield_port = (NrrdOPort *) get_oport("Output Nrrd");
-    
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
-    ofield_port->send( nHandle_ );
-  }
+  // Send the data downstream
+  send_output_handle( "Output Nrrd", nrrd_output_handle_, true );
 }
 
 void

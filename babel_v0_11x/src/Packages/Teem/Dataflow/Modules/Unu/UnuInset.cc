@@ -40,7 +40,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
@@ -66,13 +66,18 @@ public:
 DECLARE_MAKER(UnuInset)
 UnuInset::UnuInset(GuiContext* ctx)
   : Module("UnuInset", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0), isub_(0), onrrd_(0),
-    mins_(ctx->subVar("mins"))
+    inrrd_(0),
+    isub_(0),
+    onrrd_(0),
+    mins_(get_ctx()->subVar("mins"), "0")
 {
 }
 
-UnuInset::~UnuInset(){
+
+UnuInset::~UnuInset()
+{
 }
+
 
 void
 UnuInset::execute()
@@ -101,13 +106,13 @@ UnuInset::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *sub = sub_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *sub = sub_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // Determine the number of mins given
   string mins = mins_.get();
-  int minsLen = 0;
+  unsigned int minsLen = 0;
   char ch;
   int i=0, start=0;
   bool inword = false;
@@ -133,7 +138,7 @@ UnuInset::execute()
     return;
   }
 
-  int *min = new int[nin->dim];
+  size_t *min = new size_t[nin->dim];
   // Size/samples
   i=0, start=0;
   int which = 0, end=0, counter=0;
@@ -181,7 +186,7 @@ UnuInset::execute()
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++) {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 

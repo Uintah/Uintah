@@ -217,8 +217,18 @@ int main(int argc, char* argv[]) {
     }
   
     Nrrd* outNrrd=nrrdNew();
-    nrrdAxisInfoSet(outNrrd, nrrdAxisInfoLabel, "width", "height", "texture");
-    if (nrrdWrap(outNrrd, (void*)1, nrrdTypeUChar, 3, width, height, write_cnt)) {
+
+    const char *labelptr[NRRD_DIM_MAX];
+    labelptr[0] = airStrdup("width");
+    labelptr[1] = airStrdup("height");
+    labelptr[2] = airStrdup("texture");
+    nrrdAxisInfoSet_nva(outNrrd, nrrdAxisInfoLabel, labelptr);
+
+    size_t size1[NRRD_DIM_MAX];
+    size1[0] = width;
+    size1[1] = height;
+    size1[2] = write_cnt;
+    if (nrrdWrap_nva(outNrrd, (void*)1, nrrdTypeUChar, 3, size1)) {
       err=biffGet(NRRD);
       cerr<<me<<":  error creating header:  "<<err<<endl;
       free(err);
@@ -245,7 +255,9 @@ int main(int argc, char* argv[]) {
   
     // Create index nrrd
     Nrrd* idxNrrd=nrrdNew();
-    if (nrrdWrap(idxNrrd, idx, nrrdTypeInt, 1, ntextures)) {
+    size_t size2[NRRD_DIM_MAX];
+    size2[0] = ntextures;
+    if (nrrdWrap_nva(idxNrrd, idx, nrrdTypeInt, 1, size2)) {
       err=biffGet(NRRD);
       cerr<<me<<":  error creating index nrrd:  "<<err<<endl;
       free(err);

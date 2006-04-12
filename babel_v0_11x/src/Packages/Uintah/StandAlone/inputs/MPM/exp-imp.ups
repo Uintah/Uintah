@@ -14,6 +14,9 @@
                <type> mpm </type>
            </SimulationComponent>
            <input_file> inputs/MPM/4disks_2d.1mat.ups</input_file>
+           <SwitchCriteria type = "Timestep">
+             <timestep> 5 </timestep>
+           </SwitchCriteria>
        </subcomponent>
        <subcomponent>
            <SimulationComponent>
@@ -91,6 +94,11 @@
 		</Box>
 	</Level>
      </Grid>
+
+    <PhysicalBC>
+        <MPM>
+        </MPM>
+    </PhysicalBC>
 
 </Uintah_specification>
 

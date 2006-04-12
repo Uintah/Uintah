@@ -23,15 +23,15 @@ using namespace SCIRun;
 
 class MeasurementsReader : public GenericReader<MeasurementsHandle> {
 public:
-  MeasurementsReader(const string& id);
+  MeasurementsReader(const string& get_id());
 };
 
-extern "C" Module* make_MeasurementsReader(const string& id) {
-  return new MeasurementsReader(id);
+extern "C" Module* make_MeasurementsReader(const string& get_id()) {
+  return new MeasurementsReader(get_id());
 }
 
-MeasurementsReader::MeasurementsReader(const string& id)
-  : GenericReader<MeasurementsHandle>("MeasurementsReader", id, "DataIO", "MIT")
+MeasurementsReader::MeasurementsReader(const string& get_id())
+  : GenericReader<MeasurementsHandle>("MeasurementsReader", get_id(), "DataIO", "MIT")
 {
 }
 

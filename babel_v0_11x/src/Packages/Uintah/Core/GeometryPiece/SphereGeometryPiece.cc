@@ -42,10 +42,10 @@ SphereGeometryPiece::~SphereGeometryPiece()
 
 void SphereGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP sphere_ps = ps->appendChild("sphere",true,4);
+  ProblemSpecP sphere_ps = ps->appendChild("sphere");
 
-  sphere_ps->appendElement("origin",d_origin,false,5);
-  sphere_ps->appendElement("radius",d_radius,false,5);
+  sphere_ps->appendElement("origin",d_origin);
+  sphere_ps->appendElement("radius",d_radius);
 }
 
 

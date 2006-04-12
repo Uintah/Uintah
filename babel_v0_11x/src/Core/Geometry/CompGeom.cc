@@ -41,6 +41,7 @@
  */
 
 #include <Core/Geometry/CompGeom.h>
+#include <iostream>
 
 #define TOLERANCE_MIN 1.0e-12
 
@@ -92,42 +93,42 @@ distance_to_line2_aux(Point &result,
 }
 
 
-
 void
-closest_point_on_tri(Point &result, const Point &P,
-                     const Point &A, const Point &B, const Point &C)
+closest_point_on_tri(Point &result, const Point &orig,
+                     const Point &p0, const Point &p1, const Point &p2)
 {
-  const Vector E0 = B - A;
-  const Vector E1 = C - A;
+  const Vector edge1 = p1 - p0;
+  const Vector edge2 = p2 - p0;
 
-  const Vector D = A - P;
-  const double a = Dot(E0, E0);
-  const double b = Dot(E0, E1);
-  const double c = Dot(E1, E1);
-  const double d = Dot(E0, D);
-  const double e = Dot(E1, D);
-  //const double f = Dot(D, D);
+  const Vector dir = Cross(edge1, edge2);
 
-  const double det = a*c - b*b;
-  double s = b*e - c*b;
-  double t = b*d - a*e;
+  const Vector pvec = Cross(dir, edge2);
+  
+  const double inv_det = 1.0 / Dot(edge1, pvec);
 
-  if (s < 0.0) s = 0.0;
-  if (t < 0.0) t = 0.0;
-  if (s + t < det)
+  const Vector tvec = orig - p0;
+  double u = Dot(tvec, pvec) * inv_det;
+
+  const Vector qvec = Cross(tvec, edge1);
+  double v = Dot(dir, qvec) * inv_det;
+
+  if (u < 0.0)
   {
-    const double idet = 1.0 / det;
-    s *= idet;
-    t *= idet;
-
-    result = A + E0 * s + E1 * t;
+    distance_to_line2_aux(result, orig, p0, p2);
+  }
+  else if (v < 0.0)
+  {
+    distance_to_line2_aux(result, orig, p0, p1);
+  }
+  else if (u + v > 1.0)
+  {
+    distance_to_line2_aux(result, orig, p1, p2);
   }
   else
   {
-    distance_to_line2_aux(result, P, B, C);
+    result = p0 + u * edge1 + v * edge2;
   }
 }
-
 
 
 
@@ -186,6 +187,38 @@ RayTriangleIntersection(double &t, double &u, double &v, bool backface_cull,
 
   return true;
 }
+
+
+bool
+closest_line_to_line(double &s, double &t,
+                     const Point &a0, const Point &a1,
+                     const Point &b0, const Point &b1)
+{
+  const Vector u = a1 - a0;
+  const Vector v = b1 - b0;
+  const Vector w = a0 - b0;
+
+  const double a = Dot(u, u);
+  const double b = Dot(u, v);
+  const double c = Dot(v, v);
+  const double d = Dot(u, w);
+  const double e = Dot(v, w);
+  const double D = a*c - b*b;
+
+  if (D < EPSILON)
+  {
+    s = 0.0;
+    t = (b>c?d/b:e/c);
+    return false;
+  }
+  else
+  {
+    s = (b*e - c*d) / D;
+    t = (a*e - b*d) / D;
+    return true;
+  }
+}
+
 
 
 }

@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
@@ -69,16 +69,20 @@ DECLARE_MAKER(UnuSplice)
 UnuSplice::UnuSplice(GuiContext* ctx)
   : Module("UnuSplice", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), islice_(0), onrrd_(0),
-    axis_(ctx->subVar("axis")),
-    position_(ctx->subVar("position"))
+    axis_(get_ctx()->subVar("axis"), 0),
+    position_(get_ctx()->subVar("position"), 0)
 {
 }
 
-UnuSplice::~UnuSplice(){
+
+UnuSplice::~UnuSplice()
+{
 }
 
+
 void
- UnuSplice::execute(){
+UnuSplice::execute()
+{
   NrrdDataHandle nrrd_handle;
   NrrdDataHandle slice_handle;
 
@@ -103,12 +107,12 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *slice = slice_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *slice = slice_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // position could be an integer or M-<integer>
-  if (!( AIR_IN_CL(0, axis_.get(), nin->dim-1) )) {
+  if (!( AIR_IN_CL(0, (unsigned int) axis_.get(), nin->dim-1) )) {
     error("Axis " + to_string(axis_.get()) + " not in range [0," + to_string(nin->dim-1) + "]");
     return;
   }
@@ -127,7 +131,7 @@ void
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim && i<nout->dim; i++)
+  for (unsigned int i=0; i<nin->dim && i<nout->dim; i++)
   {
     nout->axis[i].kind = nin->axis[i].kind;
   }

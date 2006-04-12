@@ -70,7 +70,6 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-
 namespace SCIRun {
 
 using std::string;
@@ -192,6 +191,8 @@ public:
     LatVolMesh<Basis>::set_dim(dims);
     points_.resize(dims[0], dims[1], dims[2]);
   }
+
+  virtual int topology_geometry() const { return (Mesh::STRUCTURED | Mesh::IRREGULAR); }
 
   //! get the center point (in object space) of an element
   void get_center(Point &,

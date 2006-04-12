@@ -84,7 +84,7 @@ private:
 DECLARE_MAKER(ExtractImageFilter)
 ExtractImageFilter::ExtractImageFilter(GuiContext* ctx)
   : Module("ExtractImageFilter", ctx, Source, "Filters", "Insight"),
-  num_dims_(ctx->subVar("num-dims")),
+  num_dims_(get_ctx()->subVar("num-dims")),
   last_generation_(-1), 
   last_imgH_(0)
 {
@@ -109,13 +109,13 @@ void ExtractImageFilter::load_gui() {
     for (int a = 0; a < num_dims_.get(); a++) {
       ostringstream str;
       str << "minDim" << a;
-      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      mins_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
       ostringstream str1;
       str1 << "maxDim" << a;
-      maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
+      maxs_.push_back(new GuiInt(get_ctx()->subVar(str1.str())));
       ostringstream str2;
       str2 << "absmaxDim" << a;
-      absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(get_ctx()->subVar(str2.str())));
     }
   }
 }
@@ -222,13 +222,13 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
 	++iter;
       }
       absmaxs_.clear();
-      gui->execute(id.c_str() + string(" clear_dims"));
+      get_gui()->execute(get_id().c_str() + string(" clear_dims"));
       
       
       num_dims_.set((int)n->GetImageDimension());
       num_dims_.reset();
       load_gui();
-      gui->execute(id.c_str() + string(" init_dims"));
+      get_gui()->execute(get_id().c_str() + string(" init_dims"));
       
       for (int a = 0; a < num_dims_.get(); a++) {
 	maxs_[a]->reset();
@@ -241,8 +241,8 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
 	absmaxs_[a]->reset();
       }
       
-      str << id.c_str() << " set_max_vals" << endl; 
-      gui->execute(str.str());
+      str << get_id().c_str() << " set_max_vals" << endl; 
+      get_gui()->execute(str.str());
       
     }
   }

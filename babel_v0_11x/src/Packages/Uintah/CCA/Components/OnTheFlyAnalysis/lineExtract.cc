@@ -51,8 +51,8 @@ lineExtract::~lineExtract()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
-  delete ps_lb;
   VarLabel::destroy(ps_lb->lastWriteTimeLabel);
+  delete ps_lb;
   
   // delete each line
   vector<line*>::iterator iter;
@@ -103,8 +103,8 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
     if(label == NULL){
-      throw ProblemSetupException("lineExtract: analyze label not found: " 
-                          + name , __FILE__, __LINE__);
+      throw ProblemSetupException("lineExtract: analyze label not found: "
+                           + name , __FILE__, __LINE__);
     }
      d_varLabels.push_back(label);
   }    
@@ -257,8 +257,15 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   
+  Ghost::GhostType gac = Ghost::AroundCells;
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-    t->requires(Task::NewDW,d_varLabels[i], Ghost::None, 0);
+    // bulletproofing
+    if(d_varLabels[i] == NULL){
+      string name = d_varLabels[i]->getName();
+      throw InternalError("lineExtract: scheduleDoAnalysis label not found: " 
+                          + name , __FILE__, __LINE__);
+    }
+    t->requires(Task::NewDW,d_varLabels[i], gac, 1);
   }
   t->computes(ps_lb->lastWriteTimeLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -287,6 +294,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     
     int proc = lb->getPatchwiseProcessorAssignment(patch);
+    cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
@@ -303,17 +311,25 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       vector< constCCVariable<Vector> > CC_Vector_data;
       constCCVariable<double> q_CC_double;
       constCCVariable<Vector> q_CC_Vector;      
-      Ghost::GhostType gn = Ghost::None;
+      Ghost::GhostType gac = Ghost::AroundCells;
       int indx = d_matl->getDWIndex();
 
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+        
+        // bulletproofing
+        if(d_varLabels[i] == NULL){
+          string name = d_varLabels[i]->getName();
+          throw InternalError("lineExtract: analyze label not found: " 
+                          + name , __FILE__, __LINE__);
+        }
+      
         switch( d_varLabels[i]->typeDescription()->getSubType()->getType()){
         case TypeDescription::double_type:
-          new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gn, 0);
+          new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gac, 1);
           CC_double_data.push_back(q_CC_double);
           break;
         case TypeDescription::Vector:
-          new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gn, 0);
+          new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gac, 1);
           CC_Vector_data.push_back(q_CC_Vector);
           break;
         default:
@@ -346,29 +362,29 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         if(level->getIndex() > 0){ // ignore extra cells on fine patches
           patchDomain = patch->getInteriorBox();
         }
-        
+        // intersection
         start_pt = Max(patchDomain.lower(), start_pt);
         end_pt   = Min(patchDomain.upper(), end_pt);
         
+        //indices
         IntVector start_idx, end_idx;
         patch->findCell(start_pt, start_idx);
         patch->findCell(end_pt,   end_idx);
         
-        // enlarge the index space by 1 except:
-        // a) in the main looping direction
-        // b) if there's a neighboring patch
-        
+        // enlarge the index space by 1 except in the main looping direction
         IntVector one(1,1,1);
-        IntVector neighbors = patch->neighborsHigh();
-        one = one * neighbors;
         one[d_lines[l]->loopDir] = 0;
         end_idx+= one;   
-        
+
         //__________________________________
         // loop over each point in the line on this patch
         CellIterator iterLim = CellIterator(start_idx,end_idx);
   
         for(CellIterator iter=iterLim; !iter.done();iter++) {
+          
+          if (!patch->containsCell(*iter))
+            continue;  // just in case - the point-to-cell logic might throw us off on patch boundaries...
+            
           IntVector c = *iter;
           ostringstream fname;
           fname<<path<<"/i"<< c.x() << "_j" << c.y() << "_k"<< c.z();
@@ -416,7 +432,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
 void lineExtract::createFile(string& filename)
-{
+{ 
   FILE *fp;
   fp = fopen(filename.c_str(), "w");
   fprintf(fp,"X_CC \t Y_CC \t Z_CC \t Time"); 
@@ -442,7 +458,7 @@ void lineExtract::createFile(string& filename)
   }
   fprintf(fp,"\n");
   fclose(fp);
-  cout << "lineExtract:Created file " << filename << endl;
+  cout << Parallel::getMPIRank() << " lineExtract:Created file " << filename << endl;
 }
 //______________________________________________________________________
 // create the directory structure   lineName/LevelIndex
@@ -450,7 +466,7 @@ void lineExtract::createDirectory(string& lineName, string& levelIndex)
 {
   DIR *check = opendir(lineName.c_str());
   if ( check == NULL){
-    cout << "lineExtract:Making directory " << lineName << endl;
+    cout << Parallel::getMPIRank() << "lineExtract:Making directory " << lineName << endl;
     MKDIR( lineName.c_str(), 0777 );
   }
   closedir(check);

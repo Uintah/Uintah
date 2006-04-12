@@ -44,9 +44,9 @@
 #include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Util/Endian.h>
@@ -113,7 +113,7 @@ private:
   void				init_shader_factory();
   void				build_colormap_texture();
   void				build_histogram_texture();
-  void				draw_texture(GLuint &id);
+  void				draw_texture(GLuint &);
   void				redraw(bool force_cmap_dirty = false,
 				       bool save_ppm = false);
   void				faux_changed();
@@ -205,6 +205,12 @@ private:
   GuiFilename			filename_;
   GuiString *			end_marker_;
   pair<float,float>		value_range_;
+
+  // For some reason SCIRun will crash when loading a network
+  // containing an EditColorMap2D module when the scale widget is
+  // created in the GUI causing an early redraw.  Skipping the scale
+  // widget creation redraw fixes this problem.
+  bool crash_workaround_for_first_time_redraw_;
 };
 
 
@@ -243,15 +249,15 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     first_motion_(true),
     mouse_last_x_(0),
     mouse_last_y_(0),
-    pan_x_(ctx->subVar("panx")),
-    pan_y_(ctx->subVar("pany")),
-    scale_(ctx->subVar("scale_factor")),
+    pan_x_(get_ctx()->subVar("panx")),
+    pan_y_(get_ctx()->subVar("pany")),
+    scale_(get_ctx()->subVar("scale_factor")),
     updating_(false),
-    gui_histo_(ctx->subVar("histo")),
-    gui_selected_widget_(ctx->subVar("selected_widget"), -1),
-    gui_selected_object_(ctx->subVar("selected_object"), -1),
-    gui_num_entries_(ctx->subVar("num-entries")),
-    gui_faux_(ctx->subVar("faux")),
+    gui_histo_(get_ctx()->subVar("histo")),
+    gui_selected_widget_(get_ctx()->subVar("selected_widget"), -1),
+    gui_selected_object_(get_ctx()->subVar("selected_object"), -1),
+    gui_num_entries_(get_ctx()->subVar("num-entries")),
+    gui_faux_(get_ctx()->subVar("faux")),
     gui_name_(),
     gui_color_r_(),
     gui_color_g_(),
@@ -260,12 +266,13 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     gui_wstate_(),
     gui_sstate_(),
     gui_onstate_(),
-    filename_(ctx->subVar("filename")),
+    filename_(get_ctx()->subVar("filename")),
     end_marker_(0),
-    value_range_(0.0, -1.0)
+    value_range_(0.0, -1.0),
+    crash_workaround_for_first_time_redraw_(false)
 {
   // Mac OSX requires 512K of stack space for GL context rendering threads
-  setStackSize(1024*512);
+  set_stack_size(1024*512);
   pan_x_.set(0.0);
   pan_y_.set(0.0);
   scale_.set(1.0);
@@ -423,7 +430,14 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     }
   } else if (args[1] == "redraw") {
     histo_dirty_ |= gui_histo_.changed();
-    redraw();
+    redraw(args.count() >= 3 && args.get_int(2));
+  } else if (args[1] == "redraw-histo") {
+    if (crash_workaround_for_first_time_redraw_)
+    {
+      histo_dirty_ |= gui_histo_.changed();
+      redraw(args.count() >= 3 && args.get_int(2));
+    }
+    crash_workaround_for_first_time_redraw_ = true;
   } else if (args[1] == "destroygl") {
     if (ctx_) {
       delete ctx_;
@@ -681,14 +695,14 @@ EditColorMap2D::resize_gui(int n)
   for (i = gui_name_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
   {
     const string num = to_string(i);
-    gui_name_.push_back(new GuiString(ctx->subVar("name-" + num)));
-    gui_color_r_.push_back(new GuiDouble(ctx->subVar(num +"-color-r")));
-    gui_color_g_.push_back(new GuiDouble(ctx->subVar(num +"-color-g")));
-    gui_color_b_.push_back(new GuiDouble(ctx->subVar(num +"-color-b")));
-    gui_color_a_.push_back(new GuiDouble(ctx->subVar(num +"-color-a")));
-    gui_wstate_.push_back(new GuiString(ctx->subVar("state-" + num)));
-    gui_sstate_.push_back(new GuiInt(ctx->subVar("shadeType-" + num)));
-    gui_onstate_.push_back(new GuiInt(ctx->subVar("on-" + num)));
+    gui_name_.push_back(new GuiString(get_ctx()->subVar("name-" + num)));
+    gui_color_r_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-r")));
+    gui_color_g_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-g")));
+    gui_color_b_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-b")));
+    gui_color_a_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-a")));
+    gui_wstate_.push_back(new GuiString(get_ctx()->subVar("state-" + num)));
+    gui_sstate_.push_back(new GuiInt(get_ctx()->subVar("shadeType-" + num)));
+    gui_onstate_.push_back(new GuiInt(get_ctx()->subVar("on-" + num)));
 
   }
   // This marker stuff is for TCL, its the last variable created, so
@@ -699,7 +713,7 @@ EditColorMap2D::resize_gui(int n)
     delete end_marker_;
   // Second: Create a new marker that marks the end of the variables
   if (i != 0) 
-    end_marker_ = scinew GuiString(ctx->subVar("marker"), "end");
+    end_marker_ = scinew GuiString(get_ctx()->subVar("marker"), "end");
 }
 
 
@@ -724,7 +738,7 @@ EditColorMap2D::update_to_gui(bool forward)
   if (selected < 0 || selected >= int(widgets_.size()))
     gui_selected_widget_.set(widgets_.size()-1);
   if (forward) { 
-    gui->execute(id + " create_entries"); 
+    get_gui()->execute(get_id() + " create_entries"); 
   }
 }
 
@@ -732,7 +746,7 @@ EditColorMap2D::update_to_gui(bool forward)
 void
 EditColorMap2D::update_from_gui()
 {
-  ctx->reset();   // Reset GUI vars cache
+  get_ctx()->reset();   // Reset GUI vars cache
   resize_gui();   // Make sure we have enough GUI vars to read through
   for (unsigned int i = 0; i < widgets_.size(); i++)
   {
@@ -1026,11 +1040,11 @@ EditColorMap2D::execute()
 
   if (h.get_rep() && h->generation != hist_generation_) {
     hist_generation_ = h->generation;
-    if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
+    if(h->nrrd_->dim != 2 && h->nrrd_->dim != 3) {
       error("Invalid input histogram dimension.");
       return;
     }
-    histo_ = h->nrrd;
+    histo_ = h->nrrd_;
     histo_dirty_ = true;
 
     if (histo_ && histo_->kvp) {
@@ -1258,7 +1272,7 @@ EditColorMap2D::build_histogram_texture()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #endif
-  int axis_size[3];
+  size_t axis_size[3];
 
   if (!histo_) {
     unsigned char zero = 0;
@@ -1303,10 +1317,10 @@ void
 EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
 {
   if (!ctx_) return;
-  gui->lock();
+  get_gui()->lock();
 
   if(ctx_->width()<3 || ctx_->height()<3 || !ctx_->make_current()) {
-    gui->unlock(); 
+    get_gui()->unlock(); 
     return; 
   }
   if (force_cmap_dirty) cmap_dirty_ = true;
@@ -1390,7 +1404,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   // windows) if you do it after
   CHECK_OPENGL_ERROR("dummy")
   ctx_->release();
-  gui->unlock();
+  get_gui()->unlock();
 }
 
 

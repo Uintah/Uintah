@@ -75,9 +75,6 @@ BasicTexture * backgroundTex;     // from rtrt.cc
 
 ////////////////////////////////////////////
 
-extern "C" Display *__glutDisplay;
-extern "C" Window** __glutWindowList;
-
 namespace rtrt {
   double ORBIT_SPEED  = 0;
   double ROTATE_SPEED = 1;
@@ -252,11 +249,6 @@ void GGT::run() {
     
   mainWindowID = glutCreateWindow("GG Controls");
 
-  glut_dpy = __glutDisplay;
-  // This is an ugly, cheaty way of getting the window id out of glut...
-  glut_win = __glutWindowList[mainWindowID-1][1];
-  cerr << "initial win = "<<glut_win<<"\n";
-
   // Setup callback functions
   glutDisplayFunc( GGT::displayCB );
 
@@ -300,8 +292,6 @@ GGT::cleanup() {
   cerr << "GLUI_Master.close_all finished\n";
   glutDestroyWindow(mainWindowID);
   cerr << "glutDestroyWindow finished\n";
-  XCloseDisplay(glut_dpy);
-  cerr << "XCloseDisplay for GGT finished\n";
   DpyBase::xunlock();
 }
 
@@ -2063,7 +2053,7 @@ GGT::startSoundThreadCB( int /*id*/ )
   SoundThread * soundthread = NULL;
 
   cout << "Starting Sound Thread!\n";
-  soundthread = new SoundThread( activeGGT->rtrt_dpy->getGuiCam(), 
+  soundthread = new SoundThread( activeGGT->rtrt_dpy->get_guiCam(), 
 				 activeGGT->rtrt_dpy->scene,
 				 activeGGT );
   Thread * t = new Thread( soundthread, "Sound thread");

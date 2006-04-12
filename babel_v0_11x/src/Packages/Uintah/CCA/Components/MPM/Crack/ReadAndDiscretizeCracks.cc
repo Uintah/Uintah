@@ -67,8 +67,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   rdadx=1.;                     // Ratio of crack incremental to cell-size
   rJ=-1.;                       // Radius of J-integral contour
   NJ=2;                         // J-integral contour size  
-  CODOption=0;                  // Calculate COD at the intersection
-                                // between J-integral contour and crack plane
+  CODOption=0;                  // Calculate COD at a fixed location by default
   
   computeJKInterval=0.;         // Intervals of calculating J & K
   growCrackInterval=0.;         // Interval of doing crack propagation
@@ -135,6 +134,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   for(ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=0;
                    mat_ps=mat_ps->findNextBlock("material") ) numMPMMatls++;
   // Physical properties of cracks
+  stressState.resize(numMPMMatls);
   crackType.resize(numMPMMatls);
   cmu.resize(numMPMMatls);
 
@@ -199,6 +199,10 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        // Friction coefficient needed for friction contact, zero by default
        cmu[m]=0.0;
        if(crackType[m]=="friction") crk_ps->get("mu",cmu[m]);
+        
+       // Stress state at crack front
+       stressState[m]="planeStress"; 
+       crk_ps->get("stress_state",stressState[m]);  
 
        // Read in crack segments. Presently seven kinds of basic shapes are available.
        // More complicated crack plane can be input by combining the basic shapes.
@@ -1395,13 +1399,15 @@ Crack::CombineCrackSegments(const int& m)
 short
 Crack::TwoPointsCoincide(const Point& p1, const Point& p2)
 {
-  return TwoDoublesEqual( p1.x(), p2.x() )  &&
-         TwoDoublesEqual( p1.y(), p2.y() )  &&
-         TwoDoublesEqual( p1.z(), p2.z() );
+  double t=1.e-6;	
+  return TwoDoublesEqual( p1.x(), p2.x(), t )  &&
+         TwoDoublesEqual( p1.y(), p2.y(), t )  &&
+         TwoDoublesEqual( p1.z(), p2.z(), t );
 }
         
 short
-Crack::TwoDoublesEqual(const double& db1, const double& db2)
+Crack::TwoDoublesEqual(const double& db1, const double& db2, 
+		       const double& tolerance)
 {
   double ab1=fabs(db1);
   double ab2=fabs(db2);
@@ -1414,9 +1420,9 @@ Crack::TwoDoublesEqual(const double& db1, const double& db2)
     change=fabs(db1-db2)/ab2;
    
   // Equal if different by less than 100 ppm
-  if(change<1.e-6) return(YES);
+  if(change<tolerance) return(YES);
   else {
-    if(ab1<1.e-8 && ab2<1.e-8) return(YES);
+    if(ab1<tolerance/100. && ab2<tolerance/100.) return(YES);
     else return(NO);
   }
 }

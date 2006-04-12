@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 namespace SCITeem {
@@ -62,14 +62,17 @@ DECLARE_MAKER(TendEvq)
 
 TendEvq::TendEvq(SCIRun::GuiContext *ctx) : 
   Module("TendEvq", ctx, Filter, "Tend", "Teem"),
-  index_(ctx->subVar("index")),
-  anisotropy_(ctx->subVar("anisotropy")),
-  ns_(ctx->subVar("ns"))
+  index_(get_ctx()->subVar("index"), 0),
+  anisotropy_(get_ctx()->subVar("anisotropy"), "cl1"),
+  ns_(get_ctx()->subVar("ns"), 0)
 {
 }
 
-TendEvq::~TendEvq() {
+
+TendEvq::~TendEvq()
+{
 }
+
 
 void 
 TendEvq::execute()
@@ -89,7 +92,7 @@ TendEvq::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (tenEvqVolume(nout, nin, index_.get(), get_anisotropy(anisotropy_.get()), ns_.get())) {

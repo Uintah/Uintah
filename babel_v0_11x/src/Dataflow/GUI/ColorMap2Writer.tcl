@@ -36,21 +36,11 @@ catch {rename SCIRun_DataIO_ColorMap2Writer ""}
 
 itcl_class SCIRun_DataIO_ColorMap2Writer {
     inherit Module
+
     constructor {config} {
 	set name ColorMap2Writer
-	set_defaults
     }
-    method set_defaults {} {
-	global $this-filetype $this-confirm 
-	set $this-filetype Binary
-	set $this-confirm 1
-	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
-	    set $this-confirm 0
-	}
 
-	global $this-types
-	global $this-exporttype
-    }
     method overwrite {} {
 	global $this-confirm $this-filetype
 	if {[info exists $this-confirm] && [info exists $this-filename] && \

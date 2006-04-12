@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
 
@@ -60,9 +60,9 @@ DECLARE_MAKER(Unu1op)
 
 Unu1op::Unu1op(SCIRun::GuiContext *ctx) : 
   Module("Unu1op", ctx, Filter, "UnuAtoM", "Teem"), 
-  operator_(ctx->subVar("operator")),
-  type_(ctx->subVar("type")),
-  usetype_(ctx->subVar("usetype"))
+  operator_(get_ctx()->subVar("operator")),
+  type_(get_ctx()->subVar("type")),
+  usetype_(get_ctx()->subVar("usetype"))
 {
 }
 
@@ -89,7 +89,7 @@ Unu1op::execute()
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   Nrrd *ntmp = NULL;
 

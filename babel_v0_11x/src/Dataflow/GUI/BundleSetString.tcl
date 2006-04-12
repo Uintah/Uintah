@@ -30,24 +30,9 @@
 
 itcl_class SCIRun_Bundle_BundleSetString {
     inherit Module
+
     constructor {config} {
         set name BundleSetString
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-        global $this-string1-name
-        global $this-string2-name
-        global $this-string3-name
-        global $this-bundlename
-        
-
-        set $this-string1-name "string1"
-        set $this-string2-name "string2"
-        set $this-string3-name "string3"
-        set $this-bundlename ""
-
     }
 
     method ui {} {

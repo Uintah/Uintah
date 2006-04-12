@@ -10,7 +10,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
@@ -63,7 +63,7 @@ DECLARE_MAKER(ScalarFieldNormalize)
 
 ScalarFieldNormalize::ScalarFieldNormalize(GuiContext* ctx)
   : Module("ScalarFieldNormalize",ctx,Source, "Operators", "Uintah"),
-    xIndex_(ctx->subVar("xIndex")), yIndex_(ctx->subVar("yIndex")), zIndex_(ctx->subVar("zIndex"))
+    xIndex_(get_ctx()->subVar("xIndex")), yIndex_(get_ctx()->subVar("yIndex")), zIndex_(get_ctx()->subVar("zIndex"))
 {
 }
   

@@ -96,17 +96,16 @@ void CompNeoHookPlas::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","comp_neo_hook_plastic");
   }
   
-  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk,false,4);
-  cm_ps->appendElement("shear_modulus",d_initialData.Shear,false,4);
-  cm_ps->appendElement("yield_stress",d_initialData.FlowStress,false,4);
-  cm_ps->appendElement("hardening_modulus",d_initialData.K,false,4);
-  cm_ps->appendElement("alpha",d_initialData.Alpha,false,4);
-  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS,false,4);
-
+  cm_ps->appendElement("bulk_modulus",d_initialData.Bulk);
+  cm_ps->appendElement("shear_modulus",d_initialData.Shear);
+  cm_ps->appendElement("yield_stress",d_initialData.FlowStress);
+  cm_ps->appendElement("hardening_modulus",d_initialData.K);
+  cm_ps->appendElement("alpha",d_initialData.Alpha);
+  cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
 }
 
 
@@ -324,8 +323,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;

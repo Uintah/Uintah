@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Geometry/CompGeom.h>
 #include <Core/Geometry/CompGeom.h>
@@ -62,47 +62,33 @@ public:
   virtual void execute();
 
 private:
-  GuiDouble                     gStepsize_;
-  GuiDouble                     gTolerance_;
-  GuiInt                        gMaxsteps_;
-  GuiInt                        gDirection_;
-  GuiInt                        gValue_;
-  GuiInt                        gRemove_Colinear_;
-  GuiInt                        gMethod_;
-  GuiInt                        gNp_;
+  FieldHandle                   field_output_handle_;
 
-  double tolerance_;
-  double stepsize_;
-  int maxsteps_;
-  int direction_;
-  int value_;
-  int remove_colinear_;
-  int method_;
-  int np_;
+  GuiDouble                     gui_step_size_;
+  GuiDouble                     gui_tolerance_;
+  GuiInt                        gui_max_steps_;
+  GuiInt                        gui_direction_;
+  GuiInt                        gui_value_;
+  GuiInt                        gui_remove_colinear_;
+  GuiInt                        gui_method_;
+  GuiInt                        gui_np_;
 
-  FieldHandle fHandle_;
-
-  int vfGeneration_;
-  int sfGeneration_;
-
-  bool error_;
+  bool execute_error_;
 };
 
 DECLARE_MAKER(StreamLines)
 
 StreamLines::StreamLines(GuiContext* ctx) : 
   Module("StreamLines", ctx, Source, "Visualization", "SCIRun"),
-  gStepsize_(ctx->subVar("stepsize")),
-  gTolerance_(ctx->subVar("tolerance")),
-  gMaxsteps_(ctx->subVar("maxsteps")),
-  gDirection_(ctx->subVar("direction")),
-  gValue_(ctx->subVar("value")),
-  gRemove_Colinear_(ctx->subVar("remove-colinear")),
-  gMethod_(ctx->subVar("method")),
-  gNp_(ctx->subVar("np")),
-  vfGeneration_(-1),
-  sfGeneration_(-1),
-  error_(0)
+  gui_step_size_(get_ctx()->subVar("stepsize"), 0.01),
+  gui_tolerance_(get_ctx()->subVar("tolerance"), 0.0001),
+  gui_max_steps_(get_ctx()->subVar("maxsteps"), 2000),
+  gui_direction_(get_ctx()->subVar("direction"), 1),
+  gui_value_(get_ctx()->subVar("value"), 1),
+  gui_remove_colinear_(get_ctx()->subVar("remove-colinear"), 1),
+  gui_method_(get_ctx()->subVar("method"), 4),
+  gui_np_(get_ctx()->subVar("np"), 1),
+  execute_error_(0)
 {
 }
 
@@ -123,92 +109,49 @@ CLAMP(int a, int lower, int upper)
 void
 StreamLines::execute()
 {
-  update_state(NeedData);
- 
-  FieldIPort* vfport = (FieldIPort*)get_iport("Flow field");
   FieldHandle vfHandle;
-  Field *vField;  // vector field
-  
-  // the vector field input is required
-  if (!vfport->get(vfHandle) || !(vField = vfHandle.get_rep())) {
-    error( "No Vector field handle or representation" );
+  if( !get_input_handle( "Vector Field", vfHandle, true ) )
     return;
-  }
-  
-  // Check that the flow field input is a vector field.
-  VectorFieldInterfaceHandle vfi = vField->query_vector_interface(this);
+
+  //! Check that the input field input is a vector field.
+  VectorFieldInterfaceHandle vfi =
+    vfHandle.get_rep()->query_vector_interface(this);
   if (!vfi.get_rep()) {
     error("FlowField is not a Vector field.");
     return;
   }
 
-  // Works for surfaces and volume data only.
-  if (vField->mesh()->dimensionality() == 1) {
+  //! Works for surfaces and volume data only.
+  if (vfHandle.get_rep()->mesh()->dimensionality() == 1) {
     error("The StreamLines module does not works on 1D fields.");
     return;
   }
 
-  FieldIPort* sfport = (FieldIPort*)get_iport("Seeds");
-  FieldHandle sfHandle;
-  Field *sField;  // seed point field
-
-  // the seed field input is required
-  if (!sfport->get(sfHandle) || !(sField = sfHandle.get_rep())) {
-    error( "No Seed field handle or representation" );
+  FieldHandle spHandle;
+  if( !get_input_handle( "Seed Points", spHandle, true ) )
     return;
-  }
 
-  bool update = false;
+  if( !field_output_handle_.get_rep() ||
+      
+      inputs_changed_ ||
 
-  // Check to see if the input field has changed.
-  if( vfGeneration_ != vfHandle->generation ) {
-    vfGeneration_ = vfHandle->generation;
-    update = true;
-  }
+      gui_tolerance_.changed( true )       ||
+      gui_step_size_.changed( true )       ||
+      gui_max_steps_.changed( true )       ||
+      gui_direction_.changed( true )       ||
+      gui_value_.changed( true )           ||
+      gui_remove_colinear_.changed( true ) ||
+      gui_method_.changed( true )          ||
+      gui_np_.changed( true )              ||
 
-  // Check to see if the input field has changed.
-  if( sfGeneration_ != sfHandle->generation ) {
-    sfGeneration_ = sfHandle->generation;
-    update = true;
-  }
-
-  double tolerance = gTolerance_.get();
-  double stepsize = gStepsize_.get();
-  int maxsteps = gMaxsteps_.get();
-  int direction = gDirection_.get();
-  int value = gValue_.get();
-  int remove_colinear = gRemove_Colinear_.get();
-  int method = gMethod_.get();
-  int np = gNp_.get();
+      execute_error_ ) {
   
-  if( tolerance_ != tolerance ||
-      stepsize_  != stepsize  ||
-      maxsteps_  != maxsteps  ||
-      direction_ != direction ||
-      value_     != value ||
-      remove_colinear_ != remove_colinear  ||
-      method_    != method  ||
-      np_        != np ) {
+    execute_error_ = false;
 
-    tolerance_ = tolerance;
-    stepsize_  = stepsize;
-    maxsteps_  = maxsteps;
-    direction_ = direction;
-    value_     = value;
-    remove_colinear_ = remove_colinear;
-    method_    = method;
-    np_        = np;
+    update_state(Executing);
 
-    update = true;
-  }
-
-  if( !fHandle_.get_rep() ||
-      update ||
-      error_ ) {
-
-    update_state(JustStarted);
-
-     error_ = false;
+    Field *vField = vfHandle.get_rep();
+    Field *sField = spHandle.get_rep();
 
     const TypeDescription *sftd = sField->get_type_description();
     
@@ -216,16 +159,16 @@ StreamLines::execute()
       (*sField->get_type_description(Field::FDATA_TD_E)->get_sub_type())[0];
     const TypeDescription *sltd = sField->order_type_description();
     string dsttype = "double";
-    if (value == 0) dsttype = sfdtd->get_name();
+    if (gui_value_.get() == 0) dsttype = sfdtd->get_name();
 
     vField->mesh()->synchronize(Mesh::LOCATE_E);
     vField->mesh()->synchronize(Mesh::EDGES_E);
 
-    if (method_ == 5 ) {
+    if (gui_method_.get() == 5 ) {
 
       if( vfHandle->basis_order() != 0) {
 	error("The Cell Walk method only works for cell centered FlowFields.");
-	error_ = true;
+	execute_error_ = true;
 	return;
       }
 
@@ -236,35 +179,34 @@ StreamLines::execute()
       const TypeDescription *vtd = vfHandle->get_type_description();
       CompileInfoHandle aci =
 	StreamLinesAccAlgo::get_compile_info(sftd, sltd, vtd,
-                                             dftn, value);
+                                             dftn, gui_value_.get());
       Handle<StreamLinesAccAlgo> accalgo;
       if (!module_dynamic_compile(aci, accalgo)) return;
       
-      fHandle_ = accalgo->execute(sField, vfHandle, maxsteps,
-				  direction, value,
-				  remove_colinear);
+      field_output_handle_ =
+	accalgo->execute(this, sField, vfHandle,
+			 gui_max_steps_.get(),
+			 gui_direction_.get(),
+			 gui_value_.get(),
+			 gui_remove_colinear_.get());
     } else {
       CompileInfoHandle ci =
-	StreamLinesAlgo::get_compile_info(sftd, dsttype, sltd, value);
+	StreamLinesAlgo::get_compile_info(sftd, dsttype, sltd,
+					  gui_value_.get());
       Handle<StreamLinesAlgo> algo;
       if (!module_dynamic_compile(ci, algo)) return;
       
-      fHandle_ = algo->execute(sField, vfi,
-			       tolerance, stepsize, maxsteps,
-			       direction, value,
-			       remove_colinear,
-			       method, CLAMP(np, 1, 256));
+      field_output_handle_ =
+	algo->execute(this, sField, vfi,
+		      gui_tolerance_.get(),
+		      gui_step_size_.get(), gui_max_steps_.get(),
+		      gui_direction_.get(), gui_value_.get(),
+		      gui_remove_colinear_.get(),
+		      gui_method_.get(), CLAMP(gui_np_.get(), 1, 256));
     }
-
-    update_state(Completed);
   }
    
-  // Send the data downstream
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Streamlines");
-    ofield_port->send_and_dereference( fHandle_, true );
-  }
+  send_output_handle( "Streamlines", field_output_handle_, true );
 }
 
 

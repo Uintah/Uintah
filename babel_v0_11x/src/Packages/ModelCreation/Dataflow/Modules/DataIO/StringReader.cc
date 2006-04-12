@@ -40,7 +40,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
 
 namespace ModelCreation {
@@ -68,7 +68,7 @@ DECLARE_MAKER(StringReader)
 
 StringReader::StringReader(GuiContext* ctx)
   : GenericReader<StringHandle>("StringReader", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false))
+    gui_types_(get_ctx()->subVar("types", false))
 {
   gui_types_.set("{ {{textfile} {.txt .asc .doc}} {{all files} {.*}} }");
 }

@@ -64,18 +64,14 @@ Models_DORadiationModel::~Models_DORadiationModel()
 
 void Models_DORadiationModel::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP dor_ps = ps->appendChild("DORadiationModel",true,4);
+  ProblemSpecP dor_ps = ps->appendChild("DORadiationModel");
 
-  dor_ps->appendElement("ordinates",d_sn,false,4);
-  dor_ps->appendElement("opl",d_opl,false,4);
-  dor_ps->appendElement("property_model",d_prop_model,false,4);
-  dor_ps->appendElement("spherical_harmonics",d_SHRadiationCalc,false,4);
-  
+  dor_ps->appendElement("ordinates",d_sn);
+  dor_ps->appendElement("opl",d_opl);
+  dor_ps->appendElement("property_model",d_prop_model);
+  dor_ps->appendElement("spherical_harmonics",d_SHRadiationCalc);
 
   d_linearSolver->outputProblemSpec(dor_ps);
-  
-
-
 }
 
 //****************************************************************************

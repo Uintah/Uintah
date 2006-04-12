@@ -37,9 +37,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
@@ -103,26 +103,26 @@ public:
 
 ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   : Module("ChangeFieldBounds", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    outputcenterx_(ctx->subVar("outputcenterx")),
-    outputcentery_(ctx->subVar("outputcentery")),
-    outputcenterz_(ctx->subVar("outputcenterz")),
-    outputsizex_(ctx->subVar("outputsizex")),
-    outputsizey_(ctx->subVar("outputsizey")),
-    outputsizez_(ctx->subVar("outputsizez")),
-    useoutputcenter_(ctx->subVar("useoutputcenter")),
-    useoutputsize_(ctx->subVar("useoutputsize")),
-    inputcenterx_(ctx->subVar("inputcenterx", false)),
-    inputcentery_(ctx->subVar("inputcentery", false)),
-    inputcenterz_(ctx->subVar("inputcenterz", false)),
-    inputsizex_(ctx->subVar("inputsizex", false)),
-    inputsizey_(ctx->subVar("inputsizey", false)),
-    inputsizez_(ctx->subVar("inputsizez", false)),
-    box_scale_(ctx->subVar("box-scale")),
-    box_center_(ctx->subVar("box-center")),
-    box_right_(ctx->subVar("box-right")),
-    box_down_(ctx->subVar("box-down")),
-    box_in_(ctx->subVar("box-in")),
-    resetting_(ctx->subVar("resetting", false)),
+    outputcenterx_(get_ctx()->subVar("outputcenterx"), 0.0),
+    outputcentery_(get_ctx()->subVar("outputcentery"), 0.0),
+    outputcenterz_(get_ctx()->subVar("outputcenterz"), 0.0),
+    outputsizex_(get_ctx()->subVar("outputsizex"), 0.0),
+    outputsizey_(get_ctx()->subVar("outputsizey"), 0.0),
+    outputsizez_(get_ctx()->subVar("outputsizez"), 0.0),
+    useoutputcenter_(get_ctx()->subVar("useoutputcenter"), 0),
+    useoutputsize_(get_ctx()->subVar("useoutputsize"), 0),
+    inputcenterx_(get_ctx()->subVar("inputcenterx", false), "---"),
+    inputcentery_(get_ctx()->subVar("inputcentery", false), "---"),
+    inputcenterz_(get_ctx()->subVar("inputcenterz", false), "---"),
+    inputsizex_(get_ctx()->subVar("inputsizex", false), "---"),
+    inputsizey_(get_ctx()->subVar("inputsizey", false), "---"),
+    inputsizez_(get_ctx()->subVar("inputsizez", false), "---"),
+    box_scale_(get_ctx()->subVar("box-scale"), -1.0),
+    box_center_(get_ctx()->subVar("box-center")),
+    box_right_(get_ctx()->subVar("box-right")),
+    box_down_(get_ctx()->subVar("box-down")),
+    box_in_(get_ctx()->subVar("box-in")),
+    resetting_(get_ctx()->subVar("resetting", false), 0),
     widget_lock_("ChangeFieldBounds widget lock"),
     generation_(-1),
     widgetid_(0)

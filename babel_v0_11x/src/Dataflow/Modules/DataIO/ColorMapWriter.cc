@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
 #include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
@@ -56,6 +56,7 @@ protected:
 
 public:
   ColorMapWriter(GuiContext* ctx);
+  virtual ~ColorMapWriter();
 
   virtual void execute();
 };
@@ -65,8 +66,8 @@ DECLARE_MAKER(ColorMapWriter)
 
 ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype"), "Binary")
 {
   ColorMapIEPluginManager mgr;
   vector<string> exporters;
@@ -95,6 +96,11 @@ ColorMapWriter::ColorMapWriter(GuiContext* ctx)
 }
 
 
+ColorMapWriter::~ColorMapWriter()
+{
+}
+
+
 bool
 ColorMapWriter::call_exporter(const string &filename)
 {
@@ -107,7 +113,7 @@ ColorMapWriter::call_exporter(const string &filename)
   if (pl)
   {
     const bool result = pl->filewriter(this, handle_, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return result;
   }
   return false;

@@ -28,17 +28,17 @@ class SigmaSetReader : public Module {
     SigmaSetHandle handle;
     clString old_filename;
 public:
-    SigmaSetReader(const clString& id);
+    SigmaSetReader(const clString& get_id());
     virtual ~SigmaSetReader();
     virtual void execute();
 };
 
-extern "C" Module* make_SigmaSetReader(const clString& id) {
-  return new SigmaSetReader(id);
+extern "C" Module* make_SigmaSetReader(const clString& get_id()) {
+  return new SigmaSetReader(get_id());
 }
 
-SigmaSetReader::SigmaSetReader(const clString& id)
-: Module("SigmaSetReader", id, Source), filename("filename", id, this)
+SigmaSetReader::SigmaSetReader(const clString& get_id())
+: Module("SigmaSetReader", get_id(), Source), filename("filename", get_id(), this)
 {
     // Create the output data handle and port
     outport=scinew SigmaSetOPort(this, "Output Data", SigmaSetIPort::Atomic);

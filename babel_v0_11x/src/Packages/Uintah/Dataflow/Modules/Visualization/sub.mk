@@ -21,9 +21,9 @@ SRCS     += \
 
 PSELIBS := \
 	Dataflow/Network               \
-	Dataflow/Ports                 \
 	Dataflow/Modules/Visualization \
 	Dataflow/Widgets               \
+	Core/Basis                     \
 	Core/Datatypes                 \
         Core/Thread                    \
 	Core/Persistent                \
@@ -43,7 +43,7 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Exceptions    \
 	Packages/Uintah/Core/Datatypes     \
-	Packages/Uintah/Core/DataArchive     \
+	Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/Dataflow/Modules/Selectors
 
 

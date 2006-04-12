@@ -75,6 +75,10 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	#selected node stuff
 	global $this-show_selected_node
 	set $this-show_selected_node 1
+        
+        #boundary view
+        global $this-show_boundary_vals
+        set $this-show_boundary_vals 1
     }
     method make_color_menu {w v n} {
 	$w add radiobutton \
@@ -177,6 +181,9 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	frame $w.grid.select
 	pack $w.grid.select -side left -fill x -padx 2 -pady 2
 	
+        checkbutton $w.grid.select.boundary_on -text "Show boundary values" \
+            -variable $this-show_boundary_vals -command $n
+        pack $w.grid.select.boundary_on -side top -anchor w -pady 2 -ipadx 3
 	checkbutton $w.grid.select.plane_on -text "Show a plane of grid points" \
 		-variable $this-plane_on -command $n
 	pack $w.grid.select.plane_on -side top -anchor w -pady 2 -ipadx 3

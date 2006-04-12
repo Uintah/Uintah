@@ -13,19 +13,24 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsGeometry
 
 SRCS     += \
-	$(SRCDIR)/Unstructure.cc\
+ 	$(SRCDIR)/ComputeFieldNodes.cc\
+  	$(SRCDIR)/ComputeFieldsNodes.cc\
 	$(SRCDIR)/ConvertToPointCloud.cc\
 	$(SRCDIR)/ConvertToTetVol.cc\
 	$(SRCDIR)/ConvertToTriSurf.cc\
 	$(SRCDIR)/MergeNodes.cc\
+	$(SRCDIR)/LinkFieldBoundary.cc\
+	$(SRCDIR)/Unstructure.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
+PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Fields
+        Packages/ModelCreation/Core/Fields \
+        Packages/ModelCreation/Core/Algorithms \
+        Packages/ModelCreation/Core/Datatypes \
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

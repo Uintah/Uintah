@@ -421,7 +421,7 @@ void MIPHVB16::preprocess(double, int& pp_offset, int&)
 void MIPHVB16::calc_mcell(int depth, int startx, int starty, int startz,
 			  MIPVMCell& mcell)
 {
-    mcell.max=-MAXSHORT;
+    mcell.max=-SHRT_MAX;
     int endx=startx+xsize[depth];
     int endy=starty+ysize[depth];
     int endz=startz+zsize[depth];
@@ -542,7 +542,7 @@ void MIPHVB16::intersect(Ray& ray, HitInfo& hit,
     double yinv_dir=1./dir.y();
     double zinv_dir=1./dir.z();
 
-    float maxsofar=-MAXFLOAT;
+    float maxsofar=-FLT_MAX;
     while(curr.length()>0){
 	MIPCell cell(curr.pop());
 	if(cell.depth==-1){

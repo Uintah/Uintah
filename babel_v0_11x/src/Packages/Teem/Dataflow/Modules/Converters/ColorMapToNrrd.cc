@@ -39,8 +39,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 
 
 namespace SCITeem {
@@ -96,11 +96,13 @@ ColorMapToNrrd::execute()
     const unsigned int size = cmapH->resolution();
   
     NrrdData *nd = scinew NrrdData();
-    nrrdAlloc(nd->nrrd, nrrdTypeFloat, 2, 4, size);
-    nd->nrrd->axis[0].kind = nrrdKind4Color;
-    nd->nrrd->axis[1].kind = nrrdKindDomain;
+    size_t s[NRRD_DIM_MAX];
+    s[0] = 4; s[1] = size;
+    nrrdAlloc_nva(nd->nrrd_, nrrdTypeFloat, 2, s);
+    nd->nrrd_->axis[0].kind = nrrdKind4Color;
+    nd->nrrd_->axis[1].kind = nrrdKindDomain;
 
-    float *val = (float *)nd->nrrd->data;
+    float *val = (float *)nd->nrrd_->data;
     const float *data = cmapH->get_rgba();
 
     const int range = size*4;
@@ -109,7 +111,7 @@ ColorMapToNrrd::execute()
 	val[start+cur] = *data;
 
     // Send the data nrrd.
-    nd->nrrd->axis[0].label = airStrdup("Colors");
+    nd->nrrd_->axis[0].label = airStrdup("Colors");
     NrrdDataHandle dataH(nd);
     nout_->send_and_dereference(dataH);
   }

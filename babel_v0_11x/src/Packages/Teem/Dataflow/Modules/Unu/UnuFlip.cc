@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
@@ -57,12 +57,15 @@ DECLARE_MAKER(UnuFlip)
 
 UnuFlip::UnuFlip(SCIRun::GuiContext *ctx) : 
   Module("UnuFlip", ctx, Filter, "UnuAtoM", "Teem"), 
-  axis_(ctx->subVar("axis"))
+  axis_(get_ctx()->subVar("axis"), 0)
 {
 }
 
-UnuFlip::~UnuFlip() {
+
+UnuFlip::~UnuFlip()
+{
 }
+
 
 void 
 UnuFlip::execute()
@@ -80,7 +83,7 @@ UnuFlip::execute()
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
   if (axis_.get() >= nin->dim) {

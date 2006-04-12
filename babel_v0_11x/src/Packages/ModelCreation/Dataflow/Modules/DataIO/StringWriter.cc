@@ -40,7 +40,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 
 namespace ModelCreation {
@@ -70,10 +70,10 @@ DECLARE_MAKER(StringWriter)
 
 StringWriter::StringWriter(GuiContext* ctx)
   : GenericWriter<StringHandle>("StringWriter", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype")),
-    gui_increment_(ctx->subVar("increment")),
-    gui_current_(ctx->subVar("current"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype")),
+    gui_increment_(get_ctx()->subVar("increment")),
+    gui_current_(get_ctx()->subVar("current"))
 {
   gui_types_.set("{ {{textfile} {.txt .asc .doc}} {{all files} {.*}} }");
 }

@@ -9,7 +9,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/HexVolMesh.h>

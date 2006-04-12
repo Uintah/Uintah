@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/AttractNormals.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/Constant.h>
@@ -179,9 +179,9 @@ AttractNormals::execute()
   Handle<AttractNormalsAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
+  FieldHandle ofieldhandle(algo->execute(this, ifieldhandle, attractor));
 
-  FieldOPort *ofield_port = (FieldOPort *)getOPort("Output Field");
+  FieldOPort *ofield_port = (FieldOPort *)get_output_port("Output Field");
   ofield_port->send_and_dereference(ofieldhandle);
 }
 

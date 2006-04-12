@@ -1171,7 +1171,7 @@ class BioImageApp {
 	set c45 [addConnection $m18 1 $m19 2]
 	set c46 [addConnection $m5 2 $m6 3]
 	set c47 [addConnection $m29 0 $m28 4]
-	set c48 [addConnection $m33 0 $m28 5]
+	set c48 [addConnection $m32 0 $m28 5]
 	set c49 [addConnection $m31 0 $mods(Viewer) 0]
 	set c50 [addConnection $m28 0 $mods(Viewer) 1]
 	set c51 [addConnection $m14 0 $m35 0]
@@ -2114,8 +2114,14 @@ class BioImageApp {
 
 	    checkbutton $page.2Dtext -text "Filter 2D Textures" \
 		-variable $mods(ViewSlices)-texture_filter \
-		-command "$mods(ViewSlices)-c texture_rebind" 
-            pack $page.2Dtext -side top -anchor nw -padx 4 -pady 7
+		-command "$mods(ViewSlices)-c texture_rebind"
+
+            set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
+	    checkbutton $page.3Dtext -text "Filter 3D Textures" \
+		-variable $VolumeVisualizer-interp_mode \
+                -command "$VolumeVisualizer-c needexecute"
+
+            pack $page.2Dtext $page.3Dtext -side top -anchor nw -padx 4 -pady 7
             Tooltip $page.2Dtext "Turn filtering 2D textures\non/off"
 
 	    checkbutton $page.anatomical -text "Anatomical Coordinates" \
@@ -2175,7 +2181,7 @@ class BioImageApp {
 		"for editing the transfer function"
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
-            set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
+
             set n "$VolumeVisualizer-c needexecute"
 
             global $VolumeVisualizer-render_style

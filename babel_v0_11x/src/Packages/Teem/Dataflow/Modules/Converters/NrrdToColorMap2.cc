@@ -30,9 +30,9 @@
 //    Date   : Fri Sep 24 09:48:56 2004
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Core/Volume/CM2Widget.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -78,22 +78,22 @@ NrrdToColorMap2::execute()
     {
       ocmap_h_ = 0;
       in_nrrd_gen_ = h->generation;
-      if(h->nrrd->dim != 3) {
+      if(h->nrrd_->dim != 3) {
         error("Invalid input dimension. Must be 3d");
 	return;
       }
-      if (h->nrrd->dim != 3 || h->nrrd->axis[0].size != 4) {
+      if (h->nrrd_->dim != 3 || h->nrrd_->axis[0].size != 4) {
         error("Invalid input size. Must be 4xWidthxHeigh");
 	return;
       }
 
-      if (h->nrrd->type != nrrdTypeFloat) {
+      if (h->nrrd_->type != nrrdTypeFloat) {
 	error("input nrrd must be of type float: use UnuConvert");
 	return;
       }
 
       NrrdDataHandle temp = scinew NrrdData;
-      nrrdFlip(temp->nrrd, h->nrrd, 2);
+      nrrdFlip(temp->nrrd_, h->nrrd_, 2);
 
       vector<CM2WidgetHandle> widget;
       widget.push_back(scinew ImageCM2Widget(temp));

@@ -14,7 +14,7 @@
 #include <Packages/DaveW/Core/Datatypes/General/ContourSet.h>
 #include <Packages/DaveW/Core/Datatypes/General/ContourSetPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ScalarFieldRGchar.h>
@@ -281,14 +281,14 @@ public:
     virtual void tcl_command(TCLArgs& args, void* userdata);
 };
 
-extern "C" Module* make_CStoSFRG(const clString& id)
+extern "C" Module* make_CStoSFRG(const clString& get_id())
 {
-    return new CStoSFRG(id);
+    return new CStoSFRG(get_id());
 }
 
-CStoSFRG::CStoSFRG(const clString& id)
-: Module("CStoSFRG", id, Filter), nxTCL("nxTCL", id, this), 
-  nyTCL("nyTCL", id, this)
+CStoSFRG::CStoSFRG(const clString& get_id())
+: Module("CStoSFRG", get_id(), Filter), nxTCL("nxTCL", get_id(), this), 
+  nyTCL("nyTCL", get_id(), this)
 
 {
     // Create the input port

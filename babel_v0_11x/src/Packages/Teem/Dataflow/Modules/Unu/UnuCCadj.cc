@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
@@ -66,15 +66,19 @@ DECLARE_MAKER(UnuCCadj)
 UnuCCadj::UnuCCadj(GuiContext* ctx)
   : Module("UnuCCadj", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), onrrd_(0),
-    connectivity_(ctx->subVar("connectivity"))
+    connectivity_(get_ctx()->subVar("connectivity"), 1)
 {
 }
 
-UnuCCadj::~UnuCCadj(){
+
+UnuCCadj::~UnuCCadj()
+{
 }
 
+
 void
- UnuCCadj::execute(){
+UnuCCadj::execute()
+{
   NrrdDataHandle nrrd_handle;
 
   update_state(NeedData);
@@ -91,7 +95,7 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdCCAdjacency(nout, nin, connectivity_.get())) {

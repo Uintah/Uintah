@@ -39,7 +39,7 @@
 #include <Core/Datatypes/Mesh.h>
 
 #include <sci_hash_map.h>
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -192,7 +192,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 2:
@@ -221,7 +221,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 3:
@@ -252,7 +252,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei)); 
+          reporter->update_progress(*(bi)/double(*(ei))); 
         }
         break;
       case 4:
@@ -285,7 +285,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;    
       default:
@@ -338,7 +338,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 2:
@@ -367,7 +367,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 3:
@@ -398,7 +398,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 4:
@@ -431,7 +431,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;  
       default:
@@ -548,7 +548,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi; 
-          reporter->update_progress(*(bi),*(ei));  
+          reporter->update_progress(*(bi)/double(*(ei)));  
         }
         break;
       case 4:
@@ -603,7 +603,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));  
+          reporter->update_progress(*(bi)/double(*(ei)));  
         }
         break;
       default:
@@ -682,7 +682,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi; 
-          reporter->update_progress(*(bi),*(ei));              
+          reporter->update_progress(*(bi)/double(*(ei)));              
         }
         break;
       case 4:
@@ -737,7 +737,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));            
+          reporter->update_progress(*(bi)/double(*(ei)));            
         }
         break;
       default:
@@ -854,7 +854,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 4:
@@ -909,7 +909,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       default:
@@ -988,7 +988,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 4:
@@ -1043,7 +1043,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei)); 
+          reporter->update_progress(*(bi)/double(*(ei))); 
         }
         break;
       default:
@@ -1159,7 +1159,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 4:
@@ -1214,7 +1214,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       default:
@@ -1293,7 +1293,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       case 4:
@@ -1348,7 +1348,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
-          reporter->update_progress(*(bi),*(ei));           
+          reporter->update_progress(*(bi)/double(*(ei)));           
         }
         break;
       default:

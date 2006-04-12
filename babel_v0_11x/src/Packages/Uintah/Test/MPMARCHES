@@ -28,15 +28,15 @@ UNUSED_TESTS = [("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "
                 ("matest_heptwb_cyl_8patch", matest_heptwb_cyl_8patch_ups, "", 8, "ALL","chem_meth") \
                 ]
  
-TESTS = [ ("jp8cyl", "jp8cyl.ups", "", 1.1, "None", "chem_meth"), \
-          ("jp8cyl_8p", jp8cyl_8p_ups, "", 8, "None","chem_meth"), \
-          ("jp8cyl_40cube_8p", jp8cyl_40cube_8p_ups, "", 8, "None","chem_meth") \
+TESTS = [ ("jp8cyl", "jp8cyl.ups", 1.1, "None", "chem_meth"), \
+          ("jp8cyl_8p", jp8cyl_8p_ups, 8, "None","chem_meth"), \
+          ("jp8cyl_40cube_8p", jp8cyl_40cube_8p_ups, 8, "None","chem_meth") \
     	]
 
 def chemfile (test):
-    return test[5]
+    return test[4]
 
-def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
+def chemfileCallback (test, susdir, inputsdir, compare_root, mode, max_parallelism):
   ArchesInputsdir = "%s/../ARCHES" % inputsdir
   symlink("%s/input.dtd" % (ArchesInputsdir), "input.dtd")
   cfile = chemfile(test)
@@ -48,5 +48,5 @@ def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_par
   symlink("%s/StaticMixingTables/JP-8/NAE.rxn.new" % ArchesInputsdir, "NAE.rxn.new")
   symlink("%s/betaTable" % inputsdir, "betaTable")
                      
-exit(runSusTests(argv, TESTS, "mpmarches", chemfileCallback))
+exit(runSusTests(argv, TESTS, "MPMARCHES", chemfileCallback))
 

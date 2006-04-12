@@ -24,6 +24,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ComputeDataArray.tcl\
 	$(SRCDIR)/ComputeFieldData.tcl\
 	$(SRCDIR)/ComputeFieldsData.tcl\
+	$(SRCDIR)/ComputeFieldNodes.tcl\
+	$(SRCDIR)/ComputeFieldsNodes.tcl\
 	$(SRCDIR)/CreateFieldData.tcl\
 	$(SRCDIR)/DataArrayInfo.tcl\
 	$(SRCDIR)/FieldDataElemToNode.tcl\
@@ -31,27 +33,32 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldInfo.tcl\
 	$(SRCDIR)/FieldReader.tcl\
 	$(SRCDIR)/FieldWriter.tcl\
+	$(SRCDIR)/FieldGetMatrixProperty.tcl\
+	$(SRCDIR)/FieldGetStringProperty.tcl\
+	$(SRCDIR)/FieldSetMatrixProperty.tcl\
+	$(SRCDIR)/FieldSetStringProperty.tcl\
+	$(SRCDIR)/LinkFieldBoundary.tcl\
 	$(SRCDIR)/MatrixInfo.tcl\
 	$(SRCDIR)/MatrixReader.tcl\
+	$(SRCDIR)/MatrixToField.tcl\
 	$(SRCDIR)/MatrixWriter.tcl\
+	$(SRCDIR)/MergeFields.tcl\
+	$(SRCDIR)/MergeNodes.tcl\
+	$(SRCDIR)/NrrdToField.tcl\
 	$(SRCDIR)/ParameterList.tcl\
 	$(SRCDIR)/ParameterListMatrix.tcl\
 	$(SRCDIR)/ParameterListString.tcl\
 	$(SRCDIR)/PathReader.tcl\
 	$(SRCDIR)/PathWriter.tcl\
 	$(SRCDIR)/ReplicateDataArray.tcl\
-	$(SRCDIR)/SelectAndReplaceFieldData.tcl\
-	$(SRCDIR)/SelectAndReplaceFieldsData.tcl\
+	$(SRCDIR)/ResizeMatrix.tcl\
+	$(SRCDIR)/SelectAndSetFieldData.tcl\
+	$(SRCDIR)/SelectAndSetFieldsData.tcl\
 	$(SRCDIR)/SelectByFieldData.tcl\
 	$(SRCDIR)/SelectByFieldsData.tcl\
+	$(SRCDIR)/SphericalSurface.tcl\
 	$(SRCDIR)/StringReader.tcl\
 	$(SRCDIR)/StringWriter.tcl\
-	$(SRCDIR)/FieldGetMatrixProperty.tcl\
-	$(SRCDIR)/FieldGetStringProperty.tcl\
-	$(SRCDIR)/FieldSetMatrixProperty.tcl\
-	$(SRCDIR)/FieldSetStringProperty.tcl\
-	$(SRCDIR)/SphericalSurface.tcl\
-	$(SRCDIR)/MatrixToField.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

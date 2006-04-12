@@ -266,11 +266,7 @@
                 <thermal_conductivity>  .452            </thermal_conductivity>
                 <specific_heat>        996.0            </specific_heat>
                 <geom_object>
-                   <cylinder label = "outer cylinder">
-                     <bottom>           [0.0,0.0,-.0508]   </bottom>
-                     <top>              [0.0,0.0, .0508]   </top>
-                     <radius>           0.0508             </radius>
-                  </cylinder>
+                   <cylinder label = "inner cylinder"> </cylinder>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         600.0           </temperature>
@@ -299,11 +295,7 @@
                     <min>           [-0.254,-0.254,-0.254] </min>
                     <max>           [ 0.254, 0.254, 0.254] </max>
                   </box>
-                 <cylinder label = "container">
-                     <bottom>       [0.0,0.0,-.05715]   </bottom>
-                     <top>          [0.0,0.0, .05715]   </top>
-                     <radius>       0.05715            </radius>
-                 </cylinder>
+                 <cylinder label = "outer cylinder"> </cylinder>
                </difference>
              <res>                      [2,2,2]        </res>
              <velocity>           [0.0,0.0,0.0]       </velocity>

@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
@@ -69,10 +69,10 @@ private:
 DECLARE_MAKER(UnuCCmerge)
 UnuCCmerge::UnuCCmerge(GuiContext* ctx)
   : Module("UnuCCmerge", ctx, Source, "UnuAtoM", "Teem"),
-    dir_(ctx->subVar("dir")),
-    maxsize_(ctx->subVar("maxsize")),
-    maxneigh_(ctx->subVar("maxneigh")),
-    connectivity_(ctx->subVar("connectivity"))
+    dir_(get_ctx()->subVar("dir")),
+    maxsize_(get_ctx()->subVar("maxsize")),
+    maxneigh_(get_ctx()->subVar("maxneigh")),
+    connectivity_(get_ctx()->subVar("connectivity"))
 {
 }
 
@@ -97,7 +97,7 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   if (nrrdCCMerge(nout, nin, 0, dir_.get(), maxsize_.get(), maxneigh_.get(), 

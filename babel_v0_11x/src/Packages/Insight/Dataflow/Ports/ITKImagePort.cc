@@ -39,18 +39,19 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Insight/Dataflow/Ports/ITKImagePort.h>
+#include <Packages/Insight/Dataflow/Ports/ITKImagePort.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <Packages/Insight/Dataflow/Ports/share.h>
 namespace Insight {
 
 using namespace SCIRun;
 
 extern "C" {
-  InsightSHARE IPort* make_ITKImageIPort(Module* module, const string& name) {
+  SCISHARE IPort* make_ITKImageIPort(Module* module, const string& name) {
   return scinew SimpleIPort<ITKImageHandle>(module,name);
 }
-  InsightSHARE OPort* make_ITKImageOPort(Module* module, const string& name) {
+  SCISHARE OPort* make_ITKImageOPort(Module* module, const string& name) {
   return scinew SimpleOPort<ITKImageHandle>(module,name);
 }
 }

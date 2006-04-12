@@ -39,85 +39,22 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Containers/Handle.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <iostream>
+#include <Dataflow/Network/ChooseModule.h>
+
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 
 namespace SCIRun {
 
-class ChooseColorMap : public Module {
-private:
-  GuiInt port_index_;
-  GuiInt usefirstvalid_;
+class ChooseColorMap : public ChooseModule< ColorMapHandle > {
 public:
   ChooseColorMap(GuiContext* ctx);
-  virtual ~ChooseColorMap();
-  virtual void execute();
 };
 
 DECLARE_MAKER(ChooseColorMap)
 ChooseColorMap::ChooseColorMap(GuiContext* ctx)
-  : Module("ChooseColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    port_index_(ctx->subVar("port-index")),
-    usefirstvalid_(ctx->subVar("usefirstvalid"))
+  : ChooseModule< ColorMapHandle >("ChooseColorMap", ctx, Filter,
+				   "Visualization", "SCIRun", "ColorMap")
 {
-}
-
-ChooseColorMap::~ChooseColorMap()
-{
-}
-
-void
-ChooseColorMap::execute()
-{
-  ColorMapOPort *ofld = (ColorMapOPort *)get_oport("ColorMap");
-  port_range_type range = get_iports("ColorMap");
-  if (range.first == range.second)
-    return;
-
-  port_map_type::iterator pi = range.first;
-
-  int usefirstvalid = usefirstvalid_.get();
-
-  ColorMapIPort *icolormap = 0;
-  ColorMapHandle colormap;
-  
-  if (usefirstvalid) {
-    // iterate over the connections and use the
-    // first valid colormap
-    int idx = 0;
-    bool found_valid = false;
-    while (pi != range.second) {
-      icolormap = (ColorMapIPort *)get_iport(idx);
-      if (icolormap->get(colormap) && colormap != 0) {
-	found_valid = true;
-	break;
-      }
-      ++idx;
-      ++pi;
-    }
-    if (!found_valid) {
-      error("Didn't find any valid colormaps.");
-      return;
-    }
-  } else {
-    // use the index specified
-    int idx=port_index_.get();
-    if (idx<0) { error("Can't choose a negative port."); return; }
-    while (pi != range.second && idx != 0) { ++pi ; idx--; }
-    int port_number=pi->second;
-    if (pi == range.second || ++pi == range.second) { 
-      error("Selected port index out of range."); return; 
-    }
-
-    icolormap = (ColorMapIPort *)get_iport(port_number);
-    icolormap->get(colormap);
-  }
-  
-  ofld->send_and_dereference(colormap);
 }
 
 } // End namespace SCIRun

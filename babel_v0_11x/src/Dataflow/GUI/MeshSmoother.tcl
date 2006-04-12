@@ -27,40 +27,69 @@
 #
 
 
-itcl_class SCIRun_FieldsData_MeshSmoother {
+##
+ #  MeshSmoother.tcl: The MeshSmoother UI
+ #  Written by:
+ #   Jason Shepherd
+ #   Department of Computer Science
+ #   University of Utah
+ #   March 2006
+ #  Copyright (C) 2006 SCI Group
+ ##
+
+catch {rename SCIRun_FieldsGeometry_MeshSmoother ""}
+
+itcl_class SCIRun_FieldsGeometry_MeshSmoother {
     inherit Module
+
     constructor {config} {
         set name MeshSmoother
-        set_defaults
-    }
-
-    method set_defaults {} {
-#        global $this-isoval
-#	global $this-lte
-#	set $this-isoval 0
-#	set $this-lte 1
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            return
+            raise $w
+            return;
         }
 
         toplevel $w
+        wm minsize $w 150 80
 
-	frame       $w.f
-#	entry       $w.f.entry -textvariable $this-isoval
-#	radiobutton $w.f.lte -text "Less Than"    -value 1 -variable $this-lte
-#	radiobutton $w.f.gte -text "Greater Than" -value 0 -variable $this-lte
+	frame $w.bound1
+	label $w.bound1.t1 -text "Smooth Boundary?"
+	pack $w.bound1.t1
+	pack $w.bound1
 
-#	pack $w.f.lte   -pady 2
-#	pack $w.f.gte   -pady 2
-#	pack $w.f.entry -pady 2
+	frame $w.bound
+	radiobutton $w.bound.smoothboundaryon -text "On" \
+	    -variable $this-smoothboundary -value "On"
+	radiobutton $w.bound.smoothboundaryoff -text "Off" \
+	    -variable $this-smoothboundary -value "Off"
+	pack $w.bound.smoothboundaryon $w.bound.smoothboundaryoff \
+	    -side left -anchor nw -padx 3
+	pack $w.bound -side top
 
-#	pack $w.f -pady 4 -padx 4
+	frame $w.sep
+	label $w.sep.t1
+ 	label $w.sep.t2 -text "Smoothing Scheme"
+	pack $w.sep.t1 $w.sep.t2
+	pack $w.sep
 
-	makeSciButtonPanel $w $w $this
+	frame $w.style
+	radiobutton $w.style.smartlaplacian -text "Smart Laplacian" \
+	    -variable $this-smoothscheme -value "SmartLaplacian"
+	radiobutton $w.style.shapeimprovement -text "Shape Improvement" \
+	    -variable $this-smoothscheme -value "ShapeImprovement"
+	pack $w.style.smartlaplacian $w.style.shapeimprovement \
+	    -side left -anchor nw -padx 3
+	pack $w.style
+
+        frame $w.f
+	frame $w.fb
+        pack $w.f $w.fb -padx 2 -pady 2 -side top -expand yes
+
+        makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
 }

@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <teem/ten.h>
 
 #include <sstream>
@@ -63,8 +63,8 @@ DECLARE_MAKER(TendEvalClamp)
 
 TendEvalClamp::TendEvalClamp(SCIRun::GuiContext *ctx) : 
   Module("TendEvalClamp", ctx, Filter, "Tend", "Teem"), 
-  min_(ctx->subVar("min")),
-  max_(ctx->subVar("max"))
+  min_(get_ctx()->subVar("min"), "0.0001"),
+  max_(get_ctx()->subVar("max"), "NaN")
 {
 }
 
@@ -87,7 +87,7 @@ TendEvalClamp::execute()
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
   float min, max;

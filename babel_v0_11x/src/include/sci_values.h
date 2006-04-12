@@ -38,18 +38,7 @@
 #if !defined(SCI_VALUES_H)
 #define SCI_VALUES_H
 
-#if defined( __APPLE__) || defined(_WIN32)
-
+#include <limits.h>
 #include <float.h>
-#define MAXDOUBLE DBL_MAX
-#define MAXSHORT  SHRT_MAX
-#define MAXINT    INT_MAX
-
-#else
-
-#include <values.h>
-
-#endif
-
 
 #endif  /* #define SCI_VALUES_H */

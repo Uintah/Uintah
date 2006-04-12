@@ -36,22 +36,10 @@
 
 itcl_class SCIRun_FieldsOther_FieldFrenet {
     inherit Module
+
     constructor {config} {
         set name FieldFrenet
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-	global $this-direction
-	global $this-dims
-	global $this-axis
-
-	set $this-direction 0
-	set $this-axis 2
-	set $this-dims 3
-
-	trace variable $this-dims w "$this update_setsize_callback"
+	trace variable $this-dims w "$this update_set_size_callback"
     }
 
     method ui {} {
@@ -116,17 +104,13 @@ itcl_class SCIRun_FieldsOther_FieldFrenet {
 	moveToCursor $w
     }
 
-    method update_setsize_callback { name1 name2 op } {
-	global $this-dims
-
-	set_size [set $this-dims]
+    method update_set_size_callback { name1 name2 op } {
+	set_size
     }
 
-    method set_size { dims } {
+    method set_size { } {
 	global $this-dims
 	global $this-axis
-
-	set $this-dims $dims
 
 	if { [set $this-axis] >= [set $this-dims] } {
 	    set $this-axis [expr [set $this-dims]-1]

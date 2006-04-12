@@ -51,7 +51,7 @@ using std::string;
 
 class NrrdTextureObj {
 public:
-  NrrdTextureObj(NrrdDataHandle nrrd);
+  NrrdTextureObj(NrrdDataHandle nrrd_handle);
 
   ~NrrdTextureObj();
   void			draw_quad(double, double, double, double);
@@ -63,7 +63,7 @@ private:
   bool			bind();
   void			pad_to_power_of_2();
   
-  NrrdDataHandle	nrrd_;
+  NrrdDataHandle	nrrd_handle_;
   int			width_;
   int			height_;
   float 		color_[4];

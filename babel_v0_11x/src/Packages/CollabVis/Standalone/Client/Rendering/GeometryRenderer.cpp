@@ -1270,7 +1270,7 @@ GeometryRenderer::addPointer( const Point3d point, const double zRotation ) {
   // Add the pointer using the new params
   string ID = 
     Renderer::addPointer( newPoint, zRotation );
-  getID( ID )->setPointerSize( 2.0 ); // Make the pointer a bit smaller!
+  get_id( ID )->setPointerSize( 2.0 ); // Make the pointer a bit smaller!
 
   Log::log( LEAVE, "[GeometryRenderer::addPointer] leaving" ); 
   return ID;

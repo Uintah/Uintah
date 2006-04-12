@@ -25,17 +25,17 @@ using namespace SCIRun;
       TensorFieldHandle handle;
       clString old_filename;
     public:
-      TensorFieldReader(const clString& id);
+      TensorFieldReader(const clString& get_id());
       virtual ~TensorFieldReader();
       virtual void execute();
     };
     
-    extern "C" Module* make_TensorFieldReader(const clString& id) {
-      return new TensorFieldReader(id);
+    extern "C" Module* make_TensorFieldReader(const clString& get_id()) {
+      return new TensorFieldReader(get_id());
     }
     
-    TensorFieldReader::TensorFieldReader(const clString& id)
-      : Module("TensorFieldReader", id, Source), filename("filename", id, this)
+    TensorFieldReader::TensorFieldReader(const clString& get_id())
+      : Module("TensorFieldReader", get_id(), Source), filename("filename", get_id(), this)
     {
       // Create the output data handle and port
       outport=scinew TensorFieldOPort(this, "Output Data", TensorFieldIPort::Atomic);

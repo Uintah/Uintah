@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
@@ -65,7 +65,7 @@ DECLARE_MAKER(UnuReshape)
 UnuReshape::UnuReshape(GuiContext* ctx)
   : Module("UnuReshape", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), onrrd_(0),
-    sz_(ctx->subVar("sz"))
+    sz_(get_ctx()->subVar("sz"), "0")
 {
 }
 
@@ -90,12 +90,12 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // Determine the number of mins given
   string sizes = sz_.get();
-  int szLen = 0;
+  unsigned int szLen = 0;
   char ch;
   int i=0, start=0;
   bool inword = false;
@@ -121,7 +121,7 @@ void
     return;
   }
 
-  int *sz = new int[nin->dim];
+  size_t *sz = new size_t[nin->dim];
   // Size/samples
   i=0, start=0;
   int which = 0, end=0, counter=0;
@@ -168,7 +168,7 @@ void
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++) {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 

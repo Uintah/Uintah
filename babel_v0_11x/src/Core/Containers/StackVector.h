@@ -77,7 +77,7 @@ public:
   void resize(size_t s) { ASSERT(s <= CAPACITY); size_ = s; }
   void push_back(T t) { ASSERT(size_ < CAPACITY); data_[size_] = t; size_++; }
   void clear() { size_ = 0; }
-  StackVector() { size_ = 0xDEADBABE; }
+  StackVector() { size_ = 0; } // { size_ = 0xDEADBABE; }
   StackVector(size_t s) { ASSERT(s <= CAPACITY); size_ = s; }
   ~StackVector() {}
 };

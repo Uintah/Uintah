@@ -41,7 +41,7 @@
 
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <sstream>
@@ -71,9 +71,9 @@ DECLARE_MAKER(NrrdWriter)
 
 NrrdWriter::NrrdWriter(GuiContext *ctx)
 : Module("NrrdWriter", ctx, Filter, "DataIO", "Teem"), 
-  filename_(ctx->subVar("filename")),
-  filetype_(ctx->subVar("filetype")),
-  exporttype_(ctx->subVar("exporttype"))
+  filename_(get_ctx()->subVar("filename")),
+  filetype_(get_ctx()->subVar("filetype")),
+  exporttype_(get_ctx()->subVar("exporttype"))
 {
 }
 
@@ -170,7 +170,7 @@ void NrrdWriter::execute()
     if (writing_nhdr) nrrd_fn += ".nhdr";
     else nrrd_fn += ".nrrd";
 
-    Nrrd *nin = handle->nrrd;
+    Nrrd *nin = handle->nrrd_;
     
     NrrdIoState *nio = nrrdIoStateNew();
     // set encoding to be raw

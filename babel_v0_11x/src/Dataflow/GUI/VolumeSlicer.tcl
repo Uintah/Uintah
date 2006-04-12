@@ -31,56 +31,10 @@ catch {rename VolumeSlicer ""}
 
 itcl_class SCIRun_Visualization_VolumeSlicer {
     inherit Module
+
     constructor {config} {
 	set name VolumeSlicer
-	set_defaults
     }
-    method set_defaults {} {
-	global $this-control_pos_saved
-	global $this-control_x
-	global $this-control_y
-	global $this-control_z
-	global $this-drawX
-	global $this-drawY
-	global $this-drawZ
-	global $this-drawView
-	global $this-interp_mode 
-	global standard
-	global $this-phi_0
-	global $this-phi_1
-	global $this-draw_phi_0
-	global $this-draw_phi_1
-	global $this-cyl_active
-	global $this-use_stencil
-	global $this-multi_level
-	global $this-outline_levels
-	global $this-def-color-r
-	global $this-def-color-g
-	global $this-def-color-b
-        global $this-colors
-        global $this-color_changed
-        global $this-level_on
-	set $this-drawX 0
-	set $this-drawY 0
-	set $this-drawZ 0
-	set $this-drawView 0
-	set $this-draw_phi_0 0
-	set $this-draw_phi_1 0
-	set $this-interp_mode 1
-	set $this-phi_0 30.0
-	set $this-phi_1 60.0
-	set $this-control_pos_saved 0
-	set $this-use_stencil 0
-	set $this-multi_level 1
-	set $this-outline_levels 0
- 	set $this-def-color-r 1.0 
-	set $this-def-color-g 1.0 
-	set $this-def-color-b 1.0 
-        set $this-colors {}
-        set $this-color_changed 1
-        set $this-level_on {}
-   }
-
 
     method set_active_tab {act} {
 	global $this-cyl_active

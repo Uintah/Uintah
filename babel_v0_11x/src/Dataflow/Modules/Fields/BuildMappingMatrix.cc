@@ -42,8 +42,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/BuildMappingMatrix.h>
@@ -75,11 +75,11 @@ public:
 DECLARE_MAKER(BuildMappingMatrix)
 BuildMappingMatrix::BuildMappingMatrix(GuiContext* ctx) : 
   Module("BuildMappingMatrix", ctx, Filter, "FieldsData", "SCIRun"),
-  interpolation_basis_(ctx->subVar("interpolation_basis")),
-  map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
-  exhaustive_search_(ctx->subVar("exhaustive_search")),
-  exhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist")),
-  np_(ctx->subVar("np"))
+  interpolation_basis_(get_ctx()->subVar("interpolation_basis"), "linear"),
+  map_source_to_single_dest_(get_ctx()->subVar("map_source_to_single_dest"), 0),
+  exhaustive_search_(get_ctx()->subVar("exhaustive_search"), 0),
+  exhaustive_search_max_dist_(get_ctx()->subVar("exhaustive_search_max_dist"), -1.0),
+  np_(get_ctx()->subVar("np"), 1)
 {
 }
 
@@ -126,7 +126,8 @@ BuildMappingMatrix::execute()
   fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
   const int interp_basis = (interpolation_basis_.get() == "linear")?1:0;
   MatrixOPort *omp = (MatrixOPort *)get_oport("Mapping");
-  MatrixHandle mh(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), interp_basis,
+  MatrixHandle mh(algo->execute(this,
+                                fsrc_h->mesh(), fdst_h->mesh(), interp_basis,
                                 map_source_to_single_dest_.get(),
                                 exhaustive_search_.get(),
                                 exhaustive_search_max_dist_.get(), np_.get()));

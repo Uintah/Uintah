@@ -41,8 +41,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Geometry/CoregPts.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Basis/Constant.h>
@@ -77,11 +77,13 @@ DECLARE_MAKER(Coregister)
 
 Coregister::Coregister(GuiContext* ctx)
   : Module("Coregister", ctx, Filter, "FieldsOther", "SCIRun"),
-    allowScale_(ctx->subVar("allowScale")),
-    allowRotate_(ctx->subVar("allowRotate")),
-    allowTranslate_(ctx->subVar("allowTranslate")), seed_(ctx->subVar("seed")),
-    iters_(ctx->subVar("iters")), misfitTol_(ctx->subVar("misfitTol")),
-    method_(ctx->subVar("method")),
+    allowScale_(get_ctx()->subVar("allowScale"), 1),
+    allowRotate_(get_ctx()->subVar("allowRotate"), 1),
+    allowTranslate_(get_ctx()->subVar("allowTranslate"), 1),
+    seed_(get_ctx()->subVar("seed"), 1),
+    iters_(get_ctx()->subVar("iters"), 1000),
+    misfitTol_(get_ctx()->subVar("misfitTol"), 0.001),
+    method_(get_ctx()->subVar("method")),
     mr_(0)
 {
 }

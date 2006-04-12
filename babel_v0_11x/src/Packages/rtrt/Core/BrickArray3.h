@@ -14,6 +14,7 @@
 #ifndef SCI_Classlib_BrickArray3_h
 #define SCI_Classlib_BrickArray3_h 1
 
+#include <math.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

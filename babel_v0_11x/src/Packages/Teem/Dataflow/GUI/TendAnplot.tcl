@@ -31,23 +31,9 @@
 
 itcl_class Teem_Tend_TendAnplot {
     inherit Module
+
     constructor {config} {
         set name TendAnplot
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-resolution
-	set $this-resolution 256
-
-	global $this-whole
-	set $this-whole 0
-
-	global $this-values
-	set $this-values 0
-
-	global $this-anisotropy
-	set $this-anisotropy "cl1"
     }
 
     method ui {} {

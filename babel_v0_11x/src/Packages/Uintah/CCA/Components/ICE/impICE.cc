@@ -174,6 +174,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
 {
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet. 
   //__________________________________
   // update the pressure
@@ -183,10 +184,11 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
   t->requires(Task::OldDW,       lb->sum_imp_delPLabel,  press_matl,oims,gn);
   
-  //  for setting the boundary conditions
+  // for setting the boundary conditions
+  // you need gac,1 for funky multilevel patch configurations
   t->modifies(lb->imp_delPLabel,     press_matl, oims);
   if (level->getIndex() > 0){
-    t->requires(Task::NewDW, lb->imp_delPLabel, 0,Task::CoarseLevel, press_matl, oims, gn,0);
+    t->requires(Task::NewDW, lb->imp_delPLabel, 0,Task::CoarseLevel, press_matl, oims, gac,1);
   }  
 
 
@@ -232,6 +234,9 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   t->computes(lb->uvel_FCLabel);
   t->computes(lb->vvel_FCLabel);
   t->computes(lb->wvel_FCLabel);
+  t->computes(lb->grad_dp_XFCLabel);
+  t->computes(lb->grad_dp_YFCLabel);    // debugging variables
+  t->computes(lb->grad_dp_ZFCLabel);
   sched->addTask(t, patches, all_matls);
   
   //__________________________________
@@ -364,7 +369,11 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   //__________________________________
   //  what's produced from this task
   t->computes(lb->press_CCLabel,     press_matl,oims);
-  t->modifies(lb->sum_imp_delPLabel, press_matl,oims);  
+  t->computes(lb->matrixLabel,       one_matl,  oims);
+  t->computes(lb->grad_dp_XFCLabel,  press_matl,oims);
+  t->computes(lb->grad_dp_YFCLabel,  press_matl,oims);
+  t->computes(lb->grad_dp_ZFCLabel,  press_matl,oims);
+  t->modifies(lb->sum_imp_delPLabel, press_matl,oims);
   t->modifies(lb->term2Label,        one_matl,  oims);
   t->modifies(lb->rhsLabel,          one_matl,  oims);   
 
@@ -810,15 +819,12 @@ void ICE::updatePressure(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       parent_new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel, indx,patch,gn,0);
     }             
+    // set boundary conditions on imp_delP
+    set_imp_DelP_BC(imp_delP, patch, lb->imp_delPLabel, new_dw);
     //__________________________________
     //  add delP to press_equil
-    //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure
-    // imp_delP is ill-defined in teh extraCells
+    //  AMR:  hit the extra cells, you need to update the pressure in these cells
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
-      IntVector c = *iter;
-      press_CC[c] = press_equil[c];
-    }    
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       sum_imp_delP[c] = sum_imp_delP_old[c] + imp_delP[c];
       press_CC[c] = press_equil[c] + sum_imp_delP[c];
@@ -1131,6 +1137,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->press_CCLabel,       patch_sub,  d_press_matl, replace);
+  ParentNewDW->transferFrom(subNewDW,         // press
+                    lb->matrixLabel,         patch_sub,  one_matl,     replace);
   ParentNewDW->transferFrom(subNewDW,
                     lb->sum_imp_delPLabel,   patch_sub,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,         // term2
@@ -1144,6 +1152,13 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                     lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // wvel_FC
                     lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace);
+                    
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_XFC
+                    lb->grad_dp_XFCLabel,     patch_sub, d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_YFC
+                    lb->grad_dp_YFCLabel,     patch_sub, d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_ZFC
+                    lb->grad_dp_ZFCLabel,     patch_sub, d_press_matl, replace);
                      
   ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
                     lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 

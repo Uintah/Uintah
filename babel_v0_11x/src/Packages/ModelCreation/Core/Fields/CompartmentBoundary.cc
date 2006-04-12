@@ -32,7 +32,7 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   if (input.get_rep() == 0)
   {
@@ -62,24 +62,19 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
     pr->error("CompartmentBoundary: THis function is only defined for surface and volume data");
     return (false);
   }
-  
-  std::string algotype = "";
-  
+
   std::string mesh_type = fi.get_mesh_type();
   if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh")||(mesh_type == "HexVolMesh"))
   {
     fo.set_mesh_type("QuadSurfMesh");
-    algotype = "Volume";
   }
   else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "TriSurfMesh"))
   {
     fo.set_mesh_type("CurveMesh");
-    algotype = "Surface";
   }
   else if (mesh_type == "TetVolMesh")
   {
     fo.set_mesh_type("TriSurfMesh");
-    algotype = "Volume";
   }
   else
   {
@@ -87,11 +82,13 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
     return (false);
   }
 
+  fo.make_nodata();
+
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "CompartmentBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
-    "CompartmentBoundaryAlgo","CompartmentBoundary"+algotype+"AlgoT",
+    "CompartmentBoundaryAlgo","CompartmentBoundaryAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
@@ -110,7 +107,7 @@ bool CompartmentBoundaryAlgo::CompartmentBoundary(ProgressReporter *pr, FieldHan
     return(false);
   }
 
-  return(algo->CompartmentBoundary(pr,input,output,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  return(algo->CompartmentBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
 
 

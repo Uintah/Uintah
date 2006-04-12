@@ -47,7 +47,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Ports/Port.h>
 
 #include <iostream>
 #ifndef _WIN32
@@ -77,8 +77,8 @@ ModuleHelper::~ModuleHelper()
 void
 ModuleHelper::run()
 {
-  module->setPid(getpid());
-  if(module->have_own_dispatch)
+  module->set_pid(getpid());
+  if(module->have_own_dispatch_)
   {
     module->do_execute();
   }
@@ -86,7 +86,7 @@ ModuleHelper::run()
   {
     for(;;)
     {
-      MessageBase* msg = module->mailbox.receive();
+      MessageBase* msg = module->mailbox_.receive();
       switch(msg->type) {
       case MessageTypes::GoAway:
 	delete msg;
@@ -98,12 +98,12 @@ ModuleHelper::run()
       case MessageTypes::ExecuteModule:
         module->do_execute();
         module->do_synchronize();
-        module->sched->report_execution_finished(msg);
+        module->sched_->report_execution_finished(msg);
 	break;
 
       case MessageTypes::SynchronizeModule:
         module->do_synchronize();
-        module->sched->report_execution_finished(msg);
+        module->sched_->report_execution_finished(msg);
         break;
 
       case MessageTypes::TriggerPort:

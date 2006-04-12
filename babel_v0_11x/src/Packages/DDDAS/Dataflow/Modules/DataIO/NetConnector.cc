@@ -39,7 +39,7 @@
 // SCIRun includes
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
@@ -114,9 +114,9 @@ DECLARE_MAKER(NetConnector)
 //
 NetConnector::NetConnector(GuiContext* ctx)
   : Module("NetConnector", ctx, Source, "DataIO", "DDDAS"), 
-    cliserv_(ctx->subVar("cliserv")),
-    test_(ctx->subVar("test")),
-    stop_(ctx->subVar("stop"))
+    cliserv_(get_ctx()->subVar("cliserv")),
+    test_(get_ctx()->subVar("test")),
+    stop_(get_ctx()->subVar("stop"))
 { 
 }
  

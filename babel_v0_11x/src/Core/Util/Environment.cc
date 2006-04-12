@@ -186,6 +186,7 @@ SCIRun::create_sci_environment(char **env, char *execname)
   sci_putenv("SCIRUN_ITCL_WIDGETS", 
 	     MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
 
+  find_and_parse_scirunrc();
 }
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -264,12 +265,13 @@ SCIRun::parse_scirunrc( const string &rcfile )
     }
   }
   fclose(filein);
+  sci_putenv("SCIRUN_RC_PARSED","1");
   return true;
 }
 
 // find_and_parse_scirunrc will search for the users .scirunrc file in 
 // default locations and read it into the environemnt if possible.
-bool
+void
 SCIRun::find_and_parse_scirunrc()
 {
   // Tell the user that we are searching for the .scirunrc file...
@@ -287,8 +289,8 @@ SCIRun::find_and_parse_scirunrc()
   }
   
   // 3. check the user's home directory
-  char *HOME;
-  if (!foundrc && (HOME = getenv("HOME"))) {
+  const char *HOME;
+  if (!foundrc && (HOME = sci_getenv("HOME"))) {
       filename = HOME+string("/.scirunrc");
       foundrc = parse_scirunrc(filename);
   }
@@ -304,9 +306,6 @@ SCIRun::find_and_parse_scirunrc()
   
   // print location of .scirunrc
   cout << filename << std::endl;
-
-  // return if found
-  return foundrc;
 }
 
 
@@ -361,7 +360,7 @@ SCIRun::copy_and_parse_scirunrc()
 bool
 SCIRun::sci_getenv_p(const string &key) 
 {
-  const char *value = sci_getenv( key );
+  const char *value = sci_getenv(key);
 
   // If the environment variable does NOT EXIST OR is EMPTY then return FASE
   if (!value || !(*value)) return false;

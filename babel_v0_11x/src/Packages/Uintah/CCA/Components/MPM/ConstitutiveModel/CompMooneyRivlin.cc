@@ -59,13 +59,13 @@ void CompMooneyRivlin::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","comp_mooney_rivlin");
   }
     
-  cm_ps->appendElement("he_constant_1",d_initialData.C1,false,4);
-  cm_ps->appendElement("he_constant_2",d_initialData.C2,false,4);
-  cm_ps->appendElement("he_PR",d_initialData.PR,false,4);
+  cm_ps->appendElement("he_constant_1",d_initialData.C1);
+  cm_ps->appendElement("he_constant_2",d_initialData.C2);
+  cm_ps->appendElement("he_PR",d_initialData.PR);
 }
 
 CompMooneyRivlin* CompMooneyRivlin::clone()
@@ -212,8 +212,8 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     if(delT_new < 1.e-12)
-      // don't use adjustDelt here because of MAXDOUBLE
-      new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
+      // don't use adjustDelt here because of DBL_MAX
+      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
       new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
@@ -404,7 +404,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
     
     if(delT_new < 1.e-12)
-      new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
+      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
       new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);

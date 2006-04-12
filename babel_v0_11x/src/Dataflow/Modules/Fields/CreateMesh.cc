@@ -41,8 +41,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/CreateMesh.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
@@ -70,10 +70,10 @@ public:
 DECLARE_MAKER(CreateMesh)
 CreateMesh::CreateMesh(GuiContext* ctx)
   : Module("CreateMesh", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gui_fieldname_(ctx->subVar("fieldname")),
-    gui_meshname_(ctx->subVar("meshname")),
-    gui_fieldbasetype_(ctx->subVar("fieldbasetype")),
-    gui_datatype_(ctx->subVar("datatype"))
+    gui_fieldname_(get_ctx()->subVar("fieldname"), "Created Field"),
+    gui_meshname_(get_ctx()->subVar("meshname"), "Created Mesh"),
+    gui_fieldbasetype_(get_ctx()->subVar("fieldbasetype"), "TetVolField"),
+    gui_datatype_(get_ctx()->subVar("datatype"), "double")
 {
 }
 
@@ -144,15 +144,67 @@ CreateMeshAlgo::get_compile_info(const string &basename,
   static const string template_class_name("CreateMeshAlgoT");
   static const string base_class_name("CreateMeshAlgo");
 
+
+  string ftype;
+  string basis_inc;
+  string mesh_inc;
+  if (basename == "Curve") {
+    ftype = "GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<" + 
+      datatype + ">, vector<" + datatype + "> > ";
+    basis_inc = "../src/Core/Basis/CrvLinearLgn.h";
+    mesh_inc = "../src/Core/Datatypes/CurveMesh.h";
+  } else if (basename == "HexVol") {
+    ftype = 
+      "GenericField<HexVolMesh<HexTrilinearLgn<Point> >, HexTrilinearLgn<" + 
+      datatype + ">, vector<" + datatype + "> > ";
+    basis_inc = "../src/Core/Basis/HexTrilinearLgn.h";
+    mesh_inc = "../src/Core/Datatypes/HexVolMesh.h";
+  } else if (basename == "PointCloud") {
+    ftype = 
+      "GenericField<PointCloudMesh<ConstantBasis<Point> >, ConstantBasis<" +
+      datatype + ">, vector<" + datatype + "> > ";
+    basis_inc = "../src/Core/Basis/Constant.h";
+    mesh_inc = "../src/Core/Datatypes/PointCloudMesh.h";
+
+  } else if (basename == "PrismVol") {
+    ftype = 
+      "GenericField<PrismVolMesh<PrismLinearLgn<Point> >, PrismLinearLgn<" + 
+      datatype + ">, vector<" + datatype + "> > ";
+    basis_inc = "../src/Core/Basis/PrismLinearLgn.h";
+    mesh_inc = "../src/Core/Datatypes/PrismVolMesh.h";
+  } else if (basename == "QuadSurf") {
+    ftype = 
+      "GenericField<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<" +
+      datatype + ">, vector<" + datatype + "> > ";
+    basis_inc = "../src/Core/Basis/QuadBilinearLgn.h";
+    mesh_inc = "../src/Core/Datatypes/QuadSurfMesh.h";
+  } else if (basename == "TetVol") {
+    ftype = 
+      "GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<" +
+      datatype + ">, vector<" + datatype + "> > ";
+    basis_inc = "../src/Core/Basis/TetLinearLgn.h";
+    mesh_inc = "../src/Core/Datatypes/TetVolMesh.h";
+  } else if (basename == "TriSurf") {
+    ftype = 
+      "GenericField<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<" +
+      datatype + ">, vector<" + datatype + "> > ";
+    basis_inc = "../src/Core/Basis/TriLinearLgn.h";
+    mesh_inc = "../src/Core/Datatypes/TriSurfMesh.h";    
+  }
+
+
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(basename + datatype) + ".",
+		       to_filename(ftype) + ".",
                        base_class_name, 
                        template_class_name, 
-                       basename + "<" + datatype + "> ");
+                       ftype);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include(basis_inc);
+  rval->add_mesh_include(mesh_inc);
+  rval->add_field_include("../src/Core/Datatypes/GenericField.h");
   rval->add_namespace("SCIRun");
 
   return rval;

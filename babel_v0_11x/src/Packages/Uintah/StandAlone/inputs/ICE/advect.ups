@@ -9,6 +9,9 @@
        <title>Advection test</title>
    </Meta>
    
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -176,7 +179,7 @@
          <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE" />
+        <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
       </ICE>        
     </CFD>

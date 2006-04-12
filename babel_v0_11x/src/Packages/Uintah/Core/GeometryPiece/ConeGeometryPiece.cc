@@ -74,12 +74,12 @@ ConeGeometryPiece* ConeGeometryPiece::clone()
 void ConeGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
 {
 
-  ProblemSpecP cone_ps = ps->appendChild("cone",true,4);
+  ProblemSpecP cone_ps = ps->appendChild("cone");
 
-  cone_ps->appendElement("bottom",d_bottom,false,5);
-  cone_ps->appendElement("top",d_top,false,5);
-  cone_ps->appendElement("bottom_radius",d_radius,false,5);
-  cone_ps->appendElement("top_radius",d_topRad,false,5);
+  cone_ps->appendElement("bottom",d_bottom);
+  cone_ps->appendElement("top",d_top);
+  cone_ps->appendElement("bottom_radius",d_radius);
+  cone_ps->appendElement("top_radius",d_topRad);
 }
 
 bool 

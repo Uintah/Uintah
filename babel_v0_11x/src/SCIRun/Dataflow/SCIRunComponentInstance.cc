@@ -56,7 +56,7 @@ SCIRunComponentInstance::SCIRunComponentInstance(
  : ComponentInstance(framework, instanceName, className, tm), module(module)
 {
     // See if we have a user-interface...
-    if (module->haveUI()) {
+    if (module->have_ui()) {
         specialPorts.push_back(
             new CCAPortInstance("ui", "sci.cca.ports.UIPort",
                                 sci::cca::TypeMap::pointer(0),
@@ -85,13 +85,13 @@ PortInstance* SCIRunComponentInstance::getPortInstance(const std::string& name)
     // SCIRunPortInstance tags them with a prefix of "Input: " or
     // "Output: ", so we need to check that first.
     if (name.substr(0, INPUT_LEN) == "Input: ") {
-        IPort* port = module->getIPort(name.substr(7));
+        IPort* port = module->get_input_port(name.substr(7));
         if (!port) {
             return 0;
         }
         return new SCIRunPortInstance(this, port, SCIRunPortInstance::Input);
     } else if (name.substr(0, OUTPUT_LEN) == "Output: ") {
-        OPort* port = module->getOPort(name.substr(OUTPUT_LEN));
+        OPort* port = module->get_output_port(name.substr(OUTPUT_LEN));
         if (!port) {
             return 0;
         }
@@ -123,8 +123,8 @@ SCIRunComponentInstance::Iterator::~Iterator()
 bool SCIRunComponentInstance::Iterator::done()
 {
   return idx >= (int)component->specialPorts.size()
-    +component->module->numOPorts()
-    +component->module->numIPorts();
+    +component->module->num_output_ports()
+    +component->module->num_input_ports();
 }
 
 PortInstance* SCIRunComponentInstance::Iterator::get()
@@ -133,13 +133,13 @@ PortInstance* SCIRunComponentInstance::Iterator::get()
     int spsize = static_cast<int>(component->specialPorts.size());
     if (idx < spsize) {
         return component->specialPorts[idx];
-    } else if (idx < spsize + module->numOPorts()) {
+    } else if (idx < spsize + module->num_output_ports()) {
         return new SCIRunPortInstance(component,
-                                      module->getOPort(idx - spsize),
+                                      module->get_output_port(idx - spsize),
                                       SCIRunPortInstance::Output);
-    } else if (idx < spsize + module->numOPorts() + module->numIPorts()) {
+    } else if (idx < spsize + module->num_output_ports() + module->num_input_ports()) {
         return new SCIRunPortInstance(component,
-                                      module->getIPort(idx - spsize - module->numOPorts()),
+                                      module->get_input_port(idx - spsize - module->num_output_ports()),
                                       SCIRunPortInstance::Input);
     } else {
         return 0; // Illegal

@@ -157,11 +157,11 @@ IsolatedConnectedImageFilter::run( itk::Object *obj_InputImage)
   
     // for each defined object, clear gui
   
-    gui->execute(id.c_str() + string(" clear_seed_point_1_gui"));
-    gui->execute(id.c_str() + string(" init_seed_point_1_dimensions"));
+    get_gui()->execute(get_id().c_str() + string(" clear_seed_point_1_gui"));
+    get_gui()->execute(get_id().c_str() + string(" init_seed_point_1_dimensions"));
     
-    gui->execute(id.c_str() + string(" clear_seed_point_2_gui"));
-    gui->execute(id.c_str() + string(" init_seed_point_2_dimensions"));
+    get_gui()->execute(get_id().c_str() + string(" clear_seed_point_2_gui"));
+    get_gui()->execute(get_id().c_str() + string(" init_seed_point_2_dimensions"));
     
     execute_ = false;
   }
@@ -177,7 +177,7 @@ IsolatedConnectedImageFilter::run( itk::Object *obj_InputImage)
     ostringstream str;
     str << "seed_point_1" << i;
     
-    gui_seed_point_1_.push_back(new GuiInt(ctx->subVar(str.str())));
+    gui_seed_point_1_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
 
   }
 
@@ -200,7 +200,7 @@ IsolatedConnectedImageFilter::run( itk::Object *obj_InputImage)
     ostringstream str;
     str << "seed_point_2" << i;
     
-    gui_seed_point_2_.push_back(new GuiInt(ctx->subVar(str.str())));
+    gui_seed_point_2_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
 
   }
 
@@ -255,11 +255,11 @@ DECLARE_MAKER(IsolatedConnectedImageFilter)
 
 IsolatedConnectedImageFilter::IsolatedConnectedImageFilter(GuiContext* ctx)
   : Module("IsolatedConnectedImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_replace_value_(ctx->subVar("replace_value")),
-     gui_lower_threshold_(ctx->subVar("lower_threshold")),
-     gui_upper_value_limit_(ctx->subVar("upper_value_limit")),
-     gui_isolated_value_tolerance_(ctx->subVar("isolated_value_tolerance")),
-     gui_dimension_(ctx->subVar("dimension")), 
+     gui_replace_value_(get_ctx()->subVar("replace_value")),
+     gui_lower_threshold_(get_ctx()->subVar("lower_threshold")),
+     gui_upper_value_limit_(get_ctx()->subVar("upper_value_limit")),
+     gui_isolated_value_tolerance_(get_ctx()->subVar("isolated_value_tolerance")),
+     gui_dimension_(get_ctx()->subVar("dimension")), 
      last_InputImage_(-1)
 {
   filter_ = 0;

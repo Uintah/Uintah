@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Fields/TransformData.h>
 #include <Core/Util/DynamicCompilation.h>
@@ -76,8 +76,8 @@ DECLARE_MAKER(TransformData)
 
 TransformData::TransformData(GuiContext* ctx)
   : Module("TransformData", ctx, Filter,"FieldsData", "SCIRun"),
-    gFunction_(ctx->subVar("function")),
-    gOutputDataType_(ctx->subVar("outputdatatype")),
+    gFunction_(get_ctx()->subVar("function"), "result = v * 10;"),
+    gOutputDataType_(get_ctx()->subVar("outputdatatype"), "input"),
     fGeneration_(-1)
 {
 }
@@ -113,7 +113,7 @@ TransformData::execute()
   }
 
   string outputDataType = gOutputDataType_.get();
-  gui->execute(id + " update_text"); // update gFunction_ before get.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before get.
   string function = gFunction_.get();
 
   if ( outputDataType_ != outputDataType ||
@@ -152,7 +152,7 @@ TransformData::execute()
 	TransformDataAlgo::get_compile_info(ftd, oftn, ltd, function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)) {
 	error("Your function would not compile.");
-	gui->eval(id + " compile_error "+ci->filename_);
+	get_gui()->eval(get_id() + " compile_error "+ci->filename_);
 	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	return;
       }
@@ -176,7 +176,7 @@ TransformData::execute()
 void
 TransformData::presave()
 {
-  gui->execute(id + " update_text"); // update gFunction_ before saving.
+  get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }
 
 

@@ -1,7 +1,7 @@
 
 #include <iostream>
 using std::cout;
-#include <values.h>
+#include <sci_values.h>
 
 class Primes {
 public:
@@ -155,7 +155,7 @@ void decompose(int numProcessors, int sizex, int sizey, int sizez,
     for(int i=0;i<nump;i++)
 	axis[i]=0;
     numProcessors_x=numProcessors_y=numProcessors_z=-1;
-    double min = MAXDOUBLE;
+    double min = DBL_MAX;
     for(;;){
 	// Compute area
 	int p[3];

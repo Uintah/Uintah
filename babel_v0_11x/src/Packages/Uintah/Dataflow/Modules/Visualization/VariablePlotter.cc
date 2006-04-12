@@ -51,26 +51,26 @@ DECLARE_MAKER(VariablePlotter)
   
 VariablePlotter::VariablePlotter(const string& name, GuiContext* ctx) :
   Module(name, ctx, Filter, "Visualization", "Uintah"),
-  var_orientation_(ctx->subVar("var_orientation")),
-  nl_(ctx->subVar("nl")),
-  index_x_(ctx->subVar("index_x")),
-  index_y_(ctx->subVar("index_y")),
-  index_z_(ctx->subVar("index_z")),
-  index_l_(ctx->subVar("index_l")),
-  curr_var_(ctx->subVar("curr_var")),
+  var_orientation_(get_ctx()->subVar("var_orientation")),
+  nl_(get_ctx()->subVar("nl")),
+  index_x_(get_ctx()->subVar("index_x")),
+  index_y_(get_ctx()->subVar("index_y")),
+  index_z_(get_ctx()->subVar("index_z")),
+  index_l_(get_ctx()->subVar("index_l")),
+  curr_var_(get_ctx()->subVar("curr_var")),
   old_generation_(-1), old_timestep_(0), grid_(NULL)
 {
 }
 
 VariablePlotter::VariablePlotter(GuiContext* ctx) :
   Module("VariablePlotter", ctx, Filter, "Visualization", "Uintah"),
-  var_orientation_(ctx->subVar("var_orientation")),
-  nl_(ctx->subVar("nl")),
-  index_x_(ctx->subVar("index_x")),
-  index_y_(ctx->subVar("index_y")),
-  index_z_(ctx->subVar("index_z")),
-  index_l_(ctx->subVar("index_l")),
-  curr_var_(ctx->subVar("curr_var")),
+  var_orientation_(get_ctx()->subVar("var_orientation")),
+  nl_(get_ctx()->subVar("nl")),
+  index_x_(get_ctx()->subVar("index_x")),
+  index_y_(get_ctx()->subVar("index_y")),
+  index_z_(get_ctx()->subVar("index_z")),
+  index_l_(get_ctx()->subVar("index_l")),
+  curr_var_(get_ctx()->subVar("curr_var")),
   old_generation_(-1), old_timestep_(0), grid_(NULL)
 {
 }
@@ -103,7 +103,7 @@ VariablePlotter::getGrid()
     vector< int > indices;
     times_.clear();
     archive_->queryTimesteps( indices, times_ );
-    gui->execute(id + " set_time " +
+    get_gui()->execute(get_id() + " set_time " +
                  VariableCache::vector_to_string(times_).c_str());
     // set old_timestep to something that will cause a new grid
     // to be queried.
@@ -165,7 +165,7 @@ VariablePlotter::setVars(GridP grid)
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
 
   cerr << "Calling clearMat_list\n";
-  gui->execute(id + " clearMat_list ");
+  get_gui()->execute(get_id() + " clearMat_list ");
   
   for(int i = 0; i< (int)names_.size(); i++) {
     switch (types_[i]->getType()) {
@@ -177,7 +177,7 @@ VariablePlotter::setVars(GridP grid)
           varNames += " ";
           varNames += names_[i];
           cerr << "Calling appendMat_list for "<<names_[i]<<"\n";
-          gui->execute(id + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
+          get_gui()->execute(get_id() + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
         } else {
           error("Variable " +  names_[i] + " was not added, because its subtype is not supported.");
         }
@@ -191,7 +191,7 @@ VariablePlotter::setVars(GridP grid)
           varNames += " ";
           varNames += names_[i];
           cerr << "Calling appendMat_list for "<<names_[i]<<"\n";
-          gui->execute(id + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
+          get_gui()->execute(get_id() + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
         } else {
           error("Variable " +  names_[i] + " was not added, because its subtype is not supported.");
         }
@@ -206,8 +206,8 @@ VariablePlotter::setVars(GridP grid)
   }
 
   cerr << "varNames = " << varNames << endl;
-  gui->execute(id + " setVar_list " + varNames.c_str());
-  gui->execute(id + " setType_list " + type_list.c_str());  
+  get_gui()->execute(get_id() + " setVar_list " + varNames.c_str());
+  get_gui()->execute(get_id() + " setType_list " + type_list.c_str());  
 }
 
 void
@@ -248,12 +248,12 @@ void
 VariablePlotter::update_tcl_window() 
 {
   string visible;
-  gui->eval(id + " isVisible", visible);
+  get_gui()->eval(get_id() + " isVisible", visible);
   if ( visible == "1") {
-    gui->execute(id + " destroyFrames");
-    gui->execute(id + " build");
+    get_gui()->execute(get_id() + " destroyFrames");
+    get_gui()->execute(get_id() + " build");
 
-    gui->execute("update idletasks");
+    get_gui()->execute("update idletasks");
     reset_vars();
   }
 }
@@ -338,7 +338,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
   pick();
   
   // clear the current contents of the ticles's material data list
-  gui->execute(id + " reset_var_val");
+  get_gui()->execute(get_id() + " reset_var_val");
 
   // determine type
   const TypeDescription *td = NULL;
@@ -378,7 +378,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
       } else {
         cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -405,7 +405,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
       } else {
         cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -432,7 +432,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
       } else {
         cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -462,7 +462,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
       } else {
         cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -494,7 +494,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
         // use cached value that was put into data by is_cached
         cerr << "Cache hit\n";
       }
-      gui->execute(id+" set_var_val "+data.c_str());
+      get_gui()->execute(get_id()+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -504,7 +504,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
   default:
     cerr<<"Unknown var type\n";
     }// else { Tensor,Other}
-  gui->execute(id+" "+display_mode.c_str()+"_data "+index.c_str()+" "
+  get_gui()->execute(get_id()+" "+display_mode.c_str()+"_data "+index.c_str()+" "
                +varname.c_str()+" "+currentNode_str().c_str()+" "
                +name_list.c_str());
   

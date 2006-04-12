@@ -14,7 +14,7 @@
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="no">
+    <inputs>
      <port>
        <name>Colormap</name>
        <datatype>SCIRun::ColorMap</datatype>
@@ -27,6 +27,4 @@
       </port>
    </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

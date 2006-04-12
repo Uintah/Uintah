@@ -10,7 +10,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
@@ -30,29 +30,29 @@ private:
   GuiInt    nrows_;
   GuiInt    ncols_;
   GuiString data_;
-  GuiString dataupdate_;
 };
 
 
 DECLARE_MAKER(CreateMatrix)
 CreateMatrix::CreateMatrix(GuiContext* ctx)
   : Module("CreateMatrix", ctx, Source, "Math", "SCIRun"),
-    nrows_(ctx->subVar("rows")),
-    ncols_(ctx->subVar("cols")),
-    data_(ctx->subVar("data")),
-    dataupdate_(ctx->subVar("update-data"))
+    nrows_(get_ctx()->subVar("rows"), 1),
+    ncols_(get_ctx()->subVar("cols"), 1),
+    data_(get_ctx()->subVar("data"), "{0.0}")
 {
 }
 
-CreateMatrix::~CreateMatrix(){
+
+CreateMatrix::~CreateMatrix()
+{
 }
 
-void CreateMatrix::execute()
+
+void
+CreateMatrix::execute()
 {
   MatrixHandle handle;
-  gui->lock();
-  gui->execute(dataupdate_.get());
-  gui->unlock();
+  get_gui()->execute(get_id() + " update_matrixdata");
   
   int nrows = nrows_.get();
   int ncols = ncols_.get();

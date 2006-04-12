@@ -28,7 +28,7 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     stringstream id(index);
     int index_val = -1;
     id >> index_val;
-    cout << "Material attribute = " << index_val << endl;
+    //cout << "Material attribute = " << index_val << endl;
 
     //Create and register as an MPM material
     MPMMaterial *mat = scinew MPMMaterial(ps);
@@ -37,11 +37,12 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     // ALWAYS have an index number as in <material index = "0">.
     // Index_val = -1 means that we don't register the material by its 
     // index number.
-    if (index_val > -1) 
+    if (index_val > -1){
       sharedState->registerMPMMaterial(mat,index_val);
-    else
+    }
+    else{
       sharedState->registerMPMMaterial(mat);
-      
+    }
 
     // If new particles are to be created, create a copy of each material
     // without the associated geometry

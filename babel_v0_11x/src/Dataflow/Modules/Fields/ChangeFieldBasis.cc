@@ -33,8 +33,8 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/ChangeFieldBasis.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 #include <Core/Containers/StringUtil.h>
@@ -60,9 +60,9 @@ public:
 
 ChangeFieldBasis::ChangeFieldBasis(GuiContext* ctx)
   : Module("ChangeFieldBasis", ctx, Filter, "FieldsData", "SCIRun"),
-    outputdataat_(ctx->subVar("output-basis")),
-    inputdataat_(ctx->subVar("inputdataat", false)),
-    fldname_(ctx->subVar("fldname", false)),
+    outputdataat_(get_ctx()->subVar("output-basis"), "Linear"),
+    inputdataat_(get_ctx()->subVar("inputdataat", false), "---"),
+    fldname_(get_ctx()->subVar("fldname", false), "---"),
     generation_(-1)
 {
 }
@@ -219,7 +219,7 @@ ChangeFieldBasis::execute()
     Handle<ApplyMappingMatrixAlgo> algo;
     if (module_dynamic_compile(ci, algo))
     {
-      algo->execute_aux(fh, ef, interpolant);
+      algo->execute_aux(this, fh, ef, interpolant);
     }
   }
 

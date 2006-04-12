@@ -29,7 +29,8 @@
 
 
 /*
- *  ImageImporter.cc: Use ImageMagick to import numerous image formats.
+ *  ImageImporter.cc: Use PNG and ImageMagick's convert to import 
+ *                    numerous image formats.
  *
  *  Written by:
  *   Michael Callahan
@@ -43,14 +44,12 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <sci_defs/image_defs.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_MAGICK
-namespace C_Magick {
-#include <magick/api.h>
-}
+#if defined HAVE_PNG && HAVE_PNG
+#include <png.h>
 #endif
 
 
@@ -76,7 +75,7 @@ DECLARE_MAKER(ImageImporter)
 
 ImageImporter::ImageImporter(SCIRun::GuiContext* ctx) : 
   Module("ImageImporter", ctx, Filter, "DataIO", "Teem"),
-  filename_(ctx->subVar("filename")),
+  filename_(get_ctx()->subVar("filename"), ""),
   old_filemodification_(0),
   handle_(0)
 {
@@ -111,76 +110,148 @@ ImageImporter::execute()
   time_t new_filemodification = buf.st_mtime;
 #endif
 
-#ifdef HAVE_MAGICK
+
+#if defined HAVE_PNG && HAVE_PNG
   if (!handle_.get_rep() || 
       fn != old_filename_ || 
       new_filemodification != old_filemodification_)
-  {
-    old_filemodification_ = new_filemodification;
-    old_filename_ = fn;
-    // Read in the imagemagic image.
-    C_Magick::ImageInfo *image_info;
-    C_Magick::Image *image;
-    C_Magick::ExceptionInfo exception;
-
-    C_Magick::InitializeMagick(0);
-    C_Magick::GetExceptionInfo(&exception);
-    image_info = C_Magick::CloneImageInfo((C_Magick::ImageInfo *) NULL);
-    strncpy(image_info->filename, fn.c_str(), MaxTextExtent);
-    image = C_Magick::ReadImage(image_info, &exception);
-    if (image == 0 || exception.severity != C_Magick::UndefinedException)
     {
-      warning("Unable to read image.");
-      //C_Magick::CatchException(&exception);
-      return;
+      old_filemodification_ = new_filemodification;
+      old_filename_ = fn;
+
+      ASSERT(sci_getenv("SCIRUN_TMP_DIR"));
+      
+      const char * tmp_dir(sci_getenv("SCIRUN_TMP_DIR"));
+      
+      const string tmp_file = string (tmp_dir + string("/scirun_temp_png.png")); 
+      FILE *fp = NULL;
+      string ext = fn.substr(fn.find(".",0)+1, fn.length());
+
+      for(int i=0; i<(int)ext.size(); i++) {
+	ext[i] = tolower(ext[i]);
+      }
+      
+      if (ext != "png") {
+	// test for convert program
+	if (system("convert -version") != 0) {
+	  error(string("Unsupported extension " + ext + ". Program convert not found in path."));
+	  return;
+	}
+	if (system(string("convert " + fn + " " + tmp_file).c_str())!= 0) {
+	  error("Error using convert to write temporary png");
+	  return;
+	}
+	fp = fopen(tmp_file.c_str(), "rb");
+      }
+
+      png_structp png;
+      png_infop info;
+      png_bytep *row;
+      
+      /* create png struct */
+      png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+      if (!png) {
+	error("Error creating PNG read struct.");
+	system(string("rm " + tmp_file).c_str());
+	return;
+      }
+      
+      /* create info struct */
+      info = png_create_info_struct(png);
+      if (!info) {
+	png_destroy_read_struct(&png, NULL, NULL);
+	error("Error creating PNG ingo struct.");
+	system(string("rm " + tmp_file).c_str());
+	return;
+      }
+      
+      /* init io */
+      png_init_io(png, fp);
+
+      png_read_info(png, info);
+      
+      png_uint_32 w, h;
+      int depth, type, interlace_type;
+      png_get_IHDR(png, info, &w, &h, &depth, &type, &interlace_type, 
+		   NULL, NULL);
+      
+      if (interlace_type == PNG_INTERLACE_ADAM7) {
+	error("Interlaced images not currently supported.");
+	png_destroy_read_struct(&png, &info, NULL);
+	system(string("rm " + tmp_file).c_str());
+	return;
+      }
+
+      /* create Nrrd */
+      unsigned int nrrd_type = nrrdTypeUChar;
+      if (depth == 8) {
+	nrrd_type = nrrdTypeUChar;
+      }
+      else if (depth == 16) {
+	nrrd_type = nrrdTypeUShort;
+      } 
+
+      int type_size = 3;
+      if (type == PNG_COLOR_TYPE_GRAY) 
+	type_size = 1;
+      else if (type == PNG_COLOR_TYPE_GRAY_ALPHA)
+	type_size = 2;
+      else if (type == PNG_COLOR_TYPE_RGB)
+	type_size = 3;
+      else if (type == PNG_COLOR_TYPE_RGB_ALPHA)
+	type_size = 4;
+      else {
+	error("Unknown type");
+	png_destroy_read_struct(&png, &info, NULL);
+	system(string("rm " + tmp_file).c_str());
+	return;
+      }
+      
+      Nrrd *nrrd = nrrdNew();
+
+      size_t size[NRRD_DIM_MAX];
+      size[0] = type_size; size[1] = w;
+      size[2] = h;
+      if (nrrdAlloc_nva(nrrd,nrrd_type, 3, size)) {
+	error("Error allocating NRRD.");
+	png_destroy_read_struct(&png, &info, NULL);
+	system(string("rm " + tmp_file).c_str());
+	return;
+      }
+
+      if (nrrd->axis[0].size == 3)
+	nrrd->axis[0].kind = nrrdKind3Vector;
+      
+      png_uint_32 rowsize = png_get_rowbytes(png, info);
+
+      row = (png_bytep*)malloc(sizeof(png_bytep)*h);
+      for(int y = 0; y < (int)h; y++) {
+	row[y] = &((png_bytep)nrrd->data)[y*rowsize];
+      }
+
+      png_read_image(png, row); 
+
+      png_read_end(png, 0);
+
+      png_destroy_read_struct(&png, &info, NULL);
+      row = (png_bytep*)airFree(row);
+
+      fclose(fp);
+      system(string("rm " + tmp_file).c_str());
+
+      
+      //   Send the data downstream.
+      handle_ = scinew NrrdData();
+      handle_->nrrd_ = nrrd;
+      
+      NrrdOPort *outport = (NrrdOPort *)get_output_port(0);
+      outport->send(handle_);
+      
     }
-
-    C_Magick::SyncImage(image); // RGBA (maybe CMYK)
-    const C_Magick::PixelPacket *pixels =
-      C_Magick::AcquireImagePixels(image, 0, 0, image->columns, image->rows,
-				   &exception);
-
-    if (pixels == 0)
-    {
-      error("Unable to Acquire Image Pixels for some reason.");
-      return;
-    }
-
-    size_t dsize = image->rows * image->columns;
-    float *dptr = scinew float[dsize*3];
-    const float iqsize = (sizeof(C_Magick::Quantum) == 1)?1.0/0xff:1.0/0xffff;
-    for (unsigned int i=0; i < dsize; i++)
-    {
-      dptr[i*3+0] = pixels[i].red * iqsize;
-      dptr[i*3+1] = pixels[i].green *iqsize;
-      dptr[i*3+2] = pixels[i].blue *iqsize;
-    }
-    Nrrd *nrrd = nrrdNew();
-    if (nrrdWrap(nrrd, dptr, nrrdTypeFloat,
-		 3, 3, image->columns, image->rows))
-    {
-      char *err = biffGetDone(NRRD);
-      error(string("Error creating NRRD: ") + err);
-      free(err);
-    }
-    nrrd->axis[0].kind = nrrdKind3Vector;
-    handle_ = scinew NrrdData();
-    handle_->nrrd = nrrd;
-    
-    C_Magick::DestroyImage(image);
-
-    // Clean up Imagemagick
-    C_Magick::DestroyImageInfo(image_info);
-    C_Magick::DestroyExceptionInfo(&exception);
-    C_Magick::DestroyMagick();
-  }
-
-  // Send the data downstream.
-  NrrdOPort *outport = (NrrdOPort *)getOPort(0);
-  outport->send(handle_);
 #else
-  error("ImageMagick not found.  Please verify that you have the application development installation of ImageMagick.");
-  return;
+  error("PNG library not found.");
 #endif
+
 }
 

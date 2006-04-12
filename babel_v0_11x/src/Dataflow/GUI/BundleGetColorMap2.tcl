@@ -30,38 +30,16 @@
 
 itcl_class SCIRun_Bundle_BundleGetColorMap2 {
     inherit Module
+
     constructor {config} {
         set name BundleGetColorMap2
-        set_defaults
-    }
 
-    method set_defaults {} {
-
-        global $this-colormap21-name
-        global $this-colormap22-name
-        global $this-colormap23-name
-        global $this-colormap21-listbox
-        global $this-colormap22-listbox
-        global $this-colormap23-listbox
-        global $this-colormap2-selection
-        global $this-colormap21-entry
-        global $this-colormap22-entry
-        global $this-colormap23-entry
-
-
-        set $this-colormap21-name "colormap21"
-        set $this-colormap22-name "colormap22"
-        set $this-colormap23-name "colormap23"
-        set $this-colormap2-selection ""
-
-        set $this-colormap21-listbox ""
-        set $this-colormap22-listbox ""
-        set $this-colormap23-listbox ""
-        set $this-colormap21-entry ""
-        set $this-colormap22-entry ""
-        set $this-colormap23-entry ""
-
-
+        initGlobal $this-colormap21-listbox ""
+        initGlobal $this-colormap22-listbox ""
+        initGlobal $this-colormap23-listbox ""
+        initGlobal $this-colormap21-entry ""
+        initGlobal $this-colormap22-entry ""
+        initGlobal $this-colormap23-entry ""
     }
 
     method ui {} {

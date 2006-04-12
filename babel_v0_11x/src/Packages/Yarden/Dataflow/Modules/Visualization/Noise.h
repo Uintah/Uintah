@@ -14,13 +14,13 @@
 #define SCI_project_Noise_h 
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>      
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>      
+#include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Datatypes/ScalarFieldUG.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Network/Ports/ScalarFieldPort.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -85,7 +85,7 @@ class Noise : public Module {
   clString my_name;
   
 public:
-  Noise(const clString& id);
+  Noise(const clString& get_id());
   Noise(const Noise&, int deep);
   virtual ~Noise();
   virtual void execute();

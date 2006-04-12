@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/BrickArray2.h>
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>
@@ -24,7 +25,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-using namespace rtrt;
 using namespace std;
 using SCIRun::Mutex;
 using SCIRun::Parallel;
@@ -32,7 +32,17 @@ using SCIRun::Thread;
 
 extern Mutex io_lock_;
 
+namespace SCIRun {
+template<class T> void Pio(Piostream&str, rtrt::HMCell<T>&o)
+{
+  str.begin_cheap_delim();
+  SCIRun::Pio(str, o.min);
+  SCIRun::Pio(str, o.max);
+  str.end_cheap_delim();
+}
+}
 
+namespace rtrt {
 template<class A, class B>
 SCIRun::Persistent*
 Heightfield<A,B>::maker() {
@@ -383,13 +393,13 @@ void Heightfield<A,B>::compute_bounds(BBox& bbox, double offset)
     bbox.extend(min+datadiag+Vector(offset,offset,offset));
 }
 
-namespace rtrt{
+// namespace rtrt{
 
 extern int HitCell(const Ray& r, const Point& pmin, const Point& pmax, 
 		   float rho[2][2], double tmin, double tmax, double& t);
 extern Vector GradientCell(const Point& pmin, const Point& pmax,
 			   const Point& p, float rho[2][2]);
-}
+// }
 
 template<class A, class B>
 void Heightfield<A,B>::isect_up(int depth, double t,
@@ -993,8 +1003,8 @@ void Heightfield<A,B>::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, maxx);
   SCIRun::Pio(str, minx);
   SCIRun::Pio(str, maxy);
-  rtrt::Pio(str, indata);
-  rtrt::Pio(str, blockdata);
+  SCIRun::Pio(str, indata);
+  SCIRun::Pio(str, blockdata);
   SCIRun::Pio(str, datamin);
   SCIRun::Pio(str, datamax);
   SCIRun::Pio(str, depth);
@@ -1017,7 +1027,7 @@ void Heightfield<A,B>::io(SCIRun::Piostream &str)
     SCIRun::Pio(str, iysize[i]);
   }
   for (int i = 0; i < depth + 1; i++) {
-    rtrt::Pio(str, macrocells[i]);
+    SCIRun::Pio(str, macrocells[i]);
   }
   SCIRun::Pio(str, np_);
 
@@ -1031,13 +1041,4 @@ void Heightfield<A,B>::io(SCIRun::Piostream &str)
   }
   str.end_class();
 }
-
-namespace SCIRun {
-template<class T> void Pio(Piostream&str, rtrt::HMCell<T>&o)
-{
-  str.begin_cheap_delim();
-  SCIRun::Pio(str, o.min);
-  SCIRun::Pio(str, o.max);
-  str.end_cheap_delim();
-}
-}
+} // end namespace rtrt

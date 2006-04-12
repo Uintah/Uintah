@@ -107,7 +107,7 @@ Renderer::refresh(int flag){
 }
 
 int
-Renderer::popupUI(){
+Renderer::popup_ui(){
 
   renWin=vtkRenderWindow::New();
   renWin->SetSize( 500, 500);

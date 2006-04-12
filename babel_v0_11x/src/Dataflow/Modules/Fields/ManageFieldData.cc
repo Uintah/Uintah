@@ -41,8 +41,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ManageFieldData.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
@@ -66,7 +66,7 @@ DECLARE_MAKER(ManageFieldData)
 
 ManageFieldData::ManageFieldData(GuiContext* ctx)
   : Module("ManageFieldData", ctx, Filter, "FieldsData", "SCIRun"),
-    gui_preserve_scalar_type_(ctx->subVar("preserve-scalar-type"))
+    gui_preserve_scalar_type_(get_ctx()->subVar("preserve-scalar-type"), 0)
 {
 }
 

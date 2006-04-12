@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
@@ -66,16 +66,23 @@ private:
 DECLARE_MAKER(UnuShuffle)
 UnuShuffle::UnuShuffle(GuiContext* ctx)
   : Module("UnuShuffle", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), onrrd_(0), ordering_(ctx->subVar("ordering")),
-    axis_(ctx->subVar("axis")), inverse_(ctx->subVar("inverse"))
+    inrrd_(0),
+    onrrd_(0),
+    ordering_(get_ctx()->subVar("ordering"), "0"),
+    axis_(get_ctx()->subVar("axis"), 0),
+    inverse_(get_ctx()->subVar("inverse"), 0)
 {
 }
 
-UnuShuffle::~UnuShuffle(){
+
+UnuShuffle::~UnuShuffle()
+{
 }
 
+
 void
- UnuShuffle::execute(){
+UnuShuffle::execute()
+{
   NrrdDataHandle nrrd_handle;
 
   update_state(NeedData);
@@ -92,12 +99,12 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
   // Determine the number of mins given
   string order = ordering_.get();
-  int ordLen = 0;
+  unsigned int ordLen = 0;
   char ch;
   int i=0, start=0;
   bool inword = false;
@@ -118,9 +125,8 @@ void
     i++;
   }
 
-  int *ord = new int[ordLen];
+  unsigned int * ord = new unsigned int[ordLen];
 
-  
   i=0, start=0;
   int which = 0, end=0, counter=0;
   inword = false;
@@ -153,8 +159,9 @@ void
   }
   
   // error checking
-  if (axis_.get() >= nin->dim) {
+  if ((unsigned int) axis_.get() >= nin->dim) {
     error("Axis " + to_string(axis_.get()) + " not in valid range [0," + to_string(nin->dim-1) + "]");
+    delete [] ord;
     return;
   }
   if (ordLen != nin->axis[axis_.get()].size) {
@@ -162,30 +169,36 @@ void
     return;
   }
 
-  int *iperm;
-  int **whichperm;
+  unsigned int * iperm     = new unsigned int[ordLen];
+  size_t       * whichperm = new size_t[ordLen];
+
   if (inverse_.get()) {
-    iperm = new int[ordLen];
     if (nrrdInvertPerm(iperm, ord, ordLen)) {
       error("Couldn't compute inverse of given permutation");
+      delete [] ord;
+      delete [] iperm;
+      delete [] whichperm;
       return;
     }
-    whichperm = &iperm;
+    for (unsigned int i = 0; i < ordLen; i++) {
+      whichperm[i] = iperm[i];
+    }
   }
   else {
-    whichperm = &ord;
+    for (unsigned int i = 0; i < ordLen; i++) {
+      whichperm[i] = ord[i];
+    }
   }
 
-  if (nrrdShuffle(nout, nin, axis_.get(), *whichperm)) {
+  if (nrrdShuffle(nout, nin, axis_.get(), whichperm)) {
     char *err = biffGetDone(NRRD);
     error(string("Error Shuffling nrrd: ") + err);
     free(err);
   }
 
-  if (inverse_.get())
-    delete iperm;
-
-  delete ord;
+  delete [] ord;
+  delete [] iperm;
+  delete [] whichperm;
 
   NrrdDataHandle out(scinew NrrdData(nout));
 
@@ -193,12 +206,11 @@ void
   out->copy_properties(nrrd_handle.get_rep());
   
   // Copy the axis kinds
-  for (int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++) {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
   onrrd_->send_and_dereference(out);
-
 }
 
 } // End namespace Teem

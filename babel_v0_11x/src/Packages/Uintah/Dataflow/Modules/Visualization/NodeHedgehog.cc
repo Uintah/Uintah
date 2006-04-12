@@ -32,9 +32,9 @@
 #include <Core/Thread/Mutex.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 
@@ -332,21 +332,21 @@ DECLARE_MAKER(NodeHedgehog)
 NodeHedgehog::NodeHedgehog(GuiContext* ctx):
   Module("NodeHedgehog", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("NodeHedgehog widget lock"),
-  length_scale(ctx->subVar("length_scale")),
-  min_crop_length(ctx->subVar("min_crop_length")),
-  max_crop_length(ctx->subVar("max_crop_length")),
-  width_scale(ctx->subVar("width_scale")),
-  head_length(ctx->subVar("head_length")),
-  type(ctx->subVar("type")),
-  drawcylinders(ctx->subVar("drawcylinders")),
-  norm_head(ctx->subVar("norm_head")),
-  skip_node(ctx->subVar("skip_node")),
-  shaft_rad(ctx->subVar("shaft_rad")),
+  length_scale(get_ctx()->subVar("length_scale")),
+  min_crop_length(get_ctx()->subVar("min_crop_length")),
+  max_crop_length(get_ctx()->subVar("max_crop_length")),
+  width_scale(get_ctx()->subVar("width_scale")),
+  head_length(get_ctx()->subVar("head_length")),
+  type(get_ctx()->subVar("type")),
+  drawcylinders(get_ctx()->subVar("drawcylinders")),
+  norm_head(get_ctx()->subVar("norm_head")),
+  skip_node(get_ctx()->subVar("skip_node")),
+  shaft_rad(get_ctx()->subVar("shaft_rad")),
   max_vector(0,0,0), max_length(0),
-  max_vector_x(ctx->subVar("max_vector_x")),
-  max_vector_y(ctx->subVar("max_vector_y")),
-  max_vector_z(ctx->subVar("max_vector_z")),
-  max_vector_length(ctx->subVar("max_vector_length")),
+  max_vector_x(get_ctx()->subVar("max_vector_x")),
+  max_vector_y(get_ctx()->subVar("max_vector_y")),
+  max_vector_z(get_ctx()->subVar("max_vector_z")),
+  max_vector_length(get_ctx()->subVar("max_vector_length")),
   add_arrows("NodeHedgehog add_arrows mutex"),
   iPoint_(Point(0,0,0)),
   dim_(IntVector(1,1,1)),
@@ -772,8 +772,8 @@ void NodeHedgehog::execute()
 
 void NodeHedgehog::widget_moved(bool last, BaseWidget*)
 {
-  if(last && !abort_flag) {
-    abort_flag=1;
+  if(last && !abort_flag_) {
+    abort_flag_ = true;
     want_to_execute();
   }
 }

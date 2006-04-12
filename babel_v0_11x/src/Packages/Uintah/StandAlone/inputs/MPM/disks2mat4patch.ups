@@ -7,6 +7,9 @@
 	<title>Colliding Disks</title>
    </Meta>
 
+   <SimulationComponent>
+        <type> mpm </type>
+   </SimulationComponent>
    <Time>
 	<maxTime>0.2</maxTime>
 	<initTime>0.0</initTime>

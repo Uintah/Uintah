@@ -28,8 +28,8 @@
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>
@@ -77,19 +77,19 @@ GridSliceVis::GridSliceVis(SCIRun::GuiContext *ctx)
   control_lock("GridSliceVis resolution lock"),
   control_widget(0),
   control_id(-1),
-  is_fixed_(ctx->subVar("is_fixed_")),
-  max_brick_dim_(ctx->subVar("max_brick_dim_")),
-  min_(ctx->subVar("min_")),
-  max_(ctx->subVar("max_")),
-  drawX(ctx->subVar("drawX")),
-  drawY(ctx->subVar("drawY")),
-  drawZ(ctx->subVar("drawZ")),
-  drawView(ctx->subVar("drawView")),
-  interp_mode(ctx->subVar("interp_mode")),
-  point_x(ctx->subVar("point_x")),
-  point_y(ctx->subVar("point_y")),
-  point_z(ctx->subVar("point_z")),
-  point_init(ctx->subVar("point_init")),
+  is_fixed_(get_ctx()->subVar("is_fixed_")),
+  max_brick_dim_(get_ctx()->subVar("max_brick_dim_")),
+  min_(get_ctx()->subVar("min_")),
+  max_(get_ctx()->subVar("max_")),
+  drawX(get_ctx()->subVar("drawX")),
+  drawY(get_ctx()->subVar("drawY")),
+  drawZ(get_ctx()->subVar("drawZ")),
+  drawView(get_ctx()->subVar("drawView")),
+  interp_mode(get_ctx()->subVar("interp_mode")),
+  point_x(get_ctx()->subVar("point_x")),
+  point_y(get_ctx()->subVar("point_y")),
+  point_z(get_ctx()->subVar("point_z")),
+  point_init(get_ctx()->subVar("point_init")),
   sliceren(0),
   svr(0)
 {
@@ -160,15 +160,15 @@ void GridSliceVis::execute(void)
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield) {
-    gui->postMessage("Unable to initialize "+name+"'s iport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!incolormap) {
-    gui->postMessage("Unable to initialize "+name+"'s iport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!ogeom) {
-    gui->postMessage("Unable to initialize "+name+"'s oport\n");
+    get_gui()->post_message("Unable to initialize "+name+"'s oport\n");
     return;
   }
   
@@ -240,7 +240,7 @@ void GridSliceVis::execute(void)
     cerr<<"Need to initialize sliceren\n";
     old_cmap = cmap;
     old_tex = tex;
-    gui->execute(id + " SetDims " + to_string( sliceren->get_brick_size()));
+    get_gui()->execute(get_id() + " SetDims " + to_string( sliceren->get_brick_size()));
     max_brick_dim_.set(  sliceren->get_brick_size() );
     old_brick_size = max_brick_dim_.get();
     if( is_fixed_.get() !=1 ){

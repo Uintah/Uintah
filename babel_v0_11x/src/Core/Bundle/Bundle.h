@@ -455,13 +455,13 @@ inline void Bundle::rem(std::string name)
 template<class PTYPE> inline bool Bundle::NrrdToMatrixHelper(
                                     NrrdDataHandle dataH, MatrixHandle& matH)
 {
-  if (dataH->nrrd->dim == 1)
+  if (dataH->nrrd_->dim == 1)
   {
-    int cols = dataH->nrrd->axis[0].size;
+    int cols = dataH->nrrd_->axis[0].size;
 
     ColumnMatrix* matrix = scinew ColumnMatrix(cols);
 
-    PTYPE *val = (PTYPE*)dataH->nrrd->data;
+    PTYPE *val = (PTYPE*)dataH->nrrd_->data;
     double *data = matrix->get_data();
 
     for(int c=0; c<cols; c++) 
@@ -474,16 +474,16 @@ template<class PTYPE> inline bool Bundle::NrrdToMatrixHelper(
     return(true);
   }
 
-  if (dataH->nrrd->dim == 2)
+  if (dataH->nrrd_->dim == 2)
   {
     if (transposeNrrd_)
       {
-        int rows = dataH->nrrd->axis[1].size;
-        int cols = dataH->nrrd->axis[0].size;
+        int rows = dataH->nrrd_->axis[1].size;
+        int cols = dataH->nrrd_->axis[0].size;
 
         DenseMatrix* matrix = scinew DenseMatrix(rows,cols);
   
-        PTYPE *val = (PTYPE*)dataH->nrrd->data;
+        PTYPE *val = (PTYPE*)dataH->nrrd_->data;
         double *data = matrix->get_data_pointer();
 
         int i,j;
@@ -500,12 +500,12 @@ template<class PTYPE> inline bool Bundle::NrrdToMatrixHelper(
       }
     else
     {
-      int cols = dataH->nrrd->axis[1].size;
-      int rows = dataH->nrrd->axis[0].size;
+      int cols = dataH->nrrd_->axis[1].size;
+      int rows = dataH->nrrd_->axis[0].size;
 
       DenseMatrix* matrix = scinew DenseMatrix(cols,rows);
 
-      PTYPE *val = (PTYPE*)dataH->nrrd->data;
+      PTYPE *val = (PTYPE*)dataH->nrrd_->data;
       double *data = matrix->get_data_pointer();
       
       for(int c=0; c<cols; c++) 

@@ -39,7 +39,7 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 //#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
@@ -56,6 +56,7 @@ protected:
 
 public:
   ColorMap2Reader(GuiContext* ctx);
+  virtual ~ColorMap2Reader();
 
   virtual void execute();
 };
@@ -64,8 +65,8 @@ DECLARE_MAKER(ColorMap2Reader)
 
 ColorMap2Reader::ColorMap2Reader(GuiContext* ctx)
   : GenericReader<ColorMap2Handle>("ColorMap2Reader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_filetype_(ctx->subVar("filetype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_filetype_(get_ctx()->subVar("filetype"))
 {
   string importtypes = "{";
   importtypes += "{{SCIRun ColorMap2 File} {.cmap2} } ";
@@ -73,6 +74,11 @@ ColorMap2Reader::ColorMap2Reader(GuiContext* ctx)
   importtypes += "}";
 
   gui_types_.set(importtypes);
+}
+
+
+ColorMap2Reader::~ColorMap2Reader()
+{
 }
 
 

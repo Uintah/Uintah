@@ -46,10 +46,10 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/String.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
@@ -134,15 +134,15 @@ DECLARE_MAKER(MatlabBundlesReader)
 
 MatlabBundlesReader::MatlabBundlesReader(GuiContext* ctx)
   : Module("MatlabBundlesReader", ctx, Source, "DataIO", "MatlabInterface"),
-    guifilename_(ctx->subVar("filename")),
-    guifilenameset_(ctx->subVar("filename-set")),
-    guimatrixinfotexts_(ctx->subVar("matrixinfotexts")),     
-    guimatrixnames_(ctx->subVar("matrixnames")),    
-    guimatrixname_(ctx->subVar("matrixname")),
-    guipnrrds_(ctx->subVar("pnrrds")),    
-    guipnrrd_(ctx->subVar("pnrrd")),
-    guipbundles_(ctx->subVar("pbundles")),    
-    guipbundle_(ctx->subVar("pbundle"))
+    guifilename_(get_ctx()->subVar("filename")),
+    guifilenameset_(get_ctx()->subVar("filename-set")),
+    guimatrixinfotexts_(get_ctx()->subVar("matrixinfotexts")),     
+    guimatrixnames_(get_ctx()->subVar("matrixnames")),    
+    guimatrixname_(get_ctx()->subVar("matrixname")),
+    guipnrrds_(get_ctx()->subVar("pnrrds")),    
+    guipnrrd_(get_ctx()->subVar("pnrrd")),
+    guipbundles_(get_ctx()->subVar("pbundles")),    
+    guipbundle_(get_ctx()->subVar("pbundle"))
 {
 	indexmatlabfile(false);
 }
@@ -160,7 +160,7 @@ void MatlabBundlesReader::execute()
 {
 
   StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
+  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
   {
     StringHandle stringH;
     if (filenameport->get(stringH))
@@ -169,7 +169,7 @@ void MatlabBundlesReader::execute()
       {
         std::string filename = stringH->get();
         guifilename_.set(filename);
-        ctx->reset();
+        get_ctx()->reset();
       }
     }
   }
@@ -221,17 +221,17 @@ void MatlabBundlesReader::execute()
       std::string pnrrd = "";
       std::ostringstream ossnrrd;
       ossnrrd << "lindex {" << guipnrrd << "} " << p;
-      gui->lock();
-      gui->eval(ossnrrd.str(),pnrrd);
-      gui->unlock();
+      get_gui()->lock();
+      get_gui()->eval(ossnrrd.str(),pnrrd);
+      get_gui()->unlock();
 
       std::string guipbundle = guipbundle_.get();
       std::string pbundle = "";
       std::ostringstream ossbundle;      
       ossbundle << "lindex {" << guipbundle << "} " << p;
-      gui->lock();
-      gui->eval(ossbundle.str(),pbundle);
-      gui->unlock();
+      get_gui()->lock();
+      get_gui()->eval(ossbundle.str(),pbundle);
+      get_gui()->unlock();
 
       // The data is still in matlab format and the next function
       // creates a SCIRun matrix object
@@ -297,7 +297,7 @@ void MatlabBundlesReader::tcl_command(GuiArgs& args, void* userdata)
     // and then assumes they do not change and hence caches the data
     // Why it is done so is unclear to me, but in order to have interactive
     // GUIs I need to reset the context. (this synchronises the data again)
-    ctx->reset();
+    get_ctx()->reset();
     
     // Find out what the .mat file contains
     indexmatlabfile(true);
@@ -324,9 +324,9 @@ matlabarray MatlabBundlesReader::readmatlabarray(long p)
   std::ostringstream oss;
   oss << "lindex {" << guimatrixname << "} " << p;
   
-  gui->lock();
-  gui->eval(oss.str(),matrixname);
-  gui->unlock();
+  get_gui()->lock();
+  get_gui()->eval(oss.str(),matrixname);
+  get_gui()->unlock();
   
   if (matrixname == "")
   {
@@ -392,9 +392,9 @@ void MatlabBundlesReader::indexmatlabfile(bool postmsg)
     // TCL Dependent code
     std::ostringstream oss;
     oss << "lindex { " << matrixname << " } " << p;
-    gui->lock();
-    gui->eval(oss.str(),matrixnamelist[p]);
-    gui->unlock();
+    get_gui()->lock();
+    get_gui()->eval(oss.str(),matrixnamelist[p]);
+    get_gui()->unlock();
     foundmatrixname[p] = false;
   }
 
@@ -493,10 +493,10 @@ void MatlabBundlesReader::indexmatlabfile(bool postmsg)
 
 void MatlabBundlesReader::displayerror(std::string str)
 {
-  gui->lock();
+  get_gui()->lock();
   // Explicit call to TCL
-  gui->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
-  gui->unlock();
+  get_gui()->execute("tk_messageBox -icon error -type ok -title {ERROR} -message {" + str + "}");
+  get_gui()->unlock();
 }
 
 

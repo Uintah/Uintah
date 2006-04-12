@@ -945,6 +945,9 @@ int main(int argc, char** argv)
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
     if(do_varsummary){
+      cout.setf(ios::scientific,ios::floatfield);
+      cout.precision(16);
+  
       vector<string> vars;
       vector<const Uintah::TypeDescription*> types;
       da->queryVariables(vars, types);

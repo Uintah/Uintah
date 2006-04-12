@@ -270,6 +270,8 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     const LevelP level = grid->getLevel(levelnum);
     const VarLabel* label = VarLabel::find(trackingVars_[i]);
 
+    cout.precision(16);
+
     if (!label)
       continue;
 
@@ -277,7 +279,7 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     //Level::selectType patches;
     //level->selectPatches(trackingStartIndex_ - IntVector(1,1,1), trackingEndIndex_ + IntVector(1,1,1), patches);
     const PatchSubset* patches = dt->getPatches();
-    if (getLevel(patches)->getIndex() != levelnum)
+    if (!patches || getLevel(patches)->getIndex() != levelnum)
       continue;
     for (int p = 0; patches && p < patches->size(); p++) {
 
@@ -334,7 +336,7 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
               printedHeader = true;
             }
             if (!printedVarName) {
-              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << " matl " << m << endl;
             }
             
             for (int z = start.z(); z < end.z(); z++) {
@@ -791,9 +793,12 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           continue;
 
         // check the level on the case where variables are only computed on certain levels
-        const PatchSet* ps = graph.getTask(i)->getPatchSet();
         int level = -1;
-        if (ps) 
+        const PatchSubset* psub = dep->patches;
+        const PatchSet* ps = graph.getTask(i)->getPatchSet();
+        if (psub)
+          level = getLevel(psub)->getIndex();
+        else if (ps) 
           level = getLevel(ps)->getIndex();
         
         // we don't want data with an invalid level, or requiring from a different level (remember, we are
@@ -846,6 +851,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   vector<Handle<PatchSet> > refineSets(grid->numLevels(),(PatchSet*)0);
   SchedulerP sched(dynamic_cast<Scheduler*>(this));
 
+  d_sharedState->setCopyDataTimestep(true);
+
   for (int i = 0; i < grid->numLevels(); i++) {
     LevelP newLevel = newDataWarehouse->getGrid()->getLevel(i);
 
@@ -868,7 +875,9 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           
           // get the low/high for what we'll need to get
           IntVector lowIndex, highIndex;
-          newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
+          //newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
+          lowIndex = newPatch->getInteriorCellLowIndex();
+          highIndex = newPatch->getInteriorCellHighIndex();
           
           // find if area on the new patch was not covered by the old patches
           IntVector dist = highIndex-lowIndex;
@@ -879,18 +888,11 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           
           for (int old = 0; old < oldPatches.size(); old++) {
             const Patch* oldPatch = oldPatches[old];
-            IntVector oldLow = oldPatch->getLowIndex();
-            IntVector oldHigh = oldPatch->getHighIndex();
+            IntVector oldLow = oldPatch->getInteriorCellLowIndex();
+            IntVector oldHigh = oldPatch->getInteriorCellHighIndex();
 
-            if (newLevel->getIndex() > 0) {
-              // compensate for the extra cells, we DON'T want to copy them over on non-coarse levels
-              // we'll interpolate those up
-              oldLow += (oldPatch->getInteriorCellLowIndex() - oldPatch->getCellLowIndex());
-              oldHigh -= (oldPatch->getCellHighIndex() - oldPatch->getInteriorCellHighIndex());
-            }
-
-            IntVector low = Max(oldPatch->getLowIndex(), newPatch->getLowIndex());
-            IntVector high = Min(oldPatch->getHighIndex(), newPatch->getHighIndex());
+            IntVector low = Max(oldLow, lowIndex);
+            IntVector high = Min(oldHigh, highIndex);
             IntVector dist = high-low;
             sum += dist.x()*dist.y()*dist.z();
           }  // for oldPatches
@@ -900,8 +902,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           
         } // for patchIterator
       }
-      if (refineSets[i]->size() > 0)
+      if (refineSets[i]->size() > 0) {
+        dbg << d_myworld->myrank() << "  Calling scheduleRefine for patches " << *refineSets[i].get_rep() << endl;
         sim->scheduleRefine(refineSets[i].get_rep(), sched);
+      }
     }
 
     // find the patches that you don't refine
@@ -937,7 +941,6 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
-  d_sharedState->setCopyDataTimestep(true);
 
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
   this->compile(); 
@@ -974,7 +977,7 @@ void
 SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* patches,
                                    const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-  dbg << "SchedulerCommon::copyDataToNewGrid() BGN" << endl;
+  dbg << "SchedulerCommon::copyDataToNewGrid() BGN on patches " << *patches  << endl;
 
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
@@ -1035,7 +1038,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
           // based on the selectPatches above, we might have patches we don't want to use, so prune them here.
           if (copyLowIndex.x() >= copyHighIndex.x() || copyLowIndex.y() >= copyHighIndex.y() || copyLowIndex.z() >= copyHighIndex.z())
             continue;
-          
+
+ 
           switch(label->typeDescription()->getType()){
           case TypeDescription::NCVariable:
             {
@@ -1186,20 +1190,35 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::ParticleVariable:
             {
+              copyLowIndex = Max(copyLowIndex,
+                                 newPatch->getInteriorCellLowIndex());
+              copyHighIndex = Min(copyHighIndex,
+                                 newPatch->getInteriorCellHighIndex()); 
+              if (copyLowIndex.x() >= copyHighIndex.x() ||
+                  copyLowIndex.y() >= copyHighIndex.y() ||
+                  copyLowIndex.z() >= copyHighIndex.z()){
+                  break;
+              }
               if(!oldDataWarehouse->d_particleDB.exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                                           "in copyDataTo ParticleVariable", __FILE__, __LINE__));
               if ( !newDataWarehouse->d_particleDB.exists(label, matl, newPatch) ) {
-                PatchSubset* ps = new PatchSubset;
-                ps->add(oldPatch);
-                PatchSubset* newps = new PatchSubset;
-                newps->add(newPatch);
-                MaterialSubset* ms = new MaterialSubset;
-                ms->add(matl);
-                newDataWarehouse->transferFrom(oldDataWarehouse, label, ps, ms, false, newps);
-                delete ps;
-                delete ms;
-                delete newps;
+                ParticleSubset* subset;
+                if (!newDataWarehouse->haveParticleSubset(matl, newPatch, 
+                                                          newPatch->getInteriorCellLowIndex(),
+                                                          newPatch->getInteriorCellHighIndex())) {
+                  ParticleSubset* oldsubset = oldDataWarehouse->getParticleSubset(matl, oldPatch, 
+                                                                                  newPatch->getInteriorCellLowIndex(),
+                                                                                  newPatch->getInteriorCellHighIndex());
+                  subset = newDataWarehouse->createParticleSubset(oldsubset->numParticles(), matl, newPatch);
+                }
+                else
+                  subset = newDataWarehouse->getParticleSubset(matl, newPatch);
+                ParticleVariableBase* v = oldDataWarehouse->d_particleDB.get(label, matl, oldPatch);
+                ParticleVariableBase* newv = v->cloneType();
+                newv->copyPointer(*v);
+                newv->setParticleSubset(subset);
+                newDataWarehouse->d_particleDB.put(label, matl, newPatch, newv, false);
               } else {
                 cout << "Particle copy not implemented for pre-existent var (BNR Regridder?)\n";
                 SCI_THROW(UnknownVariable(label->getName(), newDataWarehouse->getID(), oldPatch, matl,

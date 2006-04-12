@@ -30,30 +30,20 @@
 /*
  *  Isosurface.cc:  
  *
- *   \authur Yarden Livnat
+ *   Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *
- *   \date Feb 2001
+ *   Feb 2001
  *
  *  Copyright (C) 2001 SCI Institute
  */
 
-#include <Core/Geom/Material.h>
-#include <Core/GuiInterface/GuiVar.h>
-
-#include <Core/Algorithms/Visualization/TetMC.h>
-#include <Core/Algorithms/Visualization/HexMC.h>
-#include <Core/Util/TypeDescription.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/FieldPort.h>
 
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
 
 namespace SCIRun {
 
@@ -65,6 +55,10 @@ public:
   virtual void execute();
 
 private:
+  FieldHandle  field_output_handle_;
+  MatrixHandle matrix_output_handle_;
+  GeomHandle   geometry_output_handle_;
+
   //! GUI variables
   GuiDouble  gui_iso_value_min_;
   GuiDouble  gui_iso_value_max_;
@@ -96,27 +90,6 @@ private:
 
   //! status variables
   vector< double > isovals_;
-
-  double iso_value_min_;
-  double iso_value_max_;
-
-  int     use_algorithm_;
-  int     build_field_;
-  int     build_geom_;
-  int     np_;          
-  double  color_r_;
-  double  color_g_;
-  double  color_b_;
-
-  int fGeneration_;
-  int cmGeneration_;
-  int mGeneration_;
-
-  FieldHandle  fHandle_;
-  MatrixHandle mHandle_;
-  int          geomID_;
-
-  bool error_;
 };
 
 class IsosurfaceAlgo : public DynamicAlgoBase

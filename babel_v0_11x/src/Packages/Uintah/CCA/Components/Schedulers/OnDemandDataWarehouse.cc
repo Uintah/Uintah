@@ -949,8 +949,9 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
     low = patch->getLowIndex();
     high = patch->getHighIndex();
   }
+  const Patch* realPatch = patch->getRealPatch();
 
-   psetDBType::key_type key(patch->getRealPatch(), matlIndex, low, high, getID());
+   psetDBType::key_type key(realPatch, matlIndex, low, high, getID());
    psetDBType::iterator iter = d_psetDB.find(key);
    if (iter != d_psetDB.end()) {
      d_lock.readUnlock();
@@ -960,7 +961,7 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
    // if not found, look for an encompassing particle subset
    for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
      const PSPatchMatlGhost& pmg = iter->first;
-     if (pmg.patch_ == patch && pmg.matl_ == matlIndex &&
+     if (pmg.patch_ == realPatch && pmg.matl_ == matlIndex &&
          pmg.dwid_ == getID() && 
          low.x() >= pmg.low_.x() && low.y() >= pmg.low_.y() && low.z() >= pmg.low_.z() &&
          high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z())
@@ -992,6 +993,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   particleIndex totalParticles = 0;
   vector<ParticleVariableBase*> neighborvars;
   vector<ParticleSubset*> subsets;
+  vector<const Patch*> vneighbors;
   
   for(int i=0;i<(int)neighbors.size();i++){
     const Patch* neighbor = neighbors[i];
@@ -1013,7 +1015,14 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       }
       ParticleSubset* pset;
 
+      if (patch != neighbor) {
+        patch->cullIntersection(Patch::CellBased, IntVector(0,0,0), neighbor, newLow, newHigh);
+        if (newLow == newHigh) {
+          continue;
+        }
+      }
       pset = getParticleSubset(matlIndex, neighbor, newLow, newHigh);
+
       constParticleVariable<Point> pos;
 
       get(pos, pos_var, pset);
@@ -1029,15 +1038,12 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
         }
       }
 
-      //      cout << d_myworld->myrank() << " Adding " << subset->numParticles() << " particles from patch " << neighbor->getID() << endl;
       totalParticles+=subset->numParticles();
       subsets.push_back(subset);
+      vneighbors.push_back(neighbors[i]);
     }
   }
   ParticleSet* newset = scinew ParticleSet(totalParticles);
-  vector<const Patch*> vneighbors(neighbors.size());
-  for(int i=0;i<neighbors.size();i++)
-    vneighbors[i]=neighbors[i];
   ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
                                                     matlIndex, patch,
                                                     lowIndex, highIndex,
@@ -1055,8 +1061,10 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
   checkGetAccess(label, matlIndex, patch);
 
-  if(!d_particleDB.exists(label, matlIndex, patch))
+  if(!d_particleDB.exists(label, matlIndex, patch)) {
+    print();
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+  }
   constVar = *d_particleDB.get(label, matlIndex, patch);
    
   d_lock.readUnlock();
@@ -1070,7 +1078,6 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
-  //cout << d_myworld->myrank() << " get: " << *pset <<endl;
   if((pset->getLow() == patch->getLowIndex() && pset->getHigh() == patch->getHighIndex()) ||
      pset->getNeighbors().size() == 0){
     get(constVar, label, matlIndex, patch);
@@ -1363,6 +1370,10 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
 
   Patch::selectType patches;
 
+  // if in AMR and one node intersects from another patch and that patch is missing
+  // ignore the error instead of throwing an exception
+  vector<const Patch*> missing_patches;
+
   // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
   // selectPatches doesn't detect
   IntVector tmpLow(low-IntVector(1,1,1));
@@ -1373,12 +1384,14 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
-    IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
-    IntVector h(Min(patch->getHighIndex(Patch::NodeBased, label->getBoundaryLayer()), high));
+    IntVector l(Max(patch->getInteriorLowIndex(Patch::NodeBased), low));
+    IntVector h(Min(patch->getInteriorHighIndex(Patch::NodeBased), high));
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
-    if(!d_ncDB.exists(label, matlIndex, patch->getRealPatch()))
-      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+    if(!d_ncDB.exists(label, matlIndex, patch->getRealPatch())) {
+      missing_patches.push_back(patch->getRealPatch());
+      continue;
+    }
     NCVariableBase* tmpVar = constVar.cloneType();
     d_ncDB.get(label, matlIndex, patch, *tmpVar);
 
@@ -1387,14 +1400,29 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
       // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
       tmpVar->offset(patch->getVirtualOffset());
     }
-    
+
+    IntVector vl(tmpVar->getLow()), vh(tmpVar->getHigh());
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
     totalCells += diff.x()*diff.y()*diff.z();
   }
   IntVector diff(high-low);
-  ASSERTEQ(diff.x()*diff.y()*diff.z(), totalCells);
+
+  if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
+    cout << d_myworld->myrank() << "  Unknown Variable " << *label << " matl " << matlIndex << " for patch(es): ";
+    for (unsigned i = 0; i < missing_patches.size(); i++) 
+      cout << missing_patches[i]->getID() << " ";
+    cout << endl;
+    throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
+  }
+
+  ASSERT(diff.x()*diff.y()*diff.z() <= totalCells);
+  if (diff.x()*diff.y()*diff.z() != totalCells) {
+    static ProgressiveWarning warn("GetRegion Warning", 100);
+    warn.invoke();
+  }
+
   d_lock.readUnlock();
  
   constVar = *var;
@@ -1443,6 +1471,9 @@ OnDemandDataWarehouse::getRegion(constCCVariableBase& constVar,
       // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
       tmpVar->offset(patch->getVirtualOffset());
     }
+    
+    IntVector vl(tmpVar->getLow()), vh(tmpVar->getHigh());
+
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1829,7 +1860,6 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
    else
      l=h=IntVector(-1,-1,-1);
    if (var == NULL) {
-     print();
      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
    }
    var->emit(oc, l, h, label->getCompressionMode());
@@ -2025,7 +2055,7 @@ OnDemandDataWarehouse::scrub(const VarLabel* var, int matlIndex,
 
 void
 OnDemandDataWarehouse::initializeScrubs(int dwid, 
-	const map<VarLabelMatlDW<Patch>, int>& scrubcounts)
+	const FastHashTable<ScrubItem>* scrubcounts)
 {
   d_lock.writeLock();
   d_ncDB.initializeScrubs(dwid, scrubcounts);
@@ -2035,15 +2065,6 @@ OnDemandDataWarehouse::initializeScrubs(int dwid,
   d_sfczDB.initializeScrubs(dwid, scrubcounts);
   d_particleDB.initializeScrubs(dwid, scrubcounts);
   d_perpatchDB.initializeScrubs(dwid, scrubcounts);
-  d_lock.writeUnlock();
-}
-
-void
-OnDemandDataWarehouse::initializeScrubs(int dwid, 
-      const map<VarLabelMatlDW<Level>, int>& scrubcounts)
-{
-  d_lock.writeLock();
-  d_soleDB.initializeScrubs(dwid, scrubcounts);
   d_lock.writeUnlock();
 }
 

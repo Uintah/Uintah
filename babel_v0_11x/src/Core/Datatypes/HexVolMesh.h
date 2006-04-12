@@ -43,22 +43,20 @@
 #ifndef SCI_project_HexVolMesh_h
 #define SCI_project_HexVolMesh_h 1
 
-#include <Core/Thread/Mutex.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/FieldIterator.h>
+#include <Core/Containers/StackVector.h>
+#include <Core/Persistent/PersistentSTL.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Geometry/Plane.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/FieldIterator.h>
-#include <Core/Containers/StackVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <set>
 #include <sci_hash_map.h>
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <Core/Datatypes/SearchGrid.h>
 
 namespace SCIRun {
 
@@ -100,6 +98,8 @@ public:
   };
 
   typedef Cell Elem;
+  typedef Face DElem;
+
   friend class ElemData;
 
   class ElemData
@@ -290,6 +290,13 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type node) const;
 
+  //! Wrapper to get the derivative elements from this element.
+  void get_delems(typename DElem::array_type &result,
+                  typename Elem::index_type idx) const
+  {
+    get_faces(result, idx);
+  }
+
 
   bool get_neighbor(typename Cell::index_type &neighbor,
                     typename Cell::index_type from,
@@ -455,10 +462,15 @@ public:
   void elem_reserve(size_t s) { edges_.reserve(s*8); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 3; }
+  virtual int topology_geometry() const { return (Mesh::UNSTRUCTURED | Mesh::IRREGULAR); }
 
   typename Node::index_type add_point(const Point &p);
 
   virtual bool          synchronize(unsigned int);
+  //! only call this if you have modified the geometry, this will delete
+  //! extra computed synch data and reset the flags to an unsynchronized state.
+  void                  unsynchronize();
+
 
   virtual bool has_normals() const { return basis_.polynomial_order() > 1; }
 
@@ -545,11 +557,6 @@ private:
   vector<Point>        points_;
   //! each 8 indecies make up a Hex
   vector<under_type>   cells_;
-  //! each 8 indecies make up a Hex
-  vector<under_type>   neighbors_;
-
-  //! Fill lock, used to fill points_, cells_, neighbors_
-  Mutex                fill_lock_;
 
   //! Face information.
   struct PFace {
@@ -727,14 +734,12 @@ private:
 #endif
   /*! container for face storage. Must be computed each time
     nodes or cells change. */
-  vector<PFace>             faces_;
+  vector<PFace>            faces_;
   face_ht                  face_table_;
-  Mutex                    face_table_lock_;
   /*! container for edge storage. Must be computed each time
     nodes or cells change. */
-  vector<PEdge>             edges_;
+  vector<PEdge>            edges_;
   edge_ht                  edge_table_;
-  Mutex                    edge_table_lock_;
 
 
 
@@ -764,16 +769,15 @@ private:
 
     vector<vector<typename Node::index_type> > &nbor_vec_;
     const HexVolMesh            &mesh_;
-    typename Node::array_type                   nodes_;
+    typename Node::array_type   nodes_;
   };
 
   vector<vector<typename Node::index_type> > node_neighbors_;
-  Mutex                       node_nbor_lock_;
 
-  LockingHandle<SearchGrid>   grid_;
-  Mutex                       grid_lock_; // Bad traffic!
-  typename Cell::index_type            locate_cache_;
+  LockingHandle<SearchGrid>     grid_;
+  typename Cell::index_type     locate_cache_;
 
+  Mutex                         synchronize_lock_;
   unsigned int                  synchronized_;
   Basis                         basis_;
 };
@@ -784,7 +788,7 @@ template <class Iter, class Functor>
 void
 HexVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor)
 {
-  fill_lock_.lock();
+  synchronize_lock_.lock();
   Iter iter = begin;
   points_.resize(end - begin); // resize to the new size
   vector<Point>::iterator piter = points_.begin();
@@ -793,7 +797,7 @@ HexVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor)
     *piter = fill_ftor(*iter);
     ++piter; ++iter;
   }
-  fill_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -802,7 +806,7 @@ template <class Iter, class Functor>
 void
 HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor)
 {
-  fill_lock_.lock();
+  synchronize_lock_.lock();
   Iter iter = begin;
   cells_.resize((end - begin) * 8); // resize to the new size
   vector<under_type>::iterator citer = cells_.begin();
@@ -826,42 +830,8 @@ HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor)
     *citer = nodes[7];
     ++citer; ++iter;
   }
-  fill_lock_.unlock();
+  synchronize_lock_.unlock();
 }
-
-
-template <class Basis>
-template <class Iter, class Functor>
-void
-HexVolMesh<Basis>::fill_neighbors(Iter begin, Iter end, Functor fill_ftor)
-{
-  fill_lock_.lock();
-  Iter iter = begin;
-  neighbors_.resize((end - begin) * 8); // resize to the new size
-  vector<under_type>::iterator citer = neighbors_.begin();
-  while (iter != end)
-  {
-    int *face_nbors = fill_ftor(*iter); // returns an array of length 4
-    *citer = face_nbors[0];
-    ++citer;
-    *citer = face_nbors[1];
-    ++citer;
-    *citer = face_nbors[2];
-    ++citer;
-    *citer = face_nbors[3];
-    ++citer; ++iter;
-    *citer = face_nbors[4];
-    ++citer; ++iter;
-    *citer = face_nbors[5];
-    ++citer; ++iter;
-    *citer = face_nbors[6];
-    ++citer; ++iter;
-    *citer = face_nbors[7];
-    ++citer; ++iter;
-  }
-  fill_lock_.unlock();
-}
-
 
 template <class Basis>
 PersistentTypeID
@@ -894,18 +864,13 @@ template <class Basis>
 HexVolMesh<Basis>::HexVolMesh() :
   points_(0),
   cells_(0),
-  neighbors_(0),
-  fill_lock_("HexVolMesh fill lock for points_, cells_, neighbors_"),
   faces_(0),
   face_table_(),
-  face_table_lock_("HexVolMesh faces_ fill lock"),
   edges_(0),
   edge_table_(),
-  edge_table_lock_("HexVolMesh edge_ fill lock"),
-  node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(0),
-  grid_lock_("HexVolMesh grid_ fill lock"),
   locate_cache_(0),
+  synchronize_lock_("HexVolMesh synchronize_lock_"),
   synchronized_(NODES_E | CELLS_E)
 {
 }
@@ -915,44 +880,34 @@ template <class Basis>
 HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
   points_(0),
   cells_(0),
-  neighbors_(0),
-  fill_lock_("HexVolMesh fill lock for points_, cells_, neighbors_"),
   faces_(0),
   face_table_(),
-  face_table_lock_("HexVolMesh faces_ fill lock"),
   edges_(0),
   edge_table_(),
-  edge_table_lock_("HexVolMesh edge_ fill lock"),
-  node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(0),
-  grid_lock_("HexVolMesh grid_ fill lock"),
   locate_cache_(0),
+  synchronize_lock_("HexVolMesh synchronize_lock_"),
   synchronized_(NODES_E | CELLS_E)
 {
   HexVolMesh &lcopy = (HexVolMesh &)copy;
 
-  lcopy.fill_lock_.lock();
+  lcopy.synchronize_lock_.lock();
+
   points_ = copy.points_;
   cells_ = copy.cells_;
-  neighbors_ = copy.neighbors_;
-  lcopy.fill_lock_.unlock();
 
-  lcopy.face_table_lock_.lock();
   face_table_ = copy.face_table_;
   faces_ = copy.faces_;
   synchronized_ |= copy.synchronized_ & FACES_E;
-  lcopy.face_table_lock_.unlock();
 
-  lcopy.edge_table_lock_.lock();
   edge_table_ = copy.edge_table_;
   edges_ = copy.edges_;
   synchronized_ |= copy.synchronized_ & EDGES_E;
-  lcopy.edge_table_lock_.unlock();
 
-  lcopy.grid_lock_.lock();
   grid_ = copy.grid_;
   synchronized_ |= copy.synchronized_ & LOCATE_E;
-  lcopy.grid_lock_.unlock();
+
+  lcopy.synchronize_lock_.unlock();
 }
 
 
@@ -1007,9 +962,9 @@ HexVolMesh<Basis>::transform(const Transform &t)
     ++itr;
   }
 
-  grid_lock_.lock();
+  synchronize_lock_.lock();
   if (grid_.get_rep()) { grid_->transform(t); }
-  grid_lock_.unlock();
+  synchronize_lock_.unlock();
 }
 
 
@@ -1053,11 +1008,6 @@ template <class Basis>
 void
 HexVolMesh<Basis>::compute_faces()
 {
-  face_table_lock_.lock();
-  if (synchronized_ & FACES_E) {
-    face_table_lock_.unlock();
-    return;
-  }
   face_table_.clear();
 
   typename Cell::iterator ci, cie;
@@ -1088,7 +1038,6 @@ HexVolMesh<Basis>::compute_faces()
   }
 
   synchronized_ |= FACES_E;
-  face_table_lock_.unlock();
 }
 
 
@@ -1107,6 +1056,8 @@ HexVolMesh<Basis>::hash_edge(typename Node::index_type n1,
   } else {
     PEdge e = (*iter).first;
     e.cells_.push_back(ci); // add this cell
+    table.erase(iter);
+    table[e] = 0;
   }
 }
 
@@ -1115,11 +1066,6 @@ template <class Basis>
 void
 HexVolMesh<Basis>::compute_edges()
 {
-  edge_table_lock_.lock();
-  if (synchronized_ & EDGES_E) {
-    edge_table_lock_.unlock();
-    return;
-  }
   typename Cell::iterator ci, cie;
   begin(ci); end(cie);
   typename Node::array_type arr;
@@ -1155,7 +1101,6 @@ HexVolMesh<Basis>::compute_edges()
   }
 
   synchronized_ |= EDGES_E;
-  edge_table_lock_.unlock();
 }
 
 
@@ -1163,6 +1108,8 @@ template <class Basis>
 bool
 HexVolMesh<Basis>::synchronize(unsigned int tosync)
 {
+  synchronize_lock_.lock();
+
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E))
   {
     compute_edges();
@@ -1180,7 +1127,36 @@ HexVolMesh<Basis>::synchronize(unsigned int tosync)
   {
     compute_node_neighbors();
   }
+
+  synchronize_lock_.unlock();
   return true;
+}
+
+template <class Basis>
+void
+HexVolMesh<Basis>::unsynchronize()
+{
+  synchronize_lock_.lock();
+
+  if (synchronized_ & NODE_NEIGHBORS_E)
+  {
+    node_neighbors_.clear();
+  }
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+  {
+    edge_table_.clear();
+  }
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+  {
+    face_table_.clear();
+  }
+  if (synchronized_ & LOCATE_E)
+  {
+    grid_ = 0;
+  }
+  synchronized_ = NODES_E | CELLS_E;
+
+  synchronize_lock_.unlock();
 }
 
 
@@ -1493,19 +1469,15 @@ template <class Basis>
 void
 HexVolMesh<Basis>::compute_node_neighbors()
 {
-  if (!(synchronized_ & EDGES_E)) synchronize(EDGES_E);
-  node_nbor_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    node_nbor_lock_.unlock();
-    return;
-  }
+  if (!(synchronized_ & EDGES_E)) { compute_edges(); }
+
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   typename Edge::iterator ei, eie;
   begin(ei); end(eie);
   for_each(ei, eie, FillNodeNeighbors(node_neighbors_, *this));
+
   synchronized_ |= NODE_NEIGHBORS_E;
-  node_nbor_lock_.unlock();
 }
 
 
@@ -1860,15 +1832,10 @@ template <class Basis>
 void
 HexVolMesh<Basis>::compute_grid()
 {
-  grid_lock_.lock();
-  if (synchronized_ & LOCATE_E) {
-    grid_lock_.unlock();
-    return;
-  }
-  if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
+  if (grid_.get_rep() != 0) {return; } // only create once.
 
   BBox bb = get_bounding_box();
-  if (!bb.valid()) { grid_lock_.unlock(); return; }
+  if (!bb.valid()) {return; }
 
   // Cubed root of number of cells to get a subdivision ballpark.
   const double one_third = 1.L/3.L;
@@ -1906,7 +1873,6 @@ HexVolMesh<Basis>::compute_grid()
   grid_ = scinew SearchGrid(sgc);
 
   synchronized_ |= LOCATE_E;
-  grid_lock_.unlock();
 }
 
 
@@ -2016,6 +1982,7 @@ template <class Basis>
 typename HexVolMesh<Basis>::Elem::index_type
 HexVolMesh<Basis>::add_elem(typename Node::array_type a)
 {
+  ASSERTMSG(a.size() == 8, "Tried to add non-hex element.");
   cells_.push_back(a[0]);
   cells_.push_back(a[1]);
   cells_.push_back(a[2]);
@@ -2171,7 +2138,7 @@ HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
   // Get all the nodes that share an edge with this node
   get_neighbors(neighbors, node);
   // Iterate through all those edges
-  for (unsigned int n = 0; n < neighbors.size(); ++n)
+  for (unsigned int n = 0; n < neighbors.size(); n++)
   {
     // Get the edge information for the current edge
     typename edge_ht::const_iterator iter =
@@ -2180,7 +2147,7 @@ HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
               "Edge not found in HexVolMesh::edge_table_");
     // Insert all cells that share this edge into
     // the unique set of cell indices
-    for (unsigned int c = 0; c < (iter->first).cells_.size(); ++c)
+    for (unsigned int c = 0; c < (iter->first).cells_.size(); c++)
       unique_cells.insert((iter->first).cells_[c]);
   }
 

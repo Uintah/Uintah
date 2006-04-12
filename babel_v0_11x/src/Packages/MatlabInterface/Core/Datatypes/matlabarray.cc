@@ -130,7 +130,7 @@ void matlabarray::clear()
 bool matlabarray::isempty()
 {
   if (m_ == 0) return(true);
-  if (getnumelements() == 0) return(true);
+  if (!issparse()) if (getnumelements() == 0) return(true);
   return(false);
 }
 

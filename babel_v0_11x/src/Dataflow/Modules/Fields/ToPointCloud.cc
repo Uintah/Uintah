@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ToPointCloud.h>
 #include <Core/Containers/Handle.h>
 
@@ -100,9 +100,6 @@ ToPointCloud::execute()
     string dstname("PointCloudMesh<ConstantBasis<Point> >");
     string dst_basis_name("ConstantBasis");
 
-    const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-    const string &mtdn = mtd->get_name();
-    
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     TypeDescription::td_vec *tdv = 
       ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();

@@ -319,7 +319,7 @@ void Grid2::intersect(Ray& ray, HitInfo& hit,
     double dtdx    = dix_dx * diag.x() / nx / dir.x();
     double dtdy    = diy_dy * diag.y() / ny / dir.y();
     double dtdz    = diz_dz * diag.z() / nz / dir.z();
-    hit.min_t      = MAXDOUBLE;
+    hit.min_t      = DBL_MAX;
     
     Object **cell;
     while (hit.min_t > t) {

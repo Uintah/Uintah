@@ -62,7 +62,7 @@ namespace SCIRun {
       ~Renderer();
 
       //Component interface
-      int popupUI();
+      int popup_ui();
 
       void refresh(int flag); //virtual
       

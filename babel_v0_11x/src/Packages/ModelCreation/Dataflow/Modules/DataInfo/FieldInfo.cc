@@ -36,8 +36,8 @@
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <map>
 #include <iostream>
 #include <sstream>
@@ -86,21 +86,21 @@ public:
 
 FieldInfo::FieldInfo(GuiContext* ctx)
   : Module("FieldInfo", ctx, Sink, "DataInfo", "ModelCreation"),
-    gui_fldname_(ctx->subVar("fldname", false)),
-    gui_generation_(ctx->subVar("generation", false)),
-    gui_typename_(ctx->subVar("typename", false)),
-    gui_datamin_(ctx->subVar("datamin", false)),
-    gui_datamax_(ctx->subVar("datamax", false)),
-    gui_numnodes_(ctx->subVar("numnodes", false)),
-    gui_numelems_(ctx->subVar("numelems", false)),
-    gui_numdata_(ctx->subVar("numdata", false)),
-    gui_dataat_(ctx->subVar("dataat", false)),
-    gui_cx_(ctx->subVar("cx", false)),
-    gui_cy_(ctx->subVar("cy", false)),
-    gui_cz_(ctx->subVar("cz", false)),
-    gui_sizex_(ctx->subVar("sizex", false)),
-    gui_sizey_(ctx->subVar("sizey", false)),
-    gui_sizez_(ctx->subVar("sizez", false)),
+    gui_fldname_(get_ctx()->subVar("fldname", false)),
+    gui_generation_(get_ctx()->subVar("generation", false)),
+    gui_typename_(get_ctx()->subVar("typename", false)),
+    gui_datamin_(get_ctx()->subVar("datamin", false)),
+    gui_datamax_(get_ctx()->subVar("datamax", false)),
+    gui_numnodes_(get_ctx()->subVar("numnodes", false)),
+    gui_numelems_(get_ctx()->subVar("numelems", false)),
+    gui_numdata_(get_ctx()->subVar("numdata", false)),
+    gui_dataat_(get_ctx()->subVar("dataat", false)),
+    gui_cx_(get_ctx()->subVar("cx", false)),
+    gui_cy_(get_ctx()->subVar("cy", false)),
+    gui_cz_(get_ctx()->subVar("cz", false)),
+    gui_sizex_(get_ctx()->subVar("sizex", false)),
+    gui_sizey_(get_ctx()->subVar("sizey", false)),
+    gui_sizez_(get_ctx()->subVar("sizez", false)),
     generation_(-1),
     min_(0.0),
     max_(0.0),

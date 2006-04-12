@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 
 namespace SCITeem {
@@ -67,20 +67,23 @@ public:
 DECLARE_MAKER(UnuUnquantize)
 UnuUnquantize::UnuUnquantize(GuiContext* ctx)
   : Module("UnuUnquantize", ctx, Source, "UnuNtoZ", "Teem"),
-    min_(ctx->subVar("min")),
-    useinputmin_(ctx->subVar("useinputmin")),
-    max_(ctx->subVar("max")),
-    useinputmax_(ctx->subVar("useinputmax")),
-    double_(ctx->subVar("double"))
+    min_(get_ctx()->subVar("min"), 0),
+    useinputmin_(get_ctx()->subVar("useinputmin"), 1),
+    max_(get_ctx()->subVar("max"), 0),
+    useinputmax_(get_ctx()->subVar("useinputmax"), 1),
+    double_(get_ctx()->subVar("double"), 0)
 {
 }
 
-UnuUnquantize::~UnuUnquantize(){
+
+UnuUnquantize::~UnuUnquantize()
+{
 }
 
-void
- UnuUnquantize::execute(){
 
+void
+UnuUnquantize::execute()
+{
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
@@ -95,7 +98,7 @@ void
   }
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
   Nrrd* copy = nrrdNew();
@@ -131,7 +134,7 @@ void
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++) {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 

@@ -115,6 +115,26 @@
 		<patches>[1,1,2]</patches>
 	    </Box>
 	</Level>
+        <BoundaryConditions>
+        <Face side = "x-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "x+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "y-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "y+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        </BoundaryConditions>
     </Grid>
     <PhysicalBC>
 	<MPM>

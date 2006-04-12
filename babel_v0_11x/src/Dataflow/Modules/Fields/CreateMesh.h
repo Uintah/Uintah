@@ -49,6 +49,7 @@
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/Field.h>
 
 namespace SCIRun {
 
@@ -56,7 +57,7 @@ namespace SCIRun {
 class CreateMeshAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      MatrixHandle elements,
 			      MatrixHandle positions,
 			      MatrixHandle normals,
@@ -73,7 +74,7 @@ class CreateMeshAlgoT : public CreateMeshAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      MatrixHandle elements,
 			      MatrixHandle positions,
 			      MatrixHandle normals,
@@ -83,7 +84,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
+CreateMeshAlgoT<FIELD>::execute(ProgressReporter *reporter,
 				MatrixHandle elements,
 				MatrixHandle positions,
 				MatrixHandle normals,
@@ -91,12 +92,12 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
 {
   if (positions->ncols() < 3)
   {
-    mod->error("Mesh Positions must contain at least 3 columns for position data.");
+    reporter->error("Mesh Positions must contain at least 3 columns for position data.");
     return 0;
   }
   if (positions->ncols() > 3)
   {
-    mod->remark("Mesh Positions contains unused columns, only first three are used.");
+    reporter->remark("Mesh Positions contains unused columns, only first three are used.");
   }
 
   typename FIELD::mesh_handle_type mesh = scinew typename FIELD::mesh_type();
@@ -122,8 +123,8 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
       {
 	if (ecount < 10)
 	{
-	  mod->error("Bad index found at " + to_string(i) + ", "
-		     + to_string(j));
+	  reporter->error("Bad index found at " + to_string(i) + ", "
+                          + to_string(j));
 	}
 	index = 0;
 	ecount++;
@@ -134,10 +135,10 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
   }
   if (ecount >= 10)
   {
-    mod->error("..." + to_string(ecount-9) + " additional bad indices found.");
+    reporter->error("..." + to_string(ecount-9) + " additional bad indices found.");
   }
   
-  FIELD *field = scinew FIELD(mesh, basis_order);
+  FIELD *field = scinew FIELD(mesh);
 
   return FieldHandle(field);
 }

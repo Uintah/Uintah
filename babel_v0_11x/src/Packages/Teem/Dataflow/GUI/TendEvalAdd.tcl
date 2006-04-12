@@ -31,14 +31,9 @@
 
 itcl_class Teem_Tend_TendEvalAdd {
     inherit Module
+
     constructor {config} {
         set name TendEvalAdd
-        set_defaults
-    }
-
-    method set_defaults {} {
-	global $this-value
-	set $this-value 1
     }
 
     method ui {} {

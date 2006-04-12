@@ -543,6 +543,10 @@ WARNING
      { return cellPosition(d_lowIndex) -
 	 cellPosition(getRealPatch()->d_lowIndex); }     
 
+     void setFaceMark(FaceType face, int mark) const { d_faceMarks[face] = mark; }
+     int getFaceMark(FaceType face) const { return d_faceMarks[face]; }
+
+
    public:
      
     /********************
@@ -638,6 +642,10 @@ WARNING
      //////////
      // Keep track of cells on the corner of the domain
      vector<IntVector> d_CornerCells[Patch::numFaces];
+
+     //////////
+     // add a method for the user to mark a patch face (for his own purposees)
+     mutable int d_faceMarks[numFaces];
      
    }; // end class Patch
 

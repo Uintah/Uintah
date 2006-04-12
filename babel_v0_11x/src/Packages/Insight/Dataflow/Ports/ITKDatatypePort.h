@@ -42,8 +42,8 @@
 #ifndef SCI_Insight_ITKDatatypePort_h
 #define SCI_Insight_ITKDatatypePort_h 1
 
-#include <Dataflow/Ports/SimplePort.h>
-#include <Insight/Core/Datatypes/ITKDatatype.h>
+#include <Dataflow/Network/Ports/SimplePort.h>
+#include <Packages/Insight/Core/Datatypes/ITKDatatype.h>
 
 namespace Insight {
 

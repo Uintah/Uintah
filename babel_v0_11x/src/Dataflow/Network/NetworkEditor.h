@@ -48,20 +48,24 @@
 #include <Dataflow/Network/share.h>
 
 namespace SCIRun {
-  class GuiInterface;
-  class Network;
+class GuiInterface;
+class Network;
 
-  class SCISHARE NetworkEditor : public GuiCallback {
-  public:
-    NetworkEditor(Network*, GuiInterface* gui);
-    ~NetworkEditor();
-  private:
-    virtual void	tcl_command(GuiArgs&, void*);
+class SCISHARE NetworkEditor : public GuiCallback {
+public:
+  NetworkEditor(Network*, GuiInterface* gui);
+  ~NetworkEditor();
 
-    Network *		net;
-    GuiInterface *	gui;
+  // let the C world have access to the Network.
+  static Network* get_network() { return net_; } 
+private:
+  virtual void	tcl_command(GuiArgs&, void*);
 
-  };
+  // we only ever create one Network.
+  static Network *	net_;
+  GuiInterface *	gui_;
+
+};
 } // End namespace SCIRun
 
 #endif

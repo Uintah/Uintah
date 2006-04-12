@@ -106,25 +106,6 @@ LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRA
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-# tclgui
-SRCS := $(SRCDIR)/tclgui.cc
-
-PROGRAM := Packages/rtrt/StandAlone/tclgui
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Core
-else
-  PSELIBS := \
-	Core/GuiInterface \
-	Core/Util \
-	Core/Thread \
-	Core/Persistent \
-	Core/Exceptions
-endif
-
-LIBS := $(LIBS) $(TK_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
 ##################################################
 
 SUBDIRS := \

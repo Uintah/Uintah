@@ -39,8 +39,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
@@ -70,9 +70,9 @@ DECLARE_MAKER(MatrixWriter)
 
 MatrixWriter::MatrixWriter(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype")),
-    split_(ctx->subVar("split"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype")),
+    split_(get_ctx()->subVar("split"))
 {
   MatrixIEPluginManager mgr;
   vector<string> exporters;
@@ -113,7 +113,7 @@ MatrixWriter::call_exporter(const string &filename)
   if (pl)
   {
     const bool result = pl->fileWriter_(this, handle_, filename.c_str());
-    msgStream_flush();
+    msg_stream_flush();
     return result;
   }
   return false;
@@ -149,14 +149,14 @@ MatrixWriter::execute()
 
   // CODE FOR FILENAME INPUT PORT ////
   StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>(getIPort("Filename")))
+  if (filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename")))
   {
     StringHandle filenameH;
     filenameport->get(filenameH);
     if (filenameH.get_rep())
     {
       filename_.set(filenameH->get());
-      ctx->reset();
+      get_ctx()->reset();
     }
   }
   ////////////////////////////////////

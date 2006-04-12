@@ -41,7 +41,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Basis/Constant.h>
@@ -74,7 +74,7 @@ DECLARE_MAKER(SepSurfToQuadSurf)
 
 SepSurfToQuadSurf::SepSurfToQuadSurf(GuiContext *ctx)
   : Module("SepSurfToQuadSurf", ctx, Filter, "Modeling", "BioPSE"),
-    data_(ctx->subVar("data"))    
+    data_(get_ctx()->subVar("data"))    
 {
 }
 

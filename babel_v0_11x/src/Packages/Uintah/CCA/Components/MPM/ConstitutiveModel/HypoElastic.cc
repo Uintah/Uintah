@@ -101,13 +101,13 @@ void HypoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
-    cm_ps = ps->appendChild("constitutive_model",true,3);
+    cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","hypo_elastic");
   }
 
-  cm_ps->appendElement("G",d_initialData.G,false,4);
-  cm_ps->appendElement("K",d_initialData.K,false,4);
-  cm_ps->appendElement("alpha",d_initialData.alpha,false,4);
+  cm_ps->appendElement("G",d_initialData.G);
+  cm_ps->appendElement("K",d_initialData.K);
+  cm_ps->appendElement("alpha",d_initialData.alpha);
 
   // Still need to do the FRACTURE thing
 }
@@ -483,59 +483,99 @@ void HypoElastic::carryForward(const PatchSubset* patches,
   }
 }
 
-// Convert J-integral into stress intensity factors for hypoelastic materials
+// Convert J-integral into stress intensity factors
+// for Fracture
 void 
-HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
-                     const double& C,const Vector& V,Vector& SIF)
+HypoElastic::ConvertJToK(const MPMMaterial* matl,const string& stressState,
+const Vector& J,const double& C,const Vector& D,Vector& SIF)
 {                    
-  /* J--J integral, C--Crack velocity, V--COD near crack tip
-     in local coordinates. */ 
-     
-  double J1,CC,V1,V2;
-  
-  J1=J.x();                           // total energy release rate
-  V1=V.y();  V2=V.x();                // V1--opening COD, V2--sliding COD
+  // J--J-integral vector, 
+  // C--Crack velocity, 
+  // D--COD near crack tip in local coordinates.  
+
+  double GT,CC,D1,D2,D3;
+  double KI,KII,KIII,
+         K1=0,K2=0,K3=0;
+
+  GT=fabs(J.x());                     // total energy release rate
   CC=C*C;                             // square of crack propagating velocity
-  
-  // get material properties
-  double rho_orig,G,K,v,k;
-  rho_orig=matl->getInitialDensity();
+  D1=D.y(); D2=D.x(); D3=D.z();       // D1,D2,D3: opening, sliding, tearing COD
+
+  // Material properties
+  double rho,G,K,v,k;
+  rho=matl->getInitialDensity();      // mass density
   G=d_initialData.G;                  // shear modulus
   K=d_initialData.K;                  // bulk modulus
   v=0.5*(3.*K-2.*G)/(3*K+G);          // Poisson ratio
-  string stressState="planeStress";   // Plane stress
-  k = (stressState=="planeStress")? (3.-v)/(1.+v) : (3.-4.*v); 
+  k = (stressState=="planeStress")? (3.-v)/(1.+v) : (3.-4.*v);
 
-  double Cs2,Cd2,D,B1,B2,A1,A2;
-  if(sqrt(CC)<1.e-16) {               // for static crack
-    B1=B2=1.;
-    A1=A2=(k+1.)/4.;
-  }
-  else {                              // for dynamic crack
-    Cs2=G/rho_orig;
-    Cd2=(k+1.)/(k-1.)*Cs2;
+  // Calculate stress intensity
+  if(D1==0. && D2==0. && D3==0.) {    // COD is zero
+    KI=KII=KIII=0.;
+  } 
+  else { // COD is not zero
+    // Parameters (A1,A2,A3) related to crack velocity
+    double A1,A2,A3;
+    if(sqrt(CC)<1.e-16) { // for stationary crack
+      A1=(k+1.)/4.;
+      A2=(k+1.)/4.;
+      A3=1.;
+    } 
+    else { // for dynamic crack
+      double Cs2=G/rho;
+      double Cd2=(k+1.)/(k-1.)*Cs2;
+      if(CC>Cs2) CC=Cs2;
 
-    if(CC>Cs2) CC=Cs2;
-    
-    B1=sqrt(1.-CC/Cd2);
-    B2=sqrt(1.-CC/Cs2);
-    D=4.*B1*B2-(1.+B2*B2)*(1.+B2*B2);
-    A1=B1*(1.-B2*B2)/D;
-    A2=B2*(1.-B2*B2)/D;
+      double B1=sqrt(1.-CC/Cd2);
+      double B2=sqrt(1.-CC/Cs2);
+      double DC=4.*B1*B2-(1.+B2*B2)*(1.+B2*B2);
+      A1=B1*(1.-B2*B2)/DC;
+      A2=B2*(1.-B2*B2)/DC;
+      A3=1./B2;
+    }
+
+    // Solve stress intensity factors (absolute values)
+    short  CASE=1;
+    if(fabs(D2)>fabs(D1) && fabs(D2)>fabs(D3)) CASE=2;
+    if(fabs(D3)>fabs(D1) && fabs(D3)>fabs(D2)) CASE=3;
+
+    if(CASE==1) { // Mode I COD is dominated
+      double g21=D2/D1;
+      double g31=(1.-v)*D3/D1;
+      K1=sqrt(2.*G*GT/(A1+A2*g21*g21+A3*g31*g31));
+      K2=fabs(g21*K1);
+      K3=fabs(g31*K1);
+    }
+
+    if(CASE==2) { // Mode II COD is dominated
+      double g12=D1/D2;
+      double g32=(1.-v)*D3/D2;
+      K2=sqrt(2.*G*GT/(A1*g12*g12+A2+A3*g32*g32));
+      K1=fabs(g12*K2);
+      K3=fabs(g32*K2);
+    }
+
+    if(CASE==3) { // Mode III COD is dominated
+      double g13=D1/D3/(1.-v);
+      double g23=D2/D3/(1.-v);
+      K3=sqrt(2.*G*GT/(A1*g13*g13+A2*g23*g23+A3));
+      K1=fabs(g13*K3);
+      K2=fabs(g23*K3);
+    }
+
+    // The signs of stress intensity are determined by the signs of the CODs
+    double sign1 = D1>0.? 1.:-1.;
+    double sign2 = D2>0.? 1.:-1.;
+    double sign3 = D3>0.? 1.:-1.;
+    KI   = D1==0. ? 0. : sign1*K1;
+    KII  = D2==0. ? 0. : sign2*K2;
+    KIII = D3==0. ? 0. : sign3*K3;
   }
 
-  double COD2,KI,KII;
-  COD2=V1*V1*B2+V2*V2*B1;
-  if(sqrt(COD2)<1.e-32) {            // COD=0
-    KI  = 0.;
-    KII = 0.;
-  }
-  else {
-    KI =V1*sqrt(2.*G*B2*fabs(J1)/A1/COD2);
-    KII=V2*sqrt(2.*G*B1*fabs(J1)/A2/COD2);
-  }
-  SIF=Vector(KI,KII,0.);
+  // Stress intensity vector
+  SIF=Vector(KI,KII,KIII);
 }
+
 
 // Detect if crack propagates and the propagation direction
 // for FRACTURE

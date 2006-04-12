@@ -64,16 +64,16 @@ CorrugEdgeGeomPiece::~CorrugEdgeGeomPiece()
 
 void CorrugEdgeGeomPiece::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP cegp_ps = ps->appendChild("corrugated",true,4);
+  ProblemSpecP cegp_ps = ps->appendChild("corrugated");
 
-  cegp_ps->appendElement("xymin", d_xymin,false,5);
-  cegp_ps->appendElement("xymax", d_xymax,false,5);
-  cegp_ps->appendElement("thickness", d_thickness,false,5);
-  cegp_ps->appendElement("normal", d_normal,false,5);
-  cegp_ps->appendElement("corr_edge", d_edge,false,5);
-  cegp_ps->appendElement("curve", d_curve,false,5);
-  cegp_ps->appendElement("wavelength", d_wavelength,false,5);
-  cegp_ps->appendElement("amplitude", d_amplitude,false,5);
+  cegp_ps->appendElement("xymin",      d_xymin);
+  cegp_ps->appendElement("xymax",      d_xymax);
+  cegp_ps->appendElement("thickness",  d_thickness);
+  cegp_ps->appendElement("normal",     d_normal);
+  cegp_ps->appendElement("corr_edge",  d_edge);
+  cegp_ps->appendElement("curve",      d_curve);
+  cegp_ps->appendElement("wavelength", d_wavelength);
+  cegp_ps->appendElement("amplitude",  d_amplitude);
 
 }
 

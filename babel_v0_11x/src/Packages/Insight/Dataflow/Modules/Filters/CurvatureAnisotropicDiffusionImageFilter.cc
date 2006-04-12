@@ -174,9 +174,9 @@ DECLARE_MAKER(CurvatureAnisotropicDiffusionImageFilter)
 
 CurvatureAnisotropicDiffusionImageFilter::CurvatureAnisotropicDiffusionImageFilter(GuiContext* ctx)
   : Module("CurvatureAnisotropicDiffusionImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_time_step_(ctx->subVar("time_step")),
-     gui_iterations_(ctx->subVar("iterations")),
-     gui_conductance_parameter_(ctx->subVar("conductance_parameter")), 
+     gui_time_step_(get_ctx()->subVar("time_step")),
+     gui_iterations_(get_ctx()->subVar("iterations")),
+     gui_conductance_parameter_(get_ctx()->subVar("conductance_parameter")), 
      last_InputImage_(-1)
 {
   filter_ = 0;
@@ -185,9 +185,6 @@ CurvatureAnisotropicDiffusionImageFilter::CurvatureAnisotropicDiffusionImageFilt
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &CurvatureAnisotropicDiffusionImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &CurvatureAnisotropicDiffusionImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
-
 }
 
 CurvatureAnisotropicDiffusionImageFilter::~CurvatureAnisotropicDiffusionImageFilter() 

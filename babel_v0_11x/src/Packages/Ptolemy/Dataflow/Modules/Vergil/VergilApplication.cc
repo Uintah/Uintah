@@ -72,7 +72,7 @@ private:
 
 DECLARE_MAKER(VergilApplication)
 VergilApplication::VergilApplication(GuiContext* ctx)
-    : Module("VergilApplication", ctx, Source, "Vergil", "Ptolemy"), filename_(ctx->subVar("filename"))
+    : Module("VergilApplication", ctx, Source, "Vergil", "Ptolemy"), filename_(get_ctx()->subVar("filename"))
 {
     std::cerr << "VergilApplication::VergilApplication" << std::endl;
     jvm = JNIUtil::getJavaVM();

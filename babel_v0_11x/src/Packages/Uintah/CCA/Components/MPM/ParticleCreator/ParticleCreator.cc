@@ -218,10 +218,7 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
         (MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
 
       Box bcBox;
-      if (d_fracture)
-        bcBox = Box(bc->getLowerRange(), bc->getUpperRange());
-      else
-        bcBox = Box(bc->getLowerRange()-dxpp,bc->getUpperRange()+dxpp);
+      bcBox = Box(bc->getLowerRange()-dxpp,bc->getUpperRange()+dxpp);
 
       //cerr << "BC Box = " << bcBox << " Point = " << pp << endl;
       if(bcBox.contains(pp)) {
@@ -434,7 +431,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   ptempPrevious[i] = (d_ref_temp > 0.0) ? d_ref_temp : ptemperature[i];
 
   Vector pExtForce(0,0,0);
-  ParticleCreator::applyForceBC(dxpp, p, pmass[i], pExtForce);
+  applyForceBC(dxpp, p, pmass[i], pExtForce);
   pexternalforce[i] = pExtForce;
   pfiberdir[i] = matl->getConstitutiveModel()->getInitialFiberDir();
   perosion[i] = 1.0;

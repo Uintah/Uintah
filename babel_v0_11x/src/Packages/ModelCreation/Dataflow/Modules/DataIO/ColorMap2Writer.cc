@@ -39,7 +39,7 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 
 namespace ModelCreation {
@@ -66,8 +66,8 @@ DECLARE_MAKER(ColorMap2Writer)
 
 ColorMap2Writer::ColorMap2Writer(GuiContext* ctx)
   : GenericWriter<ColorMap2Handle>("ColorMap2Writer", ctx, "DataIO", "ModelCreation"),
-    gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype"))
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_exporttype_(get_ctx()->subVar("exporttype"))
 {
   string exporttypes = "{";
   exporttypes += "{{SCIRun ColorMap2 Binary} {.cmap} } ";

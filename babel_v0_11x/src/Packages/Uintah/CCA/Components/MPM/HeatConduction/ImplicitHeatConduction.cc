@@ -22,8 +22,6 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-#define EROSION
-#undef EROSION
 
 static DebugStream cout_doing("ImplicitHeatConduction", false);
 

@@ -56,7 +56,6 @@ namespace SCIRun {
 class TaoPortInstance : public PortInstance
 {
 public:
-  enum PortType { Uses=0, Provides=1 };
   TaoPortInstance(const std::string& portname, const std::string& classname,
                   PortType porttype);
   TaoPortInstance(const std::string& portname, const std::string& classname,

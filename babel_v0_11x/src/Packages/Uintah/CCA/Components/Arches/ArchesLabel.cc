@@ -289,8 +289,6 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_h2oINLabel = VarLabel::create("h2oIN",
 				  CCVariable<double>::getTypeDescription() );
-  d_c2h2INLabel = VarLabel::create("c2h2IN",
-				  CCVariable<double>::getTypeDescription() );
   d_h2sINLabel = VarLabel::create("h2sIN",
 				  CCVariable<double>::getTypeDescription() );
   d_so2INLabel = VarLabel::create("so2IN",
@@ -299,7 +297,10 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_coINLabel = VarLabel::create("coIN",
 				  CCVariable<double>::getTypeDescription() );
-
+  d_c2h2INLabel = VarLabel::create("c2h2IN",
+                                    CCVariable<double>::getTypeDescription() );
+  d_ch4INLabel = VarLabel::create("ch4IN",
+                                   CCVariable<double>::getTypeDescription() );
 
 
   // Array containing the reference density multiplied by the void fraction
@@ -800,11 +801,12 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);
-  VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_h2sINLabel);
   VarLabel::destroy(d_so2INLabel);
   VarLabel::destroy(d_so3INLabel);
   VarLabel::destroy(d_coINLabel);
+  VarLabel::destroy(d_c2h2INLabel);
+  VarLabel::destroy(d_ch4INLabel);
   VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);

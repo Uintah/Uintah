@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Network/Ports/NrrdPort.h>
 
 #include <Core/Containers/StringUtil.h>
 
@@ -73,13 +73,13 @@ DECLARE_MAKER(UnuRmap)
 UnuRmap::UnuRmap(GuiContext* ctx)
   : Module("UnuRmap", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), idmap_(0), onrrd_(0),
-    rescale_(ctx->subVar("rescale")),
-    min_(ctx->subVar("min")),
-    useinputmin_(ctx->subVar("useinputmin")),
-    max_(ctx->subVar("max")),
-    useinputmax_(ctx->subVar("useinputmax")),
-    type_(ctx->subVar("type")),
-    usetype_(ctx->subVar("usetype"))
+    rescale_(get_ctx()->subVar("rescale")),
+    min_(get_ctx()->subVar("min")),
+    useinputmin_(get_ctx()->subVar("useinputmin")),
+    max_(get_ctx()->subVar("max")),
+    useinputmax_(get_ctx()->subVar("useinputmax")),
+    type_(get_ctx()->subVar("type")),
+    usetype_(get_ctx()->subVar("usetype"))
 {
 }
 
@@ -112,8 +112,8 @@ void
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *dmap = dmap_handle->nrrd;
+  Nrrd *nin = nrrd_handle->nrrd_;
+  Nrrd *dmap = dmap_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   NrrdRange *range = NULL;
 
@@ -155,7 +155,7 @@ void
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim && i<nout->dim; i++)
+  for (unsigned int i=0; i<nin->dim && i<nout->dim; i++)
   {
     nout->axis[i].kind = nin->axis[i].kind;
   }
