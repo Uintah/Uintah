@@ -13,13 +13,13 @@
            <SimulationComponent>
                <type> mpm </type>
            </SimulationComponent>
-           <input_file> inputs/IMPM/disks_include1.ups</input_file>
+           <input_file> inputs/MPM/disks_include1.ups</input_file>
        </subcomponent>
        <subcomponent>
            <SimulationComponent>
                <type> mpm </type>
            </SimulationComponent>
-           <input_file> inputs/IMPM/disks_include1.ups</input_file>
+           <input_file> inputs/MPM/disks_include1.ups</input_file>
        </subcomponent>
    </SimulationComponent>
    
