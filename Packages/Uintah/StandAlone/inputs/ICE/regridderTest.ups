@@ -283,10 +283,7 @@
         </constants>
          <geom_object>
             <difference>
-            <box label="wholeDomain">
-                <min>       [ -1., -1., -1. ]        </min>
-                <max>       [  1.,  1.,  1. ]        </max>
-            </box>
+            <box label="wholeDomain">               </box>
             <box label="scalarPlug">
               <min>         [0.4,0.4,0.4]            </min>
               <max>         [ 0.6, 0.6, 0.6]         </max>

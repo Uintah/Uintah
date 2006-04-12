@@ -191,14 +191,10 @@
                    <min>           [-99.0, -99.0, -99.0 ]   </min>
                    <max>           [100.0, 100.0, 100.0 ]   </max>
                </box>
-               <cylinder label = "stick">
-                    <bottom>       [0.0,0.0,0.0]   </bottom>
-                    <top>          [0.1,0.0,0.0]   </top>
-                    <radius>       0.008           </radius>
-               </cylinder>
+               <cylinder label = "stick">             </cylinder>
              </difference>
              <res>            [2,2,2]                 </res>
-             <velocity>       [-90.0,0.0,0.0]           </velocity>
+             <velocity>       [-90.0,0.0,0.0]         </velocity>
              <temperature>    300.0                   </temperature>
              <density>        1.1792946927374306      </density>
              <pressure>       101325.0                </pressure>

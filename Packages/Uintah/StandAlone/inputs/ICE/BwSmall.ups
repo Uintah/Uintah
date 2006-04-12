@@ -201,7 +201,7 @@
                     <max>[ 3.0, 3.0, 3.0 ]              </max>
                 </box>
              </difference>
-               <res>                 [2,2,2]                  </res>
+               <res>                 [2,2,2]            </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
                <density>       1.7899909957225715000    </density>
                <pressure>      101325.0                 </pressure>
@@ -209,11 +209,8 @@
            </geom_object>
            
            <geom_object>
-                <box label="hot_spot">
-                    <min>[ 2.0, 2.0, 2.0 ]              </min>
-                    <max>[ 3.0, 3.0, 3.0 ]              </max>
-                </box>
-               <res>                 [2,2,2]                  </res>
+                <box label="hot_spot">                  </box>
+               <res>                 [2,2,2]            </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
                <density>       1.7899909957225715000     </density>
                <pressure>      135266.039564763254020363         </pressure>
