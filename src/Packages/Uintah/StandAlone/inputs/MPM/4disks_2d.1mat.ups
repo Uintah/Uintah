@@ -64,7 +64,7 @@
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
-		    <box label = "piston">
+		    <box label = "mpiston">
 			<min>[-0.5,0.0, -0.05]</min>
 			<max>[ 0.5,0.05, 0.0]</max>
 		    </box>
@@ -74,7 +74,7 @@
  		</geom_object>
 
 		<geom_object>
-		    <cylinder label = "cyl1">
+		    <cylinder label = "mcyl1">
 			<bottom>[0.0,0.0, 0.5]</bottom>
 			<top>[   0.0,0.05,0.5]</top>
 			<radius> .5 </radius>
@@ -84,7 +84,7 @@
 		    <temperature>12</temperature>
  		</geom_object>
 		<geom_object>
-		    <cylinder label = "cyl2">
+		    <cylinder label = "mcyl2">
 			<bottom>[0.0,0.0, 1.5]</bottom>
 			<top>[   0.0,0.05,1.5]</top>
 			<radius> .5 </radius>
@@ -95,7 +95,7 @@
  		</geom_object>
 
 		<geom_object>
-		    <cylinder label = "cyl3">
+		    <cylinder label = "mcyl3">
 			<bottom>[0.0,0.0, 2.5]</bottom>
 			<top>[   0.0,0.05,2.5]</top>
 			<radius> .5 </radius>
@@ -106,7 +106,7 @@
  		</geom_object>
 
 		<geom_object>
-		    <cylinder label = "cyl4">
+		    <cylinder label = "mcyl4">
 			<bottom>[0.0,0.0, 3.5]</bottom>
 			<top>[   0.0,0.05,3.5]</top>
 			<radius> .5 </radius>
@@ -115,8 +115,7 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-<!--
--->
+
 	    </material>
 
 	    <contact>

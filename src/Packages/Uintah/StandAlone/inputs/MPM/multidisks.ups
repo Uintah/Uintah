@@ -14,6 +14,9 @@
                <type> mpm </type>
            </SimulationComponent>
            <input_file> inputs/MPM/disks_include1.ups</input_file>
+           <SwitchCriteria type = "Timestep">
+             <timestep> 5 </timestep>
+           </SwitchCriteria>
        </subcomponent>
        <subcomponent>
            <SimulationComponent>
