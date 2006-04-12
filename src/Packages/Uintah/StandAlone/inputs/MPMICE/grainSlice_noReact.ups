@@ -228,10 +228,7 @@
            <speed_of_sound>             376.0e-4        </speed_of_sound>
            <gamma>                      1.4             </gamma>           
            <geom_object> 
-               <sphere label = "void">               
-                 <origin>             [0.0,0.0,0.0]     </origin>
-                 <radius>             0.0015            </radius>
-               </sphere>                             
+               <sphere label = "void">               </sphere>                             
 
                <res>                  [2,2,2]           </res>
                <velocity>             [0.0,0.0,0.0]     </velocity>
@@ -263,10 +260,7 @@
                    </box>
                  </difference>
 
-                  <sphere label = "grain">
-                    <origin>           [0.0,0.0,0.0]   </origin>
-                    <radius>            0.0025         </radius>
-                  </sphere>
+                  <sphere label = "grain"> </sphere>
                </difference>
 
                <res>                  [2,2,2]           </res>
