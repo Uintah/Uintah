@@ -63,26 +63,28 @@ find_connected_faces(unsigned face, TSMesh *tsm,
 
   if (connected.end() == find(connected.begin(), connected.end(), face)) {
     connected.push_back(face);
+    //cerr << "f " << face << endl;
   }
 
   TSMesh::Edge::array_type edges(3);
   tsm->get_edges(edges, (TSMesh::Face::index_type)face);
   
   TSMesh::Face::index_type f0;
-  tsm->get_neighbor(f0, face, edges[0]);
-  if (connected.end() == find(connected.begin(), connected.end(), f0)) {
+  
+  if (tsm->get_neighbor(f0, face, edges[0]) && 
+      connected.end() == find(connected.begin(), connected.end(), f0)) {
     find_connected_faces(f0, tsm, connected);
   }
 
   TSMesh::Face::index_type f1;
-  tsm->get_neighbor(f1, face, edges[1]);
-  if (connected.end() == find(connected.begin(), connected.end(), f1)) {
+  if (tsm->get_neighbor(f1, face, edges[1]) &&
+      connected.end() == find(connected.begin(), connected.end(), f1)) {
     find_connected_faces(f1, tsm, connected);
   }
 
   TSMesh::Face::index_type f2;
-  tsm->get_neighbor(f2, face, edges[2]);
-  if (connected.end() == find(connected.begin(), connected.end(), f2)) {
+  if (tsm->get_neighbor(f2, face, edges[2]) && 
+      connected.end() == find(connected.begin(), connected.end(), f2)) {
     find_connected_faces(f2, tsm, connected);
   }
 }
