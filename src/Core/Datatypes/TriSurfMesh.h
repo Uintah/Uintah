@@ -1994,20 +1994,18 @@ TriSurfMesh<Basis>::walk_face_orient(typename Face::index_type face,
   {
     const unsigned int edge = face * 3 + i;
     const unsigned int nbr = edge_neighbors_[edge];
-    if (nbr != MESH_NO_NEIGHBOR && !tested[nbr])
+    if (nbr != MESH_NO_NEIGHBOR && !tested[nbr/3])
     {
       if (!flip[face] && faces_[edge] == faces_[nbr] ||
           flip[face] && faces_[next(edge)] == faces_[nbr])
       {
-        flip[nbr] = true;
+        flip[nbr/3] = true;
       }
       walk_face_orient(nbr/3, tested, flip);
     }
   }
 }
 
-
-// TODO:  This deadlocks on synchronize_lock_.
 template <class Basis>
 void
 TriSurfMesh<Basis>::orient_faces()
