@@ -29,8 +29,9 @@ SRCS     += \
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
 	$(SRCDIR)/ShellMaterial.cc 		\
-	$(SRCDIR)/HypoElasticPlastic.cc \
-	$(SRCDIR)/ElasticPlastic.cc 
+	$(SRCDIR)/HypoElasticPlastic.cc		\
+	$(SRCDIR)/ElasticPlastic.cc		\
+	$(SRCDIR)/SoilFoam.cc
 
 SUBDIRS := $(SRCDIR)/PlasticityModels
 

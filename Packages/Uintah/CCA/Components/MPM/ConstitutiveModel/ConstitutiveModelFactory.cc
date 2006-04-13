@@ -21,6 +21,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -127,6 +128,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlastic(child,flags));
+
+  else if (mat_type ==  "soil_foam")
+    return(scinew SoilFoam(child,flags));
 
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
