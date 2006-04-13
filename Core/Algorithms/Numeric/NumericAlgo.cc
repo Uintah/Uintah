@@ -74,7 +74,7 @@ bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, 
     int* row = input->get_row();
     int* col = input->get_col();
     int sm = input->nrows();
-    int sn = input->ncols();
+    //int sn = input->ncols();
     int nnz = input->get_data_size();
   
     int newnnz =  0;
@@ -390,11 +390,15 @@ bool NumericAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHan
 } 
  
 
-bool NumericAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mapping,bool calcmapping)
+bool
+NumericAlgo::CuthillmcKee( MatrixHandle   im,
+                           MatrixHandle & om,
+                           MatrixHandle & mapping,
+                           bool calcmapping )
 {
- int *rr, *cc;
+  int *rr, *cc;
   double *d;
-  int n,m,nnz;
+  int m/*,n,nnz*/;
 
   if (im.get_rep() == 0)
   {
@@ -424,8 +428,8 @@ bool NumericAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& ma
   }
   
   m  = sim->nrows();
-  n  = sim->ncols();
-  nnz = sim->nnz;
+  //n  = sim->ncols();
+  //nnz = sim->nnz;
   rr = sim->rows;
   cc = sim->columns;
   d  = sim->a;
@@ -535,11 +539,15 @@ bool NumericAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& ma
       Q[root] = 1; nq++;
       X[nx++] = root;
       nr = 0;
-      for (int p = rr[root];p<rr[root+1];p++) if (Q[cc[p]] == 0) { R[nr++] = cc[p]; Q[cc[p]] = 1; nq++; }
+      for (int p = rr[root];p<rr[root+1];p++) {
+        if (Q[cc[p]] == 0) { 
+          R[nr++] = cc[p]; Q[cc[p]] = 1; nq++; 
+        }
+      }
     }    
   }
 
-  int t;
+  //int t;
   
   // finish mapping matrix and inverse mapping matrix
   if (calcmapping)
