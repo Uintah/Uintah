@@ -16,14 +16,14 @@ SRCS     += $(SRCDIR)/NumericAlgo.cc\
             $(SRCDIR)/BuildFEMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
+PSELIBS :=  Core/Datatypes Core/Util Core/Containers      \
             Core/Exceptions Core/Thread Core/GuiInterface \
-            Core/Geom Core/Geometry Dataflow/Network \
+            Core/Geom Core/Geometry \
             Dataflow/Modules/Fields \
-            Core/Algorithms/Util \
-            Core/Persistent \
+            Core/Algorithms/Util    \
+            Core/Persistent         \
             Core/Basis Core/Bundle
-            
+
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
