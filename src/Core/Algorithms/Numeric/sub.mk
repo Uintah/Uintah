@@ -19,7 +19,6 @@ SRCS     += $(SRCDIR)/NumericAlgo.cc\
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers      \
             Core/Exceptions Core/Thread Core/GuiInterface \
             Core/Geom Core/Geometry \
-            Dataflow/Modules/Fields \
             Core/Algorithms/Util    \
             Core/Persistent         \
             Core/Basis Core/Bundle
