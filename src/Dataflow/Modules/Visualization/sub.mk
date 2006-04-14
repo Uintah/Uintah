@@ -56,6 +56,7 @@ SRCS     += \
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowMatrix.cc\
 	$(SRCDIR)/StreamLines.cc\
+	$(SRCDIR)/HeuristicStreamLines.cc\
 	$(SRCDIR)/TextureBuilder.cc\
 	$(SRCDIR)/VolumeSlicer.cc\
 	$(SRCDIR)/VolumeVisualizer.cc\
