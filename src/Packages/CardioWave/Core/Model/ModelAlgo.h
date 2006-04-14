@@ -55,7 +55,7 @@ class ModelAlgo : public AlgoLibrary {
   public:
     ModelAlgo(ProgressReporter* pr); // normal case
 
-    bool DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& Table, MatrixHandle& MappingMatrix);
+    bool DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& Table);
     bool DMDMembraneTableToMatrix(MembraneTable MemTable, MatrixHandle& MemMatrix);
 
     bool DMDBuildStimulusTable(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom, double domain, StimulusTable& Table);
@@ -66,8 +66,7 @@ class ModelAlgo : public AlgoLibrary {
     bool DMDBuildReferenceTableByElement(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom, double domain, ReferenceTable& Table);
     bool DMDReferenceTableToMatrix(ReferenceTable StimTable, MatrixHandle& ReferenceMatrix);
 
-
-    bool DMDBuildSimulator(BundleHandle Model, std::string filename);
+    bool DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle FileName, BundleHandle& VisualizationBundle, StringHandle& Script);
 
 };
 

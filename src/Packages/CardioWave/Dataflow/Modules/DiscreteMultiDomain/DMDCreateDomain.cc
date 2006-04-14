@@ -70,13 +70,45 @@ void DMDCreateDomain::execute()
   if(ElementType->is_property("ElemLink")) ElementType->get_property("ElemLink",ElemLink);
 
   BundleHandle output = scinew Bundle();
+  if (output.get_rep() == 0)
+  {
+    error("Could not allocate output Bundle");
+    return;
+  }
+
   output->setField("Conductivity",Conductivity);
   output->setField("ElementType",ElementType);
   output->setMatrix("ConductivityTable",ConductivityTable);
   output->setMatrix("NodeLink",NodeLink);
   output->setMatrix("ElemLink",ElemLink);
+  
+  std::string sourcefile = "DomainSPRfile.c ";
+  StringHandle SourceFile = scinew String(sourcefile);
+  if (SourceFile.get_rep() == 0)
+  {
+    error("Could not allocate String");
+    return;
+  }
+  output->setString("SourceFile",SourceFile);
+  
+  std::string parameters = "scale_int=1.0\nscale_ext=1.0\nscale_bath=1.0\nscale_area=1.0\n";
+  StringHandle Parameters = scinew String(parameters);
+  if (Parameters.get_rep() == 0)
+  {
+    error("Could not allocate String");
+    return;
+  }
+  output->setString("Parameters",Parameters);
+  
+  BundleHandle DomainBundle = scinew Bundle;
+  if (DomainBundle.get_rep() == 0)
+  {
+    error("Could not allocate DomainBundle");
+    return;
+  }
 
-  send_output_handle("DomainBundle",output,true);
+  DomainBundle->setBundle("Domain",output);
+  send_output_handle("DomainBundle",DomainBundle,true);
 }
 
 } // End namespace CardioWave

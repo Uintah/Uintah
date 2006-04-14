@@ -16,4 +16,5 @@ set auto_index(CardioWave_DataIO_TimeDataReader) [list source [file join $dir Ti
 set auto_index(CardioWave_DiscreteMultiDomain_DMDAddMembrane) [list source [file join $dir DMDAddMembrane.tcl]]
 set auto_index(CardioWave_DiscreteMultiDomain_DMDAddBlockStimulus) [list source [file join $dir DMDAddBlockStimulus.tcl]]
 set auto_index(CardioWave_DiscreteMultiDomain_DMDAddReference) [list source [file join $dir DMDAddReference.tcl]]
-set auto_index(CardioWave_DiscreteMultiDomain_DMDCreateSimulator) [list source [file join $dir DMDCreateSimulator.tcl]]
+set auto_index(CardioWave_DiscreteMultiDomain_DMDCreateSimulation) [list source [file join $dir DMDCreateSimulation.tcl]]
+set auto_index(CardioWave_DiscreteMultiDomain_DMDBuildSimulation) [list source [file join $dir DMDBuildSimulation.tcl]]

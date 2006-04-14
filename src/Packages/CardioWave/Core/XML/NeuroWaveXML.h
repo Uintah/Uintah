@@ -50,7 +50,7 @@ public:
   
   std::string         get_default_name();
   std::vector<std::string> get_names();
-  NeuroWaveItem        get_neurowave(std::string name);
+  NeuroWaveItem        get_neurowave();
 
 private:
 

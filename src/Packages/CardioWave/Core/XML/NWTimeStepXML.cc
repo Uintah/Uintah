@@ -58,7 +58,7 @@ bool NWTimeStepXML::parse_xml_files()
 {
   const char *srcdir = sci_getenv("SCIRUN_SRCDIR");
 
-  std::string xmldir = std::string(srcdir) + "Packages/CardioWave/Core/XML";
+  std::string xmldir = std::string(srcdir) + "/Packages/CardioWave/Core/XML";
   std::vector<std::string> files;
 
   DIR* dir = opendir(xmldir.c_str());
@@ -116,49 +116,56 @@ bool NWTimeStepXML::add_file(std::string filename)
     return (false);
   } 
 
-  xmlNode* node = doc->children;
-  
-  for (; node != 0; node = node->next) 
+  xmlNodePtr cnode = doc->children;
+
+  for (; cnode != 0; cnode = cnode->next) 
   {
-    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("nwtimestep")) 
+    if (cnode->type == XML_ELEMENT_NODE && std::string(to_char_ptr(cnode->name)) == std::string("cw")) 
     {
-      NWTimeStepItem item;
-      xmlNodePtr inode = node->children;
-      for (;inode != 0; inode = inode->next)
+      xmlNodePtr node = cnode->children;  
+      for (; node != 0; node = node->next) 
       {
-        if (std::string(to_char_ptr(inode->name)) == std::string("name"))
+        if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("nwtimestep")) 
         {
-          item.name = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("file"))
+          NWTimeStepItem item;
+          xmlNodePtr inode = node->children;
+          for (;inode != 0; inode = inode->next)
+          {
+            if (std::string(to_char_ptr(inode->name)) == std::string("name"))
+            {
+              item.name = get_serialized_children(inode);
+            }
+            if (std::string(to_char_ptr(inode->name)) == std::string("file"))
+            {
+              item.file = get_serialized_children(inode);
+            }
+            if (std::string(to_char_ptr(inode->name)) == std::string("parameters"))
+            {
+              item.parameters = get_serialized_children(inode);
+            }
+            if (std::string(to_char_ptr(inode->name)) == std::string("description"))
+            {
+              item.description = get_serialized_children(inode);
+            }            
+          }
+          list_.push_back(item);
+        } 
+        
+        if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("defaultnwtimestep"))
         {
-          item.file = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("parameters"))
-        {
-          item.parameters = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("description"))
-        {
-          item.description = get_serialized_children(inode);
-        }            
-      }
-      list_.push_back(item);
-    } 
-    
-    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("defaultnwtimestep"))
-    {
-      xmlNodePtr inode = node->children;
-      for (;inode != 0; inode = inode->next)
-      {
-        if (std::string(to_char_ptr(inode->name)) == std::string("name"))
-        {
-          default_name_ = get_serialized_children(inode);
+          xmlNodePtr inode = node->children;
+          for (;inode != 0; inode = inode->next)
+          {
+            if (std::string(to_char_ptr(inode->name)) == std::string("name"))
+            {
+              default_name_ = get_serialized_children(inode);
+            }
+          }
         }
       }
     }
   }
-
+  
   xmlFreeDoc(doc);
   xmlFreeParserCtxt(ctxt);  
   xmlCleanupParser();

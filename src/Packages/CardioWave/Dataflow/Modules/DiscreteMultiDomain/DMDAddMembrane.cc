@@ -82,6 +82,8 @@ DMDAddMembrane::DMDAddMembrane(GuiContext* ctx)
     guimembraneparam_(get_ctx()->subVar("mem-param")),
     guimembranedesc_(get_ctx()->subVar("mem-desc"))
 {
+    std::string defaultname = synapsexml_.get_default_name();
+    guimembranename_.set(defaultname);
 }
 
 void DMDAddMembrane::execute()
@@ -93,7 +95,7 @@ void DMDAddMembrane::execute()
   
   // required ones
   if (!(get_input_handle("Geometry",Geometry,true))) return;
-  //optional ones
+  // optional ones
   get_input_handle("MembraneBundle",MembraneBundle,false);
   get_input_handle("Parameters",Parameters_from_port,false);
   
@@ -180,11 +182,6 @@ void DMDAddMembrane::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() > 1)
   {
-    if (args[1] == "get_default_name")
-    {
-      std::string defaultname = synapsexml_.get_default_name();
-      guimembranename_.set(defaultname);
-    }
     if (args[1] == "get_membrane_names")
     {
       std::vector<std::string> names = synapsexml_.get_names(); 

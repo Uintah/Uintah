@@ -1,25 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="DMDCreateSimulator" category="DiscreteMultiDomain" optional="false">
+<component name="DMDCreateSimulation" category="DiscreteMultiDomain" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      Create the files needed for the simulation.
-
+      Bundle all the information needed to build a CardioWave simulation.
     </summary>
     <description>
-      <p>        Create the files needed for the simulation.
-</p>
+      <p>
+      Bundle all the information needed to build a CardioWave simulation.
+      </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">
-      <port>
-        <name>Filename</name>
-        <datatype>SCIRun::String</datatype>
-      </port>
       <port>
         <name>DomainBundle</name>
         <datatype>SCIRun::Bundle</datatype>
@@ -29,25 +25,21 @@
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
-        <name>StimulationBundle</name>
+        <name>StimulusBundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
         <name>ReferenceBundle</name>
-        <datatype>SCIRun::Bunde</datatype>
+        <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
         <name>ParameterBundle</name>
-        <datatype>SCIRun::Bunde</datatype>
+        <datatype>SCIRun::Bundle</datatype>
       </port>      
     </inputs>
     <outputs>
       <port>
         <name>SimulationBundle</name>
-        <datatype>SCIRun::Bundle</datatype>
-      </port>
-      <port>
-        <name>VisualizationBundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
     </outputs>

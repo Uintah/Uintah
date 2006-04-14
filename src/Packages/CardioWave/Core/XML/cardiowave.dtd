@@ -57,15 +57,17 @@
 
 <!-- ********** Elements ********** -->
 
-<!ELEMENT membrane    (name, file+, nodetype, parameters, description?)>
-<!ELEMENT synapse     (name, file+, nodetype, parameters, description?)>
-<!ELEMENT cwsolver    (name, file+, parameters, description?)>
-<!ELEMENT nwsolver    (name, file+, parameters, description?)>
-<!ELEMENT cwtimestep  (name, file+, parameters, description?)>
-<!ELEMENT nwtimestep  (name, file+, parameters, description?)>
-<!ELEMENT cardiowave  (file+, parameters, description?)>
-<!ELEMENT neurowave   (file+, parameters, description?)>
-<!ELEMENT output      (name, file+, parameters, description?)>
+<!ELEMENT cw (membrane*,synapse*,cwsolver*,nwsolver*,cwtimestep*,nwtimestep*,output*,neurowave?,cardiowave?,defaultmembrane?,defaultsynapse?,defaultcwsolver?,defaultnwsolver?,defaultcwtimestep?,defaultnwtimestep?,defaultoutput?)>
+
+<!ELEMENT membrane    (name, file, nodetype, parameters, description?)>
+<!ELEMENT synapse     (name, file, nodetype, parameters, description?)>
+<!ELEMENT cwsolver    (name, file, parameters, description?)>
+<!ELEMENT nwsolver    (name, file, parameters, description?)>
+<!ELEMENT cwtimestep  (name, file, parameters, description?)>
+<!ELEMENT nwtimestep  (name, file, parameters, description?)>
+<!ELEMENT cardiowave  (file, parameters, description?)>
+<!ELEMENT neurowave   (file, parameters, description?)>
+<!ELEMENT output      (name, file, parameters, description?)>
 
 <!ELEMENT defaultmembrane (name)>
 <!ELEMENT defaultsynapse  (name)>

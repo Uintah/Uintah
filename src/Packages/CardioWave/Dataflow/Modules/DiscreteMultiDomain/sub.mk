@@ -17,7 +17,8 @@ SRCS     += \
 	$(SRCDIR)/DMDAddBlockStimulus.cc\
 	$(SRCDIR)/DMDAddReference.cc\
 	$(SRCDIR)/DMDCreateDomain.cc\
-	$(SRCDIR)/DMDCreateSimulator.cc\
+	$(SRCDIR)/DMDCreateSimulation.cc\
+	$(SRCDIR)/DMDBuildSimulation.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

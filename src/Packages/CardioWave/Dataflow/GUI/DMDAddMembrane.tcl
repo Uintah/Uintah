@@ -12,11 +12,10 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddMembrane {
       global $this-mem-desc
       
       set $this-mem-names {}
-      set $this-mem-name "NONE"
+ #     set $this-mem-name "NONE"
       set $this-mem-param ""
       set $this-mem-desc ""
-  
-      $this-c get_default_name
+    
     }
 
     method ui {} {
@@ -74,9 +73,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddMembrane {
 
       set w .ui[modname]
       if {[winfo exists $w]} {
-        puts $this-mem-param
-        puts [set $this-mem-param]
-
+ 
         set mem [$w.m childsite]   
         $mem.param clear
         $mem.param insert end [set $this-mem-param]

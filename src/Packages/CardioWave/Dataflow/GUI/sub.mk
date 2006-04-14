@@ -37,7 +37,8 @@ SRCS := \
 	$(SRCDIR)/DMDAddMembrane.tcl\
 	$(SRCDIR)/DMDAddBlockStimulus.tcl\
 	$(SRCDIR)/DMDAddReference.tcl\
-	$(SRCDIR)/DMDCreateSimulator.tcl\
+	$(SRCDIR)/DMDCreateSimulation.tcl\
+	$(SRCDIR)/DMDBuildSimulation.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
