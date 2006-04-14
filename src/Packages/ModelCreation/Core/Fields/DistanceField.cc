@@ -65,7 +65,7 @@ bool DistanceFieldCellAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
     return (false);
   }
   
-  if (!(fi.is_volume()))
+  if (!(fobj.is_volume()))
   {
     pr->error("DistanceField: This function is only defined for volume meshes");
     return (false);    
@@ -192,7 +192,7 @@ bool DistanceFieldEdgeAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
     return (false);
   }
   
-  if (!(fi.is_curve()))
+  if (!(fobj.is_curve()))
   {
     pr->error("DistanceField: This function is only defined for curve meshes");
     return (false);    
@@ -252,7 +252,7 @@ bool DistanceFieldNodeAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
     return (false);
   }
   
-  if (!(fi.is_pointcloud()))
+  if (!(fobj.is_pointcloud()))
   {
     pr->error("DistanceField: This function is only defined for point cloud meshes");
     return (false);    

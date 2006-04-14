@@ -80,6 +80,7 @@ bool SplitFieldByDomainAlgo::SplitFieldByDomain(ProgressReporter *pr, FieldHandl
     return(false);
   }
 
+
   return(algo->SplitFieldByDomain(pr,input,output));    
 }
 

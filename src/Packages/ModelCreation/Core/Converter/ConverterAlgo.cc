@@ -39,6 +39,8 @@ ConverterAlgo::ConverterAlgo(ProgressReporter* pr) :
 
 bool ConverterAlgo::MatrixToDouble(MatrixHandle matrix, double &val)
 {
+  if (matrix.get_rep() == 0) return (false);
+
   if ((matrix->nrows() * matrix->ncols()) != 1)
   {
     error("MatrixToDouble: Matrix has not dimensions 1 x 1");
@@ -58,6 +60,8 @@ bool ConverterAlgo::MatrixToDouble(MatrixHandle matrix, double &val)
 
 bool ConverterAlgo::MatrixToInt(MatrixHandle matrix, int &val)
 {
+  if (matrix.get_rep() == 0) return (false);
+
   if ((matrix->nrows() * matrix->ncols()) != 1)
   {
     error("MatrixToInt: Matrix has not dimensions 1 x 1");
@@ -83,6 +87,7 @@ bool ConverterAlgo::MatrixToInt(MatrixHandle matrix, int &val)
 
 bool ConverterAlgo::MatrixToVector(MatrixHandle matrix, Vector& vec)
 {
+  if (matrix.get_rep() == 0) return (false);
 
   MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
   if (mat.get_rep() == 0)
@@ -122,6 +127,8 @@ bool ConverterAlgo::MatrixToVector(MatrixHandle matrix, Vector& vec)
 
 bool ConverterAlgo::MatrixToTensor(MatrixHandle matrix, Tensor& ten)
 {
+  if (matrix.get_rep() == 0) return (false);
+
   MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
   if (mat.get_rep() == 0)
   {
