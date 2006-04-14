@@ -188,6 +188,7 @@ SRCS := \
 	$(SRCDIR)/ShowString.tcl\
 	$(SRCDIR)/CreateMatrix.tcl\
 	$(SRCDIR)/GetFileName.tcl\
+	$(SRCDIR)/HeuristicStreamLines.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library
