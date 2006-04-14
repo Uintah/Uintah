@@ -116,54 +116,61 @@ bool SynapseXML::add_file(std::string filename)
     std::cerr << "XMLError for file '" << filename << "': " << error->message << std::endl;
     return (false);
   } 
+  xmlNodePtr cnode = doc->children;
 
-  xmlNode* node = doc->children;
-  
-  for (; node != 0; node = node->next) 
+  for (; cnode != 0; cnode = cnode->next) 
   {
-    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("synapse")) 
+    if (cnode->type == XML_ELEMENT_NODE && std::string(to_char_ptr(cnode->name)) == std::string("cw")) 
     {
-      SynapseItem item;
-      xmlNodePtr inode = node->children;
-      for (;inode != 0; inode = inode->next)
+      xmlNodePtr node = cnode->children;
+          
+      for (; node != 0; node = node->next) 
       {
-        if (std::string(to_char_ptr(inode->name)) == std::string("name"))
+        if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("synapse")) 
         {
-          item.synapsename = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("file"))
+          SynapseItem item;
+          xmlNodePtr inode = node->children;
+          for (;inode != 0; inode = inode->next)
+          {
+            if (std::string(to_char_ptr(inode->name)) == std::string("name"))
+            {
+              item.synapsename = get_serialized_children(inode);
+            }
+            if (std::string(to_char_ptr(inode->name)) == std::string("file"))
+            {
+              item.sourcefile = get_serialized_children(inode);
+            }
+            if (std::string(to_char_ptr(inode->name)) == std::string("nodetype"))
+            {
+              item.nodetype = get_serialized_children(inode);
+            }
+            if (std::string(to_char_ptr(inode->name)) == std::string("parameters"))
+            {
+              item.parameters = get_serialized_children(inode);
+            }
+            if (std::string(to_char_ptr(inode->name)) == std::string("description"))
+            {
+              item.description = get_serialized_children(inode);
+            }            
+          }
+          list_.push_back(item);
+        } 
+        
+        if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("defaultsynapse"))
         {
-          item.sourcefile = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("nodetype"))
-        {
-          item.nodetype = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("parameters"))
-        {
-          item.parameters = get_serialized_children(inode);
-        }
-        if (std::string(to_char_ptr(inode->name)) == std::string("description"))
-        {
-          item.description = get_serialized_children(inode);
-        }            
+          xmlNodePtr inode = node->children;
+          for (;inode != 0; inode = inode->next)
+          {
+            if (std::string(to_char_ptr(inode->name)) == std::string("name"))
+            {
+              default_name_ = get_serialized_children(inode);
+            }
+          }
+        }    
       }
-      list_.push_back(item);
-    } 
-    
-    if (node->type == XML_ELEMENT_NODE && std::string(to_char_ptr(node->name)) == std::string("defaultsynapse"))
-    {
-      xmlNodePtr inode = node->children;
-      for (;inode != 0; inode = inode->next)
-      {
-        if (std::string(to_char_ptr(inode->name)) == std::string("name"))
-        {
-          default_name_ = get_serialized_children(inode);
-        }
-      }
-    }    
+    }
   }
-
+  
   xmlFreeDoc(doc);
   xmlFreeParserCtxt(ctxt);  
   xmlCleanupParser();
