@@ -1094,7 +1094,7 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
     if (d_doRadCalc) {
       d_DORadiation->boundaryCondition(pc, patch, &radVars, &constRadVars);
       
-#if 1     
+#if 0     
       //__________________________________
       //  set boundary conditions  -- DEBUGGING ONLY  
       vector<Patch::FaceType>::const_iterator iter;
