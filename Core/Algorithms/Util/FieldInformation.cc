@@ -761,7 +761,7 @@ FieldInformation::make_cubichmtdata()
 bool
 FieldInformation::is_pointcloud()
 {
-  if (mesh_type == "PointCloud") return (true);
+  if (mesh_type == "PointCloudMesh") return (true);
   return false;
 }
 
