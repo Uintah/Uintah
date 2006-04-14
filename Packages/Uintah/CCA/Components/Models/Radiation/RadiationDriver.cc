@@ -314,7 +314,7 @@ void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
   rad_ps->appendElement("table_or_ice_temp_density",
                         d_table_or_ice_temp_density);
   rad_ps->appendElement("useTableValues",d_useTableValues);
-  rad_ps->appendElement("computeCO2_H2)_from_f",d_computeCO2_H2O_from_f);
+  rad_ps->appendElement("computeCO2_H2_from_f",d_computeCO2_H2O_from_f);
 
   ProblemSpecP geom_ps = rad_ps->appendChild("geom_object");
   for (vector<GeometryPiece*>::const_iterator it = d_geom_pieces.begin();
