@@ -1815,7 +1815,7 @@ TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1,
   p = shared.insert(faces_[face2 + 1]);
   if (!p.second) { *ns = faces_[face2 + 1]; ++ns;}
   p = shared.insert(faces_[face2 + 2]);
-  if (!p.second) { *ns = faces_[face2]; }
+  if (!p.second) { *ns = faces_[face2 + 2]; }
 
   // no shared nodes means no shared edge.
   if (shared.size() > 4) return false;
