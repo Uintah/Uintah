@@ -18,8 +18,6 @@ SRCS     += $(SRCDIR)/DataIOAlgo.cc\
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Core/Exceptions Core/Thread Core/GuiInterface \
             Core/Geom Core/Geometry Dataflow/Network \
-            Packages/ModelCreation/Core/Algorithms \
-            Packages/ModelCreation/Core/Util \
             Dataflow/Modules/Fields \
             Core/Algorithms/Fields \
             Core/Algorithms/Util \

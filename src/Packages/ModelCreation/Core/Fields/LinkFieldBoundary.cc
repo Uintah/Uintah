@@ -53,17 +53,12 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
     pr->error("LinkFieldBoundary: this function is only defined for curve, surface and volume data");
     return (false);
   }
-
-  std::string algotype = "";  
-  if (fi.is_volume()) algotype = "Volume";
-  if (fi.is_surface()) algotype = "Surface";
-  if (fi.is_curve()) algotype = "Curve";
   
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "LinkFieldBoundary."+fi.get_field_filename()+".",
-    "LinkFieldBoundaryAlgo","LinkFieldBoundary"+algotype+"AlgoT",
+    "LinkFieldBoundaryAlgo","LinkFieldBoundaryAlgoT",
     fi.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
