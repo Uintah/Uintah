@@ -200,7 +200,7 @@ AC_DEFUN([SCI_COMPILE_LINK_TEST], [
 ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
 
 ifelse([$9],[optional],,[$9],[not-optional],,
-       [AC_FATAL(arg 9 must be either 'optional' or 'not-optional')])dnl
+       [AC_FATAL(arg 9 must be either 'optional' or 'not-optional' got $9)])dnl
 
 AC_MSG_CHECKING(for $2 ($9))
 _sci_savelibs=$LIBS

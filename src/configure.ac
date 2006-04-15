@@ -3023,22 +3023,28 @@ _sci_optional=optional
 
 if test "$with_mesquite" = "yes"; then
   # If --with-mesquite is specified without a parameter, then it makes it required
-  _sci_optional=required
+  _sci_optional=not-optional
 else 
   if test "$with_mesquite"; then
     # If --with-mesquite has a parameter, then use it
     _sci_lib="$with_mesquite"
-    _sci_inc="$with_mesquite/include"
+    _sci_inc="$with_mesquite/include $with_mesquite/includeLinks"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=specific
+    _sci_optional=not-optional
   fi 
 fi
 
-SCI_TRY_LINK(MESQUITE,Mesquite library,Mesquite.hpp,$_sci_inc,
-    mesquite,$_sci_lib,,[
-      double d = Mesquite::cbrt_sqr(1.0);
-    ],$_sci_optional)
+SCI_COMPILE_LINK_TEST(MESQUITE,Mesquite library,
+[
+#include <Mesquite.hpp> 
+#include <MeshImpl.hpp>
+], $_sci_inc, mesquite, $_sci_lib,, 
+[
+  double d = Mesquite::cbrt_sqr(1.0);
+  Mesquite::MeshImpl mi;
+], optional)
 
+  
 if test "$HAVE_MESQUITE" = "yes"; then
   DEF_MESQUITE="#define HAVE_MESQUITE 1"
 fi
