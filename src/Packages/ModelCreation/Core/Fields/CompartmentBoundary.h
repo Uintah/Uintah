@@ -115,7 +115,7 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   typename FSRC::mesh_type::DElem::iterator fit, fit_end;
   unsigned int real_numfaces = 0;
   imesh->begin(fit);
-  imesh->end(fit);
+  imesh->end(fit_end);
   while (fit != fit_end)
   {
     if(*fit > real_numfaces) real_numfaces = *fit;

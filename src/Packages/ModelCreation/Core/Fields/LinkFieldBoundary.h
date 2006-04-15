@@ -103,7 +103,7 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
 
 #ifdef HAVE_HASH_MAP
   typedef hash_multimap<int,delemidx_type> delemidxmap_type;
-  typedef hash_map<unsigned int, Point> pointmap_type;
+  typedef std::vector<Point> pointmap_type;
 #else
   typedef multimap<int, delemidx_type> delemidxmap_type;
   typedef std::vector<Point> pointmap_type;
@@ -132,25 +132,20 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
   typename FSRC::mesh_type::DElem::iterator fit, fit_end;
   unsigned int real_numdelems = 0;
   imesh->begin(fit);
-  imesh->end(fit);
+  imesh->end(fit_end);
   while (fit != fit_end)
   {
-    if(*fit > real_numdelems) real_numdelems = *fit;
+    if(static_cast<unsigned int>(*fit) > real_numdelems) real_numdelems = static_cast<unsigned int>(*fit);
     ++fit;
   }
-  
 
-  // A list with the actual nodes that are being used 
   pointmap_type pointmap(numnodes);
-
   delemidxmap_type delemidx;
 
   // Find all the delems that are at the delem
   // I.E. find the field boundary
   
   {
-    
-        
     typename FSRC::mesh_type::Elem::iterator be, ee;
     typename FSRC::mesh_type::Elem::index_type nci, ci;
     typename FSRC::mesh_type::DElem::array_type delems; 
@@ -191,6 +186,7 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
       if (nodelist_create[w] != nodelist[v]) {nodelist.push_back(nodelist_create[w]); v++; }
     }
   }
+
   
   // We now have the boundary
   // Now determine the shifts in the mesh and points of origin
@@ -348,7 +344,7 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
     imesh->get_nodes(nodes,idx);
     std::vector<Point> points(nodes.size());
     std::vector<unsigned int> delemlink(nodes.size());
-         
+
     while (it != it_end)
     { 
       idx = (*it).delem;
@@ -477,7 +473,6 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
     }
     rows[numnodes] = kk;
 
-    
     // 2nd correction, link indirect nodes
     
     std::vector<int> buffer(16);
@@ -496,13 +491,14 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
         {
           int v;
           for (v=0; v < hh; v++) if (cols[u] == buffer[v]) break;
-          if (v == hh) { buffer[hh] = cols[u]; hh++;}
+          if (v == hh) { buffer[hh] = cols[u]; hh++; }
         }
         h++;
       }
-      kk+= (hh-1);  
+      kk+= hh;  
     }
-
+ 
+    
     nnz = kk;
 
     int *nrows =    scinew int[numnodes+1];
@@ -517,6 +513,7 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
       pr->error("LinkFieldBoundary: Could not allocate memory for matrix");
       return (false);
     }
+  
 
     kk = 0;
     nrows[0] = 0;
@@ -538,8 +535,8 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
         h++;
       }
 
-      std::sort(buffer.begin()+1,buffer.begin()+hh);
-      for (int s=1;s<hh;s++) 
+      std::sort(buffer.begin(),buffer.begin()+hh);
+      for (int s=0;s<hh;s++) 
       {
         ncols[kk] = buffer[s];
         nvals[kk] = 1.0;
@@ -548,6 +545,9 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
       nrows[r+1] = kk;
     }
 
+    delete[] rows;
+    delete[] cols;
+
     NodeLink = dynamic_cast<Matrix *>(scinew SparseRowMatrix(numnodes,numnodes,nrows,ncols,nnz,nvals));
   
     if (NodeLink.get_rep() == 0)
@@ -555,10 +555,9 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
       pr->error("LinkFieldBoundary: Could not build mapping matrix");
       return (false);
     }
-
   }
-
-
+ 
+ 
   {
     std::sort(elemlink.begin(),elemlink.end());  
     int nnz = 0;
@@ -572,9 +571,9 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
         p = q; nnz++;
       }
     }
-    
+        
     // reserve memory
-    
+  
     int *rows =    scinew int[real_numdelems+1];
     int *cols =    scinew int[nnz];
     double *vals = scinew double[nnz];
@@ -606,6 +605,7 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
         }
       }      
     }
+
     rows[real_numdelems] = kk;
     ElemLink = dynamic_cast<Matrix *>(scinew SparseRowMatrix(real_numdelems,real_numdelems,rows,cols,nnz,vals));
   
