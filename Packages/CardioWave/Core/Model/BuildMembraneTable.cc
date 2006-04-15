@@ -75,14 +75,11 @@ bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandl
     return (false);
   }  
 
-  std::string algotype = "BuildMembraneTableVolAlgoT";
-  if (fi2.is_curve()) algotype = "BuildMembraneTableSurfAlgoT";
-
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "BuildMembraneTable."+fi.get_field_filename()+"."+fi2.get_field_filename()+".",
-    "BuildMembraneTableAlgo",algotype,
+    "BuildMembraneTableAlgo","BuildMembraneTableAlgoT",
     fi.get_field_name()+","+fi2.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
