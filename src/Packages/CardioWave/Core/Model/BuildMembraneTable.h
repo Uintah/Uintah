@@ -139,7 +139,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   typename FVOL::mesh_type::DElem::iterator fit, fit_end;
   unsigned int real_numelementdelems = 0;
   elementtypemesh->begin(fit);
-  elementtypemesh->end(fit);
+  elementtypemesh->end(fit_end);
   while (fit != fit_end)
   {
     if(*fit > real_numelementdelems) real_numelementdelems = *fit;
