@@ -106,8 +106,21 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   
   typename FSRC::mesh_type::Node::size_type numnodes;
   imesh->size(numnodes);
-  typename FSRC::mesh_type::DElem::size_type numfaces;
-  imesh->size(numfaces);
+  
+  // WE NEED TO CALCULATE REAL NUMBER OF FACES
+  // FOR A NUMBER OF MESHES size() DOES NOT GIVE HIGHEST INDEX NOR THE NUMBER
+  // OF INDICES THAT EXIST. HENCE WE NEED TO DO IT MANUALLY. 
+  // HOPEFULLY ONE DAY SOMEONE WILL GET THE BRIGHT IDEA TO FIX IT.
+  
+  typename FSRC::mesh_type::DElem::iterator fit, fit_end;
+  unsigned int real_numfaces = 0;
+  imesh->begin(fit);
+  imesh->end(fit);
+  while (fit != fit_end)
+  {
+    if(*fit > real_numfaces) real_numfaces = *fit;
+    ++fit;
+  }
 
   bool isdomlink = false;
   int* domlinkrr = 0;
@@ -115,7 +128,7 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   
   if (DomainLink.get_rep())
   {
-    if ((numfaces != DomainLink->nrows())&&(numfaces != DomainLink->ncols()))
+    if ((real_numfaces != DomainLink->nrows())&&(real_numfaces != DomainLink->ncols()))
     {
       pr->error("CompartmentBoundary: The Domain Link property is not of the right dimensions");
       return (false);        
@@ -138,9 +151,6 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   typename FDST::mesh_type::Node::array_type onodes; 
   typename FSRC::mesh_type::Node::index_type a;
   typename FSRC::value_type val1, val2, minval, maxval;
-
-  inodes.clear();
-  onodes.clear();
 
   minval = static_cast<typename FSRC::value_type>(minrange);
   maxval = static_cast<typename FSRC::value_type>(maxrange);
@@ -168,7 +178,6 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
           int cc = domlinkcc[rr];
           typename FSRC::mesh_type::Node::array_type nodes;
           typename FSRC::mesh_type::Elem::array_type elems;           
-          typename FSRC::mesh_type::DElem::array_type delems;           
           typename FSRC::mesh_type::DElem::array_type delems2;           
           typename FSRC::mesh_type::DElem::index_type idx;
 
