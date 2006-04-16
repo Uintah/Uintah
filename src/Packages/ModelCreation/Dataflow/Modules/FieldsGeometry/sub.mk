@@ -21,6 +21,7 @@ SRCS     += \
 	$(SRCDIR)/MergeNodes.cc\
 	$(SRCDIR)/LinkFieldBoundary.cc\
 	$(SRCDIR)/Unstructure.cc\
+	$(SRCDIR)/ScaleField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -31,6 +32,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Packages/ModelCreation/Core/Fields \
         Packages/ModelCreation/Core/Algorithms \
         Packages/ModelCreation/Core/Datatypes \
+        Packages/ModelCreation/Core/Converter \
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

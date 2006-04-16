@@ -59,6 +59,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SphericalSurface.tcl\
 	$(SRCDIR)/StringReader.tcl\
 	$(SRCDIR)/StringWriter.tcl\
+	$(SRCDIR)/ScaleField.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

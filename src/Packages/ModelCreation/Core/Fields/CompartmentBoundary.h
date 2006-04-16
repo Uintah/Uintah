@@ -100,9 +100,9 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   typedef multimap<unsigned int,pointtype> hash_map_type;
 #endif
 
-  if (imesh->dimensionality() == 1) imesh->synchronize(Mesh::NODES_E|Mesh::EDGES_E);
-  if (imesh->dimensionality() == 2) imesh->synchronize(Mesh::EDGES_E|Mesh::FACES_E|Mesh::EDGE_NEIGHBORS_E);
-  if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E|Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E);
+  if (imesh->dimensionality() == 1) imesh->synchronize(Mesh::NODES_E|Mesh::EDGES_E|Mesh::NODE_NEIGHBORS_E);
+  if (imesh->dimensionality() == 2) imesh->synchronize(Mesh::EDGES_E|Mesh::FACES_E|Mesh::EDGE_NEIGHBORS_E|Mesh::NODE_NEIGHBORS_E);
+  if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E|Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E|Mesh::NODE_NEIGHBORS_E);
   
   typename FSRC::mesh_type::Node::size_type numnodes;
   imesh->size(numnodes);
@@ -162,13 +162,15 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
 
   while (be != ee) 
   {
+  
     ci = *be;
     imesh->get_delems(delems,ci);
+
     for (size_t p =0; p < delems.size(); p++)
     {
       bool neighborexist = false;
       bool includeface = false;
-      
+
       neighborexist = imesh->get_neighbor(nci,ci,delems[p]);
 
       if ((!neighborexist)&&(isdomlink))
@@ -184,10 +186,11 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
           imesh->to_index(idx,cc);
           imesh->get_nodes(nodes,idx);       
           imesh->get_elems(elems,nodes[0]);
-          
+
           for (int r=0; r<elems.size(); r++)
           {
             imesh->get_delems(delems2,elems[r]);
+
             for (int s=0; s<delems2.size(); s++)
             {
               if (delems2[s]==idx) { nci = elems[r]; neighborexist = true; break; }
@@ -197,7 +200,6 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
           if (neighborexist) break;
         }
       }
-
 
       if (neighborexist)
       {
@@ -230,7 +232,7 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
       if (includeface)
       {
         imesh->get_nodes(inodes,delems[p]);
-        if (onodes.size() == 0) onodes.resize(inodes.size());
+        onodes.resize(inodes.size());
         for (int q=0; q< onodes.size(); q++)
         {
           a = inodes[q];
