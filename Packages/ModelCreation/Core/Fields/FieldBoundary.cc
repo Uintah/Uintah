@@ -51,12 +51,6 @@ bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, F
     return (false);
   }
   
-  if (!(fi.is_constantdata()))
-  {
-    pr->error("FieldBoundary: This function needs a compartment definition on the elements (constant element data)");
-    return (false);    
-  }
-  
   if (!(fi.is_volume()||fi.is_surface()||fi.is_curve()))
   {
     pr->error("FieldBoundary: this function is only defined for curve, surface and volume data");
@@ -89,7 +83,7 @@ bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, F
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "FieldBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "FieldBoundary2."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "FieldBoundaryAlgo","FieldBoundaryAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 

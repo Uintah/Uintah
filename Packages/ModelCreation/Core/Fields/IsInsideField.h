@@ -104,12 +104,10 @@ bool IsInsideFieldAlgoT<FSRC,FDST,FOBJ>::IsInsideField(ProgressReporter *pr, Fie
         if (objmesh->locate(cidx,p))
         {
           val *= 1; // it is inside
-          std::cout << "locate = true\n";
         }
         else
         {
           val *= 0;
-          std::cout << "locate = false\n";
         }
       }
       ofield->set_value(val,*(it));
@@ -131,13 +129,11 @@ bool IsInsideFieldAlgoT<FSRC,FDST,FOBJ>::IsInsideField(ProgressReporter *pr, Fie
       imesh->get_center(p,*it);
       if (objmesh->locate(cidx,p))
       {
-        val = 1; // it is inside
-        std::cout << "locate = true\n";        
+        val = 1; // it is inside    
       }
       else
       {
-        val = 0;
-        std::cout << "locate = false\n";        
+        val = 0;       
       }
       
       ofield->set_value(val,*(it));

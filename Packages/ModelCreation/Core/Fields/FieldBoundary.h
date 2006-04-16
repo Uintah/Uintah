@@ -149,8 +149,8 @@ bool FieldBoundaryAlgoT<FSRC, FDST>::FieldBoundary(ProgressReporter *pr, FieldHa
   
   if (ifield->basis_order() == 0)
   {
-    typename FSRC::Elem::size_type isize;
-    typename FSRC::Elem::size_type osize;
+    typename FSRC::mesh_type::Elem::size_type isize;
+    typename FDST::mesh_type::Elem::size_type osize;
     imesh->size(isize);
     omesh->size(osize);
 
@@ -182,8 +182,8 @@ bool FieldBoundaryAlgoT<FSRC, FDST>::FieldBoundary(ProgressReporter *pr, FieldHa
   }
   else if (ifield->basis_order() == 1)
   {
-    typename FSRC::Node::size_type isize;
-    typename FSRC::Node::size_type osize;
+    typename FSRC::mesh_type::Node::size_type isize;
+    typename FDST::mesh_type::Node::size_type osize;
     imesh->size(isize);
     omesh->size(osize);
 
