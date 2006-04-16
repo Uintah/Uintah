@@ -31,7 +31,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Packages/ModelCreation/Core/Fields \
         Packages/ModelCreation/Core/Numeric \
         Packages/CardioWave/Core/XML \
-        
+        Packages/CardioWave/Core/Model
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

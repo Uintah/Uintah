@@ -55,15 +55,16 @@ class ModelAlgo : public AlgoLibrary {
   public:
     ModelAlgo(ProgressReporter* pr); // normal case
 
-    bool DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& Table);
+    bool DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& Table, MatrixHandle& MappingMatrix);
+    bool DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& Volume, MatrixHandle& MembaneMatrix);
     bool DMDMembraneTableToMatrix(MembraneTable MemTable, MatrixHandle& MemMatrix);
 
-    bool DMDBuildStimulusTable(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom, double domain, StimulusTable& Table);
-    bool DMDBuildStimulusTableByElement(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom, double domain, StimulusTable& Table);
+    bool DMDBuildStimulusTable(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom, double domain, StimulusTable& Table,MatrixHandle& MappingMatrix);
+    bool DMDBuildStimulusTableByElement(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom, double domain, StimulusTable& Table,MatrixHandle& MappingMatrix);
     bool DMDStimulusTableToMatrix(StimulusTable StimTable, MatrixHandle& StimulusMatrix);
 
-    bool DMDBuildReferenceTable(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom, double domain, ReferenceTable& Table);
-    bool DMDBuildReferenceTableByElement(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom, double domain, ReferenceTable& Table);
+    bool DMDBuildReferenceTable(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom, double domain, ReferenceTable& Table,MatrixHandle& MappingMatrix);
+    bool DMDBuildReferenceTableByElement(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom, double domain, ReferenceTable& Table,MatrixHandle& MappingMatrix);
     bool DMDReferenceTableToMatrix(ReferenceTable StimTable, MatrixHandle& ReferenceMatrix);
 
     bool DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle FileName, BundleHandle& VisualizationBundle, StringHandle& Script);

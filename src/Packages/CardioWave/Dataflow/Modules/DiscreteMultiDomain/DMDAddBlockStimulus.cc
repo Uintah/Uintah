@@ -121,13 +121,22 @@ void DMDAddBlockStimulus::execute()
 
   
   int stimulus_num = 0;
-  std::ostringstream oss;
-  oss << "Stimulus_" << stimulus_num;
-  while (StimulusBundle->isBundle(oss.str()))
+  std::string fieldname;
+  
+  {
+    std::ostringstream oss;
+    oss << "Stimulus_" << stimulus_num;
+    fieldname = oss.str(); 
+  }
+  
+  while (StimulusBundle->isBundle(fieldname))
   {
     stimulus_num++;
-    oss.clear();
-    oss << "Stimulus_" << stimulus_num;
+    {
+      std::ostringstream oss;
+      oss << "Stimulus_" << stimulus_num;
+      fieldname = oss.str(); 
+    }
   }
 
   BundleHandle Stimulus;
@@ -138,9 +147,12 @@ void DMDAddBlockStimulus::execute()
     return;
   }
   
-  oss.clear();
-  oss << "Stimulus_" << stimulus_num; 
-  StimulusBundle->setBundle(oss.str(),Stimulus);
+  {
+    std::ostringstream oss;
+    oss << "Stimulus_" << stimulus_num;
+    fieldname = oss.str(); 
+  }
+  StimulusBundle->setBundle(fieldname,Stimulus);
     
   Stimulus->setField("Geometry",Geometry);
 

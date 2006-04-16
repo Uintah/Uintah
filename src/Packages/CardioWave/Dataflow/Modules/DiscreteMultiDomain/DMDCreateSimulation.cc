@@ -179,7 +179,6 @@ void DMDCreateSimulation::execute()
   SimulationBundle->merge(ReferenceBundle);
   for (int q=0; q<ParameterBundle.size(); q++) SimulationBundle->merge(ParameterBundle[q]);  
 
-std::cout << "Merged bundles\n";
   // get all input from GUI 
   std::string cmd;
   cmd = get_id() + " get_param";
@@ -197,8 +196,11 @@ std::cout << "Merged bundles\n";
   NWTimeStepItem tstepitem = tstepxml_.get_nwtimestep(tstepname);
     
   std::string paramstr = guisolverparam_.get();
+  paramstr += "# Parameters for timestepper\n\n";
   paramstr += guitstepparam_.get();
+  paramstr += "# Parameters for output module\n\n";
   paramstr += guioutputparam_.get();
+  paramstr += "# Parameters for solver\n\n";
   paramstr += guicwaveparam_.get();
 
   DomainBundle = SimulationBundle->getBundle("Domain");
@@ -210,61 +212,92 @@ std::cout << "Merged bundles\n";
   StringHandle DomainParam = DomainBundle->getString("Parameters");
   if (DomainParam.get_rep())
   {
-    paramstr += "# Parameters for domain";
+    paramstr += "# Parameters for domain\n\n";
     paramstr += DomainParam->get() + "\n";
   }
   
   int membrane_num;
   int reference_num;
   int stimulus_num;
-  std::ostringstream oss;
-  
+  std::string fieldname;
   membrane_num = 0;
-  oss << "Membrane_" << membrane_num;
-  while (SimulationBundle->isBundle(oss.str()))
+
   {
-    MembraneBundle = SimulationBundle->getBundle(oss.str());
+    std::ostringstream oss;
+    oss << "Membrane_" << membrane_num;
+    fieldname = oss.str();
+  }
+  
+  while (SimulationBundle->isBundle(fieldname))
+  {
+    MembraneBundle = SimulationBundle->getBundle(fieldname);
     StringHandle MembraneParam = MembraneBundle->getString("Parameters");
     if (MembraneParam.get_rep())
     {
-      paramstr += "# Parameters for membrane";
+      std::ostringstream oss;
+      oss << membrane_num;
+      paramstr += "# Parameters for membrane " + oss.str() + "\n\n";
       paramstr += MembraneParam->get() + "\n";
     }
     membrane_num++;
-    oss.clear();
-    oss << "Membrane_" << membrane_num;
+    {
+      std::ostringstream oss;
+      oss << "Membrane_" << membrane_num;
+      fieldname = oss.str();
+    }
   }
 
+
   stimulus_num = 0;
-  oss << "Stimulus_" << stimulus_num;
-  while (SimulationBundle->isBundle(oss.str()))
+
   {
-    StimulusBundle = SimulationBundle->getBundle(oss.str());
+    std::ostringstream oss;
+    oss << "Stimulus_" << stimulus_num;
+    fieldname = oss.str();
+  }
+
+  while (SimulationBundle->isBundle(fieldname))
+  {
+    StimulusBundle = SimulationBundle->getBundle(fieldname);
     StringHandle StimulusParam = StimulusBundle->getString("Parameters");
     if (StimulusParam.get_rep())
     {
-      paramstr += "# Parameters for stimulus";
+      std::ostringstream oss;
+      oss << stimulus_num;
+      paramstr += "# Parameters for stimulus " + oss.str() + "\n\n";
       paramstr += StimulusParam->get() + "\n";
     }
     stimulus_num++;
-    oss.clear();
-    oss << "Stimulus_" << stimulus_num;
+    {
+      std::ostringstream oss;
+      oss << "Stimulus_" << stimulus_num;
+      fieldname = oss.str();
+    }
   }
 
   reference_num = 0;
-  oss << "Reference_" << reference_num;
-  while (SimulationBundle->isBundle(oss.str()))
   {
-    ReferenceBundle = SimulationBundle->getBundle(oss.str());
+    std::ostringstream oss;
+    oss << "Reference_" << reference_num;
+    fieldname = oss.str();
+  }
+  while (SimulationBundle->isBundle(fieldname))
+  {
+    ReferenceBundle = SimulationBundle->getBundle(fieldname);
     StringHandle ReferenceParam = ReferenceBundle->getString("Parameters");
     if (ReferenceParam.get_rep())
     {
-      paramstr += "# Parameters for reference";
+      std::ostringstream oss;
+      oss << reference_num;
+      paramstr += "# Parameters for reference " + oss.str() + "\n\n";
       paramstr += ReferenceParam->get() + "\n";
     }
     reference_num++;
-    oss.clear();
-    oss << "Reference_" << reference_num;
+    {
+      std::ostringstream oss;
+      oss << "Reference_" << reference_num;
+      fieldname = oss.str();
+    }
   }
 
   StringHandle Parameters = scinew String(paramstr);
@@ -274,9 +307,8 @@ std::cout << "Merged bundles\n";
     return;
   } 
   SimulationBundle->setString("Parameters",Parameters);
-    
-std::cout << "Did parameters\n";    
-    
+     
+     
   std::string sourcefiles = "NeuroKernel.c VectorOps.c CWaveKernel.c ";
   sourcefiles += solveritem.file + " ";  
   sourcefiles += tstepitem.file + " ";  
@@ -291,59 +323,79 @@ std::cout << "Did parameters\n";
   StringHandle DomainSourceFile = DomainBundle->getString("SourceFile");
   if (DomainSourceFile.get_rep())
   {
-    sourcefiles += "# Parameters for domain";
-    sourcefiles += DomainSourceFile->get() + "\n";
+    sourcefiles += DomainSourceFile->get() + " ";
   }
 
   membrane_num = 0;
-  oss << "Membrane_" << membrane_num;
-  while (SimulationBundle->isBundle(oss.str()))
   {
-    MembraneBundle = SimulationBundle->getBundle(oss.str());
+    std::ostringstream oss;
+    oss << "Membrane_" << membrane_num;
+    fieldname = oss.str();
+  }
+  
+  while (SimulationBundle->isBundle(fieldname))
+  {
+    MembraneBundle = SimulationBundle->getBundle(fieldname);
     StringHandle MembraneSourceFile = MembraneBundle->getString("SourceFile");
     if (MembraneSourceFile.get_rep())
     {
       sourcefiles += MembraneSourceFile->get() + " ";
     }
     membrane_num++;
-    oss.clear();
-    oss << "Membrane_" << membrane_num;
+    {
+      std::ostringstream oss;
+      oss << "Membrane_" << membrane_num;
+      fieldname = oss.str();
+    }  
   }
 
   stimulus_num = 0;
-  oss << "Stimulus_" << stimulus_num;
-  while (SimulationBundle->isBundle(oss.str()))
   {
-    StimulusBundle = SimulationBundle->getBundle(oss.str());
+    std::ostringstream oss;
+    oss << "Stimulus_" << stimulus_num;
+    fieldname = oss.str();
+  }
+    
+  while (SimulationBundle->isBundle(fieldname))
+  {
+    StimulusBundle = SimulationBundle->getBundle(fieldname);
     StringHandle StimulusSourceFile = StimulusBundle->getString("SourceFile");
     if (StimulusSourceFile.get_rep())
     {
       sourcefiles += StimulusSourceFile->get() + " ";
     }
     stimulus_num++;
-    oss.clear();
-    oss << "Stimulus_" << stimulus_num;
+    {
+      std::ostringstream oss;
+      oss << "Stimulus_" << stimulus_num;
+      fieldname = oss.str();
+    }
   }
 
   reference_num = 0;
-  oss << "Reference_" << reference_num;
-  while (SimulationBundle->isBundle(oss.str()))
   {
-    ReferenceBundle = SimulationBundle->getBundle(oss.str());
+    std::ostringstream oss;
+    oss << "Reference_" << reference_num;
+    fieldname = oss.str();
+  }
+  while (SimulationBundle->isBundle(fieldname))
+  {
+    ReferenceBundle = SimulationBundle->getBundle(fieldname);
     StringHandle ReferenceSourceFile = ReferenceBundle->getString("SourceFile");
     if (ReferenceSourceFile.get_rep())
     {
       sourcefiles += ReferenceSourceFile->get() + " ";
     }
     reference_num++;
-    oss.clear();
-    oss << "Reference_" << reference_num;
+    {
+      std::ostringstream oss;
+      oss << "Reference_" << reference_num;
+      fieldname = oss.str();
+    }
   }
   
   StringHandle SourceFile = scinew String(sourcefiles);
   SimulationBundle->setString("SourceFile",SourceFile);
-std::cout << "sending output\n";  
-  
   send_output_handle("SimulationBundle",SimulationBundle,true);
 }
 

@@ -102,13 +102,21 @@ void DMDAddReference::execute()
   
   // Try to find which reference numbers have already been taken
   int reference_num = 0;
-  std::ostringstream oss;
-  oss << "Reference_" << reference_num;
-  while (ReferenceBundle->isBundle(oss.str()))
+  std::string fieldname;
+  
+  {
+    std::ostringstream oss;
+    oss << "Reference_" << reference_num;
+    fieldname = oss.str(); 
+  }
+  while (ReferenceBundle->isBundle(fieldname))
   {
     reference_num++;
-    oss.clear();
-    oss << "Reference_" << reference_num;
+    {
+      std::ostringstream oss;
+      oss << "Reference_" << reference_num;
+      fieldname = oss.str(); 
+    }
   }
   
   // Add a new bundle to the bundle with the data
@@ -121,9 +129,13 @@ void DMDAddReference::execute()
   }
 
   // Link new Bundle to main Bundle
-  oss.clear();
-  oss << "Reference_" << reference_num; 
-  ReferenceBundle->setBundle(oss.str(),Reference);
+  
+  {
+    std::ostringstream oss;
+    oss << "Reference_" << reference_num;
+    fieldname = oss.str(); 
+  }
+  ReferenceBundle->setBundle(fieldname,Reference);
 
   ModelCreation::ConverterAlgo mc(this);
 

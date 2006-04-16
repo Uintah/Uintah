@@ -5,7 +5,7 @@
 #include <Core/Datatypes/String.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
-// #include <Packages/CardioWave/Core/Model/ModelAlgo.h>
+#include <Packages/CardioWave/Core/Model/ModelAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>#include <string>
@@ -62,8 +62,8 @@ void DMDBuildSimulation::execute()
   SimulationBundle->set_property("enable_debug",enable_debug,false);
   SimulationBundle->set_property("build_visualization_bundle",build_visualization_bundle,false);
   
-//  ModelAlgo algo(this);  
-//  if(!(algo.BuildSimulation(SimulationBundle,FileName,VisualizationBundle,SimulationScript))) return;
+  ModelAlgo algo(this);  
+  if(!(algo.DMDBuildSimulation(SimulationBundle,FileName,VisualizationBundle,SimulationScript))) return;
   
   send_output_handle("SimulationScript",SimulationScript,true);
   if (build_visualization_bundle)
