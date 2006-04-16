@@ -41,6 +41,10 @@
         <name>MembraneTable</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>MappingMatrix</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
     </outputs>
   </io>
 </component>

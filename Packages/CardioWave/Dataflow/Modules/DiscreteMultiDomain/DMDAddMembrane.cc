@@ -39,6 +39,7 @@
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/SynapseXML.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -96,6 +97,14 @@ void DMDAddMembrane::execute()
   // required ones
   if (!(get_input_handle("Geometry",Geometry,true))) return;
   // optional ones
+  
+  ModelCreation::FieldsAlgo algo(this);
+  if (!(algo.ClearAndChangeFieldBasis(Geometry,Geometry,"Linear")))
+  {
+    error("DMDAddMembrane: Could not build a linear field for the membrane");
+    return;        
+  }
+
   get_input_handle("MembraneBundle",MembraneBundle,false);
   get_input_handle("Parameters",Parameters_from_port,false);
   
@@ -111,13 +120,20 @@ void DMDAddMembrane::execute()
   }
 
   int membrane_num = 0;
-  std::ostringstream oss;
-  oss << "Membrane_" << membrane_num;
-  while (MembraneBundle->isBundle(oss.str()))
+  std::string fieldname;
+  {
+    std::ostringstream oss;
+    oss << "Membrane_" << membrane_num;
+    fieldname = oss.str(); 
+  }
+  while (MembraneBundle->isBundle(fieldname))
   {
     membrane_num++;
-    oss.clear();
-    oss << "Membrane_" << membrane_num;
+    {
+      std::ostringstream oss;
+      oss << "Membrane_" << membrane_num;
+      fieldname = oss.str(); 
+    }
   }
 
   ModelCreation::ConverterAlgo mc(this);
@@ -132,11 +148,14 @@ void DMDAddMembrane::execute()
     return;
   }
   
-  oss.clear();
-  oss << "Membrane_" << membrane_num; 
-  MembraneBundle->setBundle(oss.str(),Membrane);
+  {
+    std::ostringstream oss;
+    oss << "Membrane_" << membrane_num;
+    fieldname = oss.str(); 
+  }
+  MembraneBundle->setBundle(fieldname,Membrane);
   
-  Membrane->setField("geometry",Geometry);
+  Membrane->setField("Geometry",Geometry);
  
   std::string cmd;
   cmd = get_id() + " get_param";
@@ -159,10 +178,12 @@ void DMDAddMembrane::execute()
   Membrane->setString("Name",MembraneName);
   
   SynapseItem item = synapsexml_.get_synapse(membranename);
-  oss.clear();
-  oss << "\n" << item.nodetype << " = " << membrane_num << "\n";
-  paramstr += oss.str();
-
+  {
+    std::ostringstream oss;
+    oss << "\n" << item.nodetype << " = " << membrane_num << "\n";
+    paramstr += oss.str();
+  }
+  
   StringHandle Parameters = scinew String(paramstr);
   if (Parameters.get_rep() == 0)
   {

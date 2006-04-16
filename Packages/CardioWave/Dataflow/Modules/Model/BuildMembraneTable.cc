@@ -68,6 +68,7 @@ void BuildMembraneTable::execute()
   MatrixHandle NodeLink;
   MatrixHandle ElemLink;
   MatrixHandle Table;
+  MatrixHandle MappingMatrix;
   
   if (!(get_input_handle("ElementType",ElementType,true))) return;
   if (!(get_input_handle("MembraneModel",MembraneModel,true))) return;
@@ -78,10 +79,11 @@ void BuildMembraneTable::execute()
   
   MembraneTable MemTable;
   ModelAlgo algo(this);
-  algo.DMDBuildMembraneTable(ElementType,MembraneModel,CompToGeom,NodeLink,ElemLink,MemTable);
+  algo.DMDBuildMembraneTable(ElementType,MembraneModel,CompToGeom,NodeLink,ElemLink,MemTable,MappingMatrix);
   algo.DMDMembraneTableToMatrix(MemTable,Table);
   
   send_output_handle("MembraneTable",Table,true);
+  send_output_handle("MappinfMatrix",MappingMatrix,true);
 
 }
 

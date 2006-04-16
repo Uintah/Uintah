@@ -48,32 +48,89 @@ ModelAlgo::ModelAlgo(ProgressReporter* pr) :
 {
 }
 
-bool ModelAlgo::DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& MembraneTable)
+bool ModelAlgo::DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle MembraneModel, MatrixHandle CompToGeom, MatrixHandle NodeLink, MatrixHandle ElemLink, MembraneTable& MembraneTable,MatrixHandle& MappingMatrix)
 {
   BuildMembraneTableAlgo algo;
-  MatrixHandle Dummy; // need to remove this one
-  return(algo.BuildMembraneTable(pr_,ElementType,MembraneModel,CompToGeom,NodeLink, ElemLink,MembraneTable,Dummy));
+  return(algo.BuildMembraneTable(pr_,ElementType,MembraneModel,CompToGeom,NodeLink, ElemLink,MembraneTable,MappingMatrix));
 }
 
-bool ModelAlgo::DMDBuildStimulusTable(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom,  double stimulusdomain, StimulusTable& StimulusTable)
+bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
+{
+  ModelCreation::NumericAlgo numericalgo(pr_);
+  int num_totalnodes = num_volumenodes + num_synnodes;
+  
+  // Build a vector for the surface areas
+  Volume = dynamic_cast<Matrix*>(scinew DenseMatrix(num_totalnodes,1));
+  if (Volume.get_rep() == 0)
+  {
+    error("DMDBuildDomain: Could not allocate Volume Vector Matrix");
+    return (false);
+  }
+  double* volumeptr = Volume->get_data_pointer();
+  
+  // Build a vector for the node types
+  NodeType = dynamic_cast<Matrix*>(scinew DenseMatrix(num_totalnodes,1));
+  if (NodeType.get_rep() == 0)
+  {
+    error("DMDBuildDomain: Could not allocate Volume Vector Matrix");
+    return (false);
+  }
+  double* nodetypeptr = NodeType->get_data_pointer();
+  
+  // Build the Membrane connections
+
+  int synnum = num_volumenodes;
+  SparseElementVector sev(num_synnodes*3);
+  int k = 0;
+  for (int p=0; p<membranetable.size();p++)
+  {
+    for (int q=0; q< membranetable[p].size(); q++)
+    { 
+      sev[k].row = synnum;
+      sev[k].col = synnum;
+      sev[k].val = 1.0;
+      volumeptr[synnum] = membranetable[p][q].surface;
+      nodetypeptr[synnum] = nodetypes[p];
+      k++; synnum++; 
+      sev[k].row = membranetable[p][q].node1;
+      sev[k].col = membranetable[p][q].node2;
+      sev[k].val = 1e-12;
+      k++;    
+      sev[k].row = membranetable[p][q].node2;
+      sev[k].col = membranetable[p][q].node1;
+      sev[k].val = 1e-12;
+      k++; 
+    }    
+  }
+  
+  if(!(numericalgo.CreateSparseMatrix(sev, MembraneMatrix, num_totalnodes, num_totalnodes)))
+  {
+    error("DMDBuildDomain: Could not build synapse sparse matrix");
+    return (false);
+  }    
+
+  return (true);
+}
+
+bool ModelAlgo::DMDBuildStimulusTable(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom,  double stimulusdomain, StimulusTable& StimulusTable,MatrixHandle& MappingMatrix)
 {
   BuildStimulusTableAlgo algo;
   return(algo.BuildStimulusTable(pr_,ElementType,StimulusModel,CompToGeom,stimulusdomain,true,StimulusTable));
 }
 
-bool ModelAlgo::DMDBuildStimulusTableByElement(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom,  double stimulusdomain, StimulusTable& StimulusTable)
+bool ModelAlgo::DMDBuildStimulusTableByElement(FieldHandle ElementType, FieldHandle StimulusModel, MatrixHandle CompToGeom,  double stimulusdomain, StimulusTable& StimulusTable,MatrixHandle& MappingMatrix)
 {
   BuildStimulusTableAlgo algo;
   return(algo.BuildStimulusTable(pr_,ElementType,StimulusModel,CompToGeom,stimulusdomain,false,StimulusTable));
 }
 
-bool ModelAlgo::DMDBuildReferenceTableByElement(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom,  double referencedomain, ReferenceTable& ReferenceTable)
+bool ModelAlgo::DMDBuildReferenceTableByElement(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom,  double referencedomain, ReferenceTable& ReferenceTable,MatrixHandle& MappingMatrix)
 {
   BuildStimulusTableAlgo algo;
   return(algo.BuildStimulusTable(pr_,ElementType,ReferenceModel,CompToGeom,referencedomain,false,ReferenceTable));
 }
 
-bool ModelAlgo::DMDBuildReferenceTable(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom,  double referencedomain, ReferenceTable& ReferenceTable)
+bool ModelAlgo::DMDBuildReferenceTable(FieldHandle ElementType, FieldHandle ReferenceModel, MatrixHandle CompToGeom,  double referencedomain, ReferenceTable& ReferenceTable,MatrixHandle& MappingMatrix)
 {
   BuildStimulusTableAlgo algo;
   return(algo.BuildStimulusTable(pr_,ElementType,ReferenceModel,CompToGeom,referencedomain,true,ReferenceTable));
@@ -154,6 +211,13 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     error("DMDBuildSimulation: FileName is empty");
     return (false);  
   }
+
+  bool debug = true;
+  bool visbundle = true;
+  bool optimizesystem = true;
+  if (SimulationBundle->is_property("enable_debug")) SimulationBundle->get_property("enable_debug",debug);
+  if (SimulationBundle->is_property("build_visualization_bundle")) SimulationBundle->get_property("build_visualization_bundle",debug);
+  if (SimulationBundle->is_property("optimize_system")) SimulationBundle->get_property("optimize_system",debug);
   
   // Step 1: Define the filenames
   
@@ -167,6 +231,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   std::string filename_membrane;    // Membrane description (geometry)
   std::string filename_stimulus;    // Stimulus nodes in a file
   std::string filename_reference;   // Reference nodes in a file   
+  std::string filename_output;      // name of output file   
   
   // Try to derive the filename
   // Remove the .sim.bdl extension of the simulation setup bundle file
@@ -189,22 +254,82 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   filename_nodetype  = filenamebase + ".nt.bvec";
   filename_surface   = filenamebase + ".area.vec";
   filename_in        = filenamebase + ".in";
-  filename_script    = filenamebase + ".script.pl";
+  filename_script    = filenamebase + ".script.sh";
   filename_membrane  = filenamebase + ".mem.txt";
   filename_stimulus  = filenamebase + ".stim.txt";
   filename_reference = filenamebase + ".ref.txt";
+  filename_output    = filenamebase + ".out";
    
   // Step 2: Save the model to file, we need to have an archived version
   // This will allow us to go back to the original data
   
   if (!(dataioalgo.WriteBundle(std::string(filename_simbundle),SimulationBundle)))
   {
-    error("DMDBuildSimulator: Could not save simulation bundle to disk");
+    error("DMDBuildSimulation: Could not save simulation bundle to disk");
     return (false);    
   }
    
-  // Step 3: Build the Finite Element Model 
+  try
+  {
+    std::ofstream infile;
+    infile.open(filename_in.c_str());
 
+    StringHandle Parameters = SimulationBundle->getString("Parameters");
+    if (Parameters.get_rep() == 0)
+    {
+      error("DMDBuildSimulation: Could not find Parameters String");
+      return (false);     
+    }
+    
+    infile << Parameters->get();
+    infile << "\n";
+    infile << "nodefile=" << filename_nodetype << "\n";
+    infile << "synapsefile=" << filename_membrane << "\n";
+    infile << "grid_int=" << filename_sysmatrix << "\n";
+    infile << "grid_area=" << filename_surface << "\n";
+    infile << "reffile="<< filename_reference << "\n";
+    infile << "outputfile=" << filename_output << "\n";
+    infile << "stimfile=" << filename_stimulus << "\n";
+    
+    if (debug) infile << "debug=4" << "\n"; else infile << "debug=0" << "\n";
+    
+  }
+  catch (...)
+  {
+    error("DMDBuildDomain: Could write input file");
+    return (false);  
+  }   
+
+  try
+  {
+    std::ofstream scriptfile;
+    scriptfile.open(filename_script.c_str());
+
+    StringHandle SourceFile = SimulationBundle->getString("SourceFile");
+    if (SourceFile.get_rep() == 0)
+    {
+      error("DMDBuildSimulation: Could not find SourceFile String");
+      return (false);     
+    }
+    
+    scriptfile << "perl nw_make.pl " << SourceFile->get() << "\n";    
+    
+    Script->set("perl nw_make.pl "+ string(SourceFile->get()));
+  }
+  catch (...)
+  {
+    error("DMDBuildDomain: Could write script");
+    return (false);  
+  } 
+
+  // Step 3: Dissemble bundle and get pointers to model organized
+
+  // Get the pointers to the ElementType and Conductivity fields
+  // This should not be a big memory overhead as we are just reorganizing data
+  
+  // Preferably ElementType and Conductivity are the same field with shorts on the
+  // data to make it more memory efficient.
+  
   BundleHandle Domain = SimulationBundle->getBundle("Domain");
   if (Domain.get_rep() == 0)
   {
@@ -244,6 +369,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   std::vector<FieldHandle> References;      // Collect all the Geometries of the References in here
   std::vector<double>      referencevalues;
+  std::vector<double>      referencedomain;
   std::vector<bool>        usereferencevalues;
 
   std::vector<FieldHandle> Stimulus;
@@ -261,6 +387,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // Loop through all sub bundles in the mother bundle to get all the individual
   // components of the model. Next to the volume each piece of membrane has its
   // own geometry. Similarly every electrode (stimulus and reference has its own geometry)
+  
   for (size_t p=0; p < SimulationBundle->numBundles(); p++)
   {
     // Do we have a membrane definition
@@ -291,8 +418,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       BundleHandle ReferenceBundle =  SimulationBundle->getBundle(bundlename);
       FieldHandle Geometry = ReferenceBundle->getField("Geometry");
       MatrixHandle RefValue = ReferenceBundle->getMatrix("RefValue");
+      MatrixHandle Domain = ReferenceBundle->getMatrix("Domain");      
 
-      if (Geometry.get_rep())
+      if (Geometry.get_rep()&&Domain.get_rep())
       {
         References.push_back(Geometry);
         // If no reference value is given we assume one
@@ -309,10 +437,14 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
           referencevalues.push_back(0.0);
           usereferencevalues.push_back(false);
         }
+        
+        double domain;
+        converteralgo.MatrixToDouble(Domain,domain);
+        referencedomain.push_back(domain);        
       }
       else
       {
-        warning("DMDBuildDomain: One of the reference fields misses a Geometry");
+        warning("DMDBuildDomain: One of the reference fields misses a Geometry or a Domain");
       }
 
     }
@@ -369,6 +501,12 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
   }
 
+
+  // Step 4: Build the finite element system
+
+  // If we are linking surfaces we have an additional memory overhead of the linkage
+  // matrices and renumbering matrices.
+  
   MatrixHandle GeomToComp;
   MatrixHandle CompToGeom;
   
@@ -392,7 +530,6 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // Hence define a lot of properties. Most of it we need for the model or the
   // visualization bundle
   std::vector<MembraneTable>     membranetable(num_membranes);
-  std::vector<FieldHandle>       membranefield(num_membranes);
   std::vector<MatrixHandle>      membranemapping(num_membranes);
   std::vector<int>               membranenumnodes(num_membranes);
   std::vector<int>               membranenumelems(num_membranes);
@@ -401,7 +538,12 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // They are not contained in the domain, they are just computational.
   int num_synnodes = 0;
 
-  // Get all the information
+  
+  // Build the tables that tell how the different components can be linked into the
+  // system.
+  // We have a MembraneTable to specify how the membranes are linked
+  // We have a StimulusTable and a ReferenceTable
+  
   for (size_t p=0; p<membranetable.size();p++)
   {
     // Get the size
@@ -411,21 +553,13 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       error("DMDBuildDomain: Could get information from membrane field");
       return(false);    
     }
-    
-    // In the visualization we want to have a linear version, hence we need to
-    // convert it to a linear one. This function will build a new one if needed
-    if (!(fieldsalgo.ClearAndChangeFieldBasis(Membranes[p],Membranes[p],"Linear")))
-    {
-      error("DMDBuildDomain: Could not build a linear field for the membrane");
-      return(false);        
-    }
-    
+      
     // This is the expensive function, it figures out how the membrane pannels
     // are linked into the volumetric model. As we need not save this information
     // we are reconstructing it here. The reason for not keeping it is that this
     // way the user can clip and delete panels without having to remember each
     // change, as they all change the node numbering.
-    if (!(DMDBuildMembraneTable(ElementType,Membranes[p],CompToGeom,NodeLink,ElemLink,membranetable[p])))
+    if (!(DMDBuildMembraneTable(ElementType,Membranes[p],CompToGeom,NodeLink,ElemLink,membranetable[p],membranemapping[p])))
     {
       error("DMDBuildDomain: Could build membrane model");
       return(false);
@@ -435,10 +569,37 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     num_synnodes += membranetable[p].size();
   }
   
+  std::vector<StimulusTable>     stimulustable(num_stimulus);
+  std::vector<MatrixHandle>      stimulusmapping(num_stimulus);  
+  
+  for (size_t p=0; p<stimulustable.size();p++)
+  {  
+    if(!(DMDBuildStimulusTable(ElementType, Stimulus[p], CompToGeom,stimulusdomain[p], stimulustable[p], stimulusmapping[p])))
+    {
+      error("DMDBuildDomain: Could build stimulus model");
+      return(false);   
+    }
+  }
+  
+  std::vector<ReferenceTable>    referencetable(num_references);
+  std::vector<MatrixHandle>      referencemapping(num_references);  
+  
+  for (size_t p=0; p<referencetable.size();p++)
+  {  
+    if(!(DMDBuildReferenceTable(ElementType, References[p], CompToGeom,referencedomain[p], referencetable[p], referencemapping[p])))
+    {
+      error("DMDBuildDomain: Could build reference model");
+      return(false);   
+    }
+  }
+  
+  // Step 5: Build the real Stiffness matrix
+  
   // Build the Finite Element Model here
   // We enter optional fields here, if they are empty handles the routine will skip
   // them.
   MatrixHandle fematrix;
+  MatrixHandle synmatrix;
   if(!(numericalgo.BuildFEMatrix(Conductivity,fematrix,-1,ConductivityTable,GeomToComp,CompToGeom)))
   {
     error("DMDBuildDomain: Could not build FE Matrix");
@@ -456,92 +617,42 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);
   }
   
-  // Build a vector for the surface areas
-  MatrixHandle volvec = dynamic_cast<Matrix*>(scinew DenseMatrix(num_totalnodes,1));
-  if (volvec.get_rep() == 0)
+  MatrixHandle VolumeVec;
+  MatrixHandle NodeType;
+  if (!(DMDBuildMembraneMatrix(membranetable,nodetypes,num_volumenodes,num_synnodes,NodeType,VolumeVec,synmatrix)))
   {
-    error("DMDBuildDomain: Could not allocate Volume Vector Matrix");
-    return (false);
+    error("DMDBuildDomain: Could not build Synapse matrix");
+    return (false); 
   }
-  double* volvecptr = volvec->get_data_pointer();
-  
-  // Build a vector for the node types
-  MatrixHandle nodetypevec = dynamic_cast<Matrix*>(scinew DenseMatrix(num_totalnodes,1));
-  if (nodetypevec.get_rep() == 0)
-  {
-    error("DMDBuildDomain: Could not allocate Volume Vector Matrix");
-    return (false);
-  }
-  double* nodetypevecptr = volvec->get_data_pointer();
-  
-  // Build the Membrane connections
-
-  int synnum = num_volumenodes;
-  SparseElementVector sev(num_synnodes*3);
-  int k = 0;
-  for (int p=0; p<membranetable.size();p++)
-  {
-    SparseElementVector sevmapping(2*membranetable[p].size());
-    int j = 0;
-    for (int q=0; q< membranetable[p].size(); q++)
-    { 
-      sev[k].row = synnum;
-      sev[k].col = synnum;
-      sev[k].val = 1.0;
-      volvecptr[synnum] = membranetable[p][q].surface;
-      nodetypevecptr[synnum] = nodetypes[p];
-      k++; synnum++; 
-      sev[k].row = membranetable[p][q].node1;
-      sev[k].col = membranetable[p][q].node2;
-      sev[k].val = 1.0;
-      k++;    
-      sev[k].row = membranetable[p][q].node2;
-      sev[k].col = membranetable[p][q].node1;
-      sev[k].val = 1.0;
-      k++; 
-      sevmapping[j].row = membranetable[p][q].node0;
-      sevmapping[j].col = membranetable[p][q].node1;
-      sevmapping[j].val = -1.0;      
-      j++;
-      sevmapping[j].row = membranetable[p][q].node0;
-      sevmapping[j].col = membranetable[p][q].node2;
-      sevmapping[j].val = 1.0;
-      j++;
-    }
     
-    if (!(numericalgo.CreateSparseMatrix(sevmapping, membranemapping[p],membranenumnodes[p],num_synnodes)))
-    {
-      error("DMDBuildDomain: Could not build sparse mapping matrix");
-      return (false);    
-    }
-  
-    sevmapping.clear();
-  }
-  
-
-  
-  MatrixHandle synmatrix;
-  if(!(numericalgo.CreateSparseMatrix(sev, synmatrix, num_totalnodes, num_totalnodes)))
-  {
-    error("DMDBuildDomain: Could not build synapse sparse matrix");
-    return (false);
-  }  
-
-  // Free some memory
-  sev.clear();
-  
   // Somehow CardioWave uses the negative matrix for its
   MatrixHandle sysmatrix = synmatrix - fematrix;
-  
-  // free some memory
-  synmatrix = 0;
-  fematrix = 0;
-  
   if (sysmatrix.get_rep() == 0)
   {
     error("DMDBuildDomain: Could not build system sparse matrix");
     return (false);  
   }
+  
+  synmatrix = 0;
+  fematrix = 0;
+  
+  // For visualization bundle
+  MatrixHandle ElementMapping = CompToGeom;
+  
+  // All the tables we just build should have been converted to the new numbering
+  GeomToComp = 0;
+  CompToGeom = 0;
+
+  // What do we have now:
+  // We have sysmatrix a combined matrix with synapses and the volume fe matrix
+  // We have the nodetype
+  // We have the volvec
+  // We have the membranetable
+  // We have the stimulustable
+  // We have the referencetable
+
+  // Step 5:
+  // Now optimize the system:
 
   MatrixHandle mapping;
   if(!(numericalgo.ReverseCuthillmcKee(sysmatrix,sysmatrix,mapping)))
@@ -551,21 +662,21 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
 
   // Reorder domain properties
-  nodetypevec = mapping*nodetypevec;
-  volvec = mapping*volvec;
+  NodeType = mapping*NodeType;
+  VolumeVec = mapping*VolumeVec;
 
   if (!(dataioalgo.WriteMatrix(filename_sysmatrix,sysmatrix,"CardioWave Sparse Matrix")))
   {
     error("DMDBuildDomain: Could not write system matrix");  
     return (false);
   }
-  if (!(dataioalgo.WriteMatrix(filename_surface,volvec,"CardioWave FP Vector")))
+  if (!(dataioalgo.WriteMatrix(filename_surface,VolumeVec,"CardioWave FP Vector")))
   {
     error("DMDBuildDomain: Could not write volume vector");  
     return (false);
   }
 
-  if (!(dataioalgo.WriteMatrix(filename_nodetype,nodetypevec,"CardioWave Byte Vector")))
+  if (!(dataioalgo.WriteMatrix(filename_nodetype,NodeType,"CardioWave Byte Vector")))
   {
     error("DMDBuildDomain: Could not write nodetype vector");  
     return (false);
@@ -573,9 +684,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   // clean memory
   sysmatrix = 0;
-  nodetypevec = 0;
-  volvec = 0;
-  
+  NodeType = 0;
+  VolumeVec = 0;
   
   MatrixHandle imapping = mapping->transpose();
   if (imapping.get_rep() == 0)
@@ -604,8 +714,25 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
   }
   
-  // Build membrane table file
   
+  for (int p=0; p<stimulustable.size(); p++)
+  {
+    for (int q=0; q< stimulustable[p].size(); q++)
+    {
+      stimulustable[p][q].node = renumber[stimulustable[p][q].node];
+    }
+  }
+
+  for (int p=0; p<referencetable.size(); p++)
+  {
+    for (int q=0; q< referencetable[p].size(); q++)
+    {
+      referencetable[p][q].node = renumber[referencetable[p][q].node];
+    }
+  }
+  
+  
+  // Build membrane table file
   
   try
   {
@@ -621,9 +748,30 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could write membrane connection file");
+    error("DMDBuildDomain: Could not write membrane connection file");
     return (false);  
   }
+
+
+  try
+  {
+    std::ofstream stimfile;
+    stimfile.open(filename_stimulus.c_str());
+    for (int p=0; p<stimulustable.size();p++)
+    {
+      for (int q=0; q< stimulustable[p].size(); q++)
+      { 
+        stimfile << stimulustable[p][q].node <<  " " << stimuluscurrent[p]*stimulustable[p][q].weight << ", " << stimulusstart[p] << ", " << stimulusend[p] << ", I\n";
+      }
+    }
+  }
+  catch (...)
+  {
+    error("DMDBuildDomain: Could not write stimulus file");
+    return (false);  
+  }
+
+
 
   if (!(numericalgo.ResizeMatrix(imapping,imapping,num_totalnodes,num_volumenodes)))
   {
@@ -650,7 +798,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     oss << "Membrane_" << p+1;
     
     BundleHandle MembraneBundle = scinew Bundle;
-    MembraneBundle->setField("Field",membranefield[p]);
+    MembraneBundle->setField("Field",Membranes[p]);
     MembraneBundle->setMatrix("Mapping",membranemapping[p]);
     VisBundle->setBundle(oss.str(),MembraneBundle);
   }

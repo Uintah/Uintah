@@ -49,6 +49,7 @@ void BuildStimulusTableByElement::execute()
   MatrixHandle CompToGeom;
   MatrixHandle DomainType;
   MatrixHandle Table;
+  MatrixHandle MappingMatrix;
   
   if (!(get_input_handle("ElementType",ElementType,true))) return;
   if (!(get_input_handle("StimulusModel",StimulusModel,true))) return;
@@ -62,10 +63,11 @@ void BuildStimulusTableByElement::execute()
   
   StimulusTable StimTable;
   ModelAlgo algo(this);
-  algo.DMDBuildStimulusTableByElement(ElementType,StimulusModel,CompToGeom,domaintype,StimTable);
+  algo.DMDBuildStimulusTableByElement(ElementType,StimulusModel,CompToGeom,domaintype,StimTable,MappingMatrix);
   algo.DMDStimulusTableToMatrix(StimTable,Table);
   
   send_output_handle("StimulusTable",Table,true);
+  send_output_handle("MappingMatrix",MappingMatrix,true);
 }
 
 void
