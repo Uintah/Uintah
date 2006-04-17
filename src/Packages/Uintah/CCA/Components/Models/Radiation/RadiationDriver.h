@@ -199,7 +199,6 @@ class RadiationDriver : public ModelInterface {
   double d_sigma;
   bool d_doRadCalc;
   bool d_useTableValues;
-  bool d_computeCO2_H2O_from_f;
   bool d_hasAbsorbingSolid;
   string d_table_or_ice_temp_density;
   

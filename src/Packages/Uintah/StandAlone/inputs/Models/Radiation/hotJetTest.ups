@@ -369,7 +369,6 @@
         <calcInterval>              2.0e-06 </calcInterval>
         <table_or_ice_temp_density> ice     </table_or_ice_temp_density>
         <useTableValues>            false   </useTableValues>
-        <computeCO2_H2O_from_f>     true    </computeCO2_H2O_from_f>
         <DORadiationModel>
           <ordinates> 2       </ordinates>
           <opl>       0.24    </opl>
