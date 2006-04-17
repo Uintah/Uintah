@@ -188,6 +188,7 @@ proc portConnections { port } {
 
 proc drawPorts { modid { porttypes "i o" } } {
     global Subnet
+    if { ![llength [info commands $modid]] } { return }
     if { ![info exists Subnet($modid)] } { return }
     set subnet $Subnet($modid)
     if [isaSubnetEditor $modid] {
