@@ -264,7 +264,7 @@ public:
   int get_weights(const Point & , typename Cell::array_type & , double * )
   { ASSERTFAIL("ScanlineMesh::get_weights for cells isn't supported"); }
 
-  void get_random_point(Point &p, typename Elem::index_type i, int s=0) const;
+  void get_random_point(Point &p, typename Elem::index_type i, MusilRNG &rng) const;
 
   void get_point(Point &p, typename Node::index_type i) const { get_center(p, i); }
   void get_normal(Vector &, typename Node::index_type) const
@@ -598,10 +598,8 @@ template <class Basis>
 void
 ScanlineMesh<Basis>::get_random_point(Point &p,
                                       typename Elem::index_type ei,
-                                      int seed) const
+                                      MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   Point p0, p1;
   get_center(p0, typename Node::index_type(ei));
   get_center(p1, typename Node::index_type(under_type(ei)+1));

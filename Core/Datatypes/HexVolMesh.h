@@ -414,9 +414,7 @@ public:
     result.normalize();
   }
 
-
-  void get_random_point(Point &p, typename Cell::index_type i,
-                        int seed = 0) const;
+  void get_random_point(Point &p, typename Elem::index_type i, MusilRNG &r) const;
 
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
@@ -910,10 +908,8 @@ template <class Basis>
 void
 HexVolMesh<Basis>::get_random_point(Point &p,
                                     typename Cell::index_type ei,
-                                    int /*seed*/) const
+                                    MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   const Point &p0 = points_[cells_[ei*8+0]];
   const Point &p1 = points_[cells_[ei*8+1]];
   const Point &p2 = points_[cells_[ei*8+2]];

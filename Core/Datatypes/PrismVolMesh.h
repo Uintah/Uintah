@@ -783,8 +783,8 @@ public:
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }
 
-  void get_random_point(Point &p, const typename Cell::index_type &ei,
-                        int seed=0) const;
+  void get_random_point(Point &p, const typename Elem::index_type &ei,
+                        MusilRNG &rng) const;
 
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
@@ -1234,12 +1234,13 @@ PrismVolMesh<Basis>::~PrismVolMesh()
 template <class Basis>
 void
 PrismVolMesh<Basis>::get_random_point(Point &p,
-                                      const typename Cell::index_type &ei,
-                                      int seed) const
+                                      const typename Elem::index_type &ei,
+                                      MusilRNG &rng) const
 {
-  static MusilRNG rng;
+  // TODO: This code looks correct.  Should sample cube and fold it,
+  // or dice into tets.
 
-  // get positions of the vertices
+  // Get positions of the vertices.
   typename Node::array_type ra;
   get_nodes(ra,ei);
 
@@ -1247,23 +1248,12 @@ PrismVolMesh<Basis>::get_random_point(Point &p,
 
   double sum = 0;
 
-  if( seed ) {
-   MusilRNG rng1(seed);
-   for( unsigned int i=0; i<PRISM_NNODES; i++ ) {
-     const Point &p0 = point(ra[i]);
-     const double w = rng1();
+  for( unsigned int i=0; i<PRISM_NNODES; i++ ) {
+    const Point &p0 = point(ra[i]);
+    const double w = rng();
 
-     v += p0.asVector() * w;
-     sum += w;
-   }
-  } else {
-    for( unsigned int i=0; i<PRISM_NNODES; i++ ) {
-      const Point &p0 = point(ra[i]);
-      const double w = rng();
-
-      v += p0.asVector() * w;
-      sum += w;
-    }
+    v += p0.asVector() * w;
+    sum += w;
   }
 
   p = (v / sum).asPoint();

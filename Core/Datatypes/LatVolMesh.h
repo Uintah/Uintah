@@ -741,7 +741,8 @@ public:
                   unsigned int)
   { ASSERTFAIL("not implemented"); }
   void get_random_point(Point &,
-                        const typename Elem::index_type &, int seed=0) const;
+                        const typename Elem::index_type &,
+                        MusilRNG &rng) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -936,10 +937,8 @@ template <class Basis>
 void
 LatVolMesh<Basis>::get_random_point(Point &p,
                                     const typename Elem::index_type &ei,
-                                    int seed) const
+                                    MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   // build the three principal edge vectors
   typename Node::array_type ra;
   get_nodes(ra,ei);
@@ -952,18 +951,11 @@ LatVolMesh<Basis>::get_random_point(Point &p,
   Vector v1(p2-p0);
   Vector v2(p3-p0);
 
-  // choose a random point in the cell
-  double t, u, v;
-  if (seed) {
-    MusilRNG rng1(seed);
-    t = rng1();
-    u = rng1();
-    v = rng1();
-  } else {
-    t = rng();
-    u = rng();
-    v = rng();
-  }
+  // Choose a random point in the cell.
+  const double t = rng();
+  const double u = rng();
+  const double v = rng();
+
   p = p0+(v0*t)+(v1*u)+(v2*v);
 }
 

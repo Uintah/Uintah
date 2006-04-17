@@ -244,9 +244,9 @@ public:
                  const typename LatVolMesh<Basis>::Node::index_type &index);
 
 
-  void get_random_point(Point &,
-                        const typename LatVolMesh<Basis>::Elem::index_type &,
-                        int) const;
+  void get_random_point(Point &p,
+                        const typename LatVolMesh<Basis>::Elem::index_type & i,
+                        MusilRNG &rng) const;
 
   bool get_coords(vector<double> &coords,
                   const Point &p,
@@ -978,10 +978,8 @@ template<class Basis>
 void
 StructHexVolMesh<Basis>::get_random_point(Point &p,
                      const typename LatVolMesh<Basis>::Elem::index_type &ei,
-                                          int seed) const
+                                          MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   const Point &p0 = points_(ei.i_+0, ei.j_+0, ei.k_+0);
   const Point &p1 = points_(ei.i_+1, ei.j_+0, ei.k_+0);
   const Point &p2 = points_(ei.i_+1, ei.j_+1, ei.k_+0);

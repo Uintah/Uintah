@@ -657,8 +657,8 @@ public:
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }
 
-  void get_random_point(Point &p, typename Cell::index_type ei,
-                        int seed=0) const;
+  void get_random_point(Point &p, typename Elem::index_type ei,
+                        MusilRNG &rng) const;
 
   void get_basis(typename Cell::index_type ci, int gaussPt,
                  double& g0, double& g1,
@@ -1162,11 +1162,9 @@ TetVolMesh<Basis>::~TetVolMesh()
    1 that sum to 1) for the point. */
 template <class Basis>
 void
-TetVolMesh<Basis>::get_random_point(Point &p, typename Cell::index_type ei,
-                                    int seed) const
+TetVolMesh<Basis>::get_random_point(Point &p, typename Elem::index_type ei,
+                                    MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   // get positions of the vertices
   const Point &p0 = point(cells_[ei*4+0]);
   const Point &p1 = point(cells_[ei*4+1]);

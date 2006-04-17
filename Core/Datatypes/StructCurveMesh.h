@@ -189,9 +189,9 @@ public:
   void set_point(const Point &p, typename ScanlineMesh<Basis>::Node::index_type i)
   { points_[i] = p; }
 
-  void get_random_point(Point &,
-                        typename ScanlineMesh<Basis>::Elem::index_type,
-                        int) const;
+  void get_random_point(Point &p,
+                        typename ScanlineMesh<Basis>::Elem::index_type idx,
+                        MusilRNG &rng) const;
 
   class ElemData
   {
@@ -551,10 +551,8 @@ template <class Basis>
 void
 StructCurveMesh<Basis>::get_random_point(Point &p,
                      typename ScanlineMesh<Basis>::Elem::index_type i,
-                                         int seed) const
+                                         MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   const Point &p0 =points_[typename ScanlineMesh<Basis>::Node::index_type(i)];
   const Point &p1=points_[typename ScanlineMesh<Basis>::Node::index_type(i+1)];
 

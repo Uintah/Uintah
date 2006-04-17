@@ -324,7 +324,7 @@ public:
   void set_point(const Point &p, typename Node::index_type i)
   { points_[i] = p; }
 
-  void get_random_point(Point &, typename Face::index_type, int seed=0) const;
+  void get_random_point(Point &, typename Elem::index_type, MusilRNG &rng) const;
 
   int get_valence(typename Node::index_type /*idx*/) const { return 0; }
   int get_valence(typename Edge::index_type /*idx*/) const { return 0; }
@@ -979,11 +979,9 @@ QuadSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
 template <class Basis>
 void
 QuadSurfMesh<Basis>::get_random_point(Point &p,
-                                      typename Face::index_type ei,
-                                      int seed) const
+                                      typename Elem::index_type ei,
+                                      MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   const Point &a0 = points_[faces_[ei*4+0]];
   const Point &a1 = points_[faces_[ei*4+1]];
   const Point &a2 = points_[faces_[ei*4+2]];
