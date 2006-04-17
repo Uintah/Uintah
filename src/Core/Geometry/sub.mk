@@ -49,7 +49,7 @@ SRCS     += $(SRCDIR)/BBox.cc \
 	    $(SRCDIR)/Vector.cc
 
 PSELIBS := Core/Persistent Core/Containers \
-	   Core/Exceptions Core/Util
+	   Core/Exceptions Core/Util Core/Math
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

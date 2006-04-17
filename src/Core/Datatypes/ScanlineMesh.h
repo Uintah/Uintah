@@ -49,8 +49,8 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>
-
 
 namespace SCIRun {
 
@@ -263,6 +263,8 @@ public:
   { ASSERTFAIL("ScanlineMesh::get_weights for faces isn't supported"); }
   int get_weights(const Point & , typename Cell::array_type & , double * )
   { ASSERTFAIL("ScanlineMesh::get_weights for cells isn't supported"); }
+
+  void get_random_point(Point &p, typename Elem::index_type i, int s=0) const;
 
   void get_point(Point &p, typename Node::index_type i) const { get_center(p, i); }
   void get_normal(Vector &, typename Node::index_type) const
@@ -589,6 +591,22 @@ ScanlineMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l,
     return 1;
   }
   return 0;
+}
+
+
+template <class Basis>
+void
+ScanlineMesh<Basis>::get_random_point(Point &p,
+                                      typename Elem::index_type ei,
+                                      int seed) const
+{
+  static MusilRNG rng;
+
+  Point p0, p1;
+  get_center(p0, typename Node::index_type(ei));
+  get_center(p1, typename Node::index_type(under_type(ei)+1));
+
+  p = p0 + (p1 - p0) * rng();
 }
 
 

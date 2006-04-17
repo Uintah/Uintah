@@ -220,6 +220,21 @@ closest_line_to_line(double &s, double &t,
 }
 
 
+void
+uniform_sample_triangle(Point &p, const Point &p0,
+                        const Point &p1, const Point &p2,
+                        MusilRNG &rng)
+{
+  // Generate the barrycentric coordinates.
+  double u,v;
+  u = rng();
+  v = rng();
+  if (u + v > 1.0) { u = 1.0 - u; v = 1.0 - v; }
+  
+  // Compute the position of the random point.
+  p = p0+((p1-p0)*u)+((p2-p0)*v);
+}
+
 
 }
 

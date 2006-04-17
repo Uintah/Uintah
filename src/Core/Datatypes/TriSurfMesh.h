@@ -57,7 +57,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/CompGeom.h>
 #include <Core/Math/Trig.h>
-#include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -683,9 +682,6 @@ TriSurfMesh<Basis>::~TriSurfMesh()
 }
 
 
-/* To generate a random point inside of a triangle, we generate random
-   barrycentric coordinates (independent random variables between 0 and
-   1 that sum to 1) for the point. */
 template <class Basis>
 void
 TriSurfMesh<Basis>::get_random_point(Point &p,
@@ -694,27 +690,11 @@ TriSurfMesh<Basis>::get_random_point(Point &p,
 {
   static MusilRNG rng;
 
-  // Get the positions of the vertices.
-  typename Node::array_type ra;
-  get_nodes(ra,ei);
-  Point p0,p1,p2;
-  get_point(p0,ra[0]);
-  get_point(p1,ra[1]);
-  get_point(p2,ra[2]);
-
-  // Generate the barrycentric coordinates.
-  double u,v;
-  if (seed) {
-    MusilRNG rng1(seed);
-    u = rng1();
-    v = rng1()*(1.-u);
-  } else {
-    u = rng();
-    v = rng()*(1.-u);
-  }
-
-  // Compute the position of the random point.
-  p = p0+((p1-p0)*u)+((p2-p0)*v);
+  uniform_sample_triangle(p,
+                          points_[faces_[ei*3+0]],
+                          points_[faces_[ei*3+1]], 
+                          points_[faces_[ei*3+2]],
+                          rng);
 }
 
 

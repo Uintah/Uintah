@@ -474,7 +474,7 @@ public:
     get_point(p0,ra[0]);
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
-    return (Cross(p0-p1,p2-p0)).length()*0.5;
+    return (Cross(p0-p1,p2-p0)).length();
   }
   double get_size(typename Cell::index_type /*idx*/) const { return 0.0; }
   double get_length(typename Edge::index_type idx) const { return get_size(idx); };

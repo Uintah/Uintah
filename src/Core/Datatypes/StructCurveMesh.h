@@ -189,10 +189,9 @@ public:
   void set_point(const Point &p, typename ScanlineMesh<Basis>::Node::index_type i)
   { points_[i] = p; }
 
-  void get_random_point(Point &, const typename ScanlineMesh<Basis>::Elem::index_type &,
-                        int) const
-  { ASSERTFAIL("not implemented") }
-
+  void get_random_point(Point &,
+                        typename ScanlineMesh<Basis>::Elem::index_type,
+                        int) const;
 
   class ElemData
   {
@@ -420,8 +419,8 @@ template <class Basis>
 void
 StructCurveMesh<Basis>::get_center(Point &result, const typename ScanlineMesh<Basis>::Edge::index_type &idx) const
 {
-  Point p0 = points_[typename ScanlineMesh<Basis>::Node::index_type(idx)];
-  Point p1 = points_[typename ScanlineMesh<Basis>::Node::index_type(idx+1)];
+  const Point &p0 = points_[typename ScanlineMesh<Basis>::Node::index_type(idx)];
+  const Point &p1 = points_[typename ScanlineMesh<Basis>::Node::index_type(idx+1)];
 
   result = Point(p0+p1)/2.0;
 }
@@ -545,6 +544,21 @@ StructCurveMesh<Basis>::get_weights(const Point &p,
     return 1;
   }
   return 0;
+}
+
+
+template <class Basis>
+void
+StructCurveMesh<Basis>::get_random_point(Point &p,
+                     typename ScanlineMesh<Basis>::Elem::index_type i,
+                                         int seed) const
+{
+  static MusilRNG rng;
+
+  const Point &p0 =points_[typename ScanlineMesh<Basis>::Node::index_type(i)];
+  const Point &p1=points_[typename ScanlineMesh<Basis>::Node::index_type(i+1)];
+
+  p = p0 + (p1 - p0) * rng();
 }
 
 

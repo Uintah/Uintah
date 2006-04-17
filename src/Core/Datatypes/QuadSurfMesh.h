@@ -52,7 +52,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/CompGeom.h>
-#include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>
 #include <Core/Geometry/BBox.h>
 #include <sgi_stl_warnings_off.h>
@@ -977,9 +976,6 @@ QuadSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
 }
 
 
-/* To generate a random point inside of a triangle, we generate random
-   barrycentric coordinates (independent random variables between 0 and
-   1 that sum to 1) for the point. */
 template <class Basis>
 void
 QuadSurfMesh<Basis>::get_random_point(Point &p,
@@ -988,48 +984,25 @@ QuadSurfMesh<Basis>::get_random_point(Point &p,
 {
   static MusilRNG rng;
 
-  // Get the positions of the vertices.
-  typename Node::array_type ra;
-  get_nodes(ra,ei);
-  Point p0,p1,p2;
+  const Point &a0 = points_[faces_[ei*4+0]];
+  const Point &a1 = points_[faces_[ei*4+1]];
+  const Point &a2 = points_[faces_[ei*4+2]];
 
-  // Generate the barrycentric coordinates.
-  double u,v;
-  if (seed) {
-    MusilRNG rng1(seed);
-    u = rng1();
-    v = rng1()*(1.-u);
-    if (rng1() < 0.5)
-    {
-      get_point(p0,ra[0]);
-      get_point(p1,ra[1]);
-      get_point(p2,ra[2]);
-    }
-    else
-    {
-      get_point(p0,ra[2]);
-      get_point(p1,ra[3]);
-      get_point(p2,ra[0]);
-    }
-  } else {
-    u = rng();
-    v = rng()*(1.-u);
-    if (rng() < 0.5)
-    {
-      get_point(p0,ra[0]);
-      get_point(p1,ra[1]);
-      get_point(p2,ra[2]);
-    }
-    else
-    {
-      get_point(p0,ra[2]);
-      get_point(p1,ra[3]);
-      get_point(p2,ra[0]);
-    }
+  const Point &b0 = points_[faces_[ei*4+2]];
+  const Point &b1 = points_[faces_[ei*4+3]];
+  const Point &b2 = points_[faces_[ei*4+0]];
+
+  const double aarea = Cross(a1 - a0, a2 - a0).length();
+  const double barea = Cross(b1 - b0, b2 - b0).length();
+
+  if (rng() * (aarea + barea) < aarea)
+  {
+    uniform_sample_triangle(p, a0, a1, a2, rng);
   }
-
-  // compute the position of the random point
-  p = p0+((p1-p0)*u)+((p2-p0)*v);
+  else
+  {
+    uniform_sample_triangle(p, b0, b1, b2, rng);
+  }
 }
 
 
