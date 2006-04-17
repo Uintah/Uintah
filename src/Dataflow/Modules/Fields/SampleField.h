@@ -257,7 +257,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *reporter,
     else
     {
       // Find random point in that cell.
-      mesh->get_random_point(p, (*loc).second, 0);//rng_seed + i);
+      mesh->get_random_point(p, (*loc).second, rng);
     }
     pcmesh->add_node(p);
   }

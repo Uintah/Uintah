@@ -530,7 +530,7 @@ public:
   void get_point(Point &p, const typename Node::index_type &i) const
   { get_center(p, i); }
 
-  void get_random_point(Point &, const typename Face::index_type &, int seed=0) const;
+  void get_random_point(Point &, const typename Elem::index_type &, MusilRNG &rng) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -1003,12 +1003,10 @@ ImageMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l,
 template<class Basis>
 void
 ImageMesh<Basis>::get_random_point(Point &p,
-                                   const typename Face::index_type &ci,
-                                   int seed) const
+                                   const typename Elem::index_type &ci,
+                                   MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
-  // get the positions of the vertices
+  // Get the positions of the vertices.
   typename Node::array_type ra;
   get_nodes(ra,ci);
   Point p00, p10, p11, p01;
@@ -1018,20 +1016,13 @@ ImageMesh<Basis>::get_random_point(Point &p,
   get_center(p01,ra[3]);
   Vector dx=p10-p00;
   Vector dy=p01-p00;
-  // generate the barrycentric coordinates
-  double u,v;
-  if (seed) {
-    MusilRNG rng1(seed);
-    rng1();
-    u = rng1();
-    v = rng1();
-  } else {
-    u = rng();
-    v = rng();
-  }
 
-  // compute the position of the random point
-  p = p00+dx*u+dy*v;
+  // Generate the barycentric coordinates.
+  const double u = rng();
+  const double v = rng();
+
+  // Compute the position of the random point.
+  p = p00 + dx*u + dy*v;
 }
 
 

@@ -212,7 +212,7 @@ public:
 
   void get_random_point(Point &,
                         const typename ImageMesh<Basis>::Elem::index_type &,
-                        int) const;
+                        MusilRNG &rng) const;
 
   class ElemData
   {
@@ -698,10 +698,8 @@ template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_random_point(Point &p,
                        const typename ImageMesh<Basis>::Elem::index_type &ei,
-                                            int seed) const
+                                            MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   const Point &a0 = points_(ei.i_ + 0, ei.j_ + 0);
   const Point &a1 = points_(ei.i_ + 1, ei.j_ + 0);
   const Point &a2 = points_(ei.i_ + 1, ei.j_ + 1);

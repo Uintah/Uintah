@@ -335,7 +335,7 @@ public:
   void set_point(const Point &point, typename Node::index_type index)
   { nodes_[index] = point; }
 
-  void get_random_point(Point &, typename Elem::index_type, int seed=0) const;
+  void get_random_point(Point &, typename Elem::index_type, MusilRNG &r) const;
 
   void get_normal(Vector & /* result */,
                   typename Node::index_type /* index */) const
@@ -724,10 +724,8 @@ template <class Basis>
 void
 CurveMesh<Basis>::get_random_point(Point &p,
                                    typename Elem::index_type ei,
-                                   int seed) const
+                                   MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   const Point &p0 = nodes_[edges_[ei].first];
   const Point &p1 = nodes_[edges_[ei].second];
 

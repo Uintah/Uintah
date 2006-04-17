@@ -50,6 +50,7 @@
 #include <Core/Containers/StackVector.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Math/MusilRNG.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -59,6 +60,7 @@ namespace SCIRun {
 
 using std::string;
 using std::vector;
+
 
 template <class Basis>
 class PointCloudMesh : public Mesh
@@ -223,7 +225,7 @@ public:
 
   void get_random_point(Point &p,
                         const typename Elem::index_type &i,
-                        int /*seed*/) const
+                        MusilRNG &rng) const
   { get_center(p, i); }
 
   void get_point(Point &p, typename Node::index_type i) const

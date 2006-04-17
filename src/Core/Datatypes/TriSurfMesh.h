@@ -351,7 +351,7 @@ public:
   }
 
 
-  void get_random_point(Point &, typename Face::index_type, int seed=0) const;
+  void get_random_point(Point &, typename Elem::index_type, MusilRNG &rng) const;
 
   virtual bool synchronize(unsigned int);
 
@@ -685,11 +685,9 @@ TriSurfMesh<Basis>::~TriSurfMesh()
 template <class Basis>
 void
 TriSurfMesh<Basis>::get_random_point(Point &p,
-                                     typename Face::index_type ei,
-                                     int seed) const
+                                     typename Elem::index_type ei,
+                                     MusilRNG &rng) const
 {
-  static MusilRNG rng;
-
   uniform_sample_triangle(p,
                           points_[faces_[ei*3+0]],
                           points_[faces_[ei*3+1]], 
