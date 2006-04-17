@@ -50,6 +50,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/StackVector.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Math/MusilRNG.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -333,6 +334,8 @@ public:
   { get_center(result,idx); }
   void set_point(const Point &point, typename Node::index_type index)
   { nodes_[index] = point; }
+
+  void get_random_point(Point &, typename Elem::index_type, int seed=0) const;
 
   void get_normal(Vector & /* result */,
                   typename Node::index_type /* index */) const
@@ -714,6 +717,21 @@ CurveMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l,
     return 1;
   }
   return 0;
+}
+
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_random_point(Point &p,
+                                   typename Elem::index_type ei,
+                                   int seed) const
+{
+  static MusilRNG rng;
+
+  const Point &p0 = nodes_[edges_[ei].first];
+  const Point &p1 = nodes_[edges_[ei].second];
+
+  p = p0 + (p1 - p0) * rng();
 }
 
 

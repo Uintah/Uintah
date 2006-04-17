@@ -221,6 +221,11 @@ public:
   int get_weights(const Point & , typename Cell::array_type & , double * )
   { ASSERTFAIL("PointCloudField::get_weights for cells isn't supported"); }
 
+  void get_random_point(Point &p,
+                        const typename Elem::index_type &i,
+                        int /*seed*/) const
+  { get_center(p, i); }
+
   void get_point(Point &p, typename Node::index_type i) const
   { get_center(p,i); }
   void set_point(const Point &p, typename Node::index_type i)

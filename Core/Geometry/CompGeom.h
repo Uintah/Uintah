@@ -41,6 +41,7 @@
  */
 
 #include <Core/Geometry/Point.h>
+#include <Core/Math/MusilRNG.h>
 
 #include <Core/Geometry/share.h>
 
@@ -79,4 +80,12 @@ SCISHARE bool
 closest_line_to_line(double &s, double &t,
                      const Point &A0, const Point &A1,
                      const Point &B0, const Point &B1);
-}
+
+
+SCISHARE void
+uniform_sample_triangle(Point &p, const Point &p0,
+                        const Point &p1, const Point &p2,
+                        MusilRNG &rng);
+
+
+} // namespace SCIRun

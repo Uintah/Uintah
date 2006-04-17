@@ -109,13 +109,14 @@ public:
   }
   double get_size(const typename ImageMesh<Basis>::Face::index_type &idx) const
   {
-    typename ImageMesh<Basis>::Node::array_type ra;
-    get_nodes(ra,idx);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    return (Cross(p0-p1,p2-p0)).length()*0.5;
+    // Sum the sizes of the two triangles.
+    const Point &p0 = points_(idx.i_ + 0, idx.j_ + 0);
+    const Point &p1 = points_(idx.i_ + 1, idx.j_ + 0);
+    const Point &p2 = points_(idx.i_ + 1, idx.j_ + 1);
+    const Point &p3 = points_(idx.i_ + 0, idx.j_ + 1);
+    const double a0 = Cross(p0 - p1, p2 - p0).length();
+    const double a1 = Cross(p2 - p3, p0 - p2).length();
+    return (a0 + a1) * 0.5;
   }
 
   double get_size(typename ImageMesh<Basis>::Cell::index_type) const
@@ -211,8 +212,7 @@ public:
 
   void get_random_point(Point &,
                         const typename ImageMesh<Basis>::Elem::index_type &,
-                        int) const
-  { ASSERTFAIL("not implemented") }
+                        int) const;
 
   class ElemData
   {
@@ -691,6 +691,36 @@ StructQuadSurfMesh<Basis>::inside3_p(
   }
   delete [] pts;
   return false;
+}
+
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_random_point(Point &p,
+                       const typename ImageMesh<Basis>::Elem::index_type &ei,
+                                            int seed) const
+{
+  static MusilRNG rng;
+
+  const Point &a0 = points_(ei.i_ + 0, ei.j_ + 0);
+  const Point &a1 = points_(ei.i_ + 1, ei.j_ + 0);
+  const Point &a2 = points_(ei.i_ + 1, ei.j_ + 1);
+
+  const Point &b0 = points_(ei.i_ + 1, ei.j_ + 1);
+  const Point &b1 = points_(ei.i_ + 0, ei.j_ + 1);
+  const Point &b2 = points_(ei.i_ + 0, ei.j_ + 0);
+
+  const double aarea = Cross(a1 - a0, a2 - a0).length();
+  const double barea = Cross(b1 - b0, b2 - b0).length();
+
+  if (rng() * (aarea + barea) < aarea)
+  {
+    uniform_sample_triangle(p, a0, a1, a2, rng);
+  }
+  else
+  {
+    uniform_sample_triangle(p, b0, b1, b2, rng);
+  }
 }
 
 
