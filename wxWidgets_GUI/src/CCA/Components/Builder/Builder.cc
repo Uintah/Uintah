@@ -34,9 +34,12 @@
 
 #include <CCA/Components/Builder/Builder.h>
 
+#include <sci_metacomponents.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
+#if HAVE_VTK
 #include <SCIRun/Vtk/VtkPortInstance.h>
+#endif
 
 #include <Core/Util/Environment.h>
 #include <Core/Thread/Thread.h>
@@ -566,8 +569,10 @@ void Builder::setDefaultPortColors()
   portColors[std::string("sci.cca.ports.FEMmatrixPort")] = wxTheColourDatabase->Find(wxT("SLATE BLUE"));
   portColors[std::string("sci.cca.ports.BridgeTestPort")] = wxTheColourDatabase->Find(wxT("DARK GREY"));
   // VTK ports
+#if HAVE_VTK
   portColors[VtkPortInstance::VTK_OUT_PORT] = wxTheColourDatabase->Find(wxT("SPRING GREEN"));
   portColors[VtkPortInstance::VTK_IN_PORT] = wxTheColourDatabase->Find(wxT("MEDIUM VIOLET RED"));
+#endif
 }
 
 }
