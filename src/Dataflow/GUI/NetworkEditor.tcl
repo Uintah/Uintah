@@ -139,11 +139,11 @@ proc safeSetWindowGeometry { w geom } {
     set xoff    [expr ($xoff < 0) ? 0 : $xoff]
     set yoff    [expr ($yoff < 0) ? 0 : $yoff]
 
-    set swidth  [expr [winfo screenwidth .]  - $xoff]
-    set sheight [expr [winfo screenheight .] - $yoff]
+#    set swidth  [expr [winfo screenwidth .]  - $xoff]
+#    set sheight [expr [winfo screenheight .] - $yoff]
 	
-    set width   [expr ($swidth  < $width)  ? $swidth  : $width]
-    set height  [expr ($sheight < $height) ? $sheight : $height]
+#    set width   [expr ($swidth  < $width)  ? $swidth  : $width]
+#    set height  [expr ($sheight < $height) ? $sheight : $height]
 
     wm geometry $w ${width}x${height}+${xoff}+${yoff}
 }
