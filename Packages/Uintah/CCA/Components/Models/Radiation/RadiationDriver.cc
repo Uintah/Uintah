@@ -51,6 +51,10 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
 
+  // This is PerPatch structure inherited from Arches.
+  // It is used to store all sorts of cell dimentions (e.g. dx, dy, dz plus
+  // everything else for nonuniform staggered grid).
+  // Currently, and overkill to use, but removing it could be a pain.
   d_cellInfoLabel = VarLabel::create("radCellInformation",
                                      PerPatch<Models_CellInformationP>::getTypeDescription());
 
@@ -288,9 +292,8 @@ RadiationDriver::problemSetup(GridP& grid,
 
   // logical to decide whether table values should be used
   // for co2, h2o, sootVF
+  // If set to false, CO2 AND h2O would be computed from scalar F
   db->getWithDefault("useTableValues",d_useTableValues,true);
-
-  db->getWithDefault("computeCO2_H2O_from_f",d_computeCO2_H2O_from_f,false);
 
 
   d_DORadiation = scinew Models_DORadiationModel(d_myworld);
@@ -314,7 +317,6 @@ void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
   rad_ps->appendElement("table_or_ice_temp_density",
                         d_table_or_ice_temp_density);
   rad_ps->appendElement("useTableValues",d_useTableValues);
-  rad_ps->appendElement("computeCO2_H2O_from_f",d_computeCO2_H2O_from_f);
 
   ProblemSpecP geom_ps = rad_ps->appendChild("geom_object");
   for (vector<GeometryPiece*>::const_iterator it = d_geom_pieces.begin();
@@ -358,7 +360,7 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
   t->computes(shgamma_CCLabel);
   t->computes(tempCopy_CCLabel);
     
-  if(d_computeCO2_H2O_from_f){
+  if (!d_useTableValues){
     t->computes(co2_CCLabel);
     t->computes(h2o_CCLabel);
   }
@@ -421,7 +423,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
     vars.qfluxt.initialize(0.0);
     vars.qfluxb.initialize(0.0);
     vars.src.initialize(0.0);
-    vars.co2.initialize(0.03);          // why 0.03?
+    vars.co2.initialize(0.0);
     vars.h2o.initialize(0.0);
     vars.sootVF.initialize(0.0);
     vars.mixfrac.initialize(0.0);
@@ -458,7 +460,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
     //__________________________________
     //  If we're computing CO2 & H2O concentrations
     //  from scalar-f initialize them
-    if(d_computeCO2_H2O_from_f){
+    if(!d_useTableValues){
       CCVariable<double> H2O_concentration, CO2_concentration;
       new_dw->allocateAndPut(H2O_concentration, h2o_CCLabel,indx, patch); 
       new_dw->allocateAndPut(CO2_concentration, co2_CCLabel,indx, patch);
@@ -492,7 +494,9 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task("RadiationDriver::buildLinearMatrix", this, 
                         &RadiationDriver::buildLinearMatrix);
 
-// what is this ?? 
+  // d_perproc_patches is a set of all patches on all processors for a given
+  // problem. It is used by Petsc to figure out the local-to-global mapping it
+  // needs. This annoyance (l2g mapping) is not required by Hypre.
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
   LoadBalancer* lb = sched->getLoadBalancer();
@@ -574,7 +578,7 @@ RadiationDriver::scheduleComputeCO2_H2O(const LevelP& level,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-  if(d_computeCO2_H2O_from_f){
+  if(!d_useTableValues){
     cout_doing << "RADIATION::scheduleComputeCO2_H2O \t\t\t\tL-" 
                << level->getIndex() << endl;
     Task* t = scinew Task("RadiationDriver::computeCO2_H2O",
@@ -939,7 +943,6 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
     
-// Stas:  Do you know what this is?    
     PerPatch<Models_CellInformationP> cellInfoP;
     if (new_dw->exists(d_cellInfoLabel, indx, patch)) 
       new_dw->get(cellInfoP, d_cellInfoLabel, indx, patch);
