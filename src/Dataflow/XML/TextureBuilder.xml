@@ -55,6 +55,10 @@
 	<name>Gradient Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+	<name>Mask Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>

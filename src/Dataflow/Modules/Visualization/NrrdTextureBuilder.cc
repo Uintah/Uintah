@@ -61,6 +61,8 @@ private:
   GuiDouble gui_vmaxval_;
   GuiDouble gui_gminval_;
   GuiDouble gui_gmaxval_;
+  GuiDouble gui_mminval_;
+  GuiDouble gui_mmaxval_;
 
   GuiInt gui_fixed_;
   GuiInt gui_card_mem_;
@@ -71,8 +73,10 @@ private:
   int is_uchar_;
   int vnrrd_last_generation_;
   int gnrrd_last_generation_;
+  int mnrrd_last_generation_;
   double vminval_, vmaxval_;
   double gminval_, gmaxval_;
+  double mminval_, mmaxval_;
 };
 
 DECLARE_MAKER(NrrdTextureBuilder)
@@ -84,6 +88,8 @@ NrrdTextureBuilder::NrrdTextureBuilder(GuiContext* ctx)
     gui_vmaxval_(get_ctx()->subVar("vmax"), 1),
     gui_gminval_(get_ctx()->subVar("gmin"), 0),
     gui_gmaxval_(get_ctx()->subVar("gmax"), 1),
+    gui_mminval_(get_ctx()->subVar("mmin"), 0),
+    gui_mmaxval_(get_ctx()->subVar("mmax"), 1),
     gui_fixed_(get_ctx()->subVar("is_fixed"), 0),
     gui_card_mem_(get_ctx()->subVar("card_mem"), 16),
     gui_card_mem_auto_(get_ctx()->subVar("card_mem_auto"), 1),
@@ -91,7 +97,8 @@ NrrdTextureBuilder::NrrdTextureBuilder(GuiContext* ctx)
     card_mem_(video_card_memory_size()),
     is_uchar_(1),
     vnrrd_last_generation_(-1),
-    gnrrd_last_generation_(-1)
+    gnrrd_last_generation_(-1),
+    mnrrd_last_generation_(-1)
 {}
 
 
@@ -111,6 +118,7 @@ NrrdTextureBuilder::execute()
 
   NrrdDataHandle vHandle;
   NrrdDataHandle gHandle;
+  NrrdDataHandle mHandle;
 
   // Get a handle to the input nrrd port.
   NrrdIPort* vnrrd_port = (NrrdIPort *) get_iport("Scalar Nrrd");
@@ -227,6 +235,70 @@ NrrdTextureBuilder::execute()
     gnrrd_last_generation_ = -1;
   }
 
+  // Get a handle to the input mask port.
+  NrrdIPort* mnrrd_port = (NrrdIPort *) get_iport("Mask Nrrd");
+
+  // The mask nrrd input is optional.
+  if (mnrrd_port->get(mHandle) && mHandle.get_rep()) {
+    
+    if (!ShaderProgramARB::shaders_supported()) {
+      // TODO: Runtime check, change message to reflect that.
+      warning("This machine does not support advanced volume rendering. The mask nrrd will be ignored.");
+      if( mnrrd_last_generation_ != -1 )
+	update = true;
+      mHandle = 0;
+      mnrrd_last_generation_ = -1;
+
+    } else {
+      Nrrd* mask_nrrd = mHandle->nrrd_;
+
+      if (mask_nrrd->dim != 3 && mask_nrrd->dim != 4) {
+	error("Invalid dimension for input mask nrrd.");
+	return;
+      }
+      
+      if( mask_nrrd->dim == 4 ) {
+	nrrdAxisInfoGet_nva(mask_nrrd, nrrdAxisInfoSize, axis_size);
+	if (axis_size[0] != 1) {
+	  error("Invalid axis size for mask nrrd.");
+	  return;
+	}
+      }
+
+      // The input nrrd type must be unsigned char.
+      if (gui_uchar_.get() && mHandle->nrrd_->type != nrrdTypeUChar) {
+	error("Mask input nrrd type must be unsigned char.");
+	return;
+      }
+
+      if( !gui_fixed_.get() ){
+	// set mmin/mmax
+	NrrdRange *range =
+	  nrrdRangeNewSet(mHandle->nrrd_, nrrdBlind8BitRangeFalse);
+
+	gui_mminval_.set(range->min);
+	gui_mmaxval_.set(range->max);
+      }
+	
+      // Check to see if the input gradient nrrd has changed.
+      if( mnrrd_last_generation_ != mHandle->generation  ||
+	  (gui_mminval_.get() != mminval_) || 
+	  (gui_mmaxval_.get() != mmaxval_) ) {
+	mnrrd_last_generation_ = mHandle->generation;
+	  
+	mminval_ = gui_mminval_.get();
+	mmaxval_ = gui_mmaxval_.get();
+	  
+	update = true;
+      }
+    }
+  } else {
+    if( mnrrd_last_generation_ != -1 )
+      update = true;
+
+    mnrrd_last_generation_ = -1;
+  }
+
   if( gui_uchar_.get() != is_uchar_ ) {
     is_uchar_ = gui_uchar_.get();
 
@@ -239,7 +311,10 @@ NrrdTextureBuilder::execute()
       NrrdTextureBuilderAlgo::get_compile_info(vHandle->nrrd_->type,
 					       gHandle.get_rep() ? 
 					       gHandle->nrrd_->type :
-					       vHandle->nrrd_->type);
+					       vHandle->nrrd_->type,
+                                               mHandle.get_rep() ?
+                                               mHandle->nrrd_->type :
+                                               vHandle->nrrd_->type);
     
     Handle<NrrdTextureBuilderAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
@@ -247,6 +322,7 @@ NrrdTextureBuilder::execute()
     algo->build(tHandle_,
 		vHandle, vminval_, vmaxval_,
 		gHandle, gminval_, gmaxval_,
+		mHandle, mminval_, mmaxval_,
 		gui_card_mem_.get(),
 		gui_uchar_.get());
   }

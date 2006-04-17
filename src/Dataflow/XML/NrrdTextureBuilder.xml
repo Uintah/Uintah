@@ -74,6 +74,10 @@ module.</p>
 	<name>Gradient Nrrd</name>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
+      <port>
+	<name>Mask Nrrd</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
