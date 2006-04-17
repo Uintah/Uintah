@@ -65,6 +65,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Plane.h>
+#include <Core/Geometry/CompGeom.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -245,8 +246,7 @@ public:
 
   void get_random_point(Point &,
                         const typename LatVolMesh<Basis>::Elem::index_type &,
-                        int) const
-  { ASSERTFAIL("not implemented") }
+                        int) const;
 
   bool get_coords(vector<double> &coords,
                   const Point &p,
@@ -971,6 +971,53 @@ StructHexVolMesh<Basis>::set_point(const Point &p,
                        const typename LatVolMesh<Basis>::Node::index_type &i)
 {
   points_(i.i_, i.j_, i.k_) = p;
+}
+
+
+template<class Basis>
+void
+StructHexVolMesh<Basis>::get_random_point(Point &p,
+                     const typename LatVolMesh<Basis>::Elem::index_type &ei,
+                                          int seed) const
+{
+  static MusilRNG rng;
+
+  const Point &p0 = points_(ei.i_+0, ei.j_+0, ei.k_+0);
+  const Point &p1 = points_(ei.i_+1, ei.j_+0, ei.k_+0);
+  const Point &p2 = points_(ei.i_+1, ei.j_+1, ei.k_+0);
+  const Point &p3 = points_(ei.i_+0, ei.j_+1, ei.k_+0);
+  const Point &p4 = points_(ei.i_+0, ei.j_+0, ei.k_+1);
+  const Point &p5 = points_(ei.i_+1, ei.j_+0, ei.k_+1);
+  const Point &p6 = points_(ei.i_+1, ei.j_+1, ei.k_+1);
+  const Point &p7 = points_(ei.i_+0, ei.j_+1, ei.k_+1);
+
+  const double a0 = tetrahedra_volume(p0, p1, p2, p5);
+  const double a1 = tetrahedra_volume(p0, p2, p3, p7);
+  const double a2 = tetrahedra_volume(p0, p5, p2, p7);
+  const double a3 = tetrahedra_volume(p0, p5, p7, p4);
+  const double a4 = tetrahedra_volume(p5, p2, p7, p6);
+
+  const double w = rng() * (a0 + a1 + a2 + a3 + a4);
+  if (w > (a0 + a1 + a2 + a3))
+  {
+    uniform_sample_tetrahedra(p, p5, p2, p7, p6, rng);
+  }
+  else if (w > (a0 + a1 + a2))
+  {
+    uniform_sample_tetrahedra(p, p0, p5, p7, p4, rng);
+  }
+  else if (w > (a0 + a1))
+  {
+    uniform_sample_tetrahedra(p, p0, p5, p2, p7, rng);
+  }
+  else if (w > a0)
+  {
+    uniform_sample_tetrahedra(p, p0, p2, p3, p7, rng);
+  }
+  else
+  {
+    uniform_sample_tetrahedra(p, p0, p1, p2, p5, rng);
+  }
 }
 
 

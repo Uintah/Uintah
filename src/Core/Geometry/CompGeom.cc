@@ -236,5 +236,49 @@ uniform_sample_triangle(Point &p, const Point &p0,
 }
 
 
+void
+uniform_sample_tetrahedra(Point &p, const Point &p0, const Point &p1,
+                          const Point &p2, const Point &p3,
+                          MusilRNG &rng)
+{
+  double t = rng();
+  double u = rng();
+  double v = rng();
+
+  // Fold cube into prism.
+  if (t + u > 1.0)
+  {
+    t = 1.0 - t;
+    u = 1.0 - u;
+  }
+
+  // Fold prism into tet.
+  if (u + v > 1.0)
+  {
+    const double tmp = v;
+    v = 1.0 - t - u;
+    u = 1.0 - tmp;
+  }
+  else if (t + u + v > 1.0)
+  {
+    const double tmp = v;
+    v = t + u + v - 1.0;
+    t = 1.0 - u - tmp;
+  }
+
+  // Convert to Barycentric and compute new point.
+  const double a = 1.0 - t - u - v;
+  p = (p0.vector()*a + p1.vector()*t + p2.vector()*u + p3.vector()*v).point();
+}
+
+
+double
+tetrahedra_volume(const Point &p0, const Point &p1,
+                  const Point &p2, const Point &p3)
+{
+  return fabs(Dot(Cross(p1-p0,p2-p0),p3-p0)) / 6.0;
+}
+
+
 }
 

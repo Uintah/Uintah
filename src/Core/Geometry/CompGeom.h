@@ -88,4 +88,15 @@ uniform_sample_triangle(Point &p, const Point &p0,
                         MusilRNG &rng);
 
 
+double
+tetrahedra_volume(const Point &p0, const Point &p1,
+                  const Point &p2, const Point &p3);
+
+
+SCISHARE void
+uniform_sample_tetrahedra(Point &p, const Point &p0, const Point &p1,
+                          const Point &p2, const Point &p3,
+                          MusilRNG &rng);
+
+
 } // namespace SCIRun
