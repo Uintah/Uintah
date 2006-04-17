@@ -403,13 +403,7 @@ toHumanUnits( unsigned long value )
 {
   char tmp[64];
   
-  if( value > 1000000 ) {
-    sprintf( tmp, "%.2lf MBs", value / 1000000.0 );
-  } else if( value > 1000 ) {
-    sprintf( tmp, "%.2lf KBs", value / 1000.0 );
-  } else {
-    sprintf( tmp, "%.2lf Bs", (double)value );
-  }
+  sprintf( tmp, "%.2lf MB", value / 1000000.0 );
   return tmp;
 }
 
@@ -513,15 +507,18 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     // output timestep statistics
     if(d_myworld->myrank() == 0){
+      char walltime[96];
+      if (d_n > 3) {
+        sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
+      }
+      else {
+        sprintf(walltime, ", elap T = %.2lf", d_wallTime);
+      }
+
       dbg << "Time="         << time
 	  << " (timestep "  << timestep 
 	   << "), delT="     << delt
-	   << ", elap T = "  << d_wallTime;
-      
-      if (d_n > 3) {
-	dbg << ", mean: "   << mean
-	    << " +- "       << stdDev;
-      }
+	   << walltime;
 #ifndef _WIN32
       dbg << ", Mem Use = ";
       if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
@@ -530,7 +527,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	  dbg << "/" << toHumanUnits(avg_highwater);
 	}
       } else {
-	dbg << avg_memuse;
+	dbg << toHumanUnits(avg_memuse);
 	if(avg_highwater) {
 	  dbg << "/" << toHumanUnits(avg_highwater);
 	}
