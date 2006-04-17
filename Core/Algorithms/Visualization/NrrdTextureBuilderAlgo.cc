@@ -150,8 +150,9 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
                               double vmin, double vmax,
                               NrrdDataHandle gHandle,
                               double gmin, double gmax,
-                              int card_mem,
-                              int is_uchar)
+                              NrrdDataHandle mHandle,
+                              double mmin, double mmax,
+                              int card_mem, int is_uchar)
 {
   Nrrd* nv_nrrd = vHandle->nrrd_;
   Nrrd* gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd_ : 0);
@@ -247,7 +248,8 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
   tHandle->set_transform(tform);
   for (unsigned int i=0; i<bricks.size(); i++)
   {
-    fill_brick(bricks[i], vHandle, vmin, vmax, gHandle, gmin, gmax,
+    fill_brick(bricks[i],
+               vHandle, vmin, vmax, gHandle, gmin, gmax, mHandle, mmin, mmax,
 	       nx, ny, nz);
 
     bricks[i]->set_dirty(true);
@@ -258,25 +260,27 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
 
 CompileInfoHandle
 NrrdTextureBuilderAlgo::get_compile_info( const unsigned int vtype,
-					  const unsigned int gtype)
+					  const unsigned int gtype,
+                                          const unsigned int mtype)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("NrrdTextureBuilderAlgoT");
   static const string base_class_name("NrrdTextureBuilderAlgo");
 
-  string vTypeStr,  gTypeStr;
-  string vTypeName, gTypeName;
+  string vTypeStr,  gTypeStr, mTypeStr;
+  string vTypeName, gTypeName, mTypeName;
 
   get_nrrd_compile_type( vtype, vTypeStr, vTypeName );
   get_nrrd_compile_type( gtype, gTypeStr, gTypeName );
+  get_nrrd_compile_type( mtype, mTypeStr, mTypeName );
 
   CompileInfo *rval =
     scinew CompileInfo(template_class_name + "." +
-		       vTypeName + "." + gTypeName + ".",
+		       vTypeName + "." + gTypeName + "." + mTypeName + ".",
 		       base_class_name, 
 		       template_class_name, 
-		       vTypeStr + ", " + gTypeStr );
+		       vTypeStr + ", " + gTypeStr + ", " + mTypeStr );
   
   // Add in the include path to compile this obj
   rval->add_include(include_path);  
