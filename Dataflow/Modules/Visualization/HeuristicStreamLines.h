@@ -596,8 +596,8 @@ namespace SCIRun {
   class HeuristicStreamLinesGUI : virtual public HeuristicStreamLinesData
   {
   public:
-    GuiDouble numsl_;
-    GuiDouble numpts_;
+    GuiInt numsl_;
+    GuiInt numpts_;
     GuiDouble minper_;
     GuiDouble maxper_;
     GuiDouble ming_;
@@ -618,12 +618,12 @@ namespace SCIRun {
       ming_(ctx->subVar("ming")),
       maxg_(ctx->subVar("maxg")),
       numsamples_(ctx->subVar("numsamples")),
+      method_(ctx->subVar("method")),
       stepsize_(ctx->subVar("stepsize")),
       stepout_(ctx->subVar("stepout")),
       maxsteps_(ctx->subVar("maxsteps")),
       minmag_(ctx->subVar("minmag")),
-      direction_(ctx->subVar("direction")),
-      method_(ctx->subVar("method"))
+      direction_(ctx->subVar("direction"))
         {
         };
       
