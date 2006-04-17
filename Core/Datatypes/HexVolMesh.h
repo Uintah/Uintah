@@ -51,6 +51,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Geometry/Plane.h>
+#include <Core/Geometry/CompGeom.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <set>
@@ -333,21 +334,8 @@ public:
     get_point(p2,ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
-  double get_size(typename Cell::index_type idx) const
-  {
-    typename Face::array_type faces;
-    get_faces(faces, idx);
-    Point center;
-    get_center(center, idx);
-    double volume = 0.0;
-    for (unsigned int f = 0; f < faces.size(); f++)
-      {
-        typename Node::array_type nodes;
-        get_nodes(nodes, faces[f]);
-        volume += pyramid_volume(nodes, center);
-      }
-    return volume;
-  };
+  double get_size(typename Cell::index_type idx) const;
+
   double get_length(typename Edge::index_type idx) const
   { return get_size(idx); };
   double get_area(typename Face::index_type idx) const
@@ -426,6 +414,7 @@ public:
     result.normalize();
   }
 
+
   void get_random_point(Point &p, typename Cell::index_type i,
                         int seed = 0) const;
 
@@ -474,9 +463,6 @@ public:
 
   virtual bool has_normals() const { return basis_.polynomial_order() > 1; }
 
-  double pyramid_volume(const typename Node::array_type &,
-                        const Point &) const;
-  double polygon_area(const typename Node::array_type &, const Vector) const;
   Basis& get_basis() { return basis_; }
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -922,11 +908,48 @@ HexVolMesh<Basis>::~HexVolMesh()
    1 that sum to 1) for the point. */
 template <class Basis>
 void
-HexVolMesh<Basis>::get_random_point(Point &/*p*/,
-                                    typename Cell::index_type /*ei*/,
+HexVolMesh<Basis>::get_random_point(Point &p,
+                                    typename Cell::index_type ei,
                                     int /*seed*/) const
 {
-  ASSERTFAIL("don't know how to pick a random point in a hex");
+  static MusilRNG rng;
+
+  const Point &p0 = points_[cells_[ei*8+0]];
+  const Point &p1 = points_[cells_[ei*8+1]];
+  const Point &p2 = points_[cells_[ei*8+2]];
+  const Point &p3 = points_[cells_[ei*8+3]];
+  const Point &p4 = points_[cells_[ei*8+4]];
+  const Point &p5 = points_[cells_[ei*8+5]];
+  const Point &p6 = points_[cells_[ei*8+6]];
+  const Point &p7 = points_[cells_[ei*8+7]];
+
+  const double a0 = tetrahedra_volume(p0, p1, p2, p5);
+  const double a1 = tetrahedra_volume(p0, p2, p3, p7);
+  const double a2 = tetrahedra_volume(p0, p5, p2, p7);
+  const double a3 = tetrahedra_volume(p0, p5, p7, p4);
+  const double a4 = tetrahedra_volume(p5, p2, p7, p6);
+
+  const double w = rng() * (a0 + a1 + a2 + a3 + a4);
+  if (w > (a0 + a1 + a2 + a3))
+  {
+    uniform_sample_tetrahedra(p, p5, p2, p7, p6, rng);
+  }
+  else if (w > (a0 + a1 + a2))
+  {
+    uniform_sample_tetrahedra(p, p0, p5, p7, p4, rng);
+  }
+  else if (w > (a0 + a1))
+  {
+    uniform_sample_tetrahedra(p, p0, p5, p2, p7, rng);
+  }
+  else if (w > a0)
+  {
+    uniform_sample_tetrahedra(p, p0, p2, p3, p7, rng);
+  }
+  else
+  {
+    uniform_sample_tetrahedra(p, p0, p1, p2, p5, rng);
+  }
 }
 
 
@@ -1548,6 +1571,29 @@ HexVolMesh<Basis>::get_center(Point &p, typename Cell::index_type idx) const
 
 
 template <class Basis>
+double
+HexVolMesh<Basis>::get_size(typename Cell::index_type idx) const
+{
+  const Point &p0 = points_[cells_[idx*8+0]];
+  const Point &p1 = points_[cells_[idx*8+1]];
+  const Point &p2 = points_[cells_[idx*8+2]];
+  const Point &p3 = points_[cells_[idx*8+3]];
+  const Point &p4 = points_[cells_[idx*8+4]];
+  const Point &p5 = points_[cells_[idx*8+5]];
+  const Point &p6 = points_[cells_[idx*8+6]];
+  const Point &p7 = points_[cells_[idx*8+7]];
+
+  const double a0 = tetrahedra_volume(p0, p1, p2, p5);
+  const double a1 = tetrahedra_volume(p0, p2, p3, p7);
+  const double a2 = tetrahedra_volume(p0, p5, p2, p7);
+  const double a3 = tetrahedra_volume(p0, p5, p7, p4);
+  const double a4 = tetrahedra_volume(p5, p2, p7, p6);
+  
+  return a0 + a1 + a2 + a3 + a4;
+};
+
+
+template <class Basis>
 bool
 HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
 {
@@ -1733,98 +1779,6 @@ HexVolMesh<Basis>::get_weights(const Point &p, typename Cell::array_type &l,
     return 1;
   }
   return 0;
-}
-
-
-//===================================================================
-
-// area3D_Polygon(): computes the area of a 3D planar polygon
-//    Input:  int n = the number of vertices in the polygon
-//            Point* V = an array of n+2 vertices in a plane
-//                       with V[n]=V[0] and V[n+1]=V[1]
-//            Point N = unit normal vector of the polygon's plane
-//    Return: the (float) area of the polygon
-
-// Copyright 2000, softSurfer (www.softsurfer.com)
-// This code may be freely used and modified for any purpose
-// providing that this copyright notice is included with it.
-// SoftSurfer makes no warranty for this code, and cannot be held
-// liable for any real or imagined damage resulting from its use.
-// Users of this code must verify correctness for their application.
-
-template <class Basis>
-double
-HexVolMesh<Basis>::polygon_area(const typename Node::array_type &ni,
-                                const Vector N) const
-{
-  double area = 0;
-  double an, ax, ay, az;  // abs value of normal and its coords
-  int   coord;           // coord to ignore: 1=x, 2=y, 3=z
-    unsigned int   i, j, k;         // loop indices
-    const unsigned int n = ni.size();
-
-    // select largest abs coordinate to ignore for projection
-    ax = (N.x()>0 ? N.x() : -N.x());     // abs x-coord
-    ay = (N.y()>0 ? N.y() : -N.y());     // abs y-coord
-    az = (N.z()>0 ? N.z() : -N.z());     // abs z-coord
-
-    coord = 3;                     // ignore z-coord
-    if (ax > ay) {
-        if (ax > az) coord = 1;    // ignore x-coord
-    }
-    else if (ay > az) coord = 2;   // ignore y-coord
-
-    // compute area of the 2D projection
-    for (i=1, j=2, k=0; i<=n; i++, j++, k++)
-        switch (coord) {
-        case 1:
-            area += (points_[ni[i%n]].y() *
-                     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
-            continue;
-        case 2:
-            area += (points_[ni[i%n]].x() *
-                     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
-            continue;
-        case 3:
-            area += (points_[ni[i%n]].x() *
-                     (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
-            continue;
-        }
-
-    // scale to get area before projection
-    an = sqrt( ax*ax + ay*ay + az*az);  // length of normal vector
-    switch (coord) {
-    case 1:
-        area *= (an / (2*ax));
-        break;
-    case 2:
-        area *= (an / (2*ay));
-        break;
-    case 3:
-        area *= (an / (2*az));
-    }
-    return area;
-}
-
-
-template <class Basis>
-double
-HexVolMesh<Basis>::pyramid_volume(const typename Node::array_type &face, const Point &p) const
-{
-  Vector e1(points_[face[1]]-points_[face[0]]);
-  Vector e2(points_[face[1]]-points_[face[2]]);
-  if (Cross(e1,e2).length2()>0.0)
-  {
-    Plane plane(points_[face[0]], points_[face[1]], points_[face[2]]);
-    return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
-  }
-  Vector e3(points_[face[3]]-points_[face[2]]);
-  if (Cross(e2,e3).length2()>0.0)
-  {
-    Plane plane(points_[face[1]], points_[face[2]], points_[face[3]]);
-    return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
-  }
-  return 0.0;
 }
 
 

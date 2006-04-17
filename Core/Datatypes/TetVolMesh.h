@@ -48,7 +48,7 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/SearchGrid.h>
-#include <Core/Math/MusilRNG.h>
+#include <Core/Geometry/CompGeom.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Thread/Mutex.h>
@@ -1162,40 +1162,18 @@ TetVolMesh<Basis>::~TetVolMesh()
    1 that sum to 1) for the point. */
 template <class Basis>
 void
-TetVolMesh<Basis>::get_random_point(Point &p, typename Cell::index_type ei, int seed) const
+TetVolMesh<Basis>::get_random_point(Point &p, typename Cell::index_type ei,
+                                    int seed) const
 {
   static MusilRNG rng;
 
   // get positions of the vertices
-  typename Node::array_type ra;
-  get_nodes(ra,ei);
-  const Point &p0 = point(ra[0]);
-  const Point &p1 = point(ra[1]);
-  const Point &p2 = point(ra[2]);
-  const Point &p3 = point(ra[3]);
+  const Point &p0 = point(cells_[ei*4+0]);
+  const Point &p1 = point(cells_[ei*4+1]);
+  const Point &p2 = point(cells_[ei*4+2]);
+  const Point &p3 = point(cells_[ei*4+3]);
 
-  // generate barrycentric coordinates
-  double t,u,v,w;
-  if (seed) {
-    MusilRNG rng1(seed);
-    t = rng1();
-    u = rng1();
-    v = rng1();
-    w = rng1();
-  } else {
-    t = rng();
-    u = rng();
-    v = rng();
-    w = rng();
-  }
-  double sum = t+u+v+w;
-  t/=sum;
-  u/=sum;
-  v/=sum;
-  w/=sum;
-
-  // compute the position of the random point
-  p = (p0.vector()*t+p1.vector()*u+p2.vector()*v+p3.vector()*w).point();
+  uniform_sample_tetrahedra(p, p0, p1, p2, p3, rng);
 }
 
 
