@@ -181,10 +181,11 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   }  // if total_fluxout > vol  
   
   if (error && !bulletProof_test) {
-    string mesg = " WARNING: ICE Advection operator "
-         " influx outflux volume error.  The bulletproofing that usually"
-        " catches this has been disabled ";
-    static SCIRun::ProgressiveWarning warn(mesg,10); 
+    ostringstream mesg;
+    mesg << " WARNING: ICE Advection operator Influx/Outflux volume error:"
+         << " Patch " << patch->getID()
+         << ", Level " << patch->getLevel()->getIndex();
+    static SCIRun::ProgressiveWarning warn(mesg.str(),10); 
     warn.invoke();
   }
 }
