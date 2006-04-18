@@ -100,6 +100,10 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
     d_sn=6;
     d_opl=0.18;
   }
+  if (d_SHRadiationCalc) {
+  cout << "this model (spherical harmonics) does not run in parallel and has been disabled" << endl;
+  exit(1);
+  }
 
   lprobone = false;
   lprobtwo = false;
@@ -123,6 +127,7 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
   }
 
   if (d_prop_model == "patchmean"){ 
+  cout << "WARNING! Serial and parallel results may deviate for this model" << endl;
     lradcal = true;
     lwsgg = false;
     lambda = 6;
@@ -131,6 +136,8 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
   }
 
   if (d_prop_model == "wsggm"){ 
+  cout << "this model (wsgg) does not run in parallel and has been disabled" << endl;
+  exit(1);
     lradcal = false;
     lwsgg = true;
     lambda = 4;
