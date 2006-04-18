@@ -311,10 +311,7 @@ NrrdTextureBuilder::execute()
       NrrdTextureBuilderAlgo::get_compile_info(vHandle->nrrd_->type,
 					       gHandle.get_rep() ? 
 					       gHandle->nrrd_->type :
-					       vHandle->nrrd_->type,
-                                               mHandle.get_rep() ?
-                                               mHandle->nrrd_->type :
-                                               vHandle->nrrd_->type);
+					       vHandle->nrrd_->type);
     
     Handle<NrrdTextureBuilderAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
@@ -322,7 +319,7 @@ NrrdTextureBuilder::execute()
     algo->build(tHandle_,
 		vHandle, vminval_, vmaxval_,
 		gHandle, gminval_, gmaxval_,
-		mHandle, mminval_, mmaxval_,
+		//mHandle, mminval_, mmaxval_,
 		gui_card_mem_.get(),
 		gui_uchar_.get());
   }

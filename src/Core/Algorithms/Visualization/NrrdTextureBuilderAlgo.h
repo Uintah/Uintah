@@ -67,45 +67,37 @@ public:
   virtual void build(TextureHandle tHandle,
 		     NrrdDataHandle vHandle, double vmin, double vmax,
 		     NrrdDataHandle gHandle, double gmin, double gmax,
-		     NrrdDataHandle mHandle, double mmin, double mmax,
 		     int card_mem, int is_uchar);
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const unsigned int vtype,
-					    const unsigned int gtype,
-                                            const unsigned int mtype);
-
+					    const unsigned int gtype);
 protected:
   virtual void fill_brick(TextureBrickHandle &tHandle,
 			  NrrdDataHandle vHandle, double vmin, double vmax,
 			  NrrdDataHandle gHandle, double gmin, double gmax,
-			  NrrdDataHandle mHandle, double mmin, double mmax,
 			  int ni, int nj, int nk) = 0;
 };
 
 
-template < class VTYPE, class GTYPE, class MTYPE >
+template < class VTYPE, class GTYPE >
 class NrrdTextureBuilderAlgoT : public NrrdTextureBuilderAlgo
 {
 protected:
   virtual void fill_brick(TextureBrickHandle &tHandle,
 			  NrrdDataHandle vHandle, double vmin, double vmax,
 			  NrrdDataHandle gHandle, double gmin, double gmax,
-			  NrrdDataHandle mHandle, double mmin, double mmax,
 			  int ni, int nj, int nk);
 }; 
 
 
-template< class VTYPE, class GTYPE, class MTYPE >
+template< class VTYPE, class GTYPE >
 void
-NrrdTextureBuilderAlgoT<VTYPE, GTYPE, MTYPE>::fill_brick(
-                                                  TextureBrickHandle &brick,
+NrrdTextureBuilderAlgoT<VTYPE, GTYPE>::fill_brick(TextureBrickHandle &brick,
                                                   NrrdDataHandle vHandle,
                                                   double vmin, double vmax,
                                                   NrrdDataHandle gHandle,
                                                   double gmin, double gmax,
-                                                  NrrdDataHandle mHandle,
-                                                  double mmin, double mmax,
                                                   int ni, int nj, int /*nk*/)
 {
   if (brick->get_type_description(TextureBrick::TB_NAME_ONLY_E)->get_name() == 
