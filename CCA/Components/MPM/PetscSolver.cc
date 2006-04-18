@@ -16,7 +16,7 @@ using namespace SCIRun;
 using namespace std;
 
 #define LOG
-#undef LOG
+//#undef LOG
 
 MPMPetscSolver::MPMPetscSolver()
 {
