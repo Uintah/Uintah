@@ -1329,14 +1329,27 @@ QuadSurfMesh<Basis>::compute_grid()
     const double one_third = 1.L/3.L;
     typename Elem::size_type csize;  size(csize);
     const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 1;
-    Vector elem_epsilon = bb.diagonal() * (0.001 / s);
-    if (elem_epsilon.x() < MIN_ELEMENT_VAL) elem_epsilon.x(MIN_ELEMENT_VAL);
-    if (elem_epsilon.y() < MIN_ELEMENT_VAL) elem_epsilon.y(MIN_ELEMENT_VAL);
-    if (elem_epsilon.z() < MIN_ELEMENT_VAL) elem_epsilon.z(MIN_ELEMENT_VAL);
-    bb.extend(bb.min() - elem_epsilon*100);
-    bb.extend(bb.max() + elem_epsilon*100);
+    int sx, sy, sz; sx = sy = sz = s;
+    Vector elem_epsilon = bb.diagonal() * (1.0e-3 / s);
+    if (elem_epsilon.x() < MIN_ELEMENT_VAL)
+    {
+      elem_epsilon.x(MIN_ELEMENT_VAL * 100);
+      sx = 1;
+    }
+    if (elem_epsilon.y() < MIN_ELEMENT_VAL)
+    {
+      elem_epsilon.y(MIN_ELEMENT_VAL * 100);
+      sy = 1;
+    }
+    if (elem_epsilon.z() < MIN_ELEMENT_VAL)
+    {
+      elem_epsilon.z(MIN_ELEMENT_VAL * 100);
+      sz = 1;
+    }
+    bb.extend(bb.min() - elem_epsilon * 10);
+    bb.extend(bb.max() + elem_epsilon * 10);
 
-    SearchGridConstructor sgc(s, s, s, bb.min(), bb.max());
+    SearchGridConstructor sgc(sx, sy, sz, bb.min(), bb.max());
 
     BBox box;
     typename Node::array_type nodes;

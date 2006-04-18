@@ -507,7 +507,7 @@ private:
   Mutex                 synchronize_lock_;
   Basis                 basis_;
 
-  Vector cell_epsilon_;
+  Vector elem_epsilon_;
 
 #ifdef HAVE_HASH_MAP
 
@@ -2074,15 +2074,11 @@ TriSurfMesh<Basis>::insert_elem_into_grid(typename Elem::index_type ci)
   // Need to recompute grid at that point.
 
   BBox box;
-  typename Node::array_type nodes;
-  get_nodes(nodes, ci);
-
-  box.reset();
-  box.extend(points_[nodes[0]]);
-  box.extend(points_[nodes[1]]);
-  box.extend(points_[nodes[2]]);
-  const Point padmin(box.min() - cell_epsilon_);
-  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(points_[faces_[ci*3+0]]);
+  box.extend(points_[faces_[ci*3+1]]);
+  box.extend(points_[faces_[ci*3+2]]);
+  const Point padmin(box.min() - elem_epsilon_);
+  const Point padmax(box.max() + elem_epsilon_);
   box.extend(padmin);
   box.extend(padmax);
   grid_->insert(ci, box);
@@ -2094,15 +2090,11 @@ void
 TriSurfMesh<Basis>::remove_elem_from_grid(typename Elem::index_type ci)
 {
   BBox box;
-  typename Node::array_type nodes;
-  get_nodes(nodes, ci);
-
-  box.reset();
-  box.extend(points_[nodes[0]]);
-  box.extend(points_[nodes[1]]);
-  box.extend(points_[nodes[2]]);
-  const Point padmin(box.min() - cell_epsilon_);
-  const Point padmax(box.max() + cell_epsilon_);
+  box.extend(points_[faces_[ci*3+0]]);
+  box.extend(points_[faces_[ci*3+1]]);
+  box.extend(points_[faces_[ci*3+2]]);
+  const Point padmin(box.min() - elem_epsilon_);
+  const Point padmax(box.max() + elem_epsilon_);
   box.extend(padmin);
   box.extend(padmax);
   grid_->remove(ci, box);
@@ -2119,11 +2111,27 @@ TriSurfMesh<Basis>::compute_grid()
     // Cubed root of number of cells to get a subdivision ballpark.
     typename Elem::size_type csize;  size(csize);
     const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
-    cell_epsilon_ = bb.diagonal() * (1.0e-4 / s);
-    bb.extend(bb.min() - cell_epsilon_ * 2);
-    bb.extend(bb.max() + cell_epsilon_ * 2);
+    int sx, sy, sz; sx = sy = sz = s;
+    elem_epsilon_ = bb.diagonal() * (1.0e-3 / s);
+    if (elem_epsilon_.x() < MIN_ELEMENT_VAL)
+    {
+      elem_epsilon_.x(MIN_ELEMENT_VAL * 100);
+      sx = 1;
+    }
+    if (elem_epsilon_.y() < MIN_ELEMENT_VAL)
+    {
+      elem_epsilon_.y(MIN_ELEMENT_VAL * 100);
+      sy = 1;
+    }
+    if (elem_epsilon_.z() < MIN_ELEMENT_VAL)
+    {
+      elem_epsilon_.z(MIN_ELEMENT_VAL * 100);
+      sz = 1;
+    }
+    bb.extend(bb.min() - elem_epsilon_ * 10);
+    bb.extend(bb.max() + elem_epsilon_ * 10);
 
-    grid_ = scinew SearchGridConstructor(s, s, s, bb.min(), bb.max());
+    grid_ = scinew SearchGridConstructor(sx, sy, sz, bb.min(), bb.max());
 
     typename Node::array_type nodes;
     typename Elem::iterator ci, cie;
