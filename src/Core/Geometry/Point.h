@@ -44,13 +44,15 @@
 #define Geometry_Point_h 1
 
 #include <Core/Math/MinMax.h>
+#include <Core/Geometry/share.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <string>
-#include <iosfwd>
+#include   <string>
+#include   <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Geometry/share.h>
 namespace SCIRun {
+
 using std::string;
     
 class TypeDescription;
@@ -59,10 +61,10 @@ class Piostream;
 class Vector;
 
 class Point {
-  double _x,_y,_z;
+  double x_,y_,z_;
 public:
   inline explicit Point(const Vector& v);
-  inline Point(double x, double y, double z): _x(x), _y(y), _z(z) {}
+  inline Point(double x, double y, double z): x_(x), y_(y), z_(z) {}
   SCISHARE Point(double, double, double, double);
   inline Point(const Point&);
   inline Point();
@@ -158,15 +160,15 @@ SCISHARE std::istream& operator>>(std::istream& os, Point& p);
 namespace SCIRun {
 
 inline Point::Point(const Vector& v)
-    : _x(v._x), _y(v._y), _z(v._z)
+    : x_(v.x_), y_(v.y_), z_(v.z_)
 {
 }
 
 inline Point::Point(const Point& p)
 {
-    _x=p._x;
-    _y=p._y;
-    _z=p._z;
+    x_=p.x_;
+    y_=p.y_;
+    z_=p.z_;
 }
 
 inline Point::Point()
@@ -176,122 +178,122 @@ inline Point::Point()
 
 inline Point& Point::operator=(const Point& p)
 {
-    _x=p._x;
-    _y=p._y;
-    _z=p._z;
+    x_=p.x_;
+    y_=p.y_;
+    z_=p.z_;
     return *this;
 }
 
 inline Vector Point::operator+(const Point& p) const
 {
-    return Vector(_x+p._x, _y+p._y, _z+p._z);
+    return Vector(x_+p.x_, y_+p.y_, z_+p.z_);
 }
 
 inline Vector Point::operator-(const Point& p) const
 {
-    return Vector(_x-p._x, _y-p._y, _z-p._z);
+    return Vector(x_-p.x_, y_-p.y_, z_-p.z_);
 }
 
 inline Point Point::operator+(const Vector& v) const
 {
-    return Point(_x+v._x, _y+v._y, _z+v._z);
+    return Point(x_+v.x_, y_+v.y_, z_+v.z_);
 }
 
 inline Point Point::operator-(const Vector& v) const
 {
-    return Point(_x-v._x, _y-v._y, _z-v._z);
+    return Point(x_-v.x_, y_-v.y_, z_-v.z_);
 }
 
 inline Point& Point::operator+=(const Vector& v)
 {
-    _x+=v._x;
-    _y+=v._y;
-    _z+=v._z;
+    x_+=v.x_;
+    y_+=v.y_;
+    z_+=v.z_;
     return *this;
 }
 
 inline Point& Point::operator-=(const Vector& v)
 {
-    _x-=v._x;
-    _y-=v._y;
-    _z-=v._z;
+    x_-=v.x_;
+    y_-=v.y_;
+    z_-=v.z_;
     return *this;
 }
 
 inline Point& Point::operator*=(const double d)
 {
-    _x*=d;
-    _y*=d;
-    _z*=d;
+    x_*=d;
+    y_*=d;
+    z_*=d;
     return *this;
 }
 
 inline Point& Point::operator/=(const double d)
 {
-    _x/=d;
-    _y/=d;
-    _z/=d;
+    x_/=d;
+    y_/=d;
+    z_/=d;
     return *this;
 }
 
 inline Point Point::operator-() const
 {
-    return Point(-_x, -_y, -_z);
+    return Point(-x_, -y_, -z_);
 }
 
 inline Point Point::operator*(double d) const
 {
-    return Point(_x*d, _y*d, _z*d);
+    return Point(x_*d, y_*d, z_*d);
 }
 
 inline Point Point::operator/(const double d) const
 {
-    return Point(_x/d,_y/d,_z/d);
+    return Point(x_/d,y_/d,z_/d);
 }
 
 inline double& Point::operator()(int idx) {
-	return (&_x)[idx];
+	return (&x_)[idx];
 }
 
 inline double Point::operator()(int idx) const {
-	return (&_x)[idx];
+	return (&x_)[idx];
 }
 
 inline void Point::addscaled(const Point& p, const double scale) {
   // this += p * w;
-  _x += p._x * scale;
-  _y += p._y * scale;
-  _z += p._z * scale;
+  x_ += p.x_ * scale;
+  y_ += p.y_ * scale;
+  z_ += p.z_ * scale;
 }
 
 inline void Point::x(const double d)
 {
-    _x=d;
+    x_=d;
 }
 
 inline double Point::x() const
 {
-    return _x;
+    return x_;
 }
 
 inline void Point::y(const double d)
 {
-    _y=d;
+    y_=d;
 }
 
 inline double Point::y() const
 {
-    return _y;
+    return y_;
 }
 
 inline void Point::z(const double d)
 {
-    _z=d;
+    z_=d;
 }
 
 inline double Point::z() const
 {
-    return _z;
+    return z_;
 }
 
 inline const Vector &Point::vector() const
@@ -307,29 +309,29 @@ inline Vector &Point::asVector() const
 inline Point Min(const Point& p1, const Point& p2)
 {
 
-  double x=Min(p1._x, p2._x);
-  double y=Min(p1._y, p2._y);
-  double z=Min(p1._z, p2._z);
+  double x=Min(p1.x_, p2.x_);
+  double y=Min(p1.y_, p2.y_);
+  double z=Min(p1.z_, p2.z_);
   return Point(x,y,z);
 }
 
 inline Point Max(const Point& p1, const Point& p2)
 {
 
-  double x=Max(p1._x, p2._x);
-  double y=Max(p1._y, p2._y);
-  double z=Max(p1._z, p2._z);
+  double x=Max(p1.x_, p2.x_);
+  double y=Max(p1.y_, p2.y_);
+  double z=Max(p1.z_, p2.z_);
   return Point(x,y,z);
 }
 
 inline double Dot(const Point& p, const Vector& v)
 {
-    return p._x*v._x+p._y*v._y+p._z*v._z;
+    return p.x_*v.x_+p.y_*v.y_+p.z_*v.z_;
 }
 
 inline double Dot(const Point& p1, const Point& p2)
 {
-  return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
+  return p1.x_*p2.x_ + p1.y_*p2.y_ + p1.z_*p2.z_;
 }
 
 SCISHARE const TypeDescription* get_type_description(Point*);

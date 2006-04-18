@@ -6,14 +6,23 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <iostream>
+#include <math.h>
+
+#ifndef M_PI
+#  define M_PI           3.14159265358979323846  /* pi */
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using std::cout;
 
+const string GUVSphereShellPiece::TYPE_NAME = "guv_sphere_shell";
+
 GUVSphereShellPiece::GUVSphereShellPiece(ProblemSpecP& ps)
 {
-  setName("GUV_shell");
+  name_ = "Unnamed GUV_shell";
   ps->require("origin",d_origin);
   ps->require("radius",d_radius);
   if ( d_radius <= 0.0)
@@ -41,11 +50,11 @@ GUVSphereShellPiece::~GUVSphereShellPiece()
 {
 }
 
-void GUVSphereShellPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+GUVSphereShellPiece::outputHelper( ProblemSpecP & ps ) const
 {
   ProblemSpecP shell_ps = ps->appendChild("shell");
   ProblemSpecP guv_ps = shell_ps->appendChild("GUV_sphere");
-
 
   guv_ps->appendElement("origin",d_origin);
   guv_ps->appendElement("radius",d_radius);
@@ -61,7 +70,8 @@ void GUVSphereShellPiece::outputProblemSpec(ProblemSpecP& ps)
 }
 
 
-GUVSphereShellPiece* GUVSphereShellPiece::clone()
+GeometryPieceP
+GUVSphereShellPiece::clone() const
 {
   return scinew GUVSphereShellPiece(*this);
 }
@@ -178,13 +188,13 @@ GUVSphereShellPiece::insideZone(const Point& p) const
 
 int 
 GUVSphereShellPiece::createParticles(const Patch* ,
-				     ParticleVariable<Point>&  ,
-				     ParticleVariable<double>& ,
-				     ParticleVariable<double>& ,
-				     ParticleVariable<double>& ,
-				     ParticleVariable<Vector>& ,
-				     ParticleVariable<Vector>& ,
-				     particleIndex )
+                                     ParticleVariable<Point>&  ,
+                                     ParticleVariable<double>& ,
+                                     ParticleVariable<double>& ,
+                                     ParticleVariable<double>& ,
+                                     ParticleVariable<Vector>& ,
+                                     ParticleVariable<Vector>& ,
+                                     particleIndex )
 {
   cout << "**ERROR**GUVSphereShellPiece:: No create particles implemented.";
   return 0;

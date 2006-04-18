@@ -40,8 +40,7 @@ WARNING
     Handle(T*);
     Handle(const Handle<T>&);
     
-    Handle<T>& operator=(const Handle<T>& copy)
-    { return operator=(copy.d_rep); }
+    Handle<T>& operator=(const Handle<T>& copy) { return operator=(copy.d_rep); }
     Handle<T>& operator=(T*);
     
     ~Handle();
@@ -89,7 +88,7 @@ WARNING
     }
   private:
     T* d_rep;
-  };
+  }; // end class Handle
   
   template<class T>
   Handle<T>::Handle()

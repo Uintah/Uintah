@@ -2,15 +2,18 @@
 #ifndef Uintah_Components_Arches_BoundaryCondition_h
 #define Uintah_Components_Arches_BoundaryCondition_h
 
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Containers/Array1.h>
+
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <vector>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 /**************************************
@@ -52,7 +55,6 @@ class ArchesVariables;
 class ArchesConstVariables;
 class CellInformation;
 class VarLabel;
-class GeometryPiece;
 class PhysicalConstants;
 class Properties;
 class Stream;
@@ -695,7 +697,7 @@ private:
 	// calculated values
 	Stream calcStream;
 	// stores the geometry information, read from problem specs
-	std::vector<GeometryPiece*> d_geomPiece;
+	std::vector<GeometryPieceP> d_geomPiece;
 	void problemSetup(ProblemSpecP& params);
 	// reduction variable label to get area
 	VarLabel* d_area_label;
@@ -712,9 +714,9 @@ private:
 	double refPressure;
 	double area;
 	// stores the geometry information, read from problem specs
-	std::vector<GeometryPiece*> d_geomPiece;
+	std::vector<GeometryPieceP> d_geomPiece;
 	PressureInlet(int numMix, int cellID);
-	~PressureInlet();
+	~PressureInlet() {}
 	void problemSetup(ProblemSpecP& params);
       };
 
@@ -727,9 +729,9 @@ private:
 	Stream calcStream;
 	double area;
 	// stores the geometry information, read from problem specs
-	std::vector<GeometryPiece*> d_geomPiece;
+	std::vector<GeometryPieceP> d_geomPiece;
 	FlowOutlet(int numMix, int cellID);
-	~FlowOutlet();
+	~FlowOutlet() {}
 	void problemSetup(ProblemSpecP& params);
       };
 
@@ -739,9 +741,9 @@ private:
 	int d_cellTypeID;
 	double area;
 	// stores the geometry information, read from problem specs
-	std::vector<GeometryPiece*> d_geomPiece;
+	std::vector<GeometryPieceP> d_geomPiece;
 	WallBdry(int cellID);
-	~WallBdry();
+	~WallBdry() {}
 	void problemSetup(ProblemSpecP& params);
       };
 
@@ -752,9 +754,9 @@ private:
 	double area;
 	double d_temperature;
 	// stores the geometry information, read from problem specs
-	std::vector<GeometryPiece*> d_geomPiece;
+	std::vector<GeometryPieceP> d_geomPiece;
 	IntrusionBdry(int cellID);
-	~IntrusionBdry();
+	IntrusionBdry() {}
 	void problemSetup(ProblemSpecP& params);
       };
 

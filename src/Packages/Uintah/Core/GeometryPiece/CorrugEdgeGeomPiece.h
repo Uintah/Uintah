@@ -63,10 +63,11 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~CorrugEdgeGeomPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
-    CorrugEdgeGeomPiece* clone();
+    virtual GeometryPieceP clone() const;
 	 
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the cylinder. */
@@ -81,9 +82,10 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles */
     //////////////////////////////////////////////////////////////////////
-    int createPoints();
+    unsigned int createPoints();
 
   private:
+    virtual void outputHelper( ProblemSpecP & ps) const;
 	 
     Point  d_xymin;
     Point  d_xymax;

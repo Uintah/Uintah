@@ -466,7 +466,7 @@ void BoundCondReader::combineBCS()
 	  rearranged.addBCData(mat_id,bc->clone());
 	} else {
 	  // Find the child that is the "side" bc
-	  BCGeomBase* side_bc;
+	  BCGeomBase* side_bc = NULL;
 	  vector<BCGeomBase*>::const_iterator index;
 	  index = find_if(bcd_itr->second.begin(),
 			  bcd_itr->second.end(),

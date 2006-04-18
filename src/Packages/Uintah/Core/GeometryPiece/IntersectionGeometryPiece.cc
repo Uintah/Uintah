@@ -6,86 +6,82 @@
 
 using namespace SCIRun;
 using namespace Uintah;
+using namespace std;
+
+const string IntersectionGeometryPiece::TYPE_NAME = "intersection";
 
 IntersectionGeometryPiece::IntersectionGeometryPiece(ProblemSpecP &ps) 
 {
-  setName("intersection");
-  GeometryPieceFactory::create(ps,child);
+  name_ = "Unnamed Intersection";
+  GeometryPieceFactory::create(ps,child_);
 
 }
+
+IntersectionGeometryPiece::IntersectionGeometryPiece(const IntersectionGeometryPiece& rhs)
+{
+  for( vector<GeometryPieceP>::const_iterator it = rhs.child_.begin();
+       it != rhs.child_.end(); ++it )
+    child_.push_back((*it)->clone());
+}
+
 
 IntersectionGeometryPiece::~IntersectionGeometryPiece()
 {
-  for (int i = 0; i < (int)child.size(); i++) {
-    delete child[i];
-  }
 }
 
-IntersectionGeometryPiece& IntersectionGeometryPiece::operator=(const IntersectionGeometryPiece& rhs)
+IntersectionGeometryPiece&
+IntersectionGeometryPiece::operator=(const IntersectionGeometryPiece& rhs)
 {
   if (this == &rhs)
     return *this;
 
-  // Delete the lhs
-  for (std::vector<GeometryPiece*>::const_iterator it = child.begin();
-       it != child.end(); ++it)
-    delete *it;
-  child.clear();
+  child_.clear();
 
-  for (std::vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
-       it != rhs.child.end(); ++it)
-    child.push_back((*it)->clone());
+  // Copy in the new values
+  for( vector<GeometryPieceP>::const_iterator it = rhs.child_.begin();
+       it != rhs.child_.end(); ++it ) {
+    child_.push_back((*it)->clone());
+  }
 
   return *this;
-
 }
 
-
-IntersectionGeometryPiece::IntersectionGeometryPiece(const IntersectionGeometryPiece& rhs)
+void
+IntersectionGeometryPiece::outputHelper( ProblemSpecP & ps) const
 {
-  for (std::vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
-       it != rhs.child.end(); ++it)
-    child.push_back((*it)->clone());
+  for (vector<GeometryPieceP>::const_iterator it = child_.begin(); it != child_.end(); ++it) {
+    (*it)->outputProblemSpec( ps );
+  }
 }
 
-
-void IntersectionGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
-{
-  ProblemSpecP intersection_ps = ps->appendChild("intersection");
-
-  for (vector<GeometryPiece*>::const_iterator it = child.begin();
-       it != child.end(); ++it)
-    (*it)->outputProblemSpec(intersection_ps);
-}
-
-
-
-IntersectionGeometryPiece* IntersectionGeometryPiece::clone()
+GeometryPieceP
+IntersectionGeometryPiece::clone() const
 {
   return scinew IntersectionGeometryPiece(*this);
 }
 
-bool IntersectionGeometryPiece::inside(const Point &p) const 
+bool
+IntersectionGeometryPiece::inside(const Point &p) const 
 {
-  for (int i = 0; i < (int)child.size(); i++) {
-    if (!child[i]->inside(p))
+  for( unsigned int i = 0; i < child_.size(); i++ ) {
+    if (!child_[i]->inside(p))
       return false;
   }
   return true;
 }
 
-Box IntersectionGeometryPiece::getBoundingBox() const
+Box
+IntersectionGeometryPiece::getBoundingBox() const
 {
-
   Point lo,hi;
 
   // Initialize the lo and hi points to the first element
 
-  lo = child[0]->getBoundingBox().lower();
-  hi = child[0]->getBoundingBox().upper();
+  lo = child_[0]->getBoundingBox().lower();
+  hi = child_[0]->getBoundingBox().upper();
 
-  for (int i = 0; i < (int)child.size(); i++) {
-    Box box = child[i]->getBoundingBox();
+  for (unsigned int i = 0; i < child_.size(); i++) {
+    Box box = child_[i]->getBoundingBox();
     lo = Min(lo,box.lower());
     hi = Max(hi,box.upper());
   }

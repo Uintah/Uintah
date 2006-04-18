@@ -61,7 +61,7 @@ string
 Vector::get_string() const
 {
     char buf[100];
-    sprintf(buf, "[%g, %g, %g]", _x, _y, _z);
+    sprintf(buf, "[%g, %g, %g]", x_, y_, z_);
     return buf;
 }
 
@@ -124,12 +124,12 @@ istream& operator>>( istream& is, Vector& v)
 int
 Vector::operator== ( const Vector& v ) const
 {
-    return v._x == _x && v._y == _y && v._z == _z;
+    return v.x_ == x_ && v.y_ == y_ && v.z_ == z_;
 }
 
 int Vector::operator!=(const Vector& v) const
 {
-    return v._x != _x || v._y != _y || v._z != _z;
+    return v.x_ != x_ || v.y_ != y_ || v.z_ != z_;
 }
 
 void
@@ -137,13 +137,14 @@ Pio(Piostream& stream, Vector& p)
 {
 
     stream.begin_cheap_delim();
-    Pio(stream, p._x);
-    Pio(stream, p._y);
-    Pio(stream, p._z);
+    Pio(stream, p.x_);
+    Pio(stream, p.y_);
+    Pio(stream, p.z_);
     stream.end_cheap_delim();
 }
 
-void Vector::rotz90(const int c)
+void
+Vector::rotz90(const int c)
 {
     // Rotate by c*90 degrees counter clockwise
     switch(c%4){
@@ -153,22 +154,22 @@ void Vector::rotz90(const int c)
     case 1:
 	// 90 degrees
 	{
-	    double newx=-_y;
-	    _y=_x;
-	    _x=newx;
+	    double newx=-y_;
+	    y_=x_;
+	    x_=newx;
 	}
 	break;
     case 2:
 	// 180 degrees
-	_x=-_x;
-	_y=-_y;
+	x_=-x_;
+	y_=-y_;
 	break;
     case 3:
 	// 270 degrees
 	{
-	    double newy=-_x;
-	    _x=_y;
-	    _y=newy;
+	    double newy=-x_;
+	    x_=y_;
+	    y_=newy;
 	}
 	break;
     }

@@ -16,23 +16,17 @@ RegionDB::RegionDB()
 {
 }
 
-RegionDB::~RegionDB()
-{
-  for(MapType::iterator iter = db.begin(); iter != db.end(); iter++)
-    delete iter->second;
-}
-
-void RegionDB::problemSetup(ProblemSpecP& ps, const GridP& grid)
+void
+RegionDB::problemSetup(ProblemSpecP& ps, const GridP& grid)
 {
   ProblemSpecP regions = ps->findBlock("Regions");
   if(!regions)
     throw ProblemSetupException("Regions block not found", __FILE__, __LINE__);
-  vector<GeometryPiece*> pieces;
+  vector<GeometryPieceP> pieces;
   GeometryPieceFactory::create(regions, pieces);
-  for(vector<GeometryPiece*>::iterator iter = pieces.begin();
+  for(vector<GeometryPieceP>::iterator iter = pieces.begin();
       iter != pieces.end(); iter++){
     addRegion(*iter);
-    
   }
 
   // Create regions for x+, x-, y+, ...
@@ -83,22 +77,27 @@ void RegionDB::problemSetup(ProblemSpecP& ps, const GridP& grid)
 	    "zfaces");
 }
 
-void RegionDB::addRegion(GeometryPiece* piece, const string& name)
+void
+RegionDB::addRegion(GeometryPieceP piece, const string& name)
 {
   piece->setName(name);
   addRegion(piece);
 }
 
-void RegionDB::addRegion(GeometryPiece* piece)
+void
+RegionDB::addRegion(GeometryPieceP piece)
 {
   if(piece->getName().length() == 0)
     throw ProblemSetupException("Geometry pieces in <Region> must be named", __FILE__, __LINE__);
+
   if(db.find(piece->getName()) != db.end())
     throw ProblemSetupException("Duplicate name of geometry piece: "+piece->getName(), __FILE__, __LINE__);
-  db[piece->getName()]=piece;
+
+  db[piece->getName()] = piece;
 }
 
-const GeometryPiece* RegionDB::getObject(const string& name) const
+GeometryPieceP
+RegionDB::getObject(const string& name) const
 {
   MapType::const_iterator iter = db.find(name);
   if(iter == db.end())

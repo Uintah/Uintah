@@ -6,13 +6,19 @@
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
+#ifndef M_PI
+#  define M_PI           3.14159265358979323846  /* pi */
+#endif
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+const string ConeGeometryPiece::TYPE_NAME = "cone";
+
 ConeGeometryPiece::ConeGeometryPiece(ProblemSpecP& ps) 
 {
-  setName("cone");
+  name_ = "Unnamed Cone";
   Point top, bottom;
   double topRad = 0.0;
   double botRad = 0.0;
@@ -41,8 +47,8 @@ ConeGeometryPiece::ConeGeometryPiece(ProblemSpecP& ps)
 }
 
 ConeGeometryPiece::ConeGeometryPiece(const Point& top,
-		                     const Point& bottom,
-				     double topRad,
+                                     const Point& bottom,
+                                     double topRad,
                                      double botRad)
 {
   if (botRad == 0.0 && topRad == 0.0) {
@@ -66,20 +72,19 @@ ConeGeometryPiece::~ConeGeometryPiece()
 {
 }
 
-ConeGeometryPiece* ConeGeometryPiece::clone()
+GeometryPieceP
+ConeGeometryPiece::clone() const
 {
   return scinew ConeGeometryPiece(*this);
 }
 
-void ConeGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+ConeGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-
-  ProblemSpecP cone_ps = ps->appendChild("cone");
-
-  cone_ps->appendElement("bottom",d_bottom);
-  cone_ps->appendElement("top",d_top);
-  cone_ps->appendElement("bottom_radius",d_radius);
-  cone_ps->appendElement("top_radius",d_topRad);
+  ps->appendElement("bottom",d_bottom);
+  ps->appendElement("top",d_top);
+  ps->appendElement("bottom_radius",d_radius);
+  ps->appendElement("top_radius",d_topRad);
 }
 
 bool 
@@ -122,10 +127,10 @@ ConeGeometryPiece::getBoundingBox() const
   
   double rad = (d_radius > d_topRad) ? d_radius : d_topRad;
   Point lo(d_bottom.x() - rad, d_bottom.y() - rad,
-	   d_bottom.z() - rad);
+           d_bottom.z() - rad);
 
   Point hi(d_top.x() + rad, d_top.y() + rad,
-	   d_top.z() + rad);
+           d_top.z() + rad);
 
   return Box(lo,hi);
 }

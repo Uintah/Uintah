@@ -3,6 +3,7 @@
 #define Packages_Uintah_CCA_Components_Examples_flameSheet_rxn_h
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -44,7 +45,6 @@ WARNING
   
 ****************************************/
   class ICELabel;
-  class GeometryPiece;
   class flameSheet_rxn : public ModelInterface {
   public:
     flameSheet_rxn(const ProcessorGroup* myworld, ProblemSpecP& params);
@@ -53,21 +53,21 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup);
+                              ModelSetup* setup);
     
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+                                    const LevelP& level,
+                                    const ModelInfo*);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimestep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+                                               const LevelP& level,
+                                               const ModelInfo*);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+                                                   const LevelP& level,
+                                                   const ModelInfo*);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -90,9 +90,9 @@ WARNING
     
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-		      const MaterialSubset* matls, 
+                      const MaterialSubset* matls, 
                     DataWarehouse*, 
-		      DataWarehouse* new_dw);
+                      DataWarehouse* new_dw);
                      
     void testConservation(const ProcessorGroup*, 
                           const PatchSubset* patches,
@@ -103,9 +103,9 @@ WARNING
    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-	                      const MaterialSubset* matls, 
+                              const MaterialSubset* matls, 
                              DataWarehouse*, 
-	                      DataWarehouse* new_dw, 
+                              DataWarehouse* new_dw, 
                              const ModelInfo*);
 
     flameSheet_rxn(const flameSheet_rxn&);
@@ -118,9 +118,9 @@ WARNING
 
     class Region {
     public:
-      Region(GeometryPiece* piece, ProblemSpecP&);
+      Region(GeometryPieceP piece, ProblemSpecP&);
 
-      GeometryPiece* piece;
+      GeometryPieceP piece;
       double initialScalar;
     };
 

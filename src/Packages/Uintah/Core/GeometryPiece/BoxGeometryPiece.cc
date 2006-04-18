@@ -11,9 +11,12 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-BoxGeometryPiece::BoxGeometryPiece(ProblemSpecP& ps)
+const string BoxGeometryPiece::TYPE_NAME = "box";
+
+BoxGeometryPiece::BoxGeometryPiece( ProblemSpecP & ps )
 {
-  setName("box");
+  name_ = "Unnamed " + TYPE_NAME + " from PS";
+
   Point min, max;
   ps->require("min",min);
   ps->require("max",max); 
@@ -35,6 +38,8 @@ BoxGeometryPiece::BoxGeometryPiece(ProblemSpecP& ps)
 BoxGeometryPiece::BoxGeometryPiece(const Point& p1, const Point& p2)
   : d_box(Min(p1, p2), Max(p1, p2))
 {
+  name_ = "Unnamed " + TYPE_NAME + " from p1,p2";
+
   if(d_box.degenerate())
     SCI_THROW(ProblemSetupException("degenerate box", __FILE__, __LINE__));
 }
@@ -43,22 +48,21 @@ BoxGeometryPiece::~BoxGeometryPiece()
 {
 }
 
-void BoxGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+BoxGeometryPiece::outputHelper( ProblemSpecP& ps ) const
 {
-  ProblemSpecP box_ps = ps->appendChild("box");
-
-  box_ps->appendElement("min",d_box.lower());
-  box_ps->appendElement("max",d_box.upper());
+  ps->appendElement("min",d_box.lower());
+  ps->appendElement("max",d_box.upper());
 }
 
-
-
-BoxGeometryPiece* BoxGeometryPiece::clone()
+GeometryPieceP
+BoxGeometryPiece::clone() const
 {
   return scinew BoxGeometryPiece(*this);
 }
 
-bool BoxGeometryPiece::inside(const Point& p) const
+bool
+BoxGeometryPiece::inside(const Point& p) const
 {
   //Check p with the lower coordinates
 
@@ -66,10 +70,11 @@ bool BoxGeometryPiece::inside(const Point& p) const
     return true;
   else
     return false;
-	       
+               
 }
 
-Box BoxGeometryPiece::getBoundingBox() const
+Box
+BoxGeometryPiece::getBoundingBox() const
 {
   return d_box;
 }

@@ -10,9 +10,11 @@ using namespace Uintah;
 using namespace SCIRun;
 using std::ifstream;
 
+const string NullGeometryPiece::TYPE_NAME = "null";
+
 NullGeometryPiece::NullGeometryPiece(ProblemSpecP& /*ps*/)
 {
-  setName("null");
+  name_ = "Unnamed Null";
   d_box = Box(Point(0.,0.,0.),Point(0.,0.,0.));
 }
 
@@ -24,13 +26,14 @@ NullGeometryPiece::~NullGeometryPiece()
 {
 }
 
-void NullGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+NullGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-  ProblemSpecP null_ps = ps->appendChild("null");
+  ps->appendChild("null");
 }
 
-NullGeometryPiece*
-NullGeometryPiece::clone()
+GeometryPieceP
+NullGeometryPiece::clone() const
 {
   return scinew NullGeometryPiece(*this);
 }

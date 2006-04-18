@@ -13,11 +13,12 @@ using namespace SCIRun;
 
 using namespace std;
 
+const string SmoothCylGeomPiece::TYPE_NAME = "smoothcyl";
+
 //////////
 // Constructor : Initialize stuff
 SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
 {
-  setName("smoothcyl");
   ps->require("bottom", d_bottom);
   ps->require("top", d_top);
   if ((d_top-d_bottom).length2() <= 0.0)
@@ -56,24 +57,21 @@ SmoothCylGeomPiece::~SmoothCylGeomPiece()
 {
 }
 
-void SmoothCylGeomPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+SmoothCylGeomPiece::outputHelper( ProblemSpecP & ps ) const
 {
-  ProblemSpecP smooth_ps = ps->appendChild("smoothcyl");
-
-  smooth_ps->appendElement("bottom", d_bottom);
-  smooth_ps->appendElement("top", d_top);
-  smooth_ps->appendElement("radius", d_radius);
-  smooth_ps->appendElement("num_radial", d_numRadial);
-  smooth_ps->appendElement("num_axial", d_numAxial);
-  smooth_ps->appendElement("thickness", d_thickness);
-  smooth_ps->appendElement("endcap_thickness", d_capThick);
-  smooth_ps->appendElement("output_file", d_fileName);
-
+  ps->appendElement("bottom", d_bottom);
+  ps->appendElement("top", d_top);
+  ps->appendElement("radius", d_radius);
+  ps->appendElement("num_radial", d_numRadial);
+  ps->appendElement("num_axial", d_numAxial);
+  ps->appendElement("thickness", d_thickness);
+  ps->appendElement("endcap_thickness", d_capThick);
+  ps->appendElement("output_file", d_fileName);
 }
 
-
-
-SmoothCylGeomPiece* SmoothCylGeomPiece::clone()
+GeometryPieceP
+SmoothCylGeomPiece::clone() const
 {
   return scinew SmoothCylGeomPiece(*this);
 }
@@ -138,7 +136,7 @@ SmoothCylGeomPiece::getBoundingBox() const
 //////////////////////////////////////////////////////////////////////////
 /* Create particles */
 //////////////////////////////////////////////////////////////////////////
-int 
+unsigned int 
 SmoothCylGeomPiece::createPoints()
 {
   int totCount = 0;

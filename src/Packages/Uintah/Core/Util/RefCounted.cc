@@ -58,14 +58,16 @@ RefCounted::~RefCounted()
   }
 }
 
-void RefCounted::addReference() const
+void
+RefCounted::addReference() const
 {
     locks[d_lockIndex]->lock();
     d_refCount++;
     locks[d_lockIndex]->unlock();
 }
 
-bool RefCounted::removeReference() const
+bool
+RefCounted::removeReference() const
 {
     locks[d_lockIndex]->lock();
     bool status = (--d_refCount == 0);

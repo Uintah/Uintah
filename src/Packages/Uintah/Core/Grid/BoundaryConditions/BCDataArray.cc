@@ -108,7 +108,7 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
     IntVector nodes[8];
     patch->findNodesFromCell(*candidatePoints,nodes);
     Point pts[8];
-    Vector p;
+    Vector p( 0.0, 0.0, 0.0 );
     for (int i = 0; i < 8; i++)
       pts[i] = patch->getLevel()->getNodePosition(nodes[i]);
     if (face == Patch::xminus)

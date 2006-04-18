@@ -1,19 +1,25 @@
 #include <Packages/Uintah/Core/GeometryPiece/SphereMembraneGeometryPiece.h>
-#include <Core/Geometry/Vector.h>
+
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+
+#include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
+
+#include <math.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
+const string SphereMembraneGeometryPiece::TYPE_NAME = "sphere_membrane";
 
 SphereMembraneGeometryPiece::SphereMembraneGeometryPiece(ProblemSpecP& ps)
 {
-  setName("sphere_membrane");
+  name_ = "Unnamed Sphere_membrane";
+
   ps->require("origin",d_origin);
   ps->require("radius",d_radius);
   ps->require("thickness",d_h);
@@ -30,25 +36,24 @@ SphereMembraneGeometryPiece::~SphereMembraneGeometryPiece()
 {
 }
 
-void SphereMembraneGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+SphereMembraneGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-
-  ProblemSpecP sphere_mem_ps = ps->appendChild("sphere_membrane");
-
-  sphere_mem_ps->appendElement("origin",d_origin);
-  sphere_mem_ps->appendElement("radius",d_radius);
-  sphere_mem_ps->appendElement("thickness",d_h);
-  sphere_mem_ps->appendElement("num_lat",d_numLat);
-  sphere_mem_ps->appendElement("num_long",d_numLong);
+  ps->appendElement("origin",d_origin);
+  ps->appendElement("radius",d_radius);
+  ps->appendElement("thickness",d_h);
+  ps->appendElement("num_lat",d_numLat);
+  ps->appendElement("num_long",d_numLong);
 }
 
-
-SphereMembraneGeometryPiece* SphereMembraneGeometryPiece::clone()
+GeometryPieceP
+SphereMembraneGeometryPiece::clone() const
 {
   return scinew SphereMembraneGeometryPiece(*this);
 }
 
-bool SphereMembraneGeometryPiece::inside(const Point& p) const
+bool
+SphereMembraneGeometryPiece::inside(const Point& p) const
 {
   Vector diff = p - d_origin;
 
@@ -56,22 +61,23 @@ bool SphereMembraneGeometryPiece::inside(const Point& p) const
     return false;
   else 
     return true;
-  
 }
 
-Box SphereMembraneGeometryPiece::getBoundingBox() const
+Box
+SphereMembraneGeometryPiece::getBoundingBox() const
 {
     Point lo(d_origin.x()-d_radius,d_origin.y()-d_radius,
-	   d_origin.z()-d_radius);
+             d_origin.z()-d_radius);
 
     Point hi(d_origin.x()+d_radius,d_origin.y()+d_radius,
-	   d_origin.z()+d_radius);
+             d_origin.z()+d_radius);
 
     return Box(lo,hi);
 
 }
 
-int SphereMembraneGeometryPiece::returnParticleCount(const Patch* patch)
+int
+SphereMembraneGeometryPiece::returnParticleCount(const Patch* patch)
 {
   Box b = patch->getBox();
 

@@ -52,8 +52,11 @@ namespace Uintah {
     virtual ~SmoothGeomPiece();
 
     /// Make a clone
-    virtual SmoothGeomPiece* clone() = 0;
+    virtual GeometryPieceP clone() const = 0;
 	 
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
+
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the cylinder. */
     //////////////////////////////////////////////////////////////////////
@@ -67,7 +70,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! Creates points and returns count of points */
     //////////////////////////////////////////////////////////////////////
-    virtual int createPoints() = 0;
+    virtual unsigned int createPoints() = 0;
 
     //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle locations */

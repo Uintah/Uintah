@@ -1,11 +1,14 @@
 
 #ifndef Packages_Uintah_CCA_Components_Examples_AdiabaticTable_h
 #define Packages_Uintah_CCA_Components_Examples_AdiabaticTable_h
+
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+
 #include <vector>
 
 namespace Uintah {
@@ -41,7 +44,6 @@ WARNING
   
 ****************************************/
 
-  class GeometryPiece;
   class AdiabaticTable :public ModelInterface {
   public:
     AdiabaticTable(const ProcessorGroup* myworld, 
@@ -53,21 +55,21 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup);
+                              ModelSetup* setup);
     
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+                                    const LevelP& level,
+                                    const ModelInfo*);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimestep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+                                               const LevelP& level,
+                                               const ModelInfo*);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+                                                   const LevelP& level,
+                                                   const ModelInfo*);
                                             
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                 const LevelP&,
@@ -120,10 +122,10 @@ WARNING
                                vector<constCCVariable<double> >& ind_vars); 
                                
     void  errorEstimate(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse*,
-			   DataWarehouse* new_dw,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw,
                         bool);    
 
     //__________________________________
@@ -137,11 +139,11 @@ WARNING
 
     class Region {
     public:
-      Region(GeometryPiece* piece, ProblemSpecP&);
+      Region(GeometryPieceP piece, ProblemSpecP&);
       
       void outputProblemSpec(ProblemSpecP&);
 
-      GeometryPiece* piece;
+      GeometryPieceP piece;
       double initialScalar;
     };
 
@@ -211,6 +213,8 @@ WARNING
     double varianceScale;
     double varianceMax;
   };
-}
+
+} // end namespace Uintah
 
 #endif
+

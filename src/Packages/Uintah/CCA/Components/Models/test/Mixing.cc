@@ -39,13 +39,12 @@ Mixing::~Mixing()
     for(vector<Region*>::iterator iter = stream->regions.begin();
 	iter != stream->regions.end(); iter++){
       Region* region = *iter;
-      delete region->piece;
       delete region;
     }
   }
 }
 
-Mixing::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
+Mixing::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("massFraction", initialMassFraction);
@@ -112,10 +111,10 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 	 geom_obj_ps != 0;
 	 geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
       
-      vector<GeometryPiece*> pieces;
+      vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
       
-      GeometryPiece* mainpiece;
+      GeometryPieceP mainpiece;
       if(pieces.size() == 0){
 	throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
@@ -208,9 +207,9 @@ void Mixing::initialize(const ProcessorGroup*,
 	for(vector<Region*>::iterator iter = stream->regions.begin();
 	    iter != stream->regions.end(); iter++){
 	  Region* region = *iter;
-	  Box b1 = region->piece->getBoundingBox();
-	  Box b2 = patch->getBox();
-	  Box b = b1.intersect(b2);
+	  //Box b1 = region->piece->getBoundingBox();
+	  //Box b2 = patch->getBox();
+	  //Box b = b1.intersect(b2);
    
 	  for(CellIterator iter = patch->getExtraCellIterator();
 	      !iter.done(); iter++){

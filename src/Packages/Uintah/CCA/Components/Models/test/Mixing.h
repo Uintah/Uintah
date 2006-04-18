@@ -2,8 +2,10 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Mixing_h
 #define Packages_Uintah_CCA_Components_Examples_Mixing_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+
+#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Components/Models/test/MaterialProperties.h>
 
 namespace Uintah {
@@ -37,7 +39,6 @@ WARNING
   
 ****************************************/
 
-  class GeometryPiece;
   class Mixing : public ModelInterface {
   public:
     Mixing(const ProcessorGroup* myworld, ProblemSpecP& params);
@@ -102,9 +103,9 @@ WARNING
 
     class Region {
     public:
-      Region(GeometryPiece* piece, ProblemSpecP&);
+      Region(GeometryPieceP piece, ProblemSpecP&);
 
-      GeometryPiece* piece;
+      GeometryPieceP piece;
       double initialMassFraction;
     };
 

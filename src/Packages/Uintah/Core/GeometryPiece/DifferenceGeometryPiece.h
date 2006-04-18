@@ -62,7 +62,7 @@ WARNING
 	 
 	 //////////
 	 // Construtor that takes two geometry pieces
-	 DifferenceGeometryPiece(GeometryPiece* p1, GeometryPiece* p2);
+	 DifferenceGeometryPiece(GeometryPieceP p1, GeometryPieceP p2);
 
 	 /// Copy constructor
 	 DifferenceGeometryPiece(const DifferenceGeometryPiece& rhs);
@@ -74,10 +74,11 @@ WARNING
 	 // Destructor
 	 virtual ~DifferenceGeometryPiece();
 
-         virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+         static const string TYPE_NAME;
+         virtual std::string getType() const { return TYPE_NAME; }
+
 	 /// Make a clone
-	 DifferenceGeometryPiece* clone();
+         virtual GeometryPieceP clone() const;
 	 
 	 //////////
 	 // Determines whether a point is inside the union Piece.
@@ -88,10 +89,11 @@ WARNING
 	 virtual Box getBoundingBox() const;
 	 
       private:
-	 GeometryPiece* left;
-	 GeometryPiece* right;
+
+         virtual void outputHelper(ProblemSpecP & ps) const;
 	 
-	 
+	 GeometryPieceP left_;
+	 GeometryPieceP right_;
       };
 } // End namespace Uintah
       
