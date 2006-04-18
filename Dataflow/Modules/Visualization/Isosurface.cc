@@ -35,6 +35,7 @@
 
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/FieldInterface.h>
 
 #include <Dataflow/Network/Ports/MatrixPort.h>
@@ -45,8 +46,6 @@
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/Noise.h>
 #include <Core/Algorithms/Visualization/Sage.h>
-#include <Core/Containers/StringUtil.h>
-
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 
@@ -178,7 +177,6 @@ Isosurface::execute()
   // Get the optional colormap for the geometry.
   ColorMapHandle colormap_input_handle = 0;
   get_input_handle( "Optional Color Map", colormap_input_handle, false );
-  
   
   vector<double> isovals(0);
 
@@ -361,7 +359,7 @@ Isosurface::execute()
 	    return;
 	  }
 	  int np = gui_np_.get();
-	  if (np < 1 ) { np = 1; gui_np_.set(np); }
+	  if (np <  1 ) { np =  1; gui_np_.set(np); }
 	  if (np > 32 ) { np = 32; gui_np_.set(np); }
 	  mc_alg->set_np(np);
 	  mc_alg->set_field( field_input_handle.get_rep() );

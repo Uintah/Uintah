@@ -66,8 +66,8 @@ public:
   virtual void execute();
 
 private:
-  GuiString gMode_;
-  GuiString gFunction_;
+  GuiString gui_mode_;
+  GuiString gui_function_;
   GuiDouble gui_uservar0_;
   GuiDouble gui_uservar1_;
   GuiDouble gui_uservar2_;
@@ -75,13 +75,9 @@ private:
   GuiDouble gui_uservar4_;
   GuiDouble gui_uservar5_;
 
-  string mode_;
-  string function_;
-
-  FieldHandle  fHandle_;
-  MatrixHandle mHandle_;
-
-  int fGeneration_;
+  FieldHandle  field_output_handle_;
+  MatrixHandle matrix_output_handle_;
+  NrrdDataHandle nrrd_output_handle_;
 
   bool error_;
 };
@@ -91,16 +87,14 @@ DECLARE_MAKER(ClipByFunction)
 
 ClipByFunction::ClipByFunction(GuiContext* ctx)
   : Module("ClipByFunction", ctx, Filter, "FieldsCreate", "SCIRun"),
-    gMode_(get_ctx()->subVar("clipmode"), "cell"),
-    gFunction_(get_ctx()->subVar("clipfunction"), "x < 0"),
+    gui_mode_(get_ctx()->subVar("clipmode"), "cell"),
+    gui_function_(get_ctx()->subVar("clipfunction"), "x < 0"),
     gui_uservar0_(get_ctx()->subVar("u0"), 0.0),
     gui_uservar1_(get_ctx()->subVar("u1"), 0.0),
     gui_uservar2_(get_ctx()->subVar("u2"), 0.0),
     gui_uservar3_(get_ctx()->subVar("u3"), 0.0),
     gui_uservar4_(get_ctx()->subVar("u4"), 0.0),
-    gui_uservar5_(get_ctx()->subVar("u5"), 0.0),
-    fGeneration_(-1),
-    error_(0)
+    gui_uservar5_(get_ctx()->subVar("u5"), 0.0)
 {
 }
 
@@ -115,60 +109,41 @@ void
 ClipByFunction::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
-  FieldHandle fHandle;
-  if (!(ifp->get(fHandle) && fHandle.get_rep())) {
-    error( "No source field handle or representation" );
-    return;
-  }
-  if (!fHandle->mesh()->is_editable()) {
+  FieldHandle field_input_handle;
+  if( !get_input_handle( "Input", field_input_handle, true ) ) return;
+
+  if (!field_input_handle->mesh()->is_editable()) {
     error("Not an editable mesh type.");
     error("(Try passing Field through an Unstructure module first).");
     return;
   }
 
-  bool update = false;
+  // Check to see if the input field has changed.
+  if( inputs_changed_ ||
+      gui_function_.changed( true ) ||
+      gui_mode_.changed( true ) ||
+      !matrix_output_handle_.get_rep() ||
+      !field_output_handle_.get_rep() ) {
 
-  // Check to see if the source field has changed.
-  if( fGeneration_ != fHandle->generation ) {
-    fGeneration_ = fHandle->generation;
-    update = true;
-  }
+    update_state(Executing);
 
-  string mode = gMode_.get();
-  string function = gFunction_.get();
-
-  if( mode_     != mode ||
-      function_ != function )
-  {
-    update = true;
-    mode_      = mode;
-    function_ = function;
-  }
-
-  if( !fHandle_.get_rep() ||
-      !mHandle_.get_rep() ||
-      update ||
-      error_ )
-  {
-    error_ = false;
+    string function = gui_function_.get();
 
     // remove trailing white-space from the function string
     while (function.size() && isspace(function[function.size()-1]))
       function.resize(function.size()-1);
 
-    const TypeDescription *ftd = fHandle->get_type_description();
+    const TypeDescription *ftd = field_input_handle->get_type_description();
     Handle<ClipByFunctionAlgo> algo;
     int hoffset = 0;
 
-    for (;;) {
+    while (1) {
       CompileInfoHandle ci =
 	ClipByFunctionAlgo::get_compile_info(ftd, function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)){
 	  error("Your function would not compile.");
 	  get_gui()->eval(get_id() + " compile_error "+ci->filename_);
 	  DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-	  error_ = true;
 	  return;
 	}
       if (algo->identify() == function)
@@ -178,13 +153,13 @@ ClipByFunction::execute()
     }
 
     int gMode = 0;
-    if (gMode_.get() == "cell")
+    if (gui_mode_.get() == "cell")
       gMode = 0;
-    else if (gMode_.get() == "onenode")
+    else if (gui_mode_.get() == "onenode")
       gMode = 1;
-    else if (gMode_.get() == "majoritynodes")
+    else if (gui_mode_.get() == "majoritynodes")
       gMode = 2;
-    else if (gMode_.get() == "allnodes")
+    else if (gui_mode_.get() == "allnodes")
       gMode = -1;
 
     // User Variables.
@@ -195,54 +170,42 @@ ClipByFunction::execute()
     algo->u4 = gui_uservar4_.get();
     algo->u5 = gui_uservar5_.get();
 
-    if (!(fHandle->basis_order() == 0 && gMode == 0 ||
-          fHandle->basis_order() == 1 && gMode != 0) &&
-        fHandle->mesh()->dimensionality() > 0)
+    if (!(field_input_handle->basis_order() == 0 && gMode == 0 ||
+          field_input_handle->basis_order() == 1 && gMode != 0) &&
+        field_input_handle->mesh()->dimensionality() > 0)
     {
       warning("Basis doesn't match clip location, value will always be zero.");
     }
 
-    fHandle_ = algo->execute(this, fHandle, gMode, mHandle_);
-  }
+    field_output_handle_ =
+      algo->execute(this, field_input_handle, gMode, matrix_output_handle_);
 
-
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
-    ofield_port->send_and_dereference(fHandle_, true);
-  }
-
-  if( mHandle_.get_rep() )
-  {
-    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-    omatrix_port->send(mHandle_);
-
-    SparseRowMatrix *matrix = dynamic_cast<SparseRowMatrix *>(mHandle_.get_rep());
-    size_t dim[NRRD_DIM_MAX];
-    dim[0] = matrix->ncols();    
-    NrrdDataHandle nrrdH = scinew NrrdData;
-    Nrrd *nrrd = nrrdH->nrrd_;
-    nrrdAlloc_nva(nrrd, nrrdTypeUChar, 1, dim);
-    unsigned char *mask = (unsigned char *)nrrd->data;
-    memset(mask, 0, dim[0]*sizeof(unsigned char));
-    int *rr = matrix->rows;
-    int *cc = matrix->columns;
-    double *data = matrix->a;
-    for (int i = 0; i < matrix->nrows(); ++i)
-    {
-      if (rr[i+1] == rr[i]) continue; // No entires on this row
-      int col = cc[rr[i]];
-      if (data[rr[i]] > 0.0) {
-	mask[col] = 1;
+    if( matrix_output_handle_.get_rep() ) {
+      SparseRowMatrix *matrix =
+	dynamic_cast<SparseRowMatrix *>(matrix_output_handle_.get_rep());
+      size_t dim[NRRD_DIM_MAX];
+      dim[0] = matrix->ncols();    
+      nrrd_output_handle_ = scinew NrrdData;
+      Nrrd *nrrd = nrrd_output_handle_->nrrd_;
+      nrrdAlloc_nva(nrrd, nrrdTypeUChar, 1, dim);
+      unsigned char *mask = (unsigned char *)nrrd->data;
+      memset(mask, 0, dim[0]*sizeof(unsigned char));
+      int *rr = matrix->rows;
+      int *cc = matrix->columns;
+      double *data = matrix->a;
+      for (int i = 0; i < matrix->nrows(); ++i) {
+	if (rr[i+1] == rr[i]) continue; // No entires on this row
+	int col = cc[rr[i]];
+	if (data[rr[i]] > 0.0) {
+	  mask[col] = 1;
+	}
       }
     }
-    NrrdOPort *nrrd_oport = (NrrdOPort *)get_oport("MaskVector");
-    nrrd_oport->send(nrrdH);
-    if (!omatrix_port->have_data() || !nrrd_oport->have_data())
-    {
-      mHandle_ = 0;
-    }
   }
+
+  send_output_handle( "Clipped", field_output_handle_, true );
+  send_output_handle( "Mapping", matrix_output_handle_, true );
+  send_output_handle( "MaskVector", nrrd_output_handle_, true );
 }
 
 
