@@ -9,79 +9,78 @@
 using namespace SCIRun;
 using namespace Uintah;
 
+const string DifferenceGeometryPiece::TYPE_NAME = "difference";
+
 DifferenceGeometryPiece::DifferenceGeometryPiece(ProblemSpecP &ps) 
 {
-  setName("difference");
-  std::vector<GeometryPiece *> objs;
+  name_ = "Unnamed " + TYPE_NAME + " from PS";
+  std::vector<GeometryPieceP> objs;
 
   GeometryPieceFactory::create(ps,objs);
 
-  left = objs[0];
-  right = objs[1];
+  left_  = objs[0];
+  right_ = objs[1];
 
 }
 
-DifferenceGeometryPiece::DifferenceGeometryPiece(GeometryPiece* p1,
-						 GeometryPiece* p2)
-  : left(p1), right(p2)
+DifferenceGeometryPiece::DifferenceGeometryPiece(GeometryPieceP p1,
+                                                 GeometryPieceP p2)
+  : left_(p1), right_(p2)
 {
+  name_ = "Unnamed " + TYPE_NAME + " from pieces";
 }
 
 DifferenceGeometryPiece::~DifferenceGeometryPiece()
 {
-  
-  delete left;
-  delete right;
- 
 }
 
 DifferenceGeometryPiece::DifferenceGeometryPiece(const DifferenceGeometryPiece& rhs)
 {
-  left=rhs.left->clone();
-  right=rhs.right->clone();
+  name_ = "Unnamed " + TYPE_NAME + " from CpyCnstr";
+
+  left_  = rhs.left_->clone();
+  right_ = rhs.right_->clone();
 }
 
-DifferenceGeometryPiece& DifferenceGeometryPiece::operator=(const DifferenceGeometryPiece& rhs)
+DifferenceGeometryPiece&
+DifferenceGeometryPiece::operator=(const DifferenceGeometryPiece& rhs)
 {
   if (this == &rhs)
     return *this;
 
-  // Delete left hand side
-  delete left;
-  delete right;
-
-  left = rhs.left->clone();
-  right = rhs.right->clone();
+  left_  = rhs.left_->clone();
+  right_ = rhs.right_->clone();
 
   return *this;
 }
 
-void DifferenceGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+DifferenceGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-  ProblemSpecP difference_ps = ps->appendChild("difference");
-
-  left->outputProblemSpec(difference_ps);
-  right->outputProblemSpec(difference_ps);
+  left_->outputProblemSpec( ps );
+  right_->outputProblemSpec( ps );
 }
 
-DifferenceGeometryPiece* DifferenceGeometryPiece::clone()
+GeometryPieceP
+DifferenceGeometryPiece::clone() const
 {
   return scinew DifferenceGeometryPiece(*this);
 }
 
-bool DifferenceGeometryPiece::inside(const Point &p) const 
+bool
+DifferenceGeometryPiece::inside(const Point &p) const 
 {
-  return (left->inside(p) && !right->inside(p));
+  return (left_->inside(p) && !right_->inside(p));
 }
 
-Box DifferenceGeometryPiece::getBoundingBox() const
+Box
+DifferenceGeometryPiece::getBoundingBox() const
 {
    // Initialize the lo and hi points to the left element
-
-  Point left_lo = left->getBoundingBox().lower();
-  Point left_hi = left->getBoundingBox().upper();
-  Point right_lo = right->getBoundingBox().lower();
-  Point right_hi = right->getBoundingBox().upper();
+  Point left_lo = left_->getBoundingBox().lower();
+  Point left_hi = left_->getBoundingBox().upper();
+  Point right_lo = right_->getBoundingBox().lower();
+  Point right_hi = right_->getBoundingBox().upper();
    
   Point lo = Min(left_lo,right_lo);
   Point hi = Max(left_hi,right_hi);

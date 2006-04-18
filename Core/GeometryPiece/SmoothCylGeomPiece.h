@@ -86,10 +86,11 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~SmoothCylGeomPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
-    SmoothCylGeomPiece* clone();
+    virtual GeometryPieceP clone() const;
 	 
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the cylinder. */
@@ -104,9 +105,10 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles */
     //////////////////////////////////////////////////////////////////////
-    int createPoints();
+    virtual unsigned int createPoints();
 
   private:
+    virtual void outputHelper( ProblemSpecP & ps ) const;
 
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles for the two end caps */

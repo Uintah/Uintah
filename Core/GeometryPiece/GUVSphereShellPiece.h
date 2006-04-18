@@ -6,11 +6,6 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
-#include <math.h>
-#ifndef M_PI
-# define M_PI           3.14159265358979323846  /* pi */
-#endif
-
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -59,10 +54,11 @@ namespace Uintah {
     // Destructor
     virtual ~GUVSphereShellPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    static const string TYPE_NAME;
+    std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
-    GUVSphereShellPiece* clone();
+    virtual GeometryPieceP clone() const;
          
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the cylinder. */
@@ -137,17 +133,19 @@ namespace Uintah {
 
   protected:
 
+    virtual void outputHelper( ProblemSpecP & ps ) const;
+
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside a cholesterol zone. */
     //////////////////////////////////////////////////////////////////////
     bool insideZone(const Point &p) const;
          
-    vector<Point> d_pos;
+    vector<Point>  d_pos;
     vector<double> d_vol;
-    vector<int> d_type;
+    vector<int>    d_type;
     vector<double> d_thick;
     vector<Vector> d_norm;
-    double d_dx;
+    double         d_dx;
 
   private:
   

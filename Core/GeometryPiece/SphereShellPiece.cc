@@ -6,13 +6,19 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <math.h>
+#ifndef M_PI
+#  define M_PI           3.14159265358979323846  /* pi */
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 
+const string SphereShellPiece::TYPE_NAME = "sphere_shell";
 
 SphereShellPiece::SphereShellPiece(ProblemSpecP& ps)
 {
-  setName("sphere_shell");
+  name_ = "sphere_shell";
   ps->require("origin",d_origin);
   ps->require("radius",d_radius);
   ps->require("thickness",d_h);
@@ -30,7 +36,7 @@ SphereShellPiece::~SphereShellPiece()
 }
 
 
-void SphereShellPiece::outputProblemSpec(ProblemSpecP& ps)
+void SphereShellPiece::outputHelper(ProblemSpecP& ps) const
 {
   ProblemSpecP shell_ps = ps->appendChild("shell");
   ProblemSpecP sphere_ps = shell_ps->appendChild("sphere");
@@ -42,8 +48,8 @@ void SphereShellPiece::outputProblemSpec(ProblemSpecP& ps)
   sphere_ps->appendElement("num_long",d_numLong);
 }
 
-
-SphereShellPiece* SphereShellPiece::clone()
+GeometryPieceP
+SphereShellPiece::clone() const
 {
   return scinew SphereShellPiece(*this);
 }
@@ -62,9 +68,9 @@ Box
 SphereShellPiece::getBoundingBox() const
 {
   Point lo(d_origin.x()-d_radius,d_origin.y()-d_radius,
-	   d_origin.z()-d_radius);
+           d_origin.z()-d_radius);
   Point hi(d_origin.x()+d_radius,d_origin.y()+d_radius,
-	   d_origin.z()+d_radius);
+           d_origin.z()+d_radius);
   return Box(lo,hi);
 }
 
@@ -113,13 +119,13 @@ SphereShellPiece::returnParticleCount(const Patch* patch)
 
 int 
 SphereShellPiece::createParticles(const Patch* patch,
-				  ParticleVariable<Point>&  pos,
-				  ParticleVariable<double>& vol,
-				  ParticleVariable<double>& pThickTop,
-				  ParticleVariable<double>& pThickBot,
-				  ParticleVariable<Vector>& pNormal,
-				  ParticleVariable<Vector>& psiz,
-				  particleIndex start)
+                                  ParticleVariable<Point>&  pos,
+                                  ParticleVariable<double>& vol,
+                                  ParticleVariable<double>& pThickTop,
+                                  ParticleVariable<double>& pThickBot,
+                                  ParticleVariable<Vector>& pNormal,
+                                  ParticleVariable<Vector>& psiz,
+                                  particleIndex start)
 {
   Box b = patch->getBox();
 
@@ -156,7 +162,7 @@ SphereShellPiece::createParticles(const Patch* patch,
         pThickTop[pidx] = 0.5*d_h;
         pThickBot[pidx] = 0.5*d_h;
         pNormal[pidx]  = Vector(sin(theta)*cos(phi),sin(theta)*sin(phi),
-				  cos(theta));
+                                  cos(theta));
         psiz[pidx] = Vector(.5,.5,.5);
         count++;
       }

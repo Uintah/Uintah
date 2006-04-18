@@ -21,9 +21,9 @@
 //#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <string>
-#include <list>
+#include   <iostream>
+#include   <string>
+#include   <list>
 #include <sgi_stl_warnings_on.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
@@ -107,10 +107,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps)
        geom_obj_ps != 0; 
        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-    vector<GeometryPiece*> pieces;
+    vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPiece* mainpiece;
+    GeometryPieceP mainpiece;
     if(pieces.size() == 0){
       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
@@ -161,6 +161,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("is_rigid",d_is_rigid);
   mpm_ps->appendElement("includeFlowWork",d_includeFlowWork);
   d_cm->outputProblemSpec(mpm_ps);
+
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {
     (*it)->outputProblemSpec(mpm_ps);
@@ -247,8 +248,8 @@ double MPMMaterial::getMeltTemperature() const
 int MPMMaterial::nullGeomObject() const
 {
   for (int obj = 0; obj <(int)d_geom_objs.size(); obj++) {
-    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
-    NullGeometryPiece* null_piece = dynamic_cast<NullGeometryPiece*>(piece);
+    GeometryPieceP piece = d_geom_objs[obj]->getPiece();
+    NullGeometryPiece* null_piece = dynamic_cast<NullGeometryPiece*>(piece.get_rep());
     if (null_piece)
       return obj;
   }
@@ -282,7 +283,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
   Vector dx = patch->dCell();
   
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
-   GeometryPiece* piece = d_geom_objs[obj]->getPiece();
+   GeometryPieceP piece = d_geom_objs[obj]->getPiece();
    Box b1 = piece->getBoundingBox();
    //Box b2 = patch->getBox();
    //Box b = b1.intersect(b2);

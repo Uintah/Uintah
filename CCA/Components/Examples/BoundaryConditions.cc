@@ -6,9 +6,11 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+
 #include <Core/Math/MiscMath.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 using namespace SCIRun;
@@ -25,7 +27,8 @@ BoundaryConditions::~BoundaryConditions()
     delete iter->second;
 }
 
-void BoundaryConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb)
+void
+BoundaryConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb)
 {
   ProblemSpecP conds = ps->findBlock("BoundaryConditions");
   if(!conds)
@@ -74,7 +77,7 @@ void BoundaryConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb
 	string name;
 	if(!c->getAttribute("name", name))
 	  throw ProblemSetupException("Region does not have a name", __FILE__, __LINE__);
-	const GeometryPiece* piece = regiondb.getObject(name);
+	GeometryPieceP piece = regiondb.getObject(name);
 	if(!piece)
 	  throw ProblemSetupException("Unknown piece: "+name, __FILE__, __LINE__);
 
@@ -183,7 +186,7 @@ void InitialConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb)
 	string name;
 	if(!c->getAttribute("name", name))
 	  throw ProblemSetupException("Region does not have a name", __FILE__, __LINE__);
-	const GeometryPiece* piece = regiondb.getObject(name);
+	const GeometryPieceP piece = regiondb.getObject(name);
 	if(!piece)
 	  throw ProblemSetupException("Unknown piece: "+name, __FILE__, __LINE__);
 	iter->second->parseCondition(child, piece, BC::FreeFlow, true);

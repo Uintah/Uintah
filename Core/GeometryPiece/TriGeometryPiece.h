@@ -2,43 +2,44 @@
 #define __TRI_GEOMETRY_OBJECT_H__
 
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/UniformGrid.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Plane.h>
-#include <Packages/Uintah/Core/GeometryPiece/UniformGrid.h>
-#include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
 
-using std::vector;
+#include <sgi_stl_warnings_off.h>
+#include   <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
+using std::vector;
 using namespace SCIRun;
 
 /**************************************
-	
+        
 CLASS
    TriGeometryPiece
-	
+        
    Creates a triangulated surface piece from the xml input file description.
-	
+        
 GENERAL INFORMATION
-	
+        
    TriGeometryPiece.h
-	
+        
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
  
-	
+        
 KEYWORDS
    TriGeometryPiece BoundingBox inside
-	
+        
 DESCRIPTION
    Creates a triangulated surface piece from the xml input file description.
    Requires one input: file name (convetion use suffix .dat).  
@@ -48,53 +49,56 @@ DESCRIPTION
        <tri>
          <file>surface.dat</file>
        </tri>
-	
-	
+        
+        
 WARNING
-	
+        
 ****************************************/
 
       class TriGeometryPiece : public GeometryPiece {
       public:
-	 //////////
-	 //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
-	 // input specification and builds the triangulated surface piece.
-	 TriGeometryPiece(ProblemSpecP &);
-	 //////////
-	 
-	 // Destructor
-	 virtual ~TriGeometryPiece();
+         //////////
+         //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+         // input specification and builds the triangulated surface piece.
+         TriGeometryPiece(ProblemSpecP &);
+         //////////
+         
+         // Destructor
+         virtual ~TriGeometryPiece();
 
-         virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
-	 /// Make a clone
-	 TriGeometryPiece* clone();
+         static const string TYPE_NAME;
+         virtual std::string getType() const { return TYPE_NAME; }
 
-	 //////////
-	 // Determins whether a point is inside the triangulated surface.
-	 virtual bool inside(const Point &p) const;
-	 bool insideNew(const Point &p, int& cross) const;
-	 
-	 //////////
-	 // Returns the bounding box surrounding the triangulated surface.
-	 virtual Box getBoundingBox() const;
-	 
+         virtual GeometryPieceP clone() const;
+
+         //////////
+         // Determins whether a point is inside the triangulated surface.
+         virtual bool inside(const Point &p) const;
+         bool insideNew(const Point &p, int& cross) const;
+         
+         //////////
+         // Returns the bounding box surrounding the triangulated surface.
+         virtual Box getBoundingBox() const;
+         
       private:
-	 void readPoints(const string& file);
-	 void readTri(const string& file);
-	 void makePlanes();
-	 void makeTriBoxes();
-	 void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
-	 
-         std::string d_file;
-	 Box d_box;
-	 vector<Point> d_points;
-	 vector<IntVector> d_tri;
-	 vector<Plane> d_planes;
-	 vector<Box> d_boxes;
 
-	 UniformGrid* d_grid;
-	 
+         virtual void outputHelper( ProblemSpecP & ps ) const;
+         
+         void readPoints(const string& file);
+         void readTri(const string& file);
+         void makePlanes();
+         void makeTriBoxes();
+         void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
+         
+         std::string d_file;
+         Box d_box;
+         vector<Point>     d_points;
+         vector<IntVector> d_tri;
+         vector<Plane>     d_planes;
+         vector<Box>       d_boxes;
+
+         UniformGrid* d_grid;
+         
       };
 
 } // End namespace Uintah

@@ -2,14 +2,10 @@
 #define __SPHERE_SHELL_PIECE_H__
 
 #include <Packages/Uintah/Core/GeometryPiece/ShellGeometryPiece.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
-#include <math.h>
-#ifndef M_PI
-# define M_PI           3.14159265358979323846  /* pi */
-#endif
+#include <Core/Geometry/Point.h>
 
 namespace Uintah {
 
@@ -55,10 +51,11 @@ namespace Uintah {
     // Destructor
     virtual ~SphereShellPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
-    SphereShellPiece* clone();
+    virtual GeometryPieceP clone() const;
 	 
     //////////
     // Determines whether a point is inside the sphere. 
@@ -85,7 +82,8 @@ namespace Uintah {
 
 
   private:
-	 
+    virtual void outputHelper( ProblemSpecP & ps ) const;
+
     Point  d_origin;
     double d_radius;
     double d_h;

@@ -15,32 +15,31 @@ using std::endl;
 
 using namespace Uintah;
 
-void 
-ShellGeometryFactory::create(const ProblemSpecP& ps,
-			     std::vector<GeometryPiece*>& objs)
-
+GeometryPiece *
+ShellGeometryFactory::create( const ProblemSpecP& ps )
 {
-  for(ProblemSpecP child = ps->findBlock(); child != 0;
-      child = child->findNextBlock()) {
+  for(ProblemSpecP child = ps->findBlock(); child != 0; child = child->findNextBlock()) {
+
     std::string go_type = child->getNodeName();
-    if (go_type == "plane")
-      objs.push_back(new PlaneShellPiece(child));
-      
-    else if (go_type == "sphere")
-      objs.push_back(new SphereShellPiece(child));
 
-    else if (go_type == "cylinder")
-      objs.push_back(new CylinderShellPiece(child));
-
-    else if (go_type == "GUV_sphere")
-      objs.push_back(new GUVSphereShellPiece(child));
-
-    else 
-      if (ps->doWriteMessages())
-	cerr << "Unknown Shell Geometry Piece Type " << "(" << go_type << ")" 
-	     << endl;
-    string name;
-    if(child->getAttribute("name", name))
-      objs[objs.size()-1]->setName(name);
+    if (     go_type == PlaneShellPiece::TYPE_NAME ) {
+      return scinew PlaneShellPiece(child);
+    }
+    else if( go_type == SphereShellPiece::TYPE_NAME ) {
+      return scinew SphereShellPiece(child);
+    }
+    else if (go_type == CylinderShellPiece::TYPE_NAME ) {
+      return scinew CylinderShellPiece(child);
+    }
+    else if (go_type == GUVSphereShellPiece::TYPE_NAME ) {
+      return scinew GUVSphereShellPiece(child);
+    }
+    else {
+      if (ps->doWriteMessages()) {
+	cerr << "Unknown Shell Geometry Piece Type " << "(" << go_type << ")\n";
+      }
+      break;
+    }
   }
+  return NULL;
 }

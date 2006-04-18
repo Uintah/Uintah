@@ -176,7 +176,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     //
     
     bool  rigid_velocity = true;
-    Vector requested_velocity;
+    Vector requested_velocity( 0.0, 0.0, 0.0 );
     if(tcurr>d_stop_time) {
       requested_velocity = d_vel_after_stop;
       rigid_velocity = false;
@@ -247,7 +247,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     const double tcurr = d_sharedState->getElapsedTime(); // FIXME: + dt ?
     
     bool  rigid_velocity = true;
-    Vector requested_velocity;
+    Vector requested_velocity(0.0, 0.0, 0.0);
     if(tcurr>d_stop_time) {
       rigid_velocity = false;
       requested_velocity = d_vel_after_stop;

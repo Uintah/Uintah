@@ -70,10 +70,11 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~ShellGeometryPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
-    virtual ShellGeometryPiece* clone() = 0;
+    virtual GeometryPieceP clone() const = 0;
 	 
     //////////////////////////////////////////////////////////////////////
     /*! \brief Returns the bounding box surrounding the box. */
@@ -103,6 +104,8 @@ namespace Uintah {
 				particleIndex start) = 0;
 
   protected:
+    virtual void outputHelper( ProblemSpecP & ps ) const = 0;
+
     ShellGeometryPiece();
 
   };

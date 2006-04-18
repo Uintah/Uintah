@@ -13,11 +13,13 @@ using namespace SCIRun;
 
 using namespace std;
 
+const string CorrugEdgeGeomPiece::TYPE_NAME = "corrugated";
+
 //////////
 // Constructor : Initialize stuff
 CorrugEdgeGeomPiece::CorrugEdgeGeomPiece(ProblemSpecP& ps)
 {
-  setName("corrugated");
+  name_ = "Unnamed Corrugated";
   ps->require("xymin", d_xymin);
   ps->require("xymax", d_xymax);
   if ((d_xymax-d_xymin).length2() <= 0.0)
@@ -62,22 +64,21 @@ CorrugEdgeGeomPiece::~CorrugEdgeGeomPiece()
 {
 }
 
-void CorrugEdgeGeomPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+CorrugEdgeGeomPiece::outputHelper( ProblemSpecP & ps ) const
 {
-  ProblemSpecP cegp_ps = ps->appendChild("corrugated");
-
-  cegp_ps->appendElement("xymin",      d_xymin);
-  cegp_ps->appendElement("xymax",      d_xymax);
-  cegp_ps->appendElement("thickness",  d_thickness);
-  cegp_ps->appendElement("normal",     d_normal);
-  cegp_ps->appendElement("corr_edge",  d_edge);
-  cegp_ps->appendElement("curve",      d_curve);
-  cegp_ps->appendElement("wavelength", d_wavelength);
-  cegp_ps->appendElement("amplitude",  d_amplitude);
-
+  ps->appendElement("xymin",      d_xymin);
+  ps->appendElement("xymax",      d_xymax);
+  ps->appendElement("thickness",  d_thickness);
+  ps->appendElement("normal",     d_normal);
+  ps->appendElement("corr_edge",  d_edge);
+  ps->appendElement("curve",      d_curve);
+  ps->appendElement("wavelength", d_wavelength);
+  ps->appendElement("amplitude",  d_amplitude);
 }
 
-CorrugEdgeGeomPiece* CorrugEdgeGeomPiece::clone()
+GeometryPieceP
+CorrugEdgeGeomPiece::clone() const
 {
   return scinew CorrugEdgeGeomPiece(*this);
 }
@@ -112,7 +113,7 @@ CorrugEdgeGeomPiece::getBoundingBox() const
 //////////////////////////////////////////////////////////////////////////
 /* Create particles */
 //////////////////////////////////////////////////////////////////////////
-int 
+unsigned int 
 CorrugEdgeGeomPiece::createPoints()
 {
   double lambda = d_wavelength;

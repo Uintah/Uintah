@@ -23,35 +23,25 @@ using namespace SCIRun;
 /**************************************
 	
 CLASS
-   TriGeometryPiece
+   UniformGrid
 	
-   Creates a triangulated surface piece from the xml input file description.
+   ...not sure what it does....
 	
 GENERAL INFORMATION
 	
-   TriGeometryPiece.h
+   UniformGrid.h
 	
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
 	
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
  
 	
 KEYWORDS
-   TriGeometryPiece BoundingBox inside
+   UniformGrid
 	
 DESCRIPTION
-   Creates a triangulated surface piece from the xml input file description.
-   Requires one input: file name (convetion use suffix .dat).  
-   There are methods for checking if a point is inside the surface
-   and also for determining the bounding box for the surface.
-   The input form looks like this:
-       <tri>
-         <file>surface.dat</file>
-       </tri>
-	
 	
 WARNING
 	

@@ -79,7 +79,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 
     // If the geometry piece is outside the patch, look
     // for the next geometry piece
-    GeometryPiece* piece = (*obj)->getPiece();
+    GeometryPieceP piece = (*obj)->getPiece();
     Box b = (piece->getBoundingBox()).intersect(patch->getBox());
     if (b.degenerate()) {
       count = 0;
@@ -97,7 +97,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
     // If the geometry object is a shell perform special 
     // operations else just treat the geom object in the standard
     // way
-    ShellGeometryPiece* shell = dynamic_cast<ShellGeometryPiece*>(piece);
+    ShellGeometryPiece* shell = dynamic_cast<ShellGeometryPiece*>(piece.get_rep());
 
     // Create the appropriate particles 
     if (shell) {
@@ -284,8 +284,8 @@ ShellParticleCreator::countAndCreateParticles(const Patch* patch,
 					      GeometryObject* obj) 
 {
 
-  GeometryPiece* piece = obj->getPiece();
-  ShellGeometryPiece* shell = dynamic_cast<ShellGeometryPiece*>(piece);
+  GeometryPieceP piece = obj->getPiece();
+  ShellGeometryPiece* shell = dynamic_cast<ShellGeometryPiece*>(piece.get_rep());
   if (shell) return shell->returnParticleCount(patch);
   return ParticleCreator::countAndCreateParticles(patch,obj); 
 }

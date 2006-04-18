@@ -62,7 +62,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
   vector<GeometryObject*>::const_iterator obj;
   for (obj = d_geom_objs.begin(); obj != d_geom_objs.end(); ++obj) {
     particleIndex count = 0;
-    GeometryPiece* piece = (*obj)->getPiece();
+    GeometryPieceP piece = (*obj)->getPiece();
     Box b1 = piece->getBoundingBox();
     Box b2 = patch->getBox();
     Box b = b1.intersect(b2);
@@ -74,7 +74,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();    
 
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
-    SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
+    SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes = 0;
     vector<double>* temperatures = 0;
     vector<Vector>* pforces = 0;
@@ -377,7 +377,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
 void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
 {
   geompoints::key_type key(patch,obj);
-  GeometryPiece* piece = obj->getPiece();
+  GeometryPieceP piece = obj->getPiece();
   Box b2 = patch->getBox();
   IntVector ppc = obj->getNumParticlesPerCell();
   Vector dxpp = patch->dCell()/ppc;
@@ -467,7 +467,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   geomvols::key_type volkey(patch,obj);
   geomvecs::key_type forcekey(patch,obj);
   geomvecs::key_type fiberkey(patch,obj);
-  GeometryPiece* piece = obj->getPiece();
+  GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getBox();
   Box b = b1.intersect(b2);
@@ -476,10 +476,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   // If the object is a SmoothGeomPiece (e.g. FileGeometryPiece or
   // SmoothCylGeomPiece) then use the particle creators in that 
   // class to do the counting
-  SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
+  SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
   if (sgp) {
     int numPts = 0;
-    FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece);
+    FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
     if(fgp){
       fgp->readPoints(patch->getID());
       numPts = fgp->returnPointCount();
@@ -591,8 +591,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
                                                  particle_state_preReloc);
 }
 
-int ParticleCreator::checkForSurface(const GeometryPiece* piece, const Point p,
-                                     const Vector dxpp)
+int
+ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
+                                  const Vector dxpp )
 {
 
   //  Check the candidate points which surround the point just passed

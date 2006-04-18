@@ -94,7 +94,6 @@ WARNING
   private:
     std::vector<LevelP> d_levels;
     
-    Grid(const Grid&);
     Grid& operator=(const Grid&);
 
     // For automatic patch layout.  run_partition() will initialize the values of

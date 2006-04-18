@@ -6,33 +6,29 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-#ifndef M_PI
-# define M_PI           3.14159265358979323846  /* pi */
-#endif
-
 namespace Uintah {
 
 /**************************************
-	
+        
 CLASS
    ConeGeometryPiece
-	
+        
    Creates a oriented right circular cone/frustrum of a cone
    from the xml input file description.
-	
+        
 GENERAL INFORMATION
-	
+        
    ConeGeometryPiece.h
-	
+        
    Biswajit Banerjee
    Department of Mechanical Engineering
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+        
 KEYWORDS
    ConeGeometryPiece BoundingBox inside
-	
+        
 DESCRIPTION
    Creates a oriented right circular cone or frustrum of a cone
    from the xml input file description.
@@ -43,17 +39,17 @@ DESCRIPTION
    The input form looks like this:
        <cone>
          <bottom>[0.,0.,0.]</bottom>
-	 <top>[0.,0.,0.]</top>
-	 <bot_radius>2.0</bot_radius>
-	 <top_radius>1.0</top_radius>
+         <top>[0.,0.,0.]</top>
+         <bot_radius>2.0</bot_radius>
+         <top_radius>1.0</top_radius>
        </cone>
    If any of the radii are ommitted the corresponding radius is 
    assumed to be zero, i.e. this point is the vertex of the right 
    circular cone.  Stores bottom radius in d_radius of 
    CylinderGeometryPiece.
-	
+        
 WARNING
-	
+        
 ****************************************/
 
   class ConeGeometryPiece : public CylinderGeometryPiece {
@@ -69,20 +65,20 @@ WARNING
     // Constructor that takes top, bottom and radius
     //
     ConeGeometryPiece(const Point& top, 
-		      const Point& bottom,
-		      double topRad,
-		      double botRad);
+                      const Point& bottom,
+                      double topRad,
+                      double botRad);
     
     
-    /// Make a clone
-    
-    ConeGeometryPiece* clone();
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
+
+    virtual GeometryPieceP clone() const;
+
     //////////
     // Destructor
     virtual ~ConeGeometryPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
-    
     //////////
     // Determines whether a point is inside the cone.
     virtual bool inside(const Point &p) const;
@@ -106,9 +102,11 @@ WARNING
     inline double botRadius() const {return d_radius;}
     
   private:
+    virtual void outputHelper( ProblemSpecP & ps ) const;
+
     double d_topRad;
-    
   };
+
 } // End namespace Uintah
 
 #endif // __CONE_GEOMTRY_Piece_H__

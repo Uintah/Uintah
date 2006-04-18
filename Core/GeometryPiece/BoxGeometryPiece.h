@@ -66,11 +66,11 @@ WARNING
 	 // Destructor
 	 virtual ~BoxGeometryPiece();
 
-
-	 virtual void outputProblemSpec(ProblemSpecP& ps);
+         static const string TYPE_NAME;
+         virtual std::string getType() const { return TYPE_NAME; }
 
 	 /// Make a clone
-	 BoxGeometryPiece* clone();
+	 virtual GeometryPieceP clone() const;
 
 	 //////////
 	 // Determines whether a point is inside the box.
@@ -94,6 +94,8 @@ WARNING
 	 unsigned int thicknessDirection() const;
 
       private:
+         virtual void outputHelper( ProblemSpecP & ps ) const;
+
 	 Box d_box;
 	 
       };

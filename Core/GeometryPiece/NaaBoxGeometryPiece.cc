@@ -6,6 +6,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 
 #include <iostream>
 
@@ -14,9 +15,13 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+static DebugStream dbg( "GeometryPiece", false );
+
+const string NaaBoxGeometryPiece::TYPE_NAME = "parallelepiped";
+
 NaaBoxGeometryPiece::NaaBoxGeometryPiece(ProblemSpecP& ps)
 {
-  setName("Unnamed NaaBox (from ProblemSpec)");
+  name_ = "Unnamed " + TYPE_NAME + " from PS";
 
   Point p1, p2, p3, p4;
   ps->require("p1", p1);
@@ -32,7 +37,7 @@ NaaBoxGeometryPiece::NaaBoxGeometryPiece( const Point& p1,
                                           const Point& p3,
                                           const Point& p4 )
 {
-  setName("Unnamed NaaBox (from points)");
+  name_ = "Unnamed " + TYPE_NAME + " from points";
   init( p1, p2, p3, p4 );
 }
   
@@ -57,7 +62,9 @@ NaaBoxGeometryPiece::init( const Point& p1,
 
   boundingBox_ = Box( p1, p5 );
 
-  // Map the arbitrary box to a unix cube... 
+  dbg << "Creating NaaBoxx with BBox of: " << boundingBox_ << "\n";
+
+  // Map the arbitrary box to a unit cube... 
   Matrix3 mat( p2minusP1.x(), p3minusP1.x(),  p4minusP1.x(), 
                p2minusP1.y(), p3minusP1.y(),  p4minusP1.y(), 
                p2minusP1.z(), p3minusP1.z(),  p4minusP1.z() );
@@ -70,18 +77,15 @@ NaaBoxGeometryPiece::~NaaBoxGeometryPiece()
 }
 
 void
-NaaBoxGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
-{
-  ProblemSpecP box_ps = ps->appendChild("parallelepiped");
-
-  box_ps->appendElement( "p1", p1_ );
-  box_ps->appendElement( "p2", p2_ );
-  box_ps->appendElement( "p3", p3_ );
-  box_ps->appendElement( "p4", p4_ );
+NaaBoxGeometryPiece::outputHelper( ProblemSpecP & ps ) const {
+  ps->appendElement( "p1", p1_ );
+  ps->appendElement( "p2", p2_ );
+  ps->appendElement( "p3", p3_ );
+  ps->appendElement( "p4", p4_ );
 }
 
-NaaBoxGeometryPiece*
-NaaBoxGeometryPiece::clone()
+GeometryPieceP
+NaaBoxGeometryPiece::clone() const
 {
   return scinew NaaBoxGeometryPiece(*this);
 }

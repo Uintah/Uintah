@@ -9,7 +9,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
@@ -30,7 +29,6 @@ using namespace SCIRun;
  class DataWarehouse;
  class VarLabel;
  class GeometryObject;
- class GeometryPiece;
  class ConstitutiveModel;
  class MPMLabel;
  class ParticleCreator;
@@ -73,7 +71,7 @@ WARNING
 
    // Standard MPM Material Constructor
    MPMMaterial(ProblemSpecP&);
-	 
+         
    ~MPMMaterial();
 
    virtual void registerParticleState(SimulationState* ss);
@@ -83,7 +81,7 @@ WARNING
    /*!  Create a copy of the material without the associated geometry */
    void copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
                         MPMFlags* flags);
-	 
+         
    //////////
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
@@ -92,9 +90,9 @@ WARNING
    particleIndex countParticles(const Patch* patch);
 
    void createParticles(particleIndex numParticles,
-			CCVariable<short int>& cellNAPID,
-			const Patch*,
-			DataWarehouse* new_dw);
+                        CCVariable<short int>& cellNAPID,
+                        const Patch*,
+                        DataWarehouse* new_dw);
 
 
    ParticleCreator* getParticleCreator();
@@ -117,18 +115,18 @@ WARNING
    // For MPMICE
    double getGamma() const;
    void initializeCCVariables(CCVariable<double>& rhom,
-			      CCVariable<double>& rhC,
-			      CCVariable<double>& temp,   
-			      CCVariable<Vector>& vCC,
-			      int numMatls,
-			      const Patch* patch);
+                              CCVariable<double>& rhC,
+                              CCVariable<double>& temp,   
+                              CCVariable<Vector>& vCC,
+                              int numMatls,
+                              const Patch* patch);
 
    void initializeDummyCCVariables(CCVariable<double>& rhom,
-			           CCVariable<double>& rhC,
-			           CCVariable<double>& temp,   
-			           CCVariable<Vector>& vCC,
-			           int numMatls,
-			           const Patch* patch);
+                                   CCVariable<double>& rhC,
+                                   CCVariable<double>& temp,   
+                                   CCVariable<Vector>& vCC,
+                                   int numMatls,
+                                   const Patch* patch);
 
  private:
 

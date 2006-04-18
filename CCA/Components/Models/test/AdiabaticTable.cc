@@ -88,14 +88,13 @@ AdiabaticTable::~AdiabaticTable()
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                 iter != d_scalar->regions.end(); iter++){
     Region* region = *iter;
-    delete region->piece;
     delete region;
 
   }
 }
 
 //__________________________________
-AdiabaticTable::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
+AdiabaticTable::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("scalar", initialScalar);
@@ -278,10 +277,10 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
     geom_obj_ps != 0;
     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPiece*> pieces;
+    vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPiece* mainpiece;
+    GeometryPieceP mainpiece;
     if(pieces.size() == 0){
      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
@@ -941,10 +940,10 @@ void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
  Function~  AdiabaticTable::errorEstimate--
 ______________________________________________________________________*/
 void AdiabaticTable::errorEstimate(const ProcessorGroup*,
-			             const PatchSubset* patches,
-			             const MaterialSubset*,
-			             DataWarehouse*,
-			             DataWarehouse* new_dw,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw,
                                   bool)
 {
   cout_doing << "Doing errorEstimate \t\t\t\t\t AdiabaticTable"<< endl;

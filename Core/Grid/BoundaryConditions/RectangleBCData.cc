@@ -21,7 +21,7 @@ RectangleBCData::RectangleBCData(BCData& bc)
 RectangleBCData::RectangleBCData(Point& low, Point& up)
 {
   cout << "low = " << low << " up = " << up << endl;
-  Point n_low,n_up;
+  Point n_low, n_up;
 
   if(low.x() == up.x()) {
     n_low = Point(low.x()-1.e-2,low.y(),low.z());

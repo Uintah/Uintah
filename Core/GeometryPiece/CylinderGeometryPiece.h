@@ -70,11 +70,11 @@ WARNING
     //
     virtual ~CylinderGeometryPiece();
     
-    virtual void outputProblemSpec(ProblemSpecP& ps);
-    
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
+
     /// Make a clone
-    CylinderGeometryPiece* clone();
-    
+    virtual GeometryPieceP clone() const;
     
     //////////
     // Determines whether a point is inside the cylinder.
@@ -115,6 +115,8 @@ WARNING
     inline double height() const { return (d_top-d_bottom).length();}
     
   protected:
+    
+    virtual void outputHelper( ProblemSpecP & ps ) const;
     
     //////////
     // Constructor needed for subclasses

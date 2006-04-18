@@ -13,16 +13,19 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-static string numbered_str(const string & s, int is)
+const string FileGeometryPiece::TYPE_NAME = "file";
+
+static string
+numbered_str(const string & s, int is)
 {
   ostringstream b;
   b << s << is;
   return b.str();
 }
 
-FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
+FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
 {
-  setName("file");
+  name_ = "Unnamed " + TYPE_NAME + " from PS";
   ps->require("name",d_file_name);
   
   for(ProblemSpecP varblock = ps->findBlock("var");
@@ -95,30 +98,32 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
 
 FileGeometryPiece::FileGeometryPiece(const string& /*file_name*/)
 {
+  name_ = "Unnamed " + TYPE_NAME + " from file_name";
 }
 
 FileGeometryPiece::~FileGeometryPiece()
 {
 }
 
-void FileGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+FileGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-  ProblemSpecP file_ps = ps->appendChild("file");
-
-  file_ps->appendElement("name",d_file_name);
-  file_ps->appendElement("format",d_file_format);
-  file_ps->appendElement("split",d_presplit);
+  ps->appendElement("name",d_file_name);
+  ps->appendElement("format",d_file_format);
+  ps->appendElement("split",d_presplit);
   for (list<string>::const_iterator it = d_vars.begin(); it != d_vars.end(); it++) {
-    file_ps->appendElement("var",*it);
+    ps->appendElement("var",*it);
   }
 }
 
-FileGeometryPiece* FileGeometryPiece::clone()
+GeometryPieceP
+FileGeometryPiece::clone() const
 {
   return scinew FileGeometryPiece(*this);
 }
 
-bool FileGeometryPiece::inside(const Point& p) const
+bool
+FileGeometryPiece::inside(const Point& p) const
 {
   //Check p with the lower coordinates
   if (p == Max(p,d_box.lower()) && p == Min(p,d_box.upper()) )
@@ -127,13 +132,15 @@ bool FileGeometryPiece::inside(const Point& p) const
     return false;
 }
 
-Box FileGeometryPiece::getBoundingBox() const
+Box
+FileGeometryPiece::getBoundingBox() const
 {
   return d_box;
 }
 
 
-void FileGeometryPiece::read_bbox(istream & source, Point & min, Point & max) const
+void
+FileGeometryPiece::read_bbox(istream & source, Point & min, Point & max) const
 {
   if(d_file_format=="text") {
     source >> min(0) >> min(1) >> min(2) >> max(0) >> max(1) >> max(2);
@@ -239,7 +246,8 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
   return true;
 }
 
-void FileGeometryPiece::readPoints(int pid)
+void
+FileGeometryPiece::readPoints(int pid)
 {
   // use pid of -1 to indicate reading all points
   if(!d_presplit && pid!=-1) return; // already read points
@@ -285,7 +293,8 @@ void FileGeometryPiece::readPoints(int pid)
   }
 }
 
-int FileGeometryPiece::createPoints()
+unsigned int
+FileGeometryPiece::createPoints()
 {
   cerr << "You should be reading points .. not creating them" << endl;  
   return 0;

@@ -8,10 +8,12 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+const string SphereGeometryPiece::TYPE_NAME = "sphere";
 
 SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 {
-  setName("sphere");
+  name_ = "Unnamed " + TYPE_NAME + " from PS";
+
   Point orig = Point(0.,0.,0.);
   double rad = 0.;
 
@@ -27,7 +29,7 @@ SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 }
 
 SphereGeometryPiece::SphereGeometryPiece(const Point& origin,
-		                         double radius)
+                                         double radius)
 {
   if ( radius <= 0.0)
     SCI_THROW(ProblemSetupException("Input File Error: Sphere radius must be > 0.0", __FILE__, __LINE__));
@@ -40,21 +42,21 @@ SphereGeometryPiece::~SphereGeometryPiece()
 {
 }
 
-void SphereGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+SphereGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-  ProblemSpecP sphere_ps = ps->appendChild("sphere");
-
-  sphere_ps->appendElement("origin",d_origin);
-  sphere_ps->appendElement("radius",d_radius);
+  ps->appendElement("origin",d_origin);
+  ps->appendElement("radius",d_radius);
 }
 
-
-SphereGeometryPiece* SphereGeometryPiece::clone()
+GeometryPieceP
+SphereGeometryPiece::clone() const
 {
   return scinew SphereGeometryPiece(*this);
 }
 
-bool SphereGeometryPiece::inside(const Point& p) const
+bool
+SphereGeometryPiece::inside(const Point& p) const
 {
   Vector diff = p - d_origin;
 
@@ -68,10 +70,10 @@ bool SphereGeometryPiece::inside(const Point& p) const
 Box SphereGeometryPiece::getBoundingBox() const
 {
     Point lo(d_origin.x()-d_radius,d_origin.y()-d_radius,
-	   d_origin.z()-d_radius);
+           d_origin.z()-d_radius);
 
     Point hi(d_origin.x()+d_radius,d_origin.y()+d_radius,
-	   d_origin.z()+d_radius);
+           d_origin.z()+d_radius);
 
     return Box(lo,hi);
 

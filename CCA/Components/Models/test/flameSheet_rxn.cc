@@ -61,13 +61,12 @@ flameSheet_rxn::~flameSheet_rxn()
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
      iter != d_scalar->regions.end(); iter++){
     Region* region = *iter;
-    delete region->piece;
     delete region;
   }
 }
 //__________________________________
 //
-flameSheet_rxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
+flameSheet_rxn::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("scalar", initialScalar);
@@ -75,7 +74,7 @@ flameSheet_rxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 //______________________________________________________________________
 //    Problem Setup
 void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
-			   ModelSetup* setup)
+                           ModelSetup* setup)
 {
   cout_doing << "Doing problemSetup \t\t\t\tFLAMESHEET" << endl;
   d_sharedState = in_state;
@@ -105,8 +104,8 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
                                             sum_vartype::getTypeDescription());
                                             
   setup->registerTransportedVariable(d_matl_set->getSubset(0),
-				    d_scalar->scalar_CCLabel,
-				    d_scalar->scalar_source_CCLabel);
+                                    d_scalar->scalar_CCLabel,
+                                    d_scalar->scalar_source_CCLabel);
 
  
 
@@ -149,10 +148,10 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
     geom_obj_ps != 0;
     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPiece*> pieces;
+    vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPiece* mainpiece;
+    GeometryPieceP mainpiece;
     if(pieces.size() == 0){
      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
@@ -200,8 +199,8 @@ void flameSheet_rxn::outputProblemSpec(ProblemSpecP& ps)
 
 //______________________________________________________________________
 void flameSheet_rxn::scheduleInitialize(SchedulerP& sched,
-				            const LevelP& level,
-				            const ModelInfo*)
+                                            const LevelP& level,
+                                            const ModelInfo*)
 {
   //__________________________________
   //  intialize the scalar field
@@ -213,10 +212,10 @@ void flameSheet_rxn::scheduleInitialize(SchedulerP& sched,
 }
 //______________________________________________________________________
 void flameSheet_rxn::initialize(const ProcessorGroup*, 
-			           const PatchSubset* patches,
-			           const MaterialSubset* matls,
-			           DataWarehouse*,
-			           DataWarehouse* new_dw)
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
 {
   cout_doing << "Doing Initialize \t\t\t\tFLAMESHEET" << endl;
   for(int p=0;p<patches->size();p++){
@@ -228,14 +227,14 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
     f.initialize(0);
 
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
-	                           iter != d_scalar->regions.end(); iter++){
+                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
       for(CellIterator iter = patch->getExtraCellIterator();
           !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
         if(region->piece->inside(p)) {
-	   f[c] = region->initialScalar;
+           f[c] = region->initialScalar;
         }
       } // Over cells
     } // regions
@@ -263,8 +262,8 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
 
 //__________________________________
 void flameSheet_rxn::scheduleComputeModelSources(SchedulerP& sched,
-					              const LevelP& level,
-					              const ModelInfo* mi)
+                                                      const LevelP& level,
+                                                      const ModelInfo* mi)
 {
   cout_doing << "FLAMESHEET::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("flameSheet_rxn::computeModelSources",this, 
@@ -285,11 +284,11 @@ void flameSheet_rxn::scheduleComputeModelSources(SchedulerP& sched,
 }
 //______________________________________________________________________
 void flameSheet_rxn::computeModelSources(const ProcessorGroup*, 
-		                           const PatchSubset* patches,
-		                           const MaterialSubset* matls,
-		                           DataWarehouse* old_dw,
-		                           DataWarehouse* new_dw,
-		                           const ModelInfo* mi)
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw,
+                                           const ModelInfo* mi)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -498,8 +497,8 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
 }
 //__________________________________      
 void flameSheet_rxn::scheduleComputeStableTimestep(SchedulerP&,
-					   const LevelP&,
-					   const ModelInfo*)
+                                           const LevelP&,
+                                           const ModelInfo*)
 {
   // None necessary...
 }
