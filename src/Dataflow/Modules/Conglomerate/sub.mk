@@ -36,19 +36,44 @@
 # if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
-SRCDIR := Dataflow/Modules
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := \
-	$(SRCDIR)/Bundle\
-	$(SRCDIR)/Conglomerate\
-	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Fields\
-	$(SRCDIR)/Math\
-	$(SRCDIR)/Render\
-	$(SRCDIR)/Time\
-        $(SRCDIR)/Visualization\
-	$(SRCDIR)/String\
-#[INSERT NEW CATEGORY DIR HERE]
+SRCDIR   := Dataflow/Modules/Conglomerate
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCS     += \
+	$(SRCDIR)/FieldArbitrarySlicer.cc\
+#[INSERT NEW CODE FILE HERE]
+
+
+PSELIBS := \
+	Core/Algorithms/Visualization \
+	Dataflow/Modules/Fields \
+	Dataflow/Modules/Visualization \
+	Dataflow/Network         \
+	Dataflow/Widgets         \
+	Core/Algorithms/Fields   \
+	Core/Algorithms/Geometry \
+	Core/Basis               \
+	Core/Datatypes           \
+	Core/Exceptions          \
+	Core/Geom                \
+	Core/Geometry            \
+	Core/GeomInterface       \
+	Core/Containers          \
+	Core/GuiInterface        \
+	Core/ImportExport        \
+	Core/Math                \
+	Core/Persistent          \
+	Core/Thread              \
+	Core/TkExtensions        \
+	Core/Util              
+
+
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(TEEM_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+ifeq ($(LARGESOS),no)
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+endif
 
