@@ -53,9 +53,10 @@ WARNING
 #include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationConstVariables.h>
 
 namespace Uintah {
-  class ProcessorGroup;
-  class Models_RadiationModel;
-  class ICELabel;
+
+class ProcessorGroup;
+class Models_RadiationModel;
+class ICELabel;
   
 class RadiationDriver : public ModelInterface {
 
@@ -213,7 +214,7 @@ class RadiationDriver : public ModelInterface {
   const ProcessorGroup* d_myworld;
   SimulationStateP d_sharedState;
 
-  vector<GeometryPiece*> d_geom_pieces;
+  vector<GeometryPieceP> d_geom_pieces;
 
   void initialize(const ProcessorGroup*,
                   const PatchSubset* patches,

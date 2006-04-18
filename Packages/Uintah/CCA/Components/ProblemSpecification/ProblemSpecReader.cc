@@ -70,14 +70,14 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
   // find the directory the current file was in, and if the includes are 
   // not an absolute path, have them for relative to that directory
   string directory = d_filename;
-  int i;
-  for (i = directory.length()-1; i >= 0; i--) {
+
+  int index;
+  for( index = (int)directory.length()-1; index >= 0; --index ) {
     //strip off characters after last /
-    if (directory[i] == '/')
+    if (directory[index] == '/')
       break;
   }
-
-  directory = directory.substr(0,i+1);
+  directory = directory.substr(0,index+1);
 
   ProblemSpecP child = params->getFirstChild();
   while (child != 0) {

@@ -1,8 +1,11 @@
 
 #ifndef Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 #define Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
+
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+
 #include <map>
 #include <vector>
 
@@ -38,7 +41,6 @@ WARNING
   
 ****************************************/
   class ICELabel;
-  class GeometryPiece;
   class PassiveScalar :public ModelInterface {
   public:
     PassiveScalar(const ProcessorGroup* myworld, 
@@ -127,9 +129,9 @@ WARNING
 
     class Region {
     public:
-      Region(GeometryPiece* piece, ProblemSpecP&);
+      Region(GeometryPieceP piece, ProblemSpecP&);
 
-      GeometryPiece* piece;
+      GeometryPieceP piece;
       double initialScalar;
     };
 

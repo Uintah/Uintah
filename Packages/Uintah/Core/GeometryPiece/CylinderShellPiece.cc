@@ -9,6 +9,8 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+const string CylinderShellPiece::TYPE_NAME = "cylinder_shell";
+
 ///////////
 // Constructor
 CylinderShellPiece::CylinderShellPiece(ProblemSpecP& ps)
@@ -39,7 +41,8 @@ CylinderShellPiece::~CylinderShellPiece()
 {
 }
 
-void CylinderShellPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+CylinderShellPiece::outputHelper( ProblemSpecP & ps ) const
 {
   ProblemSpecP shell_ps = ps->appendChild("shell");
   ProblemSpecP cylinder_ps = shell_ps->appendChild("cylinder");
@@ -52,8 +55,8 @@ void CylinderShellPiece::outputProblemSpec(ProblemSpecP& ps)
   cylinder_ps->appendElement("num_circum",d_numCircum);
 }
 
-
-CylinderShellPiece* CylinderShellPiece::clone()
+GeometryPieceP
+CylinderShellPiece::clone() const
 {
   return scinew CylinderShellPiece(*this);
 }

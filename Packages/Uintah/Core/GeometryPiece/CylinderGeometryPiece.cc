@@ -1,15 +1,20 @@
 #include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
+const string CylinderGeometryPiece::TYPE_NAME = "cylinder";
+
 CylinderGeometryPiece::CylinderGeometryPiece() 
 {
+  name_ = "Unnamed " + TYPE_NAME + " from BasicCtor";
+
   Point top, bottom;
   d_bottom = bottom;
   d_top = top;
@@ -18,7 +23,7 @@ CylinderGeometryPiece::CylinderGeometryPiece()
 
 CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) 
 {
-  setName("cylinder");
+  name_ = "Unnamed " + TYPE_NAME + " from PS";
   Point top,bottom;
   double rad;
   
@@ -41,9 +46,11 @@ CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps)
 }
 
 CylinderGeometryPiece::CylinderGeometryPiece(const Point& top,
-		                             const Point& bottom,
-					     double radius)
+                                             const Point& bottom,
+                                             double radius)
 {
+  name_ = "Unnamed " + TYPE_NAME + " from top/bottom/radius";
+
   double near_zero = 1e-100;
   Vector axis = top - bottom;
   
@@ -62,26 +69,23 @@ CylinderGeometryPiece::~CylinderGeometryPiece()
 {
 }
 
-void CylinderGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+CylinderGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-
-  ProblemSpecP cylinder_ps = ps->appendChild("cylinder");
-
-  cylinder_ps->appendElement("bottom",d_bottom);
-  cylinder_ps->appendElement("top",d_top);
-  cylinder_ps->appendElement("radius",d_radius);
+  ps->appendElement("bottom",d_bottom);
+  ps->appendElement("top",d_top);
+  ps->appendElement("radius",d_radius);
 }
 
-
-CylinderGeometryPiece* CylinderGeometryPiece::clone()
+GeometryPieceP
+CylinderGeometryPiece::clone() const
 {
   return scinew CylinderGeometryPiece(*this);
 }
 
-
-bool CylinderGeometryPiece::inside(const Point &p) const
+bool
+CylinderGeometryPiece::inside(const Point &p) const
 {
-
   Vector axis = d_top-d_bottom;  
   double height2 = axis.length2();
 
@@ -97,17 +101,16 @@ bool CylinderGeometryPiece::inside(const Point &p) const
   if( d > d_radius*d_radius)
     return false;
   return true;
-
 }
 
-Box CylinderGeometryPiece::getBoundingBox() const
+Box
+CylinderGeometryPiece::getBoundingBox() const
 {
-  
   Point lo(d_bottom.x() - d_radius, d_bottom.y() - d_radius,
-	   d_bottom.z() - d_radius);
+           d_bottom.z() - d_radius);
 
   Point hi(d_top.x() + d_radius, d_top.y() + d_radius,
-	   d_top.z() + d_radius);
+           d_top.z() + d_radius);
 
   return Box(lo,hi);
 }

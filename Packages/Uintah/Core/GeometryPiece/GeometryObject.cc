@@ -7,9 +7,9 @@
 
 using namespace Uintah;
 
-GeometryObject::GeometryObject(GeometryPiece* piece, ProblemSpecP& ps,
-                               list<string>& data)
-   : d_piece(piece)
+GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
+                               list<string>& data) :
+  d_piece(piece)
 {
    ps->require("res", d_resolution);
    ps->require("velocity", d_initialVel);
@@ -19,15 +19,10 @@ GeometryObject::GeometryObject(GeometryPiece* piece, ProblemSpecP& ps,
      ps->require(*it,val);
      d_data[*it] = val;
    }
-
 }
 
-GeometryObject::~GeometryObject()
-{
-  delete d_piece;
-}
-
-void GeometryObject::outputProblemSpec(ProblemSpecP& ps)
+void
+GeometryObject::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
   d_piece->outputProblemSpec(geom_obj_ps);
@@ -38,11 +33,4 @@ void GeometryObject::outputProblemSpec(ProblemSpecP& ps)
        it != d_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
-
 }
-
-IntVector GeometryObject::getNumParticlesPerCell()
-{
-  return d_resolution;
-}
-

@@ -55,10 +55,11 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~CylinderShellPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    static const string TYPE_NAME;    
+    std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
-    CylinderShellPiece* clone();
+    virtual GeometryPieceP clone() const;
 	 
     //////////////////////////////////////////////////////////////////////
     /*! \brief Determines whether a point is inside the cylinder.  */
@@ -87,9 +88,10 @@ namespace Uintah {
 			ParticleVariable<Vector>& psize,
 			particleIndex start);
 
-
   private:
 	 
+    virtual void outputHelper( ProblemSpecP & ps ) const;
+
     Point  d_bottom;
     Point  d_top;
     double d_radius;

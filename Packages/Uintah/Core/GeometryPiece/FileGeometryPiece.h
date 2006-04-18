@@ -4,10 +4,11 @@
 #include <Packages/Uintah/Core/GeometryPiece/SmoothGeomPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Core/Geometry/Point.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <list>
-#include <string>
+#include   <vector>
+#include   <list>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -92,10 +93,11 @@ namespace Uintah {
     // Destructor
     virtual ~FileGeometryPiece();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+    static const string TYPE_NAME;
+    virtual std::string getType() const { return TYPE_NAME; }
+
     /// Make a clone
-    FileGeometryPiece* clone();
+    virtual GeometryPieceP clone() const;
 
     //////////
     // Determines whether a point is inside the box.
@@ -107,18 +109,19 @@ namespace Uintah {
 
     void readPoints(int pid);
 
-    int createPoints();
+    unsigned int createPoints();
 
   private:
+ 
     Box                 d_box;
     string              d_file_name;
     bool                d_presplit;
     string              d_file_format;
     list<string>        d_vars;
     
-  private:
     bool read_line(std::istream & is, Point & xmin, Point & xmax);
     void read_bbox(std::istream & source, Point & lowpt, Point & highpt) const;
+    virtual void outputHelper( ProblemSpecP & ps ) const;
   };
   
 } // End namespace Uintah

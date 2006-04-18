@@ -12,11 +12,13 @@ using namespace SCIRun;
 
 using namespace std;
 
+const string PlaneShellPiece::TYPE_NAME = "plane_shell";
+
 //////////
 // Constructor : Initialize stuff
 PlaneShellPiece::PlaneShellPiece(ProblemSpecP& ps)
 {
-  setName("plane");
+  name_ = "Unnamed Plane";
   ps->require("center", d_center);
   ps->require("normal", d_normal);
   ps->require("radius", d_radius);
@@ -44,7 +46,7 @@ PlaneShellPiece::~PlaneShellPiece()
 {
 }
 
-void PlaneShellPiece::outputProblemSpec(ProblemSpecP& ps)
+void PlaneShellPiece::outputHelper( ProblemSpecP & ps ) const
 {
   ProblemSpecP shell_ps = ps->appendChild("shell");
   ProblemSpecP plane_ps = shell_ps->appendChild("plane");
@@ -54,10 +56,10 @@ void PlaneShellPiece::outputProblemSpec(ProblemSpecP& ps)
   plane_ps->appendElement("radius", d_radius);
   plane_ps->appendElement("thickness", d_thickness);
   plane_ps->appendElement("num_radius", d_numRadius);
-
 }
 
-PlaneShellPiece* PlaneShellPiece::clone()
+GeometryPieceP
+PlaneShellPiece::clone() const
 {
   return scinew PlaneShellPiece(*this);
 }
@@ -92,9 +94,9 @@ PlaneShellPiece::getBoundingBox() const
   Vector bot = d_center.asVector() - d_normal*halfThick;
   Vector top = d_center.asVector() + d_normal*halfThick;
   Point lo(bot.x() - d_radius, bot.y() - d_radius,
-	   bot.z() - d_radius);
+           bot.z() - d_radius);
   Point hi(top.x() + d_radius, top.y() + d_radius,
-	   top.z() + d_radius);
+           top.z() + d_radius);
 
   return Box(lo,hi);
 }
@@ -159,13 +161,13 @@ PlaneShellPiece::returnParticleCount(const Patch* patch)
    in the patch. First particle is located at the center. */
 int 
 PlaneShellPiece::createParticles(const Patch* patch,
-				 ParticleVariable<Point>&  pos,
-				 ParticleVariable<double>& vol,
-				 ParticleVariable<double>& pThickTop,
-				 ParticleVariable<double>& pThickBot,
-				 ParticleVariable<Vector>& pNormal,
-				 ParticleVariable<Vector>& psiz,
-				 particleIndex start)
+                                 ParticleVariable<Point>&  pos,
+                                 ParticleVariable<double>& vol,
+                                 ParticleVariable<double>& pThickTop,
+                                 ParticleVariable<double>& pThickBot,
+                                 ParticleVariable<Vector>& pNormal,
+                                 ParticleVariable<Vector>& psiz,
+                                 particleIndex start)
 {
   cout << "Calling plane shell particle creator" << endl;
 

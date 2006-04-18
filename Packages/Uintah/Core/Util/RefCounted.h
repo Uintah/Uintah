@@ -47,8 +47,8 @@ WARNING
       int getReferenceCount() const {
 	 return d_refCount;
       }
+
    private:
-      RefCounted(const RefCounted&);
       RefCounted& operator=(const RefCounted&);
       //////////
       // Insert Documentation Here:

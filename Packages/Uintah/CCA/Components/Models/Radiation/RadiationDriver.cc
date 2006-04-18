@@ -250,10 +250,10 @@ RadiationDriver::problemSetup(GridP& grid,
         geom_obj_ps != 0;
         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-      vector<GeometryPiece*> pieces;
+      vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-      GeometryPiece* mainpiece;
+      GeometryPieceP mainpiece;
       if(pieces.size() == 0){
         throw ProblemSetupException("\n ERROR: RADIATION MODEL: No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
@@ -319,7 +319,7 @@ void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
   rad_ps->appendElement("useTableValues",d_useTableValues);
 
   ProblemSpecP geom_ps = rad_ps->appendChild("geom_object");
-  for (vector<GeometryPiece*>::const_iterator it = d_geom_pieces.begin();
+  for (vector<GeometryPieceP>::iterator it = d_geom_pieces.begin();
        it != d_geom_pieces.end(); it++) {
     (*it)->outputProblemSpec(geom_ps);
   }
@@ -442,9 +442,9 @@ RadiationDriver::initialize(const ProcessorGroup*,
       new_dw->allocateAndPut(insideSolid, insideSolidLabel,indx_S, patch);
       insideSolid.initialize(0.0);
       
-      for(vector<GeometryPiece*>::iterator iter = d_geom_pieces.begin();
+      for(vector<GeometryPieceP>::iterator iter = d_geom_pieces.begin();
                                     iter != d_geom_pieces.end(); iter++){
-        GeometryPiece* piece = *iter;
+        GeometryPieceP piece = *iter;
         
         for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
           IntVector c = *iter;
@@ -508,7 +508,7 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
   MaterialSet* matl_set_G  = new MaterialSet();
   MaterialSet* matl_set_GS = new MaterialSet();
   const MaterialSubset* mss_G = d_matl_G->thisMaterial();
-  const MaterialSubset* mss_S; 
+  const MaterialSubset* mss_S = NULL; 
   
   vector<int> g;
   g.push_back(m);

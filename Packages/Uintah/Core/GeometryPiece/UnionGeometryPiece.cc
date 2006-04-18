@@ -9,72 +9,60 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
+const string UnionGeometryPiece::TYPE_NAME = "union";
+
 UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP& ps) 
 {
-  setName("union");
+  name_ = "Unnamed " + TYPE_NAME + " from PS";
   // Need to loop through all the geometry pieces
-  GeometryPieceFactory::create(ps,child);
+  GeometryPieceFactory::create(ps,child_);
   
 }
 
-UnionGeometryPiece::UnionGeometryPiece(const vector<GeometryPiece*>& child)
-   : child(child)
+UnionGeometryPiece::UnionGeometryPiece(const vector<GeometryPieceP>& child) :
+  child_(child)
 {
+  name_ = "Unnamed " + TYPE_NAME + " from vector";
 }
 
-UnionGeometryPiece::UnionGeometryPiece(const UnionGeometryPiece& rhs)
-{
-  for (vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
-       it != rhs.child.end(); ++it)
-    child.push_back((*it)->clone());
-}
-
-UnionGeometryPiece& UnionGeometryPiece::operator=(const UnionGeometryPiece& rhs){
+UnionGeometryPiece&
+UnionGeometryPiece::operator=(const UnionGeometryPiece& rhs){
   if (this == &rhs)
     return *this;
 
-  // Delete the lhs
-  for (vector<GeometryPiece*>::const_iterator it = child.begin();
-       it != child.end(); ++it)
-    delete *it;
-  child.clear();
+  child_.clear();
 
-  for (vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
-       it != rhs.child.end(); ++it)
-    child.push_back((*it)->clone());
+  // Copy in the new values
+  for (vector<GeometryPieceP>::const_iterator it = rhs.child_.begin();
+       it != rhs.child_.end(); ++it)
+    child_.push_back((*it)->clone());
 
   return *this;
-
 }
 
-void UnionGeometryPiece::outputProblemSpec(ProblemSpecP& ps)
+void
+UnionGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
-  ProblemSpecP union_ps = ps->appendChild("union");
-
-  for (vector<GeometryPiece*>::const_iterator it = child.begin();
-       it != child.end(); ++it)
-    (*it)->outputProblemSpec(union_ps);
+  // If this is a named object, then only output the children the first time.
+  for( vector<GeometryPieceP>::const_iterator it = child_.begin(); it != child_.end(); ++it ) {
+    (*it)->outputProblemSpec( ps );
+  }
 }
 
 
-UnionGeometryPiece* UnionGeometryPiece::clone()
+GeometryPieceP
+UnionGeometryPiece::clone() const
 {
   return scinew UnionGeometryPiece(*this);
 }
 
-
-UnionGeometryPiece::~UnionGeometryPiece()
+bool
+UnionGeometryPiece::inside(const Point &p) const 
 {
-  for (int i = 0; i < (int)child.size(); i++) {
-    delete child[i];
-  }
-}
-
-bool UnionGeometryPiece::inside(const Point &p) const 
-{
-  for (int i = 0; i < (int)child.size(); i++) {
-    if (child[i]->inside(p))
+  for (int i = 0; i < (int)child_.size(); i++) {
+    if (child_[i]->inside(p)) {
       return true;
+    }
   }
   return false;
 }
@@ -86,11 +74,11 @@ Box UnionGeometryPiece::getBoundingBox() const
 
   // Initialize the lo and hi points to the first element
 
-  lo = child[0]->getBoundingBox().lower();
-  hi = child[0]->getBoundingBox().upper();
+  lo = child_[0]->getBoundingBox().lower();
+  hi = child_[0]->getBoundingBox().upper();
 
-  for (int i = 0; i < (int)child.size(); i++) {
-    Box box = child[i]->getBoundingBox();
+  for( unsigned int i = 0; i < child_.size(); i++ ) {
+    Box box = child_[i]->getBoundingBox();
     lo = Min(lo,box.lower());
     hi = Max(hi,box.upper());
   }

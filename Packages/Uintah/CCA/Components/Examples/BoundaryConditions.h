@@ -10,20 +10,22 @@
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <map>
-#include <string>
-#include <vector>
+#include   <map>
+#include   <string>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424
+#  pragma set woff 1424
 #endif
 
 namespace Uintah {
-  class GeometryPiece;
-  class RegionDB;
+
   using namespace SCIRun;
+
+  class RegionDB;
   struct BC {
     enum Type {
       FreeFlow, FixedRate, FixedValue, FixedFlux, CoarseGrid, Exterior
@@ -37,7 +39,7 @@ namespace Uintah {
   class BCRegionBase {
   public:
   protected:
-    BCRegionBase(const IntVector& offset, const GeometryPiece* piece,
+    BCRegionBase(const IntVector& offset, const GeometryPieceP piece,
 		 BC::Type type)
       : piece(piece), offset(offset), type(type)
       {
@@ -45,7 +47,7 @@ namespace Uintah {
     virtual ~BCRegionBase();
     friend class ConditionBase;
 
-    const GeometryPiece* piece;
+    const GeometryPieceP piece;
     IntVector offset;
     int idx;
     BC::Type type;
@@ -79,7 +81,7 @@ namespace Uintah {
 	{
 	  ASSERT(type == BC::FreeFlow || type == BC::CoarseGrid || type == BC::Exterior);
 	}
-      BCRegion(const IntVector& offset, const GeometryPiece* piece,
+      BCRegion(const IntVector& offset, const GeometryPieceP piece,
 	       BC::Type type, T value)
 	: BCRegionBase(offset, piece, type), value(value)
 	{
@@ -127,7 +129,7 @@ namespace Uintah {
     virtual int numRegions() = 0;
     virtual BCRegionBase* getRegion(int region) = 0;
     virtual void parseGlobal(ProblemSpecP& node) = 0;
-    virtual void parseCondition(ProblemSpecP&, const GeometryPiece*,
+    virtual void parseCondition(ProblemSpecP&, const GeometryPieceP,
 				BC::Type bctype, bool valueRequired) = 0;
     virtual void merge(int& bc1, int bc2, bool pressure) = 0;
 
@@ -153,7 +155,7 @@ namespace Uintah {
       node->require("value", regions[0]->value);
       hasGlobalValue=true;
     }
-    virtual void parseCondition(ProblemSpecP& node, const GeometryPiece* piece,
+    virtual void parseCondition(ProblemSpecP& node, const GeometryPieceP piece,
 				BC::Type bctype, bool valueRequired) {
       T value;
       if(valueRequired) {

@@ -741,8 +741,8 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
-	  double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
-                 	    (2.0*cellinfo->stb[colZ]);
+	  //double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
+          //                       (2.0*cellinfo->stb[colZ]);
 	  //double invDelta = 1.0/cube_delta;
 	  filterDen[currCell] = 0.0;
 	  filterUVel[currCell] = 0.0;

@@ -61,7 +61,6 @@ SimpleRxn::~SimpleRxn()
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                 iter != d_scalar->regions.end(); iter++){
     Region* region = *iter;
-    delete region->piece;
     delete region;
 
   }
@@ -73,7 +72,7 @@ void SimpleRxn::outputProblemSpec(ProblemSpecP& ps)
 }
 
 //__________________________________
-SimpleRxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
+SimpleRxn::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("scalar", initialScalar);
@@ -166,10 +165,10 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
     geom_obj_ps != 0;
     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPiece*> pieces;
+    vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPiece* mainpiece;
+    GeometryPieceP mainpiece;
     if(pieces.size() == 0){
      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){

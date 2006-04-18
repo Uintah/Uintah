@@ -6,10 +6,10 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
-#include <map>
-#include <iostream>
+#include   <string>
+#include   <vector>
+#include   <map>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 typedef struct _xmlNode xmlNode;
@@ -109,7 +109,7 @@ WARNING
       ProblemSpecP findNextBlock() const;
 
       //////////
-      // find fist child text node
+      // find first child text node
       ProblemSpecP findTextBlock();
 
       //////////
@@ -172,13 +172,14 @@ WARNING
       string getNodeName() const;
 
       //////////
-      // return the value of this node (the part between the xml tags)
+      // returns the value of this node (the ascii text between the
+      // xml tags) (Not to be confused with the nodes children which
+      // would be in <child></child> notation.)
       string getNodeValue();
 
       //////////
       // return type of node, as specified in the NodeType enum above
       short getNodeType();
-
 
 
       //////////

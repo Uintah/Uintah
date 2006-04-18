@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <vector>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -65,24 +65,21 @@ WARNING
 	 //////////
 	 // Constructor that takes an array of children. It copies the array,
 	 // and assume ownership of the children.
-	 UnionGeometryPiece(const std::vector<GeometryPiece*>& children);
-
-	 /// Copy constructor
-	 UnionGeometryPiece(const UnionGeometryPiece&);
+	 UnionGeometryPiece(const std::vector<GeometryPieceP>& children);
 
 	 /// Assignment operator
 	 UnionGeometryPiece& operator=(const UnionGeometryPiece& );
 
-         virtual void outputProblemSpec(ProblemSpecP& ps);
-
 	 //// Make a clone
-	 UnionGeometryPiece* clone();
-
+	 GeometryPieceP clone() const;
 
 	 //////////
 	 // Destructor
-	 virtual ~UnionGeometryPiece();
+         virtual ~UnionGeometryPiece() {}
 	 
+         static const string TYPE_NAME;
+         virtual std::string getType() const { return TYPE_NAME; }
+
 	 //////////
 	 // Determines whether a point is inside the intersection piece.
 	 virtual bool inside(const Point &p) const;
@@ -92,7 +89,9 @@ WARNING
 	 virtual Box getBoundingBox() const;
 	 
       private:
-	 std::vector<GeometryPiece* > child;
+         virtual void outputHelper( ProblemSpecP & ps ) const;
+
+	 std::vector<GeometryPieceP> child_;
 	 
       };
 } // End namespace Uintah

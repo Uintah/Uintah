@@ -1,6 +1,7 @@
 #ifndef __PARTICLE_CREATOR_H__
 #define __PARTICLE_CREATOR_H__
 
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -16,7 +17,6 @@ namespace Uintah {
   typedef int particleId;
 
   class GeometryObject;
-  class GeometryPiece;
   class Patch;
   class DataWarehouse;
   class MPMFlags;
@@ -95,7 +95,7 @@ namespace Uintah {
     virtual void applyForceBC(const Vector& dxpp,  const Point& pp,
                               const double& pMass,  Vector& pExtForce);
     
-    int checkForSurface(const GeometryPiece* piece, const Point p,
+    int checkForSurface(const GeometryPieceP piece, const Point p,
                         const Vector dxpp);
     
 

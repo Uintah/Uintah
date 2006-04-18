@@ -49,7 +49,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
   vector<GeometryObject*>::const_iterator obj;
   for (obj = d_geom_objs.begin(); obj != d_geom_objs.end(); ++obj) {  
     particleIndex count = 0;
-    GeometryPiece* piece = (*obj)->getPiece();
+    GeometryPieceP piece = (*obj)->getPiece();
     Box b1 = piece->getBoundingBox();
     Box b2 = patch->getBox();
     Box b = b1.intersect(b2);
@@ -66,7 +66,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
     
 
     SphereMembraneGeometryPiece* SMGP =
-      dynamic_cast<SphereMembraneGeometryPiece*>(piece);
+      dynamic_cast<SphereMembraneGeometryPiece*>(piece.get_rep());
     if(SMGP){
       int numP = SMGP->createParticles(patch, position, pvolume,
 				       pTang1, pTang2, pNorm, psize, start);
@@ -160,10 +160,10 @@ MembraneParticleCreator::countAndCreateParticles(const Patch* patch,
 						 GeometryObject* obj) 
 {
 
-  GeometryPiece* piece = obj->getPiece();
+  GeometryPieceP piece = obj->getPiece();
   
   SphereMembraneGeometryPiece* SMGP =
-    dynamic_cast<SphereMembraneGeometryPiece*>(piece);
+    dynamic_cast<SphereMembraneGeometryPiece*>(piece.get_rep());
   
   if(SMGP){
     return SMGP->returnParticleCount(patch);
