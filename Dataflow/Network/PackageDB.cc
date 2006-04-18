@@ -124,6 +124,8 @@ PackageDB::findMaker(ModuleInfo* moduleInfo)
   string cat_name = moduleInfo->category_name_;
   if((cat_name.substr(0, 6) == "Fields")&&(moduleInfo->package_name_ == "SCIRun"))
     { cat_name = "Fields"; }
+  else if((cat_name.substr(0, 13) == "Conglomerate_"))
+    { cat_name = "Conglomerate"; moduleInfo->category_name_.erase(0,13); }
   else if (cat_name.substr(0, 7) == "UnuAtoM") { cat_name = "Unu"; }
   else if (cat_name.substr(0, 7) == "UnuNtoZ") { cat_name = "Unu"; }
 
@@ -285,13 +287,17 @@ PackageDB::loadPackage(bool resolve)
 	continue;
       }
 
-      ci = new_package->categories.find(new_module->category_name_);
+      string cat_name = new_module->category_name_;
+      if((cat_name.substr(0, 13) == "Conglomerate_"))
+	{ cat_name.erase(0,13); }
+
+      ci = new_package->categories.find(cat_name);
       if (ci==new_package->categories.end()) 
       {
 	new_category = new category;
-	new_category->name = new_module->category_name_;
+	new_category->name = cat_name;
 	new_package->categories.insert(std::pair<string,
-				       category*>(new_category->name, 
+				       category*>(cat_name, 
 						  new_category));
 	ci = new_package->categories.find(string(new_category->name));
       }
@@ -368,9 +374,13 @@ PackageDB::registerModule(ModuleInfo* info)
       packageList_.push_back( info->package_name_ );
     }
   
+  string cat_name = info->category_name_;
+  if((cat_name.substr(0, 13) == "Conglomerate_"))
+    { cat_name.erase(0,13); }
+
   Category* category;
-  if(!package->lookup(info->category_name_,category))
-    package->insert(info->category_name_,category=new Category);
+  if(!package->lookup(cat_name,category))
+    package->insert(cat_name,category=new Category);
   
   ModuleInfo* moduleInfo;
   if(!category->lookup(info->module_name_,moduleInfo)) {
