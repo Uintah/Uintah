@@ -264,7 +264,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       if (d_pressureBoundary) {
 	int nofGeomPieces = (int)d_pressureBC->d_geomPiece.size();
 	for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPiece*  piece = d_pressureBC->d_geomPiece[ii];
+	  GeometryPieceP  piece = d_pressureBC->d_geomPiece[ii];
 	  Box geomBox = piece->getBoundingBox();
 	  Box b = geomBox.intersect(patchBox);
 	  // check for another geometry
@@ -282,7 +282,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       if (d_wallBoundary) {
         int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
         for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
+	  GeometryPieceP  piece = d_wallBdry->d_geomPiece[ii];
 	  Box geomBox = piece->getBoundingBox();
 	  Box b = geomBox.intersect(patchBox);
 	  // check for another geometry
@@ -307,7 +307,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       if (d_outletBoundary) {
 	int nofGeomPieces = (int)d_outletBC->d_geomPiece.size();
 	for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPiece*  piece = d_outletBC->d_geomPiece[ii];
+	  GeometryPieceP  piece = d_outletBC->d_geomPiece[ii];
 	  Box geomBox = piece->getBoundingBox();
 	  Box b = geomBox.intersect(patchBox);
 	  // check for another geometry
@@ -327,7 +327,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
         for (int ii = 0; ii < d_numInlets; ii++) {
           int nofGeomPieces = (int)d_flowInlets[ii].d_geomPiece.size();
           for (int jj = 0; jj < nofGeomPieces; jj++) {
-	    GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
+	    GeometryPieceP  piece = d_flowInlets[ii].d_geomPiece[jj];
 	    Box geomBox = piece->getBoundingBox();
 	    Box b = geomBox.intersect(patchBox);
 	    // check for another geometry
@@ -357,7 +357,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       if (d_intrusionBoundary) {
 	int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
 	for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPiece*  piece = d_intrusionBC->d_geomPiece[ii];
+	  GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
 	  Box geomBox = piece->getBoundingBox();
 	  Box b = geomBox.intersect(patchBox);
 	  if (!(b.degenerate())) {
@@ -695,7 +695,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
       for (int jj = 0; jj < nofGeomPieces; jj++) {
 	
 	// Intersect the geometry piece with the patch box
-	GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
+	GeometryPieceP  piece = d_flowInlets[ii].d_geomPiece[jj];
 	Box geomBox = piece->getBoundingBox();
 	Box b = geomBox.intersect(patchBox);
 	// check for another geometry
@@ -2157,16 +2157,6 @@ BoundaryCondition::WallBdry::WallBdry(int cellID):
 {
 }
 
-//****************************************************************************
-// destructor for BoundaryCondition::WallBdry
-//****************************************************************************
-BoundaryCondition::WallBdry::~WallBdry()
-{
-  for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
-       g != d_geomPiece.end(); ++g)
-    delete *g;
-}
-
 
 //****************************************************************************
 // Problem Setup for BoundaryCondition::WallBdry
@@ -2184,16 +2174,6 @@ BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
 BoundaryCondition::IntrusionBdry::IntrusionBdry(int cellID):
   d_cellTypeID(cellID)
 {
-}
-
-//****************************************************************************
-// destructor for BoundaryCondition::WallBdry
-//****************************************************************************
-BoundaryCondition::IntrusionBdry::~IntrusionBdry()
-{
-  for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
-       g != d_geomPiece.end(); ++g)
-    delete *g;
 }
 
 //****************************************************************************
@@ -2239,7 +2219,7 @@ BoundaryCondition::FlowInlet::FlowInlet():
   fcr = 0.0;
 }
 
-BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
+BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   d_cellTypeID (copy.d_cellTypeID),
   flowRate(copy.flowRate),
   inletVel(copy.inletVel),
@@ -2250,7 +2230,7 @@ BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
   d_area_label(copy.d_area_label),
   d_flowRate_label(copy.d_flowRate_label)
 {
-  for (vector<GeometryPiece*>::const_iterator it = copy.d_geomPiece.begin();
+  for (vector<GeometryPieceP>::const_iterator it = copy.d_geomPiece.begin();
        it != copy.d_geomPiece.end(); ++it)
     d_geomPiece.push_back((*it)->clone());
 
@@ -2285,9 +2265,6 @@ BoundaryCondition::FlowInlet::~FlowInlet()
 {
   VarLabel::destroy(d_area_label);
   VarLabel::destroy(d_flowRate_label);
-  for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
-       g != d_geomPiece.end(); ++g)
-    delete *g;
 }
 
 //****************************************************************************
@@ -2310,7 +2287,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
   //     geom_obj_ps != 0; 
   //     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-  //  vector<GeometryPiece*> pieces;
+  //  vector<GeometryPieceP> pieces;
   //  GeometryPieceFactory::create(geom_obj_ps, pieces);
   //  if(pieces.size() == 0){
   //    throw ParameterNotFound("No piece specified in geom_object");
@@ -2351,16 +2328,6 @@ BoundaryCondition::PressureInlet::PressureInlet(int /*numMix*/, int cellID):
 }
 
 //****************************************************************************
-// destructor for BoundaryCondition::PressureInlet
-//****************************************************************************
-BoundaryCondition::PressureInlet::~PressureInlet()
-{
-  for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
-       g != d_geomPiece.end(); ++g)
-    delete *g;
-}
-
-//****************************************************************************
 // Problem Setup for BoundaryCondition::PressureInlet
 //****************************************************************************
 void 
@@ -2374,7 +2341,7 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
   //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
   //     geom_obj_ps != 0; 
   //     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-  //  vector<GeometryPiece*> pieces;
+  //  vector<GeometryPieceP> pieces;
   //  GeometryPieceFactory::create(geom_obj_ps, pieces);
   //  if(pieces.size() == 0){
   //    throw ParameterNotFound("No piece specified in geom_object");
@@ -2411,16 +2378,6 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int /*numMix*/, int cellID):
 }
 
 //****************************************************************************
-// destructor for BoundaryCondition::FlowOutlet
-//****************************************************************************
-BoundaryCondition::FlowOutlet::~FlowOutlet()
-{
-  for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
-       g != d_geomPiece.end(); ++g)
-    delete *g;
-}
-
-//****************************************************************************
 // Problem Setup for BoundaryCondition::FlowOutlet
 //****************************************************************************
 void 
@@ -2433,7 +2390,7 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
   //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
   //     geom_obj_ps != 0; 
   //     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-  //  vector<GeometryPiece*> pieces;
+  //  vector<GeometryPieceP> pieces;
   //  GeometryPieceFactory::create(geom_obj_ps, pieces);
   //  if(pieces.size() == 0){
   //    throw ParameterNotFound("No piece specified in geom_object");
