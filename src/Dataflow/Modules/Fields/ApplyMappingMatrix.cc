@@ -55,11 +55,7 @@ namespace SCIRun {
 class ApplyMappingMatrix : public Module
 {
 private:
-  FieldHandle  fHandle_;
-
-  int sfGeneration_;
-  int dfGeneration_;
-  int mGeneration_;
+  FieldHandle  field_output_handle_;
 
 public:
   ApplyMappingMatrix(GuiContext* ctx);
@@ -72,10 +68,7 @@ public:
 DECLARE_MAKER(ApplyMappingMatrix)
 
 ApplyMappingMatrix::ApplyMappingMatrix(GuiContext* ctx)
-  : Module("ApplyMappingMatrix", ctx, Filter, "FieldsData", "SCIRun"),
-  sfGeneration_(-1),
-  dfGeneration_(-1),
-  mGeneration_(-1)
+  : Module("ApplyMappingMatrix", ctx, Filter, "FieldsData", "SCIRun")
 {
 }
 
@@ -89,75 +82,57 @@ void
 ApplyMappingMatrix::execute()
 {
   // Get source field.
-  FieldIPort *sfp = (FieldIPort *)get_iport("Source");
-  FieldHandle sfield;
-  if (!(sfp->get(sfield) && sfield.get_rep())) {
-    error( "No source field handle or representation" );
-    return;
-  }
+  FieldHandle field_src_handle;
+  if( !get_input_handle( "Source", field_src_handle, true ) ) return;
 
   // Get destination field.
-  FieldIPort *dfp = (FieldIPort *)get_iport("Destination");
-  FieldHandle dfield;
-  if (!(dfp->get(dfield) && dfield.get_rep())) {
-    error( "No destination field handle or representation" );
-    return;
-  }
+  FieldHandle field_dst_handle;
+  if( !get_input_handle( "Destination", field_dst_handle, true ) ) return;
 
   // Get the mapping matrix.
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Mapping");
-  MatrixHandle imatrix;
-  if (!(imatrix_port->get(imatrix) && imatrix.get_rep())) {
-    error( "No source matrix handle or representation" );
-    return;
-  }
+  MatrixHandle matrix_input_handle;
+  if( !get_input_handle( "Mapping", matrix_input_handle, true ) ) return;
 
   // Check to see if the source has changed.
-  if( sfGeneration_ != sfield->generation ||
-      dfGeneration_ != dfield->generation ||
-      mGeneration_  != imatrix->generation ||
-      !oport_cached("Output"))
+  if( inputs_changed_ ||
+      !field_output_handle_.get_rep() )
   {
-    sfGeneration_ = sfield->generation;
-    dfGeneration_ = dfield->generation;
-    mGeneration_  = imatrix->generation;
-
     TypeDescription::td_vec *tdv = 
-      sfield->get_type_description(Field::FDATA_TD_E)->get_sub_type();
+      field_src_handle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     string accumtype = (*tdv)[0]->get_name();
-    if (sfield->query_scalar_interface(this) != NULL) { accumtype = "double"; }
+    if (field_src_handle->query_scalar_interface(this) != NULL) { accumtype = "double"; }
     const string oftn = 
-      dfield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-      dfield->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
-      dfield->get_type_description(Field::BASIS_TD_E)->get_similar_name(accumtype,
+      field_dst_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      field_dst_handle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      field_dst_handle->get_type_description(Field::BASIS_TD_E)->get_similar_name(accumtype,
                                                         0, "<", " >, ") +
-      dfield->get_type_description(Field::FDATA_TD_E)->get_similar_name(accumtype,
+      field_dst_handle->get_type_description(Field::FDATA_TD_E)->get_similar_name(accumtype,
                                                         0, "<", " >") + " >";
 
     CompileInfoHandle ci =
-      ApplyMappingMatrixAlgo::get_compile_info(sfield->get_type_description(),
-					    sfield->order_type_description(),
-					    dfield->get_type_description(),
+      ApplyMappingMatrixAlgo::get_compile_info(field_src_handle->get_type_description(),
+					    field_src_handle->order_type_description(),
+					    field_dst_handle->get_type_description(),
                                             oftn,
-					    dfield->order_type_description(),
-					    sfield->get_type_description(Field::FDATA_TD_E),
+					    field_dst_handle->order_type_description(),
+					    field_src_handle->get_type_description(Field::FDATA_TD_E),
 					    accumtype);
     Handle<ApplyMappingMatrixAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fHandle_ = algo->execute(this, sfield, dfield->mesh(), imatrix);
+    field_output_handle_ =
+      algo->execute(this,
+		    field_src_handle,
+		    field_dst_handle->mesh(),
+		    matrix_input_handle);
 
 
-    if (fHandle_.get_rep())
-      // Copy the properties from source field.
-      fHandle_->copy_properties(sfield.get_rep());
+    // Copy the properties from source field.
+    if (field_output_handle_.get_rep())
+      field_output_handle_->copy_properties(field_src_handle.get_rep());
   }
 
-  if (fHandle_.get_rep())
-  {
-    FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-    ofp->send_and_dereference(fHandle_, true);
-  }
+  send_output_handle( "Output",  field_output_handle_, true );
 }
 
 

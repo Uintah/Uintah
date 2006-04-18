@@ -139,12 +139,13 @@ itcl_class SCIRun_Visualization_Isosurface {
 	toplevel $w
 	frame $w.f 
 	pack $w.f -padx 2 -pady 2 -expand 1 -fill x
-	set n "$this-c needexecute "
+	set n "$this-c needexecute"
 
 	set oldmeth [set $this-active-isoval-selection-tab]
 
-	# Iso Value Selection Methods
-	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection"
+# Iso Value Selection Methods
+	iwidgets::labeledframe $w.f.iso -labelpos nw \
+	    -labeltext "Isovalue Selection"
 	set isf [$w.f.iso childsite]
 	global Color
 	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 200 \
@@ -153,7 +154,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $w.f.iso -side top -fill x -expand 1
 
 
-	###### Iso Value using slider
+###### Iso Value using slider
 	set isoslider [$isf.tabs add -label "Slider" \
 		     -command "set $this-active-isoval-selection-tab 0"]
 
@@ -161,14 +162,28 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    [set $this-isoval-min] [set $this-isoval-max] \
 	     4c $this-isoval $this-isoval-typed
 
-	pack $isoslider.isoval  -fill x
+	iwidgets::labeledframe $isoslider.opt -labelpos nw -labeltext "Options"
+	set opt [$isoslider.opt childsite]
+	
+	iwidgets::optionmenu $opt.update -labeltext "Update:" \
+		-labelpos w -command "$this set_update_type $opt.update"
+	$opt.update insert end "On Release" Manual Auto
+	$opt.update select [set $this-update_type]
+
+	global $this-update
+	set $this-update $opt.update
+
+	pack $opt.update -side top -anchor w -pady 25
+
+	pack $isoslider.isoval $isoslider.opt -side top -anchor w -fill x
 
 
-	###### Iso Value using quantity	
+###### Iso Value using quantity	
 	set isoquant [$isf.tabs add -label "Quantity" \
 		     -command "set $this-active-isoval-selection-tab 1"]
 	
-	###### Save the isoval-quantity since the iwidget resets it
+
+###### Save the isoval-quantity since the iwidget resets it
 	global $this-isoval-quantity
 	set quantity [set $this-isoval-quantity]
 	iwidgets::spinint $isoquant.q -labeltext "Number of evenly-spaced isovals: " \
@@ -222,7 +237,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	pack $isoquant.f -fill x
 
-	###### Iso Value using list
+
+###### Iso Value using list
 	set isolist [$isf.tabs add -label "List" \
 			 -command "set $this-active-isoval-selection-tab 2"]
 
@@ -235,7 +251,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $isolist.f -fill x
 
 
-	###### Iso Value using matrix
+###### Iso Value using matrix
 	set isomatrix [$isf.tabs add -label "Matrix" \
 			   -command "set $this-active-isoval-selection-tab 3"]
 
@@ -246,7 +262,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $isomatrix.f -fill x
 
 
-	# Pack the Iso Value Selection Tabs
+# Pack the Iso Value Selection Tabs
 
 	$isf.tabs view $oldmeth
 	$isf.tabs configure -tabpos "n"
@@ -254,19 +270,12 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $isf.tabs -side top
 	pack $w.f.iso -side top
 
-	#  Options
+
+#  Options
 
 	iwidgets::labeledframe $w.f.opt -labelpos nw -labeltext "Options"
 	set opt [$w.f.opt childsite]
 	
-	iwidgets::optionmenu $opt.update -labeltext "Update:" \
-		-labelpos w -command "$this set_update_type $opt.update"
-	$opt.update insert end "On Release" Manual Auto
-	$opt.update select [set $this-update_type]
-
-	global $this-update
-	set $this-update $opt.update
-
 	global $this-build_trisurf
 	checkbutton $opt.buildsurf -text "Build Output Field" \
 		-variable $this-build_trisurf
@@ -279,7 +288,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 		-relief flat -variable $this-extract-from-new-field 
 
 
-	pack $opt.update $opt.aefnf $opt.buildsurf $opt.buildgeom \
+	pack $opt.aefnf $opt.buildsurf $opt.buildgeom \
 	    -side top -anchor w
 
 	addColorSelection $opt $this-color
