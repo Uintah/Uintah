@@ -62,10 +62,10 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
         geom_obj_ps != 0;
         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-      vector<GeometryPiece*> pieces;
+      vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-      GeometryPiece* mainpiece;
+      GeometryPieceP mainpiece;
       if(pieces.size() == 0){
          throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
@@ -177,7 +177,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   IveBeenHere.initialize(-9);
 
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
-   GeometryPiece* piece = d_geom_objs[obj]->getPiece();
+   GeometryPieceP piece = d_geom_objs[obj]->getPiece();
    // Box b1 = piece->getBoundingBox();
    // Box b2 = patch->getBox();
     
