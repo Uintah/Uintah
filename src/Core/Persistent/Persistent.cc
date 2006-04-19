@@ -325,7 +325,16 @@ find_derived( const string& classname, const string& basename )
   if(iter == table->end()) {
 #if DEBUG
     printf("not found in table %p\n",table );
+
+
+    cerr << "The contents of the PID table keys: " << endl;
+    iter = table->begin();
+    while (iter != table->end()) {
+      cerr << (*iter).first << endl;
+      ++iter;
+    }
 #endif
+
     persistentTypeIDMutex.unlock();
     return 0;
   }
