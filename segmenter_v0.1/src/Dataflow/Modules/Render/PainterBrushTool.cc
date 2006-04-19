@@ -353,8 +353,8 @@ Painter::BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
 {
   vector<int> index(3,0);
   const unsigned int wid = Round(radius);
-  for (unsigned int y = y0-wid; y <= y0+wid; ++y)
-    for (unsigned int x = x0-wid; x <= x0+wid; ++x)
+  for (int y = y0-wid; y <= y0+wid; ++y)
+    for (int x = x0-wid; x <= x0+wid; ++x)
       if (x >= 0 && x < nrrd->axis[1].size &&
           y >= 0 && y < nrrd->axis[2].size) 
         {
