@@ -1135,7 +1135,8 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   grid_(0),
   locate_cache_(0),
   synchronized_(copy.synchronized_),
-  synchronize_lock_("TetVolMesh synchronize() lock")
+  synchronize_lock_("TetVolMesh synchronize() lock"),
+  cell_epsilon_(copy.cell_epsilon_)
 {
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
@@ -2435,14 +2436,10 @@ TetVolMesh<Basis>::insert_cell_into_grid(typename Cell::index_type ci)
   // Need to recompute grid at that point.
 
   BBox box;
-  typename Node::array_type nodes;
-  get_nodes(nodes, ci);
-
-  box.reset();
-  box.extend(points_[nodes[0]]);
-  box.extend(points_[nodes[1]]);
-  box.extend(points_[nodes[2]]);
-  box.extend(points_[nodes[3]]);
+  box.extend(points_[cells_[ci*4+0]]);
+  box.extend(points_[cells_[ci*4+1]]);
+  box.extend(points_[cells_[ci*4+2]]);
+  box.extend(points_[cells_[ci*4+3]]);
   const Point padmin(box.min() - cell_epsilon_);
   const Point padmax(box.max() + cell_epsilon_);
   box.extend(padmin);
@@ -2456,14 +2453,10 @@ void
 TetVolMesh<Basis>::remove_cell_from_grid(typename Cell::index_type ci)
 {
   BBox box;
-  typename Node::array_type nodes;
-  get_nodes(nodes, ci);
-
-  box.reset();
-  box.extend(points_[nodes[0]]);
-  box.extend(points_[nodes[1]]);
-  box.extend(points_[nodes[2]]);
-  box.extend(points_[nodes[3]]);
+  box.extend(points_[cells_[ci*4+0]]);
+  box.extend(points_[cells_[ci*4+1]]);
+  box.extend(points_[cells_[ci*4+2]]);
+  box.extend(points_[cells_[ci*4+3]]);
   const Point padmin(box.min() - cell_epsilon_);
   const Point padmax(box.max() + cell_epsilon_);
   box.extend(padmin);
