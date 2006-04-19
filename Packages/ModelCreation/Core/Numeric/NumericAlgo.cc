@@ -26,6 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Packages/ModelCreation/Core/Numeric/LinearTetFEM.h>
 #include <Packages/ModelCreation/Core/Numeric/NumericAlgo.h>
 #include <Packages/ModelCreation/Core/Numeric/BuildFEMatrix.h>
 
@@ -49,8 +50,18 @@ NumericAlgo::NumericAlgo(ProgressReporter* pr) :
 
 bool NumericAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable, MatrixHandle GeomToComp, MatrixHandle CompToGeom)
 {
+  LinearTetFEMAlgo ltalgo;
   BuildFEMatrixAlgo algo;
-  if(!(algo.BuildFEMatrix(pr_,field,matrix,ConductivityTable,num_proc))) return(false);
+  
+  FieldInformation fi(field);
+  if ((fi.is_constantdata())&&(fi.get_mesh_type() == "TetVolMesh")&&(fi.is_linearmesh()))
+  {
+    if(!(ltalgo.LinearTetFEM(pr_,field,matrix,ConductivityTable))) return(false);  
+  }
+  else
+  {
+    if(!(algo.BuildFEMatrix(pr_,field,matrix,ConductivityTable,num_proc))) return(false);
+  }
   
   if ((GeomToComp.get_rep()==0)&&(CompToGeom.get_rep()==0))
   {

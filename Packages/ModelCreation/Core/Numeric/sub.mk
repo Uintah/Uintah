@@ -14,6 +14,7 @@ SRCDIR   := Packages/ModelCreation/Core/Numeric
 
 SRCS     += $(SRCDIR)/NumericAlgo.cc\
             $(SRCDIR)/BuildFEMatrix.cc\
+            $(SRCDIR)/LinearTetFEM.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
