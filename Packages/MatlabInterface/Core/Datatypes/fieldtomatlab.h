@@ -1327,7 +1327,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
       data[q++] = fdata[p].mat_[2][2];
     }             
     mlfield.setnumericarray(data);          
-    mlarray.setfield(0,"field",field);
+    mlarray.setfield(0,"field",mlfield);
     return(true);
   }
   

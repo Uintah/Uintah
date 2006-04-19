@@ -32,15 +32,15 @@
         <callback>addViewer</callback>
       </gui_callback>
       <var name="ViewWindow_0-geometry" val="654x531+40+128"/>
-      <var name="ViewWindow_0-view-eyep-x" val="{-101.67273102}"/>
-      <var name="ViewWindow_0-view-eyep-y" val="{-2205.2404163}"/>
-      <var name="ViewWindow_0-view-eyep-z" val="{-538.391349384}"/>
-      <var name="ViewWindow_0-view-lookat-x" val="{108.084675187}"/>
-      <var name="ViewWindow_0-view-lookat-y" val="{-63.3015229684}"/>
-      <var name="ViewWindow_0-view-lookat-z" val="{206.764814227}"/>
-      <var name="ViewWindow_0-view-up-x" val="{-0.272370652162}"/>
-      <var name="ViewWindow_0-view-up-y" val="{-0.292249067682}"/>
-      <var name="ViewWindow_0-view-up-z" val="{0.916735899966}"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-1582.78582056}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{-1723.28830547}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{1006.86791029}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{120.705084597}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{-66.8009768345}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{174.864498778}"/>
+      <var name="ViewWindow_0-view-up-x" val="{0.305259920409}"/>
+      <var name="ViewWindow_0-view-up-y" val="{0.157764474749}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.93910955246}"/>
       <var name="ViewWindow_0-view-fov" val="{20.0}"/>
       <var name="ViewWindow_0-sr" val="{1}"/>
       <var name="ViewWindow_0-do_stereo" val="{0}"/>
@@ -67,9 +67,9 @@
       <var name="ViewWindow_0-fog-start" val="{0.0}"/>
       <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
       <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
-      <var name="ViewWindow_0-inertia_mag" val="{0.0605215923789}"/>
-      <var name="ViewWindow_0-inertia_x" val="{0.531583829378}"/>
-      <var name="ViewWindow_0-inertia_y" val="{-0.810511482362}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{0.045867865292}"/>
+      <var name="ViewWindow_0-inertia_x" val="{0.0515099240032}"/>
+      <var name="ViewWindow_0-inertia_y" val="{-0.953691229952}"/>
       <var name="ViewWindow_0-currentvisual" val="{0}"/>
       <var name="ViewWindow_0-caxes" val="{0}"/>
       <var name="ViewWindow_0-global-light0" val="{1}"/>
@@ -87,6 +87,10 @@
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
       <var name="&quot;ViewWindow_0-cage-15may02 Nodes (1)&quot;" val="{1}"/>
       <var name="&quot;ViewWindow_0-cage-15may02 Faces (5)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-tank_exact_grid Edges (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-tank_exact_grid Transparent Faces (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-leadset1 Nodes (3)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-Title Sticky (4)&quot;" val="{1}"/>
     </module>
     <module id="m4" package="MatlabInterface" category="DataIO" name="MatlabFieldsReader">
       <position x="207" y="112"/>
@@ -132,7 +136,7 @@
     </module>
     <module id="m8" package="SCIRun" category="String" name="CreateString" gui_visible="yes">
       <position x="561" y="330"/>
-      <var name="inputstring" val="{602 CAGE Electrodes (GREEN)&#10;192 BODY SURFACE Electrodes (RED)&#10;&#10;&#10;}"/>
+      <var name="inputstring" val="{602 CAGE Electrodes (GREEN)&#10;192 BODY SURFACE Electrodes (RED)&#10;&#10;&#10;&#10;}"/>
       <var name="ui_geometry" val="{566x408+266+120}"/>
     </module>
     <module id="m9" package="SCIRun" category="Visualization" name="ShowString" gui_visible="yes">
