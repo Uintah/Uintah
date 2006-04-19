@@ -1,6 +1,7 @@
 #include <TauProfilerForSCIRun.h>
 
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -1230,6 +1231,9 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       // Add the <Materials> section to the timestep.xml
       SimulationInterface* sim = 
         dynamic_cast<SimulationInterface*>(getPort("sim")); 
+
+      GeometryPieceFactory::resetGeometryPiecesOutput();
+
       sim->outputProblemSpec(rootElem);
 
       sim->addToTimestepXML(rootElem);
