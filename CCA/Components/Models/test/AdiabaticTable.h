@@ -210,8 +210,8 @@ WARNING
     int d_ref_temp_index;
 
     bool d_useVariance;
-    double varianceScale;
-    double varianceMax;
+    double d_varianceScale;
+    double d_varianceMax;
   };
 
 } // end namespace Uintah

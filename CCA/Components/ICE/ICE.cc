@@ -810,9 +810,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
   if(d_turbulence){
     // The turblence model is also called directly from
-    // accumlateMomentumSourceSinks.  This method just allows other
-    // quantities (such as variance) to be computed
-    d_turbulence->scheduleTurbulence1(sched, patches, ice_matls);
+    // accumlateMomentumSourceSinks.  
+    d_turbulence->scheduleComputeVariance(sched, patches, ice_matls);
   }
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
   scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
