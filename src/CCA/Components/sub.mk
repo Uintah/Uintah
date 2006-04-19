@@ -58,7 +58,7 @@ SUBDIRS := \
             $(SRCDIR)/Hello \
             $(SRCDIR)/World \
 	    $(SRCDIR)/PDEdriver \
-	    $(SRCDIR)/sampcomp1
+
 
 ## until configure support for wxWidgets:
 SUBDIRS += $(SRCDIR)/Builder
