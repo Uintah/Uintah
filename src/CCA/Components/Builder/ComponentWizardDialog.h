@@ -56,14 +56,8 @@ public:
 
   ComponentWizardDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE, const wxString& name = "ComponentWizardDialogBox");
 
-  ~ComponentWizardDialog()
-    {
-      for(int i=0;i<pp.size();i++)
-	delete pp[i];
-      for(int i=0;i<up.size();i++)
-	delete up[i];
-    }
-
+  ~ComponentWizardDialog();
+   
   void OnOk( wxCommandEvent &event );
   void OnAddProvidesPort( wxCommandEvent &event );
   void OnAddUsesPort( wxCommandEvent &event );
@@ -91,12 +85,15 @@ public:
 
   std::string GetPortNameText() const;
   std::string GetDataTypeText() const;
+  std::string GetDescriptionText() const;
 
 private:
   wxTextCtrl  *pname;
   wxTextCtrl  *dtype;
+  wxTextCtrl  *desc;
   wxStaticText *lname;
   wxStaticText *ldtype;
+  wxStaticText *ldesc;
   wxButton *ok;
   wxButton *cancel;
 

@@ -39,13 +39,15 @@ namespace GUIBuilder {
 
 class PortDescriptor {
 public:
-  PortDescriptor(const std::string& name, const std::string& type) : name(name), type(type) {}
+  PortDescriptor(const std::string& name, const std::string& type, const std::string& desc) : name(name), type(type) , desc(desc) {}
   const std::string& GetName() const { return name; }
   const std::string& GetType() const { return type; }
+  const std::string& GetDesc() const { return desc; }
 
 private:
   std::string name;
   std::string type;
+  std::string desc;
 };
 
 class ComponentSkeletonWriter {
@@ -54,7 +56,9 @@ public:
 
   void ComponentClassDefinitionCode();
   void ComponentSourceFileCode();
-
+  void ComponentMakeFileCode();
+  
+  //void PortClassDefinitionCode();
   void GenerateCode();
 
 private:
@@ -68,6 +72,11 @@ private:
   void writeLibraryHandle();
   void writeSourceInit();
   void writeSourceClassImpl();
+  void writeSourceFileHeaderCode();
+  void writeConstructorandDestructorCode();
+  void writeSetServicesCode();
+  void writeGoAndUiFunctionsCode();
+
 
   // frequently used string tokens
   const static std::string SP;
@@ -79,6 +88,8 @@ private:
   const static std::string DEFAULT_PORT_NAMESPACE;
   const static std::string DEFAULT_SIDL_PORT_NAMESPACE;
   const std::string SERVICES_POINTER;
+  const std::string LICENCE;
+
 
   std::string compName;
 
@@ -87,6 +98,7 @@ private:
 
   std::ofstream componentSourceFile;
   std::ofstream componentHeaderFile;
+  std::ofstream componentMakeFile;
 };
 
 }
