@@ -107,18 +107,21 @@ Unu3op::execute()
     third_nrrd_ = false;
   
   if (first_nrrd_ && !nrrd_handle1.get_rep()) {
-    error("Empty InputNrrd1.");
-    return;
+    //    error("Empty InputNrrd1.");
+    first_nrrd_ = false;
+    //    return;
   }
 
   if (second_nrrd_ && !nrrd_handle2.get_rep()) {
-    error("Empty InputNrrd2.");
-    return;
+    //    error("Empty InputNrrd2.");
+    second_nrrd_ = false;
+    //    return;
   }
 
   if (third_nrrd_ && !nrrd_handle3.get_rep()) {
-    error("Empty InputNrrd3.");
-    return;
+    //    error("Empty InputNrrd3.");
+    third_nrrd_ = false;
+    //    return;
   }
 
   Nrrd *nin1 = 0;
