@@ -247,7 +247,7 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
   double Cd = C[1][1]*unitsScale_;
   double Ce = C[1][2]*unitsScale_;
   double Cf = C[2][2]*unitsScale_;
-
+	
   for(int i=0; i<local_dimension; i++)
     l_stiff[i] = 0.0;
 
@@ -259,14 +259,18 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
     hMesh_->derivate(p[i], c_ind, Jv);
     double J[9], Ji[9];
     J[0] = Jv[0].x();
-    J[3] = Jv[0].y();
-    J[6] = Jv[0].z();
-    J[1] = Jv[1].x();
+    J[1] = Jv[0].y();
+    J[2] = Jv[0].z();
+    J[3] = Jv[1].x();
     J[4] = Jv[1].y();
-    J[7] = Jv[1].z();
-    J[2] = Jv[2].x();
-    J[5] = Jv[2].y();
+    J[5] = Jv[1].z();
+    J[6] = Jv[2].x();
+    J[7] = Jv[2].y();
     J[8] = Jv[2].z();
+
+//cerr << J[0] << '\t' << J[1] << '\t' << J[2] << '\n';
+//cerr << J[3] << '\t' << J[4] << '\t' << J[5] << '\n';
+//cerr << J[6] << '\t' << J[7] << '\t' << J[8] << '\n';
 	
     double detJ = InverseMatrix3x3(J, Ji);
     ASSERT(detJ>0);
@@ -347,7 +351,7 @@ void
 BuildFEMatrix<Field>::parallel(int proc)
 {
 #ifdef BUILDFEM_DEBUG
-  cerr << "BuildFEMatrix::parallel" << endl;
+  cerr << "BuildFEMatrix::parallel " << proc << endl;
 #endif
 
   if (proc == 0)
@@ -500,7 +504,27 @@ BuildFEMatrix<Field>::parallel(int proc)
 
   vector<double> lsml; //!< line of local stiffnes matrix
   lsml.resize(local_dimension);
-      	
+
+#ifdef BUILDFEM_DEBUG
+{
+  typename Mesh::Elem::iterator ea,eb;
+  hMesh_->begin(ea);
+  hMesh_->end(eb);
+	
+  for(;ea!=eb;++ea)	{
+	 for(int i=0; i<4; i++) {
+      build_local_matrix(*ea, i, lsml, ni_points, ni_weights, ni_derivatives);
+      for(unsigned int j=0 ; j<lsml.size(); j++)
+	    cerr << lsml[j] << ' ';
+	  cerr << endl;
+    }
+	cerr << endl;
+    }
+}
+#endif
+     
+
+
   //! loop over system dofs for this thread
   for (unsigned int i = start_gd; i<end_gd; i++)
   {
@@ -548,14 +572,15 @@ BuildFEMatrix<Field>::parallel(int proc)
 	    dofi = neib_dofs.size() - 1;
 	}
       }
-#ifdef BUILDFEM_DEBUG
-      cerr << i << ", " << j << " (" << dofi << ") ";
-#endif
 
       ASSERT(dofi!=-1);
       ASSERT((int)neib_dofs.size() == local_dimension);
 
       build_local_matrix(ca[j], dofi, lsml, ni_points, ni_weights, ni_derivatives);
+#ifdef BUILDFEM_DEBUG
+      cerr << i << ", " << j << " (" << (int) ca[j] << "," << dofi << ") ";
+#endif
+
 #ifdef BUILDFEM_DEBUG
       for(unsigned int j=0 ; j<lsml.size(); j++)
 	cerr << lsml[j] << ' ';
@@ -565,6 +590,7 @@ BuildFEMatrix<Field>::parallel(int proc)
     }
   }
 
+#ifdef BUILDFEM_DEBUG
   for (int i=start_gd; i<end_gd; i++)
   {
     double sum=0.0, sumabs=0.0;
@@ -573,10 +599,9 @@ BuildFEMatrix<Field>::parallel(int proc)
       sum += pA_->get(i,j);
       sumabs += fabs(pA_->get(i,j));
     }
-#ifdef BUILDFEM_DEBUG
-    cerr << sum << " " << sumabs << endl;
-#endif
+    cerr << i << '\t' << "Sum: " << sum << "  SumAbs:" << sumabs << endl;
   }
+#endif
 
   barrier_.wait(np_);
 }
