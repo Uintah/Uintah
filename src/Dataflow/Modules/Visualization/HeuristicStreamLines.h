@@ -389,7 +389,7 @@ namespace SCIRun {
 
  	const int& dofs=FSRC::basis_type::dofs();
 	Point p;
-	double weights[dofs];
+	double * weights = new double[dofs];
 	typename FSRC::mesh_type::Node::array_type na;
 
 	double l;
@@ -454,6 +454,7 @@ namespace SCIRun {
 	    }
 	  }
 	}
+        delete [] weights;
 	/*      if (factor==1)  */
 	/* 	cerr << ww << endl; */
 	//	cerr<<"renderPoint done \n";
