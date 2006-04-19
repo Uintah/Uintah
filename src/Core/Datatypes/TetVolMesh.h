@@ -531,6 +531,10 @@ public:
   void get_faces(typename Face::array_type &array,
                  typename Cell::index_type idx) const;
 
+  void get_delems(typename DElem::array_type &array,
+                 typename Cell::index_type idx) const
+                 { get_faces(array,idx); }
+
   //! not part of the mesh concept but rather specific to tetvol
   //! Return in fi the face that is opposite the node ni in the cell ci.
   //! Return false if bad input, else true indicating the face was found.
@@ -2739,11 +2743,6 @@ typename TetVolMesh<Basis>::Node::index_type
 TetVolMesh<Basis>::add_point(const Point &p)
 {
   points_.push_back(p);
-  if (synchronized_ & NODE_NEIGHBORS_E) {
-    synchronize_lock_.lock();
-    node_neighbors_.push_back(vector<typename Cell::index_type>());
-    synchronize_lock_.unlock();
-  }
   return points_.size() - 1;
 }
 
