@@ -723,7 +723,7 @@ Painter::ITKThresholdTool::do_event(Event &event)
     painter_->redraw_all();
     painter_->want_to_execute();
 
-    return QUIT_E;
+    return QUIT_ALL_E;
   }
   
   return FALLTHROUGH_E;

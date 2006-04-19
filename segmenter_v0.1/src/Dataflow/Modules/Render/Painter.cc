@@ -2370,12 +2370,14 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
         return;
       } break;
       case PainterTool::QUIT_E: { 
+        delete tools_[tool];
+        tools_.erase(tools_.begin()+tool);
+        return;
+      } break;
+      case PainterTool::QUIT_ALL_E: { 
         for (unsigned int t = 0; t < tools_.size(); ++t)
           delete tools_[t];
         tools_.clear();
-
-        //        delete tools_[tool];
-        //        tools_.erase(tools_.begin()+tool);
         return;
       } break;
       case PainterTool::ERROR_E: { 

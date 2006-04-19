@@ -236,7 +236,8 @@ class Painter : public Module
       ERROR_E = 0,
       FALLTHROUGH_E = 1,
       HANDLED_E = 2,
-      QUIT_E = 3
+      QUIT_E = 3,
+      QUIT_ALL_E = 4
     };
 
     const string &      get_name()      { return name_; }
