@@ -28,6 +28,7 @@
 
 #include <Packages/ModelCreation/Core/Algorithms/ArrayEngine.h>
 
+
 namespace ModelCreation {
 
 ArrayEngine::ArrayEngine(SCIRun::Module *module) :
@@ -289,8 +290,8 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
     if (Input[p].isindex())         fcn += "      " + Input[p].getname() + "= static_cast<double>(p_);\n";
   }
   
-  fcn += "\n";
-  fcn += "      " + function + " \n\n";
+  fcn += "\nnamespace TensorVectorMath {\n";
+  fcn += "      " + function + " \n}\n\n";
 
   for (int p = 0; p< Input.size(); p++)
   {

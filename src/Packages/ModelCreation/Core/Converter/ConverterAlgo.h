@@ -30,20 +30,25 @@
 #ifndef MODELCREATION_CORE_CONVERTER_CONVERTERALGO_H
 #define MODELCREATION_CORE_CONVERTER_CONVERTERALGO_H 1
 
-#include <Core/Algorithms/Util/AlgoLibrary.h>
-
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Geometry/Transform.h>
-
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
+
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+
+#include <Core/Algorithms/Util/AlgoLibrary.h>
 
 namespace ModelCreation {
 
@@ -67,6 +72,7 @@ class ConverterAlgo : public AlgoLibrary {
     bool TensorToMatrix(Tensor& ten, MatrixHandle matrix);
     bool TransformToMatrix(Transform& trans, MatrixHandle& matrix);
     
+    bool MatricesToDipoleField(MatrixHandle locations,MatrixHandle strengths,FieldHandle& Dipoles);
 };
 
 } // ModelCreation

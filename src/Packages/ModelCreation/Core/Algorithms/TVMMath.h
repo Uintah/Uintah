@@ -298,6 +298,8 @@ class Tensor {
     inline double boolean() const;
     inline double* getdataptr();
 
+
+
   private:
     double d_[6];
     
@@ -380,6 +382,7 @@ inline double abs(double d)
 {
   return(d<0?-d:d);
 }
+
 
 inline double norm(double d)
 {
@@ -485,6 +488,7 @@ inline double acosh(double d)
 {
   return(::acosh(d));
 }
+
 
 inline double operator&&(double a, Vector b)
 {
@@ -1880,6 +1884,7 @@ inline double Tensor::zz() const
     
 inline Tensor& Tensor::operator=(const Tensor& ten)
 {
+  has_eigs_ = false;
   d_[0] = ten.d_[0]; d_[1] = ten.d_[1]; d_[2] = ten.d_[2]; 
   d_[3] = ten.d_[3]; d_[4] = ten.d_[4]; d_[5] = ten.d_[5];
   return(*this);
@@ -2341,6 +2346,7 @@ inline Tensor Tensor::operator&(const double d) const
 
 inline Tensor& Tensor::operator&=(const double d)
 {
+  has_eigs_ = false;
   if (!d) { d_[0] = 0.0; d_[1] = 0.0; d_[2] = 0.0; d_[3] = 0.0; d_[4] = 0.0; d_[5] = 0.0; } 
   return(*this);
 }
