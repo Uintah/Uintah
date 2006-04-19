@@ -88,9 +88,7 @@
     <component name="SCIRun.ZListWriter" />
   </library>
   
-  <library name="libCCA_Components_sampcomp1.so">
-    <component name="SCIRun.sampcomp1" />
-  </library>
+  
   
   
   
