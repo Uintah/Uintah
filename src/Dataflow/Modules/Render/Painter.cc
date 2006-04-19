@@ -579,8 +579,8 @@ Painter::render_window(SliceWindow &window) {
 
   profiler("render_text");
 
-  if (filter_text_.length()) 
-    window.render_progress_bar();
+//   if (filter_text_.length()) 
+//     window.render_progress_bar();
 
   profiler.leave();
   profiler.print();
@@ -1960,7 +1960,8 @@ Painter::extract_data_from_bundles(Bundles &bundles)
         new NrrdVolume(get_ctx()->subVar(name), name, nrrds[n]);
       show_volume(name);
     } else {
-      viter->second->set_nrrd(nrrds[n]);
+      if (nrrds[n]->generation > viter->second->nrrd_handle_->generation)
+          viter->second->set_nrrd(nrrds[n]);
     }
     volume_map_[name]->keep_ = 1;
   }
@@ -2369,8 +2370,12 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
         return;
       } break;
       case PainterTool::QUIT_E: { 
-        delete tools_[tool];
-        tools_.erase(tools_.begin()+tool);
+        for (unsigned int t = 0; t < tools_.size(); ++t)
+          delete tools_[t];
+        tools_.clear();
+
+        //        delete tools_[tool];
+        //        tools_.erase(tools_.begin()+tool);
         return;
       } break;
       case PainterTool::ERROR_E: { 
@@ -2679,19 +2684,26 @@ Painter::compute_mean_and_deviation(Nrrd *nrrd, Nrrd *mask) {
 
   float *src = (float *)nrrd->data;
   float *test = (float *)mask->data;
+
+  float min = AIR_POS_INF;
+  float max = AIR_NEG_INF;
   
   for (unsigned int i = 0; i < size; ++i)
     if (test[i] > 0.0) {
       //      cerr << test[i] << std::endl;
       mean += src[i];
       squared += src[i]*src[i];
+      min = Min(min, src[i]);
+      max = Max(max, src[i]);
+
       ++n;
     }
 
   mean = mean / n;
   double deviation = sqrt(squared/n-mean*mean);
-  cerr << "size: " << size << " n: " << n << std::endl;
-  cerr << "mean: " << mean << " dev: " << deviation << std::endl;
+  //  cerr << "size: " << size << " n: " << n << std::endl;
+  //  cerr << "mean: " << mean << " dev: " << deviation << std::endl;
+  //  return make_pair(min,max);
   return make_pair(mean, deviation);
 }
   
