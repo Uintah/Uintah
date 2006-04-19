@@ -136,7 +136,7 @@ DirectMapping::execute()
     field_src_handle->mesh()->synchronize(Mesh::LOCATE_E);
 
     field_output_handle_ =
-      algo->execute(field_src_handle, field_dst_handle->mesh(),
+      algo->execute(this, field_src_handle, field_dst_handle->mesh(),
 		    field_dst_handle->basis_order(),
 		    gui_interpolation_basis_.get(),
 		    gui_map_source_to_single_dest_.get(),

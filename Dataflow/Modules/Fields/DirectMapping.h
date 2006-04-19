@@ -47,7 +47,8 @@ namespace SCIRun {
 class DirectMappingAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
+  virtual FieldHandle execute(ProgressReporter *reporter,
+                              FieldHandle src, MeshHandle dst,
 			      int basis_order,
 			      const string &basis, bool source_to_single_dest,
 			      bool exhaustive_search, double dist, int np) = 0;
@@ -95,13 +96,15 @@ class DirectMappingAlgoT : public DirectMappingAlgo
     hash_type dstmap;
     Barrier barrier;
     Mutex maplock;
+    ProgressReporter *reporter;
     
     _DIData() : barrier("DirectMapping Barrier"), maplock("DirectMapping Map Lock") {}
   } DIData;
 
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
+  virtual FieldHandle execute(ProgressReporter *reporter,
+                              FieldHandle src, MeshHandle dst,
 			      int basis_order,
 			      const string &basis, bool source_to_single_dest,
 			      bool exhaustive_search, double dist, int np);
@@ -170,7 +173,8 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_dst_loc(typename LDST::
 template <class FSRC, class LSRC, class FOUT, class LDST>
 FieldHandle
 DirectMappingAlgoT<FSRC, LSRC, 
-                   FOUT, LDST>::execute(FieldHandle src_fieldH, 
+                   FOUT, LDST>::execute(ProgressReporter *reporter,
+                                        FieldHandle src_fieldH, 
                                         MeshHandle dst_meshH, 
                                         int basis_order, 
                                         const string &basis, 
@@ -188,6 +192,27 @@ DirectMappingAlgoT<FSRC, LSRC,
   d.exhaustive_search=exhaustive_search;
   d.dist=dist;
   d.np=np;
+  d.reporter = reporter;
+
+  if ((basis == "constant") && source_to_single_dest)
+  {
+    typename FSRC::mesh_type *src_mesh =
+      dynamic_cast<typename FSRC::mesh_type *>(src_fieldH->mesh().get_rep());
+    typename LSRC::size_type src_size0;
+    src_mesh->size(src_size0);
+    const unsigned int src_size = (unsigned int)src_size0;
+    reporter->update_progress(0, src_size);
+  }
+  else
+  {
+    typename FOUT::mesh_type *dst_mesh =
+      dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
+    typename LDST::size_type dst_size0;
+    dst_mesh->size(dst_size0);
+    const unsigned int dst_size = (unsigned int)dst_size0;
+    reporter->update_progress(0, dst_size);
+  }
+
   typename FOUT::mesh_type *dst_mesh = 
     dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
   FOUT *out_field = scinew FOUT(dst_mesh);  
@@ -282,6 +307,8 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 	++count;
 	continue;
       }
+      d->reporter->increment_progress();
+
       typename LDST::array_type locs;
       double weights[MESH_WEIGHT_MAXSIZE];
       Point p;
@@ -367,6 +394,8 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 	++count;
 	continue;
       }
+      d->reporter->increment_progress();
+
       typename LSRC::array_type locs;
       double weights[MESH_WEIGHT_MAXSIZE];
       Point p;
