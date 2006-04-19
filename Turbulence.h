@@ -37,8 +37,9 @@ namespace Uintah {
                                       SimulationStateP&  d_sharedState,
                                       CCVariable<double>& turb_viscosity) = 0;
 
-    virtual void scheduleTurbulence1(SchedulerP& sched, const PatchSet* patches,
-                                     const MaterialSet* matls) = 0;
+    virtual void scheduleComputeVariance(SchedulerP& sched, 
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls) = 0;
    
     void callTurb(DataWarehouse* new_dw,
                  const Patch* patch,
