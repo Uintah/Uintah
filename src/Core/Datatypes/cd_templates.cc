@@ -111,6 +111,7 @@ template class Property<vector<pair<string,Tensor> > >;
 template class Property<vector<pair<int,double> > >;
 template class Property<LockingHandle<Matrix> >;
 template class Property<LockingHandle<NrrdData> >;
+template class Property<NodeIndex<unsigned int> >;
 
 namespace SCIRun {
 
