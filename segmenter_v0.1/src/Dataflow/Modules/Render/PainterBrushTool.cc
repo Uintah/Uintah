@@ -121,7 +121,7 @@ Painter::BrushTool::key_press(Event &event)
 {
   if (event.key_ == " ") 
     return QUIT_E;
-  if (event.key_ == "v") 
+  if (0 && event.key_ == "v") 
     {
       printf("Enter value: ");
       scanf("%f",&value_);

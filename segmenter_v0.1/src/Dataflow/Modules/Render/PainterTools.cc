@@ -855,7 +855,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
     painter_->volume_map_[name] = temp;
     
     name = "Connected";
-    temp = new NrrdVolume(volume_, name, 2);
+    temp = new NrrdVolume(volume_, name, 1);
     temp->colormap_.set(2);
     painter_->volume_map_[name] = temp;
     painter_->show_volume(name);
