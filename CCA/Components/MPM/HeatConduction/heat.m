@@ -27,7 +27,7 @@ function [points, elems] = make_grid(bar_dim,spacing)
     elems(ro,2) = ++e;
   endfor
   
- endfunction
+endfunction
 
 function [K,F] = initialize_K_F(num_pts)
   K(1:num_pts,1:num_pts) = 0;
@@ -41,6 +41,7 @@ function [K,F] = form_matrix(K,F,points,elems,materials,dt,theta,T)
     element(1) = elems(elem_num,1);
     element(2) = elems(elem_num,2);
     [KE,C] = element_linear(elem_num,element,points,materials);
+    KE
     K = assemble(element,K,KE,C,dt,theta);
     F = source_term(element,F,KE,C,dt,theta,T);
   endfor
@@ -54,6 +55,9 @@ function [KE,Ca] = element_linear(i,element,points,materials)
   pts = [points(n1),points(n2)];
 
   [xi,weight] = gauss_quadrature;  
+  # This probably only needs to loop over the highest order integration that
+  # we will ultimately do. For linear elements, we use 2nd order integration
+  # for the capacitive matrix term.
   for (order=1:3)
     for (or=1:order)
       gauss_point = xi(order,or);
@@ -206,7 +210,7 @@ function [K,F] = apply_bcs(K,F,bcs)
       endfor
       F(node) = bcvalue;
     endfor
-    F = transpose(F);
+    F = F';
 endfunction
 
 function a = solve_system(K,F)
@@ -304,9 +308,12 @@ function main()
     [K,F] = initialize_K_F(length(p));
     [Keff,Feff] = form_matrix(K,F,p,e,materials,dt,theta,T);
     [Keff,Feff] = apply_bcs(Keff,Feff,bcs,materials);
-    T = solve_system(Keff,Feff);
+    T = solve_system(Keff,Feff)
     xlabel("Bar points");
     ylabel("Temperature");
+    plot_title = "Temperature at ";
+    plot_time = num2str(t);
+    title(strcat(plot_title,plot_time," seconds"));
     plot(p,T)
     t += dt;
   endwhile
