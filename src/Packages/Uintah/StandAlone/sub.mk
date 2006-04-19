@@ -322,18 +322,20 @@ LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
-# restart_merger
+# async_mpi_test.cc
 
 SRCS := $(SRCDIR)/async_mpi_test.cc
 PROGRAM := Packages/Uintah/StandAlone/async_mpi_test
 PSELIBS := \
         Core/Thread \
         Packages/Uintah/Core/Parallel
+
 LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# restart_merger
 
 SRCS := $(SRCDIR)/restart_merger.cc
 PROGRAM := Packages/Uintah/StandAlone/restart_merger
@@ -341,15 +343,16 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Datflow Packages/Uintah
 else
 PSELIBS := \
-        Packages/Uintah/Core/Exceptions \
-        Packages/Uintah/Core/Grid \
-        Packages/Uintah/Core/Util \
-        Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Disclosure \
-        Packages/Uintah/Core/DataArchive \
-        Packages/Uintah/CCA/Ports \
-        Packages/Uintah/CCA/Components/DataArchiver \
-        Packages/Uintah/Core/ProblemSpec \
+        Packages/Uintah/Core/GeometryPiece \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Parallel      \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/DataArchive   \
+        Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/CCA/Components/DataArchiver         \
+        Packages/Uintah/Core/ProblemSpec                    \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Core/Exceptions  \
         Core/Geometry    \
