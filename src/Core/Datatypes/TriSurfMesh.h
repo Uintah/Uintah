@@ -646,7 +646,8 @@ TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
     node_neighbors_(0),
     grid_(0),
     synchronized_(NODES_E | FACES_E | CELLS_E),
-    synchronize_lock_("TriSurfMesh synchronize_lock_")
+    synchronize_lock_("TriSurfMesh synchronize_lock_"),
+    elem_epsilon_(copy.elem_epsilon_)
 {
   TriSurfMesh &lcopy = (TriSurfMesh &)copy;
 
