@@ -363,7 +363,7 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
 {
-  ComponentWizardDialog cwDialog(this, -1, "Component wizard dialog", wxPoint(100,100), wxSize(400,400));
+  ComponentWizardDialog cwDialog(this, -1, "Component wizard dialog", wxPoint(100,100), wxSize(400,400),wxRESIZE_BORDER);
   // MyCustomDialog cwDialog ( this,-1,"Component wizard dialog",wxPoint(100,100),wxSize(400,400));
   cwDialog.ShowModal();
 }

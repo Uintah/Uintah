@@ -121,6 +121,7 @@ int HelloUIPort::ui()
 
 int HelloGoPort::go()
 {
+  std::cout<<" Inside Go Function ";
     if (services.isNull()) {
         std::cerr << "Null services!\n";
         return 1;
@@ -158,6 +159,7 @@ int HelloGoPort::go()
     services->releasePort("stringport");
 //     services->releasePort("progress");
 
+    std::cout<<" testing : "<<com->text;
     return 0;
 }
 
