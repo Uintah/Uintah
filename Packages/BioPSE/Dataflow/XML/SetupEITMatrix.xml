@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="SetupEITMatrix" category="Forward">
+  <overview>
+    <authors>
+      <author>Saeed Babaeizadeh</author>
+    </authors>
+    <summary>
+      The module solves a discretized model of Laplace's equation in a 3D volume
+conductor model using "surface method", given a particular type of boundary condition.  </summary>
+    <description>
+<p>The specific problem the authors had in mind was the forward problem of Electrical Impedance Tomography (EIT)
+which consists of calculating, for a given time instant, the potential distribution
+generated at the surface of a specified volume conductor due the presence of some
+current sources on the same surface (the module should work for other
+problems which fit the same physical description, but has only been tested for forward
+EIT.) In surface methods, the different volume conductor regions are
+assumed to have a constant and isotropic conductivity, and only the interfaces between the
+different regions are triangulated and represented in the numerical model. This module is based on a method
+developed in  [i] and uses the "Transfer-Coefficient Approach" or "solid-angle method" developed by Barr et al.
+[ii], as extended to include torso inhomogeneities in [iii] and with an improved algorithm
+for computing the solid angles [iv]. </p>
+
+<p>[i] S. Babaeizadeh, D. H. Brooks, and D. Isaacson, &quot;A 3-D Boundary Element Solution to the Forward Problem of Electrical 
+Impedance Tomography, &quot; Proceedings of the 26th Annual International Conference of the IEEE EMBS, pp. 960-963, 2004. </p>
+
+<p>[ii] R.C. Barr, M. Ramsey, and M.S. Spach, &quot;Relating epicardial to body surface
+potential distribution by means of transfer coefficients based on geometry
+measurement,&quot; IEEE Trans. Biomed. Eng., vol. BME-24, pp. 1-11, 1977.</p>
+
+<p>[iii] P.C. Stanley, T.C. Pilkington, and M.N. Morrow., &quot;The effects of thoracic
+inhomogeneities on the relationship between epicardial and torso potentials,&quot; IEEE
+Transactions on Biomedical Engineering, BME-33, pp.273-284, 1986. </p>
+
+<p> [iv] J.A. De Munck, &quot;Linear discretization of the volume conductor boundary
+integral equation using analytically integrated elements,&quot; IEEE Trans. Biomed. Eng.,
+vol. 39, no. 9, 1992.</p>
+
+      <p>This module requires the triangulated surfaces of all the objects as inputs and
+creates the forward solution matrix as output. The geometric relationships of the surfaces
+are defined as described below, as are the boundary conditions to apply.</p>
+
+<p>The number of input fields is one or two. The outermost surface is the surface on which Neumann boundary condition is
+given where the quantity of interest is the Dirichlet boundary condition which
+is to be calculated. </p>
+
+<p>To define the geometric relationships of the various fields, for each of the input
+fields use a &quot;SetProperty&quot; module with `Property'=`Inside Conductivity' and `Value' = the
+numerical value of the internal conductivity of the corresponding homogeneous region.</p>
+
+<p> The output is the forward solution matrix. This matrix can be multiplied to a
+Neumann boundary condition on the outermost surface; to result in the Dirichlet boundary condition on
+the same surface. </p>
+    </description>
+  </overview>
+
+  <io>
+    <inputs lastportdynamic="yes">
+      <!-- one of (device port file) -->
+      <port>
+        <name>Surface</name>
+        <description>
+          <p>A surface in the module.</p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+        <name>BEM Forward Matrix</name>
+        <description>
+          <p>Sends a handle to the transfer matrix</p>
+          <note>
+            <p>The handle is to base class of DenseMatrix (Matrix)</p>
+          </note>
+        </description>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
