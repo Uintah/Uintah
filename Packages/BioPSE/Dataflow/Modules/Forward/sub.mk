@@ -61,7 +61,8 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
             $(SRCDIR)/EITAnalyticSolution.cc\
             $(SRCDIR)/SetEITGround.cc\
             $(SRCDIR)/TrigCurrentPattern.cc\
-#[INSERT NEW CODE FILE HERE]    
+            $(SRCDIR)/SetupEITMatrix.cc\
+#[INSERT NEW CODE FILE HERE]	
 
 
 PSELIBS := \
