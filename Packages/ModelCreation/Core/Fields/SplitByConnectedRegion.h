@@ -131,9 +131,9 @@ bool SplitByConnectedRegionAlgoT<FSRC>::SplitByConnectedRegion(ProgressReporter 
         typename FSRC::mesh_type::Node::array_type elemnodes;
         imesh->get_nodes(elemnodes, buffer[i]);
         
-        if (static_cast<unsigned int>(*bi) >= elemmap.size()) elemmap.resize(static_cast<unsigned int>(*bi));
+        if (static_cast<unsigned int>(buffer[i]) >= elemmap.size()) elemmap.resize(static_cast<unsigned int>(buffer[i]));
         
-        elemmap[static_cast<unsigned int>(*bi)] = k;
+        elemmap[static_cast<unsigned int>(buffer[i])] = k;
         for (int p=0;p<elemnodes.size();p++)
         {
           if (static_cast<unsigned int>(elemnodes[p]) >= nodemap.size()) nodemap.resize(static_cast<unsigned int>(elemnodes[p]));      
