@@ -317,23 +317,26 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
      } 
    }//iter
 }
-
-void DynamicModel::scheduleTurbulence1(SchedulerP& sched,
-                                       const PatchSet* patches,
-                                       const MaterialSet* /*matls*/)
+//__________________________________
+//
+void DynamicModel::scheduleComputeVariance(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* /*matls*/)
 {
   if(filterScalars.size() > 0){
     for(int i=0;i<static_cast<int>(filterScalars.size());i++){
       FilterScalar* s = filterScalars[i];
-      Task* task = scinew Task("DynamicModel::computeVariance",
-                               this, &DynamicModel::computeVariance, s);
+      Task* task = scinew Task("DynamicModel::computeVariance",this, 
+                               &DynamicModel::computeVariance, s);
+                               
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
       task->computes(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
     }
   }
 }
-
+//__________________________________
+//
 void DynamicModel::computeVariance(const ProcessorGroup*, 
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -344,11 +347,13 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
   cout_doing << "Doing computeVariance "<< "\t\t\t DynamicModel" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       constCCVariable<double> f;
-      old_dw->get(f, s->scalar, matl, patch, Ghost::AroundCells, 1);
       CCVariable<double> fvar;
+      
+      old_dw->get(f, s->scalar, matl, patch, Ghost::AroundCells, 1);
       new_dw->allocateAndPut(fvar, s->scalarVariance, matl, patch);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {

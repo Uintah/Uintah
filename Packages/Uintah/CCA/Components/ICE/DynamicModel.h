@@ -30,8 +30,9 @@ namespace Uintah {
                                             SimulationStateP&  d_sharedState,
                                             CCVariable<double>& turb_viscosity);
              
-    virtual void scheduleTurbulence1(SchedulerP& sched, const PatchSet* patches,
-                                     const MaterialSet* matls);
+    virtual void scheduleComputeVariance(SchedulerP& sched, 
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls);
 
   private:
     

@@ -139,8 +139,8 @@ void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 
   model_ps->appendElement("material",d_matl->getName());
 
-  model_ps->appendElement("varianceScale",varianceScale);
-  model_ps->appendElement("varianceMax",varianceMax);
+  model_ps->appendElement("varianceScale",d_varianceScale);
+  model_ps->appendElement("varianceMax",  d_varianceMax);
 
 #if 1
   ProblemSpecP table_ps = model_ps->appendChild("table");
@@ -168,9 +168,9 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_matl_set->addReference();
 
   // Get parameters
-  params->getWithDefault("varianceScale", varianceScale, 0.0);
-  params->getWithDefault("varianceMax", varianceMax, 1.0);
-  d_useVariance = (varianceScale != 0.0);
+  params->getWithDefault("varianceScale", d_varianceScale, 0.0);
+  params->getWithDefault("varianceMax",   d_varianceMax, 1.0);
+  d_useVariance = (d_varianceScale != 0.0);
 
   //__________________________________
   //setup the table
@@ -178,7 +178,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   table = TableFactory::readTable(params, tablename);
   table->addIndependentVariable("mixture_fraction");
   if(d_useVariance)
-    table->addIndependentVariable("Fvar");
+    table->addIndependentVariable("mixture_fraction_variance");
   
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
@@ -340,6 +340,9 @@ void AdiabaticTable::scheduleInitialize(SchedulerP& sched,
   t->computes(d_scalar->scalar_CCLabel);
   t->computes(cumulativeEnergyReleased_CCLabel);
   t->computes(cumulativeEnergyReleased_src_CCLabel);
+  if(d_useVariance){
+    t->computes(d_scalar->varianceLabel);
+  }
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -406,7 +409,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     if(d_useVariance){
       // Variance is zero for initialization
       CCVariable<double> variance;
-      new_dw->allocateTemporary(variance, patch);
+      new_dw->allocateAndPut(variance, d_scalar->varianceLabel, indx, patch);
       variance.initialize(0);
       ind_vars.push_back(variance);
     }
@@ -426,10 +429,12 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     table->interpolate(d_viscosity_index,   viscosity,   iter, ind_vars);
     table->interpolate(d_temp_index,        temp,        iter, ind_vars);
     table->interpolate(d_thermalcond_index, thermalCond, iter, ind_vars);
+    
     CCVariable<double> ref_temp, ref_cv, ref_gamma;
     new_dw->allocateTemporary(ref_cv,    patch);
     new_dw->allocateTemporary(ref_gamma, patch);
     new_dw->allocateTemporary(ref_temp,  patch);
+    
     table->interpolate(d_ref_cv_index,    ref_cv,   iter, ind_vars);
     table->interpolate(d_ref_gamma_index, ref_gamma,iter, ind_vars);
     table->interpolate(d_ref_temp_index,  ref_temp, iter, ind_vars);
@@ -826,10 +831,13 @@ void AdiabaticTable::computeScaledVariance(const Patch* patch,
       denom = 1.e-20;
     }
     double sv = variance[c] / denom;
+    
+    //__________________________________
+    //  clamp the  scaled variance
     if(sv < 0){
       sv = 0;
-    }else if(sv > varianceMax){
-      sv = varianceMax;
+    }else if(sv > d_varianceMax){
+      sv = d_varianceMax;
     }
     scaledvariance[c] = sv;
   }

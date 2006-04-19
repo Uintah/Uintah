@@ -137,23 +137,26 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
  
 }
   
-
-void Smagorinsky_Model::scheduleTurbulence1(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* /*matls*/)
+//__________________________________
+//
+void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* /*matls*/)
 {
   if(filterScalars.size() > 0){
     for(int i=0;i<static_cast<int>(filterScalars.size());i++){
       FilterScalar* s = filterScalars[i];
-      Task* task = scinew Task("Smagorinsky_Model::computeVariance",
-                               this, &Smagorinsky_Model::computeVariance, s);
+      Task* task = scinew Task("Smagorinsky_Model::computeVariance",this, 
+                               &Smagorinsky_Model::computeVariance, s);
+                               
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
       task->computes(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
     }
   }
 }
-
+//__________________________________
+//
 void Smagorinsky_Model::computeVariance(const ProcessorGroup*, 
                                         const PatchSubset* patches,
                                         const MaterialSubset* matls,
@@ -164,26 +167,29 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
   cout_doing << "Doing computeVariance "<< "\t\t\t Smagorinsky_Model" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       constCCVariable<double> f;
-      old_dw->get(f, s->scalar, matl, patch, Ghost::AroundCells, 1);
       CCVariable<double> fvar;
+      old_dw->get(f, s->scalar, matl, patch, Ghost::AroundCells, 1);
       new_dw->allocateAndPut(fvar, s->scalarVariance, matl, patch);
+      
       Vector dx = patch->dCell();
       Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
       double mixing_length = cbrt(dx.x()*dx.y()*dx.z());
       double scale = mixing_length*mixing_length;
 
-      for(CellIterator iter = patch->getCellIterator();
-          !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
         const IntVector& c = *iter;
+        
         // Compute the difference of the face centered overages,
         //   0.5*(f[c+IntVector(1,0,0)]+f[c]) 
         //  -0.5*(f[c]-f[c-IntVector(1,0,0)])
         // which is
         //   0.5*(f[c+IntVector(1,0,0)]-f[c-IntVector(1,0,0)])
         // do the same for x,y,z
+        
         Vector df(0.5*(f[c+IntVector(1,0,0)]-f[c-IntVector(1,0,0)]),
                   0.5*(f[c+IntVector(0,1,0)]-f[c-IntVector(0,1,0)]),
                   0.5*(f[c+IntVector(0,0,1)]-f[c-IntVector(0,0,1)]));
