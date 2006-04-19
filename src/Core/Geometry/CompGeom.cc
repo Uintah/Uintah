@@ -225,10 +225,9 @@ uniform_sample_triangle(Point &p, const Point &p0,
                         const Point &p1, const Point &p2,
                         MusilRNG &rng)
 {
-  // Generate the barrycentric coordinates.
-  double u,v;
-  u = rng();
-  v = rng();
+  // Fold the quad sample into a triangle.
+  double u = rng();
+  double v = rng();
   if (u + v > 1.0) { u = 1.0 - u; v = 1.0 - v; }
   
   // Compute the position of the random point.
