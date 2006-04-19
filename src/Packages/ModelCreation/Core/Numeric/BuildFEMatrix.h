@@ -329,13 +329,13 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
     hMesh_->derivate(p[i], c_ind, Jv);
     double J[9], Ji[9];
     J[0] = Jv[0].x();
-    J[3] = Jv[0].y();
-    J[6] = Jv[0].z();
-    J[1] = Jv[1].x();
+    J[1] = Jv[0].y();
+    J[2] = Jv[0].z();
+    J[3] = Jv[1].x();
     J[4] = Jv[1].y();
-    J[7] = Jv[1].z();
-    J[2] = Jv[2].x();
-    J[5] = Jv[2].y();
+    J[5] = Jv[1].z();
+    J[6] = Jv[2].x();
+    J[7] = Jv[2].y();
     J[8] = Jv[2].z();
 	
     double detJ = InverseMatrix3x3(J, Ji);
