@@ -96,13 +96,15 @@ Unu2op::execute()
     second_nrrd_ = false;
   
   if (first_nrrd_ && !nrrd_handle1.get_rep()) {
-    error("Empty InputNrrd1.");
-    return;
+    //    error("Empty InputNrrd1.");
+    //    return;
+    first_nrrd_ = false;
   }
 
   if (second_nrrd_ && !nrrd_handle2.get_rep()) {
-    error("Empty InputNrrd2.");
-    return;
+    //    error("Empty InputNrrd2.");
+    //    return;
+    second_nrrd_ = false;
   }
 
   Nrrd *nin1 = 0;
