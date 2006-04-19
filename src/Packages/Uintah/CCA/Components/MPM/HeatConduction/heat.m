@@ -41,7 +41,6 @@ function [K,F] = form_matrix(K,F,points,elems,materials,dt,theta,T)
     element(1) = elems(elem_num,1);
     element(2) = elems(elem_num,2);
     [KE,C] = element_linear(elem_num,element,points,materials);
-    KE
     K = assemble(element,K,KE,C,dt,theta);
     F = source_term(element,F,KE,C,dt,theta,T);
   endfor
