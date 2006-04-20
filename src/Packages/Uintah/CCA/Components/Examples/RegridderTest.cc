@@ -91,7 +91,7 @@ namespace Uintah
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
-  void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler, int /*step*/, int /*nsteps*/ )
+  void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler)
   {
     Task* task = scinew Task( "timeAdvance", this, &RegridderTest::timeAdvance );
     task->requires( Task::OldDW, d_densityLabel, Ghost::AroundCells, 1 );
@@ -142,8 +142,7 @@ namespace Uintah
     scheduler->addTask( task, patches, d_sharedState->allMaterials() );
   }
 
-  void RegridderTest::scheduleRefineInterface ( const LevelP& /*level*/, SchedulerP& /*scheduler*/, 
-                                                int /*step*/, int /*nsteps*/ )
+  void RegridderTest::scheduleRefineInterface ( const LevelP& /*level*/, SchedulerP& /*scheduler*/, bool, bool)
   {
   }
 

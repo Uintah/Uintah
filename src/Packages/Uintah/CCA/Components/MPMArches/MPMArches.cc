@@ -955,7 +955,7 @@ void MPMArches::scheduleComputeStableTimestep(const LevelP& level,
 
 void
 MPMArches::scheduleTimeAdvance( const LevelP & level,
-				SchedulerP   & sched, int step , int nsteps )
+				SchedulerP   & sched)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();

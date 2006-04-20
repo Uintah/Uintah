@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
@@ -17,6 +18,7 @@ using namespace std;
 using namespace SCIRun;
 
 static DebugStream dbg("SingleProcessorScheduler", false);
+extern DebugStream taskdbg;
 
 SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld,
     	    	    	    	    	    	   Output* oport, 
@@ -46,38 +48,42 @@ SingleProcessorScheduler::verifyChecksum()
   // Not used in SingleProcessorScheduler
 }
 
+static
 void
-SingleProcessorScheduler::actuallyCompile()
+printTask( ostream& out, DetailedTask* task )
 {
-  if(dts_)
-    delete dts_;
-
-  if(graph.getNumTasks() == 0){
-    dts_=0;
-    return;
+  out << task->getTask()->getName();
+  if(task->getPatches()){
+    out << " on patches ";
+    const PatchSubset* patches = task->getPatches();
+    for(int p=0;p<patches->size();p++){
+      if(p != 0)
+	out << ", ";
+      out << patches->get(p)->getID();
+    }
   }
-
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  dts_ = graph.createDetailedTasks(lb, useInternalDeps() );
-
-  lb->assignResources(*dts_);
-
-  if (useInternalDeps()) {
-    graph.createDetailedDependencies(dts_, lb);
-  }
-  
-  releasePort("load balancer");
 }
 
 void
-SingleProcessorScheduler::execute()
+SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
-  if(dts_ == 0){
+  ASSERTRANGE(tgnum, 0, (int)graphs.size());
+  TaskGraph* tg = graphs[tgnum];
+  tg->setIteration(iteration);
+  currentTG_ = tgnum;
+  DetailedTasks* dts = tg->getDetailedTasks();
+
+  if (graphs.size() > 1) {
+    // tg model is the multi TG model, where each graph is going to need to
+    // have its dwmap reset here (even with the same tgnum)
+    tg->remapTaskDWs(dwmap);
+  }
+
+  if(dts == 0){
     cerr << "SingleProcessorScheduler skipping execute, no tasks\n";
     return;
   }
-  int ntasks = dts_->numTasks();
+  int ntasks = dts->numTasks();
   if(ntasks == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";
   }
@@ -90,14 +96,14 @@ SingleProcessorScheduler::execute()
     for(int i=0;i<numOldDWs;i++){
       dbg << "from DWs: ";
       if(dws[i])
-	dbg << dws[i]->getID() << ", ";
+        dbg << dws[i]->getID() << ", ";
       else
-	dbg << "Null, ";
+        dbg << "Null, ";
     }
     if(dws.size()-numOldDWs>1){
       dbg << "intermediate DWs: ";
       for(unsigned int i=numOldDWs;i<dws.size()-1;i++)
-	dbg << dws[i]->getID() << ", ";
+        dbg << dws[i]->getID() << ", ";
     }
     if(dws[dws.size()-1])
       dbg << " to DW: " << dws[dws.size()-1]->getID();
@@ -105,32 +111,26 @@ SingleProcessorScheduler::execute()
       dbg << " to DW: Null";
     dbg << "\n";
   }
-
-  makeTaskGraphDoc( dts_ );
-
-  dts_->initializeScrubs(dws);
-
+  
+  makeTaskGraphDoc( dts );
+  
+  dts->initializeScrubs(dws, dwmap);
+  
   for(int i=0;i<ntasks;i++){
 #ifdef USE_PERFEX_COUNTERS
     start_counters(0, 19);  
 #endif    
     double start = Time::currentSeconds();
-    DetailedTask* task = dts_->getTask( i );
-    if(dbg.active())
-      dbg << "Running task: " << task->getTask()->getName() << "\n";
-    //    cerr << "RANDY: Running task: " << task->getTask()->getName() << endl;
-
+    DetailedTask* task = dts->getTask( i );
+    
+    taskdbg << d_myworld->myrank() << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
     printTrackedVars(task, true);
-
     task->doit(d_myworld, dws, plain_old_dws);
-
     printTrackedVars(task, false);
-
-    if(dbg.active())
-      dbg << "calling done\n";
     task->done(dws);
-
+    
+    taskdbg << d_myworld->myrank() << " Completed task: "; printTask(taskdbg, task); taskdbg << '\n';
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
 #ifdef USE_PERFEX_COUNTERS
@@ -143,7 +143,7 @@ SingleProcessorScheduler::execute()
     }
     if(dbg.active())
       dbg << "Completed task: " << *task->getTask()
-	  << " (" << delT << " seconds)\n";
+          << " (" << delT << " seconds)\n";
     //scrub(task);
     emitNode( task, start, delT, delT, flop_count );
   }

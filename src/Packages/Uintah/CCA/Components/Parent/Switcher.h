@@ -24,7 +24,7 @@ namespace Uintah {
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&, int step, int nsteps );
+				      SchedulerP&);
 
     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
     virtual void scheduleInitNewVars(const LevelP& level, SchedulerP& sched);

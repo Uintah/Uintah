@@ -403,8 +403,7 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
 
 void
 SerialMPM::scheduleTimeAdvance(const LevelP & level,
-                               SchedulerP   & sched,
-                               int, int ) // AMR Parameters
+                               SchedulerP   & sched)
 {
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
@@ -1166,7 +1165,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
 
 void SerialMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/, 
                                         SchedulerP& /*scheduler*/,
-                                        int /*step*/, int /*nsteps*/)
+                                        bool, bool)
 {
   // do nothing for now
 }

@@ -20,7 +20,7 @@ void GhostOffsetVarMap::includeOffsets(const VarLabel* var,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     for (int m = 0; m < matls->size(); m++) {
-      VarLabelMatlPatch vmp(var, matls->get(m), patch);
+      VarLabelMatl<Patch> vmp(var, matls->get(m), patch);
       Offsets& offsets = map_[vmp];  
       offsets.encompassOffsets(lowOffset, highOffset);
     }
@@ -28,14 +28,14 @@ void GhostOffsetVarMap::includeOffsets(const VarLabel* var,
 }
 
 void GhostOffsetVarMap::
-getExtents(const VarLabelMatlPatch& vmp,
+getExtents(const VarLabelMatl<Patch>& vmp,
 	   Ghost::GhostType requestedGType, int requestedNumGhostCells,
 	   IntVector& requiredLow, IntVector& requiredHigh,	   
 	   IntVector& requestedLow, IntVector& requestedHigh) const
 {
   IntVector lowOffset, highOffset;
   const VarLabel* var = vmp.label_;
-  const Patch* patch = vmp.patch_;  
+  const Patch* patch = vmp.domain_;  
   Patch::VariableBasis basis =
     Patch::translateTypeToBasis(var->typeDescription()->getType(), true);
   Offsets offsets; // defaults to (0,0,0), (0,0,0)

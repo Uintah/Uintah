@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -23,7 +24,7 @@ SimulationInterface::scheduleRefine(const PatchSet*,
 void
 SimulationInterface::scheduleRefineInterface(const LevelP&, 
                                              SchedulerP&,
-                                             int, int)
+                                             bool, bool)
 {
   throw InternalError("scheduleRefineInterface not implemented for this component\n",
                       __FILE__, __LINE__);
@@ -38,8 +39,7 @@ SimulationInterface::scheduleCoarsen(const LevelP&,
 
 void
 SimulationInterface::scheduleTimeAdvance(const LevelP&,
-                                         SchedulerP&,
-                                         int, int)
+                                         SchedulerP&)
 {
   throw InternalError("no simulation implemented?", __FILE__, __LINE__);
 }
@@ -95,3 +95,16 @@ SimulationInterface::scheduleInitializeAddedMaterial(const LevelP&
                       __FILE__, __LINE__);
 }
 
+double
+SimulationInterface::getSubCycleProgress(DataWarehouse* fineDW)
+{
+  // DWs are always created in order of time.
+  int fineID = fineDW->getID();  
+  int coarseNewID = fineDW->getOtherDataWarehouse(Task::CoarseNewDW)->getID();
+  // need to do this check, on init timestep, old DW is NULL, and getOtherDW will throw exception
+  if (fineID == coarseNewID)
+    return 1.0; 
+  int coarseOldID = fineDW->getOtherDataWarehouse(Task::CoarseOldDW)->getID();
+  
+  return ((double)fineID-coarseOldID) / (coarseNewID-coarseOldID);
+}

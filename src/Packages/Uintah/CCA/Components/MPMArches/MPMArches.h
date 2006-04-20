@@ -102,7 +102,7 @@ public:
 	 
   //////////
   virtual void scheduleTimeAdvance( const LevelP& level, 
-				    SchedulerP&, int step, int nsteps );
+				    SchedulerP&);
 
   // Copy cut cell information from time step to next time step
   void scheduleCopyCutCells(SchedulerP& sched,

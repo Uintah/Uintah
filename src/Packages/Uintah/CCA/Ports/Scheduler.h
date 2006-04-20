@@ -65,9 +65,10 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual void initialize(int numOldDW = 1, int numNewDW = 1,
-			    DataWarehouse* parent_old_dw = 0,
-			    DataWarehouse* parent_new_dw = 0) = 0;
+    virtual void initialize(int numOldDW = 1, int numNewDW = 1) = 0;
+
+    virtual void setParentDWs(DataWarehouse* parent_old_dw, 
+                              DataWarehouse* parent_new_dw) = 0;
 
     virtual void clearMappings() = 0;
     virtual void mapDataWarehouse(Task::WhichDW, int dwTag) = 0;
@@ -77,12 +78,18 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual void compile() = 0;
-    virtual void execute() = 0;
+    virtual void execute(int tgnum = 0, int iteration = 0) = 0;
 
     virtual SchedulerP createSubScheduler() = 0;
        
     //////////
     // Insert Documentation Here:
+
+    enum tgType { NormalTaskGraph, IntermediateTaskGraph };
+
+    virtual void addTaskGraph(tgType type) = 0;
+    virtual int getNumTaskGraphs() = 0;
+    
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*) = 0;
     
     virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
@@ -90,10 +97,6 @@ WARNING
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
 
-    // get information about the taskgraph
-    virtual int getNumTasks() const = 0;
-    virtual Task* getTask(int i) = 0;
-    
     virtual DataWarehouse* get_dw(int idx) = 0;
     virtual DataWarehouse* getLastDW(void) = 0;
 
@@ -125,6 +128,14 @@ WARNING
     virtual void scheduleAndDoDataCopy(const GridP& grid, 
                                        SimulationInterface* sim) = 0;
 
+
+    //! override default behavior of DataCopy by copying additional variables
+    virtual void scheduleDataCopyVar(string var) = 0;
+
+    //! override default behavior of DataCopy by not copying additional variables
+    virtual void scheduleNotDataCopyVar(string var) = 0;
+
+    
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
     // the expected ghost cells (requiredLow, requiredHigh) and the requested

@@ -7,9 +7,9 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelLevelDW.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <Core/Containers/FastHashTable.h>
@@ -17,6 +17,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+#include <TauProfilerForSCIRun.h>
 
 #include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
@@ -42,9 +43,10 @@ extern DebugStream mixedDebug;
 #define DAV_DEBUG 0
 
 
-TaskGraph::TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg)
-  : sc(sc), d_myworld(pg)
+TaskGraph::TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg, Scheduler::tgType type)
+  : sc(sc), d_myworld(pg), type_(type), dts_(0)
 {
+  lb = dynamic_cast<LoadBalancer*>(sc->getPort("load balancer"));
 }
 
 TaskGraph::~TaskGraph()
@@ -55,6 +57,8 @@ TaskGraph::~TaskGraph()
 void
 TaskGraph::initialize()
 {
+  if( dts_ )
+    delete dts_;
   for(vector<Task*>::iterator iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
     delete *iter;
 
@@ -63,7 +67,6 @@ TaskGraph::initialize()
 
   d_tasks.clear();
 
-  d_initRequires.clear();
   d_initRequiredVars.clear();
   edges.clear();
 }
@@ -136,7 +139,7 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   // special.  Create a fake task that performs the reduction
   // While we are at it, ensure that we aren't producing anything
   // into an "old" data warehouse
-  typedef map<VarLabelLevelDW, Task*> ReductionTasksMap;
+  typedef map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
   ReductionTasksMap reductionTasks;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
@@ -154,7 +157,10 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
 	ASSERT(comp->patches == 0);
 	// Look up this variable in the reductionTasks map
 	int dw = comp->mapDataWarehouse();
-	VarLabelLevelDW key(comp->var, comp->reductionLevel, dw);
+
+        // use the dw as a 'material', just for the sake of looking it up.
+        // it should only differentiate on AMR W-cycle graphs...
+	VarLabelMatl<Level> key(comp->var, dw, comp->reductionLevel);
 	const MaterialSet* ms = task->getMaterialSet();
 	const Level* level = comp->reductionLevel;
 
@@ -256,147 +262,150 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
   for(; req != 0; req=req->next){
     if (dbg.active())
       dbg << d_myworld->myrank() << "     Checking edge for req: " << *req << ", task: " << *req->task << ", domain: " << req->patches_dom << '\n';
-    if(sc->isNewDW(req->mapDataWarehouse())){
+    if(sc->isNewDW(req->mapDataWarehouse())) {
       // If DW is finalized, we assume that we already have it,
       // or that we will get it sent to us.  Otherwise, we set
       // up an edge to connect this req to a comp
-      pair<CompMap::iterator,CompMap::iterator> iters 
-	= comps.equal_range(req->var);
-      int count=0;
-      for(CompMap::iterator compiter = iters.first;
-	  compiter != iters.second; ++compiter){
-
-	if(req->var->typeDescription() != compiter->first->typeDescription())
-	  SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName(), __FILE__, __LINE__));
-
-        // determine if we need to add a dependency edge
-	bool add=false;
-	if (dbg.active())
-          dbg << d_myworld->myrank() << "       Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
-	if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()){
-	  if(task->isReductionTask()){
-            // Make sure that we get the comp from the reduction task
-	    // Add if the level matches, but do not create a dependency on self
-	    if(compiter->second->reductionLevel == req->reductionLevel
-	       && compiter->second->task != task)
-	      add=true;
-	  } else if(req->var->typeDescription()->isReductionVariable()){
-	    if(compiter->second->task->isReductionTask())
-	      add=true;
-          } else if(overlaps(compiter->second, req))
-	    add=true;
-	}
-	if(!add)
-          if (dbg.active())
-            dbg << d_myworld->myrank() << "       did NOT create dependency\n";
-	if(add){
-	  Task::Dependency* comp = compiter->second;
-	  
-	  if (modifies) {
-	    // Add dependency edges to each task that requires the data
-	    // before it is modified.
-	    for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0;
-		 otherEdge = otherEdge->reqNext) {
-	      Task::Dependency* priorReq =
-		const_cast<Task::Dependency*>(otherEdge->req);
-	      if (priorReq != req) {
-		ASSERT(priorReq->var->equals(req->var));
-		if (priorReq->task != task) {		
-		  Task::Edge* edge = scinew Task::Edge(priorReq, req);
-		  edges.push_back(edge);
-		  req->addComp(edge);
-		  priorReq->addReq(edge);
-		  if(dbg.active()){
-		    dbg << d_myworld->myrank() << " Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
-		    dbg << d_myworld->myrank() << " Prior Req=" << *priorReq << '\n';
-		    dbg << d_myworld->myrank() << " Modify=" << *req << '\n';
-		  }
-		}
-	      }
-	    }
-	  }
-	  
-          // add the edge between the require/modify and compute
-	  Task::Edge* edge = scinew Task::Edge(comp, req);
-	  edges.push_back(edge);
-	  req->addComp(edge);
-	  comp->addReq(edge);
-	  
-	  if (!sortinfo.find(edge->comp->task)->second.visited &&
-	      !edge->comp->task->isReductionTask()) {
-	    cout << "\nWARNING: A task, '" << task->getName() << "', that ";
-	    if (modifies)
-	      cout << "modifies '";
-	    else
-	      cout << "requires '";
-	    cout << req->var->getName() << "' was added before computing task";
-	    cout << ", '" << edge->comp->task->getName() << "'\n";
-	    cout << "  Required/modified by: " << *task << '\n';
-	    cout << "  req: " << *req << '\n';
-	    cout << "  Computed by: " << *edge->comp->task << '\n';
-	    cout << "  comp: " << *comp << '\n';
-	    cout << "\n";
-	  }
-	  count++;
-	  if(dbg.active()){
-	    dbg << d_myworld->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
-	    dbg << d_myworld->myrank() << "         Req=" << *req << '\n';
-	    dbg << d_myworld->myrank() << "         Comp=" << *comp << '\n';
-	  }
-	}
-      }
-
-      // if we cannot find the required variable, throw an exception
-      if(count == 0 && (!req->matls || req->matls->size() > 0) 
-	 && (!req->patches || req->patches->size() > 0)){
-	if(req->patches){
-	  cout << req->patches->size() << " Patches: ";
-	  for(int i=0;i<req->patches->size();i++)
-	    cout << req->patches->get(i)->getID() << " ";
-	  cout << '\n';
-	} else if(req->reductionLevel) {
-	  cout << "On level " << req->reductionLevel->getIndex() << '\n';
-	} else if(task->getPatchSet()){
-	  cout << "Patches from task: ";
-	  const PatchSet* patches = task->getPatchSet();
-	  for(int i=0;i<patches->size();i++){
-	    const PatchSubset* pat=patches->getSubset(i);
-	    for(int i=0;i<pat->size();i++)
-	      cout << pat->get(i)->getID() << " ";
-	    cout << " ";
-	  }
-	  cout << '\n';
-	} else {
-	  cout << "On global level\n";
-	}
-	if(req->matls){
-	  cout << req->matls->size() << " Matls: ";
-	  for(int i=0;i<req->matls->size();i++)
-	    cout << req->matls->get(i) << " ";
-	  cout << '\n';
-	} else if(task->getMaterialSet()){
-	  cout << "Matls from task: ";
-	  const MaterialSet* matls = task->getMaterialSet();
-	  for(int i=0;i<matls->size();i++){
-	    const MaterialSubset* mat = matls->getSubset(i);
-	    for(int i=0;i<mat->size();i++)
-	      cout << mat->get(i) << " ";
-	    cout << " ";
-	  }
-	  cout << '\n';
-	} else {
-	  cout << "No matls\n";
-	}
-	SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
-      }
-      
-      if (modifies) {
-	// not just requires, but modifies, so the comps map must be
-	// updated so future modifies or requires will link to this one.
-	comps.insert(make_pair(req->var, req));
-	if (dbg.active())
-          dbg << d_myworld->myrank() << " Added modified comp for: " << *req << '\n';
-      }
+       if (!(req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)){
+         // Same thing goes if this is an Intermediate TG and the requested data is done from another TG,
+         // but if it is a modifies, we need to add the computes below
+         pair<CompMap::iterator,CompMap::iterator> iters 
+           = comps.equal_range(req->var);
+         int count=0;
+         for(CompMap::iterator compiter = iters.first;
+             compiter != iters.second; ++compiter){
+           
+           if(req->var->typeDescription() != compiter->first->typeDescription())
+             SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName(), __FILE__, __LINE__));
+           
+           // determine if we need to add a dependency edge
+           bool add=false;
+           if (dbg.active())
+             dbg << d_myworld->myrank() << "       Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
+           if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()){
+             if(task->isReductionTask()){
+               // Make sure that we get the comp from the reduction task
+               // Add if the level matches, but do not create a dependency on self
+               if(compiter->second->reductionLevel == req->reductionLevel
+                  && compiter->second->task != task)
+                 add=true;
+             } else if(req->var->typeDescription()->isReductionVariable()){
+               if(compiter->second->task->isReductionTask())
+                 add=true;
+             } else if(overlaps(compiter->second, req))
+               add=true;
+           }
+           if(!add)
+             if (dbg.active())
+               dbg << d_myworld->myrank() << "       did NOT create dependency\n";
+           if(add){
+             Task::Dependency* comp = compiter->second;
+             
+             if (modifies) {
+               // Add dependency edges to each task that requires the data
+               // before it is modified.
+               for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0;
+                    otherEdge = otherEdge->reqNext) {
+                 Task::Dependency* priorReq =
+                   const_cast<Task::Dependency*>(otherEdge->req);
+                 if (priorReq != req) {
+                   ASSERT(priorReq->var->equals(req->var));
+                   if (priorReq->task != task) {		
+                     Task::Edge* edge = scinew Task::Edge(priorReq, req);
+                     edges.push_back(edge);
+                     req->addComp(edge);
+                     priorReq->addReq(edge);
+                     if(dbg.active()){
+                       dbg << d_myworld->myrank() << " Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
+                       dbg << d_myworld->myrank() << " Prior Req=" << *priorReq << '\n';
+                       dbg << d_myworld->myrank() << " Modify=" << *req << '\n';
+                     }
+                   }
+                 }
+               }
+             }
+             
+             // add the edge between the require/modify and compute
+             Task::Edge* edge = scinew Task::Edge(comp, req);
+             edges.push_back(edge);
+             req->addComp(edge);
+             comp->addReq(edge);
+             
+             if (!sortinfo.find(edge->comp->task)->second.visited &&
+                 !edge->comp->task->isReductionTask()) {
+               cout << "\nWARNING: A task, '" << task->getName() << "', that ";
+               if (modifies)
+                 cout << "modifies '";
+               else
+                 cout << "requires '";
+               cout << req->var->getName() << "' was added before computing task";
+               cout << ", '" << edge->comp->task->getName() << "'\n";
+               cout << "  Required/modified by: " << *task << '\n';
+               cout << "  req: " << *req << '\n';
+               cout << "  Computed by: " << *edge->comp->task << '\n';
+               cout << "  comp: " << *comp << '\n';
+               cout << "\n";
+             }
+             count++;
+             if(dbg.active()){
+               dbg << d_myworld->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
+               dbg << d_myworld->myrank() << "         Req=" << *req << '\n';
+               dbg << d_myworld->myrank() << "         Comp=" << *comp << '\n';
+             }
+           }
+         }
+         
+         // if we cannot find the required variable, throw an exception
+         if(count == 0 && (!req->matls || req->matls->size() > 0) 
+            && (!req->patches || req->patches->size() > 0)){
+           if(req->patches){
+             cout << req->patches->size() << " Patches: ";
+             for(int i=0;i<req->patches->size();i++)
+               cout << req->patches->get(i)->getID() << " ";
+             cout << '\n';
+           } else if(req->reductionLevel) {
+             cout << "On level " << req->reductionLevel->getIndex() << '\n';
+           } else if(task->getPatchSet()){
+             cout << "Patches from task: ";
+             const PatchSet* patches = task->getPatchSet();
+             for(int i=0;i<patches->size();i++){
+               const PatchSubset* pat=patches->getSubset(i);
+               for(int i=0;i<pat->size();i++)
+                 cout << pat->get(i)->getID() << " ";
+               cout << " ";
+             }
+             cout << '\n';
+           } else {
+             cout << "On global level\n";
+           }
+           if(req->matls){
+             cout << req->matls->size() << " Matls: ";
+             for(int i=0;i<req->matls->size();i++)
+               cout << req->matls->get(i) << " ";
+             cout << '\n';
+           } else if(task->getMaterialSet()){
+             cout << "Matls from task: ";
+             const MaterialSet* matls = task->getMaterialSet();
+             for(int i=0;i<matls->size();i++){
+               const MaterialSubset* mat = matls->getSubset(i);
+               for(int i=0;i<mat->size();i++)
+                 cout << mat->get(i) << " ";
+               cout << " ";
+             }
+             cout << '\n';
+           } else {
+             cout << "No matls\n";
+           }
+           SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
+         }
+       }
+       if (modifies) {
+         // not just requires, but modifies, so the comps map must be
+         // updated so future modifies or requires will link to this one.
+         comps.insert(make_pair(req->var, req));
+         if (dbg.active())
+           dbg << d_myworld->myrank() << " Added modified comp for: " << *req << '\n';
+       }
     }
   }
 }
@@ -523,18 +532,16 @@ TaskGraph::addTask(Task* task, const PatchSet* patchset,
   //  maintain d_initRequires and d_initRequiredVars
   for(Task::Dependency* req = task->getRequires(); req != 0; req=req->next){
     if(sc->isOldDW(req->mapDataWarehouse())) {
-      d_initRequires.push_back(req);
       d_initRequiredVars.insert(req->var);
     }
   }
 }
 
 void
-TaskGraph::createDetailedTask(DetailedTasks* tasks, Task* task,
-			      const PatchSubset* patches,
+TaskGraph::createDetailedTask(Task* task, const PatchSubset* patches,
 			      const MaterialSubset* matls)
 {
-  DetailedTask* dt = scinew DetailedTask(task, patches, matls, tasks);
+  DetailedTask* dt = scinew DetailedTask(task, patches, matls, dts_);
 
   if (task->getType() == Task::Reduction) {
     Task::Dependency* req = task->getRequires();
@@ -544,38 +551,36 @@ TaskGraph::createDetailedTask(DetailedTasks* tasks, Task* task,
     d_reductionTasks[req->var] = dt;
   }
 		     
-  tasks->add(dt);
+  dts_->add(dt);
 }
 
 DetailedTasks*
-TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
+TaskGraph::createDetailedTasks( bool useInternalDeps, const GridP& grid,
+                                const GridP& oldGrid)
 {
+  TAU_PROFILE_TIMER(gentimer, "TG Compile" , "", TAU_USER);
+  TAU_PROFILE_TIMER(sorttimer, "TG Compile - sort" , "", TAU_USER);
+  TAU_PROFILE_TIMER(neighbortimer, "TG Compile - neighborhood" , "", TAU_USER);
+  TAU_PROFILE_TIMER(dttimer, "TG Compile - createDetailedTasks" , "", TAU_USER);
+  TAU_PROFILE_TIMER(ddtimer, "TG Compile - createDetailedDependencies" , "", TAU_USER);
+
+  TAU_PROFILE_START(gentimer);
+
+  TAU_PROFILE_START(sorttimer);
   vector<Task*> sorted_tasks;
   topologicalSort(sorted_tasks);
+  TAU_PROFILE_STOP(sorttimer);
 
   d_reductionTasks.clear();
 
-  // WARNING - this just grabs ONE grid.
-  // more careful.
-  GridP grid;
-  for(int i=0;grid == 0 && i<(int)sorted_tasks.size();i++){
-    Task* task = sorted_tasks[i];
-    const PatchSet* ps = task->getPatchSet();
-    if(ps && task->getMaterialSet()){
-      for(int p=0;grid == 0 && p<ps->size();p++){
-	const PatchSubset* pss = ps->getSubset(p);
-	for(int s=0;grid == 0 && s<pss->size();s++){
-	  const Patch* patch = pss->get(s);
-	  grid = patch->getLevel()->getGrid();
-	}
-      }
-    }
-  }
-
   ASSERT(grid != 0);
-  lb->createNeighborhood(grid);
+  TAU_PROFILE_START(neighbortimer);
+  lb->createNeighborhood(grid, oldGrid);
+  TAU_PROFILE_STOP(neighbortimer);
 
-  DetailedTasks* dt = scinew DetailedTasks(sc, d_myworld, this, useInternalDeps );
+  TAU_PROFILE_START(dttimer);
+
+  dts_ = scinew DetailedTasks(sc, d_myworld, this, useInternalDeps );
   for(int i=0;i<(int)sorted_tasks.size();i++){
     Task* task = sorted_tasks[i];
     const PatchSet* ps = task->getPatchSet();
@@ -585,24 +590,50 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
 	const PatchSubset* pss = ps->getSubset(p);
 	for(int m=0;m<ms->size();m++){
 	  const MaterialSubset* mss = ms->getSubset(m);
-	  if(lb->inNeighborhood(pss, mss) || 
-             (task->getType() == Task::Output 
-              && d_myworld->myrank() % lb->getNthProc() == 0) ||
-             task->getType() == Task::OncePerProc)
-                                                                
-
-	    createDetailedTask(dt, task, pss, mss);
+	  if(lb->inNeighborhood(pss, mss))
+	    createDetailedTask(task, pss, mss);
 	}
       }
     } else if(!ps && !ms){
-      createDetailedTask(dt, task, 0, 0);
+      createDetailedTask(task, 0, 0);
     } else if(!ps){
       SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
     } else {
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
   }
-  return dt;
+
+  if(dts_->numTasks() == 0)
+    cerr << "WARNING: Compiling scheduler with no tasks\n";
+
+  TAU_PROFILE_STOP(dttimer);
+
+  
+  lb->assignResources(*dts_);
+  
+  // use this, even on a single processor, if for nothing else than to get scrub counts
+  bool doDetailed = Parallel::usingMPI() || useInternalDeps || grid->numLevels() > 1;
+  if (doDetailed) {
+    TAU_PROFILE_START(ddtimer);
+    createDetailedDependencies();
+    TAU_PROFILE_STOP(ddtimer);
+  }
+
+  if (d_myworld->size() > 1) {
+    dts_->assignMessageTags(d_myworld->myrank());
+  }
+
+  dts_->computeLocalTasks(d_myworld->myrank());
+
+  if (!doDetailed) {
+    // the createDetailedDependencies will take care of scrub counts, so if we don't
+    // do that, do it here.
+    dts_->createScrubCounts();
+  }
+
+  TAU_PROFILE_STOP(gentimer);
+
+  return dts_;
 }
 
 namespace Uintah {
@@ -763,12 +794,17 @@ bool CompTable::findcomp(Task::Dependency* req, const Patch* patch,
 }
 
 void
-TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb)
+TaskGraph::createDetailedDependencies()
 {
+  TAU_PROFILE_TIMER(rctimer, "createDetailedDependencies - remembercomps" , "", TAU_USER);
+  TAU_PROFILE_TIMER(ddtimer, "createDetailedDependencies2" , "", TAU_USER);
+
+
+  TAU_PROFILE_START(rctimer);
   // Collect all of the comps
   CompTable ct;
-  for(int i=0;i<dt->numTasks();i++){
-    DetailedTask* task = dt->getTask(i);
+  for(int i=0;i<dts_->numTasks();i++){
+    DetailedTask* task = dts_->getTask(i);
 
     if( dbg.active() ) {
       dbg << d_myworld->myrank() << " createDetailedDependencies (collect comps) for:\n";
@@ -782,8 +818,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb)
   // Put internal links between the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
   DetailedTask* lastReductionTask = 0;
-  for(int i=0;i<dt->numTasks();i++){
-    DetailedTask* task = dt->getTask(i);
+  for(int i=0;i<dts_->numTasks();i++){
+    DetailedTask* task = dts_->getTask(i);
     if (task->task->getType() == Task::Reduction) {
       if (lastReductionTask != 0)
 	task->addInternalDependency(lastReductionTask,
@@ -792,10 +828,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb)
     }
   }
 
+  TAU_PROFILE_STOP(rctimer);
   // Go through the modifies/requires and 
   // create data dependencies as appropriate
-  for(int i=0;i<dt->numTasks();i++){
-    DetailedTask* task = dt->getTask(i);
+  TAU_PROFILE_START(ddtimer);
+  for(int i=0;i<dts_->numTasks();i++){
+    DetailedTask* task = dts_->getTask(i);
 
     if(task->task->getType() == Task::Reduction) {
       // Reduction tasks were dealt with above (adding internal dependencies
@@ -806,16 +844,15 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb)
     if(dbg.active() && (task->task->getRequires() != 0))
       dbg << d_myworld->myrank() << " Looking at requires of detailed task: " << *task << '\n';
 
-    createDetailedDependencies(dt, lb, task, task->task->getRequires(),
-                               ct, false);
+    createDetailedDependencies(task, task->task->getRequires(), ct, false);
 
     if(dbg.active() && (task->task->getModifies() != 0))
       dbg << d_myworld->myrank() << " Looking at modifies of detailed task: " << *task << '\n';
 
-    createDetailedDependencies(dt, lb, task, task->task->getModifies(),
-			       ct, true);
+    createDetailedDependencies(task, task->task->getModifies(), ct, true);
   }
 
+  TAU_PROFILE_STOP(ddtimer);
   if(dbg.active())
     dbg << d_myworld->myrank() << " Done creating detailed tasks\n";
 }
@@ -858,12 +895,58 @@ void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
 }
 
 void
-TaskGraph::createDetailedDependencies(DetailedTasks* dt,
-				      LoadBalancer* lb,
-				      DetailedTask* task,
+TaskGraph::remapTaskDWs(int dwmap[])
+{
+  int levelmin = 999;
+  int trr = 2;
+  for (unsigned i = 0; i < d_tasks.size(); i++) {
+    d_tasks[i]->setMapping(dwmap);
+
+    // for the Int timesteps, we have tasks on multiple levels.  
+    // we need to adjust based on which level they are on, but first 
+    // we need to find the coarsest level
+    if (type_ == Scheduler::IntermediateTaskGraph) {
+      const PatchSet* ps = d_tasks[i]->getPatchSet();
+      if (!ps) continue;
+      const Level* l = getLevel(ps);
+      levelmin = Min(levelmin, l->getIndex());
+      trr = l->timeRefinementRatio();
+    }
+  }
+  //cout << d_myworld->myrank() << " Basic mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " levelmin " << levelmin << endl;
+
+  if (type_ == Scheduler::IntermediateTaskGraph) {
+    // fix the CoarseNewDW for finer levels.  The CoarseOld will only matter
+    // on the level it was originally mapped, so leave it as it is
+    dwmap[Task::CoarseNewDW] = dwmap[Task::NewDW];
+    for (unsigned i = 0; i < d_tasks.size(); i++) {
+      const PatchSet* ps = d_tasks[i]->getPatchSet();
+      if (!ps) continue;
+      if (getLevel(ps)->getIndex() > levelmin) {
+        d_tasks[i]->setMapping(dwmap);
+        //cout << d_tasks[i]->getName() << " mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " (levelmin=" << levelmin << ")" << endl;
+      }
+    }
+    
+  }
+  
+}
+
+void
+TaskGraph::createDetailedDependencies(DetailedTask* task,
 				      Task::Dependency* req, CompTable& ct,
 				      bool modifies)
 {
+  TAU_PROFILE_TIMER(patchtimer, "CDD - determine domain patches" , "", TAU_USER);
+  TAU_PROFILE_TIMER(selecttimer, "CDD - selectPatches" , "", TAU_USER);
+  TAU_PROFILE_TIMER(pcdtimer, "CDD - possiblyCreateDependencies" , "", TAU_USER);
+  TAU_PROFILE_TIMER(patchloop, "CDD - patch loop" , "", TAU_USER);
+  TAU_PROFILE_TIMER(neighborloop, "CDD - neighbor loop" , "", TAU_USER);
+  TAU_PROFILE_TIMER(neighbor2loop, "CDD - neighbor2 loop" , "", TAU_USER);
+  TAU_PROFILE_TIMER(matlloop, "CDD - matl loop" , "", TAU_USER);
+  TAU_PROFILE_TIMER(findtimer, "CDD - findcomp" , "", TAU_USER);
+  TAU_PROFILE_TIMER(fvltimer, "CDD - findVariableLocation" , "", TAU_USER);
+  TAU_PROFILE_TIMER(modifysection, "CDD - modifies portion" , "", TAU_USER);
   int me = d_myworld->myrank();
   for( ; req != 0; req = req->next){
     if(dbg.active())
@@ -872,6 +955,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
     if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
       continue;
 
+    TAU_PROFILE_START(patchtimer);
+    
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
     if (req->var->typeDescription()->isReductionVariable() &&
@@ -887,13 +972,14 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
     // level's data.  Otherwise, we have to use the entire set of patches (and ghost patches if 
     // applicable) that lay above/beneath this patch.
 
+    const Patch* origPatch = 0;
     IntVector otherLevelLow, otherLevelHigh;
     if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
       // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
       // and the task->patches should be size one (so we don't have to worry about overlapping regions)
+      origPatch = task->patches->get(0);
       ASSERT(req->patches == NULL);
       ASSERT(task->patches->size() == 1);
-      const Patch* origPatch = task->patches->get(0);
       const Level* origLevel = origPatch->getLevel();
       if (req->patches_dom == Task::CoarseLevel) {
         // change the ghost cells to reflect coarse level
@@ -921,8 +1007,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
       }
     }
 
+    TAU_PROFILE_STOP(patchtimer);
+  
+
     if(patches && !patches->empty() && matls && !matls->empty()){
       for(int i=0;i<patches->size();i++){
+        TAU_PROFILE_START(patchloop);
 	const Patch* patch = patches->get(i);
 	Patch::selectType neighbors;
 	IntVector low, high;
@@ -947,14 +1037,20 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
           }
           high = Min(high, otherLevelHigh);
 
-          if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z())
+          if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z()) {
+            TAU_PROFILE_STOP(patchloop);
             continue;
-          
-          // don't need to selectPatches, patches is already all the patches we'll need.
+          }              
+
+          // don't need to selectPatches.  Just use the current patch, as we're
+          // already looping over our required patches.
           neighbors.push_back(patch);
         }
         else {
+          TAU_PROFILE_START(selecttimer);
+          origPatch = patch;
           patch->getLevel()->selectPatches(low, high, neighbors);
+          TAU_PROFILE_STOP(selecttimer);
         }
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
 			 Patch::Compare()));
@@ -962,8 +1058,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	  dbg << d_myworld->myrank() << "    Creating dependency on " << neighbors.size() << " neighbors\n";
 	  dbg << d_myworld->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
 	}
-        
+
+        TAU_PROFILE_STOP(patchloop);
+
 	for(int i=0;i<neighbors.size();i++){
+          TAU_PROFILE_START(neighborloop);
 	  const Patch* neighbor=neighbors[i];
           Patch::selectType fromNeighbors;
 	  IntVector l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
@@ -978,18 +1077,22 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
             // the grid assigned to the old dw should be the old grid.
             // This should really only impact things required from the OldDW.
             LevelP fromLevel = sc->get_dw(0)->getGrid()->getLevel(patch->getLevel()->getIndex());
+            TAU_PROFILE_START(selecttimer);
             fromLevel->selectPatches(Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l),
                                      Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h),
                                      fromNeighbors);
+            TAU_PROFILE_STOP(selecttimer);
           }
           else
             fromNeighbors.push_back(neighbor);
 
+          TAU_PROFILE_STOP(neighborloop);
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
-	    if(!(lb->inNeighborhood(neighbor) || lb->inNeighborhood(fromNeighbor)))
+	    if(!(lb->inNeighborhood(neighbor) || (neighbor != fromNeighbor && lb->inNeighborhood(fromNeighbor))))
               continue;
+            TAU_PROFILE_START(neighbor2loop);
             IntVector from_l;
             IntVector from_h;
 
@@ -1007,11 +1110,14 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
               // cull annoying overlapping AMR patch dependencies
               patch->cullIntersection(basis, req->var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
               if (from_l == from_h) {
+                TAU_PROFILE_STOP(neighbor2loop);
                 continue;
               }
             }
 
+            TAU_PROFILE_STOP(neighbor2loop);
 	    for(int m=0;m<matls->size();m++){
+              TAU_PROFILE_START(matlloop);
 	      int matl = matls->get(m);
 
 	      // creator is the task that performs the original compute.
@@ -1019,24 +1125,39 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	      // data task
 	      DetailedTask* creator = 0;
 	      Task::Dependency* comp = 0;
-              //              cout << d_myworld->myrank() << "  asdf var: " << *req->var << " patch " << fromNeighbor->getID() << " DW " << req->whichdw << " " << req->mapDataWarehouse() << " ISOLD " << sc->isOldDW(req->mapDataWarehouse()) << endl;
-	      if(sc->isOldDW(req->mapDataWarehouse())){
+
+              // look in old dw or in old TG.  Legal to modify across TG boundaries
+              TAU_PROFILE_START(fvltimer);
+	      if(sc->isOldDW(req->mapDataWarehouse())) {
 	        ASSERT(!modifies);
-	        int proc = findVariableLocation(lb, req, fromNeighbor, matl);
-	        creator = dt->getOldDWSendTask(proc);
+	        int proc = findVariableLocation(req, fromNeighbor, matl);
+	        creator = dts_->getOldDWSendTask(proc);
 	        comp=0;
 	      } else {
+                TAU_PROFILE_START(findtimer);
 	        if (!ct.findcomp(req, neighbor, matl, creator, comp, d_myworld)){
-		  cout << "Failure finding " << *req << " for " << *task
-		      << "\n";
-                  if (creator)
-                    cout << "creator=" << *creator << '\n';
-		  cout << "neighbor=" << *neighbor << ", matl=" << matl << '\n';
-		  cout << "me=" << me << '\n';
-		  SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
+                  if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG) {
+                    // same stuff as above - but do the check for findcomp first, as this is a "if you don't find it here, assign it
+                    // from the old TG" dependency
+                    int proc = findVariableLocation(req, fromNeighbor, matl);
+                    creator = dts_->getOldDWSendTask(proc);
+                    comp=0;
+                  }
+                  else {
+                    cout << "Failure finding " << *req << " for " << *task
+                         << "\n";
+                    if (creator)
+                      cout << "creator=" << *creator << '\n';
+                    cout << "neighbor=" << *neighbor << ", matl=" << matl << '\n';
+                    cout << "me=" << me << '\n';
+                    SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
+                  }
 	        }
+                TAU_PROFILE_STOP(findtimer);
 	      }
-	      if (modifies) {
+              TAU_PROFILE_STOP(fvltimer);
+	      if (modifies && comp) { // comp means NOT send-old-data tasks
+
 	        // find the tasks that up to this point require the variable
 	        // that we are modifying (i.e., the ones that use the computed
 	        // variable before we modify it), and put a dependency between
@@ -1044,6 +1165,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                 // i.e., the task that requires data computed by a task on this processor
                 // needs to finish its task before this task, which modifies the data
                 // computed by the same task
+                TAU_PROFILE_START(modifysection);
 	        list<DetailedTask*> requireBeforeModifiedTasks;
 	        creator->findRequiringTasks(req->var,
 					    requireBeforeModifiedTasks);
@@ -1073,7 +1195,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 			  << prevReqTask->getName()
                            << " to " << task->getName() << " (created by " << creator->getName() << ")\n";
                     }
-                    if (creator->getPatches()->size() > 1) {
+                    if (creator->getPatches() && creator->getPatches()->size() > 1) {
                       // if the creator works on many patches, then don't create links between patches that don't touch
                       const PatchSubset* psub = task->getPatches();
                       const PatchSubset* req_sub = prevReqTask->getPatches();
@@ -1082,9 +1204,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                         const Patch* req_patch = req_sub->get(0);
                         Patch::selectType n;
                         IntVector low, high;
-                        
-                        Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
-                                                                                 false);
                         
                         req_patch->computeVariableExtents(req->var->typeDescription()->getType(),
                                                           req->var->getBoundaryLayer(),
@@ -1103,15 +1222,21 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                           continue;
                       }
                     }
-		    dt->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
+                    TAU_PROFILE_START(pcdtimer);
+		    dts_->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
 					        matl, from_l, from_h);
+                    TAU_PROFILE_STOP(pcdtimer);
 		  }
 	        }
+                TAU_PROFILE_STOP(modifysection);
 	      }
 
-	      dt->possiblyCreateDependency(creator, comp, fromNeighbor,
+              TAU_PROFILE_START(pcdtimer);
+	      dts_->possiblyCreateDependency(creator, comp, fromNeighbor,
 					  task, req, fromNeighbor,
 					  matl, from_l, from_h);
+              TAU_PROFILE_STOP(pcdtimer);
+              TAU_PROFILE_STOP(matlloop);
 	    }
 	  }
         }
@@ -1123,6 +1248,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	int matl = matls->get(m);
 	DetailedTask* creator;
 	Task::Dependency* comp = 0;
+
+        if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG && sc->isNewDW(req->mapDataWarehouse())) {
+          continue; // will we need to fix for mixed scheduling?
+        }
+
 	if(!ct.findcomp(req, 0, matl, creator, comp, d_myworld)){
 	  cout << "Failure finding " << *req << " for " 
 	       << task->getTask()->getName() << "\n"; 
@@ -1174,16 +1304,17 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
   }
 }
 
-int TaskGraph::findVariableLocation(LoadBalancer* lb,
-				    Task::Dependency* req,
+int TaskGraph::findVariableLocation(Task::Dependency* req,
 				    const Patch* patch, int matl)
 {
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.
   int proc;
-  if (req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW) {
+  if ((req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW) ||
+      currentIteration > 0 || req->lookInOldTG) {
     // provide some accomodation for Dynamic load balancers and sub schedulers.  We need to
     // treat the requirement like a "old" dw req but it needs to be found on the current processor
+    // Same goes for successive executions of the same TG
     proc = lb->getPatchwiseProcessorAssignment(patch);
   }
   else
@@ -1201,10 +1332,8 @@ Task* TaskGraph::getTask(int idx)
   return d_tasks[idx];
 }
 
-TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
+void TaskGraph::makeVarLabelMaterialMap(Scheduler::VarLabelMaterialMap* result)
 {
-  VarLabelMaterialMap* result = scinew VarLabelMaterialMap;
-
   for(int i=0;i<(int)d_tasks.size();i++){
     Task* task = d_tasks[i];
     for(Task::Dependency* comp = task->getComputes();
@@ -1232,5 +1361,4 @@ TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
       }
     }
   }
-  return result;
 }

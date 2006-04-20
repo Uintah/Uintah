@@ -3,7 +3,7 @@
 
  
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
@@ -16,6 +16,7 @@ namespace Uintah {
   using namespace std;
   class DetailedTask;
   class DetailedTasks;
+  class Patch;
   class LoadBalancer;
 
 /**************************************
@@ -24,9 +25,9 @@ CLASS
    TaskGraph
    
    During the TaskGraph compilation, the task graph does its work in
-   two phases.  The first is the call to TaskGraph::createDetailedTasks()
-   which adds edges between the tasks' requires and computes and orders the
-   tasks for execution.
+   the createDetailedTasks function.  The first portion is to sort the tasks,
+   by add edges between computing tasks and requiring tasks,
+   and the second is to create detailed tasks and dependendices.
 
    Here is a function call tree for this phase:
    createDetailedTasks
@@ -38,15 +39,19 @@ CLASS
      LoadBalancer::createNeighborhood (this stores the patches that border
                                        patches on the current processor)
 
-   The second phase begins with a call to 
-   TaskGraph::createDetailedDependencies, which sets up the data that need
+   Detailed Task portion: divides up tasks into smaller pieces, and
+   sets up the data that need
    to be communicated between processors when the taskgraph executes.
 
-   Here is a function call tree for this phase:
-   createDetailedDependencies (public)
-     remembercomps
-     createDetailedDependencies (private)
-       DetailedTasks::possiblyCreateDependency or Task::addInternalDependency
+     createDetailedTask (for each task, patch subset, matl subset)
+
+     createDetailedDependencies (public)
+       remembercomps
+       createDetailedDependencies (private)
+         DetailedTasks::possiblyCreateDependency or Task::addInternalDependency
+
+   Then at the and:
+     DetailedTasks::compureLocalTasks
 
 GENERAL INFORMATION
 
@@ -83,7 +88,7 @@ WARNING
 
    class TaskGraph {
    public:
-     TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg);
+     TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg, Scheduler::tgType type);
      ~TaskGraph();
 
      /// Clears the TaskGraph and deletes all tasks.
@@ -107,14 +112,19 @@ WARNING
      /// DetailedTask for each PatchSubset and MaterialSubset in a Task, 
      /// where a Task may have many PatchSubsets and MaterialSubsets.).
      /// Sorts using topologicalSort.
-     DetailedTasks* createDetailedTasks( LoadBalancer* lb,
-                                         bool useInternalDeps );
+     DetailedTasks* createDetailedTasks( bool useInternalDeps, const GridP& grid,
+                                         const GridP& oldGrid);
+
+
+     inline DetailedTasks* getDetailedTasks() { return dts_; }
+
+     inline Scheduler::tgType getType() { return type_; }
 
      /// This will go through the detailed tasks and create the 
      /// dependencies need to communicate data across separate
      /// processors.  Calls the private createDetailedDependencies
      /// for each task as a helper.
-     void createDetailedDependencies(DetailedTasks*, LoadBalancer* lb);
+     void createDetailedDependencies();
 
      /// Connects the tasks, but does not sort them.
      /// Used for the MixedScheduler, this routine has the side effect
@@ -124,11 +134,6 @@ WARNING
      /// by each MPI process.
      void nullSort( vector<Task*>& tasks );
      
-     /// Get all of the requires needed from the old data warehouse
-     /// (carried forward).
-     const vector<const Task::Dependency*>& getInitialRequires() const
-       { return d_initRequires; }
-
      /// Set the requires need from the old data warehouse.
      const set<const VarLabel*, VarLabel::Compare>&
        getInitialRequiredVars() const
@@ -137,6 +142,8 @@ WARNING
      int getNumTasks() const;
      Task* getTask(int i);
 
+     void remapTaskDWs(int dwmap[]);
+
      /// Assigns unique id numbers to each dependency based on name,
      /// material index, and patch.  In other words, even though a
      /// number of tasks depend on the same data, they create there
@@ -144,6 +151,10 @@ WARNING
      /// that the dependencies are actually the same, and gives them
      /// the same id number.
      void assignUniqueMessageTags();
+
+     /// sets the iteration of the current taskgraph in a multi-TG environment
+     /// starting with 0
+     void setIteration(int iter) {currentIteration = iter;}
      
      vector<Task*>& getTasks() {
        return d_tasks;
@@ -152,7 +163,7 @@ WARNING
      /// Makes and returns a map that associates VarLabel names with
      /// the materials the variable is computed for.
      typedef map< string, list<int> > VarLabelMaterialMap;
-     VarLabelMaterialMap* makeVarLabelMaterialMap();
+     void makeVarLabelMaterialMap(VarLabelMaterialMap* result);
    private:
      typedef multimap<const VarLabel*, Task::Dependency*, VarLabel::Compare>
        CompMap;
@@ -183,19 +194,18 @@ WARNING
      /// what addDependencyEdges does for setupTaskConnections.  This will
      /// set up the data dependencies that need to be communicated between
      /// processors.
-     void createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
-				     DetailedTask* task, Task::Dependency* req,
-				     CompTable& ct, bool modifies);
+     void createDetailedDependencies(DetailedTask* task, Task::Dependency* req, 
+                                     CompTable& ct, bool modifies);
      
      /// Makes a DetailedTask from task with given PatchSubset and 
      /// MaterialSubset.
-     void createDetailedTask(DetailedTasks* tasks, Task* task,
+     void createDetailedTask(Task* task,
 			     const PatchSubset* patches,
 			     const MaterialSubset* matls);
      
      /// find the processor that a variable (req) is on given patch and 
      /// material.
-     int findVariableLocation(LoadBalancer* lb, Task::Dependency* req,
+     int findVariableLocation(Task::Dependency* req,
 			      const Patch* patch, int matl);
 
      TaskGraph(const TaskGraph&);
@@ -217,13 +227,18 @@ WARNING
       
      vector<Task*>        d_tasks;
      vector<Task::Edge*> edges;
-     SchedulerCommon* sc;
-     const ProcessorGroup* d_myworld;
 
+     SchedulerCommon* sc;
+     LoadBalancer* lb;
+     const ProcessorGroup* d_myworld;
+     Scheduler::tgType type_;
+     DetailedTasks         * dts_;
+
+     // how many times this taskgraph has executed this timestep
+     int currentIteration;
 
       // data required from old data warehouse
      set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
-     vector<const Task::Dependency*> d_initRequires;
 
      typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare>
      ReductionTasksMap;

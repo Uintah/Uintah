@@ -114,15 +114,15 @@ void Wave::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int step, int nsteps)
+Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   if(integration == "Euler"){
     Task* task = scinew Task("timeAdvance",
-                             this, &Wave::timeAdvanceEuler, step, nsteps);
+                             this, &Wave::timeAdvanceEuler);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
     task->requires(Task::OldDW, pi_label, Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
-      addRefineDependencies(task, phi_label, step, nsteps);
+      addRefineDependencies(task, phi_label, true, true);
     }
     //task->requires(Task::OldDW, sharedState_->get_delt_label());
     task->computes(phi_label);
@@ -130,11 +130,12 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int step, int
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   } else if(integration == "RK4"){
     Task* task = scinew Task("setupRK4",
-                             this, &Wave::setupRK4, step, nsteps);
+                             this, &Wave::setupRK4);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
     task->requires(Task::OldDW, pi_label, Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
-      addRefineDependencies(task, phi_label, step, nsteps);
+      // TODO, fix calls to addRefineDependencies and refineFaces
+      addRefineDependencies(task, phi_label, true, true);
     }
     task->computes(phi_label);
     task->computes(pi_label);
@@ -143,7 +144,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int step, int
     for(int i=0;i<4;i++){
       Step* s = &rk4steps[i];
       Task* task = scinew Task("timeAdvance",
-                               this, &Wave::timeAdvanceRK4, s, step, nsteps);
+                               this, &Wave::timeAdvanceRK4, s);
       //task->requires(Task::OldDW, sharedState_->get_delt_label());
       task->requires(Task::OldDW, phi_label, Ghost::None);
       task->requires(Task::OldDW, pi_label, Ghost::None);
@@ -151,7 +152,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int step, int
       task->requires(s->cur_dw, s->curpi_label, Ghost::None, 0);
 
       if(level->getIndex()>0){        // REFINE 
-        addRefineDependencies(task, s->curphi_label, (s->cur_dw == Task::OldDW?step:step+1), nsteps);
+        addRefineDependencies(task, s->curphi_label, true, true);
       }
       task->computes(s->newphi_label);
       task->computes(s->newpi_label);
@@ -210,9 +211,9 @@ void Wave::computeStableTimestep(const ProcessorGroup*,
 
 // This could be done with the RK4 version below, but this is simpler...
 void Wave::timeAdvanceEuler(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw, int step, int nsteps)
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   const Level* coarseLevel = 0;
@@ -238,7 +239,7 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
 
       if(level->getIndex() > 0){        // REFINE
         refineFaces(patch, level, coarseLevel, oldPhi.castOffConst(),
-                    phi_label, step, nsteps, matl, codw, cndw);
+                    phi_label, matl, codw, cndw);
       }                      
 
       constCCVariable<double> oldPi;
@@ -285,7 +286,7 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
 void Wave::setupRK4(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
-                    DataWarehouse* old_dw, DataWarehouse* new_dw, int step, int nsteps)
+                    DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   const Level* coarseLevel = 0;
@@ -308,7 +309,7 @@ void Wave::setupRK4(const ProcessorGroup*,
 
       if(level->getIndex() > 0){        // REFINE
         refineFaces(patch, level, coarseLevel, oldPhi.castOffConst(),
-                    phi_label, step, nsteps, matl, codw, cndw);
+                    phi_label, matl, codw, cndw);
       }                      
 
       constCCVariable<double> oldPi;
@@ -331,7 +332,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw, DataWarehouse* new_dw,
-                          Wave::Step* s, int step, int nsteps)
+                          Wave::Step* s)
 {
   const Level* level = getLevel(patches);
   const Level* coarseLevel = 0;
@@ -359,7 +360,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
 
       if(level->getIndex() > 0){        // REFINE
         refineFaces(patch, level, coarseLevel, curPhi.castOffConst(),
-                    phi_label, s->cur_dw == Task::OldDW ? step: step+1, nsteps, matl, codw, cndw);
+                    phi_label, matl, codw, cndw);
       }                      
 
 
@@ -376,7 +377,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
 
       if(level->getIndex() > 0){        // REFINE
         refineFaces(patch, level, coarseLevel, oldPhi.castOffConst(),
-                    phi_label, step, nsteps, matl, codw, cndw);
+                    phi_label, matl, codw, cndw);
       }                      
 
       constCCVariable<double> oldPi;

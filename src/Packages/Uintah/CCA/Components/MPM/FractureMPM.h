@@ -85,12 +85,12 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(const LevelP& level, 
-				   SchedulerP&, int step, int nsteps );
+				   SchedulerP&);
 
   void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
 
   void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
-                               int step, int nsteps);
+                               bool, bool);
 
   void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
 

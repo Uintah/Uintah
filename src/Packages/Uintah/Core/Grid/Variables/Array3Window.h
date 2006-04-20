@@ -6,6 +6,15 @@
 #include <limits.h>
 #include <Core/Geometry/IntVector.h>
 
+#if SCI_ASSERTION_LEVEL >= 3
+// test the range and throw a more informative exception
+// instead of testing one index's range
+#include <Core/Exceptions/InternalError.h>
+#include <iostream>
+#include <sstream>
+using std::ostringstream;
+#endif
+
 /**************************************
 
 CLASS
@@ -64,9 +73,20 @@ namespace Uintah {
       }
       inline T& get(const IntVector& idx) {
 	 ASSERT(data);
-	 CHECKARRAYBOUNDS(idx.x(), lowIndex.x(), highIndex.x());
-	 CHECKARRAYBOUNDS(idx.y(), lowIndex.y(), highIndex.y());
-	 CHECKARRAYBOUNDS(idx.z(), lowIndex.z(), highIndex.z());
+#if SCI_ASSERTION_LEVEL >= 3
+          // used to be several CHECKARRAYBOUNDS, but its lack of information
+          // has bitten me a few times.... BJW
+          bool bad = false;
+          if (idx.x() < lowIndex.x() || idx.x() >= highIndex.x()) bad = true;
+          if (idx.y() < lowIndex.y() || idx.y() >= highIndex.y()) bad = true;
+          if (idx.z() < lowIndex.z() || idx.z() >= highIndex.z()) bad = true;
+          if (bad) {
+            ostringstream ostr;
+            ostr << "Index not in range of window (on get): index: " << idx << " window low " 
+                 << lowIndex << " window high " << highIndex;
+            throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+          }
+#endif
 	 return data->get(idx-offset);
       }
       
@@ -152,12 +172,25 @@ namespace Uintah {
       {
 	// null data can be used for a place holder in OnDemandDataWarehouse
 	if (data != 0) {
-	  CHECKARRAYBOUNDS(lowIndex.x()-offset.x(), 0, data->size().x());
-	  CHECKARRAYBOUNDS(lowIndex.y()-offset.y(), 0, data->size().y());
-	  CHECKARRAYBOUNDS(lowIndex.z()-offset.z(), 0, data->size().z());
-	  CHECKARRAYBOUNDS(highIndex.x()-offset.x(), 0, data->size().x()+1);
-	  CHECKARRAYBOUNDS(highIndex.y()-offset.y(), 0, data->size().y()+1);
-	  CHECKARRAYBOUNDS(highIndex.z()-offset.z(), 0, data->size().z()+1);
+#if SCI_ASSERTION_LEVEL >= 3
+          // used to be several CHECKARRAYBOUNDS, but its lack of information
+          // has bitten me a few times.... BJW
+          IntVector low(lowIndex-offset);
+          IntVector high(highIndex-offset);
+          bool bad = false;
+          if (low.x() < 0 || low.x() >= data->size().x()) bad = true;
+          if (low.y() < 0 || low.y() >= data->size().y()) bad = true;
+          if (low.z() < 0 || low.z() >= data->size().z()) bad = true;
+          if (high.x() < 0 || high.x() > data->size().x()) bad = true;
+          if (high.y() < 0 || high.y() > data->size().y()) bad = true;
+          if (high.z() < 0 || high.z() > data->size().z()) bad = true;;
+          if (bad) {
+            ostringstream ostr;
+            ostr << "Data not in range of new window: data size: " << data->size() << " window low " 
+                 << lowIndex << " window high " << highIndex;
+            throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+          }
+#endif
 	  data->addReference();
 	}
 	else {

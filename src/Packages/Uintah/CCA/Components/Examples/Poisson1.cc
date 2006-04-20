@@ -58,8 +58,7 @@ void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-Poisson1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
-			       int, int )
+Poisson1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			   this, &Poisson1::timeAdvance);

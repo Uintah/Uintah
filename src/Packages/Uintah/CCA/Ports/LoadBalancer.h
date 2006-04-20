@@ -12,12 +12,13 @@
 
 #include <string>
 
+//#include <Packages/Uintah/CCA/Ports/share.h>
+
 namespace Uintah {
 
   class Patch;
   class ProcessorGroup;
   class DetailedTasks;
-  class DetailedTasks3;
   class Scheduler;
   class VarLabel;
 /****************************************
@@ -51,7 +52,7 @@ WARNING
 
   //! The Load Balancer is responsible for assigning tasks to do their work
   //! on specified processors.  Different subclasses differ in the way this is done.
-  class LoadBalancer : public UintahParallelPort {
+  class SCISHARE LoadBalancer : public UintahParallelPort {
   public:
     LoadBalancer();
     virtual ~LoadBalancer();
@@ -60,7 +61,6 @@ WARNING
     //! Uses the patchwise processor assignment. 
     //! @see getPatchwiseProcessorAssignment.
     virtual void assignResources(DetailedTasks& tg) = 0;
-    virtual void assignResources(DetailedTasks3& tg) = 0;
 
     //! Gets the processor that this patch will be assigned to.  
     //! This is different with the different load balancers.
@@ -88,7 +88,7 @@ WARNING
     //! Creates the Load Balancer's Neighborhood.  
     //! This is a vector of patches that represent any patch that this load 
     //! balancer will potentially have to receive data from.
-    virtual void createNeighborhood(const GridP& grid) = 0;
+    virtual void createNeighborhood(const GridP& grid, const GridP& oldGrid) = 0;
 
     //! Asks the Load Balancer if it is dynamic.
     virtual bool isDynamic() { return false; }

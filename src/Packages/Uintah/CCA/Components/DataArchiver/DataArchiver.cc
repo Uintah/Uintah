@@ -766,7 +766,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
                                int addMaterial /*=0*/)
 {
   //this function should get called exactly once per timestep
-
+  
   //  static bool wereSavesAndCheckpointsInitialized = false;
   dbg << "DataArchiver finalizeTimestep, delt= " << delt << endl;
   d_tempElapsedTime = time+delt;
@@ -826,7 +826,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
       map<int, MaterialSetP>::iterator liter;
       for (liter = saveItem.matlSet_.begin(); liter != saveItem.matlSet_.end(); liter++) {
         const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
-        t->requires(Task::NewDW, var, matls);
+        t->requires(Task::NewDW, var, matls, true);
         break; // this might break things later, but we'll leave it for now
       }
     }
@@ -849,7 +849,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
       map<int, MaterialSetP>::iterator liter;
       for (liter = saveItem.matlSet_.begin(); liter != saveItem.matlSet_.end(); liter++) {
         const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
-        t->requires(Task::NewDW, var, matls);
+        t->requires(Task::NewDW, var, matls, true);
         break;
       }
     }
@@ -1391,10 +1391,11 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
         
         const MaterialSet* matls = iter->second.get_rep();
 
-        Task* t = scinew Task((isThisCheckpoint ? "DataArchiver::checkpoint" : "DataArchiver::output"), 
-                              this, &DataArchiver::output,
+        string taskName = string(isThisCheckpoint ? "DataArchiver::checkpoint: " : "DataArchiver::output: ") + saveIter->label_->getName();
+
+        Task* t = scinew Task(taskName, this, &DataArchiver::output,
                               &baseDir, (*saveIter).label_, isThisCheckpoint);
-        t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
+        t->requires(Task::NewDW, (*saveIter).label_, Ghost::None, 0, true);
         t->setType(Task::Output);
         sched->addTask(t, patches, matls);
         n++;
@@ -1548,6 +1549,7 @@ DataArchiver::output(const ProcessorGroup*,
       (!d_wasCheckpointTimestep && isThisCheckpoint)) {
     return;
   }
+
   bool isReduction = var->typeDescription()->isReductionVariable();
 
   // this task should be called once per variable (per patch/matl subset).

@@ -401,7 +401,7 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev, SchedulerP& sched)
 }
 
 void
-ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
+ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
   if (!d_perproc_patches) {
@@ -971,7 +971,8 @@ void ImpMPM::iterate(const ProcessorGroup*,
                            old_dw->setScrubbing(DataWarehouse::ScrubNone);
   DataWarehouse::ScrubMode new_dw_scrubmode =
                            new_dw->setScrubbing(DataWarehouse::ScrubNone);
-  subsched->initialize(3, 1, old_dw, new_dw);
+  subsched->initialize(3, 1);
+  subsched->setParentDWs(old_dw, new_dw);
   subsched->clearMappings();
   subsched->mapDataWarehouse(Task::ParentOldDW, 0);
   subsched->mapDataWarehouse(Task::ParentNewDW, 1);

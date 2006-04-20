@@ -72,13 +72,12 @@ WARNING
       
      //////////
      // Insert Documentation Here:
-     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&,
-				      int step, int nsteps);
+     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
      virtual void scheduleRefine(const PatchSet* patches, 
 				 SchedulerP& scheduler);
      virtual void scheduleRefineInterface(const LevelP& fineLevel, 
 				          SchedulerP& scheduler,
-					  int step, int nsteps);
+					  bool needCoarseOld, bool needCoarseNew);
      virtual void scheduleCoarsen(const LevelP& coarseLevel, 
 				  SchedulerP& scheduler);
 
@@ -94,6 +93,9 @@ WARNING
      // Returned time is the new dt to use.
      virtual double recomputeTimestep(double delt);
      virtual bool restartableTimesteps();
+
+     // use this to get the progress ratio of an AMR subcycle
+     double getSubCycleProgress(DataWarehouse* fineNewDW);
 
      // if we have a "special" lockstep component, have it take care of its own
      // task graph scheduling rather than have the SimController do it

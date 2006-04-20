@@ -119,6 +119,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
 {
   d_sharedState = sharedState;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
 
   //__________________________________
   //  M P M
@@ -126,6 +127,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_mpm->setWithICE();
   d_ice->setWithMPM();
   d_mpm->attachPort("output",dataArchiver);
+  d_mpm->attachPort("scheduler",sched);
   d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
   d_8or27 = d_mpm->flags->d_8or27; 
   if(d_8or27==8){
@@ -164,6 +166,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("MPMICE needs a dataArchiver component to work", __FILE__, __LINE__);
   }
   d_ice->attachPort("output", dataArchiver);
+  d_ice->attachPort("scheduler", sched);
   
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver){
@@ -294,11 +297,10 @@ void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
 //______________________________________________________________________
 //
 void
-MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched, 
-                            int step , int nsteps )
+MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 {
   // Only do scheduling on level 0 for lockstep AMR
-  if(nsteps == 1 && inlevel->getIndex() > 0)
+  if(inlevel->timeRefinementRatio() == 1 && inlevel->getIndex() > 0)
     return;
 
   // If we have a finer level, then assume that we are doing multilevel MPMICE
@@ -318,14 +320,12 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
 
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
-  double AMR_subCycleVar = double(step)/double(nsteps);
   cout_doing << "---------------------------------------------------------Level ";
   if(do_mlmpmice){
     cout_doing << inlevel->getIndex() << " (ICE) " << mpm_level->getIndex() << " (MPM)";
   } else {
     cout_doing << inlevel->getIndex();
   }
-  cout_doing << "  step " << step << endl;
 
  //__________________________________
  // Scheduling
@@ -537,8 +537,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
     d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,
                                                              maxMach_PSS);
                                    
-    d_ice->scheduleAdvectAndAdvanceInTime(  sched, ice_patches, AMR_subCycleVar,
-                                                                ice_matls_sub,
+    d_ice->scheduleAdvectAndAdvanceInTime(  sched, ice_patches, ice_matls_sub,
                                                                 mpm_matls_sub,
                                                                 press_matl,
                                                                 ice_matls);
@@ -932,6 +931,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,MIlb->temp_CCLabel,      mpm_matls, gn);  
   t->requires(Task::NewDW,Ilb->rho_CCLabel,        mpm_matls, gn);  
   t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
+  t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
   t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
  
  
@@ -2412,11 +2412,10 @@ void MPMICE::printTask(const PatchSubset* patches,
 //______________________________________________________________________
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& scheduler,
-                                     int step, 
-                                     int nsteps)
+                                     bool needOld, bool needNew)
 {
-  d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
-  d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
+  d_ice->scheduleRefineInterface(fineLevel, scheduler, needOld, needNew);
+  d_mpm->scheduleRefineInterface(fineLevel, scheduler, needOld, needNew);
 
   if(fineLevel->getIndex() > 0 && d_sharedState->isCopyDataTimestep()){
     cout_doing << d_myworld->myrank() 
@@ -3039,7 +3038,7 @@ void MPMICE::coarsenVariableNC(const ProcessorGroup*,
         }
 
         constNCVariable<T> fine_q_NC;
-        new_dw->getRegion(fine_q_NC,  variable, indx, fineLevel, fl, fh);
+        new_dw->getRegion(fine_q_NC,  variable, indx, fineLevel, fl, fh, false);
 
         //__________________________________
         //  call the coarsening function
