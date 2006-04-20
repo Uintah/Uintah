@@ -17,6 +17,7 @@ using namespace std;
 
 //#define LOG
 #undef LOG
+#undef DEBUG_PETSC
 
 MPMPetscSolver::MPMPetscSolver()
 {
@@ -37,29 +38,36 @@ MPMPetscSolver::~MPMPetscSolver()
 void MPMPetscSolver::initialize()
 {
 #ifdef HAVE_PETSC
-#ifdef LOG
-  int argc = 2;
-#else
-  int argc = 2;
+  // store in a vector so we can customize the settings easily
+  vector<char*> args;
+#ifdef DEBUG_PETSC
+  args.push_back("ImpMPM::problemSetup");
+  args.push_back("-on_error_attach_debugger");
 #endif
-  char** argv;
-  argv = new char*[argc];
-  argv[0] = "ImpMPM::problemSetup";
-  argv[1] = "-on_error_attach_debugger";
 #ifdef LOG
-  argv[0] = "-log_summary";
-  argv[1] = "-log_info";
+  args.push_back("-log_summary");
+  args.push_back("-log_info");
 #if 0
-  argv[2] = "-log_exclude_actions";
-  argv[3] = "-log_exclude_objects";
-  argv[4] = "-log_info";
-  argv[5] = "-trmalloc";
-  argv[6] = "-trdump";
-  argv[7] = "-trmalloc_log";
-  argv[8] = "-log_summary";
+  args.push_back("-log_exclude_actions");
+  args.push_back("-log_exclude_objects");
+  args.push_back("-log_info");
+  args.push_back("-trmalloc");
+  args.push_back("-trdump");
+  args.push_back("-trmalloc_log");
+  args.push_back("-log_summary");
 #endif
 #endif
 
+  int argc = args.size();
+  char** argv = 0;
+
+  // copy the vector to argv, as I think petsc wants to store it around -- bjw
+  if (argc > 0) {
+    argv = new char*[argc];
+    for (unsigned i = 0; i < argc; i++) {
+      argv[i] = args[i];
+    }
+  }
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
 #endif
 }
