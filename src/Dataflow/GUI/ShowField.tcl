@@ -61,10 +61,15 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-def-color-b
 	global $this-def-color-a
 	global $this-node_scale
+	global $this-node_scaleNV
 	global $this-edge_scale
+	global $this-edge_scaleNV
 	global $this-vectors_scale
+	global $this-vectors_scaleNV
 	global $this-tensors_scale
+	global $this-tensors_scaleNV
 	global $this-scalars_scale
+	global $this-scalars_scaleNV
 	global $this-node-resolution
 	global $this-edge-resolution
 	global $this-data-resolution
@@ -104,10 +109,15 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-tensor_display_type Boxes
 	set $this-scalar_display_type Points
 	set $this-node_scale 0.03
+	set $this-node_scaleNV 0.03
 	set $this-edge_scale 0.015
+	set $this-edge_scaleNV 0.015
 	set $this-vectors_scale 0.30
+	set $this-vectors_scaleNV 0.30
 	set $this-tensors_scale 0.30
+	set $this-tensors_scaleNV 0.30
 	set $this-scalars_scale 0.30
+	set $this-scalars_scaleNV 0.30
 	set $this-def-color-r 0.5
 	set $this-def-color-g 0.5
 	set $this-def-color-b 0.5
@@ -160,11 +170,90 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-field-name-update 1
 	set $this-tensors-emphasis 0.825
 	set $this-approx-div 1
+
+	trace variable $this-node_scaleNV w "$this new_node_scale"
+	trace variable $this-edge_scaleNV w "$this new_edge_scale"
+	trace variable $this-vectors_scaleNV w "$this new_vectors_scale"
+	trace variable $this-tensors_scaleNV w "$this new_tensors_scale"
+	trace variable $this-scalars_scaleNV w "$this new_scalars_scale"
+
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vector_data w "$this vector_tab_changed"
 	trace variable $this-has_tensor_data w "$this tensor_tab_changed"
 	trace variable $this-has_scalar_data w "$this scalar_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
+	# no C side component for these variables
+	global $this-ns_slider
+	set $this-ns_slider "not.set.yet"
+	global $this-es_slider
+	set $this-es_slider "not.set.yet"
+	global $this-vs_slider
+	set $this-vs_slider "not.set.yet"
+	global $this-ts_slider
+	set $this-ts_slider "not.set.yet"
+	global $this-ss_slider
+	set $this-ss_slider "not.set.yet"
+    }
+
+    method new_node_scale {a1 a2 a3} {
+	global $this-ns_slider
+	set val [set $this-node_scaleNV]
+	upvar $this-ns_slider ns_slider
+	if {[info exists $this-ns_slider] && [winfo exists $ns_slider]} {
+	    $ns_slider newvalue $val
+	} else {
+	    set $this-node_scale [set $this-node_scaleNV]
+	}
+	set $this-node_scaleNV -0.0
+    }
+    
+    
+    method new_edge_scale {a1 a2 a3} {
+	global $this-es_slider
+	set val [set $this-edge_scaleNV]
+	upvar $this-es_slider es_slider
+	if {[info exists $this-es_slider] && [winfo exists $es_slider]} {
+	    $es_slider newvalue $val
+	} else {
+	    set $this-edge_scale [set $this-edge_scaleNV]
+	}
+	set $this-edge_scaleNV -0.0
+    }
+
+    method new_vectors_scale {a1 a2 a3} {
+	global $this-vs_slider
+	set val [set $this-vectors_scaleNV]
+	upvar $this-vs_slider vs_slider
+	if {[info exists $this-vs_slider] && [winfo exists $vs_slider]} {
+	    $vs_slider newvalue $val
+	} else {
+	    set $this-vectors_scale [set $this-vectors_scaleNV]
+	}
+	set $this-vectors_scaleNV -0.0
+    }
+
+    method new_tensors_scale {a1 a2 a3} {
+	global $this-ts_slider
+	set val [set $this-tensors_scaleNV]
+	upvar $this-ts_slider ts_slider
+	if {[info exists $this-ts_slider] && [winfo exists $ts_slider]} {
+	    $ts_slider newvalue $val
+	} else {
+	    set $this-tensors_scale [set $this-tensors_scaleNV]
+	}
+	set $this-tensors_scaleNV -0.0
+    }
+    
+    method new_scalars_scale {a1 a2 a3} {
+	global $this-ss_slider
+	set val [set $this-scalars_scaleNV]
+	upvar $this-ss_slider ss_slider
+	if {[info exists $this-ss_slider] && [winfo exists $ss_slider]} {
+	    $ss_slider newvalue $val
+	} else {
+	    set $this-scalars_scale [set $this-scalars_scaleNV]
+	}
+	set $this-scalars_scaleNV -0.0
     }
 
     method raiseColor {col color colMsg} {
@@ -218,7 +307,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	 pack $frame.colorFrame.set_color $frame.colorFrame.col -side left -padx 2
 	 pack $frame.colorFrame -side left
 
-    }
+     }
+
 
     method set_active_tab {act} {
 	global $this-active_tab
@@ -279,9 +369,12 @@ itcl_class SCIRun_Visualization_ShowField {
 	pack $node.show_nodes $node.nodes_transparency $node.udc $node.radio \
 	    -fill y -anchor w
 
+	global $this-ns_slider
 	expscale $node.slide -label NodeScale \
-		-orient horizontal \
-		-variable $this-node_scale
+	    -orient horizontal \
+	    -variable $this-node_scale
+
+	set $this-ns_slider $node.slide
 
 	bind $node.slide.scale <ButtonRelease> "$this-c node_scale"
 
@@ -320,10 +413,11 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	pack $edge.show_edges $edge.edges_transparency $edge.udc $edge.radio \
 		-side top -fill y -anchor w
-
+	global $this-es_slider
 	expscale $edge.slide -label CylinderScale \
 		-orient horizontal \
 		-variable $this-edge_scale
+	set $this-es_slider $edge.slide
 
 	bind $edge.slide.scale <ButtonRelease> "$this-c edge_scale"
 
@@ -403,10 +497,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	        $vector.bidirectional $vector.usedefcol \
 		-side top -fill y -anchor w
 
+	global $this-vs_slider
 	expscale $vector.slide -label "Vector Scale" \
 		-orient horizontal \
 		-variable $this-vectors_scale
-
+	set $this-vs_slider $vector.slide
 	bind $vector.slide.scale <ButtonRelease> "$this-c data_scale"
 
 
@@ -446,11 +541,12 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	pack $tensor.show_tensors $tensor.radio $tensor.usedefcol \
 		-side top -fill y -anchor w
-
+	
+	global $this-ts_slider
 	expscale $tensor.slide -label "Tensor Scale" \
 		-orient horizontal \
 		-variable $this-tensors_scale
-
+	set $this-ts_slider $tensor.slide
 	bind $tensor.slide.scale <ButtonRelease> "$this-c data_scale"
 
 	iwidgets::labeledframe $tensor.resolution \
@@ -494,10 +590,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	    $scalar.usedefcol $scalar.radio \
 	    -side top -fill y -anchor w
 
+	global $this-ss_slider
 	expscale $scalar.slide -label "Scalar Scale" \
 		-orient horizontal \
 		-variable $this-scalars_scale
-
+	set $this-ss_slider $scalar.slide
 	bind $scalar.slide.scale <ButtonRelease> "$this-c data_scale"
 
 	iwidgets::labeledframe $scalar.resolution \
@@ -695,21 +792,33 @@ itcl_class SCIRun_Visualization_ShowField {
 	
 	#add bottom frame for execute and dismiss buttons
 	frame $window.control -relief groove -borderwidth 2 -width 500
-	frame $window.def_col -borderwidth 2
+	frame $window.def
+	frame $window.def.vals
+	frame $window.def.col
+	frame $window.def.col.f
+	frame $window.def.col.le
 
-	addColorSelection $window.def_col "Default Color" $this-def-color \
-		"default_color_change"
+	pack $window.def.col $window.def.vals -side left -padx 10
+	label $window.def.col.le.approxl -text "PWL Approx Div:"
+	entry $window.def.col.le.approx -textvar $this-approx-div -width 4
 
-	button $window.def_col.calcdefs -text "Calculate Defaults" \
+	bind $window.def.col.le.approx <KeyRelease> "$this-c approx"
+
+
+
+	addColorSelection $window.def.col.f "Default Color" \
+	    $this-def-color "default_color_change"
+
+	button $window.def.vals.calcdefs -text "Calculate Defaults" \
 		-command "$this-c calcdefs"
+	checkbutton $window.def.vals.use_defaults \
+		-text "Use Defaults" \
+		-variable $this-use-defaults
 
-	label $window.def_col.approxl -text "Approximation Divisions"
-	entry $window.def_col.approx -textvar $this-approx-div
-
-	bind $window.def_col.approx <KeyRelease> "$this-c approx"
-
-	pack $window.def_col.calcdefs $window.def_col.approxl \
-	    $window.def_col.approx -padx 20
+	pack $window.def.col.f $window.def.col.le -side top -pady 2 -anchor w
+	pack $window.def.col.le.approxl $window.def.col.le.approx -side left
+	pack $window.def.vals.use_defaults $window.def.vals.calcdefs \
+	    -side top -pady 2
 
 	frame $window.fname -borderwidth 2
 	label $window.fname.label -text "Field Name"
@@ -747,7 +856,8 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	pack $window.options -padx 2 -pady 2 -side top -fill x -expand 1
 	#pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
-	pack $window.def_col $window.control -padx 2 -pady 2 -side top
+	pack $window.def $window.control \
+	    -padx 2 -pady 2 -side top
 
 	pack $window.control.exc_policy -side top -fill both
 
