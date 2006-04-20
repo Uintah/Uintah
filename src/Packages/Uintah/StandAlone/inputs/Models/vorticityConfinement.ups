@@ -281,10 +281,7 @@
         </constants>       
         
           <geom_object>
-             <box label = "world">
-               <min>       [ -5, -5, -0.1 ]    </min>
-               <max>       [  5,  5,  0.1 ]   </max>
-             </box>
+             <box label = "world">  </box>
              <scalar>    0.00   </scalar>
           </geom_object>
 	</scalar>

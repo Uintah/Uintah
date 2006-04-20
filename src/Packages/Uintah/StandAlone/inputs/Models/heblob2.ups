@@ -264,14 +264,10 @@
               <temperature>   300.0                    </temperature>
            </geom_object>
            <geom_object>
-                <cylinder label = "HeBlob">
-                   <bottom>           [0.0,0.0,-5]    </bottom>
-                   <top>              [0.0,0.0, 5]    </top>
-                   <radius>           0.5              </radius>
-                </cylinder>
+              <cylinder label = "HeBlob">              </cylinder>
               <res>                [2,2,2]             </res>
               <velocity>           [0.0,0.0,0.0]       </velocity>
-              <density>        0.1626119988637622          </density>
+              <density>        0.1626119988637622      </density>
               <pressure>      101325.0                 </pressure>     
               <temperature>   300.0                    </temperature>
            </geom_object>
@@ -307,21 +303,13 @@
                   <min>       [ -6.0, -6.0, -6.0 ]   </min>
                   <max>       [ 6.0, 6.0, 6.0 ]      </max>
                 </box>
-                <cylinder label = "HeBlob">
-                   <bottom>           [0.0,0.0,-5]   </bottom>
-                   <top>              [0.0,0.0, 5]    </top>
-                   <radius>           0.5             </radius>
-                </cylinder>
+                <cylinder label = "HeBlob">          </cylinder>
               </difference>
               <scalar>    0.00   </scalar>
            </geom_object>
            <geom_object>
-               <cylinder label = "HeBlob">
-                  <bottom>           [0.0,0.,-5]   </bottom>
-                  <top>              [0.0,0., 5]   </top>
-                  <radius>           0.5             </radius>
-               </cylinder>
-               <scalar>    1.00   </scalar>
+              <cylinder label = "HeBlob">           </cylinder>
+              <scalar>    1.00   </scalar>
            </geom_object>
 	</scalar>
       </Model>

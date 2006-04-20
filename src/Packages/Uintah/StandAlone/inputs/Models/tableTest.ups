@@ -241,11 +241,8 @@
 	   <diffusivity>0</diffusivity>
        </constants> 
           <geom_object>
-             <box label = "world">
-                  <min>       [-5, -5, -5]   </min>
-                  <max>       [5,   8,  5]   </max>
-             </box>
-             <scalar>    0.00   </scalar>
+             <box label = "world">  </box>
+             <scalar>    0.00       </scalar>
           </geom_object>
 	</scalar>
       

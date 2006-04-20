@@ -291,10 +291,7 @@
         </constants>
            <geom_object>
              <difference>
-                <box label="wholeDomain">
-                    <min>       [ 0.0, 0.0, 0.0 ]       </min>
-                    <max>       [ 6.0, 6.0, 6.0 ]       </max>
-                </box>
+                <box label="wholeDomain">               </box>
                 <box label="blobInMiddle">
                     <min>       [ 2.0, 2.0, 2.0 ]       </min>
                     <max>       [ 3.0, 3.0, 3.0 ]       </max>

@@ -413,11 +413,8 @@
            <AMR_Refinement_Criteria>    1.6  </AMR_Refinement_Criteria> 
         </constants> 
           <geom_object>
-             <box label = "world">
-                  <min>       [-10, -10, -10]   </min>
-                  <max>       [10,   20,  10]   </max>
-             </box>
-             <scalar>    0.00   </scalar>
+             <box label = "world">  </box>
+             <scalar>    0.00       </scalar>
           </geom_object>
 	</scalar>
       

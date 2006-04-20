@@ -226,11 +226,7 @@
               <temperature>   300.0                    </temperature>
            </geom_object>
            <geom_object>
-                <cylinder label = "fuelSlug">
-                   <bottom>           [0.0,0.0,0.0]    </bottom>
-                   <top>              [0.0,0.5,0.0]    </top>
-                   <radius>           0.1              </radius>
-                </cylinder>
+                <cylinder label = "fuelSlug">          </cylinder>
               <res>                [2,2,2]             </res>
               <velocity>           [0.0,5.0,0.0]       </velocity>
               <density>       1.1792946927374306000e+00</density>
@@ -266,25 +262,14 @@
         </reaction_constants>
            <geom_object>
               <difference>
-                <box label="world">
-                  <min>       [ 0.0, 0.0, 0.0 ]   </min>
-                  <max>       [ 6.0, 6.0, 6.0 ]   </max>
-                </box>
-                <cylinder label = "fuelSlug">
-                   <bottom>           [0.0,0.0,0.0]   </bottom>
-                   <top>              [0.0,0.5,0.0]   </top>
-                   <radius>           0.1             </radius>
-                </cylinder>
+                <box label="world">           </box>
+                <cylinder label = "fuelSlug"> </cylinder>
               </difference>
               <scalar>    0.00   </scalar>
            </geom_object>
            <geom_object>
-               <cylinder label = "fuelSlug">
-                  <bottom>           [0.0,0.0,0.0]   </bottom>
-                  <top>              [0.0,0.5,0.0]   </top>
-                  <radius>           0.1             </radius>
-               </cylinder>
-               <scalar>    1.00   </scalar>
+             <cylinder label = "fuelSlug">  </cylinder>
+             <scalar>    1.00   </scalar>
            </geom_object>
 	</scalar>
       </Model>
