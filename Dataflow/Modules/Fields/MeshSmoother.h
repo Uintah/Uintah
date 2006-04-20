@@ -175,6 +175,7 @@ MeshSmootherAlgoShared<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
     
   if ( err )
   {
+    cout << err << endl;
     mod->error( "Unexpected error from Mesquite code." );
     return field;
   }
@@ -195,7 +196,8 @@ MeshSmootherAlgoShared<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
   // TODO: This looks unreachable.  err is unused since we last checked it.
   if (err)
   {
-    mod->error( "Error occured during Mesquite initialization" );
+    cout << err << endl;
+    mod->error( "Error occurred during Mesquite initialization" );
     return field;
   }
 
@@ -213,7 +215,8 @@ MeshSmootherAlgoShared<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
   MSQ_CHKERR(err);
   if (err)
   {
-    mod->error( "Error occured during Mesquite smart laplacian smoothing." );
+    mod->error( "Error occurred during Mesquite smart laplacian smoothing." );
+    cout << err << endl;
     return field;
   }
 
@@ -289,6 +292,7 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
   queue_shape.set_master_quality_improver(&shape_opt,err);
   if(err)
   {
+    cout << err << endl;
     mod->error( "Unexpected error from Mesquite code." );
     return field;  
   }
@@ -312,7 +316,8 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
   // checked it.
   if(err)
   {
-    mod->error( "Error occured during Mesquite initialization." );
+    cout << err << endl;
+    mod->error( "Error occurred during Mesquite initialization." );
     return field;
   } 
   clock_t finish = clock();
@@ -329,6 +334,7 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
 
     if( err )
     {
+      cout << err << endl;
       mod->error( "Error occurred during Mesquite untangling." );
       return field;
     }
@@ -348,6 +354,7 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
       MSQ_CHKERR(err);
       if( err )
       {
+        cout << err << endl;
         mod->error( "Error occurred during smoothing operation." );
       }
     }
@@ -360,6 +367,7 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
     double time_remaining = max_cpu_time - total_time;
     if( err )
     {
+      cout << err << endl;
       mod->error( "Error occurred during Mesquite untangling." );
       return field;
     }
@@ -379,6 +387,7 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
       MSQ_CHKERR(err);
       if( err )
       {
+        cout << err << endl;
         mod->error( "Error occurred during smoothing operation." );
       }
     }
