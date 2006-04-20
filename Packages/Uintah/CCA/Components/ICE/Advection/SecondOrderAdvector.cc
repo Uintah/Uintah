@@ -19,7 +19,8 @@ SecondOrderAdvector::SecondOrderAdvector()
 
 
 SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw, 
-                                         const Patch*  patch) 
+                                         const Patch*  patch,
+                                         const bool isNewGrid) 
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
   new_dw->allocateTemporary(d_OFS,         patch, gac, 1);
@@ -27,7 +28,28 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
   new_dw->allocateTemporary(r_out_y,       patch, gac, 1); 
   new_dw->allocateTemporary(r_out_z,       patch, gac, 1);
   new_dw->allocateTemporary(d_mass_massVertex, patch, gac, 1);
-  new_dw->allocateTemporary(d_mass_slabs,      patch, gac, 1); 
+  new_dw->allocateTemporary(d_mass_slabs,      patch, gac, 1);
+  
+  // Initialize temporary variables when the grid changes
+  if(isNewGrid){   
+    double EVILNUM = -9.99666999e30;
+    CellIterator iter = patch->getCellIterator();
+    CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
+    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+      const IntVector& c = *iter;
+
+      for(int face = TOP; face <= BACK; face++ )  {
+        d_OFS[c].d_fflux[face]    = EVILNUM;
+        r_out_x[c].d_fflux[face]  = EVILNUM;
+        r_out_y[c].d_fflux[face]  = EVILNUM;
+        r_out_z[c].d_fflux[face]  = EVILNUM;
+        d_mass_slabs[c].d_data[face] = EVILNUM;
+      }
+      for(int i = 0; i< 8; i++){
+        d_mass_massVertex[c].d_vrtx[i] = EVILNUM;
+      }
+    }
+  }
 }
 
 
@@ -35,9 +57,10 @@ SecondOrderAdvector::~SecondOrderAdvector()
 {
 }
 SecondOrderAdvector* SecondOrderAdvector::clone(DataWarehouse* new_dw,
-                                                const Patch* patch)
+                                                const Patch* patch,
+                                                const bool isNewGrid)
 {
-  return scinew SecondOrderAdvector(new_dw,patch);
+  return scinew SecondOrderAdvector(new_dw,patch, isNewGrid);
 }
 
 /* ---------------------------------------------------------------------

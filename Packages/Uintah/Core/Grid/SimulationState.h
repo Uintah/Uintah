@@ -162,6 +162,9 @@ public:
 
   bool isCopyDataTimestep() { return d_isCopyDataTimestep; }
   void setCopyDataTimestep(bool is_cdt) { d_isCopyDataTimestep = is_cdt; }
+  
+  bool isRegridTimestep() { return d_isRegridTimestep; }
+  void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
   vector<vector<const VarLabel* > > d_particleState;
   vector<vector<const VarLabel* > > d_particleState_preReloc;
@@ -224,6 +227,8 @@ private:
   // a normal timestep.  (A copy data timestep is AMR's current 
   // method of getting data from an old to a new grid).
   bool d_isCopyDataTimestep;
+  
+  bool d_isRegridTimestep;
 
 }; // end class SimulationState
 

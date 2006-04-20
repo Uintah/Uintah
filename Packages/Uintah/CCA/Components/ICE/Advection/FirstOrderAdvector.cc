@@ -25,9 +25,23 @@ FirstOrderAdvector::FirstOrderAdvector()
 
 
 FirstOrderAdvector::FirstOrderAdvector(DataWarehouse* new_dw, 
-                                   const Patch* patch)
+                                       const Patch* patch,
+                                       const bool isNewGrid)
 {
-  new_dw->allocateTemporary(d_OFS,     patch, Ghost::AroundCells,1);
+  new_dw->allocateTemporary(d_OFS,patch, Ghost::AroundCells,1);
+  
+  // Initialize temporary variables when the grid changes
+  if(isNewGrid){   
+    double EVILNUM = -9.99666999e30;
+    CellIterator iter = patch->getCellIterator();
+    CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
+    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+      const IntVector& c = *iter;
+      for(int face = TOP; face <= BACK; face++ )  {
+        d_OFS[c].d_fflux[face]= EVILNUM;
+      }
+    }
+  }
 }
 
 
@@ -36,9 +50,10 @@ FirstOrderAdvector::~FirstOrderAdvector()
 }
 
 FirstOrderAdvector* FirstOrderAdvector::clone(DataWarehouse* new_dw,
-                                         const Patch* patch)
+                                              const Patch* patch,
+                                              const bool isNewGrid)
 {
-  return scinew FirstOrderAdvector(new_dw,patch);
+  return scinew FirstOrderAdvector(new_dw,patch,isNewGrid);
 }
 
 /* ---------------------------------------------------------------------
