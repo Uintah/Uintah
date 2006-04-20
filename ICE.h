@@ -80,7 +80,7 @@ namespace Uintah {
                                                 SchedulerP&);
       
       virtual void scheduleTimeAdvance( const LevelP& level, 
-                                        SchedulerP&, int step, int nsteps );
+                                        SchedulerP&);
                                              
       virtual void scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched);
 
@@ -169,12 +169,10 @@ namespace Uintah {
                                             vector<PatchSubset*> &);
       
       void computesRequires_AMR_Refluxing(Task* t, 
-                                          const double AMR_subCycleProgressVar,
                                           const MaterialSet* ice_matls);                                                                                         
       
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
-                                          const double AMR_subCycleProgressVar,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
@@ -200,9 +198,7 @@ namespace Uintah {
                                  const LevelP&,                  
                                  const PatchSet*,
                                  const MaterialSubset*,              
-                                 const MaterialSet*,
-                                 const bool firstIter); 
-                                 
+                                 const MaterialSet*);                                 
       void scheduleSetupRHS(  SchedulerP&,                
                               const PatchSet*, 
                               const MaterialSubset*,             
@@ -491,8 +487,7 @@ namespace Uintah {
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
                                   DataWarehouse*,
-                                  DataWarehouse*,
-                                  const double AMR_subCycleProgressVar);
+                                  DataWarehouse*);
                                   
 //__________________________________
 //   RF TASKS    
@@ -593,8 +588,7 @@ namespace Uintah {
                        const PatchSubset* patches,                      
                        const MaterialSubset* ,                          
                        DataWarehouse* old_dw,                           
-                       DataWarehouse* new_dw,
-                       const bool firstIteration);
+                       DataWarehouse* new_dw);
                        
       void setupRHS(const ProcessorGroup*,
                     const PatchSubset* patches,                      
@@ -628,7 +622,6 @@ namespace Uintah {
                                  DataWarehouse* old_dw,     
                                  DataWarehouse* new_dw,     
                                  LevelP level,     
-                                 Scheduler* sched,
                                  const MaterialSubset*,
                                  const MaterialSubset*);
 
@@ -951,6 +944,8 @@ namespace Uintah {
       MPMICELabel* MIlb;
       SimulationStateP d_sharedState;
       Output* dataArchiver;
+      SchedulerP d_subsched;
+      bool d_recompileSubsched;
       double d_EVIL_NUM;
       double d_SMALL_NUM; 
       double d_TINY_RHO;

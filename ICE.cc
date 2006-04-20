@@ -272,7 +272,19 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
     impSolver->getWithDefault("iters_before_timestep_restart",    
                                d_iters_before_timestep_restart, 5);
-    d_impICE = true; 
+    d_impICE = true;
+    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+    d_subsched = sched->createSubScheduler();
+    d_subsched->initialize(3,1);
+    d_subsched->setRestartable(true); 
+    d_subsched->clearMappings();
+    d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
+    d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
+    d_subsched->mapDataWarehouse(Task::OldDW, 2);
+    d_subsched->mapDataWarehouse(Task::NewDW, 3);
+  
+    d_recompileSubsched = true;
+
 #if 1
     if(d_doAMR  && solver->getName() != "hypreamr"){
       ostringstream msg;
@@ -758,13 +770,13 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
                             
-  t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);  
-  t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
-  t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0);
-  t->requires(Task::NewDW, lb->gammaLabel,         gn,  0);
-  t->requires(Task::NewDW, lb->specific_heatLabel, gn,  0);   
-  t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0);   
-  t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0);        
+  t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1, true);  
+  t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1, true);
+  t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0, true);
+  t->requires(Task::NewDW, lb->gammaLabel,         gn,  0, true);
+  t->requires(Task::NewDW, lb->specific_heatLabel, gn,  0, true);   
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0, true);   
+  t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0, true);        
   
   t->computes(d_sharedState->get_delt_label());
   sched->addTask(t,level->eachPatch(), ice_matls); 
@@ -783,8 +795,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
 void
-ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, 
-                          int step, int nsteps )
+ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
@@ -794,10 +805,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
     d_initialDt = 10000.0;
   
-  double AMR_subCycleProgressVar = double(step)/double(nsteps);  
-  
   cout_doing << d_myworld->myrank() << " --------------------------------------------------------L-" 
-             <<level->getIndex()<< "  progressVar " << AMR_subCycleProgressVar << endl;  
+             <<level->getIndex()<< endl;
   cout_doing << d_myworld->myrank() << " ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
@@ -900,11 +909,11 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   scheduleComputeLagrangian_Transported_Vars(sched, patches,
                                                           all_matls);
                                    
-  scheduleAdvectAndAdvanceInTime(         sched, patches, AMR_subCycleProgressVar,
-                                                          ice_matls_sub,
-                                                          mpm_matls_sub,
-                                                          d_press_matl,
-                                                          all_matls);
+  scheduleAdvectAndAdvanceInTime(         sched, patches, 
+                                          ice_matls_sub,
+                                          mpm_matls_sub,
+                                          d_press_matl,
+                                          all_matls);
   if(d_analysisModule){                                                        
     d_analysisModule->scheduleDoAnalysis(   sched, level);
   }                                                          
@@ -1601,11 +1610,9 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
  Function~  ICE::computesRequires_AMR_Refluxing--
 _____________________________________________________________________*/
 void ICE::computesRequires_AMR_Refluxing(Task* task, 
-                                    const double AMR_subCycleProgressVar,
                                     const MaterialSet* ice_matls)
 {
-  cout_doing << d_myworld->myrank() << "      computesRequires_AMR_Refluxing  progressVar " 
-             << AMR_subCycleProgressVar << endl;
+  cout_doing << d_myworld->myrank() << "      computesRequires_AMR_Refluxing\n";
   Ghost::GhostType  gn   = Ghost::None;
   task->computes(lb->mass_X_FC_fluxLabel);
   task->computes(lb->mass_Y_FC_fluxLabel);
@@ -1623,25 +1630,25 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
   task->computes(lb->int_eng_Y_FC_fluxLabel);
   task->computes(lb->int_eng_Z_FC_fluxLabel);  
   
+
+  // originally said require if not the first task of a subcycle, but
+  // require it anyway.  It will do no extra communication since there
+  // are no ghost cells, and it will do the right thing at execute time
+  task->requires(Task::OldDW, lb->mass_X_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->mass_Y_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->mass_Z_FC_fluxLabel, gn, 0);
   
-  if(AMR_subCycleProgressVar < 1.0 && AMR_subCycleProgressVar > 0.0){
-    task->requires(Task::OldDW, lb->mass_X_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->mass_Y_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->mass_Z_FC_fluxLabel, gn, 0);
-    
-    task->requires(Task::OldDW, lb->mom_X_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->mom_Y_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->mom_Z_FC_fluxLabel, gn, 0);
-    
-    task->requires(Task::OldDW, lb->sp_vol_X_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->sp_vol_Y_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->sp_vol_Z_FC_fluxLabel, gn, 0);
-    
-    task->requires(Task::OldDW, lb->int_eng_X_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->int_eng_Y_FC_fluxLabel, gn, 0);
-    task->requires(Task::OldDW, lb->int_eng_Z_FC_fluxLabel, gn, 0);
-  }
+  task->requires(Task::OldDW, lb->mom_X_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->mom_Y_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->mom_Z_FC_fluxLabel, gn, 0);
   
+  task->requires(Task::OldDW, lb->sp_vol_X_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->sp_vol_Y_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->sp_vol_Z_FC_fluxLabel, gn, 0);
+  
+  task->requires(Task::OldDW, lb->int_eng_X_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->int_eng_Y_FC_fluxLabel, gn, 0);
+  task->requires(Task::OldDW, lb->int_eng_Z_FC_fluxLabel, gn, 0);
   
   //__________________________________
   // MODELS
@@ -1654,11 +1661,9 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
     task->computes(rvar->var_Y_FC_flux);
     task->computes(rvar->var_Z_FC_flux);
     
-    if(AMR_subCycleProgressVar < 1.0 && AMR_subCycleProgressVar > 0.0){
-      task->requires(Task::OldDW, rvar->var_X_FC_flux, gn, 0);
-      task->requires(Task::OldDW, rvar->var_Y_FC_flux, gn, 0);
-      task->requires(Task::OldDW, rvar->var_Z_FC_flux, gn, 0);
-    }
+    task->requires(Task::OldDW, rvar->var_X_FC_flux, gn, 0);
+    task->requires(Task::OldDW, rvar->var_Y_FC_flux, gn, 0);
+    task->requires(Task::OldDW, rvar->var_Z_FC_flux, gn, 0);
   } 
 }
 
@@ -1667,7 +1672,6 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
 _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patch_set,
-                                    const double AMR_subCycleProgressVar,
                                     const MaterialSubset* ice_matlsub,
                                     const MaterialSubset* /*mpm_matls*/,
                                     const MaterialSubset* /*press_matl*/,
@@ -1684,7 +1688,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
              << "\t\t\t\tL-"<< levelIndex << endl;
              
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
-                     this, &ICE::advectAndAdvanceInTime, AMR_subCycleProgressVar);
+                           this, &ICE::advectAndAdvanceInTime);
 //  task->requires(Task::OldDW, lb->delTLabel);     for AMR
   task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
   task->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2);
@@ -1696,12 +1700,13 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->specific_heatLabel,  gac,2);  
   task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);
   task->requires(Task::NewDW, lb->vol_frac_CCLabel,    gn, 0);
+  task->requires(Task::NewDW, lb->gammaLabel,    gn, 0);
     
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
   if(d_doRefluxing){            
-    computesRequires_AMR_Refluxing(task, AMR_subCycleProgressVar, ice_matls);
+    computesRequires_AMR_Refluxing(task, ice_matls);
   }
   
   task->modifies(lb->rho_CCLabel);
@@ -2204,9 +2209,10 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
 void ICE::computeThermoTransportProperties(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* /*ice_matls*/,
-                                          DataWarehouse* /*old_dw*/,
+                                          DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 { 
+
   const Level* level = getLevel(patches);
   int levelIndex = level->getIndex();
   
@@ -2580,7 +2586,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
 
     CCVariable<double> vol_frac, sp_vol_new; 
     CCVariable<double> speedSound, f_theta, kappa;
-    CCVariable<double> press_eq, sumKappa, sum_imp_delP;
+    CCVariable<double> press_eq, sumKappa, sum_imp_delP, rho_CC_new;
     constCCVariable<double> Temp,rho_CC, sp_vol_CC, cv, gamma;   
     StaticArray<CCVariable<double> > rho_micro(1);
     
@@ -2597,7 +2603,6 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
        
     new_dw->allocateTemporary(rho_micro[0],  patch);
 
-    new_dw->transferFrom(old_dw, lb->rho_CCLabel, patches, matls);  
     new_dw->allocateAndPut(press_eq,     lb->press_equil_CCLabel, 0,  patch);
     new_dw->allocateAndPut(sumKappa,     lb->sumKappaLabel,       0,  patch);
     new_dw->allocateAndPut(sum_imp_delP, lb->sum_imp_delPLabel,   0,  patch);
@@ -2607,6 +2612,10 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     new_dw->allocateAndPut(f_theta,      lb->f_theta_CCLabel,    indx,patch);
     new_dw->allocateAndPut(speedSound,   lb->speedSound_CCLabel, indx,patch);       
     sum_imp_delP.initialize(0.0);       
+
+    //new_dw->allocateAndPut(rho_CC_new,   lb->rho_CCLabel,        indx,patch);
+    //rho_CC_new.copyData(rho_CC);
+    new_dw->transferFrom(old_dw, lb->rho_CCLabel, patches, matls, true);
 
     //---- P R I N T   D A T A ------   
     if (switchDebug_equil_press) {
@@ -4944,11 +4953,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                                  const PatchSubset* patches,
                                  const MaterialSubset* /*matls*/,
                                  DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-                                 const double AMR_subCycleProgressVar)
+                                 DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
+
+  // the advection calculations care about the position of the old dw subcycle
+  double AMR_subCycleProgressVar = getSubCycleProgress(old_dw);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

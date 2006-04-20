@@ -40,7 +40,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
   MaterialSubset* one_matl = d_press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
-  double AMR_subCycleProgressVar = 0; 
   
   cout_doing << "--------------------------------------------------------"<< endl;
   cout_doing << "ICE::scheduleLockstepTimeAdvance"<< endl;  
@@ -194,8 +193,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     scheduleComputeLagrangian_Transported_Vars(sched, patches,
                                                             all_matls);
 
-    scheduleAdvectAndAdvanceInTime(         sched, patches, AMR_subCycleProgressVar,
-                                                            ice_matls_sub,
+    scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
                                                             mpm_matls_sub,
                                                             d_press_matl,
                                                             all_matls);
@@ -212,7 +210,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     }
     for(int L = 1; L<maxLevel; L++){   // from coarser to finer levels
       LevelP fineLevel = grid->getLevel(L);
-      scheduleRefineInterface(fineLevel, sched, 1, 1);
+      scheduleRefineInterface(fineLevel, sched, true, true);
     }
   }
 
@@ -249,6 +247,8 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
   Task* t = scinew Task("ICE::multiLevelPressureSolve", 
                    this, &ICE::multiLevelPressureSolve,
                    grid, sched.get_rep(), ice_matls, mpm_matls);
+
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();
  
   t->hasSubScheduler();
   Ghost::GhostType  gac = Ghost::AroundCells;  
@@ -271,6 +271,9 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->requires( Task::NewDW, lb->vol_frac_CCLabel,     patches,  gac,2); 
     t->requires( Task::NewDW, lb->sp_vol_CCLabel,       patches,  gac,1);
     t->requires( Task::NewDW, lb->rhsLabel,             patches, nd, one_matl,   oims,gn,0);
+    t->requires( Task::NewDW, lb->uvel_FCLabel,         patches, gn, 0);
+    t->requires( Task::NewDW, lb->vvel_FCLabel,         patches, gn, 0);
+    t->requires( Task::NewDW, lb->wvel_FCLabel,         patches, gn, 0);
 
     //__________________________________
     // SetupRHS
@@ -316,17 +319,17 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->modifies(lb->term2Label,         patches, nd, one_matl,  oims);   
     t->modifies(lb->rhsLabel,           patches, nd, one_matl,  oims);
     
-    t->modifies(lb->uvel_FCMELabel, patches);
-    t->modifies(lb->vvel_FCMELabel, patches);
-    t->modifies(lb->wvel_FCMELabel, patches);
+    t->modifies(lb->uvel_FCMELabel, patches, all_matls_sub);
+    t->modifies(lb->vvel_FCMELabel, patches, all_matls_sub);
+    t->modifies(lb->wvel_FCMELabel, patches, all_matls_sub);
     
-    t->modifies(lb->vol_fracX_FCLabel, patches);
-    t->modifies(lb->vol_fracY_FCLabel, patches);
-    t->modifies(lb->vol_fracZ_FCLabel, patches); 
+    t->modifies(lb->vol_fracX_FCLabel, patches, all_matls_sub);
+    t->modifies(lb->vol_fracY_FCLabel, patches, all_matls_sub);
+    t->modifies(lb->vol_fracZ_FCLabel, patches, all_matls_sub); 
     
-    t->modifies(lb->vol_frac_X_FC_fluxLabel, patches);
-    t->modifies(lb->vol_frac_Y_FC_fluxLabel, patches);
-    t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches); 
+    t->modifies(lb->vol_frac_X_FC_fluxLabel, patches, all_matls_sub);
+    t->modifies(lb->vol_frac_Y_FC_fluxLabel, patches, all_matls_sub);
+    t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches, all_matls_sub); 
   }
   t->setType(Task::OncePerProc);
   LoadBalancer* loadBal = sched->getLoadBalancer();
@@ -372,7 +375,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   // create a new subscheduler
   SchedulerP subsched = sched->createSubScheduler();
   subsched->setRestartable(true); 
-  subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
+  subsched->initialize(3, 1);
+  subsched->setParentDWs(ParentOldDW, ParentNewDW);
   subsched->clearMappings();
   subsched->mapDataWarehouse(Task::ParentOldDW, 0);
   subsched->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -404,6 +408,14 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   subNewDW->transferFrom(ParentNewDW,lb->uvel_FCLabel,      patches, all_matls_s); 
   subNewDW->transferFrom(ParentNewDW,lb->vvel_FCLabel,      patches, all_matls_s); 
   subNewDW->transferFrom(ParentNewDW,lb->wvel_FCLabel,      patches, all_matls_s);
+
+  subNewDW->transferFrom(ParentNewDW,lb->sp_volX_FCLabel,   patches, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->sp_volY_FCLabel,   patches, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->sp_volZ_FCLabel,   patches, all_matls_s); 
+
+  subNewDW->transferFrom(ParentNewDW,lb->vol_fracX_FCLabel, patches, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->vol_fracY_FCLabel, patches, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->vol_fracZ_FCLabel, patches, all_matls_s); 
     
   //__________________________________
   //  Iteration Loop
@@ -422,8 +434,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       const LevelP level = grid->getLevel(L);
       const PatchSet* patch_set = level->eachPatch();
       scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
-                                                          all_matls,
-                                                          firstIter);
+                                                          all_matls);
     }
 
     for(int L = 0; L<maxLevel; L++){
@@ -500,7 +511,6 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     
     subsched->execute();
     // Allow for re-scheduling (different) tasks on the next iteration...
-    subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
     
     counter ++;
     firstIter = false;
