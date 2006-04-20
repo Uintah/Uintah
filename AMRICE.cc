@@ -1173,11 +1173,8 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       constCCVariable<double> cv, rho_CC;
 
       Ghost::GhostType  gac = Ghost::AroundCells;
-      cout << d_myworld->myrank() << "   Getting rho on patch " << *coarsePatch << endl;
       new_dw->get(rho_CC,lb->rho_CCLabel,       indx,coarsePatch, gac,1);
-      cout << d_myworld->myrank() << "   Getting cv on patch " << *coarsePatch << endl;
       new_dw->get(cv,    lb->specific_heatLabel,indx,coarsePatch, gac,1);
-      cout << d_myworld->myrank() << "   Done\n";
       
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
