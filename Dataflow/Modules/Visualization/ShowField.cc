@@ -161,10 +161,15 @@ class ShowField : public Module
   GuiString                scalar_display_type_;
   GuiString                active_tab_; //! for saving nets state
   GuiDouble                node_scale_;
+  GuiDouble                node_scaleNV_;
   GuiDouble                edge_scale_;
+  GuiDouble                edge_scaleNV_;
   GuiDouble                vectors_scale_;
+  GuiDouble                vectors_scaleNV_;
   GuiDouble                tensors_scale_;
+  GuiDouble                tensors_scaleNV_;
   GuiDouble                scalars_scale_;
+  GuiDouble                scalars_scaleNV_;
   GuiInt                   showProgress_;
   GuiString                interactive_mode_;
   GuiString                gui_field_name_;
@@ -186,6 +191,10 @@ class ShowField : public Module
 
   GeomHandle text_geometry_;
   GeomHandle data_geometry_;
+  
+  // variables related to default scale factor usage.
+  GuiInt                  gui_use_defaults_;
+  double                  cur_mesh_scale_factor_;
 
   enum toggle_type_e {
     NODE = 0,
@@ -197,6 +206,7 @@ class ShowField : public Module
   };
   vector<bool>               render_state_;
   void maybe_execute(toggle_type_e dis_type);
+  void set_default_display_values();
 
 public:
   ShowField(GuiContext* ctx);
@@ -282,10 +292,15 @@ ShowField::ShowField(GuiContext* ctx) :
   scalar_display_type_(get_ctx()->subVar("scalar_display_type")),
   active_tab_(get_ctx()->subVar("active_tab")),
   node_scale_(get_ctx()->subVar("node_scale")),
+  node_scaleNV_(get_ctx()->subVar("node_scaleNV")),
   edge_scale_(get_ctx()->subVar("edge_scale")),
+  edge_scaleNV_(get_ctx()->subVar("edge_scaleNV")),
   vectors_scale_(get_ctx()->subVar("vectors_scale")),
+  vectors_scaleNV_(get_ctx()->subVar("vectors_scaleNV")),
   tensors_scale_(get_ctx()->subVar("tensors_scale")),
+  tensors_scaleNV_(get_ctx()->subVar("tensors_scaleNV")),
   scalars_scale_(get_ctx()->subVar("scalars_scale")),
+  scalars_scaleNV_(get_ctx()->subVar("scalars_scaleNV")),
   showProgress_(get_ctx()->subVar("show_progress")),
   interactive_mode_(get_ctx()->subVar("interactive_mode")),
   gui_field_name_(get_ctx()->subVar("field-name")),
@@ -304,6 +319,8 @@ ShowField::ShowField(GuiContext* ctx) :
   data_tensor_renderer_(0),
   text_geometry_(0),
   data_geometry_(0),
+  gui_use_defaults_(get_ctx()->subVar("use-defaults"), 0),
+  cur_mesh_scale_factor_(1.0),
   render_state_(5)
 {
   def_material_->transparency = 0.5;
@@ -524,6 +541,14 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     data_id_ = 0;
     if (text_id_) ogeom_->delObj(text_id_);
     text_id_ = 0;
+
+    // set new scale defaults based on input.
+    Vector diag = fld_handle->mesh()->get_bounding_box().diagonal();
+    cur_mesh_scale_factor_ = diag.length();
+    gui_use_defaults_.reset();
+    if (gui_use_defaults_.get()) {
+      set_default_display_values();
+    }
   }
   return true;
 }
@@ -962,6 +987,19 @@ ShowField::execute()
   ogeom_->flushViews();
 }
 
+void
+ShowField::set_default_display_values() 
+{
+  double fact = cur_mesh_scale_factor_;
+  node_scaleNV_.set(fact * 0.0035);
+  edge_scaleNV_.set(fact * 0.005);
+  vectors_scaleNV_.set(fact * 0.0735);
+  tensors_scaleNV_.set(fact * 0.0735);
+  scalars_scaleNV_.set(fact * 0.0735);
+  nodes_dirty_ = true;
+  edges_dirty_ = true;
+  data_dirty_ = true;
+}
 
 void
 ShowField::maybe_execute(toggle_type_e dis_type)
@@ -1220,27 +1258,8 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     maybe_execute(DATA); // Must redraw the vectors.
   } else if (args[1] == "execute_policy"){
   } else if (args[1] == "calcdefs") {
-
-#if 0
-    if (false) { //if (bounding_vector_) {
-      //0.00896657
-      double fact = 0.01; // * bounding_vector_->length();
-      node_scale_.set(fact);
-      edge_scale_.set(fact * 0.5);
-      vectors_scale_.set(fact * 10);
-      tensors_scale_.set(fact * 10);
-      scalars_scale_.set(fact * 10);
-      nodes_dirty_ = true;
-      edges_dirty_ = true;
-      data_dirty_ = true;
-      maybe_execute(DATA_AT);
-    } else {
-#endif
-      warning("Cannot calculate defaults without a valid field input.");
-#if 0
-    }
-#endif
-
+    set_default_display_values();
+    maybe_execute(DATA_AT);
   } else {
     Module::tcl_command(args, userdata);
   }
