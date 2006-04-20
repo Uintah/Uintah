@@ -57,7 +57,7 @@ WARNING
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&, int step, int nsteps );
+				      SchedulerP&);
 
     // New functions
     virtual void scheduleRefine(const LevelP& fineLevel, SchedulerP& sched);
@@ -69,13 +69,12 @@ WARNING
 
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
 					 SchedulerP& scheduler,
-					 int step, int nsteps);
+					 bool needCoarseOld, bool needCoarseNew);
     void refineInterface(const ProcessorGroup*,
 			 const PatchSubset* finePatches, 
 			 const MaterialSubset* matls,
 			 DataWarehouse* fineDW, 
-			 DataWarehouse* coarseDW,
-			 int step, int nsteps);
+			 DataWarehouse* coarseDW);
 
     virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
     void coarsen(const ProcessorGroup* pg,

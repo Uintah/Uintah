@@ -49,8 +49,8 @@ void AMRWave::problemSetup(const ProblemSpecP& params,
 }
 
 void AMRWave::scheduleRefineInterface(const LevelP& fineLevel,
-					 SchedulerP& scheduler,
-					 int step, int nsteps)
+                                      SchedulerP& scheduler,
+                                      bool needCoarseOld, bool needCoarseNew)
 {
 }
 
@@ -99,9 +99,9 @@ void AMRWave::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
 }
 
 void AMRWave::scheduleTimeAdvance( const LevelP& level, 
-                                   SchedulerP& sched, int step, int nsteps )
+                                   SchedulerP& sched)
 {
-  Wave::scheduleTimeAdvance(level, sched, step, nsteps);
+  Wave::scheduleTimeAdvance(level, sched);
 }
 
 void AMRWave::errorEstimate(const ProcessorGroup*,
@@ -339,17 +339,16 @@ void AMRWave::coarsen(const ProcessorGroup*,
 }
 
 void AMRWave::addRefineDependencies(Task* task, const VarLabel* var,
-                                    int step, int nsteps)
+                                    bool needCoarseOld, bool needCoarseNew)
 {
   if (!do_refineFaces)
     return;
-  ASSERTRANGE(step, 0, nsteps+1);
   Ghost::GhostType gc = Ghost::AroundCells;
 
-  if(step != nsteps)
+  if(needCoarseOld)
     task->requires(Task::CoarseOldDW, var,
 		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
-  if(step != 0)
+  if(needCoarseNew)
     task->requires(Task::CoarseNewDW, var,
 		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
 }
@@ -358,11 +357,12 @@ void AMRWave::refineFaces(const Patch* finePatch,
                  const Level* fineLevel,
 		 const Level* coarseLevel, 
 		 CCVariable<double>& finevar, 
-                 const VarLabel* label,
-		 int step, int nsteps, int matl, 
+                 const VarLabel* label, int matl, 
                  DataWarehouse* coarse_old_dw,
 		 DataWarehouse* coarse_new_dw)
 {
+  DataWarehouse* fine_new_dw = coarse_old_dw->getOtherDataWarehouse(Task::NewDW);
+  double subCycleProgress = getSubCycleProgress(fine_new_dw);
   if (!do_refineFaces)
     return;
   for (int f = 0; f < 6; f++) {
@@ -383,29 +383,29 @@ void AMRWave::refineFaces(const Patch* finePatch,
       constCCVariable<double> coarse_old_var;
       constCCVariable<double> coarse_new_var;
 
-      if (step != nsteps)
+      if (subCycleProgress < 1.0-1e-10)
         coarse_old_dw->getRegion(coarse_old_var, label, matl, coarseLevel, coarseLow, coarseHigh);
 
-      if (step != 0)
+      if (subCycleProgress > 0.0)
         coarse_new_dw->getRegion(coarse_new_var, label, matl, coarseLevel, coarseLow, coarseHigh);
 
       // loop across the face, and depending on where we are in time, use the values 
       // from the old dw, new dw, or both (based on a weight)
       for (CellIterator iter(fineLow, fineHigh); !iter.done(); iter++) {
         double x0 = 0, x1 = 0;
-        double w1 = ((double) step) / (double) nsteps;
+        double w1 = subCycleProgress;
         double w0 = 1-w1;
 
-        if (step != nsteps) {
+        if (subCycleProgress < 1.0-1e-10) {
           refineCell(finevar, coarse_old_var, *iter, fineLevel, coarseLevel);
           x0 = finevar[*iter];
         }
-        if (step != 0) {
+        if (subCycleProgress > 0.0) {
           refineCell(finevar, coarse_new_var, *iter, fineLevel, coarseLevel);
           x1 = finevar[*iter];
         }
         finevar[*iter] = x0*w0 + x1*w1;
-        amrwave << "Index " << *iter << " Step " << step << " of " << nsteps << " X0 " << x0 << " X1 " << x1 << " final " << finevar[*iter] << endl;
+        amrwave << "Index " << *iter << " SubCycle: " << subCycleProgress << " X0 " << x0 << " X1 " << x1 << " final " << finevar[*iter] << endl;
       }
     } // if (finePatch->getBCType(face) == Patch::Coarse) {
   } // for (Patch::FaceType face = 0; face < Patch::numFaces; face++) {

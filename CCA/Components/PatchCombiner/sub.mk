@@ -8,7 +8,6 @@ SRCS     += $(SRCDIR)/PatchCombiner.cc $(SRCDIR)/UdaReducer.cc
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/CCA/Components/Schedulers        \
 	Packages/Uintah/Core/DataArchive \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Grid        \

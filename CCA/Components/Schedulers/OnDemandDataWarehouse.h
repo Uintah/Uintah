@@ -8,7 +8,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
 #include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlDW.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -24,9 +23,6 @@ namespace SCIRun {
 }
 
 namespace Uintah {
-
-  int getDB_ID(const Patch* patch);
-  int getDB_ID(const Level* level);
 
   using SCIRun::CrowdMonitor;
   using SCIRun::Max;
@@ -162,7 +158,8 @@ public:
 			      const Patch*);
    virtual void getRegion(constNCVariableBase&, const VarLabel*,
 			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high);
+			  const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true);
    virtual void put(NCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
@@ -201,7 +198,8 @@ public:
 			      int matlIndex, const Patch*);
    virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
 			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high);
+			  const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true);
    virtual void put(SFCXVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
@@ -219,7 +217,8 @@ public:
 			      int matlIndex, const Patch*);
    virtual void getRegion(constSFCYVariableBase&, const VarLabel*,
 			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high);
+			  const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true);
    virtual void put(SFCYVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
@@ -237,7 +236,8 @@ public:
 			      int matlIndex, const Patch*);
    virtual void getRegion(constSFCZVariableBase&, const VarLabel*,
 			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high);
+			  const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true);
    virtual void put(SFCZVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
    // PerPatch Variables
@@ -266,7 +266,6 @@ public:
                              const PatchSubset* newPatches = 0);
 
    virtual bool isFinalized() const;
-   virtual bool exists(const VarLabel*, const Patch*) const;
    
    virtual void finalize();
    virtual void unfinalize();
@@ -292,7 +291,6 @@ public:
 			    const Patch* patch);
    void scrub(const VarLabel* label, int matlIndex, const Patch* patch);
    void initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts);
-   //void initializeScrubs(int dwid, const map<VarLabelMatlDW<Level>, int>& scrubcounts);
 
    // For timestep abort/restart
    virtual bool timestepAborted();
@@ -354,39 +352,29 @@ private:
      VarAccessMap d_accesses;
    };  
 
-   // Generic get function used by the get functions for grid-based
-   // (node or cell) variables to avoid code duplication.
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424
-#endif  
-   template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
-   void getGridVar(VariableBase& var, DWDatabase& db,
-		   const VarLabel* label, int matlIndex, const Patch* patch,
-		   Ghost::GhostType gtype, int numGhostCells);
+   void getGridVar(GridVariable& var,
+                   const VarLabel* label, int matlIndex, const Patch* patch,
+                   Ghost::GhostType gtype, int numGhostCells);
 
-   template <Patch::VariableBasis basis, class VariableBase>
-   void allocateTemporaryGridVar(VariableBase& var, const Patch* patch,
-				 Ghost::GhostType gtype, int numGhostCells,
-				 const IntVector& boundaryLayer);
+   void allocateTemporaryGridVar(GridVariable& var, const Patch* patch,
+                                 Ghost::GhostType gtype, int numGhostCells,
+                                 const IntVector& boundaryLayer);
 
-   template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
-   void allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
-			      const VarLabel* label, int matlIndex, 
-			      const Patch* patch,
-			      Ghost::GhostType gtype, int numGhostCells);
+   void allocateAndPutGridVar(GridVariable& var,
+                              const VarLabel* label, int matlIndex,
+                              const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
 
-   template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
-   void putGridVar(VariableBase& var, DWDatabase& db,
-		   const VarLabel* label, int matlIndex, const Patch* patch,
-		   bool replace = false);
-   template <class VariableBase, class DWDatabase>
-   void recvMPIGridVar(DWDatabase& db, BufferInfo& buffer, 
-		       const DetailedDep* dep, const VarLabel* label, 
-		       int matlIndex, const Patch* patch);
+   void putGridVar(GridVariable& var,
+                   const VarLabel* label, int matlIndex, const Patch* patch,
+       bool replace = false);
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#endif  
+   void recvMPIGridVar(BufferInfo& buffer, const DetailedDep* dep,
+           const VarLabel* label, int matlIndex, const Patch* patch);
+
+   virtual void getRegionGridVar(GridVariable&, const VarLabel*,
+                          int matlIndex, const Level* level,
+                          const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true);
 
   // These will throw an exception if access is not allowed for the
   // curent task.
@@ -422,15 +410,8 @@ private:
    typedef map<PSPatchMatlGhost, ParticleSubset*> psetDBType;
    typedef map<pair<int, const Patch*>, map<const VarLabel*, ParticleVariableBase*>* > psetAddDBType;
 
-   DWDatabase<NCVariableBase, Patch>        d_ncDB;
-   DWDatabase<CCVariableBase, Patch>        d_ccDB;
-   DWDatabase<SFCXVariableBase, Patch>      d_sfcxDB;
-   DWDatabase<SFCYVariableBase, Patch>      d_sfcyDB;
-   DWDatabase<SFCZVariableBase, Patch>      d_sfczDB;
-   DWDatabase<ParticleVariableBase, Patch>  d_particleDB;
-   DWDatabase<ReductionVariableBase, Level> d_reductionDB;
-   DWDatabase<SoleVariableBase, Level>      d_soleDB;
-   DWDatabase<PerPatchBase, Patch>          d_perpatchDB;
+   DWDatabase<Patch>  d_varDB;
+   DWDatabase<Level>  d_levelDB;
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;
    psetAddDBType d_addsetDB;

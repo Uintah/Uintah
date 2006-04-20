@@ -23,12 +23,11 @@ namespace Uintah {
                                     
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                          SchedulerP& scheduler,
-                                         int step, 
-                                         int nsteps);
+                                         bool needCoarseOld, bool needCoarseNew);
                                          
     virtual void scheduleRefine (const PatchSet* patches, 
                                  SchedulerP& sched); 
-                                                                    
+    
     virtual void scheduleCoarsen(const LevelP& coarseLevel, 
                                  SchedulerP& sched);
 
@@ -57,8 +56,7 @@ namespace Uintah {
                                const VarLabel* var,
                                Task::DomainSpec DS,
                                const MaterialSubset* matls,
-                               int step, 
-                               int nsteps);
+                               bool needCoarseOld, bool needCoarseNew);
 
   private:
 
@@ -74,7 +72,7 @@ namespace Uintah {
                                      const Level* coarseLevel,
                                      CCVariable<T>& Q, 
                                      const VarLabel* label,
-                                     double subCycleProgress_var, 
+                                     double subCycleProgress_var,
                                      int matl, 
                                      DataWarehouse* fine_new_dw,
                                      DataWarehouse* coarse_old_dw,
@@ -84,8 +82,7 @@ namespace Uintah {
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse*, 
-                                   DataWarehouse* new_dw,
-                                   const double factor);
+                                   DataWarehouse* new_dw);
 
     void scheduleSetBC_FineLevel(const PatchSet* patches,
                                  SchedulerP& scheduler);
@@ -313,15 +310,15 @@ void ICE::refluxOperator_applyCorrectionFluxes(
 _____________________________________________________________________*/
 template<class varType>
 void AMRICE::refine_CF_interfaceOperator(const Patch* patch, 
-                                 const Level* fineLevel,
-                                 const Level* coarseLevel,
-                                 CCVariable<varType>& Q, 
-                                 const VarLabel* label,
-                                 double subCycleProgress_var, 
-                                 int matl, 
-                                 DataWarehouse* fine_new_dw,
-                                 DataWarehouse* coarse_old_dw,
-                                 DataWarehouse* coarse_new_dw)
+                                         const Level* fineLevel,
+                                         const Level* coarseLevel,
+                                         CCVariable<varType>& Q, 
+                                         const VarLabel* label,
+                                         double subCycleProgress_var,
+                                         int matl, 
+                                         DataWarehouse* fine_new_dw,
+                                         DataWarehouse* coarse_old_dw,
+                                         DataWarehouse* coarse_new_dw)
 {
   cout_dbg << *patch << " ";
   patch->printPatchBCs(cout_dbg);
@@ -352,7 +349,6 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
      constCCVariable<varType> q_NewDW;
      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
                            cl, ch);
-
      selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
                         fineLevel, refineRatio, fl,fh, Q);
     } else {    
@@ -363,6 +359,14 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       constCCVariable<varType> q_OldDW, q_NewDW;
       coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel, cl, ch);
       coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel, cl, ch);
+
+/*       cout << d_myworld->myrank() << " OLDDW " << coarse_old_dw->getID() << " newdw " << coarse_new_dw->getID() << endl; */
+
+/*       if (label->getName() == "rho_CC" && patch->getID() == 16) { */
+/*         for (CellIterator iter(IntVector(5,8,0), IntVector(7,11,1)); !iter.done(); iter++) { */
+/*           cout << d_myworld->myrank() << "   REFINING: CR: new " << *iter << " " << q_NewDW[*iter] << " old " << q_OldDW[*iter] << endl; */
+/*         } */
+/*       } */
 
       CCVariable<varType> Q_old, Q_new;
       fine_new_dw->allocateTemporary(Q_old, patch);

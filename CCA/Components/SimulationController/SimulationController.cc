@@ -50,7 +50,7 @@ namespace Uintah {
   }
 
   SimulationController::SimulationController(const ProcessorGroup* myworld, bool doAMR)
-    : UintahParallelComponent(myworld), d_doAMR(doAMR)
+    : UintahParallelComponent(myworld), d_doAMR(doAMR), d_doMultiTaskgraphing(false)
   {
     d_n = 0;
     d_wallTime = 0;
@@ -61,6 +61,7 @@ namespace Uintah {
 
     d_restarting = false;
     d_combinePatches = false;
+    d_reduceUda = false;
     d_archive = NULL;
   }
 
@@ -71,7 +72,7 @@ namespace Uintah {
 
   void SimulationController::doCombinePatches(std::string fromDir, bool reduceUda)
   {
-    ASSERT(!d_doAMR);
+    d_doAMR = false;
     d_combinePatches = true;
     d_reduceUda = reduceUda;
     d_fromDir = fromDir;
@@ -120,7 +121,19 @@ namespace Uintah {
       throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
     }
     d_output->problemSetup(d_ups, d_sharedState.get_rep());
+
+    d_ups->get("doMultiTaskgraphing", d_doMultiTaskgraphing);
+
+    // Parse time struct
+    d_timeinfo = scinew SimulationTime(d_ups);
     
+    if (d_timeinfo->max_delt_increase < 1e99 && d_timeinfo->delt_max < 1e99 && d_reduceUda && d_myworld->myrank() == 0) {
+      cout << "  WARNING: Trying to do reduce_uda with max_delt_increase or low delt_max (set to 1e99 in input.xml)."
+           << "\n this can cause times to not line up between old and new udas\n";
+    }
+      
+
+
   }
 
   GridP SimulationController::gridSetup( void ) 

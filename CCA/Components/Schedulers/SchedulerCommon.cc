@@ -1,3 +1,4 @@
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
@@ -48,12 +49,12 @@ extern DebugStream mixedDebug;
 static DebugStream dbg("SchedulerCommon", false);
 
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
-  : UintahParallelComponent(myworld), graph(this, myworld), m_outPort(oport),
+  : UintahParallelComponent(myworld), m_outPort(oport),
     m_graphDoc(NULL), m_nodes(NULL)
 {
   d_generation = 0;
+  numOldDWs = 0;
 
-  dts_ = 0;
   emit_taskgraph = false;
   memlogfile = 0;
   restartable = false;
@@ -68,8 +69,6 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
 
 SchedulerCommon::~SchedulerCommon()
 {
-  if( dts_ )
-    delete dts_;
   if(memlogfile)
     delete memlogfile;
 
@@ -79,6 +78,10 @@ SchedulerCommon::~SchedulerCommon()
       if (iter->second->removeReference())
         delete iter->second;
   
+  for (unsigned i = 0; i < graphs.size(); i++) {
+    delete graphs[i];
+  }
+
   label_matls_.clear();
 
   delete m_locallyComputedPatchVarMap;
@@ -106,8 +109,11 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
   
   ProblemSpecP edgesElement = m_graphDoc->appendChild("Edges");
   
-  if (dts_) {
-    dts_->emitEdges(edgesElement, rank);
+  for (unsigned i = 0; i < graphs.size(); i++) {
+    DetailedTasks* dts = graphs[i]->getDetailedTasks();
+    if (dts) {
+      dts->emitEdges(edgesElement, rank);
+    }
   }
 }
 
@@ -207,17 +213,9 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
         trackingTasks_.push_back(name);
       }      
     }
-    ProblemSpecP copydata = params->findBlock("CopyData");
-    if (copydata) {
-      for (ProblemSpecP var=copydata->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
-        map<string,string> attributes;
-        var->getAttributes(attributes);
-        string name = attributes["label"];
-        copyDataVars_.push_back(name);
-      }
-
-    }
   }
+  noScrubVars_.insert("refineFlag");
+  noScrubVars_.insert("refinePatchFlag");
 }
 
 void
@@ -311,33 +309,38 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
         // pending the task that allocates the var, we may not have allocated it yet
         GridVariable* v;
         switch (td->getType()) {
-        case TypeDescription::CCVariable: v = dw->d_ccDB.get(label, m, patch); break;
-        case TypeDescription::NCVariable: v = dw->d_ncDB.get(label, m, patch); break;
-        case TypeDescription::SFCXVariable: v = dw->d_sfcxDB.get(label, m, patch); break;
-        case TypeDescription::SFCYVariable: v = dw->d_sfcyDB.get(label, m, patch); break;
-        case TypeDescription::SFCZVariable: v = dw->d_sfczDB.get(label, m, patch); break;
-        default: throw InternalError("Cannot track var type of non-grid-type",__FILE__,__LINE__); break;
+        case TypeDescription::CCVariable:
+        case TypeDescription::NCVariable:
+        case TypeDescription::SFCXVariable:
+        case TypeDescription::SFCYVariable:
+        case TypeDescription::SFCZVariable: 
+          v = dynamic_cast<GridVariable*>(dw->d_varDB.get(label, m, patch));
+          break;
+        default: 
+          throw InternalError("Cannot track var type of non-grid-type",__FILE__,__LINE__); break;
         }
         start = Max(start, v->getLow());
         end = Min(end, v->getHigh());
         if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z())) 
           continue;
 
+        if (!printedHeader) {
+          cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
+               << *dt << endl;
+          printedHeader = true;
+        }
+        if (!printedVarName) {
+          cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << ", DW " << dw->getID() << ", Patch " << patch->getID() << ", Matl " << m << endl;
+          if (trackingVars_[i] == "rho_CC")
+            cout << "  RHO: " << dw->getID() << " original input " << trackingDWs_[i] << endl;
+        }
+            
         // now get it the way a normal task would get it
         switch (td->getSubType()->getType()) {
         case TypeDescription::double_type: {
           if (td->getType() == TypeDescription::CCVariable) {
             constCCVariable<double> var;
             dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            if (!printedHeader) {
-              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-                   << *dt << endl;
-              printedHeader = true;
-            }
-            if (!printedVarName) {
-              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << " matl " << m << endl;
-            }
             
             for (int z = start.z(); z < end.z(); z++) {
               for (int y = start.y(); y < end.y(); y++) {
@@ -354,15 +357,6 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
           else if (td->getType() == TypeDescription::NCVariable) {
             constNCVariable<double> var;
             dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            if (!printedHeader) {
-              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-                   << *dt << endl;
-              printedHeader = true;
-            }
-            if (!printedVarName) {
-              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
-            }
             
             for (int z = start.z(); z < end.z(); z++) {
               for (int y = start.y(); y < end.y(); y++) {
@@ -381,15 +375,6 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
             constSFCXVariable<double> var;
             dw->get(var, label, m, patch, Ghost::None, 0);
             
-            if (!printedHeader) {
-              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-                   << *dt << endl;
-              printedHeader = true;
-            }
-            if (!printedVarName) {
-              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
-            }
-            
             for (int z = start.z(); z < end.z(); z++) {
               for (int y = start.y(); y < end.y(); y++) {
                 cout << d_myworld->myrank() << "  ";
@@ -406,15 +391,6 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
             constSFCYVariable<double> var;
             dw->get(var, label, m, patch, Ghost::None, 0);
             
-            if (!printedHeader) {
-              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-                   << *dt << endl;
-              printedHeader = true;
-            }
-            if (!printedVarName) {
-              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
-            }
-            
             for (int z = start.z(); z < end.z(); z++) {
               for (int y = start.y(); y < end.y(); y++) {
                 cout << d_myworld->myrank() << "  ";
@@ -430,15 +406,6 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
           else if (td->getType() == TypeDescription::SFCZVariable) {
             constSFCZVariable<double> var;
             dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            if (!printedHeader) {
-              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-                   << *dt << endl;
-              printedHeader = true;
-            }
-            if (!printedVarName) {
-              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
-            }
             
             for (int z = start.z(); z < end.z(); z++) {
               for (int y = start.y(); y < end.y(); y++) {
@@ -457,15 +424,6 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
         case TypeDescription::Vector: {
           constCCVariable<Vector> var;
           dw->get(var, label, m, patch, Ghost::None, 0);
-          
-          if (!printedHeader) {
-            cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-                 << *dt << endl;
-            printedHeader = true;
-          }
-          if (!printedVarName) {
-            cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
-          }
           
           for (int z = start.z(); z < end.z(); z++) {
             for (int y = start.y(); y < end.y(); y++) {
@@ -496,6 +454,13 @@ SchedulerCommon::getLoadBalancer()
 }
 
 void
+SchedulerCommon::addTaskGraph(Scheduler::tgType type)
+{
+  TaskGraph* tg = scinew TaskGraph(this, d_myworld, type);
+  tg->initialize();
+  graphs.push_back(tg);
+}
+void
 SchedulerCommon::addTask(Task* task, const PatchSet* patches,
 			 const MaterialSet* matls)
 {
@@ -509,10 +474,14 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   else          dbg << "0";
   dbg << "\n";
 
-  graph.addTask(task, patches, matls);
+  graphs[graphs.size()-1]->addTask(task, patches, matls);
+  numTasks_++;
 
   for (Task::Dependency* dep = task->getRequires(); dep != 0;
        dep = dep->next) {
+    if(isOldDW(dep->mapDataWarehouse()) && notCopyDataVars_.find(dep->var->getName()) == notCopyDataVars_.end()) {
+      d_initRequires.push_back(dep);
+    }
     // Store the ghost cell information of each of the requires
     // so we can predict the total allocation needed for each variable.
     if (dep->numGhostCells > 0) {
@@ -531,15 +500,19 @@ SchedulerCommon::releaseLoadBalancer()
 }
 
 void
-SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */,
-			    DataWarehouse* parent_old_dw /* =0 */,
-			    DataWarehouse* parent_new_dw /* =0 */)
+SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
 {
 
   // doesn't really do anything except initialize/clear the taskgraph
   //   if the default parameter values are used
   int numDW = numOldDW+numNewDW;
   int oldnum = (int)dws.size();
+
+  // in AMR cases we will often need to move from many new DWs to one.  In those cases, move the last NewDW to be the next new one.
+  if (oldnum - numOldDWs > 1) {
+    dws[numDW-1] = dws[oldnum-1];
+  }
+
   // Clear out the data warehouse so that memory will be freed
   for(int i=numDW;i<oldnum;i++)
     dws[i]=0;
@@ -547,14 +520,31 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */,
   for(;oldnum < numDW; oldnum++)
     dws[oldnum] = 0;
   numOldDWs = numOldDW;
-  graph.initialize();
+
+  // clear the taskgraphs, and set the first one
+  for (unsigned i = 0; i < graphs.size(); i++) {
+    delete graphs[i];
+  }
+
+  graphs.clear();
+
+  d_initRequires.clear();
+  numTasks_ = 0;
+
+  addTaskGraph(NormalTaskGraph);
+
   m_ghostOffsetVarMap.clear();
+
+}
+
+void SchedulerCommon::setParentDWs(DataWarehouse* parent_old_dw, DataWarehouse* parent_new_dw)
+{
   OnDemandDataWarehouse* pold = dynamic_cast<OnDemandDataWarehouse*>(parent_old_dw);
   OnDemandDataWarehouse* pnew = dynamic_cast<OnDemandDataWarehouse*>(parent_new_dw);
   if(parent_old_dw && parent_new_dw){
     ASSERT(pold != 0);
     ASSERT(pnew != 0);
-    ASSERT(numOldDW > 2);
+    ASSERT(numOldDWs > 2);
     dws[0]=pold;
     dws[1]=pnew;
   }
@@ -610,7 +600,6 @@ void SchedulerCommon::fillDataWarehouses(const GridP& grid)
   for(int i=numOldDWs;i<(int)dws.size();i++)
     if(!dws[i])
       replaceDataWarehouse(i, grid);
-  d_generation++; // should this happen here? Bryan
 }
 
 void SchedulerCommon::replaceDataWarehouse(int index, const GridP& grid)
@@ -643,7 +632,7 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
     const Patch* memberPatch = connectedPatchGroup->getBoxes()[i];
-    VarLabelMatlPatch vmp(label, matlIndex, memberPatch);
+    VarLabelMatl<Patch> vmp(label, matlIndex, memberPatch);
     m_ghostOffsetVarMap.getExtents(vmp, requestedGType, requestedNumGCells,
                                    requiredLow, requiredHigh,
                                    requestedLow, requestedHigh);
@@ -693,8 +682,13 @@ SchedulerCommon::logMemoryUse()
       name="IntermediateDW";
     dws[i]->logMemoryUse(*memlogfile, total, name);
   }
-  if(dts_)
-    dts_->logMemoryUse(*memlogfile, total, "Taskgraph");
+  
+  for (unsigned i = 0; i < graphs.size(); i++) {
+    DetailedTasks* dts = graphs[i]->getDetailedTasks();
+    if (dts) {
+      dts->logMemoryUse(*memlogfile, total, "Taskgraph");
+    }
+  }
   *memlogfile << "Total: " << total << '\n';
   memlogfile->flush();
 }
@@ -704,14 +698,13 @@ SchedulerCommon::logMemoryUse()
 // variable is valid (according to d_allcomps in graph).
 Scheduler::VarLabelMaterialMap* SchedulerCommon::makeVarLabelMaterialMap()
 {
-  return graph.makeVarLabelMaterialMap();
+  VarLabelMaterialMap* result = scinew VarLabelMaterialMap;
+  for (unsigned i = 0; i < graphs.size(); i++) {
+    graphs[i]->makeVarLabelMaterialMap(result);
+  }
+  return result;
 }
      
-const vector<const Task::Dependency*>& SchedulerCommon::getInitialRequires()
-{
-  return graph.getInitialRequires();
-}
-
 void SchedulerCommon::doEmitTaskGraphDocs()
 {
   emit_taskgraph=true;
@@ -719,23 +712,39 @@ void SchedulerCommon::doEmitTaskGraphDocs()
 
 void SchedulerCommon::compile()
 {
-  actuallyCompile();
+  if(numTasks_ > 0){
+    TAU_PROFILE("SchedulerCommon::compile()", " ", TAU_USER); 
+
+    dbg << d_myworld->myrank() << " SchedulerCommon starting compile\n";
+    
+    for (unsigned i = 0; i < graphs.size(); i++) {
+      if (graphs.size() > 1)
+        dbg << d_myworld->myrank() << "  Compiling graph#" << i << " of " << graphs.size() << endl;
+      graphs[i]->createDetailedTasks(useInternalDeps(), const_cast<Grid*>(getLastDW()->getGrid()), 
+                                     dws[0]?const_cast<Grid*>(get_dw(0)->getGrid()):0);
+    }
+    verifyChecksum();
+    dbg << d_myworld->myrank() << " SchedulerCommon finished compile\n";
+  }
+
   m_locallyComputedPatchVarMap->reset();
 
-  if (dts_ != 0) {
-
-    dts_->computeLocalTasks(d_myworld->myrank());
-    dts_->createScrubCounts();
+  for (unsigned i = 0; i < graphs.size(); i++) { 
+    DetailedTasks* dts = graphs[i]->getDetailedTasks();
     
-    // figure out the locally computed patches for each variable.
-    for (int i = 0; i < dts_->numLocalTasks(); i++) {
-      const DetailedTask* dt = dts_->localTask(i);
-      for(const Task::Dependency* comp = dt->getTask()->getComputes();
-	  comp != 0; comp = comp->next){
-	constHandle<PatchSubset> patches =
-	  comp->getPatchesUnderDomain(dt->getPatches());
-	m_locallyComputedPatchVarMap->addComputedPatchSet(comp->var,
-                                                         patches.get_rep());
+    if (dts != 0) {    
+      // figure out the locally computed patches for each variable.
+      for (int i = 0; i < dts->numLocalTasks(); i++) {
+        const DetailedTask* dt = dts->localTask(i);
+        for(const Task::Dependency* comp = dt->getTask()->getComputes();
+            comp != 0; comp = comp->next){
+          if (comp->var->typeDescription()->getType() != TypeDescription::ReductionVariable) {
+            constHandle<PatchSubset> patches =
+              comp->getPatchesUnderDomain(dt->getPatches());
+            m_locallyComputedPatchVarMap->addComputedPatchSet(comp->var,
+                                                              patches.get_rep());
+          }
+        }
       }
     }
   }
@@ -765,6 +774,7 @@ SchedulerCommon::finalizeTimestep()
 void
 SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim)
 {  
+  // TODO - use the current initReqs and push them back, instead of doing this...
   // clear the old list of vars and matls
   for (unsigned i = 0; i < label_matls_.size(); i++)
     for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++)
@@ -775,67 +785,69 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   label_matls_.resize(grid->numLevels());
 
   // produce a map from all tasks' requires from the Old DW.  Store the varlabel and matls
-  for (int i = 0; i < graph.getNumTasks(); i++) {
-    for(Task::Dependency* dep = graph.getTask(i)->getRequires(); dep != 0; dep=dep->next){
-      bool copyThisVar = this->isOldDW(dep->mapDataWarehouse());
-      if (!copyThisVar) {
-        for (unsigned j = 0; j < copyDataVars_.size(); j++) {
-          const VarLabel* label = VarLabel::find(copyDataVars_[j]);
-          if (label == dep->var) {
+  // TODO - only do this ONCE.
+  for (unsigned t = 0; t < graphs.size(); t++) {
+    TaskGraph* tg = graphs[t];
+    for (int i = 0; i < tg->getNumTasks(); i++) {
+      Task* task = tg->getTask(i);
+      for(Task::Dependency* dep = task->getRequires(); dep != 0; dep=dep->next){
+        bool copyThisVar = dep->whichdw == Task::OldDW;
+        // two manual overrides - one to not copy one that would be copied...
+        if (notCopyDataVars_.find(dep->var->getName()) != notCopyDataVars_.end())
+          continue;
+        
+        // and one to copy one that would not have been.
+        if (!copyThisVar)
+          if (copyDataVars_.find(dep->var->getName()) != copyDataVars_.end())
             copyThisVar = true;
-            break;
+
+        if (copyThisVar) {
+          if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable)
+            // we will take care of reduction variables in a different section
+            continue;
+          
+          // check the level on the case where variables are only computed on certain levels
+          const PatchSet* ps = task->getPatchSet();
+          int level = -1;
+          if (ps) 
+            level = getLevel(ps)->getIndex();
+          
+          // we don't want data with an invalid level, or requiring from a different level (remember, we are
+          // using an old task graph).  That willbe copied later (and chances are, it's to modify anyway).
+          if (level == -1 || level > grid->numLevels()-1 || dep->patches_dom == Task::CoarseLevel || 
+              dep->patches_dom == Task::FineLevel)
+            continue;
+          
+          const MaterialSubset* matSubset = (dep->matls != 0) ?
+            dep->matls : dep->task->getMaterialSet()->getUnion();
+          
+          
+          // if var was already found, make a union of the materials
+          MaterialSubset* matls = scinew MaterialSubset(matSubset->getVector());
+          matls->addReference();
+          
+          MaterialSubset* union_matls;
+          union_matls = label_matls_[level][dep->var];
+          
+          if (union_matls) {
+            for (int i = 0; i < union_matls->size(); i++) {
+              if (!matls->contains(union_matls->get(i))) {
+                matls->add(union_matls->get(i)); 
+              } 
+            }
+            if (union_matls->removeReference()) {
+              delete union_matls;
+            }
           }
+          matls->sort();
+          label_matls_[level][dep->var] = matls;
         }
-      }
-      if (copyThisVar) {
-        if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable)
-          // we will take care of reduction variables in a different section
-          continue;
-
-        // check the level on the case where variables are only computed on certain levels
-        int level = -1;
-        const PatchSubset* psub = dep->patches;
-        const PatchSet* ps = graph.getTask(i)->getPatchSet();
-        if (psub)
-          level = getLevel(psub)->getIndex();
-        else if (ps) 
-          level = getLevel(ps)->getIndex();
-        
-        // we don't want data with an invalid level, or requiring from a different level (remember, we are
-        // using an old task graph).  That willbe copied later (and chances are, it's to modify anyway).
-        if (level == -1 || level > grid->numLevels()-1 || dep->patches_dom == Task::CoarseLevel || 
-            dep->patches_dom == Task::FineLevel)
-          continue;
-
-        const MaterialSubset* matSubset = (dep->matls != 0) ?
-          dep->matls : dep->task->getMaterialSet()->getUnion();
-
-
-        // if var was already found, make a union of the materials
-        MaterialSubset* matls = scinew MaterialSubset(matSubset->getVector());
-        matls->addReference();
-        
-        MaterialSubset* union_matls;
-        union_matls = label_matls_[level][dep->var];
-
-        if (union_matls) {
-          for (int i = 0; i < union_matls->size(); i++) {
-            if (!matls->contains(union_matls->get(i))) {
-              matls->add(union_matls->get(i)); 
-            } 
-          }
-          if (union_matls->removeReference()) {
-            delete union_matls;
-          }
-        }
-        matls->sort();
-        label_matls_[level][dep->var] = matls;
       }
     }
   }
-  
-  this->advanceDataWarehouse(grid);
+
   this->initialize(1, 1);
+  this->advanceDataWarehouse(grid);
   this->clearMappings();
   this->mapDataWarehouse(Task::OldDW, 0);
   this->mapDataWarehouse(Task::NewDW, 1);
@@ -843,7 +855,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   this->mapDataWarehouse(Task::CoarseNewDW, 1);
   
   DataWarehouse* oldDataWarehouse = this->get_dw(0);
+
+
   DataWarehouse* newDataWarehouse = this->getLastDW();
+
   oldDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
   newDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
   const Grid* oldGrid = oldDataWarehouse->getGrid();
@@ -926,16 +941,20 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
       const VarLabel* var = iter->first;
       MaterialSubset* matls = iter->second;
-      
+
       dataTasks[i]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
-      if (compset && compset->size() > 0)
+      if (compset && compset->size() > 0) {
+        dbg << "  Scheduling copy for var " << *var << " matl " << *matls << " Computes: " << *compset.get_rep() << endl;
         dataTasks[i]->computes(var, compset.get_rep(), matls);
-      if (modset && modset->size() > 0)
+      }
+      if (modset && modset->size() > 0) {
+        dbg << "  Scheduling copy for var " << *var << " matl " << " Modifies: " << *modset.get_rep() << endl;
         dataTasks[i]->modifies(var, modset.get_rep(), matls);
+      }
     }
     addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
     if (i > 0) {
-      sim->scheduleRefineInterface(newLevel, sched, 1, 1);
+      sim->scheduleRefineInterface(newLevel, sched, 0, 1);
     }
   }
 
@@ -1020,6 +1039,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
         for ( int oldIdx = 0;  oldIdx < oldPatches.size(); oldIdx++) {
           const Patch* oldPatch = oldPatches[oldIdx];
           
+          if(!oldDataWarehouse->exists(label, matl, oldPatch))
+            continue; // see comment about oldPatchToTest in ScheduleAndDoDataCopy
           IntVector oldLowIndex;
           IntVector oldHighIndex;
 
@@ -1042,143 +1063,30 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
  
           switch(label->typeDescription()->getType()){
           case TypeDescription::NCVariable:
-            {
-              if(!oldDataWarehouse->exists(label, matl, oldPatch))
-                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
-              NCVariableBase* v = oldDataWarehouse->d_ncDB.get(label, matl, oldPatch);
-              
-              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                NCVariableBase* newVariable = dynamic_cast<NCVariableBase*>(v->cloneType());
-                newVariable->rewindow( newLowIndex, newHighIndex );
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-                newDataWarehouse->d_ncDB.put(label, matl, newPatch, newVariable, false);
-              } else {
-                NCVariableBase* newVariable = newDataWarehouse->d_ncDB.get(label, matl, newPatch );
-                // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(newLowIndex, newHighIndex);
-                if (oldPatch->isVirtual()) {
-                  // it can happen where the old patch was virtual and this is not
-                  NCVariableBase* tmpVar = dynamic_cast<NCVariableBase*>(newVariable->cloneType());
-                  oldDataWarehouse->d_ncDB.get(label, matl, oldPatch, *tmpVar);
-                  tmpVar->offset(oldPatch->getVirtualOffset());
-                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
-                  delete tmpVar;
-                }
-                else
-                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-              }
-            }
-            break;
           case TypeDescription::CCVariable:
-            {
-              if(!oldDataWarehouse->exists(label, matl, oldPatch)) 
-                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo CCVariable", __FILE__, __LINE__));
-
-              CCVariableBase* v = oldDataWarehouse->d_ccDB.get(label, matl, oldPatch);
-              CCVariableBase* newVariable;
-              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                newVariable = dynamic_cast<CCVariableBase*>(v->cloneType());
-                newVariable->rewindow( newLowIndex, newHighIndex );
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-                newDataWarehouse->d_ccDB.put(label, matl, newPatch, newVariable, false);
-              } else {
-                newVariable = newDataWarehouse->d_ccDB.get(label, matl, newPatch );
-                // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(newLowIndex, newHighIndex);
-                if (oldPatch->isVirtual()) {
-                  cout << "  COPYING Virtual patch\n";
-                  // it can happen where the old patch was virtual and this is not
-                  CCVariableBase* tmpVar = dynamic_cast<CCVariableBase*>(newVariable->cloneType());
-                  oldDataWarehouse->d_ccDB.get(label, matl, oldPatch, *tmpVar);
-                  tmpVar->offset(oldPatch->getVirtualOffset());
-                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
-                  delete tmpVar;
-                }
-                else
-                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-              }
-            }
-            break;
           case TypeDescription::SFCXVariable:
-            {
-              if(!oldDataWarehouse->exists(label, matl, oldPatch))
-                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo SFCXVariable", __FILE__, __LINE__));
-              SFCXVariableBase* v = oldDataWarehouse->d_sfcxDB.get(label, matl, oldPatch);
-              
-              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                SFCXVariableBase* newVariable = dynamic_cast<SFCXVariableBase*>(v->cloneType());
-                newVariable->rewindow( newLowIndex, newHighIndex );
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-                newDataWarehouse->d_sfcxDB.put(label, matl, newPatch, newVariable, false);
-              } else {
-                GridVariable* newVariable = newDataWarehouse->d_sfcxDB.get(label, matl, newPatch );
-                // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(newLowIndex, newHighIndex);
-                if (oldPatch->isVirtual()) {
-                  // it can happen where the old patch was virtual and this is not
-                  SFCXVariableBase* tmpVar = dynamic_cast<SFCXVariableBase*>(newVariable->cloneType());
-                  oldDataWarehouse->d_sfcxDB.get(label, matl, oldPatch, *tmpVar);
-                  tmpVar->offset(oldPatch->getVirtualOffset());
-                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
-                  delete tmpVar;
-                }
-                else
-                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-              }
-            }
-            break;
           case TypeDescription::SFCYVariable:
-            {
-              if(!oldDataWarehouse->exists(label, matl, oldPatch))
-                SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo SFCYVariable", __FILE__, __LINE__));
-              SFCYVariableBase* v = oldDataWarehouse->d_sfcyDB.get(label, matl, oldPatch);
-              
-              if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                SFCYVariableBase* newVariable = dynamic_cast<SFCYVariableBase*>(v->cloneType());
-                newVariable->rewindow( newLowIndex, newHighIndex );
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-                newDataWarehouse->d_sfcyDB.put(label, matl, newPatch, newVariable, false);
-              } else {
-                SFCYVariableBase* newVariable = newDataWarehouse->d_sfcyDB.get(label, matl, newPatch );
-                // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(newLowIndex, newHighIndex);
-                if (oldPatch->isVirtual()) {
-                  // it can happen where the old patch was virtual and this is not
-                  SFCYVariableBase* tmpVar = dynamic_cast<SFCYVariableBase*>(newVariable->cloneType());
-                  oldDataWarehouse->d_sfcyDB.get(label, matl, oldPatch, *tmpVar);
-                  tmpVar->offset(oldPatch->getVirtualOffset());
-                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
-                  delete tmpVar;
-                }
-                else
-                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-              }
-            }
-            break;
           case TypeDescription::SFCZVariable:
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo SFCZVariable", __FILE__, __LINE__));
-              SFCZVariableBase* v = oldDataWarehouse->d_sfczDB.get(label, matl, oldPatch);
+                                          "in copyDataTo GridVariable", __FILE__, __LINE__));
+              GridVariable* v = dynamic_cast<GridVariable*>(oldDataWarehouse->d_varDB.get(label, matl, oldPatch));
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                SFCZVariableBase* newVariable = dynamic_cast<SFCZVariableBase*>(v->cloneType());
+                GridVariable* newVariable = v->cloneType();
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-                newDataWarehouse->d_sfczDB.put(label, matl, newPatch, newVariable, false);
+                newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, false);
               } else {
-                SFCZVariableBase* newVariable = newDataWarehouse->d_sfczDB.get(label, matl, newPatch );
+                GridVariable* newVariable = 
+                  dynamic_cast<GridVariable*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
                 if (oldPatch->isVirtual()) {
                   // it can happen where the old patch was virtual and this is not
-                  SFCZVariableBase* tmpVar = dynamic_cast<SFCZVariableBase*>(newVariable->cloneType());
-                  oldDataWarehouse->d_sfczDB.get(label, matl, oldPatch, *tmpVar);
+                  GridVariable* tmpVar = newVariable->cloneType();
+                  oldDataWarehouse->d_varDB.get(label, matl, oldPatch, *tmpVar);
                   tmpVar->offset(oldPatch->getVirtualOffset());
                   newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
                   delete tmpVar;
@@ -1199,10 +1107,10 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                   copyLowIndex.z() >= copyHighIndex.z()){
                   break;
               }
-              if(!oldDataWarehouse->d_particleDB.exists(label, matl, oldPatch))
+              if(!oldDataWarehouse->d_varDB.exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                                           "in copyDataTo ParticleVariable", __FILE__, __LINE__));
-              if ( !newDataWarehouse->d_particleDB.exists(label, matl, newPatch) ) {
+              if ( !newDataWarehouse->d_varDB.exists(label, matl, newPatch) ) {
                 ParticleSubset* subset;
                 if (!newDataWarehouse->haveParticleSubset(matl, newPatch, 
                                                           newPatch->getInteriorCellLowIndex(),
@@ -1214,11 +1122,12 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 }
                 else
                   subset = newDataWarehouse->getParticleSubset(matl, newPatch);
-                ParticleVariableBase* v = oldDataWarehouse->d_particleDB.get(label, matl, oldPatch);
+                ParticleVariableBase* v = 
+                  dynamic_cast<ParticleVariableBase*>(oldDataWarehouse->d_varDB.get(label, matl, oldPatch));
                 ParticleVariableBase* newv = v->cloneType();
                 newv->copyPointer(*v);
                 newv->setParticleSubset(subset);
-                newDataWarehouse->d_particleDB.put(label, matl, newPatch, newv, false);
+                newDataWarehouse->d_varDB.put(label, matl, newPatch, newv, false);
               } else {
                 cout << "Particle copy not implemented for pre-existent var (BNR Regridder?)\n";
                 SCI_THROW(UnknownVariable(label->getName(), newDataWarehouse->getID(), oldPatch, matl,
@@ -1241,4 +1150,15 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
   // d_lock.writeUnlock(); Do we need this?
 
   dbg << "SchedulerCommon::copyDataToNewGrid() END" << endl;
+}
+
+void SchedulerCommon::scheduleDataCopyVar(string var)
+{
+  copyDataVars_.insert(var);
+  noScrubVars_.insert(var);
+}
+
+void SchedulerCommon::scheduleNotDataCopyVar(string var)
+{
+  notCopyDataVars_.insert(var);
 }

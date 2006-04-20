@@ -22,7 +22,7 @@
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <map>
 
@@ -44,7 +44,7 @@ public:
   // expected ghost cells from all requires.  requestedLow and requestedHigh
   // will cover that as well as the requested ghost cells (which may be more
   // than what will be required by future tasks).
-  void getExtents(const VarLabelMatlPatch& vmp,
+  void getExtents(const VarLabelMatl<Patch>& vmp,
 		  Ghost::GhostType requestedGType, int requestedNumGhostCells,
 		  IntVector& requiredLow, IntVector& requiredHigh,
 		  IntVector& requestedLow, IntVector& requestedHigh) const;
@@ -76,7 +76,7 @@ private:
     IntVector highOffset_;
   };
 
-  typedef std::map<VarLabelMatlPatch, Offsets> Map;
+  typedef std::map<VarLabelMatl<Patch>, Offsets> Map;
   Map map_;
 };
 

@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
@@ -40,7 +41,7 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
-static DebugStream taskdbg("TaskDBG", false);
+DebugStream taskdbg("TaskDBG", false);
 DebugStream mpidbg("MPIDBG",false);
 static Mutex sendsLock( "sendsLock" );
 
@@ -113,7 +114,9 @@ MPIScheduler::verifyChecksum()
   // things in the future:
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
-  int checksum = (int)graph.getTasks().size();
+  int checksum = 0;
+  for (unsigned i = 0; i < graphs.size(); i++)
+    checksum += graphs[i]->getTasks().size();
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
   int result_checksum;
   MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
@@ -126,38 +129,6 @@ MPIScheduler::verifyChecksum()
     MPI_Abort(d_myworld->getComm(), 1);
   }
   mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
-}
-
-void
-MPIScheduler::actuallyCompile()
-{
-  TAU_PROFILE("MPIScheduler::actuallyCompile()", " ", TAU_USER); 
-
-  dbg << d_myworld->myrank() << " MPIScheduler starting compile\n";
-  if( dts_ )
-    delete dts_;
-
-  if(graph.getNumTasks() == 0){
-    dts_=0;
-    return;
-  }
-
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  dts_ = graph.createDetailedTasks(lb, useInternalDeps() );
-
-  if(dts_->numTasks() == 0)
-    cerr << "WARNING: Scheduler executed, but no tasks\n";
-  
-  lb->assignResources(*dts_);
-  graph.createDetailedDependencies(dts_, lb);
-  //releasePort("load balancer");
-
-  dts_->assignMessageTags(d_myworld->myrank());
-
-  verifyChecksum();
-
-  dbg << d_myworld->myrank() << " MPIScheduler finished compile\n";
 }
 
 #ifdef USE_TAU_PROFILING
@@ -351,6 +322,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
 
+      //dbg.setActive(req->req->lookInOldTG);
       if (dbg.active()) {
         ostr << *req << ' ';
         dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " from dw " << dw->getID() << '\n';
@@ -388,6 +360,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 	cerrLock.lock();
 	dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
             << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
+        //dbg.setActive(false);
       }
       mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; cerrLock.unlock();
 
@@ -488,6 +461,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
     // Create the MPI type
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+      //dbg.setActive(req->req->lookInOldTG );
       if (dbg.active()) {
         ostr << *req << ' ';
         dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
@@ -505,8 +479,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 
       dw->recvMPI(*top->rs_, mpibuff, batch, posDW, req);
       if (!req->isNonDataDependency()) {
-	dts_->setScrubCount(req->req->var, req->matl, req->fromPatch,
-			    req->req->mapDataWarehouse(), dws);
+	graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
       }
 
     }
@@ -527,6 +500,14 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       int from = batch->fromTask->getAssignedResourceIndex();
       ASSERTRANGE(from, 0, d_myworld->size());
       MPI_Request requestid;
+
+      if( dbg.active()) {
+	cerrLock.lock();
+	dbg << d_myworld->myrank() << " Recving message number " << batch->messageTag 
+            << " from " << from << ": " << ostr.str() << "\n"; cerrLock.unlock();
+        //dbg.setActive(false);
+      }
+
       mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";      
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
 		d_myworld->getComm(), &requestid);
@@ -582,25 +563,38 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
 } // end processMPIRecvs()
 
 void
-MPIScheduler::execute()
+MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
-   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
+  TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
+  
+  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER); 
+  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[MPIScheduler::execute()] " , TAU_USER); 
+  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[MPIScheduler::execute()] " , TAU_USER); 
+  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[MPIScheduler::execute()] ", 
+                    TAU_USER); 
+  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[MPIScheduler::execute()] ", 
+                    TAU_USER); 
+  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[MPIScheduler::execute()] ", 
+                    TAU_USER); 
+  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[MPIScheduler::execute()] ", 
+                    TAU_USER); 
+  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", 
+                    TAU_USER); 
 
-   TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER); 
-   TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[MPIScheduler::execute()] " , TAU_USER); 
-   TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[MPIScheduler::execute()] " , TAU_USER); 
-   TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[MPIScheduler::execute()] ", 
-	TAU_USER); 
-   TAU_PROFILE_TIMER(testsometimer, "Test Some", "[MPIScheduler::execute()] ", 
-	TAU_USER); 
-   TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[MPIScheduler::execute()] ", 
-	TAU_USER); 
-   TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[MPIScheduler::execute()] ", 
-	TAU_USER); 
-   TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", 
-	TAU_USER); 
+  ASSERTRANGE(tgnum, 0, (int)graphs.size());
+  TaskGraph* tg = graphs[tgnum];
+  tg->setIteration(iteration);
+  currentTG_ = tgnum;
 
-  if(dts_ == 0){
+  if (graphs.size() > 1) {
+    // tg model is the multi TG model, where each graph is going to need to
+    // have its dwmap reset here (even with the same tgnum)
+    tg->remapTaskDWs(dwmap);
+  }
+
+  DetailedTasks* dts = tg->getDetailedTasks();
+
+  if(dts == 0){
     if (d_myworld->myrank() == 0)
       cerr << "MPIScheduler skipping execute, no tasks\n";
     return;
@@ -609,9 +603,9 @@ MPIScheduler::execute()
   //ASSERT(pg_ == 0);
   //pg_ = pg;
   
-  int ntasks = dts_->numLocalTasks();
-  dts_->initializeScrubs(dws);
-  dts_->initTimestep();
+  int ntasks = dts->numLocalTasks();
+  dts->initializeScrubs(dws, dwmap);
+  dts->initTimestep();
 
   if(d_logTimes){
     d_labels.clear();
@@ -634,7 +628,7 @@ MPIScheduler::execute()
   MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
 
   int me = d_myworld->myrank();
-  makeTaskGraphDoc(dts_, me);
+  makeTaskGraphDoc(dts, me);
 
   if(d_logTimes)
     emitTime("taskGraph output");
@@ -653,7 +647,7 @@ MPIScheduler::execute()
 
   if( dbg.active() ) {
     cerrLock.lock();
-    dbg << me << " Executing " << dts_->numTasks() << " tasks (" 
+    dbg << me << " Executing " << dts->numTasks() << " tasks (" 
 	       << ntasks << " local)\n";
     cerrLock.unlock();
   }
@@ -663,7 +657,7 @@ MPIScheduler::execute()
   int abort_point = 987654;
   while( numTasksDone < ntasks ) {
 
-    DetailedTask * task = dts_->getNextInternalReadyTask();
+    DetailedTask * task = dts->getNextInternalReadyTask();
 
     //cerr << "Got task: " << task->getTask()->getName() << "\n";
 
@@ -721,7 +715,7 @@ MPIScheduler::execute()
   ASSERT(sends_.numRequests() == 0);
   if(d_logTimes)
     emitTime("final wait");
-  if(restartable){
+  if(restartable && tgnum == graphs.size() -1) {
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size()-1]->timestepRestarted();
     int netrestart;

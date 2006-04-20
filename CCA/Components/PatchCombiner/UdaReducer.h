@@ -69,12 +69,14 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     virtual void scheduleTimeAdvance( const LevelP& level, 
-				       SchedulerP&, int step, int nsteps );
+     virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
      
 
+     virtual bool needRecompile(double time, double dt,
+                                const GridP& grid);
      double getMaxTime();
-     
+
+     GridP getGrid() { return oldGrid_; }
    private:
      UdaReducer(const UdaReducer&);
      UdaReducer& operator=(const UdaReducer&);
@@ -89,21 +91,13 @@ WARNING
 			 const PatchSubset* patches,
 			 const MaterialSubset* matls,
 			 DataWarehouse* /*old_dw*/,
-			 DataWarehouse* new_dw,
-			 Scheduler* sched);
-     
-     void setGridVars(const ProcessorGroup*,
-		      const PatchSubset* patches,
-		      const MaterialSubset* matls,
-		      DataWarehouse* /*old_dw*/,
-		      DataWarehouse* new_dw,
-		      VarLabel* label);
-     void setParticleVars(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* /*old_dw*/,
-			  DataWarehouse* new_dw,
-			  VarLabel* label);
+			 DataWarehouse* new_dw);
+
+     void readAndSetVars(const ProcessorGroup*,
+			 const PatchSubset* patches,
+			 const MaterialSubset* matls,
+			 DataWarehouse* /*old_dw*/,
+			 DataWarehouse* new_dw);
 
      string udaDir_;
      DataArchive* dataArchive_;

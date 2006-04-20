@@ -436,7 +436,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   DataWarehouse::ScrubMode ParentNewDW_scrubmode =
                            new_dw->setScrubbing(DataWarehouse::ScrubNone);
   SchedulerP subsched = sched->createSubScheduler();
-  subsched->initialize(3, 1, old_dw, new_dw);
+  subsched->initialize(3, 1);
+  subsched->setParentDWs(old_dw, new_dw);
   subsched->clearMappings();
   subsched->mapDataWarehouse(Task::ParentOldDW, 0);
   subsched->mapDataWarehouse(Task::ParentNewDW, 1);

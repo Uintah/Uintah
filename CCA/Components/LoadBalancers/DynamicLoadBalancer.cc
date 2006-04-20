@@ -774,7 +774,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   double interval = 0;
   double cellFactor = .1;
   int timestepInterval = 0;
-  d_outputNthProc = 1;
   double threshold = 0.0;
   bool spaceCurve = false;
   

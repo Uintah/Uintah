@@ -104,6 +104,7 @@ class DataArchive;
       DataArchive* d_archive;
 
       bool d_doAMR;
+      bool d_doMultiTaskgraphing;
 
       /* for restarting */
       bool           d_restarting;

@@ -75,8 +75,13 @@ class Regridder;
       AMRSimulationController& operator=(const AMRSimulationController&);
 
       //! recursively schedule refinement, coarsening, and time advances for
-      //! finer levels - compensating for time refinement.
-      void subCycle(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
+      //! finer levels - compensating for time refinement.  Builds one taskgraph
+      void subCycleCompile(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
+
+      //! recursively executes taskgraphs, as several were executed.  Similar to subCycleCompile,
+      //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
+      //! (to exsecute once) recursively.
+      void subCycleExecute(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
    };
 
 } // End namespace Uintah

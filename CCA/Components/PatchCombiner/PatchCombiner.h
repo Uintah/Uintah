@@ -13,6 +13,8 @@ namespace Uintah {
 
   using namespace std;
 
+  class Scheduler;
+
 /**************************************
 
 CLASS
@@ -69,8 +71,7 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     virtual void scheduleTimeAdvance( const LevelP& level, 
-				       SchedulerP&, int step, int nsteps );
+     virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
      
 
      double getMaxTime();
@@ -107,7 +108,6 @@ WARNING
 
      string udaDir_;
      DataArchive* dataArchive_;
-     DataWarehouse* dw_;
      const ProcessorGroup* world_;
      vector<int> timesteps_;
      vector<double> times_;
@@ -117,6 +117,7 @@ WARNING
      VarLabel* delt_label;
      vector<VarLabel*> labels_;
      SimulationStateP d_sharedState;
+     SchedulerP d_subsched;
    };
 } // End namespace Uintah
    

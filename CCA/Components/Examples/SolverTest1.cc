@@ -91,8 +91,7 @@ void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
-			       int, int )
+SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			   this, &SolverTest1::timeAdvance,

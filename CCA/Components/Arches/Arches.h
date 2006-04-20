@@ -139,7 +139,7 @@ int nofTimeSteps;
       ///////////////////////////////////////////////////////////////////////
       // Schedule time advance
       virtual void scheduleTimeAdvance( const LevelP& level, 
-					SchedulerP&, int step, int nsteps );
+					SchedulerP&);
 
       ///////////////////////////////////////////////////////////////////////
        // Function to return boolean for recompiling taskgraph

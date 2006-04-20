@@ -1,9 +1,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
 
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
@@ -44,12 +42,8 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
 
   if(scheduler == "SingleProcessorScheduler"){
     sch = scinew SingleProcessorScheduler(world, output);
-  } else if(scheduler == "SimpleScheduler"){
-    sch = scinew SimpleScheduler(world, output);
   } else if(scheduler == "MPIScheduler"){
     sch = scinew MPIScheduler(world, output);
-  } else if(scheduler == "NullScheduler"){
-    sch = scinew NullScheduler(world, output);
   } else {
     sch = 0;   
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);

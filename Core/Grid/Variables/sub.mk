@@ -15,8 +15,6 @@ SRCS     += \
 	$(SRCDIR)/SoleVariable_special.cc \
 	$(SRCDIR)/Stencil7.cc \
 	$(SRCDIR)/VarLabel.cc \
-	$(SRCDIR)/VarLabelLevelDW.cc \
-	$(SRCDIR)/VarLabelMatlPatch.cc \
 	$(SRCDIR)/ScrubItem.cc \
 	$(SRCDIR)/PSPatchMatlGhost.cc \
 	$(SRCDIR)/Variable.cc \

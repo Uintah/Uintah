@@ -73,8 +73,7 @@ void Poisson3::scheduleComputeStableTimestep(const LevelP& level,
 
 
 void
-Poisson3::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
-			       int, int )
+Poisson3::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			   this, &Poisson3::timeAdvance,
@@ -254,19 +253,17 @@ void Poisson3::refine(const ProcessorGroup*,
 
 
 void Poisson3::scheduleRefineInterface(const LevelP& fineLevel,
-				       SchedulerP& sched,
-				       int step, int nsteps)
+				       SchedulerP& sched, bool needCoarseOld, bool needCoarseNew)
 {
   dbg << "Poisson3::scheduleRefineInterface\n";
-  Task* task = scinew Task("refineInterface", this, &Poisson3::refineInterface,
-			   step, nsteps);
+  Task* task = scinew Task("refineInterface", this, &Poisson3::refineInterface);
 
   task->requires(Task::OldDW, lb_->phi, Ghost::None);
   task->requires(Task::CoarseOldDW, lb_->phi,
 		 0, Task::CoarseLevel,
 		 0, Task::NormalDomain, 
                  Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
-  if(step != 0)
+  if(needCoarseNew)
     task->requires(Task::CoarseNewDW, lb_->phi,
 		   0, Task::CoarseLevel,
 		   0, Task::NormalDomain, 
@@ -280,8 +277,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 	                       const PatchSubset* finePatches, 
 		               const MaterialSubset* matls,
                                DataWarehouse* old_dw, 
-		               DataWarehouse* new_dw,
-			       int step, int nsteps)
+		               DataWarehouse* new_dw)
 {
   dbg << "Poisson3::refineInterface\n";
   // Doesn't interpolate between coarse DWs
@@ -290,7 +286,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
   dbg << "old_dw: " << old_dw->getID() << ", new_dw: " << new_dw->getID() << ", coarse_old_dw: " << coarse_old_dw->getID() << ", coarse_new_dw: " << coarse_new_dw->getID() << '\n';
   const Level* fineLevel = getLevel(finePatches);
   LevelP coarseLevel = fineLevel->getCoarserLevel();
-  double weight1 = double(step)/double(nsteps);
+  double weight1 = getSubCycleProgress(new_dw);
   double weight2 = 1-weight1;
   for(int p = 0; p < finePatches->size(); p++){
     const Patch* finePatch = finePatches->get(p);
@@ -325,7 +321,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 			      high);
 	    IntVector diff = h-l;
 	    total_fine += diff.x()*diff.y()*diff.z();
-	    if(step == 0){
+	    if(weight1 == 0){
 	      // For all finegrid nodes
 	      constNCVariable<double> coarsePhi;
 	      coarse_old_dw->get(coarsePhi, lb_->phi, matl, coarsePatch,

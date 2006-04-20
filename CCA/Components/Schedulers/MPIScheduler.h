@@ -76,7 +76,7 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void execute();
+    virtual void execute(int tgnum = 0, int iteration = 0);
 
     virtual SchedulerP createSubScheduler();
       
@@ -106,8 +106,6 @@ WARNING
     { return d_myworld; }
     virtual const MaterialSet* getMaterialSet() const {return reloc_.getMaterialSet();}
   protected:
-    virtual void actuallyCompile();
-    
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
 			       bool only_old_recvs, int abort_point);

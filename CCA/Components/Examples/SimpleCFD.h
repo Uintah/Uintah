@@ -63,8 +63,8 @@ WARNING
 				    SchedulerP& sched);
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&);
-    virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&,
-				      int step, int nsteps);
+    virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
+				      
 
     struct DiffuseInfo {
       string varname;
@@ -72,12 +72,11 @@ WARNING
       const VarLabel* scalar_matrix;
       const VarLabel* scalar_rhs;
       double rate;
-      int step, nsteps;
       DiffuseInfo(const string& varname, const VarLabel* scalar,
 		  const VarLabel* scalar_matrix, const VarLabel* scalar_rhs,
-		  double rate, int step, int nsteps)
+		  double rate)
 	: varname(varname), scalar(scalar), scalar_matrix(scalar_matrix),
-	scalar_rhs(scalar_rhs), rate(rate), step(step), nsteps(nsteps)
+	scalar_rhs(scalar_rhs), rate(rate)
 	{
 	}
     };
@@ -108,8 +107,7 @@ WARNING
 				  const VarLabel* label,
 				  int matl, double factor);
     virtual void addRefineDependencies(Task* task, const VarLabel* var,
-				       int step, int nsteps);
-    
+				       bool needCoarseOld, bool needCoarseNew);
     void schedulePressureSolve(const LevelP& level, SchedulerP& sched,
 			       SolverInterface* solver,
 			       const VarLabel* pressure,
@@ -124,8 +122,7 @@ WARNING
 			       const VarLabel* scalar_rhs,
 			       double rate,
 			       SolverInterface* solver,
-			       const SolverParameters* solverparams,
-			       int step, int nsteps);
+			       const SolverParameters* solverparams);
 
     void initialize(const ProcessorGroup*,
 		    const PatchSubset* patches, const MaterialSubset* matls,
@@ -141,8 +138,7 @@ WARNING
     void advectVelocity(const ProcessorGroup*,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw,
-			int step, int nsteps);
+			DataWarehouse* old_dw, DataWarehouse* new_dw);
     void applyForces(const ProcessorGroup*,
 		     const PatchSubset* patches,
 		     const MaterialSubset* matls,
@@ -151,7 +147,7 @@ WARNING
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
 			DataWarehouse* old_dw, DataWarehouse* new_dw,
-			int dir, int step, int nsteps);
+			int dir);
     void projectVelocity(const ProcessorGroup*,
 			 const PatchSubset* patches,
 			 const MaterialSubset* matls,
@@ -168,8 +164,7 @@ WARNING
     void advectScalars(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw,
-		       int step, int nsteps);
+		       DataWarehouse* old_dw, DataWarehouse* new_dw);
     void diffuseScalar(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,

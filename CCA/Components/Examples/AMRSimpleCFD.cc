@@ -115,8 +115,7 @@ void AMRSimpleCFD::initialize(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void AMRSimpleCFD::scheduleRefineInterface(const LevelP& /*fineLevel*/,
-					   SchedulerP& /*sched*/,
-					   int /*step*/, int /*nsteps*/)
+					   SchedulerP& /*sched*/, bool, bool)
 {
   cout_doing << "AMRSimpleCFD::scheduleRefineInterface not implemented.\n";
 }
@@ -446,12 +445,9 @@ void refineFaces(const Patch* patch,
 //
 void AMRSimpleCFD::addRefineDependencies(Task* task, 
                                          const VarLabel* var,
-					      int step, 
-                                         int nsteps)
+                                         bool needCoarseOld, bool needCoarseNew)
 {
-  cout_doing << "Doing addRefineDependencies  \t\t\t AMRSimpleCFD" 
-             << " step " << step << " nsteps " << nsteps <<'\n';
-  ASSERTRANGE(step, 0, nsteps+1);
+  cout_doing << "Doing addRefineDependencies  \t\t\t AMRSimpleCFD\n";
 
   Ghost::GhostType gc = Ghost::AroundCells;
   /*
@@ -463,10 +459,10 @@ void AMRSimpleCFD::addRefineDependencies(Task* task,
   else if (type == TypeDescription::SFCZVariable)
     gc = Ghost::AroundFacesZ;
   */
-  if(step != nsteps)
+  if(needCoarseOld)
     task->requires(Task::CoarseOldDW, var,
 		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
-  if(step != 0)
+  if(needCoarseNew)
     task->requires(Task::CoarseNewDW, var,
 		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
 }

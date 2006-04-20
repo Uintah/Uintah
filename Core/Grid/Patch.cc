@@ -1191,6 +1191,8 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
   // such that the extra cell of one patch overlaps a normal cell of another
   // in such conditions, we shall exclude that extra cell from MPI communication
   // Also disclude overlapping extra cells just to be safe
+
+  // region is the portion of neighbor that 'this' wants to receive.
   IntVector patch_low = getLowIndex(basis, bl);
   IntVector patch_high = getHighIndex(basis, bl);
   
@@ -1228,6 +1230,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
         }
         if (!(int_low[otherdim2] == region_low[otherdim2] && int_high[otherdim2] == region_high[otherdim2])) {
           if (two_diff) {
+            cout << "  Patch: " << *this << " neighbor: " << *neighbor << endl;
             throw InternalError("Patches overlap, but not correctly", __FILE__, __LINE__);
           }
           two_diff = true;
