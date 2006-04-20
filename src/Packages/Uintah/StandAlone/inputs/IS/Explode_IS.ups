@@ -131,10 +131,10 @@
                               <value> [0.,10.,0.] </value>
         </BCType>
         <BCType id = "2" label = "Temperature"  var = "Dirichlet">
-                              <value> 419.4444  </value>
+                              <value> 298  </value>
         </BCType>
         <BCType id = "2" label = "Density"      var = "Dirichlet">
-                              <value> 0.930025  </value>
+                              <value> 0.656062  </value>
         </BCType>
         <BCType id = "2" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
@@ -158,7 +158,7 @@
                               <value> 298.0  </value>
         </BCType>
         <BCType id = "2" label = "Density"      var = "Dirichlet">
-                              <value> 1.1792946927374306  </value>
+                              <value> 1.17982  </value>
         </BCType>
         <BCType id = "2" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
@@ -548,8 +548,8 @@
                  </difference>
             <res>                      [2,2,2]       </res>
             <velocity>           [0.0,0.0,0.0]       </velocity>
-            <temperature>        300.0               </temperature>
-            <density>            1.1792946927374306  </density>
+            <temperature>        298.0               </temperature>
+            <density>            1.17982             </density>
             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
