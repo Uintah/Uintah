@@ -436,11 +436,7 @@
           <useModifiedEOS>                true  </useModifiedEOS>
         </constitutive_model>
         <geom_object>
-          <cylinder label = "inner cylinder">
-            <bottom>           [0.0,0.0,-.0508]   </bottom>
-            <top>              [0.0,0.0, .0508]   </top>
-            <radius>           0.0508             </radius>
-          </cylinder>
+          <cylinder label = "inner cylinder">   </cylinder>
           <res>                 [2,2,2]         </res>
           <velocity>            [0.0,0.0,0.0]   </velocity>
           <temperature>         300.0           </temperature>
@@ -472,11 +468,7 @@
                       <min>           [-1.1,-1.1,-1.1]    </min>
                       <max>           [ 1.1, 1.1, 1.1]    </max>
                   </box>
-                  <cylinder label = "container">
-                     <bottom>       [0.0,0.0,-.06985]     </bottom>
-                     <top>          [0.0,0.0, .06985]     </top>
-                     <radius>       0.05715               </radius>
-                   </cylinder>
+                  <cylinder label = "outer cylinder">     </cylinder>
                  </difference>
             <res>                      [2,2,2]       </res>
             <velocity>           [0.0,0.0,0.0]       </velocity>
@@ -561,15 +553,8 @@
           </constants>
           <geom_object>
             <difference>
-             <box label="domain">
-                 <min>           [-1.1,-1.1,-1.1]    </min>
-                 <max>           [ 1.1, 1.1, 1.1]    </max>
-             </box>
-             <cylinder label = "container">
-                <bottom>       [0.0,0.0,-.06985]     </bottom>
-                <top>          [0.0,0.0, .06985]     </top>
-                <radius>       0.05715               </radius>
-              </cylinder>
+             <box label="domain">                 </box>
+             <cylinder label = "outer cylinder">  </cylinder>
             </difference>
             <scalar>  0.0 </scalar>
           </geom_object>

@@ -255,12 +255,9 @@
                     <min>           [-1.0,-1.0,-1.0]    </min>
                     <max>           [4.0,4.0,4.0 ]      </max>
                 </box>
-              <box label="gpicehole">
-                    <min>           [1.0,1.0,1.0]       </min>
-                    <max>           [1.5,1.5,1.5]       </max>
-                </box>
+              <box label="gpmpm">                       </box>
               </difference>
-               <res>                      [2,2,2]        </res>
+               <res>                      [2,2,2]       </res>
                <velocity>           [10.0,10.0,10.0]     </velocity>
                <temperature>        300.0               </temperature>
                <density>    1.1792946927374306000e+00   </density>

@@ -236,17 +236,11 @@
                        <min>           [-1.0,-1.0,-1.0]    </min>
                        <max>           [11.0,11.0,11.0 ]   </max>
                    </box>
-                   <box label="piston">
-                       <min>           [4.5,4.5,4.5]      </min>
-                       <max>           [5.5,5.5,5.5]      </max>
-                   </box>
+                   <box label="piston">                 </box>
                  </difference>
-                   <box label="hmx_block">
-                        <min>           [4.5,3.0,4.5]   </min>
-                        <max>           [5.5,4.0,5.5]   </max>
-                   </box>
+                   <box label="hmx_block">              </box>
                </difference>
-               <res>                      [2,2,2]        </res>
+               <res>                      [2,2,2]       </res>
                <velocity>           [0.1,0.1,0.1]       </velocity>
                <temperature>        300.0               </temperature>
                <density>      1.1792946927374306000e+03 </density>
