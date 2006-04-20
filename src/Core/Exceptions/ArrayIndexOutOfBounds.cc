@@ -71,7 +71,6 @@ ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds& copy)
     
 ArrayIndexOutOfBounds::~ArrayIndexOutOfBounds()
 {
-    free(msg);
 }
 
 const char* ArrayIndexOutOfBounds::message() const
