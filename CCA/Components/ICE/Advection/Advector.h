@@ -38,7 +38,9 @@ namespace Uintah {
     Advector();
     virtual ~Advector();
     
-    virtual Advector* clone(DataWarehouse* new_dw, const Patch* patch) = 0;
+    virtual Advector* clone(DataWarehouse* new_dw, 
+                            const Patch* patch,
+                            const bool isNewGrid) = 0;
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_FC,
