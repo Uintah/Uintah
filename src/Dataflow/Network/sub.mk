@@ -51,6 +51,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
         Dataflow/Comm      \
+        Dataflow/Modules/Render      \
         Core/Datatypes     \
         Core/Exceptions    \
         Core/Containers    \

@@ -33,6 +33,7 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Modules/Render/Viewer.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
@@ -646,6 +647,8 @@ NetworkIO::load_network()
   gui->eval("set netedit_savefile " + net_file_);
   gui->eval("::netedit scheduleok");
 
+  // first draw autoview.
+  Viewer::set_autoview_pending();
   return true;
 }
 
