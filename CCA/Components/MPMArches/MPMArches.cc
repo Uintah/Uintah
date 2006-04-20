@@ -1026,7 +1026,7 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   // Arches steps are identical with those in single-material code
   // once exchange terms are determined
 
-  d_arches->scheduleTimeAdvance( level, sched, step, nsteps );
+  d_arches->scheduleTimeAdvance( level, sched );
 
   // remaining MPM steps are explicitly shown here.
   d_mpm->scheduleExMomInterpolated(sched, patches, mpm_matls);
