@@ -25,7 +25,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0e-2      </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-        <max_iterations>    30         </max_iterations>
+        <max_Timesteps>    30           </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -185,7 +185,7 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/>  
       <save label="temp_CC"/>    
-      <checkpoint interval="0.005" cycle="2"/>"
+      <checkpoint timestepInterval="5" cycle="2"/>"
    </DataArchiver>
 
   <Debug>
@@ -221,7 +221,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.25</cfl>
+         <cfl>0.1</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
@@ -253,7 +253,7 @@
         
         <!--A M R -->
         <AMR>
-          <orderOfInterpolation>0  </orderOfInterpolation>
+          <orderOfInterpolation>1  </orderOfInterpolation>
           <useLockStep>       true </useLockStep>
           <do_Refluxing>      true </do_Refluxing>
           <Refinement_Criteria_Thresholds>
@@ -296,7 +296,7 @@
                <res>           [2,2,2]                  </res>
                <velocity>      [10.,10.,10.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
-               <pressure>      1013250                 </pressure>     
+               <pressure>      101325                 </pressure>     
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
