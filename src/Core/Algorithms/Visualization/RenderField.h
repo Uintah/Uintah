@@ -730,7 +730,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
       lines = scinew GeomLines;
       display_list = scinew GeomDL(lines);
     }
-    lines->setLineWidth(edge_scale);
+    lines->setLineWidth(1.0);
   }
 
   // Use a default color?
@@ -999,7 +999,7 @@ RenderField<Fld, Loc>::render_edges_linear(Fld *sfld,
       lines = scinew GeomLines;
       display_list = scinew GeomDL(lines);
     }
-    lines->setLineWidth(edge_scale);
+    lines->setLineWidth(1.0);
   }
 
   // Use a default color?
