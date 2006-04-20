@@ -571,7 +571,9 @@ void ICE::setupRHS(const ProcessorGroup*,
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(), level);
     
-    Advector* advector = d_advector->clone(new_dw,patch);
+    bool newGrid = d_sharedState->isRegridTimestep();
+    Advector* advector = d_advector->clone(new_dw,patch,newGrid );
+    
     CCVariable<double> q_advected, rhs;
     CCVariable<double> sumAdvection, massExchTerm;
     constCCVariable<double> press_CC, oldPressure, speedSound, sumKappa;

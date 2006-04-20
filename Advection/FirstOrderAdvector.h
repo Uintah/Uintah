@@ -12,11 +12,14 @@ namespace Uintah {
 
   public:
     FirstOrderAdvector();
-    FirstOrderAdvector(DataWarehouse* new_dw, const Patch* patch);
+    FirstOrderAdvector(DataWarehouse* new_dw, 
+                       const Patch* patch,
+                       const bool isNewGrid);
     virtual ~FirstOrderAdvector();
 
     virtual FirstOrderAdvector* clone(DataWarehouse* new_dw, 
-                                      const Patch* patch);
+                                      const Patch* patch,
+                                      const bool isNewGrid);
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_CC,

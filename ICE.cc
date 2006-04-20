@@ -3359,9 +3359,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx     = patch->dCell();
+    double vol    = dx.x()*dx.y()*dx.z(); 
+    
+    bool newGrid = d_sharedState->isRegridTimestep();
+    Advector* advector = d_advector->clone(new_dw,patch,newGrid );   
 
-    double vol    = dx.x()*dx.y()*dx.z();    
-    Advector* advector = d_advector->clone(new_dw,patch);
     CCVariable<double> q_advected;
     CCVariable<double> delP_Dilatate;
     CCVariable<double> delP_MassX;
@@ -4969,7 +4971,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
     CCVariable<double>  q_advected, mass_new, mass_advected;
     CCVariable<Vector>  qV_advected; 
 
-    Advector* advector = d_advector->clone(new_dw,patch);
+    bool newGrid = d_sharedState->isRegridTimestep();
+    Advector* advector = d_advector->clone(new_dw,patch,newGrid );
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
     new_dw->allocateTemporary(mass_new,     patch);
