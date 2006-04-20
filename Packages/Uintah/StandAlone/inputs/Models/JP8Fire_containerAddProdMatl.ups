@@ -129,10 +129,10 @@
                               <value> [0.,10.,0.] </value>
         </BCType>
         <BCType id = "3" label = "Temperature"  var = "Dirichlet">
-                              <value> 419.4444   </value>
+                              <value> 298   </value>
         </BCType>
         <BCType id = "3" label = "Density"      var = "Dirichlet">
-                              <value> 0.930025  </value>
+                              <value> 0.656062  </value>
         </BCType>
         <BCType id = "3" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
@@ -156,7 +156,7 @@
                               <value> 298.0  </value>
         </BCType>
         <BCType id = "3" label = "Density"      var = "Dirichlet">
-                              <value> 1.1792946927374306  </value>
+                              <value> 1.17982  </value>
         </BCType>
         <BCType id = "3" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
@@ -544,8 +544,8 @@
                  </difference>
             <res>                      [2,2,2]       </res>
             <velocity>           [0.0,0.0,0.0]       </velocity>
-            <temperature>        300.0               </temperature>
-            <density>            1.1792946927374306  </density>
+            <temperature>        298.0               </temperature>
+            <density>            1.179826            </density>
             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
@@ -636,8 +636,8 @@
         <!--_______________________________________________________________-->
         <!-- Arches JP8 Table.  Note - if you use this, you must also      -->
         <!-- use the corresponding density AND temperature at the inlet    -->
-        <!-- Also, if you use a co-flow, you muse set the coflow           -->
-        <!-- temperature to 298.0 and the co-flow density to 1.1798322     -->
+        <!-- Also, if you use a co-flow, you must set the coflow           -->
+        <!-- temperature and density                                       -->
         <table name="adiabatic" type="Arches">
           <include href="inputs/Models/JP8.xml"/>
 	 </table>
