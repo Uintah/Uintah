@@ -76,6 +76,8 @@ namespace SCIRun {
 #define EXPERIMENTAL_TCL_THREAD
 #endif
 
+// init the static variable.
+bool Viewer::autoview_pending_ = false;
 
 #ifdef __linux
 // This is a workaround for an unusual crash on exit bug on newer
@@ -922,8 +924,24 @@ Viewer::set_context(Network* network)
   {
     sched_->add_callback(save_image_callback, this, -1);
   }
+  sched_->add_callback(check_autoview_on_load, this, -1);
 }
 
+bool
+Viewer::check_autoview_on_load(void *voidstuff)
+{
+  if (autoview_pending_) {
+    Viewer *viewer = (Viewer *)voidstuff;
+    for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
+    {
+      BBox bbox;
+      viewer->view_window_[i]->get_bounds(bbox);
+      viewer->view_window_[i]->autoview(bbox);
+    }
+    autoview_pending_ = false;
+  }
+  return true;
+}
 
 bool
 Viewer::save_image_callback(void *voidstuff)
