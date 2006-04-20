@@ -88,6 +88,7 @@ private:
   const static std::string DEFAULT_PORT_NAMESPACE;
   const static std::string DEFAULT_SIDL_PORT_NAMESPACE;
   const std::string SERVICES_POINTER;
+  const std::string TYPEMAP_POINTER;
   const std::string LICENCE;
 
 
