@@ -70,7 +70,7 @@
           name CDATA #REQUIRED>
 
 
-<!ELEMENT module (position, gui_callback?, note?, port_caching?, var*)>
+<!ELEMENT module (position, note?, gui_callback?, port_caching?, var*)>
 <!ATTLIST module
           id CDATA #REQUIRED
           package CDATA #REQUIRED
