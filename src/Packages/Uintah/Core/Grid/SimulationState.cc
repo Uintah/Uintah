@@ -68,6 +68,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   max_matl_index = 0;
   refine_flag_matls = 0;
   d_isCopyDataTimestep = 0;
+  d_isRegridTimestep = 0;
 
   d_switchState = false;
   d_simTime = 0;

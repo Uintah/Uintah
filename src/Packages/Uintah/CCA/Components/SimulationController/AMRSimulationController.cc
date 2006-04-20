@@ -148,10 +148,10 @@ void AMRSimulationController::run()
      max_iterations = d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep();
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations) {
+   
      if (d_doAMR && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
      }
-
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
      int totalFine=1;
@@ -487,9 +487,12 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
   double regridTime = Time::currentSeconds() - start;
+  d_sharedState->setRegridTimestep(false);
+  
   if (currentGrid != oldGrid) {
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
+      d_sharedState->setRegridTimestep(true);
       //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
       for (int i = 0; i < currentGrid->numLevels(); i++) {
         cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
