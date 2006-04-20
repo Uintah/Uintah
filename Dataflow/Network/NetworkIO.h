@@ -61,7 +61,7 @@ public:
   static bool done_writing() { return done_writing_; }
   static bool has_file() { return net_file_ != string(""); }
   static bool autoview_pending() { return autoview_pending_; }
-  static bool clear_autoview_pending() { autoview_pending_ = false; }
+  static void clear_autoview_pending() { autoview_pending_ = false; }
   bool load_network();
 
   //! Interface to build up an xml document for saving.
