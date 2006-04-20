@@ -15,8 +15,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-#define LOG
-//#undef LOG
+//#define LOG
+#undef LOG
 
 MPMPetscSolver::MPMPetscSolver()
 {
