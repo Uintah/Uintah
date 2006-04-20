@@ -254,10 +254,7 @@
                     <min>       [ -1.0, -1.0, -1.0 ]       </min>
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
-              <box label="gpicehole">
-                    <min>       [ 2.0, 2.0, 2.0 ]       </min>
-                    <max>       [ 3.0, 3.0, 3.0 ]       </max>
-                </box>
+                <box label="gpmpm">                     </box>
               </difference>
                <res>                [2,2,2]             </res>
                <velocity>           [0.0,0.0,0.0]       </velocity>

@@ -280,11 +280,8 @@
         <constants>
         </constants>
         <geom_object>
-                <box label="world">
-                  <min>       [ -6.0, -6.0, -6.0 ]   </min>
-                  <max>       [ 6.0, 6.0, 6.0 ]      </max>
-                </box>
-            <scalar>    0.00   </scalar>
+            <box label="world">                     </box>
+            <scalar>    0.00      </scalar>
         </geom_object>
         <geom_object>
               <sphere label = "CH4_blob">
