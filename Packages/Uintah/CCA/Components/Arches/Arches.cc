@@ -846,8 +846,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 // ****************************************************************************
 void 
 Arches::scheduleTimeAdvance( const LevelP& level, 
-			     SchedulerP& sched,
-			     int /*step*/, int /*nsteps*/ ) // AMR Parameters
+			     SchedulerP& sched)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;

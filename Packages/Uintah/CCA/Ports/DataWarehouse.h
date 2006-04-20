@@ -175,7 +175,8 @@ public:
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constNCVariableBase&, const VarLabel*,
   			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high) = 0;
+  			 const IntVector& low, const IntVector& high,
+                         bool useBoundaryCells = true) = 0;
   void copyOut(NCVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -230,7 +231,8 @@ public:
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
   			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high) = 0;
+  			 const IntVector& low, const IntVector& high,
+                         bool useBoundaryCells = true) = 0;
   void copyOut(SFCXVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -256,7 +258,8 @@ public:
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constSFCYVariableBase&, const VarLabel*,
   			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high) = 0;
+  			 const IntVector& low, const IntVector& high,
+                         bool useBoundaryCells = true) = 0;
   void copyOut(SFCYVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -282,7 +285,8 @@ public:
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constSFCZVariableBase&, const VarLabel*,
   			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high) = 0;
+  			 const IntVector& low, const IntVector& high,
+                         bool useBoundaryCells = true) = 0;
   void copyOut(SFCZVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -331,7 +335,6 @@ public:
 
   // For the schedulers
   virtual bool isFinalized() const = 0;
-  //virtual bool exists(const VarLabel*, const Patch*) const = 0;
   virtual void finalize() = 0;
   virtual void unfinalize() = 0;
   virtual void refinalize() = 0;

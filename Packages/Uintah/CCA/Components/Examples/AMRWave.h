@@ -47,7 +47,7 @@ WARNING
                               GridP& grid, SimulationStateP& sharedState);
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
 					 SchedulerP& scheduler,
-					 int step, int nsteps);
+					 bool needCoarseOld, bool needCoarseNew);
     virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
     virtual void scheduleRefine (const PatchSet* patches, SchedulerP& sched);
 
@@ -55,13 +55,11 @@ WARNING
 				       SchedulerP& sched);
     virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                               SchedulerP& sched);
-    virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&, int step, int nsteps );
+    virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
   protected:
-    virtual void addRefineDependencies( Task* /*task*/, const VarLabel* /*label*/,
-                                        int /*step*/, int /*nsteps*/ );
+    virtual void addRefineDependencies( Task* /*task*/, const VarLabel* /*label*/, bool needCoarseOld, bool needCoarseNew);
     virtual void refineFaces(const Patch* finePatch, const Level* fineLevel, const Level* coarseLevel, 
-                      CCVariable<double>& finevar, const VarLabel* label, int step, int nsteps,
+                      CCVariable<double>& finevar, const VarLabel* label,
                       int matl, DataWarehouse* coarse_old_dw, DataWarehouse* coarse_new_dw);
   private:
     void errorEstimate(const ProcessorGroup*,

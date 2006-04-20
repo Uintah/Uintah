@@ -5,7 +5,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlDW.h>
 #include <Packages/Uintah/Core/Grid/Variables/ScrubItem.h>
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Thread/Mutex.h>
@@ -134,8 +133,7 @@ namespace Uintah {
   };
 
   typedef FastHashTable<ScrubItem> ScrubCountTable;
-  typedef map<VarLabelMatlDW<Level>, int> ScrubCountMapLevel;
-  
+
   class DetailedTask {
   public:
     DetailedTask(Task* task, const PatchSubset* patches,
@@ -241,7 +239,7 @@ namespace Uintah {
 
     void assignMessageTags(int me);
 
-    void initializeScrubs(vector<OnDemandDataWarehouseP>& dws);
+    void initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dwmap[]);
 
     void possiblyCreateDependency(DetailedTask* from, Task::Dependency* comp,
 				  const Patch* fromPatch,
@@ -280,9 +278,8 @@ namespace Uintah {
     const TaskGraph* getTaskGraph() const {
       return taskgraph_;
     }
-    void setScrubCount(const VarLabel* var, int matlindex,
-		       const Patch* patch, int dw,
-		       vector<OnDemandDataWarehouseP>& dws);
+    void setScrubCount(const Task::Dependency* req, int matl, const Patch* patch,
+                       vector<OnDemandDataWarehouseP>& dws);
 
     friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
     friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
@@ -302,13 +299,9 @@ namespace Uintah {
 
     void addScrubCount(const VarLabel* var, int matlindex,
                             const Patch* patch, int dw);
-    void addScrubCount(const VarLabel* var, int matlindex,
-                       const Level* level, int dw);
 
     bool getScrubCount(const VarLabel* var, int matlindex,
 		       const Patch* patch, int dw, int& count);
-    bool getScrubCount(const VarLabel* var, int matlindex,
-		       const Level* level, int dw, int& count);
 
     SchedulerCommon* sc_;
     const ProcessorGroup* d_myworld;
@@ -344,7 +337,6 @@ namespace Uintah {
     Semaphore readyQueueSemaphore_;
 
     ScrubCountTable scrubCountTable_;
-    ScrubCountMapLevel scrubCountMapLevel_;
 
     DetailedTasks(const DetailedTasks&);
     DetailedTasks& operator=(const DetailedTasks&);

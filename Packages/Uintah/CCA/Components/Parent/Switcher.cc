@@ -144,6 +144,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
   // Some components need the output port attached to each individual component
   // At the time of Switcher constructor, the data archiver is not available.
   Output* output = dynamic_cast<Output*>(getPort("output"));
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   ModelMaker* modelmaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   
   for (unsigned i = 0; i < d_numComponents; i++) {
@@ -151,6 +152,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
       dynamic_cast<UintahParallelComponent*>(getPort("sim",i));
 
     comp->attachPort("output",output);
+    comp->attachPort("scheduler",sched);
     comp->attachPort("modelmaker",modelmaker);
     // Do the materialmaker stuff
 
@@ -225,10 +227,9 @@ void Switcher::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-Switcher::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
-                              int a, int b )
+Switcher::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 {
-  d_sim->scheduleTimeAdvance(level,sched,a,b);
+  d_sim->scheduleTimeAdvance(level,sched);
   scheduleSwitchTest(level,sched);
 
   // compute vars for the next component that may not have been computed by the current
@@ -262,7 +263,6 @@ void Switcher::scheduleInitNewVars(const LevelP& level, SchedulerP& sched)
 // note - won't work if number of levels changes
 void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
 {
-
   static bool first = true;
   Task* t = scinew Task("Switcher::carryOverVars",
                         this, & Switcher::carryOverVars);
@@ -284,18 +284,14 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
       if (!d_carryOverVarLabels[i])
         continue;
       bool found = false;
-      for (int j = 0; j < sched->getNumTasks(); j++) {
-        for(Task::Dependency* dep = sched->getTask(j)->getComputes(); dep != 0; dep=dep->next){
-          //if(!sched->isOldDW(dep->mapDataWarehouse()))
-          //continue;
-          if (dep->var == d_carryOverVarLabels[i]) {
-            found = true;
-            break;
-          }
-        }
-        // it's already being required by somebody else, so ignore it
-        if (found)
+
+      // if it's required by the old dw in this tg, then it should also be computed
+      const vector<const Task::Dependency*>& deps = sched->getInitialRequires();
+      for (unsigned j = 0; j < deps.size(); j++) {
+        if (deps[j]->var == d_carryOverVarLabels[i]) {
+          found = true;
           break;
+        }
       }
       if (found) {
         //cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;

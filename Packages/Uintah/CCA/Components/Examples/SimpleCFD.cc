@@ -268,8 +268,7 @@ void SimpleCFD::scheduleComputeStableTimestep(const LevelP& level,
 //______________________________________________________________________
 //           S C H E D U L E     T I M E     A D V A N C E
 void
-SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
-                                int step, int nsteps )
+SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched )
 {
   cout_doing << "SimpleCFD::scheduleTimeAdvance on level " << level->getIndex() << '\n';
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
@@ -279,8 +278,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   Task* task;
   //______________________________________________________________________
   //    SCHEDULE ADVECT VELOCITY
-  task = scinew Task("advectVelocity", this, &SimpleCFD::advectVelocity,
-                     step, nsteps);
+  task = scinew Task("advectVelocity", this, &SimpleCFD::advectVelocity);
   cout_doing << "SimpleCFD::scheduleadvectVelocity on level " << level->getIndex() << '\n';
 #if 0
   task->requires(Task::OldDW, sharedState_->get_delt_label());
@@ -293,9 +291,9 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   task->computes(lb_->yvelocity);
   task->computes(lb_->zvelocity);
   if(level->getIndex()>0){        // REFINE 
-    addRefineDependencies(task, lb_->xvelocity, step, nsteps);
-    addRefineDependencies(task, lb_->yvelocity, step, nsteps);
-    addRefineDependencies(task, lb_->zvelocity, step, nsteps);
+    addRefineDependencies(task, lb_->xvelocity, true, true);
+    addRefineDependencies(task, lb_->yvelocity, true, true);
+    addRefineDependencies(task, lb_->zvelocity, true, true);
   }
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   //__________________________________
@@ -327,8 +325,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   //    SCHEDULE APPLY VISCOSITY
   cout_doing << "SimpleCFD::scheduleApplyViscosity on level " << level->getIndex() << '\n';
   for(int dir=0;dir<3;dir++){
-    task = scinew Task("applyViscosity", this, &SimpleCFD::applyViscosity, dir,
-                       step, nsteps);
+    task = scinew Task("applyViscosity", this, &SimpleCFD::applyViscosity, dir);
 #if 0
     task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
@@ -338,19 +335,19 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
       task->computes(lb_->xvelocity_matrix);
       task->computes(lb_->xvelocity_rhs);
       if(level->getIndex()>0)
-        addRefineDependencies(task, lb_->xvelocity, step+1, nsteps);
+        addRefineDependencies(task, lb_->xvelocity, true, true);
     } else if(dir == 1){
       task->requires(Task::NewDW, lb_->yvelocity, Ghost::None, 0);
       task->computes(lb_->yvelocity_matrix);
       task->computes(lb_->yvelocity_rhs);
       if(level->getIndex()>0)
-        addRefineDependencies(task, lb_->yvelocity, step+1, nsteps);
+        addRefineDependencies(task, lb_->yvelocity, true, true);
     } else if(dir ==2){
       task->requires(Task::NewDW, lb_->zvelocity, Ghost::None, 0);
       task->computes(lb_->zvelocity_matrix);
       task->computes(lb_->zvelocity_rhs);
       if(level->getIndex()>0) {         // REFINE
-        addRefineDependencies(task, lb_->zvelocity, step+1, nsteps);
+        addRefineDependencies(task, lb_->zvelocity, true, true);
       }
     }
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -389,7 +386,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   //__________________________________
   //  SCHEDULE ADVECT SCALARS
   cout_doing << "SimpleCFD::scheduleAdvectScalars on level " << level->getIndex() << '\n';
-  task = scinew Task("advectScalars", this, &SimpleCFD::advectScalars, step, nsteps);
+  task = scinew Task("advectScalars", this, &SimpleCFD::advectScalars);
 #if 0
   task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
@@ -400,16 +397,16 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   task->requires(Task::OldDW, lb_->density,   Ghost::AroundCells, maxadvect_);
   task->computes(lb_->density);
   if(level->getIndex()>0){        // REFINE
-    addRefineDependencies(task, lb_->xvelocity, step+1, nsteps);
-    addRefineDependencies(task, lb_->yvelocity, step+1, nsteps);
-    addRefineDependencies(task, lb_->zvelocity, step+1, nsteps);
-    addRefineDependencies(task, lb_->density, step, nsteps);
+    addRefineDependencies(task, lb_->xvelocity, true, true);
+    addRefineDependencies(task, lb_->yvelocity, true, true);
+    addRefineDependencies(task, lb_->zvelocity, true, true);
+    addRefineDependencies(task, lb_->density, true, true);
   }
   if(do_thermal){
     task->requires(Task::OldDW, lb_->temperature, Ghost::AroundCells, maxadvect_);
     task->computes(lb_->temperature);
     if(level->getIndex()>0)       // REFINE
-      addRefineDependencies(task, lb_->temperature, step, nsteps);
+      addRefineDependencies(task, lb_->temperature, true, true);
   }
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   //__________________________________
@@ -417,12 +414,11 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   scheduleDiffuseScalar(sched, level, "density",
                         lb_->density, lb_->density_matrix,
                         lb_->density_rhs, density_diffusion_,
-                        solver, diffusion_params_, step, nsteps);
+                        solver, diffusion_params_);
   if(do_thermal){
     scheduleDiffuseScalar(sched, level, "temperature", lb_->temperature,
                           lb_->temperature_matrix, lb_->temperature_rhs,
-                          thermal_conduction_, solver, conduction_params_,
-                          step, nsteps);
+                          thermal_conduction_, solver, conduction_params_);
   }
 
   //__________________________________
@@ -466,14 +462,13 @@ void SimpleCFD::scheduleDiffuseScalar(SchedulerP& sched, const LevelP& level,
                                       const VarLabel* scalar_rhs,
                                       double rate,
                                       SolverInterface* solver,
-                                      const SolverParameters* solverparams,
-                                      int step, int nsteps)
+                                      const SolverParameters* solverparams)
 {
   cout_doing << "SimpleCFD::scheduleDiffuseScalar on level " << level->getIndex() << '\n';
   string taskname = "diffuseScalar: "+name;
   Task* task = scinew Task(taskname, this, &SimpleCFD::diffuseScalar,
                            DiffuseInfo(name, scalar, scalar_matrix,
-                                       scalar_rhs, rate, step, nsteps));
+                                       scalar_rhs, rate));
 #if 0
   task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
@@ -482,7 +477,7 @@ void SimpleCFD::scheduleDiffuseScalar(SchedulerP& sched, const LevelP& level,
   task->computes(scalar_matrix);
   task->computes(scalar_rhs);
   if(level->getIndex()>0) {   // REFINE
-    addRefineDependencies(task, scalar, step+1, nsteps);
+    addRefineDependencies(task, scalar, true, true);
   }
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   solver->scheduleSolve(level, sched, sharedState_->allMaterials(),
@@ -849,8 +844,7 @@ void SimpleCFD::advect(Array3<double>& q, const Array3<double>& qold,
 void SimpleCFD::advectVelocity(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
-                               DataWarehouse* old_dw, DataWarehouse* new_dw,
-                               int step, int nsteps)
+                               DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
@@ -883,7 +877,7 @@ void SimpleCFD::advectVelocity(const ProcessorGroup*,
       new_dw->allocateAndPut(zvel, lb_->zvelocity, matl, patch);
 
       if(level->getIndex() > 0){        // REFINE
-       double subCycleProgress = double(step)/double(nsteps);
+       double subCycleProgress = getSubCycleProgress(new_dw);
        
         refineBoundaries(patch, xvel_old.castOffConst(),
                          new_dw, lb_->xvelocity, matl, subCycleProgress);
@@ -1472,9 +1466,10 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw,
-                               int dir, int step, int nsteps)
+                               int dir)
 {
   const Level* level = getLevel(patches);
+  double subCycleProgress_var = getSubCycleProgress(new_dw);
   delt_vartype delT;
   old_dw->get(delT, sharedState_->get_delt_label(), level);
   double delt=delT;
@@ -1499,8 +1494,8 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
         new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::None, 0);
         if(level->getIndex()>0) {      // REFINE
           refineBoundaries(patch, xvel.castOffConst(), new_dw,
-                             lb_->xvelocity, matl,
-                             double(step+1)/double(nsteps));
+                           lb_->xvelocity, matl,
+                           getSubCycleProgress(new_dw));
        }
 
         SFCXVariable<Stencil7> A_xvel;
@@ -1536,7 +1531,7 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
         if(level->getIndex()>0) {    // REFINE 
           refineBoundaries(patch, yvel.castOffConst(), new_dw,
                            lb_->yvelocity, matl,
-                           double(step+1)/double(nsteps));
+                           getSubCycleProgress(new_dw));
        }
 
         SFCYVariable<Stencil7> A_yvel;
@@ -1571,7 +1566,7 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
         if(level->getIndex()>0) {    // REFINE
           refineBoundaries(patch, zvel.castOffConst(), new_dw,
                            lb_->zvelocity, matl,
-                           double(step+1)/double(nsteps));
+                           subCycleProgress_var);
         }
       
         SFCZVariable<Stencil7> A_zvel;
@@ -2196,8 +2191,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 void SimpleCFD::advectScalars(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse* old_dw, DataWarehouse* new_dw,
-                              int step, int nsteps)
+                              DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -2227,8 +2221,8 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
         new_dw->allocateAndPut(den, lb_->density, matl, patch);
 
         if(level->getIndex() > 0){   // REFINE
-         double subCycleProgress_vel = double(step+1)/double(nsteps);
-         double subCycleProgress_den = double(step)/double(nsteps);
+         double subCycleProgress_vel = getSubCycleProgress(new_dw);
+         double subCycleProgress_den = getSubCycleProgress(new_dw);
           // X-velocity
          refineBoundaries(patch, xvel.castOffConst(),
                            new_dw, lb_->xvelocity, matl,
@@ -2267,7 +2261,7 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
         if(level->getIndex() > 0) {      // REFINE
           refineBoundaries(patch, temp_old.castOffConst(),
                            new_dw, lb_->temperature, matl,
-                           double(step)/double(nsteps));
+                           getSubCycleProgress(new_dw));
         }
         
         advect(temp, temp_old, patch->getCellIterator(), patch, delT,
@@ -2311,7 +2305,7 @@ void SimpleCFD::diffuseScalar(const ProcessorGroup*,
 
       if(level->getIndex() > 0){      // REFINE
         refineBoundaries(patch, s, new_dw, di.scalar, matl,
-                         double(di.step+1)/double(di.nsteps));
+                         getSubCycleProgress(new_dw));
       }
 
       CCVariable<Stencil7> A;
@@ -2503,8 +2497,7 @@ void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
 //          A D D     R E F I N E     D E P E N D E N C I E S
 void
 SimpleCFD::addRefineDependencies( Task* /*task*/, 
-                                  const VarLabel* /*label*/,
-                                  int /*step*/, int /*nsteps*/ )
+                                  const VarLabel* /*label*/, bool, bool)
 {
 }
 

@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/MaterialSetP.h>
@@ -70,10 +69,13 @@ void UdaReducer::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 }
 
 void
-UdaReducer::scheduleTimeAdvance( const LevelP& level,
-				    SchedulerP& sched, int, int )
+UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  
+
+  // should only get called once from SimCntrl, independent of #levels
+  GridP grid = level->getGrid();
+  const PatchSet* perProc = lb->createPerProcessorPatchSet(grid);
+
   double time = times_[timeIndex_];
   const PatchSet* eachPatch = level->eachPatch();
     
@@ -85,13 +87,13 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level,
 
   MaterialSetP prevMatlSet = 0;
   ConsecutiveRangeSet prevRangeSet;
-  Task* t = scinew Task("UdaReducer::readAndSetDelT", this, &UdaReducer::readAndSetDelT, sched.get_rep());
+  Task* t = scinew Task("UdaReducer::readAndSetVars", this, &UdaReducer::readAndSetVars);
   for (unsigned int i = 0; i < labels_.size(); i++) {
     VarLabel* label = labels_[i];
 
     ConsecutiveRangeSet matlsRangeSet;
-    for (int i = 0; i < eachPatch->size(); i++) {
-      const Patch* patch = eachPatch->getSubset(i)->get(0);
+    for (int i = 0; i < perProc->getSubset(d_myworld->myrank())->size(); i++) {
+      const Patch* patch = perProc->getSubset(d_myworld->myrank())->get(i);
       matlsRangeSet = matlsRangeSet.
         unioned(dataArchive_->queryMaterials(label->getName(), 
 					       patch, time));
@@ -115,13 +117,18 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level,
       prevMatlSet = matls;
     }
 
-    t->computes(label, matls->getUnion());
+    for (int l = 0; l < grid->numLevels(); l++)
+      t->computes(label, grid->getLevel(l)->allPatches()->getUnion(), matls->getUnion());
   }
 
   MaterialSubsetP globalMatl = scinew MaterialSubset();
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, perProc, allMatls.get_rep());
+
+  Task* t2 = scinew Task("UdaReducer::readAndSetDelt", this, &UdaReducer::readAndSetDelT);
   globalMatl->add(-1);
-  t->computes(delt_label, globalMatl.get_rep());
-  sched->addTask(t, lb->createPerProcessorPatchSet(level), allMatls.get_rep());
+  t2->computes(delt_label, grid->getLevel(0).get_rep(), globalMatl.get_rep());
+  sched->addTask(t2, perProc, allMatls.get_rep());
 } // end scheduleTimeAdvance()
 
 void UdaReducer::initialize(const ProcessorGroup*,
@@ -137,12 +144,11 @@ void UdaReducer::initialize(const ProcessorGroup*,
 }
 
 
-void UdaReducer::readAndSetDelT(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* /*old_dw*/,
-				   DataWarehouse* new_dw,
-				   Scheduler* /*sched*/)
+void UdaReducer::readAndSetVars(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* /*old_dw*/,
+                                DataWarehouse* new_dw)
 {
   double time = times_[timeIndex_];
   int timestep = timesteps_[timeIndex_];
@@ -162,18 +168,28 @@ void UdaReducer::readAndSetDelT(const ProcessorGroup*,
   
   timeIndex_++;
 
+  cout << "   Incrementing time " << timeIndex_ << " and time " << time << endl;
+
   //cerr << "deleted and recreated dw\n";
   double delt;
   dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, lb, &time, &delt);
   //cerr << "restartInitialize done\n";
+}
+
+void UdaReducer::readAndSetDelT(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* /*old_dw*/,
+                                DataWarehouse* new_dw)
   
-  // don't use that delt -- jump to the next output timestep
-  delt = times_[timeIndex_] - time;
+{
+  // don't use the delt produced in restartInitialize.
+  double delt = times_[timeIndex_] - times_[timeIndex_-1];
+  cout << "   Putting delt " << delt << endl;
   delt_vartype delt_var = delt;
   new_dw->put(delt_var, delt_label);
   //cerr << "done with reading\n";
 }
-
 
 double UdaReducer::getMaxTime()
 {
@@ -181,4 +197,15 @@ double UdaReducer::getMaxTime()
     return 0;
   else
     return times_[times_.size()-2]; // the last one is the hacked one, see problemSetup
+}
+
+bool UdaReducer::needRecompile(double time, double dt,
+                               const GridP& grid)
+{
+  GridP newGrid = dataArchive_->queryGrid(times_[timeIndex_]);
+  if (!(*(newGrid.get_rep()) == *(oldGrid_.get_rep()))) {
+    oldGrid_ = newGrid;
+    return true;
+  }
+  return false;
 }

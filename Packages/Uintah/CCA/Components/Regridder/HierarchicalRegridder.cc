@@ -71,7 +71,8 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   // it's normally unconventional to pass the new_dw in in the old_dw's spot,
   // but we don't even use the old_dw and on the first timestep it could be null 
   // and not initialize the parent dws.
-  tempsched->initialize(3, 1, parent_dw, parent_dw);
+  tempsched->initialize(3, 1);
+  tempsched->setParentDWs(parent_dw, parent_dw);
 
   tempsched->clearMappings();
   tempsched->mapDataWarehouse(Task::ParentOldDW, 0);

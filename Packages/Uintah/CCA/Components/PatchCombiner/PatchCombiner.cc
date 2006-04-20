@@ -4,7 +4,6 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/MaterialSetP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 
@@ -12,14 +11,13 @@ using namespace Uintah;
 
 PatchCombiner::PatchCombiner(const ProcessorGroup* world, string udaDir)
   : UintahParallelComponent(world), udaDir_(udaDir), dataArchive_(0),
-    dw_(0), world_(world), timeIndex_(0)
+    world_(world), timeIndex_(0)
 {
   delt_label = VarLabel::create("delT", delt_vartype::getTypeDescription());
 }
 
 PatchCombiner::~PatchCombiner()
 {
-  delete dw_;
   delete dataArchive_;
   
   VarLabel::destroy(delt_label);
@@ -48,6 +46,17 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/,
 
   GridP newGrid = scinew Grid();
   GridP oldGrid = dataArchive_->queryGrid(times_[0]);
+
+
+  // use a subscheduler cuz the DW we will read data from will have a different
+  // grid from the parent scheduler/grid.
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  d_subsched = sched->createSubScheduler();
+  d_subsched->initialize(1,1);
+  d_subsched->setRestartable(true); 
+  d_subsched->clearMappings();
+  d_subsched->mapDataWarehouse(Task::OldDW, 0);
+  d_subsched->mapDataWarehouse(Task::NewDW, 1);
 
   const SuperPatchContainer* superPatches;
   for (int i = 0; i < oldGrid->numLevels(); i++) {
@@ -112,8 +121,7 @@ void PatchCombiner::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 }
 
 void
-PatchCombiner::scheduleTimeAdvance( const LevelP& level,
-				    SchedulerP& sched, int, int )
+PatchCombiner::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   
   double time = times_[timeIndex_];
@@ -160,8 +168,7 @@ PatchCombiner::scheduleTimeAdvance( const LevelP& level,
     }
 
     t->computes(label, matls->getUnion());
-    // require delt just to set up the dependency (what it really needs is
-    // dw_).
+    // require delt just to set up the dependency (what it really needs is new dw).
     t->requires(Task::NewDW, delt_label);    
     sched->addTask(t, eachPatch, matls);
   }
@@ -216,11 +223,10 @@ void PatchCombiner::readAndSetDelT(const ProcessorGroup*,
          << "that you may have to remove manually\n\n";
   }
   
-  delete dw_;
-  dw_=scinew OnDemandDataWarehouse(0, 0, generation, oldGrid_);
+  d_subsched->advanceDataWarehouse(oldGrid_);
   //cerr << "deleted and recreated dw\n";
   double delt;
-  dataArchive_->restartInitialize(timestep, oldGrid_, dw_, NULL, &time, &delt);
+  dataArchive_->restartInitialize(timestep, oldGrid_, d_subsched->get_dw(1), NULL, &time, &delt);
   //cerr << "restartInitialize done\n";
   
   // don't use that delt -- jump to the next output timestep
@@ -238,7 +244,7 @@ void PatchCombiner::setGridVars(const ProcessorGroup*,
 				VarLabel* label)
 {
   // just get delt even though it's just a dummy requires to set up the
-  // dependency for dw_ -- get it so it doesn't complain about requiring
+  // dependency for the new dw -- get it so it doesn't complain about requiring
   // something not used.
   delt_vartype delt_var;  
   new_dw->get(delt_var, delt_label);
@@ -254,7 +260,7 @@ void PatchCombiner::setGridVars(const ProcessorGroup*,
       list<const Patch*>& oldPatches = new2OldPatchMap_[patch];
       for (list<const Patch*>::iterator iter = oldPatches.begin();
 	   iter != oldPatches.end(); iter++) {
-	dw_->copyOutGridData(var, label, matl, *iter); 
+	d_subsched->get_dw(1)->copyOutGridData(var, label, matl, *iter); 
       }
 
       delete var; // a clone should have been put in the dw
@@ -271,10 +277,11 @@ void PatchCombiner::setParticleVars(const ProcessorGroup*,
 				    VarLabel* label)
 {
   // just get delt even though it's just a dummy requires to set up the
-  // dependency for dw_ -- get it so it doesn't complain about requiring
+  // dependency for the new dw -- get it so it doesn't complain about requiring
   // something not used.
   delt_vartype delt_var;  
   new_dw->get(delt_var, delt_label);
+  DataWarehouse* dw = d_subsched->get_dw(1);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -291,7 +298,7 @@ void PatchCombiner::setParticleVars(const ProcessorGroup*,
       for (list<const Patch*>::iterator iter = oldPatches.begin();
 	   iter != oldPatches.end(); iter++) {
 	//cerr << "Getting particle subset from patch " << *iter << endl;
-	numParticles += dw_->getParticleSubset(matl, *iter)->numParticles();
+	numParticles += dw->getParticleSubset(matl, *iter)->numParticles();
       }
 
       ParticleSubset* psubset = 0;      
@@ -309,8 +316,8 @@ void PatchCombiner::setParticleVars(const ProcessorGroup*,
       vector<ParticleVariableBase*> srcs;
       for (list<const Patch*>::iterator iter = oldPatches.begin();
 	   iter != oldPatches.end(); iter++) {
-	ParticleSubset* oldPsubset = dw_->getParticleSubset(matl, *iter);
-	srcs.push_back(dw_->getParticleVariable(label, oldPsubset));
+	ParticleSubset* oldPsubset = dw->getParticleSubset(matl, *iter);
+	srcs.push_back(dw->getParticleVariable(label, oldPsubset));
 	subsets.push_back(oldPsubset);
       }
       pvar->gather(psubset, subsets, srcs);

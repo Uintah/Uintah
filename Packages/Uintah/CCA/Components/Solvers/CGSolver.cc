@@ -606,7 +606,8 @@ public:
     SchedulerP subsched = sched->createSubScheduler();
     DataWarehouse::ScrubMode old_dw_scrubmode = old_dw->setScrubbing(DataWarehouse::ScrubNone);
     DataWarehouse::ScrubMode new_dw_scrubmode = new_dw->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->initialize(3, 1, old_dw, new_dw);
+    subsched->initialize(3, 1);
+    subsched->setParentDWs(old_dw, new_dw);
     subsched->clearMappings();
     subsched->mapDataWarehouse(Task::ParentOldDW, 0);
     subsched->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -679,7 +680,8 @@ public:
 
     //__________________________________
     if(!(e < params->initial_tolerance)) {
-      subsched->initialize(3, 1, old_dw, new_dw);
+      subsched->initialize(3, 1);
+      subsched->setParentDWs(old_dw, new_dw);
       subsched->clearMappings();
       subsched->mapDataWarehouse(Task::ParentOldDW, 0);
       subsched->mapDataWarehouse(Task::ParentNewDW, 1);

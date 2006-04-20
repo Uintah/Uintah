@@ -278,7 +278,7 @@ WARNING
   public: // class Task
     
     enum WhichDW {
-      OldDW, NewDW, CoarseOldDW, CoarseNewDW, ParentOldDW, ParentNewDW,
+      OldDW, NewDW, CoarseOldDW, CoarseNewDW, ParentOldDW, ParentNewDW, 
       TotalDWs
     };
     enum {
@@ -430,51 +430,51 @@ WARNING
     void requires(WhichDW, const VarLabel*,
 		  const PatchSubset* patches, DomainSpec patches_dom,
 		  const MaterialSubset* matls, DomainSpec matls_dom,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
 		  const PatchSubset* patches, const MaterialSubset* matls,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
 		  const PatchSubset* patches,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
 		  const MaterialSubset* matls,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
 
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
 		  const PatchSubset* patches, DomainSpec patches_dom,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
 		  const MaterialSubset* matls, DomainSpec matls_dom,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+		  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Requires only for reduction variables
     void requires(WhichDW, const VarLabel*, const Level* level = 0,
-		  const MaterialSubset* matls = 0, DomainSpec matls_dom = NormalDomain);
+		  const MaterialSubset* matls = 0, DomainSpec matls_dom = NormalDomain, bool oldTG=false);
     
     //////////
     // Requires for reduction variables or perpatch veriables
-    void requires(WhichDW, const VarLabel*, const MaterialSubset* matls);
+    void requires(WhichDW, const VarLabel*, const MaterialSubset* matls, bool oldTG=false);
     
     //////////
     // Requires only for perpatch variables
@@ -515,22 +515,26 @@ WARNING
     // Most general case
     void modifies(const VarLabel*,
 		  const PatchSubset* patches, DomainSpec patches_domain, 
-		  const MaterialSubset* matls, DomainSpec matls_domain);
+		  const MaterialSubset* matls, DomainSpec matls_domain, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
-    void modifies(const VarLabel*, const PatchSubset* patches = 0,
-		  const MaterialSubset* matls = 0);
+    void modifies(const VarLabel*, const PatchSubset* patches,
+		  const MaterialSubset* matls, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
-    void modifies(const VarLabel*, const MaterialSubset* matls);
+    void modifies(const VarLabel*, const MaterialSubset* matls, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
     void modifies(const VarLabel*, const MaterialSubset* matls,
-		  DomainSpec matls_domain);
+		  DomainSpec matls_domain, bool oldTG=false);
    
+    //////////
+    // Insert Documentation Here:
+    void modifies(const VarLabel*, bool oldTG=false);
+    
     //////////
     // Tells the task to actually execute the function assigned to it.
     void doit(const ProcessorGroup* pc, const PatchSubset*,
@@ -558,6 +562,7 @@ WARNING
       DepType deptype;
       Task* task;
       const VarLabel*  var;
+      bool lookInOldTG;
       const PatchSubset* patches;
       const MaterialSubset* matls;
       const Level* reductionLevel;
@@ -569,12 +574,16 @@ WARNING
       DomainSpec matls_dom;
       Ghost::GhostType gtype;
       WhichDW whichdw;  // Used only by Requires
+      
+      // in the multi-TG construct, this will signify that the required
+      // var will be constructed by the old TG
       int numGhostCells;
       int mapDataWarehouse() const {
 	return task->mapDataWarehouse(whichdw);
       }
       
       Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
+                 bool oldtg, 
 		 const PatchSubset* patches,
 		 const MaterialSubset* matls,
 		 DomainSpec patches_dom = NormalDomain,
@@ -582,6 +591,7 @@ WARNING
 		 Ghost::GhostType gtype = Ghost::None,
 		 int numGhostCells = 0);
       Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
+                 bool oldtg, 
 		 const Level* reductionLevel,
 		 const MaterialSubset* matls,
 		 DomainSpec matls_dom = NormalDomain);

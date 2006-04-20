@@ -54,7 +54,7 @@ WARNING
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&, int step, int nsteps );
+				      SchedulerP&);
   protected:
     struct Step {
       Task::WhichDW cur_dw;
@@ -85,19 +85,18 @@ WARNING
     void timeAdvanceEuler(const ProcessorGroup*,
 		     const PatchSubset* patches,
 		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw, int step, int nsteps);
+                          DataWarehouse* old_dw, DataWarehouse* new_dw);
     void setupRK4(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw, int step, int nsteps);
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse* old_dw, DataWarehouse* new_dw);
     void timeAdvanceRK4(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-                        DataWarehouse* old_dw, DataWarehouse* new_dw, Step* s, int step, int nsteps);
-    virtual void addRefineDependencies( Task* /*task*/, const VarLabel* /*label*/,
-                                        int /*step*/, int /*nsteps*/ ) {}
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw, DataWarehouse* new_dw, Step* s);
+    virtual void addRefineDependencies( Task* /*task*/, const VarLabel* /*label*/,bool needCoarseOld, bool needCoarseNew) {}
     virtual void refineFaces(const Patch* /*finePatch*/, const Level* /*fineLevel*/, const Level* /*coarseLevel*/, 
-                             CCVariable<double>& /*finevar*/, const VarLabel* /*label*/, int /*step*/, int /*nsteps*/,
+                             CCVariable<double>& /*finevar*/, const VarLabel* /*label*/,
                              int /*matl*/, DataWarehouse* /*coarse_old_dw*/, DataWarehouse* /*coarse_new_dw*/) {}
 
     const VarLabel* phi_label;

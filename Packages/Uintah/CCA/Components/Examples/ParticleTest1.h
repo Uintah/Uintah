@@ -53,7 +53,7 @@ WARNING
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&, int step, int nsteps );
+				      SchedulerP&);
 
   private:
     void initialize(const ProcessorGroup*,

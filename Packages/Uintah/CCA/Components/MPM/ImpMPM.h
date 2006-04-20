@@ -89,8 +89,7 @@ WARNING
 	 
   //////////
   // Insert Documentation Here:
-  virtual void scheduleTimeAdvance(          const LevelP& level, SchedulerP&,
-				    int step, int nsteps );
+  virtual void scheduleTimeAdvance(          const LevelP& level, SchedulerP&);
 
   virtual bool restartableTimesteps();
   virtual double recomputeTimestep(double new_dt);

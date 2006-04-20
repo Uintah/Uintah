@@ -33,11 +33,10 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
  Function~  ICE::scheduleSetupMatrix--
 _____________________________________________________________________*/
 void ICE::scheduleSetupMatrix(  SchedulerP& sched,
-                               const LevelP&,
-                               const PatchSet* patches,
-                               const MaterialSubset* one_matl,
-                               const MaterialSet* all_matls,
-                               const bool firstIteration)
+                                const LevelP&,
+                                const PatchSet* patches,
+                                const MaterialSubset* one_matl,
+                                const MaterialSet* all_matls)
 {
   Task* t;
   Ghost::GhostType  gac = Ghost::AroundCells;  
@@ -46,18 +45,12 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   int levelIndex = getLevel(patches)->getIndex();
   const MaterialSubset* press_matl = one_matl;
   
-  Task::WhichDW whichDW;
-  if(firstIteration) {
-    whichDW  = Task::ParentNewDW;
-  } else {
-    whichDW  = Task::OldDW;
-  }   
+  Task::WhichDW whichDW = Task::OldDW;
   //__________________________________
   //  Form the matrix
   cout_doing << d_myworld->myrank()<< " ICE::scheduleSetupMatrix" 
             << "\t\t\t\t\tL-" << levelIndex<< endl;
-  t = scinew Task("ICE::setupMatrix", this, 
-                  &ICE::setupMatrix, firstIteration);
+  t = scinew Task("ICE::setupMatrix", this, &ICE::setupMatrix);
 //  t->requires( Task::ParentOldDW, lb->delTLabel);  for AMR
   t->requires( whichDW,   lb->sp_volX_FCLabel,    gac,1);        
   t->requires( whichDW,   lb->sp_volY_FCLabel,    gac,1);        
@@ -313,10 +306,12 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 {
   cout_doing << d_myworld->myrank()
               <<" ICE::scheduleImplicitPressureSolve" << endl;
-  
+
+  // if we're here, we're compiling the outer taskgraph.  Then we should compile the inner one too.
+  d_recompileSubsched = true;
   Task* t = scinew Task("ICE::implicitPressureSolve", 
                    this, &ICE::implicitPressureSolve,
-                   level, sched.get_rep(), ice_matls, mpm_matls);
+                   level, ice_matls, mpm_matls);
  
   t->hasSubScheduler();
   Ghost::GhostType  gac = Ghost::AroundCells;  
@@ -398,8 +393,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* ,
                       DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const bool firstIteration)
+                      DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   
@@ -409,13 +403,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
               << patch->getID() <<"\t\t\t\t ICE \tL-" 
               << level->getIndex()<<endl;
               
-    // define parent_new/old_dw
-    DataWarehouse* whichDW;
-    if(firstIteration) {
-      whichDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-    } else {
-      whichDW  = old_dw; // inside the outer iter use old_dw
-    }
+    DataWarehouse* whichDW = old_dw;
+
     DataWarehouse* parent_old_dw = 
 	  new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
     DataWarehouse* parent_new_dw = 
@@ -946,7 +935,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                 DataWarehouse* ParentOldDW,    
                                 DataWarehouse* ParentNewDW,    
                                 LevelP level,                 
-                                Scheduler* sched,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* mpm_matls)
 {
@@ -968,28 +956,65 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                            ParentOldDW->setScrubbing(DataWarehouse::ScrubNone);
   DataWarehouse::ScrubMode ParentNewDW_scrubmode =
                            ParentNewDW->setScrubbing(DataWarehouse::ScrubNone);
-  //__________________________________
-  // create a new subscheduler
-  SchedulerP subsched = sched->createSubScheduler();
-  subsched->setRestartable(true); 
-  subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
-  subsched->clearMappings();
-  subsched->mapDataWarehouse(Task::ParentOldDW, 0);
-  subsched->mapDataWarehouse(Task::ParentNewDW, 1);
-  subsched->mapDataWarehouse(Task::OldDW, 2);
-  subsched->mapDataWarehouse(Task::NewDW, 3);
-  
-  DataWarehouse* subOldDW = subsched->get_dw(2);
-  DataWarehouse* subNewDW = subsched->get_dw(3);
 
   GridP grid = level->getGrid();
-  subsched->advanceDataWarehouse(grid);
+  bool recursion  = true;
+  bool modifies_X = true;
+  const VarLabel* whichInitialGuess = NULL;
   const PatchSet* patch_set = level->eachPatch();
+  //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
+
+  //__________________________________
+  // recompile the subscheduler
+  if (d_recompileSubsched) {
+    d_subsched->initialize(3, 1);
+    d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
+    d_subsched->advanceDataWarehouse(grid);
+    //__________________________________
+    // schedule the tasks
+
+    scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
+                            all_matls);
+
+    solver->scheduleSolve(level, d_subsched, press_matlSet,
+                          lb->matrixLabel,   Task::NewDW,
+                          lb->imp_delPLabel, modifies_X,
+                          lb->rhsLabel,      Task::OldDW,
+                          whichInitialGuess, Task::OldDW,
+			  solver_parameters);
+
+    scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
+                                                          mpm_matls, 
+                                                          d_press_matl,  
+                                                          all_matls);
+                                                          
+    scheduleRecomputeVel_FC(d_subsched,         patch_set,  ice_matls,
+                                                          mpm_matls, 
+                                                          d_press_matl, 
+                                                          all_matls,
+                                                          recursion);
+
+    scheduleSetupRHS(       d_subsched,         patch_set,  one_matl, 
+                                                          all_matls,
+                                                          recursion,
+                                                          "computes");
+                                                          
+    scheduleCompute_maxRHS( d_subsched,         level,       one_matl,
+                                                           all_matls);
+
+    d_subsched->compile();
+  }
+  else {
+    d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
+    d_subsched->advanceDataWarehouse(grid);
+  }
+  DataWarehouse* subOldDW = d_subsched->get_dw(2);
+  DataWarehouse* subNewDW = d_subsched->get_dw(3);
 
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
   delt_vartype dt;
-  subNewDW = subsched->get_dw(3);
+  subNewDW = d_subsched->get_dw(3);
   ParentOldDW->get(dt, d_sharedState->get_delt_label());
   subNewDW->put(dt, d_sharedState->get_delt_label());
    
@@ -1004,6 +1029,14 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   subNewDW->transferFrom(ParentNewDW,lb->uvel_FCLabel,      patch_sub, all_matls_s); 
   subNewDW->transferFrom(ParentNewDW,lb->vvel_FCLabel,      patch_sub, all_matls_s); 
   subNewDW->transferFrom(ParentNewDW,lb->wvel_FCLabel,      patch_sub, all_matls_s); 
+
+  subNewDW->transferFrom(ParentNewDW,lb->sp_volX_FCLabel,   patch_sub, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->sp_volY_FCLabel,   patch_sub, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->sp_volZ_FCLabel,   patch_sub, all_matls_s); 
+
+  subNewDW->transferFrom(ParentNewDW,lb->vol_fracX_FCLabel, patch_sub, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->vol_fracY_FCLabel, patch_sub, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->vol_fracZ_FCLabel, patch_sub, all_matls_s); 
  
   //subNewDW->transferFrom(ParentOldDW,lb->initialGuessLabel, patch_sub, one_matl);  
   //__________________________________
@@ -1012,66 +1045,24 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
   bool restart    = false;
-  bool recursion  = true;
-  bool firstIter  = true;
-  bool modifies_X = true;
   Vector dx = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
   solver_parameters->setResidualNormalizationFactor(vol);
-  //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
-  const VarLabel* whichInitialGuess = NULL;
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
-  
-    //__________________________________
-    // schedule the tasks
-    subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
-
-    scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
-                                                          all_matls,
-                                                          firstIter);
-
-    solver->scheduleSolve(level, subsched, press_matlSet,
-                          lb->matrixLabel,   Task::NewDW,
-                          lb->imp_delPLabel, modifies_X,
-                          lb->rhsLabel,      Task::OldDW,
-                          whichInitialGuess, Task::OldDW,
-			  solver_parameters);
-
-    scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
-                                                          mpm_matls, 
-                                                          d_press_matl,  
-                                                          all_matls);
-                                                          
-    scheduleRecomputeVel_FC(subsched,         patch_set,  ice_matls,
-                                                          mpm_matls, 
-                                                          d_press_matl, 
-                                                          all_matls,
-                                                          recursion);
-
-    scheduleSetupRHS(       subsched,         patch_set,  one_matl, 
-                                                          all_matls,
-                                                          recursion,
-                                                          "computes");
-                                                          
-    scheduleCompute_maxRHS( subsched,         level,       one_matl,
-                                                           all_matls);
-
-    subsched->compile();
     //__________________________________
     //  - move subNewDW to subOldDW
     //  - scrub the subScheduler
     //  - execute the tasks
-    subsched->advanceDataWarehouse(grid); 
-    subOldDW = subsched->get_dw(2);
-    subNewDW = subsched->get_dw(3);
+    d_subsched->advanceDataWarehouse(grid); 
+    subOldDW = d_subsched->get_dw(2);
+    subNewDW = d_subsched->get_dw(3);
     subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
     
-    subsched->execute();
+    d_subsched->execute();
     
     counter ++;
-    firstIter = false;
     whichInitialGuess = NULL;
     
     //__________________________________
@@ -1094,7 +1085,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
         cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
     }
                                           //  solver has requested a restart
-    if (subsched->get_dw(3)->timestepRestarted() ) {
+    if (d_subsched->get_dw(3)->timestepRestarted() ) {
       if(pg->myrank() == 0)
         cout << "\nWARNING: Solver had requested a restart\n" <<endl;
       restart = true;
@@ -1134,7 +1125,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   //__________________________________
   // Move products of iteration (only) from sub_new_dw -> parent_new_dw
-  subNewDW  = subsched->get_dw(3);
+  subNewDW  = d_subsched->get_dw(3);
   bool replace = true;
 
   ParentNewDW->transferFrom(subNewDW,         // press

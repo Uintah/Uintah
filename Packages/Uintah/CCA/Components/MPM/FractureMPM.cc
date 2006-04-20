@@ -295,8 +295,7 @@ void FractureMPM::scheduleComputeStableTimestep(const LevelP&,
 
 void
 FractureMPM::scheduleTimeAdvance(const LevelP & level,
-			       SchedulerP   & sched,
-			       int, int ) // AMR Parameters
+                                 SchedulerP   & sched)
 {
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
@@ -1050,8 +1049,8 @@ void FractureMPM::scheduleRefine(const PatchSet* patches,
 }
 
 void FractureMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/,
-                                        SchedulerP& /*scheduler*/,
-                                        int /*step*/, int /*nsteps*/)
+                                          SchedulerP& /*scheduler*/,
+                                          bool, bool)
 {
   // do nothing for now
 }

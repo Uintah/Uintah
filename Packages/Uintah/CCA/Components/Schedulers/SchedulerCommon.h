@@ -5,13 +5,13 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
+#include <set>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -19,6 +19,7 @@ namespace Uintah {
   class Output;
   class DetailedTask;
   class DetailedTasks;
+  class TaskGraph;
   class LocallyComputedPatchVarMap;
 /**************************************
 
@@ -61,9 +62,10 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual void initialize(int numOldDW = 1, int numNewDW = 1,
-			    DataWarehouse* parent_old_dw = 0,
-			    DataWarehouse* parent_new_dw = 0);
+    virtual void initialize(int numOldDW = 1, int numNewDW = 1);
+
+    virtual void setParentDWs(DataWarehouse* parent_old_dw,
+                              DataWarehouse* parent_new_dw);
 
     virtual void clearMappings();
     virtual void mapDataWarehouse(Task::WhichDW, int dwTag);
@@ -71,13 +73,16 @@ WARNING
 
     //////////
     // Insert Documentation Here:
+
+    /// For more complicated models 
+    virtual void addTaskGraph(tgType type);
+    virtual int getNumTaskGraphs() { return graphs.size(); }
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*);
 
-    // get information about the taskgraph
-    virtual int getNumTasks() const { return graph.getNumTasks();}
-    virtual Task* getTask(int i) {return graph.getTask(i);}
-
-    virtual const vector<const Task::Dependency*>& getInitialRequires();
+    /// Get all of the requires needed from the old data warehouse
+    /// (carried forward).
+    virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return d_initRequires; }
 
     virtual LoadBalancer* getLoadBalancer();
     virtual void releaseLoadBalancer();
@@ -136,10 +141,18 @@ WARNING
 			   DataWarehouse* new_dw);
 
     virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim);
-    
+
+    //! override default behavior of DataCopy by copying additional variables
+    virtual void scheduleDataCopyVar(string var);
+
+    //! override default behavior of DataCopy by not copying additional variables
+    virtual void scheduleNotDataCopyVar(string var);
+
+
+    set<string>& getNoScrubVars() { return noScrubVars_;}
+
   protected:
     void finalizeTimestep();
-    virtual void actuallyCompile() = 0;
     
     void makeTaskGraphDoc(const DetailedTasks* dt,
 			  int rank = 0);
@@ -154,8 +167,10 @@ WARNING
     virtual void verifyChecksum() = 0;
     virtual bool useInternalDeps();
 
-    TaskGraph graph;
-    int       d_generation;
+    vector<TaskGraph*> graphs;
+    int currentTG_;
+    int numTasks_;
+    int d_generation;
 
     SimulationStateP d_sharedState;
 
@@ -163,7 +178,6 @@ WARNING
     int numOldDWs;
 
     int dwmap[Task::TotalDWs];
-    DetailedTasks         * dts_;
 
     Output* m_outPort;
     bool restartable;
@@ -180,7 +194,12 @@ WARNING
     IntVector trackingEndIndex_;
 
     // so we can manually copy vars between AMR levels
-    vector<string> copyDataVars_;
+    set<string> copyDataVars_;
+    set<string> notCopyDataVars_;
+
+    // vars manually set not to scrub (normally when needed between a normal taskgraph
+    // and the regridding phase)
+    set<string> noScrubVars_;
   private:
 
     SchedulerCommon(const SchedulerCommon&);
@@ -199,6 +218,8 @@ WARNING
     typedef map<const VarLabel*, MaterialSubset*> label_matl_map;
     vector<label_matl_map> label_matls_;
 
+    //! set in addTask - can be used until initialize is called...
+    vector<const Task::Dependency*> d_initRequires;
 
   };
 } // End namespace Uintah

@@ -51,12 +51,12 @@ WARNING
                               GridP& grid, SimulationStateP& state );
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
-    virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps );
+    virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler);
     virtual void scheduleErrorEstimate         ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleInitialErrorEstimate  ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
-    virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps );
+    virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, bool needCoarseOld, bool needCoarseNew);
 
   private:
     void initialize ( const ProcessorGroup*,

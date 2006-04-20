@@ -66,8 +66,7 @@ void ParticleTest1::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
-			       int, int )
+ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   const MaterialSet* matls = sharedState_->allMaterials();
 

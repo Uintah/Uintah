@@ -56,7 +56,7 @@ void Burger::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-Burger::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
+Burger::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			   this, &Burger::timeAdvance);

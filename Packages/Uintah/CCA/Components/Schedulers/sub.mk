@@ -11,13 +11,11 @@ SRCS += \
 	$(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/MixedScheduler.cc \
-	$(SRCDIR)/NullScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/Relocate.cc \
 	$(SRCDIR)/SchedulerCommon.cc \
 	$(SRCDIR)/SchedulerFactory.cc \
 	$(SRCDIR)/SendState.cc \
-	$(SRCDIR)/SimpleScheduler.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/TaskGraph.cc \
 	$(SRCDIR)/ThreadPool.cc \

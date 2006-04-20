@@ -47,12 +47,11 @@ namespace Uintah {
 
      /// Goes through the Detailed tasks and assigns each to its own processor.
      virtual void assignResources(DetailedTasks& tg);
-     virtual void assignResources(DetailedTasks3& tg);
 
      /// Creates the Load Balancer's Neighborhood.  This is a vector of patches 
      /// that represent any patch that this load balancer will potentially have to 
      /// receive data from.
-     virtual void createNeighborhood(const GridP& grid);
+     virtual void createNeighborhood(const GridP& grid, const GridP& oldGrid);
 
      /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
      virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
