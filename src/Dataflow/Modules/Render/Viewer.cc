@@ -45,6 +45,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/ModuleHelper.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Core/Containers/StringUtil.h>
@@ -76,8 +77,6 @@ namespace SCIRun {
 #define EXPERIMENTAL_TCL_THREAD
 #endif
 
-// init the static variable.
-bool Viewer::autoview_pending_ = false;
 
 #ifdef __linux
 // This is a workaround for an unusual crash on exit bug on newer
@@ -930,7 +929,7 @@ Viewer::set_context(Network* network)
 bool
 Viewer::check_autoview_on_load(void *voidstuff)
 {
-  if (autoview_pending_) {
+  if (NetworkIO::autoview_pending()) {
     Viewer *viewer = (Viewer *)voidstuff;
     for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
     {
@@ -938,7 +937,7 @@ Viewer::check_autoview_on_load(void *voidstuff)
       viewer->view_window_[i]->get_bounds(bbox);
       viewer->view_window_[i]->autoview(bbox);
     }
-    autoview_pending_ = false;
+    NetworkIO::clear_autoview_pending();
   }
   return true;
 }

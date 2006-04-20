@@ -69,10 +69,6 @@ public:
   virtual void			do_execute();
   virtual void			execute();
 
-  // set on loading new networks.
-  static void                   set_autoview_pending() 
-  { autoview_pending_ = true; }
-
   MaterialHandle		default_material_;
   Lighting			lighting_;
   CrowdMonitor			geomlock_;
@@ -107,7 +103,6 @@ private:
   vector<int>			synchronized_map_;
   list<unsigned int>            synchronized_serials_;
   int                           synchronized_debt_;
-  static bool                   autoview_pending_;
 
   static bool save_image_callback(void *stuff);
   static bool check_autoview_on_load(void *stuff);

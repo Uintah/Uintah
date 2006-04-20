@@ -33,7 +33,6 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Modules/Render/Viewer.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
@@ -45,6 +44,7 @@ namespace SCIRun {
 
 string NetworkIO::net_file_= "";
 bool NetworkIO::done_writing_= false;
+bool NetworkIO::autoview_pending_= false;
 
 inline 
 string
@@ -648,7 +648,7 @@ NetworkIO::load_network()
   gui->eval("::netedit scheduleok");
 
   // first draw autoview.
-  Viewer::set_autoview_pending();
+  autoview_pending_ = true;
   return true;
 }
 
