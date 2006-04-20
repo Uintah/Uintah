@@ -1,6 +1,6 @@
 /*
    For more information, please see: http://software.sci.utah.edu
- 
+
    The MIT License
 
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
@@ -45,101 +45,68 @@ BEGIN_EVENT_TABLE(ComponentWizardDialog, wxDialog)
 END_EVENT_TABLE()
 
 ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, const wxString &title,
-                                             const wxPoint& pos, const wxSize& size,
-                                             long style, const wxString& name)
+					     const wxPoint& pos, const wxSize& size,
+					     long style, const wxString& name)
     : wxDialog( parent, id, title, pos, size, style)
 {
-  /*wxString dimensions, s;
-  wxPoint p;
-  wxSize  sz;
+  wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
 
- 
+  topSizer->AddSpacer(10);
+  wxBoxSizer *componentSizer = new wxBoxSizer( wxHORIZONTAL );
+  int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
 
-   sz.SetWidth(size.GetWidth() - 500);    //set size of text control
-  sz.SetHeight(size.GetHeight() - 570);
+  componentSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Component Name")), 0, centerFlags, 2);
+  componentName = new wxTextCtrl( this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
+  componentSizer->Add(componentName, 1, rightFlags, 2);
+  topSizer->Add( componentSizer, 1, wxALIGN_CENTER, 0 );
+  topSizer->AddSpacer(30);
 
-  p.x = pos.x; p.y = pos.y;          //set x y position for text control
-  p.y += sz.GetHeight() + 100;
-  p.x += 100;
-  componentName = new wxTextCtrl( this,-1,"",p,wxSize(100,30),wxTE_MULTILINE);
-  lcomponentName = new wxStaticText (this,-1,"component", wxPoint(p.x-100,p.y), wxSize(150,50));
-  p.y +=  100;
-  p.x -= 100;
-  AddProvidesPort = new wxButton(this,ID_AddProvidesPort,"Add Provides Port",p,wxDefaultSize);
-  p.x += 130;
-  AddUsesPort = new wxButton(this,ID_AddUsesPort,"Add Uses Port",p,wxDefaultSize);
-  p.x -= 100;
-  p.y += 100;
-  wxButton * b = new wxButton( this, wxID_OK, "OK",p, wxDefaultSize);
-  p.x += 100;
-  wxButton * c = new wxButton( this, wxID_CANCEL,"Cancel", p, wxDefaultSize);*/
+  wxBoxSizer *portsSizer = new wxBoxSizer( wxHORIZONTAL );
+  portsSizer->Add(new wxButton(this, ID_AddProvidesPort, wxT("Add Provides Port")), 1, leftFlags, 4);
+  portsSizer->Add(new wxButton(this, ID_AddUsesPort, wxT("Add Uses Port")), 1, rightFlags, 4);
+  topSizer->Add( portsSizer, 1, wxALIGN_CENTER, 0 );
+  topSizer->AddSpacer(10);
 
-  
-  
-    wxBoxSizer *topsizer = new wxBoxSizer( wxVERTICAL );
-    wxGridSizer *gridsizer = new wxGridSizer(2,5,10);
-    wxBoxSizer *button_sizer = new wxBoxSizer( wxHORIZONTAL );
-
-    componentName = new wxTextCtrl( this,-1,"");
-
-    gridsizer->Add(new wxStaticText(this,-1,"Component Name"),
-                   wxSizerFlags().Align(wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL));
-    gridsizer->Add(componentName,wxSizerFlags(1).Align( wxGROW |wxALIGN_CENTER_VERTICAL));
-    
-    gridsizer->AddSpacer(10);
-    gridsizer->AddSpacer(10);
-    
-    gridsizer->Add(new wxButton(this,ID_AddProvidesPort ,"Add Provides Port"),
-                   wxSizerFlags().Align(wxALIGN_RIGHT |wxALIGN_CENTER_VERTICAL));
-    gridsizer->Add(new wxButton(this,ID_AddUsesPort,"Add Uses Port"),
-                  wxSizerFlags(1).Align(wxALIGN_RIGHT |wxALIGN_CENTER_VERTICAL));
-    
-
-    gridsizer->AddSpacer(10);
-    gridsizer->AddSpacer(10);
-
-    button_sizer->Add( new wxButton( this, wxID_OK, "OK" ), 0, wxALL,10 );
-    button_sizer->Add( new wxButton( this, wxID_CANCEL, "Cancel" ), 0, wxALL, 10 );
-   
-    topsizer->Add(gridsizer,wxSizerFlags().Proportion(1).Expand().Border(wxALL, 10));
-    topsizer->Add( button_sizer, 1, wxALIGN_CENTER,50 );
-
+  wxBoxSizer *okCancelSizer = new wxBoxSizer( wxHORIZONTAL );
+  okCancelSizer->Add( new wxButton( this, wxID_OK, wxT("OK") ), 1, leftFlags, 4 );
+  okCancelSizer->Add( new wxButton( this, wxID_CANCEL, wxT("Cancel") ), 1, rightFlags, 4 );
+  topSizer->Add( okCancelSizer, 1, wxALIGN_CENTER, 0 );
+  topSizer->AddSpacer(10);
 
   SetAutoLayout( TRUE );     // tell dialog to use sizer
-  SetSizer( topsizer );      // actually set the sizer
+  SetSizer( topSizer );      // actually set the sizer
 
-  topsizer->Fit( this );            // set size to minimum size as calculated by the sizer
-  topsizer->SetSizeHints( this );   // set size hints to honour mininum size
-
+  topSizer->Fit( this );            // set size to minimum size as calculated by the sizer
+  topSizer->SetSizeHints( this );   // set size hints to honour mininum size
 }
 
-  ComponentWizardDialog::~ComponentWizardDialog()
- {
-   for(unsigned int i=0;i<pp.size();i++)
+ComponentWizardDialog::~ComponentWizardDialog()
+{
+   for(unsigned int i=0;i<pp.size();i++) {
 	delete pp[i];
-   for(unsigned int i=0;i<up.size();i++)
-   delete up[i];
    }
+   for(unsigned int i=0;i<up.size();i++) {
+     delete up[i];
+   }
+}
+
 void ComponentWizardDialog::OnOk(wxCommandEvent& event)
 {
-  
-  
-    if(componentName->GetValue()=="")
-    {
+    if (componentName->GetValue()=="") {
        std::cout<<"\nComponent Name is Empty\n";
        wxString msg;
        msg.Printf(wxT("Component name field is Empty"));
-             
+
        wxMessageBox(msg, wxT("Create Component"),
-               wxOK | wxICON_INFORMATION, this);
-    }
-    else
-    {
-        ComponentSkeletonWriter newComponent(componentName->GetValue(),pp,up);
+	       wxOK | wxICON_INFORMATION, this);
+    } else {
+	ComponentSkeletonWriter newComponent(componentName->GetValue(),pp,up);
 	newComponent.GenerateCode();
 	event.Skip();
     }
-  
+
 }
 
 wxString ComponentWizardDialog::GetText()
@@ -154,96 +121,73 @@ bool ComponentWizardDialog::Validate()
 
 void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
 {
-  
   AddPortDialog addpport (this, -1, "Add provides port", wxPoint(10, 20), wxSize(400, 400), wxRESIZE_BORDER);
-  if (addpport.ShowModal() == wxID_OK) 
-    {
-       if((addpport.GetPortNameText()==""))
-       {
-	 std::cout << "\nPort name is empty";
-	 wxString msg;
-	 msg.Printf(wxT("Port name field is Empty"));
-             
-         wxMessageBox(msg, wxT("Add Provides Port"),
-               wxOK | wxICON_INFORMATION, this);
-       }
-      
-       else if (addpport.GetDataTypeText()=="")
-       { 
-	 std::cout << "\nPort type is empty";
-	 wxString msg;
-	 msg.Printf(wxT("Port type field is Empty"));
-             
-         wxMessageBox(msg, wxT("Add Provides Port"),
-               wxOK | wxICON_INFORMATION, this);
-	      
-       }
-        else if (addpport.GetDescriptionText()=="")
-       { 
-	 std::cout << "\nPort description is empty";
-	 wxString msg;
-	 msg.Printf(wxT("Port Description field is Empty"));
-             
-         wxMessageBox(msg, wxT("Add Povides Port"),
-               wxOK | wxICON_INFORMATION, this);
-	      
-       }
-       else
-	{
-	   PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
+  if (addpport.ShowModal() == wxID_OK) {
+    if ((addpport.GetPortNameText().empty())) {
+      std::cout << "\nPort name is empty";
+      wxString msg;
+      msg.Printf(wxT("Port name field is Empty"));
 
-	   std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
-	   pp.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText()));
-	}
+      wxMessageBox(msg, wxT("Add Provides Port"),
+		   wxOK | wxICON_INFORMATION, this);
+    } else if (addpport.GetDataTypeText().empty()) {
+      std::cout << "\nPort type is empty";
+      wxString msg;
+      msg.Printf(wxT("Port type field is Empty"));
+
+      wxMessageBox(msg, wxT("Add Provides Port"),
+		   wxOK | wxICON_INFORMATION, this);
+
+    } else if (addpport.GetDescriptionText().empty()) {
+      std::cout << "\nPort description is empty";
+      wxString msg;
+      msg.Printf(wxT("Port Description field is Empty"));
+
+      wxMessageBox(msg, wxT("Add Povides Port"),
+		   wxOK | wxICON_INFORMATION, this);
+
+    } else {
+      PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
+
+      std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
+      pp.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText()));
     }
+  }
 }
 void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
 {
-  
-  
   AddPortDialog addpport (this, -1, "Add uses port", wxPoint(10, 20), wxSize(400, 400),wxRESIZE_BORDER);
-  if (addpport.ShowModal() == wxID_OK) 
-    {
-        
+  if (addpport.ShowModal() == wxID_OK) {
 
-       if((addpport.GetPortNameText()==""))
-       {
-	 std::cout << "\nPort name is empty";
-	 wxString msg;
-	 msg.Printf(wxT("Port name field is Empty"));
-             
-         wxMessageBox(msg, wxT("Add Uses Port"),
-               wxOK | wxICON_INFORMATION, this);
-       }
-       else if (addpport.GetDataTypeText()=="")
-       { 
-	 std::cout << "\nPort type is empty";
-	 wxString msg;
-	 msg.Printf(wxT("Port type field is Empty"));
-             
-         wxMessageBox(msg, wxT("Add Uses Port"),
-               wxOK | wxICON_INFORMATION, this);
-	      
-       }
-      else if (addpport.GetDescriptionText()=="")
-       { 
-	 std::cout << "\nPort description is empty";
-	 wxString msg;
-	 msg.Printf(wxT("Port Description field is Empty"));
-             
-         wxMessageBox(msg, wxT("Add Uses Port"),
-               wxOK | wxICON_INFORMATION, this);
-	      
-       }
-      else
-      {
-	PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
-	std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
-	up.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(), addpport.GetDescriptionText()));
+    if ((addpport.GetPortNameText().empty())) {
+      std::cout << "\nPort name is empty" << std::endl;
+      wxString msg;
+      msg.Printf(wxT("Port name field is Empty"));
 
-      }
+      wxMessageBox(msg, wxT("Add Uses Port"),
+		   wxOK | wxICON_INFORMATION, this);
+    } else if (addpport.GetDataTypeText().empty()) {
+      std::cout << "\nPort type is empty" << std::endl;
+      wxString msg;
+      msg.Printf(wxT("Port type field is Empty"));
+
+      wxMessageBox(msg, wxT("Add Uses Port"),
+		   wxOK | wxICON_INFORMATION, this);
+
+    } else if (addpport.GetDescriptionText().empty()) {
+      std::cout << "\nPort description is empty";
+      wxString msg;
+      msg.Printf(wxT("Port Description field is Empty"));
+
+      wxMessageBox(msg, wxT("Add Uses Port"),
+		   wxOK | wxICON_INFORMATION, this);
+    } else {
+      PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
+      std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
+      up.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(), addpport.GetDescriptionText()));
+
     }
-
+  }
 }
 
 
@@ -251,57 +195,51 @@ void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
 // AddPortDialog helper class
 
 AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &title,
-			       const wxPoint& pos, const wxSize& size, long style, const wxString& name)
-    : wxDialog( parent, id, title, pos, size, style)
+			     const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+  : wxDialog( parent, id, title, pos, size, style)
 {
+  wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
+  topSizer->AddSpacer(10);
+  int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
 
-  wxPoint p;
+  wxBoxSizer *nameSizer = new wxBoxSizer( wxHORIZONTAL );
+  lname = new wxStaticText(this, wxID_ANY, wxT("Name"));
+  nameSizer->Add(lname, 1, leftFlags, 2);
+  pname = new wxTextCtrl(this,  wxID_ANY, wxT(""));
+  nameSizer->Add(pname, 1, rightFlags, 2);
+  topSizer->Add( nameSizer, 1, wxALIGN_CENTER, 2 );
+  topSizer->AddSpacer(10);
 
-  wxBoxSizer *topsizer = new wxBoxSizer( wxVERTICAL );
-  wxBoxSizer *button_sizer = new wxBoxSizer( wxHORIZONTAL );
-  wxGridSizer *gridsizer = new wxGridSizer(2,2,5,5);
-  
-  p.x = pos.x;
-  p.y = pos.y;
-  p.x += 50;
-  p.y += 50;
-  
-  lname= new wxStaticText(this,-1,"Name");
-   pname = new wxTextCtrl(this, -1,"");
+  wxBoxSizer *datatypeSizer = new wxBoxSizer( wxHORIZONTAL );
+  ldtype = new wxStaticText(this, wxID_ANY, "Datatype");
+  datatypeSizer->Add(ldtype, 1, leftFlags, 2);
+  dtype= new wxTextCtrl(this, wxID_ANY, wxT(""));
+  datatypeSizer->Add(dtype, 1, rightFlags, 2);
+  topSizer->Add( datatypeSizer, 1, wxALIGN_CENTER, 2 );
+  topSizer->AddSpacer(10);
 
-   p.y += 50;
-   ldtype = new wxStaticText(this, -1, "Datatype");
-   dtype= new wxTextCtrl(this, -1,"");
-  
-  p.y += 100;
-  
-   ldesc = new wxStaticText(this, -1, "Description");
-   desc= new wxTextCtrl(this, -1,"");
-  
-  wxButton *okbutton = new wxButton(this, wxID_OK, "OK");
-  wxButton *cancelbutton = new wxButton(this, wxID_CANCEL, "Cancel");
- 
-  button_sizer->Add(okbutton,0,wxALL,10);
-  button_sizer->Add(cancelbutton,0,wxALL,10);
-  
-   gridsizer->Add(lname,1,wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL);
-   gridsizer->Add(pname,1,wxGROW|wxALIGN_CENTER_VERTICAL);
-   gridsizer->Add(ldtype,1,wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL);
-   gridsizer->Add(dtype,1,wxGROW|wxALIGN_CENTER_VERTICAL);
-   gridsizer->Add(ldesc,1,wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL);
-   gridsizer->Add(desc,1,wxGROW|wxALIGN_CENTER_VERTICAL);
-  
-   topsizer->Add(gridsizer,wxSizerFlags().Proportion(1).Expand().Border(wxALL, 20));
-   topsizer->Add( button_sizer, 1, wxALIGN_CENTER,0 );
+  wxBoxSizer *descSizer = new wxBoxSizer( wxHORIZONTAL );
+  ldesc = new wxStaticText(this, wxID_ANY, wxT("Description"));
+  descSizer->Add(ldesc, 1, leftFlags, 2);
+  desc= new wxTextCtrl(this, wxID_ANY, wxT(""));
+  descSizer->Add(desc, 1, rightFlags, 2);
+  topSizer->Add( descSizer, 1, wxALIGN_CENTER, 2 );
+  topSizer->AddSpacer(10);
 
+  wxButton *okbutton = new wxButton(this, wxID_OK, wxT("OK"));
+  wxButton *cancelbutton = new wxButton(this, wxID_CANCEL, wxT("Cancel"));
+
+  wxBoxSizer *okCancelSizer = new wxBoxSizer( wxHORIZONTAL );
+  okCancelSizer->Add(okbutton, 1, leftFlags, 2);
+  okCancelSizer->Add(cancelbutton, 1, rightFlags, 2);
+  topSizer->Add( okCancelSizer, 1, wxALIGN_CENTER, 2 );
 
   SetAutoLayout( TRUE );     // tell dialog to use sizer
-  SetSizer( topsizer );      // actually set the sizer
+  SetSizer( topSizer );      // actually set the sizer
 
-  topsizer->Fit( this );            // set size to minimum size as calculated by the sizer
-  topsizer->SetSizeHints( this );   // set size hints to honour mininum size
-  
-
+  topSizer->Fit( this );            // set size to minimum size as calculated by the sizer
+  topSizer->SetSizeHints( this );   // set size hints to honour mininum size
 }
 
 std::string AddPortDialog::GetPortNameText() const
@@ -317,4 +255,5 @@ std::string AddPortDialog::GetDescriptionText() const
 {
   return std::string(desc->GetValue().c_str());
 }
+
 }
