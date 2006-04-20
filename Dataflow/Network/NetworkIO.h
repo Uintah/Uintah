@@ -60,6 +60,8 @@ public:
   static void load_net(const string &net);
   static bool done_writing() { return done_writing_; }
   static bool has_file() { return net_file_ != string(""); }
+  static bool autoview_pending() { return autoview_pending_; }
+  static bool clear_autoview_pending() { autoview_pending_ = false; }
   bool load_network();
 
   //! Interface to build up an xml document for saving.
@@ -152,6 +154,7 @@ private:
   map<string, string> env_subs_; 
   static string net_file_;
   static bool done_writing_;
+  static bool autoview_pending_;
 
   //! document for writing nets.
   xmlDocPtr                          doc_;  
