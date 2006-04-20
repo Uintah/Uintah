@@ -419,11 +419,7 @@
                     <max>           [ 0.25, 0.25, 0.25] </max>
                  </box>
 
-                 <cylinder label = "outer cylinder">
-                    <bottom>           [0.0,0.0,-.05]   </bottom>
-                    <top>              [0.0,0.0, .05]   </top>
-                    <radius>           0.05715          </radius>
-                 </cylinder>
+                 <cylinder label = "outer cylinder">    </cylinder>
               </difference>
  
               <res>                [2,2,2]             </res>
