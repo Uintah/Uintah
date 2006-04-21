@@ -27,6 +27,7 @@ endif # if $(HAVE_HYPRE)
 PSELIBS := \
 	Core/Containers                  \
 	Core/Exceptions                  \
+	Core/Geometry                    \
 	Core/Thread                      \
 	Core/Util                        \
 	Packages/Uintah/CCA/Ports        \

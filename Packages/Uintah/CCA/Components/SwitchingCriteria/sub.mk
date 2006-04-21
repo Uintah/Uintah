@@ -13,6 +13,7 @@ SRCS     += \
 
 PSELIBS := \
 	Core/Exceptions                  \
+	Core/Geometry                    \
 	Core/Util                        \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Disclosure  \
