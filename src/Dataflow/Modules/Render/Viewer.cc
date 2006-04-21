@@ -933,9 +933,12 @@ Viewer::check_autoview_on_load(void *voidstuff)
     Viewer *viewer = (Viewer *)voidstuff;
     for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
     {
-      BBox bbox;
-      viewer->view_window_[i]->get_bounds(bbox);
-      viewer->view_window_[i]->autoview(bbox);
+      viewer->view_window_[i]->gui_autoav_.reset();
+      if (viewer->view_window_[i]->gui_autoav_.get()) {
+	BBox bbox;
+	viewer->view_window_[i]->get_bounds(bbox);
+	viewer->view_window_[i]->autoview(bbox);
+      }
     }
     NetworkIO::clear_autoview_pending();
   }
