@@ -46,12 +46,14 @@
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Algorithms/Numeric/share.h>
+
 namespace SCIRun {
 
 class SparseElement; 
 typedef std::vector<SparseElement> SparseElementVector;
 
-class NumericAlgo : public AlgoLibrary {
+class SCISHARE NumericAlgo : public AlgoLibrary {
 
   public:
     NumericAlgo(ProgressReporter* pr); // normal case
