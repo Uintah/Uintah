@@ -78,9 +78,9 @@
        <!-- Base hollow cylinder - 4340 steel -->
        <material>
          <burn type = "null"/>
-         <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
+         <include href="../MPM/MaterialData/MaterialConst4340Steel.xml"/>
          <constitutive_model type="comp_neo_hook">
-           <include href="inputs/MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
+           <include href="../MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
          </constitutive_model>
          <geom_object>
            <smoothcyl label = "outer cylinder">
@@ -100,20 +100,18 @@
        <!-- Plane shell - Annealed Copper -->
        <material>
          <burn type = "null"/>
-         <include href="inputs/MPM/MaterialData/MaterialConstAnnCopper.xml"/>
+         <include href="../MPM/MaterialData/MaterialConstAnnCopper.xml"/>
          <constitutive_model type="shell_CNH">
-           <include href="inputs/MPM/MaterialData/IsotropicElasticAnnCopper.xml"/>
+           <include href="../MPM/MaterialData/IsotropicElasticAnnCopper.xml"/>
          </constitutive_model>
          <geom_object>
-           <shell>
-             <plane>
+           <plane_shell>
                <center>     [0.0,0.0,2.1e-2] </center>
                <normal>     [0.0,0.0,1.0]    </normal>
                <radius>     8.0e-2           </radius>
                <thickness>  2.0e-3           </thickness>
                <num_radius> 50              </num_radius>
-             </plane>
-           </shell>
+           </plane_shell>>
            <res>         [2,2,2]       </res>
            <velocity>    [0.0,0.0,-100.0] </velocity>
            <temperature> 300           </temperature>
