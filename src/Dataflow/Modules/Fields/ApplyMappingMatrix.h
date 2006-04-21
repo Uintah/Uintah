@@ -40,9 +40,11 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/Matrix.h>
 
+#include <Dataflow/Modules/Fields/share.h>
+
 namespace SCIRun {
 
-class ApplyMappingMatrixAlgo : public DynamicAlgoBase
+class SCISHARE ApplyMappingMatrixAlgo : public DynamicAlgoBase
 {
 public:
   //! virtual interface. 

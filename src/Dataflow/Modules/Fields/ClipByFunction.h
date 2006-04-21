@@ -42,12 +42,14 @@
 #include <sci_hash_map.h>
 #include <algorithm>
 
+#include <Dataflow/Modules/Fields/share.h>
+
 namespace SCIRun {
 
 
 class GuiInterface;
 
-class ClipByFunctionAlgo : public DynamicAlgoBase
+class SCISHARE ClipByFunctionAlgo : public DynamicAlgoBase
 {
 public:
   double u0, u1, u2, u3, u4, u5;

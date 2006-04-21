@@ -45,6 +45,8 @@
 #include <Core/Datatypes/Matrix.h>
 
 
+#include <Dataflow/Modules/Visualization/share.h>
+
 namespace SCIRun {
 
 class Isosurface : public Module {
@@ -92,7 +94,7 @@ private:
   vector< double > isovals_;
 };
 
-class IsosurfaceAlgo : public DynamicAlgoBase
+class SCISHARE IsosurfaceAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(vector<FieldHandle>& fields) = 0;

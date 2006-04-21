@@ -49,6 +49,7 @@
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 
+#include <Dataflow/Modules/Visualization/share.h>
 
 namespace SCIRun {
 
@@ -96,7 +97,7 @@ Isosurface::~Isosurface()
 }
 
 
-MatrixHandle
+SCISHARE MatrixHandle
 append_sparse_matrices(vector<MatrixHandle> &matrices)
 {
   unsigned int i;
