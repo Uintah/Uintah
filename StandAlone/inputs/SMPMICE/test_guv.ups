@@ -114,8 +114,7 @@
            <shear_modulus_cholesterol> 3.0e3 </shear_modulus_cholesterol>
          </constitutive_model>
          <geom_object>
-           <shell>
-             <GUV_sphere>
+           <guv_sphere_shell>
                <origin>    [0.0,0.0,0.0] </origin>
                <radius>    0.5           </radius>
                <thickness_lipid> 0.001    </thickness_lipid>
@@ -140,8 +139,7 @@
                  <zone_center_phi> 180.0 </zone_center_phi>
                  <zone_radius> 0.2</zone_radius>
                </zone>
-             </GUV_sphere>
-           </shell>
+           </guv_sphere_shell>
            <res>         [2,2,2]       </res>
            <velocity>    [0.0,0.0,0.0] </velocity>
            <temperature> 300           </temperature>

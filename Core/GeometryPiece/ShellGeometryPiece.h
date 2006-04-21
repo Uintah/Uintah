@@ -25,38 +25,22 @@ namespace Uintah {
    
     \verbatim
     a) Sphere
-    <shell>
-      <sphere>
+      <sphere_shell>
         <origin>[0.,0.,0.]</origin>
         <radius>2.0</radius>
         <thickness>0.1</thickness>
         <num_lat>20</num_lat>
         <num_long>40</num_long>
-      </sphere>
-    </shell>
+      </sphere_shell>
 
     b) Cylinder
-    <shell>
-      <cylinder>
-      </cylinder>
-    </shell>
+      <cylinder_shell>
+      </cylinder_shell>
 	
     c) Plane
-    <shell>
-      <plane>
-      </plane>
-    </shell>
+      <plane_shell>
+      </plane_shell>
 
-    d) Union/Intersection operations
-    <shell>
-      <union>
-      </union>
-    </shell>
-
-    <shell>
-      <intersect>
-      </intersect>
-    </shell>
     \endverbatim
 	
   */

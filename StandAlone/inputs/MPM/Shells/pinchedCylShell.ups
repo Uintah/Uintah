@@ -111,16 +111,14 @@
            <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
          </constitutive_model>
          <geom_object>
-           <shell>
-             <cylinder>
+           <cylinder_shell>
                <top>        [0.0,0.0,5.0e-2] </top>
                <bottom>     [0.0,0.0,0.0]     </bottom>
                <radius>     2.5e-2           </radius>
                <thickness>  5.0e-4           </thickness>
                <num_axis>   50                </num_axis>
                <num_circum> 150               </num_circum>
-             </cylinder>
-           </shell>
+           </cylinder_shell>
            <res>         [2,2,2]       </res>
            <velocity>    [0.0,0.0,0.0] </velocity>
            <temperature> 300           </temperature>
