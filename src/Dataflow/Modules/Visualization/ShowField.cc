@@ -546,7 +546,9 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     Vector diag = fld_handle->mesh()->get_bounding_box().diagonal();
     cur_mesh_scale_factor_ = diag.length();
     gui_use_defaults_.reset();
-    if (gui_use_defaults_.get()) {
+    if (gui_use_defaults_.get() || 
+	sci_getenv_p("SCIRUN_USE_DEFAULT_SETTINGS")) 
+    {
       set_default_display_values();
     }
   }

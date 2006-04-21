@@ -934,7 +934,9 @@ Viewer::check_autoview_on_load(void *voidstuff)
     for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
     {
       viewer->view_window_[i]->gui_autoav_.reset();
-      if (viewer->view_window_[i]->gui_autoav_.get()) {
+      bool def = sci_getenv_p("SCIRUN_USE_DEFAULT_SETTINGS");
+      if (viewer->view_window_[i]->gui_autoav_.get() || def)
+      {
 	BBox bbox;
 	viewer->view_window_[i]->get_bounds(bbox);
 	viewer->view_window_[i]->autoview(bbox);

@@ -297,6 +297,11 @@ SCIRUN_SERV_TMP_DIR = /tmp
 #   SCIRUN_MPEG_LICENSE_ACCEPT to "true".
 # SCIRUN_MPEG_LICENSE_ACCEPT = false
 
+### SCIRUN_USE_DEFAULT_SETTINGS = [boolean]
+#   Force the sizes for ShowField to calculate defaults when loading a new 
+#   Field.  Also Forces the Viewer to autoview whenever a new netork is
+#   loaded.
+#SCIRUN_USE_DEFAULT_SETTINGS = true
 
 ############################
 # GUI PREFERENCES SECTION ##
