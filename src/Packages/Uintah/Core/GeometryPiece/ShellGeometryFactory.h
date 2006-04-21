@@ -10,9 +10,10 @@ namespace Uintah {
   class ShellGeometryFactory
   {
   public:
-    // This function has a switch for all shell go_types
-    // It returns a pointer to the piece that it creates.
-    static GeometryPiece * create( const ProblemSpecP& ps );
+    // This function has a switch for all shell go_types It returns a
+    // pointer to the piece that it creates, NULL if does not know how
+    // to create the piece.
+    static GeometryPiece * create( ProblemSpecP& ps );
   };
 
 } // End namespace Uintah

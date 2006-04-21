@@ -112,11 +112,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
 
     GeometryPiece * newGeomPiece = NULL;
 
-    if ( go_type == ShellGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = ShellGeometryFactory::create(child);
-      if( newGeomPiece == NULL ) continue;
-    }
-    else if ( go_type == BoxGeometryPiece::TYPE_NAME ) {
+    if ( go_type == BoxGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew BoxGeometryPiece(child);
     }
     else if ( go_type == NaaBoxGeometryPiece::TYPE_NAME ){
@@ -164,9 +160,15 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       continue;    // restart loop to avoid accessing name of empty object
       
     } else {
-      if (ps->doWriteMessages() && Parallel::getMPIRank() == 0)
-        cerr << "WARNING: Unknown Geometry Piece Type " << "(" << go_type << ")\n" ;
-      continue;    // restart loop to avoid accessing name of empty object
+      // Perhaps it is a shell piece... let's find out:
+      newGeomPiece = ShellGeometryFactory::create(child);
+
+      if( newGeomPiece == NULL ) {
+        if (ps->doWriteMessages() && Parallel::getMPIRank() == 0) {
+          cerr << "WARNING: Unknown Geometry Piece Type " << "(" << go_type << ")\n" ;
+        }
+        continue;    // restart loop to avoid accessing name of empty object
+      }
     }
     // Look for the "name" of the object.  (Can also be referenced as "label").
     string name;

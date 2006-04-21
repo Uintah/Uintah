@@ -123,15 +123,13 @@
            <shear_modulus> 3.0e4 </shear_modulus>
          </constitutive_model>
          <geom_object>
-           <shell>
-             <sphere>
+           <sphere_shell>
                <origin>    [0.0,0.0,0.0] </origin>
                <radius>    0.5           </radius>
                <thickness> 0.01          </thickness>
                <num_lat>   30           </num_lat>
                <num_long>  40           </num_long>
-             </sphere>
-           </shell>
+           </sphere_shell>
            <res>         [2,2,2]       </res>
            <velocity>    [0.0,0.0,0.0] </velocity>
            <temperature> 300           </temperature>

@@ -16,30 +16,21 @@ using std::endl;
 using namespace Uintah;
 
 GeometryPiece *
-ShellGeometryFactory::create( const ProblemSpecP& ps )
+ShellGeometryFactory::create( ProblemSpecP & ps )
 {
-  for(ProblemSpecP child = ps->findBlock(); child != 0; child = child->findNextBlock()) {
+  std::string go_type = ps->getNodeName();
 
-    std::string go_type = child->getNodeName();
-
-    if (     go_type == PlaneShellPiece::TYPE_NAME ) {
-      return scinew PlaneShellPiece(child);
-    }
-    else if( go_type == SphereShellPiece::TYPE_NAME ) {
-      return scinew SphereShellPiece(child);
-    }
-    else if (go_type == CylinderShellPiece::TYPE_NAME ) {
-      return scinew CylinderShellPiece(child);
-    }
-    else if (go_type == GUVSphereShellPiece::TYPE_NAME ) {
-      return scinew GUVSphereShellPiece(child);
-    }
-    else {
-      if (ps->doWriteMessages()) {
-	cerr << "Unknown Shell Geometry Piece Type " << "(" << go_type << ")\n";
-      }
-      break;
-    }
+  if (     go_type == PlaneShellPiece::TYPE_NAME ) {
+    return scinew PlaneShellPiece(ps);
+  }
+  else if( go_type == SphereShellPiece::TYPE_NAME ) {
+    return scinew SphereShellPiece(ps);
+  }
+  else if (go_type == CylinderShellPiece::TYPE_NAME ) {
+    return scinew CylinderShellPiece(ps);
+  }
+  else if (go_type == GUVSphereShellPiece::TYPE_NAME ) {
+    return scinew GUVSphereShellPiece(ps);
   }
   return NULL;
 }
