@@ -39,9 +39,11 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 
+#include <Dataflow/Modules/Fields/share.h>
+
 namespace SCIRun {
 
-class TransformDataAlgo : public DynamicAlgoBase
+class SCISHARE TransformDataAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle src) = 0;

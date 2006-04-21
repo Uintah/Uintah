@@ -57,9 +57,15 @@
 
 #include <Core/Basis/HexTrilinearLgn.h>
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
+
 namespace SCIRun {
 
-MatrixHandle append_sparse_matrices(vector<MatrixHandle> &matrices);
+SCISHARE MatrixHandle append_sparse_matrices(vector<MatrixHandle> &matrices);
 
 class FieldArbitrarySlicer : public Module {
 public:
