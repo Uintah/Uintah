@@ -300,7 +300,8 @@ RadiationDriver::problemSetup(GridP& grid,
   d_DORadiation->problemSetup(db);
 }
 
-
+//______________________________________________________________________
+//
 void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
@@ -312,8 +313,8 @@ void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
   }
   ProblemSpecP rad_ps = model_ps->appendChild("RadiationModel");
  
-  rad_ps->appendElement("caclFreq",d_radCalcFreq);
-  rad_ps->appendElement("caclInterval",d_radCalc_interval);
+  rad_ps->appendElement("calcFreq",d_radCalcFreq);
+  rad_ps->appendElement("calcInterval",d_radCalc_interval);
   rad_ps->appendElement("table_or_ice_temp_density",
                         d_table_or_ice_temp_density);
   rad_ps->appendElement("useTableValues",d_useTableValues);
