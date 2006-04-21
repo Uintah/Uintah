@@ -647,7 +647,7 @@ itcl_class ViewWindow {
 	wm withdraw $w.detached
 	
 	# This is the frame for the geometry controls
-	iwidgets::scrolledframe $w.msframe -width 640 -height 290 \
+	iwidgets::scrolledframe $w.msframe -width 640 -height 320 \
 	    -vscrollmode dynamic -hscrollmode dynamic \
 	    -sbwidth 10 -relief groove
 
@@ -869,6 +869,12 @@ itcl_class ViewWindow {
 	pack $m.objlist.canvas -side top -padx 2 -pady 2 -fill both -expand yes
 	pack $m.objlist.xscroll -fill x -side top  -padx 2 -pady 2
 	
+	# Automatic Autoview when a network loads check button
+        checkbutton $m.autoav -text "Autoview on Load" \
+	    -variable $this-autoav -onvalue 1 -offvalue 0 
+	Tooltip $m.autoav \
+	  "Toggles on/off automatic viewer adjustment when new networks load."
+
 	# Show Axes Check Button
         checkbutton $m.caxes -text "Show Axes" -variable $this-caxes \
 	    -onvalue 1 -offvalue 0 \
@@ -890,6 +896,7 @@ itcl_class ViewWindow {
 	    "Toggles on/off the use of an orthographic projection.\n" \
 	    "SCIRun defaults to using the prospective projection."
 
+	pack $m.autoav -side top -anchor w
 	pack $m.caxes -side top -anchor w
 	pack $m.raxes -side top -anchor w
 	pack $m.ortho -side top -anchor w

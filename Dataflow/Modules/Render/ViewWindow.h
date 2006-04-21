@@ -254,6 +254,7 @@ private:
   // TCL GUI Variables
   GuiInt		gui_current_time_;
   GuiString		gui_currentvisual_;
+  GuiInt		gui_autoav_;
   GuiInt		gui_caxes_;
   GuiString		gui_pos_;
 };

@@ -172,6 +172,7 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
     focus_sphere_(scinew GeomSphere),
     gui_current_time_(ctx->subVar("current_time",false)),
     gui_currentvisual_(ctx->subVar("currentvisual")),
+    gui_autoav_(ctx->subVar("autoav")),
     gui_caxes_(ctx->subVar("caxes")),
     gui_pos_(ctx->subVar("pos"))
 {
