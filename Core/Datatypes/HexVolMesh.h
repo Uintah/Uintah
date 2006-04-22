@@ -287,6 +287,12 @@ public:
   void get_faces(typename Face::array_type &array,
                  typename Cell::index_type idx) const;
 
+  bool get_face(typename Face::index_type &array,
+		typename Node::index_type n1, 
+		typename Node::index_type n2,
+		typename Node::index_type n3, 
+		typename Node::index_type n4) const;
+
   //! Get the parent element(s) of the given index.
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type node) const;
@@ -1405,6 +1411,24 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
   array.push_back((*(edge_table_.find(e11))).second);
 }
 
+template <class Basis>
+bool
+HexVolMesh<Basis>::get_face(typename Face::index_type &face,
+			    typename Node::index_type n1, 
+			    typename Node::index_type n2,
+			    typename Node::index_type n3, 
+			    typename Node::index_type n4) const
+{
+  ASSERTMSG(synchronized_ & FACES_E,
+            "Must call synchronize FACES_E on HexVolMesh first");
+  PFace f(n1, n2, n3, n4);
+  typename face_ht::iterator fiter = face_table_.find(f);
+  if (fiter == face_table_.end()) {
+    return false;
+  }
+  face = (*fiter).second;
+  return true;
+}
 
 template <class Basis>
 void
