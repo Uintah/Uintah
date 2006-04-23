@@ -37,6 +37,7 @@ using namespace Uintah;
 
 typedef struct{
   vector<Matrix3> stress;
+  vector<Point> px;
   vector<long64> id;
   vector<double> time;
   vector<int> patch;
@@ -232,6 +233,8 @@ void printStress(DataArchive* da,
 		if(pset->numParticles() > 0){
 		  ParticleVariable<long64> pid;
 		  da->query(pid, "p.particleID", matl, patch, time);
+		  ParticleVariable<Point> px;
+		  da->query(px, "p.x", matl, patch, time);
 		  vector<bool> found;
 		  for (unsigned int ii = 0; ii < partID.size()-1 ; ++ii) {
 		    found.push_back(false);
@@ -243,6 +246,7 @@ void printStress(DataArchive* da,
 		      if (partID[ii] != pid[*iter]) continue;
 		      matData[ii].stress.push_back(value[*iter]);
 		      matData[ii].id.push_back(pid[*iter]);
+		      matData[ii].px.push_back(px[*iter]);
 		      matData[ii].time.push_back(time);
 		      matData[ii].patch.push_back(patchIndex);
 		      matData[ii].matl.push_back(matl);
@@ -282,8 +286,10 @@ void printStress(DataArchive* da,
         int matl = matData[ii].matl[jj];
         long64 pid = matData[ii].id[jj];
         Matrix3 sig = matData[ii].stress[jj];
+	Point px = matData[ii].px[jj];
         file << time << " " << patchIndex << " " << matl ;
         file << " " << pid;
+	file << " " << px.x() << " " << px.y() << " " << px.z();
         file << " " << sig(0,0) << " " << sig(1,1) << " " << sig(2,2)
   	     << " " << sig(1,2) << " " << sig(2,0) << " " << sig(0,1) << endl;
       }
@@ -305,8 +311,10 @@ void printStress(DataArchive* da,
         int matl = matData[ii].matl[jj];
         long64 pid = matData[ii].id[jj];
         Matrix3 sig = matData[ii].stress[jj];
+	Point px = matData[ii].px[jj];
         file << time << " " << patchIndex << " " << matl ;
         file << " " << pid;
+	file << " " << px.x() << " " << px.y() << " " << px.z();
         file << " " << sig(0,0) << " " << sig(1,1) << " " << sig(2,2)
   	     << " " << sig(1,2) << " " << sig(2,0) << " " << sig(0,1) << endl;
       }
