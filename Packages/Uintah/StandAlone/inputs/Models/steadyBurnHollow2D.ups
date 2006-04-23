@@ -214,6 +214,9 @@
             <evolve_damage>                 true     </evolve_damage>
             <compute_specific_heat>         true     </compute_specific_heat>
             <check_TEPLA_failure_criterion> true     </check_TEPLA_failure_criterion>
+            <taylor_quinney_coeff>          0.9      </taylor_quinney_coeff>
+            <check_max_stress_failure>      false    </check_max_stress_failure>
+            <critical_stress>              12.0e9    </critical_stress>
 
             <initial_material_temperature>  450.0    </initial_material_temperature>
             <initial_mean_porosity>         0.005    </initial_mean_porosity>
@@ -287,6 +290,8 @@
               <D4>  0.002  </D4>
               <D5>  0.61   </D5>
             </damage_model>
+
+            <specific_heat_model type="steel_Cp"> </specific_heat_model>
 
           </constitutive_model>
 
