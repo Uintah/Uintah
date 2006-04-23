@@ -11,6 +11,7 @@
 #include "PlasticityModels/MPMEquationOfState.h"
 #include "PlasticityModels/ShearModulusModel.h"
 #include "PlasticityModels/MeltingTempModel.h"
+#include "PlasticityModels/SpecificHeatModel.h"
 #include <math.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
@@ -42,6 +43,9 @@ namespace Uintah {
     3) Yield condition.
     4) Stability condition.
     5) Damage model.
+    6) Shear modulus model.
+    7) Melting temperature model.
+    8) Specific heat model.
 
     \warning Only isotropic materials, von-Mises type yield conditions, 
     associated flow rule, high strain rate.
@@ -57,6 +61,7 @@ namespace Uintah {
       double Shear;   /*< Shear Modulus */
       double alpha;   /*< Coeff. of thermal expansion */
       double Chi;     /*< Taylor-Quinney coefficient */
+      double sigma_crit; /*< Critical stress */
     };   
 
     // Create datatype for storing porosity parameters
@@ -79,11 +84,12 @@ namespace Uintah {
     };
 
     // Create a datatype for storing Cp calculation paramaters
-    struct CpData {
-      double A;
-      double B;
-      double C;
-    };
+    //struct CpData {
+    //  double A;
+    //  double B;
+    //  double C;
+    //  double n;
+    //};
 
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel;  
@@ -106,7 +112,7 @@ namespace Uintah {
     CMData           d_initialData;
     PorosityData     d_porosity;
     ScalarDamageData d_scalarDam;
-    CpData           d_Cp;
+    //CpData           d_Cp;
     
     double d_tol;
     double d_initialMaterialTemperature;
@@ -118,6 +124,7 @@ namespace Uintah {
     bool   d_computeSpecificHeat;
     bool   d_checkTeplaFailureCriterion;
     bool   d_doMelting;
+    bool   d_checkStressTriax;
 
     // Erosion algorithms
     bool   d_setStressToZero;
@@ -131,6 +138,7 @@ namespace Uintah {
     MPMEquationOfState* d_eos;
     ShearModulusModel*  d_shear;
     MeltingTempModel*   d_melt;
+    SpecificHeatModel*  d_Cp;
          
   private:
     // Prevent copying of this class
@@ -439,11 +447,10 @@ namespace Uintah {
 
     void getInitialDamageData(ProblemSpecP& ps);
 
-    void getSpecificHeatData(ProblemSpecP& ps);
-
     void setErosionAlgorithm();
 
-    double computeSpecificHeat(double T);
+    //void getSpecificHeatData(ProblemSpecP& ps);
+    //double computeSpecificHeat(double T);
 
   };
 
