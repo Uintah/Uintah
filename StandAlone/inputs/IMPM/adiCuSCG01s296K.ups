@@ -119,13 +119,15 @@
           <do_melting>                    false   </do_melting>
           <evolve_porosity>               false   </evolve_porosity>
           <evolve_damage>                 false   </evolve_damage>
-          <compute_specfic_heat>          false   </compute_specfic_heat>
           <check_TEPLA_failure_criterion> false   </check_TEPLA_failure_criterion>
+          <check_max_stress_failure>      false   </check_max_stress_failure>
           <initial_material_temperature>  296.0   </initial_material_temperature>
-
-          <shear_modulus> 46.0e9  </shear_modulus>
-          <bulk_modulus>  129.0e9 </bulk_modulus>
+          
+          <shear_modulus>           46.0e9  </shear_modulus>
+          <bulk_modulus>            129.0e9 </bulk_modulus>
           <coeff_thermal_expansion> 1.76e-5 </coeff_thermal_expansion>
+          <taylor_quinney_coeff>    0.9     </taylor_quinney_coeff>
+          <critical_stress>         129.0e9 </critical_stress>
 
           <equation_of_state type = "mie_gruneisen">
             <C_0>     3940  </C_0>
@@ -158,13 +160,11 @@
             <B> 0.92e-3 </B>
           </shear_modulus_model>
 
-
           <melting_temp_model type="scg_Tm">
             <T_m0> 1360.0 </T_m0>
             <Gamma_0> 1.99 </Gamma_0>
             <a> 1.5 </a>
           </melting_temp_model>
-
 
           <yield_condition type = "vonMises">
           </yield_condition>
@@ -176,6 +176,10 @@
             <D0> 0.0001 </D0>
             <Dc> 0.7    </Dc>
           </damage_model>
+          
+          <compute_specfic_heat> false </compute_specfic_heat>
+          <specific_heat_model type="constant_Cp">
+          </specific_heat_model>
           
         </constitutive_model>
         <geom_object>
