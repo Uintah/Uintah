@@ -7,5 +7,8 @@
     <C>0.014</C>
     <n>0.26</n>
     <m>1.03</m>
+    <T_r>298.0</T_r>
+    <T_m>1793.0</T_m>
+    <epdot_0>1.0</epdot_0>
   </plasticity_model>
 </Uintah_Include>
