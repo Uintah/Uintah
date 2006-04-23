@@ -176,7 +176,10 @@
           <compute_specific_heat>         true  </compute_specific_heat>
           <do_melting>                    true  </do_melting>
           <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
-          <check_TEPLA_failure_criterion> true </check_TEPLA_failure_criterion>
+          <taylor_quinney_coeff>          0.9   </taylor_quinney_coeff>
+          <check_max_stress_failure>      false </check_max_stress_failure>
+          <critical_stress>              12.0e9 </critical_stress>
+
           <include href="inputs/MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
           <include href="inputs/MPM/MaterialData/DefaultHypoEOS.xml"/>
           <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
@@ -185,6 +188,8 @@
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
+          <specific_heat_model type="steel_Cp"> </specific_heat_model>
+
           <initial_material_temperature>  600.0 </initial_material_temperature>
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
           <initial_std_porosity>          0.001 </initial_std_porosity>
