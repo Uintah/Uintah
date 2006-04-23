@@ -20,9 +20,9 @@ JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
   ps->require("m",d_CM.m);
   d_CM.epdot_0 = 1.0;
   ps->get("epdot_0", d_CM.epdot_0);
-  d_CM.TRoom = 294;
+  d_CM.TRoom = 298;
   ps->get("T_r",d_CM.TRoom);
-  d_CM.TMelt = 1594;
+  d_CM.TMelt = 1793;
   ps->get("T_m",d_CM.TMelt);
 }
          
@@ -145,11 +145,14 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
                                       const MPMMaterial* matl,
                                       const particleIndex idx )
 {
-  double epdot = state->plasticStrainRate/d_CM.epdot_0;
+  //double epdot = state->plasticStrainRate/d_CM.epdot_0;
+  double epdot = state->strainRate/d_CM.epdot_0;
   double ep = state->plasticStrain;
   double T = state->temperature;
-  double Tr = matl->getRoomTemperature();
-  double Tm = state->meltingTemp;
+  //double Tr = matl->getRoomTemperature();
+  //double Tm = state->meltingTemp;
+  double Tr = d_CM.TRoom;
+  double Tm = d_CM.TMelt;
 
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
   double strainRatePart = 1.0;
@@ -160,7 +163,7 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
   d_CM.TRoom = Tr;  d_CM.TMelt = Tm;
   double m = d_CM.m;
   double Tstar = (T > Tm) ? 1.0 : ((T-Tr)/(Tm-Tr)); 
-  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
+  double tempPart = (Tstar < 0.0) ? (1.0 - Tstar) : (1.0-pow(Tstar,m));
   double sigy = strainPart*strainRatePart*tempPart;
   if (isnan(sigy)) {
     cout << "**ERROR** JohnsonCook: sig_y == nan " 
@@ -186,14 +189,16 @@ JohnsonCookPlastic::computeEpdot(const PlasticityState* state,
   double tau = state->yieldStress;
   double ep = state->plasticStrain;
   double T = state->temperature;
-  double Tr = matl->getRoomTemperature();
-  double Tm = state->meltingTemp;
+  //double Tr = matl->getRoomTemperature();
+  //double Tm = state->meltingTemp;
+  double Tr = d_CM.TRoom;
+  double Tm = d_CM.TMelt;
 
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
   d_CM.TRoom = Tr;  d_CM.TMelt = Tm;
   double m = d_CM.m;
   double Tstar = (T > Tm) ? 1.0 : ((T-Tr)/(Tm-Tr)); 
-  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
+  double tempPart = (Tstar < 0.0) ? (1.0 - Tstar) : (1.0-pow(Tstar,m));
 
   double fac1 = tau/(strainPart*tempPart);
   double fac2 = (1.0/d_CM.C)*(fac1-1.0);
@@ -274,10 +279,13 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                                    const particleIndex )
 {
   // Get the state data
+  //double epdot = state->plasticStrainRate/d_CM.epdot_0;
+  double epdot = state->strainRate/d_CM.epdot_0;
   double ep = state->plasticStrain;
-  double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double T = state->temperature;
-  double Tm = state->meltingTemp;
+  //double Tm = state->meltingTemp;
+  double Tr = d_CM.TRoom;
+  double Tm = d_CM.TMelt;
 
   // Calculate strain rate part
   double strainRatePart = (epdot < 1.0) ? 
@@ -285,8 +293,8 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T > Tm) ? 1.0 : (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
-  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
+  double Tstar = (T > Tm) ? 1.0 : (T-Tr)/(Tm-Tr);
+  double tempPart = (Tstar < 0.0) ? (1.0 - Tstar) : (1.0-pow(Tstar,m));
 
   double D = strainRatePart*tempPart;
 
@@ -320,10 +328,13 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
                                                  const particleIndex )
 {
   // Get the state data
+  //double epdot = state->plasticStrainRate/d_CM.epdot_0;
+  double epdot = state->strainRate/d_CM.epdot_0;
   double ep = state->plasticStrain;
-  double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double T = state->temperature;
-  double Tm = state->meltingTemp;
+  //double Tm = state->meltingTemp;
+  double Tr = d_CM.TRoom;
+  double Tm = d_CM.TMelt;
 
   // Calculate strain part
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
@@ -335,10 +346,10 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T > Tm) ? 1.0 : (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
+  double Tstar = (T > Tm) ? 1.0 : (T-Tr)/(Tm-Tr);
 
   double F = strainPart*strainRatePart;
-  double deriv = - m*F*pow(Tstar,m)/(T-d_CM.TRoom);
+  double deriv = (T < Tr) ? -F/(Tm-Tr) : -m*F*pow(Tstar,m-1)/(Tm-Tr);
   if (isnan(deriv)) {
     cout << "**ERROR** JohnsonCook: dsig/dT == nan " << endl; 
   }
@@ -350,18 +361,21 @@ JohnsonCookPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                                 const particleIndex )
 {
   // Get the state data
+  //double epdot = state->plasticStrainRate/d_CM.epdot_0;
+  double epdot = state->strainRate/d_CM.epdot_0;
   double ep = state->plasticStrain;
-  double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double T = state->temperature;
-  double Tm = state->meltingTemp;
+  //double Tm = state->meltingTemp;
+  double Tr = d_CM.TRoom;
+  double Tm = d_CM.TMelt;
 
   // Calculate strain part
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T > Tm) ? 1.0 : (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
-  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
+  double Tstar = (T > Tm) ? 1.0 : (T-Tr)/(Tm-Tr);
+  double tempPart = (Tstar < 0.0) ? (1.0 - Tstar) : (1.0-pow(Tstar,m));
 
   double E = strainPart*tempPart;
 

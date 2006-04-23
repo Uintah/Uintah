@@ -9,23 +9,39 @@ function computeFisherPlotData
 
   load StDataRc30Ep0.dat
   dat = StDataRc30Ep0;
-  [C30] = computeFisherPlot(dat, 'StDataFisherRc30Ep0.dat');
+  [C30] = computeFisherPlot(dat, 'StDataFisherRc30Ep0.dat', '4340 Steel Rc 30');
 
-  %load StDataRc32Ep0.dat
-  %dat = StDataRc32Ep0;
-  %[C32] = computeFisherPlot(dat, 'StDataFisherRc32Ep0.dat');
+  load StDataRc32Ep0.dat
+  dat = StDataRc32Ep0;
+  [C32] = computeFisherPlot(dat, 'StDataFisherRc32Ep0.dat', '4340 Steel Rc 32');
 
+  %
+  % Separate the dat for Rc = 38 into low and high temperature parts
+  %
   load StDataRc38Ep0.dat
+  [n,m] = size(StDataRc38Ep0);
+  countHi = 1;
+  countLo = 1;
+  for i=1:n
+    if (StDataRc38Ep0(i,3) > 1040.0) 
+      highTempData(countHi, :) = StDataRc38Ep0(i,:);
+      countHi = countHi + 1;
+    else
+      lowTempData(countLo, :) = StDataRc38Ep0(i,:);
+      countLo = countLo + 1;
+    end
+  end
   dat = StDataRc38Ep0;
-  [C38] = computeFisherPlot(dat, 'StDataFisherRc38Ep0.dat');
+  [CLow,CHigh] = computeFisherPlotHi(dat, 'StDataFisherHighEp0.dat', '4340 Steel Rc 38');
+  C38 = CLow;
 
   load StDataRc45Ep0.dat
   dat = StDataRc45Ep0;
-  [C45] = computeFisherPlot(dat, 'StDataFisherRc45Ep0.dat');
+  [C45] = computeFisherPlot(dat, 'StDataFisherRc45Ep0.dat', '4340 Steel Rc 45');
 
   load StDataRc49Ep0.dat
   dat = StDataRc49Ep0;
-  [C49] = computeFisherPlot(dat, 'StDataFisherRc49Ep0.dat');
+  [C49] = computeFisherPlot(dat, 'StDataFisherRc49Ep0.dat', '4340 Steel Rc 49');
 
   %
   % HY-100 fit
@@ -47,6 +63,13 @@ function computeFisherPlotData
   P = calcP(rho0, rho0, 0, 0);
   Tm = calcTm(rho0, rho0);
   mu_0 = calcmu(rho0, rho0, Tm, P, 0);
+
+  sigma_i_mu0_pi = CHigh(2);
+  oog0i_qi = -CHigh(1)/CHigh(2);
+  sigma_i_mu0 = sigma_i_mu0_pi^(1/p_i);
+  oog0i = oog0i_qi^q_i;
+  sigma_i_High = sigma_i_mu0*mu_0
+  g0i_High = 1/oog0i
 
   Rc(1) = 30;
   sigma_i_mu0_pi = C30(2);
@@ -99,145 +122,299 @@ function computeFisherPlotData
   end
 
   figure
-  subplot(1,2,1);
-  plot(Rc, sigma_i, 'ro'); hold on;
-  plot(Rcc, sig_i, 'b-');
-  subplot(1,2,2);
-  plot(Rc, g0i, 'go'); hold on;
-  plot(Rcc, g0_i, 'b-');
+  plot(Rc, sigma_i*1.0e-6, 'ro', 'LineWidth', 2, 'MarkerSize', 8, ...
+       'MarkerFaceColor', 'r'); hold on;
+  plot(Rcc, sig_i*1.0e-6, 'b-', 'LineWidth', 3);
+  set(gca, 'XLim', [25 50], 'YLim', [0 2000] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('Hardness (R_c)', 'FontName', 'bookman', 'FontSize', 16);
+  ylabel('\sigma_i (MPa)', 'FontName', 'bookman', 'FontSize', 16);
+  axis square;
+  str = sprintf('\\sigma_i = %0.3g R_c^3 - %0.3g R_c^2 + %0.3g R_c - %0.3g', ...
+                pSigma_i(1)*1.0e-6, -pSigma_i(2)*1.0e-6, ...
+                pSigma_i(3)*1.0e-6, -pSigma_i(4)*1.0e-6); 
+  gtext(str, 'FontName', 'bookman', 'FontSize', 14);
+
+  figure
+  plot(Rc, g0i, 'ro', 'LineWidth', 2, 'MarkerSize', 8, ...
+       'MarkerFaceColor', 'r'); hold on;
+  plot(Rcc, g0_i, 'b-', 'LineWidth', 3);
+  set(gca, 'XLim', [25 50], 'YLim', [0.0 5.0] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('Hardness (R_c)', 'FontName', 'bookman', 'FontSize', 16);
+  ylabel('g_{0i}', 'FontName', 'bookman', 'FontSize', 16);
+  axis square;
+  str = sprintf('g_{0i} = %0.3g R_c^3 + %0.3g R_c^2 - %0.3g R_c + %0.3g', ...
+                pg0_i(1), pg0_i(2), -pg0_i(3), pg0_i(4)); 
+  gtext(str, 'FontName', 'bookman', 'FontSize', 14);
+
 
   %
   % Check the error
   %
-  dat = StDataRc30Ep0;
-  epdot = dat(:,2);
-  T = dat(:,3);
-  sigy = dat(:,6)*1.0e6;
-  g0 = g0i(1);
-  sigi = sigma_i(1);
-  k = 1.3806503e-23;
-  b = 2.48e-10;
-  rho0 = 7830.0;
-  P = calcP(rho0, rho0, 0, 0);
-  Tm = calcTm(rho0, rho0);
-  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
-  for i=1:length(T)
-    P = calcP(rho0, rho0, T(i), T(i));
-    Tm = calcTm(rho0, rho0);
-    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
-    leftHS(i) = (sigy(i) - sig_a)/mu(i);
-    t1 = k*T(i)/(g0*mu(i)*b^3);
-    t2 = log(edot_0i/epdot(i));
-    t3 = (t1*t2)^(1/q_i);
-    Si(i) = (1.0 - t3)^(1/p_i);
-    rightHS(i) = Si(i)*sigi/mu_0; 
-    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
-  end
-  Si
-  figure
-  plot(rightHS, leftHS, 'o');
-  figure
-  plot(sigy, Se, 'o');
-  clear sigy Se rightHS leftHS
-  
-  dat = StDataRc38Ep0;
-  epdot = dat(:,2);
-  T = dat(:,3);
-  sigy = dat(:,6)*1.0e6;
-  g0 = g0i(2);
-  sigi = sigma_i(2);
-  k = 1.3806503e-23;
-  b = 2.48e-10;
-  rho0 = 7830.0;
-  P = calcP(rho0, rho0, 0, 0);
-  Tm = calcTm(rho0, rho0);
-  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
-  for i=1:length(T)
-    P = calcP(rho0, rho0, T(i), T(i));
-    Tm = calcTm(rho0, rho0);
-    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
-    leftHS(i) = (sigy(i) - sig_a)/mu(i);
-    t1 = k*T(i)/(g0*mu(i)*b^3);
-    t2 = log(edot_0i/epdot(i));
-    t3 = (t1*t2)^(1/q_i);
-    Si(i) = (1.0 - t3)^(1/p_i);
-    rightHS(i) = Si(i)*sigi/mu_0; 
-    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
-  end
-  Si
-  figure
-  plot(rightHS, leftHS, 'o');
-  figure
-  plot(sigy, Se, 'o');
-  clear sigy Se rightHS leftHS
-  
-
-  dat = StDataRc45Ep0;
-  epdot = dat(:,2);
-  T = dat(:,3);
-  sigy = dat(:,6)*1.0e6;
-  g0 = g0i(3);
-  sigi = sigma_i(3);
-  k = 1.3806503e-23;
-  b = 2.48e-10;
-  rho0 = 7830.0;
-  P = calcP(rho0, rho0, 0, 0);
-  Tm = calcTm(rho0, rho0);
-  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
-  for i=1:length(T)
-    P = calcP(rho0, rho0, T(i), T(i));
-    Tm = calcTm(rho0, rho0);
-    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
-    leftHS(i) = (sigy(i) - sig_a)/mu(i);
-    t1 = k*T(i)/(g0*mu(i)*b^3);
-    t2 = log(edot_0i/epdot(i));
-    t3 = (t1*t2)^(1/q_i);
-    Si(i) = (1.0 - t3)^(1/p_i);
-    rightHS(i) = Si(i)*sigi/mu_0; 
-    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
-  end
-  Si
-  figure
-  plot(rightHS, leftHS, 'o');
-  figure
-  plot(sigy, Se, 'o');
-  clear sigy Se rightHS leftHS
-
-  dat = StDataRc49Ep0;
-  epdot = dat(:,2);
-  T = dat(:,3);
-  sigy = dat(:,6)*1.0e6;
-  g0 = g0i(4);
-  sigi = sigma_i(4);
-  k = 1.3806503e-23;
-  b = 2.48e-10;
-  rho0 = 7830.0;
-  P = calcP(rho0, rho0, 0, 0);
-  Tm = calcTm(rho0, rho0);
-  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
-  for i=1:length(T)
-    P = calcP(rho0, rho0, T(i), T(i));
-    Tm = calcTm(rho0, rho0);
-    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
-    leftHS(i) = (sigy(i) - sig_a)/mu(i);
-    t1 = k*T(i)/(g0*mu(i)*b^3);
-    t2 = log(edot_0i/epdot(i));
-    t3 = (t1*t2)^(1/q_i);
-    Si(i) = (1.0 - t3)^(1/p_i);
-    rightHS(i) = Si(i)*sigi/mu_0; 
-    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
-  end
-  Si
-  figure
-  plot(rightHS, leftHS, 'o');
-  figure
-  plot(sigy, Se, 'o');
+%  dat = StDataRc30Ep0;
+%  epdot = dat(:,2);
+%  T = dat(:,3);
+%  sigy = dat(:,6)*1.0e6;
+%  g0 = g0i(1);
+%  sigi = sigma_i(1);
+%  k = 1.3806503e-23;
+%  b = 2.48e-10;
+%  rho0 = 7830.0;
+%  P = calcP(rho0, rho0, 0, 0);
+%  Tm = calcTm(rho0, rho0);
+%  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
+%  for i=1:length(T)
+%    P = calcP(rho0, rho0, T(i), T(i));
+%    Tm = calcTm(rho0, rho0);
+%    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
+%    leftHS(i) = (sigy(i) - sig_a)/mu(i);
+%    t1 = k*T(i)/(g0*mu(i)*b^3);
+%    t2 = log(edot_0i/epdot(i));
+%    t3 = (t1*t2)^(1/q_i);
+%    Si(i) = (1.0 - t3)^(1/p_i);
+%    rightHS(i) = Si(i)*sigi/mu_0; 
+%    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
+%  end
+%  Si
+%  figure
+%  plot(rightHS, leftHS, 'o');
+%  figure
+%  plot(sigy, Se, 'o');
+%  clear sigy Se rightHS leftHS
+%  
+%  dat = StDataRc38Ep0;
+%  epdot = dat(:,2);
+%  T = dat(:,3);
+%  sigy = dat(:,6)*1.0e6;
+%  g0 = g0i(2);
+%  sigi = sigma_i(2);
+%  k = 1.3806503e-23;
+%  b = 2.48e-10;
+%  rho0 = 7830.0;
+%  P = calcP(rho0, rho0, 0, 0);
+%  Tm = calcTm(rho0, rho0);
+%  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
+%  for i=1:length(T)
+%    P = calcP(rho0, rho0, T(i), T(i));
+%    Tm = calcTm(rho0, rho0);
+%    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
+%    leftHS(i) = (sigy(i) - sig_a)/mu(i);
+%    t1 = k*T(i)/(g0*mu(i)*b^3);
+%    t2 = log(edot_0i/epdot(i));
+%    t3 = (t1*t2)^(1/q_i);
+%    Si(i) = (1.0 - t3)^(1/p_i);
+%    rightHS(i) = Si(i)*sigi/mu_0; 
+%    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
+%  end
+%  Si
+%  figure
+%  plot(rightHS, leftHS, 'o');
+%  figure
+%  plot(sigy, Se, 'o');
+%  clear sigy Se rightHS leftHS
+%  
+%
+%  dat = StDataRc45Ep0;
+%  epdot = dat(:,2);
+%  T = dat(:,3);
+%  sigy = dat(:,6)*1.0e6;
+%  g0 = g0i(3);
+%  sigi = sigma_i(3);
+%  k = 1.3806503e-23;
+%  b = 2.48e-10;
+%  rho0 = 7830.0;
+%  P = calcP(rho0, rho0, 0, 0);
+%  Tm = calcTm(rho0, rho0);
+%  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
+%  for i=1:length(T)
+%    P = calcP(rho0, rho0, T(i), T(i));
+%    Tm = calcTm(rho0, rho0);
+%    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
+%    leftHS(i) = (sigy(i) - sig_a)/mu(i);
+%    t1 = k*T(i)/(g0*mu(i)*b^3);
+%    t2 = log(edot_0i/epdot(i));
+%    t3 = (t1*t2)^(1/q_i);
+%    Si(i) = (1.0 - t3)^(1/p_i);
+%    rightHS(i) = Si(i)*sigi/mu_0; 
+%    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
+%  end
+%  Si
+%  figure
+%  plot(rightHS, leftHS, 'o');
+%  figure
+%  plot(sigy, Se, 'o');
+%  clear sigy Se rightHS leftHS
+%
+%  dat = StDataRc49Ep0;
+%  epdot = dat(:,2);
+%  T = dat(:,3);
+%  sigy = dat(:,6)*1.0e6;
+%  g0 = g0i(4);
+%  sigi = sigma_i(4);
+%  k = 1.3806503e-23;
+%  b = 2.48e-10;
+%  rho0 = 7830.0;
+%  P = calcP(rho0, rho0, 0, 0);
+%  Tm = calcTm(rho0, rho0);
+%  mu_0 = calcmu(rho0, rho0, Tm, P, 0);
+%  for i=1:length(T)
+%    P = calcP(rho0, rho0, T(i), T(i));
+%    Tm = calcTm(rho0, rho0);
+%    mu(i) = calcmu(rho0, rho0, Tm, P, T(i));
+%    leftHS(i) = (sigy(i) - sig_a)/mu(i);
+%    t1 = k*T(i)/(g0*mu(i)*b^3);
+%    t2 = log(edot_0i/epdot(i));
+%    t3 = (t1*t2)^(1/q_i);
+%    Si(i) = (1.0 - t3)^(1/p_i);
+%    rightHS(i) = Si(i)*sigi/mu_0; 
+%    Se(i) = (leftHS(i) - rightHS(i))*mu_0;
+%  end
+%  Si
+%  figure
+%  plot(rightHS, leftHS, 'o');
+%  figure
+%  plot(sigy, Se, 'o');
   
   
 
   %=========================================================================
 
-function [C] = computeFisherPlot(dat, fileName)
+function [CLow,CHigh] = computeFisherPlotHi(dat, fileName, label)
+
+  CLow = [0 0];
+  CHigh = [0 0];
+  fig = figure;
+
+  dat = sortrows(dat, 3);
+
+  %
+  % Separate into pre and post phase change
+  %
+  [n,m] = size(dat);
+  countHi = 1;
+  countLo = 1;
+  for i=1:n
+    if (dat(i,3) > 1040) 
+      highTempData(countHi, :) = dat(i,:);
+      countHi = countHi + 1;
+    else
+      lowTempData(countLo, :) = dat(i,:);
+      countLo = countLo + 1;
+    end
+  end
+
+  fid = fopen(fileName,'w');
+  %
+  % Plot the lower temperature data
+  %
+  [n,m] = size(lowTempData);
+  if (n > 0) 
+    edot = lowTempData(:,2);
+    T = lowTempData(:,3);
+    sig_y = lowTempData(:,6);
+    rho = 7830.0;
+    rho0 = 7830.0;
+    k = 1.3806503e-23;
+    b = 2.48e-10;
+
+    sig_a = 50.0e6;
+    edot_0i = 1.0e8;
+    p_i = 2.0/3.0;
+    q_i = 1.0;
+
+    [n,m] = size(lowTempData);
+    for i=1:n
+      P = calcP(rho, rho0, T(i), T(i));
+      Tm = calcTm(rho, rho0);
+      mu(i) = calcmu(rho, rho0, Tm, P, T(i));
+      xx(i) = (k*T(i)/(mu(i)*b^3)*log(edot_0i/edot(i)))^(1/q_i);
+      yy(i) = ((sig_y(i)*1.0e6 - sig_a)/mu(i))^p_i;
+      %str = sprintf('(%g,  %g)',edot(i),T(i));
+      %text(xx(i)+0.005,yy(i),str); hold on;
+    end
+    plot(xx, yy, 'rs', 'LineWidth', 2, 'MarkerSize', 8); hold on;
+    [CLow,S] = polyfit(xx,yy,1);
+    xmin = 0.0;
+    xmax = 0.2;
+    nx = 100;
+    dx = xmax/nx;
+    for i=1:nx+1
+      xfit(i) = xmin + (i-1)*dx;
+      yfit(i) = CLow(2) + CLow(1)*xfit(i);
+    end
+    plot(xfit, yfit, 'b-', 'LineWidth', 3); hold on;
+    %
+    % Save the data
+    %
+    for i=1:n
+      fprintf(fid,'%g %g %g %g %g %g\n', ...
+              xx(i), yy(i), T(i), edot(i), sig_y(i), mu(i)/1.0e6);
+    end
+    clear xx yy mu;
+  end
+
+  %
+  % Plot the higher temperature data
+  %
+  edot = highTempData(:,2);
+  T = highTempData(:,3);
+  sig_y = highTempData(:,6);
+  rho = 7830.0;
+  rho0 = 7830.0;
+  k = 1.3806503e-23;
+  b = 2.48e-10;
+
+  sig_a = 50.0e6;
+  edot_0i = 1.0e8;
+  p_i = 2.0/3.0;
+  q_i = 1.0;
+
+  [n,m] = size(highTempData);
+  for i=1:n
+    P = calcP(rho, rho0, T(i), T(i));
+    Tm = calcTm(rho, rho0);
+    mu(i) = calcmu(rho, rho0, Tm, P, T(i));
+    xx(i) = (k*T(i)/(mu(i)*b^3)*log(edot_0i/edot(i)))^(1/q_i);
+    yy(i) = ((sig_y(i)*1.0e6 - sig_a)/mu(i))^p_i;
+    %str = sprintf('(%g,  %g)',edot(i),T(i));
+    %text(xx(i)+0.005,yy(i),str); hold on;
+  end
+  plot(xx, yy, 'rs', 'LineWidth', 2, 'MarkerSize', 8); hold on;
+  [CHigh,S] = polyfit(xx,yy,1);
+  xmin = 0.2;
+  xmax = max(xx)+0.05;
+  nx = 100;
+  dx = xmax/nx;
+  for i=1:nx+1
+    xfit(i) = xmin + (i-1)*dx;
+    yfit(i) = CHigh(2) + CHigh(1)*xfit(i);
+  end
+  plot(xfit, yfit, 'b-', 'LineWidth', 3); hold on;
+  %
+  % Save the data
+  %
+  for i=1:n
+    fprintf(fid,'%g %g %g %g %g %g\n', ...
+            xx(i), yy(i), T(i), edot(i), sig_y(i), mu(i)/1.0e6);
+  end
+  fclose(fid);
+
+  set(gca, 'XLim', [0.0 0.40], 'YLim', [0.0 0.07]);
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('x = [k_b T/ \mu b^3 ln(\epsilon_{0i}/ \epsilon)]^{1/q_i}', ...
+         'FontName', 'bookman', 'FontSize', 16);
+  ylabel('y = [(\sigma_y - \sigma_a)/\mu]^{p_i} ', ...
+         'FontName', 'bookman', 'FontSize', 16);
+  title(label, 'FontName', 'bookman', 'FontSize', 16);
+  axis square;
+  str = sprintf('Before \\alpha-\\gamma: y = %g - %g x', CLow(2), -CLow(1));
+  gtext(str, 'FontName', 'bookman', 'FontSize', 14);
+  str = sprintf('After \\alpha-\\gamma: y = %g - %g x', CHigh(2), -CHigh(1));
+  gtext(str, 'FontName', 'bookman', 'FontSize', 14);
+
+
+function [C] = computeFisherPlot(dat, fileName, label)
 
   fig = figure;
 
@@ -273,20 +450,35 @@ function [C] = computeFisherPlot(dat, fileName)
     mu(i) = calcmu(rho, rho0, Tm, P, T(i));
     xx(i) = (k*T(i)/(mu(i)*b^3)*log(edot_0i/edot(i)))^(1/q_i);
     yy(i) = ((sig_y(i)*1.0e6 - sig_a)/mu(i))^p_i;
-    str = sprintf('(%g,  %g,  %g)',i,edot(i),T(i));
-    text(xx(i)+0.005,yy(i),str); hold on;
+    %str = sprintf('(%g,  %g)',edot(i),T(i));
+    %text(xx(i)+0.005,yy(i),str); hold on;
   end
-  plot(xx, yy, 'rs'); hold on;
+  plot(xx, yy, 'rs', 'LineWidth', 2, 'MarkerSize', 8); hold on;
   [C,S] = polyfit(xx,yy,1);
   xmin = 0.0;
-  xmax = 0.5;
+  xmax = max(xx)+0.1;
   nx = 100;
   dx = xmax/nx;
   for i=1:nx+1
     xfit(i) = xmin + (i-1)*dx;
     yfit(i) = C(2) + C(1)*xfit(i);
   end
-  plot(xfit, yfit, 'b-'); hold on;
+  plot(xfit, yfit, 'b-', 'LineWidth', 3); hold on;
+
+  set(gca, 'XLim', [0 xmax], 'YLim', [min(yfit)-0.01 max(yfit)+0.01] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('x = [k_b T/ \mu b^3 ln(\epsilon_{0i}/ \epsilon)]^{1/q_i}', ...
+         'FontName', 'bookman', 'FontSize', 16);
+  ylabel('y = [(\sigma_y - \sigma_a)/\mu]^{p_i} ', ...
+         'FontName', 'bookman', 'FontSize', 16);
+  title(label, 'FontName', 'bookman', 'FontSize', 16);
+  axis square;
+  str = sprintf('y = %g - %g x', C(2), -C(1));
+  gtext(str, 'FontName', 'bookman', 'FontSize', 14);
+
+  %
+  % Save the data
+  %
   fid = fopen(fileName,'w');
   for i=1:n
     fprintf(fid,'%g %g %g %g %g %g\n', ...

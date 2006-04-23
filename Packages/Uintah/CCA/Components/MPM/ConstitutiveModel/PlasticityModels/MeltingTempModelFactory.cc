@@ -1,6 +1,7 @@
 #include "MeltingTempModelFactory.h"
 #include "ConstantMeltTemp.h"
 #include "SCGMeltTemp.h"
+#include "BPSMeltTemp.h"
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -25,6 +26,8 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
       return(scinew ConstantMeltTemp(child));
    else if (mat_type == "scg_Tm")
       return(scinew SCGMeltTemp(child));
+   else if (mat_type == "bps_Tm")
+      return(scinew BPSMeltTemp(child));
    else 
       throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")",
                                   __FILE__, __LINE__);
@@ -37,6 +40,8 @@ MeltingTempModelFactory::createCopy(const MeltingTempModel* mtm)
       return(scinew ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
    else if (dynamic_cast<const SCGMeltTemp*>(mtm))
       return(scinew SCGMeltTemp(dynamic_cast<const SCGMeltTemp*>(mtm)));
+   else if (dynamic_cast<const BPSMeltTemp*>(mtm))
+      return(scinew BPSMeltTemp(dynamic_cast<const BPSMeltTemp*>(mtm)));
    else 
       throw ProblemSetupException("Cannot create copy of unknown melting temp model", __FILE__, __LINE__);
 }

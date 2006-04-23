@@ -36,6 +36,24 @@ MTSPlastic::MTSPlastic(ProblemSpecP& ps)
   ps->require("g_0es",d_CM.g_0es); //A
   ps->require("sigma_es0",d_CM.sigma_es0);
 
+  // Above phase transition temperature (only for steels)
+  //d_CM.Tc = 1040.0;
+  d_CM.Tc = 10400.0;  // For the other materials not to get
+                      // screwed up
+  ps->get("T_c", d_CM.Tc);   
+  d_CM.g_0i_c = 0.57582;
+  ps->get("g_0i_c", d_CM.g_0i_c);
+  d_CM.sigma_i_c = 896.14e6;
+  ps->get("sigma_i_c", d_CM.sigma_i_c);
+  d_CM.g_0es_c = 0.294;
+  ps->get("g_0es_c", d_CM.g_0es_c);
+  d_CM.sigma_es0_c = 478.36e6;
+  ps->get("sigma_es0_c", d_CM.sigma_es0_c);
+  d_CM.a_0_c = 7.5159e9;
+  ps->get("a_0_c", d_CM.a_0_c);
+  d_CM.a_3_c = 3.7796e6;
+  ps->get("a_3_c", d_CM.a_3_c);
+
   // Initialize internal variable labels for evolution
   //pMTSLabel = VarLabel::create("p.mtStress",
   //      ParticleVariable<double>::getTypeDescription());
@@ -68,6 +86,14 @@ MTSPlastic::MTSPlastic(const MTSPlastic* cm)
   d_CM.edot_es0 = cm->d_CM.edot_es0;
   d_CM.g_0es = cm->d_CM.g_0es;
   d_CM.sigma_es0 = cm->d_CM.sigma_es0;
+
+  d_CM.Tc = cm->d_CM.Tc;
+  d_CM.g_0i_c = cm->d_CM.g_0i_c;
+  d_CM.sigma_i_c = cm->d_CM.sigma_i_c;
+  d_CM.g_0es_c = cm->d_CM.g_0es_c;
+  d_CM.sigma_es0_c = cm->d_CM.sigma_es0_c;
+  d_CM.a_0_c = cm->d_CM.a_0_c;
+  d_CM.a_3_c = cm->d_CM.a_3_c;
 
   // Initialize internal variable labels for evolution
   //pMTSLabel = VarLabel::create("p.mtStress",
@@ -111,6 +137,14 @@ void MTSPlastic::outputProblemSpec(ProblemSpecP& ps)
   plastic_ps->appendElement("edot_es0",d_CM.edot_es0);
   plastic_ps->appendElement("g_0es",d_CM.g_0es); //A
   plastic_ps->appendElement("sigma_es0",d_CM.sigma_es0);
+
+  plastic_ps->appendElement("T_c", d_CM.Tc);   
+  plastic_ps->appendElement("g_0i_c", d_CM.g_0i_c);
+  plastic_ps->appendElement("sigma_i_c", d_CM.sigma_i_c);
+  plastic_ps->appendElement("g_0es_c", d_CM.g_0es_c);
+  plastic_ps->appendElement("sigma_es0_c", d_CM.sigma_es0_c);
+  plastic_ps->appendElement("a_0_c", d_CM.a_0_c);
+  plastic_ps->appendElement("a_3_c", d_CM.a_3_c);
 }
 
          
@@ -246,13 +280,13 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
                               const particleIndex )
 {
   // Calculate strain rate and incremental strain
-  double edot = state->plasticStrainRate;
+  //double edot = state->plasticStrainRate;
+  double edot = state->strainRate;
   if (edot == 0.0) edot = 1.0e-7;
 
   // Check if temperature is correct
-  double T = state->temperature;
-
   // Check if shear modulus is correct
+  double T = state->temperature;
   double mu = state->shearModulus;
   if ((mu <= 0.0) || (T <= 0.0) ) {
     cerr << "**ERROR** MTSPlastic::computeFlowStress: mu = " << mu 
@@ -260,11 +294,35 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
   }
   double mu_mu_0 = mu/d_CM.mu_0;
 
+  // If temperature is greater than phase transition temperature
+  // then update the constants
+  double g_0i = 0.0;
+  double sigma_i = 0.0;
+  double g_0es = 0.0;
+  double sigma_es0 = 0.0;
+  double a_0 = 0.0;
+  double a_3 = 0.0;
+  if (T > d_CM.Tc) {
+    g_0i = d_CM.g_0i_c;
+    sigma_i = d_CM.sigma_i_c;
+    g_0es = d_CM.g_0es_c;
+    sigma_es0 = d_CM.sigma_es0_c;
+    a_0 = d_CM.a_0_c;
+    a_3 = d_CM.a_3_c;
+  } else {
+    g_0i = d_CM.g_0i;
+    sigma_i = d_CM.sigma_i;
+    g_0es = d_CM.g_0es;
+    sigma_es0 = d_CM.sigma_es0;
+    a_0 = d_CM.a_0;
+    a_3 = d_CM.a_3;
+  }
+
   // Calculate S_i
   double CC = d_CM.koverbcubed*T/mu;
   double S_i = 0.0;
   if (d_CM.p_i > 0.0) {
-    double CCi = CC/d_CM.g_0i;
+    double CCi = CC/g_0i;
     double logei = log(d_CM.edot_0i/edot);
     double logei_q = 1.0 - pow((CCi*logei),(1.0/d_CM.q_i));
     if (logei_q > 0.0) S_i = pow(logei_q,(1.0/d_CM.p_i));
@@ -278,13 +336,23 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
   if (logee_q > 0.0) S_e = pow(logee_q,(1.0/d_CM.p_e));
 
   // Calculate theta_0
-  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
-    - d_CM.a_3*T;
+  double theta_0 = a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
+    - a_3*T;
+  
+  if(theta_0 < 0.0){
+    ostringstream desc;
+    desc << " **ERROR** MTS Plasticity Model: Negative initial hardening rate! " << endl;
+    desc << "     edot = " << edot << " ep = " << state->plasticStrain << endl;
+    desc << "     Tm = " << state->meltingTemp << " T = " << T << endl;
+    desc << "     mu = " << mu << " mu_0 = " << d_CM.mu_0 << endl;
+    desc << "     theta_0 = " << theta_0 << " epdot = " << state->plasticStrainRate << endl;
+    throw InvalidValue(desc.str(), __FILE__, __LINE__);
+  }
 
   // Calculate sigma_es
-  double CCes = CC/d_CM.g_0es;
+  double CCes = CC/g_0es;
   double powees = pow(edot/d_CM.edot_es0, CCes);
-  double sigma_es = d_CM.sigma_es0*powees;
+  double sigma_es = sigma_es0*powees;
 
   // Compute sigma_e (total)
   double sigma_e_old = 0.0;
@@ -307,7 +375,13 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
   //pMTS_new[idx] = sigma_e;
 
   // Calculate the flow stress
-  double sigma = d_CM.sigma_a + (S_i*d_CM.sigma_i + S_e*sigma_e)*mu_mu_0;
+  double sigma = d_CM.sigma_a + (S_i*sigma_i + S_e*sigma_e)*mu_mu_0;
+
+  //cout << "MTS: edot = " << edot << " T = " << T << " ep = " << delEps << endl;
+  //cout << "     mu = " << mu << " mu_0 = " << d_CM.mu_0 << endl;
+  //cout << "     S_i = " << S_i << " sigma_i = " << sigma_i << endl;
+  //cout << "     S_e = " << S_e << " sigma_e = " << sigma_e << endl;
+  //cout << "     theta_0 = " << theta_0 << endl;
   return sigma;
 }
 
@@ -324,11 +398,12 @@ MTSPlastic::computeSigma_e(const double& theta_0,
 
   double tol = 1.0;
   double talpha = tanh(d_CM.alpha);
-  double dep = ep/(double) numSubcycles;
+  int nep = numSubcycles;
+  double dep = ep/(double) nep;
   double beta = dep*theta_0;
   double delta = beta/talpha;
   double gamma = 0.5*d_CM.alpha/sigma_es;
-  for (int ii = 0; ii < numSubcycles; ++ii) {
+  for (int ii = 0; ii < nep; ++ii) {
     double phi = sigma_e + beta;
     double psi = sigma_e*gamma;
     double f = 1.0e6;
@@ -382,17 +457,35 @@ MTSPlastic::computeEpdot(const PlasticityState* state,
   double T = state->temperature;
   double mu = state->shearModulus;
 
+  // If temperature is greater than phase transition temperature
+  // then update the constants
+  double g_0es = 0.0;
+  double sigma_es0 = 0.0;
+  double a_0 = 0.0;
+  double a_3 = 0.0;
+  if (T > d_CM.Tc) {
+    g_0es = d_CM.g_0es_c;
+    sigma_es0 = d_CM.sigma_es0_c;
+    a_0 = d_CM.a_0_c;
+    a_3 = d_CM.a_3_c;
+  } else {
+    g_0es = d_CM.g_0es;
+    sigma_es0 = d_CM.sigma_es0;
+    a_0 = d_CM.a_0;
+    a_3 = d_CM.a_3;
+  }
+
   // Calculate theta_0
-  double edot = state->plasticStrainRate;
+  //double edot = state->plasticStrainRate;
+  double edot = state->strainRate;
   if (edot == 0.0) edot = 1.0e-7;
-  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
-    - d_CM.a_3*T;
+  double theta_0 = a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot) - a_3*T;
 
   // Calculate sigma_es
   double CC = d_CM.koverbcubed*T/mu;
-  double CCes = CC/d_CM.g_0es;
+  double CCes = CC/g_0es;
   double powees = pow(edot/d_CM.edot_es0, CCes);
-  double sigma_es = d_CM.sigma_es0*powees;
+  double sigma_es = sigma_es0*powees;
 
   // Compute sigma_e (total)
   double sigma_e_old = 0.0;
@@ -422,6 +515,18 @@ MTSPlastic::evalFAndFPrime(const double& tau,
                            double& f,
                            double& fPrime)
 {
+  // If temperature is greater than phase transition temperature
+  // then update the constants
+  double g_0i = 0.0;
+  double sigma_i = 0.0;
+  if (T > d_CM.Tc) {
+    g_0i = d_CM.g_0i_c;
+    sigma_i = d_CM.sigma_i_c;
+  } else {
+    g_0i = d_CM.g_0i;
+    sigma_i = d_CM.sigma_i;
+  }
+
   // Compute mu/mu0
   double mu_mu_0 = mu/d_CM.mu_0;
 
@@ -432,7 +537,7 @@ MTSPlastic::evalFAndFPrime(const double& tau,
   if (d_CM.p_i > 0.0) {
 
     // f(epdot)
-    double CCi = CC/d_CM.g_0i;
+    double CCi = CC/g_0i;
     double logei = log(d_CM.edot_0i/epdot);
     double logei_q = 1.0 - pow((CCi*logei),(1.0/d_CM.q_i));
     if (logei_q > 0.0) S_i = pow(logei_q,(1.0/d_CM.p_i));
@@ -455,10 +560,10 @@ MTSPlastic::evalFAndFPrime(const double& tau,
   double t_e = numer_t_e/denom_t_e;
 
   // Calculate f(epdot)
-  f = tau - (d_CM.sigma_a + (S_i*d_CM.sigma_i + S_e*sigma_e)*mu_mu_0);
+  f = tau - (d_CM.sigma_a + (S_i*sigma_i + S_e*sigma_e)*mu_mu_0);
 
   // Calculate f'(epdot)
-  fPrime =  - (t_i*d_CM.sigma_i + t_e*sigma_e)*mu_mu_0;
+  fPrime =  - (t_i*sigma_i + t_e*sigma_e)*mu_mu_0;
 }
 
 /*! The evolving internal variable is \f$q = \hat\sigma_e\f$.  If the 
@@ -490,7 +595,8 @@ MTSPlastic::computeTangentModulus(const Matrix3& stress,
 
   // Calculate the equivalent stress and strain rate
   double sigeqv = sqrt(sigdev.NormSquared()); 
-  double edot = state->plasticStrainRate;
+  //double edot = state->plasticStrainRate;
+  double edot = state->strainRate;
   if (edot == 0.0) edot = 1.0e-7;
 
   // Calculate the direction of plastic loading (r)
@@ -500,16 +606,33 @@ MTSPlastic::computeTangentModulus(const Matrix3& stress,
   double mu = state->shearModulus;
   double mu_mu_0 = mu/d_CM.mu_0;
 
-  // Calculate theta_0
+  // If temperature is greater than phase transition temperature
+  // then update the constants
   double T = state->temperature;
-  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
-    - d_CM.a_3*T;
+  double g_0es = 0.0;
+  double sigma_es0 = 0.0;
+  double a_0 = 0.0;
+  double a_3 = 0.0;
+  if (T > d_CM.Tc) {
+    g_0es = d_CM.g_0es_c;
+    sigma_es0 = d_CM.sigma_es0_c;
+    a_0 = d_CM.a_0_c;
+    a_3 = d_CM.a_3_c;
+  } else {
+    g_0es = d_CM.g_0es;
+    sigma_es0 = d_CM.sigma_es0;
+    a_0 = d_CM.a_0;
+    a_3 = d_CM.a_3;
+  }
+
+  // Calculate theta_0
+  double theta_0 = a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot) - a_3*T;
 
   // Calculate sigma_es
   double CC = d_CM.koverbcubed*T/mu;
-  double CCes = CC/d_CM.g_0es;
+  double CCes = CC/g_0es;
   double logees = log(edot/d_CM.edot_es0);
-  double sigma_es = d_CM.sigma_es0*exp(CCes*logees);
+  double sigma_es = sigma_es0*exp(CCes*logees);
 
   // Compute sigma_e (total)
   double sigma_e_old = 0.0;
@@ -579,26 +702,44 @@ MTSPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                            const particleIndex idx)
 {
   // Get the state data
-  double edot = state->plasticStrainRate;
+  //double edot = state->plasticStrainRate;
+  double edot = state->strainRate;
   if (edot == 0.0) edot = 1.0e-7;
   double mu = state->shearModulus;
   double T = state->temperature;
+
+  // If temperature is greater than phase transition temperature
+  // then update the constants
+  double g_0es = 0.0;
+  double sigma_es0 = 0.0;
+  double a_0 = 0.0;
+  double a_3 = 0.0;
+  if (T > d_CM.Tc) {
+    g_0es = d_CM.g_0es_c;
+    sigma_es0 = d_CM.sigma_es0_c;
+    a_0 = d_CM.a_0_c;
+    a_3 = d_CM.a_3_c;
+  } else {
+    g_0es = d_CM.g_0es;
+    sigma_es0 = d_CM.sigma_es0;
+    a_0 = d_CM.a_0;
+    a_3 = d_CM.a_3;
+  }
 
   //double sigma_e = pMTS_new[idx];
   double dsigY_dsig_e = evalDerivativeWRTSigmaE(state, idx);
 
   // Calculate theta_0
-  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
-    - d_CM.a_3*T;
+  double theta_0 = a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot) - a_3*T;
 
   // Check mu
   ASSERT (mu > 0.0);
 
   // Calculate sigma_es
   double CC = d_CM.koverbcubed*T/mu;
-  double CCes = CC/d_CM.g_0es;
+  double CCes = CC/g_0es;
   double powees = pow(edot/d_CM.edot_es0, CCes);
-  double sigma_es = d_CM.sigma_es0*powees;
+  double sigma_es = sigma_es0*powees;
 
   // Compute sigma_e (total)
   double sigma_e_old = 0.0;
@@ -651,7 +792,8 @@ MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
                                          const particleIndex )
 {
   // Get the state data
-  double edot = state->plasticStrainRate;
+  //double edot = state->plasticStrainRate;
+  double edot = state->strainRate;
   if (edot == 0.0) edot = 1.0e-7;
   double T = state->temperature;
   double mu = state->shearModulus;
@@ -663,14 +805,37 @@ MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
   double mu_mu_0 = mu/d_CM.mu_0;
   double CC = d_CM.koverbcubed/mu;
 
+  // If temperature is greater than phase transition temperature
+  // then update the constants
+  double g_0i = 0.0;
+  double sigma_i = 0.0;
+  double g_0es = 0.0;
+  double sigma_es0 = 0.0;
+  double a_0 = 0.0;
+  double a_3 = 0.0;
+  if (T > d_CM.Tc) {
+    g_0i = d_CM.g_0i_c;
+    sigma_i = d_CM.sigma_i_c;
+    g_0es = d_CM.g_0es_c;
+    sigma_es0 = d_CM.sigma_es0_c;
+    a_0 = d_CM.a_0_c;
+    a_3 = d_CM.a_3_c;
+  } else {
+    g_0i = d_CM.g_0i;
+    sigma_i = d_CM.sigma_i;
+    g_0es = d_CM.g_0es;
+    sigma_es0 = d_CM.sigma_es0;
+    a_0 = d_CM.a_0;
+    a_3 = d_CM.a_3;
+  }
+
   // Calculate theta_0
-  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
-    - d_CM.a_3*T;
+  double theta_0 = a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot) - a_3*T;
 
   // Calculate sigma_es
-  double CCes = CC/d_CM.g_0es;
+  double CCes = CC/g_0es;
   double powees = pow(edot/d_CM.edot_es0, CCes);
-  double sigma_es = d_CM.sigma_es0*powees;
+  double sigma_es = sigma_es0*powees;
 
   // Compute sigma_e (total)
   double sigma_e_old = 0.0;
@@ -688,7 +853,7 @@ MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
     double logei = log(d_CM.edot_0i/edot);
 
     // Calculate E = k/(g0*mu*b^3) log(edot_0/edot)
-    double E_i = (CC/d_CM.g_0i)*logei;
+    double E_i = (CC/g_0i)*logei;
 
     // Calculate (E*T)^{1/q}
     double ET_i = pow(E_i*T, 1.0/d_CM.q_i);
@@ -697,13 +862,13 @@ MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
     double ETpq_i = pow(1.0-ET_i,1.0/d_CM.p_i);
 
     // Calculate Ist term numer
-    numer1i = ETpq_i*d_CM.sigma_i;
+    numer1i = ETpq_i*sigma_i;
 
     // Calculate second term denom
     double denom2i = T*(1.0-ET_i);
 
     // Calculate second term numerator
-    double numer2i = ET_i*ETpq_i*d_CM.sigma_i/(d_CM.p_i*d_CM.q_i);
+    double numer2i = ET_i*ETpq_i*sigma_i/(d_CM.p_i*d_CM.q_i);
 
     // Calculate the ratios
     ratio2i = numer2i/denom2i;
@@ -753,7 +918,8 @@ MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                         const particleIndex )
 {
   // Get the state data
-  double edot = state->plasticStrainRate;
+  //double edot = state->plasticStrainRate;
+  double edot = state->strainRate;
   if (edot == 0.0) edot = 1.0e-7;
   double T = state->temperature;
   double mu = state->shearModulus;
@@ -761,14 +927,37 @@ MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
   double mu_mu_0 = mu/d_CM.mu_0;
   double CC = d_CM.koverbcubed*T/mu;
 
+  // If temperature is greater than phase transition temperature
+  // then update the constants
+  double g_0i = 0.0;
+  double sigma_i = 0.0;
+  double g_0es = 0.0;
+  double sigma_es0 = 0.0;
+  double a_0 = 0.0;
+  double a_3 = 0.0;
+  if (T > d_CM.Tc) {
+    g_0i = d_CM.g_0i_c;
+    sigma_i = d_CM.sigma_i_c;
+    g_0es = d_CM.g_0es_c;
+    sigma_es0 = d_CM.sigma_es0_c;
+    a_0 = d_CM.a_0_c;
+    a_3 = d_CM.a_3_c;
+  } else {
+    g_0i = d_CM.g_0i;
+    sigma_i = d_CM.sigma_i;
+    g_0es = d_CM.g_0es;
+    sigma_es0 = d_CM.sigma_es0;
+    a_0 = d_CM.a_0;
+    a_3 = d_CM.a_3;
+  }
+
   // Calculate theta_0
-  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
-    - d_CM.a_3*T;
+  double theta_0 = a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot) - a_3*T;
 
   // Calculate sigma_es
-  double CCes = CC/d_CM.g_0es;
+  double CCes = CC/g_0es;
   double powees = pow(edot/d_CM.edot_es0, CCes);
-  double sigma_es = d_CM.sigma_es0*powees;
+  double sigma_es = sigma_es0*powees;
 
   // Compute sigma_e (total)
   double sigma_e_old = 0.0;
@@ -781,10 +970,10 @@ MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
   if (d_CM.p_i > 0.0) {
 
     // Calculate (mu/mu0)*sigma_hat
-    double M_i = mu_mu_0*d_CM.sigma_i;
+    double M_i = mu_mu_0*sigma_i;
 
     // Calculate CC/g0
-    double K_i = CC/d_CM.g_0i;
+    double K_i = CC/g_0i;
 
     // Calculate log(edot0/edot)
     double logei = log(d_CM.edot_0i/edot);
@@ -832,7 +1021,8 @@ MTSPlastic::evalDerivativeWRTSigmaE(const PlasticityState* state,
                                     const particleIndex )
 {
   // Get the state data
-  double edot = state->plasticStrainRate;
+  //double edot = state->plasticStrainRate;
+  double edot = state->strainRate;
   if (edot == 0.0) edot = 1.0e-7;
   double T = state->temperature;
   double mu = state->shearModulus;
