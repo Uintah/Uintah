@@ -404,6 +404,9 @@
           <useModifiedEOS>                true  </useModifiedEOS>
           <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
           <initial_material_temperature>  300.0 </initial_material_temperature>
+          <taylor_quinney_coeff>          0.9   </taylor_quinney_coeff>
+          <check_max_stress_failure>      false </check_max_stress_failure>
+          <critical_stress>              12.0e9 </critical_stress>
        
           <!-- Warning: you must copy link this input file into your -->
           <!-- sus directory or these paths won't work.              -->
@@ -416,6 +419,7 @@
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JCDamage4340St.xml"/>
+          <specific_heat_model type="steel_Cp"> </specific_heat_model>
 
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
           <initial_std_porosity>          0.001 </initial_std_porosity>
@@ -462,6 +466,9 @@
           <useModifiedEOS>                true  </useModifiedEOS>
           <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
           <initial_material_temperature>  300.0 </initial_material_temperature>
+          <taylor_quinney_coeff>          0.9   </taylor_quinney_coeff>
+          <check_max_stress_failure>      false </check_max_stress_failure>
+          <critical_stress>              12.0e9 </critical_stress>
        
           <include href="inputs/MPM/MaterialData/IsoElastic4340St.xml"/>
           <include href="inputs/MPM/MaterialData/MieGrunEOS4340St.xml"/>
@@ -471,6 +478,7 @@
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JCDamage4340St.xml"/>
+          <specific_heat_model type="steel_Cp"> </specific_heat_model>
 
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
           <initial_std_porosity>          0.001 </initial_std_porosity>
