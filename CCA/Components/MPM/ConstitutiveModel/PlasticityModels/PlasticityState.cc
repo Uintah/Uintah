@@ -4,6 +4,7 @@ using namespace Uintah;
 PlasticityState::PlasticityState()
 {
   yieldStress = 0.0;
+  strainRate = 0.0;
   plasticStrainRate = 0.0;
   plasticStrain = 0.0;
   pressure = 0.0;
@@ -19,11 +20,13 @@ PlasticityState::PlasticityState()
   initialShearModulus = 0.0;
   meltingTemp = 0.0;
   initialMeltTemp = 0.0;
+  specificHeat = 0.0;
 }
 
 PlasticityState::PlasticityState(const PlasticityState& state)
 {
   yieldStress = state.yieldStress ;
+  strainRate = state.strainRate;
   plasticStrainRate = state.plasticStrainRate ;
   plasticStrain = state.plasticStrain ;
   pressure = state.pressure ;
@@ -39,11 +42,13 @@ PlasticityState::PlasticityState(const PlasticityState& state)
   initialShearModulus = state.initialShearModulus ;
   meltingTemp = state.meltingTemp ;
   initialMeltTemp = state.initialMeltTemp ;
+  specificHeat = state.specificHeat;
 }
 
 PlasticityState::PlasticityState(const PlasticityState* state)
 {
   yieldStress = state->yieldStress ;
+  strainRate = state->strainRate;
   plasticStrainRate = state->plasticStrainRate ;
   plasticStrain = state->plasticStrain ;
   pressure = state->pressure ;
@@ -59,6 +64,7 @@ PlasticityState::PlasticityState(const PlasticityState* state)
   initialShearModulus = state->initialShearModulus ;
   meltingTemp = state->meltingTemp ;
   initialMeltTemp = state->initialMeltTemp ;
+  specificHeat = state->specificHeat;
 }
 
 PlasticityState::~PlasticityState()
@@ -70,6 +76,7 @@ PlasticityState::operator=(const PlasticityState& state)
 {
   if (this == &state) return *this;
   yieldStress = state.yieldStress ;
+  strainRate = state.strainRate;
   plasticStrainRate = state.plasticStrainRate ;
   plasticStrain = state.plasticStrain ;
   pressure = state.pressure ;
@@ -85,6 +92,7 @@ PlasticityState::operator=(const PlasticityState& state)
   initialShearModulus = state.initialShearModulus ;
   meltingTemp = state.meltingTemp ;
   initialMeltTemp = state.initialMeltTemp ;
+  specificHeat = state.specificHeat;
   return *this;
 }
 
@@ -93,6 +101,7 @@ PlasticityState::operator=(const PlasticityState* state)
 {
   if (this == state) return this;
   yieldStress = state->yieldStress ;
+  strainRate = state->strainRate;
   plasticStrainRate = state->plasticStrainRate ;
   plasticStrain = state->plasticStrain ;
   pressure = state->pressure ;
@@ -108,5 +117,6 @@ PlasticityState::operator=(const PlasticityState* state)
   initialShearModulus = state->initialShearModulus ;
   meltingTemp = state->meltingTemp ;
   initialMeltTemp = state->initialMeltTemp ;
+  specificHeat = state->specificHeat;
   return this;
 }

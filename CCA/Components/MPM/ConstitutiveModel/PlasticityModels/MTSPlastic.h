@@ -131,6 +131,16 @@ namespace Uintah {
       double edot_es0;
       double g_0es; //A
       double sigma_es0;
+
+      // Above phase transition temperature (only for steels)
+      double Tc;   // Phase transition temperature (at present
+                   // pressure independent)
+      double g_0i_c;
+      double sigma_i_c;
+      double g_0es_c;
+      double sigma_es0_c;
+      double a_0_c;
+      double a_3_c;
     };   
 
     constParticleVariable<double> pMTS;
