@@ -169,6 +169,14 @@ PROGRAM := Packages/Uintah/StandAlone/extractF
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# extractS
+
+SRCS := $(SRCDIR)/extractS.cc
+PROGRAM := Packages/Uintah/StandAlone/extractS
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # partextract
 
 SRCS := $(SRCDIR)/partextract.cc
@@ -181,6 +189,14 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/partvarRange.cc
 PROGRAM := Packages/Uintah/StandAlone/partvarRange
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# selectpart
+
+SRCS := $(SRCDIR)/selectpart.cc
+PROGRAM := Packages/Uintah/StandAlone/selectpart
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
@@ -383,9 +399,11 @@ uintah: sus \
         restart_merger \
         partextract \
         partvarRange \
-        async_mpi_test \
+        selectpart \
+	async_mpi_test \
         extractV \
         extractF \
+        extractS \
         gambitFileReader \
         lineextract \
         timeextract \
@@ -453,11 +471,15 @@ partextract: prereqs Packages/Uintah/StandAlone/partextract
 
 partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
 
+selectpart: prereqs Packages/Uintah/StandAlone/selectpart
+
 async_mpi_test: prereqs Packages/Uintah/StandAlone/async_mpi_test
 
 extractV: prereqs Packages/Uintah/StandAlone/extractV
 
 extractF: prereqs Packages/Uintah/StandAlone/extractF
+
+extractS: prereqs Packages/Uintah/StandAlone/extractS
 
 gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 

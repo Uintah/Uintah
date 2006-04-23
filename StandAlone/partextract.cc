@@ -36,11 +36,20 @@ using namespace Uintah;
 
 // declarations
 void usage(const std::string& badarg, const std::string& progname);
-void getParticleStrains(DataArchive* da, int mat, string flag);
-void getParticleStresses(DataArchive* da, int mat, string flag);
+void getParticleStrains(DataArchive* da, int mat, long64 particleID, 
+		        string flag);
+void getParticleStresses(DataArchive* da, int mat, long64 particleID, 
+		         string flag);
 void printParticleVariable(DataArchive* da, int mat, string particleVariable,
                            long64 particleID, unsigned long time_step_lower,
                            unsigned long time_step_upper);
+void computeEquivStress(const Matrix3& sig, double& sigeqv);
+void computeEquivStrain(const Matrix3& F, double& epseqv);
+void computeTrueStrain(const Matrix3& F, Vector& strain);
+void computeGreenLagrangeStrain(const Matrix3& F, Matrix3& E);
+void computeGreenAlmansiStrain(const Matrix3& F, Matrix3& e);
+void computeStretchRotation(const Matrix3& F, Matrix3& R, Matrix3& U);
+void printCauchyStress(const Matrix3& stress);
 
 // Main
 int main(int argc, char** argv)
@@ -140,23 +149,30 @@ int main(int argc, char** argv)
     if (do_part_stress) {
       if (do_av_part_stress) {
         cout << "\t Volume average stress = " << endl;
-        getParticleStresses(da, mat, "avg");
-      } 
-      else if (do_equiv_part_stress) getParticleStresses(da, mat, "equiv");
-      else getParticleStresses(da, mat, "all");
+        getParticleStresses(da, mat, particleID, "avg");
+      } else if (do_equiv_part_stress) {
+        getParticleStresses(da, mat, particleID, "equiv");
+      } else {
+        getParticleStresses(da, mat, particleID, "all");
+      }
     } 
 
     // Get the particle strains
     if (do_part_strain) {
       if (do_av_part_strain) {
         cout << "\t Volume average strain = " << endl;
-        getParticleStrains(da, mat, "avg");
-      } 
-      else if (do_true_part_strain) getParticleStrains(da, mat, "true");
-      else if (do_equiv_part_strain) getParticleStrains(da, mat, "equiv");
-      else if (do_lagrange_part_strain) getParticleStrains(da, mat, "lagrange");
-      else if (do_euler_part_strain) getParticleStrains(da, mat, "euler");
-      else getParticleStrains(da, mat, "all");
+        getParticleStrains(da, mat, particleID, "avg");
+      } else if (do_true_part_strain) {
+        getParticleStrains(da, mat, particleID, "true");
+      } else if (do_equiv_part_strain) {
+        getParticleStrains(da, mat, particleID, "equiv");
+      } else if (do_lagrange_part_strain) {
+        getParticleStrains(da, mat, particleID, "lagrange");
+      } else if (do_euler_part_strain) {
+        getParticleStrains(da, mat, particleID, "euler");
+      } else {
+        getParticleStrains(da, mat, particleID, "all");
+      }
     } 
 
     // Print a particular particle variable
@@ -174,7 +190,7 @@ int main(int argc, char** argv)
       if (!tsup_set)
         time_step_upper = times.size()-1;
       else if (time_step_upper >= times.size()) {
-        cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
+        cerr << "timestephigh must be between 0 and " << times.size()-1 <<endl;
         abort();
       }
       printParticleVariable(da, mat, particleVariable, particleID, 
@@ -199,7 +215,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -partvar <variable name>\n";
   cerr << "  -partid <particleid>\n";
   cerr << "  -part_stress [avg or equiv or all]\n";
-  cerr << "  -part_strain [avg / equiv/ true / all / lagrange / euler]\n";
+  cerr << "  -part_strain [avg/true/equiv/all/lagrangian/eulerian]\n", 
   cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
   cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
   cerr << "USAGE IS NOT FINISHED\n\n";
@@ -212,7 +228,7 @@ void usage(const std::string& badarg, const std::string& progname)
 //
 ////////////////////////////////////////////////////////////////////////////
 void 
-getParticleStrains(DataArchive* da, int mat, string flag) {
+getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
 
   // Parse the flag and check which option is needed
   bool doAverage = false;
@@ -307,147 +323,137 @@ getParticleStrains(DataArchive* da, int mat, string flag) {
               if (doAverage) {
                 cerr << "Finding volume average strains ... " << endl;
                 if (var == "p.volume") {
-                  switch(td->getSubType()->getType())
-                    {
-                    case Uintah::TypeDescription::double_type:
-                      {
-                        ParticleVariable<double> value;
-                        da->query(value, var, matl, patch, time);
-                        ParticleSubset* pset = value.getParticleSubset();
-                        if(pset->numParticles() > 0){
-                          ParticleSubset::iterator iter = pset->begin();
-                          for(;iter != pset->end(); iter++){
-                            volumeVector.push_back(value[*iter]);
-                            totVol += value[*iter];
-                          }
-                        }
-                      }
-                    break;
-                    case Uintah::TypeDescription::float_type:
-                      {
-                        ParticleVariable<float> value;
-                        da->query(value, var, matl, patch, time);
-                        ParticleSubset* pset = value.getParticleSubset();
-                        if(pset->numParticles() > 0){
-                          ParticleSubset::iterator iter = pset->begin();
-                          for(;iter != pset->end(); iter++){
-                            volumeVector.push_back((double)(value[*iter]));
-                            totVol += value[*iter];
-                          }
-                        }
-                      }
-                    break;
-                    default:
-                      cerr << "Particle Variable of unknown type: " 
-                           << td->getSubType()->getType() << endl;
-                      break;
-                    }
-                }
-              }
+                  switch(td->getSubType()->getType()) {
+		  case Uintah::TypeDescription::double_type:
+		    {
+		      ParticleVariable<double> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      if(pset->numParticles() > 0){
+			ParticleSubset::iterator iter = pset->begin();
+			for(;iter != pset->end(); iter++){
+			  volumeVector.push_back(value[*iter]);
+			  totVol += value[*iter];
+			}
+		      }
+		    }
+		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      ParticleVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      if(pset->numParticles() > 0){
+			ParticleSubset::iterator iter = pset->begin();
+			for(;iter != pset->end(); iter++){
+			  volumeVector.push_back((double)(value[*iter]));
+			  totVol += value[*iter];
+			}
+		      }
+		    }
+                  break;
+                  default:
+                    cerr << "Particle Variable of unknown type: " 
+                         << td->getSubType()->getType() << endl;
+		    break;
+		  }
+                } else if (var == "p.deformationMeasure") {
+                  //cerr << "Material: " << matl << endl;
+                  ParticleVariable<Matrix3> value;
+                  da->query(value, var, matl, patch, time);
+                  ParticleSubset* pset = value.getParticleSubset();
+                  if(pset->numParticles() > 0){
+                    ParticleSubset::iterator iter = pset->begin();
+                    for(;iter != pset->end(); iter++){
+                      particleIndex idx = *iter;
+
+                      // Find the right stretch tensor
+                      Matrix3 deformGrad = value[idx];
+                      Matrix3 stretch(0.0), rotation(0.0);
+                      deformGrad.polarDecomposition(stretch, rotation, 
+                                                    1.0e-10, true);
+
+                      cout.setf(ios::scientific,ios::floatfield);
+                      cout.precision(6);
+
+                      deformVector.push_back(stretch);
+                    } 
+                  } // end of pset > 0
+                } // end of var if
+                continue;
+              } // end of doAverage
+
+              // If not an average calculation
               if (var == "p.deformationMeasure") {
                 //cerr << "Material: " << matl << endl;
                 ParticleVariable<Matrix3> value;
                 da->query(value, var, matl, patch, time);
+                ParticleVariable<long64> pid;
+                da->query(pid, "p.particleID", matl, patch, time);
                 ParticleSubset* pset = value.getParticleSubset();
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
-                  for(;iter != pset->end(); iter++){
-                    particleIndex idx = *iter;
+                  if (particleID == 0) {
+                    for(;iter != pset->end(); iter++){
+                      particleIndex idx = *iter;
 
-                    // Find the right stretch tensor
-                    Matrix3 deformGrad = value[idx];
-                    Matrix3 stretch(0.0), rotation(0.0);
-                    deformGrad.polarDecomposition(stretch, rotation, 
-                                                  1.0e-10, true);
+                      // Get the deformation gradient
+                      Matrix3 F = value[idx];
+                      cout.setf(ios::scientific,ios::floatfield);
+                      cout.precision(6);
 
-                    cout.setf(ios::scientific,ios::floatfield);
-                    cout.precision(6);
-
-                    if (doAverage) deformVector.push_back(stretch);
-                    else {
-
+                      cout << time << " " << pid[idx] << " " << patchIndex 
+                           << " " << matl ;
                       if (doTrue) {
-
-			// Compute the left Cauchy-Green tensor
-			Matrix3 C = deformGrad.Transpose()*deformGrad;
-
-                        // Find the eigenvalues of C
-                        Vector Lambda; Matrix3 direction;
-                        C.eigen(Lambda, direction);
-
-			// Find the stretches
-			Vector lambda;
-                        for (int ii =0; ii < 3; ++ii) lambda[ii] = sqrt(Lambda[ii]);
-
-                        //cerr << "True Strain = ";
-                        cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 0; ii < 3; ++ii) {
-                          double strain = log(lambda[ii]);
-                          cout << " " << strain ;
-                        }
-                        cout << endl;
+                        Vector trueStrain(0.0);
+                        computeTrueStrain(F, trueStrain);
                       } else if (doEquiv) {
-                        Matrix3 I; I.Identity();
-                        Matrix3 E = (deformGrad.Transpose()*deformGrad-I)*0.5;
-                        double equiv_strain = sqrt(E.NormSquared()/1.5);
-                        cout << time << " " << patchIndex << " " << matl ;
-                        cout << " " << equiv_strain ;
-                        cout << endl;
+                        double equiv_strain = 0.0;
+                        computeEquivStrain(F, equiv_strain);
                       } else if (doLagrange) {
-                        Matrix3 I; I.Identity();
-                        Matrix3 C = deformGrad.Transpose()*deformGrad;
-                        Matrix3 E = (C - I)*0.5;
-                        cout.setf(ios::scientific,ios::floatfield);
-                        cout.precision(4);
-                        cout << time << " " << patchIndex << " " << matl
-                             << " " << idx ;
-                        for (int ii = 0; ii < 3; ++ii) cout << " " << E(ii,ii);
-                        cout << " " << E(1,2); cout << " " << E(2,0);
-                        cout << " " << E(0,1);
-                        cout << endl;
+                        Matrix3 E(0.0);
+                        computeGreenLagrangeStrain(F,E);
                       } else if (doEuler) {
-                        Matrix3 I; I.Identity();
-                        // Calculate the Almansi-Hamel strain tensor
-			Matrix3 b = deformGrad*deformGrad.Transpose();
-                        Matrix3 binv = b.Inverse();
-                        Matrix3 e = (I - binv)*0.5;
-                        cout.setf(ios::scientific,ios::floatfield);
-                        cout.precision(4);
-                        cout << time << " " << patchIndex << " " << matl
-                             << " " << idx ;
-                        for (int ii = 0; ii < 3; ++ii) cout << " " << e(ii,ii);
-                        cout << " " << e(1,2); cout << " " << e(2,0);
-                        cout << " " << e(0,1);
-                        cout << endl;
+                        Matrix3 e(0.0);
+                        computeGreenAlmansiStrain(F,e);
                       } else {
-                        //cout << "Deformation Gradient = \n" ;
-                        //cout << "Right Stretch = \n";
-                        //cout << "Rotation = \n";
-                        cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 0; ii < 3; ++ii) {
-                          for (int jj = 0; jj < 3; ++jj) {
-                            cout << " " << deformGrad(ii,jj);
-                          }
-                        }
-                        cout << endl;
-                        cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 0; ii < 3; ++ii) {
-                          for (int jj = 0; jj < 3; ++jj) {
-                            cout << " " << stretch(ii,jj);
-                          }
-                        }
-                        cout << endl;
-                        cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 0; ii < 3; ++ii) {
-                          for (int jj = 0; jj < 3; ++jj) {
-                            cout << " " << rotation(ii,jj);
-                          }
-                        }
-                        cout << endl;
+                        Matrix3 U(0.0), R(0.0);
+                        computeStretchRotation(F,R,U);
                       }
                     }
-                  }
-                }
+                  } else {
+                    for(;iter != pset->end(); iter++){
+                      particleIndex idx = *iter;
+
+                      if (particleID != pid[*iter]) continue;
+
+                      // Get the deformation gradient
+                      Matrix3 F = value[idx];
+                      cout.setf(ios::scientific,ios::floatfield);
+                      cout.precision(6);
+
+                      cout << time << " " << pid[idx] << " " << patchIndex 
+                           << " " << matl ;
+                      if (doTrue) {
+                        Vector trueStrain(0.0);
+                        computeTrueStrain(F, trueStrain);
+                      } else if (doEquiv) {
+                        double equiv_strain = 0.0;
+                        computeEquivStrain(F, equiv_strain);
+                      } else if (doLagrange) {
+                        Matrix3 E(0.0);
+                        computeGreenLagrangeStrain(F,E);
+                      } else if (doEuler) {
+                        Matrix3 e(0.0);
+                        computeGreenAlmansiStrain(F,e);
+                      } else {
+                        Matrix3 U(0.0), R(0.0);
+                        computeStretchRotation(F,R,U);
+                      }
+                      break;
+                    } // end of pset iter loop
+                  } // end of particleId = 0 if
+                } // end of numparticle > 0 if
               } // end of var compare if
             } // end of material loop
           } // end of ParticleVariable if
@@ -479,7 +485,7 @@ getParticleStrains(DataArchive* da, int mat, string flag) {
 //
 ////////////////////////////////////////////////////////////////////////////
 void 
-getParticleStresses(DataArchive* da, int mat, string flag) {
+getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
 
   // Parse the flag and check which option is needed
   bool doAverage = false;
@@ -565,8 +571,7 @@ getParticleStresses(DataArchive* da, int mat, string flag) {
               // Find the name of the variable
               if (doAverage) {
                 if (var == "p.volume") {
-                  switch(td->getSubType()->getType())
-                    {
+                  switch(td->getSubType()->getType()) {
                     case Uintah::TypeDescription::double_type:
                       {
                         ParticleVariable<double> value;
@@ -600,39 +605,63 @@ getParticleStresses(DataArchive* da, int mat, string flag) {
                            << td->getSubType()->getType() << endl;
                       break;
                     }
+                } else if (var == "p.stress") {
+                  ParticleVariable<Matrix3> value;
+                  da->query(value, var, matl, patch, time);
+                  ParticleSubset* pset = value.getParticleSubset();
+                  if(pset->numParticles() > 0){
+                    ParticleSubset::iterator iter = pset->begin();
+                    for(;iter != pset->end(); iter++){
+                      stressVector.push_back(value[*iter]);
+                    } 
+                  }
                 }
+                continue;
               } 
+
+              // If not a volume averaged quantity
               if (var == "p.stress") {
-                //cout << "Material: " << matl << endl;
                 ParticleVariable<Matrix3> value;
                 da->query(value, var, matl, patch, time);
+                ParticleVariable<long64> pid;
+                da->query(pid, "p.particleID", matl, patch, time);
                 ParticleSubset* pset = value.getParticleSubset();
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
                   for(;iter != pset->end(); iter++){
-                    if (doAverage) {
-                      stressVector.push_back(value[*iter]);
+                    if (particleID == 0) {
+                      Matrix3 stress = value[*iter];
+
+                      cout.setf(ios::scientific,ios::floatfield);
+                      cout.precision(6);
+
+                      cout << time << " " << pid[*iter] << " " << patchIndex 
+                           << " " << matl ;
+
+                      if (doEquiv) {
+                        double sigeff = 0.0;
+                        computeEquivStress(stress, sigeff);
+                      } else {
+                        printCauchyStress(stress);
+                      }
                     } else {
                       Matrix3 stress = value[*iter];
+
+                      if (particleID != pid[*iter]) continue;
+
+                      cout.setf(ios::scientific,ios::floatfield);
+                      cout.precision(6);
+
+                      cout << time << " " << pid[*iter] << " " << patchIndex 
+                           << " " << matl ;
+
                       if (doEquiv) {
-                        Matrix3 I; I.Identity();
-		        Matrix3 s = stress - I*stress.Trace()/3.0;
-			double sigeff = sqrt(1.5*s.NormSquared());
-			double sigeff_1 = sqrt(1.5*stress.NormSquared());
-                        cout << time << " " << patchIndex << " " << matl ;
-                        cout << " " << sigeff << " " << sigeff_1 << endl; 
+                        double sigeff = 0.0;
+                        computeEquivStress(stress, sigeff);
                       } else {
-                        double sig11 = stress(0,0);
-                        double sig12 = stress(0,1);
-                        double sig13 = stress(0,2);
-                        double sig22 = stress(1,1);
-                        double sig23 = stress(1,2);
-                        double sig33 = stress(2,2);
-                        cout << time << " " << patchIndex << " " << matl ;
-                        cout << " " << sig11 << " " << sig22 << " " << sig33 
-                             << " " << sig23 << " " << sig13 << " " << sig12 
-                             << endl;
+                        printCauchyStress(stress);
                       }
+                      break;
                     }
                   }
                 }
@@ -936,3 +965,126 @@ void printParticleVariable(DataArchive* da,
   } // end of time step loop
 }
 
+void computeEquivStress(const Matrix3& stress, double& sigeff)
+{
+  Matrix3 I; I.Identity();
+  Matrix3 s = stress - I*stress.Trace()/3.0;
+  sigeff = sqrt(1.5*s.NormSquared());
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  cout << " " << sigeff << endl;
+}
+
+void computeEquivStrain(const Matrix3& F, double& equiv_strain)
+{
+  Matrix3 I; I.Identity();
+  Matrix3 E = (F.Transpose()*F-I)*0.5;
+  equiv_strain = sqrt(E.NormSquared()/1.5);
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  cout << " " << equiv_strain ;
+  cout << endl;
+}
+
+void computeTrueStrain(const Matrix3& F, Vector& strain)
+{
+  // Compute the left Cauchy-Green tensor
+  Matrix3 C = F.Transpose()*F;
+
+  // Find the eigenvalues of C
+  Vector Lambda; Matrix3 direction;
+  C.eigen(Lambda, direction);
+
+  // Find the stretches
+  Vector lambda;
+  for (int ii =0; ii < 3; ++ii) {
+    lambda[ii] = sqrt(Lambda[ii]);
+    strain[ii] = log(lambda[ii]);
+  }
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  for (int ii = 0; ii < 3; ++ii) {
+    cout << " " << strain[ii] ;
+  }
+  cout << endl;
+}
+
+void computeGreenLagrangeStrain(const Matrix3& F, Matrix3& E)
+{
+  Matrix3 I; I.Identity();
+  Matrix3 C = F.Transpose()*F;
+  E = (C - I)*0.5;
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  for (int ii = 0; ii < 3; ++ii) cout << " " << E(ii,ii);
+  cout << " " << E(1,2); cout << " " << E(2,0);
+  cout << " " << E(0,1);
+  cout << endl;
+}
+
+// Calculate the Almansi-Hamel strain tensor
+void computeGreenAlmansiStrain(const Matrix3& F, Matrix3& e)
+{
+  Matrix3 I; I.Identity();
+  Matrix3 b = F*F.Transpose();
+  Matrix3 binv = b.Inverse();
+  e = (I - binv)*0.5;
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  for (int ii = 0; ii < 3; ++ii) cout << " " << e(ii,ii);
+  cout << " " << e(1,2); cout << " " << e(2,0);
+  cout << " " << e(0,1);
+  cout << endl;
+}
+
+void computeStretchRotation(const Matrix3& F, Matrix3& R, Matrix3& U)
+{
+  F.polarDecomposition(U, R, 1.0e-10, true);
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  for (int ii = 0; ii < 3; ++ii) {
+    for (int jj = 0; jj < 3; ++jj) {
+      cout << " " << F(ii,jj);
+    }
+  }
+  for (int ii = 0; ii < 3; ++ii) {
+    for (int jj = 0; jj < 3; ++jj) {
+      cout << " " << U(ii,jj);
+    }
+  }
+  for (int ii = 0; ii < 3; ++ii) {
+    for (int jj = 0; jj < 3; ++jj) {
+      cout << " " << R(ii,jj);
+    }
+  }
+  cout << endl;
+}
+
+void printCauchyStress(const Matrix3& stress)
+{
+  double sig11 = stress(0,0);
+  double sig12 = stress(0,1);
+  double sig13 = stress(0,2);
+  double sig22 = stress(1,1);
+  double sig23 = stress(1,2);
+  double sig33 = stress(2,2);
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  cout << " " << sig11 << " " << sig22 << " " << sig33 
+       << " " << sig23 << " " << sig13 << " " << sig12 
+       << endl;
+}
