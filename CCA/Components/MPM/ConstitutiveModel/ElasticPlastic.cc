@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -28,6 +29,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/SymmMatrix3.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
@@ -56,10 +58,14 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
+
   d_initialData.alpha = 1.0e-5; // default is per K
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
   d_initialData.Chi = 0.9;
   ps->get("taylor_quinney_coeff",d_initialData.Chi);
+  d_initialData.sigma_crit = 2.0e9; // default is Pa
+  ps->get("critical_stress", d_initialData.sigma_crit);
+
   d_doIsothermal = false;
   d_isothermal = 1.0;
   ps->get("isothermal", d_doIsothermal);
@@ -79,6 +85,9 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
 
   d_doMelting = true;
   ps->get("do_melting",d_doMelting);
+
+  d_checkStressTriax = true;
+  ps->get("check_max_stress_failure",d_checkStressTriax);
 
   d_yield = YieldConditionFactory::create(ps);
   if(!d_yield){
@@ -132,11 +141,15 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
     desc << "ElasticPlastic::Error in melting temp model factory" << endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
+
+  d_computeSpecificHeat = false;
+  ps->get("compute_specific_heat",d_computeSpecificHeat);
+  d_Cp = SpecificHeatModelFactory::create(ps);
   
   setErosionAlgorithm();
   getInitialPorosityData(ps);
   getInitialDamageData(ps);
-  getSpecificHeatData(ps);
+  //getSpecificHeatData(ps);
   initializeLocalMPMLabels();
 
 }
@@ -148,6 +161,7 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm) :
   d_initialData.Shear = cm->d_initialData.Shear;
   d_initialData.alpha = cm->d_initialData.alpha;
   d_initialData.Chi = cm->d_initialData.Chi;
+  d_initialData.sigma_crit = cm->d_initialData.sigma_crit;
 
   d_tol = cm->d_tol ;
   d_useModifiedEOS = cm->d_useModifiedEOS;
@@ -155,6 +169,8 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm) :
 
   d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
+  d_doMelting = cm->d_doMelting;
+  d_checkStressTriax = cm->d_checkStressTriax;
 
   d_setStressToZero = cm->d_setStressToZero;
   d_allowNoTension = cm->d_allowNoTension;
@@ -176,10 +192,13 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm) :
   d_scalarDam.scalarDamageDist = cm->d_scalarDam.scalarDamageDist ;
 
   d_computeSpecificHeat = cm->d_computeSpecificHeat;
+  /*
   d_Cp.A = cm->d_Cp.A;
   d_Cp.B = cm->d_Cp.B;
   d_Cp.C = cm->d_Cp.C;
-
+  d_Cp.n = cm->d_Cp.n;
+  */
+  d_Cp = SpecificHeatModelFactory::createCopy(cm->d_Cp);
   d_yield = YieldConditionFactory::createCopy(cm->d_yield);
   d_stable = StabilityCheckFactory::createCopy(cm->d_stable);
   d_plastic = PlasticityModelFactory::createCopy(cm->d_plastic);
@@ -217,6 +236,7 @@ ElasticPlastic::~ElasticPlastic()
   delete d_eos;
   delete d_shear;
   delete d_melt;
+  delete d_Cp;
 }
 
 
@@ -232,6 +252,7 @@ void ElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("shear_modulus",d_initialData.Shear);
   cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha);
   cm_ps->appendElement("taylor_quinney_coeff",d_initialData.Chi);
+  cm_ps->appendElement("critical_stress", d_initialData.sigma_crit);
   cm_ps->appendElement("isothermal", d_doIsothermal);
   cm_ps->appendElement("tolerance",d_tol);
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
@@ -240,6 +261,8 @@ void ElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("check_TEPLA_failure_criterion",
                        d_checkTeplaFailureCriterion);
   cm_ps->appendElement("do_melting",d_doMelting);
+  cm_ps->appendElement("check_max_stress_failure",d_checkStressTriax);
+  cm_ps->appendElement("compute_specific_heat",d_computeSpecificHeat);
 
   d_yield->outputProblemSpec(cm_ps);
   d_stable->outputProblemSpec(cm_ps);
@@ -248,6 +271,7 @@ void ElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   d_eos->outputProblemSpec(cm_ps);
   d_shear->outputProblemSpec(cm_ps);
   d_melt->outputProblemSpec(cm_ps);
+  d_Cp->outputProblemSpec(cm_ps);
 
   cm_ps->appendElement("evolve_porosity",d_evolvePorosity);
   cm_ps->appendElement("initial_mean_porosity",d_porosity.f0);
@@ -265,10 +289,11 @@ void ElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("initial_scalar_damage_distrib",
                        d_scalarDam.scalarDamageDist);
 
-  cm_ps->appendElement("compute_specific_heat",d_computeSpecificHeat);
+  /*
   cm_ps->appendElement("Cp_constA", d_Cp.A);
   cm_ps->appendElement("Cp_constB", d_Cp.B);
   cm_ps->appendElement("Cp_constC", d_Cp.C);
+  */
 
 }
 
@@ -356,18 +381,20 @@ ElasticPlastic::getInitialDamageData(ProblemSpecP& ps)
     ** For steel **
     C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
 */
+/*
 void 
 ElasticPlastic::getSpecificHeatData(ProblemSpecP& ps)
 {
-  d_computeSpecificHeat = false;
-  ps->get("compute_specific_heat",d_computeSpecificHeat);
-  d_Cp.A = 0.09278;  // Constant A
-  d_Cp.B = 7.454e-4; // Constant B
-  d_Cp.C = 12404.0;  // Constant C
+  d_Cp.A = 0.09278;  // Constant A (HY100)
+  d_Cp.B = 7.454e-4; // Constant B (HY100)
+  d_Cp.C = 12404.0;  // Constant C (HY100)
+  d_Cp.n = 2.0;      // Constant n (HY100)
   ps->get("Cp_constA", d_Cp.A);
   ps->get("Cp_constB", d_Cp.B);
   ps->get("Cp_constC", d_Cp.C);
+  ps->get("Cp_constn", d_Cp.n);
 }
+*/
 
 void 
 ElasticPlastic::setErosionAlgorithm()
@@ -880,6 +907,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //state->plasticStrainRate = pStrainRate_new[idx];
       //state->plasticStrain = pPlasticStrain[idx];
       //state->plasticStrainRate = sqrtTwoThird*tensorEta.Norm();
+      state->strainRate = pStrainRate_new[idx];
       state->plasticStrainRate = pPlasticStrainRate[idx];
       state->plasticStrain = pPlasticStrain[idx] + 
                              state->plasticStrainRate*delT;
@@ -896,6 +924,13 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
       state->initialMeltTemp = Tm;
+      state->specificHeat = matl->getSpecificHeat();
+
+      // Get or compute the specific heat
+      if (d_computeSpecificHeat) {
+        double C_p = d_Cp->computeSpecificHeat(state);
+        state->specificHeat = C_p;
+      }
     
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step and update the plasticity state
@@ -1198,9 +1233,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = d_initialData.Chi;
-        double C_p = matl->getSpecificHeat();
-        if (d_computeSpecificHeat) C_p = computeSpecificHeat(temperature);
-        double fac = taylorQuinney/(rho_cur*C_p);
+        double fac = taylorQuinney/(rho_cur*state->specificHeat);
 
         // Calculate Tdot (internal plastic heating rate)
         double Tdot = state->yieldStress*state->plasticStrainRate*fac;
@@ -1263,6 +1296,20 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
               isLocalized = d_stable->checkStability(tensorSig, tensorD, Cep, 
                                                      direction);
             }
+          }
+        } 
+
+        // Check 4: Look at maximum stress
+        if (d_checkStressTriax) {
+
+          // Compute eigenvalues of the stress tensor
+          SymmMatrix3 stress(tensorSig);          
+          Vector eigVal(0.0, 0.0, 0.0);
+          Matrix3 eigVec;
+          stress.eigen(eigVal, eigVec);
+          double max_stress = Max(Max(eigVal[0],eigVal[1]), eigVal[2]);
+          if (max_stress > d_initialData.sigma_crit) {
+            isLocalized = true;
           }
         }
 
@@ -1670,6 +1717,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
+      state->strainRate = pStrainRate_new[idx];
       state->plasticStrainRate = pPlasticStrainRate[idx];
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
@@ -1685,6 +1733,13 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
       state->initialMeltTemp = Tm;
+      state->specificHeat = matl->getSpecificHeat();
+
+      // Get or compute the specific heat
+      if (d_computeSpecificHeat) {
+        double C_p = d_Cp->computeSpecificHeat(state);
+        state->specificHeat = C_p;
+      }
     
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step and update the plasticity state
@@ -1766,9 +1821,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = d_initialData.Chi;
-        double C_p = matl->getSpecificHeat();
-        if (d_computeSpecificHeat) C_p = computeSpecificHeat(temperature);
-        double fac = taylorQuinney/(rho_cur*C_p);
+        double fac = taylorQuinney/(rho_cur*state->specificHeat);
 
         // Calculate Tdot (internal plastic heating rate)
         double Tdot = state->yieldStress*state->plasticStrainRate*fac;
@@ -1993,6 +2046,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       incFFtInv = incFFt.Inverse();
       incTotalStrain = (One - incFFtInv)*0.5;
 
+      double pStrainRate_new = incTotalStrain.Norm()*sqrt(2.0/3.0)/delT;
+
       // Compute thermal strain increment
       double temperature = pTemperature[idx];
       double incT = temperature - pTempPrev[idx];
@@ -2007,6 +2062,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
+      state->strainRate = pStrainRate_new;
       state->plasticStrainRate = pPlasticStrainRate[idx];
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
@@ -2022,7 +2078,14 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
       state->initialMeltTemp = Tm;
+      state->specificHeat = matl->getSpecificHeat();
 
+      // Get or compute the specific heat
+      if (d_computeSpecificHeat) {
+        double C_p = d_Cp->computeSpecificHeat(state);
+        state->specificHeat = C_p;
+      }
+    
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step and update the plasticity state
       double Tm_cur = d_melt->computeMeltingTemp(state);
@@ -3193,11 +3256,38 @@ ElasticPlastic::voidNucleationFactor(double ep)
   return A;
 }
 
+/* Hardcoded specific heat computation for 4340 steel */
+/*
 double 
 ElasticPlastic::computeSpecificHeat(double T)
 {
-  return 1.0e3*(d_Cp.A + d_Cp.B*T + d_Cp.C/(T*T));
+  // Specific heat model for 4340 steel (SI units)
+  double Tc = 1040.0;
+  if (T == Tc) {
+    T = T - 1.0;
+  }
+  double Cp = 500.0;
+  if (T < Tc) {
+    double t = 1 - T/Tc;
+    d_Cp.A = 190.14;
+    d_Cp.B = 273.75;
+    d_Cp.C = 418.30;
+    d_Cp.n = 0.2;
+    Cp = d_Cp.A - d_Cp.B*t + d_Cp.C/pow(t, d_Cp.n);
+  } else {
+    double t = T/Tc - 1.0;
+    d_Cp.A = 465.21;
+    d_Cp.B = 267.52;
+    d_Cp.C = 58.16;
+    d_Cp.n = 0.35;
+    Cp = d_Cp.A + d_Cp.B*t + d_Cp.C/pow(t, d_Cp.n);
+  }
+  return Cp;
+
+  // Specific heat model for HY-100 steel
+  //return 1.0e3*(d_Cp.A + d_Cp.B*T + d_Cp.C/(T*T));
 }
+*/
 
 double ElasticPlastic::computeRhoMicroCM(double pressure,
                                          const double p_ref,

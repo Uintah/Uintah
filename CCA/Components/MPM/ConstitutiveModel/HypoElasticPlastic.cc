@@ -833,8 +833,12 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double epdot = sqrt(tensorEta.NormSquared()/1.5);
       double ep = pPlasticStrain[idx] + epdot*delT;
 
+      // Get the specific heat
+      double C_p = matl->getSpecificHeat();
+
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
+      state->strainRate = pStrainRate_new[idx];
       state->plasticStrainRate = epdot;
       state->plasticStrain = ep;
       state->pressure = pressure;
@@ -850,6 +854,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
       state->initialMeltTemp = Tm;
+      state->specificHeat = C_p;
     
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step
@@ -1093,7 +1098,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = 0.9;
-        double C_p = matl->getSpecificHeat();
 
         // ** WARNING ** Special for steel (remove for other materials)
         //double T = temperature;
@@ -1476,8 +1480,12 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       double pressure = oldStress.Trace()/3.0;
       //Matrix3 devStressOld = oldStress - One*pressure;
       
+      // Get the specific heat
+      double C_p = matl->getSpecificHeat();
+
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
+      state->strainRate = pStrainRate_new[idx];
       state->plasticStrainRate = 0.0;
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
@@ -1493,6 +1501,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
       state->initialMeltTemp = Tm;
+      state->specificHeat = C_p;
     
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step and update the plasticity state
@@ -1576,7 +1585,6 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = 0.9;
-        double C_p = matl->getSpecificHeat();
         double Tdot = flowStress*state->plasticStrainRate*taylorQuinney/
                       (rho_cur*C_p);
         pdTdt[idx] = Tdot;
@@ -1807,6 +1815,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       incFFtInv = incFFt.Inverse();
       incTotalStrain = (One - incFFtInv)*0.5;
       
+      double pStrainRate_new = incTotalStrain.Norm()*sqrt(2.0/3.0)/delT;
+
       // Compute thermal strain
       double incT = pTemperature[idx] - pTempPrev[idx];
       incThermalStrain = One*(alpha*incT);
@@ -1822,6 +1832,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
+      state->strainRate = pStrainRate_new;
       state->plasticStrainRate = 0.0;
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
