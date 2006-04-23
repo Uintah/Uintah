@@ -18,6 +18,7 @@ namespace Uintah {
 
   public:
     double yieldStress;
+    double strainRate;
     double plasticStrainRate;
     double plasticStrain;
     double pressure;
@@ -33,6 +34,7 @@ namespace Uintah {
     double initialShearModulus;
     double meltingTemp;
     double initialMeltTemp;
+    double specificHeat;
 
     PlasticityState();
 

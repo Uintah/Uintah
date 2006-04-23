@@ -37,10 +37,16 @@ SRCS     += \
 	$(SRCDIR)/NPShear.cc \
 	$(SRCDIR)/PTWShear.cc \
 	$(SRCDIR)/SCGShear.cc \
+	$(SRCDIR)/SpecificHeatModel.cc \
+	$(SRCDIR)/SpecificHeatModelFactory.cc \
+	$(SRCDIR)/ConstantCp.cc \
+	$(SRCDIR)/CopperCp.cc \
+	$(SRCDIR)/SteelCp.cc \
 	$(SRCDIR)/MeltingTempModel.cc \
 	$(SRCDIR)/MeltingTempModelFactory.cc \
 	$(SRCDIR)/ConstantMeltTemp.cc \
-	$(SRCDIR)/SCGMeltTemp.cc
+	$(SRCDIR)/SCGMeltTemp.cc \
+	$(SRCDIR)/BPSMeltTemp.cc
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Disclosure \
