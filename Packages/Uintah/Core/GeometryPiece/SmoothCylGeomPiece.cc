@@ -46,6 +46,14 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   if (d_capThick < 0.0)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Cap Thickness < 0.0", __FILE__, __LINE__));
 
+  d_angle = 2.0*M_PI;
+  double angle = -1.0;
+  ps->get("angle", angle);
+  if (angle > 0.0) d_angle = (M_PI/180.0)*angle;
+  if (d_angle < 0.0 || d_angle > 2.0*M_PI)
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Angle < 0.0 || > 2*Pi", 
+			   __FILE__, __LINE__ ));
+
   d_fileName = "none";
   ps->get("output_file", d_fileName);
 
@@ -210,8 +218,10 @@ SmoothCylGeomPiece::createEndCapPoints()
       double prevRadius = ii*radInc;
       double currRadius = prevRadius + 0.5*radInc;
       double nextRadius = (ii+1)*radInc;
-      int numCircum = (int) (2.0*M_PI*currRadius/radInc);
-      double phiInc = 2.0*M_PI/(double) numCircum;
+      //int numCircum = (int) (2.0*M_PI*currRadius/radInc);
+      //double phiInc = 2.0*M_PI/(double) numCircum;
+      int numCircum = (int) (d_angle*currRadius/radInc);
+      double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
         double phi = jj*phiInc; 
@@ -253,8 +263,10 @@ SmoothCylGeomPiece::createEndCapPoints()
       double prevRadius = ii*radInc;
       double currRadius = prevRadius + 0.5*radInc;
       double nextRadius = (ii+1)*radInc;
-      int numCircum = (int) (2.0*M_PI*currRadius/radInc);
-      double phiInc = 2.0*M_PI/(double) numCircum;
+      //int numCircum = (int) (2.0*M_PI*currRadius/radInc);
+      //double phiInc = 2.0*M_PI/(double) numCircum;
+      int numCircum = (int) (d_angle*currRadius/radInc);
+      double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
         double phi = jj*phiInc; 
@@ -333,8 +345,10 @@ SmoothCylGeomPiece::createSolidCylPoints()
       double prevRadius = ii*radInc;
       double currRadius = prevRadius + 0.5*radInc;
       double nextRadius = (ii+1)*radInc;
-      int numCircum = (int) (2.0*M_PI*currRadius/radInc);
-      double phiInc = 2.0*M_PI/(double) numCircum;
+      //int numCircum = (int) (2.0*M_PI*currRadius/radInc);
+      //double phiInc = 2.0*M_PI/(double) numCircum;
+      int numCircum = (int) (d_angle*currRadius/radInc);
+      double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
         double phi = jj*phiInc; 
@@ -405,8 +419,10 @@ SmoothCylGeomPiece::createHollowCylPoints()
       double prevRadius = innerRad + ii*radInc;
       double currRadius = prevRadius + radInc*0.5;
       double nextRadius = innerRad + (ii+1)*radInc;
-      int numCircum = (int) (2.0*M_PI*currRadius/radInc);
-      double phiInc = 2.0*M_PI/(double) numCircum;
+      //int numCircum = (int) (2.0*M_PI*currRadius/radInc);
+      //double phiInc = 2.0*M_PI/(double) numCircum;
+      int numCircum = (int) (d_angle*currRadius/radInc);
+      double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
         double phi = jj*phiInc; 
