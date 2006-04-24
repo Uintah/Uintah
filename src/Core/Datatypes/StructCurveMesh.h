@@ -220,11 +220,11 @@ public:
     }
 
     inline
-    const Point node0() const {
-      return mesh_.points_[int(index_)];
+    const Point &node0() const {
+      return mesh_.points_[(unsigned int)(index_)];
     }
     inline
-    const Point node1() const {
+    const Point &node1() const {
       return mesh_.points_[index_+1];
     }
 

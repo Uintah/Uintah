@@ -127,11 +127,11 @@ public:
     }
 
     inline
-    const Point node0() const {
+    const Point &node0() const {
       return mesh_.nodes_[mesh_.edges_[index_].first];
     }
     inline
-    const Point node1() const {
+    const Point &node1() const {
       return mesh_.nodes_[mesh_.edges_[index_].second];
     }
 

@@ -120,7 +120,7 @@ public:
     }
 
     inline
-    const Point node0() const {
+    const Point &node0() const {
       return mesh_.points_[index_];
     }
 
