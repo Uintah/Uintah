@@ -68,7 +68,7 @@ public:
   int polynomial_order() const { return 3; }
 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   { 
     const double x=coords[0], y=coords[1];  
     w[0]  = -((-1 + x)*(-1 + y)*(-1 - x + 2*x*x - y + 2*y*y));
@@ -86,7 +86,7 @@ public:
   }
   //! get value at parametric coordinate 
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[12];
     get_weights(coords, w); 
@@ -106,7 +106,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1];
     w[0]= -((-1 + y)*(-6*x + 6*x*x + y*(-1 + 2*y)));
@@ -137,8 +137,8 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     const double x=coords[0], y=coords[1];  
 
@@ -175,7 +175,7 @@ public:
   
   //! get parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const
   {
     QuadLocate< QuadBicubicHmt<T> > CL;
@@ -203,7 +203,7 @@ public:
     return 0.;
   }
   
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
 
   virtual void io (Piostream& str);
 };
@@ -217,7 +217,7 @@ const TypeDescription* get_type_description(QuadBicubicHmt<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("QuadBicubicHmt", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
@@ -225,18 +225,18 @@ const TypeDescription* get_type_description(QuadBicubicHmt<T> *)
 }
 
 template <class T>
-const string
+const std::string
 QuadBicubicHmt<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("QuadBicubicHmt");
+    static const std::string nm("QuadBicubicHmt");
     return nm;
   } else {
     return find_type_name((T *)0);

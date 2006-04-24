@@ -75,7 +75,7 @@ public:
   int polynomial_order() const { return 3; }
 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1];  
 
@@ -93,7 +93,7 @@ public:
 
   //! get value at parametric coordinate
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[10];
     get_weights(coords, w); 
@@ -112,7 +112,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
    const double x=coords[0], y=coords[1];  
     w[0] = (6*x*x + 13*(-1 + y)*y + x*(-6 + 26*y));
@@ -139,8 +139,8 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     const double x=coords[0], y=coords[1];  
 
@@ -173,7 +173,7 @@ public:
   
   //! get the parametric coordinate for value within the element.
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     TriLocate< TriCubicHmt<T> > CL;
@@ -207,14 +207,14 @@ public:
   //! return number of additional nodes
   int size_node_values() { return nodes_.size(); }
 
-  static const string type_name(int n = -1);
+  static const std::string type_name(int n = -1);
 
   virtual void io (Piostream& str);
 
 protected:
   //! Cubic Hermitian needs additional nodes stored for each edge
   //! in the topology.
-  vector<T> nodes_; 
+  std::vector<T> nodes_; 
 };
 
 
@@ -227,7 +227,7 @@ const TypeDescription* get_type_description(TriCubicHmt<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("TriCubicHmt", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
@@ -235,18 +235,18 @@ const TypeDescription* get_type_description(TriCubicHmt<T> *)
 }
 
 template <class T>
-const string
+const std::string
 TriCubicHmt<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("TriCubicHmt");
+    static const std::string nm("TriCubicHmt");
     return nm;
   } else {
     return find_type_name((T *)0);

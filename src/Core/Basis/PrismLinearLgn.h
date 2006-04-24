@@ -100,7 +100,7 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_edge(const unsigned edge,
 			   const unsigned div_per_unit, 
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(div_per_unit + 1);
 
@@ -116,7 +116,7 @@ public:
 
     for(unsigned int i = 0; i <= div_per_unit; i++) {
       const double d = (double)i / (double)div_per_unit;
-      vector<double> &tmp = coords[i];
+      std::vector<double> &tmp = coords[i];
       tmp.resize(3);
       tmp[0] = p1x + d * dx;
       tmp[1] = p1y + d * dy;
@@ -129,7 +129,7 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned face,
 			   const unsigned div_per_unit, 
-			   vector<vector<vector<double> > > &coords) const
+			   std::vector<std::vector<std::vector<double> > > &coords) const
   {	
     unsigned int fe = (PrismLinearLgnUnitElement::unit_faces[face][3] == -1 ? 1 : 2);
     coords.resize(fe * div_per_unit);
@@ -153,7 +153,7 @@ public:
 	const double dj = (double)j / (double)div_per_unit;
 	unsigned int e = 0;
 	coords[k].resize((div_per_unit - j) * 2 + 1);
-	vector<double> &tmp = coords[k][e++];
+	std::vector<double> &tmp = coords[k][e++];
 	tmp.resize(3);
 	tmp.resize(3);
  	tmp[0] = v0[0] + dj * (v2[0] - v0[0]);
@@ -162,12 +162,12 @@ public:
 
 	for(unsigned int i = 0; i < div_per_unit - j; i++) {
 	  const double di =  (double)i / (double)div_per_unit;
-	  vector<double> &tmp1 = coords[j + f * div_per_unit][e++]; 
+	  std::vector<double> &tmp1 = coords[j + f * div_per_unit][e++]; 
 	  tmp1.resize(3);
 	  tmp1[0] = v0[0] + (dj + d) * (v2[0] - v0[0]) + di * (v1[0] - v0[0]);
 	  tmp1[1] = v0[1] + (dj + d) * (v2[1] - v0[1]) + di * (v1[1] - v0[1]);
 	  tmp1[2] = v0[2] + (dj + d) * (v2[2] - v0[2]) + di * (v1[2] - v0[2]);
-	  vector<double> &tmp2 = coords[j + f * div_per_unit][e++];
+	  std::vector<double> &tmp2 = coords[j + f * div_per_unit][e++];
 	  tmp2.resize(3);
 	  tmp2[0] = v0[0] + dj * (v2[0] - v0[0]) + (di + d) * (v1[0] - v0[0]);
 	  tmp2[1] = v0[1] + dj * (v2[1] - v0[1]) + (di + d) * (v1[1] - v0[1]);
@@ -189,7 +189,7 @@ public:
   virtual ~PrismLocate() {}
  
   template <class ElemData>
-  bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
+  bool get_coords(const ElemBasis *pEB, std::vector<double> &coords, 
 		  const T& value, const ElemData &cd) const  
   {      
     initial_guess(pEB, value, cd, coords);
@@ -199,7 +199,7 @@ public:
   }
 
 protected:
-  inline bool check_coords(const vector<double> &x) const  
+  inline bool check_coords(const std::vector<double> &x) const  
   {  
     if (x[0]>=-Dim3Locate<ElemBasis>::thresholdDist)
       if (x[1]>=-Dim3Locate<ElemBasis>::thresholdDist)
@@ -214,12 +214,12 @@ protected:
   //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
-		     vector<double> & guess) const
+		     std::vector<double> & guess) const
   {
     double dist = DBL_MAX;
 	
-    vector<double> coord(3);
-    vector<T> derivs(3);
+    std::vector<double> coord(3);
+    std::vector<T> derivs(3);
     guess.resize(3);
 
     const int end = 3;
@@ -295,7 +295,7 @@ public:
 
   //! get weight factors at parametric coordinate 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   { 
     const double x = coords[0], y = coords[1], z = coords[2];  
     w[0] = (-1 + x + y) * (-1 + z);
@@ -308,7 +308,7 @@ public:
   
   //! get value at parametric coordinate 
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[6];
     get_weights(coords, w); 
@@ -323,7 +323,7 @@ public:
   
  //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1], z=coords[2];  
     w[0]= (-1 + z);
@@ -348,8 +348,8 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     const double x = coords[0], y = coords[1], z = coords[2]; 
 
@@ -375,7 +375,7 @@ public:
 
   //! get parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     PrismLocate< PrismLinearLgn<T> > CL;
@@ -406,7 +406,7 @@ public:
     return get_volume3(this, cd);
   }
   
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
 
   virtual void io (Piostream& str);
 };
@@ -421,7 +421,7 @@ const TypeDescription* get_type_description(PrismLinearLgn<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("PrismLinearLgn", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
@@ -429,18 +429,18 @@ const TypeDescription* get_type_description(PrismLinearLgn<T> *)
 }
 
 template <class T>
-const string
+const std::string
 PrismLinearLgn<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("PrismLinearLgn");
+    static const std::string nm("PrismLinearLgn");
     return nm;
   } else {
     return find_type_name((T *)0);

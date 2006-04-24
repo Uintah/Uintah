@@ -38,9 +38,6 @@
 
 namespace SCIRun {
 
-using std::vector;
-
-
 //! Class for describing interfaces to basis elements
 template <class T>
 class BasisSimple 
@@ -53,22 +50,22 @@ public:
 
   //! get value at parametric coordinate 
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     ASSERTFAIL("interpolate not supported by basis");
   }
   
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     ASSERTFAIL("derivate not supported by basis");
   }
 
   //! get parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const
   {
     ASSERTFAIL("get_coords not supported by basis");
@@ -102,13 +99,13 @@ public:
   }
 
   //! add a derivative value 
-  void add_derivatives(const vector<T> &p) 
+  void add_derivatives(const std::vector<T> &p) 
   {
     ASSERTFAIL("add_derivative not supported by basis");
   }
 
   //! add scale factors 
-  void add_scalefactors(const vector<T> &p) 
+  void add_scalefactors(const std::vector<T> &p) 
   {
     ASSERTFAIL("add_scalefactors not supported by basis");
   }
@@ -145,7 +142,7 @@ public:
   inline int size_node_values() { return nodes_.size(); }
 
 protected:
-  vector<T>          nodes_;  
+  std::vector<T>          nodes_;  
 };
 
 
@@ -158,13 +155,13 @@ public:
   virtual ~BasisAddDerivatives() {}
 
   //! add derivative values (dx, dy, dxy) for nodes.
-  inline void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
+  inline void add_derivatives(const std::vector<T> &p) { derivs_.push_back(p); }
 
   //! return number of additional derivatives
   inline int size_derivatives() { return derivs_.size(); }
 
  protected:
-  vector<vector<T> > derivs_; 
+  std::vector<std::vector<T> > derivs_; 
 };
 
 
@@ -178,13 +175,13 @@ public:
   virtual ~BasisAddDerivativesScaleFactors() {}
 
   //! add scale factors (sdx, sdy) for nodes.
-  inline void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p); }
+  inline void add_scalefactors(const std::vector<double> &p) { scalefactors_.push_back(p); }
 
   //! return number of additional derivatives
   inline int size_scalefactors() { return scalefactors_.size(); }
 
  protected:
-  vector<vector<double> > scalefactors_; 
+  std::vector<std::vector<double> > scalefactors_; 
 };
 
 //! Class for describing interfaces to basis elements with additional derivatives
@@ -197,13 +194,13 @@ public:
   virtual ~BasisAddDerivativesScaleFactorsEdges() {}
 
   //! add scale factors (sdx, sdy) for nodes.
-  inline void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p[0]); }
+  inline void add_scalefactors(const std::vector<double> &p) { scalefactors_.push_back(p[0]); }
 
   //! return number of additional derivatives
   inline int size_scalefactors() { return scalefactors_.size(); }
 
  protected:
-  vector<double> scalefactors_; 
+  std::vector<double> scalefactors_; 
 };
 
 }

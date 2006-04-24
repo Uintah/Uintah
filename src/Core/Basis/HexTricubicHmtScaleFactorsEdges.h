@@ -71,7 +71,7 @@ public:
 
   //! get weight factors at parametric coordinate 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   {    
     const double x=coords[0], y=coords[1], z=coords[2];  
     const double x2=x*x;
@@ -149,7 +149,7 @@ public:
 
   //! get value at parametric coordinate
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[64];
     get_weights(coords, w);
@@ -312,7 +312,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1], z=coords[2];  
     const double x2=x*x;
@@ -520,8 +520,8 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd,
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd,
+		std::vector<T> &derivs) const
   {
     const double x=coords[0], y=coords[1], z=coords[2];  
     const double x2=x*x;
@@ -824,7 +824,7 @@ public:
 
   //! get parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     HexLocate< HexTricubicHmtScaleFactorsEdges<T> > CL;
@@ -852,24 +852,24 @@ public:
     return get_volume(this, cd);
   }
   
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
   virtual void io (Piostream& str);
 };
 
 
 template <class T>
-const string
+const std::string
 HexTricubicHmtScaleFactorsEdges<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("HexTricubicHmtScaleFactorsEdges");
+    static const std::string nm("HexTricubicHmtScaleFactorsEdges");
     return nm;
   } else {
     return find_type_name((T *)0);
@@ -887,7 +887,7 @@ get_type_description(HexTricubicHmtScaleFactorsEdges<T> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription("HexTricubicHmtScaleFactorsEdges", 
 				subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }

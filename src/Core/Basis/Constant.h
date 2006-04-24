@@ -75,41 +75,41 @@ public:
   int polynomial_order() const { return 0; }
 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   {
     w[0]=1;
   }
 
   //! get value at parametric coordinate 
   template <class ElemData>
-  T interpolate(const vector<double> &, const ElemData &cd) const
+  T interpolate(const std::vector<double> &, const ElemData &cd) const
   {
     return cd.elem();
   }
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
-    vector<double>::size_type s=coords.size();
-    for(vector<double>::size_type si=0; si<s; si++)
+    std::vector<double>::size_type s=coords.size();
+    for(std::vector<double>::size_type si=0; si<s; si++)
       w[si] = 0;
   }
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &, 
+		std::vector<T> &derivs) const
   {
-    vector<double>::size_type s=coords.size();
+    std::vector<double>::size_type s=coords.size();
     derivs.resize(s);
-    for(vector<double>::size_type si=0; si<s; si++)
+    for(std::vector<double>::size_type si=0; si<s; si++)
       derivs[si] = T(0);
   }
 
   //! get derivative weight factors at parametric coordinate 
   inline
-  void get_weights_weights(const vector<double> &coords, double *w) const
+  void get_weights_weights(const std::vector<double> &coords, double *w) const
   {
   }
 
@@ -118,18 +118,18 @@ public:
 };
 
 template <class T>
-const string
+const std::string
 ConstantBasis<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("ConstantBasis");
+    static const std::string nm("ConstantBasis");
     return nm;
   }
   else 
@@ -147,7 +147,7 @@ const TypeDescription* get_type_description(ConstantBasis<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("ConstantBasis", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }

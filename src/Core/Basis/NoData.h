@@ -39,8 +39,6 @@
 
 namespace SCIRun {
 
-using std::string;
-
 //! Class for describing unit geometry of NoDataBasis 
 class NoDataUnitElement {
 public: 
@@ -80,23 +78,23 @@ public:
   
   int polynomial_order() const { return -1; }
   
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
   virtual void io (Piostream& str); 
 };
 
 template <class T>
-const string
+const std::string
 NoDataBasis<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("NoDataBasis");
+    static const std::string nm("NoDataBasis");
     return nm;
   }
   else 
@@ -115,7 +113,7 @@ const TypeDescription* get_type_description(NoDataBasis<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("NoDataBasis", subs, 
-				string(__FILE__), 
+				std::string(__FILE__), 
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
