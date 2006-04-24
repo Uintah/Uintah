@@ -583,27 +583,27 @@ public:
 
 
     inline
-    const Point node0() const {
+    const Point &node0() const {
       return mesh_.points_[node0_index()];
     }
     inline
-    const Point node1() const {
+    const Point &node1() const {
       return mesh_.points_[node1_index()];
     }
     inline
-    const Point node2() const {
+    const Point &node2() const {
       return mesh_.points_[node2_index()];
     }
     inline
-    const Point node3() const {
+    const Point &node3() const {
       return mesh_.points_[node3_index()];
     }
     inline
-    const Point node4() const {
+    const Point &node4() const {
       return mesh_.points_[node4_index()];
     }
     inline
-    const Point node5() const {
+    const Point &node5() const {
       return mesh_.points_[node5_index()];
     }
 

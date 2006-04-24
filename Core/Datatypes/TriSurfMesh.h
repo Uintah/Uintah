@@ -157,15 +157,15 @@ public:
     }
 
     inline
-    const Point node0() const {
+    const Point &node0() const {
       return mesh_.points_[node0_index()];
     }
     inline
-    const Point node1() const {
+    const Point &node1() const {
       return mesh_.points_[node1_index()];
     }
     inline
-    const Point node2() const {
+    const Point &node2() const {
       return mesh_.points_[node2_index()];
     }
 

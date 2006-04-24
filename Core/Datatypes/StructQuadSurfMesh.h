@@ -264,23 +264,23 @@ public:
 
 
     inline
-    const Point node0() const {
+    const Point &node0() const {
       return mesh_.points_(index_.i_, index_.j_);
     }
     inline
-    const Point node1() const {
+    const Point &node1() const {
       return mesh_.points_(index_.i_+1, index_.j_);
     }
     inline
-    const Point node2() const {
+    const Point &node2() const {
       return mesh_.points_(index_.i_+1, index_.j_+1);
     }
     inline
-    const Point node3() const {
+    const Point &node3() const {
       return mesh_.points_(index_.i_, index_.j_+1);
     }
     inline
-    const Point node4() const {
+    const Point &node4() const {
       return mesh_.points_(index_.i_, index_.j_);
     }
 
