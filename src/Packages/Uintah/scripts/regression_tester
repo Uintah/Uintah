@@ -105,9 +105,9 @@ for arg in $*; do
 	    echo; echo "Running mpm, ice, and mpmice tests . . ."
 	    do_ice=1
 	    do_mpm=1
-            do_mpmf=1
+           do_mpmf=1
 	    do_mpmice=1
-            do_models=1
+           do_models=1
 	    do_arches=1
 	    do_mpmarches=1
 	    do_examples=1;;
@@ -180,7 +180,7 @@ mpmf_test_cases="regressionFMPM"
 ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch impHotBlob"
 amr_test_cases="hotBlob_AMR advect2matAMR"
 mpmice_test_cases="advect massX guni2dRT TRWnoz testConvertMPMICEAdd"
-model_test_cases="HePlume"
+model_test_cases="HePlume JP8_Radiation"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 arches_test_cases="methane_explicit_table"
