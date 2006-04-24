@@ -343,7 +343,7 @@
        <!-- <tableValue>temperature</tableValue>     
         <tableValue>density</tableValue>     -->     
         <table name = "adiabatic" type = "Arches">
-          <include href="JP8.xml"/>
+          <include href="inputs/Models/JP8.xml"/>
         </table>
         <material>BackgroundGas</material>
         <scalar name = "f">
