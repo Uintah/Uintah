@@ -287,7 +287,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
 
     double move_particles=1.;
-    if(!d_doGridReset){
+    if(!flags->d_doGridReset){
       move_particles=0.;
     }
     for(int m = 0; m < numMPMMatls; m++){
