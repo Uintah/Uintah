@@ -141,7 +141,7 @@ GeomHandle ShowString::generate( string str )
   double dx = (nchars * 0.75 * fsizes[gui_size_.get()] * scale + 2.0 * border);
   double dy = (nlines * 1.80 * fsizes[gui_size_.get()] * scale + 2.0 * border);
 
-  if( gui_bbox_.get() ) 
+/*  if( gui_bbox_.get() ) 
   {
     GeomGroup *box = scinew GeomGroup();
     
@@ -159,6 +159,7 @@ GeomHandle ShowString::generate( string str )
     
     group->add( scinew GeomMaterial(box, material_handle_) );
   }
+*/
 
   // Use an offset so the edge of the title is visable.
   Vector refVec = 31.0/32.0 *
