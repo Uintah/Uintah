@@ -29,6 +29,8 @@
 #ifndef SCIRun_src_main_sci_version_h
 #define SCIRun_src_main_sci_version_h
 
+// When changing the version, be sure to also update 
+// src/scirunrc's SCIRUN_RCFILE_VERSION variable
 #define SCIRUN_VERSION "1.25.3"
 #define SCIRUN_RCFILE_SUBVERSION "0"
 
