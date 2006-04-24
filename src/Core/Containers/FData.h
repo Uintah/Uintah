@@ -104,7 +104,7 @@ FData3d<Data, Msh>::type_name(int n)
   ASSERT((n >= -1) && n <= 2);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNM +type_name(2) + FTNE;
     return name;
   }
   else if (n == 0)
@@ -125,7 +125,7 @@ template <class Data, class Msh>
 const TypeDescription*
 FData3d<Data, Msh>::get_type_description(int n) const 
 {
-  ASSERT((n >= -1) && n <= 3);
+  ASSERT((n >= -1) && n <= 2);
 
   static string name(type_name(0));
   static string namesp("SCIRun");
@@ -244,7 +244,7 @@ FData2d<Data, Msh>::type_name(int n)
   ASSERT((n >= -1) && n <= 2);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNM +type_name(2) + FTNE;
     return name;
   }
   else if (n == 0)
