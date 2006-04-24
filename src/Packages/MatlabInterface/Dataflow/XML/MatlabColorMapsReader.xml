@@ -70,7 +70,7 @@ package="MatlabInterface" name="MatlabNrrdsReader" />
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>filename</name>
+        <name>Filename</name>
         <datatype>SCIRun::String</datatype>
       </port>         
     </inputs>
@@ -99,6 +99,10 @@ package="MatlabInterface" name="MatlabNrrdsReader" />
         <name>ColorMap6</name>
 	<datatype>SCIRun::ColorMap</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>            
     </outputs>
   </io>
  

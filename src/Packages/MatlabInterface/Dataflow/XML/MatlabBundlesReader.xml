@@ -102,7 +102,7 @@ package="MatlabInterface" name="MatlabNrrdsReader" />
     <inputs lastportdynamic="no">
 
       <port>
-        <name>filename</name>
+        <name>Filename</name>
         <datatype>SCIRun::String</datatype>
       </port>       
     </inputs>
@@ -131,6 +131,10 @@ package="MatlabInterface" name="MatlabNrrdsReader" />
         <name>Bundle6</name>
 	<datatype>SCIRun::Bundle</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>            
     </outputs>
   </io>
 
