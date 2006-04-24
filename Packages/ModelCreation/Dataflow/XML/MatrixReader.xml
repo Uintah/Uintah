@@ -68,6 +68,10 @@
         <name>Output Data</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
     </outputs>
   </io>
 </component>

@@ -70,6 +70,10 @@
         <name>Output Data</name>
         <datatype>SCIRun::ColorMap</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
     </outputs>
   </io>
 </component>
