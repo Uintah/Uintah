@@ -56,13 +56,13 @@ HypreDriverSStruct::HyprePatch::HyprePatch(const Patch* patch,
 {
 }
 
-HypreDriverSStruct::HyprePatch::HyprePatch(const int level,
-                                           const int matl) :
   //___________________________________________________________________
   // HypreDriverSStruct::HyprePatch bogus patch constructor
   //   for when there are no patches on a level for a processor
   //   this is a one celled "patch"
   //___________________________________________________________________
+HypreDriverSStruct::HyprePatch::HyprePatch(const int level,
+                                           const int matl) :
   _patch(0), _matl(matl),
   _level(level),
   _low(IntVector(-9*(level+1),-9,-9)),
@@ -78,7 +78,7 @@ HypreDriverSStruct::~HypreDriverSStruct(void)
   // HypreDriverSStruct destructor
   //___________________________________________________________________
 {
-  cout_doing << "HypreDriverSStruct destructor BEGIN" << "\n";
+  cout_doing << "HypreDriverSStruct destructor" << "\n";
   printDataStatus();
   // Destroy matrix, RHS, solution objects
   if (_exists[SStructA] >= SStructAssembled) {
@@ -186,7 +186,7 @@ static const int CC_VAR = 0;      // Hypre CC variable type index
 void
 HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 {
-  cout_doing << "HypreDriverSStruct::makeLinearSystem_CC() BEGIN" << "\n";
+  cout_doing << Parallel::getMPIRank() << " HypreDriverSStruct::makeLinearSystem_CC() BEGIN" << "\n";
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
   
   //__________________________________
@@ -212,6 +212,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     hpatch.addToGrid(_grid,_vars);
     useBogusLevelData[_patches->get(p)->getLevel()->getIndex()] = false;
   }
+  
   
   for (int l = 0; l < numLevels; l++) {
     if (useBogusLevelData[l]) {
@@ -287,7 +288,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // applicable C/F boundaries of next-finer-level patches that lie
   // above this patch.
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
+  cout_doing << _pg->myrank() << " Matrix structured (interior) entries" << "\n";
   for (int p = 0; p < _patches->size(); p++) {
 
     const Patch* patch = _patches->get(p);
@@ -301,16 +302,8 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     } 
 
     if (level < numLevels-1) {
-      // If not at finest level, examine the connection list that
-      // impAMRICE.cc provides us and add the coarse-to-fine
-      // connections to the Hypre graph. This list should cover all
-      // the C/F interfaces of all next-finer level patches inscribed
-      // in this patch.
-      printLine("=",50);
-      cout_dbg << _pg->myrank() << " Building coarse-to-fine connections" << "\n";
-      printLine("=",50);
       hpatch.makeGraphConnections(_graph,DoingCoarseToFine);
-    } 
+    }
   } 
   
   HYPRE_SStructGraphAssemble(_graph);
@@ -373,17 +366,10 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     int level = hpatch.getLevel();
     
     if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
-      // If not at coarsest level, add fine-to-coarse connections at all
-      // C/F interface faces.
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingFineToCoarse);
     }     
     if (level < numLevels-1) {
-      // If not at finest level, examine the connection list that
-      // impAMRICE.cc provides us and add the coarse-to-fine
-      // connections to the Hypre graph. This list should cover all
-      // the C/F interfaces of all next-finer level patches inscribed
-      // in this patch.
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingCoarseToFine);
     } 
@@ -410,6 +396,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HyprePatch_CC hpatch(patch,matl); 
     hpatch.makeInteriorVector(_HB, _b_dw, _B_label);
   } 
+  
   for (int l = 0; l < numLevels; l++) {
     if (useBogusLevelData[l]) {
       HyprePatch_CC hpatch(l, matl);
@@ -475,7 +462,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HYPRE_SStructVectorGetObject(_HB, (void **) &_HB_Par);
     HYPRE_SStructVectorGetObject(_HX, (void **) &_HX_Par);
   }
-  cout_doing << "HypreDriverSStruct::makeLinearSystem_CC() END" << "\n";
+  cout_doing << Parallel::getMPIRank() << " HypreDriverSStruct::makeLinearSystem_CC() END" << "\n";
 } // end HypreDriverSStruct::makeLinearSystem_CC()
 
 
@@ -519,7 +506,7 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
                                                    const CoarseFineViewpoint& viewpoint)
 
 {
-  cout_doing << "Doing makeConnections graph for Patch "
+  cout_doing << Parallel::getMPIRank() << " Doing makeConnections graph for Patch "
              << _patch->getID() << " Level " << _level 
              << " viewpoint " << viewpoint << "\n";
        
@@ -527,7 +514,7 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
   
     // Add fine-to-coarse connections to graph
   if (viewpoint == DoingFineToCoarse) {
-    cout_doing << "Adding fine-to-coarse connections to graph" << "\n";
+    //cout_doing << "   Adding fine-to-coarse connections to graph" << "\n";
     
     const int fineLevel   = _level;
     const int coarseLevel = _level-1;
@@ -562,7 +549,7 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
     // Add coarse-to-fine connections to graph using the fine-to-coarse
     // connections of fine cells that are stored in A, assuming symmetry.
     //==================================================================
-    cout_doing << "Adding coarse-to-fine connections to graph" << "\n";
+    //cout_doing << "   Adding coarse-to-fine connections to graph" << "\n";
     const int coarseLevel = _level;
     const int fineLevel = _level+1;
     const IntVector& refRat = grid->getLevel(fineLevel)->getRefinementRatio();
@@ -623,8 +610,10 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
                                                          const bool symmetric /* = false */)
 
 {
-  cout_doing << "Adding interior eqns in patch " << (_patch?_patch->getID():-1)
-             << " from "<< _low << " to " << _high << " Level " << _level << "\n";
+  cout_doing << Parallel::getMPIRank() << " Adding interior eqns in patch " 
+             << (_patch?_patch->getID():-1)
+             << " from "<< _low << " to " << _high 
+             << " Level " << _level << "\n";
              
   CCTypes::matrix_type A;
   if (_patch) {
@@ -765,14 +754,18 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
   // fine and coarse cells as in makeConnections(graph), otherwise
   // the entry counters (entryFine, entryCoarse) will point to the wrong
   // entries in the Hypre graph.
+  
+    cout_doing << Parallel::getMPIRank() << " Doing makeConnections for Patch "
+             << _patch->getID() << " Level " << _level 
+             << " viewpoint " << viewpoint << "\n";
+  
   const GridP grid = _patch->getLevel()->getGrid();
   const double ZERO = 0.0;
   
+  // Add fine-to-coarse entries to matrix
   if (viewpoint == DoingFineToCoarse) {
-    //==================================================================
-    // Add fine-to-coarse entries to matrix
-    //==================================================================
-    cout_doing << "Adding fine-to-coarse connections to matrix" << "\n";
+    //cout_doing << Parallel::getMPIRank() << " Adding fine-to-coarse connections to matrix" << "\n";
+    
     const int fineLevel = _level;
     CCTypes::matrix_type A;
     A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
@@ -833,7 +826,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
     // Add coarse-to-fine entries to matrix using the fine-to-coarse
     // connections of fine cells that are stored in A, assuming symmetry.
     //==================================================================
-    cout_doing << "Adding coarse-to-fine connections to matrix" << "\n";
+    //cout_doing << Parallel::getMPIRank() << " Adding coarse-to-fine connections to matrix" << "\n";
     const int coarseLevel = _level;
     const int fineLevel = _level+1;
     const LevelP coarse = grid->getLevel(_level);
