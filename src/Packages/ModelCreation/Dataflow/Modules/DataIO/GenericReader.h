@@ -197,6 +197,19 @@ GenericReader<HType>::execute()
     return;
   }
   outport->send(handle_);
+  
+  // CODE FOR FILENAME OUTPUT PORT ////
+  StringOPort* filenameoport;
+  if (filenameoport = dynamic_cast<StringOPort *>(get_output_port("Filename")))
+  {
+    StringHandle filenameH = scinew String(filename_.get());
+    filenameoport->send(filenameH);
+  }
+  ////////////////////////////////////
+  
+  
+  
+  
 }
 
 } // End namespace SCIRun

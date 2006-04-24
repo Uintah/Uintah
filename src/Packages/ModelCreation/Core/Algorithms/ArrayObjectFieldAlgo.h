@@ -411,6 +411,7 @@ void ArrayObjectFieldLocationAlgoT<FIELD>::getnextlocation(TensorVectorMath::Vec
 template<class FIELD>
 void ArrayObjectFieldLocationAlgoT<FIELD>::setnextlocation(TensorVectorMath::Vector& location)
 {
+std::cout << "point = "<< SCIRun::Point(location.x(),location.y(),location.z()) << "\n";
   mesh_->set_point(SCIRun::Point(location.x(),location.y(),location.z()),(*it_));
   ++it_;
 }

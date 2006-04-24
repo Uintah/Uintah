@@ -443,6 +443,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
       typename FIELD::mesh_type::Node::index_type idx;
       hMesh_->to_index(idx,i);
       hMesh_->get_elems(ca, idx);
+     
     }
     else if (i<global_dimension_nodes+global_dimension_add_nodes)
     {

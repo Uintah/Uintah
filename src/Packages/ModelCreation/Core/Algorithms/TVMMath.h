@@ -986,142 +986,142 @@ inline double zz(Tensor& ten)
   return(ten.zz());
 }
 
-inline double norm(const Tensor& ten)
+inline double norm(const Tensor ten)
 {
   return(ten.norm());
 }
     
-inline double max(const Tensor& ten)
+inline double max(const Tensor ten)
 {
   return(ten.max());
 }
 
-inline double min(const Tensor& ten)
+inline double min(const Tensor ten)
 {
   return(ten.min());
 }
 
-inline Tensor inv(Tensor& ten)
+inline Tensor inv(Tensor ten)
 {
   return(ten.inv());
 }
 
-inline Tensor sin(const Tensor& ten)
+inline Tensor sin(const Tensor ten)
 {
   return(ten.sin());
 }
 
-inline Tensor cos(const Tensor& ten)
+inline Tensor cos(const Tensor ten)
 {
   return(ten.cos());
 }
 
-inline Tensor sinh(const Tensor& ten)
+inline Tensor sinh(const Tensor ten)
 {
   return(ten.sinh());
 }
 
-inline Tensor cosh(const Tensor& ten)
+inline Tensor cosh(const Tensor ten)
 {
   return(ten.cosh());
 }
 
-inline Tensor tan(const Tensor& ten)
+inline Tensor tan(const Tensor ten)
 {
   return(ten.tan());
 }
 
-inline Tensor asin(const Tensor& ten)
+inline Tensor asin(const Tensor ten)
 {
   return(ten.asin());
 }
 
-inline Tensor acos(const Tensor& ten)
+inline Tensor acos(const Tensor ten)
 {
   return(ten.acos());
 }
 
-inline Tensor asinh(const Tensor& ten)
+inline Tensor asinh(const Tensor ten)
 {
   return(ten.asinh());
 }
 
-inline Tensor acosh(const Tensor& ten)
+inline Tensor acosh(const Tensor ten)
 {
   return(ten.acosh());
 }
 
-inline Tensor atan(const Tensor& ten)
+inline Tensor atan(const Tensor ten)
 {
   return(ten.atan());
 }
 
-inline Tensor log(const Tensor& ten)
+inline Tensor log(const Tensor ten)
 {
   return(ten.log());
 }
 
-inline Tensor log10(const Tensor& ten)
+inline Tensor log10(const Tensor ten)
 {
   return(ten.log10());
 }
 
-inline Tensor log2(const Tensor& ten)
+inline Tensor log2(const Tensor ten)
 {
   return(ten.log2());
 }
 
-inline Tensor abs(const Tensor& ten)
+inline Tensor abs(const Tensor ten)
 {
   return(ten.abs());
 }
 
-inline Tensor cbrt(const Tensor& ten)
+inline Tensor cbrt(const Tensor ten)
 {
   return(ten.cbrt());
 }
 
-inline Tensor sqrt(const Tensor& ten)
+inline Tensor sqrt(const Tensor ten)
 {
   return(ten.sqrt());
 }
 
-inline Tensor pow(const Tensor& ten,double p)
+inline Tensor pow(const Tensor ten,double p)
 {
   return(ten.pow(p));
 }
 
-inline Tensor exp(const Tensor& ten)
+inline Tensor exp(const Tensor ten)
 {
   return(ten.exp());
 }
 
-inline Tensor ceil(const Tensor& ten)
+inline Tensor ceil(const Tensor ten)
 {
   return(ten.ceil());
 }
 
-inline Tensor floor(const Tensor& ten)
+inline Tensor floor(const Tensor ten)
 {
   return(ten.floor());
 }
 
-inline Tensor round(const Tensor& ten)
+inline Tensor round(const Tensor ten)
 {
   return(ten.round());
 }
 
-inline Tensor normalize(const Tensor& ten)
+inline Tensor normalize(const Tensor ten)
 {
   return(ten.normalize());
 }
 
-inline double isnan(const Tensor& ten)
+inline double isnan(const Tensor ten)
 {
   return(ten.isnan());
 }
 
-inline double isinf(const Tensor& ten)
+inline double isinf(const Tensor ten)
 {
   return(ten.isinf());
 }
@@ -1131,7 +1131,7 @@ inline double isfinite(const Tensor& ten)
   return(ten.isfinite());
 }
 
-inline double boolean(const Tensor& ten)
+inline double boolean(const Tensor ten)
 {
   return(ten.boolean());
 }

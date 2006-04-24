@@ -226,7 +226,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
   // Code for the function.
   std::string fcn;
   
-  fcn = std::string("template <class DATATYPE>\n") +
+  fcn = std::string("namespace TensorVectorMath {\ntemplate <class DATATYPE>\n") +
     "class " + template_name + " : public ArrayEngineAlgo\n" +
     "{\nvirtual void function(ModelCreation::ArrayObjectList& input_," + 
     "ModelCreation::ArrayObjectList& output_, int size_)\n  {\n";
@@ -290,8 +290,8 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
     if (Input[p].isindex())         fcn += "      " + Input[p].getname() + "= static_cast<double>(p_);\n";
   }
   
-  fcn += "\nnamespace TensorVectorMath {\n";
-  fcn += "      " + function + " \n}\n\n";
+  fcn += "\n\n";
+  fcn += "      " + function + " \n\n\n";
 
   for (int p = 0; p< Input.size(); p++)
   {
@@ -318,7 +318,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
   fcn += std::string("    }\n  }\n\n") +
     "  virtual std::string identify()\n" +
     "  { return std::string(\"" + std::string(SCIRun::string_Cify(function)) + 
-    "\"); }\n};\n\n";
+    "\"); }\n};\n\n}\n";
 
   // Add in the include path to compile this obj
   ci->add_include(include_path);
