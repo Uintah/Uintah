@@ -290,7 +290,8 @@ public:
   value_type y_max() const;
   value_type z_max() const;
   
-  void update(const tPoint3<T>& p);
+  void update( const tPoint3<T>& p );
+  void update( double x, double y, double z );
   
   value_type x_length() const;
   value_type y_length() const;
@@ -302,7 +303,11 @@ public:
   static tBox3 bounding_box(const tPoint3<T> &a, const tPoint3<T> &b, 
                             const tPoint3<T> &c);
   static tBox3 bounding_box(const std::vector<tPoint3<T> > &v);
-  static tBox3 make_union(const tBox3 &b1, const tBox3 &b2);
+  static tBox3 make_union( const tBox3 &b1, const tBox3 &b2 );
+//   static tBox3 make_union( double b1xmin, double b1ymin, double b1zmin, 
+//                            double b1xmax, double b1ymax, double b1zmax,
+//                            double b2xmin, double b2ymin, double b2zmin, 
+//                            double b2xmax, double b2ymax, double b2zmax );
   
 protected:
   bool is_order_correct() const;
@@ -441,6 +446,17 @@ inline void tBox3<T>::update(const tPoint3<T>& p)
 }
 
 template<class T>
+inline void tBox3<T>::update( double x, double y, double z )
+{
+    _min_pt[0] = std::min(_min_pt[0], x );
+    _max_pt[0] = std::max(_max_pt[0], x );
+    _min_pt[1] = std::min(_min_pt[1], y );
+    _max_pt[1] = std::max(_max_pt[1], y );
+    _min_pt[2] = std::min(_min_pt[2], z );
+    _max_pt[2] = std::max(_max_pt[2], z );
+}
+
+template<class T>
 inline tBox3<T> tBox3<T>::bounding_box(const std::vector<tPoint3<T> > &v)
 {
 	ASSERT(v.size() > 0);
@@ -481,13 +497,23 @@ inline int tBox3<T>::classify_position(const tBox3 &b) const
 template<class T>
 inline tBox3<T> tBox3<T>::make_union(const tBox3 &b1, const tBox3 &b2)
 {
-	return tBox3(min(b1.x_min(), b2.x_min()),
+ 	return tBox3(min(b1.x_min(), b2.x_min()),
                min(b1.y_min(), b2.y_min()),
                min(b1.z_min(), b2.z_min()),
                max(b1.x_max(), b2.x_max()),
                max(b1.y_max(), b2.y_max()),
                max(b1.z_max(), b2.z_max()));
 }
+
+// template<class T>
+// inline tBox3<T> tBox3<T>::make_union( double b1xmin, double b1ymin, double b1zmin, 
+//                                       double b1xmax, double b1ymax, double b1zmax,
+//                                       double b2xmin, double b2ymin, double b2zmin, 
+//                                       double b2xmax, double b2ymax, double b2zmax )
+// {
+// 	return tBox3(min(b1xmin, b2xmin), min(b1ymin, b2ymin), min(b1zmin, b2zmin),
+//                max(b1xmax, b2xmax), max(b1ymax, b2ymax), max(b1zmax, b2zmax));
+// }
 
 GTB_END_NAMESPACE
 #endif // GTB_BOX3_INCLUDED
