@@ -446,7 +446,6 @@ private:
   int              d_numIterations;
   bool             d_projectHeatSource;
   bool             d_doMechanics;
-  bool             d_doGridReset;  // Default is true, standard MPM
   Vector           d_contact_dirs; // For rigid body contact
   std::string      d_con_type;
   int              d_max_num_iterations;  // restart timestep

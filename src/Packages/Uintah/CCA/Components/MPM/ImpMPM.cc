@@ -76,7 +76,6 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_SMALL_NUM_MPM=1e-200;
   d_rigid_body = false;
   d_numIterations=0;
-  d_doGridReset = true;
   d_conv_crit_disp   = 1.e-10;
   d_conv_crit_energy = 4.e-10;
   d_forceIncrementFactor = 1.0;
@@ -143,7 +142,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
      mpm_soln_ps->get("ProjectHeatSource", d_projectHeatSource);
      mpm_soln_ps->get("DoMechanics", d_doMechanics);
-     mpm_soln_ps->get("do_grid_reset",  d_doGridReset);
      mpm_soln_ps->get("ForceBC_force_increment_factor",
                                     flags->d_forceIncrementFactor);
      mpm_soln_ps->get("use_load_curves", flags->d_useLoadCurves);
@@ -2455,7 +2453,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     double move_particles=1.;
-    if(!d_doGridReset){
+    if(!flags->d_doGridReset){
       move_particles=0.;
     }
 

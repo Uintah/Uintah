@@ -92,11 +92,8 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   contactModel        = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
-  d_min_part_mass = 3.e-15;
-  d_max_vel = 3.e105;
   NGP     = 1;
   NGN     = 1;
-  d_doGridReset = true;
   d_recompile = false;
   dataArchiver = 0;
 }
@@ -137,10 +134,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                                    __FILE__, __LINE__);
     }
 
-    mpm_soln_ps->get("do_grid_reset", d_doGridReset);
-    mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
-    mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
-    
     std::vector<std::string> bndy_face_txt_list;
     mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
     
@@ -2896,7 +2889,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       combustion_problem=true;
     }
     double move_particles=1.;
-    if(!d_doGridReset){
+    if(!flags->d_doGridReset){
       move_particles=0.;
     }
     for(int m = 0; m < numMPMMatls; m++){
@@ -3062,7 +3055,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
         bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
         bool pointInAny = lvl->containsPoint(pxnew[idx]);
-        if((!pointInReal && pointInAny) || (pmassNew[idx] <= d_min_part_mass)
+        if((!pointInReal && pointInAny)
+            || (pmassNew[idx] <= flags->d_min_part_mass)
             || pTempNew[idx] < 0. ){
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx 
@@ -3073,7 +3067,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //             << " tempnew = " << pTempNew[idx]
 //             << " volnew = " << pvolumeNew[idx] << endl;
         }
-        if(pvelocitynew[idx].length() > d_max_vel){
+        if(pvelocitynew[idx].length() > flags->d_max_vel){
           pvelocitynew[idx]=pvelocity[idx];
         }
       }
