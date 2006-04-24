@@ -29,13 +29,13 @@ HypreSolverBase::HypreSolverBase(HypreDriver* driver,
                                  const Priorities& priority) :
   _driver(driver), _precond(precond), _priority(priority), _requiresPar(true)
 {
-  cout_doing << "HypreSolverBase::constructor BEGIN" << "\n";
+  cout_doing << Parallel::getMPIRank()<<" HypreSolverBase::constructor BEGIN" << "\n";
   assertInterface();
 
   // Initialize results section
   _results.numIterations = 0;
   _results.finalResNorm  = 1.23456e+30; // Large number
-  cout_doing << "HypreSolverBase::constructor END" << "\n";
+  cout_doing << Parallel::getMPIRank()<<"HypreSolverBase::constructor END" << "\n";
 }
   
 HypreSolverBase::~HypreSolverBase(void)
@@ -45,7 +45,7 @@ HypreSolverBase::~HypreSolverBase(void)
 void
 HypreSolverBase::assertInterface(void)
 { 
-  cout_doing << "HypreSolverBase::assertInterface() BEGIN" << "\n";
+  cout_doing << Parallel::getMPIRank()<<" HypreSolverBase::assertInterface() BEGIN" << "\n";
   if (_priority.size() < 1) {
     throw InternalError("Solver created without interface priorities",
                         __FILE__, __LINE__);
@@ -127,7 +127,7 @@ HypreSolverBase::assertInterface(void)
     msg << "Solver does not support Hypre interface " << interface;
     throw InternalError(msg.str(),__FILE__, __LINE__); 
   }
-  cout_doing << "HypreSolverBase::assertInterface() END" << "\n";
+  cout_doing << Parallel::getMPIRank()<<" HypreSolverBase::assertInterface() END" << "\n";
 }
 
 namespace Uintah {
@@ -140,7 +140,7 @@ namespace Uintah {
     // but a generic solver pointer type.
     // Include all derived solver classes here.
   {
-    cout_doing << "newHypreSolver() BEGIN" << "\n";
+    cout_doing << Parallel::getMPIRank()<<" HypreSolverBase::newHypreSolver() BEGIN" << "\n";
     const Priorities precondPriority;
     switch (solverType) {
     case SMG:

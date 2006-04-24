@@ -254,7 +254,7 @@ namespace Uintah {
       DebugStream cout_doing("HYPRE_DOING_COUT", false);
       DebugStream cout_dbg("HYPRE_DBG", false);
 
-      cout_doing << "HypreDriver::solve() BEGIN" << "\n";
+      cout_doing << Parallel::getMPIRank()<< " HypreDriver::solve() BEGIN" << "\n";
 
       // Assign HypreDriver references that are convenient to have in
       // makeLinearSystem(), getSolution().
@@ -386,7 +386,7 @@ namespace Uintah {
         delete solver;
         delete precond;
       } // for m (matls loop)
-      cout_doing << "HypreDriver::solve() END" << "\n";
+      cout_doing << Parallel::getMPIRank()<<" HypreDriver::solve() END" << "\n";
     } // end solve()
 
   template<class Types>
