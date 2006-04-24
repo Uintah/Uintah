@@ -149,7 +149,7 @@ MatlabNrrdsReader::~MatlabNrrdsReader()
 void MatlabNrrdsReader::execute()
 {
   StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
+  if ((filenameport = static_cast<StringIPort *>(get_input_port("Filename"))))
   {
     StringHandle stringH;
     if (filenameport->get(stringH))
@@ -218,6 +218,9 @@ void MatlabNrrdsReader::execute()
       // Put the SCIRun matrix in the hands of the scheduler
       omatrix_[p]->send(mh);
     }
+
+    SCIRun::StringHandle filenameH = scinew String(filename);
+    send_output_handle("Filename",filenameH,true);
   }
 
   // in case something went wrong
