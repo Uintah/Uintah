@@ -26,6 +26,8 @@ unalias rm
 # remove your droppings and make a copy of the output file
 rm -f gp .data .plotStats_tmp .plotStats_tmp1 .tmp
 cp $out .tmp
+
+
 grep Time= .tmp |grep Mem >& .plotStats_tmp1
 
 #__________________________________
@@ -47,13 +49,11 @@ grep mean .plotStats_tmp | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
 grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
 grep delT .plotStats_tmp | cut -d"=" -f3 | cut -d"," -f1 >& .delT
 
-grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f1 > .memUse1
-grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f2 > .memUse2
-grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f1 > .memUse3
-grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f2 > .memUse4
-paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3 .memUse4>& .data
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2  > .memAve
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f5  > .memMax
+paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memAve .memMax>& .data
 
-rm -f .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3  .memUse4 
+rm -f .elapsedTime .meanTime .physicalTime .delT memAve .memMax 
 rm -f .plotStats_tmp .plotStats_tmp1 .tmp
 echo "Done extracting data"
 
@@ -90,8 +90,8 @@ plot '.data' using 1:3           t 'Physical Time' with lines,\
     #----------second plot-------------
 set size 1.0,0.33       
 set origin 0.0,0.66
-set ylabel
-set y2label
+set ylabel 'Delt'
+set y2label 'Physical Time'
 
 plot '.data' using 1:4           t 'Delt' with lines, \
      '.data' using 1:3 axes x1y2 t 'Physical Time' with lines
@@ -100,11 +100,10 @@ plot '.data' using 1:4           t 'Delt' with lines, \
 set size 1.0,0.33       
 set origin 0.0,0.0
 set xlabel "ElapsedTime"
-set ylabel "Memory useage"
-plot '.data' using 1:5 axes x1y2 t 'avg1' with lines, \
-     '.data' using 1:6 axes x1y2 t 'avg2' with lines, \
-     '.data' using 1:7 axes x1y2 t 'max1' with lines, \
-     '.data' using 1:8 axes x1y2 t 'max2' with lines
+set ylabel "Memory useage [MB]"
+set y2label ''
+plot '.data' using 1:5 axes x1y1 t 'ave' with lines, \
+     '.data' using 1:6 axes x1y2 t 'max' with lines
 set nomultiplot
 pause -1 "Hit return to exit"
 fin
