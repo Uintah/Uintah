@@ -49,7 +49,6 @@
 
 namespace SCIRun {
 
-  using std::vector;
   using std::cerr;
   using std::endl;
 
@@ -89,14 +88,14 @@ namespace SCIRun {
 
   //! default case for volume calculation - currently not needed
   template <class T>
-    inline double d_volume(const vector<T>& derivs)
+    inline double d_volume(const std::vector<T>& derivs)
   {
     ASSERT(0); // to do
     return 0;  
   }
 
   template <>
-    inline double d_volume(const vector<Point>& derivs)
+    inline double d_volume(const std::vector<Point>& derivs)
   {
     double J[9];
 
@@ -118,13 +117,13 @@ namespace SCIRun {
   {
     double volume=0.;
   
-    vector<double> coords(3);
+    std::vector<double> coords(3);
     for(int i=0; i<ElemBasis::GaussianNum; i++) {
       coords[0]=ElemBasis::GaussianPoints[i][0];
       coords[1]=ElemBasis::GaussianPoints[i][1];
       coords[2]=ElemBasis::GaussianPoints[i][2];
  
-      vector<typename ElemBasis::value_type> derivs;
+      std::vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
       volume+=ElemBasis::GaussianWeights[i]*d_volume(derivs);
     }
@@ -135,7 +134,7 @@ namespace SCIRun {
 
   //! default case for face area calculation - currently not needed
   template <class T>
-    inline double d_area(const vector<T>& derivs, const vector<double>& dv0, const vector<double>& dv1)
+    inline double d_area(const std::vector<T>& derivs, const std::vector<double>& dv0, const std::vector<double>& dv1)
   {
     ASSERT(0); // to do
     return 0;  
@@ -143,7 +142,7 @@ namespace SCIRun {
 
   //! area calculation on points
   template <>
-    inline double d_area(const vector<Point>& derivs, const vector<double>& dv0, const vector<double>& dv1)
+    inline double d_area(const std::vector<Point>& derivs, const std::vector<double>& dv0, const std::vector<double>& dv1)
   {
     const unsigned int dvsize=derivs.size();
     ASSERT(dv0.size()==dvsize);
@@ -166,25 +165,20 @@ namespace SCIRun {
     const double *v0 = pEB->unit_vertices[pEB->unit_faces[face][0]];
     const double *v1 = pEB->unit_vertices[pEB->unit_faces[face][1]];
     const double *v2 = pEB->unit_vertices[pEB->unit_faces[face][2]];
-    vector<double> d0(2), d1(2);
+    std::vector<double> d0(2), d1(2);
     d0[0]=v1[0]-v0[0];
     d0[1]=v1[1]-v0[1];
     d1[0]=v2[0]-v0[0];
     d1[1]=v2[1]-v0[1];
     double area=0.;
   
-    vector<double> coords(2);
+    std::vector<double> coords(2);
     for(int i=0; i<NumApprox::GaussianNum; i++) {
       coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*d0[0]+NumApprox::GaussianPoints[i][1]*d1[0];
       coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*d0[1]+NumApprox::GaussianPoints[i][1]*d1[1];
  
-      vector<typename ElemBasis::value_type> derivs;
+      std::vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
- /*      cerr << "D "; */
-/*       for(int j=0; j<derivs.size(); j++) */
-/* 	cerr << derivs[j] << " "; */
-/*       cerr << endl; */
-/*       cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_area(derivs, d0, d1) << endl; */
       area+=NumApprox::GaussianWeights[i]*d_area(derivs, d0, d1);
     }
     return area*pEB->area(face);
@@ -197,7 +191,7 @@ namespace SCIRun {
     const double *v0 = pEB->unit_vertices[pEB->unit_faces[face][0]];
     const double *v1 = pEB->unit_vertices[pEB->unit_faces[face][1]];
     const double *v2 = pEB->unit_vertices[pEB->unit_faces[face][2]];
-    vector<double> d0(3), d1(3);
+    std::vector<double> d0(3), d1(3);
     d0[0]=v1[0]-v0[0];
     d0[1]=v1[1]-v0[1];
     d0[2]=v1[2]-v0[2];
@@ -206,19 +200,15 @@ namespace SCIRun {
     d1[2]=v2[2]-v0[2];
     double area=0.;
   
-    vector<double> coords(3);
+    std::vector<double> coords(3);
     for(int i=0; i<NumApprox::GaussianNum; i++) {
       coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*d0[0]+NumApprox::GaussianPoints[i][1]*d1[0];
       coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*d0[1]+NumApprox::GaussianPoints[i][1]*d1[1];
       coords[2]=v0[2]+NumApprox::GaussianPoints[i][0]*d0[2]+NumApprox::GaussianPoints[i][1]*d1[2];
  
-      vector<typename ElemBasis::value_type> derivs;
+      std::vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
-/*       cerr << "D "; */
-/*       for(int j=0; j<derivs.size(); j++) */
-/* 	cerr << derivs[j] << " "; */
-/*       cerr << endl; */
-/*       cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_area(derivs, d0, d1) << endl; */
+
       area+=NumApprox::GaussianWeights[i]*d_area(derivs, d0, d1);
     }
     return area*pEB->area(face);
@@ -226,7 +216,7 @@ namespace SCIRun {
  
   //! default case for arc length calculation - currently not needed
   template <class T>
-    inline double d_arc_length(const vector<T>& derivs, const vector<double>& dv)
+    inline double d_arc_length(const std::vector<T>& derivs, const std::vector<double>& dv)
   {
     ASSERT(0); // to do
     return 0;  
@@ -234,7 +224,7 @@ namespace SCIRun {
 
   //! arc length calculation on points
   template <>
-    inline double d_arc_length(const vector<Point>& derivs, const vector<double>& dv)
+    inline double d_arc_length(const std::vector<Point>& derivs, const std::vector<double>& dv)
   {
     const unsigned int dvsize=dv.size();
     ASSERT(derivs.size()==dvsize);
@@ -255,20 +245,16 @@ namespace SCIRun {
   {
     const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
     const double *v1 = pEB->unit_vertices[pEB->unit_edges[edge][1]];
-    vector<double> dv(1);
+    std::vector<double> dv(1);
     dv[0]=v1[0]-v0[0];
     double arc_length=0.;
   
-    vector<double> coords(1);
+    std::vector<double> coords(1);
     for(int i=0; i<NumApprox::GaussianNum; i++) {
       coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
-      vector<typename ElemBasis::value_type> derivs;
+      std::vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
-/*       cerr << "D "; */
-/*       for(int j=0; j<derivs.size(); j++) */
-/* 	cerr << derivs[j] << " "; */
-/*       cerr << endl; */
-/*       cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_arc_length(derivs, dv) << endl; */
+
       arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs, dv);
     }
     return arc_length;
@@ -281,22 +267,17 @@ namespace SCIRun {
   {
     const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
     const double *v1 = pEB->unit_vertices[pEB->unit_edges[edge][1]];
-    vector<double> dv(2);
+    std::vector<double> dv(2);
     dv[0]=v1[0]-v0[0];
     dv[1]=v1[1]-v0[1];
     double arc_length=0.;
   
-    vector<double> coords(2);
+    std::vector<double> coords(2);
     for(int i=0; i<NumApprox::GaussianNum; i++) {
       coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
       coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv[1];
-      vector<typename ElemBasis::value_type> derivs;
+      std::vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
-      //   cerr << "D ";
-      //     for(int j=0; j<derivs.size(); j++)
-      //      cerr << derivs[j] << " ";
-      // cerr << endl;
-      //    cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_arc_length(derivs, dv) << endl;
       arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs, dv);
     }
     return arc_length;
@@ -309,20 +290,19 @@ namespace SCIRun {
   {
     const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
     const double *v1 = pEB->unit_vertices[pEB->unit_edges[edge][1]];
-    vector<double> dv(3);
+    std::vector<double> dv(3);
     dv[0]=v1[0]-v0[0];
     dv[1]=v1[1]-v0[1];
     dv[2]=v1[2]-v0[2];
     double arc_length=0.;
   
-    vector<double> coords(3);
+    std::vector<double> coords(3);
     for(int i=0; i<NumApprox::GaussianNum; i++) {
       coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
       coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv[1];
       coords[2]=v0[2]+NumApprox::GaussianPoints[i][0]*dv[2];
-      vector<typename ElemBasis::value_type> derivs;
+      std::vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
-      //    cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_arc_length(derivs, dv) << endl;
       arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs, dv);
     }
     return arc_length;
@@ -342,16 +322,16 @@ namespace SCIRun {
 
 
   template <class T>
-    double getnextx1(vector<double> &x, vector<double> &xold, 
-		     const T& y, const vector<T>& yd);
+    double getnextx1(std::vector<double> &x, std::vector<double> &xold, 
+		     const T& y, const std::vector<T>& yd);
 
   template <>
-    SCISHARE double getnextx1(vector<double> &x, vector<double> &xold, 
-		     const Point& y, const vector<Point>& yd);
+    SCISHARE double getnextx1(std::vector<double> &x, std::vector<double> &xold, 
+		     const Point& y, const std::vector<Point>& yd);
 
   template <class T>
-    double getnextx1(vector<double> &x, vector<double> &xold, 
-		     const T& y, const vector<T>& yd)
+    double getnextx1(std::vector<double> &x, std::vector<double> &xold, 
+		     const T& y, const std::vector<T>& yd)
   {
     x[0] -= (yd[0] ? y/yd[0] : 0.);
     const double dx=x[0]-xold[0];
@@ -359,16 +339,16 @@ namespace SCIRun {
   }
 
   template <class T>
-    double getnextx2(vector<double> &x, vector<double> &xold, 
-		     const T& y, const vector<T>& yd);
+    double getnextx2(std::vector<double> &x, std::vector<double> &xold, 
+		     const T& y, const std::vector<T>& yd);
 
   template <>
-    SCISHARE double getnextx2(vector<double> &x, vector<double> &xold, 
-		     const Point& y, const vector<Point>& yd);
+    SCISHARE double getnextx2(std::vector<double> &x, std::vector<double> &xold, 
+		     const Point& y, const std::vector<Point>& yd);
 
   template <class T>
-    double getnextx2(vector<double> &x, vector<double> &xold, 
-		     const T& y, const vector<T>& yd)
+    double getnextx2(std::vector<double> &x, std::vector<double> &xold, 
+		     const T& y, const std::vector<T>& yd)
   {
     x[0] -= (yd[0] ? y/yd[0] : 0.);
     x[1] -= (yd[1] ? y/yd[1] : 0.);
@@ -380,18 +360,18 @@ namespace SCIRun {
 
   // locate for scalar value 
   template <class T>
-    double getnextx3(vector<double> &x, vector<double> &xold, 
-		     const T& y, const vector<T>& yd);
+    double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+		     const T& y, const std::vector<T>& yd);
  
   // locate for Point 
   template <>
-    SCISHARE double getnextx3(vector<double> &x, vector<double> &xold, 
-		     const Point& y, const vector<Point>& yd);
+    SCISHARE double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+		     const Point& y, const std::vector<Point>& yd);
       
   // locate for scalar value 
   template <class T>
-    double getnextx3(vector<double> &x, vector<double> &xold, 
-		     const T& y, const vector<T>& yd)
+    double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+		     const T& y, const std::vector<T>& yd)
   {
     x[0] -= (yd[0] ? y/yd[0] : 0.);
     x[1] -= (yd[1] ? y/yd[1] : 0.);
@@ -427,11 +407,11 @@ class Dim3Locate {
  
     //! find value in interpolation for given value
     template <class ElemData>
-      bool get_iterative(const ElemBasis *pEB, vector<double> &x, 
+      bool get_iterative(const ElemBasis *pEB, std::vector<double> &x, 
 			 const T& value, const ElemData &cd) const  
     {       
-      vector<double> xold(3); 
-      vector<T> yd(3);
+      std::vector<double> xold(3); 
+      std::vector<T> yd(3);
       for (int steps=0; steps<maxsteps; steps++) {
 	xold = x;
 	T y = difference(pEB->interpolate(x, cd), value);
@@ -466,11 +446,11 @@ class Dim2Locate {
  
     //! find value in interpolation for given value
     template <class ElemData>
-      bool get_iterative(const ElemBasis *pEB, vector<double> &x, 
+      bool get_iterative(const ElemBasis *pEB, std::vector<double> &x, 
 			 const T& value, const ElemData &cd) const  
     {       
-      vector<double> xold(2); 
-      vector<T> yd(2);
+      std::vector<double> xold(2); 
+      std::vector<T> yd(2);
       for (int steps=0; steps<maxsteps; steps++) {
 	xold = x;
 	T y = difference(pEB->interpolate(x, cd), value);
@@ -508,11 +488,11 @@ class Dim1Locate {
 
     //! find value in interpolation for given value         
     template <class ElemData>
-      bool get_iterative(const ElemBasis *pElem, vector<double> &x, 
+      bool get_iterative(const ElemBasis *pElem, std::vector<double> &x, 
 			 const T& value, const ElemData &cd) const  
     {          
-      vector<double> xold(1); 
-      vector<T> yd(1);
+      std::vector<double> xold(1); 
+      std::vector<T> yd(1);
  	
       for (int steps=0; steps<maxsteps; steps++) {
 	xold = x;
@@ -551,9 +531,9 @@ class Dim1Locate {
 			  double &cur_d, double dist);
 
   template <class T>
-    bool check_zero(const vector<T> &val) 
+    bool check_zero(const std::vector<T> &val) 
   {
-    typename vector<T>::const_iterator iter = val.begin();
+    typename std::vector<T>::const_iterator iter = val.begin();
     while(iter != val.end()) {
       const T &v=*iter++;
       if (fabs(v)>1e-7)
@@ -563,7 +543,7 @@ class Dim1Locate {
   }
 
   template <>
-    SCISHARE bool check_zero(const vector<Point> &val); 
+    SCISHARE bool check_zero(const std::vector<Point> &val); 
 
 }
 #endif

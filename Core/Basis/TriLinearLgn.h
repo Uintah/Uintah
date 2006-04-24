@@ -41,8 +41,6 @@
 
 namespace SCIRun {
 
-using std::string;
-  
 //! Class for describing unit geometry of TriLinearLgn 
 class TriLinearLgnUnitElement {
 public:
@@ -96,7 +94,7 @@ public:
   //! return: coords gives parametric coordinates of the approximation.
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(div_per_unit+1);
 
@@ -110,7 +108,7 @@ public:
 
     for(unsigned i = 0; i <= div_per_unit; i++) {
       const double d = (double)i / (double)div_per_unit;
-      vector<double> &tmp = coords[i];
+      std::vector<double> &tmp = coords[i];
       tmp.resize(2);
       tmp[0] = p1x + d * dx;
       tmp[1] = p1y + d * dy;
@@ -122,7 +120,7 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned /* face */, 
 			   const unsigned div_per_unit, 
-			   vector<vector<vector<double> > > &coords) const
+			   std::vector<std::vector<std::vector<double> > > &coords) const
   {
     coords.resize(div_per_unit);
     const double d = 1. / div_per_unit;
@@ -131,17 +129,17 @@ public:
       const double dj = (double)j / (double)div_per_unit;
       unsigned e = 0;
       coords[j].resize((div_per_unit - j) * 2 + 1);
-      vector<double> &tmp = coords[j][e++];
+      std::vector<double> &tmp = coords[j][e++];
       tmp.resize(2);
       tmp[0] = 0;
       tmp[1] = dj;
       for(unsigned i = 0; i<div_per_unit - j; i++) {
 	const double di = (double)i / (double)div_per_unit;
-	vector<double> &tmp1 = coords[j][e++];
+	std::vector<double> &tmp1 = coords[j][e++];
 	tmp1.resize(2);
 	tmp1[0] = di;
 	tmp1[1] = dj + d;
-	vector<double> &tmp2 = coords[j][e++];
+	std::vector<double> &tmp2 = coords[j][e++];
 	tmp2.resize(2);
 	tmp2[0] = di + d;
 	tmp2[1] = dj;
@@ -162,7 +160,7 @@ public:
  
   //! find value in interpolation for given value
   template <class ElemData>
-  bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
+  bool get_coords(const ElemBasis *pEB, std::vector<double> &coords, 
 		  const T& value, const ElemData &cd) const  
   {          
     initial_guess(pEB, value, cd, coords);
@@ -171,7 +169,7 @@ public:
     return false;
   }
 
-  inline bool check_coords(const vector<double> &x) const  
+  inline bool check_coords(const std::vector<double> &x) const  
   {  
     if (x[0]>=-Dim2Locate<ElemBasis>::thresholdDist)
       if (x[1]>=-Dim2Locate<ElemBasis>::thresholdDist)
@@ -185,12 +183,12 @@ protected:
   //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
-		     vector<double> & guess) const
+		     std::vector<double> & guess) const
   {
     double dist = DBL_MAX;
 	
-    vector<double> coord(2);
-    vector<T> derivs(2);
+    std::vector<double> coord(2);
+    std::vector<T> derivs(2);
     guess.resize(2);
 
     const int end = 3;
@@ -213,6 +211,26 @@ protected:
     }
   }
 };
+
+//! Class with weights and coordinates for 2nd order Gaussian integration
+template <class T>
+class TriGaussian1 
+{
+public:
+  static int GaussianNum;
+  static T GaussianPoints[1][2];
+  static T GaussianWeights[1];
+};
+
+template <class T>
+int TriGaussian1<T>::GaussianNum = 1;
+
+template <class T>
+T TriGaussian1<T>::GaussianPoints[1][2] = {
+  {1./3.,1./3.}};
+
+template <class T>
+T TriGaussian1<T>::GaussianWeights[1] = {1.0};
 
 //! Class with weights and coordinates for 2nd order Gaussian integration
 template <class T>
@@ -263,7 +281,7 @@ T TriGaussian3<T>::GaussianWeights[7] =
 template <class T>
 class TriLinearLgn : public BasisSimple<T>, 
                      public TriApprox, 
-		     public TriGaussian2<double>, 
+		     public TriGaussian1<double>, 
 		     public TriLinearLgnUnitElement  
 { 
 public:
@@ -276,16 +294,16 @@ public:
 
   virtual void approx_edge(const unsigned edge, 
 			   const unsigned /* div_per_unit */,
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(2);
-    vector<double> &tmp = coords[0];
+    std::vector<double> &tmp = coords[0];
     tmp.resize(2);
     tmp[0] = TriLinearLgnUnitElement::unit_vertices[
 		       TriLinearLgnUnitElement::unit_edges[edge][0]][0];
     tmp[1] = TriLinearLgnUnitElement::unit_vertices[
                        TriLinearLgnUnitElement::unit_edges[edge][0]][1];
-    vector<double> &tmp1 = coords[1];
+    std::vector<double> &tmp1 = coords[1];
     tmp1.resize(2);
     tmp1[0] = TriLinearLgnUnitElement::unit_vertices[
 		       TriLinearLgnUnitElement::unit_edges[edge][1]][0];
@@ -295,26 +313,26 @@ public:
 
   virtual void approx_face(const unsigned /* face */, 
 			   const unsigned div_per_unit,
-			   vector<vector<vector<double> > > &coords) const
+			   std::vector<std::vector<std::vector<double> > > &coords) const
   {
     coords.resize(1);
     coords[0].resize(3);
-    vector<double> &tmp = coords[0][0];
+    std::vector<double> &tmp = coords[0][0];
     tmp.resize(2);
     tmp[0] = 0;
     tmp[1] = 0;
-    vector<double> &tmp1 = coords[0][1];
+    std::vector<double> &tmp1 = coords[0][1];
     tmp1.resize(2);
     tmp1[0] = 1;
     tmp1[1] = 0;
-    vector<double> &tmp2 = coords[0][2];
+    std::vector<double> &tmp2 = coords[0][2];
     tmp2.resize(2);
     tmp2[0] = 0;
     tmp2[1] = 1;
   }
 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   {
     const double x = coords[0], y = coords[1];  
 
@@ -325,7 +343,7 @@ public:
 
   //! get value at parametric coordinate
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[3];
     get_weights(coords, w); 
@@ -337,7 +355,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
     w[0] = -1;
     w[1] = 1;
@@ -349,8 +367,8 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     derivs.resize(2);
 
@@ -360,7 +378,7 @@ public:
 	
   //! get the parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     TriLocate< TriLinearLgn<T> > CL;
@@ -388,7 +406,7 @@ public:
     return 0.;
   }
   
-  static const string type_name(int n = -1);
+  static const std::string type_name(int n = -1);
 
   virtual void io (Piostream& str);
 };
@@ -403,7 +421,7 @@ const TypeDescription* get_type_description(TriLinearLgn<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("TriLinearLgn", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
@@ -411,18 +429,18 @@ const TypeDescription* get_type_description(TriLinearLgn<T> *)
 }
 
 template <class T>
-const string
+const std::string
 TriLinearLgn<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("TriLinearLgn");
+    static const std::string nm("TriLinearLgn");
     return nm;
   } else {
     return find_type_name((T *)0);

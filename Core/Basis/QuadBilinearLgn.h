@@ -42,8 +42,6 @@
 
 namespace SCIRun {
 
-using std::string;
-
 //! Class for describing unit geometry of QuadBilinearLgn 
 class QuadBilinearLgnUnitElement {
 public: 
@@ -97,7 +95,7 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_edge(const unsigned edge, 
 			   const unsigned div_per_unit, 
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(div_per_unit + 1);
       
@@ -108,7 +106,7 @@ public:
       
     for(unsigned i = 0; i <= div_per_unit; i ++) {
       const double d = (double)i / (double)div_per_unit;
-      vector<double> &tmp = coords[i];
+      std::vector<double> &tmp = coords[i];
       tmp.resize(2);
       tmp[0] = p1x + d * dx;
       tmp[1] = p1y + d * dy;
@@ -120,7 +118,7 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned /* face */, 
 			   const unsigned div_per_unit, 
-			   vector<vector<vector<double> > > &coords) const
+			   std::vector<std::vector<std::vector<double> > > &coords) const
   {
     coords.resize(div_per_unit);
     double d = 1. / div_per_unit;
@@ -128,11 +126,11 @@ public:
       coords[j].resize(2 * (div_per_unit + 1));
       unsigned e = 0;
       for(unsigned i = 0; i <= div_per_unit; i++) {
-	vector<double> &e1 = coords[j][e++];
+	std::vector<double> &e1 = coords[j][e++];
 	e1.resize(2);
 	e1[0] = (double)i / (double)div_per_unit;
 	e1[1] = (double)j / (double)div_per_unit;
-	vector<double> &e2 = coords[j][e++];
+	std::vector<double> &e2 = coords[j][e++];
 	e2.resize(2);
 	e2[0] = e1[0];
 	e2[1] = (double)j / (double)div_per_unit + d;
@@ -154,7 +152,7 @@ public:
  
   //! find value in interpolation for given value
   template <class ElemData>
-  bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
+  bool get_coords(const ElemBasis *pEB, std::vector<double> &coords, 
 		  const T& value, const ElemData &cd) const  
   {          
     initial_guess(pEB, value, cd, coords);
@@ -163,7 +161,7 @@ public:
     return false;
   }
 
- inline bool check_coords(const vector<double> &x) const  
+ inline bool check_coords(const std::vector<double> &x) const  
   {  
     if (x[0]>=-Dim2Locate<ElemBasis>::thresholdDist && 
 	x[0]<=Dim2Locate<ElemBasis>::thresholdDist1)
@@ -178,12 +176,12 @@ protected:
    //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
-		     vector<double> & guess) const
+		     std::vector<double> & guess) const
   {
     double dist = DBL_MAX;
 	
-    vector<double> coord(2);
-    vector<T> derivs(2);
+    std::vector<double> coord(2);
+    std::vector<T> derivs(2);
     guess.resize(2);
 
     const int end = 3;
@@ -261,7 +259,7 @@ T QuadGaussian3<T>::GaussianWeights[9] = {
 template <class T>
 class QuadBilinearLgn : public BasisSimple<T>, 
                         public QuadApprox, 
-			public QuadGaussian2<double>, 
+			public QuadGaussian3<double>, 
 			public QuadBilinearLgnUnitElement 
 {
 public:
@@ -273,7 +271,7 @@ public:
   int polynomial_order() const { return 1; }
 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   { 
     const double x = coords[0], y = coords[1];  
     w[0] = (-1 + x) * (-1 + y);
@@ -284,7 +282,7 @@ public:
 
   //! get value at parametric coordinate
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[4];
     get_weights(coords, w); 
@@ -297,7 +295,7 @@ public:
     
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
     const double x=coords[0], y=coords[1];  
     w[0] = (-1 + y);
@@ -312,14 +310,14 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     const double x = coords[0], y = coords[1];  
 
     derivs.resize(2);
 
-    derivs[0] = T((-1 + y) * cd.node0()
+    derivs[0] = T((-1 + y) * cd.node0() 
 		  +(1 - y) * cd.node1()
 		  +y * cd.node2()
 		  -y * cd.node3());
@@ -332,7 +330,7 @@ public:
 
   //! get parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const
   {
     QuadLocate< QuadBilinearLgn<T> > CL;
@@ -360,7 +358,7 @@ public:
     return 0.;
   }
   
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
 
   virtual void io (Piostream& str);
 };
@@ -374,7 +372,7 @@ const TypeDescription* get_type_description(QuadBilinearLgn<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("QuadBilinearLgn", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
@@ -382,18 +380,18 @@ const TypeDescription* get_type_description(QuadBilinearLgn<T> *)
 }
 
 template <class T>
-const string
+const std::string
 QuadBilinearLgn<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("QuadBilinearLgn");
+    static const std::string nm("QuadBilinearLgn");
     return nm;
   } else {
     return find_type_name((T *)0);

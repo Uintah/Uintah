@@ -100,7 +100,7 @@ public:
   //! return: coords gives parametric coordinates of the approximation.
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(div_per_unit + 1);
 
@@ -116,7 +116,7 @@ public:
 
     for(unsigned int i = 0; i <= div_per_unit; i++) {
       const double d = (double)i / (double)div_per_unit;
-      vector<double> &tmp = coords[i];
+      std::vector<double> &tmp = coords[i];
       tmp.resize(3);
       tmp[0] = p1x + d * dx;
       tmp[1] = p1y + d * dy;
@@ -134,7 +134,7 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned face, 
 			   const unsigned div_per_unit, 
-			   vector<vector<vector<double> > > &coords) const
+			   std::vector<std::vector<std::vector<double> > > &coords) const
   {
     const double *v0 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_faces[face][0]];
     const double *v1 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_faces[face][1]];
@@ -145,7 +145,7 @@ public:
       const double dj = (double)j / (double)div_per_unit;
       unsigned int e = 0;
       coords[j].resize((div_per_unit - j) * 2 + 1);
-      vector<double> &tmp = coords[j][e++];
+      std::vector<double> &tmp = coords[j][e++];
       tmp.resize(3);
       tmp[0] = v0[0] + dj * (v2[0] - v0[0]);
       tmp[1] = v0[1] + dj * (v2[1] - v0[1]);
@@ -153,13 +153,13 @@ public:
 
       for(unsigned int i = 0; i<div_per_unit - j; i++) {
 	const double di = (double)i / (double)div_per_unit;
-	vector<double> &tmp1 = coords[j][e++];
+	std::vector<double> &tmp1 = coords[j][e++];
 	tmp1.resize(3);
 	tmp1[0] = v0[0] + (dj + d) * (v2[0] - v0[0]) + di * (v1[0] - v0[0]);
 	tmp1[1] = v0[1] + (dj + d) * (v2[1] - v0[1]) + di * (v1[1] - v0[1]);
 	tmp1[2] = v0[2] + (dj + d) * (v2[2] - v0[2]) + di * (v1[2] - v0[2]);
 
-	vector<double> &tmp2 = coords[j][e++];
+	std::vector<double> &tmp2 = coords[j][e++];
 	tmp2.resize(3);
 	tmp2[0] = v0[0] + dj * (v2[0] - v0[0]) + (di + d) * (v1[0] - v0[0]);
 	tmp2[1] = v0[1] + dj * (v2[1] - v0[1]) + (di + d) * (v1[1] - v0[1]);
@@ -182,7 +182,7 @@ public:
  
   //! find coodinate in interpolation for given value         
   template <class ElemData>
-  bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
+  bool get_coords(const ElemBasis *pEB, std::vector<double> &coords, 
 		  const T& value, const ElemData &cd) const  
   {      
     initial_guess(pEB, value, cd, coords);
@@ -192,7 +192,7 @@ public:
   }
 
 protected:
-  inline bool check_coords(const vector<double> &x) const  
+  inline bool check_coords(const std::vector<double> &x) const  
   {  
     if (x[0]>=-Dim3Locate<ElemBasis>::thresholdDist)
       if (x[1]>=-Dim3Locate<ElemBasis>::thresholdDist)
@@ -206,12 +206,12 @@ protected:
   //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
-		     vector<double> & guess) const
+		     std::vector<double> & guess) const
   {
     double dist = DBL_MAX;
 	
-    vector<double> coord(3);
-    vector<T> derivs(3);
+    std::vector<double> coord(3);
+    std::vector<T> derivs(3);
     guess.resize(3);
 
     const int end = 3;
@@ -241,6 +241,32 @@ protected:
   }
 };
 
+//! Class with weights and coordinates for 1nd order Gaussian integration
+template <class T>
+class TetGaussian1
+{
+public:
+  static int GaussianNum;
+  static T GaussianPoints[1][3];
+  static T GaussianWeights[1];
+};
+
+#ifdef _WIN32
+// force the instantiation of TetGaussian1<double>
+template class TetGaussian1<double>;
+#endif
+
+template <class T>
+int TetGaussian1<T>::GaussianNum = 1;
+
+template <class T>
+T TetGaussian1<T>::GaussianPoints[][3] = {
+  {1./4., 1./4., 1./4.}};
+
+template <class T>
+T TetGaussian1<T>::GaussianWeights[] = {1.0};
+
+
 //! Class with weights and coordinates for 2nd order Gaussian integration
 template <class T>
 class TetGaussian2 
@@ -255,8 +281,6 @@ public:
 // force the instantiation of TetGaussian2<double>
 template class TetGaussian2<double>;
 #endif
-
-
 
 template <class T>
 int TetGaussian2<T>::GaussianNum = 4;
@@ -321,7 +345,7 @@ int TetGaussian3<T>::GaussianNum = 11;
 template <class T>
 class TetLinearLgn : public BasisSimple<T>, 
                      public TetApprox, 
-		     public TetGaussian2<double>, 
+		     public TetGaussian1<double>, 
 		     public TetLinearLgnUnitElement 
 {
 public:
@@ -333,7 +357,7 @@ public:
   int polynomial_order() const { return 1; }
 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   { 
     const double x = coords[0], y = coords[1], z = coords[2];  
     w[0] = (1. - x - y - z);
@@ -344,7 +368,7 @@ public:
 
   //! get value at parametric coordinate 
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[4];
     get_weights(coords, w); 
@@ -357,7 +381,7 @@ public:
   
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
     w[0] = -1;
     w[1] = 1;
@@ -375,8 +399,8 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     derivs.resize(3);
 	
@@ -387,7 +411,7 @@ public:
 
   //! get parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     TetLocate< TetLinearLgn<T> > CL;
@@ -415,7 +439,7 @@ public:
     return get_volume3(this, cd);
   }
   
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
 
   virtual void io (Piostream& str);
 };
@@ -430,7 +454,7 @@ const TypeDescription* get_type_description(TetLinearLgn<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("TetLinearLgn", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
@@ -438,18 +462,18 @@ const TypeDescription* get_type_description(TetLinearLgn<T> *)
 }
 
 template <class T>
-const string
+const std::string
 TetLinearLgn<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("TetLinearLgn");
+    static const std::string nm("TetLinearLgn");
     return nm;
   } else {
     return find_type_name((T *)0);

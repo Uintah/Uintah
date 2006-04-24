@@ -34,8 +34,6 @@
 
 namespace SCIRun {
 
-using std::cerr;
-
 template <>
 Point difference(const Point& interp, const Point& value)
 {
@@ -53,9 +51,9 @@ compare_distance(const Point &interp, const Point &val,
 }
 
 template <>
-bool check_zero(const vector<Point> &val) 
+bool check_zero(const std::vector<Point> &val) 
 {
-  vector<Point>::const_iterator iter = val.begin();
+  std::vector<Point>::const_iterator iter = val.begin();
   while(iter != val.end()) {
     const Point &v=*iter++;
     if (fabs(v.x())>1e-7 || fabs(v.y())>1e-7 || fabs(v.z())>1e-7)
@@ -67,13 +65,9 @@ bool check_zero(const vector<Point> &val)
 
 // locate for Point 
 template <>
-double getnextx3(vector<double> &x, vector<double> &xold, 
-		 const Point& y, const vector<Point>& yd)
+double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+		 const Point& y, const std::vector<Point>& yd)
 {
-  //cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
-  //cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
-  //cerr << x[2] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[2].x() << "\t" << yd[2].y() << "\t" << yd[2].z() << "\n" ;
-
   double J[9], JInv[9];
 
   J[0]=yd[0].x();
@@ -100,8 +94,8 @@ double getnextx3(vector<double> &x, vector<double> &xold,
 
 // locate for Point
 template <>
-double getnextx2(vector<double> &x, vector<double> &xold,
-		 const Point& y, const vector<Point>& yd)
+double getnextx2(std::vector<double> &x, std::vector<double> &xold,
+		 const Point& y, const std::vector<Point>& yd)
 {
   const double J00=yd[0].x();
   const double J10=yd[0].y();
@@ -114,9 +108,6 @@ double getnextx2(vector<double> &x, vector<double> &xold,
   const double F2=y.y();
   const double F3=y.z();
  
-  //  cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
-  //  cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
-  
   if (detJ) {
     double dx=(F2*J01-F2*J21+J21*F1-J11*F1+F3*J11-J01*F3)/detJ;
     double dy=-(-J20*F2+J20*F1+J00*F2+F3*J10-F3*J00-F1*J10)/detJ;
@@ -132,11 +123,10 @@ double getnextx2(vector<double> &x, vector<double> &xold,
 
 // locate for Point
 template <>
-double getnextx1(vector<double> &x, vector<double> &xold,
-		 const Point& y, const vector<Point>& yd)
+double getnextx1(std::vector<double> &x, std::vector<double> &xold,
+		 const Point& y, const std::vector<Point>& yd)
 {
   Point yd0=yd[0]; 
-  // cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd0.x() << "\t" << yd0.y() << "\t" << yd0.z() << "\n" ;
 
   x[0] -= ((yd0.x() ? y.x()/yd0.x() : 0.)+(yd0.y() ? y.y()/yd0.y() : 0.)+(yd0.z() ? y.z()/yd0.z() : 0.))/3.;
   const double dx=x[0]-xold[0];

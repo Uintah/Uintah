@@ -44,10 +44,7 @@
 #  pragma set woff 1506
 #endif
 
-
 namespace SCIRun {
-
-using std::string;
 
 //! Class for describing unit geometry of CrvLinearLgn 
 class CrvLinearLgnUnitElement {
@@ -91,11 +88,11 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_edge(const unsigned /* edge */, 
 			   const unsigned div_per_unit, 
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(div_per_unit + 1);
     for(unsigned i = 0; i <= div_per_unit; i++) {
-      vector<double> &tmp = coords[i];
+      std::vector<double> &tmp = coords[i];
       tmp.resize(1);
       tmp[0] = (double)i / (double)div_per_unit; 
     }
@@ -106,7 +103,7 @@ public:
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned /* face */, 
 			   const unsigned /* div_per_unit */, 
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(0);
   }
@@ -125,7 +122,7 @@ public:
  
   //! find coordinate in interpolation for given value         
   template <class ElemData>
-  bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
+  bool get_coords(const ElemBasis *pEB, std::vector<double> &coords, 
 		  const T& value, const ElemData &cd) const  
   {          
     initial_guess(pEB, value, cd, coords);
@@ -134,7 +131,7 @@ public:
     return false; 
   }
 
-  inline bool check_coords(const vector<double> &x) const  
+  inline bool check_coords(const std::vector<double> &x) const  
   {  
     if (x[0]>=-Dim3Locate<ElemBasis>::thresholdDist && 
 	x[0]<=Dim3Locate<ElemBasis>::thresholdDist1)
@@ -148,12 +145,12 @@ protected:
   //! Reasonable means near and with a derivative!=0 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, 
-		     const ElemData &cd, vector<double> &guess) const
+		     const ElemData &cd, std::vector<double> &guess) const
   {
     double dist = DBL_MAX;
 	
-    vector<double> coord(1);
-    vector<T> derivs(1);
+    std::vector<double> coord(1);
+    std::vector<T> derivs(1);
     guess.resize(1);
     
     const int end = 3;
@@ -250,20 +247,20 @@ public:
   
   virtual void approx_edge(const unsigned /* edge */, 
 			   const unsigned /*div_per_unit*/,
-			   vector<vector<double> > &coords) const
+			   std::vector<std::vector<double> > &coords) const
   {
     coords.resize(2);
-    vector<double> &tmp = coords[0];
+    std::vector<double> &tmp = coords[0];
     tmp.resize(1);
     tmp[0] = 0.0;
-    vector<double> &tmp1 = coords[1];
+    std::vector<double> &tmp1 = coords[1];
     tmp1.resize(1);
     tmp[0] = 1.0;
   }
 
   //! get weight factors at parametric coordinate 
   inline
-  static void get_weights(const vector<double> &coords, double *w) 
+  static void get_weights(const std::vector<double> &coords, double *w) 
   {
     const double x = coords[0];
     w[0] = 1. - x;
@@ -272,7 +269,7 @@ public:
 
   //! get value at parametric coordinate
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
   {
     double w[2];
     get_weights(coords, w); 
@@ -281,7 +278,7 @@ public:
 
   //! get derivative weight factors at parametric coordinate 
   inline
-  static void get_derivate_weights(const vector<double> &coords, double *w) 
+  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
     const double x = coords[0];
     w[0] = -1.;
@@ -290,8 +287,8 @@ public:
 
   //! get first derivative at parametric coordinate
   template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
+  void derivate(const std::vector<double> &coords, const ElemData &cd, 
+		std::vector<T> &derivs) const
   {
     derivs.resize(1);
     derivs[0] = T(cd.node1()-cd.node0());
@@ -299,7 +296,7 @@ public:
 
   //! get parametric coordinate for value within the element
   template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(std::vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     CrvLocate< CrvLinearLgn<T> > CL;
@@ -341,7 +338,7 @@ const TypeDescription* get_type_description(CrvLinearLgn<T> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("CrvLinearLgn", subs, 
-				string(__FILE__),
+				std::string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
   }
@@ -349,18 +346,18 @@ const TypeDescription* get_type_description(CrvLinearLgn<T> *)
 }
 
 template <class T>
-const string
+const std::string
 CrvLinearLgn<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("CrvLinearLgn");
+    static const std::string nm("CrvLinearLgn");
     return nm;
   } else {
     return find_type_name((T *)0);
