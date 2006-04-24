@@ -2885,7 +2885,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       combustion_problem=true;
     }
     double move_particles=1.;
-    if(!d_doGridReset){
+    if(!flags->d_doGridReset){
       move_particles=0.;
     }    
     for(int m = 0; m < numMPMMatls; m++){
@@ -3064,10 +3064,11 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
         bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
         bool pointInAny = lvl->containsPoint(pxnew[idx]);
-        if((!pointInReal && pointInAny) || (pmassNew[idx] <= d_min_part_mass)){
+        if((!pointInReal && pointInAny)
+           || (pmassNew[idx] <= flags->d_min_part_mass)){
           delset->addParticle(idx);
         }
-        if(pvelocitynew[idx].length() > d_max_vel){
+        if(pvelocitynew[idx].length() > flags->d_max_vel){
           pvelocitynew[idx]=pvelocity[idx];
         }
       }
@@ -3081,26 +3082,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         old_dw->get(pColor, lb->pColorLabel, pset);
         new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
         pColor_new.copyData(pColor);
-      }
-    }
-
-    if(combustion_problem){  // Adjust the min. part. mass if dt gets small
-      if(delT < 5.e-9){
-        if(delT < 1.e-10){
-          d_min_part_mass = min(d_min_part_mass*2.0,5.e-9);
-          if(d_myworld->myrank() == 0){
-            cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-          }
-        }
-        else{
-          d_min_part_mass = min(d_min_part_mass*2.0,5.e-12);
-          if(d_myworld->myrank() == 0){
-            cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-          }
-        }
-      }
-      else if(delT > 2.e-8){
-        d_min_part_mass = max(d_min_part_mass/2.0,3.e-15);
       }
     }
 

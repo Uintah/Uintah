@@ -494,9 +494,6 @@ protected:
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
-  bool             d_doGridReset;  // Default is true, standard MPM
-  double           d_min_part_mass; // Minimum particle mass before it's deleted
-  double           d_max_vel; // Maxmimum particle velocity before it's deleted
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
   
