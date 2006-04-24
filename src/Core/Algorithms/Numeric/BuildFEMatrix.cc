@@ -57,13 +57,12 @@ bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, M
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "BuildFEMatrix."+fi.get_field_filename()+".",
+    "BuildFEMatrixAlgorithm."+fi.get_field_filename()+".",
     "BuildFEMatrixAlgo","BuildFEMatrixAlgoT",
     fi.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("SCIRun");
-  ci->add_namespace("ModelCreation");
   
   fi.fill_compile_info(ci);
   
