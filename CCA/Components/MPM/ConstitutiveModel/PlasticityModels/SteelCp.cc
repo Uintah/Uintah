@@ -1,4 +1,5 @@
 #include "SteelCp.h"
+#include <math.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
