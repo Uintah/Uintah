@@ -40,7 +40,7 @@ itcl_class SCIRun_Visualization_ShowString {
 	frame $w.twocol
 	
 # Size
-	iwidgets::labeledframe $w.twocol.size -labeltext "Clock Size"
+	iwidgets::labeledframe $w.twocol.size -labeltext "String Size"
 	set size [$w.twocol.size childsite]
 
         # Size - tiny
