@@ -113,8 +113,6 @@ class Hex
 {
 public:
   int verts[8];
-  int acrossface[6];
-  static const int face_indices[6][4];
 };
 
 class HexMesh:public gtb::Model
@@ -124,7 +122,7 @@ public:
   
   std::vector<gtb::Point3> points;
   std::vector<Hex> hexes;
-  std::vector<int> glIndices;
+//   std::vector<int> glIndices;
   
   virtual void compute_bounding_box() const;
   virtual void compute_centroid() const;
@@ -142,43 +140,6 @@ void HexMesh::compute_centroid() const
 {
   _centroid = Point3::centroid(points);
 }
-
-const int Hex::face_indices[6][4] = {
-    {0,1,3,2},
-    {5,4,6,7},
-    {0,2,6,4},
-    {1,5,7,3},
-    {2,3,7,6},
-    {4,5,1,0}
-};
-
-//! \brief reads hex mesh similar to an OFF triangle file - only
-//difference is that we store the across-face relation as well
-// void HexMesh::load_mesh( FieldHandle hexfieldh )
-// {
-//   ifstream in(filename);
-//   int nverts, nhexes;
-//   in >> nverts >> nhexes;
-  
-//   hexes.resize(nhexes);
-//   points.resize(nverts);
-  
-//   for (int i=0; i<nverts; ++i) 
-//   {
-//     float x, y, z;
-//     in >> x >> y >> z;
-//     points[i] = Point3(x,y,z);
-//   }
-  
-//   for (int i=0; i<nhexes; ++i) 
-//   {
-//     for (unsigned j=0; j<8; ++j)
-//         in >> hexes[i].verts[j];
-//     for (unsigned j=0; j<6; ++j)
-//         in >> hexes[i].acrossface[j];
-//   }
-//}
-
 #endif //__HEXMESH_H
 
 #ifndef __TRIANGLE_MESH_H
@@ -481,7 +442,7 @@ inline void tTriangleMesh<T>::build_structures(const std::vector<int> &facemap, 
 	}
   
     // set the somefaces
-	cerr<<"setting somefaces"<<endl;
+//	cerr<<"setting somefaces"<<endl;
 	for (typename vertex_list::iterator v=verts.begin(); v!=verts.end(); ++v) {
 		v->someface = -1;
 	}
@@ -492,7 +453,7 @@ inline void tTriangleMesh<T>::build_structures(const std::vector<int> &facemap, 
 	}
   
     // build the adjacency info
-	cerr<<"finding neighbors"<<endl;
+//	cerr<<"finding neighbors"<<endl;
 	vector< vector<int> > vertfaces(verts.size());
 	for (unsigned i=0; i<vertfaces.size(); i++) {
 		vertfaces[i].reserve(7);
@@ -526,10 +487,10 @@ inline void tTriangleMesh<T>::build_structures(const std::vector<int> &facemap, 
 		}
 	}
   
-	cerr<<"setting normals"<<endl;
+//	cerr<<"setting normals"<<endl;
 	SetNormals();
   
-	cerr<<"done"<<endl;
+//	cerr<<"done"<<endl;
   
 	tModel<T>::invalidate_all();
 }
