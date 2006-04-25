@@ -54,11 +54,13 @@
 
 #include <map>
 #include <vector>
+#include <string>
 
 namespace SCIRun {
 
 using std::vector;
 using std::map;
+using std::string;
 
 class ViewWindow;
 
