@@ -178,6 +178,26 @@ namespace Uintah {
 
     virtual ConstitutiveModel* clone() = 0;
 
+    void computeDeformationGradientFromDisplacement(
+                                           constNCVariable<Vector> gDisp,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           constParticleVariable<Vector> psize,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           ParticleInterpolator* interp);
+
+    void computeDeformationGradientFromVelocity(
+                                           constNCVariable<Vector> gVel,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> Fold,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           ParticleInterpolator* interp,
+                                           const double& delT);
+
   protected:
 
     inline void computeVelocityGradient(Matrix3& velGrad,
@@ -247,7 +267,7 @@ namespace Uintah {
       {
 	// Compute gradient matrix
 	grad.set(0.0);
-	for(int k = 0; k < 8; k++) {
+	for(int k = 0; k < flag->d_8or27; k++) {
 	  const Vector& vec = gVec[ni[k]];
 	  for (int j = 0; j<3; j++){
 	    double fac = d_S[k][j]*oodx[j];

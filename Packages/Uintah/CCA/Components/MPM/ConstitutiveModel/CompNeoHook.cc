@@ -11,7 +11,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -166,19 +165,11 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
     Matrix3 Identity;
-
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
-
-
     Identity.Identity();
 
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -191,6 +182,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> gvelocity;
     constParticleVariable<Vector> psize;
+    ParticleVariable<double> pdTdt;
     delt_vartype delT;
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
@@ -201,30 +193,38 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     
     old_dw->get(psize,             lb->pSizeLabel,              pset);
     
-    new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+
     new_dw->allocateAndPut(deformationGradient_new,
                      lb->pDeformationMeasureLabel_preReloc, pset);
 
     new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    constParticleVariable<Short27> pgCode;
-    constNCVariable<Vector> Gvelocity; 
-    if (flag->d_fracture) {
-      new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-    }
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
-
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
 
     double rho_orig = matl->getInitialDensity();
+
+    if(flag->d_doGridReset){
+      constNCVariable<Vector> gvelocity;
+      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromVelocity(gvelocity,
+                                             pset, px, psize,
+                                             deformationGradient,
+                                             deformationGradient_new,
+                                             dx, interpolator, delT);
+    }
+    else if(!flag->d_doGridReset){
+      constNCVariable<Vector> gdisplacement;
+      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromDisplacement(gdisplacement,
+                                                 pset, px, psize,
+                                                 deformationGradient_new,
+                                                 dx, interpolator);
+    }
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -232,34 +232,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-
-      // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-      
-      Vector gvel;
-      velGrad.set(0.0);
-      for(int k = 0; k < flag->d_8or27; k++) {
-        if (flag->d_fracture) {
-          if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-          if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]]; 
-        } else
-          gvel = gvelocity[ni[k]];
-        for (int j = 0; j<3; j++){
-          double d_SXoodx = d_S[k][j] * oodx[j];
-          for (int i = 0; i<3; i++) {
-            velGrad(i,j) += gvel[i] * d_SXoodx;
-          }
-        }
-      }
-      
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
 
       // get the volumetric part of the deformation
       J = deformationGradient_new[idx].Determinant();
@@ -281,17 +253,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 
       // get the hydrostatic part of the stress
       p = 0.5*bulk*(J - 1.0/J);
-
-      // Add bulk viscosity
-      /*
-      if (flag->d_artificial_viscosity) {
-        Matrix3 tensorD = (velGrad + velGrad.Transpose())*0.5;
-        double Dkk = tensorD.Trace();
-        double c_bulk = sqrt(bulk/rho_cur);
-        double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
-        p -= q;
-      }
-      */
 
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*p + Shear/J;

@@ -282,13 +282,12 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    //
-    Matrix3 velGrad,deformationGradientInc;
     double J,p;
     double U,W,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Matrix3 Identity;
+    Identity.Identity();
     Matrix3 RCG_tilde, LCG_tilde;
     Matrix3 pressure, deviatoric_stress, fiber_stress;
     double I1tilde,I2tilde,I4tilde,lambda_tilde;
@@ -297,17 +296,8 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     Vector deformed_fiber_vector;
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
-
-
-    Identity.Identity();
 
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -321,7 +311,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
     ParticleVariable<Vector> pfiberdir_carry;
-    constNCVariable<Vector> gvelocity;
     constParticleVariable<Vector> psize;
     delt_vartype delT;
 
@@ -343,7 +332,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
     new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
-    new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
@@ -358,38 +346,33 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     double crit_shear = d_initialData.crit_shear;
     double crit_stretch = d_initialData.crit_stretch;
 
+    if(flag->d_doGridReset){
+      constNCVariable<Vector> gvelocity;
+      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromVelocity(gvelocity,
+                                             pset, px, psize,
+                                             deformationGradient,
+                                             deformationGradient_new,
+                                             dx, interpolator, delT);
+    }
+    else if(!flag->d_doGridReset){
+      constNCVariable<Vector> gdisplacement;
+      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromDisplacement(gdisplacement,
+                                                 pset, px, psize,
+                                                 deformationGradient_new,
+                                                 dx, interpolator);
+    }
+
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      // Assign zero internal heating by default - modify if necessary.
-      pdTdt[idx] = 0.0;
-      // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
-      Vector gvel;
-      velGrad.set(0.0);
-      for(int k = 0; k < flag->d_8or27; k++) {
-        gvel = gvelocity[ni[k]];
-        for (int j = 0; j<3; j++){
-          double d_SXoodx = d_S[k][j] * oodx[j];
-          for (int i = 0; i<3; i++) {
-            velGrad(i,j) += gvel[i] * d_SXoodx;
-          }
-        }
-      }
-      
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-        deformationGradient[idx];
-
       // get the volumetric part of the deformation
       J = deformationGradient_new[idx].Determinant();
+
+      // Assign zero internal heating by default - modify if necessary.
+      pdTdt[idx] = 0.0;
 
       // carry forward fiber direction
       pfiberdir_carry[idx] = pfiberdir[idx];
