@@ -74,8 +74,14 @@ WARNING
     void printStatistics() const;
 
     //////////
-    // Computes the physical boundaries for the grid
+    // Computes the physical boundaries for the grid (including extra cells)
     void getSpatialRange(SCIRun::BBox& b) const;
+
+    ////////// 
+    // Returns the boundary of the grid exactly (without
+    // extra cells).  The value returned is the same value
+    // as found in the .ups file.
+    void getInteriorSpatialRange(SCIRun::BBox& b) const;
     
     //////////
     // Computes the length of the grid

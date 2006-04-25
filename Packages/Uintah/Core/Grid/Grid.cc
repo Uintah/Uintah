@@ -176,6 +176,18 @@ void Grid::getSpatialRange(BBox& b) const
   }
 }
 
+////////// 
+// Returns the boundary of the grid exactly (without
+// extra cells).  The value returned is the same value
+// as found in the .ups file.
+void Grid::getInteriorSpatialRange(BBox& b) const
+{
+  // just call the same function for all the levels
+  for(int l=0; l < numLevels(); l++) {
+    getLevel(l)->getInteriorSpatialRange(b);
+  }
+}
+
 
 //__________________________________
 // Computes the length in each direction of the grid

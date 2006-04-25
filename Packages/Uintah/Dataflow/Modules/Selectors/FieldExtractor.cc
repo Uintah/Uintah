@@ -525,13 +525,18 @@ FieldExtractorAlgo::set_field_properties( Field* field,
                                           QueryInfo& qinfo,
                                           IntVector& offset )
 {
-  field->set_property( "name",    string(qinfo.varname), true);
-  field->set_property( "generation", qinfo.generation, true);
-  field->set_property( "timestep",   qinfo.timestep, true);
-  field->set_property( "offset",     IntVector(offset), true);
-  field->set_property( "delta_t",    qinfo.dt, true);
-  field->set_property( "time",       qinfo.time, true);
-  field->set_property( "vartype",    int(qinfo.type->getType()),true);
+  BBox b;
+  qinfo.grid->getInteriorSpatialRange( b );
+
+  field->set_property( "spacial_min", b.min(), true);
+  field->set_property( "spacial_max", b.max(), true);
+  field->set_property( "name",        string(qinfo.varname), true);
+  field->set_property( "generation",  qinfo.generation, true);
+  field->set_property( "timestep",    qinfo.timestep, true);
+  field->set_property( "offset",      IntVector(offset), true);
+  field->set_property( "delta_t",     qinfo.dt, true);
+  field->set_property( "time",        qinfo.time, true);
+  field->set_property( "vartype",     int(qinfo.type->getType()),true);
 }
 
 

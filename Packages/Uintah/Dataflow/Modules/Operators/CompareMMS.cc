@@ -120,10 +120,27 @@ CompareMMS::execute()
     return;
   }
 
+  bool   found_properties;
   string field_name;
   double field_time;
-  fh->get_property( "varname", field_name );
-  fh->get_property( "time",    field_time );
+
+  found_properties = fh->get_property( "varname", field_name );
+  found_properties = fh->get_property( "time",    field_time );
+
+  Point spacial_min, spacial_max;
+  found_properties = fh->get_property( "spacial_min", spacial_min );
+  found_properties = fh->get_property( "spacial_max", spacial_max );
+
+  cout << "field range is: " << spacial_min << " to " << spacial_max << "\n";
+
+  IntVector field_offset;
+  found_properties = fh->get_property( "offset", field_offset );
+
+  cout << "offset is " << field_offset << "\n";
+
+  if( !found_properties ) {
+    cout << "This field did not include all the properties I expected...\n";
+  }
 
   enum field_type_e { PRESSURE, UVEL, VVEL, INVALID };
   field_type_e field_type;
@@ -188,24 +205,29 @@ CompareMMS::execute()
 
     LVFieldCBD *lvf = scinew LVFieldCBD(outputMesh);
 
+    char field_info[128];
+    sprintf( field_info, "Exact %s - %lf", field_name.c_str(), field_time );
+    lvf->set_property( "varname", string(field_info), true );
+
     MMS * mms = new MMS1();
 
     bool   showDif = (gui_output_choice_.get() == 2);
     double time = gui_field_time_.get();
 
-// Indexing in SCIRun fields apparently starts from 0, thus start from zero and subtract 1 from high index
+    // Indexing in SCIRun fields apparently starts from 0, thus start
+    // from zero and subtract 1 from high index
     for( unsigned int xx = 0; xx < dimensions[0]-1; xx++ ) {
       for( unsigned int yy = 0; yy < dimensions[1]-1; yy++ ) {
         for( unsigned int zz = 0; zz < dimensions[2]-1; zz++ ) {
           LVMesh::Cell::index_type pos(outputMesh.get_rep(),xx,yy,zz);
-
-          LVMesh::Cell::index_type inputMeshPos(mesh,xx,yy,zz);
 
 //WARNING: "grid index to physical position" conversion has been hardcoded here!
           double x_pos = -0.5 + (xx-0.5) * 1.0 / 50;
           double y_pos = -0.5 + (yy-0.5) * 1.0 / 50;
 
           double calculatedValue;
+          string msg;
+
           switch( field_type ) {
           case PRESSURE:
             calculatedValue = mms->pressure( x_pos, y_pos, time );
@@ -217,12 +239,17 @@ CompareMMS::execute()
             calculatedValue = mms->vVelocity( x_pos, y_pos, time );
             break;
           case INVALID:
-            string msg = "We should not reach this point anyway, but you have selected an usupported by MMS variable";
+            msg = "We should not reach this point anyway, but you have selected a variable that is usupported by MMS";
             error(msg);
             break;
+          default:
+            printf( "ERROR: CompareMMS.cc - Bad field_type %d\n", field_type );
+            exit(1);
           }
           if( showDif ) {
             double val;
+            LVMesh::Cell::index_type inputMeshPos(mesh,xx,yy,zz);
+
             field->value( val, inputMeshPos ); // Get the value at pos
 
             lvf->set_value( calculatedValue - val, pos );
@@ -231,7 +258,6 @@ CompareMMS::execute()
           }
         }
       }
-
     } 
     ofh = lvf;
 

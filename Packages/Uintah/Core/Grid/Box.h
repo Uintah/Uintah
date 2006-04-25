@@ -4,7 +4,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
-#include <iosfwd>
+#include   <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -81,7 +81,7 @@ using namespace SCIRun;
 	 return d_lower.x() >= d_upper.x() || d_lower.y() >= d_upper.y() || d_lower.z() >= d_upper.z();
       }
 
-      friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
+      friend std::ostream& operator<<(std::ostream& out, const Box& b);
 
    private:
       Point d_lower;
