@@ -1360,63 +1360,10 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
           //  make sure that this face isn't on the original boundary
         bool is_old_boundary = false;
         unsigned int i;
-//        unsigned int i, j;
         typename FIELD::mesh_type::Face::index_type old_face;
-//NOTE TO JS: Testing new method for detecting faces on the old boundary...
-//         Point p;
-//         clipped->get_center( p, fi );
-//         typename FIELD::mesh_type::Face::index_type old_face;
-//         mesh->locate( old_face, p );
-//         for( i = 0; i < original_face_list.size(); i++ )
-//         {
-//           if( original_face_list[i] == old_face )
-//           {
-//             is_old_boundary = true;
-//             break;
-//           }
-//         }
-//end NOTE TO JS: Testing new method for detecting faces on the old boundary...
-//NOTE TO JS: New boundary face detection algorithm...
 
         typename FIELD::mesh_type::Node::array_type face_nodes;
         clipped->get_nodes( face_nodes, fi );
-//         typename FIELD::mesh_type::Face::array_type face_list1;
-//         typename FIELD::mesh_type::Face::array_type face_list2;
-//         typename FIELD::mesh_type::Face::array_type face_list3;
-//         typename FIELD::mesh_type::Face::array_type face_list4;
-//         mesh->get_faces( face_list1, nodemap[face_nodes[0]] );
-//         mesh->get_faces( face_list2, nodemap[face_nodes[1]] );
-//         mesh->get_faces( face_list3, nodemap[face_nodes[2]] );
-//         mesh->get_faces( face_list4, nodemap[face_nodes[3]] ); 
-//         vector<typename FIELD::mesh_type::Face::index_type> cull_list1;
-//         vector<typename FIELD::mesh_type::Face::index_type> cull_list2;
-//         vector<typename FIELD::mesh_type::Face::index_type> cull_list3;
-//         for( i = 0; i < face_list1.size(); i++ );
-//         {
-//           for( j = 0; j < face_list3.size(); j++ )
-//           {
-//             if( face_list1[i] == face_list3[j] )
-//             {
-//               cull_list1.push_back( face_list1[i] );
-//               break;
-//             }
-//           }
-//         }
-        
-//         if( cull_list1.size() > 0 )
-//         {
-//           for( i = 0; i < cull_list1.size(); i++ )
-//           {
-//             for( j = 0; j < face_list2.size(); j++ )
-//             {
-//               if( cull_list1[i] == face_list2[j] )
-//               {
-//                 cull_list1.push_back( face_list1[i] );
-//                 break;
-//               }
-//             }
-
-//        old_face = 0;
         if( mesh->get_face( old_face, clipped_to_original_nodemap[face_nodes[0]], 
                             clipped_to_original_nodemap[face_nodes[1]],
                             clipped_to_original_nodemap[face_nodes[2]], 
@@ -1429,16 +1376,6 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
             is_old_boundary = true;
           }
         }
-        
-//         for( i = 0; i < original_face_list.size(); i++ )
-//         {
-//           if( original_face_list[i] == old_face )
-//           {
-//             is_old_boundary = true;
-//             break;
-//           }
-//         }
-//end NOTE TO JS: New boundary face detection algorithm...
         
           //Don't add the nodes from the faces of the original boundary to the list of nodes
           // that we'll be projecting later to create the new sheet of hex elements...
@@ -1472,10 +1409,7 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
   tri_mesh->synchronize( Mesh::LOCATE_E );
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map;
   unsigned int i; 
-//  cout << "Original face list = " << original_face_list.size() << endl;
-//  cout << "Original boundary = " << original_boundary.size() << " new_boundary = " << face_list.size() << endl;
-  
-//  cout << "Projecting " << node_list.size() << " nodes--\n";
+
   for( i = 0; i < node_list.size(); i++ )
   {
     typename FIELD::mesh_type::Node::index_type this_node = node_list[i];
@@ -1486,7 +1420,6 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
     typename FIELD::mesh_type::Face::index_type face_id;
     tri_mesh->find_closest_elem( new_result, face_id, n_p );
     Vector dist_vect = n_p - new_result;
-//    cout << "   Projecting node " << this_node << ": projection distance = " << dist_vect.length() << endl;
     
       //since finding the closest face can be slow, update the progress meter to let the
       // user know that we are performing calculations and the process is not hung up...
