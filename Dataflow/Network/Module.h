@@ -473,6 +473,7 @@ Module::get_dynamic_input_handles(std::string name,
       {
 	//! Get the handle and check for data.
 	DH handle;
+
 	if (dataport->get(handle) && handle.get_rep())
         {
 	  handles.push_back(handle);
@@ -482,18 +483,25 @@ Module::get_dynamic_input_handles(std::string name,
 	  if( inputs_changed_ == false ) {
 	    inputs_changed_ = dataport->changed();
 	  }
-	  ++nPorts;
 	  return_state = true;
+
+	} else {
+	  handles.push_back(0);
 	}
+
+	++nPorts;
       }
       ++pi;
     }
   }
 
+  //! The last port is always empty so remove it.
+  handles.pop_back();
+
   if (return_state == false) 
   {
-    //! At least the first input on the port was required to have a valid
-    //! handle and data so report an error.
+    //! At least one port was required to have a valid ! handle and
+    //data so report an error.
     if( data_required ) {
       error( "No handle or representation for dynamic input port #" +
 	     to_string(nPorts) + " ' " +name + "'." );
@@ -502,7 +510,7 @@ Module::get_dynamic_input_handles(std::string name,
     //! the set of handles is empty.
     handles.clear();
   }
- 
+
   return return_state;
 }
 

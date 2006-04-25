@@ -67,7 +67,8 @@ private:
   string port_name_;
 
   GuiInt gui_use_first_valid_;
-  GuiInt gui_port_index_;
+  GuiInt gui_port_valid_index_;
+  GuiInt gui_port_selected_index_;
 
   bool gui_is_built_;
   HANDLE_TYPE output_handle_;
@@ -82,7 +83,8 @@ ChooseModule< HANDLE_TYPE >::ChooseModule(const std::string& module_name,
   : Module(module_name, ctx, Filter, catagory, package),
     port_name_(port_name),
     gui_use_first_valid_(get_ctx()->subVar("use-first-valid"), 1),
-    gui_port_index_(get_ctx()->subVar("port-index"), 0),
+    gui_port_valid_index_(get_ctx()->subVar("port-valid-index"), 0),
+    gui_port_selected_index_(get_ctx()->subVar("port-selected-index"), 0),
     gui_is_built_(false),
     output_handle_(0)
 {
@@ -98,19 +100,25 @@ std::string
 ChooseModule< HANDLE_TYPE >::get_names( std::vector< HANDLE_TYPE >& handles,
 					std::string prop_name)
 {
-  unsigned int idx = 0;
   std::string port_names("");
   std::string prop;
-  while( idx < handles.size() ){
+
+  for( unsigned int idx = 0; idx<handles.size(); ++idx ) {
+
+    port_names += "--Port_" + to_string(idx) + "_";
+
+    if( handles[idx].get_rep() ) {
       if( (handles[idx]->get_property(prop_name, prop )) ) {
-        port_names += prop + " ";
-	// use the port index to specify the name
-      } else if( handles[idx].get_rep() ){
-        port_names += "--port_" + to_string(idx) + "-- ";
+	port_names += prop;
+
+      } else {
+	port_names += "UNKNOWN";
+      }
     } else {
-      port_names += "invalid_port ";
+      port_names +=  "INVALID_OR_DISABLED";
     }
-    ++idx;
+
+    port_names +=  "-- ";
   }
   return port_names;
 }
@@ -134,7 +142,6 @@ ChooseModule< HANDLE_TYPE >::execute()
     }
   }
 
-
   // Check to see if any values have changed.
   if( inputs_changed_ ||
       
@@ -143,14 +150,14 @@ ChooseModule< HANDLE_TYPE >::execute()
       gui_use_first_valid_.changed( true ) ||
 
       (gui_use_first_valid_.get() == 1 ) ||      
-      (gui_use_first_valid_.get() == 0 &&  gui_port_index_.changed( true )) ||
+      (gui_use_first_valid_.get() == 0 && 
+       gui_port_selected_index_.changed( true )) ||
 
       execute_error_ ) {
 
     update_state(Executing);
 
     execute_error_ = false;
-
 
     port_names += get_names( handles );
     gui_->eval(id_ + " isVisible", visible);
@@ -160,8 +167,6 @@ ChooseModule< HANDLE_TYPE >::execute()
       gui_->execute(id_ + " set_ports " + port_names.c_str()); 
       gui_->execute(id_ + " build_port_list");
     }
-
-
   
     // use the first valid field
     if (gui_use_first_valid_.get()) {
@@ -172,9 +177,8 @@ ChooseModule< HANDLE_TYPE >::execute()
       if( idx < handles.size() && handles[idx].get_rep() ) {
 	output_handle_ = handles[idx];
 
-	gui_port_index_.set( idx );
-
-	gui_port_index_.reset();
+	gui_port_valid_index_.set( idx );
+	gui_port_valid_index_.reset();
 
       } else {
 	error("Did not find any valid fields.");
@@ -185,13 +189,17 @@ ChooseModule< HANDLE_TYPE >::execute()
 
     } else {
       // use the index specified
-      int idx = gui_port_index_.get();
+      int idx = gui_port_selected_index_.get();
 
       if ( 0 <= idx && idx < (int) handles.size() ) {
 	if( handles[idx].get_rep() ) {
+
 	  output_handle_ = handles[idx];
 
 	} else {
+
+	  output_handle_ = 0;
+	  
 	  error( "Port " + to_string(idx) + " did not contain a valid field.");
 	  execute_error_ = true;
 	  return;
