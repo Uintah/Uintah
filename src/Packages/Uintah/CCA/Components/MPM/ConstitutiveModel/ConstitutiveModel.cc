@@ -134,6 +134,9 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
   task->requires(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
+  if(!flag->d_doGridReset){
+    task->requires(Task::OldDW, lb->gDisplacementLabel,     matlset, gac, NGN);
+  }
   task->requires(Task::OldDW, lb->pSizeLabel,               matlset, gnone);
   task->requires(Task::OldDW, lb->pTempPreviousLabel,       matlset, gnone);
   if (flag->d_fracture) {
@@ -1091,3 +1094,74 @@ ConstitutiveModel::BtDB(const double B[6][24],
   Kmat[23][23] = t2238*B[2][23]+t2233*B[4][23]+t2222*B[5][23];
 }
 
+void
+ConstitutiveModel::computeDeformationGradientFromDisplacement(
+                                           constNCVariable<Vector> gDisp,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           constParticleVariable<Vector> psize,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           ParticleInterpolator* interp) 
+{
+  Matrix3 dispGrad,Identity;
+  Identity.Identity();
+  vector<IntVector> ni;
+  ni.reserve(interp->size());
+  vector<Vector> d_S;
+  d_S.reserve(interp->size());
+  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+                                                                            
+  for(ParticleSubset::iterator iter = pset->begin();
+       iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+                                                                            
+    // Get the node indices that surround the cell
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+                                                                            
+    computeGrad(dispGrad, ni, d_S, oodx, gDisp);
+
+    // Update the deformation gradient tensor to its time n+1 value.
+    // Compute the deformation gradient from the displacement gradient
+    Fnew[idx] = Identity + dispGrad;
+  }
+}
+
+void 
+ConstitutiveModel::computeDeformationGradientFromVelocity(
+                                           constNCVariable<Vector> gVel,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> Fold,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           ParticleInterpolator* interp,
+                                           const double& delT)
+{
+    Matrix3 velGrad,deformationGradientInc, Identity;
+    Identity.Identity();
+    vector<IntVector> ni;
+    ni.reserve(interp->size());
+    vector<Vector> d_S;
+    d_S.reserve(interp->size());
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+                                                                                
+    for(ParticleSubset::iterator iter = pset->begin();
+      iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+
+      // Get the node indices that surround the cell
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+      computeGrad(velGrad, ni, d_S, oodx, gVel);
+
+      // Compute the deformation gradient increment using the time_step
+      // velocity gradient
+      // F_n^np1 = dudx * dt + Identity
+      deformationGradientInc = velGrad * delT + Identity;
+                                                                              
+      // Update the deformation gradient tensor to its time n+1 value.
+      Fnew[idx] = deformationGradientInc * Fold[idx];
+    }
+}
