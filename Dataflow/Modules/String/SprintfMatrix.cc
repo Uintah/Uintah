@@ -86,7 +86,7 @@ void SprintfMatrix::execute()
   std::string   format, output;
   StringHandle  stringH;
   
-  MatrixHandle currentmatrix;
+  MatrixHandle currentmatrix = 0;
   unsigned int inputport = 1;
   unsigned int matrixindex = 0;
   double       datavalue = 0;
@@ -159,12 +159,12 @@ void SprintfMatrix::execute()
             {
               matrix_iport->get(currentmatrix);
               matrixindex = 0;
-              if (currentmatrix.get_rep() != 0)
+              if (currentmatrix.get_rep())
               {
                 if (currentmatrix->get_data_size() == 0) currentmatrix = 0;
               }
               
-              if (currentmatrix.get_rep() != 0)
+              if (currentmatrix.get_rep())
               {
                 // Check whether we need to transpose matrix
                 // If so we transpose the whole matrix
@@ -209,11 +209,6 @@ void SprintfMatrix::execute()
             {
               datavalue = 0.0;
             }
-            if (matrixindex == (int)currentmatrix->get_data_size()) 
-            { 
-              currentmatrix = 0; 
-              if (inputport == (num_input_ports()-1)) { lastdata = true; lastport = true; }
-            }
           }
         }
         
@@ -224,7 +219,6 @@ void SprintfMatrix::execute()
           output += fstr;
           i = j+1;
         }
-
         else if ((format[j] == 'd')||(format[j] == 'o'))
         {
           int scalar = static_cast<int>(datavalue);
