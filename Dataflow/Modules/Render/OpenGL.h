@@ -78,15 +78,15 @@
 #include <Core/Util/Timer.h>
 
 #ifdef _WIN32
-#include <sci_gl.h>
+#  include <sci_gl.h>
 #endif
 
 #ifdef HAVE_MPEG
-#include <mpege.h>
+#  include <mpege.h>
 #endif // HAVE_MPEG
 
 #ifdef __sgi
-#include <X11/extensions/SGIStereo.h>
+#  include <X11/extensions/SGIStereo.h>
 #endif // __sgi
 
 namespace SCIRun {
@@ -139,38 +139,38 @@ class OpenGL {
 public:
   OpenGL(GuiInterface* gui, Viewer *, ViewWindow *);
   ~OpenGL();
-  void			kill_helper();
-  void			start_helper();
-  void			redraw_loop();
-  void			get_pick(int, int, GeomHandle&, GeomPickHandle&, int&);
-  void			redraw(double tbeg, double tend,
-			       int ntimesteps, double frametime);
-  void			getData(int datamask,
-				FutureValue<GeometryData*>* result);
-  bool			compute_depth(const View& view,
-				      double& near, double& far);
-  bool			compute_fog_depth(const View& view,
-					  double& near, double& far,
-					  bool visible_only);
-  void			saveImage(const string& fname,
-				  const string& type = "ppm",
-				  int x=640, int y=512);
+  void                  kill_helper();
+  void                  start_helper();
+  void                  redraw_loop();
+  void                  get_pick(int, int, GeomHandle&, GeomPickHandle&, int&);
+  void                  redraw(double tbeg, double tend,
+                               int ntimesteps, double frametime);
+  void                  getData(int datamask,
+                                FutureValue<GeometryData*>* result);
+  bool                  compute_depth(const View& view,
+                                      double& near, double& far);
+  bool                  compute_fog_depth(const View& view,
+                                          double& near, double& far,
+                                          bool visible_only);
+  void                  saveImage(const string& fname,
+                                  const string& type = "ppm",
+                                  int x=640, int y=512);
 
   // Adds a DO_SYNC_FRAME to the send_mailbox_.
   void                  scheduleSyncFrame();
   
   // Compute world space point under cursor (x,y).  If successful,
   // set 'p' to that value & return true.  Otherwise, return false.
-  bool			pick_scene(int x, int y, Point *p);
+  bool                  pick_scene(int x, int y, Point *p);
 
   // Public Member Variables
-  int			xres_;
-  int			yres_;
-  bool			doing_image_p_;
-  bool			doing_movie_p_;
-  bool			make_MPEG_p_;
-  int			current_movie_frame_;
-  string		movie_name_;
+  int                   xres_;
+  int                   yres_;
+  bool                  doing_image_p_;
+  bool                  doing_movie_p_;
+  bool                  make_MPEG_p_;
+  int                   current_movie_frame_;
+  string                movie_name_;
   // True if we want only to dump a movie frame when a DO_SYNC_FRAME
   // message is received.
   bool                  doing_sync_frame_;
@@ -179,85 +179,85 @@ public:
   // regular redraws.
   bool                  dump_sync_frame_;
 
-  TkOpenGLContext *	tk_gl_context_;
-  TkOpenGLContext *	old_tk_gl_context_;
-  string		myname_;
+  TkOpenGLContext *     tk_gl_context_;
+  TkOpenGLContext *     old_tk_gl_context_;
+  string                myname_;
 #ifdef __APPLE__
   bool                  apple_wait_a_second_;
 #endif
 
 private:
-  void			redraw_frame();
-  void			setFrustumToWindowPortion();
-  void			deriveFrustum();
-  void			redraw_obj(Viewer*, ViewWindow*, GeomHandle obj);
-  void			pick_draw_obj(Viewer* , ViewWindow*, GeomHandle obj);
-  void			dump_image(const string&, const string& type = "raw");
-  void			put_scanline(int, int, Color* scanline, int repeat=1);
-  void			StartMpeg(const string& fname);
-  void			AddMpegFrame();
-  void			EndMpeg();
-  void			real_get_pick(int, int, GeomHandle&, 
-				      GeomPickHandle&, int&);
-  void			render_and_save_image(int x, int y,
-					      const string& fname,
-					      const string& type = "ppm");
-  void			real_getData(int datamask, 
-				     FutureValue<GeometryData*>* result);
-  void			render_rotation_axis(const View &view,
-					     bool do_stereo, int i, 
-					     const Vector &eyesep);
+  void                  redraw_frame();
+  void                  setFrustumToWindowPortion();
+  void                  deriveFrustum();
+  void                  redraw_obj(Viewer*, ViewWindow*, GeomHandle obj);
+  void                  pick_draw_obj(Viewer* , ViewWindow*, GeomHandle obj);
+  void                  dump_image(const string&, const string& type = "raw");
+  void                  put_scanline(int, int, Color* scanline, int repeat=1);
+  void                  StartMpeg(const string& fname);
+  void                  AddMpegFrame();
+  void                  EndMpeg();
+  void                  real_get_pick(int, int, GeomHandle&, 
+                                      GeomPickHandle&, int&);
+  void                  render_and_save_image( int x, int y,
+                                               const string& fname,
+                                               const string& type = "ppm" );
+  void                  real_getData(int datamask, 
+                                     FutureValue<GeometryData*>* result);
+  void                  render_rotation_axis(const View &view,
+                                             bool do_stereo, int i, 
+                                             const Vector &eyesep);
 
   // Private Member Variables
-  GuiInterface*		gui_;
-  Runnable *		helper_;
-  Thread *		helper_thread_;
+  GuiInterface*         gui_;
+  Runnable *            helper_;
+  Thread *              helper_thread_;
 
 
-  Viewer*		viewer_;
-  ViewWindow*		view_window_;
-  DrawInfoOpenGL*	drawinfo_;
-  WallClockTimer	fps_timer_;
-  Frustum		frustum_;
-  HiRes			hi_res_;
-  bool			dead_;
-  bool			do_hi_res_;
-  bool			encoding_mpeg_;
-  int			max_gl_lights_;
-  int			animate_num_frames_;
-  double		animate_time_begin_;
-  double		animate_time_end_;
-  double		animate_framerate_;
-  double		znear_;
-  double		zfar_;
-  double		current_time_;
-  unsigned int		frame_count_;
+  Viewer*               viewer_;
+  ViewWindow*           view_window_;
+  DrawInfoOpenGL*       drawinfo_;
+  WallClockTimer        fps_timer_;
+  Frustum               frustum_;
+  HiRes                 hi_res_;
+  bool                  dead_;
+  bool                  do_hi_res_;
+  bool                  encoding_mpeg_;
+  int                   max_gl_lights_;
+  int                   animate_num_frames_;
+  double                animate_time_begin_;
+  double                animate_time_end_;
+  double                animate_framerate_;
+  double                znear_;
+  double                zfar_;
+  double                current_time_;
+  unsigned int          frame_count_;
   // HACK -- support data for get_pixel_depth, assume no screen is > 1280x1024
-  float			depth_buffer_[1310720]; // 1310720 = 1280x1024 
-  GLdouble		modelview_matrix_[16];
-  GLdouble		projection_matrix_[16];
-  GLint			viewport_matrix_[4];
-  View			cached_view_;
+  float                 depth_buffer_[1310720]; // 1310720 = 1280x1024 
+  GLdouble              modelview_matrix_[16];
+  GLdouble              projection_matrix_[16];
+  GLint                 viewport_matrix_[4];
+  View                  cached_view_;
 
   // Mouse Picking variables
-  int			send_pick_x_;
-  int			send_pick_y_;
-  int			ret_pick_index_;
-  GeomHandle		ret_pick_obj_;
-  GeomPickHandle	ret_pick_pick_;
+  int                   send_pick_x_;
+  int                   send_pick_y_;
+  int                   ret_pick_index_;
+  GeomHandle            ret_pick_obj_;
+  GeomPickHandle        ret_pick_pick_;
 
   // Thread Communication Mailboxes
-  Mailbox<int>		send_mailbox_;
-  Mailbox<int>		recv_mailbox_;
-  Mailbox<GetReq>	get_mailbox_;
-  Mailbox<ImgReq>	img_mailbox_;
+  Mailbox<int>          send_mailbox_;
+  Mailbox<int>          recv_mailbox_;
+  Mailbox<GetReq>       get_mailbox_;
+  Mailbox<ImgReq>       img_mailbox_;
 
 #ifdef HAVE_MPEG
-  FILE *		mpeg_file_;
-  MPEGe_options		mpeg_options_;
+  FILE *                mpeg_file_;
+  MPEGe_options         mpeg_options_;
 #endif // HAVE_MPEG
 
-  Pbuffer		*pbuffer_;
+  Pbuffer               *pbuffer_;
 };
 
 } // End namespace SCIRun

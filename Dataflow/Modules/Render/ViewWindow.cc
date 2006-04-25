@@ -2072,10 +2072,17 @@ ViewWindow::setMovieFrame( int movieframe )
 
 
 void
-ViewWindow::setMessage( string message )
+ViewWindow::setMovieMessage( const string & message, bool error )
 {
   gui_->lock();
-  GuiString movieMessage(ctx_->subVar(tclID_+"-message",false));
+  GuiString movieMessage(ctx_->subVar(tclID_+"-movieMessage",false));
+
+  if( error ) {
+    cerr << message << "\n";
+    setMovie( 0 ); // stop recording
+    gui_->eval( string("createSciDialog -title \"Movie Creation Error\" -error -message \"") + message + "\"");
+  }
+
   if (movieMessage.valid())
   {
     movieMessage.set( message );

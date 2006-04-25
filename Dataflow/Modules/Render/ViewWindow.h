@@ -130,9 +130,14 @@ public:
   void			getData(int mask, FutureValue<GeometryData*>* result);
   GeomHandle		createGenAxes();   
 
+  ////////////////
+  // Set movie recording values.
+  //   - state of 0 means stop recording.
   void                  setMovie( int state );
+  //   - set the frame at which to start numbering output files
   void                  setMovieFrame( int movieframe );
-  void                  setMessage( string message );
+  //   - Places a message on the movie dialog.  If there is an error, stops movie recording.
+  void                  setMovieMessage( const string & message, bool error = false );
 
   // This is called by the Viewer when the module has executed.  If a
   // movie is being recorded, then a frame is created based on the

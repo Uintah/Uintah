@@ -469,6 +469,7 @@ OpenGL::redraw_loop()
     if (do_hi_res_)
     {
       render_and_save_image(resx, resy, fname, ftype);
+
       do_hi_res_ = false;
     }
 #ifdef __APPLE__
@@ -494,10 +495,10 @@ OpenGL::redraw_loop()
 }
 
 
-
 void
-OpenGL::render_and_save_image(int x, int y,
-                              const string& fname, const string &ftype)
+OpenGL::render_and_save_image( int x, int y,
+                               const string & fname, const string & ftype )
+                               
 {
   bool use_convert = false;
 
@@ -521,7 +522,8 @@ OpenGL::render_and_save_image(int x, int y,
 
       if (ext != "png") {
 	if (system("convert -version") != 0) {
-	  cerr << "Error - Unsupported extension " << ext << ". Program \"convert\" not found in the path.\n";
+          view_window_->setMovieMessage( string("Error - Unsupported extension ") + ext + 
+                                         ". Program \"convert\" not found in the path", true );
 	  return;
 	} else {
 	  use_convert = true;
@@ -580,7 +582,7 @@ OpenGL::render_and_save_image(int x, int y,
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
   if (png == NULL) {
-    cerr << "ERROR - Failed to create PNG write struct\n";
+    view_window_->setMovieMessage( "ERROR - Failed to create PNG write struct", true );
     return;
   }
 
@@ -588,13 +590,13 @@ OpenGL::render_and_save_image(int x, int y,
   png_infop info = png_create_info_struct(png);
 
   if (info == NULL) {
-    cerr << "ERROR - Failed to create PNG info struct\n";
+    view_window_->setMovieMessage( "ERROR - Failed to create PNG info struct", true );
     png_destroy_write_struct(&png, NULL);
     return;
   }
 
   if (setjmp(png_jmpbuf(png))) {
-    cerr << "ERROR - Initializing PNG.\n";
+    view_window_->setMovieMessage( "ERROR - Initializing PNG.", true );
     png_destroy_write_struct(&png, &info);
     return;
   }  
@@ -615,11 +617,8 @@ OpenGL::render_and_save_image(int x, int y,
     image_file = scinew ofstream(fname.c_str());
     if ( !image_file )
     {
-    ostringstream str;
-    str << "ERROR opening file: " << fname.c_str();
-    view_window_->setMessage( str.str() );
-    cerr<<str.str()<<"\n";
-    return;
+      view_window_->setMovieMessage( "Error Opening File: " + fname, true );
+      return;
     }
 
     channel_bytes = 1;
@@ -639,10 +638,7 @@ OpenGL::render_and_save_image(int x, int y,
       ofstream *nhdr_file = scinew ofstream((fname+string(".nhdr")).c_str());
       if ( !nhdr_file )
       {
-	ostringstream str;
-	str << "ERROR opening file: " << (fname+string(".nhdr")).c_str();
-	view_window_->setMessage( str.str() );
-	cerr<<str.str()<<"\n";
+	view_window_->setMovieMessage( string("ERROR opening file: ") + fname + ".nhdr", true );
 	return;
       }
       (*nhdr_file) << "NRRD0001" << std::endl;
@@ -775,7 +771,7 @@ OpenGL::render_and_save_image(int x, int y,
     {
       /* end write */
       if (setjmp(png_jmpbuf(png))) {
-	cerr << "Error during end of PNG write\n";
+        view_window_->setMovieMessage( "Error during end of PNG write", true );
 	png_destroy_write_struct(&png, &info);
 	return;
       }
@@ -804,6 +800,7 @@ OpenGL::render_and_save_image(int x, int y,
   gui_->unlock();
 
   delete[] tmp_row;
+  return ;
 
 } // end render_and_save_image()
 
@@ -1279,14 +1276,12 @@ OpenGL::redraw_frame()
         if ( fname.find("%") != std::string::npos )
         {
           string message = "Bad Format - Remove the Frame Format.";
-          view_window_->setMessage( message );
-          view_window_->setMovie( 0 );
-
+          view_window_->setMovieMessage( message, true );
         }
         else
         {
           string message = "Dumping mpeg " + fname;
-          view_window_->setMessage( message );
+          view_window_->setMovieMessage( message );
 
           StartMpeg( fname );
 
@@ -1301,7 +1296,7 @@ OpenGL::redraw_frame()
         const string message =
           "Adding Mpeg Frame " + to_string( current_movie_frame_ );
 
-        view_window_->setMessage( message );
+        view_window_->setMovieMessage( message );
 
         view_window_->setMovieFrame(current_movie_frame_);
         AddMpegFrame();
@@ -1328,9 +1323,7 @@ OpenGL::redraw_frame()
           movie_name_.find("%") != movie_name_.find_last_of("%") )
       {
         string message = "Bad Format - Illegal Frame Format.";
-        view_window_->setMessage( message );
-        view_window_->setMovie( 0 );
-	
+        view_window_->setMovieMessage( message, true );
       }
       else
       {
@@ -1357,7 +1350,7 @@ OpenGL::redraw_frame()
 	                  string(".ppm");
         
         string message = "Dumping " + fullpath;
-        view_window_->setMessage( message );
+        view_window_->setMovieMessage( message );
         dump_image(fullpath);
 
         current_movie_frame_++;
@@ -1578,10 +1571,9 @@ OpenGL::dump_image(const string& name, const string& /* type */)
   ofstream dumpfile(name.c_str());
   if ( !dumpfile )
   {
-    ostringstream str;
-    str << "ERROR opening file: " << name.c_str();
-    view_window_->setMessage( str.str() );
-    cerr << str.str() << "\n";
+    string errorMsg = "ERROR opening file: " + name;
+    view_window_->setMovieMessage( errorMsg, true );
+    cerr << errorMsg << "\n";
     return;
   }
 
@@ -1962,9 +1954,7 @@ OpenGL::AddMpegFrame()
 
   if ( !MPEGe_image(image, &mpeg_options_) )
   {
-    ostringstream str;
-    str << "ERROR creating MPEG frame: " << mpeg_options_.error;
-    view_window_->setMessage( str.str() );
+    view_window_->setMovieMessage( string("ERROR creating MPEG frame: ") + mpeg_options_.error, true );
   }
 #endif // HAVE_MPEG
 }
@@ -1977,14 +1967,13 @@ OpenGL::EndMpeg()
 #ifdef HAVE_MPEG
   if ( !MPEGe_close(&mpeg_options_) )
   {
-    ostringstream str;
-    str << "ERROR closing MPEG file: " << mpeg_options_.error;
-    view_window_->setMessage( str.str() );
+    string errorMsg = string("ERROR closing MPEG file: ") + mpeg_options_.error;
+    view_window_->setMovieMessage( errorMsg, true );
   }
   else
   {
     string message = "Ending Mpeg.";
-    view_window_->setMessage( message );
+    view_window_->setMovieMessage( message );
   }
 
   view_window_->setMovie( 0 );
