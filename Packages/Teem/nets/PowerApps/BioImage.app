@@ -508,9 +508,9 @@ class BioImageApp {
 		    return;
 		}
 		if { $dim == 3 } {
-		    setGlobal $mods(ChooseNrrd_6)-port-index 1
+		    setGlobal $mods(ChooseNrrd_6)-port-selected-index 1
 		} elseif { $dim == 4 } {
-		    setGlobal $mods(ChooseNrrd_6)-port-index 0
+		    setGlobal $mods(ChooseNrrd_6)-port-selected-index 0
 		}
 		disableModule $mods(ChooseNrrd_6) 0
 		toggle_show_vol_ren
@@ -1123,6 +1123,15 @@ class BioImageApp {
 	set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 1222]
 	set m36 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 28 1142]
 
+	setGlobal $m6-use-first-valid {0}
+	setGlobal $m8-use-first-valid {0} 
+	setGlobal $m10-use-first-valid {0}
+	setGlobal $m12-use-first-valid {0}
+	setGlobal $m14-use-first-valid {0}
+	setGlobal $m16-use-first-valid {0}
+	setGlobal $m35-use-first-valid {0}
+       
+
 	# Create the Connections between Modules
 	set c1 [addConnection $m4 0 $m5 0]
 	set c2 [addConnection $m28 1 $m29 0]
@@ -1607,27 +1616,27 @@ class BioImageApp {
         # disable flip and permute modules and change choose ports
 	set UnuFlip1 [lindex [lindex $filters(0) $modules] 29]
 	set Choose1 [lindex [lindex $filters(0) $modules] 32]
-	global $Choose1-port-index
+	global $Choose1-port-selected-index
         disableModule $UnuFlip1 1
-	set $Choose1-port-index 0
+	set $Choose1-port-selected-index 0
 
 	set UnuFlip2 [lindex [lindex $filters(0) $modules] 30]
 	set Choose2 [lindex [lindex $filters(0) $modules] 33]
-	global $Choose2-port-index
+	global $Choose2-port-selected-index
         disableModule $UnuFlip2 1
-	set $Choose2-port-index 0
+	set $Choose2-port-selected-index 0
 
 	set UnuFlip3 [lindex [lindex $filters(0) $modules] 31]
 	set Choose3 [lindex [lindex $filters(0) $modules] 34]
-	global $Choose3-port-index
+	global $Choose3-port-selected-index
         disableModule $UnuFlip3 1
-	set $Choose3-port-index 0
+	set $Choose3-port-selected-index 0
 
 	set UnuPermute [lindex [lindex $filters(0) $modules] 28]
 	set Choose4 [lindex [lindex $filters(0) $modules] 35]
-	global Choose4-port-index
+	global Choose4-port-selected-index
         disableModule $UnuPermute 1
-	set $Choose4-port-index 0
+	set $Choose4-port-selected-index 0
 
 	set top "S"
 	set front "A"
@@ -1791,13 +1800,13 @@ class BioImageApp {
 	set Choose [lindex [lindex $filters(0) $modules] 35]
 
 	if {$need_permute == 1} {
-	    setGlobal $Choose-port-index 1
+	    setGlobal $Choose-port-selected-index 1
 	    disableModule $UnuPermute 0
 	    setGlobal $UnuPermute-axis0 $new_side
 	    setGlobal $UnuPermute-axis1 $new_front
 	    setGlobal $UnuPermute-axis2 $new_top
 	} else {
-	    setGlobal $Choose-port-index 0
+	    setGlobal $Choose-port-selected-index 0
 	    disableModule $UnuPermute 1
 	}
 
@@ -1853,42 +1862,42 @@ class BioImageApp {
     method flip0 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 29]
 	set Choose [lindex [lindex $filters(0) $modules] 32]
-	global $Choose-port-index
+	global $Choose-port-selected-index
 	
 	if {$toflip == 1} {
 	    disableModule $UnuFlip 0
-	    set $Choose-port-index 1
+	    set $Choose-port-selected-index 1
 	} else {
 	    disableModule $UnuFlip 1
-	    set $Choose-port-index 0
+	    set $Choose-port-selected-index 0
 	}
     }
     
     method flip1 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 30]
 	set Choose [lindex [lindex $filters(0) $modules] 33]
-	global $Choose-port-index
+	global $Choose-port-selected-index
 	
 	if {$toflip == 1} {
 	    disableModule $UnuFlip 0
-	    set $Choose-port-index 1
+	    set $Choose-port-selected-index 1
 	} else {
 	    disableModule $UnuFlip 1
-	    set $Choose-port-index 0
+	    set $Choose-port-selected-index 0
 	}
     }
     
     method flip2 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 31]
 	set Choose [lindex [lindex $filters(0) $modules] 34]
-	global $Choose-port-index
+	global $Choose-port-selected-index
 	
 	if {$toflip == 1} {
 	    disableModule $UnuFlip 0
-	    set $Choose-port-index 1
+	    set $Choose-port-selected-index 1
 	} else {
 	    disableModule $UnuFlip 1
-	    set $Choose-port-index 0
+	    set $Choose-port-selected-index 0
 	}
     }
     
@@ -1906,25 +1915,25 @@ class BioImageApp {
 	set AnalyzeNrrdReader [lindex $load_mods $load_analyze]
 	set FieldReader [lindex $load_mods $load_field]
 	if {$which == "Nrrd"} {
-	    setGlobal $ChooseNrrd-port-index 0
+	    setGlobal $ChooseNrrd-port-selected-index 0
 	    disableModule $NrrdReader 0
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
         } elseif {$which == "Dicom"} {
-	    setGlobal $ChooseNrrd-port-index 1
+	    setGlobal $ChooseNrrd-port-selected-index 1
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 0
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
         } elseif {$which == "Analyze"} {
-	    setGlobal $ChooseNrrd-port-index 2
+	    setGlobal $ChooseNrrd-port-selected-index 2
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 0
 	    disableModule $FieldReader 1
         } elseif {$which == "Field"} {
-	    setGlobal $ChooseNrrd-port-index 3
+	    setGlobal $ChooseNrrd-port-selected-index 3
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
@@ -2586,7 +2595,7 @@ class BioImageApp {
 	# and verify valid loading file
 	set valid_data 0
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_input]
-	upvar \#0 $ChooseNrrd-port-index port
+	upvar \#0 $ChooseNrrd-port-selected-index port
         if {$port == 0} {       ; # Nrrd
             set mod [lindex [lindex $filters(0) $modules] $load_nrrd]
 	    upvar \#0 $mod-filename filename
@@ -3599,7 +3608,7 @@ class BioImageApp {
     method change_eye { {execute 1 } } {
 	global eye
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis] 
-	setGlobal $ChooseNrrd-port-index [lindex $filters($eye) $choose_port]
+	setGlobal $ChooseNrrd-port-selected-index [lindex $filters($eye) $choose_port]
 	if { $execute } {
 	    $ChooseNrrd-c needexecute
 	}
