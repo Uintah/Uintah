@@ -70,7 +70,7 @@ public:
   CrvCubicHmt() {}
   virtual ~CrvCubicHmt() {}
   
-  int polynomial_order() const { return 3; }
+  static int polynomial_order() { return 3; }
 
   //! get weight factors at parametric coordinate 
   inline

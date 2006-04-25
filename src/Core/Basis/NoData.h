@@ -76,7 +76,7 @@ public:
   NoDataBasis() {}
   virtual ~NoDataBasis() {}
   
-  int polynomial_order() const { return -1; }
+  static int polynomial_order() { return -1; }
   
   static  const std::string type_name(int n = -1);
   virtual void io (Piostream& str); 

@@ -240,7 +240,7 @@ class CrvLinearLgn : public BasisSimple<T>,
 public:
   typedef T value_type;
 
-  int polynomial_order() const { return 1; }
+  static int polynomial_order() { return 1; }
 
   CrvLinearLgn() : CrvApprox() {}
   virtual ~CrvLinearLgn() {}

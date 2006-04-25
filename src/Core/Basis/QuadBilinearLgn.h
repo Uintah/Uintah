@@ -268,7 +268,7 @@ public:
   QuadBilinearLgn() {}
   virtual ~QuadBilinearLgn() {}
   
-  int polynomial_order() const { return 1; }
+  static int polynomial_order() { return 1; }
 
   inline
   static void get_weights(const std::vector<double> &coords, double *w) 
