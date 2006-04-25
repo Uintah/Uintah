@@ -248,6 +248,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pErosionLabel);
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
+
+  if(!flags->d_doGridReset){
+    t->computes(lb->gDisplacementLabel);
+  }
   
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -327,6 +331,10 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   t->computes(lb->pStressLabel,            add_matl);
   t->computes(lb->pSizeLabel,              add_matl);
   t->computes(lb->pErosionLabel,           add_matl);
+  if(!flags->d_doGridReset){
+    t->computes(lb->gDisplacementLabel);
+  }
+  
 
   if (flags->d_accStrainEnergy) {
     // Computes accumulated strain energy
@@ -902,6 +910,11 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   t->modifies(             lb->gVelocityStarLabel,     mss);
   t->requires(Task::NewDW, lb->gVelocityInterpLabel,   Ghost::None);
 
+  if(!flags->d_doGridReset){
+    t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
+    t->computes(lb->gDisplacementLabel);
+  }
+
   sched->addTask(t, patches, matls);
 }
 
@@ -1388,23 +1401,24 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     cellNAPID.initialize(0);
 
     for(int m=0;m<matls->size();m++){
-      //cerrLock.lock();
-      //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
-      //cerrLock.unlock();
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int indx = mpm_matl->getDWIndex();
+      if(!flags->d_doGridReset){
+        NCVariable<Vector> gDisplacement;
+        new_dw->allocateAndPut(gDisplacement,lb->gDisplacementLabel,indx,patch);
+        gDisplacement.initialize(Vector(0.));
+      }
       particleIndex numParticles = mpm_matl->countParticles(patch);
       totalParticles+=numParticles;
 
       mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
-      mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-                                                         mpm_matl,
-                                                         new_dw);
+      mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
+
       // scalar used for debugging
       if(flags->d_with_color) {
         ParticleVariable<double> pcolor;
-        int index = mpm_matl->getDWIndex();
-        ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
+        ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
         setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
       }
 
@@ -2213,7 +2227,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }
-    }
+    }    // matls
   }
 }
 
@@ -2260,6 +2274,18 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
       }
 
+      if(!flags->d_doGridReset){
+        NCVariable<Vector> displacement;
+        constNCVariable<Vector> displacementOld;
+        new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
+        old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
+                                                               Ghost::None,0);
+        for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+                         !iter.done();iter++){
+           IntVector c = *iter;
+           displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
+        }
+      }  // d_doGridReset
       // Set symmetry BCs on acceleration if called for
       bc.setBoundaryCondition(patch,dwi,"Symmetric",    gacceleration,  n8or27);
 
