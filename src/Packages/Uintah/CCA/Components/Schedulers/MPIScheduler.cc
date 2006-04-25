@@ -100,7 +100,7 @@ MPIScheduler::~MPIScheduler()
 SchedulerP
 MPIScheduler::createSubScheduler()
 {
-  MPIScheduler* newsched = new MPIScheduler(d_myworld, m_outPort, this);
+  MPIScheduler* newsched = scinew MPIScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   return newsched;

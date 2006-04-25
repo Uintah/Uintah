@@ -549,10 +549,12 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
   
   for(int i=0;i<currentGrid->numLevels();i++) {
-    d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
     d_sim->scheduleInitialize(currentGrid->getLevel(i), d_scheduler);
     d_sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),d_scheduler);
-    d_sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), d_scheduler);
+    if (d_doAMR) {
+      d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
+      d_sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), d_scheduler);
+    }
   }
   d_scheduler->compile();
   
