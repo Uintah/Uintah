@@ -290,7 +290,7 @@ public:
   TriLinearLgn() {}
   virtual ~TriLinearLgn() {}
   
-  int polynomial_order() const { return 1; }
+  static int polynomial_order() { return 1; }
 
   virtual void approx_edge(const unsigned edge, 
 			   const unsigned /* div_per_unit */,

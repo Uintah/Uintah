@@ -72,7 +72,7 @@ public:
   ConstantBasis() {}
   virtual ~ConstantBasis() {}
   
-  int polynomial_order() const { return 0; }
+  static int polynomial_order() { return 0; }
 
   inline
   static void get_weights(const std::vector<double> &coords, double *w) 

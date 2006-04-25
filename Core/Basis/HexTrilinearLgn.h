@@ -325,7 +325,7 @@ public:
   HexTrilinearLgn() {}
   virtual ~HexTrilinearLgn() {}
   
-  int polynomial_order() const { return 1; }
+  static int polynomial_order() { return 1; }
 
   //! get weight factors at parametric coordinate 
   inline

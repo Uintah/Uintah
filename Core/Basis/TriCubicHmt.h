@@ -72,7 +72,7 @@ public:
   TriCubicHmt() {}
   virtual ~TriCubicHmt() {}
     
-  int polynomial_order() const { return 3; }
+  static int polynomial_order() { return 3; }
 
   inline
   static void get_weights(const std::vector<double> &coords, double *w) 

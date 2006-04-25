@@ -69,7 +69,7 @@ public:
   TetQuadraticLgn() {}
   virtual ~TetQuadraticLgn() {}
 
-  int polynomial_order() const { return 2; }
+  static int polynomial_order() { return 2; }
 
   inline
   static void get_weights(const std::vector<double> &coords, double *w) 

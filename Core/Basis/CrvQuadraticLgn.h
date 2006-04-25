@@ -70,7 +70,7 @@ public:
   CrvQuadraticLgn() {}
   virtual ~CrvQuadraticLgn() {}
   
-  int polynomial_order() const { return 2; }
+  static int polynomial_order() { return 2; }
 
   //! get weight factors at parametric coordinate 
   inline

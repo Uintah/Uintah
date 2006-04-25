@@ -46,7 +46,7 @@ public:
   BasisSimple() {}
   virtual ~BasisSimple() {}
   
-  int polynomial_order() const { return 0; }
+  static int polynomial_order() { return 0; }
 
   //! get value at parametric coordinate 
   template <class ElemData>
