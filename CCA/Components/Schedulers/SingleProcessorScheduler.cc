@@ -36,7 +36,7 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
 SchedulerP
 SingleProcessorScheduler::createSubScheduler()
 {
-  SingleProcessorScheduler* newsched = new SingleProcessorScheduler(d_myworld, m_outPort, this);
+  SingleProcessorScheduler* newsched = scinew SingleProcessorScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   return newsched;

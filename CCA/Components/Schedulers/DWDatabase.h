@@ -216,6 +216,7 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
       ScrubItem key(vlm.label_, vlm.matlIndex_, vlm.domain_, dwid);
       ScrubItem* result = scrubcounts->lookup(&key);
       if(!result){
+        delete variter->second.var;
         typename varDBtype::iterator deliter = variter;
         variter++;
         vars.erase(deliter);
