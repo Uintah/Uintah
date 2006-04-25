@@ -295,6 +295,7 @@ GeomHandle TimestepSelector::createClock(double num_seconds) {
   Point center(clock_position_x.get(), clock_position_y.get(), 0);
   double offset = radius * M_SQRT1_2;
 
+  // Draw rectangle around clock
   GeomLines* outline = scinew GeomLines();
   outline->add(center+Vector( offset,  offset, 0),
                center+Vector( offset, -offset, 0));
@@ -308,6 +309,8 @@ GeomHandle TimestepSelector::createClock(double num_seconds) {
                                scinew Material(Color(0,0,0),
                                                Color(1,1,1),
                                                Color(.5,.5,.5), 20)));
+
+  // End rectangle
   GeomLines* sh_ticks = scinew GeomLines();
   int num_sh_ticks = short_hand_ticks.get();
   for(int i = 0; i < num_sh_ticks; ++i) {

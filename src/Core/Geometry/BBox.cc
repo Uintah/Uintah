@@ -48,6 +48,7 @@
 #include <stdlib.h>
 
 using namespace SCIRun;
+using namespace std;
 
 BBox::BBox()
 {
@@ -231,4 +232,13 @@ namespace SCIRun {
     }
     stream.end_cheap_delim();
   }
+
+
+  ostream&
+  operator<<(ostream& out, const BBox& b)
+  {
+    out << b.cmin << ".." << b.cmax;
+    return out;
+  }
+
 } // End namespace SCIRun

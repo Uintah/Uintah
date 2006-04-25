@@ -40,6 +40,13 @@ ifeq ($(IS_AIX),yes)
         Packages/Uintah/CCA/Components/Parent            \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
 	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
+        Packages/Uintah/CCA/Components/Examples          \
+        $(DUMMY_LIB)                                     \
+        $(ARCHES_LIBS)                                   \
+        $(MPM_LIB)                                       \
+        $(ICE_LIB)                                       \
+        $(MPMICE_LIB)                                    \
+        Packages/Uintah/CCA/Components/PatchCombiner     \
         $(DUMMY_LIB)                                     \
         $(ARCHES_SUB_LIBS)
 endif
@@ -76,13 +83,6 @@ else
         Packages/Uintah/CCA/Components/Schedulers           \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Packages/Uintah/CCA/Components/Solvers              \
-        Packages/Uintah/CCA/Components/Examples      \
-        $(DUMMY_LIB)                                 \
-        $(ARCHES_LIBS)                               \
-        $(MPM_LIB)                                   \
-        $(ICE_LIB)                                   \
-        $(MPMICE_LIB)                               \
-        Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBRARY)
 endif
 

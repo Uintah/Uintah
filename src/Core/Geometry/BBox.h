@@ -47,6 +47,10 @@
 
 #include <Core/Geometry/share.h>
 
+#include <sgi_stl_warnings_off.h>
+#include   <ostream>
+#include <sgi_stl_warnings_on.h>
+
 namespace SCIRun {
 
   class Vector;
@@ -101,6 +105,8 @@ namespace SCIRun {
     // returns true if the ray hit the bbox and returns the hit point
     // in hitNear
     bool intersect( const Point& e, const Vector& v, Point& hitNear );
+
+    friend std::ostream& operator<<(std::ostream& out, const BBox& b);
 
   private:
     Point cmin;
