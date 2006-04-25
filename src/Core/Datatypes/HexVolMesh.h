@@ -111,7 +111,10 @@ public:
       mesh_(msh),
       index_(ind)
     {
-      mesh_.get_edges(edges_, index_);
+      //Linear and Constant Basis never use edges_
+      if (basis_type::polynomial_order() > 1) {
+	mesh_.get_edges(edges_, index_);
+      }
     }
 
     // the following designed to coordinate with ::get_nodes
