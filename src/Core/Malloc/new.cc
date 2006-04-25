@@ -87,6 +87,7 @@ namespace SCIRun {
   {
     const char* old = default_new_tag;
     default_new_tag=tag;
+    default_new_array_tag=tag;
     return old;
   }
 
