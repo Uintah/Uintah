@@ -121,8 +121,6 @@ void create_unit_element_mesh()
   FieldHandle fH(field);
   TextPiostream out_stream("a.fld", Piostream::Write);
   Pio(out_stream, fH);
-
-  delete field;
 }
 
 
