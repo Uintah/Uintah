@@ -425,27 +425,27 @@ public:
     // the following designed to coordinate with ::get_edges
     inline
     unsigned edge0_index() const {
-      return index_ * 6;
+      return *(mesh_.edges_.find(index_ * 6));
     }
     inline
     unsigned edge1_index() const {
-      return index_ * 6 + 1;
+      return *(mesh_.edges_.find(index_ * 6 + 1));
     }
     inline
     unsigned edge2_index() const {
-      return index_ * 6 + 2;
+      return *(mesh_.edges_.find(index_ * 6 + 2));
     }
     inline
     unsigned edge3_index() const {
-      return index_ * 6 + 3;
+      return *(mesh_.edges_.find(index_ * 6 + 3));
     }
     inline
     unsigned edge4_index() const {
-      return index_ * 6 + 4;
+      return *(mesh_.edges_.find(index_ * 6 + 4));
     }
     inline
     unsigned edge5_index() const {
-      return index_ * 6 + 5;
+      return *(mesh_.edges_.find(index_ * 6 + 5));
     }
 
     inline
@@ -1738,7 +1738,7 @@ TetVolMesh<Basis>::get_edges(typename Edge::array_type &array,
   array.resize(6);
   for (int i = 0; i < 6; i++)
   {
-    array[i] = idx * 6 + i;
+    array[i] = *(edges_.find(idx * 6 + i));
   }
 }
 
