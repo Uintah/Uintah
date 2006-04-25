@@ -1525,11 +1525,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
-      try {
-        old_dw->get(px,             lb->pXLabel,             pset);
-      } catch (UnknownVariable& e) {
-        cout << "  BAD boy - trying to inter patch " << patch->getID() << endl;
-      }
+      old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);

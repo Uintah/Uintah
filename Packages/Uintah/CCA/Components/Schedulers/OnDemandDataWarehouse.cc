@@ -1158,7 +1158,7 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
   }
 
   // Put it in the database
-  d_varDB.put(label, matlIndex, patch, var.clone(), true);
+  d_varDB.put(label, matlIndex, patch, var.clone(), replace);
   d_lock.writeUnlock();
 }
 
@@ -2688,6 +2688,7 @@ void OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatl<Lev
 
 void OnDemandDataWarehouse::print()
 {
+  cout << "  VARS in DW " << getID() << endl;
   d_varDB.print(cout);
   d_levelDB.print(cout);  
 }
