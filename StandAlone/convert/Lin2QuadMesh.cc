@@ -164,12 +164,7 @@ int
 main(int argc, char **argv) 
 {
   if (argc<=1) {
-    cerr << argv[0] << " [-CurveMeshLinear][-CurveMeshQuadratic][-CurveMeshCubic]" << endl;
-    cerr << "\t[-TriSurfMeshLinear][-TriSurfMeshQuadratic][-TriSurfMeshCubic]" << endl;
-    cerr << "\t[-QuadSurfMeshLinear][-QuadSurfMeshQuadratic][-QuadSurfMeshCubic]" << endl;
-    cerr << "\t[-TetVolMeshConstant][-TetVolMeshLinear][-TetVolMeshQuadratic][-TetVolMeshCubic]" << endl;
-    cerr << "\t[-PrismVolMeshLinear][-PrismVolMeshQuadratic][-PrismVolMeshCubic]" << endl;
-    cerr << "\t[-HexVolMeshLinear][-HexVolMeshQuadratic][-HexVolMeshCubic]" << endl;
+    cerr << argv[0] << " LinearField" << endl;
     exit(-1);
   }
 
