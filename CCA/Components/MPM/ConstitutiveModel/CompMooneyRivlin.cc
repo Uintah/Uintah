@@ -7,7 +7,6 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -82,27 +81,6 @@ CompMooneyRivlin::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
-  // Initialize variables used by this model
-  if (flag->d_fracture) {
-    // Put stuff in here to initialize each particle's
-    // constitutive model parameters and deformationMeasure
-    Matrix3 Identity, zero(0.);
-    Identity.Identity();
-    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-
-    // for J-Integral
-    ParticleVariable<Matrix3> pdispGrads;
-    ParticleVariable<double>  pstrainEnergyDensity;
-    new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
-    new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel,
-                           pset);
-
-    ParticleSubset::iterator iter =pset->begin();
-    for(;iter != pset->end();iter++){
-      pdispGrads[*iter] = zero;
-      pstrainEnergyDensity[*iter] = 0.0;
-    }
-  }
   computeStableTimestep(patch, matl, new_dw);
 }
 
@@ -123,14 +101,6 @@ CompMooneyRivlin::allocateCMDataAddRequires(Task* task,
   // This method is defined in the ConstitutiveModel base class.
   addSharedRForConvertExplicit(task, matlset, patches);
 
-  // Allocate other variables used in the conversion process
-  if (flag->d_fracture) {
-    task->requires(Task::NewDW,lb->pDispGradsLabel_preReloc, 
-                   matlset, Ghost::None);
-    task->requires(Task::NewDW,lb->pStrainEnergyDensityLabel_preReloc, 
-                   matlset, Ghost::None);
-  }
-
 }
 
 
@@ -144,33 +114,6 @@ void CompMooneyRivlin::allocateCMDataAdd(DataWarehouse* new_dw,
   // deleted to the particle to be added. 
   // This method is defined in the ConstitutiveModel base class.
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-  if (flag->d_fracture) {
-    ParticleVariable<Matrix3> pdispGrads;
-    ParticleVariable<double>  pstrainEnergyDensity;
-
-    constParticleVariable<Matrix3> o_dispGrads;
-    constParticleVariable<double>  o_strainEnergyDensity;
-
-    // for J-Integral
-    new_dw->allocateTemporary(pdispGrads, addset);
-    new_dw->allocateTemporary(pstrainEnergyDensity, addset);
-
-    new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
-    new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,
-                delset);
-
-    ParticleSubset::iterator o,n = addset->begin();
-    for (o=delset->begin(); o != delset->end(); o++, n++) {
-      pdispGrads[*n] = o_dispGrads[*o];
-      pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
-    }
-
-    (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
-    (*newState)[ lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
-  }
 }
 
 
@@ -181,9 +124,9 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
-  int matlindex = matl->getDWIndex();
+  int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
+  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
   new_dw->get(pmass,     lb->pMassLabel,     pset);
@@ -233,20 +176,13 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
-
 
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
-    int matlindex = matl->getDWIndex();
+    int dwi = matl->getDWIndex();
 
     // Create array for the particle position
-    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
@@ -277,18 +213,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
 
-    if (flag->d_fracture) {
-      new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
-      new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
-      old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
-      old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
-      new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
-      new_dw->allocateAndPut(pdispGrads_new,lb->pDispGradsLabel_preReloc,pset);
-      new_dw->allocateAndPut(pstrainEnergyDensity_new,
-                             lb->pStrainEnergyDensityLabel_preReloc, pset);
-    }
-
-    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
+    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // Allocate variable to store internal heating rate
@@ -304,39 +229,29 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
     double rho_orig = matl->getInitialDensity();
 
+    if(flag->d_doGridReset){
+      constNCVariable<Vector> gvelocity;
+      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromVelocity(gvelocity,
+                                             pset, px, psize,
+                                             deformationGradient,
+                                             deformationGradient_new,
+                                             dx, interpolator, delT);
+    }
+    else if(!flag->d_doGridReset){
+      constNCVariable<Vector> gdisplacement;
+      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromDisplacement(gdisplacement,
+                                                 pset, px, psize,
+                                                 deformationGradient_new,
+                                                 dx, interpolator);
+    }
+
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
       
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-
-      // Get the node indices that surround the cell
-      ASSERT(patch->getBox().contains(px[idx]));
-      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
-      
-      Vector gvel;
-      velGrad.set(0.0);
-      for(int k = 0; k < flag->d_8or27; k++) {
-        if (flag->d_fracture) {
-          if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-          if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-        } else
-          gvel = gvelocity[ni[k]];
-
-        for (int j = 0; j<3; j++){
-          double d_SXoodx = d_S[k][j] * oodx[j];
-          for (int i = 0; i<3; i++) {
-            velGrad(i,j) += gvel[i] * d_SXoodx;
-            if (flag->d_fracture)
-              pvelGrads[idx](i,j)  = velGrad(i,j);
-          }
-        }
-      }
-      
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      defGradInc = velGrad * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = defGradInc*deformationGradient[idx];
@@ -362,17 +277,6 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       // Update particle volumes
       pvolume_deform[idx]=(pmass[idx]/rho_orig)*J;
 
-      // Add bulk viscosity
-      /*
-      if (flag->d_artificial_viscosity) {
-        Matrix3 tensorD = (velGrad + velGrad.Transpose())*0.5;
-        double Dkk = tensorD.Trace();
-        double rho_cur = rho_orig/J;
-        double q = artificialBulkViscosity(Dkk, c_dil, rho_cur, dx_ave);
-        pstress[idx] = pstress[idx] - Identity*q;
-      }
-      */
-
       // Compute wave speed + particle velocity at each particle, 
       // store the maximum
       c_dil = sqrt((4.*(C1+C2*invar2)/J
@@ -390,14 +294,6 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
             C4*(invar3-1.0)*(invar3-1.0))*pvolume_deform[idx]/J;
 
       se += e;
-
-      if (flag->d_fracture) {
-        // Update particle displacement gradients
-        pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
-        // Update particle strain energy density
-        pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] +
-          e/pvolume_deform[idx];
-      }
     }
         
     WaveSpeed = dx/WaveSpeed;
@@ -439,13 +335,6 @@ void CompMooneyRivlin::carryForward(const PatchSubset* patches,
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
                                         std::vector<const VarLabel*>& to)
 {
-  // Add the local particle state data for this constitutive model.
-  if (flag->d_fracture) {
-    from.push_back(lb->pDispGradsLabel);
-    from.push_back(lb->pStrainEnergyDensityLabel);
-    to.push_back(lb->pDispGradsLabel_preReloc);
-    to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
-  }
 }
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
@@ -457,17 +346,6 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
-
-  // Other constitutive model and input dependent computes and requires
-  if (flag->d_fracture) {
-    Ghost::GhostType  gnone = Ghost::None;
-    task->requires(Task::OldDW, lb->pDispGradsLabel,           matlset, gnone);
-    task->requires(Task::OldDW, lb->pStrainEnergyDensityLabel, matlset, gnone);
-    
-    task->computes(lb->pDispGradsLabel_preReloc,             matlset);
-    task->computes(lb->pVelGradsLabel,                       matlset);
-    task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
-  }
 }
 
 void 

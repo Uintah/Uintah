@@ -10,7 +10,6 @@
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -205,9 +204,9 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
-  int matlindex = matl->getDWIndex();
+  int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
+  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   constParticleVariable<StateData> statedata;
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
@@ -259,23 +258,14 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     double J,p,fTrial,IEl,muBar,delgamma,sTnorm,Jinc,U,W;
     double onethird = (1.0/3.0),sqtwthds = sqrt(2.0/3.0), c_dil = 0.0,se = 0.;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
-
-
-
     Identity.Identity();
 
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
 
-    int matlindex = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    Vector dx = patch->dCell();
+
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new, bElBar_new;
     constParticleVariable<Matrix3> deformationGradient, bElBar;
@@ -284,15 +274,14 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<StateData> statedata;
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume_deformed;
-    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Vector> pvelocity,psize;
+    ParticleVariable<double> pdTdt;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
-    constParticleVariable<Vector> psize;
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
-    old_dw->get(psize,               lb->pSizeLabel,                   pset);
-    
+    old_dw->get(psize,                 lb->pSizeLabel,                   pset);
     old_dw->get(px,                    lb->pXLabel,                      pset);
     old_dw->get(bElBar,                bElBarLabel,                      pset);
     old_dw->get(statedata_old,         p_statedata_label,                pset);
@@ -303,27 +292,13 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(bElBar_new, bElBarLabel_preReloc,             pset);
     new_dw->allocateAndPut(statedata,  p_statedata_label_preReloc,       pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pdTdt,      lb->pdTdtLabel_preReloc,          pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
     statedata.copyData(statedata_old);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
+    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel,getLevel(patches));
-
-    constParticleVariable<Short27> pgCode;
-    constNCVariable<Vector> Gvelocity;
-    if (flag->d_fracture) {
-      new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
-    }
-
-    constParticleVariable<int> pConnectivity;
-    ParticleVariable<Vector> pRotationRate;
-    ParticleVariable<double> pStrainEnergy;
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -332,6 +307,24 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     double rho_orig = matl->getInitialDensity();
 
+    if(flag->d_doGridReset){
+      constNCVariable<Vector> gvelocity;
+      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromVelocity(gvelocity,
+                                             pset, px, psize,
+                                             deformationGradient,
+                                             deformationGradient_new,
+                                             dx, interpolator, delT);
+    }
+    else if(!flag->d_doGridReset){
+      constNCVariable<Vector> gdisplacement;
+      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      computeDeformationGradientFromDisplacement(gdisplacement,
+                                                 pset, px, psize,
+                                                 deformationGradient_new,
+                                                 dx, interpolator);
+    }
+
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
        particleIndex idx = *iter;
@@ -339,39 +332,15 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-       // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
-       Vector gvel;
-       velGrad.set(0.0);
-       for(int k = 0; k < flag->d_8or27; k++) {
-         if (flag->d_fracture) {
-           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-         } else
-           gvel = gvelocity[ni[k]];
-         for (int j = 0; j<3; j++){
-           double d_SXoodx = d_S[k][j] * oodx[j];
-           for (int i = 0; i<3; i++) {
-             velGrad(i,j) += gvel[i] * d_SXoodx;
-           }
-         }
-       }
-       
       // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
       // time step and the velocity gradient and the material constants
       double alpha = statedata[idx].Alpha;
 
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
+      // Compute the deformation gradient increment
+      deformationGradientInc = deformationGradient_new[idx]
+                              *deformationGradient[idx].Inverse();
 
       Jinc = deformationGradientInc.Determinant();
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
 
       // get the volume preserving part of the deformation gradient increment
       fbar = deformationGradientInc * pow(Jinc,-onethird);
@@ -394,17 +363,6 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       // get the hydrostatic part of the stress
       p = 0.5*bulk*(J - 1.0/J);
-
-      // compute bulk viscosity
-      /*
-      if (flag->d_artificial_viscosity) {
-        Matrix3 tensorD = (velGrad + velGrad.Transpose())*0.5;
-        double Dkk = tensorD.Trace();
-        double c_bulk = sqrt(bulk/rho_cur);
-        double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
-        p -= q;
-      }
-      */
 
       // Compute ||shearTrial||
       sTnorm = shearTrial.Norm();
