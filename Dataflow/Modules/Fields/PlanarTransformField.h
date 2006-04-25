@@ -32,11 +32,11 @@
  *
  *  Written by:
  *   Allen Sanderson
- *   School of Computering
+ *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   August 2004
+ *   April 2006
  *
- *  Copyright (C) 2004 SCI Group
+ *  Copyright (C) 2006 SCI Inst
  */
 
 #if !defined(PlanarTransformField_h)
@@ -45,7 +45,6 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geometry/BBox.h>
 
 namespace SCIRun {
@@ -54,7 +53,7 @@ class PlanarTransformFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle& src,
-			      int axis, int tx, int ty) = 0;
+			      int axis, int invert, int tx, int ty) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *oftd);
@@ -67,107 +66,131 @@ class PlanarTransformFieldAlgoT : public PlanarTransformFieldAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle& src,
-			      int axis, int tx, int ty);
+			      int axis, int invert, int tx, int ty);
 };
 
 
 template< class FIELD >
 FieldHandle
 PlanarTransformFieldAlgoT<FIELD>::execute(FieldHandle& ifield_h,
-					  int axis, int tx, int ty)
+					  int axis, int invert, int tx, int ty)
 {
   FIELD *ifield = (FIELD *) ifield_h.get_rep();
   FIELD *ofield(ifield->clone());
   ofield->mesh_detach();
 
   Transform trans;
+  Vector axisVec;
+
+  double sign = (invert ? -1 : 1);
+
+  Point p0;
+  Point p1;
+    
+  typename FIELD::mesh_type::Node::iterator inodeItr;
+  typename FIELD::mesh_type::Node::iterator inodeEnd;
+  ofield->get_typed_mesh()->begin(inodeItr);
+  ofield->get_typed_mesh()->end(inodeEnd);
+
+  //! Get the first point along the line.
+  if (inodeItr != inodeEnd) {
+    ofield->get_typed_mesh()->get_point(p0, *inodeItr);
+    ++inodeItr;
+  } else {
+    cerr << "Can not get the first point - No mesh" << endl;
+    return 0;
+  }
+
+  // Get the last point along the line.
+  unsigned int cc = 0;
+  if (inodeItr != inodeEnd) {
+    while (inodeItr != inodeEnd) {
+      ofield->get_typed_mesh()->get_point(p1, *inodeItr);
+      ++inodeItr;
+      ++cc;
+    }
+  } else {
+    cerr << "Can not get the last point - No mesh" << endl;
+    return 0;
+  }
 
   string if_name =
     ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
+  //! For a line assume that it is colinear.
   if (if_name.find("CurveMesh") != string::npos ) {
-    const BBox bbox = ofield->mesh()->get_bounding_box();
+    axisVec = Vector(p1 - p0);
 
-    if (bbox.valid()) {
-      // Translate the mesh to the center of the view.
-      //      Point min_pt = -bbox.min();
-      //      trans.post_translate( Vector( min_pt ) );
-    }
-
-    // Rotate the mesh in to the correct plane.
-    typename FIELD::mesh_type::Node::iterator inodeItr;
-    typename FIELD::mesh_type::Node::iterator inodeEnd;
-    ofield->get_typed_mesh()->begin(inodeItr);
-    ofield->get_typed_mesh()->end(inodeEnd);
-
-    Point p0;
-    Point p1;
-
-    // Get the first point along the line.
-    if (inodeItr != inodeEnd) {
-      ofield->get_typed_mesh()->get_point(p0, *inodeItr);
-      ++inodeItr;
-    } else {
-      cerr << "Can not get first point - No mesh" << endl;
-    }
-
-    // Get the last point along the line.
-    if (inodeItr != inodeEnd) {
-      while (inodeItr != inodeEnd) {
-	ofield->get_typed_mesh()->get_point(p1, *inodeItr);
-	++inodeItr;
-      }
-
-      // Get the angle of the line.
-      double dy = p1.y() - p0.y();
-      double dz = p1.z() - p0.z();
-
-      if( axis == 0 ) {       // X
-	trans.pre_rotate( atan2(dy, dz), Vector(1,0,0));
-	trans.pre_rotate( -M_PI/2.0, Vector(1,0,0));
-      } else if( axis == 1 ) {  // Y
-	trans.pre_rotate( atan2(dy, dz), Vector(0,1,0));
-      } else if( axis == 2 ){   // Z
-	trans.pre_rotate( atan2(dy, dz), Vector(0,0,1));
-      }
-    } else {
-      cerr << "Can not get second point - No mesh" << endl;
-    }
-
-    ofield->mesh()->transform(trans);
- 
   } else {
+    //! For a surface assume that it is planar.
+
     // Translate the mesh to the center of the view.
     const BBox bbox = ofield->mesh()->get_bounding_box();
-
+    
     if (bbox.valid()) {
       Point center = -bbox.center();
       trans.post_translate( Vector( center ) );
     }
 
-    // Rotate the mesh in to the correct plane.
-    typename FIELD::mesh_type::Node::iterator inodeItr;
-    typename FIELD::mesh_type::Node::iterator inodeEnd;
+    Point p2;
+    
+    cc /= 2;
+
     ofield->get_typed_mesh()->begin(inodeItr);
     ofield->get_typed_mesh()->end(inodeEnd);
+    ++inodeItr;
 
+    //! Get the middle point on the surface.
     if (inodeItr != inodeEnd) {
-      Point p0;
-      ofield->get_typed_mesh()->get_point(p0, *inodeItr);
-
-      if( axis == 0 )       // X
-	trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(1,0,0));
-      else if( axis == 1 )  // Y
-	trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(0,1,0));
-      else if( axis == 2 )  // Z
-	trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(0,0,1));
+      while (inodeItr != inodeEnd && cc ) {
+	ofield->get_typed_mesh()->get_point(p2, *inodeItr);
+	++inodeItr;
+	--cc;
+      }
     } else {
-      cerr << "Can not get point for transform - No mesh" << endl;
+      cerr << "Can not get the last  point - No mesh" << endl;
+      return 0;
     }
 
-    ofield->mesh()->transform(trans);
+    Vector vec0 = Vector(p2 - p0);
+    vec0.safe_normalize();
+
+    Vector vec1 = Vector(p2 - p1);
+    vec1.safe_normalize();
+
+    axisVec = Cross( vec0, vec1 );
+
+    axisVec.safe_normalize();
+
+    cerr << axisVec << endl;
   }
 
+  axisVec.safe_normalize();
+
+  //! Rotate only if not in the -Z or +Z axis.
+  if( axis != 2 || fabs( fabs( axisVec.z() ) - 1.0 ) > 1.0e-4 ) {
+    double theta = atan2( axisVec.y(), axisVec.x() );
+    double phi   = acos( axisVec.z() / axisVec.length() );
+
+    //! Rotate the line into the xz plane.
+    trans.pre_rotate( -theta, Vector(0,0,1) );
+    //! Rotate the line into the z axis.
+    trans.pre_rotate( -phi,   Vector(0,1,0) );
+  }
+
+  if( axis == 0 ) {
+    //! Rotate the line into the x axis.
+    trans.pre_rotate( sign * M_PI/2.0, Vector(0,1,0));
+  } else if( axis == 1 ) {
+    //! Rotate the line into the y axis.
+    trans.pre_rotate( sign * -M_PI/2.0, Vector(1,0,0));
+  } else if( invert ) {
+    //! Rotate the line into the z axis.
+    trans.pre_rotate( M_PI, Vector(1,0,0));
+  }
+
+  ofield->mesh()->transform(trans);
+ 
   // Optionally translate the mesh away from the center of the view.
   if (tx || ty) {
     const BBox bbox = ofield->mesh()->get_bounding_box();
