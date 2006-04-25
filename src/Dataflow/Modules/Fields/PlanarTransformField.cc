@@ -29,15 +29,17 @@
 
 
 /*
- *  PlanarTransformField.cc:  Rotate and flip field to get it into "standard" view
+ *  PlanarTransformField.cc
+ *
+ *  Rotate and flip field to get it into "standard" view
  *
  *  Written by:
- *   Michael Callahan
- *   Department of Computer Science
+ *   Allen Sanderson
+ *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   March 2001
+ *   April 2006
  *
- *  Copyright (C) 2001 SCI Group
+ *  Copyright (C) 2006 SCI Inst
  */
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -65,17 +67,12 @@ public:
   virtual void execute();
 
 protected:
-  GuiInt Axis_;
-  GuiInt TransX_;
-  GuiInt TransY_;
+  GuiInt gui_axis_;
+  GuiInt gui_invert_;
+  GuiInt gui_trans_x_;
+  GuiInt gui_trans_y_;
 
-  int axis_;
-  int tx_;
-  int ty_;
-
-  int field_generation_;
-
-  FieldHandle fieldout_;
+  FieldHandle field_output_handle_;
 };
 
 
@@ -83,13 +80,10 @@ DECLARE_MAKER(PlanarTransformField)
 
 PlanarTransformField::PlanarTransformField(GuiContext* context)
   : Module("PlanarTransformField", context, Filter, "FieldsGeometry", "SCIRun"),
-    Axis_(context->subVar("axis"), 2),
-    TransX_(context->subVar("trans_x"), 0),
-    TransY_(context->subVar("trans_y"), 0),
-    axis_(2),
-    tx_(0),
-    ty_(0),
-    field_generation_(-1)
+    gui_axis_(context->subVar("axis"), 2),
+    gui_invert_(context->subVar("invert"), 0),
+    gui_trans_x_(context->subVar("trans_x"), 0),
+    gui_trans_y_(context->subVar("trans_y"), 0)
 {
 }
 
@@ -102,63 +96,53 @@ PlanarTransformField::~PlanarTransformField()
 void
 PlanarTransformField::execute()
 {
-  // Get a handle to the input field port.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
+  // Get the input field.
+  FieldHandle field_input_handle;
+  if( !get_input_handle( "Input Field", field_input_handle, true ) ) return;
 
-  FieldHandle fieldin;
-  if (!(ifp->get(fieldin) && fieldin.get_rep())) {
-    error( "No field handle or representation." );
-    return;
-  }
+  // Get a handle to the optional index matrix port.
+  MatrixHandle matrix_input_handle;
+  get_input_handle( "Index Matrix", matrix_input_handle, false );
 
-  int axis, tx=0, ty=0;
+  if( matrix_input_handle.get_rep() ) {
+    //! Check to see what index has been selected and if it matches
+    //! the gui index.a
+    if( gui_trans_x_.get() != matrix_input_handle->get(0, 0) ||
+	gui_trans_y_.get() != matrix_input_handle->get(1, 0) ) {
 
-  // Get a handle to the index matrix port.
-  MatrixIPort *imp = (MatrixIPort *)get_iport("Index Matrix");
+      gui_trans_x_.set( (int) matrix_input_handle->get(0, 0) );
+      gui_trans_y_.set( (int) matrix_input_handle->get(1, 0) );
 
-  MatrixHandle matrixin;
-  if (imp->get(matrixin) ) {
-    if( !matrixin.get_rep()) {
-      error( "No index matrix representation." );
-      return;
-    } else {
-      tx = (int) matrixin->get(0, 0);
-      ty = (int) matrixin->get(1, 0);
+      inputs_changed_ = true;
     }
-  } else {
-    tx   = TransX_.get();
-    ty   = TransY_.get();
   }
 
-  axis = Axis_.get();
-
-  if (!fieldout_.get_rep() ||
-      field_generation_ != fieldin->generation ||
-      axis_ != axis ||
-      tx_ != tx ||
-      ty_ != ty )
+  //! If no data or an input change recreate the field. I.e Only
+  //! execute when neeed.
+  if (inputs_changed_  ||
+      
+      !field_output_handle_.get_rep() ||
+      
+      gui_axis_.changed( true ) ||
+      gui_invert_.changed( true ) ||
+      gui_trans_x_.changed( true ) ||
+      gui_trans_y_.changed( true ) )
   {
-    field_generation_ = fieldin->generation;
-
-    axis_ = axis;
-    tx_ = tx;
-    ty_ = ty;
-
-    const TypeDescription *ftd = fieldin->get_type_description();
+    const TypeDescription *ftd = field_input_handle->get_type_description();
     CompileInfoHandle ci = PlanarTransformFieldAlgo::get_compile_info(ftd);
 
     Handle<PlanarTransformFieldAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fieldout_ = algo->execute(fieldin, axis, tx, ty);
+    field_output_handle_ = algo->execute(field_input_handle,
+					 gui_axis_.get(),
+					 gui_invert_.get(),
+					 gui_trans_x_.get(),
+					 gui_trans_y_.get());
   }
     
-  // Get a handle to the output field port.
-  if ( fieldout_.get_rep() )
-  {
-    FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-    ofp->send_and_dereference(fieldout_, true);
-  }
+  // Send the data downstream.
+  send_output_handle( "Transformed Field",  field_output_handle_, true );
 }
 
 

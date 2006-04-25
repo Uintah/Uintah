@@ -49,7 +49,7 @@ itcl_class SCIRun_FieldsGeometry_PlanarTransformField {
 	
 	toplevel $w
 
-	iwidgets::labeledframe $w.axis -labelpos nw -labeltext "Axis of Rotation"
+	iwidgets::labeledframe $w.axis -labelpos nw -labeltext "Axis of Alignment"
 	set axis [$w.axis childsite]
 
 	radiobutton $axis.x -text "X" -width 6 \
@@ -58,8 +58,11 @@ itcl_class SCIRun_FieldsGeometry_PlanarTransformField {
 	    -anchor w -just left -variable $this-axis -value 1
 	radiobutton $axis.z -text "Z" -width 6 \
 	    -anchor w -just left -variable $this-axis -value 2
+
+	checkbutton $axis.invert -text "Invert" -width 6 \
+	    -anchor w -just left -variable $this-invert
 	
-	pack $axis.x $axis.y $axis.z -side left
+	pack $axis.x $axis.y $axis.z $axis.invert -side left
 	pack $w.axis -side top
 
 	iwidgets::labeledframe $w.trans -labelpos nw -labeltext "Transform"
