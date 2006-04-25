@@ -330,14 +330,14 @@ MatrixHandle
 NrrdToMatrix::create_column_matrix(NrrdDataHandle dataH)
 {
   remark("Creating column matrix");
-  int rows = dataH->nrrd_->axis[0].size;
+  unsigned int rows = dataH->nrrd_->axis[0].size;
 
   ColumnMatrix* matrix = scinew ColumnMatrix(rows);
   
   PTYPE *val = (PTYPE*)dataH->nrrd_->data;
   double *data = matrix->get_data();
 
-  for(int i=0; i<dataH->nrrd_->axis[0].size; i++) {
+  for(unsigned int i=0; i<dataH->nrrd_->axis[0].size; i++) {
     *data = *val;
     ++data;
     ++val;
@@ -353,16 +353,16 @@ MatrixHandle
 NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH)
 {
   remark("Creating dense matrix");
-  int rows = dataH->nrrd_->axis[1].size;
-  int cols = dataH->nrrd_->axis[0].size;
+  unsigned int rows = dataH->nrrd_->axis[1].size;
+  unsigned int cols = dataH->nrrd_->axis[0].size;
 
   DenseMatrix* matrix = scinew DenseMatrix(rows,cols);
   
   PTYPE *val = (PTYPE*)dataH->nrrd_->data;
   double *data = matrix->get_data_pointer();
 
-  for(int r=0; r<rows; r++) {
-    for(int c=0; c<cols; c++) {
+  for(unsigned int r=0; r<rows; r++) {
+    for(unsigned int c=0; c<cols; c++) {
       *data = *val;
       ++data;
       ++val;
@@ -391,22 +391,22 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
 
   if (cols == -1) {
     // Auto selected...attempt to determine number of columns
-    for (int i=0; i<cols_n->axis[0].size; i++) {
+    for (unsigned int i=0; i<cols_n->axis[0].size; i++) {
       if (cols_d[i] > cols)
 	cols = cols_d[i];
     }
     cols += 1; 
   }
   
-  int rows = rows_n->axis[0].size-1;
-  int offset = 0;
+  unsigned int rows = rows_n->axis[0].size-1;
+  unsigned int offset = 0;
   if (rows_d[0] != 0) {
     warning("First entry of rows nrrd must be a 0. Inserting 0 in first position.");
     offset = 1;
     rows++;
   }
 
-  int nnz = data_n->axis[0].size;
+  unsigned int nnz = data_n->axis[0].size;
 
   // error checking...
 
@@ -418,7 +418,7 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   }
   
   // rows values must be in increasing order
-  for (int i=0; i<rows_n->axis[0].size-1; i++) {
+  for (unsigned int i=0; i<rows_n->axis[0].size-1; i++) {
     if (rows_d[i] > rows_d[i+1] || rows_d[i] < 0) {
       error("Rows nrrd must contain values in increasing order and positive.");
       has_error_ = true;
@@ -427,13 +427,13 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   }
 
   // last rows value should be less than nnz
-  if (rows_d[rows_n->axis[0].size-1] > nnz) {
+  if ((unsigned int) rows_d[rows_n->axis[0].size-1] > nnz) {
     error("The last entry in the rows array must be less than the number of non zeros.");
     has_error_ = true;
     return 0;
   }
 
-  for (int i=0; i<nnz; i++) {
+  for (unsigned int i=0; i<nnz; i++) {
     if (cols_d[i] < 0) {
       error("Columns nrrd must have positive values");
       has_error_ = true;
@@ -443,9 +443,9 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
 
   // for each rows[N+1] - rows[N] sections of the cols array,
   // those values must be in increasing order
-  for (int i=0; i<rows_n->axis[0].size-1; i++) {
+  for (unsigned int i=0; i<rows_n->axis[0].size-1; i++) {
     int span = rows_d[i+1] - rows_d[i];
-    for(int j=i;j<(i+span-1);j++) {
+    for(unsigned int j=i; j<(i+span-1); j++) {
       if (cols_d[j] > cols_d[j+1]) {
 	error("Columns nrrd ordered incorrectly.");
 	has_error_ = true;
@@ -463,12 +463,12 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   if (offset == 1) {
     rr[0] = 0;
   }
-  for (int i=0; i<rows_n->axis[0].size; i++) {
+  for (unsigned int i=0; i<rows_n->axis[0].size; i++) {
     rr[i+offset] = rows_d[i];
   }
 	
   // copy data and cols
-  for(int i=0; i<nnz; i++) {
+  for(unsigned int i=0; i<nnz; i++) {
     cc[i] = cols_d[i];
     d[i] = data_d[i];
   }
