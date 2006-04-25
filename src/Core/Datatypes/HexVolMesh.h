@@ -1425,7 +1425,7 @@ HexVolMesh<Basis>::get_face(typename Face::index_type &face,
   ASSERTMSG(synchronized_ & FACES_E,
             "Must call synchronize FACES_E on HexVolMesh first");
   PFace f(n1, n2, n3, n4);
-  typename face_ht::iterator fiter = face_table_.find(f);
+  typename face_ht::const_iterator fiter = face_table_.find(f);
   if (fiter == face_table_.end()) {
     return false;
   }
