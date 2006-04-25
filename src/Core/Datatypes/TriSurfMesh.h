@@ -120,7 +120,9 @@ public:
       mesh_(msh),
       index_(ind)
     {
-      mesh_.get_edges(edges_, ind);
+      if (basis_type::polynomial_order() > 1) {
+	mesh_.get_edges(edges_, ind);
+      }
     }
 
     // the following designed to coordinate with ::get_nodes
