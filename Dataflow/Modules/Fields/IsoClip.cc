@@ -166,8 +166,6 @@ IsoClip::execute()
   else if (mtd->get_name().find("HexVolMesh") != string::npos)
   {
     ext = "Hex";
-//    error("HexVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting a SCIRun::FieldsGeometry::HexToTet module upstream.");
-//    return;
   }
   else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
   {
@@ -176,7 +174,6 @@ IsoClip::execute()
   }
   else if (mtd->get_name().find("LatVolMesh") != string::npos)
   {
-//    error("LatVolFields are not directly supported in this module.  Please first convert it into a HexVolField by inserting a SCIRun::FieldsGeometry::Unstructure module upstream.");
     error("LatVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting an upstream SCIRun::FieldsGeometry::Unstructure module, followed by a SCIRun::FieldsGeometry::HexToTet module.");
     return;
   }
@@ -223,8 +220,6 @@ IsoClip::execute()
   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
   omatrix_port->send_and_dereference(interp);
 }
-
-
 
 CompileInfoHandle
 IsoClipAlgo::get_compile_info(const TypeDescription *fsrc,
