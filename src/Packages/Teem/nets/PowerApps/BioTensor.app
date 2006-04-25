@@ -196,6 +196,34 @@ set m166 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 267 625]
 set m167 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 49 546]
 
 
+set $m23-use-first-valid {0}
+set $m24-use-first-valid {0} 
+set $m27-use-first-valid {0}
+set $m33-use-first-valid {0}
+set $m45-use-first-valid {0}
+set $m49-use-first-valid {0}
+set $m82-use-first-valid {0}
+set $m83-use-first-valid {0}
+set $m93-use-first-valid {0}
+set $m98-use-first-valid {0}
+set $m104-use-first-valid {0}
+set $m105-use-first-valid {0}
+set $m113-use-first-valid {0}
+set $m114-use-first-valid {0}
+set $m117-use-first-valid {0}
+set $m118-use-first-valid {0}
+set $m120-use-first-valid {0}
+set $m122-use-first-valid {0}
+set $m132-use-first-valid {0}
+set $m133-use-first-valid {0}
+set $m134-use-first-valid {0}
+set $m135-use-first-valid {0}
+set $m136-use-first-valid {0}
+set $m139-use-first-valid {0}
+set $m157-use-first-valid {0}
+set $m167-use-first-valid {0}
+
+
 setProgressText "Loading BioTensor Connections, Please Wait..."
 # Create the Connections between Modules
 set c0 [addConnection $m119 0 $m40 0]
@@ -689,9 +717,9 @@ set $m21-build-eigens {0}
 set $m22-notes {}
 set $m22-build-eigens {0}
 set $m23-notes {}
-set $m23-port-index {0}
+set $m23-port-selected-index {0}
 set $m24-notes {}
-set $m24-port-index {3}
+set $m24-port-selected-index {3}
 set $m25-notes {}
 set $m25-isFixed {0}
 set $m25-min {0}
@@ -709,7 +737,7 @@ set $m26-resolution {256}
 set $m26-realres {256}
 set $m26-gamma {0}
 set $m27-notes {}
-set $m27-port-index {3}
+set $m27-port-selected-index {3}
 set $m28-notes {}
 set $m28-interpolation_basis {linear}
 set $m28-map_source_to_single_dest {0}
@@ -794,9 +822,9 @@ set $m31-data-resolution {6}
 # set $m32-autoinvert {0}
 # set $m32-execmode {0}
 set $m33-notes {}
-set $m33-port-index {0}
+set $m33-port-selected-index {0}
 set $m34-notes {}
-set $m34-port-index {3}
+set $m34-port-selected-index {3}
 # set $m35-notes {}
 # set $m35-simplexString {Node}
 # set $m35-xFlag {1}
@@ -955,7 +983,7 @@ set $m44-ViewWindow_0-global-type {Gouraud}
 
 
 set $m45-notes {}
-set $m45-port-index {0}
+set $m45-port-selected-index {0}
 set $m46-notes {}
 set $m46-outputcenterx {-95.5}
 set $m46-outputcentery {110.5}
@@ -991,7 +1019,7 @@ if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m48-filename {}    
 } 
 set $m49-notes {}
-set $m49-port-index {0}
+set $m49-port-selected-index {0}
 set $m50-notes {}
 #set $m50-add {0}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
@@ -1167,9 +1195,9 @@ set $m81-notes {}
 set $m81-isoval {0.5}
 set $m81-lte {0}
 set $m82-notes {}
-set $m82-port-index {0}
+set $m82-port-selected-index {0}
 set $m83-notes {}
-set $m83-port-index {0}
+set $m83-port-selected-index {0}
 set $m84-notes {}
 set $m84-interpolation_basis {linear}
 set $m84-map_source_to_single_dest {0}
@@ -1315,7 +1343,7 @@ set $m92-type {}
 set $m92-dist {uniuni}
 set $m92-whichtab {Widget}
 set $m93-notes {}
-set $m93-port-index {2}
+set $m93-port-selected-index {2}
 set $m94-notes {}
 set $m94-show-value {0}
 set $m94-show-node {0}
@@ -1389,7 +1417,7 @@ set $m97-messages {}
 set $m97-suid-sel {}
 set $m97-series-del {}
 set $m98-notes {}
-set $m98-port-index {0}
+set $m98-port-selected-index {0}
 set $m99-notes {}
 set $m99-dir {.}
 set $m99-series-uid {}
@@ -1422,9 +1450,9 @@ set $m103-resampAxis1 {x1}
 set $m103-resampAxis2 {x1}
 set $m103-resampAxis3 {=}
 set $m104-notes {}
-set $m104-port-index {1}
+set $m104-port-selected-index {1}
 set $m105-notes {}
-set $m105-port-index {0}
+set $m105-port-selected-index {0}
 set $m106-notes {}
 set $m106-filtertype {gaussian}
 set $m106-dim {4}
@@ -1459,9 +1487,9 @@ set $m112-notes {}
 set $m112-min {0.0001}
 set $m112-max {NaN}
 set $m113-notes {}
-set $m113-port-index {0}
+set $m113-port-selected-index {0}
 set $m114-notes {}
-set $m114-port-index {0}
+set $m114-port-selected-index {0}
 set $m115-notes {}
 set $m115-scale {1.0}
 set $m116-notes {}
@@ -1471,13 +1499,13 @@ set $m116-minor-weight {1.0}
 set $m116-amount {1.0}
 set $m116-target {1.0}
 set $m117-notes {}
-set $m117-port-index {0}
+set $m117-port-selected-index {0}
 set $m118-notes {}
-set $m118-port-index {1}
+set $m118-port-selected-index {1}
 set $m119-notes {}
 set $m119-force-pointcloud {1}
 set $m120-notes {}
-set $m120-port-index {1}
+set $m120-port-selected-index {1}
 set $m121-notes {}
 set $m121-interpolation_basis {linear}
 set $m121-map_source_to_single_dest {0}
@@ -1485,7 +1513,7 @@ set $m121-exhaustive_search {0}
 set $m121-exhaustive_search_max_dist {-1}
 set $m121-np {1}
 set $m122-notes {}
-set $m122-port-index {3}
+set $m122-port-selected-index {3}
 set $m123-notes {}
 set $m123-fibertype {tensorline}
 set $m123-puncture {0.0}
@@ -1606,45 +1634,18 @@ set $m131-endpoints {1}
 set $m131-done_bld_icon {0}
 
 set $m132-notes {}
-set $m132-port-index {1}
+set $m132-port-selected-index {1}
 set $m133-notes {}
-set $m133-port-index {1}
+set $m133-port-selected-index {1}
 set $m134-notes {}
-set $m134-port-index {1}
+set $m134-port-selected-index {1}
 set $m135-notes {}
-set $m135-port-index {1}
-set $m136-port-index {0}
+set $m135-port-selected-index {1}
+set $m136-port-selected-index {1}
 
 set $m137-kind {nrrdKind3DMaskedSymTensor}
 
 set $m138-filename {/tmp/tensors.nrrd}
-
-set $m23-use-first-valid {0}
-set $m24-use-first-valid {0} 
-set $m27-use-first-valid {0}
-set $m33-use-first-valid {0}
-set $m45-use-first-valid {0}
-set $m49-use-first-valid {0}
-set $m82-use-first-valid {0}
-set $m83-use-first-valid {0}
-set $m93-use-first-valid {0}
-set $m98-use-first-valid {0}
-set $m104-use-first-valid {0}
-set $m105-use-first-valid {0}
-set $m113-use-first-valid {0}
-set $m114-use-first-valid {0}
-set $m117-use-first-valid {0}
-set $m118-use-first-valid {0}
-set $m120-use-first-valid {0}
-set $m122-use-first-valid {0}
-set $m132-use-first-valid {0}
-set $m133-use-first-valid {0}
-set $m134-use-first-valid {0}
-set $m135-use-first-valid {0}
-set $m136-use-first-valid {0}
-set $m139-use-first-valid {0}
-set $m157-use-first-valid {0}
-set $m167-use-first-valid {0}
 
 ::netedit scheduleok
 
@@ -1964,6 +1965,7 @@ set exec_fibers(GenStandardColorMaps-Fibers) 0
 
 
 setProgressText "Loading BioTensor Application, Please Wait..."
+
                                                                                
 #######################################################
 # Build up a simplistic standalone application.
@@ -2311,6 +2313,7 @@ class BioTensorApp {
 	disableModule $mods(ChooseNrrd-B0) 1
 	#disableModule $mods(UnuCrop-DWI) 1
 	#disableModule $mods(ChooseNrrd-B0) 1
+
 
 	# Blocking Registration
         disableModule $mods(TendEpireg) 1
@@ -4103,7 +4106,7 @@ class BioTensorApp {
 		    global $mods(NrrdInfo-full)-size0
 		    global $mods(NrrdInfo-full)-size1
 		    global $mods(NrrdInfo-full)-size2
-		    global $mods(ChooseNrrd-preprocess)-port-index
+		    global $mods(ChooseNrrd-preprocess)-port-selected-index
 		    if {[set $mods(NrrdInfo-full)-dimension] == 4} {
 			global $mods(NrrdInfo-full)-size3
 			# just slice and crop - no preprocessing
@@ -4112,7 +4115,7 @@ class BioTensorApp {
 			set y [set $mods(NrrdInfo-full)-size2]
 			set z [set $mods(NrrdInfo-full)-size3]
 			
-			set $mods(ChooseNrrd-preprocess)-port-index 0
+			set $mods(ChooseNrrd-preprocess)-port-selected-index 0
 			
 			disableModule $mods(UnuAxinsert) 1
 			disableModule $mods(UnuReshape) 1
@@ -4126,7 +4129,7 @@ class BioTensorApp {
 			set y [set $mods(NrrdInfo-full)-size1]
 			set z [expr [set $mods(NrrdInfo-full)-size2] / $v]
 			
-			set $mods(ChooseNrrd-preprocess)-port-index 1
+			set $mods(ChooseNrrd-preprocess)-port-selected-index 1
 			
 			# set unu axinsert
 			global $mods(UnuAxinsert)-axis
@@ -4371,26 +4374,26 @@ class BioTensorApp {
 	} elseif {$which == $mods(ShowField-Fibers) && $state == "Completed"} { 
 	    change_indicate_val 2
 	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed"} {
-	    global $mods(ChooseField-GlyphSeeds)-port-index
-	    if {[set $mods(ShowField-Glyphs)-tensors-on] == 0 || [set $mods(ChooseField-GlyphSeeds)-port-index] != 1}  {
+	    global $mods(ChooseField-GlyphSeeds)-port-selected-index
+	    if {[set $mods(ShowField-Glyphs)-tensors-on] == 0 || [set $mods(ChooseField-GlyphSeeds)-port-selected-index] != 1}  {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
 	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed"} {
-	    global $mods(ChooseField-GlyphSeeds)-port-index
-	    if {[set $mods(ShowField-Glyphs)-tensors-on] == 0 || [set $mods(ChooseField-GlyphSeeds)-port-index] != 0} {
+	    global $mods(ChooseField-GlyphSeeds)-port-selected-index
+	    if {[set $mods(ShowField-Glyphs)-tensors-on] == 0 || [set $mods(ChooseField-GlyphSeeds)-port-selected-index] != 0} {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
 	} elseif {$which == $mods(SampleField-FiberSeeds) && $state == "Completed"} {
-	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {[set $mods(ShowField-Fibers)-edges-on] == 0 || [set $mods(ChooseField-FiberSeeds)-port-index] != 1}  {
+	    global $mods(ChooseField-FiberSeeds)-port-selected-index
+	    if {[set $mods(ShowField-Fibers)-edges-on] == 0 || [set $mods(ChooseField-FiberSeeds)-port-selected-index] != 1}  {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
 	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed"} {
-	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {[set $mods(ShowField-Fibers)-edges-on] == 0 || [set $mods(ChooseField-FiberSeeds)-port-index] != 0} {
+	    global $mods(ChooseField-FiberSeeds)-port-selected-index
+	    if {[set $mods(ShowField-Fibers)-edges-on] == 0 || [set $mods(ChooseField-FiberSeeds)-port-selected-index] != 0} {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
@@ -4490,7 +4493,7 @@ class BioTensorApp {
     method execute_Data {} {
 	global mods 
 	global data_mode
-	global $mods(ChooseNrrd1)-port-index
+	global $mods(ChooseNrrd1)-port-selected-index
 
 	# Call toggle_data_mode to reset the data state which
 	# helps maintain state of disabled/enabled modules when
@@ -4502,7 +4505,7 @@ class BioTensorApp {
 	if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	    # determine if we are loading nrrd, dicom, or analyze
 	    # and check if both DWI and T2 files have been specified
-	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+	    if {[set $mods(ChooseNrrd1)-port-selected-index] == 0} {
 		# Nrrd
 
 		global $mods(NrrdReader1)-filename
@@ -4522,7 +4525,7 @@ class BioTensorApp {
 		    }
 		    
 		}
-	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+	    } elseif {[set $mods(ChooseNrrd1)-port-selected-index] == 1} {
 		# Dicom 
 		global $mods(DicomToNrrd1)-num-entries
 		global $mods(DicomToNrrd-T2)-num-entries
@@ -4539,7 +4542,7 @@ class BioTensorApp {
 			return
 		    }
 		}
-	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
+	    } elseif {[set $mods(ChooseNrrd1)-port-selected-index] == 2} {
 		# Analyze
 		global $mods(AnalyzeToNrrd1)-num-files
 		global $mods(AnalyzeToNrrd-T2)-num-files
@@ -4578,7 +4581,7 @@ class BioTensorApp {
 	    # Loading tensors
 	    # determine if we are loading nrrd, dicom, or analyze
 	    # and check if the tensors file has been specified
-	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+	    if {[set $mods(ChooseNrrd1)-port-selected-index] == 0} {
 		# Nrrd
 		global $mods(NrrdReader1)-filename
 		if {![file exists [set $mods(NrrdReader1)-filename]]} {
@@ -4586,7 +4589,7 @@ class BioTensorApp {
 				    "Please specify a valid nrrd file\nwith Tensors before executing." -type ok -icon info -parent .standalone] 
 		    return
 		}
-	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+	    } elseif {[set $mods(ChooseNrrd1)-port-selected-index] == 1} {
 		# Dicom 
 		global $mods(DicomToNrrd1)-num-entries
 		global $mods(DicomToNrrd-T2)-num-entries
@@ -4596,7 +4599,7 @@ class BioTensorApp {
 				    "Please specify existing Dicom files\nofTensors before\nexecuting." -type ok -icon info -parent .standalone] 
 		    return
 		}
-	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
+	    } elseif {[set $mods(ChooseNrrd1)-port-selected-index] == 2} {
 		# Analyze
 		global $mods(AnalyzeToNrrd1)-num-files
 
@@ -4629,10 +4632,10 @@ class BioTensorApp {
 	
 	# determine which type of data (nrrd, dicom, analyze)
 	# and execute that module
-	global $mods(ChooseNrrd1)-port-index
-	if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+	global $mods(ChooseNrrd1)-port-selected-index
+	if {[set $mods(ChooseNrrd1)-port-selected-index] == 0} {
 	    $mods(NrrdReader1)-c needexecute
-	} elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+	} elseif {[set $mods(ChooseNrrd1)-port-selected-index] == 1} {
 	    $mods(DicomToNrrd1)-c needexecute
 	} else {
 	    $mods(AnalyzeToNrrd1)-c needexecute
@@ -4649,11 +4652,10 @@ class BioTensorApp {
     method toggle_data_mode { } {
 	global data_mode
         global mods
-        global $mods(ChooseNrrd-DT)-port-index
+        global $mods(ChooseNrrd-DT)-port-selected-index
 	global $mods(NrrdReader1)-type
-	global $mods(ChooseNrrd-KnownB0)-port-index
-	global $mods(ChooseNrrd-B0)-port-index
-	global $mods(ChooseNrrd-T2)-port-index
+	global $mods(ChooseNrrd-B0)-port-selected-index
+	global $mods(ChooseNrrd-T2)-port-selected-index
 	global $mods(TendEstim)-knownB0
 	
 	if {$data_mode == "DWIknownB0"} {
@@ -4696,7 +4698,7 @@ class BioTensorApp {
 	    $analyze_tab2.load2 configure -state normal
 	    
 	    # configure ChooseNrrd
-	    set $mods(ChooseNrrd-DT)-port-index 0
+	    set $mods(ChooseNrrd-DT)-port-selected-index 0
 	    
 	    # enable registration and dt tabs
 	    #activate_registration
@@ -4704,12 +4706,11 @@ class BioTensorApp {
 	    #activate_dt
 	    
 	    set $mods(TendEstim)-knownB0 1
-	    set $mods(ChooseNrrd-KnownB0)-port-index 0
 	    
-	    set $mods(ChooseNrrd-B0)-port-index 0
-	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
+	    set $mods(ChooseNrrd-B0)-port-selected-index 0
+	    set $mods(ChooseNrrd-T2)-port-selected-index $last_B0_port
 	    
-	    set $mods(ChooseNrrd-B0)-port-index 0
+	    set $mods(ChooseNrrd-B0)-port-selected-index 0
 	    
 	} elseif {$data_mode == "DWI"} {
 	    configure_readers all
@@ -4751,7 +4752,7 @@ class BioTensorApp {
 	    $analyze_tab2.load2 configure -state disabled
 	    
 	    # configure ChooseNrrd
-	    set $mods(ChooseNrrd-DT)-port-index 0
+	    set $mods(ChooseNrrd-DT)-port-selected-index 0
 	    
 	    # enable registration and dt tabs
 	    #activate_registration
@@ -4759,12 +4760,11 @@ class BioTensorApp {
 	    #activate_dt
 	    
 	    set $mods(TendEstim)-knownB0 0
-	    set $mods(ChooseNrrd-KnownB0)-port-index 1
 	    
-	    set $mods(ChooseNrrd-B0)-port-index 0
-	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
+	    set $mods(ChooseNrrd-B0)-port-selected-index 0
+	    set $mods(ChooseNrrd-T2)-port-selected-index $last_B0_port
 
-	    set $mods(ChooseNrrd-B0)-port-index 0
+	    set $mods(ChooseNrrd-B0)-port-selected-index 0
         } elseif {$data_mode == "B0DWI"} {
 	    configure_readers all
 
@@ -4807,7 +4807,7 @@ class BioTensorApp {
 	    $analyze_tab2.load2 configure -state disabled
 	    
 	    # configure ChooseNrrd
-	    set $mods(ChooseNrrd-DT)-port-index 0
+	    set $mods(ChooseNrrd-DT)-port-selected-index 0
 	    
 	    # enable registration and dt tabs
 	    #activate_registration
@@ -4815,11 +4815,10 @@ class BioTensorApp {
 	    #activate_dt
 
 	    set $mods(TendEstim)-knownB0 1
-	    set $mods(ChooseNrrd-KnownB0)-port-index 0
 
-	    set $mods(ChooseNrrd-B0)-port-index 1
+	    set $mods(ChooseNrrd-B0)-port-selected-index 1
 
-	    set $mods(ChooseNrrd-T2)-port-index 3
+	    set $mods(ChooseNrrd-T2)-port-selected-index 3
 	} else {
 	    configure_readers all
 
@@ -4860,7 +4859,7 @@ class BioTensorApp {
 	    $analyze_tab2.load2 configure -state disabled
 	    
 	    # configure ChooseNrrd
-	    set $mods(ChooseNrrd-DT)-port-index 1
+	    set $mods(ChooseNrrd-DT)-port-selected-index 1
 	    
 	    # disable Next button
 	    $data_next_button1 configure -state disabled \
@@ -4894,9 +4893,8 @@ class BioTensorApp {
 	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
 	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
 	    
-	    set $mods(ChooseNrrd-KnownB0)-port-index 0
-	    set $mods(ChooseNrrd-B0)-port-index 0	
-	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
+	    set $mods(ChooseNrrd-B0)-port-selected-index 0	
+	    set $mods(ChooseNrrd-T2)-port-selected-index $last_B0_port
         }
 
 	$this configure_data_mode
@@ -4912,16 +4910,16 @@ class BioTensorApp {
     # readers must be disabled to avoid errors.
     method configure_readers { which } {
         global mods
-        global $mods(ChooseNrrd1)-port-index
-	global $mods(ChooseNrrd-T2)-port-index
-	global $mods(ChooseNrrd-ToProcess)-port-index
+        global $mods(ChooseNrrd1)-port-selected-index
+	global $mods(ChooseNrrd-T2)-port-selected-index
+	global $mods(ChooseNrrd-ToProcess)-port-selected-index
         global data_mode
 
 	if {$which == "Generic"} {
-	    set $mods(ChooseNrrd1)-port-index 0
-	    set $mods(ChooseNrrd-T2)-port-index 0
+	    set $mods(ChooseNrrd1)-port-selected-index 0
+	    set $mods(ChooseNrrd-T2)-port-selected-index 0
 	    set last_B0_port 0	    
-	    set $mods(ChooseNrrd-ToProcess)-port-index 0
+	    set $mods(ChooseNrrd-ToProcess)-port-selected-index 0
 
 	    disableModule $mods(NrrdReader1) 0
 	    disableModule $mods(NrrdReader-T2) 0
@@ -4936,7 +4934,7 @@ class BioTensorApp {
 	    global data_mode
 	    if {$data_mode == "B0DWI"} {
 		disableModule $mods(NrrdReader-T2) 1
-		set $mods(ChooseNrrd-T2)-port-index 3
+		set $mods(ChooseNrrd-T2)-port-selected-index 3
 	    }
 
 	    if {$initialized != 0} {
@@ -4945,10 +4943,10 @@ class BioTensorApp {
 		set c_data_tab "Generic"
 	    }
         } elseif {$which == "Dicom"} {
-	    set $mods(ChooseNrrd1)-port-index 1
-	    set $mods(ChooseNrrd-T2)-port-index 1
+	    set $mods(ChooseNrrd1)-port-selected-index 1
+	    set $mods(ChooseNrrd-T2)-port-selected-index 1
 	    set last_B0_port 1
-	    set $mods(ChooseNrrd-ToProcess)-port-index 1
+	    set $mods(ChooseNrrd-ToProcess)-port-selected-index 1
 
 	    disableModule $mods(NrrdReader1) 1
 	    disableModule $mods(NrrdReader-T2) 1
@@ -4963,7 +4961,7 @@ class BioTensorApp {
 	    global data_mode
 	    if {$data_mode == "B0DWI"} {
 		disableModule $mods(DicomToNrrd-T2) 1
-		set $mods(ChooseNrrd-T2)-port-index 3
+		set $mods(ChooseNrrd-T2)-port-selected-index 3
 	    }
 
             if {$initialized != 0} {
@@ -4973,10 +4971,10 @@ class BioTensorApp {
 	    }
         } elseif {$which == "Analyze"} {
 	    # Analyze
-	    set $mods(ChooseNrrd1)-port-index 2
-	    set $mods(ChooseNrrd-T2)-port-index 2
+	    set $mods(ChooseNrrd1)-port-selected-index 2
+	    set $mods(ChooseNrrd-T2)-port-selected-index 2
 	    set last_B0_port 2
-	    set $mods(ChooseNrrd-ToProcess)-port-index 2
+	    set $mods(ChooseNrrd-ToProcess)-port-selected-index 2
 
 	    disableModule $mods(NrrdReader1) 1
 	    disableModule $mods(NrrdReader-T2) 1
@@ -4999,7 +4997,7 @@ class BioTensorApp {
 		set c_data_tab "Analyze"
 	    }
         } elseif {$which == "all"} {
-	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+	    if {[set $mods(ChooseNrrd1)-port-selected-index] == 0} {
 		# nrrd
 		disableModule $mods(NrrdReader1) 0
 		disableModule $mods(NrrdReader-T2) 0
@@ -5014,9 +5012,9 @@ class BioTensorApp {
 		global data_mode
 		if {$data_mode == "B0DWI"} {
 		    disableModule $mods(NrrdReader-T2) 1
-		    set $mods(ChooseNrrd-T2)-port-index 3
+		    set $mods(ChooseNrrd-T2)-port-selected-index 3
 		}
-	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+	    } elseif {[set $mods(ChooseNrrd1)-port-selected-index] == 1} {
 		# dicom
 		disableModule $mods(NrrdReader1) 1
 		disableModule $mods(NrrdReader-T2) 1
@@ -5031,7 +5029,7 @@ class BioTensorApp {
 		global data_mode
 		if {$data_mode == "B0DWI"} {
 		    disableModule $mods(DicomToNrrd-T2) 1
-		    set $mods(ChooseNrrd-T2)-port-index 3
+		    set $mods(ChooseNrrd-T2)-port-selected-index 3
 		}
 	    } else {
 		# analyze
@@ -5048,7 +5046,7 @@ class BioTensorApp {
 		global data_mode
 		if {$data_mode == "B0DWI"} {
 		    disableModule $mods(AnalyzeToNrrd-T2) 1
-		    set $mods(ChooseNrrd-T2)-port-index 3
+		    set $mods(ChooseNrrd-T2)-port-selected-index 3
 		}
 	    }
 	}
@@ -5128,6 +5126,19 @@ class BioTensorApp {
 	    # activate reg variance checkbutton
 	    $variance_tab1.reg configure -state normal
 	    $variance_tab2.reg configure -state normal
+
+	    # set ChooseNrrd-KnownB0 vals
+	    global $mods(ChooseNrrd-KnownB0)-port-selected-index
+	    global data_mode
+	    if {$data_mode == "DWIknownB0"} {
+		set $mods(ChooseNrrd-KnownB0)-port-selected-index 0
+	    } elseif {$data_mode == "DWI"} {
+		set $mods(ChooseNrrd-KnownB0)-port-selected-index 1
+	    } elseif {$data_mode == "B0DWI"} {
+		set $mods(ChooseNrrd-KnownB0)-port-selected-index 0
+	    } else {
+		set $mods(ChooseNrrd-KnownB0)-port-selected-index 0
+	    }
 	    
 	    # execute
 	    $mods(TendEpireg)-c needexecute
@@ -5376,7 +5387,7 @@ class BioTensorApp {
     
     method toggle_do_registration {} {
         global mods
-        global $mods(ChooseNrrd-ToReg)-port-index
+        global $mods(ChooseNrrd-ToReg)-port-selected-index
         global do_registration
 	global bmatrix
 	
@@ -5389,7 +5400,7 @@ class BioTensorApp {
 	    activate_registration
 
 	    # change ChooseNrrd
-	    set $mods(ChooseNrrd-ToReg)-port-index 0
+	    set $mods(ChooseNrrd-ToReg)-port-selected-index 0
 
 	    # set bmatrix selection to load compute
 	    set bmatrix "compute"
@@ -5426,7 +5437,7 @@ class BioTensorApp {
 	    $reg_tab2.last.ex configure -background grey75 -foreground grey64
 	    	    
 	    # change ChooseNrrd
-	    set $mods(ChooseNrrd-ToReg)-port-index 1
+	    set $mods(ChooseNrrd-ToReg)-port-selected-index 1
 
 	    # set bmatrix selection to load load
 	    set bmatrix "load"
@@ -5551,7 +5562,7 @@ class BioTensorApp {
     method toggle_b_matrix {} {
 	global bmatrix
 	global mods
-	global $mods(ChooseNrrd-BMatrix)-port-index
+	global $mods(ChooseNrrd-BMatrix)-port-selected-index
 	
 	if {$bmatrix == "compute"} {
             $dt_tab1.bm.childsite.load.e configure -state disabled \
@@ -5562,7 +5573,7 @@ class BioTensorApp {
                 -foreground grey64
             $dt_tab2.bm.childsite.browse configure -state disabled
 
-	    set $mods(ChooseNrrd-BMatrix)-port-index 0
+	    set $mods(ChooseNrrd-BMatrix)-port-selected-index 0
 	    disableModule $mods(NrrdReader-BMatrix) 1
 	    disableModule $mods(NrrdReader-Gradient) 0
 	} else {
@@ -5574,7 +5585,7 @@ class BioTensorApp {
                 -foreground black
             $dt_tab2.bm.childsite.browse configure -state normal
 
-	    set $mods(ChooseNrrd-BMatrix)-port-index 1
+	    set $mods(ChooseNrrd-BMatrix)-port-selected-index 1
 	    disableModule $mods(NrrdReader-BMatrix) 0
 	    disableModule $mods(NrrdReader-Gradient) 1
 	}
@@ -5582,7 +5593,7 @@ class BioTensorApp {
 
     method toggle_do_smoothing {} {
         global mods
-        global $mods(ChooseNrrd-ToSmooth)-port-index
+        global $mods(ChooseNrrd-ToSmooth)-port-selected-index
         global do_smoothing
 
         if {$do_smoothing == 0} {
@@ -5609,7 +5620,7 @@ class BioTensorApp {
 	   disableModule $mods(UnuResample-XY) 1
 	   disableModule $mods(UnuResample-Z) 1
 
-           set $mods(ChooseNrrd-ToSmooth)-port-index 1
+           set $mods(ChooseNrrd-ToSmooth)-port-selected-index 1
         } else {
            # disable smoothing scrollbar
            $dt_tab1.blur.childsite.rad1.l configure -state normal
@@ -5634,7 +5645,7 @@ class BioTensorApp {
 	   disableModule $mods(UnuResample-XY) 0
 	   disableModule $mods(UnuResample-Z) 0
 
-           set $mods(ChooseNrrd-ToSmooth)-port-index 0
+           set $mods(ChooseNrrd-ToSmooth)-port-selected-index 0
 
         }
     }
@@ -6103,8 +6114,8 @@ class BioTensorApp {
 	    set plane_z [expr $size_z/2]
 	}
 
-	global $mods(ChooseField-ColorPlanes)-port-index
-	set port [set $mods(ChooseField-ColorPlanes)-port-index]
+	global $mods(ChooseField-ColorPlanes)-port-selected-index
+	set port [set $mods(ChooseField-ColorPlanes)-port-selected-index]
 
 	if {$plane_type == "Constant"} {
 	    #Constant
@@ -6132,11 +6143,11 @@ class BioTensorApp {
 
     method configure_planes_tabs {} {
 	global mods
-	global $mods(ChooseField-ColorPlanes)-port-index
-	global $mods(ChooseColorMap-Planes)-port-index
+	global $mods(ChooseField-ColorPlanes)-port-selected-index
+	global $mods(ChooseColorMap-Planes)-port-selected-index
 
-	set port [set $mods(ChooseField-ColorPlanes)-port-index]
-	set color_port [set $mods(ChooseColorMap-Planes)-port-index]
+	set port [set $mods(ChooseField-ColorPlanes)-port-selected-index]
+	set color_port [set $mods(ChooseColorMap-Planes)-port-selected-index]
 
 	foreach w [winfo children $planes_tab1] {
 	    enable_widget $w
@@ -6163,8 +6174,8 @@ class BioTensorApp {
 
     method select_color_planes_color { w } {
         global mods
-	global $mods(ChooseField-ColorPlanes)-port-index
-	global $mods(ChooseColorMap-Planes)-port-index
+	global $mods(ChooseField-ColorPlanes)-port-selected-index
+	global $mods(ChooseColorMap-Planes)-port-selected-index
 	global $mods(ShowField-X)-faces-usedefcolor
 	global $mods(ShowField-Y)-faces-usedefcolor
 	global $mods(ShowField-Z)-faces-usedefcolor
@@ -6180,32 +6191,32 @@ class BioTensorApp {
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
 	    disableModule $mods(ChooseColorMap-Planes) 1
-	    set $mods(ChooseColorMap-Planes)-port-index 1
-	    set $mods(ChooseField-ColorPlanes)-port-index 3
+	    set $mods(ChooseColorMap-Planes)-port-selected-index 1
+	    set $mods(ChooseField-ColorPlanes)-port-selected-index 3
 	    disable_planes_colormaps
         } elseif {$which == "Fractional Anisotropy"} {
 	    set plane_type "Fractional Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
 	    disableModule $mods(ChooseColorMap-Planes) 0
-	    set $mods(ChooseColorMap-Planes)-port-index 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 0
+	    set $mods(ChooseColorMap-Planes)-port-selected-index 0
+	    set $mods(ChooseField-ColorPlanes)-port-selected-index 0
 	    enable_planes_colormaps
         } elseif {$which == "Linear Anisotropy"} {
 	    set plane_type "Linear Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
 	    disableModule $mods(ChooseColorMap-Planes) 0
-	    set $mods(ChooseColorMap-Planes)-port-index 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 1
+	    set $mods(ChooseColorMap-Planes)-port-selected-index 0
+	    set $mods(ChooseField-ColorPlanes)-port-selected-index 1
 	    enable_planes_colormaps
         } elseif {$which == "Planar Anisotropy"} {
 	    set plane_type "Planar Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
 	    disableModule $mods(ChooseColorMap-Planes) 0
-	    set $mods(ChooseColorMap-Planes)-port-index 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 2
+	    set $mods(ChooseColorMap-Planes)-port-selected-index 0
+	    set $mods(ChooseField-ColorPlanes)-port-selected-index 2
 	    enable_planes_colormaps
         } else {
 	    set plane_type "Constant"
@@ -6213,8 +6224,8 @@ class BioTensorApp {
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state normal
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state normal
 	    disableModule $mods(ChooseColorMap-Planes) 1
-	    set $mods(ChooseColorMap-Planes)-port-index 1
-	    set $mods(ChooseField-ColorPlanes)-port-index 0
+	    set $mods(ChooseColorMap-Planes)-port-selected-index 1
+	    set $mods(ChooseField-ColorPlanes)-port-selected-index 0
 
 	    set $mods(ShowField-X)-faces-usedefcolor 1
 	    set $mods(ShowField-Y)-faces-usedefcolor 1
@@ -6538,22 +6549,22 @@ class BioTensorApp {
     method toggle_clip_to_isosurface {} {
 	global mods
 	global clip_to_isosurface
-	global $mods(ChooseField-X)-port-index
-	global $mods(ChooseField-Y)-port-index
-	global $mods(ChooseField-Z)-port-index
+	global $mods(ChooseField-X)-port-selected-index
+	global $mods(ChooseField-Y)-port-selected-index
+	global $mods(ChooseField-Z)-port-selected-index
 	
 	if {$clip_to_isosurface == 1} {
 	    # change ChooseField port to 1
 	    
-	    set $mods(ChooseField-X)-port-index 1
-	    set $mods(ChooseField-Y)-port-index 1
-	    set $mods(ChooseField-Z)-port-index 1
+	    set $mods(ChooseField-X)-port-selected-index 1
+	    set $mods(ChooseField-Y)-port-selected-index 1
+	    set $mods(ChooseField-Z)-port-selected-index 1
 	} else {
 	    # change ChooseField port to 0
 	    
-	    set $mods(ChooseField-X)-port-index 0
-	    set $mods(ChooseField-Y)-port-index 0
-	    set $mods(ChooseField-Z)-port-index 0
+	    set $mods(ChooseField-X)-port-selected-index 0
+	    set $mods(ChooseField-Y)-port-selected-index 0
+	    set $mods(ChooseField-Z)-port-selected-index 0
 	}
 	
 	# re-execute
@@ -6589,10 +6600,10 @@ class BioTensorApp {
             # only update if fibers or glyphs are on?
 	    # and if they are seeding on grid
             global $mods(ShowField-Glyphs)-tensors-on
-	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    global $mods(ChooseField-GlyphSeeds)-port-selected-index
 	    global $mods(ShowField-Fibers)-edges-on
-	    global $mods(ChooseField-FiberSeeds)-port-index
-	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+	    global $mods(ChooseField-FiberSeeds)-port-selected-index
+	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    # }	    	   
 	    
@@ -6630,10 +6641,10 @@ class BioTensorApp {
             # only update if fibers or glyphs are on?
 	    # and if they are seeding on grid
             global $mods(ShowField-Glyphs)-tensors-on
-	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    global $mods(ChooseField-GlyphSeeds)-port-selected-index
 	    global $mods(ShowField-Fibers)-edges-on
-	    global $mods(ChooseField-FiberSeeds)-port-index
-	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+	    global $mods(ChooseField-FiberSeeds)-port-selected-index
+	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    # }	    
 	    
@@ -6671,10 +6682,10 @@ class BioTensorApp {
             # only update if fibers or glyphs are on?
 	    # and if they are seeding on grid
             global $mods(ShowField-Glyphs)-tensors-on
-	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    global $mods(ChooseField-GlyphSeeds)-port-selected-index
 	    global $mods(ShowField-Fibers)-edges-on
-	    global $mods(ChooseField-FiberSeeds)-port-index
-	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+	    global $mods(ChooseField-FiberSeeds)-port-selected-index
+	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    # }
 	    $mods(SamplePlane-Z)-c needexecute
@@ -6691,8 +6702,8 @@ class BioTensorApp {
 	global $mods(ShowField-X)-faces-on
 	global $mods(ShowField-Y)-faces-on
 	global $mods(ShowField-Z)-faces-on
-        global $mods(ChooseField-GlyphSeeds)-port-index
-        global $mods(ChooseField-FiberSeeds)-port-index
+        global $mods(ChooseField-GlyphSeeds)-port-selected-index
+        global $mods(ChooseField-FiberSeeds)-port-selected-index
 	global $mods(Viewer)-ViewWindow_0-clip
 	set clip $mods(Viewer)-ViewWindow_0-clip
 	
@@ -6719,7 +6730,7 @@ class BioTensorApp {
 
 	    # only take the time to rexecute of glyphs or fibers are
 	    # being seeded in the grid
-	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 
@@ -6751,7 +6762,7 @@ class BioTensorApp {
 
 	    # only take the time to rexecute of glyphs or fibers are
 	    # being seeded in the grid
-	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 
@@ -6784,7 +6795,7 @@ class BioTensorApp {
 
 	    # only take the time to rexecute of glyphs or fibers are
 	    # being seeded in the grid
-	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 	    
@@ -7110,8 +7121,8 @@ class BioTensorApp {
 
     method sync_isosurface_tabs {} {
 	global mods
-	global $mods(ChooseField-Isoval)-port-index
-	set port [set $mods(ChooseField-Isoval)-port-index]
+	global $mods(ChooseField-Isoval)-port-selected-index
+	set port [set $mods(ChooseField-Isoval)-port-selected-index]
 
 	if {$port == 0} {
 	    #FA
@@ -7127,10 +7138,10 @@ class BioTensorApp {
 	    $isosurface_tab2.isovalcolor select "Planar Anisotropy"
 	} 
 
-	global $mods(ChooseField-Isosurface)-port-index
-	set port [set $mods(ChooseField-Isosurface)-port-index]
-	global $mods(ChooseColorMap-Isosurface)-port-index
-	set color_port [set $mods(ChooseColorMap-Isosurface)-port-index]
+	global $mods(ChooseField-Isosurface)-port-selected-index
+	set port [set $mods(ChooseField-Isosurface)-port-selected-index]
+	global $mods(ChooseColorMap-Isosurface)-port-selected-index
+	set color_port [set $mods(ChooseColorMap-Isosurface)-port-selected-index]
 
 
 	if {$color_port == 1 && $port != 3} {
@@ -7288,8 +7299,8 @@ class BioTensorApp {
 
     method select_isosurface_color { w } {
 	global mods
-       	global $mods(ChooseField-Isosurface)-port-index
-	global $mods(ChooseColorMap-Isosurface)-port-index
+       	global $mods(ChooseField-Isosurface)-port-selected-index
+	global $mods(ChooseColorMap-Isosurface)-port-selected-index
 	
 	set which [$w.color get]
 
@@ -7302,32 +7313,32 @@ class BioTensorApp {
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    disableModule $mods(ChooseColorMap-Isosurface) 1
-	    set $mods(ChooseColorMap-Isosurface)-port-index 1
-	    set $mods(ChooseField-Isosurface)-port-index 3
+	    set $mods(ChooseColorMap-Isosurface)-port-selected-index 1
+	    set $mods(ChooseField-Isosurface)-port-selected-index 3
 	    disable_isosurface_colormaps
         } elseif {$which == "Fractional Anisotropy"} {
 	    set iso_type "Fractional Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
 	    disableModule $mods(ChooseColorMap-Isosurface) 0
-	    set $mods(ChooseColorMap-Isosurface)-port-index 0
-	    set $mods(ChooseField-Isosurface)-port-index 0
+	    set $mods(ChooseColorMap-Isosurface)-port-selected-index 0
+	    set $mods(ChooseField-Isosurface)-port-selected-index 0
 	    enable_isosurface_colormaps
         } elseif {$which == "Linear Anisotropy"} {
 	    set iso_type "Linear Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	   
 	    disableModule $mods(ChooseColorMap-Isosurface) 0
-	    set $mods(ChooseColorMap-Isosurface)-port-index 0
-	    set $mods(ChooseField-Isosurface)-port-index 1
+	    set $mods(ChooseColorMap-Isosurface)-port-selected-index 0
+	    set $mods(ChooseField-Isosurface)-port-selected-index 1
 	    enable_isosurface_colormaps
         } elseif {$which == "Planar Anisotropy"} {
 	    set iso_type "Planar Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
 	    disableModule $mods(ChooseColorMap-Isosurface) 0
-	    set $mods(ChooseColorMap-Isosurface)-port-index 0
-	    set $mods(ChooseField-Isosurface)-port-index 2
+	    set $mods(ChooseColorMap-Isosurface)-port-selected-index 0
+	    set $mods(ChooseField-Isosurface)-port-selected-index 2
 	    enable_isosurface_colormaps
         } else {
 	    set iso_type "Constant"
@@ -7335,8 +7346,8 @@ class BioTensorApp {
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal	   
 	    disableModule $mods(ChooseColorMap-Isosurface) 1
-	    set $mods(ChooseColorMap-Isosurface)-port-index 1
-	    set $mods(ChooseField-Isosurface)-port-index 0
+	    set $mods(ChooseColorMap-Isosurface)-port-selected-index 1
+	    set $mods(ChooseField-Isosurface)-port-selected-index 0
 	    set $mods(ShowField-Isosurface)-faces-usedefcolor 1
 	    disable_isosurface_colormaps
         }
@@ -7386,17 +7397,17 @@ class BioTensorApp {
 
     method select_isoval_based_on { w } {
 	global mods
-       	global $mods(ChooseField-Isoval)-port-index
+       	global $mods(ChooseField-Isoval)-port-selected-index
 	
 	set which [$w.isovalcolor get]
 	
         if {$which == "Fractional Anisotropy"} {
-	    set $mods(ChooseField-Isoval)-port-index 0
+	    set $mods(ChooseField-Isoval)-port-selected-index 0
         } elseif {$which == "Linear Anisotropy"} {
-	    set $mods(ChooseField-Isoval)-port-index 1
+	    set $mods(ChooseField-Isoval)-port-selected-index 1
         } else {
 	    # Planar Anisotropy
-	    set $mods(ChooseField-Isoval)-port-index 2
+	    set $mods(ChooseField-Isoval)-port-selected-index 2
         } 
 
 	configure_anisotropy_modules
@@ -7544,7 +7555,7 @@ class BioTensorApp {
 	    
 	    set seed [$f.seed childsite]
 	    
-	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    global $mods(ChooseField-GlyphSeeds)-port-selected-index
 	    frame $seed.a
 	    pack $seed.a -side left -anchor n -padx 3
 
@@ -7552,7 +7563,7 @@ class BioTensorApp {
 	    pack $seed.a.pointf -side top\
 		-anchor nw -padx 3 -pady 1
 	    radiobutton $seed.a.pointf.point -text "Single Point" \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-variable $mods(ChooseField-GlyphSeeds)-port-selected-index \
 		-value 0 \
 		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
@@ -7572,7 +7583,7 @@ class BioTensorApp {
 		-anchor nw -padx 3 -pady 1
 
 	    radiobutton $seed.a.rakef.rake -text "Along Line  " \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-variable $mods(ChooseField-GlyphSeeds)-port-selected-index \
 		-value 1 \
 		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
@@ -7590,14 +7601,14 @@ class BioTensorApp {
 	    frame $seed.b
 	    pack $seed.b -side right -anchor n -padx 3
 	    radiobutton $seed.b.plane -text "On Planes" \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-variable $mods(ChooseField-GlyphSeeds)-port-selected-index \
 		-value 2 \
 		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
 	    Tooltip $seed.b.plane $tips(GlyphsSeedLine)
 	    
 	    radiobutton $seed.b.grid -text "On Grid" \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-variable $mods(ChooseField-GlyphSeeds)-port-selected-index \
 		-value 3 \
 		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
@@ -7802,12 +7813,12 @@ class BioTensorApp {
     method sync_glyphs_tabs {} {
 	global mods
 	global glyph_display_type
-	global $mods(ChooseField-Glyphs)-port-index
+	global $mods(ChooseField-Glyphs)-port-selected-index
 	global $mods(ShowField-Glyphs)-data_display_type
-	global $mods(ChooseField-Glyphs)-port-index
+	global $mods(ChooseField-Glyphs)-port-selected-index
 
-	set port [set $mods(ChooseField-Glyphs)-port-index]
-	set color_port [set $mods(ChooseField-Glyphs)-port-index]
+	set port [set $mods(ChooseField-Glyphs)-port-selected-index]
+	set color_port [set $mods(ChooseField-Glyphs)-port-selected-index]
 
 	set type ""
 	if {$glyph_display_type == "boxes" && [set $mods(ShowField-Glyphs)-data_display_type] == "Colored Boxes"} {
@@ -7944,13 +7955,13 @@ class BioTensorApp {
 	}
 	
 	# configure glyph rake
-	global $mods(ChooseField-GlyphSeeds)-port-index
-	if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+	global $mods(ChooseField-GlyphSeeds)-port-selected-index
+	if {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 1} {
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
-	} elseif {[set $mods(ChooseField-GlyphSeeds)-port-index]== 0} {
+	} elseif {[set $mods(ChooseField-GlyphSeeds)-port-selected-index]== 0} {
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
@@ -7980,7 +7991,7 @@ class BioTensorApp {
 
     method toggle_scale_glyph {} {
 	global mods
-        global $mods(ChooseNrrd-Norm)-port-index
+        global $mods(ChooseNrrd-Norm)-port-selected-index
         global scale_glyph
         global $mods(ShowField-Glyphs)-tensors-on
 
@@ -7989,7 +8000,7 @@ class BioTensorApp {
 	    # $glyphs_tab1.scale.s configure -state disabled -foreground grey64
 	    # $glyphs_tab2.scale.s configure -state disabled -foreground grey64
 	    
-	    set $mods(ChooseNrrd-Norm)-port-index 1
+	    set $mods(ChooseNrrd-Norm)-port-selected-index 1
 		
 	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		$mods(ChooseNrrd-Norm)-c needexecute
@@ -8001,7 +8012,7 @@ class BioTensorApp {
 	    #$glyphs_tab1.scale.s configure -state normal -foreground black
 	    #$glyphs_tab2.scale.s configure -state normal -foreground black
 	    
-	    set $mods(ChooseNrrd-Norm)-port-index 0
+	    set $mods(ChooseNrrd-Norm)-port-selected-index 0
 		
 	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		$mods(TendNorm-Glyphs)-c needexecute
@@ -8015,14 +8026,14 @@ class BioTensorApp {
     
     method toggle_exag_glyph {} {
 	global mods
-        global $mods(ChooseNrrd-Exag)-port-index
+        global $mods(ChooseNrrd-Exag)-port-selected-index
         global exag_glyph
 
 	if {$exag_glyph == 0} {
 	    $glyphs_tab1.exag.s configure -state disabled -foreground grey64
 	    $glyphs_tab2.exag.s configure -state disabled -foreground grey64
 	    
-	    set $mods(ChooseNrrd-Exag)-port-index 1
+	    set $mods(ChooseNrrd-Exag)-port-selected-index 1
 	    
 	    global $mods(ShowField-Glyphs)-tensors-on
 	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
@@ -8035,7 +8046,7 @@ class BioTensorApp {
 	    $glyphs_tab1.exag.s configure -state normal -foreground black
 	    $glyphs_tab2.exag.s configure -state normal -foreground black
 	    
-	    set $mods(ChooseNrrd-Exag)-port-index 0
+	    set $mods(ChooseNrrd-Exag)-port-selected-index 0
 
 	    
 	    global $mods(ShowField-Glyphs)-tensors-on
@@ -8053,8 +8064,8 @@ class BioTensorApp {
 	global glyph_display_type
         global mods
         global $mods(ShowField-Glyphs)-tensor_display_type
-        global $mods(ChooseField-Glyphs)-port-index
-	global $mods(ChooseColorMap-Glyphs)-port-index
+        global $mods(ChooseField-Glyphs)-port-selected-index
+	global $mods(ChooseColorMap-Glyphs)-port-selected-index
 	global $mods(ShowField-Glyphs)-tensor-usedefcolor
 	
         set type ""
@@ -8097,32 +8108,32 @@ class BioTensorApp {
 	# configure color
 	if {$type == "Principle Eigenvector"} {
 	    set glyph_type "Principle Eigenvector"
-	    set $mods(ChooseField-Glyphs)-port-index 3
+	    set $mods(ChooseField-Glyphs)-port-selected-index 3
 	    disableModule $mods(ChooseColorMap-Glyphs) 1
-	    set $mods(ChooseColorMap-Glyphs)-port-index 1
+	    set $mods(ChooseColorMap-Glyphs)-port-selected-index 1
 	    disable_glyphs_colormaps
 	} elseif {$type == "Fractional Anisotropy"} {
 	    set glyph_type "Fractional Anisotropy"
-	    set $mods(ChooseField-Glyphs)-port-index 0
+	    set $mods(ChooseField-Glyphs)-port-selected-index 0
 	    disableModule $mods(ChooseColorMap-Glyphs) 0
-	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    set $mods(ChooseColorMap-Glyphs)-port-selected-index 0
 	    enable_glyphs_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
 	    set glyph_type "Linear Anisotropy"
-	    set $mods(ChooseField-Glyphs)-port-index 1
+	    set $mods(ChooseField-Glyphs)-port-selected-index 1
 	    disableModule $mods(ChooseColorMap-Glyphs) 0
-	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    set $mods(ChooseColorMap-Glyphs)-port-selected-index 0
 	    enable_glyphs_colormaps
 	} elseif {$type == "Planar Anisotropy"} {
 	    set glyph_type "Planar Anisotropy"
-	    set $mods(ChooseField-Glyphs)-port-index 2
+	    set $mods(ChooseField-Glyphs)-port-selected-index 2
 	    disableModule $mods(ChooseColorMap-Glyphs) 0
-	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    set $mods(ChooseColorMap-Glyphs)-port-selected-index 0
 	    enable_glyphs_colormaps
 	} elseif {$type == "Constant"} {
 	    set glyph_type "Constant"
 	    disableModule $mods(ChooseColorMap-Glyphs) 1
-	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    set $mods(ChooseColorMap-Glyphs)-port-selected-index 0
 	    set $mods(ShowField-Glyphs)-tensors-usedefcolor 1
 	    disable_glyphs_colormaps
 	}
@@ -8166,9 +8177,9 @@ class BioTensorApp {
 
     method update_glyph_seed_method {} {
         global mods
-        global $mods(ChooseField-GlyphSeeds)-port-index
+        global $mods(ChooseField-GlyphSeeds)-port-selected-index
 
-	if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
+	if {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 0} {
 	    # Point
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
@@ -8177,7 +8188,7 @@ class BioTensorApp {
 	    
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
-	} elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+	} elseif {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 1} {
 	    # Rake
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
@@ -8195,7 +8206,7 @@ class BioTensorApp {
 	    
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
-	    if {$vis_activated && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
+	    if {$vis_activated && [set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 	}
@@ -8245,14 +8256,14 @@ class BioTensorApp {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
         } else {
-            global $mods(ChooseField-GlyphSeeds)-port-index
-            if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
+            global $mods(ChooseField-GlyphSeeds)-port-selected-index
+            if {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 0} {
 		# enable Probe Widget
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
-            } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+            } elseif {[set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
-            } elseif {$vis_activated && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
+            } elseif {$vis_activated && [set $mods(ChooseField-GlyphSeeds)-port-selected-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
         }
@@ -8569,7 +8580,7 @@ class BioTensorApp {
 	    
 	    set seed [$f.seed childsite]
 	    
-	    global $mods(ChooseField-FiberSeeds)-port-index
+	    global $mods(ChooseField-FiberSeeds)-port-selected-index
 	    
 	    frame $seed.a
 	    pack $seed.a -side left -anchor n -padx 3
@@ -8578,7 +8589,7 @@ class BioTensorApp {
 	    pack $seed.a.pointf -side top\
 		-anchor nw -padx 3 -pady 1
 	    radiobutton $seed.a.pointf.point -text "Single Point" \
-		-variable $mods(ChooseField-FiberSeeds)-port-index \
+		-variable $mods(ChooseField-FiberSeeds)-port-selected-index \
 		-value 0 \
 		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
@@ -8598,7 +8609,7 @@ class BioTensorApp {
 		-anchor nw -padx 3 -pady 1
 
 	    radiobutton $seed.a.rakef.rake -text "Along Line  " \
-		-variable $mods(ChooseField-FiberSeeds)-port-index \
+		-variable $mods(ChooseField-FiberSeeds)-port-selected-index \
 		-value 1 \
 		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
@@ -8616,14 +8627,14 @@ class BioTensorApp {
 	    frame $seed.b
 	    pack $seed.b -side right -anchor n -padx 3
 	    radiobutton $seed.b.plane -text "On Planes" \
-		-variable $mods(ChooseField-FiberSeeds)-port-index \
+		-variable $mods(ChooseField-FiberSeeds)-port-selected-index \
 		-value 2 \
 		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
 	    Tooltip $seed.b.plane $tips(FibersSeedPlanes)
 	    
 	    radiobutton $seed.b.grid -text "On Grid" \
-		-variable $mods(ChooseField-FiberSeeds)-port-index \
+		-variable $mods(ChooseField-FiberSeeds)-port-selected-index \
 		-value 3 \
 		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
@@ -8803,11 +8814,11 @@ class BioTensorApp {
 
     method sync_fibers_tabs {} {
 	global mods 
-	global $mods(ChooseField-Fibers)-port-index
-	global $mods(ChooseColorMap-Fibers)-port-index
+	global $mods(ChooseField-Fibers)-port-selected-index
+	global $mods(ChooseColorMap-Fibers)-port-selected-index
 
-	set port [set $mods(ChooseField-Fibers)-port-index]
-	set color_port [set $mods(ChooseColorMap-Fibers)-port-index]
+	set port [set $mods(ChooseField-Fibers)-port-selected-index]
+	set color_port [set $mods(ChooseColorMap-Fibers)-port-selected-index]
 
 	if {$color_port == 1 && $port != 3} {
 	    # set optionmenu Constant and enable color button
@@ -8867,13 +8878,13 @@ class BioTensorApp {
 	    }
 
 	    # configure glyph rake
-	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
+	    global $mods(ChooseField-FiberSeeds)-port-selected-index
+	    if {[set $mods(ChooseField-FiberSeeds)-port-selected-index] == 1} {
 		$fibers_tab1.seed.childsite.a.rakef.w configure -state normal
 		$fibers_tab2.seed.childsite.a.rakef.w configure -state normal
 		$fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
 		$fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
-	    } elseif {[set $mods(ChooseField-FiberSeeds)-port-index]== 0} {
+	    } elseif {[set $mods(ChooseField-FiberSeeds)-port-selected-index]== 0} {
 		$fibers_tab1.seed.childsite.a.pointf.w configure -state normal
 		$fibers_tab2.seed.childsite.a.pointf.w configure -state normal
 		$fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
@@ -9030,8 +9041,8 @@ class BioTensorApp {
 
     method change_fiber_color_by { f } {
 	global mods
-	global $mods(ChooseField-Fibers)-port-index
-	global $mods(ChooseColorMap-Fibers)-port-index
+	global $mods(ChooseField-Fibers)-port-selected-index
+	global $mods(ChooseColorMap-Fibers)-port-selected-index
 	global $mods(ShowField-Fibers)-edges-usedefcolor
 
 	# get selection and change appropriate port
@@ -9045,42 +9056,42 @@ class BioTensorApp {
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 
-	    set $mods(ChooseField-Fibers)-port-index 3
+	    set $mods(ChooseField-Fibers)-port-selected-index 3
 	    disableModule $mods(ChooseColorMap-Fibers) 1
-	    set $mods(ChooseColorMap-Fibers)-port-index 1
+	    set $mods(ChooseColorMap-Fibers)-port-selected-index 1
 	    disable_fibers_colormaps
 	} elseif {$type == "Fractional Anisotropy"} {
 	    set fiber_type "Fractional Anisotropy"
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
-	    set $mods(ChooseField-Fibers)-port-index 0
+	    set $mods(ChooseField-Fibers)-port-selected-index 0
 	    disableModule $mods(ChooseColorMap-Fibers) 0
-	    set $mods(ChooseColorMap-Fibers)-port-index 0
+	    set $mods(ChooseColorMap-Fibers)-port-selected-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
 	    set fiber_type "Linear Anisotropy"
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
-	    set $mods(ChooseField-Fibers)-port-index 1
+	    set $mods(ChooseField-Fibers)-port-selected-index 1
 	    disableModule $mods(ChooseColorMap-Fibers) 0
-	    set $mods(ChooseColorMap-Fibers)-port-index 0
+	    set $mods(ChooseColorMap-Fibers)-port-selected-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Planar Anisotropy"} {
 	    set fiber_type "Planar Anisotropy"
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
-	    set $mods(ChooseField-Fibers)-port-index 2
+	    set $mods(ChooseField-Fibers)-port-selected-index 2
 	    disableModule $mods(ChooseColorMap-Fibers) 0
-	    set $mods(ChooseColorMap-Fibers)-port-index 0
+	    set $mods(ChooseColorMap-Fibers)-port-selected-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Constant"} {
 	    set fiber_type "Constant"
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state normal
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state normal
 	    disableModule $mods(ChooseColorMap-Fibers) 1
-	    set $mods(ChooseColorMap-Fibers)-port-index 1
+	    set $mods(ChooseColorMap-Fibers)-port-selected-index 1
 	    set $mods(ShowField-Fibers)-edges-usedefcolor 1
-	    set $mods(ChooseField-Fibers)-port-index 0
+	    set $mods(ChooseField-Fibers)-port-selected-index 0
 	    disable_fibers_colormaps
 	}
 
@@ -9144,9 +9155,9 @@ class BioTensorApp {
 
     method update_fiber_seed_method {} {
         global mods
-        global $mods(ChooseField-FiberSeeds)-port-index
+        global $mods(ChooseField-FiberSeeds)-port-selected-index
 	
-	if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
+	if {[set $mods(ChooseField-FiberSeeds)-port-selected-index] == 0} {
 	    # Point
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
@@ -9155,7 +9166,7 @@ class BioTensorApp {
 	    
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
-	} elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
+	} elseif {[set $mods(ChooseField-FiberSeeds)-port-selected-index] == 1} {
 	    # Rake
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
 	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
@@ -9173,7 +9184,7 @@ class BioTensorApp {
 	    
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
-	    if {$vis_activated && [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+	    if {$vis_activated && [set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 	}
@@ -9229,14 +9240,14 @@ class BioTensorApp {
 	    # disable rest of fibers tab except for checkbutton
         } else {
 	    # sync nodes
-            global $mods(ChooseField-FiberSeeds)-port-index
-            if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
+            global $mods(ChooseField-FiberSeeds)-port-selected-index
+            if {[set $mods(ChooseField-FiberSeeds)-port-selected-index] == 0} {
 		# enable Probe Widget
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
-            } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
+            } elseif {[set $mods(ChooseField-FiberSeeds)-port-selected-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
-            } elseif {$vis_activated && [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+            } elseif {$vis_activated && [set $mods(ChooseField-FiberSeeds)-port-selected-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
         }
@@ -9662,17 +9673,17 @@ class BioTensorApp {
     # anisotropies available, only those needed are enabled
     method configure_anisotropy_modules {} {
 	global mods
-	global $mods(ChooseField-Isoval)-port-index \
-	    $mods(ChooseField-Isosurface)-port-index \
-	    $mods(ChooseField-ColorPlanes)-port-index \
-	    $mods(ChooseField-Glyphs)-port-index \
-	    $mods(ChooseField-Fibers)-port-index
+	global $mods(ChooseField-Isoval)-port-selected-index \
+	    $mods(ChooseField-Isosurface)-port-selected-index \
+	    $mods(ChooseField-ColorPlanes)-port-selected-index \
+	    $mods(ChooseField-Glyphs)-port-selected-index \
+	    $mods(ChooseField-Fibers)-port-selected-index
 
-	set tmp1 [set $mods(ChooseField-Isoval)-port-index]
-	set tmp2 [set $mods(ChooseField-Isosurface)-port-index]
-	set tmp3 [set $mods(ChooseField-ColorPlanes)-port-index]
-	set tmp4 [set $mods(ChooseField-Glyphs)-port-index]
-	set tmp5 [set $mods(ChooseField-Fibers)-port-index]
+	set tmp1 [set $mods(ChooseField-Isoval)-port-selected-index]
+	set tmp2 [set $mods(ChooseField-Isosurface)-port-selected-index]
+	set tmp3 [set $mods(ChooseField-ColorPlanes)-port-selected-index]
+	set tmp4 [set $mods(ChooseField-Glyphs)-port-selected-index]
+	set tmp5 [set $mods(ChooseField-Fibers)-port-selected-index]
 
 	# Fractional Anisotropy
 	if {$tmp1 == 0 || $tmp2 == 0 || $tmp3 == 0 \
