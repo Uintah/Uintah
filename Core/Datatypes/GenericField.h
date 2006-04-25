@@ -154,7 +154,9 @@ private:
       index_(idx)
     {
       fld_.mesh_->get_nodes(nodes_, idx);
-      fld_.mesh_->get_edges(edges_, idx);
+      if (fld_.basis_order() > 1) {
+        fld_.mesh_->get_edges(edges_, idx);
+      }
     }
     
     // basis may encode extra values based on cell index.
