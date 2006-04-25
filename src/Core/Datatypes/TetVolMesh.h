@@ -1751,7 +1751,7 @@ TetVolMesh<Basis>::get_faces(typename Face::array_type &array,
   array.resize(4);
   for (int i = 0; i < 4; i++)
   {
-    array[i] = idx * 4 + i;
+    array[i] = *(faces_.find(idx * 4 + i));
   }
 }
 
@@ -2042,7 +2042,7 @@ TetVolMesh<Basis>::nbors_from_2_to_3_split(typename Cell::index_type ci,
 template <class Basis>
 void
 TetVolMesh<Basis>::nbors_from_center_split(typename Cell::index_type ci,
-                                    typename Cell::array_type &tets)
+                                           typename Cell::array_type &tets)
 {
   // Any tet in the center split, knows its 3 nbors.  All faces
   // except the face opposite the center node define the nbors.
@@ -2090,11 +2090,19 @@ TetVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor,
                                 typename Cell::index_type from,
                                 typename Face::index_type idx) const
 {
-  ASSERT(idx/4 == from);
-  typename Face::index_type neigh;
-  bool ret_val = get_neighbor(neigh, idx);
-  neighbor.index_ = neigh.index_ / 4;
-  return ret_val;
+  bool result = false;
+  if (idx/4 == from)
+  {
+    typename Face::index_type neigh;
+    result = get_neighbor(neigh, idx);
+    neighbor.index_ = neigh.index_ / 4;
+  }
+  else
+  {
+    neighbor.index_ = idx / 4;
+    result = true;
+  }
+  return result;
 }
 
 
