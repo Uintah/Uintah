@@ -518,16 +518,10 @@ public:
                 typename Node::index_type n2) const;
 
   void get_edges(typename Edge::array_type &array,
-                 typename Node::index_type idx) const;
-  void get_edges(typename Edge::array_type &array,
                  typename Face::index_type idx) const;
   void get_edges(typename Edge::array_type &array,
                  typename Cell::index_type idx) const;
 
-  void get_faces(typename Face::array_type &array,
-                 typename Node::index_type idx) const;
-  void get_faces(typename Face::array_type &array,
-                 typename Edge::index_type idx) const;
   void get_faces(typename Face::array_type &array,
                  typename Cell::index_type idx) const;
 
@@ -1713,15 +1707,6 @@ TetVolMesh<Basis>::set_nodes(typename Node::array_type &array,
 
 template <class Basis>
 void
-TetVolMesh<Basis>::get_edges(typename Edge::array_type &/*array*/,
-                             typename Node::index_type /*idx*/) const
-{
-  ASSERTFAIL("Not implemented yet");
-}
-
-
-template <class Basis>
-void
 TetVolMesh<Basis>::get_edges(typename Edge::array_type &array,
                              typename Face::index_type idx) const
 {
@@ -1755,23 +1740,6 @@ TetVolMesh<Basis>::get_edges(typename Edge::array_type &array,
   {
     array[i] = idx * 6 + i;
   }
-}
-
-
-template <class Basis>
-void
-TetVolMesh<Basis>::get_faces(typename Face::array_type &/*array*/,
-                             typename Node::index_type /*idx*/) const
-{
-  ASSERTFAIL("Not implemented yet");
-}
-
-template <class Basis>
-void
-TetVolMesh<Basis>::get_faces(typename Face::array_type &/*array*/,
-                             typename Edge::index_type /*idx*/) const
-{
-  ASSERTFAIL("Not implemented yet");
 }
 
 
