@@ -103,31 +103,44 @@ itcl_class ChooseModule {
 	set tab [$dof.tabs add -label "Basic"]
         
         
-	frame $tab.f
-	pack $tab.f -side top -e y -f both -padx 5 -pady 5
+	frame $tab.v
+	pack $tab.v -side top -e y -f both -padx 5 -pady 5
         
 
-	checkbutton $tab.valid -text "Use first valid port" \
+	radiobutton $tab.v.radio \
+	    -text "Use first valid port.   Port sent:" \
 	    -variable $this-use-first-valid \
+	    -value 1 \
 	    -command "$this toggle_use_first_valid"
-	pack $tab.valid -side top -anchor nw -padx 3 -pady 3
 
-	frame $tab.c
-	pack $tab.c -side top -e y -f both -padx 5 -pady 5
+	entry $tab.v.entry -textvariable $this-port-valid-index -state disabled
+
+	pack $tab.v.radio -side left
+	pack $tab.v.entry -side left -padx 10
+
+	frame $tab.s
+	pack $tab.s -side top -e y -f both -padx 5 -pady 5
 	
-	label $tab.c.l -text "Select input port: "
-	entry $tab.c.e -textvariable $this-port-index
-	bind $tab.c.e <Return> "$this-c needexecute"
-	pack $tab.c.l $tab.c.e -side left
+	radiobutton $tab.s.radio -text "Use use selected port:" \
+	    -variable $this-use-first-valid \
+	    -value 0 \
+	    -command "$this toggle_use_first_valid"
+
+	entry $tab.s.entry -textvariable $this-port-selected-index
+
+	bind $tab.s.entry <Return> "$this-c needexecute"
+
+	pack $tab.s.radio -side left
+	pack $tab.s.entry -side left -padx 10
 
 
-	Tooltip $tab.valid "Module will iterate over ports\nand use the first one with a valid handle."
+	Tooltip $tab.v "Module will iterate over ports\nand use the first one with a valid handle."
 
 
-	TooltipMultiline $tab.c.l \
+	TooltipMultiline $tab.v.radio \
             "Specify the input port that should be routed to the output port.\n" \
             "Index is 0 based (ie: the first port is index 0, the second port 1, etc.)"
-	TooltipMultiline $tab.c.e \
+	TooltipMultiline $tab.v.entry \
             "Specify the input port that should be routed to the output port.\n" \
             "Index is 0 based (ie: the first port is index 0, the second port 1, etc.)"
 
@@ -147,12 +160,10 @@ itcl_class ChooseModule {
             if {[winfo exists $tab]} {
                 # grey out port stuff if checked
                 if {[set $this-use-first-valid]} {
-                    $tab.c.l configure -foreground grey64
-                    $tab.c.e configure -foreground grey64
+                    $tab.s.entry configure -state disabled
                     $dof.tabs pageconfigure "Select Port" -state disabled
                 } else {
-                    $tab.c.l configure -foreground black
-                    $tab.c.e configure -foreground black
+                    $tab.s.entry configure -state normal
                     $dof.tabs pageconfigure "Select Port" -state normal
                 }
             }
@@ -197,10 +208,10 @@ itcl_class ChooseModule {
 
 	    regsub \\. $lvar _ lvar
 	    radiobutton $list_frame.1.1.$lvar -text $port_name \
-		-variable $this-port-index -command $c -value $i
+		-variable $this-port-selected-index -command $c -value $i
 	    pack $list_frame.1.1.$lvar -side top -anchor w \
                  -expand yes -fill x
-#	    if { $port_name == [set $this-port-index] } {
+#	    if { $port_name == [set $this-port-selected-index] } {
 #		$list_frame.1.1.$lvar invoke
 #	    }
 	}
