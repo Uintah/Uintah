@@ -17,7 +17,7 @@ SRCS     += $(SRCDIR)/ConverterAlgo.cc\
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Core/Exceptions Core/Thread Core/GuiInterface \
-            Core/Geom Core/Geometry Dataflow/Network \
+            Core/Geom Core/Geometry \
             Core/Algorithms/Util \
             Core/Persistent \
             Core/Basis Core/Bundle

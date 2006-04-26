@@ -26,52 +26,50 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/Field.h>
 
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
+#include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Dataflow/Network/Module.h>
+#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+
 #include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class BuildFEMatrix : public Module {
+class MatricesToDipoleField : public Module {
 public:
-  BuildFEMatrix(GuiContext*);
+  MatricesToDipoleField(GuiContext*);
 
   virtual void execute();
-
 };
 
 
-DECLARE_MAKER(BuildFEMatrix)
-BuildFEMatrix::BuildFEMatrix(GuiContext* ctx)
-  : Module("BuildFEMatrix", ctx, Source, "FiniteElements", "ModelCreation")
+DECLARE_MAKER(MatricesToDipoleField)
+MatricesToDipoleField::MatricesToDipoleField(GuiContext* ctx)
+  : Module("MatricesToDipoleField", ctx, Source, "Converter", "ModelCreation")
 {
 }
 
-
-void BuildFEMatrix::execute()
+void MatricesToDipoleField::execute()
 {
-  NumericAlgo numericalgo(this);
+  MatrixHandle Locations, Strengths;
+  FieldHandle DipoleField;
   
-  FieldHandle Field;
-  MatrixHandle Conductivity;
-  MatrixHandle GeomToComp, CompToGeom;
-  MatrixHandle SysMatrix;
-  if (!(get_input_handle("Field",Field,true))) return;
-  get_input_handle("ConductivityTable",Conductivity,false);
-  get_input_handle("GeomToComp",GeomToComp,false);
+  if (!(get_input_handle("Locations",Locations,true))) return;
+  if (!(get_input_handle("Strengths",Strengths,true))) return;
+
+  ConverterAlgo algo(this);
+  if(!(algo.MatricesToDipoleField(Locations,Strengths,DipoleField))) return;
   
-  if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,1,Conductivity,GeomToComp,CompToGeom))) return;
-  
-  send_output_handle("FEMatrix",SysMatrix,true);  
+  send_output_handle("DipoleField",DipoleField,true);
 }
-
-
 
 } // End namespace ModelCreation
 

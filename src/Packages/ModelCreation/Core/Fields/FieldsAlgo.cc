@@ -99,6 +99,7 @@
 #include <Packages/ModelCreation/Core/Fields/ToPointCloud.h>
 #include <Packages/ModelCreation/Core/Fields/Unstructure.h>
 #include <Packages/ModelCreation/Core/Fields/TriSurfPhaseFilter.h>
+#include <Packages/ModelCreation/Core/Fields/TracePoints.h>
 
 
 #include <sgi_stl_warnings_off.h>
@@ -799,5 +800,10 @@ bool FieldsAlgo::TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, Fiel
   return(algo.TriSurfPhaseFilter(pr_,input,output,phaseline,phasepoint));  
 }
 
+bool FieldsAlgo::TracePoints(ProgressReporter *pr, FieldHandle pointcloud, FieldHandle old_curvefield, FieldHandle& curvefield, double val, double tol)
+{
+  TracePointsAlgo algo;
+  return(algo.TracePoints(pr_, pointcloud, old_curvefield, curvefield, val, tol));
+}
 
 } // ModelCreation

@@ -185,9 +185,11 @@ class FieldsAlgo : public AlgoLibrary {
     // an unstructured mesh. This is often needed to make a mesh editable
     bool Unstructure(FieldHandle input,FieldHandle& output);
     
-    // TriSurfPhaseFilter
+    // TriSurfPhaseFilter: Reconstruct phase shifts 
     bool TriSurfPhaseFilter(FieldHandle input, FieldHandle& output, FieldHandle& phaseline, FieldHandle& phasepoint);    
     
+    // TracePoints: Trace how points over time
+    bool TracePoints(ProgressReporter *pr, FieldHandle pointcloud, FieldHandle old_curvefield, FieldHandle& curvefield, double val, double tol);
 };
 
 

@@ -43,6 +43,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/ToPointCloud.cc\
             $(SRCDIR)/Unstructure.cc\
             $(SRCDIR)/TriSurfPhaseFilter.cc\
+            $(SRCDIR)/TracePoints.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
