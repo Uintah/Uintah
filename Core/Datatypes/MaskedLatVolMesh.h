@@ -1027,10 +1027,10 @@ public:
 
   void get_normal(Vector &/*normal*/,
                   typename Node::index_type /*index*/) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("This mesh type does not have node normals."); }
   void get_normal(Vector &, vector<double> &, typename Elem::index_type,
                   unsigned int)
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have element normals."); }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

@@ -736,10 +736,10 @@ public:
   { get_center(p, i); }
 
   void get_normal(Vector &, const typename Node::index_type &) const
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have node normals."); }
   void get_normal(Vector &, vector<double> &, typename Elem::index_type,
                   unsigned int)
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have element normals."); }
   void get_random_point(Point &,
                         const typename Elem::index_type &,
                         MusilRNG &rng) const;

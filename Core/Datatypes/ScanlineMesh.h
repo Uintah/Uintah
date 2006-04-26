@@ -268,10 +268,10 @@ public:
 
   void get_point(Point &p, typename Node::index_type i) const { get_center(p, i); }
   void get_normal(Vector &, typename Node::index_type) const
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have node normals."); }
   void get_normal(Vector &, vector<double> &, typename Elem::index_type,
                   unsigned int)
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have element normals."); }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

@@ -193,6 +193,15 @@ public:
                         typename ScanlineMesh<Basis>::Elem::index_type idx,
                         MusilRNG &rng) const;
 
+  void get_normal(Vector &,
+                  typename ScanlineMesh<Basis>::Node::index_type) const
+  { ASSERTFAIL("This mesh type does not have node normals."); }
+
+  void get_normal(Vector &, vector<double> &,
+                  typename ScanlineMesh<Basis>::Elem::index_type,
+                  unsigned int)
+  { ASSERTFAIL("This mesh type does not have element normals."); }
+
   class ElemData
   {
   public:
