@@ -63,6 +63,7 @@ void lin2quad(FieldLin *lf)
 {
   typedef typename FieldLin::mesh_type MeshLin;
   typedef typename FieldQuad::mesh_type MeshQuad;
+  typedef typename FieldLin::basis_type BasisLin;
 
   FieldQuad *qf=new FieldQuad();
   
@@ -132,24 +133,31 @@ void lin2quad(FieldLin *lf)
     lm->begin(ea);
     lm->end(eb);
     
+    bool errorprinted=false;
     while(ea!=eb) {
       Point p;
       lm->get_center(p, *ea);
- 
+  
       typename MeshLin::Elem::iterator eea, eeb;
       lm->begin(eea);
       lm->end(eeb);
       vector<double> coords(lm->dimensionality());
       while (eea != eeb) {
-	if (lm->get_coords(coords, p, *eea)) {
+	if (lm->get_coords(coords, p, *eea)) 
 	  break;
-	}
 	++eea;
       }
 
-      typename FieldLin::value_type v;
-      lf->interpolate(v, coords, *eea);
-      qf->get_basis().add_node_value(v);
+      typename FieldLin::value_type v=0;
+      if (!errorprinted && eea==eeb) {
+	cerr << "Interpolation failed\n";
+	errorprinted=true;
+    }
+      else if (BasisLin::dofs()) {
+	lf->interpolate(v, coords, *eea);
+      }
+
+     qf->get_basis().add_node_value(v);
       ++ea;
     }
   }
@@ -195,11 +203,16 @@ main(int argc, char **argv)
   typedef GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, vector<double> >   TetFLin;
   typedef GenericField<TetVolMesh<TetQuadraticLgn<Point> >, TetQuadraticLgn<double>, vector<double> > TetFQuad;
 
+  typedef GenericField<TetVolMesh<TetLinearLgn<Point> >, NoDataBasis<double>, vector<double> >   TetNFLin;
+  typedef GenericField<TetVolMesh<TetQuadraticLgn<Point> >, TetQuadraticLgn<double>, vector<double> > TetNFQuad;
+
   if (dynamic_cast<CrvFLin *>(field.get_rep()))
     lin2quad<CrvFLin, CrvFQuad>((CrvFLin *)field.get_rep());
   if (dynamic_cast<TetFLin *>(field.get_rep()))
     lin2quad<TetFLin, TetFQuad>((TetFLin *)field.get_rep());
-  else
+  if (dynamic_cast<TetNFLin *>(field.get_rep()))
+    lin2quad<TetNFLin, TetNFQuad>((TetNFLin *)field.get_rep());
+   else
     cerr << argv[0] << ": Invalid field '" << fn << "'" << endl;
 
   return 0;  
