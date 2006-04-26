@@ -1021,10 +1021,6 @@ public:
   void get_point(Point &point, const typename Node::index_type &index) const
   { get_center(point, index); }
 
-  void get_random_point(Point &/*p*/, const typename Elem::index_type &/*ei*/,
-                        int /*seed=0*/) const
-  { ASSERTFAIL("not implemented") }
-
   void get_normal(Vector &/*normal*/,
                   typename Node::index_type /*index*/) const
   { ASSERTFAIL("This mesh type does not have node normals."); }
@@ -1241,11 +1237,10 @@ MaskedLatVolMesh<Basis>::size(typename MaskedLatVolMesh<Basis>::Edge::size_type 
 
 template <class Basis>
 void
-MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Edge::index_type &/*idx*/,
-                                  unsigned int /*a*/)
+MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Edge::index_type &idx,
+                                  unsigned int a)
 {
-  // TODO: Implement inverse of unsigned() function in EdgeIndex.
-  ASSERTFAIL("NOT IMPLEMENTED YET!");
+  idx = a;
 }
 
 
@@ -1276,11 +1271,10 @@ MaskedLatVolMesh<Basis>::size(typename MaskedLatVolMesh<Basis>::Face::size_type 
 
 template <class Basis>
 void
-MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Face::index_type &/*idx*/,
-                                  unsigned int /*a*/)
+MaskedLatVolMesh<Basis>::to_index(typename MaskedLatVolMesh<Basis>::Face::index_type &idx,
+                                  unsigned int a)
 {
-  // TODO: Implement inverse of unsigned() function in FaceIndex.
-  ASSERTFAIL("NOT IMPLEMENTED YET!");
+  idx = a;
 }
 
 
@@ -1909,6 +1903,8 @@ MaskedLatVolMesh<Basis>::get_sequential_node_index(const typename Node::index_ty
 
   return nodes_[idx];
 }
+
+
 
 
 template <class Basis>
