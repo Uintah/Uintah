@@ -16,6 +16,7 @@ SRCS     += \
 	$(SRCDIR)/MatrixToString.cc\
 	$(SRCDIR)/MatrixToField.cc\
 	$(SRCDIR)/NrrdToField.cc\
+	$(SRCDIR)/MatricesToDipoleField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -23,7 +24,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Fields 
+        Packages/ModelCreation/Core/Fields \
+        Packages/ModelCreation/Core/Converter \
+
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

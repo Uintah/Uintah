@@ -106,6 +106,7 @@ bool TriSurfPhaseFilterAlgoT<FSRC, FDST, FLINE, FPOINT>::TriSurfPhaseFilter(Prog
   imesh->end(it_end);
 
   std::vector<double> fvals;
+  std::vector<double> pvals;
 
   for (int q=0; q<6; q++)
   {
@@ -287,6 +288,7 @@ bool TriSurfPhaseFilterAlgoT<FSRC, FDST, FLINE, FPOINT>::TriSurfPhaseFilter(Prog
           nnodes[5][0] = static_cast<typename FDST::mesh_type::Node::index_type>(idx3); 
           nnodes[5][1] = static_cast<typename FDST::mesh_type::Node::index_type>(idx5); 
           nnodes[5][2] = static_cast<typename FDST::mesh_type::Node::index_type>(idx11);
+          pvals.push_back(1.0);
 
         }
         else
@@ -314,6 +316,7 @@ bool TriSurfPhaseFilterAlgoT<FSRC, FDST, FLINE, FPOINT>::TriSurfPhaseFilter(Prog
           nnodes[5][1] = static_cast<typename FDST::mesh_type::Node::index_type>(idx3); 
           nnodes[5][0] = static_cast<typename FDST::mesh_type::Node::index_type>(idx5); 
           nnodes[5][2] = static_cast<typename FDST::mesh_type::Node::index_type>(idx11);
+          pvals.push_back(-1.0);
         }
 
         omesh->add_elem(nnodes[0]);
@@ -373,6 +376,20 @@ bool TriSurfPhaseFilterAlgoT<FSRC, FDST, FLINE, FPOINT>::TriSurfPhaseFilter(Prog
     ofield->set_value(fvals[static_cast<unsigned int>(*nit)],*nit);
     ++nit;
   }
+
+
+
+  typename FPOINT::mesh_type::Node::iterator pnit, pnit_end;
+  pmesh->begin(pnit);
+  pmesh->end(pnit_end);
+  pfield->resize_fdata();
+  
+  while (pnit != pnit_end)
+  {
+    pfield->set_value(pvals[static_cast<unsigned int>(*pnit)],*pnit);
+    ++pnit;
+  }
+
   
   // Success:
   return (true);

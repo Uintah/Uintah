@@ -28,8 +28,7 @@
 
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
-#include <Core/Basis/Constant.h>
-#include <Core/Datatypes/PointCloudMesh.h>
+
 #include <Core/Datatypes/GenericField.h>
 
 namespace ModelCreation {
