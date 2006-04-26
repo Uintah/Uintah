@@ -24,6 +24,9 @@ namespace SCIRun {
 
 namespace Uintah {
 
+  inline const Patch* getRealDomain(const Patch* patch) { return patch->getRealPatch(); }
+  inline const Level* getRealDomain(const Level* level) { return level; }
+
   using SCIRun::CrowdMonitor;
   using SCIRun::Max;
   using SCIRun::Thread;
