@@ -437,13 +437,16 @@ VolumeRenderer::draw_volume()
 
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
-    load_brick(bricks, i, use_cmap2);
     vertex.clear();
     texcoord.clear();
     mask.clear();
     size.clear();
     b->compute_polygons(view_ray, dt, vertex, texcoord, size);
     b->mask_polygons(size, vertex, texcoord, mask, planes_);
+    if( vertex.size() == 0 ) {
+      continue;
+    }
+    load_brick(bricks, i, use_cmap2);
     shader->setLocalParam(4, 1.0/b->nx(), 1.0/b->ny(), 1.0/b->nz(), 0.0);
     draw_polygons(vertex, texcoord, size, false, use_fog,
                   blend_num_bits_ > 8 ? blend_buffer_ : 0,
