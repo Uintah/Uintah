@@ -1,11 +1,11 @@
-//  
+//
 //  For more information, please see: http://software.sci.utah.edu
-//  
+//
 //  The MIT License
-//  
+//
 //  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 //  University of Utah.
-//  
+//
 //  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
 //  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 //  and/or sell copies of the Software, and to permit persons to whom the
 //  Software is furnished to do so, subject to the following conditions:
-//  
+//
 //  The above copyright notice and this permission notice shall be included
 //  in all copies or substantial portions of the Software.
-//  
+//
 //  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 //  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -24,7 +24,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
-//  
+//
 //    File   : VolumeRenderer.cc
 //    Author : Milan Ikits
 //    Date   : Thu Jul  8 00:04:15 2004
@@ -63,7 +63,7 @@ namespace SCIRun {
 //static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex,
-                               ColorMapHandle cmap1, 
+                               ColorMapHandle cmap1,
 			       vector<ColorMap2Handle> &cmap2,
 			       vector<Plane *> &planes,
                                int tex_mem):
@@ -157,7 +157,7 @@ VolumeRenderer::set_adaptive(bool b)
 {
   adaptive_ = b;
 }
-    
+
 #ifdef SCI_OPENGL
 void
 VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
@@ -178,14 +178,13 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw_volume()
 {
-
   if( tex_->nlevels() > 1 ){
     multi_level_draw();
     return;
   }
 
   tex_->lock_bricks();
-  
+
   Ray view_ray = compute_view();
   vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
@@ -200,9 +199,10 @@ VolumeRenderer::draw_volume()
       cmap2_updating = true;
       break;
     }
-  
+
   set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action_));
 
+  // Set sampling rate based on interaction.
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
   const Vector cell_diag(diag.x()/tex_->nx(),
@@ -235,7 +235,6 @@ VolumeRenderer::draw_volume()
 
   const bool use_shading = true;//shading_ && nb0 == 4;
   const GLboolean use_fog = glIsEnabled(GL_FOG);
-  // glGetBooleanv(GL_FOG, &use_fog);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
   GLfloat clear_color[4];
@@ -250,7 +249,7 @@ VolumeRenderer::draw_volume()
     switch(mode_) {
     case MODE_OVER:
 #ifndef _WIN32
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS))) 
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
 #else
       if (glBlendEquation)
 #endif
@@ -260,10 +259,10 @@ VolumeRenderer::draw_volume()
       break;
     case MODE_MIP:
 #ifndef _WIN32
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
 #else
       if (glBlendEquation)
-#endif 
+#endif
 	glBlendEquation(GL_MAX);
       glBlendFunc(GL_ONE, GL_ONE);
       break;
@@ -330,7 +329,7 @@ VolumeRenderer::draw_volume()
       glFogfv(GL_FOG_COLOR, fcolor);
     }
   }
-  
+
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
 
@@ -362,7 +361,7 @@ VolumeRenderer::draw_volume()
     build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
     bind_colormap1(cmap1_tex_);
   }
-  
+
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
@@ -370,7 +369,6 @@ VolumeRenderer::draw_volume()
   if (glActiveTexture)
 #endif
   glActiveTexture(GL_TEXTURE0_ARB);
-  
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
@@ -394,13 +392,9 @@ VolumeRenderer::draw_volume()
       }
     }
   }
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1,  // dimension
-				       nb0, // vsize
-				       use_shading, // shading
-				       false, // frag
-                                       use_fog, // use fog
-				       blend_mode, // blend,
-				       cmap2_.size());
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
+				       use_shading, false,
+				       use_fog, blend_mode, cmap2_.size());
   if(shader) {
     if(!shader->valid()) {
       shader->create();
@@ -410,16 +404,16 @@ VolumeRenderer::draw_volume()
 
   if(use_shading) {
     // set shader parameters
-    Vector l(light_pos[0], light_pos[1], light_pos[2]);
-    double m[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, m);
+    double mat[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
     Transform mv;
-    mv.set_trans(m);
+    mv.set_trans(mat);
     const Transform &t = tex_->transform();
-    l = mv.unproject(l);
-    l = t.unproject(l);
-    l.safe_normalize();
-    shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
+    Vector light(light_pos[0], light_pos[1], light_pos[2]);
+    light = mv.unproject(light);
+    light = t.unproject(light);
+    light.safe_normalize();
+    shader->setLocalParam(0, light.x(), light.y(), light.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
   }
 
@@ -441,10 +435,11 @@ VolumeRenderer::draw_volume()
   planes.push_back(make_pair(Plane(p, p+v+up, p+v), 2));
   //  cerr << "Plane: " << p << p+v << p+v+up << std::endl;
 #endif
-  
+
   //--------------------------------------------------------------------------
   // render bricks
 
+  // set up transform
   const Transform &tform = tex_->transform();
   double mvmat[16];
   tform.get_trans(mvmat);
@@ -457,7 +452,7 @@ VolumeRenderer::draw_volume()
     shader->setLocalParam(2, grange_, goffset_, cm2scale, cm2scale);
   } else {
     shader->setLocalParam(2, 1, 0, 0, 0);
-  }    
+  }
 
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
@@ -474,18 +469,16 @@ VolumeRenderer::draw_volume()
 		  &mask, shader);
   }
 
+  // Undo transform.
   glPopMatrix();
-  
+
   glDepthMask(GL_TRUE);
 
-  //--------------------------------------------------------------------------
-  // release shader
-
+  // Release shader.
   if(shader && shader->valid())
     shader->release();
-  
-  //--------------------------------------------------------------------------
-  // release textures
+
+  // Release textures.
   if(use_cmap2) {
     release_colormap2();
   } else {
@@ -519,11 +512,11 @@ VolumeRenderer::draw_volume()
     GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
     GLboolean lighting = glIsEnabled(GL_LIGHTING);
     GLboolean cull_face = glIsEnabled(GL_CULL_FACE);
-    
+
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
-    
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
   if (glActiveTexture)
@@ -545,13 +538,13 @@ VolumeRenderer::draw_volume()
       glVertex2f( 0.0,  1.0);
     }
     glEnd();
-    
+
     blend_buffer_->release(GL_FRONT);
 
     if(depth_test) glEnable(GL_DEPTH_TEST);
     if(lighting) glEnable(GL_LIGHTING);
     if(cull_face) glEnable(GL_CULL_FACE);
-    
+
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
@@ -570,47 +563,45 @@ VolumeRenderer::draw_volume()
 void
 VolumeRenderer::multi_level_draw()
 {
+  tex_->lock_bricks();
+
   // all temporary ************************
   vector< cmap_data* > cmaps; //(  tex_->nlevels() );
   for(int i = 0; i < tex_->nlevels(); i++ ){
     cmaps.push_back( new cmap_data );
   }
   // ***************************************
-  tex_->lock_bricks();  
 
-    
   Ray view_ray = compute_view();
   vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray, 0);
   int levels = tex_->nlevels();
 
-  // set interactive mode
   bool cmap2_updating = false;
   for (unsigned int c = 0; c < cmap2_.size(); ++c)
     if (cmap2_[c]->updating()) {
       cmap2_updating = true;
       break;
     }
-  
-  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action_));
-  
-  // set sampling rate based on interaction.
-  double rate = imode_ ? irate_ : sampling_rate_;
 
-  Vector diag = tex_->bbox().diagonal();
-  Vector cell_diag(diag.x()/(tex_->nx()*pow(2.0,levels-1)),
-		   diag.y()/(tex_->ny()*pow(2.0,levels-1)),
-		   diag.z()/(tex_->nz()*pow(2.0,levels-1)));
-  
-  double dt = cell_diag.length()/rate;
-  int num_slices = (int)(diag.length()/dt);
-  
+  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action_));
+
+  // Set sampling rate based on interaction.
+  const double rate = imode_ ? irate_ : sampling_rate_;
+  const Vector diag = tex_->bbox().diagonal();
+  const Vector cell_diag(diag.x()/(tex_->nx()*pow(2.0,levels-1)),
+                         diag.y()/(tex_->ny()*pow(2.0,levels-1)),
+                         diag.z()/(tex_->nz()*pow(2.0,levels-1)));
+  const double dt = cell_diag.length()/rate;
+  const int num_slices = (int)(diag.length()/dt);
+
   vector<float> vertex;
   vector<float> texcoord;
   vector<int> size;
   vertex.reserve(num_slices*6);
   texcoord.reserve(num_slices*6);
   size.reserve(num_slices*6);
+
   //--------------------------------------------------------------------------
 
   const int nc = bricks[0]->nc();
@@ -626,21 +617,19 @@ VolumeRenderer::multi_level_draw()
 
   const bool use_shading = shading_ && nb0 == 4;
   const GLboolean use_fog = glIsEnabled(GL_FOG);
-  // glGetBooleanv(GL_FOG, &use_fog);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
   GLfloat clear_color[4];
   glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
   int vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
-  
+
   //--------------------------------------------------------------------------
   // set up blending
-  
   int psize[2];
   psize[0] = Pow2(vp[2]);
   psize[1] = Pow2(vp[3]);
-  
+
   if(blend_num_bits_ != 8)
   {
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
@@ -665,13 +654,13 @@ VolumeRenderer::multi_level_draw()
       }
     }
   }
-  
+
   if(blend_num_bits_ == 8) {
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
 #ifndef _WIN32
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
 #else
       if (glBlendEquation)
 #endif
@@ -681,7 +670,7 @@ VolumeRenderer::multi_level_draw()
       break;
     case MODE_MIP:
 #ifndef _WIN32
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
 #else
       if (glBlendEquation)
 #endif
@@ -696,7 +685,7 @@ VolumeRenderer::multi_level_draw()
     double mv[16], pr[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
     glGetDoublev(GL_PROJECTION_MATRIX, pr);
-    
+
      GLfloat fstart, fend, fcolor[4];
     // Copy the fog state to the new context.
     if (use_fog)
@@ -712,13 +701,13 @@ VolumeRenderer::multi_level_draw()
     glClearColor(cc[0], cc[1], cc[2], cc[3]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     blend_buffer_->swapBuffers();
-    
+
     glViewport(vp[0], vp[1], vp[2], vp[3]);
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixd(pr);
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixd(mv);
- 
+
     if (use_fog)
     {
       glFogi(GL_FOG_MODE, GL_LINEAR);
@@ -727,10 +716,10 @@ VolumeRenderer::multi_level_draw()
       glFogfv(GL_FOG_COLOR, fcolor);
     }
   }
-  
+
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
-  
+
   //--------------------------------------------------------------------------
   // load colormap texture
   if(use_cmap2) {
@@ -745,13 +734,13 @@ VolumeRenderer::multi_level_draw()
 		       cmaps[levels - i - 1]->tex_id_,
 		       cmaps[levels - i - 1]->dirty_,
 		       cmaps[levels - i - 1]->alpha_dirty_,
-		       double( invert_opacity_  ? 
-			       tan(1.570796327 * 
+		       double( invert_opacity_  ?
+			       tan(1.570796327 *
 				   (0.5 - level_alpha_[levels - i - 1])*
 				   0.49999) : i ));;
     }
   }
-  
+
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
@@ -791,21 +780,22 @@ VolumeRenderer::multi_level_draw()
     }
     shader->bind();
   }
-  
+
   if(use_shading) {
     // set shader parameters
-    Vector l(light_pos[0], light_pos[1], light_pos[2]);
-    double m[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, m);
+    double mat[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
     Transform mv;
-    mv.set_trans(m);
-    Transform t = tex_->transform();
-    l = mv.unproject(l);
-    l = t.unproject(l);
-    shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
+    mv.set_trans(mat);
+    const Transform &t = tex_->transform();
+    Vector light(light_pos[0], light_pos[1], light_pos[2]);
+    light = mv.unproject(light);
+    light = t.unproject(light);
+    light.safe_normalize();
+    shader->setLocalParam(0, light.x(), light.y(), light.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
   }
-  
+
   //-------------------------------------------------------------------------
   // set up stenciling
   if(use_stencil_){
@@ -813,11 +803,11 @@ VolumeRenderer::multi_level_draw()
     glStencilFunc(GL_EQUAL, 0, 1);
     glStencilOp(GL_KEEP, GL_KEEP,GL_INCR);
     glEnable(GL_STENCIL_TEST);
-  } 
+  }
 
   //--------------------------------------------------------------------------
   // render bricks
-  
+
   // set up transform
   Transform tform = tex_->transform();
   double mvmat[16];
@@ -852,7 +842,6 @@ VolumeRenderer::multi_level_draw()
     tex_->get_sorted_bricks(blevels[levels - (i + 1)], view_ray, i);
   }
 
-
   for(double t = tmax ; t >= tmin; t -= dt){
     if( use_stencil_){
       glStencilMask(~0);
@@ -879,9 +868,9 @@ VolumeRenderer::multi_level_draw()
 
 	if( !go_on ){
 	  break;
-	} 
+	}
       }
-     
+
       bind_colormap1( cmaps[i]->tex_id_ );
 
       // Blend mode for no texture palette support.
@@ -889,10 +878,10 @@ VolumeRenderer::multi_level_draw()
       if (!ShaderProgramARB::shaders_supported() && mode_ == MODE_OVER)
       {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
+
         // Scale slice opacity
-        double level_exponent = double(invert_opacity_  ? 
-                                       tan(1.570796327 * 
+        double level_exponent = double(invert_opacity_  ?
+                                       tan(1.570796327 *
                                            (0.5 - level_alpha_[levels - i-1])*
                                            0.49999) : i);
         double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
@@ -926,25 +915,20 @@ VolumeRenderer::multi_level_draw()
     ++count;
   }
 
-  //________________________________________________________________________
-  // undo transform
+  // Undo transform.
   glPopMatrix();
-  
-  //-------------------------------------------------------------------------
-  // turn off stenciling
+
+  // Turn off stenciling.
   if(use_stencil_)
     glDisable(GL_STENCIL_TEST);
 
   glDepthMask(GL_TRUE);
 
-  
-  //--------------------------------------------------------------------------
-  // release shader
+  // Release shader.
   if(shader && shader->valid())
     shader->release();
-  
-  //--------------------------------------------------------------------------
-  // release textures
+
+  // Release textures.
   if(use_cmap2) {
     release_colormap2();
   } else {
@@ -960,7 +944,6 @@ VolumeRenderer::multi_level_draw()
   glBindTexture(GL_TEXTURE_3D, 0);
 
   //--------------------------------------------------------------------------
-
   if(blend_num_bits_ == 8) {
     glDisable(GL_BLEND);
   } else {
@@ -979,11 +962,11 @@ VolumeRenderer::multi_level_draw()
     GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
     GLboolean lighting = glIsEnabled(GL_LIGHTING);
     GLboolean cull_face = glIsEnabled(GL_CULL_FACE);
-    
+
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
-    
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
   if (glActiveTexture)
@@ -1005,13 +988,13 @@ VolumeRenderer::multi_level_draw()
       glVertex2f( 0.0,  1.0);
     }
     glEnd();
-    
+
     blend_buffer_->release(GL_FRONT);
 
     if(depth_test) glEnable(GL_DEPTH_TEST);
     if(lighting) glEnable(GL_LIGHTING);
     if(cull_face) glEnable(GL_CULL_FACE);
-    
+
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
@@ -1019,7 +1002,7 @@ VolumeRenderer::multi_level_draw()
 
     blend_buffer_->set_use_default_shader(false);
   }
- 
+
   vector< cmap_data* >::iterator it =  cmaps.begin(); //(  tex_->nlevels() );
   for(; it != cmaps.end(); ++it){
     delete *it;
@@ -1047,7 +1030,7 @@ VolumeRenderer::draw_wireframe()
   glDisable(GL_LIGHTING);
   vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
-  
+
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
   const Vector cell_diag(diag.x()/tex_->nx(),
@@ -1143,10 +1126,10 @@ VolumeRenderer::num_slices_to_rate(int num_slices)
 
 void
 VolumeRenderer::set_gradient_range(double min, double max)
-{ 
+{
   double range = max-min;
-  if (fabs(range) < 0.001) { 
-    grange_ = 1.0; 
+  if (fabs(range) < 0.001) {
+    grange_ = 1.0;
     goffset_ = 1.0;
   } else {
     grange_ = 1/(max-min);
