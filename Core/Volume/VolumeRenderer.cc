@@ -578,9 +578,11 @@ VolumeRenderer::multi_level_draw()
   vector<float> vertex;
   vector<float> texcoord;
   vector<int> size;
+  vector<int> mask;
   vertex.reserve(num_slices*6);
   texcoord.reserve(num_slices*6);
   size.reserve(num_slices*6);
+  mask.reserve(num_slices*6);
 
   //--------------------------------------------------------------------------
 
@@ -796,6 +798,13 @@ VolumeRenderer::multi_level_draw()
   glPushMatrix();
   glMultMatrixd(mvmat);
 
+  if( use_cmap2 ){
+    float cm2scale = 1.0 / Pow2(cmap2_.size());
+    shader->setLocalParam(2, grange_, goffset_, cm2scale, cm2scale);
+  } else {
+    shader->setLocalParam(2, 1, 0, 0, 0);
+  }
+
   Point corner[8];
   BBox bbox = tex_->bbox();
   corner[0] = bbox.min();
@@ -828,12 +837,12 @@ VolumeRenderer::multi_level_draw()
       glClear(GL_STENCIL_BUFFER_BIT);
       glStencilMask(1);
     }
-
-    for(int i = 0; i < levels; ++i ){
-      if( !draw_level_[i] ) continue;
-      if( i > 0 ){
+    
+    for(int j = 0; j < levels; ++j ){
+      if( !draw_level_[j] ) continue;
+      if( j > 0 ){
         bool go_on = false;
-        int k = i;
+        int k = j;
         while( k < levels ){
           int draw_level = int(pow(2.0, k));
           if( count < draw_level ){
@@ -851,7 +860,7 @@ VolumeRenderer::multi_level_draw()
         }
       }
 
-      bind_colormap1( cmaps[i]->tex_id_ );
+      bind_colormap1( cmaps[j]->tex_id_ );
 
       // Blend mode for no texture palette support.
 #ifdef __APPLE__
@@ -862,8 +871,8 @@ VolumeRenderer::multi_level_draw()
         // Scale slice opacity
         double level_exponent = double(invert_opacity_  ?
                                        tan(1.570796327 *
-                                           (0.5 - level_alpha_[levels - i-1])*
-                                           0.49999) : i);
+                                           (0.5 - level_alpha_[levels - j-1])*
+                                           0.49999) : j);
         double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
         double alpha = pow(0.5, bp); // 0.5 as default global cmap alpha
         alpha = 1.0 - pow((1.0 - alpha), imode_ ?
@@ -875,19 +884,23 @@ VolumeRenderer::multi_level_draw()
 #endif
 
 
-      vector<TextureBrickHandle>& bs  = blevels[i];
-      for(unsigned int j =0; j < bs.size(); j++) {
-        TextureBrickHandle b = bs[j];
-        vertex.resize(0);
-        texcoord.resize(0);
-        size.resize(0);
+      vector<TextureBrickHandle>& bs  = blevels[j];
+      for(unsigned int i = 0; i < bs.size(); i++) {
+        TextureBrickHandle b = bs[i];
+        vertex.clear();
+        texcoord.clear();
+        mask.clear();
+        size.clear();
         b->compute_polygon( view_ray, t, vertex, texcoord, size);
+        b->mask_polygons(size, vertex, texcoord, mask, planes_);
         if( vertex.size() == 0 ) {
           continue;
         }
-        load_brick(bs, j, use_cmap2);
+        load_brick(bs, i, use_cmap2);
+        shader->setLocalParam(4, 1.0/b->nx(), 1.0/b->ny(), 1.0/b->nz(), 0.0);
         draw_polygons(vertex, texcoord, size, false, use_fog,
-                      blend_num_bits_ > 8 ? blend_buffer_ : 0);
+                      blend_num_bits_ > 8 ? blend_buffer_ : 0,
+                      &mask, shader);
       }
       release_colormap1();
     }
