@@ -295,9 +295,11 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
       IntVector low = dep->low;
       IntVector high = dep->high;
 
-      if(!d_varDB.exists(label, matlIndex, patch))
+      if(!d_varDB.exists(label, matlIndex, patch)) {
+        print();
 	SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
 			      "in sendMPI", __FILE__, __LINE__));
+      }
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
 
       int dest = batch->toTasks.front()->getAssignedResourceIndex();
@@ -384,6 +386,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
   case TypeDescription::SFCZVariable:
     {
       if(!d_varDB.exists(label, matlIndex, patch)) {
+        cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << endl;
         SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
           "in sendMPI", __FILE__, __LINE__));
       }
@@ -1857,7 +1860,7 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
       bool ignore = d_isInitializationDW && d_finalized;
       if (!ignore && !warned ) {
 	warned = true;
-        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 5, warn);
+        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 5);
         if (rw.invoke()) {
           // print out this message if the ProgressiveWarning does
           ostringstream errmsg;

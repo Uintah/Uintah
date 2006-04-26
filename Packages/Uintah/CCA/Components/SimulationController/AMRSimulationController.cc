@@ -358,7 +358,7 @@ void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwSt
     if (rootCycle) {
       // if we're called from the coarsest level, then refineInterface all the way down
       for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
-        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, 1, 1); 
+        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, false, true); 
       }
     }
   }
