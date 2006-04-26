@@ -169,7 +169,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    Matrix3 Identity,defGradInc,B,velGrad;
+    Matrix3 Identity,B;
     double invar1,invar2,invar3,J,w3,i3w3,C1pi1C2;
     Identity.Identity();
     double c_dil = 0.0,se=0.0;
@@ -190,11 +190,10 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume_deform;
     constParticleVariable<Vector> pvelocity,psize;
-    constNCVariable<Vector> gvelocity;
     delt_vartype delT;
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
-    old_dw->get(psize,             lb->pSizeLabel,                     pset);
+    old_dw->get(psize,               lb->pSizeLabel,                     pset);
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
@@ -204,22 +203,13 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
-
-    constNCVariable<Vector> Gvelocity;
-    constParticleVariable<Short27> pgCode;
-    constParticleVariable<Matrix3> pdispGrads;
     constParticleVariable<double>  pstrainEnergyDensity;
-    ParticleVariable<Matrix3> pvelGrads;
-    ParticleVariable<Matrix3> pdispGrads_new;
-    ParticleVariable<double> pstrainEnergyDensity_new;
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     double C1 = d_initialData.C1;
     double C2 = d_initialData.C2;
@@ -252,9 +242,6 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = defGradInc*deformationGradient[idx];
 
       // Compute the left Cauchy-Green deformation tensor
       B = deformationGradient_new[idx]*deformationGradient_new[idx].Transpose();
