@@ -217,9 +217,6 @@ public:
     get_nodes(result, idx);
   }
 
-  //! return all edge_indecies that overlap the BBox in arr.
-  void get_edges(typename Edge::array_type &arr, const BBox &box) const;
-
   //! Get the size of an elemnt (length, area, volume)
   double get_size(typename Node::index_type) const { return 0.0; }
   double get_size(typename Edge::index_type idx) const
@@ -485,16 +482,6 @@ ScanlineMesh<Basis>::get_elems(typename Edge::array_type &result,
   {
     result.push_back(typename Edge::index_type(index));
   }
-}
-
-
-//! return all cell_indecies that overlap the BBox in arr.
-template <class Basis>
-void
-ScanlineMesh<Basis>::get_edges(typename Edge::array_type &/* arr */,
-                               const BBox &/*bbox*/) const
-{
-  // TODO: implement this
 }
 
 

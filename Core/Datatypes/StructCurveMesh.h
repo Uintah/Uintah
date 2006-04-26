@@ -110,11 +110,6 @@ public:
                  typename ScanlineMesh<Basis>::Edge::index_type idx) const
   { a.push_back(idx);}
 
-  //! return all edge_indecies that overlap the BBox in arr.
-  void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &,
-                 const BBox &) const
-  { ASSERTFAIL("ScanlineMesh::get_edges for BBox is not implemented."); }
-
   //! Get the size of an elemnt (length, area, volume)
   double get_size(typename ScanlineMesh<Basis>::Node::index_type) const
   { return 0.0; }
