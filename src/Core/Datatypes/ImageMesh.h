@@ -498,7 +498,7 @@ public:
   void get_neighbors(typename Face::array_type &array, typename Face::index_type idx) const;
 
   void get_normal(Vector &, const typename Node::index_type &) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("This mesh type does not have node normals."); }
   void get_normal(Vector &result, vector<double> &coords,
                   typename Elem::index_type eidx, unsigned int)
   {
