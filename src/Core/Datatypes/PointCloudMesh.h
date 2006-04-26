@@ -233,10 +233,10 @@ public:
   void set_point(const Point &p, typename Node::index_type i)
   { points_[i] = p; }
   void get_normal(Vector &, typename Node::index_type) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("This mesh type does not have node normals."); }
   void get_normal(Vector &, vector<double> &, typename Elem::index_type,
                   unsigned int)
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have element normals."); }
 
   //! use these to build up a new PointCloudField mesh
   typename Node::index_type add_node(const Point &p) { return add_point(p); }

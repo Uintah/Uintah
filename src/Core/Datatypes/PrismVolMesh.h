@@ -775,10 +775,10 @@ public:
   { result = points_[index]; }
 
   void get_normal(Vector &, typename Node::index_type) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("This mesh type does not have node normals."); }
   void get_normal(Vector &, vector<double> &, typename Elem::index_type,
                   unsigned int)
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have element normals."); }
 
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }

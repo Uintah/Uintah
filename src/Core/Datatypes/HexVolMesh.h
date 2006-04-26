@@ -385,7 +385,7 @@ public:
     { points_[index] = point; }
 
   void get_normal(Vector &, typename Node::index_type /*index*/) const
-  { ASSERTFAIL("not implemented"); }
+  { ASSERTFAIL("This mesh type does not have node normals."); }
 
   void get_normal(Vector &result, vector<double> &coords,
                   typename Elem::index_type eidx, unsigned int f)
