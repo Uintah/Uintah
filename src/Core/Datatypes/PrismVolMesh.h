@@ -646,12 +646,9 @@ public:
   void get_nodes(typename Node::array_type &array, typename Face::index_type idx) const;
   void get_nodes(typename Node::array_type &array, typename Cell::index_type idx) const;
 
-  void get_edges(typename Edge::array_type &array, typename Node::index_type idx) const;
   void get_edges(typename Edge::array_type &array, typename Face::index_type idx) const;
   void get_edges(typename Edge::array_type &array, typename Cell::index_type idx) const;
 
-  void get_faces(typename Face::array_type &array, typename Node::index_type idx) const;
-  void get_faces(typename Face::array_type &array, typename Edge::index_type idx) const;
   void get_faces(typename Face::array_type &array, typename Cell::index_type idx) const;
 
   void get_cells(typename Cell::array_type &array, typename Node::index_type idx) const;
@@ -1237,7 +1234,7 @@ PrismVolMesh<Basis>::get_random_point(Point &p,
                                       const typename Elem::index_type &ei,
                                       MusilRNG &rng) const
 {
-  // TODO: This code looks correct.  Should sample cube and fold it,
+  // TODO: This code looks incorrect.  Should sample cube and fold it,
   // or dice into tets.
 
   // Get positions of the vertices.
@@ -1852,15 +1849,6 @@ PrismVolMesh<Basis>::set_nodes(typename Node::array_type &array,
 template <class Basis>
 void
 PrismVolMesh<Basis>::get_edges(typename Edge::array_type &/*array*/,
-                               typename Node::index_type /*idx*/) const
-{
-  ASSERTFAIL("Not implemented yet");
-}
-
-
-template <class Basis>
-void
-PrismVolMesh<Basis>::get_edges(typename Edge::array_type &/*array*/,
                                typename Face::index_type /*idx*/) const
 {
   ASSERTFAIL("Not implemented yet");
@@ -1878,24 +1866,6 @@ PrismVolMesh<Basis>::get_edges(typename Edge::array_type &array,
     array[i] = base + i;
 }
 
-
-
-template <class Basis>
-void
-PrismVolMesh<Basis>::get_faces(typename Face::array_type &/*array*/,
-                               typename Node::index_type /*idx*/) const
-{
-  ASSERTFAIL("Not implemented yet");
-}
-
-
-template <class Basis>
-void
-PrismVolMesh<Basis>::get_faces(typename Face::array_type &/*array*/,
-                               typename Edge::index_type /*idx*/) const
-{
-  ASSERTFAIL("Not implemented yet");
-}
 
 
 template <class Basis>
