@@ -1625,7 +1625,7 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
    checkGetAccess(label, matlIndex, patch);
 
    Variable* var = NULL;
-   if(d_varDB.exists(label, matlIndex, patch))
+   if(patch && d_varDB.exists(label, matlIndex, patch))
       var = d_varDB.get(label, matlIndex, patch);
    else {
      const Level* level = patch?patch->getLevel():0;
@@ -2663,22 +2663,6 @@ void OnDemandDataWarehouse::abortTimestep()
 void OnDemandDataWarehouse::restartTimestep()
 {
   restart=true;
-}
-
-namespace Uintah {
-  int getDB_ID(const Patch* patch) {
-    if(!patch)
-      return -1;
-    //ASSERT(!patch->isVirtual());
-    if(patch->isVirtual())
-      patch = patch->getRealPatch();
-    return patch->getID();
-  }
-  int getDB_ID(const Level* level) {
-    if(!level)
-      return -1;
-    return level->getIndex();
-  }
 }
 
 void OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const
