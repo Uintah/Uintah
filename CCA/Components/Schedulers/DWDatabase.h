@@ -183,7 +183,7 @@ void
 DWDatabase<DomainType>::scrub(const VarLabel* var, int matlIndex, const DomainType* dom)
 {
   ASSERT(matlIndex >= -1);
-  VarLabelMatl<DomainType> vlm(var, matlIndex, dom);
+  VarLabelMatl<DomainType> vlm(var, matlIndex, getRealDomain(dom));
   typename varDBtype::iterator iter = vars.find(vlm);
   if (iter != vars.end()) {
     ASSERTEQ(iter->second.scrubCount, 0);
@@ -235,7 +235,7 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
 template<class DomainType>
 bool DWDatabase<DomainType>::exists(const VarLabel* label, int matlIndex, const DomainType* dom) const
 {
-  return vars.find(VarLabelMatl<DomainType>(label, matlIndex, dom)) != vars.end();
+  return vars.find(VarLabelMatl<DomainType>(label, matlIndex, getRealDomain(dom))) != vars.end();
 }
 
 template<class DomainType>
@@ -245,7 +245,7 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
 {
   ASSERT(matlIndex >= -1);
   
-  VarLabelMatl<DomainType> v(label, matlIndex, dom);
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   DataItem& di = vars[v]; 
   if (di.var) {
     if (!replace) {
@@ -263,7 +263,7 @@ DWDatabase<DomainType>::getDataItem( const VarLabel* label, int matlIndex, const
 {
   ASSERT(matlIndex >= -1);
     
-  VarLabelMatl<DomainType> v(label, matlIndex, dom);
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename varDBtype::const_iterator iter = vars.find(v);
   if(iter == vars.end())
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
