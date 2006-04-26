@@ -416,7 +416,7 @@ toHumanUnits( unsigned long value )
 {
   char tmp[64];
   
-  sprintf( tmp, "%.2lf MB", value / 1000000.0 );
+  sprintf( tmp, "%.2lf", value / 1000000.0 );
   return tmp;
 }
 
@@ -533,7 +533,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	   << "), delT="     << delt
 	   << walltime;
 #ifndef _WIN32
-      dbg << ", Mem Use = ";
+      dbg << ", Mem Use (MB)= ";
       if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
 	dbg << toHumanUnits(avg_memuse);
 	if(avg_highwater) {
