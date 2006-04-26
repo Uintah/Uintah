@@ -64,8 +64,8 @@ namespace SCIRun {
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex,
                                ColorMapHandle cmap1,
-			       vector<ColorMap2Handle> &cmap2,
-			       vector<Plane *> &planes,
+                               vector<ColorMap2Handle> &cmap2,
+                               vector<Plane *> &planes,
                                int tex_mem):
   TextureRenderer(tex, cmap1, cmap2, tex_mem),
   grange_(1.0),
@@ -206,8 +206,8 @@ VolumeRenderer::draw_volume()
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
   const Vector cell_diag(diag.x()/tex_->nx(),
-			 diag.y()/tex_->ny(),
-			 diag.z()/tex_->nz());
+                         diag.y()/tex_->ny(),
+                         diag.z()/tex_->nz());
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
 
@@ -253,7 +253,7 @@ VolumeRenderer::draw_volume()
 #else
       if (glBlendEquation)
 #endif
-	glBlendEquation(GL_FUNC_ADD);
+        glBlendEquation(GL_FUNC_ADD);
 
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
@@ -263,7 +263,7 @@ VolumeRenderer::draw_volume()
 #else
       if (glBlendEquation)
 #endif
-	glBlendEquation(GL_MAX);
+        glBlendEquation(GL_MAX);
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
@@ -278,8 +278,8 @@ VolumeRenderer::draw_volume()
        || psize[1] != blend_buffer_->height())
     {
       blend_buffer_ = new Pbuffer(psize[0], psize[1],
-				  GL_FLOAT, blend_num_bits_, true,
-				  GL_FALSE, GL_DONT_CARE, 24);
+                                  GL_FLOAT, blend_num_bits_, true,
+                                  GL_FALSE, GL_DONT_CARE, 24);
       if (!blend_buffer_->create())
       {
         blend_buffer_->destroy();
@@ -393,8 +393,8 @@ VolumeRenderer::draw_volume()
     }
   }
   shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
-				       use_shading, false,
-				       use_fog, blend_mode, cmap2_.size());
+                                       use_shading, false,
+                                       use_fog, blend_mode, cmap2_.size());
   if(shader) {
     if(!shader->valid()) {
       shader->create();
@@ -416,25 +416,6 @@ VolumeRenderer::draw_volume()
     shader->setLocalParam(0, light.x(), light.y(), light.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
   }
-
-#if 0
-  const Transform &field_trans = tex_->transform();
-  double mvmat[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
-  // index space view direction
-  Vector v = field_trans.unproject(Vector(-mvmat[2], -mvmat[6], -mvmat[10]));
-  Vector up = field_trans.unproject(Vector(-mvmat[1], -mvmat[5], -mvmat[9]));
-  Vector right = field_trans.unproject(Vector(-mvmat[0], -mvmat[4], -mvmat[8]));
-  v.safe_normalize();
-  up.safe_normalize();
-  right.safe_normalize();
-  Transform mv;
-  mv.set_trans(mvmat);
-  Point p = field_trans.unproject(mv.unproject(Point(0,0,0)));
-  vector<pair<Plane, int> > planes;
-  planes.push_back(make_pair(Plane(p, p+v+up, p+v), 2));
-  //  cerr << "Plane: " << p << p+v << p+v+up << std::endl;
-#endif
 
   //--------------------------------------------------------------------------
   // render bricks
@@ -466,7 +447,7 @@ VolumeRenderer::draw_volume()
     shader->setLocalParam(4, 1.0/b->nx(), 1.0/b->ny(), 1.0/b->nz(), 0.0);
     draw_polygons(vertex, texcoord, size, false, use_fog,
                   blend_num_bits_ > 8 ? blend_buffer_ : 0,
-		  &mask, shader);
+                  &mask, shader);
   }
 
   // Undo transform.
@@ -565,12 +546,11 @@ VolumeRenderer::multi_level_draw()
 {
   tex_->lock_bricks();
 
-  // all temporary ************************
-  vector< cmap_data* > cmaps; //(  tex_->nlevels() );
+  // Create temporary 1D colormaps.
+  vector< cmap_data* > cmaps;
   for(int i = 0; i < tex_->nlevels(); i++ ){
     cmaps.push_back( new cmap_data );
   }
-  // ***************************************
 
   Ray view_ray = compute_view();
   vector<TextureBrickHandle> bricks;
@@ -637,20 +617,20 @@ VolumeRenderer::multi_level_draw()
        || psize[1] != blend_buffer_->height())
     {
       blend_buffer_ = new Pbuffer(psize[0], psize[1],
-				  GL_FLOAT, blend_num_bits_, true,
-				  GL_FALSE, GL_DONT_CARE, 24);
+                                  GL_FLOAT, blend_num_bits_, true,
+                                  GL_FALSE, GL_DONT_CARE, 24);
       if (!blend_buffer_->create())
       {
-	blend_buffer_->destroy();
-	delete blend_buffer_;
-	blend_buffer_ = 0;
-	blend_num_bits_ = 8;
-	use_blend_buffer_ = false;
+        blend_buffer_->destroy();
+        delete blend_buffer_;
+        blend_buffer_ = 0;
+        blend_num_bits_ = 8;
+        use_blend_buffer_ = false;
       }
       else
       {
-	blend_buffer_->set_use_default_shader(false);
-	blend_buffer_->set_use_texture_matrix(false);
+        blend_buffer_->set_use_default_shader(false);
+        blend_buffer_->set_use_texture_matrix(false);
       }
     }
   }
@@ -664,7 +644,7 @@ VolumeRenderer::multi_level_draw()
 #else
       if (glBlendEquation)
 #endif
-	glBlendEquation(GL_FUNC_ADD);
+        glBlendEquation(GL_FUNC_ADD);
 
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
@@ -674,7 +654,7 @@ VolumeRenderer::multi_level_draw()
 #else
       if (glBlendEquation)
 #endif
-	glBlendEquation(GL_MAX);
+        glBlendEquation(GL_MAX);
 
       glBlendFunc(GL_ONE, GL_ONE);
       break;
@@ -731,13 +711,13 @@ VolumeRenderer::multi_level_draw()
 
     for(int i = 0; i < levels; ++i ){
       build_colormap1( cmaps[levels - i - 1]->data_,
-		       cmaps[levels - i - 1]->tex_id_,
-		       cmaps[levels - i - 1]->dirty_,
-		       cmaps[levels - i - 1]->alpha_dirty_,
-		       double( invert_opacity_  ?
-			       tan(1.570796327 *
-				   (0.5 - level_alpha_[levels - i - 1])*
-				   0.49999) : i ));;
+                       cmaps[levels - i - 1]->tex_id_,
+                       cmaps[levels - i - 1]->dirty_,
+                       cmaps[levels - i - 1]->alpha_dirty_,
+                       double( invert_opacity_  ?
+                               tan(1.570796327 *
+                                   (0.5 - level_alpha_[levels - i - 1])*
+                                   0.49999) : i ));;
     }
   }
 
@@ -759,21 +739,21 @@ VolumeRenderer::multi_level_draw()
   if(blend_num_bits_ != 8) {
     if(mode_ == MODE_OVER) {
       if(blend_buffer_->need_shader()) {
-	blend_mode = 1;
+        blend_mode = 1;
       } else {
-	blend_mode = 3;
+        blend_mode = 3;
       }
     } else {
       if(blend_buffer_->need_shader()) {
-	blend_mode = 2;
+        blend_mode = 2;
       } else {
-	blend_mode = 4;
+        blend_mode = 4;
       }
     }
   }
   shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
-				       use_shading, false,
-				       use_fog, blend_mode, cmap2_.size());
+                                       use_shading, false,
+                                       use_fog, blend_mode, cmap2_.size());
   if(shader) {
     if(!shader->valid()) {
       shader->create();
@@ -852,23 +832,23 @@ VolumeRenderer::multi_level_draw()
     for(int i = 0; i < levels; ++i ){
       if( !draw_level_[i] ) continue;
       if( i > 0 ){
-	bool go_on = false;
-	int k = i;
-	while( k < levels ){
-	  int draw_level = int(pow(2.0, k));
-	  if( count < draw_level ){
-	    break;
-	  } else if( count == draw_level ) {
-	    go_on = true;
-	    break;
-	  } else {
-	    ++k;
-	  }
-	}
+        bool go_on = false;
+        int k = i;
+        while( k < levels ){
+          int draw_level = int(pow(2.0, k));
+          if( count < draw_level ){
+            break;
+          } else if( count == draw_level ) {
+            go_on = true;
+            break;
+          } else {
+            ++k;
+          }
+        }
 
-	if( !go_on ){
-	  break;
-	}
+        if( !go_on ){
+          break;
+        }
       }
 
       bind_colormap1( cmaps[i]->tex_id_ );
@@ -897,17 +877,17 @@ VolumeRenderer::multi_level_draw()
 
       vector<TextureBrickHandle>& bs  = blevels[i];
       for(unsigned int j =0; j < bs.size(); j++) {
-	TextureBrickHandle b = bs[j];
-	vertex.resize(0);
-	texcoord.resize(0);
-	size.resize(0);
-	b->compute_polygon( view_ray, t, vertex, texcoord, size);
-	if( vertex.size() == 0 ) {
-	  continue;
-	}
-	load_brick(bs, j, use_cmap2);
-	draw_polygons(vertex, texcoord, size, false, use_fog,
-		      blend_num_bits_ > 8 ? blend_buffer_ : 0);
+        TextureBrickHandle b = bs[j];
+        vertex.resize(0);
+        texcoord.resize(0);
+        size.resize(0);
+        b->compute_polygon( view_ray, t, vertex, texcoord, size);
+        if( vertex.size() == 0 ) {
+          continue;
+        }
+        load_brick(bs, j, use_cmap2);
+        draw_polygons(vertex, texcoord, size, false, use_fog,
+                      blend_num_bits_ > 8 ? blend_buffer_ : 0);
       }
       release_colormap1();
     }
@@ -1034,8 +1014,8 @@ VolumeRenderer::draw_wireframe()
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
   const Vector cell_diag(diag.x()/tex_->nx(),
-			 diag.y()/tex_->ny(),
-			 diag.z()/tex_->nz());
+                         diag.y()/tex_->ny(),
+                         diag.z()/tex_->nz());
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
 
@@ -1115,8 +1095,8 @@ VolumeRenderer::num_slices_to_rate(int num_slices)
 {
   const Vector diag = tex_->bbox().diagonal();
   const Vector cell_diag(diag.x()/tex_->nx(),
-			 diag.y()/tex_->ny(),
-			 diag.z()/tex_->nz());
+                         diag.y()/tex_->ny(),
+                         diag.z()/tex_->nz());
   const double dt = diag.length() / num_slices;
   const double rate = cell_diag.length() / dt;
 
