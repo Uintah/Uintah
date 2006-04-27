@@ -292,6 +292,14 @@ private:
 			
   //////////
   // Insert Documentation Here:
+  void updateTotalDisplacement(        const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   void computeAcceleration(            const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -406,6 +414,9 @@ private:
                                                const MaterialSet*);
 
   void scheduleGetTemperatureIncrement(        SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleUpdateTotalDisplacement(        SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
   void scheduleComputeAcceleration(            SchedulerP&, const PatchSet*,
