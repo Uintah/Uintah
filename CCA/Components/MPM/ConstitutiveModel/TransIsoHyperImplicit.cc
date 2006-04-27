@@ -262,7 +262,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
-    Matrix3 dispGrad,deformationGradientInc;
     Matrix3 Shear,fbar;
     Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
     Matrix3 pressure, deviatoric_stress, fiber_stress;
@@ -272,9 +271,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni;
-    ni.reserve(interpolator->size());
+    ni.reserve(8);
     vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    d_S.reserve(8);
 
     Matrix3 Identity;
     Identity.Identity();
@@ -309,8 +308,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     parent_old_dw->get(deformationGradient,lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pfiberdir,          lb->pFiberDirLabel,           pset);
     parent_old_dw->get(fail_old,           pFailureLabel,                pset);
-
-    old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
 
     new_dw->allocateAndPut(pstress,         lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,  pset);
@@ -349,10 +346,26 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
+      Ghost::GhostType  gac   = Ghost::AroundCells;
+      if(flag->d_doGridReset){
+        constNCVariable<Vector> dispNew;
+        old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
+        computeDeformationGradientFromIncrementalDisplacement(
+                                                      dispNew, pset, px,
+                                                      deformationGradient,
+                                                      deformationGradient_new,
+                                                      dx, interpolator);
+      }
+      else if(!flag->d_doGridReset){
+        constNCVariable<Vector> gdisplacement;
+        old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
+        computeDeformationGradientFromTotalDisplacement(gdisplacement,
+                                                        pset, px,
+                                                        deformationGradient_new,                                                        dx, interpolator);
+      }
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        dispGrad.set(0.0);
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
@@ -364,14 +377,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           dof[3*k]  =l2g_node_num;
           dof[3*k+1]=l2g_node_num+1;
           dof[3*k+2]=l2g_node_num+2;
-
-          const Vector& disp = dispNew[ni[k]];
-
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
-            }
-          }
 
           B[0][3*k] = d_S[k][0]*oodx[0];
           B[3][3*k] = d_S[k][1]*oodx[1];
@@ -404,13 +409,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           Bnl[1][3*k+2] = 0.;
           Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
         }
-        // Find the stressTensor using the displacement gradient
-        deformationGradientInc = dispGrad + Identity;
-        // Update the deformation gradient tensor to its time n+1 value.
-        deformationGradient_new[idx] = deformationGradientInc *
-                                       deformationGradient[idx];
+
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
+
         deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
         //_______________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS of DEF GRAD
         //_______________________Ftilde=J^(-1/3)*F and Fvol=J^1/3*Identity
@@ -434,26 +436,24 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                      * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
 
         //________________________________strain energy derivatives
-        if (lambda_tilde < 1.)
-         {dWdI4tilde = 0.;
+        if (lambda_tilde < 1.) {
+          dWdI4tilde = 0.;
           d2WdI4tilde2 = 0.;
-         }
+        }
         else
-        if (lambda_tilde < lambda_star)
-         {
+        if (lambda_tilde < lambda_star) {
           dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
                            /(lambda_tilde*lambda_tilde);
           d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
                         -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
                           /(lambda_tilde*lambda_tilde*lambda_tilde);
-          }
-        else
-         {
+        }
+        else {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
           d2WdI4tilde2 = -0.25*c6
                          /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
-          }
-	  
+        }
+
 	//_________________________________stiffness and stress vars.
         double matrix_failed,fiber_failed;
 
@@ -473,13 +473,14 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         //________________________________Failure+Stress+Stiffness
         fail[idx] = 0.;
-        if (failure == 1)
-        {matrix_failed = 0.;
+        if (failure == 1){
+        matrix_failed = 0.;
         fiber_failed = 0.;
 
-        //________________________________Mooney Rivlin deviatoric term +failure of matrix
+        //_______________Mooney Rivlin deviatoric term +failure of matrix
         Matrix3 RCG;
-        RCG = deformationGradient_new[idx].Transpose()*deformationGradient_new[idx];
+        RCG = deformationGradient_new[idx].Transpose()
+             *deformationGradient_new[idx];
         double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
         double Q,R,Dis;
         double pi = 3.1415926535897932384;
@@ -510,7 +511,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           if (e2 < e3) swap(e2,e3);
           };
         double max_shear_strain = (e1-e3)/2.;
-        if (max_shear_strain > crit_shear || fail_old[idx] == 1. || fail_old[idx] == 3.)
+        if (max_shear_strain > crit_shear || fail_old[idx] == 1. 
+                                          || fail_old[idx] == 3.)
           {deviatoric_stress = Identity*0.;
           fail[idx] = 1.;
           matrix_failed = 1.;
@@ -521,7 +523,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
           }
         //________________________________fiber stress term + failure of fibers
-        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
+        if (stretch[idx] > crit_stretch || fail_old[idx] == 2.
+                                        || fail_old[idx] == 3.)
           {fiber_stress = Identity*0.;
           fail[idx] = 2.;
           fiber_failed =1.;
@@ -546,7 +549,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         }
         //_______________________________Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
-	
+
 	//________________________________STIFFNESS
         //________________________________________________________vol. term
         double cvol[6][6];//failure already recorded into p
@@ -574,8 +577,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         //________________________________________________________Mooney-Rivlin term
         double cMR[6][6];
-	if (fail[idx] == 1.0 || fail[idx] == 3.0)
-	{
+	if (fail[idx] == 1.0 || fail[idx] == 3.0) {
          cMR[0][0] = 0;
          cMR[0][1] = 0;
          cMR[0][2] = 0;
@@ -598,14 +600,16 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cMR[4][5] = 0;
          cMR[5][5] = 0;
 	}
-	else
-        {
-	 cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
-                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(0,0)+devsMR(0,0)
-                        +(-4./3.)*(termMR(0,0)+termMR(0,0));
-         cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)-(4./J)*c2*(RB(0,1)*RB(0,1)+RB(0,1)*RB(0,1))
-                        +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
-                        +(-4./3.)*(termMR(0,0)+termMR(1,1));
+	else {
+	 cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)
+                   +RB(0,0)*RB(0,0))
+                   +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(0,0)
+                   +devsMR(0,0)
+                   +(-4./3.)*(termMR(0,0)+termMR(0,0));
+         cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)-(4./J)*c2*(RB(0,1)*RB(0,1)
+                   +RB(0,1)*RB(0,1))
+                   +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
+                   +(-4./3.)*(termMR(0,0)+termMR(1,1));
          cMR[0][2] = (4./J)*c2*RB(0,0)*RB(2,2)-(4./J)*c2*(RB(0,2)*RB(0,2)+RB(0,2)*RB(0,2))
                         +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(2,2)
                         +(-4./3.)*(termMR(0,0)+termMR(2,2));
@@ -649,11 +653,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
                         +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
 	};
-        //________________________________________________________fiber contribution term
+        //_______________________________________fiber contribution term
 
         double cFC[6][6];
-	if (fail[idx] == 2.0 || fail[idx] == 3.0)
-	{
+	if (fail[idx] == 2.0 || fail[idx] == 3.0) {
          cFC[0][0] = 0;
          cFC[0][1] = 0;
          cFC[0][2] = 0;
@@ -676,8 +679,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cFC[4][5] = 0;
          cFC[5][5] = 0;
 	}
-	else
-        {
+	else {
          cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
                         +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
          cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)
@@ -705,206 +707,197 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cFC[4][4] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(1,2)*DY(1,2);
          cFC[4][5] = (4./J)*cc1*DY(1,2)*DY(2,0);
          cFC[5][5] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
-	};
+	}
 
         //________________________________________________________the STIFFNESS
 
-        D[0][0] =cvol[0][0]+cMR[0][0]+cFC[0][0];
-        D[0][1] =cvol[0][1]+cMR[0][1]+cFC[0][1];
-        D[0][2] =cvol[0][2]+cMR[0][2]+cFC[0][2];
-        D[1][1] =cvol[1][1]+cMR[1][1]+cFC[1][1];
-        D[1][2] =cvol[1][2]+cMR[1][2]+cFC[1][2];
-        D[2][2] =cvol[2][2]+cMR[2][2]+cFC[2][2];
-        D[0][3] =cvol[0][3]+cMR[0][3]+cFC[0][3];
-        D[0][4] =cvol[0][4]+cMR[0][4]+cFC[0][4];
-        D[0][5] =cvol[0][5]+cMR[0][5]+cFC[0][5];
-        D[1][3] =cvol[1][3]+cMR[1][3]+cFC[1][3];
-        D[1][4] =cvol[1][4]+cMR[1][4]+cFC[1][4];
-        D[1][5] =cvol[1][5]+cMR[1][5]+cFC[1][5];
-        D[2][3] =cvol[2][3]+cMR[2][3]+cFC[2][3];
-        D[2][4] =cvol[2][4]+cMR[2][4]+cFC[2][4];
-        D[2][5] =cvol[2][5]+cMR[2][5]+cFC[2][5];
-        D[3][3] =cvol[3][3]+cMR[3][3]+cFC[3][3];
-        D[3][4] =cvol[3][4]+cMR[3][4]+cFC[3][4];
-        D[3][5] =cvol[3][5]+cMR[3][5]+cFC[3][5];
-        D[4][4] =cvol[4][4]+cMR[4][4]+cFC[4][4];
-        D[4][5] =cvol[4][5]+cMR[4][5]+cFC[4][5];
-        D[5][5] =cvol[5][5]+cMR[5][5]+cFC[5][5];
-
+        for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            D[i][j] =cvol[i][j]+cMR[i][j]+cFC[i][j];
+          }
         }
-      else
-        {
-          deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
-          fiber_stress = (DY*dWdI4tilde*I4tilde
-                          - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-          double p = Bulk*log(J)/J; // p -= qVisco;
-          if (p >= -1.e-5 && p <= 1.e-5)
-            p = 0.;
-          pressure = Identity*p;
-          //Cauchy stress
-          pstress[idx] = pressure + deviatoric_stress + fiber_stress;
+      }
+      else{
+        deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+             - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+             - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+        fiber_stress = (DY*dWdI4tilde*I4tilde
+                        - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+        double p = Bulk*log(J)/J; // p -= qVisco;
+        if (p >= -1.e-5 && p <= 1.e-5)
+          p = 0.;
+        pressure = Identity*p;
+        //Cauchy stress
+        pstress[idx] = pressure + deviatoric_stress + fiber_stress;
+
         //________________________________STIFFNESS
-        //________________________________________________________vol. term
+        //________________________________vol. term
         double cvol[6][6];
+        for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            cvol[i][j] =  0.;
+          }
+        }
         cvol[0][0] = K*(1./J)-2*p;
         cvol[0][1] = K*(1./J);
         cvol[0][2] = K*(1./J);
         cvol[1][1] = K*(1./J)-2*p;
         cvol[1][2] = K*(1./J);
         cvol[2][2] = K*(1./J)-2*p;
-        cvol[0][3] =  0.;
-        cvol[0][4] =  0.;
-        cvol[0][5] =  0.;
-        cvol[1][3] =  0.;
-        cvol[1][4] =  0.;
-        cvol[1][5] =  0.;
-        cvol[2][3] =  0.;
-        cvol[2][4] =  0.;
-        cvol[2][5] =  0.;
         cvol[3][3] = -p;
-        cvol[3][4] =  0.;
-        cvol[3][5] =  0.;
         cvol[4][4] = -p;
-        cvol[4][5] =  0.;
         cvol[5][5] = -p;
-        //________________________________________________________Mooney-Rivlin term
+
+        //_________________________________________________Mooney-Rivlin term
         double cMR[6][6];
-	 cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
-                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(0,0)+devsMR(0,0)
-                        +(-4./3.)*(termMR(0,0)+termMR(0,0));
-         cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)-(4./J)*c2*(RB(0,1)*RB(0,1)+RB(0,1)*RB(0,1))
-                        +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
-                        +(-4./3.)*(termMR(0,0)+termMR(1,1));
-         cMR[0][2] = (4./J)*c2*RB(0,0)*RB(2,2)-(4./J)*c2*(RB(0,2)*RB(0,2)+RB(0,2)*RB(0,2))
-                        +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(2,2)
-                        +(-4./3.)*(termMR(0,0)+termMR(2,2));
-         cMR[1][1] = (4./J)*c2*RB(1,1)*RB(1,1)-(4./J)*c2*(RB(1,1)*RB(1,1)+RB(1,1)*RB(1,1))
-                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(1,1)+devsMR(1,1)
-                        +(-4./3.)*(termMR(1,1)+termMR(1,1));
-         cMR[1][2] = (4./J)*c2*RB(1,1)*RB(2,2)-(4./J)*c2*(RB(1,2)*RB(1,2)+RB(1,2)*RB(1,2))
-                        +(-1./3.)*cc2MR+devsMR(1,1)+devsMR(2,2)
-                        +(-4./3.)*(termMR(1,1)+termMR(2,2));
-         cMR[2][2] = (4./J)*c2*RB(2,2)*RB(2,2)-(4./J)*c2*(RB(2,2)*RB(2,2)+RB(2,2)*RB(2,2))
-                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(2,2)+devsMR(2,2)
-                        +(-4./3.)*(termMR(2,2)+termMR(2,2));
-         cMR[0][3] = (4./J)*c2*RB(0,0)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(0,1)+RB(0,1)*RB(0,0))
+	 cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)
+                    -(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
+                    +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
+                    +devsMR(0,0)+devsMR(0,0)
+                    +(-4./3.)*(termMR(0,0)+termMR(0,0));
+         cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)
+                    -(4./J)*c2*(RB(0,1)*RB(0,1)+RB(0,1)*RB(0,1))
+                    +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
+                    +(-4./3.)*(termMR(0,0)+termMR(1,1));
+         cMR[0][2] = (4./J)*c2*RB(0,0)*RB(2,2)
+                   -(4./J)*c2*(RB(0,2)*RB(0,2)+RB(0,2)*RB(0,2))
+                   +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(2,2)
+                   +(-4./3.)*(termMR(0,0)+termMR(2,2));
+         cMR[1][1] = (4./J)*c2*RB(1,1)*RB(1,1)
+                   -(4./J)*c2*(RB(1,1)*RB(1,1)+RB(1,1)*RB(1,1))
+                   +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
+                   +devsMR(1,1)+devsMR(1,1)
+                   +(-4./3.)*(termMR(1,1)+termMR(1,1));
+         cMR[1][2] = (4./J)*c2*RB(1,1)*RB(2,2)
+                   -(4./J)*c2*(RB(1,2)*RB(1,2)+RB(1,2)*RB(1,2))
+                   +(-1./3.)*cc2MR+devsMR(1,1)+devsMR(2,2)
+                   +(-4./3.)*(termMR(1,1)+termMR(2,2));
+         cMR[2][2] = (4./J)*c2*RB(2,2)*RB(2,2)
+                   -(4./J)*c2*(RB(2,2)*RB(2,2)+RB(2,2)*RB(2,2))
+                   +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
+                   +devsMR(2,2)+devsMR(2,2)
+                   +(-4./3.)*(termMR(2,2)+termMR(2,2));
+         cMR[0][3] = (4./J)*c2*RB(0,0)*RB(0,1)
+                   -(4./J)*c2*(RB(0,0)*RB(0,1)+RB(0,1)*RB(0,0))
                         +devsMR(0,1)+(-4./3.)*termMR(0,1);
-         cMR[0][4] = (4./J)*c2*RB(0,0)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(0,2)+RB(0,2)*RB(0,1))
+         cMR[0][4] = (4./J)*c2*RB(0,0)*RB(1,2)
+                   -(4./J)*c2*(RB(0,1)*RB(0,2)+RB(0,2)*RB(0,1))
                         +devsMR(1,2)+(-4./3.)*termMR(1,2);
-         cMR[0][5] = (4./J)*c2*RB(0,0)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(0,0)+RB(0,0)*RB(0,2))
+         cMR[0][5] = (4./J)*c2*RB(0,0)*RB(2,0)
+                   -(4./J)*c2*(RB(0,2)*RB(0,0)+RB(0,0)*RB(0,2))
                         +devsMR(2,0)+(-4./3.)*termMR(2,0);
-         cMR[1][3] = (4./J)*c2*RB(1,1)*RB(0,1)-(4./J)*c2*(RB(1,0)*RB(1,1)+RB(1,1)*RB(1,0))
+         cMR[1][3] = (4./J)*c2*RB(1,1)*RB(0,1)
+                   -(4./J)*c2*(RB(1,0)*RB(1,1)+RB(1,1)*RB(1,0))
                         +devsMR(0,1)+(-4./3.)*termMR(0,1);
-         cMR[1][4] = (4./J)*c2*RB(1,1)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(1,2)+RB(1,2)*RB(1,1))
+         cMR[1][4] = (4./J)*c2*RB(1,1)*RB(1,2)
+                   -(4./J)*c2*(RB(1,1)*RB(1,2)+RB(1,2)*RB(1,1))
                         +devsMR(1,2)+(-4./3.)*termMR(1,2);
-         cMR[1][5] = (4./J)*c2*RB(1,1)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(1,0)+RB(1,0)*RB(1,2))
+         cMR[1][5] = (4./J)*c2*RB(1,1)*RB(2,0)
+                   -(4./J)*c2*(RB(1,2)*RB(1,0)+RB(1,0)*RB(1,2))
                         +devsMR(2,0)+(-4./3.)*termMR(2,0);
-         cMR[2][3] = (4./J)*c2*RB(2,2)*RB(0,1)-(4./J)*c2*(RB(2,0)*RB(2,1)+RB(2,1)*RB(2,0))
+         cMR[2][3] = (4./J)*c2*RB(2,2)*RB(0,1)
+                   -(4./J)*c2*(RB(2,0)*RB(2,1)+RB(2,1)*RB(2,0))
                         +devsMR(0,1)+(-4./3.)*termMR(0,1);
-         cMR[2][4] = (4./J)*c2*RB(2,2)*RB(1,2)-(4./J)*c2*(RB(2,1)*RB(2,2)+RB(2,2)*RB(2,1))
+         cMR[2][4] = (4./J)*c2*RB(2,2)*RB(1,2)
+                   -(4./J)*c2*(RB(2,1)*RB(2,2)+RB(2,2)*RB(2,1))
                         +devsMR(1,2)+(-4./3.)*termMR(1,2);
-         cMR[2][5] = (4./J)*c2*RB(2,2)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(2,0)+RB(2,0)*RB(2,2))
+         cMR[2][5] = (4./J)*c2*RB(2,2)*RB(2,0)
+                   -(4./J)*c2*(RB(2,2)*RB(2,0)+RB(2,0)*RB(2,2))
                         +devsMR(2,0)+(-4./3.)*termMR(2,0);
-         cMR[3][3] = (4./J)*c2*RB(0,1)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(1,1)+RB(0,1)*RB(1,0))
+         cMR[3][3] = (4./J)*c2*RB(0,1)*RB(0,1)
+                   -(4./J)*c2*(RB(0,0)*RB(1,1)+RB(0,1)*RB(1,0))
                         +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
-         cMR[3][4] = (4./J)*c2*RB(0,1)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(1,2)+RB(0,2)*RB(1,1));
-
-         cMR[3][5] = (4./J)*c2*RB(0,1)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(1,0)+RB(0,0)*RB(1,2));
-
-         cMR[4][4] = (4./J)*c2*RB(1,2)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(2,2)+RB(1,2)*RB(2,1))
+         cMR[3][4] = (4./J)*c2*RB(0,1)*RB(1,2)
+                   -(4./J)*c2*(RB(0,1)*RB(1,2)+RB(0,2)*RB(1,1));
+         cMR[3][5] = (4./J)*c2*RB(0,1)*RB(2,0)
+                   -(4./J)*c2*(RB(0,2)*RB(1,0)+RB(0,0)*RB(1,2));
+         cMR[4][4] = (4./J)*c2*RB(1,2)*RB(1,2)
+                   -(4./J)*c2*(RB(1,1)*RB(2,2)+RB(1,2)*RB(2,1))
                         +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
-         cMR[4][5] = (4./J)*c2*RB(1,2)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(2,0)+RB(1,0)*RB(2,2));
+         cMR[4][5] = (4./J)*c2*RB(1,2)*RB(2,0)
+                   -(4./J)*c2*(RB(1,2)*RB(2,0)+RB(1,0)*RB(2,2));
+         cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)
+                   -(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
+                   +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
 
-         cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
-                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
-        //________________________________________________________fiber contribution term
-
+        //_________________________fiber contribution term
         double cFC[6][6];
          cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
-                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
+              +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
          cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)
-                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(1,1))+(4./J)*cc1*DY(0,0)*DY(1,1);
+              +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(1,1))+(4./J)*cc1*DY(0,0)*DY(1,1);
          cFC[0][2] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(2,2)
-                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(2,2))+(4./J)*cc1*DY(0,0)*DY(2,2);
+              +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(2,2))+(4./J)*cc1*DY(0,0)*DY(2,2);
          cFC[1][1] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(1,1)+devsFC(1,1)
-                        +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(1,1))+(4./J)*cc1*DY(1,1)*DY(1,1);
+              +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(1,1))+(4./J)*cc1*DY(1,1)*DY(1,1);
          cFC[1][2] = (-1./3.)*cc2FC+devsFC(1,1)+devsFC(2,2)
-                        +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(2,2))+(4./J)*cc1*DY(1,1)*DY(2,2);
+              +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(2,2))+(4./J)*cc1*DY(1,1)*DY(2,2);
          cFC[2][2] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(2,2)+devsFC(2,2)
-                        +(-4./3.)*(1./J)*cc1*(DY(2,2)+DY(2,2))+(4./J)*cc1*DY(2,2)*DY(2,2);
-         cFC[0][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(0,0)*DY(0,1);
-         cFC[0][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(0,0)*DY(1,2);
-         cFC[0][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(0,0)*DY(2,0);
-         cFC[1][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(1,1)*DY(0,1);
-         cFC[1][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(1,1)*DY(1,2);
-         cFC[1][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(1,1)*DY(2,0);
-         cFC[2][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(2,2)*DY(0,1);
-         cFC[2][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(2,2)*DY(1,2);
-         cFC[2][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(2,2)*DY(2,0);
-         cFC[3][3] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(0,1)*DY(0,1);
-         cFC[3][4] = (4./J)*cc1*DY(0,1)*DY(1,2);
-         cFC[3][5] = (4./J)*cc1*DY(0,1)*DY(2,0);
-         cFC[4][4] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(1,2)*DY(1,2);
-         cFC[4][5] = (4./J)*cc1*DY(1,2)*DY(2,0);
-         cFC[5][5] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
+              +(-4./3.)*(1./J)*cc1*(DY(2,2)+DY(2,2))+(4./J)*cc1*DY(2,2)*DY(2,2);
+         cFC[0][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)
+                   +(4./J)*cc1*DY(0,0)*DY(0,1);
+         cFC[0][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)
+                   +(4./J)*cc1*DY(0,0)*DY(1,2);
+         cFC[0][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)
+                   +(4./J)*cc1*DY(0,0)*DY(2,0);
+         cFC[1][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)
+                   +(4./J)*cc1*DY(1,1)*DY(0,1);
+         cFC[1][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)
+                   +(4./J)*cc1*DY(1,1)*DY(1,2);
+         cFC[1][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)
+                   +(4./J)*cc1*DY(1,1)*DY(2,0);
+         cFC[2][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)
+                   +(4./J)*cc1*DY(2,2)*DY(0,1);
+         cFC[2][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)
+                   +(4./J)*cc1*DY(2,2)*DY(1,2);
+         cFC[2][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)
+                   +(4./J)*cc1*DY(2,2)*DY(2,0);
+         cFC[3][3] =.5*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(0,1)*DY(0,1);
+         cFC[3][4] =(4./J)*cc1*DY(0,1)*DY(1,2);
+         cFC[3][5] =(4./J)*cc1*DY(0,1)*DY(2,0);
+         cFC[4][4] =.5*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(1,2)*DY(1,2);
+         cFC[4][5] =(4./J)*cc1*DY(1,2)*DY(2,0);
+         cFC[5][5] =.5*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
 
         //________________________________________________________the STIFFNESS
 
-        D[0][0] =cvol[0][0]+cMR[0][0]+cFC[0][0];
-        D[0][1] =cvol[0][1]+cMR[0][1]+cFC[0][1];
-        D[0][2] =cvol[0][2]+cMR[0][2]+cFC[0][2];
-        D[1][1] =cvol[1][1]+cMR[1][1]+cFC[1][1];
-        D[1][2] =cvol[1][2]+cMR[1][2]+cFC[1][2];
-        D[2][2] =cvol[2][2]+cMR[2][2]+cFC[2][2];
-        D[0][3] =cvol[0][3]+cMR[0][3]+cFC[0][3];
-        D[0][4] =cvol[0][4]+cMR[0][4]+cFC[0][4];
-        D[0][5] =cvol[0][5]+cMR[0][5]+cFC[0][5];
-        D[1][3] =cvol[1][3]+cMR[1][3]+cFC[1][3];
-        D[1][4] =cvol[1][4]+cMR[1][4]+cFC[1][4];
-        D[1][5] =cvol[1][5]+cMR[1][5]+cFC[1][5];
-        D[2][3] =cvol[2][3]+cMR[2][3]+cFC[2][3];
-        D[2][4] =cvol[2][4]+cMR[2][4]+cFC[2][4];
-        D[2][5] =cvol[2][5]+cMR[2][5]+cFC[2][5];
-        D[3][3] =cvol[3][3]+cMR[3][3]+cFC[3][3];
-        D[3][4] =cvol[3][4]+cMR[3][4]+cFC[3][4];
-        D[3][5] =cvol[3][5]+cMR[3][5]+cFC[3][5];
-        D[4][4] =cvol[4][4]+cMR[4][4]+cFC[4][4];
-        D[4][5] =cvol[4][5]+cMR[4][5]+cFC[4][5];
-        D[5][5] =cvol[5][5]+cMR[5][5]+cFC[5][5];
-	}
+        for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            D[i][j] =cvol[i][j]+cMR[i][j]+cFC[i][j];
+          }
+        }
+      }
 
-        // kmat = B.transpose()*D*B*volold
-        double kmat[24][24];
-        BtDB(B,D,kmat);
-        // kgeo = Bnl.transpose*sig*Bnl*volnew;
-        double sig[3][3];
-        for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-            sig[i][j]=pstress[idx](i,j);
-          }
+      // kmat = B.transpose()*D*B*volold
+      double kmat[24][24];
+      BtDB(B,D,kmat);
+      // kgeo = Bnl.transpose*sig*Bnl*volnew;
+      double sig[3][3];
+      for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+          sig[i][j]=pstress[idx](i,j);
         }
-        double kgeo[24][24];
-        BnltDBnl(Bnl,sig,kgeo);
-        double volold = (pmass[idx]/rho_orig);
-        double volnew = volold*J;
-        pvolume_deformed[idx] = volnew;
-        for(int ii = 0;ii<24;ii++){
-          for(int jj = 0;jj<24;jj++){
-            kmat[ii][jj]*=volold;
-            kgeo[ii][jj]*=volnew;
-          }
+      }
+      double kgeo[24][24];
+      BnltDBnl(Bnl,sig,kgeo);
+      double volold = (pmass[idx]/rho_orig);
+      double volnew = volold*J;
+      pvolume_deformed[idx] = volnew;
+      for(int ii = 0;ii<24;ii++){
+        for(int jj = 0;jj<24;jj++){
+          kmat[ii][jj]*=volold;
+          kgeo[ii][jj]*=volnew;
         }
-        for (int I = 0; I < 24;I++){
-          for (int J = 0; J < 24; J++){
-            v[24*I+J] = kmat[I][J] + kgeo[I][J];
-          }
+      }
+      for (int I = 0; I < 24;I++){
+        for (int J = 0; J < 24; J++){
+          v[24*I+J] = kmat[I][J] + kgeo[I][J];
         }
-        solver->fillMatrix(24,dof,24,dof,v);
+      }
+      solver->fillMatrix(24,dof,24,dof,v);
       }  // end of loop over particles
     }
-    delete interpolator;
+  delete interpolator;
   }
   solver->flushMatrix();
 }
@@ -919,10 +912,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
    for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
 
-//
-     Matrix3 deformationGradientInc,dispGrad;
      double J;
      Matrix3 Identity;
+     Identity.Identity();
      Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
      Matrix3 pressure, deviatoric_stress, fiber_stress;
      double I1tilde,I2tilde,I4tilde,lambda_tilde;
@@ -935,10 +927,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      vector<Vector> d_S;
      d_S.reserve(interpolator->size());
 
-     Identity.Identity();
-
      Vector dx = patch->dCell();
-     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
      int dwi = matl->getDWIndex();
      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -965,12 +954,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);//fiber dir the initial one gets passed on
      old_dw->get(fail_old,            pFailureLabel,                pset);
 
-     new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);//displacement
      new_dw->allocateAndPut(pstress,         lb->pStressLabel_preReloc,   pset);//stress
      new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,    pset);//def volume
      old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel,pset);//deformation gradient label
      new_dw->allocateAndPut(deformationGradient_new,
-                                             lb->pDeformationMeasureLabel_preReloc, pset);
+                                  lb->pDeformationMeasureLabel_preReloc, pset);
      new_dw->allocateAndPut(pfiberdir_carry, lb->pFiberDirLabel_preReloc,pset);
      new_dw->allocateAndPut(stretch,         pStretchLabel_preReloc,     pset);
      new_dw->allocateAndPut(fail,            pFailureLabel_preReloc,     pset);
@@ -998,30 +986,35 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
+     LinearInterpolator* interpolator = new LinearInterpolator(patch);
+     Ghost::GhostType  gac   = Ghost::AroundCells;
+     if(flag->d_doGridReset){
+        constNCVariable<Vector> dispNew;
+        new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
+        computeDeformationGradientFromIncrementalDisplacement(
+                                                      dispNew, pset, px,
+                                                      deformationGradient,
+                                                      deformationGradient_new,
+                                                      dx, interpolator);
+     }
+     else if(!flag->d_doGridReset){
+        constNCVariable<Vector> gdisplacement;
+        new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
+        computeDeformationGradientFromTotalDisplacement(gdisplacement,
+                                                        pset, px,
+                                                        deformationGradient_new,                                                        dx, interpolator);
+     }
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        dispGrad.set(0.0);
-        // Get the node indices that surround the cell
 
+        // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
-        for(int k = 0; k < 8; k++) {
-          const Vector& disp = dispNew[ni[k]];
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
-            }
-          }
-        }
-
-        deformationGradientInc = dispGrad + Identity;
-        // Update the deformation gradient tensor to its time n+1 value.
-        deformationGradient_new[idx] = deformationGradientInc *
-                                       deformationGradient[idx];
         // get the volumetric part of the deformation
         J = deformationGradient_new[idx].Determinant();
-        double Jinc = deformationGradientInc.Determinant();
+        double Jold = deformationGradient[idx].Determinant();
+        double Jinc = J/Jold;
         // carry forward fiber direction
         pfiberdir_carry[idx] = pfiberdir[idx];
         deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
@@ -1039,7 +1032,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         // For diagnostics only
         double I4 = I4tilde*pow(J,(2./3.));
         stretch[idx] = sqrt(I4);
-        deformed_fiber_vector = deformationGradient_new[idx]*deformed_fiber_vector*(1./lambda_tilde*pow(J,-(1./3.)));
+        deformed_fiber_vector = deformationGradient_new[idx]
+                               *deformed_fiber_vector
+                               *(1./lambda_tilde*pow(J,-(1./3.)));
+
         Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
 
         //________________________________left Cauchy Green (B) tilde
@@ -1048,27 +1044,26 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         //________________________________hydrostatic pressure term
         double p = Bulk*log(J)/J;
         //________________________________strain energy derivatives
-        if (lambda_tilde < 1.)
-         {dWdI4tilde = 0.;
-         }
+        if (lambda_tilde < 1.){
+           dWdI4tilde = 0.;
+        }
         else
-        if (lambda_tilde < lambda_star)
-         {
+        if (lambda_tilde < lambda_star) {
           dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
                            /lambda_tilde/lambda_tilde;
-          }
-        else
-         {
+        }
+        else {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
-          }
+        }
       //________________________________Failure and stress terms
       fail[idx] = 0.;
-      if (failure == 1)
-       {double matrix_failed = 0.;
+      if (failure == 1){
+        double matrix_failed = 0.;
         double fiber_failed = 0.;
-        //________________________________Mooney Rivlin deviatoric term +failure of matrix
+        //________________Mooney Rivlin deviatoric term +failure of matrix
         Matrix3 RCG;
-        RCG = deformationGradient_new[idx].Transpose()*deformationGradient_new[idx];
+        RCG = deformationGradient_new[idx].Transpose()
+             *deformationGradient_new[idx];
         double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
         double Q,R,Dis;
         double pi = 3.1415926535897932384;
@@ -1078,64 +1073,63 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         Q = (1./9.)*(3.*I2-pow(I1,2));
         R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
         Dis = pow(Q,3)+pow(R,2);
-        if (Dis <= 1.e-5 && Dis >= 0.)
-          {if (R >= -1.e-5 && R<= 1.e-5)
+        if (Dis <= 1.e-5 && Dis >= 0.){
+         if (R >= -1.e-5 && R<= 1.e-5)
             e1 = e2 = e3 = I1/3.;
-          else
-            {
+         else {
               e1 = 2.*pow(R,1./3.)+I1/3.;
               e3 = -pow(R,1./3.)+I1/3.;
               if (e1 < e3) swap(e1,e3);
               e2=e3;
             }
-          }
-        else
-          {double theta = acos(R/pow(-Q,3./2.));
+        }
+        else{
+          double theta = acos(R/pow(-Q,3./2.));
           e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
           e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
           e3 = 2.*pow(-Q,1./2.)*cos(theta/3.+4.*pi/3.)+I1/3.;
           if (e1 < e2) swap(e1,e2);
           if (e1 < e3) swap(e1,e3);
           if (e2 < e3) swap(e2,e3);
-          };
+        }
         double max_shear_strain = (e1-e3)/2.;
-        if (max_shear_strain > crit_shear || fail_old[idx] == 1. || fail_old[idx] == 3.)
-          {deviatoric_stress = Identity*0.;
+        if (max_shear_strain > crit_shear || fail_old[idx] == 1.
+                                          || fail_old[idx] == 3.){
+          deviatoric_stress = Identity*0.;
           fail[idx] = 1.;
           matrix_failed = 1.;
-          }
-        else
-          {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+        }
+        else{
+          deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
                - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
-          }
+        }
         //________________________________fiber stress term + failure of fibers
-        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
-          {fiber_stress = Identity*0.;
+        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. 
+                                        || fail_old[idx] == 3.){
+          fiber_stress = Identity*0.;
           fail[idx] = 2.;
           fiber_failed =1.;
-          }
-        else
-          {fiber_stress = (DY*dWdI4tilde*I4tilde
+        }
+        else{
+          fiber_stress = (DY*dWdI4tilde*I4tilde
                            - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-          }
+        }
         if ( (matrix_failed + fiber_failed) == 2.|| fail_old[idx] == 3.)
           fail[idx] = 3.;
         //________________________________hydrostatic pressure term
         if (fail[idx] == 1.0 ||fail[idx] == 3.0)
           pressure = Identity*0.;
-        else
-          {
+        else {
             p = Bulk*log(J)/J; // p -= qVisco;
             if (p >= -1.e-5 && p <= 1.e-5)
               p = 0.;
             pressure = Identity*p;
-          }
+        }
         //_______________________________Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
-        }
-      else
-        {
+      }
+      else {
           deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
                - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
@@ -1147,10 +1141,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           pressure = Identity*p;
           //Cauchy stress
           pstress[idx] = pressure + deviatoric_stress + fiber_stress;
-        }
-        pvolume_deformed[idx] = pvolumeold[idx]*Jinc;
       }
+      pvolume_deformed[idx] = pvolumeold[idx]*Jinc;
      }
+    }
     delete interpolator;
    }
 }
@@ -1162,16 +1156,22 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
 //________________________________corresponds to the 1st ComputeStressTensor
 {
   const MaterialSubset* matlset = matl->thisMaterial();
+  Ghost::GhostType  gac   = Ghost::AroundCells;
 
-  task->requires(Task::ParentOldDW, lb->pXLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pMassLabel,   matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeLabel, matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pXLabel,        matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pMassLabel,     matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pVolumeLabel,   matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
-                                                         matlset,Ghost::None);
-  task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
-  task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset, Ghost::None);
-  task->requires(Task::ParentOldDW, pFailureLabel,      matlset, Ghost::None);
-  //
+                                                        matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+  if(flag->d_doGridReset){
+    task->requires(Task::OldDW,lb->dispNewLabel,        matlset,gac,1);
+  }
+  if(!flag->d_doGridReset){
+    task->requires(Task::OldDW, lb->gDisplacementLabel, matlset,gac,1);
+  }
+
   task->computes(lb->pStressLabel_preReloc,  matlset);
   task->computes(lb->pVolumeDeformedLabel,   matlset);
   task->computes(lb->pFiberDirLabel_preReloc,matlset);
@@ -1184,14 +1184,21 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
 //________________________________corresponds to the 2nd ComputeStressTensor
 {
   const MaterialSubset* matlset = matl->thisMaterial();
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->dispNewLabel,            matlset,Ghost::AroundCells,1);
   task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pFiberDirLabel,          matlset, Ghost::None);
-  task->requires(Task::OldDW, pFailureLabel,               matlset, Ghost::None);
-  //
+  task->requires(Task::OldDW, lb->pFiberDirLabel,          matlset,Ghost::None);
+  task->requires(Task::OldDW, pFailureLabel,               matlset,Ghost::None);
+  if(flag->d_doGridReset){
+    task->requires(Task::NewDW,lb->dispNewLabel,           matlset,gac,1);
+  }
+  if(!flag->d_doGridReset){
+    task->requires(Task::NewDW,lb->gDisplacementLabel,     matlset,gac,1);
+  }
+
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);

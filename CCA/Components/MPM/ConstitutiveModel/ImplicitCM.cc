@@ -96,7 +96,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(d_lb->pVolumeDeformedLabel,              matlset);
-  task->computes(d_lb->pdTdtLabel_preReloc,   matlset);
+  task->computes(d_lb->pdTdtLabel_preReloc,               matlset);
 }
 
 void 
@@ -113,17 +113,15 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
-                                                           matlset, gnone);
+                                                             matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pStressLabel,      matlset, gnone);
   task->requires(Task::OldDW,       d_lb->dispNewLabel,      matlset, gac, 1);
 
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(d_lb->pVolumeDeformedLabel,              matlset);
-  task->computes(d_lb->pdTdtLabel_preReloc,   matlset);
+  task->computes(d_lb->pdTdtLabel_preReloc,               matlset);
 }
-
-
 
 void 
 ImplicitCM::computeStressTensor(const PatchSubset*,
@@ -141,8 +139,8 @@ ImplicitCM::computeStressTensor(const PatchSubset*,
 
 void
 ImplicitCM::BnltDBnl(double Bnl[3][24], 
-                            double sig[3][3],
-                            double BnTsigBn[24][24]) const
+                     double sig[3][3],
+                     double BnTsigBn[24][24]) const
 {
   double t1, t10, t11, t12, t13, t14, t15, t16, t17;
   double t18, t19, t2, t20, t21, t22, t23, t24, t25;
@@ -812,4 +810,3 @@ ImplicitCM::BnltDBnl(double Bnl[3][24],
   t90 = Bnl[2][23]*Bnl[2][23];
   BnTsigBn[23][23] = t90*sig[2][2];
 }
-

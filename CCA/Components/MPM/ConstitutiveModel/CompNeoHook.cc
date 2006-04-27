@@ -180,7 +180,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
-    constNCVariable<Vector> gvelocity;
     constParticleVariable<Vector> psize;
     ParticleVariable<double> pdTdt;
     delt_vartype delT;
@@ -200,7 +199,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                      lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     double shear = d_initialData.Shear;

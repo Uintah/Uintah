@@ -17,7 +17,6 @@
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 
-
 namespace Uintah {
 
   class Task;
