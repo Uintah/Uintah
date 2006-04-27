@@ -122,7 +122,10 @@ void lin2quad(FieldLin *lf)
 
   { 
     cerr << "Copying node values from linear to quad mesh\n";
-    qf->fdata()=lf->fdata();
+    if (BasisLin::dofs())    
+      qf->fdata()=lf->fdata();
+    else
+      qf->resize_fdata();
   }
 
   {
@@ -157,7 +160,7 @@ void lin2quad(FieldLin *lf)
 	lf->interpolate(v, coords, *eea);
       }
 
-     qf->get_basis().add_node_value(v);
+      qf->get_basis().add_node_value(v);
       ++ea;
     }
   }
