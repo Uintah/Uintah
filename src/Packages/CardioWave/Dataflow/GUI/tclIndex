@@ -18,3 +18,4 @@ set auto_index(CardioWave_DiscreteMultiDomain_DMDAddBlockStimulus) [list source 
 set auto_index(CardioWave_DiscreteMultiDomain_DMDAddReference) [list source [file join $dir DMDAddReference.tcl]]
 set auto_index(CardioWave_DiscreteMultiDomain_DMDCreateSimulation) [list source [file join $dir DMDCreateSimulation.tcl]]
 set auto_index(CardioWave_DiscreteMultiDomain_DMDBuildSimulation) [list source [file join $dir DMDBuildSimulation.tcl]]
+set auto_index(CardioWave_DiscreteMultiDomain_DMDConductionVelocity) [list source [file join $dir DMDConductionVelocity.tcl]]

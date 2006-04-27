@@ -266,7 +266,7 @@ void TimeDataFile::open(std::string filename)
         
         if (cmp_nocase(keyword,"spacings")== 0)
         {
-          std::istringstream iss(attribute);
+          std::istringstream iss(attribute+" ");
           iss.exceptions(std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit);
           try
           {
@@ -288,7 +288,7 @@ void TimeDataFile::open(std::string filename)
           if (percent < attribute.size())
           {
              std::istringstream iss(attribute); 
-             iss.exceptions(std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit);
+             iss.exceptions(std::ifstream::eofbit | std::istream::failbit | std::istream::badbit);
              start_ = 1;
              end_ = 1;
              step_ = 1;

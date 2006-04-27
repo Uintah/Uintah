@@ -39,6 +39,7 @@ SRCS := \
 	$(SRCDIR)/DMDAddReference.tcl\
 	$(SRCDIR)/DMDCreateSimulation.tcl\
 	$(SRCDIR)/DMDBuildSimulation.tcl\
+	$(SRCDIR)/DMDConductionVelocity.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

@@ -293,10 +293,12 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     
     if (debug) infile << "debug=4" << "\n"; else infile << "debug=0" << "\n";
     
+    remark("Created parameter file");
+    
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could write input file");
+    error("DMDBuildDomain: Could not write input file");
     return (false);  
   }   
 
@@ -314,11 +316,13 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     
     scriptfile << "perl nw_make.pl " << SourceFile->get() << "\n";    
     
-    Script->set("perl nw_make.pl "+ string(SourceFile->get()));
+    Script = scinew String("perl nw_make.pl "+ string(SourceFile->get()));
+
+    remark("Created script file");
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could write script");
+    error("DMDBuildDomain: Could not write script");
     return (false);  
   } 
 
@@ -501,6 +505,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
   }
 
+  remark("Verified Simulation Bundle");
+
 
   // Step 4: Build the finite element system
 
@@ -518,6 +524,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       error("DMDBuildDomain: Could not build computational grid to geometrical mesh linkage matrices");
       return (false);  
     }
+    remark("Created Computational grid");
   }
 
   // We should have ordered all the geometric information now
@@ -569,6 +576,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     num_synnodes += membranetable[p].size();
   }
   
+  remark("Located nodes that form the membranes in volume");
+
+  
   std::vector<StimulusTable>     stimulustable(num_stimulus);
   std::vector<MatrixHandle>      stimulusmapping(num_stimulus);  
   
@@ -580,6 +590,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       return(false);   
     }
   }
+  
+  remark("Located nodes that form the stimulus nodes");  
   
   std::vector<ReferenceTable>    referencetable(num_references);
   std::vector<MatrixHandle>      referencemapping(num_references);  
@@ -593,6 +605,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
   }
   
+  remark("Located nodes that form the reference nodes");  
+  
   // Step 5: Build the real Stiffness matrix
   
   // Build the Finite Element Model here
@@ -605,6 +619,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     error("DMDBuildDomain: Could not build FE Matrix");
     return(false);
   }
+  
+  remark("Created the stiffness matrix");
   
   // Figure out how many nodes we actually have
   int num_volumenodes = fematrix->nrows();
@@ -624,6 +640,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     error("DMDBuildDomain: Could not build Synapse matrix");
     return (false); 
   }
+    
+  remark("Created the Membrane matrix");    
     
   // Somehow CardioWave uses the negative matrix for its
   MatrixHandle sysmatrix = synmatrix - fematrix;
@@ -651,6 +669,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // We have the stimulustable
   // We have the referencetable
 
+  remark("Created the full linear system");  
+
   // Step 5:
   // Now optimize the system:
 
@@ -660,6 +680,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     error("DMDBuildDomain: Matrix reordering failed");
     return (false);    
   }
+
+  remark("Reordering through Reverse CuthillMcKee");  
 
   // Reorder domain properties
   NodeType = mapping*NodeType;
@@ -682,6 +704,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);
   }
 
+  remark("Created domain files");  
+ 
   // clean memory
   sysmatrix = 0;
   NodeType = 0;
@@ -730,7 +754,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       referencetable[p][q].node = renumber[referencetable[p][q].node];
     }
   }
-  
+
+  remark("Renumbered Membrane table, Stimulus Table, and Reference Table");   
   
   // Build membrane table file
   
@@ -771,7 +796,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);  
   }
 
-
+  remark("Wrote stimulus, reference and membrane table"); 
 
   if (!(numericalgo.ResizeMatrix(imapping,imapping,num_totalnodes,num_volumenodes)))
   {
@@ -785,12 +810,12 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);            
   }
 
-  BundleHandle VisBundle = scinew Bundle();
+  VisualizationBundle = scinew Bundle();
   BundleHandle VolumeField = scinew Bundle();
   
   VolumeField->setField("Field",ElementType);
   VolumeField->setMatrix("Mapping",imapping);
-  VisBundle->setBundle("Tissue",VolumeField);
+  VisualizationBundle->setBundle("Tissue",VolumeField);
   
   for (size_t p=0; p <num_membranes; p++)
   {
@@ -800,14 +825,16 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     BundleHandle MembraneBundle = scinew Bundle;
     MembraneBundle->setField("Field",Membranes[p]);
     MembraneBundle->setMatrix("Mapping",membranemapping[p]);
-    VisBundle->setBundle(oss.str(),MembraneBundle);
+    VisualizationBundle->setBundle(oss.str(),MembraneBundle);
   }
 
-  if (!(dataioalgo.WriteBundle(filename_visbundle,VisBundle)))
+  if (!(dataioalgo.WriteBundle(filename_visbundle,VisualizationBundle)))
   {
     error("DMDBuildDomain: Could not write visualization information");
     return (false);     
   }
+
+  remark("Created Visualization Bundle"); 
    
   return (true);
 }

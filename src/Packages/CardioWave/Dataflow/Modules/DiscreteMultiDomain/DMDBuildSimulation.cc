@@ -55,6 +55,7 @@ void DMDBuildSimulation::execute()
   }
   
   std::string filename = gui_filename_.get();
+  FileName = scinew String(filename);
   bool enable_debug = gui_enable_debug_.get();
   bool build_visualization_bundle = gui_build_visualization_bundle_.get();
   
