@@ -20,6 +20,11 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
     }
 
     method ui {} {
+
+        global $this-filename
+        global $this-filename-set
+        global $this-filename-entry
+
         set w .ui[modname]
         if {[winfo exists $w]} {
             return
@@ -27,7 +32,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
         toplevel $w
         
         iwidgets::labeledframe $w.fn -labeltext "SIMULATION FILENAME"
-        set filename [$w.fn childsite]
+        set fileframe [$w.fn childsite]
         pack $w.fn -fill both -expand yes
         
         label $fileframe.label -text "Simulation filename"
@@ -38,13 +43,13 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
         pack $fileframe.label -side left
         pack $fileframe.file  -side left -fill x -expand yes
         pack $fileframe.browse -side left
-        pack $fileframe.note -side bottom
+#        pack $fileframe.note -side bottom
   
         iwidgets::labeledframe $w.opt -labeltext "SIMULATION OPTIONS"
-        set options [$w.opt childsite]
+        set opt [$w.opt childsite]
         pack $w.opt -fill both -expand yes
   
-        checkbutton $opt.enabledebug -text "Enable CardioWAave Debug mode" -variable $this-usedebug
+        checkbutton $opt.enabledebug -text "Enable CardioWave Debug mode" -variable $this-usedebug
         checkbutton $opt.buildvisualization -text "Build Visualization bundle" -variable $this-buildvisbundle
   
         grid $opt.enabledebug -row 0 -column 0
@@ -90,18 +95,23 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
 	    		set initdir $env(PSE_DATA)
 		}
 	
+ 		set $this-formatvar ""
+    set $this-filename-set [set $this-filename]
+  
 		makeSaveFilebox \
 			-parent $w \
 			-filevar $this-filename-set \
-			-command "wm withdraw $w;  $this OpenNewSimulationfile" \
+			-setcmd "wm withdraw $w;  $this OpenNewSimulationfile" \
  			-commandname "Set" \
 			-cancel "wm withdraw $w" \
 			-title "Enter the filename of simulation" \
 			-filetypes {{ "Simulation Bundle" "*.sim.bdl" } }\
 			-initialdir $initdir \
 			-defaultextension "*.*" \
-			-selectedfiletype 0
-
+			-selectedfiletype 0 \
+			-formatvar $this-formatvar \
+      -formats {None} 
+          
 		wm deiconify $w	
 	}
 	
@@ -121,6 +131,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
 		global $this-filename-entry
 		
 		set $this-filename [set $this-filename-set] 
+#    $this-filename-entry insert 0 $this-filename
 		
 	}    
     

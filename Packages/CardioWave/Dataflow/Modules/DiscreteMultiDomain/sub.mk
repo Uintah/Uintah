@@ -19,6 +19,7 @@ SRCS     += \
 	$(SRCDIR)/DMDCreateDomain.cc\
 	$(SRCDIR)/DMDCreateSimulation.cc\
 	$(SRCDIR)/DMDBuildSimulation.cc\
+	$(SRCDIR)/DMDConductionVelocity.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
