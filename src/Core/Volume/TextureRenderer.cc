@@ -1009,7 +1009,8 @@ TextureRenderer::build_colormap2()
 }
 
 void
-TextureRenderer::bind_colormap1(unsigned int cmap_tex)
+TextureRenderer::bind_colormap1(Array2<float>& cmap_array,
+                                unsigned int cmap_tex)
 {
 #if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
   glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
@@ -1018,7 +1019,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                256,
                GL_RGBA,
                GL_FLOAT,
-               &(cmap1_array_(0, 0)));
+               &(cmap_array(0, 0)));
 #elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported() && glActiveTexture)
   {
@@ -1043,7 +1044,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                  256,
                  GL_RGBA,
                  GL_FLOAT,
-                 &(cmap1_array_(0, 0)));
+                 &(cmap_array(0, 0)));
   }
 #  else
   {

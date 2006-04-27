@@ -54,15 +54,6 @@ class Pbuffer;
 class FragmentProgramARB;
 class VolShaderFactory;
 
-struct cmap_data {
-public:
-  cmap_data() : tex_id_(0), dirty_(true), alpha_dirty_(true) {}
-  Array2<float>  data_;
-  unsigned int tex_id_;
-  bool dirty_;
-  bool alpha_dirty_;
-};
-
 class SCISHARE TextureRenderer : public GeomObj
 {
 public:
@@ -172,7 +163,7 @@ protected:
 
 
 
-  void bind_colormap1(unsigned int cmap_tex );
+  void bind_colormap1(Array2<float>& cmap_array, unsigned int cmap_tex );
   void bind_colormap2();
 
   void release_colormap1();
