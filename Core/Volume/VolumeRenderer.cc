@@ -165,10 +165,20 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
   if(!pre_draw(di, mat, shading_)) return;
   mutex_.lock();
   di_ = di;
-  if(di->get_drawtype() == DrawInfoOpenGL::WireFrame ) {
+  if(di->get_drawtype() == DrawInfoOpenGL::WireFrame )
+  {
     draw_wireframe();
-  } else {
-    draw_volume();
+  }
+  else
+  {
+    if (tex_->nlevels() > 1)
+    {
+      multi_level_draw();
+    }
+    else
+    {
+      draw_volume();
+    }
   }
   di_ = 0;
   mutex_.unlock();
@@ -178,17 +188,14 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw_volume()
 {
-  if( tex_->nlevels() > 1 ){
-    multi_level_draw();
-    return;
-  }
-
   tex_->lock_bricks();
+
+  const int levels = tex_->nlevels();
 
   Ray view_ray = compute_view();
   vector<TextureBrickHandle> bricks;
-  tex_->get_sorted_bricks(bricks, view_ray);
-  if(bricks.size() == 0) {
+  tex_->get_sorted_bricks(bricks, view_ray, 0);
+  if (levels < 2 && bricks.size() == 0) {
     tex_->unlock_bricks();
     return;
   }
@@ -205,9 +212,9 @@ VolumeRenderer::draw_volume()
   // Set sampling rate based on interaction.
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
-  const Vector cell_diag(diag.x()/tex_->nx(),
-                         diag.y()/tex_->ny(),
-                         diag.z()/tex_->nz());
+  const Vector cell_diag(diag.x() / (tex_->nx() * pow(2.0, levels-1)),
+                         diag.y() / (tex_->ny() * pow(2.0, levels-1)),
+                         diag.z() / (tex_->nz() * pow(2.0, levels-1)));
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
 
@@ -222,18 +229,17 @@ VolumeRenderer::draw_volume()
 
   //--------------------------------------------------------------------------
 
-  //  const int nc = bricks[0]->nc();
   const int nb0 = bricks[0]->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
-    cmap2_.size() && /*nc == 2 && */ShaderProgramARB::shaders_supported();
+    cmap2_.size() && ShaderProgramARB::shaders_supported();
   if(!use_cmap1 && !use_cmap2)
   {
     tex_->unlock_bricks();
     return;
   }
 
-  const bool use_shading = true;//shading_ && nb0 == 4;
+  const bool use_shading = true;
   const GLboolean use_fog = glIsEnabled(GL_FOG);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
@@ -333,15 +339,15 @@ VolumeRenderer::draw_volume()
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
 
-  // Blend mode for no texture palette support.
 #ifdef __APPLE__
+  // Blend mode for no texture palette support.
   if (!ShaderProgramARB::shaders_supported() && mode_ == MODE_OVER)
   {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Scale slice opacity (from build_colormap1)
-    double level_exponent = 0.0;  // used for multi-layer code
-    double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+    const double level_exponent = 0.0;  // used for multi-layer code
+    const double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
     double alpha = pow(0.5, bp); // 0.5 as default global cmap alpha
     alpha = 1.0 - pow((1.0 - alpha), imode_ ?
                       1.0/irate_/pow(2.0, level_exponent) :
@@ -352,11 +358,14 @@ VolumeRenderer::draw_volume()
 
   //--------------------------------------------------------------------------
   // load colormap texture into texture unit 2
-  if(use_cmap2) {
+  if(use_cmap2)
+  {
     // rebuild if needed
     build_colormap2();
     bind_colormap2();
-  } else {
+  }
+  else
+  {
     // rebuild if needed
     build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
     bind_colormap1(cmap1_tex_);
@@ -417,6 +426,15 @@ VolumeRenderer::draw_volume()
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
   }
 
+  //-------------------------------------------------------------------------
+  // set up stenciling
+  if(use_stencil_){
+    glStencilMask(1);
+    glStencilFunc(GL_EQUAL, 0, 1);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+    glEnable(GL_STENCIL_TEST);
+  }
+
   //--------------------------------------------------------------------------
   // render bricks
 
@@ -455,6 +473,10 @@ VolumeRenderer::draw_volume()
 
   // Undo transform.
   glPopMatrix();
+
+  // Turn off stenciling.
+  if(use_stencil_)
+    glDisable(GL_STENCIL_TEST);
 
   glDepthMask(GL_TRUE);
 
@@ -549,16 +571,15 @@ VolumeRenderer::multi_level_draw()
 {
   tex_->lock_bricks();
 
-  // Create temporary 1D colormaps.
-  vector< cmap_data* > cmaps;
-  for(int i = 0; i < tex_->nlevels(); i++ ){
-    cmaps.push_back( new cmap_data );
-  }
+  const int levels = tex_->nlevels();
 
   Ray view_ray = compute_view();
   vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray, 0);
-  int levels = tex_->nlevels();
+  if (levels < 2 && bricks.size() == 0) {
+    tex_->unlock_bricks();
+    return;
+  }
 
   bool cmap2_updating = false;
   for (unsigned int c = 0; c < cmap2_.size(); ++c)
@@ -572,9 +593,9 @@ VolumeRenderer::multi_level_draw()
   // Set sampling rate based on interaction.
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
-  const Vector cell_diag(diag.x()/(tex_->nx()*pow(2.0,levels-1)),
-                         diag.y()/(tex_->ny()*pow(2.0,levels-1)),
-                         diag.z()/(tex_->nz()*pow(2.0,levels-1)));
+  const Vector cell_diag(diag.x() / (tex_->nx() * pow(2.0, levels-1)),
+                         diag.y() / (tex_->ny() * pow(2.0, levels-1)),
+                         diag.z() / (tex_->nz() * pow(2.0, levels-1)));
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
 
@@ -589,18 +610,17 @@ VolumeRenderer::multi_level_draw()
 
   //--------------------------------------------------------------------------
 
-  const int nc = bricks[0]->nc();
   const int nb0 = bricks[0]->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
-    cmap2_.size() && nc == 2 && ShaderProgramARB::shaders_supported();
+    cmap2_.size() && ShaderProgramARB::shaders_supported();
   if(!use_cmap1 && !use_cmap2)
   {
     tex_->unlock_bricks();
     return;
   }
 
-  const bool use_shading = shading_ && nb0 == 4;
+  const bool use_shading = true;
   const GLboolean use_fog = glIsEnabled(GL_FOG);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
@@ -611,12 +631,35 @@ VolumeRenderer::multi_level_draw()
 
   //--------------------------------------------------------------------------
   // set up blending
-  int psize[2];
-  psize[0] = Pow2(vp[2]);
-  psize[1] = Pow2(vp[3]);
+  if(blend_num_bits_ == 8) {
+    glEnable(GL_BLEND);
+    switch(mode_) {
+    case MODE_OVER:
+#ifndef _WIN32
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
+#else
+      if (glBlendEquation)
+#endif
+        glBlendEquation(GL_FUNC_ADD);
 
-  if(blend_num_bits_ != 8)
-  {
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      break;
+    case MODE_MIP:
+#ifndef _WIN32
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
+#else
+      if (glBlendEquation)
+#endif
+        glBlendEquation(GL_MAX);
+      glBlendFunc(GL_ONE, GL_ONE);
+      break;
+    default:
+      break;
+    }
+  } else {
+    int psize[2];
+    psize[0] = Pow2(vp[2]);
+    psize[1] = Pow2(vp[3]);
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
        || psize[0] != blend_buffer_->width()
        || psize[1] != blend_buffer_->height())
@@ -638,40 +681,12 @@ VolumeRenderer::multi_level_draw()
         blend_buffer_->set_use_texture_matrix(false);
       }
     }
-  }
 
-  if(blend_num_bits_ == 8) {
-    glEnable(GL_BLEND);
-    switch(mode_) {
-    case MODE_OVER:
-#ifndef _WIN32
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
-#else
-      if (glBlendEquation)
-#endif
-        glBlendEquation(GL_FUNC_ADD);
-
-      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-      break;
-    case MODE_MIP:
-#ifndef _WIN32
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))
-#else
-      if (glBlendEquation)
-#endif
-        glBlendEquation(GL_MAX);
-
-      glBlendFunc(GL_ONE, GL_ONE);
-      break;
-    default:
-      break;
-    }
-  } else {
     double mv[16], pr[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
     glGetDoublev(GL_PROJECTION_MATRIX, pr);
 
-     GLfloat fstart, fend, fcolor[4];
+    GLfloat fstart, fend, fcolor[4];
     // Copy the fog state to the new context.
     if (use_fog)
     {
@@ -705,16 +720,25 @@ VolumeRenderer::multi_level_draw()
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
 
+  // Create temporary 1D colormaps.
+  vector< cmap_data* > cmaps;
+  for (int i = 0; i < levels; i++ ) {
+    cmaps.push_back( new cmap_data );
+  }
+
   //--------------------------------------------------------------------------
   // load colormap texture
-  if(use_cmap2) {
+  if (use_cmap2)
+  {
     // rebuild if needed
     build_colormap2();
     bind_colormap2();
-  } else {
+  }
+  else
+  {
     // rebuild if needed
-
-    for(int i = 0; i < levels; ++i ){
+    for (int i = 0; i < levels; ++i )
+    {
       build_colormap1( cmaps[levels - i - 1]->data_,
                        cmaps[levels - i - 1]->tex_id_,
                        cmaps[levels - i - 1]->dirty_,
@@ -786,7 +810,7 @@ VolumeRenderer::multi_level_draw()
   if(use_stencil_){
     glStencilMask(1);
     glStencilFunc(GL_EQUAL, 0, 1);
-    glStencilOp(GL_KEEP, GL_KEEP,GL_INCR);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
     glEnable(GL_STENCIL_TEST);
   }
 
@@ -794,7 +818,7 @@ VolumeRenderer::multi_level_draw()
   // render bricks
 
   // set up transform
-  Transform tform = tex_->transform();
+  const Transform &tform = tex_->transform();
   double mvmat[16];
   tform.get_trans(mvmat);
   glMatrixMode(GL_MODELVIEW);
@@ -865,27 +889,24 @@ VolumeRenderer::multi_level_draw()
 
       bind_colormap1( cmaps[j]->tex_id_ );
 
-      // Blend mode for no texture palette support.
 #ifdef __APPLE__
+      // Blend mode for no texture palette support.
       if (!ShaderProgramARB::shaders_supported() && mode_ == MODE_OVER)
       {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        // Scale slice opacity
-        double level_exponent = double(invert_opacity_  ?
-                                       tan(1.570796327 *
-                                           (0.5 - level_alpha_[levels - j-1])*
-                                           0.49999) : j);
-        double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+        // Scale slice opacity (from build_colormap1)
+        const double level_exponent = invert_opacity_  ?
+          tan(1.570796327 * (0.5 - level_alpha_[levels - j-1]) * 0.49999) :
+          (double)j;
+        const double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
         double alpha = pow(0.5, bp); // 0.5 as default global cmap alpha
         alpha = 1.0 - pow((1.0 - alpha), imode_ ?
                           1.0/irate_/pow(2.0, level_exponent) :
                           1.0/sampling_rate_/pow(2.0, level_exponent) );
-
         glColor4f(1.0, 1.0, 1.0, alpha);
       }
 #endif
-
 
       vector<TextureBrickHandle>& bs  = blevels[j];
       for(unsigned int i = 0; i < bs.size(); i++) {
