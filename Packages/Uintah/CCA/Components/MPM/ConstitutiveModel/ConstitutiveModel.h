@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
@@ -198,6 +199,22 @@ namespace Uintah {
                                            ParticleInterpolator* interp,
                                            const double& delT);
 
+    void computeDeformationGradientFromTotalDisplacement(
+                                           constNCVariable<Vector> gDisp,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           LinearInterpolator* interp);
+                                                                                
+    void computeDeformationGradientFromIncrementalDisplacement(
+                                           constNCVariable<Vector> IncDisp,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           constParticleVariable<Matrix3> Fold,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           LinearInterpolator* interp);
   protected:
 
     inline void computeVelocityGradient(Matrix3& velGrad,
