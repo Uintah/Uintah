@@ -64,15 +64,14 @@ public:
   void set_adaptive(bool b);
   void set_gradient_range(double min, double max);
   inline void set_shading(bool shading) { shading_ = shading; }
-  inline void set_material(double ambient, double diffuse, double specular, double shine)
-  { ambient_ = ambient; diffuse_ = diffuse; specular_ = specular; shine_ = shine; }
+  inline void set_material(double amb, double diff, double spec, double shine)
+  { ambient_ = amb; diffuse_ = diff; specular_ = spec; shine_ = shine; }
   inline void set_light(int light) { light_ = light; }
   
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 
   void draw_wireframe();
-  void multi_level_draw();
   void draw_volume();
 #endif
 

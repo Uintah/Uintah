@@ -187,7 +187,7 @@ SliceRenderer::draw_slice()
 //     build_colormap1();
 //     bind_colormap1();
     build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
-    bind_colormap1(cmap1_tex_);
+    bind_colormap1(cmap1_array_, cmap1_tex_);
 
   }
   
@@ -396,7 +396,7 @@ SliceRenderer::multi_level_draw()
   } else {
     // rebuild if needed
     build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
-    bind_colormap1(cmap1_tex_);
+    bind_colormap1(cmap1_array_, cmap1_tex_);
   }
   
   //--------------------------------------------------------------------------
