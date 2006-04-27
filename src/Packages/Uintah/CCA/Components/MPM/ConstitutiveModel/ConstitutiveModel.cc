@@ -1165,3 +1165,70 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
       Fnew[idx] = deformationGradientInc * Fold[idx];
     }
 }
+
+void
+ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
+                                           constNCVariable<Vector> gDisp,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           LinearInterpolator* interp)
+{
+  Matrix3 dispGrad,Identity;
+  Identity.Identity();
+  vector<IntVector> ni;
+  ni.reserve(8);
+  vector<Vector> d_S;
+  d_S.reserve(8);
+  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+                                                                                
+  for(ParticleSubset::iterator iter = pset->begin();
+       iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+                                                                                
+    // Get the node indices that surround the cell
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S);
+                                                                                
+    computeGrad(dispGrad, ni, d_S, oodx, gDisp);
+                                                                                
+    // Update the deformation gradient tensor to its time n+1 value.
+    // Compute the deformation gradient from the displacement gradient
+    Fnew[idx] = Identity + dispGrad;
+  }
+}
+                                                                                
+void
+ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
+                                           constNCVariable<Vector> gDisp,
+                                           ParticleSubset* pset,
+                                           constParticleVariable<Point> px,
+                                           constParticleVariable<Matrix3> Fold,
+                                           ParticleVariable<Matrix3> &Fnew,
+                                           Vector dx,
+                                           LinearInterpolator* interp)
+{
+    Matrix3 IncDispGrad,deformationGradientInc, Identity;
+    Identity.Identity();
+    vector<IntVector> ni;
+    ni.reserve(8);
+    vector<Vector> d_S;
+    d_S.reserve(8);
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+                                                                                
+    for(ParticleSubset::iterator iter = pset->begin();
+      iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+                                                                                
+      // Get the node indices that surround the cell
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S);
+                                                                                
+      computeGrad(IncDispGrad, ni, d_S, oodx, gDisp);
+                                                                                
+      // Compute the deformation gradient increment
+      deformationGradientInc = IncDispGrad + Identity;
+                                                                                
+      // Update the deformation gradient tensor to its time n+1 value.
+      Fnew[idx] = deformationGradientInc * Fold[idx];
+    }
+}
