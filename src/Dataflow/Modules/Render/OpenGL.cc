@@ -503,7 +503,6 @@ OpenGL::render_and_save_image( int x, int y,
   bool use_convert = false;
 
 #if defined(HAVE_PNG) && HAVE_PNG
-
   bool write_png = false;
   // Either the user specified the type to be ppm or raw (in that case
   // we create that type of image), or they specified the "by_extension"
@@ -796,14 +795,12 @@ OpenGL::render_and_save_image( int x, int y,
 #endif
   {
     image_file->close();
-    delete[] pixels;
   }
 
   gui_->unlock();
 
-  delete[] tmp_row;
-  return ;
-
+  delete [] pixels;
+  delete [] tmp_row;
 } // end render_and_save_image()
 
 
