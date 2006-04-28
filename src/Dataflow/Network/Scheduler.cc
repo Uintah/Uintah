@@ -86,6 +86,7 @@ Scheduler::Scheduler(Network* net)
     first_schedule(true),
     schedule(true),
     serial_id(1),
+    callback_lock_("Scheduler lock for callbacks_"),
     mailbox("NetworkEditor request FIFO", 100)
 {
   net->attach(this);
@@ -380,6 +381,7 @@ Scheduler::report_execution_finished_real(unsigned int serial)
     // which callbacks are added to the queue.
     bool done = false;
     int priority = 0;
+    callback_lock_.lock();
     for (unsigned int i = 0; i < callbacks_.size(); i++)
     {
       if (done && callbacks_[i].priority != priority)
@@ -393,6 +395,7 @@ Scheduler::report_execution_finished_real(unsigned int serial)
         done = true;
       }
     }
+    callback_lock_.unlock();
   }
 }
 
@@ -407,6 +410,7 @@ Scheduler::add_callback(SchedulerCallback cb, void *data, int priority)
 
   // Insert the callback.  Preserve insertion order if priorities are
   // the same.
+  callback_lock_.lock();
   callbacks_.push_back(sc);
   for (size_t i = callbacks_.size()-1; i > 0; i--)
   {
@@ -417,6 +421,7 @@ Scheduler::add_callback(SchedulerCallback cb, void *data, int priority)
       callbacks_[i] = tmp;
     }
   }
+  callback_lock_.unlock();
 }
 
 
@@ -426,8 +431,10 @@ Scheduler::remove_callback(SchedulerCallback cb, void *data)
   SCData sc;
   sc.callback = cb;
   sc.data = data;
+  callback_lock_.lock();
   callbacks_.erase(std::remove_if(callbacks_.begin(), callbacks_.end(), sc),
 		   callbacks_.end());
+  callback_lock_.unlock();
 }
 
 

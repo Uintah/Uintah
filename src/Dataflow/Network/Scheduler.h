@@ -104,6 +104,7 @@ class SCISHARE Scheduler : public Runnable
   };
 
   std::vector<SCData> callbacks_;
+  Mutex callback_lock_;
 
   virtual void run();
   void main_loop();
