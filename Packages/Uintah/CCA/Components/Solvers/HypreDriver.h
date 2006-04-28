@@ -313,7 +313,7 @@ namespace Uintah {
         cout_dbg << "Making linear system" << "\n";
         makeLinearSystem<Types>(matl);
         
-        printMatrix("Matix");
+        printMatrix("Matrix");
         printRHS("RHS");
         
         //-----------------------------------------------------------
