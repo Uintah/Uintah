@@ -126,7 +126,7 @@ public:
 
 //! Class for describing interfaces to basis elements with additional nodes
 template <class T>
-  class BasisAddNodes : public BasisSimple<T> 
+class BasisAddNodes : public BasisSimple<T> 
 {
 public:
   BasisAddNodes() {}
@@ -146,60 +146,68 @@ protected:
 };
 
 
-//! Class for describing interfaces to basis elements with additional derivatives
+//! Class for describing interfaces to basis elements with 
+//! additional derivatives
 template <class T>
-  class BasisAddDerivatives : public BasisSimple<T> 
+class BasisAddDerivatives : public BasisSimple<T> 
 {
 public:
   BasisAddDerivatives() {}
   virtual ~BasisAddDerivatives() {}
 
   //! add derivative values (dx, dy, dxy) for nodes.
-  inline void add_derivatives(const std::vector<T> &p) { derivs_.push_back(p); }
+  inline void add_derivatives(const std::vector<T> &p) 
+  {
+    derivs_.push_back(p); 
+  }
 
   //! return number of additional derivatives
   inline int size_derivatives() { return derivs_.size(); }
 
- protected:
+protected:
   std::vector<std::vector<T> > derivs_; 
 };
 
 
-//! Class for describing interfaces to basis elements with additional derivatives
-//! and scale factors at nodes
+//! Class for describing interfaces to basis elements with 
+//! additional derivatives and scale factors at nodes.
 template <class T>
-  class BasisAddDerivativesScaleFactors : public BasisAddDerivatives<T> 
+class BasisAddDerivativesScaleFactors : public BasisAddDerivatives<T> 
 {
 public:
   BasisAddDerivativesScaleFactors() {}
   virtual ~BasisAddDerivativesScaleFactors() {}
 
   //! add scale factors (sdx, sdy) for nodes.
-  inline void add_scalefactors(const std::vector<double> &p) { scalefactors_.push_back(p); }
+  inline void add_scalefactors(const std::vector<double> &p) 
+  {
+    scalefactors_.push_back(p); 
+  }
 
   //! return number of additional derivatives
   inline int size_scalefactors() { return scalefactors_.size(); }
 
- protected:
+protected:
   std::vector<std::vector<double> > scalefactors_; 
 };
 
-//! Class for describing interfaces to basis elements with additional derivatives
-//! and scale factors at edges
+//! Class for describing interfaces to basis elements with 
+//! additional derivatives and scale factors at edges
 template <class T>
-  class BasisAddDerivativesScaleFactorsEdges : public BasisAddDerivatives<T> 
+class BasisAddDerivativesScaleFactorsEdges : public BasisAddDerivatives<T> 
 {
 public:
   BasisAddDerivativesScaleFactorsEdges() {}
   virtual ~BasisAddDerivativesScaleFactorsEdges() {}
 
   //! add scale factors (sdx, sdy) for nodes.
-  inline void add_scalefactors(const std::vector<double> &p) { scalefactors_.push_back(p[0]); }
+  inline void add_scalefactors(const std::vector<double> &p) 
+  { scalefactors_.push_back(p[0]); }
 
   //! return number of additional derivatives
   inline int size_scalefactors() { return scalefactors_.size(); }
 
- protected:
+protected:
   std::vector<double> scalefactors_; 
 };
 
