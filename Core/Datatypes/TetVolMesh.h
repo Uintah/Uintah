@@ -82,6 +82,20 @@ public:
     typedef StackVector<index_type, 10> array_type; // 10 = quadratic size
   };
 
+  struct Edge {
+    typedef EdgeIndex<under_type>       index_type;
+    typedef EdgeIterator<under_type>    iterator;
+    typedef EdgeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };
+
+  struct Face {
+    typedef FaceIndex<under_type>       index_type;
+    typedef FaceIterator<under_type>    iterator;
+    typedef FaceIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };
+
   struct Cell {
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
@@ -90,308 +104,10 @@ public:
 
   };
 
-  // Used for hashing operations below
-  static const int sizeof_uint = sizeof(unsigned int) * 8; // in bits
-
-  typedef map<typename Cell::index_type,
-              typename Cell::index_type> cell_2_cell_map_t;
-
-  //! An edge is indexed via the cells structure.
-  //! There are 6 unique edges in each cell of 4 nodes.
-  //! Therefore, the edge index / 6 == cell index
-  //! And, the edge index % 6 == which edge in that cell
-  //! Edges indices are stored in a hash_set and a hash_multiset.
-  //! The hash_set stores shared edges only once.
-  //! The hash_multiset stores all shared edges together.
-  struct Edge {
-    typedef EdgeIndex<under_type>       index_type;
-
-    //! edgei return the two nodes make the edge
-    static pair<typename Node::index_type,
-                typename Node::index_type> edgei(index_type idx)
-    {
-      const int b = (idx / 6) * 4;
-      switch (idx % 6)
-      {
-      case 0: return pair<typename Node::index_type,
-                          typename Node::index_type>(b+0,b+1);
-      case 1: return pair<typename Node::index_type,
-                          typename Node::index_type>(b+0,b+2);
-      case 2: return pair<typename Node::index_type,
-                          typename Node::index_type>(b+0,b+3);
-      case 3: return pair<typename Node::index_type,
-                          typename Node::index_type>(b+1,b+2);
-      case 4: return pair<typename Node::index_type,
-                          typename Node::index_type>(b+2,b+3);
-      default:
-      case 5: return pair<typename Node::index_type,
-                          typename Node::index_type>(b+1,b+3);
-      }
-    }
-
-    static index_type opposite_edge(index_type idx)
-    {
-      const int cell = (idx / 6);
-      switch (idx % 6)
-      {
-      case 0: return cell * 6 + 4;
-      case 1: return cell * 6 + 5;
-      case 2: return cell * 6 + 3;
-      case 3: return cell * 6 + 2;
-      case 4: return cell * 6 + 0;
-      default:
-      case 5: return cell * 6 + 1;
-      }
-    }
-
-    //! A functor that returns a boolean indicating whether two
-    //! edges' indices share the same nodes, and thus the same edge in space
-    //! Used as a template parameter to STL containers typedef'd below
-    struct eqEdge : public binary_function<index_type, index_type, bool>
-    {
-    private:
-      const vector<under_type> &cells_;
-    public:
-      eqEdge(const vector<under_type> &cells) :
-        cells_(cells) {};
-
-      // Since the indicies of the nodes can be in any order, we need
-      // to order them before we do comparisons.  This can be done
-      // simply for two items using Min and Max.  This works, because
-      // index_type is a single integral value.
-      bool operator()(index_type ei1, index_type ei2) const
-      {
-        const pair<index_type, index_type> e1 = edgei(ei1), e2 = edgei(ei2);
-        return (Max(cells_[e1.first], cells_[e1.second]) ==
-                Max(cells_[e2.first], cells_[e2.second]) &&
-                Min(cells_[e1.first], cells_[e1.second]) ==
-                Min(cells_[e2.first], cells_[e2.second]));
-      };
-    };
-
-    //! A fucntor that returns a boolean indicating weather two
-    //! edges indices are less than each other.
-    //! Used as a template parameter to STL containers typedef'd below
-    struct lessEdge : public binary_function<index_type, index_type, bool>
-    {
-    private:
-      const vector<under_type> &cells_;
-    public:
-      lessEdge(const vector<under_type> &cells) :
-        cells_(cells) {};
-      lessEdge() {}; // make visual c++ happy
-
-      static bool lessthen(const vector<under_type> &cells, index_type ei1, index_type ei2) {
-        const pair<index_type, index_type> e1 = edgei(ei1), e2 = edgei(ei2);
-        index_type e1min = Min(cells[e1.first], cells[e1.second]);
-        index_type e2min = Min(cells[e2.first], cells[e2.second]);
-        if (e1min == e2min) {
-          index_type e1max = Max(cells[e1.first], cells[e1.second]);
-          index_type e2max = Max(cells[e2.first], cells[e2.second]);
-          return  e1max < e2max;
-        } else {
-          return e1min < e2min;
-        }
-      }
-
-      bool operator()(index_type ei1, index_type ei2) const
-      {
-        return lessthen(cells_, ei1, ei2);
-      };
-    };
-
-#ifdef HAVE_HASH_SET
-    //! A functor that hashes an edge index according to the node
-    //! indices of that edge
-    //! Used as a template parameter to STL hash_[set,map] containers
-    struct CellEdgeHasher : public unary_function<size_t, index_type>
-    {
-    private:
-      const vector<under_type> &cells_;
-    public:
-      CellEdgeHasher(const vector<under_type> &cells) :
-        cells_(cells) {};
-      static const int size = sizeof_uint / 2; // in bits
-      static const int mask = (~(unsigned int)0) >> (sizeof_uint - size);
-      size_t operator()(index_type cell) const
-      {
-        pair<index_type,index_type> e = edgei(cell);
-        const int n0 = cells_[e.first] & mask;
-        const int n1 = cells_[e.second] & mask;
-        return Min(n0, n1) << size | Max(n0, n1);
-      }
-# if defined(__ECC) || defined(_MSC_VER)
-
-      // These are particularly needed by ICC's hash stuff
-      static const size_t bucket_size = 4;
-      static const size_t min_buckets = 8;
-
-      // This is a less than function.
-      bool operator()(index_type ei1, index_type ei2) const {
-        return lessEdge::lessthen(cells_, ei1, ei2);
-      }
-# endif // endif ifdef __ICC
-    };
-
-# if defined(__ECC) || defined(_MSC_VER)
-    // The comparator function needs to be a member of CellEdgeHasher
-    typedef hash_multiset<index_type, CellEdgeHasher> HalfEdgeSet;
-    typedef hash_set<index_type, CellEdgeHasher> EdgeSet;
-# else
-    typedef eqEdge EdgeComparitor;
-    typedef hash_multiset<index_type, CellEdgeHasher, EdgeComparitor> HalfEdgeSet;
-#   if defined(__sgi)
-    typedef typename hash_multiset<index_type, CellEdgeHasher, EdgeComparitor>::size_type HESsize_type;
-    typedef typename hash_multiset<index_type, CellEdgeHasher, EdgeComparitor>::allocator_type HESallocator_type;
-#   endif
-    typedef hash_set<index_type, CellEdgeHasher, EdgeComparitor> EdgeSet;
-# endif // end if defined(__ECC) || defined(_MSC_VER)
-#else // do not HAVE_HASH_SET
-    typedef lessEdge EdgeComparitor;
-    typedef multiset<index_type, EdgeComparitor> HalfEdgeSet;
-    typedef set<index_type, EdgeComparitor> EdgeSet;
-#endif
-    //! This iterator will traverse each shared edge once in no
-    //! particular order.
-    typedef typename EdgeSet::iterator          iterator;
-    typedef EdgeIndex<under_type>               size_type;
-    typedef vector<index_type>                  array_type;
-  };
-
-
-  //! A face is directly opposite the same indexed node in the cells_ structure
-  struct Face
-  {
-    typedef FaceIndex<under_type>       index_type;
-
-    struct eqFace : public binary_function<index_type, index_type, bool>
-    {
-    private:
-      const vector<under_type> &cells_;
-    public:
-      eqFace(const vector<under_type> &cells) :
-        cells_(cells) {};
-      bool operator()(index_type fi1, index_type fi2) const
-      {
-        const int f1_offset = fi1 % 4;
-        const int f1_base = fi1 - f1_offset;
-        const under_type f1_n0 = cells_[f1_base + (f1_offset < 1 ? 1 : 0)];
-        const under_type f1_n1 = cells_[f1_base + (f1_offset < 2 ? 2 : 1)];
-        const under_type f1_n2 = cells_[f1_base + (f1_offset < 3 ? 3 : 2)];
-        const int f2_offset = fi2 % 4;
-        const int f2_base = fi2 - f2_offset;
-        const under_type f2_n0 = cells_[f2_base + (f2_offset < 1 ? 1 : 0)];
-        const under_type f2_n1 = cells_[f2_base + (f2_offset < 2 ? 2 : 1)];
-        const under_type f2_n2 = cells_[f2_base + (f2_offset < 3 ? 3 : 2)];
-
-        return (Max(f1_n0, f1_n1, f1_n2) == Max(f2_n0, f2_n1, f2_n2) &&
-                Mid(f1_n0, f1_n1, f1_n2) == Mid(f2_n0, f2_n1, f2_n2) &&
-                Min(f1_n0, f1_n1, f1_n2) == Min(f2_n0, f2_n1, f2_n2));
-      }
-    }; // end struct TetVolMesh::Face::eqFace
-
-    struct lessFace : public binary_function<index_type, index_type, bool>
-    {
-    private:
-      const vector<under_type> &cells_;
-    public:
-      lessFace(const vector<under_type> &cells) :
-        cells_(cells) {};
-      lessFace() {}; // make visual c++ happy
-      static bool lessthen(const vector<under_type> &cells, index_type fi1, index_type fi2)
-      {
-        const int f1_offset = fi1 % 4;
-        const int f1_base = fi1 - f1_offset;
-        const under_type f1_n0 = cells[f1_base + (f1_offset < 1 ? 1 : 0)];
-        const under_type f1_n1 = cells[f1_base + (f1_offset < 2 ? 2 : 1)];
-        const under_type f1_n2 = cells[f1_base + (f1_offset < 3 ? 3 : 2)];
-        const int f2_offset = fi2 % 4;
-        const int f2_base = fi2 - f2_offset;
-        const under_type f2_n0 = cells[f2_base + (f2_offset < 1 ? 1 : 0)];
-        const under_type f2_n1 = cells[f2_base + (f2_offset < 2 ? 2 : 1)];
-        const under_type f2_n2 = cells[f2_base + (f2_offset < 3 ? 3 : 2)];
-
-        under_type f1_max = Max(f1_n0, f1_n1, f1_n2);
-        under_type f2_max = Max(f2_n0, f2_n1, f2_n2);
-        if (f1_max == f2_max) {
-          under_type f1_mid = Mid(f1_n0, f1_n1, f1_n2);
-          under_type f2_mid = Mid(f2_n0, f2_n1, f2_n2);
-          if (f1_mid == f2_mid)
-            return Min(f1_n0, f1_n1, f1_n2) < Min(f2_n0, f2_n1, f2_n2);
-          else
-            return f1_mid < f2_mid;
-        } else
-          return f1_max < f2_max;
-      }
-      bool operator()(index_type fi1, index_type fi2) const
-      {
-        return lessthen(cells_, fi1, fi2);
-      }
-    }; // end struct TetVolMesh::Face::lessFace
-
-#ifdef HAVE_HASH_SET
-    struct CellFaceHasher: public unary_function<size_t, index_type>
-    {
-    private:
-      const vector<under_type> &cells_;
-    public:
-      CellFaceHasher(const vector<under_type> &cells) :
-        cells_(cells) {};
-      static const int size = sizeof_uint / 3; // in bits
-      static const int mask = (~(unsigned int)0) >> (sizeof_uint - size);
-      size_t operator()(index_type cell) const
-      {
-        const int offset = cell % 4;
-        const int base = cell - offset;
-        const under_type n0 = cells_[base + (offset < 1 ? 1 : 0)] & mask;
-        const under_type n1 = cells_[base + (offset < 2 ? 2 : 1)] & mask;
-        const under_type n2 = cells_[base + (offset < 3 ? 3 : 2)] & mask;
-        return Min(n0,n1,n2)<<size*2 | Mid(n0,n1,n2)<<size | Max(n0,n1,n2);
-      }
-
-# if defined(__ECC) || defined(_MSC_VER)
-
-      // These are particularly needed by ICC's hash stuff
-      static const size_t bucket_size = 4;
-      static const size_t min_buckets = 8;
-
-      // This is a less than function.
-      bool operator()(index_type fi1, index_type fi2) const {
-        return lessFace::lessthen(cells_, fi1, fi2);
-      }
-# endif // __ICC
-
-    }; // end struct TetVolMesh::Face::CellFaceHasher
-
-# if defined(__ECC) || defined(_MSC_VER)
-    // The comparator function needs to be a member of CellFaceHasher
-    typedef hash_multiset<index_type, CellFaceHasher> HalfFaceSet;
-    typedef hash_set<index_type, CellFaceHasher> FaceSet;
-# else
-    typedef eqFace FaceComparitor;
-    typedef hash_multiset<index_type, CellFaceHasher,FaceComparitor> HalfFaceSet;
-    typedef hash_set<index_type, CellFaceHasher, FaceComparitor> FaceSet;
-#   if defined(__sgi)
-    typedef typename hash_multiset<index_type, CellFaceHasher, FaceComparitor>::size_type HFSsize_type;
-    typedef typename hash_multiset<index_type, CellFaceHasher, FaceComparitor>::allocator_type HFSallocator_type;
-#   endif
-# endif // end if defined(__ECC) || defined(_MSC_VER)
-#else // ifdef HAVE_HASH_SET
-    typedef lessFace FaceComparitor;
-    typedef multiset<index_type, FaceComparitor> HalfFaceSet;
-    typedef set<index_type, FaceComparitor> FaceSet;
-#endif
-    typedef typename FaceSet::iterator          iterator;
-    typedef FaceIndex<under_type>               size_type;
-    typedef vector<index_type>                  array_type;
-  }; // end struct TetVolMesh::Face;
-
-
   typedef Cell Elem;
   typedef Face DElem;
 
   enum { ELEMENTS_E = CELLS_E };
-
 
   friend class ElemData;
 
@@ -402,8 +118,13 @@ public:
              const typename Cell::index_type ind) :
       mesh_(msh),
       index_(ind)
-    {}
-
+    {
+      //Linear and Constant Basis never use edges_
+      if (basis_type::polynomial_order() > 1) {
+	mesh_.get_edges(edges_, index_);
+      }
+    }
+    
     // the following designed to coordinate with ::get_nodes
     inline
     unsigned node0_index() const {
@@ -425,27 +146,27 @@ public:
     // the following designed to coordinate with ::get_edges
     inline
     unsigned edge0_index() const {
-      return *(mesh_.edges_.find(index_ * 6));
+      return edges_[0];
     }
     inline
     unsigned edge1_index() const {
-      return *(mesh_.edges_.find(index_ * 6 + 1));
+      return edges_[1];
     }
     inline
     unsigned edge2_index() const {
-      return *(mesh_.edges_.find(index_ * 6 + 2));
+      return edges_[2];
     }
     inline
     unsigned edge3_index() const {
-      return *(mesh_.edges_.find(index_ * 6 + 3));
+      return edges_[3];
     }
     inline
     unsigned edge4_index() const {
-      return *(mesh_.edges_.find(index_ * 6 + 4));
+      return edges_[4];
     }
     inline
     unsigned edge5_index() const {
-      return *(mesh_.edges_.find(index_ * 6 + 5));
+      return edges_[5];
     }
 
     inline
@@ -468,6 +189,7 @@ public:
   private:
     const TetVolMesh<Basis>          &mesh_;
     const typename Cell::index_type  index_;
+    typename Edge::array_type        edges_;
   };  // end class TetVolMesh::ElemData
 
 
@@ -512,11 +234,6 @@ public:
   void get_nodes(typename Node::array_type &array,
                  typename Cell::index_type idx) const;
 
-  bool get_edge(typename Edge::index_type &ei,
-                typename Cell::index_type ci,
-                typename Node::index_type n1,
-                typename Node::index_type n2) const;
-
   void get_edges(typename Edge::array_type &array,
                  typename Face::index_type idx) const;
   void get_edges(typename Edge::array_type &array,
@@ -536,6 +253,10 @@ public:
                               typename Cell::index_type ci,
                               typename Node::index_type ni) const;
 
+  bool get_node_opposite_face(typename Node::index_type &ni,
+                              typename Cell::index_type ci,
+                              typename Face::index_type fi) const;
+
   void get_cells(typename Cell::array_type &array,
                  typename Node::index_type idx) const;
   void get_cells(typename Cell::array_type &array,
@@ -550,9 +271,7 @@ public:
   bool get_neighbor(typename Cell::index_type &neighbor,
                     typename Cell::index_type from,
                     typename Face::index_type idx) const;
-  // Use this one instead
-  bool get_neighbor(typename Face::index_type &neighbor,
-                    typename Face::index_type idx) const;
+
   void get_neighbors(typename Cell::array_type &array,
                      typename Cell::index_type idx) const;
   // This uses vector instead of array_type because we cannot make any
@@ -613,12 +332,15 @@ public:
     get_neighbors(arr, idx);
     return static_cast<unsigned int>(arr.size());
   }
-  unsigned int get_valence(typename Edge::index_type /*idx*/) const
-  { return 0; }
+  unsigned int get_valence(typename Edge::index_type idx) const
+  { 
+    ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
+    return edges_[idx].cells_.size() - 1;
+  }
   unsigned int get_valence(typename Face::index_type idx) const
   {
-    typename Face::index_type tmp;
-    return (get_neighbor(tmp, idx) ? 1 : 0);
+    ASSERTMSG(synchronized_ & FACES_E, "FACES_E not synchronized.");
+    return faces_[idx].cells_.size() - 1;
   }
   unsigned int get_valence(typename Cell::index_type idx) const
   {
@@ -702,40 +424,6 @@ public:
   void node_reserve(size_t s) { points_.reserve(s); }
   void elem_reserve(size_t s) { cells_.reserve(s*4); }
 
-
-  //! Subdivision methods:
-  //! Given 2 cells that share a face, split the 2 tets into 3 by connecting
-  //! the 2 nodes not on the shared face.
-  bool             split_2_to_3(typename Cell::array_type &new_tets,
-                                typename Node::index_type &c1_node,
-                                typename Node::index_type &c2_node,
-                                typename Cell::index_type c1,
-                                typename Cell::index_type c2,
-                                typename Face::index_type between);
-  //! Given a cell, and the face index which is hte boundary face,
-  //! split the cell into 3, by adding a point at the center of the boundary
-  //! face.
-  bool             split_cell_at_boundary(typename Cell::array_type &new_tets,
-                                          typename Node::index_type &new_node,
-                                          typename Cell::index_type ci,
-                                          typename Face::index_type bface);
-
-  //! Given an edge that has exactly 3 tets sharing the edge, create 2 tets in
-  //! thier place.  The 3 points not on the edge become a face shared between
-  //! the new 2 tet combo.
-  //! Warning: This invalidates iterators.  removed has the invalid cell index.
-  bool         combine_3_to_2(typename Cell::index_type &removed,
-                              typename Edge::index_type shared_edge);
-
-  bool         combine_4_to_1_cell(typename Cell::array_type &split_tets,
-                                       set<unsigned int> &removed_tets,
-                                       set<unsigned int> &removed_nodes);
-
-  void         nbors_from_2_to_3_split(typename Cell::index_type ci,
-                                        typename Cell::array_type &split_tets);
-  void         nbors_from_center_split(typename Cell::index_type ci,
-                                        typename Cell::array_type &split_tets);
-
   //! Always creates 4 tets, does not handle element boundaries properly.
   bool         insert_node_in_cell(typename Cell::array_type &tets,
                                    typename Cell::index_type ci,
@@ -745,7 +433,7 @@ public:
   void         insert_node_in_cell_face(typename Cell::array_type &tets,
                                         typename Node::index_type ni,
                                         typename Cell::index_type ci,
-                                        unsigned int skip);
+					typename Face::index_type fi);
 
   void         insert_node_in_cell_edge(typename Cell::array_type &tets,
                                         typename Node::index_type ni,
@@ -766,26 +454,11 @@ public:
                insert_node_watson(const Point &p,
                                   typename Cell::array_type *new_cells = 0,
                                   typename Cell::array_type *mod_cells = 0);
-  void         refine_elements_levels(const typename Cell::array_type &cells,
-                                      const vector<int> &refine_level,
-                                      cell_2_cell_map_t &);
-  void         refine_elements(const typename Cell::array_type &cells,
-                             vector<typename Cell::array_type> &cell_children,
-                               cell_2_cell_map_t &green_children);
   void         bisect_element(const typename Cell::index_type c);
 
 
   void         delete_cells(set<unsigned int> &to_delete);
   void         delete_nodes(set<unsigned int> &to_delete);
-
-  bool         is_edge(const typename Node::index_type n0,
-                       const typename Node::index_type n1,
-                       typename Edge::array_type *edges = 0);
-
-  bool         is_face(typename Node::index_type n0,
-                       typename Node::index_type n1,
-                       typename Node::index_type n2,
-                       typename Face::array_type *faces = 0);
 
   virtual bool is_editable() const { return true; }
   virtual int  dimensionality() const { return 3; }
@@ -799,12 +472,7 @@ public:
                        unsigned which_edge,
                        unsigned div_per_unit) const
   {
-    // Needs to match UnitEdges in Basis/TetLinearLgn.cc
-    // compare get_nodes order to the basis order
-    // map mesh order to basis order
-
-    int emap[] = {0, 2, 3, 1, 5, 4};
-    basis_.approx_edge(emap[which_edge], div_per_unit, coords);
+    basis_.approx_edge(which_edge, div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -814,8 +482,6 @@ public:
                        unsigned which_face,
                        unsigned div_per_unit) const
   {
-    // Needs to match UnitEdges in Basis/TetLinearLgn.cc
-    // compare get_nodes order to the basis order
     basis_.approx_face(which_face, div_per_unit, coords);
   }
 
@@ -864,7 +530,6 @@ protected:
 
   void                  orient(typename Cell::index_type ci);
   bool                  inside(typename Cell::index_type idx, const Point &p);
-  pair<Point,double>    circumsphere(const typename Cell::index_type);
 
   //! Used to recompute data for individual cells.  Don't use these, they
   // are not synchronous.  Use create_cell_syncinfo instead.
@@ -894,41 +559,207 @@ protected:
   //! each 4 indecies make up a tet
   vector<under_type>    cells_;
 
-  typedef LockingHandle<typename Edge::HalfEdgeSet> HalfEdgeSetHandle;
-  typedef LockingHandle<typename Edge::EdgeSet> EdgeSetHandle;
-#ifdef HAVE_HASH_SET
-  typename Edge::CellEdgeHasher edge_hasher_;
-# if !defined(__ECC) && !defined(_MSC_VER)
-  typename Edge::EdgeComparitor edge_comp_;
-# endif
-#else // ifdef HAVE_HASH_SET
-  typename Edge::EdgeComparitor  edge_comp_;
+  //! Face information.
+  struct PFace {
+    typename Node::index_type         nodes_[3];  //! 3 nodes makes a face.
+    typename Cell::index_type         cells_[2];  //! 2 cells share this face.
+    typename Node::index_type         snodes_[4]; //! sorted nodes,for hashing
+
+    PFace() {
+      nodes_[0] = MESH_NO_NEIGHBOR;
+      nodes_[1] = MESH_NO_NEIGHBOR;
+      nodes_[2] = MESH_NO_NEIGHBOR;
+      snodes_[0] = MESH_NO_NEIGHBOR;
+      snodes_[1] = MESH_NO_NEIGHBOR;
+      snodes_[2] = MESH_NO_NEIGHBOR;
+      cells_[0] = MESH_NO_NEIGHBOR;
+      cells_[1] = MESH_NO_NEIGHBOR;
+    }
+    // snodes_ must be sorted. See Hash Function below.
+    PFace(typename Node::index_type n1, typename Node::index_type n2,
+          typename Node::index_type n3) 
+    {
+      cells_[0] = MESH_NO_NEIGHBOR;
+      cells_[1] = MESH_NO_NEIGHBOR;
+      nodes_[0] = n1;
+      nodes_[1] = n2;
+      nodes_[2] = n3;
+      snodes_[0] = n1;
+      snodes_[1] = n2;
+      snodes_[2] = n3;
+      typename Node::index_type tmp;
+      // bubble sort the 3 node indices -- smallest one goes to nodes_[0]
+      int i,j;
+      for (i=0; i<2; i++) {
+        for (j=i+1; j<3; j++) {
+          if (snodes_[i] > snodes_[j]) {
+            tmp = snodes_[i]; snodes_[i] = snodes_[j]; snodes_[j] = tmp;
+          }
+        }
+      }
+    }
+
+    bool shared() const { return ((cells_[0] != MESH_NO_NEIGHBOR) &&
+                                  (cells_[1] != MESH_NO_NEIGHBOR)); }
+
+    //! true if both have the same nodes (order does not matter)
+    bool operator==(const PFace &f) const {
+      return ((snodes_[0] == f.snodes_[0]) && (snodes_[1] == f.snodes_[1]) &&
+              (snodes_[2] == f.snodes_[2]));
+    }
+
+    //! Compares each node.  When a non equal node is found the <
+    //! operator is applied.
+    bool operator<(const PFace &f) const {
+      if (snodes_[0] == f.snodes_[0])
+        if (snodes_[1] == f.snodes_[1])
+            return (snodes_[2] < f.snodes_[2]);
+        else
+          return (snodes_[1] < f.snodes_[1]);
+      else
+        return (snodes_[0] < f.snodes_[0]);
+    }
+  };
+
+  //! Edge information.
+  struct PEdge {
+    typename Node::index_type         nodes_[2];   //! 2 nodes makes an edge.
+    //! list of all the cells this edge is in.
+    vector<typename Cell::index_type> cells_;
+
+    PEdge() : cells_(0) {
+      nodes_[0] = MESH_NO_NEIGHBOR;
+      nodes_[1] = MESH_NO_NEIGHBOR;
+    }
+    // node_[0] must be smaller than node_[1]. See Hash Function below.
+    PEdge(typename Node::index_type n1,
+          typename Node::index_type n2) : cells_(0) {
+      if (n1 < n2) {
+        nodes_[0] = n1;
+        nodes_[1] = n2;
+      } else {
+        nodes_[0] = n2;
+        nodes_[1] = n1;
+      }
+    }
+
+    bool shared() const { return cells_.size() > 1; }
+
+    //! true if both have the same nodes (order does not matter)
+    bool operator==(const PEdge &e) const {
+      return ((nodes_[0] == e.nodes_[0]) && (nodes_[1] == e.nodes_[1]));
+    }
+
+    //! Compares each node.  When a non equal node is found the <
+    //! operator is applied.
+    bool operator<(const PEdge &e) const {
+      if (nodes_[0] == e.nodes_[0])
+        return (nodes_[1] < e.nodes_[1]);
+      else
+        return (nodes_[0] < e.nodes_[0]);
+    }
+  };
+
+  /*! hash the egde's node_indecies such that edges with the same nodes
+   *  hash to the same value. nodes are sorted on edge construction. */
+  static const int sz_int = sizeof(int) * 8; // in bits
+  struct FaceHash {
+    //! These are needed by the hash_map particularly
+    // ANSI C++ allows us to initialize these variables in the
+    // declaration.  However there may be compilers which will complain
+    // about it.
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+
+    //! These are for our own use (making the hash function).
+    static const int sz_third_int = (int)(sz_int * .33);
+    static const int up_mask = (~((int)0) << sz_third_int << sz_third_int);
+    static const int mid_mask =  up_mask ^ (~((int)0) << sz_third_int);
+    static const int low_mask = ~(up_mask | mid_mask);
+
+    //! This is the hash function
+    size_t operator()(const PFace &f) const {
+      return ((up_mask & (f.snodes_[0] << sz_third_int << sz_third_int)) |
+              (mid_mask & (f.snodes_[1] << sz_third_int)) |
+              (low_mask & f.snodes_[2]));
+    }
+    //! This should return less than rather than equal to.
+    bool operator()(const PFace &f1, const PFace& f2) const {
+      return f1 < f2;
+    }
+  };
+
+  friend struct FaceHash; // needed by the gcc-2.95.3 compiler
+
+  /*! hash the egde's node_indecies such that edges with the same nodes
+   *  hash to the same value. nodes are sorted on edge construction. */
+  struct EdgeHash {
+    //! These are needed by the hash_map particularly
+    // ANSI C++ allows us to initialize these variables in the
+    // declaration.  However there may be compilers which will complain
+    // about it.
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+
+    //! These are for our own use (making the hash function.
+    static const int sz_int = sizeof(int) * 8; // in bits
+    static const int sz_half_int = sizeof(int) << 2; // in bits
+    static const int up_mask = ((~((int)0)) << sz_half_int);
+    static const int low_mask = (~((int)0) ^ up_mask);
+
+    //! This is the hash function
+    size_t operator()(const PEdge &e) const {
+      return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[1]);
+    }
+    //!  This should return less than rather than equal to.
+    bool operator()(const PEdge &e1, const PEdge& e2) const {
+      return e1 < e2;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  typedef hash_map<PFace, typename Face::index_type, FaceHash> face_ht;
+  typedef hash_map<PEdge, typename Edge::index_type, EdgeHash> edge_ht;
+#else
+  typedef map<PFace, typename Face::index_type, FaceHash> face_ht;
+  typedef map<PEdge, typename Edge::index_type, EdgeHash> edge_ht;
 #endif
+  /*! container for face storage. Must be computed each time
+    nodes or cells change. */
+  vector<PFace>            faces_;
+  face_ht                  face_table_;
+  /*! container for edge storage. Must be computed each time
+    nodes or cells change. */
+  vector<PEdge>            edges_;
+  edge_ht                  edge_table_;
 
-  typename Edge::HalfEdgeSet    all_edges_;
+  
+  //! iterate over the edge_table_ and store the vector of edges_
+  void                  build_edge_vec();
 
-#if defined(__digital__) || defined(_AIX) || defined(__ECC) || defined(_MSC_VER)
-  mutable
-#endif
-  typename Edge::EdgeSet                edges_;
+  inline
+  void remove_edge(typename Node::index_type n1,
+		   typename Node::index_type n2,
+		   typename Cell::index_type ci,
+		   edge_ht &table);
+  inline
+  void hash_edge(typename Node::index_type n1, typename Node::index_type n2,
+		 typename Cell::index_type ci, edge_ht &table) const;
+  
 
-  typedef LockingHandle<typename Face::HalfFaceSet> HalfFaceSetHandle;
-  typedef LockingHandle<typename Face::FaceSet> FaceSetHandle;
-#ifdef HAVE_HASH_SET
-  typename Face::CellFaceHasher face_hasher_;
-# if !defined(__ECC) && !defined(_MSC_VER)
-  typename Face::FaceComparitor  face_comp_;
-# endif
-#else // ifdef HAVE_HASH_SET
-  typename Face::FaceComparitor face_comp_;
-#endif
+  //! iterate over the face_table_ and store the vector of faces_
+  void                  build_face_vec();
 
-  typename Face::HalfFaceSet    all_faces_;
-
-#if defined(__digital__) || defined(_AIX) || defined(__ECC) || defined(_MSC_VER)
-  mutable
-#endif
-  typename Face::FaceSet                faces_;
+  inline
+  void remove_face(typename Node::index_type n1,
+		   typename Node::index_type n2,
+		   typename Node::index_type n3,
+		   typename Cell::index_type ci,
+		   face_ht &table);
+  inline
+  void hash_face(typename Node::index_type n1, typename Node::index_type n2,
+                 typename Node::index_type n3, 
+                 typename Cell::index_type ci, face_ht &table) const;
 
   typedef vector<vector<typename Cell::index_type> > NodeNeighborMap;
   NodeNeighborMap       node_neighbors_;
@@ -940,16 +771,11 @@ protected:
   //!  then search just those tets that overlap that grid cell.
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
   LockingHandle<SearchGridConstructor>  grid_;
-  typename Cell::index_type           locate_cache_;
+  typename Cell::index_type             locate_cache_;
 
   unsigned int          synchronized_;
   Mutex                 synchronize_lock_;
   Basis                 basis_;
-
-#if defined(__sgi)
-  Edge::HESallocator_type edge_allocator_;
-  Face::HFSallocator_type face_allocator_;
-#endif
 
   Vector cell_epsilon_;
 }; // end class TetVolMesh
@@ -1026,51 +852,10 @@ template <class Basis>
 TetVolMesh<Basis>::TetVolMesh() :
   points_(0),
   cells_(0),
-
-  //! Unique Edges
-#ifdef HAVE_HASH_SET
-  edge_hasher_(cells_),
-#  if defined(__ECC) || defined(_MSC_VER)
-  all_edges_(edge_hasher_),
-  edges_(edge_hasher_),
-#  else
-  edge_comp_(cells_),
-#    if defined(__sgi)
-  // The SGI compiler can't figure this out on its own, so we have to help it.
-  all_edges_((Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_),
-  edges_( (Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_ ),
-#    else
-  all_edges_( 0, edge_hasher_, edge_comp_ ),
-  edges_( 0, edge_hasher_, edge_comp_ ),
-#    endif
-#  endif // if defined(__ECC) || defined(_MSC_VER)
-#else // ifdef HAVE_HASH_SET
-  all_edges_(edge_comp_),
-  edges_(edge_comp_),
-#endif // ifdef HAVE_HASH_SET
-
-  //! Unique Faces
-#ifdef HAVE_HASH_SET
-  face_hasher_(cells_),
-#  if defined(__ECC) || defined(_MSC_VER)
-  all_faces_(face_hasher_),
-  faces_(face_hasher_),
-#  else
-  face_comp_(cells_),
-#    if defined(__sgi)
-  // The SGI compiler can't figure this out on its own, so we have to help it.
-  all_faces_((Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_),
-  faces_( (Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_ ),
-#    else
-  all_faces_( 0, face_hasher_, face_comp_ ),
-  faces_( 0, face_hasher_, face_comp_ ),
-#    endif
-#  endif // if defined(__ECC) || defined(_MSC_VER)
-#else // ifdef HAVE_HASH_SET
-  all_faces_(face_comp_),
-  faces_(face_comp_),
-#endif // ifdef HAVE_HASH_SET
-
+  faces_(0),
+  face_table_(),
+  edges_(0),
+  edge_table_(),
   node_neighbors_(0),
   grid_(0),
   locate_cache_(0),
@@ -1083,48 +868,10 @@ template <class Basis>
 TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   points_(0),
   cells_(0),
-#ifdef HAVE_HASH_SET
-  edge_hasher_(cells_),
-#  if defined(__ECC) || defined(_MSC_VER)
-  all_edges_(edge_hasher_),
-  edges_(edge_hasher_),
-#  else
-  edge_comp_(cells_),
-#    if defined(__sgi)
-  // The SGI compiler can't figure this out on its own, so we have to help it.
-  all_edges_((Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_),
-  edges_( (Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_ ),
-#    else
-  all_edges_( 0, edge_hasher_, edge_comp_ ),
-  edges_( 0, edge_hasher_, edge_comp_ ),
-#    endif
-#  endif // if defined(__ECC) || defined(_MSC_VER)
-#else // ifdef HAVE_HASH_SET
-  all_edges_(edge_comp_),
-  edges_(edge_comp_),
-#endif // ifdef HAVE_HASH_SET
-
-#ifdef HAVE_HASH_SET
-  face_hasher_(cells_),
-#  if defined(__ECC) || defined(_MSC_VER)
-  all_faces_(face_hasher_),
-  faces_(face_hasher_),
-#  else
-  face_comp_(cells_),
-#    if defined(__sgi)
-  // The SGI compiler can't figure this out on its own, so we have to help it.
-  all_faces_((Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_),
-  faces_( (Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_ ),
-#    else
-  all_faces_( 0, face_hasher_, face_comp_ ),
-  faces_( 0, face_hasher_, face_comp_ ),
-#    endif
-#  endif // if defined(__ECC) || defined(_MSC_VER)
-#else // ifdef HAVE_HASH_SET
-  all_faces_(face_comp_),
-  faces_(face_comp_),
-#endif // ifdef HAVE_HASH_SET
-
+  faces_(0),
+  face_table_(),
+  edges_(0),
+  edge_table_(),
   node_neighbors_(0),
   grid_(0),
   locate_cache_(0),
@@ -1213,35 +960,150 @@ TetVolMesh<Basis>::transform(const Transform &t)
 
 template <class Basis>
 void
-TetVolMesh<Basis>::compute_faces()
+TetVolMesh<Basis>::remove_face(typename Node::index_type n1,
+			       typename Node::index_type n2,
+			       typename Node::index_type n3,
+			       typename Cell::index_type ci,
+			       face_ht &table)
 {
-  faces_.clear();
-  all_faces_.clear();
-  unsigned int i, num_cells = cells_.size();
-  for (i = 0; i < num_cells; i++)
-  {
-    faces_.insert(i);
-    all_faces_.insert(i);
+  PFace e(n1, n2, n3);
+  typename face_ht::iterator iter = table.find(e);
+
+  if (iter == table.end()) {
+    ASSERTFAIL("this face did not exist in the table");
   }
-  synchronized_ |= FACES_E;
-  synchronized_ |= FACE_NEIGHBORS_E;
+  PFace found_face = (*iter).first;
+  unsigned found_idx = (*iter).second;
+  face_table_.erase(iter);
+    
+  if (!found_face.shared()) {
+    // this face belongs to only one cell
+    faces_.erase(faces_.begin() + found_idx);
+  } else {
+    typename vector<typename Cell::index_type>::iterator citer;
+    if (found_face.cells_[0] == ci) {
+      found_face.cells_[0] = found_face.cells_[1];
+    }
+    found_face.cells_[1] = MESH_NO_NEIGHBOR;
+    //reinsert remaining partial faces.
+    face_table_[found_face] = found_idx;
+    faces_[found_idx] = found_face;
+  }
 }
 
+template <class Basis>
+void
+TetVolMesh<Basis>::hash_face(typename Node::index_type n1,
+                             typename Node::index_type n2,
+                             typename Node::index_type n3,
+                             typename Cell::index_type ci,
+                             face_ht &table) const
+{
+  PFace f(n1, n2, n3);
+
+  typename face_ht::iterator iter = table.find(f);
+  if (iter == table.end()) {
+    f.cells_[0] = ci;
+    table[f] = 0; // insert for the first time
+  } else {
+    PFace f = (*iter).first;
+    if (f.cells_[1] != MESH_NO_NEIGHBOR) {
+      cerr << "This Mesh has problems: Cells #"
+           << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci
+           << " are illegally adjacent." << std::endl;
+    } else if (f.cells_[0] == ci) {
+      cerr << "This Mesh has problems: Cells #"
+           << f.cells_[0] << " and #" << ci
+           << " are the same." << std::endl;
+    } else {
+      f.cells_[1] = ci; // add this cell
+      table.erase(iter);
+      table[f] = 0;
+    }
+  }
+}
+
+template <class Basis>
+void
+TetVolMesh<Basis>::build_face_vec()
+
+{
+  // dump edges into the faces_ container.
+  faces_.resize(face_table_.size());
+  typename vector<PFace>::iterator f_iter = faces_.begin();
+  typename face_ht::iterator ht_iter = face_table_.begin();
+  int i = 0;
+  while (ht_iter != face_table_.end())
+  {
+    *f_iter = (*ht_iter).first;
+    (*ht_iter).second = i;
+    ++f_iter; ++ht_iter; i++;
+  }
+}
+
+template <class Basis>
+void
+TetVolMesh<Basis>::compute_faces()
+{
+  face_table_.clear();
+  
+  typename Cell::iterator ci, cie;
+  begin(ci); end(cie);
+  typename Node::array_type arr(4);
+  while (ci != cie)
+  {
+    get_nodes(arr, *ci);
+    // 4 faces -- each is entered CCW from outside looking in
+    hash_face(arr[0], arr[2], arr[1], *ci, face_table_);
+    hash_face(arr[1], arr[2], arr[3], *ci, face_table_);
+    hash_face(arr[0], arr[1], arr[3], *ci, face_table_);
+    hash_face(arr[0], arr[3], arr[2], *ci, face_table_);
+    ++ci;
+  }
+  build_face_vec();
+  synchronized_ |= FACES_E;
+}
+
+template <class Basis>
+void
+TetVolMesh<Basis>::hash_edge(typename Node::index_type n1,
+                             typename Node::index_type n2,
+                             typename Cell::index_type ci,
+                             edge_ht &table) const
+{
+  PEdge e(n1, n2);
+  typename edge_ht::iterator iter = table.find(e);
+  if (iter == table.end()) {
+    e.cells_.push_back(ci); // add this cell
+    table[e] = 0; // insert for the first time
+  } else {
+    PEdge e = (*iter).first;
+    e.cells_.push_back(ci); // add this cell
+    table.erase(iter);
+    table[e] = 0;
+  }
+}
 
 template <class Basis>
 void
 TetVolMesh<Basis>::compute_edges()
 {
-  edges_.clear();
-  all_edges_.clear();
-  unsigned int i, num_cells = (cells_.size()) / 4 * 6;
-  for (i = 0; i < num_cells; i++)
+  typename Cell::iterator ci, cie;
+  begin(ci); end(cie);
+  typename Node::array_type arr;
+  while (ci != cie)
   {
-    edges_.insert(i);
-    all_edges_.insert(i);
+    get_nodes(arr, *ci);
+    hash_edge(arr[0], arr[1], *ci, edge_table_);
+    hash_edge(arr[1], arr[2], *ci, edge_table_);
+    hash_edge(arr[2], arr[0], *ci, edge_table_);
+    hash_edge(arr[3], arr[0], *ci, edge_table_);
+    hash_edge(arr[3], arr[1], *ci, edge_table_);
+    hash_edge(arr[3], arr[2], *ci, edge_table_);
+    ++ci;
   }
+  build_edge_vec();
   synchronized_ |= EDGES_E;
-  synchronized_ |= EDGE_NEIGHBORS_E;
 }
 
 
@@ -1312,7 +1174,7 @@ void
 TetVolMesh<Basis>::begin(typename TetVolMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
-  itr = edges_.begin();
+  itr = 0;
 }
 
 
@@ -1321,7 +1183,7 @@ void
 TetVolMesh<Basis>::end(typename TetVolMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
-  itr = edges_.end();
+  itr = static_cast<typename Edge::iterator>(edges_.size());
 }
 
 
@@ -1339,7 +1201,7 @@ void
 TetVolMesh<Basis>::begin(typename TetVolMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E, "FACES_E not synchronized.");
-  itr = faces_.begin();
+  itr = 0;
 }
 
 
@@ -1348,7 +1210,7 @@ void
 TetVolMesh<Basis>::end(typename TetVolMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E, "FACES_E not synchronized.");
-  itr = faces_.end();
+  itr = static_cast<typename Face::iterator>(faces_.size());
 }
 
 
@@ -1387,72 +1249,97 @@ TetVolMesh<Basis>::size(typename TetVolMesh::Cell::size_type &s) const
   s = cells_.size() >> 2;
 }
 
+template <class Basis>
+void
+TetVolMesh<Basis>::build_edge_vec()
+{
+  // dump edges into the edges_ container.
+  edges_.resize(edge_table_.size());
+  typename vector<PEdge>::iterator e_iter = edges_.begin();
+  typename edge_ht::iterator ht_iter = edge_table_.begin();
+  while (ht_iter != edge_table_.end()) {
+    *e_iter = (*ht_iter).first;
+    (*ht_iter).second = 
+      static_cast<typename Edge::index_type>(e_iter - edges_.begin());
+    ++e_iter; ++ht_iter;
+  }
+}
+
 
 template <class Basis>
 void
 TetVolMesh<Basis>::create_cell_edges(typename Cell::index_type c)
 {
-  for (unsigned int i = c*6; i < c*6+6; ++i)
-  {
-    edges_.insert(i);
-    all_edges_.insert(i);
-  }
+  typename Node::array_type arr;
+  get_nodes(arr, c);
+  hash_edge(arr[0], arr[1], c, edge_table_);
+  hash_edge(arr[1], arr[2], c, edge_table_);
+  hash_edge(arr[2], arr[0], c, edge_table_);
+  hash_edge(arr[3], arr[0], c, edge_table_);
+  hash_edge(arr[3], arr[1], c, edge_table_);
+  hash_edge(arr[3], arr[2], c, edge_table_);
+
+  // This is a bit heavy handed, should optimize this to a more local cleanup.
+  build_edge_vec();
 }
 
+template <class Basis>
+void
+TetVolMesh<Basis>::remove_edge(typename Node::index_type n1,
+			       typename Node::index_type n2,
+			       typename Cell::index_type ci,
+			       edge_ht &table)
+{
+  PEdge e(n1, n2);
+  typename edge_ht::iterator iter = table.find(e);
 
+  if (iter == table.end()) {
+    ASSERTFAIL("this edge did not exist in the table");
+  }
+  PEdge found_edge = (*iter).first;
+  unsigned found_idx = (*iter).second;
+  edge_table_.erase(iter);
+    
+  if (!found_edge.shared()) {
+    // this edge belongs to only one cell
+    edges_.erase(edges_.begin() + found_idx);
+  } else {
+    typename vector<typename Cell::index_type>::iterator citer;
+    citer = std::find(found_edge.cells_.begin(), found_edge.cells_.end(), ci);
+    found_edge.cells_.erase(citer);
+    //reinsert remaining partial edges.
+    edge_table_[found_edge] = found_idx;
+    edges_[found_idx] = found_edge;
+  }
+}
+ 
 template <class Basis>
 void
 TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c)
 {
-  for (unsigned int i = c*6; i < c*6+6; ++i)
-  {
-    //! If the Shared Edge Set is represented by the particular
-    //! cell/edge index that is being recomputed, then
-    //! remove it (and insert a non-recomputed edge if any left)
-    bool shared_edge_exists = true;
-    typename Edge::iterator shared_edge = edges_.find(i);
-    // ASSERT guarantees edges were computed correctly for this cell
-    ASSERT(shared_edge != edges_.end());
-    if ((*shared_edge).index_ == i)
-    {
-      edges_.erase(shared_edge);
-      shared_edge_exists = false;
-    }
-
-    typename Edge::HalfEdgeSet::iterator half_edge_to_delete = all_edges_.end();
-    pair<typename Edge::HalfEdgeSet::iterator, typename Edge::HalfEdgeSet::iterator> range =
-      all_edges_.equal_range(i);
-    for (typename Edge::HalfEdgeSet::iterator e = range.first; e != range.second; ++e)
-    {
-      if ((*e).index_ == i)
-      {
-        half_edge_to_delete = e;
-      }
-      else if (!shared_edge_exists)
-      {
-        edges_.insert((*e).index_);
-        shared_edge_exists = true;
-      }
-      //! At this point, the edges_ set has the new index for this
-      //! shared edge and we know what half-edge is getting deleted below
-      if (half_edge_to_delete != all_edges_.end() && shared_edge_exists) break;
-    }
-    //! ASSERT guarantees edges were computed correctly for this cell
-    ASSERT(half_edge_to_delete != all_edges_.end());
-    all_edges_.erase(half_edge_to_delete);
-  }
+  typename Node::array_type arr;
+  get_nodes(arr, c);
+  remove_edge(arr[0], arr[1], c, edge_table_);
+  remove_edge(arr[1], arr[2], c, edge_table_);
+  remove_edge(arr[2], arr[0], c, edge_table_);
+  remove_edge(arr[3], arr[0], c, edge_table_);
+  remove_edge(arr[3], arr[1], c, edge_table_);
+  remove_edge(arr[3], arr[2], c, edge_table_);
 }
-
 
 template <class Basis>
 void
 TetVolMesh<Basis>::create_cell_faces(typename Cell::index_type c)
 {
-  for (unsigned int i = c*4; i < c*4+4; ++i)
-  {
-    faces_.insert(i);
-    all_faces_.insert(i);
-  }
+  typename Node::array_type arr;
+  get_nodes(arr, c);
+  hash_face(arr[0], arr[2], arr[1], c, face_table_);
+  hash_face(arr[1], arr[2], arr[3], c, face_table_);
+  hash_face(arr[0], arr[1], arr[3], c, face_table_);
+  hash_face(arr[0], arr[3], arr[2], c, face_table_);
+
+  // This is a bit heavy handed, should optimize this to a more local cleanup.
+  build_face_vec();
 }
 
 
@@ -1460,42 +1347,12 @@ template <class Basis>
 void
 TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c)
 {
-  for (unsigned int i = c*4; i < c*4+4; ++i)
-  {
-    // If the Shared Face Set is represented by the particular
-    // cell/face index that is being recomputed, then
-    // remove it (and insert a non-recomputed shared face if any exist)
-    bool shared_face_exists = true;
-    typename Face::FaceSet::iterator shared_face = faces_.find(i);
-    ASSERT(shared_face != faces_.end());
-    if ((*shared_face).index_ == i)
-    {
-      faces_.erase(shared_face);
-      shared_face_exists = false;
-    }
-
-    typename Face::HalfFaceSet::iterator half_face_to_delete = all_faces_.end();
-    pair<typename Face::HalfFaceSet::iterator, typename Face::HalfFaceSet::iterator> range =
-      all_faces_.equal_range(i);
-    for (typename Face::HalfFaceSet::iterator e = range.first; e != range.second; ++e)
-    {
-      if ((*e).index_ == i)
-      {
-        half_face_to_delete = e;
-      }
-      else if (!shared_face_exists)
-      {
-        faces_.insert((*e).index_);
-        shared_face_exists = true;
-      }
-      if (half_face_to_delete != all_faces_.end() && shared_face_exists) break;
-    }
-
-    //! If this ASSERT is reached, it means that the faces
-    //! were not computed correctlyfor this cell
-    ASSERT(half_face_to_delete != all_faces_.end());
-    all_faces_.erase(half_face_to_delete);
-  }
+  typename Node::array_type arr;
+  get_nodes(arr, c);
+  remove_face(arr[0], arr[2], arr[1], c, face_table_);
+  remove_face(arr[1], arr[2], arr[3], c, face_table_);
+  remove_face(arr[0], arr[1], arr[3], c, face_table_);
+  remove_face(arr[0], arr[3], arr[2], c, face_table_);
 }
 
 
@@ -1530,7 +1387,6 @@ TetVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type c)
   }
 }
 
-
 template <class Basis>
 void
 TetVolMesh<Basis>::create_cell_syncinfo(typename Cell::index_type ci)
@@ -1546,7 +1402,6 @@ TetVolMesh<Basis>::create_cell_syncinfo(typename Cell::index_type ci)
     insert_cell_into_grid(ci);
   synchronize_lock_.unlock();
 }
-
 
 template <class Basis>
 void
@@ -1565,114 +1420,32 @@ TetVolMesh<Basis>::delete_cell_syncinfo(typename Cell::index_type ci)
 }
 
 
-//! Given two nodes (n0, n1), return all edge indexes that
-//! span those two nodes
-template <class Basis>
-bool
-TetVolMesh<Basis>::is_edge(const typename Node::index_type n0,
-                           const typename Node::index_type n1,
-                    typename Edge::array_type *array)
-{
-  ASSERTMSG(synchronized_ & EDGES_E, "EDGES_E not synchronized.");
-  synchronize_lock_.lock();
-  //! Create a phantom cell with edge 0 being the one we're searching for
-  const unsigned int fake_edge = cells_.size() / 4 * 6;
-  const unsigned int fake_cell = cells_.size() / 4;
-  cells_.push_back(n0);
-  cells_.push_back(n1);
-  cells_.push_back(n0);
-  cells_.push_back(n1);
-
-  //! Search the all_edges_ multiset for edges matching our fake_edge
-  pair<typename Edge::HalfEdgeSet::iterator, typename Edge::HalfEdgeSet::iterator> range =  all_edges_.equal_range(fake_edge);
-
-  bool ret_val = false;
-  if(array)  array->clear();
-  typename Edge::HalfEdgeSet::iterator iter = range.first;
-  while(iter != range.second) {
-    if ((*iter)/6 != fake_cell) {
-      if (array) {
-        array->push_back(*iter);
-      }
-      ret_val = true;
-    }
-    ++iter;
-  }
-
-  //! Delete the phantom cell
-  cells_.resize(cells_.size()-4);
-
-  synchronize_lock_.unlock();
-  return ret_val;
-}
-
-
-//! Given three nodes (n0, n1, n2), return all facee indexes that
-//! span those three nodes
-template <class Basis>
-bool
-TetVolMesh<Basis>::is_face(typename Node::index_type n0,typename Node::index_type n1,
-                    typename Node::index_type n2, typename Face::array_type *array)
-{
-  ASSERTMSG(synchronized_ & FACES_E, "Must call synchronize FACES_E on TetVolMesh first.");
-  synchronize_lock_.lock();
-
-  //! Create a phantom cell with face 3 being the one we're searching for
-  const int fake_face = cells_.size() + 3;
-  vector<under_type>::iterator c0 = cells_.insert(cells_.end(),n0);
-  vector<under_type>::iterator c1 = cells_.insert(cells_.end(),n1);
-  vector<under_type>::iterator c2 = cells_.insert(cells_.end(),n2);
-
-  //! Search the all_face_ multiset for edges matching our fake_edge
-  pair<typename Face::HalfFaceSet::const_iterator, typename Face::HalfFaceSet::const_iterator>
-     range = all_faces_.equal_range(fake_face);
-
-  if (array)
-  {
-    array->clear();
-    copy(range.first, range.second, array->end());
-  }
-
-  //! Delete the pahntom cell
-  cells_.erase(c0);
-  cells_.erase(c1);
-  cells_.erase(c2);
-
-  synchronize_lock_.unlock();
-  return range.first != range.second;
-}
-
-
 template <class Basis>
 void
 TetVolMesh<Basis>::get_nodes(typename Node::array_type &array,
                              typename Edge::index_type idx) const
 {
-  array.resize(2);
-  pair<typename Edge::index_type, typename Edge::index_type> edge =
-    Edge::edgei(idx);
-  array[0] = cells_[edge.first];
-  array[1] = cells_[edge.second];
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize EDGES_E on TetVolMesh first");
+  array.clear();
+  PEdge e = edges_[idx];
+  array.push_back(e.nodes_[0]);
+  array.push_back(e.nodes_[1]);
 }
-
 
 // Always returns nodes in counter-clockwise order
 template <class Basis>
 void
-TetVolMesh<Basis>::get_nodes(typename Node::array_type &a,
+TetVolMesh<Basis>::get_nodes(typename Node::array_type &array,
                              typename Face::index_type idx) const
 {
-  a.resize(3);
-  const unsigned int offset = idx%4;
-  const unsigned int b = idx - offset; // base cell index
-  switch (offset)
-  {
-  case 0: a[0] = cells_[b+3]; a[1] = cells_[b+2]; a[2] = cells_[b+1]; break;
-  case 1: a[0] = cells_[b+0]; a[1] = cells_[b+2]; a[2] = cells_[b+3]; break;
-  case 2: a[0] = cells_[b+3]; a[1] = cells_[b+1]; a[2] = cells_[b+0]; break;
-  default:
-  case 3: a[0] = cells_[b+0]; a[1] = cells_[b+1]; a[2] = cells_[b+2]; break;
-  }
+  ASSERTMSG(synchronized_ & FACES_E,
+            "Must call synchronize FACES_E on TetVolMesh first");
+  array.clear();
+  const PFace &f = faces_[idx];
+  array.push_back(f.nodes_[0]);
+  array.push_back(f.nodes_[1]);
+  array.push_back(f.nodes_[2]);
 }
 
 
@@ -1710,23 +1483,19 @@ void
 TetVolMesh<Basis>::get_edges(typename Edge::array_type &array,
                              typename Face::index_type idx) const
 {
-  //  ASSERTFAIL("Not implemented correctly");
-  //#if 0
+  ASSERTMSG(synchronized_ & FACES_E,
+            "Must call synchronize FACES_E on TetVolMesh first");
   array.clear();
-  static int table[4][3] =
-  {
-    {4, 3, 5},
-    {1, 2, 4},
-    {0, 2, 5},
-    {1, 0, 3}
-  };
+  const PFace &f = faces_[idx];
+  PEdge e0(f.nodes_[0], f.nodes_[1]);
+  PEdge e1(f.nodes_[1], f.nodes_[2]);
+  PEdge e2(f.nodes_[2], f.nodes_[0]);
 
-  const int base = idx / 4 * 6;
-  const int off = idx % 4;
-  array.push_back(base + table[off][0]);
-  array.push_back(base + table[off][1]);
-  array.push_back(base + table[off][2]);
-  //#endif
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize EDGES_E on TetVolMesh first");
+  array.push_back((*(edge_table_.find(e0))).second);
+  array.push_back((*(edge_table_.find(e1))).second);
+  array.push_back((*(edge_table_.find(e2))).second);
 }
 
 
@@ -1735,11 +1504,24 @@ void
 TetVolMesh<Basis>::get_edges(typename Edge::array_type &array,
                              typename Cell::index_type idx) const
 {
-  array.resize(6);
-  for (int i = 0; i < 6; i++)
-  {
-    array[i] = *(edges_.find(idx * 6 + i));
-  }
+  array.clear();
+  const int off = idx * 4;
+  PEdge e00(cells_[off + 0], cells_[off + 1]);
+  PEdge e01(cells_[off + 1], cells_[off + 2]);
+  PEdge e02(cells_[off + 2], cells_[off + 0]);
+  PEdge e03(cells_[off + 0], cells_[off + 3]);
+  PEdge e04(cells_[off + 1], cells_[off + 3]);
+  PEdge e05(cells_[off + 2], cells_[off + 3]);
+
+
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize EDGES_E on TetVolMesh first");
+  array.push_back((*(edge_table_.find(e00))).second);
+  array.push_back((*(edge_table_.find(e01))).second);
+  array.push_back((*(edge_table_.find(e02))).second);
+  array.push_back((*(edge_table_.find(e03))).second);
+  array.push_back((*(edge_table_.find(e04))).second);
+  array.push_back((*(edge_table_.find(e05))).second);
 }
 
 
@@ -1748,11 +1530,21 @@ void
 TetVolMesh<Basis>::get_faces(typename Face::array_type &array,
                              typename Cell::index_type idx) const
 {
-  array.resize(4);
-  for (int i = 0; i < 4; i++)
-  {
-    array[i] = *(faces_.find(idx * 4 + i));
-  }
+  array.clear();
+
+  const int off = idx * 4;
+  PFace f0(cells_[off + 3], cells_[off + 2], cells_[off + 1]);
+  PFace f1(cells_[off + 0], cells_[off + 2], cells_[off + 3]);
+  PFace f2(cells_[off + 3], cells_[off + 1], cells_[off + 0]);
+  PFace f3(cells_[off + 0], cells_[off + 1], cells_[off + 2]);
+
+  ASSERTMSG(synchronized_ & FACES_E,
+            "Must call synchronize FACES_E on HexVolMesh first");
+  array.push_back((*(face_table_.find(f0))).second);
+  array.push_back((*(face_table_.find(f1))).second);
+  array.push_back((*(face_table_.find(f2))).second);
+  array.push_back((*(face_table_.find(f3))).second);
+
 }
 
 
@@ -1761,19 +1553,7 @@ void
 TetVolMesh<Basis>::get_cells(typename Cell::array_type &array,
                              typename Edge::index_type idx) const
 {
-  pair<typename Edge::HalfEdgeSet::const_iterator,
-       typename Edge::HalfEdgeSet::const_iterator>
-    range = all_edges_.equal_range(idx);
-
-  //! ASSERT that this cell's edges have been computed
-  ASSERT(range.first != range.second);
-
-  array.clear();
-  while (range.first != range.second)
-  {
-    array.push_back((*range.first)/6);
-    ++range.first;
-  }
+  array = edges_[idx].cells_;
 }
 
 
@@ -1782,286 +1562,8 @@ void
 TetVolMesh<Basis>::get_cells(typename Cell::array_type &array,
                              typename Face::index_type idx) const
 {
-  pair<typename Face::HalfFaceSet::const_iterator,
-       typename Face::HalfFaceSet::const_iterator> range =
-    all_faces_.equal_range(idx);
-
-  //! ASSERT that this cell's faces have been computed
-  ASSERT(range.first != range.second);
-
-  array.clear();
-  while (range.first != range.second)
-  {
-    array.push_back((*range.first)/4);
-    ++range.first;
-  }
+  array = faces_[idx].cells_;
 }
-
-
-template <class Basis>
-bool
-TetVolMesh<Basis>::split_cell_at_boundary(typename Cell::array_type &new_tets,
-                                          typename Node::index_type &ni,
-                                          typename Cell::index_type ci,
-                                          typename Face::index_type fi)
-{
-  new_tets.resize(3);
-  Point face_center;
-  get_center(face_center, fi);
-  ni = add_point(face_center);
-
-  typename Node::array_type face_nodes;
-  get_nodes(face_nodes, fi);
-
-  typename Node::index_type piv_ni = cells_[(int)fi];
-
-  new_tets[0] = ci;
-  mod_tet(ci, ni, piv_ni, face_nodes[0], face_nodes[1]);
-  new_tets[1] = add_tet(ni, piv_ni, face_nodes[2], face_nodes[0]);
-  new_tets[2] = add_tet(ni, piv_ni, face_nodes[1], face_nodes[2]);
-  return true;
-}
-
-
-template <class Basis>
-bool
-TetVolMesh<Basis>::split_2_to_3(typename Cell::array_type &new_tets,
-                                typename Node::index_type &c1_node,
-                                typename Node::index_type &c2_node,
-                                typename Cell::index_type c1,
-                                typename Cell::index_type c2,
-                                typename Face::index_type c1face)
-{
-  new_tets.resize(3);
-
-  typename Node::array_type face_nodes;
-  get_nodes(face_nodes, c1face);
-
-  c1_node = cells_[(int)c1face];
-
-  typename Face::index_type c2face;
-  get_neighbor(c2face, c1face);
-
-  c2_node = cells_[(int)c2face];
-
-  // FIX_ME needs to make sure that the ray between c1_node, and c2_node
-  //        intersects the face shared by the tets.
-
-  mod_tet(c1, c2_node, c1_node, face_nodes[0], face_nodes[1]);
-  mod_tet(c2, c1_node, c2_node, face_nodes[0], face_nodes[2]);
-  new_tets[0] = c1;
-  new_tets[1] = c2;
-  new_tets[2] = add_tet(c2_node, c1_node, face_nodes[1], face_nodes[2]);
-  return true;
-}
-
-
-template <class Basis>
-bool
-TetVolMesh<Basis>::get_edge(typename Edge::index_type &ei,
-                            typename Cell::index_type ci,
-                            typename Node::index_type n1,
-                            typename Node::index_type n2) const
-{
-  typename Edge::index_type ebase = ci * 6;
-  for (int i = 0; i < 6; i++)
-  {
-    pair<typename Node::index_type, typename Node::index_type> enodes =
-      Edge::edgei(ebase + i);
-
-    if ((cells_[enodes.first] == n1 && cells_[enodes.second] == n2) ||
-        (cells_[enodes.first] == n2 && cells_[enodes.second] == n1))
-    {
-      ei = ebase + i;
-      return true;
-    }
-  }
-  return false;
-}
-
-
-//! Given 3 tets that share an edge exclusively, combine them into 2
-//! tets that share a face.  This call orphans a cell index, which must be
-//! deleted later.  use delete_cells with removed added to the set targeted
-//! deletion.
-template <class Basis>
-bool
-TetVolMesh<Basis>::combine_3_to_2(typename Cell::index_type &removed,
-                           typename Edge::index_type shared_edge)
-{
-  typename Node::array_type extrema;
-  typename Edge::array_type edges;
-  get_nodes(extrema, shared_edge);
-
-  //! Search the all_edges_ multiset for edges matching our fake_edge
-  pair<typename Edge::HalfEdgeSet::iterator,
-       typename Edge::HalfEdgeSet::iterator> range =
-    all_edges_.equal_range(shared_edge);
-
-  typename Edge::HalfEdgeSet::iterator edge_iter = range.first;
-
-  edges.push_back(*edge_iter++);
-  edges.push_back(*edge_iter++);
-  edges.push_back(*edge_iter);
-
-  set<unsigned int, less<unsigned int> > ord_cells;
-  ord_cells.insert(edges[0] / 6);
-  ord_cells.insert(edges[1] / 6);
-  ord_cells.insert(edges[2] / 6);
-  set<unsigned int, less<unsigned int> >::iterator iter = ord_cells.begin();
-
-  typename Cell::index_type c1 = *iter++;
-  typename Cell::index_type c2 = *iter++;
-  typename Cell::index_type c3 = *iter;
-
-  // get the 3 nodes that are not on the shared edge
-  typename Node::array_type opp0;
-  typename Node::array_type opp1;
-  typename Node::array_type opp2;
-
-  get_nodes(opp0, Edge::opposite_edge(edges[0]));
-  get_nodes(opp1, Edge::opposite_edge(edges[1]));
-  get_nodes(opp2, Edge::opposite_edge(edges[2]));
-
-  // filter out duplicates
-  set<unsigned int, less<unsigned int> > shared_face;
-  shared_face.insert(opp0[0]);
-  shared_face.insert(opp0[1]);
-  shared_face.insert(opp1[0]);
-  shared_face.insert(opp1[1]);
-  shared_face.insert(opp2[0]);
-  shared_face.insert(opp2[1]);
-
-  ASSERT(shared_face.size() == 3);
-
-  iter = shared_face.begin();
-  typename Node::array_type face;
-  face.resize(3);
-  face[0] = *iter++;
-  face[1] = *iter++;
-  face[2] = *iter++;
-
-  // the cell index that is orphaned, needs to be added to the set for
-  // later deletion outside of this call.
-  removed = c3;
-
-  delete_cell_syncinfo(removed);
-
-  // FIX_ME needs to make sure that the ray between c1_node, and c2_node
-  //        intersects the face shared by the tets.
-
-  mod_tet(c1, extrema[0], face[0], face[1], face[2]);
-  mod_tet(c2, extrema[1], face[1], face[0], face[2]);
-  return true;
-}
-
-
-//! Undoes a previous center split.
-template <class Basis>
-bool
-TetVolMesh<Basis>::combine_4_to_1_cell(typename Cell::array_type &tets,
-                                       set<unsigned int> &removed_tets,
-                                       set<unsigned int> &removed_nodes)
-{
-  // the center node gets removed, it is at index 3 for each cell.
-  unsigned c0, c1, c2, c3;
-  c0 = tets[0]*4;
-  c1 = tets[1]*4;
-  c2 = tets[2]*4;
-  c3 = tets[3]*4;
-
-  // Sanity check that that we are removing the right node.
-  if ((cells_[c0 + 3] == cells_[c1 + 3]) &&
-      (cells_[c0 + 3] == cells_[c2 + 3]) &&
-      (cells_[c0 + 3] == cells_[c3 + 3]))
-  {
-    removed_nodes.insert(cells_[c0+3]);
-    removed_tets.insert(tets[1]);
-    removed_tets.insert(tets[2]);
-    removed_tets.insert(tets[3]);
-    // clean up to be removed tets
-    for (int i = 1; i < 4; i++) {
-      delete_cell_syncinfo(tets[i]);
-    }
-
-    // redefine the remaining tet.
-    // get the 4 unique nodes that make up the new single tet.
-    set<unsigned int> new_tet;
-    new_tet.insert(cells_[c0]);
-    new_tet.insert(cells_[c0 + 1]);
-    new_tet.insert(cells_[c0 + 2]);
-    new_tet.insert(cells_[c1]);
-    new_tet.insert(cells_[c1 + 1]);
-    new_tet.insert(cells_[c1 + 2]);
-    new_tet.insert(cells_[c2]);
-    new_tet.insert(cells_[c2 + 1]);
-    new_tet.insert(cells_[c2 + 2]);
-    new_tet.insert(cells_[c3]);
-    new_tet.insert(cells_[c3 + 1]);
-    new_tet.insert(cells_[c3 + 2]);
-    ASSERT(new_tet.size() == 4);
-
-    set<unsigned int>::iterator iter = new_tet.begin();
-    mod_tet(tets[0], *iter++, *iter++, *iter++, *iter);
-
-    return true;
-  }
-  // should all share a center point, this set does not.
-  return false;
-}
-
-
-template <class Basis>
-void
-TetVolMesh<Basis>::nbors_from_2_to_3_split(typename Cell::index_type ci,
-                                    typename Cell::array_type &nbors)
-{
-  //! The first 2 nodes make up the edge that the 3 tets share.
-  //! Search the all_edges_ multiset for edges matching our edge.
-  typename Edge::index_type ei;
-  get_edge(ei, ci, ci * 4, ci * 4 + 1);
-
-  pair<typename Edge::HalfEdgeSet::iterator,
-       typename Edge::HalfEdgeSet::iterator> range =
-    all_edges_.equal_range(ei);
-
-
-  typename Edge::HalfEdgeSet::iterator edge_iter = range.first;
-  nbors.clear();
-  while(edge_iter != range.second)
-  {
-    nbors.push_back(*edge_iter / 6);
-    ++edge_iter;
-  }
-}
-
-
-//! ASSUMPTION: call this only if you know ci was created from a center split
-//! operation. This call will succeed even if ci was not created this way
-//! except if it is a boundary cell.
-template <class Basis>
-void
-TetVolMesh<Basis>::nbors_from_center_split(typename Cell::index_type ci,
-                                           typename Cell::array_type &tets)
-{
-  // Any tet in the center split, knows its 3 nbors.  All faces
-  // except the face opposite the center node define the nbors.
-  unsigned index = ci * 4;
-  typename Face::index_type f0 = cells_[index];
-  typename Face::index_type f1 = cells_[index + 1];
-  typename Face::index_type f2 = cells_[index + 2];
-
-  tets.clear();
-  tets.push_back(ci);
-  typename Cell::index_type n;
-  get_neighbor(n, ci, f0);
-  tets.push_back(n);
-  get_neighbor(n, ci, f1);
-  tets.push_back(n);
-  get_neighbor(n, ci, f2);
-  tets.push_back(n);
-}
-
 
 //! Return in fi the face that is opposite the node ni in the cell ci.
 //! Return false if bad input, else true indicating the face was found.
@@ -2071,11 +1573,32 @@ TetVolMesh<Basis>::get_face_opposite_node(typename Face::index_type &fi,
                                           typename Cell::index_type ci,
                                           typename Node::index_type ni) const
 {
-  for (unsigned int f = ci * 4; f < (ci * 4) + 4; f++)
-  {
-    if (cells_[f] == ni)
-    {
-      fi = f;
+  typename Face::array_type faces;
+  get_faces(faces, ci);
+  for (int i = 0; i < 4; i++) {
+    PFace f = faces_[faces[i]];
+    fi = faces[i];
+    if (ni != f.nodes_[0] && ni != f.nodes_[1] && ni != f.nodes_[2]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//! Return in ni the node that is opposite the face fi in the cell ci.
+//! Return false if bad input, else true indicating the node was found.
+template <class Basis>
+bool
+TetVolMesh<Basis>::get_node_opposite_face(typename Node::index_type &ni,
+                                          typename Cell::index_type ci,
+                                          typename Face::index_type fi) const
+{
+  typename Node::array_type nodes;
+  get_nodes(nodes, ci);
+  for (int i = 0; i < 4; i++) {
+    PFace f = faces_[fi];
+    ni = nodes[i];
+    if (ni != f.nodes_[0] && ni != f.nodes_[1] && ni != f.nodes_[2]) {
       return true;
     }
   }
@@ -2090,74 +1613,34 @@ TetVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor,
                                 typename Cell::index_type from,
                                 typename Face::index_type idx) const
 {
-  bool result = false;
-  if (idx/4 == from)
-  {
-    typename Face::index_type neigh;
-    result = get_neighbor(neigh, idx);
-    neighbor.index_ = neigh.index_ / 4;
+  ASSERTMSG(synchronized_ & FACES_E,
+            "Must call synchronize FACES_E on TetVolMesh first");
+  const PFace &f = faces_[idx];
+
+  if (from == f.cells_[0]) {
+    neighbor = f.cells_[1];
+  } else {
+    neighbor = f.cells_[0];
   }
-  else
-  {
-    neighbor.index_ = idx / 4;
-    result = true;
-  }
-  return result;
-}
-
-
-
-//! given a face index, return the face index that spans the same 3 nodes
-template <class Basis>
-bool
-TetVolMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
-                                typename Face::index_type idx)const
-{
-  ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E,
-            "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
-  pair<typename Face::HalfFaceSet::const_iterator,
-       typename Face::HalfFaceSet::const_iterator> range =
-    all_faces_.equal_range(idx);
-
-  // ASSERT that this face was computed
-  ASSERT(range.first != range.second);
-
-  // Cell has no neighbor
-  typename Face::HalfFaceSet::const_iterator second = range.first;
-  if (++second == range.second)
-  {
-    neighbor = MESH_NO_NEIGHBOR;
-    return false;
-  }
-
-  if ((*range.first).index_ == idx)
-    neighbor = (*second).index_;
-  else if ((*second).index_ == idx)
-    neighbor = (*range.first).index_;
-  else {ASSERTFAIL("Non-Manifold Face in all_faces_ structure.");}
-
+  if (neighbor == MESH_NO_NEIGHBOR) return false;
   return true;
 }
-
 
 template <class Basis>
 void
 TetVolMesh<Basis>::get_neighbors(typename Cell::array_type &array,
                                  typename Cell::index_type idx) const
 {
-  ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E,
-            "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
-  typename Face::index_type face;
-  for (unsigned int i = idx*4; i < idx*4+4; i++)
-  {
-    face.index_ = i;
-    pair<const typename Face::HalfFaceSet::const_iterator,
-         const typename Face::HalfFaceSet::const_iterator> range =
-      all_faces_.equal_range(face);
-    for (typename Face::HalfFaceSet::const_iterator iter = range.first;
-         iter != range.second; ++iter)
-      if (*iter != i)
-        array.push_back(*iter/4);
+  typename Face::array_type faces;
+  get_faces(faces, idx);
+  array.clear();
+  typename Face::array_type::iterator iter = faces.begin();
+  while(iter != faces.end()) {
+    typename Cell::index_type nbor;
+    if (get_neighbor(nbor, idx, *iter)) {
+      array.push_back(nbor);
+    }
+    ++iter;
   }
 }
 
@@ -2692,8 +2175,10 @@ TetVolMesh<Basis>::add_find_point(const Point &p, double err)
 
 template <class Basis>
 typename TetVolMesh<Basis>::Elem::index_type
-TetVolMesh<Basis>::add_tet(typename Node::index_type a, typename Node::index_type b,
-                    typename Node::index_type c, typename Node::index_type d)
+TetVolMesh<Basis>::add_tet(typename Node::index_type a, 
+			   typename Node::index_type b,
+			   typename Node::index_type c, 
+			   typename Node::index_type d)
 {
   const int tet = cells_.size() / 4;
   cells_.push_back(a);
@@ -2801,33 +2286,6 @@ TetVolMesh<Basis>::delete_nodes(set<unsigned int> &to_delete)
   synchronize_lock_.unlock();
 }
 
-
-template <class Basis>
-void
-TetVolMesh<Basis>::orient(typename Cell::index_type ci)
-{
-  typename Node::array_type ra;
-  get_nodes(ra,ci);
-  const Point &p0 = point(ra[0]);
-  const Point &p1 = point(ra[1]);
-  const Point &p2 = point(ra[2]);
-  const Point &p3 = point(ra[3]);
-
-  // Unsigned volumex6 of the tet.
-  double sgn=Dot(Cross(p1-p0,p2-p0),p3-p0);
-
-  if(sgn < 0.0) {
-    unsigned int base = ci * 4;
-    mod_tet(ci, cells_[base+1],  cells_[base], cells_[base+2], cells_[base+3]);
-    sgn=-sgn;
-  }
-
-  if(sgn < MIN_ELEMENT_VAL){ // return 0; // Degenerate...
-    cerr << "Warning - small element, volume=" << sgn << std::endl;
-  }
-}
-
-
 template <class Basis>
 bool
 TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
@@ -2855,43 +2313,30 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
 }
 
 
+
 template <class Basis>
 void
 TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
                                             typename Node::index_type pi,
                                             typename Cell::index_type ci,
-                                            unsigned int skip)
+                                            typename Face::index_type face)
 {
   delete_cell_syncinfo(ci);
+  // NOTE: This funcion assumes that the same operation has or will happen 
+  // to any neighbor cell across the face.
 
-  const unsigned int i = ci*4;
+  typename Node::index_type opp;
+  get_node_opposite_face(opp, ci, face);
+
+  PFace f = faces_[face];
+
   tets.push_back(ci);
-  if (skip == 0)
-  {
-    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
-    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
-    cells_[i+3] = pi;
-  }
-  else if (skip == 1)
-  {
-    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
-    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
-    cells_[i+3] = pi;
-  }
-  else if (skip == 2)
-  {
-    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
-    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
-    cells_[i+3] = pi;
-  }
-  else if (skip == 3)
-  {
-    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
-    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
-    cells_[i+1] = cells_[i+2];
-    cells_[i+2] = cells_[i+3];
-    cells_[i+3] = pi;
-  }
+  tets.push_back(add_tet(f.nodes_[0], f.nodes_[1], pi, opp));
+  tets.push_back(add_tet(f.nodes_[0], f.nodes_[2], pi, opp));
+  cells_[ci*4] = f.nodes_[2];
+  cells_[ci*4 + 1] = f.nodes_[0];
+  cells_[ci*4 + 2] = pi;
+  cells_[ci*4 + 3] = opp;
 
   create_cell_syncinfo(ci);
 }
@@ -3044,28 +2489,51 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
   else if (mask == 3 || mask == 5 || mask == 6 ||
            mask == 9 || mask == 10 || mask == 12)
   {
-    // The skips are the missing nodes, edgeoff is the half edge index.
-    unsigned int skip1, skip2, edgeoff;
-    if      (mask == 3)  { skip1 = 2; skip2 = 3; edgeoff = 0; } /* 0-1 edge */
-    else if (mask == 5)  { skip1 = 1; skip2 = 3; edgeoff = 1; } /* 0-2 edge */
-    else if (mask == 6)  { skip1 = 0; skip2 = 3; edgeoff = 3; } /* 1-2 edge */
-    else if (mask == 9)  { skip1 = 1; skip2 = 2; edgeoff = 2; } /* 0-3 edge */
-    else if (mask == 10) { skip1 = 0; skip2 = 2; edgeoff = 5; } /* 1-3 edge */
-    else if (mask == 12) { skip1 = 0; skip2 = 1; edgeoff = 4; } /* 2-3 edge */
+    typename Edge::index_type edge;
+    // The skips are the missing nodes.
+    unsigned int skip1, skip2;
+    if      (mask == 3) { 
+      /* 0-1 edge */ 
+      skip1 = 2; skip2 = 3; 
+      PEdge e(cells_[ci*4 + 0], cells_[ci*4 + 1]);
+      edge = (*edge_table_.find(e)).second;
+    } else if (mask == 5) { 
+      /* 0-2 edge */
+      skip1 = 1; skip2 = 3; 
+      PEdge e(cells_[ci*4 + 0], cells_[ci*4 + 2]);
+      edge = (*edge_table_.find(e)).second;
+    } else if (mask == 6) { 
+      /* 1-2 edge */
+      skip1 = 0; skip2 = 3; 
+      PEdge e(cells_[ci*4 + 1], cells_[ci*4 + 2]);
+      edge = (*edge_table_.find(e)).second;
+    } else if (mask == 9) { 
+      /* 0-3 edge */
+      skip1 = 1; skip2 = 2; 
+      PEdge e(cells_[ci*4 + 0], cells_[ci*4 + 3]);
+      edge = (*edge_table_.find(e)).second;
+    } else if (mask == 10) { 
+      /* 1-3 edge */
+      skip1 = 0; skip2 = 2; 
+      PEdge e(cells_[ci*4 + 1], cells_[ci*4 + 3]);
+      edge = (*edge_table_.find(e)).second;
+    } else if (mask == 12) { 
+      /* 2-3 edge */
+      skip1 = 0; skip2 = 1; 
+      PEdge e(cells_[ci*4 + 2], cells_[ci*4 + 3]);
+      edge = (*edge_table_.find(e)).second;
+    } 
 
     typename Cell::array_type nbrs;
-    if (recurse)
-    {
-      typename Edge::index_type edge = ci * 6 + edgeoff;
+    if (recurse) {
       get_cells(nbrs, edge);
       pi = add_point(p);
       tets.clear();
     }
+
     insert_node_in_cell_edge(tets, pi, ci, skip1, skip2);
-    for (unsigned int i = 0; i < nbrs.size(); i++)
-    {
-      if (nbrs[i] != ci)
-      {
+    for (unsigned int i = 0; i < nbrs.size(); i++) {
+      if (nbrs[i] != ci) {
         insert_node_in_cell_2(tets, pi, nbrs[i], p, false);
       }
     }
@@ -3075,20 +2543,38 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
   else if (mask == 7 || mask == 11 || mask == 13 || mask == 14)
   { 
     unsigned int skip;
-    if      (mask == 7)  skip = 3; /* on 0 1 2 face */
-    else if (mask == 11) skip = 2; /* on 0 1 3 face */
-    else if (mask == 13) skip = 1; /* on 0 2 3 face */
-    else if (mask == 14) skip = 0; /* on 1 2 3 face */
+    typename Face::index_type fi;
+    if      (mask == 7)  {
+      /* on 0 1 2 face */
+      skip = 3; 
+      PFace f(cells_[ci*4 + 0], cells_[ci*4 + 1], cells_[ci*4 + 2]);
+      fi = (*face_table_.find(f)).second;
+    } else if (mask == 11) {
+      /* on 0 1 3 face */
+      skip = 2; 
+      PFace f(cells_[ci*4 + 0], cells_[ci*4 + 1], cells_[ci*4 + 3]);
+      fi = (*face_table_.find(f)).second;
+    } else if (mask == 13) {
+      /* on 0 2 3 face */
+      skip = 1; 
+      PFace f(cells_[ci*4 + 0], cells_[ci*4 + 2], cells_[ci*4 + 3]);
+      fi = (*face_table_.find(f)).second;
+    } else if (mask == 14) {
+      /* on 1 2 3 face */
+      skip = 0; 
+      PFace f(cells_[ci*4 + 1], cells_[ci*4 + 2], cells_[ci*4 + 3]);
+      fi = (*face_table_.find(f)).second;
+    }
    
-    typename Face::index_type fi = ci * 4 + skip;
-    typename Face::index_type nbr;
-    const bool have_neighbor = get_neighbor(nbr, fi);
+    typename Cell::index_type nbr_tet;
+    const bool have_neighbor = get_neighbor(nbr_tet, ci, fi);
+
     pi = add_point(p);
     tets.clear();
-    insert_node_in_cell_face(tets, pi, ci, skip);
+    insert_node_in_cell_face(tets, pi, ci, fi);
     if (have_neighbor)
     {
-      insert_node_in_cell_face(tets, pi, nbr/4, nbr%4);
+      insert_node_in_cell_face(tets, pi, nbr_tet, fi);
     }
   }
 
@@ -3110,581 +2596,31 @@ TetVolMesh<Basis>::insert_node(const Point &p)
 }
 
 
-/* From Comp.Graphics.Algorithms FAQ 5.21
- * Circumsphere of 4 points a,b,c,d
- *
- *    |                                                                       |
- *    | |d-a|^2 [(b-a)x(c-a)] + |c-a|^2 [(d-a)x(b-a)] + |b-a|^2 [(c-a)x(d-a)] |
- *    |                                                                       |
- * r= -------------------------------------------------------------------------
- *                             | bx-ax  by-ay  bz-az |
- *                           2 | cx-ax  cy-ay  cz-az |
- *                             | dx-ax  dy-ay  dz-az |
- *
- *
- *
- *        |d-a|^2 [(b-a)x(c-a)] + |c-a|^2 [(d-a)x(b-a)] + |b-a|^2 [(c-a)x(d-a)]
- * m= a + ---------------------------------------------------------------------
- *                               | bx-ax  by-ay  bz-az |
- *                             2 | cx-ax  cy-ay  cz-az |
- *                               | dx-ax  dy-ay  dz-az |
- */
-
-template <class Basis>
-pair<Point,double>
-TetVolMesh<Basis>::circumsphere(const typename Cell::index_type cell)
-{
-  const Point &a = points_[cells_[cell*4+0]];
-  const Point &b = points_[cells_[cell*4+1]];
-  const Point &c = points_[cells_[cell*4+2]];
-  const Point &d = points_[cells_[cell*4+3]];
-
-  const Vector bma = b-a;
-  const Vector cma = c-a;
-  const Vector dma = d-a;
-
-  const double denominator =
-    2*(bma.x()*(cma.y()*dma.z()-dma.y()*cma.z())-
-       bma.y()*(cma.x()*dma.z()-dma.x()*cma.z())+
-       bma.z()*(cma.x()*dma.y()-dma.x()*cma.y()));
-
-  const Vector numerator =
-    dma.length2()*Cross(bma,cma) +
-    cma.length2()*Cross(dma,bma) +
-    bma.length2()*Cross(cma,dma);
-
-  return make_pair(a+numerator/denominator,numerator.length()/denominator);
-}
-
-// Bowyer-Watson Node insertion for Delaunay Tetrahedralization
-template <class Basis>
-typename TetVolMesh<Basis>::Node::index_type
-TetVolMesh<Basis>::insert_node_watson(const Point &p, typename Cell::array_type *new_cells, typename Cell::array_type *mod_cells)
-{
-  typename Cell::index_type cell;
-  synchronize(LOCATE_E | FACE_NEIGHBORS_E);
-  if (!locate(cell,p)) {
-    cerr << "Watson outside volume: " << p.x() << ", " << p.y() << ", " << p.z() << endl;
-    return (typename TetVolMesh::Node::index_type)(MESH_NO_NEIGHBOR);
-  }
-
-  typename Node::index_type new_point_index = add_point(p);
-
-  // set of tets checked for circumsphere point intersection
-  set<typename Cell::index_type> cells_checked, cells_removed;
-  cells_removed.insert(cell);
-  cells_checked.insert(cell);
-
-  unsigned int face;
-  // set of faces that need to be checked for neighboring tet removal
-  set<typename Face::index_type> faces_todo;
-  for (face = cell*4; face < (unsigned int)cell*4+4; ++face)
-    faces_todo.insert(typename Face::index_type(face));
-
-  // set of node triplets that form face on hull interior
-  vector<typename Node::array_type> hull_nodes;
-
-  // Propagate front until we have checked all faces on hull
-  while (!faces_todo.empty())
-  {
-    set<typename Face::index_type> faces = faces_todo;
-    typename set<typename Face::index_type>::iterator faces_iter =
-      faces.begin();
-    typename set<typename Face::index_type>::iterator faces_end = faces.end();
-    faces_todo.clear();
-    for (;faces_iter != faces_end; ++faces_iter)
-    {
-      // Face index of neighboring tet that shares this face
-      typename Face::index_type nbr;
-      if (!get_neighbor(nbr, *faces_iter))
-      {
-        // This was a boundary face, therefore on the hull
-        hull_nodes.push_back(typename Node::array_type());
-        get_nodes(hull_nodes.back(),*faces_iter);
-      }
-      else // not a boundary face
-      {
-        // Index of neighboring tet that we need to check for removal
-        cell = typename Cell::index_type(nbr/4);
-        // Check to see if we didnt reach this cell already from other path
-        if (cells_checked.find(cell) == cells_checked.end())
-        {
-          cells_checked.insert(cell);
-          // Get the circumsphere of tet
-          pair<Point,double> sphere = circumsphere(cell);
-          if ((sphere.first - p).length() < sphere.second)
-          {
-            // Point is within circumsphere of Cell
-            // mark for removal
-            cells_removed.insert(cell);
-            // Now add all of its faces (minus the one we crossed to get here)
-            // to be crossed the next time around
-            for (face = cell*4; face < (unsigned int)cell*4+4; ++face)
-              if (face != (unsigned int)nbr) // dont add nbr already crossed
-                faces_todo.insert(typename Face::index_type(face));
-          }
-          else
-          {
-            // The point is not within the circumsphere of the cell
-            // therefore the face we crossed is on the interior hull
-            hull_nodes.push_back(typename Node::array_type());
-            get_nodes(hull_nodes.back(),*faces_iter);
-          }
-        }
-      }
-    }
-  }
-
-  unsigned int num_hull_faces = hull_nodes.size();
-  unsigned int num_cells_removed = cells_removed.size();
-  ASSERT(num_hull_faces >= num_cells_removed);
-
-  // A list of all tets that were modifed/added
-  vector<typename Cell::index_type> tets(num_hull_faces);
-
-  // Re-define already allocated tets to include new point
-  // and the 3 points of an interior hulls face
-  typename set<typename Cell::index_type>::iterator cells_removed_iter =
-    cells_removed.begin();
-  for (face = 0; face < num_cells_removed; face++)
-  {
-    tets[face] = mod_tet(*cells_removed_iter,
-                         hull_nodes[face][0],
-                         hull_nodes[face][1],
-                         hull_nodes[face][2],
-                         new_point_index);
-    if (mod_cells) mod_cells->push_back(tets[face]);
-    ++cells_removed_iter;
-  }
-
-
-
-  for (face = num_cells_removed; face < num_hull_faces; face++)
-  {
-    tets[face] = add_tet(hull_nodes[face][0],
-                         hull_nodes[face][1],
-                         hull_nodes[face][2],
-                         new_point_index);
-    if (new_cells) new_cells->push_back(tets[face]);
-  }
-
-  return new_point_index;
-}
-
-
 template <class Basis>
 void
-TetVolMesh<Basis>::refine_elements_levels(const typename Cell::array_type &cells,
-                                          const vector<int> &refine_level,
-                                          cell_2_cell_map_t &child_2_parent)
+TetVolMesh<Basis>::orient(typename Cell::index_type ci)
 {
-  synchronize(FACE_NEIGHBORS_E | EDGE_NEIGHBORS_E);
+  typename Node::array_type ra;
+  get_nodes(ra,ci);
+  const Point &p0 = point(ra[0]);
+  const Point &p1 = point(ra[1]);
+  const Point &p2 = point(ra[2]);
+  const Point &p3 = point(ra[3]);
 
-  int current_level = 0;
-  typename Cell::array_type todo = cells;
-  vector<int> new_level = refine_level, level;
+  // Unsigned volumex6 of the tet.
+  double sgn=Dot(Cross(p1-p0,p2-p0),p3-p0);
 
-  while(!todo.empty()) {
-    ++current_level;
-    const unsigned int num_todo = todo.size();
-    vector<typename Cell::array_type> todo_children(num_todo);
-    cell_2_cell_map_t green_children;
+  if(sgn < 0.0) {
+    unsigned int base = ci * 4;
+    mod_tet(ci, cells_[base+1],  cells_[base], cells_[base+2], cells_[base+3]);
+    sgn=-sgn;
+  }
 
-    refine_elements(todo, todo_children, green_children);
-
-    todo.clear();
-    level = new_level;
-    new_level.clear();
-
-    for (unsigned int i = 0; i < num_todo; ++i) {
-      typename Cell::index_type parent = todo_children[i][0];
-      const unsigned int num_children = todo_children[i].size();
-      ASSERT(num_children == 8);
-
-      const typename cell_2_cell_map_t::iterator pos =
-        child_2_parent.find(parent);
-      if (pos != child_2_parent.end())
-        parent = (*pos).second;
-
-      for (unsigned int j = 0; j < num_children; ++j) {
-        child_2_parent.insert(make_pair(todo_children[i][j],parent));
-        if (level[i] > current_level) {
-          todo.push_back(todo_children[i][j]);
-          new_level.push_back(level[i]);
-        }
-      }
-    }
-    typename cell_2_cell_map_t::iterator iter = green_children.begin();
-    const typename cell_2_cell_map_t::iterator iter_end = green_children.end();
-    while (iter != iter_end) {
-      child_2_parent.insert(*iter);
-      iter++;
-    }
+  if(sgn < MIN_ELEMENT_VAL){ // return 0; // Degenerate...
+    cerr << "Warning - small element, volume=" << sgn << std::endl;
   }
 }
 
-
-template <class Basis>
-void
-TetVolMesh<Basis>::refine_elements(const typename Cell::array_type &cells,
-                            vector<typename Cell::array_type> &cell_children,
-                            cell_2_cell_map_t &green_children)
-{
-#ifdef HAVE_HASH_MAP
-#  if defined(__ECC) || defined(_MSC_VER)
-  typedef hash_multimap<typename Edge::index_type, typename Node::index_type, typename Edge::CellEdgeHasher>  HalfEdgeMap;
-  HalfEdgeMap inserted_nodes(edge_hasher_);
-#  else
-  typedef hash_multimap<typename Edge::index_type, typename Node::index_type, typename Edge::CellEdgeHasher, typename Edge::EdgeComparitor>  HalfEdgeMap;
-  HalfEdgeMap inserted_nodes(100, edge_hasher_, edge_comp_);
-#  endif // if defined(__ECC) || defined(_MSC_VER)
-#else // ifdef HAVE_HASH_SET
-  typedef multimap<typename Edge::index_type, typename Node::index_type, typename Edge::EdgeComparitor>  HalfEdgeMap;
-  HalfEdgeMap inserted_nodes(edge_comp_);
-#endif // ifdef HAVE_HASH_SET
-
-  // iterate over the cells
-  const unsigned int num_cells = cells.size();
-  for (unsigned int c = 0; c < num_cells; ++c) {
-    typename Node::array_type nodes;
-    const typename Cell::index_type &cell = cells[c];
-    get_nodes(nodes,cell);
-
-    // Loop through edges and create new nodes at center
-    for (unsigned int edge = 0; edge < 6; ++edge)
-    {
-      unsigned int edgeNum = cell*6+edge;
-      pair<typename Edge::HalfEdgeSet::iterator,
-        typename Edge::HalfEdgeSet::iterator> range =
-        all_edges_.equal_range(edgeNum);
-
-      typename Node::index_type newnode;
-
-      pair<typename HalfEdgeMap::iterator,
-        typename HalfEdgeMap::iterator> iter =
-        inserted_nodes.equal_range(edgeNum);
-
-      if (iter.first == iter.second) {
-        Point p;
-        get_center(p, typename Edge::index_type(edgeNum));
-        newnode = add_point(p);
-        for (typename Edge::HalfEdgeSet::iterator e = range.first;
-             e != range.second; ++e)
-        {
-          if(*e != edgeNum) {
-             inserted_nodes.insert(make_pair(*e,newnode));
-          }
-        }
-      } else {
-        for (typename HalfEdgeMap::iterator e = iter.first;
-             e != iter.second; ++e)
-        {
-          if((*e).first == edgeNum) {
-            newnode = (*e).second;
-            inserted_nodes.erase(e);
-            break;
-          }
-        }
-      }
-      nodes.push_back(newnode);
-
-    }
-
-    // Perform an 8:1 split on this tet
-    typename Elem::index_type t1 = mod_tet(cell,nodes[4],nodes[6],nodes[5],nodes[0]);
-    typename Elem::index_type t2 = add_tet(nodes[4], nodes[7], nodes[9], nodes[1]);
-    typename Elem::index_type t3 = add_tet(nodes[7], nodes[5], nodes[8], nodes[2]);
-    typename Elem::index_type t4 = add_tet(nodes[6], nodes[9], nodes[8], nodes[3]);
-
-    Point p4,p5,p6,p7,p8,p9;
-    get_point(p4,nodes[4]);
-    get_point(p5,nodes[5]);
-    get_point(p6,nodes[6]);
-    get_point(p7,nodes[7]);
-    get_point(p8,nodes[8]);
-    get_point(p9,nodes[9]);
-
-    double v48, v67, v59;
-    v48 = (p4 - p8).length();
-    v67 = (p6 - p7).length();
-    v59 = (p5 - p9).length();
-
-    typename Elem::index_type t5,t6,t7,t8;
-
-    if(v48 >= v67 && v48 >= v59) {
-      t5 = add_tet(nodes[4], nodes[9], nodes[8], nodes[6]);
-      t6 = add_tet(nodes[4], nodes[8], nodes[5], nodes[6]);
-      t7 = add_tet(nodes[4], nodes[5], nodes[8], nodes[7]);
-      t8 = add_tet(nodes[4], nodes[8], nodes[9], nodes[7]);
-    } else if(v67 >= v48 && v67 >= v59) {
-      t5 = add_tet(nodes[9], nodes[4], nodes[6], nodes[7]);
-      t6 = add_tet(nodes[8], nodes[6], nodes[5], nodes[7]);
-      t7 = add_tet(nodes[4], nodes[5], nodes[6], nodes[7]);
-      t8 = add_tet(nodes[7], nodes[6], nodes[9], nodes[8]);
-    } else {
-      t5 = add_tet(nodes[9], nodes[5], nodes[6], nodes[8]);
-      t6 = add_tet(nodes[9], nodes[5], nodes[7], nodes[4]);
-      t7 = add_tet(nodes[9], nodes[4], nodes[6], nodes[5]);
-      t8 = add_tet(nodes[9], nodes[7], nodes[5], nodes[8]);
-    }
-
-    cell_children[c].push_back(t1);
-    cell_children[c].push_back(t2);
-    cell_children[c].push_back(t3);
-    cell_children[c].push_back(t4);
-    cell_children[c].push_back(t5);
-    cell_children[c].push_back(t6);
-    cell_children[c].push_back(t7);
-    cell_children[c].push_back(t8);
-  }
-
-  typedef pair<typename Node::index_type,
-    typename Node::index_type> node_pair_t;
-  typedef map<node_pair_t, typename Node::index_type> edge_centers_t;
-  edge_centers_t edge_centers;
-  set<typename Cell::index_type> centersplits;
-  typename HalfEdgeMap::iterator edge_iter = inserted_nodes.begin();
-  while (edge_iter != inserted_nodes.end()) {
-    const typename Edge::index_type edge = (*edge_iter).first;
-    const typename Cell::index_type cell = edge/6;
-    node_pair_t enodes = Edge::edgei((*edge_iter).first);
-    enodes = make_pair(Max(cells_[enodes.first],cells_[enodes.second]),
-                       Min(cells_[enodes.first],cells_[enodes.second]));
-    edge_centers.insert(make_pair(enodes,(*edge_iter).second));
-    centersplits.insert(cell);
-    ++edge_iter;
-  }
-
-  typename set<typename Cell::index_type>::iterator splitcell =
-    centersplits.begin();
-  hash_map<typename Cell::index_type, typename Cell::index_type> green_parent;
-  while (splitcell != centersplits.end()) {
-    const typename Cell::index_type cell = *splitcell;
-    ++splitcell;
-
-    // Make Center point of cell
-    Point p;
-    get_center(p, cell);
-    typename Node::index_type center = add_point(p);
-
-    // Get the nodes of the original cell
-    typename Node::array_type cnodes;
-    get_nodes(cnodes,cell);
-
-    vector<typename Cell::index_type> tets(4);
-
-    // Modify the first tet to be 1 of 4
-    tets[0] = mod_tet(cell, center, cnodes[1], cnodes[0], cnodes[2]);
-    // Create the last 3 tets
-    tets[1] = add_tet(center, cnodes[2], cnodes[0], cnodes[3]);
-    tets[2] = add_tet(center, cnodes[0], cnodes[1], cnodes[3]);
-    tets[3] = add_tet(center, cnodes[1], cnodes[2], cnodes[3]);
-
-    typename Node::array_type fnodes;
-    node_pair_t fenodes;
-    vector<typename edge_centers_t::iterator> edge_center_iters(3);
-    for (unsigned int t = 0; t < 4; ++t) {
-      green_children.insert(make_pair(tets[t], cell));
-      get_nodes(fnodes, typename Face::index_type(tets[t]*4));
-      fenodes = make_pair(Max(fnodes[0],fnodes[1]),
-                          Min(fnodes[0],fnodes[1]));
-      edge_center_iters[0] = edge_centers.find(fenodes);
-      if (edge_center_iters[0] == edge_centers.end()) continue;
-
-      fenodes = make_pair(Max(fnodes[0],fnodes[2]),
-                          Min(fnodes[0],fnodes[2]));
-      edge_center_iters[1] = edge_centers.find(fenodes);
-      if (edge_center_iters[1] == edge_centers.end()) continue;
-
-      fenodes = make_pair(Max(fnodes[1],fnodes[2]),
-                          Min(fnodes[1],fnodes[2]));
-      edge_center_iters[2] = edge_centers.find(fenodes);
-      if (edge_center_iters[2] == edge_centers.end()) continue;
-
-      typename Cell::index_type t1, t2, t3, t4;
-      // Perform a 4:1 split on tet
-      t1 = mod_tet(tets[t], center,
-                   (*edge_center_iters[0]).second,
-                   (*edge_center_iters[1]).second,
-                   (*edge_center_iters[2]).second);
-
-      t2 = add_tet(center,fnodes[0],
-                   (*edge_center_iters[0]).second,
-                   (*edge_center_iters[1]).second);
-
-      t3 = add_tet(center,fnodes[1],
-                   (*edge_center_iters[0]).second,
-                   (*edge_center_iters[2]).second);
-
-      t4 = add_tet(center,fnodes[2],
-                   (*edge_center_iters[1]).second,
-                   (*edge_center_iters[2]).second);
-
-      orient(t1);
-      orient(t2);
-      orient(t3);
-      orient(t4);
-
-      green_children.insert(make_pair(t2, cell));
-      green_children.insert(make_pair(t3, cell));
-      green_children.insert(make_pair(t4, cell));
-    }
-  }
-
-  typename edge_centers_t::iterator enodes_iter = edge_centers.begin();
-  while (enodes_iter != edge_centers.end()) {
-    const node_pair_t enodes = (*enodes_iter).first;
-    const typename Node::index_type center = (*enodes_iter).second;
-    typename Edge::array_type half_edges;
-    if (is_edge(enodes.first, enodes.second, &half_edges)) {
-      for (unsigned int e = 0; e < half_edges.size(); ++e) {
-        const typename Edge::index_type edge = half_edges[e];
-        const typename Cell::index_type cell = edge/6;
-
-        pair<typename Node::index_type, typename Node::index_type> nnodes =
-          Edge::edgei(edge);
-        pair<typename Node::index_type, typename Node::index_type> onodes =
-          Edge::edgei(Edge::opposite_edge(edge));
-
-        // Perform the 2:1 split
-        const typename Elem::index_type t1 =
-          add_tet(center, cells_[nnodes.first],
-                  cells_[onodes.second], cells_[onodes.first]);
-        orient(t1);
-
-        const typename cell_2_cell_map_t::iterator green_iter =
-          green_children.find(cell);
-        ASSERT(green_iter != green_children.end());
-
-        green_children.insert(make_pair(t1, (*green_iter).second));
-
-        orient(mod_tet(cell, center, cells_[nnodes.second],
-                       cells_[onodes.second], cells_[onodes.first]));
-
-      }
-    }
-    ++enodes_iter;
-  }
-}
-
-
-template <class Basis>
-void
-TetVolMesh<Basis>::bisect_element(const typename Cell::index_type cell)
-{
-  synchronize(FACE_NEIGHBORS_E | EDGE_NEIGHBORS_E);
-  int edge, face;
-  vector<typename Edge::array_type> edge_nbrs(6);
-  typename Node::array_type nodes;
-  get_nodes(nodes,cell);
-  // Loop through edges and create new nodes at center
-  for (edge = 0; edge < 6; ++edge)
-  {
-    Point p;
-    get_center(p, typename Edge::index_type(cell*6+edge));
-    nodes.push_back(add_point(p));
-    // Get all other tets that share an edge with this tet
-    pair<typename Edge::HalfEdgeSet::iterator, typename Edge::HalfEdgeSet::iterator> range =
-      all_edges_.equal_range(cell*6+edge);
-    edge_nbrs[edge].insert(edge_nbrs[edge].end(), range.first, range.second);
-  }
-
-  // Get all other tets that share a face with this tet
-  typename Face::array_type face_nbrs(4);
-  for (face = 0; face < 4; ++face)
-    get_neighbor(face_nbrs[face], typename Face::index_type(cell*4+face));
-
-  // This is used below to weed out tets that have already been split
-  set<typename Cell::index_type> done;
-  done.insert(cell);
-
-  // Vector of all tets that have been modified or added
-  typename Cell::array_type tets;
-
-  // Perform an 8:1 split on this tet
-  tets.push_back(mod_tet(cell,nodes[4],nodes[6],nodes[5],nodes[0]));
-  tets.push_back(add_tet(nodes[4], nodes[7], nodes[9], nodes[1]));
-  tets.push_back(add_tet(nodes[7], nodes[5], nodes[8], nodes[2]));
-  tets.push_back(add_tet(nodes[6], nodes[8], nodes[9], nodes[3]));
-  tets.push_back(add_tet(nodes[4], nodes[9], nodes[8], nodes[6]));
-  tets.push_back(add_tet(nodes[4], nodes[8], nodes[5], nodes[6]));
-  tets.push_back(add_tet(nodes[4], nodes[5], nodes[8], nodes[7]));
-  tets.push_back(add_tet(nodes[4], nodes[8], nodes[9], nodes[7]));
-
-  // Perform a 4:1 split on tet sharing face 0
-  if (face_nbrs[0] != MESH_NO_NEIGHBOR)
-  {
-     typename Node::index_type opp = cells_[face_nbrs[0]];
-    tets.push_back(mod_tet(face_nbrs[0]/4,nodes[7],nodes[8],nodes[9],opp));
-    tets.push_back(add_tet(nodes[7],nodes[2],nodes[8],opp));
-    tets.push_back(add_tet(nodes[8],nodes[3],nodes[9],opp));
-    tets.push_back(add_tet(nodes[9],nodes[1],nodes[7],opp));
-    done.insert(face_nbrs[0]/4);
-  }
-  // Perform a 4:1 split on tet sharing face 1
-  if (face_nbrs[1] != MESH_NO_NEIGHBOR)
-  {
-    typename Node::index_type opp = cells_[face_nbrs[1]];
-    tets.push_back(mod_tet(face_nbrs[1]/4,nodes[5],nodes[6],nodes[8],opp));
-    tets.push_back(add_tet(nodes[5],nodes[0],nodes[6],opp));
-    tets.push_back(add_tet(nodes[6],nodes[3],nodes[8],opp));
-    tets.push_back(add_tet(nodes[8],nodes[2],nodes[5],opp));
-    done.insert(face_nbrs[1]/4);
-  }
-  // Perform a 4:1 split on tet sharing face 2
-  if (face_nbrs[2] != MESH_NO_NEIGHBOR)
-  {
-    typename Node::index_type opp = cells_[face_nbrs[2]];
-    tets.push_back(mod_tet(face_nbrs[2]/4,nodes[4],nodes[9],nodes[6],opp));
-    tets.push_back(add_tet(nodes[4],nodes[1],nodes[9],opp));
-    tets.push_back(add_tet(nodes[9],nodes[3],nodes[6],opp));
-    tets.push_back(add_tet(nodes[6],nodes[0],nodes[4],opp));
-    done.insert(face_nbrs[2]/4);
-  }
-  // Perform a 4:1 split on tet sharing face 3
-  if (face_nbrs[3] != MESH_NO_NEIGHBOR)
-  {
-    typename Node::index_type opp = cells_[face_nbrs[3]];
-    tets.push_back(mod_tet(face_nbrs[3]/4,nodes[4],nodes[5],nodes[7],opp));
-    tets.push_back(add_tet(nodes[4],nodes[0],nodes[5],opp));
-    tets.push_back(add_tet(nodes[5],nodes[2],nodes[7],opp));
-    tets.push_back(add_tet(nodes[7],nodes[1],nodes[4],opp));
-    done.insert(face_nbrs[3]/4);
-  }
-
-  // Search every tet that shares an edge with the one we just split 8:1
-  // If it hasnt been split 4:1 (because it shared a face) split it 2:1
-  for (edge = 0; edge < 6; ++edge)
-  {
-    for (unsigned shared = 0; shared < edge_nbrs[edge].size(); ++shared)
-    {
-      // Edge index of tet that shares an edge
-      typename Edge::index_type nedge = edge_nbrs[edge][shared];
-      typename Cell::index_type ntet = nedge/6;
-      // Check to only split tets that havent been split already
-      if (done.find(ntet) == done.end())
-      {
-        // Opposite edge index.  Opposite tet edges are: 0 & 4, 1 & 5, 2 & 3
-        typename Edge::index_type oedge = (ntet*6+nedge%6+
-                                  (nedge%6>2?-1:1)*((nedge%6)/2==1?1:4));
-        // Cell Indices of Tet that only shares one edge with tet we split 8:1
-        pair<typename Node::index_type, typename Node::index_type> nnodes =
-          Edge::edgei(nedge);
-        pair<typename Node::index_type, typename Node::index_type> onodes =
-          Edge::edgei(oedge);
-        // Perform the 2:1 split
-        tets.push_back(add_tet(nodes[4+edge], cells_[nnodes.first],
-                               cells_[onodes.second], cells_[onodes.first]));
-        orient(tets.back());
-        tets.push_back(mod_tet(ntet,nodes[4+edge], cells_[nnodes.second],
-                               cells_[onodes.second], cells_[onodes.first]));
-        orient(tets.back());
-        // dont think is necessasary, but make sure tet doesnt get split again
-        done.insert(ntet);
-      }
-    }
-  }
-}
 
 
 template <class Basis>
