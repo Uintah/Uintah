@@ -123,6 +123,55 @@ double CellIntegral(FIELD *field, FBASIS& f)
   return vol;
 }
 
+typedef TriSurfMesh<TriCubicHmtScaleFactors<Point> > TSFMesh;
+typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVSFMesh;
+typedef HexVolMesh<HexTricubicHmtScaleFactorsEdges<Point> > HVSFEMesh;
+
+
+template <class MSH>
+void add_extra_basis_data(MSH *mesh);
+
+template <>
+void add_extra_basis_data(TSFMesh *mesh)
+{
+  // xy scale factor per elem.
+  TSFMesh::Elem::size_type sz;
+  mesh->size(sz);
+  for (unsigned i = 0; i < sz; i++) {
+    vector<double> sf(2, 1.0L);
+    mesh->get_basis().add_scalefactors(sf);
+  }
+}
+
+template <>
+void add_extra_basis_data(HVSFMesh *mesh)
+{
+  // xyz scale factor per node.
+  HVSFMesh::Node::size_type sz;
+  mesh->size(sz);
+  for (unsigned i = 0; i < sz; i++) {
+    vector<double> sf(3, 1.0L);
+    mesh->get_basis().add_scalefactors(sf);
+  }
+}
+
+template <>
+void add_extra_basis_data(HVSFEMesh *mesh)
+{
+  // single scale factor per edge.
+  HVSFEMesh::basis_type bas;
+  unsigned sz = bas.number_of_edges();
+  for (unsigned i = 0; i < sz; i++) {
+    vector<double> sf(1, 1.0L);
+    mesh->get_basis().add_scalefactors(sf);
+  }
+}
+
+template<class MSH>
+void add_extra_basis_data(MSH *mesh) 
+{
+}
+
 template<typename MESH, typename FBASIS>
 void Test()
 {   
@@ -134,46 +183,59 @@ void Test()
   //t.rotate(Vector(1,0,0), Vector(0,1,0));
   //t.pre_scale(Vector(1,2,3));
   //  t.print();
-
-  typename MESH::basis_type u;
+  typedef typename MESH::basis_type MBASIS;
   typename MESH::Node::array_type n;
-  n.resize(u.number_of_mesh_vertices());
+  n.resize(MBASIS::number_of_mesh_vertices());
 
-  for(int i=0; i<u.number_of_vertices(); i++) {
+  for(int i=0; i<MBASIS::number_of_vertices(); i++) 
+  {
     Point p;
-    switch(u.domain_dimension()) {
+    switch(MBASIS::domain_dimension()) 
+    {
     case 1:
-      p=Point(u.unit_vertices[i][0], 0, 0);
+      p=Point(MBASIS::unit_vertices[i][0], 0, 0);
       break;
     case 2:
-      p=Point(u.unit_vertices[i][0], u.unit_vertices[i][1], 0);
+      p=Point(MBASIS::unit_vertices[i][0], MBASIS::unit_vertices[i][1], 0);
       break;
     case 3:
-      p=Point(u.unit_vertices[i][0], u.unit_vertices[i][1], u.unit_vertices[i][2]);
+      p=Point(MBASIS::unit_vertices[i][0], MBASIS::unit_vertices[i][1], 
+	      MBASIS::unit_vertices[i][2]);
       break;
     default:
       ASSERTFAIL("unknown dimension");
     }
-    if ((unsigned)i<n.size()) {
+
+    if ((unsigned)i<n.size()) 
+    {
       mesh->add_point(p);
       n[i]=i;
-      if (u.polynomial_order()==3) {
-	vector<Point> d(u.domain_dimension());
-	for(unsigned int i=0; i<d.size();i++)
-	  d[i]=Point(0,0,0);
+      if (MBASIS::polynomial_order()==3) {
+	// number of derivative values is dofs / num verts - 1;
+	// putting too many in does not harm tests...
+	unsigned sz = MBASIS::dofs() / MBASIS::number_of_vertices();
+	cerr << "size of deriv array: " << sz << endl;
+	vector<Point> d(sz);
+	for(unsigned int i=0; i < d.size(); i++) {
+	  d[i].x(0.0);
+	  d[i].y(0.0);
+	  d[i].z(0.0);
+	}
 	mesh->get_basis().add_derivatives(d);
       }
     }
     else
       mesh->get_basis().add_node_value(p);
   }
+  
+  add_extra_basis_data(mesh);
 
   typename MESH::Elem::index_type e0=mesh->add_elem(n); 
   ASSERT(e0==0);
   //  cout<<"Element index: " << e0 << "\n"; 
   mesh->synchronize(MESH::EDGES_E);
 
-  vector<double> coords(u.domain_dimension());
+  vector<double> coords(MBASIS::domain_dimension());
   for(unsigned int i=0; i<coords.size();i++)
     coords[i]=drand48();
   Point p;
@@ -184,7 +246,7 @@ void Test()
     cout << coords[0];
   cout << " => " << p << endl;
 
-  vector<double> lc(u.domain_dimension());
+  vector<double> lc(MBASIS::domain_dimension());
   bool rc=mesh->get_coords(lc, p, 0);
   cout << "Transform G->L " << p << " => ";
   if (rc) {
@@ -196,10 +258,10 @@ void Test()
     cout << " not found" << endl;
 
   typename MESH::ElemData cmcd(*mesh, e0);
-  for(int i=0; i<u.number_of_edges(); i++)
+  for(int i=0; i<MBASIS::number_of_edges(); i++)
     cout << "Edge " << i << " length " << mesh->get_basis().get_arc_length(i, cmcd) << endl;
 
-  for(int i=0; i<u.faces_of_cell(); i++)
+  for(int i=0; i<MBASIS::faces_of_cell(); i++)
     cout << "Face " << i << " area " << mesh->get_basis().get_area(i, cmcd) << endl;
 
 
@@ -211,7 +273,7 @@ void Test()
   for(int i=0; i<f.number_of_vertices(); i++)
     d[i] = 1;
 
-  switch(u.domain_dimension()) {
+  switch(MBASIS::domain_dimension()) {
   case 1:
     cout << "Crv integral " << CrvIntegral(field, f) << endl; 
     break;
@@ -248,8 +310,8 @@ main(int argc, char **argv)
     Test<TriSurfMesh<TriQuadraticLgn<Point> >, TriLinearLgn<double> >();
     srand48(0);
     Test<TriSurfMesh<TriCubicHmt<Point> >, TriLinearLgn<double> >();
-//     srand48(0);
-//     Test<TriSurfMesh<TriCubicHmtScaleFactors<Point> >, TriLinearLgn<double> >();
+    srand48(0);
+    Test<TriSurfMesh<TriCubicHmtScaleFactors<Point> >,TriLinearLgn<double> >();
   }
 
   {
@@ -285,12 +347,12 @@ main(int argc, char **argv)
     Test<HexVolMesh<HexTrilinearLgn<Point> >, HexTrilinearLgn<double> >();
     srand48(0);
     Test<HexVolMesh<HexTriquadraticLgn<Point> >, HexTrilinearLgn<double> >();
-//     srand48(0);
-//     Test<HexVolMesh<HexTricubicHmt<Point> >, HexTrilinearLgn<double> >();  
-    //    srand48(0);
-    //    Test<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double> >();   
-    //    srand48(0);
-    //    Test<HexVolMesh<HexTricubicHmtScaleFactorsEdges<Point> >, HexTrilinearLgn<double> >();    
+    srand48(0);
+    Test<HexVolMesh<HexTricubicHmt<Point> >, HexTrilinearLgn<double> >();  
+    srand48(0);
+    Test<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double> >();   
+    srand48(0);
+    Test<HexVolMesh<HexTricubicHmtScaleFactorsEdges<Point> >, HexTrilinearLgn<double> >();    
   }
   
   return 0;  
