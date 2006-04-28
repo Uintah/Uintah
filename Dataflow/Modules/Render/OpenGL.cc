@@ -578,30 +578,35 @@ OpenGL::render_and_save_image( int x, int y,
 
 
 #if defined(HAVE_PNG) && HAVE_PNG
-  /* create png struct */
-  png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  // Create the PNG struct.
+  png_structp png;
+  png_infop info;
+  if (write_png)
+  {
+    png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
-  if (png == NULL) {
-    view_window_->setMovieMessage( "ERROR - Failed to create PNG write struct", true );
-    return;
+    if (png == NULL) {
+      view_window_->setMovieMessage( "ERROR - Failed to create PNG write struct", true );
+      return;
+    }
+
+    // Create the PNG info struct.
+    info = png_create_info_struct(png);
+
+    if (info == NULL) {
+      view_window_->setMovieMessage( "ERROR - Failed to create PNG info struct", true );
+      png_destroy_write_struct(&png, NULL);
+      return;
+    }
+
+    if (setjmp(png_jmpbuf(png))) {
+      view_window_->setMovieMessage( "ERROR - Initializing PNG.", true );
+      png_destroy_write_struct(&png, &info);
+      return;
+    }
   }
-
-  /* create image info struct */
-  png_infop info = png_create_info_struct(png);
-
-  if (info == NULL) {
-    view_window_->setMovieMessage( "ERROR - Failed to create PNG info struct", true );
-    png_destroy_write_struct(&png, NULL);
-    return;
-  }
-
-  if (setjmp(png_jmpbuf(png))) {
-    view_window_->setMovieMessage( "ERROR - Initializing PNG.", true );
-    png_destroy_write_struct(&png, &info);
-    return;
-  }  
-
 #endif
+
   ASSERT(sci_getenv("SCIRUN_TMP_DIR"));
 
   const char * tmp_dir(sci_getenv("SCIRUN_TMP_DIR"));
@@ -652,8 +657,6 @@ OpenGL::render_and_save_image( int x, int y,
   }
   else
   {
-
-
 #if defined(HAVE_PNG) && HAVE_PNG
     channel_bytes = 1;
     num_channels = 3;
@@ -675,7 +678,6 @@ OpenGL::render_and_save_image( int x, int y,
 
     /* write header */
     png_write_info(png, info);      
-    
 #endif
   }
 
@@ -1339,11 +1341,11 @@ OpenGL::redraw_frame()
 	timestr.width(6);
 	timestr << tv.tv_usec;
 #else
-  long m_sec = Time::currentSeconds();
-  timestr << "." << m_sec /1000 << ".";
+        long m_sec = Time::currentSeconds();
+        timestr << "." << m_sec /1000 << ".";
 	timestr.fill('0');
 	timestr.width(3);
-  timestr << m_sec % 1000;
+        timestr << m_sec % 1000;
 #endif
 
         string fullpath = string(fname) + string(timestr.str()) + 
