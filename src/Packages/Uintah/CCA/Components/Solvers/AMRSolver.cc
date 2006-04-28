@@ -50,14 +50,14 @@ AMRSolver::AMRSolver(const ProcessorGroup* myworld)
   
 AMRSolver::~AMRSolver() {}
 
+
+/*_____________________________________________________________________
+ Function AMRSolver::readParameters 
+ _____________________________________________________________________*/
 SolverParameters*
 AMRSolver::readParameters(ProblemSpecP& params,
-                               const string& varname)
-  /*_____________________________________________________________________
-    Function AMRSolver::readParameters
-    Load input parameters into the AMRSolver parameter struct;
-    check their correctness.
-    _____________________________________________________________________*/
+                          const string& varname)
+  
 {
   HypreSolverParams* p = new HypreSolverParams();
   bool found=false;
@@ -78,6 +78,7 @@ AMRSolver::readParameters(ProblemSpecP& params,
       param->getWithDefault("skip", p->skip, 0);
       param->getWithDefault("jump", p->jump, 0);
       param->getWithDefault("logging", p->logging, 0);
+      param->getWithDefault("outputEquations", p->printSystem,false);
       found=true;
     }
   }
@@ -101,7 +102,8 @@ AMRSolver::readParameters(ProblemSpecP& params,
 
   return p;
 } // end readParameters()
-
+//______________________________________________________________________
+//
 void
 AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                          const MaterialSet* matls,
