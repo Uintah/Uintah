@@ -35,10 +35,7 @@ namespace Uintah {
 
   class HypreSolverParams : public SolverParameters {
 
-    //========================== PUBLIC SECTION ==========================
   public:
-
-    //---------- Data members ----------
 
     HypreSolverParams(void) 
       {
@@ -67,12 +64,11 @@ namespace Uintah {
     // SparseMSG parameters
     int    jump;               // Hypre Sparse MSG parameter
 
-    //===== Oren's extra parameters & functions, might be removed later. =====
     // Debugging and control flags
     bool   printSystem;    // Linear system dump to file
     bool   timing;         // Time results
 
-  }; // class HypreSolverParams
-} // end namespace Uintah
+  }; 
+}
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
+#endif

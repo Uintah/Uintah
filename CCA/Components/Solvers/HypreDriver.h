@@ -121,9 +121,9 @@ namespace Uintah {
     
     // Utilities, HYPRE data printouts
     bool         isConvertable(const HypreInterface& to);
-    virtual void printMatrix(const string& fileName = "output") = 0;
-    virtual void printRHS(const string& fileName = "output_b") = 0;
-    virtual void printSolution(const string& fileName = "output_x") = 0;
+    virtual void printMatrix(const string& fileName = "Matrix") = 0;
+    virtual void printRHS(const string& fileName = "RHS") = 0;
+    virtual void printSolution(const string& fileName = "X") = 0;
 
     // Generic solve functions (common for all var types)
     template<class Types>
@@ -312,8 +312,9 @@ namespace Uintah {
         _requiresPar = solver->requiresPar();
         cout_dbg << "Making linear system" << "\n";
         makeLinearSystem<Types>(matl);
-        //printMatrix("output_A");
-        // RHS("output_b");
+        
+        printMatrix("Matix");
+        printRHS("RHS");
         
         //-----------------------------------------------------------
         // Solve the linear system
@@ -367,7 +368,7 @@ namespace Uintah {
          * Print the solution and other info
          *-----------------------------------------------------------*/
         cout_dbg << "Print the solution vector" << "\n";
-       // printSolution("output_x1");
+        printSolution("Solution");
         cout_dbg << "Iterations = " << numIterations << "\n";
         cout_dbg << "Final Relative Residual Norm = "
                  << finalResNorm << "\n";
