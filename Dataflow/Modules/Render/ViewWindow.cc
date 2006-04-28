@@ -1998,9 +1998,19 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 
       renderer_->doing_movie_p_ = 1;
       if (movie.get() == 1)
+      {
         renderer_->make_MPEG_p_ = 0;
+        renderer_->movie_frame_extension_ = "ppm";
+      }
+      if (movie.get() == 3)
+      {
+        renderer_->make_MPEG_p_ = 0;
+        renderer_->movie_frame_extension_ = "png";
+      }
       else if (movie.get() == 2)
+      {
         renderer_->make_MPEG_p_ = 1;
+      }
     }
   }
 
@@ -2042,8 +2052,9 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 
 
 void
-ViewWindow::setMovie( int state )
+ViewWindow::setMovieStopped()
 {
+  bool state = false;
   gui_->lock();
   GuiInt movie(ctx_->subVar(tclID_+"-movie",false));
   if (movie.valid())
@@ -2079,7 +2090,7 @@ ViewWindow::setMovieMessage( const string & message, bool error )
 
   if( error ) {
     cerr << message << "\n";
-    setMovie( 0 ); // stop recording
+    setMovieStopped();
     gui_->eval( string("createSciDialog -title \"Movie Creation Error\" -error -message \"") + message + "\"");
   }
 

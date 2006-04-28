@@ -169,6 +169,7 @@ public:
   bool                  doing_image_p_;
   bool                  doing_movie_p_;
   bool                  make_MPEG_p_;
+  string                movie_frame_extension_;  // Currently "png" or "ppm".
   int                   current_movie_frame_;
   string                movie_name_;
   // True if we want only to dump a movie frame when a DO_SYNC_FRAME

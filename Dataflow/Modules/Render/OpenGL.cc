@@ -575,7 +575,6 @@ OpenGL::render_and_save_image( int x, int y,
 
   ofstream *image_file = NULL;
 
-
 #if defined(HAVE_PNG) && HAVE_PNG
   // Create the PNG struct.
   png_structp png;
@@ -652,6 +651,7 @@ OpenGL::render_and_save_image( int x, int y,
       (*nhdr_file) << "encoding: raw" << std::endl;
       (*nhdr_file) << "data file: " << fname << std::endl;
       nhdr_file->close();
+      delete nhdr_file;
     }
   }
   else
@@ -753,6 +753,7 @@ OpenGL::render_and_save_image( int x, int y,
       png_set_rows(png, info, rows);
 
       png_write_image(png, rows);
+      free(rows);
     }
     else
 #endif
@@ -795,6 +796,7 @@ OpenGL::render_and_save_image( int x, int y,
 #endif
   {
     image_file->close();
+    delete image_file;
   }
 
   gui_->unlock();
@@ -1291,7 +1293,6 @@ OpenGL::redraw_frame()
 
       if (encoding_mpeg_)
       {
-
         const string message =
           "Adding Mpeg Frame " + to_string( current_movie_frame_ );
 
@@ -1303,7 +1304,6 @@ OpenGL::redraw_frame()
         current_movie_frame_++;
         view_window_->setMovieFrame(current_movie_frame_);
       }
-
     }
     else
     { // Dump each frame.
@@ -1344,13 +1344,11 @@ OpenGL::redraw_frame()
 	timestr.width(3);
         timestr << m_sec % 1000;
 #endif
-
-        string fullpath = string(fname) + string(timestr.str()) + 
-	                  string(".ppm");
+        string fullpath = string(fname) + "." + movie_frame_extension_;
         
         string message = "Dumping " + fullpath;
         view_window_->setMovieMessage( message );
-        dump_image(fullpath);
+        dump_image(fullpath, movie_frame_extension_);
 
         current_movie_frame_++;
         view_window_->setMovieFrame(current_movie_frame_);
@@ -1565,25 +1563,16 @@ OpenGL::real_get_pick(int x, int y,
 
 // Dump a ppm image.
 void
-OpenGL::dump_image(const string& name, const string& /* type */)
+OpenGL::dump_image(const string& fname, const string& ftype)
 {
-  ofstream dumpfile(name.c_str());
-  if ( !dumpfile )
-  {
-    string errorMsg = "ERROR opening file: " + name;
-    view_window_->setMovieMessage( errorMsg, true );
-    cerr << errorMsg << "\n";
-    return;
-  }
-
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
   const int pix_size = 3;  // for RGB
   const int n = pix_size * vp[2] * vp[3];
-  unsigned char* pxl = scinew unsigned char[n];
+  unsigned char* pixels = scinew unsigned char[n];
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
   glReadBuffer(GL_FRONT);
-  glReadPixels(0, 0, vp[2], vp[3], GL_RGB, GL_UNSIGNED_BYTE, pxl);
+  glReadPixels(0, 0, vp[2], vp[3], GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
   // TODO: This looks bogus. Copying pbuffer image to screen only works
   // if we aren't flushed anyway and the image size was the same as
@@ -1603,7 +1592,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     glDrawBuffer(GL_BACK);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawPixels(vp[2], vp[3], GL_RGB, GL_UNSIGNED_BYTE, pxl);
+    glDrawPixels(vp[2], vp[3], GL_RGB, GL_UNSIGNED_BYTE, pixels);
     glEnable(GL_DEPTH_TEST);
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -1611,27 +1600,103 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     tk_gl_context_->swap();
   }
 
-  // Print out the ppm  header
-  dumpfile << "P6" << std::endl;
-  dumpfile << vp[2] << " " << vp[3] << std::endl;
-  dumpfile << 255 << std::endl;
+#if defined(HAVE_PNG) && HAVE_PNG
+  if (ftype == "png")
+  {
+    // Create the PNG struct.
+    png_structp png =
+      png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
-  // OpenGL renders upside-down to ppm_file writing
-  unsigned char *top_row, *bot_row;     
-  unsigned char *tmp_row = scinew unsigned char[ vp[2] * pix_size];
-  int top, bot;
-  for ( top = vp[3] - 1, bot = 0; bot < vp[3]/2; top --, bot++){
-    top_row = pxl + vp[2] *top*pix_size;
-    bot_row = pxl + vp[2]*bot*pix_size;
-    memcpy(tmp_row, top_row, vp[2]*pix_size);
-    memcpy(top_row, bot_row, vp[2]*pix_size);
-    memcpy(bot_row, tmp_row, vp[2]*pix_size);
+    if (png == NULL) {
+      view_window_->setMovieMessage( "ERROR - Failed to create PNG write struct", true );
+      return;
+    }
+
+    // Create the PNG info struct.
+    png_infop info = png_create_info_struct(png);
+
+    if (info == NULL) {
+      view_window_->setMovieMessage( "ERROR - Failed to create PNG info struct", true );
+      png_destroy_write_struct(&png, NULL);
+      return;
+    }
+
+    if (setjmp(png_jmpbuf(png))) {
+      view_window_->setMovieMessage( "ERROR - Initializing PNG.", true );
+      png_destroy_write_struct(&png, &info);
+      return;
+    }
+
+    // Initialize the PNG IO.
+    FILE *fp = fopen(fname.c_str(), "wb");
+    png_init_io(png, fp);
+    
+    png_set_IHDR(png, info, vp[2], vp[3],
+		 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+		 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    // Write the PNG header.
+    png_write_info(png, info);      
+
+    // Run loop to divide memory into "row" chunks
+    png_bytep *rows = (png_bytep*)malloc(sizeof(png_bytep) * vp[3]);
+    for (int hi = 0; hi < vp[3]; hi++) {
+      rows[hi] = &((png_bytep)pixels)[hi * vp[2] * pix_size];
+    }
+
+    png_set_rows(png, info, rows);
+
+    png_write_image(png, rows);
+
+    /* end write */
+    if (setjmp(png_jmpbuf(png))) {
+      view_window_->setMovieMessage( "Error during end of PNG write", true );
+      png_destroy_write_struct(&png, &info);
+      return;
+    }
+      
+    // Finish writing.
+    png_write_end(png, NULL);
+      
+    // More clean up.
+    png_destroy_write_struct(&png, &info);
+    fclose(fp);
+    free(rows);
   }
-  // now dump the file
-  dumpfile.write((const char *)pxl,n);
+  else
+#endif
+  {
+    ofstream dumpfile(fname.c_str());
+    if ( !dumpfile )
+    {
+      string errorMsg = "ERROR opening file: " + fname;
+      view_window_->setMovieMessage( errorMsg, true );
+      cerr << errorMsg << "\n";
+      return;
+    }
 
-  delete [] pxl;
-  delete [] tmp_row;
+    // Print out the ppm  header.
+    dumpfile << "P6" << std::endl;
+    dumpfile << vp[2] << " " << vp[3] << std::endl;
+    dumpfile << 255 << std::endl;
+
+    // OpenGL renders upside-down to ppm_file writing.
+    unsigned char *top_row, *bot_row;     
+    unsigned char *tmp_row = scinew unsigned char[ vp[2] * pix_size];
+    int top, bot;
+    for ( top = vp[3] - 1, bot = 0; bot < vp[3]/2; top --, bot++){
+      top_row = pixels + vp[2] * top * pix_size;
+      bot_row = pixels + vp[2] * bot * pix_size;
+      memcpy(tmp_row, top_row, vp[2] * pix_size);
+      memcpy(top_row, bot_row, vp[2] * pix_size);
+      memcpy(bot_row, tmp_row, vp[2] * pix_size);
+    }
+    // Now dump the file.
+    dumpfile.write((const char *)pixels, n);
+    delete [] tmp_row;
+  }
+
+  delete [] pixels;
 }
 
 
@@ -1975,7 +2040,7 @@ OpenGL::EndMpeg()
     view_window_->setMovieMessage( message );
   }
 
-  view_window_->setMovie( 0 );
+  view_window_->setMovieStopped();
 #endif // HAVE_MPEG
 }
 
