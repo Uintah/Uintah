@@ -1538,6 +1538,8 @@ itcl_class ViewWindow {
             -variable $this-global-movie -value 0 -command "$this-c redraw"
 	radiobutton $w.raw -text "PPM Frames" \
             -variable $this-global-movie -value 1 -command "$this-c redraw"
+	radiobutton $w.png -text "PNG Frames" \
+            -variable $this-global-movie -value 3 -command "$this-c redraw"
 	radiobutton $w.mpeg -text "Mpeg" \
 	    -variable $this-global-movie -value 2 -command "$this checkMPGlicense"
 	
@@ -1597,7 +1599,7 @@ itcl_class ViewWindow {
 	  -command "wm withdraw $w"
 
         pack $w.l -padx 4 -anchor w
-        pack $w.none $w.raw $w.mpeg $w.sync -padx 4 -anchor w
+        pack $w.none $w.raw $w.png $w.mpeg $w.sync -padx 4 -anchor w
 
         pack $w.moviebase.label $w.moviebase.entry -side left -padx 4
         pack $w.moviebase -pady 5 -padx 4 -anchor w
