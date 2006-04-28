@@ -1247,8 +1247,13 @@ Semaphore::up(int count)
 void
 Semaphore::down(int count)
 {
-  Thread_private* p = Thread::self()->priv_;
-  int oldstate = Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, name_);
+  Thread* self = Thread::self();
+  int oldstate;
+  Thread_private* p;
+  if (self) {
+    p = Thread::self()->priv_;
+    oldstate = Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, name_);
+  }
   for (int i = 0;i<count;i++)
   {
     if (SEM_LOCK(&priv_->sem) != 0)
@@ -1257,7 +1262,7 @@ Semaphore::down(int count)
       throw ThreadError(std::string("SEM_LOCK: ") + strerror(errno));
     }
   }
-  Thread::pop_bstack(p, oldstate);
+  if (self) Thread::pop_bstack(p, oldstate);
 }
 
 
