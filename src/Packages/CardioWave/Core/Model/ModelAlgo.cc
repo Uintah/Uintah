@@ -395,7 +395,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   for (size_t p=0; p < SimulationBundle->numBundles(); p++)
   {
     // Do we have a membrane definition
-    std::string bundlename = SimulationBundle->getFieldName(p);
+    std::string bundlename = SimulationBundle->getBundleName(p);
+    std::cout << "bundlename=" << bundlename << "\n";
     if (bundlename.substr(0,9) == "Membrane_")
     {
       BundleHandle MembraneBundle = SimulationBundle->getBundle(bundlename);
@@ -410,6 +411,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
         // It is just book keeping
         Membranes.push_back(Geometry);
         nodetypes.push_back(nodetype);
+        num_membranes++;
       }
       else
       {
@@ -445,6 +447,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
         double domain;
         converteralgo.MatrixToDouble(Domain,domain);
         referencedomain.push_back(domain);        
+        num_references++;
       }
       else
       {
@@ -479,6 +482,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
         stimulusdomain.push_back(domain);
         stimulusstart.push_back(end);     
         stimulusend.push_back(start);
+        num_stimulus++;
 
         if (Current.get_rep())
         {
@@ -505,6 +509,12 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
   }
 
+  {
+    std::ostringstream oss;
+    oss << "Number of membranes="<<num_membranes<<" ,number of stimulus="<<num_stimulus<<" ,number of references="<<num_references;
+    remark(oss.str());
+  }
+  
   remark("Verified Simulation Bundle");
 
 
@@ -820,7 +830,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   for (size_t p=0; p <num_membranes; p++)
   {
     std::ostringstream oss;
-    oss << "Membrane_" << p+1;
+    oss << "Membrane_" << p;
     
     BundleHandle MembraneBundle = scinew Bundle;
     MembraneBundle->setField("Field",Membranes[p]);

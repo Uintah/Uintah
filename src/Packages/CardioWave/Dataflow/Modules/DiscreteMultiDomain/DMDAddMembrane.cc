@@ -118,6 +118,12 @@ void DMDAddMembrane::execute()
       return;
     }   
   }
+  else
+  {
+    BundleHandle temp;
+    temp = MembraneBundle->clone();
+    MembraneBundle = temp;    
+  }
 
   int membrane_num = 0;
   std::string fieldname;

@@ -81,13 +81,13 @@ protected:
   template<class MESH>
   double weight_factor(MESH *mesh, typename MESH::Cell::index_type elemidx, typename MESH::Node::index_type nodeidx)
   {
-     return (static_cast<double>(mesh->get_size(elemidx)/mesh->basis()->number_of_vertices()));
+     return (static_cast<double>(mesh->get_size(elemidx)/mesh->get_basis().number_of_vertices()));
   }
 
   template<class MESH>
   double weight_factor(MESH *mesh, typename MESH::Face::index_type elemidx, typename MESH::Node::index_type nodeidx)
   {
-     return (static_cast<double>(mesh->get_size(elemidx)/mesh->basis()->vertices_of_face()));
+     return (static_cast<double>(mesh->get_size(elemidx)/mesh->get_basis().vertices_of_face()));
   }
 
 
@@ -419,14 +419,12 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     elementtypemesh->get_center(point,*it);
     if (stimmesh->locate(ci,point))
     {
-      std::cout << "found locate\n";
       elementtypemesh->get_elems(elems,*it);
       if (elems.size() > 0)
       {
         val = elementtypefield->value(elems[0]);
         if (val == dval)
         {
-          std::cout << "node " << *it << "is in domain!\n";
           indomain[(static_cast<unsigned int>(*it))] = true;        
         }
       }
@@ -570,8 +568,8 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   typename FNODE::mesh_type::Eleme::array_type elems;
   typename FNODE::mesh_type::Node::iterator it, it_end;
   typename FNODE::mesh_type::Node::size_type sz;
-  typename FNODE::mesh_type::Elem::index_type ci;
-  typename FIELD::value_type val, dval;
+  typename FIELD::mesh_type::Elem::index_type ci;
+  typename FNODE::value_type val, dval;
   Point point;
 
   elementtypemesh->size(sz);
@@ -736,8 +734,8 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   typename FNODE::mesh_type::Elem::array_type elems;
   typename FNODE::mesh_type::Node::iterator it, it_end;
   typename FNODE::mesh_type::Node::size_type sz;
-  typename FNODE::mesh_type::Elem::index_type ci;
-  typename FIELD::value_type val, dval;
+  typename FIELD::mesh_type::Elem::index_type ci;
+  typename FNODE::value_type val, dval;
   Point point;
 
   elementtypemesh->size(sz);
