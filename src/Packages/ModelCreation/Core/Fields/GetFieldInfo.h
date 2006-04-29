@@ -61,14 +61,14 @@ bool GetFieldInfoAlgoT<FIELD>::GetFieldInfo(ProgressReporter *pr, FieldHandle in
   numnodes = 0;
   numelems = 0;
   
-  FIELD* field = input.get_rep();
+  FIELD* field = dynamic_cast<FIELD *>(input.get_rep());
   if (field == 0) return (false);
 
   typename FIELD::mesh_type::Node::size_type nnodes;
   typename FIELD::mesh_type::Elem::size_type nelems;
 
-  field->size(nnodes);
-  field->size(nelems);
+  field->get_typed_mesh()->size(nnodes);
+  field->get_typed_mesh()->size(nelems);
   numnodes = static_cast<int>(nnodes);
   numelems = static_cast<int>(nelems);
   
