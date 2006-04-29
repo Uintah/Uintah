@@ -1062,6 +1062,8 @@ TetVolMesh<Basis>::compute_faces()
   }
   build_face_vec();
   synchronized_ |= FACES_E;
+  synchronized_ |= FACE_NEIGHBORS_E;
+  
 }
 
 template <class Basis>
@@ -1104,6 +1106,7 @@ TetVolMesh<Basis>::compute_edges()
   }
   build_edge_vec();
   synchronized_ |= EDGES_E;
+  synchronized_ |= EDGE_NEIGHBORS_E;
 }
 
 
@@ -2222,7 +2225,9 @@ TetVolMesh<Basis>::add_elem(typename Node::array_type a)
   for (unsigned int n = 0; n < a.size(); n++)
     cells_.push_back(a[n]);
 
-  create_cell_syncinfo(tet);
+//  Synchronous element addition should be a separate function
+//  This slows down normal operation of the function considerably
+//  create_cell_syncinfo(tet);
 
   return tet;
 }
