@@ -82,9 +82,35 @@ bool ClearAndChangeFieldBasisAlgoT<FSRC, FDST>::ClearAndChangeFieldBasis(Progres
     return (false);
   }
 
+
+  typename FSRC::mesh_type::Node::iterator it, it_end;
+  Point p;
+
+  imesh->begin(it);
+  imesh->end(it_end);
+  while (it != it_end)
+  {
+    imesh->get_center(p,*it);
+    omesh->add_point(p);
+    ++it;
+  }
+
+  typename FSRC::mesh_type::Elem::iterator eit, eit_end;
+  typename FSRC::mesh_type::Node::array_type nodes;
+  
+  imesh->begin(eit);
+  imesh->end(eit_end);
+  while (eit != eit_end)
+  {
+    imesh->get_nodes(nodes,*eit);
+    omesh->add_elem(static_cast<typename FDST::mesh_type::Node::array_type>(nodes));
+    ++eit;
+  }
+
   FDST *ofield = scinew FDST(omesh);
   output = dynamic_cast<Field*>(ofield);
-
+  
+  
   if (ofield->basis_order() == 0)
   {
     typename FDST::mesh_type::Elem::iterator it, it_end;
