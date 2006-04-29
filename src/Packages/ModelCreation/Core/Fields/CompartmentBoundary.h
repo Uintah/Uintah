@@ -105,22 +105,10 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E|Mesh::FACES_E|Mesh::FACE_NEIGHBORS_E|Mesh::NODE_NEIGHBORS_E);
   
   typename FSRC::mesh_type::Node::size_type numnodes;
+  typename FSRC::mesh_type::DElem::size_type numdelems;
+
   imesh->size(numnodes);
-  
-  // WE NEED TO CALCULATE REAL NUMBER OF FACES
-  // FOR A NUMBER OF MESHES size() DOES NOT GIVE HIGHEST INDEX NOR THE NUMBER
-  // OF INDICES THAT EXIST. HENCE WE NEED TO DO IT MANUALLY. 
-  // HOPEFULLY ONE DAY SOMEONE WILL GET THE BRIGHT IDEA TO FIX IT.
-  
-  typename FSRC::mesh_type::DElem::iterator fit, fit_end;
-  unsigned int real_numfaces = 0;
-  imesh->begin(fit);
-  imesh->end(fit_end);
-  while (fit != fit_end)
-  {
-    if(*fit > real_numfaces) real_numfaces = *fit;
-    ++fit;
-  }
+  imesh->size(numdelems);
 
   bool isdomlink = false;
   int* domlinkrr = 0;
@@ -128,7 +116,7 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   
   if (DomainLink.get_rep())
   {
-    if ((real_numfaces != DomainLink->nrows())&&(real_numfaces != DomainLink->ncols()))
+    if ((numdelems != DomainLink->nrows())&&(numdelems != DomainLink->ncols()))
     {
       pr->error("CompartmentBoundary: The Domain Link property is not of the right dimensions");
       return (false);        

@@ -122,22 +122,9 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
   if (imesh->dimensionality() == 1) imesh->synchronize(Mesh::NODES_E|Mesh::NODE_NEIGHBORS_E);
   
   typename FSRC::mesh_type::Node::size_type numnodes;
+  typename FSRC::mesh_type::DElem::size_type numdelems;
   imesh->size(numnodes);
- 
-  // WE NEED TO CALCULATE REAL NUMBER OF FACES
-  // FOR A NUMBER OF MESHES size() DOES NOT GIVE HIGHEST INDEX NOR THE NUMBER
-  // OF INDICES THAT EXIST. HENCE WE NEED TO DO IT MANUALLY. 
-  // HOPEFULLY ONE DAY SOMEONE WILL GET THE BRIGHT IDEA TO FIX IT.
-  
-  typename FSRC::mesh_type::DElem::iterator fit, fit_end;
-  unsigned int real_numdelems = 0;
-  imesh->begin(fit);
-  imesh->end(fit_end);
-  while (fit != fit_end)
-  {
-    if(static_cast<unsigned int>(*fit) > real_numdelems) real_numdelems = static_cast<unsigned int>(*fit);
-    ++fit;
-  }
+  imesh->size(numdelems);
 
   pointmap_type pointmap(numnodes);
   delemidxmap_type delemidx;
@@ -574,7 +561,7 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
         
     // reserve memory
   
-    int *rows =    scinew int[real_numdelems+1];
+    int *rows =    scinew int[numdelems+1];
     int *cols =    scinew int[nnz];
     double *vals = scinew double[nnz];
     
@@ -590,7 +577,7 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
     int p = 0;
     int kk = 0;
     int q = 0;
-    for (int r = 0; r < real_numdelems; r++)
+    for (int r = 0; r < numdelems; r++)
     {
       rows[r] = kk;
       for (; q < elemlink.size();q++)
@@ -606,8 +593,8 @@ bool LinkFieldBoundaryAlgoT<FSRC>::LinkFieldBoundary(ProgressReporter *pr, Field
       }      
     }
 
-    rows[real_numdelems] = kk;
-    ElemLink = dynamic_cast<Matrix *>(scinew SparseRowMatrix(real_numdelems,real_numdelems,rows,cols,nnz,vals));
+    rows[numdelems] = kk;
+    ElemLink = dynamic_cast<Matrix *>(scinew SparseRowMatrix(numdelems,numdelems,rows,cols,nnz,vals));
   
     if (ElemLink.get_rep() == 0)
     {
