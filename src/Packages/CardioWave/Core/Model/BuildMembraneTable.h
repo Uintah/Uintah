@@ -133,19 +133,11 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   
   typename FVOL::mesh_type::Node::size_type numelementnodes;
   typename FSURF::mesh_type::Node::size_type nummembranenodes;
+  typename FVOL::mesh_type::DElem::size_type numelementdelems;
+
+  elementtypemesh->size(numelementdelems);
   elementtypemesh->size(numelementnodes);
   membranemesh->size(nummembranenodes);
-  
-  typename FVOL::mesh_type::DElem::iterator fit, fit_end;
-  unsigned int real_numelementdelems = 0;
-  elementtypemesh->begin(fit);
-  elementtypemesh->end(fit_end);
-  while (fit != fit_end)
-  {
-    if(*fit > real_numelementdelems) real_numelementdelems = *fit;
-    ++fit;
-  }
-  
   
   
   // If there are no nodes there is no point in persuing this effort...
@@ -282,7 +274,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
     // We have a ElemLink Matrix
     
     // Do a sanity check, if not return a proper error
-    if ((real_numelementdelems != ElemLink->nrows())&&(real_numelementdelems != ElemLink->ncols()))
+    if ((numelementdelems != ElemLink->nrows())&&(numelementdelems != ElemLink->ncols()))
     {
       pr->error("BuildMembraneTable: The ElemLink property is not of the right dimensions");
       return (false);        
