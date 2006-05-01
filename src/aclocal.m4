@@ -174,7 +174,7 @@ echo "found it with .$_extension"
   eval $1='"$_final_libs"'
 ])
 
-## original SCI_TRY_LINK...
+## SCI_COMPILE_LINK_TEST (was the original SCI_TRY_LINK...)
 AC_DEFUN([SCI_COMPILE_LINK_TEST], [
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
