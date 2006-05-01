@@ -1,6 +1,5 @@
 //----- Discretization.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>

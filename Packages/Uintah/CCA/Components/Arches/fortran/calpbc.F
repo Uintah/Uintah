@@ -66,14 +66,6 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
-#ifdef ARCHES_BC_DEBUG
-      print*,'ist',ist
-      print*,'jst',jst
-      print*,'kst',kst
-      print*,'iend',iend
-      print*,'jend',jend
-      print*,'kend',kend
-#endif
       FACK = 1.0D0
       URFBC = 0.1D0
       LNORM = .TRUE.
