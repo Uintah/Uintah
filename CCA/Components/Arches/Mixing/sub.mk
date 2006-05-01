@@ -7,13 +7,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing
 
 SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
-                $(SRCDIR)/DynamicTable.cc \
-                $(SRCDIR)/MixRxnTableInfo.cc $(SRCDIR)/MixRxnTable.cc \
 		$(SRCDIR)/NewStaticMixingTable.cc \
 		$(SRCDIR)/StandardTable.cc \
-		$(SRCDIR)/ReactionModel.cc \
-                $(SRCDIR)/Common.cc \
-                $(SRCDIR)/VectorTable.cc \
 		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc \
 
 PSELIBS := \

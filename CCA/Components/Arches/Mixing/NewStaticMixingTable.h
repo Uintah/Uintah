@@ -36,7 +36,6 @@ POSSIBLE REVISIONS
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/DynamicTable.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -131,9 +130,6 @@ public:
       inline int getTotalVars() const {
 	return 0;
       }
-      inline ReactionModel* getRxnModel() const {
-	return 0;
-      }      
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
       }
