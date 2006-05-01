@@ -45,7 +45,7 @@ using namespace SCIRun;
 class PtolemyServer : public Runnable 
 {
 	public:
-		PtolemyServer(TCLInterface *tclInt, Network *n) : gui(tclInt), net(n) {}
+		PtolemyServer(GuiInterface *tclInt, Network *n) : gui(tclInt), net(n) {}
 		~PtolemyServer();
 		void run();
 		static Semaphore& servSem();
@@ -57,7 +57,7 @@ class PtolemyServer : public Runnable
 												//store stuff in it etc.... stoped this thought here.
 												//so detach just stops the timer right now
 	private:
-		TCLInterface *gui;
+		GuiInterface *gui;
 		Network *net;
 		int listenfd;
 };
