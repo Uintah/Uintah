@@ -56,7 +56,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
         global $this-clock_position_y
         global $this-clock_radius
         set $this-time 0
-        set $this-max_time 100
+        set $this-max_time 0
         set $this-timeval 0
         set $this-animate 0
         set $this-tinc 1
@@ -140,7 +140,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
         pack $w.aframe -side top -fill x -padx 2 -pady 2
         checkbutton $w.aframe.abutton -text Animate \
             -variable $this-animate
-        entry $w.aframe.status  -width 15  -relief sunken -bd 2 \
+        entry $w.aframe.status  -width 40  -relief sunken -bd 2 \
             -textvariable $this-tcl_status 
         pack $w.aframe.abutton -side left
         pack $w.aframe.status -side right  -padx 2 -pady 2
@@ -237,7 +237,10 @@ itcl_class Uintah_Selectors_TimestepSelector {
         if { [set $this-time] == [set $this-max_time] } {
             set $this-time 0
         } else { 
-            incr $this-time 1
+            incr $this-time [set $this-tinc]
+            if { [set $this-time] > [set $this-max_time] } {
+                set $this-time [set $this-max_time]
+            }
         }
         $this-c needexecute
     }
@@ -245,7 +248,10 @@ itcl_class Uintah_Selectors_TimestepSelector {
         if { [set $this-time] == 0 } {
             set $this-time [set $this-max_time]
         } else { 
-            incr $this-time -1
+            incr $this-time -[set $this-tinc]
+            if { [set $this-time] < 0 } {
+                set $this-time 0
+            }
         }
         $this-c needexecute
     }
