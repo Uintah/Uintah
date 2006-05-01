@@ -33,7 +33,6 @@
 #define TimePort_h
 
 #include <Dataflow/Network/Ports/SimplePort.h>
-
 #include <Dataflow/Network/share.h>
 
 namespace SCIRun {
@@ -52,6 +51,9 @@ public:
   //! needed for LockingHandle<T>
   int      ref_cnt;
   Mutex    lock;
+  //! required interface for SimplePort
+  int generation;
+
 };
 
 class SCISHARE TimeData : public TimeViewer
