@@ -20,7 +20,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ColorMapWriter.tcl\
 	$(SRCDIR)/ColorMap2Reader.tcl\
 	$(SRCDIR)/ColorMap2Writer.tcl\
-  	$(SRCDIR)/CompartmentBoundary.tcl\
+  $(SRCDIR)/DomainBoundary.tcl\
 	$(SRCDIR)/ComputeDataArray.tcl\
 	$(SRCDIR)/ComputeFieldData.tcl\
 	$(SRCDIR)/ComputeFieldsData.tcl\
@@ -61,6 +61,9 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/StringWriter.tcl\
 	$(SRCDIR)/ScaleField.tcl\
 	$(SRCDIR)/DataArrayMeasure.tcl\
+	$(SRCDIR)/StreamMatrix.tcl\
+	$(SRCDIR)/ApplyRowOperation.tcl\
+	$(SRCDIR)/ApplyColumnOperation.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

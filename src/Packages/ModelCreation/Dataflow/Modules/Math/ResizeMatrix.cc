@@ -29,7 +29,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
-#include <Packages/ModelCreation/Core/Numeric/NumericAlgo.h>
+#include <Core/Algorithms/Numeric/NumericAlgo.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 #include <Dataflow/Network/Module.h>

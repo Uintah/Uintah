@@ -37,9 +37,9 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class CompartmentBoundary : public Module {
+class DomainBoundary : public Module {
 public:
-  CompartmentBoundary(GuiContext*);
+  DomainBoundary(GuiContext*);
   virtual void execute();
   
 private:
@@ -53,9 +53,9 @@ private:
 };
 
 
-DECLARE_MAKER(CompartmentBoundary)
-CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
-  : Module("CompartmentBoundary", ctx, Source, "FieldsCreate", "ModelCreation"),
+DECLARE_MAKER(DomainBoundary)
+DomainBoundary::DomainBoundary(GuiContext* ctx)
+  : Module("DomainBoundary", ctx, Source, "FieldsCreate", "ModelCreation"),
     guiuserange_(get_ctx()->subVar("userange")),
     guiminrange_(get_ctx()->subVar("minrange")),
     guimaxrange_(get_ctx()->subVar("maxrange")),
@@ -64,7 +64,7 @@ CompartmentBoundary::CompartmentBoundary(GuiContext* ctx)
 {
 }
 
-void CompartmentBoundary::execute()
+void DomainBoundary::execute()
 {
   FieldHandle ifield, ofield;
   MatrixHandle ElemLink;
