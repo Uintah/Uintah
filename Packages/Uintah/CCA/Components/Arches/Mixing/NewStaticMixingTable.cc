@@ -2,10 +2,6 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/VectorTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTableInfo.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
