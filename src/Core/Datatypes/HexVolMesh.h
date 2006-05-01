@@ -113,7 +113,7 @@ public:
     {
       //Linear and Constant Basis never use edges_
       if (basis_type::polynomial_order() > 1) {
-	mesh_.get_edges(edges_, index_);
+        mesh_.get_edges(edges_, index_);
       }
     }
 
@@ -288,10 +288,10 @@ public:
                  typename Cell::index_type idx) const;
 
   bool get_face(typename Face::index_type &array,
-		typename Node::index_type n1, 
-		typename Node::index_type n2,
-		typename Node::index_type n3, 
-		typename Node::index_type n4) const;
+                typename Node::index_type n1, 
+                typename Node::index_type n2,
+                typename Node::index_type n3, 
+                typename Node::index_type n4) const;
 
   //! Get the parent element(s) of the given index.
   void get_elems(typename Elem::array_type &result,
@@ -1409,10 +1409,10 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
 template <class Basis>
 bool
 HexVolMesh<Basis>::get_face(typename Face::index_type &face,
-			    typename Node::index_type n1, 
-			    typename Node::index_type n2,
-			    typename Node::index_type n3, 
-			    typename Node::index_type n4) const
+                            typename Node::index_type n1, 
+                            typename Node::index_type n2,
+                            typename Node::index_type n3, 
+                            typename Node::index_type n4) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
             "Must call synchronize FACES_E on HexVolMesh first");
@@ -1605,7 +1605,7 @@ HexVolMesh<Basis>::get_size(typename Cell::index_type idx) const
   const double a4 = tetrahedra_volume(p5, p2, p7, p6);
   
   return a0 + a1 + a2 + a3 + a4;
-};
+}
 
 
 template <class Basis>
