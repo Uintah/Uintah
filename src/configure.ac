@@ -723,7 +723,9 @@ if test "$pkg_Ptolemy" = "yes"; then
 
     SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
 
-    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
+    DEF_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
+    HAVE_PTOLEMY_PACKAGE="yes"
+    AC_SUBST(DEF_PTOLEMY_PACKAGE)
     AC_SUBST(HAVE_PTOLEMY_PACKAGE)
     sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
   else
