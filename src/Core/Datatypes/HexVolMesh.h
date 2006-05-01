@@ -151,9 +151,6 @@ public:
       return mesh_.cells_[index_ * 8 + 7];
     }
 
-    // the following designed to coordinate with ::get_edges
-    // use the mapping as in approx_edge to match basis order.
-    //unsigned emap[] = {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7};
     inline
     unsigned edge0_index() const {
       return edges_[0];
@@ -172,35 +169,35 @@ public:
     }
     inline
     unsigned edge4_index() const {
-      return edges_[8];
-    }
-    inline
-    unsigned edge5_index() const {
-      return edges_[9];
-    }
-    inline
-    unsigned edge6_index() const {
-      return edges_[10];
-    }
-    inline
-    unsigned edge7_index() const {
-      return edges_[11];
-    }
-    inline
-    unsigned edge8_index() const {
       return edges_[4];
     }
     inline
-    unsigned edge9_index() const {
+    unsigned edge5_index() const {
       return edges_[5];
     }
     inline
-    unsigned edge10_index() const {
+    unsigned edge6_index() const {
       return edges_[6];
     }
     inline
-    unsigned edge11_index() const {
+    unsigned edge7_index() const {
       return edges_[7];
+    }
+    inline
+    unsigned edge8_index() const {
+      return edges_[8];
+    }
+    inline
+    unsigned edge9_index() const {
+      return edges_[9];
+    }
+    inline
+    unsigned edge10_index() const {
+      return edges_[10];
+    }
+    inline
+    unsigned edge11_index() const {
+      return edges_[11];
     }
 
     inline
@@ -479,8 +476,7 @@ public:
                        unsigned which_edge,
                        unsigned div_per_unit) const
   {
-    unsigned emap[] = {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7};
-    basis_.approx_edge(emap[which_edge], div_per_unit, coords);
+    basis_.approx_edge(which_edge, div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -490,11 +486,7 @@ public:
                        unsigned which_face,
                        unsigned div_per_unit) const
   {
-
-    // map the order we have faces to the way the basis expects it for hexes.
-    // this needs to be unified for all hex types to avoid this switch.
-    unsigned fmap[] = {0, 5, 1, 3, 4, 2};
-    basis_.approx_face(fmap[which_face], div_per_unit, coords);
+    basis_.approx_face(which_face, div_per_unit, coords);
   }
 
   bool get_coords(vector<double> &coords,
