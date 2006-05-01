@@ -185,11 +185,9 @@ std::string CardioWaveXML::get_default_name()
   return ("NONE");
 }
 
-CardioWaveItem CardioWaveXML::get_cardiowave(std::string name)
+CardioWaveItem CardioWaveXML::get_cardiowave()
 {
-  CardioWaveItem item;
-  for (size_t p=0; p < list_.size();p++) if(list_[p].name == name) item = list_[p];
-  return (item);
+  return (list_[0]);
 }
 
 } // end namespace

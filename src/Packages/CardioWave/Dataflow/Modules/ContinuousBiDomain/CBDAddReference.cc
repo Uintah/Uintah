@@ -38,7 +38,6 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
-#include <Packages/CardioWave/Core/XML/SynapseXML.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -51,23 +50,23 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-class DMDAddReference : public Module {
+class CBDAddReference : public Module {
 public:
-  DMDAddReference(GuiContext*);
+  CBDAddReference(GuiContext*);
   virtual void execute();
 
 private:  
   GuiInt    guiuseelements_;
   GuiInt    guiusefieldvalue_;
   GuiDouble guireferencevalue_;
-  GuiDouble guireferencedomain_;
+  GuiString guireferencedomain_;
 };
 
 
-DECLARE_MAKER(DMDAddReference)
+DECLARE_MAKER(CBDAddReference)
 
-DMDAddReference::DMDAddReference(GuiContext* ctx)
-  : Module("DMDAddReference", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+CBDAddReference::CBDAddReference(GuiContext* ctx)
+  : Module("CBDAddReference", ctx, Source, "ContinuousBiDomain", "CardioWave"),
     guiusefieldvalue_(get_ctx()->subVar("usefieldvalue")),
     guireferencevalue_(get_ctx()->subVar("referencevalue")),
     guireferencedomain_(get_ctx()->subVar("referencedomain")),
@@ -75,7 +74,7 @@ DMDAddReference::DMDAddReference(GuiContext* ctx)
 {
 }
 
-void DMDAddReference::execute()
+void CBDAddReference::execute()
 {
   // Make sure we have a reference bundle
   BundleHandle ReferenceBundle;
@@ -166,9 +165,10 @@ void DMDAddReference::execute()
   if (RefDomain.get_rep())
   {
     mc.MatrixToDouble(RefDomain,referencedomain);
-    guireferencedomain_.set(referencedomain);
+    if (referencedomain == 0.0) guireferencedomain_.set("ExtraCellular"); else guireferencedomain_.set("IntraCellular");
   }
-  referencedomain = guireferencedomain_.get();
+  std::string str = guireferencedomain_.get();
+  if (str == "ExtraCellular") referencedomain = 0.0; else referencedomain = 1.0;
   mc.DoubleToMatrix(referencedomain,RefDomain);
   Reference->setMatrix("Domain",RefDomain);
 
@@ -188,8 +188,6 @@ void DMDAddReference::execute()
 
   send_output_handle("ReferenceBundle",ReferenceBundle,true);
 }
-
-
 
 } // End namespace CardioWave
 

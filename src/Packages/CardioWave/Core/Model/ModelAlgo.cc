@@ -28,12 +28,12 @@
 
 #include <Packages/CardioWave/Core/Model/ModelAlgo.h>
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Packages/ModelCreation/Core/Numeric/NumericAlgo.h>
 #include <Packages/ModelCreation/Core/DataIO/DataIOAlgo.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 #include <Packages/CardioWave/Core/Model/BuildMembraneTable.h>
 #include <Packages/CardioWave/Core/Model/BuildStimulusTable.h>
 #include <Core/Datatypes/MatrixOperations.h>
+#include <Core/Algorithms/Numeric/NumericAlgo.h>
 
 #include <fstream>
 
@@ -56,7 +56,7 @@ bool ModelAlgo::DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle Membr
 
 bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
 {
-  ModelCreation::NumericAlgo numericalgo(pr_);
+  SCIRun::NumericAlgo numericalgo(pr_);
   int num_totalnodes = num_volumenodes + num_synnodes;
   
   // Build a vector for the surface areas
@@ -94,15 +94,15 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
       k++; synnum++; 
       sev[k].row = membranetable[p][q].node1;
       sev[k].col = membranetable[p][q].node2;
-      sev[k].val = 1e-12;
+      sev[k].val = 1.0;
       k++;    
       sev[k].row = membranetable[p][q].node2;
       sev[k].col = membranetable[p][q].node1;
-      sev[k].val = 1e-12;
+      sev[k].val = 1.0;
       k++; 
     }    
   }
-  
+
   if(!(numericalgo.CreateSparseMatrix(sev, MembraneMatrix, num_totalnodes, num_totalnodes)))
   {
     error("DMDBuildDomain: Could not build synapse sparse matrix");
@@ -194,7 +194,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // Forward the ProgressReporter so everything can forward an error
 
   ModelCreation::FieldsAlgo  fieldsalgo(pr_);
-  ModelCreation::NumericAlgo numericalgo(pr_);
+  SCIRun::NumericAlgo numericalgo(pr_);
   ModelCreation::ConverterAlgo converteralgo(pr_);
   ModelCreation::DataIOAlgo  dataioalgo(pr_);
 
@@ -396,7 +396,6 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     // Do we have a membrane definition
     std::string bundlename = SimulationBundle->getBundleName(p);
-    std::cout << "bundlename=" << bundlename << "\n";
     if (bundlename.substr(0,9) == "Membrane_")
     {
       BundleHandle MembraneBundle = SimulationBundle->getBundle(bundlename);
@@ -642,6 +641,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     error("DMDBuildDomain: Could not resize FE matrix");
     return (false);
   }
+
+  remark("Resized the stiffness matrix");
   
   MatrixHandle VolumeVec;
   MatrixHandle NodeType;
@@ -651,8 +652,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false); 
   }
     
-  remark("Created the Membrane matrix");    
-    
+
   // Somehow CardioWave uses the negative matrix for its
   MatrixHandle sysmatrix = synmatrix - fematrix;
   if (sysmatrix.get_rep() == 0)
@@ -683,6 +683,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   // Step 5:
   // Now optimize the system:
+  
 
   MatrixHandle mapping;
   if(!(numericalgo.ReverseCuthillmcKee(sysmatrix,sysmatrix,mapping)))
@@ -806,7 +807,26 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);  
   }
 
+  try
+  {
+    std::ofstream reffile;
+    reffile.open(filename_reference.c_str());
+    for (int p=0; p<referencetable.size();p++)
+    {
+      for (int q=0; q< referencetable[p].size(); q++)
+      { 
+        reffile << referencetable[p][q].node <<  " " << referencevalues[p] << ", I\n";
+      }
+    }
+  }
+  catch (...)
+  {
+    error("DMDBuildDomain: Could not write reference file");
+    return (false);  
+  }
+
   remark("Wrote stimulus, reference and membrane table"); 
+
 
   if (!(numericalgo.ResizeMatrix(imapping,imapping,num_totalnodes,num_volumenodes)))
   {

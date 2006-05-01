@@ -739,7 +739,6 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     std::ostringstream oss;
     oss << size;
     std::string ssize = oss.str();
-    std::cout << "before replace\n";
     header.replace(5,ssize.size(),ssize);
     
     // OK we created a header

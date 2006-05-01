@@ -37,11 +37,11 @@
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
-#include <Packages/CardioWave/Core/XML/SynapseXML.h>
-#include <Packages/CardioWave/Core/XML/NWSolverXML.h>
+#include <Packages/CardioWave/Core/XML/MembraneXML.h>
+#include <Packages/CardioWave/Core/XML/CWSolverXML.h>
 #include <Packages/CardioWave/Core/XML/OutputXML.h>
-#include <Packages/CardioWave/Core/XML/NeuroWaveXML.h>
-#include <Packages/CardioWave/Core/XML/NWTimeStepXML.h>
+#include <Packages/CardioWave/Core/XML/CardioWaveXML.h>
+#include <Packages/CardioWave/Core/XML/CWTimeStepXML.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -54,9 +54,9 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-class DMDCreateSimulation : public Module {
+class CBDCreateSimulation : public Module {
 public:
-  DMDCreateSimulation(GuiContext*);
+  CBDCreateSimulation(GuiContext*);
 
   virtual void execute();
 
@@ -85,17 +85,17 @@ private:
   GuiString guicwaveparam_;
   GuiString guicwavedesc_;
 
-  NWSolverXML    solverxml_;  
-  NWTimeStepXML  tstepxml_;  
+  CWSolverXML    solverxml_;  
+  CWTimeStepXML  tstepxml_;  
   OutputXML      outputxml_;    
-  NeuroWaveXML   neurowavexml_;  
+  CardioWaveXML   cardiowavexml_;  
   
 };
 
 
-DECLARE_MAKER(DMDCreateSimulation)
-DMDCreateSimulation::DMDCreateSimulation(GuiContext* ctx)
-  : Module("DMDCreateSimulation", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+DECLARE_MAKER(CBDCreateSimulation)
+CBDCreateSimulation::CBDCreateSimulation(GuiContext* ctx)
+  : Module("CBDCreateSimulation", ctx, Source, "ContinuousBiDomain", "CardioWave"),
     guisolvernames_(get_ctx()->subVar("solver-names")),
     guisolvername_(get_ctx()->subVar("solver-name")),
     guisolverparam_(get_ctx()->subVar("solver-param")),
@@ -116,7 +116,7 @@ DMDCreateSimulation::DMDCreateSimulation(GuiContext* ctx)
     std::string desc;
     defaultname = solverxml_.get_default_name();
     guisolvername_.set(defaultname);
-    NWSolverItem solveritem = solverxml_.get_nwsolver(defaultname);
+    CWSolverItem solveritem = solverxml_.get_cwsolver(defaultname);
     param = solveritem.parameters;
     desc  = solveritem.description;
     guisolverparam_.set(param);
@@ -124,7 +124,7 @@ DMDCreateSimulation::DMDCreateSimulation(GuiContext* ctx)
 
     defaultname = tstepxml_.get_default_name();
     guitstepname_.set(defaultname);
-    NWTimeStepItem tstepitem = tstepxml_.get_nwtimestep(defaultname);
+    CWTimeStepItem tstepitem = tstepxml_.get_cwtimestep(defaultname);
     param = tstepitem.parameters;
     desc  = tstepitem.description;
     guitstepparam_.set(param);
@@ -138,7 +138,7 @@ DMDCreateSimulation::DMDCreateSimulation(GuiContext* ctx)
     guioutputparam_.set(param);
     guioutputdesc_.set(desc);
     
-    NeuroWaveItem cwaveitem = neurowavexml_.get_neurowave();
+    CardioWaveItem cwaveitem = cardiowavexml_.get_cardiowave();
     param = cwaveitem.parameters;
     desc  = cwaveitem.description;
     guicwaveparam_.set(param);
@@ -148,7 +148,7 @@ DMDCreateSimulation::DMDCreateSimulation(GuiContext* ctx)
 }
 
 
-void DMDCreateSimulation::execute()
+void CBDCreateSimulation::execute()
 {
   BundleHandle SimulationBundle;
   BundleHandle MembraneBundle;
@@ -162,7 +162,7 @@ void DMDCreateSimulation::execute()
   if (!(get_input_handle("MembraneBundle",MembraneBundle,true))) return;
   if (!(get_input_handle("StimulusBundle",StimulusBundle,true))) return;
   if (!(get_input_handle("ReferenceBundle",ReferenceBundle,true))) return;
-
+  // optional ones
   get_input_handle("Parameters",ExtParameters,false);
   
   SimulationBundle = scinew Bundle();
@@ -190,9 +190,9 @@ void DMDCreateSimulation::execute()
   std::string tstepname  = guitstepname_.get();
   std::string outputname = guioutputname_.get();
   
-  NWSolverItem solveritem = solverxml_.get_nwsolver(solvername);
+  CWSolverItem solveritem = solverxml_.get_cwsolver(solvername);
   OutputItem outputitem = outputxml_.get_output(outputname);
-  NWTimeStepItem tstepitem = tstepxml_.get_nwtimestep(tstepname);
+  CWTimeStepItem tstepitem = tstepxml_.get_cwtimestep(tstepname);
     
   std::string paramstr = guisolverparam_.get();
   paramstr += "# Parameters for timestepper\n\n";
@@ -313,8 +313,7 @@ void DMDCreateSimulation::execute()
   } 
   SimulationBundle->setString("Parameters",Parameters);
      
-     
-  std::string sourcefiles = "NeuroKernel.c VectorOps.c CWaveKernel.c ";
+  std::string sourcefiles = "CardioKernel.c VectorOps.c CWaveKernel.c ";
   sourcefiles += solveritem.file + " ";  
   sourcefiles += tstepitem.file + " ";  
   sourcefiles += outputitem.file + " ";  
@@ -405,7 +404,7 @@ void DMDCreateSimulation::execute()
 }
 
 void
- DMDCreateSimulation::tcl_command(GuiArgs& args, void* userdata)
+ CBDCreateSimulation::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() > 1)
   {
@@ -418,7 +417,7 @@ void
     {
       if (args[2] != "")
       {
-        NWSolverItem item = solverxml_.get_nwsolver(args[2]);
+        CWSolverItem item = solverxml_.get_cwsolver(args[2]);
         std::string param = item.parameters;
         std::string desc  = item.description;
         guisolvername_.set(args[2]);
@@ -436,7 +435,7 @@ void
     {
       if (args[2] != "")
       {
-        NWTimeStepItem item = tstepxml_.get_nwtimestep(args[2]);
+        CWTimeStepItem item = tstepxml_.get_cwtimestep(args[2]);
         std::string param = item.parameters;
         std::string desc  = item.description;
         guitstepname_.set(args[2]);
@@ -465,7 +464,7 @@ void
     }
     else if (args[1] == "set_cwave")
     {
-      NeuroWaveItem item = neurowavexml_.get_neurowave();
+      CardioWaveItem item = cardiowavexml_.get_cardiowave();
       std::string param = item.parameters;
       guicwaveparam_.set(param);
       std::string desc = item.description;
@@ -484,7 +483,7 @@ void
 }
 
 
-std::string DMDCreateSimulation::totclstring(std::string &instring)
+std::string CBDCreateSimulation::totclstring(std::string &instring)
 {
 	int strsize = instring.size();
 	int specchar = 0;
@@ -516,7 +515,7 @@ std::string DMDCreateSimulation::totclstring(std::string &instring)
 	return(newstring);
 }
 
-std::string DMDCreateSimulation::convertclist(std::vector<std::string> list)
+std::string CBDCreateSimulation::convertclist(std::vector<std::string> list)
 {
   std::string result;
   for (size_t p=0; p < list.size(); p++)

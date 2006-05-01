@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="DMDCreateSimulation" category="DiscreteMultiDomain" optional="false">
+<component name="CBDCreateSimulation" category="ContinuousBiDomain" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

@@ -40,6 +40,11 @@ SRCS := \
 	$(SRCDIR)/DMDCreateSimulation.tcl\
 	$(SRCDIR)/DMDBuildSimulation.tcl\
 	$(SRCDIR)/DMDConductionVelocity.tcl\
+  $(SRCDIR)/CBDAddMembrane.tcl\
+	$(SRCDIR)/CBDAddBlockStimulus.tcl\
+	$(SRCDIR)/CBDAddReference.tcl\
+	$(SRCDIR)/CBDCreateSimulation.tcl\
+	$(SRCDIR)/CBDBuildSimulation.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

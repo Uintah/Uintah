@@ -50,7 +50,7 @@ public:
   
   std::string         get_default_name();
   std::vector<std::string> get_names();
-  CardioWaveItem        get_cardiowave(std::string name);
+  CardioWaveItem        get_cardiowave();
 
 private:
 
