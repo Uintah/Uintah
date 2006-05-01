@@ -809,7 +809,9 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           // check the level on the case where variables are only computed on certain levels
           const PatchSet* ps = task->getPatchSet();
           int level = -1;
-          if (ps) 
+          if (dep->patches) // just in case the task is over multiple levels...
+            level = getLevel(dep->patches)->getIndex();
+          else if (ps) 
             level = getLevel(ps)->getIndex();
           
           // we don't want data with an invalid level, or requiring from a different level (remember, we are
