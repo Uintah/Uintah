@@ -35,7 +35,6 @@ POSSIBLE REVISIONS
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -44,7 +43,6 @@ POSSIBLE REVISIONS
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-  class Integrator;
 
 class MixingModel {
 
@@ -108,7 +106,6 @@ public:
       virtual int getTableDimension() const = 0;
       virtual std::string getMixTableType() const = 0;
       virtual int getTotalVars() const = 0;
-      virtual ReactionModel* getRxnModel() const = 0;
 
 
 protected :
