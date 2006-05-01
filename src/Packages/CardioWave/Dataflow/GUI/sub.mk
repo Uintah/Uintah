@@ -27,12 +27,6 @@
 SRCDIR := Packages/CardioWave/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/CreateSimpleMesh.tcl \
-	$(SRCDIR)/HexIntMask.tcl \
-	$(SRCDIR)/ReclassifyInteriorTets.tcl \
-	$(SRCDIR)/RemoveInteriorTets.tcl \
-	$(SRCDIR)/SetupFVMatrix.tcl \
-	$(SRCDIR)/SetupFVM2.tcl \
 	$(SRCDIR)/TimeDataReader.tcl\
 	$(SRCDIR)/DMDAddMembrane.tcl\
 	$(SRCDIR)/DMDAddBlockStimulus.tcl\

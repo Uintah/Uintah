@@ -27,11 +27,9 @@
 SRCDIR := Packages/CardioWave/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/CreateModel\
-	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Tools\
-	$(SRCDIR)/DiscreteMultiDomain\
 	$(SRCDIR)/ContinuousBiDomain\
+	$(SRCDIR)/DataIO\
+	$(SRCDIR)/DiscreteMultiDomain\
 	$(SRCDIR)/Model\
 #[INSERT NEW CATEGORY DIR HERE]
 
