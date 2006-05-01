@@ -39,7 +39,7 @@
 #include <wx/region.h>
 
 #ifndef DEBUG
-#  define DEBUG 1
+#  define DEBUG 0
 #endif
 
 
@@ -204,12 +204,9 @@ void Connection::OnDraw(wxDC& dc)
   if (highlight) {
     wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 2, wxSOLID);
     dc.SetPen(*pen);
-  //} else if (possibleConnection) {
   } else {
     wxPen* pen = wxThePenList->FindOrCreatePen(color, 2, wxSOLID);
     dc.SetPen(*pen);
-//   } else {
-//     dc.SetPen(wxPen(color, 3, wxSOLID));
   }
   dc.SetBrush(*wxTRANSPARENT_BRUSH);
   dc.DrawLines(NUM_DRAW_POINTS, drawPoints, 0, 0);
@@ -221,63 +218,62 @@ bool Connection::IsMouseOver(const wxPoint& position)
 
   for (int i = 0; i < NUM_DRAW_POINTS; i += 2) {
     wxRegion r;
-//     if (drawPoints[i].y == drawPoints[i+1].y) {
-      // vertical doesn't work!!!
-      if (drawPoints[i].x > drawPoints[i+1].x) {
-	wxPoint topLeft(drawPoints[i+1].x - tolerance, drawPoints[i+1].y - tolerance);
-	wxPoint bottomRight(drawPoints[i].x + tolerance, drawPoints[i].y + tolerance);
-#if 1
-std::cerr << "Connection::IsMouseOver y_i = y_i+1, x_i > x_i+1" << std::endl
-          << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-          << "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-          << "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-          << "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
-          << "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
+    wxRegion pr;
+
+    wxPoint pTopLeft, pBottomRight;
+    if (position.x - 2 < 0) {
+      pTopLeft.x = 0;
+    } else {
+      pTopLeft.x = position.x - 2;
+    }
+    if (position.y - 2 < 0) {
+      pTopLeft.y = 0;
+    } else {
+      pTopLeft.y = position.y - 2;
+    }
+    pBottomRight.x = position.x + 2;
+    pBottomRight.y = position.y + 2;
+
+    pr = wxRegion(pTopLeft, pBottomRight);
+
+#if DEBUG
+std::cerr << "Connection::IsMouseOver point top left ("
+	  << pTopLeft.x << ", " << pTopLeft.y << ") point bottom right ("
+	  << pBottomRight.x << ", " << pBottomRight.y << ")"
           << std::endl;
 #endif
-	r = wxRegion(topLeft, bottomRight);
-      } else {
-	wxPoint topLeft(drawPoints[i].x - tolerance, drawPoints[i].y - tolerance);
-	wxPoint bottomRight(drawPoints[i+1].x + tolerance, drawPoints[i+1].y + tolerance);
-#if 1
-std::cerr << "Connection::IsMouseOver y_i = y_i+1, x_i <= x_i+1" << std::endl
-          << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-          << "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-          << "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-          << "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
-          << "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
-          << std::endl;
+
+    if (drawPoints[i].x > drawPoints[i+1].x) {
+      wxPoint topLeft(drawPoints[i+1].x - tolerance, drawPoints[i+1].y - tolerance);
+      wxPoint bottomRight(drawPoints[i].x + tolerance, drawPoints[i].y + tolerance);
+#if DEBUG
+      std::cerr << "Connection::IsMouseOver (if) y_i = y_i+1, x_i > x_i+1" << std::endl
+		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
+		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
+		<< std::endl;
 #endif
-	r = wxRegion(topLeft, bottomRight);
-      }
-//     } else if (drawPoints[i].x == drawPoints[i+1].x) {
-//       if (drawPoints[i].y < drawPoints[i+1].y) {
-// 	wxPoint topLeft(drawPoints[i+1].x - 2, drawPoints[i+1].y);
-// 	wxPoint bottomRight(drawPoints[i].x + 2, drawPoints[i].y);
-// std::cerr << "Connection::IsMouseOver x_i = x_i+1, y_i < y_i+1" << std::endl
-//           << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-//           << "\tpoint i=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-//           << "\tpoint i+1=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-//           << "\ttopLeft=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-//           << "\tbottomRight=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")"
-//           << std::endl;
-// 	r = wxRegion(topLeft, bottomRight);
-//       } else {
-// 	wxPoint topLeft(drawPoints[i].x - 2, drawPoints[i].y);
-// 	wxPoint bottomRight(drawPoints[i+1].x + 2, drawPoints[i+1].y);
-// std::cerr << "Connection::IsMouseOver x_i = x_i+1, y_i >= y_i+1" << std::endl
-//           << "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-//           << "\tpoint i=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-//           << "\tpoint i+1=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-//           << "\ttopLeft=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-//           << "\tbottomRight=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")"
-//           << std::endl;
-// 	r = wxRegion(topLeft, bottomRight);
-//       }
-//     }
-    wxRegionContain c = r.Contains(position);
-    if (c == wxInRegion || c == wxPartRegion) {
-std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
+      r = wxRegion(topLeft, bottomRight);
+    } else {
+      wxPoint topLeft(drawPoints[i].x - tolerance, drawPoints[i].y - tolerance);
+      wxPoint bottomRight(drawPoints[i+1].x + tolerance, drawPoints[i+1].y + tolerance);
+#if DEBUG
+      std::cerr << "Connection::IsMouseOver (else) y_i = y_i+1, x_i <= x_i+1" << std::endl
+		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
+		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
+		<< std::endl;
+#endif
+      r = wxRegion(topLeft, bottomRight);
+    }
+    if (r.Intersect(pr)) {
+#if DEBUG
+      std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
+#endif
       return true;
     }
   }

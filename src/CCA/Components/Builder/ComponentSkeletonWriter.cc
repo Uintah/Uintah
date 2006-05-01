@@ -36,6 +36,10 @@
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -289,7 +293,9 @@ void ComponentSkeletonWriter::writeGoAndUiFunctionsCode()
    string portname(providesPortsList[i]->GetType());
    string porttype(providesPortsList[i]->GetType());
 
+#if DEBUG
    std::cout << "\nhere in ckw " << porttype.c_str() << "\n";
+#endif
    // if(strcmp(porttype.c_str(),"UIPort")==0);
    if (porttype.compare(string("UIPort")) == 0) {
      componentSourceFile << std::endl <<"int " << providesPortsList[i]->GetName() << "::ui()"
