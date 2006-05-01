@@ -189,7 +189,7 @@ private:
   NrrdDataHandle                        data_;
   NrrdDataHandle                        data2_;
   vector<int>                           markers_;
-  int                                   cur_idx_;
+  unsigned                              cur_idx_;
   bool                                  plots_dirty_;
   bool                                  decision_space_dirty_;
   //GLuint				CONTROL_SPACE_LIST;
@@ -546,13 +546,13 @@ ExecutiveState::inc_time(double elapsed)
   int samples = (int)round(samp_rate * elapsed);
   //cur_idx_ += samples;
   cur_idx_ = samples;
-  if (cur_idx_ >= data_->nrrd->axis[1].size) {
-    cur_idx_ = data_->nrrd->axis[1].size - 1;
+  if (cur_idx_ >= data_->nrrd_->axis[1].size) {
+    cur_idx_ = data_->nrrd_->axis[1].size - 1;
     //gui_play_mode_.set(0);
     //cur_idx_ = 0;
   }
 
-  gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+  gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
   gui_time_.reset();
   get_gui()->execute("update idletasks");
 
@@ -811,12 +811,12 @@ ExecutiveState::draw_plots()
     //glEnable(GL_TEXTURE_2D);
 
     if (data2_.get_rep()) {
-      float *dat2 = (float *)data2_->nrrd->data;
-      int dat2_id = cur_idx_ * data2_->nrrd->axis[0].size + ALARM_IDX;
+      float *dat2 = (float *)data2_->nrrd_->data;
+      int dat2_id = cur_idx_ * data2_->nrrd_->axis[0].size + ALARM_IDX;
 
       alarm_now = ((int)dat2[dat2_id] == 1);
 
-      //int inj_id = cur_idx_ * data2_->nrrd->axis[0].size + TIME_IDX;
+      //int inj_id = cur_idx_ * data2_->nrrd_->axis[0].size + TIME_IDX;
       //float time_value = dat2[inj_id];
 		//cerr << cur_idx_ << ":" << time_value << endl;
 		//if (time_value == 0)
@@ -937,7 +937,7 @@ ExecutiveState::draw_plots()
     if (data_.get_rep()) {
       //if (cur_idx_ > 0) {
       if (cur_idx_ >= 0) {
-        float *dat = (float *)data_->nrrd->data;
+        float *dat = (float *)data_->nrrd_->data;
 
         glPushMatrix();
           //glDisable(GL_TEXTURE_2D);
@@ -960,8 +960,8 @@ ExecutiveState::draw_plots()
           float z = dat[cur_idx_*6+5];
 
           if (data2_.get_rep() && gui_show_vectors_.get()) {
-            float *dat2 = (float *)data2_->nrrd->data;
-            int dat2_id = cur_idx_ * data2_->nrrd->axis[0].size + VECTOR_IDX;
+            float *dat2 = (float *)data2_->nrrd_->data;
+            int dat2_id = cur_idx_ * data2_->nrrd_->axis[0].size + VECTOR_IDX;
 
             float x2 = dat2[dat2_id];
             float y2 = dat2[dat2_id+1];
@@ -1021,9 +1021,9 @@ ExecutiveState::draw_plots()
 			}
 
     //if (data2_.get_rep()) {
-     // float *dat2 = (float *)data2_->nrrd->data;
+     // float *dat2 = (float *)data2_->nrrd_->data;
 
-      //int inj_id = cur_idx_ * data2_->nrrd->axis[0].size + TIME_IDX;
+      //int inj_id = cur_idx_ * data2_->nrrd_->axis[0].size + TIME_IDX;
       //float time_value = dat2[inj_id];
 
 		//if (time_value == 0) {
@@ -1191,15 +1191,15 @@ ExecutiveState::draw_plots()
     }
 
     if (data2_.get_rep()) {
-      float *dat2 = (float *)data2_->nrrd->data;
+      float *dat2 = (float *)data2_->nrrd_->data;
       float yoff(0.0);
 
-      float lv_inj = dat2[cur_idx_*data2_->nrrd->axis[0].size + LV_INJURY_IDX];
-      float rv_inj = dat2[cur_idx_*data2_->nrrd->axis[0].size + RV_INJURY_IDX];
-      float lv_pwr = dat2[cur_idx_*data2_->nrrd->axis[0].size + LV_POWER_IDX];
-      float rv_pwr = dat2[cur_idx_*data2_->nrrd->axis[0].size + RV_POWER_IDX];
-      float ttd = dat2[cur_idx_*data2_->nrrd->axis[0].size + TIME_TO_DEATH_IDX];
-      float pos = dat2[cur_idx_*data2_->nrrd->axis[0].size + PROB_OF_SURV_IDX];
+      float lv_inj = dat2[cur_idx_*data2_->nrrd_->axis[0].size + LV_INJURY_IDX];
+      float rv_inj = dat2[cur_idx_*data2_->nrrd_->axis[0].size + RV_INJURY_IDX];
+      float lv_pwr = dat2[cur_idx_*data2_->nrrd_->axis[0].size + LV_POWER_IDX];
+      float rv_pwr = dat2[cur_idx_*data2_->nrrd_->axis[0].size + RV_POWER_IDX];
+      float ttd = dat2[cur_idx_*data2_->nrrd_->axis[0].size + TIME_TO_DEATH_IDX];
+      float pos = dat2[cur_idx_*data2_->nrrd_->axis[0].size + PROB_OF_SURV_IDX];
       lv_inj *= 100;
       rv_inj *= 100;
       lv_pwr *= 100;
@@ -1493,13 +1493,13 @@ ExecutiveState::createDecisionSpaceArrays()
   decision_space_dirty_ = false;
 
   if (data_.get_rep()) {
-    float *dat = (float *)data_->nrrd->data;
+    float *dat = (float *)data_->nrrd_->data;
 
     glEnableClientState(GL_VERTEX_ARRAY);
     //glVertexPointer(3, GL_FLOAT, 0, dat);
 
 	 //if (color_dat) delete[] color_dat;
-    //int size = data_->nrrd->axis[1].size;
+    //int size = data_->nrrd_->axis[1].size;
     //color_dat = scinew GLfloat[size * 4];
 
     //int inj = gui_injury_offset_.get() * 100 * 4;
@@ -1631,9 +1631,9 @@ ExecutiveState::execute()
     return;
   }
 
-  double rt = data_->nrrd->axis[0].spacing;
+  double rt = data_->nrrd_->axis[0].spacing;
   if (rt == rt)
-    gui_sample_rate_.set(1/data_->nrrd->axis[0].spacing);
+    gui_sample_rate_.set(1/data_->nrrd_->axis[0].spacing);
 
   addMarkersToMenu();
 
@@ -1652,7 +1652,7 @@ ExecutiveState::execute()
 
   nrrd2_port->get(data2_);
 
-  if (data2_.get_rep() && data2_->nrrd->axis[1].size != data_->nrrd->axis[1].size)
+  if (data2_.get_rep() && data2_->nrrd_->axis[1].size != data_->nrrd_->axis[1].size)
   {
     error ("Axis 1 size for both NRRD files must be identical.");
   } 
@@ -1707,7 +1707,7 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
   } else if(args[1] == "time") {
     gui_time_.reset();
     if (data_.get_rep()) {
-      cur_idx_ = (int)round(gui_time_.get() * (data_->nrrd->axis[1].size - 1));
+      cur_idx_ = (int)round(gui_time_.get() * (data_->nrrd_->axis[1].size - 1));
     }
 
     setTimeLabel();
@@ -1726,10 +1726,10 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
     int mkr = gui_selected_marker_.get();
     int val = (mkr == -1)?-1:markers_[mkr];
 
-    if (val == -1 || val >= data_->nrrd->axis[1].size) return;
+    if (val == -1 || val >= data_->nrrd_->axis[1].size) return;
     cur_idx_ = val;
 
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 
@@ -1739,10 +1739,10 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
     if (!data_.get_rep()) return;
 
     cur_idx_ += (int)gui_sample_rate_.get();
-    if (cur_idx_ >= data_->nrrd->axis[1].size) {
-        cur_idx_ = data_->nrrd->axis[1].size - 1;
+    if (cur_idx_ >= data_->nrrd_->axis[1].size) {
+        cur_idx_ = data_->nrrd_->axis[1].size - 1;
     }
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 
@@ -1755,7 +1755,7 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
     if (cur_idx_ < 0) {
        cur_idx_ = 0;
     }
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 

@@ -11,7 +11,6 @@
 SRCDIR := Packages/VS/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/DataFlow   \
 	$(SRCDIR)/Fields     \
 	$(SRCDIR)/Render     \
 

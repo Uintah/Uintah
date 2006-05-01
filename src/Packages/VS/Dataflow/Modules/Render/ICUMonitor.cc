@@ -241,7 +241,7 @@ private:
   NrrdDataHandle                        data_;
   NrrdDataHandle                        data2_;
   vector<int>                           markers_;
-  int                                   cur_idx_;
+  unsigned                              cur_idx_;
   bool                                  plots_dirty_;
   unsigned int                          frame_count_;
   double                                last_global_time_;
@@ -522,11 +522,11 @@ ICUMonitor::inc_time(double elapsed)
   if (! data_.get_rep() || ! gui_play_mode_.get()) return;
   int samples = (int)round(samp_rate * elapsed);
   cur_idx_ = samples;
-  if (cur_idx_ > data_->nrrd->axis[1].size - 1) {
-    cur_idx_ = data_->nrrd->axis[1].size - 1;
+  if (cur_idx_ > data_->nrrd_->axis[1].size - 1) {
+    cur_idx_ = data_->nrrd_->axis[1].size - 1;
   }
 
-  gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+  gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
   gui_time_.reset();
   get_gui()->execute("update idletasks");
 
@@ -957,11 +957,11 @@ ICUMonitor::draw_plots()
 
       if (data_.get_rep()) {
 	int idx = cur_idx_;
-	if (idx > data_->nrrd->axis[1].size) {
-	  idx -= data_->nrrd->axis[1].size;
+	if (idx > data_->nrrd_->axis[1].size) {
+	  idx -= data_->nrrd_->axis[1].size;
 	}
-	float *dat = (float *)data_->nrrd->data;
-	int dat_index = idx * data_->nrrd->axis[0].size + g.auxindex_;
+	float *dat = (float *)data_->nrrd_->data;
+	int dat_index = idx * data_->nrrd_->axis[0].size + g.auxindex_;
          
 	int val = (int)dat[dat_index];
 
@@ -1007,16 +1007,16 @@ ICUMonitor::draw_plots()
 	bool last_tick = false;
 	static bool wrapping = false;
 	int idx = i + cur_idx_;
-	if (idx > data_->nrrd->axis[1].size - 1) {
-	  idx -= data_->nrrd->axis[1].size - 1;
+	if (idx > data_->nrrd_->axis[1].size - 1) {
+	  idx -= data_->nrrd_->axis[1].size - 1;
 	   last_tick = !wrapping;
 	   wrapping = true;
 	} else {
 	  wrapping = false;
 	}
 	
-	float *dat = (float*)data_->nrrd->data;
-	int dat_index = idx * data_->nrrd->axis[0].size + g.index_;
+	float *dat = (float*)data_->nrrd_->data;
+	int dat_index = idx * data_->nrrd_->axis[0].size + g.index_;
         float tmpdat = dat[dat_index];
         if (g.clamp_) {
           if (tmpdat > g.max_) tmpdat = g.max_;
@@ -1047,11 +1047,11 @@ ICUMonitor::draw_plots()
         glBegin(GL_LINE_STRIP);
         for (int i = 0; i < (int)samples; i++) {
           int idx = i + cur_idx_;
-          if (idx > data2_->nrrd->axis[1].size - 1) {
-	    idx -= data2_->nrrd->axis[1].size - 1; 
+          if (idx > data2_->nrrd_->axis[1].size - 1) {
+	    idx -= data2_->nrrd_->axis[1].size - 1; 
           }
-          float *dat = (float*)data2_->nrrd->data;
-          int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
+          float *dat = (float*)data2_->nrrd_->data;
+          int dat_index = idx * data2_->nrrd_->axis[0].size + g.index_;
           float tmpdata2 = dat[dat_index];
           if (g.clamp_) {
             if (tmpdata2 > g.max_) tmpdata2 = g.max_;
@@ -1511,7 +1511,7 @@ ICUMonitor::setConfigFromData()
 void 
 ICUMonitor::setNameAndDateAndTime()
 {
-  char *name = nrrdKeyValueGet(data_->nrrd, "name");
+  char *name = nrrd_KeyValueGet(data_->nrrd_, "name");
 
   if (name != NULL) {
     string title(name);
@@ -1525,7 +1525,7 @@ ICUMonitor::setNameAndDateAndTime()
     plots_dirty_ = true;
   }
 
-  char *date = nrrdKeyValueGet(data_->nrrd, "date");
+  char *date = nrrd_KeyValueGet(data_->nrrd_, "date");
 
   if (date != NULL) {
     string created(date);
@@ -1538,7 +1538,7 @@ ICUMonitor::setNameAndDateAndTime()
     plots_dirty_ = true;
   }
 
-  //char *inj = nrrdKeyValueGet(data_->nrrd, "injury");
+  //char *inj = nrrd_KeyValueGet(data_->nrrd_, "injury");
   //if (inj != NULL) {
    //  string injoff(inj);
                                                                                 
@@ -1568,15 +1568,15 @@ ICUMonitor::execute()
     return;
   }
 
-  NrrdIPort *nrrd1_port = (NrrdIPort*)get_iport("Nrrd1");
+  Nrrd_IPort *nrrd_1_port = (Nrrd_IPort*)get_iport("Nrrd_1");
 
-  if (!nrrd1_port) 
+  if (!nrrd_1_port) 
   {
-    error("Unable to initialize iport Nrrd1.");
+    error("Unable to initialize iport Nrrd_1.");
     return;
   }
   if (runner_) runner_->lock();
-  nrrd1_port->get(data_);
+  nrrd_1_port->get(data_);
 
   if (!data_.get_rep())
   {
@@ -1584,9 +1584,9 @@ ICUMonitor::execute()
     return;
   } 
 
-  double rt = data_->nrrd->axis[0].spacing;
+  double rt = data_->nrrd_->axis[0].spacing;
   if (rt == rt)
-    gui_sample_rate_.set(1/data_->nrrd->axis[0].spacing);
+    gui_sample_rate_.set(1/data_->nrrd_->axis[0].spacing);
 
   addMarkersToMenu();
 
@@ -1594,22 +1594,22 @@ ICUMonitor::execute()
 
   setConfigFromData();
 
-  NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
+  Nrrd_IPort *nrrd_2_port = (Nrrd_IPort*)get_iport("Nrrd_2");
 
-  if (!nrrd2_port) 
+  if (!nrrd_2_port) 
   {
-    error("Unable to initialize iport Nrrd2.");
+    error("Unable to initialize iport Nrrd_2.");
     return;
   }
 
-  nrrd2_port->get(data2_);
+  nrrd_2_port->get(data2_);
 
   if (runner_) runner_->unlock();
 
-  if (data2_.get_rep() && data2_->nrrd->axis[1].size != 
-      data_->nrrd->axis[1].size)
+  if (data2_.get_rep() && data2_->nrrd_->axis[1].size != 
+      data_->nrrd_->axis[1].size)
   {
-    remark ("Axis 1 size for both NRRD files are not identical.");
+    remark ("Axis 1 size for both NRRD_ files are not identical.");
   } 
   
   if (!runner_) {
@@ -1627,7 +1627,7 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
   } else if(args[1] == "time") {
     gui_time_.reset();
     if (data_.get_rep()) {
-      cur_idx_ = (int)round(gui_time_.get() * data_->nrrd->axis[1].size);
+      cur_idx_ = (int)round(gui_time_.get() * data_->nrrd_->axis[1].size);
     }
 
     setTimeLabel();
@@ -1645,11 +1645,11 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
     int mkr = gui_selected_marker_.get();
     int val = (mkr == -1)?-1:markers_[mkr];
 
-    if (val == -1 || val > data_->nrrd->axis[1].size) return;
+    if (val == -1 || val > data_->nrrd_->axis[1].size) return;
 
     cur_idx_ = val;
 
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 
@@ -1659,10 +1659,10 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
     if (!data_.get_rep()) return;
 
     cur_idx_ += (int)gui_sample_rate_.get();
-    if (cur_idx_ > data_->nrrd->axis[1].size) {
-        cur_idx_ = data_->nrrd->axis[1].size;
+    if (cur_idx_ > data_->nrrd_->axis[1].size) {
+        cur_idx_ = data_->nrrd_->axis[1].size;
     }
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 
@@ -1675,7 +1675,7 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
     if (cur_idx_ < 0) {
        cur_idx_ = 0;
     }
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 
