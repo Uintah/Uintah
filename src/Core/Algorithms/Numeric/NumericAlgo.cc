@@ -77,10 +77,14 @@ bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, 
     int sm = input->nrows();
     int sn = input->ncols();
     int nnz = input->get_data_size();
+ 
   
-    int newnnz =  0;
-    for (int p=0; p<nnz; p++) if (col[p] < n) newnnz++;
-    
+	int newnnz=0;
+    for (int p=1; p<(m+1); p++)
+    {
+      if (p <= sm) for (int q = row[p-1]; q < row[p]; q++) if (col[q] < n) newnnz++;
+    }
+ 
     double* newval = scinew double[newnnz];  
     int* newcol = scinew int[newnnz];
     int* newrow = scinew int[m+1];
@@ -167,6 +171,7 @@ bool NumericAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& o
     if (input[p] == input[q])
     {
       input[q].val += input[p].val; 
+	  input[p].val = 0.0;
     }
     else
     {
@@ -192,10 +197,21 @@ bool NumericAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& o
   
   rows[0] = 0;
   q = 0;
+  
+  int k = 0;
   for (int p=0; p < m; p++)
   {
-    while ((q < input.size())&&(input[q].row <= p)) { cols[q] = input[q].col; vals[q] = input[q].val; q++; }
-    rows[p] = q;
+    while ((q < input.size())&&(input[q].row == p)) 
+	{ 
+	  if (input[q].val)
+	  {
+	    cols[k] = input[q].col; 
+	    vals[k] = input[q].val;
+		k++; 
+	  }
+	  q++; 
+	}
+    rows[p+1] = k;
   }   
   
   output = dynamic_cast<Matrix *>(scinew SparseRowMatrix(m,n,rows,cols,nnz,vals));
@@ -576,6 +592,236 @@ bool NumericAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& ma
 
   return (true);
 }
+
+bool NumericAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::string method)
+{
+  if (input.get_rep() == 0)
+  {
+    error("ApplyRowOperation: no input matrix found");
+    return (false);
+  }
+  
+  int nrows = input->nrows();
+  int ncols = input->ncols();
+  
+  output = dynamic_cast<Matrix*>(scinew DenseMatrix(nrows,1));
+  if (output.get_rep() == 0)
+  {
+    error("ApplyRowOperation: could not create output matrix");
+    return (false);  
+  }
+
+  double *dest = output->get_data_pointer();
+  for (int q=0; q<nrows; q++) dest[q] = 0.0;
+
+  if (input->is_sparse())
+  {
+    int *rows = input->sparse()->rows;
+    int *cols = input->sparse()->columns;
+    double *vals = input->sparse()->a;
+    
+    if (method == "Sum")
+    {
+      for (int q=0; q<nrows; q++) { for (int r = rows[q]; r < rows[q+1]; r++) dest[q] += vals[r]; }        
+    }
+    else if ((method == "Average")||(method == "Mean"))
+    {
+      for (int q=0; q<nrows; q++) 
+      {
+        for (int r = rows[q]; r < rows[q+1]; r++) dest[q] += vals[r];  
+        dest[q] /= static_cast<double>(ncols);  
+      }            
+    }
+    else if (method == "Norm")
+    {
+      for (int q=0; q<nrows; q++) 
+      {
+        for (int r = rows[q]; r < rows[q+1]; r++) dest[q] += (vals[r])*(vals[r]);  
+        if (rows[q] != rows[q+1]) dest[q] = sqrt(dest[q]);  
+      }                
+    }
+    else if (method == "Variance")
+    {
+      double mean;
+      for (int q=0; q<nrows; q++) 
+      {
+        mean = 0.0;
+        for (int r = rows[q]; r < rows[q+1]; r++) mean += vals[r];
+        if (ncols) mean /= static_cast<double>(ncols);
+        for (int r = rows[q]; r < rows[q+1]; r++) dest[q] += (vals[r]-mean)*(vals[r]-mean);
+        dest[q] += (ncols-(rows[q+1]-rows[q]))*mean*mean;  
+        if (ncols > 1) dest[q] = dest[q]/static_cast<double>(ncols-1); else dest[q] = 0.0;
+      }               
+    }
+    else if (method == "StdDev")
+    {
+      double mean;
+      for (int q=0; q<nrows; q++) 
+      {
+        mean = 0.0;
+        for (int r = rows[q]; r < rows[q+1]; r++) mean += vals[r];
+        if (ncols) mean /= static_cast<double>(ncols);
+        for (int r = rows[q]; r < rows[q+1]; r++) dest[q] += (vals[r]-mean)*(vals[r]-mean);  
+        dest[q] += (ncols-(rows[q+1]-rows[q]))*mean*mean;  
+        if (ncols > 1) dest[q] = sqrt(dest[q]/static_cast<double>(ncols-1)); else dest[q] = 0.0;
+      }               
+    }
+    else if (method == "Maximum")
+    {
+      for (int q=0; q<nrows; q++) 
+      {
+        if (rows[q+1]-rows[q] == ncols) dest[q] = -DBL_MAX; else dest[q] = 0.0;
+        for (int r = rows[q]; r < rows[q+1]; r++) if (vals[r] > dest[q]) dest[q] = vals[r];
+      }                   
+    }
+    else if (method == "Minimum")
+    {
+      for (int q=0; q<nrows; q++) 
+      {
+        if (rows[q+1]-rows[q] == ncols) dest[q] = DBL_MAX; else dest[q] = 0.0;
+        for (int r = rows[q]; r < rows[q+1]; r++) if (vals[r] < dest[q]) dest[q] = vals[r];
+      }                   
+    }
+    else if (method == "Median")
+    {
+      for (int q=0; q<nrows; q++) 
+      {
+        std::vector<double> dpos;
+        std::vector<double> dneg;
+        for (int r = rows[q]; r < rows[q+1]; r++) if (vals[r] < 0.0 ) dneg.push_back(vals[r]); else dpos.push_back(vals[r]);
+        if (dpos.size() >= ncols/2) std::sort(dpos.begin(),dpos.end());
+        if (dneg.size() >= ncols/2) std::sort(dneg.begin(),dneg.end());
+        if (2*(ncols/2) == ncols)
+        {
+          double val1 = 0.0;
+          double val2 = 0.0;
+          int q1 = (ncols/2)-1;
+          int q2 = ncols/2; 
+          if ( q1 < dneg.size()) val1 = dneg[q1];
+          if ( q2 < dneg.size()) val2 = dneg[q2];
+          if ( (ncols-1)-q1 < dpos.size()) val1 = dpos[dpos.size()-ncols+q1];
+          if ( (ncols-1)-q2 < dpos.size()) val2 = dpos[dpos.size()-ncols+q2];          
+          dest[q] = 0.5*(val1+val2);
+        }
+        else
+        {
+          double val1 = 0.0;
+          int q1 = (ncols/2);
+          if ( q1 < dneg.size()) val1 = dneg[q1];
+          if ( (ncols-1)-q1 < dpos.size()) val1 = dpos[dpos.size()-ncols+q1];
+          dest[q] = val1;
+        }       
+      }                   
+    }
+    else
+    {
+      error ("ApplyRowOperation: This method has not yet been implemented");
+      return (false);
+    }
+  }
+  else
+  {
+    DenseMatrix* mat = input->dense();
+    
+    int m = mat->nrows();
+    int n = mat->ncols();
+    double* data = mat->get_data_pointer();
+  
+    if (method == "Sum")
+    {
+      int k = 0;
+      for (int p=0; p<m; p++) dest[p] = 0.0;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++) dest[p] += data[k++]; 
+    }
+    else if (method == "Mean")
+    {
+      int k = 0;
+      for (int p=0; p<m; p++) dest[p] = 0.0;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++) dest[p] += data[k++]; 
+      for (int p=0; p<m; p++) dest[p] /= static_cast<double>(n);  
+    }
+    else if (method == "Variance")
+    {
+      std::vector<double> mean(m);
+      int k = 0;
+      for (int p=0; p<m; p++) dest[p] = 0.0;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++) mean[p] += data[k++];
+      for (int p=0; p<m; p++) mean[p] /= static_cast<double>(n);  
+      k = 0;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++, k++) dest[p] += (data[k]-mean[p])*(data[k]-mean[p]); 
+      for (int p=0; p<m; p++)  if (n > 1) dest[p] /= static_cast<double>(n-1);  else dest[p] = 0.0;
+    }
+    else if (method == "StdDev")
+    {
+      std::vector<double> mean(m);
+      int k = 0;
+      for (int p=0; p<m; p++) dest[p] = 0.0;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++) mean[p] += data[k++];
+      for (int p=0; p<m; p++) mean[p] /= static_cast<double>(n);  
+      k = 0;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++, k++) dest[p] += (data[k]-mean[p])*(data[k]-mean[p]); 
+      for (int p=0; p<m; p++)  if (n > 1) dest[p] = sqrt(dest[p]/static_cast<double>(n-1));  else dest[p] = 0.0;
+    }
+    else if (method == "Norm")
+    {
+      int k = 0;
+      for (int p=0; p<m; p++) dest[p] = 0.0;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++, k++) dest[p] += data[k]*data[k]; 
+      for (int p=0; p<m; p++) dest[p] = sqrt(dest[p]); 
+    }
+    else if (method == "Maximum")
+    {
+      int k = 0;
+      for (int p=0; p<m; p++) dest[p] = -DBL_MAX;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++, k++) if (data[k] > dest[p]) dest[p] = data[k]; 
+    }
+    else if (method == "Minimum")
+    {
+      int k = 0;
+      for (int p=0; p<m; p++) dest[p] = DBL_MAX;
+      for (int p=0; p<m; p++) for (int q=0; q<n; q++, k++) if (data[k] < dest[p]) dest[p] = data[k]; 
+    }
+    else if (method == "Median")
+    {
+      int k = 0;
+      std::vector<double> v(n);
+
+      for (int p=0; p<m; p++)
+      {
+        for (int q=0; q<n; q++, k++) v[q] = data[k];
+        std::sort(v.begin(),v.end());
+        if ((n/2)*2 == n)
+        {
+          dest[p] = 0.5*(v[n/2]+v[(n/2) -1]);
+        }
+        else
+        {
+          dest[p] = v[n/2];
+        }
+      }
+    }
+    else
+    {
+      error("ApplyRowOperation: This method has not yet been implemented");
+      return (false);    
+    }
+  }
+  
+  return (true);
+}
+
+bool NumericAlgo::ApplyColumnOperation(MatrixHandle input, MatrixHandle& output, std::string method)
+{
+  if (input.get_rep() == 0)
+  {
+    error("ApplyRowOperation: no input matrix found");
+    return (false);
+  }
+  MatrixHandle t = dynamic_cast<Matrix *>(input->transpose());
+  if(!(ApplyRowOperation(t,t,method))) return (false);
+  output = dynamic_cast<Matrix *>(t->transpose());
+  return (true);
+} 
 
 
 } // end SCIRun namespace
