@@ -67,25 +67,11 @@ c*********************************************************************
               IF ((PCELL(IEND+1,J,K).eq.curr_bc_type).AND.xplus) THEN
                  AP(IEND,J,K) = AP(IEND,J,K)+curr_bc_factor*AE(IEND,J,K)
                  AE(IEND,J,K) = ZERO
-#ifdef ARCHES_BC_DEBUG
-                  i = iend
-                  call fixval(
-     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
-     $                 at(i,j,k), ab(i,j,k),
-     $                 su(i,j,k), sp(i,j,k), one)
-#endif
 
                END IF
                IF ((PCELL(IST-1,J,K).eq.curr_bc_type).AND.xminus) THEN
                   AP(IST,J,K) = AP(IST,J,K)+curr_bc_factor*AW(IST,J,K)
                   AW(IST,J,K) = ZERO
-#ifdef ARCHES_BC_DEBUG
-                  i = ist
-                  call fixval(
-     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
-     $                 at(i,j,k), ab(i,j,k),
-     $                 su(i,j,k), sp(i,j,k), one)
-#endif
                END IF
  600        CONTINUE
  610     CONTINUE
@@ -99,24 +85,10 @@ c*********************************************************************
               IF ((PCELL(I,JEND+1,K).eq.curr_bc_type).AND.yplus) THEN
                  AP(I,JEND,K) = AP(I,JEND,K)+curr_bc_factor*AN(I,JEND,K)
                  AN(I,JEND,K) = ZERO
-#ifdef ARCHES_BC_DEBUG
-                  j = jend
-                  call fixval(
-     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
-     $                 at(i,j,k), ab(i,j,k),
-     $                 su(i,j,k), sp(i,j,k), one)
-#endif                  
                END IF
                IF ((PCELL(I,JST-1,K).eq.curr_bc_type).AND.yminus) THEN
                   AP(I,JST,K) = AP(I,JST,K)+curr_bc_factor*AS(I,JST,K)
                   AS(I,JST,K) = ZERO
-#ifdef ARCHES_BC_DEBUG
-                  j = jst
-                  call fixval(
-     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
-     $                 at(i,j,k), ab(i,j,k),
-     $                 su(i,j,k), sp(i,j,k), one)
-#endif
                END IF
  700        CONTINUE
  710     CONTINUE
@@ -130,24 +102,10 @@ c*********************************************************************
               IF ((PCELL(I,J,KEND+1).eq.curr_bc_type).AND.zplus)THEN
                  AP(I,J,KEND) = AP(I,J,KEND)+curr_bc_factor*AT(I,J,KEND)
                  AT(I,J,KEND) = ZERO
-#ifdef ARCHES_BC_DEBUG
-                  k = kend
-                  call fixval(
-     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
-     $                 at(i,j,k), ab(i,j,k),
-     $                 su(i,j,k), sp(i,j,k), one)
-#endif
                END IF
                IF ((PCELL(I,J,KST-1).eq.curr_bc_type).AND.zminus) THEN
                   AP(I,J,KST) = AP(I,J,KST)+curr_bc_factor*AB(I,J,KST)
                   AB(I,J,KST) = ZERO
-#ifdef ARCHES_BC_DEBUG
-                  k = kst
-                  call fixval(
-     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
-     $                 at(i,j,k), ab(i,j,k),
-     $                 su(i,j,k), sp(i,j,k), one)
-#endif
                END IF
  800        CONTINUE
  810     CONTINUE

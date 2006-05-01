@@ -163,9 +163,6 @@ Filter::matrixCreate(const PatchSet* allpatches,
     }
     numCells[s] = mytotal;
   }
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "totalCells = " << totalCells << '\n';
-#endif
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
@@ -217,14 +214,6 @@ Filter::matrixCreate(const PatchSet* allpatches,
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
 	+start.y()*dcells.x()+start.x();
-      //#ifdef ARCHES_PETSC_DEBUG
-#if 0
-      cerr << "Looking at patch: " << neighbor->getID() << '\n';
-      cerr << "low=" << low << '\n';
-      cerr << "high=" << high << '\n';
-      cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
-      cerr << "globalIndex = " << petscglobalIndex << '\n';
-#endif
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
 	int idx_slab = petscglobalIndex;
 	petscglobalIndex += dcells.x()*dcells.y();
@@ -239,21 +228,6 @@ Filter::matrixCreate(const PatchSet* allpatches,
       }
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
-    // #ifdef ARCHES_PETSC_DEBUG
-#if 0
-    {	
-      IntVector l = l2g.getWindow()->getLowIndex();
-      IntVector h = l2g.getWindow()->getHighIndex();
-      for(int z=l.z();z<h.z();z++){
-	for(int y=l.y();y<h.y();y++){
-	  for(int x=l.x();x<h.x();x++){
-	    IntVector idx(x,y,z);
-	    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
-	  }
-	}
-      }
-    }
-#endif
   }
   int me = d_myworld->myrank();
   int numlrows = numCells[me];
@@ -263,10 +237,6 @@ Filter::matrixCreate(const PatchSet* allpatches,
   // for box filter of size 2 matrix width is 27
   d_nz = 27; // defined in Filter.h
   o_nz = 26;
-  // #ifdef ARCHES_PETSC_DEBUG
-#if 0
-  cout << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
-#endif
   cout << "Creating the patch matrix... \n Note: if sus crashes here, try reducing your resolution.";
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
@@ -298,9 +268,6 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 			CellInformation* cellinfo,
 			constCCVariable<int>& cellType )
 {
-#ifdef ARCHES_PETSC_DEBUG
-   cerr << "in setFilterMatrix on patch: " << patch->getID() << '\n';
-#endif
   // Get the patch bounds and the variable bounds
    if (!d_matrixInitialize) {
      // #ifdef notincludeBdry
@@ -465,9 +432,6 @@ Filter::applyFilter(const ProcessorGroup* ,
     }
   }
 
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "Doing mat/vec assembly\n";
-#endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
     throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
@@ -576,9 +540,6 @@ Filter::applyFilter(const ProcessorGroup* ,
     }
   }
 
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "Doing mat/vec assembly\n";
-#endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
     throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);

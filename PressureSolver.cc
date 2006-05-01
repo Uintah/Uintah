@@ -2,7 +2,6 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
@@ -394,9 +393,6 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   tsk->computes(timelabels->pressure_out);
   tsk->computes(d_lab->d_InitNormLabel);
 
-#ifdef ARCHES_PRES_DEBUG
-  cerr << "Adding computes on patch: " << patch->getID() << '\n';
-#endif
 
   sched->addTask(tsk, d_perproc_patches, matls);
 
@@ -637,19 +633,6 @@ PressureSolver::normPressure(const ProcessorGroup*,
   double pressref = vars->press_ref;
   fort_normpress(idxLo, idxHi, vars->pressure, pressref);
 
-#ifdef ARCHES_PRES_DEBUG
-  cerr << " After Pressure Normalization : " << endl;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr << "pressure for ii = " << ii << endl;
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-	cerr.width(10);
-	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
-#endif
 }  
 
 void 

@@ -2,7 +2,6 @@
 
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
@@ -120,9 +119,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 
   //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
   //  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
-#ifdef ARCHES_MOM_DEBUG
-  cerr << " ref_ density" << den_ref << endl;
-#endif
   // Get the patch and variable indices
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
@@ -139,12 +135,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector domLoWng;
   IntVector domHiWng;
 
-#ifdef ARCHES_MOM_DEBUG
-  for (int iii = domLo.z(); iii < domHi.z(); iii++)
-    std::cerr << cellinfo->ktsdw[iii] << " " << cellinfo->kbsdw[iii] << endl;
-  for (int iii = domLo.y(); iii < domHi.z(); iii++)
-    std::cerr << cellinfo->jnsdv[iii] << " " << cellinfo->jssdv[iii] << endl;
-#endif
   
   switch(index) {
   case Arches::XDIR:
@@ -165,34 +155,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		 cellinfo->fac1u, cellinfo->fac2u, cellinfo->fac3u,
 		 cellinfo->fac4u, cellinfo->iesdu, cellinfo->iwsdu);
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "patch: " << *patch << '\n';
-    cerr << "dom: " << domLoU << ", " << domHiU << '\n';
-    Array3Window<double>* win = vars->uVelNonlinearSrc.getWindow();
-    cerr << "usrc: " << win->getLowIndex() << ", " << win->getHighIndex() << ", " << win->getOffset() << '\n';
-    cerr << "AFTER U Velocity Source" << endl;
-    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-      cerr << "SU for U velocity for ii = " << ii << endl;
-      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER U Velocity Source" << endl;
-    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-      cerr << "SP for U velocity for ii = " << ii << endl;
-      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->uVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 
     break;
   case Arches::YDIR:
@@ -215,30 +177,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		 cellinfo->fac3v, cellinfo->fac4v, cellinfo->jnsdv,
 		 cellinfo->jssdv); 
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER V Velocity Source" << endl;
-    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-      cerr << "SU for V velocity for ii = " << ii << endl;
-      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER V Velocity Source" << endl;
-    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-      cerr << "SP for V velocity for ii = " << ii << endl;
-      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->vVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 
     break;
   case Arches::ZDIR:
@@ -261,30 +199,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		 cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
 		 cellinfo->ktsdw, cellinfo->kbsdw); 
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER W Velocity Source" << endl;
-    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-      cerr << "SU for W velocity for ii = " << ii << endl;
-      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER W Velocity Source" << endl;
-    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-      cerr << "SP for W velocity for ii = " << ii << endl;
-      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->wVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 
     break;
   default:
@@ -422,30 +336,6 @@ Source::calculateScalarSource(const ProcessorGroup*,
 	       constvars->old_density, constvars->old_scalar,
 	       cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER Calculate Scalar Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER Calculate Scalar Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP for Scalar " << index << " for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->scalarLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 }
 
 
@@ -536,30 +426,6 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
 	       constvars->old_density, constvars->old_enthalpy,
 	       cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER Calculate Scalar Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER Calculate Scalar Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP for Scalar " << index << " for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->scalarLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 }
 
 
@@ -668,23 +534,6 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
   case Arches::XDIR:
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-#if 0
-    fort_uvelcoeffupdate(idxLo, idxHi, vars->uVelocity,
-			 vars->uVelocityCoeff[Arches::AP],
-			 vars->uVelocityCoeff[Arches::AE],
-			 vars->uVelocityCoeff[Arches::AW],
-			 vars->uVelocityCoeff[Arches::AN],
-			 vars->uVelocityCoeff[Arches::AS],
-			 vars->uVelocityCoeff[Arches::AT],
-			 vars->uVelocityCoeff[Arches::AB],
-			 vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-			 vars->uVelocityConvectCoeff[Arches::AE],
-			 vars->uVelocityConvectCoeff[Arches::AW],
-			 vars->uVelocityConvectCoeff[Arches::AN],
-			 vars->uVelocityConvectCoeff[Arches::AS],
-			 vars->uVelocityConvectCoeff[Arches::AT],
-			 vars->uVelocityConvectCoeff[Arches::AB]);
-#endif
     fort_mascal(idxLo, idxHi, constvars->uVelocity,
 		vars->uVelocityCoeff[Arches::AE],
 		vars->uVelocityCoeff[Arches::AW],
@@ -700,53 +549,10 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->uVelocityConvectCoeff[Arches::AT],
 		vars->uVelocityConvectCoeff[Arches::AB]);
 
-#ifdef ARCHES_SRC_DEBUG
-    domLo = constvars->uVelocity.getFortLowIndex();
-    domHi = constvars->uVelocity.getFortHighIndex();
-    cerr << "AFTER Modify Velocity Mass Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SU for U velocity for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER Modify Velocity Mass Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP for U velocity for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->uVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
     break;
   case Arches::YDIR:
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-#if 0
-    fort_uvelcoeffupdate(idxLo, idxHi, vars->vVelocity,
-			 vars->vVelocityCoeff[Arches::AP],
-		vars->vVelocityCoeff[Arches::AE],
-		vars->vVelocityCoeff[Arches::AW],
-		vars->vVelocityCoeff[Arches::AN],
-		vars->vVelocityCoeff[Arches::AS],
-		vars->vVelocityCoeff[Arches::AT],
-		vars->vVelocityCoeff[Arches::AB],
-		vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-		vars->vVelocityConvectCoeff[Arches::AE],
-		vars->vVelocityConvectCoeff[Arches::AW],
-		vars->vVelocityConvectCoeff[Arches::AN],
-		vars->vVelocityConvectCoeff[Arches::AS],
-		vars->vVelocityConvectCoeff[Arches::AT],
-		vars->vVelocityConvectCoeff[Arches::AB]);
-#endif
     fort_mascal(idxLo, idxHi, constvars->vVelocity,
 		vars->vVelocityCoeff[Arches::AE],
 		vars->vVelocityCoeff[Arches::AW],
@@ -762,53 +568,10 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->vVelocityConvectCoeff[Arches::AT],
 		vars->vVelocityConvectCoeff[Arches::AB]);
 
-#ifdef ARCHES_SRC_DEBUG
-    domLo = constvars->vVelocity.getFortLowIndex();
-    domHi = constvars->vVelocity.getFortHighIndex();
-    cerr << "AFTER Modify Velocity Mass Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SU for V velocity for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER Modify Velocity Mass Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP for V velocity for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->vVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
     break;
   case Arches::ZDIR:
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
-#if 0
-    fort_uvelcoeffupdate(idxLo, idxHi, vars->wVelocity,
-			 vars->wVelocityCoeff[Arches::AP],
-		vars->wVelocityCoeff[Arches::AE],
-		vars->wVelocityCoeff[Arches::AW],
-		vars->wVelocityCoeff[Arches::AN],
-		vars->wVelocityCoeff[Arches::AS],
-		vars->wVelocityCoeff[Arches::AT],
-		vars->wVelocityCoeff[Arches::AB],
-		vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-		vars->wVelocityConvectCoeff[Arches::AE],
-		vars->wVelocityConvectCoeff[Arches::AW],
-		vars->wVelocityConvectCoeff[Arches::AN],
-		vars->wVelocityConvectCoeff[Arches::AS],
-		vars->wVelocityConvectCoeff[Arches::AT],
-		vars->wVelocityConvectCoeff[Arches::AB]);
-#endif
     fort_mascal(idxLo, idxHi, constvars->wVelocity,
 		vars->wVelocityCoeff[Arches::AE],
 		vars->wVelocityCoeff[Arches::AW],
@@ -824,32 +587,6 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->wVelocityConvectCoeff[Arches::AT],
 		vars->wVelocityConvectCoeff[Arches::AB]);
 
-#ifdef ARCHES_SRC_DEBUG
-    domLo = constvars->wVelocity.getFortLowIndex();
-    domHi = constvars->wVelocity.getFortHighIndex();
-    cerr << "AFTER Modify Velocity Mass Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SU for W velocity for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER Modify Velocity Mass Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP for W velocity for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->wVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
     break;
   default:
     throw InvalidValue("Invalid index in Source::calcVelMassSrc", __FILE__, __LINE__);
@@ -934,12 +671,6 @@ Source::addPressureSource(const ProcessorGroup* ,
   IntVector domLoU, domHiU;
   IntVector domLoUng, domHiUng;
   IntVector idxLoU, idxHiU;
-#ifdef ARCHES_SOURCE_DEBUG
-  if (patch->containsCell(IntVector(2,3,3))) {
-    cerr << "[2,3,3] press" << vars->pressure[IntVector(2,3,3)] << " " <<
-      vars->pressure[IntVector(1,3,3)] << endl;
-  }
-#endif
   int ioff, joff, koff;
   switch(index) {
   case Arches::XDIR:
@@ -1165,12 +896,6 @@ Source::computePressureSource(const ProcessorGroup* ,
   IntVector domLoU, domHiU;
   IntVector domLoUng, domHiUng;
   IntVector idxLoU, idxHiU;
-#ifdef ARCHES_SOURCE_DEBUG
-  if (patch->containsCell(IntVector(2,3,3))) {
-    cerr << "[2,3,3] press" << vars->pressure[IntVector(2,3,3)] << " " <<
-      vars->pressure[IntVector(1,3,3)] << endl;
-  }
-#endif
   int ioff, joff, koff;
   switch(index) {
   case Arches::XDIR:
@@ -1478,9 +1203,6 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
 				ArchesConstVariables* constvars)
 {
 //  double time = d_lab->d_sharedState->getElapsedTime();
-#ifdef ARCHES_MOM_DEBUG
-  cerr << " ref_ density" << den_ref << endl;
-#endif
   // Get the patch and variable indices
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
@@ -1489,12 +1211,6 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
-#ifdef ARCHES_MOM_DEBUG
-  for (int iii = domLo.z(); iii < domHi.z(); iii++)
-    std::cerr << cellinfo->ktsdw[iii] << " " << cellinfo->kbsdw[iii] << endl;
-  for (int iii = domLo.y(); iii < domHi.z(); iii++)
-    std::cerr << cellinfo->jnsdv[iii] << " " << cellinfo->jssdv[iii] << endl;
-#endif
   double rho0=d_airDensity*d_heDensity/(phi0*d_airDensity+(1-phi0)*d_heDensity);
   switch(index) {
   case Arches::XDIR:
@@ -1512,34 +1228,6 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
     }
   }
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "patch: " << *patch << '\n';
-    cerr << "dom: " << domLoU << ", " << domHiU << '\n';
-    Array3Window<double>* win = vars->uVelNonlinearSrc.getWindow();
-    cerr << "usrc: " << win->getLowIndex() << ", " << win->getHighIndex() << ", " << win->getOffset() << '\n';
-    cerr << "AFTER U Velocity LinearSource" << endl;
-    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-      cerr << "SU for U velocity for ii = " << ii << endl;
-      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER U Velocity LinearSource" << endl;
-    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-      cerr << "SP for U velocity for ii = " << ii << endl;
-      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->uVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 
     break;
   case Arches::YDIR:
@@ -1557,30 +1245,6 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
     }
   }
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER V Velocity LinearSource" << endl;
-    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-      cerr << "SU for V velocity for ii = " << ii << endl;
-      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER V Velocity LinearSource" << endl;
-    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-      cerr << "SP for V velocity for ii = " << ii << endl;
-      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->vVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 
     break;
   case Arches::ZDIR:
@@ -1598,30 +1262,6 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
     }
   }
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER W Velocity LinearSource" << endl;
-    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-      cerr << "SU for W velocity for ii = " << ii << endl;
-      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER W Velocity LinearSource" << endl;
-    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-      cerr << "SP for W velocity for ii = " << ii << endl;
-      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->wVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 
     break;
   default:
@@ -1658,30 +1298,6 @@ Source::calculateScalarMMSource(const ProcessorGroup*,
     }
   }
 
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER Calculate Scalar LinearMMsSource" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER Calculate Scalar LinearMMsSource" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP for Scalar " << index << " for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->scalarLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
 }
 //****************************************************************************
 // Pressure source calculation for MMS

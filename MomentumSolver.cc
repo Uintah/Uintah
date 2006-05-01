@@ -6,7 +6,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
@@ -314,14 +313,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     }
 
-#ifdef ARCHES_MOM_DEBUG
-    cerr << "momentum solver: pressure=\n";
-    velocityVars.pressure.print(cerr);
-    if (patch->containsCell(IntVector(2,3,3))) {
-      cerr << "[2,3,3] press[2,3,3]" << velocityVars.pressure[IntVector(2,3,3)] 
-	   << " " << velocityVars.pressure[IntVector(1,3,3)] << endl;
-    }
-#endif
     
     // Actual compute operations
 
@@ -1264,9 +1255,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   }
   }
 
-#ifdef ARCHES_PRES_DEBUG
-    std::cerr << "Done building matrix for press coeff" << endl;
-#endif
     
     }
     double time_shift = 0.0;
@@ -1447,9 +1435,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
 //#endif
 
-#ifdef ARCHES_PRES_DEBUG
-    std::cerr << "Done building matrix for vel coeff for pressure" << endl;
-#endif
     
   TAU_PROFILE_STOP(compute);
   }

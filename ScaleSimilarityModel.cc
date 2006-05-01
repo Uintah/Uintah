@@ -1,6 +1,5 @@
 //----- ScaleSimilarityModel.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>

@@ -1,7 +1,6 @@
 //----- OdtClosure.cc --------------------------------------------------
 #include <Packages/Uintah/CCA/Components/Arches/OdtData.h>
 #include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>

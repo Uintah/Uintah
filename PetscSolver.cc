@@ -1,6 +1,5 @@
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Time.h>
@@ -118,9 +117,6 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
     }
     numCells[s] = mytotal;
   }
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "totalCells = " << totalCells << '\n';
-#endif
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
@@ -149,13 +145,6 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
 	+start.y()*dcells.x()+start.x();
-#ifdef ARCHES_PETSC_DEBUG
-      cerr << "Looking at patch: " << neighbor->getID() << '\n';
-      cerr << "low=" << low << '\n';
-      cerr << "high=" << high << '\n';
-      cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
-      cerr << "globalIndex = " << petscglobalIndex << '\n';
-#endif
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
 	int idx_slab = petscglobalIndex;
 	petscglobalIndex += dcells.x()*dcells.y();
@@ -172,20 +161,6 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
       totalCells+=d.x()*d.y()*d.z();
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
-#ifdef ARCHES_PETSC_DEBUG
-    {	
-      IntVector l = l2g.getWindow()->getLowIndex();
-      IntVector h = l2g.getWindow()->getHighIndex();
-      for(int z=l.z();z<h.z();z++){
-	for(int y=l.y();y<h.y();y++){
-	  for(int x=l.x();x<h.x();x++){
-	    IntVector idx(x,y,z);
-	    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
-	  }
-	}
-      }
-    }
-#endif
   }
   int me = d_myworld->myrank();
   int numlrows = numCells[me];
@@ -194,9 +169,6 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
   int globalcolumns = (int)totalCells;
   int d_nz = 7;
   int o_nz = 6;
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
-#endif
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
@@ -232,9 +204,6 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 {
   double solve_start = Time::currentSeconds();
 
-#ifdef ARCHES_PETSC_DEBUG
-   cerr << "in setPressMatrix on patch: " << patch->getID() << '\n';
-#endif
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
@@ -283,9 +252,6 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
 	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
 	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
-#ifdef ARCHES_PETSC_DEBUG
-	  cerr << "filling in row: " << col[3] << '\n';
-#endif
 	  value[0] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
 	  value[1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
@@ -293,24 +259,14 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	  value[4] = -constvars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
 	  value[5] = -constvars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
 	  value[6] = -constvars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
-#ifdef ARCHES_PETSC_DEBUG
-	  for(int i=0;i<7;i++)
-	     cerr << "A[" << col[3] << "][" << col[i] << "]=" << value[i] << '\n';
-#endif
 	  int row = col[3];
 	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
 	  if(ierr)
 	    throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
-#ifdef ARCHES_PETSC_DEBUG
-	  cerr << "ierr=" << ierr << '\n';
-#endif
 	}
       }
     }
 
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "assemblign rhs\n";
-#endif
   // assemble right hand side and solution vector
   double vecvalueb, vecvaluex;
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -334,9 +290,6 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     if(me == 0) {
      cerr << "Time in PETSC Assemble: " << Time::currentSeconds()-solve_start << " seconds\n";
     }
-#ifdef ARCHES_PETSC_DEBUG
-    cerr << " all done\n";
-#endif
 }
 
 
@@ -348,9 +301,6 @@ PetscSolver::pressLinearSolve()
   PC peqnpc; // pressure eqn pc
  
   int ierr;
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "Doing mat/vec assembly\n";
-#endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
     throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
@@ -396,19 +346,6 @@ PetscSolver::pressLinearSolve()
     throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   /* debugging - steve */
   double norm;
-#if 0
-  // #ifdef ARCHES_PETSC_DEBUG
-  ierr = ViewerSetFormat(VIEWER_STDOUT_WORLD, VIEWER_FORMAT_ASCII_DEFAULT, 0);
-  ierr = MatNorm(A,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);
-  ierr = MatView(A, VIEWER_STDOUT_WORLD);
-  ierr = VecNorm(d_x,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector x norm = %g\n",norm);
-  ierr = VecView(d_x, VIEWER_STDOUT_WORLD);
-  ierr = VecNorm(d_b,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);
-  ierr = VecView(d_b, VIEWER_STDOUT_WORLD);
-#endif
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
@@ -492,9 +429,6 @@ PetscSolver::pressLinearSolve()
   ierr = VecNorm(d_x,NORM_1,&norm);
   if(ierr)
     throw PetscError(ierr, "VecNorm", __FILE__,  __LINE__);
-#ifdef ARCHES_PETSC_DEBUG
-  ierr = VecView(d_x, VIEWER_STDOUT_WORLD);
-#endif
 
   // check the error
   ierr = MatMult(A, d_x, d_u);

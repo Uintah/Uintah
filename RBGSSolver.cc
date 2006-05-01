@@ -1,6 +1,5 @@
 //----- RBGSSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
 #include <Core/Containers/Array1.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
