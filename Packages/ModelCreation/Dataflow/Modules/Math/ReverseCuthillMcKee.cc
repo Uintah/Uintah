@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Numeric/NumericAlgo.h>
+#include <Core/Algorithms/Numeric/NumericAlgo.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 

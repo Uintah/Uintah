@@ -1,7 +1,7 @@
-itcl_class ModelCreation_FieldsCreate_CompartmentBoundary {
+itcl_class ModelCreation_FieldsCreate_DomainBoundary {
     inherit Module
     constructor {config} {
-        set name CompartmentBoundary
+        set name DomainBoundary
         set_defaults
     }
 

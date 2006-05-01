@@ -148,11 +148,11 @@ void DataArrayMeasure::execute()
       std::sort(v.begin(),v.end());
       if ((m/2)*2 == m)
       {
-        dest[0] = 0.5*(data[m/2]+data[(m/2) -1]);
+        dest[0] = 0.5*(v[m/2]+v[(m/2) -1]);
       }
       else
       {
-        dest[0] = data[m/2];
+        dest[0] = v[m/2];
       }
     }
     else

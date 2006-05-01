@@ -26,10 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Numeric/NumericAlgo.h>
 
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -37,36 +37,36 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class CuthillMcKee : public Module {
+class ApplyRowOperation : public Module {
 public:
-  CuthillMcKee(GuiContext*);
+  ApplyRowOperation(GuiContext*);
   virtual void execute();
 
+private:
+  GuiString guimethod_;  
 };
 
 
-DECLARE_MAKER(CuthillMcKee)
-CuthillMcKee::CuthillMcKee(GuiContext* ctx)
-  : Module("CuthillMcKee", ctx, Source, "Math", "ModelCreation")
+DECLARE_MAKER(ApplyRowOperation)
+ApplyRowOperation::ApplyRowOperation(GuiContext* ctx)
+  : Module("ApplyRowOperation", ctx, Source, "Math", "ModelCreation"),
+    guimethod_(ctx->subVar("method"))
 {
 }
 
-
-void CuthillMcKee::execute()
+void ApplyRowOperation::execute()
 {
-  MatrixHandle Mat, Mapping, InverseMapping;
-  if(!(get_input_handle("Matrix",Mat,true))) return;
-
-  NumericAlgo algo(this);
-  if(!(algo.CuthillmcKee(Mat,Mat,InverseMapping,true))) return;
+  MatrixHandle input, output;
   
-  Mapping = InverseMapping->transpose();
+  if (!(get_input_handle("Matrix",input,true))) return;
   
-  send_output_handle("Matrix",Mat,true);
-  send_output_handle("Mapping",Mapping,true);
-  send_output_handle("InverseMapping",InverseMapping,true);
+  SCIRun::NumericAlgo algo(this);
+  
+  std::string method = guimethod_.get();
+  if (!(algo.ApplyRowOperation(input,output,method))) return;
+  
+  send_output_handle("Vector",output,true);
 }
-
 
 } // End namespace ModelCreation
 

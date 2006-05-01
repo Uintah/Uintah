@@ -24,6 +24,7 @@ SUBDIRS := \
 	$(SRCDIR)/FiniteElements\
 	$(SRCDIR)/Converter\
 	$(SRCDIR)/Math\
+	$(SRCDIR)/DataStreaming\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

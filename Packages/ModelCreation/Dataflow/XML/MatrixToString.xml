@@ -6,12 +6,15 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      MatrixToString converts a matrix and prints its contents in a string. This module exists mainly for debugging purposes.
-
+      MatrixToString prints the contents of a matrix into a string.
     </summary>
     <description>
-      <p>        MatrixToString converts a matrix and prints its contents in a string. This module exists mainly for debugging purposes.
-</p>
+      <p>       
+      MatrixToString prints the contents of a matrix into a string.
+      For a dense matrix it outputs all the rows and columns of the
+      matrix. For a sparse matrix only the non zero elements are
+      printed.
+      </p>
     </description>
   </overview>
   <io>
