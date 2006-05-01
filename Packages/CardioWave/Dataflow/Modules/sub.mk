@@ -31,6 +31,7 @@ SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Tools\
 	$(SRCDIR)/DiscreteMultiDomain\
+	$(SRCDIR)/ContinuousBiDomain\
 	$(SRCDIR)/Model\
 #[INSERT NEW CATEGORY DIR HERE]
 

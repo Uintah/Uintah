@@ -38,7 +38,7 @@ class MembraneItem {
   public:
     std::string membranename;
     std::string nodetype;
-    std::string file;
+    std::string sourcefile;
     std::string parameters;
     std::string description;
 };

@@ -37,7 +37,7 @@
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
-#include <Packages/CardioWave/Core/XML/SynapseXML.h>
+#include <Packages/CardioWave/Core/XML/MembraneXML.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 #include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
 
@@ -51,9 +51,9 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-class DMDAddMembrane : public Module {
+class CBDAddMembrane : public Module {
 public:
-  DMDAddMembrane(GuiContext*);
+  CBDAddMembrane(GuiContext*);
 
   virtual void execute();
 
@@ -68,46 +68,37 @@ private:
   GuiString guimembranename_;
   GuiString guimembraneparam_;
   GuiString guimembranedesc_;
+  GuiInt    guimembranetype_;
 
-  SynapseXML synapsexml_;
+  MembraneXML membranexml_;
 
 };
 
 
-DECLARE_MAKER(DMDAddMembrane)
+DECLARE_MAKER(CBDAddMembrane)
 
-DMDAddMembrane::DMDAddMembrane(GuiContext* ctx)
-  : Module("DMDAddMembrane", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+CBDAddMembrane::CBDAddMembrane(GuiContext* ctx)
+  : Module("CBDAddMembrane", ctx, Source, "ContinuousBiDomain", "CardioWave"),
     guimembranenames_(get_ctx()->subVar("mem-names")),
     guimembranename_(get_ctx()->subVar("mem-name")),
     guimembraneparam_(get_ctx()->subVar("mem-param")),
-    guimembranedesc_(get_ctx()->subVar("mem-desc"))
+    guimembranedesc_(get_ctx()->subVar("mem-desc")),
+    guimembranetype_(get_ctx()->subVar("mem-type"))
 {
-    std::string defaultname = synapsexml_.get_default_name();
+    std::string defaultname = membranexml_.get_default_name();
     guimembranename_.set(defaultname);
 }
 
-void DMDAddMembrane::execute()
+void CBDAddMembrane::execute()
 {
   BundleHandle MembraneBundle;
   BundleHandle Membrane;
-  FieldHandle  Geometry;
+  MatrixHandle MembraneType;
   StringHandle Parameters_from_port;
   
-  // required ones
-  if (!(get_input_handle("Geometry",Geometry,true))) return;
-  // optional ones
-  
-  ModelCreation::FieldsAlgo algo(this);
-  if (!(algo.ClearAndChangeFieldBasis(Geometry,Geometry,"Linear")))
-  {
-    error("DMDAddMembrane: Could not build a linear field for the membrane");
-    return;        
-  }
-
   get_input_handle("MembraneBundle",MembraneBundle,false);
+  get_input_handle("MembraneType",MembraneType,false);
   get_input_handle("Parameters",Parameters_from_port,false);
-  
   
   if (MembraneBundle.get_rep() == 0)
   {
@@ -140,7 +131,15 @@ void DMDAddMembrane::execute()
     }
   }
 
+  
   ModelCreation::ConverterAlgo mc(this);
+
+  if (MembraneType.get_rep())
+  {
+    int memtype;
+    if(mc.MatrixToInt(MembraneType,memtype)) guimembranetype_.set(memtype);
+    get_ctx()->reset();
+  }
 
   
   // Add a new bundle to the bundle with the data
@@ -158,8 +157,7 @@ void DMDAddMembrane::execute()
     fieldname = oss.str(); 
   }
   MembraneBundle->setBundle(fieldname,Membrane);
-  
-  Membrane->setField("Geometry",Geometry);
+ 
  
   std::string cmd;
   cmd = get_id() + " get_param";
@@ -181,10 +179,13 @@ void DMDAddMembrane::execute()
   StringHandle MembraneName = scinew String(membranename);
   Membrane->setString("Name",MembraneName);
   
-  SynapseItem item = synapsexml_.get_synapse(membranename);
+  int membranetype = guimembranetype_.get();
+  
+  MembraneItem item = membranexml_.get_membrane(membranename);
+  
   {
     std::ostringstream oss;
-    oss << "\n" << item.nodetype << " = " << membrane_num << "\n";
+    oss << "\n" << item.nodetype << " = " << membranetype << "\n";
     paramstr += oss.str();
   }
   
@@ -203,20 +204,20 @@ void DMDAddMembrane::execute()
 }
 
 
-void DMDAddMembrane::tcl_command(GuiArgs& args, void* userdata)
+void CBDAddMembrane::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() > 1)
   {
     if (args[1] == "get_membrane_names")
     {
-      std::vector<std::string> names = synapsexml_.get_names(); 
+      std::vector<std::string> names = membranexml_.get_names(); 
       guimembranenames_.set(convertclist(names));
     }
     else if (args[1] == "set_membrane")
     {
       if (args[2] != "")
       {
-        SynapseItem item = synapsexml_.get_synapse(args[2]);
+        MembraneItem item = membranexml_.get_membrane(args[2]);
         std::string param = item.parameters;
         std::string desc  = item.description;
         guimembranename_.set(args[2]);
@@ -237,7 +238,7 @@ void DMDAddMembrane::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-std::string DMDAddMembrane::totclstring(std::string &instring)
+std::string CBDAddMembrane::totclstring(std::string &instring)
 {
 	int strsize = instring.size();
 	int specchar = 0;
@@ -269,7 +270,7 @@ std::string DMDAddMembrane::totclstring(std::string &instring)
 	return(newstring);
 }
 
-std::string DMDAddMembrane::convertclist(std::vector<std::string> list)
+std::string CBDAddMembrane::convertclist(std::vector<std::string> list)
 {
   std::string result;
   for (size_t p=0; p < list.size(); p++)

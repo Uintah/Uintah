@@ -78,9 +78,6 @@ bool BuildStimulusTableAlgo::BuildStimulusTable(ProgressReporter *pr,  FieldHand
     if (fi2.is_volume()) algotype = "BuildStimulusTableCellAlgoT";
   }
 
-  std::cout << "algotype = " << algotype << "\n";
-
-
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(

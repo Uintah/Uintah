@@ -51,15 +51,15 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-class DMDAddBlockStimulus : public Module {
+class CBDAddBlockStimulus : public Module {
 public:
-  DMDAddBlockStimulus(GuiContext*);
+  CBDAddBlockStimulus(GuiContext*);
   virtual void execute();
 
 private:  
   // TCL tools
 
-  GuiDouble  guidomain_;
+  GuiString  guidomain_;
   GuiDouble  guicurrent_;
   GuiDouble  guistart_;
   GuiDouble  guiend_;
@@ -68,10 +68,10 @@ private:
 };
 
 
-DECLARE_MAKER(DMDAddBlockStimulus)
+DECLARE_MAKER(CBDAddBlockStimulus)
 
-DMDAddBlockStimulus::DMDAddBlockStimulus(GuiContext* ctx)
-  : Module("DMDAddBlockStimulus", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+CBDAddBlockStimulus::CBDAddBlockStimulus(GuiContext* ctx)
+  : Module("CBDAddBlockStimulus", ctx, Source, "ContinuousBiDomain", "CardioWave"),
     guidomain_(get_ctx()->subVar("stim-domain")),
     guicurrent_(get_ctx()->subVar("stim-current")),
     guistart_(get_ctx()->subVar("stim-start")),
@@ -81,7 +81,7 @@ DMDAddBlockStimulus::DMDAddBlockStimulus(GuiContext* ctx)
 {
 }
 
-void DMDAddBlockStimulus::execute()
+void CBDAddBlockStimulus::execute()
 {
   BundleHandle StimulusBundle;
   FieldHandle Geometry;
@@ -103,7 +103,10 @@ void DMDAddBlockStimulus::execute()
   ModelCreation::ConverterAlgo mc(this);
   double val;
 
-  if (mc.MatrixToDouble(Domain,val)) guidomain_.set(val);
+  if (mc.MatrixToDouble(Domain,val)) 
+  {
+    if (val == 0) guidomain_.set("ExtraCellular"); else guidomain_.set("IntraCellular");
+  }
   if (mc.MatrixToDouble(Current,val)) guicurrent_.set(val);
   if (mc.MatrixToDouble(Start,val)) guistart_.set(val);      
   if (mc.MatrixToDouble(End,val)) guiend_.set(val);  
@@ -122,7 +125,7 @@ void DMDAddBlockStimulus::execute()
     StimulusBundle.detach();
   }
 
-  
+
   int stimulus_num = 0;
   std::string fieldname;
   
@@ -159,8 +162,8 @@ void DMDAddBlockStimulus::execute()
     
   Stimulus->setField("Geometry",Geometry);
 
-  val = guidomain_.get(); mc.DoubleToMatrix(val,Domain); 
-  val = guidomain_.get(); mc.DoubleToMatrix(val,Current); 
+  std::string str = guidomain_.get(); 
+  if (str == "ExtraCellular") mc.DoubleToMatrix(0.0,Domain); else mc.DoubleToMatrix(1.0,Domain); 
   val = guistart_.get(); mc.DoubleToMatrix(val,Start); 
   val = guiend_.get(); mc.DoubleToMatrix(val,End); 
  
