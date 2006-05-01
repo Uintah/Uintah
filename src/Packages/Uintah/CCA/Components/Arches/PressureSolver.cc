@@ -349,12 +349,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_boundaryCondition->anyArchesPhysicalBC())
       d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				      cellinfo, &pressureVars,&constPressureVars);
-    // apply underelaxation to eqn
-// Pressure underrelaxation is turned off since it breaks continuity!!!
-/*    if (!(d_pressure_correction))
-    d_linearSolver->computePressUnderrelax(pc, patch,
-					   &pressureVars, &constPressureVars);*/
-
   }
 }
 
@@ -396,11 +390,6 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_presNonLinSrcPBLMLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-#ifdef compute_residual
-  // computes global residual
-  tsk->computes(d_lab->d_presResidPSLabel);
-  tsk->computes(d_lab->d_presTruncPSLabel);
-#endif
 
   tsk->computes(timelabels->pressure_out);
   tsk->computes(d_lab->d_InitNormLabel);
@@ -443,7 +432,6 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   d_linearSolver->matrixCreate(d_perproc_patches, patches);
   for (int p = 0; p < patches->size(); p++) {
     const Patch *patch = patches->get(p);
-    // Underrelax...
     // This calls fillRows on linear(petsc) solver
     pressureLinearSolve(pg, patch, matlIndex, old_dw, new_dw, pressureVars,
 			timelabels);
@@ -515,17 +503,6 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
 		  d_lab->d_presNonLinSrcPBLMLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-#ifdef compute_residual
-  // compute eqn residual, L1 norm
-  new_dw->allocate(pressureVars.residualPressure, d_lab->d_pressureRes,
-			  matlIndex, patch);
-  d_linearSolver->computePressResidual(pc, patch, old_dw, new_dw, 
-				       &pressureVars);
-  new_dw->put(sum_vartype(pressureVars.residPress), d_lab->d_presResidPSLabel);
-  new_dw->put(sum_vartype(pressureVars.truncPress), d_lab->d_presTruncPSLabel);
-#else
-  pressureVars.residPress=pressureVars.truncPress=0;
-#endif
 
   // for parallel code lisolve will become a recursive task and 
   // will make the following subroutine separate

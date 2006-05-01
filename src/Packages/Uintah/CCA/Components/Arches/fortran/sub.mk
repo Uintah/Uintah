@@ -40,7 +40,6 @@ SRCS += \
 	$(SRCDIR)/initScal.F \
 	$(SRCDIR)/inlbcs.F \
 	$(SRCDIR)/intrusion_computevel.F \
-	$(SRCDIR)/linegs.F \
 	$(SRCDIR)/mascal.F \
 	$(SRCDIR)/mascal_scalar.F \
 	$(SRCDIR)/uvelcoeffupdate.F \
@@ -65,13 +64,11 @@ SRCS += \
         $(SRCDIR)/pressrcpred_var.F \
 	$(SRCDIR)/profscalar.F \
 	$(SRCDIR)/profv.F \
-	$(SRCDIR)/rescal.F \
 	$(SRCDIR)/scalarvarmodel.F \
 	$(SRCDIR)/scalcoef.F \
 	$(SRCDIR)/scalsrc.F \
 	$(SRCDIR)/smagmodel.F \
 	$(SRCDIR)/symbcs.F \
-	$(SRCDIR)/underelax.F \
 	$(SRCDIR)/uvelcoef.F \
 	$(SRCDIR)/uvelsrc.F \
 	$(SRCDIR)/vvelcoef.F \
@@ -131,7 +128,6 @@ $(SRCDIR)/explicit_velocity.o: $(SRCDIR)/explicit_velocity_fort.h
 $(SRCDIR)/init.o: $(SRCDIR)/init_fort.h
 $(SRCDIR)/initScal.o: $(SRCDIR)/initScal_fort.h
 $(SRCDIR)/inlbcs.o: $(SRCDIR)/inlbcs_fort.h $(SRCDIR)/ramping.h
-$(SRCDIR)/linegs.o: $(SRCDIR)/linegs_fort.h
 $(SRCDIR)/mascal.o: $(SRCDIR)/mascal_fort.h
 $(SRCDIR)/mascal_scalar.o: $(SRCDIR)/mascal_scalar_fort.h
 $(SRCDIR)/mm_computevel.o: $(SRCDIR)/mm_computevel_fort.h
@@ -155,14 +151,12 @@ $(SRCDIR)/pressrcpred.o: $(SRCDIR)/pressrcpred_fort.h
 $(SRCDIR)/pressrcpred_var.o: $(SRCDIR)/pressrcpred_var_fort.h
 $(SRCDIR)/profscalar.o: $(SRCDIR)/profscalar_fort.h
 $(SRCDIR)/profv.o: $(SRCDIR)/profv_fort.h $(SRCDIR)/ramping.h
-$(SRCDIR)/rescal.o: $(SRCDIR)/rescal_fort.h
 $(SRCDIR)/rmean.o: $(SRCDIR)/rmean_fort.h
 $(SRCDIR)/scalarvarmodel.o: $(SRCDIR)/scalarvarmodel_fort.h
 $(SRCDIR)/scalcoef.o: $(SRCDIR)/scalcoef_fort.h
 $(SRCDIR)/scalsrc.o: $(SRCDIR)/scalsrc_fort.h
 $(SRCDIR)/smagmodel.o: $(SRCDIR)/smagmodel_fort.h
 $(SRCDIR)/symbcs.o: $(SRCDIR)/symbcs_fort.h
-$(SRCDIR)/underelax.o: $(SRCDIR)/underelax_fort.h
 $(SRCDIR)/uvelcoef.o: $(SRCDIR)/uvelcoef_fort.h
 $(SRCDIR)/uvelsrc.o: $(SRCDIR)/uvelsrc_fort.h
 $(SRCDIR)/vvelcoef.o: $(SRCDIR)/vvelcoef_fort.h

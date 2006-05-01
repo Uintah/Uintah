@@ -184,50 +184,6 @@ ArchesLabel::ArchesLabel()
   // End of thermal NOx labels
 
 
-  // labels for nonlinear residuals
-  d_presResidPSLabel = VarLabel::create("presResidPSLabel",
-				        ReductionVariable<double,
-				       Reductions::Sum<double> >::getTypeDescription());
-  d_presTruncPSLabel = VarLabel::create("presTruncPSLabel",
-				       sum_vartype::getTypeDescription() );
-  d_uVelResidPSLabel = VarLabel::create("uVelResidPSLabel",
-				       sum_vartype::getTypeDescription() );
-  d_uVelTruncPSLabel = VarLabel::create("uVelTruncPSLabel",
-				       sum_vartype::getTypeDescription() );
-  d_vVelResidPSLabel = VarLabel::create("vVelResidPSLabel",
-				       sum_vartype::getTypeDescription() );
-  d_vVelTruncPSLabel = VarLabel::create("vVelTruncPSLabel",
-				       sum_vartype::getTypeDescription() );
-  d_wVelResidPSLabel = VarLabel::create("wVelResidPSLabel",
-				       sum_vartype::getTypeDescription() );
-  d_wVelTruncPSLabel = VarLabel::create("wVelTruncPSLabel",
-				       sum_vartype::getTypeDescription() );
-  d_scalarResidLabel = VarLabel::create("scalarResidLabel",
-				       sum_vartype::getTypeDescription() );
-  d_scalarTruncLabel = VarLabel::create("scalarTruncLabel",
-				       sum_vartype::getTypeDescription() );
-
-
-  d_pressureRes = VarLabel::create("pressureRes",
-				   CCVariable<double>::getTypeDescription() );
-  d_uVelocityRes = VarLabel::create("uVelocityRes",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelocityRes = VarLabel::create("vVelocityRes",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelocityRes = VarLabel::create("wVelocityRes",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_scalarRes = VarLabel::create("scalarRes",
-				   CCVariable<double>::getTypeDescription() );
-
-  d_reactscalarRes = VarLabel::create("reactscalarRes",
-				   CCVariable<double>::getTypeDescription() );
-
-  d_thermalnoxRes = VarLabel::create("thermalnoxRes",
-                                   CCVariable<double>::getTypeDescription() );
-
-  d_enthalpyRes = VarLabel::create("enthalpyRes",
-				   CCVariable<double>::getTypeDescription() );
-
 
   // Unsure stuff
   // Unsure stuff
@@ -730,7 +686,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_netflowOUTBCLabel);
   VarLabel::destroy(d_totalAreaOUTLabel);
   VarLabel::destroy(d_denAccumLabel);
-  VarLabel::destroy(d_enthalpyRes);
   VarLabel::destroy(d_densityCPLabel);
   VarLabel::destroy(d_densityGuessLabel);
   VarLabel::destroy(d_densityTempLabel);
@@ -763,23 +718,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_refDensity_label);
   VarLabel::destroy(d_refDensityPred_label);
   VarLabel::destroy(d_refPressure_label);
-  VarLabel::destroy(d_presResidPSLabel);
-  VarLabel::destroy(d_presTruncPSLabel);
-  VarLabel::destroy(d_uVelResidPSLabel);
-  VarLabel::destroy(d_uVelTruncPSLabel);
-  VarLabel::destroy(d_vVelResidPSLabel);
-  VarLabel::destroy(d_vVelTruncPSLabel);
-  VarLabel::destroy(d_wVelResidPSLabel);
-  VarLabel::destroy(d_wVelTruncPSLabel);
-  VarLabel::destroy(d_scalarResidLabel);
-  VarLabel::destroy(d_scalarTruncLabel);
-  VarLabel::destroy(d_pressureRes);
-  VarLabel::destroy(d_uVelocityRes);
-  VarLabel::destroy(d_vVelocityRes);
-  VarLabel::destroy(d_wVelocityRes);
-  VarLabel::destroy(d_scalarRes);
-  VarLabel::destroy(d_reactscalarRes);
-  VarLabel::destroy(d_thermalnoxRes);
   VarLabel::destroy(d_DUPBLMLabel);
   VarLabel::destroy(d_DVPBLMLabel);
   VarLabel::destroy(d_DWPBLMLabel);

@@ -33,47 +33,9 @@ PetscSolver::problemSetup(const ProblemSpecP&)
 }
 
 
-// ****************************************************************************
-// Actual compute of pressure residual
-// ****************************************************************************
-void 
-PetscSolver::computePressResidual(const ProcessorGroup*,
-                                  const Patch*,
-                                  DataWarehouseP&,
-                                  DataWarehouseP&,
-                                  ArchesVariables*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-
-// ****************************************************************************
-// Actual calculation of order of magnitude term for pressure equation
-// ****************************************************************************
-void 
-PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
-                                          const Patch* ,
-                                          DataWarehouseP& ,
-                                          DataWarehouseP& , ArchesVariables* )
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
 void 
 PetscSolver::matrixCreate(const PatchSet*,
                           const PatchSubset*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-// ****************************************************************************
-// Actual compute of pressure underrelaxation
-// ****************************************************************************
-void 
-PetscSolver::computePressUnderrelax(const ProcessorGroup*,
-                                    const Patch*,
-                                    ArchesVariables*,
-                                    ArchesConstVariables*)
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
@@ -134,49 +96,6 @@ void PetscSolver::finalizeSolver()
 }
 
 //****************************************************************************
-// Actual compute of Velocity residual
-//****************************************************************************
-
-void 
-PetscSolver::computeVelResidual(const ProcessorGroup* ,
-                                const Patch*,
-                                DataWarehouseP&,
-                                DataWarehouseP&, int,
-                                ArchesVariables*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-
-//****************************************************************************
-// Actual calculation of order of magnitude term for Velocity equation
-//****************************************************************************
-void 
-PetscSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
-                                        const Patch* ,
-                                        DataWarehouseP& ,
-                                        DataWarehouseP& , ArchesVariables* )
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-
-
-//****************************************************************************
-// Velocity Underrelaxation
-//****************************************************************************
-void 
-PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
-                                  const Patch*,
-                                  int,
-                                  ArchesVariables*,
-                                  ArchesConstVariables*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-
-//****************************************************************************
 // Velocity Solve
 //****************************************************************************
 void 
@@ -187,46 +106,6 @@ PetscSolver::velocityLisolve(const ProcessorGroup*,
                              ArchesVariables*,
                              CellInformation*,
                              const ArchesLabel*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-//****************************************************************************
-// Calculate Scalar residuals
-//****************************************************************************
-void 
-PetscSolver::computeScalarResidual(const ProcessorGroup* ,
-                                   const Patch*,
-                                   DataWarehouseP& ,
-                                   DataWarehouseP& , 
-                                   int,
-                                   ArchesVariables*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-
-//****************************************************************************
-// Actual calculation of order of magnitude term for Scalar equation
-//****************************************************************************
-void 
-PetscSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
-                                           const Patch* ,
-                                           DataWarehouseP& ,
-                                           DataWarehouseP& , ArchesVariables* )
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-//****************************************************************************
-// Scalar Underrelaxation
-//****************************************************************************
-void 
-PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
-                                     const Patch*,
-                                     int,
-                                     ArchesVariables*,
-                                     ArchesConstVariables*)
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
@@ -244,16 +123,6 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
-
-void 
-PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
-                                       const Patch*,
-                                       ArchesVariables*,
-                                       ArchesConstVariables*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
 
 //****************************************************************************
 // Scalar Solve

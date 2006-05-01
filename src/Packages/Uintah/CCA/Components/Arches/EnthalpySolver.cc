@@ -201,7 +201,6 @@ EnthalpySolver::solve(const LevelP& level,
   
   // Schedule the enthalpy solve
   // require : enthalpyIN, scalCoefSBLM, scalNonLinSrcSBLM
-  // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, enthalpySP
   //d_linearSolver->sched_enthalpySolve(level, sched, new_dw, matrix_dw);
   sched_enthalpyLinearSolve(sched, patches, matls, timelabels);
 }
@@ -883,10 +882,6 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
 
-    // apply underelax to eqn
-    d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
-					      &enthalpyVars,&constEnthalpyVars);
-
   }
 }
 
@@ -1036,7 +1031,6 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constEnthalpyVars.scalarNonlinearSrc,
 		d_lab->d_enthNonLinSrcSBLMLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
 
 
     if (d_MAlab) {

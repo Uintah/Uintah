@@ -130,17 +130,10 @@ $(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_5loop_fort.h
 $(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_6loop_fort.h
 $(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_7loop_fort.h
 $(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_8loop_fort.h
-$(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/rescal_fort.h
-$(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/underelax_fort.h
-$(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/rescal_fort.h
-$(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/underelax_fort.h
 $(SRCDIR)/PressureSolver.o: $(SRCDIR)/fortran/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/PressureSolver.o: $(SRCDIR)/fortran/normpress_fort.h
 $(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/explicit_fort.h
 $(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/explicit_velocity_fort.h
-$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/linegs_fort.h
-$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/rescal_fort.h
-$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/underelax_fort.h
 $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/scalarvarmodel_fort.h
 $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/add_mm_enth_src_fort.h

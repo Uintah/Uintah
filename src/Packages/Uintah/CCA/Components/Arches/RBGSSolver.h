@@ -70,13 +70,6 @@ public:
       void problemSetup(const ProblemSpecP& params);
 
       ////////////////////////////////////////////////////////////////////////
-      // Pressure Underrelaxation
-      void computePressUnderrelax(const ProcessorGroup* pc,
-				  const Patch* patch,
-				  ArchesVariables* vars,
-				  ArchesConstVariables* constvars);
-
-      ////////////////////////////////////////////////////////////////////////
       // Pressure Solve
       void pressLisolve(const ProcessorGroup* pc,
 			const Patch* patch,
@@ -85,29 +78,6 @@ public:
 			ArchesVariables* vars, 
 			const ArchesLabel* lab);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate pressure residuals
-      void computePressResidual(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars);
-
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate order of magnitude term for pressure equation
-      void computePressOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars);
-
-
-      ////////////////////////////////////////////////////////////////////////
-      // Velocity Underrelaxation
-      void computeVelUnderrelax(const ProcessorGroup* pc,
-				const Patch* patch,
-				int index,
-				ArchesVariables* vars,
-				ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Velocity Solve
@@ -120,45 +90,6 @@ public:
 			   const ArchesLabel* lab);
 
       ////////////////////////////////////////////////////////////////////////
-      // Calculate Velocity residuals
-      void computeVelResidual(const ProcessorGroup* pc,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw, int index,
-				      ArchesVariables* vars);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate order of magnitude term for Velocity equation
-      void computeVelOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate scalar residuals
-      void computeScalarResidual(const ProcessorGroup* pc,
-				 const Patch* patch,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw, 
-				 int index,
-				 ArchesVariables* vars);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate order of magnitude term for scalar equation
-      void computeScalarOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Underrelaxation
-      void computeScalarUnderrelax(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   int index,
-				   ArchesVariables* vars,
-				   ArchesConstVariables* constvars);
-
-      ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
       void scalarLisolve(const ProcessorGroup* pc,
 			 const Patch* patch,
@@ -166,13 +97,6 @@ public:
 			 ArchesVariables* vars,
 			 ArchesConstVariables* constvars,
 			 CellInformation* cellinfo);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Underrelaxation
-      void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
-				     const Patch* patch,
-				     ArchesVariables* vars,
-				     ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
@@ -198,8 +122,6 @@ private:
 
       int d_maxSweeps;
       double d_convgTol; // convergence tolerence
-      double d_underrelax;
-      double d_initResid;
       double d_residual;
 
 }; // End class RBGSSolver.h
