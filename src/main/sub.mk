@@ -59,7 +59,7 @@ else
         Dataflow/Network   \
         Dataflow/TCLThread 
 
-  ifeq ($(HAVE_PTOLEMY), yes)   
+  ifeq ($(HAVE_PTOLEMY_PACKAGE), yes)   
         PSELIBS += Packages/Ptolemy/Core/Comm
   endif
 
