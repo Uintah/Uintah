@@ -50,7 +50,9 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/pidl_cast.h>
 
-//#include <iostream>
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
 
 namespace GUIBuilder {
 
@@ -152,7 +154,9 @@ void
 wxSCIRunApp::AddTopWindow(const sci::cca::BuilderComponent::pointer& bc)
 {
   Guard g(&appLock);
-  //std::cerr << "wxSCIRunApp::AddTopWindow(): from thread " << Thread::self()->getThreadName() << std::endl;
+#if DEBUG
+  std::cerr << "wxSCIRunApp::AddTopWindow(): from thread " << Thread::self()->getThreadName() << std::endl;
+#endif
 
   // set the "main" top level window as parent
   wxWindow *top = GetTopWindow();
@@ -171,12 +175,16 @@ wxSCIRunApp::GetTopBuilderWindow() const
 
 Builder::Builder()
 {
-std::cerr << "Builder::Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
+#if DEBUG
+  std::cerr << "Builder::Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
+#endif
 }
 
 Builder::~Builder()
 {
-std::cerr << "Builder::~Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
+#if DEBUG
+  std::cerr << "Builder::~Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
+#endif
 }
 
 // The first Builder to be instantiated (when wxTheApp is null) gets setServices
@@ -187,8 +195,10 @@ std::cerr << "Builder::~Builder(): from thread " << Thread::self()->getThreadNam
 void
 Builder::setServices(const sci::cca::Services::pointer &svc)
 {
-  Guard g(&builderLock);
+  //Guard g(&builderLock);
+#if DEBUG
   std::cerr << "Builder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
+#endif
   services = svc;
 
   // What framework do we belong to?
@@ -210,6 +220,9 @@ Builder::setServices(const sci::cca::Services::pointer &svc)
     t->detach();
     wxSCIRunApp::semDown();
   } else {
+#if DEBUG
+    std::cerr << "Builder::setServices(..) try to add top window." << std::endl;
+#endif
     if (Thread::self()->getThreadName() == guiThreadName) {
       app->AddTopWindow(sci::cca::BuilderComponent::pointer(this));
     //} else {
@@ -237,7 +250,6 @@ Builder::getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::strin
 
   model = props->getString(PortInstance::MODEL, "");
   type = props->getString(PortInstance::TYPE, "");
-  std::cerr << "Builder::getPortInfo(..): " << portName << ", " << model << ", " << type << std::endl;
 }
 
 
@@ -245,7 +257,6 @@ sci::cca::ComponentID::pointer
 Builder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
 {
   Guard g(&builderLock);
-//std::cerr << "Builder::createInstance(): from thread " << Thread::self()->getThreadName() << std::endl;
   sci::cca::TypeMap::pointer tm = services->createTypeMap();
   sci::cca::ComponentID::pointer cid;
   try {
@@ -259,7 +270,6 @@ Builder::createInstance(const std::string& className, const sci::cca::TypeMap::p
     if (bw) {
       bw->DisplayErrorMessage(e->getNote());
     }
-    //std::cerr << "Error: Could not create an instance of " << className << "; " <<  e->getNote() << std::endl;
   }
   return cid;
 }
@@ -489,12 +499,16 @@ int Builder::go(const std::string& goPortName)
 
 void Builder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)
 {
+#if DEBUG
   std::cerr << "Builder::connectionActivity(..)" << std::endl;
+#endif
 }
 
 void Builder::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
 {
+#if DEBUG
   std::cerr << "Builder::componentActivity: got event for component " << e->getComponentID()->getInstanceName() << std::endl;
+#endif
 }
 
 bool Builder::setPortColor(const std::string& portType, const std::string& colorName)

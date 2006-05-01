@@ -109,13 +109,13 @@ void PortIcon::OnLeftUp(wxMouseEvent& event)
   parent->GetCanvas()->OnConnect(this);
 }
 
-void PortIcon::OnMouseMove(wxMouseEvent& WXUNUSED(event))
+void PortIcon::OnMouseMove(wxMouseEvent& /*WXUNUSED(*/event/*)*/)
 {
   if (connecting) {
     NetworkCanvas *canvas = parent->GetCanvas();
-//     wxPoint p = event.GetPosition();
+//    wxPoint p = event.GetPosition();
     wxPoint p;
-    canvas->GetUnscrolledMousePosition(p);
+    canvas->GetUnscrolledPosition(event.GetPosition(), p);
     canvas->HighlightConnection(p);
   }
 }

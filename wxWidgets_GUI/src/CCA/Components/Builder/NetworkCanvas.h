@@ -54,6 +54,7 @@ typedef std::multimap<PortIcon*, Connection*> ConnectionMap;
 class NetworkCanvas : public wxScrolledWindow {
 public:
   friend class MiniCanvas;
+  friend class BuilderWindow;
 
   // identifiers are local to each wxWindow, so duplication between different windows is OK
   enum {
@@ -82,12 +83,12 @@ public:
   void OnRightClick(wxMouseEvent& event);
   void OnScroll(wxScrollWinEvent& event);
   void OnClear(wxCommandEvent& event);
+  void OnDisconnect(wxCommandEvent& event);
 
   //void DrawIcons(wxDC& dc);
   void DrawConnections(wxDC& dc);
 
   void OnConnect(PortIcon* pUsed);
-  void OnDisconnect(Connection* connection);
   bool ShowPossibleConnections(PortIcon* usesPort);
   void HighlightConnection(const wxPoint& point);
 

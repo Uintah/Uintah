@@ -44,6 +44,10 @@
 
 #include <string>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -108,8 +112,10 @@ void ComponentIcon::OnLeftDown(wxMouseEvent& event)
 {
   canvas->GetUnscrolledMousePosition(movingStart);
 
+#if DEBUG
   std::cerr << "ComponentIcon::OnLeftDown(..) pos=(" << movingStart.x << ", " << movingStart.y << ") "
             << std::endl;
+#endif
 
   isMoving = true;
   canvas->SetMovingIcon(this);
@@ -145,6 +151,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
     wxPoint topLeft;
     canvas->GetUnscrolledPosition(wxPoint(newX, newY), topLeft);
 
+#if DEBUG
     std::cerr << "ComponentIcon::OnMouseMove(..) "
       //<< "event pos=(" << p.x << ", " << p.y << ")"
             << std::endl
@@ -154,6 +161,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
            << std::endl
 	    << "\ttop left pos=(" << topLeft.x << ", " << topLeft.y << ")"
             << std::endl;
+#endif
 
 //     // test
 //     wxPoint p;

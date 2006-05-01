@@ -83,6 +83,7 @@ public:
   //typedef std::map<std::string, int> IntMap;
   typedef std::map<std::string, MenuTree*> MenuTreeMap;
   typedef std::map<int, wxMenu*> MenuMap;
+  typedef SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ClassDescriptionList;
 
   enum { // user specified ids for widgets, menus
     ID_WINDOW_LEFT = MenuTree::ID_MENUTREE_HIGHEST,
@@ -136,7 +137,7 @@ public:
   void DisplayMessages(const std::vector<std::string>& lines);
   void DisplayErrorMessages(const std::vector<std::string>& lines);
 
-  const MenuMap& GetComponentMenus() { return menus; }
+  //const MenuMap& GetComponentMenus() { return menus; }
 
   static int GetNextID() { return ++IdCounter; }
   static int GetCurrentID() { return IdCounter; }
@@ -161,7 +162,7 @@ protected:
   wxMenuBar* menuBar;
   wxStatusBar* statusBar;
 
-  MenuTreeMap menuTrees;
+  //MenuTreeMap menuTrees;
   MenuMap menus;
 
 private:
@@ -182,6 +183,7 @@ private:
   std::string url;
 
   void buildPackageMenus();
+  void buildNetworkPackageMenus();
   void setDefaultText();
 };
 

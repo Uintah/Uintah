@@ -34,6 +34,10 @@
 
 #include <iostream>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -95,7 +99,9 @@ ComponentWizardDialog::~ComponentWizardDialog()
 void ComponentWizardDialog::OnOk(wxCommandEvent& event)
 {
     if (componentName->GetValue()=="") {
+#if DEBUG
        std::cout<<"\nComponent Name is Empty\n";
+#endif
        wxString msg;
        msg.Printf(wxT("Component name field is Empty"));
 
@@ -124,14 +130,18 @@ void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
   AddPortDialog addpport (this, -1, "Add provides port", wxPoint(10, 20), wxSize(400, 400), wxRESIZE_BORDER);
   if (addpport.ShowModal() == wxID_OK) {
     if ((addpport.GetPortNameText().empty())) {
+#if DEBUG
       std::cout << "\nPort name is empty";
+#endif
       wxString msg;
       msg.Printf(wxT("Port name field is Empty"));
 
       wxMessageBox(msg, wxT("Add Provides Port"),
 		   wxOK | wxICON_INFORMATION, this);
     } else if (addpport.GetDataTypeText().empty()) {
+#if DEBUG
       std::cout << "\nPort type is empty";
+#endif
       wxString msg;
       msg.Printf(wxT("Port type field is Empty"));
 
@@ -139,7 +149,9 @@ void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
 		   wxOK | wxICON_INFORMATION, this);
 
     } else if (addpport.GetDescriptionText().empty()) {
+#if DEBUG
       std::cout << "\nPort description is empty";
+#endif
       wxString msg;
       msg.Printf(wxT("Port Description field is Empty"));
 
@@ -149,7 +161,9 @@ void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
     } else {
       PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
 
+#if DEBUG
       std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
+#endif
       pp.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText()));
     }
   }
@@ -160,7 +174,9 @@ void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
   if (addpport.ShowModal() == wxID_OK) {
 
     if ((addpport.GetPortNameText().empty())) {
+#if DEBUG
       std::cout << "\nPort name is empty" << std::endl;
+#endif
       wxString msg;
       msg.Printf(wxT("Port name field is Empty"));
 
@@ -175,7 +191,9 @@ void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
 		   wxOK | wxICON_INFORMATION, this);
 
     } else if (addpport.GetDescriptionText().empty()) {
+#if DEBUG
       std::cout << "\nPort description is empty";
+#endif
       wxString msg;
       msg.Printf(wxT("Port Description field is Empty"));
 
@@ -183,7 +201,9 @@ void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
 		   wxOK | wxICON_INFORMATION, this);
     } else {
       PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
+#if DEBUG
       std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
+#endif
       up.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(), addpport.GetDescriptionText()));
 
     }

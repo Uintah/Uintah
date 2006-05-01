@@ -48,10 +48,11 @@
 #include <CCA/Components/Builder/MiniCanvas.h>
 #include <CCA/Components/Builder/NetworkCanvas.h>
 #include <CCA/Components/Builder/ComponentIcon.h>
-
 #include <CCA/Components/Builder/ComponentWizardDialog.h>
 
-//#include "compdialog.h"
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
 
 namespace GUIBuilder {
 
@@ -175,7 +176,9 @@ int BuilderWindow::IdCounter = BuilderWindow::ID_BUILDERWINDOW_HIGHEST;
 
 BuilderWindow::BuilderWindow(const sci::cca::BuilderComponent::pointer& bc, wxWindow *parent) : builder(bc)
 {
-std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;
+#if DEBUG
+  std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;
+#endif
 
   Init();
   Create(parent, wxID_ANY);
@@ -211,7 +214,9 @@ bool BuilderWindow::SetBuilder(const sci::cca::BuilderComponent::pointer& bc)
 
 BuilderWindow::~BuilderWindow()
 {
+#if DEBUG
   std::cerr << "BuilderWindow::~BuilderWindow()" << std::endl;
+#endif
   // framework shutdown instead!!!
   Thread::exitAll(0);
 }
@@ -229,7 +234,9 @@ void BuilderWindow::OnAbout(wxCommandEvent &event)
 
 void BuilderWindow::OnQuit(wxCommandEvent &event)
 {
+#if DEBUG
   std::cerr << "BuilderWindow::OnQuit(..)" << std::endl;
+#endif
   // Destroy the frame
   Close();
 }
@@ -317,42 +324,27 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
   try {
     sci::cca::ComponentID::pointer helloCid = builder->createInstance("SCIRun.Hello", sci::cca::TypeMap::pointer(0));
     if (! helloCid.isNull()) {
+#if DEBUG
       std::cerr << "wx: Got hello: " << helloCid->getInstanceName() << std::endl;
+#endif
       networkCanvas->AddIcon(helloCid);
     }
 
-//     sci::cca::ComponentID::pointer helloCid1 = builder->createInstance("SCIRun.Hello");
-//     std::cerr << "wx: Got hello: " << helloCid1->getInstanceName() << std::endl;
-
-//     sci::cca::ComponentID::pointer helloCid2 = builder->createInstance("SCIRun.Hello");
-//     std::cerr << "wx: Got hello: " << helloCid2->getInstanceName() << std::endl;
-
     sci::cca::ComponentID::pointer worldCid = builder->createInstance("SCIRun.World", sci::cca::TypeMap::pointer(0));
     if (! worldCid.isNull()) {
+#if DEBUG
       std::cerr << "wx: Got world: " << worldCid->getInstanceName() << std::endl;
+#endif
       networkCanvas->AddIcon(worldCid);
     }
 
     sci::cca::ComponentID::pointer pdeDriverCid = builder->createInstance("SCIRun.PDEdriver", sci::cca::TypeMap::pointer(0));
     if (! pdeDriverCid.isNull()) {
+#if DEBUG
       std::cerr << "wx: Got pdeDriver: " << pdeDriverCid->getInstanceName() << std::endl;
+#endif
       networkCanvas->AddIcon(pdeDriverCid);
     }
-
-//     sci::cca::ComponentID::pointer builderCid = builder->createInstance("SCIRun.Builder");
-//     std::cerr << "wx: Got builder: " << builderCid->getInstanceName() << std::endl;
-
-    //sci::cca::ConnectionID::pointer connID = bs->connect(worldCid, "stringport", helloCid, "stringport");
-    //Refresh();
-
-    //services->registerUsesPort("goPort", "sci.cca.ports.GoPort", sci::cca::TypeMap::pointer(0));
-    //bs->connect(services->getComponentID(), "goPort", helloCid, "go");
-
-    //sci::cca::Port::pointer p = services->getPort("goPort");
-    //sci::cca::ports::GoPort::pointer goPort = pidl_cast<sci::cca::ports::GoPort::pointer>(p);
-    //goPort->go();
-    //services->releasePort("goPort");
-    //services->releasePort("cca.BuilderService");
   }
   catch (const sci::cca::CCAException::pointer &e) {
     DisplayErrorMessage(e->getNote());
@@ -363,8 +355,7 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
 {
-  ComponentWizardDialog cwDialog(this, -1, "Component wizard dialog", wxPoint(100,100), wxSize(400,400),wxRESIZE_BORDER);
-  // MyCustomDialog cwDialog ( this,-1,"Component wizard dialog",wxPoint(100,100),wxSize(400,400));
+  ComponentWizardDialog cwDialog(this, wxID_ANY, "Component wizard dialog", wxPoint(100, 100), wxSize(400, 400), wxRESIZE_BORDER);
   cwDialog.ShowModal();
 }
 
@@ -391,7 +382,6 @@ void BuilderWindow::OnClearMessages(wxCommandEvent& event)
 
 void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
 {
-std::cerr << "BuilderWindow::InstantiateComponent(..)" << std::endl;
   statusBar->SetStatusText("Build component", 0);
   //try {
     TypeMap *tm = new TypeMap;
@@ -515,12 +505,13 @@ void BuilderWindow::buildPackageMenus()
   //statusBar()->message("Building component menus...", 4000);
   //setCursor(Qt::WaitCursor);
   //componentMenu->clear(); // canvas popup menu
-  menuTrees.clear();
+  MenuTreeMap menuTrees;
 
-  SSIDL::array1<sci::cca::ComponentClassDescription::pointer> list;
+  ClassDescriptionList list;
   builder->getComponentClassDescriptions(list);
 
-  for (std::vector<sci::cca::ComponentClassDescription::pointer>::iterator iter = list.begin(); iter != list.end(); iter++) {
+  // build menu trees for component model and component types in model
+  for (ClassDescriptionList::iterator iter = list.begin(); iter != list.end(); iter++) {
     // model name could be obtained somehow locally.
     // and we can assume that the remote component model is always "CCA"
     std::string model = (*iter)->getComponentModelName();
@@ -544,21 +535,19 @@ void BuilderWindow::buildPackageMenus()
        iter != menuTrees.end(); iter++) {
     iter->second->coalesce();
   }
-
   //componentMenu->insertItem("Components");
 
+  // build menus from menu trees
   for (MenuTreeMap::iterator iter = menuTrees.begin(); iter != menuTrees.end(); iter++) {
-    //QPopupMenu* menu = new QPopupMenu(this);
-    //menu->setFont(*bFont);
     wxMenu *menu = new wxMenu(wxT(""), wxMENU_TEAROFF);
-    //int menuID;
     iter->second->populateMenu(menu);
-    int menuIndex = menuBar->FindMenu(wxT(iter->first));
+
     // must be tested after adding components at runtime
+    int menuIndex = menuBar->FindMenu(wxT(iter->first));
     if (menuIndex == wxNOT_FOUND) {
       if (menuBar->Append(menu, wxT(iter->first))) {
 	menus[menuIndex] = menu;
-	menuIndex = menuBar->FindMenu(wxT(iter->first));
+	//menuIndex = menuBar->FindMenu(wxT(iter->first));
       } else {
 	DisplayErrorMessage(std::string("Could not append menu ") + iter->first);
       }

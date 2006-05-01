@@ -39,6 +39,10 @@
 
 #include <iostream>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -54,6 +58,7 @@ BEGIN_EVENT_TABLE(NetworkCanvas, wxScrolledWindow)
 // EVT_MIDDLE_DOWN(NetworkCanvas::OnLeftDown) // ignore middle clicks on canvas for now...
   EVT_SCROLLWIN(NetworkCanvas::OnScroll)
   EVT_MENU(ID_MENU_CLEAR, NetworkCanvas::OnClear)
+  EVT_MENU(ID_MENU_DISCONNECT, NetworkCanvas::OnDisconnect)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(NetworkCanvas, wxScrolledWindow)
@@ -97,12 +102,12 @@ void NetworkCanvas::OnLeftDown(wxMouseEvent& event)
   GetUnscrolledPosition(p, pp);
   wxPoint mp;
   GetUnscrolledMousePosition(mp);
+#if DEBUG
   std::cerr << "NetworkCanvas::OnLeftDown(..):" << std::endl
 	    << "\t event position=(" << p.x << ", " << p.y << ")" << std::endl
 	    << "\t unscrolled event position=(" << pp.x << ", " << pp.y << ")" << std::endl
 	    << "\t unscrolled mouse position=(" << mp.x << ", " << mp.y << ")" << std::endl
             << std::endl;
-#if 0
   std::cerr << "NetworkCanvas::OnLeftDown(..)" << std::endl;
   if (movingIcon) {
     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
@@ -112,7 +117,7 @@ void NetworkCanvas::OnLeftDown(wxMouseEvent& event)
 
 void NetworkCanvas::OnLeftUp(wxMouseEvent& event)
 {
-#if 0
+#if DEBUG
   std::cerr << "NetworkCanvas::OnLeftUp(..)" << std::endl;
   if (movingIcon) {
     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
@@ -123,9 +128,9 @@ void NetworkCanvas::OnLeftUp(wxMouseEvent& event)
 
 void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
 {
-#if 0
-  std::cerr << "NetworkCanvas::OnMouseMove(..)" << std::endl;
+#if DEBUG
   if (movingIcon) {
+    std::cerr << "NetworkCanvas::OnMouseMove(..)" << std::endl;
     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
     movingIcon->OnMouseMove(event);
     //wxPoint p = event.GetPosition();
@@ -149,12 +154,10 @@ void NetworkCanvas::OnRightClick(wxMouseEvent& event)
 // set menu parent???? would have to reset menu parent when done?
 //     componentMenu->Append();
 //   }
-  bool ret;
   wxPoint mp;
   GetUnscrolledMousePosition(mp);
   for (ConnectionMap::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-    ret = iter->second->IsMouseOver(mp);
-    if (ret) {
+    if (iter->second->IsMouseOver(mp)) {
       PopupMenu(connectionPopupMenu, mp);
       return;
     }
@@ -174,6 +177,21 @@ void NetworkCanvas::OnClear(wxCommandEvent& event)
 {
   Clear();
   builderWindow->RedrawMiniCanvas();
+}
+
+void NetworkCanvas::OnDisconnect(wxCommandEvent& event)
+{
+  wxPoint mp;
+  GetUnscrolledMousePosition(mp);
+  for (ConnectionMap::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+    if (iter->second->IsMouseOver(mp)) {
+      Connection* c = iter->second;
+      connections.erase(iter);
+      delete c;
+    }
+  }
+  builderWindow->RedrawMiniCanvas();
+  Refresh();
 }
 
 void NetworkCanvas::OnPaint(wxPaintEvent& event)
@@ -247,13 +265,6 @@ void NetworkCanvas::OnConnect(PortIcon* usesPortIcon)
     }
   }
   ClearPossibleConnections();
-}
-
-void NetworkCanvas::OnDisconnect(Connection* connection)
-{
-  // disconnect
-  // connection multimap: uses port icon : connections...
-  //builder->disconnect();
 }
 
 bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
@@ -344,15 +355,6 @@ void NetworkCanvas::HighlightConnection(const wxPoint& point)
       iter->second->UnhighlightConnection();
     }
   }
-
-//   for (ConnectionMap::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-//     bool ret = iter->second->IsMouseOver(point);
-//     if (ret) {
-//       iter->second->HighlightConnection();
-//     } else {
-//       iter->second->UnhighlightConnection();
-//     }
-//   }
   Refresh();
 }
 
@@ -620,10 +622,11 @@ void NetworkCanvas::SetMenus()
 
   popupMenu->Append(clearMenuItem);
   popupMenu->AppendSeparator();
-  popupMenu->Append(ID_MENU_COMPONENTS, wxT("Components submenu"), componentMenu);
+  //popupMenu->Append(ID_MENU_COMPONENTS, wxT("Components submenu"), componentMenu);
 
   connectionPopupMenu = new wxMenu();
   deleteConnection = new wxMenuItem(connectionPopupMenu, ID_MENU_DISCONNECT, wxT("Disconnect"), wxT("Break this connection"));
+  connectionPopupMenu->Append(deleteConnection);
 }
 
 // called from within paint event handler only!
