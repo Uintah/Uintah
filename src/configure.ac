@@ -4114,8 +4114,9 @@ if test "$sci_required_ptolemyII" = "yes"; then
     #PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
     PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
+    HAVE_PTOLEMY_PACKAGE="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
-    HAVE_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
+    DEF_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
   else
     AC_MSG_ERROR(Ptolemy II directory is missing.)
   fi
@@ -4124,6 +4125,7 @@ fi
 AC_SUBST(HAVE_PTOLEMY)
 AC_SUBST(DEF_PTOLEMY)
 AC_SUBST(HAVE_PTOLEMY_PACKAGE)
+AC_SUBST(DEF_PTOLEMY_PACKAGE)
 AC_SUBST(PTOLEMY_PATH)
 AC_SUBST(PTOLEMY_CLASSPATH)
 sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
