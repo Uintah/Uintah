@@ -654,6 +654,7 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
       }
     }
   }
+  d_state = checkLoadBalance;
 }
 
 bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool force)
