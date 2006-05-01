@@ -72,6 +72,14 @@ class SCISHARE NumericAlgo : public AlgoLibrary {
 
     // CutHill-mcKee
     bool CuthillmcKee(MatrixHandle input,MatrixHandle& output,MatrixHandle& mapping,bool calcmapping = true);
+    
+    // Apply an operation on a row by row basis
+    bool ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::string operation); 
+
+    // Apply an operation on a column by column basis
+    bool ApplyColumnOperation(MatrixHandle input, MatrixHandle& output, std::string operation); 
+    
+    
 };
 
 
