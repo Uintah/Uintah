@@ -244,8 +244,6 @@ private:
       bool d_radiationCalc;
       bool d_DORadiationCalc;
       bool d_thermalNOx;
-      bool d_flamelet;
-      bool d_steadyflamelet;
 
       bool d_co_output;
       bool d_sulfur_chem;
