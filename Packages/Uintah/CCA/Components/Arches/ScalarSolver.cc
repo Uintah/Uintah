@@ -160,7 +160,6 @@ ScalarSolver::solve(SchedulerP& sched,
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
-  // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
   sched_scalarLinearSolve(sched, patches, matls, timelabels, index);
 }
@@ -536,9 +535,6 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
 
-    // apply underelax to eqn
-    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
-					    &scalarVars, &constScalarVars);
 
   }
 }
@@ -691,7 +687,6 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constScalarVars.scalarNonlinearSrc,
 		d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
 
     new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);

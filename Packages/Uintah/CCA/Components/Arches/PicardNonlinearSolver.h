@@ -123,15 +123,6 @@ public:
 			   const MaterialSet* matls);
 
       // GROUP: Action Computations :
-      ///////////////////////////////////////////////////////////////////////
-      // Compute the residual
-      //    [in] 
-      //        documentation here
-      double computeResidual(const LevelP&, 
-			     SchedulerP& sched,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
-
       void sched_printTotalKE(SchedulerP& sched,
 			      const PatchSet* patches,
 			      const MaterialSet* matls,

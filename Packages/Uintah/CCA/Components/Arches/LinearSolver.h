@@ -83,43 +83,12 @@ public:
       inline double getInitNorm() { return init_norm; }
 
       ////////////////////////////////////////////////////////////////////////
-      // Pressure Underrelaxation
-      virtual void computePressUnderrelax(const ProcessorGroup* pc,
-					  const Patch* patch,
-					  ArchesVariables* vars,
-				          ArchesConstVariables* constvars) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
       // Pressure Solve
       virtual void pressLisolve(const ProcessorGroup* pc,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw, ArchesVariables* vars, 
 				const ArchesLabel* lab) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate pressure residuals
-      virtual void computePressResidual(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
-
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate order of magnitude term for pressure equation
-      virtual void computePressOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
-
-
-      ////////////////////////////////////////////////////////////////////////
-      // Velocity Underrelaxation
-      virtual void computeVelUnderrelax(const ProcessorGroup* pc,
-					const Patch* patch,
-					int index,
-					ArchesVariables* vars,
-				        ArchesConstVariables* constvars) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Velocity Solve
@@ -132,30 +101,6 @@ public:
 				   const ArchesLabel* lab) = 0;
 
       ////////////////////////////////////////////////////////////////////////
-      // Calculate Velocity residuals
-      virtual void computeVelResidual(const ProcessorGroup* pc,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw, int index,
-				      ArchesVariables* vars) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate order of magnitude term for Velocity equation
-      virtual void computeVelOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
-
-
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Underrelaxation
-      virtual void computeScalarUnderrelax(const ProcessorGroup* pc,
-					   const Patch* patch,
-					   int index,
-					   ArchesVariables* vars,
-				           ArchesConstVariables* constvars) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
       virtual void scalarLisolve(const ProcessorGroup* pc,
 				 const Patch* patch,
@@ -165,11 +110,6 @@ public:
 				 ArchesConstVariables* constvars,
 				 CellInformation* cellinfo) = 0;
 
-      virtual void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
-					     const Patch* patch,
-					     ArchesVariables* vars,
-					     ArchesConstVariables* constvars)=0;
-
       ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
       virtual void enthalpyLisolve(const ProcessorGroup* pc,
@@ -178,22 +118,6 @@ public:
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars,
 				   CellInformation* cellinfo) = 0;
-
-       ////////////////////////////////////////////////////////////////////////
-      // Calculate Scalar residuals
-      virtual void computeScalarResidual(const ProcessorGroup* pc,
-					 const Patch* patch,
-					 DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw, int index,
-					 ArchesVariables* vars) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
-      // Calculate order of magnitude term for scalar equation
-      virtual void computeScalarOrderOfMagnitude(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
-
 
    virtual void matrixCreate(const PatchSet* allpatches,
 			     const PatchSubset* mypatches) = 0;

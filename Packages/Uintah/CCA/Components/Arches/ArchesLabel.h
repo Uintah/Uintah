@@ -69,7 +69,6 @@ namespace Uintah {
       const VarLabel* d_totalAreaOUTLabel;
       const VarLabel* d_denAccumLabel;
       // Density Labels
-      const VarLabel* d_enthalpyRes;
 
       const VarLabel* d_densityCPLabel;
       const VarLabel* d_densityGuessLabel;
@@ -253,23 +252,6 @@ namespace Uintah {
 
       // labels for nonlinear residuals
 
-      const VarLabel* d_presResidPSLabel;
-      const VarLabel* d_presTruncPSLabel;
-      const VarLabel* d_uVelResidPSLabel;
-      const VarLabel* d_uVelTruncPSLabel;
-      const VarLabel* d_vVelResidPSLabel;
-      const VarLabel* d_vVelTruncPSLabel;
-      const VarLabel* d_wVelResidPSLabel;
-      const VarLabel* d_wVelTruncPSLabel;
-      const VarLabel* d_scalarResidLabel;
-      const VarLabel* d_scalarTruncLabel;
-      const VarLabel* d_pressureRes;
-      const VarLabel* d_uVelocityRes;
-      const VarLabel* d_vVelocityRes;
-      const VarLabel* d_wVelocityRes;
-      const VarLabel* d_scalarRes;
-      const VarLabel* d_reactscalarRes;
-      const VarLabel* d_thermalnoxRes;
 
 
       // Not sure what these labels are for

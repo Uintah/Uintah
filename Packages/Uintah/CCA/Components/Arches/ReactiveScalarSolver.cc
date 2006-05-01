@@ -160,7 +160,6 @@ ReactiveScalarSolver::solve(SchedulerP& sched,
   
   // Schedule the scalar solve
   // require : scalarIN, reactscalCoefSBLM, scalNonLinSrcSBLM
-  // compute : scalResidualSS, reactscalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_reactscalarSolve(level, sched, new_dw, matrix_dw, index);
   sched_reactscalarLinearSolve(sched, patches, matls, timelabels, index);
 }
@@ -467,11 +466,6 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: reactscalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
 
-    // apply underelax to eqn
-    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
-					    &reactscalarVars,
-					    &constReactscalarVars);
-
   }
 }
 
@@ -616,7 +610,6 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constReactscalarVars.scalarNonlinearSrc,
 		d_lab->d_reactscalNonLinSrcSBLMLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocateTemporary(reactscalarVars.residualReactivescalar,  patch);
 
     new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
