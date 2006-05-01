@@ -57,7 +57,8 @@ template<> string SimpleIPort<TimeViewerHandle>::port_color_("SpringGreen2");
 
 TimeViewer::TimeViewer() :
   ref_cnt(0),
-  lock("TimeViewer ref_cnt lock")
+  lock("TimeViewer ref_cnt lock"),
+  generation(-1)
 {}
 
 TimeViewer::~TimeViewer()
