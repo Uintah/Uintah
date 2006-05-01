@@ -40,7 +40,6 @@ itcl_class SCIRun_FieldsCreate_CreateMesh {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -88,6 +87,9 @@ itcl_class SCIRun_FieldsCreate_CreateMesh {
 	pack $w.exec -side bottom -padx 5 -pady 5
 	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.exec.execute -side top -e n
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method labelcombo { win text1 arglist var} {

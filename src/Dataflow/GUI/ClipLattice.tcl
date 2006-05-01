@@ -37,8 +37,7 @@ itcl_class SCIRun_FieldsCreate_ClipLattice {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -66,7 +65,13 @@ itcl_class SCIRun_FieldsCreate_ClipLattice {
 	labelentry $w.f.max.y "Y:" $this-text-max-y
 	labelentry $w.f.max.z "Z:" $this-text-max-z
 	pack $w.f.max.x $w.f.max.y $w.f.max.z -side top -fill x -pady 3 -expand 1
-	checkbutton $w.f.c -text "Use This BBox" -variable $this-use-text-bbox
-	pack $w.f.min $w.f.max $w.f.c -side top -fill x -padx 3 -pady 3 -expand 1
+
+	checkbutton $w.c -text "Use This BBox" -variable $this-use-text-bbox
+
+	pack $w.f.min $w.f.max -side left -fill x -padx 3 -pady 3 -expand 1
+        pack $w.c
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
