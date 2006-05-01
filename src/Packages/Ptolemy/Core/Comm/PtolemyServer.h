@@ -70,7 +70,7 @@ int PtolemyServer::next_tag = 0;
 class ProcessRequest : public Runnable
 {
 	public:
-		ProcessRequest(TCLInterface *tclInt, Network *n, int fd,Thread* t, WallClockTimer* w)
+		ProcessRequest(GuiInterface *tclInt, Network *n, int fd,Thread* t, WallClockTimer* w)
 	: gui(tclInt), net(n), connfd(fd), idle_time(t), wc(w) {}
 		~ProcessRequest();
 		void run();
@@ -84,7 +84,7 @@ class ProcessRequest : public Runnable
 		void stop(int sockfd);
 		void detach(int sockfd);
 		void eval(int sockfd, string command);
-		TCLInterface *gui;
+		GuiInterface *gui;
 		Network *net;
 		string loaded_net;
 		int connfd;
@@ -95,11 +95,11 @@ class ProcessRequest : public Runnable
 class ServerTime : public Runnable
 {
 	public:
-		ServerTime(TCLInterface *tclInt, WallClockTimer* w,  double max) : gui(tclInt), wc(w), max_time(max) {}
+		ServerTime(GuiInterface *tclInt, WallClockTimer* w,  double max) : gui(tclInt), wc(w), max_time(max) {}
 		virtual ~ServerTime() {}
 		void run();
 	private:
-		TCLInterface *gui;
+		GuiInterface *gui;
 		WallClockTimer* wc;
 		double max_time;	//TODO right now this is hard coded..  make command line option?
 };

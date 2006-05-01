@@ -289,10 +289,10 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 			//when the viewer is done save the image
 			ViewerMessage *msg1 = scinew ViewerMessage
 					(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, picFormat,"640","470");
-			viewer->mailbox.send(msg1); 
+			viewer->mailbox_.send(msg1); 
 
 			ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
-			viewer->mailbox.send(msg2);
+			viewer->mailbox_.send(msg2);
 		}//else we do not try and save pictures
 		
 	}

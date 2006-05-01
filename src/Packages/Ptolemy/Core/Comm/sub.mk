@@ -54,7 +54,6 @@ else
                Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
                Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
                Dataflow/Modules/Render \
-                   Packages/Ptolemy/Core/PtolemyInterface \
 
 endif
    
