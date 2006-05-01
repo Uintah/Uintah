@@ -395,9 +395,11 @@ main(int argc, char *argv[], char **environment) {
 
 
 #ifdef HAVE_PTOLEMY_PACKAGE
+  //get gui pointer
+  GuiInterface *gui = GuiInterface::getSingleton();
   //start the Ptolemy/spa server socket
   const char *pt_str = sci_getenv("PTOLEMY_CLIENT_PORT");
-  if (pt_str && string_to_int(pt_str, port)) {
+  if (pt_str){ //if we want to specify the port someday && string_to_int(pt_str, port)) {
     cerr << "Starting SPA server thread" << std::endl;
     PtolemyServer *ptserv = new PtolemyServer(gui,net);
     Thread *pt = new Thread(ptserv, "Ptolemy/SPA Server", 0,
