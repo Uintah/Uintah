@@ -246,7 +246,7 @@ itcl_class BaseViewWindow {
 	setGlobal $this-global-movieName "./movie.%04d"
 	setGlobal $this-global-movieFrame 0
 	setGlobal $this-global-resize 0
-	setGlobal $this-global-message "Waiting ..."
+	setGlobal $this-global-movieMessage "Waiting ..."
 	setGlobal $this-global-sync_with_execute 0
 	setGlobal $this-x-resize 700
 	setGlobal $this-y-resize 512
@@ -1592,7 +1592,7 @@ itcl_class ViewWindow {
 	bind $w.resize_f.e1 <Return> "$this resize"
 	bind $w.resize_f.e2 <Return> "$this resize"
 
-	entry $w.message -textvariable $this-global-message \
+	entry $w.message -textvariable $this-global-movieMessage \
 	    -relief flat -width 20 -state disabled
 	frame $w.separator -height 2 -relief sunken -borderwidth 2
 	button $w.close -width 10 -text "Close" \
