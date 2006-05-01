@@ -16,13 +16,19 @@
 #include <Core/Containers/HashTable.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/QuadSurfField.h>
+
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+
+#include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
@@ -45,7 +51,6 @@
 #include <Dataflow/Network/Ports/TimePort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/XMLUtil/XMLUtil.h>
-#include <Core/XMLUtil/StrX.h>
 
 #include <sys/stat.h>
 #include <math.h>
@@ -56,19 +61,10 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 // Foundational Model of Anatomy Web Services
-#include "soapServiceInterfaceSoapBindingProxy.h" // get proxy
-#include "ServiceInterfaceSoapBinding.nsmap" // get namespace bindings
-#include "stdsoap2.h"
-// Xerces XML parser
-#include <xercesc/framework/MemBufInputSource.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/dom/DOMNamedNodeMap.hpp>
-#include <xercesc/dom/DOMNodeList.hpp>
-#include <xercesc/dom/DOMNamedNodeMap.hpp>
-#include <xercesc/sax/ErrorHandler.hpp>
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
+// #include "soapServiceInterfaceSoapBindingProxy.h" // get proxy
+// #include "ServiceInterfaceSoapBinding.nsmap" // get namespace bindings
+// #include "stdsoap2.h"
+
 // VS/Hotbox
 #include "VS_SCI_HotBox.h"
 #include "labelmaps.h"

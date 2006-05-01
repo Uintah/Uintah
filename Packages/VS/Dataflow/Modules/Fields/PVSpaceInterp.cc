@@ -32,7 +32,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/Timer.h>
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
@@ -53,6 +55,9 @@ class InterpController;
 
 class PVSpaceInterp : public Module
 {
+  typedef HexVolMesh<HexTrilinearLgn<Point> >             HVMesh;
+  typedef HexTrilinearLgn<double>                         FDDBasis;
+  typedef GenericField<HVMesh, FDDBasis, vector<double> > HVField;  
 public:
   PVSpaceInterp(GuiContext* ctx);
   virtual ~PVSpaceInterp();
@@ -74,7 +79,7 @@ private:
   void apply_potentials(float e_phase, float HR);
   void set_phase_ranges();
 
-  HexVolMesh::Node::index_type find_closest(HexVolMesh *mesh, 
+  HVMesh::Node::index_type find_closest(HVMesh *mesh, 
 					    const Point &p) const;
   void set_field(const unsigned idx);
   inline 
@@ -234,7 +239,7 @@ void
 PVSpaceInterp::set_context(Network* network)
 {
   Module::set_context(network);
-  sched->add_callback(consumed_callback, this);
+  sched_->add_callback(consumed_callback, this);
 }
 
 bool
@@ -276,13 +281,13 @@ PVSpaceInterp::check_lv_vol(const Point &hip_pnt)
 		      322, 152, 328, 149, 325, 146, 319};
   int bp_len = 18;
   
-  LockingHandle<HexVolMesh> mesh = 
-    ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
+  LockingHandle<HVMesh> mesh = 
+    ((HVField*)out_fld_.get_rep())->get_typed_mesh();
 
   Vector tot(0.0, 0.0, 0.0);
   for (int i = 0; i < bp_len; ++i) {
     Point p;
-    mesh->get_center(p, (HexVolMesh::Node::index_type)base_perim[i]);
+    mesh->get_center(p, (HVMesh::Node::index_type)base_perim[i]);
     //    cerr << "point: " << p << std::endl;
     tot += Vector(p);
     //cerr << "at: " << i << " " << tot << std::endl;
@@ -299,24 +304,24 @@ PVSpaceInterp::check_lv_vol(const Point &hip_pnt)
   int sz_lv_elems = 180;
   double tot_vol = 0.0L;
   for (int i = 0; i < sz_lv_elems; ++i) {
-    HexVolMesh::Face::array_type faces;
-    HexVolMesh::Cell::index_type ci =
-      (HexVolMesh::Cell::index_type)(lv_elems[i] - 1);
+    HVMesh::Face::array_type faces;
+    HVMesh::Cell::index_type ci =
+      (HVMesh::Cell::index_type)(lv_elems[i] - 1);
     mesh->get_faces(faces, ci);
 
     // Check each face for neighbors.
-    HexVolMesh::Face::array_type::iterator fiter = faces.begin();
+    HVMesh::Face::array_type::iterator fiter = faces.begin();
 
     while (fiter != faces.end())
     {
-      HexVolMesh::Cell::index_type nci;
-      HexVolMesh::Face::index_type fi = *fiter;
+      HVMesh::Cell::index_type nci;
+      HVMesh::Face::index_type fi = *fiter;
       ++fiter;
 
       if (! mesh->get_neighbor(nci , ci, fi))
       {
 	// Faces with no neighbors are on the boundary, build 2 tets.
-	HexVolMesh::Node::array_type nodes;
+	HVMesh::Node::array_type nodes;
 	mesh->get_nodes(nodes, fi);
 	// the 4 points
 
@@ -364,10 +369,9 @@ PVSpaceInterp::apply_potentials(float e_phase, float HR)
     }
   }
 
-  LockingHandle<HexVolMesh> mesh = 
-    ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
-  out_fld_pot_ = scinew HexVolField<double>(mesh, 1);
-  vector<double> &data = ((HexVolField<double>*)out_fld_pot_.get_rep())->fdata();
+  HVMesh::handle_type mesh = ((HVField*)out_fld_.get_rep())->get_typed_mesh();
+  out_fld_pot_ = scinew HVField(mesh);
+  vector<double> &data = ((HVField*)out_fld_pot_.get_rep())->fdata();
   MatrixHandle crv = crv_mats_[closest];
   if (crv.get_rep() == 0) {
     return;
@@ -387,13 +391,13 @@ PVSpaceInterp::apply_potentials(float e_phase, float HR)
 }
 
 
-HexVolMesh::Node::index_type
-PVSpaceInterp::find_closest(HexVolMesh *mesh, const Point &p) const
+PVSpaceInterp::HVMesh::Node::index_type
+PVSpaceInterp::find_closest(HVMesh *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
 
-  HexVolMesh::Node::index_type index;
-  HexVolMesh::Node::iterator bi, ei;
+  HVMesh::Node::index_type index;
+  HVMesh::Node::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
   {
@@ -417,8 +421,8 @@ PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx,
 
   FieldHandle fld = ppv_flds_[phase_idx];
   MeshHandle mesh_h = fld->mesh();
-  HexVolMesh *mesh = (HexVolMesh*)mesh_h.get_rep();
-  HexVolMesh::Node::array_type nodes;
+  HVMesh *mesh = (HVMesh*)mesh_h.get_rep();
+  HVMesh::Node::array_type nodes;
   unsigned    interp_idxs[8];
   double      weights[8];
 
@@ -438,7 +442,7 @@ PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx,
   //find closest...
   if (! mesh->get_weights(p, nodes, weights)) 
   {
-    HexVolMesh::Node::index_type ni = find_closest(mesh, p);
+    HVMesh::Node::index_type ni = find_closest(mesh, p);
     set_field(phase_idx * ppv_nodes + ni + idx_off);
   } else { 
     interp_idxs[0] = phase_idx * ppv_nodes + nodes[0] + idx_off;
@@ -460,16 +464,15 @@ PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx,
 void 
 PVSpaceInterp::set_field(const unsigned node_idx) 
 {
-  const int sz = interp_space_->nrrd->axis[1].size;
-  float *dat = (float*)interp_space_->nrrd->data;
+  const int sz = interp_space_->nrrd_->axis[1].size;
+  float *dat = (float*)interp_space_->nrrd_->data;
 
   out_fld_ = con_fld_;
   out_fld_->generation++;
 
-  LockingHandle<HexVolMesh> mesh = 
-    ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
+  HVMesh::handle_type mesh = ((HVField*)out_fld_.get_rep())->get_typed_mesh();
   vector<Point> &points = mesh->get_points();
-  vector<double> &data = ((HexVolField<double>*)out_fld_.get_rep())->fdata();
+  vector<double> &data = ((HVField*)out_fld_.get_rep())->fdata();
 
   for (int i = 0; i < sz; ++i) {
     int idx = node_idx * sz * 4;
@@ -485,8 +488,8 @@ void
 PVSpaceInterp::interp_field(const double *weights, 
 			    const unsigned *interp_idxs) 
 {
-  const int sz = interp_space_->nrrd->axis[1].size;
-  float *dat = (float*)interp_space_->nrrd->data;
+  const int sz = interp_space_->nrrd_->axis[1].size;
+  float *dat = (float*)interp_space_->nrrd_->data;
   float dst[sz][4];
   memset(dst, 0, 4 * sz * sizeof(float));
   for (int i = 0; i < 8; ++i) {
@@ -503,10 +506,9 @@ PVSpaceInterp::interp_field(const double *weights,
   out_fld_ = con_fld_;
   out_fld_->generation++;
 
-  LockingHandle<HexVolMesh> mesh = 
-    ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
+  HVMesh::handle_type mesh = ((HVField*)out_fld_.get_rep())->get_typed_mesh();
   vector<Point> &points = mesh->get_points();
-  vector<double> &data = ((HexVolField<double>*)out_fld_.get_rep())->fdata();
+  vector<double> &data = ((HVField*)out_fld_.get_rep())->fdata();
 
   for (int i = 0; i < sz; ++i) {
     points[i].x(dst[i][0]);
@@ -527,11 +529,11 @@ PVSpaceInterp::set_phase_ranges()
   ASSERT(phase_info_data_->get_property("i-end", i_end));
   //  cout <<"h_end: " << h_end << " i_end:" << i_end << endl;
 
-  float *dat = (float *)phase_info_data_->nrrd->data;
-  int row_l = phase_info_data_->nrrd->axis[0].size;
-  int sz = phase_info_data_->nrrd->axis[1].size;
+  float *dat = (float *)phase_info_data_->nrrd_->data;
+  int row_l = phase_info_data_->nrrd_->axis[0].size;
+  int sz = phase_info_data_->nrrd_->axis[1].size;
   if (phase_ranges_ != 0) delete[] phase_ranges_;
-  phase_ranges_ = new double[phase_info_data_->nrrd->axis[1].size];
+  phase_ranges_ = new double[phase_info_data_->nrrd_->axis[1].size];
   //cout << "size is : " << sz << endl;
   for (int i = 0; i < h_end + 1; ++i) {
     int idx = i * row_l;
@@ -552,7 +554,7 @@ int
 PVSpaceInterp::find_phase_index(float phase, int &p_idx) 
 {
   // healthy first then injured
-  //  int sz = phase_info_data_->nrrd->axis[1].size / 2;
+  //  int sz = phase_info_data_->nrrd_->axis[1].size / 2;
   int h_end;
   ASSERT(phase_info_data_->get_property("h-end", h_end));
   int i_end;
@@ -580,8 +582,8 @@ PVSpaceInterp::find_phase_index(float phase, int &p_idx)
   }
   if (! found) { p_idx = e + 1; }
 
-  int idx = phase_info_data_->nrrd->axis[0].size * p_idx + 1;
-  float *dat = (float *)phase_info_data_->nrrd->data;
+  int idx = phase_info_data_->nrrd_->axis[0].size * p_idx + 1;
+  float *dat = (float *)phase_info_data_->nrrd_->data;
 
   return (int)dat[idx] - 1 + pm_off;
 }
@@ -611,16 +613,16 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   // Sample Rate HIP data is recorded at. 
   sample_rate_.reset();
   const double hip_sample_rate = sample_rate_.get();
-  int idx = Round(abs_seconds * hip_sample_rate);
-  if (idx > hip_data_->nrrd->axis[1].size - 1) {
-    idx = hip_data_->nrrd->axis[1].size - 1;
+  unsigned int idx = Round(abs_seconds * hip_sample_rate);
+  if (idx > hip_data_->nrrd_->axis[1].size - 1) {
+    idx = hip_data_->nrrd_->axis[1].size - 1;
   }
 
-  char *inj_time_string = nrrdKeyValueGet(hip_data_->nrrd, "inj_time");
+  char *inj_time_string = nrrdKeyValueGet(hip_data_->nrrd_, "inj_time");
   float inj_time = atof(inj_time_string);
   
-  float *dat = (float *)hip_data_->nrrd->data;
-  int row = idx * hip_data_->nrrd->axis[0].size;
+  float *dat = (float *)hip_data_->nrrd_->data;
+  int row = idx * hip_data_->nrrd_->axis[0].size;
   float cur_phase = dat[row + phase_idx];
 
   //FIX_ME get phase from hip will have its own index. fix HR
@@ -629,7 +631,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   int e_count = 0;
   bool found = false;
   while (! found) {
-    int row = e_idx * hip_data_->nrrd->axis[0].size;
+    int row = e_idx * hip_data_->nrrd_->axis[0].size;
     float cur_qrs = dat[row + qrs_idx];    
     if (cur_qrs > 9.0) {
       found = true;
@@ -644,10 +646,10 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   phase_mesh = find_phase_index(cur_phase, phase_index);
 
   // fetch the phase center for the range.
-  int pidx = phase_info_data_->nrrd->axis[0].size * phase_idx;
-  float *pdat = (float *)phase_info_data_->nrrd->data;
+  int pidx = phase_info_data_->nrrd_->axis[0].size * phase_idx;
+  float *pdat = (float *)phase_info_data_->nrrd_->data;
   const float center = pdat[pidx];
-  int f_idx = idx;
+  unsigned int f_idx = idx;
   float last_delta = fabs(cur_phase - center);
   if (last_delta > 0.0001) {
     float delta = last_delta + 1;
@@ -656,19 +658,19 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
       if (delta < last_delta) last_delta = delta;
 
       ++f_idx;
-      if (f_idx > hip_data_->nrrd->axis[1].size - 1) {
-	f_idx = hip_data_->nrrd->axis[1].size - 1;
+      if (f_idx > hip_data_->nrrd_->axis[1].size - 1) {
+	f_idx = hip_data_->nrrd_->axis[1].size - 1;
 	last_delta = delta;
 	break;
       }
-      row = f_idx * hip_data_->nrrd->axis[0].size;
+      row = f_idx * hip_data_->nrrd_->axis[0].size;
       cur_phase = dat[row + phase_idx];
       delta = fabs(cur_phase - center);
     } while (delta < last_delta);
 
     float forward_delta = last_delta;
     int bk_idx = idx;
-    row = bk_idx * hip_data_->nrrd->axis[0].size;
+    row = bk_idx * hip_data_->nrrd_->axis[0].size;
     cur_phase   = dat[row + phase_idx];
     last_delta = fabs(cur_phase - center);
     delta = last_delta + 1;
@@ -682,7 +684,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
 	last_delta = delta;
 	break; 
       }
-      row = bk_idx * hip_data_->nrrd->axis[0].size;
+      row = bk_idx * hip_data_->nrrd_->axis[0].size;
       cur_phase = dat[row + phase_idx];
       delta = fabs(cur_phase - center);
 
@@ -693,7 +695,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
     else idx = f_idx - 1;
 
   }
-  row = idx * hip_data_->nrrd->axis[0].size;
+  row = idx * hip_data_->nrrd_->axis[0].size;
   float cur_lvp   = dat[row + lvp_idx];
   float cur_rvp   = dat[row + rvp_idx];
   float cur_vol   = dat[row + vol_idx];

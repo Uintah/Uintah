@@ -176,7 +176,7 @@ private:
   bool                                  dig_init_;
   NrrdDataHandle                        data_;
   vector<int>                           markers_;
-  int                                   cur_idx_;
+  unsigned                              cur_idx_;
   bool                                  plots_dirty_;
   bool                                  decision_space_dirty_;
   GLuint				CONTROL_SPACE_LIST;
@@ -228,7 +228,7 @@ private:
   static unsigned int	pow2(const unsigned int);
   void 			setTimeLabel();
   void 			addMarkersToMenu();
-  void 			getNrrd1KeyValues();
+  void 			getNrrd_1KeyValues();
   void 			createDecisionSpaceArrays();
   void 			createTextureMap(string path, int width, int height, Textures tex);
   void 			translate_start(int x, int y);
@@ -497,13 +497,13 @@ StatForecast::inc_time(double elapsed)
   int samples = (int)round(samp_rate * elapsed);
   //cur_idx_ += samples;
   cur_idx_ = samples;
-  if (cur_idx_ >= data_->nrrd->axis[1].size) {
-    cur_idx_ = data_->nrrd->axis[1].size - 1;
+  if (cur_idx_ >= data_->nrrd_->axis[1].size) {
+    cur_idx_ = data_->nrrd_->axis[1].size - 1;
     //gui_play_mode_.set(0);
     //cur_idx_ = 0;
   }
 
-  gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+  gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
   gui_time_.reset();
   get_gui()->execute("update idletasks");
 
@@ -637,19 +637,19 @@ StatForecast::draw_plots()
 	const float scale_factor = 2.0 * scale_;
 
 	if (data_.get_rep()) {
-		float *dat2 = (float *)data_->nrrd->data;
+		float *dat2 = (float *)data_->nrrd_->data;
 
-		int nrrd_idx_ = cur_idx_ * data_->nrrd->axis[0].size;
+		int nrrd__idx_ = cur_idx_ * data_->nrrd_->axis[0].size;
 
-		bool alarm_now = ((int)dat2[nrrd_idx_ + ALARM_IDX] == 1);
-		bool ever_alarm = ((int)dat2[nrrd_idx_ + EVER_ALARM_IDX] == 1);
-		float file_time = dat2[nrrd_idx_ + TIME_IDX];
-		float lv_inj = dat2[nrrd_idx_ + PROB_OF_LV_INJURY_IDX];
-		float rv_inj = dat2[nrrd_idx_ + PROB_OF_RV_INJURY_IDX];
-		float lvp_pwr = dat2[nrrd_idx_ + LVP_POWER_IDX];
-		float abp_pwr = dat2[nrrd_idx_ + ABP_POWER_IDX];
-		float ttd    = dat2[nrrd_idx_ + TIME_TO_DEATH_IDX];
-		float pos    = dat2[nrrd_idx_ + PROB_OF_SURV_IDX];
+		bool alarm_now = ((int)dat2[nrrd__idx_ + ALARM_IDX] == 1);
+		bool ever_alarm = ((int)dat2[nrrd__idx_ + EVER_ALARM_IDX] == 1);
+		float file_time = dat2[nrrd__idx_ + TIME_IDX];
+		float lv_inj = dat2[nrrd__idx_ + PROB_OF_LV_INJURY_IDX];
+		float rv_inj = dat2[nrrd__idx_ + PROB_OF_RV_INJURY_IDX];
+		float lvp_pwr = dat2[nrrd__idx_ + LVP_POWER_IDX];
+		float abp_pwr = dat2[nrrd__idx_ + ABP_POWER_IDX];
+		float ttd    = dat2[nrrd__idx_ + TIME_TO_DEATH_IDX];
+		float pos    = dat2[nrrd__idx_ + PROB_OF_SURV_IDX];
 
 		lv_inj *= 100;
 		rv_inj *= 100;
@@ -1136,9 +1136,9 @@ StatForecast::addMarkersToMenu()
 }
 
 void 
-StatForecast::getNrrd1KeyValues()
+StatForecast::getNrrd_1KeyValues()
 {
-  char *name = nrrdKeyValueGet(data_->nrrd, "name");
+  char *name = nrrdKeyValueGet(data_->nrrd_, "name");
 
   if (name != NULL) {
     string title(name);
@@ -1308,15 +1308,15 @@ StatForecast::execute()
 	 return;
   }
 
-  NrrdIPort *nrrd1_port = (NrrdIPort*)get_iport("Nrrd1");
+  NrrdIPort *nrrd_1_port = (NrrdIPort*)get_iport("Nrrd1");
 
-  if (!nrrd1_port) 
+  if (!nrrd_1_port) 
   {
     error("Unable to initialize iport Nrrd1.");
     return;
   }
 
-  nrrd1_port->get(data_);
+  nrrd_1_port->get(data_);
 
   if (!data_.get_rep())
   {
@@ -1326,9 +1326,9 @@ StatForecast::execute()
   	//cerr << "Data Rep" << endl;
   //}
 
-  double rt = data_->nrrd->axis[0].spacing;
+  double rt = data_->nrrd_->axis[0].spacing;
   if (rt == rt)
-    gui_sample_rate_.set(1/data_->nrrd->axis[0].spacing);
+    gui_sample_rate_.set(1/data_->nrrd_->axis[0].spacing);
 
   addMarkersToMenu();
 
@@ -1387,7 +1387,7 @@ StatForecast::tcl_command(GuiArgs& args, void* userdata)
   } else if(args[1] == "time") {
     gui_time_.reset();
     if (data_.get_rep()) {
-      cur_idx_ = (int)round(gui_time_.get() * (data_->nrrd->axis[1].size - 1));
+      cur_idx_ = (int)round(gui_time_.get() * (data_->nrrd_->axis[1].size - 1));
     }
 
     setTimeLabel();
@@ -1406,10 +1406,10 @@ StatForecast::tcl_command(GuiArgs& args, void* userdata)
     int mkr = gui_selected_marker_.get();
     int val = (mkr == -1)?-1:markers_[mkr];
 
-    if (val == -1 || val >= data_->nrrd->axis[1].size) return;
+    if (val == -1 || val >= data_->nrrd_->axis[1].size) return;
     cur_idx_ = val;
 
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 
@@ -1419,10 +1419,10 @@ StatForecast::tcl_command(GuiArgs& args, void* userdata)
     if (!data_.get_rep()) return;
 
     cur_idx_ += (int)gui_sample_rate_.get();
-    if (cur_idx_ >= data_->nrrd->axis[1].size) {
-        cur_idx_ = data_->nrrd->axis[1].size - 1;
+    if (cur_idx_ >= data_->nrrd_->axis[1].size) {
+        cur_idx_ = data_->nrrd_->axis[1].size - 1;
     }
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 
@@ -1435,7 +1435,7 @@ StatForecast::tcl_command(GuiArgs& args, void* userdata)
     if (cur_idx_ < 0) {
        cur_idx_ = 0;
     }
-    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd_->axis[1].size);
     gui_time_.reset();
     get_gui()->execute("update idletasks");
 

@@ -123,19 +123,19 @@ EinthovenLeads::execute()
 	sz[0] = (count_ / 100 + 1) * 100;
 	ndata = new NrrdData();
 
-	ndata->nrrd->axis[0].kind = nrrdKindDomain;
-	ndata->nrrd->axis[1].kind = nrrdKindDomain;
+	ndata->nrrd_->axis[0].kind = nrrdKindDomain;
+	ndata->nrrd_->axis[1].kind = nrrdKindDomain;
 
 	unsigned int centers[NRRD_DIM_MAX];
 	centers[0] = nrrdCenterNode;
 	centers[1] = nrrdCenterNode;
-	nrrdAxisInfoSet_nva(ndata->nrrd, nrrdAxisInfoCenter, centers);
-	ndata->nrrd->axis[0].label = strdup("leads");
-	ndata->nrrd->axis[1].label = strdup("time");
-	nrrdAlloc_nva(ndata->nrrd, nrrdTypeFloat, 2, 3, sz);
-	memset(ndata->nrrd->data, 0, count_ * 3 * sizeof(float));
+	nrrdAxisInfoSet_nva(ndata->nrrd_, nrrdAxisInfoCenter, centers);
+	ndata->nrrd_->axis[0].label = strdup("leads");
+	ndata->nrrd_->axis[1].label = strdup("time");
+	nrrdAlloc_nva(ndata->nrrd_, nrrdTypeFloat, 3, sz);
+	memset(ndata->nrrd_->data, 0, count_ * 3 * sizeof(float));
 	if (nrrd_out_.get_rep()) {
-	  memcpy(ndata->nrrd->data, nrrd_out_->nrrd->data, 
+	  memcpy(ndata->nrrd_->data, nrrd_out_->nrrd_->data, 
 		 count_ * 3 * sizeof(float));
 	  
 	}
@@ -143,7 +143,7 @@ EinthovenLeads::execute()
       }
       float last[3];
 
-      float *dat = (float*)nrrd_out_->nrrd->data;
+      float *dat = (float*)nrrd_out_->nrrd_->data;
       
       if (count_) {
 	last[0] = dat[3 * (count_ - 1)];
