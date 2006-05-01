@@ -1,6 +1,5 @@
 //----- SmagorinskyModel.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
@@ -285,15 +284,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       }
     }
 
-#ifdef ARCHES_PRES_DEBUG
-    // Testing if correct values have been put
-    cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-    viscosity.print(cerr);
-#endif
-    
-    // Put the calculated viscosityvalue into the new data warehouse
-    // allocateAndPut instead:
-    /* new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch); */;
   }
 }
 
