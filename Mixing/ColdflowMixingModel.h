@@ -34,7 +34,6 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -118,9 +117,6 @@ public:
       //***warning** compute totalvars from number of species and dependent vars
       inline int getTotalVars() const {
 	return 0;
-      }
-      inline ReactionModel* getRxnModel() const {
-        return 0;
       }
       inline double getAdiabaticAirEnthalpy() const{
 	return 0.0;
