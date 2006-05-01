@@ -76,18 +76,21 @@ TimestepSelector::~TimestepSelector() {
 void
 TimestepSelector::execute() 
 { 
-  tcl_status.set("Calling TimestepSelector!"); 
   in = (ArchiveIPort *) get_iport("Data Archive");
-  out = (ArchiveOPort *) get_oport("Archive Timestep");
-  ogeom=(GeometryOPort *) get_oport("Geometry");
-  time_port = (MatrixOPort *) get_oport("Timestep");
   
   ArchiveHandle handle;
 
   if (!(in->get(handle) && handle.get_rep())) {
     warning("Input field is empty.");
+    animate.set( 0 );
     return;
   }
+
+  tcl_status.set("Calling TimestepSelector!"); 
+
+  out = (ArchiveOPort *) get_oport("Archive Timestep");
+  ogeom=(GeometryOPort *) get_oport("Geometry");
+  time_port = (MatrixOPort *) get_oport("Timestep");
 
   vector< double > times;
   vector< int > indices;

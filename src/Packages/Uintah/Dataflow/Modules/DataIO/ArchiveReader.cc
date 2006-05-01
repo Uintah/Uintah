@@ -39,36 +39,38 @@ ArchiveReader::execute()
 { 
   struct stat statbuffer;
 
+  if( filebase.get() == "" ) {
+    warning( "No file specified. " );
+    return;
+  }
+
   tcl_status.set("Executing"); 
   out = (ArchiveOPort *) get_oport("Data Archive");
 
-   if( filebase.get() == "" )
-     return;
+  string index( filebase.get() + "/index.xml" );
+  errno = 0;
+  int result = stat( index.c_str(), &statbuffer);
+  
+  if( result != 0 ) {
+    char msg[1024];
+    sprintf( msg, "ArchiveReader unable to open %s.  (Errno: %d)", index.c_str(), errno );
+    error( msg );
+    return;
+  }
 
-   string index( filebase.get() + "/index.xml" );
-   errno = 0;
-   int result = stat( index.c_str(), &statbuffer);
-
-   if( result != 0 ) {
-     char msg[1024];
-     sprintf( msg, "ArchiveReader unable to open %s.  (Errno: %d)", index.c_str(), errno );
-     error( msg );
-     return;
-   }
-
-   if(filebase.get() != aName || aName_size != statbuffer.st_size) {
-     try {
-       reader = scinew DataArchive(filebase.get(),0,1,false);
-     } catch ( const Exception& ex) {
-       error("ArchiveReader caught exception: " + string(ex.message()));
-       return;
-     }
-     aName = filebase.get();
-     aName_size = statbuffer.st_size;
-     archiveH = scinew Archive(reader);
-   }
-
-   out->send( archiveH );
+  if(filebase.get() != aName || aName_size != statbuffer.st_size) {
+    try {
+      reader = scinew DataArchive(filebase.get(),0,1,false);
+    } catch ( const Exception& ex) {
+      error("ArchiveReader caught exception: " + string(ex.message()));
+      return;
+    }
+    aName = filebase.get();
+    aName_size = statbuffer.st_size;
+    archiveH = scinew Archive(reader);
+  }
+  
+  out->send( archiveH );
 }
 
   
