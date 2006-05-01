@@ -2242,39 +2242,6 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
   }
 }
 
-// ****************************************************************************
-// compute the residual
-// ****************************************************************************
-double 
-PicardNonlinearSolver::computeResidual(const LevelP&,
-				       SchedulerP&,
-				       DataWarehouseP&,
-				       DataWarehouseP&)
-{
-  double nlresidual = 0.0;
-#if 0
-  SoleVariable<double> residual;
-  SoleVariable<double> omg;
-  // not sure of the syntax...this operation is supposed to get 
-  // L1norm of the residual over the whole level
-  new_dw->get(residual,"pressResidual");
-  new_dw->get(omg,"pressomg");
-  nlresidual = MACHINEPRECISSION + log(residual/omg);
-  for (int index = 1; index <= Arches::NDIM; ++index) {
-    new_dw->get(residual,"velocityResidual", index);
-    new_dw->get(omg,"velocityomg", index);
-    nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
-  }
-  //for multiple scalars iterate
-  for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
-    new_dw->get(residual,"scalarResidual", index);
-    new_dw->get(omg,"scalaromg", index);
-    nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
-  }
-#endif
-  return nlresidual;
-}
-
 
 void 
 PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched, const PatchSet* patches,

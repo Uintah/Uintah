@@ -126,7 +126,6 @@ void ThermalNOxSolver::solve(SchedulerP& sched,
   
   // Schedule the thermal Nox solve
   // require : thermalnoxIN, thermalnoxCoefSBLM, thermalnoxNonLinSrcSBLM
-  // compute : thermalnoxResidualSS, thermalnoxCoefSS, thermalnoxNonLinSrcSS, thermalnoxSP
   //d_linearSolver->sched_thermalnoxSolve(level, sched, new_dw, matrix_dw, index);
   sched_thermalnoxLinearSolve(sched, patches, matls, timelabels);
 }
@@ -411,11 +410,6 @@ void ThermalNOxSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: thermalnoxCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &thermalnoxVars);
 
-    // apply underelax to eqn
-    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
-					    &thermalnoxVars,
-					    &constthermalnoxVars);
-
   }
 }
 
@@ -556,7 +550,6 @@ ThermalNOxSolver::thermalnoxLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constthermalnoxVars.scalarNonlinearSrc,
 		d_lab->d_thermalnoxNonLinSrcSBLMLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocateTemporary(thermalnoxVars.residualthermalnox,  patch);
 
     new_dw->get(constthermalnoxVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);

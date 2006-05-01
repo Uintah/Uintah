@@ -2765,63 +2765,6 @@ BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#if implict_defined
-
-  IntVector domLo = vars->scalar.getFortLowIndex();
-  IntVector domHi = vars->scalar.getFortHighIndex();
-
-  IntVector domLoDen = vars->old_density.getFortLowIndex();
-  IntVector domHiDen = vars->old_density.getFortHighIndex();
-
-  Array1<double> e1;
-  Array1<double> f1;
-  Array1<double> e2;
-  Array1<double> f2;
-  Array1<double> e3;
-  Array1<double> f3;
-
-  IntVector Size = domHi - domLo + IntVector(1,1,1);
-
-  e1.resize(Size.x());
-  f1.resize(Size.x());
-  e2.resize(Size.y());
-  f2.resize(Size.y());
-  e3.resize(Size.z());
-  f3.resize(Size.z());
-
-  sum_vartype resid;
-  sum_vartype trunc;
-
-  old_dw->get(resid, lab->d_scalarResidLabel);
-  old_dw->get(trunc, lab->d_scalarTruncLabel);
-
-  double nlResid = resid;
-  double trunc_conv = trunc*1.0E-7;
-  double theta = 0.5;
-  int scalarIter = 0;
-  double scalarResid = 0.0;
-  do {
-    //fortran call for lineGS solver
-    fort_linegs(idxLo, idxHi,
-		vars->scalar,
-		vars->scalarCoeff[Arches::AE],
-		vars->scalarCoeff[Arches::AW],
-		vars->scalarCoeff[Arches::AN],
-		vars->scalarCoeff[Arches::AS],
-		vars->scalarCoeff[Arches::AT],
-		vars->scalarCoeff[Arches::AB],
-		vars->scalarCoeff[Arches::AP],
-		vars->scalarNonlinearSrc,
-		e1, f1, e2, f2, e3, f3, theta);
-		
-    computeScalarResidual(pc, patch, old_dw, new_dw, index, vars);
-    scalarResid = vars->residScalar;
-    ++scalarIter;
-  } while((scalarIter < d_maxSweeps)&&((scalarResid > d_residual*nlResid)||
-				      (scalarResid > trunc_conv)));
-  cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
-  cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
-#endif
 
   fort_mm_explicit(idxLo, idxHi, vars->scalar, constvars->old_scalar,
 		   constvars->scalarCoeff[Arches::AE], 
@@ -2835,10 +2778,6 @@ BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb, 
 		   delta_t,
 		   constvars->cellType, d_mmWallID);
-
-
-    vars->residScalar = 1.0E-7;
-    vars->truncScalar = 1.0;
 
 }
 
@@ -2857,64 +2796,6 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#if implict_defined
-
-  IntVector domLo = vars->enthalpy.getFortLowIndex();
-  IntVector domHi = vars->enthalpy.getFortHighIndex();
-
-  IntVector domLoDen = vars->old_density.getFortLowIndex();
-  IntVector domHiDen = vars->old_density.getFortHighIndex();
-
-  Array1<double> e1;
-  Array1<double> f1;
-  Array1<double> e2;
-  Array1<double> f2;
-  Array1<double> e3;
-  Array1<double> f3;
-
-  IntVector Size = domHi - domLo + IntVector(1,1,1);
-
-  e1.resize(Size.x());
-  f1.resize(Size.x());
-  e2.resize(Size.y());
-  f2.resize(Size.y());
-  e3.resize(Size.z());
-  f3.resize(Size.z());
-
-  sum_vartype resid;
-  sum_vartype trunc;
-
-  old_dw->get(resid, lab->d_enthalpyResidLabel);
-  old_dw->get(trunc, lab->d_enthalpyTruncLabel);
-
-  double nlResid = resid;
-  double trunc_conv = trunc*1.0E-7;
-  double theta = 0.5;
-  int scalarIter = 0;
-  double scalarResid = 0.0;
-  do {
-    //fortran call for lineGS solver
-    fort_linegs(idxLo, idxHi,
-		vars->enthalpy,
-		vars->scalarCoeff[Arches::AE],
-		vars->scalarCoeff[Arches::AW],
-		vars->scalarCoeff[Arches::AN],
-		vars->scalarCoeff[Arches::AS],
-		vars->scalarCoeff[Arches::AT],
-		vars->scalarCoeff[Arches::AB],
-		vars->scalarCoeff[Arches::AP],
-		vars->scalarNonlinearSrc,
-		e1, f1, e2, f2, e3, f3, theta);
-		
-    computeScalarResidual(pc, patch, old_dw, new_dw, index, vars);
-    scalarResid = vars->residScalar;
-    ++scalarIter;
-  } while((scalarIter < d_maxSweeps)&&((scalarResid > d_residual*nlResid)||
-				      (scalarResid > trunc_conv)));
-  cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
-  cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
-#endif
-
   fort_mm_explicit_oldvalue(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
 			    constvars->scalarCoeff[Arches::AE], 
 			    constvars->scalarCoeff[Arches::AW], 
@@ -2927,9 +2808,6 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 			    cellinfo->sew, cellinfo->sns, cellinfo->stb, 
 			    delta_t,
 			    constvars->cellType, d_mmWallID);
-
-    vars->residScalar = 1.0E-7;
-    vars->truncScalar = 1.0;
 
 }
 

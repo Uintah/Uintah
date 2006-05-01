@@ -199,8 +199,6 @@ private:
 
       // Maximum number of iterations to take before stopping/giving up.
       int d_maxIterations;
-      // underrealaxation parameter, read from an input database
-      double d_underrelax;
       //reference points for the solvers
       IntVector d_pressRef;
       const Patch* d_pressRefPatch;
