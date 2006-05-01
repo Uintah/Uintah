@@ -1304,7 +1304,7 @@ OnDemandDataWarehouse::getRegionGridVar(GridVariable& var,
   
   // if in AMR and one node intersects from another patch and that patch is missing
   // ignore the error instead of throwing an exception
-  // (node-based only)
+  // (should only be for node-based vars)
   vector<const Patch*> missing_patches;
 
   // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
@@ -1332,16 +1332,19 @@ OnDemandDataWarehouse::getRegionGridVar(GridVariable& var,
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
     if(!d_varDB.exists(label, matlIndex, patch->getRealPatch())) {
-      if (basis == Patch::NodeBased) {
-        missing_patches.push_back(patch->getRealPatch());
-        continue;
-      }
-      else {
-        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
-      }
+      missing_patches.push_back(patch->getRealPatch());
+      continue;
     }
     GridVariable* tmpVar = var.cloneType();
     d_varDB.get(label, matlIndex, patch, *tmpVar);
+
+    if (Max(l, tmpVar->getLow()) != l || Min(h, tmpVar->getHigh()) != h) {
+      // just like a "missing patch": got data on this patch, but it either corresponds to a different
+      // region or is incomplete"
+      missing_patches.push_back(patch->getRealPatch());
+      continue;
+    }
+    
     if (patch->isVirtual()) {
       // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
       // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
@@ -1350,7 +1353,9 @@ OnDemandDataWarehouse::getRegionGridVar(GridVariable& var,
     try {
       var.copyPatch(tmpVar, l, h);
     } catch (InternalError& e) {
-      cout << " Bad range: " << low << " " << high << ", patch: " << l << " " << h << endl;
+      cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h 
+           << " actual patch " << patch->getInteriorLowIndex(basis) << " " << patch->getInteriorHighIndex(basis) 
+           << " var range: "  << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
       throw e;
     }
     delete tmpVar;
