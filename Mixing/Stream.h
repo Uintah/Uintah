@@ -37,7 +37,6 @@ WARNING
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-    class ChemkinInterface;
     // Low temperature limit; used in addStream
     const double TLIM = 200.0;
     const int NUM_DEP_VARS = 9; // includes all the vars in stateSpaceVector
@@ -68,13 +67,7 @@ namespace Uintah {
       ~Stream();
       Stream& linInterpolate(double upfactor, double lowfactor,
 			     Stream& rightvalue);
-      void addStream(const Stream& strm, ChemkinInterface* chemInterf,
-		     double factor) ;
-      void addSpecies(const ChemkinInterface* chemInterf, 
-		      const char* speciesName, double mfrac);
-      int speciesIndex(const ChemkinInterface* chemInterf, const char* name);
       void print(std::ostream& out) const;
-      void print(std::ostream& out, ChemkinInterface* chemInterf);
       void print_oneline(std::ofstream& out);
       //std::vector<double> convertStreamToVec(bool lsoot);
       std::vector<double> convertStreamToVec();

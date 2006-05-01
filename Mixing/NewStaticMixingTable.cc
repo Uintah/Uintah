@@ -2,12 +2,8 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/KDTree.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/VectorTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/StanjanEquilibriumReactionModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ILDMReactionModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTableInfo.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>

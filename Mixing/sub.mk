@@ -12,15 +12,10 @@ SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 		$(SRCDIR)/NewStaticMixingTable.cc \
 		$(SRCDIR)/StandardTable.cc \
 		$(SRCDIR)/ReactionModel.cc \
-		$(SRCDIR)/StanjanEquilibriumReactionModel.cc \
-		$(SRCDIR)/ILDMReactionModel.cc \
-	        $(SRCDIR)/ChemkinInterface.cc \
                 $(SRCDIR)/Common.cc \
-                $(SRCDIR)/KDTree.cc  $(SRCDIR)/VectorTable.cc \
-		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc	
+                $(SRCDIR)/VectorTable.cc \
+		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc \
 
-SUBDIRS := $(SRCDIR)/fortran
-include $(SCIRUN_SCRIPTS)/recurse.mk
 PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Util   \

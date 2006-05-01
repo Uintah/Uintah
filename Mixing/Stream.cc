@@ -1,7 +1,6 @@
 //----- Stream.cc --------------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <string>
@@ -213,75 +212,6 @@ Stream::~Stream()
 {
 }
 
-void
-Stream::addSpecies(const ChemkinInterface* chemInterf,
-		   const char* speciesName, double mfrac)
-{
-  int indx = speciesIndex(chemInterf, speciesName);
-  d_speciesConcn[indx] = mfrac;
-}
-
-void 
-Stream::addStream(const Stream& strm, ChemkinInterface* chemInterf,
-		  double factor) 
-{
-  vector<double> spec_mfrac;
-  if (strm.d_mole) // convert to mass fraction
-    spec_mfrac = chemInterf->convertMolestoMass(strm.d_speciesConcn);
-  else
-    spec_mfrac = strm.d_speciesConcn;
-  for (int i = 0; i < spec_mfrac.size(); i++)
-    d_speciesConcn[i] += factor*spec_mfrac[i];
-  d_pressure += factor*strm.d_pressure;
-  d_density += factor*strm.d_density;
-  d_temperature += factor*strm.d_temperature;
-  d_enthalpy += factor*strm.d_enthalpy;
-  //Newton iteration to get mixture temperature
-  double adH, Cp, del;
-  // Do not do Newton iteration if temperature = 0 (i.e., value it is
-  // initialized to)
-  if (d_temperature > TLIM) {
-    do {
-      //get enthalpy of mixture
-      adH = chemInterf->getMixEnthalpy(d_temperature, d_speciesConcn);
-      //get heat capacity of mixture
-      Cp = chemInterf->getMixSpecificHeat(d_temperature, d_speciesConcn);
-      if (Cp < 1e-10) {
-	del = 1e-10;  //***Use CONST here***
-	//cout<<"WARNING in Stream.cc."<<endl
-	//	  <<"The mixture heat capacity is "<< Cp <<endl;     
-      }
-      else {
-	del = (adH-d_enthalpy)/Cp;
-	d_temperature -= del;
-      }
-    } while(fabs(del) > 0.0001);
-  }
-  d_sensibleEnthalpy += factor*strm.d_sensibleEnthalpy; //Does this even make sense??
-  d_moleWeight += factor*strm.d_moleWeight;
-  d_cp += factor*strm.d_cp;
-  d_drhodf += factor*strm.d_drhodf;
-  d_drhodh += factor* strm.d_drhodh;
-  d_mole = false;
-  //if (d_lsoot) {
-  //for (int i = 0; i < strm.d_sootData.size(); i++)
-  //  d_sootData[i] += factor*strm.d_sootData[i];
-  //}
-}
-
-
-int
-Stream::speciesIndex(const ChemkinInterface* chemInterf, const char* speciesName) 
-{
-  for (int i = 0; i < d_speciesConcn.size(); i++) {
-    if (strlen(speciesName) == strlen(chemInterf->d_speciesNames[i])) {
-      if (strncmp(speciesName, chemInterf->d_speciesNames[i],
-		  (size_t) strlen(speciesName)) == 0) 
-	return i;
-    }
-  }
-  throw InvalidValue("Species not found", __FILE__, __LINE__);
-}
 
 double
 Stream::getValue(int count) 
@@ -496,36 +426,6 @@ Stream::print(std::ostream& out) const {
   out << endl;
 }
 
-void
-Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
-  out << "Integrated values"<< '\n';
-  out << "Density: "<< d_density << endl;
-  out << "Pressure: "<< d_pressure << endl;
-  out << "Temperature: "<< d_temperature << endl;
-  out << "Enthalpy: "<< d_enthalpy << endl;
-  out << "Sensible Enthalpy: "<< d_sensibleEnthalpy << endl;
-  out << "Molecular Weight: "<< d_moleWeight << endl;
-  out << "CP: "<< d_cp << endl;
-  out << "Drhodf: "<< d_drhodf << endl;
-  out << "Drhodh: "<< d_drhodh << endl;
-  int numSpecies = chemInterf->getNumSpecies();
-  double* specMW = new double[numSpecies];
- chemInterf->getMoleWeight(specMW);
-  out << "Species concentration in mole fraction: " << endl;
-  for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
-    out.width(10);
-    out << d_speciesConcn[ii]/specMW[ii] << " " ; 
-    if (!(ii % 10)) out << endl; 
-  }
-  if (d_lsoot) {
-    for (int ii = 0; ii < d_sootData.size(); ii++) {
-      out.width(10);
-      out << d_sootData[ii] << " " ; 
-      if (!(ii % 10)) out << endl; 
-    }
-  }
-  out << endl;
-}
 
 void 
 Stream::print_oneline(std::ofstream& out) {
