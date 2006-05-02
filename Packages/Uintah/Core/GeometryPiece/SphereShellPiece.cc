@@ -36,11 +36,8 @@ SphereShellPiece::~SphereShellPiece()
 }
 
 
-void SphereShellPiece::outputHelper(ProblemSpecP& ps) const
+void SphereShellPiece::outputHelper(ProblemSpecP& sphere_ps) const
 {
-  ProblemSpecP shell_ps = ps->appendChild("shell");
-  ProblemSpecP sphere_ps = shell_ps->appendChild("sphere");
-
   sphere_ps->appendElement("origin",d_origin);
   sphere_ps->appendElement("radius",d_radius);
   sphere_ps->appendElement("thickness",d_h);
