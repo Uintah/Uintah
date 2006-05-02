@@ -1641,7 +1641,7 @@ OpenGL::dump_image(const string& fname, const string& ftype)
     // Run loop to divide memory into "row" chunks
     png_bytep *rows = (png_bytep*)malloc(sizeof(png_bytep) * vp[3]);
     for (int hi = 0; hi < vp[3]; hi++) {
-      rows[hi] = &((png_bytep)pixels)[hi * vp[2] * pix_size];
+      rows[hi] = &((png_bytep)pixels)[(vp[3] - hi - 1) * vp[2] * pix_size];
     }
 
     png_set_rows(png, info, rows);
