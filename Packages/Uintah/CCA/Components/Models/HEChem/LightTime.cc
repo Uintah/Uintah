@@ -56,7 +56,6 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
 void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {
-  cout << "I'm in problem setup" << endl;
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
