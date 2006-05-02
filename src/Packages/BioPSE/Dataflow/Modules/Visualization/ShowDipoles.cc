@@ -161,7 +161,7 @@ ShowDipoles::maybe_resize_widget(void *ptr)
     GeometryOPort *ogeom = (GeometryOPort *)me->get_oport("Geometry");
     BBox b;
     if (ogeom->get_view_bounds(b)) {
-      double sc = b.diagonal().length() * 0.035;
+      double sc = b.diagonal().length() * 0.02;
       for (int i = 0; i < me->num_dipoles_.get(); i++) {
 	me->widget_[i]->SetScale(sc);
 	me->widget_[i]->SetLength(2 * sc);
