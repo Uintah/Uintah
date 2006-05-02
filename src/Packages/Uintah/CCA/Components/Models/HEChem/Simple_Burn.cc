@@ -61,7 +61,6 @@ Simple_Burn::~Simple_Burn()
 void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {
-  cout << "I'm in problem setup" << endl;
   d_sharedState = sharedState;
   bool defaultActive=true;
   params->getWithDefault("Active", d_active, defaultActive);
