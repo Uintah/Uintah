@@ -111,8 +111,13 @@ void PtolemyServer::run()
 				wc->clear();  //clear time because something happened
 			}//TODO fatal errors after this need to start time out timer back up
 		servSem().up();
-
-		ProcessRequest *proc_req = new ProcessRequest(gui,net,connfd,idle_time,wc);
+        
+  //TODO based on latest changes we have to get the gui here instead of in main.cc... 
+  //need to remove that and change the constructors!          
+        gui = GuiInterface::getSingleton();      
+        ASSERT(gui);
+		
+        ProcessRequest *proc_req = new ProcessRequest(gui,net,connfd,idle_time,wc);
 		Thread *pr = new Thread(proc_req,"process client request", 0, Thread::NotActivated);
 		pr->setDaemon();
 		pr->setStackSize(1024*512);
@@ -347,7 +352,7 @@ void ProcessRequest::processItrRequest(int sockfd)
 		//temp seems to be 0 always
 		//TODO this yield is probably due to scirun error that needs to be fixed
 		Thread::yield();  //necessary to avoid a "Error: bad window path name"
-		cout << "loaded net " << PtolemyServer::loaded_net << "!" << endl;
+		cout << "loaded net " << PtolemyServer::loaded_net << "!" << net << endl;
 		temp = gui->eval("source " + net);
 		PtolemyServer::loaded_net = net;
 	}
