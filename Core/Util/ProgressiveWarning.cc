@@ -1,13 +1,20 @@
 #include <Core/Util/ProgressiveWarning.h>
+#include <Core/Util/DebugStream.h>
 
 namespace SCIRun {
+
+static DebugStream dbg("ProgressiveWarning", true);
 
 ProgressiveWarning::ProgressiveWarning(std::string message, int multiplier /* =-1 */, 
                                        std::ostream& stream /* =cerr */)
 {
   d_message = message;
   d_multiplier = multiplier;
-  out = &stream;
+
+  if (stream == std::cerr)
+    out = &dbg;
+  else
+    out = &stream;
   
   d_numOccurences = 0;
   d_nextOccurence = 1;
