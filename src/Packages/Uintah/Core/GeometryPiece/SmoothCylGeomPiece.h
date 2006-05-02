@@ -131,6 +131,7 @@ namespace Uintah {
     double d_radius;
     double d_thickness;
     double d_capThick;
+    double d_arcStart;
     double d_angle;
     int d_numRadial;
     int d_numAxial;
