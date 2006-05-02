@@ -454,9 +454,7 @@ Viewer::process_event()
     if((unsigned int)(gmsg->which_viewwindow) >= view_window_.size())
     {
       gmsg->datareply->send(0);
-    }
-    else
-    {
+    } else {
       view_window_[gmsg->which_viewwindow]->
 	getData(gmsg->datamask, gmsg->datareply);
     }

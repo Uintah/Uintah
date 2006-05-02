@@ -1905,6 +1905,11 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 //    CHECK_OPENGL_ERROR("OpenGL::real_getData");
     gui_->unlock();
   }
+
+  if (datamask&(GEOM_VIEW_BOUNDS))
+  {
+    view_window_->get_bounds_all(res->view_bounds_);
+  }
   result->send(res);
 }
 
