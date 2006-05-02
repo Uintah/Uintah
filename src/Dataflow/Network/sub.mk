@@ -56,6 +56,7 @@ PSELIBS := \
         Core/Containers    \
         Core/Geom          \
         Core/GeomInterface \
+        Core/Geometry      \
         Core/GuiInterface  \
         Core/Util          \
         Core/Thread        \
