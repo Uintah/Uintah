@@ -72,7 +72,7 @@ Each row is stored [ex1 ey1 ez1 ex2 ey2 ez2 ex3 ey3 ez3 ... exn eyn ezn] where
       <var name="filename" val="scisub_datadir/scisub_dataset/generated/scisub_dataset-leadfield.mat"/>
       <var name="filetype" val="{ASCII}"/>
       <var name="exporttype" val="{Binary}"/>
-      <var name="split" val="{1}"/>
+      <var name="split" val="{0}"/>
     </module>
     <module id="m7" package="SCIRun" category="FieldsData" name="ManageFieldData">
       <position x="404" y="473"/>

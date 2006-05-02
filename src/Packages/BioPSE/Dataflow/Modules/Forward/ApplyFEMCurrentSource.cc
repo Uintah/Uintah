@@ -103,10 +103,11 @@ ApplyFEMCurrentSource::execute()
   // Get the input dipoles.
   FieldIPort *iportSource = (FieldIPort *)get_iport("Sources");
   FieldHandle hSource;
-  if (!iportSource->get(hSource) || !hSource.get_rep()) {
-    error("Can't get handle to Source field.");
-    return;
-  } 
+//  if (!iportSource->get(hSource) || !hSource.get_rep()) {
+//    error("Can't get handle to Source field.");
+//    return;
+//  } 
+  iportSource->get(hSource);
 	
   // If the user passed in a vector the right size, copy it into ours.
   MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
