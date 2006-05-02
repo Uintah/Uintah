@@ -46,19 +46,29 @@ LightTime::~LightTime()
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
-
+//__________________________________
 void LightTime::outputProblemSpec(ProblemSpecP& ps)
 {
-  ps = params;
+  ProblemSpecP model_ps = ps->appendChild("Model");
+  model_ps->setAttribute("type","LightTime");
 
+  model_ps->appendElement("fromMaterial",         matl0->getName());
+  model_ps->appendElement("toMaterial",           matl1->getName());
+  model_ps->appendElement("starting_location",    d_start_place);
+  model_ps->appendElement("direction_if_plane",   d_direction);
+  model_ps->appendElement("D",                    d_D);
+  model_ps->appendElement("E0",                   d_E0);
+  model_ps->appendElement("rho0",                 d_rho0);
+  model_ps->appendElement("react_mixed_cells",    d_react_mixed_cells);
 }
-
+//__________________________________
 void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
+  
   params->require("starting_location",    d_start_place);
   params->require("direction_if_plane",   d_direction);
   params->require("D",    d_D);
