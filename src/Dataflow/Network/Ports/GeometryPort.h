@@ -48,6 +48,7 @@
 #include <Core/Thread/Mailbox.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Light.h>
+#include <Core/Geometry/BBox.h>
 #include <string>
 #include <vector>
 #include <list>
@@ -85,6 +86,7 @@ struct SCISHARE GeometryData {
   View* view;
   int xres, yres;
   double znear, zfar;
+  BBox   view_bounds_;
 #ifdef HAVE_COLLAB_VIS
   // CollabVis code begin
   double modelview[16];
@@ -105,10 +107,11 @@ struct SCISHARE GeometryData {
 #define GEOM_VIEW		1
 #define GEOM_COLORBUFFER	2
 #define GEOM_DEPTHBUFFER	4
+#define GEOM_VIEW_BOUNDS	8
 #define GEOM_ALLDATA		(GEOM_VIEW|GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)
-#define GEOM_TRIANGLES		8
+#define GEOM_TRIANGLES		16
 // CollabVis code begin
-#define GEOM_MATRICES           16
+#define GEOM_MATRICES           32
 // CollabVis code end
 
   
@@ -137,6 +140,7 @@ public:
   void delAll();
   void flush();
   void flushViews();
+  bool get_view_bounds(BBox &bbox);
   void flushViewsAndWait();
 
   void forward(GeometryComm* msg);

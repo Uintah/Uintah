@@ -310,6 +310,19 @@ GeometryOPort::flushViews()
   turn_off_light();
 }
 
+bool
+GeometryOPort::get_view_bounds(BBox &bbox)
+{
+
+  GeometryData *data;
+  data = getData(0, 0, GEOM_VIEW_BOUNDS);
+  if (data) {
+    bbox = data->view_bounds_;
+    return true;
+  }
+  return false;
+}
+
 
 void
 GeometryOPort::flushViewsAndWait()
