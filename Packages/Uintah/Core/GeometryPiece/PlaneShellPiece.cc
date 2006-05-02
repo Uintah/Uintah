@@ -46,11 +46,8 @@ PlaneShellPiece::~PlaneShellPiece()
 {
 }
 
-void PlaneShellPiece::outputHelper( ProblemSpecP & ps ) const
+void PlaneShellPiece::outputHelper( ProblemSpecP & plane_ps ) const
 {
-  ProblemSpecP shell_ps = ps->appendChild("shell");
-  ProblemSpecP plane_ps = shell_ps->appendChild("plane");
-
   plane_ps->appendElement("center", d_center);
   plane_ps->appendElement("normal", d_normal);
   plane_ps->appendElement("radius", d_radius);
