@@ -111,7 +111,7 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
     {
       typename TFIELD::mesh_type::Node::index_type newnode;
       typename TFIELD::mesh_type::Elem::array_type newelems;
-      tmesh->insert_node_in_cell_2(newelems, newnode, elem, p);
+      tmesh->insert_node_in_elem(newelems, newnode, elem, p);
 
       new_nodes.push_back(newnode);
       for (unsigned int i = 0; i < newelems.size(); i++)
@@ -222,7 +222,7 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     {
       if (tmesh->locate(elem, points[i]))
       {
-        tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[i]);
+        tmesh->insert_node_in_elem(newelems, newnode, elem, points[i]);
 
         new_nodes.push_back(newnode);
         for (unsigned int i = 0; i < newelems.size(); i++)
@@ -314,7 +314,7 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
       {
         if (tmesh->locate(elem, points[j]))
         {
-          tmesh->insert_node_in_cell_2(newelems, newnode, elem, points[j]);
+          tmesh->insert_node_in_elem(newelems, newnode, elem, points[j]);
 
           new_nodes.push_back(newnode);
           for (unsigned int k = 0; k < newelems.size(); k++)

@@ -424,28 +424,10 @@ public:
   void node_reserve(size_t s) { points_.reserve(s); }
   void elem_reserve(size_t s) { cells_.reserve(s*4); }
 
-  //! Always creates 4 tets, does not handle element boundaries properly.
-  bool         insert_node_in_cell(typename Cell::array_type &tets,
-                                   typename Cell::index_type ci,
+  bool         insert_node_in_elem(typename Elem::array_type &tets,
                                    typename Node::index_type &ni,
+                                   typename Elem::index_type ci,
                                    const Point &p);
-
-  void         insert_node_in_cell_face(typename Cell::array_type &tets,
-                                        typename Node::index_type ni,
-                                        typename Cell::index_type ci,
-					typename Face::index_type fi);
-
-  void         insert_node_in_cell_edge(typename Cell::array_type &tets,
-                                        typename Node::index_type ni,
-                                        typename Cell::index_type ci,
-					typename Edge::index_type ei);
-
-  void         resync_cells(typename Cell::array_type &carray);
-
-  bool         insert_node_in_cell_2(typename Cell::array_type &tets,
-                                     typename Node::index_type &ni,
-                                     typename Cell::index_type ci,
-                                     const Point &p);
 
   bool         insert_node(const Point &p);
   void         delete_cells(set<unsigned int> &to_delete);
@@ -512,6 +494,24 @@ public:
 protected:
   const Point &point(typename Node::index_type idx) const
   { return points_[idx]; }
+
+  //! Always creates 4 tets, does not handle element boundaries properly.
+  bool         insert_node_in_cell(typename Cell::array_type &tets,
+                                   typename Cell::index_type ci,
+                                   typename Node::index_type &ni,
+                                   const Point &p);
+
+  void         insert_node_in_face(typename Cell::array_type &tets,
+                                   typename Node::index_type ni,
+                                   typename Cell::index_type ci,
+                                   typename Face::index_type fi);
+
+  void         insert_node_in_edge(typename Cell::array_type &tets,
+                                   typename Node::index_type ni,
+                                   typename Cell::index_type ci,
+                                   typename Edge::index_type ei);
+
+  void         resync_cells(typename Cell::array_type &carray);
 
   // These should not be called outside of the synchronize_lock_.
   void                  compute_node_neighbors();
@@ -2315,10 +2315,10 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
 
 template <class Basis>
 void
-TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
-                                            typename Node::index_type pi,
-                                            typename Cell::index_type ci,
-                                            typename Face::index_type face)
+TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
+                                       typename Node::index_type pi,
+                                       typename Cell::index_type ci,
+                                       typename Face::index_type face)
 {
   // NOTE: This funcion assumes that the same operation has or will happen 
   // to any neighbor cell across the face.
@@ -2344,10 +2344,10 @@ TetVolMesh<Basis>::insert_node_in_cell_face(typename Cell::array_type &tets,
 
 template <class Basis>
 void
-TetVolMesh<Basis>::insert_node_in_cell_edge(typename Cell::array_type &tets,
-                                            typename Node::index_type pi,
-                                            typename Cell::index_type ci,
-                                            typename Edge::index_type ei)
+TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
+                                       typename Node::index_type pi,
+                                       typename Cell::index_type ci,
+                                       typename Edge::index_type ei)
 {
   // these 2 are not in the edge
   typename Node::index_type nie[2];
@@ -2390,10 +2390,10 @@ TetVolMesh<Basis>::resync_cells(typename Cell::array_type &carray)
 
 template <class Basis>
 bool
-TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
-                                         typename Node::index_type &pi,
-                                         typename Cell::index_type ci,
-                                         const Point &p)
+TetVolMesh<Basis>::insert_node_in_elem(typename Elem::array_type &tets,
+                                       typename Node::index_type &pi,
+                                       typename Elem::index_type ci,
+                                       const Point &p)
 {
   const Point &p0 = points_[cells_[ci*4 + 0]];
   const Point &p1 = points_[cells_[ci*4 + 1]];
@@ -2486,7 +2486,7 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
     typename Cell::array_type nbrs;
     typename Cell::index_type cur_cell = ci;
     do  {
-      insert_node_in_cell_edge(tets, pi, cur_cell, edge);
+      insert_node_in_edge(tets, pi, cur_cell, edge);
       typename edge_ht::iterator eiter = edge_table_.find(e);
       if (eiter == edge_table_.end()) break;
       edge = (*eiter).second;
@@ -2526,12 +2526,12 @@ TetVolMesh<Basis>::insert_node_in_cell_2(typename Cell::array_type &tets,
 
     pi = add_point(p);
     tets.clear();
-    insert_node_in_cell_face(tets, pi, ci, fi);
+    insert_node_in_face(tets, pi, ci, fi);
     if (have_neighbor)
     {
       // refind the face, its location in the table changed.
       fi = (*face_table_.find(f)).second;
-      insert_node_in_cell_face(tets, pi, nbr_tet, fi);
+      insert_node_in_face(tets, pi, nbr_tet, fi);
     }
   }
 
