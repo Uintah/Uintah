@@ -83,7 +83,7 @@ void PtolemyServer::run()
 	socklen_t	 clientLength;
 	struct sockaddr_in clientAddr, serverAddr;
 	
-	//start up the server
+ 	//start up the server
 	startUpServer(&listenfd, &serverAddr);
 	//time how long the server has been running
 	WallClockTimer *wc = new WallClockTimer();
@@ -111,12 +111,7 @@ void PtolemyServer::run()
 				wc->clear();  //clear time because something happened
 			}//TODO fatal errors after this need to start time out timer back up
 		servSem().up();
-        
-  //TODO based on latest changes we have to get the gui here instead of in main.cc... 
-  //need to remove that and change the constructors!          
-        gui = GuiInterface::getSingleton();      
-        ASSERT(gui);
-		
+    
         ProcessRequest *proc_req = new ProcessRequest(gui,net,connfd,idle_time,wc);
 		Thread *pr = new Thread(proc_req,"process client request", 0, Thread::NotActivated);
 		pr->setDaemon();
@@ -141,6 +136,11 @@ void ProcessRequest::run()
 {
 	cout << "Here and listening" << endl;
 	
+ //TODO based on latest changes we have to get the gui here instead of in main.cc... 
+  //need to remove that and change the constructors!          
+    gui = GuiInterface::getSingleton();      
+    ASSERT(gui);
+       
 	//networking variables
 	ssize_t n;
 	char line[MAXLINE];	  //lines we get sent  
