@@ -993,8 +993,8 @@ void
 ShowField::set_default_display_values() 
 {
   double fact = cur_mesh_scale_factor_;
-  node_scaleNV_.set(fact * 0.0035);
-  edge_scaleNV_.set(fact * 0.005);
+  node_scaleNV_.set(fact * 0.01);
+  edge_scaleNV_.set(fact * 0.003);
   vectors_scaleNV_.set(fact * 0.0735);
   tensors_scaleNV_.set(fact * 0.0735);
   scalars_scaleNV_.set(fact * 0.0735);
