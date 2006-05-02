@@ -2153,20 +2153,22 @@ ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
   drawinfo->mouse_action_ = mouse_action_;
 }
 
+
 void
-ViewWindow::maybeSaveMovieFrame() {
+ViewWindow::maybeSaveMovieFrame()
+{
   gui_->lock();
   // Check to see if we are doing synchronized movie frames
   GuiInt sync(ctx_->subVar("global-sync_with_execute", false));
-  if (sync.valid()) {
-    if (sync.get()) {
-      // This doesn't actually cause a redraw, so call redraw after we
-      // tell it that the next frame is synchronized.
-      renderer_->scheduleSyncFrame();
-      redraw();
-    }
-  }
+  const bool draw = sync.valid() && sync.get();
   gui_->unlock();
+  if (draw)
+  {
+    // This doesn't actually cause a redraw, so call redraw after we
+    // tell it that the next frame is synchronized.
+    renderer_->scheduleSyncFrame();
+    redraw();
+  }
 }
 
 
