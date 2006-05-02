@@ -26,11 +26,21 @@ Tillotson::Tillotson(ProblemSpecP& ps)
 Tillotson::~Tillotson()
 {
 }
-
+//_________________________________
 void Tillotson::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("EOS");
   eos_ps->setAttribute("type","Tillotson");
+  eos_ps->appendElement("a",a);
+  eos_ps->appendElement("b",b);
+  eos_ps->appendElement("A",A);
+  eos_ps->appendElement("B",B);
+  eos_ps->appendElement("E0",E0);
+  eos_ps->appendElement("Es",Es);
+  eos_ps->appendElement("Esp",Esp);
+  eos_ps->appendElement("alpha",alpha);
+  eos_ps->appendElement("beta",beta);
+  eos_ps->appendElement("rho0",rho0);
 }
 
 //__________________________________
