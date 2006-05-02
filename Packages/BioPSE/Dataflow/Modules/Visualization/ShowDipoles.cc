@@ -42,6 +42,7 @@
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
@@ -79,6 +80,9 @@ private:
   void draw_lines();
   void load_gui();
   void last_as_vec();
+
+  virtual void set_context(Network* network);
+  static bool maybe_resize_widget(void*);
 
   CrowdMonitor             widget_lock_;
   vector<int>              widget_id_;
@@ -135,9 +139,39 @@ ShowDipoles::ShowDipoles(GuiContext *context) :
   gidx_=0;
 }
 
-ShowDipoles::~ShowDipoles(){
+ShowDipoles::~ShowDipoles()
+{}
+
+void
+ShowDipoles::set_context(Network* network)
+{
+  Module::set_context(network);
+  if (sci_getenv_p("SCIRUN_USE_DEFAULT_SETTINGS"))
+  {
+    sched_->add_callback(maybe_resize_widget, this);
+  }
 }
 
+bool
+ShowDipoles::maybe_resize_widget(void *ptr) 
+{
+  if (sci_getenv_p("SCIRUN_USE_DEFAULT_SETTINGS"))
+  {
+    ShowDipoles* me = (ShowDipoles*)ptr;
+    GeometryOPort *ogeom = (GeometryOPort *)me->get_oport("Geometry");
+    BBox b;
+    if (ogeom->get_view_bounds(b)) {
+      double sc = b.diagonal().length() * 0.035;
+      for (int i = 0; i < me->num_dipoles_.get(); i++) {
+	me->widget_[i]->SetScale(sc);
+	me->widget_[i]->SetLength(2 * sc);
+      }
+    } else {
+      me->warning("Could not create default widget size");
+    }  
+  }
+  return true;  
+}
 
 void
 ShowDipoles::execute()
