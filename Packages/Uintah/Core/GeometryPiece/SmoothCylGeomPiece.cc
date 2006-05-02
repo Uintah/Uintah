@@ -46,9 +46,16 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   if (d_capThick < 0.0)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Cap Thickness < 0.0", __FILE__, __LINE__));
 
+  d_arcStart = 0.0;
+  double arcStart = 0.0;
+  ps->get("arc_start_angle", arcStart);
+  if (arcStart > 0.0) d_arcStart = (M_PI/180.0)*arcStart;
+  if (d_arcStart < 0.0 || d_arcStart > 2.0*M_PI)
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Arc Start Angle < 0.0 || > 2*Pi", __FILE__, __LINE__ ));
+
   d_angle = 2.0*M_PI;
   double angle = -1.0;
-  ps->get("angle", angle);
+  ps->get("arc_angle", angle);
   if (angle > 0.0) d_angle = (M_PI/180.0)*angle;
   if (d_angle < 0.0 || d_angle > 2.0*M_PI)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Angle < 0.0 || > 2*Pi", 
@@ -75,6 +82,8 @@ SmoothCylGeomPiece::outputHelper( ProblemSpecP & ps ) const
   ps->appendElement("num_axial", d_numAxial);
   ps->appendElement("thickness", d_thickness);
   ps->appendElement("endcap_thickness", d_capThick);
+  ps->appendElement("arc_start_angle", d_arcStart);
+  ps->appendElement("arc_angle", d_angle);
   ps->appendElement("output_file", d_fileName);
 }
 
@@ -224,7 +233,7 @@ SmoothCylGeomPiece::createEndCapPoints()
       double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-        double phi = jj*phiInc; 
+        double phi = d_arcStart + jj*phiInc; 
         double cosphi = cos(phi);
         double sinphi = sin(phi);
 
@@ -269,7 +278,7 @@ SmoothCylGeomPiece::createEndCapPoints()
       double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-        double phi = jj*phiInc; 
+        double phi = d_arcStart + jj*phiInc; 
         double cosphi = cos(phi);
         double sinphi = sin(phi);
 
@@ -351,7 +360,7 @@ SmoothCylGeomPiece::createSolidCylPoints()
       double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-        double phi = jj*phiInc; 
+        double phi = d_arcStart + jj*phiInc; 
         double cosphi = cos(phi);
         double sinphi = sin(phi);
 
@@ -425,7 +434,7 @@ SmoothCylGeomPiece::createHollowCylPoints()
       double phiInc = d_angle/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-        double phi = jj*phiInc; 
+        double phi = d_arcStart + jj*phiInc; 
         double cosphi = cos(phi);
         double sinphi = sin(phi);
 
