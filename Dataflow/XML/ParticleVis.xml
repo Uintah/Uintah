@@ -28,10 +28,14 @@
       <port>
         <name>Tensor Particles</name>
         <datatype>Uintah::TensorParticles</datatype>
-      </port>
-      <port>
+      </port> 
+     <port>
 	<name>ColorMap</name>
 	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
