@@ -190,6 +190,9 @@ public:
   const Patch* selectPatchForCellIndex( const IntVector& idx) const;
   const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
   const Patch* getPatchByID(int id) const;
+  
+  //getID() returns a unique identifier so if the grid is rebuilt the new 
+  //levels will have different id numbers (like a  serial number).  
   inline int getID() const {
     return d_id;
   }
@@ -197,6 +200,9 @@ public:
     return d_timeRefinementRatio;
   }
   void setTimeRefinementRatio(int trr);
+  
+ //getIndex() returns the relative position of the level - 0 is coarsest, 1 is  
+ //next and so forth.  
   inline int getIndex() const {
     return d_index;
   }
