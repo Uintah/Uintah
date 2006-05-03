@@ -136,22 +136,10 @@ namespace Uintah {
     template<class Types>
       void makeLinearSystem(const int matl);
     template<class Types>
-      void getSolution(const int matl);
+    void getSolution(const int matl);
     virtual void gatherSolutionVector(void) = 0;
 
-    // Set up linear system, read back solution for each variable type
-    // (default: throw exception; if implemented in derived classes
-    // from HypreDriver, it will be activated from the code therein)
-    virtual void makeLinearSystem_SFCX(const int matl);
-    virtual void makeLinearSystem_SFCY(const int matl);
-    virtual void makeLinearSystem_SFCZ(const int matl);
-    virtual void makeLinearSystem_NC(const int matl);
     virtual void makeLinearSystem_CC(const int matl);
-
-    virtual void getSolution_SFCX(const int matl);
-    virtual void getSolution_SFCY(const int matl);
-    virtual void getSolution_SFCZ(const int matl);
-    virtual void getSolution_NC(const int matl);
     virtual void getSolution_CC(const int matl);
 
     //========================== PROTECTED SECTION ==========================
@@ -196,21 +184,6 @@ namespace Uintah {
   }; // end class HypreDriver
 
   //========================== Utilities, printouts ==========================
-
-  template<class Types>
-    TypeDescription::Type TypeTemplate2Enum(const Types& t);
-  // Specific instantiations
-  template<>
-    TypeDescription::Type TypeTemplate2Enum(const SFCXTypes& t);
-  template<>
-    TypeDescription::Type TypeTemplate2Enum(const SFCYTypes& t);
-  template<>
-    TypeDescription::Type TypeTemplate2Enum(const SFCZTypes& t);
-  template<>
-    TypeDescription::Type TypeTemplate2Enum(const NCTypes& t);
-  template<>
-    TypeDescription::Type TypeTemplate2Enum(const CCTypes& t);
-
   HypreDriver*    newHypreDriver(const HypreInterface& interface,
                                  const Level* level,
                                  const MaterialSet* matlset,
@@ -222,11 +195,6 @@ namespace Uintah {
                                  const HypreSolverParams* params,
                                  const PatchSet* perProcPatches);
 
-  HypreInterface& operator ++ (HypreInterface& interface);
-  ostream&        operator << (ostream& os, const HypreInterface& i);
-  
-  BoxSide&        operator ++ (BoxSide& side);
-  ostream&        operator << (ostream& os, const BoxSide& s);
   BoxSide         patchFaceSide(const Patch::FaceType& patchFace);
 
   //========================================================================
@@ -390,110 +358,29 @@ namespace Uintah {
       cout_doing << Parallel::getMPIRank()<<" HypreDriver::solve() END" << "\n";
     } // end solve()
 
+  //_____________________________________________________________________
+  // Function HypreDriver::makeLinearSystem~
+  // Switch between makeLinearSystems of specific variable types by
+  // template class.
+  //_____________________________________________________________________
   template<class Types>
     void
     HypreDriver::makeLinearSystem(const int matl)
-    //_____________________________________________________________________
-    // Function HypreDriver::makeLinearSystem~
-    // Switch between makeLinearSystems of specific variable types by
-    // template class.
-    //_____________________________________________________________________
     {
-      Types t;
-      TypeDescription::Type domType = TypeTemplate2Enum(t);
-      switch (domType) {
-      case TypeDescription::SFCXVariable:
-        {
-          makeLinearSystem_SFCX(matl);
-          break;
-        } // end case SFCXVariable 
+      makeLinearSystem_CC(matl);
+    } 
 
-      case TypeDescription::SFCYVariable:
-        {
-          makeLinearSystem_SFCY(matl);
-          break;
-        } // end case SFCYVariable 
-
-      case TypeDescription::SFCZVariable:
-        {
-          makeLinearSystem_SFCZ(matl);
-          break;
-        } // end case SFCZVariable 
-
-      case TypeDescription::NCVariable:
-        {
-          makeLinearSystem_NC(matl);
-          break;
-        } // end case NCVariable 
-
-      case TypeDescription::CCVariable:
-        {
-          makeLinearSystem_CC(matl);
-          break;
-        } // end case CCVariable
-
-      default:
-        {
-          throw InternalError("Unknown variable type in scheduleSolve",
-                              __FILE__, __LINE__);
-        } // end default
-
-      } // end switch (domType)
-
-    } // end makeLinearSystem() for
-
-
+  //_____________________________________________________________________
+  // Function HypreDriver::getSolution~
+  // Switch between getSolutions of specific variable types by
+  // template class.
+  //_____________________________________________________________________
   template<class Types>
     void
     HypreDriver::getSolution(const int matl)
-    //_____________________________________________________________________
-    // Function HypreDriver::getSolution~
-    // Switch between getSolutions of specific variable types by
-    // template class.
-    //_____________________________________________________________________
     {
-      Types t;
-      TypeDescription::Type domType = TypeTemplate2Enum(t);
-      switch (domType) {
-      case TypeDescription::SFCXVariable:
-        {
-          getSolution_SFCX(matl);
-          break;
-        } // end case SFCXVariable 
-
-      case TypeDescription::SFCYVariable:
-        {
-          getSolution_SFCY(matl);
-          break;
-        } // end case SFCYVariable 
-
-      case TypeDescription::SFCZVariable:
-        {
-          getSolution_SFCZ(matl);
-          break;
-        } // end case SFCZVariable 
-
-      case TypeDescription::NCVariable:
-        {
-          getSolution_NC(matl);
-          break;
-        } // end case NCVariable 
-
-      case TypeDescription::CCVariable:
-        {
-          getSolution_CC(matl);
-          break;
-        } // end case CCVariable
-
-      default:
-        {
-          throw InternalError("Unknown variable type in scheduleSolve",
-                              __FILE__, __LINE__);
-        } // end default
-
-      } // end switch (domType)
-
-    } // end getSolution()
+      getSolution_CC(matl);
+    }
 
 } // end namespace Uintah
 
