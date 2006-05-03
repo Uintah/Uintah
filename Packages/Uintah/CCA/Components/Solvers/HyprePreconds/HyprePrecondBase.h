@@ -46,11 +46,8 @@ WARNING
 
 namespace Uintah {
   
-  // Forward declarations
   class HypreSolverParams;
   class HypreSolverBase;
-
-  //---------- Types ----------
   
   class HyprePrecondBase {
 
@@ -88,14 +85,12 @@ namespace Uintah {
     HYPRE_PtrToSolverFcn     _pcsetup;        // Hypre ptr-to-function
     HYPRE_Solver             _precond_solver; // Hypre precond object   
     Priorities               _priority;       // Prioritized acceptable drivers
-
   }; // end class HyprePrecondBase
 
   // Utilities
   HyprePrecondBase* newHyprePrecond(const PrecondType& precondType);
   PrecondType       getPrecondType(const std::string& precondTitle);
-  ostream&          operator << (ostream& os, const PrecondType& precondType);
 
-} // end namespace Uintah
+}
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecondBase_h
+#endif
