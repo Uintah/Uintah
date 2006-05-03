@@ -41,7 +41,7 @@ HypreSolverBase::HypreSolverBase(HypreDriver* driver,
 HypreSolverBase::~HypreSolverBase(void)
 {
 }
-  
+//______________________________________________________________________  
 void
 HypreSolverBase::assertInterface(void)
 { 
@@ -120,6 +120,7 @@ HypreSolverBase::assertInterface(void)
       }
     }
   }
+
   cout_dbg << "2. found = " << found << "\n";
 
   if (!found) {
@@ -129,7 +130,7 @@ HypreSolverBase::assertInterface(void)
   }
   cout_doing << Parallel::getMPIRank()<<" HypreSolverBase::assertInterface() END" << "\n";
 }
-
+//______________________________________________________________________
 namespace Uintah {
 
   HypreSolverBase*
@@ -185,7 +186,7 @@ namespace Uintah {
     cout_doing << "newHypreSolver() END (shouldn't be reached)" << "\n";
     RETURN_0;
   }
-
+//______________________________________________________________________
   SolverType
   getSolverType(const string& solverTitle)
   {
