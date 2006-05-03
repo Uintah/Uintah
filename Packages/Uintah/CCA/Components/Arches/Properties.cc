@@ -546,7 +546,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           }
 	  else
 	    local_enthalpy_init = false;
-
+	  
+	  inStream.d_currentCell = currCell;
+	  
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
 	  }

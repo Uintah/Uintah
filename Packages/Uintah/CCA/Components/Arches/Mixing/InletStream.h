@@ -28,11 +28,14 @@ WARNING
    none
 
 ************************************************************************/
+#include <Core/Geometry/IntVector.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
+  using namespace SCIRun;
     class InletStream {
     public:
       InletStream();
@@ -47,6 +50,8 @@ namespace Uintah {
       std::vector<double> d_rxnVars;
       int d_axialLoc;
       double d_scalarDisp;
+    
+      IntVector d_currentCell;
 
     }; // End class InletStream
 
