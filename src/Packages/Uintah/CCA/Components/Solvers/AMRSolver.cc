@@ -116,12 +116,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                          const VarLabel* guess,
                          Task::WhichDW which_guess_dw,
                          const SolverParameters* params)
-  /*_____________________________________________________________________
-    Function AMRSolver::scheduleSolve
-    Create the Uintah task that solves the linear system using Hypre.
-    We can accomodate different types of variables to be solved: CC,
-    NC, FC, etc. NOTE: Currently only CC is supported.
-    _____________________________________________________________________*/
+  
 {
   cout_doing << "AMRSolver::scheduleSolve() BEGIN" << "\n";
   Task* task;
@@ -142,92 +137,36 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   HypreInterface interface;
   int numLevels = level->getGrid()->numLevels();
   if (numLevels > 1) {
-    /* Composite grid of uniform patches */
-    interface = HypreSStruct;
+    interface = HypreSStruct;   /* Composite grid of uniform patches */
   } else {
-    /* A uniform grid */
-    interface = HypreSStruct;
+    interface = HypreSStruct;   /* A uniform grid */
   }
 
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perProcPatches = lb->createPerProcessorPatchSet(level->getGrid());
+  
   HypreDriver* that = newHypreDriver
     (interface,level.get_rep(), matls, A, which_A_dw,
      x, modifies_x, b, which_b_dw, guess, 
      which_guess_dw, dparams, perProcPatches);
   Handle<HypreDriver > handle = that;
 
-  switch (domType) {
-  case TypeDescription::SFCXVariable:
-    {
-      // The SGI compiler does't like accepting a templated function over
-      // a function call for some reason...  We use this hack to force it
-      // to figure out the correct type of the function.
-      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
-                                const MaterialSubset*,
-                                DataWarehouse*, DataWarehouse*,
-                                Handle<HypreDriver>);
-      func = &HypreDriver::solve<SFCXTypes>;
-      task = scinew Task("Matrix solve SFCX", that, func, handle);
-      break;
-    } // end case SFCXVariable 
 
-  case TypeDescription::SFCYVariable:
-    {
-      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
-                                const MaterialSubset*,
-                                DataWarehouse*, DataWarehouse*,
-                                Handle<HypreDriver>);
-      func = &HypreDriver::solve<SFCYTypes>;
-      task = scinew Task("Matrix solve SFCY", that, func, handle);
-      break;
-    } // end case SFCYVariable 
-
-  case TypeDescription::SFCZVariable:
-    {
-      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
-                                const MaterialSubset*,
-                                DataWarehouse*, DataWarehouse*,
-                                Handle<HypreDriver>);
-      func = &HypreDriver::solve<SFCZTypes>;
-      task = scinew Task("Matrix solve SFCZ", that, func, handle);
-      break;
-    } // end case SFCZVariable 
-
-  case TypeDescription::NCVariable:
-    {
-      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
-                                const MaterialSubset*,
-                                DataWarehouse*, DataWarehouse*,
-                                Handle<HypreDriver>);
-      func = &HypreDriver::solve<NCTypes>;
-      task = scinew Task("Matrix solve NC", that, func, handle);
-      break;
-    } // end case NCVariable 
-
-  case TypeDescription::CCVariable:
-    {
-      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
-                                const MaterialSubset*,
-                                DataWarehouse*, DataWarehouse*,
-                                Handle<HypreDriver>);
-      func = &HypreDriver::solve<CCTypes>;
-      task = scinew Task("Matrix solve CC", that, func, handle);
-      break;
-    } // end case CCVariable
-
-  default:
-    {
-      throw InternalError("Unknown variable type in scheduleSolve",
-                          __FILE__, __LINE__);
-    } // end default
-
-  } // end switch (domType)
-
+  void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
+                            const MaterialSubset*,
+                            DataWarehouse*, DataWarehouse*,
+                            Handle<HypreDriver>);
+  func = &HypreDriver::solve<CCTypes>;
+  task = scinew Task("Matrix solve CC", that, func, handle);
+      
+  //__________________________________
+  // computes and requires for A, X and rhs
   for (int i = 0; i < level->getGrid()->numLevels(); i++) {
     const LevelP l = level->getGrid()->getLevel(i);
     const PatchSubset* subset = l->eachPatch()->getUnion();
+    
     task->requires(which_A_dw, A, subset, Ghost::None, 0);
+    
     if (modifies_x) {
       task->modifies(x, subset, 0);
     }
@@ -240,7 +179,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     }
     
     task->requires(which_b_dw, b, subset, Ghost::None, 0);
-  }
+  }// numLevels
+  
+  
   task->setType(Task::OncePerProc);
 
   sched->addTask(task, perProcPatches, matls);
