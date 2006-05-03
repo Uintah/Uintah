@@ -51,6 +51,7 @@ using namespace SCIRun;
 
 ParticleVis::ParticleVis(GuiContext* ctx) :
   Module("ParticleVis", ctx, Filter, "Visualization", "Uintah"), 
+  spin0(0), spin1(0), vpin(0), tpin(0), mat_in(0), cin(0), ogeom(0),
   min_(get_ctx()->subVar("min_")),  max_(get_ctx()->subVar("max_")),
   isFixed(get_ctx()->subVar("isFixed")),
   current_time(get_ctx()->subVar("current_time")),
@@ -103,6 +104,7 @@ void ParticleVis::execute()
   spin1= (ScalarParticlesIPort *) get_iport("Scaling Particles");
   vpin= (VectorParticlesIPort *) get_iport("Vector Particles");
   tpin= (TensorParticlesIPort *) get_iport("Tensor Particles");
+  mat_in= (MatrixIPort *) get_iport("Matrix");
   cin= (ColorMapIPort *) get_iport("ColorMap"); 
   ogeom= (GeometryOPort *) get_oport("Geometry"); 
   ogeom->delAll();
@@ -159,7 +161,16 @@ void ParticleVis::execute()
 	hasTensors = true;
     }
   }
-  
+
+  // check for input matrix
+  MatrixHandle mH = 0;
+  Transform pt; // particle transform
+  if( mat_in ){
+    if( mat_in->get( mH ) ){
+      if(mH.get_rep() != 0);
+      pt = mH->toTransform();
+    }
+  }
   
   // grab the color map from the input port
   ColorMapHandle cmh;
@@ -329,7 +340,7 @@ void ParticleVis::execute()
 	    if( scalefactor >= 1e-6 ){
 	      if(!hasTensors){
 		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
-		sp = scinew GeomSphere( (*p_it)[*iter],
+		sp = scinew GeomSphere( pt.project((*p_it)[*iter]),
 					scalefactor * radius.get(),
 					nu, nv);
 		sp->setId((long long)((*id_it)[*iter]));
@@ -354,7 +365,7 @@ void ParticleVis::execute()
 		  matrix[10] = M(2,2)*norm;
 		  
 		  //cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
-		  sp = scinew GeomEllipsoid((*p_it)[*iter],
+		  sp = scinew GeomEllipsoid(pt.project((*p_it)[*iter]),
 					    scalefactor * radius.get(),
 					    nu, nv, &(matrix[0]), 2);
 		  sp->setId((long long)((*id_it)[*iter]));
@@ -364,7 +375,8 @@ void ParticleVis::execute()
 	  } else {
 	    if(!hasTensors){
 	      //cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
-	      sp = scinew GeomSphere( (*p_it)[*iter], radius.get(), nu, nv);
+	      sp = scinew GeomSphere( pt.project((*p_it)[*iter]), 
+                                      radius.get(), nu, nv);
 	      sp->setId((long long)((*id_it)[*iter]));
 	    } else {
 	      double matrix[16];
@@ -387,7 +399,7 @@ void ParticleVis::execute()
 		matrix[10] = M(2,2)*norm;
 		
 		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
-		sp = scinew GeomEllipsoid((*p_it)[*iter],
+		sp = scinew GeomEllipsoid(pt.project((*p_it)[*iter]),
 					  radius.get(), nu, nv, &(matrix[0]),
 					  2);
 		sp->setId((long long)((*id_it)[*iter]));
@@ -404,7 +416,7 @@ void ParticleVis::execute()
 	    if(len > min_crop_length.get() ){
 	      if( max_crop_length.get() == 0 ||
 		  len < max_crop_length.get()){
-		arrows->add( (*p_it)[*iter],
+		arrows->add( pt.project((*p_it)[*iter]),
 			     V*length_scale.get(),
 			     outcolor, outcolor, outcolor);
 	      }
@@ -441,7 +453,7 @@ void ParticleVis::execute()
 	if (count == show_nth.get() ){ 
 	  have_particle = true;
 	  double value = (*s_it)[*iter];
-	  pts->add((*p_it)[*iter], cmap->lookup(value));
+	  pts->add(pt.project((*p_it)[*iter]), cmap->lookup(value));
 	  count = 0;
 	}
  	if( drawVectors.get() == 1 && hasVectors){
@@ -450,7 +462,7 @@ void ParticleVis::execute()
  	  if(len > min_crop_length.get() ){
 	    if( max_crop_length.get() == 0 ||
 		len < max_crop_length.get()){
-	      arrows->add( (*p_it)[*iter],
+	      arrows->add( pt.project((*p_it)[*iter]),
 			   V*length_scale.get(),
 			   outcolor, outcolor, outcolor);
 	    }
