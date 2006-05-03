@@ -498,7 +498,7 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
  
   //__________________________________
   // viewpoint LOGIC
-  int f_level_ID, c_level_ID;
+  int fineIndex, coarseIndex;
   Level::selectType finePatches;
   const Level* fineLevel;
   
@@ -509,8 +509,8 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
     
     finePatches.push_back(finePatch);
     
-    c_level_ID  = coarseLevel->getID();
-    f_level_ID  = fineLevel->getID();  
+    coarseIndex  = coarseLevel->getIndex();
+    fineIndex  = fineLevel->getIndex();  
   }
   if(viewpoint == DoingCoarseToFine){
     const Patch* coarsePatch = _patch;
@@ -519,8 +519,8 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
     
     coarsePatch->getFineLevelPatches(finePatches);
     
-    c_level_ID  = coarseLevel->getID();
-    f_level_ID  = fineLevel->getID(); 
+    coarseIndex  = coarseLevel->getIndex();
+    fineIndex  = fineLevel->getIndex(); 
   }
 
   const IntVector& refRat = fineLevel->getRefinementRatio();
@@ -541,7 +541,10 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
 #if 1           // spew
       cout << mpiRank << "-----------------Face " << finePatch->getFaceName(face) 
            << " iter " << f_iter.begin() << " " << f_iter.end() 
-           << " offset " << offset<<endl;
+           << " offset " << offset
+           << " finePatch ID " << finePatch->getID() 
+           << " f_level " << fineIndex 
+           << " c_level " << coarseIndex << endl;
 #endif
 
       for(; !f_iter.done(); f_iter++) {
@@ -554,9 +557,9 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
           //     << " -> coarseCell " << coarseCell;
         
           HYPRE_SStructGraphAddEntries(graph,
-                                       f_level_ID, fineCell.get_pointer(),
+                                       fineIndex, fineCell.get_pointer(),
                                        CC_VAR,
-                                       c_level_ID, coarseCell.get_pointer(),
+                                       coarseIndex, coarseCell.get_pointer(),
                                        CC_VAR);
           //cout << " done " << endl;
 
@@ -566,9 +569,9 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
           //     << " <- coarseCell " << coarseCell;
         
           HYPRE_SStructGraphAddEntries(graph,
-                                       c_level_ID, coarseCell.get_pointer(),
+                                       coarseIndex, coarseCell.get_pointer(),
                                        CC_VAR,
-                                       f_level_ID, fineCell.get_pointer(),
+                                       fineIndex, fineCell.get_pointer(),
                                        CC_VAR);
           //cout << " done " << endl;
 
@@ -794,17 +797,17 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
       //  Update the entries on the fine level
       int graphIndex_fine[1] = {counter_fine[fineCell]};
       const double* graphValue = &A[fineCell][face];
-      int f_level_ID = fineLevel->getID();
+      int fineIndex = fineLevel->getIndex();
 
       // add the unstructured entry to the matrix
-      HYPRE_SStructMatrixSetValues(HA, f_level_ID,
+      HYPRE_SStructMatrixSetValues(HA, fineIndex,
                                    fineCell.get_pointer(),
                                    CC_VAR, 1, graphIndex_fine,
                                    const_cast<double*>(graphValue));
 
       // Wipe out the original structured entry 
       const double* stencilValue = &ZERO;
-       HYPRE_SStructMatrixSetValues(HA, f_level_ID,
+       HYPRE_SStructMatrixSetValues(HA, fineIndex,
                                    fineCell.get_pointer(),
                                    CC_VAR, 1, stencilIndex_fine,
                                    const_cast<double*>(stencilValue));
@@ -818,9 +821,9 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
       // the fine and coarse cells to the graph.    
       IntVector coarseCell = (fineCell + offset) / refRat;
       int graphIndex_coarse[1] = {counter_coarse[coarseCell]};
-      int c_level_ID = coarseLevel->getID();
+      int coarseIndex = coarseLevel->getIndex();
 
-      HYPRE_SStructMatrixSetValues(HA, c_level_ID,
+      HYPRE_SStructMatrixSetValues(HA, coarseIndex,
                                    coarseCell.get_pointer(),
                                    CC_VAR, 1, graphIndex_coarse,
                                    const_cast<double*>(graphValue));
@@ -828,7 +831,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
       // Wipe out the original coarse-coarse structured connection
       if (counter_coarse[coarseCell] == stencilSize) {
         stencilValue = &ZERO;
-        HYPRE_SStructMatrixSetValues(HA, c_level_ID,
+        HYPRE_SStructMatrixSetValues(HA, coarseIndex,
                                      coarseCell.get_pointer(),
                                      CC_VAR, 1, stencilIndex_coarse, 
                                      const_cast<double*>(stencilValue));
