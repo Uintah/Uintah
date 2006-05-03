@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
@@ -17,6 +18,7 @@ class ParticleVis : public Module {
     ScalarParticlesIPort* spin1;
     VectorParticlesIPort* vpin;
     TensorParticlesIPort* tpin;
+    MatrixIPort *mat_in;
     ColorMapIPort *cin;
     GeometryOPort* ogeom;
     GuiDouble min_;
