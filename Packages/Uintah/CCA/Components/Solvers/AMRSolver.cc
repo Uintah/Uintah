@@ -1,13 +1,3 @@
-/*--------------------------------------------------------------------------
- * File: AMRSolver.cc
- *
- * Uintah wrap around HypreDriver class that schedules the solver call.
- * Here we read the solver parameters, so we when adding a new solver
- * or new variable type (NC, FC), remember to update the relevant functions
- * here.
- * See also AMRSolver.h.
- *--------------------------------------------------------------------------*/
-
 #include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
@@ -41,9 +31,6 @@ using namespace Uintah;
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 static DebugStream cout_dbg("HYPRE_DBG", false);
 
-/*_____________________________________________________________________
-  class AMRSolver implementation
-  _____________________________________________________________________*/
 
 AMRSolver::AMRSolver(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld) {}
@@ -101,34 +88,26 @@ AMRSolver::readParameters(ProblemSpecP& params,
   //  p->restart=true;
 
   return p;
-} // end readParameters()
+}
 //______________________________________________________________________
-//
+//  This originated from Steve's implementation of HypreSolver
 void
 AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                          const MaterialSet* matls,
-                         const VarLabel* A,
-                         Task::WhichDW which_A_dw,  
-                         const VarLabel* x,
-                         bool modifies_x,
-                         const VarLabel* b,
-                         Task::WhichDW which_b_dw,  
-                         const VarLabel* guess,
-                         Task::WhichDW which_guess_dw,
+                         const VarLabel* A,       Task::WhichDW which_A_dw,  
+                         const VarLabel* x,       bool modifies_x,
+                         const VarLabel* b,       Task::WhichDW which_b_dw,  
+                         const VarLabel* guess,   Task::WhichDW which_guess_dw,
                          const SolverParameters* params)
   
 {
   cout_doing << "AMRSolver::scheduleSolve() BEGIN" << "\n";
   Task* task;
-  // The extra handle arg ensures that the stencil7 object will get freed
-  // when the task gets freed.  The downside is that the refcount gets
-  // tweaked everytime solve is called.
 
   TypeDescription::Type domType = A->typeDescription()->getType();
   ASSERTEQ(domType, x->typeDescription()->getType());
   ASSERTEQ(domType, b->typeDescription()->getType());
-  const HypreSolverParams* dparams =
-    dynamic_cast<const HypreSolverParams*>(params);
+  const HypreSolverParams* dparams = dynamic_cast<const HypreSolverParams*>(params);
   if(!dparams)
     throw InternalError("Wrong type of params passed to hypre solver!",
                         __FILE__, __LINE__);
@@ -145,17 +124,14 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perProcPatches = lb->createPerProcessorPatchSet(level->getGrid());
   
-  HypreDriver* that = newHypreDriver
-    (interface,level.get_rep(), matls, A, which_A_dw,
-     x, modifies_x, b, which_b_dw, guess, 
-     which_guess_dw, dparams, perProcPatches);
+  HypreDriver* that = newHypreDriver(interface,level.get_rep(), matls, A, which_A_dw,x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams, perProcPatches);
   Handle<HypreDriver > handle = that;
-
 
   void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
                             const MaterialSubset*,
                             DataWarehouse*, DataWarehouse*,
                             Handle<HypreDriver>);
+                            
   func = &HypreDriver::solve<CCTypes>;
   task = scinew Task("Matrix solve CC", that, func, handle);
       
