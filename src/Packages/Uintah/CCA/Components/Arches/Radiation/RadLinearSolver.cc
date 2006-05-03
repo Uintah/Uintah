@@ -153,9 +153,6 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
     }
     numCells[s] = mytotal;
   }
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "totalCells = " << totalCells << '\n';
-#endif
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
@@ -184,14 +181,6 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
 	+start.y()*dcells.x()+start.x();
-      //#ifdef ARCHES_PETSC_DEBUG
-#if 0
-      cerr << "Looking at patch: " << neighbor->getID() << '\n';
-      cerr << "low=" << low << '\n';
-      cerr << "high=" << high << '\n';
-      cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
-      cerr << "globalIndex = " << petscglobalIndex << '\n';
-#endif
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
 	int idx_slab = petscglobalIndex;
 	petscglobalIndex += dcells.x()*dcells.y();
@@ -208,21 +197,6 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
       totalCells+=d.x()*d.y()*d.z();
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
-    //#ifdef ARCHES_PETSC_DEBUG
-#if 0
-    {	
-      IntVector l = l2g.getWindow()->getLowIndex();
-      IntVector h = l2g.getWindow()->getHighIndex();
-      for(int z=l.z();z<h.z();z++){
-	for(int y=l.y();y<h.y();y++){
-	  for(int x=l.x();x<h.x();x++){
-	    IntVector idx(x,y,z);
-	    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
-	  }
-	}
-      }
-    }
-#endif
   }
   int me = d_myworld->myrank();
   numlrows = numCells[me];
@@ -241,34 +215,6 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
   o_nz = 3;
   //  }
 
-  // #ifdef ARCHES_PETSC_DEBUG
-#if 0
-  cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
-#endif
-#if 0
-  int ierr;
-  ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
-  if(ierr)
-    throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
-
-  /* 
-     Create vectors.  Note that we form 1 vector from scratch and
-     then duplicate as needed.
-  */
-  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
-  if(ierr)
-    throw PetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
-  ierr = VecSetFromOptions(d_x);
-  if(ierr)
-    throw PetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
-  ierr = VecDuplicate(d_x,&d_b);
-  if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
-  ierr = VecDuplicate(d_x,&d_u);
-  if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
-#endif
 }
 
 // ****************************************************************************
@@ -427,62 +373,9 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 	if(ierr)
 	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 
-#ifdef ARCHES_PETSC_DEBUG
-	cerr << "ierr=" << ierr << '\n';
-#endif
       }
     }
   }
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "assemblign rhs\n";
-#endif
-  // assemble right hand side and solution vector
-#if 0
-  int numCells = (idxHi.x()-idxLo.x()+1)*(idxHi.y()-idxLo.y()+1)*
-    (idxHi.z()-idxLo.z()+1);
-  vector<double> vecb(numCells);
-  vector<double> vecx(numCells);
-  vector<int> indexes(numCells);
-  int count = 0;
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	vecb[count] = SU[IntVector(colX,colY,colZ)];
-	vecx[count] = vars->cenint[IntVector(colX, colY, colZ)];
-	indexes[count] = l2g[IntVector(colX, colY, colZ)];	  
-	count++;
-      }
-    }
-  }
-
-  ierr = VecSetValues(d_b, numCells, &indexes[0], &vecb[0], INSERT_VALUES);
-  if(ierr)
-    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-  ierr = VecSetValues(d_x, numCells, &indexes[0], &vecx[0], INSERT_VALUES);
-  if(ierr)
-    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-#endif
-#if 0
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  vecvalueb = SU[IntVector(colX,colY,colZ)];
-	  vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
-	  int row = l2g[IntVector(colX, colY, colZ)];	  
-	  ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-	  ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-	}
-      }
-    }
-#endif
-    //#ifdef ARCHES_PETSC_DEBUG
-#if 0
-    cerr << " all done\n";
-#endif
 }
 
 
@@ -494,9 +387,6 @@ RadLinearSolver::radLinearSolve()
   PC peqnpc; // pressure eqn pc
  
   int ierr;
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "Doing mat/vec assembly\n";
-#endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
     throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
@@ -546,19 +436,6 @@ RadLinearSolver::radLinearSolve()
     throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   /* debugging - steve */
   double norm;
-#if 0
-  // #ifdef ARCHES_PETSC_DEBUG
-  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_DEFAULT);
-  ierr = MatNorm(A,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);
-  //  ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
-  ierr = VecNorm(d_x,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector x norm = %g\n",norm);
-  ierr = VecView(d_x, PETSC_VIEWER_STDOUT_WORLD);
-  ierr = VecNorm(d_b,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);
-  ierr = VecView(d_b, PETSC_VIEWER_STDOUT_WORLD);
-#endif
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
@@ -643,9 +520,6 @@ RadLinearSolver::radLinearSolve()
   ierr = VecNorm(d_x,NORM_1,&norm);
   if(ierr)
     throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
-#ifdef ARCHES_PETSC_DEBUG
-  ierr = VecView(d_x, VIEWER_STDOUT_WORLD);
-#endif
 
   // check the error
   ierr = MatMult(A, d_x, d_u);
