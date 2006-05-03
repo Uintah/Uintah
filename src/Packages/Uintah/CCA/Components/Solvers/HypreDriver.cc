@@ -1,10 +1,3 @@
-/*--------------------------------------------------------------------------
- * File: HypreDriver.cc
- *
- * Implementation of a wrapper of a Hypre solver for a particular variable
- * type. 
- *--------------------------------------------------------------------------*/
-
 #include <sci_defs/hypre_defs.h>
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
@@ -38,10 +31,7 @@ using namespace Uintah;
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 static DebugStream cout_dbg("HYPRE_DBG", false);
 
-/*_____________________________________________________________________
-  class HypreDriver implementation common to all variable types
-  and all Hypre interfaces
-  _____________________________________________________________________*/
+
 void
 HypreDriver::makeLinearSystem_CC(const int matl)
 {
@@ -57,7 +47,6 @@ HypreDriver::getSolution_CC(const int matl)
 }
 
 //__________________________________
-
 bool
 HypreDriver::isConvertable(const HypreInterface& to)
   // Is it possible to convert from the current HypreInterface
@@ -71,7 +60,7 @@ HypreDriver::isConvertable(const HypreInterface& to)
   if ((_interface == HypreSStruct) && (to == HypreParCSR)) return true;
 
   return false;
-} // end isConvertable()
+}
 
 //__________________________________
 
@@ -110,10 +99,11 @@ namespace Uintah {
   }
 
  //__________________________________
+ // Correspondence between Uintah patch face and hypre BoxSide
+ // (left or right).
   BoxSide
   patchFaceSide(const Patch::FaceType& patchFace)
-    // Correspondence between Uintah patch face and their BoxSide
-    // (left or right).
+
   {
     if (patchFace == Patch::xminus || 
         patchFace == Patch::yminus || 
