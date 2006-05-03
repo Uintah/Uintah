@@ -22,11 +22,6 @@
 #include <iomanip>
 
 using namespace Uintah;
-//__________________________________
-//  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
-
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 HyprePrecondBase::HyprePrecondBase(const Priorities& priority) :
   _priority(priority)
@@ -39,39 +34,6 @@ HyprePrecondBase::HyprePrecondBase(const Priorities& priority) :
 }
 
 namespace Uintah {
-
-  PrecondType   
-  precondFromTitle(const std::string& precondTitle)
-  {
-    /* Determine preconditioner type from title */
-    if ((precondTitle == "SMG") ||
-        (precondTitle == "smg")) {
-      return PrecondSMG;
-    } else if ((precondTitle == "PFMG") ||
-               (precondTitle == "pfmg")) {
-      return PrecondPFMG;
-    } else if ((precondTitle == "SparseMSG") ||
-               (precondTitle == "sparsemsg")) {
-      return PrecondSparseMSG;
-    } else if ((precondTitle == "Jacobi") ||
-               (precondTitle == "jacobi")) {
-      return PrecondJacobi;
-    } else if ((precondTitle == "Diagonal") ||
-               (precondTitle == "diagonal")) {
-      return PrecondDiagonal;
-    } else if ((precondTitle == "AMG") ||
-               (precondTitle == "amg") ||
-               (precondTitle == "BoomerAMG") ||
-               (precondTitle == "boomeramg")) {
-      return PrecondAMG;
-    } else if ((precondTitle == "FAC") ||
-               (precondTitle == "fac")) {
-      return PrecondFAC;
-    } else {
-      throw InternalError("Unknown preconditionertype: "+precondTitle,
-                          __FILE__, __LINE__);
-    } // end "switch" (precondTitle)
-  } // end precondFromTitle()
 
   HyprePrecondBase*
   newHyprePrecond(const PrecondType& precondType)
@@ -90,16 +52,15 @@ namespace Uintah {
     default:
       throw InternalError("Unknown preconditionertype in newHyprePrecond: "
                           +precondType, __FILE__, __LINE__);
-
-    } // switch (precondType)
+    }
     throw InternalError("Preconditioner not yet implemented in newHyprePrecond: "
                         +precondType, __FILE__, __LINE__);
-  } // end newHyprePrecond()
-
+  } 
+  
+/* Determine preconditioner type from title */
   PrecondType
   getPrecondType(const string& precondTitle)
   {
-    /* Determine preconditioner type from title */
     if ((precondTitle == "None") ||
         (precondTitle == "none")) {
       return PrecondNA;
@@ -129,26 +90,6 @@ namespace Uintah {
     } else {
       throw InternalError("Unknown preconditionertype: "+precondTitle,
                           __FILE__, __LINE__);
-    } // end "switch" (precondTitle)
-  } // end precondFromTitle()
-
-  ostream&
-  operator << (ostream& os, const PrecondType& precondType)
-    // Write a solver type (enum) to the stream os.
-  {
-    switch (precondType) {
-    case PrecondNA:        { os << "PrecondNA"; break; }
-    case PrecondSMG:       { os << "PrecondSMG"; break; }
-    case PrecondPFMG:      { os << "PrecondPFMG"; break; }
-    case PrecondSparseMSG: { os << "PrecondSparseMSG"; break; }
-    case PrecondJacobi:    { os << "PrecondJacobi"; break; }
-    case PrecondDiagonal:  { os << "PrecondDiagonal"; break; }
-    case PrecondAMG:       { os << "PrecondAMG"; break; }
-    case PrecondFAC:       { os << "PrecondFAC"; break; }
-    default:               { os << "???"; break; }
-    } // switch (precondType)
-   
-    return os;
+    } 
   }
-
-} // end namespace Uintah 
+}
