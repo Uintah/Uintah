@@ -65,7 +65,7 @@ Models_HypreSolver::outputProblemSpec(ProblemSpecP& ps)
 
   solver_ps->appendElement("solver",d_solverType);
   solver_ps->appendElement("preconditioner", d_precondType);
-  solver_ps->appendElement("max_iter", d_maxSweeps);
+  solver_ps->appendElement("max_iter", d_maxIter);
   solver_ps->appendElement("tolerance", d_tolerance);
   
 }
@@ -122,7 +122,7 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
        d_precondType != "smg"     && d_precondType != "SMG" &&
        d_precondType != "pfmg"    && d_precondType != "PFMG" &&
        d_precondType != "jacobi"  && d_precondType != "JACOBI"){
-      warn1 << warn0.str() << " ("<<d_precondType<<") with gmres solver";
+      warn1 << warn0.str() << " ("<<d_precondType<<") with cg solver";
       throw ProblemSetupException(warn1.str(),__FILE__, __LINE__);
     }
   }
@@ -142,7 +142,7 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
     cerr<< "WARNING: HypreSolver:Spherical Harmonics generates a symmetric matrix; use cg as the solver; using gmres really slows things down" << endl;
   }  
 
-  db->getWithDefault("max_iter", d_maxSweeps, 75);
+  db->getWithDefault("max_iter", d_maxIter, 75);
   db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
 
 }
@@ -440,6 +440,7 @@ Models_HypreSolver::radLinearSolve()
   int num_iterations;
   int n_pre, n_post, skip;
   double sum_b, iprod, final_res_norm;
+  double init_norm;
 
   /*Calculating initial norm*/
   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &tmp);
@@ -466,7 +467,7 @@ Models_HypreSolver::radLinearSolve()
     /*Solve the system using SMG*/
     HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
-    HYPRE_StructSMGSetMaxIter(solver, d_maxSweeps);
+    HYPRE_StructSMGSetMaxIter(solver, d_maxIter);
     HYPRE_StructSMGSetTol(solver, d_tolerance);
     HYPRE_StructSMGSetRelChange(solver, 0);
     HYPRE_StructSMGSetNumPreRelax(solver, n_pre);
@@ -485,7 +486,7 @@ Models_HypreSolver::radLinearSolve()
   if (d_solverType == "pfmg" || d_solverType == "PFMG") {
     /*Solve the system using PFMG*/
     HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
-    HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
+    HYPRE_StructPFMGSetMaxIter(solver, d_maxIter);
     HYPRE_StructPFMGSetTol(solver, d_tolerance);
     HYPRE_StructPFMGSetRelChange(solver, 0);
     /* weighted Jacobi = 1; red-black GS = 2 */
@@ -507,7 +508,7 @@ Models_HypreSolver::radLinearSolve()
   //  GMRES
   if (d_solverType == "gmres" || d_solverType == "GMRES") {
     HYPRE_StructGMRESCreate(MPI_COMM_WORLD, &solver);
-    HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
+    HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, d_maxIter);
     HYPRE_GMRESSetTol( (HYPRE_Solver)solver, d_tolerance);
     //    HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
     //    HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
@@ -570,7 +571,7 @@ Models_HypreSolver::radLinearSolve()
 
     HYPRE_GMRESSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
-        cerr << "GMRES Solve time = " << Time::currentSeconds()-dummy_start << endl;
+        //cerr << "GMRES Solve time = " << Time::currentSeconds()-dummy_start << endl;
     
     HYPRE_GMRESGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_GMRESGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
@@ -590,7 +591,7 @@ Models_HypreSolver::radLinearSolve()
   //  CG SOLVER
   if (d_solverType == "cg" || d_solverType == "CG") {
     HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
-    HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
+    HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxIter);
     HYPRE_PCGSetTol( (HYPRE_Solver)solver, d_tolerance);
     HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
     HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
@@ -750,11 +751,3 @@ void Models_HypreSolver::finalizeSolver()
 {
   
 }
-
-
-
-
-
-
-
-
