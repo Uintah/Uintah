@@ -216,8 +216,8 @@ NetworkIO::gui_set_modgui_variable(const string &mod_id, const string &var,
     cmmd = "set " + mod + "-" + var +  " " + val;
   } else {
     string v = var;
-    v.insert(pos, mod + "-");
-    cmmd = "set " + var +  " " + val;
+    v.insert(++pos, mod + "-");
+    cmmd = "set " + v +  " " + val;
   }
   gui->eval(cmmd);
 }
