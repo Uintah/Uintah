@@ -66,7 +66,7 @@ namespace Uintah {
 
   class HypreDriverStruct : public HypreDriver {
     
-    //========================== PUBLIC SECTION ==========================
+    
   public:
 
     // Construction & Destruction
@@ -97,7 +97,7 @@ namespace Uintah {
     // Common for all var types
     virtual void gatherSolutionVector(void);
 
-    // CC variables: set up linear system & read back solution
+    // CC variables: 
     virtual void makeLinearSystem_CC(const int matl);
     virtual void getSolution_CC(const int matl);
 
@@ -106,7 +106,7 @@ namespace Uintah {
     virtual void printRHS(const string& fileName = "output_b");
     virtual void printSolution(const string& fileName = "output_x");
 
-    //========================== PRIVATE SECTION ==========================
+   
   private:
 
     //---------- Data members ----------
@@ -117,8 +117,7 @@ namespace Uintah {
     HYPRE_StructVector       _HB;                // Right-hand-side vector
     HYPRE_StructVector       _HX;                // Solution vector
 
-  }; // end class HypreDriverStruct
+  }; 
+} 
 
-} // end namespace Uintah
-
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreDriverStruct_h
+#endif 
