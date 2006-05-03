@@ -43,6 +43,7 @@
 #ifndef Core_Thread_Thread_h
 #define Core_Thread_Thread_h
 
+#include <sci_defs/bits_defs.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Parallel1.h>
 #include <Core/Thread/Parallel2.h>
@@ -71,7 +72,11 @@ DESCRIPTION
    
 ****************************************/
 	class SCISHARE Thread {
+#ifdef SCI_64BITS
+          static const unsigned long DEFAULT_STACKSIZE  = 256 * 1024; // 128 KB
+#else
           static const unsigned long DEFAULT_STACKSIZE  = 128 * 1024; // 128 KB
+#endif
 	public:
 	    //////////
 	    // Possible thread start states
