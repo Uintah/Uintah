@@ -870,15 +870,15 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   synchronize_lock_("TetVolMesh synchronize() lock"),
   cell_epsilon_(copy.cell_epsilon_)
 {
+  TetVolMesh &lcopy = (TetVolMesh &)copy;
+  lcopy.synchronize_lock_.lock();
+
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~EDGES_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~FACES_E;
   synchronized_ &= ~FACE_NEIGHBORS_E;
 
-  TetVolMesh &lcopy = (TetVolMesh &)copy;
-
-  lcopy.synchronize_lock_.lock();
   points_ = copy.points_;
   cells_ = copy.cells_;
   grid_ = copy.grid_;
