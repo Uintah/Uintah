@@ -429,7 +429,6 @@ public:
                                    typename Elem::index_type ci,
                                    const Point &p);
 
-  bool         insert_node(const Point &p);
   void         delete_cells(set<unsigned int> &to_delete);
   void         delete_nodes(set<unsigned int> &to_delete);
 
@@ -552,6 +551,7 @@ protected:
 
   //! Face information.
   struct PFace {
+    // The order of nodes_ corresponds with cells_[0] for CW/CCW purposes.
     typename Node::index_type         nodes_[3];  //! 3 nodes makes a face.
     typename Cell::index_type         cells_[2];  //! 2 cells share this face.
     typename Node::index_type         snodes_[4]; //! sorted nodes,for hashing
@@ -976,6 +976,10 @@ TetVolMesh<Basis>::remove_face(typename Node::index_type n1,
     typename vector<typename Cell::index_type>::iterator citer;
     if (found_face.cells_[0] == ci) {
       found_face.cells_[0] = found_face.cells_[1];
+      // Swap the order so that the face order remains consistent.
+      const unsigned int tmp = found_face.nodes_[0];
+      found_face.nodes_[0] = found_face.nodes_[1];
+      found_face.nodes_[1] = tmp;
     }
     found_face.cells_[1] = MESH_NO_NEIGHBOR;
   }
@@ -2330,40 +2334,23 @@ TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
 
   delete_cell_syncinfo(ci);
   
-  // TODO: This seems overly complex for making sure that the face
-  // points have the same orientation as the tet points.
-  const Point &n0 = point(f.nodes_[0]);
-  const Point &n1 = point(f.nodes_[1]);
-  const Point &n2 = point(pi);
-  const Point &n3 = point(opp);
-
-  const double signedareanew = Dot(Cross(n1-n0,n2-n0),n3-n0);
-
-  const Point &o0 = point(cells_[ci*4+0]);
-  const Point &o1 = point(cells_[ci*4+1]);
-  const Point &o2 = point(cells_[ci*4+2]);
-  const Point &o3 = point(cells_[ci*4+3]);
-
-  const double signedareaold = Dot(Cross(o1-o0,o2-o0),o3-o0);
-
-  if (signedareanew > 0 && signedareaold > 0 ||
-      signedareanew < 0 && signedareaold < 0)
-  {
-    tets.push_back(ci);
-    tets.push_back(add_tet(f.nodes_[0], f.nodes_[1], pi, opp));
-    tets.push_back(add_tet(f.nodes_[2], f.nodes_[0], pi, opp));
-    cells_[ci*4] =     f.nodes_[1];
-    cells_[ci*4 + 1] = f.nodes_[2];
-    cells_[ci*4 + 2] = pi;
-    cells_[ci*4 + 3] = opp;
-  }
-  else
+  if (f.cells_[0] == ci)
   {
     tets.push_back(ci);
     tets.push_back(add_tet(f.nodes_[1], f.nodes_[0], pi, opp));
     tets.push_back(add_tet(f.nodes_[0], f.nodes_[2], pi, opp));
     cells_[ci*4] =     f.nodes_[2];
     cells_[ci*4 + 1] = f.nodes_[1];
+    cells_[ci*4 + 2] = pi;
+    cells_[ci*4 + 3] = opp;
+  }
+  else
+  {
+    tets.push_back(ci);
+    tets.push_back(add_tet(f.nodes_[0], f.nodes_[1], pi, opp));
+    tets.push_back(add_tet(f.nodes_[2], f.nodes_[0], pi, opp));
+    cells_[ci*4] =     f.nodes_[1];
+    cells_[ci*4 + 1] = f.nodes_[2];
     cells_[ci*4 + 2] = pi;
     cells_[ci*4 + 3] = opp;
   }
@@ -2567,19 +2554,6 @@ TetVolMesh<Basis>::insert_node_in_elem(typename Elem::array_type &tets,
 
   resync_cells(tets);
   return true;
-}
-
-
-template <class Basis>
-bool
-TetVolMesh<Basis>::insert_node(const Point &p)
-{
-  typename Node::index_type pi;
-  typename Cell::index_type cell;
-  locate(cell, p);
-
-  typename Cell::array_type tets;
-  return insert_node_in_cell(tets, cell, pi, p);
 }
 
 
