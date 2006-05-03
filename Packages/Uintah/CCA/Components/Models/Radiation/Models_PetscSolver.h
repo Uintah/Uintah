@@ -59,64 +59,63 @@ class Models_PetscSolver: public Models_RadiationSolver {
 
 public:
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a Models_PetscSolver.
-      Models_PetscSolver(const ProcessorGroup* myworld);
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Construct an instance of a Models_PetscSolver.
+  Models_PetscSolver(const ProcessorGroup* myworld);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual Destructor
-      virtual ~Models_PetscSolver();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual Destructor
+  virtual ~Models_PetscSolver();
 
-      // GROUP: Problem Setup:
-      ////////////////////////////////////////////////////////////////////////
-      // Problem setup
-      void problemSetup(const ProblemSpecP& params, bool shradiation);
+  // GROUP: Problem Setup:
+  ////////////////////////////////////////////////////////////////////////
+  // Problem setup
+  void problemSetup(const ProblemSpecP& params, bool shradiation);
 
-      virtual void outputProblemSpec(ProblemSpecP& ps);
+  virtual void outputProblemSpec(ProblemSpecP& ps);
 
-      // to close petsc 
-      void finalizeSolver();
+  ////////////////////////////////////////////////////////////////////////
+  // to close petsc 
+  void finalizeSolver();
 
-      void matrixCreate(const PatchSet* allpatches,
-                                const PatchSubset* mypatches);
-      void setMatrix(const ProcessorGroup* pc, const Patch* patch,
-                     RadiationVariables* vars,
-                     bool xplus, bool yplus, bool zplus,
-                     CCVariable<double>& SU,
-                     CCVariable<double>& AB,
-                     CCVariable<double>& AS,
-                     CCVariable<double>& AW,
-                     CCVariable<double>& AP,
-                     CCVariable<double>& AE,
-                     CCVariable<double>& AN,
-                     CCVariable<double>& AT);
+  void matrixCreate(const PatchSet* allpatches,
+                            const PatchSubset* mypatches);
+  void setMatrix(const ProcessorGroup* pc, const Patch* patch,
+                 RadiationVariables* vars,
+                 bool xplus, bool yplus, bool zplus,
+                 CCVariable<double>& SU,
+                 CCVariable<double>& AB,
+                 CCVariable<double>& AS,
+                 CCVariable<double>& AW,
+                 CCVariable<double>& AP,
+                 CCVariable<double>& AE,
+                 CCVariable<double>& AN,
+                 CCVariable<double>& AT);
 
-      bool radLinearSolve();
+  bool radLinearSolve();
 
-      virtual void copyRadSoln(const Patch* patch, RadiationVariables* vars);
-      virtual void destroyMatrix();
+  virtual void copyRadSoln(const Patch* patch, RadiationVariables* vars);
+  virtual void destroyMatrix();
 protected:
 
 private:
-      int numlrows;
-      int numlcolumns;
-      int globalrows;
-      int globalcolumns;
-      int d_nz;
-      int o_nz;
-      string d_pcType;
-      string d_kspType;
-      int d_overlap;
-      int d_fill;
-      int d_maxSweeps;
-      bool d_shsolver;
-      double d_tolerance; // convergence tolerence
-      double d_underrelax;
-      double d_initResid;
-      double d_residual;
-   const ProcessorGroup* d_myworld;
+  string d_precondType;
+  string d_solverType;
+  int d_maxIter;
+  double d_tolerance;
+  bool d_shrad;
+
+  int numlrows;
+  int numlcolumns;
+  int globalrows;
+  int globalcolumns;
+  int d_nz;
+  int o_nz;
+  int d_overlap;
+  int d_fill;
+  const ProcessorGroup* d_myworld;
 #ifdef HAVE_PETSC
    map<const Patch*, int> d_petscGlobalStart;
    map<const Patch*, Array3<int> > d_petscLocalToGlobal;
@@ -128,6 +127,3 @@ private:
 } // End namespace Uintah
 
 #endif  
-  
-
-

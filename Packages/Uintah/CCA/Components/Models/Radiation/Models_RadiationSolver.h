@@ -82,7 +82,6 @@ public:
 
       virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
-//      inline double getInitNorm() { return init_norm; }
 
       ////////////////////////////////////////////////////////////////////////
 
@@ -105,7 +104,6 @@ public:
    virtual bool radLinearSolve() = 0;
    virtual void copyRadSoln(const Patch* patch, RadiationVariables* vars) = 0;
    virtual void destroyMatrix() = 0;
-//   double init_norm;
 
 protected:
 

@@ -50,15 +50,13 @@ Models_PetscSolver::outputProblemSpec(ProblemSpecP& ps)
 
   ProblemSpecP solver_ps = ps->appendChild("LinearSolver");
 
-  solver_ps->appendElement("underrelax",d_underrelax);
-  solver_ps->appendElement("max_iter", d_maxSweeps);
-  if (d_shsolver) 
-    solver_ps->appendElement("ksptype", d_kspType);
+  solver_ps->appendElement("solver", d_solverType);
+  solver_ps->appendElement("preconditioner", d_precondType);
+  solver_ps->appendElement("max_iter", d_maxIter);
   solver_ps->appendElement("tolerance", d_tolerance);
-  solver_ps->appendElement("pctype", d_pcType);
-  if (d_pcType == "asm")
+  if (d_precondType == "asm")
     solver_ps->appendElement("overlap", d_overlap);
-  if (d_pcType == "ilu")
+  if (d_precondType == "ilu")
     solver_ps->appendElement("fill", d_fill);
 }
 
@@ -68,59 +66,36 @@ Models_PetscSolver::outputProblemSpec(ProblemSpecP& ps)
 void 
 Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 {
-  d_shsolver = shradiation;
-  if (params) {
-    ProblemSpecP db = params->findBlock("LinearSolver");
-    if (db) {
+  d_shrad = shradiation;
+  ProblemSpecP db = params->findBlock("LinearSolver");
+  db->get("solver", d_solverType);
+  db->get("preconditioner", d_precondType);
 
-      db->getWithDefault("underrelax", d_underrelax, 1.0);
-      db->getWithDefault("max_iter", d_maxSweeps, 75);
-      if (d_shsolver)
-        db->getWithDefault("ksptype", d_kspType, "cg");
-      else
-        db->getWithDefault("ksptype", d_kspType, "gmres");
-      
-      if (!d_shsolver && (d_kspType == "cg"))
-        throw ProblemSetupException("Models_Radiation_PetscSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg cannot be used; Use gmres as the ksptype",
+  if (!d_shrad && (d_solverType == "cg" || d_solverType == "CG"))
+     throw ProblemSetupException("Models_Radiation_PetscSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg cannot be used; Use gmres as the solver",
                                     __FILE__, __LINE__);
 
-      if (d_shsolver && (d_kspType == "gmres"))
-        throw ProblemSetupException("Models_Radiation_PetscSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype",
+  if (d_shrad && (d_solverType == "gmres" || d_solverType == "GMRES"))
+     throw ProblemSetupException("Models_Radiation_PetscSolver:Spherical Harmonics generates a symmetric matrix; use cg as the solver",
+                                    __FILE__, __LINE__);
+  if (d_solverType != "gmres" && d_solverType != "GMRES"
+      && d_solverType != "cg" && d_solverType != "CG")
+     throw ProblemSetupException("Models_Radiation_PetscSolver:Only cg solver for Spherical Harmonics and gmres solver for Discrete Ordinates are supported",
+                                    __FILE__, __LINE__);
+  if (d_precondType != "ilu"     && d_precondType != "ILU" &&
+      d_precondType != "asm"    && d_precondType != "ASM" &&
+      d_precondType != "blockjacobi"  && d_precondType != "BLOCKJACOBI" &&
+      d_precondType != "jacobi"  && d_precondType != "JACOBI")
+     throw ProblemSetupException("Models_Radiation_PetscSolver:Only jacobi, blockjacobi, ilu and asm preconditioners are supported",
                                     __FILE__, __LINE__);
 
-      db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
-      db->getWithDefault("pctype", d_pcType, "blockjacobi");
+  if (d_precondType == "asm")
+    db->require("overlap",d_overlap);
+  if (d_precondType == "ilu")
+    db->require("fill",d_fill);
 
-      if (d_pcType == "asm")
-        db->require("overlap",d_overlap);
-      if (d_pcType == "ilu")
-        db->require("fill",d_fill);
-    }
-    else {
-      d_underrelax = 1.0;
-      d_maxSweeps = 75;
-      d_pcType = "blockjacobi";
-      if (d_shsolver) {
-        d_kspType = "cg";
-      }
-      else {
-        d_kspType = "gmres";
-      }
-      d_tolerance = 1.0e-08;
-    }
-  }
-  else  {
-    d_underrelax = 1.0;
-    d_maxSweeps = 75;
-    d_pcType = "blockjacobi";
-    if (d_shsolver) {
-      d_kspType = "cg";
-    }
-    else {
-      d_kspType = "gmres";
-    }
-    d_tolerance = 1.0e-08;
-  }
+  db->getWithDefault("max_iter", d_maxIter, 75);
+  db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
 
   int argc = 4;
   char** argv;
@@ -238,7 +213,7 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
   globalrows = (int)totalCells;
   globalcolumns = (int)totalCells;
 
-  if(d_shsolver){
+  if(d_shrad){
 
     d_nz = 7;
     o_nz = 6;
@@ -375,7 +350,7 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
         int jj = colY+facY;
         int kk = colZ+facZ;
 
-        if(d_shsolver){
+        if(d_shrad){
           col_sh[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
           col_sh[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
           col_sh[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
@@ -391,9 +366,8 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
           col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
         }
 
-        //#ifdef ARCHES_PETSC_DEBUG
 
-        if(d_shsolver){
+        if(d_shrad){
           value_sh[0] = -AB[IntVector(colX,colY,colZ)];
           value_sh[1] = -AS[IntVector(colX,colY,colZ)];
           value_sh[2] = -AW[IntVector(colX,colY,colZ)];
@@ -410,12 +384,12 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
         }
 
         int row;
-        if (d_shsolver) 
+        if (d_shrad) 
           row = col_sh[3];
         else
           row = col[3];
 
-        if(d_shsolver){
+        if(d_shrad){
           ierr = MatSetValues(A,1, &row, 7, col_sh, value_sh, INSERT_VALUES);
         }
         else{
@@ -433,62 +407,9 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
         if(ierr)
           throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 
-#ifdef ARCHES_PETSC_DEBUG
-        cerr << "ierr=" << ierr << '\n';
-#endif
       }
     }
   }
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "assemblign rhs\n";
-#endif
-  // assemble right hand side and solution vector
-#if 0
-  int numCells = (idxHi.x()-idxLo.x()+1)*(idxHi.y()-idxLo.y()+1)*
-    (idxHi.z()-idxLo.z()+1);
-  vector<double> vecb(numCells);
-  vector<double> vecx(numCells);
-  vector<int> indexes(numCells);
-  int count = 0;
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        vecb[count] = SU[IntVector(colX,colY,colZ)];
-        vecx[count] = vars->cenint[IntVector(colX, colY, colZ)];
-        indexes[count] = l2g[IntVector(colX, colY, colZ)];        
-        count++;
-      }
-    }
-  }
-
-  ierr = VecSetValues(d_b, numCells, &indexes[0], &vecb[0], INSERT_VALUES);
-  if(ierr)
-    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-  ierr = VecSetValues(d_x, numCells, &indexes[0], &vecx[0], INSERT_VALUES);
-  if(ierr)
-    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-#endif
-#if 0
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          vecvalueb = SU[IntVector(colX,colY,colZ)];
-          vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
-          int row = l2g[IntVector(colX, colY, colZ)];     
-          ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-          if(ierr)
-            throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-          ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-          if(ierr)
-            throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-        }
-      }
-    }
-#endif
-    //#ifdef ARCHES_PETSC_DEBUG
-#if 0
-    cerr << " all done\n";
-#endif
 }
 
 bool
@@ -499,9 +420,6 @@ Models_PetscSolver::radLinearSolve()
   PC peqnpc; // pressure eqn pc
  
   int ierr;
-#ifdef ARCHES_PETSC_DEBUG
-  cerr << "Doing mat/vec assembly\n";
-#endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
     throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
@@ -552,19 +470,6 @@ Models_PetscSolver::radLinearSolve()
     throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   /* debugging - steve */
   double norm;
-#if 0
-  // #ifdef ARCHES_PETSC_DEBUG
-  ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_DEFAULT);
-  ierr = MatNorm(A,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);
-  //  ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
-  ierr = VecNorm(d_x,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector x norm = %g\n",norm);
-  ierr = VecView(d_x, PETSC_VIEWER_STDOUT_WORLD);
-  ierr = VecNorm(d_b,NORM_1,&norm);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);
-  ierr = VecView(d_b, PETSC_VIEWER_STDOUT_WORLD);
-#endif
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
@@ -580,12 +485,13 @@ Models_PetscSolver::radLinearSolve()
   ierr = KSPGetPC(solver, &peqnpc);
   if(ierr)
     throw PetscError(ierr, "KSPGetPC", __FILE__, __LINE__);
-  if (d_pcType == "jacobi") {
+
+  if (d_precondType == "jacobi") {
     ierr = PCSetType(peqnpc, PCJACOBI);
     if(ierr)
       throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
   }
-  else if (d_pcType == "asm") {
+  else if (d_precondType == "asm") {
     ierr = PCSetType(peqnpc, PCASM);
     if(ierr)
       throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
@@ -593,7 +499,7 @@ Models_PetscSolver::radLinearSolve()
     if(ierr)
       throw PetscError(ierr, "PCASMSetOverlap", __FILE__, __LINE__);
   }
-  else if (d_pcType == "ilu") {
+  else if (d_precondType == "ilu") {
     ierr = PCSetType(peqnpc, PCILU);
     if(ierr)
       throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
@@ -606,7 +512,8 @@ Models_PetscSolver::radLinearSolve()
     if(ierr)
       throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
   }
-  if (d_kspType == "cg") {
+
+  if (d_solverType == "cg") {
     ierr = KSPSetType(solver, KSPCG);
     if(ierr)
       throw PetscError(ierr, "KSPSetType", __FILE__, __LINE__);
@@ -643,9 +550,6 @@ Models_PetscSolver::radLinearSolve()
   ierr = VecNorm(d_x,NORM_1,&norm);
   if(ierr)
     throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
-#ifdef ARCHES_PETSC_DEBUG
-  ierr = VecView(d_x, VIEWER_STDOUT_WORLD);
-#endif
 
   // check the error
   ierr = MatMult(A, d_x, d_u);
@@ -758,16 +662,3 @@ void Models_PetscSolver::finalizeSolver()
   if(ierr)
     throw PetscError(ierr, "PetscFinalize", __FILE__, __LINE__);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

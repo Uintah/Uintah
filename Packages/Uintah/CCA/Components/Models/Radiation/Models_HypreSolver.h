@@ -74,13 +74,13 @@ public:
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
   ////////////////////////////////////////////////////////////////////////
+  // to close hypre
+  void finalizeSolver();
+
+  ////////////////////////////////////////////////////////////////////////
   // HYPRE grid and stencil setup
   void gridSetup(const ProcessorGroup*,
                  const Patch* patch, bool plusX, bool plusY, bool plusZ);
-
-  ////////////////////////////////////////////////////////////////////////
-  // to close petsc
-  void finalizeSolver();
 
   virtual void matrixCreate(const PatchSet* /*allpatches*/,
                             const PatchSubset* /*mypatc*/) {
@@ -109,22 +109,16 @@ protected:
 private:
   string d_precondType;
   string d_solverType;
-  int d_overlap;
-  int d_fill;
-  int d_maxSweeps;
+  int d_maxIter;
+  double d_tolerance;
+  bool d_shrad;
+
   int **d_iupper, **d_ilower, **d_offsets;
   int d_volume, d_nblocks, d_dim, d_stencilSize;
   int *d_stencilIndices;
   int d_A_num_ghost[6];
-  double d_tolerance;
-  double init_norm;
-
-  bool d_shrad;
-
   double *d_value;
   const ProcessorGroup* d_myworld;
-  map<const Patch*, int> d_petscGlobalStart;
-  map<const Patch*, Array3<int> > d_petscLocalToGlobal;
   HYPRE_StructMatrix d_A;
   HYPRE_StructVector d_x, d_b;
   HYPRE_StructGrid d_grid;
