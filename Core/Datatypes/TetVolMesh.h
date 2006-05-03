@@ -2320,7 +2320,7 @@ TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
                                        typename Cell::index_type ci,
                                        typename Face::index_type face)
 {
-  // NOTE: This funcion assumes that the same operation has or will happen 
+  // NOTE: This function assumes that the same operation has or will happen 
   // to any neighbor cell across the face.
 
   typename Node::index_type opp;
@@ -2329,14 +2329,44 @@ TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
   PFace f = faces_[face];
 
   delete_cell_syncinfo(ci);
+  
+  // TODO: This seems overly complex for making sure that the face
+  // points have the same orientation as the tet points.
+  const Point &n0 = point(f.nodes_[0]);
+  const Point &n1 = point(f.nodes_[1]);
+  const Point &n2 = point(pi);
+  const Point &n3 = point(opp);
 
-  tets.push_back(ci);
-  tets.push_back(add_tet(f.nodes_[0], f.nodes_[1], pi, opp));
-  tets.push_back(add_tet(f.nodes_[0], f.nodes_[2], pi, opp));
-  cells_[ci*4] = f.nodes_[2];
-  cells_[ci*4 + 1] = f.nodes_[1];
-  cells_[ci*4 + 2] = pi;
-  cells_[ci*4 + 3] = opp;
+  const double signedareanew = Dot(Cross(n1-n0,n2-n0),n3-n0);
+
+  const Point &o0 = point(cells_[ci*4+0]);
+  const Point &o1 = point(cells_[ci*4+1]);
+  const Point &o2 = point(cells_[ci*4+2]);
+  const Point &o3 = point(cells_[ci*4+3]);
+
+  const double signedareaold = Dot(Cross(o1-o0,o2-o0),o3-o0);
+
+  if (signedareanew > 0 && signedareaold > 0 ||
+      signedareanew < 0 && signedareaold < 0)
+  {
+    tets.push_back(ci);
+    tets.push_back(add_tet(f.nodes_[0], f.nodes_[1], pi, opp));
+    tets.push_back(add_tet(f.nodes_[2], f.nodes_[0], pi, opp));
+    cells_[ci*4] =     f.nodes_[1];
+    cells_[ci*4 + 1] = f.nodes_[2];
+    cells_[ci*4 + 2] = pi;
+    cells_[ci*4 + 3] = opp;
+  }
+  else
+  {
+    tets.push_back(ci);
+    tets.push_back(add_tet(f.nodes_[1], f.nodes_[0], pi, opp));
+    tets.push_back(add_tet(f.nodes_[0], f.nodes_[2], pi, opp));
+    cells_[ci*4] =     f.nodes_[2];
+    cells_[ci*4 + 1] = f.nodes_[1];
+    cells_[ci*4 + 2] = pi;
+    cells_[ci*4 + 3] = opp;
+  }
 
   create_cell_syncinfo(ci);
 }
