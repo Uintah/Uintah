@@ -267,7 +267,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
    *-----------------------------------------------------------*/
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
-  HYPRE_StructMatrixSetSymmetric(d_A, 1);
+  HYPRE_StructMatrixSetSymmetric(d_A, 0);
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 
 
