@@ -79,7 +79,7 @@ public:
 			     int num_procs=1);
 
 private:
-  typedef typename Field::basis_type FieldType;
+  //typedef typename Field::basis_type FieldType;
   typedef typename Field::mesh_type Mesh;
   typedef typename Field::mesh_type::basis_type MeshType;
   typedef typename Field::mesh_handle_type MeshHandle;
@@ -88,7 +88,7 @@ private:
   MeshType mb_;
   MeshHandle hMesh_;
 
-  FieldType fb;
+  //FieldType fb_;
   FieldHandle hField_;
   Field *pField_;
 
@@ -101,15 +101,15 @@ private:
   vector<int> colIdx_;
   vector<pair<string, Tensor> >& tens_;
   double unitsScale_;
-  int domain_dimension;
-  int local_dimension_nodes;
-  int local_dimension_add_nodes;
-  int local_dimension_derivatives;
-  int local_dimension;
-  int global_dimension_nodes;
-  int global_dimension_add_nodes;
-  int global_dimension_derivatives;
-  int global_dimension;
+  int domain_dimension_;
+  int local_dimension_nodes_;
+  int local_dimension_add_nodes_;
+  int local_dimension_derivatives_;
+  int local_dimension_;
+  int global_dimension_nodes_;
+  int global_dimension_add_nodes_;
+  int global_dimension_derivatives_;
+  int global_dimension_;
 
   BuildFEMatrix(FieldHandle hField,
                 vector<pair<string, Tensor> >& tens,
@@ -178,28 +178,17 @@ BuildFEMatrix<Field>::build_FEMatrix(FieldHandle hField,
                                      MatrixHandle& hA, double unitsScale,
                                      int num_procs)
 {
-  int np = Thread::numProcessors();
-
-  if ( np > 2 )
+  int np = num_procs;
+  if (np < 1)
   {
-    np /= 2;
-    if (np > 10)
-    {
-      np = 5;
-    }
+    np = Max(1, Min(Thread::numProcessors()/2, 5));
   }
-
-  if (num_procs > 0) { np = num_procs; }
 
   hA = 0;
 
-  BuildFEMatrix *hMaker =
-    scinew BuildFEMatrix(hField, tens, hA, unitsScale, np);
+  BuildFEMatrix hMaker(hField, tens, hA, unitsScale, np);
 
-  Thread::parallel(hMaker, &BuildFEMatrix::parallel, np);
-
-  // -- refer to the object one more time not to make it die before
-  delete hMaker;
+  Thread::parallel(&hMaker, &BuildFEMatrix::parallel, np);
 
   return hA.get_rep() != 0;
 }
@@ -219,11 +208,11 @@ BuildFEMatrix<Field>::create_numerical_integration(vector<vector<double> > &p,
   {
     w[i] = mb_.GaussianWeights[i];
 
-    p[i].resize(domain_dimension);
-    for(int j=0; j<domain_dimension; j++)
+    p[i].resize(domain_dimension_);
+    for (int j=0; j<domain_dimension_; j++)
       p[i][j]=mb_.GaussianPoints[i][j];
 
-    d[i].resize(local_dimension*domain_dimension);
+    d[i].resize(local_dimension_ * domain_dimension_);
     mb_.get_derivate_weights(p[i], (double *)&d[i][0]);
   }
 }
@@ -241,17 +230,19 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
   typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
   const onerow *C = get_tensor(dynamic_cast<Field *>(hField_.get_rep())->value(c_ind)).mat_;
 
-  double Ca = C[0][0]*unitsScale_;
-  double Cb = C[0][1]*unitsScale_;
-  double Cc = C[0][2]*unitsScale_;
-  double Cd = C[1][1]*unitsScale_;
-  double Ce = C[1][2]*unitsScale_;
-  double Cf = C[2][2]*unitsScale_;
+  double Ca = C[0][0] * unitsScale_;
+  double Cb = C[0][1] * unitsScale_;
+  double Cc = C[0][2] * unitsScale_;
+  double Cd = C[1][1] * unitsScale_;
+  double Ce = C[1][2] * unitsScale_;
+  double Cf = C[2][2] * unitsScale_;
 	
-  for(int i=0; i<local_dimension; i++)
+  for (int i=0; i<local_dimension_; i++)
+  {
     l_stiff[i] = 0.0;
+  }
 
-  int local_dimension2=2*local_dimension;
+  int local_dimension2 = 2 * local_dimension_;
 
   for (unsigned int i = 0; i < d.size(); i++)
   {
@@ -287,7 +278,7 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
     const double& Ji8 = Ji[8];
 	
     const double *Nxi = &d[i][0];
-    const double *Nyi = &d[i][local_dimension];
+    const double *Nyi = &d[i][local_dimension_];
     const double *Nzi = &d[i][local_dimension2];
     const double &Nxip = Nxi[row];
     const double &Nyip = Nyi[row];
@@ -299,7 +290,7 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
     const double uxyzpbde = uxp*Cb+uyp*Cd+uzp*Ce;
     const double uxyzpcef = uxp*Cc+uyp*Ce+uzp*Cf;
 	
-    for (int j = 0; j<local_dimension; j++)
+    for (int j = 0; j < local_dimension_; j++)
     {
       const double &Nxj = Nxi[j];
       const double &Nyj = Nyi[j];
@@ -318,31 +309,35 @@ template <class Field>
 void
 BuildFEMatrix<Field>::setup()
 {
-  domain_dimension = mb_.domain_dimension();
-  ASSERT(domain_dimension>0);
+  domain_dimension_ = mb_.domain_dimension();
+  ASSERT(domain_dimension_ > 0);
 
-  local_dimension_nodes = mb_.number_of_mesh_vertices();
-  local_dimension_add_nodes = mb_.number_of_mesh_vertices()-mb_.number_of_vertices();
-  local_dimension_derivatives = 0;
-  local_dimension = local_dimension_nodes + local_dimension_add_nodes + local_dimension_derivatives; //!< degrees of freedom (dofs) of system
-  ASSERT(mb_.dofs()==local_dimension);
+  local_dimension_nodes_ = mb_.number_of_mesh_vertices();
+  local_dimension_add_nodes_ =
+    mb_.number_of_mesh_vertices()-mb_.number_of_vertices();
+  local_dimension_derivatives_ = 0;
+  //!< Degrees of freedom (dofs) of system.
+  local_dimension_ = local_dimension_nodes_ 
+    + local_dimension_add_nodes_ + local_dimension_derivatives_;
+  ASSERT(mb_.dofs() == local_dimension_);
 
   typename Mesh::Node::size_type mns;
   hMesh_->size(mns);
-  global_dimension_nodes = mns;
-  global_dimension_add_nodes = pField_->get_basis().size_node_values();
-  global_dimension_derivatives = pField_->get_basis().size_derivatives();
-  global_dimension = global_dimension_nodes+global_dimension_add_nodes+global_dimension_derivatives;
+  global_dimension_nodes_ = mns;
+  global_dimension_add_nodes_ = pField_->get_basis().size_node_values();
+  global_dimension_derivatives_ = pField_->get_basis().size_derivatives();
+  global_dimension_ = global_dimension_nodes_ +
+    global_dimension_add_nodes_ + global_dimension_derivatives_;
 
 #ifdef BUILDFEM_DEBUG
-  cerr << "Gdn " <<  global_dimension_nodes << endl;
-  cerr << "Gdan " <<  global_dimension_add_nodes << endl;
-  cerr << "Gdd " <<  global_dimension_derivatives << endl;
-  cerr << "Gdd " <<  global_dimension << endl;
+  cerr << "Gdn " <<  global_dimension_nodes_ << endl;
+  cerr << "Gdan " <<  global_dimension_add_nodes_ << endl;
+  cerr << "Gdd " <<  global_dimension_derivatives_ << endl;
+  cerr << "Gdd " <<  global_dimension_ << endl;
 #endif
 
   hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
-  rows_ = scinew int[global_dimension+1];
+  rows_ = scinew int[global_dimension_ + 1];
 }
 
 
@@ -363,13 +358,13 @@ BuildFEMatrix<Field>::parallel(int proc)
   barrier_.wait(np_);
 
   //! Distributing dofs among processors.
-  const int start_gd = global_dimension * proc/np_;
-  const int end_gd  = global_dimension * (proc+1)/np_;
+  const int start_gd = global_dimension_ * proc/np_;
+  const int end_gd  = global_dimension_ * (proc+1)/np_;
 
   //! Creating sparse matrix structure.
   vector<unsigned int> mycols;
   //! Estimate for elements in submatrix of sparse matrix.
-  mycols.reserve((end_gd - start_gd)*local_dimension*8);
+  mycols.reserve((end_gd - start_gd)*local_dimension_ * 8);
 
   typename Mesh::Elem::array_type ca;
   typename Mesh::Node::array_type na;
@@ -383,7 +378,7 @@ BuildFEMatrix<Field>::parallel(int proc)
 
     neib_dofs.clear();
     //! Check for nodes.
-    if (i<global_dimension_nodes)
+    if (i < global_dimension_nodes_)
     {
       //! Convert int index to node index.
       typename Mesh::Node::index_type ii;
@@ -391,7 +386,7 @@ BuildFEMatrix<Field>::parallel(int proc)
       //! Get neighboring cells for node.
       hMesh_->get_elems(ca, ii);
     }
-    else if (i<global_dimension_nodes+global_dimension_add_nodes)
+    else if (i < global_dimension_nodes_ + global_dimension_add_nodes_)
     {
       //! Check for additional nodes at edges.
       //! Get neighboring cells for node.
@@ -415,13 +410,13 @@ BuildFEMatrix<Field>::parallel(int proc)
       }
 
       //! Check for additional nodes at edges.
-      if (global_dimension_add_nodes)
+      if (global_dimension_add_nodes_)
       {
         //! Get neighboring edges.
         hMesh_->get_edges(ea, ca[j]);
 
         for(unsigned int k = 0; k < ea.size(); k++)
-          neib_dofs.push_back(global_dimension + ea[k]);
+          neib_dofs.push_back(global_dimension_ + ea[k]);
       }
     }
 	
@@ -484,8 +479,9 @@ BuildFEMatrix<Field>::parallel(int proc)
   //! The main thread makes the matrix.
   if (proc == 0)
   {
-    rows_[global_dimension] = st;
-    pA_ = scinew SparseRowMatrix(global_dimension, global_dimension, rows_, allCols_, st);
+    rows_[global_dimension_] = st;
+    pA_ = scinew SparseRowMatrix(global_dimension_, global_dimension_,
+                                 rows_, allCols_, st);
     hA_ = pA_;
   }
 
@@ -505,7 +501,7 @@ BuildFEMatrix<Field>::parallel(int proc)
   create_numerical_integration(ni_points, ni_weights, ni_derivatives);
 
   vector<double> lsml; //!< line of local stiffnes matrix
-  lsml.resize(local_dimension);
+  lsml.resize(local_dimension_);
 
 #ifdef BUILDFEM_DEBUG
 {
@@ -528,7 +524,7 @@ BuildFEMatrix<Field>::parallel(int proc)
   //! Loop over system dofs for this thread.
   for (int i = start_gd; i<end_gd; i++)
   {
-    if (i < global_dimension_nodes)
+    if (i < global_dimension_nodes_)
     {
       //! Convert int index to node index.
       typename Mesh::Node::index_type ii;
@@ -536,7 +532,7 @@ BuildFEMatrix<Field>::parallel(int proc)
       //! Get neighboring cells for node.
       hMesh_->get_elems(ca, ii);
     }
-    else if (i < global_dimension_nodes + global_dimension_add_nodes)
+    else if (i < global_dimension_nodes_ + global_dimension_add_nodes_)
     {
       //! Check for additional nodes at edges.
       //! Get neighboring cells for additional nodes.
@@ -562,19 +558,19 @@ BuildFEMatrix<Field>::parallel(int proc)
 	  dofi = neib_dofs.size()-1;
       }
       //! Check for additional nodes at edges.
-      if (global_dimension_add_nodes)
+      if (global_dimension_add_nodes_)
       {
 	hMesh_->get_edges(ea, ca[j]); //!< Get neighboring edges.
 	for(int k = 0; k < (int)ea.size(); k++)
         {
-	  neib_dofs.push_back(global_dimension + ea[k]);
+	  neib_dofs.push_back(global_dimension_ + ea[k]);
 	  if ((int)na[k] == i)
 	    dofi = neib_dofs.size() - 1;
 	}
       }
 
       ASSERT(dofi!=-1);
-      ASSERT((int)neib_dofs.size() == local_dimension);
+      ASSERT((int)neib_dofs.size() == local_dimension_);
 
       build_local_matrix(ca[j], dofi, lsml, ni_points,
                          ni_weights, ni_derivatives);
@@ -593,7 +589,7 @@ BuildFEMatrix<Field>::parallel(int proc)
   for (int i=start_gd; i<end_gd; i++)
   {
     double sum=0.0, sumabs=0.0;
-    for (int j=0; j<global_dimension; j++)
+    for (int j=0; j<global_dimension_; j++)
     {
       sum += pA_->get(i,j);
       sumabs += fabs(pA_->get(i,j));
