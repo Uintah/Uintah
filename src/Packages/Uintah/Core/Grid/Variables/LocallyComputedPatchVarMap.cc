@@ -1,4 +1,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 
 #include <iostream>
@@ -79,14 +82,13 @@ void
 LocallyComputedPatchVarMap::reset()
 {
   groupsMade=false;
-  for(MapType::iterator iter = map_.begin(); iter != map_.end(); ++iter)
-    delete iter->second;
-  map_.clear();
+  for (unsigned i = 0; i < sets_.size(); i++)
+    delete sets_[i];
+  sets_.clear();
 }
 
 void
-LocallyComputedPatchVarMap::addComputedPatchSet(const VarLabel* label,
-						const PatchSubset* patches)
+LocallyComputedPatchVarMap::addComputedPatchSet(const PatchSubset* patches)
 {
   ASSERT(!groupsMade);
   if (!patches || !patches->size())
@@ -101,43 +103,44 @@ LocallyComputedPatchVarMap::addComputedPatchSet(const VarLabel* label,
   }
 #endif
 
-  MapType::iterator iter = map_.find(make_pair(label, level));
-  if(iter == map_.end()){
-    map_.insert(make_pair(make_pair(label, level), new LocallyComputedPatchSet()));
-    iter = map_.find(make_pair(label, level));
+  if (sets_.size() == 0)
+    sets_.resize(level->getGrid()->numLevels());
+
+  LocallyComputedPatchSet* lcpatches = sets_[level->getIndex()];
+  if(lcpatches == 0){
+    lcpatches = new LocallyComputedPatchSet();
+    sets_[level->getIndex()] = lcpatches;
   }
-  LocallyComputedPatchSet* lcpatches = iter->second;
   lcpatches->addPatches(patches);
 }
 
 const SuperPatch*
-LocallyComputedPatchVarMap::getConnectedPatchGroup(const VarLabel* label,
-						   const Patch* patch) const
+LocallyComputedPatchVarMap::getConnectedPatchGroup(const Patch* patch) const
 {
   ASSERT(groupsMade);
-  const Level* level = patch->getLevel();
-  MapType::const_iterator iter = map_.find(make_pair(label, level));
-  if(iter == map_.end())
+  int l = patch->getLevel()->getIndex();
+  if (sets_.size() == 0 || sets_[l] == 0)
     return 0;
-  return iter->second->getConnectedPatchGroup(patch);
+  return sets_[l]->getConnectedPatchGroup(patch);
 }
 
 const SuperPatchContainer*
-LocallyComputedPatchVarMap::getSuperPatches(const VarLabel* label,
-					    const Level* level) const
+LocallyComputedPatchVarMap::getSuperPatches(const Level* level) const
 {
   ASSERT(groupsMade);
-  MapType::const_iterator iter = map_.find(make_pair(label, level));
-  if(iter == map_.end())
+  int l = level->getIndex();
+  if (sets_.size() == 0 || sets_[l] != 0)
     return 0;
-  return iter->second->getSuperPatches();
+  return sets_[l]->getSuperPatches();
 }
 
 void LocallyComputedPatchVarMap::makeGroups()
 {
   ASSERT(!groupsMade);
-  for(MapType::iterator iter = map_.begin(); iter != map_.end(); ++iter)
-    iter->second->makeGroups();
+  for (unsigned l = 0; l < sets_.size(); l++)
+    if (sets_[l]) {
+      sets_[l]->makeGroups();
+    }
   groupsMade=true;
 }
 

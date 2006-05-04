@@ -355,9 +355,9 @@ FieldExtractorAlgo::build_minimal_patch_grid( GridP oldGrid )
     LevelP level = oldGrid->getLevel(i);
     LocallyComputedPatchVarMap patchGrouper;
     const PatchSubset* patches = level->allPatches()->getUnion();
-    patchGrouper.addComputedPatchSet(0, patches);
+    patchGrouper.addComputedPatchSet(patches);
     patchGrouper.makeGroups();
-    superPatches = patchGrouper.getSuperPatches(0, level.get_rep());
+    superPatches = patchGrouper.getSuperPatches(level.get_rep());
     ASSERT(superPatches != 0);
 
     LevelP newLevel =
