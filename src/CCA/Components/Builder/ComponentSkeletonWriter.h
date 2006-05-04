@@ -63,7 +63,11 @@ public:
 
 private:
 
+  
+  void writeHeaderLicense();
+  void writeSourceLicense();
   // generate header file
+  
   void writeHeaderInit();
   void writeComponentDefinitionCode();
   void writePortClassDefinitionCode();
@@ -96,7 +100,6 @@ private:
 
   std::vector<PortDescriptor*> providesPortsList;
   std::vector<PortDescriptor*> usesPortsList;
-
   std::ofstream componentSourceFile;
   std::ofstream componentHeaderFile;
   std::ofstream componentMakeFile;
