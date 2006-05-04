@@ -2490,15 +2490,16 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
 
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
   
+  task->computes(MIlb->NC_CCweightLabel);
+
   if(d_ice->doICEOnLevel(L_indx, num_levels)) {
     task->computes(Mlb->heatRate_CCLabel);
   }
-  if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
-    task->computes(MIlb->NC_CCweightLabel);
+  //if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
     task->computes(Ilb->sp_vol_CCLabel);
     task->computes(MIlb->vel_CCLabel);
     task->computes(Ilb->temp_CCLabel);
-  }
+    //}
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
 
@@ -2664,27 +2665,25 @@ MPMICE::refine(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
     // First do NC_CCweight 
-    if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
-      NCVariable<double> NC_CCweight;
-      new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch);
-      //__________________________________
-      // - Initialize NC_CCweight = 0.125
-      // - Find the walls with symmetry BC and
-      //   double NC_CCweight
-      NC_CCweight.initialize(0.125);
-      vector<Patch::FaceType>::const_iterator iter;
-      for (iter  = patch->getBoundaryFaces()->begin();
-           iter != patch->getBoundaryFaces()->end(); ++iter){
-        Patch::FaceType face = *iter;
-        int mat_id = 0;
-        if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-          for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
-              !iter.done(); iter++) {
-            NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
-          }
+    NCVariable<double> NC_CCweight;
+    new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch);
+    //__________________________________
+    // - Initialize NC_CCweight = 0.125
+    // - Find the walls with symmetry BC and
+    //   double NC_CCweight
+    NC_CCweight.initialize(0.125);
+    vector<Patch::FaceType>::const_iterator iter;
+    for (iter  = patch->getBoundaryFaces()->begin();
+         iter != patch->getBoundaryFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+      int mat_id = 0;
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+        for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+            !iter.done(); iter++) {
+          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
         }
       }
-    }  //on mpmLevel
+    }
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2702,7 +2701,7 @@ MPMICE::refine(const ProcessorGroup*,
         heatFlux.initialize(0.0);
       }
 
-      if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
+      //if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
         CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
         CCVariable<Vector> vel_CC;
 
@@ -2745,7 +2744,7 @@ MPMICE::refine(const ProcessorGroup*,
               <<neg_cell << " sp_vol_CC is negative\n";
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
         }
-      }  //on mpmLevel
+        //}  //on mpmLevel
     }  //mpmMatls
   }  //patches
 }

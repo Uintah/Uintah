@@ -564,9 +564,9 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
         const SuperPatchContainer* superPatches;
         LocallyComputedPatchVarMap patchGrouper;
         const PatchSubset* patches = addToLevel->allPatches()->getUnion();
-        patchGrouper.addComputedPatchSet(0, patches);
+        patchGrouper.addComputedPatchSet(patches);
         patchGrouper.makeGroups();
-        superPatches = patchGrouper.getSuperPatches(0, addToLevel);
+        superPatches = patchGrouper.getSuperPatches(addToLevel);
 
         SuperPatchContainer::const_iterator iter;
         for (iter = superPatches->begin(); iter != superPatches->end(); iter++) {

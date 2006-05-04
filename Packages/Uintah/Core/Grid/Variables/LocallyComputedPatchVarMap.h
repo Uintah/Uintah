@@ -22,7 +22,6 @@
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Core/Containers/SuperBox.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -47,23 +46,12 @@ namespace Uintah {
     ~LocallyComputedPatchVarMap();
 
     void reset();
-    void addComputedPatchSet(const VarLabel* label, const PatchSubset* patches);
+    void addComputedPatchSet(const PatchSubset* patches);
 
-    const SuperPatch* getConnectedPatchGroup(const VarLabel* label,
-					     const Patch* patch) const;
-    const SuperPatchContainer* getSuperPatches(const VarLabel* label,
-					       const Level* level) const;
+    const SuperPatch* getConnectedPatchGroup(const Patch* patch) const;
+    const SuperPatchContainer* getSuperPatches(const Level* level) const;
     void makeGroups();
 
-    class Compare {
-      VarLabel::Compare vlcomp;
-    public:
-      inline bool operator()(const std::pair<const VarLabel*, const Level*>& p1,
-			     const std::pair<const VarLabel*, const Level*>& p2) const
-      {
-	return p1.second == p2.second?vlcomp(p1.first, p2.first): p1.second < p2.second;
-      }
-    };
     class LocallyComputedPatchSet {
     public:
       LocallyComputedPatchSet();
@@ -79,8 +67,8 @@ namespace Uintah {
     };
   private:
 
-    typedef std::map<std::pair<const VarLabel*, const Level*>, LocallyComputedPatchSet*, Compare> MapType;
-    MapType map_;
+    typedef std::vector<LocallyComputedPatchSet*> DataType;
+    DataType sets_;
     bool groupsMade;
   };
 
