@@ -18,7 +18,6 @@ SRCS += \
 	$(SRCDIR)/bcuvel.F \
 	$(SRCDIR)/bcvvel.F \
 	$(SRCDIR)/bcwvel.F \
-	$(SRCDIR)/calpbc.F \
 	$(SRCDIR)/cellg.F \
 	$(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/computeVel.F \
@@ -30,8 +29,6 @@ SRCS += \
 	$(SRCDIR)/explicit_vel.F \
 	$(SRCDIR)/fixval.F \
 	$(SRCDIR)/fixval_trans.F \
-	$(SRCDIR)/init.F \
-	$(SRCDIR)/initScal.F \
 	$(SRCDIR)/inlbcs.F \
 	$(SRCDIR)/intrusion_computevel.F \
 	$(SRCDIR)/mascal.F \
@@ -100,7 +97,6 @@ $(SRCDIR)/bcscalar.o: $(SRCDIR)/bcscalar_fort.h
 $(SRCDIR)/bcuvel.o: $(SRCDIR)/bcuvel_fort.h
 $(SRCDIR)/bcvvel.o: $(SRCDIR)/bcvvel_fort.h
 $(SRCDIR)/bcwvel.o: $(SRCDIR)/bcwvel_fort.h
-$(SRCDIR)/calpbc.o: $(SRCDIR)/calpbc_fort.h
 $(SRCDIR)/cellg.o: $(SRCDIR)/cellg_fort.h
 $(SRCDIR)/celltypeInit.o: $(SRCDIR)/celltypeInit_fort.h
 $(SRCDIR)/computeVel.o: $(SRCDIR)/computeVel_fort.h
@@ -110,8 +106,6 @@ $(SRCDIR)/enthalpyradthinsrc.o: $(SRCDIR)/enthalpyradthinsrc_fort.h
 $(SRCDIR)/enthalpyradwallbc.o: $(SRCDIR)/enthalpyradwallbc_fort.h
 $(SRCDIR)/explicit.o: $(SRCDIR)/explicit_fort.h
 $(SRCDIR)/explicit_vel.o: $(SRCDIR)/explicit_vel_fort.h
-$(SRCDIR)/init.o: $(SRCDIR)/init_fort.h
-$(SRCDIR)/initScal.o: $(SRCDIR)/initScal_fort.h
 $(SRCDIR)/inlbcs.o: $(SRCDIR)/inlbcs_fort.h $(SRCDIR)/ramping.h
 $(SRCDIR)/mascal.o: $(SRCDIR)/mascal_fort.h
 $(SRCDIR)/mascal_scalar.o: $(SRCDIR)/mascal_scalar_fort.h

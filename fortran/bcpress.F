@@ -16,8 +16,6 @@ c*********************************************************************
       integer IST, JST, KST, IEND, JEND, KEND
       integer i,j,k
 
-      LOGICAL*1 LWRAP,LSYMB, LPRDKK, LPRDAV, LPRDJK
-
 c*********************************************************************
 c     Start :
 c*********************************************************************
@@ -28,14 +26,6 @@ c*********************************************************************
       JEND = idxHi(2)
       KEND = idxHi(3)
 
-c*********************************************************************
-c     Set the logicals :
-c*********************************************************************
-      LSYMB = .false.
-      LWRAP = .false.
-      LPRDJK = .false.
-      LPRDKK = .false.
-      LPRDAV = .false.
 
 *----------------------------------------------------------------------
 *     intrusion boundary conditions
@@ -110,70 +100,6 @@ c*********************************************************************
  800        CONTINUE
  810     CONTINUE
       endif
-*--------------------------------------------------------------------
-*     SYMMETRY AND INTRUSION BOUNDARY CONDITIONS
-*--------------------------------------------------------------------
-c commented symmtry out for the time being
-c      IF (LSYMB) THEN
-c         CALL SYMBCS(domLo, domHi, idxLo, idxHi,
-c     & PASS3A(PP)
-c     & PASS3B(PP),
-c     & PASS3A(AE)
-c     & PASS3B(AE),
-c     & PASS3A(AW)
-c     & PASS3B(AW),
-c     & PASS3A(AN)
-c     & PASS3B(AN),
-c     & PASS3A(AS)
-c     & PASS3B(AS),
-c     & PASS3A(AT)
-c     & PASS3B(AT),
-c     & PASS3A(AB)
-c     & PASS3B(AB),
-c     & PASS3A(PCELL)
-c     & PASS3B(PCELL),
-c     & PCELL, SYMTRY,LPRDJK, LPRDKK)
-c      ENDIF
 
-c added what wallbc does to the loop explicitly above
-c      CALL WALLBC(idxLo, idxHi,
-c     & PASS3A(AE)
-c     & PASS3B(AE),
-c     & PASS3A(AW)
-c     & PASS3B(AW),
-c     & PASS3A(AN)
-c     & PASS3B(AN),
-c     & PASS3A(AS)
-c     & PASS3B(AS),
-c     & PASS3A(AT)
-c     & PASS3B(AT),
-c     & PASS3A(AB)
-c     & PASS3B(AB),
-c     & PASS3A(PCELL)
-c     & PASS3B(PCELL),
-c     & WALL, xminus, xplus, yminus, yplus, zminus, zplus)
       RETURN
       END 
-
-c*********************************************************************
-c
-c Revision 1.6  2000/10/07 23:53:03  rawat
-c modified bc subroutines
-c
-c Revision 1.5  2000/10/06 23:07:53  rawat
-c fixed some more bc routines for mulit-patch
-c
-c Revision 1.4  2000/09/26 19:59:19  sparker
-c Work on MPI petsc
-c
-c Revision 1.3  2000/09/26 04:35:34  rawat
-c added some more multi-patch support
-c
-c Revision 1.2  2000/07/17 22:07:02  rawat
-c modified momentum source
-c
-c Revision 1.1  2000/07/13 04:51:34  bbanerje
-c Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
-c
-c
-c*********************************************************************
