@@ -9,7 +9,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/RHSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationModel.h>
@@ -59,7 +59,7 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_perproc_patches = 0;
   d_discretize = 0;
   d_source = 0;
-  d_linearSolver = 0;
+  d_rhsSolver = 0;
   d_DORadiation = 0;
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
@@ -73,7 +73,7 @@ EnthalpySolver::~EnthalpySolver()
 {
   delete d_discretize;
   delete d_source;
-  delete d_linearSolver;
+  delete d_rhsSolver;
   delete d_DORadiation;
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
@@ -106,16 +106,9 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
       d_DORadiation->problemSetup(db);
     }
   }
-  string finite_diff;
-  db->require("finite_difference", finite_diff);
-  if (finite_diff == "second") 
-    d_discretize = scinew Discretization();
-  else {
-    throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff, __FILE__, __LINE__);
-    //throw InvalidValue("Finite Differencing scheme "
-	//	       "not supported: " + finite_diff, db);
-  }
+
+  d_discretize = scinew Discretization();
+
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"l2up");
 //  if (db->findBlock("convection_scheme")) {
@@ -165,19 +158,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (d_doMMS)
 	  d_source->problemSetup(db);
   
-  string linear_sol;
-  db->require("linear_solver", linear_sol);
-  if (linear_sol == "linegs")
-    d_linearSolver = scinew RBGSSolver();
-  else if (linear_sol == "petsc")
-     d_linearSolver = scinew PetscSolver(0); // CHEAT - steve d_myworld);
-  else {
-    throw InvalidValue("linear solver option"
-		       " not supported" + linear_sol, __FILE__, __LINE__);
-    //throw InvalidValue("linear solver option"
-	//	       " not supported" + linear_sol, db);
-  }
-  d_linearSolver->problemSetup(db);
+  d_rhsSolver = scinew RHSSolver();
+
   d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
@@ -201,7 +183,6 @@ EnthalpySolver::solve(const LevelP& level,
   
   // Schedule the enthalpy solve
   // require : enthalpyIN, scalCoefSBLM, scalNonLinSrcSBLM
-  //d_linearSolver->sched_enthalpySolve(level, sched, new_dw, matrix_dw);
   sched_enthalpyLinearSolve(sched, patches, matls, timelabels);
 }
 
@@ -1045,7 +1026,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 					      &constEnthalpyVars, 
 					      cellinfo);
     else
-      d_linearSolver->enthalpyLisolve(pc, patch, delta_t, 
+      d_rhsSolver->enthalpyLisolve(pc, patch, delta_t, 
 				      &enthalpyVars, &constEnthalpyVars,
 				      cellinfo);
 
