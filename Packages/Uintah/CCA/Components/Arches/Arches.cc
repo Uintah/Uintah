@@ -77,6 +77,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_nlSolver = 0;
   d_physicalConsts = 0;
   d_calcReactingScalar = 0;
+  d_calcScalar = 0;
   d_calcThermalNOx = 0;
   d_calcEnthalpy =0;
 #ifdef multimaterialform
@@ -236,6 +237,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
 					      d_boundaryCondition,
 					      d_turbModel, d_physicalConsts,
+                                              d_calcScalar,
 					      d_calcReactingScalar,
 					      d_calcEnthalpy,
 					      d_myworld);
@@ -245,6 +247,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 					   d_boundaryCondition,
 					   d_turbModel, d_scaleSimilarityModel, 
 					   d_physicalConsts,
+					   d_calcScalar,
 					   d_calcReactingScalar,
 					   d_calcEnthalpy,
 				       	   d_calcThermalNOx,

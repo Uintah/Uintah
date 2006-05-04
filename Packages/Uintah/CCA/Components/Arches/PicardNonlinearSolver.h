@@ -61,6 +61,7 @@ public:
 			    BoundaryCondition* bc,
 			    TurbulenceModel* turbModel, 
 			    PhysicalConstants* physConst,
+		     	    bool calcScalar,
 		     	    bool calcReactscalar,
 			    bool calcEnthalpy,
 			    const ProcessorGroup* myworld);
@@ -311,6 +312,7 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // Turbulence Model
       TurbulenceModel* d_turbModel;
+      bool d_calScalar;
       bool d_reactingScalarSolve;
       bool d_enthalpySolve;
       bool d_radiationCalc;
@@ -337,7 +339,6 @@ private:
       const PatchSet* d_perproc_patches;
       bool d_3d_periodic;
       double d_u_norm,d_v_norm,d_w_norm, d_rho_norm;
-      bool d_calScalar;
       bool d_dynScalarModel;
       double d_H_air;
       bool d_doMMS;

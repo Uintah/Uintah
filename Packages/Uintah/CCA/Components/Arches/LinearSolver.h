@@ -82,43 +82,6 @@ public:
 
       inline double getInitNorm() { return init_norm; }
 
-      ////////////////////////////////////////////////////////////////////////
-      // Pressure Solve
-      virtual void pressLisolve(const ProcessorGroup* pc,
-			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw, ArchesVariables* vars, 
-				const ArchesLabel* lab) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
-      // Velocity Solve
-      virtual void velocityLisolve(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   int index,
-				   double delta_t,
-				   ArchesVariables* vars,
-				   CellInformation* cellinfo,
-				   const ArchesLabel* lab) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Solve
-      virtual void scalarLisolve(const ProcessorGroup* pc,
-				 const Patch* patch,
-				 int index,
-				 double delta_t,
-				 ArchesVariables* vars,
-				 ArchesConstVariables* constvars,
-				 CellInformation* cellinfo) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Solve
-      virtual void enthalpyLisolve(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   double delta_t,
-				   ArchesVariables* vars,
-				   ArchesConstVariables* constvars,
-				   CellInformation* cellinfo) = 0;
-
    virtual void matrixCreate(const PatchSet* allpatches,
 			     const PatchSubset* mypatches) = 0;
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,

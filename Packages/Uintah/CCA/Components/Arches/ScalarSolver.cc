@@ -9,7 +9,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/RHSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
@@ -48,7 +48,7 @@ ScalarSolver::ScalarSolver(const ArchesLabel* label,
 {
   d_discretize = 0;
   d_source = 0;
-  d_linearSolver = 0;
+  d_rhsSolver = 0;
 }
 
 //****************************************************************************
@@ -58,7 +58,7 @@ ScalarSolver::~ScalarSolver()
 {
   delete d_discretize;
   delete d_source;
-  delete d_linearSolver;
+  delete d_rhsSolver;
 }
 
 //****************************************************************************
@@ -68,16 +68,9 @@ void
 ScalarSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("MixtureFractionSolver");
-  string finite_diff;
-  db->require("finite_difference", finite_diff);
-  if (finite_diff == "second") 
-    d_discretize = scinew Discretization();
-  else {
-    throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff, __FILE__, __LINE__);
-    //throw InvalidValue("Finite Differencing scheme "
-	//	       "not supported: " + finite_diff, db);
-  }
+
+  d_discretize = scinew Discretization();
+
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"l2up");
     if (conv_scheme == "l2up") d_conv_scheme = 0;
@@ -125,19 +118,8 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   if (d_doMMS)
 	  d_source->problemSetup(db);
 
-  string linear_sol;
-  db->require("linear_solver", linear_sol);
-  if (linear_sol == "linegs")
-    d_linearSolver = scinew RBGSSolver();
-  else if (linear_sol == "petsc")
-     d_linearSolver = scinew PetscSolver(0); // CHEAT - steve d_myworld);
-  else {
-    throw InvalidValue("linear solver option"
-		       " not supported" + linear_sol, __FILE__, __LINE__);
-    //throw InvalidValue("linear solver option"
-	//	       " not supported" + linear_sol, db);
-  }
-  d_linearSolver->problemSetup(db);
+  d_rhsSolver = scinew RHSSolver();
+
   d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
@@ -160,7 +142,6 @@ ScalarSolver::solve(SchedulerP& sched,
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
-  //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
   sched_scalarLinearSolve(sched, patches, matls, timelabels, index);
 }
 
@@ -703,7 +684,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 					    &scalarVars, &constScalarVars,
 					    cellinfo);
     else
-      d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
+      d_rhsSolver->scalarLisolve(pc, patch, index, delta_t, 
 				    &scalarVars, &constScalarVars,
 				    cellinfo);
 

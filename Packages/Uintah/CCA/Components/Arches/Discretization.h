@@ -90,12 +90,6 @@ public:
 				  ArchesVariables* vars,
 				  ArchesConstVariables* constvars);
 
-      void calculateVelRhoHat(const ProcessorGroup* /*pc*/,
-			      const Patch* patch,
-			      int index, double delta_t,
-			      CellInformation* cellinfo,
-			      ArchesVariables* vars,
-			      ArchesConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
       // Set stencil weights. (Pressure)
       // It uses second order hybrid differencing for computing

@@ -56,12 +56,14 @@ PicardNonlinearSolver(const ArchesLabel* label,
 		      BoundaryCondition* bc,
 		      TurbulenceModel* turbModel,
 		      PhysicalConstants* physConst,
+	     	      bool calc_Scalar,
 	     	      bool calc_reactingScalar,
 		      bool calc_enthalpy,
 		      const ProcessorGroup* myworld):
 		      NonlinearSolver(myworld),
 		      d_lab(label), d_MAlab(MAlb), d_props(props), 
 		      d_boundaryCondition(bc), d_turbModel(turbModel),
+                      d_calScalar(calc_Scalar),
 	       	      d_reactingScalarSolve(calc_reactingScalar),
 		      d_enthalpySolve(calc_enthalpy),
 		      d_physicalConsts(physConst)
@@ -114,27 +116,20 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
-  bool calPress;
-  db->require("cal_pressure", calPress);
-  if (calPress) {
-    d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
+
+  d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
 					  d_turbModel, d_boundaryCondition,
 					  d_physicalConsts, d_myworld);
-    d_pressSolver->problemSetup(db); // d_mmInterface
-  }
-  bool calMom;
-  db->require("cal_momentum", calMom);
-  if (calMom) {
-    d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
+  d_pressSolver->problemSetup(db);
+
+  d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
 					d_turbModel, d_boundaryCondition,
 					d_physicalConsts);
-    d_momSolver->problemSetup(db); // d_mmInterface
-  }
-  if ((calPress)&&(calMom)) {
+  d_momSolver->problemSetup(db);
+
   d_pressure_correction = d_momSolver->getPressureCorrectionFlag();
   d_pressSolver->setPressureCorrectionFlag(d_pressure_correction);
-  }
-  db->require("cal_mixturescalar", d_calScalar);
+
   if (d_calScalar) {
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
 					 d_turbModel, d_boundaryCondition,
