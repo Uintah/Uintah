@@ -69,20 +69,20 @@ itcl_class SCIRun_FieldsCreate_InsertHexSheet {
 	    -side left -anchor nw -padx 3
 	pack $w.bound -side top
 
-# 	frame $w.sep
-# 	label $w.sep.t1
-#  	label $w.sep.t2 -text "Smoothing Scheme"
-# 	pack $w.sep.t1 $w.sep.t2
-# 	pack $w.sep
+	frame $w.layer1
+	label $w.layer1.t1
+	label $w.layer1.t2 -text "Add Sheet?"
+	pack $w.layer1.t1 $w.layer1.t2
+	pack $w.layer1
 
-# 	frame $w.style
-# 	radiobutton $w.style.smartlaplacian -text "Smart Laplacian" \
-# 	    -variable $this-smoothscheme -value "SmartLaplacian"
-# 	radiobutton $w.style.shapeimprovement -text "Shape Improvement" \
-# 	    -variable $this-smoothscheme -value "ShapeImprovement"
-# 	pack $w.style.smartlaplacian $w.style.shapeimprovement \
-# 	    -side left -anchor nw -padx 3
-# 	pack $w.style
+	frame $w.layer
+	radiobutton $w.layer.addlayeron -text "On" \
+	    -variable $this-addlayer -value "On"
+	radiobutton $w.layer.addlayeroff -text "Off" \
+	    -variable $this-addlayer -value "Off"
+	pack $w.layer.addlayeron $w.layer.addlayeroff \
+	    -side left -anchor nw -padx 3
+	pack $w.layer -side top
 
         frame $w.f
  	frame $w.fb

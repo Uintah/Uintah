@@ -71,7 +71,7 @@ public:
       ProgressReporter *reporter, 
       FieldHandle hexfieldh, FieldHandle trifieldh, 
       FieldHandle& side1field, FieldHandle& side2field,
-      bool add_to_side1 ) = 0;
+      bool add_to_side1, bool add_layer ) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -87,16 +87,18 @@ public:
       ProgressReporter *reporter, 
       FieldHandle hexfieldh, FieldHandle trifieldh, 
       FieldHandle& side1field, FieldHandle& side2field,
-      bool add_to_side1 );
+      bool add_to_side1, bool add_layer );
   
   void load_hex_mesh( FieldHandle hexfieldh );
-  void load_tri_mesh( FieldHandle trifieldh );
+  void load_tri_mesh( TriSurfMesh<TriLinearLgn<Point> > *sci_tri_mesh );
   
   void compute_intersections(
       ProgressReporter* mod,
       HexVolMesh<HexTrilinearLgn<Point> >* original_mesh,
+      TriSurfMesh<TriLinearLgn<Point> > *tri_mesh,
       HexVolMesh<HexTrilinearLgn<Point> >*& side1_mesh,
-      HexVolMesh<HexTrilinearLgn<Point> >*& side2_mesh, bool add_to_side1 );
+      HexVolMesh<HexTrilinearLgn<Point> >*& side2_mesh, 
+      bool add_to_side1, bool add_layer );
   
   bool interferes(const vector<Vector3> &p, const Vector3 &axis, int split);
   
@@ -133,12 +135,14 @@ template <class FIELD>
 void InsertHexSheetAlgoHex<FIELD>::execute(
     ProgressReporter *mod, FieldHandle hexfieldh, FieldHandle trifieldh,
     FieldHandle& side1field, FieldHandle& side2field,
-    bool add_to_side1 )
+    bool add_to_side1, bool add_layer )
 {
   typename FIELD::mesh_type *original_mesh =
       dynamic_cast<typename FIELD::mesh_type *>(hexfieldh->mesh().get_rep());
-
-  load_tri_mesh( trifieldh );
+  TriSurfMesh<TriLinearLgn<Point> > *tri_mesh = 
+      dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(trifieldh->mesh().get_rep());
+  
+  load_tri_mesh( tri_mesh );
   cerr << " Finished" << endl;
   mod->update_progress( 0.05 );
 
@@ -153,7 +157,7 @@ void InsertHexSheetAlgoHex<FIELD>::execute(
   typename FIELD::mesh_type *side2_mesh = scinew typename FIELD::mesh_type();
   side2_mesh->copy_properties( mesh_rep );
 
-  compute_intersections( mod, original_mesh, side1_mesh, side2_mesh, add_to_side1 );
+  compute_intersections( mod, original_mesh, tri_mesh, side1_mesh, side2_mesh, add_to_side1, add_layer );
 
   side1field = scinew FIELD( side1_mesh );
   side2field = scinew FIELD( side2_mesh );
@@ -162,9 +166,9 @@ void InsertHexSheetAlgoHex<FIELD>::execute(
 }
     
 template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( FieldHandle trifieldh )
+void InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( TriSurfMesh<TriLinearLgn<Point> > *sci_tri_mesh )
 { 
-  TriSurfMesh<TriLinearLgn<Point> > *sci_tri_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(trifieldh->mesh().get_rep());
+//  TriSurfMesh<TriLinearLgn<Point> > *sci_tri_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(trifieldh->mesh().get_rep());
   
   typename TriSurfMesh<TriLinearLgn<Point> >::Node::size_type num_nodes;
   typename TriSurfMesh<TriLinearLgn<Point> >::Elem::size_type num_tris;
@@ -391,9 +395,10 @@ template <class FIELD>
 void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     ProgressReporter* mod,
     HexVolMesh<HexTrilinearLgn<Point> >* original_mesh,
+    TriSurfMesh<TriLinearLgn<Point> > *tri_mesh,
     HexVolMesh<HexTrilinearLgn<Point> >*& side1_mesh,
     HexVolMesh<HexTrilinearLgn<Point> >*& side2_mesh,
-    bool add_to_side1 )
+    bool add_to_side1, bool add_layer )
 {
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -470,7 +475,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   mod->update_progress( 0.70 );
 
 //need to add elements from the three sets of elements...
-  hash_type side1_nodemap, side2_nodemap;
+  hash_type side1_nodemap, side2_nodemap, side1_reverse_map, side2_reverse_map;
   for( unsigned int k = 0; k < crosses.size(); ++k )
   {
     typename FIELD::mesh_type::Node::array_type onodes;
@@ -509,6 +514,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             const typename FIELD::mesh_type::Node::index_type nodeindex =
                 side1_mesh->add_point( np );
             side1_nodemap[(unsigned int)onodes[i]] = nodeindex;
+            side1_reverse_map[nodeindex] = (unsigned int)onodes[i];
             nnodes[i] = nodeindex;
           }
           else
@@ -530,6 +536,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             const typename FIELD::mesh_type::Node::index_type nodeindex =
                 side2_mesh->add_point( np );
             side2_nodemap[(unsigned int)onodes[i]] = nodeindex;
+            side2_reverse_map[nodeindex] = (unsigned int)onodes[i];
             nnodes[i] = nodeindex;
           }
           else
@@ -552,6 +559,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
           const typename FIELD::mesh_type::Node::index_type nodeindex =
               side1_mesh->add_point( np );
           side1_nodemap[(unsigned int)onodes[i]] = nodeindex;
+          side1_reverse_map[nodeindex] = (unsigned int)onodes[i];
           nnodes[i] = nodeindex;
         }
         else
@@ -573,6 +581,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
           const typename FIELD::mesh_type::Node::index_type nodeindex =
               side2_mesh->add_point( np );
           side2_nodemap[(unsigned int)onodes[i]] = nodeindex;
+          side2_reverse_map[nodeindex] = (unsigned int)onodes[i];
           nnodes[i] = nodeindex;
         }
         else
@@ -585,7 +594,265 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   }
 
   mod->update_progress( 0.75 );
+  if( add_layer )
+  {  
+    cout << "Adding the new layers of hexes...";
+    typename HexVolMesh<HexTrilinearLgn<Point> >::Node::size_type s1_node_size;
+    typename HexVolMesh<HexTrilinearLgn<Point> >::Node::size_type s2_node_size;
+    typename hash_type::iterator node_iter; 
+    vector<typename FIELD::mesh_type::Node::index_type> oi_node_list;  
+    hash_type shared_vertex_map;
+    unsigned int count = 0;
+    
+    if( s1_node_size < s2_node_size )
+    {
+      typename hash_type::iterator hitr = side1_nodemap.begin();
+      while( hitr != side1_nodemap.end() )
+      {
+        node_iter = side2_nodemap.find( (*hitr).first );
+        if( node_iter != side2_nodemap.end() )
+        {
+            //want this one...
+          oi_node_list.push_back( (*hitr).first );
+          count++;
+        }
+        ++hitr;
+      }
+    }
+    else
+    {
+      typename hash_type::iterator hitr = side2_nodemap.begin();
+      while( hitr != side2_nodemap.end() )
+      {
+        node_iter = side1_nodemap.find( (*hitr).first );
+        if( node_iter != side1_nodemap.end() )
+        {
+            //want this one...
+          oi_node_list.push_back( (*hitr).first );
+          shared_vertex_map[(*hitr).first] = (*hitr).first;
+          count++;
+        }
+        ++hitr;
+      }
+    }
 
+    tri_mesh->synchronize( Mesh::LOCATE_E );
+    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map1;
+    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map2;
+    unsigned int i; 
+
+    for( i = 0; i < oi_node_list.size(); i++ )
+    {
+      typename FIELD::mesh_type::Node::index_type this_node = oi_node_list[i];
+      Point n_p;
+      original_mesh->get_center( n_p, this_node );
+    
+      Point new_result;
+      typename FIELD::mesh_type::Face::index_type face_id;
+      tri_mesh->find_closest_elem( new_result, face_id, n_p );
+      Vector dist_vect = n_p - new_result;
+    
+        //since finding the closest face can be slow, update the progress meter 
+        // to let the user know that we are performing calculations and the 
+        // process has not hung...
+      if( i%50 == 0 )
+      {
+        double temp = 0.75 + 0.25*( (double)i/(double)oi_node_list.size() );
+        mod->update_progress( temp );
+      }
+    
+        //add the new node to the clipped mesh
+      Point new_point( new_result );
+      typename FIELD::mesh_type::Node::index_type this_index1 = side1_mesh->add_point( new_point ); 
+      typename FIELD::mesh_type::Node::index_type this_index2 = side2_mesh->add_point( new_point );
+    
+        //create a map for the new node to a node on the boundary of the clipped mesh...
+      new_map1[side1_nodemap[this_node]] = this_index1;
+      new_map2[side2_nodemap[this_node]] = this_index2;
+    }
+    cout << "\nFound " << count << " nodes along the shared boundary...\n";
+
+    side1_mesh->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E ); 
+    side2_mesh->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E );
+  
+    typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type clipped1_size;
+    typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type clipped2_size;
+    side1_mesh->size( clipped1_size );
+    side2_mesh->size( clipped2_size );
+
+    if( clipped1_size < clipped2_size )
+    {
+        //Walk all the cells in the smallest clipped mesh to find the boundary faces...
+      typename FIELD::mesh_type::Cell::iterator citer; side1_mesh->begin(citer);
+      typename FIELD::mesh_type::Cell::iterator citere; side1_mesh->end(citere);
+      
+      while( citer != citere )
+      {
+        typename FIELD::mesh_type::Cell::index_type ci = *citer;
+        ++citer;
+        
+          // Get all the faces in the cell.
+        typename FIELD::mesh_type::Face::array_type faces;
+        side1_mesh->get_faces( faces, ci );
+        
+          // Check each face for neighbors.
+        typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
+        
+        while( fiter != faces.end() )
+        {
+          typename FIELD::mesh_type::Cell::index_type nci;
+          typename FIELD::mesh_type::Face::index_type fi = *fiter;
+          ++fiter;
+          
+          if( !side1_mesh->get_neighbor( nci, ci, fi ) )
+          {
+              // Faces with no neighbors are on the boundary...
+              //    make sure that this face isn't on the original boundary
+            typename FIELD::mesh_type::Face::index_type old_face;
+            
+            typename FIELD::mesh_type::Node::array_type face_nodes;
+            side1_mesh->get_nodes( face_nodes, fi );
+            typename hash_type::iterator search1, search2, search3, search4, search_end; 
+            search_end = shared_vertex_map.end();
+            search1 = shared_vertex_map.find( side1_reverse_map[face_nodes[0]] );
+            search2 = shared_vertex_map.find( side1_reverse_map[face_nodes[1]] );
+            search3 = shared_vertex_map.find( side1_reverse_map[face_nodes[2]] );
+            search4 = shared_vertex_map.find( side1_reverse_map[face_nodes[3]] );
+            if( search1 != search_end && search2 != search_end &&
+                search3 != search_end && search4 != search_end )
+            {
+              typename FIELD::mesh_type::Node::array_type nnodes1(8);
+              typename FIELD::mesh_type::Node::array_type nnodes2(8);
+//NOTE TO JS:NEED to find a way to ensure the ordering is always correct...              
+              if( add_to_side1 )
+              {
+                nnodes1[0] = face_nodes[0];
+                nnodes1[1] = face_nodes[1];
+                nnodes1[2] = face_nodes[2];
+                nnodes1[3] = face_nodes[3];
+                nnodes1[4] = new_map1[face_nodes[0]];
+                nnodes1[5] = new_map1[face_nodes[1]];
+                nnodes1[6] = new_map1[face_nodes[2]];
+                nnodes1[7] = new_map1[face_nodes[3]];
+                side1_mesh->add_elem( nnodes1 );
+              }
+              else
+              {
+                nnodes1[0] = face_nodes[3];
+                nnodes1[1] = face_nodes[2];
+                nnodes1[2] = face_nodes[1];
+                nnodes1[3] = face_nodes[0];
+                nnodes1[4] = new_map1[face_nodes[3]];
+                nnodes1[5] = new_map1[face_nodes[2]];
+                nnodes1[6] = new_map1[face_nodes[1]];
+                nnodes1[7] = new_map1[face_nodes[0]];              
+                side1_mesh->add_elem( nnodes1 );
+              }
+              
+              nnodes2[0] = side2_nodemap[side1_reverse_map[face_nodes[0]]];
+              nnodes2[1] = side2_nodemap[side1_reverse_map[face_nodes[1]]];
+              nnodes2[2] = side2_nodemap[side1_reverse_map[face_nodes[2]]];
+              nnodes2[3] = side2_nodemap[side1_reverse_map[face_nodes[3]]];
+              nnodes2[4] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[0]]]];
+              nnodes2[5] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[1]]]];
+              nnodes2[6] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[2]]]];
+              nnodes2[7] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[3]]]];
+              side2_mesh->add_elem( nnodes2 );
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+        //Walk all the cells in the smallest clipped mesh to find the boundary faces...
+      typename FIELD::mesh_type::Cell::iterator citer; side2_mesh->begin(citer);
+      typename FIELD::mesh_type::Cell::iterator citere; side2_mesh->end(citere);
+      
+      while( citer != citere )
+      {
+        typename FIELD::mesh_type::Cell::index_type ci = *citer;
+        ++citer;
+        
+          // Get all the faces in the cell.
+        typename FIELD::mesh_type::Face::array_type faces;
+        side2_mesh->get_faces( faces, ci );
+        
+          // Check each face for neighbors.
+        typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
+        
+        while( fiter != faces.end() )
+        {
+          typename FIELD::mesh_type::Cell::index_type nci;
+          typename FIELD::mesh_type::Face::index_type fi = *fiter;
+          ++fiter;
+          
+          if( !side2_mesh->get_neighbor( nci, ci, fi ) )
+          {
+              // Faces with no neighbors are on the boundary...
+              //    make sure that this face isn't on the original boundary
+            typename FIELD::mesh_type::Face::index_type old_face;
+            
+            typename FIELD::mesh_type::Node::array_type face_nodes;
+            side2_mesh->get_nodes( face_nodes, fi );
+            typename hash_type::iterator search1, search2, search3, search4, search_end; 
+            search_end = shared_vertex_map.end();
+            search1 = shared_vertex_map.find( side2_reverse_map[face_nodes[0]] );
+            search2 = shared_vertex_map.find( side2_reverse_map[face_nodes[1]] );
+            search3 = shared_vertex_map.find( side2_reverse_map[face_nodes[2]] );
+            search4 = shared_vertex_map.find( side2_reverse_map[face_nodes[3]] );
+            if( search1 != search_end && search2 != search_end &&
+                search3 != search_end && search4 != search_end )
+            {
+              typename FIELD::mesh_type::Node::array_type nnodes1(8);
+              typename FIELD::mesh_type::Node::array_type nnodes2(8);
+//NOTE TO JS:NEED to find a way to ensure the ordering is always correct...           
+//               if( add_to_side1 )
+//               {
+//                 nnodes2[0] = face_nodes[0];
+//                 nnodes2[1] = face_nodes[1];
+//                 nnodes2[2] = face_nodes[2];
+//                 nnodes2[3] = face_nodes[3];
+//                 nnodes2[4] = new_map2[face_nodes[0]];
+//                 nnodes2[5] = new_map2[face_nodes[1]];
+//                 nnodes2[6] = new_map2[face_nodes[2]];
+//                 nnodes2[7] = new_map2[face_nodes[3]];
+//                 side2_mesh->add_elem( nnodes2 );
+//               }
+//               else
+//               {
+                nnodes2[0] = face_nodes[3];
+                nnodes2[1] = face_nodes[2];
+                nnodes2[2] = face_nodes[1];
+                nnodes2[3] = face_nodes[0];
+                nnodes2[4] = new_map2[face_nodes[3]];
+                nnodes2[5] = new_map2[face_nodes[2]];
+                nnodes2[6] = new_map2[face_nodes[1]];
+                nnodes2[7] = new_map2[face_nodes[0]];              
+                side2_mesh->add_elem( nnodes2 );
+//               }
+              
+              nnodes1[0] = side1_nodemap[side2_reverse_map[face_nodes[0]]];
+              nnodes1[1] = side1_nodemap[side2_reverse_map[face_nodes[1]]];
+              nnodes1[2] = side1_nodemap[side2_reverse_map[face_nodes[2]]];
+              nnodes1[3] = side1_nodemap[side2_reverse_map[face_nodes[3]]];
+              nnodes1[4] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[0]]]];
+              nnodes1[5] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[1]]]];
+              nnodes1[6] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[2]]]];
+              nnodes1[7] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[3]]]];
+              side1_mesh->add_elem( nnodes1 );
+            }
+          }
+        }
+      }
+    }
+  }
+  cout << "Finished\n";
+
+    //force all the synch data to be rebuilt on next synch call.
+  side1_mesh->unsynchronize();
+  side2_mesh->unsynchronize();
+  
 //  typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type original_size;
   typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type side1_size;
   typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type side2_size;
@@ -596,6 +863,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
 //  cout << "Hexmesh has " << original_size << " hexes." << endl;
   cout << "Side1 has " << side1_size << " hexes." << endl;
   cout << "Side2 has " << side2_size << " hexes." << endl << endl;
+  mod->update_progress( 0.99 );
 }
 
 } // end namespace SCIRun
