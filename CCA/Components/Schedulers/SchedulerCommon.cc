@@ -619,7 +619,7 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
                      IntVector& requestedLow, IntVector& requestedHigh) const
 {
   const SuperPatch* connectedPatchGroup =
-    m_locallyComputedPatchVarMap->getConnectedPatchGroup(label, patch);
+    m_locallyComputedPatchVarMap->getConnectedPatchGroup(patch);
   if (connectedPatchGroup == 0)
     return 0;
 
@@ -712,6 +712,10 @@ void SchedulerCommon::doEmitTaskGraphDocs()
 
 void SchedulerCommon::compile()
 {
+  GridP grid = const_cast<Grid*>(getLastDW()->getGrid());
+  GridP oldGrid;
+  if (dws[0])
+    oldGrid = const_cast<Grid*>(get_dw(0)->getGrid());
   if(numTasks_ > 0){
     TAU_PROFILE("SchedulerCommon::compile()", " ", TAU_USER); 
 
@@ -720,8 +724,7 @@ void SchedulerCommon::compile()
     for (unsigned i = 0; i < graphs.size(); i++) {
       if (graphs.size() > 1)
         dbg << d_myworld->myrank() << "  Compiling graph#" << i << " of " << graphs.size() << endl;
-      graphs[i]->createDetailedTasks(useInternalDeps(), const_cast<Grid*>(getLastDW()->getGrid()), 
-                                     dws[0]?const_cast<Grid*>(get_dw(0)->getGrid()):0);
+      graphs[i]->createDetailedTasks(useInternalDeps(), grid, oldGrid);
     }
     verifyChecksum();
     dbg << d_myworld->myrank() << " SchedulerCommon finished compile\n";
@@ -729,6 +732,13 @@ void SchedulerCommon::compile()
 
   m_locallyComputedPatchVarMap->reset();
 
+#if 1
+  for (unsigned i = 0; i < grid->numLevels(); i++) {
+    const PatchSubset* patches = getLoadBalancer()->createPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
+    if (patches->size() > 0)
+      m_locallyComputedPatchVarMap->addComputedPatchSet(patches);
+  }
+#else
   for (unsigned i = 0; i < graphs.size(); i++) { 
     DetailedTasks* dts = graphs[i]->getDetailedTasks();
     
@@ -741,13 +751,13 @@ void SchedulerCommon::compile()
           if (comp->var->typeDescription()->getType() != TypeDescription::ReductionVariable) {
             constHandle<PatchSubset> patches =
               comp->getPatchesUnderDomain(dt->getPatches());
-            m_locallyComputedPatchVarMap->addComputedPatchSet(comp->var,
-                                                              patches.get_rep());
+            m_locallyComputedPatchVarMap->addComputedPatchSet(patches.get_rep());
           }
         }
       }
     }
   }
+#endif
   m_locallyComputedPatchVarMap->makeGroups();
 }
 

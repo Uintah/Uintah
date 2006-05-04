@@ -50,8 +50,7 @@ void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel,
   
   // coarse region we need to get from the dw
   cl = finePatch->getLevel()->mapCellToCoarser(fl);
-  ch = finePatch->getLevel()->mapCellToCoarser(fh) + 
-    finePatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
+  ch = finePatch->getLevel()->mapCellToCoarser(fh) + IntVector(1,1,1);
   
   //__________________________________
   // coarseHigh and coarseLow cannot lie outside
