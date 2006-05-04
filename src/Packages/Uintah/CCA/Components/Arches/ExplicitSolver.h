@@ -65,6 +65,7 @@ public:
 		     TurbulenceModel* turbModel, 
 		     ScaleSimilarityModel* scaleSimilarityModel, 
 		     PhysicalConstants* physConst,
+		     bool calcScalar,
 		     bool calcReactscalar,
 		     bool calcEnthalpy,
                      bool calcThermalNOx,
@@ -318,6 +319,7 @@ private:
       TurbulenceModel* d_turbModel;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       bool d_mixedModel;
+      bool d_calScalar;
       bool d_reactingScalarSolve;
       bool d_enthalpySolve;
       vector<IntVector> d_probePoints;
@@ -343,7 +345,6 @@ private:
     bool nosolve_timelabels_allocated;
     bool d_pressure_correction;
     bool d_3d_periodic;
-    bool d_calScalar;
     bool d_dynScalarModel;
     int d_turbModelCalcFreq;
     bool d_turbModelRKsteps;

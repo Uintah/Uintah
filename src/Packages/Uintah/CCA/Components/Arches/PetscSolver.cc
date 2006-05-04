@@ -519,21 +519,6 @@ PetscSolver::destroyMatrix()
     throw PetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 }
 
-// ****************************************************************************
-// Actual linear solve for pressure
-// ****************************************************************************
-void 
-PetscSolver::pressLisolve(const ProcessorGroup*,
-			 const Patch*,
-			 DataWarehouseP&,
-			 DataWarehouseP&,
-			 ArchesVariables*,
-			 const ArchesLabel*)
-{
-
-}
-
-
 // Shutdown PETSc
 void PetscSolver::finalizeSolver()
 {
@@ -546,42 +531,3 @@ void PetscSolver::finalizeSolver()
     throw PetscError(ierr, "PetscFinalize", __FILE__, __LINE__);
 }
 
-//****************************************************************************
-// Velocity Solve
-//****************************************************************************
-void 
-PetscSolver::velocityLisolve(const ProcessorGroup*,
-			     const Patch*,
-			     int, double,
-			     ArchesVariables*,
-			     CellInformation*,
-			     const ArchesLabel*)
-{
-}
-
-//****************************************************************************
-// Scalar Solve
-//****************************************************************************
-void 
-PetscSolver::scalarLisolve(const ProcessorGroup*,
-			  const Patch*,
-			  int, double,
-			  ArchesVariables*,
-			  ArchesConstVariables*,
-			  CellInformation*)
-{
-}
-
-
-//****************************************************************************
-// Scalar Solve
-//****************************************************************************
-void 
-PetscSolver::enthalpyLisolve(const ProcessorGroup*,
-			     const Patch*,
-			     double,
-			     ArchesVariables*,
-			     ArchesConstVariables*,
-			     CellInformation*)
-{
-}

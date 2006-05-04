@@ -74,19 +74,6 @@ PetscSolver::destroyMatrix()
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
-// ****************************************************************************
-// Actual linear solve for pressure
-// ****************************************************************************
-void 
-PetscSolver::pressLisolve(const ProcessorGroup*,
-                          const Patch*,
-                          DataWarehouseP&,
-                          DataWarehouseP&,
-                          ArchesVariables*,
-                          const ArchesLabel*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
 
 
 // Shutdown PETSc
@@ -95,45 +82,3 @@ void PetscSolver::finalizeSolver()
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
-//****************************************************************************
-// Velocity Solve
-//****************************************************************************
-void 
-PetscSolver::velocityLisolve(const ProcessorGroup*,
-                             const Patch*,
-                             int,
-                             double,
-                             ArchesVariables*,
-                             CellInformation*,
-                             const ArchesLabel*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-//****************************************************************************
-// Scalar Solve
-//****************************************************************************
-void 
-PetscSolver::scalarLisolve(const ProcessorGroup*,
-                           const Patch*,
-                           int, double,
-                           ArchesVariables*,
-                           ArchesConstVariables*,
-                           CellInformation*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-//****************************************************************************
-// Scalar Solve
-//****************************************************************************
-void 
-PetscSolver::enthalpyLisolve(const ProcessorGroup*,
-                             const Patch*,
-                             double ,
-                             ArchesVariables*,
-                             ArchesConstVariables*,
-                             CellInformation*)
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}

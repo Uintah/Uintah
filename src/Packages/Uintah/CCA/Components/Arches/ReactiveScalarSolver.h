@@ -58,7 +58,7 @@ namespace Uintah {
   class Discretization;
   class Source;
   class BoundaryCondition;
-  class LinearSolver;
+  class RHSSolver;
   class TimeIntegratorLabel;
 
 class ReactiveScalarSolver {
@@ -160,7 +160,7 @@ private:
       // computes sources
       Source* d_source;
       // linear solver
-      LinearSolver* d_linearSolver;
+      RHSSolver* d_rhsSolver;
       // turbulence model
       TurbulenceModel* d_turbModel;
       // boundary condition

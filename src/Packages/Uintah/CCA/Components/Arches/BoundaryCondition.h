@@ -411,14 +411,6 @@ public:
 				 ArchesVariables* vars,
 				 ArchesConstVariables* constvars);
 
-      // adds pressure gradient to momentum nonlinear source term
-      void addPressureGrad(const ProcessorGroup* ,
-			   const Patch* patch ,
-			   int index,
-			   CellInformation* cellinfo,			  
-			   ArchesVariables* vars);
-
-
       void calculateVelocityPred_mm(const ProcessorGroup*,
 				    const Patch* patch,
 				    double delta_t,
@@ -693,7 +685,6 @@ private:
 	double inletVel;           
 	double fcr;
         InletStream streamMixturefraction; // array [numMixingVars-1]
-	double turb_lengthScale;
 	// calculated values
 	Stream calcStream;
 	// stores the geometry information, read from problem specs
@@ -709,9 +700,7 @@ private:
       struct PressureInlet {
 	int d_cellTypeID;
 	InletStream streamMixturefraction; // array [numMixingVars-1]
-	double turb_lengthScale;
 	Stream calcStream;
-	double refPressure;
 	double area;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPieceP> d_geomPiece;
@@ -725,7 +714,6 @@ private:
       struct FlowOutlet {
 	int d_cellTypeID;
 	InletStream streamMixturefraction; // array [numMixingVars-1]
-	double turb_lengthScale;
 	Stream calcStream;
 	double area;
 	// stores the geometry information, read from problem specs
