@@ -23,7 +23,7 @@
    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+   DEALINGS IN THE SOFTWARE. 
 */
 
 #include<iostream>
@@ -86,6 +86,7 @@ void ComponentSkeletonWriter::GenerateCode()
 
 void ComponentSkeletonWriter::ComponentClassDefinitionCode()
 {
+  writeHeaderLicense();
   writeHeaderInit();
   writeComponentDefinitionCode();
   writePortClassDefinitionCode();
@@ -93,6 +94,8 @@ void ComponentSkeletonWriter::ComponentClassDefinitionCode()
 
 void ComponentSkeletonWriter::ComponentSourceFileCode()
 {
+ 
+  writeSourceLicense();
   writeSourceInit();
   writeLibraryHandle();
   writeSourceClassImpl();
@@ -102,6 +105,33 @@ void ComponentSkeletonWriter::ComponentSourceFileCode()
 //////////////////////////////////////////////////////////////////////////
 // private member functions
 
+void ComponentSkeletonWriter::writeHeaderLicense()
+{
+  
+  componentHeaderFile << "/*"<<std::endl<<SP<<"For more information, please see: http://software.sci.utah.edu"<<std::endl<<std::endl<<std::endl<<SP<<"The MIT License"<<std::endl<<std::endl<<SP<<"Copyright (c) 2004 Scientific Computing and Imaging Institute,"<<std::endl<<SP<<"University of Utah."<<std::endl<<SP<<"License for the specific language governing rights and limitations under"<<std::endl<<SP<<"Permission is hereby granted, free of charge, to any person obtaining a"<<std::endl<<SP<<"copy of this software and associated documentation files (the \"Software\"),"<<std::endl<<SP<<"to deal in the Software without restriction, including without limitation"<<std::endl<<SP<<"the rights to use, copy, modify, merge, publish, distribute, sublicense,"<<std::endl<<SP<<"and/or sell copies of the Software, and to permit persons to whom the"<<std::endl<<SP<<"Software is furnished to do so, subject to the following conditions:"<<std::endl<<std::endl<<SP<<"The above copyright notice and this permission notice shall be included"<<std::endl<<SP<<"in all copies or substantial portions of the Software."<<std::endl<<std::endl<<SP<<"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS"<<std::endl<<SP<<"OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"<<std::endl<<SP<<"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL"<<std::endl<<SP<<"THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER"<<std::endl<<SP<<"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING"<<std::endl<<SP<<"FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER"<<std::endl<<SP<<"DEALINGS IN THE SOFTWARE."<<std::endl<<"*/";
+  
+
+
+
+ //  std::string line;
+//   std::ifstream myfile ("license.txt");
+//   if (myfile.is_open())
+//   {
+    
+//     while (! myfile.eof() )
+//     {
+//       getline (myfile,line);
+//       std::cout << "line is" << line << std::endl;
+//     }
+//     myfile.close();
+//   }
+
+//   else std::cout << "Unable to open file";
+
+
+  
+ 
+}
 void ComponentSkeletonWriter::writeHeaderInit()
 {
   // license here
@@ -147,29 +177,38 @@ void ComponentSkeletonWriter::writePortClassDefinitionCode()
 			<< DEFAULT_PORT_NAMESPACE << (providesPortsList[i])->GetType() << " {"
 			<< std::endl;
 
-    // public members
+    //public  members
     componentHeaderFile << "public:" << std::endl;
     componentHeaderFile << SP << "virtual ~"<< (providesPortsList[i])->GetName() << "() {}" << std::endl;
-    componentHeaderFile << SP << "void setParent(" << compName << " *com)" << " { this->com = com; }" << std::endl;
-    componentHeaderFile << SP << compName << " *com;" << std::endl;
-
-    if ((providesPortsList[i])->GetType() == "GoPort") {
-	componentHeaderFile << "\n" << SP << "int go();";
+    componentHeaderFile << SP << "void setParent(" << compName << " *com)" << " { this->com = com; }";
+     if ((providesPortsList[i])->GetType() == "GoPort") {
+	componentHeaderFile <<std::endl<< SP << "virtual int go();";
     }
     if ((providesPortsList[i])->GetType() == "UIPort") {
-	componentHeaderFile << "\n" << SP << "int ui();";
+      componentHeaderFile <<std::endl << SP << "virtual int ui();";
     }
-
+     // private  members
+    componentHeaderFile << std::endl;
+    componentHeaderFile << std::endl << "private:" << std::endl;
+    componentHeaderFile << SP << compName << " *com;" << std::endl;
     componentHeaderFile << std::endl << "};" << std::endl;
   }
   componentHeaderFile << std::endl;
   componentHeaderFile << "#endif" << std::endl;
 }
 
+void ComponentSkeletonWriter::writeSourceLicense()
+{
+
+  
+  componentSourceFile << "/*"<<std::endl<<SP<<"For more information, please see: http://software.sci.utah.edu"<<std::endl<<std::endl<<std::endl<<SP<<"The MIT License"<<std::endl<<std::endl<<SP<<"Copyright (c) 2004 Scientific Computing and Imaging Institute,"<<std::endl<<SP<<"University of Utah."<<std::endl<<SP<<"License for the specific language governing rights and limitations under"<<std::endl<<SP<<"Permission is hereby granted, free of charge, to any person obtaining a"<<std::endl<<SP<<"copy of this software and associated documentation files (the \"Software\"),"<<std::endl<<SP<<"to deal in the Software without restriction, including without limitation"<<std::endl<<SP<<"the rights to use, copy, modify, merge, publish, distribute, sublicense,"<<std::endl<<SP<<"and/or sell copies of the Software, and to permit persons to whom the"<<std::endl<<SP<<"Software is furnished to do so, subject to the following conditions:"<<std::endl<<std::endl<<SP<<"The above copyright notice and this permission notice shall be included"<<std::endl<<SP<<"in all copies or substantial portions of the Software."<<std::endl<<std::endl<<SP<<"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS"<<std::endl<<SP<<"OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"<<std::endl<<SP<<"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL"<<std::endl<<SP<<"THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER"<<std::endl<<SP<<"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING"<<std::endl<<SP<<"FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER"<<std::endl<<SP<<"DEALINGS IN THE SOFTWARE."<<std::endl<<"*/";
+  
+}
+
 void ComponentSkeletonWriter::writeSourceInit()
 {
 
-  componentSourceFile << "//Sample Source code" << std::endl;
+  
   componentSourceFile << std::endl;
 
   //Header files
@@ -227,7 +266,7 @@ void ComponentSkeletonWriter::writeSetServicesCode()
                       << "void " << compName << "::setServices(const " << SERVICES_POINTER << "& svc)"<< std::endl;
   componentSourceFile << "{" << std::endl;
   componentSourceFile << SP << "services = svc;" << std::endl;
-  //componentSourceFile<<"\n"<<SP<<"svc->registerForRelease(sci::cca::ComponentRelease::pointer(this)); ";
+  //componentSourceFile<<std::endl<<SP<<"svc->registerForRelease(sci::cca::ComponentRelease::pointer(this)); ";
 
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
     std::string portName(providesPortsList[i]->GetName());
@@ -236,6 +275,7 @@ void ComponentSkeletonWriter::writeSetServicesCode()
 
     for (unsigned int j = 0; j < portType.length(); j++) {
       char tmp = portType.at(j);
+      
       // Unicode safe?
       if ((tmp >= 'A') && (tmp <= 'Z')) {
 	tempPortInstance.append(1, (char) tolower(tmp));
@@ -301,6 +341,7 @@ void ComponentSkeletonWriter::writeGoAndUiFunctionsCode()
      componentSourceFile << std::endl <<"int " << providesPortsList[i]->GetName() << "::ui()"
                          << std::endl
                          << "{"
+                         << std::endl<<SP<<"return 0;"
                          << std::endl
                          << "}" << std::endl;
    }
@@ -308,6 +349,7 @@ void ComponentSkeletonWriter::writeGoAndUiFunctionsCode()
      componentSourceFile << std::endl <<"int " << providesPortsList[i]->GetName() << "::go()"
                          << std::endl
                          << "{"
+                         << std::endl<<SP<<"return 0;"
                          << std::endl
                          << "}" << std::endl;
    }

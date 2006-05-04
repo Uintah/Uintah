@@ -63,6 +63,7 @@ ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, co
 
   componentSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Component Name")), 0, centerFlags, 2);
   componentName = new wxTextCtrl( this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
+  componentName->SetToolTip(wxT("The Name of this component\nUsually begins with a capital letter\nExample: Hello,Linsolver..etc"));
   componentSizer->Add(componentName, 1, rightFlags, 2);
   topSizer->Add( componentSizer, 1, wxALIGN_CENTER, 0 );
   topSizer->AddSpacer(30);
@@ -98,7 +99,8 @@ ComponentWizardDialog::~ComponentWizardDialog()
 
 void ComponentWizardDialog::OnOk(wxCommandEvent& event)
 {
-    if (componentName->GetValue()=="") {
+ 
+     if ((componentName->GetValue()).empty()) {
 #if DEBUG
        std::cout<<"\nComponent Name is Empty\n";
 #endif
@@ -127,7 +129,7 @@ bool ComponentWizardDialog::Validate()
 
 void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
 {
-  AddPortDialog addpport (this, -1, "Add provides port", wxPoint(10, 20), wxSize(400, 400), wxRESIZE_BORDER);
+  AddPortDialog addpport (this,  wxID_ANY, "Add provides port", wxPoint(10, 20), wxSize(400, 400), wxRESIZE_BORDER);
   if (addpport.ShowModal() == wxID_OK) {
     if ((addpport.GetPortNameText().empty())) {
 #if DEBUG
@@ -170,7 +172,7 @@ void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
 }
 void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
 {
-  AddPortDialog addpport (this, -1, "Add uses port", wxPoint(10, 20), wxSize(400, 400),wxRESIZE_BORDER);
+  AddPortDialog addpport (this, wxID_ANY, "Add uses port", wxPoint(10, 20), wxSize(400, 400),wxRESIZE_BORDER);
   if (addpport.ShowModal() == wxID_OK) {
 
     if ((addpport.GetPortNameText().empty())) {
@@ -227,6 +229,7 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
   lname = new wxStaticText(this, wxID_ANY, wxT("Name"));
   nameSizer->Add(lname, 1, leftFlags, 2);
   pname = new wxTextCtrl(this,  wxID_ANY, wxT(""));
+  pname->SetToolTip(wxT("The name of this Port.Usually has the name of the component as a prefix.\nExample: HelloUIPort,WorldGoPort..etc"));
   nameSizer->Add(pname, 1, rightFlags, 2);
   topSizer->Add( nameSizer, 1, wxALIGN_CENTER, 2 );
   topSizer->AddSpacer(10);
@@ -235,14 +238,16 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
   ldtype = new wxStaticText(this, wxID_ANY, "Datatype");
   datatypeSizer->Add(ldtype, 1, leftFlags, 2);
   dtype= new wxTextCtrl(this, wxID_ANY, wxT(""));
+  dtype->SetToolTip(wxT("The type of this port. Usually starts with a capital letter and has \"Port\" as a suffix.\nExample: StringPort,GoPort..etc"));
   datatypeSizer->Add(dtype, 1, rightFlags, 2);
   topSizer->Add( datatypeSizer, 1, wxALIGN_CENTER, 2 );
   topSizer->AddSpacer(10);
 
   wxBoxSizer *descSizer = new wxBoxSizer( wxHORIZONTAL );
   ldesc = new wxStaticText(this, wxID_ANY, wxT("Description"));
-  descSizer->Add(ldesc, 1, leftFlags, 2);
+  descSizer->Add(ldesc, 1, rightFlags, 2);
   desc= new wxTextCtrl(this, wxID_ANY, wxT(""));
+  desc->SetToolTip(wxT("This port's description. Example: ui,go,string..etc"));
   descSizer->Add(desc, 1, rightFlags, 2);
   topSizer->Add( descSizer, 1, wxALIGN_CENTER, 2 );
   topSizer->AddSpacer(10);
