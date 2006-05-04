@@ -52,9 +52,11 @@ class InsertHexSheet : public Module
 {
 private:
   GuiString add_to_side_;
+  GuiString add_layer_;
   int       last_field_generation_;
 
   string last_add_to_side_;
+  string last_add_layer_;
   
 public:
   InsertHexSheet(GuiContext* ctx);
@@ -70,6 +72,7 @@ DECLARE_MAKER(InsertHexSheet)
 InsertHexSheet::InsertHexSheet(GuiContext* ctx)
         : Module("InsertHexSheet", ctx, Filter, "FieldsCreate", "SCIRun"),
           add_to_side_(get_ctx()->subVar("side"), "side1" ),
+          add_layer_(get_ctx()->subVar("addlayer"), "On" ),
           last_field_generation_(0)
 {
 }
@@ -100,6 +103,11 @@ void InsertHexSheet::execute()
   if( last_add_to_side_ != add_to_side_.get() )
   {
     last_add_to_side_ = add_to_side_.get();
+    changed = true;
+  } 
+  if( last_add_layer_ != add_layer_.get() )
+  {
+    last_add_layer_ = add_layer_.get();
     changed = true;
   }
   
@@ -149,9 +157,13 @@ void InsertHexSheet::execute()
   if( last_add_to_side_ == "side1" )
       add_to_side1 = true;
   
+  bool add_layer = false;
+  if( last_add_layer_ == "On" )
+      add_layer = true;
+  
   FieldHandle side1field, side2field;
   algo->execute( this, hexfieldhandle, trifieldhandle, 
-                 side1field, side2field, add_to_side1 );
+                 side1field, side2field, add_to_side1, add_layer );
   
   FieldOPort *ofield_port2 = (FieldOPort *)get_oport("Side1Field");
   ofield_port2->send_and_dereference(side1field);
