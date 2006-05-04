@@ -17,7 +17,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
 #endif
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
@@ -88,13 +87,8 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
   db->getWithDefault("normalize_pressure", d_norm_pres, false);
-  string finite_diff;
-  db->require("finite_difference", finite_diff);
-  if (finite_diff == "second") d_discretize = scinew Discretization();
-  else {
-    throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff, __FILE__, __LINE__);
-  }
+
+  d_discretize = scinew Discretization();
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
@@ -102,8 +96,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 	  d_source->problemSetup(db);
   string linear_sol;
   db->require("linear_solver", linear_sol);
-  if (linear_sol == "linegs") d_linearSolver = scinew RBGSSolver();
-  else if (linear_sol == "petsc") d_linearSolver = scinew PetscSolver(d_myworld);
+  if (linear_sol == "petsc") d_linearSolver = scinew PetscSolver(d_myworld);
 #ifdef HAVE_HYPRE
   else if (linear_sol == "hypre") d_linearSolver = scinew HypreSolver(d_myworld);
 #endif

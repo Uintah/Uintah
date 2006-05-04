@@ -23,7 +23,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/Properties.cc \
 	$(SRCDIR)/ReactiveScalarSolver.cc \
 	$(SRCDIR)/ThermalNOxSolver.cc \
-	$(SRCDIR)/RBGSSolver.cc \
+	$(SRCDIR)/RHSSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc \
 	$(SRCDIR)/SmagorinskyModel.cc \
 	$(SRCDIR)/ScaleSimilarityModel.cc \
@@ -80,7 +80,6 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/Arches.o: $(SRCDIR)/fortran/init_fort.h
 $(SRCDIR)/Arches.o: $(SRCDIR)/fortran/initScal_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/addpressuregrad_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcenthalpy_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlpresbcinout_fort.h
@@ -132,14 +131,11 @@ $(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_7loop_fort.h
 $(SRCDIR)/CompDynamicProcedure.o: $(SRCDIR)/fortran/comp_dynamic_8loop_fort.h
 $(SRCDIR)/PressureSolver.o: $(SRCDIR)/fortran/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/PressureSolver.o: $(SRCDIR)/fortran/normpress_fort.h
-$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/explicit_fort.h
-$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/explicit_velocity_fort.h
+$(SRCDIR)/RHSSolver.o: $(SRCDIR)/fortran/explicit_fort.h
+$(SRCDIR)/RHSSolver.o: $(SRCDIR)/fortran/explicit_vel_fort.h
 $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/scalarvarmodel_fort.h
 $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/add_mm_enth_src_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/addpressgrad_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/addtranssrc_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/calcpressgrad_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/computeVel_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradflux_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradsrc_fort.h
@@ -153,5 +149,4 @@ $(SRCDIR)/Source.o: $(SRCDIR)/fortran/scalsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/vvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/wvelsrc_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelcoeffupdate_fort.h
 $(SRCDIR)/MomentumSolver.o: $(SRCDIR)/fortran/computeVel_fort.h

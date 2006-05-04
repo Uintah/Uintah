@@ -12,7 +12,7 @@ C-----------------------------------------------------------------------
       double precision areaew, arean, areas, areatb
 c read these values in - Rajesh
       integer i, j, k
-      logical*1 lwrap, lsymb, ltest, loutsf, liflx, lprdjk, lprdkk
+      logical*1 lwrap, ltest, loutsf, liflx, lprdjk, lprdkk
       
 c     include 'celltypes.h'
 
@@ -42,30 +42,11 @@ c
 c           symmetry and intrusion boundary conditions
 c---------------------------------------------------------------------
       liflx = .false. 
-      lsymb = .false.
       lprdjk = .false.
       lprdkk = .false.
       ltest = .false.
       loutsf = .false.
 
-      if (lsymb) call symbcs(domLo, domHi, idxLo, idxHi,
-     $ PASS3A(f)
-     $ PASS3B(f),
-     $ PASS3A(ae)
-     $ PASS3B(ae),
-     $ PASS3A(aw)
-     $ PASS3B(aw),
-     $ PASS3A(an)
-     $ PASS3B(an),
-     $ PASS3A(as)
-     $ PASS3B(as),
-     $ PASS3A(at)
-     $ PASS3B(at),
-     $ PASS3A(ab)
-     $ PASS3B(ab),
-     $ PASS3A(pcell)
-     $ PASS3B(pcell),
-     $ symtry, lprdjk, lprdkk)
 
       call wallbc(idxLo, idxHi, 
      $ PASS3A(ae)

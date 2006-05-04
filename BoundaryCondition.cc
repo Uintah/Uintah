@@ -64,7 +64,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcenthalpy_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradwallbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/addpressuregrad_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
@@ -845,10 +844,10 @@ BoundaryCondition::computePressureBC(const ProcessorGroup* ,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
+    double refPressure = 0.0;
     fort_calpbc(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 		pressure, density, viscosity, cellType, 
-		d_pressureBC->d_cellTypeID,
-		d_pressureBC->refPressure,
+		d_pressureBC->d_cellTypeID, refPressure,
 		cellinfo->dxepu, cellinfo->dynpv, cellinfo->dztpw,
 		xminus, xplus, yminus, yplus, zminus, zplus);
     
@@ -1502,111 +1501,6 @@ BoundaryCondition::enthalpyRadWallBC(const ProcessorGroup*,
 
 
 
-//****************************************************************************
-// Documentation here
-//****************************************************************************
-void 
-BoundaryCondition::addPressureGrad(const ProcessorGroup* ,
-				   const Patch* patch ,
-				   int index,
-				   CellInformation*,
-				   ArchesVariables* vars)
-{
-  // Get the patch and variable indices
-  IntVector domLoU, domHiU;
-  IntVector domLoUng, domHiUng;
-  IntVector idxLoU, idxHiU;
-  int ioff, joff, koff;
-  switch(index) {
-  case Arches::XDIR:
-    domLoU = vars->pressGradUSu.getFortLowIndex();
-    domHiU = vars->pressGradUSu.getFortHighIndex();
-    domLoUng = vars->uVelNonlinearSrc.getFortLowIndex();
-    domHiUng = vars->uVelNonlinearSrc.getFortHighIndex();
-    idxLoU = patch->getSFCXFORTLowIndex();
-    idxHiU = patch->getSFCXFORTHighIndex();
-
-    ioff = 1;
-    joff = 0;
-    koff = 0;
-    if (d_MAlab) {
-      for (int colZ = idxLoU.z(); colZ < idxHiU.z(); colZ ++) {
-	for (int colY = idxLoU.y(); colY < idxHiU.y(); colY ++) {
-	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
-	  // Store current cell
-	    IntVector currCell(colX, colY, colZ);
-	    IntVector prevCell(colX-1, colY, colZ);
-	    vars->pressGradUSu[currCell] *= (vars->voidFraction[currCell]+
-					     vars->voidFraction[prevCell])/2;
-	  }
-	}
-      }
-    }
-    fort_addpressuregrad(idxLoU, idxHiU, vars->pressGradUSu,
-			 vars->uVelNonlinearSrc, vars->cellType, d_mmWallID,
-			 ioff, joff, koff);
-    break;
-  case Arches::YDIR:
-    domLoU = vars->pressGradVSu.getFortLowIndex();
-    domHiU = vars->pressGradVSu.getFortHighIndex();
-    domLoUng = vars->vVelNonlinearSrc.getFortLowIndex();
-    domHiUng = vars->vVelNonlinearSrc.getFortHighIndex();
-    idxLoU = patch->getSFCYFORTLowIndex();
-    idxHiU = patch->getSFCYFORTHighIndex();
-
-    ioff = 0;
-    joff = 1;
-    koff = 0;
-    if (d_MAlab) {
-      for (int colZ = idxLoU.z(); colZ < idxHiU.z(); colZ ++) {
-	for (int colY = idxLoU.y(); colY < idxHiU.y(); colY ++) {
-	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
-	  // Store current cell
-	    IntVector currCell(colX, colY, colZ);
-	    IntVector prevCell(colX, colY-1, colZ);
-	    vars->pressGradVSu[currCell] *= (vars->voidFraction[currCell]+
-					     vars->voidFraction[prevCell])/2;
-	  }
-	}
-      }
-    }
-    fort_addpressuregrad(idxLoU, idxHiU, vars->pressGradVSu,
-			 vars->vVelNonlinearSrc, vars->cellType, d_mmWallID,
-			 ioff, joff, koff);
-    break;
-  case Arches::ZDIR:
-    domLoU = vars->pressGradWSu.getFortLowIndex();
-    domHiU = vars->pressGradWSu.getFortHighIndex();
-    domLoUng = vars->wVelNonlinearSrc.getFortLowIndex();
-    domHiUng = vars->wVelNonlinearSrc.getFortHighIndex();
-    idxLoU = patch->getSFCZFORTLowIndex();
-    idxHiU = patch->getSFCZFORTHighIndex();
-
-    ioff = 0;
-    joff = 0;
-    koff = 1;
-    if (d_MAlab) {
-      for (int colZ = idxLoU.z(); colZ < idxHiU.z(); colZ ++) {
-	for (int colY = idxLoU.y(); colY < idxHiU.y(); colY ++) {
-	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
-	  // Store current cell
-	    IntVector currCell(colX, colY, colZ);
-	    IntVector prevCell(colX, colY, colZ-1);
-	    vars->pressGradWSu[currCell] *= (vars->voidFraction[currCell]+
-					     vars->voidFraction[prevCell])/2;
-	  }
-	}
-      }
-    }
-    fort_addpressuregrad(idxLoU, idxHiU, vars->pressGradWSu,
-			 vars->wVelNonlinearSrc, vars->cellType, d_mmWallID,
-			 ioff, joff, koff);
-    break;
-  default:
-    throw InvalidValue("Invalid index in BoundaryCondition::addPressGrad", __FILE__, __LINE__);
-  }
-}
-
 void
 BoundaryCondition::intrusionTemperatureBC(const ProcessorGroup*,
 					  const Patch* patch,
@@ -2198,7 +2092,6 @@ BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
 BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
-  turb_lengthScale = 0.0;
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
@@ -2212,7 +2105,6 @@ BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
 BoundaryCondition::FlowInlet::FlowInlet():
   d_cellTypeID(0), d_area_label(0), d_flowRate_label(0)
 {
-  turb_lengthScale = 0.0;
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
@@ -2224,7 +2116,6 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   inletVel(copy.inletVel),
   fcr(copy.fcr),
   streamMixturefraction(copy.streamMixturefraction),
-  turb_lengthScale(copy.turb_lengthScale),
   calcStream(copy.calcStream),
   d_area_label(copy.d_area_label),
   d_flowRate_label(copy.d_flowRate_label)
@@ -2252,7 +2143,6 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   inletVel = copy.inletVel;
   fcr = copy.fcr;
   streamMixturefraction = copy.streamMixturefraction;
-  turb_lengthScale = copy.turb_lengthScale;
   calcStream = copy.calcStream;
   d_geomPiece = copy.d_geomPiece;
 
@@ -2274,7 +2164,6 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 {
   params->getWithDefault("Flow_rate", flowRate,0.0);
   params->getWithDefault("InletVelocity", inletVel,0.0);
-  params->require("TurblengthScale", turb_lengthScale);
   // This parameter only needs to be set for fuel inlets for which
   // mixture fraction > 0, if there is an air inlet, and air has some CO2,
   // this air CO2 will be counted in the balance automatically
@@ -2321,9 +2210,6 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 BoundaryCondition::PressureInlet::PressureInlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
-  //  streamMixturefraction.setsize(numMix-1);
-  turb_lengthScale = 0.0;
-  refPressure = 0.0;
 }
 
 //****************************************************************************
@@ -2332,8 +2218,6 @@ BoundaryCondition::PressureInlet::PressureInlet(int /*numMix*/, int cellID):
 void 
 BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
 {
-  params->require("RefPressure", refPressure);
-  params->require("TurblengthScale", turb_lengthScale);
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
   // loop thru all the pressure inlet geometry objects
@@ -2373,7 +2257,6 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
   //  streamMixturefraction.setsize(numMix-1);
-  turb_lengthScale = 0.0;
 }
 
 //****************************************************************************
@@ -2382,7 +2265,6 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int /*numMix*/, int cellID):
 void 
 BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 {
-  params->require("TurblengthScale", turb_lengthScale);
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
   // loop thru all the inlet geometry objects

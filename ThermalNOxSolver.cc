@@ -10,7 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/RHSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
@@ -50,7 +50,7 @@ ThermalNOxSolver::ThermalNOxSolver(const ArchesLabel* label,
 {
   d_discretize = 0;
   d_source = 0;
-  d_linearSolver = 0;
+  d_rhsSolver = 0;
 }
 
 //****************************************************************************
@@ -60,7 +60,7 @@ ThermalNOxSolver::~ThermalNOxSolver()
 {
   delete d_discretize;
   delete d_source;
-  delete d_linearSolver;
+  delete d_rhsSolver;
 }
 
 //****************************************************************************
@@ -70,16 +70,9 @@ void
 ThermalNOxSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("ThermalNOxSolver");
-  string finite_diff;
-  db->require("finite_difference", finite_diff);
-  if (finite_diff == "second") 
-    d_discretize = scinew Discretization();
-  else {
-    throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff, __FILE__, __LINE__);
-    //throw InvalidValue("Finite Differencing scheme "
-	//	       "not supported: " + finite_diff, db);
-  }
+
+  d_discretize = scinew Discretization();
+
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"l2up");
 //  if (db->findBlock("convection_scheme")) {
@@ -93,19 +86,9 @@ ThermalNOxSolver::problemSetup(const ProblemSpecP& params)
 //    d_conv_scheme = 0;
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
-  string linear_sol;
-  db->require("linear_solver", linear_sol);
-  if (linear_sol == "linegs")
-    d_linearSolver = scinew RBGSSolver();
-  else if (linear_sol == "petsc")
-     d_linearSolver = scinew PetscSolver(0); // CHEAT - steve d_myworld);
-  else {
-    throw InvalidValue("linear solver option"
-		       " not supported" + linear_sol, __FILE__, __LINE__);
-    //throw InvalidValue("linear solver option"
-	//	       " not supported" + linear_sol, db);
-  }
-  d_linearSolver->problemSetup(db);
+
+  d_rhsSolver = scinew RHSSolver();
+
   d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
 // dynamic Scalar Model for NOx is not implemented
   d_dynScalarModel = false;
@@ -126,7 +109,6 @@ void ThermalNOxSolver::solve(SchedulerP& sched,
   
   // Schedule the thermal Nox solve
   // require : thermalnoxIN, thermalnoxCoefSBLM, thermalnoxNonLinSrcSBLM
-  //d_linearSolver->sched_thermalnoxSolve(level, sched, new_dw, matrix_dw, index);
   sched_thermalnoxLinearSolve(sched, patches, matls, timelabels);
 }
 
@@ -556,7 +538,7 @@ ThermalNOxSolver::thermalnoxLinearSolve(const ProcessorGroup* pc,
 
     // make it a separate task later
     int index=0;
-    d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
+    d_rhsSolver->scalarLisolve(pc, patch, index, delta_t, 
                                   &thermalnoxVars, &constthermalnoxVars,
 				  cellinfo);
 

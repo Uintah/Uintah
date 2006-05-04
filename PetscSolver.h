@@ -78,41 +78,6 @@ public:
       // Problem setup
       void problemSetup(const ProblemSpecP& params);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Pressure Solve
-      void pressLisolve(const ProcessorGroup* pc,
-			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw, 
-			ArchesVariables* vars, 
-			const ArchesLabel* lab);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Velocity Solve
-      void velocityLisolve(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   int index,
-			   double delta_t,
-			   ArchesVariables* vars,
-			   CellInformation* cellinfo,
-			   const ArchesLabel* lab);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Solve
-      void scalarLisolve(const ProcessorGroup* pc,
-			 const Patch* patch,
-			 int index, double delta_t,
-			 ArchesVariables* vars,
-			 ArchesConstVariables* constvars,
-			 CellInformation* cellinfo);
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Solve
-      void enthalpyLisolve(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   double delta_t,
-			   ArchesVariables* vars,
-			   ArchesConstVariables* constvars,
-			   CellInformation* cellinfo);
        // to close petsc 
       void finalizeSolver();
 

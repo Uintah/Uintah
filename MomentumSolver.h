@@ -57,7 +57,7 @@ class Source;
 class Filter;
 #endif
 class BoundaryCondition;
-class LinearSolver;
+class RHSSolver;
 class TimeIntegratorLabel;
 
 class MomentumSolver {
@@ -117,13 +117,6 @@ public:
 				 	const MaterialSet* matls,
 				        const TimeIntegratorLabel* timelabels);
 
-	void sched_computeNonlinearTerms(SchedulerP&, 
-					const PatchSet* patches,
-					const MaterialSet* matls,
-					const ArchesLabel* d_lab,
-					const TimeIntegratorLabel* timelabels);
-
-
 #ifdef PetscFilter
       inline void setDiscretizationFilter(Filter* filter) {
         d_discretize->setFilter(filter);
@@ -171,20 +164,6 @@ private:
 			          DataWarehouse* new_dw,
 				  const TimeIntegratorLabel* timelabels);
 
-	void computeNonlinearTerms(const ProcessorGroup* pc,
-					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw,
-					const ArchesLabel* d_lab,
-					const TimeIntegratorLabel* timelabels);
-
-	void filterNonlinearTerms(const ProcessorGroup* pc,
-					const Patch* patch,
-					int index,
-					CellInformation* cellinfo,
-					ArchesVariables* vars);
-
    
 private:
 
@@ -198,7 +177,7 @@ private:
       // computes sources
       Source* d_source;
       // linear solver
-      LinearSolver* d_linearSolver;
+      RHSSolver* d_rhsSolver;
       // turbulence model
       TurbulenceModel* d_turbModel;
       // boundary condition
