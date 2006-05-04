@@ -322,64 +322,95 @@ namespace SCIRun {
 
 
   template <class T>
-    double getnextx1(std::vector<double> &x, std::vector<double> &xold, 
+    double getnextx1(std::vector<double> &x, 
 		     const T& y, const std::vector<T>& yd);
 
   template <>
-    SCISHARE double getnextx1(std::vector<double> &x, std::vector<double> &xold, 
+    SCISHARE double getnextx1(std::vector<double> &x, 
 		     const Point& y, const std::vector<Point>& yd);
 
   template <class T>
-    double getnextx1(std::vector<double> &x, std::vector<double> &xold, 
+    double getnextx1(std::vector<double> &x, 
 		     const T& y, const std::vector<T>& yd)
   {
-    x[0] -= (yd[0] ? y/yd[0] : 0.);
-    const double dx=x[0]-xold[0];
+    const double dx;
+    if (yd[0]) {
+      dx= y/yd[0];
+      x[0]-=dx;
+    }
+    else 
+      dx=0.;
     return sqrt(dx*dx);
   }
 
   template <class T>
-    double getnextx2(std::vector<double> &x, std::vector<double> &xold, 
+    double getnextx2(std::vector<double> &x, 
 		     const T& y, const std::vector<T>& yd);
 
   template <>
-    SCISHARE double getnextx2(std::vector<double> &x, std::vector<double> &xold, 
+    SCISHARE double getnextx2(std::vector<double> &x, 
 		     const Point& y, const std::vector<Point>& yd);
 
   template <class T>
-    double getnextx2(std::vector<double> &x, std::vector<double> &xold, 
+    double getnextx2(std::vector<double> &x,  
 		     const T& y, const std::vector<T>& yd)
   {
-    x[0] -= (yd[0] ? y/yd[0] : 0.);
-    x[1] -= (yd[1] ? y/yd[1] : 0.);
-    const double dx=x[0]-xold[0];
-    const double dy=x[1]-xold[1];
+    const double dx, dy;
+    if (yd[0]) {
+      dx= y/yd[0];
+      x[0]-=dx;
+    }
+    else 
+      dx=0.;
+
+    if (yd[1]) {
+      dy= y/yd[1];
+      x[1]-=dy;
+    }
+    else 
+      dy=0.;
+ 
     return sqrt(dx*dx+dy*dy);
 
   }
 
   // locate for scalar value 
   template <class T>
-    double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+    double getnextx3(std::vector<double> &x, 
 		     const T& y, const std::vector<T>& yd);
  
   // locate for Point 
   template <>
-    SCISHARE double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+    SCISHARE double getnextx3(std::vector<double> &x,  
 		     const Point& y, const std::vector<Point>& yd);
       
   // locate for scalar value 
   template <class T>
-    double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+    double getnextx3(std::vector<double> &x, 
 		     const T& y, const std::vector<T>& yd)
   {
-    x[0] -= (yd[0] ? y/yd[0] : 0.);
-    x[1] -= (yd[1] ? y/yd[1] : 0.);
-    x[2] -= (yd[2] ? y/yd[2] : 0.);
+    const double dx, dy, dz;
+    if (yd[0]) {
+      dx= y/yd[0];
+      x[0]-=dx;
+    }
+    else 
+      dx=0.;
+    
+    if (yd[1]) {
+      dy= y/yd[1];
+      x[1]-=dy;
+    }
+    else 
+      dy=0.;
+    
+    if (yd[2]) {
+      dz= y/yd[2];
+      x[2]-=dz;
+    }
+    else 
+      dz=0.;
 
-    const double dx=x[0]-xold[0];
-    const double dy=x[1]-xold[1];
-    const double dz=x[2]-xold[2];
     return sqrt(dx*dx+dy*dy+dz*dz);	
   }
 
@@ -410,13 +441,11 @@ class Dim3Locate {
       bool get_iterative(const ElemBasis *pEB, std::vector<double> &x, 
 			 const T& value, const ElemData &cd) const  
     {       
-      std::vector<double> xold(3); 
       std::vector<T> yd(3);
       for (int steps=0; steps<maxsteps; steps++) {
-	xold = x;
 	T y = difference(pEB->interpolate(x, cd), value);
 	pEB->derivate(x, cd, yd);
-	double dist=getnextx3(x, xold, y, yd);
+	double dist=getnextx3(x, y, yd);
 	if (dist < thresholdDist) 
 	  return true;	  
       }
@@ -449,13 +478,11 @@ class Dim2Locate {
       bool get_iterative(const ElemBasis *pEB, std::vector<double> &x, 
 			 const T& value, const ElemData &cd) const  
     {       
-      std::vector<double> xold(2); 
-      std::vector<T> yd(2);
+       std::vector<T> yd(2);
       for (int steps=0; steps<maxsteps; steps++) {
-	xold = x;
 	T y = difference(pEB->interpolate(x, cd), value);
 	pEB->derivate(x, cd, yd);
-	double dist=getnextx2(x, xold, y, yd);
+	double dist=getnextx2(x, y, yd);
 	if (dist < thresholdDist) 
 	  return true;	  
       }
@@ -491,14 +518,12 @@ class Dim1Locate {
       bool get_iterative(const ElemBasis *pElem, std::vector<double> &x, 
 			 const T& value, const ElemData &cd) const  
     {          
-      std::vector<double> xold(1); 
-      std::vector<T> yd(1);
+       std::vector<T> yd(1);
  	
       for (int steps=0; steps<maxsteps; steps++) {
-	xold = x;
 	T y = difference(pElem->interpolate(x, cd), value); 
 	pElem->derivate(x, cd, yd);
-	double dist=getnextx1(x, xold, y, yd);
+	double dist=getnextx1(x, y, yd);
 	if (dist < thresholdDist)
 	  return true;
       }

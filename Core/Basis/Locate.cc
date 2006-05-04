@@ -65,7 +65,7 @@ bool check_zero(const std::vector<Point> &val)
 
 // locate for Point 
 template <>
-double getnextx3(std::vector<double> &x, std::vector<double> &xold, 
+double getnextx3(std::vector<double> &x,  
 		 const Point& y, const std::vector<Point>& yd)
 {
   double J[9], JInv[9];
@@ -82,19 +82,20 @@ double getnextx3(std::vector<double> &x, std::vector<double> &xold,
 
   InverseMatrix3x3(J, JInv);
    
-  x[0] -= JInv[0]*y.x()+JInv[1]*y.y()+JInv[2]*y.z();
-  x[1] -= JInv[3]*y.x()+JInv[4]*y.y()+JInv[5]*y.z();
-  x[2] -= JInv[6]*y.x()+JInv[7]*y.y()+JInv[8]*y.z();
+  const double dx= JInv[0]*y.x()+JInv[1]*y.y()+JInv[2]*y.z();
+  const double dy= JInv[3]*y.x()+JInv[4]*y.y()+JInv[5]*y.z();
+  const double dz= JInv[6]*y.x()+JInv[7]*y.y()+JInv[8]*y.z();
    
-  const double dx=x[0]-xold[0];
-  const double dy=x[1]-xold[1];
-  const double dz=x[2]-xold[2];
+  x[0] -= dx;
+  x[1] -= dy;
+  x[2] -= dz;
+
   return sqrt(dx*dx+dy*dy+dz*dz);    
 }
 
 // locate for Point
 template <>
-double getnextx2(std::vector<double> &x, std::vector<double> &xold,
+double getnextx2(std::vector<double> &x, 
 		 const Point& y, const std::vector<Point>& yd)
 {
   const double J00=yd[0].x();
@@ -123,13 +124,14 @@ double getnextx2(std::vector<double> &x, std::vector<double> &xold,
 
 // locate for Point
 template <>
-double getnextx1(std::vector<double> &x, std::vector<double> &xold,
+double getnextx1(std::vector<double> &x, 
 		 const Point& y, const std::vector<Point>& yd)
 {
-  Point yd0=yd[0]; 
+  const Point &yd0=yd[0]; 
 
-  x[0] -= ((yd0.x() ? y.x()/yd0.x() : 0.)+(yd0.y() ? y.y()/yd0.y() : 0.)+(yd0.z() ? y.z()/yd0.z() : 0.))/3.;
-  const double dx=x[0]-xold[0];
+  const double dx=((yd0.x() ? y.x()/yd0.x() : 0.)+(yd0.y() ? y.y()/yd0.y() : 0.)+(yd0.z() ? y.z()/yd0.z() : 0.))/3.;
+  x[0] -= dx;
+
   return sqrt(dx*dx);
 }
 
