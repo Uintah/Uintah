@@ -56,8 +56,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #endif
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/initScal_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/init_fort.h>
 
 const int Arches::NDIM = 3;
 
@@ -349,12 +347,6 @@ Arches::scheduleInitialize(const LevelP& level,
     else
       d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
   }
-
-  // Computes velocities at apecified pressure b.c's
-  // require : densityCP, pressureIN, [u,v,w]VelocitySP
-  // compute : pressureSPBC, [u,v,w]VelocitySPBC
-  if (d_boundaryCondition->getPressureBC()) 
-    d_boundaryCondition->sched_computePressureBC(sched, patches, matls);
 }
 
 // ****************************************************************************
@@ -578,32 +570,14 @@ Arches::paramInit(const ProcessorGroup* ,
         new_dw->allocateAndPut(reactScalarDiffusivity, d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch);
     }  
 
-  // ** WARNING **  this needs to be changed soon (6/9/2000)
-    IntVector domLoU = uVelocity.getFortLowIndex();
-    IntVector domHiU = uVelocity.getFortHighIndex();
-    IntVector idxLoU = domLoU;
-    IntVector idxHiU = domHiU;
-    IntVector domLoV = vVelocity.getFortLowIndex();
-    IntVector domHiV = vVelocity.getFortHighIndex();
-    IntVector idxLoV = domLoV;
-    IntVector idxHiV = domHiV;
-    IntVector domLoW = wVelocity.getFortLowIndex();
-    IntVector domHiW = wVelocity.getFortHighIndex();
-    IntVector idxLoW = domLoW;
-    IntVector idxHiW = domHiW;
-    IntVector domLo = pressure.getFortLowIndex();
-    IntVector domHi = pressure.getFortHighIndex();
-    IntVector idxLo = domLo;
-    IntVector idxHi = domHi;
-
-  //can read these values from input file 
-    double uVal = 0.0, vVal = 0.0, wVal = 0.0;
-    double pVal = 0.0, denVal = 0.0;
+    uVelocity.initialize(0.0);
+    vVelocity.initialize(0.0);
+    wVelocity.initialize(0.0);
+    density.initialize(0.0);
+    pressure.initialize(0.0);
     double visVal = d_physicalConsts->getMolecularViscosity();
-    fort_init(idxLoU, idxHiU, uVelocity, uVal, idxLoV, idxHiV,
-	      vVelocity, vVal, idxLoW, idxHiW, wVelocity, wVal,
-	      idxLo, idxHi, pressure, pVal, density, denVal,
-	      viscosity, visVal);
+    viscosity.initialize(visVal);
+
     if (d_dynScalarModel) {
       if (d_calcScalar)
         scalarDiffusivity.initialize(visVal/0.4);
@@ -613,8 +587,7 @@ Arches::paramInit(const ProcessorGroup* ,
         reactScalarDiffusivity.initialize(visVal/0.4);
     }
     for (int ii = 0; ii < d_nofScalars; ii++) {
-      double scalVal = 0.0;
-      fort_initscal(idxLo, idxHi, scalar[ii], scalVal);
+      scalar[ii].initialize(0.0);
     }
   }
 }

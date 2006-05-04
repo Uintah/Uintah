@@ -78,8 +78,6 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/Arches.o: $(SRCDIR)/fortran/init_fort.h
-$(SRCDIR)/Arches.o: $(SRCDIR)/fortran/initScal_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcenthalpy_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlpresbcinout_fort.h
@@ -88,7 +86,6 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcscalar_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcuvel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcvvel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcwvel_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/calpbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/celltypeInit_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/enthalpyradwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlbcs_fort.h
