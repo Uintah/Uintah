@@ -95,7 +95,7 @@
                   <adiabatic>false</adiabatic>
                   <mixstatvars>1</mixstatvars>
                   <rxnvars>0</rxnvars>
-                  <inputfile>CH4_equil_clipped.mxn</inputfile>
+                  <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn</inputfile>
                   <h_fuel>-465039.0</h_fuel>
                   <h_air>-112.327</h_air>
                 </NewStaticMixingTable>
