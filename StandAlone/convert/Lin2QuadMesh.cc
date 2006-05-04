@@ -136,30 +136,29 @@ void lin2quad(FieldLin *lf)
     lm->begin(ea);
     lm->end(eb);
     
-    bool errorprinted=false;
+    int errorprinted=0;
+    int i=0;
     while(ea!=eb) {
       Point p;
       lm->get_center(p, *ea);
+      cerr << i++ << ' ' << errorprinted << '\r';
   
-      typename MeshLin::Elem::iterator eea, eeb;
-      lm->begin(eea);
-      lm->end(eeb);
+      typename MeshLin::Elem::index_type e;
       vector<double> coords(lm->dimensionality());
-      while (eea != eeb) {
-	if (lm->get_coords(coords, p, *eea)) 
-	  break;
-	++eea;
-      }
+      bool found=false;
+      if (lm->locate(e, p)) 
+	if (lm->get_coords(coords, p, e)) 
+	  found=true;
 
       typename FieldLin::value_type v=0;
-      if (!errorprinted && eea==eeb) {
+      if (!errorprinted && !found) {
 	cerr << "Interpolation failed\n";
-	errorprinted=true;
-    }
-      else if (BasisLin::dofs()) {
-	lf->interpolate(v, coords, *eea);
+	errorprinted++;
       }
-
+      else if (BasisLin::dofs()) {
+ 	lf->interpolate(v, coords, e);
+      }
+      
       qf->get_basis().add_node_value(v);
       ++ea;
     }
@@ -211,11 +210,11 @@ main(int argc, char **argv)
 
   if (dynamic_cast<CrvFLin *>(field.get_rep()))
     lin2quad<CrvFLin, CrvFQuad>((CrvFLin *)field.get_rep());
-  if (dynamic_cast<TetFLin *>(field.get_rep()))
+  else if (dynamic_cast<TetFLin *>(field.get_rep()))
     lin2quad<TetFLin, TetFQuad>((TetFLin *)field.get_rep());
-  if (dynamic_cast<TetNFLin *>(field.get_rep()))
+  else if (dynamic_cast<TetNFLin *>(field.get_rep()))
     lin2quad<TetNFLin, TetNFQuad>((TetNFLin *)field.get_rep());
-   else
+  else
     cerr << argv[0] << ": Invalid field '" << fn << "'" << endl;
 
   return 0;  
