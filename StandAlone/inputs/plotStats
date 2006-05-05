@@ -50,10 +50,10 @@ grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
 grep delT .plotStats_tmp | cut -d"=" -f3 | cut -d"," -f1 >& .delT
 
 grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2  > .memAve
-grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f5  > .memMax
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4  > .memMax
 paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memAve .memMax>& .data
 
-rm -f .elapsedTime .meanTime .physicalTime .delT memAve .memMax 
+rm -f .elapsedTime .meanTime .physicalTime .delT .memAve .memMax 
 rm -f .plotStats_tmp .plotStats_tmp1 .tmp
 echo "Done extracting data"
 
@@ -102,8 +102,8 @@ set origin 0.0,0.0
 set xlabel "ElapsedTime"
 set ylabel "Memory useage [MB]"
 set y2label ''
-plot '.data' using 1:5 axes x1y1 t 'ave' with lines, \
-     '.data' using 1:6 axes x1y2 t 'max' with lines
+plot '.data' using 1:5 axes x1y1 t 'max' with lines, \
+     '.data' using 1:6 axes x1y2 t 'ave' with lines
 set nomultiplot
 pause -1 "Hit return to exit"
 fin
