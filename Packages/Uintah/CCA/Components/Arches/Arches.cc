@@ -19,6 +19,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
@@ -83,6 +84,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
 #endif
   nofTimeSteps = 0;
   init_timelabel_allocated = false;
+  d_analysisModule = false;
 }
 
 // ****************************************************************************
@@ -103,6 +105,9 @@ Arches::~Arches()
 #endif
   if (init_timelabel_allocated)
     delete init_timelabel;
+  if (d_analysisModule) {
+    delete d_analysisModule;
+  }
 }
 
 // ****************************************************************************
@@ -111,7 +116,7 @@ Arches::~Arches()
 void 
 Arches::problemSetup(const ProblemSpecP& params, 
                      const ProblemSpecP& materials_ps, 
-		     GridP&, SimulationStateP& sharedState)
+		     GridP& grid, SimulationStateP& sharedState)
 {
   d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);
@@ -257,6 +262,27 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
+
+
+  //__________________
+  // Init data analysis module(s) and run problemSetup
+  // note we're just calling a child problemSetup with mostly
+  // the same parameters
+
+  
+  //__________________
+  //This is not the proper way to get our DA.  Scheduler should
+  //pass us a DW pointer on every function call.  I don't think
+  //AnalysisModule should retain the pointer in a field, IMHO.
+  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(!dataArchiver){
+    throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
+  }
+ 
+  d_analysisModule = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
+  if (d_analysisModule) {
+    d_analysisModule->problemSetup(params, grid, sharedState);
+  }
 }
 
 // ****************************************************************************
@@ -346,6 +372,12 @@ Arches::scheduleInitialize(const LevelP& level,
       d_initTurb->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
     else
       d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+  }
+
+  //______________________
+  //Data Analysis
+  if (d_analysisModule) {
+    d_analysisModule->scheduleInitialize(sched, level);
   }
 }
 
@@ -841,6 +873,10 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }
   else {
     d_nlSolver->nonlinearSolve(level, sched);
+  }
+
+  if (d_analysisModule) {
+    d_analysisModule->scheduleDoAnalysis(sched, level);
   }
 }
 
