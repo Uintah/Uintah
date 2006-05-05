@@ -103,7 +103,7 @@ void create_unit_element_mesh()
 
   int local_dimension_elem=(f.number_of_mesh_vertices() || !f.dofs() ? 0 : 1);
   int local_dimension_nodes=f.number_of_mesh_vertices();
-  int local_dimension_add_nodes=f.number_of_mesh_vertices()-f.number_of_vertices();
+  int local_dimension_add_nodes=f.number_of_vertices()-f.number_of_mesh_vertices();
   //  int local_dimension_derivatives=f.dofs()-local_dimension_nodes-local_dimension_add_nodes-local_dimension_elem;
 
   for(int i=0; i<f.dofs(); i++) {
@@ -121,6 +121,8 @@ void create_unit_element_mesh()
   FieldHandle fH(field);
   TextPiostream out_stream("a.fld", Piostream::Write);
   Pio(out_stream, fH);
+
+  //  cerr << "ao " << field->get_basis().size_node_values() << endl;
 }
 
 
@@ -137,9 +139,9 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  
-  for (int currArg = 1; currArg < argc; currArg++)   
-    if (!strcmp(argv[currArg],"-CurveMeshLinear")) 
+  try {
+    for (int currArg = 1; currArg < argc; currArg++)   
+      if (!strcmp(argv[currArg],"-CurveMeshLinear")) 
       create_unit_element_mesh<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double> >();
     else if (!strcmp(argv[currArg],"-CurveMeshQuadratic")) 
       create_unit_element_mesh<CurveMesh<CrvQuadraticLgn<Point> >, CrvQuadraticLgn<double> >();
@@ -189,5 +191,17 @@ main(int argc, char **argv)
   
     else
       cerr << argv[0] << ": Invalid argument " << argv[currArg] << endl;
+  }
+
+  catch(const Exception& e) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << e.message() << std::endl;
+    abort();
+  }
+  catch(...) {
+    std::cerr << "Caught unexpected exception!\n";
+    abort();
+  }
+
   return 0;  
 }    
