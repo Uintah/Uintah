@@ -98,7 +98,15 @@ public:
 
 template<class FIELD>
 void
-create_conductivities(FIELD, ConstantBasis<Tensor>, 
+create_conductivities(FIELD, Tensor &, 
+                      const SetupFEMatrixParam&, 
+                      vector<pair<string, Tensor> >&)
+{
+}
+
+template<class FIELD>
+void
+create_conductivities(FIELD, double &, 
                       const SetupFEMatrixParam&, 
                       vector<pair<string, Tensor> >&)
 {
@@ -106,7 +114,7 @@ create_conductivities(FIELD, ConstantBasis<Tensor>,
 
 template<class FIELD> 
 void
-create_conductivities(FIELD *pField, ConstantBasis<int>, 
+create_conductivities(FIELD *pField, int, 
                       const SetupFEMatrixParam& SFP, 
                       vector<pair<string, Tensor> > &tens)
 {
@@ -182,7 +190,7 @@ public:
     //! Either use supplied tensors, or make an array of identity tensors
     vector<pair<string, Tensor> > tens;
  
-    typename FIELD::basis_type dummy;
+    typename FIELD::basis_type::value_type dummy;
     create_conductivities(pField, dummy, SFP, tens);
 
     //! Cache data values for comparison next time
