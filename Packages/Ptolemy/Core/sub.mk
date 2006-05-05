@@ -32,12 +32,12 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Packages/Ptolemy/Core
 
 SUBDIRS := \
-        $(SRCDIR)/Datatypes
+        $(SRCDIR)/Datatypes \
+        $(SRCDIR)/Comm
 
 ifeq ($(HAVE_JAVA), yes)
  SUBDIRS += \
             $(SRCDIR)/PtolemyInterface \
-            $(SRCDIR)/Comm
 #$(SRCDIR)/jni
 endif
 
