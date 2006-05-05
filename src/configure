@@ -8009,7 +8009,7 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS $extra_cflags"
-         FORTRAN_UNDERSCORE=linux
+         FORTRAN_UNDERSCORE=end
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"

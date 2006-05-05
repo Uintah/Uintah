@@ -1351,7 +1351,7 @@ case $host in
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS $extra_cflags"   
-         FORTRAN_UNDERSCORE=linux
+         FORTRAN_UNDERSCORE=end
          ;;        
       *)
          FFLAGS="$FFLAGS $extra_cflags"
