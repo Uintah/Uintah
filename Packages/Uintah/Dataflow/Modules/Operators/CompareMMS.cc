@@ -124,7 +124,7 @@ CompareMMS::execute()
   string field_name;
   double field_time;
 
-  found_properties = fh->get_property( "varname", field_name );
+  found_properties = fh->get_property( "name", field_name );
   found_properties = fh->get_property( "time",    field_time );
 
   Point spacial_min, spacial_max;

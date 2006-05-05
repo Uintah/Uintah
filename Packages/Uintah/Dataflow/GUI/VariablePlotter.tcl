@@ -430,8 +430,8 @@ itcl_class Uintah_Visualization_VariablePlotter {
             # Get the childsite, so we can add stuff to it.
             set cs [$w.vars.canvas childsite]
 
-            set stuff [$cs configure]
-            puts "stuff = $stuff"
+            #set stuff [$cs configure]
+            #puts "stuff = $stuff"
 
             # Populate the scroll pane with buttons
 #	    puts "var_list length [llength $var_list]"
