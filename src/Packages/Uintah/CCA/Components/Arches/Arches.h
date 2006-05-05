@@ -36,8 +36,9 @@ WARNING
 ****************************************/
 
 #include <sci_defs/petsc_defs.h>
-
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -288,6 +289,8 @@ private:
 
     bool d_recompile;
 
+    AnalysisModule* d_analysisModule;
+    
     bool d_set_initial_condition;
     std::string d_init_inputfile;
     TimeIntegratorLabel* init_timelabel;
