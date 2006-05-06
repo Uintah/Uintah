@@ -27,8 +27,8 @@
 */
 
 
-#ifndef MODELCREATION_CORE_FIELDS_NUMERICALGO_H
-#define MODELCREATION_CORE_FIELDS_NUMERICALGO_H 1
+#ifndef CORE_ALGORITHMS_MATH_MATHALGO_H
+#define CORE_ALGORITHMS_MATH_MATHALGO_H 1
 
 #include <Core/Algorithms/Util/AlgoLibrary.h>
 
@@ -46,17 +46,17 @@
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Algorithms/Numeric/share.h>
+#include <Core/Algorithms/Math/share.h>
 
 namespace SCIRun {
 
 class SparseElement; 
 typedef std::vector<SparseElement> SparseElementVector;
 
-class SCISHARE NumericAlgo : public AlgoLibrary {
+class SCISHARE MathAlgo : public AlgoLibrary {
 
   public:
-    NumericAlgo(ProgressReporter* pr); // normal case
+    MathAlgo(ProgressReporter* pr); // normal case
 
     // Build the FEMMatrix using a variable number of processes
     bool BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable = 0, MatrixHandle GeomToComp = 0, MatrixHandle CompToGeom = 0);
@@ -106,6 +106,5 @@ inline bool operator<(const SparseElement& s1, const SparseElement& s2)
 }
 
 
-} // ModelCreation
-
+} // end SCIRun namespace
 #endif

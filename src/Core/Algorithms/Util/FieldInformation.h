@@ -109,6 +109,12 @@ class SCISHARE FieldInformation {
     bool        make_quadraticdata();
     bool        make_cubichmtdata();    
     
+    bool        make_scalar();
+    bool        make_double();
+    bool        make_float();
+    bool        make_vector();
+    bool        make_tensor();
+    
   private:
     // type names
     std::string field_type;

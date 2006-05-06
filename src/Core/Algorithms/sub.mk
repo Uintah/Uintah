@@ -31,9 +31,9 @@
 SRCDIR := Core/Algorithms
 
 SUBDIRS := \
-        $(SRCDIR)/DataIO                \
+  $(SRCDIR)/DataIO    \
 	$(SRCDIR)/Fields		\
-	$(SRCDIR)/Numeric		\
+	$(SRCDIR)/Math		  \
 	$(SRCDIR)/Geometry		\
 	$(SRCDIR)/Visualization		\
 	$(SRCDIR)/Util			\

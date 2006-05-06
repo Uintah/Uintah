@@ -28,12 +28,11 @@
 
 #include <Core/Algorithms/Util/FieldInformation.h>
 
-using std::string;
-using namespace SCIRun;
+namespace SCIRun {
 
 FieldInformation::FieldInformation(FieldHandle handle)
 {
-  string temp;
+  std::string temp;
   // Get the name of the GenericField class
   // This should give GenericField
   field_type = handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name();
@@ -74,14 +73,14 @@ FieldInformation::FieldInformation(FieldHandle handle)
   container_type_h = container_td->get_h_file_path();
 }
 
-string
+std::string
 FieldInformation::get_field_type()
 {
   return(field_type);
 }
 
 void
-FieldInformation::set_field_type(string type)
+FieldInformation::set_field_type(std::string type)
 {
   field_type = type;
   field_type_h = "";
@@ -89,34 +88,34 @@ FieldInformation::set_field_type(string type)
   if (type == "MultiLevelField") field_type_h = "Core/Datatypes/MultiLevelField.h";
 }
 
-string
+std::string
 FieldInformation::get_mesh_type()
 {
   return(mesh_type);
 }
 
 void
-FieldInformation::set_mesh_type(string type)
+FieldInformation::set_mesh_type(std::string type)
 {
   mesh_type = type;
   mesh_type_h = "";
   if (type == "ScanlineMesh")
   { 
     field_type_h = "Core/Datatypes/ScanlineMesh.h";
-    if (mesh_basis_type.find("Crv") == string::npos)
+    if (mesh_basis_type.find("Crv") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("CrvQuadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("CrvCubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("CrvQuadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("CrvCubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("CrvLinearLgn");      
     }
-    if (basis_type.find("Crv") == string::npos)
+    if (basis_type.find("Crv") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("CrvQuadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("CrvCubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("CrvQuadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("CrvCubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("CrvLinearLgn");      
     }
     set_container_type("vector");    
@@ -124,20 +123,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "ImageMesh") 
   {
     field_type_h = "Core/Datatypes/ImageMesh.h";
-    if (mesh_basis_type.find("Quad") == string::npos)
+    if (mesh_basis_type.find("Quad") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("QuadBiquadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("QuadBicubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("QuadBiquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("QuadBicubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("QuadBilinearLgn");      
     }
-    if (basis_type.find("Quad") == string::npos)
+    if (basis_type.find("Quad") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("QuadBiquadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("QuadBicubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("QuadBiquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("QuadBicubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("QuadBilinearLgn");      
     }
     set_container_type("FData2d");    
@@ -145,20 +144,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "LatVolMesh") 
   {
     field_type_h = "Core/Datatypes/LatVolMesh.h";
-    if (mesh_basis_type.find("Hex") == string::npos)
+    if (mesh_basis_type.find("Hex") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("HexTriquadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("HexTricubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("HexTriquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("HexTricubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("HexTrilinearLgn");      
     }    
-    if (basis_type.find("Hex") == string::npos)
+    if (basis_type.find("Hex") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("HexTriquadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("HexTricubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("HexTriquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("HexTricubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("HexTrilinearLgn");      
     }    
     set_container_type("FData3d");    
@@ -166,20 +165,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "MaskedLatVolMesh") 
   {
     field_type_h = "Core/Datatypes/MaskedLatVolMesh.h";
-    if (mesh_basis_type.find("Hex") == string::npos)
+    if (mesh_basis_type.find("Hex") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("HexTriquadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("HexTricubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("HexTriquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("HexTricubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("HexTrilinearLgn");      
     }    
-    if (basis_type.find("Hex") == string::npos)
+    if (basis_type.find("Hex") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("HexTriquadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("HexTricubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("HexTriquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("HexTricubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("HexTrilinearLgn");      
     }    
     set_container_type("FData3d");    
@@ -188,20 +187,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "StructCurveMesh") 
   {
     field_type_h = "Core/Datatypes/StructCurveMesh.h";
-    if (mesh_basis_type.find("Crv") == string::npos)
+    if (mesh_basis_type.find("Crv") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("CrvQuadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("CrvCubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("CrvQuadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("CrvCubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("CrvLinearLgn");      
     }
-    if (basis_type.find("Crv") == string::npos)
+    if (basis_type.find("Crv") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("CrvQuadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("CrvCubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("CrvQuadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("CrvCubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("CrvLinearLgn");      
     }  
     set_container_type("vector");    
@@ -210,20 +209,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "StructQuadSurfMesh")
   {
     field_type_h = "Core/Datatypes/StructQuadSurfMesh.h";
-    if (mesh_basis_type.find("Quad") == string::npos)
+    if (mesh_basis_type.find("Quad") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("QuadBiquadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("QuadBicubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("QuadBiquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("QuadBicubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("QuadBilinearLgn");      
     }
-    if (basis_type.find("Quad") == string::npos)
+    if (basis_type.find("Quad") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("QuadBiquadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("QuadBicubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("QuadBiquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("QuadBicubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("QuadBilinearLgn");      
     }  
     set_container_type("FData2d");    
@@ -232,20 +231,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "StructHexVolMesh") 
   {
     field_type_h = "Core/Datatypes/StructHexVolMesh.h";
-    if (mesh_basis_type.find("Hex") == string::npos)
+    if (mesh_basis_type.find("Hex") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("HexTriquadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("HexTricubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("HexTriquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("HexTricubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("HexTrilinearLgn");      
     }    
-    if (basis_type.find("Hex") == string::npos)
+    if (basis_type.find("Hex") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("HexTriquadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("HexTricubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("HexTriquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("HexTricubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("HexTrilinearLgn");      
     }        
     set_container_type("FData3d");    
@@ -254,20 +253,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "CurveMesh") 
   {
     field_type_h = "Core/Datatypes/CurveMesh.h";
-    if (mesh_basis_type.find("Crv") == string::npos)
+    if (mesh_basis_type.find("Crv") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("CrvQuadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("CrvCubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("CrvQuadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("CrvCubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("CrvLinearLgn");      
     }
-    if (basis_type.find("Crv") == string::npos)
+    if (basis_type.find("Crv") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("CrvQuadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("CrvCubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("CrvQuadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("CrvCubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("CrvLinearLgn");      
     }
     set_container_type("vector");            
@@ -276,20 +275,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "TriSurfMesh") 
   {
     field_type_h = "Core/Datatypes/TriSurfMesh.h";
-    if (mesh_basis_type.find("Tri") == string::npos)
+    if (mesh_basis_type.find("Tri") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("TriQuadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("TriCubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("TriQuadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("TriCubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("TriLinearLgn");      
     }
-    if (basis_type.find("Tri") == string::npos)
+    if (basis_type.find("Tri") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("TriQuadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("TriCubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("TriQuadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("TriCubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("TriLinearLgn");      
     }       
     set_container_type("vector");            
@@ -297,20 +296,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "QuadSurfMesh")
   {
     field_type_h = "Core/Datatypes/QuadSurfMesh.h";
-    if (mesh_basis_type.find("Quad") == string::npos)
+    if (mesh_basis_type.find("Quad") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("QuadBiquadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("QuadBicubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("QuadBiquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("QuadBicubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("QuadBilinearLgn");      
     }
-    if (basis_type.find("Quad") == string::npos)
+    if (basis_type.find("Quad") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("QuadBiquadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("QuadBicubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("QuadBiquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("QuadBicubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("QuadBilinearLgn");      
     }
     set_container_type("vector");                
@@ -319,20 +318,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "TetVolMesh")
   {
     field_type_h = "Core/Datatypes/TetVolMesh.h";
-    if (mesh_basis_type.find("Tet") == string::npos)
+    if (mesh_basis_type.find("Tet") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("TetQuadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("TetCubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("TetQuadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("TetCubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("TetLinearLgn");      
     }
-    if (basis_type.find("Tet") == string::npos)
+    if (basis_type.find("Tet") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("TetQuadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("TetCubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("TetQuadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("TetCubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("TetLinearLgn");      
     }  
     set_container_type("vector");                
@@ -341,20 +340,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "PrismVolMesh") 
   {
     field_type_h = "Core/Datatypes/PrismVolMesh.h";
-    if (mesh_basis_type.find("Prism") == string::npos)
+    if (mesh_basis_type.find("Prism") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("PrismQuadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("PrismCubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("PrismQuadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("PrismCubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("PrismLinearLgn");      
     }
-    if (basis_type.find("Prism") == string::npos)
+    if (basis_type.find("Prism") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("PrismQuadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("PrismCubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("PrismQuadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("PrismCubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("PrismLinearLgn");      
     }      
     set_container_type("vector");            
@@ -363,20 +362,20 @@ FieldInformation::set_mesh_type(string type)
   if (type == "HexVolMesh") 
   {
     field_type_h = "Core/Datatypes/HexVolMesh.h";
-    if (mesh_basis_type.find("Hex") == string::npos)
+    if (mesh_basis_type.find("Hex") == std::string::npos)
     {
-      if (mesh_basis_type.find("uadraticLgn") != string::npos) set_mesh_basis_type("HexTriquadraticLgn");
-      else if (mesh_basis_type.find("ubicHmt") != string::npos) set_mesh_basis_type("HexTricubicHmt");
-      else if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
-      else if (mesh_basis_type.find("Constant") != string::npos) set_mesh_basis_type("ConstantBasis");
+      if (mesh_basis_type.find("uadraticLgn") != std::string::npos) set_mesh_basis_type("HexTriquadraticLgn");
+      else if (mesh_basis_type.find("ubicHmt") != std::string::npos) set_mesh_basis_type("HexTricubicHmt");
+      else if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
+      else if (mesh_basis_type.find("Constant") != std::string::npos) set_mesh_basis_type("ConstantBasis");
       else set_mesh_basis_type("HexTrilinearLgn");      
     }    
-    if (basis_type.find("Hex") == string::npos)
+    if (basis_type.find("Hex") == std::string::npos)
     {
-      if (basis_type.find("uadraticLgn") != string::npos) set_basis_type("HexTriquadraticLgn");
-      else if (basis_type.find("ubicHmt") != string::npos) set_basis_type("HexTricubicHmt");
-      else if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
-      else if (basis_type.find("Constant") != string::npos) set_basis_type("ConstantBasis");
+      if (basis_type.find("uadraticLgn") != std::string::npos) set_basis_type("HexTriquadraticLgn");
+      else if (basis_type.find("ubicHmt") != std::string::npos) set_basis_type("HexTricubicHmt");
+      else if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
+      else if (basis_type.find("Constant") != std::string::npos) set_basis_type("ConstantBasis");
       else set_basis_type("HexTrilinearLgn");      
     }        
     set_container_type("vector");            
@@ -386,23 +385,23 @@ FieldInformation::set_mesh_type(string type)
   {
     field_type_h = "Core/Datatypes/PointCloudMesh.h";
     
-    if (mesh_basis_type.find("NoData") != string::npos) set_mesh_basis_type("NoDataBasis");
+    if (mesh_basis_type.find("NoData") != std::string::npos) set_mesh_basis_type("NoDataBasis");
     else set_mesh_basis_type("ConstantBasis");
 
-    if (basis_type.find("NoData") != string::npos) set_basis_type("NoDataBasis");
+    if (basis_type.find("NoData") != std::string::npos) set_basis_type("NoDataBasis");
     else set_basis_type("ConstantBasis");
     set_container_type("vector");            
   }
 }
 
-string
+std::string
 FieldInformation::get_mesh_basis_type()
 {
   return(mesh_basis_type);
 }
 
 void
-FieldInformation::set_mesh_basis_type(string type)
+FieldInformation::set_mesh_basis_type(std::string type)
 {
   mesh_basis_type = type;
   
@@ -430,28 +429,28 @@ FieldInformation::set_mesh_basis_type(string type)
   if (type == "QuadBicubicHmt")      mesh_basis_type_h = "Core/Basis/QuadbicubicHmt.h";
 }
 
-string
+std::string
 FieldInformation::get_point_type()
 {
   return(point_type);
 }
 
 void
-FieldInformation::set_point_type(string type)
+FieldInformation::set_point_type(std::string type)
 {
   point_type = type;
   point_type_h = "";
 }
 
 
-string
+std::string
 FieldInformation::get_basis_type()
 {
   return(basis_type);
 }
 
 void
-FieldInformation::set_basis_type(string type)
+FieldInformation::set_basis_type(std::string type)
 {
   basis_type = type;
   basis_type_h = "";
@@ -478,14 +477,14 @@ FieldInformation::set_basis_type(string type)
 }
 
 
-string
+std::string
 FieldInformation::get_data_type()
 {
   return(data_type);
 }
 
 void
-FieldInformation::set_data_type(string type)
+FieldInformation::set_data_type(std::string type)
 {
   data_type = type;
   data_type_h = "";
@@ -493,14 +492,14 @@ FieldInformation::set_data_type(string type)
   if (type == "Tensor") data_type_h = "Core/Geometry/Tensor.h";
 }
 
-string
+std::string
 FieldInformation::get_container_type()
 {
   return(container_type);
 }
 
 void
-FieldInformation::set_container_type(string type)
+FieldInformation::set_container_type(std::string type)
 {
   container_type = type;
   container_type_h = "";
@@ -509,15 +508,15 @@ FieldInformation::set_container_type(string type)
 }
 
 
-string
+std::string
 FieldInformation::get_field_name()
 {
   // Deal with some SCIRun design flaw
-  string meshptr = "";
-  if ((container_type.find("2d") != string::npos)||(container_type.find("3d") != string::npos)) 
+  std::string meshptr = "";
+  if ((container_type.find("2d") != std::string::npos)||(container_type.find("3d") != std::string::npos)) 
     meshptr = "," + mesh_type + "<" + mesh_basis_type + "<" + point_type + "> " + "> ";
     
-  string field_template = field_type + "<" + mesh_type + "<" + 
+  std::string field_template = field_type + "<" + mesh_type + "<" + 
     mesh_basis_type + "<" + point_type + "> " + "> " + "," +
     basis_type + "<" + data_type + "> " + "," + container_type + "<" +
     data_type + meshptr + "> " + "> ";
@@ -525,7 +524,7 @@ FieldInformation::get_field_name()
   return(field_template);
 }
 
-string
+std::string
 FieldInformation::get_field_filename()
 {
   return(DynamicAlgoBase::to_filename(get_field_name()));
@@ -577,26 +576,26 @@ FieldInformation::is_constantdata()
 bool
 FieldInformation::is_lineardata()
 {
-  return((basis_type.find("inear") != string::npos));
+  return((basis_type.find("inear") != std::string::npos));
 }
 
 bool
 FieldInformation::is_nonlineardata()
 {
-  return( (basis_type.find("uadratic") != string::npos)||
-          (basis_type.find("ubicHmt") != string::npos));
+  return( (basis_type.find("uadratic") != std::string::npos)||
+          (basis_type.find("ubicHmt") != std::string::npos));
 }
 
 bool
 FieldInformation::is_quadraticdata()
 {
-  return ((basis_type.find("uadratic") != string::npos));
+  return ((basis_type.find("uadratic") != std::string::npos));
 }
 
 bool
 FieldInformation::is_cubichmtdata()
 {
-  return ((basis_type.find("ubicHmt") != string::npos));
+  return ((basis_type.find("ubicHmt") != std::string::npos));
 }
 
 bool
@@ -608,26 +607,26 @@ FieldInformation::is_constantmesh()
 bool
 FieldInformation::is_linearmesh()
 {
-  return((mesh_basis_type.find("inear") != string::npos));
+  return((mesh_basis_type.find("inear") != std::string::npos));
 }
 
 bool
 FieldInformation::is_nonlinearmesh()
 {
-  return( (mesh_basis_type.find("uadratic") != string::npos)||
-          (mesh_basis_type.find("ubicHmt") != string::npos));
+  return( (mesh_basis_type.find("uadratic") != std::string::npos)||
+          (mesh_basis_type.find("ubicHmt") != std::string::npos));
 }
 
 bool
 FieldInformation::is_quadraticmesh()
 {
-  return ((mesh_basis_type.find("uadratic") != string::npos));
+  return ((mesh_basis_type.find("uadratic") != std::string::npos));
 }
 
 bool
 FieldInformation::is_cubichmtmesh()
 {
-  return ((mesh_basis_type.find("ubicHmt") != string::npos));
+  return ((mesh_basis_type.find("ubicHmt") != std::string::npos));
 }
 
 bool
@@ -669,7 +668,7 @@ FieldInformation::is_dvt()
 bool
 FieldInformation::is_structuredmesh()
 {
-  return((mesh_type.find("Struct")!=string::npos));
+  return((mesh_type.find("Struct")!=std::string::npos));
 }
 
 bool
@@ -759,6 +758,37 @@ FieldInformation::make_cubichmtdata()
 }
 
 bool
+FieldInformation::make_scalar()
+{
+  data_type = "double";
+}
+
+bool
+FieldInformation::make_float()
+{
+  data_type = "float";
+}
+
+bool
+FieldInformation::make_double()
+{
+  data_type = "double";
+}
+
+bool
+FieldInformation::make_vector()
+{
+  data_type = "Vector";
+}
+
+bool
+FieldInformation::make_tensor()
+{
+  data_type = "Tensor";
+}
+
+
+bool
 FieldInformation::is_pointcloud()
 {
   if (mesh_type == "PointCloudMesh") return (true);
@@ -787,4 +817,6 @@ FieldInformation::is_volume()
       (mesh_type == "StructHexVolMesh")||(mesh_type == "MaskedLatVolMesh")) return (true);
   return false;  
 }
+
+} // end namespace
 
