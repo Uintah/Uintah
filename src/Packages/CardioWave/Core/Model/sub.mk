@@ -43,7 +43,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Packages/ModelCreation/Core/Fields \
         Packages/ModelCreation/Core/Converter \
         Packages/ModelCreation/Core/DataIO \
-        Core/Algorithms/Numeric \
+        Core/Algorithms/Math \
 
                 
 LIBS :=

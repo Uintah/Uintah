@@ -33,7 +33,7 @@
 #include <Packages/CardioWave/Core/Model/BuildMembraneTable.h>
 #include <Packages/CardioWave/Core/Model/BuildStimulusTable.h>
 #include <Core/Datatypes/MatrixOperations.h>
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
 
 #include <fstream>
 
@@ -56,7 +56,7 @@ bool ModelAlgo::DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle Membr
 
 bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
 {
-  SCIRun::NumericAlgo numericalgo(pr_);
+  SCIRun::MathAlgo numericalgo(pr_);
   int num_totalnodes = num_volumenodes + num_synnodes;
   
   // Build a vector for the surface areas
@@ -194,7 +194,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // Forward the ProgressReporter so everything can forward an error
 
   ModelCreation::FieldsAlgo  fieldsalgo(pr_);
-  SCIRun::NumericAlgo numericalgo(pr_);
+  SCIRun::MathAlgo numericalgo(pr_);
   ModelCreation::ConverterAlgo converteralgo(pr_);
   ModelCreation::DataIOAlgo  dataioalgo(pr_);
 
