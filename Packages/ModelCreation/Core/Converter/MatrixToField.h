@@ -26,57 +26,22 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  TriSurfPhaseFilter.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
+#ifndef MODELCREATION_CORE_CONVERTER_MATRIXTOFIELD_H
+#define MODELCREATION_CORE_CONVERTER_MATRIXTOFIELD_H 1
 
-#include <Dataflow/Network/Ports/FieldPort.h>
-
-#include <Core/Datatypes/Field.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class TriSurfPhaseFilter : public Module {
-  public:
-    TriSurfPhaseFilter(GuiContext*);
-    virtual void execute();   
+class MatrixToFieldAlgo 
+{
+public:
+  bool MatrixToField(ProgressReporter *pr, MatrixHandle input, FieldHandle& output,std::string datalocation);
 };
 
+} // end namespace ModelCreation
 
-DECLARE_MAKER(TriSurfPhaseFilter)
-TriSurfPhaseFilter::TriSurfPhaseFilter(GuiContext* ctx)
-  : Module("TriSurfPhaseFilter", ctx, Source, "FieldsData", "ModelCreation")
-{
-}
-
-void TriSurfPhaseFilter::execute()
-{
-  FieldHandle input, output;
-  FieldHandle phaseline, phasepoint;
-
-  if (!(get_input_handle("PhaseField",input,true))) return;
-  
-  FieldsAlgo algo(this);
-  
-  if(!(algo.TriSurfPhaseFilter(input,output,phaseline,phasepoint))) return;
- 
-  send_output_handle("PhaseField",output,true);
-  send_output_handle("PhaseLine",phaseline,true);
-  send_output_handle("PhasePoint",phasepoint,true);
-
-}
-
-} // End namespace ModelCreation
-
-
+#endif 

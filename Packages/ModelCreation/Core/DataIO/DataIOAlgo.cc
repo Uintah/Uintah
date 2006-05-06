@@ -174,9 +174,95 @@ bool DataIOAlgo::ReadNrrd(std::string filename, NrrdDataHandle& nrrd, std::strin
 }
 
 
+bool DataIOAlgo::ReadColorMap(std::string filename, ColorMapHandle& colormap, std::string importer)
+{
+  if (importer != "")
+  {
+    error("Error no external importers are defined for colormaps");
+    return (false);
+  }
+  
+  Piostream *stream = auto_istream(filename, pr_);
+  if (!stream)
+  {
+    error("Error reading file '" + filename + "'.");
+    return (false);
+  }
+    
+  // Read the file
+  Pio(*stream, colormap);
+  if (!colormap.get_rep() || stream->error())
+  {
+    error("Error reading data from file '" + filename +"'.");
+    delete stream;
+    return (false);
+  }
+     
+  delete stream;
+  return (true);
+}
+
+bool DataIOAlgo::ReadColorMap2(std::string filename, ColorMap2Handle& colormap, std::string importer)
+{
+  if (importer != "")
+  {
+    error("Error no external importers are defined for colormaps");
+    return (false);
+  }
+  
+  Piostream *stream = auto_istream(filename, pr_);
+  if (!stream)
+  {
+    error("Error reading file '" + filename + "'.");
+    return (false);
+  }
+    
+  // Read the file
+  Pio(*stream, colormap);
+  if (!colormap.get_rep() || stream->error())
+  {
+    error("Error reading data from file '" + filename +"'.");
+    delete stream;
+    return (false);
+  }
+     
+  delete stream;
+  return (true);
+}
+
+
+bool DataIOAlgo::ReadPath(std::string filename, PathHandle& path, std::string importer)
+{
+  if (importer != "")
+  {
+    error("Error no external importers are defined for colormaps");
+    return (false);
+  }
+  
+  Piostream *stream = auto_istream(filename, pr_);
+  if (!stream)
+  {
+    error("Error reading file '" + filename + "'.");
+    return (false);
+  }
+    
+  // Read the file
+  Pio(*stream, path);
+  if (!path.get_rep() || stream->error())
+  {
+    error("Error reading data from file '" + filename +"'.");
+    delete stream;
+    return (false);
+  }
+     
+  delete stream;
+  return (true);
+}
+
+
 bool DataIOAlgo::WriteField(std::string filename, FieldHandle& field, std::string exporter)
 {
-  if (exporter == "text")
+  if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
     stream = auto_ostream(filename, "Text", pr_);
@@ -229,7 +315,7 @@ bool DataIOAlgo::WriteField(std::string filename, FieldHandle& field, std::strin
 
 bool DataIOAlgo::WriteMatrix(std::string filename, MatrixHandle& matrix, std::string exporter)
 {
-  if (exporter == "text")
+  if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
     stream = auto_ostream(filename, "Text", pr_);
@@ -282,7 +368,7 @@ bool DataIOAlgo::WriteMatrix(std::string filename, MatrixHandle& matrix, std::st
 
 bool DataIOAlgo::WriteBundle(std::string filename, BundleHandle& bundle, std::string exporter)
 {
-  if (exporter == "text")
+  if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
     stream = auto_ostream(filename, "Text", pr_);
@@ -325,7 +411,7 @@ bool DataIOAlgo::WriteBundle(std::string filename, BundleHandle& bundle, std::st
 
 bool DataIOAlgo::WriteNrrd(std::string filename, NrrdDataHandle& nrrd, std::string exporter)
 {
-  if (exporter == "text")
+  if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
     stream = auto_ostream(filename, "Text", pr_);
@@ -364,4 +450,130 @@ bool DataIOAlgo::WriteNrrd(std::string filename, NrrdDataHandle& nrrd, std::stri
   }
 }
 
+
+bool DataIOAlgo::WriteColorMap(std::string filename, ColorMapHandle& colormap, std::string exporter)
+{
+  if ((exporter == "text")||(exporter == "Text"))
+  {
+    Piostream* stream;
+    stream = auto_ostream(filename, "Text", pr_);
+    if (stream->error())
+    {
+      error("Could not open file for writing" + filename);
+      return (false);
+    }
+    else
+    {
+      // Write the file
+      Pio(*stream, colormap);
+    } 
+    delete stream;
+  }
+  else if (exporter == "")
+  {
+    Piostream* stream;
+    stream = auto_ostream(filename, "Binary", pr_);
+    if (stream->error())
+    {
+      error("Could not open file for writing" + filename);
+      return (false);
+    }
+    else
+    {
+      // Write the file
+      Pio(*stream, colormap);
+    } 
+    delete stream;  
+  }
+  else
+  {
+    error("No exporters are supported for colormaps");
+    return (false);
+  }
+}
+
+bool DataIOAlgo::WriteColorMap2(std::string filename, ColorMap2Handle& colormap, std::string exporter)
+{
+  if ((exporter == "text")||(exporter == "Text"))
+  {
+    Piostream* stream;
+    stream = auto_ostream(filename, "Text", pr_);
+    if (stream->error())
+    {
+      error("Could not open file for writing" + filename);
+      return (false);
+    }
+    else
+    {
+      // Write the file
+      Pio(*stream, colormap);
+    } 
+    delete stream;
+  }
+  else if (exporter == "")
+  {
+    Piostream* stream;
+    stream = auto_ostream(filename, "Binary", pr_);
+    if (stream->error())
+    {
+      error("Could not open file for writing" + filename);
+      return (false);
+    }
+    else
+    {
+      // Write the file
+      Pio(*stream, colormap);
+    } 
+    delete stream;  
+  }
+  else
+  {
+    error("No exporters are supported for colormaps");
+    return (false);
+  }
+}
+
+bool DataIOAlgo::WritePath(std::string filename, PathHandle& path, std::string exporter)
+{
+  if ((exporter == "text")||(exporter == "Text"))
+  {
+    Piostream* stream;
+    stream = auto_ostream(filename, "Text", pr_);
+    if (stream->error())
+    {
+      error("Could not open file for writing" + filename);
+      return (false);
+    }
+    else
+    {
+      // Write the file
+      Pio(*stream, path);
+    } 
+    delete stream;
+  }
+  else if (exporter == "")
+  {
+    Piostream* stream;
+    stream = auto_ostream(filename, "Binary", pr_);
+    if (stream->error())
+    {
+      error("Could not open file for writing" + filename);
+      return (false);
+    }
+    else
+    {
+      // Write the file
+      Pio(*stream, path);
+    } 
+    delete stream;  
+  }
+  else
+  {
+    error("No exporters are supported for paths");
+    return (false);
+  }
+}
+
+
 } // end namespace
+

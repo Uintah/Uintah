@@ -58,7 +58,7 @@ bool ScaleFieldAlgo::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHa
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ScaleField."+fi.get_field_filename()+".",
+    "ALGOScaleField."+fi.get_field_filename()+".",
     "ScaleFieldAlgo","ScaleFieldAlgoT",
     fi.get_field_name());
 

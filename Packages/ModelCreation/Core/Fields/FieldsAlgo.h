@@ -32,17 +32,8 @@
 
 #include <Core/Algorithms/Util/AlgoLibrary.h>
 
-#include <Core/Bundle/Bundle.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/NrrdData.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/DenseMatrix.h>
-
-#include <Dataflow/Network/Module.h>
-
 #include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sstream>
 #include <sgi_stl_warnings_on.h>
 
 namespace ModelCreation {
@@ -60,25 +51,19 @@ class FieldsAlgo : public AlgoLibrary {
     
     // ManageFieldData split into two parts
     // Need to upgrade code for these when we are done with HO integration
-    bool SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype);
+    bool SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype = false);
     bool GetFieldData(FieldHandle input, MatrixHandle& data);
 	
     // Due to some oddity in the FieldDesign information like this cannot be queried directly
     bool GetFieldInfo(FieldHandle input, int& numnodes, int& numelems);
     
+    // ClipFieldBySelectionMask:
+    // Clip using a selectionmask
     bool ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle SelectionMask,MatrixHandle &interpolant);
     
-
     // Change where the data is located
     bool FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method);
     bool FieldDataElemToNode(FieldHandle input, FieldHandle& output, std::string method);
-
-    bool FilterFieldElements(FieldHandle input, FieldHandle& output, bool removezerosize = true, bool removedegenerate = true, bool removedouble = true);
-
-    // Check properties of surface field
-    bool IsClosedSurface(FieldHandle input);
-    bool IsClockWiseSurface(FieldHandle input);
-    bool IsCounterClockWiseSurface(FieldHandle input);
   
     // BundleToFieldArray
     // Created an vector of fields out of the bundle type
@@ -88,11 +73,11 @@ class FieldsAlgo : public AlgoLibrary {
     // Similar to ChangeBasis but do not do the interpolation stuff
     bool ClearAndChangeFieldBasis(FieldHandle input,FieldHandle& output, std::string newbasis);
 
-    // CompartmentBoundary
+    // DomainBoundary
     // Extract the boundaries between compartments in a volume or surface field
     // The data needs to be on the elements. This function only extracts internal
     // boundaries, use field boundary to extract the outer surfaces.
-    bool CompartmentBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+    bool DomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 
     // ConvertToTetVol:
     // This function converts an hexvol or latvol into a tetvol. The functionality
@@ -144,12 +129,6 @@ class FieldsAlgo : public AlgoLibrary {
     // needed.
     bool MakeEditable(FieldHandle input, FieldHandle& output);
 
-    // MatrixToField: Convert the Field into a Matrix
-    bool MatrixToField(MatrixHandle input, FieldHandle& output, std::string datalocation);
-
-    // NrrdToField: Convert the Field into a Matrix
-    bool NrrdToField(NrrdDataHandle input, FieldHandle& output, std::string datalocation);
-
     // MergeFields: Merge a set of fields of the same type together into one
     // new output field. If mergenodes is true, nodes will be merge if the
     // distance between them is smaller than tolerance  
@@ -158,7 +137,7 @@ class FieldsAlgo : public AlgoLibrary {
     // MergeNodes: Merge the nodes in a field together if the distance between
     // them is smaller than tolerance.
     bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true, bool matchvalue = true);
-
+ 
     // ScaleField:
     // Scales FieldData and MeshData, used to change units properly
     bool ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh);

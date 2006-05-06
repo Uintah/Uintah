@@ -27,14 +27,14 @@
 */
 
 /*
- * FILE: StreamMatrix.h
+ * FILE: StreamMatrixAlgo.h
  * AUTH: Jeroen G Stinstra
  * DATE: 23 MAR 2005
  */
  
  
-#ifndef PACKAGES_MODELCREATION_CORE_DATASTREAMING_STREAMMATRIX_H
-#define PACKAGES_MODELCREATION_CORE_DATASTREAMING_STREAMMATRIX_H 1
+#ifndef PACKAGES_MODELCREATION_CORE_DATASTREAMING_STREAMMATRIXALGO_H
+#define PACKAGES_MODELCREATION_CORE_DATASTREAMING_STREAMMATRIXALGO_H 1
 
 #include <Core/Thread/Time.h>
 #include <Core/Datatypes/Matrix.h>
@@ -49,20 +49,20 @@
 
 namespace ModelCreation {
 
-class StreamMatrix {
+class StreamMatrixAlgo {
 
   public:
   
     // Constructor of the datastreaming class
-    StreamMatrix(SCIRun::ProgressReporter* pr);
-	  StreamMatrix(SCIRun::ProgressReporter* pr, std::string filename);
+    StreamMatrixAlgo(SCIRun::ProgressReporter* pr);
+	  StreamMatrixAlgo(SCIRun::ProgressReporter* pr, std::string filename);
     
     // Destructor of the datastreaming class
-    virtual ~StreamMatrix();
+    virtual ~StreamMatrixAlgo();
     
     // Open and close file for datastreaming
-    void open(std::string filename);
-    void close();
+    bool open(std::string filename);
+    bool close();
 	
     // Get the essential information from the data file
 	  int         get_numrows();
@@ -87,7 +87,6 @@ class StreamMatrix {
 	
     
   private:  
-
 	  // Remove white spaces from data when reading the header file
     std::string remspaces(std::string str); 
 	

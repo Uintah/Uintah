@@ -74,7 +74,7 @@ bool ConvertToTriSurfAlgo::ConvertToTriSurf(ProgressReporter *pr, FieldHandle in
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ConvertToTriSurf."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOConvertToTriSurf."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "ConvertToTriSurfAlgo",algotype,
     fi.get_field_name() + "," + fo.get_field_name());
 

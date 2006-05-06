@@ -37,6 +37,9 @@
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Geom/Path.h>
+#include <Core/Geom/ColorMap.h>
+#include <Core/Volume/ColorMap2.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
@@ -65,6 +68,16 @@ public:
 
   bool ReadBundle(std::string filename, BundleHandle& matrix, std::string importer = "");
   bool WriteBundle(std::string filename, BundleHandle& matrix, std::string exporter = "");
+  
+  bool ReadColorMap(std::string filename, ColorMapHandle& matrix, std::string importer = "");
+  bool WriteColorMap(std::string filename, ColorMapHandle& matrix, std::string exporter = "");
+
+  bool ReadColorMap2(std::string filename, ColorMap2Handle& matrix, std::string importer = "");
+  bool WriteColorMap2(std::string filename, ColorMap2Handle& matrix, std::string exporter = "");
+
+  bool ReadPath(std::string filename, PathHandle& matrix, std::string importer = "");
+  bool WritePath(std::string filename, PathHandle& matrix, std::string exporter = "");
+  
 };
 
 } // end namespace

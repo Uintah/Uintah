@@ -6,9 +6,9 @@ SUBDIRS := \
         $(SRCDIR)/Converter \
         $(SRCDIR)/DataIO \
         $(SRCDIR)/Datatypes \
+        $(SRCDIR)/DataStreaming \
         $(SRCDIR)/Algorithms \
         $(SRCDIR)/Fields \
-        $(SRCDIR)/Numeric \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

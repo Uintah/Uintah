@@ -43,9 +43,6 @@ class ApplyMappingMatrixAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool ApplyMappingMatrix(ProgressReporter *pr, FieldHandle fsrc, FieldHandle fdst, FieldHandle& output,MatrixHandle mapping);
-  virtual bool testinput(FieldHandle fsrc, FieldHandle fdst);
-
-  static AlgoList<ApplyMappingMatrixAlgo> precompiled_;
 };
 
 
@@ -54,7 +51,6 @@ class ApplyMappingMatrixAlgoT : public ApplyMappingMatrixAlgo
 {
 public:
   virtual bool ApplyMappingMatrix(ProgressReporter *pr, FieldHandle fsrc, FieldHandle fdst, FieldHandle& output,MatrixHandle mapping);
-  virtual bool testinput(FieldHandle fsrc, FieldHandle fdst);
 };
 
 
@@ -171,13 +167,6 @@ bool ApplyMappingMatrixAlgoT<FSRC, FDST, FOUT>::ApplyMappingMatrix(ProgressRepor
 	fdst->copy_properties(output.get_rep());
   return (true);
 }
-
-template <class FSRC, class FDST, class FOUT>
-bool ApplyMappingMatrixAlgoT<FSRC, FDST, FOUT>::testinput(FieldHandle fsrc, FieldHandle fdst)
-{
-  return((dynamic_cast<FSRC*>(fsrc.get_rep()) != 0)&&(dynamic_cast<FDST*>(fdst.get_rep()) != 0));
-}
-
 
 } // end namespace ModelCreation
 

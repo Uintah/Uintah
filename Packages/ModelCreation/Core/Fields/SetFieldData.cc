@@ -27,14 +27,22 @@
 */
 
 #include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
+#include <Packages/ModelCreation/Core/Fields/GetFieldInfo.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-CompileInfoHandle
-SetFieldDataAlgo::get_compile_info(FieldHandle field, MatrixHandle matrix,int numnodes, int numelements,  bool keepscalartype)
+bool SetFieldDataAlgo::SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle matrix, bool keepscalartype)
 {
+
+  GetFieldInfoAlgo falgo;
+  int numnodes, numelements;
+  if(!(falgo.GetFieldInfo(pr,input,numnodes,numelements)))
+  {
+    pr->error("Could not obtain dimensions of field");
+    return (false);
+  }
 
   std::string algo_type = "Scalar";  
   if ((matrix->nrows() == 3)&&((matrix->ncols()== numnodes)||(matrix->ncols()== numelements))) algo_type = "Vector";
@@ -42,45 +50,31 @@ SetFieldDataAlgo::get_compile_info(FieldHandle field, MatrixHandle matrix,int nu
   if (((matrix->nrows() == 6)||(matrix->nrows() == 9))&&((matrix->ncols()== numnodes)||(matrix->ncols()== numelements))) algo_type = "Tensor";
   if ((matrix->ncols() == 6)||(matrix->ncols() == 9)) algo_type = "Tensor";
 
-  std::string algo_name = "SetField" + algo_type + "DataAlgoT";
-  std::string algo_base = "SetFieldDataAlgo";
-
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  std::string include_path(TypeDescription::cc_to_h(__FILE__));
+  FieldInformation fi(input);
+  if (keepscalartype == false) if (algo_type ==  "Scalar") fi.make_double();
+  if (algo_type ==  "Vector") fi.make_vector();
+  if (algo_type ==  "Tensor") fi.make_tensor();
   
-  const SCIRun::TypeDescription *basistype = field->get_type_description(Field::BASIS_TD_E);
-  const SCIRun::TypeDescription::td_vec *basis_subtype = basistype->get_sub_type();
-  const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
-  
-  std::string datatype = data_type->get_name();
-  
-  if ((algo_type == "Scalar")&&(keepscalartype == false)) datatype = "double";
-  if (algo_type == "Vector") datatype = "Vector";
-  if (algo_type == "Tensor") datatype = "Tensor";
-  
-  std::string outputtype = field->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-                           field->get_type_description(Field::MESH_TD_E)->get_name() + "," +
-                           field->get_type_description(Field::BASIS_TD_E)->get_similar_name(datatype, 0,"<", " >") + "," +
-                           field->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", " >") + " > ";
-  
-  
-  CompileInfoHandle ci = 
-    scinew CompileInfo(algo_name + "." +
-                       to_filename(outputtype) + ".",
-                       algo_base, 
-                       algo_name, 
-                       outputtype);
-                       
+  CompileInfoHandle ci = scinew CompileInfo("ALGOSetField" + algo_type + "DataAlgoT." + fi.get_field_filename() + ".",
+                       "SetFieldDataAlgo", "SetField" + algo_type + "DataAlgoT", fi.get_field_name());
 
   // Add in the include path to compile this obj
-  ci->add_include(include_path);
+  ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");   
   ci->add_namespace("SCIRun");
   
-  
-  const SCIRun::TypeDescription *fsrc = field->get_type_description();
-  fsrc->fill_compile_info(ci.get_rep());
-  return(ci);
+  fi.fill_compile_info(ci);
+
+  SCIRun::Handle<SetFieldDataAlgo> algo;
+  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  {
+    pr->compile_error(ci->filename_);
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    return(false);
+  }
+
+  return(algo->SetFieldData(pr,input,output,matrix,keepscalartype));
 }
 
 } // namespace ModelCreation
+

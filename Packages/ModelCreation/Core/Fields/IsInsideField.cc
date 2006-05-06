@@ -61,7 +61,7 @@ bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, F
   fo.set_data_type("double");
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "IsInsideField."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
+    "ALGOIsInsideField."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
     "IsInsideFieldAlgo","IsInsideFieldAlgoT",
     fi.get_field_name() + "," + fo.get_field_name() + "," + fobj.get_field_name() );
 

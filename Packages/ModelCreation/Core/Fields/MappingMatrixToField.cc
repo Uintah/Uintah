@@ -60,7 +60,7 @@ bool MappingMatrixToFieldAlgo::MappingMatrixToField(ProgressReporter *pr, FieldH
 
   // Setup dynamic files
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "MappingMatrixToField."+fi.get_field_filename()+"."+fo.get_field_filename()+"."+fo2.get_field_filename()+".",
+    "ALGOMappingMatrixToField."+fi.get_field_filename()+"."+fo.get_field_filename()+"."+fo2.get_field_filename()+".",
     "MappingMatrixToFieldAlgo","MappingMatrixToFieldAlgoT",
     fi.get_field_name() + "," + fo.get_field_name() + "," + fo2.get_field_name() );
 

@@ -75,7 +75,7 @@ bool DistanceFieldCellAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   if (fo.is_nodata()) fo.make_lineardata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "DistanceFieldCell."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
+    "ALGODistanceFieldCell."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
     "DistanceFieldCellAlgo","DistanceFieldCellAlgoT",
     fi.get_field_name() + "," + fo.get_field_name() + "," + fobj.get_field_name() + "," + fdobj.get_field_name() );
 

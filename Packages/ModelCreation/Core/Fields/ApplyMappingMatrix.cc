@@ -61,16 +61,11 @@ bool ApplyMappingMatrixAlgo::ApplyMappingMatrix(ProgressReporter *pr, FieldHandl
   }
 
   fi_out.set_data_type(fi_src.get_data_type());
-  
-  for(size_t p =0; p< precompiled_.size(); p++)
-  {
-    if (precompiled_[p]->testinput(fsrc,fdst)) return(precompiled_[p]->ApplyMappingMatrix(pr,fsrc,fdst,output,mapping));
-  }
 
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ApplyMappingMatrix."+fi_src.get_field_filename()+"."+fi_dst.get_field_filename()+"."+fi_out.get_field_filename()+".",
+    "ALGOApplyMappingMatrix."+fi_src.get_field_filename()+"."+fi_dst.get_field_filename()+"."+fi_out.get_field_filename()+".",
     "ApplyMappingMatrixAlgo","ApplyMappingMatrixAlgoT",
     fi_src.get_field_name() + "," + fi_dst.get_field_name() + "," + fi_out.get_field_name());
 
@@ -94,11 +89,5 @@ bool ApplyMappingMatrixAlgo::ApplyMappingMatrix(ProgressReporter *pr, FieldHandl
   return(algo->ApplyMappingMatrix(pr,fsrc,fdst,output,mapping));
 }
 
-bool ApplyMappingMatrixAlgo::testinput(FieldHandle fsrc,FieldHandle fdst)
-{
-  return (false);
-}
-
-AlgoList<ApplyMappingMatrixAlgo> ApplyMappingMatrixAlgo::precompiled_;
 
 } // End namespace ModelCreation

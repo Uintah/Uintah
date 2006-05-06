@@ -13,11 +13,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Core/Fields
 
 SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
-            $(SRCDIR)/BuildMembraneTable.cc\
             $(SRCDIR)/ClearAndChangeFieldBasis.cc\
             $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
-            $(SRCDIR)/CompartmentBoundary.cc\
+            $(SRCDIR)/DomainBoundary.cc\
             $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/DistanceToField.cc\
             $(SRCDIR)/DistanceField.cc\
@@ -42,8 +41,6 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/TransformField.cc\
             $(SRCDIR)/ToPointCloud.cc\
             $(SRCDIR)/Unstructure.cc\
-            $(SRCDIR)/TriSurfPhaseFilter.cc\
-            $(SRCDIR)/TracePoints.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \

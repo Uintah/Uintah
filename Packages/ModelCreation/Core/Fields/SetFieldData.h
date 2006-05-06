@@ -50,10 +50,7 @@ using namespace std;
 class SetFieldDataAlgo : public SCIRun::DynamicAlgoBase
 {
   public:
-  
-    virtual bool setfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data) = 0;  
-    
-    static SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle field,MatrixHandle matrix,int numnodes, int numelements, bool keepscalartype = true);  
+    virtual bool SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data, bool keepscalartype);  
 };
 
 
@@ -61,50 +58,47 @@ template <class FIELD>
 class SetFieldScalarDataAlgoT : public SetFieldDataAlgo
 {
   public:
-  
-    virtual bool setfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data);  
+    virtual bool SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data, bool keepscalartype);  
 };
 
 template <class FIELD>
 class SetFieldVectorDataAlgoT : public SetFieldDataAlgo
 {
   public:
-  
-    virtual bool setfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data);  
+    virtual bool SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data, bool keepscalartype);  
 };
 
 template <class FIELD>
 class SetFieldTensorDataAlgoT : public SetFieldDataAlgo
 {
   public:
-  
-    virtual bool setfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data);  
+    virtual bool SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data, bool keepscalartype);  
 };
 
 
 
 template <class FIELD>
-bool SetFieldScalarDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data)
+bool SetFieldScalarDataAlgoT<FIELD>::SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data, bool keepscalartype)
 {
 
   if (data.get_rep() == 0)
   {
-    reporter->error("SetFieldData: No data matrix was specified");
+    pr->error("SetFieldData: No data matrix was specified");
     return (false);  
   }
 
   FIELD* field = dynamic_cast<FIELD* >(scinew FIELD(input->mesh()));
   if (field == 0)
   {
-    reporter->error("SetFieldData: Could not allocate a new field");
+    pr->error("SetFieldData: Could not allocate a new field");
     return (false);
   }
   output = dynamic_cast<SCIRun::Matrix*>(field);
-
+  output->copy_properties(input.get_rep());
 
   if (field->basis_order() == -1)
   {
-    reporter->warning("SetFieldData: The Field has no basis for field data");
+    pr->warning("SetFieldData: The Field has no basis for field data");
     return (false);
   }
   else if (field->basis_order() == 0)
@@ -124,7 +118,7 @@ bool SetFieldScalarDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -137,7 +131,7 @@ bool SetFieldScalarDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       }
       return (true);
     }
-    reporter->error("SetFieldData: Dimensions of input matrix do not match field");
+    pr->error("SetFieldData: Dimensions of input matrix do not match field");
     return (false);
   }
   else 
@@ -157,7 +151,7 @@ bool SetFieldScalarDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -170,33 +164,35 @@ bool SetFieldScalarDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       }
       return (true);
     }
-    reporter->error("SetFieldData: Dimensions of input matrix do not match field");
+    pr->error("SetFieldData: Dimensions of input matrix do not match field");
     return (false);
   }
 }
 
 
 template <class FIELD>
-bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data)
+bool SetFieldVectorDataAlgoT<FIELD>::SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data, bool keepscalartype)
 {
 
   if (data.get_rep() == 0)
   {
-    reporter->error("SetFieldData: No data matrix was specified");
+    pr->error("SetFieldData: No data matrix was specified");
     return (false);  
   }
 
   FIELD* field = dynamic_cast<FIELD* >(scinew FIELD(input->mesh()));
   if (field == 0)
   {
-    reporter->error("SetFieldData: Could not allocate a new field");
+    pr->error("SetFieldData: Could not allocate a new field");
     return (false);
   }
   output = dynamic_cast<SCIRun::Matrix*>(field);
+  output->copy_properties(input.get_rep());
+  
 
   if (field->basis_order() == -1)
   {
-    reporter->warning("SetFieldData: The Field has no basis for field data");
+    pr->warning("SetFieldData: The Field has no basis for field data");
     return (false);
   }
   else if (field->basis_order() == 0)
@@ -215,7 +211,7 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -234,7 +230,7 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -250,7 +246,7 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     }
     
     
-    reporter->error("SetFieldData: Dimensions of input matrix do not match field");
+    pr->error("SetFieldData: Dimensions of input matrix do not match field");
     return (false);
   }
   else 
@@ -269,7 +265,7 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -288,7 +284,7 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -304,33 +300,34 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     }
     
     
-    reporter->error("SetFieldData: Dimensions of input matrix do not match field");
+    pr->error("SetFieldData: Dimensions of input matrix do not match field");
     return (false);
   }
 }
 
 
 template <class FIELD>
-bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data)
+bool SetFieldTensorDataAlgoT<FIELD>::SetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output, SCIRun::MatrixHandle data, bool keepscalartype)
 {
 
   if (data.get_rep() == 0)
   {
-    reporter->error("SetFieldData: No data matrix was specified");
+    pr->error("SetFieldData: No data matrix was specified");
     return (false);  
   }
 
   FIELD* field = dynamic_cast<FIELD* >(scinew FIELD(input->mesh()));
   if (field == 0)
   {
-    reporter->error("SetFieldData: Could not allocate a new field");
+    pr->error("SetFieldData: Could not allocate a new field");
     return (false);
   }
   output = dynamic_cast<SCIRun::Matrix*>(field);
+  output->copy_properties(input.get_rep());
 
   if (field->basis_order() == -1)
   {
-    reporter->warning("SetFieldData: The Field has no basis for field data");
+    pr->warning("SetFieldData: The Field has no basis for field data");
     return (false);
   }
   else if (field->basis_order() == 0)
@@ -349,7 +346,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -377,7 +374,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -406,7 +403,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -434,7 +431,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -457,7 +454,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       return (true);
     }
 
-    reporter->error("SetFieldData: Dimensions of input matrix do not match field");
+    pr->error("SetFieldData: Dimensions of input matrix do not match field");
     return (false);
   }
   else 
@@ -476,7 +473,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -504,7 +501,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -533,7 +530,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -561,7 +558,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       double* dataptr = data->get_data_pointer();
       if (dataptr == 0)
       {
-        reporter->error("SetFieldData: No data in data matrix");
+        pr->error("SetFieldData: No data in data matrix");
         return (false);
       }
 
@@ -584,7 +581,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
       return (true);
     }
 
-    reporter->error("SetFieldData: Dimensions of input matrix do not match field");
+    pr->error("SetFieldData: Dimensions of input matrix do not match field");
     return (false);
   }
 }

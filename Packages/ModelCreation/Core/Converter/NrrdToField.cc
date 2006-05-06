@@ -26,40 +26,32 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef MODELCREATION_CORE_FIELDS_NRRDTOFIELD_H
-#define MODELCREATION_CORE_FIELDS_NRRDTOFIELD_H 1
+#include <Packages/ModelCreation/Core/Converter/NrrdToField.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Datatypes/NrrdData.h>
-
 #include <Core/Basis/NoData.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
-
-// Mesh types
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/ImageMesh.h>
-
 #include <Core/Datatypes/GenericField.h>
-
-
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class NrrdToFieldAlgo {
+class NrrdToFieldAlgoT {
 public:
   template<class T>
   bool NrrdToField(ProgressReporter* pr,NrrdDataHandle input, FieldHandle& output,std::string datalocation);
 };
 
 template<class T>
-bool NrrdToFieldAlgo::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, FieldHandle& output,std::string datalocation)
+bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, FieldHandle& output,std::string datalocation)
 {
   Nrrd *nrrd = input->nrrd_;
 
@@ -196,6 +188,48 @@ bool NrrdToFieldAlgo::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fie
 }
 
 
+bool NrrdToFieldAlgo::NrrdToField(ProgressReporter *pr, NrrdDataHandle input, FieldHandle& output,std::string datalocation)
+{
+  if (input.get_rep() == 0)
+  {
+    pr->error("NrrdToField: No input Nrrd");
+    return (false);    
+  } 
+
+  Nrrd *nrrd = input->nrrd_;
+
+  if (nrrd == 0)
+  {
+    pr->error("NrrdToField: NrrdData does not contain Nrrd");
+    return (false);      
+  }
+
+  NrrdToFieldAlgoT algo;
+
+  switch (nrrd->type)
+  {
+    case nrrdTypeChar : 
+      return(algo.NrrdToField<char>(pr,input,output,datalocation));
+    case nrrdTypeUChar : 
+      return(algo.NrrdToField<unsigned char>(pr,input,output,datalocation));
+    case nrrdTypeShort : 
+      return(algo.NrrdToField<short>(pr,input,output,datalocation));
+    case nrrdTypeUShort : 
+      return(algo.NrrdToField<unsigned short>(pr,input,output,datalocation));              
+    case nrrdTypeInt : 
+      return(algo.NrrdToField<int>(pr,input,output,datalocation));
+    case nrrdTypeUInt : 
+      return(algo.NrrdToField<unsigned int>(pr,input,output,datalocation));
+    case nrrdTypeFloat : 
+      return(algo.NrrdToField<float>(pr,input,output,datalocation));
+    case nrrdTypeDouble : 
+      return(algo.NrrdToField<double>(pr,input,output,datalocation));
+    default: 
+      pr->error("NrrdToField: This datatype is not supported");
+      return (false);
+  }
+  return (true);
+}
+
 } // end namespace
 
-#endif

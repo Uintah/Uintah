@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
@@ -57,7 +57,7 @@ void ReverseCuthillMcKee::execute()
   MatrixHandle Mat, Mapping, InverseMapping;
   if(!(get_input_handle("Matrix",Mat,true))) return;
 
-  NumericAlgo algo(this);
+  MathAlgo algo(this);
   if(!(algo.ReverseCuthillmcKee(Mat,Mat,InverseMapping,true))) return;
   
   Mapping = InverseMapping->transpose();

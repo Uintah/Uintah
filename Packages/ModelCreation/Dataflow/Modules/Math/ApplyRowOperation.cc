@@ -27,7 +27,7 @@
 */
 
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
 
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
@@ -60,7 +60,7 @@ void ApplyRowOperation::execute()
   
   if (!(get_input_handle("Matrix",input,true))) return;
   
-  SCIRun::NumericAlgo algo(this);
+  SCIRun::MathAlgo algo(this);
   
   std::string method = guimethod_.get();
   if (!(algo.ApplyRowOperation(input,output,method))) return;

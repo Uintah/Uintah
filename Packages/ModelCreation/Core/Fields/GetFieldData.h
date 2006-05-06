@@ -30,29 +30,18 @@
 #define MODELCREATION_CORE_FIELDS_GETFIELDDATA_H 1
 
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ProgressReporter.h>
-
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/Mesh.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Matrix.h>
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
-using namespace std;
 
 
 class GetFieldDataAlgo : public SCIRun::DynamicAlgoBase
 {
   public:
-  
-    virtual bool getfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output) = 0;  
-    
-    static SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle field);  
+    virtual bool GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output);  
 };
 
 
@@ -60,8 +49,7 @@ template <class FIELD>
 class GetFieldScalarDataAlgoT : public GetFieldDataAlgo
 {
   public:
-  
-    virtual bool getfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output);  
+    virtual bool GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output);  
 };
 
 
@@ -69,21 +57,19 @@ template <class FIELD>
 class GetFieldVectorDataAlgoT : public GetFieldDataAlgo
 {
   public:
-  
-    virtual bool getfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output);  
+    virtual bool GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output);  
 };
 
 template <class FIELD>
 class GetFieldTensorDataAlgoT : public GetFieldDataAlgo
 {
   public:
-  
-    virtual bool getfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output);  
+    virtual bool GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output);  
 };
 
 
 template <class FIELD>
-bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output)
+bool GetFieldScalarDataAlgoT<FIELD>::GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output)
 {
   typename FIELD::value_type val;
 
@@ -91,7 +77,7 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 
   if (input->basis_order() == -1)
   {
-    reporter->warning("GetFieldData: No data present in field");
+    pr->warning("GetFieldData: No data present in field");
     output = dynamic_cast<Matrix *>(scinew DenseMatrix(0,0));
     return (true);
   }
@@ -108,14 +94,14 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,1));
     if (output.get_rep() == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
     
     double* dataptr = output->get_data_pointer();
     if (dataptr == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
 
@@ -142,14 +128,14 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,1));
     if (output.get_rep() == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
     
     double* dataptr = output->get_data_pointer();
     if (dataptr == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
 
@@ -167,7 +153,7 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 }
 
 template <class FIELD>
-bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output)
+bool GetFieldVectorDataAlgoT<FIELD>::GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output)
 {
   typename FIELD::value_type val;
 
@@ -175,7 +161,7 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 
   if (input->basis_order() == -1)
   {
-    reporter->warning("GetFieldData: No data present in field");
+    pr->warning("GetFieldData: No data present in field");
     output = dynamic_cast<Matrix *>(scinew DenseMatrix(0,0));
     return (true);
   }
@@ -192,14 +178,14 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,3));
     if (output.get_rep() == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
     
     double* dataptr = output->get_data_pointer();
     if (dataptr == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
 
@@ -228,14 +214,14 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,3));
     if (output.get_rep() == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
     
     double* dataptr = output->get_data_pointer();
     if (dataptr == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
 
@@ -256,7 +242,7 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 
 
 template <class FIELD>
-bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *reporter,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output)
+bool GetFieldTensorDataAlgoT<FIELD>::GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output)
 {
   typename FIELD::value_type val;
 
@@ -264,7 +250,7 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 
   if (input->basis_order() == -1)
   {
-    reporter->warning("GetFieldData: No data present in field");
+    pr->warning("GetFieldData: No data present in field");
     output = dynamic_cast<Matrix *>(scinew DenseMatrix(0,0));
     return (true);
   }
@@ -278,17 +264,17 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     mesh->begin(it);
     mesh->end(it_end);
     
-    output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,9));
+    output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,6));
     if (output.get_rep() == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
     
     double* dataptr = output->get_data_pointer();
     if (dataptr == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
 
@@ -300,11 +286,8 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
       dataptr[k++] = static_cast<double>(val.mat_[0][0]);
       dataptr[k++] = static_cast<double>(val.mat_[0][1]);
       dataptr[k++] = static_cast<double>(val.mat_[0][2]);
-      dataptr[k++] = static_cast<double>(val.mat_[1][0]);
       dataptr[k++] = static_cast<double>(val.mat_[1][1]);
       dataptr[k++] = static_cast<double>(val.mat_[1][2]);
-      dataptr[k++] = static_cast<double>(val.mat_[2][0]);
-      dataptr[k++] = static_cast<double>(val.mat_[2][1]);
       dataptr[k++] = static_cast<double>(val.mat_[2][2]);
 
       ++it;
@@ -322,17 +305,17 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     mesh->begin(it);
     mesh->end(it_end);
     
-    output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,9));
+    output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,6));
     if (output.get_rep() == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
     
     double* dataptr = output->get_data_pointer();
     if (dataptr == 0)
     {
-      reporter->error("GetFieldData: Could not allocate output matrix");
+      pr->error("GetFieldData: Could not allocate output matrix");
       return (false);
     }
 
@@ -344,11 +327,8 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
       dataptr[k++] = static_cast<double>(val.mat_[0][0]);
       dataptr[k++] = static_cast<double>(val.mat_[0][1]);
       dataptr[k++] = static_cast<double>(val.mat_[0][2]);
-      dataptr[k++] = static_cast<double>(val.mat_[1][0]);
       dataptr[k++] = static_cast<double>(val.mat_[1][1]);
       dataptr[k++] = static_cast<double>(val.mat_[1][2]);
-      dataptr[k++] = static_cast<double>(val.mat_[2][0]);
-      dataptr[k++] = static_cast<double>(val.mat_[2][1]);
       dataptr[k++] = static_cast<double>(val.mat_[2][2]);
       ++it;
     }

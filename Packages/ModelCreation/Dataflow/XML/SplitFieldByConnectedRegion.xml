@@ -6,12 +6,19 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module splits a field into parts where every part is always a fully connected surface or volume.
-
+      This module splits a field into a series of fields in which every field
+      contains a segment of the field that was not topologically connected to the
+      other parts of the field. 
     </summary>
     <description>
-      <p>        This module splits a field into parts where every part is always a fully connected surface or volume.
-</p>
+      <p> 
+      This module splits a field into a series of fields in which every field
+      contains a segment of the field that was not topologically connected to the
+      other parts of the field. Thos module can for example be used to split a
+      surface separating different domains in a set of surfaces that are not
+      topologically connected. The out of this module is a bundle with the set
+      of fields.
+      </p>
     </description>
   </overview>
   <io>
