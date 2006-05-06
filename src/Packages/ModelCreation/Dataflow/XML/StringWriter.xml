@@ -37,12 +37,19 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module writes a text file.
+      This module writes a text file with the contents of the string.
     </summary>
     <description>
       <p>
-      This module writes a text file. The output file will be a plain ascii file.
+      This module writes a text file with the contents of the string. 
+      The output file will be a plain ASCII file.
       </p>
+      <p>
+      This module has an optional filename input port which allows
+      to override the name assigned in the GUI. This port is intended
+      to assist with scripting and can be used to automatically assign
+      filenames.
+      </p>      
     </description>
   </overview>
   <io>

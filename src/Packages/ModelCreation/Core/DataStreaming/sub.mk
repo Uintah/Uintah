@@ -10,22 +10,17 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/ModelCreation/Core/DataIO
+SRCDIR   := Packages/ModelCreation/Core/DataStreaming
 
-SRCS     += $(SRCDIR)/DataIOAlgo.cc\
+SRCS     += $(SRCDIR)/StreamMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
+PSELIBS :=  Core/ImportExport\
+            Core/Datatypes Core/Util Core/Containers \
             Core/Exceptions Core/Thread Core/GuiInterface \
             Core/Geom Core/Geometry Dataflow/Network \
-            Dataflow/Modules/Fields \
-            Core/Algorithms/Fields \
-            Core/Algorithms/Util \
-            Core/Persistent \
-            Core/Basis Core/Bundle \
-            Core/ImportExport \
-            Core/Volume \
             
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+

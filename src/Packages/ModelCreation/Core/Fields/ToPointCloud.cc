@@ -126,7 +126,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   //  4) The template descriptors separated by commas
    
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ToPointCloud."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOToPointCloud."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "ToPointCloudAlgo","ToPointCloudAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 

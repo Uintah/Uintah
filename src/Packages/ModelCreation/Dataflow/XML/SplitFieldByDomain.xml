@@ -37,13 +37,14 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module uses the data at the elements to split the mesh into mesh segements that all have the same element data.
+      This module uses the data at the elements to split the mesh into segements
+       that all have the same element data.
     </summary>
     <description>
       <p>
-      This module uses the data at the elements to split the mesh into mesh 
+      This module uses the data at the elements to split the mesh into 
       segements that all have the same element data.  Where two elements with 
-      different values at the elements meet the nodes are split into two nodes 
+      different values at the elements intersect the nodes are split into two nodes 
       and the elements are unlinked. The result of this module is a field in 
       which all the elements are only linked to elements with the same value.
       </p>

@@ -29,7 +29,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
 #include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 #include <Dataflow/Network/Module.h>
@@ -68,7 +68,7 @@ void ResizeMatrix::execute()
  get_input_handle("M",M,false);
  get_input_handle("N",N,false);
  
- NumericAlgo nalgo(this);
+ MathAlgo nalgo(this);
  ConverterAlgo calgo(this);
  int n,m;
  

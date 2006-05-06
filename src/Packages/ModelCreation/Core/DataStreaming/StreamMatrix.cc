@@ -33,6 +33,12 @@
  */
 
 #include <Packages/ModelCreation/Core/DataStreaming/StreamMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/NrrdData.h>
+
+#include <sci_defs/config_defs.h>
  
 #ifdef _WIN32
 
@@ -60,6 +66,7 @@
     #include <unistd.h>
     #include <fcntl.h>
   #endif
+  
 
   #ifndef O_LARGEFILE
     #define O_LARGEFILE 0
@@ -68,87 +75,87 @@
 #endif
 
 
+#include <sstream>
 #include <stdio.h>
 #include <ctype.h>
 #include <sys/stat.h>
 
 #include <Core/OS/Dir.h>
-#include <sci_defs/config_defs.h>
 
 using namespace SCIRun;
 
 namespace ModelCreation {
 
 
-StreamMatrix::StreamMatrix(SCIRun::ProgressReporter* pr) :
+StreamMatrixAlgo::StreamMatrixAlgo(SCIRun::ProgressReporter* pr) :
   pr_(pr), lineskip_(0), byteskip_(0), elemsize_(0), ntype_(0), dimension_(0),
   start_(0), end_(0), step_(0), subdim_(0), useformatting_(false), swapbytes_(false)
 {
 }
 
 
-StreamMatrix::StreamMatrix(SCIRun::ProgressReporter* pr, std::string filename) :
-  pr_(pr), ncols_(0), nrows_(0), byteskip_(0), lineskip_(0), elemsize_(0), ntype_(0), dimension_(0),
+StreamMatrixAlgo::StreamMatrixAlgo(SCIRun::ProgressReporter* pr, std::string filename) :
+  pr_(pr), byteskip_(0), lineskip_(0), elemsize_(0), ntype_(0), dimension_(0),
   start_(0), end_(0), step_(0), subdim_(0), useformatting_(false), swapbytes_(false)
 {
   open(filename);
 }
 
 
-StreamMatrix::~StreamMatrix()
+StreamMatrixAlgo::~StreamMatrixAlgo()
 {
 }
 
 
-int StreamMatrix::get_numrows()
+int StreamMatrixAlgo::get_numrows()
 {
   return(sizes_[0]);
 }
 
 
-int StreamMatrix::get_numcols()
+int StreamMatrixAlgo::get_numcols()
 {
   return(sizes_[1]);
 }
 
 
-int StreamMatrix::get_rowspacing()
+double StreamMatrixAlgo::get_rowspacing()
 {
   return(spacings_[0]);
 }
 
 
-int StreamMatrix::get_colspacing()
+double StreamMatrixAlgo::get_colspacing()
 {
   return(spacings_[1]);
 }
 
 
-std::string StreamMatrix::get_rowkind()
+std::string StreamMatrixAlgo::get_rowkind()
 {
   return(kinds_[0]);
 }
 
 
-std::string StreamMatrix::get_colkind()
+std::string StreamMatrixAlgo::get_colkind()
 {
   return(kinds_[1]);
 }
 
 
-std::string StreamMatrix::get_rowunit()
+std::string StreamMatrixAlgo::get_rowunit()
 {
   return(units_[0]);
 }
 
 
-std::string StreamMatrix::get_colunit()
+std::string StreamMatrixAlgo::get_colunit()
 {
   return(units_[1]);
 }
 
 
-void StreamMatrix::open(std::string filename)
+bool StreamMatrixAlgo::open(std::string filename)
 {
   std::ifstream file;
 
@@ -163,6 +170,12 @@ void StreamMatrix::open(std::string filename)
   // dynamically adding files by using only a template of a
   // file. Hence the use of this hack.
 
+  if (filename == "")
+  {
+    pr_->error("StreamMatrixAlgo: No filename given");
+    return (false);
+  }
+
   while ((ntries < 10)&&(success == false))
   {
     try
@@ -176,8 +189,14 @@ void StreamMatrix::open(std::string filename)
       SCIRun::Time::waitFor(0.2);
     }
   }
+  
+  if (success == false)
+  {
+    pr_->error("StreamMatrixAlgo: Could not open file");
+    return (false);
+  }
+  
     
-  keyvalue_.clear();
   datafilename_ = "";
   datafilenames_.clear();
   units_.clear();
@@ -369,14 +388,14 @@ void StreamMatrix::open(std::string filename)
   // Check dimensions
   if (sizes_.size() != 2)
   {
-    pr_->error("StreamMatrix: This method only supports 2D matrices");
+    pr_->error("StreamMatrixAlgo: This method only supports 2D matrices");
     return (false);      
   }
 
   // Correct the subdim values
   if ((subdim_ > 2)&&(subdim_ < 0))
   {
-    pr_->error("StreamMatrix: Improper subdim value encountered");
+    pr_->error("StreamMatrixAlgo: Improper subdim value encountered");
     return (false);    
   }
   if (subdim_ == 0) subdim_ = 1;
@@ -385,7 +404,7 @@ void StreamMatrix::open(std::string filename)
   // If someone wants more it would be easier to fix teem library
   if ((encoding_ != "raw")&&(encoding_!=""))
   {
-    pr_->error("StreamMatrix: Encoding must be 'raw'");
+    pr_->error("StreamMatrixAlgo: Encoding must be 'raw'");
     return (false);    
   }
   encoding_ = "raw";
@@ -393,7 +412,7 @@ void StreamMatrix::open(std::string filename)
   gettype(type_,ntype_,elemsize_);
   if (ntype_ == 0)
   {
-    pr_->error("StreamMatrix: Unknown encoding encounterd");
+    pr_->error("StreamMatrixAlgo: Unknown encoding encounterd");
     return (false);    
   }
 
@@ -429,13 +448,13 @@ void StreamMatrix::open(std::string filename)
         if (datafile == 0)
         {
                
-          if ((ncols_ == -1)||(end_ == -1))
+          if ((sizes_[1] == -1)||(end_ == -1))
           {
             foundend = true;
           }
           else
           {
-            pr_->error("StreamMatrix: Could not find/open datafile: "+newfilename);   
+            pr_->error("StreamMatrixAlgo: Could not find/open datafile: "+newfilename);   
             return (false); 
           }
         }
@@ -456,13 +475,13 @@ void StreamMatrix::open(std::string filename)
 
   if (datafilename_ == "")
   {
-    pr_->error("StreamMatrix: No data file specified, separate headers are required");    
+    pr_->error("StreamMatrixAlgo: No data file specified, separate headers are required");    
     return (false);
   }
 
   if ((endian_ != "big")&&(endian_ != "little")&&(endian_ != ""))
   {
-    pr_->error("StreamMatrix: Unknown endian type encountered");
+    pr_->error("StreamMatrixAlgo: Unknown endian type encountered");
     return (false); 
   }
 
@@ -472,9 +491,9 @@ void StreamMatrix::open(std::string filename)
   if ((testptr[1])&&(endian_ == "little")) swapbytes_ = true;
   if ((testptr[0])&&(endian_ == "big")) swapbytes_ = true;
 
-  if ((nrows_ < 1)||(ncols_ < -1))
+  if ((sizes_[0] < 1)||(sizes_[1] < -1))
   {
-    pr_->error("StreamMatrix: Improper NRRD dimensions: number of columns/rows is smaller then one");  
+    pr_->error("StreamMatrixAlgo: Improper NRRD dimensions: number of columns/rows is smaller then one");  
     return (false);
   }
 
@@ -494,7 +513,7 @@ void StreamMatrix::open(std::string filename)
       datafile = fopen(datafilename_.c_str(),"rb");
       if (datafile == 0)
       {
-        pr_->("StreamMatrix: Could not find/open datafile: "+datafilename_);
+        pr_->error("StreamMatrixAlgo: Could not find/open datafile: "+datafilename_);
         return (false);    
       }
     }
@@ -507,52 +526,56 @@ void StreamMatrix::open(std::string filename)
     struct stat buf;
     if (LSTAT(datafilename_.c_str(),&buf) < 0)
     {
-      pr_->error("StreamMatrix: Could not determine size of datafile");
+      pr_->error("StreamMatrixAlgo: Could not determine size of datafile");
       return (false);          
     }
-    ncolsr = static_cast<int>((buf.st_size)/static_cast<off_t>(nrows_*elemsize_));
+    ncolsr = static_cast<int>((buf.st_size)/static_cast<off_t>(sizes_[0]*elemsize_));
   }
   else
   {
     ncolsr = 0;
-    std::list<std::string>::iterator p = datafilenames_.begin();
     int q = 0;
     coloffset_.resize(datafilenames_.size()+1);
-    for (;p != datafilenames_.end();p++)
+    for (int p = 0;p < datafilenames_.size();p++)
     {
       struct stat buf;
-      if (LSTAT((*p).c_str(),&buf) < 0)
+      if (LSTAT(datafilenames_[p].c_str(),&buf) < 0)
       {
-        pr_->error("StreamMatrix: Could not determine size of datafile");
+        pr_->error("StreamMatrixAlgo: Could not determine size of datafile");
         return (false);          
       }
       coloffset_[q++] = ncolsr;
-      ncolsr += static_cast<int>((buf.st_size)/static_cast<off_t>(nrows_*elemsize_));
+      ncolsr += static_cast<int>((buf.st_size)/static_cast<off_t>(sizes_[0]*elemsize_));
     }
     coloffset_[q] = ncolsr;
   }
 
-  if (ncols_ == -1) ncols_ = ncolsr;
-  if (ncols_ > ncolsr) ncols_ = ncolsr;
+  if (sizes_[1] == -1) sizes_[1] = ncolsr;
+  if (sizes_[1] > ncolsr) sizes_[1] = ncolsr;
 
   if (datafilenames_.size() > 0)
   {
     if (byteskip_ != 0)  
     {
-      pr_->error("StreamMatrix: Byteskip and data spread out over multiple files is not supported yet");
+      pr_->error("StreamMatrixAlgo: Byteskip and data spread out over multiple files is not supported yet");
       return (false);
     }
     if (lineskip_ != 0)
     {
-      pr_->error("StreamMatrix: Lineskip and data spread out over multiple files is not supported yet");
+      pr_->error("StreamMatrixAlgo: Lineskip and data spread out over multiple files is not supported yet");
       return (false);
     }
   }
+  return (true);
 }
 
+bool StreamMatrixAlgo::close()
+{
+  // File is not left open, it is opened for each reading operation.
+  return (true);
+}
 
-
-void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle indices)
+bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle indices)
 {
   FILE* datafile;
   int   datafile_uni;
@@ -560,7 +583,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
   // Check whether we have an index ort multiple indices
   if (indices.get_rep() == 0)
   {
-    pr_->error("StreamMatrix: No indices given for colums");
+    pr_->error("StreamMatrixAlgo: No indices given for colums");
     return (false);
   }
   
@@ -573,10 +596,10 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
   for (int p=0; p<idx.size(); p++) idx[p] = static_cast<int>(idataptr[p]);
   
   // Create the output matrix
-  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(idx.size(),nrows_,);
+  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(idx.size(),sizes_[0]);
   if (mat == 0)
   {
-    pr_->error("StreamMatrix: Could not allocate matrix");
+    pr_->error("StreamMatrixAlgo: Could not allocate matrix");
     return (false);
   }   
   
@@ -587,20 +610,21 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
   char* buffer = reinterpret_cast<char *>(mat->get_data_pointer());
 
 
+  std::string fn;
   // Loop over all the indices
   int k = 0;
   for (k=0; k< idx.size(); k++)
   {
-    int coloffset = idx[k];
+    int coffset = idx[k];
      
     if (datafilenames_.size() > 0)
     {
       // find file to read
       int  p=0;
-      for (p=0;p<coloffset_.size();p++) { if((coloffset >= coloffset_[p] )&&(coloffset <coloffset_[p+1])) break;}
+      for (p=0;p<coloffset_.size();p++) { if((coffset >= coloffset_[p] )&&(coffset <coloffset_[p+1])) break;}
       if (p == coloffset_.size()) 
       {
-        pr_->error("StreamMatrix: Column index out of range");
+        pr_->error("StreamMatrixAlgo: Column index out of range");
         return (false);
       }
       
@@ -610,7 +634,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
     }
     else
     {
-      std::string fn = datafilename_;    
+      fn = datafilename_;    
     }
     
     #ifndef HAVE_UNISTD_H 
@@ -619,7 +643,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
       datafile = ::fopen(fn.c_str(),"rb");
       if (datafile == 0)
       {
-        pr_->error("StreamMatrix: Could not find/open datafile");
+        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
         return (false);
       }
       
@@ -632,7 +656,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
             if(::fread(&cbuffer,1,1,datafile) != 1)
             {
               ::fclose(datafile);
-              pr_->error("StreamMatrix: Could not read header of datafile"); 
+              pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
               return (false);
             }
             if (cbuffer == '\n') ln--;
@@ -644,7 +668,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
         if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
         {
           ::fclose(datafile);
-          pr_->error("StreamMatrix: Could not read datafile"); 
+          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
           return (false);
         }
       }
@@ -653,7 +677,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
         if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
         {
           ::fclose(datafile);
-          pr_->error("StreamMatrix: Could not read datafile"); 
+          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
           return (false);
         }
       }
@@ -661,14 +685,14 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
       if (::fseek(datafile,elemsize_*sizes_[0]*coffset,SEEK_CUR)!=0)
       {
         ::fclose(datafile);
-        pr_->error("StreamMatrix: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
         return (false);
       }    
 
       if (sizes_[0] != ::fread((void *)buffer,elemsize_,sizes_[0],datafile))
       {
         ::fclose(datafile);
-        pr_->error("StreamMatrix: Error reading datafile");
+        pr_->error("StreamMatrixAlgo: Error reading datafile");
         return (false);
       }
        
@@ -680,7 +704,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
       datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
       if (datafile_uni < 0)
       {
-        pr_->error("StreamMatrix: Could not find/open datafile");
+        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
         return (false);
       }
       if (lineskip_ > 0)
@@ -692,7 +716,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
             if(::read(datafile_uni,&cbuffer,1) != 1)
             {
               ::close(datafile_uni);
-              pr_->error("StreamMatrix: Could not read header of datafile");
+              pr_->error("StreamMatrixAlgo: Could not read header of datafile");
               return (false); 
             }
             if (cbuffer == '\n') ln--;
@@ -704,7 +728,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
         if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
         {
           ::close(datafile_uni);
-          pr_->error("StreamMatrix: Could not read datafile");
+          pr_->error("StreamMatrixAlgo: Could not read datafile");
           return (false);
         }
       }
@@ -713,7 +737,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
         if (::lseek(datafile_uni,static_cast<off_t>(sizes_[1])*static_cast<off_t>(sizes_[0])*static_cast<off_t>(elemsize_),SEEK_END)<0)
         {
           ::close(datafile_uni);
-          pr_->error("StreamMatrix: Could not read datafile");
+          pr_->error("StreamMatrixAlgo: Could not read datafile");
           return (false);
         }
       }
@@ -721,7 +745,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
       if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(sizes_[0])*static_cast<off_t>(coffset),SEEK_CUR)<0)
       {
         ::close(datafile_uni);
-        pr_->error("StreamMatrix: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
         return (false);
       }    
 
@@ -729,7 +753,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
       if (static_cast<size_t>(elemsize_*sizes_[0]) != ret)
       {
         ::close(datafile_uni);
-        pr_->error("StreamMatrix: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
         return (false);
       }
      
@@ -762,7 +786,7 @@ void StreamMatrix::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
 }
 
 
-void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle weights)
+bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle weights)
 {
   FILE* datafile;
   int   datafile_uni;
@@ -770,7 +794,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
   // Check whether we have an index ort multiple indices
   if (weights.get_rep() == 0)
   {
-    pr_->error("StreamMatrix: No indices given for colums");
+    pr_->error("StreamMatrixAlgo: No indices given for colums");
     return (false);
   }
   
@@ -782,15 +806,15 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
   int    *rows = spr_weights->rows;
   int    *cols  = spr_weights->columns;
   double *vals = spr_weights->a;
-  int    nrows = spr_weights->nrows_;
-  int    ncols = spr_weights->ncols_;
+  int    nrows = spr_weights->nrows();
+  int    ncols = spr_weights->ncols();
   int    nnz  = spr_weights->get_data_size(); 
       
   // Create the output matrix
-  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nnz,nrows_,);
+  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nnz,sizes_[0]);
   if (mat == 0)
   {
-    pr_->error("StreamMatrix: Could not allocate matrix");
+    pr_->error("StreamMatrixAlgo: Could not allocate matrix");
     return (false);
   }   
   
@@ -804,17 +828,18 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
 
   // Loop over all the indices
   
+  std::string fn;
   for (int k=0; k<nnz; k++)
   {
-    int coloffset = cols[k];     
+    int coffset = cols[k];     
     if (datafilenames_.size() > 0)
     {
       // find file to read
       int  p=0;
-      for (p=0;p<coloffset_.size();p++) { if((coloffset >= coloffset_[p] )&&(coloffset <coloffset_[p+1])) break;}
+      for (p=0;p<coloffset_.size();p++) { if((coffset >= coloffset_[p] )&&(coffset <coloffset_[p+1])) break;}
       if (p == coloffset_.size()) 
       {
-        pr_->error("StreamMatrix: Column index out of range");
+        pr_->error("StreamMatrixAlgo: Column index out of range");
         return (false);
       }
       
@@ -824,7 +849,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
     }
     else
     {
-      std::string fn = datafilename_;    
+      fn = datafilename_;    
     }
     
     #ifndef HAVE_UNISTD_H 
@@ -833,7 +858,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
       datafile = ::fopen(fn.c_str(),"rb");
       if (datafile == 0)
       {
-        pr_->error("StreamMatrix: Could not find/open datafile");
+        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
         return (false);
       }
       
@@ -846,7 +871,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
             if(::fread(&cbuffer,1,1,datafile) != 1)
             {
               ::fclose(datafile);
-              pr_->error("StreamMatrix: Could not read header of datafile"); 
+              pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
               return (false);
             }
             if (cbuffer == '\n') ln--;
@@ -858,7 +883,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
         if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
         {
           ::fclose(datafile);
-          pr_->error("StreamMatrix: Could not read datafile"); 
+          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
           return (false);
         }
       }
@@ -867,7 +892,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
         if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
         {
           ::fclose(datafile);
-          pr_->error("StreamMatrix: Could not read datafile"); 
+          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
           return (false);
         }
       }
@@ -875,14 +900,14 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
       if (::fseek(datafile,elemsize_*sizes_[0]*coffset,SEEK_CUR)!=0)
       {
         ::fclose(datafile);
-        pr_->error("StreamMatrix: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
         return (false);
       }    
 
       if (sizes_[0] != ::fread((void *)buffer,elemsize_,sizes_[0],datafile))
       {
         ::fclose(datafile);
-        pr_->error("StreamMatrix: Error reading datafile");
+        pr_->error("StreamMatrixAlgo: Error reading datafile");
         return (false);
       }
        
@@ -894,7 +919,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
       datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
       if (datafile_uni < 0)
       {
-        pr_->error("StreamMatrix: Could not find/open datafile");
+        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
         return (false);
       }
       if (lineskip_ > 0)
@@ -906,7 +931,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
             if(::read(datafile_uni,&cbuffer,1) != 1)
             {
               ::close(datafile_uni);
-              pr_->error("StreamMatrix: Could not read header of datafile");
+              pr_->error("StreamMatrixAlgo: Could not read header of datafile");
               return (false); 
             }
             if (cbuffer == '\n') ln--;
@@ -918,7 +943,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
         if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
         {
           ::close(datafile_uni);
-          pr_->error("StreamMatrix: Could not read datafile");
+          pr_->error("StreamMatrixAlgo: Could not read datafile");
           return (false);
         }
       }
@@ -927,7 +952,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
         if (::lseek(datafile_uni,static_cast<off_t>(sizes_[1])*static_cast<off_t>(sizes_[0])*static_cast<off_t>(elemsize_),SEEK_END)<0)
         {
           ::close(datafile_uni);
-          pr_->error("StreamMatrix: Could not read datafile");
+          pr_->error("StreamMatrixAlgo: Could not read datafile");
           return (false);
         }
       }
@@ -935,7 +960,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
       if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(sizes_[0])*static_cast<off_t>(coffset),SEEK_CUR)<0)
       {
         ::close(datafile_uni);
-        pr_->error("StreamMatrix: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
         return (false);
       }    
 
@@ -943,7 +968,7 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
       if (static_cast<size_t>(elemsize_*sizes_[0]) != ret)
       {
         ::close(datafile_uni);
-        pr_->error("StreamMatrix: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
         return (false);
       }
      
@@ -958,24 +983,24 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
   buffer = reinterpret_cast<char *>(mat->get_data_pointer());
   
   // Do the byte swapping and then  unpack the data into doubles
-  if (swapbytes_) doswapbytes(reinterpret_cast<void*>(buffer),elemsize_,idx.size()*sizes_[0]);
-  if (ntype_ == nrrdTypeChar) { char *fbuffer = reinterpret_cast<char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeUChar) { unsigned char *fbuffer = reinterpret_cast<unsigned char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeShort) { short *fbuffer = reinterpret_cast<short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeUShort) { unsigned short *fbuffer = reinterpret_cast<unsigned short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeInt) { int *fbuffer = reinterpret_cast<int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeUInt) { unsigned int *fbuffer = reinterpret_cast<unsigned int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeFloat) { float *fbuffer = reinterpret_cast<float *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeLLong) { int64 *fbuffer = reinterpret_cast<int64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeULLong) { uint64 *fbuffer = reinterpret_cast<uint64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]);}
+  if (swapbytes_) doswapbytes(reinterpret_cast<void*>(buffer),elemsize_,nnz*sizes_[0]);
+  if (ntype_ == nrrdTypeChar) { char *fbuffer = reinterpret_cast<char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUChar) { unsigned char *fbuffer = reinterpret_cast<unsigned char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeShort) { short *fbuffer = reinterpret_cast<short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUShort) { unsigned short *fbuffer = reinterpret_cast<unsigned short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeInt) { int *fbuffer = reinterpret_cast<int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUInt) { unsigned int *fbuffer = reinterpret_cast<unsigned int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeFloat) { float *fbuffer = reinterpret_cast<float *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeLLong) { int64 *fbuffer = reinterpret_cast<int64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeULLong) { uint64 *fbuffer = reinterpret_cast<uint64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[0]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]);}
 
   // Fit everything together again
   
-  mh = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(sizes_[0],spr_weights->nrows_));
+  mh = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(sizes_[0],nrows));
 
   if (mh.get_rep() == 0)
   {
-    pr_->error("StreamMatrix: Could not allocate output matrix");
+    pr_->error("StreamMatrixAlgo: Could not allocate output matrix");
     return (false);  
   }
 
@@ -983,10 +1008,10 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
   double* dataptr = mh->get_data_pointer();
   for (int p=0; p<nrows;p++)
   {
-    for (int q = 0; q < sizes_[0], q++) dataptr[q*nrows+p] += 0.0;
+    for (int q = 0; q < sizes_[0]; q++) dataptr[q*nrows+p] += 0.0;
     for (int r = rows[p]; r<rows[p+1]; r++)
     {
-      for (int q = 0; q < sizes_[0], q++) dataptr[q*nrows+p] += vals[r]*dbuffer[s++];
+      for (int q = 0; q < sizes_[0]; q++) dataptr[q*nrows+p] += vals[r]*dbuffer[s++];
     }
   }
 
@@ -994,25 +1019,14 @@ void StreamMatrix::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixH
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-void StreamMatrix::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle indices)
+bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle indices)
 {
   FILE*                   datafile;
   int                     datafile_uni;
 
   if (indices.get_rep() == 0)
   {
-    pr_->error("StreamMatrix: No indices given for colums");
+    pr_->error("StreamMatrixAlgo: No indices given for colums");
     return (false);
   }
   
@@ -1020,16 +1034,19 @@ void StreamMatrix::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
   
   if (imat == 0)
   {
-    pr_->error("StreamMatrix: Could not read indices matrix");
+    pr_->error("StreamMatrixAlgo: Could not read indices matrix");
     return (false);  
   }
 
+  // Converter matrix into STL vector
   std::vector<int> idx(imat->get_data_size());
   double *idataptr =  imat->get_data_pointer();
   for (int p=0; p<idx.size(); p++) idx[p] = static_cast<int>(idataptr[p]);
-  std::sort(idx.begin(),idx.end());
 
-  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(ncols_,idx.size());
+  // Create output martrix
+  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(idx.size(),sizes_[1]);
+  // Store matrix in a handle so that when we fail, the memory is automatically
+  // deallocated
   SCIRun::MatrixHandle handle = dynamic_cast<SCIRun::Matrix *>(mat);
   
   if (mat == 0)
@@ -1038,42 +1055,49 @@ void StreamMatrix::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
     return (false);
   }
   
+  // Get the buffer when output data needs to be written
   char* buffer = reinterpret_cast<char *>(mat->get_data_pointer());  
 
-  std::vector<int>::iterator it = idx.begin();
-  std::vector<int>::iterator it_end = idx.end();
-
+  // Get the column start and end
   int cstart= 0;
   int cend = sizes_[1];
 
+  // Data file counter
   int k = 0;
 
   while (1)
   {
     std::string fn = datafilename_;
 
+    // Do we have data spread out over multiple files
     if (datafilenames_.size() > 0)
     {
-      if (datafilenames_.size() == k) break;
+     // check whether we already read all files
+      if (datafilenames_.size() == k) break; // done
+      // get start and end column
       cstart = coloffset_[k];
       cend = coloffset_[k+1];
+      // get filename
       fn = datafilenames_[k];
       k++;      
     }
     else
     {
-      if (k > 0) break;
-      k++;
+      // incase we have one file
+      if (k > 0) break; // done
+      k++; //add one so next time we will break out of the loop
     }
+
 
   #ifndef HAVE_UNISTD_H
     datafile = ::fopen(fn.c_str(),"rb");
     if (datafile == 0) 
     {
-      pr_->error("StreamMatrix: Could not find/open datafile");
+      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
       return (false);
     }
     
+    // Skip a number of lines at the start of the file
     if (lineskip_ > 0)
     {
        char cbuffer;
@@ -1083,133 +1107,548 @@ void StreamMatrix::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle in
           if(::fread(&cbuffer,1,1,datafile) != 1)
           {
             ::fclose(datafile);
-            pr_->error("StreamMatrix: Could not read header of datafile"); 
+            pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
             return (false);
           }
           if (cbuffer == '\n') ln--;
        }
     }
     
-
+    // skip a number of bytes at the start
     if (byteskip_ >= 0)
     {
       if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
       {
         ::fclose(datafile);
-        pr_->error("StreamMatrix: Could not read datafile");
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
         return (false);
       }
     }
     else
     {
-      if (fseek(datafile,ncols_*nrows_*elemsize_,SEEK_END)!=0)
+      if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
       {
         fclose(datafile);
-        throw TimeDataFileException("Could not read datafile");
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
       }
     }
 
-    
-      if (fseek(datafile,elemsize_*rowstart,SEEK_CUR)!=0)
+    int oldidx = 0;
+
+    for (int j=cstart;j<cend;j++)
+    {
+      for (int p=0;p<idx.size();p++)
       {
-        fclose(datafile);
-        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+        if (::feesk(datafile,elemsize_*(idx[p]-oldidx),SEEK_CUR)!=0)
+        {
+          ::fclose(datafile);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");      
+          return (false);
+        }
+        oldidx = idx[p]+1;
+        
+        if (::fread(buffer+(elemsize_*(j+p*sizes_[1])),elemsize_,1,datafile) != 1)
+        {
+          ::fclose(datafile);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+          return (false);
+        }        
+      }
+
+      if (::fseek(datafile,elemsize_*(sizes_[0]),SEEK_CUR)!=0)
+      {
+        ::fclose(datafile);
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+        return (false);
       }    
+    }
+    
+    ::fclose(datafile);
 
-      int i,j;
-      for (i=0, j=cstart;j<cend;i++,j++)
-      {
-        if (numrows != fread(buffer+(elemsize_*j*numrows),elemsize_,numrows,datafile))
-        {
-          fclose(datafile);
-          throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-        }
-        if (fseek(datafile,elemsize_*(nrows_-numrows),SEEK_CUR)!=0)
-        {
-          fclose(datafile);
-          throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-        }    
-      }
-      fclose(datafile);
-    #else
-      datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
-      if (datafile_uni < 0) 
-      {
-        throw TimeDataFileException("Could not find/open datafile");
-      }
+  #else
+    datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
+    if (datafile_uni < 0) 
+    {
+      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
+      return (false);
+    }
 
-      if (lineskip_ > 0)
-      {
-         char cbuffer;
-         int ln = lineskip_;
-         while (ln)
-         {
-            if(::read(datafile_uni,&cbuffer,1) != 1)
-            {
-              ::close(datafile_uni);
-              throw TimeDataFileException("Could not read header of datafile"); 
-            }
-            if (cbuffer == '\n') ln--;
-         }
-      }
-      
-      // Accoring to Gordon's definition
-      if (byteskip_ >= 0)
-      {
-        if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
-        {
-          ::close(datafile_uni);
-          throw TimeDataFileException("Could not read datafile");
-        }
-      }
-      else
-      {
-        if (::lseek(datafile_uni,static_cast<off_t>(ncols_)*static_cast<off_t>(nrows_)*static_cast<off_t>(elemsize_),SEEK_END)<0)
-        {
-          ::close(datafile_uni);
-          throw TimeDataFileException("Could not read datafile");
-        }
-      }
-      
-      if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(rowstart),SEEK_CUR)<0)
+    if (lineskip_ > 0)
+    {
+       char cbuffer;
+       int ln = lineskip_;
+       while (ln)
+       {
+          if(::read(datafile_uni,&cbuffer,1) != 1)
+          {
+            ::close(datafile_uni);
+            pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
+            return (false);
+          }
+          if (cbuffer == '\n') ln--;
+       }
+    }
+    
+    // Accoring to Gordon's definition
+    if (byteskip_ >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
       {
         ::close(datafile_uni);
-        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-      }    
-
-      int i,j;
-      for (i=0, j=cstart;j<cend;i++,j++)
-      {
-        if (static_cast<size_t>(numrows*elemsize_) != ::read(datafile_uni,buffer+(elemsize_*j*numrows),static_cast<size_t>(elemsize_*numrows)))
-        {
-          ::close(datafile_uni);
-          throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-        }
-        if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(nrows_-numrows),SEEK_CUR)<0)
-        {
-          ::close(datafile_uni);
-          throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-        }    
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
       }
-      ::close(datafile_uni);  
-    #endif
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(sizes_[0])*static_cast<off_t>(sizes_[1])*static_cast<off_t>(elemsize_),SEEK_END)<0)
+      {
+        ::close(datafile_uni);
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
+      }
+    }
+    
+    int oldidx = 0;
+    for (int j=cstart;j<cend;j++)
+    {
+      for (int p=0;p<idx.size();p++)
+      {
+        if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(idx[p]-oldidx),SEEK_CUR)<0)
+        {
+          ::close(datafile_uni);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");      
+          return (false);
+        }
+        oldidx = idx[p]+1;
+
+        if (::read(datafile_uni,buffer+(elemsize_*(j+p*sizes_[1])),static_cast<size_t>(elemsize_)) != static_cast<size_t>(elemsize_))
+        {
+          ::close(datafile_uni);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+          return (false);
+        }        
+      }
+
+      if (::lseek(datafile_uni,static_cast<size_t>(elemsize_)*static_cast<size_t>(sizes_[0]),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+        return (false);
+      }    
+    }
+    
+    ::close(datafile_uni);
+  #endif
   }
     
-  if (swapbytes_) doswapbytes(buffer,elemsize_,numrows*ncols_);
+  if (swapbytes_) doswapbytes(buffer,elemsize_,idx.size()*sizes_[1]);
 
-  if (ntype_ == nrrdTypeChar) { char *fbuffer = reinterpret_cast<char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeUChar) { unsigned char *fbuffer = reinterpret_cast<unsigned char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeShort) { short *fbuffer = reinterpret_cast<short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeUShort) { unsigned short *fbuffer = reinterpret_cast<unsigned short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeInt) { int *fbuffer = reinterpret_cast<int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeUInt) { unsigned int *fbuffer = reinterpret_cast<unsigned int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeFloat) { float *fbuffer = reinterpret_cast<float *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeLLong) { int64 *fbuffer = reinterpret_cast<int64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
-  if (ntype_ == nrrdTypeULLong) { uint64 *fbuffer = reinterpret_cast<uint64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols_*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeChar) { char *fbuffer = reinterpret_cast<char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUChar) { unsigned char *fbuffer = reinterpret_cast<unsigned char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeShort) { short *fbuffer = reinterpret_cast<short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUShort) { unsigned short *fbuffer = reinterpret_cast<unsigned short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeInt) { int *fbuffer = reinterpret_cast<int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUInt) { unsigned int *fbuffer = reinterpret_cast<unsigned int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeFloat) { float *fbuffer = reinterpret_cast<float *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeLLong) { int64 *fbuffer = reinterpret_cast<int64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeULLong) { uint64 *fbuffer = reinterpret_cast<uint64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(idx.size()*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+
+  mh = handle;
   
-
-  mh = dynamic_cast<Matrix *>(mat->transpose());
+  return (true);
 }
 
+
+bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle weights)
+{
+  FILE*                   datafile;
+  int                     datafile_uni;
+
+  // Check whether we have an index ort multiple indices
+  if (weights.get_rep() == 0)
+  {
+    pr_->error("StreamMatrixAlgo: No indices given for colums");
+    return (false);
+  }
+  
+  SCIRun::SparseRowMatrix *spr_weights = weights->sparse();
+  SCIRun::MatrixHandle sprhandle = dynamic_cast<Matrix *>(spr_weights); 
+  
+  // Copy the indices into a more accessible vector
+  // Get the number of elements (sparse or dense it does not matter)
+  int    *rows = spr_weights->rows;
+  int    *cols  = spr_weights->columns;
+  double *vals = spr_weights->a;
+  int    nrows = spr_weights->nrows();
+  int    ncols = spr_weights->ncols();
+  int    nnz  = spr_weights->get_data_size(); 
+      
+  // Create the output matrix
+  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nnz,sizes_[1]);
+  if (mat == 0)
+  {
+    pr_->error("StreamMatrixAlgo: Could not allocate matrix");
+    return (false);
+  }   
+  
+  // Store matrix in a handle so that when we fail, the memory is automatically
+  // deallocated
+  SCIRun::MatrixHandle handle = dynamic_cast<SCIRun::Matrix *>(mat);
+  
+  if (mat == 0)
+  {
+    pr_->error("Could not allocate matrix");
+    return (false);
+  }
+  
+  // Get the buffer when output data needs to be written
+  double* dbuffer = mat->get_data_pointer();
+  char* buffer = reinterpret_cast<char *>(mat->get_data_pointer());  
+
+  // Get the column start and end
+  int cstart= 0;
+  int cend = sizes_[1];
+
+  // Data file counter
+  int k = 0;
+
+  while (1)
+  {
+    std::string fn = datafilename_;
+
+    // Do we have data spread out over multiple files
+    if (datafilenames_.size() > 0)
+    {
+     // check whether we already read all files
+      if (datafilenames_.size() == k) break; // done
+      // get start and end column
+      cstart = coloffset_[k];
+      cend = coloffset_[k+1];
+      // get filename
+      fn = datafilenames_[k];
+      k++;      
+    }
+    else
+    {
+      // incase we have one file
+      if (k > 0) break; // done
+      k++; //add one so next time we will break out of the loop
+    }
+
+
+  #ifndef HAVE_UNISTD_H
+    datafile = ::fopen(fn.c_str(),"rb");
+    if (datafile == 0) 
+    {
+      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
+      return (false);
+    }
+    
+    // Skip a number of lines at the start of the file
+    if (lineskip_ > 0)
+    {
+       char cbuffer;
+       int ln = lineskip_;
+       while (ln)
+       {
+          if(::fread(&cbuffer,1,1,datafile) != 1)
+          {
+            ::fclose(datafile);
+            pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
+            return (false);
+          }
+          if (cbuffer == '\n') ln--;
+       }
+    }
+    
+    // skip a number of bytes at the start
+    if (byteskip_ >= 0)
+    {
+      if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
+      {
+        ::fclose(datafile);
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
+      }
+    }
+    else
+    {
+      if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
+      {
+        fclose(datafile);
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
+      }
+    }
+
+    int oldidx = 0;
+
+    for (int j=cstart;j<cend;j++)
+    {
+      for (int p=0;p<nnz;p++)
+      {
+        if (::feesk(datafile,elemsize_*(cols[p]-oldidx),SEEK_CUR)!=0)
+        {
+          ::fclose(datafile);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");      
+          return (false);
+        }
+        oldidx = cols[p]+1;
+        
+        if (::fread(buffer+(elemsize_*(j+p*sizes_[1])),elemsize_,1,datafile) != 1)
+        {
+          ::fclose(datafile);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+          return (false);
+        }        
+      }
+
+      if (::fseek(datafile,elemsize_*(sizes_[0]),SEEK_CUR)!=0)
+      {
+        ::fclose(datafile);
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+        return (false);
+      }    
+    }
+    
+    ::fclose(datafile);
+
+  #else
+    datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
+    if (datafile_uni < 0) 
+    {
+      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
+      return (false);
+    }
+
+    if (lineskip_ > 0)
+    {
+       char cbuffer;
+       int ln = lineskip_;
+       while (ln)
+       {
+          if(::read(datafile_uni,&cbuffer,1) != 1)
+          {
+            ::close(datafile_uni);
+            pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
+            return (false);
+          }
+          if (cbuffer == '\n') ln--;
+       }
+    }
+    
+    // Accoring to Gordon's definition
+    if (byteskip_ >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
+      }
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(sizes_[0])*static_cast<off_t>(sizes_[1])*static_cast<off_t>(elemsize_),SEEK_END)<0)
+      {
+        ::close(datafile_uni);
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
+      }
+    }
+    
+    int oldidx = 0;
+    for (int j=cstart;j<cend;j++)
+    {
+      for (int p=0;p<nnz;p++)
+      {
+        if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(cols[p]-oldidx),SEEK_CUR)<0)
+        {
+          ::close(datafile_uni);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");      
+          return (false);
+        }
+        oldidx = cols[p]+1;
+
+        if (::read(datafile_uni,buffer+(elemsize_*(j+p*sizes_[1])),static_cast<size_t>(elemsize_)) != static_cast<size_t>(elemsize_))
+        {
+          ::close(datafile_uni);
+          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+          return (false);
+        }        
+      }
+
+      if (::lseek(datafile_uni,static_cast<size_t>(elemsize_)*static_cast<size_t>(sizes_[0]),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+        return (false);
+      }    
+    }
+    
+    ::close(datafile_uni);
+  #endif
+  }
+    
+  if (swapbytes_) doswapbytes(buffer,elemsize_,nnz*sizes_[1]);
+
+  if (ntype_ == nrrdTypeChar) { char *fbuffer = reinterpret_cast<char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUChar) { unsigned char *fbuffer = reinterpret_cast<unsigned char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeShort) { short *fbuffer = reinterpret_cast<short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUShort) { unsigned short *fbuffer = reinterpret_cast<unsigned short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeInt) { int *fbuffer = reinterpret_cast<int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeUInt) { unsigned int *fbuffer = reinterpret_cast<unsigned int *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeFloat) { float *fbuffer = reinterpret_cast<float *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeLLong) { int64 *fbuffer = reinterpret_cast<int64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+  if (ntype_ == nrrdTypeULLong) { uint64 *fbuffer = reinterpret_cast<uint64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(nnz*sizes_[1]-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
+
+  // Fit everything together again
+  
+  mh = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(nrows,sizes_[1]));
+
+  if (mh.get_rep() == 0)
+  {
+    pr_->error("StreamMatrixAlgo: Could not allocate output matrix");
+    return (false);  
+  }
+
+  int s = 0;
+  double* dataptr = mh->get_data_pointer();
+  for (int p=0; p<nrows;p++)
+  {
+    for (int q = 0; q < sizes_[1]; q++) dataptr[p*nrows+q] += 0.0;
+ 
+    for (int r = rows[p]; r<rows[p+1]; r++)
+    {
+      for (int q = 0; q < sizes_[1]; q++) dataptr[p*nrows+q] += vals[r]*dbuffer[s++];
+    }
+  }
+
+  mh = handle;
+  
+  return (true);
 }
+
+
+
+
+void StreamMatrixAlgo::gettype(std::string type,int& nrrdtype, int& elsize)
+{
+    if ((type == "char")||(type == "signedchar")||(type == "int8")||(type == "int8_t"))
+    {
+        nrrdtype = nrrdTypeChar; elsize = 1; return;
+    }
+    if  ((type == "unsignedchar")||(type == "uchar")||(type == "unit8")||(type == "uint8_t"))
+    {
+      nrrdtype = nrrdTypeUChar; elsize= 1; return;
+    }
+    if ((type == "short")||(type == "shortint")||(type == "signedshort")||(type == "signedshortint")||(type == "int16")||(type == "int_16"))
+    {
+        nrrdtype = nrrdTypeShort; elsize = 2; return;
+    }
+    if  ((type == "ushort")||(type == "unsignedshort")||(type == "unsignedshortint")||(type == "uint16")||(type == "uint16_t"))
+    {
+      nrrdtype = nrrdTypeUShort; elsize= 2; return;
+    }
+    if ((type == "int")||(type == "signedint")||(type == "int32")||(type == "int32_t")||(type == "long")||(type == "longint"))
+    {
+        nrrdtype = nrrdTypeInt; elsize = 4; return;
+    }
+    if  ((type == "uint")||(type == "unsignedint")||(type == "uint32")||(type == "uint32_t")||(type == "unsignedlong")||(type == "unsignedlongint"))
+    {
+      nrrdtype = nrrdTypeUInt; elsize= 4; return;
+    }  
+    if ((type == "longlong")||(type == "longlongint")||(type == "signedlonglong")||(type == "signedlonglongint")||(type == "int64")||(type == "int64_t"))
+    {
+        nrrdtype = nrrdTypeLLong; elsize = 8; return;
+    }
+    if  ((type == "unsignedlonglong")||(type == "unsignedlonglongint")||(type == "uint64")||(type == "uint64_t")||(type == "ulonglong"))
+    {
+      nrrdtype = nrrdTypeULLong; elsize= 8; return;
+    }  
+    if  ((type == "float")||(type == "single"))
+    {
+      nrrdtype = nrrdTypeFloat; elsize= 4; return;
+    }        
+    if  ((type == "double"))
+    {
+      nrrdtype = nrrdTypeDouble; elsize= 8; return;
+    }        
+        
+    nrrdtype = 0;
+    elsize = 0;    
+}
+
+
+int StreamMatrixAlgo::cmp_nocase(const std::string& s1, const std::string& s2)
+{
+  std::string::const_iterator p1 = s1.begin();
+  std::string::const_iterator p2 = s2.begin();
+  
+  while (p1 != s1.end() && p2 != s2.end())
+  {
+    if (toupper(*p1) != toupper(*p2)) return (( toupper(*p1) < toupper(*p2)) ? -1 : 1);
+    ++p1;
+    ++p2;
+  }
+  
+  return ((s2.size() == s1.size()) ? 0 : (s1.size() < s2.size()) ? -1 : 1);
+}
+
+std::string StreamMatrixAlgo::remspaces(std::string str)
+{
+  std::string newstr;
+  bool quote_on =false;
+  
+  for (std::string::size_type i=0;i<str.size();i++) 
+  {
+    if (str[i]=='"')
+    {
+      if (quote_on == false) quote_on = true; else quote_on = false;
+    }
+    if (quote_on) newstr += str[i]; else if ((str[i] != ' ' )&&(str[i] != '\t')&&(str[i] != '\n')&&(str[i] != '\r')) newstr += str[i];
+  }
+  return(newstr);
+}
+
+void StreamMatrixAlgo::doswapbytes(void *vbuffer,long elsize,long size)
+{
+   char temp;
+   char *buffer = static_cast<char *>(vbuffer);
+
+   size *= elsize;
+
+   switch(elsize)
+   {
+      case 0:
+      case 1:
+         // Do nothing. Element size is 1 byte, so there is nothing to swap
+         break;
+      case 2:  
+		// Do a 2 bytes element byte swap. 
+		for(long p=0;p<size;p+=2)
+		  { temp = buffer[p]; buffer[p] = buffer[p+1]; buffer[p+1] = temp; }
+		break;
+      case 4:
+		// Do a 4 bytes element byte swap.
+		for(long p=0;p<size;p+=4)
+		  { temp = buffer[p]; buffer[p] = buffer[p+3]; buffer[p+3] = temp; 
+			temp = buffer[p+1]; buffer[p+1] = buffer[p+2]; buffer[p+2] = temp; }
+		break;
+      case 8:
+		// Do a 8 bytes element byte swap.
+		for(long p=0;p<size;p+=8)
+		  { temp = buffer[p]; buffer[p] = buffer[p+7]; buffer[p+7] = temp; 
+			temp = buffer[p+1]; buffer[p+1] = buffer[p+6]; buffer[p+6] = temp; 
+			temp = buffer[p+2]; buffer[p+2] = buffer[p+5]; buffer[p+5] = temp; 
+			temp = buffer[p+3]; buffer[p+3] = buffer[p+4]; buffer[p+4] = temp; }
+   	    break;
+      default:
+       return;    
+   }  
+}
+
+} // end namespace ModelCreation
 

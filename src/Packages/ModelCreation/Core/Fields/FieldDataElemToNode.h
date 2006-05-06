@@ -30,21 +30,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_FIELDDATAELEMTONODE_H
 #define MODELCREATION_CORE_FIELDS_FIELDDATAELEMTONODE_H 1
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/DynamicCompilation.h>
-#include <Core/Util/ProgressReporter.h>
-
-
-// Basis classes
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Basis/Bases.h>
-
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Mesh.h>
-
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -55,18 +41,15 @@
 namespace ModelCreation {
 
 using namespace SCIRun;
-using namespace std;
 
 class FieldDataElemToNodeAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual bool execute(ProgressReporter *reporter,
+  virtual bool FieldDataElemToNode(ProgressReporter *pr,
                               FieldHandle input,
                               FieldHandle& output,
-                              std::string method) = 0;
-
-  static CompileInfoHandle get_compile_info(FieldHandle input);                                   
+                              std::string method);
 };
 
 
@@ -74,7 +57,7 @@ template<class FIELD, class OFIELD>
 class FieldDataElemToNodeAlgoT : public FieldDataElemToNodeAlgo
 {
 public:
-  virtual bool execute(ProgressReporter *reporter,
+  virtual bool FieldDataElemToNode(ProgressReporter *pr,
                               FieldHandle input,
                               FieldHandle& output,
                               std::string method);                          
@@ -82,7 +65,7 @@ public:
 
 
 template<class FIELD, class OFIELD>
-bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
+bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporter *pr,
                               FieldHandle input,
                               FieldHandle& output,
                               std::string method)
@@ -92,20 +75,20 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
   FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
   if (field == 0)
   {
-    reporter->error("FieldDataElemToNode: Object is not valid");
+    pr->error("FieldDataElemToNode: Object is not valid");
     return(false);
   }
 
   if (field->basis_order() > 0)
   {
-     reporter->warning("FieldDataElemToNode: Data is already located at nodes");
+     pr->warning("FieldDataElemToNode: Data is already located at nodes");
      output = input;
      return(true);   
   }
   
   if (field->basis_order() != 0)
   {
-     reporter->error("FieldDataElemToNode: Data is not located at elements");
+     pr->error("FieldDataElemToNode: Data is not located at elements");
      return(false);   
   }
 

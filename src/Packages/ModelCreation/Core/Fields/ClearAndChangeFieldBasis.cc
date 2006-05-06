@@ -70,7 +70,7 @@ bool ClearAndChangeFieldBasisAlgo::ClearAndChangeFieldBasis(ProgressReporter *pr
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ClearAndChangeFieldBasis."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOClearAndChangeFieldBasis."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "ClearAndChangeFieldBasisAlgo","ClearAndChangeFieldBasisAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 

@@ -83,7 +83,7 @@ bool FieldBoundaryAlgo::FieldBoundary(ProgressReporter *pr, FieldHandle input, F
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "FieldBoundary2."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOFieldBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "FieldBoundaryAlgo","FieldBoundaryAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 

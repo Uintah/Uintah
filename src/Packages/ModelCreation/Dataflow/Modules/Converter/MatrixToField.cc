@@ -29,7 +29,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
@@ -78,7 +78,7 @@ void MatrixToField::execute()
 
   MatrixHandle imatrix;
   FieldHandle ofield;
-  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+  ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
 
   std::string datalocation = guidatalocation_.get();
   

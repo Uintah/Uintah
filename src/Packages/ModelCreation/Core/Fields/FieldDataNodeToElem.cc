@@ -32,45 +32,63 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-CompileInfoHandle
-FieldDataNodeToElemAlgo::get_compile_info(FieldHandle field)
+bool FieldDataNodeToElemAlgo::FieldDataNodeToElem(ProgressReporter *pr,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              std::string method)
 {
-  const SCIRun::TypeDescription *basis_type = field->get_type_description(Field::BASIS_TD_E);
-  const SCIRun::TypeDescription::td_vec *basis_subtype = basis_type->get_sub_type();
-  const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
+  if (input.get_rep() == 0)
+  {
+    pr->error("FieldDataNodeToElem: No input source field");
+    return (false);
+  }
+
+  FieldInformation fi(input);
+  FieldInformation fo(output);
   
-  std::string basis =  "ConstantBasis<" + data_type->get_name() +"> ";
-  std::string datatype = data_type->get_name();
-  
+  fo.make_constantdata();
 
-              
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name = "FieldDataNodeToElemAlgoT";
-  std::string base_name = "FieldDataNodeToElemAlgo";
+  if (fi.is_constantdata())
+  {
+    pr->remark("FieldDataNodeToElem: Skipping conversion data is already at elements");
+    output = input;
+    return (true);
+  }
 
+  if (!(fi.is_lineardata()))
+  {
+    pr->error("FieldDataNodeToElem: This function needs to have data at the nodes");
+    return (false);  
+  }
 
+  if (fi.is_nonlinear())
+  {
+    pr->error("FieldDataNodeToElem: This function has not been implemented for non linear elements");
+    return (false);
+  }
 
-  std::string fieldtype_in = field->get_type_description()->get_name();
-  std::string fieldtype_out = field->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-              field->get_type_description(Field::MESH_TD_E)->get_name() + "," + basis + "," +
-              field->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", "> ") + " > ";
-
-  CompileInfoHandle ci = 
-    scinew CompileInfo(algo_name + "." +
-                       to_filename(fieldtype_in) + "." +    
-                       to_filename(fieldtype_out) + ".",
-                       base_name,
-                       algo_name,  
-                       fieldtype_in + "," + fieldtype_out);
+  CompileInfoHandle ci = scinew CompileInfo("ALGOFieldDataNodeToElemAlgo." +
+                       fi.get_field_filename() + "." + fo.get_field_filename() + ".",
+                       "FieldDataNodeToElemAlgo","FieldDataNodeToElemAlgoT",  
+                       fi.get_field_name() + "," + fo.get_field_name());
 
   // Add in the include path to compile this obj
-  ci->add_data_include(include_path);
+  ci->add_data_include(SCIRun::TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
   ci->add_namespace("SCIRun");
-  
-  field->get_type_description()->fill_compile_info(ci.get_rep());
-  return(ci);
+
+  fi.fill_compile_info(ci);
+  fo.fill_compile_info(ci);
+ 
+  SCIRun::Handle<FieldDataNodeToElemAlgo> algo;
+  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  {
+    pr->compile_error(ci->filename_);
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    return(false);
+  }
+
+  return(algo->FieldDataNodeToElem(pr,input,output,method));  
 }
 
 } // namespace ModelCreation

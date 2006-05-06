@@ -63,7 +63,7 @@ bool LinkToCompGridByDomainAlgo::LinkToCompGridByDomain(ProgressReporter *pr, Fi
   }
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "LinkToCompGridByDomain."+fi.get_field_filename()+".",
+    "ALGOLinkToCompGridByDomain."+fi.get_field_filename()+".",
     "LinkToCompGridByDomainAlgo","LinkToCompGridByDomainAlgoT",
     fi.get_field_name());
 

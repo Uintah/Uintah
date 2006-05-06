@@ -30,19 +30,8 @@
 #ifndef MODELCREATION_CORE_FIELDS_CLIPBYSELECTIONMASK_H
 #define MODELCREATION_CORE_FIELDS_CLIPBYSELECTIONMASK_H 1
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/DynamicCompilation.h>
-#include <Core/Util/ProgressReporter.h>
-
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/Mesh.h>
-
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
-#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -58,14 +47,13 @@ class ClipBySelectionMaskAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual bool execute(ProgressReporter *reporter,
+  virtual bool ClipBySelectionMask(ProgressReporter *reporter,
                        FieldHandle input,
                        FieldHandle& output,
                        MatrixHandle selmask,
                        MatrixHandle &interpolant,
-                       int nodeclipmode = 0) = 0;
+                       int nodeclipmode = 0);
 
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
 };
 
 
@@ -73,7 +61,7 @@ template <class FIELD>
 class ClipBySelectionMaskAlgoT : public ClipBySelectionMaskAlgo
 {
 public:
-  virtual bool execute(ProgressReporter *reporter,
+  virtual bool ClipBySelectionMask(ProgressReporter *reporter,
 			      FieldHandle input,
 			      FieldHandle& output,
             MatrixHandle selmask,
@@ -83,7 +71,7 @@ public:
 
 
 template <class FIELD>
-bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
+bool ClipBySelectionMaskAlgoT<FIELD>::ClipBySelectionMask(ProgressReporter *pr,
 				    FieldHandle input,
             FieldHandle& output,
             MatrixHandle selinput,
@@ -100,7 +88,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
   clipped->copy_properties(mesh);
 
 // I know this isn't the fastest algorithm, but otherwise I have to figure
-// out those painful iterators. This one is adapted from CipByFunction
+// out those painful iterators. This one is adapted from ClipByFunction
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -113,7 +101,8 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
     less<unsigned int> > hash_type;
 #endif
 
-  SelectionMask selmask(selinput);
+  MatrixHandle selmat = dynamic_cast<Matrix *>(selinput->dense());
+  double *selmask = selmat->get_data_pointer();
   int clipmode = -1;
   
   typename FIELD::mesh_type::Node::size_type nnodes;
@@ -124,16 +113,16 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
   switch (field->basis_order())
   {
     case -1:
-        if (selmask.size() == nnodes) clipmode = 1;
-        if (selmask.size() == nelems) clipmode = 0;
+        if (selmat->get_data_size() == nnodes) clipmode = 1;
+        if (selmat->get_data_size() == nelems) clipmode = 0;
         break;
     case 0:
-        if (selmask.size() == nelems) clipmode = 0;
-        if (selmask.size() == nnodes) clipmode = 1;
+        if (selmat->get_data_size() == nelems) clipmode = 0;
+        if (selmat->get_data_size() == nnodes) clipmode = 1;
         break;
     default:
-        if (selmask.size() == nnodes) clipmode = 0;        
-        if (selmask.size() == nelems) clipmode = 0;
+        if (selmat->get_data_size() == nnodes) clipmode = 0;        
+        if (selmat->get_data_size() == nelems) clipmode = 0;
         break;    
   }
 
@@ -190,19 +179,19 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
 
       for (unsigned int i = 0; i<onodes.size(); i++)
       {
-	if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
-	{
-	  Point np;
-	  mesh->get_center(np, onodes[i]);
-	  const typename FIELD::mesh_type::Node::index_type nodeindex =
-	    clipped->add_point(np);
-	  nodemap[(unsigned int)onodes[i]] = nodeindex;
-	  nnodes[i] = nodeindex;
-	}
-	else
-	{
-	  nnodes[i] = nodemap[(unsigned int)onodes[i]];
-	}
+        if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
+        {
+          Point np;
+          mesh->get_center(np, onodes[i]);
+          const typename FIELD::mesh_type::Node::index_type nodeindex =
+            clipped->add_point(np);
+          nodemap[(unsigned int)onodes[i]] = nodeindex;
+          nnodes[i] = nodeindex;
+        }
+        else
+        {
+          nnodes[i] = nodemap[(unsigned int)onodes[i]];
+        }
       }
       clipped->add_elem(nnodes);
       elemmap.push_back(*bi); // Assumes elements always added to end.
@@ -233,8 +222,8 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
     while (hitr != nodemap.end())
     {
       typename FIELD::value_type val;
-      field->value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).first));
-      ofield->set_value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).second));
+      field->value(val,static_cast<typename FIELD::mesh_type::Node::index_type>((*hitr).first));
+      ofield->set_value(val, static_cast<typename FIELD::mesh_type::Node::index_type>((*hitr).second));
       cc[(*hitr).second] = (*hitr).first;
       ++hitr;
     }
@@ -268,9 +257,8 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
     for (unsigned int i=0; i < elemmap.size(); i++)
     {
       typename FIELD::value_type val;
-      field->value(val,
-		   (typename FIELD::mesh_type::Elem::index_type)elemmap[i]);
-      ofield->set_value(val, (typename FIELD::mesh_type::Elem::index_type)i);
+      field->value(val,static_cast<typename FIELD::mesh_type::Elem::index_type>(elemmap[i]));
+      ofield->set_value(val, static_cast<typename FIELD::mesh_type::Elem::index_type>(i));
 
       cc[i] = elemmap[i];
     }

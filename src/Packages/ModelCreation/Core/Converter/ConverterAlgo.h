@@ -73,6 +73,9 @@ class ConverterAlgo : public AlgoLibrary {
     bool TransformToMatrix(Transform& trans, MatrixHandle& matrix);
     
     bool MatricesToDipoleField(MatrixHandle locations,MatrixHandle strengths,FieldHandle& Dipoles);
+    bool MatrixToField(MatrixHandle input, FieldHandle& output,std::string datalocation);
+    bool NrrdToField(NrrdDataHandle input, FieldHandle& output,std::string datalocation);
+
 };
 
 } // ModelCreation

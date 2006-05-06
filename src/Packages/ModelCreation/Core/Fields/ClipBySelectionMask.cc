@@ -32,28 +32,50 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-CompileInfoHandle
-ClipBySelectionMaskAlgo::get_compile_info(const TypeDescription *fsrc)
+bool
+ClipBySelectionMaskAlgo::ClipBySelectionMask(ProgressReporter *pr,
+                       FieldHandle input,
+                       FieldHandle& output,
+                       MatrixHandle selmask,
+                       MatrixHandle &interpolant,
+                       int nodeclipmode)
 {
+  if (input.get_rep() == 0)
+  {
+    pr->error("ClipBySelectionMask: No input field");
+    return (false);
+  }
 
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  std::string include_path(TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name("ClipBySelectionMaskAlgoT");
-  std::string base_name("ClipBySelectionMaskAlgo");
+  if (selmask.get_rep() == 0)
+  {
+    pr->error("ClipBySelectionMask: No input selection mask");
+    return (false);
+  }
 
-  CompileInfo *rval = 
-    scinew CompileInfo(algo_name + "." +
-                       fsrc->get_filename() + ".",
-                       base_name, 
-                       algo_name, 
-                       fsrc->get_name());
+  FieldInformation fi(input);
+  
+  CompileInfoHandle ci = 
+    scinew CompileInfo("ALGOClipBySelectionMask." + fi.get_field_filename() + ".",
+                       "ClipBySelectionMaskAlgo","ClipBySelectionMaskAlgoT",
+                       fi.get_field_name());
 
   // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  rval->add_namespace("ModelCreation");
-  rval->add_namespace("SCIRun");
-  fsrc->fill_compile_info(rval);
-  return rval;
+  ci->add_include(TypeDescription::cc_to_h(__FILE__));
+  ci->add_namespace("ModelCreation");
+  ci->add_namespace("SCIRun");
+  fi.fill_compile_info(ci);
+
+  // Handle dynamic compilation
+  SCIRun::Handle<ClipBySelectionMaskAlgo> algo;
+  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  {
+    pr->compile_error(ci->filename_);
+//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    return(false);
+  }
+
+  return(algo->ClipBySelectionMask(pr,input,output,selmask,interpolant,nodeclipmode));
+
 }
 
 } // namespace ModelCreation

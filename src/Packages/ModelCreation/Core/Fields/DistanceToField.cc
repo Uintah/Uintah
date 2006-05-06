@@ -50,7 +50,7 @@ DistanceToFieldAlgo::get_compile_info(FieldHandle srcfield,FieldHandle objectfie
   std::string base_name("DistanceToFieldAlgo");
 
   CompileInfoHandle ci = 
-    scinew CompileInfo(algo_name + "." +
+    scinew CompileInfo("ALGO"+algo_name + "." +
                        to_filename(fieldtype_in) + "." +
                        to_filename(fieldtype_object) + ".",
                        base_name, 

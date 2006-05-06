@@ -27,7 +27,7 @@
 */
 
 
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
@@ -56,7 +56,7 @@ BuildFEMatrix::BuildFEMatrix(GuiContext* ctx)
 
 void BuildFEMatrix::execute()
 {
-  NumericAlgo numericalgo(this);
+  MathAlgo numericalgo(this);
   
   FieldHandle Field;
   MatrixHandle Conductivity;

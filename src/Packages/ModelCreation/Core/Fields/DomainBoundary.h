@@ -27,8 +27,8 @@
 */
 
 
-#ifndef MODELCREATION_CORE_FIELDS_COMPARTMENTBOUNDARY_H
-#define MODELCREATION_CORE_FIELDS_COMPARTMENTBOUNDARY_H 1
+#ifndef MODELCREATION_CORE_FIELDS_DOMAINBOUNDARY_H
+#define MODELCREATION_CORE_FIELDS_DOMAINBOUNDARY_H 1
 
 #include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
@@ -37,18 +37,18 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class CompartmentBoundaryAlgo : public DynamicAlgoBase
+class DomainBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 };
 
 
 template <class FSRC, class FDST>
-class CompartmentBoundaryAlgoT : public CompartmentBoundaryAlgo
+class DomainBoundaryAlgoT : public DomainBoundaryAlgo
 {
 public:
-  virtual bool CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
 
 private:
   typedef class {
@@ -63,26 +63,26 @@ private:
 
 
 template <class FSRC, class FDST>
-bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundaryAlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
   {
-    pr->error("CompartmentBoundary: Could not obtain input field");
+    pr->error("DomainBoundary: Could not obtain input field");
     return (false);
   }
 
   typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
   if (imesh == 0)
   {
-    pr->error("CompartmentBoundary: No mesh associated with input field");
+    pr->error("DomainBoundary: No mesh associated with input field");
     return (false);
   }
 
   typename FDST::mesh_handle_type omesh = scinew typename FDST::mesh_type();
   if (omesh == 0)
   {
-    pr->error("CompartmentBoundary: Could not create output field");
+    pr->error("DomainBoundary: Could not create output field");
     return (false);
   }
   
@@ -90,7 +90,7 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   output = dynamic_cast<Field*>(ofield);
   if (ofield == 0)
   {
-    pr->error("CompartmentBoundary: Could not create output field");
+    pr->error("DomainBoundary: Could not create output field");
     return (false);
   }
   
@@ -118,7 +118,7 @@ bool CompartmentBoundaryAlgoT<FSRC, FDST>::CompartmentBoundary(ProgressReporter 
   {
     if ((numdelems != DomainLink->nrows())&&(numdelems != DomainLink->ncols()))
     {
-      pr->error("CompartmentBoundary: The Domain Link property is not of the right dimensions");
+      pr->error("DomainBoundary: The Domain Link property is not of the right dimensions");
       return (false);        
     }
     SparseRowMatrix *spr = dynamic_cast<SparseRowMatrix *>(DomainLink.get_rep());

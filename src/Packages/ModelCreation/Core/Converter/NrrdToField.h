@@ -26,46 +26,22 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/GetFieldData.h>
+
+#ifndef MODELCREATION_CORE_CONVERTER_NRRDTOFIELD_H
+#define MODELCREATION_CORE_CONVERTER_NRRDTOFIELD_H 1
+
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool GetFieldDataAlgo::GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::MatrixHandle& output)
+class NrrdToFieldAlgo
 {
+public:
+  bool NrrdToField(ProgressReporter *pr, NrrdDataHandle input, FieldHandle& output,std::string datalocation);
+};
 
-  if (input.get_rep() == 0)
-  {
-    pr->error("GetFieldData: No input source field");
-    return (false);
-  }
+} // end namespace ModelCreation
 
-  FieldInformation fi(input);
-  
-  std::string algo_type = "Scalar";  
-  if (fi.is_vector()) algo_type = "Vector";
-  if (fi.is_tensor()) algo_type = "Tensor";
-  
-  SCIRun::CompileInfoHandle ci = scinew CompileInfo("ALGOGetFieldDataAlgo." + fi.get_field_filename() + ".",
-                       "GetFieldDataAlgo","GetField" + algo_type + "DataAlgoT", fi.get_field_name());
-                       
-  // Add in the include path to compile this obj
-  ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("ModelCreation");   
-  ci->add_namespace("SCIRun");
-  
-  fi.fill_compile_info(ci);
-
-  SCIRun::Handle<GetFieldDataAlgo> algo;
-  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
-  {
-    pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
-    return(false);
-  }
-
-  return(algo->GetFieldData(pr,input,output));
-}
-
-} // namespace ModelCreation
+#endif 

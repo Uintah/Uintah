@@ -69,7 +69,7 @@ bool TransformFieldAlgo::TransformField(ProgressReporter *pr, FieldHandle input,
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "TransformField."+fi.get_field_filename()+".",
+    "ALGOTransformField."+fi.get_field_filename()+".",
     "TransformFieldAlgo","TransformField"+algotype+"AlgoT",
     fi.get_field_name());
 

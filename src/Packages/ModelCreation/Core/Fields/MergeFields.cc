@@ -113,7 +113,7 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
   //  4) The template descriptors separated by commas
    
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "MergeFields."+fi.get_field_filename()+".",
+    "ALGOMergeFields."+fi.get_field_filename()+".",
     "MergeFieldsAlgo","MergeFieldsAlgoT",
     fi.get_field_name());
 

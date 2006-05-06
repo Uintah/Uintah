@@ -79,7 +79,7 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "Unstructure."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOUnstructure."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "UnstructureAlgo","UnstructureAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 

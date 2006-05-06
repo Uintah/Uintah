@@ -26,61 +26,89 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
+#include <Packages/ModelCreation/Core/Fields/DomainBoundary.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-bool SplitFieldByElementDataAlgo::SplitFieldByElementData(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool DomainBoundaryAlgo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
 {
   if (input.get_rep() == 0)
   {
-    pr->error("SplitFieldByElementData: No input field");
+    pr->error("DomainBoundary: No input field");
     return (false);
   }
+
+  // no precompiled version available, so compile one
 
   FieldInformation fi(input);
+  FieldInformation fo(input);
+  
   if (fi.is_nonlinear())
   {
-    pr->error("SplitFieldByElementData: This function has not yet been defined for non-linear elements.");
+    pr->error("DomainBoundary: This function has not yet been defined for non-linear elements");
     return (false);
   }
-
+  
   if (!(fi.is_constantdata()))
   {
-    pr->error("SplitFieldByElementData: This function only works for data located at the elements");
-    return (false);
+    pr->error("DomainBoundary: This function needs a compartment definition on the elements (constant element data)");
+    return (false);    
   }
-
-  if (!(fi.is_unstructuredmesh()))
-  {
-    pr->error("SplitFieldByElementData: This function only works for unstructured meshes");
-    return (false);
-  }
-
   
+  if (!(fi.is_volume()||fi.is_surface()))
+  {
+    pr->error("DomainBoundary: THis function is only defined for surface and volume data");
+    return (false);
+  }
+
+  std::string mesh_type = fi.get_mesh_type();
+  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh")||(mesh_type == "HexVolMesh"))
+  {
+    fo.set_mesh_type("QuadSurfMesh");
+  }
+  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "TriSurfMesh"))
+  {
+    fo.set_mesh_type("CurveMesh");
+  }
+  else if (mesh_type == "TetVolMesh")
+  {
+    fo.set_mesh_type("TriSurfMesh");
+  }
+  else
+  {
+    pr->error("No method available for mesh: " + mesh_type);
+    return (false);
+  }
+
+  fo.make_nodata();
+
+  // Setup dynamic files
+
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "SplitFieldByElementDataAlgoT." + fi.get_field_filename() + ".",
-    "SplitFieldByElementDataAlgo","SplitFieldByElementDataAlgoT",
-    fi.get_field_name());
+    "ALGODomainBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "DomainBoundaryAlgo","DomainBoundaryAlgoT",
+    fi.get_field_name() + "," + fo.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("ModelCreation");
   ci->add_namespace("SCIRun");
-
+  
   fi.fill_compile_info(ci);
+  fo.fill_compile_info(ci);
   
   // Handle dynamic compilation
-  SCIRun::Handle<SplitFieldByElementDataAlgo> algo;
+  SCIRun::Handle<DomainBoundaryAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->SplitFieldByElementData(pr,input,output));    
+  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
 
-} // namespace ModelCreation
+
+} // End namespace ModelCreation

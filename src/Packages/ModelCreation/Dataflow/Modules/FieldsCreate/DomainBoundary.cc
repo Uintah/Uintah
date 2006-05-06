@@ -83,7 +83,7 @@ void DomainBoundary::execute()
   includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
   innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
 
-  if(!(algo.CompartmentBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly))) return;
+  if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly))) return;
   
   send_output_handle("Field",ofield,true);
 }

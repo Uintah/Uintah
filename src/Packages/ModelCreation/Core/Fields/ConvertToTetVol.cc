@@ -79,7 +79,7 @@ bool ConvertToTetVolAlgo::ConvertToTetVol(ProgressReporter *pr, FieldHandle inpu
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ConvertToTetVol."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOConvertToTetVol."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "ConvertToTetVolAlgo",algotype,
     fi.get_field_name() + "," + fo.get_field_name());
 

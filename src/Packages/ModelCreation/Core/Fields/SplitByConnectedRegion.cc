@@ -66,7 +66,7 @@ bool SplitByConnectedRegionAlgo::SplitByConnectedRegion(ProgressReporter *pr, Fi
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "SplitByConnectedRegion."+fi.get_field_filename()+".",
+    "ALGOSplitByConnectedRegion."+fi.get_field_filename()+".",
     "SplitByConnectedRegionAlgo","SplitByConnectedRegionAlgoT",
     fi.get_field_name());
 

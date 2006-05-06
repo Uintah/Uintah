@@ -57,7 +57,7 @@ bool LinkFieldBoundaryAlgo::LinkFieldBoundary(ProgressReporter *pr, FieldHandle 
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "LinkFieldBoundary."+fi.get_field_filename()+".",
+    "ALGOLinkFieldBoundary."+fi.get_field_filename()+".",
     "LinkFieldBoundaryAlgo","LinkFieldBoundaryAlgoT",
     fi.get_field_name());
 
