@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Numeric/NumericAlgo.h>
-#include <Core/Algorithms/Numeric/BuildFEMatrix.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
+#include <Core/Algorithms/Math/BuildFEMatrix.h>
 
 #include <Core/Algorithms/Fields/FieldCount.h>
 #include <Core/Datatypes/MatrixOperations.h>
@@ -38,12 +38,12 @@
 
 namespace SCIRun {
 
-NumericAlgo::NumericAlgo(ProgressReporter* pr) :
+MathAlgo::MathAlgo(ProgressReporter* pr) :
   AlgoLibrary(pr)
 {
 }
 
-bool NumericAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable, MatrixHandle GeomToComp, MatrixHandle CompToGeom)
+bool MathAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable, MatrixHandle GeomToComp, MatrixHandle CompToGeom)
 {
   BuildFEMatrixAlgo algo;
   
@@ -67,7 +67,7 @@ bool NumericAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num
 }
 
 
-bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
+bool MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
 { 
   if (input->is_sparse())
   {
@@ -160,7 +160,7 @@ bool NumericAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, 
   return (false);
 }
 
-bool NumericAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& output, int m, int n)
+bool MathAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& output, int m, int n)
 {
   std::sort(input.begin(),input.end());
   
@@ -222,7 +222,7 @@ bool NumericAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& o
 
 
 
-bool NumericAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mapping,bool calcmapping)
+bool MathAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mapping,bool calcmapping)
 {
   int *rr, *cc;
   double *d;
@@ -407,7 +407,7 @@ bool NumericAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHan
 } 
  
 
-bool NumericAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mapping,bool calcmapping)
+bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mapping,bool calcmapping)
 {
  int *rr, *cc;
   double *d;
@@ -593,7 +593,7 @@ bool NumericAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& ma
   return (true);
 }
 
-bool NumericAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::string method)
+bool MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::string method)
 {
   if (input.get_rep() == 0)
   {
@@ -810,7 +810,7 @@ bool NumericAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, st
   return (true);
 }
 
-bool NumericAlgo::ApplyColumnOperation(MatrixHandle input, MatrixHandle& output, std::string method)
+bool MathAlgo::ApplyColumnOperation(MatrixHandle input, MatrixHandle& output, std::string method)
 {
   if (input.get_rep() == 0)
   {

@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Numeric/BuildFEMatrix.h>
+#include <Core/Algorithms/Math/BuildFEMatrix.h>
 
 namespace SCIRun {
 
@@ -57,7 +57,7 @@ bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, M
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "BuildFEMatrixAlgorithm."+fi.get_field_filename()+".",
+    "ALGOBuildFEMatrix."+fi.get_field_filename()+".",
     "BuildFEMatrixAlgo","BuildFEMatrixAlgoT",
     fi.get_field_name());
 

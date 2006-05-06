@@ -10,9 +10,9 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/Algorithms/Numeric
+SRCDIR   := Core/Algorithms/Math
 
-SRCS     += $(SRCDIR)/NumericAlgo.cc\
+SRCS     += $(SRCDIR)/MathAlgo.cc\
             $(SRCDIR)/BuildFEMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 

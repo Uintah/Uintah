@@ -34,6 +34,12 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/String.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/NrrdData.h>
+#include <Core/Bundle/Bundle.h>
+
 namespace SCIRun {
 
 class AlgoLibrary {
