@@ -227,17 +227,25 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
                                          vector<double> &w,
                                          vector<vector<double> >  &d)
 {
-  typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
-  const onerow *C = get_tensor(dynamic_cast<Field *>(hField_.get_rep())->value(c_ind)).mat_;
+/*   typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC */
+/*   const onerow *C = get_tensor(dynamic_cast<Field *>(hField_.get_rep())->value(c_ind)).mat_; */
 
-  double Ca = C[0][0] * unitsScale_;
-  double Cb = C[0][1] * unitsScale_;
-  double Cc = C[0][2] * unitsScale_;
-  double Cd = C[1][1] * unitsScale_;
-  double Ce = C[1][2] * unitsScale_;
-  double Cf = C[2][2] * unitsScale_;
+/*   double Ca = C[0][0] * unitsScale_; */
+/*   double Cb = C[0][1] * unitsScale_; */
+/*   double Cc = C[0][2] * unitsScale_; */
+/*   double Cd = C[1][1] * unitsScale_; */
+/*   double Ce = C[1][2] * unitsScale_; */
+/*   double Cf = C[2][2] * unitsScale_; */
 	
-  for (int i=0; i<local_dimension_; i++)
+  double Ca = 0.;
+  double Cb = 0.;
+  double Cc = unitsScale_;
+  double Cd = unitsScale_;
+  double Ce = 0.;
+  double Cf = unitsScale_;
+
+
+ for (int i=0; i<local_dimension_; i++)
   {
     l_stiff[i] = 0.0;
   }
@@ -314,27 +322,34 @@ BuildFEMatrix<Field>::setup()
 
   local_dimension_nodes_ = mb_.number_of_mesh_vertices();
   local_dimension_add_nodes_ =
-    mb_.number_of_mesh_vertices()-mb_.number_of_vertices();
+    mb_.number_of_vertices()-mb_.number_of_mesh_vertices();
   local_dimension_derivatives_ = 0;
   //!< Degrees of freedom (dofs) of system.
   local_dimension_ = local_dimension_nodes_ 
     + local_dimension_add_nodes_ + local_dimension_derivatives_;
+  //#ifdef BUILDFEM_DEBUG
+  cerr << "Ldn " <<  local_dimension_nodes_ << endl;
+  cerr << "Ldan " <<  local_dimension_add_nodes_ << endl;
+  cerr << "Ldd " <<  local_dimension_derivatives_ << endl;
+  cerr << "Ldd " <<  local_dimension_ << endl;
+  //#endif
+
   ASSERT(mb_.dofs() == local_dimension_);
 
   typename Mesh::Node::size_type mns;
   hMesh_->size(mns);
   global_dimension_nodes_ = mns;
-  global_dimension_add_nodes_ = pField_->get_basis().size_node_values();
-  global_dimension_derivatives_ = pField_->get_basis().size_derivatives();
+  global_dimension_add_nodes_ = hMesh_->get_basis().size_node_values();
+  global_dimension_derivatives_ = hMesh_->get_basis().size_derivatives();
   global_dimension_ = global_dimension_nodes_ +
     global_dimension_add_nodes_ + global_dimension_derivatives_;
 
-#ifdef BUILDFEM_DEBUG
+  //#ifdef BUILDFEM_DEBUG
   cerr << "Gdn " <<  global_dimension_nodes_ << endl;
   cerr << "Gdan " <<  global_dimension_add_nodes_ << endl;
   cerr << "Gdd " <<  global_dimension_derivatives_ << endl;
   cerr << "Gdd " <<  global_dimension_ << endl;
-#endif
+  //#endif
 
   hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
   rows_ = scinew int[global_dimension_ + 1];
@@ -390,8 +405,8 @@ BuildFEMatrix<Field>::parallel(int proc)
     {
       //! Check for additional nodes at edges.
       //! Get neighboring cells for node.
-      //      const int ii = i-global_dimension_nodes;
-      //      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
+      const int ii = i-global_dimension_nodes_;
+      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
     }
     else
     {
@@ -416,14 +431,14 @@ BuildFEMatrix<Field>::parallel(int proc)
         hMesh_->get_edges(ea, ca[j]);
 
         for(unsigned int k = 0; k < ea.size(); k++)
-          neib_dofs.push_back(global_dimension_ + ea[k]);
+          neib_dofs.push_back(global_dimension_nodes_ + ea[k]);
       }
     }
 	
     sort(neib_dofs.begin(), neib_dofs.end());
 
 #ifdef BUILDFEM_DEBUG
-    cerr << i << ' ';
+    cerr << i << '\r';
 #endif
 
     for (unsigned int j=0; j<neib_dofs.size(); j++)
@@ -524,6 +539,7 @@ BuildFEMatrix<Field>::parallel(int proc)
   //! Loop over system dofs for this thread.
   for (int i = start_gd; i<end_gd; i++)
   {
+    cerr << i << endl;
     if (i < global_dimension_nodes_)
     {
       //! Convert int index to node index.
@@ -536,8 +552,8 @@ BuildFEMatrix<Field>::parallel(int proc)
     {
       //! Check for additional nodes at edges.
       //! Get neighboring cells for additional nodes.
-      //      const int ii=i-global_dimension_nodes;
-      //      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
+      const int ii=i-global_dimension_nodes_;
+      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
     }
     else
     {
@@ -549,8 +565,10 @@ BuildFEMatrix<Field>::parallel(int proc)
     {
       neib_dofs.clear();
       int dofi = -1; //!< Index of global dof in local dofs.
-      hMesh_->get_nodes(na, ca[j]); //!< Get neighboring nodes.
-      for(int k = 0; k < (int)na.size(); k++)
+      hMesh_->get_nodes(na, ca[j]); //!< Get neighboring element's nodes.
+      // 	cerr << "na: " << na.size() << endl;
+
+     for(int k = 0; k < (int)na.size(); k++)
       {
         // Must cast to (int) for SGI compiler :-(
 	neib_dofs.push_back((int)(na[k]));
@@ -560,11 +578,13 @@ BuildFEMatrix<Field>::parallel(int proc)
       //! Check for additional nodes at edges.
       if (global_dimension_add_nodes_)
       {
-	hMesh_->get_edges(ea, ca[j]); //!< Get neighboring edges.
+	hMesh_->get_edges(ea, ca[j]); //!< Get neighboring element's edges.
+	cerr << "ea: " << ea.size() << endl;
+
 	for(int k = 0; k < (int)ea.size(); k++)
         {
-	  neib_dofs.push_back(global_dimension_ + ea[k]);
-	  if ((int)na[k] == i)
+	  neib_dofs.push_back(global_dimension_nodes_ + ea[k]);
+	  if (global_dimension_nodes_ +(int)ea[k] == i)
 	    dofi = neib_dofs.size() - 1;
 	}
       }
