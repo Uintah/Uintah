@@ -11,7 +11,7 @@ UNUSED = [ ("ice_perf_test", "icePerformanceTest.ups", 1, "Linux","", ["do_perf"
 ]
 
 TESTS = [   ("dlb_mpm", "mpmDLBTest.ups", 8, "NONE"), \
-            ("dlb_mpmice", "mpmiceDLBTest.ups", 8, "ALL"), \
+            ("dlb_mpmice", "mpmiceDLBTest.ups", 8, "NONE"), \
             ("periodic_disks", "periodic_disks.ups", 6, "ALL"),  \
             ("switcher", "JP8-switch.ups", 8, "NONE")
         ]
