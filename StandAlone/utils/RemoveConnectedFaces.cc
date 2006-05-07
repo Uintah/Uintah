@@ -130,7 +130,7 @@ main(int argc, char **argv) {
   vector<TSMesh::Face::index_type> faces;
   if (node_idx_p) {
     tsm->synchronize(Mesh::NODE_NEIGHBORS_E);
-    tsm->get_elems(faces, atoi(argv[3]));
+    tsm->get_elems(faces, static_cast<TSMesh::Node::index_type>(atoi(argv[3])));
   } else {
     find_connected_faces(atoi(argv[3]), tsm, faces);
   }
