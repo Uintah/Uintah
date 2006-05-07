@@ -230,12 +230,13 @@ protected:
 			  bool use_transparency, unsigned div,
 			  bool use_texture_for_face = false);
   GeomHandle render_faces_linear(Fld *fld, 
-				 ColorMapHandle color_handle,
-				 MaterialHandle def_mat,
-				 bool force_def_color,
-				 bool use_normals,
-				 bool use_transparency,
-				 bool use_texture_for_face = false);
+        ColorMapHandle color_handle,
+        MaterialHandle def_mat,
+        bool force_def_color,
+        bool use_normals,
+        bool use_transparency,
+        bool use_texture_for_face = false);      
+         
   virtual GeomHandle render_texture_face(Fld *fld, 
                                          ColorMapHandle color_handle,
                                          MaterialHandle def_mat,
@@ -402,10 +403,10 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   {
     if (do_linear) {
       face_switch_ = render_faces_linear(fld, color_handle, def_mat, ffdc,
-					 use_normals, f_transp, fut);
+           use_normals, f_transp, fut);
     } else {
       face_switch_ = render_faces(fld, color_handle, def_mat, ffdc,
-				  use_normals, f_transp, div, fut);
+          use_normals, f_transp, div, fut);
     }
   }
 
@@ -1411,6 +1412,11 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
   GeomHandle face_switch;
   GeomFastTriangles* faces;
   GeomFastQuads* qfaces;
+  GeomFastTrianglesTwoSided* tfaces;
+  GeomFastQuadsTwoSided* tqfaces;
+
+  bool def_color = !(color_handle.get_rep()) || force_def_color;
+  
   if (use_transparency)
   {
     faces = scinew GeomTranspTriangles;
@@ -1419,6 +1425,16 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
     tmp->add(faces);
     tmp->add(qfaces);
     face_switch = tmp;
+  }
+  else if ((sfld->basis_order() == 0) && (mesh->dimensionality() == 3) && !def_color)
+  {
+    tfaces = scinew GeomFastTrianglesTwoSided;
+    tqfaces = scinew GeomFastQuadsTwoSided;
+    GeomGroup *tmp = scinew GeomGroup;
+    tmp->add(tfaces);
+    tmp->add(tqfaces);
+    GeomDL *dl = scinew GeomDL(tmp);
+    face_switch = dl;
   }
   else
   {
@@ -1431,8 +1447,6 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
     face_switch = dl;
   }
 
-  // Use a default color?
-  bool def_color = !(color_handle.get_rep()) || force_def_color;
   bool vec_color = false;
   vector<MaterialHandle> vcol(20, (Material *)NULL);
   vector<Vector> vvals(20);
@@ -1651,6 +1665,103 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
         }
       }
     }
+    else if (sfld->basis_order() == 0 && mesh->dimensionality() == 3 && !def_color)
+    {
+      typename Fld::value_type val,val2;
+      typename Fld::mesh_type::Elem::array_type cells;
+      mesh->get_elems(cells,*fiter);
+      
+      sfld->value(val, cells[0]);
+      if (cells.size() > 1) sfld->value(val2, cells[1]); else val2 = val;
+
+      if (vec_color)
+      {
+        Vector vval, vval2;
+        to_vector(val, vval);
+        to_vector(val2, vval2);
+        
+        sciVectorToColor(vcol[0]->diffuse, vval);
+        sciVectorToColor(vcol[1]->diffuse, vval2);
+
+        if (nodes.size() == 4)
+        {
+          if (with_normals)
+          {
+            tqfaces->add(points[0], normals[0], vcol[0], vcol[1],
+                        points[1], normals[1], vcol[0], vcol[1],
+                        points[2], normals[2], vcol[0], vcol[1],
+                        points[3], normals[3], vcol[0], vcol[1]);
+          }
+          else
+          {
+            tqfaces->add(points[0], vcol[0], vcol[1],
+                        points[1], vcol[0], vcol[1],
+                        points[2], vcol[0], vcol[1],
+                        points[3], vcol[0], vcol[1]);
+          }
+        }
+        else
+        {
+          for (i=2; i<nodes.size(); i++)
+          {
+            if (with_normals)
+            {
+              tfaces->add(points[0], normals[0], vcol[0], vcol[1],
+                         points[i-1], normals[i-1], vcol[0], vcol[1],
+                         points[i], normals[i], vcol[0], vcol[1]);
+            }
+            else
+            {
+              tfaces->add(points[0], vcol[0], vcol[1],
+                         points[i-1], vcol[0], vcol[1],
+                         points[i], vcol[0], vcol[1]);
+            }
+          }
+        }
+      }
+      else
+      {
+        double dval, dval2;
+        to_double(val, dval);
+        to_double(val2, dval2);
+
+        if (nodes.size() == 4)
+        {
+          if (with_normals)
+          {
+            tqfaces->add(points[0], normals[0], dval, dval2,
+                        points[1], normals[1], dval, dval2,
+                        points[2], normals[2], dval, dval2,
+                        points[3], normals[3], dval, dval2);
+          }
+          else
+          {
+            tqfaces->add(points[0], dval, dval2,
+                        points[1], dval, dval2,
+                        points[2], dval, dval2,
+                        points[3], dval, dval2);
+          }
+        }
+        else
+        {
+          for (i=2; i<nodes.size(); i++)
+          {
+            if (with_normals)
+            {
+              tfaces->add(points[0], normals[0], dval, dval2,
+                         points[i-1], normals[i-1], dval, dval2,
+                         points[i], normals[i], dval, dval2);
+            }
+            else
+            {
+              tfaces->add(points[0], dval, dval2,
+                         points[i-1], dval, dval2,
+                         points[i], dval, dval2);
+            }
+          }
+        }
+      }
+    }
     else
     {
       if (nodes.size() == 4)
@@ -1689,6 +1800,7 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
 
   return face_switch;
 }
+
 
 template <class Fld, class Loc>
 GeomHandle 
