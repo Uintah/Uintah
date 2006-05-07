@@ -257,6 +257,9 @@ public:
                               typename Cell::index_type ci,
                               typename Face::index_type fi) const;
 
+  //! Use get_elems instead of get_cells(). get_cells() is going to
+  //! be replaced by get_elems(). In dynamic code use get_elems() as
+  //! it is implemented in every class, whereas get_cells() is not
   void get_cells(typename Cell::array_type &array,
                  typename Node::index_type idx) const;
   void get_cells(typename Cell::array_type &array,
@@ -264,9 +267,20 @@ public:
   void get_cells(typename Cell::array_type &array,
                  typename Face::index_type idx) const;
 
+
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   { get_cells(result, idx); }
+  void get_elems(typename Elem::array_type &result,
+                 typename Edge::index_type idx) const
+  { get_cells(result, idx); }
+  //! This function will return the cells in the following order
+  //! first cell that links to the front face and then the one
+  //! that links to the back face
+  void get_elems(typename Elem::array_type &result,
+                 typename Face::index_type idx) const
+  { get_cells(result, idx); }
+
 
   bool get_neighbor(typename Cell::index_type &neighbor,
                     typename Cell::index_type from,
@@ -554,7 +568,7 @@ protected:
     // The order of nodes_ corresponds with cells_[0] for CW/CCW purposes.
     typename Node::index_type         nodes_[3];  //! 3 nodes makes a face.
     typename Cell::index_type         cells_[2];  //! 2 cells share this face.
-    typename Node::index_type         snodes_[4]; //! sorted nodes,for hashing
+    typename Node::index_type         snodes_[3]; //! sorted nodes,for hashing
 
     PFace() {
       nodes_[0] = MESH_NO_NEIGHBOR;
@@ -1540,7 +1554,7 @@ TetVolMesh<Basis>::get_faces(typename Face::array_type &array,
   PFace f3(cells_[off + 0], cells_[off + 1], cells_[off + 2]);
 
   ASSERTMSG(synchronized_ & FACES_E,
-            "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on TetVolMesh first");
   array.push_back((*(face_table_.find(f0))).second);
   array.push_back((*(face_table_.find(f1))).second);
   array.push_back((*(face_table_.find(f2))).second);
@@ -1554,6 +1568,8 @@ void
 TetVolMesh<Basis>::get_cells(typename Cell::array_type &array,
                              typename Edge::index_type idx) const
 {
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize FACES_E on TetVolMesh first");
   array = edges_[idx].cells_;
 }
 
@@ -1563,7 +1579,23 @@ void
 TetVolMesh<Basis>::get_cells(typename Cell::array_type &array,
                              typename Face::index_type idx) const
 {
-  array = faces_[idx].cells_;
+  ASSERTMSG(synchronized_ & FACES_E,
+            "Must call synchronize FACES_E on TetVolMesh first");
+  if (faces_[idx].cells_[1] == MESH_NO_NEIGHBOR)
+  {
+    array.resize(1);
+    array[0] = faces_[idx].cells_[0];
+  }
+  else
+  {
+    array.resize(2);
+    // Fix the order for drawing:
+    // first return front face and then
+    // back face.
+    // This was somehow inverted in the table
+    array[0] = faces_[idx].cells_[1];
+    array[1] = faces_[idx].cells_[0];
+  }
 }
 
 //! Return in fi the face that is opposite the node ni in the cell ci.

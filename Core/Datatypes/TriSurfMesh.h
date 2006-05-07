@@ -229,6 +229,11 @@ public:
     for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
       result.push_back(node_neighbors_[idx][i]/3);
   }
+  void get_elems(typename Elem::array_type &result,
+                 typename Edge::index_type idx) const {}
+  void get_elems(typename Elem::array_type &result,
+                 typename Face::index_type idx) const {}
+
 
   //! Wrapper to get the derivative elements from this element.
   void get_delems(typename DElem::array_type &result,

@@ -444,6 +444,11 @@ public:
   //! get the parent element(s) of the given index
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const;
+  void get_elems(typename Elem::array_type &result,
+                 typename Edge::index_type idx) const;
+  void get_elems(typename Elem::array_type &result,
+                 typename Face::index_type idx) const {}
+
 
   //! Wrapper to get the derivative elements from this element.
   void get_delems(typename DElem::array_type &result,
@@ -760,6 +765,34 @@ ImageMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::ind
   array[2] = idx.i_    *(nj_-1) + idx.j_+ j_idx;
   array[3] = (idx.i_+1)*(nj_-1) + idx.j_+ j_idx;
 }
+
+template<class Basis>
+void
+ImageMesh<Basis>::get_elems(typename Face::array_type &array, typename Edge::index_type idx) const
+{
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset = (ni_-1)*nj_;
+  
+  if (idx < offset)
+  {
+    const unsigned int j = idx/(ni_-1); 
+    const unsigned int i = idx - j*(ni_-1);
+    if (j < (nj_-1)) array.push_back(IFaceIndex(this,i,j));
+    if (j > 0) array.push_back(IFaceIndex(this,i,j-1));  
+  }
+  else
+  {
+    idx -= offset;
+    const unsigned int i = idx/(nj_-1); 
+    const unsigned int j = idx - i*(nj_-1);
+    if (i < (ni_-1)) array.push_back(IFaceIndex(this,i,j));
+    if (i > 0) array.push_back(IFaceIndex(this,i-1));  
+  }
+}
+
+
 
 
 template<class Basis>
