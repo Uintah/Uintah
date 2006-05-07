@@ -86,6 +86,15 @@ Persistent* make_GeomFastTriangles()
 
 PersistentTypeID GeomFastTriangles::type_id("GeomFastTriangles", "GeomObj", make_GeomFastTriangles);
 
+
+Persistent* make_GeomFastTrianglesTwoSided()
+{
+    return scinew GeomFastTrianglesTwoSided;
+}
+
+PersistentTypeID GeomFastTrianglesTwoSided::type_id("GeomFastTrianglesTwoSided", "GeomObj", make_GeomFastTrianglesTwoSided);
+
+
 Persistent* make_GeomTrianglesP()
 {
     return scinew GeomTrianglesP;
@@ -481,6 +490,226 @@ void GeomFastTriangles::io(Piostream& stream)
     Pio(stream, points_);
     Pio(stream, colors_);
     Pio(stream, indices_);
+    Pio(stream, normals_);
+    stream.end_class();
+}
+
+
+GeomFastTrianglesTwoSided::GeomFastTrianglesTwoSided() :
+ material_(0), material2_(0)
+{
+}
+
+GeomFastTrianglesTwoSided::GeomFastTrianglesTwoSided(const GeomFastTrianglesTwoSided& copy)
+  : points_(copy.points_),
+    colors_(copy.colors_),
+    colors2_(copy.colors2_),
+    indices_(copy.indices_),
+    indices2_(copy.indices2_),
+    normals_(copy.normals_),
+    face_normals_(copy.face_normals_)
+{
+}
+
+GeomFastTrianglesTwoSided::~GeomFastTrianglesTwoSided()
+{
+}
+
+GeomObj*
+GeomFastTrianglesTwoSided::clone()
+{
+  return scinew GeomFastTrianglesTwoSided(*this);
+}
+
+
+int
+GeomFastTrianglesTwoSided::size()
+{
+  return points_.size() / 9;
+}
+
+
+void
+GeomFastTrianglesTwoSided::get_bounds(BBox& bb)
+{
+  for(unsigned int i=0;i<points_.size();i+=3)
+  {
+    bb.extend(Point(points_[i+0], points_[i+1], points_[i+2]));
+  }
+}
+
+void
+GeomFastTrianglesTwoSided::add(const Point &p0,
+		       const Point &p1,
+		       const Point &p2)
+{
+  Vector n(Cross(p1-p0, p2-p0));
+#ifndef SCI_NORM_OGL
+  if(n.length2() > 0)
+  {
+    n.normalize();
+  }
+  else
+  {
+    cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
+    return;
+  }
+#endif
+
+  points_.push_back(p0.x());
+  points_.push_back(p0.y());
+  points_.push_back(p0.z());
+
+  points_.push_back(p1.x());
+  points_.push_back(p1.y());
+  points_.push_back(p1.z());
+
+  points_.push_back(p2.x());
+  points_.push_back(p2.y());
+  points_.push_back(p2.z());
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+}
+
+
+void
+GeomFastTrianglesTwoSided::add(const Point &p0, const Vector &n0,
+		       const Point &p1, const Vector &n1,
+		       const Point &p2, const Vector &n2)
+{
+  add(p0, p1, p2);
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+}
+
+
+void
+GeomFastTrianglesTwoSided::add(const Point &p0, double i0, double j0,
+		       const Point &p1, double i1, double j1,
+		       const Point &p2, double i2, double j2)
+{
+  add(p0, p1, p2);
+
+  indices_.push_back(i0);
+  indices_.push_back(i1);
+  indices_.push_back(i2);
+
+  indices2_.push_back(j0);
+  indices2_.push_back(j1);
+  indices2_.push_back(j2);
+}
+
+void
+GeomFastTrianglesTwoSided::add(const Point &p0, const MaterialHandle &m0, const MaterialHandle &k0,
+		       const Point &p1, const MaterialHandle &m1, const MaterialHandle &k1,
+		       const Point &p2, const MaterialHandle &m2,  const MaterialHandle &k2)
+{
+  add(p0, p1, p2);
+
+  colors_.push_back(COLOR_FTOB(m0->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m0->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m0->diffuse.b()));
+
+  colors_.push_back(COLOR_FTOB(m1->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m1->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m1->diffuse.b()));
+
+  colors_.push_back(COLOR_FTOB(m2->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m2->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m2->diffuse.b()));
+
+  colors2_.push_back(COLOR_FTOB(k0->diffuse.r()));
+  colors2_.push_back(COLOR_FTOB(k0->diffuse.g()));
+  colors2_.push_back(COLOR_FTOB(k0->diffuse.b()));
+
+  colors2_.push_back(COLOR_FTOB(k1->diffuse.r()));
+  colors2_.push_back(COLOR_FTOB(k1->diffuse.g()));
+  colors2_.push_back(COLOR_FTOB(k1->diffuse.b()));
+
+  colors2_.push_back(COLOR_FTOB(k2->diffuse.r()));
+  colors2_.push_back(COLOR_FTOB(k2->diffuse.g()));
+  colors2_.push_back(COLOR_FTOB(k2->diffuse.b()));
+
+  material_ = m0;
+  material2_ = k0;
+}
+
+
+void
+GeomFastTrianglesTwoSided::add(const Point &p0, const Vector &n0,
+		       const MaterialHandle &m0, const MaterialHandle &k0,
+		       const Point &p1, const Vector &n1,
+		       const MaterialHandle &m1, const MaterialHandle &k1,
+		       const Point &p2, const Vector &n2,
+		       const MaterialHandle &m2, const MaterialHandle &k2)
+{
+  add(p0, m0, k0, p1, m1, k1, p2, m2, k2);
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+}
+
+
+void
+GeomFastTrianglesTwoSided::add(const Point &p0, const Vector &n0, double i0, double j0,
+		       const Point &p1, const Vector &n1, double i1, double j1,
+		       const Point &p2, const Vector &n2, double i2, double j2)
+{
+  add(p0, i0, j0, p1, i1, j1, p2, i2, j2);
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+}
+
+
+#define GEOMFASTTRIANGLESTWOSIDED_VERSION 1
+
+void GeomFastTrianglesTwoSided::io(Piostream& stream)
+{
+    stream.begin_class("GeomFastTrianglesTwoSided", GEOMFASTTRIANGLESTWOSIDED_VERSION);
+    Pio(stream, points_);
+    Pio(stream, colors_);
+    Pio(stream, colors2_);
+    Pio(stream, indices_);
+    Pio(stream, indices2_);
     Pio(stream, normals_);
     stream.end_class();
 }

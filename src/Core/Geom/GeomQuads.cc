@@ -411,5 +411,257 @@ void GeomTranspQuads::io(Piostream& stream)
   stream.end_class();
 }
 
+
+
+Persistent* make_GeomFastQuadsTwoSided()
+{
+    return scinew GeomFastQuadsTwoSided;
+}
+
+PersistentTypeID GeomFastQuadsTwoSided::type_id("GeomFastQuadsTwoSided", "GeomObj", make_GeomFastQuadsTwoSided);
+
+
+GeomFastQuadsTwoSided::GeomFastQuadsTwoSided()
+  : material_(0), material2_(0)
+{
+}
+
+GeomFastQuadsTwoSided::GeomFastQuadsTwoSided(const GeomFastQuadsTwoSided& copy)
+  : points_(copy.points_),
+    colors_(copy.colors_),
+    colors2_(copy.colors2_),
+    normals_(copy.normals_),
+    material_(copy.material_),
+    material2_(copy.material2_)
+{
+}
+
+GeomFastQuadsTwoSided::~GeomFastQuadsTwoSided()
+{
+}
+
+
+GeomObj*
+GeomFastQuadsTwoSided::clone()
+{
+  return scinew GeomFastQuadsTwoSided(*this);
+}
+
+
+int
+GeomFastQuadsTwoSided::size()
+{
+  return points_.size() / 12;
+}
+
+
+void
+GeomFastQuadsTwoSided::get_bounds(BBox& bb)
+{
+  for(unsigned int i=0;i<points_.size();i+=3)
+  {
+    bb.extend(Point(points_[i+0], points_[i+1], points_[i+2]));
+  }
+}
+
+
+void
+GeomFastQuadsTwoSided::add(const Point &p0, const Point &p1,
+		   const Point &p2, const Point &p3)
+{
+  // Assume planar, use first three to compute normal.
+  Vector n(Cross(p1-p0, p2-p0));
+#ifndef SCI_NORM_OGL
+  if(n.length2() > 0)
+  {
+    n.normalize();
+  }
+  else
+  {
+    cerr << "Degenerate triangle in GeomQuads::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
+    return;
+  }
+#endif
+
+  add(p0, n, p1, n, p2, n, p3, n);
+}
+
+
+void
+GeomFastQuadsTwoSided::add(const Point &p0, const MaterialHandle &m0, const MaterialHandle &k0,
+		   const Point &p1, const MaterialHandle &m1, const MaterialHandle &k1,
+		   const Point &p2, const MaterialHandle &m2, const MaterialHandle &k2,
+		   const Point &p3, const MaterialHandle &m3, const MaterialHandle &k3)
+{
+  // Assume planar, use first three to compute normal.
+  Vector n(Cross(p1-p0, p2-p0));
+#ifndef SCI_NORM_OGL
+  if(n.length2() > 0)
+  {
+    n.normalize();
+  }
+  else
+  {
+    cerr << "Degenerate triangle in GeomQuads::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
+    return;
+  }
+#endif
+
+  add(p0, n, m0, k0, p1, n, m1, k1, p2, n, m2, k2, p3, n, m3, k3);
+}
+
+
+
+void
+GeomFastQuadsTwoSided::add(const Point &p0, const Vector &n0,
+		   const Point &p1, const Vector &n1,
+		   const Point &p2, const Vector &n2,
+		   const Point &p3, const Vector &n3)
+{
+  points_.push_back(p0.x());
+  points_.push_back(p0.y());
+  points_.push_back(p0.z());
+
+  points_.push_back(p1.x());
+  points_.push_back(p1.y());
+  points_.push_back(p1.z());
+
+  points_.push_back(p2.x());
+  points_.push_back(p2.y());
+  points_.push_back(p2.z());
+
+  points_.push_back(p3.x());
+  points_.push_back(p3.y());
+  points_.push_back(p3.z());
+
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+
+  normals_.push_back(n3.x());
+  normals_.push_back(n3.y());
+  normals_.push_back(n3.z());
+}
+
+
+void
+GeomFastQuadsTwoSided::add(const Point &p0, double i0, double j0,
+		   const Point &p1, double i1, double j1,
+		   const Point &p2, double i2, double j2,
+		   const Point &p3, double i3, double j3)
+{
+  add(p0, p1, p2, p3);
+  
+  indices_.push_back(i0);
+  indices_.push_back(i1);
+  indices_.push_back(i2);
+  indices_.push_back(i3);
+
+  indices2_.push_back(j0);
+  indices2_.push_back(j1);
+  indices2_.push_back(j2);
+  indices2_.push_back(j3);
+}
+
+
+void
+GeomFastQuadsTwoSided::add(const Point &p0, const Vector &n0,
+		   const MaterialHandle &m0, const MaterialHandle &k0,
+		   const Point &p1, const Vector &n1,
+		   const MaterialHandle &m1, const MaterialHandle &k1,
+		   const Point &p2, const Vector &n2,
+		   const MaterialHandle &m2, const MaterialHandle &k2,
+		   const Point &p3, const Vector &n3,
+		   const MaterialHandle &m3, const MaterialHandle &k3)
+{
+  add(p0, n0, p1, n1, p2, n2, p3, n3);
+
+  colors_.push_back(COLOR_FTOB(m0->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m0->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m0->diffuse.b()));
+
+  colors_.push_back(COLOR_FTOB(m1->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m1->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m1->diffuse.b()));
+
+  colors_.push_back(COLOR_FTOB(m2->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m2->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m2->diffuse.b()));
+
+  colors_.push_back(COLOR_FTOB(m3->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m3->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m3->diffuse.b()));
+
+  colors2_.push_back(COLOR_FTOB(k0->diffuse.r()));
+  colors2_.push_back(COLOR_FTOB(k0->diffuse.g()));
+  colors2_.push_back(COLOR_FTOB(k0->diffuse.b()));
+
+  colors2_.push_back(COLOR_FTOB(k1->diffuse.r()));
+  colors2_.push_back(COLOR_FTOB(k1->diffuse.g()));
+  colors2_.push_back(COLOR_FTOB(k1->diffuse.b()));
+
+  colors2_.push_back(COLOR_FTOB(k2->diffuse.r()));
+  colors2_.push_back(COLOR_FTOB(k2->diffuse.g()));
+  colors2_.push_back(COLOR_FTOB(k2->diffuse.b()));
+
+  colors2_.push_back(COLOR_FTOB(k3->diffuse.r()));
+  colors2_.push_back(COLOR_FTOB(k3->diffuse.g()));
+  colors2_.push_back(COLOR_FTOB(k3->diffuse.b()));
+
+  material_ = m0;
+  material2_ = k0;
+}
+
+
+
+void
+GeomFastQuadsTwoSided::add(const Point &p0, const Vector &n0, double i0, double j0,
+		   const Point &p1, const Vector &n1, double i1, double j1,
+		   const Point &p2, const Vector &n2, double i2, double j2,
+		   const Point &p3, const Vector &n3, double i3, double j3)
+{
+  add(p0, n0, p1, n1, p2, n2, p3, n3);
+
+  indices_.push_back(i0);
+  indices_.push_back(i1);
+  indices_.push_back(i2);
+  indices_.push_back(i3);
+
+  indices2_.push_back(j0);
+  indices2_.push_back(j1);
+  indices2_.push_back(j2);
+  indices2_.push_back(j3);
+}
+
+
+#define GEOMFASTQUADSTWOSIDED_VERSION 1
+
+void GeomFastQuadsTwoSided::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomFastQuadsTwoSided", GEOMFASTQUADSTWOSIDED_VERSION);
+    Pio(stream, points_);
+    Pio(stream, colors_);
+    Pio(stream, colors2_);
+    Pio(stream, indices_);
+    Pio(stream, indices2_);
+    Pio(stream, normals_);
+    stream.end_class();
+}
+
+
+
+
+
+
 } // End namespace SCIRun
 

@@ -135,6 +135,53 @@ public:
 
 
 
+class SCISHARE GeomFastTrianglesTwoSided : public GeomObj {
+protected:
+  vector<float> points_;
+  vector<unsigned char> colors_;
+  vector<unsigned char> colors2_;  
+  vector<float> indices_;
+  vector<float> indices2_;
+  vector<float> normals_;
+  vector<float> face_normals_;
+  MaterialHandle material_;
+  MaterialHandle material2_;
+  
+public:
+  GeomFastTrianglesTwoSided();
+  GeomFastTrianglesTwoSided(const GeomFastTrianglesTwoSided&);
+  virtual ~GeomFastTrianglesTwoSided();
+  virtual GeomObj* clone();
+
+  int size(void);
+  void add(const Point &p0, const Point &p1, const Point &p2);
+  void add(const Point &p0, const Vector &n0,
+	   const Point &p1, const Vector &n1,
+	   const Point &p2, const Vector &n2);
+  void add(const Point &p0, const MaterialHandle &m0, const MaterialHandle &k0,
+	   const Point &p1, const MaterialHandle &m1, const MaterialHandle &k1,
+	   const Point &p2, const MaterialHandle &m2, const MaterialHandle &k2);
+  void add(const Point &p0, double cindex0, double dindex0,
+	   const Point &p1, double cindex1, double dindex1,
+	   const Point &p2, double cindex2, double dindex2);
+  void add(const Point &p0, const Vector &n0, const MaterialHandle &m0, const MaterialHandle &k0,
+	   const Point &p1, const Vector &n1, const MaterialHandle &m1, const MaterialHandle &k1,
+	   const Point &p2, const Vector &n2, const MaterialHandle &m2, const MaterialHandle &k2);     
+  void add(const Point &p0, const Vector &n0, double i0, double j0,
+	   const Point &p1, const Vector &n1, double i1, double j1,
+	   const Point &p2, const Vector &n2, double i2, double j2);
+
+  virtual void get_bounds(BBox& bb);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+};
+
+
 class SCISHARE GeomTranspTriangles : public GeomFastTriangles
 {
 protected:

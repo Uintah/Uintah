@@ -3995,6 +3995,144 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 void
+GeomFastTrianglesTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+  di->polycount_ += size();
+
+  glShadeModel(GL_FLAT);
+  glDisable(GL_NORMALIZE);
+  if (di->currently_lit_)
+  {
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#endif
+    if (di->get_drawtype() == DrawInfoOpenGL::Flat ||
+        normals_.size() < face_normals_.size())
+    {
+      glNormalPointer(GL_FLOAT, 0, &(face_normals_.front()));
+    }
+    else
+    {
+      glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    }
+    glEnableClientState(GL_NORMAL_ARRAY);
+    if (di->get_drawtype() != DrawInfoOpenGL::Flat)
+    {
+      glShadeModel(GL_SMOOTH);
+    }
+  }
+  else
+  {
+    glDisableClientState(GL_NORMAL_ARRAY);
+  }
+
+  if (material_.get_rep()) { di->set_material(material_.get_rep()); }
+  if (colors_.size())
+  {
+    glColorPointer(3, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+  
+  bool cullenable = false;
+  if (glIsEnabled(GL_CULL_FACE)) cullenable = true;
+
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+
+
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
+  {
+    glBegin(GL_TRIANGLES);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
+  }
+  else
+  {
+    glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
+  }
+
+  glCullFace(GL_FRONT);
+
+  if (material2_.get_rep()) { di->set_material(material2_.get_rep()); }
+  if (colors2_.size())
+  {
+    glColorPointer(3, GL_UNSIGNED_BYTE, 0, &(colors2_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices2_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
+  if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
+  {
+    glBegin(GL_TRIANGLES);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
+  }
+  else
+  {
+    glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
+  }
+
+  if (!(cullenable)) glDisable(GL_CULL_FACE);
+
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glEnable(GL_NORMALIZE);
+  glShadeModel(GL_SMOOTH);
+  glDisable(GL_TEXTURE_1D);
+
+  post_draw(di);
+}
+
+
+void
 GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
@@ -4212,6 +4350,152 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   post_draw(di);
 }
+
+
+
+void
+GeomFastQuadsTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+  di->polycount_ += size();
+
+  if (di->currently_lit_)
+  {
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#else
+    glDisable(GL_NORMALIZE);
+#endif
+    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    glEnableClientState(GL_NORMAL_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisable(GL_NORMALIZE);
+  }
+
+  if (material_.get_rep()) { di->set_material(material_.get_rep()); }
+  if (colors_.size())
+  {
+    glColorPointer(3, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_FLAT);
+  }
+  else
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  bool cullenable = false;
+  if (glIsEnabled(GL_CULL_FACE)) cullenable = true;
+
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+  
+  if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
+  {
+    glBegin(GL_QUADS);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
+  }
+  else
+  {
+    glDrawArrays(GL_QUADS, 0, points_.size()/3);
+  }
+
+  glCullFace(GL_FRONT);
+ 
+  if (material2_.get_rep()) { di->set_material(material2_.get_rep()); }
+  if (colors2_.size())
+  {
+    glColorPointer(3, GL_UNSIGNED_BYTE, 0, &(colors2_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+  
+    
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices2_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+  
+  if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
+  {
+    glBegin(GL_QUADS);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
+  }
+  else
+  {
+    glDrawArrays(GL_QUADS, 0, points_.size()/3);
+  }
+    
+  if(!(cullenable)) glDisable(GL_CULL_FACE);
+  
+  glDisableClientState(GL_NORMAL_ARRAY);
+
+  glEnable(GL_NORMALIZE);
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  glDisable(GL_TEXTURE_1D);
+
+  post_draw(di);
+}
+
+
+
 
 
 void
