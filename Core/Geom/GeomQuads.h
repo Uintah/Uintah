@@ -100,6 +100,57 @@ public:
 };
 
 
+class SCISHARE GeomFastQuadsTwoSided : public GeomObj {
+protected:
+  vector<float> points_;
+  vector<unsigned char> colors_;
+  vector<unsigned char> colors2_;  
+  vector<float> indices_;
+  vector<float> indices2_;
+  vector<float> normals_;
+  MaterialHandle material_;
+  MaterialHandle material2_;
+ 
+public:
+  GeomFastQuadsTwoSided();
+  GeomFastQuadsTwoSided(const GeomFastQuadsTwoSided&);
+  virtual ~GeomFastQuadsTwoSided();
+  virtual GeomObj* clone();
+
+  int size(void);
+  void add(const Point &p0, const Point &p1,
+	   const Point &p2, const Point &p3);
+  void add(const Point &p0, const Vector &n0,
+	   const Point &p1, const Vector &n1,
+	   const Point &p2, const Vector &n2,
+	   const Point &p3, const Vector &n3);
+  void add(const Point &p0, double cindex0, double dindex0,
+	   const Point &p1, double cindex1, double dindex1,
+	   const Point &p2, double cindex2, double dindex2,
+	   const Point &p3, double cindex3, double dindex3);
+  void add(const Point &p0, const MaterialHandle &m0, const MaterialHandle &k0,
+	   const Point &p1, const MaterialHandle &m1, const MaterialHandle &k1,
+	   const Point &p2, const MaterialHandle &m2, const MaterialHandle &k2,
+	   const Point &p3, const MaterialHandle &m3, const MaterialHandle &k3);     
+  void add(const Point &p0, const Vector &n0, double cindex0, double dindex0,
+	   const Point &p1, const Vector &n1, double cindex1, double dindex1,
+	   const Point &p2, const Vector &n2, double cindex2, double dindex2,
+	   const Point &p3, const Vector &n3, double cindex3, double dindex3);
+  void add(const Point &p0, const Vector &n0, const MaterialHandle &m0, const MaterialHandle &k0,
+	   const Point &p1, const Vector &n1, const MaterialHandle &m1, const MaterialHandle &k1,
+	   const Point &p2, const Vector &n2, const MaterialHandle &m2, const MaterialHandle &k2,
+	   const Point &p3, const Vector &n3, const MaterialHandle &m3, const MaterialHandle &k3);
+     
+  virtual void get_bounds(BBox& bb);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+};
+
 
 class SCISHARE GeomTranspQuads : public GeomFastQuads
 {
