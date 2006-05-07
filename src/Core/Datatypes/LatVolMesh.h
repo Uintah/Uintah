@@ -673,6 +673,11 @@ public:
   //! get the parent element(s) of the given index
   void get_elems(typename Elem::array_type &result,
                  const typename Node::index_type &idx) const;
+  void get_elems(typename Elem::array_type &result,
+                 const typename Edge::index_type &idx) const;
+  void get_elems(typename Elem::array_type &result,
+                 const typename Face::index_type &idx) const;
+
 
   //! Wrapper to get the derivative elements from this element.
   void get_delems(typename DElem::array_type &result,
@@ -1278,6 +1283,76 @@ LatVolMesh<Basis>::get_edges(typename Edge::array_type &array,
 
 template <class Basis>
 void
+LatVolMesh<Basis>::get_elems(typename Cell::array_type &result,
+                             const typename Edge::index_type &eidx) const
+{
+  result.reserve(4);
+  result.clear();
+  const unsigned int offset1 = (ni_-1)*nj_*nk_;
+  const unsigned int offset2 = offset1 + ni_*(nj_-1)*nk_;
+  unsigned idx = eidx;
+
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_)*(ni_-1)); idx -= k*(nj_)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (j > 0)
+    {
+      if (k < (nk_-1)) result.push_back(CellIndex(this,i,j-1,k));
+      if (k > 0) result.push_back(CellIndex(this,i,j-1,k-1));
+    }
+    
+    if (j < (nj_-1))
+    {
+      if (k < (nk_-1)) result.push_back(CellIndex(this,i,j,k));
+      if (k > 0) result.push_back(CellIndex(this,i,j,k-1));
+    }
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_)); idx -= j*(nk_-1)*(ni_);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (i > 0)
+    {
+      if (j < (nj_-1)) result.push_back(CellIndex(this,i-1,j,k));    
+      if (j > 0) result.push_back(CellIndex(this,i-1,j-1,k));
+    }
+    
+    if (i < (ni_-1))
+    {
+      if (j < (nj_-1)) result.push_back(CellIndex(this,i,j,k));    
+      if (j > 0) result.push_back(CellIndex(this,i,j-1,k));
+    }
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_)*(nj_-1)); idx -= i*(nk_)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (k > 0)
+    {
+      if (i < (nk_-1)) result.push_back(CellIndex(this,i,j,k-1));
+      if (i > 0) result.push_back(CellIndex(this,i-1,j,k-1));
+    }
+
+    if (k < (nk_-1))
+    {
+      if (i < (ni_-1)) result.push_back(CellIndex(this,i,j,k));        
+      if (i > 0) result.push_back(CellIndex(this,i-1,j,k));
+    }
+  }
+}
+
+
+template <class Basis>
+void
 LatVolMesh<Basis>::get_faces(typename Face::array_type &array,
                              const typename Cell::index_type &idx) const
 {
@@ -1300,6 +1375,48 @@ LatVolMesh<Basis>::get_faces(typename Face::array_type &array,
   array[5] = offset2 + k + (i + (j+1) * (ni_-1)) * (nk_-1);
 }
 
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_elems(typename Cell::array_type &result,
+                             const typename Face::index_type &fidx) const
+{
+  result.reserve(2);
+  result.clear();
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+  unsigned idx = fidx;
+
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_-1)*(ni_-1)); idx -= k*(nj_-1)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (k < (nk_-1)) result.push_back(CellIndex(this,i,j,k));
+    if (k > 0) result.push_back(CellIndex(this,i,j,k-1));
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_-1)); idx -= j*(nk_-1)*(ni_-1);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (j < (nj_-1)) result.push_back(CellIndex(this,i,j,k));    
+    if (j > 0) result.push_back(CellIndex(this,i,j-1,k));
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_-1)*(nj_-1)); idx -= i*(nk_-1)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (i < (ni_-1)) result.push_back(CellIndex(this,i,j,k));        
+    if (i > 0) result.push_back(CellIndex(this,i-1,j,k));
+  }
+}
 
 template <class Basis>
 void

@@ -183,6 +183,11 @@ public:
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const
   { result.clear(); result.push_back(idx); }
+  void get_elems(typename Elem::array_type &result,
+                 typename Edge::index_type idx) const {}
+  void get_elems(typename Elem::array_type &result,
+                 typename Face::index_type idx) const {}
+
 
   //! get the center point (in object space) of an element
   void get_center(Point &p, typename Node::index_type i) const { p = points_[i]; }

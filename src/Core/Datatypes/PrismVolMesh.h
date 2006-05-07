@@ -659,6 +659,15 @@ public:
                  typename Node::index_type idx) const
   { get_cells(result, idx); }
 
+  void get_elems(typename Elem::array_type &result,
+                 typename Edge::index_type idx) const
+  { get_cells(result, idx); }
+
+  void get_elems(typename Elem::array_type &result,
+                 typename Face::index_type idx) const
+  { get_cells(result, idx); }
+
+
   //! Wrapper to get the derivative elements from this element.
   void get_delems(typename DElem::array_type &result,
                   typename Elem::index_type idx) const

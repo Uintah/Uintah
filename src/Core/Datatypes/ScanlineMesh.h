@@ -209,6 +209,10 @@ public:
   //! get the parent element(s) of the given index
   void get_elems(typename Elem::array_type &result,
                  typename Node::index_type idx) const;
+  void get_elems(typename Elem::array_type &result,
+                 typename Edge::index_type idx) const {}
+  void get_elems(typename Elem::array_type &result,
+                 typename Face::index_type idx) const {}
 
   //! Wrapper to get the derivative elements from this element.
   void get_delems(typename DElem::array_type &result,

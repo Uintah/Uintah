@@ -295,7 +295,12 @@ public:
 
   //! Get the parent element(s) of the given index.
   void get_elems(typename Elem::array_type &result,
-                 typename Node::index_type node) const;
+                 typename Node::index_type idx) const;
+  void get_elems(typename Elem::array_type &result,
+                 typename Edge::index_type idx) const;
+  void get_elems(typename Elem::array_type &result,
+                 typename Face::index_type idx) const;
+
 
   //! Wrapper to get the derivative elements from this element.
   void get_delems(typename DElem::array_type &result,
@@ -2089,6 +2094,37 @@ HexVolMesh<Basis>::cell_type_description()
                                 TypeDescription::MESH_E);
   }
   return td;
+}
+
+
+template <class Basis>
+void
+HexVolMesh<Basis>::get_elems(typename Cell::array_type &array,
+                             typename Edge::index_type idx) const
+{
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize FACES_E on HexVolMesh first");
+  array = edges_[idx].cells_;
+}
+
+template <class Basis>
+void
+HexVolMesh<Basis>::get_elems(typename Cell::array_type &array,
+                             typename Face::index_type idx) const
+{
+  ASSERTMSG(synchronized_ & FACES_E,
+            "Must call synchronize FACES_E on HexVolMesh first");
+  if (faces_[idx].cells_[1] == MESH_NO_NEIGHBOR)
+  {
+    array.resize(1);
+    array[0] = faces_[idx].cells_[0];
+  }
+  else
+  {
+    array.resize(2);
+    array[0] = faces_[idx].cells_[0];
+    array[1] = faces_[idx].cells_[1];
+  }
 }
 
 
