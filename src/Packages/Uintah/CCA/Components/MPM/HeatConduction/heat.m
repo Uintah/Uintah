@@ -41,9 +41,13 @@ function [K,F] = form_matrix(K,F,points,elems,materials,dt,theta,T)
     element(1) = elems(elem_num,1);
     element(2) = elems(elem_num,2);
     [KE,C] = element_linear(elem_num,element,points,materials);
+#    KE
+#    C
     K = assemble(element,K,KE,C,dt,theta);
     F = source_term(element,F,KE,C,dt,theta,T);
   endfor
+  K
+  F
 
 endfunction
 
@@ -71,7 +75,7 @@ function [KE,Ca] = element_linear(i,element,points,materials)
 
   KE(1:2,1:2)=0;
 
-  Ka = Kalpha(1,shape,weight,kond); # 1 gauss point for integration
+  Ka = Kalpha(2,shape,weight,kond); # 1 gauss point for integration
   Ca = Capacitance(2,shape,weight,density,specific_heat); # 2 gauss pt integ
 
   KE = Ka;
@@ -96,10 +100,15 @@ function [xi,weight] = gauss_quadrature
   xi(1,1) = 0;
   weight(1,1) = 2;
   
-  xi(2,1) = -1/sqrt(3);
+  xi(2,1) = -1/2;
   xi(2,2) = -xi(2,1);
   weight(2,1) = 1;
   weight(2,2) = weight(2,1);
+
+#  xi(2,1) = -1/sqrt(3);
+#  xi(2,2) = -xi(2,1);
+#  weight(2,1) = 1;
+#  weight(2,2) = weight(2,1);
   
   
   xi(3,1) = -sqrt(3/5);
@@ -254,6 +263,26 @@ function T = set_intial_condition(initial_temp,num)
 
 endfunction
 
+function Texact = exact_solution(x,t,n,bc,initial_temp,bar,mat)
+
+  C = initial_temp - bc.left; # f(x) - U_0
+  D = bc.right - bc.left;     # U_l - U_0
+  c_p = mat.specific_heat(1);
+  rho = mat.density(1);
+  k = mat.kond(1);
+
+  T_ic = 0;
+  for (i=1:n)
+    A = (2/(pi*i))*(1-cos(i*pi))*C - 2*D/(pi^2*i^2)*(sin(pi*i) - pi*i*cos(pi*i));
+    T_ic += A*sin(i*pi*x/bar)*exp(-i^2 * pi^2 * t * k/(c_p*rho*bar^2));
+  endfor
+
+  T_ss = bc.left + D/bar * x;
+
+  Texact = T_ss + T_ic; 
+
+endfunction
+
 
 function main()
   
@@ -301,19 +330,34 @@ function main()
   materials = create_materials_element(p,e,mat);
   T = set_intial_condition(initial_temp,length(p));
 
-  
+  mid_pt = ceil(length(p)/2)
+
   t = 0;
   while (t <= end_time)
-    [K,F] = initialize_K_F(length(p));
-    [Keff,Feff] = form_matrix(K,F,p,e,materials,dt,theta,T);
-    [Keff,Feff] = apply_bcs(Keff,Feff,bcs,materials);
-    T = solve_system(Keff,Feff)
     xlabel("Bar points");
     ylabel("Temperature");
     plot_title = "Temperature at ";
     plot_time = num2str(t);
     title(strcat(plot_title,plot_time," seconds"));
-    plot(p,T)
+    hold off;
+    plot(p,T);
+    hold on;
+    Tex = exact_solution(p,t,30,bc,initial_temp,bar,mat);
+    plot(p,Tex,'x')
+    printf("At %f, T = %f, Texact = %f\n",p(mid_pt),T(mid_pt),Tex(mid_pt));
+    T(mid_pt)
+#    pl=input('hit return');
+    [K,F] = initialize_K_F(length(p));
+    [Keff,Feff] = form_matrix(K,F,p,e,materials,dt,theta,T);
+    Feff
+    [Keff,Feff] = apply_bcs(Keff,Feff,bcs,materials);
+#    Keff
+    Feff
+    T = solve_system(Keff,Feff);
+    t
+    T
+    
+    
     t += dt;
   endwhile
 endfunction
