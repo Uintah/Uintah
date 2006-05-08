@@ -725,6 +725,8 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 class FieldComparator
 {
 public:
+
+  virtual ~FieldComparator() {};
   virtual void
   compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 		ConsecutiveRangeSet matls, const Patch* patch,
