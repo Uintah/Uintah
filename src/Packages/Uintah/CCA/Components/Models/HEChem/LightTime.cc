@@ -1,16 +1,18 @@
-
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
+
 #include <iostream>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
@@ -29,11 +31,14 @@ LightTime::LightTime(const ProcessorGroup* myworld, ProblemSpecP& params)
   Ilb  = scinew ICELabel();
   //__________________________________
   //  diagnostic labels
-  reactedFractionLabel   = VarLabel::create("F",
-                     CCVariable<double>::getTypeDescription());
+  reactedFractionLabel= VarLabel::create("F",
+                        CCVariable<double>::getTypeDescription());
                      
-  delFLabel   = VarLabel::create("delF",
-                     CCVariable<double>::getTypeDescription());
+  delFLabel           = VarLabel::create("delF",
+                        CCVariable<double>::getTypeDescription());
+
+  mag_grad_Fr_Label   = VarLabel::create("mag_grad_Fr",
+                        CCVariable<double>::getTypeDescription());
 }
 
 LightTime::~LightTime()
@@ -41,6 +46,7 @@ LightTime::~LightTime()
   delete Ilb;
 
   VarLabel::destroy(reactedFractionLabel);
+  VarLabel::destroy(mag_grad_Fr_Label);
   VarLabel::destroy(delFLabel);
   
   if(mymatls && mymatls->removeReference())
@@ -68,13 +74,14 @@ void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-  
   params->require("starting_location",    d_start_place);
   params->require("direction_if_plane",   d_direction);
   params->require("D",    d_D);
   params->require("E0",   d_E0);
   params->require("rho0", d_rho0);
   params->getWithDefault("react_mixed_cells", d_react_mixed_cells,true);
+  params->getWithDefault("AMR_Refinement_Criteria", d_refineCriteria,1e100);
+
 
   // if point  ignition is desired, direction_if_plane = (0.,0.,0)
   // if planar ignition is desired, direction_if_plane is normal in
@@ -325,6 +332,90 @@ void LightTime::computeModelSources(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
+void LightTime::scheduleErrorEstimate(const LevelP& coarseLevel,
+                                      SchedulerP& sched)
+{
+  cout_doing << "LightTime::scheduleErrorEstimate \t\t\tL-" 
+             << coarseLevel->getIndex() << '\n';
+  
+  Task* t = scinew Task("LightTime::errorEstimate", 
+                  this, &LightTime::errorEstimate);  
+  
+  
+  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  const MaterialSubset* react_matl = matl0->thisMaterial();
+  
+  t->requires(Task::NewDW, reactedFractionLabel,   react_matl, gac, 1);
+  
+  t->computes(mag_grad_Fr_Label, react_matl);
+  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  
+  sched->addTask(t, coarseLevel->eachPatch(), mymatls);
+}
+/*_____________________________________________________________________
+ Function~  PassiveScalar::errorEstimate--
+______________________________________________________________________*/
+void LightTime::errorEstimate(const ProcessorGroup*,
+			         const PatchSubset* patches,
+			         const MaterialSubset*,
+			         DataWarehouse*,
+			         DataWarehouse* new_dw)
+{
+  cout_doing << "Doing errorEstimate \t\t\t\t\t LightTime"<< endl;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
+    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    
+    CCVariable<int> refineFlag;
+    new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      
+
+    PerPatch<PatchFlagP> refinePatchFlag;
+    new_dw->get(refinePatchFlag, refinePatchLabel, 0, patch);
+
+    constCCVariable<double> Fr;
+    CCVariable<double> mag_grad_Fr;
+    int m0 = matl0->getDWIndex();
+    
+    new_dw->get(Fr, reactedFractionLabel, m0,patch,gac,1);
+    new_dw->allocateAndPut(mag_grad_Fr, mag_grad_Fr_Label, m0,patch);
+    mag_grad_Fr.initialize(0.0);
+    
+    //__________________________________
+    // compute gradient
+    Vector dx = patch->dCell(); 
+    
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      IntVector r = c;
+      IntVector l = c;
+      Vector grad_Fr;
+      for(int dir = 0; dir <3; dir ++ ) { 
+        double inv_dx = 0.5 /dx[dir];
+        r[dir] += 1;
+        l[dir] -= 1;
+        grad_Fr[dir] = (Fr[r] - Fr[l])*inv_dx;
+      }
+      mag_grad_Fr[c] = grad_Fr.length();
+    }
+    //__________________________________
+    // set refinement flag
+    PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      if( mag_grad_Fr[c] > d_refineCriteria){
+        refineFlag[c] = true;
+        refinePatch->set();
+      }
+    }
+  }  // patches
+}
+
+//______________________________________________________________________
+//
 void LightTime::scheduleModifyThermoTransportProperties(SchedulerP&,
                                                     const LevelP&,
                                                     const MaterialSet*)
@@ -337,13 +428,6 @@ void LightTime::computeSpecificHeat(CCVariable<double>&,
                                 const int)      
 {
   //do nothing
-}
-//______________________________________________________________________
-//
-void LightTime::scheduleErrorEstimate(const LevelP&,
-                                      SchedulerP&)
-{
-  // Not implemented yet
 }
 //__________________________________
 void LightTime::scheduleTestConservation(SchedulerP&,

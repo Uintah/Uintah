@@ -86,12 +86,19 @@ WARNING
                              DataWarehouse*, 
 		               DataWarehouse* new_dw, 
                              const ModelInfo*);
+                             
+    void errorEstimate(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset*,
+			  DataWarehouse*,
+			  DataWarehouse* new_dw);
 
     LightTime(const LightTime&);
     LightTime& operator=(const LightTime&);
 
     const VarLabel* reactedFractionLabel;   // diagnostic labels
-    const VarLabel* delFLabel;   // diagnostic labels
+    const VarLabel* mag_grad_Fr_Label;   
+    const VarLabel* delFLabel;
 
     ProblemSpecP params;
     const Material* matl0;
@@ -108,6 +115,7 @@ WARNING
     Point  d_start_place;
     Vector d_direction;
     bool   d_react_mixed_cells;
+    double d_refineCriteria;
 
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
