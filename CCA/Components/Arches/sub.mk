@@ -5,35 +5,35 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Arches
 
 SRCS     += $(SRCDIR)/Arches.cc \
-	$(SRCDIR)/ArchesLabel.cc \
-	$(SRCDIR)/ArchesMaterial.cc \
-	$(SRCDIR)/ArchesVariables.cc \
-	$(SRCDIR)/ArchesConstVariables.cc \
-	$(SRCDIR)/BoundaryCondition.cc \
-	$(SRCDIR)/CellInformation.cc \
-	$(SRCDIR)/Discretization.cc \
-	$(SRCDIR)/EnthalpySolver.cc \
-	$(SRCDIR)/ExplicitSolver.cc \
-	$(SRCDIR)/LinearSolver.cc \
-	$(SRCDIR)/MomentumSolver.cc \
-	$(SRCDIR)/NonlinearSolver.cc \
-	$(SRCDIR)/PhysicalConstants.cc \
-	$(SRCDIR)/PicardNonlinearSolver.cc \
-	$(SRCDIR)/PressureSolver.cc \
-	$(SRCDIR)/Properties.cc \
-	$(SRCDIR)/ReactiveScalarSolver.cc \
-	$(SRCDIR)/ThermalNOxSolver.cc \
-	$(SRCDIR)/RHSSolver.cc \
-	$(SRCDIR)/ScalarSolver.cc \
-	$(SRCDIR)/SmagorinskyModel.cc \
-	$(SRCDIR)/ScaleSimilarityModel.cc \
-	$(SRCDIR)/IncDynamicProcedure.cc \
-	$(SRCDIR)/CompDynamicProcedure.cc \
-	$(SRCDIR)/CompLocalDynamicProcedure.cc \
-	$(SRCDIR)/OdtClosure.cc \
-	$(SRCDIR)/OdtData.cc \
-	$(SRCDIR)/Source.cc \
-	$(SRCDIR)/TurbulenceModel.cc
+        $(SRCDIR)/ArchesLabel.cc \
+        $(SRCDIR)/ArchesMaterial.cc \
+        $(SRCDIR)/ArchesVariables.cc \
+        $(SRCDIR)/ArchesConstVariables.cc \
+        $(SRCDIR)/BoundaryCondition.cc \
+        $(SRCDIR)/CellInformation.cc \
+        $(SRCDIR)/Discretization.cc \
+        $(SRCDIR)/EnthalpySolver.cc \
+        $(SRCDIR)/ExplicitSolver.cc \
+        $(SRCDIR)/LinearSolver.cc \
+        $(SRCDIR)/MomentumSolver.cc \
+        $(SRCDIR)/NonlinearSolver.cc \
+        $(SRCDIR)/PhysicalConstants.cc \
+        $(SRCDIR)/PicardNonlinearSolver.cc \
+        $(SRCDIR)/PressureSolver.cc \
+        $(SRCDIR)/Properties.cc \
+        $(SRCDIR)/ReactiveScalarSolver.cc \
+        $(SRCDIR)/ThermalNOxSolver.cc \
+        $(SRCDIR)/RHSSolver.cc \
+        $(SRCDIR)/ScalarSolver.cc \
+        $(SRCDIR)/SmagorinskyModel.cc \
+        $(SRCDIR)/ScaleSimilarityModel.cc \
+        $(SRCDIR)/IncDynamicProcedure.cc \
+        $(SRCDIR)/CompDynamicProcedure.cc \
+        $(SRCDIR)/CompLocalDynamicProcedure.cc \
+        $(SRCDIR)/OdtClosure.cc \
+        $(SRCDIR)/OdtData.cc \
+        $(SRCDIR)/Source.cc \
+        $(SRCDIR)/TurbulenceModel.cc
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc $(SRCDIR)/Filter.cc
@@ -49,29 +49,30 @@ endif
 # include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/GeometryPiece \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/CCA/Components/Arches/fortran \
-	Packages/Uintah/CCA/Components/Arches/Mixing \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/GeometryPiece \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/CCA/Components/Arches/fortran   \
+        Packages/Uintah/CCA/Components/Arches/Mixing    \
         Packages/Uintah/CCA/Components/Arches/Radiation \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Parallel \
-        Core/Util \
-        Core/Thread \
-	Core/Exceptions \
-	Core/Geometry \
-	Core/Containers
+        Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
+        Packages/Uintah/CCA/Ports     \
+        Packages/Uintah/Core/Parallel \
+        Core/Util       \
+        Core/Thread     \
+        Core/Exceptions \
+        Core/Geometry   \
+        Core/Containers
 
 ifneq ($(HAVE_PETSC),)
-LIBS := $(LIBS) $(PETSC_LIBRARY) 
+  LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
 ifneq ($(HAVE_HYPRE),)
-LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
