@@ -48,10 +48,10 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
     method set_defaults {} {
 	global $this-UseCondTCL
 	global $this-UseBasisTCL
-	global $this-nprocs
+        global $this-NProcessorsTCL
 	set $this-UseCondTCL 1
 	set $this-UseBasisTCL 0
-	set $this-nprocs "auto"
+	set $this-NProcessorsTCL "auto"
     }
     method ui {} {
         set w .ui[modname]
@@ -61,13 +61,13 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
         }
 	global $this-UseCondTCL
 	global $this-UseBasisTCL
-	global $this-nprocs
+	global $this-NProcessorsTCL
 
         toplevel $w
 
 	frame $w.np
 	label $w.np.l -text "Number of Threads"
-	entry $w.np.e -width 5 -textvariable $this-nprocs -justify center
+	entry $w.np.e -width 5 -textvariable $this-NProcessorsTCL -justify center
 	pack $w.np.l $w.np.e -side left
 
 	checkbutton $w.c -text "Use Conductivities" \
