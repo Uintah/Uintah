@@ -109,34 +109,10 @@ void ComponentSkeletonWriter::writeHeaderLicense()
 {
   
   componentHeaderFile << "/*"<<std::endl<<SP<<"For more information, please see: http://software.sci.utah.edu"<<std::endl<<std::endl<<std::endl<<SP<<"The MIT License"<<std::endl<<std::endl<<SP<<"Copyright (c) 2004 Scientific Computing and Imaging Institute,"<<std::endl<<SP<<"University of Utah."<<std::endl<<SP<<"License for the specific language governing rights and limitations under"<<std::endl<<SP<<"Permission is hereby granted, free of charge, to any person obtaining a"<<std::endl<<SP<<"copy of this software and associated documentation files (the \"Software\"),"<<std::endl<<SP<<"to deal in the Software without restriction, including without limitation"<<std::endl<<SP<<"the rights to use, copy, modify, merge, publish, distribute, sublicense,"<<std::endl<<SP<<"and/or sell copies of the Software, and to permit persons to whom the"<<std::endl<<SP<<"Software is furnished to do so, subject to the following conditions:"<<std::endl<<std::endl<<SP<<"The above copyright notice and this permission notice shall be included"<<std::endl<<SP<<"in all copies or substantial portions of the Software."<<std::endl<<std::endl<<SP<<"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS"<<std::endl<<SP<<"OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"<<std::endl<<SP<<"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL"<<std::endl<<SP<<"THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER"<<std::endl<<SP<<"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING"<<std::endl<<SP<<"FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER"<<std::endl<<SP<<"DEALINGS IN THE SOFTWARE."<<std::endl<<"*/";
-  
-
-
-
- //  std::string line;
-//   std::ifstream myfile ("license.txt");
-//   if (myfile.is_open())
-//   {
-    
-//     while (! myfile.eof() )
-//     {
-//       getline (myfile,line);
-//       std::cout << "line is" << line << std::endl;
-//     }
-//     myfile.close();
-//   }
-
-//   else std::cout << "Unable to open file";
-
-
-  
  
 }
 void ComponentSkeletonWriter::writeHeaderInit()
 {
-  // license here
-
-  //componentHeaderFile << "//Sample header File" << std::endl;
   componentHeaderFile << std::endl;
   componentHeaderFile << std::endl;
   componentHeaderFile << "#ifndef SCIRun_Framework_" << compName << "_h" << std::endl;
@@ -209,8 +185,8 @@ void ComponentSkeletonWriter::writeSourceInit()
 {
 
   
-  componentSourceFile << std::endl;
-
+  componentSourceFile << std::endl << std::endl;
+  
   //Header files
   componentSourceFile << "#include<CCA/Components" << DIR_SEP << compName << DIR_SEP << compName << ".h>" << std::endl;
   componentSourceFile << "#include <SCIRun" << DIR_SEP << "TypeMap.h>" << std::endl;

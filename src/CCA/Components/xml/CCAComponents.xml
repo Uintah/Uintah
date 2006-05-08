@@ -87,8 +87,9 @@
   <library name="libCCA_Components_ZListWriter.so">
     <component name="SCIRun.ZListWriter" />
   </library>
-  
-  
-  
+  <library name="libCCA_Components_samplecomponent.so">
+    <component name="SCIRun.samplecomponent" />
+  </library>
+ 
   
 </metacomponentmodel>
