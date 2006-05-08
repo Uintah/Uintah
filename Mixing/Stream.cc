@@ -376,19 +376,19 @@ Stream& Stream::linInterpolate(double upfactor, double lowfactor,
   d_cp = upfactor*d_cp+lowfactor*rightvalue.d_cp;
   d_drhodf = upfactor*d_drhodf+lowfactor*rightvalue.d_drhodf;
   d_drhodh = upfactor*d_drhodh+lowfactor*rightvalue.d_drhodh;
-  for (int i = 0; i < d_speciesConcn.size(); i++)
+  for (int i = 0; i < (int)d_speciesConcn.size(); i++)
     d_speciesConcn[i] = upfactor*d_speciesConcn[i] +
                    lowfactor*rightvalue.d_speciesConcn[i];
   if (d_numRxnVars > 0) {
-    for (int i = 0; i < d_rxnVarRates.size(); i++)
+    for (int i = 0; i < (int)d_rxnVarRates.size(); i++)
       d_rxnVarRates[i] = upfactor*d_rxnVarRates[i] +
 	lowfactor*rightvalue.d_rxnVarRates[i];
-    for (int i = 0; i < d_rxnVarNorm.size(); i++)
+    for (int i = 0; i < (int)d_rxnVarNorm.size(); i++)
       d_rxnVarNorm[i] = upfactor*d_rxnVarNorm[i] +
 	lowfactor*rightvalue.d_rxnVarNorm[i];
   }
   if (d_lsoot) {
-    for (int i = 0; i < d_sootData.size(); i++)
+    for (int i = 0; i < (int)d_sootData.size(); i++)
       d_sootData[i] = upfactor*d_sootData[i] +
 	lowfactor*rightvalue.d_sootData[i];
   }
@@ -409,7 +409,7 @@ Stream::print(std::ostream& out) const {
   out << "Drhodf: "<< d_drhodf << endl;
   out << "Drhodh: "<< d_drhodh << endl;
   out << "Species concentration in mass fraction: " << endl;
-  for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
+  for (int ii = 0; ii < (int)d_speciesConcn.size(); ii++) {
     out.width(10);
     out << d_speciesConcn[ii] << " " ; 
     if (!(ii % 10)) out << endl; 
@@ -417,7 +417,7 @@ Stream::print(std::ostream& out) const {
   }
   if (d_lsoot) {
     out << "Soot Data: " << endl;
-    for (int ii = 0; ii < d_sootData.size(); ii++) {
+    for (int ii = 0; ii < (int)d_sootData.size(); ii++) {
       out.width(10);
       out << d_sootData[ii] << " " ; 
       if (!(ii % 10)) out << endl; 
@@ -438,16 +438,16 @@ Stream::print_oneline(std::ofstream& out) {
   out << d_cp << " " ;
   out << d_drhodf << " " ;
   out << d_drhodh << " " ;
-  for (int ii = 0; ii < d_speciesConcn.size(); ii++)
+  for (int ii = 0; ii < (int)d_speciesConcn.size(); ii++)
     out << d_speciesConcn[ii] << " " ;
   if (d_numRxnVars > 0) {
-    for (int ii = 0; ii < d_rxnVarRates.size(); ii++)
+    for (int ii = 0; ii < (int)d_rxnVarRates.size(); ii++)
       out << d_rxnVarRates[ii] << " " ;
-    for (int ii = 0; ii < d_rxnVarNorm.size(); ii++)
+    for (int ii = 0; ii < (int)d_rxnVarNorm.size(); ii++)
       out << d_rxnVarNorm[ii] << " " ;
   }
   if (d_lsoot) {
-    for (int ii = 0; ii < d_sootData.size(); ii++)
+    for (int ii = 0; ii < (int)d_sootData.size(); ii++)
       out << d_sootData[ii] << " " ;
   }
   out << endl;
