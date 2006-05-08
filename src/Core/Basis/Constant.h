@@ -69,6 +69,8 @@ template <class T>
   class ConstantBasis : public BasisSimple<T>, public ConstantBasisUnitElement
 {
 public:
+  typedef T value_type;
+
   ConstantBasis() {}
   virtual ~ConstantBasis() {}
   
