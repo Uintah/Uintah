@@ -238,16 +238,16 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
   ldtype = new wxStaticText(this, wxID_ANY, "Datatype");
   datatypeSizer->Add(ldtype, 1, leftFlags, 2);
   dtype= new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
-  dtype->SetToolTip(wxT("The type of this port. Usually starts with a capital letter and has \"Port\" as a suffix.\nExample: StringPort,GoPort..etc"));
+  dtype->SetToolTip(wxT("A SIDL type that derives from cca.Port.\nExample: StringPort,GoPort..etc"));
   datatypeSizer->Add(dtype, 1, rightFlags, 2);
   topSizer->Add( datatypeSizer, 1, wxALIGN_CENTER, 2 );
   topSizer->AddSpacer(10);
 
   wxBoxSizer *descSizer = new wxBoxSizer( wxHORIZONTAL );
-  ldesc = new wxStaticText(this, wxID_ANY, wxT("Description"));
+  ldesc = new wxStaticText(this, wxID_ANY, wxT("Port Name"));
   descSizer->Add(ldesc, 1, rightFlags, 2);
   desc= new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
-  desc->SetToolTip(wxT("This port's description. Example: ui,go,string..etc"));
+  desc->SetToolTip(wxT("The name of this port, which should be unique over both Uses and Provides ports. Example: ui,go,string..etc"));
   descSizer->Add(desc, 1, rightFlags, 2);
   topSizer->Add( descSizer, 1, wxALIGN_CENTER, 2 );
   topSizer->AddSpacer(30);
