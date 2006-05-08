@@ -503,9 +503,15 @@ Models_PetscSolver::radLinearSolve()
     ierr = PCSetType(peqnpc, PCILU);
     if(ierr)
       throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
+#if (PETSC_VERSION_MINOR == 3 && PETSC_VERSION_SUBMINOR == 1) // 2.3.1
+    ierr = PCFactorSetFill(peqnpc, d_fill);
+    if(ierr)
+      throw PetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
+#else
     ierr = PCILUSetFill(peqnpc, d_fill);
     if(ierr)
       throw PetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
+#endif
   }
   else {
     ierr = PCSetType(peqnpc, PCBJACOBI);
