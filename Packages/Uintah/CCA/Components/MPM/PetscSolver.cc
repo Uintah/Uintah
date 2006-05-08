@@ -232,6 +232,12 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
       DIAG_MAX=27;
     }
 
+    if (numlcolumns < ONNZ_MAX)
+      ONNZ_MAX = numlcolumns;
+
+    if (numlcolumns < DIAG_MAX)
+      DIAG_MAX = numlcolumns;
+
     for (int i = 0; i < numlrows; i++){ 
       onnz[i]=ONNZ_MAX;
       if(diag[i]==1){
