@@ -320,7 +320,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
     delete one_matl; 
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
-  d_perproc_patches = loadbal->createPerProcessorPatchSet(level);
+  d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
 
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
@@ -412,7 +412,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
   if (!d_perproc_patches) {
     LoadBalancer* loadbal = sched->getLoadBalancer();
-    d_perproc_patches = loadbal->createPerProcessorPatchSet(level);
+    d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
     d_perproc_patches->addReference();
   }
 

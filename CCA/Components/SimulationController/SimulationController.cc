@@ -479,16 +479,21 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	delete mallocPerProcStream;
       }
     }
-    
-    unsigned long avg_memuse = memuse;
+
+    // with the sum reduces, use double, since with memory it is possible that
+    // it will overflow
+    double tmp_double = memuse;
+    double avg_memuse = memuse;
     unsigned long max_memuse = memuse;
-    unsigned long avg_highwater = highwater;
+    cout << d_myworld->myrank() << " memuse: " << toHumanUnits(memuse) << endl;
+    double avg_highwater = highwater;
     unsigned long max_highwater = highwater;
     if (d_myworld->size() > 1) {
-      MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
+      MPI_Reduce(&tmp_double, &avg_memuse, 1, MPI_DOUBLE, MPI_SUM, 0,
 		 d_myworld->getComm());
       if(highwater){
-	MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
+        tmp_double = highwater;
+	MPI_Reduce(&tmp_double, &avg_highwater, 1, MPI_DOUBLE,
 		   MPI_SUM, 0, d_myworld->getComm());
       }
       avg_memuse /= d_myworld->size(); // only to be used by processor 0
@@ -535,14 +540,14 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 #ifndef _WIN32
       dbg << ", Mem Use (MB)= ";
       if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
-	dbg << toHumanUnits(avg_memuse);
+	dbg << toHumanUnits((unsigned long) avg_memuse);
 	if(avg_highwater) {
-	  dbg << "/" << toHumanUnits(avg_highwater);
+	  dbg << "/" << toHumanUnits((unsigned long) avg_highwater);
 	}
       } else {
-	dbg << toHumanUnits(avg_memuse);
+	dbg << toHumanUnits((unsigned long) avg_memuse);
 	if(avg_highwater) {
-	  dbg << "/" << toHumanUnits(avg_highwater);
+	  dbg << "/" << toHumanUnits((unsigned long)avg_highwater);
 	}
 	dbg << " (avg), " << toHumanUnits(max_memuse);
 	if(max_highwater) {

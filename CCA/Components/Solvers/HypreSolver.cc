@@ -801,7 +801,7 @@ namespace Uintah {
 
     task->requires(which_b_dw, b, Ghost::None, 0);
     LoadBalancer* lb = sched->getLoadBalancer();
-    sched->addTask(task, lb->createPerProcessorPatchSet(level), matls);
+    sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
   
 string HypreSolver2::getName(){
