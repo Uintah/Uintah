@@ -123,6 +123,20 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 
 }
 
+bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, bool force)
+{
+  if (force) {
+    // have it create a new patch set, and have the DLB version call this.
+    // This is a good place to do it, as it is automatically called when the
+    // grid changes.
+    levelPerProcPatchSets.clear();
+    gridPerProcPatchSet = createPerProcessorPatchSet(grid);
+    for (int i = 0; i < grid->numLevels(); i++)
+      levelPerProcPatchSets.push_back(createPerProcessorPatchSet(grid->getLevel(i)));
+  }
+  return false;
+}
+
 // Creates a PatchSet containing PatchSubsets for each processor for a
 // single level.
 const PatchSet*

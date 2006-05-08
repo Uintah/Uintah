@@ -3,6 +3,9 @@
 
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+
 #include <set>
 #include <string>
 
@@ -63,6 +66,21 @@ namespace Uintah {
      /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
      virtual void problemSetup(ProblemSpecP& pspec, SimulationStateP& state);
 
+     // for DynamicLoadBalancer mostly, but if we're called then it also means the 
+     // grid might have changed and need to create a new perProcessorPatchSet
+     virtual bool possiblyDynamicallyReallocate(const GridP&, bool /*force*/);
+
+     //! Returns n - data gets output every n procs.
+     virtual int getNthProc() { return d_outputNthProc; }
+
+    //! Returns the patchset of all patches that have work done on this processor.
+    virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { return levelPerProcPatchSets[level->getIndex()].get_rep(); }
+    virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { return gridPerProcPatchSet.get_rep(); }
+
+   private:
+     LoadBalancerCommon(const LoadBalancerCommon&);
+     LoadBalancerCommon& operator=(const LoadBalancerCommon&);
+   protected:
      /// Creates a patchset of all patches that have work done on each processor.
      //    - There are two versions of this function.  The first works on a per level
      //      basis.  The second works on the entire grid and will provide a PatchSet
@@ -74,12 +92,6 @@ namespace Uintah {
      virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level);
      virtual const PatchSet* createPerProcessorPatchSet(const GridP& grid);
 
-     //! Returns n - data gets output every n procs.
-     virtual int getNthProc() { return d_outputNthProc; }
-   private:
-     LoadBalancerCommon(const LoadBalancerCommon&);
-     LoadBalancerCommon& operator=(const LoadBalancerCommon&);
-   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
      Scheduler* d_scheduler; ///< store the scheduler to not have to keep passing it in
      std::set<const Patch*> d_neighbors; ///< the neighborhood.  \See createNeighborhood
@@ -87,7 +99,12 @@ namespace Uintah {
      //! with the DataArchiver as well, but we keep it here because the lb
      //! needs it to assign the processor resource.
      int d_outputNthProc;
+
+     vector<Handle<const PatchSet> > levelPerProcPatchSets;
+     Handle<const PatchSet> gridPerProcPatchSet;
+
    };
+
 } // End namespace Uintah
 
 #endif

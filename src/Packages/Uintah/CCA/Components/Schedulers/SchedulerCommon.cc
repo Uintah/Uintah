@@ -734,7 +734,7 @@ void SchedulerCommon::compile()
 
 #if 1
   for (unsigned i = 0; i < grid->numLevels(); i++) {
-    const PatchSubset* patches = getLoadBalancer()->createPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
+    const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
     if (patches->size() > 0)
       m_locallyComputedPatchVarMap->addComputedPatchSet(patches);
   }

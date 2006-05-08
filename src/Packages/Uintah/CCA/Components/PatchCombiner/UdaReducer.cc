@@ -74,7 +74,7 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   // should only get called once from SimCntrl, independent of #levels
   GridP grid = level->getGrid();
-  const PatchSet* perProc = lb->createPerProcessorPatchSet(grid);
+  const PatchSet* perProc = lb->getPerProcessorPatchSet(grid);
 
   double time = times_[timeIndex_];
   const PatchSet* eachPatch = level->eachPatch();

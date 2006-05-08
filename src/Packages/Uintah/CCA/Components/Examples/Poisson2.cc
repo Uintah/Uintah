@@ -68,7 +68,7 @@ Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->requires(Task::OldDW, lb_->phi, Ghost::AroundNodes, 1);
   task->computes(lb_->phi);
   LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level);
+  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }
 

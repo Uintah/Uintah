@@ -382,7 +382,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  
-                        loadBal->createPerProcessorPatchSet(level);
+                        loadBal->getPerProcessorPatchSet(level);
   sched->addTask(t, perproc_patches, all_matls);
 }
 

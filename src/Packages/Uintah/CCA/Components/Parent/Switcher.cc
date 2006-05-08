@@ -278,7 +278,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
       }
     }
     d_matlVarsDB[level->getIndex()].clear();
-    const PatchSet* procset = sched->getLoadBalancer()->createPerProcessorPatchSet(level);
+    const PatchSet* procset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
     // rebuild carry-over db
     for (unsigned i = 0; i < d_carryOverVarLabels.size(); i++) {
       if (!d_carryOverVarLabels[i])

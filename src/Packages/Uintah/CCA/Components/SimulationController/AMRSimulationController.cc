@@ -478,6 +478,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, 1);
   
   if(d_restarting){
+    d_lb->possiblyDynamicallyReallocate(grid, true); 
     d_sim->restartInitialize();
   } else {
     // for dynamic lb's, set up initial patch config
