@@ -89,6 +89,7 @@ int main(int argc, char** argv)
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     DataArchiver out_uda(world);
     out_uda.problemSetup(ups, NULL);
+    out_uda.initializeOutput(ups);
     new_uda_dir = out_uda.getOutputLocation();
     
     int timestep = 0;
