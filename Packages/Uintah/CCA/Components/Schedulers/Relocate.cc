@@ -493,7 +493,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }
   const PatchSet* patches;
   if(lb)
-    patches = lb->createPerProcessorPatchSet(level);
+    patches = lb->getPerProcessorPatchSet(level);
   else
     patches = level->allPatches();
   t->setType(Task::OncePerProc);

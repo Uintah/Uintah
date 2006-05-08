@@ -91,7 +91,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   int ngc;
   for ( int levelIndex = 0; levelIndex < oldGrid->numLevels() && levelIndex < d_maxLevels-1; levelIndex++ ) {
   // copy refine flags to the "old dw" so mpi copying will work correctly
-    const PatchSet* perproc = scheduler->getLoadBalancer()->createPerProcessorPatchSet(oldGrid->getLevel(levelIndex));
+    const PatchSet* perproc = scheduler->getLoadBalancer()->getPerProcessorPatchSet(oldGrid->getLevel(levelIndex));
     perproc->addReference();
     const PatchSubset* psub = perproc->getSubset(d_myworld->myrank());
     MaterialSubset* msub = scinew MaterialSubset;

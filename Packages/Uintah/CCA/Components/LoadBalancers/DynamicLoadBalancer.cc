@@ -44,7 +44,8 @@ DynamicLoadBalancer::~DynamicLoadBalancer()
 
 void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchInfo>& allParticles)
 {
-  dbg << " DLB::collectParticles\n";
+  if (d_myworld->myrank() == 0)
+    dbg << " DLB::collectParticles\n";
 
   int numProcs = d_myworld->size();
   int myrank = d_myworld->myrank();
@@ -212,7 +213,8 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchI
       PatchInfo& pi = allParticles[spi.id];
       pi.id = spi.id;
       pi.numParticles += spi.numParticles;
-      dbg << d_myworld->myrank() << "  Post gather " << spi.id << " numP : " << spi.numParticles << " total " << pi.numParticles << endl;
+      if (d_myworld->myrank() == 0)
+        dbg << d_myworld->myrank() << "  Post gather " << spi.id << " numP : " << spi.numParticles << " total " << pi.numParticles << endl;
     }
   }
   MPI_Type_free(&particletype);
@@ -221,7 +223,7 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchI
 bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 {
 
-  doing << "   APF\n";
+  doing << d_myworld->myrank() << "   APF\n";
   double time = Time::currentSeconds();
 
   int numProcs = d_myworld->size();
@@ -316,10 +318,12 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   if (currentProc > 0) {
     int optimal_procs = (int)(totalCost /
       ((origTotalCost - totalCost) / currentProc) +  currentProc);
-    dbg << "This simulation would probably perform better on " 
-        << optimal_procs << "-" << optimal_procs+1 << " processors\n";
-    dbg << "  or rather - origCost " << origTotalCost << ", costLeft " 
-        << totalCost << " after " << currentProc << " procs " << endl;
+    if (d_myworld->myrank() == 0) {
+      dbg << "This simulation would probably perform better on " 
+          << optimal_procs << "-" << optimal_procs+1 << " processors\n";
+      dbg << "  or rather - origCost " << origTotalCost << ", costLeft " 
+          << totalCost << " after " << currentProc << " procs " << endl;
+    }
   }
   avg_costPerProc = totalCost / (numProcs-currentProc);
 
@@ -373,27 +377,30 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       totalCost -= currentProcCost;
       avg_costPerProc = totalCost / (numProcs-currentProc);
       currentProcCost = patchCost;
-      dbg << "Patch " << index << "-> proc " << currentProc 
-          << " PatchCost: " << patchCost << ", ProcCost: " 
-          << currentProcCost 
-          << ", idcheck: " << patchset[index]->getGridIndex() << endl;
+      if (d_myworld->myrank() == 0)
+        dbg << "Patch " << index << "-> proc " << currentProc 
+            << " PatchCost: " << patchCost << ", ProcCost: " 
+            << currentProcCost 
+            << ", idcheck: " << patchset[index]->getGridIndex() << endl;
     }
     else {
       // add patch to currentProc
       d_tempAssignment[index] = currentProc;
       currentProcCost += patchCost;
-      dbg << "Patch " << index << "-> proc " << currentProc 
-          << " PatchCost: " << patchCost << ", ProcCost: " 
-          << currentProcCost 
-          << ", idcheck: " << patchset[index]->getGridIndex() << endl;
+      if (d_myworld->myrank() == 0)
+        dbg << "Patch " << index << "-> proc " << currentProc 
+            << " PatchCost: " << patchCost << ", ProcCost: " 
+            << currentProcCost 
+            << ", idcheck: " << patchset[index]->getGridIndex() << endl;
     }
   }
 
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
 
   time = Time::currentSeconds() - time;
-  dbg << " Time to LB: " << time << endl;
-  doing << "   APF END\n";
+  if (d_myworld->myrank() == 0)
+    dbg << " Time to LB: " << time << endl;
+  doing << d_myworld->myrank() << "   APF END\n";
   return doLoadBalancing;
 }
 
@@ -430,8 +437,9 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<float>& patch_costs)
   float curStdDev = sqrt((numProcs*sum_of_current_squares - sum_of_current*sum_of_current)/(numProcs*numProcs));
   float tmpStdDev = sqrt((numProcs*sum_of_temp_squares - sum_of_temp*sum_of_temp)/(numProcs*numProcs));
 
-  dbg << "CurrStdDev: " << curStdDev << " tmp " << tmpStdDev 
-      << " threshold: " << curStdDev/tmpStdDev << " minT " << d_lbThreshold << endl;
+  if (d_myworld->myrank() == 0)
+    dbg << "CurrStdDev: " << curStdDev << " tmp " << tmpStdDev 
+        << " threshold: " << curStdDev/tmpStdDev << " minT " << d_lbThreshold << endl;
 
   // if cur / tmp is greater than 1, it is an improvement
   if (curStdDev / tmpStdDev >= d_lbThreshold)
@@ -592,7 +600,6 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
 
   d_processorAssignment.resize(numPatches);
 
-  dbg << " PLB: restartInitialize\n";
   d_state = idle;
   for (unsigned i = 0; i < d_processorAssignment.size(); i++)
     d_processorAssignment[i]= -1;
@@ -654,114 +661,110 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
       }
     }
   }
-  d_state = checkLoadBalance;
 }
 
 bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool force)
 {
-
   doing << d_myworld->myrank() << " In PLB - State: " << d_state << endl;
 
   if (force)
     d_state = checkLoadBalance;
 
-  if (d_state == idle) 
-    return false;
-
   // if the last timestep was a load balance, we need to recompile the 
   // task graph
-  else if (d_state == postLoadBalance) {
+  if (d_state == postLoadBalance) {
     d_oldAssignment = d_processorAssignment;
     d_state = idle;
     doing << d_myworld->myrank() << "  Changing LB state from postLB to idle\n";
-    return true;
   }
-  
-  int numProcs = d_myworld->size();
-  int numPatches = 0;
-
-  for(int l=0;l<grid->numLevels();l++){
-    const LevelP& level = grid->getLevel(l);
-    numPatches += level->numPatches();
-  }
-
-  int myrank = d_myworld->myrank();
-
-  DataWarehouse* dw = d_scheduler->get_dw(0);
-
-  if (dw == 0) {
-    // on the first timestep, just assign the patches in a simple fashion
-    // then on the next timestep do the real work
-    d_processorAssignment.resize(numPatches);
-
+  else if (d_state != idle) {
+    int numProcs = d_myworld->size();
+    int numPatches = 0;
+    
     for(int l=0;l<grid->numLevels();l++){
       const LevelP& level = grid->getLevel(l);
-
-      for (Level::const_patchIterator iter = level->patchesBegin(); 
-           iter != level->patchesEnd(); iter++) {
-        Patch *patch = *iter;
-        int patchid = patch->getGridIndex();
-        int levelidx = patch->getLevelIndex();
-        d_processorAssignment[patchid] = levelidx * numProcs / patch->getLevel()->numPatches();
-        ASSERTRANGE(patchid,0,numPatches);
-      }
+      numPatches += level->numPatches();
     }
-
-    if (dw == 0)
-      d_oldAssignment = d_processorAssignment;
-    if (d_dynamicAlgorithm != static_lb)
-      d_state = checkLoadBalance;  // l.b. on next timestep
-    else
-      d_state = postLoadBalance;
-  }
-  else {
-    //d_oldAssignment = d_processorAssignment;
-    d_tempAssignment.clear();
-    d_tempAssignment.resize(numPatches);
-    if (d_myworld->myrank() == 0)
-      doing << d_myworld->myrank() << "  Checking whether we need to LB\n";
-    bool dynamicAllocate = false;
-    switch (d_dynamicAlgorithm) {
-    case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
-    case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
-    case random_lb:        dynamicAllocate = assignPatchesRandom(grid, force); break;
-    // static_lb does nothing
-    }
-    if (dynamicAllocate || force) {
-      d_oldAssignment = d_processorAssignment;
-      d_processorAssignment = d_tempAssignment;
-
-      d_state = postLoadBalance;
-
-      if (lb.active()) {
-        if (myrank == 0) {
-          LevelP curLevel = grid->getLevel(0);
-          Level::const_patchIterator iter = curLevel->patchesBegin();
-          lb << "  Changing the Load Balance\n";
-          vector<int> costs(numProcs);
-          for (int i = 0; i < numPatches; i++) {
-            lb << myrank << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getHighIndex() - (*iter)->getLowIndex()) << "\n";
-            IntVector range = ((*iter)->getHighIndex() - (*iter)->getLowIndex());
-            costs[d_processorAssignment[i]] += range.x() * range.y() * range.z();
-            iter++;
-            if (iter == curLevel->patchesEnd() && i+1 < numPatches) {
-              curLevel = curLevel->getFinerLevel();
-              iter = curLevel->patchesBegin();
-            }
-          }
-          for (int i = 0; i < numProcs; i++) {
-            lb << myrank << " proc " << i << "  has cost: " << costs[i] << endl;
-          }
+    
+    int myrank = d_myworld->myrank();
+    
+    DataWarehouse* dw = d_scheduler->get_dw(0);
+    
+    if (dw == 0) {
+      // on the first timestep, just assign the patches in a simple fashion
+      // then on the next timestep do the real work
+      d_processorAssignment.resize(numPatches);
+      
+      for(int l=0;l<grid->numLevels();l++){
+        const LevelP& level = grid->getLevel(l);
+        
+        for (Level::const_patchIterator iter = level->patchesBegin(); 
+             iter != level->patchesEnd(); iter++) {
+          Patch *patch = *iter;
+          int patchid = patch->getGridIndex();
+          int levelidx = patch->getLevelIndex();
+          d_processorAssignment[patchid] = levelidx * numProcs / patch->getLevel()->numPatches();
+          ASSERTRANGE(patchid,0,numPatches);
         }
       }
-
+      
+      if (dw == 0)
+        d_oldAssignment = d_processorAssignment;
+      if (d_dynamicAlgorithm != static_lb)
+        d_state = checkLoadBalance;  // l.b. on next timestep
+      else
+        d_state = postLoadBalance;
     }
     else {
-      d_state = idle;
-      return false;
+      //d_oldAssignment = d_processorAssignment;
+      d_tempAssignment.clear();
+      d_tempAssignment.resize(numPatches);
+      if (d_myworld->myrank() == 0)
+      doing << d_myworld->myrank() << "  Checking whether we need to LB\n";
+      bool dynamicAllocate = false;
+      switch (d_dynamicAlgorithm) {
+      case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
+      case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
+      case random_lb:        dynamicAllocate = assignPatchesRandom(grid, force); break;
+        // static_lb does nothing
+      }
+      if (dynamicAllocate || force) {
+        d_oldAssignment = d_processorAssignment;
+        d_processorAssignment = d_tempAssignment;
+        
+        d_state = postLoadBalance;
+        
+        if (lb.active()) {
+          if (myrank == 0) {
+            LevelP curLevel = grid->getLevel(0);
+            Level::const_patchIterator iter = curLevel->patchesBegin();
+            lb << "  Changing the Load Balance\n";
+            vector<int> costs(numProcs);
+            for (int i = 0; i < numPatches; i++) {
+              lb << myrank << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getHighIndex() - (*iter)->getLowIndex()) << "\n";
+              IntVector range = ((*iter)->getHighIndex() - (*iter)->getLowIndex());
+              costs[d_processorAssignment[i]] += range.x() * range.y() * range.z();
+              iter++;
+              if (iter == curLevel->patchesEnd() && i+1 < numPatches) {
+                curLevel = curLevel->getFinerLevel();
+                iter = curLevel->patchesBegin();
+              }
+            }
+            for (int i = 0; i < numProcs; i++) {
+              lb << myrank << " proc " << i << "  has cost: " << costs[i] << endl;
+            }
+          }
+        }
+        
+      }
+      else {
+        d_state = idle;
+      }
     }
   }
-  
+
+  // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
+  LoadBalancerCommon::possiblyDynamicallyReallocate(grid, d_state != idle);
   return d_state != idle;
 }
 

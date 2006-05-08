@@ -501,7 +501,7 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
   LoadBalancer* lb = sched->getLoadBalancer();
-  d_perproc_patches = lb->createPerProcessorPatchSet(level);
+  d_perproc_patches = lb->getPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
 
   // compute the material set and subset

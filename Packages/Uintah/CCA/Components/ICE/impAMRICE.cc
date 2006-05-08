@@ -333,7 +333,7 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
   }
   t->setType(Task::OncePerProc);
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perprocPatches = loadBal->createPerProcessorPatchSet(grid);
+  const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
 
   sched->addTask(t, perprocPatches, all_matls);
   cout << d_myworld->myrank() << " proc_patches are " << *perprocPatches << "\n";
@@ -456,7 +456,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
 #else
     const PatchSet* perProcPatches = 
-      sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
+      sched->getLoadBalancer()->getPerProcessorPatchSet(grid);
     const VarLabel* whichInitialGuess = NULL;
     schedule_bogus_imp_delP(subsched,  perProcPatches,        d_press_matl,
                             all_matls);   

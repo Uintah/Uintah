@@ -110,7 +110,7 @@ namespace Uintah
     task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     task->computes( d_currentAngleLabel, (Level*) 0);
-    scheduler->addTask( task, scheduler->getLoadBalancer()->createPerProcessorPatchSet(level), d_sharedState->allMaterials() );
+    scheduler->addTask( task, scheduler->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMaterials() );
   }
 
   void RegridderTest::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )

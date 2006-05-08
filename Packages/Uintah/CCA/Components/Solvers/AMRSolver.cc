@@ -122,7 +122,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   }
 
   LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = lb->createPerProcessorPatchSet(level->getGrid());
+  const PatchSet* perProcPatches = lb->getPerProcessorPatchSet(level->getGrid());
   
   HypreDriver* that = newHypreDriver(interface,level.get_rep(), matls, A, which_A_dw,x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams, perProcPatches);
   Handle<HypreDriver > handle = that;
