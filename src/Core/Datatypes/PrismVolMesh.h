@@ -1221,9 +1221,14 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
   lcopy.cells_lock_.unlock();
 
   lcopy.grid_lock_.lock();
-  grid_ = copy.grid_;
-  synchronized_ &= LOCATE_E;
+
+  synchronized_ &= ~LOCATE_E;
+  if (copy.grid_.get_rep())
+  {
+    grid_ = scinew SearchGrid(*(copy.grid_.get_rep()));
+  }
   synchronized_ |= copy.synchronized_ & LOCATE_E;
+
   lcopy.grid_lock_.unlock();
 }
 

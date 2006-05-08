@@ -573,7 +573,11 @@ QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
   normals_ = copy.normals_;
   synchronized_ |= copy.synchronized_ & NORMALS_E;
 
-  grid_ = copy.grid_;
+  synchronized_ &= ~LOCATE_E;
+  if (copy.grid_.get_rep())
+  {
+    grid_ = scinew SearchGrid(*(copy.grid_.get_rep()));
+  }
   synchronized_ |= copy.synchronized_ & LOCATE_E;
 
   lcopy.synchronize_lock_.unlock();

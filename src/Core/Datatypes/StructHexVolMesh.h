@@ -357,11 +357,15 @@ StructHexVolMesh<Basis>::StructHexVolMesh(const StructHexVolMesh<Basis> &copy):
   points_.copy( copy.points_ );
 
   StructHexVolMesh &lcopy = (StructHexVolMesh &)copy;
-
   lcopy.grid_lock_.lock();
-  grid_ = copy.grid_;
+
   synchronized_ &= ~Mesh::LOCATE_E;
+  if (copy.grid_.get_rep())
+  {
+    grid_ = scinew SearchGrid(*(copy.grid_.get_rep()));
+  }
   synchronized_ |= copy.synchronized_ & Mesh::LOCATE_E;
+
   lcopy.grid_lock_.unlock();
 }
 
