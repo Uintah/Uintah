@@ -26,10 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -73,7 +72,7 @@ void LinkFieldBoundary::execute()
   bool   linky = static_cast<bool>(guilinky_.get());
   bool   linkz = static_cast<bool>(guilinkz_.get());
 
-  FieldsAlgo fieldsalgo(this);
+  SCIRunAlgo::FieldsAlgo fieldsalgo(this);
   if(!(fieldsalgo.LinkFieldBoundary(input,NodeLink,ElemLink,tol,linkx,linky,linkz))) return;
   
   output = input->clone();

@@ -51,7 +51,7 @@
 
 #include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
 #include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/String.h>
@@ -337,7 +337,7 @@ void ComputeFieldsNodes::execute()
   // Add as well the output object
   FieldHandle ofield;
   
-  FieldsAlgo fieldsalgo(this);
+  SCIRunAlgo::FieldsAlgo fieldsalgo(this);
   if(!(fieldsalgo.MakeEditable(field,field))) return;
 
   if(!(outputlist[0].create_outputlocation(field,"NEWPOS",ofield)))

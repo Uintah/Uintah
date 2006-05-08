@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Fields/FieldCount.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -242,51 +242,31 @@ FieldInfo::update_input_attributes(FieldHandle f)
     max_ = 0.0;
   }
 
-  // Do this last, sometimes takes a while.
-  const TypeDescription *meshtd = f->mesh()->get_type_description();
-  CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd);
-  Handle<FieldCountAlgorithm> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  SCIRunAlgo::FieldsAlgo algo(this);
+  if(!(algo.GetFieldInfo(f,numnodes_,numelems_))) return;
 
-  //string num_nodes, num_elems;
-  //int num_nodes, num_elems;
-  const string num_nodes = algo->execute_node(f->mesh());
-  const string num_elems = algo->execute_elem(f->mesh());
-  string num_data;
-  
   switch(f->basis_order())
   {
   case 1:
-    num_data = num_nodes;
+    numdata_ = numnodes_;
     break;
   case 0:
-    num_data = num_elems;
+    numdata_ = numelems_;
     break;
   default:
-    num_data = "0";
+    numdata_ = 0;
     break;
   }
-  
-  gui_numnodes_.set(num_nodes);
-  gui_numelems_.set(num_elems);
-  gui_numdata_.set(num_data);
 
-  std::istringstream iss_nnodes(num_nodes);
-  std::istringstream iss_nelems(num_elems);
-  iss_nnodes >> numnodes_;
-  iss_nelems >> numelems_;
-  switch(f->basis_order())
-  {
-    case 1:
-      numdata_ = numnodes_;
-      break;
-    case 0:
-      numdata_ = numelems_;
-      break;
-    default:
-      numdata_ = 0;
-      break;
-  }
+  //string num_nodes, num_elems;
+  //int num_nodes, num_elems;
+  std::ostringstream num_nodes; num_nodes << numnodes_;
+  std::ostringstream num_elems; num_elems << numelems_;
+  std::ostringstream num_data;  num_data  << numdata_;
+  
+  gui_numnodes_.set(num_nodes.str());
+  gui_numelems_.set(num_elems.str());
+  gui_numdata_.set(num_data.str());
 }
 
 

@@ -26,10 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/NrrdData.h>
@@ -62,28 +59,14 @@ NrrdToField::NrrdToField(GuiContext* ctx)
 
 void NrrdToField::execute()
 {
-  NrrdIPort* iport = dynamic_cast<NrrdIPort*>(get_iport(0));
-  if (iport == 0) 
-  {
-    error("Could not find input port");
-    return;
-  }
-
-  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
-  if (oport == 0) 
-  {
-    error("Could not find output port");
-    return;
-  }
-
   NrrdDataHandle nrrd;
   FieldHandle ofield;
-  ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
-
+  SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
   std::string datalocation = guidatalocation_.get();
-  
-  iport->get(nrrd);
-  if(algo.NrrdToField(nrrd,ofield,datalocation)) oport->send(ofield);
+
+  if (!(get_input_handle("Nrrd",nrrd,true))) return;
+  if (!(algo.NrrdToField(nrrd,ofield,datalocation))) return;
+  send_output_handle("Field",ofield,true);
 }
 
 

@@ -51,7 +51,7 @@
 
 #include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
 #include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 
 #include <Core/Datatypes/Matrix.h>
@@ -72,8 +72,6 @@ class ComputeFieldNodes : public Module {
   public:
     ComputeFieldNodes(GuiContext*);
 
-    virtual ~ComputeFieldNodes();
-
     virtual void execute();
 
     virtual void tcl_command(GuiArgs&, void*);
@@ -88,9 +86,6 @@ ComputeFieldNodes::ComputeFieldNodes(GuiContext* ctx)
   : Module("ComputeFieldNodes", ctx, Source, "FieldsGeometry", "ModelCreation"),
   guifunction_(get_ctx()->subVar("function"))
 {
-}
-
-ComputeFieldNodes::~ComputeFieldNodes(){
 }
 
 void ComputeFieldNodes::execute()
@@ -237,7 +232,7 @@ void ComputeFieldNodes::execute()
   // Add as well the output object
   FieldHandle ofield;
   
-  FieldsAlgo fieldsalgo(this);
+  SCIRunAlgo::FieldsAlgo fieldsalgo(this);
   if(!(fieldsalgo.MakeEditable(field,field))) return;
   if(!(outputlist[0].create_outputlocation(field,"NEWPOS",ofield)))
   {

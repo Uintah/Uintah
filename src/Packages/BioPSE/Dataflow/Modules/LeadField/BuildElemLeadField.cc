@@ -38,7 +38,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/Algorithms/Fields/FieldCount.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Basis/TetLinearLgn.h>
@@ -115,11 +115,9 @@ void BuildElemLeadField::execute() {
     error("Couldn't get input mesh.");
     return;
   }
-  const TypeDescription *meshtd = mesh_in->mesh()->get_type_description();
-  CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd);
-  Handle<FieldCountAlgorithm> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
-  algo->execute(mesh_in->mesh(), nnodes, nelems);
+
+  SCIRunAlgo::FieldsAlgo algo(this);
+  if (!(algo.GetFieldInfo(mesh_in, nnodes, nelems))) return;
 
   MatrixHandle interp_in;
   if (!interp_iport->get(interp_in) || !interp_in.get_rep()) {

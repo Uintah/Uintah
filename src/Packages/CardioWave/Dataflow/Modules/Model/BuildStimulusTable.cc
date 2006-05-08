@@ -12,7 +12,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Packages/CardioWave/Core/Model/ModelAlgo.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -58,7 +58,7 @@ void BuildStimulusTable::execute()
   get_input_handle("DomainType",DomainType,false);
   
   double domaintype;
-  ModelCreation::ConverterAlgo convalgo(this);
+  SCIRunAlgo::ConverterAlgo convalgo(this);
   convalgo.MatrixToDouble(DomainType,domaintype);
   
   StimulusTable StimTable;

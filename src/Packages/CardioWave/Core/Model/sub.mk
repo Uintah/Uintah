@@ -40,9 +40,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/Bundle \
         Core/Algorithms/Util \
-        Packages/ModelCreation/Core/Fields \
-        Packages/ModelCreation/Core/Converter \
-        Packages/ModelCreation/Core/DataIO \
+        Core/Algorithms/Fields \
+        Core/Algorithms/Converter \
+        Core/Algorithms/DataIO \
         Core/Algorithms/Math \
 
                 

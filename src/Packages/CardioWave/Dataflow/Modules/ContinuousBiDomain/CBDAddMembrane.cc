@@ -38,8 +38,8 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/MembraneXML.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -132,7 +132,7 @@ void CBDAddMembrane::execute()
   }
 
   
-  ModelCreation::ConverterAlgo mc(this);
+  SCIRunAlgo::ConverterAlgo mc(this);
 
   if (MembraneType.get_rep())
   {

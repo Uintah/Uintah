@@ -67,6 +67,7 @@
 #include <Core/Datatypes/ScanlineMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Containers/FData.h>
 
 #include <Core/Util/TypeDescription.h>
@@ -602,6 +603,10 @@ class ArrayObjectFieldElemAlgo : public SCIRun::DynamicAlgoBase {
     void get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec);
     void get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
     void get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
+    void get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec);
+    void get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
+    void get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec);
+    void get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
 
 
 };

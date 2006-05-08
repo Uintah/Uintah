@@ -35,8 +35,8 @@
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Packages/ModelCreation/Core/Fields/ExampleFields.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 namespace ModelCreation {
 
@@ -88,13 +88,13 @@ void
   
   MatrixHandle radius, disc;
 
-  ConverterAlgo mc(dynamic_cast<ProgressReporter *>(this));
+  SCIRunAlgo::ConverterAlgo mc(dynamic_cast<ProgressReporter *>(this));
   
   if (!(disc_port->get(disc))) mc.DoubleToMatrix(guidiscretization_.get(),disc);
   if (!(radius_port->get(radius))) mc.DoubleToMatrix(guiradius_.get(),radius);
   
   ExampleFields sphere_algo(dynamic_cast<ProgressReporter *>(this));
-  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
   FieldHandle ofield;
 
   if(sphere_algo.SphericalSurface(ofield,disc))

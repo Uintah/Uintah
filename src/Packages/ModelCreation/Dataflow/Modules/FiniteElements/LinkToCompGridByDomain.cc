@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
@@ -61,7 +61,7 @@ void LinkToCompGridByDomain::execute()
   if (!(get_input_handle("Field",Geometry,true))) return;
   if (!(get_input_handle("NodeLink",NodeLink,true))) return;
   
-  FieldsAlgo algo(this);
+  SCIRunAlgo::FieldsAlgo algo(this);
   algo.LinkToCompGridByDomain(Geometry,NodeLink,GeomToComp,CompToGeom);
 
   send_output_handle("GeomToComp",GeomToComp,true);

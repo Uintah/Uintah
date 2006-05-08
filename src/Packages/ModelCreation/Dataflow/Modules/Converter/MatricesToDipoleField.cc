@@ -35,7 +35,7 @@
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 #include <Core/Malloc/Allocator.h>
 
@@ -65,7 +65,7 @@ void MatricesToDipoleField::execute()
   if (!(get_input_handle("Locations",Locations,true))) return;
   if (!(get_input_handle("Strengths",Strengths,true))) return;
 
-  ConverterAlgo algo(this);
+  SCIRunAlgo::ConverterAlgo algo(this);
   if(!(algo.MatricesToDipoleField(Locations,Strengths,DipoleField))) return;
   
   send_output_handle("DipoleField",DipoleField,true);

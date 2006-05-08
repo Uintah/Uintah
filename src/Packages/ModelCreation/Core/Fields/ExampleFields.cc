@@ -28,6 +28,8 @@
 
 #include <Core/Util/ProgressReporter.h>
 #include <Packages/ModelCreation/Core/Fields/ExampleFields.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
+
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
@@ -58,7 +60,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
 {
   int n;
   
-  ConverterAlgo mc(pr_);
+  SCIRunAlgo::ConverterAlgo mc(pr_);
   mc.MatrixToInt(disc,n);
   
   double r  = 1.0;

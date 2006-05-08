@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/SynapseXML.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -100,7 +100,7 @@ void DMDAddBlockStimulus::execute()
   get_input_handle("Start",Start,false);
   get_input_handle("End",End,false);
 
-  ModelCreation::ConverterAlgo mc(this);
+  SCIRunAlgo::ConverterAlgo mc(this);
   double val;
 
   if (mc.MatrixToDouble(Domain,val)) guidomain_.set(val);

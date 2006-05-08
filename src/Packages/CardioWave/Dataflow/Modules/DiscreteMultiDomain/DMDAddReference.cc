@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/SynapseXML.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -141,7 +141,7 @@ void DMDAddReference::execute()
   }
   ReferenceBundle->setBundle(fieldname,Reference);
 
-  ModelCreation::ConverterAlgo mc(this);
+  SCIRunAlgo::ConverterAlgo mc(this);
 
   // fill out bundle with data
   Reference->setField("Geometry",Geometry);

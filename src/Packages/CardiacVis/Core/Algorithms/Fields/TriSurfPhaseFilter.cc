@@ -71,12 +71,12 @@ bool TriSurfPhaseFilterAlgo::TriSurfPhaseFilter(ProgressReporter *pr, FieldHandl
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "TriSurfPhaseFilter."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOTriSurfPhaseFilter."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "TriSurfPhaseFilterAlgo","TriSurfPhaseFilterAlgoT",
     fi.get_field_name() + "," + fo.get_field_name() + "," + fo2.get_field_name() + "," + fo3.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("ModelCreation");
+  ci->add_namespace("CardiacVis");
   ci->add_namespace("SCIRun");
   
   fi.fill_compile_info(ci);

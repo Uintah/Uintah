@@ -28,9 +28,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
         Core/Bundle \
-        Packages/ModelCreation/Core/Converter \
-        Packages/ModelCreation/Core/Fields \
-        Packages/ModelCreation/Core/Numeric \
+        Core/Algorithms/Converter \
+        Core/Algorithms/Fields \
+        Core/Algorithms/Math \
         Packages/CardioWave/Core/XML \
         Packages/CardioWave/Core/Model
         

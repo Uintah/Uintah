@@ -44,7 +44,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -53,16 +53,10 @@ using namespace SCIRun;
 class FieldDataNodeToElem : public Module {
   public:
     FieldDataNodeToElem(GuiContext*);
-
-    virtual ~FieldDataNodeToElem();
-
     virtual void execute();
 
-    virtual void tcl_command(GuiArgs&, void*);
   private:
     GuiString method_;
-    int fGeneration_;
-    std::string oldmethod_;
 
 };
 
@@ -74,62 +68,20 @@ FieldDataNodeToElem::FieldDataNodeToElem(GuiContext* ctx)
 {
 }
 
-FieldDataNodeToElem::~FieldDataNodeToElem(){
-}
-
 void
  FieldDataNodeToElem::execute()
 {
-
-  FieldIPort *field_iport;
-  
-  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
-  {
-    error("Could not find Field input port");
-    return;
-  }
-   
   FieldHandle input;
+  FieldHandle output;
+  if (!(get_input_handle("Field",input,true))) return;
   
-  field_iport->get(input);
-  
-  if (input.get_rep()==0)
-  {
-    warning("No Field was found on input port");
-    return;
-  }
- 
-  bool update = false;
-
-  if ((fGeneration_ != input->generation )||(oldmethod_ != method_.get())) {
-    fGeneration_ = input->generation;
-    oldmethod_ = method_.get();
-    update = true;
-  }
-
   std::string method = method_.get();
-
-  if(update)
-  {
-    FieldsAlgo fieldmath(this);
-    FieldHandle output;
-
-    if(!(fieldmath.FieldDataNodeToElem(input,output,method)))
-    {
-      return;
-    }
+  SCIRunAlgo::FieldsAlgo algo(this);
   
-    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(get_output_port(0));
-    if (output_oport) output_oport->send(output);
-  }
-}
-
-void
- FieldDataNodeToElem::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  if(!(algo.FieldDataNodeToElem(input,output,method))) return;
+  
+  send_output_handle("Field",output,true);
 }
 
 } // End namespace ModelCreation
-
 

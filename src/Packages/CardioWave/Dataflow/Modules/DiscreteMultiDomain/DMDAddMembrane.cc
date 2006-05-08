@@ -38,8 +38,8 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWave/Core/XML/SynapseXML.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -98,7 +98,7 @@ void DMDAddMembrane::execute()
   if (!(get_input_handle("Geometry",Geometry,true))) return;
   // optional ones
   
-  ModelCreation::FieldsAlgo algo(this);
+  SCIRunAlgo::FieldsAlgo algo(this);
   if (!(algo.ClearAndChangeFieldBasis(Geometry,Geometry,"Linear")))
   {
     error("DMDAddMembrane: Could not build a linear field for the membrane");
@@ -140,7 +140,7 @@ void DMDAddMembrane::execute()
     }
   }
 
-  ModelCreation::ConverterAlgo mc(this);
+  SCIRunAlgo::ConverterAlgo mc(this);
 
   
   // Add a new bundle to the bundle with the data

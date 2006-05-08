@@ -27,11 +27,11 @@
 */
 
 #include <Packages/CardioWave/Core/Model/ModelAlgo.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Packages/ModelCreation/Core/DataIO/DataIOAlgo.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 #include <Packages/CardioWave/Core/Model/BuildMembraneTable.h>
 #include <Packages/CardioWave/Core/Model/BuildStimulusTable.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/DataIO/DataIOAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Datatypes/MatrixOperations.h>
 #include <Core/Algorithms/Math/MathAlgo.h>
 
@@ -40,7 +40,7 @@
 namespace CardioWave {
 
 using namespace SCIRun;
-using namespace ModelCreation;
+using namespace SCIRunAlgo;
 
 
 ModelAlgo::ModelAlgo(ProgressReporter* pr) :
@@ -54,9 +54,9 @@ bool ModelAlgo::DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle Membr
   return(algo.BuildMembraneTable(pr_,ElementType,MembraneModel,CompToGeom,NodeLink, ElemLink,MembraneTable,MappingMatrix));
 }
 
-bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
+bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& DomainType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
 {
-  SCIRun::MathAlgo numericalgo(pr_);
+  SCIRunAlgo::MathAlgo numericalgo(pr_);
   int num_totalnodes = num_volumenodes + num_synnodes;
   
   // Build a vector for the surface areas
@@ -76,6 +76,7 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
     return (false);
   }
   double* nodetypeptr = NodeType->get_data_pointer();
+  double* domaintypeptr = DomainType->get_data_pointer();
   
   // Build the Membrane connections
 
@@ -91,6 +92,7 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
       sev[k].val = 1.0;
       volumeptr[synnum] = membranetable[p][q].surface;
       nodetypeptr[synnum] = nodetypes[p];
+      domaintypeptr[synnum] = -1.0;
       k++; synnum++; 
       sev[k].row = membranetable[p][q].node1;
       sev[k].col = membranetable[p][q].node2;
@@ -193,10 +195,10 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // Define all the dynamic algorithms.
   // Forward the ProgressReporter so everything can forward an error
 
-  ModelCreation::FieldsAlgo  fieldsalgo(pr_);
-  SCIRun::MathAlgo numericalgo(pr_);
-  ModelCreation::ConverterAlgo converteralgo(pr_);
-  ModelCreation::DataIOAlgo  dataioalgo(pr_);
+  SCIRunAlgo::FieldsAlgo  fieldsalgo(pr_);
+  SCIRunAlgo::MathAlgo numericalgo(pr_);
+  SCIRunAlgo::ConverterAlgo converteralgo(pr_);
+  SCIRunAlgo::DataIOAlgo  dataioalgo(pr_);
 
   // Step 0: Some sanity checks
   
@@ -225,6 +227,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   std::string filename_visbundle;   // Visualization Bundle, as we need to renumber the system we need a back projection all information is contained in this bundle
   std::string filename_sysmatrix;   // The system matrix
   std::string filename_nodetype;    // A vector with the nodetype for each node in the system
+  std::string filename_domaintype;  // A vector with the domaintype for each node in the system
   std::string filename_surface;     // Surface factors for the cell membrane
   std::string filename_in;          // Parameter file
   std::string filename_script;      // The script to build simulation
@@ -252,6 +255,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   filename_visbundle = filenamebase + ".vis.bdl";
   filename_sysmatrix = filenamebase + ".fem.spr";
   filename_nodetype  = filenamebase + ".nt.bvec";
+  filename_domaintype= filenamebase + ".dt.bvec";
   filename_surface   = filenamebase + ".area.vec";
   filename_in        = filenamebase + ".in";
   filename_script    = filenamebase + ".script.sh";
@@ -284,6 +288,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     infile << Parameters->get();
     infile << "\n";
     infile << "nodefile=" << filename_nodetype << "\n";
+    infile << "domainfile=" << filename_domaintype << "\n";
     infile << "synapsefile=" << filename_membrane << "\n";
     infile << "grid_int=" << filename_sysmatrix << "\n";
     infile << "grid_area=" << filename_surface << "\n";
@@ -646,7 +651,20 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   
   MatrixHandle VolumeVec;
   MatrixHandle NodeType;
-  if (!(DMDBuildMembraneMatrix(membranetable,nodetypes,num_volumenodes,num_synnodes,NodeType,VolumeVec,synmatrix)))
+  MatrixHandle DomainType;
+  
+  if(!(fieldsalgo.GetFieldData(ElementType,DomainType)))
+  {
+    error("DMDBuildDomain: Could not extract DomainType from ElementType field");
+    return (false);   
+  }
+  if(!(numericalgo.ResizeMatrix(DomainType,DomainType,num_totalnodes,1)))
+  {
+    error("DMDBuildDomain: Could not resize DomainType matrix");
+    return (false);   
+  }
+  
+  if (!(DMDBuildMembraneMatrix(membranetable,nodetypes,num_volumenodes,num_synnodes,NodeType,DomainType,VolumeVec,synmatrix)))
   {
     error("DMDBuildDomain: Could not build Synapse matrix");
     return (false); 
@@ -696,6 +714,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   // Reorder domain properties
   NodeType = mapping*NodeType;
+  DomainType = mapping*DomainType;
   VolumeVec = mapping*VolumeVec;
 
   if (!(dataioalgo.WriteMatrix(filename_sysmatrix,sysmatrix,"CardioWave Sparse Matrix")))
@@ -715,10 +734,18 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);
   }
 
+  if (!(dataioalgo.WriteMatrix(filename_nodetype,DomainType,"CardioWave Byte Vector")))
+  {
+    error("DMDBuildDomain: Could not write domaintype vector");  
+    return (false);
+  }
+
+
   remark("Created domain files");  
  
   // clean memory
   sysmatrix = 0;
+  DomainType = 0;
   NodeType = 0;
   VolumeVec = 0;
   

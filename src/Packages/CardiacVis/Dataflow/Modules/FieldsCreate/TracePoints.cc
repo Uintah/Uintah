@@ -31,7 +31,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Packages/CardiacVis/Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -80,7 +80,7 @@ TracePoints::execute()
     field_generation_ = Input->generation;
     time_generation_  = Time->generation;
 
-    ModelCreation::ConverterAlgo calgo(this);
+    SCIRunAlgo::ConverterAlgo calgo(this);
     CardiacVis::FieldsAlgo algo(this);
     
     double time;

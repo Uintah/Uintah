@@ -31,7 +31,7 @@
 
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>.
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 namespace CardioWave {
 
@@ -107,7 +107,7 @@ void DMDConductionVelocity::execute()
   potential1_generation_ = Potential1_->generation;
   potential2_generation_ = Potential2_->generation;
 
-  ModelCreation::ConverterAlgo calgo(this);
+  SCIRunAlgo::ConverterAlgo calgo(this);
   double time, potential1, potential2, distance, activationthreshold, conductionvelocity;
 
   if (Distance.get_rep()) if (calgo.MatrixToDouble(Distance,distance)) guidistance_.set(distance);

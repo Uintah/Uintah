@@ -29,11 +29,7 @@
 #ifndef MODELCREATION_CORE_FIELDS_EXAMPLEFIELDS_H
 #define MODELCREATION_CORE_FIELDS_EXAMPLEFIELDS_H 1
 
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 #include <Core/Algorithms/Util/AlgoLibrary.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/Field.h>
-
 
 namespace ModelCreation {
 

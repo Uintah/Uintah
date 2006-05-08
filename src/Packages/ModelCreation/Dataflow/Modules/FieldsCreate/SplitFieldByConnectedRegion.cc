@@ -32,7 +32,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -85,7 +85,7 @@ void SplitFieldByConnectedRegion::execute()
 
   if(update)
   {
-    FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
+    SCIRunAlgo::FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
     
     std::vector<FieldHandle> ofields;
     if(!(fieldmath.SplitFieldByConnectedRegion(input,ofields)))
