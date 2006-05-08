@@ -965,6 +965,13 @@ public:
   void get_elems(typename Cell::array_type &result,
                  const typename Node::index_type &idx) const;
 
+  void get_elems(typename Cell::array_type &result,
+                 const typename Edge::index_type &idx) const { result.clear(); }
+
+  void get_elems(typename Cell::array_type &result,
+                 const typename Face::index_type &idx) const { result.clear(); }
+
+
   //! Wrapper to get the derivative elements from this element.
   void get_delems(typename DElem::array_type &result,
                   typename Elem::index_type idx) const

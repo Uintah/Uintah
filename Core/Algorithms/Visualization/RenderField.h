@@ -1417,6 +1417,22 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
 
   bool def_color = !(color_handle.get_rep()) || force_def_color;
   
+  if ((sfld->basis_order() == 0) && (mesh->dimensionality() == 3))
+  {
+    typename Fld::mesh_type::Face::iterator face_iter; mesh->begin(face_iter); 
+    typename Fld::mesh_type::Face::iterator face_iter_end; mesh->end(face_iter_end); 
+    typename Fld::mesh_type::Elem::array_type cells;
+    if (face_iter != face_iter_end)
+    {
+      mesh->get_elems(cells,*face_iter);  
+      if (cells.size() == 0) def_color = true;
+    }
+    else
+    {
+      def_color = true;
+    }
+  }
+  
   if (use_transparency)
   {
     faces = scinew GeomTranspTriangles;
