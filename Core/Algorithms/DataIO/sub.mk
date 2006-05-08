@@ -29,21 +29,28 @@
 
 # Makefile fragment for this subdirectory
 
-ifeq ($(HAVE_INSIGHT),yes)
   include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-  INCLUDES += $(INSIGHT_INCLUDE)
   SRCDIR   := Core/Algorithms/DataIO
 
   SRCS     += \
+	  $(SRCDIR)/DataIOAlgo.cc \
+
+  LIBS := $(M_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY)
+
+ifeq ($(HAVE_INSIGHT),yes)
+  INCLUDES += $(INSIGHT_INCLUDE)
+  SRCS     += \
           $(SRCDIR)/AnalyzeImage.cc      \
           $(SRCDIR)/AnalyzeReader.cc     \
-	  $(SRCDIR)/AnalyzeSliceImageIO.cc \
+          $(SRCDIR)/AnalyzeSliceImageIO.cc \
 
-  LIBS := $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY)
+  LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) 
+endif
 
   PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geometry Core/Util Core/Math
+	Core/Exceptions Core/Geometry Core/Util Core/Math Core/Persistent \
+  Core/Geom Core/Bundle Core/ImportExport Core/Volume
 
   include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-endif
+  

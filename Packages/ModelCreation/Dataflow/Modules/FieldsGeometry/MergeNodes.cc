@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
@@ -72,7 +72,7 @@ void MergeNodes::execute()
   tolerance = guitolerance_.get();
   if (guimatchval_.get()) matchval = true;
 
-  FieldsAlgo algo(this);  
+  SCIRunAlgo::FieldsAlgo algo(this);  
 
   std::vector<FieldHandle> fields(1);
   fields[0] = input;

@@ -48,7 +48,9 @@
 
 #include <Core/Algorithms/Math/share.h>
 
-namespace SCIRun {
+namespace SCIRunAlgo {
+
+using namespace SCIRun;
 
 class SparseElement; 
 typedef std::vector<SparseElement> SparseElementVector;

@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
@@ -81,7 +81,7 @@ void MergeFields::execute()
   if (guiforcepointcloud_.get()) forcepointcloud = true;
   if (guimatchval_.get()) matchval = true;
 
-  FieldsAlgo algo(this);  
+  SCIRunAlgo::FieldsAlgo algo(this);  
 
   if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval))) return;
 

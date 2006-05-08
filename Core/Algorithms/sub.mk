@@ -31,6 +31,7 @@
 SRCDIR := Core/Algorithms
 
 SUBDIRS := \
+  $(SRCDIR)/Converter    \
   $(SRCDIR)/DataIO    \
 	$(SRCDIR)/Fields		\
 	$(SRCDIR)/Math		  \

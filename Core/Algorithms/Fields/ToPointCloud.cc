@@ -29,10 +29,13 @@
 // Get all the class definitions. 
 #include <Core/Algorithms/Fields/ToPointCloud.h>
 
+
 // As we already included DynamicAlgorithm.h in the header we do not need to
 // include it again here.
 
-namespace SCIRun {
+namespace SCIRunAlgo {
+
+using namespace SCIRun;
 
 // Implementation of the actual access point to the algorithm
 
@@ -107,9 +110,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
     fo.set_basis_type("NoDataBasis");
   }
   
-  // We have now figured out the input and output type
-  
-  // Step 2: Build information structure for the dynamic compilation
+  // Step 3: Build information structure for the dynamic compilation
   
   // The only object we need to build to perform a dynamic compilation is the
   // CompileInfo. This object is created and we use the handle to the object
@@ -125,7 +126,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   //  4) The template descriptors separated by commas
    
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ToPointCloud."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOToPointCloud."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "ToPointCloudAlgo","ToPointCloudAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 
@@ -134,9 +135,9 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   // of this algorithm. 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
 
-  // This function is defined in the namespace ModelCreation, add a statement
-  // 'using namespace ModelCreation' to the dynamic file to be created.
-  ci->add_namespace("ModelCreation");
+  // This function is defined in the namespace SCIRunAlgo, add a statement
+  // 'using namespace SCIRunAlgo' to the dynamic file to be created.
+  ci->add_namespace("SCIRunAlgo");
   ci->add_namespace("SCIRun");
   
   // In order to be able to compile the dynamic code it needs to include the
@@ -178,4 +179,5 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   return(algo->ToPointCloud(pr,input,output));
 }
 
-} // End namespace
+} // End namespace SCIRunAlgo
+

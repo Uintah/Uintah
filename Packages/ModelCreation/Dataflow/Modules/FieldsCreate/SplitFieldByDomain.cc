@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Malloc/Allocator.h>
@@ -59,10 +59,9 @@ void SplitFieldByDomain::execute()
   FieldHandle output;
   
   if(!(get_input_handle("Field",input,true))) return;
-  FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
-  if(!(fieldmath.SplitFieldByDomain(input,output))) return;
+  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
+  if(!(algo.SplitFieldByDomain(input,output))) return;
   send_output_handle("SplitField",output,true);
-
 }
 
 

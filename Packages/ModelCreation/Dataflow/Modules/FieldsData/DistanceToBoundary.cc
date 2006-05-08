@@ -36,7 +36,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -62,7 +62,7 @@ void DistanceToBoundary::execute()
 
   if (!(get_input_handle("Field",input,true))) return;  
   
-  FieldsAlgo algo(this);
+  SCIRunAlgo::FieldsAlgo algo(this);
 
   MatrixHandle dummy;
   if(!(algo.FieldBoundary(input,object,dummy))) return;

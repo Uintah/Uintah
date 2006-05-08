@@ -42,7 +42,6 @@
 #include <Packages/CardioWave/Core/XML/OutputXML.h>
 #include <Packages/CardioWave/Core/XML/NeuroWaveXML.h>
 #include <Packages/CardioWave/Core/XML/NWTimeStepXML.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>

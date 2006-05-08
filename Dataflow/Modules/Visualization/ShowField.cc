@@ -43,7 +43,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Algorithms/Fields/FieldCount.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 
 #include <Dataflow/Network/Module.h>
@@ -626,20 +626,12 @@ ShowField::execute()
 	return;
       }
 
-      // Do this last, sometimes takes a while.
-      const TypeDescription *meshtd0 = fld_handle->mesh()->get_type_description();
-
-      CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd0);
-      Handle<FieldCountAlgorithm> algo;
-      if (!module_dynamic_compile(ci, algo)) return;
-
-      //string num_nodes, num_elems;
-      //int num_nodes, num_elems;
-      const string num_nodes0 = algo->execute_node(fld_handle->mesh());
-      const string num_elems0 = algo->execute_elem(fld_handle->mesh());
-
-      const string num_nodes1 = algo->execute_node(vfld_handle->mesh());
-      const string num_elems1 = algo->execute_elem(vfld_handle->mesh());
+      // Code to replace the old FieldCountAlgorithm
+      SCIRunAlgo::FieldsAlgo algo(this);
+      int num_nodes0, num_nodes1;
+      int num_elems0, num_elems1;
+      if (!(algo.GetFieldInfo(fld_handle,num_nodes0,num_elems0))) return;
+      if (!(algo.GetFieldInfo(vfld_handle,num_nodes1,num_elems1))) return;
 
       if( num_nodes0 != num_nodes1 || num_elems0 != num_elems1 ) {
 	error("The input meshes must have the same number of nodes and elements.");

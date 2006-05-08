@@ -35,7 +35,7 @@
  *
  */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
@@ -72,9 +72,7 @@ void MappingMatrixToField::execute()
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("MappingMatrix",matrix,true))) return;
 
-  FieldsAlgo fieldmath(this);  
-
-  send_output_handle("IndicesField",output,true);
+  SCIRunAlgo::FieldsAlgo fieldmath(this);  
   if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
   
   send_output_handle("IndicesField",output,true);

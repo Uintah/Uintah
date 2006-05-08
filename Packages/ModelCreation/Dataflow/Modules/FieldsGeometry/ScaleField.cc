@@ -26,15 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
-#include <Packages/ModelCreation/Core/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Dataflow/Network/Module.h>
-
 
 namespace ModelCreation {
 
@@ -72,8 +71,8 @@ void ScaleField::execute()
   get_input_handle("GeomScaleFactor",GeomScale,false);
   
   double datascale, geomscale;
-  ConverterAlgo calgo(this);
-  FieldsAlgo    falgo(this);
+  SCIRunAlgo::ConverterAlgo calgo(this);
+  SCIRunAlgo::FieldsAlgo    falgo(this);
   
   if (DataScale.get_rep()) 
   {

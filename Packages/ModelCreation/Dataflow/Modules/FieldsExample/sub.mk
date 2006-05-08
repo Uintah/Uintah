@@ -21,8 +21,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions\
-        Packages/ModelCreation/Core/Fields \
-        Packages/ModelCreation/Core/Converter
+        Core/Algorithms/Fields \
+        Core/Algorithms/Converter \
+        Packages/ModelCreation/Core/Fields
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

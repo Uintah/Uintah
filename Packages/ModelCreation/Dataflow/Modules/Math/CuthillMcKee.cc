@@ -57,7 +57,7 @@ void CuthillMcKee::execute()
   MatrixHandle Mat, Mapping, InverseMapping;
   if(!(get_input_handle("Matrix",Mat,true))) return;
 
-  MathAlgo algo(this);
+  SCIRunAlgo::MathAlgo algo(this);
   if(!(algo.CuthillmcKee(Mat,Mat,InverseMapping,true))) return;
   
   Mapping = InverseMapping->transpose();

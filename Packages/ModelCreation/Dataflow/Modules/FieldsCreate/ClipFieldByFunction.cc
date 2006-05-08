@@ -64,7 +64,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -73,8 +73,6 @@ using namespace SCIRun;
 class ClipFieldByFunction : public Module {
   public:
     ClipFieldByFunction(GuiContext*);
-
-    virtual ~ClipFieldByFunction();
 
     virtual void execute();
 
@@ -93,8 +91,6 @@ ClipFieldByFunction::ClipFieldByFunction(GuiContext* ctx)
 {
 }
 
-ClipFieldByFunction::~ClipFieldByFunction(){
-}
 
 void ClipFieldByFunction::execute()
 {
@@ -126,8 +122,6 @@ void ClipFieldByFunction::execute()
   
   ArrayObjectList inputlist(numinputs+4,ArrayObject(this));
   ArrayObjectList outputlist(1,ArrayObject(this));
-  
-
   
   // The function can be scripted. If a string is found on the input
   // use this one. It will be set in the GIU, after which it is retrieved the
@@ -258,11 +252,11 @@ void ClipFieldByFunction::execute()
   
   // Now do the clipping
 
-  FieldsAlgo fieldmath(this);
+  SCIRunAlgo::FieldsAlgo fieldalgo(this);
 
   FieldHandle output;
   MatrixHandle interpolant;
-  if(!(fieldmath.ClipFieldBySelectionMask(field,output,selmask,interpolant)))
+  if(!(fieldalgo.ClipFieldBySelectionMask(field,output,selmask,interpolant)))
   {
     error("Clipping algorithm failed");
     return;

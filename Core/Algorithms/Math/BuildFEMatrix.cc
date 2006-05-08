@@ -28,7 +28,9 @@
 
 #include <Core/Algorithms/Math/BuildFEMatrix.h>
 
-namespace SCIRun {
+namespace SCIRunAlgo {
+
+using namespace SCIRun;
 
 bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc)
 {
@@ -63,7 +65,8 @@ bool BuildFEMatrixAlgo::BuildFEMatrix(ProgressReporter *pr, FieldHandle input, M
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("SCIRun");
-  
+  ci->add_namespace("SCIRunAlgo");
+
   fi.fill_compile_info(ci);
   
   // Handle dynamic compilation

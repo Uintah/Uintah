@@ -32,7 +32,7 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -54,27 +54,14 @@ Unstructure::Unstructure(GuiContext* ctx)
 
 void Unstructure::execute()
 {
-  FieldIPort* iport = dynamic_cast<FieldIPort*>(get_iport(0));
-  if (iport == 0) 
-  {
-    error("Could not find input port");
-    return;
-  }
-
-  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
-  if (oport == 0) 
-  {
-    error("Could not find output port");
-    return;
-  }
-
   FieldHandle ifield, ofield;
-  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
-
-  iport->get(ifield);
-  if(algo.Unstructure(ifield,ofield)) oport->send(ofield);
+  if (!(get_input_handle("Field",ifield,true))) return;
+  
+  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+  if (!(algo.Unstructure(ifield,ofield))) return;
+  
+  send_output_handle("Field",ofield,true);
 }
-
 
 } // End namespace ModelCreation
 

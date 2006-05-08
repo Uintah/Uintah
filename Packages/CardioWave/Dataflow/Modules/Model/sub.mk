@@ -23,7 +23,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Converter \
+        Core/Algorithms/Converter \
         Packages/CardioWave/Core/Model
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)

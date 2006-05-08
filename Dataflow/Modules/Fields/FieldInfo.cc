@@ -31,7 +31,7 @@
 //    Author : McKay Davis
 //    Date   : July 2002
 
-#include <Core/Algorithms/Fields/FieldCount.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -42,6 +42,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <map>
 #include <iostream>
+#include <sstream>
 
 namespace SCIRun {
 
@@ -225,22 +226,21 @@ FieldInfo::update_input_attributes(FieldHandle f)
   }
 
   // Do this last, sometimes takes a while.
-  const TypeDescription *meshtd = f->mesh()->get_type_description();
-  CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd);
-  Handle<FieldCountAlgorithm> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
 
-  //string num_nodes, num_elems;
-  //int num_nodes, num_elems;
-  const string num_nodes = algo->execute_node(f->mesh());
-  const string num_elems = algo->execute_elem(f->mesh());
+  int nnodes, nelems;
 
-  gui_numnodes_.set(num_nodes);
-  gui_numelems_.set(num_elems);
+  SCIRunAlgo::FieldsAlgo algo(this);
+  algo.GetFieldInfo(f,nnodes,nelems);
+  
+  std::ostringstream num_nodes; num_nodes << nnodes;
+  std::ostringstream num_elems; num_elems << nelems;
+
+  gui_numnodes_.set(num_nodes.str());
+  gui_numelems_.set(num_elems.str());
   if (regressing)
   {
-    remark("Num Nodes: " + num_nodes);
-    remark("Num Elems: " + num_elems);
+    remark("Num Nodes: " + num_nodes.str());
+    remark("Num Elems: " + num_elems.str());
   }
 }
 

@@ -395,7 +395,29 @@ void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point
 
 void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
 {
-  SCIRun::QuadSurfMesh<TriLinearLgn<Point> >::Node::array_type nodes;
+  SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::array_type nodes;
+  mesh->get_nodes(nodes,*it);
+  
+  SCIRun::Point p1,p2,p3;
+  if (nodes.size() == 3)
+  {
+    mesh->get_center(p1,nodes[0]);
+    mesh->get_center(p2,nodes[1]);
+    mesh->get_center(p3,nodes[2]);
+    
+    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = TensorVectorMath::cross(vec1,vec2);    
+  }
+  else
+  {
+    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+  }
+}
+
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+{
+  SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::array_type nodes;
   mesh->get_nodes(nodes,*it);
   
   Point p1,p2,p3;
@@ -415,6 +437,29 @@ void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<P
   }
 }
 
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+{
+  SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::array_type nodes;
+  mesh->get_nodes(nodes,*it);
+  
+  Point p1,p2,p3;
+  if (nodes.size() == 3)
+  {
+    mesh->get_center(p1,nodes[0]);
+    mesh->get_center(p2,nodes[1]);
+    mesh->get_center(p3,nodes[2]);
+    
+    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = TensorVectorMath::cross(vec1,vec2);    
+  }
+  else
+  {
+    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+  }
+}
+
+
 void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
 {
   SCIRun::Vector v;
@@ -424,6 +469,22 @@ void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point
 }
 
 void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+{
+  SCIRun::Vector v;
+  mesh->synchronize(SCIRun::Mesh::NORMALS_E);
+  mesh->get_normal(v,*it);
+  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+}
+
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+{
+  SCIRun::Vector v;
+  mesh->synchronize(SCIRun::Mesh::NORMALS_E);
+  mesh->get_normal(v,*it);
+  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+}
+
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
 {
   SCIRun::Vector v;
   mesh->synchronize(SCIRun::Mesh::NORMALS_E);

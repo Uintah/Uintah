@@ -21,8 +21,8 @@ PSELIBS :=  Core/ImportExport\
             Core/Exceptions Core/Thread Core/GuiInterface \
             Core/Geom Core/Geometry Dataflow/Network \
             Packages/ModelCreation/Core/Algorithms \
-            Packages/ModelCreation/Core/Fields \
-            Packages/ModelCreation/Core/Numeric \
+            Core/Algorithms/Fields \
+            Core/Algorithms/Math \
             
 LIBS :=
 

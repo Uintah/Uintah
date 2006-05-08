@@ -63,10 +63,6 @@
         <name>Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
-      <port>
-        <name>Mapping</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
     </outputs>
   </io>
 </component>

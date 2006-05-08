@@ -56,7 +56,7 @@ BuildFEMatrix::BuildFEMatrix(GuiContext* ctx)
 
 void BuildFEMatrix::execute()
 {
-  MathAlgo numericalgo(this);
+  SCIRunAlgo::MathAlgo numericalgo(this);
   
   FieldHandle Field;
   MatrixHandle Conductivity;

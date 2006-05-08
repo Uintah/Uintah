@@ -29,7 +29,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
@@ -68,7 +68,7 @@ void DomainBoundary::execute()
 {
   FieldHandle ifield, ofield;
   MatrixHandle ElemLink;
-  FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
  
   if(!(get_input_handle("Field",ifield,true))) return;
   if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);

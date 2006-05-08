@@ -44,8 +44,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
-#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -73,7 +72,7 @@ void SignedDistanceToField::execute()
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("ObjectField",object,true))) return;
  
-  FieldsAlgo algo(this);
+  SCIRunAlgo::FieldsAlgo algo(this);
   
   if(!(algo.SignedDistanceField(input,output,object))) return;
    

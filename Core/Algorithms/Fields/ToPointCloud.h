@@ -33,12 +33,13 @@
 // The following include file will include all tools needed for doing 
 // dynamic compilation and will include all the standard dataflow types
 #include <Core/Algorithms/Util/DynamicAlgo.h>
-#include <Core/Algorithms/Fields/share.h>
 
 // Additionally we include sci_hash_map here as it is needed by the algorithm
 #include <sci_hash_map.h>
 
-namespace SCIRun {
+namespace SCIRunAlgo {
+
+using namespace SCIRun;
 
 // The idea of a dynamically compiling class is the following:
 //  A general pointer to the Field is given to the algorithm, this is a pointer
@@ -92,7 +93,7 @@ namespace SCIRun {
 // hence the pointer to the module can be used to initialise the ProgressReporter
 //
 
-class SCISHARE ToPointCloudAlgo : public DynamicAlgoBase
+class ToPointCloudAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
@@ -108,7 +109,7 @@ public:
 // proper algorithm.   
 
 template <class FSRC, class FDST>
-class SCISHARE ToPointCloudAlgoT : public ToPointCloudAlgo
+class ToPointCloudAlgoT : public ToPointCloudAlgo
 {
 public:
   virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
@@ -246,7 +247,7 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
   return (true);
 }
 
-
-} // end namespace
+} // end namespace SCIRunAlgo
 
 #endif 
+

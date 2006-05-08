@@ -64,6 +64,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/StreamMatrix.tcl\
 	$(SRCDIR)/ApplyRowOperation.tcl\
 	$(SRCDIR)/ApplyColumnOperation.tcl\
+	$(SRCDIR)/CollectFields.tcl\
+	$(SRCDIR)/SetFieldData.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

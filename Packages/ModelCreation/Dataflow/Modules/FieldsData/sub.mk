@@ -27,6 +27,8 @@ SRCS     += \
 	$(SRCDIR)/SelectByFieldsData.cc\
 	$(SRCDIR)/SignedDistanceToField.cc\
 	$(SRCDIR)/MappingMatrixToField.cc\
+	$(SRCDIR)/GetFieldData.cc\
+  $(SRCDIR)/SetFieldData.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -36,7 +38,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/GeomInterface Core/TkExtensions \
         Packages/ModelCreation/Core/Algorithms \
         Packages/ModelCreation/Core/Datatypes \
-        Packages/ModelCreation/Core/Fields 
+        Packages/ModelCreation/Core/Fields \
+        Core/Algorithms/Converter \
+        Core/Algorithms/Fields 
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

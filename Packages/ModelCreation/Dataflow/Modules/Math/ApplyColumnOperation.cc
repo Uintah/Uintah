@@ -60,7 +60,7 @@ void ApplyColumnOperation::execute()
   
   if (!(get_input_handle("Matrix",input,true))) return;
   
-  SCIRun::MathAlgo algo(this);
+  SCIRunAlgo::MathAlgo algo(this);
   
   std::string method = guimethod_.get();
   if (!(algo.ApplyColumnOperation(input,output,method))) return;

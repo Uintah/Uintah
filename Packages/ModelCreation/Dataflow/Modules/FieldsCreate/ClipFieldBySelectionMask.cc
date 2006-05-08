@@ -35,7 +35,7 @@
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/ModelCreation/Core/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -45,7 +45,6 @@ class ClipFieldBySelectionMask : public Module {
   public:
     ClipFieldBySelectionMask(GuiContext*);
     virtual void execute();
-
 };
 
 
@@ -66,8 +65,8 @@ void ClipFieldBySelectionMask::execute()
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("SelectionMask",selmask,true))) return;
 
-  FieldsAlgo fieldmath(this);
-  if(!(fieldmath.ClipFieldBySelectionMask(input,output,selmask,interpolant))) return;
+  SCIRunAlgo::FieldsAlgo algo(this);
+  if(!(algo.ClipFieldBySelectionMask(input,output,selmask,interpolant))) return;
   
   send_output_handle("ClippedField",output,true);
   send_output_handle("MappingMatrix",interpolant, true);

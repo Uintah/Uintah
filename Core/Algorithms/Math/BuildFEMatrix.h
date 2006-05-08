@@ -50,7 +50,9 @@
 #include <sgi_stl_warnings_on.h>
 
 
-namespace SCIRun {
+namespace SCIRunAlgo {
+
+using namespace SCIRun;
 
 class BuildFEMatrixAlgo : public DynamicAlgoBase
 {
