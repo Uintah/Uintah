@@ -751,7 +751,9 @@ DataArchiver::createIndexXML(Dir& dir)
    time_t t = time(NULL) ;
    
    metaElem->appendElement("date", ctime(&t));
-   metaElem->appendElement("endianness", endianness().c_str());
+   // DHG
+   // Moved the endianness tag to each timestep, to support multiendian udas
+   //   metaElem->appendElement("endianness", endianness().c_str());
    metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
    
    string iname = dir.getName()+"/index.xml";
@@ -1141,6 +1143,12 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       // make a timestep.xml file for this timestep 
       // we need to do it here in case there is a timestesp restart
       ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
+
+
+      // Create a metadata element to store the per-timestep endianess
+      ProblemSpecP metaElem = rootElem->appendChild("Meta");
+      metaElem->appendElement("endianness", endianness().c_str());
+      
 
       ProblemSpecP timeElem = rootElem->appendChild("Time");
       timeElem->appendElement("timestepNumber", timestep);
