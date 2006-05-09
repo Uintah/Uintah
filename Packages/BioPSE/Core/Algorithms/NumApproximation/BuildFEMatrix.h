@@ -183,6 +183,11 @@ BuildFEMatrix<Field>::build_FEMatrix(FieldHandle hField,
   {
     np = Max(1, Min(Thread::numProcessors()/2, 5));
   }
+  
+  // TODO: This code sometimes crashes with np > 1.  Jeroen claims the
+  // module is being rewritten so no fix for now.  Instead
+  // force np = 1 until the rewrite is done.
+  np = 1;
 
   hA = 0;
 
