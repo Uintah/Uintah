@@ -82,8 +82,11 @@ AdiabaticTable::~AdiabaticTable()
   
   delete lb;
   delete table;
-  for(int i=0;i<(int)tablevalues.size();i++)
+  for(int i=0;i<(int)tablevalues.size();i++){
+    TableValue* tv = tablevalues[i];
+    VarLabel::destroy(tv->label);
     delete tablevalues[i];
+  }
   
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                 iter != d_scalar->regions.end(); iter++){
