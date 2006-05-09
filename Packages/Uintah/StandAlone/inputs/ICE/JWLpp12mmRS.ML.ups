@@ -195,12 +195,11 @@
           <orderOfInterpolation>1  </orderOfInterpolation>
           <do_Refluxing>  false     </do_Refluxing>
           <Refinement_Criteria_Thresholds>
-            <Density>     2e5        </Density>
-            <Temperature> 1e100      </Temperature>
-            <Pressure>    4e10       </Pressure>
-            <Velocity>    1e100      </Velocity>
+            <Variable name = "rho_CC"   value = "2e5"  matl = "all" />
+            <Variable name = "press_CC" value = "4e10" matl = "0" />
           </Refinement_Criteria_Thresholds>
         </AMR>
+        
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  1.0            </knob_for_speedSound>

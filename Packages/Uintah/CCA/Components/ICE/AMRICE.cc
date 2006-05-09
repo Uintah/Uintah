@@ -22,7 +22,6 @@
 #define SPEW 0
 //#undef SPEW
 
-//#define BRYAN
 
 using namespace Uintah;
 using namespace std;
@@ -68,14 +67,78 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   amr_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
   amr_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
   amr_ps->getWithDefault( "useLockStep",   d_useLockStep,       false);
-  refine_ps->getWithDefault("Density",     d_rho_threshold,     1e100);
-  refine_ps->getWithDefault("Temperature", d_temp_threshold,    1e100);
-  refine_ps->getWithDefault("Pressure",    d_press_threshold,   1e100);
-  refine_ps->getWithDefault("VolumeFrac",  d_vol_frac_threshold,1e100);
-  refine_ps->getWithDefault("Velocity",    d_vel_threshold,     1e100);
   
   //__________________________________
-  // bullet proofing
+  // Pull out the refinement threshold criteria 
+  for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0; 
+                    var_ps = var_ps->findNextBlock("Variable")) {
+    thresholdVar data; 
+    string name, value, matl;
+        
+    map<string,string> input;
+    var_ps->getAttributes(input);
+    name  = input["name"];
+    value = input["value"];
+    matl  = input["matl"];
+    
+    stringstream n_ss(name);
+    stringstream v_ss(value);
+    stringstream m_ss(matl);
+    
+    n_ss >> data.name;
+    v_ss >> data.value;
+    m_ss >> data.matl;
+    
+    int numMatls = d_sharedState->getNumMatls();
+
+    //__________________________________
+    //  bulletproofing    
+    VarLabel* label = VarLabel::find(name);
+    
+    if(label == NULL){
+      throw ProblemSetupException("The threshold variable name("+name+") could not be found",
+                                   __FILE__, __LINE__);
+    }
+
+    if( data.name != "rho_CC"      && data.name != "temp_CC" && 
+        data.name != "vol_frac_CC" && data.name != "vel_CC" &&
+        data.name != "press_CC"){
+      ostringstream warn;
+      warn <<"\n INPUT FILE ERROR:\n The threshold variable name ("<< name <<") is not valid\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
+    if( data.value < 0){
+      ostringstream warn;
+      warn <<"\n INPUT FILE ERROR:\n The threshold value ("<< value <<") cannot be negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    if( (data.matl < 0 || data.matl > numMatls) && matl != "all"){
+      ostringstream warn;
+      warn <<"\n INPUT FILE ERROR:\n The threshold material ("<< matl <<") is not valid\n"
+           << " select any material < total number of materials or 'all'";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    if( data.name == "Pressure"){  // ignore what the user input, it's always 0
+     data.matl = 0;
+    }
+    
+    //__________________________________
+    // if using "all" matls 
+    if(matl == "all"){
+      for (int m = 0; m < numMatls; m++){
+        data.matl = m;
+        d_thresholdVars.push_back(data);
+      }
+      
+    }else{
+      d_thresholdVars.push_back(data);
+    }
+  }
+  
+  //__________________________________
+  // More bullet proofing
   int maxLevel = grid->numLevels();
   
   for (int i=0; i< maxLevel; i++){
@@ -1807,7 +1870,7 @@ void AMRICE::compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
 /*_____________________________________________________________________
  Function~  AMRICE::set_refinementFlags
 ______________________________________________________________________*/         
-void AMRICE::set_refineFlags( CCVariable<double>& mag_grad_q_CC,
+void AMRICE::set_refineFlags( constCCVariable<double>& mag_grad_q_CC,
                               double threshold,
                               CCVariable<int>& refineFlag,
                               PerPatch<PatchFlagP>& refinePatchFlag,
@@ -1851,7 +1914,6 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     PerPatch<PatchFlagP> refinePatchFlag;
     new_dw->get(refinePatchFlag, refinePatchLabel, 0, patch);
 
-
     //__________________________________
     //  PRESSURE      
     constCCVariable<double> press_CC;
@@ -1863,8 +1925,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     mag_grad_press_CC.initialize(0.0);
     
     compute_Mag_gradient(press_CC, mag_grad_press_CC, patch);
-    set_refineFlags( mag_grad_press_CC, d_press_threshold,refineFlag, 
-                            refinePatchFlag, patch);
+    
     //__________________________________
     //  RHO, TEMP, VEL_CC, VOL_FRAC
     int numMatls = d_sharedState->getNumMatls();
@@ -1897,102 +1958,33 @@ AMRICE::errorEstimate(const ProcessorGroup*,
       mag_grad_vol_frac_CC.initialize(0.0);
       
       //__________________________________
-      // compute the gradients and set the refinement flags
-                                        // Density
-      compute_Mag_gradient(rho_CC,      mag_grad_rho_CC,      patch); 
-      set_refineFlags( mag_grad_rho_CC, d_rho_threshold,refineFlag, 
-                            refinePatchFlag, patch);
+      // compute the gradients for all the variables
+      compute_Mag_gradient(rho_CC,       mag_grad_rho_CC,      patch);
       
-                                        // Temperature
       compute_Mag_gradient(temp_CC,      mag_grad_temp_CC,     patch); 
-      set_refineFlags( mag_grad_temp_CC, d_temp_threshold,refineFlag, 
-                            refinePatchFlag, patch);
       
-                                        // Vol Fraction
-      compute_Mag_gradient(vol_frac_CC,  mag_grad_vol_frac_CC, patch); 
-      set_refineFlags( mag_grad_vol_frac_CC, d_vol_frac_threshold,refineFlag, 
-                            refinePatchFlag, patch);
+      compute_Mag_gradient(vol_frac_CC,  mag_grad_vol_frac_CC, patch);
       
-                                        // Velocity
-      compute_Mag_Divergence(vel_CC,      mag_div_vel_CC,  patch); 
-      set_refineFlags( mag_div_vel_CC, d_vel_threshold,refineFlag, 
-                            refinePatchFlag, patch);
+      compute_Mag_Divergence(vel_CC,     mag_div_vel_CC,       patch);
     }  // matls
-    
-    //______________________________________________________________________
-    //    Hardcoding to move the error flags around every nTimeSteps
-    if(d_regridderTest){
-      double nTimeSteps = 5;  // how ofter to move the error flags
-      const Level* level = getLevel(patches);
-      int dw = d_sharedState->getCurrentTopLevelTimeStep();
-      double timeToMove = fmod((double)dw, nTimeSteps);
-      static int counter = 0;
 
-      IntVector lo = patch->getInteriorCellLowIndex();
-      IntVector hi = patch->getInteriorCellHighIndex() - IntVector(1,1,1);
-
-      if (level->getIndex() == 0 ){
-        //__________________________________
-        // counter to move the error flag around
-        if(timeToMove == 0){
-          counter += 1;
-          if (counter == 8) {
-            counter = 0;
-          }
-        }
-        //__________________________________
-        //  find the 8 corner cells of level 0
-        vector<IntVector> corners;
-
-        for(int k = 0; k< 2; k++){
-          for(int j = 0; j< 2; j++){
-            for(int i = 0; i< 2; i++){
-              int x = (i) * lo.x() + (1-i)*hi.x();
-              int y = (j) * lo.y() + (1-j)*hi.y();
-              int z = (k) * lo.z() + (1-k)*hi.z();
-              corners.push_back(IntVector(x,y,z));     
-            }
-          }
-        }
-        if(timeToMove == 0){
-          cout << "RegridderTest:  moving the error flag to "
-               << corners[counter]<< " on level " 
-               << level->getIndex() <<endl; 
-        }
-        //__________________________________
-        //  Set the refinement flag      
-        PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-        refineFlag[corners[counter]] = true;
-        refinePatch->set();
-      }
+    //__________________________________
+    // Only set the refinement flags for certain materials
+    for(int i = 0; i< d_thresholdVars.size(); i++ ){
+      thresholdVar data = d_thresholdVars[i];
+      string name  = data.name;
+      int matl     = data.matl;
+      double thresholdValue = data.value;
+      VarLabel* mag_grad_qLabel = VarLabel::find("mag_grad_"+name);
       
-      //__________________________________
-      //  Levels other than 0
-      if(level->getIndex() && timeToMove == 0){
-        Vector randNum(drand48());
-        
-        IntVector diff = hi - lo;
-        Vector here = randNum * diff.asVector();
-        int i = RoundUp(here.x());
-        int j = RoundUp(here.y());
-        int k = RoundUp(here.z());
-        
-        IntVector twk(i,j,k);
-        IntVector c = twk + lo;
-        
-        c = Max(c, lo+IntVector(2,2,2));
-        c = Min(c, hi-IntVector(2,2,2));
-        
-        cout << "RegridderTest:  moving the error flag to "
-               << c << " on level " 
-               << level->getIndex() <<endl;
-    
-        //  Set the refinement flag      
-        PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-        refineFlag[c] = true;
-        refinePatch->set();        
+      if(mag_grad_qLabel==NULL){  // bulletproofing
+        throw InternalError("AMRICE::errorEstimate: label(mag_grad_"+name+") not found.",
+                            __FILE__, __LINE__);
       }
-    }  // regridderTest
-    
+      constCCVariable<double> mag_grad_q_CC;
+      new_dw->get(mag_grad_q_CC, mag_grad_qLabel, matl,patch,Ghost::None,0);
+      
+      set_refineFlags( mag_grad_q_CC, thresholdValue,refineFlag, refinePatchFlag, patch);
+    }
   }  // patches
 }

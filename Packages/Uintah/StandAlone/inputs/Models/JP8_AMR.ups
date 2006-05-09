@@ -331,11 +331,7 @@
           <orderOfInterpolation>1 </orderOfInterpolation>
           <do_Refluxing> false    </do_Refluxing>
           <Refinement_Criteria_Thresholds>
-            <Density>     1e100    </Density>
-            <Temperature> 1e100    </Temperature>
-            <Pressure>    1e100    </Pressure>
-            <VolumeFrac>  1e100    </VolumeFrac>
-            <Velocity>    1e100    </Velocity>
+            <!-- none defined -->
           </Refinement_Criteria_Thresholds>
         </AMR>    
       </ICE>       
