@@ -23,7 +23,8 @@ namespace Uintah {
                                     
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                          SchedulerP& scheduler,
-                                         bool needCoarseOld, bool needCoarseNew);
+                                         bool needCoarseOld, 
+                                         bool needCoarseNew);
                                          
     virtual void scheduleRefine (const PatchSet* patches, 
                                  SchedulerP& sched); 
@@ -56,7 +57,8 @@ namespace Uintah {
                                const VarLabel* var,
                                Task::DomainSpec DS,
                                const MaterialSubset* matls,
-                               bool needCoarseOld, bool needCoarseNew);
+                               bool needCoarseOld, 
+                               bool needCoarseNew);
 
   private:
 
@@ -179,7 +181,7 @@ namespace Uintah {
                                  CCVariable<double>& mag_div_q_CC,                   
                                  const Patch* patch);
 
-    void set_refineFlags( CCVariable<double>& q_CC_grad,
+    void set_refineFlags( constCCVariable<double>& q_CC_grad,
                           double threshold,
                           CCVariable<int>& refineFlag,
                           PerPatch<PatchFlagP>& refinePatchFlag,
@@ -189,11 +191,12 @@ namespace Uintah {
     
     //__________________________________
     // refinement criteria threshold knobs
-    double d_rho_threshold;     
-    double d_temp_threshold;    
-    double d_press_threshold;   
-    double d_vol_frac_threshold;
-    double d_vel_threshold;
+    struct thresholdVar {
+      string name;
+      int matl;
+      double value;
+    };
+    vector<thresholdVar> d_thresholdVars;
     
     bool d_regridderTest;
     int d_orderOfInterpolation;    
@@ -359,14 +362,6 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       constCCVariable<varType> q_OldDW, q_NewDW;
       coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel, cl, ch);
       coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel, cl, ch);
-
-/*       cout << d_myworld->myrank() << " OLDDW " << coarse_old_dw->getID() << " newdw " << coarse_new_dw->getID() << endl; */
-
-/*       if (label->getName() == "rho_CC" && patch->getID() == 16) { */
-/*         for (CellIterator iter(IntVector(5,8,0), IntVector(7,11,1)); !iter.done(); iter++) { */
-/*           cout << d_myworld->myrank() << "   REFINING: CR: new " << *iter << " " << q_NewDW[*iter] << " old " << q_OldDW[*iter] << endl; */
-/*         } */
-/*       } */
 
       CCVariable<varType> Q_old, Q_new;
       fine_new_dw->allocateTemporary(Q_old, patch);

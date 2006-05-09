@@ -209,16 +209,12 @@
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
         <solution technique = "EqForm" />
-                <!--if gradient is > knob then refine -->
+
         <AMR>
-          <orderOfInterpolation>1  </orderOfInterpolation>
-          <do_Refluxing>  false     </do_Refluxing>
+          <orderOfInterpolation>1         </orderOfInterpolation>
+          <do_Refluxing>        false     </do_Refluxing>
           <Refinement_Criteria_Thresholds>
-            <Density>     1e100    </Density>
-            <Temperature> 1e100    </Temperature>
-            <Pressure>    1e100    </Pressure>
-            <VolumeFrac>  3       </VolumeFrac>
-            <Velocity>    1e100    </Velocity>
+            <Variable name = "vol_frac_CC"  value = "3" matl = "all" />
           </Refinement_Criteria_Thresholds>
         </AMR>
         

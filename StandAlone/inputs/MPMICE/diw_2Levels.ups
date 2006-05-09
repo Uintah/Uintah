@@ -176,17 +176,14 @@
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
         <advection type = "FirstOrder"/>
         <solution technique = "EqForm"/>
+        
         <AMR>
-          <do_Refluxing>  false    </do_Refluxing>
+          <do_Refluxing>        false </do_Refluxing>
+          <orderOfInterpolation>1     </orderOfInterpolation>
           <Refinement_Criteria_Thresholds>
-            <Density>     1e100    </Density>
-            <Temperature> 1e100    </Temperature>
-            <Pressure>    1e100    </Pressure>
-            <VolumeFrac>  1e100    </VolumeFrac>
-            <Velocity>    1e100    </Velocity>
-          </Refinement_Criteria_Thresholds>
-          <orderOfInterpolation>1 </orderOfInterpolation>
+          </Refinement_Criteria_Thresholds>  
         </AMR>
+        
         <min_grid_level>0</min_grid_level>
         <max_grid_level>1</max_grid_level>
       </ICE>        
