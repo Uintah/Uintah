@@ -88,6 +88,7 @@ public:
   void OnRightClick(wxMouseEvent& event);
   void OnGo(wxCommandEvent& event);
   void OnDelete(wxCommandEvent& event);
+  void OnUI(wxCommandEvent& event);
 
   //const wxSize& GetBorderSize() const { return borderSize; }
   //void DrawPorts(wxDC& dc);

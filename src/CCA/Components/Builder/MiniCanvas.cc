@@ -31,10 +31,10 @@
 #include <wx/string.h>
 #include <wx/event.h>
 
-#include <CCA/Components/Builder/MiniCanvas.h>
-#include <CCA/Components/Builder/BuilderWindow.h>
-#include <CCA/Components/Builder/Connection.h>
-#include <CCA/Components/Builder/NetworkCanvas.h>
+#include <CCA/Components/GUIBuilder/MiniCanvas.h>
+#include <CCA/Components/GUIBuilder/BuilderWindow.h>
+#include <CCA/Components/GUIBuilder/Connection.h>
+#include <CCA/Components/GUIBuilder/NetworkCanvas.h>
 
 #include <iostream>
 #include <cmath>

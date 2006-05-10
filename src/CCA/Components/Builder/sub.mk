@@ -31,11 +31,11 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := CCA/Components/Builder
+SRCDIR := CCA/Components/GUIBuilder
 
 SRCS += \
          $(SRCDIR)/wxSCIRunApp.cc \
-         $(SRCDIR)/Builder.cc \
+         $(SRCDIR)/GUIBuilder.cc \
          $(SRCDIR)/BuilderWindow.cc \
          $(SRCDIR)/NetworkCanvas.cc \
          $(SRCDIR)/MiniCanvas.cc \

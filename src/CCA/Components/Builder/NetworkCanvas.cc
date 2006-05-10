@@ -31,11 +31,11 @@
 #include <wx/event.h>
 #include <wx/menu.h>
 
-#include <CCA/Components/Builder/NetworkCanvas.h>
-#include <CCA/Components/Builder/BuilderWindow.h>
-#include <CCA/Components/Builder/ComponentIcon.h>
-#include <CCA/Components/Builder/PortIcon.h>
-#include <CCA/Components/Builder/Connection.h>
+#include <CCA/Components/GUIBuilder/NetworkCanvas.h>
+#include <CCA/Components/GUIBuilder/BuilderWindow.h>
+#include <CCA/Components/GUIBuilder/ComponentIcon.h>
+#include <CCA/Components/GUIBuilder/PortIcon.h>
+#include <CCA/Components/GUIBuilder/Connection.h>
 
 #include <iostream>
 
@@ -270,7 +270,7 @@ void NetworkCanvas::OnConnect(PortIcon* usesPortIcon)
 bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
 {
   ComponentIcon* pCI = port->GetParent();
-  Builder::PortType type = port->GetPortType();
+  GUIBuilder::PortType type = port->GetPortType();
   for (ComponentMap::iterator iter = components.begin(); iter != components.end(); iter++) {
     ComponentIcon* ci_ = iter->second;
 
@@ -280,7 +280,7 @@ bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
 
     for (unsigned int j = 0; j < portArray.size(); j++) {
       Connection *con;
-      if (type == Builder::Uses) {
+      if (type == GUIBuilder::Uses) {
         PortIcon *pUses = pCI->GetPortIcon(port->GetPortName());
         if (pUses == 0) {
           std::cerr << "Error: could not locate port " << port->GetPortName() << std::endl;

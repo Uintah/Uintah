@@ -30,8 +30,8 @@
 #define Connection_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <CCA/Components/Builder/Builder.h>
-#include <wx/event.h>
+#include <CCA/Components/Builder/GUIBuilder.h>
+// #include <wx/event.h>
 
 class wxPoint;
 class wxDC;

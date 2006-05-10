@@ -35,7 +35,7 @@
 #define PortIcon_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <CCA/Components/Builder/Builder.h>
+#include <CCA/Components/GUIBuilder/GUIBuilder.h>
 
 class wxWindow;
 
@@ -47,7 +47,7 @@ class ComponentIcon;
 class PortIcon : public wxWindow {
 public:
   PortIcon(const sci::cca::GUIBuilder::pointer& bc, ComponentIcon *parent,
-           wxWindowID id, Builder::PortType pt, const std::string& name);
+           wxWindowID id, GUIBuilder::PortType pt, const std::string& name);
   virtual ~PortIcon();
   bool Create(wxWindow *parent, wxWindowID id, const wxString &name);
 
@@ -59,7 +59,7 @@ public:
 
   wxColor GetPortColor() { return pColor; }
   const std::string GetPortName() const { return name; }
-  Builder::PortType GetPortType() const { return portType; }
+  GUIBuilder::PortType GetPortType() const { return portType; }
 
   ComponentIcon* GetParent() const { return parent; }
 
@@ -73,7 +73,7 @@ protected:
 
   sci::cca::GUIBuilder::pointer builder;
   ComponentIcon* parent;
-  Builder::PortType portType;
+  GUIBuilder::PortType portType;
   std::string name;
   std::string model;
   std::string type;
