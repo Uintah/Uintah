@@ -322,7 +322,7 @@ public:
     srcmean=getMean(src_field);
 
     double rms=0., srcscale=srcmean, comparescale=comparemean;
-    cerr << "srcmean: " << srcscale << "\t" << "comparemean: " << comparescale;
+    //    cerr << "srcmean: " << srcscale << "\t" << "comparemean: " << comparescale;
     if (srcscale==0) srcscale=1.;
     if (comparescale==0) comparescale=1.;
     while(src_itr != src_end_itr) {
