@@ -128,9 +128,12 @@ void ParticleVis::execute()
      hasTensors = false;
   if (!spin0->get(part)){
     last_idx=-1;
+    error("No Scalar Particles, please connect to the scalar particles port.");
     return;
   } else if(!part.get_rep()) {
     last_idx=-1;
+    error("No Scalar Particles. This module requires scalar particles.");
+    remark("Use the Vector/TensorParticleOperators to create one if you have only Vector or Tensor Data");
     return;
   }
 
@@ -205,7 +208,6 @@ void ParticleVis::execute()
   double max = -1e30;
   double min = 1e30;
   
-
   // All three particle variables use the same particle subset
   // so just grab one
   PSet *pset = part->getParticleSet();
@@ -281,7 +283,7 @@ void ParticleVis::execute()
       v_it = vect->get().begin();
     }
   }
-  
+
   for(; p_it != p_it_end; p_it++, s_it++, id_it++){
     ParticleSubset *ps = (*p_it).getParticleSubset();
     GeomGroup *obj = scinew GeomGroup;
