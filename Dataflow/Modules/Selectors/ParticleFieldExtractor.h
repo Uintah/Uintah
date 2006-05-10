@@ -162,6 +162,7 @@ private:
   vector< const TypeDescription *> types;
   double time;
   int num_materials;
+  int num_selected_materials;
 
   string vector_to_string(vector< int > data);
   string vector_to_string(vector< string > data);
