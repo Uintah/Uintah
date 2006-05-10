@@ -55,7 +55,7 @@ BEGIN_EVENT_TABLE(NetworkCanvas, wxScrolledWindow)
   EVT_LEFT_UP(NetworkCanvas::OnLeftUp)
   EVT_RIGHT_UP(NetworkCanvas::OnRightClick) // show popup menu
   EVT_MOTION(NetworkCanvas::OnMouseMove)
-// EVT_MIDDLE_DOWN(NetworkCanvas::OnLeftDown) // ignore middle clicks on canvas for now...
+  EVT_MIDDLE_UP(NetworkCanvas::OnMiddleClick)
   EVT_SCROLLWIN(NetworkCanvas::OnScroll)
   EVT_MENU(ID_MENU_CLEAR, NetworkCanvas::OnClear)
   EVT_MENU(ID_MENU_DISCONNECT, NetworkCanvas::OnDisconnect)
@@ -167,6 +167,18 @@ void NetworkCanvas::OnRightClick(wxMouseEvent& event)
   //std::cerr << "NetworkCanvas::OnRightClick(..): popup menu done!" << std::endl;
 }
 
+void NetworkCanvas::OnMiddleClick(wxMouseEvent& event)
+{
+  wxPoint mp;
+  GetUnscrolledMousePosition(mp);
+  for (ConnectionMap::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+    if (iter->second->IsMouseOver(mp)) {
+      Disconnect(iter);
+      return;
+    }
+  }
+}
+
 void NetworkCanvas::OnScroll(wxScrollWinEvent& event)
 {
   wxScrolledWindow::OnScroll(event);
@@ -185,9 +197,7 @@ void NetworkCanvas::OnDisconnect(wxCommandEvent& event)
   GetUnscrolledMousePosition(mp);
   for (ConnectionMap::iterator iter = connections.begin(); iter != connections.end(); iter++) {
     if (iter->second->IsMouseOver(mp)) {
-      Connection* c = iter->second;
-      connections.erase(iter);
-      delete c;
+      Disconnect(iter);
     }
   }
   builderWindow->RedrawMiniCanvas();
@@ -316,35 +326,6 @@ bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
   return true;
 }
 
-void NetworkCanvas::ClearPossibleConnections()
-{
-  ConnectionMap::iterator iter = possibleConnections.begin();
-  while (iter != possibleConnections.end()) {
-    Connection *c = iter->second;
-    possibleConnections.erase(iter);
-    iter = possibleConnections.begin();
-    delete c;
-  }
-  possibleConnections.clear();
-  Refresh();
-}
-
-void NetworkCanvas::ClearConnections()
-{
-  ConnectionMap::iterator iter = connections.begin();
-  while (iter != connections.end()) {
-    Connection *c = iter->second;
-    if (c) {
-      builder->disconnect(c->GetConnectionID(), 0);
-      delete c;
-    }
-    connections.erase(iter);
-    iter = connections.begin();
-  }
-  connections.clear();
-  Refresh();
-}
-
 void NetworkCanvas::HighlightConnection(const wxPoint& point)
 {
   for (ConnectionMap::iterator iter = possibleConnections.begin(); iter != possibleConnections.end(); iter++) {
@@ -383,6 +364,43 @@ void NetworkCanvas::Clear()
     // get error message?
     builderWindow->DisplayErrorMessage("Not all component instances were destroyed by the framework.");
   }
+}
+
+void NetworkCanvas::Disconnect(const ConnectionMap::iterator& iter)
+{
+  Connection* c = iter->second;
+  if (c) {
+    builder->disconnect(c->GetConnectionID(), 0);
+    delete c;
+  }
+  connections.erase(iter);
+
+  builderWindow->RedrawMiniCanvas();
+  Refresh();
+}
+
+void NetworkCanvas::ClearPossibleConnections()
+{
+  ConnectionMap::iterator iter = possibleConnections.begin();
+  while (iter != possibleConnections.end()) {
+    Connection *c = iter->second;
+    possibleConnections.erase(iter);
+    iter = possibleConnections.begin();
+    delete c;
+  }
+  possibleConnections.clear();
+  Refresh();
+}
+
+void NetworkCanvas::ClearConnections()
+{
+  ConnectionMap::iterator iter = connections.begin();
+  while (iter != connections.end()) {
+    Disconnect(iter);
+    iter = connections.begin();
+  }
+  connections.clear();
+  Refresh();
 }
 
 void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
