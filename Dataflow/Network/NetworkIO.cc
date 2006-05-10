@@ -641,7 +641,11 @@ NetworkIO::load_network()
   xmlFreeDoc(doc);
   /* free up the parser context */
   xmlFreeParserCtxt(ctxt);  
+#ifndef _WIN32
+  // there is a problem on windows when using Uintah 
+  // which is either caused or exploited by this
   xmlCleanupParser();
+#endif
 
   gui->eval("setGlobal NetworkChanged 0");
   gui->eval("set netedit_savefile " + net_file_);

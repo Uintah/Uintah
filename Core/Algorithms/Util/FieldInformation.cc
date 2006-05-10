@@ -761,30 +761,35 @@ bool
 FieldInformation::make_scalar()
 {
   data_type = "double";
+  return (true);
 }
 
 bool
 FieldInformation::make_float()
 {
   data_type = "float";
+  return (true);
 }
 
 bool
 FieldInformation::make_double()
 {
   data_type = "double";
+  return (true);
 }
 
 bool
 FieldInformation::make_vector()
 {
   data_type = "Vector";
+  return (true);
 }
 
 bool
 FieldInformation::make_tensor()
 {
   data_type = "Tensor";
+  return (true);
 }
 
 

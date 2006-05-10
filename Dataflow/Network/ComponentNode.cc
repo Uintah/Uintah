@@ -352,8 +352,11 @@ bool read_component_file(ModuleInfo &mi, const char* filename)
   xmlFreeDoc(doc);
   /* free up the parser context */
   xmlFreeParserCtxt(ctxt);  
+#ifndef _WIN32
+  // there is a problem on windows when using Uintah 
+  // which is either caused or exploited by this
   xmlCleanupParser();
-
+#endif
   return true;
 }
 

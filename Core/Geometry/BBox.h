@@ -51,6 +51,12 @@
 #include   <ostream>
 #include <sgi_stl_warnings_on.h>
 
+// some compilers define the min and max macro, and the BBox::min/max will get confused.
+#ifdef min
+#undef min
+#undef max
+#endif
+
 namespace SCIRun {
 
   class Vector;
