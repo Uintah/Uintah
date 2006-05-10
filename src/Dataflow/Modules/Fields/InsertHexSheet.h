@@ -650,7 +650,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
       Point new_result;
       typename FIELD::mesh_type::Face::index_type face_id;
       tri_mesh->find_closest_elem( new_result, face_id, n_p );
-      Vector dist_vect = n_p - new_result;
+      Vector dist_vect = 1.5*( new_result - n_p );
     
         //since finding the closest face can be slow, update the progress meter 
         // to let the user know that we are performing calculations and the 
@@ -669,6 +669,27 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
         //create a map for the new node to a node on the boundary of the clipped mesh...
       new_map1[side1_nodemap[this_node]] = this_index1;
       new_map2[side2_nodemap[this_node]] = this_index2;
+
+      if( add_to_side1 )
+      {  
+        Point p;
+        side1_mesh->get_point( p, side1_nodemap[this_node] );
+        double x = p.x(), y = p.y(), z = p.z();
+        p.x( dist_vect.x() + x );
+        p.y( dist_vect.y() + y );
+        p.z( dist_vect.z() + z );
+        side1_mesh->set_point( p, side1_nodemap[this_node] );
+      }
+      else
+      {
+        Point p;
+        side2_mesh->get_point( p, side2_nodemap[this_node] );
+        double x = p.x(), y = p.y(), z = p.z();
+        p.x( dist_vect.x() + x );
+        p.y( dist_vect.y() + y );
+        p.z( dist_vect.z() + z );
+        side2_mesh->set_point( p, side2_nodemap[this_node] );
+      }
     }
     cout << "\nFound " << count << " nodes along the shared boundary...\n";
 
@@ -723,31 +744,17 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             {
               typename FIELD::mesh_type::Node::array_type nnodes1(8);
               typename FIELD::mesh_type::Node::array_type nnodes2(8);
-//NOTE TO JS:NEED to find a way to ensure the ordering is always correct...              
-              if( add_to_side1 )
-              {
-                nnodes1[0] = face_nodes[0];
-                nnodes1[1] = face_nodes[1];
-                nnodes1[2] = face_nodes[2];
-                nnodes1[3] = face_nodes[3];
-                nnodes1[4] = new_map1[face_nodes[0]];
-                nnodes1[5] = new_map1[face_nodes[1]];
-                nnodes1[6] = new_map1[face_nodes[2]];
-                nnodes1[7] = new_map1[face_nodes[3]];
-                side1_mesh->add_elem( nnodes1 );
-              }
-              else
-              {
-                nnodes1[0] = face_nodes[3];
-                nnodes1[1] = face_nodes[2];
-                nnodes1[2] = face_nodes[1];
-                nnodes1[3] = face_nodes[0];
-                nnodes1[4] = new_map1[face_nodes[3]];
-                nnodes1[5] = new_map1[face_nodes[2]];
-                nnodes1[6] = new_map1[face_nodes[1]];
-                nnodes1[7] = new_map1[face_nodes[0]];              
-                side1_mesh->add_elem( nnodes1 );
-              }
+//NOTE TO JS:NEED to find a way to ensure the ordering is always correct...
+
+              nnodes1[0] = face_nodes[3];
+              nnodes1[1] = face_nodes[2];
+              nnodes1[2] = face_nodes[1];
+              nnodes1[3] = face_nodes[0];
+              nnodes1[4] = new_map1[face_nodes[3]];
+              nnodes1[5] = new_map1[face_nodes[2]];
+              nnodes1[6] = new_map1[face_nodes[1]];
+              nnodes1[7] = new_map1[face_nodes[0]];              
+              side1_mesh->add_elem( nnodes1 );
               
               nnodes2[0] = side2_nodemap[side1_reverse_map[face_nodes[0]]];
               nnodes2[1] = side2_nodemap[side1_reverse_map[face_nodes[1]]];
