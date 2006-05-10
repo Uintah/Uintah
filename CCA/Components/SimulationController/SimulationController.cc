@@ -485,7 +485,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     double tmp_double = memuse;
     double avg_memuse = memuse;
     unsigned long max_memuse = memuse;
-    cout << d_myworld->myrank() << " memuse: " << toHumanUnits(memuse) << endl;
     double avg_highwater = highwater;
     unsigned long max_highwater = highwater;
     if (d_myworld->size() > 1) {
