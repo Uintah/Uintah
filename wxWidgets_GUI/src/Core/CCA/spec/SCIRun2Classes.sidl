@@ -63,13 +63,20 @@ interface TaoServices {
   void removeProvidesPort(in string portName);
 }
 
-class BuilderComponent implements-all sci.cca.Component,
-                                      sci.cca.ports.ComponentEventListener,
-                                      sci.cca.ports.ConnectionEventListener {
+class GUIBuilder implements-all sci.cca.Component,
+                                sci.cca.ports.ComponentEventListener,
+                                sci.cca.ports.ConnectionEventListener {
   string getFrameworkURL();
-  void getPortInfo(in cca.ComponentID cid, in string portName, out string model, out string type);
+
+  // wrapper for ComponentRepository
+
+  void getComponentClassDescriptions(out array<cca.ComponentClassDescription>);
 
   // wrappers for BuilderService mostly
+
+  void getPortInfo(in cca.ComponentID cid, in string portName, out string model, out string type);
+
+  // manage component creation/destruction
   ComponentID createInstance(in string className, in sci.cca.TypeMap properties);
   void destroyInstance(in cca.ComponentID cid, in float timeout);
   int destroyInstances(in array<cca.ComponentID> cidArray, in float timeout);
@@ -77,16 +84,22 @@ class BuilderComponent implements-all sci.cca.Component,
   void getUsedPortNames(in cca.ComponentID cid, out array<string>);
   void getProvidedPortNames(in cca.ComponentID cid, out array<string>);
 
-  void getComponentClassDescriptions(out array<cca.ComponentClassDescription>);
   void getCompatiblePortList(in sci.cca.ComponentID c1, in string port1, in sci.cca.ComponentID c2, out array<string>);
 
+  // manage connections
   ConnectionID connect(in cca.ComponentID usesCID, in string usesPortName, in cca.ComponentID providesCID, in string providesPortName);
-  void disconnect(in cca.ConnectionID, in float timeout); // note: don't support timeout yet
+  void disconnect(in cca.ConnectionID connID, in float timeout); // note: don't support timeout yet
   // void disconnectAll(); note: not implemented in BuilderService yet
 
-  bool registerGoPort(in string usesName, in cca.ComponentID cid, in bool isSciPort, out string usesPortName);
-  void unregisterGoPort(in string goPortName);
+  // manage go ports for the GUI
+  bool connectGoPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
+  void disconnectGoPort(in string goPortName);
   int go(in string goPortName);
+
+  // manage UI ports for the GUI
+  bool connectUIPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
+  void disconnectUIPort(in string uiPortName);
+  int ui(in string uiPortName);
 
   bool setPortColor(in string portName, in string colorName);
   // see Bugzilla bug #2834:
