@@ -55,6 +55,7 @@
 
 #include <sci_hash_set.h>
 #include <sci_hash_map.h>
+#include <sci_algorithm.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

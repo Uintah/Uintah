@@ -33,6 +33,9 @@
 // Some ports don't implement the std algorithms we use, so we
 // implement them here on our own.
 
+#ifndef SCI_INCLUDE_ALGORITHM
+#define SCI_INCLUDE_ALGORITHM
+
 #include <algorithm>
 
 #if defined(__digital__) || defined(_AIX) || defined(__APPLE__) \
@@ -71,4 +74,5 @@ namespace std {
     return true;
   }
 }
+#endif
 #endif

@@ -32,11 +32,13 @@
 
 #include <Core/Algorithms/Util/DynamicAlgo.h>
 
+#include <Core/Algorithms/Converter/share.h>
+
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-class MatrixToFieldAlgo 
+class SCISHARE MatrixToFieldAlgo 
 {
 public:
   bool MatrixToField(ProgressReporter *pr, MatrixHandle input, FieldHandle& output,std::string datalocation);
