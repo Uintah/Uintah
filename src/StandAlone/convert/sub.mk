@@ -49,6 +49,10 @@ PROGRAM := $(SRCDIR)/HexVolFieldToText
 SRCS := $(SRCDIR)/HexVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/HexVolFieldToExotxt
+SRCS := $(SRCDIR)/HexVolFieldToExotxt.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/HexVolToVtk
 SRCS := $(SRCDIR)/HexVolToVtk.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -80,6 +84,10 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfFieldToText
 SRCS := $(SRCDIR)/TriSurfFieldToText.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TriSurfFieldToExotxt
+SRCS := $(SRCDIR)/TriSurfFieldToExotxt.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 
