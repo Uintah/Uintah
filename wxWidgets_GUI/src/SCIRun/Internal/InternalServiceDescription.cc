@@ -59,7 +59,7 @@ std::string InternalServiceDescription::getType() const
   return serviceType;
 }
 
-ComponentModel* InternalServiceDescription::getModel() const
+const ComponentModel* InternalServiceDescription::getModel() const
 {
   return model;
 }
