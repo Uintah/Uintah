@@ -174,7 +174,7 @@ IMPLEMENT_DYNAMIC_CLASS(BuilderWindow, wxFrame)
 
 int BuilderWindow::IdCounter = BuilderWindow::ID_BUILDERWINDOW_HIGHEST;
 
-BuilderWindow::BuilderWindow(const sci::cca::BuilderComponent::pointer& bc, wxWindow *parent) : builder(bc)
+BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent) : builder(bc)
 {
 #if DEBUG
   std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;
@@ -202,7 +202,7 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
 
   return true;
 }
-bool BuilderWindow::SetBuilder(const sci::cca::BuilderComponent::pointer& bc)
+bool BuilderWindow::SetBuilder(const sci::cca::GUIBuilder::pointer& bc)
 {
   if (builder.isNull()) {
     builder = bc;
@@ -388,8 +388,12 @@ void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescripti
     tm->putString("LOADER NAME", cd->getLoaderName());
 
     sci::cca::ComponentID::pointer cid = builder->createInstance(cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
-    if (! cid.isNull()) {
+    // Assumes that the GUI builder component class will be named "SCIRun.Builder".
+    // Is there a better way to check if this is a GUI builder?
+    if (! cid.isNull() && cd->getComponentClassName() != "SCIRun.GUIBuilder") {
+#if DEBUG
       std::cerr << "wx: Got " << cid->getInstanceName() << std::endl;
+#endif
       networkCanvas->AddIcon(cid);
     }
   //}

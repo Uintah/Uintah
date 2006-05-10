@@ -73,7 +73,7 @@ public:
   };
 
   // deal with wxValidator?
-  ComponentIcon(const sci::cca::BuilderComponent::pointer& bc, wxWindowID winid, NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y);
+  ComponentIcon(const sci::cca::GUIBuilder::pointer& bc, wxWindowID winid, NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y);
   virtual ~ComponentIcon();
 
   // draw own border?
@@ -126,12 +126,13 @@ protected:
 
   bool hasUIPort;
   bool hasGoPort;
-  bool isSciPort;
+  //bool isSciPort;
   bool isMoving;
 
   sci::cca::ComponentID::pointer cid;
-  sci::cca::BuilderComponent::pointer builder;
+  sci::cca::GUIBuilder::pointer builder;
   std::string goPortName;
+  std::string uiPortName;
 
   //PortMap ports;
   PortList usesPorts;

@@ -40,7 +40,7 @@
 #include <iostream>
 
 #ifndef DEBUG
-#  define DEBUG 0
+#  define DEBUG 1
 #endif
 
 namespace GUIBuilder {
@@ -63,7 +63,7 @@ END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(NetworkCanvas, wxScrolledWindow)
 
-NetworkCanvas::NetworkCanvas(const sci::cca::BuilderComponent::pointer& bc, BuilderWindow* bw, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size) : builder(bc), builderWindow(bw), movingIcon(0)/*, highlightedConnection(0)*/
+NetworkCanvas::NetworkCanvas(const sci::cca::GUIBuilder::pointer& bc, BuilderWindow* bw, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size) : builder(bc), builderWindow(bw), movingIcon(0)/*, highlightedConnection(0)*/
 {
   Init();
   Create(parent, id, pos, size);

@@ -40,6 +40,7 @@
 #include <wx/gdicmn.h>
 
 #include <CCA/Components/Builder/PortIcon.h>
+#include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/ComponentIcon.h>
 #include <CCA/Components/Builder/NetworkCanvas.h>
 
@@ -60,7 +61,7 @@ END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(PortIcon, wxWindow)
 
-PortIcon::PortIcon(const sci::cca::BuilderComponent::pointer& bc, ComponentIcon* parent,
+PortIcon::PortIcon(const sci::cca::GUIBuilder::pointer& bc, ComponentIcon* parent,
                    wxWindowID id, Builder::PortType pt, const std::string& name)
   : builder(bc), parent(parent), portType(pt), name(name), connecting(false),
     ID_MENU_POPUP(BuilderWindow::GetNextID())

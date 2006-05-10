@@ -34,6 +34,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Builder
 
 SRCS += \
+         $(SRCDIR)/wxSCIRunApp.cc \
          $(SRCDIR)/Builder.cc \
          $(SRCDIR)/BuilderWindow.cc \
          $(SRCDIR)/NetworkCanvas.cc \
@@ -42,8 +43,8 @@ SRCS += \
          $(SRCDIR)/ComponentIcon.cc \
          $(SRCDIR)/PortIcon.cc \
 	 $(SRCDIR)/ComponentWizardDialog.cc \
-         $(SRCDIR)/ComponentSkeletonWriter.cc 
-	
+         $(SRCDIR)/ComponentSkeletonWriter.cc
+
 PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/Thread Core/Exceptions SCIRun
 
 CFLAGS += $(WX_CXXFLAGS)
