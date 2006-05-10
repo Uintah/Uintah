@@ -55,17 +55,17 @@
 using namespace SCIRun;
 using namespace sci::cca;
 
-#define VERSION "2.0.0" // this needs to be synced with the contents of
+#define VERSION "0.1.0" // this needs to be synced with the contents of
 			// SCIRun/doc/edition.xml
 #include <sys/stat.h>
 
-std::string defaultBuilder = "gui";
+static std::string defaultBuilder("gui");
 static std::string fileName;
 
 void
 usage()
 {
-  std::cout << "Usage: scirun [args] [network file]\n";
+  std::cout << "Usage: sr [args] [network file]\n";
   std::cout << "       [-]-v[ersion]          : prints out version information\n";
   std::cout << "       [-]-h[elp]             : prints usage information\n";
   std::cout << "       [-]-b[uilder] gui/txt  : selects GUI or Textual builder\n";
@@ -91,9 +91,9 @@ parse_args( int argc, char *argv[])
     } else if ( ( arg == "--builder" ) || ( arg == "-builder" ) ||
 	      ( arg == "-b" ) ||  ( arg == "--b" ) ) {
       if(++cnt < argc) {
-	defaultBuilder=argv[cnt];
+	defaultBuilder = argv[cnt];
       } else {
-	std::cerr << "Unkown builder."<<std::endl;
+	std::cerr << "Unknown builder."<<std::endl;
 	usage();
       }
     } else {
@@ -103,6 +103,7 @@ parse_args( int argc, char *argv[])
 		  << ".\nNo such file or directory.  Exiting." << std::endl;
 	exit(0);
       } else {
+	// SCIRun has new network file format -> check format and change extension
 	  if (ends_with(arg, ".net")) {
 	      fileName = arg;
 	      load = true;
@@ -117,8 +118,8 @@ int
 main(int argc, char *argv[]) {
   bool framework = true;
 
-  bool loadNet = parse_args( argc, argv);
-  create_sci_environment(0,0);
+  bool loadNet = parse_args(argc, argv);
+  create_sci_environment(0, 0);
 
   try {
     // TODO: Move this out of here???
@@ -128,12 +129,12 @@ main(int argc, char *argv[]) {
     //invocation id
     PRMI::setInvID(ProxyID(1,0));
   }
-  catch(const Exception& e) {
+  catch (const Exception& e) {
     std::cerr << "Caught exception:\n";
     std::cerr << e.message() << std::endl;
     abort();
   }
-  catch(...) {
+  catch (...) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
@@ -177,15 +178,15 @@ main(int argc, char *argv[]) {
 	//fwkProperties->setProperties(map);
     }
 
-#   if !defined(HAVE_WX)
+#if !defined(HAVE_WX)
     defaultBuilder="txt";
-#   endif
+#endif
 
-    if (defaultBuilder=="gui") {
+    if (defaultBuilder == "gui") {
       ComponentID::pointer gui_id =
-	  builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
+	  builder->createInstance("SCIRun.GUIBuilder", "cca:SCIRun.GUIBuilder", sci::cca::TypeMap::pointer(0));
       if (gui_id.isNull()) {
-	std::cerr << "Cannot create component: cca:SCIRun.Builder\n";
+	std::cerr << "Cannot create component: cca:SCIRun.GUIBuilder\n";
 	Thread::exitAll(1);
       }
     } else {
@@ -209,17 +210,17 @@ main(int argc, char *argv[]) {
     PIDL::finalize();
 
   }
-  catch(const sci::cca::CCAException::pointer &pe) {
+  catch (const sci::cca::CCAException::pointer &pe) {
     std::cerr << "Caught exception:\n";
     std::cerr << pe->getNote() << std::endl;
     abort();
   }
-  catch(const Exception& e) {
+  catch (const Exception& e) {
     std::cerr << "Caught exception:\n";
     std::cerr << e.message() << std::endl;
     abort();
   }
-  catch(...) {
+  catch (...) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
